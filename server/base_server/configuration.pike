@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.39 1997/07/16 20:07:54 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.40 1997/07/22 17:05:19 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -700,41 +700,42 @@ int|mapping check_security(function a, object id, void|int slevel)
 
   catch {
     foreach(seclevels[0], level) {
-      switch(level[0])
-      {
-       case MOD_ALLOW: // allow ip=...
+      switch(level[0]) {
+      case MOD_ALLOW: // allow ip=...
 	if(level[1](id->remoteaddr)) {
-	  ip_ok = ~0;		// Match. It's ok.
+	  ip_ok = ~0;	// Match. It's ok.
 	} else {
-	  ip_ok = ip_ok | 1;	// IP may be bad.
+	  ip_ok |= 1;	// IP may be bad.
 	}
 	continue;
 	
-       case MOD_DENY: // deny ip=...
+      case MOD_DENY: // deny ip=...
 	if(level[1](id->remoteaddr))
 	  return http_low_answer(403, "<h2>Access forbidden</h2>");
 	continue;
 
-       case MOD_USER: // allow user=...
+      case MOD_USER: // allow user=...
 	if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
 	need_auth = 1;
 	continue;
 	
-       case MOD_PROXY_USER: // allow user=...
+      case MOD_PROXY_USER: // allow user=...
 	if(id->misc->proxyauth && id->misc->proxyauth[0] && 
 	   level[1](id->misc->proxyauth[1])) return 0;
 	return http_proxy_auth_required(seclevels[2]);
       }
     }
   };
-  if (ip_ok == 1) {
+  if (ip_ok != ~0) {
     // IP not in any of the allow patterns
-    return http_low_answer(403, "<h2>Access forbidden</h2>");
+
+    // If auth is needed (access might be allowed if you are the right user),
+    // request authentification from the user. Otherwise this is a lost case,
+    // the user will never be allowed access unless the patterns change.
+    return need_auth ? http_auth_failed(seclevels[2]) : 1;
   }
-  // If auth is needed (access might be allowed if you are the right user),
-  // request authentification from the user. Otherwise this is a lost case,
-  // the user will never be allowed access unless the patterns change.
-  return need_auth ? http_auth_failed(seclevels[2]) : 1; 
+  // IP is OK, but there might be other authentication required.
+  return need_auth ? http_auth_failed(seclevels[2]) : 0;
 }
 #endif
 // Empty all the caches above.
