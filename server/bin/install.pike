@@ -5,7 +5,7 @@
  * doc = "Main part of the install script that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.35 1999/06/07 01:47:25 mast Exp $";
+string cvs_version = "$Id: install.pike,v 1.36 1999/06/07 04:34:45 mast Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -400,14 +400,14 @@ void main(int argc, string *argv)
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
   int have_crypto = 0;
   catch(have_crypto = sizeof(indices(master()->resolv("_Crypto"))));
-  int have_ssl3 = 0;
-  have_ssl3 = file_stat("protocols/ssl3.pike") != 0;
+  int have_https = 0;
+  have_https = file_stat("protocols/https.pike") != 0;
 
-  if (have_gmp && have_crypto && have_ssl3) {
+  if (have_gmp && have_crypto && have_https) {
     write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");
     tmp = gets() - " ";
     if (!strlen(tmp) || lower_case(tmp)[0] != 'n') {
-      prot_prog = "ssl3";
+      prot_prog = "https";
       prot_spec = "https://";
       prot_extras = "cert-file demo_certificate.pem";
 
@@ -415,7 +415,7 @@ void main(int argc, string *argv)
 	    "It is recommended that you change the certificate to one of your own.\n");
     }
   } else {
-    if (have_crypto && have_ssl3) {
+    if (have_crypto && have_https) {
       write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
     } else {
       write("[1mExport version -- using http for the configuration-interface[0m.\n");
@@ -455,8 +455,8 @@ void main(int argc, string *argv)
     client = tmp;
   if(client)
   {
-    if (prot_prog == "ssl3") {
-      write("Waiting for SSL3 to initialize...\n");
+    if (prot_prog == "https") {
+      write("Waiting for HTTPS to initialize...\n");
       sleep(40);
     } else {
       sleep(10);
