@@ -1,0 +1,43 @@
+<topmenu base="../" selected=ports>
+
+<content>
+<subtablist>
+ <st-tabs>
+ </st-tabs>
+ <st-page>
+  <table>
+   <configif-output source=ports>
+    <tr><td bgcolor="&usr.bgcolor;" colspan=2>
+      <table border=0 cellpadding=0 cellspacing=0>
+      <tr width=100%>
+       <td width=100%>
+         &nbsp;&nbsp;<b><font size=+2>#name#</font>
+       </td>
+        <td align=right>
+          <gbutton href='?port=#port:quote=dtag#'> Expand </gbutton>
+        </td>
+      </tr>
+     </table>
+      <tr>
+        <td colspan=2>
+          <table>
+          <configif-output source=port-urls quote=½ port="#port:quote=dtag#">
+           <tr>
+               <td> ½url½ </td>
+               <td> <a href='../sites/site.html/½conf:quote=dtag½/'>½confname½</a> </td>
+           </tr>
+          </configif-output>
+          </table>
+        </td>
+      </tr>
+    <if variable="port is #port#">
+       <configif-output source=port-variables quote=½ port="#port:quote=dtag#">
+       <tr><td width=30%><b>½name½</b></td><td>½form:quote=none½</td></tr>
+        <tr><td></td><td>½doc:quote=none½<p>½type_hint½</td></tr>
+       </configif-output><br>
+     </if>
+     </configif-output>
+   </table>
+ </st-page>
+</subtablist>
+</content>

@@ -277,6 +277,15 @@ string module_page( RequestID id, string conf, string module )
 </formoutput>";
 }
 
+string port_for( string url )
+{
+  object p = roxen->urls[url]->port;
+  if(!p)
+    return "";
+  return "<font size=-1>(handled by <a href='../../../ports/?port="+p->get_key()+"'>"+
+         p->name+"://"+(p->ip||"*")+":"+p->port+"/" + "</a>)</font>";
+}
+
 
 string parse( RequestID id )
 {
@@ -300,11 +309,15 @@ string parse( RequestID id )
     {
      default: /* Status info */
        string res="<br><blockquote><h1>Urls</h1>";
-       foreach( conf->query( "URLs" ), string url ) {
+       foreach( conf->query( "URLs" ), string url )
+       {
 	 if(search(url, "*")==-1)
-           res += "<a href='"+url+"'>"+url+"</a><br>";
-	 else
-	   res += url+"<br>";
+           res += "<a href='"+url+"'>"+url+"</a> "+port_for(url)+"<br>";
+	 else if( sizeof( url/"*" ) == 2 )
+	   res += "<a href='"+replace(url, "*", gethostname() )+"'>"+
+               url+"</a> "+port_for(url)+"<br>";
+         else
+	   res += url + " "+port_for(url)+"<br>";
        }
        res+="<h1><cf-locale get=eventlog></h1><insert file=log.pike nocache>";
 

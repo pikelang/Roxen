@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.408 2000/02/03 20:32:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.409 2000/02/04 01:35:56 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -703,14 +703,29 @@ class fallback_redirect_request
   }
 }
 
+mapping get_port_options( string key )
+{
+  return (query( "port_options" )[ key ] || ([]));
+}
+
+void set_port_options( string key, mapping value )
+{
+  mapping q = query("port_options");
+  q[ key ] = value;
+  set( "port_options" , q );
+  save( );
+}
+
 class Protocol
 {
   inherit Stdio.Port: port;
+  inherit "basic_defvar";
 
   constant name = "unknown";
   constant supports_ipless = 0;
   constant requesthandlerfile = "";
   constant default_port = 4711;
+
 
   int port;
   int refs;
@@ -772,65 +787,46 @@ class Protocol
     return values( urls )[0]->conf;
   }
 
-  void set_option_default(string option, mixed value)
+  mixed query_option( string x )
   {
-    mapping all_options = QUERY(port_options);
-    if (!all_options[""]) all_options[""] = ([]);
-    all_options[""][option] = value;
-
-    // FIXME: Mark as changed?
-    // FIXME: Save?
+    return query( x );
   }
 
-  mixed query_option(string option)
+  string get_key()
   {
-    // FIXME: Cache?
+    return name+":"+ip+":"+port;
+  }
 
-    mapping(string:mapping(string:mixed)) all_options = QUERY(port_options);
+  void save()
+  {
+    set_port_options( get_key(),
+                      mkmapping( indices(variables),
+                                 map(indices(variables),query)));
+  }
 
-    mixed res;
-
-    mapping val;
-
-    // Any protocol specific settiongs?
-    if (val = all_options[name]) {
-      mapping val2;
-      // Any ip specific settings?
-      if (val2 = val[ip]) {
-	mapping val3;
-	// Any port specific settings?
-	if (val3 = val2[port]) {
-	  if (!zero_type(res = val3[option])) {
-	    return res;
-	  }
-	}
-	if (!zero_type(res = val2[""][option])) {
-	  return res;
-	}
-      }
-      if (!zero_type(res = val[""][option])) {
-	return res;
-      }
-    }
-    if( all_options[""] )
-      return all_options[""][option];
-    return 0;
+  void restore()
+  {
+    foreach( (array)get_port_options( get_key() ),  array kv )
+      set( kv[0], kv[1] );
   }
 
   void create( int pn, string i )
   {
-    if (query_option("do_not_bind")) {
+    port = pn;
+    ip = i;
+
+    restore();
+//     if (query_option("do_not_bind"))
+//     {
       // This is useful if you run two Roxen processes,
       // that both handle an URL which has two IPs, and
       // use DNS round-robin.
-      report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
-			     name, ip, port));
-      destruct();
-    }
+//       report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
+// 			     name, ip, port));
+//       destruct();
+//     }
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
-    port = pn;
-    ip = i;
 
     ::create();
     if(!bind( port, got_connection, ip ))
@@ -905,6 +901,20 @@ class SSLProtocol
   void create(int pn, string i)
   {
     ctx = SSL.context();
+
+    defvar( "ssl_cert_file", "demo_certificate.pem",
+            TYPE_STRING,
+            ([
+              "standard":"SSL certificate file",
+              "svenska":"SSL-certifikatsfil",
+            ]),
+            ([
+              "standard":"The SSL certificate file to use. The path "
+                         "is relative to "+getcwd()+"\n",
+              "svenska":"SSLcertifikatfilen som den här porten ska använda."
+                        " Filnamnet är relativt "+getcwd()+"\n",
+            ]) );
+
 
     object privs = Privs("Reading cert file");
     string f = Stdio.read_file(query_option("ssl_cert_file") ||
@@ -1169,10 +1179,14 @@ class FHTTP
        case "None":
          l->log_as_array();
          break;
-       case "Commonlog":
+       case "CommonLog":
          object f = Stdio.File( query("log_file"), "wca" );
          l->log_as_commonlog_to_file( f );
          destruct(f);
+         break;
+       default:
+         report_notice( "It is not yet possible to log using the "+
+                        query("log")+" method. Sorry. Out of time");
          break;
       }
       cdel--;
@@ -1226,20 +1240,72 @@ class FHTTP
   {
     requesthandler = (program)"protocols/fhttp.pike";
 
-    if (query_option("do_not_bind"))
-    {
-      // This is useful if you run two Roxen processes,
-      // that both handle an URL which has two IPs, and
-      // use DNS round-robin.
-      report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
-			     name, ip, port));
-      destruct();
-      return;
-    }
+//     if (query_option("do_not_bind"))
+//     {
+//       // This is useful if you run two Roxen processes,
+//       // that both handle an URL which has two IPs, and
+//       // use DNS round-robin.
+//       report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
+// 			     name, ip, port));
+//       destruct();
+//       return;
+//     }
     port = pn;
     ip = i;
+    set_up_http_variables( this_object() );
 
-    dolog = (query_option( "log" ) && (query_option( "log" )!="none"));
+    defvar( "log", "None", TYPE_STRING_LIST,
+            (["standard":"Logging method",
+              "svenska":"Loggmetod", ]),
+            (["standard":
+              "None - No log<br>"
+              "CommonLog - A common log in a file<br>"
+              "Compat - Log though roxen's normal logging format.<br>"
+              "<p>Please note that compat limits roxen to less than 1k "
+              "requests/second.",
+              "svenska":
+              "Ingen - Logga inte alls<br>"
+              "Commonlog - Logga i en commonlogfil<br>"
+              "Kompatibelt - Logga som vanligt. Notera att det inte går "
+              "speciellt fort att logga med den här metoden, det begränsar "
+              "roxens hastighet till strax under 1000 requests/sekund på "
+              "en normalsnabb dator år 1999.",
+            ]),
+            ({ "None", "CommonLog", "Compat" }),
+            ([ "svenska":
+               ([
+                 "None":"Ingen",
+                 "CommonLog":"Commonlog",
+                 "Compat":"Kompatibel",
+               ])
+            ]) );
+
+    defvar( "log_file", "../logs/clog-"+ip+":"+port, TYPE_FILE,
+            ([ "standard":"Log file",
+               "svenska":"Logfil", ]),
+            ([ "svenska":"Den här filen används om man loggar med "
+               " commonlog metoden.",
+               "standard":"This file is used if logging is done using the "
+               "CommonLog method."
+            ]));
+
+    defvar( "ram_cache", 20, TYPE_INT,
+            (["standard":"Ram cache",
+              "svenska":"Minnescache"]),
+            (["standard":"The size of the ram cache, in MegaBytes",
+              "svenska":"Storleken hos minnescachen, i Megabytes"]));
+
+    defvar( "read_timeout", 120, TYPE_INT,
+            ([ "standard":"Client timeout",
+               "svenska":"Klienttimeout" ]),
+            ([ "standard":"The maximum time roxen will wait for a "
+               "client before giving up, and close the connection, in seconds",
+               "svenska":"Maxtiden som roxen väntar innan en klients "
+               "förbindelse stängs, i sekunder" ]) );
+
+
+    restore();
+    dolog = (query_option( "log" ) && (query_option( "log" )!="None"));
     portobj = Stdio.Port(); /* No way to use ::create easily */
     if( !portobj->bind( port, 0, ip ) )
     {
@@ -1269,6 +1335,12 @@ class HTTP
   constant name = "http";
   constant requesthandlerfile = "protocols/http.pike";
   constant default_port = 80;
+
+  void create( mixed ... args )
+  {
+    set_up_http_variables( this_object() );
+    ::create( @args );
+  }
 }
 
 class HTTPS
@@ -1339,6 +1411,12 @@ class HTTPS
     return q;
   }
 #endif /* constant(SSL.sslfile) */
+
+  void create( mixed ... args )
+  {
+    set_up_http_variables( this_object() );
+    ::create( @args );
+  }
 }
 
 class FTP
@@ -1353,6 +1431,12 @@ class FTP
   int sessions;
   int ftp_users;
   int ftp_users_now;
+
+  void create( mixed ... args )
+  {
+    set_up_ftp_variables( this_object() );
+    ::create( @args );
+  }
 }
 
 class FTPS
@@ -1367,6 +1451,12 @@ class FTPS
   int sessions;
   int ftp_users;
   int ftp_users_now;
+
+  void create( mixed ... args )
+  {
+    set_up_ftp_variables( this_object() );
+    ::create( @args );
+  }
 }
 
 class GOPHER
@@ -1464,6 +1554,18 @@ void unregister_url( string url )
     m_delete( urls, url );
     sort_urls();
   }
+}
+
+array all_ports( )
+{
+  return Array.uniq( values( urls )->port );
+}
+
+Protocol find_port( string name )
+{
+  foreach( all_ports(), Protocol p  )
+    if( p->get_key() == name )
+      return p;
 }
 
 void sort_urls()

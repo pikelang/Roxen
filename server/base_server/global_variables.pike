@@ -13,6 +13,62 @@ private int cache_disabled_p() { return !QUERY(cache);         }
 private int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
 private int ident_disabled_p() { return QUERY(default_ident); }
 
+
+// And why put these functions here, you might rightully ask.
+
+// The answer is that there is actually a reason for it, it's for
+// performance reasons. This file is dumped to a .o file, roxen.pike
+// is not.
+
+
+void set_up_ftp_variables( object o )
+{
+  function defvar = o->defvar;
+
+
+  defvar( "FTPWelcome",
+          "              +------------------------------------------------\n"
+          "              +--      Welcome to the Roxen FTP server      ---\n"
+          "              +------------------------------------------------\n",
+          TYPE_TEXT,
+          "Welcome text",
+          "The text shown the the user on connect" );
+
+  defvar( "ftp_user_session_limit", 0, TYPE_INT,
+          "User session limit",
+          "The maximum number of times a user can connect at once."
+          " 0 means unlimited" );
+
+  defvar( "named_ftp", 1, TYPE_FLAG,
+          "Allow named ftp",
+          "If yes, non-anonymous users can connect" );
+
+  defvar( "guest_ftp", 1, TYPE_FLAG,
+          "Allow login with incorrect password/user",
+          "If yes, users can connect with the wrong password and/or username"
+          ". This is useful since things like .htaccess files can later on "
+          "authenticate the user.");
+
+  defvar( "anonymous_ftp", 1, TYPE_FLAG,
+          "Allow anonymous ftp",
+          "If yes, anonymous users can connect" );
+
+  defvar( "shells", "", TYPE_FILE,
+          "Shell database",
+          "If this string is set to anything but the empty string, "
+          "it should point to a file containing a list of valid shells. "
+          "Users with shells that does not figure in this list will not "
+          "be allowed to log in." );
+}
+
+
+void set_up_http_variables( object o )
+{
+  function defvar = o->defvar;
+  function deflocaledoc = o->deflocaledoc;
+}
+
+
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
@@ -48,24 +104,12 @@ void define_global_variables( int argc, array (string) argv )
   int p;
 
   globvar("port_options", ([]), "Ports: Options", VAR_EXPERT|TYPE_CUSTOM,
-	  "Mapping with options and defaults for all ports.<br>\n"
-	  "Structure:<br>\n"
-	  "<dl><pre>\n"
-	  "([\n"
-	  "  \"\" : ([ string : mixed ]), // Global defaults\n"
-	  "  \"prot\" : ([\n"
-	  "    \"\" : ([ string : mixed ]), // Defaults for prot://\n"
-	  "    \"ip\" : ([\n"
-	  "      \"\" : ([ string : mixed ]), // Defaults for prot://ip/\n"
-	  "      port : ([ string : mixed ]), // Options for prot://ip:port/\n"
-	  "    ]),\n"
-	  "  ]),\n"
-	  "])\n"
-	  "</pre></dl>\n",
+	  "Mapping with options and defaults for all ports.\n",
 	  ({
 	    lambda(mixed value, int action) {
 	      return "Edit the cofig-file by hand for now.";
-	    }
+	    },
+            lambda(){},
 	  }));
 
   globvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
