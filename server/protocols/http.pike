@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.294 2001/06/06 22:08:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.295 2001/06/07 04:34:30 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1727,8 +1727,8 @@ void send_result(mapping|void result)
 	    if ( ((since_info[0] >= misc->last_modified) && 
 		  ((since_info[1] == -1) || (since_info[1] == file->len)))
 		 // actually ok, or...
-		 || ((misc->cacheable>0) 
-		     && (since_info[0] + misc->cacheable<= predef::time(1)))
+		 // || ((misc->cacheable>0) 
+		 // && (since_info[0] + misc->cacheable<= predef::time(1))
 		 // cacheable, and not enough time has passed.
 	       )
 	    {
@@ -2120,7 +2120,10 @@ void got_data(mixed fooid, string s)
   remove_call_out(do_timeout);
 #ifdef RAM_CACHE
   array cv;
-  if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
+  if( misc->cacheable        &&
+      prot != "HTTP/0.9"     &&
+      !since                 &&
+      (cv = conf->datacache->get( raw_url )) )
   {
     if( !cv[1]->key )
       conf->datacache->expire_entry( raw_url );
