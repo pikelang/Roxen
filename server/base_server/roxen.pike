@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.82 1997/07/11 06:00:05 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.83 1997/07/16 20:31:23 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -60,7 +60,8 @@ string real_version = "Roxen Challenger/1.2alpha7";
 // in the future.
 mapping portno=([]);
 
-function decode = MIME.decode_base64;
+// decode.pike used to be here.
+constant decode = MIME.decode_base64;
 // End of what was formely known as decode.pike, the base64 decoder
 
 // Function pointer and the root of the to the configuration interface
@@ -905,7 +906,8 @@ string filename(object o)
   return my_loaded[object_program(o)]||last_module_name;
 }
 
-mapping module_stat_cache = ([]);
+// ([ filename:stat_array ])
+mapping(string:array) module_stat_cache = ([]);
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
   string cvs;
@@ -1747,7 +1749,7 @@ void scan_module_dir(string d)
 	case "lpc":
 	  if(catch{
 	    if((open(path+file,"r")->read(4))=="#!NO") {
-	      MD_PERROR(("Not a module"));
+	      MD_PERROR(("Not a module\n"));
 	      file=0;
 	    }
 	  }) {
@@ -1833,7 +1835,9 @@ void rescan_modules()
   string file, path;
   mixed err;
   
-  allmodules=copy_value(somemodules);
+  if (!allmodules) {
+    allmodules=copy_value(somemodules);
+  }
 
   foreach(QUERY(ModuleDirs), path)
   {
