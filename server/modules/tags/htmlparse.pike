@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.58 1997/12/23 11:13:28 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.59 1997/12/23 18:40:27 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1239,7 +1239,8 @@ string simple_parse_users_file(string file, string u)
 int match_user(array u, string user, string f, int wwwfile, object got)
 {
   string s, pass;
-
+  if(!u)
+    return 0; // No auth sent
   if(!wwwfile)
     s=read_bytes(f);
   else
