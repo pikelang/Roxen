@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.16 2004/08/09 10:01:10 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.17 2004/08/11 11:59:10 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -317,7 +317,8 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   //!   that the function returns a boolean answer that in RXML should
   //!   return either of the strings @tt{"yes"@} or @tt{"no"@}.
   static string fetch_and_quote_value(string calendar_method,
-				      RXML.Type want_type)
+				      RXML.Type want_type,
+				      string|void parent_scope)
   {
     string result, format_string;
     if(sscanf(calendar_method, "TZ:%s", calendar_method))
@@ -334,6 +335,8 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       result = time[ calendar_method ]() ? "yes" : "no";
     else if(sscanf(calendar_method, "%s:%s", calendar_method, format_string))
       result = sprintf(format_string, time[ calendar_method ]());
+    else if(calendar_method == "number_of_days")
+      result = (string)time->month()->number_of_days();
     else
       result = (string)time[ calendar_method ]();
     if(want_type && want_type != RXML.t_text)
@@ -398,7 +401,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       return result;
     }
     if(what && stringp( what )) // it's a plain old Calendar method name
-      return fetch_and_quote_value([string]what, want_type);
+      return fetch_and_quote_value([string]what, want_type, scope);
     DEBUG("\b => same object\n",);
     return this_object();
   }
