@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.145 2003/08/26 16:17:00 grubba Exp $
+// $Id: module.pike,v 1.146 2003/10/06 16:11:43 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -432,32 +432,34 @@ multiset(string) query_all_properties(string path, RequestID id)
   multiset(string) res = (<
     "DAV:creationdate",		// RFC2518 13.1
     "DAV:displayname",		// RFC2518 13.2
-    "DAV:getcontentlanguage",	// RFC2518 13.3
+    //"DAV:getcontentlanguage",	// RFC2518 13.3
+    "DAV:getcontentlength",	// RFC2518 13.4
+    "DAV:getcontenttype",	// RFC2518 13.5
+    "DAV:getetag",		// RFC2518 13.6
     "DAV:getlastmodified",	// RFC2518 13.7
     "DAV:resourcetype",		// RFC2518 13.9
+    "DAV:supportedlock",	// RFC2518 13.11
 
     "DAV:iscollection",		// draft-ietf-dasl-protocol-00 5.18
 
     "DAV:ishidden",		// draft-hopmann-collection-props-00 1.6
 
-    "DAV:isreadonly",		// MS uses this.
-    "DAV:lastaccessed",		// MS uses this.
-    "DAV:href",			// MS uses this.
-    "DAV:contentclass",		// MS uses this.
-    "DAV:parentname",		// MS uses this.
-    "DAV:name",			// MS uses this.
+    //"DAV:isreadonly",		// MS uses this.
+    //"DAV:lastaccessed",	// MS uses this.
+    //"DAV:href",		// MS uses this.
+    //"DAV:contentclass",	// MS uses this.
+    //"DAV:parentname",		// MS uses this.
+    //"DAV:name",		// MS uses this.
   >);
   if (st->isreg) {
     res += (<
-      "DAV:getcontentlength",	// RFC2518 13.4
-      "DAV:getcontenttype",	// RFC2518 13.5
       "http://apache.org/dav/props/executable",
     >);
   } else if (st->isdir) {
     res += (<
-      "DAV:defaultdocument",	  // draft-hopmann-collection-props-00 1.3
-      "DAV:isstructureddocument", // draft-hopmann-collection-props-00 1.7
-      "DAV:isroot",		  // MS uses this.
+      //"DAV:defaultdocument",	  // draft-hopmann-collection-props-00 1.3
+      //"DAV:isstructureddocument", // draft-hopmann-collection-props-00 1.7
+      //"DAV:isroot",		  // MS uses this.
     >);
   }
   return res;
@@ -475,28 +477,39 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   Stat st = stat_file(path, id);
   if (!st) return Roxen.http_low_answer(404, "No such file or directory.");
   switch(prop_name) {
+  case "DAV:creationdate":	// RFC2518 13.1
+    int t = st->ctime;
+    if (t > st->atime) t = st->atime;
+    if (t > st->mtime) t = st->mtime;
+    return Roxen.iso8601_date_time(t);	// MS kludge.
   case "DAV:displayname":	// RFC2518 13.2
     return combine_path(query_location(), path);
+  case "DAV:getcontentlanguage":// RFC2518 13.3
+    return "en";			// MS kludge.
   case "DAV:getcontentlength":	// RFC2518 13.4
     if (st->isreg) {
       return (string)st->size;
     }
-    break;
+    return "0";
   case "DAV:getcontenttype":	// RFC2518 13.5
     if (st->isreg) {
       return id->conf->
 	type_from_filename(path, 0,
 			   lower_case(Roxen.extension(path, id)));
     }
-    break;
+    return "application/octet-stream";
+  case "DAV:getetag":		// RFC2518 13.6
+    return "FOOBAR";
   case "DAV:getlastmodified":	// RFC2518 13.7
-    return Roxen.iso8601_date_time(st->mtime);
+    return Roxen.http_date(st->mtime);
   case "DAV:resourcetype":	// RFC2518 13.9
     if (st->isdir) {
       return ({
 	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
       });
     }
+    return 0;
+  case "DAV:supportedlock":	// RFC2518 13.11
     return "";
   case "http://apache.org/dav/props/executable":
     // http://www.webdav.org/mod_dav/:
@@ -517,6 +530,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     }
     break;
 
+#if 0
     // The following are properties in the DAV namespace
     // that Microsoft has stolen.
   case "DAV:isreadonly":	// draft-ietf-dasl-protocol-00
@@ -524,6 +538,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
       return "1";
     }
     return "0";
+#endif
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":		// draft-hopmann-collection-props-00 1.5
     if (st->isdir) {
@@ -532,9 +547,32 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     return "0";
   case "DAV:ishidden":		// draft-hopmann-collection-props-00 1.6
     return "0";
-  case "DAV:isroot":		// ?
+#if 0
+  case "DAV:isroot":		// MS
     if (path == "/") return "1";
     return "0";
+  case "DAV:isstructureddocument"://MS
+    return "0";
+  case "DAV:lastaccessed":	// MS
+    return Roxen.iso8601_date_time(st->atime);
+  case "DAV:href":		// MS
+    return sprintf("%s://%s%s%s%s",
+		   id->port_obj->prot_name,
+		   id->misc->host || id->port_obj->ip ||
+		   gethostname(),
+		   (id->port_obj->port == id->port_obj->port)?
+		   "":(":"+(string)id->port_obj->port),
+		   id->port_obj->path||"",
+		   combine_path(query_location(), path));
+  case "DAV:name":		// MS
+    return combine_path(query_location(), path);
+  case "DAV:contentclass":	// MS
+    return "";
+  case "DAV:parentname":	// MS
+    return "";
+  case "DAV:defaultdocument":	// MS
+    return "";
+#endif /* 0 */
   default:
     break;
   }
