@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.15 1999/07/15 16:59:28 neotron Exp $
+ * $Id: config.h,v 1.16 1999/08/21 01:47:10 grubba Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -154,8 +154,10 @@
 /*
  * Should support for URL modules be included?
  * I am trying to phase them out, but..
+ *
+ * htaccess is an URL module!
  */
-// #define URL_MODULES
+#define URL_MODULES
 
 /* Basically, should it be o.k. to return "string" as a member of
  * the result mapping? This is only for compability.
