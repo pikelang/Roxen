@@ -760,6 +760,10 @@ array(string) container_cset(string tag, mapping m, string c, RequestID id) {
   return ({ "" });
 }
 
+array container_elif(string t, mapping m, string c, RequestID id) {
+  return ({ 1, "elseif", m, c });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -814,6 +818,7 @@ mapping query_container_callers() {
     "aconf":container_aconf,
     "apre":container_apre,
     "cset":container_cset,
+    "elif":container_elif,
     "preparse":container_preparse
   ]);
   return active;
