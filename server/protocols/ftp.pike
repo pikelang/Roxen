@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.49 2001/03/03 00:44:41 grubba Exp $
+ * $Id: ftp.pike,v 2.50 2001/03/05 14:14:10 stewa Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -163,7 +163,7 @@ class RequestID2
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
-		"send", "scan_for_query", "send_result", >)[var]) {
+		"send", "scan_for_query", "send_result", "misc" >)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
 #endif /* FTP2_DEBUG */
@@ -177,6 +177,7 @@ class RequestID2
 #endif /* FTP2_DEBUG */
 	}
       }
+      o["misc"] = m_rid["misc"] + ([ ]);
     } else {
       // Defaults...
       client = ({ "ftp" });
@@ -2014,6 +2015,11 @@ class FTPSession
     }
   }
 
+  static private void discard_data_connection() {
+    if(pasv_port && sizeof(pasv_accepted))
+      pasv_accepted = pasv_accepted[1..];
+  }
+
   static private void connect_and_send(mapping file, object session)
   {
     DWRITE(sprintf("FTP: connect_and_send(%O)\n", file));
@@ -2338,6 +2344,7 @@ class FTPSession
       options = Getopt.find_all_options(argv, ls_getopt_args, 1, 1);
     }) {
       send(550, (argv[0]+": "+err[0])/"\n");
+      discard_data_connection();
       return;
     }
 
@@ -2351,6 +2358,7 @@ class FTPSession
       argv = Getopt.get_args(argv, 1, 1);
     }) {
       send(550, (argv[0] + ": " + err[0])/"\n");
+      discard_data_connection();
       return;
     }
 
@@ -2449,8 +2457,9 @@ class FTPSession
 
     array f = indices(dir);
 
-    session->file->data = (Array.map(f, make_MLSD_fact, dir, session) * "\r\n")
-      + "\r\n";
+    session->file->data = sizeof(f) ?
+      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
+      "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
@@ -2763,7 +2772,10 @@ class FTPSession
 	}
       }
     }
-    string message = conf->try_get_file(cwd + ".message", session);
+    string message;
+    catch {
+      message = conf->try_get_file(cwd + ".message", session);
+    };
     if (message) {
       reply = (message/"\n")+({ "" })+reply;
     }
@@ -2899,6 +2911,7 @@ class FTPSession
 		(session->file->file->seek(restart_point) != -1))) {
 	    restart_point = 0;
 	    send(550, ({ "'RETR': Error restoring restart point." }));
+	    discard_data_connection();
 	    return;
 	  }
 	  restart_point = 0;
@@ -2907,6 +2920,8 @@ class FTPSession
 
       connect_and_send(session->file, session);
     }
+    else
+      discard_data_connection();
   }
 
   void ftp_STOR(string args)
@@ -3058,6 +3073,7 @@ class FTPSession
 	session->file->error = 405;
       }
       send_error("MLSD", args, session->file, session);
+      discard_data_connection();
     }
   }
 
