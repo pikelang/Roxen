@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.7 2001/08/13 18:17:16 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.8 2001/08/28 15:48:00 per Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -133,6 +133,10 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 
 void start()
 {
+#if constant(REPLICATE)
+  set_my_db( "replicate" );
+#endif
+
   table =
     get_my_table("",
 		 ({

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.25 2001/08/22 19:23:08 per Exp $
+// $Id: DBManager.pmod,v 1.26 2001/08/28 15:48:00 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -268,8 +268,16 @@ array(string) list( void|Configuration c )
                    " dbs.name=db_permissions.db"
                    " AND db_permissions.config=%s"
                    " AND db_permissions.permission!='none'",
-                   c->name)->name;
-  return query( "SELECT name from dbs" )->name;
+                   c->name)->name
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      -({"roxen","mysql"})
+#endif
+      ;
+  return query( "SELECT name from dbs" )->name
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      -({"roxen","mysql"})
+#endif
+    ;
 }
 
 mapping(string:mapping(string:int)) get_permission_map( )
@@ -436,8 +444,8 @@ void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
 {
-  if( (< "shared", "local" >)[ name ] )
-    error( "Cannot drop the 'shared' or 'local' database\n" );
+  if( (<  "local" >)[ name ] )
+    error( "Cannot drop the 'local' database\n" );
 
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
   if(!sizeof( q ) )
@@ -844,11 +852,10 @@ CREATE TABLE dbs (
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL )
  " );
-    create_db( "shared", 0, 1 );
-    is_module_db( 0, "shared",
-		  "The shared database contains data that "
-		  "should be shared between multiple-frontend servers" );
     create_db( "local",  0, 1 );
+    create_db( "roxen",  0, 1 );
+    create_db( "mysql",  0, 1 );
+
     is_module_db( 0, "local",
 		  "The local database contains data that "
 		  "should not be shared between multiple-frontend servers" );
@@ -870,7 +877,6 @@ CREATE TABLE db_permissions (
       lambda(){
 	foreach( roxenp()->configurations, object c )
 	{
-	  set_permission( "shared", c, WRITE );
 	  set_permission( "local", c, WRITE );
 	}
       }, 0 );

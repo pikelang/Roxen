@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.717 2001/08/27 13:49:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.718 2001/08/28 15:47:59 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3004,7 +3004,7 @@ class ImageCache
     name = id;
     draw_function = draw_func;
     init_db();
-    // Support that the 'shared' database moves.
+    // Support that the 'local' database moves.
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
 
     // Always remove entries that are older than one week.
@@ -3564,7 +3564,7 @@ void reload_all_configurations()
   int modified;
 
   setvars(retrieve("Variables", 0));
-
+  
   foreach(list_all_configurations(), string config)
   {
     mixed err;
@@ -3596,7 +3596,6 @@ void reload_all_configurations()
       }
       function sp = master()->resolv("DBManager.set_permission");
       catch(sp( "docs",   conf,  1 )); // the docs db can be non-existant
-      sp( "shared", conf,  2 );
       sp( "local",  conf,  2 );
     }
     if(err = catch
@@ -3993,6 +3992,13 @@ int main(int argc, array tmp)
     configuration_dir += "/";
 
   restore_global_variables(); // restore settings...
+
+  if( query("replicate" ) )
+  {
+    report_notice( "Enabling replication support\n"
+		   "Please note that this is very much work in progress\n");
+    add_constant( "REPLICATE", 1 );
+  }
 
   // Dangerous...
   mixed tmp_root;

@@ -55,7 +55,7 @@ string|mapping parse( RequestID id )
     object c = roxen.find_configuration( id->variables->name );
     if( !c ) c = roxen.enable_configuration( id->variables->name );
     catch(DBManager.set_permission( "docs", c,   DBManager.READ ));
-    DBManager.set_permission( "shared", c, DBManager.WRITE );
+    catch(DBManager.set_permission( "replicate", c, DBManager.WRITE ));
     DBManager.set_permission( "local", c,  DBManager.WRITE );
     c->error_log[0] = 1;
     id->misc->new_configuration = c;

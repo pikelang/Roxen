@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.35 2001/08/24 19:02:43 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.36 2001/08/28 15:47:59 per Exp $";
 
 class Variable
 {
@@ -809,12 +809,13 @@ class AuthModule
   //! database.
 }
 
-static mapping(string:int) user_sql_inited = ([]);
+static mapping(string:function(void:void)) user_sql_inited = ([]);
 static Sql.Sql user_mysql;
 static void init_user_sql(string table)
 {
+  string db = all_constants()->REPLICATE?"replicate":"local";
   if( !user_mysql )
-    user_mysql = master()->resolv("DBManager.get")( "shared" );
+    user_mysql = master()->resolv("DBManager.get")( db );
   if(catch(user_mysql->query( "SELECT module FROM "+
 			      table+" WHERE module=''")))
   {
@@ -825,13 +826,14 @@ static void init_user_sql(string table)
 		       "  value  blob, "
 		       "  raw    int not null, "
 		       " INDEX foo (module,name,user))" );
-    master()->resolv("DBManager.is_module_table")( 0, "shared", table,
-			       "Contains metadata about users. "
+    master()->resolv("DBManager.is_module_table")( 0, db, table,
+ 			       "Contains metadata about users. "
 			       "Userdatabases can store information here "
 			       "at the request of other modules, or they "
 			       "can keep their own state in this table" );
   }
-  user_sql_inited[ table ] = 1;
+  user_sql_inited[ table ]=
+    lambda(){user_mysql = master()->resolv("DBManager.get")( db );};
 }
 
 //! @appears Group
@@ -857,6 +859,10 @@ class Group( UserDB database )
   int gid();
   //! A numerical GID, or -1 if not applicable
 }
+
+#ifdef THREADS
+static Thread.Mutex mutex;
+#endif
 
 //! @appears User
 class User( UserDB database )
@@ -929,10 +935,15 @@ class User( UserDB database )
 
 #define INIT_SQL() do{ \
     if(!table) table = replace(database->my_configuration()->name," ","_")+"_user_variables"; \
-    if(!user_sql_inited[ table ] )init_user_sql( table ); \
+    if(!user_sql_inited[ table ] )init_user_sql( table );else user_sql_inited[ table ](); \
   } while( 0 )
-  
 
+
+#ifdef THREADS
+#define LOCK() mixed ___key = mutex->lock()
+#else
+#define LOCK()
+#endif
 
   static string module_name( RoxenModule module )
   {
@@ -959,6 +970,7 @@ class User( UserDB database )
   {
     delete_var( module, index );
     mixed oval = value;
+    LOCK();
     INIT_SQL();
     int encoded;
 
@@ -969,6 +981,7 @@ class User( UserDB database )
       value = encode_value( value );
       encoded = 1;
     }
+
     user_mysql->query(
       "INSERT INTO "+table+" (module,name,user,value,raw) "
       "VALUES ("+module_name( module )+", %s, %s, %s, %d)",
@@ -981,11 +994,11 @@ class User( UserDB database )
   //! Return the value of a variable previously set with @[set_var]
   {
     array rows;
+    LOCK();
     INIT_SQL();
-
     rows = user_mysql->query( "SELECT * FROM "+table+
-			      " WHERE (module="+module_name( module )
-			      +" AND name=%s AND user=%s)",
+			      " WHERE module="+module_name( module )
+			      +" AND name=%s AND user=%s",
 			      index, name() );
     if( !sizeof( rows ) )
       return 0;
@@ -999,12 +1012,14 @@ class User( UserDB database )
   void delete_var( RoxenModule module, string index )
   //! Delete a variable previously created with @[set_var]
   {
+    LOCK();
     INIT_SQL();
     user_mysql->query( "DELETE FROM "+table+" WHERE (module="+
 		       module_name( module )+
 		       " AND name=%s AND user=%s)", index, name() );
   }
 #undef INIT_SQL
+#undef LOCK
 }
 
 class UserDB

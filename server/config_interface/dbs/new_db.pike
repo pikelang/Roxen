@@ -105,7 +105,7 @@ ERROR
 	   "</font>";
          break;
        case "mysql": case "roxen":
-       case "local": case "shared":
+       case "local":
          error = sprintf("<font color='&usr.warncolor;'>"+
                          _(409,"%s is an internal database, used by roxen."
 			   "Please select another name")+

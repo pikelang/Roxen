@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.160 2001/08/28 14:55:08 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.161 2001/08/28 15:48:00 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -407,9 +407,13 @@ string diff_url( RequestID id, object mod, Variable.Variable var )
 {
   RoxenModule cfs = id->conf->find_module( "config_filesystem#0" );
 
-  string base =
-    combine_path((id->port_obj->path||"/"),cfs->query_location()[1..])+
-    "diff.pike";
+  // There is one occasion when there is no id->port_obj: When the
+  // port for the configuration interface is changed.
+  string base =(id->port_obj ? 
+		combine_path((id->port_obj->path||"/"),
+			     cfs->query_location()[1..])+
+		"diff.pike":
+		cfs->query_location()+"diff.pike");
   return base+"?variable="+Roxen.http_encode_string(var->path());
 }
 

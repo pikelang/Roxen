@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.44 2001/08/23 21:02:01 per Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.45 2001/08/28 15:48:01 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -48,17 +48,6 @@ void create(Configuration c) {
 	 "8 seconds. This saves resourses on servers with many sites.",
 	 0, lambda(){ return query("backend")!="File database"; } );
 
-  //------ SQL database settings
-  defvar("sqldb",
-	 Variable.DatabaseChoice( "shared", 0, "SQL Database", 
-				  "What database to use for the "
-				  "database backend." ) )
-    ->set_invisibility_check_callback(
-      lambda(Variable.Variable v, RequestID id) {
-	return query("backend")!="SQL database";
-      } );
-  getvar("sqldb")
-    ->set_configuration_pointer( my_configuration );
 }
 
 TAGDOCUMENTATION
@@ -412,7 +401,9 @@ class SQLCounter {
   
   void create()
   {
-    set_my_db( module::query( "sqldb" ) );
+#if constant(REPLICATE)
+    set_my_db( "replicate" );
+#endif
     
     if( create_sql_tables( defs,
 			   "Hits per file database for the accessed tag "

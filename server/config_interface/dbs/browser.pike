@@ -679,7 +679,6 @@ mapping|string parse( RequestID id )
   switch( id->variables->db )
   {
     case "local":
-    case "shared":
       foreach( ({ "move","backup" }), string x )
 	ADD_ACTION( x );
       break;

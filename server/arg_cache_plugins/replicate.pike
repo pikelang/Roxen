@@ -1,4 +1,4 @@
-#ifdef REPLICATE
+#if constant(REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)
 

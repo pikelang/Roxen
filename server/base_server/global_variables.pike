@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.81 2001/08/24 15:45:16 mast Exp $
+// $Id: global_variables.pike,v 1.82 2001/08/28 15:47:58 per Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -492,7 +492,7 @@ although the start script fixes this for the standard file locations."));
 #endif // THREADS
 
 #ifndef __NT__
-  defvar("abs_engage", 0, LOCALE(154, "ABS: Enable Anti-Block-System"), 
+  defvar("abs_engage", 0, LOCALE(154, "Auto Restart: Enable Anti-Block-System"), 
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(155, "If set, the anti-block-system will be enabled. "
 		"This will restart the server after a configurable number of minutes if it "
@@ -503,7 +503,7 @@ although the start script fixes this for the standard file locations."));
 
 
 
-  defvar("abs_timeout", 5, LOCALE(156, "ABS: Timeout"),
+  defvar("abs_timeout", 5, LOCALE(156, "Auto Restart: ABS Timeout"),
 	 TYPE_INT_LIST|VAR_MORE,
 	 LOCALE(157, "If the server is unable to accept connection for this many "
 		"minutes, it will be restarted. You need to find a balance: "
@@ -579,6 +579,16 @@ although the start script fixes this for the standard file locations."));
 	 ->set_range(1, 60*60*24);
 	 // Note that the upper limit is arbitrary.
 
+  defvar("replicate", 0,
+	 LOCALE(0, "Enable replication system" ),
+	 TYPE_FLAG,
+	 LOCALE(0,"If enabled, Roxen will enable various replication systems "
+		"needed to set up multiple frontend systems. You will need "
+		"a database named 'replicate' that recides in a shared mysql "
+		"server for this to work. Also, all servers has to have this "
+		"flag set. Roxen must be restarted before changes to this "
+		"variable takes effect " ) );
+  
   defvar("config_file_comments", 0,
 	 LOCALE(172, "Commented config files"),
 	 TYPE_FLAG,

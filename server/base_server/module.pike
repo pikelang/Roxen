@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.128 2001/08/23 23:34:41 mast Exp $
+// $Id: module.pike,v 1.129 2001/08/28 15:47:59 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -565,7 +565,7 @@ static string|int get_my_table( string|array(string) name,
   return __my_tables[ "&"+oname+";" ] = res;
 }
 
-static string my_db = "shared";
+static string my_db = "local";
 
 static void set_my_db( string to )
 //! Select the database in which tables will be created with

@@ -34,23 +34,18 @@ void run_tests( Configuration c )
 
   test_true( DBManager.set_permission, "local", c1, DBManager.WRITE );
   test_true( DBManager.set_permission, "local", c2, DBManager.WRITE );
-  test_true( DBManager.set_permission, "shared", c1, DBManager.WRITE );
-  test_true( DBManager.set_permission, "shared", c2, DBManager.WRITE );
 
   test_equal( DBManager.list(c2), DBManager.list, c1 );
   test_equal( DBManager.list(), DBManager.list, c2 );
   
 
   test_true( DBManager.get_permission_map );
-  test_true( DBManager.db_stats, "shared" );
   test_true( DBManager.db_stats, "local" );
   
 
   // NOTE: This assumes a clear setup when running the tests.
   test_true(  DBManager.is_internal, "local" );
-  test_true(  DBManager.is_internal, "shared" );
   test_false( DBManager.db_url, "local" );
-  test_false( DBManager.db_url, "shared" );
   
 
   Sql.Sql sql_rw = test_true( DBManager.get, "local" );
