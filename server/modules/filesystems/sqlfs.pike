@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.4 2002/06/14 11:10:18 nilsson Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.5 2002/08/05 13:33:11 nilsson Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -96,8 +96,8 @@ static array low_stat_file( string f, RequestID id )
       last_file = r[0];
       if( charset != "iso-8859-1" )
       {
-        if( id->misc->set_output_charset )
-          id->misc->set_output_charset( charset, 2 );
+	if( id->set_output_charset )
+	  id->set_output_charset( charset, 2 );
         id->misc->input_charset = charset;
       }
     }
