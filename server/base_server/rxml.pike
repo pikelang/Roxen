@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.72 2000/01/21 20:52:56 nilsson Exp $
+ * $Id: rxml.pike,v 1.73 2000/01/21 21:14:34 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -539,7 +539,8 @@ string tag_help(string t, mapping args, RequestID id)
 	tag_links=({});
       }
       if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":")
-	tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
+	tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
+				id->not_query, http_encode_url(tag), tag) });
     }
 
     return ret + "<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
