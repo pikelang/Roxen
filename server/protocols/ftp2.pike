@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.66 1998/10/06 21:33:02 grubba Exp $
+ * $Id: ftp2.pike,v 1.67 1998/10/06 22:17:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2211,6 +2211,10 @@ class FTPSession
     curr_pipe = 0;
     restart_point = 0;
     logged_in = 0;
+    if (pasv_port) {
+      destruct(pasv_port);
+      pasv_port = 0;
+    }
     if (args != 1) {
       // Not called by QUIT.
       send(220, ({ "Server ready for new user." }));
@@ -3071,6 +3075,9 @@ class FTPSession
 	  if (objectp(master_session->file->pipe)) {
 	    destruct(master_session->file->pipe);
 	  }
+	}
+	if (objectp(pasv_port)) {
+	  destruct(pasv_port);
 	}
 	master_session->method = "QUIT";
 	master_session->not_query = user || "Anonymous";
