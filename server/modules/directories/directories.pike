@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.6 1996/12/02 04:32:37 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.7 1997/01/26 23:56:23 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -56,12 +56,16 @@ program dirnode_program = class {
 		      + blink(s, name), name);
   }
 
+  mixed dcallout;
   string describe(int i, string|void foo)
   {
     string res="";
     object node,prevnode;
     mixed tmp;
     string root;
+
+    if(dcallout) remove_call_out(dcallout);
+    dcallout = call_out(dest, 60);
 
     if(i)
       root = path(1);
@@ -141,10 +145,10 @@ void create()
 	 "directory listings. This requires a user database module.");
 #endif
 
-  defvar("override", 1, "Allow directory index file overrides", TYPE_FLAG,
+  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by prepending '.' to the directory name, like this: "
-	 "<a href=http://roxen.com/.>http://roxen.com/.</a>"
+	 "in a directory by prepending '.' or '/' to the directory name, like this: "
+	 "<a href=http://roxen.com//>http://roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
   

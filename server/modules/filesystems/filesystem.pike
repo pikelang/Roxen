@@ -3,7 +3,7 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.6 1996/12/02 04:32:39 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.7 1997/01/26 23:56:47 per Exp $";
 #include <module.h>
 
 #if DEBUG_LEVEL > 20
@@ -77,6 +77,7 @@ void create()
 	 "GET and POST. If unset, this filesystem will be a _very_ "
 	 "public one (anyone can edit files located on it)");
 }
+
 
 mixed *register_module()
 {
