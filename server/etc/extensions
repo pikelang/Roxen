@@ -1,12 +1,14 @@
-# $Id: extensions,v 1.42 2000/02/16 17:54:09 peter Exp $
-# name="Extension database";
-# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+# $Id: extensions,v 1.43 2000/11/22 22:33:19 nilsson Exp $
 #
-# Lines are commented with ## to resolve name conflicts (same extension mapping to several
-# MIME-types). Up to date with IANA MIME-type listing 03-SEP-1999. Chemical/* is not included
-# since they collide with quite a few other mime types. They can be found in the file
+# ---- Extension database ----
+# The database used by the content typ module to map from extension to mime-type
+# (example: *.gif to image/gif). Lines are commented with ## to resolve name
+# conflicts (same extension mapping to several MIME-types). Up to date with IANA
+# MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
+# quite a few other mime types. They can be found in the file
 # more_extensions/chemical.
-
+#
+# Last synchronized with IANA media types list: 2000-09-20
 
 # -------------------- Audio ---------------------
 
@@ -25,10 +27,16 @@ snd	audio/basic
 # audio/vnd.cns.anp1
 # audio/vnd.cns.inf1
 # audio/L16
+# audio/vnd.everad.plj
+# audio/telephone-event
+# audio/tone
+sid	audio/prs.sid
+# vnd.nuera.ecelp4800
+# vnd.nuera.ecelp7470
 
 # Other
 
-abs	audio/x-mpeg
+abs	audio/mpeg
 aif	audio/x-aiff
 aifc	audio/x-aiff
 aiff	audio/x-aiff
@@ -42,11 +50,11 @@ m3u	audio/x-mpegurl
 mid	audio/midi
 midi	audio/midi
 mod	audio/x-mod
-mp2	audio/x-mpeg
-mp3	audio/x-mpeg
+mp2	audio/mpeg
+mp3	audio/mpeg
 mp3url	audio/x-mpegurl
-##mpa	audio/x-mpeg
-mpega	audio/x-mpeg
+##mpa	audio/mpeg
+mpega	audio/mpeg
 pls	audio/x-mpegurl
 psid	audio/x-psid
 ra	audio/x-pn-realaudio
@@ -97,6 +105,9 @@ wbmp    image/vnd.wap.wbmp
 # image/prs.pti
 # image/vnd.cns.inf2
 # image/vnd.mix
+# image/vnd.fujixerox.edmics-rlc
+# image/vnd.fujixerox.edmics-mmr
+# image/vnd.fst
 
 # Pending registration
 
@@ -169,6 +180,8 @@ viv     video/vnd.vivo
 vivo    video/vnd.vivo
 # video/vnd.motorola.video
 # video/vnd.motorola.videop
+# video/vnd.fvt
+# video/pointer
 
 # Other
 
@@ -236,6 +249,13 @@ wml	text/vnd.wap.wml
 wmls	text/vnd.wap.wmlscript
 # text/vnd.motorola.reflex
 # text/vnd.fly
+# text/wap.sl
+# text/wap.si
+# text/t140
+# text/vnd.ms-mediapackage
+# text/vnd.IPTC.NewsML
+# text/vnd.IPTC.NITF
+# text/vnd.curl
 
 # Other
 
@@ -250,8 +270,8 @@ pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
 ##src	text/speech
 ##talk	text/speech
-vcf	text/x-vcard
-vcs	text/x-vcal
+vcf	text/x-vCard
+vcs	text/x-vCalendar
 
 
 # -------------------- Application ---------------------
@@ -505,6 +525,35 @@ wbxml	application/vnd.wap.wbxml
 # application/vnd.dpgraph
 # application/http
 sdp	application/sdp
+# vnd.eudora.data
+# vnd.fujixerox.docuworks.binder
+# vnd.vectorworks
+# vnd.grafeq
+# vnd.bmi
+# vnd.ericsson.quickcall
+# vnd.hzn-3d-crossword
+# vnd.wap.slc
+# vnd.wap.sic
+# vnd.groove-injector
+# vnd.fujixerox.ddd
+# vnd.groove-account
+# vnd.groove-identity-message
+# vnd.groove-tool-message
+# vnd.groove-tool-template
+# vnd.groove-vcard
+# vnd.ctc-posml
+# vnd.canon-lips
+# vnd.canon-cpdl
+# vnd.trueapp
+# vnd.s3sms
+# iotp
+# vnd.mcd
+# vnd.httphone
+# vnd.informix-visionary
+# vnd.msign
+# vnd.ms-lrm
+# vnd.contact.cmsg
+# vnd.epson.esf
 
 # Other
 
@@ -520,6 +569,8 @@ asp	application/x-asap
 asz	application/astound
 axs	application/olescript
 bcpio	application/x-bcpio
+bld	application/bld
+bld2	application/bld2
 cairn	application/x-cairn
 ca_cert application/x-x509-ca-cert
 cert	application/x-x509-ca-cert
@@ -630,6 +681,7 @@ sc2	application/vnd.ms-schedule
 scd	application/vnd.ms-schedule
 sch	application/vnd.ms-schedule
 #scm	application/x-icq
+sdf	application/e-score
 sh	application/x-sh
 shar	application/x-shar
 shw	application/presentations
@@ -681,10 +733,11 @@ wri	application/x-write
 xcf	application/x-gimp
 zpa	application/pcphoto
 
-#Dreamcast specific
+# Dreamcast specific
 lcd application/x-dreamcast-lcdimg
 vmi application/x-dreamcast-vms-info
 vms application/x-dreamcast-vms
+
 
 # -------------------- Model ---------------------
 
@@ -698,6 +751,10 @@ wrml    model/vrml
 # model/vnd.dwf
 # model/vnd.gtw
 # model/vnd.flatland.3dml
+# model/vnd.vtu
+# model/vnd.mts
+# model/vnd.gdl
+# model/vnd.gs-gdl
 
 
 # ------------------ Multipart -------------------
@@ -755,6 +812,7 @@ ice     x-conference/x-cooltalk
 Z	STRIP			x-compress
 gz	STRIP			x-gzip
 bz	STRIP			x-bzip
+bz2	STRIP			x-bzip2
 
 uu	STRIP			uuencode
 b64	STRIP			base64
