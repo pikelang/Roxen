@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.18 2001/10/01 14:14:08 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.19 2001/10/05 15:20:52 jhs Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -35,7 +35,7 @@ constant module_doc  = "This module gives the tag <tt>&lt;ldap&gt;</tt> and "
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
- "ldap":#"<desc tag='tag'><p><short>
+ "ldap":#"<desc type='tag'><p><short>
  Executes a LDAP operation, but doesn't do anything with the
  result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
  operation that change the contents of the directory, for example
@@ -59,11 +59,11 @@ constant tagdoc=([
 <attr name='op' value='add,delete,modify,replace' required='required'><p>
  The actual LDAP operation.</p>
 
- <p>Note that <att>op='modify'</att> will change only the attributes
- given by the <att>attr</att> attribute.</p>
+ <p>Note that <i>op='modify'</i> will change only the attributes
+ given by the <i>attr</i> attribute.</p>
 </attr>
 
-<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'>
+<attr name='attr' value='attribute_name1:[(attribute_value1[,... ])][,attribute_name2,...]'>
  <p>The actual values of attributes, for example:</p>
  <ex-box>(sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')</ex-box>
 </attr>
@@ -87,9 +87,7 @@ constant tagdoc=([
 <attr name='password' value='user password'><p>
  User password for connection to the directory server. If omitted the
  default will be used.</p>
-</attr>
-
-"
+</attr>"
 ]);
 #endif
 
