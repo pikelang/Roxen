@@ -1,5 +1,6 @@
-constant doc = "points='x0,y0, x1,y1, ...' color='color'. Draws in the mask channel as well if the current channel is the image channel.";
+// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
 
+constant doc = "points='x0,y0, x1,y1, ...' color='color'. Draws in the mask channel as well if the current channel is the image channel.";
 
 void render(mapping args, mapping this, string channel, object id, object m)
 {
@@ -18,7 +19,7 @@ void render(mapping args, mapping this, string channel, object id, object m)
       if(points[q+1] > y)
         y = points[q];
     }
-    i = Image.image( x,y ); 
+    i = Image.image( x,y );
   }
   i->setcolor(@c);
   i->polyfill( points );

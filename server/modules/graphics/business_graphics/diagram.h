@@ -1,8 +1,10 @@
+// This file is part of business graphics. Copyright © 1998 - 2000, Roxen IS.
+
 /*
  * name = "BG: diagram.h";
  * doc = "Business Graphics common things. You must upgrade this component to use newer versions of BG.";
  *
- * string cvs_version="$Id: diagram.h,v 1.7 1998/11/05 15:53:40 grubba Exp $";
+ * string cvs_version="$Id: diagram.h,v 1.8 2000/03/02 04:18:38 nilsson Exp $";
  */
 
 
@@ -21,5 +23,5 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e30;
 
 #define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
-					    
+
 //#define BG_DEBUG 1

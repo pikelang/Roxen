@@ -1,3 +1,5 @@
+// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+
 constant doc="Mirror the image along the X axis";
 
 void render(mapping args, mapping this, string channel, object id, object m)

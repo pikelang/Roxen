@@ -1,11 +1,11 @@
-/* The Atlas module.
+/* The Atlas module. Copyright © 1999 - 2000, Roxen IS.
  *
  * Please note: The map is incomplete and incorrect in details.  Countries
  * and territories are missing.
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.3 2000/02/10 05:29:54 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.4 2000/03/02 04:18:38 nilsson Exp $";
 
 #include <module.h>
 
@@ -33,18 +33,18 @@ static private string cache_set(mixed value)
 {
   string x = encode_value(value);
   string key = cache_reverse[x];
-  
+
   if(!key)
   {
     /* Heavy key.  We do not want anyone
        to guess someone else's map number. */
     key = sprintf("%08x%08x%08x.gif",
 		  RANDOM(), cache_base + sizeof(cache), time(1));
-  
+
     cache[key] = value;
     cache_reverse[x] = key;
   }
-  
+
   return key;
 }
 
@@ -92,9 +92,9 @@ string cont_atlas_country(string t, mapping arg, mapping state)
     name = .Map.domain_to_country[lower_case(arg->domain)];
   else if(arg->name)
     name = .Map.aliases[lower_case(arg->name)] || arg->name;
-  
+
   state->color[lower_case(name || "")] = parse_color(arg->color || "#e0c080");
-  
+
   return "";
 }
 
@@ -138,19 +138,19 @@ mapping find_internal(string filename, RequestID id)
   if(!r)
   {
     mapping state = cache_get(filename);
-    
+
     if(!state)
       return 0;
-    
+
     mapping arg = state->arg;
-    
+
     mapping opt = ([]);
     if(arg->bgcolor)
       opt->color_sea = parse_color(arg->bgcolor);
     state->fgcolor = parse_color(arg->fgcolor || "#ffffff");
-    
+
     .Map.Earth m = .Map.Earth(([ "region":arg->region ]));
-    
+
     Image img = m->image(state->width, state->height,
 			 ([ "color_fu":
 			    lambda(string name, mapping state)
@@ -158,14 +158,14 @@ mapping find_internal(string filename, RequestID id)
 			      return state->color[name] || state->fgcolor;
 			    },
 			    "fu_args":({ state }) ]) + opt);
-    
+
     /* Kludge because the image package does not handle polygons
        correctly (notice the funny pixels at the top of the map). */
     img->line(0, 0, img->xsize(), 0, 0,0,0);
-    
+
     r = Image.GIF.encode(img);
     cache_set_meta(filename, r);
   }
-  
+
   return http_string_answer(r, "image/gif");
 }

@@ -1,4 +1,6 @@
-constant doc = 
+// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+
+constant doc =
 "If there already is an image in the channel, add a 'width' x 'height' "
 "pixels big solid box with the color 'color' at 'xpos', 'ypos', otherwise"
 " create the channel as a 'width' x 'height' solid  'color' colored box";
@@ -17,7 +19,7 @@ void render( mapping args, mapping this, string channel, object id, object m )
   {
     if(!args["nomask"] && channel == "image")
     {
-      if(!a)      
+      if(!a)
         a = Image.image( xs+xp,ys+yp, 0,0,0 );
       a->box( xp,yp,xp+xs-1,yp+ys-1, 255,255,255, (int)(255-((int)(args->alpha)*2.55)) );
       m->set_channel( this, "alpha", a );

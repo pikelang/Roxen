@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.208 2000/03/01 11:39:04 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.209 2000/03/02 04:18:37 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -258,7 +258,7 @@ constant gtextargs=#"
 </attr>
 
 <attr name=scale value=number>
- Sets the scale of the image. Larger than 1.0 is enlargement. 
+ Sets the scale of the image. Larger than 1.0 is enlargement.
  <ex type=vert>
   <gtext scale=1.0>&lt;gtext scale=1.0&gt;</gtext>
   <gtext scale=0.5>&lt;gtext scale=0.5&gt;</gtext>

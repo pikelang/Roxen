@@ -1,3 +1,5 @@
+// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+
 constant doc = "paste the 'image' slot over the current channel at xpos, ypos, using 'alpha' (defaults to solid) as a transparency mask";
 
 void render(mapping args, mapping this, string channel, object id, object m)

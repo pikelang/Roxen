@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999, Idonex AB.
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
 
 #include <module.h>
@@ -7,7 +7,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.12 2000/02/10 05:29:53 nilsson Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.13 2000/03/02 04:18:37 nilsson Exp $";
 constant tagdesc="Provides the tag 'cimg' that can be used to convert images "
   "between different image formats.";
 

@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+
 #include <module.h>
 inherit "roxenlib";
 inherit "module";
@@ -53,7 +55,7 @@ Image.Image get_channel( Image.Layer from, string channel )
 Image.Layer add_channel( Image.Layer to, string channel, object img, int xp, int yp )
 {
   Image.image i = get_channel( to, channel );
-  if(!i) 
+  if(!i)
   {
     if(!xp && !yp)
       i = img;
@@ -63,7 +65,7 @@ Image.Layer add_channel( Image.Layer to, string channel, object img, int xp, int
       i->paste( img, xp, yp );
     }
   }
-  else 
+  else
   {
     i = assert_size( i, img->xsize()+xp, img->ysize()+yp );
     i->paste( img, xp, yp );
@@ -91,7 +93,7 @@ Image.Layer set_channel( Image.Layer in, string channel, Image.Image from )
       y = q->alpha->ysize();
   }
 
-  if( q->image ) 
+  if( q->image )
     q->image = assert_size( q->image, x, y );
   if( q->alpha )
     q->alpha = assert_size( q->alpha, x, y );
@@ -101,7 +103,7 @@ Image.Layer set_channel( Image.Layer in, string channel, Image.Image from )
   return in;
 }
 
-mixed internal_tag_image(string t, mapping m, int line, 
+mixed internal_tag_image(string t, mapping m, int line,
 			 object id, Image.Layer this)
 {
   string c = m->channel||"image";
@@ -113,7 +115,7 @@ string internal_parse_layer(string t, mapping m, string c, int line,
 			    object id, mapping res)
 {
   Image.Layer l = Image.Layer();
-  
+
   if( m->tiled ) l->set_tiled( 1 );
   if( m->mode ) l->set_mode( m->mode );
   l->set_offset( (int)m->xpos, (int)m->ypos );
@@ -143,7 +145,7 @@ mapping low_render_image(string how, object id)
 
   l = Image.lay( res->layers );
 
-  res = ([ 
+  res = ([
     "xsize":l->xsize(),
     "ysize":l->ysize(),
     "image":l->image(),
@@ -171,11 +173,11 @@ mapping cached_image(string hmm, object id)
   mapping rv;
   if(rv = cache_lookup("rimage:"+id->conf->name, (string)hmm))
      return rv;
-  
+
   if(file_stat(query("cache-dir")+hmm))
   {
     catch {
-      return cache_set("rimage:"+id->conf->name, (string)hmm, 
+      return cache_set("rimage:"+id->conf->name, (string)hmm,
 		       decode_value(Stdio.read_bytes(query("cache-dir")+hmm)));
     };
     rm(query("cache-dir")+hmm);
@@ -198,9 +200,9 @@ mapping find_internal(string f, object id)
 
   if(res = cached_image( f, id ))
     return res;
-  
+
   mixed e;
-  e = catch 
+  e = catch
   {
     mapping r = render_image( roxen.argcache.lookup( f )[0], id );
     if(id->misc->cacheable == 4711)

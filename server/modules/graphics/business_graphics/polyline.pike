@@ -1,8 +1,11 @@
 #!NOMODULE
+
+// This file is part of business graphics. Copyright © 1998 - 2000, Roxen IS.
+
 /*
  * name = "BG: Create pies";
  * doc = "Business Graphics sub-module providing draw functions.";
- * $Id: polyline.pike,v 1.5 1998/06/24 16:29:45 grubba Exp $
+ * $Id: polyline.pike,v 1.6 2000/03/02 04:18:38 nilsson Exp $
  */
 
 #define CAP_BUTT       0
@@ -135,7 +138,7 @@ array(array(float)) make_polygon_from_line(float h, array(float) coords,
 	s2y = sy;
       }
 
-      float mdiv = (sx*s2y-sy*s2x); 
+      float mdiv = (sx*s2y-sy*s2x);
       if(mdiv == 0.0) {
 	left += ({ tx+sx, ty+sy, tx+s2x, ty+s2y });
 	right += ({ tx-sx, ty-sy, tx-s2x, ty-s2y });

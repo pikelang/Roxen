@@ -1,4 +1,6 @@
-string cvs_version="$Id: pimage.pike,v 1.20 2000/02/12 15:53:29 nilsson Exp $";
+// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+
+string cvs_version="$Id: pimage.pike,v 1.21 2000/03/02 04:18:38 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -55,7 +57,7 @@ class Constructors
       }
     }
 
-  
+
     void create(object id, object image)
     {
       my_fd = id->my_fd;
@@ -70,7 +72,7 @@ class Constructors
   inherit "roxenlib";
 
   object id;
-  
+
   class myimage
   {
     inherit "http";
@@ -112,7 +114,7 @@ class Constructors
       if(m_gif_begin) return m_gif_begin;
       return m_gif_begin=draw(1)->gif_begin();
     }
-    
+
     string first_frame()
     {
       mixed ff = draw(2);
@@ -158,7 +160,7 @@ class Constructors
 	img=m_img;
       }
     }
-    
+
     mixed `->(string q)
     {
       function f;
@@ -166,7 +168,7 @@ class Constructors
       if(image && (f = image[q])) return FunctionCall(f, this_object());
       return predef::`[](this_object(),q);
     }
-    
+
     void create(array (int) b, object i, float|void delay,
 		function|void anim,mixed|void st)
     {
@@ -191,7 +193,7 @@ class Constructors
   {
     function get_progress;
     int old_progress = -1;
-    
+
     object draw_progress(object image, mixed state)
     {
       int percent = get_progress(state);
@@ -202,7 +204,7 @@ class Constructors
 	object text = (get_font("lucida",32,0,0,0,0.0,0.0)->
 		       write(percent==100?"Done":percent+"%")
 		       ->scale(0.5));
-      
+
 	image=image->paste_alpha_color(text,0,0,0,
 				       (image->xsize()/2-text->xsize()/2),
 				       (image->ysize()/2-text->ysize()/2));
@@ -253,7 +255,7 @@ class Constructors
       on->paste_alpha_color(item,@foreground,xs-item->xsize()/2-1,ys-item->ysize()/2+1);
     }
 
-    
+
     object draw()
     {
       mapping lt = localtime(time()+time_offset );
@@ -301,7 +303,7 @@ class Constructors
   {
     return myimage(bg(),0, delay+0.01, cb, state);
   }
-  
+
   object Progress( function cb, mixed|void state )
   {
     return myimage(bg(),0, 0.3, ProgressIMG(cb)->draw_progress, state);
@@ -344,12 +346,12 @@ class Constructors
   {
     return load( "roxen-images/urtavla.png" );
   }
-  
+
   object PImage(int xs, int ys, mixed bgc)
   {
     return myimage(bg(),Image.Image(xs,ys,@to_color(bgc)));
   }
-  
+
 }
 
 mapping compiled = ([]);
@@ -417,10 +419,10 @@ constant DANGEROUS_TO   = ({  "", "" });
 string tag_glock(string t, mapping m, object rid)
 {
   string face;
-  if(m->help) 
+  if(m->help)
     return ("<b>&lt;gclock [dial=<i>ppm-file</i>]&gt;</b> Draws a graphical clock");
   if(m->dial){ m->face = m->dial; m_delete(m, face); }
-  if(!m->face) 
+  if(!m->face)
     face = "Dial()";
   else
   {
@@ -434,7 +436,7 @@ string tag_glock(string t, mapping m, object rid)
   }
   m_delete(m, "face");
 
-  return tag_pimage("pimage", m, 
+  return tag_pimage("pimage", m,
 		    sprintf("object draw() {\n"
 			    "  return Clock(30,%d,%s,\"%s\",%d);\n"
 			    "}\n",(int)m->offset,face,

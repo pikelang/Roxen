@@ -1,7 +1,7 @@
-/* This is a roxen module. (c) Idonex AB 1997, 1998.
- * 
+/* This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+ *
  * Draws diagrams pleasing to the eye.
- * 
+ *
  * Made by Peter Bortas <peter@idonex.se> and Henrik Wallin <hedda@idonex.se>
  * in October 1997
  */
@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.122 2000/02/20 16:18:27 noring Exp $";
+constant cvs_version = "$Id: business.pike,v 1.123 2000/03/02 04:18:38 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business Graphics";
@@ -113,7 +113,7 @@ constant tagdoc=([]);
        "  <b>xnames</b>         If given, the first line or column is used as\n"
        "                 xnames. If set to a number N, N lines or columns\n"
        "                 are used.\n"
-       "  <b>xnamesvert</b>     If given, the xnames are written vertically.\n" 
+       "  <b>xnamesvert</b>     If given, the xnames are written vertically.\n"
        "  <b>noparse</b>        Do not run the content of the tag through\n"
        "                 the RXML parser before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
@@ -164,7 +164,7 @@ void start(int num, object configuration)
     roxen->dump( (combine_path( __FILE__, "../" ) + "create_graph.pike")
                  -(getcwd()+"/"));
   }
-  image_cache = roxen.ImageCache( "diagram", draw_callback );  
+  image_cache = roxen.ImageCache( "diagram", draw_callback );
 }
 
 void stop()
@@ -200,11 +200,11 @@ string itag_xaxis(string tag, mapping m, mapping res)
 
   res->xaxisfont = m->font || m->nfont || res->xaxisfont;
 
-  if(m->name) res->xname = m->name[..l];  
-  if(m->start) 
+  if(m->name) res->xname = m->name[..l];
+  if(m->start)
     if (lower_case(m->start[0..2])=="min")
       res->xmin=1;
-    else 
+    else
       res->xstart = (float)m->start;
   if(m->stop) res->xstop = (float)m->stop;
   if(m->quantity) res->xstor = m->quantity[..l];
@@ -226,10 +226,10 @@ string itag_yaxis(string tag, mapping m, mapping res)
   res->yaxisfont = m->font || m->nfont || res->yaxisfont;
 
   if(m->name) res->yname = m->name[..l];
-  if(m->start) 
+  if(m->start)
     if (lower_case(m->start[0..2])=="min")
       res->ymin=1;
-    else 
+    else
       res->ystart = (float)m->start;
   if(m->stop) res->ystop = (float)m->stop;
   if(m->quantity) res->ystor = m->quantity[..l];
@@ -267,22 +267,22 @@ string itag_names(string tag, mapping m, string contents,
       res->xnamesfont = m->font || m->nfont || res->xnamesfont;
 
       foo=res->xnames = contents/sep;
-      if(m->orient) 
+      if(m->orient)
 	if (m->orient[0..3] == "vert")
 	  res->orientation = "vert";
-	else 
+	else
 	  res->orientation="hor";
     }
     else
     {
       foo=res->ynames = contents/sep;
-      
+
       res->ynamesfont = m->font || m->nfont || res->ynamesfont;
     }
   }
   else
      return "";
-  
+
   for(int i=0; i<sizeof(foo); i++)
     if (voidsep==foo[i])
       foo[i]=" ";
@@ -318,7 +318,7 @@ string itag_values(string tag, mapping m, string contents,
     contents = parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
-  
+
   if( contents-" " != "" )
   {
     if(tag=="xvalues")
@@ -352,7 +352,7 @@ string itag_data(mapping tag, mapping m, string contents,
 
   if (linesep=="")
     linesep="\n";
-  
+
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
@@ -373,7 +373,7 @@ string itag_data(mapping tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->data_foo = gauge {
 #endif
- 
+
   bar=allocate(sizeof(lines));
   int gaba=sizeof(lines);
 
@@ -409,7 +409,7 @@ string itag_data(mapping tag, mapping m, string contents,
 	for(int i=0; i<maxsize; i++)
 	  bar2[i]=column(bar, i);
 	res->data=bar2;
-      } 
+      }
     else
       res->data=bar;
   else
@@ -423,7 +423,7 @@ string itag_data(mapping tag, mapping m, string contents,
       m->xnames=1;
     else
       m->xnames=(int)(m->xnames);
-  
+
   if ((m->xnames)&&(sizeof(res->data)>m->xnames))
   {
     res->xnames=res->data[..m->xnames-1];
@@ -434,10 +434,10 @@ string itag_data(mapping tag, mapping m, string contents,
     res->xnames=foo;
     res->data=res->data[m->xnames..];
   }
-  
+
   if (m->xnamesvert)
-    res->orientation = "vert"; 
-  
+    res->orientation = "vert";
+
 #ifdef BG_DEBUG
   bg_timers->data_gaz = gauge {
 #endif
@@ -472,8 +472,8 @@ string itag_colors(mapping tag, mapping m, string contents,
     contents = parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
-  
-  res->colors = map(contents/sep, parse_color); 
+
+  res->colors = map(contents/sep, parse_color);
 
   return "";
 }
@@ -516,7 +516,7 @@ string syntax( string error )
 
 //mapping(string:mapping) cache = ([]);
 mapping(string:object) palette_cache = ([]);
-int datacounter = 0; 
+int datacounter = 0;
 
 
 //FIXME: Put back some hash on the URL. Easily done by putting the hash
@@ -542,7 +542,7 @@ constant _diagram_args =
    "colortable_cache"});
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
-constant _shuffle_args = 
+constant _shuffle_args =
 ({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
    "xstart", "xstop", "ystart", "ystop", "colors", "xvalues", "yvalues",
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
@@ -610,7 +610,7 @@ string container_diagram(string tag, mapping m, string contents,
   }
   else if (m->colorbg)
     res->colorbg=parse_color(m->colorbg);
-  
+
   if ((m->bgcolor)&&(m->notrans))
   {
     res->colorbg=parse_color(m->bgcolor);
@@ -619,7 +619,7 @@ string container_diagram(string tag, mapping m, string contents,
   else
     if (m->notrans)
       res->colorbg=parse_color("white");
-  
+
   res->drawtype="linear";
 
   switch(res->type[0..3]) {
@@ -660,7 +660,7 @@ string container_diagram(string tag, mapping m, string contents,
   {
     res->drawtype = "3D";
     if( lower_case(m["3d"])!="3d" )
-      res->dimensionsdepth = (int)m["3d"];    
+      res->dimensionsdepth = (int)m["3d"];
     else
       res->dimensionsdepth = 20;
   }
@@ -710,7 +710,7 @@ string container_diagram(string tag, mapping m, string contents,
   } else if(!res->background)
     m->width = "350";
 
-  if(m->height) {  
+  if(m->height) {
     if((int)m->height > query("maxheight"))
       m->height = (string)query("maxheight");
     if((int)m->height < 100)
@@ -734,7 +734,7 @@ string container_diagram(string tag, mapping m, string contents,
 
   if(!res->xnames)
     if(res->xname) res->xnames = ({ res->xname });
-      
+
   if(!res->ynames)
     if(res->yname) res->ynames = ({ res->yname });
 
@@ -800,7 +800,7 @@ string container_diagram(string tag, mapping m, string contents,
 
   m->src = query_internal_location() + image_cache->store( res,id )+ext;
 
-  if( mapping size = image_cache->metadata( m, id, 1 ) ) 
+  if( mapping size = image_cache->metadata( m, id, 1 ) )
   {
     // image in cache (1 above prevents generation on-the-fly)
     m->width = size->xsize;
@@ -836,7 +836,7 @@ mixed draw_callback(mapping args, object id)
 {
   if(id->prestate->debug)
     return http_string_answer( sprintf("<pre>%O\n", args) );
-  
+
   array back=0;
   if (args->bgcolor)
     back = args->bgcolor;
@@ -847,7 +847,7 @@ mixed draw_callback(mapping args, object id)
     args->image = PPM(args->background, id);
 
     /* Image was not found or broken */
-    if(args->image == 1) 
+    if(args->image == 1)
     {
       args->image=get_font(0, 24, 0, 0,"left", 0, 0);
       if (!(args->image))
@@ -866,8 +866,8 @@ mixed draw_callback(mapping args, object id)
     back=0; //args->bgcolor;
     m_delete( args, "bgcolor" );
     args->image = Image.Image(args->xsize, args->ysize, @args->colorbg);
-  } 
-  
+  }
+
   Image.Image img;
 
 #ifdef BG_DEBUG

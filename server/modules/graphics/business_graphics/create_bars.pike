@@ -1,5 +1,7 @@
 #!NOMODULE
 
+// This file is part of business graphics. Copyright © 1998 - 2000, Roxen IS.
+
 #include "diagram.h"
 
 import Image;
@@ -9,7 +11,7 @@ import Stdio;
 inherit "polyline.pike";
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.72 1998/11/04 20:13:38 peter Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.73 2000/03/02 04:18:38 nilsson Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -19,7 +21,7 @@ constant cvs_version = "$Id: create_bars.pike,v 1.72 1998/11/04 20:13:38 peter E
 /*
 These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.
-*/ 
+*/
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
@@ -31,7 +33,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //Supports only xsize>=100
 
   int si=diagram_data["fontsize"];
- 
+
   //Fix defaultcolors!
   setinitcolors(diagram_data);
 
@@ -59,7 +61,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
   //write("ysize:"+diagram_data["ysize"]+"\n");
-  
+
 #ifdef BG_DEBUG
   bg_timers->init = gauge {
 #endif
@@ -79,7 +81,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   if (!(diagram_data["xspace"]))
   {
     //Initera hur långt det ska vara emellan.
-    
+
     float range=(diagram_data["xmaxvalue"]-
 		 diagram_data["xminvalue"]);
     //write("range"+range+"\n");
@@ -96,12 +98,12 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     else
       if (range/space<2.5)
 	space*=0.5;
-    diagram_data["xspace"]=space;      
+    diagram_data["xspace"]=space;
   }
   if (!(diagram_data["yspace"]))
   {
     //Initera hur långt det ska vara emellan.
-    
+
     float range=(diagram_data["ymaxvalue"]-
 		 diagram_data["yminvalue"]);
     float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
@@ -115,9 +117,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     else
       if (range/space<2.5)
 	space *= 0.5;
-    diagram_data["yspace"]=space;      
+    diagram_data["yspace"]=space;
   }
- 
+
 #ifdef BG_DEBUG
   };
 #endif
@@ -126,8 +128,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 #ifdef BG_DEBUG
   bg_timers->text = gauge {
 #endif
-    
-    
+
+
   float start;
   start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
   diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
@@ -148,13 +150,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  diagram_data["ymaxvalue"]-diagram_data["yspace"])
       diagram_data["values_for_ynames"]+=({start+=diagram_data["yspace"]});
   }
-  
+
   function fun;
   if (diagram_data["eng"])
     fun=diagram_eng;
   else
     fun=diagram_neng;
-  
+
   //Generera texten om den inte finns
   if (!(diagram_data["ynames"]))
     if (diagram_data["eng"]||diagram_data["neng"])
@@ -175,18 +177,18 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     {
       diagram_data["ynames"]=
 	allocate(sizeof(diagram_data["values_for_ynames"]));
-      
+
       for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
 	diagram_data["ynames"][i]=
 	  no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
     }
-  
-  
+
+
   if (!(diagram_data["xnames"]))
   {
     diagram_data["xnames"]=
       allocate(sizeof(diagram_data["values_for_xnames"]));
-      
+
     for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
       diagram_data["xnames"][i]=
 	no_end_zeros((string)(diagram_data["values_for_xnames"][i]));
@@ -255,7 +257,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		    * (diagram_data["ystop"] - diagram_data["ystart"]))
       /	(diagram_data["ymaxvalue"]-diagram_data["yminvalue"])
       + diagram_data["ystart"];
-      
+
     int minpos;
     minpos=max(labely, diagram_data["ymaxxnames"])+si/2;
     if (minpos>ypos_for_xaxis)
@@ -297,7 +299,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
       diagram_data["ystart"]=ypos_for_xaxis+si*2;
     }
-  
+
   //xpos_for_yaxis=diagram_data["xmaxynames"]+
   // si;
 
@@ -309,7 +311,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
-  
+
   if (diagram_data["xminvalue"]<0)
   {
     //placera ut y-axeln.
@@ -318,7 +320,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		    * (diagram_data["xstop"]-diagram_data["xstart"]))
       /	(diagram_data["xmaxvalue"]-diagram_data["xminvalue"])
       + diagram_data["xstart"];
-      
+
     int minpos;
     minpos=diagram_data["xmaxynames"]+si/2;
     if (minpos>xpos_for_yaxis)
@@ -358,7 +360,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     {
       //sätt y-axeln längst ner och diagram_data["xstart"] en aning högre
       //write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
-      
+
       diagram_data["xstop"]=diagram_data["xsize"]-
 	(int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
 	diagram_data["xmaxxnames"]/2;
@@ -373,14 +375,14 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   float ystart=(float)diagram_data["ystart"];
   float ymore=(-ystart+diagram_data["ystop"])/
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
-  
+
 #ifdef BG_DEBUG
   bg_timers->draw_grid = gauge {
 #endif
 
-  draw_grid(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
+  draw_grid(diagram_data, xpos_for_yaxis, ypos_for_xaxis,
 	     xmore, ymore, xstart, ystart, (float) si);
-  
+
 #ifdef BG_DEBUG
   };
 #endif
@@ -392,7 +394,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
 
 
- 
+
 #ifdef BG_DEBUG
   bg_timers->draw_values = gauge {
 #endif
@@ -407,11 +409,11 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       float x,y;
       x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
 	xmore;
-      
+
       y=-(-diagram_data["yminvalue"])*ymore+
-	diagram_data["ysize"]-ystart;	 
+	diagram_data["ysize"]-ystart;	
       float start=y;
-      
+
       foreach(column(diagram_data["data"], i), float|string d)
       {
 	if (d==VOIDSYMBOL)
@@ -421,19 +423,19 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	barsdiagram->setcolor(@(diagram_data["datacolors"][j++]));
 	
 	barsdiagram->polygone(
-			      ({x-barw, y 
-				, x+barw, y, 
+			      ({x-barw, y
+				, x+barw, y,
 				x+barw, start
 				, x-barw, start
-			      }));  
+			      }));
 	/*   barsdiagram->setcolor(0,0,0);
-	     draw(barsdiagram, 0.5, 
+	     draw(barsdiagram, 0.5,
 	     ({
 	     x-barw, start,
-	     x-barw, y 
-	     , x+barw, y, 
+	     x-barw, y
+	     , x+barw, y,
 	     x+barw, start
-	     
+	
 	     })
 	     );
 	*/
@@ -459,9 +461,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 			   diagram_data["xspace"]*i)
 	      * xmore;
 	    l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
-	      diagram_data["ysize"]-ystart;	  
+	      diagram_data["ysize"]-ystart;	
 	  }
-	  
+	
 	  //Draw Ugly outlines
 	  if ((diagram_data["backdatacolors"])&&
 	      (diagram_data["backlinewidth"]))
@@ -493,7 +495,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	foreach(diagram_data["data"], array(float|string) d)
 	{
 	  farg++;
-	  
+	
 	  for(int i=0; i<sizeof(d); i++)
 	    if (d[i]!=VOIDSYMBOL)
 	    {
@@ -501,30 +503,30 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	      x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
 		xmore;
 	      y=-(d[i]-diagram_data["yminvalue"])*ymore+
-		diagram_data["ysize"]-ystart;	 
-		    
-	      // if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
+		diagram_data["ysize"]-ystart;	
+		
+	      // if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"])
 	      // y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
-		    
+		
 	      barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
-	      
+	
 	      barsdiagram->polygone(
-				    ({x-barw+dnr, y 
-				      , x+barw+dnr, y, 
+				    ({x-barw+dnr, y
+				      , x+barw+dnr, y,
 				      x+barw+dnr, yfoo
 				      , x-barw+dnr, yfoo
-				    })); 
-	      /*  barsdiagram->setcolor(0,0,0);		  
-		  draw(barsdiagram, 0.5, 
-		  ({x-barw+dnr, y 
-		  , x+barw+dnr, y, 
+				    }));
+	      /*  barsdiagram->setcolor(0,0,0);		
+		  draw(barsdiagram, 0.5,
+		  ({x-barw+dnr, y
+		  , x+barw+dnr, y,
 		  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 		  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
-		  x-barw+dnr, y 
+		  x-barw+dnr, y
 		  }));*/
 	    }
 	  dnr+=barw*2.0;
-	}   
+	}
       }
       else
 	throw( ({"\""+diagram_data["drawtype"]
@@ -536,51 +538,51 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 #ifdef BG_DEBUG
   };
 #endif
-  
+
   //Rita ut axlarna
   barsdiagram->setcolor(@(diagram_data["axcolor"]));
-  
+
   //write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
 
   //Rita xaxeln
   if ((diagram_data["xminvalue"]<=LITET)&&
       (diagram_data["xmaxvalue"]>=-LITET))
     barsdiagram->
-      polygone(make_polygon_from_line(diagram_data["linewidth"], 
+      polygone(make_polygon_from_line(diagram_data["linewidth"],
 				      ({
 					xpos_for_yaxis,
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					diagram_data["linewidth"]-labelx/2,  
+					diagram_data["linewidth"]-labelx/2,
 					diagram_data["ysize"]-ypos_for_xaxis
-				      }), 
+				      }),
 				      1, 1)[0]);
   else
     if (diagram_data["xmaxvalue"]<-LITET)
     {
       //write("xpos_for_yaxis"+xpos_for_yaxis+"\n");
-      
+
       //diagram_data["xstop"]-=(int)ceil(4.0/3.0*(float)si);
       barsdiagram
 	->polygone(make_polygon_from_line(
-                     diagram_data["linewidth"], 
+                     diagram_data["linewidth"],
 		     ({
 		       xpos_for_yaxis,
 		       diagram_data["ysize"]-ypos_for_xaxis,
-		       
-		       xpos_for_yaxis-4.0/3.0*si, 
+		
+		       xpos_for_yaxis-4.0/3.0*si,
 		       diagram_data["ysize"]-ypos_for_xaxis,
-		       
-		       xpos_for_yaxis-si, 
+		
+		       xpos_for_yaxis-si,
 		       diagram_data["ysize"]-ypos_for_xaxis-si/2.0,
 		       xpos_for_yaxis-si/1.5,
 		       diagram_data["ysize"]-ypos_for_xaxis+si/2.0,
-		       
+		
 		       xpos_for_yaxis-si/3.0,
 		       diagram_data["ysize"]-ypos_for_xaxis,
-		       
+		
 		       diagram_data["xsize"]-diagram_data["linewidth"]
-		       - labelx/2, 
+		       - labelx/2,
 		       diagram_data["ysize"]-ypos_for_xaxis
 		     }), 1, 1)[0]);
     }
@@ -590,50 +592,50 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//diagram_data["xstart"]+=(int)ceil(4.0/3.0*(float)si);
 	barsdiagram
 	  ->polygone(make_polygon_from_line(
-                       diagram_data["linewidth"], 
+                       diagram_data["linewidth"],
 		       ({
 			 xpos_for_yaxis,
 			 diagram_data["ysize"]- ypos_for_xaxis,
-			 
-			 xpos_for_yaxis+si/3.0, 
+			
+			 xpos_for_yaxis+si/3.0,
 			 diagram_data["ysize"]-ypos_for_xaxis,
-			 
-			 xpos_for_yaxis+si/1.5, 
+			
+			 xpos_for_yaxis+si/1.5,
 			 diagram_data["ysize"]-ypos_for_xaxis-si/2.0,
-			 xpos_for_yaxis+si, 
+			 xpos_for_yaxis+si,
 			 diagram_data["ysize"]-ypos_for_xaxis+si/2.0,
-			 
-			 xpos_for_yaxis+4.0/3.0*si, 
+			
+			 xpos_for_yaxis+4.0/3.0*si,
 			 diagram_data["ysize"]-ypos_for_xaxis,
-			 
+			
 			 diagram_data["xsize"]-diagram_data["linewidth"]
-			 - labelx/2, 
+			 - labelx/2,
 			 diagram_data["ysize"]-ypos_for_xaxis
 		       }), 1, 1)[0]);
       }
-  
+
   //Rita pilen på xaxeln
   if (diagram_data["subtype"]=="line")
     barsdiagram->polygone( ({
       diagram_data["xsize"]-diagram_data["linewidth"]/2-(float)si-labelx/2,
       diagram_data["ysize"]-ypos_for_xaxis-(float)si/4.0,
-      
+
       diagram_data["xsize"]-diagram_data["linewidth"]/2-labelx/2,
       diagram_data["ysize"]-ypos_for_xaxis,
-      
+
       diagram_data["xsize"]-diagram_data["linewidth"]/2-(float)si-labelx/2,
       diagram_data["ysize"]-ypos_for_xaxis+(float)si/4.0
     })
-			   );  
-  
+			   );
+
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
       (diagram_data["ymaxvalue"]>=-LITET))
   {
     if  ((diagram_data["yminvalue"]<=LITET)&&
-	 (diagram_data["yminvalue"]>=-LITET)) 
+	 (diagram_data["yminvalue"]>=-LITET))
       barsdiagram->
-	polygone(make_polygon_from_line(diagram_data["linewidth"], 
+	polygone(make_polygon_from_line(diagram_data["linewidth"],
 					({
 					  xpos_for_yaxis,
 					  diagram_data["ysize"]-ypos_for_xaxis,
@@ -643,39 +645,39 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  }), 1, 1)[0]);
     else
       barsdiagram->
-	polygone(make_polygon_from_line(diagram_data["linewidth"], 
+	polygone(make_polygon_from_line(diagram_data["linewidth"],
 					({
 					  xpos_for_yaxis,
 					  diagram_data["ysize"]
 					  - diagram_data["linewidth"],
-					  
+					
 					  xpos_for_yaxis,
 					  si+labely
 					  }), 1, 1)[0]);
-    
+
   }
   else
     if (diagram_data["ymaxvalue"]<-LITET)
     {
       barsdiagram->
 	polygone(make_polygon_from_line(
-                   diagram_data["linewidth"], 
+                   diagram_data["linewidth"],
 		   ({
 		     xpos_for_yaxis,
 		     diagram_data["ysize"]-diagram_data["linewidth"],
-		     
+		
 		     xpos_for_yaxis,
 		     diagram_data["ysize"]-ypos_for_xaxis+si*4.0/3.0,
-		     
+		
 		     xpos_for_yaxis-si/2.0,
 		     diagram_data["ysize"]-ypos_for_xaxis+si,
-		     
+		
 		     xpos_for_yaxis+si/2.0,
 		     diagram_data["ysize"]-ypos_for_xaxis+si/1.5,
-		     
+		
 		     xpos_for_yaxis,
 		     diagram_data["ysize"]-ypos_for_xaxis+si/3.0,
-		     
+		
 		     xpos_for_yaxis,
 		     si+labely
 		   }), 1, 1)[0]);
@@ -685,46 +687,46 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       {
 	barsdiagram->
 	  polygone(make_polygon_from_line(
-		     diagram_data["linewidth"], 
+		     diagram_data["linewidth"],
 		     ({
 		       xpos_for_yaxis,
 		       diagram_data["ysize"]-diagram_data["linewidth"],
-		       
+		
 		       xpos_for_yaxis,
 		       diagram_data["ysize"]-ypos_for_xaxis-si/3.0,
-		       
+		
 		       xpos_for_yaxis-si/2.0,
 		       diagram_data["ysize"]-ypos_for_xaxis-si/1.5,
-		       
+		
 		       xpos_for_yaxis+si/2.0,
 		       diagram_data["ysize"]-ypos_for_xaxis-si,
-		       
+		
 		       xpos_for_yaxis,
 		       diagram_data["ysize"]-ypos_for_xaxis-si*4.0/3.0,
-		       
+		
 		       xpos_for_yaxis,
 		       si+labely
 		     }), 1, 1)[0]);
       }
-    
+
   //Rita pilen
   barsdiagram->
     polygone( ({
       xpos_for_yaxis-(float)si/4.0,
       diagram_data["linewidth"]/2.0+(float)si+labely,
-				      
+				
       xpos_for_yaxis,
       diagram_data["linewidth"]/2.0+labely,
 	
       xpos_for_yaxis+(float)si/4.0,
       diagram_data["linewidth"]/2.0+(float)si+labely
-    }) ); 
+    }) );
 
   //Placera ut texten på X-axeln
   int s=sizeof(diagram_data["xnamesimg"]);
 
 
- 
+
 #ifdef BG_DEBUG
   bg_timers->text_on_axis = gauge {
 #endif
@@ -734,16 +736,16 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	(diagram_data["values_for_xnames"][i]>diagram_data["xminvalue"]))
     {
       barsdiagram->paste_alpha_color(
-                    diagram_data["xnamesimg"][i], 
-		    @(diagram_data["textcolor"]), 
+                    diagram_data["xnamesimg"][i],
+		    @(diagram_data["textcolor"]),
 		    (int)floor((diagram_data["values_for_xnames"][i]
 				- diagram_data["xminvalue"])*xmore+xstart
-			       - diagram_data["xnamesimg"][i]->xsize()/2), 
+			       - diagram_data["xnamesimg"][i]->xsize()/2),
 		    (int)floor(diagram_data["ysize"]-ypos_for_xaxis+si/4.0));
     }
 
   //Placera ut texten på Y-axeln
-  s=min(sizeof(diagram_data["ynamesimg"]), 
+  s=min(sizeof(diagram_data["ynamesimg"]),
 	sizeof(diagram_data["values_for_ynames"]));
   for(int i=0; i<s; i++)
     if ((diagram_data["values_for_ynames"][i]<=diagram_data["ymaxvalue"])&&
@@ -752,8 +754,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
       barsdiagram->setcolor(@diagram_data["textcolor"]);
       barsdiagram->paste_alpha_color(
-                     diagram_data["ynamesimg"][i], 
-		     @(diagram_data["textcolor"]), 
+                     diagram_data["ynamesimg"][i],
+		     @(diagram_data["textcolor"]),
 		     (int)floor(xpos_for_yaxis-
 				si/4.0-diagram_data["linewidth"]-
 				diagram_data["ynamesimg"][i]->xsize()),
@@ -762,17 +764,17 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 				*ymore+diagram_data["ysize"]-ystart
 				-
 				diagram_data["ymaxynames"]/2));
-      
+
       barsdiagram->setcolor(@diagram_data["axcolor"]);
       barsdiagram->
 	polygone(make_polygon_from_line(
-                   diagram_data["linewidth"], 
+                   diagram_data["linewidth"],
 		   ({
 		     xpos_for_yaxis-si/4,
 		     (-(diagram_data["values_for_ynames"][i]
 			- diagram_data["yminvalue"])*ymore
 		      + diagram_data["ysize"]-ystart),
-		     
+		
 		     xpos_for_yaxis+si/4,
 		     (-(diagram_data["values_for_ynames"][i]
 			- diagram_data["yminvalue"])*ymore
@@ -785,13 +787,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   if (diagram_data["labelsize"])
   {
     barsdiagram
-      ->paste_alpha_color(labelimg, 
-			  @(diagram_data["labelcolor"]), 
+      ->paste_alpha_color(labelimg,
+			  @(diagram_data["labelcolor"]),
 			  diagram_data["xsize"]-labelx
 			  - (int)ceil((float)diagram_data["linewidth"]),
 			  diagram_data["ysize"]
 			  - (int)ceil((float)(ypos_for_xaxis-si/2)));
-      
+
     string label;
     int x;
     int y;
@@ -806,30 +808,30 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	->write(label)->scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
-    
+
     if (labelimg->xsize()<1)
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
-    
+
     if (labelimg->xsize()>
 	diagram_data["xsize"])
       labelimg=labelimg->scale(diagram_data["xsize"], 0);
 
     //if (labelimg->xsize()> barsdiagram->xsize())
     //labelimg->scale(barsdiagram->xsize(),labelimg->ysize());
-      
+
     x=max(2,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
     x=min(x, barsdiagram->xsize()-labelimg->xsize());
-      
-    y=0; 
-      
+
+    y=0;
+
     if (label && sizeof(label))
-      barsdiagram->paste_alpha_color(labelimg, 
-				     @(diagram_data["labelcolor"]), 
+      barsdiagram->paste_alpha_color(labelimg,
+				     @(diagram_data["labelcolor"]),
 				     x,
 				     2+labely-labelimg->ysize());
   }
 
- 
+
 #ifdef BG_DEBUG
   };
 #endif
