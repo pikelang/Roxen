@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.146 1998/07/09 17:16:13 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.147 1998/07/09 20:45:34 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3180,12 +3180,35 @@ string desc()
 
 mapping(string:string) sql_urls = ([]);
 
+mapping sql_cache = ([]);
+
+object sql_cache_get(string what)
+{
+#ifdef THREADS
+#if !constant(this_thread)
+  return Sql.sql( what );
+#else
+  if(sql_cache[what] && sql_cache[what][this_thread()])
+    return sql_cache[what][this_thread()];
+  if(!sql_cache[what])
+    sql_cache[what] =  ([ this_thread():Sql.sql( what ) ]);
+  else
+    sql_cache[what][ this_thread() ] = Sql.sql( what );
+  return sql_cache[what][ this_thread() ];
+#endif   /* !this_thread */
+#else /* !THREADS */
+  if(!sql_cache[what])
+    sql_cache[what] =  Sql.sql( what );
+  return sql_cache[what];
+#endif
+}
+
 object sql_connect(string db)
 {
   if (sql_urls[db]) {
-    return(Sql.sql(sql_urls[db]));
+    return(sql_cache_get(sql_urls[db]));
   } else {
-    return(Sql.sql(db));
+    return(sql_cache_get(db));
   }
 }
 
