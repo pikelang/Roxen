@@ -5,10 +5,19 @@ object udp_broad=spider.dumUDP();
 
 void got_info()
 {
-  mapping m = decode_value(udp_broad->read()->data);
-  if(m->seq<=(neighborhood[m->configurl]?neighborhood[m->configurl]->seq:0))
-    m->last_reboot = time();
-  neighborhood[m->configurl] = (neighborhood[m->configurl]||([])) | m;
+  int cs;
+  mapping m = decode_value(udp_broad->read()->data),
+          ns = neighborhood[m->configurl]||([]);
+
+  if(m->last_reboot < ns->last_reboot)
+  {
+    m->last_last_reboot = m->last_reboot;
+    m->seq_reboots++;
+  } else {
+    if(m->sequence!=ns->sequence)
+      m->seq_reboots=0;
+  }
+  neighborhood[m->configurl] = ns | m;
 }
 
 string network_number()
@@ -16,7 +25,7 @@ string network_number()
   return roxen->query("neigh_ip");
 }
 
-int seq;
+int seq,lr=time();
 void broadcast()
 {
   udp_broad->
@@ -25,6 +34,7 @@ void broadcast()
 			"host":gethostname(),
 			"sequence":seq++,
 		     	"uid":getuid(),
+			"last_reboot":lr,
 			"comment":roxen->query("neigh_com"),
 			"server_urls":Array.map(roxen->configurations,
 				   lambda(object c)  {

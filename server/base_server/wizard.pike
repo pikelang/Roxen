@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.24 1997/08/21 13:16:35 per Exp $
+/* $Id: wizard.pike,v 1.25 1997/08/21 14:22:14 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -370,14 +370,16 @@ string html_table(array(string) subtitles, array(array(string)) table)
   {
     if(stringp(s))
     {
-      r += "<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
+      r+="<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
       cols++;
     } else {
-      r += "</tr><tr><th nowrap align=left colspan="+cols+">"
-	"<font color=#ffffff>"+s[0]+"</font></th>";
+      r+="</tr><tr bgcolor=#113377><th nowrap align=left colspan="+cols+">"
+	"<font color=#ffffff>"+s[0]+" &nbsp; </font></th>";
     }
-      
+  }      
   r += "</tr>";
+
+
   for(int i = 0; i < sizeof(table); i++) {
     r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
     foreach(table[i], mixed s)
@@ -385,8 +387,7 @@ string html_table(array(string) subtitles, array(array(string)) table)
 	r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
       else
 	r += "</tr><tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+
-	  "><td colspan="+cols+">"+s[0]+"</td>";
-    }
+	  "><td colspan="+cols+">"+s[0]+" &nbsp;</td>";
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
