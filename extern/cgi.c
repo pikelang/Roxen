@@ -366,17 +366,18 @@ void main(int argc, char **argv)
   if(!getuid()) {
     int euid = geteuid();
     int egid = getegid();
+#ifdef HAVE_SETRESUID
+    setresgid(egid, egid, -1);
+    setresuid(euid, euid, -1);
+#else
 #ifdef HAVE_SETEUID
     seteuid(0);
 #else
-#ifdef HAVE_SETRESUID
-    setresuid(-1, 0, -1);
-#else
     /* No way to change euid, so we don't */
-#endif /* HAVE_SETRESUID */
 #endif /* HAVE_SETEUID */
     setgid(egid);
     setuid(euid);
+#endif /* HAVE_SETRESUID */
   }
   if(!getuid()) {
     printf("Couldn't change uid from root.\n");
