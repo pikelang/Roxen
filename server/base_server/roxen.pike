@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.489 2000/06/01 15:04:47 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.490 2000/06/04 19:24:39 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -823,7 +823,9 @@ class Protocol
 	}
       // if there is no such servers, pick the first default server
       // available.
-      return ((array)choices)[0];
+      c = ((array)choices)[0];
+      if(!c->inited) c->enable_all_modules();
+      return c;
     }
 
 
@@ -2388,6 +2390,7 @@ class ImageCache
 
   static void store_data( string id, string data )
   {
+    if(!data) return;
     Stdio.File f;
     if(!(f = open(dir+id+".d", "wct" )))
     {
