@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.238 2001/08/24 01:00:33 mast Exp $
+// $Id: module.pmod,v 1.239 2001/08/24 20:46:45 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3452,10 +3452,11 @@ class Frame
 		  if (!stringp (raw_args[arg]))
 		    error ("%O: raw_args[%O] not a string:\n"
 			   "raw_args: %O\n"
-			   "atypes: %O\n"
-			   "raw_args == atypes: %O\n",
-			   this_object(), arg, raw_args, atypes,
-			   [mapping] raw_args == [mapping] atypes);
+			   "args: %O\n"
+			   "raw_args == args: %O\n"
+			   "flags: %x\n",
+			   this_object(), arg, raw_args, args,
+			   raw_args == args, flags);
 
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
@@ -3652,8 +3653,6 @@ class Frame
 			       ctx->make_p_code ? " and compiling" : "");
 	    if (PCode p_code = ctx->make_p_code &&
 		(evaler->is_RXML_PCode ? evaler : evaler->p_code)) {
-	      // FIXME: Perhaps make a new PCode object if the evaler
-	      // doesn't provide one?
 	      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
 	      in_args = _prepare (ctx, type, args && args + ([]), p_code);
 	      PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
@@ -6864,7 +6863,7 @@ class PCode
 #ifdef MODULE_DEBUG
     if (tag_set && tag_set->generation != generation)
       error ("P-code is stale - tag set %O has generation %d and not %d.\n",
-	     tag_set->name, tag_set->generation, generation);
+	     tag_set, tag_set->generation, generation);
 #endif
 
     if (ctx->unwind_state)
