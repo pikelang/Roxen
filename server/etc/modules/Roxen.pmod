@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.69 2001/02/16 15:07:19 mast Exp $
+// $Id: Roxen.pmod,v 1.70 2001/02/20 00:45:30 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3044,7 +3044,7 @@ void set_cookie( RequestID id,
   if( expire_time_delta )
     cookie += "; expires="+http_date( expire_time_delta+time(1) );
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
-  if( path )   cookie += "; path="+http_encode_cookie( path );
+  if( path!="" ) cookie += "; path="+http_encode_cookie( path||"/" );
   if(!id->misc->moreheads)
     id->misc->moreheads = ([]);
   add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
