@@ -1,5 +1,5 @@
-/* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
- * $Id: directories2.pike,v 1.11 1998/10/12 22:55:34 per Exp $
+/* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB
+ * $Id: directories2.pike,v 1.12 1998/11/05 00:48:56 peter Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.11 1998/10/12 22:55:34 per Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.12 1998/11/05 00:48:56 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,7 +29,7 @@ void start( int num, object conf )
 array register_module()
 {
   return ({ MODULE_DIRECTORIES | MODULE_PARSER,
-	      "Directory parsing module mk2",
+	      "Enhanced directory listings",
 	      "This module is an experimental directory parsing module. "
 	      "It pretty prints a list of files much like the ordinary "
 	      "directory parsing module. "
