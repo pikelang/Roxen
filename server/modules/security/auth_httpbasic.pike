@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.10 2004/05/23 01:30:51 _cvs_stephen Exp $";
+  "$Id: auth_httpbasic.pike,v 1.11 2004/05/23 01:32:51 _cvs_stephen Exp $";
 inherit AuthModule;
 inherit "module";
 

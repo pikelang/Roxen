@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.10 2002/06/14 00:08:58 nilsson Exp $";
+  "$Id: auth_httpcookie.pike,v 1.11 2004/05/23 01:32:51 _cvs_stephen Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -129,7 +129,7 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 
 void start()
 {
-#if constant(REPLICATE)
+#if constant(WS_REPLICATE)
   set_my_db( "replicate" );
 #endif
 
