@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.68 2001/04/21 21:15:00 nilsson Exp $
+// $Id: cache.pike,v 1.69 2001/04/23 00:30:05 nilsson Exp $
 
 #pragma strict_types
 
@@ -257,7 +257,7 @@ void nongarbing_cache_flush(string cache_id) {
 # define SESSION_BUCKETS 4
 #endif
 #ifndef SESSION_SHIFT_TIME
-# define SESSION_SHIFT_TIME 30
+# define SESSION_SHIFT_TIME 15*60
 #endif
 
 // The minimum time until which the session should be stored.
