@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.17 2001/01/06 01:56:51 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.18 2001/01/25 23:25:54 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -68,30 +68,32 @@ class VInputFrame {
     }
 #endif
 
+    var = id->misc->vform_objects[args->name];
+
     switch(args->type) {
     case "int":
-      var=Variable.Int(args->value||"");
+      if(!var) var=Variable.Int(args->value||"");
       var->set_range((int)args->min, (int)args->max);
       break;
     case "float":
-      var=Variable.Float(args->value||"");
+      if(!var) var=Variable.Float(args->value||"");
       var->set_range((float)args->min, (float)args->max);
       break;
     case "email":
-      var=Variable.Email(args->value||"");
+      if(!var) var=Variable.Email(args->value||"");
       if(args["disable-domain-check"]) var->disable_domain_check();
       break;
     case "date":
-      var=Variable.Date(args->value||"");
+     if(!var) var=Variable.Date(args->value||"");
       break;
     case "image":
-      var=Variable.Image( args->value||"", 0, 0, 0 );
+      if(!var) var=Variable.Image( args->value||"", 0, 0, 0 );
       break;
 //   case "upload":
-//     var=Variable.Upload( args->value||"", 0, 0, 0 );
+//     if(!var) var=Variable.Upload( args->value||"", 0, 0, 0 );
 //     break;
     case "password":
-      var=Variable.VerifiedPassword(args->value||"");
+      if(!var) var=Variable.VerifiedPassword(args->value||"");
     case "text":
       if(!var) var=Variable.VerifiedText(args->value||"");
     case "string":
@@ -131,6 +133,7 @@ class VInputFrame {
 
     vars=([ "input":var->render_form(id, new_args) ]);
     if(var->get_warnings()) vars->warning=var->get_warnings();
+    id->misc->vform_objects[args->name] = var;
     return 0;
   }
 
@@ -230,6 +233,7 @@ class TagWizzVInput {
 	if(!id->misc->vform_verified) {
 	  id->misc->vform_verified=(<>);
 	  id->misc->vform_failed=(<>);
+          id->misc->vform_objects=([]);
 	  id->misc->vform_xml = !args->noxml;
 	}
 
@@ -389,12 +393,19 @@ class TagVForm {
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal;
+    private StateHandler.Page_state state;
 
     array do_enter(RequestID id) {
       id->misc->vform_ok = 1;
       id->misc->vform_verified=(<>);
       id->misc->vform_failed=(<>);
       id->misc->vform_xml = !args->noxml;
+      state = StateHandler.Page_state(id);
+      state->register_consumer("vform");
+      state->use_session( StateHandler.decode_session_id(id->variables->__state) );
+      if(id->variables->__state)
+	state->decode(id->variables->__state);
+      id->misc->vform_objects = state->get() || ([]);
       return 0;
     }
 
@@ -408,11 +419,19 @@ class TagVForm {
 	 id->misc->defines[" _ok"] ) {
 	m_delete(id->misc, "vform_verified");
 	m_delete(id->misc, "vform_failed");
+        m_delete(id->misc, "vform_xml");
 	return 0;
       }
 
+      state->alter(id->misc->vform_objects);
+      content = "<input name=\"__state\" type=\"hidden\" value=\"" + 
+	state->encode() + "\" />\n" + content;
+
+      m_delete(id->misc, "vform_objects");
       m_delete(id->misc, "vform_verified");
       m_delete(id->misc, "vform_failed");
+      m_delete(id->misc, "vform_xml");
+
       result = RXML.t_xml->format_tag("form", args, content);
       return 0;
     }
