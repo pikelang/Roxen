@@ -247,16 +247,14 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
   string page =  #"
   <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='"+config_setting2("fade3")+#"'>
     <tr bgcolor='"+config_setting2("fade3")+#"'>
-      <td colspan=2>
-       <table><tr><td>
-         <img src=/internal-roxen-roxen-blue-small.gif xspacing=10>
-         </td>
-          <td><font color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface>
-              </font></td></tr></table></td>
-      <td align=right valign=top rowspan=2>"+c->middle+#"</td>
+       <td rowspan=2><img src=/internal-roxen-roxen.gif xspacing=2></td>
+       <td align=center>
+         <font size=+1 color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface></font>
+       </td>
+       <td align=right valign=top>"+c->middle+#"</td>
     </tr>
-    <tr valign=bottom>
-      <td colspan=2 valign=bottom>"+c->top+#"</td>
+    <tr>
+      <td colspan=2 align=right width=100% valign=bottom>"+c->top+#"</td>
     </tr>
   </table>
 ";
@@ -349,6 +347,7 @@ string set_variable( string v, object in, mixed to, object id )
      break;
 
    case TYPE_DIR:
+     if(!strlen(val)) val = "./";
      if( !(file_stat( val ) && (file_stat( val )[ ST_SIZE ] == -2 )))
        warning = "<font color=darkred>"+val+" is not a directory</font>";
      if( val[-1] != '/' )
