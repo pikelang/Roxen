@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.106 2000/03/30 19:57:38 leif Exp $
+# $Id: start,v 1.107 2000/03/31 02:26:04 nilsson Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -506,7 +506,7 @@ start_roxen() {
         echo "$pre" "Using '$pike'"|sed -e "s!`pwd`!.!g"
       fi
     fi
-    #args="-DSERIOUS $args"
+    args="-DSERIOUS $args"
     $pike $args $@
   else
     echo "$pre" Executing gdb $pike $args $@
