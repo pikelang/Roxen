@@ -1,6 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. 
+// Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.93 1998/04/13 04:36:17 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.94 1998/04/24 08:44:53 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -25,13 +26,13 @@ int req_time = HRTIME();
 #define MARK_FD(X)
 #endif
 
-constant decode=roxen->decode;
-constant find_supports=roxen->find_supports;
-constant version=roxen->version;
-constant handle=roxen->handle;
-constant _query=roxen->query;
-constant thepipe = roxen->pipe;
-constant _time=predef::time;
+constant decode        = MIME.decode_base64;
+constant find_supports = roxen->find_supports;
+constant version       = roxen->version;
+constant handle        = roxen->handle;
+constant _query        = roxen->query;
+constant thepipe       = roxen->pipe;
+constant _time         = predef::time;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
@@ -48,12 +49,12 @@ object conf;
 #define QUERY(X) 	_query("X")
 #endif /* constant(cpp) */
 
-int time = predef::time(1);
+int time;
 string raw_url;
 int do_not_disconnect;
 mapping (string:string) variables = ([ ]);
-mapping (string:mixed)  misc = ([ ]);
-mapping (string:string) cookies = ([ ]);
+mapping (string:mixed)  misc      = ([ ]);
+mapping (string:string) cookies   = ([ ]);
 
 multiset (string) prestate  = (< >);
 multiset (string) config    = (< >);
@@ -80,7 +81,7 @@ string rest_query="";
 string raw;
 string query;
 string not_query;
-string extra_extension = ""; // special hack for the language module
+// string extra_extension = ""; // special hack for the language module
 string data, leftovers;
 array (int|string) auth;
 string rawauth, realauth;
@@ -133,7 +134,7 @@ string scan_for_query( string f )
 	else
 	  rest_query = http_decode_string( v );
     rest_query=replace(rest_query, "+", "\000"); /* IDIOTIC STUPID STANDARD */
-  } 
+  }
   return f;
 }
 
@@ -336,9 +337,8 @@ private int parse_got(string s)
 	      have_data=strlen(data);
 
 	      if(strlen(data) <= l) // \r are included. 
-	      {
 		return 0;
-	      }
+
 	      leftovers = data[l+1..];
 	      data = data[..l];
 	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
@@ -504,7 +504,7 @@ private int parse_got(string s)
 	  case "mime-version":
 	    break;
 	    
-	  case "if-modified-since":
+	   case "if-modified-since":
 	    since=contents;
 	    break;
 	    
@@ -623,10 +623,11 @@ void end(string|void s, int|void keepit)
   disconnect();  
 }
 
-static void do_timeout(mapping foo)
+static void do_timeout()
 {
+  werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
   int elapsed = _time()-time;
-  if(elapsed >= 30)
+  if(time && elapsed >= 30)
   {
     MARK_FD("HTTP timeout");
     end("HTTP/1.0 408 Timeout\r\n"
@@ -1018,6 +1019,7 @@ void got_data(mixed fooid, string s)
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
+  time = _time(1);
   if(wanted_data)
   {
     if(strlen(s)+have_data < wanted_data)
@@ -1105,7 +1107,6 @@ object clone_me()
   c->raw = raw;
   c->query = query;
   c->not_query = not_query;
-  c->extra_extension = extra_extension;
   c->data = data;
   
   c->auth = auth;
@@ -1143,12 +1144,13 @@ void chain(object f, object c, string le)
   my_fd = f;
   conf = c;
   do_not_disconnect=-1;
+  MARK_FD("Kept alive");
   if(strlen(le))
     // More to handle already.
     got_data(0,le);
-  else
-     // If no pipelined data is available, call out...
-    call_out(do_timeout, 15); 
+//   else
+//      // If no pipelined data is available, call out...
+//     call_out(do_timeout, 150);
 
   if(!my_fd)
   {
