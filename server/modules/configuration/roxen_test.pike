@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.4 2000/11/12 01:16:57 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.5 2000/11/20 12:59:14 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 constant module_name = "Roxen self test module";
@@ -16,7 +16,6 @@ Protocol port;
 void start(int n, Configuration c) {
   conf=c;
   index_file = Stdio.File();
-  port = Protocol();
   call_out( do_tests, 2 );
   report_debug("Call out requested\n");
 }
