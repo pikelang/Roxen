@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.35 1998/07/15 18:24:57 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.36 1998/07/19 21:21:06 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -122,24 +122,27 @@ mixed *register_module()
     });
 }
 
-mixed find_file(string f, object got)
+static array(string) find_user(string f, object id)
 {
-  string u, of;
-  of=f;
+  string of = f;
+  string u;
 
-  
   if(QUERY(virtual_hosting)) {
-    if(got->misc->host)
-    {
-      string host = (got->misc->host / ":")[0];
-      if(search(host, ".") != -1)
+    if(id->misc->host) {
+      string host = (id->misc->host / ":")[0];
+      if(search(host, ".") != -1) {
 	sscanf(host, "%s.%*s", u);
-      else 
+      } else {
 	u = host;
+      }
     }
   } else {
-    if((<"","/">)[f]) return -1;
+    if((<"","/", ".">)[f]) return 0;
     switch(sscanf(f, "%*[/]%s/%s", u, f)) {
+    case 1:
+      sscanf(f, "%*[/]%s", u);
+      f = "";
+      break;
     default:
       u="";
       // FALL_THROUGH
@@ -150,6 +153,32 @@ mixed find_file(string f, object got)
       break;
     }
   }
+
+#ifdef USERFS_DEBUG
+  roxen_perror(sprintf("USERFS: find_user(%O, X) => u:%O, f:%O\n", of, u, f));
+#endif /* USERFS_DEBUG */
+
+  return({ u, f });
+}
+
+mixed find_file(string f, object got)
+{
+  string u, of;
+  of=f;
+
+#ifdef USERFS_DEBUG
+  roxen_perror(sprintf("USERFS: find_file(%O, X)\n", f));
+#endif /* USERFS_DEBUG */
+
+  array a = find_user(f, got);
+
+  if (!a) {
+    return -1;
+  }
+
+  u = a[0];
+  f = a[1];
+  
   if(u)
   {
     string *us;
@@ -211,20 +240,20 @@ mixed find_file(string f, object got)
 
 string real_file( mixed f, mixed id )
 {
-  string u, of;
-  if(!strlen(f) || f=="/")
-    return 0;
+  string u;
 
-  switch(sscanf(f, "%*[/]%s/%s", u, f)) {
-  default:
-    u="";
-    // FALL_THROUGH
-  case 2:
-    f = "";
-    // FALL_THROUGH
-  case 3:
-    break;
+#ifdef USERFS_DEBUG
+  roxen_perror(sprintf("USERFS: real_file(%O, X)\n", f));
+#endif /* USERFS_DEBUG */
+
+  array a = find_user(f, id);
+
+  if (!a) {
+    return 0;
   }
+
+  u = a[0];
+  f = a[1];
 
   if(u)
   {
@@ -256,38 +285,23 @@ string real_file( mixed f, mixed id )
 
 array find_dir(string f, object got)
 {
-  string u, of;
-  array l;
-  
-  if(QUERY(virtual_hosting)) {
-    if(got->misc->host)
-    {
-      string host = (got->misc->host / ":")[0];
-      if(search(host, ".") != -1)
-	sscanf(host, "%s.%*s", u);
-      else 
-	u = host;
-    }
-  } else {
+#ifdef USERFS_DEBUG
+  roxen_perror(sprintf("USERFS: find_dir(%O, X)\n", f));
+#endif /* USERFS_DEBUG */
 
-    if(!strlen(f) || f=="/")
-    {
-      l=got->conf->userlist(got);
-      if(l) return (l - QUERY(banish_list));
-      return 0;
-    }
-    
-    switch(sscanf(f, "%*[/]%s/%s", u, f)) {
-    default:
-      u="";
-      // FALL_THROUGH
-    case 2:
-      f = "";
-      // FALL_THROUGH
-    case 3:
-      break;
-    }
+  array a = find_user(f, got);
+
+  if (!a) {
+    array l;
+  
+    l = got->conf->userlist(got);
+    if(l) return(l - QUERY(banish_list));
+    return 0;
   }
+
+  string u = a[0];
+  f = a[1];
+
   if(u)
   {
     if(query("homedir"))
@@ -311,33 +325,18 @@ array find_dir(string f, object got)
 
 mixed stat_file( mixed f, mixed id )
 {
-  string u, of;
+#ifdef USERFS_DEBUG
+  roxen_perror(sprintf("USERFS: stat_file(%O, X)\n", f));
+#endif /* USERFS_DEBUG */
 
-  if(QUERY(virtual_hosting)) {
-    if(id->misc->host)
-    {
-      string host = (id->misc->host / ":")[0];
-      if(search(host, ".") != -1)
-	sscanf(host, "%s.%*s", u);
-      else 
-	u = host;
-    }
-  } else {
-    
-    if(!strlen(f) || f=="/")
-      return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+  array a = find_user(f, id);
 
-    switch(sscanf(f, "%*[/]%s/%s", u, f)) {
-    default:
-      u="";
-      // FALL_THROUGH
-    case 2:
-      f = "";
-      // FALL_THROUGH
-    case 3:
-      break;
-    }
+  if (!a) {
+    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
   }
+
+  string u = a[0];
+  f = a[1];
 
   if(u)
   {
