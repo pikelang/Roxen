@@ -44,7 +44,7 @@ void old_rxml_warning(object id, string problem, string solution)
 // Changes the parsing order by first parsing it's contents and then
 // morphing itself into another tag that gets parsed. Makes it possible to
 // use, for example, tablify together with sqloutput.
-string tag_preparse( string tag_name, mapping args, string contents,
+string container_preparse( string tag_name, mapping args, string contents,
 		     object id )
 {
   old_rxml_warning(id, "preparse tag","preparse attribute");
@@ -130,13 +130,13 @@ string tag_date(string q, mapping m, object id)
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
   if(m->second) t += (int)m->second;
+  t+=time_dequantifier(m);
 
   if(!(m->brief || m->time || m->date))
     m->full=1;
 
-  if(!m->date)
-    if(!m->unix_time || m->second)
-      NOCACHE();
+  if(m->part=="second" || m->part=="beat")
+    NOCACHE();
   else
     CACHE(60); // One minute is good enough.
 
@@ -234,7 +234,7 @@ string|array(string)|int tag_insert(string tag,mapping m,object id)
   return 0;
 }
 
-string|int tag_aprestate(string tag, mapping m, string q, object id)
+string|int container_apre(string tag, mapping m, string q, object id)
 {
   if(m->add || m->drop) return 0;
   old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
@@ -272,7 +272,7 @@ string|int tag_aprestate(string tag, mapping m, string q, object id)
   return make_container("a", m, q);
 }
 
-string|array(string)|int tag_aconf(string tag, mapping m, string q, object id)
+string|array(string)|int container_aconf(string tag, mapping m, string q, object id)
 {
   if(m->add || m->drop) return 0;
   old_rxml_warning(id, "config items as atomic attributes in aconf tag","add and drop");
@@ -315,7 +315,7 @@ string|array(string)|int tag_aconf(string tag, mapping m, string q, object id)
   return make_container("a", m, q);
 }
 
-string|int tag_autoformat(string tag, mapping m, string c, object id)
+string|int container_autoformat(string tag, mapping m, string c, object id)
 {
   if(!m->pre) return 0;
   old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
@@ -324,7 +324,7 @@ string|int tag_autoformat(string tag, mapping m, string c, object id)
   return make_container("autoformat", m, c);
 }
 
-string|int tag_default(string tag, mapping m, string c, object id)
+string|int container_default(string tag, mapping m, string c, object id)
 {
   if(!m->multi_separator) return 0;
   old_rxml_warning(id, "multiseparator attribute in default tag","separator attribute");
@@ -333,7 +333,7 @@ string|int tag_default(string tag, mapping m, string c, object id)
   return make_container("default", m, c);
 }
 
-string|int tag_recursive_output(string tag, mapping m, string c, object id)
+string|int container_recursive_output(string tag, mapping m, string c, object id)
 {
   if(!m->multisep) return 0;
   old_rxml_warning(id, "multisep attribute in recursive-output tag","separator attribute");
@@ -342,7 +342,7 @@ string|int tag_recursive_output(string tag, mapping m, string c, object id)
   return make_container("recursive-output", m, c);
 }
 
-string tag_source(string tag, mapping m, string s, object id)
+string container_source(string tag, mapping m, string s, object id)
 {
   old_rxml_warning(id, "source tag","a template");
   string sep;
@@ -414,7 +414,7 @@ string|int tag_countdown(string tag, mapping m, string c, object id)
   }
 }
 
-string|int tag_tablify(string tag, mapping m, string q, object id)
+string|int container_tablify(string tag, mapping m, string q, object id)
 {
   if(!m->fgcolor0 && !m->fgcolor1 && !m->fgcolor && !m->rowalign &&
      !m->bgcolor && !m->preprocess && !m->parse) return 0;
@@ -454,34 +454,7 @@ string|int tag_tablify(string tag, mapping m, string q, object id)
   return make_container("tablify",m,q);
 }
 
-mapping query_tag_callers()
-{
-  return ([
-    "countdown":tag_countdown,
-    "append":tag_append,
-    "redirect":tag_redirect,
-    "refferrer":tag_refferrer,
-    "set":tag_set,
-    "pr":tag_pr,
-    "date":tag_date,
-    "insert":tag_insert,
-    "echo":
-            lambda(string t, mapping m, object id) {   // Well, this isn't exactly 100% compatible...
-              old_rxml_warning(id, "echo tag","insert tag");
-              return make_tag("!--#echo",m);
-            }
-  ]);
-}
-
-mapping query_container_callers()
-{
-  return ([ 
-    "tablify":tag_tablify,
-    "apre":tag_aprestate,
-    "preparse":tag_preparse,
-    "autoformat":tag_autoformat,
-    "default":tag_default,
-    "recursive-output":tag_recursive_output,
-    "source":tag_source
-  ]);
+string tag_echo(string t, mapping m, RequestID id) {
+  old_rxml_warning(id, "echo tag","insert tag");
+  return make_tag("!--#echo",m);  
 }
