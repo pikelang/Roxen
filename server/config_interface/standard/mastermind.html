@@ -1,0 +1,116 @@
+
+<content><center>
+
+<?comment calculate the answer ?>
+<if not="1" variable="form.turn">
+  <for from="1" to="6">
+    <set variable="var.c"><random separator="">012345</random></set>
+    <append variable="form.q" from="var.c"/>
+  </for>
+  <set variable="form.q" expr="&form.q; ^ 1745381"/>
+  <set variable="form.turn" value="0" />
+</if>
+<else>
+  <for variable="var.i" from="1" to="&form.turn;">
+    <set variable="var.r"><insert variable="form.or&var.i;"/></set>
+    <append variable="var.or" value="&amp;or&var.i;=&var.r;"/>
+  </for>
+</else>
+
+<set variable="var.q" expr="&form.q; ^ 1745381"/>
+
+<script language="JavaScript">
+
+turn = &form.turn;;
+old = "&var.or:none;";
+quest = "&form.q;";
+
+buggy_image_counter = false;
+if (navigator.appName == "Microsoft Internet Explorer") buggy_image_counter = true;
+
+function tomArrej() {
+  for(var i = 0; i < 7; i++)
+    this[i] = 0;
+}
+
+arrej = new tomArrej();
+colors = new tomArrej();
+colors[0] = "white";
+colors[1] = "blue";
+colors[2] = "green";
+colors[3] = "yellow";
+colors[4] = "purple";
+colors[5] = "red";
+
+function shiftColor(imgName) {
+  if(buggy_image_counter) imgName--;
+  arrej[imgName] = (arrej[imgName]+1)%6;
+  document [imgName].src = "/internal-roxen-pixel-" + colors[arrej[imgName]];
+}
+
+function send() {
+  var ret="";
+  turn++;
+  for(var i = 1; i < 7; i++)
+    ret+=arrej[i];
+  top.location="mastermind.html?turn="+turn+"&or"+turn+"="+ret+old+"&q="+quest;
+}
+
+</script>
+
+<table border="0"><tr valign="bottom"><td>Make your guess -></td><td>
+<table border="1" cellspacing="0" cellpadding="1">
+<tr><td></td><td></td><td></td><td></td><td></td><td></td> <td width="10"></td> <td></tr></tr>
+
+<?comment draw the previous guesses ?>
+<if variable="form.turn > 0">
+<define tag="square"><td><img src="/internal-roxen-pixel-&_.color;" width="20" height="20" /></td></define>
+<set variable="var.qs" split="">&var.q;</set>
+<for variable="var.i" from="1" to="&form.turn;">
+  <tr>
+  <set variable="var.r"><insert variable="form.or&var.i;"/></set>
+  <set variable="var.gold" value="0"/>
+  <set variable="var.silver" value="0"/>
+  <set variable="var.i" value="0"/>
+  <unset variable="var.tmp"/>
+  <emit source="values" values="&var.r;" advanced="chars">
+    <inc variable="var.i"/>
+    <cond>
+      <case variable="value = 0"><square color="white"/></case>
+      <case variable="value = 1"><square color="blue"/></case>
+      <case variable="value = 2"><square color="green"/></case>
+      <case variable="value = 3"><square color="yellow"/></case>
+      <case variable="value = 4"><square color="purple"/></case>
+      <case variable="value = 5"><square color="red"/></case>
+    </cond>
+    <set variable="var.c"><insert variable="var.qs.&var.i;"/></set>
+    <if variable="value = &var.c;"><inc variable="var.gold"/><append variable="var.tmp" value="x"></if>
+    <else><append variable="var.tmp" value="&var.c;"/></else>
+  </emit>
+  <emit source="values" values="&var.r;" advanced="chars">
+    <if variable="var.tmp = *&_.value;*">
+      <inc variable="var.silver"/>
+    </if>
+  </emit>
+  <td></td><td>G:&var.gold; S:&var.silver;</td></tr>
+</for>
+</if>
+
+<?comment draw the interface ?>
+<if variable="form.turn > 0"><set variable="var.r"><insert variable="form.or&form.turn;"/></set></if>
+<if variable="var.q = &var.r;">
+  <tr><td colspan="6" align="center"><b>That's right!</b></td></tr>
+  <set variable="var.win">1</set>
+</if>
+<else>
+<tr><for variable="var.i" from="1" to="6">
+  <td><a href="javascript:shiftColor(&var.i;)">
+  <img src="/internal-roxen-pixel-white" width="20" height="20" border="0" name="&var.i;" /></a></td>
+</for><td></td><td>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;</td></tr>
+</else>
+
+</table></td>
+<td><if not="1" variable="var.win = 1"><a href="javascript:send()">Done</a></if></td>
+</tr></table>
+
+</center></content>
