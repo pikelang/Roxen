@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.110 2000/01/28 19:39:51 jonasw Exp $
+/* $Id: wizard.pike,v 1.111 2000/02/02 19:13:36 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -164,7 +164,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     if (current && current != "0" &&
 	(current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
-    return make_tag("input",m);
+    res=make_tag("input",m);
+    m->type="hidden";   //  Yes, this hidden var is needed! Cleared boxes may
+    m->value="0";       //  otherwise revert to their initial set state.
+    return res+make_tag("input", m);
 
    case "int":
     m->type = "number";
