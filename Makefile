@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.21 1997/12/14 23:36:30 grubba Exp $
+# $Id: Makefile,v 1.22 1997/12/17 18:05:16 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -148,7 +148,7 @@ censor_crypto :
 	  (cd pike/src/modules/_Crypto; ./.build_lobotomized_crypto); \
 	else :; fi
 	@echo "Censoring the Crypto implementation..."
-	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto/rsa.pike pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
+	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto/rsa.pike pike/lib/modules/SSL.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
 
 censor_dbapi :
 	@echo "Censoring the DBAPI..."
