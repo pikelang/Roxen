@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.44 2000/09/19 12:24:38 wing Exp $
+// $Id: global_variables.pike,v 1.45 2000/09/19 12:46:28 lange Exp $
 
 /*
 #pragma strict_types
@@ -211,14 +211,6 @@ class PortOptions
     ::create( ([]), 0, 0, 0 );
   }
 };
-
-class LanguageList {
-  inherit Variable.MultipleChoice;
-
-  static string _title( string lang ) {
-    return roxenp()->language(roxenp()->locale->get(), "language")(lang);
-  }
-}
 
 array(string) old_module_dirs;
 void zap_all_module_caches( Variable.Variable v ) 
@@ -531,23 +523,23 @@ void define_global_variables(  )
 	 lambda() {return !QUERY(abs_engage);});
 #endif
 
-  object languagelist =
-    LanguageList("eng", 
+  defvar("locale",
+	 Variable.Language("Standard", ({ "Standard" }) +
 #if constant(Locale.list_languages)
-		 Locale.list_languages("roxen_config"),
+			   Locale.list_languages("roxen_config"),
 #else
-		 RoxenLocale.list_languages("roxen_config"),
+			   RoxenLocale.list_languages("roxen_config"),
 #endif
-		 0, LOCALE(158, "Default language"), 
-		 LOCALE(159, "Locale, used to localize all messages in Roxen.\n"
-			"Standard means using the default locale, which varies "
-			"according to the value of the 'LANG' environment variable."));
-
-  languagelist->set_changed_callback( lambda(Variable.Variable s) {
-					roxenp()->default_locale=roxenp()->verify_locale(QUERY(locale));
-				      } );
-
-  defvar("locale", languagelist);
+			   0, LOCALE(158, "Default language"), 
+			   LOCALE(159, "Locale, used to localize all "
+				  "messages in Roxen. Standard means using "
+				  "the default locale, which varies "
+				  "according to the value of "
+				  "the 'LANG' environment variable.")))
+    ->set_changed_callback( lambda(Variable.Variable s) {
+			      roxenp()->set_default_locale(QUERY(locale));
+			      roxenp()->set_locale();
+			    } );
 
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),
