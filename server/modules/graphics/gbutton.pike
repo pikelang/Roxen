@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.17 2000/02/07 04:43:10 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.18 2000/02/08 03:12:34 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -51,7 +51,7 @@ array register_module()
 
 
 TAGDOCUMENTATION
-#if manual
+#ifdef manual
 constant tagdoc=(["gbutton":"","gbutton-url":""]);
 /*
 	     "<table border=0>"
