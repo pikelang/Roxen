@@ -1,4 +1,4 @@
-/* This is a roxen module. (c) Idonex AB 1997.
+/* This is a roxen module. (c) Idonex AB 1997, 1998.
  * 
  * Draws diagrams pleasing to the eye.
  * 
@@ -6,11 +6,12 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.96 1998/03/12 02:28:08 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.97 1998/03/12 03:25:58 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
+#include "diagram.h"
 
 inherit "module";
 inherit "roxenlib";
@@ -19,16 +20,13 @@ import Image;
 
 function create_pie, create_bars, create_graph;
 
-//#define BG_DEBUG 1
-#define SEP "\t"
-#define VOIDSYMBOL "\n"
-
 #ifdef BG_DEBUG
   mapping bg_timers = ([]);
 #endif
 
 //FIXME (Inte alltid VOID!
-#define VOIDCODE if(m->voidseparator) \
+#define VOIDCODE \
+if(m->voidseparator) \
     voidsep=m->voidseparator; \
   else\
     if(m->voidsep)\
@@ -37,8 +35,7 @@ function create_pie, create_bars, create_graph;
       if (res->voidsep)\
 	voidsep=res->voidsep;\
       else\
-	voidsep="VOID";
-
+	voidsep="VOID"
 
 int loaded;
 
@@ -255,7 +252,7 @@ string itag_names(string tag, mapping m, string contents,
     sep=m->separator;
 
   string voidsep;
-  VOIDCODE
+  VOIDCODE;
 
   array foo;
 
@@ -306,7 +303,7 @@ string itag_values(string tag, mapping m, string contents,
   string sep=SEP;
   string voidsep;
 
-  VOIDCODE
+  VOIDCODE;
 
   if(!m->noparse)
     contents = parse_rxml( contents, id );
@@ -337,7 +334,7 @@ string itag_data(mapping tag, mapping m, string contents,
   string sep=SEP;
   string voidsep;
 
-  VOIDCODE
+  VOIDCODE;
 
   if(m->separator)
     sep=m->separator; 
@@ -384,18 +381,6 @@ string itag_data(mapping tag, mapping m, string contents,
       maxsize=sizeof(foo);
     bar[j] = foo;
   }
-  /*
-  foreach( lines, string entries )
-  {
-    foo=entries/sep - ({""});
-    for(int i=0; i<sizeof(foo); i++)
-      if (foo[i]==voidsep)
-	foo[i]=VOIDSYMBOL;
-    if (sizeof(foo)>maxsize)
-      maxsize=sizeof(foo);
-    bar += ({ foo });
-    foo = ({});
-    }*/
 #ifdef BG_DEBUG
   };
 #endif
@@ -497,7 +482,7 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   string sep=SEP;
   string voidsep;
 
-  VOIDCODE
+  VOIDCODE;
 
   if(!m->noparse)
     contents = parse_rxml( contents, id );
@@ -575,7 +560,6 @@ string tag_diagram(string tag, mapping m, string contents,
   bg_timers->all = gauge {
 #endif
 
-  res->datacounter=0;  // Lets see.. What was this for?!
   if(m->help) return register_module()[2];
 
   if(m->type) res->type = m->type;
@@ -683,10 +667,10 @@ string tag_diagram(string tag, mapping m, string contents,
 		"legend":itag_legendtext ]),
 	     res, id );
 
-  if ((res->data==0)||( sizeof(res->data) == 0 ))
+  if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
 
-  res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
+  res->bg = parse_color(m->bgcolor || defines->bg || "white");
   res->fg = parse_color(m->textcolor || defines->fg || "black");
 
   if(m->center) res->center = (int)m->center;
@@ -800,7 +784,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
 
 #ifdef BG_DEBUG
-  //  if(id->prestate->debug)
+  if(id->prestate->debug)
     return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m));
 #endif
 
@@ -814,7 +798,6 @@ mapping query_container_callers()
 
 int|object PPM(string fname, object id)
 {
-  perror("fname: %O\n",fname);
   if( objectp(fname) )
     perror("fname: %O\n",indices(fname));
   string q;
@@ -954,8 +937,8 @@ mapping find_file(string f, object id)
      break;
    case "bars":
    case "sumbars":
-      img = create_bars(diagram_data)["image"];
-      break;
+     img = create_bars(diagram_data)["image"];
+     break;
    case "graph":
      img = create_graph(diagram_data)["image"];
      break;
