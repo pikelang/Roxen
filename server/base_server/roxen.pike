@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.563 2000/11/02 09:11:01 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.564 2000/11/13 09:03:27 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -810,6 +810,10 @@ class Protocol
     ip = i;
 
     restore();
+    catch {
+      if( !requesthandler )
+	requesthandler = (program)("../local/"+requesthandlerfile);
+    };
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
     ::create();
