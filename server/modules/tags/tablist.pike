@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.31 2000/02/02 00:21:54 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.32 2000/02/02 12:42:44 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -142,6 +142,9 @@ string container_tablist(string t, mapping a, string contents, RequestID id)
 Image.Image draw_tab(mapping args, string txt)
 {
   object      button_font = resolve_font( args->font );
+  if (!button_font) {
+    error(sprintf("Tablist: Font %O not found.\n", args->font));
+  }
   Image.Image text = button_font->write( txt );
   text = text->scale(0, height);
 
