@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.428 2004/04/13 18:33:40 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.429 2004/04/14 14:24:49 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1568,7 +1568,6 @@ void send_result(mapping|void result)
       }
 
       if(file->type == "raw")  file->raw = 1;
-      else if(!file->type)     file->type="text/plain";
     }
 
   if(!file->raw && (prot != "HTTP/0.9"))
@@ -1756,6 +1755,8 @@ void send_result(mapping|void result)
           head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += strlen(head_string);
     }
+  else
+    if(!file->type) file->type="text/plain";
 #if 0
     REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
 			 prot, method, file));

@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.82 2004/04/13 18:44:11 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.83 2004/04/14 14:24:51 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -987,6 +987,8 @@ class RequestID
   {
     mapping(string:string) heads = ([]);
 
+    if(!file->type) file->type="text/plain";
+
     if( !zero_type(misc->cacheable) &&
 	(misc->cacheable != INITIAL_CACHEABLE) ) {
       if (!misc->cacheable) {
@@ -1023,7 +1025,7 @@ class RequestID
 	}
 	file->len = strlen(file->data);
       }
-      heads["Content-Type"] = file["type"]+charset;
+      heads["Content-Type"] = file->type + charset;
     }
 
     heads["Accept-Ranges"] = "bytes";
