@@ -10,7 +10,9 @@ class gdbm
     while(sscanf(fd->read(4), "%4c", len))
     {
       array err;
-      err = catch(::store(@decode_value(fd->read(len))));
+      err = decode_value(fd->read(len));
+//    perror("Storing "+err[0]+"\n");
+      err = catch(::store(@err));
       if(err) perror("Error while storing: %O\n", describe_backtrace(err));
     }
   }

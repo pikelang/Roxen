@@ -1,4 +1,6 @@
-PRIVATE string save_variables()
+static private array _vars=({});
+
+static private string save_variables()
 {
   mixed b, a;
   array res = ({ }), variable;
@@ -19,19 +21,19 @@ PRIVATE string save_variables()
 }
 
 
-PRIVATE void restore_variables(array var)
+static private void restore_variables(array var)
 {
   if(var)
     foreach(var, var)
       catch { this[var[0]] = var[1]; };
 }
 
-PRIVATE int max(int a,int b) /* Not macro becasue this is faster.. */
+static private int max(int a,int b) /* Not macro becasue this is faster.. */
 {
   return a<b?b:a;
 }
 
-PRIVATE void restore_call_out_list(array var)
+private static void restore_call_out_list(array var)
 {
   array ci;
 
@@ -52,7 +54,7 @@ PRIVATE void restore_call_out_list(array var)
   }
 }
 
-PRIVATE int save_call_out_list()
+private static int save_call_out_list()
 {
   array ci;
   array res = ({});
@@ -63,23 +65,16 @@ PRIVATE int save_call_out_list()
   return res;
 }
 
-
-
 string cast(string to)
 {
   if(to!="string") error("Cannot cast to "+to+".\n");
-  return encode_value(({save_variables(),save_call_out_list()}));
+  return encode_value(save_variables());
 }
 
 void create(string from)
 {
   array f;
   catch {
-    f = decode_value(from);
+    restore_variables(decode_value(from));
   };
-  if(arrayp(f))
-  {
-    restore_variables(f[0]);
-    restore_call_out_list(f[1]);
-  }
 }

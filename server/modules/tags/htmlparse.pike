@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.27 1997/04/16 04:01:14 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.28 1997/04/26 03:38:40 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -515,36 +515,43 @@ string tagtime(int t,mapping m)
 
   if (m->part)
   {
+    string sp;
+    if(m->type == "ordered")
+    {
+      m->type="string";
+      sp = "ordered";
+    }
+
     switch (m->part)
     {
      case "year":
       return number2string((int)(localtime(t)->year+1900),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      case "month":
       return number2string((int)(localtime(t)->mon+1),m,
-			   language(m->lang, "month"));
+			   language(m->lang, sp||"month"));
      case "day":
      case "wday":
       return number2string((int)(localtime(t)->wday+1),m,
-			   language(m->lang, "day"));
+			   language(m->lang, sp||"day"));
      case "date":
      case "mday":
       return number2string((int)(localtime(t)->mday),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      case "hour":
       return number2string((int)(localtime(t)->hour),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      case "min":
      case "minute":
       return number2string((int)(localtime(t)->min),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      case "sec":
      case "second":
       return number2string((int)(localtime(t)->sec),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      case "yday":
       return number2string((int)(localtime(t)->yday),m,
-			   language(m->lang, "number"));
+			   language(m->lang, sp||"number"));
      default: return "";
     }
   } else if(m->type) {
@@ -991,7 +998,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
   if(prec=(int)m->precision || (int)m->prec)
   {
     n=ipow(10, prec);
-    while(counts>n) { counts/=10; q++; }
+    while(counts>n) { counts=(counts+5)/10; q++; }
     counts*=ipow(10, q);
   }
 
@@ -1191,8 +1198,6 @@ string tag_allow(string a, mapping (string:string) m,
 {
   int ok;
 
-  got->misc->internal_get=1; /* ? */
-
   if(m->not)
   {
     m_delete(m, "not");
@@ -1377,7 +1382,7 @@ string tag_configimage(string f, mapping m)
 
 string tag_aprestate(string tag, mapping m, string q, object got)
 {
-  string href, s, *foo, target;
+  string href, s, *foo;
   multiset prestate=(< >);
 
   if(!m->href)

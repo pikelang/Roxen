@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.18 1997/04/19 21:29:02 grubba Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.19 1997/04/26 03:38:38 per Exp $";
 
 #define perror roxen_perror
 
@@ -118,7 +118,7 @@ class db {
 program gdbm;
 object open_db(string id)
 {
-  if(!gdbm && !(gdbm = master()->resolv("PerGdbm","base_server/foo")->gdbm))
+  if(!gdbm && !(gdbm = master()->resolv("Gdbm","base_server/foo")->gdbm))
   {
     werror("No gdbm module installed.\n");
     exit(0);

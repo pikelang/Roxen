@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.24 1997/04/13 00:42:03 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.25 1997/04/26 03:38:42 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -176,7 +176,7 @@ private int really_set_config(array mod_config)
 
     my_fd->write(prot+" 302 Config In Prestate!\r\n"
 		 +"\r\nLocation: "+conf->query("MyWorldLocation")+
-		 add_pre_state(url, aggregate_multiset(@prestate))+"\r\n"
+		 add_pre_state(url, prestate)+"\r\n"
 		 +"Content-Type: text/html\r\n"
 		 +"Content-Length: 0\r\n\r\n");
   }

@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.25 1997/04/26 03:34:53 per Exp $ */
+/* $Id: persistent.pike,v 1.26 1997/04/26 03:38:36 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -26,7 +26,7 @@ private static array __id;
 void really_save()
 {
   if(nosave()) return;
-  perror("really save ("+(__id*":")+")!\n");
+//  perror("really save ("+(__id*":")+")!\n");
 
   object file = files.file();
   array res = ({ });
@@ -110,17 +110,18 @@ nomask public void persist(mixed id)
   array var;
   err = catch {
     var=decode_value(open_db(__id[0])->get(__id[1]));
-    perror("decode_value ok\n");
+    //perror("decode_value ok\n");
   };
   if(err)
-    report_error("Failed to restore +"(__id*":")+": "+describe_backtrace(err));
+    report_error(sprintf("Failed to restore "+(id*":")+": %O",
+			 describe_backtrace((array)err)));
   
   if(var && sizeof(var))
   {
     foreach(var, var) if(err=catch {
       this_object()[var[0]] = var[1];
     })
-      report_error(" When setting +"(var[0])+" in "+(__id*":")+": "+
+      report_error(" When setting "+(var[0])+" in "+(__id*":")+": "+
 		   describe_backtrace(err));
   } else
     compat_persist();

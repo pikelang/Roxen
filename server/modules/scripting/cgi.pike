@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.21 1997/04/17 15:40:27 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.22 1997/04/26 03:38:39 per Exp $";
 
 #include <module.h>
 
