@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.31 1999/12/27 22:49:05 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.32 1999/12/27 23:08:51 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -46,6 +46,7 @@ int get_size(mixed x)
 # endif
 #endif
 
+#undef CACHE_WERR
 #ifdef CACHE_DEBUG
 # define CACHE_WERR(X) werror("CACHE: "+X+"\n");
 #else

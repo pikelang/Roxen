@@ -1,8 +1,7 @@
-/* $Id: fonts.pike,v 1.34 1999/12/27 22:46:05 mast Exp $ */
+/* $Id: fonts.pike,v 1.35 1999/12/27 23:15:42 nilsson Exp $ */
 
 #include <module.h>
 
-//import Image;
 constant Font = Image.font;
 
 string fix_name(string in)
@@ -60,7 +59,7 @@ string translate_ttf_style( string style )
   }
   if(search(lower_case(style), "oblique"))
     return "ni"; // for now.
-  werror("Unknwon ttf style: "+style+"\n");
+  report_debug("Unknwon ttf style: "+style+"\n");
   return "nn";
 }
 

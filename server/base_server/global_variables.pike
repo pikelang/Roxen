@@ -666,22 +666,22 @@ så här ofta. Tiden är angiven i dagar");
           mixed res = compile_string( "mixed f(){ return "+v+";}")()->f();
           if(sprintf("%t", res) != sprintf("%t", variables[c][VAR_VALUE]) &&
              res != 0 && variables[c][VAR_VALUE] != 0)
-            werror("Warning: Setting variable "+c+"\n"
+            report_debug("Warning: Setting variable "+c+"\n"
                    "to a value of a different type than the default value.\n"
                    "Default was "+sprintf("%t", variables[c][VAR_VALUE])+
                    " new is "+sprintf("%t", res)+"\n");
           variables[c][VAR_VALUE]=res;
         })
         {
-          werror("Warning: Asuming '"+v+"' should be taken "
+          report_debug("Warning: Asuming '"+v+"' should be taken "
                  "as a string value.\n");
           if(!stringp(variables[c][VAR_VALUE]))
-            werror("Warning: Old value was not a string.\n");
+            report_debug("Warning: Old value was not a string.\n");
           variables[c][VAR_VALUE]=v;
         }
       }
       else
-	perror("Unknown variable: "+c+"\n");
+	report_debug("Unknown variable: "+c+"\n");
     }
   }
 }
