@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.155 1998/09/17 19:48:49 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.156 1998/09/30 01:27:37 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1382,7 +1382,10 @@ mapping|int low_get_file(object id, int|void no_magic)
 	{
 #ifdef MODULE_LEVEL_SECURITY
 	  int oslevel = slevel;
-	  slevel = misc_cache[ tmp[1] ][1];// misc_cache from check_security
+	  slevel = misc_cache[ tmp[1] ][1];
+	  // misc_cache from
+	  // check_security
+	  id->misc->seclevel = slevel;
 #endif
 	  if(objectp(fid))
 	    TRACE_LEAVE("Returned open file"
