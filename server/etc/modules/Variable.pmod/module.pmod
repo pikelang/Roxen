@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.53 2001/06/14 20:07:11 js Exp $
+// $Id: module.pmod,v 1.54 2001/06/16 15:48:40 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -903,6 +903,30 @@ class FontChoice
     //! for the default locale (always english)
   {
     ::create( default_value, 0, flags,std_name, std_doc );
+  }
+}
+
+class DatabaseChoice
+//! Select a database from all available databases.
+{
+  inherit StringChoice;
+  constant type = "DatabaseChoice";
+
+  function(void:void|object) config = lambda() { return; };
+
+  DatabaseChoice set_configuration_pointer( function(void:object) configuration )
+  //! Provide a function that returns a configuration object,
+  //! that will be used for authentication against the database
+  //! manager. Typically called as
+  //! @code{set_configuration_pointer(my_configuration)}.
+  {
+    config = configuration;
+    return this_object();
+  }
+
+  array get_choice_list( )
+  {
+    return ({ " none" }) + sort(DBManager.list( config() ));
   }
 }
 
