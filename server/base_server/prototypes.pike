@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.90 2004/04/29 19:30:01 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.91 2004/04/30 09:17:17 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -159,6 +159,13 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
 }
 
+// Simulate an import of useful stuff from Parser.XML.Tree.
+static constant Node = Parser.XML.Tree.Node;
+static constant RootNode = Parser.XML.Tree.RootNode;
+static constant HeaderNode = Parser.XML.Tree.HeaderNode;
+static constant TextNode = Parser.XML.Tree.TextNode;
+static constant ElementNode = Parser.XML.Tree.ElementNode;
+
 class DAVLock(string locktoken,
 	      string path,
 	      int(0..1) recursive,
@@ -213,6 +220,35 @@ class DAVLock(string locktoken,
   //!
   //! @[RoxenModule.lock_file] may set this if it's zero, otherwise
   //! it shouldn't change.
+
+  //! Returns a DAV:activelock @[Parser.XML.Tree.Node] structure
+  //! describing the lock.
+  Node get_xml()
+  {
+    ElementNode res = ElementNode("DAV:activelock", ([]));
+    ElementNode tmp;
+    res->add_child(tmp = ElementNode("DAV:locktype", ([])));
+    tmp->add_child(stringp(locktype)?ElementNode(locktype, ([])):locktype);
+    res->add_child(tmp = ElementNode("DAV:lockscope", ([])));
+    tmp->add_child(stringp(lockscope)?ElementNode(lockscope, ([])):lockscope);
+    res->add_child(tmp = ElementNode("DAV:depth", ([])));
+    tmp->add_child(recursive?TextNode("Infinity"):TextNode("0"));
+
+#if 0
+    if (owner) {
+      res->add_child(tmp = ElementNode("DAV:owner", ([])));
+      tmp->add_child(owner);	// FIXME: How?
+    }
+#endif /* 0 */
+
+    // FIXME: Timeout.
+
+    res->add_child(tmp = ElementNode("DAV:locktoken", ([])));
+    tmp->add_child(tmp = ElementNode("DAV:href", ([])));
+    tmp->add_child(TextNode(locktoken));
+
+    return res;
+  }
 }
 
 class Configuration
@@ -1225,12 +1261,6 @@ class RequestID
     return conf;
   }
 }
-
-static constant Node = Parser.XML.Tree.Node;
-static constant RootNode = Parser.XML.Tree.RootNode;
-static constant HeaderNode = Parser.XML.Tree.HeaderNode;
-static constant TextNode = Parser.XML.Tree.TextNode;
-static constant ElementNode = Parser.XML.Tree.ElementNode;
 
 class XMLStatusNode
 {
