@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.6 2000/01/28 16:27:12 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.7 2000/01/28 16:33:38 mast Exp $
 
 #pragma strict_types
 
@@ -72,6 +72,13 @@ this_program add_containers (mapping(string:CONTAINER_TYPE) cdefs)
     else m_delete (tagmap_containers, name);
   return this_object();
 }
+
+// Disable registration of low entities that shouldn't be parsed in
+// compatibility mode.
+this_program add_entity (string name, ENTITY_TYPE edef)
+  {return this_object();}
+this_program add_entities (mapping(string:ENTITY_TYPE) edefs)
+  {return this_object();}
 
 mapping(string:TAG_TYPE) tags() {return tagmap_tags;}
 
