@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.482 2000/04/25 17:41:30 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.483 2000/05/16 17:50:56 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -599,6 +599,7 @@ void threaded_handle(function f, mixed ... args)
 }
 
 int number_of_threads;
+static array(object) handler_threads = ({});
 void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
@@ -609,26 +610,34 @@ void start_handler_threads()
                  language_low("en")->number(  QUERY(numthreads) )
                  +" threads to handle requests.\n");
   }
+  array(object) new_threads = ({});
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
-    do_thread_create( "Handle thread ["+number_of_threads+"]",
-		   handler_thread, number_of_threads );
+    new_threads += ({ do_thread_create( "Handle thread [" +
+					number_of_threads + "]",
+					handler_thread, number_of_threads ) });
+  handler_threads += new_threads;
 }
 
 void stop_handler_threads()
 {
   int timeout=10;
+#if constant(_reset_dmalloc)
+  // DMALLOC slows stuff down a bit...
+  timeout *= 10;
+#endif /* constant(_reset_dmalloc) */
   report_debug("Stopping all request handler threads.\n");
   while(number_of_threads>0) {
     number_of_threads--;
     handle_queue->write(0);
     thread_reap_cnt++;
   }
+  handler_threads = ({});
   while(thread_reap_cnt) {
+    sleep(0.1);
     if(--timeout<=0) {
       report_debug("Giving up waiting on threads!\n");
       return;
     }
-    sleep(0.1);
   }
 }
 #endif /* THREADS */
@@ -1600,12 +1609,15 @@ int register_url( string url, object conf )
 
   array(string) required_hosts;
 
-  /*  if( !prot->supports_ipless )*/
-    required_hosts = find_ips_for( host );
+  if (is_ip(host)) {
+    required_hosts = ({ host });
+  } else {
+    /*  if( !prot->supports_ipless )*/
+      required_hosts = find_ips_for( host );
 
-  if (!required_hosts)
-    required_hosts = ({ 0 });	// ANY
-
+    if (!required_hosts)
+      required_hosts = ({ 0 });	// ANY
+  }
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
@@ -2121,17 +2133,17 @@ class ImageCache
         float degree = (float)(args["rotate-cw"] || args["rotate-ccw"]);
         switch( args["rotate-unit"] && args["rotate-unit"][0..0] )
         {
-         case "r":  degree = (degree / (2*3.1415)) * 360; break;
-         case "d":                                        break;
+         case "r":  degree = (degree / 2*3.1415) * 360;   break;
+         case "d":  break;
          case "n":  degree = (degree / 400) * 360;        break;
          case "p":  degree = (degree / 1.0) * 360;        break;
         }
         if( args["rotate-cw"] )
           degree = -degree;
-        if( !alpha )
+        if(!alpha)
           alpha = reply->copy()->clear(255,255,255);
         reply = reply->rotate_expand( degree );
-        alpha = alpha->rotate( degree,0,0,0 );
+        alpha = alpha->rotate( degree, 0,0,0 );
       }
 
 
@@ -3127,7 +3139,9 @@ void dump( string file )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
+#ifdef __NT__
   file = normalize_path( file );
+#endif
   program p = master()->programs[ replace(file, "//", "/" ) ];
 #ifdef __NT__
   if( !p )
@@ -3370,28 +3384,17 @@ int is_ip(string s)
 array(RoxenModule) configuration_auth=({});
 mapping configuration_perm=([]);
 
-private int configs_loaded = 0;
-array(RoxenModule) get_configuration_auth()
-{
-  if (!configs_loaded) {
-    foreach (configurations, object c)
-      if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
-	c->enable_all_modules();
-    configs_loaded = 1;
-  }
-  configuration_auth -= ({0});
-  return configuration_auth;
-}
-
-// Temporary compatibility kludge.
 void fix_configuration_auth()
 {
-  get_configuration_auth();
+  foreach (configurations, object c)
+    if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
+      c->enable_all_modules();
+  configuration_auth -= ({0});
 }
 
 void add_permission(string name, mapping desc)
 {
-  get_configuration_auth();
+  fix_configuration_auth();
   configuration_perm[ name ]=desc;
   configuration_auth->add_permission( name, desc );
 }
@@ -3411,7 +3414,7 @@ string configuration_authenticate(RequestID id, string what)
 {
   if(!id->realauth)
     return 0;
-  get_configuration_auth();
+  fix_configuration_auth();
 
   array auth;
   RoxenModule o;
@@ -3432,14 +3435,14 @@ string configuration_authenticate(RequestID id, string what)
 
 array(object) get_config_users( string uname )
 {
-  get_configuration_auth();
+  fix_configuration_auth();
   return configuration_auth->find_admin_user( uname );
 }
 
 
 array(string|object) list_config_users(string uname, string|void required_auth)
 {
-  get_configuration_auth();
+  fix_configuration_auth();
   array users = `+( ({}), configuration_auth->list_admin_users( ) );
   if( !required_auth )
     return users;
