@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.268 2002/02/06 17:38:59 mast Exp $
+// $Id: module.pmod,v 1.269 2002/02/14 22:07:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5568,47 +5568,47 @@ class Type
   //! it won't do a direct conversion from @[conversion_type] to this
   //! type. Throws RXML parse error on any conversion error.
   {
-    if (conversion_type) {
-      if (from->conversion_type) {
-	string fromconvname = from->conversion_type->name;
-	if (conversion_type->name == fromconvname)
-	  return encode (from->decode ? from->decode (val) : val, conversion_type);
-	if (this_object()->name == fromconvname)
-	  return from->decode ? from->decode (val) : val;
-      }
-      string name = this_object()->name;
-      if (name == from->name)
-	return val;
-      // The following is not terribly efficient, but most situations
-      // should be handled by the special cases above.
-      int levels = 1;
-      for (Type conv = from->conversion_type;
-	   conv;
-	   conv = conv->conversion_type, levels++)
-	if (conv->name == name) {
-	  while (levels--) {
-	    val = from->decode ? from->decode (val) : val;
-	    from = from->conversion_type;
-	  }
-	  return val;
+    Type convtype = conversion_type || this_object();
+
+    if (from->conversion_type &&
+	convtype->name == from->conversion_type->name) {
+      if (from->decode) val = from->decode (val);
+      return convtype == this_object() ? val : encode (val, conversion_type);
+    }
+
+    string name = this_object()->name;
+    if (name == from->name)
+      return val;
+
+    // The following is not terribly efficient, but most situations
+    // should be handled by the special cases above.
+    int levels = 1;
+    for (Type conv = from->conversion_type;
+	 conv;
+	 conv = conv->conversion_type, levels++)
+      if (conv->name == name) {
+	while (levels--) {
+	  val = from->decode ? from->decode (val) : val;
+	  from = from->conversion_type;
 	}
-      if (conversion_type->conversion_type &&
-	  conversion_type->conversion_type->name == from->name)
+	return val;
+      }
+
+    if (conversion_type)
+      if (convtype->conversion_type &&
+	  convtype->conversion_type->name == from->name)
 	// indirect_convert should never do the job of encode.
-	return encode (conversion_type->encode (val, from), conversion_type);
+	return encode (convtype->encode (val, from), convtype);
       else {
 #ifdef MODULE_DEBUG
-	if (conversion_type->name == from->name)
+	if (convtype->name == from->name)
 	  fatal_error ("This function shouldn't be used to convert "
 		       "from the conversion type %s to %s; use encode() for that.\n",
-		       conversion_type->name, this_object()->name);
+		       convtype->name, this_object()->name);
 #endif
-	return encode (conversion_type->indirect_convert (val, from), conversion_type);
+	return encode (convtype->indirect_convert (val, from), convtype);
       }
-    }
-    else
-      if (from->conversion_type && from->conversion_type->name == this_object()->name)
-	return from->decode ? from->decode (val) : val;
+
     parse_error ("Cannot convert type %s to %s.\n", from->name, this_object()->name);
   }
 
@@ -5994,6 +5994,12 @@ TString t_string = TString();
 //! Conversion to and from this type works just like
 //! @[RXML.t_any_text]; see the note for that type for further
 //! details.
+//!
+//! @note
+//! The whitespace handling implemented by this type is a bit
+//! inadequate and doesn't conform to e.g. the XML whitespace
+//! normalization rules. Therefore this type should be expected to
+//! change.
 
 //!
 class TString
@@ -6228,10 +6234,13 @@ class TXml
 	foreach (indices (args), string arg)
 	  add (" ", arg, "=\"", replace (args[arg], "\"", "\"'\"'\""), "\"");
       else
-	foreach (indices (args), string arg)
-	  add (" ", arg, "=\"",
-	       replace (args[arg], ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})),
-	       "\"");
+	foreach (indices (args), string arg) {
+	  // Three serial replaces are currently faster than one parallell.
+	  string val = replace (args[arg], "&", "&amp;");
+	  val = replace (val, "\"", "&quot;");
+	  val = replace (val, "<", "&lt;");
+	  add (" ", arg, "=\"", val, "\"");
+	}
 
     if (content)
       add (">", content, "</", tagname, ">");
@@ -7599,8 +7608,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	string parser_name = what->parser_prog->name;
 #ifdef DEBUG
 	if (!reg_parsers[parser_name])
-	  error ("Cannot encode unregistered parser %O in type %O.\n",
-		 parser_name, what);
+	  error ("Cannot encode unregistered parser at %s in type %O.\n",
+		 Program.defined (what->parser_prog), what);
 #endif
 	ENCODE_DEBUG_RETURN (({"type", what->name, "p:" + parser_name}) +
 			     what->parser_args);
@@ -7645,7 +7654,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	else if (what->is_RXML_Parser) {
 #ifdef DEBUG
 	  if (!reg_parsers[what->name])
-	    error ("Cannot encode unregistered parser %O.\n", what->name);
+	    error ("Cannot encode unregistered parser at %s.\n",
+		   Program.defined (what));
 #endif
 	  ENCODE_DEBUG_RETURN ("p:" + what->name);
 	}
@@ -7678,11 +7688,15 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
     }
 
     if (programp (what))
-      error("Cannot encode program %s.\n", Program.defined (what));
-    else if (object o = functionp (what) && function_object (what)) {
-      string s = sprintf ("%O", o);
-      if (s == "object") s = "object(" + Program.defined (object_program (o)) + ")";
-      error ("Cannot encode function %s->%O.\n", s, what);
+      error("Cannot encode program at %s.\n", Program.defined (what));
+    else if (functionp (what)) {
+      string s = "";
+      if (object o = function_object (what)) {
+	s = sprintf ("%O", o);
+	if (s == "object") s = "";
+	else s += "->";
+      }
+      error ("Cannot encode function %s%O at %s.\n", s, what, Function.defined (what));
     }
     else
       error ("Cannot encode %O.\n", what);
@@ -7692,7 +7706,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
   {
     ENCODE_MSG ("encode_object (%O)\n", x);
     if (x->_encode && x->_decode) ENCODE_DEBUG_RETURN (x->_encode());
-    error ("Cannot encode object %O without _encode() and _decode().\n", x);
+    error ("Cannot encode object %O at %s without _encode() and _decode().\n",
+	   x, Program.defined (object_program (x)));
   }
 
   void decode_object (object x, mixed data)
@@ -7700,7 +7715,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
     ENCODE_MSG ("decode_object (%O)\n", x);
     if (x->is_RXML_PCode) x->_decode (data, check_tag_set_hash);
     else if (x->_decode) x->_decode (data);
-    else error("Cannot decode object %O without _decode().\n", x);
+    else error("Cannot decode object %O at %s without _decode().\n",
+	       x, Program.defined (object_program (x)));
   }
 
   string _sprintf()
