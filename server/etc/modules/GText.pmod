@@ -183,17 +183,6 @@ array(Image.Image) make_text_image(
     yoffset+=3;
   }
 
-  if(args->move)
-  {
-    int dx,dy;
-    if(sscanf(args->move, "%d,%d", dx, dy)!=2)
-      m_delete(args,"move");
-    else {
-      xoffset += dx;
-      yoffset += dy;
-    }
-  }
-
   if(args->ghost)
   {
     int howmuch=(int)args->ghost;
@@ -325,6 +314,17 @@ array(Image.Image) make_text_image(
     }
   } else
     background = Image.Image(xsize, ysize, @bgcolor);
+
+  if(args->move)
+  {
+    int dx,dy;
+    if(sscanf(args->move, "%d,%d", dx, dy)!=2)
+      m_delete(args,"move");
+    else {
+      xoffset += dx;
+      yoffset += dy;
+    }
+  }
 
   if(args->border)
   {
