@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.11 2000/09/14 19:33:05 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.12 2001/08/23 20:20:12 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -52,8 +52,12 @@ void start(int n, Configuration c) {
 // ------------- Find the best language file -------------
 
 array(string) find_language(RequestID id) {
-  array(string) langs=id->misc->pref_languages->get_languages()+({default_language});
-  return langs & languages;
+  if (id->misc->pref_languages) {
+    return (id->misc->pref_languages->get_languages() +
+	    ({ default_language })) & languages;
+  } else {
+    return ({ default_language }) & languages;
+  }
 }
 
 object remap_url(RequestID id, string url) {
