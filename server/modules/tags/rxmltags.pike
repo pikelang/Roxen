@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.72 2000/02/17 08:42:44 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.73 2000/02/17 23:39:23 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -19,7 +19,7 @@ inherit "roxenlib";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_PARSER | MODULE_PROVIDER;
-constant module_name = "RXML 1.4 tags";
+constant module_name = "RXML 2.0 tags";
 constant module_doc  = "This module adds a lot of RXML tags.";
 
 void create()
@@ -863,9 +863,7 @@ array(string) container_cache(string tag, mapping args,
 #else
   string key = (string)hash(HASH(contents));
 #endif
-  int tm;
-  if (args->timeout)
-    tm = (int)args->timeout;
+  int tm = (int)args->timeout;
   if(args->key)
     key += args->key;
   string parsed = cache_lookup("tag_cache", key);

@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.39 2000/02/14 09:23:02 per Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.40 2000/02/17 23:38:05 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -23,11 +23,11 @@ inherit "roxenlib";
 // ------------- Module registration and configuration. ---------------
 
 constant module_type = MODULE_FILE_EXTENSION;
-constant module_name = "RXML 1.4 parser";
+constant module_name = "RXML 2.0 parser";
 constant module_doc  = "This module handles rxml parsing of HTML pages. It is recommended to also "
-  "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
+  "add the \"RXML 2.0 tags\" module so that this modules gets some tags to parse. "
   "Some bare bones logic tags are already provided by this module (case, cond, "
-  "comment, define, elif, else, elseif, false, help, if, line, "
+  "comment, define, elif, else, elseif, emit, eval, false, help, if, "
   "nooutput, noparse, number, strlen, then, trace, true, undefine and use).";
 
 string status()
