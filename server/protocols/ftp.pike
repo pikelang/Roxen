@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.19 1997/05/26 01:21:12 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.20 1997/05/26 21:52:10 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -583,7 +583,7 @@ int open_file(string arg)
     switch(misc->error_code) {
     case 401:
     case 403:
-      reply("550 "+args+": Access denied.\n");
+      reply("550 "+arg+": Access denied.\n");
       break;
     case 405:
       reply("553 "+arg+": Method not allowed.\n");
