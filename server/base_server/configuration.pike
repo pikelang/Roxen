@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.43 1997/08/04 12:55:54 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.44 1997/08/06 15:00:39 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -881,7 +881,7 @@ mapping|int low_get_file(object id, int|void no_magic)
       nest ++;
       err = catch {
 	if( nest < 20 )
-	  tmp = low_get_file( tmp, no_magic );
+	  tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	else
 	  error("Too deep recursion in roxen::get_file() while mapping "
 		+file+".\n");
