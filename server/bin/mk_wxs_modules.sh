@@ -1,18 +1,12 @@
 #/bin/sh
 #
-# $Id: mk_wxs_modules.sh,v 1.2 2004/11/10 09:21:03 grubba Exp $
+# $Id: mk_wxs_modules.sh,v 1.3 2004/11/10 13:12:27 grubba Exp $
 #
 # Make a set of Windows Installer XML source module files
 # from a typical roxen module layout.
 #
 # 2004-11-03 Henrik Grubbström
 #
-
-if [ "$#" = "2" ]; then :; else
-  echo "Usage:" >&2
-  echo "  $0 [-v <version>] <base_name> <directory>" >&2
-  exit 1
-fi
 
 version="1.0.0"
 
@@ -23,6 +17,22 @@ if [ "$1" = "-v" ] then
   shift
 fi
 
+if [ "$#" = "2" ]; then :; else
+  echo "Usage:" >&2
+  echo "  $0 [-v <version>] <base_name> <directory>" >&2
+  exit 1
+fi
+
+if [ "$PIKE" = "" ]; then 
+  if type pike >/dev/null 2>&1; then 
+    PIKE=pike
+  else 
+    echo "No pike binary found." >&2 
+    exit 1 
+  fi 
+fi 
+export PIKE
+ 
 base="$1"
 dir="$2"
 
