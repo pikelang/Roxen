@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.61 2001/06/26 16:09:54 jhs Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.62 2001/06/27 00:06:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -168,7 +168,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     TRACE_ENTER (sprintf ("Evaluating RXML page %O",
 			  id->not_query), this_object());
     RXML.Parser parser = Roxen.get_rxml_parser (id);
-    parser->finish (data);
+    parser->write_end (data);
     rxml = parser->eval();
   }
   TRACE_LEAVE ("");
