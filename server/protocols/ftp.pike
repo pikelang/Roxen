@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.56 1997/09/26 12:19:00 grubba Exp $
+ * $Id: ftp.pike,v 1.57 1997/10/03 21:39:37 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -388,7 +388,7 @@ class ls_program {
 
   object(list_stream) output;
 
-  void do_assynch_dir_ls()
+  int|void do_assynch_dir_ls()
   {
     if (output) {
       if (dir_stack->ptr) {
@@ -435,7 +435,12 @@ class ls_program {
 	}
 	output->write(s);
 
+	// Call me again.
+#ifdef THREADS
+	return 1;
+#else
 	call_out(do_assynch_dir_ls, 0);
+#endif /* THREADS */
       } else {
 	output->write(0);
       }
@@ -476,7 +481,13 @@ class ls_program {
 	name_directories = 1;
       }
 
+#ifdef THREADS
+      // No need to do it asynchronously, we'd just tie up the backend.
+      while(do_assynch_dir_ls())
+	;
+#else
       call_out(do_assynch_dir_ls, 0);
+#endif /* THREADS */
     }
   }
 
@@ -1034,7 +1045,11 @@ void timeout()
 
 object ls_session;
 
-void got_data(mixed fooid, string s)
+#if constant(thread_create)
+object(Thread.Mutex) handler_lock = Thread.Mutex();
+#endif /* constant(thread_create) */
+
+void handle_data(string s, mixed key)
 {
   string cmdlin;
   time = _time(1);
@@ -1534,6 +1549,20 @@ void got_data(mixed fooid, string s)
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
   }
+  if (objectp(key))
+    destruct(key);
+}
+
+void got_data(mixed fooid, string s)
+{
+  mixed key;
+#if constant(thread_create)
+  // NOTE: It's always the backend which locks, so we need to force
+  // the lock to avoid a "Recursive mutex" error in case it is locked.
+  key = handler_lock->lock(1);
+#endif /* constant(thread_create) */
+  // Support for threading. The key is needed to get the correct order.
+  roxen->handle(handle_data, s, key);
 }
 
 int is_connection;
