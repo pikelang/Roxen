@@ -6,7 +6,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.9 2000/03/25 02:31:00 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.10 2000/05/11 17:52:43 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -86,7 +86,15 @@ class TagEmitLanguages {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "emit#languages":({ "<desc plugin>Outputs language descriptions</desc>",
+  "emit#languages":({ #"<desc plugin><short>Outputs language descriptions.</short>
+It will output information associated to languages, such as the name of the language in
+different languages. A list of languages that should be outputed can be provided with the langs
+attribute. If no such attribute is used a generated list of present languages will be used. If
+such a list could not be generated the list provided in the Preferred Language Analyzer module
+will be used.</desc>
+<attr name=langs>Should contain comma seperated list of language codes. The languages
+associated with these codes will be emitted in this order.</attr>
+",
 		      ([
 			"&_.code;":"<desc ent>The language code.</desc>",
 			"&_.en;":"<desc ent>The language name in english.</desc>",
