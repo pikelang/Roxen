@@ -10,8 +10,8 @@ function replace ()
   rsif "$1" "$2" $files >/dev/null && echo -n '.'
 }
 
-javadoc -nonavbar -sourcepath ../src -d . com.chilimoon.chilimoon
-cd com/chilimoon/chilimoon
+javadoc -nonavbar -sourcepath ../src -d . com.roxen.roxen
+cd com/roxen.roxen
 mv package-tree.html index.html
 rm -f package-*
 files=(*.html)
@@ -28,7 +28,7 @@ replace	'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">' '<manual>'
 echo
 
 echo -n "Removing cruft."
-remove '../../../com/chilimoon/chilimoon/'
+remove '../../../com/roxen.roxen/'
 remove '<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../stylesheet.css" TITLE="Style">'
 remove '<!--NewPage-->'
 remove '<BODY BGCOLOR="white">'
