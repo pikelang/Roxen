@@ -1,8 +1,11 @@
 <h1>Välkommen till Roxen WebServer 2.0</h1>    
     
-<p><font size="+1">
+<blockquote>
 Om dina fonter är alldeles för stora (eller för små, beroende på tycke),
 justera inställningarna för unicodefontstorlek i din browser.
 Detta konfigurationsinterface använder UTF-8, och åtminstone
 netscape har olika fontstorlek för unicodefonter (default 18) än
-normala fonter (default 12).</font></p>
+normala fonter (default 12).
+</blockquote>
+
+<a href="whatsnew.html"><h2>Vad är nytt i 2.0?</h2></a>

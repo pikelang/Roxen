@@ -1,8 +1,10 @@
-<h1>Welcome to Roxen WebServer 2.0</h1>    
-    
-<p><font size="+1">
-If your fonts are way to large (or small, depending on personal
-preferences), please adjust the unicode font size in your
-browser. This configuration interface uses UTF-8, and at least
-netscape has a different font size for unicode fonts (defaulting to 18)
-than normal fonts (defaulting to 12).</font></p>
+<h1>Welcome to Roxen WebServer 2.0</h1>
+<blockquote> 
+ If your fonts are way to large (or small, depending on personal
+ preferences), please adjust the unicode font size in your
+ browser. This configuration interface uses UTF-8, and at least
+ netscape has a different font size for unicode fonts (defaulting to 18)
+ than normal fonts (defaulting to 12).
+</blockquote> 
+
+<a href="whatsnew.html"><h2>What's new?</h2></a>
