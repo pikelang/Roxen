@@ -4,18 +4,20 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.38 2002/05/23 14:14:27 wellhard Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.39 2002/09/11 15:43:23 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Verified form";
 constant module_doc  = "Creates a self verifying form.";
 
-// maxlength is excluded so that it gets exported.
+// maxlength is excluded so that it gets exported. value is included
+// since not all widgets have a value attribute, and those who do add
+// it themselves.
 constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
 		 "regexp", "glob", "minlength", "case",
 		 "mode", "fail-if-failed", "ignore-if-false",
-		 "ignore-if-failed", "ignore-if-verified", "optional" >);
+		 "ignore-if-failed", "ignore-if-verified", "optional", "value" >);
 
 constant forbidden = ({"\\", ".", "[", "]", "^",
 		       "$", "(", ")", "*", "+", "|"});
