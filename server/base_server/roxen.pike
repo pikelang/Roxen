@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.632 2001/02/22 23:47:21 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.633 2001/02/23 02:25:44 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2652,6 +2652,8 @@ void create()
 
   // for module encoding stuff
 
+  add_constant( "CFUserDBModule",config_userdb_module );
+  
   add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
@@ -2661,6 +2663,10 @@ void create()
 //   add_constant( "DBManager", ((object)"base_server/dbs.pike") );
 
   DDUMP( "etc/modules/DBManager.pmod");
+  DDUMP( "base_server/roxenlib.pike");
+  DDUMP( "base_server/html.pike");
+  DDUMP( "etc/modules/Dims.pmod");
+  DDUMP( "config_interface/boxes/Box.pmod" );
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
 
