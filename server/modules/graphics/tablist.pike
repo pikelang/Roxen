@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.47 2000/09/10 16:37:50 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.48 2001/01/14 00:09:16 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -96,7 +96,7 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
     gbutton_args->alt = a->alt;
     m_delete(a, "alt");
   } else
-    gbutton_args->alt = "_/" + contents + "\\_";
+    gbutton_args->alt = "/" + contents + "\\";
 
   d->result += ({ ({gbutton_args,contents}) });
   return 0;
