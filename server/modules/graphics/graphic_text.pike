@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.276 2001/08/30 12:20:33 jhs Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.277 2001/09/02 23:20:29 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -349,16 +349,17 @@ texture=\"/internal-roxen-squares\">A</gtext>
  the actual image.
 </attr>
 
-<attr name='xpad' value='percentage|integer'><p>
+<attr name='xpad' value='percentage|integer ended with \"px\"'><p>
  Sets the padding between characters. The value can either be an
- relative change, in percent, or an absolute value. Note that
+ relative change, in percent, or an absolute number of pixels, ended
+ with the string \"px\". Note that
  different fonts reacts differently on these values and for some it
  will not have any effect at all. This depends on the type of the font
  and the font implementation.</p>
 
 <ex>
 <gtext font=\"niquel\">HELLO ROXEN</gtext><br />
-<gtext xpad=\"4\" font=\"niquel\">HELLO ROXEN</gtext><br />
+<gtext xpad=\"4px\" font=\"niquel\">HELLO ROXEN</gtext><br />
 <gtext xpad=\"50%\" font=\"niquel\">HELLO ROXEN</gtext><br />
 </ex>
 </attr>
@@ -371,8 +372,8 @@ texture=\"/internal-roxen-squares\">A</gtext>
  Sets the horizontal spacing.</p>
 </attr>
 
-<attr name='ypad' value='percentage'><p>
- Sets the padding beteen lines.</p>
+<attr name='ypad' value='percentage|integer ended with \"px\"'><p>
+ Sets the padding beteen lines. Works as xpad.</p>
 </attr>
 
 
@@ -663,17 +664,17 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
 
     int|float xpad=0.0;
     if(args->xpad)
-      if(args->xpad[-1]=='%')
-	xpad = (float)args->xpad;
-      else
+      if(args->xpad[-1]=='x' && args->xpad[-2]=='p')
 	xpad = (int)args->xpad;
+      else
+	xpad = (float)args->xpad;
 
     int|float ypad=0.0;
     if(args->ypad)
-      if(args->ypad[-1]=='%')
-	ypad = (float)args->ypad;
-      else
+      if(args->ypad[-1]=='x' && args->ypad[-2]=='p')
 	ypad = (int)args->ypad;
+      else
+	ypad = (float)args->ypad;
 
     font = get_font(args->font,
                     (int)args->fontsize||32,
