@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.15 1998/05/08 11:50:33 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.16 1998/07/01 11:04:01 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -44,7 +44,8 @@ string container_fields(string name, mapping arg, string q,
   return "";
 }
 
-string tag_tablify( string tag, mapping m, string q, mapping request_id )
+string tag_tablify( string tag, mapping m, string q, mapping request_id,
+		    object file, mapping defines)
 {
   array rows, res;
   string sep, td, color, table;
@@ -59,6 +60,10 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   if(tag == "htable") m->nice="nice";
   
   if(m->help) return register_module()[2];
+
+  if (m->parse) {
+    q = parse_rxml(q, request_id, file, defines);
+  }
 
   mapping arg_list = ([]);
   q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
