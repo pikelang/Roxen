@@ -18,11 +18,13 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
 
   string subsel;
   string cfg = q;
-  string pre = ("<item selected "
-                "title='"+(c->name-"'") +
-                "' href='"+DOTDOT(2)+(q-"'")+"/'>");
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
+
+  string pre = ("<item selected "
+                "title='"+(c->name-"'") +
+                "' href='"+(subsel==""? DOTDOT(1):DOTDOT(2)+(q-"'")+"/")+"'>");
+
   foreach( ({ "modules", "settings", }), string q )
   {
     if( subsel == q )
