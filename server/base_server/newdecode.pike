@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.8 1999/02/15 23:20:10 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.9 1999/03/13 20:06:09 marcus Exp $";
 #endif
 
 #include <roxen.h>
@@ -268,6 +268,18 @@ private mapping compat_parse(string s)
   return res;
 }
 
+static private string strip_doc(string s)
+{
+  int p=0;
+  while((p=search(s, "\n#", p))>=0) {
+    int p2 = search(s, "\n", p+2);
+    if(p2<0)
+      return s[..p];
+    else
+      s = s[..p]+s[p2+1..];
+  }
+  return s;
+}
 
 mapping decode_config_file(string s)
 {
@@ -293,7 +305,8 @@ mapping decode_config_file(string s)
              // a mere human can edit it.
     
 //    trace(1);
-    parse_html(s, ([]), ([ "region":new_decode_config_region ]), res);
+     parse_html(strip_doc(s), ([]),
+		([ "region":new_decode_config_region ]), res);
 //    trace(0);
 //    werror(sprintf("Decoded value is: %O\n", res));
     return res;
