@@ -142,6 +142,7 @@ urw_itc_avant_garde-demi-r binary
 /server/java/src/se/idonex/roxen/Module.java foreign_ident
 /server/java/src/se/idonex/roxen/ParserModule.java foreign_ident
 /server/java/src/se/idonex/roxen/RoxenConfiguration.java foreign_ident
+/server/java/src/se/idonex/roxen/RoxenFileResponse.java foreign_ident
 /server/java/src/se/idonex/roxen/RoxenLib.java foreign_ident
 /server/java/src/se/idonex/roxen/RoxenRequest.java foreign_ident
 /server/java/src/se/idonex/roxen/RoxenResponse.java foreign_ident

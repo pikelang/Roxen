@@ -1,9 +1,16 @@
 /*
- * $Id: HTTP.java,v 1.1 1999/12/19 00:26:00 marcus Exp $
+ * $Id: HTTP.java,v 1.2 1999/12/21 00:05:45 marcus Exp $
  *
  */
 
 package se.idonex.roxen;
+
+import java.io.Reader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
 
 public class HTTP {
 
@@ -26,6 +33,56 @@ public class HTTP {
   {
     return httpStringAnswer(text, "text/html");
   }
+
+  public static RoxenResponse httpFileAnswer(Reader text, String type, long len)
+  {
+    return new RoxenFileResponse(type, len, text);
+  }
+
+  public static RoxenResponse httpFileAnswer(Reader text, String type)
+  {
+    return httpFileAnswer(text, type, -1);
+  }
+
+  public static RoxenResponse httpFileAnswer(Reader text)
+  {
+    return httpFileAnswer(text, "text/html");
+  }  
+
+  public static RoxenResponse httpFileAnswer(InputStream text, String type,
+					     long len)
+  {
+    return httpFileAnswer(new InputStreamReader(text), type, len);
+  }
+
+  public static RoxenResponse httpFileAnswer(InputStream text, String type)
+  {
+    return httpFileAnswer(text, type, -1);
+  }
+
+  public static RoxenResponse httpFileAnswer(InputStream text)
+  {
+    return httpFileAnswer(text, "text/html");
+  }  
+
+  public static RoxenResponse httpFileAnswer(File text, String type, long len)
+    throws FileNotFoundException
+  {
+    return httpFileAnswer(new FileReader(text), type, len);
+  }
+
+  public static RoxenResponse httpFileAnswer(File text, String type)
+    throws FileNotFoundException
+  {
+    return httpFileAnswer(text, type, text.length());
+  }
+
+  public static RoxenResponse httpFileAnswer(File text)
+    throws FileNotFoundException
+  {
+    return httpFileAnswer(text, "text/html");
+  }  
+
 
   HTTP() { }
 
