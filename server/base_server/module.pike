@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.39 1999/04/24 17:55:02 grubba Exp $ */
+/* $Id: module.pike,v 1.40 1999/05/18 03:54:38 per Exp $ */
 
 #include <module.h>
 
@@ -650,4 +650,32 @@ object get_font_from_var(string base)
    case "italic": slant=1; break;
   }
   return get_font(query(base+"_font"), 32, weight, slant, "left", 0, 0);
+}
+
+
+mapping query_tag_callers()
+{
+  mapping m = ([]);
+  foreach(glob("tag_*", indices( this_object())), string q)
+    if(functionp( this_object()[q] ))
+      m[replace(q[4..], "_", "-")] = this_object()[q];
+  return m;
+}
+
+mapping query_container_callers()
+{
+  mapping m = ([]);
+  foreach(glob("container_*", indices( this_object())), string q)
+    if(functionp( this_object()[q] ))
+      m[replace(q[10..], "_", "-")] = this_object()[q];
+  return m;
+}
+
+mapping query_if_callers()
+{
+  mapping m = ([]);
+  foreach(glob("if_*", indices( this_object())), string q)
+    if(functionp( this_object()[q] ))
+      m[replace(q[3..], "_", "-")] = this_object()[q];
+  return m;
 }
