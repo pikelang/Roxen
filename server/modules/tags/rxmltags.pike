@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.400 2002/09/27 08:14:18 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.401 2002/10/08 14:57:25 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5225,7 +5225,7 @@ class TagIWCache {
       args = ([ "shared" : "yes-please",
 		"key"    : ("userid:" + userid +
 			    "|tmpl:" + (id->misc->iw_template_set || "")) ]);
-      if(id->supports->robot)
+      if(id->supports->robot||id->variables->__print)
 	args += ([ "nocache" : "yes" ]);
       
       return ::do_enter(id);
