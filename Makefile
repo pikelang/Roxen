@@ -20,16 +20,10 @@ PIKE_SRC_DIRS="../pike"
 
 OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 
-all:
-	@echo "###############################################"
-	@echo "###                                         ###"
-	@echo "### Type make install to install ChiliMoon. ###"
-	@echo "###                                         ###"
-	@echo "### To make Java Servlets, type make java.  ###"
-	@echo "###                                         ###"
-	@echo "###############################################"
+all: pike_version_test
 
-install : pike_version_test install_dirs install_data config_test 
+
+install : all install_dirs install_data mysql config_test
 
 	
 pike_version_test:
@@ -61,11 +55,34 @@ pike_version_test:
 install_dirs:
 	${INSTALL_DIR} -dD ${PROG_DIR};
 	${INSTALL_DIR} -dD ${PROG_DIR}/server;
+	${INSTALL_DIR} -dD ${PROG_DIR}/server/mysql;
+	${INSTALL_DIR} -dD ${PROG_DIR}/server/mysql/share;
+	${INSTALL_DIR} -dD ${PROG_DIR}/server/data;
 	${INSTALL_DIR} -dD ${PROG_DIR}/local;
 
 install_data:
-	${INSTALL_DATA_R} server 	${PROG_DIR}/;
-	${INSTALL_DATA_R} local 	${PROG_DIR}/;
+	${INSTALL_DATA_R} server/admin_interface	${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/bin			${PROG_DIR}/server/;
+	${INSTALL_DATA}   server/data/contenttypes	${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/example_pages	${PROG_DIR}/server/data/;
+	${INSTALL_DATA}   server/data/extensions	${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/fonts 		${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/images 		${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/include 		${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/maps 		${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/more_extensions	${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/randomtext	${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/data/refdoc		${PROG_DIR}/server/data/;
+	${INSTALL_DATA}   server/data/supports		${PROG_DIR}/server/data/;
+	${INSTALL_DATA_R} server/java			${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/modules		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/pike_modules		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/rxml_packages		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/server_core		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/site_templates		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/translations		${PROG_DIR}/server/;
+	${INSTALL_DATA}   server/start			${PROG_DIR}/server/;
+	${INSTALL_DATA_R} local 		${PROG_DIR}/;
 	#${INSTALL_DATA}   GPL   	${PROG_DIR}/;
 	#${INSTALL_DATA}   COPYING   	${PROG_DIR}/;
 	${INSTALL_DATA}   start  	${PROG_DIR}/;
@@ -79,9 +96,7 @@ config_test:
 	fi
 	
 config:
-	@cd ${PROG_DIR}/server/mysql;\
-	./lnmysql.sh >/dev/null 2>/dev/null;
-	@pike ${PREFIX}/${PROGNAME}/server/bin/create_configif.pike -d ${CONFIGDIR} 
+	@pike ${PROG_DIR}//server/bin/create_configif.pike -d ${CONFIGDIR} 
 
 build_pike:
 	BUILD=0;\
@@ -94,18 +109,29 @@ build_pike:
 	fi	
 
 selftest:
-	@if [ -d ${PROG_DIR} ] ; then\
-	cd ${PROG_DIR};\
-	./start --self-test-verbose;\
-	else\
-	echo "################################################";\
-	echo "###                                          ###";\
-	echo "### Failed, no ChiliMoon installation found. ###";\
-	echo "### Type make install to install ChiliMoon.  ###";\
-	echo "### After installing start SelfTest again.   ###";\
-	echo "###                                          ###";\
-	echo "################################################";\
+	cd server/mysql;\
+	./lnmysql.sh;
+	./start --self-test-verbose;
+
+mysql:
+	if [ -f /usr/sbin/mysqld ] ; then\
+	if [ -d /usr/share/mysql ] ; then\
+	ln -s /usr/sbin ${PROG_DIR}/server/mysql/. ;\
+	ln -s /usr/share/mysql ${PROG_DIR}/server/mysql/share ;\
+  	fi\
 	fi
-		
+	if [ -f /usr/libexec/mysqld ] ; then\
+	if [ -d /usr/share/mysql ] ; then\
+	ln -s /usr/libexec ${PROG_DIR}/server/mysql/. ;\
+	ln -s /usr/share/mysql ${PROG_DIR}/server/mysql/share ;\
+  	fi\
+	fi
+	if [ -f /usr/local/libexec/mysqld ] ; then\
+	if [ -d /usr/local/share/mysql ] ; then\
+	ln -s /usr/local/libexec ${PROG_DIR}/server/mysql/.;\
+	ln -s /usr/local/share/mysql ${PROG_DIR}/server/mysql/share;\
+  	fi\
+	fi
+
 
 .phony: install
