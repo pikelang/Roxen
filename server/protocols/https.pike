@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.43 1998/11/25 23:35:30 grubba Exp $
+/* $Id: https.pike,v 1.1 1998/11/30 03:47:33 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */

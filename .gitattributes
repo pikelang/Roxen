@@ -236,7 +236,7 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/ftp2.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
-/server/protocols/ssl3.pike foreign_ident
+/server/protocols/https.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
 /server/roxen-images/auto/README foreign_ident
 /server/server_templates/bare.pike foreign_ident
