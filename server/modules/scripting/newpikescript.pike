@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.11 1999/09/27 20:08:08 grubba Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.12 2000/01/17 02:33:53 nilsson Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -19,19 +19,13 @@ mixed *register_module()
 inherit "module";
 inherit "roxenlib";
 
-mixed *register_module()
-{
-  return ({ 
-    MODULE_FILE_EXTENSION,
-    "Pike script support mark II", 
-    "This is an enhanced version of the normal 'pike scripts' module. "
-    "Major features:<ul>\n"
-    "<li> A separate process for each user."
-    "<li> The processes are quite persistent"
-    "</ul>"
-    });
-}
-
+constant module_type = MODULE_FILE_EXTENSION;
+constant module_name = "Pike script support mark II";
+constant module_doc  = "This is an enhanced version of the normal 'pike scripts' module. "
+  "Major features:<ul>\n"
+  "<li> A separate process for each user."
+  "<li> The processes are quite persistent"
+  "</ul>";
 
 void create()
 {
@@ -205,7 +199,7 @@ void start()
     }
 }
 
-array (int) find_uid(string file, string isuser, object id)
+array(int) find_uid(string file, string isuser, RequestID id)
 {
   if(isuser && query("isuser_overrides"))
     return file_stat(isuser)[5..6]; // this overrides the patterns...
@@ -253,7 +247,7 @@ class Call
   }
 }
 
-mapping handle_file_extension(object file, string ext, object id)
+mapping handle_file_extension(object file, string ext, RequestID id)
 {
   int mode = file->stat()[0];
   if(!(mode & (int)query("exec-mask")) ||
@@ -511,7 +505,7 @@ int main()
   call_out(perhaps_die, 300);
   eventlog("Pike script server started as PID "+
 	   getpid()+" on "+gethostname());
-  werror("Pike script server up and running\n");
+  report_debug("Pike script server up and running\n");
   master()->set_inhibit_compile_errors( got_compile_error );
   return -1;
 }
