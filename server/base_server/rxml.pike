@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.75 2000/01/23 06:25:24 nilsson Exp $
+ * $Id: rxml.pike,v 1.76 2000/01/23 07:50:35 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -33,6 +33,15 @@ string handle_rxml_error (mixed err, RXML.Type type)
   else return describe_error (err);
 }
 
+#ifdef OLD_RXML_COMPAT
+RoxenModule rxml_warning_cache;
+void old_rxml_warning(RequestID id, string no, string yes) {
+  if(!rxml_warning_cache) rxml_warning_cache=id->conf->get_provider("oldRXMLwarning");
+  if(!rxml_warning_cache) return;
+  rxml_warning_cache->old_rxml_warning(id, no, yes);
+}
+#endif
+
 // A note on tag overriding: It's possible for old style tags to
 // propagate their results to the tags they have overridden. This is
 // done by an extension to the return value:
@@ -50,6 +59,9 @@ string handle_rxml_error (mixed err, RXML.Type type)
 //
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
+
+
+// ----------------------- Default scopes -------------------------
 
 class Scope_roxen {
   inherit RXML.Scope;
@@ -70,6 +82,8 @@ class Scope_roxen {
   array(string) _indices() {
     return ({"version", "time", "server"});
   }
+
+  string _sprintf() { return "RXML.Scope(roxen)"; }
 }
 
 class Scope_page {
@@ -97,10 +111,26 @@ class Scope_page {
       if(c->id->misc->defines[def]) ind+=({def});
     return ind;
   }
+
+  void m_delete (string var, void|RXML.Context c, void|string scope_name) {
+    if(!c) return;
+    if(has_value(in_defines, var)) {
+      if(var[0..4]=="theme")
+	predef::m_delete(c->id->misc->defines, var);
+      else
+	::m_delete(var, c, scope_name);
+    }
+    predef::m_delete(c->id->misc->page, var);
+  }
+
+  string _sprintf() { return "RXML.Scope(page)"; }
 }
 
 RXML.Scope scope_roxen=Scope_roxen();
 RXML.Scope scope_page=Scope_page();
+
+
+// ------------------------- RXML Parser ------------------------------
 
 RXML.TagSet rxml_tag_set = class
 {
@@ -474,7 +504,7 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
     contents = parse_rxml(contents, id);
     id->misc->do_not_recurse_for_ever_please--;
   }
-  if(args->trimwhites) 
+  if(args->trimwhites)
   {
     sscanf(contents, "%*[ \t\n\r]%s", contents);
     contents = reverse(contents);
@@ -496,14 +526,13 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
   return r;
 }
 
-
 #define _stat defines[" _stat"]
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-string parse_rxml(string what, RequestID id, 
+string parse_rxml(string what, RequestID id,
 		  void|Stdio.File file,
 		  void|mapping defines )
 {
@@ -512,7 +541,7 @@ string parse_rxml(string what, RequestID id,
   werror("parse_rxml( "+strlen(what)+" ) -> ");
   int time = gethrtime();
 #endif
-  if(!defines) 
+  if(!defines)
   {
     defines = id->misc->defines||([]);
     if(!_error)
@@ -523,7 +552,7 @@ string parse_rxml(string what, RequestID id,
   if(!defines->sizefmt)
   {
     set_start_quote(set_end_quote(0));
-    defines->sizefmt = "abbrev"; 
+    defines->sizefmt = "abbrev";
     _error=200;
     _extra_heads=([ ]);
     if(id->misc->stat)
@@ -548,6 +577,8 @@ string parse_rxml(string what, RequestID id,
   return what;
 }
 
+
+// ------------------------- RXML Core tags --------------------------
 
 string tag_help(string t, mapping args, RequestID id)
 {
@@ -596,16 +627,16 @@ class TagLine
   }
 }
 
-string tag_number(string t, mapping args)
+string tag_number(string t, mapping args, RequestID id)
 {
-  return roxen.language(args->language||args->lang, 
+  return roxen.language(args->lang||args->language||id->misc->defines->theme_language,
                         args->type||"number")( (int)args->num );
 }
 
 array(string) list_packages()
 {
   return Array.filter(((get_dir("../local/rxml_packages")||({}))
-                       |(get_dir("../rxml_packages")||({}))), 
+                       |(get_dir("../rxml_packages")||({}))),
                       lambda( string s ) {
                         return (Stdio.file_size("../local/rxml_packages/"+s)+
                                 Stdio.file_size( "../rxml_packages/"+s )) > 0;
@@ -624,16 +655,15 @@ string read_package( string p )
   return data;
 }
 
-
 string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
 {
   string res="";
-  catch 
+  catch
   {
     string doc = "";
     int help=0; /* If true, all tags support the 'help' argument. */
     sscanf(data, "%*sdoc=\"%s\"", doc);
-    sscanf(data, "%*sdoc=%d", help); 
+    sscanf(data, "%*sdoc=%d", help);
     parse_rxml("<scope>"+data+"</scope>", nid);
     res += "<dt><b>"+f+"</b><dd>"+(doc?doc+"<br>":"");
     array tags = indices(nid->misc->tags||({}));
@@ -692,10 +722,10 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
     return ({res+"</dl>"});
   }
 
-  if(!m->file && !m->package) 
+  if(!m->file && !m->package)
     return "<use help>";
-  
-  if(id->pragma["no-cache"] || 
+
+  if(id->pragma["no-cache"] ||
      !(res=cache_lookup("macrofiles:"+name,(m->file||("pkg!"+m->package)))))
   {
     SETUP_NID();
@@ -703,9 +733,9 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
     string foo;
     if(m->file)
       foo = try_get_file( fix_relative(m->file, nid), nid );
-    else 
+    else
       foo = read_package( m->package );
-      
+
     if(!foo)
       return ({ rxml_error(tag, "Failed to fetch "+(m->file||m->package)+".", id)-"<false>" });
 
@@ -745,16 +775,9 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
   return ({ c });
 }
 
-RoxenModule rxml_warning_cache;
-void old_rxml_warning(RequestID id, string no, string yes) {
-  if(!rxml_warning_cache) rxml_warning_cache=id->conf->get_provider("oldRXMLwarning");
-  if(!rxml_warning_cache) return;
-  rxml_warning_cache->old_rxml_warning(id, no, yes);
-}
-
-string tag_define(string tag, mapping m, string str, RequestID id, 
+string tag_define(string tag, mapping m, string str, RequestID id,
                   Stdio.File file, mapping defines)
-{ 
+{
   if(m->variable)
     id->variables[m->variable] = str;
 #ifdef OLD_RXML_COMPAT
@@ -763,7 +786,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     old_rxml_warning(id, "attempt to define name ","variable");
   }
 #endif
-  else if (m->tag) 
+  else if (m->tag)
   {
     m->tag = lower_case(m->tag);
     string n = m->tag;
@@ -799,7 +822,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
     id->misc->_tags[n] = call_user_tag;
   }
-  else if (m->container) 
+  else if (m->container)
   {
     string n = lower_case(m->container);
     m_delete( m, "container" );
@@ -836,29 +859,29 @@ string tag_define(string tag, mapping m, string str, RequestID id,
   }
   else if (m["if"])
     id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
-  else 
+  else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);
-  
-  return ""; 
+
+  return "";
 }
 
-string tag_undefine(string tag, mapping m, RequestID id, 
+string tag_undefine(string tag, mapping m, RequestID id,
                     Stdio.File file, mapping defines)
-{ 
+{
   if(m->variable)
     m_delete(id->variables,m->variable);
 #ifdef OLD_RXML_COMPAT
-  else if (m->name) 
+  else if (m->name)
     m_delete(defines,m->name);
 #endif
-  else if (m->tag) 
+  else if (m->tag)
   {
     m_delete(id->misc->tags,m->tag);
     m_delete(id->misc->_tags,m->tag);
   }
-  else if (m["if"]) 
+  else if (m["if"])
     m_delete(id->misc->_ifs,m["if"]);
-  else if (m->container) 
+  else if (m->container)
   {
     m_delete(id->misc->containers,m->container);
     m_delete(id->misc->_containers,m->container);
@@ -866,10 +889,8 @@ string tag_undefine(string tag, mapping m, RequestID id,
   else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);
 
-  return ""; 
+  return "";
 }
-
-
 
 class Tracer
 {
@@ -901,10 +922,10 @@ class Tracer
 
   void trace_enter_ol(string type, function|RoxenModule module)
   {
-    level++; 
+    level++;
 
     string efont="", font="";
-    if(level>2) {efont="</font>";font="<font size=-1>";} 
+    if(level>2) {efont="</font>";font="<font size=-1>";}
     resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
 #if efun(gethrvtime)
     et2[level] = gethrvtime();
@@ -924,7 +945,7 @@ class Tracer
 #endif
     level--;
     string efont="", font="";
-    if(level>1) {efont="</font>";font="<font size=-1>";} 
+    if(level>1) {efont="</font>";font="<font size=-1>";}
     resolv += (font+"</ol>"+
 #if efun(gethrtime)
 	       "Time: "+sprintf("%.5f",delay/1000000.0)+
@@ -1010,7 +1031,7 @@ string tag_if( string t, mapping m, string c, RequestID id )
 {
   int res, and = 1;
 
-  if(m->not) 
+  if(m->not)
   {
     m_delete( m, "not" );
     tag_if( t, m, c, id );
@@ -1032,12 +1053,12 @@ string tag_if( string t, mapping m, string c, RequestID id )
     last=res;
     if(res)
     {
-      if(!and) 
+      if(!and)
         return c+"<true>";
     }
-    else 
+    else
     {
-      if(and) 
+      if(and)
         return "<false>";
     }
   }
@@ -1089,7 +1110,7 @@ void internal_tag_case( string t, mapping m, string c, int l, RequestID id,
 string tag_cond( string t, mapping m, string c, RequestID id )
 {
   mapping result = ([]);
-  parse_html_lines(c,([]),(["case":internal_tag_case, 
+  parse_html_lines(c,([]),(["case":internal_tag_case,
                             "default":lambda(mixed ... a){
     result->def = a[2]+"<false>"; }]),id,result);
   return result->res||result->def;
@@ -1101,7 +1122,7 @@ mapping query_container_callers()
     "comment":lambda(){ return ""; },
     "if":tag_if,
     "else":tag_else,
-    "then":tag_then, 
+    "then":tag_then,
     "elseif":tag_elseif,
     "elif":tag_elseif,
     "noparse":tag_noparse,
@@ -1115,7 +1136,6 @@ mapping query_container_callers()
   ]);
 }
 
-
 mapping query_tag_callers()
 {
   return ([
@@ -1123,11 +1143,9 @@ mapping query_tag_callers()
     "false":tag_false,
     "number":tag_number,
     "undefine":tag_undefine,
-    "help": tag_help,
-    "version":lambda() { return ({ roxen.version() }); }
+    "help": tag_help
   ]);
 }
-
 
 RXML.TagSet query_tag_set()
 {
@@ -1140,6 +1158,8 @@ RXML.TagSet query_tag_set()
 }
 
 
+// ---------------------------- If callers -------------------------------
+
 class UserIf
 {
   string rxml_code;
@@ -1147,7 +1167,7 @@ class UserIf
   {
     rxml_code = what;
   }
-  
+
   string _sprintf()
   {
     return "UserIf("+rxml_code+")";
@@ -1256,7 +1276,6 @@ class IfMatch
   }
 }
 
-
 int if_date( string date, RequestID id, mapping m )
 {
   CACHE(60); // One minute accuracy is probably good enough...
@@ -1282,7 +1301,7 @@ int if_time( string ti, RequestID id, mapping m )
   int tok, a, b, d;
   mapping c;
   c=localtime(time());
-  
+
   b=(int)sprintf("%02d%02d", c->hour, c->min);
   a=(int)replace(ti,":","");
 
@@ -1323,7 +1342,7 @@ string simple_parse_users_file(string file, string u)
 int match_user(array u, string user, string f, int wwwfile, RequestID id)
 {
   string s, pass;
-  if(u[1]!=user) 
+  if(u[1]!=user)
     return 0;
   if(!wwwfile)
     s=Stdio.read_bytes(f);
@@ -1354,7 +1373,7 @@ int group_member(array auth, string group, string groupfile, RequestID id)
   if (!s)
     s = id->conf->try_get_file( fix_relative( groupfile, id), id );
 
-  if (!s) 
+  if (!s)
     return 0;
 
   s = replace(s,({" ","\t","\r" }), ({"","","" }));
@@ -1386,7 +1405,7 @@ int if_group( string u, RequestID id, mapping m)
   if( !id->auth )
     return 0;
   NOCACHE();
-  return ((m->groupfile && sizeof(m->groupfile)) 
+  return ((m->groupfile && sizeof(m->groupfile))
           && group_member(id->auth, m->group, m->groupfile, id));
 }
 
