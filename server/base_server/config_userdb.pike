@@ -324,7 +324,7 @@ class ConfigurationSettings
 	    ([
 	      "js": LOCALE(17,"Folded with javascript popup"),
 	      "fl": LOCALE(122,"Folded"),
-	      "uf": LOCALE(123,"Unfolded (old stype)"),
+	      "uf": LOCALE(123,"Unfolded (old style)"),
 	    ]) );
 
     defvar( "configlistmode", 0,
