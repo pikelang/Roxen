@@ -1,12 +1,12 @@
-string cvs_version = "$Id: roxen.pike,v 1.76 1997/06/12 23:41:07 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.77 1997/06/14 15:11:14 grubba Exp $";
 #define IN_ROXEN
+#include <roxen.h>
+#include <config.h>
 #ifdef THREADS
 #include <fifo.h>
 #endif
 #include <module.h>
 #include <variables.h>
-#include <roxen.h>
-#include <config.h>
 
 inherit "read_config";
 
