@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.172 2000/03/16 10:54:30 mast Exp $
+// $Id: rxml.pike,v 1.173 2000/03/16 11:35:16 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -709,9 +709,10 @@ class TagUse {
 	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
 
 	multiset before=ctx->get_runtime_tags();
+	mapping before_ifs=id->misc->_ifs;
 	parse_rxml( file, id );
 
-	res[0] = id->misc->_ifs - id->misc->_ifs;
+	res[0] = id->misc->_ifs - before_ifs;
 	res[1]=indices(RXML.get_context()->get_runtime_tags()-before);
 	cache_set("macrofiles", name, res);
       }
