@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.333 1999/05/24 04:38:09 peter Exp $
+ * $Id: roxen.pike,v 1.334 1999/05/24 23:23:15 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.333 1999/05/24 04:38:09 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.334 1999/05/24 23:23:15 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -1504,31 +1504,6 @@ object enable_configuration(string name)
   report_notice("Enabled the virtual server \""+name+"\".\n");
   
   return cf;
-}
-
-// Enable all configurations
-void enable_configurations (void|int call_set_u_and_gid)
-{
-  array err;
-
-  enabling_configurations = 1;
-  configurations = ({});
-  foreach(list_all_configurations(), string config)
-  {
-    if(err=catch { enable_configuration(config)->start();  })
-      perror("Error while loading configuration "+config+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
-
-  if (call_set_u_and_gid) set_u_and_gid();
-
-  foreach(configurations, object config)
-  {
-    if(err=catch { config->enable_all_modules();  })
-      perror("Error while loading modules in configuration "+config->name+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
-  enabling_configurations = 0;
 }
 
 
@@ -3374,6 +3349,22 @@ int main(int|void argc, array (string)|void argv)
 
   initiate_configuration_port( 1 );
 
+  // Open all the ports before changing uid:gid in case permanent_uid is set.
+  enabling_configurations = 1;
+  configurations = ({});
+  foreach(list_all_configurations(), string config)
+  {
+    array err;
+    if(err=catch { enable_configuration(config)->start();  })
+      perror("Error while loading configuration "+config+":\n"+
+	     describe_backtrace(err)+"\n");
+  };
+
+  set_u_and_gid();		// Running with the right uid:gid from this point on.
+
+  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
+		  || QUERY(pidfile));
+
   roxen_perror("Initiating argument cache ... ");
 
   int id;
@@ -3394,10 +3385,14 @@ int main(int|void argc, array (string)|void argv)
   }
   roxen_perror( "\n" );
 
-  enable_configurations (1);
-
-  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
-		  || QUERY(pidfile));
+  foreach(configurations, object config)
+  {
+    array err;
+    if(err=catch { config->enable_all_modules();  })
+      perror("Error while loading modules in configuration "+config->name+":\n"+
+	     describe_backtrace(err)+"\n");
+  };
+  enabling_configurations = 0;
 
 // Rebuild the configuration interface tree if the interface was
 // loaded before the configurations was enabled (a configuration is a
