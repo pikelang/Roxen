@@ -3,7 +3,7 @@
 
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.5 2000/09/04 07:40:51 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.6 2000/10/21 18:46:50 per Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -120,7 +120,7 @@ class TTFWrapper
     array(Image.Image) res = map( what, real_write );
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,@res->ysize())*y_spacing) );
+                                  (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
 
     float start;
     if( y_spacing < 0 )
@@ -129,11 +129,11 @@ class TTFWrapper
     foreach( res, object r )
     {
       if( j_right )
-        rr->paste( r, rr->xsize()-r->xsize(), (int)start );
+        rr->paste_alpha_color( r, 255,255,255, rr->xsize()-r->xsize(), (int)start );
       else if( j_center )
-        rr->paste( r, (rr->xsize()-r->xsize())/2, (int)start );
+        rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, (int)start );
       else
-        rr->paste( r, 0, (int)start );
+        rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
     return rr->scale(0.5);
