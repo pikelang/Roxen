@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.12 1997/08/19 07:03:28 per Exp $ */
+/* $Id: low_describers.pike,v 1.13 1997/08/23 16:54:58 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -267,7 +267,11 @@ string all_ip_numbers_as_selection(int id, string sel)
 
 array protocols()
 {
-  return map(filter(get_dir("protocols"), lambda(string s) {
+  array(string) files = get_dir("protocols");
+  if (!files || !sizeof(files)) {
+    throw(({"No protocols available!\n", backtrace() }));
+  }
+  return map(files, lambda(string s) {
     return ((search(s,".pike") == search(s,".")) &&
 	    (search(s,".")!=-1) && s[-1]!="~");
   }), lambda(string s) { return (s/".")[0]; });
