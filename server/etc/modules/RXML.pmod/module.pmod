@@ -2,10 +2,11 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.80 2000/03/17 05:48:47 mast Exp $
+//! $Id: module.pmod,v 1.81 2000/03/17 20:54:07 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
+static object Roxen;
 
 //! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 //! WARNING                                                 WARNING
@@ -2294,7 +2295,7 @@ class Parser
 	  return ({});
 	}
 	context->current_var = 0;
-	return encoding ? ({roxen.roxen_encode (val, encoding)}) : ({val});
+	return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
       }) {
 	context->current_var = 0;
 	context->handle_exception (err, this_object()); // May throw.
@@ -3094,6 +3095,7 @@ void _fix_module_ref (string name, mixed val)
       case "PXml": PXml = [program] val; break;
       case "PEnt": PEnt = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
+      case "Roxen": Roxen = [object] val; break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
     }

@@ -5,6 +5,7 @@ void create()
   ._fix_module_ref ("PXml", RXML.PXml);
   ._fix_module_ref ("PEnt", RXML.PEnt);
   ._fix_module_ref ("PExpr", RXML.PExpr);
+  ._fix_module_ref ("Roxen", Roxen);
   ._fix_module_ref (
     "empty_tag_set",
     class {
