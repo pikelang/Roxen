@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.114 1999/03/12 23:34:59 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.115 1999/03/12 23:39:58 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -204,7 +204,7 @@ class imap_mail
   
   object mapping_to_list(mapping m)
   {
-    return imap_list(Array.map( ((array) m) * ({ })), imap_string);
+    return imap_list(Array.map( ((array) m) * ({ }), imap_string));
   }
 
   object make_bodystructure(object(MIME.Message) msg, int extension_data)
