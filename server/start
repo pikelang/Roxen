@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.194 2002/05/18 18:15:49 jonasw Exp $
+# $Id: start,v 1.195 2002/10/14 11:50:07 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -850,7 +850,7 @@ if [ -z "$once" ] ; then
 	  # Clean shutdown.
 	  dp "Roxen WebServer shutdown."
 	  signal_exit
-	  # Note reached, but...
+	  # Not reached, but...
 	  exit 0
 	fi
 	if [ "$exitcode" -lt "0" ] ; then
@@ -866,6 +866,13 @@ if [ -z "$once" ] ; then
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
            ;;
+	 50)
+	   dp "Failed to open any port. Shutdown."
+	   keep_mysql=1
+	   signal_exit
+	   # Not reached, but...
+	   exit 50
+	   ;;
          *)
            dp "Roxen WebServer down with code $exitcode."
            ;;
