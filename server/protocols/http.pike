@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.410 2003/11/03 13:49:19 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.411 2003/11/03 13:52:37 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -30,19 +30,19 @@ RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define REQUEST_WERR(X) bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
+#define REQUEST_WERR(X) do {bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime();} while (0)
 #else
-#define REQUEST_WERR(X)
+#define REQUEST_WERR(X) do {} while (0)
 #endif
 
 #ifdef FD_DEBUG
-#define MARK_FD(X)							\
-  catch{								\
-    REQUEST_WERR("FD " + my_fd->query_fd() + ": " + (X));		\
-    mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);			\
-  }
+#define MARK_FD(X) do {							\
+    int _fd = my_fd && my_fd->query_fd ? my_fd->query_fd() : -1;	\
+    REQUEST_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
+    mark_fd(_fd, (X)+" "+remoteaddr);					\
+  } while (0)
 #else
-#define MARK_FD(X)
+#define MARK_FD(X) do {} while (0)
 #endif
 
 #ifdef THROTTLING_DEBUG
@@ -62,6 +62,18 @@ private static int wanted_data, have_data;
 private static object(String.Buffer) data_buffer;
 
 int kept_alive;
+
+#ifdef DEBUG
+#define CHECK_FD_SAFE_USE do {						\
+    if (this_thread() != roxen->backend_thread &&			\
+	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
+	 my_fd->query_close_callback() ||				\
+	 !zero_type (find_call_out (do_timeout))))			\
+      error ("Got callbacks but not called from backend thread.\n");	\
+  } while (0)
+#else
+#define CHECK_FD_SAFE_USE do {} while (0)
+#endif
 
 #include <roxen.h>
 #include <module.h>
@@ -342,6 +354,7 @@ private void really_set_config(array mod_config)
   };
 
   void do_send_reply( string what, string url ) {
+    CHECK_FD_SAFE_USE;
     url = url_base() + url[1..];
     my_fd->set_blocking();
     my_fd->write( prot + " 302 Roxen config coming up\r\n"+
@@ -844,6 +857,8 @@ void end(int|void keepit)
   if( conf )
     conf->connection_drop( this_object() );
 
+  CHECK_FD_SAFE_USE;
+
 #if constant(Parser.XML.Tree.XMLNSParser)
   if (xml_data) {
     mixed err = catch {
@@ -925,6 +940,9 @@ static void do_timeout()
     MARK_FD("HTTP timeout");
     end();
   } else {
+#ifdef DEBUG
+    error ("This shouldn't happen.\n");
+#endif
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
     MARK_FD("HTTP premature timeout");
@@ -1464,6 +1482,8 @@ void ready_to_receive()
 void send_result(mapping|void result)
 {
   TIMER_START(send_result);
+
+  CHECK_FD_SAFE_USE;
 
   array err;
   int tmp;
@@ -2074,6 +2094,8 @@ void got_data(mixed fooid, string s)
     conf->connection_add( this_object(), connection_stats );
     conf->received += strlen(raw);
     conf->requests++;
+
+    CHECK_FD_SAFE_USE;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
     if (my_fd->set_accept_callback) my_fd->set_accept_callback (0);
@@ -2186,12 +2208,8 @@ void got_data(mixed fooid, string s)
     REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
     TIMER_END(parse_request);
 
-#ifdef THREADS
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     roxen.handle(handle_request);
-#else
-    handle_request();
-#endif
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
