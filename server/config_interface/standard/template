@@ -27,7 +27,7 @@
         bottommargin=0 rightmargin=0 margin=0  
         bgcolor=white text=black>
 
-    <form method=POST action='<file>'>
+    <form method=POST action='<cf-current-url>'>
       <roxen-config preparse>
         <middle title="<version> <cf-locale get=administration_interface>">
           <configif-output quote=¤ source=locales>

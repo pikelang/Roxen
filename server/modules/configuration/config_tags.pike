@@ -684,18 +684,20 @@ array get_variable_maps( object mod, mapping m, object id )
                                   return search( q->rname, m->section )!=-1;
                                 } );
   }
+  sort( variables->name, variables );
   return variables;
 }
 
 array get_variable_sections( object mod, mapping m, object id )
 {
   mapping w = ([]);
-
   array variables = map(indices(mod->variables),get_variable_section,mod,id);
-  return Array.filter( variables-({0}), 
+  variables = Array.filter( variables-({0}), 
                        lambda( mapping q ) {
                          return !w[q->section]++;
                        });
+  sort( variables->section, variables );
+  return variables;
 }
 
 string container_configif_output(string t, mapping m, string c, object id)
@@ -735,11 +737,43 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "global-modules":
+     break;
 
    case "config-modules":
+     object conf = roxen->find_configuration( m->configuration );
+     if( !conf )
+       error("Unknown configuration\n");
+     variables = ({ });
+     foreach( values(conf->otomod), string q )
+     {
+       object mi = roxen->find_module((q/"#")[0]);
+       variables += 
+       ({
+         ([
+           "sname":replace(q, "#", "!"),
+           "name":mi->get_name()+((int)reverse(q)?" # "+ (q/"#")[1]:""),
+           "doc":mi->get_description(),
+         ]),
+       });
+     } 
+     sort( variables->name, variables );
+     break;
+
    case "config-variables":
+     object conf = roxen->find_configuration( m->configuration );
+     if( !conf )
+       error("Unknown configuration "+ m->configuration +"\n");
+     variables = get_variable_maps( conf, m, id );
+     break;
+
    case "config-variables-sections":
-   case "configuration-urls":
+     object conf = roxen->find_configuration( m->configuration );
+     if( !conf )
+       error("Unknown configuration "+ m->configuration +"\n");
+     variables = get_variable_sections( conf, m, id );
+     break;
+
+   case "urls":
    case "module-variables":
    case "module-variables-sections":
      break;
@@ -773,6 +807,21 @@ string container_configif_output(string t, mapping m, string c, object id)
   return do_output_tag( m, variables, c, id );
 }
 
+string tag_cf_num_dotdots( string t, mapping m, object id )
+{
+  while( id->misc->orig ) id = id->misc->orig;
+  int depth = sizeof( (id->not_query + (id->misc->path_info||""))/"/" )-3;
+  string dotodots = depth>0?(({ "../" })*depth)*"":"./";
+  return dotodots;
+}
+
+
+array(string) tag_cf_current_url( string t, mapping m, object id )
+{
+  while ( id->misc->orig )
+    id = id->misc->orig;
+  return ({ id->not_query+(id->misc->path_info?id->misc->path_info:"") });
+}
 
 string tag_cf_locale( string t, mapping m, object id )
 {
