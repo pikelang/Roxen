@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.99 1998/04/06 14:19:21 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.100 1998/04/17 01:58:41 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -805,7 +805,7 @@ int|object PPM(string fname, object id)
   if( objectp(fname) )
     perror("fname: %O\n",indices(fname));
   string q;
-  q = roxen->try_get_file( fname, id );
+  q = id->conf->try_get_file( fname, id );
 
   if(!q) perror("Diagram: Unknown image '"+fname+"'\n");
 

@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.92 1998/04/13 15:10:36 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.93 1998/04/17 01:58:45 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -806,7 +806,7 @@ string tag_echo(string tag,mapping m,object got,object file,
     return "&lt;unimplemented&gt;";
       
    case "document_name": case "path_translated":
-    return roxen->real_file(got->not_query, got);
+    return got->conf->real_file(got->not_query, got);
 
    case "document_uri":
     return got->not_query;
@@ -937,12 +937,12 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 
     if(m->nocache) got->pragma["no-cache"] = 1;
 
-    s = roxen->try_get_file(f, got);
+    s = got->conf->try_get_file(f, got);
 
     if(!s) {
       if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
 	// Might be a compat insert.
-	s = roxen->try_get_file(f[..sizeof(f)-3], got);
+	s = got->conf->try_get_file(f[..sizeof(f)-3], got);
       }
       if (!s) {
 	return got->misc->debug?"No such file: "+f+"!":"";
@@ -1078,7 +1078,7 @@ string tag_compat_fsize(string tag,mapping m,object got,object file,
 
   if(m->virtual)
   {
-    m->file = roxen->real_file(m->virtual, got);
+    m->file = got->conf->real_file(m->virtual, got);
     m_delete(m, "virtual");
   }
   if(m->file)
@@ -1239,13 +1239,13 @@ string tag_modified(string tag, mapping m, object got, object file,
   {
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = roxen->last_modified_by(file, got);
+    m->name = got->conf->last_modified_by(file, got);
     return tag_user(tag, m, got, file, defines);
   }
 
   if(m->file)
   {
-    m->realfile = roxen->real_file(fix_relative(m->file,got), got);
+    m->realfile = got->conf->real_file(fix_relative(m->file,got), got);
     m_delete(m, "file");
   }
 
@@ -1256,7 +1256,7 @@ string tag_modified(string tag, mapping m, object got, object file,
 
     if(f = open(m->realfile, "r"))
     {
-      m->name = roxen->last_modified_by(f, got);
+      m->name = got->conf->last_modified_by(f, got);
       destruct(f);
       return tag_user(tag, m, got, file,defines);
     }
@@ -1272,7 +1272,7 @@ string tag_modified(string tag, mapping m, object got, object file,
     return tag_modified(tag, m, got, file, defines);
   }
   if(!s) s = _stat;
-  if(!s) s = roxen->stat_file( got->not_query, got );
+  if(!s) s = got->conf->stat_file( got->not_query, got );
   return s ? tagtime(s[3], m) : "Error: Cannot stat file";
 }
 
@@ -1317,7 +1317,7 @@ string tag_user(string tag, mapping m, object got, object file,mapping defines)
   if(dom[-1]=='.')
     dom=dom[0..strlen(dom)-2];
   if(!b) return "";
-  u=roxen->userinfo(b, got);
+  u=got->conf->userinfo(b, got);
   if(!u) return "";
   
   if(m->realname && !m->email)
@@ -1371,7 +1371,7 @@ int match_user(array u, string user, string f, int wwwfile, object got)
   if(!wwwfile)
     s=Stdio.read_bytes(f);
   else
-    s=roxen->try_get_file(f, got);
+    s=got->conf->try_get_file(f, got);
   if(!s)
     return 0;
   if(u[1]!=user) return 0;
@@ -1423,7 +1423,7 @@ string tag_allow(string a, mapping (string:string) m,
   if(m->module)
     TEST(got->conf && got->conf->modules[m->module]);
   
-  if(m->exists) TEST(roxen->try_get_file(fix_relative(m->exists,got),got,1));
+  if(m->exists) TEST(got->conf->try_get_file(fix_relative(m->exists,got),got,1));
   
   if(m->language)
     if(!got->misc["accept-language"])

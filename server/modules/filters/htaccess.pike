@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.34 1998/04/11 08:23:19 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.35 1998/04/17 01:58:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -397,12 +397,12 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 #endif
       if(!gr || !gr[3])
 	continue;
-      if(!userfile && roxen->userlist(id)){
+      if(!userfile && id->conf->userlist(id)){
 #ifdef HTACCESS_DEBUG
 	werror("HTACCESS: Checking login group for user "+auth[0]
-	       +"("+roxen->userinfo(auth[0],id)[3]+") against gid("+gr[2]+")\n");
+	       +"("+id->conf->userinfo(auth[0],id)[3]+") against gid("+gr[2]+")\n");
 #endif
-	if((int)roxen->userinfo(auth[0],id)[3]==gr[2])
+	if((int)id->conf->userinfo(auth[0],id)[3]==gr[2])
 	  return 1;
       }
       int gr_i;
@@ -668,7 +668,7 @@ array rec_find_htaccess_file(object id, string vpath)
     }
   } /* Not found in cache... */
 
-  if(path = roxen->real_file(vpath, id))
+  if(path = id->conf->real_file(vpath, id))
   {
     object f;
     array st;

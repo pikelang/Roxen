@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.80 1998/04/15 11:58:55 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.81 1998/04/17 01:58:43 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -851,7 +851,7 @@ mapping last_resort(object id)
 	fid = id->clone_me();
 	fid->not_query = a+"."+e;
 	fid->misc->path_info = b;
-	res = roxen->get_file(fid); // Recurse.
+	res = id->conf->get_file(fid); // Recurse.
 	if(res) return res;
       }
     }

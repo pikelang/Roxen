@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.17 1998/03/23 08:20:57 neotron Exp $
+// $Id: counter.pike,v 1.18 1998/04/17 01:58:39 grubba Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,34 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.17  1998/03/23 08:20:57  neotron
+// o Added new module type, MODULE_PROVIDER. This is a module type which
+//   enables other modules, scripts or protocols to call it very
+//   simply. Function needed in the module:
+//   "string|array|multiset query_provides()" - Return the name of the
+//   data this module provides. One existing example is "counter"
+//   (which is the graphical counter module).
+//
+//   Functions available to other modules:
+//    object conf->get_provider(string for);
+//      Get the first (highest priority) provider for "for".
+//    array (object) conf->get_providers(string for);
+//      Dito, but return all matching modules.
+//    void map_providers(string for, string fun, mixed ... args);
+//      Run the function "fun" in all modules providing "for", with the
+//      optional arguments "args".
+//    mixed call_provider(string for, string fun, mixed ... args);
+//      Run the function "fun" in all modules providing "for", with the
+//      optional arguments "args" until a positive response
+//      (!zero). Return the result. This is the main way of calling
+//      functions in provider modules from other places.
+//
+// o Added new tag - echo. It's usable with one of the following syntaxes:
+//   <echo var='Remote Host'> <echo remote_host>  <insert remote_host>
+//   Case doesn't matter and in the first syntax, ' ' and '_' are
+//   interchangable. The available variables are identical to the SSI
+//   <!--#echo var="..." -->
+//
 // Revision 1.16  1998/03/18 19:51:20  neotron
 // Added Jordi's nicer ppm-fontlist.
 //
@@ -84,7 +112,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.17 1998/03/23 08:20:57 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.18 1998/04/17 01:58:39 grubba Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -363,8 +391,8 @@ mapping find_file_ppm( string f, object id )
 
 
   if(!arrayp(digits)) {
-    if( user != "1" && roxen->userlist() &&
-	(us=roxen->userinfo(user, id)) )
+    if( user != "1" && id->conf->userlist(id) &&
+	(us=id->conf->userinfo(user, id)) )
       dir = us[5] + (us[5][-1]!='/'?"/":"") + query("userpath");
     else
       dir = query("ppmpath"); 
@@ -468,7 +496,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.17 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.18 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
