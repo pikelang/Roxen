@@ -15,6 +15,7 @@ void main(int argc, array argv)
 
   write_fragmented( f,
 		    "GET "+argv[2]+" HTTP/1.1\r\n"
+		    "Host: "+argv[1]+"\r\n"
 		    "Connection: close\r\n"
 		    "User-Agent: Roxen Testscript\r\n\r\n",
 		    100000 );
