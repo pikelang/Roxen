@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.565 2000/09/28 02:07:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.566 2000/09/30 19:20:20 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -584,7 +584,7 @@ class InternalRequestID
 {
   inherit RequestID;
 
-  void create()
+  static void create()
   {
     client = ({ "Roxen" });
     prot = "INTERNAL";
@@ -1447,6 +1447,15 @@ class HTTPS
 }
 #endif
 
+class HILFE
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "hilfe";
+  constant requesthandlerfile = "protocols/hilfe.pike";
+  constant default_port = 2345;
+}
+
 class FTP
 {
   inherit Protocol;
@@ -1547,10 +1556,12 @@ mapping protocols = ([
   "http":HTTP,
   "ftp":FTP,
 
-#if constant(Crypto) && constant(SSL.sslfile)
+#if constant(SSL.sslfile)
   "https":HTTPS,
   "ftps":FTPS,
 #endif
+
+  "hilfe":HILFE,
 
   "gopher":GOPHER,
   "tetris":TETRIS,
