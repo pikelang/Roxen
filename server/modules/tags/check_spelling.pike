@@ -1,368 +1,248 @@
 #include <module.h>
 inherit "module";
+inherit "roxenlib";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.6 2000/02/17 08:42:43 per Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.7 2000/02/22 16:37:04 stewa Exp $";
 
-#define FILE "etc/errordata"
+constant module_type = MODULE_PARSER;
+constant module_name = "Spell Checker";
+constant module_doc  = "Checks for  misspellings inside "
+                       "the &lt;spell&gt; tag.<p>"
+                       " &lt;spell [help] [dictionary=dictionary] [prestate=prestate] [report=popup/table]&gt;text to "
+                       "spellcheck&lt;/spell&gt;";
 
-/* no need to make this very big, it will seldom be used anyway */
-#define READ_LINES 200
 
-mapping (string:string) wrong_to_right_data = ([]);
-mapping (string:string) right_to_wrong_data = ([]);
-
-/* Use these only for checking single words */
-string iswrong(string word)
+mapping find_internal(string f, RequestID id)
 {
-  word=lower_case(word);
-  return wrong_to_right_data[word];
-}
-
-string isright(string word)
-{
-  word=lower_case(word);
-  return right_to_wrong_data[word];
-}
-
-array register_module()
-{
-  return ({
-    MODULE_PARSER,
-    "Spell checker",
-      "Checks for and marks common misspellings inside the &lt;spell&gt; tag.<p>"
-      " &lt;spell [help] [warn]&gt;text to spellcheck[&lt;/spell&gt;]<p>If "
-      "warn is defined, all unknown words will be reported",
-      0,1
-  });
-}
-
-array (string) magic(string text,int warn);
-
-string do_spell(string q, mapping args, string words)
-{
-  int w;
-  if(args->warn) w = 1;
-  if(args->help) return register_module()[2]+"<p>";
-  return words + "<p><b>Spell checking report:</b><p>"+magic(words, w)*"<br>";
-}
-
-mapping query_container_callers()
-{
-  return (["spell":do_spell, ]);
-}
-
-string api_do_spell(object id, string q, int warn)
-{
-  return do_spell("spell", (["warn":warn]), q);
-}
-
-// compat code..
-void add_api_function( string name, function f, void|array(string) types)
-{
-  if(this_object()["_api_functions"])
-    this_object()["_api_functions"][name] = ({ f, types });
-}
-
-/* startup code */
-void start(int arg)
-{
-  add_api_function("spell_check", api_do_spell, ({"string","int"}));
-  mixed stat1,stat2;
-  int e;
-  if(arg) return;
-
-  string l,wrong,right;
-  array(string) r;
-  int e;
-
-  l=Stdio.read_bytes(FILE);
-  r=lower_case(l)/"\n";
-  if(!r) r=({l});
-  for(e=0;e<sizeof(r);e++)
-  {
-    if(strlen(r[e]))
-    {
-      if(r[e][0]=='#' || (sscanf(r[e],"%s=%s",wrong,right)!=2)) continue;
-      wrong_to_right_data[wrong]=right;
-      right_to_wrong_data[right]=wrong;
-    }
-  }
-
-  catch
-  {
-    l=Stdio.read_bytes("/usr/dict/words");
-    foreach(lower_case(l)/"\n", string w)
-      right_to_wrong_data[w] = "";
-  };
-}
-
-#define w_to_r wrong_to_right_data
-#define r_to_w right_to_wrong_data
-
-int right,wrong,unknown;
-int deduced_right,deduced_wrong,names;
-
-string status()
-{
-  int c;
-  c=right+wrong+unknown+deduced_right+deduced_wrong+names+1;
-
-  return (sprintf("<pre>Checked words          :%7d\n"+
-		"Known correct words    :%7d\n"+
-		"Known incorrect words  :%7d\n"+
-		"Correct words          :%7d (%3d%%)\n"+
-		"Misspelled words       :%7d (%3d%%)\n"+
-		"Words probably correct :%7d (%3d%%)\n"+
-		"Words probably wrong   :%7d (%3d%%)\n"+
-		"Names                  :%7d (%3d%%)\n"+
-		"Unknown words          :%7d (%3d%%)\n</pre>",
-		c,
-	        sizeof(r_to_w),
-	        sizeof(w_to_r),
-		right,right*100/c,
-		wrong,wrong*100/c,
-		deduced_right,deduced_right*100/c,
-		deduced_wrong,deduced_wrong*100/c,
-		names,names*100/c,
-		unknown,unknown*100/c));
-}
-
-string spellit(string word,int warn)
-{
-  string t,tmp,last;
-
-  if(strlen(word)<2) return 0;
-
-  if(word[0]=='\'' && word[strlen(word)-1]=='\'')
-  {
-    /* de-quote */
-    word=word[1..strlen(word)-2];
-    if(!strlen(word)) return 0;
-  }
-
-  if(t=w_to_r[word])
-  {
-    wrong++;
-    return "\""+word+"\" is spelled \""+t+"\"";
-  }
-  if(t=r_to_w[word])
-  {
-    right++;
+  switch(f) {
+  case "red.gif":
+    return http_string_answer("GIF89a\5\0\5\0\200\0\0\0\0\0\267\0\0,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
+  case "green.gif":
+    return http_string_answer("GIF89a\5\0\5\0\200\0\0\2\2\2\0\267\14,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
+  default:
     return 0;
   }
+}
 
-  if(warn<2)
-  {
-    switch(strlen(word))
-    {
-    default:
+void create() {
+  defvar("spellchecker","/usr/bin/ispell",
+	 "Spell checker", TYPE_STRING,
+         "Spell checker executable.");
 
-    case 3:
-      last=word[strlen(word)-3..strlen(word)-1];
-      /* -ves -> -f */
-      if(last=="ves")
-      {
-	tmp=word[0..strlen(word)-4]+"f";
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
+  defvar("dictionary", "american", "Defualt dictionary",TYPE_STRING,
+         "Dictionary used when not specified.");
 
-      /* -ies  & -ied-> -y */
-      if(last=="ies" || last=="ied")
-      {
-	tmp=word[0..strlen(word)-4]+"y";
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
+  defvar("report", "popup", "Defualt report type",TYPE_STRING_LIST,
+         "Report type used when not specified.",
+         ({ "popup","table" }) );
 
-      if(last=="ing")
-      {
-	tmp=word[0..strlen(word)-4];
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
+  defvar("prestate", "", "Prestate",TYPE_STRING,
+         "If specified, only check spelling when this prestate is present.");
 
-	/* -ing -> -e */
-	tmp+="e";
+}
 
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
+string render_table(array spellreport) {
+  string ret="<table bgcolor=\"#000000\" border=\"0\" cellspacing=\"0\" cellpadding=\"1\">\n"
+    "<tr><td><table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n"
+    "<tr bgcolor=\"#112266\">\n"
+    "<th align=\"left\"><font color=\"#ffffff\">Word</font></th><th align=\"left\"><font color=\"#ffffff\">Suggestions</th></tr>\n";
 
-      /* -ion -> -e */
-      if(last=="ion")
-      {
-	tmp=word[0..strlen(word)-4]+"e";
-
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
-
-    case 2:
-      last=word[strlen(word)-2..strlen(word)-1];
-
-      /* -ed -> - */
-      if(last=="ed")
-      {
-	tmp=word[0..strlen(word)-3];
-
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-	tmp+="e";
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
-
-      /* -'s */
-      if(last=="'s")
-      {
-	tmp=word[0..strlen(word)-3];
-
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-      }
-
-
-    case 1:
-      /* -s */
-
-      if(word[-1]=='s')
-      {
-	tmp=word[0..strlen(word)-2];
-
-	if(t=w_to_r[tmp])
-	{
-	  deduced_wrong++;
-	  return "\""+word+"\" (\""+tmp+"\" is spelled \""+t+"\")";
-	}
-	if(t=r_to_w[tmp])
-	{
-	  deduced_right++;
-	  return 0;
-	}
-
-      }
-
-    case 0:
-    }
-#if 0
-    if(find_living(word))
-    {
-      names++;
-      return 0;
-    }
-#endif
+  int row=0;
+  foreach(spellreport,array word) {
+    row++;
+    ret+="<tr bgcolor=\"#"+(row&1?"ffffff":"ddeeff")+"\"><td align=\"left\">"+word[0]+"</td><td align=\"left\">"+word[1]+"</td></tr>\n";
   }
-  unknown++;
-  if(warn) return "\""+word+"\" is unknown to spellchecker";
-  return 0;
+  return ret+"</table></td></tr>\n</table>";
 }
 
-array(string) unique(array(string) str)
+
+string do_spell(string q, mapping args, string content,RequestID id)
 {
-  int e;
-  mapping q;
-  q=([]);
-  str=str-({""," "});
-  for(e=0;e<sizeof(str);e++) q[str[e]]=1;
-  return indices(q);
-}
+  string ret="";
 
-array(string) magic(string text,int warn)
-{
-  array(string) words;
-  int e;
-  text=lower_case(text);
-  text=replace(text,"-\n","");
-  text=replace(text,"<"," ");
-  text=replace(text,">"," ");
-  text=replace(text,"."," ");
-  text=replace(text,":"," ");
-  text=replace(text,";"," ");
-  text=replace(text,"\t"," ");
-  text=replace(text,"\n"," ");
-  text=replace(text,"!"," ");
-  text=replace(text,"|"," ");
-  text=replace(text,"?"," ");
-  text=replace(text,","," ");
-  text=replace(text,"("," ");
-  text=replace(text,")"," ");
-  text=replace(text,"\""," ");
+  if(args->help) return register_module()[2]+"<p>";
 
-  words=text/" ";
+  string dict=args->dictionary || query("dictionary");
+  if(!sizeof(dict)) dict="american";
 
-  if(!words) return ({});
+  string text=Protocols.HTTP.unentity(content);
 
+  text=replace(text,({"\n","\r"}),({" "," "}));
+  text=Array.everynth((replace(text,">","<")/"<"),2)*" ";
+  text=replace(text,
+	       ({ ".",",",":",";","\t","!","|","?","(",")","\"" }),
+	       ({ "", "", "", "", "",  "", "", "", "", "", ""   }) );
+  array(string) words=text/" ";
   words-=({"-",""});
-//  words=regexp(words,"^[^/]");
-//  words=regexp(words,"^[^0123456789]*$");
 
-  words=Array.map(words,spellit,warn);
-  words-=({0});
-  return unique(words);
+
+  array result=spellcheck(words,dict);
+
+  if(args->report||query("report")=="popup") {
+    if(!sizeof(result))
+      return "<img src=\""+query_internal_location()+"green.gif\">"+content;
+    
+    if(!id->misc->__checkspelling) {
+      id->misc->__checkspelling=1;
+      
+      ret+=#"<script language=\"javascript\">
+var spellcheckpopup='';
+var isNav4 = false;
+if (navigator.appVersion.charAt(0) == \"4\" && navigator.appName == \"Netscape\")
+    isNav4 = true;
+
+function getObj(obj) {
+  if (isNav4)
+    return eval(\"document.\" + obj);
+  else
+    return eval(\"document.all.\" + obj);
+}
+
+function getRecursiveLeft(o)
+{
+  if(o.tagName == \"BODY\")
+    return o.offsetLeft;
+  return o.offsetLeft + getRecursiveLeft(o.offsetParent);
+}
+
+function getRecursiveTop(o)
+{
+  if(o.tagName == \"BODY\")
+    return o.offsetTop;
+  return o.offsetTop + getRecursiveTop(o.offsetParent);
+}
+
+function showPopup(popupid,e) {
+  if(isNav4){
+    getObj(popupid).moveTo(e.target.x,e.target.y);
+  } else {
+    getObj(popupid).style.pixelLeft=getRecursiveLeft(window.event.srcElement);
+    getObj(popupid).style.pixelTop=getRecursiveTop(window.event.srcElement);
+  }
+  spellcheckpopup=popupid
+  if(isNav4) {
+    getObj(popupid).visibility=\"visible\";
+    document.captureEvents(Event.MOUSEMOVE);
+    document.onMouseMove = checkPopupCoord;
+  } else { 
+    getObj(popupid).style.visibility=\"visible\";
+    document.onmousemove = checkPopupCoord;
+  }
+}
+
+function checkPopupCoord(e)
+{
+  p = getObj(spellcheckpopup);
+  if(isNav4) {
+    x=e.pageX;
+    y=e.pageY;
+    pw=p.clip.width;
+    ph=p.clip.height;
+    px=p.left;
+    py=p.top;
+  } else {
+    x=window.event.clientX + document.body.scrollLeft;
+    y=window.event.clientY + document.body.scrollTop;
+    pw=p.offsetWidth;
+    ph=p.offsetHeight;
+    px=p.style.pixelLeft;
+    py=p.style.pixelTop;
+  }
+  if(!((x > px && x < px + pw) && (y > py && y < py + ph))) {
+    if(isNav4) {
+      p.visibility=\"hidden\";
+      document.releaseEvents(Event.MOUSEMOVE);
+    } else {
+      p.style.visibility=\"hidden\";
+      document.onMouseMove = 0; 
+     }
+    }
+ }
+</script>";
+  
+    }
+
+
+    string popupid="spellreport"+sprintf("%02x",id->misc->__checkspelling);
+    
+    ret+="<style>#"+popupid+" {position:absolute; left:0; top:0; visibility:hidden}</style>";
+    ret+="<div id=\""+popupid+"\">"+render_table(result)+"</div>";
+
+    ret+= "<a href=\"\" onMouseOver='if(isNav4) showPopup(\""+popupid+"\",event);else showPopup(\""+popupid+"\");'><img border=0 src=\""+query_internal_location()+"red.gif\"></a>"+content;
+    
+    id->misc->__checkspelling++;
+    return ret;
+  }
+
+
+  return content + "<p><b>Spell checking report:</b><p>"+
+    render_table(result);
+}
+
+
+class TagSpell {
+  inherit RXML.Tag;
+  constant name="spell";
+
+  class Frame {
+    inherit RXML.Frame;
+     array do_return (RequestID id) {
+       string _prestate=id->variables->prestate||query("prestate");
+       if(sizeof(_prestate) && !id->prestate[_prestate])
+         return ({ content });
+       else
+         return ({ do_spell("spell",args,content,id) });
+     }
+
+  }
+}
+
+array spellcheck(array(string) words,string dict) {
+  array res=({ });
+  
+  object file1=Stdio.File();
+  object file2=file1->pipe();
+  object file3=Stdio.File();
+  object file4=file3->pipe();
+  string spell_res;
+
+  Process.create_process( ({ query("spellchecker"),"-a","-d",dict }) ,(["stdin":file2,"stdout":file4 ]) );
+
+
+  file1->write(" "+words*"\n "+"\n");
+  file1->close();
+  file2->close();
+  file4->close();
+  spell_res=file3->read();
+  file3->close();
+
+  array ispell_data=spell_res/"\n";
+    
+  if(sizeof(ispell_data)>1) {
+    int i,row=0,pos=0,pos2;
+    string word,suggestions;
+    for(i=1;i<sizeof(ispell_data)-1 && row<sizeof(words);i++) {
+      if(!sizeof(ispell_data[i])){ // next row
+	row++;
+	pos=0;
+      }
+      else {
+        switch(ispell_data[i][0]) {
+        case '&': // misspelled, suggestions
+          sscanf(ispell_data[i],"& %s %*d %d:%s",word,pos2,suggestions);
+	  res += ({ ({ words[row],suggestions }) });;
+          pos=pos2-1+sizeof(word);
+          break;
+	case '#': //misspelled
+	  sscanf(ispell_data[i],"# %s %d",word,pos2);
+	  res += ({ ({ words[row],"-" }) });
+	  pos=pos2-1+sizeof(word);
+	  break;
+	}
+      }
+    }
+    return res;
+  }
 }
