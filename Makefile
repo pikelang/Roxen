@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.1 1997/08/18 01:22:40 grubba Exp $
+# $Id: Makefile,v 1.2 1997/08/18 01:28:59 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -9,7 +9,7 @@ MAKE=make
 
 easy : blurb all
 
-hard :
+hard : configure
 	./configure
 	@echo
 	@echo 'Please run make again.'
@@ -31,7 +31,7 @@ blurb :
 	@echo
 	@sleep 10
 
-all :
+all : configure
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
 	srcdir=`pwd`; \
 	echo Attempting to build Roxen 1.2 in build/$$os...; \
@@ -40,6 +40,12 @@ all :
 	cd build/$$os && \
 	(test -f Makefile || CONFIG_SITE=x $$srcdir/configure) && \
 	$(MAKE);
+
+configure : configure.in
+	@echo Rebuilding the configure-scripts...
+	@echo
+	@pike/src/run_autoconfig 2>&1 | grep -v warning
+	@echo
 
 install : all
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
