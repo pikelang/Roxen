@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.279 2002/04/03 12:48:31 mast Exp $
+// $Id: module.pmod,v 1.280 2002/04/09 10:53:06 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3741,6 +3741,10 @@ class Frame
       return func;
   }
 
+#ifdef DEBUG
+  Thread.Thread using_thread;
+#endif
+
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
   // Note: It might be somewhat tricky to override this function,
   // since it handles unwinding and rewinding.
@@ -3770,6 +3774,10 @@ class Frame
 #define PRE_INIT_ERROR(X...) (ctx->frame = this_object(), fatal_error (X))
 #ifdef DEBUG
     // Internal sanity checks.
+    if (using_thread)
+      PRE_INIT_ERROR ("Frame already in use by thread %O, this is thread %O.\n",
+		      using_thread, this_thread());
+    using_thread = this_thread();
     if (ctx != RXML_CONTEXT)
       PRE_INIT_ERROR ("Context not current.\n");
     if (!evaler->tag_set_eval)
@@ -3782,13 +3790,19 @@ class Frame
       PRE_INIT_ERROR ("Looks like Context.add_runtime_tag() or "
 		      "Context.remove_runtime_tag() was used outside any parser.\n");
 #endif
-#undef PRE_INIT_ERROR
 
     up = ctx->frame;
+#ifdef DEBUG
+    if (up && up->using_thread != this_thread())
+      PRE_INIT_ERROR ("Parent frame in use by thread %O, this is thread %O.\n",
+		      up->using_thread, this_thread());
+#endif
     ctx->frame = this_object();
     ctx->frame_depth++;
     FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 		     ctx->frame_depth, "", this_object(), __LINE__);
+
+#undef PRE_INIT_ERROR
 
   process_tag:
     while (1) {			// Looping only when continuing in streaming mode.
@@ -4191,6 +4205,7 @@ class Frame
 			   ctx->frame_depth, "", this_object(),		\
 			   __LINE__);					\
 	  ctx->frame_depth--;						\
+	  DO_IF_DEBUG (using_thread = 0);				\
 	} while (0)
 	
 	CLEANUP;
