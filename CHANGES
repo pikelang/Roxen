@@ -1,9 +1,7 @@
 Changes since Roxen Challenger 1.2.37 Yellow
 -----------------------------------------------
 
-o Roxen 1.3 is now split off from Roxen 1.2.
-
-o Some localization support added.
+o Fixed broken dependencies rule.
 
 o Config action "Thread backtrace" removed from the 1.2 dist.
 
