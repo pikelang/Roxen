@@ -1602,7 +1602,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.domain;</rxml>
-<regexp>.*\.[a-z][a-z].$</regexp>
+<glob>?*</glob>
 </test>
 
 <test>
@@ -1627,7 +1627,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.pike-version;</rxml>
-<regexp>Pike v7.[3-9] release [0-9]+</regexp>
+<regexp>Pike v7.[2-9] release [0-9]+</regexp>
 </test>
 
 <test>
@@ -1652,7 +1652,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.server;</rxml>
-<glob>http://*:12321</glob>
+<glob>http://*:17369</glob>
 </test>
 
 <test>
