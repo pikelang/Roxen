@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.9 1999/10/27 18:30:14 grubba Exp $
+ * $Id: smtprelay.pike,v 2.10 2000/02/04 15:56:57 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,9 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.9 1999/10/27 18:30:14 grubba Exp $";
+#pragma strict_types
+
+constant cvs_version = "$Id: smtprelay.pike,v 2.10 2000/02/04 15:56:57 grubba Exp $";
 
 /*
  * Some globals
@@ -55,7 +57,7 @@ void create()
 
   // Try to get our FQDN.
   string hostname = gethostname();
-  array hostinfo = gethostbyname(hostname);
+  array(string) hostinfo = gethostbyname(hostname);
   if (hostinfo && sizeof(hostinfo)) {
     hostname = hostinfo[0];
   }
@@ -91,7 +93,7 @@ void start(int i, object c)
   if (c) {
     conf = c;
 
-    if (!catch { sql = Sql.sql(QUERY(sqlurl)); }) {
+    if (!catch { sql = Sql.sql([string]QUERY(sqlurl)); }) {
 
       /* Initialize the sql-database if needed */
       init_db();
@@ -116,7 +118,7 @@ constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 static string mktimestamp(int t)
 {
-  mapping lt = localtime(t);
+  mapping(string:int) lt = localtime(t);
     
   string tz = "GMT";
   int off;
@@ -174,7 +176,8 @@ constant ACON_REFUSED = 0;
 constant ACON_LOOP = -1;
 constant ACON_DNS_FAIL = -2;
 
-static void async_connected(int status, function(int, mixed ...:void) cb,
+static void async_connected(int status,
+			    function(int|object, mixed ...:void) cb,
 			    object f, mixed ... args)
 {
   /* Done */
@@ -182,7 +185,7 @@ static void async_connected(int status, function(int, mixed ...:void) cb,
 }
 
 static void async_connect_got_hostname(string host, int port,
-				       function(int, mixed ...:void) cb,
+				       function(int|object, mixed ...:void) cb,
 				       mixed ... args)
 {
   if (!host) {
@@ -193,7 +196,7 @@ static void async_connect_got_hostname(string host, int port,
   }
 
   // Check that we aren't looping.
-  object p = Stdio.Port();
+  object(Stdio.Port) p = Stdio.Port();
 
   if (p->bind(0,0,host)) {
     // We were just about to connect to ourselves!
@@ -205,7 +208,7 @@ static void async_connect_got_hostname(string host, int port,
   destruct(p);
 
   // Looks OK so far. Try connecting.
-  object f = Stdio.File();
+  object(Stdio.File) f = Stdio.File();
 
   if (!f->async_connect(host, port, async_connected, cb, f, @args)) {
     // Connection failed.
@@ -215,7 +218,7 @@ static void async_connect_got_hostname(string host, int port,
 }
 
 int async_connect_not_self(string host, int port,
-			   function(int, mixed ...:void) callback,
+			   function(int|object, mixed ...:void) callback,
 			   mixed ... args)
 {
 #ifdef SOCKET_DEBUG
@@ -226,7 +229,7 @@ int async_connect_not_self(string host, int port,
 
 class SMTP_Reader
 {
-  object con;
+  object(Stdio.File) con;
 
   int sent_bytes;
   int recv_bytes;
@@ -259,8 +262,8 @@ class SMTP_Reader
     _got_code = 0;
 
     if (sizeof(codes)) {
-      string code = codes[0][0];
-      array(string) text = codes[0][1];
+      string code = [string]codes[0][0];
+      array(string) text = [array(string)]codes[0][1];
       codes = codes[1..];
 
       cb(code, text);
@@ -404,11 +407,11 @@ class MailSender
 {
   inherit SMTP_Reader;
 
-  static mapping message;
+  static mapping(string:string) message;
   static array(string) servers;
   static int servercount;
 
-  static object mail;
+  static object(Stdio.File) mail;
 
   static function(int, mapping:void) send_done;
 
@@ -561,7 +564,7 @@ class MailSender
   static void got_helo_reply(string code, array(string) text)
   {
     switch(code) {
-    case 250:
+    case "250":
       // HELO OK.
       send_command(sprintf("MAIL FROM:<%s>", message->sender),
 		   got_mail_from_reply);
@@ -580,7 +583,9 @@ class MailSender
       // EHLO OK.
       if (sizeof(text) > 1) {
 	// Parse EHLO reply
-	esmtp_features = (< @Array.map(text[1..], lower_case) >);
+	esmtp_features = [multiset(string)](<
+	  @Array.map(text[1..], lower_case)
+	>);
       }
       string extras = "";
       if (esmtp_features["8bitmime"]) {
@@ -635,7 +640,7 @@ class MailSender
     }
   }
 
-  static void got_connection(int|object c)
+  static void got_connection(int|object(Stdio.File) c)
   {
     message->sent += sent_bytes;
     sent_bytes = 0;
@@ -688,7 +693,7 @@ class MailSender
     // Reset buffers etc.
     reset();
 
-    con = c;
+    con = [object(Stdio.File)]c;
 
     async_get_code(got_con_reply);
   }
