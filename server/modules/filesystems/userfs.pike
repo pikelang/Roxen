@@ -9,12 +9,13 @@
 // http://www.hostname.of.provider/customer/.
 
 // #define USERFS_DEBUG 
+#define PASSWD_DISABLED ((us[1]=="") || (us[1][0]=='*'))
 
 #include <module.h>
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.41 1998/10/08 13:50:01 peter Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.42 1998/10/19 04:41:54 peter Exp $";
 
 // import Array;
 // import Stdio;
@@ -193,7 +194,7 @@ mixed find_file(string f, object got)
       us = got->conf->userinfo( u, got );
       // No user, or access denied.
       if(!us ||
-	 (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
+	 (QUERY(only_password) && (PASSWD_DISABLED)) ||
 	 banish_list[u])
       {
 	if (!banish_reported[u]) {
@@ -267,9 +268,9 @@ string real_file( mixed f, mixed id )
     {
       string *us;
       us = id->conf->userinfo( u, id );
-      if ((!us) ||
-	  (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
-	  (banish_list[u])) {
+      if ((!us)
+	|| (QUERY(only_password) && (PASSWD_DISABLED))
+	|| (banish_list[u])) {
 	return 0;
       }
       if(us[5][-1] != '/')
@@ -319,8 +320,8 @@ mapping|array find_dir(string f, object got)
       array(string) us;
       us = got->conf->userinfo( u, got );
       if(!us) return 0;
-      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(QUERY(only_password) && (PASSWD_DISABLED))   return 0;
+      if(search(QUERY(banish_list), u) != -1)         return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else
@@ -358,8 +359,8 @@ mixed stat_file( mixed f, mixed id )
     if(query("homedir"))
     {
       if(!us) return 0;
-      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(QUERY(only_password) && (PASSWD_DISABLED))   return 0;
+      if(search(QUERY(banish_list), u) != -1)         return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else
