@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.4 1998/09/04 11:44:57 per Exp $";
+"$Id: mailtags.pike,v 1.5 1998/09/09 09:21:19 per Exp $";
 
 constant thread_safe = 1;
 
@@ -27,172 +27,55 @@ constant thread_safe = 1;
 
 class  ClientLayer 
 {
-  int authentificate_user(string username, string passwordcleartext);
-
-  int create_mailbox(int user, string mailbox);
-  int delete_mailbox(int mailbox_id);
-  int rename_mailbox(int mailbox_id, string newmailbox);
-  string get_mailbox_name(int mailbox_id);
-  mapping(string:int) list_mailboxes(int user);
-
-  int add_mailbox_to_mail(int mail_id, int mailbox_id);
-
-  mapping(string:mixed) get_mail(int mail_id);
-  mapping(string:mixed) get_mail_headers(int message_id);
-  int delete_mail(int mail_id);
-  array(int) list_mail(int mailbox_id);
-
-  void set_flag(int mail_id, string flag);
-  void delete_flag(int mail_id, string flag);
-  multiset get_flags(int mail_id);
-}
-
-
-/* Client layer wrapper layer ------------------------------------- */
-
-static mapping (program:mapping(int:object)) object_cache = ([]);
-
-object get_cache_obj( program type, int id )
-{
-  if(!object_cache[ type ])
-    return 0;
-  if(object_cache[ type ][ id ])
-    return object_cache[ type ][ id ];
-}
-
-object get_any_obj(int id, program type, mixed ... moreargs)
-{
-  if(!object_cache[ type ])
-    object_cache[ type ] = ([]);
-  if(object_cache[ type ][ id ])
+  class Common
   {
-    object_cache[ type ][ id ]->create(id, @moreargs);
-    return object_cache[ type ][ id ];
-  }
-  return object_cache[ type ][ id ] = type(id,@moreargs);
-}
-
-class Mail
-{
-  int id;
-  object user;
-  array(object) _mboxes;
-  string name;
-
-  static mapping _headers;
-  static multiset _flags;
-
-  string body()
-  {
-    if(!_headers)headers();
-    return clientlayer->load_body( (int)_headers->body_id );
+    int get_serial();
   }
 
-  mapping headers(int force)
+  class User
   {
-    mapping h = clientlayer->get_mail_headers( id );
-    if(!_headers || force)
-      return _headers = parse_headers(h[ HEAD_CID ]) | h;
-    return _headers;
+    inherit Common;
+    array(Mailbox) mailboxes();
+    mixed set( string name, mixed to );
+    mixed get( string name );
+    Mailbox get_or_create_mailbox( string name );
+    Mailbox get_incoming();
+    Mailbox get_drafts();
   }
 
-  multiset flags(int force)
+  class Mail
   {
-    if(!_flags || force)
-      return _flags = clientlayer->get_flags( id );
+    inherit Common;
+    string body();
+    Stdio.File body_fd();
+    mapping headers(int force);
+    multiset flags(int force);
+    void set_flag(string name);
+    void clear_flag(string name);
+    mixed set(string name, mixed to);
+    mixed get(string name);
   }
 
-  void set_flag(string name)
+  class Mailbox
   {
-    _flags = 0;
-    clientlayer->set_flag( id, name );
+    inherit Common;
+    int rename(string to);
+    void delete();
+    string query_name(int force);
+
+    array(Mail) mails();
+    Mail add_mail(Mail m, int|void do_not_copy_the_flags);
+    void remove_mail(Mail m);
+
+    Mail low_create_mail( string bodyid, mapping headers )
+    Mail create_mail_from_fd( Stdio.File from );
+    Mail create_mail_from_data( string from );
+    Mail create_mail( MIME.Message from );
+
   }
 
-  void clear_flag(string name)
-  {
-    _flags = 0;
-    clientlayer->delete_flag( id, name );
-  }
-
-  void create(int i, object m)
-  {
-    id = i;
-    if(_mboxes)
-      _mboxes |= ({ m });
-    else
-      _mboxes = ({ m });
-    user = m->user;
-  }
-}
-
-class Mailbox
-{
-  int id;
-  object user;
-  string name;
-
-  int rename(string to)
-  {
-    name=0;
-    clientlayer->rename_mailbox( id, to );
-  }
-  
-  void delete()
-  {
-    clientlayer->delete_mailbox( id );
-    destruct(this_object());
-  }
-  
-  string query_name(int force)
-  {
-    if(force) name=0;
-    return name||(name=clientlayer->get_mailbox_name( id ));
-  }
-
-  array(Mail) mails()
-  {
-    return Array.map(clientlayer->list_mail( id ), get_any_obj, 
-		     Mail, this_object());
-  }
-
-  void create(int i, object u, string n)
-  {
-    id = i;
-    user = u;
-    name = n;
-  }
-}
-
-class User
-{
-  int id;
-
-  string cast(string to)
-  {
-    if(to != "int") 
-      error("Cannot cast to "+to+"\n");
-    return (string)id;
-  }
-
-  array(Mailbox) mailboxes()
-  {
-    mapping m = clientlayer->list_mailboxes(id);
-    array a = values(m), b = indices(m);
-    for(int i=0; i<sizeof(f); i++)
-      a[i] = get_any_obj( a[i], Mailbox, this_object(), b[i] );
-    return a;
-  }
-
-  Mailbox create_mailbox( string name )
-  {
-    return Mailbox( clientlayer->create_mailbox( id, name ), 
-		    get_any_obj, Mailbox, this_object(), name );
-  }
-
-  void create(int _id)
-  {
-    id = _id;
-  }
+  User get_user( string username, string password );
+  object get_cache_obj( program type, int id );
 }
 
 
@@ -323,9 +206,8 @@ string login(object id)
   if(!UID)
   {
     if(!id->realauth) return force;
-    id = clientlayer->authenticate_user( @(id->realauth/":") );
-    if(!id) return force;
-    UID = get_any_obj( id, User );
+    UID = clientlayer->get_user(  @(id->realauth/":") );
+    if(!UID) return force;
   }
 }
 
@@ -340,7 +222,7 @@ string login(object id)
 string tag_delete_mail(string tag, mapping args, object id)
 {
   string res;
-  Mail mid = get_cache_obj( Mail, (int)args->mail );
+  Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, (int)args->mail );
   if(res = login(id))
     return res;
   if(mail && mail->user == UID )
@@ -354,7 +236,7 @@ string tag_mail_body(string tag, mapping args, object id)
   if(res = login(id))
     return res;
 
-  Mail mail = get_cache_obj( Mail, (int)args->mail );
+  Mail mail = clientlyer->get_cache_obj( clientlayer->Mail, (int)args->mail );
   if(res = login(id))
     return res;
   if(mail && mail->user == UID )
@@ -536,7 +418,7 @@ string container_get_mail( string tag, mapping args,
 			   string contents, object id )
 {
   string res;
-  Mail mid = get_cache_obj( Mail, (int)args->mail );
+  Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, (int)args->mail );
 
   if(res = login(id))
     return res;
