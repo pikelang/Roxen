@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.119 2000/02/11 08:53:30 per Exp $
+ * $Id: rxml.pike,v 1.120 2000/02/11 10:41:17 per Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -587,10 +587,10 @@ string call_user_tag(RXML.PHtml parser, mapping args)
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
+  id->misc->last_tag_args = args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = map(indices(args),make_entity)+({"#args#"});
   array replace_to = values(args)+({make_tag_attributes( args  ) });
-
   string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   return r;
@@ -619,6 +619,7 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
     contents = reverse(contents);
   }
 
+  id->misc->last_tag_args = args;
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   id->misc->do_not_recurse_for_ever_please++;
   array i = indices( args );
