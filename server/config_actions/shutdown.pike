@@ -1,3 +1,7 @@
+/*
+ * $Id: shutdown.pike,v 1.6 1997/08/13 22:27:31 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Shut down Roxen...";
 

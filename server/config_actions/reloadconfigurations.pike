@@ -1,3 +1,7 @@
+/*
+ * $Id: reloadconfigurations.pike,v 1.3 1997/08/13 22:27:28 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Reload configurations from disk";
 

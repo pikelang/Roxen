@@ -1,3 +1,7 @@
+/*
+ * $Id: changepass.pike,v 1.4 1997/08/13 22:27:24 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Change password and/or username...";
 

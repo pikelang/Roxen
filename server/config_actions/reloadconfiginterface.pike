@@ -1,3 +1,7 @@
+/*
+ * $Id: reloadconfiginterface.pike,v 1.2 1997/08/13 22:27:27 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Reload the configuration interface from disk";
 constant doc = ("Force a reload of the configuration interface.");
@@ -22,8 +26,8 @@ mixed handle(object id, object mc)
   foreach(indices(master()->programs), string s)
     foreach(programs, string s2)
       if(search(s,s2)!=-1) {
-	werror("Deleting "+s+"\n");
-	m_delete(master()->programs,s);
+	werror("Unloading "+s+"\n");
+	m_delete(master()->programs, s);
       }
 
   report_notice("Configuration interface reloaded from disk");

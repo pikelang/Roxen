@@ -1,3 +1,7 @@
+/*
+ * $Id: reloadmoduledb.pike,v 1.2 1997/08/13 22:27:29 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Flush module cache";
 

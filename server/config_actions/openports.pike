@@ -1,3 +1,7 @@
+/*
+ * $Id: openports.pike,v 1.2 1997/08/13 22:27:26 grubba Exp $
+ */
+
 inherit "roxenlib";
 constant name= "Show all open ports...";
 
