@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.375 2002/06/14 14:42:11 ian Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.376 2002/06/15 00:49:26 ian Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1072,22 +1072,14 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 {
 
   if(m->by && !m->file && !m->realfile)
-  {
-    // FIXME: The auth module should probably not be used in this case.
-    if(!id->conf->auth_module)
-      RXML.run_error("Modified by requires a user database.\n");
-    // FIXME: The next row is defunct. last_modified_by does not exist.
-    m->name = id->conf->last_modified_by(file, id);
-    CACHE(10);
-    return tag_user(tag, m, id);
-  }
-
+    m->file = id->virtfile;
+  
   if(m->file)
     m->realfile = id->conf->real_file(Roxen.fix_relative( m_delete(m, "file"), id), id);
 
   if(m->by && m->realfile)
   {
-    if(!id->conf->auth_module)
+    if(!id->conf->user_databases())
       RXML.run_error("Modified by requires a user database.\n");
 
     Stdio.File f;
@@ -6526,19 +6518,12 @@ using the pre tag.
  realname='1'/>.</ex-box>
 </attr>
 
-<attr name='date'>
-    <p>Print the modification date. Takes all the date attributes in <xref href='date.tag' />.</p>
-
- <ex-box>This page was last modified on
-<modified date='1' case='lower' type='string'/>.</ex-box>
-</attr>
-
 <attr name='file' value='path'>
  <p>Get information about this file rather than the current page.</p>
 </attr>
 
 <attr name='realfile' value='path'>
- <p>Get information from this file in the computers filesystem rather
+ <p>Get information from this file in the computer's filesystem rather
  than Roxen Webserver's virtual filesystem.</p>
 </attr>",
 
