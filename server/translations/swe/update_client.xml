@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>update_client</project>
+<language>swe</language>
+<file>../config_interface/standard/update.html</file>
+<file>../config_interface/standard/update/category.txt</file>
+<file>../config_interface/standard/update/details.txt</file>
+<file>../config_interface/standard/update/index.txt</file>
+<file>../config_interface/standard/update/install.txt</file>
+<file>../config_interface/standard/update/uninstall.txt</file>
+<file>../modules/configuration/update.pike</file>
+
+<str id="1">
+<o>Update List</o>
+<t>Uppdater listan</t>
+</str>
+
+<str id="2">
+<o>Main</o>
+<t>Översikt</t>
+</str>
+
+<str id="3">
+<o>[Details...]</o>
+<t>[Detaljer...]</t>
+</str>
+
+<str id="4">
+<o>Currently no packages in this category.</o>
+<t>Inga paket i denna kategori för tillfället.</t>
+</str>
+
+<str id="5">
+<o>[More..]</o>
+<t>[Mer..]</t>
+</str>
+
+<str id="6">
+<o>Roxen Update System</o>
+<t>Roxen Uppdaterare</t>
+</str>
+
+<str id="7">
+<o>Launched a package list update request.</o>
+<t>Efterfrågade en ny paketlista.</t>
+</str>
+
+<str id="8">
+<o>This information was last synchronized with the main server
+ &amp;var.last_updated; ago.</o>
+<t>Denna information var senast synkroniserad med uppdateringsservern
+ för &amp;var.last_update; sedan.</t>
+</str>
+
+<str id="9">
+<o>Products</o>
+<t>Produkter</t>
+</str>
+
+<str id="10">
+<o>Security fixes</o>
+<t>Säkerhetsfixar</t>
+</str>
+
+<str id="11">
+<o>Bug fixes</o>
+<t>Bug-fixar</t>
+</str>
+
+<str id="12">
+<o>Thirs party modules</o>
+<t>Tredjepartsmoduler</t>
+</str>
+
+<str id="13">
+<o>Downloads&amp;nbsp;in&amp;nbsp;progress</o>
+<t>Nedladdning&amp;pågår</t>
+</str>
+
+<str id="14">
+<o>Description</o>
+<t>Beskrivning</t>
+</str>
+
+<str id="15">
+<o>Size</o>
+<t>Storlek</t>
+</str>
+
+<str id="16">
+<o>Downloaded</o>
+<t>Nedladdad</t>
+</str>
+
+<str id="17">
+<o>Downloaded&amp;nbsp;packages</o>
+<t>Nedladdade&amp;nbsp;packet</t>
+</str>
+
+<str id="19">
+<o>Organization</o>
+<t>Organisation</t>
+</str>
+
+<str id="20">
+<o>Author</o>
+<t>Författare</t>
+</str>
+
+<str id="21">
+<o>License</o>
+<t>Licens</t>
+</str>
+
+<str id="22">
+<o>Date</o>
+<t>Datum</t>
+</str>
+
+<str id="23">
+<o>[Return]</o>
+<t>[Tillbaka]</t>
+</str>
+
+<str id="24">
+<o>Hide package contents</o>
+<t>Göm packetinnehåll</t>
+</str>
+
+<str id="25">
+<o>The following files will be installed:</o>
+<t>Följande filer kommer att installeras:</t>
+</str>
+
+<str id="26">
+<o>Path</o>
+<t>Sökväg</t>
+</str>
+
+<str id="27">
+<o>Show package contents</o>
+<t>Visa packetinnehåll</t>
+</str>
+
+<str id="28">
+<o>Do you really want to install this package?</o>
+<t>Vill du verkligen installera det här packetet?</t>
+</str>
+
+<str id="29">
+<o>Yes</o>
+<t>Ja</t>
+</str>
+
+<str id="30">
+<o>No</o>
+<t>Nej</t>
+</str>
+
+<str id="31">
+<o>Installed packages:</o>
+<t>Installerade packet:</t>
+</str>
+
+<str id="18">
+<o>some time</o>
+<t>en tid</t>
+</str>
+
+<str id="32">
+<o>%d minutes</o>
+<t>%d minuer</t>
+</str>
+
+<str id="33">
+<o>%d hours</o>
+<t>%d timmar</t>
+</str>
+
+<str id="34">
+<o>%d days</o>
+<t>%d dagar</t>
+</str>
+
+<str id="35">
+<o>%d months</o>
+<t>%d månader</t>
+</str>
+
+<str id="36">
+<o>%d years</o>
+<t>%d år</t>
+</str>
+
+<str id="37">
+<o>infinitely long</o>
+<t>oändligt länge</t>
+</str>
+
+<str id="38">
+<o>Update client initialization error</o>
+<t>Initialiseringsfel i uppdateraren</t>
+</str>
+
+<str id="39">
+<o>Possible causes:</o>
+<t>Troliga orsaker</t>
+</str>
+
+<str id="40">
+<o>Yabu does not have permission to create/write/read its files.</o>
+<t>Yabu har inte behörighet att skapa/skriva/läsa sina filer.</t>
+</str>
+
+<str id="41">
+<o>Solution: Change permissions on the relevant files.</o>
+<t>Lösning: Ändra behörighet på de relevanta filerna.</t>
+</str>
+
+<str id="42">
+<o>Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files!</o>
+<t>Yabu är utelåst av en annan process. Detta indikerar att flera Roxenservrar är igång och använder samma filer!</t>
+</str>
+
+<str id="43">
+<o>Solution: Kill the offending Roxen processes.</o>
+<t>Lösning: Ta ner de blockerande Roxenprocesserna.</t>
+</str>
+
+<str id="44">
+<o>Backtrace:</o>
+<t>Backtrace:</t>
+</str>
+
+<str id="45">
+<o>Security</o>
+<t>Säkerhet</t>
+</str>
+
+<str id="46">
+<o>Bugfixes</o>
+<t>Bugfixar</t>
+</str>
+
+<str id="47">
+<o>Third party</o>
+<t>Tredjeparts</t>
+</str>
+
+<str id="48">
+<o>Package not completely downloaded.</o>
+<t>Packetet inte helt nedladdat.</t>
+</str>
+
+<str id="49">
+<o>Could not install package. Fix the problems above and try again.</o>
+<t>Kunde inte installera packete. Lös ovanstående problem och försök igen.</t>
+</str>
+
+<str id="50">
+<o>Package installed completely.</o>
+<t>Packetet helt installerat.</t>
+</str>
+
+<str id="51">
+<o>No package argument.</o>
+<t>Inga packetargument.</t>
+</str>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="update_client">
+<nocopy />
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/update_client.xml</xmlpath>
+
+  <file>../config_interface/standard/update.html</file>
+  <file>../config_interface/standard/update/category.txt</file>
+  <file>../config_interface/standard/update/details.txt</file>
+  <file>../config_interface/standard/update/index.txt</file>
+  <file>../config_interface/standard/update/install.txt</file>
+  <file>../config_interface/standard/update/uninstall.txt</file>
+  <file>../modules/configuration/update.pike</file>
+</project>

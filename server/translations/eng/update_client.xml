@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>update_client</project>
+<language>eng</language>
+<file>../config_interface/standard/update.html</file>
+<file>../config_interface/standard/update/category.txt</file>
+<file>../config_interface/standard/update/details.txt</file>
+<file>../config_interface/standard/update/index.txt</file>
+<file>../config_interface/standard/update/install.txt</file>
+<file>../config_interface/standard/update/uninstall.txt</file>
+<file>../modules/configuration/update.pike</file>
+
+<str id="1">
+<o>Update List</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>Main</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>[Details...]</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Currently no packages in this category.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>[More..]</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>Roxen Update System</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Launched a package list update request.</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>This information was last synchronized with the main server
+ &amp;var.last_updated; ago.</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Products</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>Security fixes</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>Bug fixes</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>Thirs party modules</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Downloads&amp;nbsp;in&amp;nbsp;progress</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Description</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Size</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Downloaded</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>Downloaded&amp;nbsp;packages</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Organization</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Author</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>License</o>
+<t></t>
+</str>
+
+<str id="22">
+<o>Date</o>
+<t></t>
+</str>
+
+<str id="23">
+<o>[Return]</o>
+<t></t>
+</str>
+
+<str id="24">
+<o>Hide package contents</o>
+<t></t>
+</str>
+
+<str id="25">
+<o>The following files will be installed:</o>
+<t></t>
+</str>
+
+<str id="26">
+<o>Path</o>
+<t></t>
+</str>
+
+<str id="27">
+<o>Show package contents</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>Do you really want to install this package?</o>
+<t></t>
+</str>
+
+<str id="29">
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="30">
+<o>No</o>
+<t></t>
+</str>
+
+<str id="31">
+<o>Installed packages:</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>some time</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>%d minutes</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>%d hours</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>%d days</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>%d months</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>%d years</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>infinitely long</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>Update client initialization error</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>Possible causes:</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>Yabu does not have permission to create/write/read its files.</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Solution: Change permissions on the relevant files.</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files!</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>Solution: Kill the offending Roxen processes.</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>Backtrace:</o>
+<t></t>
+</str>
+
+<str id="45">
+<o>Security</o>
+<t></t>
+</str>
+
+<str id="46">
+<o>Bugfixes</o>
+<t></t>
+</str>
+
+<str id="47">
+<o>Third party</o>
+<t></t>
+</str>
+
+<str id="48">
+<o>Package not completely downloaded.</o>
+<t></t>
+</str>
+
+<str id="49">
+<o>Could not install package. Fix the problems above and try again.</o>
+<t></t>
+</str>
+
+<str id="50">
+<o>Package installed completely.</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>No package argument.</o>
+<t></t>
+</str>

@@ -51,5 +51,4 @@
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../modules/configuration/config_userdb.pike</file>
-  <file>../modules/configuration/update.pike</file>
 </project>

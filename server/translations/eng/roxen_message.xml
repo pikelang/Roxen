@@ -4,7 +4,6 @@
 <language>eng</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
-<file>../modules/configuration/update.pike</file>
 <file>../protocols/prot_fhttp.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
