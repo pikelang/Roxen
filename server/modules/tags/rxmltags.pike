@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.407 2002/11/01 12:37:58 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.408 2002/11/15 09:41:43 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8474,8 +8474,13 @@ just got zapped?
  be an array or mapping.
 </p></desc>
 
-<attr name='values' value='string, mapping or array' required='required'><p>
- An array, mapping or a string to be splitted into an array.</p>
+<attr name='values' value='string, mapping or array'><p>
+ An array, mapping or a string to be splitted into an array. This
+ attribute is required unless the variable attribute is used.</p>
+</attr>
+
+<attr name='variable' value='name'><p>Name of a variable from which the
+ values are taken.</p>
 </attr>
 
 <attr name='split' value='string' default='NULL'><p>
