@@ -1,5 +1,5 @@
 /*
- * $Id: linuxproc.pike,v 1.4 1997/10/11 19:48:26 neotron Exp $
+ * $Id: linuxproc.pike,v 1.5 1997/10/16 19:34:49 neotron Exp $
  */
 
 inherit "wizard";
@@ -41,7 +41,7 @@ string format_proc_line(string in, int ipid)
     begin = search(in, "+-") + 2;
   if((end = search(in, ") ")) == -1 &&(end = search(in, ")")) == -1)
     end = strlen(in) -1;
-  perror("%d %d %s\n", begin, end, in[begin..end]);
+//  perror("%d %d %s\n", begin, end, in[begin..end]);
   if(search(in,"/proc/")==-1)
     return ((begin ? html_encode_string(in[0..begin-1]) :"")+
 	    "<a href=/Actions/?action=linuxproc.pike&pid="+pid+"&unique="+time()+">"+
@@ -58,9 +58,9 @@ string get_status(int pid)
   string cwd, status, state = "unknown", name = "who knows";
   int vmsize, vmrss, vmdata, vmstack, vmexe, vmlib, vmstk, vmlck, ppid;
   array (string) uid, gid, tmp;
-  cd("/proc/"+pid+"/cwd/"); 
-  cwd = getcwd();
-  cd(wd);
+//  cd("/proc/"+pid+"/cwd/"); 
+//  cwd = getcwd();
+//  cd(wd);
   status = Stdio.read_file("/proc/"+pid+"/status");
   if(!status || !strlen(status))
     return "<i>Failed to read /proc/. Process died?</i>";
@@ -162,7 +162,7 @@ string get_status(int pid)
 		       "<b>Process state:</b> %s\n"
 		       "<b>Parent pid(s):</b> %s\n"
 		       "%s" // fds
-		       "<b>CWD:</b>           %s\n\n"
+//		       "<b>CWD:</b>           %s\n\n"
 		       "<b>Memory usage</b>:\n\n"
 		       "  Size (incl. mmap): %6d kB"
 		       "    RSS:          %6d kB\n"
@@ -180,7 +180,8 @@ string get_status(int pid)
 		       "environment</a>\n",
 		       name, state,
 		       ppids, fds,
-		       cwd, vmsize,
+//		       cwd,
+vmsize,
 		       vmrss, vmdata, vmstk, vmlck,
 		       vmexe, vmlib,
 		       "real", "effective",
