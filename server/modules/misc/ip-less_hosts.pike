@@ -1,10 +1,12 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.20 1998/07/12 09:55:27 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.21 1998/07/29 06:31:18 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
+
+//#define IP_LESS_DEBUG
 
 array register_module()
 {
@@ -49,7 +51,45 @@ object find_server_for(object id, string host)
       return(id->conf);
     }
 
-#if constant(Array.diff_longest_sequence)
+
+#if constant(String.fuzzymatch)
+    int best;
+    object c;
+    string hn;
+#ifdef IP_LESS_DEBUG
+    roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
+#endif /* IP_LESS_DEBUG */
+    foreach(roxen->configurations, object s) {
+      string h = lower_case(s->query("MyWorldLocation"));
+
+      // Remove http:// and trailing slash...
+      // Would get interresting correlation problems with the "http" otherwise.
+      sscanf(h, "%*s://%s/", h);
+
+      int corr = String.fuzzymatch(host, h);
+#ifdef IP_LESS_DEBUG
+      roxen_perror(sprintf("IPLESS: host: \"%s\"\n"
+			   "IPLESS: server: \"%s\"\n"
+			   "IPLESS: corr: %d\n",
+			   host, h, corr));
+#endif /* IP_LESS_DEBUG */
+      if ((corr > best) ||
+	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
+	/* Either better correlation,
+	 * or the same, but a shorter hostname.
+	 */
+#ifdef IP_LESS_DEBUG
+	roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+			     h, host, hn||""));
+#endif /* IP_LESS_DEBUG */
+	best = corr;
+	c = s;
+	hn = h;
+      }
+    }
+    id->conf = config_cache[host] = (c || id->conf);
+
+#elif constant(Array.diff_longest_sequence)
 
     /* The idea of the algorithm is to find the server-url with the longest
      * common sequence of characters with the host-string, and among those with
