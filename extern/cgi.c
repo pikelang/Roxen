@@ -1,4 +1,22 @@
+/*
+ * $Id: cgi.c,v 1.24 1998/04/11 13:57:02 grubba Exp $
+ *
+ * CGI-wrapper for Roxen.
+ *
+ * David Hedbor
+ * Per Hedbor
+ * Henrik Grubbström
+ * and others.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif /* HAVE_STRINGS_H */
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef HAVE_SIGNAL_H
@@ -325,7 +343,7 @@ void send_data(char *bar, int re)
 
 char *is_end_of_headers(char *s, int len)
 {
-  int end_of_header;
+  char *end_of_header;
 
   if(!headers) 
   {
@@ -353,7 +371,7 @@ char *is_end_of_headers(char *s, int len)
   if (!end_of_header) {
     end_of_header = strstr(headers, "\n\r\n\r");
   }
-  return(end_of_header)
+  return(end_of_header);
 }
 
 
@@ -387,8 +405,8 @@ int parse_and_send_headers(char *header_end)
       free(headers);
       return 1;
     }
-    if((pointer = strstr(headers, "Location:") && (pointer < end_of_headers)) ||
-       (pointer = strstr(headers, "location:") && (pointer < end_of_headers)))
+    if((pointer = strstr(headers, "Location:") && (pointer < header_end)) ||
+       (pointer = strstr(headers, "location:") && (pointer < header_end)))
       error = "HTTP/1.0 302 Document Found\r\n";
     else
       error = "HTTP/1.0 200 Ok\r\n";

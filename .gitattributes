@@ -22,6 +22,7 @@ urw_itc_avant_garde-demi-r binary
 /Makefile foreign_ident
 /configure.in foreign_ident
 /extern/acconfig.h foreign_ident
+/extern/cgi.c foreign_ident
 /extern/configure.in foreign_ident
 /extern/fast_cgi/Makefile.in foreign_ident
 /extern/fast_cgi/README foreign_ident
