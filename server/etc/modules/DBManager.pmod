@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.33 2001/09/03 13:40:30 per Exp $
+// $Id: DBManager.pmod,v 1.34 2001/09/03 13:48:33 jonasw Exp $
 
 //! Manages database aliases and permissions
 
@@ -590,7 +590,7 @@ array(string|array(mapping)) backup( string dbname, string directory )
     directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
   directory = combine_path( getcwd(), directory );
 
-o  if( is_internal( dbname ) )
+  if( is_internal( dbname ) )
   {
     mkdirhier( directory+"/" );
     array tables = db_tables( dbname );
