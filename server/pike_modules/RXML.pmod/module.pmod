@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.294 2002/11/05 02:14:22 mani Exp $
+// $Id: module.pmod,v 1.295 2002/11/13 16:42:50 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7053,6 +7053,10 @@ class CompiledError
 #  define COMP_MSG(X...) do {} while (0)
 #endif
 
+// Count the identifiers globally to avoid the slightly bogus cyclic
+// check in the compiler.
+static int p_comp_idnr = 0;
+
 #ifdef DEBUG
 static int p_comp_count = 0;
 #endif
@@ -7064,7 +7068,6 @@ static class PikeCompile
 #ifdef DEBUG
   static string pcid = "pc" + ++p_comp_count;
 #endif
-  static int idnr = 0;
   static inherit String.Buffer: code;
   static inherit Thread.Mutex: mutex;
   static mapping(string:mixed) bindings = ([]);
@@ -7077,7 +7080,7 @@ static class PikeCompile
 #ifdef DEBUG
       pcid +
 #endif
-      "b" + idnr++;
+      "b" + p_comp_idnr++;
     COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
     return id;
@@ -7089,7 +7092,7 @@ static class PikeCompile
 #ifdef DEBUG
       pcid +
 #endif
-      "v" + idnr++;
+      "v" + p_comp_idnr++;
     string txt;
 
     if (init) {
@@ -7114,7 +7117,7 @@ static class PikeCompile
 #ifdef DEBUG
       pcid +
 #endif
-      "f" + idnr++;
+      "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
     string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
