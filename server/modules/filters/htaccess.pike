@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.48 1999/04/24 14:40:16 mast Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.49 1999/05/14 18:28:21 marcus Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -23,6 +23,14 @@ inherit "roxenlib";
 #define TRACE_ENTER(A,B)
 #define TRACE_LEAVE(A)
 #endif /* HTACCESS_DEBUG */
+
+#ifdef __NT__
+#define IS_PATH (strlen(id->not_query)&&(id->not_query[0]=='/'||id->not_query[0]=='\\'))
+#define NOT_QUERY (replace(id->not_query,"\\","/"))
+#else /* !__NT__ */
+#define IS_PATH (strlen(id->not_query)&&id->not_query[0]=='/')
+#define NOT_QUERY (id->not_query)
+#endif /* __NT__ */
 
 array *register_module()
 {
@@ -511,7 +519,7 @@ mapping|string|int htaccess(mapping access, object id)
       return http_redirect(access->redirect,id);
     }
 
-    if(search(id->not_query, from) + 1) {
+    if(search(NOT_QUERY, from) + 1) {
       TRACE_LEAVE("redirect");
       return http_redirect(to,id);
     }
@@ -781,7 +789,7 @@ array find_htaccess_file(object id)
 {
   string vpath;
 
-  vpath = id->not_query;
+  vpath = NOT_QUERY;
 
   // Make sure the path does _not_ end with '/', since that would disable
   // checking for /foo/.htaccess when /foo/ is accessed.   The only thing
@@ -925,7 +933,7 @@ mapping last_resort(object id)
 
   TRACE_ENTER("htaccess->last_resort()", 0);
 
-  if(strlen(id->not_query)&&id->not_query[0]=='/')
+  if(IS_PATH)
     if(access_violation = htaccess_no_file( id )) {
       TRACE_LEAVE("Access violation");
       return access_violation;
@@ -939,7 +947,7 @@ mapping remap_url(object id)
 
   TRACE_ENTER("htaccess->remap_url()", 0);
 
-  if(strlen(id->not_query)&&id->not_query[0]=='/')
+  if(IS_PATH)
   {
     access_violation = try_htaccess( id );
     if(access_violation) {
@@ -947,7 +955,7 @@ mapping remap_url(object id)
       return access_violation;
     } else {
 
-      string s = (id->not_query/"/")[-1];
+      string s = (NOT_QUERY/"/")[-1];
       if (search(QUERY(denyhtlist), s) != -1) {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
