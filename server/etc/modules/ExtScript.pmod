@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.8 2000/11/27 21:27:43 leif Exp $
+// $Id: ExtScript.pmod,v 1.9 2000/11/28 06:22:58 per Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -12,59 +12,50 @@ static void diag(string x)
 }
 
 class Handler
-{ object  proc;
-  object  pipe;
-  object  pipe_other;
+{
+  Process  proc;
+  Stdio.File  pipe;
+  Stdio.File  pipe_other;
   string  binpath;
-  mapping settings;
+  mapping(string:mixed) settings;
   int     runcount = 0;
   int     timeout;
-#if constant(Thread.Mutex)
-  object  mutex = Thread.Mutex();
-#endif
+  Thread.Mutex  mutex = Thread.Mutex();
 
   void terminate()
   {
-#if constant(Thread.Mutex)
-    object lock = mutex ? mutex->lock() : 0;
-#endif
+    Thread.MutexKey lock = mutex ? mutex->lock() : 0;
     if (proc && !proc->status() && pipe)
-    {
       // send 'exit' command to subprocess
       pipe->write("X");
-    }
   }
 
   int busy()
   {
-#if constant(Thread.Mutex)
     if (mutex)
-    { if (mutex->trylock()) return 0;
-      return 1;
-    }
-#endif
+      return !mutex->trylock();
     return 0;
   }
 
   int procstat()
-  { return proc ? proc->status() : -1;
+  {
+    return proc ? proc->status() : -1;
   }
 
   int probe()
-  { return timeout < time(0);
+  {
+    return timeout < time(0);
   }
 
   static void putvar(string vtype, string vname, string vval)
-  { pipe->write(sprintf("%s%c%s%c%c%c", vtype, strlen(vname), vname,
-          strlen(vval)/65536, strlen(vval)/256, strlen(vval) & 255));
+  {
+    pipe->write("%s%c%s%3c", vtype, strlen(vname), vname, strlen(vval));
     pipe->write(vval);
   }
 
-  array launch(string how, string arg, object id)
+  array launch(string how, string arg, RequestID id)
   {
-#if constant(Thread.Mutex)
-    object lock = mutex ? mutex->lock() : 0;
-#endif
+    Thread.MutexKey lock = mutex ? mutex->lock() : 0;
     timeout = time(0) + 190;
 
     if (!proc || proc->status() != 0)
@@ -74,8 +65,9 @@ class Handler
 
       diag("(L1)");
 
-      mapping opts = ([ "fds": ({ pipe_other }) ]);
-      if (settings->set_uid) opts["set_uid"] = settings->set_uid;
+      mapping opts = ([ "fds":({pipe_other}) ]);
+      if (settings->set_uid)
+	opts["set_uid"] = settings->set_uid;
 
       if (catch (
         proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
@@ -91,8 +83,8 @@ class Handler
       diag("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
-              return ({ -1, "external process didn't respond"
-                + sprintf("(Got: %O)", res) });
+	return ({ -1, "external process didn't respond"
+		  + sprintf("(Got: %O)", res) });
       diag("(NewSubprocess)");
       if (how == "run")
         putvar("L", "cd", dirname(arg));
@@ -103,7 +95,8 @@ class Handler
     }
 
     if (id)
-    { int len, returncode = 200; string headers;
+    {
+      int len, returncode = 200; string headers;
 
       diag("{");
       // Reset script variables.
@@ -142,21 +135,26 @@ class Handler
       if (arrayp(id->auth) && sizeof(id->auth) > 1)
       {
         if (stringp(id->auth[0]) && stringp(id->auth[1]))
-        { putvar("I", "auth_type", id->auth[0]);
+        {
+	  putvar("I", "auth_type", id->auth[0]);
           putvar("E", "AUTH_TYPE", id->auth[0]);
           array arr = id->auth[1] / ":";
           putvar("I", "auth_user", arr[0]);
           putvar("E", "REMOTE_USER", arr[0]);
-          if (sizeof(arr) > 1) putvar("I", "auth_passwd", arr[1]);
+          if (sizeof(arr) > 1)
+	    putvar("I", "auth_passwd", arr[1]);
         }
         else if (sizeof(id->auth) == 3 && intp(id->auth[0]))
-        { putvar("I", "auth_type", "Basic");
+        {
+	  putvar("I", "auth_type", "Basic");
           putvar("E", "AUTH_TYPE", "Basic");
           if (stringp(id->auth[1]))
-          { putvar("I", "auth_user", id->auth[1]);
+          {
+	    putvar("I", "auth_user", id->auth[1]);
             putvar("E", "REMOTE_USER", id->auth[1]);
           }
-          if (stringp(id->auth[2])) putvar("I", "auth_passwd", id->auth[2]);
+          if (stringp(id->auth[2]))
+	    putvar("I", "auth_passwd", id->auth[2]);
         }
       }
 
@@ -183,50 +181,58 @@ class Handler
       pipe->write("QP");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
-      { pipe = 0; proc = 0; diag("@");
-#if constant(Thread.Mutex)
+      {
+	pipe = 0; proc = 0; diag("@");
         lock = 0;
-#endif
         return launch(how, arg, id);
       }
 
       // start operation
       diag("$");
-      len = strlen(arg);
-      pipe->write(sprintf("%c%c%c%c%s", how == "eval" ? 'C' : 'S',
-                   len/65536, len/256, len&255, arg));
+      pipe->write("%c%3c%s", (how == "eval" ? 'C' : 'S'), strlen(arg), arg);
       string output = "";
 
       while (sizeof(res = pipe->read(1)) > 0)
-      { diag("."+res);
-        if (res == "a") continue;
-        else if (res == "X") { return ({ -1, "SCRIPT ERROR (1)" });}
+      {
+	diag("."+res);
+        if (res == "a")
+	  continue;
+        else if (res == "X")
+	  return ({ -1, "SCRIPT ERROR (1)" });
         else if (res == "+" || res == "*" || res == "?" || res == "=")
-        { string tmp = pipe->read(3);
+        {
+	  string tmp = pipe->read(3);
           len = tmp[1]*256 + tmp[2];
           diag("<");
           tmp = pipe->read(len);
           diag(">");
           if (stringp(tmp))
-          { if (res == "=")
-            { array arr = tmp / "=";
+          {
+	    if (res == "=")
+            {
+	      array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
-              { diag(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
+              {
+		diag(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
                 if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
               }
               else if (arr[0] == "HEADERS")
-              { headers = arr[1..] * "=";
+              {
+		headers = arr[1..] * "=";
               }
               else if (arr[0] == "ADDHEADER")
-              { headers = (headers || "") + arr[1..]*"=" + "\n";
+              {
+		headers = (headers || "") + arr[1..]*"=" + "\n";
                 diag(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
               }
             }
             else if (res == "?")
-            { return ({ -1, tmp });
+            {
+	      return ({ -1, tmp });
             }
-            else output += tmp;
+            else
+	      output += tmp;
           }
           if (res == "*" || res == "?") break;
         }
@@ -234,9 +240,10 @@ class Handler
       }
       diag("<Done.>");
       if (res == "" || res == 0)
-           return ({ -1, "SCRIPT I/O ERROR (2)" });
+	return ({ -1, "SCRIPT I/O ERROR (2)" });
 
-      if (++runcount > 5000) proc = 0, pipe = 0;
+      if (++runcount > 5000)
+	proc = 0, pipe = 0;
 
       diag("}");
 
@@ -246,37 +253,41 @@ class Handler
     else return ({ -1, "[Internal error?]" });
   }
 
-  array run(string path, object id)
-  { return launch("run", path, id);
+  array run(string path, RequestID id)
+  {
+    return launch("run", path, id);
   }
 
-  array eval(string expr, object id)
-  { return launch("eval", expr, id);
+  array eval(string expr, RequestID id)
+  {
+    return launch("eval", expr, id);
   }
 
   void create(string helper_program_path, void|mapping settings0)
-  { binpath = helper_program_path;
+  {
+    binpath = helper_program_path;
     settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
     timeout = time(0) + 300;
   }
 }
 
-#if constant(Thread.Mutex)
-object dispatchmutex = Thread.Mutex();
-#endif
+Thread.Mutex dispatchmutex = Thread.Mutex();
 
 static int lastobjdiag = 0;
 
 static void objdiag()
-{ if (lastobjdiag > time(0)-25) return;
+{
+  if (lastobjdiag > time(0)-25)
+    return;
   lastobjdiag = time(0);
   diag("Subprocess status:\n");
   foreach(indices(scripthandlers), string binpath)
-  { mapping m = scripthandlers[binpath];
+  {
+    mapping m = scripthandlers[binpath];
     string line = "  " + binpath;
     int     n = 0;
-    foreach(m->handlers, object h)
+    foreach(m->handlers, Handler h)
       if (h)
         line += "  H" + (++n) + "=" + h->procstat();
     diag(line + "\n");
@@ -286,16 +297,17 @@ static void objdiag()
 static int lastcleanup = 0;
 
 void periodic_cleanup()
-{ int now = time(0);
+{
+  int now = time(0);
   if (lastcleanup+42 < now)
-  { lastcleanup = now;
+  {
+    lastcleanup = now;
     foreach(indices(scripthandlers), string binpath)
-    { mapping m = scripthandlers[binpath];
+    {
+      mapping m = scripthandlers[binpath];
       if (m->expire < now)
       {
-#if constant(Thread.Mutex)
-        object lock = m->mutex->lock();
-#endif
+        Thread.MutexKey lock = m->mutex->lock();
   	diag("(Z)");
   	if (m->handlers[0])
   	{ if (m->handlers[0]->probe())
@@ -310,9 +322,7 @@ void periodic_cleanup()
   	   m->handlers = ({ 0 });
   	now = time(0);
   	m->expire   = now+600/(2+sizeof(m->handlers));
-#if constant(Thread.Mutex)
   	lock = 0;
-#endif
       }
     }
   }
@@ -320,10 +330,11 @@ void periodic_cleanup()
   objdiag();
 }
 
-object getscripthandler(string binpath, void|int multi, void|mapping settings)
-{ mapping m;
-  object  h;
-  object  lock;
+Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
+{
+  mapping m;
+  Handler  h;
+  Thread.MutexKey  lock;
   int     i;
 
   if (!intp(multi) || multi < 1) multi = 1;
@@ -332,26 +343,24 @@ object getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!(m = scripthandlers[binpath])) 
   {
-#if constant(Thread.Mutex)
     lock = dispatchmutex->lock();
-#endif
     scripthandlers[binpath] = m =
-       ([ "handlers": ({ Handler(binpath) }),
+       ([
+	 "handlers": ({ Handler(binpath) }),
           "expire": time(0) + 600,  
-#if constant(Thread.Mutex)
           "mutex": Thread.Mutex(),
-#endif
           "binpath": binpath
         ]);
   }
 
-#if constant(Thread.Mutex)
   lock = m->mutex->lock();
-#endif
+
   for(i = 0; i < multi && i < sizeof(m->handlers); ++i)
     if (h = m->handlers[i])
-    { if (!h->busy())
-      { if (!h->procstat())
+    {
+      if (!h->busy())
+      {
+	if (!h->procstat())
           return h;
         else return h;
       }
@@ -362,16 +371,10 @@ object getscripthandler(string binpath, void|int multi, void|mapping settings)
       return m->handlers[i] = Handler(binpath);
 
   if (i < multi && multi < 10) // Another handler.
-  { m->handlers += ({ h = Handler(binpath, settings) });
+  {
+    m->handlers += ({ h = Handler(binpath, settings) });
     return h;
   }
 
   return m->handlers[random(sizeof(m->handlers))];
 }
-
-
-
-
-
-
-
