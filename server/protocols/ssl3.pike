@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.49 1999/05/06 01:04:04 mast Exp $
+/* $Id: ssl3.pike,v 1.50 1999/05/06 03:14:30 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -438,6 +438,11 @@ void send_result(mapping|void result)
     file->file = 0;
   }
 
+  if(conf) {
+    conf->sent+=(file->len>0 ? file->len : 1000);
+    conf->log(file, this_object());
+  }
+
   file->head = head_string;
   to_send = copy_value(file);
 
@@ -468,13 +473,11 @@ void send_result(mapping|void result)
 #endif
   }
 
-  if(conf) {
-    conf->sent+=(file->len>0 ? file->len : 1000);
-    conf->log(file, this_object());
-  }
-
 #ifndef SSL3_CLOSE_BUG_STILL_EXISTS
-  destruct_my_fd();
+  if (my_fd->destructme == 2) {
+    destruct_my_fd();
+    destruct();
+  }
 #endif
 }
 
@@ -641,7 +644,7 @@ class roxen_sslfile {
 		       * the ssl-code shut down the connection. */
 #endif
 
-  int selfdestruct;
+  int destructme; // 0: alive, 1: parent wants destruct, 2: self wants destruct.
 
   void die(int status)
   {
@@ -653,7 +656,8 @@ class roxen_sslfile {
 #endif
       ssl::die(status);
 
-    if (selfdestruct) destruct();
+    if (destructme == 1) destruct();
+    else destructme = 2;
   }
 
 #ifdef SSL3_CLOSE_BUG_STILL_EXISTS
@@ -687,8 +691,8 @@ void destruct_my_fd()
   catch {
     // When the request disappear there's noone else interested in
     // my_fd, so it should destruct itself asap.
-    my_fd_for_destruct->selfdestruct = 1;
-    if (my_fd_for_destruct->is_closed) destruct (my_fd);
+    if (my_fd_for_destruct->destructme == 2) destruct (my_fd);
+    else my_fd_for_destruct->destructme = 1;
   };
 }
 
