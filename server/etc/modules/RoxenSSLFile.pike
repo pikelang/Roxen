@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.5 2005/01/27 14:26:41 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.6 2005/01/27 14:36:06 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -277,7 +277,7 @@ static THREAD_T op_thread;
   run_maybe_blocking:							\
     if (COND) {								\
       if (!local_backend) local_backend = Pike.Backend();		\
-      local_backend->add (stream);					\
+      local_backend->add_file (stream);					\
       stream->set_id (0);						\
       SSL3_DEBUG_MSG ("Starting %s local backend\n",			\
 		      NONBLOCKING_MODE ? "nonblocking" : "blocking");	\
@@ -294,7 +294,7 @@ static THREAD_T op_thread;
 	   * need to bother with the return value from ssl_read_callback \
 	   * since we'll propagate the error, if any, just below. */	\
 	  if (got_extra_read_call_out > 0)				\
-	    real_backend->remove_call_out (ssl_read_callback);		\
+	    remove_call_out (ssl_read_callback);			\
 	  ssl_read_callback (0, 0); /* Will clear got_extra_read_call_out. */ \
 	}								\
 									\
@@ -395,7 +395,7 @@ static void create (Stdio.File stream, SSL.context ctx,
     stream->set_close_callback (0);
     stream->set_id (1);
 
-    conn = SSL.connection (!is_client, ctx);
+    conn = SSLConnection (!is_client, ctx);
 
     if(is_blocking) {
       set_blocking();
@@ -673,7 +673,7 @@ int write (string|array(string) data, mixed... args)
 
       while (idx < sizeof (data) && !sizeof (write_buffer)) {
 	int size = sizeof (data[idx]) - pos;
-	if (size > SSL.Constants.PACKET_MAX_SIZE) {
+	if (size > SSL.constants.PACKET_MAX_SIZE) {
 	  int n = conn->send_streaming_data (data[idx][pos..]);
 	  SSL3_DEBUG_MSG ("SSL.sslfile->write: Queued data[%d][%d..%d]\n",
 			  idx, pos, pos + n - 1);
@@ -686,7 +686,7 @@ int write (string|array(string) data, mixed... args)
 	  int end;
 	  for (end = idx + 1; end < sizeof (data); end++) {
 	    int newsize = size + sizeof (data[end]);
-	    if (newsize > SSL.Constants.PACKET_MAX_SIZE) break;
+	    if (newsize > SSL.constants.PACKET_MAX_SIZE) break;
 	    size = newsize;
 	  }
 
@@ -1282,7 +1282,7 @@ static int ssl_read_callback (int called_from_real_backend, string input)
       if (got_extra_read_call_out) {
 	// Don't know if this actually can happen, but it's symmetric.
 	if (got_extra_read_call_out > 0)
-	  real_backend->remove_call_out (ssl_read_callback);
+	  remove_call_out (ssl_read_callback);
 	got_extra_read_call_out = 0;
       }
 
@@ -1362,7 +1362,7 @@ static int ssl_write_callback (int called_from_real_backend)
 	error ("Ended up in ssl_write_callback from real backend "
 	       "when no callbacks are supposed to be installed.\n");
 #endif
-      real_backend->remove_call_out (ssl_read_callback);
+      remove_call_out (ssl_read_callback);
       RESTORE;
       // ssl_read_callback will clear got_extra_read_call_out.
       return ssl_read_callback (called_from_real_backend, 0);
@@ -1493,7 +1493,7 @@ static int ssl_close_callback (int called_from_real_backend)
 	error ("Ended up in ssl_close_callback from real backend "
 	       "when no callbacks are supposed to be installed.\n");
 #endif
-      real_backend->remove_call_out (ssl_read_callback);
+      remove_call_out (ssl_read_callback);
       RESTORE;
       // ssl_read_callback will clear got_extra_read_call_out.
       return ssl_read_callback (called_from_real_backend, 0);
