@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.21 2000/07/11 01:47:07 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.22 2000/08/09 02:35:10 per Exp $
  *
  * Various helper functions.
  *
@@ -619,6 +619,89 @@ class QuotaDB
 }
 
 
+#define CTX()   
+class EScope
+{
+  string scope;
+  
+  void delete( string var )
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    ctx->delete_var( var, scope );
+  }
+
+  string name()
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    return scope == "_" ? ctx->current_scope() : scope;
+  }
+
+  static mixed `[]( string what )
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    return ctx->get_var( what, scope );
+  }
+
+  static mixed `->( string what )
+  {
+    return `[]( what );
+  }
+
+  static mixed `[]=( string what, mixed nval )
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    ctx->set_var( what, nval, scope );
+    return nval;
+  }
+
+  static mixed `->=( string what, mixed nval )
+  {
+    return `[]=( what, nval );
+  }
+
+  static array(string) _indices( )
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    return ctx->list_var( scope );
+  } 
+
+  static array(string) _values( )
+  {
+    RXML.Context ctx = RXML.get_context( );  
+    return map( ctx->list_var( scope ), `[] );
+  } 
+
+  static void create( string _scope )
+  {
+    scope = _scope;
+  }
+}
+
+class SRestore
+{
+  mapping osc = ([]);
+  void destroy()
+  {
+    foreach( indices( osc ), string o ) 
+      add_constant( o, osc[o] );
+    add_constant( "roxen", roxenp() );
+  }
+}
+
+SRestore add_scope_constants( string|void name )
+{
+  SRestore res = SRestore();
+  mapping ac = all_constants();
+  if(!name) name = "";
+  foreach( RXML.get_context()->list_scopes()|({"_"}), string scope )
+  {
+    res->osc[ name+scope ] = ac[ name+scope ];
+    add_constant( name+scope, EScope( scope ) );
+  }
+  return res;
+}
+
+
 // RXML complementary stuff shared between configurations.
 
 class ScopeRoxen {
@@ -825,7 +908,7 @@ array(int) parse_since(string date)
 	year -= 1900;
       }
       catch {
-	t = mktime(second, minute, hour, day, month, year, -1, 0);
+	t = mktime(second, minute, hour, day, month, year, 0, 0);
       };
     } else {
       report_debug("Could not parse \""+date+"\" to a time int.");
