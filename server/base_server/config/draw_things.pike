@@ -1,8 +1,8 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.34 1998/09/11 22:16:42 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.35 1999/04/30 11:28:34 js Exp $";
 
-object (Image.image) load_image(string f)
+Image.image load_image(string f)
 {
   object file = Stdio.File();
   string data;
@@ -20,7 +20,7 @@ object (Image.image) load_image(string f)
     return 0;
 
   if(img=Image.PNM.decode(data))
-    return img->scale(0,48);
+    return img;
 //  werror("Failed to parse image file.\n");
   return 0;
 }
@@ -34,22 +34,22 @@ object (Image.image) load_image(string f)
    }\
  }while(0)
 
-#define first_filter  load_image("1stfilt.ppm")
-#define last_filter   load_image("lastfilt.ppm")
-#define experimental  load_image("experimental.ppm")
-#define last          load_image("last.ppm")
-#define first         load_image("first.ppm")
-#define dir           load_image("dir.ppm")
-#define location      load_image("find.ppm")
-#define extension     load_image("extension.ppm")
-#define logger        load_image("log.ppm")
-#define proxy         load_image("proxy.ppm")
-#define security      load_image("security.ppm")
-#define tag           load_image("tag.ppm")
-#define fade          load_image("fade.ppm")
-#define pad           load_image("padding.ppm")
+#define first_filter  load_image("1stfilt.ppm")->scale(0,48)
+#define last_filter   load_image("lastfilt.ppm")->scale(0,48)
+#define experimental  load_image("experimental.ppm")->scale(0,48)
+#define last          load_image("last.ppm")->scale(0,48)
+#define first         load_image("first.ppm")->scale(0,48)
+#define dir           load_image("dir.ppm")->scale(0,48)
+#define location      load_image("find.ppm")->scale(0,48)
+#define extension     load_image("extension.ppm")->scale(0,48)
+#define logger        load_image("log.ppm")->scale(0,48)
+#define proxy         load_image("proxy.ppm")->scale(0,48)
+#define security      load_image("security.ppm")->scale(0,48)
+#define tag           load_image("tag.ppm")->scale(0,48)
+#define fade          load_image("fade.ppm")->scale(0,48)
+#define pad           load_image("padding.ppm")->scale(0,48)
 
-object (Image.image) draw_module_header(string name, int type, object font)
+Image.image draw_module_header(string name, int type, object font)
 {
   object result = Image.image(1000,48);
   object knappar = Image.image(1000,48);
@@ -129,7 +129,10 @@ object (Image.image) draw_module_header(string name, int type, object font)
 #define hG 0xa0
 #define hB 0xff
 
-object (Image.image) draw_config_button(string name, object font, int lm, int rm)
+object unselected_tab_image = load_image("../tab_unselected.ppm");
+object selected_tab_image = load_image("../tab_selected.ppm");
+
+Image.image draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image.image(1,15, dR,dG,dB);
 
@@ -154,93 +157,36 @@ object (Image.image) draw_config_button(string name, object font, int lm, int rm
   return ruta->scale(0,15);
 }
 
-object (Image.image) draw_unselected_button(string name, object font,
-					    void|array(int) pagecol)
+Image.image draw_tab( object tab, object text, array(int) bgcolor )
 {
-  if(!strlen(name)) return Image.image(1,15, R,G,B);
-
-  object txt = font->write(name)->scale(0.48);
-  object ruta = Image.image(txt->xsize()+40, 20, bR, bG, bB), s;
-  object linje = Image.image(2,30, hR,hG,hB);
-  object linje_mask = Image.image(2,30, 128,128,128);
-
-  linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
-  
-  ruta=ruta->paste_alpha_color(txt, 255,255,255, 20, 0);
-  ruta=ruta->paste_alpha_color(linje_mask, 0,0,0);
-  s=ruta->select_from(0,0);
-  
-  if(pagecol)
-  {
-    ruta->paste_alpha_color(s, @pagecol);
-    ruta->setpixel(0,0,@pagecol);
-    linje_mask = linje_mask->mirrory()->color(196,196,196);
-    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-    s=ruta->select_from(txt->xsize()+34,0);
-    ruta->paste_alpha_color(s, @pagecol);
-    ruta->setpixel(txt->xsize()+34,0, @pagecol);
-  }
+  text = text->scale( 0, tab->ysize()-2 );
+  object i = Image.image( tab->xsize()*2 + text->xsize(), tab->ysize() );
+  tab *= bgcolor;
+  i = i->paste( tab );
+  i = i->paste( tab->mirrorx(), i->xsize()-tab->xsize(), 0 );
+  object linje=tab->copy(tab->xsize()-1, 0, tab->xsize()-1, tab->ysize());
+  for(int x = tab->xsize(); x<i->xsize()-tab->xsize(); x++ )
+    i->paste( linje, x, 0 );
+  if(`+(@tab->getpixel( tab->xsize()-1, tab->ysize()/2 )) < 200)
+    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 2 );
   else
-  {
-    ruta->paste_alpha_color(s, dR,dG,dB);
-    ruta->setpixel(0,0, dR, dG, dB);
-    linje_mask = linje_mask->mirrory()->color(196,196,196);
-    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-    s=ruta->select_from(txt->xsize()+34,0);
-    ruta->paste_alpha_color(s, dR,dG,dB);
-    ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
-  };
-    
-
-  
-  txt=linje=0;
-  ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
-  ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);
-  return ruta->scale(0,TABSIZE);
+    i->paste_alpha_color( text, 0,0,0, tab->xsize(), 2 );
+  return i;
 }
 
-object (Image.image) draw_selected_button(string name, object font,
+
+Image.image draw_unselected_button(string name, object font,
+					    void|array(int) pagecol)
+{
+  object txt = font->write(name);
+  return draw_tab( unselected_tab_image, txt, pagecol );
+}
+
+Image.image draw_selected_button(string name, object font,
 					  void|array(int) pagecol)
 {
-  if(!strlen(name)) return Image.image(1,15, R,G,B);
-
-  object txt = font->write(name)->scale(0.48);
-  object ruta = Image.image(txt->xsize()+40, 20, bsR, bsG, bsB), s;
-  object linje = Image.image(2,30, hR,hG,hB);
-  object linje_mask = Image.image(2,30, 128,128,128);
-
-  linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
-  
-  ruta=ruta->paste_alpha_color(txt, 0,0,0, 20, 0);
-  ruta=ruta->paste_alpha_color(linje_mask, 0,0,0);
-  s=ruta->select_from(0,0);
-
-  if(pagecol)
-  {
-    ruta->paste_alpha_color(s, @pagecol);
-    ruta->setpixel(0,0, @pagecol);
-    linje_mask = linje_mask->mirrory()->color(196,196,196);
-    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-    s=ruta->select_from(txt->xsize()+34,0);
-    ruta->paste_alpha_color(s, @pagecol);
-    ruta->setpixel(txt->xsize()+34,0, @pagecol);
-  }
-  else
-  {
-    ruta->paste_alpha_color(s, dR,dG,dB);
-    ruta->setpixel(0,0, dR, dG, dB);
-    linje_mask = linje_mask->mirrory()->color(196,196,196);
-    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-    s=ruta->select_from(txt->xsize()+34,0);
-    ruta->paste_alpha_color(s, dR,dG,dB);
-    ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
-  };
-
-  
-  txt=linje=0;
-  ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
-  ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);
-  return ruta->scale(0,TABSIZE);
+  object txt = font->write(name);
+  return draw_tab( selected_tab_image, txt, pagecol );
 }
 
 
