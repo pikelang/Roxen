@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.293 2002/10/24 00:35:04 nilsson Exp $
+// $Id: module.pmod,v 1.294 2002/11/05 02:14:22 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1230,8 +1230,8 @@ class TagSet
     return ({
       this_object()->prefix,
       this_object()->prefix_req,
-      sort (indices (tags)),
-      proc_instrs && sort (indices (proc_instrs)),
+      mkmultiset (indices (tags)),
+      proc_instrs && mkmultiset (indices (proc_instrs)),
       string_entities,
     }) + imported->get_hash_data() +
       ({0}) + indices (dep_tag_sets)->get_hash_data();
@@ -1918,7 +1918,16 @@ class Context
   //! Neither @[index] nor @[value] is copied when stored in the
   //! cache. That means that you probably don't want to change them
   //! destructively, or else those changes can have propagated
-  //! "backwards" when the cached p-code is used.
+  //! "backwards" when the cached p-code is used. Sometimes that
+  //! propagation can be a useful feature, though.
+  //!
+  //! @note
+  //! Use @[set_id_misc] or @[set_root_id_misc] instead of this if you
+  //! want to access the stored value after the RXML evaluation has
+  //! finished. There is compatibility code that tries to keep
+  //! @tt{id->misc->defines@} around for a while afterwards, but it's
+  //! not recommended to depend on it since there are circumstances
+  //! when the mapping will get overridden.
   //!
   //! @note
   //! For compatibility reasons, changes of the _ok flag
@@ -1933,6 +1942,29 @@ class Context
       if (stringp (index)) index = encode_value_canonic (index);
       var_chg[index] = value;
     }
+  }
+
+  void set_id_misc (mixed index, mixed value)
+  //! Like @[set_misc], but sets a value in @[id->misc], which is
+  //! useful if the value should be used by other code after the rxml
+  //! evaluation.
+  {
+    if (value == nil) m_delete (id->misc, index);
+    else id->misc[index] = value;
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({1, index}))] = value;
+  }
+
+  void set_root_id_misc (mixed index, mixed value)
+  //! Like @[set_id_misc], but sets a value in @[id->root_id->misc]
+  //! instead. The difference is that the setting then is visible
+  //! throughout the outermost request when the setting is made in an
+  //! internal subrequest, e.g. through @[Configuration.try_get_file].
+  {
+    if (value == nil) m_delete (id->root_id->misc, index);
+    else id->root_id->misc[index] = value;
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({2, index}))] = value;
   }
 
   static int last_internal_var_id = 0;
@@ -6855,18 +6887,41 @@ class VariableChange (/*static*/ mapping settings)
 	    }
 	  }
 
-	  else {
-	    // A runtime tag change. Can extend this by looking closer at var[0].
+	  else switch (var[0]) {
+	    case 0:
+	      // A runtime tag change.
 #ifdef DEBUG
-	    if (TAG_DEBUG_TEST (ctx->frame))
-	      TAG_DEBUG (ctx->frame,
-			 "    Installing cached runtime tag definition for %s: %O\n",
-			 var[1], settings[encoded_var]);
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached runtime tag definition for %s: %O\n",
+			   var[1], settings[encoded_var]);
 #endif
-	    if (Tag tag = settings[encoded_var])
-	      ctx->direct_add_runtime_tag (var[1], tag);
-	    else
-	      ctx->direct_remove_runtime_tag (var[1]);
+	      if (Tag tag = settings[encoded_var])
+		ctx->direct_add_runtime_tag (var[1], tag);
+	      else
+		ctx->direct_remove_runtime_tag (var[1]);
+	      break;
+
+	    case 1:
+	      // Set in id->misc.
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached id->misc entry: %s: %s\n",
+			   format_short (var), format_short (settings[encoded_var]));
+#endif
+	      ctx->set_id_misc (var[1], settings[encoded_var]);
+	      break;
+
+	    case 2:
+	      // Set in root_id->misc.
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached id->root_id->misc entry: %s: %s\n",
+			   format_short (var), format_short (settings[encoded_var]));
+#endif
+	      ctx->set_root_id_misc (var[1], settings[encoded_var]);
 	  }
 
 	  continue handle_var_loop;
