@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>deu</language>
-<dumped>975305586</dumped>
 <file>../base_server/roxen.pike</file>
 <file>../config_interface/standard/actions/cachestatus.pike</file>
 <file>../config_interface/standard/actions/debug_info.pike</file>
@@ -19,8 +18,8 @@
 <file>../config_interface/standard/actions/proc.pike</file>
 <file>../config_interface/standard/actions/processstatus.pike</file>
 <file>../config_interface/standard/actions/reloadconfigurations.pike</file>
-<file>../config_interface/standard/actions/resolv.pike</file>
 <file>../config_interface/standard/actions/requeststatus.pike</file>
+<file>../config_interface/standard/actions/resolv.pike</file>
 <file>../config_interface/standard/actions/restart.pike</file>
 <file>../config_interface/standard/actions/ssl_common.pike</file>
 <file>../config_interface/standard/actions/tablist.pike</file>

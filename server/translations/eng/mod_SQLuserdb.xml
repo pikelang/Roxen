@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_SQLuserdb</project>
 <language>eng</language>
-<dumped>975305588</dumped>
 <file>../modules/database/SQLuserdb.pike</file>
 
 <str id="1">

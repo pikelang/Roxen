@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_auth</project>
 <language>eng</language>
-<dumped>975305589</dumped>
 <file>../modules/examples/auth.pike</file>
 
 <str id="1">

@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_filesystem</project>
 <language>eng</language>
-<dumped>975305594</dumped>
 <file>../modules/filesystems/filesystem.pike</file>
 
 <str id="1">

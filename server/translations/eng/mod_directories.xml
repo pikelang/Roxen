@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_directories</project>
 <language>eng</language>
-<dumped>975305592</dumped>
 <file>../modules/directories/directories.pike</file>
 
 <str id="1">

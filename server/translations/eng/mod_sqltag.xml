@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_sqltag</project>
 <language>eng</language>
-<dumped>975305598</dumped>
 <file>../modules/database/sqltag.pike</file>
 
 <str id="1">

@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>mod_fnord</project>
 <language>eng</language>
-<dumped>975305595</dumped>
 <file>../modules/examples/fnord.pike</file>
 <file>../modules/examples/newstyle_fnord.pike</file>
 
