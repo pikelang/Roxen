@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.281 1999/05/18 10:50:23 per Exp $
+ * $Id: roxen.pike,v 1.282 1999/05/19 03:47:48 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.281 1999/05/18 10:50:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.282 1999/05/19 03:47:48 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1935,11 +1935,11 @@ class ImageCache
           if( alpha )
             alpha = alpha->scale( x, y );
         }
-        else 
+        else if( (float)args->scale < 3.0)
         {
-          reply->scale( ((float)args->scale)/100.0 );
+          reply = reply->scale( ((float)args->scale) );
           if( alpha )
-            alpha->scale( ((float)args->scale)/100.0 );
+            alpha = alpha->scale( ((float)args->scale) );
         }
       }
 
