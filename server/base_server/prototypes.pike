@@ -6,9 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.143 2004/06/30 13:01:59 stewa Exp $";
-
-constant magic_charset_variable_placeholder = "__MaGIC_RoxEn_Actual___charseT";
+constant cvs_version="$Id: prototypes.pike,v 1.144 2004/06/30 14:52:44 stewa Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1456,8 +1454,7 @@ class RequestID
   array replace_charset_placeholder(string charset, string what, int allow_entities) {
     // If we allow entities we also replace the automatic charset placeholder with the charset in use
     if(allow_entities && charset)
-      what = replace(what, magic_charset_variable_placeholder, charset);
-    // Dependency problem here using Roxen.magic_charset_variable_placeholder
+      what = replace(what, Roxen->magic_charset_variable_placeholder, charset);
     return ({ charset, what });
   } 
   
