@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.1 1998/09/03 00:05:39 grubba Exp $
+ * $Id: testrcpt.pike,v 1.2 1998/09/03 00:06:19 grubba Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -11,6 +11,8 @@
 inherit "module";
 
 #define RCPT_DEBUG
+
+constant cvs_version = "$Id: testrcpt.pike,v 1.2 1998/09/03 00:06:19 grubba Exp $";
 
 /*
  * Roxen glue
