@@ -32,7 +32,7 @@ static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/Ser
 static object context_init = context_class->get_method("<init>", "(I)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lse/idonex/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-static object response_init = response_class->get_method("<init>", "(Ljavax/servlet/ServletOutputStream;)V");
+static object response_init = response_class->get_method("<init>", "(Lse/idonex/servlet/HTTPOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
 static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
 static object attrs_field = request_class->get_field("attributes", "Ljava/util/Dictionary;");
@@ -402,18 +402,11 @@ static void native_close(object str)
   }
 }
 
-static void native_writei(object str, int n)
-{
-  object f = streams[stream_id_field->get(str)];
-  if(f)
-    f->write(sprintf("%c", n));
-}
-
 static void native_writeba(object str, object b, int off, int len)
 {
   object f = streams[stream_id_field->get(str)];
   if(f)
-    f->write(sprintf("%@c", values(b[off..off+len-1])));
+    f->write(((string)values(b[off..off+len-1]))&("\xff"*len));
 }
 
 static string native_blockingIPToHost(object n)
@@ -432,8 +425,7 @@ void create()
     ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo})}));
   natives_bind2 = stream_class->register_natives(({
     ({"close", "()V", native_close}),
-    ({"write", "(I)V", native_writei}),
-    ({"write", "([BII)V", native_writeba}),
+    ({"low_write", "([BII)V", native_writeba}),
     ({"forgetfd", "()V", native_forgetfd})}));
 
   natives_bind3 = request_class->register_natives(({

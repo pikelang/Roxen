@@ -192,7 +192,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     {
       if(!lookingAt('"'))
 	return getToken();
-      int p0=pos++;
+      int p0=++pos;
       while(pos<len && header.charAt(pos)!='"')
 	if(header.charAt(pos)=='\\')
 	  pos+=2;
@@ -345,9 +345,10 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   public String getRequestedSessionId()
   {
     Cookie[] cookies = getCookies();
-    for(int i=0; i<cookies.length; i++)
-      if("JSESSIONID".equals(cookies[i].getName()))
+    for(int i=0; i<cookies.length; i++) {
+      if("JSESSIONID".equalsIgnoreCase(cookies[i].getName()))
 	return cookies[i].getValue();
+    }
     return null;
   }
 

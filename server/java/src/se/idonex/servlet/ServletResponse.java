@@ -18,7 +18,8 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   int contentLength = -1;
   String contentType = null;
   String encoding = null;
-  ServletOutputStream pikeStream, outputStream = null;
+  HTTPOutputStream pikeStream;
+  ServletOutputStream outputStream = null;
   PrintWriter writer = null;
   Dictionary headers = null;
   int status = 200;
@@ -72,12 +73,27 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     if(outputStream == null) {
       if(writer != null)
 	throw new IllegalStateException();
-      getWriter();
-      writer.flush();
-      writer = null;
       outputStream = pikeStream;
     }
     return outputStream;
+  }
+
+  void commitRequest(ServletOutputStream out) throws IOException
+  {
+    Object statustext;
+    out.println("HTTP/1.0 "+status+" "+
+		  ((statustext=statusTexts.get(new Integer(status)))==null?
+		   "Foo":(String)statustext));
+    if(!containsHeader("Content-Type"))
+      out.println("Content-Type: "+contentType);
+    if(contentLength != -1 && !containsHeader("Content-Length"))
+      out.println("Content-Length: "+contentLength);
+    if(headers != null)
+      for(Enumeration e = headers.elements(); e.hasMoreElements() ;)
+	out.println((String)e.nextElement());
+    out.println();
+    if(statusmsg != null)
+      out.print(statusmsg);
   }
 
   public PrintWriter getWriter() throws IOException
@@ -87,20 +103,6 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 	throw new IllegalStateException();
       writer = new PrintWriter(new OutputStreamWriter(pikeStream,
 						      getCharacterEncoding()));
-      Object statustext;
-      writer.print("HTTP/1.0 "+status+" "+
-		   ((statustext=statusTexts.get(new Integer(status)))==null?
-		    "Foo":(String)statustext)+"\r\n");
-      if(!containsHeader("Content-Type"))
-	writer.print("Content-Type: "+contentType+"\r\n");
-      if(contentLength != -1 && !containsHeader("Content-Length"))
-	writer.print("Content-Length: "+contentLength+"\r\n");
-      if(headers != null)
-	for(Enumeration e = headers.elements(); e.hasMoreElements() ;)
-	  writer.print(e.nextElement()+"\r\n");
-      writer.print("\r\n");
-      if(statusmsg != null)
-	writer.print(statusmsg);
     }
     return writer;
   }
@@ -278,38 +280,37 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     pikeStream.close();
   }
 
-  ServletResponse(ServletOutputStream sos)
+  ServletResponse(HTTPOutputStream sos)
   {
     pikeStream = sos;
+    pikeStream.setResponse(this);
   }
 
   // 2.2 stuff follows
 
   public void setBufferSize(int size)
   {
-    // FIXME
+    pikeStream.setBufferSize(size);
   }
 
   public int getBufferSize()
   {
-    // FIXME
-    return 0;
+    return pikeStream.getBufferSize();
   }
 
   public void reset()
   {
-    // FIXME
+    pikeStream.reset();
   }
   
   public boolean isCommitted()
   {
-    // FIXME
-    return true;
+    return pikeStream.isCommitted();
   }
 
   public void flushBuffer() throws IOException
   {
-    // FIXME
+    pikeStream.flush();
   }
 
   public void setLocale(Locale loc)
