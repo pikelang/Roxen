@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.12 2000/03/20 03:08:47 mast Exp $
+ * $Id: Roxen.pmod,v 1.13 2000/03/20 07:29:16 mast Exp $
  *
  * Various helper functions.
  *
@@ -717,8 +717,7 @@ class ScopePage {
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
-    if (c->id->misc->path_info) ind += ({"pathinfo"});
-    return ind;
+    return ind + ({"pathinfo"});
   }
 
   void m_delete (string var, void|RXML.Context c, void|string scope_name) {
