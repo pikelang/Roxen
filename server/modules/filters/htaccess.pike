@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.59 2000/03/18 01:57:20 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.60 2000/03/20 13:57:28 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -466,7 +466,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
 
   string htaccess, aname, userfile, groupfile, hname, method, errorfile;
 
-  TRACE_ENTER("htaccess->htaccess()", access);
+  TRACE_ENTER("htaccess->htaccess()", htaccess);
 
   if(access->redirect)
   {
@@ -487,7 +487,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
   groupfile  = access->authgroupfile;
   HT_WERR("Verifying access.");
 
-  TRACE_ENTER("Checking method", id->method);
+  TRACE_ENTER("Checking method: " + id->method, htaccess);
 
   if(!access[method = lower_case(id->method)])
   {
@@ -780,7 +780,7 @@ mapping try_htaccess(RequestID id)
   int|array tmp;
   mapping access = ([]);
 
-  TRACE_ENTER("htaccess->try_htaccess()", 0);
+  TRACE_ENTER("htaccess->try_htaccess()", try_htaccess);
 
   if(!(tmp = find_htaccess_file(id)))
   {
@@ -873,7 +873,7 @@ mapping last_resort(RequestID id)
 {
   mapping access_violation;
 
-  TRACE_ENTER("htaccess->last_resort()", 0);
+  TRACE_ENTER("htaccess->last_resort()", last_resort);
 
   if(strlen(id->not_query)&&id->not_query[0]=='/')
     if(access_violation = htaccess_no_file( id )) {
@@ -887,7 +887,7 @@ mapping remap_url(RequestID id)
 {
   mapping access_violation;
 
-  TRACE_ENTER("htaccess->remap_url()", 0);
+  TRACE_ENTER("htaccess->remap_url()", remap_url);
 
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
