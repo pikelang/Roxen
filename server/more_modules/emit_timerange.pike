@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.1 2001/06/11 19:21:58 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.1 2001/06/12 13:45:55 jhs Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
