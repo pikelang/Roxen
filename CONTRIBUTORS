@@ -1,81 +1,23 @@
-Main programmers:
------------------
+ This file mentions some of the people who have contributed to Roxen
+ WebServer. If you ought to be on this list, don't hesitate to contact
+ us, and we'll try to fix it.
 
-Roxen Core:
-	Per Hedbor and Henrik Grubbström
+Roxen people:
 
-Pike Core:
-	Fredrik Hübinette
+ Per Hedbor, Henrik Grubbström, Fredrik Hübinette, Niels Möller, Pontus
+ Hagland, Marcus Comstedt, Peter Bortas, Björn Ericsson, David Hedbor,
+ Fredrik Noring, Johan Schön, Martin Stjernholm, Johan Sundström,
+ Henrik Wallin, Jonas Walldén, Francesco Chemolli, Martin Nilsson
 
-Cryptography module and SSL support:
-	Niels Möller
+Other people:
 
-Image module:
-	Pontus Hagland
-
-MIME support:
-	Marcus Comstedt
-
-Various modules:
-	Peter Bortas
-	Björn Ericsson
-	David Hedbor
-	Fredrik Noring
-	Johan Schön
-	Martin Stjernholm
-	Johan Sundström
-	Henrik Wallin
-	Jonas Walldén
+ Ian Carr-de Avelon, Martin Bähr, Stephen R. van den Berg, Tvns Böker,
+ Janne Edelman, Kai Garlipp, Patrick Kremer, Wilhelm Köhler, Eric
+ Lammerts, Alistair MacDonald, Klara Makovac, Jordi Murgo, Morten Hol
+ Møller, Goran Opacic, Jason Rumney, Celso J. Sawaia, Iztok Umek, Zsolt
+ Varga, Bill Welliver
 
 
-The following people have made valuable contributions to Roxen & Pike:
-----------------------------------------------------------------------
+ A special thanks to the people at Real and the Roxen Alphatesters for
+ valuable bugreports and fixes.
 
-Ian Carr-de Avelon	Several valuable suggestions and ideas.
-
-Martin Bähr		Fixes to the hostredirect and several other modules.
-
-Stephen R. van den Berg	The Dutch language-module.
-
-Tvns Böker		The German language-module.
-
-Francesco Chemolli	The Postgres and Msql database modules and
-			the Italian language-module.
-			ABS - Anti-Block-System
-
-Janne Edelman		The Finnish language-module.
-
-Kai Garlipp		ISO-8859-1 entity support for the graphical text
-			module, and several fixes.
-
-Patrick Kremer		The French language-module.
-
-Wilhelm Köhler		The disk-cache system, and several fixes.
-
-Eric Lammerts		Fixes to the CGI-module.
-
-Alistair MacDonald	Fixes to the hostredirect module.
-
-Klara Makovac		The Croatian language-module.
-
-Jordi Murgo		The Spanish language-module.
-
-Morten Hol Møller	The Norwegian language-module.
-
-Goran Opacic		The Serbian language-module.
-
-Jason Rumney		The Maaori language-module, and some fixes.
-
-Celso J. Sawaia		The Portuguese language-module.
-
-Iztok Umek		The Slovenian language-module.
-
-Zsolt Varga		Valuable ideas.
-
-Bill Welliver		Fixes to the SQL module.
-
-The people at Real	For valuable bugreports and fixes.
-
-The Roxen Alphatesters	Several valuable bugreports and fixes.
-
-And several others.
