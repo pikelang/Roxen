@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.84 1999/05/19 23:02:08 mast Exp $
+ * $Id: wizard.pike,v 1.85 1999/06/11 22:40:45 mattias Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -69,11 +69,25 @@
 
 inherit "roxenlib";
 
+
 #ifdef DEBUG_WIZARD
 #define DEBUGMSG(msg) report_debug (msg)
 #else
 #define DEBUGMSG(msg) do {} while (0)
 #endif
+
+
+string loc_encode(string val, void|mapping args, void|string def)
+{
+  string quote = args->quote || def || "html";
+
+  switch (quote) {
+  case "html": return html_encode_string(val); break;
+  case "none": return val; break;
+  }
+  return val;
+}
+
 
 string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 {
@@ -103,7 +117,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     if((m->type != "password") && (m->type != "hidden"))
       m->type = "string";
     m_delete(m,"default");
-    m->value = current||m->value||"";
+    m->value = loc_encode(current||m->value||"", m, "none");
     if(!m->size)m->size="60,1";
     return make_tag("input", m);
 
@@ -116,7 +130,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
     {
-      res+="<tr><td>"+html_encode_string(v)+"</td><td><font size=-2>";
+      res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=-2>";
       m->name="_delete_"+n+":"+v;
       m->value = " Remove ";
       m->type = "submit";
@@ -139,7 +153,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m, "value");
     if(!m->rows)m->rows="6";
     if(!m->cols)m->cols="40";
-    return make_container("textarea", m, html_encode_string(current||""));
+    return make_container("textarea", m, loc_encode(current||"", m, "html"));
 
    case "radio":
     m_delete(m,"default");
@@ -344,7 +358,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 			({"__CoMma__", "__CoLon__"}));
 
      return make_container("select", m2, Array.map(m->choices/",",
-						   lambda(string s, string c) {
+						   lambda(string s, string c, mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
@@ -353,8 +367,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 	t=replace(t,({"__CoMma__", 
 		      "__CoLon__"}),({",",":"}));
 
-        return "<option value='"+s+"' "+(s==c?" selected":"")+">"+html_encode_string(t)+"\n";
-     },current)*"");
+        return "<option value='"+s+"' "+(s==c?" selected":"")+">"+loc_encode(t, m, "html")+"\n";
+     },current,m)*"");
 
 
    case "select_multiple":
@@ -372,7 +386,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 		       ({"__CoMma__", "__CoLon__"}));
 
     return make_container("select", m2, Array.map(m->choices/",",
-				 lambda(string s, array c) {
+				 lambda(string s, array c, mapping m) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
         t = s;
@@ -381,8 +395,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       t=replace(t,({"__CoMma__", 
 		    "__CoLon__"}),({",",":"}));
 
-      return "<option value='"+s+"' "+(search(c,s)!=-1?"selected":"")+">"+html_encode_string(t)+"\n";
-    },(current||"")/"\0")*"");
+      return "<option value='"+s+"' "+(search(c,s)!=-1?"selected":"")+">"+loc_encode(t, m, "html")+"\n";
+    },(current||"")/"\0",m)*"");
   }
 }
 
