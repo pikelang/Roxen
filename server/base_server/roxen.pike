@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.62 1997/05/31 19:15:55 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.63 1997/05/31 23:36:47 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -383,15 +383,25 @@ mixed configuration_parse(mixed ... args)
     return configuration_interface()->configuration_parse(@args);
 }
 
+mapping(string:array(int)) error_log=([]);
+
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr)
 {
+#if 0
   if(root && root->descend("Errors", 1))
   {
     mapping e = root->descend("Errors", 1)->data;
     if(!e[s]) e[s]=({ time(1) });
     else e[s] += ({ time(1) });
   }
+#else
+  if (!error_log[s]) {
+    error_log[s] = ({ time(1) });
+  } else {
+    error_log[s] += ({ time(1) });
+  }
+#endif /* 0 */
   roxen_perror(s);
 }
  
@@ -1666,7 +1676,7 @@ void initiate_configuration_port( int|void first )
 
       if(o=create_listen_socket(port[0],0,port[2],requestprogram,port))
       {
-	perror("Configuration port: port number "
+	perror("Configuration port: "+port[1]+" port number "
 	       +port[0]+" interface " +port[2]+"\n");
 	main_configuration_port = o;
 	configuration_ports += ({ o });

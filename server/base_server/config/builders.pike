@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.7 1997/05/31 22:01:18 grubba Exp $ */
+/* $Id: builders.pike,v 1.8 1997/05/31 23:36:48 grubba Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -275,7 +275,11 @@ void build_root(object root, void|int nodes)
   if(!o->data)
   {
     o->describer = describe_errors;
+#if 0
     o->data = ([]);
+#else
+    o->data = roxen->error_log;
+#endif /* 0 */
     o->type = NODE_ERRORS;
   }
 
