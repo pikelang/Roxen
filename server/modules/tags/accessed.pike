@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.37 2000/09/20 23:40:55 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.38 2000/10/13 13:31:23 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -99,7 +99,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=factor value=percent>
- Multiplies the actual number of accesses by the factor. E.g. <accessed factor=50>
+ Multiplies the actual number of accesses by the factor. E.g. <tag>accessed factor='50'</tag>
  displays half the actual value.
 </attr>
 

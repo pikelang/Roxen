@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.134 2000/09/13 18:29:38 jonasw Exp $";
+constant cvs_version = "$Id: business.pike,v 1.135 2000/10/13 13:30:27 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -808,11 +808,11 @@ mixed draw_callback(mapping args, object id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"diagram":({ #"<desc cont><short hide>
- The <diagram> tag is used to draw pie, bar, or line charts as well as
- graphs. </short>The <tag>diagram</tag> tag is used to draw pie, bar,
- or line charts as well as graphs. It is quite complex with six
- internal tags. </desc>
+"diagram":({ #"<desc cont><short>
+ The <tag>diagram</tag> tag is used to draw pie, bar, or line charts
+ as well as graphs. </short> It is quite complex with six internal
+ tags.
+</desc>
 
 <attr name='3d' value='number'>
  Draws a pie-chart on top of a cylinder, takes the height in pixels of the

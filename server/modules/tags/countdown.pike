@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.39 2000/09/18 19:32:37 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.40 2000/10/13 13:32:52 kuntri Exp $";
 #include <module.h>
 inherit "module";
 
@@ -14,8 +14,9 @@ constant module_doc  = "Provides the <tt>&lt;countdown&gt;</tt> tag, that "
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["countdown":#"<desc tag><short>
-This tag can count days, minutes, months, etc. from a specified date or time.</short> It can also
-give the time to or from a few special events. See below for a full list.</desc>
+This tag can count days, minutes, months, etc. from a specified date
+or time.</short> It can also give the time to or from a few special
+events. See below for a full list.</desc>
 
 <p>Time:</p>
 <attr name=year value=number>Sets the year.</attr>
@@ -71,16 +72,16 @@ Sets the time of an evet to count down to.</attr>
 
 <ex type='vert'>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></c></row>
 <row><c><i>display=dogyears</i></c><c>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></c></row>
-<row><c><i>display=boolean</i></c><c>Return true or false (1 or 0), depending on if the time is now or not. The
-                         fuzziness of 'now' is decided by the 'prec' option.
-<ex type='vert'><p>Is this a Sunday?</p>
+<row><c><i>display=boolean</i></c><c>Return true or false (1 or 0), depending on if the time is now or not. The fuzziness of 'now' is decided by the 'prec' option.
+
+<ex type='vert'><b>Is this a Sunday?</b>
 <define variable='var.test' preparse=''><countdown day='sunday' display='boolean'/></define>
 <if variable='var.test = 1'>Yes, this is a Sunday.</if>
 <else>No, it isn´t.</else></ex>
-</c><row>
+</c></row>
 </xtable>
-
 </attr>
+
 <attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
 <attr name=lang value=langcodes>The language in which the result should be written if the type is string.
 <lang/>

@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.60 2000/09/10 16:55:49 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.61 2000/10/13 13:27:07 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -50,10 +50,10 @@ constant tagdoc=([
  The actual SQL-statement.
 </attr>
 
-<attribute name=parse>
+<attr name=parse>
  If specified, the query will be parsed by the RXML parser.
  Useful if you wish to dynamically build the query.
-</attribute>",
+</attr>",
 
 "sqlquery":#"
 <desc tag><short>

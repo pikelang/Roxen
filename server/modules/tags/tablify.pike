@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.57 2000/09/18 19:32:39 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.58 2000/10/13 13:27:25 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -182,7 +182,7 @@ Finland, 5 158 372
   (["fields":#"<desc cont>
  The container 'fields' may be used inside the tablify container to
  describe the type of contents the fields in a column has. Available
- fields are<br>
+ fields are<br />
 
    <list type='ul'>
    <item>text (default)</item>
@@ -199,7 +199,7 @@ Finland, 5 158 372
    All fields except text overrides the cellvalign attribute.</desc>
 
 
-  <attr name=separator value=string>Defines the field type separator.
+  <attr name='separator' value='string'>Defines the field type separator.
 
   The fields types are separated by
   <list type='ol'>
@@ -207,7 +207,8 @@ Finland, 5 158 372
   <item>The value given in the cellseparator attribute to tablify.</item>
   <item>Tab.</item>
   </list></attr>"])
-})]);
+			    }),
+		  		]);
 #endif
 
 string encode_url(int col, int state, object stateobj, RequestID id){

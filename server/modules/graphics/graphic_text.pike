@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.253 2000/10/02 01:14:27 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.254 2000/10/13 13:32:21 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -368,10 +368,18 @@ opaque=70</gtext>
 
 
 constant tagdoc=([
-"anfang":#"<desc cont></desc> 
-<ex type=vert><anfang crop=\"\">This is a beginning<br />
-of a very short text,<br />
-and here it ends.</ex>
+"anfang":#"<desc cont><short>
+
+ Creates an anfang in the beginning of a text.</short> This tag takes
+ the same attributes as <tag>gtext</tag> does.
+
+ <ex type=vert>
+ <anfang crop=\"\">This is a beginning<br />
+ of a very short text,<br />
+ and here it ends.
+ </anfang>
+ </ex>
+</desc>
 <noex>"+gtextargs+"</noex>",
 
 "gh":#"<desc cont><short>Creates a graphical header.</short> The header
@@ -449,7 +457,7 @@ and here it ends.</ex>
 </attr>
 
 <attr name=split>
- <gtext scale=0.4 split>Make each word into a separate gif image.
+ <gtext scale='0.4' split='split'>Make each word into a separate gif image.
  Useful if you are writing a large text, and word wrap at the edges of
  the display is desired. This text is an example (try resisizing your
  browser window, the images should move just like normal text
