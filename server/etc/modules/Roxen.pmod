@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.115 2001/08/23 23:34:43 mast Exp $
+// $Id: Roxen.pmod,v 1.116 2001/08/24 14:57:52 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -153,11 +153,11 @@ string decode_mode(int m)
   if(S_ISLNK(m))  s += "Symbolic link";
   else if(S_ISREG(m))  s += "File";
   else if(S_ISDIR(m))  s += "Dir";
-  else if(S_ISCHR(m))  s += "Special";
-  else if(S_ISBLK(m))  s += "Device";
-  else if(S_ISFIFO(m)) s += "FIFO";
   else if(S_ISSOCK(m)) s += "Socket";
+  else if(S_ISFIFO(m)) s += "FIFO";
   else if((m&0xf000)==0xd000) s+="Door";
+  else if(S_ISBLK(m))  s += "Device";
+  else if(S_ISCHR(m))  s += "Special";
   else s+= "Unknown";
 
   s+=", ";
