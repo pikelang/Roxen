@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.65 2000/05/17 20:48:14 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.66 2000/05/18 11:55:24 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -412,3 +412,63 @@ string|mapping parse_directory(RequestID id)
 
   return Roxen.http_rxml_answer( query("template"), id );
 }
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=([
+"emit#path":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
+
+<attr name='directory' value='path'>
+
+</attr>
+
+<attr name='options' value='option1,[option2,...]'>
+
+</attr>
+
+<attr name='timeformat' value=''>
+
+</attr>
+
+<attr name='glob' value='glob-pattern1[,glob-pattern2,...]'>
+ Only show files that matches the glob-pattern.
+</attr>
+
+<attr name='type-glob' value='glob-pattern1[,glob-pattern2,...]'>
+ Only show files which content-type matches the glob-pattern.
+</attr>
+
+<attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'>
+ Sort the files by this method.
+</attr>
+
+<attr name='sort-reversed'>
+ Reverse the sort order.
+</attr>",
+
+(["&_.atime;":#"<desc ent></desc>",
+"&_.atime-iso;":#"<desc ent></desc>",
+"&_.atime-unix;":#"<desc ent></desc>",
+"&_.dirname;":#"<desc ent></desc>",
+"&_.filename;":#"<desc ent></desc>",
+"&_.icon;":#"<desc ent></desc>",
+"&_.mode;":#"<desc ent></desc>",
+"&_.mode-int;":#"<desc ent></desc>",
+"&_.mtime;":#"<desc ent></desc>",
+"&_.mtime-iso;":#"<desc ent></desc>",
+"&_.mtime-unix;":#"<desc ent></desc>",
+"&_.name;":#"<desc ent></desc>",
+"&_.path;":#"<desc ent></desc>",
+"&_.size;":#"<desc ent></desc>",
+"&_.size-int;":#"<desc ent></desc>",
+"&_.type;":#"<desc ent></desc>",
+"&_.thumbnail;":#"<desc ent></desc>",
+"&_.x-size;":#"<desc ent></desc>",
+"&_.y-size;":#"<desc ent></desc>",
+])
+		 })
+]);
+
+
+#endif
+
