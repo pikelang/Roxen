@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.106 1999/03/08 20:47:47 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.107 1999/03/08 21:15:29 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -147,8 +147,9 @@ class imap_mail
   {
     if (flags["\\Deleted"]) {
       mail->delete();
+      int i = index;
       destruct();
-      return ({ imap_number(index), "EXPUNGE" });
+      return ({ imap_number(i), "EXPUNGE" });
     }
     return 0;
   }
