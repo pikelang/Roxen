@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.185 2000/01/12 22:02:19 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.186 2000/01/16 23:20:34 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -843,8 +843,7 @@ void end(string|void s, int|void keepit)
 #endif
 
 #ifdef KEEP_ALIVE
-  if(keepit &&
-     (!(file->raw || file->len <= 0))
+  if(keepit && !file->raw
      && (misc->connection == "keep-alive" ||
 	 (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd)
@@ -1496,6 +1495,9 @@ void send_result(mapping|void result)
 
       if(file->len > -1)
 	head_string += "Content-Length: "+ file->len +"\r\n";
+      else
+	misc->connection = "close";
+
       head_string += "\r\n";
 
       if(conf) conf->hsent += strlen(head_string);
