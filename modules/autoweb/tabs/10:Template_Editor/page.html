@@ -210,50 +210,52 @@
 				  where id='¤wizard¤'">
         <wizard preparse name="¥title:quote=mysql¥">
 	  <sqloutput quote='$' query="select * from template_wizards_pages where
-			              wizard_id='¤wizard¤'">
+	  		              wizard_id='¤wizard¤'">
 	    <page>
 	      <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	      <input type=hidden name=wizard value='¤wizard:quote=mysql¤'>
-
-	      <sqloutput quote='#' query="select * from template_vars where
-		                          page_id='$id$'">
-  		<cset preparse variable=options><pike>
-  		  string query=
-  		    "<sqloutput quote='£' query="
-  		    "\"select * from template_vars_opts where"
-  		    " variable_id='#id:quote=mysql#'\">"
-  		    "£value£:£name£,</sqloutput>";
-  		  return ((parse_rxml(query, id)/",")-({ "" }))*",";
-  		  </pike></cset>
-  		<cset preparse variable=default><pike>
-  		  return
-  		    "<sqloutput quote='£' query="
-  		    "\"select * from customers_schemes_vars "
-  		    "where scheme_id='¤current_scheme:quote=mysql¤' and"
-  		    " variable_id='#id:quote=mysql#'\">"
-  		    "£value£</sqloutput>";
-  		  </pike></cset>
-                <formoutput quote='£'>
-		  <b>#title#: </b>
-		  <var name="variable_#id#" type="#type#" advanced
-                       options="£options£" default="£default£">
-  		  <cset variable=__show_example__></cset>
-		  <if match="#name# is nav_name">
-		    <cset variable=__show_example__>1</cset> 
-		  </if>
-		  <if match="#name# is template_name">
-		      <cset variable=__show_example__>1</cset> 
+              <table>
+	        <sqloutput quote='#' query="select * from template_vars where
+					    page_id='$id$'">
+		  <cset preparse variable=options><pike>
+		    string query=
+		      "<sqloutput quote='£' query="
+		      "\"select o.value,o.name from template_options as o,"
+                      "           template_option_groups as g where"
+		      " g.id='#option_group_id#' and"
+		      " g.id=o.option_group_id\">"
+		      "£value£:£name£,</sqloutput>";
+		    return ((parse_rxml(query, id)/",")-({ "" }))*",";
+		    </pike></cset>
+		  <cset preparse variable=default><sqloutput quote='£'
+		      query="select * from customers_schemes_vars
+		      where scheme_id='¤current_scheme:quote=mysql¤' and
+		      variable_id='#id:quote=mysql#'">£value£</sqloutput></cset>
+		  <formoutput quote='£'>
+		    <tr>
+		      <td><b>#title#:</b></td>
+		      <td><var name="variable_#id#" type="#type#" noexample
+			       options="£options£" default="£default£"></td>
+		    </tr>
+		    <if not match='#help# is '>
+		      <tr><td></td><td>#help#</td></tr>
 		    </if>
-		  <if variable="__show_example__ is 1">
-		    <input type=submit name=example value='Example'>
-		    <if variable=example>
-		      <br><img src=/img/examples/£variable_#id#£.jpg>
-		    </if>
+		  </formoutput>
+		</sqloutput>
+		<noparse><noparse>
+		  <if not match="$example_html:quote=none$ is ">
+		    <tr>
+		      <td><input type=submit name=example value=Example></td>
+                      <td><comment><hr width=100% align=center noshade size=1>
+		          </comment>
+		        <if variable=example>
+			  $example_html:quote=none$
+		        </if>
+		      </td>
+		    </tr>
 		  </if>
-		</formoutput>
-		<if not match='#help# is '><br>#help#</if>
-		<p>
-	      </sqloutput>
+		</noparse></noparse>
+	      </table>
 	    </page>
 	  </sqloutput>
 	  <noparse><noparse><done>
@@ -273,12 +275,7 @@
 		       "insert into customers_schemes_vars "
 		       "(scheme_id,variable_id,value) "
 		       " values ('¤current_scheme¤','"+variable_id+"','"+
-		       id->variables[variable]+
-                       ((id->variables[variable+
-		         "_bold"]||"0")!="0"?" bold":"")+
-		       ((id->variables[variable+"_italic"]||"0")!="0"?
-		        " italic":"")+
-		       "')"+
+		       id->variables[variable]+"')"+
 		       "\">\n";
 		}
 	      return r;
