@@ -1,3 +1,6 @@
+// Old RXML Compatibility Module Copyright 2000 (c) Idonex
+//
+
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
@@ -7,6 +10,9 @@ inherit "roxenlib";
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
+
+
+// ------------------- Module Registration and common stuff ------------------------
 
 constant thread_safe=1;
 constant language = roxen->language;
@@ -56,25 +62,116 @@ string status() {
   return ret;
 }
 
+
+// ----------------------- Documentation --------------------------
+
 TAGDOCUMENTATION;
 #ifdef manual
-constant rxmltags_doc=(["clientname":"<desc tag></desc>",
-"file":"<desc tag></desc>",
-"realfile":"<desc tag></desc>",
-"referer":"<desc tag></desc>",
-"referrer":"<desc tag></desc>",
-"refferrer":"<desc tag></desc>",
-"vfs":"<desc tag></desc>",
-"accept-language":"<desc tag></desc>"
+constant tagdoc=([
+"clientname":#"<desc tag>
+ Returns the name of the client. No required attributes.
+</desc>
+
+<attr name=full>
+ View the full User Agent string.
+</attr>
+
+<attr name=quote value=html,none>
+ Quotes the clientname. Default is 'html'.
+</attr>",
+
+"file":#"<desc tag>
+ Prints the path part of the URL used to get this page.
+</desc>
+
+<attr name=quote value=html,none>
+ How the filename is quoted. Default is 'html'.
+</attr>
+
+<attr name=raw>
+ Prints the full path part, including the query part with form
+ variables.
+</attr>",
+
+"realfile":#"<desc tag>
+
+ Prints the path to the file containing the page in the computers file
+ system, rather than Roxen Webserver's virtual file system, or unknown if
+ it is impossible to determine.
+</desc>",
+
+"referer":#"<desc tag>
+ Inserts the URL the visitor came from.
+</desc>
+
+<attr name=alt>
+ Text to write if no referrer is given.
+</attr>
+
+<attr name=quote value=html,none>
+ How the referrer should be quoted. Default is 'html'.
+</attr>",
+
+"referrer":#"<desc tag>
+ Inserts the URL the visitor came from.
+</desc>
+
+<attr name=alt>
+ Text to write if no referrer is given.
+</attr>
+
+<attr name=quote value=html,none>
+ How the referrer should be quoted. Default is 'html'.
+</attr>",
+
+"refferrer":#"<desc tag>
+ Inserts the URL the visitor came from.
+</desc>
+
+<attr name=alt>
+ Text to write if no referrer is given.
+</attr>
+
+<attr name=quote value=html,none>
+ How the referrer should be quoted. Default is 'html'.
+</attr>",
+
+"vfs":#"<desc tag>
+ Prints the mountpoint of the filesystem module that handles the page,
+ or unknown if it could not be determined. This is useful for creating
+ pages or applications that are to be placed anywhere on a site, but
+ for some reason have to use absolute paths.
+</desc>",
+
+"accept-language":#"<desc tag>
+ Returns the language code of the language the user prefers, as
+ specified by the first language in the accept-language header.
+
+ <p>If no accept-language is sent by the users browser None will be
+ returned.</p>
+</desc>
+
+<attr name=end value=character>
+
+</attr>
+
+<attr name=full>
+ Returns all languages the user has specified, as a comma separated list.
+</attr>
+
+<attr name=start value=character>
+
+</attr>",
 ]);
-mapping tagdoc=(["preparse":"<desc cont></desc>"])+
-  (enabled->rxmltags?rxmltags_doc:([]));
 #endif
 
-// Changes the parsing order by first parsing it's contents and then
-// morphing itself into another tag that gets parsed.
+
+// --------------------------- Tags and containers ------------------------------
+
 string container_preparse( string tag_name, mapping args, string contents,
 		     RequestID id )
+// Changes the parsing order by first parsing it's contents and then
+// morphing itself into another tag that gets parsed.
 {
   old_rxml_warning(id, "preparse tag","preparse attribute");
   return make_container( args->tag, args - ([ "tag" : 1 ]),
@@ -583,6 +680,9 @@ array(string) tag_version(string tag, mapping m, RequestID id) {
   old_rxml_warning(id, "version tag", "&roxen.version;");
   return ({ roxen->version() });
 }
+
+
+// --------------- Register tags, containers and if-callers ---------------
 
 mapping query_tag_callers() {
   mapping active=(["list-tags":tag_list_tags,
