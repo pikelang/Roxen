@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.303 2000/04/12 19:42:52 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.304 2000/04/25 19:36:45 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3382,7 +3382,7 @@ Dies hat auch Einfluss auf den Access-Counter.");
 
   defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
 	 "The domainname of the server. The domainname is used "
-	 " to generate default URLs, and to gererate email addresses");
+	 " to generate default URLs, and to generate email addresses");
 
   deflocaledoc( "deutsch", "Domain",
                 "DNS-Domain",
