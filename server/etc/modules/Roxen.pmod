@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.59 2000/12/11 03:45:33 per Exp $
+ * $Id: Roxen.pmod,v 1.60 2000/12/11 04:05:46 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -309,6 +309,7 @@ string http_encode_url (string f)
 }
 
 string add_pre_state( string url, multiset state )
+//! Adds the provided states as prestates to the provided url.
 {
   if(!url)
     error("URL needed for add_pre_state()\n");
@@ -417,6 +418,33 @@ string extract_query(string from)
 mapping build_env_vars(string f, RequestID id, string path_info)
 //! Generate a mapping with environment variables suitable for use
 //! with CGI-scripts or SSI scripts etc.
+//! INDEX
+//! SCRIPT_NAME
+//! PATH_INFO
+//! PATH_TRANSLATED
+//! DOCUMENT_NAME
+//! DOCUMENT_URI
+//! LAST_MODIFIED
+//! SCRIPT_FILENAME
+//! DOCUMENT_ROOT
+//! HTTP_HOST
+//! HTTP_PROXY_CONNECTION
+//! HTTP_ACCEPT
+//! HTTP_COOKIE
+//! HTTP_PRAGMA
+//! HTTP_CONNECTION
+//! HTTP_USER_AGENT
+//! HTTP_REFERER
+//! REMOTE_ADDR
+//! REMOTE_HOST
+//! REMOTE_PORT
+//! QUERY_STRING
+//! REMOTE_USER
+//! ROXEN_AUTHENTICATED
+//! CONTENT_TYPE
+//! CONTENT_LENGTH
+//! REQUEST_METHOD
+//! SERVER_PORT
 {
   string addr=id->remoteaddr || "Internal";
   mapping(string:string) new = ([]);
@@ -594,9 +622,18 @@ mapping build_roxen_env_vars(RequestID id)
 //! Specifically:
 //! For each cookie:          COOKIE_cookiename=cookievalue
 //! For each variable:        VAR_variablename=variablevalue
+//!                           (Where the null character is encoded as "#")
+//! For each variable:        QUERY_variablename=variablevalue
+//!                           (Where the null character is encoded as " ")
 //! For each 'prestate':      PRESTATE_x=true
 //! For each 'config':        CONFIG_x=true
 //! For each 'supports' flag: SUPPORTS_x=true
+//! ROXEN_USER_ID     The unique ID for that client, if available.
+//! COOKIES           A space delimitered list of all the cookies names.
+//! CONFIGS           A space delimitered list of all config flags.
+//! VARIABLES         A space delimitered list of all variable names.
+//! PRESTATES         A space delimitered list of all prestates.
+//! SUPPORTS          A space delimitered list of all support flags.
 {
   mapping(string:string) new = ([]);
   string tmp;
@@ -613,7 +650,7 @@ mapping build_roxen_env_vars(RequestID id)
 
   foreach(indices(id->config), tmp)
     {
-      new["WANTS_"+replace(tmp, " ", "_")]="true";
+      new["CONFIG_"+replace(tmp, " ", "_")]="true";
       if(new["CONFIGS"])
 	new["CONFIGS"] += " " + replace(tmp, " ", "_");
       else
@@ -668,16 +705,11 @@ string strip_prestate(string from)
   return from;
 }
 
-#define _error defines[" _error"]
-#define _extra_heads defines[" _extra_heads"]
-#define _rettext defines[" _rettext"]
-
-string parse_rxml(string what, RequestID id,
-			 void|Stdio.File file,
-			 void|mapping(string:mixed) defines)
+string parse_rxml(string what, RequestID id )
+//! Parse the given string as RXML and return the result.
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
-  return id->conf->parse_rxml( what, id, file, defines );
+  return id->conf->parse_rxml( what, id );
 }
 
 constant iso88591
