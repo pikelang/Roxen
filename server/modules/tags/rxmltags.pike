@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.327 2001/10/22 12:31:11 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.328 2001/11/23 21:29:42 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -315,13 +315,15 @@ class TagAuthRequired {
 
     array do_return(RequestID id) {
       mapping hdrs = Roxen.http_auth_required (args->realm||"document access", args->message);
-      if (hdrs->error) _error = hdrs->error;
+      if (hdrs->error)
+	RXML_CONTEXT->set_misc (" _error", hdrs->error);
       if (hdrs->extra_heads)
-	_extra_heads += hdrs->extra_heads;
+	RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + hdrs->extra_heads);
       // We do not need this as long as hdrs only contains strings and numbers
       //   foreach(indices(hdrs->extra_heads), string tmp)
       //      Roxen.add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
-      if (hdrs->text) _rettext = hdrs->text;
+      if (hdrs->text)
+	RXML_CONTEXT->set_misc (" _rettext", hdrs->text);
       return 0;
     }
   }
@@ -421,14 +423,14 @@ class TagRedirect {
       mapping r = Roxen.http_redirect(args->to, id, prestate);
 
       if (r->error)
-	_error = r->error;
+	RXML_CONTEXT->set_misc (" _error", r->error);
       if (r->extra_heads)
-	_extra_heads += r->extra_heads;
+	RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
       // We do not need this as long as r only contains strings and numbers
       //    foreach(indices(r->extra_heads), string tmp)
       //      Roxen.add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
       if (args->text)
-	_rettext = args->text;
+	RXML_CONTEXT->set_misc (" _rettext", args->text);
 
       return 0;
     }
@@ -996,9 +998,9 @@ class TagReturn {
     array do_return(RequestID id)
     {
       if(args->code)
-	_error = (int)args->code;
+	RXML_CONTEXT->set_misc (" _error", (int)args->code);
       if(args->text)
-	_rettext = replace(args->text, "\n\r"/1, "%0A%0D"/3);
+	RXML_CONTEXT->set_misc (" _rettext", replace(args->text, "\n\r"/1, "%0A%0D"/3));
       return 0;
     }
   }
@@ -3412,12 +3414,27 @@ class TagEmit {
       scope_name=args->scope||args->source;
       vars = (["counter":0]);
 
+#if 0
+#ifdef DEBUG
+      tag_debug ("Got emit plugin %O for source %O\n", plugin, args->source);
+#endif
+#endif
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       PROF_ENTER( args->source, "emit" );
       plugin->eval_args( args, 0, 0, emit_args );
       res = plugin->get_dataset(args, id);
       PROF_LEAVE( args->source, "emit" );
       TRACE_LEAVE("");
+#if 0
+#ifdef DEBUG
+      if (objectp (res))
+	tag_debug ("Emit plugin %O returned data set object %O\n",
+		   plugin, res);
+      else if (arrayp (res))
+	tag_debug ("Emit plugin %O returned data set with %d items\n",
+		   plugin, sizeof (res));
+#endif
+#endif
 
       if(args->skiprows && plugin->skiprows)
 	m_delete(args, "skiprows");

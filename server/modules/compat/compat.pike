@@ -187,12 +187,14 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   id->prestate = orig_prestate;
 
   if (r->error)
-    _error = r->error;
-  if (r->extra_heads)
+    RXML_CONTEXT->set_misc (" _error", r->error);
+  if (r->extra_heads) {
     foreach(indices(r->extra_heads), string tmp)
       add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+    RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads);
+  }
   if (m->text)
-    _rettext = m->text;
+    RXML_CONTEXT->set_misc (" _rettext", m->text);
 
   return ({""});
 }

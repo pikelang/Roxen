@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.67 2001/09/03 18:52:20 nilsson Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.68 2001/11/23 21:29:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -353,8 +353,12 @@ int api_set_supports(RequestID id, string p)
 
 int api_set_return_code(RequestID id, int c, void|string p)
 {
-  if(c) _error=c;
-  if(p) _rettext=p;
+  if(c)
+    if (RXML.Context ctx = RXML_CONTEXT) ctx->set_misc (" _error", c);
+    else _error = c;
+  if(p)
+    if (RXML.Context ctx = RXML_CONTEXT) ctx->set_misc (" _rettext", p);
+    else _rettext = p;
   return 1;
 }
 

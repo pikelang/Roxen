@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.13 2001/10/08 12:32:56 anders Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.14 2001/11/23 21:29:42 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -122,9 +122,9 @@ class TagForceSessionID {
 
 	mapping r = Roxen.http_redirect(id->not_query, id);
 	if (r->error)
-	  _error = r->error;
+	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  _extra_heads += r->extra_heads;
+	  RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
 
 	// Don't trust that the user cookie setting is turned on. The effect
 	// might be that the RoxenUserID cookie is set twice, but that is
@@ -148,9 +148,9 @@ class TagForceSessionID {
 	mapping r = Roxen.http_redirect(id->not_query, id);
 	id->prestate = orig_prestate;
 	if (r->error)
-	  _error = r->error;
+	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  _extra_heads += r->extra_heads;
+	  RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
 	return 0;
       }
     }
