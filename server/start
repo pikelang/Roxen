@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.125 2000/09/01 12:42:46 nilsson Exp $
+# $Id: start,v 1.126 2000/09/01 14:11:17 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -11,7 +11,7 @@ then
     shift
 fi
 
-pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
+pre="`echo \"                   \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
 dp() {
   if [ "x$SILENT_START" = "xy" ]
@@ -446,13 +446,13 @@ if [ ! "X$ROXEN_ARGS" = "X" ]; then
 fi
 
 
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    if [ $verbose -gt 0 ] ; then
-      dp "Solaris 2.5 or later was detected. Threads enabled by default."
-    fi
-  fi
-fi
+#if uname | grep 'SunOS' >/dev/null 2>&1; then
+#  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+#    if [ $verbose -gt 0 ] ; then
+#      dp "Solaris 2.5 or later was detected. Threads enabled by default."
+#    fi
+#  fi
+#fi
 
 
 if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
@@ -594,7 +594,7 @@ start_roxen() {
       if [ $verbose -gt 1 -o -z "$once" ] ; then
         dp "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
       else
-        dp "Using '$pike'"|sed -e "s!`pwd`!.!g"
+        dp "Using the '$pike' pike binary"|sed -e "s!`pwd`!.!g"
       fi
     fi
 
