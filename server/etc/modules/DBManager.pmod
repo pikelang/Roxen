@@ -1,8 +1,10 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.4 2001/06/11 02:43:38 per Exp $
+// $Id: DBManager.pmod,v 1.5 2001/06/13 13:43:07 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
+#include <roxen.h>
+#include <config.h>
 
 constant NONE  = 0;
 //! No permissions. Used in @[set_permission] and @[get_permission_map]
@@ -312,6 +314,36 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
   }
   return low_get( (ro?"ro":"rw"), name );
 }
+
+#ifdef THREADS
+static Thread.Local connection_cache = Thread.Local();
+Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
+{
+  string key = name+"|"+(c&&c->name)+"|"+ro;
+  mapping cm = connection_cache->get() || ([]);
+
+  Sql.Sql res;
+
+  if( res = cm[key] )
+    return res;
+
+  res = get( name, c, ro );
+
+  if( res )
+  {
+    cm[key]=res;
+    connection_cache->set( cm );
+  }
+  return res;
+}
+#else
+static mapping connection_cache  = ([]);
+Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
+{
+  string key = name+"|"+(c&&c->name)+"|"+ro;
+  return connection_cache[key] || (connection_cache[key]=get( name, c, ro ));
+}
+#endif
 
 void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
