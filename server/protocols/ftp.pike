@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.49 2002/02/13 10:04:46 grubba Exp $
+ * $Id: ftp.pike,v 2.50 2002/03/25 15:36:29 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3563,15 +3563,17 @@ class FTPSession
       }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
-	mixed err;
-	if (err = catch {
-	  this_object()["ftp_"+cmd](args);
-	}) {
-	  report_error(sprintf("Internal server error in FTP2\n"
-			       "Handling command \"%s\"\n"
-			       "%s\n",
-			       line, describe_backtrace(err)));
-	}
+	roxen->handle(lambda(function f, string args, string line) {
+	  mixed err;
+	  if (err = catch {
+	    f(args);
+	  }) {
+	    report_error(sprintf("Internal server error in FTP2\n"
+				 "Handling command \"%s\"\n"
+				 "%s\n",
+				 line, describe_backtrace(err)));
+	  }
+	}, this_object()["ftp_"+cmd], args, line);
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
       }
