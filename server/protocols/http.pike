@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.420 2004/02/03 10:20:10 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.421 2004/02/20 17:25:36 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -869,12 +869,10 @@ void disconnect()
   destruct();
 }
 
-void end(int|void keepit)
+static void cleanup_request_object()
 {
   if( conf )
     conf->connection_drop( this_object() );
-
-  CHECK_FD_SAFE_USE;
 
 #if constant(Parser.XML.Tree.XMLNSParser)
   if (xml_data) {
@@ -891,12 +889,21 @@ void end(int|void keepit)
 #endif
   }
 #endif /* Parser.XML.Tree.XMLNSParser */
+}
+
+void end(int|void keepit)
+{
+  CHECK_FD_SAFE_USE;
+
+  cleanup_request_object();
 
   if(keepit
      && !file->raw
      && (misc->connection == "keep-alive" ||
          (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd
+     // Is this necessary now when this function no longer is called
+     // from the close callback? /mast
      && !catch(my_fd->query_address()) )
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
@@ -920,6 +927,30 @@ void end(int|void keepit)
 
   data_buffer = 0;
   pipe = 0;
+  disconnect();
+}
+
+static void close_cb()
+{
+  REQUEST_WERR ("HTTP: Got remote close.");
+
+  CHECK_FD_SAFE_USE;
+
+  cleanup_request_object();
+
+  data_buffer = 0;
+  pipe = 0;
+
+  // Already closed - simply drop the fd.
+#if constant (SSL.sslfile.PACKET_MAX_SIZE)
+  // Destruct necessary since the old SSL.sslfile implementation
+  // contains cyclic refs. Delay it a little to let the close
+  // handshake be carried out properly; I'm not comfortable doing
+  // blocking I/O here. /mast
+  call_out (destruct, 1, my_fd);
+#endif
+  my_fd = 0;
+
   disconnect();
 }
 
@@ -2288,11 +2319,11 @@ static void create(object f, object c, object cc)
 #if !constant (SSL.sslfile.PACKET_MAX_SIZE)
     if (f->query_accept_callback)
       // The new SSL.sslfile in 7.5.12 sets the accept callback too.
-      f->set_nonblocking(got_data, f->query_write_callback(), end, 0, 0,
+      f->set_nonblocking(got_data, f->query_write_callback(), close_cb, 0, 0,
 			 f->query_accept_callback());
     else
 #endif
-      f->set_nonblocking(got_data, f->query_write_callback(), end);
+      f->set_nonblocking(got_data, f->query_write_callback(), close_cb);
     my_fd = f;
     CHECK_FD_SAFE_USE;
     MARK_FD("HTTP connection");
@@ -2334,7 +2365,7 @@ void chain(object f, object c, string le)
   {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
-    f->set_nonblocking(!processed && got_data, f->query_write_callback(), end);
+    f->set_nonblocking(!processed && got_data, f->query_write_callback(), close_cb);
   }
 }
 
