@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.34 2000/03/29 10:21:49 grubba Exp $
+ * $Id: ftp.pike,v 2.35 2000/05/29 14:05:24 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1424,7 +1424,7 @@ class FTPSession
 
   static private int time_touch = time();
 
-  static private object(ADT.queue) to_send = ADT.queue();
+  static private object(ADT.Queue) to_send = ADT.Queue();
 
   static private int end_marker = 0;
 
