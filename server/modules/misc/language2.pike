@@ -6,14 +6,14 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.6 2000/03/16 18:57:13 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.7 2000/04/24 22:37:03 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
 constant module_doc  = "Handles documents in different languages. "
-            "What language a file is in is specified with an "
-	    "extra extension. index.html.sv would be a file in swedish "
-            "while index.html.en would be one in english. ";
+            "What language a file is in is specified with the "
+	    "language code before the extension. index.sv.html would be a file in swedish "
+            "while index.en.html would be one in english.";
 
 void create() {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
@@ -61,7 +61,7 @@ object remap_url(RequestID id, string url) {
   multiset(string) found;
   mapping(string:string) files;
   array split=cache_lookup(cache_id,url);
-  if(!found) {
+  if(!split) {
     found=(<>);
     files=([]);
 
