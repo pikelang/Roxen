@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.8 1997/08/20 02:48:04 grubba Exp $
+# $Id: configure.in,v 1.9 1997/08/21 23:48:49 grubba Exp $
 #
 
 prefix=$PWD
@@ -59,6 +59,66 @@ AC_ARG_WITH(zlib,     [  --with(out)-zlib       Support gzip compression],[],[wi
 AC_ARG_WITH(gdbm,    [  --with(out)-gdbm       GNU database manager support ],[],[with_gdbm=yes])
 
 
+# Check compilers and such
+#--------------------------
+
+if test ! -z "$roxen_cv_prog_CC" -a ! -z "$CC" -a "$CC" != "$roxen_cv_prog_CC"
+then
+  AC_MSG_WARN([CC is different than last time Roxen was compiled,
+It is probably best to delete ./config.cache before proceeding])
+fi
+
+roxen_cv_prog_CC="$CC"
+
+AC_PROG_CC
+AC_AIX
+AC_MINIX
+
+# Set up smartlink
+
+case $CC in
+ *smartlink*) ;;
+ *)
+   CC="$srcdir/pike/bin/smartlink $CC"
+   ac_cv_prog_CC="$CC"
+ ;;
+esac
+
+# We need some special hacks when running slowaris
+AC_PATH_PROG(uname_prog,uname,no)
+AC_MSG_CHECKING(operating system)
+AC_CACHE_VAL(roxen_cv_sys_os,
+[
+if test "$uname_prog" != "no"; then
+  roxen_cv_sys_os="`uname`"
+
+  case "$roxen_cv_sys_os" in
+    SunOS)
+      case "`uname -r`" in
+        5.*) roxen_cv_sys_os="Solaris";
+      esac
+    ;;
+  esac
+else
+  roxen_cv_sys_os="Not Solaris"
+fi
+])
+AC_MSG_RESULT($roxen_cv_sys_os)
+
+case "$roxen_cv_sys_os" in
+  SCO*)
+     case "$CC" in
+       *-belf*) ;;
+       *)
+          CC="$CC -belf"
+       ;;
+     esac
+  ;;
+esac
+
+#############################################################################
+
+
 # Set some of the compiler flags.
 
 if test "x${CFLAGS-}" = x ; then
@@ -110,47 +170,8 @@ else
   :
 fi
 
-# Check compilers and such
-#--------------------------
-
-AC_PROG_CC
-AC_AIX
-AC_MINIX
-
-# We need some special hacks when running slowaris
-AC_PATH_PROG(uname_prog,uname,no)
-AC_MSG_CHECKING(operating system)
-AC_CACHE_VAL(roxen_cv_sys_os,
-[
-if test "$uname_prog" != "no"; then
-  roxen_cv_sys_os="`uname`"
-
-  case "$roxen_cv_sys_os" in
-    SunOS)
-      case "`uname -r`" in
-        5.*) roxen_cv_sys_os="Solaris";
-      esac
-    ;;
-  esac
-else
-  roxen_cv_sys_os="Not Solaris"
-fi
-])
-AC_MSG_RESULT($roxen_cv_sys_os)
-
-case "$roxen_cv_sys_os" in
-  SCO*)
-     case "$CC" in
-       *-belf*) ;;
-       *)
-          CC="$CC -belf"
-       ;;
-     esac
-  ;;
-esac
-
-#############################################################################
-
+#############################################################
+# Optimization flags...
 
 AC_DEFUN(AC_SYS_COMPILER_FLAG,
 [
@@ -195,7 +216,9 @@ if test $cflags_is_set = no; then
 
 ### Non-gcc thingies. This should probably be enhanced...
   AC_SYS_COMPILER_FLAG(-fast,fast)
-
+  AC_SYS_COMPILER_FLAG(+Odataprefetch,odataprefetch)
+  AC_SYS_COMPILER_FLAG(+Ofailsafe,ofailsafe)
+  AC_SYS_COMPILER_FLAG(+O4,o4)
 dnl
 dnl This does not work with Digital UNIX cc/ld (cc thinks it is ok, ld does not)
 dnl  
@@ -244,6 +267,8 @@ else
     ])
   fi
 fi
+
+export CC
 
 # GMP -- Gnu Multi-Precision library
 #------------------------------------
