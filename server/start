@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.53 1999/03/30 19:54:46 marcus Exp $
+# $Id: start,v 1.54 1999/04/24 17:49:22 mast Exp $
 
 VERSION=202; BETA=.b;
 
@@ -30,28 +30,30 @@ fi
 # which it expects to be able to read as the run-time user.
 umask 022
 
-# Pike default Master-program
-if [ "x$PIKE_MASTER" = "x" ]; then
-  if [ -d share/pike ]; then
-    # This is used with localinstall
-    DEFINES="$DEFINES -Ishare/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:share/pike/modules"
+if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
+  # Pike default Master-program
+  if [ "x$PIKE_MASTER" = "x" ]; then
+    if [ -d share/pike ]; then
+      # This is used with localinstall
+      DEFINES="$DEFINES -Ishare/pike/include"
+      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:share/pike/modules"
+    fi
+    if [ -f lib/master.pike ]; then
+      DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
+      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
+    elif [ -f lib/pike/master.pike ]; then
+      DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
+      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
+    fi
+    export PIKE_MODULE_PATH
+  else
+    # This is useful when using several different Pikes.
+    # Specify include and module paths with
+    # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
+    # they are handled automatically by the master,
+    # so no need to do it here.
+    DEFINES="$DEFINES -m$PIKE_MASTER"
   fi
-  if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
-  elif [ -f lib/pike/master.pike ]; then
-    DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
-  fi
-  export PIKE_MODULE_PATH
-else
-  # This is usefull when using several different Pikes.
-  # Specify include and module paths with
-  # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
-  # they are handled automatically by the master,
-  # so no need to do it here.
-  DEFINES="$DEFINES -m$PIKE_MASTER"
 fi
 
 # Extra module-path
