@@ -41,3 +41,8 @@
 <o>The default database is not connected</o>
 <t></t>
 </str>
+
+<str id="8">
+<o>If this is defined, it's the database this server will use as the default database</o>
+<t></t>
+</str>
