@@ -1194,6 +1194,16 @@ hej</result>
   <result>[a][b]</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <define if="foo"><true/></define>
+      <nocache><if foo="">ok</if></nocache>
+    </cache>
+  </rxml>
+  <result>ok</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
