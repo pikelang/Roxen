@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.33 1998/04/24 09:30:00 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.34 1998/04/27 14:30:23 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -298,6 +298,11 @@ mixed find_file( string f, object id )
   int size;
   string tmp;
   string oldf = f;
+
+#ifdef FILESYSTEM_DEBUG
+  roxen_perror("FILESYSTEM: Request for \""+f+"\"\n");
+#endif /* FILESYSTEM_DEBUG */
+
   f = path + f;
 #ifdef __NT__
   if(f[-1]=='/') f = f[..strlen(f)-2];
