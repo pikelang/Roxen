@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.37 2000/09/12 14:11:37 per Exp $
+ * $Id: Roxen.pmod,v 1.38 2000/09/16 21:45:13 per Exp $
  *
  * Various helper functions.
  *
@@ -26,6 +26,12 @@ inherit _Roxen;
 #else /* !QUOTA_DEBUG */
 #define QD_WRITE(X)
 #endif /* QUOTA_DEBUG */
+
+#undef CACHE
+#undef NOCACHE
+#define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
+#define NOCACHE(id) ([mapping(string:mixed)]id->misc)->cacheable=0
+
 
 class QuotaDB
 {
@@ -781,34 +787,34 @@ class ScopeRoxen {
     switch(var)
     {
      case "uptime":
-       c->id->misc->cacheable=1;
+       CACHE(c->id,1);
        return (time(1)-roxenp()->start_time);
      case "uptime-days":
-       c->id->misc->cacheable=3600*2;
+       CACHE(c->id,3600*2);
        return (time(1)-roxenp()->start_time)/3600/24;
      case "uptime-hours":
-       c->id->misc->cacheable=1800;
+       CACHE(c->id,1800);
        return (time(1)-roxenp()->start_time)/3600;
      case "uptime-minutes":
-       c->id->misc->cacheable=60;
+       CACHE(c->id,60);
        return (time(1)-roxenp()->start_time)/60;
      case "hits-per-minute":
-       c->id->misc->cacheable=60;
+       CACHE(c->id,2);
        return c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1);
      case "hits":
-       c->id->misc->cacheable=0;
+       NOCACHE(c->id);
        return c->id->conf->requests;
      case "sent-mb":
-       c->id->misc->cacheable=10;
+       CACHE(c->id,10);
        return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
      case "sent":
-       c->id->misc->cacheable=0;
+       NOCACHE(c->id);
        return c->id->conf->sent;
      case "sent-per-minute":
-       c->id->misc->cacheable=60;
+       CACHE(c->id,2);
        return c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1);
      case "sent-kbit-per-second":
-       c->id->misc->cacheable=1;
+       CACHE(c->id,2);
        return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
                                (time(1)-roxenp()->start_time || 1)));
      case "ssl-strength":
@@ -822,7 +828,7 @@ class ScopeRoxen {
      case "build":
        return __roxen_build__;
      case "time":
-       c->id->misc->cacheable=1;
+       CACHE(c->id,1);
        return time(1);
      case "server":
        return c->id->conf->query("MyWorldLocation");
@@ -833,7 +839,7 @@ class ScopeRoxen {
        sscanf(tmp, "%s/", tmp);
        return tmp;
      case "locale":
-       c->id->misc->cacheable=0;
+       NOCACHE(c->id);
        return roxenp()->locale->get();
      default:
        return RXML.nil;
@@ -860,7 +866,7 @@ class ScopePage {
   constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
-    c->id->misc->cacheable=0;
+    NOCACHE(c->id);
     switch (var) {
       case "pathinfo": return c->id->misc->path_info;
     }
@@ -881,7 +887,7 @@ class ScopePage {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    c->id->misc->cacheable=0;
+    NOCACHE(c->id);
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
@@ -913,7 +919,7 @@ class ScopeCookie {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
     if(!c) return RXML.nil;
-    c->id->misc->cacheable=0;
+    NOCACHE(c->id);
     return c->id->cookies[var];
   }
 
@@ -929,7 +935,7 @@ class ScopeCookie {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    c->id->misc->cacheable=0;
+    NOCACHE(c->id);
     return indices(c->id->cookies);
   }
 
