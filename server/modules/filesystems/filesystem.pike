@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.16 1997/06/11 22:30:40 marcus Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.17 1997/06/11 23:20:17 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -334,8 +334,9 @@ mixed find_file( string f, object id )
     if(!putting[id->my_fd])
       return http_string_answer("Ok");
 
-    if(id->prot == "HTTP/1.1")
+    if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
+    }
     id->my_fd->set_id( ({ to, id->my_fd }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     return http_pipe_in_progress();
