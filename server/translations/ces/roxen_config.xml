@@ -34,24 +34,10 @@
 <file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
 
-<<<<<<< roxen_config.xml
-<str id="1">
-<o>No virtual servers enabled</o>
-<t>®ádný virtuální server není povolen</t>
-</str>
 
-=======
-
-
->>>>>>> 1.3
 <str id="2">
-<<<<<<< roxen_config.xml
-<o>Sent data</o>
-<t>Odeslaná data</t>
-=======
 <o>Sent data:</o>
 <t>Odeslaná data:</t>
->>>>>>> 1.3
 </str>
 
 <str id="3">
@@ -61,23 +47,13 @@
 </str>
 
 <str id="4">
-<<<<<<< roxen_config.xml
-<o>Sent headers</o>
-<t>Odeslané hlavièky</t>
-=======
 <o>Sent headers:</o>
 <t>Odeslané hlavièky:</t>
->>>>>>> 1.3
 </str>
 
 <str id="5">
-<<<<<<< roxen_config.xml
-<o>Number of requests</o>
-<t>Poèet ¾ádostí</t>
-=======
 <o>Number of requests:</o>
 <t>Poèet ¾ádostí:</t>
->>>>>>> 1.3
 </str>
 
 <str id="6">
@@ -87,33 +63,18 @@
 </str>
 
 <str id="7">
-<<<<<<< roxen_config.xml
-<o>Received data</o>
-<t>Pøijatá data</t>
-=======
 <o>Received data:</o>
 <t>Pøijatá data:</t>
->>>>>>> 1.3
 </str>
 
 <str id="8">
-<<<<<<< roxen_config.xml
-<o>FTP users (total)</o>
-<t>FTP u¾ivatelù (celkem)</t>
-=======
 <o>FTP users (total):</o>
 <t>FTP u¾ivatelù (celkem):</t>
->>>>>>> 1.3
 </str>
 
 <str id="9">
-<<<<<<< roxen_config.xml
-<o>FTP users (now)</o>
-<t>FTP u¾ivatelù (nyní)</t>
-=======
 <o>FTP users (now):</o>
 <t>FTP u¾ivatelù (nyní):</t>
->>>>>>> 1.3
 </str>
 
 <str id="10">
