@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.4 2002/04/22 11:32:39 anders Exp $
+ * $Id: debug_summary.pike,v 1.5 2002/05/15 14:43:32 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -82,7 +82,11 @@ string make_environment_summary()
 
   res += "\n";
   res += make_headline("Local environment variables");
-  res += indent(Stdio.read_file("../local/environment"), 1);  
+#ifdef __NT__
+  res += indent(Stdio.read_file("../local/environment.ini")||"", 1);
+#else
+  res += indent(Stdio.read_file("../local/environment")||"", 1);
+#endif
 
   res += "\n";
   res += make_headline("System environment variables");
