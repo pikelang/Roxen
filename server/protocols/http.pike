@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.124 1999/07/02 20:33:55 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.125 1999/07/04 18:40:37 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1041,6 +1041,7 @@ class MultiRangeWrapper
     //    werror(sprintf("Want to read %d bytes\n", num_bytes));
     total = num_bytes;
     num_bytes -= strlen(out);
+    stored_data = ""; // Very important. Ia.
     foreach(ranges, array range)
     {
       rlen = range_info[0][0] - current_pos;
@@ -1069,16 +1070,10 @@ class MultiRangeWrapper
 	  num_bytes = 0;
 	}
       }
-      if(strlen(out) > total)
-      {
-	// Oops. too much data. Send amount asked for and save
-	// the rest.
-	stored_data = out[total..];
-	//	werror(sprintf("Returning %d bytes in loop.\n", strlen(out[..total-1])));
-	return out[..total-1];
-      }
+      if(num_bytes <= 0)
+	break; // Return what we got.
     }
-    if(!is_single_range && separator != 2) {
+    if(!sizeof(ranges) && !is_single_range && separator != 2) {
       // End boundary. Only write once.
       separator = 2;
       out += "\r\n--" BOUND "--\r\n";
@@ -1090,7 +1085,6 @@ class MultiRangeWrapper
       //      werror(sprintf("Returning %d bytes outside loop.\n", strlen(out[..total-1])));
       return out[..total-1];
     }
-    stored_data = ""; // Very important. Ia.
     //    werror(sprintf("Returning last %d bytes.\n", strlen(out[..total-1])));
     return out ; // We are finally done.
   }
@@ -1102,6 +1096,9 @@ class MultiRangeWrapper
 
      case "set_nonblocking":
       return 0;
+
+     case "query_fd":
+      return lambda() { return 0; };
 
      default:
       return file[what];
