@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.324 2002/01/30 00:16:24 mast Exp $
+// $Id: rxml.pike,v 1.325 2002/02/06 20:33:39 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -445,7 +445,15 @@ void remove_parse_module (RoxenModule mod)
       rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..];
     rxml_tag_set->imported =
       rxml_tag_set->imported[..i - 1] + rxml_tag_set->imported[i + 1..];
-    if (tag_set) destruct (tag_set);
+    // The following destruct was presumably made to invalidate the
+    // tag set thoroughly on a module reload. Reload seems to work
+    // well without it, though. It's common that modules initialize
+    // the tag set further in start() (and not query_tag_set(), which
+    // would be a more accurate place). If we destroy it here and the
+    // module remains in use then a new tag set will normally be
+    // generated on demand by query_tag_set(), and any initializations
+    // in start() won't be made on that one.
+    //if (tag_set) destruct (tag_set);
   }
 }
 
