@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.285 1999/05/23 20:00:49 grubba Exp $
+ * $Id: roxen.pike,v 1.286 1999/05/24 08:41:45 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.285 1999/05/23 20:00:49 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.286 1999/05/24 08:41:45 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2221,8 +2221,9 @@ class ArgCache
       mapping res = db->query("select * from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
-        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
-        return res->contents;
+        db->query("update "+name+" set atime='"+
+                  time()+"' where id='"+id+"'");
+        return res[0]->contents;
       }
       return 0;
     } else {
@@ -2305,6 +2306,7 @@ class ArgCache
       return cache[cache[id]][CACHE_VALUE];
 
     string q = read_args( id );
+
     if(!q) error("Key does not exist!\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
