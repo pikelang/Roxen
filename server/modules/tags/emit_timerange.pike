@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.18 2004/08/16 23:19:05 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.19 2004/10/01 11:48:23 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -880,12 +880,163 @@ array(mapping) db_query(string q,string db_name)
   return con->query(q);
 }
 
+#define DOC_SCOPE(SCOPE_NAME)  \
+  "&"##SCOPE_NAME + ".year;":"<desc type='entity'><p>"\
+  "  Returns the year i.e. 2003</p></desc>",\
+  "&"##SCOPE_NAME + ".year.day;":"<desc type='entity'><p>"\
+  "  Returns the day day of the year for date,"\
+  "  in the range 1 to 366</p></desc>",\
+  "&"##SCOPE_NAME + ".year.name;":"<desc type='entity'><p>"\
+  "  Returns the year number i.e. 2003</p></desc>",\
+  "&"##SCOPE_NAME + ".year.is-leap-year;":"<desc type='entity'><p>"\
+  "    Returns TRUE or FALSE</p></desc>",\
+  "&"##SCOPE_NAME + ".month;":"<desc type='entity'><p>"\
+  "    Returns the month number i.e. 3 for march</p></desc>",\
+  "&"##SCOPE_NAME + ".month.day;":"<desc type='entity'><p>"\
+  "    Returns the day number in the month</p></desc>",\
+  "&"##SCOPE_NAME + ".month.number_of_days;":"<desc type='entity'><p>"\
+  "    Returns the number of days there is in a month.</p></desc>",\
+  "&"##SCOPE_NAME + ".month.name;":"<desc type='entity'><p>"\
+  "    Month name. Language dependent.</p></desc>",\
+  "&"##SCOPE_NAME + ".month.short-name;":"<desc type='entity'><p>"\
+  "  Month short name. Language dependent.</p></desc>",\
+  "&"##SCOPE_NAME + ".month.number-of-days;":"<desc type='entity'><p>"\
+  "    Integervalue of how many days the month contains. <ent>_.month.number_of_days</ent>"\
+  "    will also work due to backward compatibility.</p></desc>",\
+  "&"##SCOPE_NAME + ".week;":"<desc type='entity'><p>"\
+  "    Returns the week number. Language dependent</p></desc>",\
+  "&"##SCOPE_NAME + ".weeks;":"<desc type='entity'><p>"\
+  "    Returns the week number. Zero padded. Language dependent</p></desc>",\
+  "&"##SCOPE_NAME + ".week.day;":"<desc type='entity'><p>"\
+  "    Returns the week day number. 1 for monday if it is ISO"\
+  "    1 for sunday if it is Gregorian. ISO is default if Gregorian"\
+  "    is not specified for the <att>calendar</att>."\
+  "    Language dependent</p></desc>",\
+  "&"##SCOPE_NAME + ".week.day.name;":"<desc type='entity'><p>"\
+  "    Returns the name of the day. I.e. monday."\
+  "    Language dependent</p></desc>",\
+  "&"##SCOPE_NAME + ".week.day.short-name;":"<desc type='entity'><p>"\
+  "    Returns the name of the day. I.e. mo for monday."\
+  "    Language dependent</p></desc>",\
+  "&"##SCOPE_NAME + ".week.name;":"<desc type='entity'><p>"\
+  "    the name of the week. I.e. w5 for week number 5 that year.</p></desc>",\
+  "&"##SCOPE_NAME + ".day;":"<desc type='entity'><p>Same as <ent>_.month.day</ent>"\
+  "       </p></desc>",\
+  "&"##SCOPE_NAME + ".days;":"<desc type='entity'><p>Same as <ent>_.month.days</ent>"\
+  "        </p></desc>",\
+  "&"##SCOPE_NAME + ".ymd;":"<desc type='entity'><p>"\
+  "    Returns a date formated like YYYY-MM-DD (ISO date)</p></desc>",\
+  "&"##SCOPE_NAME + ".ymd_short;":"<desc type='entity'><p>"\
+  "    Returns a date formated YYYYMMDD (ISO)</p></desc>",\
+  "&"##SCOPE_NAME + ".time;":"<desc type='entity'><p>"\
+  "    Returns time formated hh:mm:ss (ISO)</p></desc>",\
+  "&"##SCOPE_NAME + ".timestamp;":"<desc type='entity'><p>"\
+  "    Returns a date and time timestamp formated YYYY-MM-DD hh:mm:ss</p></desc>",\
+  "&"##SCOPE_NAME + ".hour;":"<desc type='entity'><p>"\
+  "    Returns the hour. (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".hours;":"<desc type='entity'><p>"\
+  "    Returns the hour zero padded. (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".minute;":"<desc type='entity'><p>"\
+  "    Returns minutes, integer value, i.e. 5"\
+  "    (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".minutes;":"<desc type='entity'><p>"\
+  "    Returns minutes, zero padded, i.e. 05"\
+  "    (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".second;":"<desc type='entity'><p>"\
+  "    Returns seconds. (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".seconds;":"<desc type='entity'><p>"\
+  "Returns seconds, zero padded. (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".timezone;":"<desc type='entity'><p>"\
+  "    Returns the timezone iso name.(Time zone dependent data</p></desc>",\
+  "&"##SCOPE_NAME + ".timezone.name;":"<desc type='entity'><p>"\
+  "    Returns the name of the time zone.</p></desc>",\
+  "&"##SCOPE_NAME + ".timezone.iso-name;":"<desc type='entity'><p>"\
+  "    Returns the ISO name of the timezone</p></desc>",\
+  "&"##SCOPE_NAME + ".timezone.seconds-to-utc;":"<desc type='entity'><p>"\
+  "    The offset to UTC in seconds. (Time zone dependent data)</p></desc>",\
+  "&"##SCOPE_NAME + ".unix-time;":"<desc type='entity'><p>"\
+  "    Returns seconds since 1:st of january 1970 01:00:00</p>"\
+  "    <p>Time zone dependent data</p></desc>",\
+  "&"##SCOPE_NAME + ".julian-day;":"<desc type='entity'><p>"\
+  "    Returns the Julian day number since the Julian calendar started.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.something;":"<desc type='entity'><p>"\
+  "    Returns date compared to the current date. This will display a"\
+  "    new date that is next to the current date.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.second;":"<desc type='entity'><p>"\
+  "    Returns the next date the next second.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.minute;":"<desc type='entity'><p>"\
+  "    Returns the next date the next minute.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.hour;":"<desc type='entity'><p>"\
+  "    Returns the next date the next hour.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.day;":"<desc type='entity'><p>"\
+  "    Returns the next date the next day.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.week;":"<desc type='entity'><p>"\
+  "    Returns the next date the next week.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.month;":"<desc type='entity'><p>"\
+  "    Returns the next date the next month.</p></desc>",\
+  "&"##SCOPE_NAME + ".next.year;":"<desc type='entity'><p>"\
+  "    Returns the next date the next year.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.something;":"<desc type='entity'><p>"\
+  "    Returns date compared to the current date. This will display a"\
+  "    new date that is previous to the current date.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.second;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous second.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.minute;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous minute.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.hour;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous hour.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.day;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous day.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.week;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous week.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.month;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous month.</p></desc>",\
+  "&"##SCOPE_NAME + ".prev.year;":"<desc type='entity'><p>"\
+  "    Returns the previous date the previous year.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.something;":"<desc type='entity'><p>"\
+  "    </p></desc>",\
+  "&"##SCOPE_NAME + ".this.second;":"<desc type='entity'><p>"\
+  "    Returns the this date this second.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.minute;":"<desc type='entity'><p>"\
+  "    Returns the this date this minute.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.hour;":"<desc type='entity'><p>"\
+  "    Returns the this date this hour.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.day;":"<desc type='entity'><p>"\
+  "    Returns the this date this day.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.week;":"<desc type='entity'><p>"\
+  "    Returns the this date the this week.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.month;":"<desc type='entity'><p>"\
+  "    Returns the this date this month.</p></desc>",\
+  "&"##SCOPE_NAME + ".this.year;":"<desc type='entity'><p>"\
+  "    Returns the this date this year.</p></desc>",\
+  "&"##SCOPE_NAME + ".default.something;":"<desc type='entity'><p>"\
+  "    Returns the this modules settings.</p></desc>",\
+  "&"##SCOPE_NAME + ".default.calendar;":"<desc type='entity'><p>"\
+  "    Returns the this modules default calendar. I.e. \"ISO\", \"Gregorian\" etc.</p></desc>",\
+  "&"##SCOPE_NAME + ".default.timezone;":"<desc type='entity'><p>"\
+  "    Returns the this modules default timezone.</p></desc>",\
+  "&"##SCOPE_NAME + ".default.timezone.region;":"<desc type='entity'><p>"\
+  "    Returns the this modules default timezone region. I.e. Europe if the"\
+  "    timezone is Europe/Stockholm</p></desc>",\
+  "&"##SCOPE_NAME + ".default.timezone.detail;":"<desc type='entity'><p>"\
+  "    Returns the this modules default timezone specific part. I.e. Stockholm if"\
+  "    the timezone is Europe/Stockholm</p></desc>",\
+  "&"##SCOPE_NAME + ".default.language;":"<desc type='entity'><p>"\
+  "    Returns the this modules default language.</p></desc>"
 
 
 TAGDOCUMENTATION;
-constant tagdoc = ([
-      "emit#timerange": ({ #"<desc type='plugin'>
-  <p>This tag emits over a timerange
+constant tagdoc =   ([
+  "&calendar;":#"<desc type='scope'><p><short hide='hide'>
+    This scope contains date variables.</short> This scope contains the
+    dates variables, and also some possibility to calculate dates, e.g.
+    when yuo ant to know the next month or the previous day.
+   </p></desc>",
+
+  DOC_SCOPE("calendar"),
+
+    "emit#timerange": ({ #"<desc type='plugin'>
+  <p>This tag emits over a timerange 
   between two dates (from i.e. from-date and to-date -attributes). 
   The purpose is also that you might have a Resultset from i.e. a
   database (but the goal is that   it should work with other resultsets
@@ -1177,213 +1328,7 @@ constant tagdoc = ([
     &amp;var.start_td:none; see documentation: Encoding,
     under Variables, Scopes &amp; Entities
     </p>
-  ",
-  ([
-    "&_.year;":#"<desc type='entity'><p>
-  Returns the year i.e. 2003</p></desc>",
-  "&_.year.day;":#"<desc type='entity'><p>
-  Returns the day day of the year for date,
-  in the range 1 to 366</p></desc>",
-
-    "&_.year.name;":#"<desc type='entity'><p>
-  Returns the year number i.e. 2003</p></desc>",
-
-    "&_.year.is-leap-year;":#"<desc type='entity'><p>
-  Returns TRUE or FALSE</p></desc>",
-
-    "&_.month;":#"<desc type='entity'><p>
-  Returns the month number i.e. 3 for march</p></desc>",
-
-    "&_.month.day;":#"<desc type='entity'><p>
-  Returns the day number in the month</p></desc>",
-
-    "&_.month.number_of_days;":#"<desc type='entity'><p>
-  Returns the number of days there is in a month.</p></desc>",
-
-    "&_.month.name;":#"<desc type='entity'><p>
-  Month name. Language dependent.</p></desc>",
-
-    "&_.month.short-name;":#"<desc type='entity'><p>
-  Month short name. Language dependent.</p></desc>",
-
-    "&_.month.number-of-days;":#"<desc type='entity'><p>
-  Integervalue of how many days the month contains. <ent>_.month.number_of_days</ent>
-  will also work due to backward compatibility.</p></desc>",
-
-    "&_.week;":#"<desc type='entity'><p>
-  Returns the week number. Language dependent</p></desc>",
-
-    "&_.weeks;":#"<desc type='entity'><p>
-  Returns the week number. Zero padded. Language dependent</p></desc>",
-
-    "&_.week.day;":#"<desc type='entity'><p>
-  Returns the week day number. 1 for monday if it is ISO
-  1 for sunday if it is Gregorian. ISO is default if Gregorian
-  is not specified for the <att>calendar</att>.
-  Language dependent</p></desc>",
-
-    "&_.week.day.name;":#"<desc type='entity'><p>
-  Returns the name of the day. I.e. monday.
-  Language dependent</p></desc>",
-
-    "&_.week.day.short-name;":#"<desc type='entity'><p>
-  Returns the name of the day. I.e. mo for monday.
-  Language dependent</p></desc>",
-
-    "&_.week.name;":#"<desc type='entity'><p>
-  the name of the week. I.e. w5 for week number 5 that year.</p></desc>",
-
-    "&_.day;":#"<desc type='entity'><p>Same as <ent>_.month.day</ent>
-        </p></desc>",
-
-    "&_.days;":#"<desc type='entity'><p>Same as <ent>_.month.days</ent>
-        </p></desc>",
-
-    "&_.ymd;":#"<desc type='entity'><p>
-  Returns a date formated like YYYY-MM-DD (ISO date)</p></desc>",
-
-    "&_.ymd_short;":#"<desc type='entity'><p>
-  Returns a date formated YYYYMMDD (ISO)</p></desc>",
-
-    "&_.time;":#"<desc type='entity'><p>
-  Returns time formated hh:mm:ss (ISO)</p></desc>",
-
-    "&_.timestamp;":#"<desc type='entity'><p>
-  Returns a date and time timestamp formated YYYY-MM-DD hh:mm:ss</p></desc>",
-
-    "&_.hour;":#"<desc type='entity'><p>
-  Returns the hour. (Time zone dependent data)</p></desc>",
-
-    "&_.hours;":#"<desc type='entity'><p>
-  Returns the hour zero padded. (Time zone dependent data)</p></desc>",
-
-    "&_.minute;":#"<desc type='entity'><p>
-  Returns minutes, integer value, i.e. 5
-  (Time zone dependent data)</p></desc>",
-
-    "&_.minutes;":#"<desc type='entity'><p>
-  Returns minutes, zero padded, i.e. 05
-  (Time zone dependent data)</p></desc>",
-
-    "&_.second;":#"<desc type='entity'><p>
-  Returns seconds. (Time zone dependent data)</p></desc>",
-
-    "&_.seconds;":#"<desc type='entity'><p>
-  Returns seconds, zero padded. (Time zone dependent data)</p></desc>",
-
-    "&_.timezone;":#"<desc type='entity'><p>
-   Returns the timezone iso name.(Time zone dependent data</p></desc>",
-
-    "&_.timezone.name;":#"<desc type='entity'><p>
-  Returns the name of the time zone.</p></desc>",
-
-    "&_.timezone.iso-name;":#"<desc type='entity'><p>
-  Returns the ISO name of the timezone</p></desc>",
-
-    "&_.timezone.seconds-to-utc;":#"<desc type='entity'><p>
-  The offset to UTC in seconds. (Time zone dependent data)</p></desc>",
-
-    "&_.unix-time;":#"<desc type='entity'><p>
-  Returns seconds since 1:st of january 1970 01:00:00</p>
-  <p>Time zone dependent data</p></desc>",
-
-    "&_.julian-day;":#"<desc type='entity'><p>
-  Returns the Julian day number since the Julian calendar started.</p></desc>",
-
-    "&_.next.something;":#"<desc type='entity'><p>
-  Returns date compared to the current date. This will display a
-  new date that is next to the current date.</p></desc>",
-
-    "&_.next.second;":#"<desc type='entity'><p>
-  Returns the next date the next second.</p></desc>",
-
-    "&_.next.minute;":#"<desc type='entity'><p>
-  Returns the next date the next minute.</p></desc>",
-
-    "&_.next.hour;":#"<desc type='entity'><p>
-  Returns the next date the next hour.</p></desc>",
-
-    "&_.next.day;":#"<desc type='entity'><p>
-  Returns the next date the next day.</p></desc>",
-
-    "&_.next.week;":#"<desc type='entity'><p>
-  Returns the next date the next week.</p></desc>",
-
-    "&_.next.month;":#"<desc type='entity'><p>
-  Returns the next date the next month.</p></desc>",
-
-    "&_.next.year;":#"<desc type='entity'><p>
-  Returns the next date the next year.</p></desc>",
-
-    "&_.prev.something;":#"<desc type='entity'><p>
-  Returns date compared to the current date. This will display a
-  new date that is previous to the current date.</p></desc>",
-
-    "&_.prev.second;":#"<desc type='entity'><p>
-  Returns the previous date the previous second.</p></desc>",
-
-    "&_.prev.minute;":#"<desc type='entity'><p>
-  Returns the previous date the previous minute.</p></desc>",
-
-    "&_.prev.hour;":#"<desc type='entity'><p>
-  Returns the previous date the previous hour.</p></desc>",
-
-    "&_.prev.day;":#"<desc type='entity'><p>
-  Returns the previous date the previous day.</p></desc>",
-
-    "&_.prev.week;":#"<desc type='entity'><p>
-  Returns the previous date the previous week.</p></desc>",
-
-    "&_.prev.month;":#"<desc type='entity'><p>
-  Returns the previous date the previous month.</p></desc>",
-
-    "&_.prev.year;":#"<desc type='entity'><p>
-  Returns the previous date the previous year.</p></desc>",
-
-    "&_.this.something;":#"<desc type='entity'><p>
-  </p></desc>",
-
-    "&_.this.second;":#"<desc type='entity'><p>
-  Returns the this date this second.</p></desc>",
-
-    "&_.this.minute;":#"<desc type='entity'><p>
-  Returns the this date this minute.</p></desc>",
-
-    "&_.this.hour;":#"<desc type='entity'><p>
-  Returns the this date this hour.</p></desc>",
-
-    "&_.this.day;":#"<desc type='entity'><p>
-  Returns the this date this day.</p></desc>",
-
-    "&_.this.week;":#"<desc type='entity'><p>
-  Returns the this date the this week.</p></desc>",
-
-    "&_.this.month;":#"<desc type='entity'><p>
-  Returns the this date this month.</p></desc>",
-
-    "&_.this.year;":#"<desc type='entity'><p>
-  Returns the this date this year.</p></desc>",
-
-    "&_.default.something;":#"<desc type='entity'><p>
-  Returns the this modules settings.</p></desc>",
-
-    "&_.default.calendar;":#"<desc type='entity'><p>
-  Returns the this modules default calendar. I.e. \"ISO\", \"Gregorian\" etc.</p></desc>",
-
-    "&_.default.timezone;":#"<desc type='entity'><p>
-  Returns the this modules default timezone.</p></desc>",
-
-    "&_.default.timezone.region;":#"<desc type='entity'><p>
-  Returns the this modules default timezone region. I.e. Europe if the
-  timezone is Europe/Stockholm</p></desc>",
-
-    "&_.default.timezone.detail;":#"<desc type='entity'><p>
-  Returns the this modules default timezone specific part. I.e. Stockholm if
-  the timezone is Europe/Stockholm</p></desc>",
-
-    "&_.default.language;":#"<desc type='entity'><p>
-  Returns the this modules default language.</p></desc>",
-
-  ])
+  ", ([ DOC_SCOPE("_") ])
  })
 ]);
+
