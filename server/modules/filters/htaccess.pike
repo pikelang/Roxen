@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.74 2001/05/07 12:35:05 peter Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.75 2001/05/08 03:58:39 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -528,12 +528,24 @@ array(mapping) parse_groupfile( string f )
     switch( sizeof( q ) ) 
     {
       case 2: // group:members
-	foreach( q[1]/",", string u ) u2g[u]+=(<q[0]>);
+	foreach( q[1]/",", string u )
+	{
+	  if( u2g[u] )
+	    u2g[u]+=(<q[0]>);
+	  else
+	    u2g[u]=(<q[0]>);
+	}
 	groups[q[0]]=({ q[0], "", gid++, (multiset)(q[1]/",") });
 	groups[gid-1] = groups[q[0]];
 	break;
       case 4: // group:passwd:gid:
-	foreach( q[3]/",", string u ) u2g[u]+=(<q[0]>);
+	foreach( q[3]/",", string u )
+	{
+	  if( u2g[u] )
+	    u2g[u]+=(<q[0]>);
+	  else
+	    u2g[u]=(<q[0]>);
+	}
 	groups[q[0]]=({ q[0], q[1], (int)q[2], (multiset)(q[3]/",") });
 	groups[(int)q[2]] = groups[q[0]];
 	break;
