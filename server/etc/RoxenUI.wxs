@@ -9,9 +9,6 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT1" Property="SERVER_NAME" Value="Administration Interface" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
-    <CustomAction Id="OldCreateConfigInterface" Directory="SERVERDIR"
-      ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
-      Execute="deferred" />
     <CustomAction Id="SetCreateConfigInterface"
       Property="CreateConfigInterface"
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
