@@ -1,0 +1,9 @@
+Debug
+Release
+startdll.plg
+startdll.tlb
+startdll_i.c
+startdll.h
+startdllps.def
+startdllps.mk
+startdll.aps
