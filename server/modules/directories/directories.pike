@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.54 2000/03/07 19:27:53 mast Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.55 2000/03/07 19:29:31 mast Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -76,8 +76,8 @@ void create()
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG|VAR_INITIAL,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' to the directory name. It is "
-	 "_very_ useful for debugging, but some people regard it as a "
-	 "security hole.");
+	 "<em>very</em> useful for debugging, but some people regard "
+	 "it as a security hole.");
 
   defvar("spartan", 0, "Spartan listings", TYPE_FLAG|VAR_INITIAL,
 	 "Show minimalistic file listings by default.");
