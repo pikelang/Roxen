@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.117 1997/08/26 21:26:43 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.118 1997/09/01 01:01:39 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -172,7 +172,26 @@ function handle = unthreaded_handle;
 
 #ifdef THREADS
 #define THREAD_DEBUG
+#if 0
+class Queue {
+  mixed *buffer=({});
+  
+  int size() {  return sizeof(buffer);  }
 
+  mixed read()
+  {
+    while(!sizeof(buffer)) sleep(0.1);
+    mixed q = buffer[0];
+    buffer = buffer[1..];
+    return q;
+  }
+
+  void write(mixed what)
+  {
+    buffer += ({ what });
+  }
+};
+#endif
 object (Queue) handle_queue = Queue();
 
 void handler_thread(int id)
@@ -181,27 +200,31 @@ void handler_thread(int id)
   perror("Handler thread "+id+" started.\n");
 #endif
   array (mixed) h;
-  while( h=handle_queue->read() )
-  {
+  while(1)
+    catch {
+      do
+      {
 #ifdef THREAD_DEBUG
-    //perror(id+" START.\n");
+//    perror(id+" WAIT.\n");
 #endif
-#ifdef DEBUG
-    array err=
-#endif
-      catch { h[0](@h[1]); };
-#ifdef DEBUG
-    if(err) perror("Error in handler thread:\n"+describe_backtrace(err)+"\n");
-#endif
+	if((h=handle_queue->read()) && h && h[0])
+	{
 #ifdef THREAD_DEBUG
-    //perror(id+" DONE.\n");
+//      perror(id+" START.\n");
 #endif
-    h=0;
-  }
+	  h[0](@h[1]);
+#ifdef THREAD_DEBUG
+//      perror(id+" DONE.\n");
+#endif
+	  h=0;
+	}
+      } while(1);
+    };
 }
 
 void threaded_handle(function f, mixed ... args)
 {
+//  thread_create(f, @args);
   handle_queue->write(({f, args }));
 }
 
@@ -1603,14 +1626,14 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If this option is set, Roxen will automatically broadcast it's "
 	  "existence to other Roxen servers on the local network");
 
-  globvar("neigh_ip",  lambda(){
+  globvar("neigh_ips",  ({lambda(){
     string n = reverse(gethostbyname(gethostname())[1][0]);
     sscanf(n,"%*d.%s", n);
     n=reverse(n)+".";
     // Currently only defaults to C-nets..
     return n+"255";
-  }(), "Neighborhood: Local network broadcast address", TYPE_STRING|VAR_MORE,
-  "Usually included in the output from 'ifconfig -a'");
+  }()}), "Neighborhood: Broadcast addresses", TYPE_STRING_LIST|VAR_MORE,
+  "");
 
   globvar("neigh_com", "", "Neighborhood: Server informational comment",
 	  TYPE_TEXT|VAR_MORE, "A short string describing this server");

@@ -24,9 +24,9 @@ void got_info()
   };
 }
 
-string network_number()
+string network_numbers()
 {
-  return roxen->query("neigh_ip");
+  return roxen->query("neigh_ips");
 }
 
 int seq,lr=time();
@@ -35,8 +35,8 @@ void broadcast()
   remove_call_out(broadcast);
   if(seq) call_out(broadcast,2*60); else call_out(broadcast,1);
   if(catch {
-    udp_broad->
-      send(network_number(),51521,
+    foreach(network_number(), string nn)
+      udp_broad->send(nn,51521,
 	   encode_value((["configurl":roxen->config_url(),
 			  "host":gethostname(),
 			  "sequence":seq++,
