@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.127 1997/09/09 03:44:44 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.128 1997/09/09 04:47:57 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1133,8 +1133,11 @@ int set_u_and_gid()
       } else
 	pw = getpwuid((int)u);
 #if efun(initgroups)
-      if(pw)
-	initgroups(pw[0], (int)g);
+      catch {
+	if(pw)
+	  initgroups(pw[0], (int)g);
+	// Doesn't always work - David.
+      };
 #endif
 #if efun(setegid) && defined(SET_EFFECTIVE)
       setegid((int)g);
