@@ -514,10 +514,7 @@ also set 'URLs'.</o>
 </str>
 
 <str id="515">
-<o>If set to Yes, fonts will be oversampled resulting
-   in higher quality but more fuzz. This will require clearing
-   of various graphics caches like the Graphic text and
-   GButton caches to take full effect.</o>
+<o>If set to Yes, fonts will be oversampled resulting in higher quality but more fuzz. This will require clearing of various graphics caches like the Graphic text and GButton caches to take full effect.</o>
 <t></t>
 </str>
 
