@@ -1,7 +1,7 @@
 /*
- * $Id: restrictedfs.pike,v 1.8 1998/02/10 18:36:13 per Exp $
+ * $Id: restrictedfs.pike,v 1.9 1999/08/12 17:11:15 grubba Exp $
  *
- * $Author: per $
+ * $Author: grubba $
  *
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
@@ -13,7 +13,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.8 1998/02/10 18:36:13 per Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.9 1999/08/12 17:11:15 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -94,6 +94,29 @@ array find_dir(string f, object id)
       }
     }
     return(::find_dir(f, id));
+  }
+}
+
+string real_file(string f, object id)
+{
+  if (!stringp(home)) {
+    // No home-directory
+    return(0);
+  }
+  if (QUERY(remap_home)) {
+    if (home[0] == '/') {
+      home = home[1..];
+    }
+    if (home[-1] != '/') {
+      home += "/";
+    }
+    return(::real_file(home + f, id));
+  } else {
+    if (search("/" + f, home)) {
+      // Not a prefix, or short.
+      return(0);
+    }
+    return(::real_file(f, id));
   }
 }
 
