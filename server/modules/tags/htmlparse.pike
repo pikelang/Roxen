@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.162 1999/03/30 23:37:48 neotron Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.163 1999/04/07 18:51:20 peter Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -498,7 +498,7 @@ inline string do_replace(string s, mapping (string:string) m)
 
 
 array permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
-		     "0", "-", "*", "+","/", "%", "&", "|", "(", ")" });
+		     "0", "-", "*", "+", "/", "%", "&", "|", "(", ")" });
 string sexpr_eval(string what)
 {
   array q = what/"";
