@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.211 2000/07/31 01:58:54 nilsson Exp $
+// $Id: rxml.pike,v 1.212 2000/07/31 02:02:18 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -631,7 +631,6 @@ class TagHelp {
 
   class Frame {
     inherit RXML.Frame;
-    inherit "rxmlhelp";
 
     array do_return(RequestID id) {
       RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
