@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.328 2001/11/23 21:29:42 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.329 2001/12/03 17:26:54 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5383,13 +5383,13 @@ using the pre tag.
  the precision.</p>
 
 <xtable>
-<row><c><p><i>type=discordian</i></p></c><c><p><ex><date date='' type='discordian'/> </ex></p></c></row>
-<row><c><p><i>type=iso</i></p></c><c><p><ex><date date='' type='iso'/></ex></p></c></row>
-<row><c><p><i>type=number</i></p></c><c><p><ex><date date='' type='number'/></ex></p></c></row>
-<row><c><p><i>type=ordered</i></p></c><c><p><ex><date date='' type='ordered'/></ex></p></c></row>
-<row><c><p><i>type=stardate</i></p></c><c><p><ex><date date='' type='stardate'/></ex></p></c></row>
-<row><c><p><i>type=string</i></p></c><c><p><ex><date date='' type='string'/></ex></p></c></row>
-<row><c><p><i>type=unix</i></p></c><c><p><ex><date date='' type='unix'/></ex></p></c></row>
+<row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/> </ex></c></row>
+<row><c><p><i>type=iso</i></p></c><c><ex><date date='' type='iso'/></ex></c></row>
+<row><c><p><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
+<row><c><p><i>type=ordered</i></p></c><c><ex><date date='' type='ordered'/></ex></c></row>
+<row><c><p><i>type=stardate</i></p></c><c><ex><date date='' type='stardate'/></ex></c></row>
+<row><c><p><i>type=string</i></p></c><c><ex><date date='' type='string'/></ex></c></row>
+<row><c><p><i>type=unix</i></p></c><c><ex><date date='' type='unix'/></ex></c></row>
 </xtable>
 </attr>
 
@@ -7323,7 +7323,7 @@ just got zapped?
 
 <attr name='language' value='langcodes'><p>
  The language to use.</p>
- <lang/>
+ <p><lang/></p>
  <ex>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
  <ex>Il mio numero preferito è <number num='15' language='it'/>.</ex>
 </attr>

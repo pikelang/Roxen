@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.49 2001/10/08 12:32:55 anders Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.50 2001/12/03 17:26:55 anders Exp $";
 #include <module.h>
 inherit "module";
 
@@ -60,7 +60,7 @@ Sets the time of an event to count down to.</p></attr>
 <item name='display=months'><p>How many months until the time.</p></item>
 <item name='display=weeks'><p>How many weeks until the time.</p></item>
 <item name='display=days'><p>How many days until the time.</p></item>
-<item name='display=hours'><p>How many hours until the time. <ex><countdown day='friday' display='hours'/></ex></p></item>
+<item name='display=hours'><p>How many hours until the time.</p><ex><countdown day='friday' display='hours'/></ex></item>
 <item name='display=beats'><p>How many beats until the time.</p></item>
 <item name='display=minutes'><p>How many minutes until the time.</p></item>
 <item name='display=seconds'><p>How many seconds until the time.</p></item>
@@ -71,7 +71,7 @@ Sets the time of an event to count down to.</p></attr>
                          instead of years/weeks/days.</p>
 
 <ex>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></item>
-<item name='display=dogyears'><p>How many dog-years until the time. (With one decimal) <ex><countdown years='2' display='dogyears'/></ex></p></item>
+<item name='display=dogyears'><p>How many dog-years until the time. (With one decimal)</p><ex><countdown years='2' display='dogyears'/></ex></item>
 <item name='display=boolean'><p>Return true or false (1 or 0), depending on if the time is now or not. The fuzziness of 'now' is decided by the 'prec' option.</p>
 
 <ex><b>Is this a Sunday?</b>
