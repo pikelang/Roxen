@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.9 2001/09/03 20:14:02 peter Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.10 2001/09/10 15:50:52 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -119,12 +119,19 @@ class TagForceSessionID {
       if(!id->cookies->RoxenUserID && !prestate) {
 	multiset orig_prestate = id->prestate;
 	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
+
 	mapping r = Roxen.http_redirect(id->not_query, id);
-	id->prestate = orig_prestate;
 	if (r->error)
 	  _error = r->error;
 	if (r->extra_heads)
 	  _extra_heads += r->extra_heads;
+
+	// Don't trust that the user cookie setting is turned on. The effect
+	// might be that the RoxenUserID cookie is set twice, but that is
+	// not a problem for us.
+	Roxen.add_http_header( _extra_heads, "Set-Cookie",
+			       Roxen.http_roxen_id_cookie() );
+	id->prestate = orig_prestate;
 	return 0;
       }
 
@@ -132,7 +139,7 @@ class TagForceSessionID {
       // user do accept cookies, and there is no need for the session
       // prestate. Redirect back to the page, but without the session
       // prestate. 
-      if(id->cookies->RoxenUserID && id->prestate) {
+      if(id->cookies->RoxenUserID && prestate) {
 	multiset orig_prestate = id->prestate;
 	id->prestate = filter(id->prestate,
 			      lambda(string in) {
@@ -192,7 +199,8 @@ the session tag.</p></attr>
 The session key is primary taken from the RoxenUserID cookie. If there is no such cookie it
 will return the value in the prestate that begins with \"RoxenUserID=\". However, if both
 the cookie and such a prestate exists the client.session variable will be empty. This allows
-the client.session variable to be used together with <tag>force-session-id</tag>.</p></desc>",
+the client.session variable to be used together with <tag>force-session-id</tag>. Note that
+the Session tag module must be loaded for this entity to exist.</p></desc>",
 
   // ------------------------------------------------------------
 
