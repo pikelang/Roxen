@@ -4,8 +4,9 @@
 inherit "module";
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.7 2000/03/16 18:34:42 nilsson Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.8 2000/03/29 13:57:44 marcus Exp $";
 int thread_safe=1;
+constant module_unique = 0;
 
 inherit "roxenlib";
 static inherit "http";
