@@ -4,20 +4,20 @@
 
 <content>
 <cv-split>
-<subtablist width="100%" preparse>
-  <st-tabs><insert file="tablist.pike" nocache/></st-tabs>
+<subtablist width="100%" preparse="" >
+  <st-tabs><insert file="tablist.pike" nocache="" /></st-tabs>
   <st-page><blockquote><br />
-    <if not variable="form.class"><set variable="form.class" value="status"/></if>
+    <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if variable="form.action">
       <input type="hidden" name="class" value="&form.class;" />
-      <insert file="&form.action;" nocache/>
+      <insert file="&form.action;" nocache="" />
     </if>
     <else>
-      <define container=action>
+      <define container="action">
 	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
       </define>
-      <insert file="list_actions.pike" nocache/>
+      <eval><insert file="list_actions.pike" nocache="" /></eval>
     </else>
   </blockquote></st-page>
 </subtablist>
