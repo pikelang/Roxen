@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.60 2000/05/14 15:56:12 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.61 2000/05/14 15:58:42 per Exp $";
 constant thread_safe = 1;
 
 #ifdef DIRECTORIES_DEBUG
@@ -175,7 +175,7 @@ string spartan_directory(string d, array(string) dir, RequestID id)
 
   /* FIXME: Perhaps make func. customizable? */
   if (sizeof(dir)) 
-    dir = Array.sort_array((dir, Array.dwim_sort_func); 
+    dir = Array.sort_array(dir, Array.dwim_sort_func); 
 
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
@@ -199,7 +199,7 @@ string describe_directory(string d, array(string) dir, RequestID id)
 
   /* FIXME: Perhaps make func. customizable? */
   if (sizeof(dir)) 
-    dir = Array.sort_array((dir, Array.dwim_sort_func);
+    dir = Array.sort_array(dir, Array.dwim_sort_func);
 
   string result="";
   int toplevel=!id->misc->dir_no_head++;
