@@ -114,10 +114,10 @@
 <cset variable=leftimage>
   <p><if not match="&usr.left-image; is "><img src=&usr.left-image;></if>
 </cset>
+  <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
    <if not match="&usr.theme; is ">
      <insert file=/standard/themes/&usr.theme;/theme nocache>
    </if>
-  <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 
 
