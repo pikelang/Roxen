@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.649 2001/03/15 23:31:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.650 2001/03/15 23:45:51 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2727,6 +2727,7 @@ class ArgCache
 #define CLEAN_SIZE  100
 
   static string lq, ulq;
+#ifdef DB_SHARING
   class DBLock
   {
     static void create()
@@ -2743,9 +2744,16 @@ class ArgCache
       db->query( ulq );
     }
   }
-  
 # define LOCK() DBLock __ = DBLock()
-
+#else
+#ifdef THREADS
+  Thread.Mutex _mt = Thread.Mutex();
+# define LOCK() mixed __ = _mt->lock()
+#else
+# define LOCK()
+#endif
+#endif
+  
   static mapping (string:mixed) cache = ([ ]);
 
   static void setup_table()
@@ -2790,16 +2798,16 @@ class ArgCache
 
   static int create_key( string long_key )
   {
-    int hl = hash(long_key);
+    string hl = Crypto.md5()->update( long_key )->digest();
     array data = db->query("SELECT id,contents FROM "+name+" WHERE hash=%d",
-			   hl);
+			   hash(long_key));
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
     db->query( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
 	       "(%s,%d,UNIX_TIMESTAMP())",
-	       long_key, hl );
+	       long_key, hash(long_key) );
     int id = (int)db->master_sql->insert_id();
     if( !plugins ) get_plugins();
     (plugins->create_key-({0}))( id, hl, long_key );
@@ -2864,6 +2872,7 @@ class ArgCache
   //! Does the key 'key' exist in the cache? Returns 1 if it does, 0
   //! if it was not present.
   {
+    if( cache[key] ) return 1;
     array i = decode_id( key );
     if(!i) return 0;
     return low_key_exists( i[0] ) && low_key_exists( i[1] );
@@ -2883,7 +2892,7 @@ class ArgCache
   static int low_store( array a )
   {
     string data = encode_value( a );
-    int hv = hash( data );
+    string hv = Crypto.md5()->update( data )->digest();
     if( mixed q = cache[ hv ] )
       return q;
     LOCK();
@@ -2911,7 +2920,8 @@ class ArgCache
   mapping lookup( string id )
   //! Recall a mapping stored in the cache. 
   {
-    if( cache[id] )  return cache[id]+([]);
+    if( cache[id] )
+      return cache[id]+([]);
     array i = decode_id( id );
     if( !i )
     {
@@ -2944,7 +2954,8 @@ class ArgCache
       error("Requesting unknown key\n");
     }
     mixed data = decode_value(q);
-    cache[ hash( q ) ] = id;
+    string hl = Crypto.md5()->update( q )->digest();
+    cache[ hl ] = id;
     cache[ id ] = data;
     return data;
   }
