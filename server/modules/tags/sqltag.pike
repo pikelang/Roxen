@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.21 1998/02/02 01:00:21 wing Exp $
+ * $Id: sqltag.pike,v 1.22 1998/02/10 19:35:15 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.21 1998/02/02 01:00:21 wing Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.22 1998/02/10 19:35:15 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -67,7 +67,9 @@ array register_module()
 	     "<td>The password to access the database.</td></tr>\n"
 	     "<tr><td valign=top><b>parse</b></td>"
 	     "<td>If specified, the query will be parsed by the "
-	     "RXML-parser</td></tr>"
+	     "RXML-parser</td></tr>\n"
+	     "<tr><td valign=top><b>quiet</b></td>"
+	     "<td>If specified, SQL-errors will be kept quiet.</td></tr>\n"
 	     "</table></ul><p>\n"
 	     "The &lt;sqltable&gt; tag has an additional attribute "
 	     "<b>ascii</b>, which generates a tab-separated table (usefull "
@@ -135,12 +137,20 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
       error = catch(con = sql(host, database, user, password));
     }
     if (error) {
-      contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n");
+      if (!args->quiet) {
+	contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
+	  ((master()->describe_backtrace(error)/"\n")*"<br>\n" + "<false>");
+      } else {
+	contents = "<false>";
+      }
     } else if (error = catch(result = con->query(args->query))) {
-      contents = "<h1>Query \"" + args->query + "\" failed: " +
-	con->error() + "</h1>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n");
+      if (!args->quiet) {
+	contents = "<h1>Query \"" + args->query + "\" failed: " +
+	  con->error() + "</h1>\n" +
+	  ((master()->describe_backtrace(error)/"\n")*"<br>\n" + "<false>");
+      } else {
+	contents = "<false>";
+      }
     } else if (result && sizeof(result))
     {
       contents = do_output_tag( args, result, contents, request_id )
@@ -203,12 +213,22 @@ string sqlquery_tag(string tag_name, mapping args,
       error = catch(con = sql(host, database, user, password));
     }
     if (error) {
-      return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
+      if (!args->quiet) {
+	return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
+	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
+		"<false>"));
+      } else {
+	return("<false>");
+      }
     } else if (error = catch(res = con->query(args->query))) {
-      return("<h1>Query \"" + args->query + "\" failed: " +
-	     con->error() + "</h1>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
+      if (!args->quiet) {
+	return("<h1>Query \"" + args->query + "\" failed: " +
+	       con->error() + "</h1>\n" +
+	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
+		"<false>"));
+      } else {
+	return("<false>");
+      }
     }
     return(res?"<true>":"<false>");
   } else {
@@ -273,12 +293,22 @@ string sqltable_tag(string tag_name, mapping args,
       error = catch(con = sql(host, database, user, password));
     }
     if (error) {
-      return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
+      if (!args->quiet) {
+	return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
+	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
+		"<false>"));
+      } else {
+	return("<false>");
+      }
     } else if (error = catch(result = con->big_query(args->query))) {
-      return("<h1>Query \"" + args->query + "\" failed: " +
-	     con->error() + "</h1>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
+      if (!args->quiet) {
+	return("<h1>Query \"" + args->query + "\" failed: " +
+	       con->error() + "</h1>\n" +
+	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
+		"<false>"));
+      } else {
+	return("<false>");
+      }
     }
 
     if (result) {
