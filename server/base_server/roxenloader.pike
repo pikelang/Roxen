@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.304 2001/11/14 16:29:37 tomas Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.305 2001/11/15 11:11:18 tomas Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1143,8 +1143,11 @@ Roxen 2.2 should be run with Pike 7.2.
   // The default (internally managed) mysql path
   string defpath =
 #ifdef __NT__
-    // Use pipes with default name "MySQL"
-    "mysql://%user%@./%db%";
+    // Use pipes with a name created from the config dir
+    "mysql://%user%@.:"+
+    replace(combine_path( getcwd(),
+                          query_configuration_dir()+"_mysql/pipe"), ":", "_") +
+    "/%db%";
 #else
     "mysql://%user%@localhost:"+
     combine_path( getcwd(), query_configuration_dir()+"_mysql/socket")+
@@ -1594,7 +1597,7 @@ void low_start_mysql( string datadir,
                   "--skip-networking",
 #ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
-		  //"--socket=roxen_mysql",
+		  "--socket="+replace(datadir, ":", "_") + "/pipe",
 #else
 		  "--socket="+datadir+"/socket",
 		  "--pid-file="+pid_file,
