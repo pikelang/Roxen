@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.102 2000/03/21 21:09:50 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.103 2000/03/24 00:05:44 grubba Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -44,8 +44,18 @@ constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%%|()"/"";
 string sexpr_eval(string what)
 {
   array q = what/"";
-  what = "mixed foo(){ return "+(q-(q-permitted))*""+";}";
-  return (string)compile_string( what )()->foo();
+  // Make sure we hide any dangerous global symbols
+  // that only contain permitted characters.
+  // FIXME: This should probably be even more paranoid.
+  what =
+    "constant allocate = 0;"
+    "constant atexit = 0;"
+    "constant cd = 0;"
+    "constant clone = 0;"
+    "constant exece = 0;"
+    "constant exit = 0;"
+    "mixed foo_(){ return "+(q-(q-permitted))*""+";}";
+  return (string)compile_string( what )()->foo_();
 }
 
 
