@@ -19,7 +19,6 @@ string|mapping parse( RequestID id )
 
   string cfname = roxen.configuration_dir + "/" + cf->name;
   mv (cfname, cfname + "~");
-  roxen->configurations -= ({ cf });
   roxen->remove_configuration( cf->name );
   cf->stop();
   destruct( cf );
