@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.12 1998/05/20 23:04:55 grubba Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.13 1999/08/05 11:07:00 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -32,7 +32,7 @@ array seclevels = ({ });
 void start()
 {
   string sl, sec;
-  array ips=({ }), users=({ }), denys=({});
+  array new_seclevels = ({});
 
   foreach(replace(query("sec"),({" ","\t","\\\n"}),({"","",""}))/"\n", sl)
   {
@@ -43,35 +43,35 @@ void start()
     {
       switch(type)
       {
-       case "allowip":
-	ips += ({ ({ regexp(replace(pat, ({ "?", "*", "." }),
-				       ({ ".", ".*", "\." }))),
-			ALLOW, 
-			regexp(replace(value, ({ "?", ".", "*" }),
-				       ({ ".", "\.", ".*" })))
-			}) });
+      case "allowip":
+	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", "*", "." }),
+					      ({ ".", ".*", "\." }))),
+			       ALLOW, 
+			       regexp(replace(value, ({ "?", ".", "*" }),
+					      ({ ".", "\.", ".*" })))
+	}) });
 	break;
 
-       case "denyip":
-	denys += ({ ({ regexp(replace(pat, ({ "?", ".", "*" }),
-				       ({ ".", "\.", ".*" }))),
-			DENY, 
-			regexp(replace(value, ({ "?", ".", "*" }),
-				       ({ ".", "\.", ".*" })))
-			}) });
+      case "denyip":
+	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*" }),
+					      ({ ".", "\.", ".*" }))),
+			       DENY, 
+			       regexp(replace(value, ({ "?", ".", "*" }),
+					      ({ ".", "\.", ".*" })))
+	}) });
 	break;
 
-       case "allowuser":
-	users += ({ ({ regexp(replace(pat, ({ "?", ".", "*", "," }),
-				       ({ ".", "\.", ".*","|" }))),
-			USER,
-			value,
-		      }) });
+      case "allowuser":
+	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*", "," }),
+					      ({ ".", "\.", ".*","|" }))),
+			       USER,
+			       value,
+	}) });
 	break;
       }
     }
   }
-  seclevels = ips+users+denys;
+  seclevels = new_seclevels;
   ::start();
 }
 
