@@ -30,31 +30,25 @@ void set_up_ftp_variables( object o )
           "              +------------------------------------------------\n"
           "              +--      Welcome to the Roxen FTP server      ---\n"
           "              +------------------------------------------------\n",
-          TYPE_TEXT,
-          "Welcome text",
+           "Welcome text",TYPE_TEXT,
           "The text shown the the user on connect" );
 
-  defvar( "ftp_user_session_limit", 0, TYPE_INT,
-          "User session limit",
+  defvar( "ftp_user_session_limit", 0, "User session limit", TYPE_INT,
           "The maximum number of times a user can connect at once."
           " 0 means unlimited" );
 
-  defvar( "named_ftp", 1, TYPE_FLAG,
-          "Allow named ftp",
+  defvar( "named_ftp", 1,  "Allow named ftp", TYPE_FLAG,
           "If yes, non-anonymous users can connect" );
 
-  defvar( "guest_ftp", 1, TYPE_FLAG,
-          "Allow login with incorrect password/user",
+  defvar( "guest_ftp", 1,"Allow login with incorrect password/user", TYPE_FLAG,
           "If yes, users can connect with the wrong password and/or username"
           ". This is useful since things like .htaccess files can later on "
           "authenticate the user.");
 
-  defvar( "anonymous_ftp", 1, TYPE_FLAG,
-          "Allow anonymous ftp",
+  defvar( "anonymous_ftp", 1, "Allow anonymous ftp", TYPE_FLAG,
           "If yes, anonymous users can connect" );
 
-  defvar( "shells", "", TYPE_FILE,
-          "Shell database",
+  defvar( "shells", "",  "Shell database", TYPE_FILE,
           "If this string is set to anything but the empty string, "
           "it should point to a file containing a list of valid shells. "
           "Users with shells that does not figure in this list will not "
@@ -62,10 +56,143 @@ void set_up_ftp_variables( object o )
 }
 
 
-void set_up_http_variables( object o )
+void set_up_http_variables( object o, int|void fhttp )
 {
   function defvar = o->defvar;
   function deflocaledoc = o->deflocaledoc;
+
+  defvar("show_internals", 1, "Show internal errors", TYPE_FLAG,
+#"Show 'Internal server error' messages to the user.
+This is very useful if you are debugging your own modules
+or writing Pike scripts.");
+
+  deflocaledoc( "svenska", "show_internals", "Visa interna fel",
+		#"Visa interna server fel för användaren av servern.
+Det är väldigt användbart när du utvecklar egna moduler eller pikeskript.");
+
+  if(!fhttp)
+  {
+    defvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
+#"If set to Yes, all users of your server whose clients support
+cookies will get a unique 'user-id-cookie', this can then be
+used in the log and in scripts to track individual users.");
+
+    deflocaledoc( "svenska", "set_cookie",
+                  "Loggning: Sätt en unik cookie för alla användare",
+#"Om du sätter den här variabeln till 'ja', så kommer
+alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt.  Den
+här kakan kan användas i skript för att spåra individuella användare.  Det är
+inte rekommenderat att använda den här variabeln, många användare tycker illa
+om cookies");
+
+    defvar("set_cookie_only_once",1,"Logging: Set ID cookies only once",
+           TYPE_FLAG,
+#"If set to Yes, Roxen will attempt to set unique user ID cookies
+ only upon receiving the first request (and again after some minutes). Thus, if
+the user doesn't allow the cookie to be set, she won't be bothered with
+multiple requests.",0,
+	  lambda() {return !QUERY(set_cookie);});
+
+    deflocaledoc( "svenska", "set_cookie_only_once",
+                  "Loggning: Sätt bara kakan en gång per användare",
+#"Om den här variablen är satt till 'ja' så kommer roxen bara
+försöka sätta den unika användarkakan en gång. Det gör att om användaren inte
+tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under
+några minuter");
+  }
+}
+
+void set_up_fhttp_variables( object o )
+{
+  function defvar = o->defvar;
+  function deflocaledoc = o->deflocaledoc;
+
+  defvar( "log", "None",
+          (["standard":"Logging method",
+            "svenska":"Loggmetod", ]), TYPE_STRING_LIST,
+          (["standard":
+            "None - No log<br>"
+            "CommonLog - A common log in a file<br>"
+            "Compat - Log though roxen's normal logging format.<br>"
+            "<p>Please note that compat limits roxen to less than 1k "
+            "requests/second.",
+            "svenska":
+            "Ingen - Logga inte alls<br>"
+            "Commonlog - Logga i en commonlogfil<br>"
+            "Kompatibelt - Logga som vanligt. Notera att det inte går "
+            "speciellt fort att logga med den här metoden, det begränsar "
+            "roxens hastighet till strax under 1000 requests/sekund på "
+            "en normalsnabb dator år 1999.",
+          ]),
+          ({ "None", "CommonLog", "Compat" }),
+          ([ "svenska":
+             ([
+               "None":"Ingen",
+               "CommonLog":"Commonlog",
+               "Compat":"Kompatibel",
+             ])
+          ]) );
+
+  defvar( "log_file", "../logs/clog-"+o->ip+":"+o->port,
+          ([ "standard":"Log file",
+             "svenska":"Logfil", ]), TYPE_FILE,
+          ([ "svenska":"Den här filen används om man loggar med "
+             " commonlog metoden.",
+             "standard":"This file is used if logging is done using the "
+             "CommonLog method."
+          ]));
+
+  defvar( "ram_cache", 20,
+          (["standard":"Ram cache",
+            "svenska":"Minnescache"]), TYPE_INT,
+          (["standard":"The size of the ram cache, in MegaBytes",
+            "svenska":"Storleken hos minnescachen, i Megabytes"]));
+
+  defvar( "read_timeout", 120,
+          ([ "standard":"Client timeout",
+             "svenska":"Klienttimeout" ]),TYPE_INT,
+          ([ "standard":"The maximum time roxen will wait for a "
+             "client before giving up, and close the connection, in seconds",
+             "svenska":"Maxtiden som roxen väntar innan en klients "
+             "förbindelse stängs, i sekunder" ]) );
+
+
+  set_up_http_variables( o,1 );
+
+}
+
+void set_up_ssl_variables( object o )
+{
+  function defvar = o->defvar;
+  function deflocaledoc = o->deflocaledoc;
+
+  defvar( "ssl_cert_file", "demo_certificate.pem",
+          ([
+            "standard":"SSL certificate file",
+            "svenska":"SSL-certifikatsfil",
+          ]), TYPE_STRING,
+          ([
+            "standard":"The SSL certificate file to use. The path "
+            "is relative to "+getcwd()+"\n",
+            "svenska":"SSLcertifikatfilen som den här porten ska använda."
+            " Filnamnet är relativt "+getcwd()+"\n",
+          ]) );
+
+
+  defvar( "ssl_key_file", "",
+          ([
+            "standard":"SSL key file",
+            "svenska":"SSL-nyckelfil",
+          ]),          TYPE_STRING,
+          ([
+            "standard":"The SSL key file to use. The path "
+            "is relative to "+getcwd()+", you do not have to specify a key "
+            "file, leave this field empty to use the certificate file only\n",
+            "svenska":"SSLnyckelfilen som den här porten ska använda."
+            " Filnamnet är relativt "+getcwd()+". Du behöver inte ange en "
+            "nyckelfil, lämna det här fältet tomt om du bara har en "
+            "certifikatfil\n",
+          ]) );
 }
 
 
@@ -112,33 +239,6 @@ void define_global_variables( int argc, array (string) argv )
             lambda(){},
 	  }));
 
-  globvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
-	  #"If set to Yes, all users of your server whose clients support
-cookies will get a unique 'user-id-cookie', this can then be
-used in the log and in scripts to track individual users.");
-
-  deflocaledoc( "svenska", "set_cookie",
-		"Loggning: Sätt en unik cookie för alla användare",
-		#"Om du sätter den här variabeln till 'ja', så kommer
-alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt.  Den
-här kakan kan användas i skript för att spåra individuella användare.  Det är
-inte rekommenderat att använda den här variabeln, många användare tycker illa
-om cookies");
-
-  globvar("set_cookie_only_once",1,"Logging: Set ID cookies only once",TYPE_FLAG,
-	  #"If set to Yes, Roxen will attempt to set unique user ID cookies
- only upon receiving the first request (and again after some minutes). Thus, if
-the user doesn't allow the cookie to be set, she won't be bothered with
-multiple requests.",0,
-	  lambda() {return !QUERY(set_cookie);});
-
-  deflocaledoc( "svenska", "set_cookie_only_once",
-		"Loggning: Sätt bara kakan en gång per användare",
-		#"Om den här variablen är satt till 'ja' så kommer roxen bara
-försöka sätta den unika användarkakan en gång. Det gör att om användaren inte
-tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under
-några minuter");
-
   globvar("RestoreConnLogFull", 0,
 	  "Logging: Log entire file length in restored connections",
 	  TYPE_TOGGLE,
@@ -162,15 +262,6 @@ några minuter");
 	       "<p>Detta kan vara användbart om du vill se om en användare "
 	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
-
-  globvar("show_internals", 1, "Show internal errors", TYPE_FLAG,
-#"Show 'Internal server error' messages to the user.
-This is very useful if you are debugging your own modules
-or writing Pike scripts.");
-
-  deflocaledoc( "svenska", "show_internals", "Visa interna fel",
-		#"Visa interna server fel för användaren av servern.
-Det är väldigt användbart när du utvecklar egna moduler eller pikeskript.");
 
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
   globvar("default_font", "bastard", "Default font", TYPE_FONT,
