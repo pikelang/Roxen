@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxenloader.pike,v 1.6.2.1 1997/03/02 19:16:09 grubba Exp $";
+string cvs_version = "$Id: roxenloader.pike,v 1.6.2.2 1997/03/13 22:02:21 grubba Exp $";
 
 import files;
 import spider;
@@ -168,13 +168,8 @@ void main(mixed ... args)
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
 
-  object mm=((program)"etc/master.pike")();
+  object mm=((program)"etc/roxen_master.pike")();
   replace_master(mm);
-#if 0
-  mm->putenv("PIKE_INCLUDE_PATH", path);
-  mm->pike_include_path = path/":";
-  mm->pike_library_path = master()->pike_library_path;
-#endif /* 0 */
 
   add_constant("error", lambda(string s){error(s);});
 
