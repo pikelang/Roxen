@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.11 2001/04/08 23:54:21 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.12 2001/04/11 05:52:41 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -253,10 +253,10 @@ class GXMLClearStack
   }
 }
 
-class GXMLPop
+class GXMLMerge
 {
   inherit RXML.Tag;
-  constant name = "pop";
+  constant name = "merge";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
@@ -289,7 +289,7 @@ class GXMLPop
 class GXMLPopDup
 {
   inherit RXML.Tag;
-  constant name = "pop-dup";
+  constant name = "merge-dup";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
@@ -324,7 +324,7 @@ class GXMLPopDup
 class GXMLPopReplace
 {
   inherit RXML.Tag;
-  constant name = "pop-replace";
+  constant name = "pop";
 
   class Frame
   {
