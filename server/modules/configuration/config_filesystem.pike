@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.110 2002/06/05 10:11:51 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.111 2002/06/10 15:15:37 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -351,19 +351,29 @@ void start(int n, Configuration cfg)
       // The config interface always runs with the current compatibility level.
       cfg->set ("compat_level", roxen.__roxen_version__);
 
-    int crt;
+    mixed err;
+    array(mapping(string:string)) old_version;
+    int ver;
     if( !(docs = DBManager.get( "docs", cfg ) ) ||
-	((crt=1) && catch( DBManager.get( "docs", cfg )
-			   ->query("SELECT name FROM docs LIMIT 1") )))
+	(err = catch( old_version = DBManager.get( "docs", cfg )
+		      ->query("SELECT contents FROM docs where name='_version'") )) ||
+	((!sizeof(old_version) || old_version[0]->contents!=roxen_version()) &&
+	 (ver=1)) )
     {
-      if( !crt && DBManager.get( "docs" ) )
+      if( !err && DBManager.get( "docs" ) && !ver )
 	report_warning( "The database 'docs' exists, but this server can "
 			"not read from it.\n"
 			"Documentation will be unavailable.\n" );
       else if( file_stat( "data/docs.frm" ) )
       {
+	if( !err && ver )
+	{
+	  report_notice("Removing old 'docs' database.\n");
+	  DBManager.drop_db("docs");
+	}
+
 	// Restore from "backup".
-	if( !crt )
+	if( !err )
 	{
 	  report_notice("Creating the 'docs' database.\n");
 	  DBManager.create_db( "docs", 0, 1 );
@@ -372,6 +382,10 @@ void start(int n, Configuration cfg)
 	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
 	DBManager.restore( "docs", getcwd()+"/data/", "docs", ({ "docs" }) );
+	DBManager.set_permission( "docs", cfg, DBManager.WRITE );
+	DBManager.get( "docs", cfg )->
+	  query("REPLACE docs set name='_version', contents='"+roxen_version()+"'");
+	DBManager.set_permission( "docs", cfg, DBManager.READ );
 	docs = DBManager.get( "docs", cfg );
       }
       else
