@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.803 2002/06/13 14:15:42 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.804 2002/06/13 19:26:28 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -37,10 +37,6 @@ inherit "config_userdb";
 Thread.Thread backend_thread;
 #endif /* THREADS */
 
-// --- Locale defines ---
-
-//<locale-token project="roxen_message"> CALL_M </locale-token>
-#define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
 
 // --- Debug defines ---
 
@@ -3729,8 +3725,9 @@ int set_u_and_gid (void|int from_handler_thread)
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
-	  report_notice(CALL_M("setting_uid_gid_permanently",  "eng")
-			(uid, gid, u, g));
+	  report_notice("Setting uid to "+uid+" ("+u+")"+
+			(g ? " and gid to "+gid+" ("+g+")" : "")+
+			" permanently.\n");
 #else
 	if (!from_handler_thread)
 	  report_warning("Setting uid not supported on this system.\n");
@@ -3758,7 +3755,8 @@ int set_u_and_gid (void|int from_handler_thread)
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
-	  report_notice(CALL_M("setting_uid_gid", "eng")(uid, gid, u, g));
+	  report_notice("Setting uid to "+uid+" ("+u+")"+
+			(g ? " and gid to "+gid+" ("+g+")" : "")+".\n");
 #else
 	if (!from_handler_thread)
 	  report_warning("Setting effective uid not supported on this system.\n");
