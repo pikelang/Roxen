@@ -382,12 +382,14 @@ force_update: force
 
 pre_dist: bump_version
 	-@$(MAKE) depend
+	-@$(MAKE) new_peep_engine
 	-@$(MAKE) run_autoconfig
 #	@(cd pike; $(MAKE) pre_dist)
 
 faked_pre_dist:
 	echo "test_build" > $(SRCDIR)/VERSION
 	-@$(MAKE) depend
+	-@$(MAKE) new_peep_engine
 	-@$(MAKE) run_autoconfig
 
 copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
