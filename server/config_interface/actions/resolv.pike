@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.21 2001/09/03 18:39:26 per Exp $
+ * $Id: resolv.pike,v 1.22 2001/10/08 08:23:39 per Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -281,7 +281,9 @@ string parse( RequestID id )
     }
 
     id->variables->path = nid->not_query;
-    nid->real_variables = ([]);
+
+    foreach( indices( nid->real_variables ), string x )
+      m_delete( nid->real_variables, x );
 
     if(!(int)id->variables->cache)
       nid->pragma = (<"no-cache">);
