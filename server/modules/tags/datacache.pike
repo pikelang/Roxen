@@ -1,4 +1,4 @@
-// This is a roxen module which provides explicit data caching.
+// This is a ChiliMoon module which provides explicit data caching.
 // Copyright (c) 2004-2005, Stephen R. van den Berg, The Netherlands.
 //                     <srb@cuci.nl>
 //
@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: datacache.pike,v 1.2 2004/06/07 08:41:37 _cvs_stephen Exp $";
+ "$Id: datacache.pike,v 1.3 2004/06/07 08:42:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -52,7 +52,7 @@ void create() {
  * A generic memory-based cache implementation
  * by Stephen R. van den Berg <srb@cuci.nl>
  *
- * $Id: datacache.pike,v 1.2 2004/06/07 08:41:37 _cvs_stephen Exp $
+ * $Id: datacache.pike,v 1.3 2004/06/07 08:42:55 _cvs_stephen Exp $
  *
  */
 
