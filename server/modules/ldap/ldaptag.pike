@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.31 2004/06/30 16:59:12 mast Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.32 2005/04/01 14:50:52 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -54,6 +54,10 @@ constant tagdoc=([
 <attr name='password' value='password'><p>
  User password for connection to the directory server. If omitted the
  default will be used.</p>
+ </attr>
+
+<attr name='binddn' value='distinguished name'><p>
+ User for connecting to the directory server.</p>
  </attr>
 
 <attr name='dn' value='distinguished name' required='required'><p>
@@ -245,10 +249,10 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   }
 
   int ver = (int)(args->version)||3;
-  if(ver == 2 || sizeof(pass))
-    error = catch(sizeof(pass) ? con->bind(args->dn, pass, ver) : con->bind());
+  if(ver == 2 || sizeof(pass) || args->binddn)
+    error = catch((sizeof(pass)||args->binddn) ? con->bind(args->binddn||args->dn, pass, ver) : con->bind());
   if(error || con->error_number()) // trying v2 of LDAP protocol as fallback
-    error = catch(sizeof(pass) ? con->bind(args->dn, pass, 2) : con->bind("","",2));
+    error = catch(sizeof(pass) ? con->bind(args->binddn||args->dn, pass, 2) : con->bind("","",2));
   if(error) {
     RXML.run_error("Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]));
     ldap_last_error = "Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]);
