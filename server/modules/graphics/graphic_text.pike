@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.119 1998/03/27 23:22:21 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.120 1998/03/27 23:29:48 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1566,7 +1566,7 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
 string|void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
-  array c = copy_value(id->misc->colors);
+  array c = id->misc->colors;
   if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(!c ||!sizeof(c)) 
     return;
