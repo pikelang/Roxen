@@ -11,7 +11,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.10 2001/10/30 22:24:53 srb%cuci.nl Exp $";
+ "$Id: writefile.pike,v 1.11 2001/11/26 14:00:16 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -86,9 +86,24 @@ class TagWritefile {
 	_ok = 0;
 	return 0;
       }
+
       string filename,rootpath,path,schroot=args->chroot||"";
-      path=dirname(id->conf->real_file(id->not_query||"/", id))+"/";
-      rootpath=QUERY(onlysubdirs)?path:id->conf->real_file("/",id);
+
+      path = id->conf->real_file(id->not_query||"/", id);
+      if (!path)
+	parse_error ("There is no file system for %O that supports this tag "
+		     "(i.e. implements real_file).\n", id->not_query || "/");
+
+      path=dirname(path)+"/";
+      if (QUERY(onlysubdirs))
+	rootpath = path;
+      else {
+	rootpath = id->conf->real_file("/",id);
+	if (!rootpath)
+	  parse_error ("There is no file system for / that supports this tag "
+		       "(i.e. implements real_file).\n");
+      }
+
       filename=((schroot+args->filename)[0]=='/'?rootpath:path)+
        Stdio.append_path(schroot, args->filename);
       if(args->remove) {
