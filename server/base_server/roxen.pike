@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.210 1998/06/10 19:15:52 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.211 1998/06/13 18:18:57 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1981,13 +1981,13 @@ void initiate_configuration_port( int|void first )
 			     (stringp(erro)?erro:describe_backtrace(erro))));
       }
     }
-    if(!main_configuration_port)
-    {
-      report_error("No configuration ports could be created.\n"
-		   "Is roxen already running?\n");
-      if(first)
-	exit( -1 );	// Restart.
-    }
+  }
+  if(!main_configuration_port)
+  {
+    report_error("No configuration ports could be created.\n"
+		 "Is roxen already running?\n");
+    if(first)
+      exit( -1 );	// Restart.
   }
 }
 #include <stat.h>
