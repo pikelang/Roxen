@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.51 2002/12/14 14:43:48 anders Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.52 2003/05/13 15:45:25 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -404,7 +404,7 @@ class SQLCounter {
   
   void create()
   {
-#if constant(REPLICATE)
+#if constant(WS_REPLICATE)
     set_my_db( "replicate" );
 #endif
     
