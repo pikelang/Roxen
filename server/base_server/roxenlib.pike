@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.96 1999/04/22 09:30:01 per Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.97 1999/04/24 09:58:43 neotron Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -166,8 +166,8 @@ static mapping build_env_vars(string f, object id, string path_info)
     new["QUERY_STRING"] = id->query;
   }
 
-  if(id->auth && id->auth[0] && stringp(id->auth[1]))
-    new["REMOTE_USER"] = (id->auth[1]/":")[0];
+  if(id->realauth)
+    new["REMOTE_USER"] = (id->realauth / ":")[0];
     
   if(id->data && strlen(id->data))
   {
