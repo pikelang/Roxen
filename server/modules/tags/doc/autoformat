@@ -1,4 +1,4 @@
 <kbd><b>{autoformat [p]}</b></kbd>
 
-<p>If 'p' is specified, all double newlines will be replaced with <p>.
-Otherwise, all newlines will be replaced with '\n'.
+<p>If 'p' is specified, all double newlines will be replaced with '{p}'.
+Otherwise, all newlines will be replaced with '{br}'.

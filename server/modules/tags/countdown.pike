@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.4 1997/10/25 15:09:06 grubba Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.5 1998/03/08 13:48:52 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -129,8 +129,10 @@ int find_a_month(string which)
   which = lower_case(which);
   foreach(indices(roxen->languages), string lang)
     for(int i=1; i<13; i++)
+      catch {
       if(which == lower_case(language(lang,"month")(i))[..strlen(which)])
 	return i-1;
+    };
   return 1;
 }
 

@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.11 1997/09/17 19:51:38 grubba Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.12 1998/03/08 13:48:56 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -17,7 +17,7 @@ array register_module()
 {
   return ({ MODULE_PARSER,
 	    "Pike tag", 
-	    "This module adds a new tag, <pike></pike>. It makes it possible"
+	    "This module adds a new tag, &lt;pike&gt;&lt;/pike&gt;. It makes it possible"
 	    " to insert some pike code directly in the document."
 	      " Example:<p><pre>"
 	      " &lt;pike&gt; "
@@ -100,6 +100,8 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   string tmp;
   string res;
   mixed err;
+  if(m->help) return register_module()[2];
+
 #if efun(set_max_eval_time)
   if(err = catch {
     set_max_eval_time(2);

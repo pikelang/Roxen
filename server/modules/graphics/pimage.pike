@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.8 1998/01/29 08:36:36 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.9 1998/03/08 13:48:49 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -401,6 +401,7 @@ object compile(string c, object id)
 string tag_pimage(string t, mapping m, string contents, object rid)
 {
   // Hohum. Here we go.
+  if(m->help) return register_module()[2];
   int id = hash(contents);
   if(!m->nocache && compiled[id]) return do_replace(compiled[id]->tag(m), id);
   return do_replace((compiled[id]=compile(contents, rid))->tag(m), id);
@@ -412,6 +413,8 @@ constant DANGEROUS_TO   = ({  "", "" });
 string tag_glock(string t, mapping m, object rid)
 {
   string face;
+  if(m->help) 
+    return ("<b>&lt;gclock [dial=<i>ppm-file</i>]&gt;</b> Draws a graphical clock");
   if(m->dial){ m->face = m->dial; m_delete(m, face); }
   if(!m->face) 
     face = "Dial()";

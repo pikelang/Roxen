@@ -2,7 +2,7 @@
 // of a container.
  
 // This variable is shown in the configinterface as the varion of the module.
-string cvs_version = "$Id: fnord.pike,v 1.4 1997/08/31 03:47:18 peter Exp $";
+string cvs_version = "$Id: fnord.pike,v 1.5 1998/03/08 13:48:48 per Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -58,6 +58,7 @@ inherit "module";
 
 
 
+array register_module();
 
 
 // First, check the 'request_id->prestate' multiset for the presence
@@ -66,6 +67,8 @@ inherit "module";
 
 string tag_fnord(string tag, mapping m, string q, object request_id ) 
 { 
+  if(m->help) // This is a standard argument.
+    return register_module()[2];
   if (request_id->prestate->fnord)
     return "<SAMP>"+q+"</SAMP>"; 
   else if (m->alt)

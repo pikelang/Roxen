@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.6 1997/10/15 20:19:59 grubba Exp $
+ * $Id: configtablist.pike,v 1.7 1998/03/08 13:48:51 per Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: grubba $
+ * $Author: per $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.6 1997/10/15 20:19:59 grubba Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.7 1998/03/08 13:48:51 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -49,6 +49,7 @@ string tag_config_tab(string t, mapping a, string contents)
 {
   string dir = "u/";
   mapping img_attrs = ([]);
+  if(a->help) return register_module()[2];
   if (a->selected) {
     dir = "s/";
   }

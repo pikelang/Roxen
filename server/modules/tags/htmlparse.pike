@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.86 1998/03/06 11:05:37 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.87 1998/03/08 13:48:53 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -553,14 +553,16 @@ void build_callers()
    {
      mapping foo;
      if(o->query_tag_callers)
+     {
        foo=o->query_tag_callers();
-
-     if(mappingp(foo)) insert_in_map_list(foo, "tag");
+       if(mappingp(foo)) insert_in_map_list(foo, "tag");
+     }
      
      if(o->query_container_callers)
+     {
        foo=o->query_container_callers();
-
-     if(mappingp(foo)) insert_in_map_list(foo, "container");
+       if(mappingp(foo)) insert_in_map_list(foo, "container");
+     }
    }
    sort_lists();
 }
@@ -2036,8 +2038,8 @@ string tag_list_tags( string t, mapping args, object id, object f )
     res += ("<b><font size=+1>Tags at prioity level "+i+": </b></font><p>");
     foreach(sort(indices(tag_callers[i])), string tag)
     {
-      res += "  <a name=\""+replace(tag, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag, "#","%23")+"#"+replace(tag, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
-      if(verbose || id->variables->verbose == tag)
+      res += "  <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#","%23")+"#"+replace(tag+i, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
+      if(verbose || id->variables->verbose == tag+i)
       {
 	res += "<blockquote><table><tr><td>";
 	string tr;
@@ -2055,8 +2057,8 @@ string tag_list_tags( string t, mapping args, object id, object f )
     res += ("<p><b><font size=+1>Containers at prioity level "+i+": </b></font><p>");
     foreach(sort(indices(container_callers[i])), string tag)
     {
-      res += " <a name=\""+replace(tag, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag, "#", "%23")+"#"+replace(tag,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
-      if(verbose || id->variables->verbose == tag)
+      res += " <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#", "%23")+"#"+replace(tag+i,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
+      if(verbose || id->variables->verbose == tag+i)
       {
 	res += "<blockquote><table><tr><td>";
 	string tr;

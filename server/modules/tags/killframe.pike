@@ -10,7 +10,7 @@
  * Thanks to 
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.12 1998/01/15 10:40:18 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.13 1998/03/08 13:48:54 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -38,6 +38,8 @@ mixed *register_module()
 string tag_killframe( string tag, mapping m, object id )
 {
   /* Links to index.html are ugly. */
+  if(m->help) return register_module()[2];
+
   string my_url = id->conf->query("MyWorldLocation") + id->raw_url[1..];
   int l=strlen(my_url);
 
