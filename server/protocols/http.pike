@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.465 2004/12/01 16:56:41 stewa Exp $";
+constant cvs_version = "$Id: http.pike,v 1.466 2005/01/19 15:21:30 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1029,69 +1029,68 @@ string link_to(string file, int line, string fun, int eid, int qq)
 
 static string error_page(string line1, string title, string body)
 {
-  return
-    "<html><head>"
-    "  <title>Internal Server Error</title>"
-    "  <style>"
-    "    .msg  { font-family:    verdana, helvetica, arial, sans-serif;"
-    "            font-size:      12px;"
-    "            line-height:    160% }"
-    "    .big  { font-family:    georgia, times, serif;"
-    "            font-size:      18px;"
-    "            padding-top:    6px;"
-    "            padding-bottom: 20px }"
-    "    .info { font-family:    verdana, helvetica, arial, sans-serif;"
-    "            font-size:      10px;"
-    "            color:          #999999 }"
-    "    .list { padding-left:   20px;"
-    "            list-style-type:square; }"
-    "    .code { font-family:    monaco, courier, monospace;"
-    "            font-size:      10px;"
-    "            color:          #404070; }"
-    "  </style>"
-    "</head>"
-    "<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' "
-    "      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' "
-    "      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>"
-    "<table border='0' cellspacing='0' cellpadding='0' height='99%'>"
-    "  <tr>"
-    "    <td><img src='/internal-roxen-unit' height='30' /></td>"
-    "  </tr><tr>"
-    "    <td></td>"
-    "    <td><img src='/internal-roxen-500' /></td>"
-    "    <td><img src='/internal-roxen-unit' width='30' /></td>"
-    "    <td valign='bottom'><img src='/internal-roxen-server-error' /></td>"
-    "  </tr><tr>"
-    "    <td><img src='/internal-roxen-unit' height='30' /></td>"
-    "  </tr><tr>"
-    "    <td colspan='3'></td>"
-    "    <td>"
-    "      <div class='msg'>" + line1 + "</div>"
-    "      <div class='big'>" + title + "</div>"
-    "    </td>"
-    "  </tr><tr>"
-    "    <td colspan='3'></td>"
-    "    <td>"
-    "      <div class='msg'>" + body + "</div>"
-    "    </td>"
-    "  </tr><tr valign='bottom' height='100%'>"
-    "    <td colspan='3'></td>"
-    "    <td>"
-    "      <img src='/internal-roxen-unit' height='20' />"
-    "      <table border='0' cellspacing='0' cellpadding='0'>"
-    "        <tr>"
-    "          <td><img src='/internal-roxen-roxen-mini.gif' /></td>"
-    "          <td class='info'>"
-    "            &nbsp;&nbsp;<b>" + roxen_product_name + "</b>"
-    "            <font color='#ffbe00'>|</font> " + roxen_dist_version +
-    "          </td>"
-    "        </tr>"
-    "      </table>"
-    "      <img src='/internal-roxen-unit' height='15' />"
-    "    </td>"
-    "  </tr>"
-    "</table>"
-    "</body></html>";
+  return #"\
+<html><head>
+  <title>Internal Server Error</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .big  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+    .list { padding-left:   20px;
+            list-style-type:square; }
+    .code { font-family:    monaco, courier, monospace;
+            font-size:      10px;
+            color:          #404070; }
+  </style>
+</head>
+<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' 
+      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' 
+      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/internal-roxen-500' /></td>
+    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td valign='bottom'><img src='/internal-roxen-server-error' /></td>
+  </tr><tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td>
+      <div class='msg'>" + line1 + #"</div>
+      <div class='big'>" + title + #"</div>
+    </td>
+  </tr><tr>
+    <td></td>
+    <td colspan='3'>
+      <div class='msg'>" + body + #"</div>
+    </td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='4' align='right'>
+      <img src='/internal-roxen-unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td class='info'>
+	    &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
+	    <font color='#ffbe00'>|</font> " + roxen_dist_version + #"
+          </td>
+        </tr>
+      </table>
+      <img src='/internal-roxen-unit' height='15' />
+    </td>
+  </tr>
+</table>
+</body></html>";
 }
 
 
