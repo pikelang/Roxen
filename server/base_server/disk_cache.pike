@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.40 1999/01/15 12:34:57 neotron Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.41 1999/03/05 01:29:51 grubba Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -83,9 +83,6 @@ class CacheStream
       return 0;
     }
 
-    headers->head_vers = ROXEN_HEAD_VERS;
-    headers->head_size = ROXEN_HEAD_SIZE;
-    
     line = replace((gets()||""), ({"\r","\n"}), ({"",""}));
     if(!(headers[" returncode"] = get_code(line)))
       return 0;
@@ -389,9 +386,6 @@ class Cache {
  |
  */
 
-// FIXME: Use this as long as the disk_cache module is not reloadable
-private int last_init = time();
-
 private object cache;
 
 
@@ -662,6 +656,8 @@ object create_cache_file(string cl, string entry)
   cache->accessed(name, 0);
   cf=new_cache_stream(cf, name);
   cf->headers->name = entry;
+  cf->headers->head_vers = ROXEN_HEAD_VERS;
+  cf->headers->head_size = ROXEN_HEAD_SIZE;
 
   cf->rfile = rfile;
   cf->rfiledone = rfiledone;
@@ -677,11 +673,16 @@ object create_cache_file(string cl, string entry)
 
 void rmold(string fname)
 {
-  int len;
+  if(QUERY(cache_size)||QUERY(cache_max_num_files)){
+    int len;
  
-  len = Stdio.file_size(fname);
-  if((len>=0) && rm(fname) && (len > 0))
-    cache->check(-len);
+    len = Stdio.file_size(fname);
+    if((len>=0) && rm(fname) && (len > 0))
+      cache->check(-len);
+  } else {
+    rm(fname);
+    return;
+  }
 }
   
 void default_check_cache_file(object stream)
@@ -698,7 +699,9 @@ void default_check_cache_file(object stream)
     }
     stream->file->close();
     mv(stream->rfile, stream->rfiledone);
-    cache->accessed(stream->fname+".done", stat[ST_SIZE]);
+    cache->accessed(stream->fname+".done",
+		    (QUERY(cache_size) || QUERY(cache_max_num_files))?
+		    stat[ST_SIZE]:0);
     stream->new = 0;
   }
   destruct(stream);
@@ -709,8 +712,8 @@ string get_garb_info()
   return "<pre>"+cache->status()+"</pre>";
 }
 
-#define DELETE_AND_RETURN(){rmold(cachef->rfiledone);if(cachef){cachef->new=1;destruct(cachef);}return;}
-#define RETURN() {if(cachef){destruct(cachef);}return;}
+#define DELETE_AND_RETURN(){rmold(cachef->rfiledone);if(cachef){cachef->new=1;}return;}
+#define RETURN() {return;}
 
 void http_check_cache_file(object cachef)
 {
@@ -721,9 +724,31 @@ void http_check_cache_file(object cachef)
   /*  Initial screening is done in the proxy module. */
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();
 
-  if((float)stat[ST_SIZE] >=
+  if(QUERY(cache_size)&&(float)stat[ST_SIZE] >=
      (float)QUERY(cache_size)*1024.0*1024.0)
     DELETE_AND_RETURN();
+
+  // Check for files remaining from the last crash
+  if(cachef->rfile[strlen(cachef->rfile)-1]=='+') {
+    string tocheck = cachef->rfile;
+    object tc;
+    array (int) tc_stat;
+    while(tocheck[strlen(tocheck)-1]=='+') {
+      tocheck=tocheck[.. strlen(tocheck)-2];
+      if((tc = open(tocheck,"rx")) &&
+        (tc_stat = tc->stat()) &&
+        (tc_stat[ST_SIZE]>=0) &&
+        (tc_stat[ST_MTIME]+120<stat[ST_MTIME])) {
+#ifdef CACHE_DEBUG
+	perror(tocheck + ": cleaned away\n");
+#endif
+	rm(tocheck);
+      }
+#ifdef CACHE_DEBUG
+      else perror(tocheck + ": not cleaned away\n");
+#endif
+    }
+  }
 
   if(!cachef->parse_headers())
     DELETE_AND_RETURN();
@@ -804,34 +829,21 @@ void http_check_cache_file(object cachef)
   }
 
   int len;
-  if((len = Stdio.file_size(cachef->rfiledone)) > 0)
+  if((QUERY(cache_size)||QUERY(cache_max_num_files))&&
+     (len = Stdio.file_size(cachef->rfiledone)) > 0){
     cache->check(-len);
+    len = stat[ST_SIZE];
+  }
+  else
+    len = 0;
 
   if(!cachef->save_headers())
     DELETE_AND_RETURN();
 
   mv(cachef->rfile, cachef->rfiledone);
-  cache->accessed(cachef->fname+".done", stat[ST_SIZE]);
+  cache->accessed(cachef->fname+".done", len);
   cachef->file->close();
 
   cachef->new = 0;
-
-  // Check for files remaining from the last crash
-  if(cachef->rfile[strlen(cachef->rfile)-1]=='+') {
-    string tocheck = cachef->rfile;
-    object tc;
-    while(tocheck[strlen(tocheck)-1]=='+') {
-      tocheck=tocheck[.. strlen(tocheck)-2];
-      if((tc = open(tocheck,"rx")) &&
-	 (stat = tc->stat()) &&
-	 (stat[ST_SIZE]>=0) &&
-	 (stat[ST_CTIME]<last_init)) {
-#ifdef CACHE_DEBUG
-	perror(tocheck + ": cleaned away\n");
-#endif
-	rm(tocheck);
-      }
-    }
-  }
 }
 
