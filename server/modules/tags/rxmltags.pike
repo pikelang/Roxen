@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.367 2002/04/17 15:22:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.368 2002/04/19 13:46:52 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1258,6 +1258,7 @@ class TagCache {
 		    RXML.FLAG_GET_EVALED_CONTENT |
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
+  constant cache_tag_location = "tag_cache";
 
   static class TimeOutEntry (
     TimeOutEntry next,
@@ -1455,7 +1456,7 @@ class TagCache {
       // Now we have the cache key.
 
       object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
-	cache_lookup ("tag_cache", key) :
+	cache_lookup (cache_tag_location, key) :
 	alternatives && alternatives[key];
 
       int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
@@ -1478,7 +1479,7 @@ class TagCache {
 
 	if (removed) {
 	  if (args->shared)
-	    cache_remove ("tag_cache", key);
+	    cache_remove (cache_tag_location, key);
 	  else
 	    if (alternatives) m_delete (alternatives, key);
 	}
@@ -1528,7 +1529,7 @@ class TagCache {
 	}
 
 	if (args->shared) {
-	  cache_set("tag_cache", key, evaled_content, timeout);
+	  cache_set(cache_tag_location, key, evaled_content, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry", timeout ? " timeout" : "");
 	}
 	else
@@ -4945,6 +4946,36 @@ static int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
   doc[key]+="<ul>\n"+c+"</ul>\n";
   return 0;
 }
+
+
+//  FIXME: Move this to intrawise.pike if possible
+class TagIWCache {
+  inherit TagCache;
+  constant name = "__iwcache";
+
+  //  Place all cache data in a specific cache which we can clear when
+  //  the layout files are updated.
+  constant cache_tag_location = "iwcache";
+  
+  class Frame {
+    inherit TagCache::Frame;
+    
+    array do_enter(RequestID id) {
+      //  Compute a cache key which depends on the state of the user's
+      //  Platform cookie. Get user ID from id->misc->sbobj which in
+      //  turn gets initialized in find_file(). This ID will be 0 for
+      //  all users (even when authenticated in IW) as long as they
+      //  haven't logged in into Platform.
+      object sbobj = id->misc->sbobj;
+      int userid = sbobj && sbobj->get_userid();
+      args = ([ "shared" : "yes-please",
+		"key"    : "userid:" + userid ]);
+      return ::do_enter(id);
+    }
+  }
+}
+
+
 
 #ifdef manual
 constant tagdoc=([
