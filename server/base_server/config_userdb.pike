@@ -144,9 +144,16 @@ class ConfigurationSettings
 
     static array(string) all_themes( )
     {
-      return (get_dir( "config_interface/themes/" ) + 
-              (get_dir( "../local/config_interface/themes/" )||({}))-
-              ({"CVS","README",".distignore",".cvsignore"}));
+      return filter((get_dir( "config_interface/themes/" ) + 
+		     (get_dir( "../local/config_interface/themes/" )||({}))-
+		     ({"CVS","README",".distignore",".cvsignore"})),
+		    lambda(string theme) {
+		      catch {
+			return lopen("config_interface/themes/"+theme+"/name",
+				     "r")->read() != "";
+		      };
+		      return 0;
+		    });
     }
 
     mixed set( string nv )
