@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.97 1999/11/08 13:16:04 jonasw Exp $
+/* $Id: wizard.pike,v 1.98 1999/11/17 11:08:20 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -513,9 +513,11 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
 	 "</td><td width=\"33%\" align=\"center\">"+
 	 (wiz_name!="done"
 	  ?(((automaton ? !id->variables->_next : pageno==max_page)
-	     ?"\n        <input type=\"submit\" name=\"ok\" value=\" "+OK+" \" />"
+	     ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
+	     OK+" \" />&nbsp;&nbsp;"
 	     :"")+
-	    "\n         <input type=\"submit\" name=\"cancel\" value=\" "+CANCEL+" \" />")
+	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
+	    CANCEL+" \" />&nbsp;&nbsp")
 	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+OK+" \" />")+
 	 "</td><td width=\"33%\" align=\"right\">"+
 	 (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
