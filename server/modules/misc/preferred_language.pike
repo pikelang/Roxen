@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.13 2000/09/10 16:50:31 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.14 2000/09/18 20:05:32 lange Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -32,7 +32,13 @@ constant language_low=roxen->language_low;
 array(string) languages;
 array(string) defaults;
 void start() {
-  languages=roxen->list_languages();
+  // First get the available languages in ISO-639-2
+  array(string) proper_codes = roxen->list_languages();  
+  languages = proper_codes;
+  foreach(proper_codes, string lang) {
+    // Add all the old aliases too
+    languages += (array(string))language_low(lang)->_aliases;
+  }
   defaults=[array(string)]query("defaults")&languages;
 }
 
