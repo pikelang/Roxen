@@ -1,11 +1,18 @@
-//! Contains methods for querying and setting of properties for
-//! a file.
+//! Contains methods for querying and setting of properties for a
+//! resource.
+//!
+//! This default implementation takes care of the most important RFC
+//! 2518 properties for ordinary files and directories in read-only
+//! mode.
 //!
 //! Objects of this class are usually created through
 //! @[RoxenModule()->query_properties()].
 
-//! RequestID for the set.
-RequestID id;
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
 
 //! Path for which these properties apply.
 string path;
@@ -13,14 +20,17 @@ string path;
 //! Status information about @[path] as returned by @[stat_file()].
 Stat st;
 
+//! The current request.
+RequestID id;
+
 //! Create a new property set.
 //!
 //! Usually called via @[query_properties()].
 static void create(string path, Stat st, RequestID id)
 {
-  global::id = id;
-  global::st = st;
   global::path = path;
+  global::st = st;
+  global::id = id;
 }
 
 //! Destruction callback.
@@ -30,6 +40,28 @@ static void create(string path, Stat st, RequestID id)
 static void destroy()
 {
 }
+
+//! Called by the default @[query_property] implementation to get the
+//! response headers a GET or HEAD request on @[path] would yield.
+//! It's used to fill in the properties that should reflect various
+//! response headers.
+mapping(string:string) get_response_headers();
+
+private constant all_properties_common = (<
+  "DAV:getcontentlength",
+  "DAV:getcontenttype",
+  "DAV:displayname",
+  "DAV:resourcetype",
+  "DAV:supportedlock",
+  "DAV:iscollection",
+  "DAV:isfolder",
+>);
+
+private constant all_properties_file = all_properties_common + (<
+  "http://apache.org/dav/props/executable",
+>);
+
+private constant all_properties_dir = all_properties_common;
 
 //! Returns a multiset with the names of all supported properties.
 //!
@@ -41,21 +73,34 @@ static void destroy()
 //!   The following properties are required to keep
 //!   @tt{Microsoft Data Access Internet Publishing Provider DAV 1.1@}
 //!   as supplied with @tt{Microsoft Windows 2000@} happy:
+//!
 //!   @string
 //!     @value "DAV:creationdate"
 //!	  RFC2518 13.1
+//!
 //!     @value "DAV:displayname"
 //!	  RFC2518 13.2
+//!
 //!     @value "DAV:getcontentlanguage"
 //!	  RFC2518 13.3
+//!
 //!     @value "DAV:getcontentlength"
 //!	  RFC2518 13.4
+//!
 //!     @value "DAV:getcontenttype"
 //!	  RFC2518 13.5
+//!
+//!     @value "DAV:getetag"
+//!	  RFC2518 13.6
+//!
 //!     @value "DAV:getlastmodified"
 //!	  RFC2518 13.7
+//!
 //!     @value "DAV:resourcetype"
 //!	  RFC2518 13.9
+//!
+//!     @value "DAV:supportedlock"
+//!	  RFC2518 13.11
 //!
 //!     @value "DAV:defaultdocument"
 //!	  @tt{draft-hopmann-collection-props-00@} 1.3
@@ -76,8 +121,9 @@ static void destroy()
 //!	  Note: The server implementation does not need to store this
 //!	  property in the normal property store (the property could well
 //!	  be live).
+//!
 //!     @value "DAV:ishidden"
-//!	  @tt{draft-hopmann-collection-props-00@} 1.7
+//!	  @tt{draft-hopmann-collection-props-00@} 1.6
 //!
 //!	  Specifies whether or not a resource is hidden. 
 //!
@@ -91,7 +137,8 @@ static void destroy()
 //!	  this property is absent, the collection is not hidden. Since this 
 //!	  property provides no actual form of protection to the resources,
 //!	  this MUST NOT be used as a form of access control and should
-//!	  only be used for presentation purposes. 
+//!	  only be used for presentation purposes.
+//!
 //!     @value "DAV:isstructureddocument"
 //!	  @tt{draft-hopmann-collection-props-00@} 1.7
 //!
@@ -141,70 +188,59 @@ static void destroy()
 //!	  The @tt{isreadonly@} field specifies whether an item can be
 //!	  modified or deleted. If this field is TRUE, the item cannot
 //!	  be modified or deleted.
+//!
 //!     @value "DAV:isroot"
 //!	  Microsoft specific.
 //!
 //!	  The @tt{DAV:isroot@} field specifies whether an item is a
 //!	  root folder.
+//!
 //!     @value "DAV:lastaccessed"
 //!	  Microsoft specific.
 //!
 //!	  The @tt{DAV:lastaccessed@} field specifies the date and time
 //!	  when an item was last accessed. This field is read-only.
+//!
 //!     @value "DAV:href"
 //!	  Microsoft specific.
 //!
 //!	  Read-only. The @b{absolute URL@} of an item.
+//!
 //!     @value "DAV:contentclass"
 //!	  Microsoft specific.
 //!
 //!	  The item's content class.
+//!
 //!     @value "DAV:parentname"
 //!	  Microsoft specific.
 //!
 //!	  The @tt{DAV:parentname@} field specifies the name of the folder
 //!	  that contains an item.
+//!
 //!     @value "DAV:name"
 //!	  Microsoft specific.
 //!
 //!	  Unknown definition.
 //!   @endstring
+//!
+//!   Also, the MS DAV client requires a type argument to be able to
+//!   parse date/time fields correctly, even when they are formatted
+//!   according to the standard. @[XMLPropStatNode.add_property] has
+//!   special cases for this for @tt{DAV:creationdate@} and
+//!   @tt{DAV:getlastmodified@}.
 multiset(string) query_all_properties()
 {
-  multiset(string) res = (<
-    "DAV:creationdate",		// RFC2518 13.1
-    "DAV:displayname",		// RFC2518 13.2
-    //"DAV:getcontentlanguage", // RFC2518 13.3
-    "DAV:getcontentlength",	// RFC2518 13.4
-    "DAV:getcontenttype",	// RFC2518 13.5
-    "DAV:getetag",		// RFC2518 13.6
-    "DAV:getlastmodified",	// RFC2518 13.7
-    "DAV:resourcetype",		// RFC2518 13.9
-    "DAV:supportedlock",	// RFC2518 13.11
+  multiset(string) props =
+    (st->isreg ? all_properties_file : all_properties_dir) + (<>);
 
-    "DAV:iscollection",		// draft-ietf-dasl-protocol-00 5.18
+  // This isn't necessary for the Content-Length and Content-Type
+  // headers since RequestID.make_response_headers always sets those.
+  mapping(string:string) hdrs = get_response_headers();
+  if (hdrs["Content-Language"]) props["DAV:getcontentlanguage"] = 1;
+  if (hdrs->ETag)               props["DAV:getetag"] = 1;
+  if (hdrs["Last-Modified"])    props["DAV:getlastmodified"] = 1;
 
-    "DAV:ishidden",		// draft-hopmann-collection-props-00 1.6
-
-    //"DAV:isreadonly",		// MS uses this.
-    //"DAV:lastaccessed",	// MS uses this.
-    //"DAV:href",		// MS uses this.
-    //"DAV:contentclass",	// MS uses this.
-    //"DAV:parentname",		// MS uses this.
-    //"DAV:name",		// MS uses this.
-  >);
-  if (st->isreg) {
-    res += (<
-      "http://apache.org/dav/props/executable",
-    >);
-  } else if (st->isdir) {
-    res += (<
-      //"DAV:defaultdocument",  // draft-hopmann-collection-props-00 1.3
-      //"DAV:isstructureddocument", // draft-hopmann-collection-props-00 1.7
-      //"DAV:isroot",		  // MS uses this.
-      >);
-  }
-  return res;
+  return props;
 }
 
 //! Returns the value of the specified property, or an error code
@@ -220,33 +256,36 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   query_property(string prop_name)
 {
   switch(prop_name) {
+#if 0
+    // We don't really have any idea of the creation time in a unix
+    // style file system.
   case "DAV:creationdate":	// RFC2518 13.1
     int t = st->ctime;
     if (t > st->atime) t = st->atime;
     if (t > st->mtime) t = st->mtime;
     return Roxen.iso8601_date_time(t);	// MS kludge.
+#endif
+
   case "DAV:displayname":	// RFC2518 13.2
     if ((path == "") || (path == "/")) return "/";
     if (path[-1] == '/') return basename(path[..sizeof(path)-2]);
     return basename(path);
+
   case "DAV:getcontentlanguage":// RFC2518 13.3
-    return "en";			// MS kludge.
+    return get_response_headers()["Content-Language"];
+
   case "DAV:getcontentlength":	// RFC2518 13.4
-    if (st->isreg) {
-      return (string)st->size;
-    }
-    return "0";
+    return get_response_headers()["Content-Length"];
+
   case "DAV:getcontenttype":	// RFC2518 13.5
-    if (st->isreg) {
-      return id->conf->
-	type_from_filename(path, 0,
-			   lower_case(Roxen.extension(path, id)));
-    }
-    return "application/octet-stream";
+    return get_response_headers()["Content-Type"];
+
   case "DAV:getetag":		// RFC2518 13.6
-    return "FOOBAR";
+    return get_response_headers()->ETag;
+
   case "DAV:getlastmodified":	// RFC2518 13.7
-    return Roxen.http_date(st->mtime);
+    return get_response_headers()["Last-Modified"];
+
   case "DAV:resourcetype":	// RFC2518 13.9
     if (st->isdir) {
       return ({
@@ -254,8 +293,10 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
       });
     }
     return 0;
+
   case "DAV:supportedlock":	// RFC2518 13.11
     return "";
+
   case "http://apache.org/dav/props/executable":
     // http://www.webdav.org/mod_dav/:
     //
@@ -275,26 +316,38 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     }
     break;
 
-  case "DAV:isreadonly":	// draft-ietf-dasl-protocol-00
-    if (!(st->mode & 0222)) {
-      return "1";
-    }
+#if 0
+    // Need more interaction with directory listing modules to handle
+    // this.
+  case "DAV:defaultdocument":	// draft-hopmann-collection-props-00 1.3
+    return "";
+
+    // Absence means not hidden.
+  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
     return "0";
+
+    // Absence means not a structured document.
+  case "DAV:isstructureddocument": // draft-hopmann-collection-props-00 1.7
+    return "0";
+#endif
+
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
     if (st->isdir) {
       return "1";
     }
     return "0";
-  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
-    return "0";
+
 #if 0
     // The following are properties in the DAV namespace
     // that Microsoft has stolen.
-  case "DAV:isroot":		// MS
-    if (path == "/") return "1";
+  case "DAV:isreadonly":	// MS
+    if (!(st->mode & 0222)) {
+      return "1";
+    }
     return "0";
-  case "DAV:isstructureddocument"://MS
+  case "DAV:isroot":		// MS
+    if (path == "") return "1";
     return "0";
   case "DAV:lastaccessed":	// MS
     return Roxen.iso8601_date_time(st->atime);
@@ -307,21 +360,19 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 		   "":(":"+(string)id->port_obj->port),
 		   id->port_obj->path||"",
 		   combine_path(query_location(), path));
-  case "DAV:name":		// MS
-    return combine_path(query_location(), path);
   case "DAV:contentclass":	// MS
     return "";
   case "DAV:parentname":	// MS
     return "";
-  case "DAV:defaultdocument":	// MS
-    return "";
+  case "DAV:name":		// MS
+    return combine_path(query_location(), path);
 #endif /* 0 */
+
   default:
     break;
   }
-#ifdef DAV_DEBUG
-  report_debug("query_property(): Unimplemented property:%O\n", prop_name);
-#endif /* DAV_DEBUG */
+
+  DAV_WERROR("query_property(): Unimplemented property:%O\n", prop_name);
   // RFC 2518 8.1:
   //   A request to retrieve the value of a property which does not
   //   exist is an error and MUST be noted, if the response uses a
@@ -492,25 +543,16 @@ mapping(string:mixed) remove_property(string prop_name)
 //!   @endstring
 //! @param result
 //!   Result object.
-//! @param id
-//!   Id of the current request.
 //! @param filt
 //!   Optional multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
-//! @param st
-//!   If set, this should be the stat that corresponds to @[path]. Its
-//!   only purpose is to save a call to @[stat_file] when the stat
-//!   already has been retrieved.
-//!
-//! @note
-//!   id->not_query() does not necessarily contain the same value as @[path].
 mapping(string:mixed) find_properties(string mode,
 				      MultiStatus result,
 				      multiset(string)|void filt)
 {
   switch(mode) {
   case "DAV:propname":
-    foreach(indices(query_all_properties()), string prop_name) {
+    foreach(query_all_properties(); string prop_name;) {
       result->add_property(path, prop_name, "");
     }
     return 0;
@@ -533,4 +575,3 @@ mapping(string:mixed) find_properties(string mode,
   // FIXME: Unsupported DAV operation.
   return 0;
 }
-
