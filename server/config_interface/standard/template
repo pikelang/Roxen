@@ -72,7 +72,6 @@
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 
-  <define name=font>&usr.font;</define>
 
   <body hspace=0 vspace=0
         topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
@@ -81,6 +80,7 @@
         bgcolor=&usr.bgcolor; text=&usr.fgcolor;>
 
     <form method=POST action='<cf-current-url>'>
+      <define name=font preparse>&usr.font;</define>
       <roxen-automatic-charset-variable>
       <roxen-config preparse>
         <middle title="">
