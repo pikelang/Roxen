@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.10 1999/08/16 01:47:50 js Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.11 1999/08/24 09:58:59 kinkie Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -299,6 +299,10 @@ array|int auth (string *auth, object id)
 
 	DEBUGLOG (u+" positively recognized");
 	succ++;
+	id->misc+=mkmapping(
+			({"uid","gid","gecos","home","shell"}),
+			dbinfo[2..6]
+			);
 	return ({1,u,0});
 }
 
