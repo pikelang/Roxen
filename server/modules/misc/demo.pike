@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: demo.pike,v 1.18 2000/07/04 09:31:34 nilsson Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.19 2000/09/17 18:58:24 js Exp $";
 
 void create()
 {
@@ -24,7 +24,7 @@ void start(int level, Configuration conf)
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Demo module";
-constant module_doc  = "This module makes it possible to develop, RXML code interactively.";
+constant module_doc  = "This module makes it possible to develop RXML code interactively.";
 
 #define FOO "<title>Demo</title>\n" \
 "<body bgcolor='white'>\n" \
@@ -71,10 +71,10 @@ mapping find_file( string f, RequestID id )
       mdb[42]=
 #"<for variable=var.i from=99 to=1 step=-1>
   <if not variable=\"var.i is 1\">
-    <set variable=var.s value=\"s\">
+    <set variable=var.s value=\"s\"/>
   </if>
   <else>
-    <set variable=var.s value=\"\">
+    <set variable=var.s value=\"\"/>
   </else>
   &var.i; bottle&var.s; of beer on the wall,<br><br>
   &var.i; bottle&var.s; of beer on the wall,<br>
