@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.10 1996/12/15 12:35:45 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.10.2.1 1997/02/13 23:28:02 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -921,6 +921,7 @@ object clone_me()
   c->misc = copy_value(misc);
   c->misc->orig = this_object();
   c->realauth = realauth;
+  c->variables = variables; // Mirar 
   return c;
 }
 
