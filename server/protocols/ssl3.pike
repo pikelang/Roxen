@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.24 1998/02/24 12:07:33 grubba Exp $
+/* $Id: ssl3.pike,v 1.25 1998/03/10 21:35:12 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -437,8 +437,7 @@ void handle_request( )
     my_fd->set_nonblocking(0, write_more, end);
   }
 
-
-  if(conf) conf->log(file, thiso);
+  if(thiso && conf) conf->log(file, thiso);
 }
 
 class fallback_redirect_request {
