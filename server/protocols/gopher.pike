@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-string cvs_version = "$Id: gopher.pike,v 1.7 1998/05/18 21:23:49 grubba Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.8 1998/05/20 15:41:44 grubba Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
@@ -25,7 +25,7 @@ static private string encode_direntry(string file, string host, int port)
 {
   string title;
   if(!file) return 0;
-  string type = roxen->type_from_filename(file) || "text/plain";
+  string type = conf->type_from_filename(file) || "text/plain";
 
   /* 0 == file
      1 == dir
@@ -41,7 +41,7 @@ static private string encode_direntry(string file, string host, int port)
     type="1";
     title = (file/"/")[-2];
   } else  if(type == "text/html") {
-    title = extract_title(roxen->try_get_file(file, this_object())) ||
+    title = extract_title(conf->try_get_file(file, this_object())) ||
       (file/"/")[-1];
     type = "0";
   } else if(!search(type, "text/")) {
@@ -69,7 +69,7 @@ mapping generate_directory()
   if(res=cache_lookup(conf->name+":gopherdir", not_query))
     return ([ "type":"text/gopherdir", "data":res ]);
 
-  mydir = roxen->find_dir(not_query, this_object());
+  mydir = conf->find_dir(not_query, this_object());
 
   if(!mydir)
     return ([ "type":"text/gopherdir", "data":"0No such dir.\n" ]);
@@ -77,7 +77,7 @@ mapping generate_directory()
   res = sort(map(map(mydir, lambda(string s, string f) {
     array st;
     f += s;
-    if(st = roxen->stat_file(f, this_object()))
+    if(st = conf->stat_file(f, this_object()))
     {
       if(st[1] < 0) return f + "/";
       return f;
@@ -85,6 +85,7 @@ mapping generate_directory()
     return 0;
   }, not_query), encode_direntry,
   (my_fd->query_address(1)/" ")[0], (my_fd->query_address(1)/" ")[1]))*"\r\n";
+  res += "\r\n";
 
   cache_set(conf->name+":gopherdir", not_query, res);
 
@@ -97,9 +98,15 @@ void got_data(mixed fooid, string s)
   mapping file;
   time = _time();
 
+  remove_call_out(do_timeout);
+
   not_query = (s-"\r")-"\n";
   if(!strlen(not_query))
     not_query = "/";
+
+#ifdef GOPHER_DEBUG
+  roxen_perror(sprintf("GOPHER: got_data(X, %O) => %O\n", s, not_query));
+#endif /* GOPHER_DEBUG */
 
   remoteaddr = my_fd->query_address();
   supports = (< "gopher", "images", "tables", >);
@@ -110,7 +117,7 @@ void got_data(mixed fooid, string s)
   
   if(not_query[-1] == '/')
     file = generate_directory();
-  else if(err = catch(file = roxen->get_file(this_object()))) {
+  else if(err = catch(file = conf->get_file(this_object()))) {
     internal_error(err);
     file = this_object()->file;
   }
@@ -130,43 +137,28 @@ void got_data(mixed fooid, string s)
     if(file->file)   file->len += file->file->stat()[1];
   }
   if(file->len > 0) conf->sent+=file->len;
+  
+  conf->log(file, this_object());
+
+  if(file->data) send(file->data);
+  if(file->file) send(file->file);
   if(stringp(file->type) && file->type[0..3] == "text")
   {
-    /* Bugger.   No shuffle possible.. */
-    roxen->log(file, this_object());
-    if(file->data) send(file->data);
-    if(file->file) send(file->file);
-    send(".");
-    pipe->output(my_fd);
-    return;
-  } else {
-    if(file->data) my_fd->write(file->data);
-
-#if efun(send_fd)
-    if(roxen->shuffle_fd && objectp(file->file)
-       && (!file->data || strlen(file->data) < 2000))
-    {
-      my_fd->set_blocking();
-      if(file->data)  my_fd->write(file->data);
-      if(send_fd(roxen->shuffle_fd, file->file->query_fd())
-	 && send_fd(roxen->shuffle_fd, my_fd->query_fd()))
-      {
-	roxen->log(file, this_object());
-	end();
-	return;
-      }
-    } else {
-      report_error("Failed to send fd to shuffler process.\n");
-      roxen->init_shuffler();
-    }
-#endif
-
-    if(file->data)  send(file->data);
-    if(file->file)  send(file->file);
-    pipe->output(my_fd);
-    return;
+    send(".\r\n");
   }
-  end("!Not reached!");
+  pipe->set_done_callback(end);
+  pipe->output(my_fd);
+  return;
+}
+
+void gopher_trace_enter(string s, mixed foo)
+{
+  roxen_perror("GOPHER ENTER:"+s+"\n");
+}
+
+void gopher_trace_leave(string s)
+{
+  roxen_perror("GOPHER LEAVE:"+s+"\n");
 }
 
 void create(object f, object c)
@@ -175,6 +167,9 @@ void create(object f, object c)
   {
     ::create(f, c);
     my_fd->set_nonblocking(got_data, lambda(){}, end);
+
+    misc->trace_enter = gopher_trace_enter;
+    misc->trace_leave = gopher_trace_leave;
   }
 }
 
