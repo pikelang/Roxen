@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.34 1998/06/08 14:44:06 grubba Exp $
+ * $Id: cgi.c,v 1.35 1998/12/08 19:44:07 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -346,19 +346,18 @@ void send_data(char *bar, int re)
     fprintf(stderr, "wrote %d bytes to client\n", written);
 #endif
 
-    if(written <= 0)
-      kill_kill_kill();
-
-    if(!written)
-    {
+    if (written > 0) {
+      bar += written;
+      re -= written;
+    } else if ((written < 0) && ((errno == EINTR) || (errno == EAGAIN))) {
 #if defined(HAVE_POLL) && defined(HAVE_POLL_H)
       poll(pollfds, 1, 1000);
 #else
       select(2, 0, writefd, 0, NULL);
 #endif
     } else {
-      bar += written;
-      re -= written;
+      /* EOF or Bad errno */
+      kill_kill_kill();
     }
   } while(re);
 }
