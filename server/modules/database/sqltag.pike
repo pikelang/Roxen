@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.91 2001/10/12 12:36:08 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.92 2001/10/12 23:24:45 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -259,7 +259,8 @@ class SqlEmitResponse {
   }
 
   int num_rows_left() {
-    return sqlres && (sqlres->num_rows() - fetched + !!next_row);
+    if(!sqlres) return !!next_row;
+    return sqlres->num_rows() - fetched + !!next_row;
   }
 
   void create(object _sqlres) {
