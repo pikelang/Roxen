@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.223 1998/07/20 08:46:04 noring Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.224 1998/07/21 07:22:30 neotron Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -1870,7 +1870,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "cause the server to reboot, since only one thread is blocked. In general there is "
 	  "no harm in having this option enabled. ");
 
-  globvar("abs_timeout", 5, "Anti-Block-System: Timeout", TYPE_INT_LIST,
+  globvar("abs_timeout", 5, "Anti-Block-System: Timeout", TYPE_INT_LIST | VAR_MORE,
 	  "If the server is unable to accept connection for this many "
 	  "minutes, it will be restarted. You need to find a balance: "
 	  "if set too low, the server will be restarted even if it's doing "
@@ -1893,7 +1893,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("suicide_timeout",
 	  7,
 	  "Automatic Restart: Timeout",
-	  TYPE_INT_LIST,
+	  TYPE_INT_LIST|VAR_MORE,
 	  "Automatically restart the server after this many days.",
 	  ({1,2,3,4,5,6,7,14,30}),
 	  lambda(){return !QUERY(suicide_engage);}
