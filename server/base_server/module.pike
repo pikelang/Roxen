@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.150 2004/03/01 15:48:35 mast Exp $
+// $Id: module.pike,v 1.151 2004/03/01 19:10:19 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -845,18 +845,60 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
   }
 }
 
-void recurse_patch_properties(string path, int depth,
-			      array(PatchPropertyCommand) instructions,
-			      MultiStatus result, RequestID id)
+mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
+{
+  werror("copy_file(%O, %O, %O, %O)\n",
+	 path, dest, behavior, id);
+  return Roxen.http_low_answer(501, "Not implemented.");
+}
+
+void recurse_copy_files(string path, int depth, string dest_prefix,
+			string dest_suffix,
+			mapping(string:int(-1..1)) behavior,
+			MultiStatus result, RequestID id)
 {
   Stat st = stat_file(path, id);
-
-  patch_properties(path, instructions, result, id);
-  if (!st || (depth <= 0) || !st->isdir) return;
+  if (!st) return;
+  if (!dest_prefix) {
+    Standards.URI dest_uri = Standards.URI(result->href_prefix);
+    Configuration c = roxen->find_configuration_for_url(dest_uri, id->conf);
+    // FIXME: Mounting server on subpath.
+    if (!c ||
+	!has_prefix(dest_uri->path||"/", query_location())) {
+      // Destination is not local to this module.
+      // FIXME: Not supported yet.
+      result->add_response(dest_suffix, XMLStatusNode(502));
+      return;
+    }
+    dest_prefix = (dest_uri->path||"/")[sizeof(query_location())..];
+    Stat dest_st;
+    if (!(dest_st = stat_file(combine_path(dest_prefix, ".."), id)) ||
+	!(dest_st->isdir)) {
+      result->add_response("", XMLStatusNode(409));
+      return;
+    }
+    if (combine_path(dest_prefix, dest_suffix, ".") ==
+	combine_path(path, ".")) {
+      result->add_response(dest_suffix, XMLStatusNode(403, "Source and destination are the same."));
+      return;
+    }
+  }
+  werror("recurse_copy_files(%O, %O, %O, %O, %O, %O, %O)\n",
+	 path, depth, dest_prefix, dest_suffix, behavior, result, id);
+  mapping res = copy_file(path, dest_prefix + dest_suffix,
+			  behavior[dest_prefix + dest_suffix]||behavior[0],
+			  id);
+  result->add_response(dest_suffix, XMLStatusNode(res->error, res->data));
+  if (res->error >= 300) {
+    // RFC 2518 8.8.3 and 8.8.8 (error minimization).
+    return;
+  }
+  if ((depth <= 0) || !st->isdir) return;
   depth--;
   foreach(find_dir(path, id), string filename) {
-    recurse_patch_properties(combine_path(path, filename), depth,
-			     instructions, result, id);
+    recurse_copy_files(combine_path(path, filename), depth,
+		       dest_prefix, combine_path(dest_suffix, filename),
+		       behavior, result, id);
   }
 }
 
