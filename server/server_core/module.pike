@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.138 2004/04/04 14:26:43 mani Exp $
+// $Id: module.pike,v 1.139 2004/04/04 15:12:54 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -254,7 +254,7 @@ array(string) location_urls()
 }
 
 /* By default, provide nothing. */
-string query_provides() { return 0; }
+string|multiset(string) query_provides() { return 0; }
 
 
 function(RequestID:int|mapping) query_seclevels()

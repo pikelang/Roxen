@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.552 2004/04/04 14:26:41 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.553 2004/04/04 15:13:26 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2953,11 +2953,14 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_PROVIDER)
     if (err = catch
     {
-      mixed provs = me->query_provides ? me->query_provides() : ({});
+      mixed provs = me->query_provides ? me->query_provides() : (<>);
       if(stringp(provs))
 	provs = (< provs >);
+
+      // NGSERVER: Deprecate array API.
       if(arrayp(provs))
 	provs = mkmultiset(provs);
+
       if (multisetp(provs)) {
 	pri[pr]->provider_modules [ me ] = provs;
       }
