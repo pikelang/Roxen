@@ -5,22 +5,21 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.16 1999/10/04 11:34:33 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.17 1999/12/08 14:14:14 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["obox": ([
+  "standard":"<desc cont>Outlined box</desc>",
+  "svenska":"<desc cont>Ramlåda</desc>"]) ]);
+#endif
+
 constant unit_gif = "/internal-roxen-unit";
-
-static private int loaded;
-
-static private string doc()
-{
-  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/obox")||"",
-			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
-}
 
 static string img_placeholder (mapping args)
 {
@@ -142,12 +141,6 @@ string container_obox(string name, mapping args,
 {
   string s;
   
-  if (args->help) {
-    args->right = 250;
-    args->title = "The Outlined Box container tag";
-    contents = doc();
-  }
-
   // Set the defaults...
   args->outlinecolor = args->outlinecolor || "#000000";
   args->style = args->style || "groupbox";
@@ -195,21 +188,9 @@ array register_module()
     ]),
     ([ 
       "standard":
-      "This is a container tag making outlined boxes.<p>"
-      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n "
-      +doc(),
+      "This is a container tag making outlined boxes.",
       "svenska":
       "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> är en tag som ramar "
       "in det som står i den. <obox title=exempel>innehåll</obox>",
     ]), 0, 1 });
-}
-
-void start(int num, object configuration)
-{
-  loaded = 1;
-}
-
-mapping query_container_callers()
-{
-  return ([ "obox":container_obox, ]);
 }
