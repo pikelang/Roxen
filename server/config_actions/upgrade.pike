@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.18 1997/08/30 22:57:57 peter Exp $
+ * $Id: upgrade.pike,v 1.19 1997/08/31 10:21:18 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -11,6 +11,12 @@ int is_older(string v1, string v2)
 {
   int def;
   array a1,a2;
+  if (!v1) {
+    return(v2 != 0);
+  }
+  if (!v2) {
+    return(0);
+  }
   if(sizeof(a1=v1/".") == sizeof(a2=v2/"."))
     if(strlen(v1)<strlen(v2))
       return 1;
