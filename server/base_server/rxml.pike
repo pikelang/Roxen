@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.100 2000/02/06 20:08:22 mast Exp $
+ * $Id: rxml.pike,v 1.101 2000/02/06 21:47:58 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1129,15 +1129,16 @@ class TagIf {
 
   class Frame {
     inherit RXML.Frame;
-    int do_iterate = 0;
+    int do_iterate = -1;
 
     array do_enter(RequestID id) {
       int res, and = 1;
+      LAST_IF_TRUE = 0;
 
       if(args->not) {
 	m_delete(args, "not");
 	do_enter(id);
-	do_iterate=!do_iterate;
+	do_iterate=do_iterate==1?-1:1;
 	return 0;
       }
 
@@ -1154,6 +1155,7 @@ class TagIf {
 	last=res;
 	if(res) {
 	  if(!and) {
+	    LAST_IF_TRUE = 1;
 	    do_iterate = 1;
 	    return 0;
 	  }
@@ -1161,19 +1163,12 @@ class TagIf {
 	else
 	  if(and) return 0;
       }
-      if(last) do_iterate=1;
+      if(last) {
+	do_iterate = 1;
+	LAST_IF_TRUE = 1;
+      }
       return 0;
     }
-
-    array do_return(RequestID id) {
-      if(do_iterate) {
-	result=content;
-	LAST_IF_TRUE=1;
-      }
-      else
-	LAST_IF_TRUE=0;
-    }
-
   }
 }
 
@@ -1718,7 +1713,9 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-      return (string)RXML.get_context()->user_get_var(s);
+    mixed var=RXML.get_context()->user_get_var(s);
+    if(zero_type(var)) return 0;
+    return (string)var;
   }
 }
 
