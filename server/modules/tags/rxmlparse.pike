@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.32 1999/12/09 20:46:56 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.33 1999/12/09 21:41:46 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -32,7 +32,7 @@ string status()
 
 void create(object c)
 {
-  defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse",
+  defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
 	 "Note: This module must be reloaded for a change here to take "
 	 "effect.");
@@ -48,9 +48,6 @@ void create(object c)
 	 "If set, files with the exec bit set will be parsed. If not set, "
 	 "and the 'Require exec bit on files for parsing' flag is set, no "
 	 "parsing will occur.");
-
-  defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
-	 "Maximum file size to parse, in Kilo Bytes.");
 }
 
 
@@ -81,26 +78,27 @@ mapping tagdocumentation() {
   return (["version":"<desc tag>Shows the version number of the Roxen Challenger web server you are using.</desc>"]);
 }
 
+
 // ------------------- RXML Parsing -------------------
 
-mapping handle_file_extension(object file, string e, object id)
-{
-  string to_parse;
+constant truth=(["defines":([" _ok":1])]);
 
+mapping handle_file_extension(object file, string e, RequestID id)
+{
   array stat;
   if(id->misc->defines)
     stat=_stat;
   else {
-    id->misc+=(["defines":([" _ok":1])]);
+    id->misc+=truth;
     stat=_stat=id->misc->stat || file->stat();
   }
 
   if(QUERY(require_exec) && !(stat[0] & 07111)) return 0;
   if(!QUERY(parse_exec) && (stat[0] & 07111)) return 0;
 
-  bytes += strlen(to_parse = file->read());
+  bytes += stat[1];
 
-  return http_rxml_answer( to_parse, id, file, file2type(id->realfile||id->no_query||"index.html") );
+  return http_rxml_answer( file->read(), id, file, file2type(id->realfile||id->no_query||"index.html") );
 }
 
 array(string) tag_version() { return ({ roxen.version() }); }
@@ -110,24 +108,24 @@ array(string) tag_version() { return ({ roxen.version() }); }
 
 string api_configurl(string f, mapping m) { return roxen->config_url(); }
 
-string api_parse_rxml(object id, string r)
+string api_parse_rxml(RequestID id, string r)
 {
   return parse_rxml( r, id );
 }
 
-string api_tagtime(object id, int ti, string t, string l)
+string api_tagtime(RequestID id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
   NOCACHE();
   return tagtime( ti, m, id, language );
 }
 
-string api_relative(object id, string path)
+string api_relative(RequestID id, string path)
 {
   return fix_relative( path, id );
 }
 
-string api_set(object id, string what, string to)
+string api_set(RequestID id, string what, string to)
 {
   if (id->variables[ what ])
     id->variables[ what ] += to;
@@ -136,33 +134,33 @@ string api_set(object id, string what, string to)
   return ([])[0];
 }
 
-string api_define(object id, string what, string to)
+string api_define(RequestID id, string what, string to)
 {
   id->misc->defines[what]=to;
   return ([])[0];
 }
 
-string api_query_define(object id, string what)
+string api_query_define(RequestID id, string what)
 {
   return id->misc->defines[what];
 }
 
-string api_query_variable(object id, string what)
+string api_query_variable(RequestID id, string what)
 {
   return id->variables[what];
 }
 
-string api_query_cookie(object id, string f)
+string api_query_cookie(RequestID id, string f)
 {
   return id->cookies[f];
 }
 
-void api_add_header(object id, string h, string v)
+void api_add_header(RequestID id, string h, string v)
 {
   add_http_header(_extra_heads, h, v);
 }
 
-int api_set_cookie(object id, string c, string v, void|string p)
+int api_set_cookie(RequestID id, string c, string v, void|string p)
 {
   if(!c)
     return 0;
@@ -176,7 +174,7 @@ int api_set_cookie(object id, string c, string v, void|string p)
   return 1;
 }
 
-int api_remove_cookie(object id, string c, string v)
+int api_remove_cookie(RequestID id, string c, string v)
 {
   if(!c)
     return 0;
@@ -188,65 +186,65 @@ int api_remove_cookie(object id, string c, string v)
   return 1;
 }
 
-int api_prestate(object id, string p)
+int api_prestate(RequestID id, string p)
 {
   return id->prestate[p];
 }
 
-int api_set_prestate(object id, string p)
+int api_set_prestate(RequestID id, string p)
 {
   return id->prestate[p]=1;
 }
 
-int api_supports(object id, string p)
+int api_supports(RequestID id, string p)
 {
   NOCACHE();
   return id->supports[p];
 }
 
-int api_set_supports(object id, string p)
+int api_set_supports(RequestID id, string p)
 {
   NOCACHE();
   return id->supports[p]=1;
 }
 
-int api_set_return_code(object id, int c, void|string p)
+int api_set_return_code(RequestID id, int c, void|string p)
 {
   if(c) _error=c;
   if(p) _rettext=p;
   return 1;
 }
 
-string api_get_referer(object id)
+string api_get_referer(RequestID id)
 {
   NOCACHE();
   if(id->referer && sizeof(id->referer)) return id->referer*"";
   return "";
 }
 
-string api_html_quote(object id, string what)
+string api_html_quote(RequestID id, string what)
 {
   return html_encode_string(what);
 }
 
-string api_html_dequote(object id, string what)
+string api_html_dequote(RequestID id, string what)
 {
   return html_decode_string(what);
 }
 
-string api_html_quote_attr(object id, string value)
+string api_html_quote_attr(RequestID id, string value)
 {
   return sprintf("\"%s\"", replace(value, "\"", "&quot;"));
 }
 
-void add_api_function( string name, function f, void|array(string) types)
+string api_read_file(RequestID id, string file) {
+  return API_read_file(id,file)||rxml_error("insert", "No such file ("+file+").", id);
+}
+
+void add_api_function(string name, function f, void|array(string) types)
 {
   if(this_object()["_api_functions"])
     this_object()["_api_functions"][name] = ({ f, types });
-}
-
-string api_read_file(object id, string file) {
-  return API_read_file(id,file)||rxml_error("insert", "No such file ("+file+").", id);
 }
 
 
