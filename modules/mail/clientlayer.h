@@ -12,6 +12,7 @@ class Mail
   object user;
   string body();
   Stdio.File body_fd();
+  mapping decoded_headers(int force);
   mapping headers(int force);
   multiset flags(int force);
   void set_flag(string name);
@@ -28,7 +29,7 @@ class Mailbox
   void delete();
   string query_name(int force);
 
-  array(Mail) mails();
+  array(Mail) mail();
   Mail add_mail(Mail m, int|void do_not_copy_the_flags);
   void remove_mail(Mail m);
 
@@ -52,7 +53,7 @@ class User
 class ClientLayer
 {
   User get_user( string username, string password );
-  User get_user_from_adress( string adress );
+  User get_user_from_address( string adress );
 
   object get_cache_obj( program type, int id );
 
@@ -76,8 +77,7 @@ class ClientLayer
   multiset get_mail_flags(string mail_id);
 }
 
-class ClientInit
-{
+#ifdef WANT_CLIENTINIT
   static local ClientLayer clientlayer;
 
   int init_clientlayer( roxen.Configuration c )
@@ -85,9 +85,14 @@ class ClientInit
     array err;
     if( err = catch {
       module_dependencies( c, ({ "clientlayer" }) );
-      clientlayer = conf->get_providers( "automail_clientlayer" )[ 0 ];
+      clientlayer = c->get_providers( "automail_clientlayer" )[ 0 ];
     })
+    {
+      report_error("While getting clientlayer: "+ 
+		   describe_backtrace(err));
       return 0;
-    return !!clientlayer;
+    }
+    if(clientlayer) 
+      return 1;
   }
-}
+#endif
