@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.245 2000/09/19 14:21:32 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.246 2000/09/19 14:58:29 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -538,7 +538,10 @@ mixed draw_callback(mapping args, string text, RequestID id)
     id = (object)text;
     text = args->text;
   }
-
+  if( !mappingp( args ) || !stringp( text ))
+    // errors in the argument cache. Not all that unsusual when using the
+    // relay module.
+    return 0;
   if(!args->verbatim) // typographically correct...
   {
     text = replace(text, nbsp, " ");
@@ -668,18 +671,22 @@ mixed draw_callback(mapping args, string text, RequestID id)
 
 mapping find_internal(string f, RequestID id)
 {
-  if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
-    f = f[..strlen(f)-5];
-  if( strlen(f) && f[0]=='$' )
+  catch
   {
-    array id_text = f/"/";
-    if( sizeof(id_text)==2 )
-    {   // It's a gtext-id
-      string second_key = roxen->argcache->store( (["":id_text[1]]) );
-      return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
+    if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+      f = f[..strlen(f)-5];
+    if( strlen(f) && f[0]=='$' )
+    {
+      array id_text = f/"/";
+      if( sizeof(id_text)==2 )
+      {   // It's a gtext-id
+        string second_key = roxen->argcache->store( (["":id_text[1]]) );
+        return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
+      }
     }
-  }
-  return image_cache->http_file_answer( f, id );
+    return image_cache->http_file_answer( f, id );
+  };
+  return 0;
 }
 
 
