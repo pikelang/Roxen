@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.446 2000/03/03 22:53:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.447 2000/03/04 14:06:58 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3263,10 +3263,12 @@ string check_variable(string name, mixed value)
     break;
    case "locale":
      object o;
-     if(value != "standard" && (o = RoxenLocale[value]))
+     if(o = RoxenLocale[value])
      {
        default_locale = o;
        SET_LOCALE(default_locale);
+     } else {
+       return sprintf("No such locale: %O\n", value);
      }
      break;
   }
