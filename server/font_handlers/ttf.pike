@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.11 2001/11/14 13:36:09 grubba Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.12 2001/11/15 10:49:12 anders Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -217,7 +217,7 @@ array(mapping) font_information( string font )
   return ({ res });
 }
 
-array(string) has_font( string name, int size, int(0..1) force )
+array(string) has_font( string name, int size, int(0..1)|void force )
 {
 #ifdef THREADS
   object key = lock->lock();
