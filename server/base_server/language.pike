@@ -1,10 +1,13 @@
 /* Language support for numbers and dates. Very simple,
  * really. Look at one of the existing language plugins (not really
- * modules, you see..)
+ * modules, you see)
+ *
+ * The languagefiles are loaded on demand and cached through the 
+ * Locale-api.
  *
  * Copyright © 1996 - 2000, Roxen IS.
  *
- * $Id: language.pike,v 1.29 2000/04/29 17:27:08 nilsson Exp $
+ * $Id: language.pike,v 1.30 2000/07/30 02:41:01 lange Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default
@@ -13,48 +16,44 @@
 
 #pragma strict_types
 
-private mapping(string:object) languages = ([ ]);
+#include <roxen.h>
+#define PROJECT "languages"
 
-array(string) get_lldir()
-{
-  array(string) res;
-  catch { res = get_dir( "../local/languages" ); };
-  return res || ({});
+string default_language;
+
+static string fix_lang(string l) {
+  if(!l)
+    return default_language;
+  if(sizeof(l)==2) {
+#if constant(Standards.ISO639_2)
+    return Standards.ISO639_2.map_639_1(l);
+#else
+    return RoxenLocale.ISO639_2.map_639_1(l);
+#endif
+  }
+  return l;
 }
 
 void initiate_languages()
 {
-  array(string) langs = get_dir("languages")-({"abstract.pike"}) + get_lldir();
-
-  if(!langs)
-  {
-    report_fatal("No languages available!\n"+
-		 "This is a serious error.\n"
-		 "Many RXML tags will not work as expected!\n");
-    return 0;
-  }
   report_debug( "Adding languages ... ");
   int start = gethrtime();
-  foreach(glob("*.pike",langs), string lang)
-  {
-    array(string) tmp;
-    mixed err;
-    if (err = catch {
-      object l = (object)("languages/"+lang);
-      roxenp()->dump( "languages/"+lang );
-      if(tmp=([function(void:array(string))]l->aliases)())
-	foreach(tmp, string alias)
-	  languages[alias] = l;
-    }) {
-      report_error(sprintf("Initialization of language %s failed:%s\n",
-			   lang, describe_backtrace(err)));
-    }
-  }
+
+  default_language = fix_lang([string]getenv("ROXEN_LANG")) || "eng";
+
+  __LOCALEMODULE.register_project(PROJECT, "languages/_xml_glue/%L.xml");
+
+  // Atleast read the default_language, to make sure that fallback is ok.
+  if(!__LOCALEMODULE.get_object(PROJECT, default_language))
+    report_fatal("\n* The default language %O is not available!\n"
+		 "* This is a serious error.\n"
+		 "* Several RXML tags might not work as expected!\n",
+		 default_language);
 
   report_debug( "Done [%4.2fms]\n", (gethrtime()-start)/1000.0 );
 }
 
-private string nil()
+static string nil()
 {
 #ifdef LANGUAGE_DEBUG
   werror("Cannot find that one in %O.\n", languages);
@@ -62,38 +61,21 @@ private string nil()
   return "No such function in that language, or no such language.";
 }
 
-string default_language = [string]getenv("ROXEN_LANG")||"en";
-
 /* Return a pointer to an language-specific conversion function. */
-public function language(string what, string func, object|void id)
+public function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
-  werror("Function: " + func + " in "+ what+"\n");
+  werror("Function: " + func + " in "+ fix_lang(lang) +"\n");
 #endif
-  object l;
-  if( (l=languages[what]) && id && id->set_output_charset && l->charset )
-    ([function(string,int:void)]id->set_output_charset)( [string]l->charset, 2 );
-
-  if(!l) {
-#ifdef LANGUAGE_DEBUG
-    werror( what+" is not available. Trying default...\n");
-#endif
-    if(!(l=languages[default_language])) {
-#ifdef LANGUAGE_DEBUG
-      werror( default_language+" is not available. Trying english...\n");
-#endif
-      if(!(l=languages->en))
-	return [function]languages->en[func];
-    }
-  }
-
-  return [function]l[func] || nil;
+  return __LOCALEMODULE.call(PROJECT, fix_lang(lang), 
+			     func, default_language) || nil;  
 }
 
 array(string) list_languages() {
-  return indices(languages);
+  return __LOCALEMODULE.list_languages(PROJECT);
 }
 
-object language_low(string what) {
-  return languages[what];
+object language_low(string lang) {
+  return [object]__LOCALEMODULE.get_object( PROJECT, 
+					    fix_lang(lang) )->functions;
 }
