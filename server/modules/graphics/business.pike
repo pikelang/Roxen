@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.144 2001/09/22 03:23:18 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.145 2002/01/23 13:12:39 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -571,9 +571,6 @@ string container_diagram(string tag, mapping m, string contents,
 
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
-
-  if(res->fontsize == res->labelsize)
-    m_delete(res, "labelsize");
 
   res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
   res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
