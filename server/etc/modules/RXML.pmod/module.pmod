@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.338 2005/02/15 15:46:58 grubba Exp $
+// $Id: module.pmod,v 1.339 2005/02/17 17:17:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6793,13 +6793,13 @@ class TXml
     {return tolerant_charref_decode_parser->clone()->finish (val)->read();}
 
   string lower_case (string val)
-    {return lowercaser->clone()->finish (val)->read();}
+    {return val && lowercaser->clone()->finish (val)->read();}
 
   string upper_case (string val)
-    {return uppercaser->clone()->finish (val)->read();}
+    {return val && uppercaser->clone()->finish (val)->read();}
 
   string capitalize (string val)
-    {return capitalizer->clone()->finish (val)->read();}
+    {return val && capitalizer->clone()->finish (val)->read();}
 
   array(string|mapping(string:string)) parse_tag (string tag_text)
   //! Parses the first tag in @[tag_text] and returns an array where
@@ -9248,7 +9248,7 @@ static void init_parsers()
   p = Parser_HTML();
   p->_set_data_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
-      return ({ data?lower_case(data):data });
+      return ({lower_case (data)});
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
@@ -9261,7 +9261,7 @@ static void init_parsers()
   p = Parser_HTML();
   p->_set_data_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
-      return ({ data?upper_case(data):data});
+      return ({upper_case (data)});
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
@@ -9276,7 +9276,7 @@ static void init_parsers()
     lambda (object/*(Parser.HTML)*/ p, string data) {
       p->_set_data_callback (0);
       p->_set_entity_callback (0);
-      return ({ data?String.capitalize(data):data });
+      return ({String.capitalize (data)});
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
