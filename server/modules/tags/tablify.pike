@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.36 1999/08/13 16:49:06 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.37 1999/08/16 11:01:41 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -43,7 +43,10 @@ string make_table(array subtitles, array table, mapping opt, object id)
 
   if (subtitles) {
     int col=0;
-    r += "<tr bgcolor=\""+(opt->titlebgcolor||"#112266")+"\">\n";
+    if(opt->nice || opt->nicer)
+      r+="<tr bgcolor=\""+(opt->titlebgcolor||"#112266")+"\">\n";
+    else
+      r+="<tr>";
     foreach(subtitles, string s) {
       col++;
       r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state_id,id)+"\">":"");
@@ -51,8 +54,10 @@ string make_table(array subtitles, array table, mapping opt, object id)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
 	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
 	   (opt->titlebgcolor||"#112266")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
-      else
+      else if(opt->nice)
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
+      else
+        r+=s;
       r+=(opt["interactive-sort"]?(abs(opt->sortcol||0)==col?"<img hspace=\"5\" src=\"internal-roxen-sort-"+
         (opt->sortcol<0?"asc":"desc")+"\" border=\"0\">":"")+
         "</a>":"")+"&nbsp;</th>";
@@ -87,7 +92,7 @@ string make_table(array subtitles, array table, mapping opt, object id)
 	}
 
         //The right way<tm> is to preparse the whole column and find the longest string of
-        //decimals and use that to calculate the maximum with of the decimal cell, insted
+        //decimals and use that to calculate the maximum width of the decimal cell, insted
         //of just saying widht=30, which easily produces an ugly result.
         r+="<td align=\"right\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"right\">"+
           font+a[0]+nofont+"</td><td>"+font+"."+nofont+"</td><td align=\"left\" width=\"30\">"+font+
@@ -192,6 +197,30 @@ string tag_tablify(string tag, mapping m, string q, object id)
 
   q = parse_html(q, ([]), (["fields":container_fields]), m);
 
+  if(m->intable) {
+    q=`-(q,"\n","\r","\t");
+    m_delete(m, "rowseparator");
+    m_delete(m, "cellseparator");
+    if(!m->notitle) m+=(["notitle":1]);
+    q=parse_html(q, ([]), (["table":lambda(string name, mapping arg, string q, mapping m) {
+				      if(arg->border) m->border=arg->border;
+				      if(arg->cellspacing) m->cellspacing=arg->cellspacing;
+				      if(arg->cellpadding) m->cellpadding=arg->cellpadding;
+				      return q;
+				    },
+			    "tr":lambda(string name, mapping arg, string q, mapping m) {
+				   return q+"\n";
+				 },
+			    "td":lambda(string name, mapping arg, string q, mapping m) {
+				   return q+"\t";
+				 },
+			    "th":lambda(string name, mapping arg, string q, mapping m) {
+                                   if(m->notitle && m->notitle==1) m_delete(m, "notitle");
+				   return q+"\t";
+				 }
+    ]), m);
+  }
+
   sep = m->rowseparator||"\n";
   m_delete(m,"rowseparator");
 
@@ -201,7 +230,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
   m_delete(m,"cellseparator");
 
   array title;
-  if((m->nice||m->nicer) && (!m->notitle) && sizeof(rows)) {
+  if(!m->notitle && sizeof(rows)>1) {
     title = rows[0]/sep;
     rows = rows[1..];
   }
