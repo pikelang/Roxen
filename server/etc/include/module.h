@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.26 1999/11/06 08:20:07 per Exp $
+// $Id: module.h,v 1.27 1999/11/27 12:09:28 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -52,6 +52,7 @@
 
 #define VAR_EXPERT        256
 #define VAR_MORE          512
+
 #define VAR_DEVELOPER    1024
 #define VAR_INITIAL      2048
 
