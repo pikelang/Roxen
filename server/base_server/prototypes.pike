@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.117 2004/05/10 19:25:42 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.118 2004/05/10 21:38:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1859,6 +1859,20 @@ enum LockFlag {
   LOCK_EXCL_AT		= 7
 };
 
+//! State of the Overwrite header.
+enum Overwrite {
+  NEVER_OVERWRITE = -1,	//! The Overwrite header is "F".
+  MAYBE_OVERWRITE = 0,	//! No Overwrite header.
+  DO_OVERWRITE = 1,	//! The Overwrite header is "T".
+};
+
+//! State of the DAV:PropertyBehavior for this source.
+enum PropertyBehavior {
+  PROPERTY_OMIT = -1,	//! DAV:omit (Omit if it can't be copied).
+  PROPERTY_COPY = 0,	//! Copy if it can't be kept alive (default).
+  PROPERTY_ALIVE = 1,	//! DAV:keepalive (Live properties must be kept alive).
+}
+
 class RoxenModule
 {
   inherit BasicDefvar;
@@ -1898,11 +1912,10 @@ class RoxenModule
   string|array(SimpleNode)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   void recurse_find_properties(string path, string mode, int depth,
-			       MultiStatus.Prefixed result, RequestID id,
-			       multiset(string)|void filt);
+			       RequestID id, multiset(string)|void filt);
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
-					 MultiStatus.Prefixed result, RequestID id);
+					 RequestID id);
   mapping(string:mixed) set_property (string path, string prop_name,
 				      string|array(SimpleNode) value,
 				      RequestID id);
@@ -1930,8 +1943,16 @@ class RoxenModule
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
   mapping(string:mixed) recurse_delete_files(string path,
-					     MultiStatus.Prefixed result,
 					     RequestID id);
+  mapping(string:mixed) make_collection(string path, RequestID id);
+  mapping(string:mixed) copy_properties(string source, string destination,
+					PropertyBehavior behavior, RequestID id);
+  mapping(string:mixed) copy_file(string source, string destination,
+				  PropertyBehavior behavior,
+				  Overwrite overwrite, RequestID id);
+  mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
+					   mapping(string:PropertyBehavior) behavior,
+					   Overwrite overwrite, RequestID id);
 }
 
 class PatchPropertyCommand
