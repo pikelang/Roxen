@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.90 2004/05/31 23:02:02 _cvs_stephen Exp $
+// $Id: cache.pike,v 1.91 2004/06/03 22:53:14 mani Exp $
 
 // #pragma strict_types
 
@@ -179,52 +179,6 @@ void cache_clean()
 }
 
 
-// --- Non-garbing "cache" -----------
-
-private mapping(string:mapping(string:mixed)) nongc_cache;
-
-//! Associates a @[value] to a @[key] in a cache identified with
-//! the @[cache_id]. This cache does not garb, hence it should be
-//! used for storing data where its size is well controled.
-void nongarbing_cache_set(string cache_id, string key, mixed value) {
-  if(nongc_cache[cache_id])
-    nongc_cache[cache_id][key] = value;
-  else
-    nongc_cache[cache_id] = ([ key:value ]);
-}
-
-//! Returns the value associated to the @[key] in the cache
-//! identified by @[cache_id] in the non-garbing cache.
-mixed nongarbing_cache_lookup(string cache_id, string key) {
-  return nongc_cache[cache_id]?nongc_cache[cache_id][key]:UNDEFINED;
-}
-
-//! Remove a value from the non-garbing cache.
-void nongarbing_cache_remove(string cache_id, string key) {
-  if(nongc_cache[cache_id]) m_delete(nongc_cache[cache_id], key);
-}
-
-//! Flush a cache in the non-garbing cache.
-void nongarbing_cache_flush(string cache_id) {
-  m_delete(nongc_cache, cache_id);
-}
-
-mapping(string:array(int)) ngc_status() {
-  mapping(string:array(int)) res = ([]);
-
-  foreach(nongc_cache; string name; mapping entry) {
-    mixed err = catch {
-      res[name] = ({ sizeof(entry),
-		     sizeof(encode_value(entry)) });
-    };
-    if(err)
-      res[name] = ({ sizeof(entry), -1 });
-  }
-
-  return res;
-}
-
-
 // --- Session cache -----------------
 
 #ifndef SESSION_BUCKETS
@@ -384,8 +338,6 @@ void init()
 void create()
 {
   caches = ([ ]);
-
-  nongc_cache = ([ ]);
 
   session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   session_persistence = ([]);
