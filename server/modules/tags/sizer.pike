@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.5 2001/03/06 11:34:26 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.6 2001/03/06 11:49:39 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -19,12 +19,12 @@ LocaleString module_doc  =
 
 #include <variables.h>
 
-#define NOTE(X) ("<tr><td valign=top><img src='/internal-roxen-err_1'></td>\n"\
-		"<td><font color=black size=-1>" + (X) +"</font></td></tr>")
-#define WARN(X) ("<tr><td valign=top><img src='/internal-roxen-err_2'></td>\n"\
-		 "<td><font color=black size=-1>" + (X) +"</font></td></tr>")
-#define ERR(X) ("<tr><td valign=top><img src='/internal-roxen-err_3'></td>\n"\
-		 "<td><font color=black size=-1>" + (X) +"</font></td></tr>")
+#define NOTE(X) ("<tr><td valign='top'><img src='/internal-roxen-err_1'></td>\n"\
+		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
+#define WARN(X) ("<tr><td valign='top'><img src='/internal-roxen-err_2'></td>\n"\
+		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
+#define ERR(X) ("<tr><td valign='top'><img src='/internal-roxen-err_3'></td>\n"\
+		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 
 class Combo( string file, RequestID id )
 {
@@ -252,11 +252,11 @@ string simpletag_page_size( string name,
     int pct = (`+(@sz)*100)/total;
     if( pct > mpct )
       mpct = pct;
-    return sprintf( "  <tr><td><font color=black size=-1>%s</font></td>"
-		    "<td align=right><font color=black size=-1>%.1f</font>"
-		    "</td><td align=right><font color=black size=-1>%d"
+    return sprintf( "  <tr><td><font color='black' size='-1'>%s</font></td>"
+		    "<td align='right'><font color='black' size='-1'>%.1f</font>"
+		    "</td><td align='right'><font color='black' size='-1'>%d"
 		    "</font></td>"
-	    "<td align=right><font color=black size=-1>%d%%</font></td>"
+	    "<td align='right'><font color='black' size='-1'>%d%%</font></td>"
 		    "</tr>\n",
 		    f, `+(@sz)/1024.0, sz[1],pct );
   };
@@ -268,12 +268,12 @@ string simpletag_page_size( string name,
     total_headers += sz[1];
   }
   
-  res += "<table width=100% cellpadding=0 cellspacing=0>\n"
-    "  <tr><th align=left><font size=-1 color=black>File</font></th>"
-    "<th align=right><font size=-1 color=black>Size (kb)</font></th>"
-    "<th align=right><font size=-1 color=black>&nbsp; Headers (b)</font></th>"
-    "<td align=right><font size=-1 color=black>&nbsp; % of page</font></td></tr>"
-    "<tr><td colspan=4><hr noshade size=1></td></tr>";
+  res += "<table width='100%' cellpadding='0' cellspacing='0'>\n"
+    "  <tr><th align='left'><font size='-1' color='black'>File</font></th>"
+    "<th align='right'><font size='-1' color='black'>Size (kb)</font></th>"
+    "<th align='right'><font size='-1' color='black'>&nbsp; Headers (b)</font></th>"
+    "<td align='right'><font size='-1' color='black'>&nbsp; % of page</font></td></tr>"
+    "<tr><td colspan='4'><hr noshade='noshade' size='1'></td></tr>";
 
   foreach( files, string file )
     res += describe_size( file, fname(file) );
@@ -288,9 +288,9 @@ string simpletag_page_size( string name,
 
   if( what->summary )
   {
-    res += sprintf( "\n<tr><td><font color=black size=-1><b>Total size:</b></font></td><td align=right><font color=black size=-1>%.1f</font></td><td align=right><font color=black size=-1>%d</font></td><td>&nbsp;</td></tr>",
+    res += sprintf( "\n<tr><td><font color='black' size='-1'><b>Total size:</b></font></td><td align='right'><font color='black' size='-1'>%.1f</font></td><td align='right'><font color='black' size='-1'>%d</font></td><td>&nbsp;</td></tr>",
 		    total/1024.0, total_headers );
-    res += "<tr><td colspan=4><hr noshade size=1></td></tr>";
+    res += "<tr><td colspan='4'><hr noshade size='1'></td></tr>";
   }
 
   res += "</table>\n";
@@ -312,8 +312,8 @@ string simpletag_page_size( string name,
 	case 21..30:    color = "darkorange";    break;
 	case 31..:      color = "red";        break; 
       }
-      res+=sprintf("<td align=right><font color='%s' size=-1><b>%2.1f</b>:"
-		   "</td><td align=right><font color='%s' size=-1>%ds</font></td>\n",
+      res+=sprintf("<td align='right'><font color='%s' size='-1'><b>%2.1f</b>:"
+		   "</td><td align='right'><font color='%s' size='-1'>%ds</font></td>\n",
 		   color, kbit,color,time  );
       if( (++i % 3) == 2)
 	res += "</tr>\n<tr>";
@@ -326,7 +326,7 @@ string simpletag_page_size( string name,
 
   if( what->suggestions )
   {
-    res += "<hr noshade size=1 />";
+    res += "<hr noshade size='1' />";
     res += "<table>";
     if( ((total*8) / 56000)  > 20 )
     {
@@ -376,18 +376,18 @@ string simpletag_page_size( string name,
 		  {
 		    res+=WARN(sprintf(replace(mm,"%","%%")+
 				      " Some suggestions: "
-				      "<a target=_foo href='%s'>50%%: -%.1fKb</a>, "
-				      "<a target=_foo href='%s'>25%%: -%.1fKb</a>",
+				      "<a target='_foo' href='%s'>50%%: -%.1fKb</a>, "
+				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
 				      imglink(f, "JPEG", 50,id),
 				      (sizes[f][0]-sz[50])/1024.0,
 				      imglink(f, "JPEG", 25,id),
 				      (sizes[f][0]-sz[25])/1024.0 ) );
 		  } else {
 		    res+=WARN(sprintf(replace(mm,"%","%%")+
-				      " Some suggestions: <a target=_foo href='%s'>75%%: "
-				      "-%.1fKb</a>, <a target=_foo href='%s'>"
+				      " Some suggestions: <a target='_foo' href='%s'>75%%: "
+				      "-%.1fKb</a>, <a target='_foo' href='%s'>"
 				      "50%%: -%.1fKb</a>, "
-				      "<a target=_foo href='%s'>25%%: -%.1fKb</a>",
+				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
 				      imglink(f, "JPEG", 75,id),
 				      (sizes[f][0]-sz[75])/1024.0,
 				      imglink(f, "JPEG", 50,id),
@@ -468,9 +468,9 @@ string simpletag_page_size( string name,
     res += "</table>";
   }
   
-  res = "<table width=400 cellpadding=0 cellspacing=0 border=0 "
-    "bgcolor=black>\n<tr><td>\n<table cellpadding=10 cellspacing=1"
-    "  border=0  bgcolor=white>\n<tr><td>\n"+res+
-    "</td></tr>\n</table>\n</td></tr>\n</table>\n";
+  res = "<table width='400' cellpadding='0' cellspacing='0' border='0'"
+    " bgcolor='black'><tr><td>\n<table cellpadding='10' cellspacing='1'"
+    " border='0' width='100%' bgcolor='white'>\n<tr><td>\n" + res +
+    "</td></tr>\n</table>\n</td></tr></table>\n";
   return res ;
 }
