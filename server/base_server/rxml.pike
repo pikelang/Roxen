@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.126 2000/02/15 01:18:28 mast Exp $
+ * $Id: rxml.pike,v 1.127 2000/02/15 03:10:44 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -569,58 +569,6 @@ void remove_parse_module (RoxenModule mod)
   }
 }
 
-
-string call_user_tag(RXML.PXml parser, mapping args)
-{
-  RequestID id = parser->context->id;
-  string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
-  args = id->misc->defaults[tag]|args;
-  id->misc->last_tag_args = args;
-  TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
-  array replace_from = map(indices(args),make_entity)+({"#args#"});
-  array replace_to = values(args)+({make_tag_attributes( args  ) });
-  string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
-  TRACE_LEAVE("");
-  return r;
-}
-
-array|string call_user_container(RXML.PXml parser, mapping args, string contents)
-{
-  RequestID id = parser->context->id;
-  string tag = parser->tag_name();
-  if(!id->misc->defaults[tag] && id->misc->defaults[""])
-    tag = "";
-  id->misc->line = (string)parser->at_line();
-  args = id->misc->defaults[tag]|args;
-  if( args->preparse )
-  {
-    if( id->misc->do_not_recurse_for_ever_please++ > 10000 )
-      error("Too deep Recursion.\n");
-    contents = parse_rxml(contents, id);
-    id->misc->do_not_recurse_for_ever_please--;
-  }
-  if(args->trimwhites)
-  {
-    sscanf(contents, "%*[ \t\n\r]%s", contents);
-    contents = reverse(contents);
-    sscanf(contents, "%*[ \t\n\r]%s", contents);
-    contents = reverse(contents);
-  }
-
-  id->misc->last_tag_args = args;
-  TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
-  id->misc->do_not_recurse_for_ever_please++;
-  array i = indices( args );
-  array v = values( args );
-  array replace_from = map(i,make_entity)+({"#args#", "<contents>"});
-  array replace_to = v + ({make_tag_attributes( args  ), contents });
-  string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
-  TRACE_LEAVE("");
-  if( args->noparse ) return ({ r });
-  return r;
-}
-
 #define _stat defines[" _stat"]
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
@@ -675,45 +623,63 @@ string parse_rxml(string what, RequestID id,
 
 // ------------------------- RXML Core tags --------------------------
 
-string tag_help(string t, mapping args, RequestID id)
-{
-  RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
-  array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
-  string help_for = args->for || id->variables->_r_t_h;
-  string ret="<h2>Roxen Interactive RXML Help</h2>";
+class TagHelp {
+  inherit RXML.Tag;
+  constant name = "help";
+  constant flags = RXML.FLAG_NONCONTAINER;
 
-  if(!help_for)
-  {
-    string char;
-    ret += "<b>Here is a list of all defined tags. Click on the name to "
-      "receive more detailed information. All these tags are also availabe "
-      "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
-    array tag_links;
+  class Frame {
+    inherit RXML.Frame;
 
-    foreach(tags, string tag) {
-      if(tag[0..0]!=char) {
-	if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
-	char=tag[0..0];
-	tag_links=({});
+    array do_return(RequestID id) {
+      RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
+      array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
+      string help_for = args->for || id->variables->_r_t_h;
+      string ret="<h2>Roxen Interactive RXML Help</h2>";
+
+      if(!help_for) {
+	string char;
+	ret += "<b>Here is a list of all defined tags. Click on the name to "
+	  "receive more detailed information. All these tags are also availabe "
+	  "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
+	array tag_links;
+
+	foreach(tags, string tag) {
+	  if(tag[0..0]!=char) {
+	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
+					 String.implode_nicely(tag_links)+"</p>";
+	    char=tag[0..0];
+	    tag_links=({});
+	  }
+	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":")
+	    if(undocumented_tags[tag])
+	      tag_links += ({ tag });
+	    else
+	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
+				      id->not_query, http_encode_url(tag), tag) });
+	}
+
+	result=ret+"<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
+	return 0;
       }
-      if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":")
-	if(undocumented_tags[tag])
-	  tag_links += ({ tag });
-	else
-	  tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				  id->not_query, http_encode_url(tag), tag) });
+
+      result=ret+find_tag_doc(help_for, id);
     }
-
-    return ret + "<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
   }
-
-  return ret+find_tag_doc(help_for, id);
 }
 
-string tag_number(string t, mapping args, RequestID id)
-{
-  return roxen.language(args->lang||args->language||id->misc->defines->theme_language,
-                        args->type||"number")( (int)args->num );
+class TagNumber {
+  inherit RXML.Tag;
+  constant name = "number";
+  constant flags = RXML.FLAG_NONCONTAINER;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      result=roxen.language(args->lang||args->language||id->misc->defines->theme_language,
+			    args->type||"number")( (int)args->num );
+    }
+  }
 }
 
 private array(string) list_packages()
@@ -738,38 +704,40 @@ private string read_package( string p )
   return data;
 }
 
-private string use_file_doc( string f, string data, RequestID nid, RequestID id )
+private string use_file_doc(string f, string data)
 {
-  string res="";
-  catch
-  {
-    string doc = "";
-    int help=0; /* If true, all tags support the 'help' argument. */
-    sscanf(data, "%*sdoc=\"%s\"", doc);
-    sscanf(data, "%*sdoc=%d", help);
-    parse_rxml(data, nid);
-    res += "<dt><b>"+f+"</b><dd>"+(doc?doc+"<br>":"");
-    array tags = indices(nid->misc->tags||({}));
-    array containers = indices(nid->misc->containers||({}));
-    array ifs = indices(nid->misc->_ifs)- indices(id->misc->_ifs);
-    array defines = indices(nid->misc->defines)- indices(id->misc->defines);
-    if(sizeof(tags))
+  string res="", doc="";
+  int help=0; /* If true, all tags support the 'help' argument. */
+  sscanf(data, "%*sdoc=\"%s\"", doc);
+  sscanf(data, "%*shelp=%d", help);
+  res += "<dt><b>"+f+"</b></dt><dd>"+(doc?doc+"<br />":"")+"</dd>";
+
+  mapping d=(["tag":({}),
+	      "container":({}),
+	      "if":({}),
+	      "variable":({}) ]);
+
+  parse_html(data, ([]), (["define":
+			   lambda(string t, mapping m, string c) {
+			     foreach(indices(d), string type)
+			       if(m[type]) d[type]+=({m[type]});
+			     return "";
+			   },
+			   "undefine":
+			   lambda(string t, mapping m, string c) {
+			     foreach(indices(d), string type)
+			       if(m[type]) d[type]+=({m[type]});
+			     return "";
+			   } ]) );
+
+  foreach(indices(d), string type) {
+    array ind=d[type];
+    if(sizeof(ind))
       res += "defines the following tag"+
-        (sizeof(tags)!=1?"s":"") +": "+
-        String.implode_nicely( sort(tags) )+"<br>";
-    if(sizeof(containers))
-      res += "defines the following container"+
-        (sizeof(tags)!=1?"s":"") +": "+
-        String.implode_nicely( sort(containers) )+"<br>";
-    if(sizeof(ifs))
-      res += "defines the following if argument"+
-        (sizeof(ifs)!=1?"s":"") +": "+
-        String.implode_nicely( sort(ifs) )+"<br>";
-    if(sizeof(defines))
-      res += "defines the following macro"+
-        (sizeof(defines)!=1?"s":"") +": "+
-        String.implode_nicely( sort(defines) )+"<br>";
-  };
+	(sizeof(ind)!=1?"s":"") +": "+
+	String.implode_nicely( sort(ind) )+"<br />";
+  }
+
   return res;
 }
 
@@ -778,38 +746,24 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
   mapping res = ([]);
   if(!id->misc->_ifs) id->misc->_ifs=([]);
 
-#define SETUP_NID()                             \
-    RequestID nid = id->clone_me();             \
-    nid->misc->tags = 0;                        \
-    nid->misc->containers = 0;                  \
-    nid->misc->defines = ([]);                  \
-    nid->misc->_tags = 0;                       \
-    nid->misc->_containers = 0;                 \
-    nid->misc->defaults = ([]);                 \
-    nid->misc->_ifs = ([]);                     \
-    nid->misc->_parser = 0;
-
   if(m->packageinfo)
   {
     string res ="<dl>";
-    foreach(list_packages(), string f) {
-      SETUP_NID();
-      res += use_file_doc( f, read_package( f ), nid, id );
-    }
-    return ({res+"</dl>"});
+    foreach(list_packages(), string f)
+      res += use_file_doc(f, read_package( f ));
+    return ({ res+"</dl>" });
   }
 
   if(!m->file && !m->package)
     return "<use help>";
 
-  if(id->pragma["no-cache"] ||
+  if(!m->info || id->pragma["no-cache"] ||
      !(res=cache_lookup("macrofiles:"+name,(m->file||("pkg!"+m->package)))))
   {
-    SETUP_NID();
     res = ([]);
     string foo;
     if(m->file)
-      foo = try_get_file( fix_relative(m->file, nid), nid );
+      foo = try_get_file( fix_relative(m->file, id), id );
     else
       foo = read_package( m->package );
 
@@ -817,172 +771,184 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
       return ({ rxml_error(tag, "Failed to fetch "+(m->file||m->package)+".", id)-"<false>" });
 
     if( m->info )
-      return ({"<dl>"+use_file_doc( m->file || m->package, foo, nid,id )+"</dl>"});
+      return ({"<dl>"+use_file_doc( m->file || m->package, foo )+"</dl>"});
 
-    parse_rxml( foo, nid );
-    res->tags  = nid->misc->tags||([]);
-    res->_tags = nid->misc->_tags||([]);
-    foreach(indices(res->_tags), string t)
-      if(!res->tags[t]) m_delete(res->_tags, t);
-    res->containers  = nid->misc->containers||([]);
-    res->_containers = nid->misc->_containers||([]);
-    foreach(indices(res->_containers), string t)
-      if(!res->containers[t]) m_delete(res->_containers, t);
-    res->defines = nid->misc->defines||([]);
-    res->defaults = nid->misc->defaults||([]);
-    res->_ifs = nid->misc->_ifs - id->misc->_ifs;
-    m_delete( res->defines, " _stat" );
-    m_delete( res->defines, " _error" );
-    m_delete( res->defines, " _extra_heads" );
-    m_delete( res->defines, " _rettext" );
-    m_delete( res->defines, " _ok" );
-    m_delete( res->defines, "line");
-    m_delete( res->defines, "sizefmt");
-    cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
+    parse_rxml( foo, id );
+
+    res->_ifs = id->misc->_ifs - id->misc->_ifs;
+    //    cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
   }
-  id->misc->tags += copy_value(res->tags);
-  id->misc->containers += res->containers;
-  id->misc->defaults += res->defaults;
-  id->misc->defines += copy_value(res->defines);
-  id->misc->_tags += res->_tags;
-  id->misc->_containers += res->_containers;
   id->misc->_ifs += res->_ifs;
 
   c = parse_rxml( c, id );
   return ({ c });
 }
 
-string tag_define(string tag, mapping m, string str, RequestID id,
-                  Stdio.File file, mapping defines)
-{
-  if(m->variable)
-    id->variables[m->variable] = str;
-#ifdef OLD_RXML_COMPAT
-  else if (m->name) {
-    defines[m->name]=str;
-    old_rxml_warning(id, "attempt to define name ","variable");
+class UserTag {
+  inherit RXML.Tag;
+  string name;
+  int flags = 0;
+  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PHtmlCompat) });
+
+  string c;
+  mapping defaults;
+
+  void create(string _name, string _c, mapping _defaults, int tag) {
+    name=_name;
+    c=_c;
+    defaults=_defaults;
+    flags|=RXML.FLAG_NONCONTAINER*tag;
   }
-#endif
-  else if (m->tag)
-  {
-    m->tag = lower_case(m->tag);
-    string n = m->tag;
-    m_delete( m, "tag" );
-    if(!id->misc->tags)
-      id->misc->tags = ([]);
-    if(!id->misc->defaults)
-      id->misc->defaults = ([]);
-    id->misc->defaults[n] = ([]);
+
+  class Frame {
+    inherit RXML.Frame;
+    mapping vars;
+    string scope_name;
+
+    array do_return(RequestID id) {
+      args=defaults+args;
+      id->misc->last_tag_args = args;
+      scope_name=args->scope||name;
+      vars = args;
+      m_delete(args, "scope");
+
+      if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites) {
+	sscanf(content, "%*[ \t\n\r]%s", content);
+	content = reverse(content);
+	sscanf(content, "%*[ \t\n\r]%s", content);
+	content = reverse(content);
+      }
 
 #ifdef OLD_RXML_COMPAT
-    // This is not part of RXML 1.4
-    foreach( indices(m), string arg )
-      if( arg[..7] == "default_" )
-      {
-	id->misc->defaults[n][arg[8..]] = m[arg];
-        old_rxml_warning(id, "define attribute "+arg,"attrib container");
-        m_delete( m, arg );
+      array replace_from = map(indices(args),make_entity)+({"#args#", "<contents>"});
+      array replace_to = values(args)+({ make_tag_attributes(args), content||"" });
+      string c2;
+      c2 = replace(c, replace_from, replace_to);
+      if(c2!=c) {
+	vars=([]);
+	return ({ c2 });
       }
 #endif
 
-    str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c) {
-        if(m->name) id->misc->defaults[n][m->name]=parse_rxml(cont,id);
-        return "";
-      }
-    ]));
-
-    if(m->trimwhites) {
-      sscanf(str, "%*[ \t\n\r]%s", str);
-      str = reverse(str);
-      sscanf(str, "%*[ \t\n\r]%s", str);
-      str = reverse(str);
+      vars->args = make_tag_attributes(args);
+      vars->contents = content||"";
+      return ({ c });
     }
-
-#ifdef OLD_RXML_COMPAT
-    id->misc->tags[n] = replace( str, indices(m), values(m) );
-#else
-    id->misc->tags[n] = str;
-#endif
-    id->misc->_tags[n] = call_user_tag;
   }
-  else if (m->container)
-  {
-    string n = lower_case(m->container);
-    m_delete( m, "container" );
-    if(!id->misc->containers)
-      id->misc->containers = ([]);
-    if(!id->misc->defaults)
-      id->misc->defaults = ([]);
-    id->misc->defaults[n] = ([]);
-
-#ifdef OLD_RXML_COMPAT
-    // This is not part of RXML 1.4
-    foreach( indices(m), string arg )
-      if( arg[0..7] == "default_" )
-      {
-	id->misc->defaults[n][arg[8..]] = m[arg];
-        old_rxml_warning(id, "define attribute "+arg,"attrib container");
-        m_delete( m, arg );
-      }
-#endif
-
-    str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c) {
-        if(m->name) id->misc->defaults[n][m->name]=parse_rxml(cont,id);
-        return "";
-      }
-    ]));
-
-    if(m->trimwhites) {
-      sscanf(str, "%*[ \t\n\r]%s", str);
-      str = reverse(str);
-      sscanf(str, "%*[ \t\n\r]%s", str);
-      str = reverse(str);
-    }
-
-#ifdef OLD_RXML_COMPAT
-    id->misc->containers[n] = replace( str, indices(m), values(m) );
-#else
-    id->misc->containers[n] = str;
-#endif
-    id->misc->_containers[n] = call_user_container;
-  }
-  else if (m->if) {
-    if(!id->misc->_ifs) id->misc->_ifs=([]);
-    id->misc->_ifs[ lower_case(m->if) ] = UserIf(m->if, str);
-  }
-  else
-    return rxml_error(tag, "No tag, variable, if or container specified.", id);
-
-  return "";
 }
 
-string tag_undefine(string tag, mapping m, RequestID id,
-                    Stdio.File file, mapping defines)
-{
-  if(m->variable)
-    m_delete(id->variables,m->variable);
-#ifdef OLD_RXML_COMPAT
-  else if (m->name)
-    m_delete(defines,m->name);
-#endif
-  else if (m->tag)
-  {
-    m_delete(id->misc->tags,m->tag);
-    m_delete(id->misc->_tags,m->tag);
-  }
-  else if (m["if"])
-    m_delete(id->misc->_ifs,m["if"]);
-  else if (m->container)
-  {
-    m_delete(id->misc->containers,m->container);
-    m_delete(id->misc->_containers,m->container);
-  }
-  else
-    return rxml_error(tag, "No tag, variable, if or container specified.", id);
+class TagDefine {
+  inherit RXML.Tag;
+  constant name = "define";
+  RXML.Type content_type = RXML.t_xml;
 
-  return "";
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      result = "";
+      string n;
+
+      if(n=args->variable) {
+	RXML.get_context()->user_set_var(n, content, args->scope);
+	return 0;
+      }
+
+      if (n=args->tag||args->container) {
+	n = lower_case(n);
+	int container=0;
+	if(args->tag)
+	  m_delete(args, "tag");
+	else {
+	  container=1;
+	  m_delete(args, "container");
+	}
+
+	mapping defaults=([]);
+
+#ifdef OLD_RXML_COMPAT
+	// This is not part of RXML 1.4
+	foreach( indices(args), string arg )
+	  if( arg[..7] == "default_" )
+	    {
+	      defaults[arg[8..]] = args[arg];
+	      old_rxml_warning(id, "define attribute "+arg,"attrib container");
+	      m_delete( args, arg );
+	    }
+#endif
+	content=parse_html(content,([]),(["attrib":
+				  lambda(string tag, mapping m, string cont) {
+				    if(m->name) defaults[m->name]=parse_rxml(cont,id);
+				    return "";
+				  }
+	]));
+
+	if(args->trimwhites) {
+	  sscanf(content, "%*[ \t\n\r]%s", content);
+	  content = reverse(content);
+	  sscanf(content, "%*[ \t\n\r]%s", content);
+	  content = reverse(content);
+	}
+
+#ifdef OLD_RXML_COMPAT
+	content = replace( content, indices(args), values(args) );
+#endif
+
+	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults, !container));
+	return 0;
+      }
+
+      if (n=args->if) {
+	if(!id->misc->_ifs) id->misc->_ifs=([]);
+	id->misc->_ifs[args->if]=UserIf(args->if, content);
+	return 0;
+      }
+
+#ifdef OLD_RXML_COMPAT
+      if (n=args->name) {
+	id->misc->defines[n]=content;
+	old_rxml_warning(id, "attempt to define name ","variable");
+	return 0;
+      }
+#endif
+
+      //    rxml_parse_error("No tag, variable, if or container specified.");
+    }
+  }
+}
+
+class TagUndefine {
+  inherit RXML.Tag;
+  constant name = "undefine";
+  class Frame {
+    inherit RXML.Frame;
+    array do_enter(RequestID id) {
+      string n;
+
+      if(n=args->variable) {
+	RXML.get_context()->user_delete_var(n, args->scope);
+	return 0;
+      }
+
+      if (n=args->tag||args->container) {
+	RXML.get_context()->remove_runtime_tag(n);
+	return 0;
+      }
+
+      if (n=args->if) {
+	m_delete(id->misc->_ifs, n);
+	return 0;
+      }
+
+#ifdef OLD_RXML_COMPAT
+      if (n=args->name) {
+	m_delete(id->misc->defines, args->name);
+	return 0;
+      }
+#endif
+
+      //      rxml_parse_error("No tag, variable, if or container specified.");
+    }
+  }
 }
 
 class Tracer
@@ -1076,15 +1042,15 @@ array(string) tag_trace(string t, mapping args, string c , RequestID id)
   return ({r + "<h1>Trace report</h1>"+t->res()+"</ol>"});
 }
 
-array(string) tag_noparse(string t, mapping m, string c)
-{
+array tag_noparse(string t, mapping m, string c) {
   return ({ c });
 }
 
 class TagEval {
   inherit RXML.Tag;
   constant name = "eval";
-  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PXml), RXML.t_html(RXML.PXml) });
+  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
+
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -1093,15 +1059,28 @@ class TagEval {
   }
 }
 
-string tag_nooutput(string t, mapping m, string c, RequestID id)
-{
-  parse_rxml(c, id);
-  return "";
+class TagNoOutput {
+  inherit RXML.Tag;
+  constant name = "nooutput";
+  constant flags = 0;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return() {
+      return ({""});
+    }
+  }
 }
 
-string tag_strlen(string t, mapping m, string c, RequestID id)
-{
-  return (string)strlen(c);
+class TagStrLen {
+  inherit RXML.Tag;
+  constant name = "strlen";
+  constant flags = 0;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return() { result = (string)strlen(content); }
+  }
 }
 
 string tag_case(string t, mapping m, string c, RequestID id)
@@ -1189,10 +1168,17 @@ class TagIf {
   program Frame = FrameIf;
 }
 
-string tag_else( string t, mapping m, string c, RequestID id )
-{
-  if(!LAST_IF_TRUE) return c;
-  return "";
+class TagElse {
+  inherit RXML.Tag;
+  constant name = "else";
+  constant flags = 0;
+  class Frame {
+    inherit RXML.Frame;
+    array do_enter(RequestID id) {
+      if(LAST_IF_TRUE) return ({""});
+      return 0;
+    }
+  }
 }
 
 string tag_then( string t, mapping m, string c, RequestID id )
@@ -1363,15 +1349,11 @@ mapping query_container_callers()
 {
   return ([
     "comment":lambda(){ return ""; },
-    "else":tag_else,
+    "noparse":tag_noparse,
     "then":tag_then,
     "elseif":tag_elseif,
     "elif":tag_elseif,
-    "noparse":tag_noparse,
-    "nooutput":tag_nooutput,
     "case":tag_case,
-    "strlen":tag_strlen,
-    "define":tag_define,
     "trace":tag_trace,
     "use":tag_use,
   ]);
@@ -1382,9 +1364,6 @@ mapping query_tag_callers()
   return ([
     "true":tag_true,
     "false":tag_false,
-    "number":tag_number,
-    "undefine":tag_undefine,
-    "help": tag_help
   ]);
 }
 
