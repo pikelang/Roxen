@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.817 2002/07/04 09:20:57 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.818 2002/07/05 09:54:01 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -653,16 +653,16 @@ void start_handler_threads()
   }
   array(object) new_threads = ({});
 
-  // FIXME: This should probably not be done like this.
-  shufflers = map( enumerate( query("numthreads") ),
-		   lambda( int i )
-		   {
-		     Shuffler.Shuffler res = Shuffler.Shuffler();
-		     Pike.Backend back = Pike.Backend();
-		     res->set_backend( back );
-		     thread_create( backend_thread_func, back );
-		     return res;
-		   } );
+// FIXME: This should probably not be done like this.
+//    shufflers = map( enumerate( query("numthreads") ),
+//  		   lambda( int i )
+//  		   {
+//  		     Shuffler.Shuffler res = Shuffler.Shuffler();
+//  		     Pike.Backend back = Pike.Backend();
+//  		     res->set_backend( back );
+//  		     thread_create( backend_thread_func, back );
+//  		     return res;
+//  		   } );
   for(; number_of_threads < query("numthreads"); number_of_threads++)
     new_threads += ({ do_thread_create( "Handle thread [" +
 					number_of_threads + "]",
