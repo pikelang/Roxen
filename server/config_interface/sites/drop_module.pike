@@ -44,7 +44,14 @@ mapping|string parse( RequestID id )
   string res ="";
   array mods = map( indices( c->otomod )-({0}),
                     lambda(mixed q){ return c->otomod[q]; });
-  foreach( sort(mods), string q )
+
+  array pos = map( mods,
+		   lambda(string q) {
+		     return roxen.find_module( (q/"#")[0] )->get_name()+q;
+		   } );
+
+  sort(pos, mods);
+  foreach( mods, string q )
   {
     RoxenModule m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
