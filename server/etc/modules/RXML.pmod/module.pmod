@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.247 2001/09/19 18:06:07 nilsson Exp $
+// $Id: module.pmod,v 1.248 2001/09/27 20:35:33 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -418,9 +418,9 @@ class Tag
 	if (!ustate) ustate = _ctx->unwind_state = ([]);		\
 	DO_IF_DEBUG (							\
 	  if (err != _frame)						\
-	  fatal_error ("Unexpected unwind object catched.\n");		\
+	    fatal_error ("Unexpected unwind object catched.\n");	\
 	  if (ustate[_parser])						\
-	  fatal_error ("Clobbering unwind state for parser.\n");	\
+	    fatal_error ("Clobbering unwind state for parser.\n");	\
 	);								\
 	ustate[_parser] = ({_frame});					\
 	throw (_parser);						\
@@ -3345,7 +3345,8 @@ class Frame
 				  PCode p_code)
   // Evaluates raw_args simultaneously as generating the
   // EVAL_ARGS_FUNC function. The result of the evaluations is stored
-  // in args. Might be destructive on raw_args.
+  // in args. Might be destructive on raw_args. No evaluation of
+  // raw_args is done if tag isn't set.
   {
     mixed err = catch {
       if (ctx->frame_depth >= Context.max_frame_depth)
@@ -3367,7 +3368,7 @@ class Frame
 	}
 	else
 #endif
-	  if (sizeof (raw_args)) {
+	  if (sizeof (raw_args) || tag && sizeof (tag->req_arg_types)) {
 	    // Note: Approximate code duplication in Tag.eval_args and
 	    // Tag._eval_splice_args.
 
@@ -3376,18 +3377,23 @@ class Frame
 	    else splice_arg = 0;
 	    mapping(string:Type) splice_req_types;
 
-	    mapping(string:Type) atypes = raw_args & tag->req_arg_types;
-	    if (sizeof (atypes) < sizeof (tag->req_arg_types))
-	      if (splice_arg)
-		splice_req_types = tag->req_arg_types - atypes;
-	      else {
-		array(string) missing = sort (indices (tag->req_arg_types - atypes));
-		parse_error ("Required " +
-			     (sizeof (missing) > 1 ?
-			      "arguments " + String.implode_nicely (missing) + " are" :
-			      "argument " + missing[0] + " is") + " missing.\n");
-	      }
-	    atypes += raw_args & tag->opt_arg_types;
+	    mapping(string:Type) atypes;
+	    if (tag) {
+	      atypes = raw_args & tag->req_arg_types;
+	      if (sizeof (atypes) < sizeof (tag->req_arg_types))
+		if (splice_arg)
+		  splice_req_types = tag->req_arg_types - atypes;
+		else {
+		  array(string) missing = sort (indices (tag->req_arg_types - atypes));
+		  parse_error ("Required " +
+			       (sizeof (missing) > 1 ?
+				"arguments " + String.implode_nicely (missing) + " are" :
+				"argument " + missing[0] + " is") + " missing.\n");
+		}
+	      atypes += raw_args & tag->opt_arg_types;
+	    }
+	    else
+	      atypes = ([]);
 
 	    String.Buffer fn_text;
 	    function(string...:void) fn_text_add;
@@ -3420,14 +3426,23 @@ class Frame
 	      }
 #endif
 	      if (p_code)
-		fn_text_add (
-		  "return ", comp->bind (tag->_eval_splice_args), "(ctx,",
-		  comp->bind (xml_tag_parser->parse_tag_args), "((",
-		  sub_p_code->compile_text (comp), ")||\"\"),",
-		  comp->bind (splice_req_types), ")+([\n");
+		if (tag)
+		  fn_text_add (
+		    "return ", comp->bind (tag->_eval_splice_args), "(ctx,",
+		    comp->bind (xml_tag_parser->parse_tag_args), "((",
+		    sub_p_code->compile_text (comp), ")||\"\"),",
+		    comp->bind (splice_req_types), ")+([\n");
+		else
+		  fn_text_add (
+		    "return ", comp->bind (xml_tag_parser->parse_tag_args), "((",
+		    sub_p_code->compile_text (comp), ")||\"\")+([\n");
 	      splice_arg_type->give_back (parser, ctx->tag_set);
-	      args = tag->_eval_splice_args (
-		ctx, xml_tag_parser->parse_tag_args (splice_arg || ""), splice_req_types);
+	      if (tag)
+		args = tag->_eval_splice_args (
+		  ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
+		  splice_req_types);
+	      else
+		args = xml_tag_parser->parse_tag_args (splice_arg || "");
 	    }
 	    else {
 	      args = raw_args;
@@ -3438,9 +3453,10 @@ class Frame
 	    if (mixed err = catch {
 #endif
 	      TagSet ctx_tag_set = ctx->tag_set;
+	      Type default_type = tag ? tag->def_arg_type : t_any_text (PNone);
 	      if (p_code)
 		foreach (indices (raw_args), string arg) {
-		  Type t = atypes[arg] || tag->def_arg_type;
+		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
@@ -3461,7 +3477,7 @@ class Frame
 		}
 	      else
 		foreach (indices (raw_args), string arg) {
-		  Type t = atypes[arg] || tag->def_arg_type;
+		  Type t = atypes[arg] || default_type;
 
 		  // Temporary debug check.
 		  if (!stringp (raw_args[arg]))
@@ -3496,7 +3512,7 @@ class Frame
 
 	    if (p_code) {
 	      fn_text_add ("]);\n");
-	      func = ctx->p_code_comp->add_func (
+	      func = comp->add_func (
 		"mapping(string:mixed)", "object ctx, object evaler", fn_text->get());
 	    }
 	  }
@@ -4440,8 +4456,7 @@ final class parse_frame
 {
   inherit Frame;
   constant name = "(parse_frame)"; // Only for debug output, like rxml backtraces.
-  int flags = FLAG_UNPARSED;
-  mapping(string:mixed) args = ([]);
+  int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
   static void create (Type type, string to_parse)
   {
