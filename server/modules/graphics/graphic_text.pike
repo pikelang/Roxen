@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.1 1996/12/02 13:21:31 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.2 1996/12/04 01:53:55 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -52,14 +52,23 @@ array register_module()
 	      " rotate=ang(deg.)Rotate the finished image\n"
 	      " background=file Use the specifed file as a background\n"
 	      " texture=file    Use the specified file as text texture\n"
-	      "</pre>\n",0,1
+	      "</pre>\n",
+	      0,
+	      1,
 	      });
 }
 
 
 array (string) list_fonts()
 {
-  return get_dir("fonts/32/") - ({".",".."});
+  array fnts;
+  catch(fnts = get_dir("fonts/32/") - ({".",".."}));
+  if(!fnts)
+  {
+    report_error("Failed to find any fonts in 'fonts/32/'. No default font.\n");
+    return ({});
+  }
+  return fnts;
 }
 
 void create()
@@ -101,16 +110,6 @@ object(Font) load_font(string name)
     error("Failed to load the default font\n");
   return fnt;
 }
-
-array (int) make_color(string from)
-{
-  if(!from || !strlen(from)) return ({ 0,0,0 });
-  int c = (int)("0x"+from[1..]);
-  if(strlen(from)>6)
-    return ({ c>>16, (c>>8)&255, c&255 });
-  return ({ (c>>8)<<4, ((c>>4)&15)<<4, (c&15)<<4 });
-}
-
 
 static private mapping (int:mapping(string:mixed)) cached_args = ([ ]);
 
@@ -238,8 +237,8 @@ object (Image) make_text_image(mapping args, object font, string text)
   }
 
   
-  array (int) bgcolor = make_color(args->bg);
-  array (int) fgcolor = make_color(args->fg);
+  array (int) bgcolor = parse_color(args->bg);
+  array (int) fgcolor = parse_color(args->fg);
 
   object background,foreground;
 
@@ -260,7 +259,7 @@ object (Image) make_text_image(mapping args, object font, string text)
     int alpha;
     string bg;
     sscanf(args->textbox, "%d,%s", alpha, bg);
-    background->paste_alpha(Image(txsize,tysize, @make_color(bg)),
+    background->paste_alpha(Image(txsize,tysize, @parse_color(bg)),
 			    255-(alpha*255/100), xoffset,yoffset);
   }
 
@@ -278,7 +277,7 @@ object (Image) make_text_image(mapping args, object font, string text)
   {
     string c;
     if(sscanf(args->rotate, "%*d,%s", c))
-       background->setcolor(@make_color(c));
+       background->setcolor(@parse_color(c));
     else
        background->setcolor(@bgcolor);
     background = background->rotate((float)args->rotate);
@@ -328,12 +327,12 @@ array(int)|string write_text(int _args, string text, int size,
   
   // place in cache.
   int q = (int)args->quant || (args->background?256:16);
-  img = img->map_closest(img->select_colors(q-1)+({make_color(args->bg)}));
+  img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
   if(args->fs)
-    data=({ img->togif_fs(@(args->notrans?({}):make_color(args->bg))),
+    data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
 	    ({img->xsize(),img->ysize()})});
   else
-    data=({ img->togif(@(args->notrans?({}):make_color(args->bg))),
+    data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
 	    ({img->xsize(),img->ysize()})});
   img=0;
 

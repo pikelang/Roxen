@@ -1,5 +1,5 @@
-string cvs_version = "$Id: roxen.pike,v 1.14 1996/12/03 04:13:29 neotron Exp $";
-#define IN_SPIDER
+string cvs_version = "$Id: roxen.pike,v 1.15 1996/12/04 01:53:54 per Exp $";
+#define IN_ROXEN
 #include <module.h>
 #include <variables.h>
 #include <roxen.h>
@@ -1723,6 +1723,7 @@ void create()
   add_efun("roxen", this_object());
   add_efun("spinner", this_object());
   add_efun("load",    load);
+  (object)"color";
 }
 
 
@@ -1875,7 +1876,13 @@ private void update_global_vars(int from)
 			      QUERY(ConfigurationIP), "" }) });
   case 4:
   case 5:
-    // Current level
+
+   if(search(QUERY(ident), "Spinner")!=-1)
+   {
+     QUERY(ident) = real_version;
+     perr("Updating version field to "+real_version+"\n");
+   }
+
    if(search(QUERY(ident), "Challenger")!=-1)
      QUERY(ident) = real_version;
    if(!search(QUERY(ident), "Roxen Challenger/1.0")
@@ -1887,6 +1894,8 @@ private void update_global_vars(int from)
       perr("Not updating version field ("+QUERY(ident)+") since it is "
 	   "either already updated, or modified by the administrator.\n");
     }
+   case 6:
+    // Current level
   }
   perr("----------------------------------------------------\n");
   report_debug(report);
