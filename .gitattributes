@@ -211,6 +211,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/scripting/fcgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
 /server/modules/scripting/newpikescript.pike foreign_ident
+/server/modules/scripting/oldcgi.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/configtablist.pike foreign_ident
