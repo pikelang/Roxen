@@ -2,6 +2,7 @@ inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
 #include <config_interface.h>
+#include <config.h>
 
 string module_global_page( RequestID id, string conf )
 {
@@ -291,8 +292,10 @@ string find_module_doc( string cn, string mn, RequestID id )
 		      String.implode_nicely(creators));
   } else creators = "";
 
+#ifdef THREADS
   mapping accesses = c[m->thread_safe ? "thread_safe" : "locked"];
   int my_accesses = accesses[m];
+#endif
 
   return replace( "<br><b><font size=+2>"
                   + translate(m->register_module()[1]) +
@@ -305,9 +308,11 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    "<h2>Developer information</h2>" +
                     "<b>Identifier:</b> " + mi->sname + "<br>"
 		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
+#ifdef THREADS
 		    " <small>(<a href='../../../../../actions/?action"
 		    "=locks.pike&class=status'>more info</a>)</small><br>"
 		    "<b>Number of accesses:</b> " + my_accesses +
+#endif
                     "<br><br><table border=0 cellspacing=0 cellpadding=0>"
 		    "<tr><td valign=top><b>Type:</b> </td><td "
                     "valign=top>" + describe_type( m, mi->type, id ) +
