@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.5 1997/08/30 22:57:57 peter Exp $
+ * $Id: problems.pike,v 1.6 1997/09/05 16:56:26 grubba Exp $
  */
 
 inherit "wizard";
@@ -72,7 +72,9 @@ string page_1(object id)
 	if(search(roxen->query("ModuleDirs"), n)+1)
 	  in_main_path = 1;
 	if(array a=file_stat(n, 1))
-	  if(a[1]<-1) symlink = readlink(n);
+	  if(a[1]<-1) {
+	    symlink = readlink(n);
+	  }
 
 	if(symlink)
 	  res+=html_error("The module directory <b>"+n+"</b> "
