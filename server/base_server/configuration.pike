@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.145 1998/07/07 19:05:08 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.146 1998/07/09 17:16:13 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -351,14 +351,14 @@ array (object) get_providers(string provides)
 {
   // FIXME: Is there any way to clear this cache?
   // /grubba 1998-05-28
+  // - Yes, it is zapped together with the rest in invalidate_cache().
   if(!provider_module_cache[provides])
   { 
     int i;
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      object d;
-      foreach(indices(pri[i]->provider_modules), d) 
+      foreach(indices(pri[i]->provider_modules), object d) 
 	if(pri[i]->provider_modules[ d ][ provides ]) 
 	  provider_module_cache[provides] += ({ d });
     }
