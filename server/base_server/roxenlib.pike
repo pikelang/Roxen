@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.83 1998/09/18 14:04:32 per Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.84 1998/10/20 06:40:24 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -880,11 +880,10 @@ object get_module (string modname)
   sscanf (mname, "%s#%d", mname, mid);
 
   foreach (roxen->configurations, object conf) {
-    object moddata;
+    mapping moddata;
     if (conf->name == cname && (moddata = conf->modules[mname])) {
       if (mid >= 0) {
-	if (moddata->copies && sizeof (moddata->copies) > mid)
-	  return moddata->copies[mid];
+	if (moddata->copies) return moddata->copies[mid];
       }
       else if (moddata->enabled) return moddata->enabled;
       if (moddata->master) return moddata->master;
@@ -905,9 +904,9 @@ string get_modname (object module)
   foreach (roxen->configurations, object conf) {
     string mname = conf->otomod[module];
     if (mname) {
-      object moddata = conf->modules[mname];
+      mapping moddata = conf->modules[mname];
       if (moddata->copies)
-	for (int i = 0; i < sizeof (moddata->copies); i++) {
+	foreach (indices (moddata->copies), int i) {
 	  if (moddata->copies[i] == module)
 	    return conf->name + "/" + mname + "#" + i;
 	}
