@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.884 2004/10/11 19:05:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.885 2004/10/19 14:27:32 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1079,8 +1079,8 @@ class BackgroundProcess
 //! makes as little impact as possible on the incoming requests (using
 //! @[background_run]).
 //!
-//! The user need to keep a reference to this object, otherwise it
-//! will remove itself and the callback won't be called anymore.
+//! The user must keep a reference to this object, otherwise it will remove
+//! itself and the callback won't be called anymore.
 {
   int|float period;
   int stopping = 0;
@@ -1095,7 +1095,7 @@ class BackgroundProcess
     int self_refs = _refs (this);
 #ifdef DEBUG
     if (self_refs < 4)
-      error ("Minimum ref calculation wrong.\n");
+      error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
 #endif
     if (stopping || self_refs <= 4) return;
     func (@args);
@@ -1252,7 +1252,7 @@ class InternalRequestID
       }
     }
     not_query = Roxen.simplify_path( scan_for_query( f ) );
-    return this_object();
+    return this;
   }
 
   this_program set_url( string url )
