@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.60 2000/07/31 22:34:36 jhs Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.61 2000/11/13 10:26:02 per Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -141,6 +141,7 @@ static array(string) find_user(string f, RequestID id)
   string u;
 
   if(QUERY(virtual_hosting)) {
+    NOCACHE();
     if(id->misc->host) {
       string host = (id->misc->host / ":")[0];
       if(search(host, ".") != -1) {
