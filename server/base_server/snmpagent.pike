@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.10 2001/08/17 01:20:16 hop Exp $
+ * $Id: snmpagent.pike,v 1.11 2001/08/22 14:41:18 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -31,7 +31,7 @@ Developer notes:
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
 	- cold_start trap code isn't completed
-	- tabular walking throught roxenis.app.roxen.* doesn't working
+	- tabular walking throught roxenis.app.webserver.* doesn't working
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
@@ -97,24 +97,26 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_ADD		"1.1"
 // enterprises.roxenis.app.roxen
 #define RISMIB_BASE_WEBSERVER			RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
-// enterprises.roxenis.app.roxen.global
+// enterprises.roxenis.app.webserver.global
 #define RISMIB_BASE_WEBSERVER_GLOBAL		RISMIB_BASE_WEBSERVER+".1"
-// enterprises.roxenis.app.roxen.global.vs
-#define RISMIB_BASE_WEBSERVER_GLOBAL_VS		RISMIB_BASE_WEBSERVER_GLOBAL+".1"
-// enterprises.roxenis.app.roxen.global.restart
-#define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".2"
-// enterprises.roxenis.app.roxen.vs
-#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2"
-// enterprises.roxenis.app.roxen.vs.name
-#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".1"
-// enterprises.roxenis.app.roxen.vs.sentdata
-#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".2"
-// enterprises.roxenis.app.roxen.vs.senthdrs
-#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".3"
-// enterprises.roxenis.app.roxen.vs.recvdata
-#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".4"
-// enterprises.roxenis.app.roxen.vs.requests
-#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".5"
+// enterprises.roxenis.app.webserver.global.restart
+#define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry
+#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2.1"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsIndex
+#define RISMIB_BASE_WEBSERVER_VS_INDEX		RISMIB_BASE_WEBSERVER_VS+".1"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsName
+#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".2"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsDescription
+#define RISMIB_BASE_WEBSERVER_VS_DESC		RISMIB_BASE_WEBSERVER_VS+".3"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsSent
+#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".4"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsReceived
+#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".5"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsHeaders
+#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".6"
+// enterprises.roxenis.app.webserver.vsTable.vsEntry.vsRequests
+#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".7"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -425,6 +427,13 @@ class SNMPagent {
     return (roxen->configurations[vsid]->name);
   }
 
+  //! Returns description of the virtual server
+  string get_virtservdesc(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return 0; // bad index number
+    return "blahblah!"; //(roxen->configurations[vsid]->name);
+  }
+
   //! Returns send data statistics of the virtual server
   int get_virtservsdata(int vsid) {
     if(zero_type(vsdb[vsid]))
@@ -537,7 +546,7 @@ class SubMIBManager {
     function rval;
     string soid;
 
-    SNMPAGENT_MSG(sprintf("GET(%s): %O", name, oid));
+    SNMPAGENT_MSG(sprintf("%s: GET(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
     soid = oid_strip(oid);
     if (functionp(rval = submibtab[soid])) {
       SNMPAGENT_MSG("found MIB object.");
@@ -553,7 +562,7 @@ class SubMIBManager {
 	string manoid = s[..cnt]*".";
         SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
 				subtreeman[manoid]->name, manoid));
-	return subtreeman[manoid]->get(oid);
+	return subtreeman[manoid]->get(oid, pkt);
       }
     }
 
@@ -569,7 +578,7 @@ class SubMIBManager {
     string soid;
     array s;
 
-    SNMPAGENT_MSG(sprintf("GETNEXT(%s): %O", name, oid));
+    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
     if(!(soid = oid_strip(oid)))
       return 0;
     idx = search(idxnums, soid);
@@ -659,7 +668,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.10 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.11 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -811,8 +820,8 @@ class SubMIBRoxenVS {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis.app.roxen.global.vs";
-  constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_VS - (MIBTREE_BASE+".");
+  constant name = "enterprises.roxenis.app.webserver.vsTable";
+  constant tree = RISMIB_BASE_WEBSERVER_VS - (MIBTREE_BASE+".");
 
   void create(object agent) {
 
@@ -857,12 +866,12 @@ class SubMIBRoxenVS {
 */
 
 //! roxenis enterprise subtree manager
-//! Manages the enterprise.roxenis.* submib tree.
+//! Manages the enterprises.roxenis.app.webserver.vsTable submib tree.
 class SubMIBRoxenVSName {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis.app.roxen.vs";
+  constant name = "enterprises.roxenis.app.webserver.vsTable";
   constant tree =  RISMIB_BASE_WEBSERVER_VS  - (MIBTREE_BASE+".");
 
   object agent;
@@ -875,10 +884,10 @@ class SubMIBRoxenVSName {
   array get(string oid, mapping|void pkt) {
 
     string soid, vname;
-    int vdata;
+    int vdata, idx;
     array rval, arroid;
 
-    SNMPAGENT_MSG(sprintf("GET(%s): %O", name, oid));
+    SNMPAGENT_MSG(sprintf("%s: GET(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
     soid = oid_strip(oid);
 
     /* fist, we will try to find  an "ordinary" object in the MIB
@@ -891,34 +900,47 @@ class SubMIBRoxenVSName {
     if(sizeof((soid = soid - (tree + "."))/".") != 2)
       return ({}); // exactly one point, please
 
+    idx = ((int)(soid/".")[1])+1;
     switch ((soid/".")[0]) {
 
-	case "1": // VS_NAME
-    	  vname = agent->get_virtservname(((int)(soid/".")[1])+1);
+	case "1": // VS_INDEX
+    	  vname = agent->get_virtservname(idx);
+    	  if(!stringp(vname))
+	    return ({}); // wrong index
+    	  return (OBJ_INT(idx));
+
+	case "2": // VS_NAME
+    	  vname = agent->get_virtservname(idx);
     	  if(!stringp(vname))
 	    return ({}); // wrong index
     	  return (OBJ_STR(vname));
 
-	case "2": // VS_SDATA
-    	  vdata = agent->get_virtservsdata(((int)(soid/".")[1])+1);
+	case "3": // VS_DESC
+    	  vname = agent->get_virtservdesc(idx);
+    	  if(!stringp(vname))
+	    return ({}); // wrong index
+    	  return (OBJ_STR(vname));
+
+	case "4": // VS_SDATA
+    	  vdata = agent->get_virtservsdata(idx);
     	  if(vdata < 0)
 	    return ({}); // wrong index
     	  return (OBJ_COUNT(vdata));
 
-	case "3": // VS_SHDRS
-    	  vdata = agent->get_virtservshdrs(((int)(soid/".")[1])+1);
+	case "5": // VS_RDATA
+    	  vdata = agent->get_virtservrdata(idx);
     	  if(vdata < 0)
 	    return ({}); // wrong index
     	  return (OBJ_COUNT(vdata));
 
-	case "4": // VS_RDATA
-    	  vdata = agent->get_virtservrdata(((int)(soid/".")[1])+1);
+	case "6": // VS_SHDRS
+    	  vdata = agent->get_virtservshdrs(idx);
     	  if(vdata < 0)
 	    return ({}); // wrong index
     	  return (OBJ_COUNT(vdata));
 
-	case "5": // VS_REQS
-    	  vdata = agent->get_virtservreqs(((int)(soid/".")[1])+1);
+	case "7": // VS_REQS
+    	  vdata = agent->get_virtservreqs(idx);
     	  if(vdata < 0)
 	    return ({}); // wrong index
     	  return (OBJ_COUNT(vdata));
@@ -934,7 +956,7 @@ class SubMIBRoxenVSName {
     int idx, vdata;
     array rval, arr;
 
-    SNMPAGENT_MSG(sprintf("GETNEXT(%s): %O", name, oid));
+    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
     soid = oid_strip(oid);
 
     if(oid == (MIBTREE_BASE+"."+tree)) {
@@ -990,11 +1012,12 @@ class SubMIBRoxenVSName {
 }
 
 
+//! Manages the enterprises.roxenis.app.webserver.global.boot object
 class SubMIBRoxenBoot {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis.app.roxen.global.boot";
+  constant name = "enterprises.roxenis.app.webserver.global.boot";
   constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_BOOT - (MIBTREE_BASE+".");
 
   object agent;
