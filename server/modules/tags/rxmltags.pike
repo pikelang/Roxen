@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.409 2004/05/21 00:12:22 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.410 2004/05/21 00:59:07 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -27,7 +27,7 @@ constant module_doc  = "This module provides the common RXML tags.";
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
 //  start() is called.
-float compat_level = 0.0;
+float compat_level;
 
 
 void start()
@@ -42,7 +42,7 @@ int cache_static_in_2_5()
   if (compat_level == 0.0) {
     compat_level = (float) my_configuration()->query("compat_level");
   }
-  return compat_level >= 2.5 && RXML.FLAG_IS_CACHE_STATIC;
+  return RXML.FLAG_IS_CACHE_STATIC;
 }
 
 private object compile_handler = class {
@@ -91,98 +91,95 @@ string sexpr_eval(string what)
 
 class EntityClientReferrer {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     array referrer=c->id->referer;
-    return referrer && sizeof(referrer)?ENCODE_RXML_TEXT(referrer[0], type):RXML.nil;
+    return referrer && sizeof(referrer)? referrer[0] :RXML.nil;
   }
 }
 
 class EntityClientName {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     array client=c->id->client;
-    return client && sizeof(client)?ENCODE_RXML_TEXT(client[0], type):RXML.nil;
+    return client && sizeof(client)? client[0] :RXML.nil;
   }
 }
 
 class EntityClientIP {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_TEXT(c->id->remoteaddr, type);
+    return c->id->remoteaddr;
   }
 }
 
 class EntityClientAcceptLanguage {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
-    return ENCODE_RXML_TEXT(c->id->misc["accept-language"][0], type);
+    return c->id->misc["accept-language"][0];
   }
 }
 
 class EntityClientAcceptLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_TEXT(c->id->misc["accept-language"]*", ", type);
+    return c->id->misc["accept-language"]*", ";
   }
 }
 
 class EntityClientLanguage {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
-    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_language(), type);
+    return c->id->misc->pref_languages->get_language();
   }
 }
 
 class EntityClientLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_languages()*", ", type);
+    return c->id->misc->pref_languages->get_languages()*", ";
   }
 }
 
 class EntityClientHost {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
-    if(c->id->host) return ENCODE_RXML_TEXT(c->id->host, type);
-    return ENCODE_RXML_TEXT(c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr),
-			    type);
+    if(c->id->host) return c->id->host;
+    return c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr);
   }
 }
 
 class EntityClientAuthenticated {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     // Actually, it is cacheable, but _only_ if there is no authentication.
     c->id->misc->cacheable=0;
     User u = c->id->conf->authenticate(c->id);
     if (!u) return RXML.nil;
-    return ENCODE_RXML_TEXT(u->name(), type );
+    return u->name();
   }
 }
 
 class EntityClientUser {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if (c->id->realauth) {
       // Extract the username.
-      return ENCODE_RXML_TEXT((c->id->realauth/":")[0], type);
+      return (c->id->realauth/":")[0];
     }
     return RXML.nil;
   }
@@ -190,13 +187,12 @@ class EntityClientUser {
 
 class EntityClientPassword {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     array tmp;
     c->id->misc->cacheable=0;
     if( c->id->realauth
        && (sizeof(tmp = c->id->realauth/":") > 1) )
-      return ENCODE_RXML_TEXT(tmp[1..]*":", type);
+      return tmp[1..]*":";
     return RXML.nil;
   }
 }
@@ -234,11 +230,11 @@ class TagRoxenACV {
     // Pass CJK character as entity to prevent changing default output
     // character set of pages to UTF-8.
     constant html_magic =
-      "<input type='hidden' name='magic_roxen_automatic_charset_variable' "
-      "value='" + Roxen.magic_charset_variable_value + "' />";
+      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" "
+      "value=\""+Roxen.magic_charset_variable_value+"\" />";
     constant wml_magic =
       "<postfield name='magic_roxen_automatic_charset_variable' "
-      "value='" + Roxen.magic_charset_variable_value + "' />";
+      "value='"+Roxen.magic_charset_variable_value+"' />";
 
     array do_return(RequestID id) {
       if(result_type->name=="text/wml")
@@ -506,6 +502,15 @@ class TagSet {
       // Set an entity variable to a value.
       if(args->split && content)
 	RXML.user_set_var(args->variable, (string)content/args->split, args->scope);
+      else if (content == RXML.nil) {
+	if (content_type->sequential)
+	  RXML.user_set_var (args->variable, content_type->empty_value, args->scope);
+	else if (content_type == RXML.t_any)
+	  RXML.user_set_var (args->variable, RXML.empty, args->scope);
+	else
+	  parse_error ("The value is missing for non-sequential type %O.\n",
+		 content_type);
+      }
       else
 	RXML.user_set_var(args->variable, content, args->scope);
       return 0;
@@ -527,6 +532,24 @@ class TagCopyScope {
       RXML.Context ctx = RXML_CONTEXT;
       foreach(ctx->list_var(args->from), string var)
 	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
+    }
+  }
+}
+
+class TagCombinePath {
+  inherit RXML.Tag;
+  constant name = "combine-path";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([
+    "base":RXML.t_text(RXML.PEnt),
+    "path":RXML.t_text(RXML.PEnt)
+  ]);
+  
+  class Frame {
+    inherit RXML.Frame;
+    
+    array do_return(RequestID id) {
+      return ({ combine_path_unix(args->base, args->path) });
     }
   }
 }
@@ -904,7 +927,11 @@ class TagInsertVariables {
     if(var=="full")
       return map(sort(context->list_var(args->scope)),
 		 lambda(string s) {
-		   return sprintf("%s=%O", s, context->get_var(s, args->scope) );
+		   mixed value = context->get_var(s, args->scope);
+		   if (zero_type (value))
+		     return sprintf("%s=UNDEFINED", s);
+		   else
+		     return sprintf("%s=%O", s, value);
 		 } ) * "\n";
     return String.implode_nicely(sort(context->list_var(args->scope)));
   }
@@ -975,8 +1002,23 @@ class TagInsertFile {
     string result;
     if(args->nocache) // try_get_file never uses the cache any more.
       CACHE(0);      // Should we really enforce CACHE(0) here?
-    
+
+    // Save current language state, and add the wanted language first
+    // in the list.
+    array old_lang, old_qualities;
+    object pl;
+    if (args->language && (pl = id->misc->pref_languages)) {
+      old_lang = pl->get_languages();
+      old_qualities = pl->get_qualities();
+      pl->set_sorted( ({ args->language }) + old_lang );
+    }
+
     result=id->conf->try_get_file(var, id);
+
+    // Restore previous language state.
+    if (args->langauge && pl) {
+      pl->set_sorted(old_lang, old_qualities);
+    }
 
     if( !result )
       RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
@@ -1046,7 +1088,11 @@ class TagRemoveCookie {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "value" : RXML.t_text(RXML.PEnt),
+    "domain" : RXML.t_text(RXML.PEnt),
+    "path" : RXML.t_text(RXML.PEnt),
+  ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -1213,6 +1259,37 @@ class TagCharset
       result_type = result_type (RXML.PXml);
       result="";
       return ({content});
+    }
+  }
+}
+
+class TagRecode
+{
+  inherit RXML.Tag;
+  constant name="recode";
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from" : RXML.t_text(RXML.PEnt),
+    "to"   : RXML.t_text(RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      if( !content ) content = "";
+
+      if( args->from && catch {
+	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+		       args->from );
+      if( args->to && catch {
+	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
+		       args->to );
+      return ({ content });
     }
   }
 }
@@ -1869,7 +1946,7 @@ class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smal
   static string text="",part="";
   static int last=UNDEF;
 
-  string _sprintf(int t) {
+  string _sprintf() {
     return "Smallcapsstr("+bigtag+","+smalltag+")";
   }
 
@@ -2036,16 +2113,18 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
 }
 array split_on_option( string what, Regexp r )
 {
-  array a = r->split( what );
+  string whatwhatwhat = string_to_utf8(what);
+  array a = r->split( whatwhatwhat );
   if( !a )
-     return ({ what });
-  return split_on_option( a[0], r ) + a[1..];
+    return ({ what });
+  return split_on_option( utf8_to_string(a[0]), r ) + map(a[1..],utf8_to_string);
 }
-private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
+private int|array internal_tag_select(string t, mapping m, string c, string name
+, multiset(string) value)
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
-  // Split indata into an array with the layout
+  // Split input into an array with the layout
   // ({ "option", option_args, stuff_before_next_option })*n
   // e.g. "fox<OPtioN foo='bar'>gazink</option>" will yield
   // tmp=({ "OPtioN", " foo='bar'", "gazink</option>" }) and
@@ -2063,11 +2142,11 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
       nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
     else if(!sscanf(nvalue, "\"%s\"", nvalue) && !sscanf(nvalue, "'%s'", nvalue))
       sscanf(nvalue, "%s%*[ >]", nvalue);
-    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(tmp[1]);
+    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(string_to_utf8(tmp[1]));
     ret+="<"+tmp[0]+tmp[1];
     if(value[nvalue] && !selected) ret+=" selected=\"selected\"";
     ret+=">"+tmp[2];
-    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(tmp[2])) ret+="</"+tmp[0]+">";
+    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(string_to_utf8(tmp[2]))) ret+="</"+tmp[0]+">";
     tmp=tmp[3..];
   }
   return ({ RXML.t_xml->format_tag(t, m, ret) });
@@ -2540,6 +2619,11 @@ class UserTagContents
     }
   }
 
+  static function(:mapping) get_arg_function (mapping args)
+  {
+    return lambda () {return args;};
+  }
+
   class ExpansionFrame
   {
     inherit RXML.Frame;
@@ -2566,9 +2650,7 @@ class UserTagContents
 	    // flag is to set args to a function returning the
 	    // argument mapping. It'd be prettier with a flag for
 	    // this.
-	    args = (mixed) lambda (mapping args) {
-			     return lambda() {return args;};
-			   } (args);
+	    args = (mixed) get_arg_function (args);
 	  }
 	  else {
 	    content = upframe->content_text;
@@ -2779,6 +2861,11 @@ class UserTagContents
 	// suppress this one.
 	return "";
     }
+
+    string _sprintf (int flag)
+    {
+      return flag == 'O' && sprintf ("ExpansionFrame(contents in %O)", upframe);
+    }
   }
 }
 
@@ -2900,7 +2987,15 @@ class UserTag {
 
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
+
+    string _sprintf ()
+    {
+      if (catch {return "UserTag.Frame(" + name + ")";})
+	return "UserTag.Frame(?)";
+    }
   }
+
+  string _sprintf() {return "UserTag(" + name + ")";}
 }
 
 // A helper Scope class used when preparsing in TagDefine: Every
@@ -3166,7 +3261,7 @@ class Tracer (Configuration conf)
   string resolv="<ol>";
   int level;
 
-  string _sprintf(int t)
+  string _sprintf()
   {
     return "Tracer()";
   }
@@ -3382,7 +3477,7 @@ class TagElements
 	parse_error ("Variable %O doesn't exist.\n", args->variable);
       if (objectp (var) && var->_sizeof)
 	result = var->_sizeof();
-      else if (arrayp (var) || mappingp (var))
+      else if (arrayp (var) || mappingp (var) || multisetp (var))
 	result = sizeof (var);
       else
 	result = 1;
@@ -3495,7 +3590,9 @@ class TagIf {
   constant name = "if";
   int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
-  program Frame = FrameIf;
+  class Frame {
+    inherit FrameIf;
+  }
 }
 
 class TagElse {
@@ -4353,20 +4450,9 @@ class IfIs
     if(sizeof(arr)<2) return !!var;
 
     if(!var)
-      if (compat_level == 2.2)
-	// This makes unset variables be compared as if they had the
-	// empty string as value. I can't understand the logic behind
-	// it, but it makes the test <if variable="form.foo is "> be
-	// true if form.foo is unset, a state very different from
-	// having the empty string as a value. To be on the safe side
-	// we're still bug compatible in 2.2 compatibility mode (but
-	// both earlier and later releases does the correct thing
-	// here). /mast
-	var = "";
-      else
-	// If var is zero then it had no value. Thus it's always
-	// different from any value it might be compared with.
-	return arr[1] == "!=";
+      // If var is zero then it had no value. Thus it's always
+      // different from any value it might be compared with.
+      return arr[1] == "!=";
 
     string is;
 
@@ -4876,18 +4962,7 @@ class TagIfVariable {
   constant cache = 1;
   mixed source(RequestID id, string s, void|int check_set_only) {
     mixed var;
-    if (compat_level == 2.2) {
-      // The check below makes it impossible to tell the value 0 from
-      // an unset variable. It's clearly a bug, but we still keep it
-      // in 2.2 compatibility mode since fixing it would introduce an
-      // incompatibility in (at least) this case:
-      //
-      //    <set variable="var.foo" expr="0"/>
-      //    <if variable="var.foo"> <!-- This is expected to be false. -->
-      if (!(var=RXML.user_get_var(s))) return 0;
-    }
-    else
-      if (zero_type (var=RXML.user_get_var(s))) return 0;
+    if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
     return check_set_only ? 1 : RXML.t_text->encode (var);
   }
@@ -5992,17 +6067,19 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "charset":#"<desc type='both'><p>
- <short>Converts between character sets.</short> The tag can be used both
- to decode texts encoded in strange character encoding schemas, but also
- to decide upon the final encoding of the resulting page. All character
- sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a> are
- supported.
+ <short>Set output character set.</short>
+ The tag can be used to decide upon the final encoding of the resulting page.
+ All character sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a>
+ are supported.
 </p>
 </desc>
 
 <attr name='in' value='Character set'><p>
  Converts the contents of the charset tag from the character set indicated
  by this attribute to the internal text representation.</p>
+
+ <note><p>This attribute is depricated, use &lt;recode 
+ from=\"\"&gt;...&lt;/recode&gt; instead.</p></note>
 </attr>
 
 <attr name='out' value='Character set'><p>
@@ -6193,14 +6270,16 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <ex><date date=''/></ex>
 </attr>
 
-<attr name='type' value='string|ordered|iso|discordian|stardate|number|unix'>
- <p>Defines in which format the date should be displayed in. Discordian
- and stardate only make a difference when not using part. Note that
- type='stardate' has a separate companion attribute, prec, which sets
- the precision.</p>
+<attr name='type' value='discordian|http|iso|number|ordered|stardate|string|unix'>
+ <p>Defines in which format the date should be displayed in. 'http' is
+ the format specified for use in the HTTP protocol (useful for headers
+ etc). Discordian and stardate only make a difference when not using
+ part. Note that type='stardate' has a separate companion attribute,
+ prec, which sets the precision.</p>
 
 <xtable>
 <row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/> </ex></c></row>
+<row><c><p><i>type=http</i></p></c><c><ex><date date='' type='http'/> </ex></c></row>
 <row><c><p><i>type=iso</i></p></c><c><ex><date date='' type='iso'/></ex></c></row>
 <row><c><p><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
 <row><c><p><i>type=ordered</i></p></c><c><ex><date date='' type='ordered'/></ex></c></row>
@@ -6516,8 +6595,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 "for":#"<desc type='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
 
- <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- if the compatibility level is set to 2.5 or higher.</p></note>
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag).</p></note>
 </p></desc>
 
 <attr name='from' value='number'>
