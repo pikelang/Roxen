@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.391 2002/08/13 15:44:53 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.392 2002/08/13 16:17:38 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1634,6 +1634,7 @@ class TagCrypt {
 class TagFor {
   inherit RXML.Tag;
   constant name = "for";
+  int flags = cache_static_in_2_5();
 
   class Frame {
     inherit RXML.Frame;
@@ -6459,6 +6460,9 @@ using the pre tag.
 
 "for":#"<desc type='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </p></desc>
 
 <attr name='from' value='number'>
