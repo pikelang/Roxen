@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.64 2001/07/20 06:40:32 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.65 2001/08/09 23:02:53 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -136,6 +136,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      break;
   }
 
+  RXML.Context context;
   string rxml;
 #ifdef MAY_OVERRIDE_RXML_PARSING
   if(id->prestate->norxml)
@@ -155,19 +156,25 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 	  TRACE_LEAVE ("RAM cache entry was stale");
 	}
 	else {
-	  rxml = Roxen.eval_p_code (cache_ent[1], id);
+	  context = cache_ent[1]->new_context (id);
+	  rxml = cache_ent[1]->eval (context);
 	  break eval_rxml;
 	}
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
 			    id->not_query), this_object());
-      [rxml, RXML.PCode p_code] = Roxen.compile_rxml (data, id);
+      RXML.Parser parser = Roxen.get_rxml_parser (id, 0, 1);
+      context = parser->context;
+      parser->write_end (data);
+      rxml = parser->eval();
+      RXML.PCode p_code = parser->p_code;
       cache_set (ram_cache_name, id->not_query, ({stat[ST_MTIME], p_code}));
     }
     else {
       TRACE_ENTER (sprintf ("Evaluating RXML page %O",
 			    id->not_query), this_object());
       RXML.Parser parser = Roxen.get_rxml_parser (id);
+      context = parser->context;
       parser->write_end (data);
       rxml = parser->eval();
     }
@@ -179,10 +186,10 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 				      || id->no_query
 				      || "index.html"),
 			     0, e) || "text/html",
-	   "stat":id->misc->defines[" _stat"],
-	   "error":id->misc->defines[" _error"],
-	   "rettext":id->misc->defines[" _rettext"],
-	   "extra_heads":id->misc->defines[" _extra_heads"],
+	   "stat":context->misc[" _stat"],
+	   "error":context->misc[" _error"],
+	   "rettext":context->misc[" _rettext"],
+	   "extra_heads":context->misc[" _extra_heads"],
 	   ]);
 }
 
