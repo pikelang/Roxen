@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.77 1998/07/17 17:50:54 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.78 1998/09/11 22:16:24 per Exp $";
 
 #define perror roxen_perror
 
@@ -39,6 +39,43 @@ int getppid()
 }
 #endif
 
+#if efun(syslog)
+#define  LOG_CONS   (1<<0)
+#define  LOG_NDELAY (1<<1)
+#define  LOG_PERROR (1<<2)
+#define  LOG_PID    (1<<3)
+
+#define  LOG_AUTH    (1<<0)
+#define  LOG_AUTHPRIV (1<<1)
+#define  LOG_CRON    (1<<2)
+#define  LOG_DAEMON  (1<<3)
+#define  LOG_KERN    (1<<4)
+#define  LOG_LOCAL  (1<<5)
+#define  LOG_LOCAL1  (1<<6)
+#define  LOG_LOCAL2  (1<<7)
+#define  LOG_LOCAL3  (1<<8)
+#define  LOG_LOCAL4  (1<<9)
+#define  LOG_LOCAL5  (1<<10)
+#define  LOG_LOCAL6  (1<<11)
+#define  LOG_LOCAL7  (1<<12)
+#define  LOG_LPR     (1<<13)
+#define  LOG_MAIL    (1<<14)
+#define  LOG_NEWS    (1<<15)
+#define  LOG_SYSLOG  (1<<16)
+#define  LOG_USER    (1<<17)
+#define  LOG_UUCP    (1<<18)
+
+#define  LOG_EMERG   (1<<0)
+#define  LOG_ALERT   (1<<1)
+#define  LOG_CRIT    (1<<2)
+#define  LOG_ERR     (1<<3)
+#define  LOG_WARNING (1<<4)
+#define  LOG_NOTICE  (1<<5)
+#define  LOG_INFO    (1<<6)
+#define  LOG_DEBUG   (1<<7)
+int use_syslog, loggingfield;
+#endif
+
 void roxen_perror(string format,mixed ... args)
 {
   int t = time();
@@ -58,6 +95,12 @@ void roxen_perror(string format,mixed ... args)
   spider;
   if(sizeof(args)) format=sprintf(format,@args);
   if (format=="") return;
+
+#if efun(syslog)
+  if(use_syslog && (loggingfield&LOG_DEBUG))
+    foreach(format/"\n"-({""}), string message)
+      syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
+#endif
   stderr->write(format);
 }
 
@@ -120,42 +163,6 @@ mapping make_mapping(string *f)
 object roxen;
 function nwrite;
 
-#if efun(syslog)
-#define  LOG_CONS   (1<<0)
-#define  LOG_NDELAY (1<<1)
-#define  LOG_PERROR (1<<2)
-#define  LOG_PID    (1<<3)
-
-#define  LOG_AUTH    (1<<0)
-#define  LOG_AUTHPRIV (1<<1)
-#define  LOG_CRON    (1<<2)
-#define  LOG_DAEMON  (1<<3)
-#define  LOG_KERN    (1<<4)
-#define  LOG_LOCAL  (1<<5)
-#define  LOG_LOCAL1  (1<<6)
-#define  LOG_LOCAL2  (1<<7)
-#define  LOG_LOCAL3  (1<<8)
-#define  LOG_LOCAL4  (1<<9)
-#define  LOG_LOCAL5  (1<<10)
-#define  LOG_LOCAL6  (1<<11)
-#define  LOG_LOCAL7  (1<<12)
-#define  LOG_LPR     (1<<13)
-#define  LOG_MAIL    (1<<14)
-#define  LOG_NEWS    (1<<15)
-#define  LOG_SYSLOG  (1<<16)
-#define  LOG_USER    (1<<17)
-#define  LOG_UUCP    (1<<18)
-
-#define  LOG_EMERG   (1<<0)
-#define  LOG_ALERT   (1<<1)
-#define  LOG_CRIT    (1<<2)
-#define  LOG_ERR     (1<<3)
-#define  LOG_WARNING (1<<4)
-#define  LOG_NOTICE  (1<<5)
-#define  LOG_INFO    (1<<6)
-#define  LOG_DEBUG   (1<<7)
-int use_syslog, loggingfield;
-#endif
 
 #define VAR_VALUE 0
 
@@ -216,7 +223,8 @@ void report_debug(string message)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_DEBUG))
-    syslog(LOG_DEBUG, replace(message, "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
   else
 #endif
     nwrite(message,0,2);
@@ -226,7 +234,8 @@ void report_warning(string message)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    syslog(LOG_WARNING, replace(message, "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
   else
 #endif
     nwrite(message,0,2);
@@ -236,7 +245,8 @@ void report_notice(string message)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
-    syslog(LOG_NOTICE, replace(message, "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(LOG_NOTICE, replace(message+"\n", "%", "%%"));
   else
 #endif
     nwrite(message,0,1);
@@ -246,7 +256,8 @@ void report_error(string message)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    syslog(LOG_ERR, replace(message, "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
   else
 #endif
     nwrite(message,0,3);
@@ -256,7 +267,8 @@ void report_fatal(string message)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
-    syslog(LOG_EMERG, replace(message, "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(LOG_EMERG, replace(message+"\n", "%", "%%"));
   else
 #endif
     nwrite(message,0,3);
@@ -296,8 +308,8 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   }
 
 #ifdef DEBUG
-  report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
- 		       ({ "/bin/sh", "-c", s }), opts));
+//   report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
+//  		       ({ "/bin/sh", "-c", s }), opts));
 #endif /* DEBUG */
   object proc;
 #ifndef __NT__
@@ -361,10 +373,10 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     };
     catch {
       if (err) {
-	werror(sprintf("Error in popen():\n"
+	report_error(sprintf("Error in popen():\n"
 		       "%s\n", describe_backtrace(err)));
       } else {
-	werror(sprintf("popen(%O) failed\n", s));
+	report_error(sprintf("popen(%O) failed\n", s));
       }
     };
     exit(69);
@@ -591,7 +603,7 @@ object really_load_roxen()
   int start_time = gethrtime();
   werror("Loading roxen ... ");
   object res = ((program)"roxen")();
-  werror("done in "+sprintf("%4.3fs\n", (gethrtime()-start_time)/1000000.0));
+  roxen_perror("Loaded roxen in "+sprintf("%4.3fs\n", (gethrtime()-start_time)/1000000.0));
   return res;
 }
 
