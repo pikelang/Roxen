@@ -33,12 +33,9 @@
           </table>
         </td>
       </tr>
-    <if variable="form.port is &port.port;">
-       <emit source='port-variables' port="&port.port;">
-       <tr><td width="30%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
-        <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</td></tr>
-       </emit><br />
-     </if>
+       <if variable="form.port is &port.port;"><tr><td colspan=2>
+         <cfg-variables source='port-variables' extra='port="&port.port;"'/>
+       </td></tr></if>
      </emit>
    </table>
  </st-page>

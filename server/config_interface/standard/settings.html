@@ -5,14 +5,7 @@
 
 <content>
 <cv-startpage>
-  <cf-save/><br clear="all" />
-  <table>
-    <emit source="config-settings">
-      <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
-      <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
-    </emit>
-  </table>
-  <cf-save/>
+  <cfg-variables source='config-settings'/>
 </cv-startpage>
 
 </content>

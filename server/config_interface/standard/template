@@ -1,4 +1,59 @@
 <!-- -*- html -*- -->
+<define tag='cfg-variables'>
+  <cf-save/>
+  <br clear="all" />
+  <set variable='var.oldchanged' value='notreally'/>
+  <table cellspacing=0 cellpadding=4>
+    <emit source="&_.source;" ::='&_.extra:none;'>
+      <cond>
+        <case variable='usr.changemark is not'>
+          <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+          <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
+        </case>
+    
+        <case variable='usr.changemark is color'>
+          <if variable='_.changed is 1'>
+           <set variable='var.extraargs' value='bgcolor="&usr.fade2;"'/>
+          </if>
+          <else>
+           <set variable='var.extraargs' value=''/>
+          </else>
+          <tr>
+            <td width="20%"><b>&_.name;</b></td>
+            <td ::='&var.extraargs;'>&_.form:none;</td>
+          </tr>
+          <tr>
+            <td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td>
+          </tr>
+        </case>
+    
+        <case variable='usr.changemark is header'>
+          <if not variable='_.changed is &var.oldchanged;'>
+            <set variable='var.oldchanged' value='&_.changed;'/>
+            <if variable='_.changed is 1'>
+            <tr bgcolor='&usr.content-titlebg;'>
+              <td colspan=2 width="100%">
+                <font size='+1' color='&usr.content-titlefg;'>Changed</font>
+             </td>
+            </tr>
+          </if>
+          <else>
+            <tr bgcolor='&usr.content-titlebg;'>
+              <td colspan=2 width="100%">
+                <font size='+1' color='&usr.content-titlefg;'>Unchanged</font>
+              </td>
+            </tr>
+          </else>
+         </if>
+         <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+         <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
+        </case>
+      </cond>
+    </emit>
+  </table>
+  <cf-save/>
+
+</define>
 <define container="st-tabs">
   <colorscope ::="&usr.subtabs-tableargs:none;">
     <define preparse="1" variable="var.__tabs"><contents/></define>

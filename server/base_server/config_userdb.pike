@@ -210,6 +210,17 @@ class ConfigurationSettings
 	      "changed/as defined"   : LOCALE(0,"as defined, changed first"),
 	    ]) );
 
+    defvar( "changemark", "not",
+	    LOCALE(0, "Changed variables are highlighted"),
+	    TYPE_STRING_LIST,
+	    LOCALE(0, "How to highlight variables that does not have "
+		   "their default value" ),
+	    ([
+	      "not"   :LOCALE(0, "Not at all"),
+	      "color" :LOCALE(0, "Different background color"),
+	      "header":LOCALE(0, "Add a header")
+	    ]) );
+
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
             TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
 

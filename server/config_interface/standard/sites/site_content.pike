@@ -381,20 +381,13 @@ string module_page( RequestID id, string conf, string module )
 
   return #"
  <input type=\"hidden\" name=\"section\" value=\"&form.section;\" />
- <cf-save what='Module'/><br clear=\"all\" />
 <nooutput>
   This is necessary to update all the variables before showing them.
   <emit source='module-variables' configuration=\""+conf+#"\" 
         section=\"&form.section;\" module=\""+module+#"\"/>
 </nooutput>
-<table>
-  <emit source='module-variables' configuration=\""+conf+#"\" 
-        section=\"&form.section;\" module=\""+module+#"\">
-    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>
-    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</td></tr>
-   </emit>
-  </table>
- <cf-save what='Module'/>";
+   <cfg-variables source='module-variables' extra='configuration=\""+conf+#"\" 
+        section=\"&form.section;\" module=\""+module+#"\"'/>";
 }
 
 string port_for( string url )
@@ -439,19 +432,13 @@ string parse( RequestID id )
      default: /* Not status info */
        do  id->misc->do_not_goto = 1; while( id = id->misc->orig );
        return
-	 "<emit source='config-variables' configuration=\""+path[ 0 ]+"\""
-         " section=\"&form.section;\"></emit>\n"
+	 "<emit source='config-variables' "
+	 "configuration=\""+path[ 0 ]+"\" section=\"&form.section;\">"
+	 "</emit>\n"
          ""
 	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
-	 "<table>\n"
-	 "  <emit source='config-variables' configuration=\""+path[ 0 ]+"\"\n"
-         "        section=\"&form.section;\">\n"
-         ""
-	 "    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>\n"
-	 "    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</p></td></tr>\n"
-	 "   </emit>\n"
-	 "  </table>\n"
-	 "   <cf-save what='Site'/>";
+	 "<cfg-variables source='config-variables' "
+	 "extra='configuration=\""+path[0]+"\" section=\"&form.section;\"'/>";
 
      case 0:
      case "":

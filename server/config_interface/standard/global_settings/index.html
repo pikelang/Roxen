@@ -18,15 +18,8 @@ Then the page...
  </st-tabs>
  <st-page>
   <input type='hidden' name='section' value="&form.section;">
-  <cf-save/><br clear="all" />
-  <table>
-   <emit source='global-variables' noset='' section="&form.section;">
-    <tr><td width='30%' valign='top'><b>&_.name;</b></td>
-        <td valign='top'><eval>&_.form:none;</eval></td></tr>
-    <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</p></td></tr>
-   </emit>
-  </table>
-  <cf-save/>
+  <cfg-variables source='global-variables' 
+                 extra="noset='' section='&form.section;'"/>
  </st-page>
 </subtablist>
 </cv-split>
