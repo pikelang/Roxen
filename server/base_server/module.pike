@@ -1,6 +1,9 @@
-/* $Id: module.pike,v 1.30 1998/03/23 08:20:55 neotron Exp $ */
+/* $Id: module.pike,v 1.31 1998/05/23 13:56:17 grubba Exp $ */
 
 #include <module.h>
+
+#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
+#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
 mapping (string:mixed *) variables=([]);
 
@@ -479,15 +482,23 @@ mixed stat_file(string f, object id){}
 mixed find_dir(string f, object id){}
 mapping(string:array(mixed)) find_dir_stat(string f, object id)
 {
+  TRACE_ENTER("find_dir_stat(): \""+f+"\"", 0);
+
   array(string) files = find_dir(f, id);
   mapping(string:array(mixed)) res = ([]);
 
   foreach(files || ({}), string fname) {
+    TRACE_ENTER("stat()'ing "+ f + "/" + fname, 0);
     array(mixed) st = stat_file(f + "/" + fname, id);
     if (st) {
       res[fname] = st;
+      TRACE_LEAVE("OK");
+    } else {
+      TRACE_LEAVE("No stat info");
     }
   }
+
+  TRACE_LEAVE("");
   return(res);
 }
 mixed real_file(string f, object id){}
