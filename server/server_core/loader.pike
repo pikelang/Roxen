@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.377 2004/04/06 21:07:05 mani Exp $
+// $Id: loader.pike,v 1.378 2004/05/02 14:06:38 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -27,7 +27,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.377 2004/04/06 21:07:05 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.378 2004/05/02 14:06:38 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2250,9 +2250,9 @@ void do_main( int argc, array(string) argv )
   {
     DC( "SSL.context" );
     DC( "Tools.PEM.pem_msg" );
-    DC( "Crypto.randomness.reasonably_random" );
+    DC( "Crypto.Random.random_string" );
     DC( "Standards.PKCS.RSA.parse_private_key");
-    DC( "Crypto.rsa" );
+    DC( "Crypto.RSA" );
     DC( "Tools.X509.decode_certificate" );
     DC( "Standards.PKCS.DSA.parse_private_key" );
     DC( "SSL.Cipher.DHParameters" );
