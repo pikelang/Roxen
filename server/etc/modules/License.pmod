@@ -2,16 +2,87 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.7 2002/03/06 16:24:02 wellhard Exp $
+// $Id: License.pmod,v 1.8 2002/03/07 16:45:27 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
 #endif
 
+array(Configuration) get_configurations_for_license(Key key)
+{
+  array(Configuration) confs = ({ });
+  foreach(roxen.list_all_configurations(), string conf_name)
+    if(Configuration conf = roxen.get_configuration(conf_name)) {
+      Key _key = conf->getvar("license")->get_key();
+      if(_key && _key->number() == key->number())
+	confs += ({ conf });
+    }
+  return confs;
+}
+
+static mapping(string:Key) license_keys = ([]);
+static mapping(string:int) license_keys_time = ([]);
+Key get_license(string license_dir, string filename)
+{
+  if(!filename || !Stdio.is_file(Stdio.append_path(license_dir, filename)))
+    return 0;
+  //werror("License.get_license(%O) ", filename);
+  string path = Stdio.append_path(license_dir, filename);
+  if(!license_keys[path] || file_stat(path)->mtime > license_keys_time[path]) {
+    Key key = Key(license_dir, filename);
+    //werror("new %O.\n", key);
+    license_keys[path] = key;
+    license_keys_time[path] = time();
+  } else { 
+    //werror("cached %O.\n", license_keys[path]);
+  }
+  return license_keys[path];
+}
+
+int key_count;
+
 class Key
 {
   static mapping content;
   static string license_dir, _filename;
+  static mapping warnings;
+  static int key_id;
+  
+  class WarningEntry
+  {
+    int t;
+    string msg, type;
+
+    mapping to_mapping()
+    {
+      return ([ "time":t, "msg":msg, "type":type ]);
+    }
+
+    string _sprintf()
+    {
+      return sprintf("WarningEntry(%O, %O, %O)", type, time, msg);
+    }
+    
+    void create(string _msg, string _type)
+    {
+      msg = _msg;
+      type = _type;
+      t = time();
+    }
+  }
+
+  void report_warning(string type, string msg)
+  {
+    //werror("License.Key->report_warning(%O, %O) for key %O\n",
+    //	   type, msg, this_object());
+    warnings[type] = WarningEntry(msg, type);
+  }
+
+  array(mapping(string:string)) get_warnings()
+  {
+    array(mapping(string:string)) res = values(warnings)->to_mapping();
+    return sort(res, res->time);
+  }
   
   static array(Gmp.mpz) read_public_key()
   {
@@ -157,21 +228,46 @@ class Key
   }
 #endif
 
-  string|void verify(object /*Configuration*/|void configuration)
+  string|void verify(object /*Configuration*/|void configuration,
+		     int|void time, string|void _hostname)
   {
-#if 0  // Disable config test.
-    // verify configuration integrity.
-    if(configuration && !enterprise()) {
-      Configuration conf = used_in(configuration);
-      if(conf)
-	return sprintf("Error: License %O is already used in "
-		       "configuration %O.", _filename, conf->name);;
+    if(configuration)
+    {
+      // verify configuration integrity.
+      array(object /*Configuration*/) confs =
+	get_configurations_for_license(this_object());
+      if(sizeof(confs - ({ configuration })))
+	report_warning("Configuration",
+		       sprintf("License used in multiple configurations: "
+			       "%s.", String.
+			       implode_nicely((confs | ({ configuration }))->name)));
     }
-#endif
+    
+    if(time)
+    {
+      // verify expiration integrity.
+      if(expires() != "*" && Calendar.ISO->dwim_day(expires()) < time)
+	report_warning("Expiration", sprintf("License expired"));
+    }
+
+    if(_hostname && configuration)
+    {
+      // verify hostname integrity.
+      if(!glob(hostname(), _hostname))
+	report_warning("Hostname", sprintf("Hostname mismatch: %O does not match %O",
+					   hostname(), _hostname));
+    }
+  }
+  
+  string _sprintf()
+  {
+    return sprintf("License.Key(#%O, %O, %O)", key_id, _filename, sizeof(warnings));
   }
 
   void create(string _license_dir, string __filename, mapping|void _content)
   {
+    key_id = key_count++;
+    warnings = ([]);
     license_dir = _license_dir;
     _filename = __filename;
     if(!_content)
@@ -187,12 +283,11 @@ class LicenseVariable
   inherit Variable.MultipleChoice;
   Configuration configuration;
   string license_dir;
+  static Key license_key;
   
   Key get_key()
   {
-    return query() &&
-      Stdio.is_file(Stdio.append_path(license_dir, query())) &&
-      Key(license_dir, query());
+    return license_key;
   }
   
   array get_choice_list()
@@ -223,18 +318,27 @@ class LicenseVariable
     if(new_value && new_value != query())
     {
       Key key;
-      if(mixed err = catch { key = Key(license_dir, new_value); }) {
+      if(mixed err = catch { key = get_license(license_dir, new_value); }) {
 	werror("License error: %s\n", describe_backtrace(err));
 	return ({ sprintf("Error reading license: %O\n  %s", new_value, err[0]),
 		  query() });
       }
       
-      if(string err = key->verify(configuration))
+      string url = configuration->get_url();
+      string hostname = url && sizeof(url) && Standards.URI(url)->host;
+      if(string err = key->verify(configuration, time(), hostname))
 	return ({ err, query() });
     }
     return ({ 0, new_value });
   }
 
+  int low_set(mixed to)
+  {
+    license_key = get_license(license_dir, to);
+    //werror("Updating key to %O for configuration %O\n", license_key, configuration);
+    return ::low_set(to);
+  }
+  
   static int invisibility_check(RequestID id, Variable.Variable var)
   {
     return !Stdio.is_dir(license_dir);
