@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.48 1999/05/18 19:48:48 grubba Exp $
+# $Id: Makefile,v 1.49 1999/06/07 01:02:28 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -27,7 +27,7 @@ ChangeLog.rxml.gz: .noway
 
 hard : configure
 	@grep Bootstrap Makefile >/dev/null 2>&1 && mv Makefile Makefile.boot
-	./configure --prefix=$(prefix)
+	./configure --prefix=$(prefix) $(CONFIGUREARGS)
 	@echo
 	@echo 'Please run make again.'
 	@exit 1
@@ -75,7 +75,7 @@ configure_all : configure
 	test -f stamp-h && (test "`cat stamp-h`" = $$pikeversion) || ( \
 	  echo "Configuring Roxen 1.4 in $$builddir ..."; \
 	  echo; \
-	  CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion \
+	  CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion $(CONFIGUREARGS) \
 	)
 
 install :
