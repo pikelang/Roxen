@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.96 1998/01/17 02:57:24 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.97 1998/01/26 08:22:08 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -64,6 +64,8 @@ array register_module()
 	      " magic[=message] Modifier to href, more flashy links\n"
 	      "                 Does <b>not</b> work with 'split'\n"
 	      " magicbg=bg      As background, but for the 'magic' image\n"
+	      " magic_X         same as X, where X is any other argument,\n"
+	      "                 but for the 'magic' image.\n"
 	      " fuzz[=color]    Apply the 'glow' effect to the result\n"
  	      " fs              Use floyd-steinberg dithering\n"
 	      " border=int,col. Draw an border (width is the first argument\n"
@@ -128,6 +130,11 @@ array (string) list_fonts()
 
 void create()
 {
+  defvar("cache_dir", ".gtext_cache", "Cache directory for gtext images",
+	 TYPE_DIR,
+	 "The gtext tag saves images when they are calculated in this "
+	 "directory. We currently do not clean this directory.");
+  
   defvar("speedy", 0, "Avoid automatic detection of document colors",
 	 TYPE_FLAG|VAR_MORE,
 	 "If this flag is set, the tags 'body', 'tr', 'td', 'font' and 'th' "
@@ -610,6 +617,7 @@ void start(int|void val, object|void conf)
 {
   if(conf)
   {
+    mkdirhier( query( "cache_dir" )+".foo" );
     mc = conf;
     base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
   }
@@ -629,12 +637,64 @@ int number=0;
 
 mapping find_cached_args(int num);
 
+
+#if !constant(iso88591)
+constant iso88591
+=([ "&nbsp;":   " ",  "&iexcl;":  "¡",  "&cent;":   "¢",  "&pound;":  "£",
+    "&curren;": "¤",  "&yen;":    "¥",  "&brvbar;": "¦",  "&sect;":   "§",
+    "&uml;":    "¨",  "&copy;":   "©",  "&ordf;":   "ª",  "&laquo;":  "«",
+    "&not;":    "¬",  "&shy;":    "­",  "&reg;":    "®",  "&macr;":   "¯",
+    "&deg;":    "°",  "&plusmn;": "±",  "&sup2;":   "²",  "&sup3;":   "³",
+    "&acute;":  "´",  "&micro;":  "µ",  "&para;":   "¶",  "&middot;": "·",
+    "&cedil;":  "¸",  "&sup1;":   "¹",  "&ordm;":   "º",  "&raquo;":  "»",
+    "&frac14;": "¼",  "&frac12;": "½",  "&frac34;": "¾",  "&iquest;": "¿",
+    "&Agrave;": "À",  "&Aacute;": "Á",  "&Acirc;":  "Â",  "&Atilde;": "Ã",
+    "&Auml;":   "Ä",  "&Aring;":  "Å",  "&AElig;":  "Æ",  "&Ccedil;": "Ç",
+    "&Egrave;": "È",  "&Eacute;": "É",  "&Ecirc;":  "Ê",  "&Euml;":   "Ë",
+    "&Igrave;": "Ì",  "&Iacute;": "Í",  "&Icirc;":  "Î",  "&Iuml;":   "Ï",
+    "&ETH;":    "Ð",  "&Ntilde;": "Ñ",  "&Ograve;": "Ò",  "&Oacute;": "Ó",
+    "&Ocirc;":  "Ô",  "&Otilde;": "Õ",  "&Ouml;":   "Ö",  "&times;":  "×",
+    "&Oslash;": "Ø",  "&Ugrave;": "Ù",  "&Uacute;": "Ú",  "&Ucirc;":  "Û",
+    "&Uuml;":   "Ü",  "&Yacute;": "Ý",  "&THORN;":  "Þ",  "&szlig;":  "ß",
+    "&agrave;": "à",  "&aacute;": "á",  "&acirc;":  "â",  "&atilde;": "ã",
+    "&auml;":   "ä",  "&aring;":  "å",  "&aelig;":  "æ",  "&ccedil;": "ç",
+    "&egrave;": "è",  "&eacute;": "é",  "&ecirc;":  "ê",  "&euml;":   "ë",
+    "&igrave;": "ì",  "&iacute;": "í",  "&icirc;":  "î",  "&iuml;":   "ï",
+    "&eth;":    "ð",  "&ntilde;": "ñ",  "&ograve;": "ò",  "&oacute;": "ó",
+    "&ocirc;":  "ô",  "&otilde;": "õ",  "&ouml;":   "ö",  "&divide;": "÷",
+    "&oslash;": "ø",  "&ugrave;": "ù",  "&uacute;": "ú",  "&ucirc;":  "û",
+    "&uuml;":   "ü",  "&yacute;": "ý",  "&thorn;":  "þ",  "&yuml;":   "ÿ",
+]);
+#endif
+
+
+
 constant nbsp = iso88591["&nbsp;"];
 
 constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp",});
 constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
+
+
+array get_cache_file(string a, string b)
+{
+  object fd = open(query("cache_dir")+
+		   sprintf("%x",hash(reverse(a)))+sprintf("%x",hash(b)), "r");
+  if(!fd) return 0;
+  array r = decode_value(fd->read());
+  if(r[0]==a && r[1]==b) return r[2];
+}
+
+void store_cache_file(string a, string b, array data)
+{
+  object fd = open(query("cache_dir")+
+		   sprintf("%x",hash(reverse(a)))+sprintf("%x",hash(b)), "wct");
+  if(!fd) return;
+  fd->write(encode_value(({a,b,data})));
+  destruct(fd);
+}
+
 
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
@@ -690,16 +750,28 @@ array(int)|string write_text(int _args, string text, int size,
     {
       if(data == "rendering")
       {
+// 	werror("rendering of "+_args+" <"+text+"> already in progress\n");
 	sleep(0.1);
 	continue;
       }
-      if(args->nocache) // Remove from cache. Very usable for access counters
+//       werror("rendering of "+_args+" <"+text+">: memory cache hit\n");
+      if(args->nocache) // Remove from cache. Very useful for access counters
 	cache_remove(key, text);
       if(size) return data[1];
       return data[0];
     }
+//     werror("rendering of "+_args+" <"+text+"> started\n");
+    
     //  Nothing found in the cache. Generate a new image.
-    cache_set(key, text, "rendering");
+//     cache_set(key, text, "rendering");
+
+    if(!args->nocache && (err = get_cache_file( key, text )))
+    {
+      cache_set(key, text, err);
+//       werror("found < "+_args+" <"+text+"> in persistant cache\n");
+      if(size) return err[1];
+      return err[0];
+    }
 
 #if efun(get_font)
     if(args->nfont)
@@ -739,6 +811,8 @@ array(int)|string write_text(int _args, string text, int size,
 
     if (!data) {
       roxen_perror("gtext: No font!\n");
+//       werror("no font found! < "+_args+" <"+text+">\n");
+      cache_set(key, text, 0);
       return(0);
     }
 
@@ -746,7 +820,11 @@ array(int)|string write_text(int _args, string text, int size,
     img = make_text_image(args,data,text,id);
 
     // Now we have the image in 'img', or nothing.
-    if(!img) return 0;
+    if(!img) {
+//       werror("error while drawing image? (no image) < "+_args+" <"+text+">\n");
+      cache_set(key, text, 0);
+      return 0;
+    }
   
     int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
 
@@ -811,10 +889,13 @@ array(int)|string write_text(int _args, string text, int size,
     }
 
     
+    if(!args->nocache && store_cache_file( key, text, data ))
+//     werror("done! < "+_args+" <"+text+">\n");
     cache_set(key, text, data);
     if(size) return data[1];
     return data[0];
   };
+//   werror("Got error < "+_args+" <"+text+">\n");
   cache_set(key, text, 0);
   throw(err);
 }
@@ -1087,26 +1168,26 @@ string tag_graphicstext(string t, mapping arg, string contents,
   int i;
   string split;
 
-  if(arg->alternatives)
-  {
-    mapping arg_list = (["list":({})]);
-    parse_html(contents,(["on":internal_tag_on]),
-	       (["text":internal_tag_text, ]), arg_list, id, defines);
+//   if(arg->alternatives)
+//   {
+//     mapping arg_list = (["list":({})]);
+//     parse_html(contents,(["on":internal_tag_on]),
+// 	       (["text":internal_tag_text, ]), arg_list, id, defines);
 
-    string js = "", href="";
-    mapping img_tag_args = ([]);
-    array(int) nums = ({});
-    foreach(arg_list->list, mapping q)
-    {
-      mapping w = copy_value(q);
-      m_delete(w, "text"); m_delete(w, "type"); m_delete(w, "delay");
-      m_delete(w, "href"); m_delete(w, "name"); m_delete(w, "align");
-      nums += ({ find_or_insert( w ) });
-      if(q->align) img_tag_args->align = q->align;
-      if(q->name)  img_tag_args->name = q->name;
-      if(q->href) href = make_tag("a", (["href":q->href, "name":q->name]));
-    }
-  }
+//     string js = "", href="";
+//     mapping img_tag_args = ([]);
+//     array(int) nums = ({});
+//     foreach(arg_list->list, mapping q)
+//     {
+//       mapping w = copy_value(q);
+//       m_delete(w, "text"); m_delete(w, "type"); m_delete(w, "delay");
+//       m_delete(w, "href"); m_delete(w, "name"); m_delete(w, "align");
+//       nums += ({ find_or_insert( w ) });
+//       if(q->align) img_tag_args->align = q->align;
+//       if(q->name)  img_tag_args->name = q->name;
+//       if(q->href) href = make_tag("a", (["href":q->href, "name":q->name]));
+//     }
+//   }
 
  // No images here, let's generate an alternative..
   if(!id->supports->images || id->prestate->noimages)
@@ -1284,6 +1365,12 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(arg->magicbg) arg->background = arg->magicbg;
     if(arg->bevel) arg->pressed=1;
 
+    foreach(glob("magic_*", indices(arg)), string q)
+    {
+      arg[q[6..]]=arg[q];
+      m_delete(arg, q);
+    }
+    
     int num2 = find_or_insert(arg);
     array size = write_text(num2,gt,1,id);
 
