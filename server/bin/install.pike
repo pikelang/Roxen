@@ -1,5 +1,5 @@
 #!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.8 1997/01/07 03:35:06 neotron Exp $";
+string cvs_version = "$Id: install.pike,v 1.9 1997/01/29 18:39:55 kg Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -47,9 +47,9 @@ void mkdirhier(string from)
 void setglobvar(string var, mixed value)
 {
   mapping v;
-  v = retrieve("Variables");
+  v = retrieve("Variables", 0);
   v[var] = value;
-  store("Variables", v, 1);
+  store("Variables", v, 1, 0);
 }
 
 
