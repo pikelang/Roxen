@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.73 1997/09/17 00:44:09 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.74 1997/09/19 16:28:28 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -53,6 +53,8 @@ array register_module()
 	      " href=url        Link the image to the specified URL\n"
 	      "                 The 'link' color of the document will be\n"
 	      "                 used as the default foreground of the text\n"
+	      " alt=message     Sets the 'alt' attribute.\n"
+	      "                 Use alt="" if no alternate message is wanted.\n"
 	      " quant=cols      Use this number of colors\n"
 	      " magic[=message] Modifier to href, more flashy links\n"
 	      "                 Does <b>not</b> work with 'split'\n"
@@ -929,7 +931,8 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->images) return alt;
   if(!id->supports->javascript)
     return (!input)?
-      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src=\""+image_1+"\" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"):
+      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src=\""+image_1+"\" name="+sn+" border=0 "+
+       "alt=\""+alt+"\"></a>\n"):
     ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
   return
@@ -1171,16 +1174,20 @@ string tag_graphicstext(string t, mapping arg, string contents,
       magic_image(url||"", size[0], size[1], "i"+(defines->mi++),
 		  query_location()+num+"/"+quote(gt),
 		  query_location()+num2+"/"+quote(gt),
-		  replace(gt, "\"","'"),(magic=="magic"?0:magic),
+		  (arg->alt?arg->alt:replace(gt, "\"","'")),
+		  (magic=="magic"?0:magic),
 		  id,input?na||"submit":0,ea);
   }
   if(input)
     return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
-	    replace(gt,"\"","'")+"\" src="+query_location()+num+"/"+quote(gt)
+	    (arg->alt?arg->alt:replace(gt,"\"","'"))+
+	    "\" src="+query_location()+num+"/"+quote(gt)
 	    +" align="+(al || defalign)+ea+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
-	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src=\""+
+	  "<img _parsed=1 border=0 alt=\""+
+	  (arg->alt?arg->alt:replace(gt,"\"","'")+"\"")
+	  +"\" src=\""+
 	  query_location()+num+"/"+quote(gt)+"\" "+ea
 	  +" align="+(al || defalign)+
 	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
