@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.1.1.1 1996/11/11 23:31:40 per Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.2 1996/12/22 16:07:59 grubba Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -32,6 +32,36 @@ static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.1.1.1 1996/11/11 23:31:40 per E
 #include "fcgiappmisc.h"
 #include "fastcgi.h"
 #include "fcgi_config.h"
+
+/*
+ * Some things to make this a bit more portable
+ *
+ * Henrik Grubbström 1996-12-22
+ */
+
+#ifndef STDIN_FILENO
+#define STDIN_FILENO 0
+#endif /* STDIN_FILENO */
+
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif /* STDOUT_FILENO */
+
+#ifndef STDERR_FILENO
+#define STDERR_FILENO 2
+#endif /* STDERR_FILENO */
+
+#ifndef O_NONBLOCK
+#ifdef FNDELAY
+#define O_NONBLOCK FNDELAY
+#else
+#ifdef O_NDELAY
+#define O_NONBLOCK O_NDELAY
+#else
+#error Insert your nonblock method here
+#endif /* O_NDELAY */
+#endif /* FNDELAY */
+#endif /* O_NONBLOCK */
 
 
 #ifndef MAXPATHLEN 
