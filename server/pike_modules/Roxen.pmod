@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.188 2004/05/24 17:31:44 mani Exp $
+// $Id: Roxen.pmod,v 1.189 2004/05/27 23:21:07 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3766,7 +3766,8 @@ private inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..1) colormode)
+int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id,
+			      int(0..1) colormode)
 {
   mapping(string:mixed) ctx_misc = RXML_CONTEXT->misc;
   int changed=0;
@@ -3789,21 +3790,15 @@ int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..
   } \
 }while(0)
 
-  //FIXME: These values are not up to date
-
   FIX(text,   "#000000","fgcolor");
   FIX(link,   "#0000ee","link");
   FIX(alink,  "#ff0000","alink");
   FIX(vlink,  "#551a8b","vlink");
+  FIX(bgcolor,"#ffffff","bgcolor");
 
-  if(id->client_var && has_value(id->client_var->fullname||"","windows"))
-  {
-    FIX(bgcolor,"#c0c0c0","bgcolor");
-  } else {
-    FIX(bgcolor,"#ffffff","bgcolor");
-  }
+#undef FIX
 
-  ctx_misc->wiretap_stack = ({});
+  ctx_misc->wiretap_stack = ADT.Stack();
 
 #ifdef WIRETAP_TRACE
   report_debug ("Init wiretap stack for %O: "
@@ -3823,10 +3818,9 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
   if(!ctx_misc->wiretap_stack)
     init_wiretap_stack (([]), id, colormode);
 
-  ctx_misc->wiretap_stack +=
-    ({ ({ tagname, ctx_misc->fgcolor, ctx_misc->bgcolor }) });
+  ctx_misc->wiretap_stack->push( ({ tagname, ctx_misc->fgcolor,
+				    ctx_misc->bgcolor }) );
 
-#undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){ \
   ctx_misc->Y=args->X; \
   if(colormode && args->X[0]!='#'){ \
@@ -3842,9 +3836,9 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 #undef FIX
 
 #ifdef WIRETAP_TRACE
-  report_debug ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-		sizeof (ctx_misc->wiretap_stack) * 2, "", id, tagname,
-		ctx_misc->fgcolor, ctx_misc->bgcolor);
+  report_debug("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	       sizeof (ctx_misc->wiretap_stack) * 2, "", id, tagname,
+	       ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
 
   return changed;
@@ -3853,24 +3847,21 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 void pop_color (string tagname, RequestID id)
 {
   mapping(string:mixed) ctx_misc = RXML_CONTEXT->misc;
-  array c = ctx_misc->wiretap_stack;
+  ADT.Stack c = ctx_misc->wiretap_stack;
   if(c && sizeof(c)) {
-    int i;
 
-    for(i=0; i<sizeof(c); i++)
-      if(c[-i-1][0]==tagname)
-      {
-	ctx_misc->fgcolor = c[-i-1][1];
-	ctx_misc->bgcolor = c[-i-1][2];
-	break;
-      }
+    array x;
+    do {
+      x = c->pop();
+    } while( sizeof(c) && x[0]!=tagname );
 
-    ctx_misc->wiretap_stack = c[..sizeof(c)-i-2];
+    ctx_misc->fgcolor = x[1];
+    ctx_misc->bgcolor = x[2];
 
 #ifdef WIRETAP_TRACE
-  report_debug ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-		sizeof (c) * 2, "", id, tagname,
-		ctx_misc->fgcolor, ctx_misc->bgcolor);
+  report_debug("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	       sizeof (c) * 2, "", id, tagname,
+	       ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
   }
 }
