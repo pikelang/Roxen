@@ -23,8 +23,8 @@ constant thread_safe=1;
 constant language = roxen->language;
 
 constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
-object module_name_locale   = LOCALE(3,"Old RXML Compatibility Module");
-object module_doc_locale    =
+LocaleString module_name_locale   = LOCALE(3,"Old RXML Compatibility Module");
+LocaleString module_doc_locale    =
   LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.");
 
 void create()

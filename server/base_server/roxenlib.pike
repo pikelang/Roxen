@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.205 2000/11/21 21:47:01 nilsson Exp $
+// $Id: roxenlib.pike,v 1.206 2000/11/24 16:50:34 per Exp $
 
 //#pragma strict_types
 
@@ -889,20 +889,20 @@ string program_directory()
   return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
 }
 
-string html_encode_string(string|object str)
+string html_encode_string(LocaleString str)
 //! Encodes `str' for use as a literal in html text.
 {
   return replace((string)str, ({"&", "<", ">", "\"", "\'", "\000" }),
 		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
 }
 
-string html_decode_string(string|object str)
+string html_decode_string(LocaleString str)
 //! Decodes `str', opposite to <ref>html_encode_string()</ref>
 {
   return replace((string)str, replace_entities, replace_values);
 }
 
-string html_encode_tag_value(string|object str)
+string html_encode_tag_value(LocaleString str)
 //! Encodes `str' for use as a value in an html tag.
 {
   // '<' is not allowed in attribute values in XML 1.0.

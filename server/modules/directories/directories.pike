@@ -7,79 +7,18 @@
 // TODO:
 //  o Perhaps add <fl> to default template?
 //  o Add readme support
-//  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.85 2000/11/13 10:53:11 per Exp $";
+//<locale-token project="mod_directories">LOCALE</locale-token>
+//<locale-token project="mod_directories">SLOCALE</locale-token>
+#define SLOCALE(X,Y)	_STR_LOCALE("mod_directories",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
+// end locale stuff
+
+constant cvs_version = "$Id: directories.pike,v 1.86 2000/11/24 16:50:37 per Exp $";
 constant thread_safe = 1;
 
-#include <stat.h>
-#include <module.h>
-inherit "module";
-
-array(string) readme, indexfiles;
-string template;
-int override;
-
-constant module_type = MODULE_DIRECTORIES|MODULE_TAG;
-constant module_name = "Directory Listings";
-constant module_doc = "This module pretty prints a list of files.";
-
-void set_template()
-{
-  set( "template", template );
-}
-
-string status()
-{
-  if( query("default-template") && query("template") != template )
-    return 
-#"The directory list template is not the same as the default template, but
-  the default template is used. This might be a residue from an old configuration
-  file, or intentional.";
-}
-
-mapping query_action_buttons()
-{
-  if(query("default-template") && query("template") != template )
-    return ([ "Reset template to default"  : set_template ]);
-  return ([]);
-}
-
-void create()
-{
-  defvar("indexfiles",
-         ({ "index.html", "index.xml", "index.htm", "index.pike",
-            "index.cgi" }),
-	 "Index files", TYPE_STRING_LIST|VAR_INITIAL,
-	 "If one of these files is present in a directory, it will "
-	 "be returned instead of the directory listing.");
-
-  defvar("override", 0, "Allow directory index file overrides",
-         TYPE_FLAG,
-	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by appending '.' to the directory name. It is "
-	 "<em>very</em> useful for debugging, but some people regard "
-	 "it as a security hole.");
-
-  defvar("default-template", 1, "Use the default template",
-         TYPE_FLAG,
-         "If true, use the default directory layout template" );
-
-  defvar("template", "", "Directorylisting template", TYPE_TEXT,
-         "The template for directory list generation.", 0,
-         lambda(){ return query("default-template"); } );
-}
-
-void start(int n, Configuration c)
-{
-  if( c )
-  {
-    indexfiles = query("indexfiles")-({""});
-    override = query("override");
-    if( query("default-template" ) )
-      template =
-#"
+constant default_template= #"
 <if not='' variable='form.sort'>
   <set variable='form.sort' value='name' />
 </if>
@@ -156,6 +95,77 @@ void start(int n, Configuration c)
   </body>
 </html>
 ";
+
+
+#include <stat.h>
+#include <module.h>
+inherit "module";
+
+array(string) readme, indexfiles;
+string template;
+int override;
+
+constant module_type = MODULE_DIRECTORIES|MODULE_TAG;
+LocaleString module_name_locale = LOCALE(0,"Directory Listings");
+LocaleString module_doc_locale =
+  LOCALE(0,"This module pretty prints a list of files.");
+
+void set_template()
+{
+  set( "template", default_template );
+}
+
+string status()
+{
+  if( query("default-template") && query("template") != template )
+    return 
+      LOCALE(0,"The directory list template is not the same as the default "
+	     "template, but the default template is used. This might be a "
+	     "residue from an old configuration file, or intentional.");
+}
+
+mapping query_action_buttons()
+{
+  if(query("default-template") && query("template") != default_template )
+    return ([ LOCALE(0,"Reset template to default")  : set_template ]);
+  return ([]);
+}
+
+void create()
+{
+  defvar("indexfiles",
+         ({ "index.html", "index.xml", "index.htm", "index.pike",
+            "index.cgi" }),
+	 LOCALE(0,"Index files"), TYPE_STRING_LIST|VAR_INITIAL,
+	 LOCALE(0,"If one of these files is present in a directory, it will "
+		"be returned instead of the directory listing."));
+
+  defvar("override", 0, LOCALE(0,"Allow directory index file overrides"),
+         TYPE_FLAG,
+	 LOCALE(0,"If this variable is set, you can get a listing of all "
+		"files in a directory by appending '.' to the directory "
+		"name. It is <em>very</em> useful for debugging, but some"
+		" people regard it as a security hole."));
+
+  defvar("default-template", 1, LOCALE(0,"Use the default template"),
+         TYPE_FLAG,
+         LOCALE(0,"If true, use the default directory layout template") );
+
+  defvar("template", default_template, LOCALE(0,"Directorylisting template"),
+	 TYPE_TEXT,
+         LOCALE(0,"The template for directory list generation."),
+	 0,
+         lambda(){ return query("default-template"); } );
+}
+
+void start(int n, Configuration c)
+{
+  if( c )
+  {
+    indexfiles = query("indexfiles")-({""});
+    override = query("override");
+    if( query("default-template" ) )
+      template = default_template;
     else
       template = query("template");
 
@@ -218,67 +228,3 @@ mapping parse_directory(RequestID id)
     }
   return Roxen.http_rxml_answer( template, id );
 }
-
-
-class TagPathplugin
-{
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "path";
-
-  array get_dataset(mapping m, RequestID id)
-  {
-    string fp = "";
-    array res = ({});
-    string p = id->not_query;
-    if( m->trim )
-      sscanf( p, "%s"+m->trim, p );
-    if( p[-1] == '/' )
-      p = p[..strlen(p)-2];
-    array q = p / "/";
-    if( m->skip )
-      q = q[(int)m->skip..];
-    foreach( q, string elem )
-    {
-      fp += "/" + elem;
-      fp = replace( fp, "//", "/" );
-      res += ({
-        ([
-          "name":elem,
-          "path":fp
-        ])
-      });
-    }
-    return res;
-  }
-}
-
-TAGDOCUMENTATION;
-#ifdef manual
-constant tagdoc=([
-"emit#path":({ #"<desc plugin><short>
- Prints paths.</short> This plugin traverses over all directories in
- the path from the root up to the current one.
-</desc>
-
-<attr name='trim' value='string'>
- Removes all of the remaining path after and including the specified
- string.
-</attr>
-
-<attr name='skip' value='number'>
- Skips the 'number' of slashes ('/') specified, with beginning from
- the root.
-</attr>",
-	       ([
-"&_.name;":#"<desc ent>
- Returns the name of the most recently traversed directory.
-</desc>",
-
-"&_.path;":#"<desc ent>
- Returns the path to the most recently traversed directory.
-</desc>"
-	       ])
-	    }) ]);
-#endif
-

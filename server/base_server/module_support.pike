@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.82 2000/11/21 19:01:02 per Exp $
+// $Id: module_support.pike,v 1.83 2000/11/24 16:50:33 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -273,7 +273,7 @@ class ModuleInfo( string sname, string filename )
     return what;
   }
 
-  static string|object decode_string( mixed what )
+  static LocaleString decode_string( mixed what )
   {
     if( arrayp( what ) )
     {

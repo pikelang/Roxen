@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.11 2000/09/10 16:42:10 nilsson Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.12 2000/11/24 16:50:37 per Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -14,6 +14,11 @@ constant thread_safe=1;
 #include <module.h>
 inherit "module";
 
+// Some defines for the translation system
+// 
+//<locale-token project="mod_fnord">LOCALE</locale-token>
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_fnord",X,Y)
+// end of the locale related stuff
 
 // Documentation:
 
@@ -79,13 +84,13 @@ string simpletag_fnord(string tag_name, mapping arguments, string contents,
 
 
 // Some constants that are needed to register the module in the RXML parser.
-
 constant module_type = MODULE_TAG;
-constant module_name = "Fnord!";
-constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
-  "things invisible unless the \"fnord\" prestate is present."
-  "<p>This module is here as an example of how to write a "
-  "very simple RXML-parsing module.</p>";
+LocaleString module_name_locale = LOCALE(0,"Fnord!");
+LocaleString module_doc_locale  =
+  LOCALE(0,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
+	 "to make things invisible unless the \"fnord\" prestate is present."
+	 "<p>This module is here as an example of how to write a "
+	 "very simple RXML-parsing module.</p>" );
 
 
 // Last, but not least, we want a documentation that can be integrated in the

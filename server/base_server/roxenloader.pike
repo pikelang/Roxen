@@ -1,4 +1,5 @@
 // Roxen bootstrap program. Copyright © 1996 - 2000, Roxen IS.
+#define LocaleString Locale.DeferredLocale|string
 
 //#pragma strict_types
 
@@ -20,7 +21,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.214 2000/11/13 10:23:29 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.215 2000/11/24 16:50:34 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -957,7 +958,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
 
 #define MC @find_module_and_conf_for_log(backtrace())
 
-void report_warning(string message, mixed ... foo)
+void report_warning(LocaleString message, mixed ... foo)
 //! Report a warning message, that will show up in the server's debug log and
 //! in the event logs, along with the yellow exclamation mark warning sign.
 //! Shares argument prototype with <ref>sprintf()</ref>.
@@ -971,7 +972,7 @@ void report_warning(string message, mixed ... foo)
 #endif
 }
 
-void report_notice(string|object message, mixed ... foo)
+void report_notice(LocaleString message, mixed ... foo)
 //! Report a status message of some sort for the server's debug log and event
 //! logs, along with the blue informational notification sign. Shares argument
 //! prototype with <ref>sprintf()</ref>.
@@ -985,7 +986,7 @@ void report_notice(string|object message, mixed ... foo)
 #endif
 }
 
-void report_error(string message, mixed ... foo)
+void report_error(LocaleString message, mixed ... foo)
 //! Report an error message, that will show up in the server's debug log and
 //! in the event logs, along with the red exclamation mark sign. Shares
 //! argument prototype with <ref>sprintf()</ref>.
@@ -1597,6 +1598,7 @@ void do_main_wrapper(int argc, array(string) argv)
   exit(1);
 }
 
+LocaleString da_String_type;
 void do_main( int argc, array(string) argv )
 {
   array(string) hider = argv;
@@ -1680,6 +1682,8 @@ Please install a newer version of Pike.
 
   add_constant( "mark_fd", mark_fd );
 
+  add_constant( "LocaleString", typeof(da_String_type) );
+  
   mixed err;
 
   add_constant("open", open);

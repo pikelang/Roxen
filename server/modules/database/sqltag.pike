@@ -5,12 +5,18 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.65 2000/11/21 12:26:33 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.66 2000/11/24 16:50:36 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
 
 inherit "module";
+
+//<locale-token project="mod_sqltag">LOCALE</locale-token>
+//<locale-token project="mod_sqltag">SLOCALE</locale-token>
+#define SLOCALE(X,Y)	_STR_LOCALE("mod_sqltag",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_sqltag",X,Y)
+// end locale stuff
 
 Configuration conf;
 
@@ -18,12 +24,13 @@ Configuration conf;
 // Module interface functions
 
 constant module_type=MODULE_TAG|MODULE_PROVIDER;
-constant module_name="SQL tags";
-constant module_doc =
-#"The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and
-<tt>&lt;sqltable&gt;</tt> as well as being a source to the 
-<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>).
-All tags send queries to SQL databases.";
+LocaleString module_name_locale=LOCALE(0,"SQL tags");
+LocaleString module_doc_locale =
+LOCALE(0,
+       "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
+       "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
+       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>)."
+       "All tags send queries to SQL databases.");
 
 TAGDOCUMENTATION
 #ifdef manual
@@ -124,7 +131,8 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 
   if (error)
-    RXML.run_error("Couldn't connect to SQL server: "+error[0]+"\n");
+    RXML.run_error(LOCALE(0,"Couldn't connect to SQL server")+
+		   ": "+error[0]+"\n");
 
   // Got a connection now. Any errors below this point ought to be
   // syntax errors and should be reported with parse_error.
@@ -278,8 +286,10 @@ class TagSQLTable {
 	}
 
 	if (!ascii)
-	  ret=Roxen.make_container("table", args-(["host":"", "database":"", "user":"", "password":"",
-						   "query":"", "nullvalue":"", "dbobj":""]), ret);
+	  ret=Roxen.make_container("table",
+				   args-(["host":"","database":"","user":"",
+					  "password":"","query":"",
+					  "nullvalue":"", "dbobj":""]), ret);
 
 	id->misc->defines[" _ok"] = 1;
 	result=ret;
@@ -320,9 +330,9 @@ string query_provides()
 
 void create()
 {
-  defvar("hostname", "localhost", "Default database",
+  defvar("hostname", "mysql://localhost/", LOCALE(0,"Default database"),
 	 TYPE_STRING | VAR_INITIAL,
-	 "The default database that will be used if no <i>host</i> "
+	 LOCALE(0,"The default database that will be used if no <i>host</i> "
 	 "attribute is given to the tags. "
 	 "The value is a database URL in this format:\n"
 	 "<p><blockquote><pre>"
@@ -334,7 +344,7 @@ void create()
 	 "<p>If the <i>SQL databases</i> module is loaded, it's also "
 	 "possible to use an alias registered there. That's the "
 	 "recommended way, since this (usually sensitive) data is "
-	 "collected in one place then.");
+	 "collected in one place then."));
 }
 
 
@@ -357,16 +367,17 @@ string status()
     else
       o = Sql.sql(QUERY(hostname));
 
-    return(sprintf("The default database is connected to %s server on %s.<br />\n",
+    return(sprintf(LOCALE(0,"The default database is connected to %s "
+			  "server on %s.")+
+		   "<br />\n",
 		   Roxen.html_encode_string (o->server_info()),
 		   Roxen.html_encode_string (o->host_info())));
   }) {
-#if 0
-    werror ("Default database connection error: " + describe_backtrace (err));
-#endif
     return
-      "<font color=\"red\">The default database is not connected:</font><br />\n" +
-      replace (Roxen.html_encode_string (describe_error(err)), "\n", "<br />\n") +
+      "<font color=\"red\">"+LOCALE(0,"The default database is not connected")+
+      ":</font><br />\n" +
+      replace( Roxen.html_encode_string( describe_error(err) ),
+	       "\n", "<br />\n") +
       "<br />\n";
   }
 }

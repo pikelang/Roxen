@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.21 2000/11/20 13:36:32 per Exp $
+// $Id: basic_defvar.pike,v 1.22 2000/11/24 16:50:33 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -74,34 +74,16 @@ void setvars( mapping (string:mixed) vars )
 
 // Define a variable, with more than a little error checking...
 Variable.Variable defvar(string var, mixed value, 
-
 // rest is compat, and thus optional...
-                         mapping|string|object|void name,
+                         LocaleString|void name,
                          int|void type, 
-                         mapping|string|object|void doc_str, 
+                         LocaleString|void doc_str, 
                          mixed|void misc,
                          int|function|void not_in_config,
                          mapping|void option_translations)
 {
-  mapping ln;
   if( objectp( value ) && value->is_variable )
     return (variables[var] = value);
-
-  if( mappingp( name ) )
-  {
-    report_error("Warning: [%O:%O] name/doc as mapping is deprecated. Ignored.\n",
-		 this_object(), var );
-    ln = name;
-    name = name->standard || name->english;
-  }
-
-  if( mappingp( doc_str ) )
-  {
-    if( !ln )
-      report_error("Warning: [%O:%O] doc as mapping is deprecated. Ignored.\n",
-		   this_object(), var );
-    doc_str = doc_str->standard || doc_str->english;
-  }
 
   Variable.Variable vv;
 
@@ -241,21 +223,6 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
                                                 Variable.Variable i )
                                          { return 1; } );
     
-//   if( ln && ld )
-//   {
-//     foreach( indices( ln ), string locale )
-//     {
-//       if( ln[locale] && ld[locale] )
-//       {
-//         if( option_translations && option_translations[ locale ] )
-//           vv->deflocaledoc( locale, ln[locale], ld[locale], 
-//                             option_translations[locale] );
-//         else
-//           vv->deflocaledoc( locale, ln[locale], ld[locale] );
-//       }
-//     }
-//   }
-
   return (variables[var] = vv);
 }
 

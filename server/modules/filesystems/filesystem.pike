@@ -7,13 +7,18 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.89 2000/09/05 15:06:41 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.90 2000/11/24 16:50:38 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
 #include <stat.h>
 #include <request_trace.h>
+
+
+//<locale-token project="mod_filesystem">LOCALE</locale-token>
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
+// end of the locale related stuff
 
 #if DEBUG_LEVEL > 20
 # ifndef FILESYSTEM_DEBUG
@@ -34,10 +39,11 @@ constant thread_safe=1;
 #endif
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "File system";
-constant module_doc =
-("This is the basic file system module that makes it possible to mount a "
- "directory structure on the virtual file system of your site.") ;
+LocaleString module_name_locale = LOCALE(0,"File system");
+LocaleString module_doc_locale =
+LOCALE(0,"This is the basic file system module that makes it possible "
+       "to mount a directory structure in the virtual file system of "
+       "your site.");
 constant module_unique = 0;
 
 int redirects, accesses, errors, dirlists;
@@ -58,110 +64,116 @@ static int do_stat = 1;
 
 string status()
 {
-  return "<h2>Accesses to this filesystem</h2>"+
-    (redirects?"<b>Redirects</b>: "+redirects+"<br>":"")+
-    (accesses?"<b>Normal files</b>: "+accesses+"<br>"
-     :"No file accesses<br>")+
-    (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
-    (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
+  return "<h2>"+LOCALE(0,"Accesses to this filesystem")+"</h2>"+
+    (redirects?"<b>"+LOCALE(0,"Redirects")+"</b>: "+redirects+"<br>":"")+
+    (accesses?"<b>"+LOCALE(0,"Normal files")+"</b>: "+accesses+"<br>"
+     :LOCALE(0,"No file accesses)")+"<br>")+
+    (QUERY(put)&&puts?"<b>"+LOCALE(0,"PUTs")+"</b>: "+puts+"<br>":"")+
+    (QUERY(put)&&mkdirs?"<b>"+LOCALE(0,"MKDIRs")+"</b>: "+mkdirs+"<br>":"")+
     (QUERY(put)&&QUERY(delete)&&moves?
-     "<b>Moved files</b>: "+moves+"<br>":"")+
-    (QUERY(put)&&chmods?"<b>CHMODs</b>: "+chmods+"<br>":"")+
-    (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
-    (errors?"<b>Permission denied</b>: "+errors
-     +" (not counting .htaccess)<br>":"")+
-    (dirlists?"<b>Directories</b>:"+dirlists+"<br>":"");
+     "<b>"+LOCALE(0,"Moved files")+"</b>: "+moves+"<br>":"")+
+    (QUERY(put)&&chmods?"<b>"+LOCALE(0,"CHMODs")+"</b>: "+chmods+"<br>":"")+
+    (QUERY(delete)&&deletes?"<b>"+LOCALE(0,"Deletes")+"</b>: "+deletes+"<br>":"")+
+    (errors?"<b>"+LOCALE(0,"Permission denied")+"</b>: "+errors
+     +" ("+LOCALE(0,"not counting .htaccess")+")<br>":"")+
+    (dirlists?"<b>"+LOCALE(0,"Directories")+"</b>:"+dirlists+"<br>":"");
 }
 
 void create()
 {
-  defvar("mountpoint", "/", "Mount point", TYPE_LOCATION|VAR_INITIAL,
-	 "Where the module will be mounted in the site's virtual file "
-	 "system.");
+  defvar("mountpoint", "/", LOCALE(0,"Mount point"), TYPE_LOCATION|VAR_INITIAL,
+	 LOCALE(0,"Where the module will be mounted in the site's virtual "
+		"file system."));
 
-  defvar("searchpath", "NONE", "Search path", TYPE_DIR|VAR_INITIAL,
-	 "The directory that contains the files.");
+  defvar("searchpath", "NONE", LOCALE(0,"Search path"), TYPE_DIR|VAR_INITIAL,
+	 LOCALE(0,"The directory that contains the files."));
 
-  defvar(".files", 0, "Show hidden files", TYPE_FLAG|VAR_MORE,
-	 "If set, hidden files, ie files that begin with a '.', "
-	 "will be shown in directory listings." );
+  defvar(".files", 0, LOCALE(0,"Show hidden files"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(0,"If set, hidden files, ie files that begin with a '.', "
+		"will be shown in directory listings." ));
 
-  defvar("dir", 1, "Enable directory listings per default", TYPE_FLAG|VAR_MORE,
-	 "If set, it will be possible to get a directory listings from "
-	 "directories in this file system. It is possible to force a "
-	 "directory to never be browsable by putting a "
-	 "<tt>.www_not_browsable</tt> or a <tt>.nodiraccess</tt> file "
-	 "in it. Similarly it is possible to let a directory be browsable, "
-	 "even if the file system is not, by putting a "
-	 "<tt>.www_browsable</tt> file in it.\n");
+  defvar("dir", 1, LOCALE(0,"Enable directory listings per default"),
+	 TYPE_FLAG|VAR_MORE,
+	 LOCALE(0,"If set, it will be possible to get a directory listings "
+		"from directories in this file system. It is possible to "
+		"force a directory to never be browsable by putting a "
+		"<tt>.www_not_browsable</tt> or a <tt>.nodiraccess</tt> file "
+		"in it. Similarly it is possible to let a directory be "
+		"browsable, even if the file system is not, by putting a "
+		"<tt>.www_browsable</tt> file in it.\n"));
 
   defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
-	 "List prevention files", TYPE_STRING_LIST|VAR_MORE,
-	 "All directories containing any of these files will not be "
-	 "browsable.");
+	 LOCALE(0,"List prevention files"), TYPE_STRING_LIST|VAR_MORE,
+	 LOCALE(0,"All directories containing any of these files will not be "
+		"browsable."));
 
 
-  defvar("tilde", 0, "Show backup files", TYPE_FLAG|VAR_MORE,
-	 "If set, files ending with '~', '#' or '.bak' will "+
-	 "be shown in directory listings");
+  defvar("tilde", 0, LOCALE(0,"Show backup files"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(0,"If set, files ending with '~', '#' or '.bak' will "+
+		"be shown in directory listings"));
 
-  defvar("put", 0, "Handle the PUT method", TYPE_FLAG,
-	 "If set, it will be possible to upload files with the HTTP "
-	 "method PUT, or through FTP.");
+  defvar("put", 0, LOCALE(0,"Handle the PUT method"), TYPE_FLAG,
+	 LOCALE(0,"If set, it will be possible to upload files with the HTTP "
+		"method PUT, or through FTP."));
 
-  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
-	 "If set, it will be possible to delete files with the HTTP "
-	 "method DELETE, or through FTP.");
+  defvar("delete", 0, LOCALE(0,"Handle the DELETE method"), TYPE_FLAG,
+	 LOCALE(0,"If set, it will be possible to delete files with the HTTP "
+		"method DELETE, or through FTP."));
 
-  defvar("check_auth", 1, "Require authentication for modification",
+  defvar("check_auth", 1, LOCALE(0,"Require authentication for modification"),
 	 TYPE_FLAG,
-	 "Only allow users authenticated by a authentication module to "
-         "use methods that can modify the files, such as PUT or DELETE. "
-	 "If this is not set the file system will be a <b>very</b> public "
-	 "one since anyone will be able to edit files.");
+	 LOCALE(0,"Only allow users authenticated by a authentication module "
+		"to use methods that can modify the files, such as PUT or "
+		"DELETE. If this is not set the file system will be a "
+		"<b>very</b> public one since anyone will be able to edit "
+		"files."));
 
-  defvar("stat_cache", 0, "Cache the results of stat(2)",
+  defvar("stat_cache", 0, LOCALE(0,"Cache the results of stat(2)"),
 	 TYPE_FLAG|VAR_MORE,
-	 "A performace option that can speed up retrieval of files from "
-	 "NFS with up to 70%. In turn it uses some memory and the file "
-	 "system might not notice that files have changed unless it gets "
-	 "a pragma no-cache request (produced e.g. by "
-	 "Alt-Ctrl-Reload in Netscape) or the module is reloaded. "
-	 "Therefore this option should not be used on file systems that "
-	 "change a lot.");
+	 LOCALE(0,"A performace option that can speed up retrieval of files "
+		"from NFS with up to 50%. In turn it uses some memory and the "
+		"file system will not notice that files have changed unless "
+		"it gets a pragma no-cache request (produced e.g. by "
+		"Alt-Ctrl-Reload in Netscape). Therefore this option should "
+		"not be used on file systems that change a lot."));
 
-  defvar("access_as_user", 0, "Access file as the logged in user",
+  defvar("access_as_user", 0, LOCALE(0,"Access file as the logged in user"),
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the module will access files as the authenticated user. "
-	 "This assumes that a authentication module which imports the "
-	 "users from the operating systems, such as the <i>User database</i> "
-	 "module is used. This option is very useful for named FTP sites, "
-	 "but it will have severe performance impacts since all threads "
-	 "will be locked for each access.");
+	 LOCALE(0,"If set, the module will access files as the authenticated "
+		"user. This assumes that a authentication module which imports"
+		" the users from the operating systems, such as the <i>User "
+		"database</i> module is used. This option is very useful for "
+		"named FTP sites, but it will have severe performance impacts "
+		"since all threads will be locked for each access."));
 
-  defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
-	 "It set, the file system will not follow symbolic links. This "
-	 "option can lower performace by a lot." );
+  defvar("no_symlinks", 0, LOCALE(0,"Forbid access to symlinks"),
+	 TYPE_FLAG|VAR_MORE,
+	 LOCALE(0,"It set, the file system will not follow symbolic links. "
+		"This option can lower performace by a lot." ));
 
-  defvar("charset", "iso-8859-1", "File contents charset", TYPE_STRING,
-	 "The charset of the contents of the files on this file system. "
-	 "This variable makes it possible for Roxen to use any text file, "
-	 "no matter what charset it is written in. If necessary, Roxen will "
-	 "convert to Unicode before processing the file.");
+  defvar("charset", "iso-8859-1", LOCALE(0,"File contents charset"),
+	 TYPE_STRING,
+	 LOCALE(0,"The charset of the contents of the files on this file "
+		"system. This variable makes it possible for Roxen to use "
+		"any text file, no matter what charset it is written in. If"
+		" necessary, Roxen will convert the file to Unicode before "
+		"processing the file."));
 
-  defvar("path_encoding", "iso-8859-1", "Filename charset", TYPE_STRING,
-	 "The charset of the file names of the files on this file system. "
-	 "Unlike the <i>File contents charset</i> variable, this might not "
-	 "work for all charsets simply because not all browsers support "
-	 "anything other characters than ASCII or ISO-8859-1 in URLs.");
+  defvar("path_encoding", "iso-8859-1", LOCALE(0,"Filename charset"),
+	 TYPE_STRING,
+	 LOCALE(0,"The charset of the file names of the files on this file "
+		"system. Unlike the <i>File contents charset</i> variable, "
+		"this might not work for all charsets simply because not "
+		"all browsers support anything except ISO-8859-1 "
+		"in URLs."));
 
-  defvar("internal_files", ({}), "Internal files", TYPE_STRING_LIST,
-	 "A list of glob patterns that matches files which should be "
-	 "considered internal. Internal files cannot be requested directly "
-	 "from a browser, won't show up in directory listings and can "
-	 "never be uploaded, moved or deleted by a browser. They can "
-	 "only be accessed internally, e.g. with the RXML tags "
-	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>.");
+  defvar("internal_files", ({}), LOCALE(0,"Internal files"), TYPE_STRING_LIST,
+	 LOCALE(0,"A list of glob patterns that matches files which should be "
+		"considered internal. Internal files cannot be requested "
+		"directly from a browser, won't show up in directory listings "
+		"and can never be uploaded, moved or deleted by a browser."
+		"They can only be accessed internally, e.g. with the RXML tags"
+		" <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>."));
 }
 
 string path, mountpoint, charset, path_encoding;
@@ -507,7 +519,7 @@ mixed find_file( string f, RequestID id )
       if(!o || (no_symlinks && (contains_symlinks(path, oldf))))
       {
 	errors++;
-	report_error("Open of " + f + " failed. Permission denied.\n");
+	report_error(LOCALE(0,"Open of %s failed. Permission denied.\n"),f);
 
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied.");
@@ -560,7 +572,7 @@ mixed find_file( string f, RequestID id )
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
-      report_error("Creation of " + f + " failed. Permission denied.\n");
+      report_error(LOCALE(0,"Creation of %s failed. Permission denied.\n"),f);
       TRACE_LEAVE("MKDIR: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
@@ -609,7 +621,7 @@ mixed find_file( string f, RequestID id )
     if (id->misc->quota_obj && (id->misc->len > 0) &&
 	!id->misc->quota_obj->check_quota(URI, id->misc->len)) {
       errors++;
-      report_warning("Creation of " + f + " failed. Out of quota.\n");
+      report_warning(LOCALE(0,"Creation of %s failed. Out of quota.\n"),f);
       TRACE_LEAVE("PUT: Out of quota.");
       return http_low_answer(413, "<h2>Out of disk quota.</h2>",
 			     "413 Out of disk quota");
@@ -624,7 +636,7 @@ mixed find_file( string f, RequestID id )
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
-      report_error("Creation of " + f + " failed. Permission denied.\n");
+      report_error(LOCALE(0,"Creation of %s failed. Permission denied.\n"),f);
       TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
@@ -964,12 +976,12 @@ mixed find_file( string f, RequestID id )
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       errors++;
-      report_error("Deletion of " + f + " failed. Permission denied.\n");
+      report_error(LOCALE(0,"Deletion of %s failed. Permission denied.\n"),f);
       TRACE_LEAVE("DELETE: Contains symlinks");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    report_notice("DELETING the file "+f+"\n");
+    report_notice(LOCALE(0,"DELETING the file %s.\n"),f);
     accesses++;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
@@ -1003,12 +1015,11 @@ mixed find_file( string f, RequestID id )
     TRACE_LEAVE("Not supported");
     return 0;
   }
-  report_error("Not reached..\n");
   TRACE_LEAVE("Not reached");
   return 0;
 }
 
 string query_name()
 {
-  return sprintf("<i>%s</i> mounted on <i>%s</i>", path,mountpoint);
+  return sprintf("FS: %s",mountpoint);
 }

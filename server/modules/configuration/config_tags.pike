@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.126 2000/11/18 17:31:26 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.127 2000/11/24 16:50:36 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -622,13 +622,15 @@ class TagConfigModulesplugin
     array variables = ({ });
     foreach( values(conf->otomod), string q )
     {
-      object mi = roxen->find_module((q/"#")[0]);
+      ModuleInfo mi = roxen.find_module((q/"#")[0]);
+      RoxenModule m = conf->find_module( q );
       array variables =
                 ({
                   ([
                     "sname":replace(q, "#", "!"),
-                    "name":mi->get_name()+((int)reverse(q)?
-                                           " # "+ (q/"#")[1]:""),
+                    "name":(m->query_name ? m->query_name() :
+			    (mi->get_name()+
+			     ((int)reverse(q)?" # "+(q/"#")[1]:""))),
                     "doc":mi->get_description(),
                   ]),
                 });

@@ -472,7 +472,7 @@ class AdminUser
 array possible_permissions = ({ });
 mapping permission_translations = ([ ]);
 
-void add_permission( string perm, string|object text )
+void add_permission( string perm, LocaleString text )
 {
   if( mappingp( text ) )
   {

@@ -8,13 +8,22 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.8 2000/09/10 16:42:10 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.9 2000/11/24 16:50:37 per Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
 
 // Inherit code that is needed in every module.
 inherit "module";
+
+
+// moduke.h must be included to use the LOCALE macro below.
+#include <module.h>
+// Some defines for the translation system
+// 
+//<locale-token project="mod_fnord">LOCALE</locale-token>
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_fnord",X,Y)
+// end of the locale related stuff
 
 
 // Define the fnord tag class. It must begin with "Tag".
@@ -64,11 +73,12 @@ class TagFnord {
 // Some constants to register the module in the RXML parser.
 
 constant module_type = MODULE_TAG;
-constant module_name = "Newstyle Fnord!";
-constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
-  "things invisible unless the \"fnord\" prestate is present."
-  "<p>This module is here as an example of how to write a "
-  "very simple newstyle RXML-parsing module.</p>";
+LocaleString module_name_locale = LOCALE(0,"Newstyle Fnord!");
+LocaleString module_doc_locale  =
+  LOCALE(0,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
+	 "to make things invisible unless the \"fnord\" prestate is present."
+	 "<p>This module is here as an example of how to write a "
+	 "very simple newstyle RXML-parsing module.</p>");
 
 // Last, but not least, we want a documentation that can be integrated in the
 // online manual. The mapping tagdoc maps from container names to it's description.

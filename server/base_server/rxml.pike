@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.260 2000/11/19 16:32:31 mast Exp $
+// $Id: rxml.pike,v 1.261 2000/11/24 16:50:34 per Exp $
 
 
 inherit "rxmlhelp";
@@ -1557,6 +1557,40 @@ class TagEmitSources {
   }
 }
 
+
+class TagPathplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "path";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    string fp = "";
+    array res = ({});
+    string p = id->not_query;
+    if( m->trim )
+      sscanf( p, "%s"+m->trim, p );
+    if( p[-1] == '/' )
+      p = p[..strlen(p)-2];
+    array q = p / "/";
+    if( m->skip )
+      q = q[(int)m->skip..];
+    foreach( q, string elem )
+    {
+      fp += "/" + elem;
+      fp = replace( fp, "//", "/" );
+      res += ({
+        ([
+          "name":elem,
+          "path":fp
+        ])
+      });
+    }
+    return res;
+  }
+}
+
 class TagEmitValues {
   inherit RXML.Tag;
   constant name="emit";
@@ -2902,6 +2936,31 @@ Available variables are:",
  RXML-code. <tag>eval</tag> is then placed around the entity to get
  its content parsed.
 </desc>",
+
+"emit#path":({ #"<desc plugin><short>
+ Prints paths.</short> This plugin traverses over all directories in
+ the path from the root up to the current one.
+</desc>
+
+<attr name='trim' value='string'>
+ Removes all of the remaining path after and including the specified
+ string.
+</attr>
+
+<attr name='skip' value='number'>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the root.
+</attr>",
+	       ([
+"&_.name;":#"<desc ent>
+ Returns the name of the most recently traversed directory.
+</desc>",
+
+"&_.path;":#"<desc ent>
+ Returns the path to the most recently traversed directory.
+</desc>"
+	       ])
+	    })
 
 "emit#sources":({ #"<desc plugin>
  Provides a list of all available emit sources.

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.36 2000/11/20 13:36:36 per Exp $
+// $Id: module.pmod,v 1.37 2000/11/24 16:50:35 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -37,7 +37,7 @@ class Variable
 
   static mixed _initial; // default value
   static string _path;   // used for forms
-  static string|object  __name, __doc;
+  static LocaleString  __name, __doc;
 
   void destroy()
   {
@@ -157,7 +157,7 @@ class Variable
     return invisibility_callbacks[_id];
   }
 
-  string doc(  )
+  LocaleString doc(  )
     //! Return the documentation for this variable (locale dependant).
     //! 
     //! The default implementation queries the locale object in roxen
@@ -166,7 +166,7 @@ class Variable
     return __doc || "";
   }
   
-  string name(  )
+  LocaleString name(  )
     //! Return the name of this variable (locale dependant).
     //! 
     //! The default implementation queries the locale object in roxen
@@ -175,7 +175,7 @@ class Variable
     return __name || LOCALE(326,"unnamed")+" "+_id;
   } 
 
-  string type_hint(  )
+  LocaleString type_hint(  )
     //! Return the type hint for this variable.
     //! Type hints are generic documentation for this variable type, 
     //! and is the same for all instances of the type.
@@ -386,7 +386,7 @@ class Variable
   }
 
   static void create(mixed default_value, void|int flags,
-                     void|string|object std_name, void|string|object std_doc)
+                     void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -783,8 +783,8 @@ class MultipleChoice
     return res + "</select>";
   }
   static void create( mixed default_value, array|mapping choices,
-                      int _flags, string|object std_name,
-		      string|object std_doc )
+                      int _flags, LocaleString std_name,
+		      LocaleString std_doc )
     //! Constructor. 
     //!
     //! Choices is the list of possible choices, can be set with 
@@ -876,7 +876,7 @@ class FontChoice
     return roxenp()->fonts->available_fonts();
   }
   static void create(mixed default_value,int flags,
-                     string|object std_name,string|object std_doc)
+                     LocaleString std_name,LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 

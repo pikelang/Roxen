@@ -11,10 +11,10 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.10 2000/11/21 19:01:31 per Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.11 2000/11/24 16:50:36 per Exp $";
 constant module_type = MODULE_ZERO;
-object module_name_locale = LOCALE(1,"SQL databases");
-object module_doc_locale  = 
+LocaleString module_name_locale = LOCALE(1,"SQL databases");
+LocaleString module_doc_locale  = 
 LOCALE(2,
 "SQL databases provides symbolic names to any number of database URLs. The\n"
 "symbolic names can later be used instead of the database URL. This makes\n"

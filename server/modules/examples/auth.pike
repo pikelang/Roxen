@@ -2,21 +2,32 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: auth.pike,v 1.2 2000/11/21 19:01:31 per Exp $";
+// Some defines for the translation system
+// 
+//<locale-token project="mod_auth">LOCALE</locale-token>
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_auth",X,Y)
+// end of the locale related stuff
+
+
+constant cvs_version = "$Id: auth.pike,v 1.3 2000/11/24 16:50:37 per Exp $";
 constant module_type = MODULE_AUTH;
-constant module_name = "RefDoc for MODULE_AUTH";
-constant module_doc = #"This module does nothing, but its inlined documentation
-gets imported into the roxen programmer manual. You definetely don't want to use
-this module in your virtual servers, since anybody with access to your admin
-interface or server configuration file automatically gains access to all your
-passwords. For a budding roxen programmer, the module however does show the
-basics of making an authentication module.";
+LocaleString module_name_locale = LOCALE(0,"RefDoc for MODULE_AUTH");
+LocaleString module_doc_locale =
+  LOCALE(0,"This module does nothing, but its inlined documentation "
+	 "gets imported into the roxen programmer manual. You definetely "
+	 "don't want to use this module in your virtual servers, since "
+	 "anybody with access to your admin interface or server configuration "
+	 " file automatically gains access to all yourpasswords. For a "
+	 " budding roxen programmer, the module however does show the "
+	 " basics of making an authentication module.");
 
 void create()
 {
-  defvar("users", Variable.StringList(({}), VAR_INITIAL, "Users and Passwords",
-				      "A list of username:password pairs the "
-				      "module should grant access for."));
+  defvar("users", Variable.StringList(({}), VAR_INITIAL,
+				      LOCALE(0,"Users and Passwords"),
+				      LOCALE(0,"A list of username:password "
+					     "pairs the module should grant "
+					     "access for."));
 }
 
 array|int auth(array(string) auth, RequestID id)

@@ -1,14 +1,12 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.50 2000/11/20 13:36:33 per Exp $
+// $Id: global_variables.pike,v 1.51 2000/11/24 16:50:33 per Exp $
 
 /*
 #pragma strict_types
 */
 #define DEFVAR mixed...:object
-// string,int|string,string|object|mapping,int,string|object|mapping(string:string),mixed,void|function:object
 #define BDEFVAR mixed...:object
-//string,int|string,string|object|mapping,int,string|object|mapping(string:string),void|array(string),void|mapping(string:mapping(string:string)):object
 
 #define IN_ROXEN
 #include <module.h>

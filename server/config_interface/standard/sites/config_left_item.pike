@@ -91,20 +91,24 @@ string selected_item( string q, Configuration c, RequestID id, string module )
 	     mixed err;
 	     if(err=catch(name=mi->get_name()+(i?" # "+i:""))) {
 	       name = q + (i?" # "+i:"") + " (Generated an error)";
-	       report_error("Error reading module name from %s#%d\n%O\n",
-			    q, i, err);
+	       report_error("Error reading module name from %s#%d\n%s\n",
+			    q, i, describe_backtrace(err));
 	     }
-	     if(err=catch(doc=mi->get_description())) {
-	       doc = "(Documentation generated an error)";
-	       report_error("Error reading module documentation from %s#%d\n%O\n",
-			    q, i, err);
-	     }
+	     if( c->modules[q]->copies[i]->query_name )
+	       if( err = catch(name = c->modules[q]->copies[i]->query_name( )))
+		 report_error("Cannot get module name for %s#%d\n%s\n",
+			      q, i, describe_backtrace(err));
+	     
+
+// 	     if(err=catch(doc=mi->get_description())) {
+// 	       doc = "(Documentation generated an error)";
+// 	     }
              variables +=
              ({
                ([
                  "sname":q+"!"+i,
                  "name":name,
-                 "doc":doc,
+//                  "doc":doc,
                ]),
              });
            }
