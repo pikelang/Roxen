@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.365 2002/11/18 00:10:22 mani Exp $
+// $Id: loader.pike,v 1.366 2002/12/01 23:39:54 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.365 2002/11/18 00:10:22 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.366 2002/12/01 23:39:54 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -784,6 +784,17 @@ void load_core()
 #if !constant(gethostname)
   add_constant("gethostname", lambda() { return "localhost"; });
 #endif
+
+  // spider compatibility
+  add_constant("_low_program_name", spider._low_program_name);
+  add_constant("set_start_quote", spider.set_start_quote);
+  add_constant("set_end_quote", spider.set_end_quote);
+  add_constant("parse_accessed_database", spider.parse_accessed_database);
+  add_constant("_dump_obj_table", spider._dump_obj_table);
+  add_constant("discdate", spider.discdate);
+  add_constant("stardate", spider.stardate);
+  add_constant("get_all_active_fd", spider.get_all_active_fd);
+  add_constant("fd_info", spider.fd_info);
 
 #ifndef OLD_PARSE_HTML
   // Temporary kludge to get wide string rxml parsing.
