@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.2 2000/03/14 21:05:26 js Exp $
+ * $Id: update.pike,v 1.3 2000/03/17 03:09:53 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -28,8 +28,6 @@ object db;
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
-constant pkgdir = "../local/packages/";  /* FIXME: Make user configurable */
-
 mapping(int:GetPackage) package_downloads = ([ ]);
 
 int inited;
@@ -39,8 +37,9 @@ void post_start()
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
-  mkdir(pkgdir);
-  updater=UpdateInfoFiles();
+  mkdirhier(roxen_path(QUERY(pkgdir)+"/foo"));
+  if(QUERY(do_external_updates))
+    updater=UpdateInfoFiles();
 }
 
 void start(int num, Configuration conf)
@@ -67,18 +66,20 @@ void create()
   query_tag_set()->prepare_context=set_entities;
   defvar("yabudir", "$VVARDIR/update_data/", "Database directory",
 	 TYPE_DIR, ""); 
-  /* Keep this in server and regenerate on update */
-
-  /*  defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
-      TYPE_DIR, "");*/
-  defvar("server", "community.roxen.com", "Server host",
-	 TYPE_STRING, "");
-  defvar("port", 80, "Server port",
+  defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
+	 TYPE_DIR, "");
+  defvar("proxyserver", "", "Proxy host",
+	 TYPE_STRING, "Leave empty to disable the use of a proxy server");
+  defvar("proxyport", 80, "Proxy port",
 	 TYPE_INT, "");
   defvar("userpassword", "", "Username and password",
 	 TYPE_STRING,
 	 "Format: username@host:password. "
 	 "Will not use auth if left empty.");
+  defvar("do_external_updates",1,"Connect to community.roxen.com for updates",
+	 TYPE_FLAG,
+         "Turn this off if you're inside a firewall and/or don't want to "
+	 "reveal anything to the outside world.");
 }
 
 static string describe_time_period( int amnt )
@@ -180,7 +181,7 @@ string container_update_package_output(string t, mapping m, string c, RequestID 
     if(p)
     {
       mapping t=localtime((int)p["issued-date"]);
-      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->month+1, t->mday);;
+      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->mon+1, t->mday);;
       res=({ p });
     }
   }
@@ -230,20 +231,20 @@ mapping get_package_info(string dir, int package)
     return 0;
   string s=fd->read();
   fd->close();
-  array stat=file_stat(pkgdir+package+".tar");
+  array stat=file_stat(roxen_path(QUERY(pkgdir))+package+".tar");
   return parse_info_file(s) | ([ "size":stat[1] ]);    
 }
 
 string tag_update_scan_local_packages(string t, mapping m,
 				      RequestID id)
 {
-  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(pkgdir)));
+  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
   foreach(packages, int package)
   {
     mapping pkg=pkginfo[(string)package];
     if(!pkg)
     {
-      mapping tmp=get_package_info(pkgdir,package);
+      mapping tmp=get_package_info(roxen_path(QUERY(pkgdir)),package);
       if(tmp && tmp->id)
       {
 	pkginfo[tmp->id]=tmp;
@@ -259,7 +260,7 @@ string tag_update_scan_local_packages(string t, mapping m,
 string container_update_downloaded_packages_output(string t, mapping m,
 					    string c, RequestID id)
 {
-  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(pkgdir)));
+  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
   array res=({ });
 
   foreach(packages, int package)
@@ -366,7 +367,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
 
   mixed err;
   string res;
-  if(err=catch(res=unpack_tarfile(pkgdir+(int)m->package+".tar")))
+  if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+(int)m->package+".tar")))
     return err+"<br><br><b>Could not install package. Fix the problems above and try again.</b>";
 
   id->variables[m->variable]="1";
@@ -401,13 +402,16 @@ string tag_update_package_contents(string t, mapping m, RequestID id)
   if(!m->package)
     return "No package argument.";
 
-  return tarfile_contents(pkgdir+m->package+".tar")*"\n";
+  return tarfile_contents(roxen_path(QUERY(pkgdir))+m->package+".tar")*"\n";
 }
 
 string tag_update_update_list(string t, mapping m, RequestID id)
 {
-  remove_call_out(updater->do_request);
-  updater->do_request();
+  if(QUERY(do_external_updates))
+  {
+    remove_call_out(updater->do_request);
+    updater->do_request();
+  }
   return "";
 }
 
@@ -461,7 +465,7 @@ array(int) decode_ranges(string s)
 
 mapping get_headers()
 {
-  mapping m = ([ "host":QUERY(server)+":"+QUERY(port),
+  mapping m = ([ "host":"community.roxen.com:80",
 		 "user-agent": roxen->real_version ]);
 
   if(sizeof(QUERY(userpassword)))
@@ -472,7 +476,7 @@ mapping get_headers()
 
 int completely_downloaded(int num)
 {
-  array stat=r_file_stat(pkgdir+num+".tar");
+  array stat=r_file_stat(roxen_path(QUERY(pkgdir))+num+".tar");
 
   return (stat && (stat[1]==pkginfo[(string)num]->size));
 }
@@ -487,6 +491,29 @@ void start_package_download(int num)
     throw("Package "+num+" already completely downloaded.\n");
 
   package_downloads[num]=GetPackage(num);
+}
+
+
+string proxyprefix()
+{
+  if(sizeof(QUERY(proxyserver)))
+    return "http://community.roxen.com";
+  else
+    return "";
+}
+
+string get_server()
+{
+  if(sizeof(QUERY(proxyserver)))
+    return QUERY(proxyserver);
+  return "community.roxen.com";
+}
+
+int get_port()
+{
+  if(sizeof(QUERY(proxyserver)))
+    return QUERY(proxyport);
+  return 80;
 }
 
 
@@ -512,18 +539,18 @@ class GetPackage
     Stdio.File f;
     num=_num;
 
-    if(catch(f=Stdio.File(pkgdir+num+".tar","wc")))
+    if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+num+".tar","wc")))
     {
       report_error("Update: Failed to open file for writing: "+
-		   pkgdir+num+".tar\n");
+		   roxen_path(QUERY(pkgdir))+num+".tar\n");
       catch(m_delete(package_downloads, num));
       return;
     }
     if(catch(f->write(httpquery->data())))
     {
       report_error("Update: Failed to write package to file: "+
-		   pkgdir+num+".tar\n");
-      catch(r_rm(pkgdir+num+".tar"));
+		   roxen_path(QUERY(pkgdir))+num+".tar\n");
+      catch(r_rm(QUERY(pkgdir)+num+".tar"));
       catch(m_delete(package_downloads, num));
       return;
     }
@@ -541,8 +568,9 @@ class GetPackage
   void create(int pkgnum)
   {
     set_callbacks(request_ok, request_fail, pkgnum);
-    async_request(QUERY(server),QUERY(port),
-		  "GET /updateserver/packages/"+pkgnum+".tar HTTP/1.0",
+    async_request(get_server(), get_port(),
+		  "GET "+proxyprefix()+"/updateserver/packages/"+
+		  pkgnum+".tar HTTP/1.0",
 		  get_headers());
   }
 }
@@ -588,7 +616,7 @@ class GetInfoFile
     if(httpquery->status!=200)
     {
       report_error("Update: Wrong answer from server for package %d. "
-		   "Error code: %d\n",num,httpquery->status);
+		   "HTTP status code: %d\n",num,httpquery->status);
       return;
     }
 
@@ -609,8 +637,9 @@ class GetInfoFile
   void create(int pkgnum)
   {
     set_callbacks(request_ok, request_fail, pkgnum);
-    async_request(QUERY(server),QUERY(port),
-		  "GET /updateserver/packages/"+pkgnum+".info HTTP/1.0",
+    async_request(get_server(), get_port(),
+		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
+		  ".info HTTP/1.0",
 		  get_headers());
   }
 }
@@ -636,7 +665,7 @@ class UpdateInfoFiles
     if(httpquery->status!=200 || lines[0]!="update" || sizeof(lines)<3)
     {
       report_error("Update: Wrong answer from server. "
-		   "Error code: %d\n",httpquery->status);
+		   "HTTP status code: %d\n",httpquery->status);
       return;
     }
 
@@ -653,8 +682,6 @@ class UpdateInfoFiles
       report_notice("Update: Deleting packages: "+
 		    ((array(string))delete_packages)*", "+
 		    "\n");
-    else
-      report_notice("Update: No packages to delete found.\n");
 
     foreach(new_packages, int i)
       GetInfoFile(i);
@@ -671,13 +698,22 @@ class UpdateInfoFiles
 		 "information about new packages.\n");
   }
 
+  string version_as_float()
+  {
+    string s=roxen_version();
+    string major, rest;
+    sscanf(s,"%s.%s",major,rest);
+    return (string)(float)sprintf("%s.%s",major,rest-".");
+  }
+
+  
   void do_request()
   {
-    async_request(QUERY(server),QUERY(port),
-		  "POST /updateserver/get_packages HTTP/1.0",
+    async_request(get_server(), get_port(),
+		  "POST "+proxyprefix()+"/updateserver/get_packages HTTP/1.0",
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
-		  "roxen_version=2.0001&"+
+		  "roxen_version="+version_as_float()+"&"+
 		  "have_packages="+
 		  encode_ranges((array(int))indices(pkginfo)));
     call_out(do_request, 12*3600);
