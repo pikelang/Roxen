@@ -1,16 +1,25 @@
 
 static constant jvm = Java.machine;
 
+static private inherit "roxenlib";
+
 #define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
 
 /* Marshalling */
 static object object_class = FINDCLASS("java/lang/Object");
 static object int_class = FINDCLASS("java/lang/Integer");
 static object map_class = FINDCLASS("java/util/HashMap");
+static object map_ifc = FINDCLASS("java/util/Map");
+static object map_entry_ifc = FINDCLASS("java/util/Map$Entry");
+static object set_ifc = FINDCLASS("java/util/Set");
 static object int_value = int_class->get_method("intValue", "()I");
 static object int_init = int_class->get_method("<init>", "(I)V");
 static object map_init = map_class->get_method("<init>", "(I)V");
 static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+static object map_entry_set = map_ifc->get_method("entrySet", "()Ljava/util/Set;");
+static object set_to_array = set_ifc->get_method("toArray", "()[Ljava/lang/Object;");
+static object map_entry_getkey = map_entry_ifc->get_method("getKey", "()Ljava/lang/Object;");
+static object map_entry_getvalue = map_entry_ifc->get_method("getValue", "()Ljava/lang/Object;");
 
 /* File I/O */
 static object reader_class = FINDCLASS("java/io/Reader");
@@ -41,6 +50,7 @@ static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 
 /* Module interface */
+static object reqid_class = FINDCLASS("se/idonex/roxen/RoxenRequest");
 static object conf_class = FINDCLASS("se/idonex/roxen/RoxenConfiguration");
 static object module_class = FINDCLASS("se/idonex/roxen/Module");
 static object defvar_class = FINDCLASS("se/idonex/roxen/Defvar");
@@ -52,6 +62,7 @@ static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
 static object response4_class = FINDCLASS("se/idonex/roxen/RoxenRXMLResponse");
+static object reqid_init = reqid_class->get_method("<init>", "()V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object _configuration = module_class->get_field("configuration", "Lse/idonex/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
@@ -84,11 +95,12 @@ static object _type = response_class->get_field("type", "Ljava/lang/String;");
 static object _data = response2_class->get_field("data", "Ljava/lang/String;");
 static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
 
-static object natives_bind1, natives_bind2;
+static object natives_bind1, natives_bind2, natives_bind3;
 
 static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
 static mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
+static mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
 
 
 static void check_exception()
@@ -142,7 +154,7 @@ static string stringify(object o)
   return o && (string)o;
 }
 
-static mixed valify(mixed v)
+static mixed objify(mixed v)
 {
   if(!v)
     return v;
@@ -162,7 +174,7 @@ static mixed valify(mixed v)
     return (string)v;
 }
 
-static mixed objify(mixed o)
+static mixed valify(mixed o)
 {
   if(!objectp(o))
     return o;
@@ -170,7 +182,13 @@ static mixed objify(mixed o)
     return map(values(o), valify);
   else if(o->is_instance_of(int_class))
     return int_value(o);
-  else
+  else if(o->is_instance_of(map_ifc)) {
+    mapping r = ([]);
+    foreach(values(set_to_array(map_entry_set(o))||({})), object e)
+      r[valify(map_entry_getkey(e))] = valify(map_entry_getvalue(e));
+    check_exception();
+    return r;
+  } else
     return (string)o;
 }
 
@@ -259,8 +277,11 @@ class ModuleWrapper
 
   static object make_reqid(RequestID id)
   {
-    /* FIXME */
-    return 0;
+    object r = reqid_class->alloc();
+    reqid_init(r);
+    check_exception();
+    jotoid[r] = id;
+    return r;
   }
 
   static object make_args(mapping args)
@@ -488,6 +509,18 @@ static object native_queryconfinternal(object conf, object mod)
   return conf && conf->query_internal_location(mod && jotomod[mod]);
 }
 
+static string native_do_output_tag(object args, object var_arr,
+				   object contents, object id)
+{
+  return do_output_tag(valify(args), valify(var_arr),
+		       contents && (string)contents, jotoid[id]);
+}
+
+static string native_parse_rxml(object what, object id)
+{
+  return parse_rxml( what && (string)what, jotoid[id] );
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
@@ -497,5 +530,9 @@ void create()
   natives_bind2 = conf_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
     ({"queryInternalLocation", "(Lse/idonex/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
+  }));
+  natives_bind3 = FINDCLASS("se/idonex/roxen/RoxenLib")->register_natives(({
+    ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
+    ({"parseRXML", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
 }
