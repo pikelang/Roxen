@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.300 2001/09/13 00:08:49 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.301 2001/09/13 14:27:24 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1487,12 +1487,13 @@ class TagCache {
     {
       if (key) {
 	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
-	if (subkeymap != keymap) {
-	  // The test above assumes that all subtags change the
-	  // mapping directly.
+	if (sizeof (subkeymap) > sizeof (keymap)) {
+	  // The test above assumes that no subtag removes entries in
+	  // RXML_CONTEXT->misc->cache_key.
 	  m_delete (subkeymap, 0);
 	  subvariables = indices (subkeymap - keymap);
-	  RXML_CONTEXT->state_update();
+	  // subvariables is part of the persistent state, but we'll
+	  // come to update_state later anyway if it should be called.
 	}
 	if (overridden_keymap) {
 	  RXML_CONTEXT->misc->cache_key = overridden_keymap;
