@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.30 1997/08/12 08:59:58 per Exp $ */
+/* $Id: describers.pike,v 1.31 1997/08/12 11:10:37 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -89,6 +89,13 @@ string describe_times(array (int) times)
 			map(times[sizeof(times)-3..], describe_time));
 }
 
+string fix_err(string s)
+{
+  while(s[-1]=='\n' || s[-1]==' ' || s[-1]=='\t') s=s[..strlen(s)-2];
+  if(!(<'.','!','?'>)[s[-1]]) s+=".";
+  return capitalize(s);
+}
+
 int last_time;
 string describe_error(string err, array (int) times)
 {
@@ -98,7 +105,34 @@ string describe_error(string err, array (int) times)
   sscanf(err, "%d,%s", code, err);
   return ("<table><tr><td valign=top><img src=/image/err_"+code+".gif>"
 	  "</td><td>"+(nt?"":describe_times(times)+"<br>")+
-	  replace(err,"\n","<br>\n")+"</table>");
+	  replace(fix_err(err),"\n","<br>\n")+"</table>");
+}
+
+mapping actions = ([]);
+object get_action(string act)
+{
+  if(!actions[act]) actions[act]=compile_file("config_actions/"+act)();
+  return actions[act];
+}
+
+mixed describe_actions(object node, object id)
+{
+  if(id->pragma["no-cache"]) actions=([]);
+  if(!id->variables->action)
+  {
+    string res="<dl>";
+    array acts = ({});
+    foreach(get_dir("config_actions"), string act) catch {
+      if(act[0]!='#' && act[-1]=='e')
+	acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=+2><a href=\"/Actions/?action="+
+		  act+"\">"+get_action(act)->name+"</a></font><dd>"+
+		  (get_action(act)->doc||"") });
+    };
+    return res+(sort(acts)*"\n")+"</dl>";
+  }
+  mixed res;
+  res=get_action(id->variables->action)->handle(id,this_object());
+  return res;
 }
 
 string describe_errors(object node)

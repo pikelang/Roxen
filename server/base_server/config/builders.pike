@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.9 1997/07/10 16:28:32 per Exp $ */
+/* $Id: builders.pike,v 1.10 1997/08/12 11:10:36 per Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -288,6 +288,11 @@ void build_root(object root, void|int nodes)
     o->type = NODE_GLOBAL_VARIABLES;
     build_global_variables( o );
 
+    o=root->descend("Actions");
+    o->describer = describe_actions;
+    o->data = 0;
+    o->type = NODE_WIZARDS;
+   
     o=root->descend("Configurations");
     o->describer = describe_configurations;
     o->data = roxen->configurations;

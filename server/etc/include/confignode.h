@@ -1,5 +1,6 @@
 #define NODE_ROOT          0
 # define NODE_ERRORS        11 
+# define NODE_WIZARDS        12
 # define NODE_GLOBAL_VARIABLES 3
 #! define NODE_MODULE_COPY_VARIABLE  9
 # define NODE_CONFIGURATIONS 4

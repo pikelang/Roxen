@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.52 1997/08/12 09:35:06 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.53 1997/08/12 11:10:33 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -67,14 +67,14 @@ class Node {
 	      "</a>\n "+s+"\n");
   }
 
-  string describe(int i)
+  mixed describe(int i, object id)
   {
     array (string) res=({""});
     object node,prevnode;
     mixed tmp;
 
     if(describer)
-      tmp = describer(this_object());
+      tmp = describer(this_object(), id);
 #ifdef NODE_DEBUG
     else
     {
@@ -82,6 +82,10 @@ class Node {
       return 0;
     }
 #endif
+    if(mappingp(tmp)) {
+      werror("Got mapping.\n");
+      return tmp;
+    }
     if(arrayp(tmp) && sizeof(tmp))
       PUSH(tmp[0] +  "<dt>" + (i?tmp[i]:show_me(tmp[1])) + "\n");
     else if(stringp(tmp) && strlen(tmp))
@@ -274,7 +278,7 @@ mapping verify_changed_ports(object id, object o)
 		     "value=\"%s\">\n</pre><p>",
 		     name, name, def);
   }
-  changed_port_servers = ([]);
+  changed_port_servers = (<>);
   return stores(res+"<input type=submit value=\"Continue...\"></form>");
 }
 
@@ -974,6 +978,7 @@ mapping (string:string) selected_nodes =
   "Globals":"/Globals",
   "Status":"/Status",
   "Errors":"/Errors",
+  "Actions":"/Actions",
 ]);
 
 array tabs = ({
@@ -981,13 +986,15 @@ array tabs = ({
   "Globals",
   "Status",
   "Errors",
+  "Actions",
 });
 
 array tab_names = ({
- " Virtual servers ", 
- " Global variables ",
- " Status info ",
- " Event log ",
+ "Virtual Servers",
+ "Global variables",
+ "Status",
+ "Events",
+ "Actions",
 });
 		
 
@@ -1000,6 +1007,7 @@ string display_tabular_header(object node)
     selected_nodes[tabs[1]]+"?"+(bar++),
     selected_nodes[tabs[2]]+"?"+(bar++),
     selected_nodes[tabs[3]]+"?"+(bar++),
+    selected_nodes[tabs[4]]+"?"+(bar++),
   });
 
   if(node != root)
@@ -1126,9 +1134,18 @@ int nfoldedr(object o)
 string dn(object node)
 {
   if(!node) return "???";
-  string s = node->_path[-1];
+  string s = sizeof(node->_path)?node->_path[-1]:".";
   if(((string)((int)s))==s)
     return "Instance "+s;
+  switch(s)
+  {
+   case "Globals":
+    return "Global Variables";
+   case "Configurations":
+    return "Servers";
+   case "Errors":
+    return "Events";
+  }
   return s;
 }
 
@@ -1139,11 +1156,11 @@ string describe_node_path(object node)
   foreach(node->path(1)/"/", string p)
   {
     q+=p+"/";
-    if(cnt>=2)
+    if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += "<font size=+1><a href="+q+">"+
-	dn(find_node(http_decode_string(q[..strlen(q)-2])))+"</a></font> -&gt; ";
+      res += "<b><font size=+1><a href="+q+">"+
+	dn(find_node(http_decode_string(q[..strlen(q)-2])))+"</a></font></b> -&gt; ";
     }
     else
       cnt++;
@@ -1154,11 +1171,20 @@ string describe_node_path(object node)
 string status_row(object node)
 {
   return ("<table width=100% bgcolor=#dddddd border=0 cellpadding=0"
-	  " cellspacing=0><tr><td align=left><a href=$docurl><img border=0 "
+	  " cellspacing=0><tr><td valign=center align=left><a href=$docurl><img border=0 "
 	  "src=/image/roxen-small.gif></a></td><td align=right valign=top>"+
-	  describe_node_path(node)+"</td></tr></table><br>");
+	  describe_node_path(node)+"</td><td>&nbsp</td></tr></table><br>");
 }
 
+mapping logged = ([ ]);
+
+void check_login(object id)
+{
+  if(logged[id->remoteaddr]+1000<time())
+    report_notice("Administrator logged on from "+
+		  roxen->blocking_ip_to_host(id->remoteaddr)+".");
+  logged[id->remoteaddr]=time(1);
+}
 
 mapping configuration_parse(object id)
 {
@@ -1585,6 +1611,8 @@ mapping configuration_parse(object id)
     }
     return std_redirect(o, id);
   }
+
+  check_login(id);
   
   PUSH(default_head("Roxen server configuration"));
 //  PUSH("<table><tr><td>&nbsp;<td>"
@@ -1596,7 +1624,8 @@ mapping configuration_parse(object id)
 	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a>\n");
 
   if(i=o->folded) o->folded=0;
-  string tmp = o->describe(1);
+  mixed tmp = o->describe(1,id);
+  if(mappingp(tmp)) return tmp;
   if(!id->supports->font)
     tmp = parse_html(tmp, ([]),(["font":remove_font, ]));
   PUSH(tmp);
