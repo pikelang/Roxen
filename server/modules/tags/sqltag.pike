@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.50 2000/03/25 02:28:11 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.51 2000/03/25 03:05:02 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -141,11 +141,7 @@ string simpletag_sqloutput(string tag, mapping args, string contents,
   if (args["do-once"])
     return do_output_tag( args, ({([])}), contents, id )+ "<true>";
 
-  if(args->quiet) {
-    id->misc->defines[" _ok"] = 0;
-    return "";
-  }
-  RXML.run_error("No SQL return values.");
+  id->misc->defines[" _ok"] = 0;
 }
 
 class TagSqlplugin {
@@ -172,7 +168,7 @@ string tag_sqlquery(string tag, mapping args, RequestID id)
     else
       RXML.parse_error("No insert_id present.");
 
-  return "<true />";
+  id->misc->defines[" _ok"] = 1;
 }
 
 string tag_sqltable(string tag, mapping args, RequestID id)
@@ -215,10 +211,11 @@ string tag_sqltable(string tag, mapping args, RequestID id)
       ret=make_container("table", args-(["host":"", "database":"", "user":"", "password":"",
 					 "query":"", "nullvalue":""]), ret);
 
-    return ret+"<true>";
+    id->misc->defines[" _ok"] = 1;
+    return ret;
   }
 
-  RXML.run_error("No SQL return values.");
+  id->misc->defines[" _ok"] = 0;
 }
 
 
