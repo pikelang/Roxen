@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.154 1998/11/02 07:00:39 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.155 1998/11/06 15:22:50 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -183,11 +183,7 @@ object load_image(string f,object id)
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
   object file;
-  object img
-#if !constant(Image.PNM)
-  =Image.image()
-#endif
-    ;
+  object img;
   
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
@@ -205,21 +201,20 @@ object load_image(string f,object id)
 #if constant(Image.PNM.decode)
   catch { if(!img) img = Image.PNM.decode( data ); };
 #endif
-#if !constant(Image.PNM.decode)
-  if (catch { if(!img->frompnm(data)) return 0;}) return 0;
-#endif
   if(!img) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
 }
 
-object  blur(object img, int amnt)
+object blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
 
   for(int i=0; i<amnt; i++) 
-    img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
+    img = img->apply_matrix( ({  ({ 0, 1, 0 }),
+				 ({ 1, 2, 1 }),
+				 ({ 0, 1, 0 }) }) );
   return img;
 }
 
@@ -234,12 +229,11 @@ object  outline(object  on, object  with,
   return on;
 }
 
-array white = ({ 255,255,255 });
-array lgrey = ({ 200,200,200 });
-array grey = ({ 128,128,128 });
-array black = ({ 0,0,0 });
+constant white = ({ 255,255,255 });
+constant lgrey = ({ 200,200,200 });
+constant grey = ({ 128,128,128 });
+constant black = ({ 0,0,0 });
 
-array wwwb = ({ lgrey,lgrey,grey,black });
 object  bevel(object  in, int width, int|void invert)
 {
   int h=in->ysize();
@@ -286,16 +280,14 @@ object  bevel(object  in, int width, int|void invert)
 
 object make_text_image(mapping args, object font, string text,object id)
 {
-  object text_alpha=font->write(@(
-#if constant(Locale.Charset)
-				  args->encoding?
-				  Array.map(text/"\n",
-					    lambda(string s, object d) {
-					      return d->feed(s)->drain();
-					    },
-					    Locale.Charset.decoder(args->encoding)) :
-#endif
-				  text/"\n"));
+  object text_alpha=
+    font->write(@(args->encoding?
+		  Array.map(text/"\n",
+			    lambda(string s, object d) {
+			      return d->feed(s)->drain();
+			    },
+			    Locale.Charset.decoder(args->encoding))
+		  :text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
@@ -336,6 +328,12 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize += ((int)args->yspacing)*2;
   }
 
+  if(args->xspacing)
+  {
+    xoffset += (int)args->xspacing;
+    xsize += ((int)args->xspacing)*2;
+  }
+
   if(args->shadow)
   {
     xsize+=((int)(args->shadow/",")[-1])+2;
@@ -370,12 +368,6 @@ object make_text_image(mapping args, object font, string text,object id)
     xsize+=howmuch*2+10;
     xoffset += 3;
     ysize+=howmuch*2+10;
-  }
-
-  if(args->xspacing)
-  {
-    xoffset += (int)args->xspacing;
-    xsize += ((int)args->xspacing)*2;
   }
 
   if(args->border)
@@ -426,8 +418,8 @@ object make_text_image(mapping args, object font, string text,object id)
   int background_is_color;
   if(args->background &&
      ((background = load_image(args->background, id)) ||
-      (sizeof(args->background)>1 &&
-       (background=Image.image(xsize,ysize, @(parse_color(args->background[1..]))))
+      ((background=Image.image(xsize,ysize,
+			       @(parse_color(args->background))))
        && (background_is_color=1))))
   {
     object alpha;
@@ -435,12 +427,11 @@ object make_text_image(mapping args, object font, string text,object id)
     {
       xsize=MAX(xsize,alpha->xsize());
       ysize=MAX(ysize,alpha->ysize());
-      if((float)args->scale)
+      if((float)args->scale && (float)args->scale != 1.0)
 	alpha=alpha->scale(1/(float)args->scale);
-      background=Image.image(xsize,ysize, @(parse_color(args->background[1..])));
     }
       
-    if((float)args->scale >= 0.1 && !alpha)
+    if(!args->nobgscale && (float)args->scale >= 0.1)
       background = background->scale(1.0/(float)args->scale);
     
     if(args->tile)
@@ -474,7 +465,7 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize = MAX(ysize,background->ysize());
  
     if(alpha)
-      background->paste_alpha_color(alpha->invert(),@bgcolor);
+      background = background->paste_alpha_color(alpha->invert(),@bgcolor);
 
     switch(lower_case(args->talign||"left")) {
     case "center":
@@ -488,6 +479,18 @@ object make_text_image(mapping args, object font, string text,object id)
     }
   } else
     background = Image.image(xsize, ysize, @bgcolor);
+
+
+  if(args->bgscale)
+  {
+    string c1="black",c2="black",c3="black",c4="black";
+    sscanf(args->bgscale, "%s,%s,%s,%s", c1, c2, c3, c4);
+    background->tuned_box(0,0, xsize,ysize,
+			  ({parse_color(c1),parse_color(c2),parse_color(c3),
+			      parse_color(c4)}));
+  }
+
+
 
   if(args->border)
   {
@@ -589,7 +592,7 @@ object make_text_image(mapping args, object font, string text,object id)
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
+    ta = blur(ta, MIN((sdist/2),1))->color(255,255,255);
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -620,6 +623,7 @@ object make_text_image(mapping args, object font, string text,object id)
 			  ({parse_color(c1),parse_color(c2),parse_color(c3),
 			      parse_color(c4)}));
   }
+
   if(args->outline)
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
@@ -716,46 +720,14 @@ void start(int|void val, object|void conf)
 #ifdef QUANT_DEBUG
 void print_colors(array from)
 {
-#if efun(color_name)
   for(int i=0; i<sizeof(from); i++)
     perror("%d: %s\n", i, color_name(from[i]));
-#endif
 }
 #endif
 
 int number=0;
 
 mapping find_cached_args(int num);
-
-
-#if !constant(iso88591)
-constant iso88591
-=([ "&nbsp;":   " ",  "&iexcl;":  "¡",  "&cent;":   "¢",  "&pound;":  "£",
-    "&curren;": "¤",  "&yen;":    "¥",  "&brvbar;": "¦",  "&sect;":   "§",
-    "&uml;":    "¨",  "&copy;":   "©",  "&ordf;":   "ª",  "&laquo;":  "«",
-    "&not;":    "¬",  "&shy;":    "­",  "&reg;":    "®",  "&macr;":   "¯",
-    "&deg;":    "°",  "&plusmn;": "±",  "&sup2;":   "²",  "&sup3;":   "³",
-    "&acute;":  "´",  "&micro;":  "µ",  "&para;":   "¶",  "&middot;": "·",
-    "&cedil;":  "¸",  "&sup1;":   "¹",  "&ordm;":   "º",  "&raquo;":  "»",
-    "&frac14;": "¼",  "&frac12;": "½",  "&frac34;": "¾",  "&iquest;": "¿",
-    "&Agrave;": "À",  "&Aacute;": "Á",  "&Acirc;":  "Â",  "&Atilde;": "Ã",
-    "&Auml;":   "Ä",  "&Aring;":  "Å",  "&AElig;":  "Æ",  "&Ccedil;": "Ç",
-    "&Egrave;": "È",  "&Eacute;": "É",  "&Ecirc;":  "Ê",  "&Euml;":   "Ë",
-    "&Igrave;": "Ì",  "&Iacute;": "Í",  "&Icirc;":  "Î",  "&Iuml;":   "Ï",
-    "&ETH;":    "Ð",  "&Ntilde;": "Ñ",  "&Ograve;": "Ò",  "&Oacute;": "Ó",
-    "&Ocirc;":  "Ô",  "&Otilde;": "Õ",  "&Ouml;":   "Ö",  "&times;":  "×",
-    "&Oslash;": "Ø",  "&Ugrave;": "Ù",  "&Uacute;": "Ú",  "&Ucirc;":  "Û",
-    "&Uuml;":   "Ü",  "&Yacute;": "Ý",  "&THORN;":  "Þ",  "&szlig;":  "ß",
-    "&agrave;": "à",  "&aacute;": "á",  "&acirc;":  "â",  "&atilde;": "ã",
-    "&auml;":   "ä",  "&aring;":  "å",  "&aelig;":  "æ",  "&ccedil;": "ç",
-    "&egrave;": "è",  "&eacute;": "é",  "&ecirc;":  "ê",  "&euml;":   "ë",
-    "&igrave;": "ì",  "&iacute;": "í",  "&icirc;":  "î",  "&iuml;":   "ï",
-    "&eth;":    "ð",  "&ntilde;": "ñ",  "&ograve;": "ò",  "&oacute;": "ó",
-    "&ocirc;":  "ô",  "&otilde;": "õ",  "&ouml;":   "ö",  "&divide;": "÷",
-    "&oslash;": "ø",  "&ugrave;": "ù",  "&uacute;": "ú",  "&ucirc;":  "û",
-    "&uuml;":   "ü",  "&yacute;": "ý",  "&thorn;":  "þ",  "&yuml;":   "ÿ",
-]);
-#endif
 
 
 
@@ -862,42 +834,24 @@ array(int)|string write_text(int _args, string text, int size, object id)
 
 //  cache_set(key, text, "rendering");
 
-#if efun(resolve_font)
     if(args->afont)
+      data = resolve_font(args->afont+" "+(args->font_size||32));
+    else
     {
-      data = resolve_font(args->afont);
+      if(!args->nfont) args->nfont = args->font;
+      int bold, italic;
+      if(args->bold) bold=1;
+      if(args->light) bold=-1;
+      if(args->black) bold=2;
+      if(args->italic) italic=1;
+      data = get_font(args->nfont||"default",
+		      (int)args->font_size||32,bold,italic,
+		      lower_case(args->talign||"left"),
+		      (float)(int)args->xpad, (float)(int)args->ypad);
     } 
-    else 
-#endif
-      if(args->nfont)
-    {
-      int bold, italic;
-      if(args->bold) bold=1;
-      if(args->light) bold=-1;
-      if(args->italic) italic=1;
-      if(args->black) bold=2;
-      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
-		      lower_case(args->talign||"left"),
-		      (float)(int)args->xpad, (float)(int)args->ypad);
-    }
-    else if(args->font)
-    {
-      data = resolve_font(args->font);
-      if(!data)
-	data = load_font(args->font, lower_case(args->talign||"left"),
-			 (int)args->xpad,(int)args->ypad);
-    } else {
-      int bold, italic;
-      if(args->bold) bold=1;
-      if(args->light) bold=-1;
-      if(args->italic) italic=1;
-      if(args->black) bold=2;
-      data = get_font(roxen->QUERY(default_font),32,bold,italic,
-		      lower_case(args->talign||"left"),
-		      (float)(int)args->xpad, (float)(int)args->ypad);
-    }
 
-    if (!data) {
+    if (!data) 
+    {
       roxen_perror("gtext: No font!\n");
 //       werror("no font found! < "+_args+" <"+text+">\n");
 //       cache_set(key, orig_text, 0);
@@ -914,26 +868,22 @@ array(int)|string write_text(int _args, string text, int size, object id)
       return 0;
     }
   
+// Quantify
     int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
 
     if(q>255) q=255;
     if(q<3) q=3;
 
-// Quantify
-    if(!args->fs)
-    {
-#ifdef QUANT_DEBUG
-      print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
-#endif
-      img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
-    }
+//     if(!args->fs)
+//       img = img->map_closest(img->select_colors(q-1)+
+// 			     ({parse_color(args->bg)}));
 
     if(!args->scroll)
       if(args->fadein)
       {
 	int amount=2, steps=10, delay=10, initialdelay=0, ox;
 	string res = img->gif_begin();
-	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
+	sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
 	if(initialdelay)
 	{
 	  object foo=Image.image(img->xsize(),img->ysize(),@parse_color(args->bg));
@@ -958,20 +908,22 @@ array(int)|string write_text(int _args, string text, int size, object id)
 	  data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
 		  ({img->xsize(),img->ysize()})});
 	img=0;
-      } else {
-	int len=100, steps=30, delay=5, ox;
-	string res = img->gif_begin() + img->gif_netscape_loop();
-	sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
-	img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
-	img->paste(img, ox, 0);
-	for(int i = 0; i<steps; i++)
-	{
-	  int xp = i*ox/steps;
-	  res += img->copy(xp, 0, xp+len, img->ysize(),
-			   @parse_color(args->bg))->gif_add(0,0,delay);
-	}
-	res += img->gif_end();
-	data = ({ res, ({ len, img->ysize() }) });
+      } 
+    else 
+    {
+      int len=100, steps=30, delay=5, ox;
+      string res = img->gif_begin() + img->gif_netscape_loop();
+      sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+      img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+      img->paste(img, ox, 0);
+      for(int i = 0; i<steps; i++)
+      {
+	int xp = i*ox/steps;
+	res += img->copy(xp, 0, xp+len, img->ysize(),
+			 @parse_color(args->bg))->gif_add(0,0,delay);
+      }
+      res += img->gif_end();
+      data = ({ res, ({ len, img->ysize() }) });
     }
 
 // place in caches, as a gif image.
@@ -1244,7 +1196,6 @@ string tag_gtext_id(string t, mapping arg,
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
   if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
   if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->font) arg->font=defines->font;
 
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
@@ -1300,11 +1251,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   string gif="";
   if(query("gif")) gif=".gif";
   
-#if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
-#else
-  contents = parse_rxml(contents, id, foo);
-#endif
 
   string lp, url, ea;
   string pre, post, defalign, gt, rest, magic;
@@ -1343,7 +1290,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
   if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
   if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->font) arg->font=defines->font;
+  if(defines->font &&  !arg->nfont) arg->font=defines->font;
   if(defines->bold && !arg->bold) arg->bold=defines->bold;
   if(defines->italic && !arg->italic) arg->italic=defines->italic;
   if(defines->black && !arg->black) arg->black=defines->black;
@@ -1425,7 +1372,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	res += ({ "<img border=0 alt=\"" +
 		    replace(arg->alt || word, "\"", "'") +
 		    "\" src=\"" + pre + quote(word) + gif + "\" width=" +
-		    size[0] + " height=" + size[1] + " " + ea + ">\n"
+  		     size[0] + " height=" + size[1] + " " + ea + ">\n"
 		    });
       }
     }
