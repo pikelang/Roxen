@@ -66,6 +66,7 @@ install: roxen_hostname fcgi cgi $(HAVE_SHUFFLE)-install
 		if /bin/cp $$f $(prefix)/roxen/server/bin/; then :; \
 		else exit 1; fi; \
 	done
+	-@ln -s $(prefix)/roxen/server/bin/cgi $(prefix)/roxen/server/bin/cgi-bin
 	@echo Done.
 
 localinstall: fcgi roxen_hostname cgi $(HAVE_SHUFFLE)-localinstall
