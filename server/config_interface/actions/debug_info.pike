@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.16 2001/08/29 15:45:17 mast Exp $
+ * $Id: debug_info.pike,v 1.17 2001/10/08 09:30:34 per Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -210,7 +210,7 @@ mixed page_0( object id )
       if((foo[f]-last_usage[f]) == 0)
 	col="&usr.fgcolor;";
       if((foo[f]-last_usage[f]) < 0)
-	col="&usr.fade2;";
+	col="&usr.fade4;";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       foo->total_bytes += foo[ bn ];
@@ -267,7 +267,7 @@ mixed page_0( object id )
 
   string cwd = getcwd() + "/";
   constant inc_color  = "&usr.warncolor;";
-  constant dec_color  = "&usr.fade2;";
+  constant dec_color  = "&usr.fade4;";
   constant same_color = "&usr.fgcolor;";
 
   for (int i = 0; i < sizeof (table); i++) {
@@ -323,15 +323,21 @@ mixed page_0( object id )
   roxen->set_var("__num_clones", bar);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", "Source") +
-    HCELL ("align='left' ", "&usr.fgcolor;", "Program") +
-    HCELL ("align='right'", "&usr.fgcolor;", "Clones") +
-    HCELL ("align='right'", "&usr.fgcolor;", "Change") +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(0,"Source")) +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(0,"Program")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"Clones")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
     "</tr>\n";
+  string trim_path( string what )
+  {
+    sscanf( what, "%*s/lib/modules/%s", what );
+    return what;
+  };
+
   foreach (table, array entry)
     res += "<tr>" +
       TCELL ("align='left' ", entry[0],
-	     replace (Roxen.html_encode_string (entry[1]), " ", "\0240")) +
+	     replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
       TCELL ("align='left' ", entry[0],
 	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
       TCELL ("align='right'", entry[0], entry[3]) +
