@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.14 1999/04/20 22:45:00 marcus Exp $";
+string cvs_version="$Id: pimage.pike,v 1.15 1999/07/21 23:00:51 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -125,10 +125,10 @@ class Constructors
     {
       if(m->notrans) bg=0;
       if(!image) return "<img src=\"$BASE\" alt=\"\" "
-		   "align=\""+(m->align||"baseline")+"\">";
+		   "align=\""+(m->align||"baseline")+"\" />";
       return ("<img src=\"$BASE\" alt=\"\" width="+
 	      image->xsize()+" height="+image->ysize()+" align=\""
-	      +(m->align||"baseline")+"\">");
+	      +(m->align||"baseline")+"\" />");
     }
 
     mixed handle(object id)
