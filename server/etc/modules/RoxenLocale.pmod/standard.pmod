@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.7 2000/03/20 16:21:03 per Exp $
+ * $Id: standard.pmod,v 1.8 2000/03/24 10:55:23 jhs Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -335,7 +335,7 @@ class _config_interface
 {
   constant all_memory_caches_flushed = "All memory caches have been flushed.";
 
-  constant font_test_string = "The quick brown fox jumped over the lazy dog.";
+  constant font_test_string = "Jackdaws love my big sphinx of quartz.";
 
   // config/low_describers.pike
   string module_hint() {
