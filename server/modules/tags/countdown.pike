@@ -1,11 +1,11 @@
-constant cvs_version="$Id: countdown.pike,v 1.21 1999/12/07 12:12:14 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.22 1999/12/14 01:39:15 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
 
-TAGDOCUMENTATION
+TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["countdown":#"<desc tag>
 This tag can count days, minutes, months, etc. from a specified date or time. It can also
@@ -103,12 +103,17 @@ array register_module()
             "Shows how long time it is until a certain event.",0,1 });
 }
 
+void start( int num, Configuration conf )
+{
+  module_dependencies (conf, ({ "rxmltags" }));
+}
+
 // :-) This code is not exactly conforming to the Roxen API, since it
 // uses a rather private mapping the language object (which you are
 // not even supposed to know the existence of). But I wanted some nice
 // month->number code that did not depend on a static mapping.
 // Currently, this means that you can enter the name of the month or day in
-// your nativ language, if it is supported by roxen.
+// your native language, if it is supported by roxen.
 constant language = roxen->language;
 int find_a_month(string which)
 {
