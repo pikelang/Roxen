@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.61 2000/10/13 13:27:07 kuntri Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.62 2000/10/16 15:56:45 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -264,7 +264,7 @@ class TagSQLTable {
 	array row;
 	while(arrayp(row=res->fetch_row())) {
 	  if (ascii)
-	    ret += row * "\t" + "\n";
+	    ret += ((array(string))row) * "\t" + "\n";
 	  else {
 	    ret += "<tr>";
 	    foreach(row, mixed value)
