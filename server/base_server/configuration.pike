@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.272 2000/03/07 22:42:02 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.273 2000/03/08 01:13:51 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1796,7 +1796,7 @@ public array open_file(string fname, string mode, RequestID id)
 					  replace(query("ZNoSuchFile"),
 						  ({ "$File", "$Me" }),
 						  ({ "&page.virtfile;",
-						     conf->query("MyWorldLocation")
+						     "&roxen.server;"
 						  })),
 #else
 					  query("ZNoSuchFile"),
@@ -3209,7 +3209,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
   deflocaledoc("svenska", "Log", "Loggning: På",
 	       "Ska roxen logga alla förfrågningar till en logfil?");
 
-  defvar("LogFile", roxen->QUERY(logdirprefix)+
+  defvar("LogFile", roxen->query("logdirprefix")+
 	 short_name(name)+"/Log",
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
