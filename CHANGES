@@ -1,3 +1,13 @@
+Changes since Roxen Challenger 1.2.34
+---------------------------------------
+
+o Added <recursive-output>, <auth-reqiured> and <expire-time>
+
+o Fixed install
+
+o Updated Pike 0.6
+
+
 Changes since Roxen Challenger 1.2.32 Yellow
 -----------------------------------------------
 
