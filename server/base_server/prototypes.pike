@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.116 2004/05/10 19:13:06 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.117 2004/05/10 19:25:42 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1894,7 +1894,7 @@ class RoxenModule
   string info(object conf);
   string comment();
 
-  PropertySet|mapping(string:mixed) query_properties(string path, RequestID id);
+  PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id);
   string|array(SimpleNode)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   void recurse_find_properties(string path, string mode, int depth,
