@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.44 2000/08/28 05:31:55 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.45 2000/09/05 09:10:21 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -81,7 +81,8 @@ array lookup_user( string what )
     uid = getpwnam( what );
   if(uid)
     return pwuid_cache[what] = ({ uid[2],uid[3] });
-  report_warning("CGI: Failed to get user information for ["+what+"] (assuming nobody)\n");
+  report_warning("CGI: Failed to get user information for ["+
+                 what+"] (assuming nobody)\n");
   catch {
     return getpwnam("nobody")[2..3];
   };
@@ -287,7 +288,7 @@ class Wrapper
     mid = _m;
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
-    tofd = tofdremote->pipe( );// Stdio.PROP_NONBLOCK );
+    tofd = tofdremote->pipe( ); // Stdio.PROP_NONBLOCK
     fromfd->set_nonblocking( read_callback, 0, close_callback );
 
 #ifdef CGI_DEBUG
@@ -1214,7 +1215,8 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
       sscanf(data, "%*s\n\n%s", data);
     return data;
   };
+  NOCACHE();
   return ("Failed to run CGI script: <font color=\"red\"><pre>"+
-          (Roxen.html_encode_string(describe_backtrace(e))/"\n")[0]+
+          (Roxen.html_encode_string(describe_backtrace(e)))+
           "</pre></font>");
 }
