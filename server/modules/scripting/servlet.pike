@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.10 2000/07/25 14:24:55 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.11 2000/08/02 15:22:42 marcus Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -15,7 +15,7 @@ object servlet;
 
 string status_info="";
 
-constant module_type = MODULE_LOCATION;
+constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION;
 constant module_name = "Java Servlet bridge";
 constant module_doc  = "An interface to Java <a href=\"http://jserv.javasoft.com/"
   "products/java-server/servlets/index.html\">Servlets</a>.";
@@ -109,10 +109,20 @@ class ClassPathList
 
 void create()
 {
+  defvar("ex", 0, "File extension servlet", TYPE_FLAG,
+	 "Use a servlet mapping based on file extension rather than "
+	 "path location.");
+
   defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
 	 "This is where the servlet will be inserted in the "
-	 "namespace of your server.");
+	 "namespace of your server.", 0,
+	 lambda() { return query("ex"); });
 
+  defvar("ext", ({}), "Servlet extensions", TYPE_STRING_LIST,
+         "All files ending with these extensions, will be handled by "+
+	 "this servlet.", 0,
+	 lambda() { return !query("ex"); });
+  
   defvar("codebase", ClassPathList( ({"servlets"}), 0, "Class path",
 				    "Any number of directories and/or JAR "
 				    "files from which to load the servlet "
@@ -165,7 +175,7 @@ class RXMLParseWrapper
 
 mixed find_file( string f, RequestID id )
 {
-  if(!servlet)
+  if(!servlet || query("ex"))
     return 0;
 
   id->my_fd->set_read_callback(0);
@@ -178,6 +188,28 @@ mixed find_file( string f, RequestID id )
   servlet->service(id);
 
   return Roxen.http_pipe_in_progress();
+}
+
+mixed handle_file_extension(object o, string e, RequestID id)
+{
+  if(!servlet || !query("ex"))
+    return 0;
+  
+  id->my_fd->set_read_callback(0);
+  id->my_fd->set_close_callback(0);
+  id->my_fd->set_blocking();
+  id->misc->path_info = id->not_query;
+  id->misc->mountpoint = "/";
+  if(query("rxml"))
+    id->my_fd = RXMLParseWrapper(id->my_fd, id);
+  servlet->service(id);
+
+  return Roxen.http_pipe_in_progress();
+}
+
+array(string) query_file_extensions()
+{
+  return (query("ex")? query("ext") : ({}));
 }
 
 #else
