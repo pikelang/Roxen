@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.104 2001/08/15 16:42:53 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.105 2001/08/16 15:18:09 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -487,7 +487,8 @@ mixed find_file( string f, RequestID id )
     /* NOTE: NORMALIZE_PATH() may throw errors. */
     f = norm_f = NORMALIZE_PATH(f = decode_path(path + f));
 #if constant(system.normalize_path)
-    if (!has_prefix(norm_f, normalized_path)) {
+    if (!has_prefix(norm_f, normalized_path) &&
+	(norm_f+"/" != normalized_path)) {
       errors++;
       report_error(LOCALE(0, "Path verification of %O failed.\n"), oldf);
       TRACE_LEAVE("");
@@ -498,6 +499,9 @@ mixed find_file( string f, RequestID id )
     
     id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
 					 "\\", "/");
+    if (sizeof(oldf) && (oldf[-1] == '/')) {
+      id->not_query += "/";
+    }
 #endif /* constant(system.normalize_path) */
   };
 
