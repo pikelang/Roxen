@@ -10,14 +10,14 @@ int du(string dir)
   foreach((files || ({})) - ({ ".", ".." }), string file) {
     string path = dir + "/" + file;
 
-    mixed st = file_stat(path);
+    Stdio.Stat st = file_stat(path);
     if (st) {
-      if (st[1] == -2) {
+      if (st->isdir) {
 	// Recurse
 	total += du(path);
-      } else if (st[1] >= 0) {
+      } else if (st->isreg) {
 	// Ordinary file
-	total += st[1];
+	total += st->size;
       } else {
 	werror("%O is not an ordinary file!\n", path);
       }
@@ -65,7 +65,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: fixquota.pike,v 1.3 2002/07/03 12:45:05 nilsson Exp $\n");
+      werror("$Id: fixquota.pike,v 1.4 2004/06/09 21:37:18 _cvs_dirix Exp $\n");
       exit(0);
       break;
     }
