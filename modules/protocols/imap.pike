@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.5 1998/09/28 18:17:00 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.6 1998/10/12 15:59:54 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -154,16 +154,46 @@ class imap_mail
 			 {
 			   string|array(string) value = h[name];
 			   if (stringp(value))
-			     return name + ":" + h[name] + "\r\n";
-			      return
-				Array.map(value,
-					  lambda(string v, string n)
-					    { return n + ":" + v + "\r\n"; },
-					  name) * "";
+			     return name + ": " + h[name] + "\r\n";
+			   return
+			     Array.map(value,
+				       lambda(string v, string n)
+				       { return n + ": " + v + "\r\n"; },
+				       name) * "";
 			 },
 		       headers) * "" + "\r\n";
     }
-      
+
+  object get_message(string|void s)
+    {
+      return MIME.Message(s || mail->getdata(), 0, 0, 1);
+    }
+
+  string read_headers()
+    {
+      string h = "";
+      object fd = mail->body_fd();
+	
+      while(search(h, "\r\n\r\n") < 0)
+      {
+	/* 1024 octets should be enough for most messages */
+	string data = fd->read(1024);
+	if (!data || !strlen(data))
+	{
+	  if (h[strlen(h)-2..] != "\r\n")
+	    h += "\r\n";
+	  break;
+	}
+	h += data;
+      }
+      return h;
+    }
+  
+  mapping get_headers(string|void s)
+    {
+      return MIME.parse_headers(s || read_headers(), 1);
+    }
+  
   /* Returns a pair ({ atom[options], value }) */
   mixed fetch_attr(mapping attr)
     {
@@ -179,10 +209,12 @@ class imap_mail
 	if (!(sizeof(attr->section) + sizeof(attr->part)))
 	{
 	  /* Entire message */
-	  return m->body();
+	  return mail->body();
 	}
 
-	MIME.Message msg = MIME.Message(m->body());
+	string raw_body = mail->body();
+	// Use multiple headers
+	MIME.Message msg = get_message(raw_body);
 	
 	if (sizeof(attr->part))
 	{
@@ -197,7 +229,7 @@ class imap_mail
 	      if ( (msg->type == "message")
 		   && (msg->subtype == "rfc822"))
 	      {
-		msg = MIME.Message(msg->getdata());
+		msg = get_message(msg->getdata());
 		top_level = 0;
 	      }
 	      else
@@ -205,8 +237,9 @@ class imap_mail
 	    }
 	    if (!msg->body_parts)
 	    {
-	      /* Every message has a part 1. This may be more liberal than rfc-2060,
-	       * which seems to require this only at the top level. */
+	      /* Every message has a part 1. This may be more liberal
+	       * than rfc-2060, which seems to require this only at
+	       * the top level. */
 	      if (i == 1)
 		continue;
 	      else
@@ -220,7 +253,7 @@ class imap_mail
 	}
 
 	if (!sizeof(attr->section))
-	  return top_level ? m->body() : (string) msg;
+	  return top_level ? raw_body : (string) msg;
 	
 	switch(attr->section[0])
 	{
@@ -242,10 +275,10 @@ class imap_mail
 		 "content-type" : 1,
 		 "content-length" : 1,
 		 "content-transfer-encoding" : 1 ])
-	      & (top_level ? m->headers() : msg->headers) );
+	      & msg->headers );
 	  
 	case "header": {
-	  mapping headers = top_level ? m->headers() : msg->headers;
+	  mapping headers = msg->headers;
 	  
 	  if (sizeof(attr->section) == 1)
 	    return format_headers(headers);
@@ -287,12 +320,11 @@ class imap_mail
 	throw( ({ "Internal error", backtrace() }) );
       }
       case "bodystructure": 
-	return make_bodystructure(MIME.Message(m->getdata()), attr->no_extention_data);
+	return make_bodystructure(MIME.Message(mail->getdata(), 0, 0, 1),
+				  attr->no_extention_data);
 
       case "envelope": 
-	return make_envelope(top_level
-			     ? m->decoded_headers()
-			     : MIME.Message(m->getdata())->headers);
+	return make_envelope(get_headers());
 	
       case "flags":
 	return imap_list(indices(get_flags()));
@@ -303,7 +335,7 @@ class imap_mail
 
       case "rfc822":
 	if (sizeof(attr->section == 1))
-	  return m->body();
+	  return mail->body();
 
 	if (sizeof(attr->section != 2))
 	  throw("Invalid fetch");
@@ -311,12 +343,12 @@ class imap_mail
 	switch(attr->section[1])
 	{
 	case "header":
-	  return format_headers(m->headers());
+	  return read_headers();
 	case "size":
 	  // FIXME: How does rfc-822 define the size of the message?
 	  throw("Not implemented");
 	case "text":
-	  return MIME.Message(m->body())->getdata();
+	  return get_message()->getdata();
 	default:
 	  throw("Invalid fetch");
 	}
@@ -332,7 +364,7 @@ class imap_mail
     {
       /* Don't update the flags variable: That is done by a later
        * update() call.*/
-      m->set_flag("read");
+      mail->set_flag("read");
     }
 }
   
@@ -373,7 +405,7 @@ class imap_mailbox
 	next_uid = mailbox->get(NEXT_UID);
 	contents = get_contents(0);
       }
-      flags = m->get("DEFINED_FLAGS") || (< >);
+      flags = mailbox->get("DEFINED_FLAGS") || (< >);
     }
 
   array get_contents(int make_new_uids)
