@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.72 1997/10/24 20:55:05 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.73 1997/10/24 22:16:57 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -406,21 +406,41 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
     }
 
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
-  for(int i=0; i<j; i++)
-    {
-      if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
-	  ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
-	diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
-	  ->scale(0,diagram_data["fontsize"])
-	  ;
-      else
-	diagram_data["ynamesimg"][i]=
-	  image(diagram_data["fontsize"],diagram_data["fontsize"]);
-      
-      if (diagram_data["ynamesimg"][i]->xsize()<1)
-	diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-    }
-
+  if ((diagram_data["type"]=="bars")||
+      (diagram_data["type"]=="sumbars"))
+    for(int i=0; i<j; i++)
+      {
+	if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
+	  {
+	    if (diagram_data["ynames"][i]=="-0")
+	      diagram_data["ynames"][i]="0";
+	    diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+	      ->scale(0,diagram_data["fontsize"])
+	      ;
+	  }
+	else
+	  diagram_data["ynamesimg"][i]=
+	    image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	
+	if (diagram_data["ynamesimg"][i]->xsize()<1)
+	  diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+      }
+  else
+    for(int i=0; i<j; i++)
+      {
+	if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
+	    ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
+	  diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+	    ->scale(0,diagram_data["fontsize"])
+	    ;
+	else
+	  diagram_data["ynamesimg"][i]=
+	    image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	
+	if (diagram_data["ynamesimg"][i]->xsize()<1)
+	  diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+      }
+  
   if (diagram_data["orient"]=="vert")
     for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
       diagram_data["xnamesimg"][i]=diagram_data["xnamesimg"][i]->rotate_ccw();

@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.46 1997/10/24 20:55:00 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.47 1997/10/24 22:16:52 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -455,14 +455,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   
   //write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
 
-  
   //Rita xaxeln
   if ((diagram_data["xminvalue"]<=LITET)&&
       (diagram_data["xmaxvalue"]>=-LITET))
     barsdiagram->
       polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				      ({
-					diagram_data["linewidth"],
+					xpos_for_yaxis,
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
 					diagram_data["linewidth"]-labelx/2-0.01, //FIXME 
@@ -478,7 +477,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	barsdiagram->
 	  polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					  ({
-					    diagram_data["linewidth"],
+					    xpos_for_yaxis,
 					    diagram_data["ysize"]- ypos_for_xaxis,
 					    
 					    xpos_for_yaxis-4.0/3.0*si, 
@@ -507,7 +506,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  barsdiagram->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
-					      diagram_data["linewidth"],
+					      xpos_for_yaxis,
 					      diagram_data["ysize"]- ypos_for_xaxis,
 					      
 					      xpos_for_yaxis+si/3.0, 
@@ -656,8 +655,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //Placera ut texten på Y-axeln
   s=sizeof(diagram_data["ynamesimg"]);
   for(int i=0; i<s; i++)
-    if ((diagram_data["values_for_ynames"][i]<diagram_data["ymaxvalue"])&&
-	(diagram_data["values_for_ynames"][i]>diagram_data["yminvalue"]))
+    if ((diagram_data["values_for_ynames"][i]<=diagram_data["ymaxvalue"])&&
+	(diagram_data["values_for_ynames"][i]>=diagram_data["yminvalue"]))
     {
       //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
       barsdiagram->setcolor(@diagram_data["textcolor"]);
