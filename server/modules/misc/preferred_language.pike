@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.23 2002/08/12 16:21:28 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.24 2002/10/10 13:58:02 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -185,23 +185,22 @@ will be used.</p></desc>
 
 <attr name='langs'><p>Should be a comma seperated list of language codes. The
 languages associated with these codes will be emitted in that order.</p></attr>",
-		      ([
-			"&_.code;":"<desc type='entity'><p>The language "
-			           "code.</p></desc>",
-			"&_.en;":"<desc type='entity'><p>The language name in "
-				   "english.</p></desc>",
-			"&_.local;":"<desc type='entity'><p>The language name "
-				"as written in the language itself.</p></desc>",
-			"&_.preurl;":#"<desc type='entity'><p>A URL which "
-				      "makes this language the used one by "
-				      "altering prestates.</p></desc>",
-			"&_.confurl;":#"<desc type='entity'><p>A URL which "
-				       "makes the language the used one by "
-				       "altering the roxen cookie.</p></desc>",
-			"&_.localized;":#"<desc type='entity'><p>The language "
-				         "name as written in the currently "
-				         "selected language.</p></desc>"
-		      ])
+([
+  "&_.code;"      : "<desc type='entity'><p>The language code.</p></desc>",
+  "&_.en;"        : "<desc type='entity'><p>The language name in english.</p>"
+                    "</desc>",
+  "&_.local;"     : "<desc type='entity'><p>The language name as written in "
+                    "the language itself.</p></desc>",
+  "&_.preurl;"    : "<desc type='entity'><p>A URL which makes this language "
+                    "the used one by altering prestates.</p></desc>",
+  "&_.confurl;"   : "<desc type='entity'><p>A URL which makes the language "
+                    "the used one by altering the Roxen cookie.</p>"
+                    "<note><p>The <tag>emit</tag> statement must be enclosed "
+                    "in <tag>nocache</tag> to work correctly when this "
+                    "entity is used.</p></note></desc>",
+  "&_.localized;" : "<desc type='entity'><p>The language name as written in "
+                    "the currently selected language.</p></desc>"
+])
   })
 
 ]);
