@@ -7,6 +7,7 @@ inherit "roxenlib";
 #include <roxen.h>
 #include <stat.h>
 #include <config_interface.h>
+#include <config.h>
 
 #define LOCALE	LOW_LOCALE->config_interface
 #define CU_AUTH id->misc->config_user->auth
@@ -19,7 +20,7 @@ constant module_name = "Administration interface RXML tags";
  */
 constant thread_safe = 1;
 
-
+#ifdef OLD_RXML_COMPAT
 void start(int num, Configuration conf)
 {
   if (!num) conf->old_rxml_compat++;
@@ -29,6 +30,7 @@ void stop()
 {
   my_configuration()->old_rxml_compat--;
 }
+#endif
 
 void create()
 {
