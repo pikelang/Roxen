@@ -166,6 +166,7 @@ nn binary
 /server/modules/misc/ip-less_hosts.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language.pike foreign_ident
+/server/modules/misc/language2.pike foreign_ident
 /server/modules/misc/mirrorserver.pike foreign_ident
 /server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/sqldb.pike foreign_ident
