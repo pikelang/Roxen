@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.6 1997/09/05 16:56:26 grubba Exp $
+ * $Id: problems.pike,v 1.7 1997/10/04 23:38:56 grubba Exp $
  */
 
 inherit "wizard";
@@ -123,7 +123,7 @@ string page_2(object id)
   {
     res+=html_notice("<b>Checking "+(strlen(c->query("name"))?
 				     c->query("name"):c->name)+"</b>",id);
-    if(strlen(c->query("LogFile")) && !c->log_function)
+    if(c->query("Log") && strlen(c->query("LogFile")) && !c->log_function)
     {
       errs++;
       res +=
