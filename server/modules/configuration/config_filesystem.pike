@@ -17,12 +17,12 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.61 2000/09/24 13:35:51 nilsson Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.62 2000/09/25 06:29:44 per Exp $";
 
 constant path = "config_interface/";
-object charset_decoder;
 
-object tar;
+object charset_decoder;
+Filesystem.Tar tar;
 
 string template_for( string f, object id )
 {

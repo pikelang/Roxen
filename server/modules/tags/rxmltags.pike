@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.179 2000/09/24 17:03:09 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.180 2000/09/25 06:29:45 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1524,14 +1524,7 @@ string simpletag_trimlines( string tag_name, mapping args,
 void container_throw( string t, mapping m, string c, RequestID id)
 {
   if(c[-1]!='\n') c+="\n";
-  throw(
-	class {
-	  string tag_throw;
-	  void create(string c) {
-	    tag_throw=c;
-	  }
-	}(c)
-	);
+  throw( class(string tag_throw) {}( c ) );
 }
 
 // Internal methods for the default tag

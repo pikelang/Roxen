@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.378 2000/09/24 01:48:17 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.379 2000/09/25 06:29:43 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1561,11 +1561,9 @@ public array(int)|Stat stat_file(string file, RequestID id)
   TRACE_LEAVE("Returned 'no such file'.");
 }
 
-class StringFile
+class StringFile( string data, mixed|void _st )
 {
-  string data;
   int offset;
-  mixed _st;
 
   string _sprintf()
   {
@@ -1599,13 +1597,6 @@ class StringFile
   {
     offset = to;
   }
-
-  void create(string d, mixed|void __st)
-  {
-    data = d;
-    _st = __st;
-  }
-
 }
 
 

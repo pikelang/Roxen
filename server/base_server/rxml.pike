@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.253 2000/09/21 11:31:00 kuntri Exp $
+// $Id: rxml.pike,v 1.254 2000/09/25 06:29:44 per Exp $
 
 
 inherit "rxmlhelp";
@@ -13,14 +13,11 @@ inherit "rxmlhelp";
 #include <config.h>
 
 #ifndef manual
-
 #define _stat defines[" _stat"]
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
-
-class RequestID { }
 
 // ----------------------- Error handling -------------------------
 
@@ -2026,7 +2023,7 @@ class TagIfMatch {
 class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
-  string source(RequestID id, string s) {
+  int source(RequestID id, string s) {
     NOCACHE();
     return id->pragma[s];
   }
