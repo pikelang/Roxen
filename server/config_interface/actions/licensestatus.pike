@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.4 2002/03/07 16:43:31 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.5 2002/04/08 14:13:17 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -28,13 +28,23 @@ mixed parse( RequestID id )
     </tr>
     <emit source='licenses'>
       <tr>
-        <td><a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'
-          >&_.filename;</a>&nbsp;&nbsp;&nbsp;</td>
-        <td>&_.number;&nbsp;&nbsp;&nbsp;</td>
-        <td>&_.type;&nbsp;&nbsp;&nbsp;</td>
         <td>
-          <emit source='license-warnings' rowinfo='var.warnings'></emit>
-          <if variable='var.warnings > 0'>Warnings detected</if>
+          <if variable='_.malformed != yes'>
+            <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'
+              >&_.filename;</a>&nbsp;&nbsp;&nbsp;</if>
+          <else>&_.filename;&nbsp;&nbsp;&nbsp;</else>
+        </td>
+        <td>&_.number;&nbsp;&nbsp;&nbsp;</td>
+        <td>
+          <if variable='_.malformed == yes'>
+            <font color='darkred'>malformed&nbsp;&nbsp;&nbsp;</font></if>
+          <else>&_.type;&nbsp;&nbsp;&nbsp;</else>
+        </td>
+        <td>
+          <if variable='_.malformed != yes'>
+            <emit source='license-warnings' rowinfo='var.warnings'></emit>
+            <if variable='var.warnings > 0'>Warnings detected</if>
+          </if>
           &nbsp;&nbsp;&nbsp;
         </td>
       </tr>

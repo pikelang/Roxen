@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.171 2002/04/08 12:47:48 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.172 2002/04/08 14:12:45 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1336,8 +1336,14 @@ class TagEmitLicenses {
     array(mapping) licenses = ({});
     foreach(glob("*.lic", get_dir(license_dir)), string filename)
     {
-      License.Key key = License.get_license(license_dir, filename);
-      licenses += ({ get_license_vars(key) });
+      License.Key key;
+      if(mixed err = catch { key = License.get_license(license_dir, filename); } )
+      {
+	werror(describe_backtrace(err));
+	licenses += ({ ([ "filename": filename,
+			  "malformed": "yes" ]) });
+      }
+      else licenses += ({ get_license_vars(key) });
     }
     return licenses;
   }
