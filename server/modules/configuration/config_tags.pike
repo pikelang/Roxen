@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.167 2001/10/08 12:32:51 anders Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.168 2002/01/15 11:38:24 grubba Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -397,8 +397,8 @@ string get_var_form( string s, object var, object mod, RequestID id,
         "<font size='+1' color='&usr.warncolor;'><pre>"
         + html_encode_string( tmp )
         + "</pre></font>";
-  
-  if( !view_mode )
+
+  if( !view_mode && var->render_form )
     return pre + var->render_form( id );
   return pre + var->render_view( id );
 }
