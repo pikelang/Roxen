@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.134 2000/01/05 17:45:28 mast Exp $
+ * $Id: roxenloader.pike,v 1.135 2000/01/21 22:26:15 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.134 2000/01/05 17:45:28 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.135 2000/01/21 22:26:15 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -671,6 +671,32 @@ void load_roxen()
 
 #ifndef OLD_PARSE_HTML
 
+static int|string|array(string) compat_call_tag (
+  Parser.HTML p, string str, mixed... extra)
+{
+  string name = lower_case (p->tag_name());
+  if (string|function tag = p->m_tags[name])
+    if (stringp (tag)) return ({tag});
+    else return tag (name, p->tag_args(), @extra);
+  else if (string|function container = p->m_containers[name])
+    // A container has been added.
+    p->add_container (name, compat_call_container);
+  return 1;
+}
+
+static int|string|array(string) compat_call_container (
+  Parser.HTML p, mapping(string:string) args, string content, mixed... extra)
+{
+  string name = lower_case (p->tag_name());
+  if (string|function container = p->m_containers[name])
+    if (stringp (container)) return ({container});
+    else return container (name, args, content, @extra);
+  else
+    // The container has disappeared from the mapping.
+    p->add_container (name, 0);
+  return 1;
+}
+
 class ParseHtmlCompat
 {
   inherit Parser.HTML;
@@ -684,38 +710,13 @@ class ParseHtmlCompat
     m_tags = tags;
     m_containers = containers;
     add_containers (mkmapping (indices (m_containers),
-			       ({call_container}) * sizeof (m_containers)));
-    _set_tag_callback (call_tag);
+			       ({compat_call_container}) * sizeof (m_containers)));
+    _set_tag_callback (compat_call_tag);
     set_extra (@extra);
     case_insensitive_tag (1);
     lazy_entity_end (1);
     match_tag (0);
     ignore_unknown (1);
-  }
-
-  int|string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
-  {
-    string name = lower_case (tag_name());
-    if (string|function tag = m_tags[name])
-      if (stringp (tag)) return ({tag});
-      else return tag (name, tag_args(), @extra);
-    else if (string|function container = m_containers[name])
-      // A container has been added.
-      add_container (name, call_container);
-    return 1;
-  }
-
-  int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
-					   string content, mixed... extra)
-  {
-    string name = lower_case (tag_name());
-    if (string|function container = m_containers[name])
-      if (stringp (container)) return ({container});
-      else return container (name, args, content, @extra);
-    else
-      // The container has disappeared from the mapping.
-      add_container (name, 0);
-    return 1;
   }
 }
 
@@ -725,33 +726,52 @@ string parse_html (string data, mapping tags, mapping containers,
   return ParseHtmlCompat (tags, containers, @args)->finish (data)->read();
 }
 
+static int|string|array(string) compat_call_tag_lines (
+  Parser.HTML p, string str, mixed... extra)
+{
+  string name = lower_case (p->tag_name());
+  if (string|function tag = p->m_tags[name])
+    if (stringp (tag)) return ({tag});
+    else return tag (name, p->tag_args(), p->at_line(), @extra);
+  else if (string|function container = p->m_containers[name])
+    // A container has been added.
+    p->add_container (name, compat_call_container_lines);
+  return 1;
+}
+
+static int|string|array(string) compat_call_container_lines (
+  Parser.HTML p, mapping(string:string) args, string content, mixed... extra)
+{
+  string name = lower_case (p->tag_name());
+  if (string|function container = p->m_containers[name])
+    if (stringp (container)) return ({container});
+    else return container (name, args, content, p->at_line(), @extra);
+  else
+    // The container has disappeared from the mapping.
+    p->add_container (name, 0);
+  return 1;
+}
+
 class ParseHtmlLinesCompat
 {
-  inherit ParseHtmlCompat;
+  inherit Parser.HTML;
 
-  int|string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
-  {
-    string name = lower_case (tag_name());
-    if (string|function tag = m_tags[name])
-      if (stringp (tag)) return ({tag});
-      else return tag (name, tag_args(), at_line(), @extra);
-    else if (string|function container = m_containers[name])
-      // A container has been added.
-      add_container (name, call_container);
-    return 1;
-  }
+  mapping(string:string|function) m_tags, m_containers;
 
-  int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
-					   string content, mixed... extra)
+  void create (mapping(string:string|function) tags,
+	       mapping(string:string|function) containers,
+	       mixed... extra)
   {
-    string name = lower_case (tag_name());
-    if (string|function container = m_containers[name])
-      if (stringp (container)) return ({container});
-      else return container (name, args, content, at_line(), @extra);
-    else
-      // The container has disappeared from the mapping.
-      add_container (name, 0);
-    return 1;
+    m_tags = tags;
+    m_containers = containers;
+    add_containers (mkmapping (indices (m_containers),
+			       ({compat_call_container_lines}) * sizeof (m_containers)));
+    _set_tag_callback (compat_call_tag_lines);
+    set_extra (@extra);
+    case_insensitive_tag (1);
+    lazy_entity_end (1);
+    match_tag (0);
+    ignore_unknown (1);
   }
 }
 
@@ -1036,6 +1056,8 @@ void paranoia_throw(mixed err)
   }
   throw(err);
 }
+
+int global_count;
 
 // Roxen bootstrap code.
 int main(int argc, array argv)
