@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.265 2001/04/24 23:35:21 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.266 2001/06/29 09:31:11 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -971,7 +971,7 @@ class TagGText {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      return ({ do_gtext(args, content, id) });
+      return ({ do_gtext(args, (string) content, id) });
     }
   }
 }
