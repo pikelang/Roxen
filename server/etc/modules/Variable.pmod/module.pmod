@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.13 2000/09/04 13:52:44 per Exp $
+// $Id: module.pmod,v 1.14 2000/09/12 21:27:50 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1166,7 +1166,7 @@ static array(string) verify_port( string port, int nofhttp )
   if( path == "" )
   {
     warning += "Added / to the end of "+port+"\n";
-    host += "/";
+    path = "/";
   }
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)
