@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.23 1999/07/21 20:00:44 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.24 1999/07/27 23:21:40 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -641,8 +641,32 @@ class CGIScript
 #if UNIX
     if(!getuid())
     {
-      options->uid = uid;
-      options->gid = gid;
+      if (uid >= 0) {
+	options->uid = uid;
+      } else {
+	// Some OS's (HPUX) have negative uids in /etc/passwd,
+	// but don't like them in setuid() et al.
+	// Remap them to the old 16bit uids.
+	options->uid = 0xffff & uid;
+
+	if (options->uid <= 10) {
+	  // Paranoia
+	  options->uid = 65534;
+	}
+      }
+      if (gid >= 0) {
+	options->gid = gid;
+      } else {
+	// Some OS's (HPUX) have negative gids in /etc/passwd,
+	// but don't like them in setgid() et al.
+	// Remap them to the old 16bit gids.
+	options->gid = 0xffff & gid;
+
+	if (options->gid <= 10) {
+	  // Paranoia
+	  options->gid = 65534;
+	}
+      }
       options->setgroups = extra_gids;
       if( !uid && QUERY(warn_root_cgi) )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
