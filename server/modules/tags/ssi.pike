@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.39 2001/03/15 23:31:26 per Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.40 2001/05/30 16:47:27 nilsson Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -51,8 +51,8 @@ class ScopeSSI {
     get_var=_get_var;
   }
 
-  string|int `[] (string var, void|RXML.Context c, void|string scope) {
-    return get_var(var, c->id)||"";
+  string|int `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    return ENCODE_RXML_TEXT(get_var(var, c->id), type);
   }
 
   array(string) _indices(void|RXML.Context c) {
@@ -313,6 +313,7 @@ array(string) simpletag_echo(string tag, mapping m, string c, RequestID id)
 {
   if(!m->var)
   {
+    m_delete(m, "--");
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
     else
