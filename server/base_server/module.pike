@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.44 1999/06/28 01:42:10 mast Exp $ */
+/* $Id: module.pike,v 1.45 1999/08/07 16:24:35 nilsson Exp $ */
 
 #include <module.h>
 
@@ -622,6 +622,10 @@ void add_api_function( string name, function f, void|array(string) types)
 mapping api_functions()
 {
   return _api_functions;
+}
+
+string rxml_error(string tag, string error, object id) {
+  return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
 }
 
 object get_font_from_var(string base)
