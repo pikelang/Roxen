@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.98 2002/04/24 14:07:04 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.99 2002/06/24 13:53:29 anders Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -41,7 +41,7 @@ constant tagdoc=([
 
 <attr name='host' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator/installing/databases.xml'><module>SQL
+ href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default database will
  be used.</p>
 </attr>
@@ -64,7 +64,7 @@ constant tagdoc=([
 
 <attr name='host' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator/installing/databases.xml'><module>SQL
+ href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default
  database will be used.</p>
 </attr>
@@ -93,7 +93,7 @@ constant tagdoc=([
 
 <attr name='host' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator/installing/databases.xml'><module>SQL
+ href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default
  database will be used.</p>
 </attr>
