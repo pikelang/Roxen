@@ -1,50 +1,5 @@
 #!/bin/sh
 #
-# $Id: install,v 1.7 1998/05/11 19:18:02 grubba Exp $
+# $Id: install,v 1.8 1998/08/20 07:42:40 per Exp $
 #
-
-# Find the default master
-if [ -f lib/pike/master.pike ]; then
-  DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
-  PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
-else
-  if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
-  else
-    # This is used with localinstall
-    if [ -f ../pike/src/lib/master.pike ]; then
-      DEFINES="$DEFINES -m../pike/src/lib/master.pike -I../pike/src/lib/include"
-      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/lib/modules"
-      if [ -d ../pike/src/share/modules/. ]; then
-        DEFINES="$DEFINES -I../pike/src/share/include"
-	PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/share/modules"
-      fi
-    fi
-  fi
-fi
-export PIKE_MODULE_PATH
-
-# Extra module-path
-if [ -d etc/modules ]; then
-  DEFINES="$DEFINES -Metc/modules"
-fi
- 
-# Extra include-path
-if [ -d etc/include ]; then
-  DEFINES="$DEFINES -Ietc/include"
-fi
- 
-# Extra include-path (2)
-if [ -d base_server ]; then
-  DEFINES="$DEFINES -Ibase_server"
-fi
-
-# Extra program-path
-DEFINES="$DEFINES -P`pwd`"
-
-if [ -f base_server/roxen.pike ]; then
-  exec bin/pike $DEFINES ./bin/install.pike $@
-else
-  echo You have to cd to the 'roxen/server' directory to run this program.
-fi
+./start $@ --once --program bin/install.pike
