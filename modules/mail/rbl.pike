@@ -1,5 +1,5 @@
 /*
- * $Id: rbl.pike,v 1.2 1998/09/17 19:59:56 grubba Exp $
+ * $Id: rbl.pike,v 1.3 1998/09/17 20:18:50 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,10 +9,24 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: rbl.pike,v 1.2 1998/09/17 19:59:56 grubba Exp $";
+constant cvs_version="$Id: rbl.pike,v 1.3 1998/09/17 20:18:50 grubba Exp $";
 constant thread_safe=1;
 
 // #define RBL_DEBUG
+
+/*
+ * Globals
+ */
+
+static object dns;
+
+static int total;
+static int accepted;
+static int denied;
+
+/*
+ * Module interface functions
+ */
 
 array register_module()
 {
@@ -37,11 +51,18 @@ void create()
 	 "<tt>orbs.dorkslayers.com</tt>.");
 }
 
-/*
- * Globals
- */
+string query_name()
+{
+  return(sprintf("SMTP RBL: <tt>%s</tt>", QUERY(server)));
+}
 
-object dns;
+string status()
+{
+  return(sprintf("<b>RBL requests</b>: %d<br>\n"
+		 "<b>Accepted</b>: %d<br>\n"
+		 "<b>Denied</b>: %d<br>\n",
+		 total, accepted, denied));
+}
 
 /*
  * Callback functions
@@ -51,6 +72,7 @@ static void check_dns_result(string nodename, mapping dns_result,
 			     function cb, mixed ... args)
 {
   if (dns_result && sizeof(dns_result->an)) {
+    denied++;
 #ifdef RBL_DEBUG
     report_debug(sprintf("RBL: Access refused for %s\n"
 			 "%O\n",
@@ -59,6 +81,7 @@ static void check_dns_result(string nodename, mapping dns_result,
     cb(({ sprintf("RBL: Access refused for %s", nodename),
 	  "RBL: see http://maps.vix.com/rbl/", }), @args);
   }
+  accepted++;
 #ifdef RBL_DEBUG
   report_debug(sprintf("RBL: Access ok for %s\n", nodename));
 #endif /* RBL_DEBUG */
@@ -77,6 +100,8 @@ void async_classify_connection(object con, mapping con_info,
   }
 
   // con_info->remoteip = "127.0.0.2";
+
+  total++;
 
   string nodename = reverse(con_info->remoteip/".")*"."+"."+QUERY(server);
 
