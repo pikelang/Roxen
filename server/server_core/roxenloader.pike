@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.345 2002/10/22 00:06:12 nilsson Exp $
+// $Id: roxenloader.pike,v 1.346 2002/10/22 01:23:48 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.345 2002/10/22 00:06:12 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.346 2002/10/22 01:23:48 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -725,7 +725,7 @@ int getgid(){ return 42; }
 Roxen really_load_roxen()
 {
   int start_time = gethrtime();
-  report_debug("Loading roxen ... \b");
+  report_debug("Loading server core ... \b");
   Roxen res;
   mixed err = catch {
     res = ((program)"server_core/roxen.pike")();
@@ -2211,6 +2211,7 @@ void do_main( int argc, array(string) argv )
 
   report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
 
+  // NGSERVER: Remove these
   add_constant( "hsv_to_rgb",  nm_resolv("Colors.hsv_to_rgb")  );
   add_constant( "rgb_to_hsv",  nm_resolv("Colors.rgb_to_hsv")  );
   add_constant( "parse_color", nm_resolv("Colors.parse_color") );
