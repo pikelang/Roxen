@@ -28,6 +28,7 @@
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenloader.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
+/server/etc/supports foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/fastdir.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
