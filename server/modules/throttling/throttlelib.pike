@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.10 2000/05/22 19:07:19 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.11 2000/05/23 22:08:33 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -31,8 +31,61 @@ string rules_doc="FIXME: override rules_doc";
 mapping rules;
 //format: ([pattern:({command_type,value,0|1(fix)})])
 //command_type is a string (+-*/=!), value a float
-//if command_type==!, it means no throttling
+//if command_type==!, it means no throttling and value is ignored
 array(string) rulenames; //needed to keep the rules in order.
+
+//cleans shell-like comments (#..EOL)
+string handle_comments(string line) {
+  mixed tmp;
+  if (sscanf(line,"%*[ \t]%s#%*s",tmp)==3) {
+    //comment. Let's trim it out
+    line=tmp;
+  }
+  return String.trim_whites(line); //now the line should be clean.
+}
+
+//override this in subclasses to define new configuration line formats
+//it takes as input one configuration variable line, and must return either
+//an array having in index 0 the configuration key and in index 1 the
+//corresponding rule, or a string indicating an error (and in this case
+//the string must contain the error code) or 0 if the line doesn't contain
+//any configuration info.
+array(mixed)|string|int parse_rules_line (string line) {
+  int fix=0;
+  float val=0;
+  string cmd;
+  array(string) words;
+  line=replace(line,"\t"," ");
+  THROTTLING_DEBUG(" examining: '"+line+"'");
+  if(!sizeof(line))
+    return 0;
+  line=handle_comments(line);
+  words=(line/" ")-({""}); //({command, modifier, fix?})
+  if (sizeof(words)<2 || sizeof(words)>3) {
+    return "can't parse";
+  }
+  if (lower_case(words[1])=="nothrottle") {
+    THROTTLING_DEBUG("nothrottle");
+    return ({words[0],({"!",0,1})});
+  }
+  if (sscanf(words[1],"%[-+*/=]%f",cmd,val) != 2) {
+    THROTTLING_DEBUG("command not understood");
+    return "command not understood";
+  }
+  if (!((<"+","-","*","/","=","!">)[cmd])) {
+    THROTTLING_DEBUG("unknown command");
+    return "unknown command";
+  }
+  if (sizeof(words)>2) {
+    if (lower_case(words[2])=="fix") {
+      fix=1;
+    } else {
+       THROTTLING_DEBUG("unknown keyword \""+words[2]+"\"");
+       return "uknown keyword ["+words[2]+"]";
+    }
+  }
+  return ({ words[0], ({cmd,val,fix}) });
+}
 
 //if there are errors, it will set the rules to a version with the offending
 //lines commented out.
@@ -52,56 +105,20 @@ string|void update_rules(string new_rules) {
     return;
   }
   //  lines=replace(QUERY(rules),"\t"," ")/"\n";
-  lines=replace(new_rules,"\t"," ")/"\n";
+  lines=new_rules/"\n";
   THROTTLING_DEBUG((string)(sizeof(lines))+" lines to examine");
   for (int lineno=0; lineno<sizeof(lines);lineno++) {
     line=lines[lineno];
-    THROTTLING_DEBUG(" examining: '"+line+"'");
-    int fix=0;
-    float val=0;
-    string cmd;
-    if(!sizeof(line))
-      continue;
-    if(line[0]=='#')
-      continue;
-    words=(line/" ")-({""});
-
-    if (sizeof(words)<2) {
-      THROTTLING_DEBUG("can't parse");
-      lines[lineno]="#(can't parse) "+line;
+    mixed got=parse_rules_line(line);
+    if (arrayp(got)) { //rule parsed ok.
+      my_rules[got[0]]=got[1];
+      my_rulenames+=({got[0]});
+    }
+    if (stringp(got)) { //error
+      lines[lineno]="#("+got+") "+lines[lineno];
       errors+=({(string)(lineno+1)});
-      continue;
     }
-    
-    if (lower_case(words[1])=="nothrottle") {
-      THROTTLING_DEBUG("nothrottle");
-      cmd="!";
-      val=0;
-    } else if (sscanf(words[1],"%[-+*/=]%f",cmd,val) != 2) {
-      THROTTLING_DEBUG("command not understood");
-      lines[lineno]="#(command not understood) "+line;
-      errors+=({(string)(lineno+1)});
-      continue;
-    }
-    if (!((<"+","-","*","/","=","!">)[cmd])) {
-      THROTTLING_DEBUG("unknown command");
-      lines[lineno]="#(unknown command) "+line;
-      errors+=({(string)(lineno+1)});
-      continue;
-    }
-    if (cmd=="!" || sizeof(words)>2 ) {
-      if (cmd=="!" || lower_case(words[2])=="fix")
-        //don't change order, or it bangs!
-        fix=1;
-      else {
-        THROTTLING_DEBUG("unknown keyword \""+words[2]+"\"");
-        lines[lineno]="#(unknown keyword \""+words[2]+"\") "+line;
-        errors+=({(string)(lineno+1)});
-        continue;
-      }
-    }
-    my_rules[words[0]]=({cmd,val,fix});
-    my_rulenames+=({words[0]});
+    //else just let it through.
   }
   if (sizeof(errors)) {
 #ifdef IF_ONLY_COULD_CHANGE_RULES
@@ -142,9 +159,9 @@ void start() {
 //If no pattern is found, returns 0
 array low_find_rule(string tomatch, array(string) rulenames, mapping rules) {
   THROTTLING_DEBUG("got request for "+tomatch);
-  string s;
+  mixed s;
   foreach(rulenames,s) {
-    THROTTLING_DEBUG("examining "+s);
+    THROTTLING_DEBUG(sprintf("examining %O",s));
     if (glob(s,tomatch)) {
       THROTTLING_DEBUG("!!matched!!");
       return rules[s];
