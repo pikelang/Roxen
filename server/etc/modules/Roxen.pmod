@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.3 1999/05/10 23:21:21 grubba Exp $
+ * $Id: Roxen.pmod,v 1.4 1999/05/12 21:42:14 grubba Exp $
  *
  * Various helper functions.
  *
@@ -52,17 +52,18 @@ class QuotaDB
     string name;
     int data_offset;
 
+    static int usage;
     static int quota;
 
     static void store()
     {
       LOCK();
 
-      QD_WRITE(sprintf("QuotaEntry::store(): Quota for %O is now %O\n",
-		       name, quota));
+      QD_WRITE(sprintf("QuotaEntry::store(): Usage for %O is now %O(%O)\n",
+		       name, usage, quota));
 
       data_file->seek(data_offset);
-      data_file->write(sprintf("%4c", quota));
+      data_file->write(sprintf("%4c", usage));
 
       UNLOCK();
     }
@@ -74,48 +75,54 @@ class QuotaDB
       data_file->seek(data_offset);
       string s = data_file->read(4);
 
-      quota = 0;
-      sscanf(s, "%4c", quota);
+      usage = 0;
+      sscanf(s, "%4c", usage);
 
-      QD_WRITE(sprintf("QuotaEntry::read(): Quota for %O is %O\n",
-		       name, quota));
+      QD_WRITE(sprintf("QuotaEntry::read(): Usage for %O is %O(%O)\n",
+		       name, usage, quota));
 
       UNLOCK();
     }
 
-    void create(string n, int d_o)
+    void create(string n, int d_o, int q)
     {
-      QD_WRITE(sprintf("QuotaEntry(%O, %O)\n", n, d_o));
+      QD_WRITE(sprintf("QuotaEntry(%O, %O, %O)\n", n, d_o, q));
 
       name = n;
       data_offset = d_o;
+      quota = q;
 
       read();
     }
 
     int check_quota(string uri, int amount)
     {
-      QD_WRITE(sprintf("QuotaEntry::check_quota(%O, %O): quota:%d\n",
-		       uri, amount, quota));
+      QD_WRITE(sprintf("QuotaEntry::check_quota(%O, %O): usage:%d(%d)\n",
+		       uri, amount, usage, quota));
+
+      if (!quota) {
+	// No quota at all.
+	return 0;
+      }
 
       if (amount == 0x7fffffff) {
 	// Workaround for FTP.
 	return 1;
       }
 
-      return(amount <= quota);
+      return(usage + amount <= quota);
     }
 
     int allocate(string uri, int amount)
     {
-      QD_WRITE(sprintf("QuotaEntry::allocate(%O, %O): quota:%d => %d\n",
-		       uri, amount, quota, quota - amount));
+      QD_WRITE(sprintf("QuotaEntry::allocate(%O, %O): usage:%d => %d(%d)\n",
+		       uri, amount, usage, usage + amount, quota));
 
-      quota -= amount;
+      usage += amount;
 
       store();
 
-      return(quota >= 0);
+      return(usage <= quota);
     }
 
     int deallocate(string uri, int amount)
@@ -123,14 +130,14 @@ class QuotaDB
       return(allocate(uri, -amount));
     }
 
-    int get_quota(string uri)
+    int get_usage(string uri)
     {
-      return quota;
+      return usage;
     }
 
-    void set_quota(string uri, int amount)
+    void set_usage(string uri, int amount)
     {
-      quota = amount;
+      usage = amount;
 
       store();
     }
@@ -158,8 +165,8 @@ class QuotaDB
     function(string, int:int) check_quota;
     function(string, int:int) allocate;
     function(string, int:int) deallocate;
-    function(string, int:void) set_quota;
-    function(string:int) get_quota;
+    function(string, int:void) set_usage;
+    function(string:int) get_usage;
 
     void create(object(QuotaEntry) m)
     {
@@ -168,8 +175,8 @@ class QuotaDB
       check_quota = master->check_quota;
       allocate = master->allocate;
       deallocate = master->deallocate;
-      set_quota = master->set_quota;
-      get_quota = master->get_quota;
+      set_usage = master->set_usage;
+      get_usage = master->get_usage;
     }
 
     void destroy()
@@ -179,16 +186,17 @@ class QuotaDB
 #endif /* !constant(set_weak_flag) */
   }
 
-  static object read_entry(int offset)
+  static object read_entry(int offset, int|void quota)
   {
-    QD_WRITE(sprintf("QuotaDB::read_entry(%O)\n", offset));
+    QD_WRITE(sprintf("QuotaDB::read_entry(%O, %O)\n", offset, quota));
 
     catalog_file->seek(offset);
 
     string data = catalog_file->read(READ_BUF_SIZE);
 
     if (data == "") {
-      QD_WRITE(sprintf("QuotaDB::read_entry(%O): At EOF\n", offset));
+      QD_WRITE(sprintf("QuotaDB::read_entry(%O, %O): At EOF\n",
+		       offset, quota));
 
       return 0;
     }
@@ -212,7 +220,7 @@ class QuotaDB
       key = data[8..len-1];
     }
 
-    return QuotaEntry(key, data_offset);
+    return QuotaEntry(key, data_offset, quota);
   }
 
   static object open(string fname, int|void create_new)
@@ -261,54 +269,59 @@ class QuotaDB
     foreach(new_keys, string key) {
       int lo;
       int hi = sizeof(index_acc);
-      while(lo < hi-1) {
-	int probe = (lo + hi)/2;
+      if (hi) {
+	do {
+	  int probe = (lo + hi)/2;
 
-	if (!index_acc[probe]) {
-	  object e = read_entry(index[probe * acc_scale]);
+	  if (!index_acc[probe]) {
+	    object e = read_entry(index[probe * acc_scale]);
 
-	  index_acc[probe] = e->name;
-	}
-	if (index_acc[probe] < key) {
-	  lo = probe;
-	} else if (index_acc[probe] > key) {
-	  hi = probe;
-	} else {
-	  /* Found */
-	  // Shouldn't happen...
-	  break;
-	}
-      }
-      if (lo < hi-1) {
-	// Found...
-	// Shouldn't happen, but...
-	// Skip to the next key...
-	continue;
-      }
-      lo *= acc_scale;
-      hi *= acc_scale;
+	    index_acc[probe] = e->name;
+	  }
+	  if (index_acc[probe] < key) {
+	    lo = probe;
+	  } else if (index_acc[probe] > key) {
+	    hi = probe;
+	  } else {
+	    /* Found */
+	    // Shouldn't happen...
+	    break;
+	  }
+	} while(lo < hi-1);
 
-      while (lo < hi-1) {
-	int probe = (lo + hi)/2;
-	object e = read_entry(index[probe]);
-	if (e->name < key) {
-	  lo = probe;
-	} else if (e->name > key) {
-	  hi = probe;
-	} else {
-	  /* Found */
-	  // Shouldn't happen...
-	  break;
+	if (lo < hi-1) {
+	  // Found...
+	  // Shouldn't happen, but...
+	  // Skip to the next key...
+	  continue;
 	}
+	lo *= acc_scale;
+	hi *= acc_scale;
+
+	do {
+	  int probe = (lo + hi)/2;
+	  object e = read_entry(index[probe]);
+	  if (e->name < key) {
+	    lo = probe;
+	  } else if (e->name > key) {
+	    hi = probe;
+	  } else {
+	    /* Found */
+	    // Shouldn't happen...
+	    break;
+	  }
+	} while (lo < hi-1);
+	if (lo < hi-1) {
+	  // Found...
+	  // Shouldn't happen, but...
+	  // Skip to the next key...
+	  continue;
+	}
+	new_index += index[prev..lo] + ({ new_entries_cache[key] });
+	prev = hi;
+      } else {
+	new_index += ({ new_entries_cache[key] });
       }
-      if (lo < hi-1) {
-	// Found...
-	// Shouldn't happen, but...
-	// Skip to the next key...
-	continue;
-      }
-      new_index += index[prev..lo] + ({ new_entries_cache[key] });
-      prev = hi;
     }
 
     LOCK();
@@ -332,14 +345,16 @@ class QuotaDB
     }
   }
 
-  static object low_lookup(string key)
+  static object low_lookup(string key, int quota)
   {
-    QD_WRITE(sprintf("QuotaDB::low_lookup(%O)\n", key));
+    QD_WRITE(sprintf("QuotaDB::low_lookup(%O, %O)\n", key, quota));
 
     int cat_offset;
 
     if (!zero_type(cat_offset = new_entries_cache[key])) {
-      return read_entry(cat_offset);
+      QD_WRITE(sprintf("QuotaDB::low_lookup(%O, %O): "
+		       "Found in new entries cache.\n", key, quota));
+      return read_entry(cat_offset, quota);
     }
 
     /* Try the index file. */
@@ -347,50 +362,52 @@ class QuotaDB
     /* First use the accellerated index. */
     int lo;
     int hi = sizeof(index_acc);
-    while(lo < hi-1) {
-      int probe = (lo + hi)/2;
+    if (hi) {
+      do {
+	int probe = (lo + hi)/2;
 
-      if (!index_acc[probe]) {
-	object e = read_entry(index[probe * acc_scale]);
+	if (!index_acc[probe]) {
+	  object e = read_entry(index[probe * acc_scale], quota);
 
-	index_acc[probe] = e->name;
+	  index_acc[probe] = e->name;
 
-	if (key == e->name) {
-	  /* Found in e */
+	  if (key == e->name) {
+	    /* Found in e */
+	    QD_WRITE(sprintf("QuotaDB:low_lookup(%O): In acc: Found at %d\n",
+			     key, probe * acc_scale));
+	    return e;
+	  }
+	}
+	if (index_acc[probe] < key) {
+	  lo = probe+1;
+	} else if (index_acc[probe] > key) {
+	  hi = probe;
+	} else {
+	  /* Found */
 	  QD_WRITE(sprintf("QuotaDB:low_lookup(%O): In acc: Found at %d\n",
 			   key, probe * acc_scale));
+	  return read_entry(index[probe * acc_scale], quota);
+	}
+      } while(lo < hi-1);
+
+      /* Not in the accellerated index, so go to disk. */
+      lo *= acc_scale;
+      hi *= acc_scale;
+      do {
+	int probe = (lo + hi)/2;
+	object e = read_entry(index[probe], quota);
+	
+	if (e->name < key) {
+	  lo = probe+1;
+	} else if (e->name > key) {
+	  hi = probe;
+	} else {
+	  /* Found */
+	  QD_WRITE(sprintf("QuotaDB:low_lookup(%O): Found at %d\n",
+			   key, probe));
 	  return e;
 	}
-      }
-      if (index_acc[probe] < key) {
-	lo = probe+1;
-      } else if (index_acc[probe] > key) {
-	hi = probe;
-      } else {
-	/* Found */
-	QD_WRITE(sprintf("QuotaDB:low_lookup(%O): In acc: Found at %d\n",
-			 key, probe * acc_scale));
-	return read_entry(index[probe * acc_scale]);
-      }
-    }
-
-    /* Not in the accellerated index, so go to disk. */
-    lo *= acc_scale;
-    hi *= acc_scale;
-    while (lo < hi-1) {
-      int probe = (lo + hi)/2;
-      object e = read_entry(index[probe]);
-
-      if (e->name < key) {
-	lo = probe+1;
-      } else if (e->name > key) {
-	hi = probe;
-      } else {
-	/* Found */
-	QD_WRITE(sprintf("QuotaDB:low_lookup(%O): Found at %d\n",
-			 key, probe));
-	return e;
-      }
+      } while (lo < hi-1);
     }
 
     QD_WRITE(sprintf("QuotaDB::low_lookup(%O): Not found\n", key));
@@ -416,7 +433,7 @@ class QuotaDB
       return QuotaProxy(res);
 #endif /* constant(set_weak_flag) */
     }
-    if (res = low_lookup(key)) {
+    if (res = low_lookup(key, quota)) {
       active_objects[key] = res;
 
 #if constant(set_weak_flag)
@@ -439,7 +456,7 @@ class QuotaDB
     int data_offset = data_file->tell();
 
     // Initialize.
-    if (data_file->write(sprintf("%4c", quota)) != 4) {
+    if (data_file->write(sprintf("%4c", 0)) != 4) {
       error(sprintf("write() failed for quota data file!\n"));
     }
     string entry = sprintf("%4c%4c%s", sizeof(key)+8, data_offset, key);
@@ -456,7 +473,7 @@ class QuotaDB
     }
 
     // low_lookup will always succeed at this point.
-    return low_lookup(key);
+    return low_lookup(key, quota);
   }
 
   void create(string base_name, int|void create_new)
