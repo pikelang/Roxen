@@ -179,7 +179,6 @@ string|mapping parse( RequestID id )
 
   string last_group;
   sort( sts );
-  res += "<hr>";
   foreach( sts, array q ) {
     //  Extract group name and create divider if different from last one
     string group = (q[0] / "|")[1];
@@ -227,7 +226,11 @@ string|mapping parse( RequestID id )
   };
   string license_res = "";
   if(license->check_visibility(id, 0, 0, 0, 0))
-    license_res = "<table border='0'>"+render_variable(license, id)+"</table>";
+    license_res =
+      "<table border='0'>" +
+      render_variable(license, id) +
+      "</table>"
+      "<hr>\n";
   
   return sprintf(base, license_res, res);
 }
