@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.29 2002/08/23 08:49:38 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.30 2003/02/05 10:36:33 anders Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -168,7 +168,7 @@ int parse_param(Node c, mapping(string:string) data)
         return 0;
 }
 
-void do_parse_servlet(Node c, mapping(string:string) data)
+void do_parse_servlet(Node c, mapping(string:string|int|mapping(string:string)) data)
 {
   mapping(string:string) param = ([ ]);
   int prio;
@@ -965,7 +965,7 @@ Thread.Mutex load_mutex = Thread.Mutex();
 #endif
 
 
-int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
+int load_servlet(mapping(string:string|mapping|Servlet.servlet|int) servlet)
 {
 #if constant(thread_create)
   //  Serialize initializations so concurrent threads won't init the same
@@ -1025,9 +1025,9 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
     }
 }
 
-mapping(string:string|mapping|Servlet.servlet) match_anyservlet(string f, RequestID id)
+mapping(string:string|mapping|Servlet.servlet|array) match_anyservlet(string f, RequestID id)
 {
-  mapping(string:string|mapping|Servlet.servlet) ret;
+  mapping(string:string|mapping|Servlet.servlet|array) ret;
   if (query("anyservlet") && has_prefix(f, "/servlet/"))
     {
       //WEBAPP_WERR(sprintf("match_anyservlet(%s)", f));
