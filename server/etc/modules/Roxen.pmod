@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.85 2001/04/21 16:45:29 nilsson Exp $
+// $Id: Roxen.pmod,v 1.86 2001/04/21 18:32:21 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2651,6 +2651,25 @@ class ScopePage {
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
+      case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
+      case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
+      case "virtfile": // Fallthrough from deprecated name.
+      case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
+      case "query": return ENCODE_RXML_TEXT(c->id->query, type);
+      case "url": return ENCODE_RXML_TEXT(c->id->raw_url, type);
+      case "last-true": return ENCODE_RXML_INT(c->id->misc->defines[" _ok"], type);
+      case "language": return ENCODE_RXML_TEXT(c->id->misc->defines->language, type);
+      case "scope": return ENCODE_RXML_TEXT(c->current_scope(), type);
+      case "filesize": return ENCODE_RXML_INT(c->id->misc->defines[" _stat"]?
+					      c->id->misc->defines[" _stat"][1]:-4, type);
+      case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
+      case "ssl-strength":
+	c->id->misc->cacheable = 0;
+	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
+	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
+      case "dir":
+	array parts = c->id->not_query/"/";
+	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
     }
     mixed val;
     if(converter[var])
