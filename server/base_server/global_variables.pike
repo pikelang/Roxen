@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.61 2001/01/21 17:45:05 nilsson Exp $
+// $Id: global_variables.pike,v 1.62 2001/01/29 07:50:20 per Exp $
 
 /*
 #pragma strict_types
@@ -92,6 +92,13 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 {
   function(DEFVAR) defvar = o->defvar;
 
+  function do_set_cookie(Protocol o)
+  {
+    return lambda() {
+	     return o->query("set_cookie") == 0;
+	   };
+  };
+
   defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
 	 TYPE_FLAG,
 	 LOCALE(73, "Show 'Internal server error' messages to the user. "
@@ -114,8 +121,7 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 		  "ID cookies only upon receiving the first request (and "
 		  "again after some minutes). Thus, if the user doesn't allow "
 		  "the cookie to be set, she won't be bothered with "
-		  "multiple requests."),0 ,
-	   lambda() {return !query("set_cookie");});
+		  "multiple requests."),0, do_set_cookie( o ));
   }
 }
 

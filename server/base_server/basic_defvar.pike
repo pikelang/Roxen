@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.23 2001/01/19 12:41:32 per Exp $
+// $Id: basic_defvar.pike,v 1.24 2001/01/29 07:50:18 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -235,7 +235,8 @@ mixed query(string|void var, int|void ok)
     if(variables[var])
       return variables[var]->query();
     else if(!ok && var[0] != '_')
-      report_error("Querying undefined variable: "+var+"\n");
+      report_error("Querying undefined variable: %O in %O\n%s\n",
+		   var, this_object(), describe_backtrace(backtrace()));
     return ([])[0];
   }
   return variables;
