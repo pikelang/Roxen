@@ -1,5 +1,5 @@
 /*
- * $Id: SimpleTagCaller.java,v 1.2 2000/02/07 23:25:29 marcus Exp $
+ * $Id: SimpleTagCaller.java,v 1.3 2000/02/21 18:14:56 marcus Exp $
  *
  */
 
@@ -21,8 +21,8 @@ public interface SimpleTagCaller {
   /** The no-flags flag. In case you think 0 is too ugly. */
   public static final int FLAG_NONE = 0x00000000;
 
-  /** If set, the tag accepts non-empty content. */
-  public static final int FLAG_CONTAINER = 0x00000001;
+  /** If set, the tag doesn't accept content. */
+  public static final int FLAG_EMPTY_ELEMENT = 0x00000001;
 
   /** Never apply any prefix to this tag. */
   public static final int FLAG_NO_PREFIX = 0x00000002;
@@ -72,8 +72,10 @@ public interface SimpleTagCaller {
    * @param  args      any attributes given to the tag
    * @param  contents  the contents of the tag
    * @param  id        the request object
+   * @param  frame     the parse frame
    * @return           the result of handling the tag
    */
-  public String tagCalled(String tag, Map args, String contents, RoxenRequest id);
+  public String tagCalled(String tag, Map args, String contents,
+			  RoxenRequest id, Frame frame);
 
 }
