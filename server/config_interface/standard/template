@@ -9,9 +9,8 @@
 
 
 <define container=cv-leftside>
-  <cset variable=leftside><contents></cset>
+  <cset quote=none variable=leftside><contents></cset>
 </define>
-
 
 <define container=cv-split>
  <table ::=&usr.content-toptableargs:none;>
@@ -72,26 +71,7 @@
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>
-  <top-menu>
-    <item ::=&usr.toptabs-args:none;
-          title="<cf-locale get=configiftab>" href="&base;"
-      <if match="&selected; is home"> selected</if>  />
-    <item ::=&usr.toptabs-args:none; perm="View Settings"
-          title="<cf-locale get=sites>" href="&base;sites/"
-      <if match="&selected; is sites"> selected</if> />
-    <item ::=&usr.toptabs-args:none; perm="View Settings"
-          title="<cf-locale get=globals>" href="&base;global_settings/"
-          <if match="&selected; is globals"> selected</if> />
-    <item ::=&usr.toptabs-args:none; perm="View Settings"
-          title="<cf-locale get=ports>" href="&base;ports/"
-          <if match="&selected; is ports"> selected</if> />
-    <item ::=&usr.toptabs-args:none; perm="View Settings"
-          title="<cf-locale get=eventlog>" href="&base;event_log/"
-          <if match="&selected; is event_log"> selected</if> />
-    <item ::=&usr.toptabs-args:none; perm="Tasks"
-          title="<cf-locale get=actions>" href="&base;actions/"
-          <if match="&selected; is actions"> selected</if>  />
-  </top-menu>
+ <cset quote=none variable=_top_content preparse><insert file=/standard/topmenu.pike nocache></cset>
 </define>
 
 <define container=submit-gbutton default_align=baseline>
@@ -112,6 +92,8 @@
    <submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton>
 </define>
 
+<define container=content><cset quote=none preparse variable=content><contents></cset></define>
+
 <define container=tmpl>
 <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
 <comment preparse> <!-- We do not want any output from this. -->
@@ -123,50 +105,60 @@
   <define name=font preparse>&usr.font;</define>
   <expire-time now>
 </comment>
+<comment preparse><contents></comment>
   <body ::=&usr.body-args:none;>
     <form method=POST action='<cf-current-url>'>
       <roxen-automatic-charset-variable>
-      <roxen-config preparse>
-        <middle>
-          <table><tr><td align=right>
-            <gtext preparse  font=&usr.font;
-                   fgcolor=&usr.top-fgcolor; scale=0.45
-                   hspace=3><cf-locale get=language>:</gtext>
-            </td>
-            <td>
-              <font color=&usr.fgcolor;>
-               <configif-output quote=¤ source=locales>
+      <table width=100% cellpadding=0 cellspacing=0 border=0
+             ::=&usr.top-tableargs:none;>
+      <tr>
+      <td><a href=http://www.roxen.com/>&usr.logo-html:none;</a></td>
+      <td align=right valign=top>
+        <table><tr><td align=right>
+           <gtext preparse  font=&usr.font;
+                  fgcolor=&usr.top-fgcolor; scale=0.45
+                  hspace=3><cf-locale get=language>:</gtext>
+           </td>
+           <td>
+             <font color=&usr.fgcolor;>
+              <configif-output quote=¤ source=locales>
                 <a href="¤path¤">
                   <img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
                        alt="¤latin1-name¤" border=0 height=16>
                 </a>
-                </configif-output>
-              </font>
+              </configif-output>
+             </font>
            </td>
          </tr>
          <tr>
            <td align=right>
              <font color=&usr.top-fgcolor;>
-               <gbutton preparse
-                    href='/standard/change_user.pike?uid=&form.config_user_uid;'
-                    align=right textcolor=&usr.top-fgcolor;
-                    width=70> <cf-locale get=user>: </gbutton>
+              <gbutton preparse
+                 href='/standard/change_user.pike?uid=&form.config_user_uid;'
+                  align=right textcolor=&usr.top-fgcolor;
+                  width=70> <cf-locale get=user>: </gbutton>
             </td>
             <td>
-              <font color=&usr.top-fgcolor;>
-                 &form.config_user_name; (&form.config_user_uid;)
-              </font>
+               <font color=&usr.top-fgcolor;>
+                &form.config_user_name; (&form.config_user_uid;)
+               </font>
             </td>
-           </tr>
-         </table>
-        </middle>
-        <contents>
-     </roxen-config>
-    </form>
-    <div align=right>
-       <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
-    </div>
-  </body>
+         </tr>
+       </table>
+     </td>
+   </tr>
+   <tr>
+    <td colspan=2 ::=&usr.toptabs-tableargs:none; width=100% valign=bottom>
+      <img src=/internal-roxen-unit width=50 height=1>&form._top_content:none;
+    </td>
+   </tr>
+  </table>
+   <insert variable=content quote=none>
+  </form>
+  <div align=right>
+   <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
+  </div>
+ </body>
 </define>
 
 <define tag=cf-save>

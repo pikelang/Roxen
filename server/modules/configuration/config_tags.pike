@@ -12,17 +12,19 @@ inherit "roxenlib";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Configuration interface RXML tags";
 
-constant thread_safe = 1; /* Not nessesarily true, the config
-                             filesystem forbids parallell accesses anyway
-                             so there is no need for an extra lock here..
-                          */
+/* Not exactly true, but the config filesystem forbids parallell
+ * accesses anyway so there is no need for an extra lock here..
+ */
+constant thread_safe = 1;
+
 
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
 }
 
-void create() {
+void create()
+{
   query_tag_set()->prepare_context=set_entities;
 }
 
@@ -244,113 +246,11 @@ void set_entities(RXML.Context c)
   c->extend_scope("usr", usr_scope);
 }
 
-string internal_topmenu_tag_item(string t, mapping m,
-				 mapping c, RequestID id)
-{
-  if( m->perm  && !CU_AUTH( m->perm ))
-    return "";
-  c->them += ({ m });
-  return "";
-}
-
-string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id)
-{
-  mixed items = (["them":({})]);
-
-  mapping a = ([]);
-  parse_html( d, (["item":internal_topmenu_tag_item]), a, items, id );
-
-  items = items->them;
-
-  c->top=( "<tablist bgcolor='"+config_setting2("toptabs-bgcolor")+
-           "' font='"+config_setting2( "toptabs-font" ) +"'>" );
-  foreach(items, mapping i)
-  {
-    mapping targs = ([]);
-    if(i->selected)
-    {
-      targs->selected = "selected";
-      targs->bgcolor =  config_setting2( "toptabs-bgcolor" );
-      targs->selcolor = config_setting2( "toptabs-selcolor" );
-      targs->textcolor = config_setting2( "toptabs-seltextcolor" );
-    }
-    else
-    {
-      targs->bgcolor =  config_setting2( "toptabs-bgcolor" );
-      targs->dimcolor = config_setting2( "toptabs-dimcolor" );
-      targs->textcolor = config_setting2( "toptabs-dimtextcolor" );
-    }
-    if( i->first ) targs->first=i->first;
-    if( i->last )  targs->last=i->last;
-    targs->href = i->href;
-    c->top += make_container( "tab", targs, " "+i->title+" " );
-  }
-  c->top += "</tablist>";
-  return "";
-}
-
-constant nbsp = iso88591["&nbsp;"];
-string internal_c_middle(string t, mapping m, string d, mapping c,RequestID id)
-{
-  c->middle = d;
-  return "";
-}
-
-string internal_c_content(string t, mapping m, string d, mapping c, RequestID id)
-{
-  c->content = d;
-  return "";
-}
-
-string container_roxen_config(string t, mapping m, string data, RequestID id)
-{
-  int _start = gethrtime();
-
-  mapping c = ([
-    "title":"",
-    "left":"",
-    "top":"",
-    "content":"",
-    "middle":"",
-  ]);
-
-
-  string rest;
-  rest = parse_html(data,([]),
-                    ([
-                      "middle":internal_c_middle,
-                      "top-menu":internal_c_topmenu,
-                      "content":internal_c_content,
-                    ]), c, id);
-
-
-//   c->title =
-  string page =  #"
-  <table width=100% cellpadding=0 cellspacing=0 border=0
-         ::=&usr.top-tableargs:none;>
-    <tr>
-       <td ><a href=http://www.roxen.com/>
-         &usr.logo-html:none;</a></td>
-       <td align=right valign=top>"+c->middle+#"</td>
-    </tr>
-    <tr>
-      <td colspan=2 ::=&usr.toptabs-tableargs:none;
-          width=100% valign=bottom><img src=/internal-roxen-unit width=50 height=1>"+c->top+#"</td>
-    </tr>
-  </table>
-";
-
-  page += c->content;
-
-  return page;
-}
-
 string get_var_doc( string s, object mod, int n, object id )
 {
   s = LOW_LOCALE->module_doc_string( mod, s, (n==1) );
   if( !s ) return "";
-  if( n==2 )
-    sscanf( s, "%*s:%s", s );
+  if( n==2 ) sscanf( s, "%*s:%s", s );
   return s;
 }
 
@@ -358,8 +258,7 @@ string theme_name( string theme )
 {
   catch {
     return trim(Stdio.read_bytes("config_interface/standard/themes/"+
-                                 theme+"/name"));
-  };
+                                 theme+"/name")); };
   return "Unknown theme";
 }
 
@@ -590,7 +489,7 @@ string get_var_form( string s, object mod, object id )
    case TYPE_PASSWORD:
      if( view_mode )
        return "<b>Password</b>";
-     return pre + "<input name=\""+path+"\" type=password size=30,1>";
+     return pre + "<input name=\""+path+"\" type=password size=30>";
     break;
 
    case TYPE_FONT:
@@ -678,7 +577,7 @@ string get_var_form( string s, object mod, object id )
     }
     if( view_mode )
       return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";
-    return input( path, ((array(string))var[VAR_VALUE])*", ", 60 );
+    return input( path, ((array(string))var[VAR_VALUE])*", ", 40 );
 
 
    case TYPE_FLAG:
@@ -816,26 +715,32 @@ mapping get_variable_section( string s, object mod, object id )
 array get_variable_maps( object mod, mapping m, object id )
 {
   array variables = map( indices(mod->variables),get_variable_map,mod,id);
-  variables = Array.filter( variables,
-                            lambda( mapping q ) {
-                              return q->form &&
-                                     strlen(q->sname) &&
-                                     (q->sname[0] != '_');
-                            } );
+
+  variables = filter( variables,
+                      lambda( mapping q ) {
+                        return q->form &&
+                               strlen(q->sname) &&
+                               (q->sname[0] != '_');
+                      } );
+  map( variables, lambda( mapping q ) {
+                    if( search( q->form, "<" ) != -1 )
+                      q->form=("<font size=-1>"+q->form+"</font>");
+                  } );
+
   if( m->section && (m->section != "all"))
   {
     if( !strlen( m->section ) || (search( m->section, "Settings" ) != -1 ))
-      variables = Array.filter( variables,
-                                lambda( mapping q )
-                                {
-                                  return search( q->rname, ":" ) == -1;
-                                } );
+      variables = filter( variables,
+                          lambda( mapping q )
+                          {
+                            return search( q->rname, ":" ) == -1;
+                          } );
     else
-      variables = Array.filter( variables,
-                                lambda( mapping q )
-                                {
-                                  return search( q->rname, m->section )!=-1;
-                                } );
+      variables = filter( variables,
+                       lambda( mapping q )
+                       {
+                         return search( q->rname, m->section )!=-1;
+                       } );
   }
   sort( variables->name, variables );
   return variables;
@@ -1126,8 +1031,7 @@ string tag_cf_locale( string t, mapping m, object id )
 
 string container_cf_perm( string t, mapping m, string c, RequestID id )
 {
-  if( !id->misc->config_user )
-    return "";
+  if( !id->misc->config_user ) return "";
   return CU_AUTH( m->perm )==!m->not ? c : "";
 }
 
