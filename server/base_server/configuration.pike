@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.474 2001/08/28 15:37:40 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.475 2001/08/28 16:32:01 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3333,7 +3333,7 @@ $cache-status  -- A comma separated list of words (containing no
 	 "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "",
-         DLOCALE(36, "Primary Server URL"), TYPE_URL|VAR_PUBLIC,
+         DLOCALE(36, "Ports: Primary Server URL"), TYPE_URL|VAR_PUBLIC,
 	 DLOCALE(37, #"\
 This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
@@ -3346,7 +3346,7 @@ also set 'URLs'."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
-           DLOCALE(38, "URLs"), 
+           DLOCALE(38, "Ports: URLs"), 
 	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  The possible protocols "
