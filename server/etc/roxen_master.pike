@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.70 2000/01/05 13:33:08 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.71 2000/01/30 21:16:23 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -68,7 +68,7 @@ class MyCodec
     if(object tmp=(object)x) return tmp;
     werror("Failed to decode %s\n",x);
     return 0;
-    
+
   }
 
   program programof(string x)
@@ -114,10 +114,8 @@ mapping(program:string) program_names = set_weak_flag (([]), 1);
 string make_ofilename( string from )
 {
   return "precompiled/"+
-         (hash(from)+""+
-          hash(reverse(from))+""+
-          hash(from[strlen(from)/2..]))
-         +".o";
+         uname()->machine+"."+uname()->release + "/"
+         +sprintf( "%s-%08x.o",((from/"/")[-1]/".")[0], hash(from));
 }
 
 void dump_program( string pname, program what )
@@ -130,12 +128,12 @@ void dump_program( string pname, program what )
     mkdir("precompiled");
     _static_modules.files()->Fd(outfile,"wct")->write(data);
   }
-} 
+}
 
 int loaded_at( program p )
 {
   return load_time[ program_name (p) ];
-} 
+}
 
 // Make low_find_prog() search in precompiled/ for precompiled files.
 array(string) query_precompiled_names(string fname)
@@ -159,13 +157,13 @@ program low_findprog(string pname, string ext, object|void handler)
     {
     case "":
     case ".pike":
-      foreach(query_precompiled_names(fname), string ofile ) 
+      foreach(query_precompiled_names(fname), string ofile )
       {
         if(array s2=master_file_stat( ofile ))
-        {	
+        {
           if(s2[1]>0 && s2[3]>=s[3])
           {
-            mixed err = catch 
+            mixed err = catch
             {
               load_time[ fname ] = time();
               ret = programs[fname]=
@@ -231,8 +229,8 @@ int refresh( program p, int|void force )
   }
 
   /*
-   * No need to do anything right now, low_findprog handles 
-   * refresh automatically. 
+   * No need to do anything right now, low_findprog handles
+   * refresh automatically.
    *
    * simply return 1 if a refresh will take place.
    *
@@ -262,7 +260,7 @@ int recursively_check_inherit_time(program root, array up, mapping done)
   int res;
   if( done[ root ]++ )
     return 0;
-  
+
 //   if(!sizeof(up)) werror("\n\n");
 //   werror("**"+("-"*sizeof(up))+" checking "+program_name( root )+"\n");
 
@@ -303,33 +301,33 @@ string stupid_describe(mixed m, int maxlen)
     case "int":
     case "float":
       return (string)m;
-      
+
     case "string":
       canclip++;
       if(sizeof(m) < 40)
         return  sprintf("%O", m);;
       clipped++;
       return sprintf("%O+[%d]",m[..34],sizeof(m)-(35));
-      
+
     case "array":
       if(!sizeof(m)) return "({})";
       return "({" + stupid_describe_comma_list(m,maxlen-2) +"})";
-      
+
     case "mapping":
       if(!sizeof(m)) return "([])";
       return "mapping["+sizeof(m)+"]";
-      
+
     case "multiset":
       if(!sizeof(m)) return "(<>)";
       return "multiset["+sizeof(m)+"]";
-      
+
     case "function":
       if(string tmp=describe_program(m)) return tmp;
       if(object o=function_object(m))
 	return (describe_object(o)||"")+"->"+function_name(m);
       else
 	return function_name(m) || "function";
-      
+
     case "program":
       if(string tmp=describe_program(m)) return tmp;
       return typ;
@@ -377,7 +375,7 @@ string describe_backtrace(mixed trace, void|int linewidth)
       mixed tmp;
       string row;
 
-      if (mixed err=catch 
+      if (mixed err=catch
       {
 	tmp = trace[e];
 	if(stringp(tmp))
@@ -406,9 +404,9 @@ string describe_backtrace(mixed trace, void|int linewidth)
 	    }
 	    pos=desc;
 	  }
-	  
+
 	  string data;
-	  
+
 	  if(sizeof(tmp)>=3)
 	  {
 	    if(functionp(tmp[2]))
@@ -417,7 +415,7 @@ string describe_backtrace(mixed trace, void|int linewidth)
 	      data= tmp[2];
 	    } else
 	      data ="unknown function";
-	    
+
 	    data+="("+
 	      stupid_describe_comma_list(tmp[3..], 99999999)+
 	    ")";
