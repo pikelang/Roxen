@@ -1,6 +1,7 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.165 1999/02/15 23:28:34 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.166 1999/03/11 23:07:24 mast Exp $";
 constant thread_safe=1;
 
+#include <config.h>
 #include <module.h>
 #include <stat.h>
 inherit "module";
@@ -724,7 +725,7 @@ void print_colors(array from)
 int number=0;
 
 #ifdef THREADS
-object number_lock = Threads.Mutex();
+object number_lock = Thread.Mutex();
 #define NUMBER_LOCK()	do { object __key = number_lock->lock()
 #define NUMBER_UNLOCK()	if (__key) destruct(__key); } while(0)
 #else /* !THREADS */
@@ -1118,10 +1119,11 @@ int find_or_insert(mapping find)
   if(res = cached_args[ q ])
     return res;
 
+  int n;
   NUMBER_LOCK();
   cached_args[ number ] = f2;
   cached_args[ q ] = number;
-  int n = number++;
+  n = number++;
   NUMBER_UNLOCK();
 
   remove_call_out(save_cached_args);
