@@ -86,6 +86,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
            object mi = roxen->find_module( q );
            foreach( sort(indices(c->modules[q]->copies)), int i )
            {
+	     catch {
              variables +=
              ({
                ([
@@ -94,6 +95,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
                  "doc":mi->get_description(),
                ]),
              });
+	     };
            }
          }
          sort( variables->name, variables );
