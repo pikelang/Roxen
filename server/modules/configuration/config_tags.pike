@@ -431,7 +431,14 @@ string set_variable( string v, object in, mixed to, object id )
   }
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
-  werror("set %s to %O\n", v, val );
+  if( stringp(val) )
+    val = utf8_to_string(val);
+  if( arrayp( val ) )
+    val = map( val, lambda( mixed q ) { 
+                      if(stringp(q)) 
+                        return utf8_to_string(q);
+                      return q;
+                    } );
   var[ VAR_VALUE ] = val;
   return warning;
 }
