@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.38 2001/07/20 12:13:18 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.39 2001/08/21 09:29:25 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -33,6 +33,8 @@ string query_provides()
 }
 
 
+mapping file_cache = ([ ]);
+
 mapping find_internal(string f, RequestID id)
 {
   //  On-the-fly generation using callback function
@@ -49,11 +51,20 @@ mapping find_internal(string f, RequestID id)
     return Roxen.http_string_answer(externals[key], "application/x-javascript");
   }
   
+  //  Cache the files
   string file = combine_path(__FILE__, "../scripts", (f-".."));
-  if(!file_stat(file))
-    return 0;
-  return Roxen.http_file_answer(Stdio.File(file,"r"),
-				"application/x-javascript" );
+  int|string data;
+  if (!(data = file_cache[file])) {
+    //  Put entry in cache. Missing files are stored as -1.
+    if (!file_stat(file)) {
+      file_cache[file] = -1;
+      return 0;
+    }
+    data = file_cache[file] = Stdio.read_bytes(file);
+  }
+  id->misc->cacheable = INITIAL_CACHEABLE;
+  return
+    stringp(data) && Roxen.http_string_answer(data, "application/x-javascript" );
 }
 
 // Provider function
