@@ -1441,7 +1441,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="277">
-<o>The maximum size of a file that is to be considered for the cache</o>
+<changed from="The maximum size of a file that is to be considered for the cache"/>
+<o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
 <t>De maximala storleken för filer som ska lagras i datacachen</t>
 </str>
 

@@ -1300,7 +1300,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="277">
-<o>The maximum size of a file that is to be considered for the cache</o>
+<changed from="The maximum size of a file that is to be considered for the cache"/>
+<o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
 <t>Die maximale Dateigröße, die für den Cache verwendet werden soll</t>
 </str>
 

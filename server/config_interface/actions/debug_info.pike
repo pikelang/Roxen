@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.27 2003/02/04 16:34:26 mast Exp $
+ * $Id: debug_info.pike,v 1.28 2003/03/04 17:51:46 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -237,8 +237,8 @@ mixed page_0( object id )
 		    gc_freed, gc_freed + num_things_afterwards,
 		    gc_freed * 100 / (gc_freed + num_things_afterwards));
   else
-    res += sprintf (LOCALE (170, "%d seconds since last garbage collection, "
-			    "%d%% of the interval is consumed."),
+    res += sprintf (LOCALE(170, "%d seconds since last garbage collection, "
+			   "%d%% of the interval is consumed."),
 		    time() - gc_status->last_gc,
 		    (gc_status->num_allocs + 1) * 100 /
 		    (gc_status->alloc_threshold + 1));
@@ -248,8 +248,8 @@ mixed page_0( object id )
     " /> " + LOCALE(171, "Run the garbage collector first.") + "</p>\n";
 
   if (!this_found)
-    res += "<p><font color='&usr.warncolor;'>" + LOCALE (0, "Internal inconsistency") +
-      ":</font> " + LOCALE (0, "Object(s) missing in object link list.") + "</p>\n";
+    res += "<p><font color='&usr.warncolor;'>" + LOCALE(173, "Internal inconsistency") +
+      ":</font> " + LOCALE(174, "Object(s) missing in object link list.") + "</p>\n";
 
   string first="";
   mem_usage->total_usage = 0;
@@ -313,14 +313,14 @@ mixed page_0( object id )
   res += "</table></p>\n";
 
   if (walked_objects != mem_usage->num_objects) {
-    res += "<p><font color='&usr.warncolor;'>" + LOCALE (0, "Warning") + ":</font> ";
+    res += "<p><font color='&usr.warncolor;'>" + LOCALE(175, "Warning") + ":</font> ";
     if (mem_usage_afterwards->num_objects != mem_usage->num_objects)
-      res += LOCALE (0, "Number of objects changed during object walkthrough "
-		     "(probably due to automatic gc call) - "
-		     "the list below is not complete.");
+      res += LOCALE(176, "Number of objects changed during object walkthrough "
+		    "(probably due to automatic gc call) - "
+		    "the list below is not complete.");
     else
-      res += sprintf (LOCALE (0, "The object walkthrough visited %d of %d objects - "
-			      "the list below is not accurate."),
+      res += sprintf (LOCALE(177, "The object walkthrough visited %d of %d objects - "
+			     "the list below is not accurate."),
 		      walked_objects, mem_usage->num_objects);
     res += "</p>\n";
   }
@@ -441,7 +441,7 @@ mixed page_0( object id )
     gc_status->gc_time_ratio =
       (float) gc_status->gc_time / gc_status->non_gc_time;
 
-  res += "<p><b>" + LOCALE (172,"Garbage collector status") + "</b><br />\n"
+  res += "<p><b>" + LOCALE(172,"Garbage collector status") + "</b><br />\n"
     "<table border='0' cellpadding='0'>\n";
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +

@@ -1409,7 +1409,7 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 
 <str id="277">
 <new/>
-<o>The maximum size of a file that is to be considered for the cache</o>
+<o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
 <t></t>
 </str>
 

@@ -982,14 +982,12 @@ change the currently running version.</o>
 </str>
 
 <str id="169">
-<o>The garbage collector freed %d of %d things (%f%%).
-</o>
+<o>The garbage collector freed %d of %d things (%d%%).</o>
 <t></t>
 </str>
 
 <str id="170">
-<o>%d seconds since last garbage collection.
-</o>
+<o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
 <t></t>
 </str>
 
@@ -999,6 +997,31 @@ change the currently running version.</o>
 </str>
 
 <str id="172">
-<o>Status from last garbage collection</o>
+<o>Garbage collector status</o>
+<t></t>
+</str>
+
+<str id="173">
+<o>Internal inconsistency</o>
+<t></t>
+</str>
+
+<str id="174">
+<o>Object(s) missing in object link list.</o>
+<t></t>
+</str>
+
+<str id="175">
+<o>Warning</o>
+<t></t>
+</str>
+
+<str id="176">
+<o>Number of objects changed during object walkthrough (probably due to automatic gc call) - the list below is not complete.</o>
+<t></t>
+</str>
+
+<str id="177">
+<o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
 <t></t>
 </str>
