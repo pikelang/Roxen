@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.111 2000/02/08 07:15:35 nilsson Exp $
+ * $Id: rxml.pike,v 1.112 2000/02/09 20:18:41 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1882,8 +1882,9 @@ constant tagdoc=([
 
  If the if caller is of an IfIs type the if statement will be compared
  with one of the following operators is, =, ==, !=, &lt; and &gt. The
- operators is, = and == are the same. E.g. <tag><ref type=cont>if
- variable=\"x &gt; 5\"</ref></tag>More than one hand<tag><ref type=cont/if</ref></tag>",
+ operators is, = and == are the same.
+ <ex><set variable=x value=6>
+<if variable=\"x > 5\">More than one hand</if></ex>",
 
 "if#true":#"<desc plugin>
  This will always be true if the truth value is set to be true.
@@ -1991,182 +1992,57 @@ constant tagdoc=([
  if caller.
 </desc>",
 
+//FIXME: The list should be extracted from the supports database.
 "if#supports":#"<desc plugin>
  Does the browser support this feature? Supports is an IfIs if caller.
 </desc>
 
-<attr name=activex>
-  The browser handles active-X contents.
-</attr>
-
-<attr name=align>
- The browser supports the align attribute in its tags.
-</attr>
-
-<attr name=autogunzip>
- The browser can decode a gunzipped file on the fly.
-</attr>
-
-<attr name=backgrounds>
- The browser supports backgrounds according to the HTML3 specifications.
-</attr>
-
-<attr name=bigsmall>
- The browser supports the <tag>big</tag> and <tag>small</tag> tags.
-</attr>
-
-<attr name=center>
- The browser supports the <tag>center</tag> tag.
-</attr>
-
-<attr name=cookies>
- The browser can receive cookies.
-</attr>
-
-<attr name=divisions>
- The browser supports <tag>div align=...</tag>.
-</attr>
-
-<attr name=div>
- Same as divisions.
-</attr>
-
-<attr name=epsinline>
- The browser can show encapsulated postscript files inline.
-</attr>
-
-<attr name=font>
- The browser supports <tag>font size=num</tag>.
-</attr>
-
-<attr name=fontcolor>
- The browser can change color of individual characters.
-</attr>
-
-<attr name=fonttype>
- The browser can set the font.
-</attr>
-
-<attr name=forms>
- The browser supports forms according to the HTML 2.0 and 3.0
- specifications.
-</attr>
-
-<attr name=frames>
- The browser supports frames.
-</attr>
-
-<attr name=gifinline>
- The browser can show GIF images inlined.
-</attr>
-
-<attr name=html>
- This is a HTML browser (as opposed to e.g. a WAP browser).
-</attr>
-
-<attr name=imagealign>
- The browser supports align=left and align=right in images.
-</attr>
-
-<attr name=images>
- The browser can display images.
-</attr>
-
-<attr name=java>
- The browser supports Java applets.
-</attr>
-
-<attr name=javascript>
- The browser supports Java Scripts.
-</attr>
-
-<attr name=jpeginline>
- The browser can show JPEG images inlined.
-</attr>
-
-<attr name=mailto>
- The browser supports mailto URLs.
-</attr>
-
-<attr name=math>
- The <tag>math</tag> tag is correctly displayed by the browser.
-</attr>
-
-<attr name=msie>
- This is a Microsoft Internet Explorer browser.
-</attr>
-
-<attr name=netscape_javascript>
- The browser needs netscape styled javascript.
-</attr>
-
-<attr name=phone>
- The client is a phone.
-</attr>
-
-<attr name=pjpeginline>
- The browser can handle progressive JPEG images, .pjpeg, inline.
-</attr>
-
-<attr name=pnginline>
- The browser can handle PNG images inlined.
-</attr>
-
-<attr name=pull>
- The browser handles Client Pull.
-</attr>
-
-<attr name=push>
- The browser handles Server Push.
-</attr>
-
-<attr name=requests_are_utf8_encoded>
- The requests are UTF8 encoded.
-</attr>
-
-<attr name=ssl>
- The browser handles secure sockets layer.
-</attr>
-
-<attr name=stylesheets>
- The browser supports stylesheets.
-</attr>
-
-<attr name=supsub>
- The browser handles <tag>sup</tag> and <tag>sub</tag> tags correctly.
-</attr>
-
-<attr name=tables>
- The browser handles tables according to the HTML3.0 specification.
-</attr>
-
-<attr name=tablecolor>
- It is possible to set the background color in the browser.
-</attr>
-
-<attr name=tableimages>
- It is possible to set a backgroud image in a table in the browser.
-</attr>
-
-<attr name=unknown>
-  The browser is not known, hence the supports classes can not be trusted.
-</attr>
-
-<attr name=vrml>
- The browser supports VRML
-</attr>
-
-<attr name=wbmp0>
- The browser supports Wireless Bitmap Picture Format, type 0.
-</attr>
-
-<attr name=wml1.0>
- The browser supports Wireless Markup Language 1.0.
-</attr>
-
-<attr name=wml1.1>
- The browser supports Wireless Markup Language 1.1.
-</attr>",
+The following features are supported:
+<ul>
+<li>activex - The browser handles active-X contents.</li>
+<li>align - The browser supports the align attribute in its tags.</li>
+<li>autogunzip - The browser can decode a gunzipped file on the fly.</li>
+<li>backgrounds - The browser supports backgrounds according to the HTML3 specifications.</li>
+<li>bigsmall - The browser supports the <tag>big</tag> and <tag>small</tag> tags.</li>
+<li>center - The browser supports the <tag>center</tag> tag.</li>
+<li>cookies - The browser can receive cookies.</li>
+<li>divisions - The browser supports <tag>div align=...</tag>.</li>
+<li>div - Same as divisions.</li>
+<li>epsinline - The browser can show encapsulated postscript files inline.</li>
+<li>font - The browser supports <tag>font size=num</tag>.</li>
+<li>fontcolor - The browser can change color of individual characters.</li>
+<li>fonttype - The browser can set the font.</li>
+<li>forms - The browser supports forms according to the HTML 2.0 and 3.0  specifications.</li>
+<li>frames - The browser supports frames.</li>
+<li>gifinline - The browser can show GIF images inlined.</li>
+<li>html - This is a HTML browser (as opposed to e.g. a WAP browser).</li>
+<li>imagealign - The browser supports align=left and align=right in images.</li>
+<li>images - The browser can display images.</li>
+<li>java - The browser supports Java applets.</li>
+<li>javascript - The browser supports Java Scripts.</li>
+<li>jpeginline - The browser can show JPEG images inlined.</li>
+<li>mailto - The browser supports mailto URLs.</li>
+<li>math - The <tag>math</tag> tag is correctly displayed by the browser.</li>
+<li>msie - This is a Microsoft Internet Explorer browser.</li>
+<li>netscape_javascript - The browser needs netscape styled javascript.</li>
+<li>phone - The client is a phone.</li>
+<li>pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.</li>
+<li>pnginline - The browser can handle PNG images inlined.</li>
+<li>pull - The browser handles Client Pull.</li>
+<li>push - The browser handles Server Push.</li>
+<li>requests_are_utf8_encoded - The requests are UTF8 encoded.</li>
+<li>ssl - The browser handles secure sockets layer.</li>
+<li>stylesheets - The browser supports stylesheets.</li>
+<li>supsub - The browser handles <tag>sup</tag> and <tag>sub</tag> tags correctly.</li>
+<li>tables - The browser handles tables according to the HTML3.0 specification.</li>
+<li>tablecolor - It is possible to set the background color in the browser.</li>
+<li>tableimages - It is possible to set a backgroud image in a table in the browser.</li>
+<li>unknown - The browser is not known, hence the supports classes can not be trusted.</li>
+<li>vrml - The browser supports VRML.</li>
+<li>wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.</li>
+<li>wml1.0 - The browser supports Wireless Markup Language 1.0.</li>
+<li>wml1.1 - The browser supports Wireless Markup Language 1.1.</li>
+",
 
 "if#time":#"<desc plugin>
  Is the date ttmm? The attributes before, after and inclusive modifies
