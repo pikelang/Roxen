@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
 inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.23 2004/05/22 22:41:17 _cvs_dirix Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.24 2004/05/23 00:52:54 _cvs_stephen Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -19,7 +19,7 @@ constant module_name = "Java: Java Servlet bridge";
 constant module_doc  = "An interface to Java <a href=\"http://java.sun.com/"
   "products/servlet/index.html""\">Servlets</a>.";
 
-#if constant(servlet.servlet)
+#if constant(Servlet.servlet)
 
 void stop()
 {
@@ -129,8 +129,8 @@ mixed find_file( string f, RequestID id )
     id->misc->path_info = f;
     id->misc->mountpoint = "";
     if(query("rxml"))
-    id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
-	servlet->service(id);
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
+    servlet->service(id);
   }
 
   return Roxen.http_pipe_in_progress();
@@ -150,8 +150,7 @@ mixed handle_file_extension(object o, string e, RequestID id)
     id->misc->path_info = id->not_query;
     id->misc->mountpoint = "/";
     if(query("rxml"))
-    id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
-  
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
     servlet->service(id);
   }
 
