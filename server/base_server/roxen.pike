@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.334 1999/10/10 10:37:53 per Exp $
+ * $Id: roxen.pike,v 1.335 1999/10/10 17:25:33 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.334 1999/10/10 10:37:53 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.335 1999/10/10 17:25:33 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -26,6 +26,8 @@ inherit "hosts";
 inherit "disk_cache";
 inherit "language";
 inherit "supports";
+
+#define SSL3_DEBUG
 
 /*
  * Version information
@@ -607,7 +609,7 @@ class fallback_redirect_request
 	  {
 	    if ( (sizeof(header) >= 2) &&
 		 (lower_case(header[0]) == "host") )
-	      prefix = "https://" + (header[1]/":")[0] - " ";
+	      prefix = "https://" + header[1] - " ";
 	  }
 	}
 	if (prefix) {
@@ -622,7 +624,8 @@ class fallback_redirect_request
 	    /* This case is most unlikely to occur,
 	     * but better safe than sorry...
 	     */
-	    prefix = "https://localhost:" + port;
+	    string ip = (f->query_address(1)/" ")[0];
+	    prefix = "https://" + ip + ":" + port;
 	  } else if (prefix[..4] == "http:") {
 	    /* Broken MyWorldLocation -- fix. */
 	    prefix = "https:" + prefix[5..];
@@ -801,14 +804,26 @@ class SSLProtocol
       return sslfile[s];
     }
 
+    mixed `[]=(string s, mixed val)
+    {
+      return sslfile[s] = val;
+    }
+
     mixed `->(string s)
     {
       return sslfile[s];
     }
 
+    mixed `->=(string s, mixed val)
+    {
+      return sslfile[s] = val;
+    }
+
     void destroy()
     {
-      sslfile->close();
+      if (sslfile) {
+	sslfile->close();
+      }
     }
 
     void create(object q, object ctx)
@@ -1006,12 +1021,8 @@ class HTTPS
       if ( (my_fd->current_write_state->seq_num == 0)
 	   && search(lower_case(data), "http"))
       {
-#if 0
-	object raw_fd = Stdio.File();
-	raw_fd->assign(my_fd);
-#else /* !0 */
 	object raw_fd = my_fd->socket;
-#endif /* 0 */
+	my_fd->socket = 0;
 
 	/* Redirect to a https-url */
 	//    my_fd->set_close_callback(0);
