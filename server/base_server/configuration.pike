@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.58 1997/08/18 00:37:42 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.59 1997/08/18 01:35:53 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2414,11 +2414,12 @@ string desc()
 
   if(!sizeof(QUERY(Ports)))
   {
-    foreach(roxen->configurations, object c)
-    {
-      if(c->modules["ip-less_hosts"])
-	handlers += ({ http_encode_string("/Configurations/"+c->name) });
-    }
+//    foreach(roxen->configuration_interface()
+//    foreach(roxen->configurations, object c)
+//    {
+//      if(c->modules["ip-less_hosts"])
+//	handlers += ({ http_encode_string("/Configurations/"+c->name) });
+//    }
     res="There are no ports configured<br>\n";
   }
   
