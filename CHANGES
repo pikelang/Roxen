@@ -2,11 +2,17 @@ Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
 
 o When you save port changes in virtual servers (and also the
-  configuration ports), you get a page where you are prompted to
+  configuration ports), you now get a page where you are prompted to
   change the virtual server URL (or configuration URL). You can choose
   between the different ports and the current one, which you can also
   modify to something else. This should decrease the number of
   misconfigured server URLs drastically.
+
+o Shutdown and restart have moved to the Actions tab.
+
+o Several other actions added.
+
+o Now opens the configuration port(s) first instead of last.
 
 o Colors in the configuration interface changed to the official
   Infovav User Interface Colors. Some other changes to the layout as well.
@@ -20,10 +26,25 @@ o Added a new tag: <pr>. Use <pr help> to get some help.
 o The FTP-protocol module now sends a nice message when it shuts down a
   connection due to timeout.
 
-o The old SSL-protocol modules have at last been removed in favour of the
-  SSL3-module.
+o The SSL3-module is now used in favour of the old SSL-protocol modules,
+  which in turn have at last been removed.
 
 o Module-level security improved again.
+
+o Added support for subnet-based IP security.
+
+o Module-variables can now be tagged as less interresting, and are then
+  shown only in more-mode.
+
+o Added possibility to disable directory-listing overrides to the
+  fastdirectory-module.
+
+o The mirror server and client now have some documentation.
+
+o The restricted-filesystem now supports hiding the path to the
+  home-directory.
+
+o Fixed some CGI environment-variable bugs.
 
 
 Changes since Roxen Challenger 1.2 alpha 7
