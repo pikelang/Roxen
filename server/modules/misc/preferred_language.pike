@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.23 2002/08/12 16:21:23 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.24 2002/10/11 22:17:56 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -156,9 +156,9 @@ class TagEmitLanguages {
 
     array res=({});
     foreach(langs, string lang) {
-      array(string) lid =
-	(locale_obj && [array(string)] locale_obj->id()) ||
-	({ lang, "Unknown", "Unknown" });
+      object l_obj = [object]roxen->language_low(lang);
+      array(string) lid = ( (l_obj && [array(string)]l_obj->id()) ||
+			    ({ lang, "Unknown", "Unknown" }) );
       
       res+=({ (["code":lid[0],
 		"en":lid[1],
