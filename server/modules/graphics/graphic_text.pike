@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.165 1999/05/30 21:13:32 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.166 1999/06/10 14:59:39 jonasw Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -554,7 +554,7 @@ void start(int|void val, object|void conf)
 }
 
 constant nbsp = iso88591["&nbsp;"];
-constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp",});
+constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
 constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
