@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
-constant cvs_version = "$Id: master.pike,v 1.131 2002/11/04 20:13:23 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.132 2002/11/14 04:58:00 mani Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -270,12 +270,13 @@ void init_security()
 UID root   = UID( "root", "Supersture",0,0, ~0, ~BIT_DESTRUCT );
 
 
-// The nobody user cannot do anything, basically (it can read/stat files, though)
+// The nobody user cannot do anything, basically (it can read/stat
+// files, though)
 UID nobody = UID( "nobody", "Nobody", 65535,65535,  BIT_CONDITIONAL_IO, ~0 )
              ->set_io_bits( BIT_IO_CHROOT | BIT_IO_CAN_READ );
 
-// Default roxen user. Basically the same as the root user, but the IO bits apply.
-// More specifically, the chroot() function works.
+// Default ChiliMoon user. Basically the same as the root user, but
+// the IO bits apply. More specifically, the chroot() function works.
 UID roxen = UID( "roxen", "ChiliMoon internal user", getuid(), getgid(),
 		 ~BIT_SECURITY, ~BIT_DESTRUCT );
 
@@ -747,13 +748,25 @@ program low_findprog(string pname, string ext, object|void handler)
 
 program handle_inherit (string pname, string current_file, object|void handler)
 {
-  if (has_prefix (pname, "roxen-module://")) {
-    pname = pname[sizeof ("roxen-module://")..];
+  if (has_prefix (pname, "chili-module:")) {
+    pname = pname[sizeof ("chili-module:")..];
     if (object modinfo = roxenp()->find_module (pname))
-      if (program ret = cast_to_program (modinfo->filename, current_file, handler))
+      if (program ret = cast_to_program (modinfo->filename, current_file,
+					 handler))
 	return ret;
     return 0;
   }
+
+  // NGSERVER: Remove this
+  if (has_prefix (pname, "roxen-module://")) {
+    pname = pname[sizeof ("roxen-module://")..];
+    if (object modinfo = roxenp()->find_module (pname))
+      if (program ret = cast_to_program (modinfo->filename, current_file,
+					 handler))
+	return ret;
+    return 0;
+  }
+
   return ::handle_inherit (pname, current_file, handler);
 }
 
