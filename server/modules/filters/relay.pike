@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-constant cvs_version = "$Id: relay.pike,v 1.11 1998/08/10 21:37:19 per Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.12 1998/08/27 14:40:39 wing Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -70,7 +70,7 @@ string comment()
   return "http://"+query("relayh")+":"+query("relayp")+"/";
 }
 
-void connected(object to, object id)
+void connected( object to, object from, object id )
 {
   if(!id || !to || !to->query_address()) {
     if (id)
@@ -81,7 +81,7 @@ void connected(object to, object id)
   }
   to->write(id->raw);
   id->do_not_disconnect = 0;
-  roxen->shuffle(to, id->my_fd);
+  roxen->shuffle( to, from );
 }
 
 array (string) always_list=({ });
@@ -116,7 +116,7 @@ mapping relay(object fid)
   
   fid -> do_not_disconnect = 1;
   
-  async_connect(QUERY(relayh), QUERY(relayp), connected, fid );
+  async_connect(QUERY(relayh), QUERY(relayp), connected, fid->my_fd, fid );
   return http_pipe_in_progress();
 }
 
