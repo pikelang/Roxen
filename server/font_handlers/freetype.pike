@@ -274,7 +274,6 @@ Font open(string f, int size, int bold, int italic )
   int|string style = font_style( f, size, bold, italic );
   object fo;
 
-  werror("open %s %d %d %d (%s)\n\n", f, size, bold, italic, style);
   if( style == -1 ) // exact file
   {
     if( fo = Image.FreeType.Face( name ) )
