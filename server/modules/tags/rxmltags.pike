@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.403 2004/04/04 15:11:04 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.404 2004/04/04 15:15:43 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -98,16 +98,6 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
 
 
 // ----------------- Entities ----------------------
-
-class EntityClientTM {
-  inherit RXML.Value;
-  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    c->id->misc->cacheable=0;
-    if(c->id->supports->trade) return ENCODE_RXML_XML("&trade;", type);
-    if(c->id->supports->supsub) return ENCODE_RXML_XML("<sup>TM</sup>", type);
-    return ENCODE_RXML_XML("&lt;TM&gt;", type);
-  }
-}
 
 class EntityClientReferrer {
   inherit RXML.Value;
@@ -233,7 +223,6 @@ mapping client_scope = ([
   "authenticated":EntityClientAuthenticated(),
   "user":EntityClientUser(),
   "password":EntityClientPassword(),
-  "tm":EntityClientTM(),
 ]);
 
 void set_entities(RXML.Context c) {
@@ -5401,12 +5390,6 @@ constant tagdoc=([
 "&client.javascript;":#"<desc type='entity'><p>
  Returns the highest version of javascript supported.
 </p></desc>",
-
-"&client.tm;":#"<desc type='entity'><p><short>
- Generates a trademark sign in a way that the client can
- render.</short> Possible outcomes are \"&amp;trade;\",
- \"&lt;sup&gt;TM&lt;/sup&gt;\", and \"&amp;gt;TM&amp;lt;\".</p>
-</desc>",
 
 //----------------------------------------------------------------------
 
