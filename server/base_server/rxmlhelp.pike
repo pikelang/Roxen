@@ -204,6 +204,11 @@ static string help_tag( mixed a, mapping m, string c )
   return 0; // keep.
 }
 
+static string webserver_tag( mixed a, mixed b, string c )
+{
+  return roxen_product_name;
+}
+
 
 static string format_doc(string|mapping doc, string name, void|object id) 
 {
@@ -234,6 +239,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
   return TagdocParser()->
          add_tag( "lang",lambda() { return available_languages(id); } )->
          add_tag( "help", help_tag )->
+         add_tag( "webserver", webserver_tag )->
          add_containers( ([
            "list":list_cont,
            "xtable":xtable_cont,
