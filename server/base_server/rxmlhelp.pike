@@ -55,7 +55,7 @@ static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
   }
   if(m->ent) dt=rt;
   if(m->scope) dt=rt[..sizeof(rt)-2]+" ... ;";
-  if(m->pi) dt=rt+" ... ?&gt;";
+  if(m->pi) dt="&lt;" + rt+" ... ?&gt;";
   return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
 }
 
@@ -290,9 +290,9 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 
   array tags;
 
-  if(name[..1]=="<?") {
-    RXMLHELP_WERR(name+"?> is a processing instruction.");
-    object tmp=tag_set->get_tag(name[2..], 1);
+  if(name[0]=='?') {
+    RXMLHELP_WERR("<"+name+"?> is a processing instruction.");
+    object tmp=tag_set->get_tag(name[1..], 1);
     if(tmp)
       tags=({ tmp });
     else
@@ -347,7 +347,10 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     RXMLHELP_WERR(sprintf("Tag defined in module %O", tag));
 
     mapping tagdoc=call_tagdocumentation(tag);
-    if(!tagdoc || !tagdoc[name]) continue;
+    if(!tagdoc || !tagdoc[name]) {
+      RXMLHELP_WERR(name+" not present in result.");
+      continue;
+    }
     string res = parse_doc(tagdoc[name], name, id)+plugindoc;
     if( !reenter )
       RXML.set_context( old_ctx );

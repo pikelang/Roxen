@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.279 2001/08/23 16:42:47 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.280 2001/08/23 21:54:42 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2134,7 +2134,7 @@ class TagHelp {
 	  }
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
 	    string enc=tag;
-	    if(enc[0..4]=="&lt;?") enc="<?"+enc[5..sizeof(enc)-6];
+	    if(enc[0..4]=="&lt;?") enc=enc[4..sizeof(enc)-6];
 	    if(undocumented_tags && undocumented_tags[tag])
 	      tag_links += ({ tag });
 	    else
