@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.3 2001/02/04 22:53:48 leif Exp $
+# $Id: perlhelper,v 1.4 2001/03/13 14:18:10 leif Exp $
 
 package Roxen::Internal;
  
@@ -79,6 +79,11 @@ sub PRINT
     $Roxen::Request::req_outbuf =
        substr $Roxen::Request::req_outbuf, $len;
   }
+}
+
+sub PRINTF
+{ my $self = shift;
+  Roxen::TieStdio::PRINT($self, CORE::sprintf($_[0], @_[1..$#_]));
 }
 
 package Apache; # Some compatilibity with the Apache interface.
@@ -436,7 +441,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
       if ($cmd eq "P")
         { Sendreply(""); }
       elsif ($cmd eq "V")
-        { Sendreply('Roxen Perl Helper: $Id: perlhelper,v 1.3 2001/02/04 22:53:48 leif Exp $'); }
+        { Sendreply('Roxen Perl Helper: $Id: perlhelper,v 1.4 2001/03/13 14:18:10 leif Exp $'); }
       else
         { die "perlhelper $$/MLQQ: exiting.\n"; }
     }
