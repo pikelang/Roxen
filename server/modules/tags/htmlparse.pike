@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.176 1999/06/22 20:27:29 grubba Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.177 1999/06/22 21:46:27 grubba Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1236,7 +1236,7 @@ string tag_configimage(string f, mapping m)
     m->src = "/internal-roxen-" + m->src;
   }
 
-  m->border = "0";
+  m->border = m->border || "0";
 
   return make_tag("img", m);
 }
