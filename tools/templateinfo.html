@@ -2,8 +2,8 @@
 
   <delete all>
 
-  <!--  Template groups  -->
-  <insert name="General" title="Edit general template preferences"
+  <!--  Layout groups  -->
+  <insert name="General" title="Edit general layout preferences"
           help="help" category="tmpl">
 	  
   <insert name="Link colors" title="Edit link colors"
@@ -42,10 +42,10 @@
 	           name='#_wizard_name#' and category='#_wizard_category#'">
   <delete all>
 
-  <!--  Template variables  -->
+  <!--  Layout variables  -->
   <!--  General  -->
-  <insert name="template_name" title="Template name"
-          type="select" help="Template name"
+  <insert name="template_name" title="Layout style"
+          type="select" help="Layout style"
 	  _wizard_name="General" _wizard_category="tmpl">
 	  
   <insert name="bg_color" title="Background color"
@@ -122,7 +122,7 @@
 	  
   <!--  Navigation Variables  -->
   <!--  General  -->
-  <insert name="nav_name" title="Navigation name"
+  <insert name="nav_name" title="Navigation style"
           type="select" help="Navigation template name"
 	  _wizard_name="General" _wizard_category="nav">
 	  
@@ -210,9 +210,9 @@
   <delete all>
 
   <!--  Template files  -->
-  <insert name="Template 1" value="tmpl1.tmpl" _variable_name="template_name">
-  <insert name="Template 2" value="tmpl2.tmpl" _variable_name="template_name">
-  <insert name="Template 3" value="tmpl3.tmpl" _variable_name="template_name">
+  <insert name="Layout 1" value="tmpl1.tmpl" _variable_name="template_name">
+  <insert name="Layout 2" value="tmpl2.tmpl" _variable_name="template_name">
+  <insert name="Layout 3" value="tmpl3.tmpl" _variable_name="template_name">
 
   <!--  Navigation files  -->
   <insert name="Nav 1" value="nav1.ntmpl" _variable_name="nav_name">
@@ -226,6 +226,8 @@
   <insert name="bg 4" value="bg4.pnm" _variable_name="nav_bg_img">
   <insert name="bg 5" value="bg5.pnm" _variable_name="nav_bg_img">
   <insert name="bg 6" value="bg6.pnm" _variable_name="nav_bg_img">
+  <insert name="Vaser" value="nav2/vaser.ppm" _variable_name="nav_bg_img">
+  <insert name="cashew" value="nav2/cashew.ppm" _variable_name="nav_bg_img">
 
   <!--  Test options-->
   <insert name="foo"    value="" _variable_name="select">
