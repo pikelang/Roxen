@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.93 2001/05/30 17:35:36 nilsson Exp $
+// $Id: Roxen.pmod,v 1.94 2001/06/18 15:23:07 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -738,10 +738,54 @@ string strip_prestate(string from)
 }
 
 string parse_rxml(string what, RequestID id )
-//! Parse the given string as RXML and return the result.
+//! Parse the given string as RXML and return the result. This
+//! function inherits the current RXML evaluation context if there is
+//! any, otherwise a new context is created.
+//!
+//! @note
+//! Try to avoid using this function to parse recursively; the RXML
+//! module provides several ways to accomplish that. If there's code
+//! that recurses directly then several RXML features, like p-code
+//! compilation, streaming operation and continuations, won't work in
+//! that part of the RXML code.
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
   return id->conf->parse_rxml( what, id );
+}
+
+RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_code)
+//! Returns a parser object for parsing and evaluating a string as
+//! RXML in a new context. @[type] may be used to set the top level
+//! type to parse. It defaults to the standard type and parser for
+//! RXML code. If @[make_p_code] is nonzero, the parser is initialized
+//! with an @[RXML.PCode] object to collect p-code during the
+//! evaluation.
+{
+  return id->conf->rxml_tag_set->get_parser (
+    type || id->conf->default_content_type, id, make_p_code);
+}
+
+static int(0..0) return_zero() {return 0;}
+
+static Parser.HTML xml_parser =
+  lambda() {
+    Parser.HTML p = Parser.HTML();
+    p->lazy_entity_end (1);
+    p->match_tag (0);
+    p->xml_tag_syntax (3);
+    p->add_quote_tag ("!--", return_zero, "--");
+    p->add_quote_tag ("![CDATA[", return_zero, "]]");
+    p->add_quote_tag ("?", return_zero, "?");
+    return p;
+  }();
+
+Parser.HTML get_xml_parser()
+//! Returns a @[Parser.HTML] initialized for parsing XML. It has all
+//! the flags set properly for XML syntax and have callbacks to ignore
+//! comments, CDATA blocks and unknown PI tags, but it has no
+//! registered tags and doesn't decode any entities.
+{
+  return xml_parser->clone();
 }
 
 constant iso88591
@@ -1430,7 +1474,7 @@ string get_modfullname (RoxenModule module)
 //! returned string is text/html.
 {
   if (module) {
-    string|mapping(string:string) name = 0;
+    string|mapping(string:string)|Locale.DeferredLocale name = 0;
     if (module->query)
       catch {
 	mixed res = module->query ("_name");
@@ -1441,9 +1485,8 @@ string get_modfullname (RoxenModule module)
     if (!(name && sizeof (name)))
       name = [string]module->register_module()[1];
     if (mappingp (name))
-      // FIXME: Use locale from an id object in some standard way.
       name = name->standard;
-    return name;
+    return (string) name;
   }
   else return 0;
 }
@@ -2680,11 +2723,11 @@ class ScopePage {
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
       case "url": return ENCODE_RXML_TEXT(c->id->raw_url, type);
-      case "last-true": return ENCODE_RXML_INT(c->id->misc->defines[" _ok"], type);
-      case "language": return ENCODE_RXML_TEXT(c->id->misc->defines->language, type);
+      case "last-true": return ENCODE_RXML_INT(c->misc[" _ok"], type);
+      case "language": return ENCODE_RXML_TEXT(c->misc->language, type);
       case "scope": return ENCODE_RXML_TEXT(c->current_scope(), type);
-      case "filesize": return ENCODE_RXML_INT(c->id->misc->defines[" _stat"]?
-					      c->id->misc->defines[" _stat"][1]:-4, type);
+      case "filesize": return ENCODE_RXML_INT(c->misc[" _stat"]?
+					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
 	c->id->misc->cacheable = 0;
@@ -2694,13 +2737,13 @@ class ScopePage {
 	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
       case "counter":
-	return ENCODE_RXML_INT(++c->id->misc->internal_counter, type);
+	return ENCODE_RXML_INT(++c->misc->internal_counter, type);
     }
     mixed val;
     if(converter[var])
-      val = c->id->misc->defines[converter[var]];
+      val = c->misc[converter[var]];
     else
-      val = c->id->misc->scope_page[var];
+      val = c->misc->scope_page[var];
     if( zero_type(val) ) return RXML.nil;
     if (objectp (val) && val->rxml_var_eval) return val;
     return ENCODE_RXML_TEXT(val, type);
@@ -2711,15 +2754,15 @@ class ScopePage {
       case "pathinfo": return c->id->misc->path_info = val;
     }
     if(converter[var])
-      return c->id->misc->defines[converter[var]]=val;
-    return c->id->misc->scope_page[var]=val;
+      return c->misc[converter[var]]=val;
+    return c->misc->scope_page[var]=val;
   }
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    array ind=indices(c->id->misc->scope_page);
+    array ind=indices(c->misc->scope_page);
     foreach(indices(converter), string def)
-      if(c->id->misc->defines[converter[def]]) ind+=({def});
+      if(c->misc[converter[def]]) ind+=({def});
     return ind + ({"pathinfo"});
   }
 
@@ -2732,12 +2775,12 @@ class ScopePage {
     }
     if(converter[var]) {
       if(var[0..4]=="theme")
-	predef::m_delete(c->id->misc->defines, converter[var]);
+	predef::m_delete(c->misc, converter[var]);
       else
 	::_m_delete(var, c, scope_name);
       return;
     }
-    predef::m_delete(c->id->misc->scope_page, var);
+    predef::m_delete(c->misc->scope_page, var);
   }
 
   string _sprintf() { return "RXML.Scope(page)"; }
@@ -2757,7 +2800,7 @@ class ScopeCookie {
       RXML.parse_error ("Cannot set cookies of type %t.\n", val);
     if(c && c->id->cookies[var]!=val) {
       c->id->cookies[var]=val;
-      add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
+      add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
 		      "="+http_encode_cookie( val )+
 		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
     }
@@ -2773,7 +2816,7 @@ class ScopeCookie {
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if(!c || !c->id->cookies[var]) return;
     predef::m_delete(c->id->cookies, var);
-    add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie",
+    add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
 		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
@@ -2921,7 +2964,7 @@ class FormScope
     if( arrayp(q) && sizeof( q ) == 1 )
       q = q[0];
     if (type && !(objectp (q) && q->rxml_var_eval)) {
-      if (arrayp(q) && type->subtype_of (RXML.t_string))
+      if (arrayp(q) && type->subtype_of (RXML.t_any_text))
 	q *= "\0";
       return type->encode (q);
     }
@@ -2944,7 +2987,7 @@ RXML.TagSet entities_tag_set = class
 
   void prepare_context (RXML.Context c) {
     c->add_scope("roxen",scope_roxen);
-    c->id->misc->scope_page=([]);
+    c->misc->scope_page=([]);
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);
     c->add_scope("modvar", scope_modvar);
@@ -3273,19 +3316,20 @@ private inline string ns_color(array (int) col)
 
 int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..1) colormode)
 {
+  mapping(string:mixed) ctx_misc = RXML_CONTEXT->misc;
   int changed=0;
   mixed cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
 
 #define FIX(Y,Z,X) do{ \
   if(!args->Y || args->Y==""){ \
-    id->misc->defines[X]=Z; \
+    ctx_misc[X]=Z; \
     if(cols){ \
       args->Y=Z; \
       changed=1; \
     } \
   } \
   else{ \
-    id->misc->defines[X]=args->Y; \
+    ctx_misc[X]=args->Y; \
     if(colormode&&args->Y[0]!='#'){ \
       args->Y=ns_color(parse_color(args->Y)); \
       changed=1; \
@@ -3307,14 +3351,13 @@ int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..
     FIX(bgcolor,"#ffffff","bgcolor");
   }
 
-  id->misc->wiretap_stack = ({});
+  ctx_misc->wiretap_stack = ({});
 
 #ifdef WIRETAP_TRACE
   report_debug ("Init wiretap stack for %O: "
 		"fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
-		id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
-		id->misc->defines->alink, id->misc->defines->alink,
-		id->misc->defines->vlink);
+		id, ctx_misc->fgcolor, ctx_misc->bgcolor,
+		ctx_misc->alink, ctx_misc->alink, ctx_misc->vlink);
 #endif
 
   return changed;
@@ -3323,16 +3366,17 @@ int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..
 int(0..1) push_color (string tagname, mapping(string:string) args,
 		      RequestID id, void|int colormode)
 {
+  mapping(string:mixed) ctx_misc = RXML_CONTEXT->misc;
   int changed;
-  if(!id->misc->wiretap_stack)
+  if(!ctx_misc->wiretap_stack)
     init_wiretap_stack (([]), id, colormode);
 
-  id->misc->wiretap_stack +=
-    ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
+  ctx_misc->wiretap_stack +=
+    ({ ({ tagname, ctx_misc->fgcolor, ctx_misc->bgcolor }) });
 
 #undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){ \
-  id->misc->defines->Y=args->X; \
+  ctx_misc->Y=args->X; \
   if(colormode && args->X[0]!='#'){ \
     args->X=ns_color(parse_color(args->X)); \
     changed = 1; \
@@ -3346,8 +3390,8 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 
 #ifdef WIRETAP_TRACE
   report_debug ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-		sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
-		id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+		sizeof (ctx_misc->wiretap_stack) * 2, "", id, tagname,
+		ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
 
   return changed;
@@ -3355,24 +3399,25 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 
 void pop_color (string tagname, RequestID id)
 {
-  array c = id->misc->wiretap_stack;
+  mapping(string:mixed) ctx_misc = RXML_CONTEXT->misc;
+  array c = ctx_misc->wiretap_stack;
   if(c && sizeof(c)) {
     int i;
 
     for(i=0; i<sizeof(c); i++)
       if(c[-i-1][0]==tagname)
       {
-	id->misc->defines->fgcolor = c[-i-1][1];
-	id->misc->defines->bgcolor = c[-i-1][2];
+	ctx_misc->fgcolor = c[-i-1][1];
+	ctx_misc->bgcolor = c[-i-1][2];
 	break;
       }
 
-    id->misc->wiretap_stack = c[..sizeof(c)-i-2];
+    ctx_misc->wiretap_stack = c[..sizeof(c)-i-2];
 
 #ifdef WIRETAP_TRACE
   report_debug ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
 		sizeof (c) * 2, "", id, tagname,
-		id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+		ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
   }
 }
