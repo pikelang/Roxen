@@ -1080,6 +1080,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="TESTER" test="3" sort="data">&_.data;:</emit></rxml>
+<result>:3:a:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x">&_.c;:</emit></rxml>
 <result>1:2:4:</result>
 </test>
