@@ -1,9 +1,9 @@
 /*
- * $Id: HTTP.java,v 1.6 2000/02/21 18:30:45 marcus Exp $
+ * $Id: HTTP.java,v 1.7 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.net.URL;
 /**
  * A support class providing HTTP related functionality.
  * Rather than using this class directly, all these functions can
- * be accessed through the {@link RoxenLib} class.
+ * be accessed through the {@link ChiliMoonLib} class.
  *
  * @version	$Version$
  * @author	marcus
@@ -68,9 +68,9 @@ public class HTTP {
    * @param  data   the HTML text message
    * @return        a response object
    */
-  public static RoxenResponse httpLowAnswer(int error, String data)
+  public static ChiliMoonResponse httpLowAnswer(int error, String data)
   {
-    return new RoxenStringResponse(error, "text/html", data.length(), data);
+    return new ChiliMoonStringResponse(error, "text/html", data.length(), data);
   }
 
   /**
@@ -80,7 +80,7 @@ public class HTTP {
    * @param  error  the HTTP error code
    * @return        a response object
    */
-  public static RoxenResponse httpLowAnswer(int error)
+  public static ChiliMoonResponse httpLowAnswer(int error)
   {
     return httpLowAnswer(error, "");
   }
@@ -93,9 +93,9 @@ public class HTTP {
    * @param  type   the media type of the response
    * @return        a response object
    */
-  public static RoxenResponse httpStringAnswer(String text, String type)
+  public static ChiliMoonResponse httpStringAnswer(String text, String type)
   {
-    return new RoxenStringResponse(0, type, text.length(), text);
+    return new ChiliMoonStringResponse(0, type, text.length(), text);
   }
 
   /**
@@ -104,7 +104,7 @@ public class HTTP {
    * @param  text   the content of the response
    * @return        a response object
    */
-  public static RoxenResponse httpStringAnswer(String text)
+  public static ChiliMoonResponse httpStringAnswer(String text)
   {
     return httpStringAnswer(text, "text/html");
   }
@@ -117,9 +117,9 @@ public class HTTP {
    * @param  type   the media type of the response
    * @return        a response object
    */
-  public static RoxenResponse httpRXMLAnswer(String text, String type)
+  public static ChiliMoonResponse httpRXMLAnswer(String text, String type)
   {
-    return new RoxenRXMLResponse(0, type, text);
+    return new ChiliMoonRXMLResponse(0, type, text);
   }
 
   /**
@@ -128,7 +128,7 @@ public class HTTP {
    * @param  text   the content of the response
    * @return        a response object
    */
-  public static RoxenResponse httpRXMLAnswer(String text)
+  public static ChiliMoonResponse httpRXMLAnswer(String text)
   {
     return httpRXMLAnswer(text, "text/html");
   }
@@ -142,9 +142,9 @@ public class HTTP {
    * @param  len    the number of bytes in the content
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(Reader text, String type, long len)
+  public static ChiliMoonResponse httpFileAnswer(Reader text, String type, long len)
   {
-    return new RoxenFileResponse(type, len, text);
+    return new ChiliMoonFileResponse(type, len, text);
   }
 
   /**
@@ -155,7 +155,7 @@ public class HTTP {
    * @param  type   the media type of the response
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(Reader text, String type)
+  public static ChiliMoonResponse httpFileAnswer(Reader text, String type)
   {
     return httpFileAnswer(text, type, -1);
   }
@@ -166,7 +166,7 @@ public class HTTP {
    * @param  text   the Reader which should produce the content of the response
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(Reader text)
+  public static ChiliMoonResponse httpFileAnswer(Reader text)
   {
     return httpFileAnswer(text, "text/html");
   }  
@@ -180,7 +180,7 @@ public class HTTP {
    * @param  len    the number of bytes in the content
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(InputStream text, String type,
+  public static ChiliMoonResponse httpFileAnswer(InputStream text, String type,
 					     long len)
   {
     return httpFileAnswer(new InputStreamReader(text), type, len);
@@ -194,7 +194,7 @@ public class HTTP {
    * @param  type   the media type of the response
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(InputStream text, String type)
+  public static ChiliMoonResponse httpFileAnswer(InputStream text, String type)
   {
     return httpFileAnswer(text, type, -1);
   }
@@ -205,7 +205,7 @@ public class HTTP {
    * @param  text   the InputStream which should produce the content of the response
    * @return        a response object
    */
-  public static RoxenResponse httpFileAnswer(InputStream text)
+  public static ChiliMoonResponse httpFileAnswer(InputStream text)
   {
     return httpFileAnswer(text, "text/html");
   }  
@@ -220,7 +220,7 @@ public class HTTP {
    * @return        a response object
    * @exception  FileNotFoundException  if the file doesn't exist
    */
-  public static RoxenResponse httpFileAnswer(File text, String type, long len)
+  public static ChiliMoonResponse httpFileAnswer(File text, String type, long len)
     throws FileNotFoundException
   {
     return httpFileAnswer(new FileReader(text), type, len);
@@ -235,7 +235,7 @@ public class HTTP {
    * @return        a response object
    * @exception  FileNotFoundException  if the file doesn't exist
    */
-  public static RoxenResponse httpFileAnswer(File text, String type)
+  public static ChiliMoonResponse httpFileAnswer(File text, String type)
     throws FileNotFoundException
   {
     return httpFileAnswer(text, type, text.length());
@@ -249,7 +249,7 @@ public class HTTP {
    * @return        a response object
    * @exception  FileNotFoundException  if the file doesn't exist
    */
-  public static RoxenResponse httpFileAnswer(File text)
+  public static ChiliMoonResponse httpFileAnswer(File text)
     throws FileNotFoundException
   {
     return httpFileAnswer(text, "text/html");
@@ -261,9 +261,9 @@ public class HTTP {
    * @param  url  the URL to which the client should be redirected
    * @return      a response object
    */
-  public static RoxenResponse httpRedirect(URL url)
+  public static ChiliMoonResponse httpRedirect(URL url)
   {
-    RoxenResponse r = httpLowAnswer(302);
+    ChiliMoonResponse r = httpLowAnswer(302);
     r.addHTTPHeader("Location", httpEncodeString(url.toExternalForm()));
     return r;    
   }
@@ -275,9 +275,9 @@ public class HTTP {
    * @param  message an HTTP string to be displayed if no authentication is provided
    * @return         a response object
    */
-  public static RoxenResponse httpAuthRequired(String realm, String message)
+  public static ChiliMoonResponse httpAuthRequired(String realm, String message)
   {
-    RoxenResponse r = httpLowAnswer(401, message);
+    ChiliMoonResponse r = httpLowAnswer(401, message);
     r.addHTTPHeader("WWW-Authenticate", "basic realm=\""+realm+"\"");
     return r;
   }
@@ -289,7 +289,7 @@ public class HTTP {
    * @param  realm   the security realm for which authentication is required
    * @return         a response object
    */
-  public static RoxenResponse httpAuthRequired(String realm)
+  public static ChiliMoonResponse httpAuthRequired(String realm)
   {
     return httpAuthRequired(realm, "<h1>Authentication failed.\n</h1>");
   }
@@ -301,9 +301,9 @@ public class HTTP {
    * @param  message an HTTP string to be displayed if no authentication is provided
    * @return         a response object
    */
-  public static RoxenResponse httpProxyAuthRequired(String realm, String message)
+  public static ChiliMoonResponse httpProxyAuthRequired(String realm, String message)
   {
-    RoxenResponse r = httpLowAnswer(407, message);
+    ChiliMoonResponse r = httpLowAnswer(407, message);
     r.addHTTPHeader("Proxy-Authenticate", "basic realm=\""+realm+"\"");
     return r;
   }
@@ -315,7 +315,7 @@ public class HTTP {
    * @param  realm   the security realm for which authentication is required
    * @return         a response object
    */
-  public static RoxenResponse httpProxyAuthRequired(String realm)
+  public static ChiliMoonResponse httpProxyAuthRequired(String realm)
   {
     return httpProxyAuthRequired(realm, "<h1>Proxy authentication failed.\n</h1>");
   }

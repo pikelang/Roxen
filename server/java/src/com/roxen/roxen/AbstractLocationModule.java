@@ -1,9 +1,9 @@
 /*
- * $Id: AbstractLocationModule.java,v 1.3 2000/02/21 18:30:45 marcus Exp $
+ * $Id: AbstractLocationModule.java,v 1.4 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 /**
  * An abstract adaptor class that provides default implementations for
@@ -41,7 +41,7 @@ public abstract class AbstractLocationModule extends Module implements LocationM
    * @return     a list of filenames, or <code>null</code> if no such
    *             directory exists.
    */
-  public String[] findDir(String f, RoxenRequest id)
+  public String[] findDir(String f, ChiliMoonRequest id)
   {
     return null;
   }
@@ -56,7 +56,7 @@ public abstract class AbstractLocationModule extends Module implements LocationM
    *             <code>null</code> if this resource is not a real
    *             file.
    */
-  public String realFile(String f, RoxenRequest id)
+  public String realFile(String f, ChiliMoonRequest id)
   {
     return null;
   }
@@ -73,7 +73,7 @@ public abstract class AbstractLocationModule extends Module implements LocationM
    * @return     the attributes of this file or directory, or
    *             <code>null</code> if this information is not available.
    */
-  public int[] statFile(String f, RoxenRequest id)
+  public int[] statFile(String f, ChiliMoonRequest id)
   {
     return null;
   }

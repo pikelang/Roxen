@@ -1,4 +1,4 @@
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 /**
  * @author <a href="mailto:tomp@uk.uu.net">Tom Palmer</a>
@@ -10,5 +10,5 @@ public interface LastResortModule {
    * @param id Request Information object associated with the request.
    * @return null if you didn't handle the request, otherwise your result
    */
-  public RoxenResponse last_resort(RoxenRequest id);
+  public ChiliMoonResponse last_resort(ChiliMoonRequest id);
 }

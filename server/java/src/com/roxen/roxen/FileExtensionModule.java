@@ -1,9 +1,9 @@
 /*
- * $Id: FileExtensionModule.java,v 1.3 2000/02/21 18:30:45 marcus Exp $
+ * $Id: FileExtensionModule.java,v 1.4 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 import java.io.File;
 
@@ -37,6 +37,6 @@ public interface FileExtensionModule {
    * @return       a response, or <code>null</code> if the module
    *               will not process this file.
    */
-  RoxenResponse handleFileExtension(File file, String ext, RoxenRequest id);
+  ChiliMoonResponse handleFileExtension(File file, String ext, ChiliMoonRequest id);
 
 }

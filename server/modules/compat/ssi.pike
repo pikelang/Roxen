@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.45 2004/05/24 19:34:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.46 2004/05/30 23:18:40 _cvs_dirix Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -143,7 +143,7 @@ constant tagdoc=([
 
 <attr name='var' value='server software'><p>
  The web server software. RXML counterpart:
- <ent>roxen.version</ent>.</p>
+ <ent>system.version</ent>.</p>
 </attr>
 
 <attr name='var' value='server name'><p>

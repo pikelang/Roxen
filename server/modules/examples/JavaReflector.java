@@ -1,4 +1,4 @@
-import com.roxen.roxen.*;
+import com.chilimoon.chilimoon.*;
 
 import java.util.HashMap;
 import java.lang.reflect.Modifier;
@@ -8,7 +8,7 @@ import java.lang.reflect.Constructor;
 
 
 /*
- * This is an example Roxen location module.
+ * This is an example ChiliMoon location module.
  * Copyright (c) 2000 - 2001, Roxen IS
  */
 
@@ -28,7 +28,7 @@ public class JavaReflector extends AbstractLocationModule
     return "A location module providing an HTML interface to Java Reflection.";
   }
 
-  protected RoxenResponse response(String title, String body)
+  protected ChiliMoonResponse response(String title, String body)
   {
     /*
      * Package the content in an HTML page and return it with
@@ -40,10 +40,10 @@ public class JavaReflector extends AbstractLocationModule
       body+
       "</body></html>\n";
 
-    return RoxenLib.httpRXMLAnswer(page);
+    return ChiliMoonLib.httpRXMLAnswer(page);
   }
 
-  public RoxenResponse packageList(RoxenRequest id)
+  public ChiliMoonResponse packageList(ChiliMoonRequest id)
   {
     /*
      * Default page, lists known packages.
@@ -56,7 +56,7 @@ public class JavaReflector extends AbstractLocationModule
       page.append(" <li>");
       HashMap args = new HashMap();
       args.put("href", queryLocation()+p.getName());
-      page.append(RoxenLib.makeContainer("a", args, p.getName()));
+      page.append(ChiliMoonLib.makeContainer("a", args, p.getName()));
       page.append("</li>\n");
     }
     page.append("</ul>\n");
@@ -68,12 +68,12 @@ public class JavaReflector extends AbstractLocationModule
     HashMap args = new HashMap();
     Class c = getClass();
     args.put("href", queryLocation()+c.getName());
-    page.append(RoxenLib.makeContainer("a", args, c.getName()));
+    page.append(ChiliMoonLib.makeContainer("a", args, c.getName()));
     page.append("\n");
     return response("Packages", page.toString());
   }
 
-  public RoxenResponse describePackage(Package p, RoxenRequest id)
+  public ChiliMoonResponse describePackage(Package p, ChiliMoonRequest id)
   {
     /*
      * Unfortunately, there is no way to list all classes
@@ -84,17 +84,17 @@ public class JavaReflector extends AbstractLocationModule
     page.append("<table border=1>\n<tr><td></td><th>Title</th>"+
 		"<th>Vendor</th><th>Version</th></tr>\n");
     page.append("<tr><th>Specification</th><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getSpecificationTitle()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getSpecificationTitle()+""));
     page.append("</td><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getSpecificationVendor()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getSpecificationVendor()+""));
     page.append("</td><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getSpecificationVersion()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getSpecificationVersion()+""));
     page.append("</td></tr>\n<tr><th>Implementation</th><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getImplementationTitle()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getImplementationTitle()+""));
     page.append("</td><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getImplementationVendor()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getImplementationVendor()+""));
     page.append("</td><td>");
-    page.append(RoxenLib.htmlEncodeString(p.getImplementationVersion()+""));
+    page.append(ChiliMoonLib.htmlEncodeString(p.getImplementationVersion()+""));
     page.append("</td></tr></table>\n");
     return response("Package "+p.getName(), page.toString());
   }
@@ -137,7 +137,7 @@ public class JavaReflector extends AbstractLocationModule
     int i = n.lastIndexOf('$');
     HashMap args = new HashMap();
     args.put("href", queryLocation()+(i<0? n : n.substring(0, i)));
-    return RoxenLib.makeContainer("a", args, t);
+    return ChiliMoonLib.makeContainer("a", args, t);
   }
 
   protected String classLink(Class[] c)
@@ -152,7 +152,7 @@ public class JavaReflector extends AbstractLocationModule
     return buf.toString();
   }
 
-  protected void describe(StringBuffer page, Field f, RoxenRequest id,
+  protected void describe(StringBuffer page, Field f, ChiliMoonRequest id,
 			  int indent)
   {
     /* Append description of a field to a StringBuffer */
@@ -161,7 +161,7 @@ public class JavaReflector extends AbstractLocationModule
 		 f.getName()+"</font>;", indent);
   }
 
-  protected void describe(StringBuffer page, Method m, RoxenRequest id,
+  protected void describe(StringBuffer page, Method m, ChiliMoonRequest id,
 			  int indent)
   {
     /* Append description of a method to a StringBuffer */
@@ -173,7 +173,7 @@ public class JavaReflector extends AbstractLocationModule
 		      classLink(th):"")+";", indent);
   }
 
-  protected void describe(StringBuffer page, Constructor c, RoxenRequest id,
+  protected void describe(StringBuffer page, Constructor c, ChiliMoonRequest id,
 			  int indent)
   {
     /* Append description of a constructor to a StringBuffer */
@@ -185,7 +185,7 @@ public class JavaReflector extends AbstractLocationModule
 		      classLink(th):"")+";", indent);
   }
 
-  protected void describe(StringBuffer page, Class c, RoxenRequest id,
+  protected void describe(StringBuffer page, Class c, ChiliMoonRequest id,
 			  int indent)
   {
     /* Append description of a class or interface to a StringBuffer */
@@ -234,7 +234,7 @@ public class JavaReflector extends AbstractLocationModule
     indentedLine(page, "}", indent);
   }
 
-  public RoxenResponse describeClass(Class c, RoxenRequest id)
+  public ChiliMoonResponse describeClass(Class c, ChiliMoonRequest id)
   {
     /*
      * Page describing a class or interface (including inner classes)
@@ -248,7 +248,7 @@ public class JavaReflector extends AbstractLocationModule
       page.append(keywordFont+"package</font> ");
       HashMap args = new HashMap();
       args.put("href", queryLocation()+p.getName());
-      page.append(RoxenLib.makeContainer("a", args,
+      page.append(ChiliMoonLib.makeContainer("a", args,
 					 modifierFont+p.getName()+"</font>"));
       page.append(";<br><br>\n");
     }
@@ -257,7 +257,7 @@ public class JavaReflector extends AbstractLocationModule
     return response(ci+" "+c.getName(), page.toString());
   }
 
-  public RoxenResponse findFile(String f, RoxenRequest id)
+  public ChiliMoonResponse findFile(String f, ChiliMoonRequest id)
   {
     /* If no class or package name is given, show a default page */
     if("".equals(f))

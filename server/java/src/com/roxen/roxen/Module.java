@@ -1,14 +1,14 @@
 /*
- * $Id: Module.java,v 1.10 2000/11/13 19:33:23 marcus Exp $
+ * $Id: Module.java,v 1.11 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 import java.util.Vector;
 
 /**
- * The base class for Roxen modules.  All modules must inherit this
+ * The base class for ChiliMoon modules.  All modules must inherit this
  * class, directly or indirectly.
  * <P>
  * Each module should also implement one or more of the specific module
@@ -146,7 +146,7 @@ public abstract class Module {
   static final int MODULE_EXPERIMENTAL    =  (1 << 30);
 
 
-  private RoxenConfiguration configuration;
+  private ChiliMoonConfiguration configuration;
 
   private Vector defvars = null;
 
@@ -186,7 +186,7 @@ public abstract class Module {
    *
    * @return  the configuration
    */
-  public RoxenConfiguration myConfiguration()
+  public ChiliMoonConfiguration myConfiguration()
   {
     return configuration;
   }
@@ -211,7 +211,7 @@ public abstract class Module {
    * @return     a response, or <code>null</code> if no such
    *             file exists.
    */
-  protected RoxenResponse findInternal(String f, RoxenRequest id)
+  protected ChiliMoonResponse findInternal(String f, ChiliMoonRequest id)
   {
     return null;
   }

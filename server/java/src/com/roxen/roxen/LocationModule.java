@@ -1,9 +1,9 @@
 /*
- * $Id: LocationModule.java,v 1.5 2000/02/21 18:30:45 marcus Exp $
+ * $Id: LocationModule.java,v 1.6 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 /**
  * The interface for modules which have a specific URL path in the
@@ -33,7 +33,7 @@ public interface LocationModule {
    * @return     a response, or <code>null</code> if no such
    *             file exists.
    */
-  RoxenResponse findFile(String f, RoxenRequest id);
+  ChiliMoonResponse findFile(String f, ChiliMoonRequest id);
 
   /**
    * List the contents of a directory.
@@ -44,7 +44,7 @@ public interface LocationModule {
    * @return     a list of filenames, or <code>null</code> if no such
    *             directory exists.
    */
-  String[] findDir(String f, RoxenRequest id);
+  String[] findDir(String f, ChiliMoonRequest id);
 
   /**
    * Get the real filename of a file.
@@ -56,7 +56,7 @@ public interface LocationModule {
    *             <code>null</code> if this resource is not a real
    *             file.
    */
-  String realFile(String f, RoxenRequest id);
+  String realFile(String f, ChiliMoonRequest id);
 
   /**
    * Get the attributes of a file or directory.
@@ -70,6 +70,6 @@ public interface LocationModule {
    * @return     the attributes of this file or directory, or
    *             <code>null</code> if this information is not available.
    */
-  int[] statFile(String f, RoxenRequest id);
+  int[] statFile(String f, ChiliMoonRequest id);
 
 }

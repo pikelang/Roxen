@@ -9,20 +9,20 @@ SRCDIR = ../src
 
 MODULEDIR = ../../modules
 
-all : roxen_module.jar roxen_servlet.jar compile_modules
+all : chilimoon_module.jar chilimoon_servlet.jar compile_modules
 
-roxen_servlet.jar : servlet_classes
-	jar cf $@ com/roxen/servlet/*.class
+chilimoon_servlet.jar : servlet_classes
+	jar cf $@ com/chilimoon/servlet/*.class
 
-servlet_classes : $(SRCDIR)/com/roxen/servlet/*.java
+servlet_classes : $(SRCDIR)/com/chilimoon/servlet/*.java
 	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
 
-roxen_module.jar : module_classes
-	jar cf $@ com/roxen/roxen/*.class
+chilimoon_module.jar : module_classes
+	jar cf $@ com/chilimoon/chilimoon/*.class
 
-module_classes : $(SRCDIR)/com/roxen/roxen/*.java
+module_classes : $(SRCDIR)/com/chilimoon/chilimoon/*.java
 	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
 
-compile_modules: roxen_module.jar 
-	CLASSPATH=roxen_module.jar find $(MODULEDIR) -name '*.java' \
+compile_modules: chilimoon_module.jar 
+	CLASSPATH=chilimoon_module.jar find $(MODULEDIR) -name '*.java' \
 		-exec $(JAVAC) $(JAVAFLAGS) {} \;

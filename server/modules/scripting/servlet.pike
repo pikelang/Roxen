@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.24 2004/05/23 00:52:54 _cvs_stephen Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.25 2004/05/30 23:18:41 _cvs_dirix Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -166,11 +166,11 @@ constant dont_dump_program = 1;
 string status()
 {
   return 
-#"<font color='&usr.warncolor;'>Java 2 is not available in this roxen.<p>
+#"<font color='&usr.warncolor;'>Java 2 is not available in this ChiliMoon.<p>
   To get Java 2:
   <ol>
     <li> Download and install Java
-    <li> Restart roxen
+    <li> Restart ChiliMoon 
   </ol></font>";
 }
 

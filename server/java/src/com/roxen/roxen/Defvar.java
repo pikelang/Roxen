@@ -1,9 +1,9 @@
 /*
- * $Id: Defvar.java,v 1.2 2000/02/21 18:30:45 marcus Exp $
+ * $Id: Defvar.java,v 1.3 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 class Defvar {
 

@@ -1,9 +1,9 @@
 /*
- * $Id: RXML.java,v 1.2 2001/06/01 17:17:39 marcus Exp $
+ * $Id: RXML.java,v 1.3 2004/05/30 23:18:39 _cvs_dirix Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.chilimoon.chilimoon;
 
 /**
  * RXML framework

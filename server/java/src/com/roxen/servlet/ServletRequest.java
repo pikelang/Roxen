@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.chilimoon.servlet;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.RequestDispatcher;
@@ -19,8 +19,8 @@ import java.security.Principal;
 
 class ServletRequest implements javax.servlet.http.HttpServletRequest
 {
-  RoxenServletContext context;
-  RoxenSessionContext sessioncontext;
+  ChiliMoonServletContext context;
+  ChiliMoonSessionContext sessioncontext;
   ServletResponse response = null;
   int contentLength;
   String contentType, protocol, scheme;
@@ -240,7 +240,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     String h = getHeader(hdr);
     try {
       return (h==null? -1 :
-	      RoxenServletContext.dateformat.parse(h).getTime());
+	      ChiliMoonServletContext.dateformat.parse(h).getTime());
     } catch(ParseException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
@@ -311,7 +311,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     response = rp;
   }
 
-  ServletRequest(RoxenServletContext cx, RoxenSessionContext sx,
+  ServletRequest(ChiliMoonServletContext cx, ChiliMoonSessionContext sx,
 		 int cl, String ct, String pr, String sc,
 		 String sn, int sp, String ra, String rh, String d,
 		 String mp, String ap, String pi, String me, String ru,

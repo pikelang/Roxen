@@ -34,15 +34,15 @@ static object string_init = string_class->get_method("<init>", "([CII)V");
 /* Class loading */
 static object class_class = FINDCLASS("java/lang/Class");
 static object classloader_class = FINDCLASS("java/lang/ClassLoader");
-static object roxenclassloader_class = FINDCLASS("com/roxen/roxen/RoxenClassLoader");
+static object chilimoonclassloader_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonClassLoader");
 static object file_class = FINDCLASS("java/io/File");
 static object url_class = FINDCLASS("java/net/URL");
-static object load_class = roxenclassloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = roxenclassloader_class->get_method("<init>", "([Ljava/net/URL;)V");
+static object load_class = chilimoonclassloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+static object cl_init = chilimoonclassloader_class->get_method("<init>", "([Ljava/net/URL;)V");
 static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
 static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
-static object get_module_name = roxenclassloader_class->get_static_method("getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
-static object add_jar = roxenclassloader_class->get_method("addJarFile", "(Ljava/lang/String;)V");
+static object get_module_name = chilimoonclassloader_class->get_static_method("getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
+static object add_jar = chilimoonclassloader_class->get_method("addJarFile", "(Ljava/lang/String;)V");
 static object new_instance = class_class->get_method("newInstance", "()Ljava/lang/Object;");
 static object filenotfound_class = FINDCLASS("java/io/FileNotFoundException");
 static object ioexception_class = FINDCLASS("java/io/IOException");
@@ -58,27 +58,27 @@ static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 
 /* Module interface */
-static object reqid_class = FINDCLASS("com/roxen/roxen/RoxenRequest");
-static object conf_class = FINDCLASS("com/roxen/roxen/RoxenConfiguration");
-static object module_class = FINDCLASS("com/roxen/roxen/Module");
-static object defvar_class = FINDCLASS("com/roxen/roxen/Defvar");
-static object location_ifc = FINDCLASS("com/roxen/roxen/LocationModule");
-static object parser_ifc = FINDCLASS("com/roxen/roxen/ParserModule");
-static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
-static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
-static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
-static object lastresort_ifc = FINDCLASS("com/roxen/roxen/LastResortModule");
-static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
-static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
-static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
-static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
-static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object rxml_class = FINDCLASS("com/roxen/roxen/RXML");
-static object backtrace_class = FINDCLASS("com/roxen/roxen/RXML$Backtrace");
-static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+static object reqid_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonRequest");
+static object conf_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonConfiguration");
+static object module_class = FINDCLASS("com/chilimoon/chilimoon/Module");
+static object defvar_class = FINDCLASS("com/chilimoon/chilimoon/Defvar");
+static object location_ifc = FINDCLASS("com/chilimoon/chilimoon/LocationModule");
+static object parser_ifc = FINDCLASS("com/chilimoon/chilimoon/ParserModule");
+static object fileext_ifc = FINDCLASS("com/chilimoon/chilimoon/FileExtensionModule");
+static object provider_ifc = FINDCLASS("com/chilimoon/chilimoon/ProviderModule");
+static object simpletagcaller_ifc = FINDCLASS("com/chilimoon/chilimoon/SimpleTagCaller");
+static object lastresort_ifc = FINDCLASS("com/chilimoon/chilimoon/LastResortModule");
+static object frame_class = FINDCLASS("com/chilimoon/chilimoon/Frame");
+static object response_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonResponse");
+static object response2_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonStringResponse");
+static object response3_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonFileResponse");
+static object response4_class = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonRXMLResponse");
+static object rxml_class = FINDCLASS("com/chilimoon/chilimoon/RXML");
+static object backtrace_class = FINDCLASS("com/chilimoon/chilimoon/RXML$Backtrace");
+static object reqid_init = reqid_class->get_method("<init>", "(Lcom/chilimoon/chilimoon/ChiliMoonConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object frame_init = frame_class->get_method("<init>", "()V");
-static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
+static object _configuration = module_class->get_field("configuration", "Lcom/chilimoon/chilimoon/ChiliMoonConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
 static object query_unique = module_class->get_method("queryUnique", "()Z");
 static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
@@ -88,20 +88,20 @@ static object _start = module_class->get_method("start", "()V");
 static object _stop = module_class->get_method("stop", "()V");
 static object _query_provides = provider_ifc->get_method("queryProvides", "()Ljava/lang/String;");
 static object _check_variable = module_class->get_method("checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
-static object _getdefvars = module_class->get_method("getDefvars", "()[Lcom/roxen/roxen/Defvar;");
-static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _getdefvars = module_class->get_method("getDefvars", "()[Lcom/chilimoon/chilimoon/Defvar;");
+static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Lcom/chilimoon/chilimoon/ChiliMoonResponse;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
-static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
-static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
-static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
+static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Lcom/chilimoon/chilimoon/ChiliMoonResponse;");
+static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)[Ljava/lang/String;");
+static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Ljava/lang/String;");
+static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)[I");
 static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
-static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
-static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Lcom/chilimoon/chilimoon/ChiliMoonResponse;");
+static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/chilimoon/chilimoon/SimpleTagCaller;");
+static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Lcom/chilimoon/chilimoon/ChiliMoonResponse;");
 static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
 static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
-static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
+static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;Lcom/chilimoon/chilimoon/Frame;)Ljava/lang/String;");
 static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
 static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
 static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
@@ -185,7 +185,7 @@ class ClassLoader
     check_exception();
     urls[0] = url;
     check_exception();
-    cl = roxenclassloader_class->alloc();
+    cl = chilimoonclassloader_class->alloc();
     check_exception();
     cl_init->call_nonvirtual(cl, urls);
     check_exception();
@@ -607,7 +607,7 @@ class ModuleWrapper
     modobj = new_instance(modcls);
     check_exception();
     if(!modobj->is_instance_of(module_class))
-      error("class does not implement com.roxen.roxen.Module\n");
+      error("class does not implement com.chilimoon.chilimoon.Module\n");
     else
       jotomod[modobj] = this;
   }
@@ -817,14 +817,14 @@ void create()
   }));
   natives_bind2 = conf_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
-    ({"queryInternalLocation", "(Lcom/roxen/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
-    ({"getRealPath", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_real_file}),
-    ({"getFileContents", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_try_get_file}),
+    ({"queryInternalLocation", "(Lcom/chilimoon/chilimoon/Module;)Ljava/lang/String;", native_queryconfinternal}),
+    ({"getRealPath", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Ljava/lang/String;", native_real_file}),
+    ({"getFileContents", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Ljava/lang/String;", native_try_get_file}),
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;", native_type_from_filename}),
-    ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
+    ({"getProviders", "(Ljava/lang/String;)[Lcom/chilimoon/chilimoon/Module;", native_get_providers}),
   }));
-  natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
-    ({"parseRXML", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
+  natives_bind3 = FINDCLASS("com/chilimoon/chilimoon/ChiliMoonLib")->register_natives(({
+    ({"parseRXML", "(Ljava/lang/String;Lcom/chilimoon/chilimoon/ChiliMoonRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
   natives_bind4 = reqid_class->register_natives(({
     ({"getVariables", "()Ljava/util/Map;", native_get_variables}),
