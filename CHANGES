@@ -7,6 +7,13 @@ o Shuffle disabled for all OS's except Solaris 2.x on sparc.
 
 o Logfiles now opened as root.
 
+o Ftp-module now gives error message instead of sending an error-file.
+
+o .htaccess-module now filters files starting with ".ht".
+
+o Added height specification to module-list images. The module-list should
+  now display *much* faster.
+
 o Some patches to disk_cache.pike.
 
 o Some patches for those who are brave enough to run with THREADS enabled.
