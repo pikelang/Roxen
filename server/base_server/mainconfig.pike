@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.15 1996/12/03 01:17:46 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.16 1996/12/03 02:04:06 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -11,8 +11,8 @@ inherit "config/draw_things";
 #define dB "50"
 
 #define bdR "00"
-#define bdG "30"
-#define bdB "70"
+#define bdG "50"
+#define bdB "90"
 
 
 #define BODY "<body bgcolor=#002050 text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
@@ -428,7 +428,7 @@ string configuration_list()
 
 string new_configuration_form()
 {
-  return replace(read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
+  return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
     "\n\n<hr noshade><p align=right><a href=http://www.roxen.com/>"+
     roxen->real_version +"</a></body>";
@@ -552,7 +552,6 @@ string new_module_form(object id, object node)
 		 "</a><br>"+a[q][1]+"<p><br><p>"});
     }
   }
-
   return res*""+"</td></tr></table>";
 }
 
@@ -608,7 +607,7 @@ int low_enable_configuration(string name, string type)
       roxen->enable_module("cgi#0");
       roxen->enable_module("contenttypes#0");
       roxen->enable_module("ismap#0");
-      roxen->enable_module("lpcscript#0");
+      roxen->enable_module("pikescript#0");
       roxen->enable_module("htmlparse#0");
       roxen->enable_module("directories#0");
       roxen->enable_module("userdb#0");
@@ -845,10 +844,10 @@ constant tabs = ({
 });
 
 constant tab_names = ({
- "Virtual servers", 
- "Global variables",
- "Status info",
- "Error log",
+ " Virtual servers ", 
+ " Global variables ",
+ " Status info ",
+ " Error log ",
 });
 		
 
@@ -865,6 +864,7 @@ string display_tabular_header(object node)
     selected_nodes[tabs[2]]+"?"+(bar++),
     selected_nodes[tabs[3]]+"?"+(bar++),
   });
+  links[search(tabs,s)]="/"+s+"/"+"?"+(bar++);
   return tablist(tab_names, links, search(tabs,s));
 }
 
@@ -930,7 +930,8 @@ mapping auto_image(string in, object id)
     i=draw_unselected_button(value,button_font);
     break;
   }
-  if(i) r = http_string_answer(i->togif(128,@trans),"image/gif");
+  i->map_closest(i->select_colors(31)+({trans}));
+  if(i) r = http_string_answer(i->togif(@trans),"image/gif");
   i=0;
   cache_set("config_images", in, r);
   return r;

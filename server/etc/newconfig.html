@@ -1,29 +1,16 @@
-<title>Roxen server configuration - Add a virtual server</title>
-
-<body background=/image/background.jpg bgcolor=#f0e0a0
-      text=#000000 link=#0000f0 vlink=#0000f0 alink=#00f000>
-
-<h1 align=center>
-<img align=left alt="Add a server" src=/image/roxen.gif>
-</h1>
-
-<br clear=all>
-<hr noshade>
-
-
-<form>
 <h2>Add a new virtual server</h2>
+<table cellpadding=10><tr><td bgcolor=#000000>
+<form>
 <pre>
-<font size=+1>Server name:       </font>  <font size=+2><input name=name size=55,1></font>
-<font size=+1>Configuration type: <select name=type>
+Server name:        <input name=name size=40,1>
+Configuration type: <select name=type>
 <option>Bare bones
 <option>IPP customer configuration
 <option selected>Standard configuration
 <option>Proxy server
 $COPIES
-</select>
-<input type=submit value="Add it!"></form></pre>
-</font>
+</select><input type=submit value="Add it!"></form></pre>
+</td></table>
 <p>The only thing the type change is the initial configuration.
 <p>The types are:
 <dl compact>
