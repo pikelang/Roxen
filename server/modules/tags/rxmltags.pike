@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.185 2000/11/02 12:47:02 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.186 2000/11/02 14:19:22 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1923,7 +1923,7 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  Returns a message if a login failed or cancelled.
 </attr>",
 
-"autoformat":#"<desc cont='cont'><p><short hide>
+"autoformat":#"<desc cont='cont'><p><short hide='hide'>
  Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
 
 <ex><autoformat>
@@ -2264,7 +2264,7 @@ Display the time from another timezone.
  The value to be subtracted.
 </attr>",
 
-"default":#"<desc cont='cont'><p><short hide>
+"default":#"<desc cont='cont'><p><short hide='hide'>
  Used to set default values for form elements.</short> Makes it easier
  to give default values to \"<tag>select</tag>\" or
  \"<tag>checkbox</tag>\" form elements.
@@ -2297,7 +2297,7 @@ Display the time from another timezone.
  </default>
 </ex>",
 
-"doc":#"<desc cont='cont'><p><short hide>
+"doc":#"<desc cont='cont'><p><short hide='hide'>
  Eases code documentation by reformatting it.</short>
  Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\". No attributes required.
@@ -2556,7 +2556,7 @@ location module.</p></desc>
  The virtual path to the file to be inserted.
 </attr>",
 
-"maketag":#"<desc cont='cont'><p><short hide>Makes it possible to create tags.</short>
+"maketag":#"<desc cont='cont'><p><short hide='hide'>Makes it possible to create tags.</short>
  This tag creates tags. The contents of the container will be put into
  the contents of the produced container.
 </p></desc>
@@ -2586,7 +2586,7 @@ location module.</p></desc>
 </eval>
 </ex>",
 
-"modified":#"<desc tag='tag'><p><short hide>
+"modified":#"<desc tag='tag'><p><short hide='hide'>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
 </p></desc>
