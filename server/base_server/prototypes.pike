@@ -1,6 +1,6 @@
 #include <stat.h>
 #include <config.h>
-constant cvs_version="$Id: prototypes.pike,v 1.2 2001/01/10 08:57:24 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.3 2001/01/14 10:25:18 nilsson Exp $";
 
 class Variable
 {
@@ -247,7 +247,7 @@ class Configuration
   mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
-  array(int)|Stat stat_file(string file, RequestID id);
+  array(int)|object(Stdio.Stat) stat_file(string file, RequestID id);
   array open_file(string fname, string mode, RequestID id, void|int ig);
   mapping(string:array(mixed)) find_dir_stat(string file, RequestID id);
   array access(string file, RequestID id);
@@ -593,7 +593,7 @@ class RoxenModule
   string query_location();
   string query_provides();
   array query_seclevels();
-  array(int)|Stat stat_file(string f, RequestID id);
+  array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(String) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
   string real_file(string f, RequestID id);
