@@ -1,4 +1,4 @@
-/* This code is (C) 1997 Francesco Chemolli <kinkie@comedia.it>
+/* This code is (C) 1997 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
  * It can be freely distributed and copied under the terms of the
  * GNU General Public License.
  * This code comes with NO WARRANTY of any kind, either implicit or explicit.
@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.3 1997/12/16 16:18:21 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.4 1998/07/15 19:41:15 grubba Exp $";
 
 //#define SQLAUTHDEBUG
 
