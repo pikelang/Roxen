@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.542 2003/10/07 10:45:08 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.543 2003/10/20 14:47:09 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1260,14 +1260,14 @@ string examine_return_mapping(mapping m)
       case 302: // redirect
 	 if (m->extra_heads &&
 	     (m->extra_heads->location))
-	   res = sprintf("Returned redirect to %s ", m->extra_heads->location);
+	   res = sprintf("Returned redirect to %O ", m->extra_heads->location);
 	 else
 	   res = "Returned redirect, but no location header. ";
 	 break;
 
       case 401:
 	 if (m->extra_heads["www-authenticate"])
-	   res = sprintf("Returned authentication failed: %s ",
+	   res = sprintf("Returned authentication failed: %O ",
 			 m->extra_heads["www-authenticate"]);
 	 else
 	   res = "Returned authentication failed. ";
@@ -1278,20 +1278,20 @@ string examine_return_mapping(mapping m)
 	 break;
 
       default:
-	 res = sprintf("Returned %d. ", m->error);
+	 res = sprintf("Returned %O. ", m->error);
    }
 
    if (!zero_type(m->len))
       if (m->len<0)
 	 res += "No data ";
       else
-	 res += sprintf("%d bytes ", m->len);
+	 res += sprintf("%O bytes ", m->len);
    else if (stringp(m->data))
      res += sprintf("%d bytes ", strlen(m->data));
    else if (objectp(m->file))
       if (catch {
 	 Stat a=m->file->stat();
-	 res += sprintf("%d bytes ", a[1]-m->file->tell());
+	 res += sprintf("%O bytes ", a[1]-m->file->tell());
       })
 	res += "? bytes ";
 
@@ -1300,7 +1300,7 @@ string examine_return_mapping(mapping m)
 
    if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
-      res += sprintf(" of %s", m->type||m->extra_heads["content-type"]);
+      res += sprintf(" of %O", m->type||m->extra_heads["content-type"]);
    }
 
    res+="<br />";
