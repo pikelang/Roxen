@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.12 1998/07/22 00:05:30 js Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.13 1998/08/05 14:38:54 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -100,7 +100,13 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		   ([ "page":internal_page,
 		      "done":internal_done ]), 
 		   (int)defines->line,f);
-  if(f->done&&!args->ok);
+  if (f->done && !args->ok) {
+#if __VERSION__ >= 0.6
+    pike += sprintf("mixed wizard_done(object id)\n"
+		    "{\n"
+		    "  return parse_rxml(%O, id);\n"
+		    "}\n", f->done);
+#else
     pike += ("mixed wizard_done(object id)\n"
 	     "{\n"
 	     "  return parse_rxml(\""+replace(f->done,
@@ -108,6 +114,8 @@ string tag_wizard(string t, mapping args, string contents, object id,
 					      ({"\\\"", "\\n", "\\r", "\\\\"}))+
 	     "\",id);\n"
 	     "}\n");
+#endif /* __VERSION__ >= 0.6 */
+  }
   foreach(f->pages, array q)
   {
 #if __VERSION__ >= 0.6
