@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.14 1997/08/23 17:36:37 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.15 1997/08/24 14:21:49 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -271,10 +271,10 @@ array protocols()
   if (!files || !sizeof(files)) {
     throw(({"No protocols available!\n", backtrace() }));
   }
-  return map(files, lambda(string s) {
+  return map(filter(files, lambda(string s) {
     return ((search(s,".pike") == search(s,".")) &&
 	    (search(s,".")!=-1) && s[-1]!="~");
-  }, lambda(string s) { return (s/".")[0]; });
+  }), lambda(string s) { return (s/".")[0]; });
 }
 
 string all_protocols_as_selection(int id, string sel)
