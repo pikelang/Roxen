@@ -19,3 +19,8 @@ constant modules = ({
   "tablist",
   "filesystem",
 });
+
+void init_modules( Configuration c, RequestID id )
+{
+  c->find_module( "graphic_text#0" )->set("colorparse",1 );
+}
