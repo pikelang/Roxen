@@ -68,7 +68,7 @@ constant rxmltags_doc=(["clientname":"<desc tag></desc>",
 "accept-language":"<desc tag></desc>"
 ]);
 mapping tagdoc=(["preparse":"<desc cont></desc>"])+
-  enabled->rxmltags?rxmltags_doc:([]);
+  (enabled->rxmltags?rxmltags_doc:([]));
 #endif
 
 // Changes the parsing order by first parsing it's contents and then
