@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.353 2002/03/12 13:36:56 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.354 2002/03/13 13:18:46 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7003,42 +7003,42 @@ just got zapped?
  markup.</p>
 
  <p>The expression is a simplified variant of an XPath location path:
- It consists of one or more steps delimited by \'<code>/</code>\'.
+ It consists of one or more steps delimited by \'<tt>/</tt>\'.
  Each step selects some part(s) of the current node. The first step
  operates on the defined tag or container itself, and each following
  one operates on the part(s) selected by the previous step.</p>
 
  <p>A step may be any of the following:</p>
 
- <ul>
-   <li>\'<code><i>name</i></code>\' selects all elements (i.e. tags or
+ <list type=\"ul\">
+   <item><p>\'<i>name</i>\' selects all elements (i.e. tags or
    containers) with the given name in the content. The name can be
-   \'<code>*</code>\' to select all.</li>
+   \'<tt>*</tt>\' to select all.</p></item>
 
-   <li>\'<code>@<i>name</i></code>\' selects the element attribute
-   with the given name. The name can be \'<code>*</code>\' to select
-   all.</li>
+   <item><p>\'<tt>@</tt><i>name</i>\' selects the element attribute
+   with the given name. The name can be \'<tt>*</tt>\' to select
+   all.</p></item>
 
-   <li>\'<code>comment()</code>\' selects all comments in the
-   content.</li>
+   <item><p>\'<tt>comment()</tt>\' selects all comments in the
+   content.</p></item>
 
-   <li>\'<code>text()</code>\' selects all text pieces in the
-   content.</li>
+   <item><p>\'<tt>text()</tt>\' selects all text pieces in the
+   content.</p></item>
 
-   <li>\'<code>processing-instruction(<i>name</i>)</code>\' selects
+   <item><p>\'<tt>processing-instruction(<i>name</i>)</tt>\' selects
    all processing instructions with the given name in the content. The
-   name may be left out to select all.</li>
+   name may be left out to select all.</p></item>
 
-   <li>\'<code>node()</code>\' selects all the different sorts of
-   nodes in the content, i.e. the whole content.</li>
- </ul>
+   <item><p>\'<tt>node()</tt>\' selects all the different sorts of
+   nodes in the content, i.e. the whole content.</p></item>
+ </list>
 
- <p>A step may be followed by \'<code>[<i>n</i>]</code>\' to choose
+ <p>A step may be followed by \'<tt>[<i>n</i>]</tt>\' to choose
  the nth item in the selected set. The index n may be negative to
  select an element in reverse order, i.e. -1 selects the last element,
  -2 the second-to-last, etc.</p>
 
- <p>An example: The expression \'<code>p/*[2]/@href</code>\' first
+ <p>An example: The expression \'<tt>p/*[2]/@href</tt>\' first
  selects all <tag>p</tag> elements in the content. In the content of
  each of these, the second element with any name is selected. It\'s
  not an error if some of the <tag>p</tag> elements have less than two
@@ -7048,8 +7048,8 @@ just got zapped?
 
  <p>Note that an attribute node is both the name and the value, so in
  the example above the result might be
- \'<code>href=\"index.html\"</code>\' and not
- \'<code>index.html</code>\'. If you only want the value, use the
+ \'<tt>href=\"index.html\"</tt>\' and not
+ \'<tt>index.html</tt>\'. If you only want the value, use the
  value-of attribute instead.</p>
 </attr>
 
