@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.85 1998/03/23 17:39:40 grubba Exp $
+ * $Id: ftp.pike,v 1.86 1998/03/23 17:58:33 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -818,6 +818,9 @@ void done_callback(object fd)
 {
   if(fd)
   {
+    if (fd->set_blocking) {
+      fd->set_blocking();	// Force close() to flush any buffers.
+    }
     fd->close();
     destruct(fd);
   }
@@ -1254,6 +1257,8 @@ object ls_session;
 object(Thread.Mutex) handler_lock = Thread.Mutex();
 #endif /* constant(thread_create) */
 
+string partial = "";
+
 void handle_data(string s, mixed key)
 {
   string cmdlin;
@@ -1272,12 +1277,18 @@ void handle_data(string s, mixed key)
   prot = "FTP";
   method = "GET";
 
+  // A single read() can contain multiple or partial commands
+  // RFC 1123 4.1.2.10
+  if (sizeof(partial)) {
+    s = partial + s;
+  }
+
   // However, a server-FTP MUST be capable of
   // accepting and refusing Telnet negotiations (i.e., sending
   // DON'T/WON'T). RFC 1123 4.1.2.12
   // FIXME: Not supported yet.
 
-  array a = cmdlin/"\377";
+  array a = s/"\377";
   if (sizeof(a) > 1) {
     int i = 1;
     string answer = "";
@@ -1350,7 +1361,7 @@ void handle_data(string s, mixed key)
     if (sizeof(answer)) {
       reply(answer);
     }
-    cmdlin = a*"";
+    s = a*"";
   }
 
   // A single read() can contain multiple or partial commands
@@ -1916,6 +1927,9 @@ void handle_data(string s, mixed key)
     }
     oldcmd = cmd;
   }
+
+  partial = s;
+
   if (objectp(key))
     destruct(key);
 }
