@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.788 2002/10/28 19:24:50 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.789 2002/11/25 10:31:53 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1487,18 +1487,21 @@ class SSLProtocol
     string f, f2;
     ctx->certificates = ({});
 
-    foreach( query_option("ssl_cert_file")/",", string cert_file )
+    foreach( map(query_option("ssl_cert_file")/",", String.trim_whites),
+	     string cert_file )
     {
       if( catch{ f = lopen(cert_file, "r")->read(); } )
       {
-	report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
+	report_error(LOC_M(8,"SSL3: Reading cert-file '%s' failed!")+"\n",
+		     cert_file);
 	return;
       }
 
       if( strlen(query_option("ssl_key_file")) &&
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
-	report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
+	report_error(LOC_M(9, "SSL3: Reading key-file '%s' failed!")+"\n",
+		     query_option("ssl_key_file"));
 	return;
       }
 
