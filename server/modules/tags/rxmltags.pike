@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.201 2001/02/10 22:02:04 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.202 2001/02/11 03:59:53 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1527,10 +1527,16 @@ string simpletag_smallcaps(string t, mapping m, string s)
 
 string simpletag_random(string tag, mapping m, string s, RequestID id)
 {
-  string|array q;
   NOCACHE();
-  if(!(q=m->separator || m->sep)) return (q=s/"\n")[random(sizeof(q))];
-  return (q=s/q)[random(sizeof(q))];
+  array q = s/(m->separator || m->sep || "\n");
+  int index;
+  if(m->seed)
+    index = array_sscanf(Crypto.md5()->update(m->seed)->digest(),
+			 "%4c")[0]%sizeof(q);
+  else
+    index = random(sizeof(q));
+
+  return q[index];
 }
 
 class TagGauge {
@@ -2663,32 +2669,17 @@ location module.</desc>
 <attr name=separator value=string>
  The separator used to separate the messages, by default newline.
 
-<ex><random separator=#>
-Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
+<ex><random separator=','>
+Roxen,Pike,Foo,Bar,roxen.com,community.roxen.com,Roxen Internet Software
 </random>
 </ex>
 
-</attr>",
-
-"recursive-output":#"<desc cont>
-
-</desc>
-
-<attr name=limit value=number>
-
 </attr>
 
-<attr name=inside value=string>
-
+<attr name='seed' value='string'>
+Enables you to use a seed that determines which message to choose.
 </attr>
-
-<attr name=outside value=string>
-
-</attr>
-
-<attr name=separator value=string>
-
-</attr>",
+",
 
 "redirect":#"<desc tag><short>
  Redirects the user to another page.</short> Requires the to attribute.
