@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.304 1999/07/10 21:44:32 peter Exp $
+ * $Id: roxen.pike,v 1.305 1999/07/12 18:34:31 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.304 1999/07/10 21:44:32 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.305 1999/07/12 18:34:31 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -1423,6 +1423,8 @@ string get_domain(int|void l)
 #endif
     if(!s)
     {
+      // FIXME: NT support.
+
       t = Stdio.read_bytes("/etc/resolv.conf");
       if(t) 
       {
@@ -2788,7 +2790,7 @@ källservern om de har en last-modified header som anger när de senast
 	  "$uid with the uid of the user running the process.");
   deflocaledoc("svenska", "pidfile", "ProcessIDfil",
 	       "I den här filen sparas roxen processid och processidt "
-	       "for roxens start-skript. $uid byts ut mot användaridt hos "
+	       "for roxens start-skript. $uid byts ut mot användaridt för "
 	       "den användare som kör roxen");
 
   globvar("default_ident", 1, "Identify: Use default identification string",
