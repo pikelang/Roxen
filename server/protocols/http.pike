@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.332 2001/08/23 05:33:43 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.333 2001/08/23 13:29:52 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -891,7 +891,7 @@ private int parse_got( string new_data )
        break;
     }
   }
-  if(misc->len && method == "POST")
+  if(misc->len)
   {
     if(!data) data="";
     int l = misc->len;
@@ -900,51 +900,54 @@ private int parse_got( string new_data )
 	
     if(strlen(data) < l)
     {
-      REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
+      REQUEST_WERR(sprintf("HTTP: parse_request(): More data needed in %s.",
+			   method));
       TIMER_END(parse_got);
       return 0;
     }
     leftovers = data[l+2..];
     data = data[..l+1];
 	
-    switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
-    {
-     default: 
-       // Normal form data.
-       string v;
+    if (method == "POST") {
+      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
+      {
+      default: 
+	// Normal form data.
+	string v;
 
-       // Ok.. This might seem somewhat odd, but IE seems to add a
-       // (spurious) \r\n to the end of the data, and some versions of
-       // opera seems to add (spurious) \r\n to the start of the data.
-       //
-       // Oh, the joy of supporting all webbrowsers is endless.
-       data = String.trim_all_whites( data );
-       l = misc->len = strlen(data);
+	// Ok.. This might seem somewhat odd, but IE seems to add a
+	// (spurious) \r\n to the end of the data, and some versions of
+	// opera seems to add (spurious) \r\n to the start of the data.
+	//
+	// Oh, the joy of supporting all webbrowsers is endless.
+	data = String.trim_all_whites( data );
+	l = misc->len = strlen(data);
 
-       if(l < 200000)
-         foreach(replace(data,"+"," ")/"&", v)
-           if(sscanf(v, "%s=%s", a, b) == 2)
-           {
-             a = http_decode_string( a );
-             b = http_decode_string( b );
-	     real_variables[ a ] += ({ b });
-           }
-       break;
+	if(l < 200000)
+	  foreach(replace(data,"+"," ")/"&", v)
+	    if(sscanf(v, "%s=%s", a, b) == 2)
+	    {
+	      a = http_decode_string( a );
+	      b = http_decode_string( b );
+	      real_variables[ a ] += ({ b });
+	    }
+	break;
 	    
-     case "multipart/form-data":
-       object messg = MIME.Message(data, misc);
-       foreach(messg->body_parts, object part)
-       {
-         if(part->disp_params->filename)
-	 {
-           real_variables[part->disp_params->name] += ({part->getdata()});
-           real_variables[part->disp_params->name+".filename"] +=
-             ({part->disp_params->filename});
-	   misc->files += ({ part->disp_params->name });
-         } else 
-	   real_variables[part->disp_params->name] += ({part->getdata()});
-       }
-       break;
+      case "multipart/form-data":
+	object messg = MIME.Message(data, misc);
+	foreach(messg->body_parts, object part)
+	{
+	  if(part->disp_params->filename)
+	  {
+	    real_variables[part->disp_params->name] += ({part->getdata()});
+	    real_variables[part->disp_params->name+".filename"] +=
+	    ({part->disp_params->filename});
+	    misc->files += ({ part->disp_params->name });
+	  } else 
+	    real_variables[part->disp_params->name] += ({part->getdata()});
+	}
+	break;
+      }
     }
   }
   TIMER_END(parse_got);
