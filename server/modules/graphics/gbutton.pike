@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.10 2000/01/19 19:04:44 noring Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.11 2000/02/02 00:21:49 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -34,7 +34,6 @@ inherit "roxenlib";
 
 
 roxen.ImageCache  button_cache;
-Image.Font button_font;
 Image.Image button_border;
 Image.Image button_mask;
 
@@ -98,7 +97,6 @@ constant tagdoc=(["gbutton":"","gbutton-url":""]);
 void start()
 {
   button_cache = roxen.ImageCache("gbutton", draw_button);
-  button_font  = resolve_font( "haru 32" );
 }
 
 
@@ -119,7 +117,8 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   Image.Image  text_img, b, tmp, button;
   int          req_width, b_width, b_height, t_width, i_width, icn_x, txt_x;
   mapping      icon;
-  
+  object       button_font = resolve_font( args->font );
+
   //  Load images
   if (!button_border) {
     button_border = roxen.load_image("roxen-images/gbutton_border.gif", id);
@@ -130,7 +129,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if (!args->dim)
     b = button_border->clone()->grey()->
             modify_by_intensity(1, 1, 1, args->bo, args->bob );
-  else 
+  else
   {
     array dim_bg = ({ 255, 255, 255 });
     array dim_bo = ({ 0, 0, 0 });
@@ -138,20 +137,20 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
       dim_bo[i] = (args->bo[i] + args->bg[i]) / 2;
       dim_bg[i] = (args->bg[i] + dim_bg[i]) / 2;
     }
-    
+
     b = button_border->clone()->grey()->
             modify_by_intensity(1, 1, 1, dim_bo, dim_bg);
   }
   b_width = b->xsize();
   b_height = b->ysize();
-  
+
   //  Get icon
   if (args->icn)
     icon = roxen.low_load_image(args->icn, id);
   else if (args->icd)
     icon = roxen.low_decode_image(args->icd);
   i_width = icon && (icon->img->xsize() + IMAGE_SPC);
-  
+
   //  Generate text
   if (sizeof(text)) {
     text_img = button_font->write(text)->scale(0, b_height - IMAGE_SPC);
@@ -160,7 +159,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
 				 text_img->ysize());
     t_width = text_img->xsize();
   }
-  
+
   //  Compute text and icon placement
   req_width = t_width + b_width + i_width;
   if (args->wi && (req_width < args->wi))
@@ -224,7 +223,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     break;
   }
   button = Image.Image(req_width, b_height, args->bg);
-  
+
   //  Paste left and right edge of border
   tmp = b->copy(0, 0, b_width / 2 - 1, b_height - 1);
   button->paste_mask(tmp, button_mask->copy(0, 0,
@@ -233,30 +232,30 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   button->paste_mask(tmp, button_mask->copy(b_width / 2, 0,
 					    b_width - 1, b_height - 1),
 		     req_width - b_width / 2, 0);
-  
+
   //  Stretch top/bottom borders
   tmp = button->copy(b_width / 2 - 1, 0, b_width / 2 - 1, b_height - 1);
   for (int offset = b_width / 2; offset <= req_width - b_width / 2; offset++)
     button->paste(tmp, offset, 0);
-  
+
   //  Draw icon
   if (icon) {
     int icn_y = (b_height - icon->img->ysize()) / 2;
-    
+
     if (!icon->alpha)
       icon->alpha = icon->img->clone()->clear(({255,255,255}));
     if (args->dim)
       icon->alpha *= 0.3;
     button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
   }
-  
+
   //  Draw text
   if (args->dim)
     for (int i = 0; i < 3; i++)
       args->txt[i] = (args->txt[i] + args->bg[i]) / 2;
   if(text_img)
     button->paste_alpha_color(text_img, args->txt, txt_x, 2);
-  
+
   return button;
 }
 
@@ -282,7 +281,8 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
             (< "dim", "disabled" >)[lower_case(args->state || "")],
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
-    "ica" : args->align_icon || "left"                   //  Icon alignment
+    "ica" : args->align_icon || "left",                  //  Icon alignment
+    "font": args->font,
   ]);
 
   if(args->bordercolor)
@@ -311,7 +311,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
 			 "border" : args->border,
 			 "hspace" : args->hspace,
 			 "vspace" : args->vspace ]);
-  
+
   if (mapping size = button_cache->metadata(new_args, id, 1)) {
     //  Image in cache (1 above prevents generation on-the-fly, i.e.
     //  first image will lack sizes).

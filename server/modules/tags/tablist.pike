@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.30 2000/01/10 11:48:38 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.31 2000/02/02 00:21:54 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -18,15 +18,13 @@ Image.Image mask_image;
 Image.Image frame_image;
 int         height;
 int         width;
-object      button_font;
 
 void start()
 {
   mask_image = Image.load("roxen-images/tab_mask.png");
   frame_image = Image.load("roxen-images/tab_frame.png");
-  height = frame_image->ysize();                       
-  width = frame_image->xsize();                        
-  button_font = resolve_font("haru 32");               
+  height = frame_image->ysize();
+  width = frame_image->xsize();
   the_cache = roxen.ImageCache( "tablist", draw_tab );
   find_internal = the_cache->http_file_answer;
 }
@@ -85,12 +83,14 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
    "gamma": a->gamma  || d->gamma   || 0,
   "format": a->format || d->format  || "gif",
     "sel" : a->selected,
+   "font" : a->font || d->font,
   "first" : a->first,
   "last"  : a->last,
     "bg"  : parse_color(a->bgcolor || d->bgcolor || id->misc->defines->theme_bgcolor || id->misc->defines->bgcolor || "white"),
     "fg"  : parse_color(a->selcolor || d->selcolor || "white"),
     "dim" : parse_color(a->dimcolor || d->dimcolor || "#003366"),
-    "txt" : parse_color(a->textcolor || d->textcolor ||
+    "txt" : parse_color((a->selected?(a->seltextcolor||d->seltextcolor):0)
+                        || a->textcolor || d->textcolor ||
 			(a->selected ? "black" : "white"))
   ]);
 
@@ -98,7 +98,7 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   foreach( glob( "*-*", indices(a)), string n )   args[n] = a[n];
 
   m_delete(a, "selected");
-  
+
   //  Create <img> tag
   mapping img_attrs = ([ ]);
 
@@ -107,24 +107,24 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
     m_delete(a, "alt");
   } else
     img_attrs->alt = "_/" + html_encode_string(contents) + "\\_";
-  
+
   if (a->border) {
     img_attrs->border = a->border;
     m_delete(a, "border");
   } else
     img_attrs->border="0";
-  
+
   img_attrs->src = query_internal_location()+
                  the_cache->store( ({args,contents}), id );
-  if( mapping size = the_cache->metadata( a, id, 1 ) ) 
+  if( mapping size = the_cache->metadata( a, id, 1 ) )
   {
-    // image in cache (1 above prevents generation on-the-fly, 
+    // image in cache (1 above prevents generation on-the-fly,
     // first image will lack sizes)
     img_attrs->width = size->xsize;
     img_attrs->height = size->ysize;
   }
-  d->result += 
-            make_container("a", a, 
+  d->result +=
+            make_container("a", a,
                            make_container("b", ([]),
                                           make_tag("img", img_attrs)));
   return "";
@@ -133,16 +133,15 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
 string container_tablist(string t, mapping a, string contents, RequestID id)
 {
   a->result="";
-  replace(parse_html(contents, ([]), (["tab":internal_tag_tab]), 
+  replace(parse_html(contents, ([]), (["tab":internal_tag_tab]),
                      a, id),
           ({ "\n", "\r" }), ({ "", "" }));
   return a->result;
 }
 
-
-
 Image.Image draw_tab(mapping args, string txt)
 {
+  object      button_font = resolve_font( args->font );
   Image.Image text = button_font->write( txt );
   text = text->scale(0, height);
 
@@ -162,11 +161,11 @@ Image.Image draw_tab(mapping args, string txt)
   corner *= frame_image;
   i->paste(corner);
   i->paste(corner->mirrorx(), i->xsize() - corner->xsize(), 0);
-  
+
   //  Add text which is drawn it twice if the color is bleak
   for (int loop = (`+(@args->txt) / 3 > 200 ? 2 : 1); loop; loop--)
     i->paste_alpha_color(text, args->txt, width, 0);
-  
+
   //  Create line on top of tab, and also at bottom if not selected
   i->line(width - 1, 0, i->xsize() - width, 0,
 	  0, 0, 0);
@@ -193,9 +192,9 @@ Image.Image draw_tab(mapping args, string txt)
     for( int x=0; x<size; x++)
       i->setpixel( i->xsize()-(size+1)+x,
                    i->ysize()-1,
-                   (args->bg[0]*x)/size, (args->bg[1]*x)/size, 
+                   (args->bg[0]*x)/size, (args->bg[1]*x)/size,
                    (args->bg[2]*x)/size);
-  }  
+  }
   return i;
 }
 
