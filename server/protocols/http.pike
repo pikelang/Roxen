@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.446 2004/05/18 09:12:14 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.447 2004/05/18 15:40:30 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -893,7 +893,19 @@ void disconnect()
 #if constant (SSL.sslfile.PACKET_MAX_SIZE)
     // Destruct necessary since the old SSL.sslfile implementation
     // contains cyclic refs.
-    my_fd->set_blocking();
+
+    // Don't set to blocking mode in SSL since naughty clients can
+    // hang the backend then. Otoh, not doing it can cause connections
+    // to be closed prematurely which typically leads to broken images
+    // in browsers that don't support keep-alive (e.g. Safari). The
+    // real problem is that SSL.sslfile in pike <= 7.4 has flawed
+    // buffering in callback mode. It's fixed by a complete rewrite in
+    // 7.6. FIXME: Use the 7.6 version of SSL.sslfile in Roxen.
+#if 0
+    if (my_fd->CipherSpec)
+      my_fd->set_blocking();
+#endif
+
     my_fd->close();
     destruct (my_fd);
 #else
@@ -1870,7 +1882,6 @@ void send_result(mapping|void result)
   TIMER_END(send_result);
   start_sender();
 }
-
 
 // Execute the request
 void handle_request( )
