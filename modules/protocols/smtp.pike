@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.67 1998/12/06 22:04:22 grubba Exp $
+ * $Id: smtp.pike,v 1.68 1999/02/02 15:28:16 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.67 1998/12/06 22:04:22 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.68 1999/02/02 15:28:16 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -462,9 +462,15 @@ static class Smtp_Connection {
       }
     }
 
-    conf->log(([ "error":200 ]), id);
+    if (sizeof(result)) {
+      conf->log(([ "error":200 ]), id);
 
-    send(250, sort(result));
+      send(250, sort(result));
+    } else {
+      conf->log(([ "error":404 ]), id);
+      
+      send(550, ({ sprintf("Unknown recipient %O", args) }));
+    }
   }
 
   static string low_desc(string addr)
