@@ -245,10 +245,20 @@ string comment()
   return "";
 }
 
+/* Per default, return the value of the module variable 'location' */
+string query_location()
+{
+  string s;
+  catch{s = query("location");};
+  return s;
+}
+
+
 /*
  * Parse and return a parsed version of the security levels for this module
  *
  */
+
 
 array query_seclevels()
 {
