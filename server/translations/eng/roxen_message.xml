@@ -5,7 +5,6 @@
 <dumped>974833157</dumped>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
-<file>../base_server/#roxen.pike#</file>
 <file>../modules/configuration/update.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <file>../protocols/prot_fhttp.pike</file>
