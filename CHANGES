@@ -3,10 +3,10 @@ Changes since Roxen Challenger 1.2.95 Yellow
 
 o Reverted the error messages introduced in 1.2.95.
 
-o Automated the CLASSPATH setting (for selvlets).
+o Automated the CLASSPATH setting (for servlets).
 
 o Install script now tries to locate installed databases etc and set
-  enviroment variables accordingly.
+  environment variables accordingly.
 
 o Fixed resolving to handle computers without /etc/resolv.conf
 
@@ -16,7 +16,7 @@ o Added internal handling of cgi-scripts. This eliminates the need for
   an external cgi-script wrapper and speeds up execution.
 
 o Rewrote CGI-module. In contrast to the old cgi.pike this one
-  acctually looks nice. Except for code that you can read and enjoy
+  actually looks nice. Except for code that you can read and enjoy
   there is now a uid and group cache.
 
 o Added possibility to parse the output from CGI-scripts. Possibly
@@ -24,14 +24,14 @@ o Added possibility to parse the output from CGI-scripts. Possibly
 
 o Added <cgi> tag.
 
-o Upgraded libtool for libiodbc.
+o Added support for libiodbc.
 
 o Changed default build from 1.2 to 1.3.
 
-o Fixed so that Challenger doesn't unnessesarily try to become
+o Fixed so that Challenger doesn't unnecessarily try to become
   superuser to write config files.
 
-o Fixed so that Challenger doesn't unnessesarily change permissions on
+o Fixed so that Challenger doesn't unnecessarily change permissions on
   files.
 
 NOTE: The two changes above can lead to Challenger beeing unable to
