@@ -1,6 +1,6 @@
 static private inherit "db";
 
-/* $Id: persistent.pike,v 1.8 1997/02/14 04:37:22 per Exp $ */
+/* $Id: persistent.pike,v 1.9 1997/02/14 05:58:55 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -168,11 +168,11 @@ public void save()
  *
  * I think not.
  */  
-void destroy()  
-{
-  perror("\n\n\npersist->destroy ("+__id+")\n"+describe_backtrace(backtrace()));
+//void destroy()  
+//{
+//  perror("\n\n\npersist->destroy ("+__id+")\n"+describe_backtrace(backtrace()));
 //  if(!_____destroyed)
 //    save();
-}
+//}
     
 
