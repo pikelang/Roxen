@@ -1,8 +1,9 @@
 inherit "module";
+#include <request_trace.h>
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.11 1999/12/22 01:34:46 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.12 2000/01/05 18:21:06 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -33,7 +34,7 @@ mapping lookup( string id )
 // Advanced wizard
 
 // tags:
-//  <store title=...>
+//  <awizard title=...>
 //  <page [name=...]>
 //   <verify>...</verify> --> Will be executed when leaving the page.
 //   <button [page=...] [title=...] [image=...]>
@@ -67,7 +68,7 @@ class Page
       my_containers[ replace(i-"container_","_","-") ] = this_object()[ i ];
   }
 
-  string tag_goto(string t, mapping m, int q, int w, object id)
+  string tag_goto(string t, mapping m,  RequestID id)
   {
     if(m->page)
       id->misc->return_me = ([ "page":m->page ]);
@@ -76,7 +77,7 @@ class Page
     return "";
   }
 
-  string tag_wizard_buttons(string t, mapping m, int q, int w, object id)
+  string tag_wizard_buttons(string t, mapping m, RequestID id)
   {
     return ("<p><table width=100%><tr width=100% >\n"
             "<td  width=50% align=left>"
@@ -94,7 +95,7 @@ class Page
     return res;
   }
 
-  string tag_button(string t, mapping m, int q, int w, object id)
+  string tag_button(string t, mapping m, RequestID id)
   {
     mapping args = ([]);
     if(m->page)
@@ -114,9 +115,14 @@ class Page
       args->name  = "goto_prev_page/"+m->id;
     } else 
       args->name = "goto_current_page/"+m->id;
-    if(m->image || m->gbutton_title) 
+    if(m->image || m->gbutton_title || m["gbutton_title"] )
     {
       args->type = "image";
+      if(!m->gbutton_title)
+      {
+        m->gbutton_title = m["gbutton-title"];
+        m_delete( m, "gbutton-title" );
+      }
       args->alt  = m->title||m->gbutton_title||m->alt||m->page||"[ "+m->image+" ]";
       args->border="0";
       if( !m->gbutton_title )
@@ -135,8 +141,7 @@ class Page
     return make_tag("input", args);
   }
 
-  string container_dbutton(string t, mapping m, string c, int q, int w, 
-                           object id)
+  string container_dbutton(string t, mapping m, string c, RequestID id)
   {
     mapping args = ([]);
     if(m->page)
@@ -156,8 +161,13 @@ class Page
       args->name  = "goto_prev_page/"+m->id;
     } else 
       args->name = "goto_current_page/"+m->id;
-    if(m->image || m->gbutton_title) 
+    if(m->image || m->gbutton_title || m["gbutton-title"]) 
     {
+      if(!m->gbutton_title)
+      {
+        m->gbutton_title = m["gbutton-title"];
+        m_delete( m, "gbutton-title" );
+      }
       args->type = "image";
       args->border="0";
       if( m->gbutton_title )
@@ -174,17 +184,17 @@ class Page
     return make_tag("input", args);
   }
 
-  string container_warn(string t, mapping m, string c, int q, int w, object id)
+  string container_warn(string t, mapping m, string c, RequestID id)
   {
     return html_warning( c, id );
   }
 
-  string container_notice(string t, mapping m, string c, int q, int w, object id)
+  string container_notice(string t, mapping m, string c,RequestID id)
   {
     return html_notice( c, id );
   }
 
-  string container_error(string t, mapping m, string c, int q, int w, object id) 
+  string container_error(string t, mapping m, string c, RequestID id) 
   {
     id->variables->error_message = c;
     return c;
@@ -228,91 +238,35 @@ class Page
     ]));
   }
 
-  string call_var(string tag, mapping args, int line, mixed foo, object id)
+  string call_var(string tag, mapping args, RequestID id)
   {
-    id->misc->line = line;
     return wizard_tag_var( tag, args, id );
   }
 
   string call_cvar(string tag, mapping args, string c, int line, 
-		   mixed foo, object id)
+		   mixed foo, RequestID id)
   {
     id->misc->line = line;
     return wizard_tag_var( tag, args, c, id );
   }
 
-  class TagCaller
-  {
-    function fun;
-
-    string _sprintf( )
-    {
-      return sprintf("AWizardTag(%O)", fun);
-    }
-    
-    mixed call(object parser, mapping args, mixed... extra)
-    {
-      if(!fun) 
-        return "";
-      return fun(parser->tag_name(), args, 0,@extra);
-    }
-                   
-    void create( function f )
-    {
-      fun = f;
-    }
-  }
-
-  class ContainerCaller
-  {
-    function fun;
-
-    string _sprintf( )
-    {
-      return sprintf("AWizardContainer(%O)", fun);
-    }
-    
-    mixed call(object parser, mapping args, string c, mixed... extra)
-    {
-      if(!fun) return "";
-      return fun(parser->tag_name(), args, c, 0, @extra);
-    }
-                   
-    void create( function f )
-    {
-      fun = f;
-    }
-  }
-
-  string eval(string what, object id)
+  string eval(string what, RequestID id)
   {
     if(!what) return "";
     id->misc->offset = line_offset;
     my_tags["var"] = call_var;
     my_containers["cvar"] = call_cvar;
+
     foreach(indices(my_tags), string s)
-    {
-#ifndef OLD_PARSE_HTML
-      for (object p = id->misc->_parser_obj; p; p = p->up)
-        p->add_tag( s, TagCaller( my_tags[s] )->call );
-#endif
-      id->misc->_tags[ s ] = my_tags[ s ];
-    }
+      id->misc->_tags[ s ] = ({ id->conf->call_tag, my_tags[ s ] });
 
     foreach(indices(my_containers), string s)
-    {
-#ifndef OLD_PARSE_HTML
-      for (object p = id->misc->_parser_obj; p; p = p->up)
-        p->add_container( s, ContainerCaller( my_containers[s] )->call );
-#endif
-      id->misc->_containers[ s ] = my_containers[ s ];
-    }
-//     id->misc->_tags["var"] = call_var;
-//     id->misc->_containers["cvar"] = call_cvar;
+      id->misc->_tags[ s ] = ({ id->conf->call_container,my_containers[ s ] });
+
     return parse_rxml(what, id);
   }
 
-  mapping|int can_leave(object id, string eeval)
+  mapping|int can_leave(RequestID id, string eeval)
   {
     m_delete(id->variables,"error_message");
     eval(eeval + button_code[ id->misc->button_id ] + verify, id);
@@ -320,7 +274,7 @@ class Page
     return !id->variables->error_message;
   }
 
-  string generate( object id, string header, string footer )
+  string generate( RequestID id, string header, string footer )
   {
     string contents = eval((come_from[id->last_page]||"")
 			   + header 
@@ -334,7 +288,7 @@ class Page
 
 
 
-class Store
+class AWizard
 {
   inherit "wizard";
 
@@ -354,15 +308,17 @@ class Store
     footer = c;
   }
 
-  string internal_tag_include(string t, mapping args, int l, object id)
+  string internal_tag_include(string t, mapping args, int l, RequestID id)
   {
-    if(args->define) return id->misc->defines[args->define]||"";
+    if(args->define) 
+      return id->misc->defines[args->define]||"";
     string q = id->conf->try_get_file(fix_relative(args->file, id), id);
     return q;
   }
 
   mapping button_code;
-  string internal_tag_page(string t, mapping args, string c, int l, object id)
+  string internal_tag_page(string t, mapping args, string c, int l, 
+                           RequestID id)
   {
     args->num = last_page;
     if(!args->name) args->name = (string)last_page;
@@ -374,7 +330,7 @@ class Store
   }
 
   string lc = "";
-  void update(string contents, object id)
+  void update(string contents, RequestID id)
   {
     if((contents != lc) || id->pragma["no-cache"])
     {
@@ -405,13 +361,13 @@ class Store
     }
   }
 
-  void create(mapping args, string contents, object id, object p)
+  void create(mapping args, string contents, RequestID id, object p)
   {
     update(contents,id);
   }
 
 
-  mapping|string handle( object id )
+  mapping|string handle( RequestID id )
   {
     mapping v = id->variables;
     mapping s, error;
@@ -434,7 +390,7 @@ class Store
     m_delete(v, "_____state");
     id->misc->next_possible = ((int)v->_page_num) < (sizeof(pages)-1);
     id->misc->prev_possible = ((int)v->_page_num) > 0;
-    id->misc->_store_object = this_object();
+    id->misc->_awizard_object = this_object();
     foreach(glob("goto_*", indices(v)), string q)  
     {
       goto = q;
@@ -526,23 +482,20 @@ void create()
 }
 
 
-mapping stores = ([]);
-
-constant help = "Da help";
+mapping(string:AWizard) wizards = ([]);
 
 mixed container_awizard(string tagname, mapping arguments, 
-                        string contents, object id)
+                        string contents, RequestID id)
 {
   mixed res;
 
-  if(arguments->help)
-    return help;
-
-  if(!stores[id->not_query])
-    stores[ id->not_query ] = Store( arguments, contents, id, this_object() );
+  if(!wizards[id->not_query])
+    wizards[ id->not_query ]=AWizard(arguments, contents, id, this_object() );
   else
-    stores[ id->not_query ]->update( contents, id );
-  res = stores[ id->not_query ]->handle( id );
+    wizards[ id->not_query ]->update( contents, id );
+
+  res = wizards[ id->not_query ]->handle( id );
+
   if(mappingp(res)) 
   {
     string v = "";
