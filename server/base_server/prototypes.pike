@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.68 2004/03/01 19:39:04 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.69 2004/03/02 10:32:43 grubba Exp $";
 
 class Variable
 {
@@ -1309,14 +1309,11 @@ class RoxenModule
   void recurse_find_properties(string path, string mode, int depth,
 			       MultiStatus result,
 			       RequestID id, multiset(string)|void filt);
-  void patch_property_start(string path, RequestID id);
-  void patch_property_unroll(string path, RequestID id);
-  void patch_property_commit(string path, RequestID id);
+  mixed patch_property_start(string path, RequestID id);
+  void patch_property_unroll(string path, RequestID id, mixed context);
+  void patch_property_commit(string path, RequestID id, mixed context);
   void patch_properties(string path, array(PatchPropertyCommand) instructions,
 			MultiStatus result, RequestID id);
-  void recurse_patch_properties(string path, int depth,
-				array(PatchPropertyCommand) instructions,
-				MultiStatus result, RequestID id);
 }
 
 class _roxen
