@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.4 1998/01/29 16:16:49 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.5 1998/01/29 17:25:28 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -58,24 +58,19 @@ void init_for(object e);
 
 mapping environs = ([]);
 program E = this_object()->Environment;
+object find_environment(string f)
+{
+  if(environs[f]) return environs[f];
+  environs[f] = E();
+  init_for( environs[f] );
+  return environs[f];
+}
 
 string tag_lisp(string t, mapping m, string c, 
 		object id, object f, mapping defines)
 {
-  object e;
-  mixed f = m->context||id->not_query;
-  if(environs[f]) 
-  {
-    e = environs[f];
-    f = 0;
-  } else {
-    e = environs[f] = E();
-    init_for( e );
-    f = 1;
-  }
-  if(m->once && !f) return ""; // only once...
-
   object lisp = parse( "(progn\n"+c+")" );
+  object e = find_environment(m->context||id->not_query);
   id->misc->lisp_result="";
   e->id = id;
   e->eval_limit = query("max-eval-time");
@@ -95,8 +90,8 @@ class lisp_types
 {
   /* Data shared between all Lisp objects */
   mapping symbol_table = ([ ]);
-  object Nil = this_object()->NilSymbol(symbol_table);
-  object True = this_object()->ConstantSymbol("t", symbol_table);
+  object Nil = NilSymbol(symbol_table);
+  object True = ConstantSymbol("t", symbol_table);
 
 
   class LObject 
@@ -133,7 +128,8 @@ class lisp_types
 	error("No car");
       }
     
-      object new_cdr = (!cdr->is_nil) ? cdr->mapcar(fun, @extra) : cdr;
+      object new_cdr = (!cdr->is_nil) ? cdr->mapcar(fun, @extra)
+	: cdr;
       if (cdr) 
 	return object_program(this_object())(new_car, new_cdr);
       else
@@ -222,7 +218,7 @@ class lisp_types
 	|| globals->query_binding(this_object());
       if (!binding)
       {
-	error("No binding for this symbol ["+this_object()->print()+"].\n");
+	error("No binding for this symbol ["+name+"].\n");
       }
       return binding->query();
     }
@@ -378,7 +374,7 @@ class lisp_types
     {
       env = new_env(env, arglist); 
       if (env)
-	return arglist->map("eval", env, globals);
+	return list->map("eval", env, globals);
       error("Nothing to apply with.");
     }
   }
@@ -559,11 +555,14 @@ class lisp_types
 
 inherit lisp_types;
 
+
 /* Special forms */
 object s_quote(object arglist, object env, object globals)
 {
   return arglist->car;
 }
+
+
 
 object s_setq(object arglist, object env, object globals)
 {
@@ -615,20 +614,6 @@ object s_if(object arglist, object env, object globals)
   return e ? e->car->eval(env, globals) : Nil;
 }
 
-object s_or(object arglist, object env, object globals)
-{
-  object res;
-  while(!arglist->cdr->is_nil)
-  {
-    res = arglist->car->eval(env, globals);
-    if (!res || !res->is_nil)
-      return res;
-    arglist = arglist->cdr;
-  }
-  return arglist->car->eval(env, globals);
-}
-
-
 object s_and(object arglist, object env, object globals)
 {
   object res;
@@ -636,6 +621,19 @@ object s_and(object arglist, object env, object globals)
   {
     res = arglist->car->eval(env, globals);
     if (!res || res->is_nil)
+      return res;
+    arglist = arglist->cdr;
+  }
+  return arglist->car->eval(env, globals);
+}
+
+object s_or(object arglist, object env, object globals)
+{
+  object res;
+  while(!arglist->cdr->is_nil)
+  {
+    res = arglist->car->eval(env, globals);
+    if (!res || !res->is_nil)
       return res;
     arglist = arglist->cdr;
   }
@@ -663,21 +661,14 @@ object s_catch(object arglist, object env, object globals)
 }
 
 
-
 object s_while(object arglist, object env, object globals)
 {
-  object expr = arglist->car;
+  object expr = arglist->car, res;
   object to_eval = arglist->cdr;
-  
-  while(!expr->eval(env,globals)->is_nil)
-  {
-    object f = to_eval;
-    while( f->car && !f->car->is_nil )
-    {
-      if(!f->car->eval(env,globals)) return 0;
-      f = f->cdr;
-    }
-  }
+  werror( to_eval->print() );
+  while (!expr->eval(env,globals)->is_nil)
+    res=to_eval->map("eval", env, globals);    //f_eval (to_eval,env,globals);
+  return res;
 }
 
 void init_specials(object environment)
@@ -685,18 +676,51 @@ void init_specials(object environment)
   environment->extend(make_symbol("quote"), Special(s_quote));
   environment->extend(make_symbol("set!"), Special(s_setq));
   environment->extend(make_symbol("setq"), Special(s_setq));
-  environment->extend(make_symbol("define"), Special(s_define));
   environment->extend(make_symbol("while"), Special(s_while));
+  environment->extend(make_symbol("define"), Special(s_define));
   environment->extend(make_symbol("defmacro"), Special(s_defmacro));
   environment->extend(make_symbol("lambda"), Special(s_lambda));
   environment->extend(make_symbol("if"), Special(s_if));
-  environment->extend(make_symbol("or"), Special(s_or));
-  environment->extend(make_symbol("while"), Special(s_while));
   environment->extend(make_symbol("and"), Special(s_and));
+  environment->extend(make_symbol("or"), Special(s_or));
   environment->extend(make_symbol("progn"), Special(s_progn));
   environment->extend(make_symbol("catch"), Special(s_catch));
 }
 
+
+object f_get_id_int(object arglist, object env, object globals)
+{
+  return Number( (int)globals->id[arglist->car->value] );
+}
+
+
+object f_get_id(object arglist, object env, object globals)
+{
+  mixed val = globals->id[arglist->car->value];
+
+  if(stringp(val))
+     return String( globals->id->variables[arglist->car->value] );
+  if(intp(val) && !zero_type(val))
+     return Number( globals->id->variables[arglist->car->value] );
+
+  if(arrayp(val) || multisetp(val))
+  {
+    object res = Nil;
+    int m;
+    if(multisetp(val)) { m = 1; val = indices( val ); }
+    for(int i=sizeof(val)-1; i>=0; i--)
+    {
+      object t;
+      if(m)
+	t = make_symbol( (string)val[i] );
+      else
+	t = stringp(val[i])?String(val[i]):Number((int)val[i]);
+      res = Cons( t , res );
+    }
+    return res;
+  }
+  return Nil;
+}
 
 object f_car(object arglist, object env, object globals)
 {
@@ -824,40 +848,6 @@ object f_get(object arglist, object env, object globals)
   return Nil;
 }
 
-object f_get_id_int(object arglist, object env, object globals)
-{
-  return Number( (int)globals->id[arglist->car->value] );
-}
-
-
-object f_get_id(object arglist, object env, object globals)
-{
-  mixed val = globals->id[arglist->car->value];
-
-  if(stringp(val))
-     return String( globals->id->variables[arglist->car->value] );
-  if(intp(val) && !zero_type(val))
-     return Number( globals->id->variables[arglist->car->value] );
-
-  if(arrayp(val) || multisetp(val))
-  {
-    object res = Nil;
-    int m;
-    if(multisetp(val)) { m = 1; val = indices( val ); }
-    for(int i=sizeof(val)-1; i>=0; i--)
-    {
-      object t;
-      if(m)
-	t = make_symbol( (string)val[i] );
-      else
-	t = stringp(val[i])?String(val[i]):Number((int)val[i]);
-      res = Cons( t , res );
-    }
-    return res;
-  }
-  return Nil;
-}
-
 object f_getint(object arglist, object env, object globals)
 {
   if(globals->id->variables[arglist->car->value])
@@ -870,9 +860,9 @@ object f_getint(object arglist, object env, object globals)
 object f_output(object arglist, object env, object globals)
 {
   int foo = strlen( globals->id->misc->lisp_result );
-  do 
+  do {
     globals->id->misc->lisp_result += (string)arglist->car->value;
-  while( !(arglist = arglist->cdr)->is_nil);
+  } while( !(arglist = arglist->cdr)->is_nil);
   return Number( strlen(globals->id->misc->lisp_result) - foo );
 }
 
@@ -901,6 +891,8 @@ object f_format(object arglist, object env, object globals)
   }
   return String( sprintf(f, @args) );
 }
+  
+
 
 object f_line_break(object arglist, object env, object globals)
 {
@@ -916,7 +908,6 @@ object f_line_break(object arglist, object env, object globals)
 }
 
 object boot_code;
-
 void init_functions(object environment)
 {
   environment->extend(make_symbol("+"), Builtin(f_add));
@@ -931,11 +922,11 @@ void init_functions(object environment)
 
   environment->extend(make_symbol("variable"), Builtin(f_get));
   environment->extend(make_symbol("variable-number"), Builtin(f_getint));
-
-  environment->extend(make_symbol("id"), Builtin(f_get_id));
-  environment->extend(make_symbol("id-number"), Builtin(f_get_id_int));
+  environment->extend(make_symbol("id"), Builtin(f_get));
+  environment->extend(make_symbol("id-number"), Builtin(f_getint));
   environment->extend(make_symbol("output"), Builtin(f_output));
 
+  environment->extend(make_symbol("line-break"), Builtin(f_line_break));
   environment->extend(make_symbol("read"), Builtin(f_read));
   environment->extend(make_symbol("print"), Builtin(f_print));
   environment->extend(make_symbol("princ"), Builtin(f_print));
@@ -948,8 +939,6 @@ void init_functions(object environment)
   environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
   environment->extend(make_symbol("cons"), Builtin(f_cons));
   environment->extend(make_symbol("list"), Builtin(f_list));
-
-  environment->extend(make_symbol("line-break"), Builtin(f_line_break));
 }
 
 
