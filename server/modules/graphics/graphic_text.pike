@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.298 2004/05/22 19:52:24 _cvs_stephen Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.299 2004/05/23 02:56:52 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -565,7 +565,7 @@ function alter_image(label)
 
 // -------------------- Image cache functions --------------------
 
-private roxen.ImageCache image_cache;
+private core.ImageCache image_cache;
 private string compat_level;
 private int honor_supports;
 
@@ -586,8 +586,8 @@ void flush_cache() {
 
 void start(int num, Configuration conf)
 {
-  image_cache = roxen.ImageCache( "gtext", draw_callback );
-  roxen.dump( "etc/modules/GText.pmod" );
+  image_cache = core.ImageCache( "gtext", draw_callback );
+  core.dump( "etc/modules/GText.pmod" );
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
   compat_level = conf->query("compat_level");
   honor_supports = query("honor_supports");
@@ -766,7 +766,7 @@ mapping find_internal(string f, RequestID id)
       array id_text = f/"/";
       if( sizeof(id_text)==2 )
       {   // It's a gtext-id
-        string second_key = roxen->argcache->store( (["":id_text[1]]) );
+        string second_key = core.argcache->store( (["":id_text[1]]) );
         return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
       }
     }
