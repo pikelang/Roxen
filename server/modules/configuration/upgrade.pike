@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.12 2000/02/15 15:43:22 js Exp $
+ * $Id: upgrade.pike,v 1.13 2000/02/21 14:44:25 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -22,9 +22,11 @@ object db;
 
 object updater;
 
+
+mapping(int:GetPackage) package_downloads = ([ ]);
+
 void start(int num, Configuration conf)
 {
-  conf->parse_html_compat=1;
   if(!num)
   {
     catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
@@ -93,10 +95,10 @@ void set_entities(RXML.Context c)
 
 array(array) menu = ({
   ({ "Main","" }),
+  ({ "Products","products" }),
   ({ "Security","security" }),
   ({ "Bugfixes","bugfixes" }),
-  ({ "Idonex","idonex" }),
-  ({ "3rd part","3rdpart" }),
+  ({ "Third party","3rdpart" }),
 });
 
 string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
@@ -121,27 +123,40 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
   return ret;
 }
 
-string container_package_list(string t, mapping m, string c, RequestID id)
+string container_upgrade_package_output(string t, mapping m, string c, RequestID id)
 {
   array res=({ });
   int i=0;
 
-  array(string) packages=indices(db["pkginfo"]);
-  packages=sort(packages);
-  if(m->reverse)
-    packages=reverse(packages);
-  
-  foreach(packages, string pkg)
+  if(!m->package)
   {
-    mapping p=db["pkginfo"][pkg];
-    if( (m->type && p["package-type"]==m->type) || !m->type)
-      res+=({ p });
-    i++;
-    if(m->limit && i>=(int)m->limit)
-      break;
+    array(string) packages=indices(db["pkginfo"]);
+    packages=sort(packages);
+    if(m->reverse)
+      packages=reverse(packages);
+    
+    foreach(packages, string pkg)
+    {
+      mapping p=db["pkginfo"][pkg];
+      if( (m->type && p["package-type"]==m->type) || !m->type)
+	res+=({ p });
+      i++;
+      if(m->limit && i>=(int)m->limit)
+	break;
+    }
+  }
+  else
+  {
+    mixed err=catch(start_package_download((int)m->package));
+    if(err) report_error("Upgrade: %s",err);
+    
+    mapping p=db["pkginfo"][m->package];
+    if(p)
+      res=({ p });
   }
   return do_output_tag(m, res, c, id);
 }
+  
 
 string encode_ranges(array(int) a)
 {
@@ -199,8 +214,27 @@ mapping get_headers()
   ]);
 }
 
+
+void start_package_download(int num)
+{
+  if(search(indices(package_downloads), num)!=-1)
+    throw("Package download already in progress for package "+num+".\n");
+
+  array stat=file_stat(QUERY(pkgdir)+num+".tar");
+
+  if(stat && stat[1]==db["pkginfo"][(string)num]->size)
+    throw("Package "+num+" already completely downloaded.\n");
+
+  package_downloads[num]=GetPackage(num);
+}
+
+
+/*--- Custom HTTP fetchers ------------------------------------*/
+
 class GetPackage
 {
+  int num;
+  
   inherit Protocols.HTTP.Query;
 
   int|float percent_done()
@@ -211,14 +245,17 @@ class GetPackage
     return (float)downloaded_bytes() / (float)b;
   }
   
-  void request_ok(object httpquery, int num)
+  void request_ok(object httpquery, int _num)
   {
     // FIXME: rewrite this to use a file object and stream to disk?
     Stdio.File f;
+    num=_num;
+
     if(catch(f=Stdio.File(QUERY(pkgdir)+num+".tar","wc")))
     {
       report_error("Upgrade: Failed to open file for writing: "+
 		   QUERY(pkgdir)+num+".tar\n");
+      catch(m_delete(package_downloads, num));
       return;
     }
     if(catch(f->write(httpquery->data())))
@@ -226,14 +263,18 @@ class GetPackage
       report_error("Upgrade: Failed to write package to file: "+
 		   QUERY(pkgdir)+num+".tar\n");
       catch(rm(QUERY(pkgdir)+num+".tar"));
+      catch(m_delete(package_downloads, num));
       return;
     }
+    f->close();
+    catch(m_delete(package_downloads, num));
   }
   
   void request_fail(object httpquery, int num)
   {
     report_error("Upgrade: Failed to connect to upgrade server to fetch "
 		 "package number "+num+".\n");
+    catch(m_delete(package_downloads, num));
   }
 
   void create(int pkgnum)
@@ -282,8 +323,8 @@ class GetInfoFile
 		       "roxen-high": get_containers, 
 		       "crypto": get_containers ]),		     
 		     res);
-    res->size=httpquery->headers->size;
-//     werror("%O\n",res);
+    res->size=(int)httpquery->headers->pkgsize;
+    werror("%O\n",res);
     db["pkginfo"][(string)num]=res;
     db["pkginfo"]->sync();
     report_notice("Upgrade: Added information about package number "
