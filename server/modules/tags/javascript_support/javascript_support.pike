@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.54 2003/01/27 10:31:33 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.55 2003/10/27 10:06:58 anders Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -54,20 +54,21 @@ mapping find_internal(string f, RequestID id)
   
   //  Cache the files
   string file = combine_path(__FILE__, "../scripts", (f-".."));
-  int|string data;
+  int|array data;
   if (!(data = file_cache[file])) {
     //  Put entry in cache. Missing files are stored as -1.
-    if (!file_stat(file)) {
+    Stdio.Stat st;
+    if (!(st = file_stat(file))) {
       file_cache[file] = -1;
       return 0;
     }
-    data = file_cache[file] = Stdio.read_bytes(file);
+    data = file_cache[file] = ({ Stdio.read_bytes(file), (array(int))st });
   }
   id->misc->cacheable = INITIAL_CACHEABLE;
   return
-    stringp(data) &&
-    (Roxen.http_string_answer(data, "application/x-javascript" ) +
-     ([ "stat" : ({0, 0, 0, 900000000, 0, 0, 0}) ]) );
+    arrayp(data) && stringp(data[0]) &&
+    (Roxen.http_string_answer(data[0], "application/x-javascript" ) +
+     ([ "stat" : data[1] ]) );
 }
 
 // Provider function
