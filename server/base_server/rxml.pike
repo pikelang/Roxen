@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.34 1999/11/22 00:17:42 grubba Exp $
+ * $Id: rxml.pike,v 1.35 1999/11/23 06:41:41 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -68,7 +68,8 @@ array|string call_tag(string tag, mapping args, int line, int i,
 
 array(string)|string 
 call_container(string tag, mapping args, string contents, int line,
-	       int i, RequestID id, object file, mapping defines, object client)
+	       int i, RequestID id, object file, mapping defines, 
+               object client)
 {
   id->misc->line = (string)line;
   string|function rf = real_container_callers[tag][i];
@@ -121,40 +122,34 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
   if (id->misc->_parser_obj)
     parser = id->misc->_parser_obj->clone (id->misc->_parser_obj);
   else
-    parser = class {
+  {
+    parser =  class 
+    {
       inherit Parser.HTML;
       object up;
       void create (object _up) {::create(); up = _up;}
     }(0);
-  parser->add_tags (map (
-    id->misc->_tags,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, mixed... extra) {
-	  return what (parser->tag_name(), args, parser->at_line(), @extra);
-	};
-    }));
-  parser->add_containers (map (
-    id->misc->_containers,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, string contents, mixed... extra) {
-	  return what (parser->tag_name(), args, contents, parser->at_line(), @extra);
-	};
-    }));
+  }
+  parser->add_tags (map( id->misc->_tags, roxenloader.make_caller, 
+                         roxenloader.TagCaller ) );
+  parser->add_containers (map ( id->misc->_containers, roxenloader.make_caller,
+                                roxenloader.ContainerCaller ));
   parser->_set_tag_callback (
     lambda (object parser, string str) {
-      parser->feed_insert (str[1..]);
+      parser->feed_insert( str[1..] );
       return ({str[..0]});
     });
   id->misc->_parser_obj = parser;
-  parser->set_extra (0, id, file, defines, my_fd);
+  parser->set_extra( 0, id, file, defines, my_fd );
   to_parse = parser->finish (to_parse)->read();
+  id->misc->_parser_obj = 0;
 #endif
 
   for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse,tag_callers[i], container_callers[i],
 			      i, id, file, defines, my_fd);
+//   werror( "%O; %O\n", _refs(parser), _refs(this_object() ) );
+//   destruct( parser );
   return to_parse;
 }
 
@@ -671,12 +666,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->_tags[n] = call_user_tag;
 #ifndef OLD_PARSE_HTML
     for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_tag (
-	n, lambda (object parser, mapping args, mixed... extra)
-	   {
-	     return call_user_tag (parser->tag_name(), args,
-				   parser->at_line(), @extra);
-	   });
+      p->add_tag (n, roxenloader.make_caller( n, roxenloader.TagCaller ) );
 #endif
   }
   else if (m->container) 
@@ -717,12 +707,8 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->_containers[n] = call_user_container;
 #ifndef OLD_PARSE_HTML
     for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_container (
-	n, lambda (object parser, mapping args, string contents, mixed... extra)
-	   {
-	     return call_user_container (parser->tag_name(), args, contents,
-					 parser->at_line(), @extra);
-	   });
+      p->add_container(n, roxenloader.make_caller( n, 
+                                    roxenloader.ContainerCaller ));
 #endif
   }
   else if (m["if"])
@@ -1079,6 +1065,11 @@ class UserIf
     rxml_code = what;
   }
   
+  string _sprintf()
+  {
+    return "UserIf("+rxml_code+")";
+  }
+
   int `()( string ind, RequestID id, mapping args, int and, string a )
   {
     int otruth, res;
@@ -1105,6 +1096,11 @@ class IfIs
   string index;
   int cache, misc;
   function `() = match_in_map;
+
+  string _sprintf()
+  {
+    return "IfIS("+index+")";
+  }
 
   void create( string ind, int c, int|void m )
   {
@@ -1152,12 +1148,19 @@ class IfMatch
 {
   string index;
   int cache, misc;
+
+  string _sprintf()
+  {
+    return "IfMatch("+index+")";
+  }
+
   void create(string ind, int c, int|void m)
   {
     index = ind;
     cache = c;
     misc = m;
   }
+
   int `()( string is, RequestID id )
   {
     array|string value = misc?id->misc[index]:id[index];
