@@ -64,6 +64,7 @@ array(string) get_module_list( function describe_module, RequestID id )
     object b = module_nomore(q->sname, q, conf);
     res += describe_module( q, b );
   }
+  master()->set_inhibit_compile_errors( 0 );
   return ({ res, ec->get() });
 }
 
