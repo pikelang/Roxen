@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.11 2004/05/24 15:15:01 anders Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.12 2004/05/24 16:42:55 anders Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -853,7 +853,7 @@ constant tagdoc = ([
   <p>
   This tag is very usefull for application that needs a calendar functionality.
   </p>
-  <note><p>All <xhref href='emit.tag'>emit</xhref> attributes apply.</p></note>
+  <note><p>All <xref href='emit.tag'>emit</xref> attributes apply.</p></note>
 
   </desc>
 
@@ -1086,18 +1086,19 @@ constant tagdoc = ([
           host='mydb'>
 
           <if variable='_.ymd_short is &var.ymd_short_old;' not=''>
-            </td>
+            <![CDATA[</td>]]>
           </if>
           <if variable='_.week.day is 1' 
               match='&_.ymd_short; != &var.ymd_short_old;'>
             <if variable='_.counter &gt; 1'>
+              <![CDATA[
               </tr>
-              <tr>
+              <tr>]]>
             </if>
             <td width='30' valign='top'>
               <div>&_.week;</div>
             </td>
-            <td width='100' valign='top'>
+            <![CDATA[<td width='100' valign='top'>]]>
             <div align='right'>&_.month.day;</div>
             <div>&_.day_event;</div>
           </if>
@@ -1105,7 +1106,7 @@ constant tagdoc = ([
             <set variable='var.cal-day-width'
               value='{$working-day-column-width}'/>
             <if variable='_.ymd_short is &var.ymd_short_old;' not=''>
-              <td width='100' valign='top'>
+              <![CDATA[<td width='100' valign='top'>]]>
               <if variable='_.week.day is 7'>
                 <div align='right' style='color: red'>
                   &_.month.day;
@@ -1115,14 +1116,14 @@ constant tagdoc = ([
                 <div align='right'>&_.month.day;</div>
               </else>
             </if>
-            <div>&_.day_event;
+            <div>&_.day_event;</div>
           </else>
           <set variable='var.ymd_short_old' from='_.ymd_short'/>
         </emit>
       </tr>
     </table>
   </ex-box>
-  <note><p>The code above does not work in a XML- or XSLT-file
+  <p>The code above does not work in a XML- or XSLT-file
     unless modified to conform to XML. To accomplish that
     &lt;xsl:text disable-output-escaping='yes'&gt;
     &lt;![CDATA[&lt;td&gt;]]&gt;
@@ -1132,7 +1133,6 @@ constant tagdoc = ([
     &amp;var.start_td:none; see documentation: Encoding,
     under Variables, Scopes &amp; Entities
     </p>
-  </note>
   ",
   ([
     "&_.year;":#"<desc type='entity'><p>
@@ -1163,7 +1163,7 @@ constant tagdoc = ([
   Month short name. Language dependent.</p></desc>",
 
     "&_.month.number-of-days;":#"<desc type='entity'><p>
-  Integervalue of how many days the month contains. &amp;_.month.number_of_days;
+  Integervalue of how many days the month contains. <ent>_.month.number_of_days</ent>
   will also work due to backward compatibility.</p></desc>",
 
     "&_.week;":#"<desc type='entity'><p>
@@ -1189,10 +1189,10 @@ constant tagdoc = ([
     "&_.week.name;":#"<desc type='entity'><p>
   the name of the week. I.e. w5 for week number 5 that year.</p></desc>",
 
-    "&_.day;":#"<desc type='entity'><p>Same as &amp;_.month.day;
+    "&_.day;":#"<desc type='entity'><p>Same as <ent>_.month.day</ent>
         </p></desc>",
 
-    "&_.days;":#"<desc type='entity'><p>Same as &amp;_.month.days;
+    "&_.days;":#"<desc type='entity'><p>Same as <ent>_.month.days</ent>
         </p></desc>",
 
     "&_.ymd;":#"<desc type='entity'><p>
