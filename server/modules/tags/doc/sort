@@ -1,0 +1,33 @@
+<kbd><b>{sort [separator=...]}</b></kbd> sorts the contents, divided by the specified separator (default is newline)
+
+<p>
+Example:
+<p>
+<pre>{sort}
+z
+q
+r
+gf
+jfe
+few
+re
+1
+10
+3
+2
+{/sort}</pre>
+<p>
+<b>results in</b>
+<pre><sort>
+z
+q
+r
+gf
+jfe
+few
+re
+1
+10
+3
+2
+</sort></pre>
