@@ -1,9 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.57 1998/11/28 13:40:57 per Exp $
+# $Id: start,v 1.58 1998/11/28 20:46:03 grubba Exp $
 
 cd `dirname $0`
-roxendir="$PWD"
 
 VERSION=202; BETA=.b;
 
@@ -14,98 +13,10 @@ FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
 
-roxendir=`pwd`
+# Default to using a relative path.
+roxendir="."
 
-# Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    if [ x"$1" != "x--help" ] ; then
-      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
-    fi
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
-fi
-
-# Roxen will create files as the initial user,
-# which it expects to be able to read as the run-time user.
-umask 022
-
-# Pike default Master-program
-if [ "x$PIKE_MASTER" = "x" ]; then
-  if [ -d share/pike ]; then
-    # This is used with localinstall
-    DEFINES="$DEFINES -Ishare/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:share/pike/modules"
-  fi
-  if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules:share/modules"
-  elif [ -f lib/pike/master.pike ]; then
-    DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules:share/pike/modules"
-  fi
-  export PIKE_MODULE_PATH
-else
-  # This is usefull when using several different Pikes.
-  # Specify include and module paths with
-  # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
-  # they are handled automatically by the master,
-  # so no need to do it here.
-  DEFINES="$DEFINES -m$PIKE_MASTER"
-fi
-
-# Extra module-path
-if [ -d etc/modules ]; then
-  DEFINES="$DEFINES -Metc/modules"
-fi
-
-# Extra include-path
-if [ -d etc/include ]; then
-  DEFINES="$DEFINES -Ietc/include"
-fi
-
-# Extra include-path (2)
-if [ -d base_server ]; then
-  DEFINES="$DEFINES -Ibase_server"
-fi
-
-# Extra program-path
-DEFINES="$DEFINES -P`pwd`"
-
-# Support for adding local pike-modules
-if [ -d ../local/etc/. ]; then
-  # Extra module-path
-  if [ -d ../local/etc/modules/. ]; then
-    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
-  fi
-
-  # Extra include-path
-  if [ -d ../local/etc/include ]; then
-    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
-  fi
-
-  # Extra program-path
-  DEFINES="$DEFINES -P$roxendir/../local/etc"
-fi
-
-# Extra kludge for HPUX
-# HPUX doesn't like group 60001(nobody)
-if uname | grep 'HP-UX' >/dev/null 2>&1; then
-  echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
-  DEFINES="$DEFINES -DHPUX_KLUDGE"
-fi
-
-pike=pike
-if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
-if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
-if [ "x$PIKE" = "x" ]; then :; else
-  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
-fi
-
-gdb=no
-
-####### END PREAMBLE
+####### BEGIN ARGUMENT PARSING
 
 ## Parse all arguments.
 ## GNU-style, long options only, except for -D, simply passed on.
@@ -172,6 +83,8 @@ parse_args() {
   ;;
   '--cd')
     cd_to="$2"
+    # Use the absolute path...
+    roxendir="`pwd`"
     once=1
     shift
   ;;
@@ -285,8 +198,6 @@ EOF
  done
 }
 
-####### END PREAMBLE
-
 parse_args $@
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
@@ -296,6 +207,102 @@ fi
 
 if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
+
+####### END ARGUMENT PARSING
+
+
+####### BEGIN PIKE OPTIONS
+
+# Enable threads (if available) on Solaris.
+# Most other OS's have thread bugs that cause them or Roxen to crash.
+if uname | grep 'SunOS' >/dev/null 2>&1; then
+  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+    if [ x"$1" != "x--help" ] ; then
+      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+    fi
+    DEFINES="$DEFINES -DENABLE_THREADS"
+  fi
+fi
+
+# Roxen will create files as the initial user,
+# which it expects to be able to read as the run-time user.
+umask 022
+
+# Pike default Master-program
+if [ "x$PIKE_MASTER" = "x" ]; then
+  if [ -d share/pike ]; then
+    # This is used with localinstall
+    DEFINES="$DEFINES -I$roxendir/share/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/share/pike/modules"
+  fi
+  if [ -f lib/master.pike ]; then
+    DEFINES="$DEFINES -m$roxendir/lib/master.pike -I$roxendir/lib/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/modules:$roxendir/share/modules"
+  elif [ -f lib/pike/master.pike ]; then
+    DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike -I$roxendir/lib/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/pike/modules:$roxendir/share/pike/modules"
+  fi
+  export PIKE_MODULE_PATH
+else
+  # This is usefull when using several different Pikes.
+  # Specify include and module paths with
+  # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
+  # they are handled automatically by the master,
+  # so no need to do it here.
+  DEFINES="$DEFINES -m$PIKE_MASTER"
+fi
+
+# Extra module-path
+if [ -d etc/modules ]; then
+  DEFINES="$DEFINES -M$roxendir/etc/modules"
+fi
+
+# Extra include-path
+if [ -d etc/include ]; then
+  DEFINES="$DEFINES -I$roxendir/etc/include"
+fi
+
+# Extra include-path (2)
+if [ -d base_server ]; then
+  DEFINES="$DEFINES -I$roxendir/base_server"
+fi
+
+# Extra program-path
+DEFINES="$DEFINES -P`pwd`"
+
+# Support for adding local pike-modules
+if [ -d ../local/etc/. ]; then
+  # Extra module-path
+  if [ -d ../local/etc/modules/. ]; then
+    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
+  fi
+
+  # Extra include-path
+  if [ -d ../local/etc/include ]; then
+    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
+  fi
+
+  # Extra program-path
+  DEFINES="$DEFINES -P$roxendir/../local/etc"
+fi
+
+# Extra kludge for HPUX
+# HPUX doesn't like group 60001(nobody)
+if uname | grep 'HP-UX' >/dev/null 2>&1; then
+  echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
+  DEFINES="$DEFINES -DHPUX_KLUDGE"
+fi
+
+pike=pike
+if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
+if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
+if [ "x$PIKE" = "x" ]; then :; else
+  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+fi
+
+gdb=no
+
+####### END PIKE OPTIONS
 
 
 #
