@@ -722,6 +722,18 @@ array(string) tag_version(string tag, mapping m, RequestID id) {
 //  return ({ (string)id->misc->line });
 //}
 
+class TagQuote {
+  inherit RXML.Tag;
+  constant name="quote";
+  constant flags=0;
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      rxml_fatal("<quote> does not work with the new parser.");
+    }
+  }
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -780,10 +792,18 @@ mapping query_container_callers() {
   return active;
 }
 
-mapping query_if_callers()
-{
-  return ([
-    "successful":lambda(string q, RequestID id){ return id->misc->defines[" _ok"]; },
-    "failed":lambda(string q, RequestID id){ return !id->misc->defines[" _ok"]; }
-  ]);
+class TagIfsuccessful {
+  inherit RXML.Tag;
+  constant plugin_name = "successful";
+  int `() (string u, RequestID id) {
+    return id->misc->defines[" _ok"];
+  }
+}
+
+class TagIffailed {
+  inherit RXML.Tag;
+  constant plugin_name = "failed";
+  int `() (string u, RequestID id) {
+    return !id->misc->defines[" _ok"];
+  }
 }
