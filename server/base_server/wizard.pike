@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.109 2000/01/19 08:08:14 mast Exp $
+/* $Id: wizard.pike,v 1.110 2000/01/28 19:39:51 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -485,8 +485,12 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   if (stringp (id->variables->action))
     id->variables->action = (id->variables->action/"\0")[0];
 
+  //  Use custom method if caller doesn't like GET or perhaps wants other
+  //  attributes included.
+  string method = this_object()->wizard_method || "method=\"get\"";
+
   res = ("\n<!--Wizard-->\n"
-         "<form method=\"get\">\n" +
+         "<form " + method + ">\n" +
 	 (stringp (id->variables->action) ?
 	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
 	  "") +
