@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.27 1997/11/29 22:00:33 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.28 1997/11/30 05:05:59 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -154,28 +154,41 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   //initiate the 0.25*% for different numbers:
   //Ex: If numbers is ({3,3}) pnumbers will be ({200, 200}) 
   sum=`+(@ numbers);
-  for(int i=0; i<sizeof(numbers); i++)
+  int i;
+
+  if (sum>LITET)
     {
-      float t=(float)(numbers[i]*400)/sum;
-      pnumbers[i]=(int)floor(t);
-      numbers[i]=t-floor(t);
+      for(int i=0; i<sizeof(numbers); i++)
+	{
+	  float t=(float)(numbers[i]*400)/sum;
+	  pnumbers[i]=(int)floor(t);
+	  numbers[i]=t-floor(t);
+	}
+      
+      
+      //Now the rests are in the numbers-array
+      //We now make sure that the sum of pnumbers is 400.
+      sort(numbers, order);
+      sum2=`+(@ pnumbers);
+      i=sizeof(pnumbers);
+      while(sum2<400)
+	{
+	  pnumbers[order[--i]]++;
+	  sum2++;
+	}  
     }
-
-
-  //Now the rests are in the numbers-array
-  //We now make sure that the sum of pnumbers is 400.
-  sort(numbers, order);
-  sum2=`+(@ pnumbers);
-  int i=sizeof(pnumbers);
-  while(sum2<400)
-    {
-      pnumbers[order[--i]]++;
-      sum2++;
-    }  
-
-
-
-
+  else
+    if (sizeof(numbers)>1)
+      {
+	for(int i=0; i<sizeof(numbers); i++)
+	  pnumbers[i]=(int)floor(400.0/(float)sizeof(numbers));
+	int j=400-`+(@pnumbers);
+	for(int i=0; i<j; i++)
+	  pnumbers[i]++;
+      }
+    else
+      pnumbers=({400});
+  
   //Initiate the piediagram!
   float FI=0;
   if (diagram_data["center"])
