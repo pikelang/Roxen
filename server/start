@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.42 1998/07/09 17:15:08 grubba Exp $
+# $Id: start,v 1.43 1998/07/22 23:55:30 neotron Exp $
 
 VERSION=202; BETA=.b;
 
@@ -120,22 +120,22 @@ parse_args() {
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
   ;;
-  '--debug')
+  '--debug'|'--with-debug'|'--enable-debug')
     debug=1
   ;;
-  '--fd-debug')
+  '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
   ;;
-  '--threads')
+  '--threads'|'--with-threads'|'--enable-threads')
     DEFINES="-DENABLE_THREADS $DEFINES"
   ;;
-  '--no-threads')
+  '--no-threads'|'--without-threads'|'--disable-threads')
     DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
   ;;
   '--profile')
     DEFINES="-DPROFILE $DEFINES"
   ;;
-  '--keep-alive')
+  '--keep-alive'|'--with-keep-alive'|'--enable-keep-alive')
     DEFINES="-DKEEP_ALIVE $DEFINES"
   ;;
   '--once')
