@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.87 1998/10/27 01:39:56 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.88 1998/11/17 03:31:41 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1011,8 +1011,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  mixed val = vars[var];
 	  array(string) encodings = ({});
 	  string multisep = multi_separator;
+	  int pad = (int) args->pad;
 	  string zero = args->zero || "";
 	  string empty = args->empty || "";
+	  string align = args->align || "right";
 
 	  foreach(options[1..], string option) {
 	    array (string) foo = option / "=";
@@ -1024,6 +1026,12 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		break;
 	      case "zero":
 		zero = optval;
+		break;
+	      case "pad":
+		pad = (int) optval;
+		break;
+	      case "align":
+		align = optval;
 		break;
 	      case "multisep":
 	      case "multi_separator":
@@ -1061,6 +1069,15 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	    else
 	      val = replace ((string) val, "\000", multisep);
 	    if (!sizeof (val)) val = empty;
+	  }
+
+	  if (pad) {
+	    if(align=="left")
+	      align="-";
+	    else if(align=="center")
+	      align="|";
+	    else align="";
+	    val=sprintf("%!" + align + pad + "s",val);
 	  }
 
 	  if (!sizeof (encodings))
@@ -1111,6 +1128,15 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		val = replace (val,
 			       ({ "\"", "\\", "\n" }),
 			       ({ "\\\"", "\\\\", "\\n" }));
+		break;
+
+	      case "js":
+	      case "javascript":
+		// Javascript string quoting.
+		val = replace (val,
+			       ({ "\b", "\f", "\n", "\r", "\t", "\\", "'", "\"" }),
+			       ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
+				  "\\'", "\\\"" }));
 		break;
 
 	      case "mysql":
