@@ -33,12 +33,20 @@ string drawtype;
  "linear"; //Om !=0 så är bars/graph-diagrammet linjärt spline (default)
  "quadratic"; //Om !=0 så är bars/graph-diagrammet kvadratiskt spline
  "cubic";//Om !=0 så är bars/graph-diagrammet kubiskt spline 
+ //För bars-box och pie:
+ "2D" - ritar 2D boxar
+ "3D" - flash!!!
+ 
+
 
 array(array(float)) data; 
 //Innehåller för graph 
- // en array med arrayer av typ x-data, y-data, x-data, ...
+ // en array med arrayer av typ x-pos1, y-pos1, x-pos2, ...
 //För Bars:
- // x-data, x-data, ...
+ // x-data1, x-data2, ...
+//För pie:
+ // value1, value2, ... 
+
 
 array(string) labels;
 //Innehåller en array med ({xstorhet, ystorhet, xenhet, yenhet})
@@ -47,10 +55,14 @@ array(string) labels;
 array(string) xnames;
 //Innehåller en array med olika namn som ska stå längs x-axeln 
 //(t ex jan, feb).
+// Dessa namn är de som används av pie-diagramet för legenden.
+
 
 array(string) ynames;
 //Innehåller en array med olika namn som ska stå längs y-axeln (t ex
 //lite, mycket).
+// Dessa namn skrivs i diagrammet av create_pie.
+
 
 array(object(image)) xnamesimg;
 array(object(image)) ynamesimg;
