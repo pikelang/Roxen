@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.734 2001/09/06 11:54:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.735 2001/09/06 12:26:43 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2099,8 +2099,7 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
-#define QUERY(X,Y...) db->query(X,Y)
-  Sql.Sql db;
+#define QUERY(X,Y...) get_db()->query(X,Y)
   string name;
   string dir;
   function draw_function;
@@ -2984,11 +2983,14 @@ class ImageCache
     }
   }
 
+  Sql.Sql get_db()
+  {
+    return dbm_cached_get("local");
+  }
 
   static void init_db( )
   {
     meta_cache = ([]);
-    db = master()->resolv( "DBManager.cached_get" )("local");
     setup_tables();
   }
 
@@ -3025,6 +3027,8 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
+#undef QUERY
+#define QUERY(X,Y...) db->query(X,Y)
   Sql.Sql db;
   string name;
 
@@ -3068,7 +3072,7 @@ class ArgCache
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
     cache = ([]);
-    db = master()->resolv( "DBManager.cached_get" )("local");
+    db = dbm_cached_get("local");
     setup_table( );
   }
 
