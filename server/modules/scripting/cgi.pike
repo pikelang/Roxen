@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.40 1997/09/17 00:44:12 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.41 1997/09/26 21:30:38 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -341,30 +341,144 @@ array extract_path_info(string f)
   return ({ path_info, f });
 }
 
-void got_some_data(object to, string d)
+class spawn_cgi
 {
-  to->write( d );
-}
+  // This program asserts that fork() is called from the backend to
+  // avoid some problems with threads, fork() and buggy OS's.
+  string wrapper;
+  string f;
+  array(string) args;
+  mapping env;
+  string wd;
+  int|string uid;
+  object pipe1, pipe2;
+  int kill_call_out;
+  int dup_err;
+  object my_fd;
+  string data;
 
-
-void cgi_fail(int errcode, string err)
-{
-  string to_write = sprintf("HTTP/1.0 %d %s\r\n"
-			    "\r\n"
-			    "<title>%s</title>\n"
-			    "<h2>%s</h2>\n", errcode, err, err, err);
-
-  object(files.file) output = files.file("stdout");
-  int bytes;
-
-  while ((bytes = output->write(to_write)) > 0) {
-    if ((to_write = to_write[bytes..]) == "") {
-      break;
-    }
+  void got_some_data(object to, string d)
+  {
+    to->write( d );
   }
 
-  exit(0);
-}
+  void cgi_fail(int errcode, string err)
+  {
+    string to_write = sprintf("HTTP/1.0 %d %s\r\n"
+			      "\r\n"
+			      "<title>%s</title>\n"
+			      "<h2>%s</h2>\n", errcode, err, err, err);
+
+    object(files.file) output = files.file("stdout");
+    int bytes;
+    
+    while ((bytes = output->write(to_write)) > 0) {
+      if ((to_write = to_write[bytes..]) == "") {
+	break;
+      }
+    }
+
+    exit(0);
+  }
+  
+  void do_cgi()
+  {
+    int pid;
+    if (!(pid = fork())) {
+      mixed err = catch {
+	array us;
+	/* The COREDUMPSIZE should be set to zero here !!
+	 * This should be done at least before the change of directory
+	 */
+	string oldwd = getcwd() + "/";
+	destruct(pipe2);
+	pipe1->dup2(files.file("stdin"));
+	pipe1->dup2(files.file("stdout"));
+	if(dup_err)
+	  pipe1->dup2(files.file("stderr"));
+
+	object privs;
+	if (!getuid()) {
+	  // We are running as root -- change!
+	  privs = Privs("CGI script", uid);
+	} else {
+	  // Try to change user anyway, but don't throw an error if we fail.
+	  catch(privs = Privs("CGI script", uid));
+	}
+	setgid(getegid()||65534);
+	setuid(geteuid()||65534);
+	
+	/* Now that the correct privileges are set, the current working
+	 * directory can be changed. This implies a check for user permissions
+	 * Also some technical requirements for execution can be checked
+	 * before control is given to the wrapper or the script.
+	 */
+	if(!cd(wd) ||
+	   !(us = file_stat(f)) ||
+	   !((us[0]&0111) ||
+	     ((us[0]&0100) && (uid == us[5])) ||
+	     (us[0]&0444) ||
+	     ((us[0]&0400) && (uid == us[5])))) {
+	  cgi_fail(403, "File exists, but access forbidden by user");
+	}
+	
+	if(wrapper) {
+	  if(!(us = file_stat(combine_path(oldwd, wrapper))) ||
+	     !(us[0]&0111)) {
+	    cgi_fail(403,
+		     "Wrapper exists, but access forbidden for user");
+	  }
+	  exece(combine_path(oldwd, wrapper), ({ f }) + args, env);
+	} else {
+	  exece(f, args, env);
+	}
+      };
+      catch(roxen_perror("CGI: Exec failed!\n%O\n",
+			 describe_backtrace((array)err)));
+      exit(0);
+    }
+    destruct(pipe1);
+    if(kill_call_out) {
+      call_out(lambda (int pid) {
+	object privs;
+	catch(privs = Privs("Killing CGI script."));
+	int killed;
+	killed = kill(pid, signum("SIGINTR"));
+	if(!killed)
+	  killed = kill(pid, signum("SIGHUP"));
+	if(!killed)
+	  killed = kill(pid, signum("SIGKILL"));
+	if(killed)
+	  perror("Killed CGI pid "+pid+"\n");
+      }, kill_call_out * 60 , pid);
+    }
+
+    if(my_fd && data && sizeof(data)) {
+      pipe2->write(data);
+      my_fd->set_id( pipe2 );                      // for put..
+      my_fd->set_nonblocking(got_some_data, 0, 0); // lets try, atleast..
+    }
+  }
+  
+  void create(string wrapper_, string f_, array(string) args_, mapping env_,
+	      string wd_, int|string uid_, object pipe1_, object pipe2_,
+	      int dup_err_, int kill_call_out_, object my_fd_, string data_)
+  {
+    wrapper = wrapper_;
+    f = f_;
+    args = args_;
+    env = env_;
+    wd = wd_;
+    uid = uid_;
+    pipe1 = pipe1_;
+    pipe2 = pipe2_;
+    dup_err = dup_err_;
+    kill_call_out = kill_call_out_;
+    my_fd = my_fd_;
+    data = data_;
+    call_out(do_cgi, 0);
+  }
+};
 
 mixed find_file(string f, object id)
 {
@@ -398,7 +512,8 @@ mixed find_file(string f, object id)
     return(0);
   }
   pipe2->set_blocking(); pipe1->set_blocking();
-    
+  pipe2->set_id(pipe2);
+
   mixed uid;
   array us;
   if(query("noexec"))
@@ -418,87 +533,16 @@ mixed find_file(string f, object id)
   if(!uid)
     uid = "nobody";
 
-  if(!(pid = fork()))
-  {
-    mixed err = catch {
-      /* The COREDUMPSIZE should be set to zero here !!
-       * This should be done at least before the change of directory
-       */
-      string oldwd = getcwd() + "/";
-      destruct(pipe2);
-      pipe1->dup2(files.file("stdin"));
-      pipe1->dup2(files.file("stdout"));
-      if(QUERY(err))
-	pipe1->dup2(files.file("stderr"));
-      if (arrayp(uid)) {
-	uid = uid[0];
-      }
-      object privs;
-      if (!getuid()) {
-	// We are running as root -- change!
-	privs = Privs("CGI script", uid);
-      } else {
-	// Try to change user anyway, but don't throw an error if we fail.
-	catch(privs = Privs("CGI script", uid));
-      }
-      setgid(getegid()||65534);
-      setuid(geteuid()||65534);
-
-      /* Now that the correct privileges are set, the current working
-       * directory can be changed. This implies a check for user permissions
-       * Also some technical requirements for execution can be checked
-       * before control is given to the wrapper or the script.
-       */
-      if(!cd(wd) ||
-	 !(us = file_stat(f)) ||
-	 !((us[0]&0111) ||
-	   ((us[0]&0100) && (uid == us[5])) ||
-	   (us[0]&0444) ||
-	   ((us[0]&0400) && (uid == us[5])))) {
-	cgi_fail(403, "File exists, but access forbidden by user");
-      }
-      
-      if(QUERY(use_wrapper)) {
-	if(!(us = file_stat(combine_path(oldwd,
-					 (QUERY(wrapper)||"bin/cgi")))) ||
-	   !(us[0]&0111)) {
-	  cgi_fail(403,
-		   "Wrapper exists, but access forbidden for user");
-	}
-	exece(combine_path(oldwd, (QUERY(wrapper)||"bin/cgi")),
-	      ({f})+make_args(id->rest_query),
-	      my_build_env_vars(f, id, path_info));
-      } else {
-	exece(f, make_args(id->rest_query),
-	      my_build_env_vars(f, id, path_info));
-      }
-    };
-    catch(roxen_perror("CGI: Exec failed!\n%O\n",
-		       describe_backtrace((array)err)));
-    exit(0);
+  if (arrayp(uid)) {
+    uid = uid[0];
   }
-  destruct(pipe1);
-  if(QUERY(kill_call_out))
-    call_out(lambda (int pid) {
-      object privs;
-      catch(privs = Privs("Killing CGI script."));
-      int killed;
-      killed = kill(pid, signum("SIGINTR"));
-      if(!killed)
-	killed = kill(pid, signum("SIGHUP"));
-      if(!killed)
-	killed = kill(pid, signum("SIGKILL"));
-      if(killed)
-	perror("Killed CGI pid "+pid+"\n");
-    }, QUERY(kill_call_out) * 60 , pid);
-  if(id->my_fd)
-    if(id->data || id->misc->len)
-    {
-      pipe2->write(id->data);
-      id->my_fd->set_id( pipe2 );                      // for put..
-      id->my_fd->set_nonblocking(got_some_data, 0, 0); // lets try, atleast..
-    }
-  pipe2->set_id(pipe2);
+
+  spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"), f,
+	    make_args(id->rest_query),
+	    my_build_env_vars(f, id, path_info),
+	    wd, uid, pipe1, pipe2, QUERY(err), QUERY(kill_call_out),
+	    id->my_fd, id->data);
+  
   return http_stream(pipe2);
 }
 
