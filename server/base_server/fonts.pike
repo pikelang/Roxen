@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.47 2000/03/08 01:03:12 nilsson Exp $
+// $Id: fonts.pike,v 1.48 2000/03/13 06:11:12 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -70,7 +70,7 @@ array available_font_versions(string name, int size)
      return indices(ttf_font_names_cache[ name ]);
   foreach(roxen->query("font_dirs"), dir)
   {
-    foreach(get_dir( dir )||({}), string fname)
+    foreach(r_get_dir( dir )||({}), string fname)
     {
       catch
       {
@@ -96,8 +96,8 @@ array available_font_versions(string name, int size)
   }
   if(ttffontschanged)
     catch{
-      Stdio.File(".ttffontcache",
-		 "wct")->write(encode_value(ttf_font_names_cache));
+      open("$VVARDIR/ttffontcache","wct")
+        ->write(encode_value(ttf_font_names_cache));
     };
   if(ttffound)
     return  indices(ttf_font_names_cache[ lower_case(name) ]);
@@ -106,13 +106,13 @@ array available_font_versions(string name, int size)
   foreach(roxen->query("font_dirs"), dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
-    if((available = get_dir(base_dir)))
+    if((available = r_get_dir(base_dir)))
       break;
     base_dir=dir+"/32/"+fix_name(name);
-    if((available = get_dir(base_dir)))
+    if((available = r_get_dir(base_dir)))
       break;
     base_dir=dir+"/32/"+roxen->query("default_font");
-    if((available = get_dir(base_dir)))
+    if((available = r_get_dir(base_dir)))
       break;
   }
   if(!available) return 0;
@@ -153,7 +153,7 @@ string make_font_name(string name, int size, int bold, int italic)
 {
   string base_dir, dir;
   mixed available = available_font_versions( name,size );
-  if(file_stat(name)) return name;
+  if(r_file_stat(name)) return name;
 
   string bc=(bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
   if(available)
@@ -220,8 +220,8 @@ class TTFWrapper
     real = r;
     size = s;
     real->set_height( size );
-    if(file_stat(fn+".properties"))
-      parse_html(Stdio.read_file(fn+".properties")||"", ([]),
+    if(r_file_stat(fn+".properties"))
+      parse_html(open(fn+".properties","r")->read(), ([]),
 		 (["encoding":lambda(string tag, mapping m, string enc) {
 				encoding = enc;
 			      }]));
@@ -257,12 +257,12 @@ object get_font(string f, int size, int bold, int italic,
       f = lower_case(f);
       if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
-	object fo = Image.TTF( f = ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] );
+	object fo = Image.TTF( roxen_path(f = ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] ));
 	fo = TTFWrapper( fo(), size, f );
 	cache_set("fonts", key, fo);
 	return fo;
       }
-      object fo = Image.TTF( f = values(ttf_font_names_cache[ lower_case(f) ])[0]);
+      object fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ lower_case(f) ])[0]));
       return TTFWrapper( fo(), size, f );
     } else if( search( lower_case(f), ".ttf" ) != -1 ) {
       catch {
@@ -279,13 +279,13 @@ object get_font(string f, int size, int bold, int italic,
     foreach(roxen->query("font_dirs"), string f)
     {
       name = fix_name(name);
-      if(file_stat( f + size + "/" + name ))
+      if(r_file_stat( f + size + "/" + name ))
       {
 	name = f+size+"/"+name;
 	break;
       }
     }
-    if(!fnt->load( name ))
+    if(!fnt->load( roxen_path( name ) ))
     {
       if(f == roxen->query("default_font"))
       {
@@ -383,13 +383,13 @@ array available_fonts( )
   {
     dir+="32/";
     array d;
-    if(array d = get_dir(dir))
+    if(array d = r_get_dir(dir))
     {
       foreach(d,string f)
       {
 	if(f=="CVS") continue;
 	array a;
-	if((a=file_stat(dir+f)) && (a[1]==-2))
+	if((a=r_file_stat(dir+f)) && (a[1]==-2))
 	  res |= ({ replace(f,"_"," ") });
       }
     }
@@ -410,7 +410,7 @@ void create()
 #if constant(has_Image_TTF)
   catch {
     ttf_font_names_cache =
-      decode_value(Stdio.read_bytes(".ttffontcache"));
+      decode_value(open("$VVARDIR/ttffontcache","r")->read());
   };
 #endif
 }
