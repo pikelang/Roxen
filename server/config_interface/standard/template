@@ -48,13 +48,12 @@
   </td></tr></table>
 </define>
 
-<define container=subtablist default_width=90%>
+<define container=subtablist default_width=100%>
 <contents>
 <p><br><p>
-<div align=right>
+
 <table width=&width; border=0 cellpadding=0 cellspacing=0>
 <tr>
-
 <td valign=bottom
 ><tablist preparse
          font="&usr.font;"
@@ -69,7 +68,6 @@
 <tr>
 <td bgcolor="&usr.fade1;">&form.__contents:none;</td>
 </tr></table>
-</div>
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>
@@ -109,16 +107,17 @@
   <p><if not match="&usr.left-image; is "><img src=&usr.left-image;></if>
 </cset>
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
-   <if not match="&usr.theme; is ">
+  <if not match="&usr.theme; is ">
      <insert file=/standard/themes/&usr.theme;/theme nocache>
-   </if>
+  </if>
+  <define preparse name=tab-frame-image>&usr.tab-frame-image;</define>
+  <define preparse name=tab-font-size>&usr.tab-font-size;</define>
   <expire-time now>
 
 
-  <body hspace=0 vspace=0
-        topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
+  <body topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
         bottommargin=0 rightmargin=0 margin=0
-        link=&usr.linkcolor; vlink=&usr.linkcolor; alink=&usr.fade2;
+        link=&usr.linkcolor;  vlink=&usr.linkcolor; alink=&usr.fade2;
         bgcolor=&usr.bgcolor; text=&usr.fgcolor;>
 
     <form method=POST action='<cf-current-url>'>
@@ -152,7 +151,7 @@
         <contents>
       </roxen-config>
     </form>
-<div align=right><font size=-1>&roxen.version; using &roxen.pike-version;</font></div>
+<div align=right><font size=-1>&roxen.version; / &roxen.pike-version;</font></div>
   </body>
 </define>
 
