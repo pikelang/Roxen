@@ -7,7 +7,7 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT3" Property="SERVER_PORT" Value="22202" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT2" Property="SERVER_PROTOCOL" Value="https" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT1" Property="SERVER_NAME" Value="Administration Interface" Execute="firstSequence" />
-    <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="Administrator" Execute="firstSequence" />
+    <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
     <CustomAction Id="CreateConfigInterface" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
