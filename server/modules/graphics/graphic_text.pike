@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.227 2000/04/06 07:34:41 wing Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.228 2000/04/06 07:41:44 wing Exp $";
 
 #include <module.h>
 inherit "module";
@@ -11,7 +11,7 @@ inherit "roxenlib";
 // ------------------- Module registration ---------------------
 
 constant module_type   = MODULE_PARSER;
-constant module_name   = "Graphics text";
+constant module_name   = "Graphic text";
 constant module_doc    = 
 #"Provides the <tt>&lt;gtext&gt;</tt> that is used to generate text into 
 graphical images.";

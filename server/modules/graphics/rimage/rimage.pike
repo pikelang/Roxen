@@ -7,7 +7,7 @@ inherit "module";
 /*  ------------------------------------------- MODULE GLUE */
 
 constant module_type = MODULE_PARSER;
-constant module_name = "Roxen image manipulator";
+constant module_name = "Image manipulator";
 constant module_doc  = 
 #"Provides the <tt>&lt;rimage&gt; tag that is used for layer base image
 manipulations. It also comes with plugin support.";
