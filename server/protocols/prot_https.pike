@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2004, Roxen IS.
 
-// $Id: prot_https.pike,v 2.10 2004/08/16 19:24:30 grubba Exp $
+// $Id: prot_https.pike,v 2.11 2004/08/16 19:31:37 grubba Exp $
 
 // --- Debug defines ---
 
@@ -204,7 +204,7 @@ class http_fallback
 
 Stdio.File accept()
 {
-  Stdio.File|SSL.sslfile q = ::accept();
+  object(Stdio.File)|SSL.sslfile q = ::accept();
 
   if (q) {
     http_fallback(q);
