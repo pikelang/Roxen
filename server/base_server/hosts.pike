@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: hosts.pike,v 1.32 2004/06/30 16:58:37 mast Exp $
+// $Id: hosts.pike,v 1.33 2005/03/01 19:11:48 grubba Exp $
 
 #include <roxen.h>
 
@@ -26,7 +26,7 @@ mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
 
 #define lookup(MODE,NAME) lookup_funs[MODE](NAME, got_one_result)
 #define LOOKUP(MODE,NAME,CB,ARGS) do{if(!do_when_found[NAME]){do_when_found[NAME]=(CB?({({CB,ARGS})}):({}));lookup(MODE, NAME);} else if(CB) do_when_found[NAME]+=({({CB,ARGS})});}while(0)
-#define ISIP(H,CODE) do {mixed entry;if(sizeof(entry = H / "." ) == 4){int isip = 1;foreach(entry, string s)if((string)((int)s) != s)isip = 0;if(isip) {CODE;};}}while(0)
+#define ISIP(H,CODE) do {mixed entry;if(sizeof(entry = H / "." ) == 4){int isip = 1;foreach(entry, string s)if((string)((int)s) != s)isip = 0;if(isip) {CODE;};} else if (has_value(H, ":")) {CODE;}}while(0)
 
 void got_one_result(string from, string to)
 {
@@ -49,6 +49,10 @@ string blocking_ip_to_host(string ip)
        );
   return ip;
 
+}
+
+array gethostbyname(string name) {
+  return dns->gethostbyname(name);
 }
 
 string blocking_host_to_ip(string host)
