@@ -2,14 +2,14 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.10 1997/08/12 06:32:29 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.11 1997/08/14 22:18:55 grubba Exp $";
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
 "host\r\nContent-type: text/html\r\n\r\n<title>Roxen: Connection "	\
 "refused </title>\n<h1>Proxy request failed</h1><hr><font "		\
 "size=+2><i>Connection refused by remote host</i></font><hr><font "	\
-"size=-2><a href=http://roxen.com/>Roxen Challenger</a></font>"
+"size=-2><a href=http://www.roxen.com/>Roxen Challenger</a></font>"
 
 #if DEBUG_LEVEL > 22
 # ifndef GOPHER_DEBUG

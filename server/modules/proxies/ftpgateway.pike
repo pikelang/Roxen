@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.14 1997/08/12 06:32:28 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.15 1997/08/14 22:18:54 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -67,9 +67,9 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=+2><i>Host unknown or connection refused</i></font>\
 <hr>\
-<font size=-2><a href=http://roxen.com/>"+roxen->version()+"</a></font>"
+<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
 
-#define INFOSTRING "<font size=-2><a href=http://roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@infovav.se</i></font>"
+#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@infovav.se</i></font>"
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 

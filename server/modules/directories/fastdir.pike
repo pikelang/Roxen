@@ -2,7 +2,7 @@
 
 // A fast directory module, without support for the fold/unfold stuff
 // in the normal one.
-constant cvs_version = "$Id: fastdir.pike,v 1.8 1997/08/13 17:54:58 grubba Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.9 1997/08/14 22:18:51 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -33,7 +33,7 @@ void create()
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by prepending '.' or '/' to the directory name, like "
-	 "this: <a href=http://roxen.com//>http://roxen.com//</a>"
+	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
 }

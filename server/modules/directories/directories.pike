@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.12 1997/07/10 16:28:34 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.13 1997/08/14 22:18:49 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -170,7 +170,7 @@ void create()
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by prepending '.' or '/' to the directory name, like this: "
-	 "<a href=http://roxen.com//>http://roxen.com//</a>"
+	 "<a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
 

@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.8 1997/04/05 01:26:08 per Exp $";
+string cvs_version = "$Id: redirect.pike,v 1.9 1997/08/14 22:18:52 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -23,7 +23,7 @@ void create()
          "/from/.*      http://to.infovav.se/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
-	 "/roxen/     http://roxen.com/\n"
+	 "/roxen/     http://www.roxen.com/\n"
 	 "exact / /main/index.html\n"
 	 "</pre>"
 
