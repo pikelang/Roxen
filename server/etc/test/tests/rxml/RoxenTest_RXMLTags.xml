@@ -258,6 +258,11 @@ e</result>
 <result><small>A</small><big>A</big><small>A </small><big>A</big><small>A</small></result>
 </test>
 
+<test>
+  <rxml><set variable="var.foo"/>&var.foo;</rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Crypt</comment>
@@ -1174,6 +1179,19 @@ hej</result>
     </cache>
   </rxml>
   <result>ab</result>
+</test>
+
+<test>
+  <rxml
+    ><cache
+      ><define container="foo">[&_.contents;]</define
+      ><nocache
+	><foo>a</foo
+	><foo>b</foo
+      ></nocache
+    ></cache
+  ></rxml>
+  <result>[a][b]</result>
 </test>
 
 
