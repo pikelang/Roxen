@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.332 2003/01/22 17:37:38 grubba Exp $
+// $Id: roxenloader.pike,v 1.333 2003/02/05 13:33:58 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.332 2003/01/22 17:37:38 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.333 2003/02/05 13:33:58 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1149,7 +1149,7 @@ int main(int argc, array(string) argv)
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 2.4 should be run with Pike 7.2.
+Roxen 2.4 or newer should be run with Pike 7.2.
 ---------------------------------------------------------------
 ");
 	exit(1);
@@ -1206,8 +1206,8 @@ Roxen 2.4 should be run with Pike 7.2.
   {
     werror(
      "          : ----------------------------------------------------------\n"
-      "Notice: Not using the built-in mysql\n"
-      "Mysql path is "+my_mysql_path+"\n"
+      "Notice: Not using the built-in MySQL\n"
+      "MySQL path is "+my_mysql_path+"\n"
     );
     mysql_path_is_remote = 1;
   }
@@ -1541,7 +1541,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
       throw( err );
 #ifdef DB_DEBUG
     else
-      werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
+      werror ("Couldn't connect to MySQL as %s: %s", ro, describe_error (err));
 #endif
   if( db != "mysql" )
     low_connect_to_my_mysql( 0, "mysql" )
@@ -1615,7 +1615,7 @@ void low_start_mysql( string datadir,
       bindir = basedir+"sbin/";
       if( !file_stat( bindir+mysqld ) )
       {
-	report_debug( "\nNo mysqld found in "+basedir+"!\n" );
+	report_debug( "\nNo MySQL found in "+basedir+"!\n" );
 	exit( 1 );
       }
     }
@@ -1768,17 +1768,17 @@ void start_mysql()
                  (was?"Was running":"Done"),
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
-      report_debug( "Warning: This is a very old Mysql. "
+      report_debug( "Warning: This is a very old MySQL. "
                      "Please use 3.23.*\n");
 
     assure_that_base_tables_exists();
   };
 
-  report_debug( "Starting mysql ... \b");
+  report_debug( "Starting MySQL ... \b");
   
   if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
-    werror ("Error connecting to local mysql: %s", describe_error (err));
+    werror ("Error connecting to local MySQL: %s", describe_error (err));
 #endif
   }
   else {
@@ -1789,7 +1789,7 @@ void start_mysql()
   if( mysql_path_is_remote )
   {
     report_debug( "******************** FATAL ******************\n"
-		  "Cannot connect to the specified mysql, server\n"
+		  "Cannot connect to the specified MySQL server\n"
 		  "                  Aborting\n"
 		  "******************** FATAL ******************\n" );
     exit(1);
@@ -1815,7 +1815,7 @@ void start_mysql()
       !file_stat( mysqldir+"/mysql/db.MYD" ) )
   {
 #ifdef DEBUG
-    report_debug("Mysql data directory does not exist -- copying template\n");
+    report_debug("MySQL data directory does not exist -- copying template\n");
 #endif
     if (!file_stat(mysqldir)) {
 #ifdef DEBUG
@@ -1859,12 +1859,12 @@ void start_mysql()
 #ifndef THREADS
       do_tailf(0, mysqldir+"/error_log" );
 #endif
-      report_fatal("\nFailed to start mysql. Aborting\n");
+      report_fatal("\nFailed to start MySQL. Aborting\n");
       exit(1);
     }
     if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
-      werror ("Error connecting to local mysql: %s", describe_error (err));
+      werror ("Error connecting to local MySQL: %s", describe_error (err));
 #endif
     }
     else
@@ -1961,11 +1961,11 @@ it impossible for roxen to have any internal security at all.
     report_debug(
 #"
 ------- WARNING -----------------------------------------------
-Roxen 2.4 requires bignum support in pike.
-Please recompile pike with gmp / bignum support to run Roxen.
+Roxen 2.4 or newer requires bignum support in Pike.
+Please recompile Pike with gmp / bignum support to run Roxen.
 
-It might still be possible to start roxen, but the 
-functionality will be affected, and stange errors might occurr.
+It might still be possible to start Roxen, but the 
+functionality will be affected, and stange errors might occur.
 ---------------------------------------------------------------
 
 ");
@@ -1975,11 +1975,11 @@ functionality will be affected, and stange errors might occurr.
     report_debug(
 #"
 ------- WARNING -----------------------------------------------
-You are running with an un-installed pike binary.
+You are running with an un-installed Pike binary.
 
 Please note that this is unsupported, and might stop working at
 any time, since some things are done differently in uninstalled
-pikes, as an example the module search paths are different, and
+Pikes, as an example the module search paths are different, and
 some environment variables are ignored.
 ---------------------------------------------------------------
 
@@ -1992,7 +1992,7 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 2.4 requires pike 7.2.
+Roxen 2.4 or newer requires Pike 7.2.
 Please install a newer version of Pike.
 ******************************************************
 
@@ -2006,7 +2006,7 @@ Please install a newer version of Pike.
 
 
 ******************************************************
-Roxen 2.4 requires MySQL support in Pike.
+Roxen 2.4 or newer requires MySQL support in Pike.
 Your Pike has been compiled without support for MySQL.
 Please install MySQL client libraries and reconfigure
 and rebuild Pike from scratch.
@@ -2169,7 +2169,7 @@ library should be enough.
   }
 
   // These are here to allow dumping of roxen.pike to a .o file.
-  report_debug("Loading pike modules ... \b");
+  report_debug("Loading Pike modules ... \b");
 
   add_dump_constant = new_master->add_dump_constant;
   int t = gethrtime();

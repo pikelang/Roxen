@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.821 2003/01/24 10:41:38 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.822 2003/02/05 13:33:58 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -4230,7 +4230,7 @@ void describe_all_threads()
   // have the backtraces. It also gives an atomic view of the state.
   object threads_disabled = _disable_threads();
 
-  report_debug("### Describing all pike threads:\n\n");
+  report_debug("### Describing all Pike threads:\n\n");
 
   array(Thread.Thread) threads = all_threads();
   array(string|int) thread_ids =
@@ -4255,7 +4255,7 @@ void describe_all_threads()
     report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
   }
 
-  report_debug ("### Total %d pike threads\n", sizeof (threads));
+  report_debug ("### Total %d Pike threads\n", sizeof (threads));
 
   threads = 0;
   threads_disabled = 0;

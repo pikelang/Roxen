@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.198 2003/01/13 15:14:08 mast Exp $
+# $Id: start,v 1.199 2003/02/05 13:34:06 jonasw Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -367,7 +367,7 @@ the default arguments.
       .B--debug-log=FILEB.:           Use an alternate debuglog file.
 				  Defaults to .B../logs/debug/B.configdirname.B.1B..
 
-      .B--pid-file=FILEB.:            Store the roxen and startscript pids in this
+      .B--pid-file=FILEB.:            Store the Roxen and start script pids in this
 				  file. Defaults to .B../configurations/_roxen_pidB..
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
@@ -417,7 +417,7 @@ the default arguments.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
-      .B--programB.:                  Start a different program with the roxen
+      .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
                                   .B./start --program bin/install.pikeB. will
 				  start the installation program normally
@@ -446,7 +446,7 @@ the default arguments.
 
       .B--with-snmp-agentB.:          Enable internal SNMP agent code.
 
-  .BArguments passed to pike:B.
+  .BArguments passed to Pike:B.
 
        .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
@@ -459,7 +459,7 @@ the default arguments.
 				  Things will run more slowly, but it is very
                                   useful while developing code.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting Roxen with --debug
 
        .B-rTB.:                       Enable strict types.
 				  Same as adding #pragma strict-types
@@ -472,11 +472,11 @@ the default arguments.
 				  object variable with an untyped
 				  object) will generate warnings.
 
-				  Useful for module and roxen core
+				  Useful for module and Roxen core
 				  developers, but not so useful for
 				  the occasional pike-script-writer.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting Roxen with --debug
 
        .B-s<size>B.:                  Set the stack size.
 
@@ -701,7 +701,7 @@ start_roxen() {
       if [ $verbose -gt 1 -o -z "$once" ] ; then
         dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
       else
-        dp "Using the '$pike' pike binary"|sed -e "s!`pwd`!.!g"
+        dp "Using the '$pike' Pike binary"|sed -e "s!`pwd`!.!g"
       fi
     fi
 
@@ -804,7 +804,7 @@ VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
 if [ "$program" = "base_server/roxenloader.pike" ] ; then
   if [ "`cat \"$old_roxen_defines\" 2>/dev/null`" != "$VERSION_DATA" ] ; then
-    remove_old_dot_o_files "defines or pike version changed"
+    remove_old_dot_o_files "defines or Pike version changed"
   fi
   echo "$VERSION_DATA" > "$old_roxen_defines"
 fi
