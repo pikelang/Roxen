@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.198 2004/05/12 14:31:10 mast Exp $
+// $Id: module.pike,v 1.199 2004/05/12 15:19:48 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1229,10 +1229,10 @@ mapping(string:mixed) recurse_delete_files(string path,
     }
 
     SIMPLE_TRACE_LEAVE ("");
-    return 0;
+    return delete_file (path, id);
   };
 
-  return recurse(path, st) || delete_file(path, id) || Roxen.http_status(204);
+  return recurse(path, st) || Roxen.http_status(204);
 }
 
 mapping(string:mixed) make_collection(string path, RequestID id)
