@@ -3,15 +3,11 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.301 2001/06/17 20:07:10 nilsson Exp $
+// $Id: rxml.pike,v 1.302 2001/06/18 15:27:57 mast Exp $
 
 
 inherit "rxmlhelp";
 #include <config.h>
-
-#define _stat defines[" _stat"]
-#define _error defines[" _error"]
-#define _extra_heads defines[" _extra_heads"]
 
 
 // ------------------------- RXML Parser ------------------------------
@@ -23,7 +19,7 @@ RXML.TagSet rxml_tag_set = class
 
   string prefix = RXML_NAMESPACE;
 
-#ifdef THREADS
+#if constant (thread_create)
   Thread.Mutex lists_mutex = Thread.Mutex();
   // Locks destructive changes to the arrays modules and imported.
 #endif
@@ -35,7 +31,7 @@ RXML.TagSet rxml_tag_set = class
 
   void sort_on_priority()
   {
-#ifdef THREADS
+#if constant (thread_create)
     Thread.MutexKey lock = lists_mutex->lock();
 #endif
     int i = search (imported, Roxen.entities_tag_set);
@@ -76,6 +72,33 @@ RXML.TagSet rxml_tag_set = class
     imported = ({Roxen.entities_tag_set});
     modules = ({rxml_object});
   }
+
+  void prepare_context (RXML.Context ctx)
+  {
+    RequestID id = ctx->id;
+
+    PROF_ENTER( "rxml", "overhead" );
+
+    id->misc->defines = ctx->misc; // Mostly for compatibility.
+
+    ctx->misc[" _ok"] = 1;
+    ctx->misc[" _error"] = 200;
+    ctx->misc[" _extra_heads"] = ([ ]);
+    if(id->misc->stat) ctx->misc[" _stat"] = id->misc->stat;
+  }
+
+  void eval_finish (RXML.Context ctx)
+  {
+    RequestID id = ctx->id;
+
+    if(sizeof(ctx->misc[" _extra_heads"]) && !id->misc->moreheads)
+    {
+      id->misc->moreheads= ([]);
+      id->misc->moreheads |= ctx->misc[" _extra_heads"];
+    }
+
+    PROF_LEAVE( "rxml", "overhead" );
+  }
 } (this_object());
 
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
@@ -109,27 +132,6 @@ string parse_rxml(string what, RequestID id,
 // rxml parse session. The RXML module provides several different ways
 // to accomplish that.
 {
-  PROF_ENTER( "rxml", "overhead" );
-  id->misc->_rxml_recurse++;
-#ifdef RXML_DEBUG
-  report_debug("parse_rxml( "+strlen(what)+" ) -> ");
-  int time = gethrtime();
-#endif
-  if(!defines)
-    defines = id->misc->defines||([]);
-  if(!_error)
-    _error=200;
-  if(!_extra_heads)
-    _extra_heads=([ ]);
-  if(!_stat) {
-    if(id->misc->stat)
-      _stat=id->misc->stat;
-    else if(file)
-      _stat=file->stat();
-  }
-
-  id->misc->defines = defines;
-
   RXML.PXml parent_parser = id->misc->_parser; // Don't count on that this exists.
   RXML.PXml parser;
   RXML.Context ctx;
@@ -139,28 +141,40 @@ string parse_rxml(string what, RequestID id,
     parser->recover_errors = parent_parser->recover_errors;
   }
   else {
-    parser = rxml_tag_set (default_content_type, id);
+    parser = rxml_tag_set->get_parser (default_content_type, id);
     parser->recover_errors = 1;
     parent_parser = 0;
+    ctx = parser->context;
 #if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) parser->context->compatible_scope = 1;
 #endif
   }
   id->misc->_parser = parser;
 
-  // Hmm, how does this propagation differ from id->misc? Does it
-  // matter? This is only used by the compatibility code for old style
-  // tags.
-  parser->_defines = defines;
-  parser->_source_file = file;
+  if (defines) {
+    ctx->misc = id->misc->defines = defines;
+    if (!defines[" _error"])
+      defines[" _error"] = 200;
+    if (!defines[" _extra_heads"])
+      defines[" _extra_heads"] = ([ ]);
+    if (!defines[" _stat"] && id->misc->stat)
+      defines[" _stat"] = id->misc->stat;
+  }
+  else
+    defines = ctx->misc;
+
+  if (file) {
+    if (!defines[" _stat"])
+      defines[" _stat"] = file->stat();
+    parser->_source_file = file;
+  }
 
   if (mixed err = catch {
-    if (parent_parser && ctx == RXML.get_context())
-      parser->finish (what);
+    if (parent_parser && ctx == RXML_CONTEXT)
+      parser->finish (what);	// Skip the unnecessary work in write_end. DDTAH.
     else
       parser->write_end (what);
     what = parser->eval();
-    parser->_defines = 0;
     id->misc->_parser = parent_parser;
   }) {
 #ifdef DEBUG
@@ -172,7 +186,6 @@ string parse_rxml(string what, RequestID id,
       error("Parser destructed!\n");
     }
 #endif
-    parser->_defines = 0;
     id->misc->_parser = parent_parser;
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
@@ -180,17 +193,6 @@ string parse_rxml(string what, RequestID id,
     else throw (err);
   }
 
-  if(sizeof(_extra_heads) && !id->misc->moreheads)
-  {
-    id->misc->moreheads= ([]);
-    id->misc->moreheads |= _extra_heads;
-  }
-  id->misc->_rxml_recurse--;
-#ifdef RXML_DEBUG
-  report_debug("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
-	      ("  "*id->misc->_rxml_recurse));
-#endif
-  PROF_LEAVE( "rxml", "overhead" );
   return what;
 }
 
@@ -246,7 +248,7 @@ class CompatTag
       mapping defines;
       if (id->misc->_parser) {
 	source_file = id->misc->_parser->_source_file;
-	defines = id->misc->_parser->_defines;
+	defines = id->misc->defines;
       }
 
       string|array(string) result;
