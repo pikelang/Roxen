@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.21 2001/06/17 20:07:10 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.22 2001/07/21 08:27:30 mast Exp $";
 
 class Variable
 {
@@ -308,7 +308,8 @@ class Protocol
   string ip;
   array(string) sorted_urls = ({});
   mapping(string:mapping) urls = ([]);
-  
+  mapping(Configuration:mapping) conf_data = ([]);
+
   void ref(string url, mapping data);
   void unref(string url);
   Configuration find_configuration_for_url( string url, RequestID id, 

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.685 2001/07/16 14:40:57 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.686 2001/07/21 08:27:31 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1037,6 +1037,7 @@ class Protocol
   constant name = "unknown";
   constant supports_ipless = 0;
   //! If true, the protocol handles ip-less virtual hosting
+
   constant requesthandlerfile = "";
   //! Filename of a by-connection handling class. It is also possible
   //! to set the 'requesthandler' class member in a overloaded create
@@ -1047,30 +1048,38 @@ class Protocol
 
   int port;
   //! The currently bound portnumber
+
   string ip;
   //! The IP-number (0 for ANY) this port is bound to
+
   int refs;
   //! The number of references to this port
+
   program requesthandler;
   //! The per-connection request handling class
+
   array(string) sorted_urls = ({});
   //! Sorted by length, longest first
+
   mapping(string:mapping) urls = ([]);
   //! .. url -> ([ "conf":.., ... ])
+
+  mapping(Configuration:mapping) conf_data = ([]);
+  //! Maps the configuration objects to the data mappings in @[urls].
 
   void ref(string name, mapping data)
   //! Add a ref for the URL 'name' with the data 'data'
   {
     if(urls[name])
     {
-      urls[name] = data;
+      conf_data[urls[name]->conf] = urls[name] = data;
       return; // only ref once per URL
     }
     if (!refs) path = data->path;
     else if (path != (data->path || "")) path = 0;
     refs++;
-    urls[name] = data;
-    sorted_urls = Array.sort_array(indices(urls), 
+    conf_data[data->conf] = urls[name] = data;
+    sorted_urls = Array.sort_array(indices(urls),
                                  lambda(string a, string b) {
                                    return sizeof(a)<sizeof(b);
                                  });
@@ -1082,6 +1091,7 @@ class Protocol
 //     if(!urls[name]) // only unref once
 //       return;
 
+    m_delete(conf_data, urls[name]->conf);
     m_delete(urls, name);
     if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
       path = values (urls)[0]->path;
@@ -1122,6 +1132,12 @@ class Protocol
 
 #define INIT(X) do{mapping _=(X);string __=_->path;c=_->conf;if(__&&id->adjust_for_config_path) id->adjust_for_config_path(__);if(!c->inited)c->enable_all_modules(); } while(0)
 
+#ifdef DEBUG_URL2CONF
+#define URL2CONF_MSG(X...) report_debug (X)
+#else
+#define URL2CONF_MSG(X...)
+#endif
+
   Configuration find_configuration_for_url( string url, RequestID id, 
                                             int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
@@ -1134,6 +1150,7 @@ class Protocol
     {
       if(!mu) mu=urls[sorted_urls[0]];
       INIT( mu );
+      URL2CONF_MSG ("%O %O cached: %O\n", this_object(), url, c);
       return c;
     }
 
@@ -1146,12 +1163,15 @@ class Protocol
       if( glob( in+"*", url ) )
       {
         INIT( urls[in] );
+	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this_object(), url, c);
 	return c;
       }
     }
     
-    if( no_default )
+    if( no_default ) {
+      URL2CONF_MSG ("%O %O no default\n", this_object(), url);
       return 0;
+    }
     
     // No host matched, or no host header was included in the request.
     // Is the URL in the '*' ports?
@@ -1160,8 +1180,10 @@ class Protocol
       sp_fcfu = i->find_configuration_for_url;
     
     if( sp_fcfu && (sp_fcfu != find_configuration_for_url)
-	&& (i = sp_fcfu( url, id, 1 )))
+	&& (i = sp_fcfu( url, id, 1 ))) {
+      URL2CONF_MSG ("%O %O sp_fcfu: %O\n", this_object(), url, i);
       return i;
+    }
     
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
@@ -1177,6 +1199,7 @@ class Protocol
 	if( choices[ cc->conf ] )
 	{
           INIT( cc );
+	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this_object(), url, c);
 	  return c;
 	}
 
@@ -1186,6 +1209,7 @@ class Protocol
 
       c = ((array)choices)[0];
       if(!c->inited) c->enable_all_modules();
+      URL2CONF_MSG ("%O %O any in choices: %O\n", this_object(), url, c);
       return c;
     }
 
@@ -1194,6 +1218,7 @@ class Protocol
     // so grab the first configuration that is available at all.
     INIT( urls[sorted_urls[0]] );
     id->misc->defaulted=1;
+    URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this_object(), url, c);
     return c;
   }
 
@@ -1720,8 +1745,8 @@ int register_url( string url, Configuration conf )
     required_hosts = ({ 0 });
 
 
-  urls[ url ] = ([ "conf":conf, "path":path ]);
-  urls[ ourl ] = ([ "conf":conf, "path":path ]);
+  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  urls[ ourl ] = urls[url] + ([]);
   sorted_urls += ({ url });
 
   int failures;
