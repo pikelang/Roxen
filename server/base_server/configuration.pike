@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.113 1998/03/26 07:51:40 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.114 1998/03/27 18:28:30 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3179,6 +3179,9 @@ void create(string config)
 
   defvar("anonymous_ftp", 1, "Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
 	 "Allows anonymous ftp.\n");
+
+  defvar("guest_ftp", 0, "Allow FTP guest users", TYPE_FLAG|VAR_MORE,
+	 "Allows FTP guest users.\n");
 
   defvar("shells", "/etc/shells", "Shell database", TYPE_FILE|VAR_MORE,
 	 "File which contains a list of all valid shells.\n"
