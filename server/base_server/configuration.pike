@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.151 1998/08/21 23:00:11 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.152 1998/09/02 19:32:18 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -376,19 +376,24 @@ object get_provider(string provides)
 }
 
 // map the function "fun" over all matching provider modules.
-void map_providers(string provides, string fun, mixed ... args)
+array(mixed) map_providers(string provides, string fun, mixed ... args)
 {
   array (object) prov = get_providers(provides);
   array error;
+  array a=({ });
+  mixed m;
   foreach(prov, object mod) {
     if(!objectp(mod))
       continue;
     if(functionp(mod[fun])) 
-      error = catch(mod[fun](@args));
+      error = catch(m=mod[fun](@args));
     if(arrayp(error))
       werror(describe_backtrace(error + ({ "Error in map_providers:"})));
+    else
+      a+=({ m });
     error = 0;
   }
+  return m;
 }
 
 // map the function "fun" over all matching provider modules and
