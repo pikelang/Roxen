@@ -1,3 +1,26 @@
+Changes since Roxen Challenger 1.2 alpha 14
+-----------------------------------------------
+
+o Fixed some bugs in the top-level Makefiles.
+
+o Added support for SparcWorks-cc.
+
+o Several fixes of old long-time bugs in Pike:
+  o Disappearing call-out bug fixed.
+  o Image color-quantifier rewritten.
+  o GIF-encoder rewritten.
+  o Several threading-bugs fixed.
+  o Some fd-leaks fixed.
+
+o Added some sanity-checks to privs.pike
+
+o Some bug-fixes in the wizard-handling.
+
+o Applied some rather large patches to the obox-module by Francesco Chemolli.
+
+o Changed the default mode of the ftp-protocol module to ASCII.
+
+
 Changes since Roxen Challenger 1.2 alpha 13
 -----------------------------------------------
 
