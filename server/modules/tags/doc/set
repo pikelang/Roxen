@@ -11,6 +11,10 @@
 <dd>Set this variable
 <dt><kbd>value=...</kbd>
 <dd>The exact value to set the variable to
+<dt><kbd>expr=...</kbd>
+<dd>Set the variable to the result of a simple mathematical
+    expression.  Allowed operators are +,-,*,/,%,& and |, only numerical
+    values can be used in the expression.
 <dt><kbd>from=...</kbd>
 <dd>Set the variable to the value of this variable
 <dt><kbd>other=...</kbd>
@@ -20,7 +24,7 @@ and pike-module programmers
 <dt><kbd>define=...</kbd>
 <dd>Use the value of this define.
 <dt><kdb>eval=...</kbd>
-<dd>Use the result of some evaluated HTML
+<dd>Use the result of some evaluated RXML
 </dl>
 If none of the above attributes are specified, the variable is unset.
 If debug is currently on, more specific debug information is provided

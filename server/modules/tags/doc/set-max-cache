@@ -1,0 +1,9 @@
+<b>{set-max-cache time=seconds}</b>: Set the maximum time this
+document can be cached in any ram caches. 
+
+<p>Default is to get this time from the other tags in the document (as
+an example, {if supports=...} sets the time to 0 seconds since the
+result of the test depends on the client used.
+
+<p> You must do this at the end of the document, since many of the
+normal tags will override this value.

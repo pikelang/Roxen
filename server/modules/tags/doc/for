@@ -1,0 +1,8 @@
+<b>Syntax:</b>
+<kbd>
+<b>{for variable=variable-to-set [from=value] to=value [step=value]}rxml-code{/for}</b>
+</kbd>
+<dl>
+A simple RXML loop. <p><b>Example:</b>
+<i>{for variable=i from=10 to=20 step=3}i is {insert variable=i}{br}{/for}</i> results in: <p>
+<for variable=i from=10 to=20 step=3>i is <insert variable=i><br></for>
