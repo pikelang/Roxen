@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.24 2001/01/23 15:27:36 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.25 2001/03/21 07:45:01 hop Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -154,7 +154,7 @@ void create()
 		//({ "search", "compare" }) );
 
 	// LDAP server:
-        defvar ("CI_dir_server","ldap://localhost/??sub?(&(objectclass=person)(uid=%u%))","LDAP server: Location",
+        defvar ("CI_dir_server","ldap://localhost/??sub?(&(objectclass=person)(uid=%u%))","LDAP server location",
                    TYPE_STRING, "LDAP URL based information for connection"
 		   " to directory server which maintains "
                    "the authentication information.<br>"
@@ -163,23 +163,6 @@ void create()
 		   "<i>More detailed info at <a href=\"http://community.roxen.com/developers/idocs/rfc/rfc2255.html\"> RFC 2255</a>.</i><br>"
 		   "Notice:<i>"
 		   " %u% will be replaced by username.</i>");
-
-	// "user" access type
-        defvar ("CI_required_attr","","LDAP server: Required attribute",
-                   TYPE_STRING|VAR_MORE,
-		   "Which attribute must be present to successfully"
-		   " authenticate user (can be empty)"
-		   "<br>Example: <i>memberOf</i>",
-		   0,
-		   access_mode_is_user_or_roaming
-		   );
-        defvar ("CI_required_value","","LDAP server: Required value",
-                   TYPE_STRING|VAR_MORE,
-		   "Which value must be in required attribute (can be empty)" 
-		   "<br>Example: <i>cn=KISS-PEOPLE</i>",
-		   0,
-		   access_mode_is_user_or_roaming
-		   );
 
 	// "guest" access type
         defvar ("CI_dir_pwd","", "LDAP server: Directory user's password",
@@ -468,7 +451,7 @@ array(string) userinfo (string u,mixed p) {
 		get_attrval(tmp, QUERY(CI_default_attrname_gecos), QUERY(CI_default_gecos)),
 		QUERY(CI_default_addname) ? QUERY(CI_default_home)+u : get_attrval(tmp, QUERY(CI_default_attrname_homedir), ""),
 		get_attrval(tmp, QUERY(CI_default_attrname_shell), QUERY(CI_default_shell)),
-		sizeof(QUERY(CI_required_attr)) && !access_mode_is_user() && !zero_type(tmp[QUERY(CI_required_attr)]) ? mkmapping(({QUERY(CI_required_attr)}),tmp[QUERY(CI_required_attr)]) : 0
+		0 // TODO: delete this, as it seems to not be used anymore
 	});
     } else {
 	// Compare method is unimplemented, yet
@@ -609,40 +592,6 @@ array|int auth (array(string) auth, object id)
 	    return ({0,u,p});
 	}
     }
-
-    if(!access_mode_is_user()) {
-	// Check for the Atributes
-	if(sizeof(QUERY(CI_required_attr))) {
-	    attr=QUERY(CI_required_attr);
-	    if (mappingp(dirinfo[7]) && dirinfo[7][attr]) {
-		mixed d;
-		d=dirinfo[7][attr];
-		if(sizeof(QUERY(CI_required_value))) {
-		    mixed temp;
-		    int found=0;
-		    value=QUERY(CI_required_value);
-		    foreach(d, mixed temp) {
-			if (search(temp,value)!=-1)
-			    found=1;
-		    }
-		    if (found) {
-		        DEBUGLOG ("User "+u+" has value "+value+"\n");
-		    } else {
-			werror("LDAPuserauth: User "+u+" has not value "+value+"\n");
-			failed[id->remoteaddr]++;
-			roxen->quick_ip_to_host(id->remoteaddr);
-			return ({0,u,p});
-		    }
-		}
-	    } else {
-		werror("LDAPuserauth: User "+u+" has no attr "+attr+"\n");
-		failed[id->remoteaddr]++;
-		roxen->quick_ip_to_host(id->remoteaddr);
-		return ({0,u,p});
-	    }
-
-	}
-    } // if access_mode_is_user
 
     // Its OK so save them
     if (QUERY(CI_use_cache))
