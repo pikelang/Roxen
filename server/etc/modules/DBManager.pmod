@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.8 2001/06/15 09:58:09 per Exp $
+// $Id: DBManager.pmod,v 1.9 2001/06/16 15:48:11 nilsson Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -236,7 +236,7 @@ mapping(string:mapping(string:int)) get_permission_map( )
       res[n->name] = ([]);
   }
   foreach( indices(res), string q )
-    foreach( roxen->configurations, Configuration c )
+    foreach( roxenp()->configurations, Configuration c )
       if( zero_type( res[q][c->name] ) )
         res[q][c->name] = 0;
   return res;
@@ -472,7 +472,7 @@ CREATE TABLE db_permissions (
     // roxen)
     call_out(
       lambda(){
-	foreach( roxen->configurations, object c )
+	foreach( roxenp()->configurations, object c )
 	{
 	  set_permission( "shared", c, WRITE );
 	  set_permission( "local", c, WRITE );
