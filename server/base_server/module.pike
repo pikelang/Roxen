@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.56 1999/11/22 18:45:07 nilsson Exp $ */
+/* $Id: module.pike,v 1.57 1999/11/29 18:50:04 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -54,9 +54,9 @@ string file_name_and_stuff()
            fix_cvs(this->cvs_version)+"\n":""));
 }
 
-static private object _my_configuration;
+static private Configuration _my_configuration;
 
-object my_configuration()
+Configuration my_configuration()
 {
   if(_my_configuration)
     return _my_configuration;
