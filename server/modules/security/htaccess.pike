@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.79 2001/08/28 15:47:35 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.80 2001/08/29 13:49:32 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -103,7 +103,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
       string from, to;
 
       if(sscanf(r, "%s %s", from, to) < 2)
-	return Roxen.http_redirect(access->redirect,id);
+	return Roxen.http_redirect(r, id);
 
       if( has_value(id->not_query, from) )
 	return Roxen.http_redirect(to,id);
@@ -303,7 +303,7 @@ mapping parse_and_find_htaccess( RequestID id )
   if( !cv ) return 0;
 
   [string file,string htaccess,int mtime] = cv;
-    
+
   cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
 
   array in_cache;
@@ -313,7 +313,12 @@ mapping parse_and_find_htaccess( RequestID id )
   if( !strlen(htaccess) )
     return 0;
 
-  htaccess = replace(htaccess, ([ "\\\n":" ", "\r":"" ]));
+#ifdef HTACCESS_DEBUG
+  report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
+		       "%{    %s\n%}\n", file, mtime, htaccess/"\n"));
+#endif /* HTACCESS_DEBUG */
+    
+  htaccess = replace(htaccess, ([ "\\\r\n":" ", "\\\n":" ", "\r":"" ]));
   foreach(htaccess / "\n"-({""}), string line)
   {
     string cmd, rest;
@@ -344,7 +349,7 @@ mapping parse_and_find_htaccess( RequestID id )
       case "redirect":
       case "redirectperm":
       case "redirectpermanent":
-	access->redirect = rest;
+	access->redirect += ({ rest });
 	break;
 
       case "authuserfile":
@@ -382,8 +387,10 @@ mapping try_htaccess(RequestID id)
   string file;
 
   TRACE_ENTER("htaccess->try_htaccess()", try_htaccess);
-  if( !( access = parse_and_find_htaccess( id )) )
+  if( !( access = parse_and_find_htaccess( id )) ) {
+    TRACE_LEAVE("No htaccess-file.");
     return 0;
+  }
   NOCACHE(); // Since there is a htaccess file we cannot cache at all.
 
   switch(mixed ret = htaccess(access, id))
@@ -430,9 +437,9 @@ mapping last_resort(RequestID id)
 	return Roxen.http_rxml_answer( file, id );
       }
     }
-    return 0;
   }
   TRACE_LEAVE("OK");
+  return 0;
 }
 
 mapping remap_url(RequestID id)
