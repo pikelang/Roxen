@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.576 2000/11/20 13:36:34 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.577 2000/11/21 13:16:01 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2715,10 +2715,7 @@ mapping low_decode_image(string data, void|mixed tocolor)
   return 0;
 }
 
-array(Image.Layer) decode_layers(string data, void|mixed tocolor)
-{
-  return Image.decode_layers( data, tocolor );
-}
+function decode_layers = Image.decode_layers;
 
 mapping low_load_image(string f, RequestID id)
 {
@@ -2756,7 +2753,7 @@ mapping low_load_image(string f, RequestID id)
   return low_decode_image( data );
 }
 
-array(Image.Layer) load_layers(string f, RequestID id)
+array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
 {
   string data;
   Stdio.File file;
@@ -2780,7 +2777,7 @@ array(Image.Layer) load_layers(string f, RequestID id)
   }
   id->misc->_load_image_called = 0;
   if(!data) return 0;
-  return decode_layers( data );
+  return decode_layers( data, opt );
 }
 
 Image.Image load_image(string f, RequestID id)
