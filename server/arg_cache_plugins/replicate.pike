@@ -299,7 +299,7 @@ void create_remote_key(int id, string key,
   // If an index id is specified create a record in the remote
   // database and create local records for index key and value
   // key. Also create a record in the arguments_replicated table.
-  if(index_id >= 0) {
+  if(index_id >= 0 && index_key) {
     create_key(index_id, index_key, server);
     add_replicated_key(cache->create_key(index_key, 0),
 		       cache->create_key(key, 0, index_id),
