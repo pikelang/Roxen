@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.89 2000/12/01 17:07:49 js Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.90 2000/12/04 22:35:23 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -90,7 +90,7 @@ void start(int n, Configuration c)
      <roxen align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&_.path:url;'> &_.name; <font color='black'>/</font></a>
+     <a href='&_.name:url;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -140,8 +140,8 @@ void start(int n, Configuration c)
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align='left'><a href='&_.path:http;'><img src='&_.type-img;' border='0' /></a></td>
-          <td align='left'><a href='&_.path:http;'>&_.name;</a> &nbsp;</td>
+          <td align='left'><a href='&_.name:url;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.name:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>
           <td align='right'>&_.mtime; &nbsp;</td>
@@ -174,10 +174,7 @@ mapping parse_directory(RequestID id)
   //
   // It must end with "/" or "/."
 
-  if(f == "" )
-    return Roxen.http_redirect(id->not_query + "/", id);
-
-  if(f[-1]!='/' && f[-1]!='.')
+  if(f=="" || (f[-1]!='/' && f[-1]!='.'))
     return Roxen.http_redirect(f+"/", id);
 
   if(f[-1]=='.' && !override)
