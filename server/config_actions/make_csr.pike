@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.7 1998/04/21 18:14:06 nisse Exp $
+ * $Id: make_csr.pike,v 1.8 1998/04/22 14:32:19 grubba Exp $
  */
 
 inherit "wizard";
@@ -177,6 +177,7 @@ mixed page_4(object id, object mc)
     return "<font color=red>Could not read private key: "
       + strerror(file->errno()) + "\n</font>";
 
+#if constant(Tools)
   object msg = Tools.PEM.pem_msg()->init(s);
   object part = msg->parts["RSA PRIVATE KEY"];
   
@@ -184,6 +185,14 @@ mixed page_4(object id, object mc)
     return "<font color=red>Key file not formatted properly.\n</font>";
 
   object rsa = RSA.parse_private_key(part->decoded_body());
+#else /* !constant(Tools)*/
+  /* Backward compatibility */
+  mapping m = SSL.pem.parse_pem(s);
+  if (!m || !m["RSA PRIVATE KEY"])
+    return "<font color=red>Key file not formatted properly.\n</font>";
+
+  object rsa = RSA.parse_private_key(m["RSA PRIVATE KEY"]);
+#endif /* constant(Tools) */
   if (!rsa)
     return "<font color=red>Invalid key.\n</font>";
   
@@ -237,9 +246,16 @@ mixed page_4(object id, object mc)
 			     Certificate.build_distinguished_name(@name),
 			     csr_attrs);
 
+#if constant(Tools)
   return "<textarea cols=80 rows=12>"
     + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->der())
     +"</textarea>";
+#else /* !constant(Tools) */
+  /* Backward compatibility */
+  return "<textarea cols=80 rows=12>"
+    + SSL.pem.build_pem("CERTIFICATE REQUEST", csr->der())
+    +"</textarea>";
+#endif /* constant(Tools) */
 }
 
 mixed wizard_done(object id, object mc)
