@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.246 1998/10/12 22:54:16 per Exp $
+ * $Id: roxen.pike,v 1.247 1998/10/15 20:22:11 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.246 1998/10/12 22:54:16 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.247 1998/10/15 20:22:11 grubba Exp $";
 
 
 // Some headerfiles
@@ -58,9 +58,13 @@ int new_id(){ return idcount++; }
 int startpid, roxenpid;
 
 // Locale support
-object locale = Locale.Roxen.svenska;
-#define LOCALE	locale->base_server
-
+object(Locale.Roxen.standard) default_locale = Locale.Roxen.svenska; //standard;
+#ifdef THREADS
+object locale = thread_local();
+#else
+object(Locale.Roxen.standard) locale = default_locale;
+#endif /* THREADS */
+#define LOCALE	LOW_LOCALE->base_server
 
 program Configuration;	/*set in create*/
 
@@ -318,6 +322,7 @@ void handler_thread(int id)
   array (mixed) h, q;
   while(1)
   {
+    SET_LOCALE(default_locale);
     if(q=catch {
       do {
 	if((h=handle_queue->read()) && h[0]) {
@@ -933,7 +938,6 @@ public string full_status()
 }
 
 
-
 int config_ports_changed = 0;
 
 static string MKPORTKEY(array(string) p)
@@ -1090,6 +1094,8 @@ void post_create ()
 
 void create()
 {
+  SET_LOCALE(default_locale);
+
   catch
   {
     module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
@@ -2226,6 +2232,7 @@ void exit_it()
 // Roxen :) It has not changed all that much since Spider 2.0.
 int main(int|void argc, array (string)|void argv)
 {
+  SET_LOCALE(default_locale);
   initiate_languages();
   mixed tmp;
 
@@ -2299,12 +2306,12 @@ int main(int|void argc, array (string)|void argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGINT" }), string sig) {
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTERM" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
-  foreach( ({ "SIGTERM" }), string sig) {
+  foreach( ({ "SIGINT" }), string sig) {
     catch { signal(signum(sig), shutdown); };
   }
 
