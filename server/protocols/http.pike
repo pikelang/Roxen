@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.188 2000/01/20 22:38:28 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.189 2000/01/21 23:05:21 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1608,6 +1608,8 @@ void handle_request( )
 int processed;
 void got_data(mixed fooid, string s)
 {
+  if (mixed err = catch {
+
   int tmp;
 
   MARK_FD("HTTP got data");
@@ -1713,6 +1715,13 @@ void got_data(mixed fooid, string s)
   my_fd->set_read_callback(0);
   processed=1;
   roxen.handle(this_object()->handle_request);
+
+  }) {
+    report_error("Internal server error: " + describe_backtrace(err));
+    my_fd->close();
+    destruct (my_fd);
+    disconnect();
+  }
 }
 
 /* Get a somewhat identical copy of this object, used when doing
