@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.42 2001/06/25 15:09:41 wellhard Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.43 2001/08/10 23:41:28 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -274,7 +274,7 @@ class TagCimgplugin
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
       return ({ res });
     };
-    RXML.parse_error( "Illegal arguments or image" );
+    RXML.parse_error( "Illegal arguments or image\n" );
     return ({});
   }
 }
