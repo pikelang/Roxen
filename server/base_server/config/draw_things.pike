@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.32 1998/08/20 07:37:55 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.33 1998/08/27 14:41:33 wing Exp $";
 
 object (Image.image) load_image(string f)
 {
@@ -57,7 +57,7 @@ object (Image.image) draw_module_header(string name, int type, object font)
   int cxp = 0, first_icon;
   text = font->write(name);
   first_icon=1;PASTE(fade,"");first_icon=1;
-  werror("dmh: 0x%08x\n",type);
+//  werror( sprintf( "dmh: 0x%08x\n", type ) );
   if(type&MODULE_EXPERIMENTAL) {
     PASTE(experimental,"Experimental");
     werror("exp!\n");
