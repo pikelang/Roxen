@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.81 2000/03/17 20:54:07 mast Exp $
+//! $Id: module.pmod,v 1.82 2000/03/18 03:32:31 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -20,39 +20,32 @@ static object Roxen;
 #include <config.h>
 
 #ifdef RXML_OBJ_DEBUG
-#  ifndef OBJ_COUNT_DEBUG
-#    define OBJ_COUNT_DEBUG
-#  endif
-mapping(string:int) object_markers = ([]);
-class ObjectMarker
-{
-  string id;
-  void create (string _id) {werror ("create  %s\n", id = _id); object_markers[id] = 1;}
-  void destroy() {werror ("destroy %s\n", id); m_delete (object_markers, id);}
-}
-#  define MARK_OBJECT(marker) \
-  private ObjectMarker marker = ObjectMarker (sprintf ("%O", this_object()))
-string report_leaks()
-{
-  string res = "leaks: " + sort (indices (object_markers)) * ", " + "\n";
-  object_markers = ([]);
-  return res;
-}
+#  define MARK_OBJECT \
+     Debug.ObjectMarker __object_marker = Debug.ObjectMarker (this_object())
+#  define MARK_OBJECT_ONLY \
+     Debug.ObjectMarker __object_marker = Debug.ObjectMarker (0)
 #else
-#  define MARK_OBJECT(marker)
+#  define MARK_OBJECT
+#  define MARK_OBJECT_ONLY
 #endif
 
 #ifdef OBJ_COUNT_DEBUG
 // This debug mode gives every object a unique number in the
 // _sprintf() string.
-#  define DECLARE_CNT(count) static int count = ++all_constants()->_obj_count
-#  define PAREN_CNT(count) ("(" + (count) + ")")
-#  define COMMA_CNT(count) ("," + (count))
+#  ifndef RXML_OBJ_DEBUG
+#    undef MARK_OBJECT
+#    undef MARK_OBJECT_ONLY
+#    define MARK_OBJECT \
+       mapping __object_marker = (["count": ++all_constants()->_obj_count])
+#    define MARK_OBJECT_ONLY \
+       mapping __object_marker = (["count": ++all_constants()->_obj_count])
+#  endif
+#  define OBJ_COUNT (__object_marker ? "[" + __object_marker->count + "]" : "")
 #else
-#  define DECLARE_CNT(count)
-#  define PAREN_CNT(count) ""
-#  define COMMA_CNT(count) ""
+#  define OBJ_COUNT ""
 #endif
+
+#define HASH_INT2(m, n) (n < 65536 ? (m << 16) + n : sprintf ("%x,%x", m, n))
 
 class Tag
 //! Interface class for the static information about a tag.
@@ -246,14 +239,12 @@ class Tag
     }
   }
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT;
 
   string _sprintf()
   {
-    return "RXML.Tag(" + [string] this_object()->name + COMMA_CNT (__count) + ")";
+    return "RXML.Tag(" + [string] this_object()->name + ")" + OBJ_COUNT;
   }
-
-  MARK_OBJECT (__object_marker);
 }
 
 
@@ -291,6 +282,9 @@ class TagSet
   //! A number that is increased every time something changes in this
   //! object or in some tag set it imports.
 
+  int id_number;
+  //! Unique number identifying this tag set.
+
 #define LOW_TAG_TYPE							\
   string|array|								\
   function(:int(1..1)|string|array)|					\
@@ -316,11 +310,15 @@ class TagSet
   static void create (string _name, void|array(Tag) _tags)
   //!
   {
+    id_number = ++tag_set_count;
     name = _name;
     if (_tags)
       foreach (_tags, Tag tag)
 	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
 	else tags[tag->name] = tag;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
   }
 
   void add_tag (Tag tag)
@@ -545,15 +543,12 @@ class TagSet
     // We don't cache in plugins; do that only at the top level.
   }
 
-  DECLARE_CNT (__count);
-
   string _sprintf()
   {
-    return name ? "RXML.TagSet(" + name + COMMA_CNT (__count) + ")" :
-      "RXML.TagSet" + PAREN_CNT (__count);
+    return sprintf ("RXML.TagSet(%O,%d)%s", name, id_number, OBJ_COUNT);
   }
 
-  MARK_OBJECT (__object_marker);
+  MARK_OBJECT_ONLY;
 }
 
 TagSet empty_tag_set;
@@ -643,10 +638,6 @@ class Context
 
   TagSet tag_set;
   //! The current tag set that will be inherited by subparsers.
-
-  int tag_set_is_local;
-  //! Nonzero if tag_set is a copy local to this context. A local tag
-  //! set that imports the old tag set is created whenever need be.
 
 #ifdef OLD_RXML_COMPAT
   int compatible_scope = 0;
@@ -1014,16 +1005,6 @@ class Context
 #define ENTER_SCOPE(ctx, frame) (frame->vars && ctx->enter_scope (frame))
 #define LEAVE_SCOPE(ctx, frame) (frame->vars && ctx->leave_scope (frame))
 
-  void make_tag_set_local()
-  {
-    if (!tag_set_is_local) {
-      TagSet new_tag_set = TagSet (tag_set->name + " (local)"); // FIXME: Cache this?
-      new_tag_set->imported = ({tag_set});
-      tag_set = new_tag_set;
-      tag_set_is_local = 1;
-    }
-  }
-
   multiset(Tag) runtime_tags = (<>);
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
@@ -1034,6 +1015,9 @@ class Context
   {
     tag_set = _tag_set;
     id = _id;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
   }
 
   mapping(string:mixed)|mapping(object:array) unwind_state;
@@ -1049,11 +1033,9 @@ class Context
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT_ONLY;
 
-  string _sprintf() {return "RXML.Context" + PAREN_CNT (__count);}
-
-  MARK_OBJECT (__object_marker);
+  string _sprintf() {return "RXML.Context" + OBJ_COUNT;}
 
 #ifdef MODULE_DEBUG
 #if constant (thread_create)
@@ -1644,7 +1626,7 @@ class Frame
     Parser subparser;
     mixed piece;
     array exec;
-    int tags_added;		// Flag that we added additional_tags to ctx->tag_set.
+    TagSet orig_tag_set;	// Flags that we added additional_tags to ctx->tag_set.
     //ctx->new_runtime_tags
 
 #define PRE_INIT_ERROR(X) (ctx->frame = this, fatal_error (X))
@@ -1684,7 +1666,7 @@ class Frame
 			"when resuming parse.\n");
 #endif
       object ignored;
-      [ignored, eval_state, iter, raw_content, subparser, piece, exec, tags_added,
+      [ignored, eval_state, iter, raw_content, subparser, piece, exec, orig_tag_set,
        ctx->new_runtime_tags] = state;
       m_delete (ctx->unwind_state, this);
       if (!sizeof (ctx->unwind_state)) ctx->unwind_state = 0;
@@ -1741,11 +1723,15 @@ class Frame
 #endif
 
     if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
-      if (!ctx->tag_set_is_local) ctx->make_tag_set_local();
-      if (search (ctx->tag_set->imported, add_tags) < 0) {
-	ctx->tag_set->imported = ({add_tags}) + ctx->tag_set->imported;
-	tags_added = 1;
+      int hash = HASH_INT2 (ctx->tag_set->id_number, add_tags->id_number);
+      orig_tag_set = ctx->tag_set;
+      TagSet local_ts;
+      if (!(local_ts = local_tag_set_cache[hash])) {
+	local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
+	local_ts->imported = ({add_tags, orig_tag_set});
+	local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
       }
+      ctx->tag_set = local_ts;
     }
 
     if (!result_type) {
@@ -2008,10 +1994,7 @@ class Frame
 	    // the appropriate do_process stuff in this frame in
 	    // either case.
 	    if (err == this) err = 0;
-	    if (tags_added) {
-	      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
-	      tags_added = 0;
-	    }
+	    if (orig_tag_set) ctx->tag_set = orig_tag_set, orig_tag_set = 0;
 	    action = "break";
 	  }
 	  else {
@@ -2030,7 +2013,7 @@ class Frame
 	else action = "break";	// Some other reason - back up to the top.
 
 	ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
-			 exec, tags_added, ctx->new_runtime_tags});
+			 exec, orig_tag_set, ctx->new_runtime_tags});
       }
       else {
 	ctx->handle_exception (err, parser); // Will rethrow unknown errors.
@@ -2054,19 +2037,16 @@ class Frame
       }
     }
 
-    if (tags_added)
-      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
+    if (orig_tag_set) ctx->tag_set = orig_tag_set;
     ctx->frame = up;
   }
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT;
 
   string _sprintf()
   {
-    return "RXML.Frame(" + (tag && [string] tag->name) + COMMA_CNT (__count) + ")";
+    return "RXML.Frame(" + (tag && [string] tag->name) + ")" + OBJ_COUNT;
   }
-
-  MARK_OBJECT (__object_marker);
 }
 
 
@@ -2376,6 +2356,9 @@ class Parser
   {
     context = ctx;
     type = _type;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
   }
 
   // Internals.
@@ -2390,11 +2373,12 @@ class Parser
   mapping _defines;
   // These two are compatibility kludges for use with parse_rxml().
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT_ONLY;
 
-  string _sprintf() {return "RXML.Parser" + PAREN_CNT (__count);}
-
-  MARK_OBJECT (__object_marker);
+  string _sprintf()
+  {
+    return sprintf ("RXML.Parser(%O,%O)%s", context, type, OBJ_COUNT);
+  }
 }
 
 
@@ -2420,12 +2404,17 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
-  optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
-  optional Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
-  static void create (Context ctx, Type type, TagSet _tag_set, mixed... args)
+  optional void reset (Context ctx, Type _type, TagSet tag_set, mixed... args);
+  optional Parser clone (Context ctx, Type _type, TagSet tag_set, mixed... args);
+  static void create (Context ctx, Type _type, TagSet _tag_set, mixed... args)
   {
-    ::create (ctx, type);
+    //::create (ctx, _type);
+    context = ctx;
+    type = _type;
     tag_set = _tag_set;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
   }
   //! In addition to the type, the tag set is part of the static
   //! configuration.
@@ -2449,7 +2438,10 @@ class TagSetParser
 
   int _local_tag_set;
 
-  string _sprintf() {return "RXML.TagSetParser" + PAREN_CNT (__count);}
+  string _sprintf()
+  {
+    return sprintf ("RXML.TagSetParser(%O,%O,%O)%s", context, type, tag_set, OBJ_COUNT);
+  }
 }
 
 class PNone
@@ -2495,7 +2487,7 @@ class PNone
     evalpos = 0;
   }
 
-  string _sprintf() {return "RXML.PNone" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.PNone" + OBJ_COUNT;}
 }
 
 
@@ -2607,7 +2599,7 @@ class Type
       newtype = clone();
       newtype->_parser_prog = newparser;
       newtype->_parser_args = parser_args;
-      if (newparser->tag_set_eval) newtype->_p_cache = ([]);
+      if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
     }
     else {
       if (!_t_obj_cache) _t_obj_cache = ([]);
@@ -2617,7 +2609,7 @@ class Type
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->_parser_prog = newparser;
-	  if (newparser->tag_set_eval) newtype->_p_cache = ([]);
+	  if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
 	}
     }
     return newtype;
@@ -2648,6 +2640,9 @@ class Type
 	  // ^^^ Using interpreter lock to here.
 	  p->data_callback = p->compile = 0;
 	  p->reset (ctx, this_object(), tset, @_parser_args);
+#ifdef RXML_OBJ_DEBUG
+	  p->__object_marker->create (p);
+#endif
 	}
 
 	else
@@ -2658,6 +2653,9 @@ class Type
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
 	    p->context = 0;	// Don't leave the context in the clone master.
+#ifdef RXML_OBJ_DEBUG
+	    p->__object_marker->create (p);
+#endif
 	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
 	  }
       }
@@ -2671,6 +2669,9 @@ class Type
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
 	  p->context = 0;	// Don't leave the context in the clone master.
+#ifdef RXML_OBJ_DEBUG
+	  p->__object_marker->create (p);
+#endif
 	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
 	}
       }
@@ -2686,6 +2687,9 @@ class Type
 	free_parser = p->_next_free;
 	p->data_callback = p->compile = 0;
 	p->reset (ctx, this_object(), @_parser_args);
+#ifdef RXML_OBJ_DEBUG
+	p->__object_marker->create (p);
+#endif
       }
 
       else if (clone_parser)
@@ -2696,6 +2700,9 @@ class Type
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
 	p->context = 0;		// Don't leave the context in the clone master.
+#ifdef RXML_OBJ_DEBUG
+	p->__object_marker->create (p);
+#endif
 	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
       }
     }
@@ -2722,6 +2729,9 @@ class Type
       res = p->eval();
       if (p->reset) {
 	p->context = p->_parent = 0;
+#ifdef RXML_OBJ_DEBUG
+	p->__object_marker->create (p);
+#endif
 	if (_p_cache) {
 	  // Relying on interpreter lock in this block.
 	  PCacheObj pco = _p_cache[tag_set || ctx->tag_set];
@@ -2756,11 +2766,9 @@ class Type
   // Cache used for parsers that depend on the tag set.
   /*private*/ mapping(TagSet:PCacheObj) _p_cache;
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT_ONLY;
 
-  string _sprintf() {return "RXML.Type" + PAREN_CNT (__count);}
-
-  MARK_OBJECT (__object_marker);
+  string _sprintf() {return "RXML.Type" + OBJ_COUNT;}
 }
 
 static class PCacheObj
@@ -2780,7 +2788,7 @@ static class TAny
 
   mixed convert (mixed val) {return val;}
 
-  string _sprintf() {return "RXML.t_any" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_any" + OBJ_COUNT;}
 }
 TAny t_any = TAny();
 
@@ -2804,7 +2812,7 @@ static class TNone
     return Void;
   }
 
-  string _sprintf() {return "RXML.t_none" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_none" + OBJ_COUNT;}
 }
 TNone t_none = TNone();
 
@@ -2813,7 +2821,7 @@ static class TSame
 {
   inherit Type;
   constant name = "same";
-  string _sprintf() {return "RXML.t_same" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_same" + OBJ_COUNT;}
 }
 TSame t_same = TSame();
 
@@ -2833,7 +2841,7 @@ static class TText
       parse_error ("Couldn't convert value to text: " + describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
 }
 TText t_text = TText();
 
@@ -2872,7 +2880,7 @@ static class TXml
     return val;
   }
 
-  string _sprintf() {return "RXML.t_xml" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_xml" + OBJ_COUNT;}
 }
 THtml t_xml = TXml();
 
@@ -2881,7 +2889,7 @@ static class THtml
 {
   inherit TXml;
   constant name = "text/html";
-  string _sprintf() {return "RXML.t_html" + PAREN_CNT (__count);}
+  string _sprintf() {return "RXML.t_html" + OBJ_COUNT;}
 }
 THtml t_html = THtml();
 
@@ -2899,10 +2907,8 @@ class VarRef
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
   void delete (Context ctx) {ctx->delete_var (var, scope);}
   string name() {return scope + "." + var;}
-  DECLARE_CNT (__count);
-  string _sprintf()
-    {return "RXML.VarRef(" + scope + "." + var + COMMA_CNT (__count) + ")";}
-  MARK_OBJECT (__object_marker);
+  MARK_OBJECT;
+  string _sprintf() {return "RXML.VarRef(" + scope + "." + var + ")" + OBJ_COUNT;}
 }
 
 class PCode
@@ -2939,11 +2945,9 @@ class PCode
   PCode|Parser _parent;
   // The parent evaluator if this one is nested.
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT;
 
-  string _sprintf() {return "RXML.PCode" + PAREN_CNT (__count);}
-
-  MARK_OBJECT (__object_marker);
+  string _sprintf() {return "RXML.PCode" + OBJ_COUNT;}
 }
 
 
@@ -3065,11 +3069,9 @@ class ScanStream
     return fin;
   }
 
-  DECLARE_CNT (__count);
+  MARK_OBJECT;
 
-  string _sprintf() {return "RXML.ScanStream" + PAREN_CNT (__count);}
-
-  MARK_OBJECT (__object_marker);
+  string _sprintf() {return "RXML.ScanStream" + OBJ_COUNT;}
 }
 
 private class Link
@@ -3077,6 +3079,13 @@ private class Link
   array data;
   Link next;
 }
+
+
+// Caches and object tracking.
+
+static int tag_set_count = 0;
+
+mapping(int|string:TagSet) local_tag_set_cache = set_weak_flag (([]), 1);
 
 
 // Various internal kludges.
