@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.413 2004/07/01 17:34:39 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.414 2004/07/06 09:06:56 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -729,7 +729,7 @@ void disconnect()
   conf && conf->connection_drop( this );
   if (my_fd) {
     MARK_FD("HTTP my_fd in HTTP disconnected?");
-    my_fd->close();
+    catch(my_fd->close());
     my_fd = 0;
   }
   MERGE_TIMERS(conf);
@@ -751,7 +751,7 @@ void end(int|void keepit)
   cleanup_request_object();
 
   if(keepit
-     && !file->raw
+     && !(file && file->raw)
      && misc->connection != "close"
      && ((prot == "HTTP/1.1") || (misc->connection == "keep-alive"))
      && my_fd
