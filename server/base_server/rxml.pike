@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.283 2001/03/13 10:19:12 kuntri Exp $
+// $Id: rxml.pike,v 1.284 2001/03/14 23:10:10 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -26,9 +26,6 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
 // RXML.run_error().
 {
   RequestID id=RXML.get_context()->id;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
-#endif
   if(id->conf->get_provider("RXMLRunError")) {
     if(!_run_error)
       _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
@@ -39,6 +36,9 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
     _run_error=0;
   NOCACHE();
   id->misc->defines[" _ok"]=0;
+#ifdef MODULE_DEBUG
+  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
+#endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
@@ -51,9 +51,6 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 // RXML.parse_error().
 {
   RequestID id=RXML.get_context()->id;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
-#endif
   if(id->conf->get_provider("RXMLParseError")) {
     if(!_parse_error)
       _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
@@ -64,6 +61,9 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
     _parse_error=0;
   NOCACHE();
   id->misc->defines[" _ok"]=0;
+#ifdef MODULE_DEBUG
+  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
+#endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
