@@ -1,7 +1,7 @@
 This file lists the known compatibility issues between various
 versions of Roxen WebServer.
 
-Between InternetServer 2.5 and Roxen WebServer <= 2.4
+Between ChiliMoon 2.5 and Roxen WebServer <= 2.4
 
  - The font folder has moved from server/nfonts to data/fonts. The font
    directory setting must be updated in all configurations. This can
@@ -51,3 +51,26 @@ Between InternetServer 2.5 and Roxen WebServer <= 2.4
    This can be solved by moving or symlinking the old local themes to
    the new location.
      ln -s local/config_interface/themes local/admin_interface/themes
+
+ - Several /internal-roxen images has been removed. They can be copied
+   from a Roxen WebServer installation (server/roxen-images/) to the
+   ChiliMoon image directory (server/data/images/) if they are needed.
+   The images are:
+     power
+     power-large-black
+     power-large-white
+     power-medium-black
+     power-medium-white
+     power-small-black
+     power-small-white
+     roxen
+     roxen-small
+     webserver
+
+ - Less support for running the server without GIF support in Pike.
+   There's no technical solution but running Pike with GIF support.
+
+ - The Roxen Built in Unicode font is not included. It was never
+   really free, ie. Roxen Internet Software pays money to Bitstream
+   Inc. for every downloaded Roxen WebServer. If you need a good font,
+   buy one.
