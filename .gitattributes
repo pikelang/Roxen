@@ -121,8 +121,6 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/shutdown.pike foreign_ident
 /server/config_actions/threads.pike foreign_ident
 /server/config_actions/upgrade.pike foreign_ident
-/server/etc/config.html foreign_ident
-/server/etc/config.int.html foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/confignode.h foreign_ident
@@ -148,13 +146,10 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/more_extensions/vanilla foreign_ident
 /server/etc/more_extensions/video foreign_ident
 /server/etc/more_extensions/vrml foreign_ident
-/server/etc/restart.html foreign_ident
 /server/etc/roxen_hilfe.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
-/server/etc/shutdown.html foreign_ident
 /server/etc/supports foreign_ident
 /server/etc/upgrade_servers foreign_ident
-/server/etc/welcome.html foreign_ident
 /server/install foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
