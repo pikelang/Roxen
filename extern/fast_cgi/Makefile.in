@@ -3,7 +3,7 @@
 #
 #  Open Market, Inc.
 #
-#  $Id: Makefile.in,v 1.3 1997/10/14 23:10:04 grubba Exp $
+#  $Id: Makefile.in,v 1.4 1997/10/15 02:20:55 grubba Exp $
 #
 
 @SET_MAKE@
@@ -14,8 +14,8 @@ LDFLAGS=@LDFLAGS@
 SHELL=/bin/sh
 
 all:
-	(cd libfcgi; $(MAKE) all "CC=$(CC)" "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
-	(cd cgi-fcgi; $(MAKE) all "CC=$(CC)" "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
+	(cd libfcgi; $(MAKE) all "CC=$(CC)" "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
+	(cd cgi-fcgi; $(MAKE) all "CC=$(CC)" "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
 
 reconfig: clean
 	uname -rs >config.uname
@@ -25,7 +25,7 @@ clean:
 	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
 	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
 	rm -f config.cache config.log config.status config.uname
-	(cd libfcgi; $(MAKE) clean "CC=$(CC)" "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
-	(cd cgi-fcgi; $(MAKE) clean "CC=$(CC)" "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
+	(cd libfcgi; $(MAKE) clean "CC=$(CC)" "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
+	(cd cgi-fcgi; $(MAKE) clean "CC=$(CC)" "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)")
 
 # ----------------------------------------------------------------------------
