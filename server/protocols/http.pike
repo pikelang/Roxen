@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.134 1999/05/23 23:19:24 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.135 1999/05/23 23:31:21 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -750,8 +750,6 @@ void end(string|void s, int|void keepit)
     if(s) leftovers += s;
     o->chain(fd,conf,leftovers);
     disconnect();
-    /* Make sure we don't leave any circular references... */
-    file = 0;
     return;
   }
 #endif
@@ -770,8 +768,6 @@ void end(string|void s, int|void keepit)
     my_fd = 0;
   }
   disconnect();  
-  /* Make sure we don't leave any circular references... */
-  file = 0;
 }
 
 static void do_timeout()
