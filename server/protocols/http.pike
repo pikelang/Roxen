@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.128 1999/03/18 20:35:40 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.129 1999/04/16 15:28:04 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -80,7 +80,6 @@ array  (string) referer;
 mapping file;
 
 object my_fd; /* The client. */
-object pipe;
 
 // string range;
 string prot;
@@ -104,6 +103,50 @@ string since;
 
 void end(string|void a,int|void b);
 
+#if constant(Stdio.sendfile)
+object pipe;	// Always 0.
+
+static array(string) result_headers = ({});
+static object result_file;
+static int result_f_len;
+
+void send(string|object what, int|void len)
+{
+  if (stringp(what)) {
+    result_headers += ({ what });
+  } else {
+    if (result_file) {
+      error("HTTP: Multiple result files are not supported!\n");
+    }
+    result_file = what;
+    result_f_len = len;
+  }
+}
+
+static void send_done(int bytes)
+{
+  file->len = bytes;
+  do_log();
+}
+
+static void start_sender()
+{
+  array(string) headers = result_headers;
+  object file = result_file;
+  int len = result_f_len;
+
+  result_headers = 0;
+  result_file = 0;
+  result_f_len = 0;
+
+  // FIXME: Timeout handling!
+
+  Stdio.sendfile(headers, file, -1, len, 0, my_fd, send_done);
+}
+
+#else /* !constant(Stdio.sendfile) */
+object pipe;
+
 private void setup_pipe()
 {
   if(!my_fd) 
@@ -126,6 +169,23 @@ void send(string|object what, int|void len)
   if(stringp(what))  pipe->write(what);
   else               pipe->input(what,len);
 }
+
+static void start_sender()
+{
+  if (pipe) {
+    MARK_FD("HTTP really handled, piping "+not_query);
+#ifdef FD_DEBUG
+    call_out(timer, 30, _time(1)); // Update FD with time...
+#endif
+    pipe->set_done_callback( do_log );
+    pipe->output(my_fd);
+  } else {
+    MARK_FD("HTTP really handled, pipe done");
+    do_log();
+  }
+}
+
+#endif /* constant(Stdio.sendfile) */
 
 string scan_for_query( string f )
 {
@@ -233,6 +293,8 @@ private int parse_got(string s)
   string a, b, linename, contents;
   int config_in_url;
 
+  DPERROR(sprintf("HTTP: parse_got(%O)", s));
+
   raw = s;
 
   if (!line) {
@@ -245,6 +307,9 @@ private int parse_got(string s)
 
     if ((< -1, 0 >)[hstart]) {
       // Not enough data, or malformed request.
+      DPERROR(sprintf("HTTP: parse_got(%O): "
+		      "Not enough data, or malformed request.",
+		      s));
       return ([ -1:0, 0:2 ])[hstart];
     }
 
@@ -293,6 +358,7 @@ private int parse_got(string s)
 	int end;
 	if ((end = search(s, "\r\n\r\n")) == -1) {
 	  // No, we need more data.
+	  DPERROR("HTTP: parse_got(): Request is not complete.");
 	  return 0;
 	}
 	data = s[end+4..];
@@ -314,6 +380,7 @@ private int parse_got(string s)
     int end;
     if ((end = search(s, "\r\n\r\n")) == -1) {
       // No, we still need more data.
+      DPERROR("HTTP: parse_got(): Request is not complete.");
       return 0;
     }
     data = s[end+4..];
@@ -342,8 +409,9 @@ private int parse_got(string s)
   {
     if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
     if(!remoteaddr) {
+      DPERROR("HTTP: parse_request(): No remote address.");
       end();
-      return 0;
+      return -2;
     }
   }
 
@@ -404,8 +472,10 @@ private int parse_got(string s)
 	      wanted_data=l;
 	      have_data=strlen(data);
 
-	      if(strlen(data) <= l) // \r are included. 
+	      if(strlen(data) <= l) { // \r are included. 
+		DPERROR("HTTP: parse_request(): More data needed in POST.");
 		return 0;
+	      }
 
 	      leftovers = data[l+1..];
 	      data = data[..l];
@@ -609,6 +679,7 @@ private int parse_got(string s)
   }
 
   if(config_in_url) {
+    DPERROR("HTTP: parse_got(): config_in_url");
     return really_set_config( mod_config );
   }
   if(!supports->cookies)
@@ -1019,6 +1090,8 @@ void send_result(mapping|void result)
     file = result;
   }
 
+  DPERROR(sprintf("HTTP: send_result(%O)", file));
+
   if(!mappingp(file))
   {
     if(misc->error_code)
@@ -1160,23 +1233,16 @@ void send_result(mapping|void result)
       send(file->file, file->len);
   } else
     file->len = 1; // Keep those alive, please...
-  if (pipe) {
-    MARK_FD("HTTP really handled, piping "+not_query);
-#ifdef FD_DEBUG
-    call_out(timer, 30, _time(1)); // Update FD with time...
-#endif
-    pipe->set_done_callback( do_log );
-    pipe->output(my_fd);
-  } else {
-    MARK_FD("HTTP really handled, pipe done");
-    do_log();
-  }
+
+  start_sender();
 }
 
 
 // Execute the request
 void handle_request( )
 {
+  DPERROR("HTTP: handle_request()");
+
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -1250,6 +1316,8 @@ void got_data(mixed fooid, string s)
     {
       cache += ({ s });
       have_data += strlen(s);
+
+      DPERROR("HTTP: We want more data.");
       return;
     }
   }
@@ -1267,13 +1335,16 @@ void got_data(mixed fooid, string s)
    case 0:
     if(this_object()) 
       cache = ({ s });		// More on the way.
+    DPERROR("HTTP: Request needs more data.");
     return;
     
    case 1:
+    DPERROR("HTTP: Stupid Client Error");
     end(prot+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
     return;			// Stupid request.
     
    case 2:
+    DPERROR("HTTP: Done");
     end();
     return;
   }
@@ -1283,6 +1354,8 @@ void got_data(mixed fooid, string s)
     conf->received += strlen(s);
     conf->requests++;
   }
+
+  DPERROR("HTTP: Calling roxen.handle().");
 
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 
