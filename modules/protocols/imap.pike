@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.34 1999/02/05 20:54:28 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.35 1999/02/06 23:01:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -735,6 +735,46 @@ class imap_mailbox
 
     return res;
   }
+
+  object uid_to_local(object uid_set)
+  {
+    /* FIXME: Some of this stuff should probably be in types.imap_set. */
+
+    array all_uids = indices(uid_lookup);
+
+    // Not terribly efficient, but...
+    // Doesn't handle overlapping ranges.
+    object local_set = imap_set(({}));
+    foreach(uid_set->items, string|array(int|string)|int item) {
+      if (intp(item)) {
+	// Specific UID
+	if (uid_lookup[item]) {
+	  local_set->items += ({ uid_lookup[uid] });
+	}
+      } else if (item == "*") {
+	// Matches all UID's
+	local_set->items = values(uid_lookup);
+	sort(indices(uid_lookup), local_set->items);
+	return(local_set);
+      } else if (arrayp(item)) {
+	if (item[1] == "*") {
+	  // No upper limit.
+	  foreach(all_uids, int uid) {
+	    if (uid >= item[0]) {
+	      local_set->items += ({ uid_lookup[uid] });
+	    }
+	  }
+	} else {
+	  foreach(all_uids, int uid) {
+	    if ((uid >= item[0]) && (uid <= item[1])) {
+	      local_set->items += ({ uid_lookup[uid] });
+	    }
+	  }
+	}
+      }
+    }
+    return(local_set);
+  }
 }
 
 // The IMAP protocol uses this object to operate on the mailboxes */
@@ -857,6 +897,11 @@ class backend
   {
     return session->mailbox->fetch(message_set, fetch_attrs)
       + (session->mailbox->update() || ({}));
+  }
+
+  object uid_to_local(object uid_set)
+  {
+    return session->mailbox->uid_to_local(uid_set);
   }
 }
 
