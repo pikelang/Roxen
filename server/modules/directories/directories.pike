@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.43 2000/01/27 08:22:39 jhs Exp $";
+string cvs_version = "$Id: directories.pike,v 1.44 2000/01/27 08:33:05 jhs Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -68,8 +68,9 @@ void create()
 	 "Include readme files", TYPE_STRING_LIST,
 	 "Include one of these readme files in directory listings");
 
-  defvar("nobrowse", ({".www_not_browsable",".nodiraccess"}), "List prevention files",
-	 TYPE_STRING_LIST, "All directories containing any of these files will not be "
+  defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
+	 "List prevention files", TYPE_STRING_LIST | VAR_MORE,
+	 "All directories containing any of these files will not be "
 	 "browsable.");
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
