@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.197 2002/12/16 14:37:52 grubba Exp $
+# $Id: start,v 1.198 2003/01/13 15:14:08 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -133,6 +133,7 @@ if uname | grep 'Linux' >/dev/null 2>&1; then
 fi
 
 gdb=no
+truss=
 
 remove_dumped_passed=no
 remove_old_dot_o_files () {
@@ -178,10 +179,13 @@ parse_args() {
    ARGS="$ARGS $1"
   ;;
   --truss)
-     pike="truss $pike"
+     truss="truss"
    ;;
   --truss-c)
-     pike="truss -c $pike"
+     truss="truss -c"
+   ;;
+  --strace)
+     truss="strace"
    ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
@@ -710,17 +714,17 @@ start_roxen() {
     else
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
-	  eval "fork_roxen \"$pike\" $args 2>&1"
+	  eval "fork_roxen $truss \"$pike\" $args 2>&1"
 	  wait $ROXEN_PID 2>/dev/null 1>&2
 	  exitcode="$?"
 	  ROXEN_PID=""
 	else
-	  eval "\"$pike\" $args" 2>&1
+	  eval "$truss \"$pike\" $args" 2>&1
 	  exitcode="$?"
 	fi
       else
         trap exit_fail 1
-        eval "(eval \"\\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
+	eval "(eval \"$truss \\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
         exit $exitcode
       fi
     fi
