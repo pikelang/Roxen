@@ -1,12 +1,13 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.6 2001/08/09 16:23:45 tomas Exp $
+// $Id: cmdline.cpp,v 1.7 2001/08/14 10:00:00 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "startdll.h"
 #include "cmdline.h"
+#include "roxen.h"
 #include "enumproc.h"
 
 #ifdef _DEBUG
@@ -129,7 +130,7 @@ BOOL CArgList::ReSize(int diff)
 }
 
 
-BOOL CArgList::Exists(char *item)
+BOOL CArgList::Exists(const char *item)
 {
   int ret = FALSE;
   int i;
@@ -147,7 +148,7 @@ BOOL CArgList::Exists(char *item)
 }
 
 
-BOOL CArgList::Add(char *item)
+BOOL CArgList::Add(const char *item)
 {
   ReSize(1);
 
@@ -161,7 +162,7 @@ BOOL CArgList::Add(char *item)
 }
 
 
-BOOL CArgList::AddIfNew(char *item)
+BOOL CArgList::AddIfNew(const char *item)
 {
   if (Exists(item))
     return TRUE;
@@ -170,7 +171,7 @@ BOOL CArgList::AddIfNew(char *item)
 }
 
 
-BOOL CArgList::Remove(char *item)
+BOOL CArgList::Remove(const char *item)
 {
   int ret = FALSE;
   int i;
@@ -208,6 +209,7 @@ BOOL CArgList::Remove(char *item)
 //////////////////////////////////////////////////////////////////////
 
 CCmdLine::CCmdLine()
+: m_SelfTestDir("etc\\test")
 {
   m_bPreloaded  = FALSE;
 
@@ -230,6 +232,36 @@ CCmdLine::~CCmdLine()
 }
 
 
+/* Check if the string s[0..len[ matches the glob m[0..mlen[ */
+static BOOL does_match(char *s, char *p)
+{
+  for (; *p; p++)
+  {
+    switch (*p)
+    {
+    case '?':
+      if(!*s++) return 0;
+      break;
+      
+    case '*': 
+      p++;
+      if (!*p) return 1;	//* slut /
+      
+      for (; *s; s++)
+        if (does_match(s, p))
+          return 1;
+        
+        return 0;
+        
+    default: 
+      if(!*s ||
+        *p != *s) return 0;
+      s++;
+    }
+  }
+
+  return *s==0;
+}
 
 ////////////////////////
 //
@@ -244,16 +276,7 @@ CCmdLine::~CCmdLine()
 BOOL CCmdLine::Match(char *s, char *pattern, char *delim, char **value)
 {
   BOOL ret = FALSE;
-  int len = strlen(pattern);
-  int cmp;
-
-  // check for trailing *
-  if (pattern[len-1] == '*')
-    cmp = strncmp(s, pattern, len-1);
-  else
-    cmp = strcmp(s, pattern);
-
-  if (cmp == 0)
+  if (does_match(s, pattern))
   {
     if (delim && value)
     {
@@ -397,21 +420,18 @@ void CCmdLine::PrintHelp()
     "      .B--self-testB.:                Runs a testsuite.",
     "      .B--self-test-verboseB.:        Runs a testsuite, report all tests.",
 //    "      .B--self-test-quietB.:          Runs a testsuite, only report errors.",
-    "                                  .BNOTE:B. You must manually shutdown any",
-    "                                  running mysql process both before and",
-    "                                  after these commands!",
+    "      .B--self-test-dir=DIRB.:        Use this self test directory instead of",
+    "                                  the default .Betc/testB. directory.",
     "",
     "      .B--onceB.:                     Run the server only once, in the foreground.",
     "                                  This is very useful when debugging.",
     "                                  Implies --module-debug.",
     "",
-/*
     "      .B--keep-mysqlB.:               Don't shut down MySQL process when exiting",
     "                                  the start script. Useful during development",
     "                                  or any other scenario where the start script",
     "                                  is frequently terminated.",
     "",
-*/
 /*
     "      .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..",
     "",
@@ -1101,7 +1121,6 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   }
 
   //--debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
-  // TODO: --*-debug*
   //  # Argument passed along to Pike.
   //  ARGS="$ARGS $1"
   if (Match(*argv, "--debug-without=*", NULL, NULL) ||
@@ -1111,7 +1130,8 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "-l*", NULL, NULL) ||
       Match(*argv, "-w*", NULL, NULL) ||
       Match(*argv, "-p*", NULL, NULL) ||
-      Match(*argv, "-a*", NULL, NULL) )
+      Match(*argv, "-a*", NULL, NULL) ||
+      Match(*argv, "--*-debug*", NULL, NULL) )
   {
     m_saPikeArgs.Add(*argv);
     type = eArgPike;
@@ -1186,6 +1206,22 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   {
     m_saRoxenArgs.Add("--tests-verbose=1");
     type = eArgSelfTest;
+    return 1;
+  }
+
+  //--self-test-dir=*)
+  //  SELF_TEST_DIR=`echo $1 | sed -e's/--self-test-dir=//'`
+  if (Match(*argv, "--self-test-dir=*", "=", &value))
+  {
+    m_SelfTestDir.resize(strlen(value));
+    for (int i=0; i<strlen(value); i++)
+    {
+      if (value[i] == '/')
+        m_SelfTestDir[i] = '\\';
+      else
+        m_SelfTestDir[i] = value[i];
+    }
+    type = eArgStart;
     return 1;
   }
 
@@ -1310,26 +1346,50 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       break;
 
     case eArgSelfTest:
-      // Make sure that mysql is not running
-      KillMySql();
+      {
+        // Make sure that mysql is not running
+        KillMySql();
 
-      //DEFINES="-DRUN_SELF_TEST $DEFINES"
-      //rm -rf $VARDIR/test_config*
-      //cp -R etc/test/config $VARDIR/test_config
-      //cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
-      //DIR=$VARDIR/test_config
-      //once=1
-      //remove_dumped=1
-      m_saPikeArgs.Add("-DRUN_SELF_TEST");
-      SetEnvironmentVariable("COPYCMD", "/Y");
-      system("rmdir /Q /S ..\\var\\test_config >NUL:");
-      system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q >NUL:");
-      system("copy etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
+        std::string selfTestDirUnx;
+        selfTestDirUnx.resize(m_SelfTestDir.length());
+        for (int i=0; i<m_SelfTestDir.length(); i++)
+        {
+          if (m_SelfTestDir[i] == '\\')
+            selfTestDirUnx[i] = '/';
+          else
+            selfTestDirUnx[i] = m_SelfTestDir[i];
+        }
+        
+        //DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
+        //rm -rf $VARDIR/test_config*
+        //cp -R etc/test/config $VARDIR/test_config
+        //cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
+        //DIR=$VARDIR/test_config
+        //once=1
+        //remove_dumped=1
+        m_saPikeArgs.Add("-DRUN_SELF_TEST");
+        m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
 
-      m_bOnce = TRUE;
-      m_saRoxenArgs.Add("--config-dir=../var/test_config");
-      m_saRoxenArgs.Add("--remove-dumped");
+        m_bOnce = TRUE;
+        m_saRoxenArgs.Add("--config-dir=../var/test_config");
+        m_saRoxenArgs.Add("--remove-dumped");
+        
+        SetEnvironmentVariable("COPYCMD", "/Y");
+        system("rmdir /Q /S ..\\var\\test_config >NUL:");
+        //system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q >NUL:");
+        //system("copy etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
+        system(("xcopy " + m_SelfTestDir + "\\config ..\\var\\test_config\\ /E /Q >NUL:").c_str());
+        
 
+        std::string setupCmd = m_SelfTestDir + "\\scripts\\setup.pike";
+        DWORD attr = GetFileAttributes(setupCmd.c_str());
+        if (attr != -1 && !(attr & FILE_ATTRIBUTE_DIRECTORY))
+        {
+          setupCmd += " " + selfTestDirUnx + " ../var";
+          CRoxen::RunPike(setupCmd.c_str());
+        }
+        
+      }
       //OutputLineFmt(hOut, ".BSelfTest argument: %sB.", argv[i]);
       break;
 

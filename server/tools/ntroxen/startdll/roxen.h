@@ -1,6 +1,6 @@
 // roxen.h: interface for the CRoxen class.
 //
-// $Id: roxen.h,v 1.1 2001/05/29 14:35:41 tomas Exp $
+// $Id: roxen.h,v 1.2 2001/08/14 10:00:01 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -28,15 +28,16 @@ public:
 
   static void PrintVersion();
 
+  static BOOL RunPike(const char *cmdline, BOOL wait=TRUE);
+
   //impl
 private:
-  void ErrorMsg (int show_last_err, const TCHAR *fmt, ...);
-  std::string FindPike();
+  static void ErrorMsg (int show_last_err, const TCHAR *fmt, ...);
+  static std::string FindPike();
   BOOL CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, char *key);
 
   //data
 private:
-  int m_initDone;
   char key[9];
   int console_mode;  
   HANDLE hProcess;

@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.5 2001/08/09 16:23:46 tomas Exp $
+// $Id: cmdline.h,v 1.6 2001/08/14 10:00:00 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,6 +10,8 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+
+#include <string>
 
 ////////////////////////
 //
@@ -22,10 +24,10 @@ public:
   CArgList();
   virtual ~CArgList();
 
-  BOOL Add(char *item);
-  BOOL AddIfNew(char *item);
-  BOOL Remove(char *item);
-  BOOL Exists(char *item);
+  BOOL Add(const char *item);
+  BOOL AddIfNew(const char *item);
+  BOOL Remove(const char *item);
+  BOOL Exists(const char *item);
 
   tData * GetList() { return m_pData; }
 
@@ -124,6 +126,8 @@ private:
 
   int  m_iVerbose;
   int  m_iDebug;
+
+  std::string m_SelfTestDir;
 };
 
 #endif // !defined(AFX_CMDLINE_H__F6894D74_C532_40F7_8873_2A23BACE2581__INCLUDED_)

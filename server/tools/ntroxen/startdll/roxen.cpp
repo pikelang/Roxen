@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.4 2001/08/09 16:23:47 tomas Exp $
+// $Id: roxen.cpp,v 1.5 2001/08/14 10:00:00 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,6 @@ char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 
 CRoxen::CRoxen(int console)
 {
-  m_initDone = 0;
   console_mode = console;
   hProcess = 0;
 }
@@ -143,6 +142,7 @@ std::string CRoxen::FindPike()
   TCHAR cwd[_MAX_PATH];
   cwd[0] = 0;
   _tgetcwd (cwd, _MAX_PATH);
+  static int m_initDone = 0;
 
   if (!(fd = fopen ("pikelocation.txt", "r"))) {
     if (!m_initDone) {
@@ -244,7 +244,7 @@ BOOL CRoxen::CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, ch
   p += sprintf(p, " ntroxenloader.pike +../logs/%hs.run", key);
 
   // Insert silent flag if required (must be first argument after +/../xxxxx.run)
-  if (_Module.m_bService || !cmdline.IsOnce())
+  if (_Module.m_bService || cmdline.GetVerbose() == 0)
     p += sprintf(p, " -silent");
 
   // Insert roxen args
@@ -364,6 +364,8 @@ int CRoxen::Start(int first_time)
   GetStartupInfo(&info);
   /*   info.wShowWindow=SW_HIDE; */
   info.dwFlags|=STARTF_USESHOWWINDOW;
+  if (hProcess != 0)
+    CloseHandle(hProcess);
   hProcess = 0;
   ret=CreateProcess(NULL,
     cmd,
@@ -381,6 +383,7 @@ int CRoxen::Start(int first_time)
     return FALSE;
   }
   
+  CloseHandle(proc.hThread);
   hProcess=proc.hProcess;
   return TRUE;
 }
@@ -404,5 +407,62 @@ int CRoxen::Stop(BOOL write_stop_file)
     fclose(f);
   }
 
+  return TRUE;
+}
+
+BOOL CRoxen::RunPike(const char *cmdline, BOOL wait /*=TRUE*/)
+{
+  char cmd[4000];
+  char *p = cmd;
+  int ret;
+
+  std::string pikeloc = FindPike();
+
+  // Copy path to pike
+  if (pikeloc[0] == '"')
+  {
+    strcpy(p, pikeloc.c_str());
+    p += pikeloc.length();
+  }
+  else
+    p += sprintf(p, "\"%s\"", pikeloc.c_str());
+
+  // Add on the pike command line
+  p += sprintf(p, " %s", cmdline);
+
+
+  ////////////
+  // Run pike
+  TCHAR cwd[_MAX_PATH];
+  cwd[0] = 0;
+  _tgetcwd (cwd, _MAX_PATH);
+  
+  STARTUPINFO info;
+  PROCESS_INFORMATION proc;
+  GetStartupInfo(&info);
+  /*   info.wShowWindow=SW_HIDE; */
+  info.dwFlags|=STARTF_USESHOWWINDOW;
+  ret=CreateProcess(NULL,
+    cmd,
+    NULL,  /* process security attribute */
+    NULL,  /* thread security attribute */
+    1,     /* inherithandles */
+    0,     /* create flags */
+    NULL,   /* environment */
+    cwd,   /* current dir */
+    &info,
+    &proc);
+  if(!ret)
+  {
+    ErrorMsg (1, TEXT("Error running the command '%s'"), cmd);
+    return FALSE;
+  }
+
+  if (wait)
+    WaitForSingleObject(proc.hProcess, INFINITE);
+
+  CloseHandle(proc.hThread);
+  CloseHandle(proc.hProcess);
+  
   return TRUE;
 }
