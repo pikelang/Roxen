@@ -14,32 +14,18 @@ string host_ip_no;
 #define ZREFRESH "Zone Refresh Time"
 #define ZRETRY   "Zone Failed-Refresh Retry Time"
 #define ZEXPIRE  "Zone Expire Time"
-#define DBHOST   "Database Server Machine"
-#define DBNAME   "Database Name"
-#define DBUSER   "Database User Name"
-#define DBPASS   "Database User Password"
+#define DBURL    "Database URL"
 
 void create()
 { defvar("DNS File", "/tmp/test-dns-hosts",
-         "DNS File", TYPE_TEXT_FIELD,
+         "DNS File", TYPE_STRING,
          "The name of the file where the DNS server (typically "
          "<TT>in.named</TT>) expects to find the DNS zone master data.");
 
-  defvar(DBHOST, "kopparorm.idonex.se",
-         DBHOST, TYPE_TEXT_FIELD,
-         "The name of the machine running the SQL database server.");
+  defvar(DBURL, "mysql://auto:site@kopparorm.idonex.se/autosite",
+         DBURL, TYPE_STRING,
+         "The SQL database URL.");
 
-  defvar(DBNAME, "autosite",
-         DBNAME, TYPE_TEXT_FIELD,
-         "The name of the database in the SQL database server.");
-
-  defvar(DBUSER, "auto",
-         DBUSER, TYPE_TEXT_FIELD,
-         "The user name used to login on the SQL database server.");
-
-  defvar(DBPASS, "site",
-         DBPASS, TYPE_TEXT_FIELD,
-         "The password used to login on the SQL database server.");
 
   defvar(ZTTL, "1 day",
          ZTTL, TYPE_MULTIPLE_STRING,
@@ -113,7 +99,7 @@ void do_update()
     dns_update_status = "<P><B>DNS Update</B>: pending. Database presently unavailable.";
     return;
   }
-  string fname = query("DNS File Name");
+  string fname = query("DNS File");
   object data  = AutoSiteDB->big_query("SELECT domain_address FROM domains");
   object file  = Stdio.FILE("/tmp/new_dns_zone", "wt");
   object row;
@@ -175,19 +161,8 @@ void start()
      host_ip_no = gethostbyname(gethostname())[1][0];
   
   if (! AutoSiteDB)
-  { string dbhost = query(DBHOST);
-    string dbname = query(DBNAME);
-    string user   = query(DBUSER);
-    string passwd = query(DBPASS);
-    string dburl  = "mysql://";
-    if (user)
-    { dburl += user;
-      if (passwd) dburl += ":" + passwd;
-      dburl += "@";
-    }
-    dburl += dbhost + "/" + dbname;
-     
-    AutoSiteDB = Sql.sql(dburl);
+  {
+    AutoSiteDB = Sql.sql(query(DBURL));
 
     if (AutoSiteDB)
     { database_status = "connected (" + AutoSiteDB->host_info() + ")";
