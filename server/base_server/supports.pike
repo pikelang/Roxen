@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.14 2000/03/06 23:45:25 nilsson Exp $
+// $Id: supports.pike,v 1.15 2000/03/07 02:38:35 nilsson Exp $
 
 #pragma strict_types
 
@@ -114,7 +114,7 @@ public void initiate_supports()
   supports = ([ 0:({ }) ]);
   default_supports = (< >);
   default_client_var = ([ ]);
-  parse_supports_string(([function(string:string)]roxenp()->query)("Supports"), 0, ([]) );
+  parse_supports_string([string]roxenp()->query("Supports"), 0, ([]) );
 }
 
 private array(multiset(string)|mapping(string:string)) lookup_supports(string from)
@@ -249,9 +249,9 @@ void connected_to_roxen_com(object(Stdio.File) port)
 #endif
   _new_supports = ({});
   port->set_id(port);
-  string v = ([function(void:string)]roxenp()->version)();
+  string v = roxenp()->version();
   if (v != roxenp()->real_version) {
-    v = v + " (" + [string]roxenp()->real_version + ")";
+    v = v + " (" + roxenp()->real_version + ")";
   }
   port->write("GET /supports HTTP/1.0\r\n"
 	      "User-Agent: " + v + "\r\n"
@@ -267,9 +267,9 @@ public void update_supports_from_roxen_com()
 {
   // FIXME:
   // This code has a race-condition, but it only occurs once a week...
-  if(([function(string:int)]roxenp()->query)("next_supports_update") <= time())
+  if([int]roxenp()->query("next_supports_update") <= time())
   {
-    if(([function(string:int(0..1))]roxenp()->query)("AutoUpdate"))
+    if([int(0..1)]roxenp()->query("AutoUpdate"))
     {
       async_connect("www.roxen.com.", 80, connected_to_roxen_com);
 #ifdef DEBUG
@@ -279,9 +279,9 @@ public void update_supports_from_roxen_com()
     remove_call_out( update_supports_from_roxen_com );
 
   // Check again in one week.
-    ([mapping(string:array(int|string))]roxenp()->variables)["next_supports_update"][VAR_VALUE]=3600*24*7 + time(1);
-    ([function(string, mapping, int, int:void)]roxenp()->store)("Variables", [mapping]roxenp()->variables, 0, 0);
+    ([array(string|int)]roxenp()->variables["next_supports_update"])[VAR_VALUE]=3600*24*7 + time(1);
+    roxenp()->store("Variables", roxenp()->variables, 0, 0);
   }
   call_out(update_supports_from_roxen_com,
-	   ([function(string:int)]roxenp()->query)("next_supports_update")-time(1));
+	   [int]roxenp()->query("next_supports_update")-time(1));
 }
