@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.335 2000/08/13 13:54:21 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.336 2000/08/14 18:57:04 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -837,16 +837,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
   //    ~0  OK -- Test passed.
 
   if(!(seclevels = misc_cache[ a ])) {
-    object mod;
-    if (objectp (a))
-      if (a->query_seclevels) mod = a;
-      else
-	// It's probably an RXML.Tag object, and in that case we
-	// assume that the parent object is the module. FIXME: That's
-	// not necessarily true.
-	catch (mod = function_object (object_program (a)));
-    else
-      catch (mod = function_object (a));
+    object mod = Roxen.get_owning_module (a);
     if(mod && mod->query_seclevels)
       misc_cache[ a ] = seclevels = ({
 	mod->query_seclevels(),
@@ -1097,25 +1088,25 @@ string examine_return_mapping(mapping m)
       case 302: // redirect
 	 if (m->extra_heads &&
 	     (m->extra_heads->location))
-	   res = sprintf("Returned redirect to %s\n", m->extra_heads->location);
+	   res = sprintf("Returned redirect to %s ", m->extra_heads->location);
 	 else
-	   res = "Returned redirect, but no location header\n";
+	   res = "Returned redirect, but no location header. ";
 	 break;
 
       case 401:
 	 if (m->extra_heads["www-authenticate"])
-	   res = sprintf("Returned authentication failed: %s\n",
+	   res = sprintf("Returned authentication failed: %s ",
 			 m->extra_heads["www-authenticate"]);
 	 else
-	   res = "Returned authentication failed.\n";
+	   res = "Returned authentication failed. ";
 	 break;
 
       case 200:
-	 res = "Returned ok\n";
+	 res = "Returned ok. ";
 	 break;
 
       default:
-	 res = sprintf("Returned %d.\n", m->error);
+	 res = sprintf("Returned %d. ", m->error);
    }
 
    if (!zero_type(m->len))
@@ -1130,14 +1121,14 @@ string examine_return_mapping(mapping m)
 	 array a=m->file->stat();
 	 res += sprintf("%d bytes ", a[1]-m->file->tell());
       })
-	res += "? bytes";
+	res += "? bytes ";
 
-   if (m->data) res += " (static)";
+   if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
 
    if (stringp(m->extra_heads["http-content-type"]) ||
        stringp(m->type)) {
-      res += sprintf(" of %s\n", m->type);
+      res += sprintf(" of %s", m->type);
    }
 
    res+="<br />";
