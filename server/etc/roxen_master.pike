@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.51 1999/10/08 02:41:01 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.52 1999/11/23 11:03:11 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -148,6 +148,100 @@ function functionof(array f)
   return o[f[-1]];
 }
 
+
+string describe_backtrace(mixed trace, void|int linewidth)
+{
+  int e;
+  string ret;
+  linewidth=999999;
+
+  if((arrayp(trace) && sizeof(trace)==2 && stringp(trace[0])) ||
+     (objectp(trace) && trace->is_generic_error))
+  {
+    if (catch {
+      ret = trace[0];
+      trace = trace[1];
+    }) {
+      return "Error indexing backtrace!\n";
+    }
+  }else{
+    ret="";
+  }
+
+  if(!arrayp(trace))
+  {
+    ret+="No backtrace.\n";
+  }else{
+    for(e = sizeof(trace)-1; e>=0; e--)
+    {
+      mixed tmp;
+      string row;
+
+      if (mixed err=catch 
+      {
+	tmp = trace[e];
+	if(stringp(tmp))
+	{
+	  row=tmp;
+	}
+	else if(arrayp(tmp))
+	{
+	  string pos;
+	  if(sizeof(tmp)>=2 && stringp(tmp[0]) && intp(tmp[1]))
+	  {
+	    pos=trim_file_name(tmp[0])+":"+tmp[1];
+	  }else{
+	    mixed desc="Unknown program";
+	    if(sizeof(tmp)>=3 && functionp(tmp[2]))
+	    {
+	      catch {
+		if(mixed tmp=function_object(tmp[2]))
+		  if(tmp=object_program(tmp))
+		    if(tmp=describe_program(tmp))
+		      desc=tmp;
+	      };
+	    }
+	    pos=desc;
+	  }
+	  
+	  string data;
+	  
+	  if(sizeof(tmp)>=3)
+	  {
+	    if(functionp(tmp[2]))
+	      data = function_name(tmp[2]);
+	    else if (stringp(tmp[2])) {
+	      data= tmp[2];
+	    } else
+	      data ="unknown function";
+	    
+	    data+="("+
+	      stupid_describe_comma_list(tmp[3..], 99999999)+
+	    ")";
+
+	    if(sizeof(pos)+sizeof(data) < linewidth-4)
+	    {
+	      row=sprintf("%s: %s",pos,data);
+	    }else{
+	      row=sprintf("%s:\n%s",pos,sprintf("    %*-/s",linewidth-6,data));
+	    }
+	  }
+	}
+	else
+	{
+	  row="Destructed object";
+	}
+      }) {
+	row += sprintf("Error indexing backtrace line %d (%O)!", e, err[1]);
+      }
+      ret += row + "\n";
+    }
+  }
+
+  return ret;
+}
+
+
 void create()
 {
   object o = this_object();
@@ -165,6 +259,7 @@ void create()
   } else {
     ::create();
   }
+  add_constant("describe_backtrace", describe_backtrace );
   add_constant("persistent_variables", persistent_variables);
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
