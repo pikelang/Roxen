@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.14 2000/05/03 08:38:54 mast Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.15 2000/07/19 22:31:10 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -119,6 +119,14 @@ mixed find_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
+    if (id->method == "MV") {
+      id->misc->move_from = fix_slashes(home) + id->misc->move_from;
+    } else if (id->method == "MOVE") {
+      if (sizeof(id->misc["new-uri"]||"") &&
+	  id->misc["new-uri"][0] == '/') {
+	id->misc["new-uri"] = fix_slashes(home) + id->misc["new-uri"];
+      }
+    }
     return(::find_file(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
