@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.381 2000/09/25 07:55:57 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.382 2000/09/30 19:19:49 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -326,7 +326,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
   }
 }
 
-array (function) file_extension_modules(string ext, RequestID id)
+array (function) file_extension_modules(string ext)
 {
   if(!file_extension_module_cache[ext])
   {
@@ -344,7 +344,7 @@ array (function) file_extension_modules(string ext, RequestID id)
   return file_extension_module_cache[ext];
 }
 
-array (function) url_modules(RequestID id)
+array (function) url_modules()
 {
   if(!url_module_cache)
   {
@@ -368,7 +368,7 @@ mapping api_functions(void|RequestID id)
   return api_module_cache+([]);
 }
 
-array (function) logger_modules(RequestID id)
+array (function) logger_modules()
 {
   if(!logger_module_cache)
   {
@@ -387,7 +387,7 @@ array (function) logger_modules(RequestID id)
   return logger_module_cache;
 }
 
-array (function) last_modules(RequestID id)
+array (function) last_modules()
 {
   if(!last_module_cache)
   {
@@ -416,7 +416,7 @@ static mixed strip_fork_information(RequestID id)
 }
 #endif /* __NT__ */
 
-array (function) first_modules(RequestID id)
+array (function) first_modules()
 {
   if(!first_module_cache)
   {
@@ -443,7 +443,7 @@ array (function) first_modules(RequestID id)
 }
 
 
-array location_modules(RequestID id)
+array location_modules()
 //! Return an array of all location modules the request would be
 //! mapped through, by order of priority.
 {
@@ -480,7 +480,7 @@ array location_modules(RequestID id)
   return location_module_cache;
 }
 
-array(function) filter_modules(RequestID id)
+array(function) filter_modules()
 {
   if(!filter_module_cache)
   {
@@ -538,7 +538,7 @@ public void log(mapping file, RequestID request_id)
   function f;
 
 // Call all logging functions
-  foreach(logger_module_cache||logger_modules(request_id), f) 
+  foreach(logger_module_cache||logger_modules(), f) 
     if( f( request_id, file ) )
       return;
 
@@ -1090,7 +1090,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   {
 #ifdef URL_MODULES
   // Map URL-modules
-    foreach(url_module_cache||url_modules(id), funp)
+    foreach(url_module_cache||url_modules(), funp)
     {
       LOCK(funp);
       TRACE_ENTER("URL module", funp);
@@ -1128,7 +1128,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     }
 #endif
 
-    foreach(location_module_cache||location_modules(id), tmp)
+    foreach(location_module_cache||location_modules(), tmp)
     {
       loc = tmp[0];
       if(!search(file, loc))
@@ -1235,7 +1235,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   // Map the file extensions, but only if there is a file...
   if(objectp(fid) &&
-     (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id), id))) {
+     (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id))))
+  {
     foreach(tmp, funp)
     {
       TRACE_ENTER(sprintf("Extension module [%s] ", loc), funp);
@@ -1304,7 +1305,7 @@ mixed handle_request( RequestID id  )
   function funp;
   mixed file;
   REQUEST_WERR("handle_request()");
-  foreach(first_module_cache||first_modules(id), funp)
+  foreach(first_module_cache||first_modules(), funp)
   {
     if(file = funp( id ))
       break;
@@ -1316,7 +1317,7 @@ mixed handle_request( RequestID id  )
   if(!mappingp(file) && !mappingp(file = get_file(id)))
   {
     mixed ret;
-    foreach(last_module_cache||last_modules(id), funp) if(ret = funp(id)) break;
+    foreach(last_module_cache||last_modules(), funp) if(ret = funp(id)) break;
     if (ret == 1) {
       REQUEST_WERR("handle_request(): Recurse");
       return handle_request(id);
@@ -1343,7 +1344,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   // finally map all filter type modules.
   // Filter modules are like TYPE_LAST modules, but they get called
   // for _all_ files.
-  foreach(filter_module_cache||filter_modules(id), tmp)
+  foreach(filter_module_cache||filter_modules(), tmp)
   {
     TRACE_ENTER("Filter module", tmp);
     if(res2=tmp(res,id))
@@ -1373,7 +1374,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   object key;
 #endif
   // Map URL-modules
-  foreach(url_modules(id), function funp)
+  foreach(url_modules(), function funp)
   {
     string of = id->not_query;
     id->not_query = file;
@@ -1417,7 +1418,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   array(string) locks=({});
   object mod;
   string loc;
-  foreach(location_modules(id), array tmp)
+  foreach(location_modules(), array tmp)
   {
     loc = tmp[0];
     if(!search(file, loc)) {
@@ -1493,7 +1494,7 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  foreach(url_modules(id), function funp)
+  foreach(url_modules(), function funp)
   {
     string of = id->not_query;
     id->not_query = file;
@@ -1536,7 +1537,7 @@ array(int)|Stat stat_file(string file, RequestID id)
 #endif
 
   // Map location-modules.
-  foreach(location_modules(id), tmp)
+  foreach(location_modules(), tmp)
   {
     loc = tmp[0];
     if((file == loc) || ((file+"/")==loc))
@@ -1571,6 +1572,9 @@ array(int)|Stat stat_file(string file, RequestID id)
 // this is not as trivial as it sounds. Consider gtext. :-)
 array open_file(string fname, string mode, RequestID id, void|int internal_get)
 {
+  if( id->conf && (id->conf != this_object()) )
+    return id->conf->open_file( fname, mode, id, internal_get );
+
   object oc = id->conf;
   string oq = id->not_query;
   function funp;
@@ -1578,12 +1582,12 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
 
   id->not_query = fname;
 
-  foreach(oc->first_modules(), funp)
+  foreach(first_modules(), funp)
     if(file = funp( id ))
       break;
-    else if(id->conf != oc)
+    else if(id->conf && (id->conf != oc))
     {
-      return open_file(fname, mode,id, internal_get);
+      return id->conf->open_file(fname, mode,id, internal_get);
     }
   fname = id->not_query;
 
@@ -1603,9 +1607,9 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
   {
     if(!file)
     {
-      file = oc->get_file( id, 0, internal_get );
+      file = get_file( id, 0, internal_get );
       if(!file) {
-	foreach(oc->last_modules(), funp) if(file = funp( id ))
+	foreach(last_modules(), funp) if(file = funp( id ))
 	  break;
 	if (file == 1) {
 	  // Recurse.
@@ -1674,7 +1678,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
   object key;
 #endif
   // Map URL-modules
-  foreach(url_modules(id), function funp)
+  foreach(url_modules(), function funp)
   {
     string of = id->not_query;
     id->not_query = file;
@@ -1725,7 +1729,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
   }
 #endif /* URL_MODULES */
 
-  foreach(location_modules(id), tmp)
+  foreach(location_modules(), tmp)
   {
     loc = tmp[0];
 
@@ -1787,7 +1791,7 @@ array access(string file, RequestID id)
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
   // Map location-modules.
-  foreach(location_modules(id), tmp)
+  foreach(location_modules(), tmp)
   {
     loc = tmp[0];
     if((file+"/")==loc) {
@@ -1818,7 +1822,7 @@ string real_file(string file, RequestID id)
   if(!id) error("No id passed to real_file");
 
   // Map location-modules.
-  foreach(location_modules(id), tmp)
+  foreach(location_modules(), tmp)
   {
     loc = tmp[0];
     if(!search(file, loc))
