@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.56 1998/01/12 14:32:37 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.57 1998/01/12 19:14:04 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -61,6 +61,12 @@ void nil(){}
 int uid_was_zero()
 {
   return !(getuid() == 0); // Somewhat misnamed function.. :-)
+}
+
+int run_as_user_enabled()
+{
+  // Return 0 if run_as_user is enabled...
+  return(uid_was_zero() || !QUERY(user))
 }
 
 void create()
@@ -157,6 +163,12 @@ void create()
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, uid_was_zero);
+
+  defvar("allow_symlinks", 1, "Allow symlinks", TYPE_FLAG,
+	 "If set, allows symbolic links to binaries owned by the directory "
+	 "owner. Other symlinks are still disabled.<br>\n"
+	 "NOTE: This option only has effect if scripts are run as owner.",
+	 0, run_as_user_enabled);
 
   defvar("nice", 1, "Nice value", TYPE_INT|VAR_MORE,
 	 "The nice level to use when running scripts. "
@@ -667,14 +679,19 @@ mixed find_file(string f, object id)
       // Scan for symlinks
       string fname = "";
       foreach(id->misc->is_user/"/", string part) {
-	array a;
+	array a,b;
 	fname += part + "/";
 	if ((!(a = file_stat(fname, 1))) ||
 	    ((< -3, -4 >)[a[1]])) {
 	  // Symlink or device encountered.
-	  fname = 0;
-	  break;
+	  // Don't allow symlinks from directories not owned by the
+	  // same user as the file itself.
+	  if (!b || (b[5] != us[5]) || !QUERY(allow_symlinks)) {
+	    fname = 0;
+	    break;
+	  }
 	}
+	b = a;
       }
       if (fname) {
 	uid = us[5..6];
