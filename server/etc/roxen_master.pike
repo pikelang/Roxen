@@ -11,17 +11,16 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.6 1997/03/01 17:32:13 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.7 1997/03/02 19:20:50 grubba Exp $";
 
 object stdout, stdin;
 mapping names=([]);
 int unique_id=time();
 
-string pike_library_path;
-string *pike_include_path=({});
-string *pike_module_path=({});
-
 mapping (string:string) environment=([]);
+
+constant mm=master();
+inherit mm;
 
 varargs mixed getenv(string s)
 {
@@ -34,32 +33,6 @@ void putenv(string var, string val)
   environment[var]=val;
 }
 
-void add_include_path(string tmp)
-{
-  tmp=combine_path(getcwd(),tmp);
-  pike_include_path-=({tmp});
-  pike_include_path=({tmp})+pike_include_path;
-}
- 
-void remove_include_path(string tmp)
-{
-  tmp=combine_path(getcwd(),tmp);
-  pike_include_path-=({tmp});
-}
- 
-void add_module_path(string tmp)
-{
-  tmp=combine_path(getcwd(),tmp);
-  pike_module_path-=({tmp});
-  pike_module_path=({tmp})+pike_module_path;
-}
- 
-void remove_module_path(string tmp)
-{
-  tmp=combine_path(getcwd(),tmp);
-  pike_module_path-=({tmp});
-}
- 
 mapping (string:program) programs=(["/master":object_program(this_object())]);
 
 string program_name(program p)
@@ -141,6 +114,7 @@ void add_precompiled_program(string name, program p)
   }
 }
 
+#if 0
 /* This function is called when the driver wants to cast a string
  * to a program, this might be because of an explicit cast, an inherit
  * or a implict cast. In the future it might receive more arguments,
@@ -180,6 +154,8 @@ program cast_to_program(string pname, string current_file)
   }
 }
 
+#endif /* 0 */
+
 /* This function is called when an error occurs that is not caught
  * with catch(). It's argument consists of:
  * ({ error_string, backtrace }) where backtrace is the output from the
@@ -202,6 +178,10 @@ object new(mixed prog, mixed ... args)
  */
 void create()
 {
+  foreach(indices(mm), string varname) {
+    catch(this_object()[varname] = mm[varname]);
+    /* Ignore errors when copying functions */
+  }
   /* make ourselves known */
   add_constant("add_include_path",add_include_path);
   add_constant("remove_include_path",remove_include_path);
@@ -405,6 +385,7 @@ void _main(string *argv, string *env)
   /*
    * Backward compatibility
    */
+#if 0
   add_precompiled_program("/precompiled/file", _static_modules.files()->file);
   add_precompiled_program("/precompiled/port", _static_modules.files()->port);
   add_precompiled_program("/precompiled/regexp", resolv("Regexp", pike_library_path+"/modules/"));
@@ -414,6 +395,8 @@ void _main(string *argv, string *env)
 #if !efun(mark_fd)
   resolv("spider", pike_library_path+"/modules/");
 #endif
+
+#endif /* 0 */
 
 //  add_precompiled_program("/precompiled/pipe",
 //			    object_program(resolv("Pipe",
@@ -585,6 +568,7 @@ void compile_error(string file,int line,string err)
     errors+=sprintf("%s:%d:%s\n",file,line,err);
 }
 
+#if 0
 /* This function is called whenever an #include directive is encountered
  * it receives the argument for #include and should return the file name
  * of the file to include
@@ -637,6 +621,8 @@ string handle_include(string f,
 
   return path;
 }
+
+#endif /* 0 */
 
 // FIXME
 string stupid_describe(mixed m)
