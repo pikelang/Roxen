@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.36 2000/02/08 22:14:15 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.37 2000/02/08 22:41:15 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -80,6 +80,7 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
                                id->misc->defines->theme_fgcolor ||
                                "black");
   } else {
+    gbutton_args["extra-layers"] = "unselected";
     gbutton_args->bgcolor =  a->dimcolor || d->dimcolor || "#003366";
     gbutton_args->textcolor = (a->textcolor || d->textcolor || "white");
   }
