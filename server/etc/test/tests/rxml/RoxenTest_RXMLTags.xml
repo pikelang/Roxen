@@ -137,6 +137,11 @@ e</result>
 </test>
 
 <test>
+<rxml><set>hej</set></rxml>
+<result>[Error (parse): No variable specified.]</result>
+</test>
+
+<test>
 <rxml><set variable='var.a..b' value='5'/>&var.a..b;</rxml>
 <result>5</result>
 </test>
