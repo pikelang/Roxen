@@ -624,7 +624,7 @@ mapping|string parse( RequestID id )
   {
     array data = DBManager.db_table_fields( id->variables->db, table );
     if( !data )
-      return sprintf((string)_(0,"Cannot list fields in %s databases"), 
+      return sprintf((string)_(507,"Cannot list fields in %s databases"), 
 		     DBManager.db_driver(id->variables->db) );
     string res = "<tr><td></td><td colspan='3'><table>";
     foreach( data, mapping r )
