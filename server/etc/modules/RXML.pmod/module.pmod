@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.26 2000/01/21 13:56:34 nilsson Exp $
+//! $Id: module.pmod,v 1.27 2000/01/21 19:47:31 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -285,8 +285,8 @@ class TagSet
   //! get_local_tag().
   {
     if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) def = get_local_tag (name))
-      return ({def}) + imported->get_all_tags (name) * ({});
-    else return imported->get_all_tags (name) * ({});
+      return ({def}) + imported->get_overridden_tags (name) * ({});
+    else return imported->get_overridden_tags (name) * ({});
   }
 
   multiset(string) get_tag_names()
