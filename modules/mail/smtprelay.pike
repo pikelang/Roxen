@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.39 1999/03/09 15:59:54 grubba Exp $
+ * $Id: smtprelay.pike,v 1.40 1999/03/12 17:56:34 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.39 1999/03/09 15:59:54 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.40 1999/03/12 17:56:34 grubba Exp $";
 
 /*
  * Some globals
@@ -948,7 +948,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 	  "Content-Type":"message/rfc822",
 	])),
       }));
-    send_message("<>", (< msg->sender >), message);
+    send_message("", (< msg->sender >), message);
 
     // Inform the postmaster too, but send only the headers.
     message = (string)
@@ -980,7 +980,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 	  "Content-Type":"text/rfc822-headers",
 	])),
       }));
-    send_message("<>", (< QUERY(postmaster) >), message);
+    send_message("", (< QUERY(postmaster) >), message);
   } else {
     report_warning("SMTP: A bounce which bounced!\n");
   }
