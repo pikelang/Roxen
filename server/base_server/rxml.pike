@@ -1,3 +1,11 @@
+/*
+ * $Id: rxml.pike,v 1.15 1999/07/27 19:00:04 neotron Exp $
+ *
+ * The Roxen Challenger RXML Parser.
+ *
+ * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
+ */
+
 inherit "roxenlib";
 
 
