@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.97 2000/02/06 14:55:07 nilsson Exp $
+ * $Id: rxml.pike,v 1.98 2000/02/06 18:36:58 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -473,6 +473,7 @@ class GenericTag {
   string name;
   int flags;
   function _do_return;
+  array(RXML.Type) result_types = ({ RXML.t_text(RXML.PHtml) });
 
   void create(string _name, int _flags,
 	      function __do_return) {
@@ -481,16 +482,18 @@ class GenericTag {
     _do_return=__do_return;
     if(flags&RXML.FLAG_DONT_PREPARSE)
       content_type = RXML.t_text;
-    if(flags&RXML.FLAG_POSTPARSE)
-      result_types = ({ RXML.t_text(RXML.PHtml) });
   }
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(_do_return)
-	result=_do_return(name, args, content, id, this_object());
+      if(_do_return) {
+	if(flags&RXML.FLAG_POSTPARSE)
+	  return ({ _do_return(name, args, content, id, this_object()) });
+	else
+	  result=_do_return(name, args, content, id, this_object());
+      }
     }
   }
 }
@@ -1054,6 +1057,19 @@ array(string) tag_trace(string t, mapping args, string c , RequestID id)
 array(string) tag_noparse(string t, mapping m, string c)
 {
   return ({ c });
+}
+
+class TagEval {
+  inherit RXML.Tag;
+  constant name = "eval";
+  constant flags = RXML.FLAG_CONTAINER;
+  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PHtml), RXML.t_html(RXML.PHtml) });
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      return ({ content });
+    }
+  }
 }
 
 string tag_nooutput(string t, mapping m, string c, RequestID id)
@@ -2189,8 +2205,8 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
  (Serbian), si (Slovenian), es (Spanish) and sv (Swedish).
 </attr>
 
-<attr name=type value=foo>
- Default is number. What more???????????????
+<attr name=type value=number,ordered>
+ Default is number.
 </attr>",
 
 "strlen":#"<desc cont>
@@ -2271,5 +2287,10 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
  The <tag><ref type=tag>use</ref></tag> tag is much faster than the
  <tag><ref type=tag>insert</ref></tag>, since the parsed definitions
  is cached.",
+
+"eval":#"<desc cont>Postparses its content. Useful when an entity contains
+ RXML-code. <tag>eval</tag> is then placed around the entity to get its
+ content parsed.</desc>",
+
 ]);
 #endif
