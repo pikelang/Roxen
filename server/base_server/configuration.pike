@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.299 2000/04/05 22:17:50 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.300 2000/04/05 23:40:43 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2237,9 +2237,13 @@ RoxenModule reload_module( string modname )
   
   if( catch( nm = enable_module( modname, 0, 0, 1 ) ) || (nm == 0) )
     enable_module( modname, (nm=old_module), mi, 1 );
-  else {
+  else 
+  {
     foreach ((array) old_module->error_log, [string msg, array(int) times])
       nm->error_log[msg] += times;
+
+    catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
+
     nm->report_notice ("Reloaded %s.\n", mi->get_name());
     destruct( old_module );
   }
