@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.114 2000/02/10 02:37:21 nilsson Exp $
+ * $Id: rxml.pike,v 1.115 2000/02/10 03:36:11 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -214,21 +214,25 @@ RXML.TagSet rxml_tag_set = class
 
   void sort_on_priority()
   {
-    array(RXML.TagSet) new_imported = imported[..sizeof (imported) - 2];
-    array(RoxenModule) new_modules = modules[..sizeof (modules) - 2];
+    int i = search (imported, entities_tag_set);
+    array(RXML.TagSet) new_imported = imported[..i-1] + imported[i+1..];
+    array(RoxenModule) new_modules = modules[..i-1] + imported[i+1..];
     array(int) priorities = new_modules->query ("_priority", 1);
     priorities = replace (priorities, 0, 4);
     sort (priorities, new_imported, new_modules);
-    new_imported = reverse (new_imported) + ({imported[-1]});
+    new_imported = reverse (new_imported) + ({imported[i]});
     if (equal (imported, new_imported)) return;
-    new_modules = reverse (new_modules) + ({modules[-1]});
-    imported = new_imported, modules = new_modules;
+    new_modules = reverse (new_modules) + ({modules[i]});
+    `->= ("imported", new_imported);
+    modules = new_modules;
   }
 
-  void set_modules (array(RoxenModule) _modules)
-  // Kludge currently necessary in Pike 7.
+  mixed `->= (string var, mixed val)
+  // Currently necessary due to misfeature in Pike.
   {
-    modules = _modules;
+    if (var == "modules") modules = val;
+    else ::`->= (var, val);
+    return val;
   }
 
   void create (string name, object rxml_object)
@@ -541,9 +545,8 @@ void add_parse_module (RoxenModule mod)
 				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
-    rxml_tag_set->set_modules (rxml_tag_set->modules + ({mod}));
-    array(RXML.Tag) foo = rxml_tag_set->imported;
-    rxml_tag_set->imported = foo + ({tag_set});
+    rxml_tag_set->modules = rxml_tag_set->modules + ({mod});
+    rxml_tag_set->imported = rxml_tag_set->imported + ({tag_set});
     remove_call_out (rxml_tag_set->sort_on_priority);
     call_out (rxml_tag_set->sort_on_priority, 0);
   }
