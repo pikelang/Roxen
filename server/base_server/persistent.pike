@@ -1,11 +1,9 @@
-/* $Id: persistent.pike,v 1.29 1997/08/02 15:21:17 marcus Exp $ */
+/* $Id: persistent.pike,v 1.30 1997/09/01 00:58:30 peter Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables are saved between restarts.                       *
 '*************************************************************/
-
-#define PRIVATE private static inline 
 
 static void _nosave(){}
 static function nosave = _nosave;
@@ -14,7 +12,6 @@ private static array __id;
 void really_save()
 {
   if(nosave()) return;
-//  perror("really save ("+(__id*":")+")!\n");
 
   array res = ({ });
   mixed b;
@@ -26,10 +23,12 @@ void really_save()
     else __id = i;
   }
 
+  perror("really save (%s)\n", __id*":");
+  
   string a;
   foreach(persistent_variables(object_program(this_object()),this_object()),a)
     res += ({ ({ a, this_object()[a] }) });
-  open_db(__id[0])->set(__id[1], encode_value(res) );
+  open_db(__id[0])[__id[1]]=res;
 }
 
 
@@ -80,7 +79,7 @@ static void compat_persist()
       else __id = i;
     }
     
-    open_db(__id[0])->set(__id[1], tmp );
+    open_db(__id[0])[__id[1]]=tmp;
     rm(COMPAT_DIR+_id);
   }
 }
@@ -94,14 +93,7 @@ nomask public void persist(mixed id)
 
 // Restore
   array var;
-  err = catch {
-    var=decode_value(open_db(__id[0])->get(__id[1]));
-    //perror("decode_value ok\n");
-  };
-  //  if(err)
- //    report_error(sprintf("Failed to restore "+(id*":")+": %O",
-//			 describe_backtrace((array)err)));
-  
+  var=open_db(__id[0])[__id[1]];
   if(var && sizeof(var))
   {
     foreach(var, var) if(err=catch {
@@ -122,7 +114,7 @@ public void save()
   if(nosave()) return;
   if(!___destructed)
   {
-    remove_call_out(really_save);
-    call_out(really_save,60);
+    if(zero_type(find_call_out(really_save)))
+      call_out(really_save,10);
   }
 }
