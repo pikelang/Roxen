@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.11 2001/06/21 09:01:30 anders Exp $
+// $Id: DBManager.pmod,v 1.12 2001/06/28 14:57:22 wellhard Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -484,7 +484,7 @@ static void create()
   {
     query( #"
 CREATE TABLE dbs (
- name VARCHAR(20) NOT NULL PRIMARY KEY,
+ name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL )
  " );
@@ -496,7 +496,7 @@ CREATE TABLE dbs (
   {
     query(#"
 CREATE TABLE db_permissions (
- db VARCHAR(20) NOT NULL, 
+ db VARCHAR(64) NOT NULL, 
  config VARCHAR(80) NOT NULL, 
  permission ENUM ('none','read','write') NOT NULL,
  INDEX db_conf (db,config))
