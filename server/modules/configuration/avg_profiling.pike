@@ -31,7 +31,8 @@ void dump_iter( function cb )
 	foreach( indices( i ), string e )
 	  cb( c, f, e, @i[e] );
       }
-  }    
+    c->profiling_info = ([]);
+  }
 }
 
 void dump_to_db( )
@@ -46,7 +47,9 @@ void dump_to_db( )
 		"           cpu_ns  INT,"
 		"           config  VARCHAR(30),"
 		"           file    VARCHAR(100),"
-		"           event   VARCHAR(100) )" );
+		"           event_name  VARCHAR(100),"
+		"           event_class VARCHAR(20) )"
+	      );
   };
   
   array q = sql->query( "SELECT MAX(session) as m FROM average_profiling" );
@@ -54,15 +57,21 @@ void dump_to_db( )
   int session;
 
   if( sizeof( q ) )
-    session = q[0]->m+1;
+    session = ((int)q[0]->m)+1;
   else
-    session = 0;
+    session = 1;
   
   void dump_row( Configuration c, string file, string event,
 		 int realtime, int cputime, int calls )
   {
-    sql->query( "INSERT INTO average_profiling VALUES (%d,%d,%d,%d,%s,%s,%s)",
-		session, calls, realtime, cputime, c->query_name(), file, event );
+    array q = event / ":";
+    string ev_n = q[..sizeof(q)-2]*":";
+    string ev_c = q[-1];
+    
+    sql->query( "INSERT INTO average_profiling VALUES "
+		"(%d,%d,%d,%d,%s,%s,%s,%s)",
+		session, calls, realtime, cputime, c->query_name(),
+		file, ev_n, ev_c );
     
   };
 
