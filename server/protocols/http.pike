@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.261 2000/08/28 12:02:19 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.262 2000/08/28 12:10:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1986,12 +1986,12 @@ void got_data(mixed fooid, string s)
                                              misc->host +
                                              (search(misc->host, ":")<0?
                                              (":"+port_obj->default_port):"") +
-                                              not_query,
+                                              raw_url,
                                               this_object());
   }
   else if( strlen(path) )
   {
-    not_query = not_query[strlen(path)..];
+    raw_url = raw_url[strlen(path)..];
     misc->site_prefix_path = path;
   }
 
