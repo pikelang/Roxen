@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.67 1999/05/21 00:14:53 grubba Exp $
+# $Id: configure.in,v 1.68 1999/06/03 21:18:28 grubba Exp $
 #
 
 prefix=$PWD
@@ -227,6 +227,42 @@ case $CC in
  ;;
 esac
 
+# Compiler flags...
+
+AC_DEFUN(AC_SYS_COMPILER_FLAG,
+[
+  AC_MSG_CHECKING($1)
+  OLD_CFLAGS="[$]CFLAGS"
+  AC_CACHE_VAL(roxen_cv_option_$2,
+  [
+    CFLAGS="[$]OLD_CFLAGS $1"
+    AC_TRY_RUN([int main(){exit(0);}],roxen_cv_option_$2=yes,roxen_cv_option_$2=no)
+  ])
+  
+  CFLAGS="[$]OLD_CFLAGS"
+  
+  if test x"[$]roxen_cv_option_$2" = "xyes" ; then
+    $3="[$]$3 $1"
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+])
+
+AC_DEFUN(AC_SYS_CPU_COMPILER_FLAG,
+[
+ if test "`uname -m 2>/dev/null`" = "$1" ; then
+    AC_SYS_COMPILER_FLAG($2,$3,$4)
+ fi
+])
+
+AC_DEFUN(AC_SYS_OS_COMPILER_FLAG,
+[
+ if test "x$roxen_cv_sys_os" = "x$1" ; then
+    AC_SYS_COMPILER_FLAG($2,$3,$4)
+ fi
+])
+
 # We need some special hacks when running slowaris
 AC_PATH_PROG(uname_prog,uname,no)
 AC_MSG_CHECKING(operating system)
@@ -250,20 +286,18 @@ AC_MSG_RESULT($roxen_cv_sys_os)
 
 case "$roxen_cv_sys_os" in
   SCO*)
-     case "$CFLAGS" in
-       *-belf*) ;;
-       *)
-	  echo "Adding -belf option to CFLAGS."
-          CFLAGS="$CFLAGS -belf"
-       ;;
-     esac
-     case "$LDFLAGS" in
-       *-belf*) ;;
-       *)
-	  echo "Adding -belf option to LDFLAGS."
-          LDFLAGS="$LDFLAGS -belf"
-       ;;
-     esac
+    case "$CFLAGS" in
+      *-belf*) ;;
+      *)
+	AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS)
+      ;;
+    esac
+    case "$LDFLAGS" in
+      *-belf*) ;;
+      *)
+	AC_SYS_COMPILER_FLAG(-belf,belf,LDFLAGS)
+      ;;
+    esac
   ;;
 esac
 
@@ -329,40 +363,6 @@ fi
 
 #############################################################
 # Optimization flags...
-
-AC_DEFUN(AC_SYS_COMPILER_FLAG,
-[
-  AC_MSG_CHECKING($1)
-  OLD_CFLAGS="[$]CFLAGS"
-  AC_CACHE_VAL(roxen_cv_option_$2,
-  [
-    CFLAGS="[$]OLD_CFLAGS $1"
-    AC_TRY_RUN([int main(){exit(0);}],roxen_cv_option_$2=yes,roxen_cv_option_$2=no)
-  ])
-  
-  CFLAGS="[$]OLD_CFLAGS"
-  
-  if test x"[$]roxen_cv_option_$2" = "xyes" ; then
-    $3="[$]$3 $1"
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-  fi
-])
-
-AC_DEFUN(AC_SYS_CPU_COMPILER_FLAG,
-[
- if test "`uname -m 2>/dev/null`" = "$1" ; then
-    AC_SYS_COMPILER_FLAG($2,$3,$4)
- fi
-])
-
-AC_DEFUN(AC_SYS_OS_COMPILER_FLAG,
-[
- if test "x$roxen_cv_sys_os" = "x$1" ; then
-    AC_SYS_COMPILER_FLAG($2,$3,$4)
- fi
-])
 
 WARN=""
 OPTIMIZE=""
