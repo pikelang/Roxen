@@ -215,7 +215,7 @@ mapping find_internal(string f, object id)
     }
     return r;
   };
-  uncache_img( f );
+//   uncache_img( f );
   throw( e );
 }
 
@@ -223,8 +223,8 @@ mapping find_internal(string f, object id)
 
 string container_rimage_id( string t, mapping m, string contents, object id )
 {
-  q = ([ 0:contents ]);
-  i = roxen.argcache.store( q );
+  mapping q = ([ 0:contents ]);
+  string i = roxen.argcache.store( q );
 
   if( mapping t = cached_image( i, id ) )
   {
@@ -236,6 +236,6 @@ string container_rimage_id( string t, mapping m, string contents, object id )
 
 string container_rimage(string t, mapping m, string contents, object id)
 {
-  m->src = tag_rimage_id( t, m, contents, id );
+  m->src = container_rimage_id( t, m, contents, id );
   return make_tag( "img", m );
 }
