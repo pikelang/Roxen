@@ -230,6 +230,11 @@ void got_connection(object on)
   c->write("!");
 }
 
+string query_address()
+{
+  return port->query_address();
+}
+
 void create(string|object host, int|void p )
 {
   if(objectp(host))

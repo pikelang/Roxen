@@ -78,7 +78,7 @@ void create(string|object ip, int port, string cl, int|void lck)
     server = ip;
   } else {
     if(!server->connect(ip, port)) error("Failed to connect to RPC server\n");
-    if(server->read(1) != "!") error("Server refused connection.\n");
+    if(server->read(1) != "!") error("Server there, but refused connection.\n");
   }
   myclass = cl;
   if(!lck) { nolock=1; lock = class{ void lock(){}}(); }
