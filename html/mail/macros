@@ -1,0 +1,5 @@
+<define tag=mset>
+<cset variable=&variable; preparse
+  ><amail-user-variable variable='&from;' default='&default;'><
+/cset>
+</define>

@@ -1,0 +1,22 @@
+<insert file=stddef>
+<h1>AutoMail(tm)(r)</h1>
+
+<insert file=show_mailboxes>
+
+<if variable=mailbox_id>
+  <insert file=show_mailbox>
+</if>
+  <formoutput quote=$>
+   <if variable=mail_id>
+     <get-mail mail=$mail_id$>
+     Subject: #subject#<br>
+     From: #from#<br>
+     To: #to#<br>
+     Date: #date#<br>
+     <p>
+     <mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts>
+  </if>
+  </formoutput>
+</if>
+<else>
+</else>

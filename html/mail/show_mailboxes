@@ -1,0 +1,8 @@
+<tablify nice preparse cellseparator=, rowseparator=$$>
+  Mailbox,unread,read,mail
+  <list-mailboxes>
+     $$<font size=-1><mail-a mail_id=0 mailbox_id=#id#>#name#</mail-a></font>,
+     <font size=-1>#unread#</font>,<font size=-1>#read#</font>,<font size=-1>#mail#</font>
+ </list-mailboxes>
+</tablify>
+

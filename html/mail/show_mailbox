@@ -1,0 +1,41 @@
+<formoutput quote=$>
+  <table cellpadding=1 bgcolor=black border=0 cellspacing=0><tr><td>
+  <table cellpadding=3 bgcolor=white cellspacing=0 border=0>
+    <tr bgcolor=black><td><font color=white>Subject</td><td><font color=white>From</td>
+    <list-mail mailbox=$mailbox_id$ start=-10 num=10>
+      <tr>
+         <pike>
+            string mark="";
+            if("#id#" == id->variables->mail_id)
+              mark+="<td bgcolor=lightgrey><font color=black>";
+            else
+              mark += "<td>";
+            if("#flag_read#" == "set")
+              mark += "<i>";
+            else
+              mark += "<b>";
+            if("#flag_marked#" == "set")
+              mark += "<b>";
+            return mark;
+           </pike>
+           <font size=-1><mail-a mail_id=#id#>#subject#</mail-a></font>
+         </td>
+         <pike>
+            string mark="";
+            if("#id#" == id->variables->mail_id)
+              mark+="<td bgcolor=lightgrey><font color=black>";
+            else
+              mark += "<td>";
+            if("#flag_read#" == "set")
+              mark += "<i>";
+            if("#flag_marked#" == "set")
+              mark += "<b>";
+            return mark;
+           </pike>
+             <font size=-1><mail-a mail_id=#id#>#from#</a></font>
+         </td>
+      </tr>
+    </list-mail>
+  </table></tr></td></table>
+</formoutout>
+<p>
