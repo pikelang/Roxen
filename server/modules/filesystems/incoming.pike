@@ -3,15 +3,15 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.14 2001/01/29 05:40:29 per Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.15 2001/01/29 05:54:41 per Exp $";
 
 //<locale-token project="mod_incoming">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)
 // end of the locale related stuff
 
-LocaleString module_name = _(0,"Incoming filesystem");
+LocaleString module_name = _(1,"Incoming filesystem");
 LocaleString module_doc = 
-_(0,"This file system is used only for uploads, the files that are uploaded\n"
+_(2,"This file system is used only for uploads, the files that are uploaded\n"
 "can either not be downloaded, or they will be scrambled during the download.\n"
 "This is considered a nice way to treat people who try to "
 "use your FTP site for warez distribution.");
@@ -103,18 +103,18 @@ void create()
   ::create();
 
   defvar("bitrot", 0,
-	 _(0,"Scrambled downloads: Return files with bitrot"), TYPE_FLAG,
-	 _(0,"If this function is enabled, downloads <i>are</i> allowed, "
+	 _(3,"Scrambled downloads: Return files with bitrot"), TYPE_FLAG,
+	 _(4,"If this function is enabled, downloads <i>are</i> allowed, "
 	 "but the files will be scrambled."));
 
   defvar("bitrot_header", 2376,
-	 _(0,"Scrambled downloads: Unscrambled header length"),TYPE_INT,
-	 _(0,"Number of bytes to be sent without any bitrot at all."), 0,
+	 _(5,"Scrambled downloads: Unscrambled header length"),TYPE_INT,
+	 _(6,"Number of bytes to be sent without any bitrot at all."), 0,
 	 lambda(){ return !query("bitrot"); });
 
   defvar("bitrot_percent", 3,
-	 _(0,"Scrambled downloads: Percent of bits to rot"), TYPE_INT,
-	 _(0,"Selects the percentage of the file that will receive bitrot"), 0,
+	 _(7,"Scrambled downloads: Percent of bits to rot"), TYPE_INT,
+	 _(8,"Selects the percentage of the file that will receive bitrot"), 0,
 	 lambda(){ return !query("bitrot"); });
 }
 

@@ -24,11 +24,11 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.63 2001/01/29 05:40:30 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.64 2001/01/29 05:54:42 per Exp $";
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(0,"User file system");
+LocaleString module_name = _(1,"User file system");
 LocaleString module_doc  = 
-_(0,"A file system that gives access to files in the users' home\n"
+_(2,"A file system that gives access to files in the users' home\n"
 "directories.  The users and home directories are found through the\n"
 "current authentication module. The files from the home directories are\n"
 "mounted either in the virtual file system of the site or as sites of\n"
@@ -59,38 +59,38 @@ void create()
 {
   filesystem::create();
   killvar("searchpath");
-  defvar("searchpath", "NONE", _(0,"Search path"), TYPE_DIR|VAR_INITIAL,
+  defvar("searchpath", "NONE", _(3,"Search path"), TYPE_DIR|VAR_INITIAL,
 	 (0,"This is where the module will find the files in the real "
 	  "file system"),
 	 0, hide_searchpath);
 
   set("mountpoint", "/home/");
 
-  defvar("only_password", 1, _(0,"Password users only"),
+  defvar("only_password", 1, _(4,"Password users only"),
 	 TYPE_FLAG|VAR_INITIAL,
-         _(0,"Mount only home directories for users with valid passwords."));
+         _(5,"Mount only home directories for users with valid passwords."));
 
-  defvar("user_listing", 0, _(0,"Enable userlisting"), TYPE_FLAG|VAR_INITIAL,
-	 _(0,"If set a listing of all users will be shown when you access the "
+  defvar("user_listing", 0, _(6,"Enable userlisting"), TYPE_FLAG|VAR_INITIAL,
+	 _(7,"If set a listing of all users will be shown when you access the "
 	   "mount point."));
 
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
 			   "lp", "smtp", "uucp", "nuucp", "listen",
 			   "nobody", "noaccess", "ftp", "news",
-			   "postmaster" }), _(0,"Banish list"),
+			   "postmaster" }), _(8,"Banish list"),
 	 TYPE_STRING_LIST, 
-	 _(0,"This is a list of users who's home directories will not be "
+	 _(9,"This is a list of users who's home directories will not be "
 	   "mounted."));
 
-  defvar("own", 0, _(0,"Only owned files"), TYPE_FLAG,
-	 _(0,"If set, only files actually owned by the user will be sent "
+  defvar("own", 0, _(10,"Only owned files"), TYPE_FLAG,
+	 _(11,"If set, only files actually owned by the user will be sent "
 	   "from her home directory. This prohibits users from making "
 	   "confidental files available by symlinking to them. On the other "
 	   "hand it also makes it harder for user to cooperate on projects."));
   
-  defvar("virtual_hosting", 0, _(0,"Virtual user hosting"),
+  defvar("virtual_hosting", 0, _(12,"Virtual user hosting"),
 	 TYPE_FLAG|VAR_INITIAL,
-	 _(0,"If set, each user will get her own site. You access the user's "
+	 _(13,"If set, each user will get her own site. You access the user's "
 	 "with "
 	 "<br><tt>http://&lt;user&gt;.domain.com/&lt;mountpoint&gt;</tt> "
 	 "<br>instead of "
@@ -100,16 +100,16 @@ void create()
 	 "regexp CNAME that matches all users, to get this to "
 	 "work."));
 
-  defvar("useuserid", 1, _(0,"Run user scripts as the owner of the script"),
+  defvar("useuserid", 1, _(14,"Run user scripts as the owner of the script"),
 	 TYPE_FLAG|VAR_MORE,
-	 _(0,"If set, users' CGI and Pike scripts will be run as the user whos"
+	 _(15,"If set, users' CGI and Pike scripts will be run as the user whos"
 	   " home directory the file was found in. This only works if the "
 	 " server was started as root."),
 	 0, uid_was_zero);
 
-  defvar("pdir", "html/", _(0,"Public directory"),
+  defvar("pdir", "html/", _(16,"Public directory"),
 	 TYPE_STRING|VAR_INITIAL,
-         _(0,"This is the directory in the home directory of the users which "
+         _(17,"This is the directory in the home directory of the users which "
 	 "contains the files that will be shown on the web. "
 	 "If the module is mounted on <tt>/home/</tt>, the file "
 	 "<tt>/home/anne/test.html</tt> is accessed and the home direcory "
@@ -117,8 +117,8 @@ void create()
 	 "the file <tt>/export/users/anne/&lt;Public dir&gt;/test.html</tt>."),
 	 0, hide_pdir);
 
-  defvar("homedir" ,1,_(0,"Look in users homedir"), TYPE_FLAG|VAR_INITIAL,
-	 _(0,"If set, the module will look for the files in the user's home "
+  defvar("homedir" ,1,_(18,"Look in users homedir"), TYPE_FLAG|VAR_INITIAL,
+	 _(19,"If set, the module will look for the files in the user's home "
 	 "directory, according to the <i>Public directory</i> variable. "
 	 "Otherwise the files are fetched from a directory with the same "
 	 "name as the user in the directory configured in the "
@@ -410,7 +410,7 @@ string status()
 {
   if(sizeof(my_configuration()->user_databases()) == 0)
     return "<font color='&usr.warncolor;'>"+
-      _(0,"You need a user database module in this virtual server to resolve "
+      _(20,"You need a user database module in this virtual server to resolve "
 	"your users' homedirectories.")+
       "</font>";
 }
@@ -418,7 +418,7 @@ string status()
 mapping query_action_buttons()
 {
   if(sizeof(my_configuration()->user_databases()) == 0)
-    return ([ _(0,"Add system user database module to server")
+    return ([ _(21,"Add system user database module to server")
 	      : add_standard_userdb ]);
   return ([]);
 }

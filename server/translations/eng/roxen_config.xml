@@ -42,8 +42,9 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 
@@ -910,8 +911,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 
 
 
-
-
 <str id="180">
 <o>Show developer options and actions</o>
 <t></t>
@@ -972,8 +971,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-
-
 <str id="194">
 <o>Edit Global Variables</o>
 <t></t>
@@ -1029,8 +1026,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-
-
 <str id="206">
 <o>User</o>
 <t></t>
@@ -1080,8 +1075,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <o>Globals</o>
 <t></t>
 </str>
-
-
 
 <str id="216">
 <o>Events</o>
@@ -1368,8 +1361,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-
-
 <str id="234">
 <o>Requests</o>
 <t></t>
@@ -1525,12 +1516,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>The domain %s could not be found.</o>
 <t></t>
 </str>
-
-
-
-
-
-
 
 
 
@@ -1919,8 +1904,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-
-
 <str id="8">
 <o>Server secret</o>
 <t></t>
@@ -1946,7 +1929,44 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="167">
-<o>Failed login attempt from %s</o>
+
+
+<str id="168">
+<o>Hide</o>
+<t></t>
+</str>
+
+<str id="320">
+<o>Value %s does not match the regexp %s.</o>
+<t></t>
+</str>
+
+<str id="321">
+<o>Value %s does not match the glob %s.</o>
+<t></t>
+</str>
+
+<str id="322">
+<o>Value %s must be at least %d characters long. (%d character short)</o>
+<t></t>
+</str>
+
+<str id="323">
+<o>Value %s must not be more than %d characters long. (%d character too long)</o>
+<t></t>
+</str>
+
+<str id="324">
+<o>Value %s is not uppercased.</o>
+<t></t>
+</str>
+
+<str id="325">
+<o>Value %s is not lowercased.</o>
+<t></t>
+</str>
+
+<str id="169">
+<o>Login attempt from %s</o>
 <t></t>
 </str>

@@ -42,8 +42,9 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 
@@ -1107,8 +1108,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 
 
 
-
-
 <str id="180">
 <o>Show developer options and actions</o>
 <t>Visa utvecklar-alternativ och funktioner</t>
@@ -1169,8 +1168,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Visa inställningar</t>
 </str>
 
-
-
 <str id="194">
 <o>Edit Global Variables</o>
 <t>Editera globala inställningar</t>
@@ -1226,8 +1223,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Admingränssnittet</t>
 </str>
 
-
-
 <str id="206">
 <o>User</o>
 <t>Användare</t>
@@ -1277,8 +1272,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <o>Globals</o>
 <t>Globala</t>
 </str>
-
-
 
 <str id="216">
 <o>Events</o>
@@ -1565,8 +1558,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Den teckenuppsättning som används i admingränssnittet</t>
 </str>
 
-
-
 <str id="234">
 <o>Requests</o>
 <t>Anrop</t>
@@ -1725,12 +1716,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>The domain %s could not be found.</o>
 <t>Domänen %s kunde inte hittas.</t>
 </str>
-
-
-
-
-
-
 
 
 
@@ -2132,8 +2117,6 @@ utifrån detta namn.</t>
 <t>MySQL-status</t>
 </str>
 
-
-
 <str id="8">
 <new/>
 <o>Server secret</o>
@@ -2164,8 +2147,52 @@ utifrån detta namn.</t>
 <t></t>
 </str>
 
-<str id="167">
+
+
+<str id="168">
 <new/>
-<o>Failed login attempt from %s</o>
+<o>Hide</o>
+<t></t>
+</str>
+
+<str id="320">
+<new/>
+<o>Value %s does not match the regexp %s.</o>
+<t></t>
+</str>
+
+<str id="321">
+<new/>
+<o>Value %s does not match the glob %s.</o>
+<t></t>
+</str>
+
+<str id="322">
+<new/>
+<o>Value %s must be at least %d characters long. (%d character short)</o>
+<t></t>
+</str>
+
+<str id="323">
+<new/>
+<o>Value %s must not be more than %d characters long. (%d character too long)</o>
+<t></t>
+</str>
+
+<str id="324">
+<new/>
+<o>Value %s is not uppercased.</o>
+<t></t>
+</str>
+
+<str id="325">
+<new/>
+<o>Value %s is not lowercased.</o>
+<t></t>
+</str>
+
+<str id="169">
+<new/>
+<o>Login attempt from %s</o>
 <t></t>
 </str>

@@ -337,7 +337,7 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
     header+=("<gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE(0, "Hide")+" </gbutton>");
+	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   }
   else

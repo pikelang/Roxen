@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.73 2001/01/29 05:43:53 per Exp $";
+  "$Id: config_filesystem.pike,v 1.74 2001/01/29 05:54:41 per Exp $";
 
 constant path = "config_interface/";
 
@@ -211,7 +211,7 @@ mixed find_file( string f, RequestID id )
 #ifdef CFFS_DEBUG
       werror( db_indent+"Returning login fail\n" );
 #endif
-      report_notice(LOCALE(0,"Login attempt from %s")+"\n",host);
+      report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen configuration",
 					   roxen.config_userdb_module );
     }

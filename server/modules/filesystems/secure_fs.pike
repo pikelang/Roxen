@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.25 2001/01/29 05:40:30 per Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.26 2001/01/29 05:54:42 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -16,9 +16,9 @@ inherit "filesystem";
 // end of the locale related stuff
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(0,"Secure file system");
+LocaleString module_name = _(1,"Secure file system");
 LocaleString module_doc  = 
-_(0,
+_(2,
  "This is a file system module that allows for more fine-grained control\n"
  "over the Roxen's built-in module security. Instead of just having security\n"
  "pattern for the whole module it is possible to create several patterns.\n"
@@ -95,7 +95,7 @@ void create()
 	 "# Only allow from localhost, or persons with a valid account\n"
 	 "*:  allow ip=127.0.0.1\n"
 	 "*:  allow user=any\n",
-	 _(0,"Security patterns"),
+	 _(3,"Security patterns"),
 
 	 TYPE_TEXT_FIELD|VAR_INITIAL,
 
@@ -111,12 +111,12 @@ void create()
 	 "system that will be affected by the security pattern. '*' will "
 	 "match one or more characters, '?' will match one character."));
 
-  defvar("page", 0, _(0,"Use form authentication"), TYPE_FLAG,
+  defvar("page", 0, _(4,"Use form authentication"), TYPE_FLAG,
          (0,"If set it will produce a page containing a login form instead "
 	  "of sending a HTTP authentication needed header."), 0 );
   defvar("expire", 60*15, (0,"Authentication expire time"),
          TYPE_INT,
-         _(0,"New authentication will be required if no page has been "
+         _(5,"New authentication will be required if no page has been "
 	  "requested within this time, in seconds."),
          0, dont_use_page);
   defvar("authpage",
@@ -127,9 +127,9 @@ void create()
          "<INPUT TYPE=submit VALUE=Authenticate>\n"
          "</FORM>\n"
          "</BODY></HTML>",
-         _(0,"Form authentication page."),
+         _(6,"Form authentication page."),
          TYPE_TEXT_FIELD,
-         _(0,"Should contain an form with input fields named <i>httpuser</i> "
+         _(7,"Should contain an form with input fields named <i>httpuser</i> "
 	   "and <i>httppass</i>. "
 	   "The string $File will be replaced with the URL to the current "
 	   "page being accessed and "
