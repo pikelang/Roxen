@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.491 2000/07/10 22:22:18 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.492 2000/07/18 19:56:39 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -762,8 +762,11 @@ class Protocol
       foreach( values(urls), mapping c )
 	if( choices[ c->conf ] )
 	{
-	  id->not_query = id->not_query[strlen(c->path)..];
-	  id->misc->site_prefix_path = c->path;
+          if( c->path )
+          {
+            id->not_query = id->not_query[strlen(c->path)..];
+            id->misc->site_prefix_path = c->path;
+          }
 	  if(c->conf->inited) 
 	    c->conf->enable_all_modules();
 	  return c->conf;
