@@ -1,6 +1,6 @@
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.5 2000/04/26 15:44:30 per Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.6 2000/04/28 22:38:47 per Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -14,6 +14,7 @@ constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION;
 constant module_name = "Fast CGI scripting support";
 constant module_doc  =
 "Support for the <a href=\"http://www.fastcgi.com/\">Fast CGI 1 interface</a>";
+constant module_unique = 0;
 
 #define FCGI_RESPONDER  1
 #define FCGI_AUTHORIZER 2
