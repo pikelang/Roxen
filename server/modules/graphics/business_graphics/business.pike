@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.65 1998/02/16 19:53:57 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.66 1998/02/17 09:14:24 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -69,13 +69,15 @@ mixed *register_module()
        "  <b>fontsize</b>       Height of text in pixels.\n"
        "  <b>legendfontsize</b> Height of legend text in pixels. Uses\n"
        "                 <b>fontsize</b> if not defined.\n"
-       "  <b>3D</b>             Render piecharts on top of a cylinder, takes the\n                 height in pixels of the cylinder as argument.\n"
+       "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
+       " the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
        "                 colors assigned to each of the four corners.\n"
-       "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth slice\n"
+       "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth"
+       " slice\n"
        "  <b>voidsep</b>        If this separator is given it will be used\n"
        "                 instead of VOID (This option can also\n"
        "                 be given i <b>xnames</b> and so on)\n"
@@ -87,35 +89,49 @@ mixed *register_module()
        "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
        "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
 
-       "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
+       "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They"
+       " will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
        "The following internal tags are available:\n"
        "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
-       "Tab and newline separated list of data values for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
-       "  <b>lineseparator</b>  Use the specified string as lineseparator instead of newline.\n"
-       "  <b>form</b>           Can be set to either row or column. Default is row.\n"
-       "  <b>parse</b>          Run the content of the tag through the RXML parser\n"
+       "Tab and newline separated list of data values for the diagram."
+       " Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead"
+       " of tab.\n"
+       "  <b>lineseparator</b>  Use the specified string as lineseparator"
+       " instead of newline.\n"
+       "  <b>form</b>           Can be set to either row or column. Default"
+       " is row.\n"
+       "  <b>parse</b>          Run the content of the tag through the RXML"
+       " parser\n"
        "                 before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
        "Tab separated list of colors for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "  <b>separator</b>      Use the specified string as separator instead"
+       " of tab.\n"
        "\n&lt;<b>legend</b>&gt; (container)\n"
        "Tab separated list of titles for the legend. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "  <b>separator</b>      Use the specified string as separator instead"
+       " of tab.\n"
        "\n&lt;<b>xnames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
-       "  <b>orient</b>         If set to vert the xnames will be written vertical.\n"
+       "  <b>separator</b>      Use the specified string as separator instead"
+       " of tab.\n"
+       "  <b>orient</b>         If set to vert the xnames will be written"
+       " vertical.\n"
        "\n&lt;<b>ynames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "  <b>separator</b>      Use the specified string as separator instead"
+       " of tab.\n"
        "\n&lt;<b>xaxis</b>&gt; and &lt;<b>yaxis</b>&gt; (tags)\n"
        "Options:\n"
        /* " name=        Dunno what this does.\n" */
        //I know!!! /Hedda
-       "  <b>start</b>          Limit the start of the diagram at this quantity.\n"
-       "                 If set to <b>min</b> the axis starts at the lowest value.\n\n"
-       "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
+       "  <b>start</b>          Limit the start of the diagram at this"
+       " quantity.\n"
+       "                 If set to <b>min</b> the axis starts at the lowest"
+       " value.\n\n"
+       "  <b>stop</b>           Limit the end of the diagram at this"
+       " quantity.\n"
        "  <b>quantity</b>       Name things represented in the diagram.\n"
        "  <b>unit</b>           Name the unit.\n"
        "</pre>"
@@ -129,8 +145,8 @@ void start(int num, object configuration)
   program Bars  = (program)"create_bars";
   program Graph = (program)"create_graph";
   program Pie   = (program)"create_pie";
-  create_pie  = Pie()->create_pie;
-  create_bars = Bars()->create_bars;
+  create_pie   = Pie()->create_pie;
+  create_bars  = Bars()->create_bars;
   create_graph = Graph()->create_graph;
 }
 
@@ -146,23 +162,23 @@ void stop()
 
 void create()
 {
-  defvar("location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	 "The URL-prefix for the diagrams.");
+  defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
+	  "The URL-prefix for the diagrams." );
   defvar( "maxwidth", 800, "Maxwidth", TYPE_INT,
-	  "Maximal width of the generated image.");
+	  "Maximal width of the generated image." );
   defvar( "maxheight", 600, "Maxheight", TYPE_INT,
-	  "Maximal height of the generated image.");
+	  "Maximal height of the generated image." );
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
 {
-  if(m->name)  res->xname = m->name;  
+  if(m->name) res->xname = m->name;  
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
       res->xmin=1;
     else 
       res->xstart = (float)m->start;
-  if(m->stop)  res->xstop = (float)m->stop;
+  if(m->stop) res->xstop = (float)m->stop;
   if(m->quantity) res->xstor = m->quantity;
   if(m->unit) res->xunit = m->unit;
 
@@ -171,13 +187,13 @@ string itag_xaxis(string tag, mapping m, mapping res)
 
 string itag_yaxis(string tag, mapping m, mapping res)
 {
-  if(m->name)  res->yname = m->name;
+  if(m->name) res->yname = m->name;
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
       res->ymin=1;
     else 
       res->ystart = (float)m->start;
-  if(m->stop)  res->ystop = (float)m->stop;
+  if(m->stop) res->ystop = (float)m->stop;
   if(m->quantity) res->ystor = m->quantity;
   if(m->unit) res->yunit = m->unit;
 
@@ -221,7 +237,7 @@ string itag_names(string tag, mapping m, string contents,
   return "";
 }
 
-float|string floatify( string in , string voidsep)
+float|string floatify( string in , string voidsep )
 {
   if (voidsep==in)
     return VOIDSYMBOL;
