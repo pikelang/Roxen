@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.540 2000/09/03 02:33:17 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.541 2000/09/04 04:03:23 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1970,10 +1970,13 @@ class ConfigIFCache
   mixed set( string name, mixed to )
   {
     Stdio.File f;
-    if(!(f=open(  dir + replace( name, "/", "-" ), "wct" )))
+    int mode = 0777;
+    if( settings )
+      mode = 0770;
+    if(!(f=open(  dir + replace( name, "/", "-" ), "wct", mode )))
     {
       mkdirhier( dir+"/foo" );
-      if(!(f=open(  dir + replace( name, "/", "-" ), "wct" )))
+      if(!(f=open(  dir + replace( name, "/", "-" ), "wct", mode )))
       {
         report_error("Failed to create administration interface cache file ("+
                      dir + replace( name, "/", "-" )+") "+
