@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.153 1998/10/21 20:09:38 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.154 1998/10/21 20:51:56 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -561,7 +561,6 @@ string call_tag(string tag, mapping args, int line, int i,
 #endif
   mixed result=rf(tag,args,id,file,defines,client);
   TRACE_LEAVE("");
-  if(args->noparse && stringp(result)) return ({ result }); 
   return result;
 }
 
@@ -637,7 +636,6 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
   }
   string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
-  if(args->noparse && stringp(r)) return ({ r }); 
   return r;
 }
 
@@ -670,7 +668,6 @@ string call_user_container(string tag, mapping args, string contents, int line,
   }
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
-  if(args->noparse && stringp(r)) return ({ r }); 
   return r;
 }
 
