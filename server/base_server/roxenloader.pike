@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.266 2001/07/31 11:57:18 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.267 2001/08/08 14:57:29 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1175,9 +1175,11 @@ static void do_tailf( int loop, string f )
 {
   string mysqlify( string what )
   {
-    string res = (what/"\n")[0];
-    foreach( (what/"\n")[1..], string line )
+    string res = "";
+    foreach( (what/"\n"), string line )
     {
+      if( sscanf( line, "%*sAborted connection%*s" ) == 2 )
+	continue;
       if( line == "" )
 	return res+"\n";
       res += "\n";
