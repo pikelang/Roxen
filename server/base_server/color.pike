@@ -1,6 +1,8 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.9 1997/07/10 16:28:27 per Exp $";
+string cvs_version = "$Id: color.pike,v 1.10 1997/08/04 12:54:27 grubba Exp $";
+
+#include <stdio.h>
 
 mapping (string:array(int)) colors = ([]);
 mapping (string:string) html_32_colors =
@@ -180,7 +182,7 @@ string color_name(array (int) from)
 
 void create()
 {
-  catch(colors = decode_value(Stdio.read_bytes("etc/rgb.dat")));
+  catch(colors = decode_value(read_bytes("etc/rgb.dat")));
   add_constant("parse_color", parse_color);
   add_constant("color_name", color_name);
   add_constant("color", this_object());
