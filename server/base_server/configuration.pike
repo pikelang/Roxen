@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.517 2002/06/05 10:50:46 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.518 2002/06/06 08:37:05 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2663,7 +2663,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
                      MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
                      MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
-                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST))
+                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST|
+                     MODULE_USERDB))
   {
     if(module_type != MODULE_CONFIG)
     {
@@ -2680,7 +2681,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     }
 
 #ifdef MODULE_LEVEL_SECURITY
-    if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER)) != 0 )
+    if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER|MODULE_USERDB)) != 0 )
     {
 //       me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
 // 		 TYPE_STRING,
