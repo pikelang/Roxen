@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.31 1998/04/20 04:11:44 nisse Exp $
+/* $Id: ssl3.pike,v 1.32 1998/04/21 20:18:33 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -577,7 +577,7 @@ class fallback_redirect_request {
   void create(object socket, string s, string l, int p)
   {
 #ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l, p));
+    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l||"CONFIG PORT", p));
 #endif /* SSL3_DEBUG */
     f = socket;
     default_prefix = l;
