@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.141 1998/08/10 06:26:00 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.142 1998/08/14 12:20:02 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,6 +11,7 @@ inherit "roxenlib";
 #endif /* VAR_MORE */
 
 static private int loaded;
+int args_restored = 0;
 
 static private string doc()
 {
@@ -784,7 +785,6 @@ array(int)|string write_text(int _args, string text, int size, object id)
   {
     throw( ({ "Internal error in gtext: Got request for non-existant gtext class", backtrace() }) );
   }
-
   if(data = cache_lookup(key, text))
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
@@ -796,7 +796,8 @@ array(int)|string write_text(int _args, string text, int size, object id)
     if(size) return data[1];
     return data[0];
   }
-
+  //werror("Not cached: %O -> %O\n", key, text);
+  //werror("In cache: %O\n", sort(indices(cache->cache)));
 
   // So. We have to actually draw the thing...
 
@@ -962,6 +963,7 @@ array(int)|string write_text(int _args, string text, int size, object id)
     if(!args->nocache)
       store_cache_file( key, orig_text, data );
     cache_set(key, orig_text, data);
+    //  werror("Cache set:  %O -> %O\n", key, orig_text);
     if(size) return data[1];
     return data[0];
   };
@@ -987,7 +989,7 @@ array find_dir(string f, object rid)
 {
   if(!strlen(f))
   {
-    restore_cached_args();
+    if(!args_restored) restore_cached_args();
     return Array.map(indices(cached_args), lambda(mixed m){return (string)m;});
   }
   return ({"Example"});
@@ -1054,7 +1056,6 @@ string quote(string in)
 
 #define ARGHASH query("cache_dir")+"ARGS_"+hash(mc->name)
 
-int args_restored = 0;
 void restore_cached_args()
 {
   args_restored = 1;
@@ -1083,7 +1084,7 @@ void save_cached_args()
 {
   int on;
   on = number;
-  restore_cached_args();
+  if(!args_restored) restore_cached_args();
   if(on > number) number=on;
   object o = open(ARGHASH, "wct");
 #ifndef __NT__
@@ -1120,11 +1121,10 @@ int find_or_insert(mapping find)
   array a = indices(cached_args);
   array b = values(cached_args);
   int i;
-
-  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
+  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i]))  return a[i];
   restore_cached_args();
   for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
-  cached_args[number]=find;
+  cached_args[number]=f2; // Save the same that you try to restore, please.
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
   return number++;
