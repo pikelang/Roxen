@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.249 2001/10/01 09:21:33 anders Exp $
+// $Id: module.pmod,v 1.250 2001/10/03 05:38:26 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7178,8 +7178,10 @@ class RenewablePCode
       if (ctx->unwind_state)
 	[parser] = m_delete (ctx->unwind_state, this_object());
 
+      int orig_make_p_code = ctx->make_p_code;
       mixed res;
       if (mixed err = catch {
+	  ctx->make_p_code = 1;
 	if (!parser) {
 	  parser = type->get_parser (ctx, tag_set, 0, this_object());
 	  parser->finish (source); // Might unwind.
@@ -7187,12 +7189,14 @@ class RenewablePCode
 	else parser->finish();	// Might unwind.
 	res = parser->eval();	// Might undwind.
 	flags |= UPDATED;
-      })
+      }) {
+	ctx->make_p_code = orig_make_p_code;
 	if (objectp (err) && err->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({parser});
 	  throw (this_object());
 	}
 	else throw (err);
+      }
 
       type->give_back (parser, tag_set);
       return res;
@@ -7215,8 +7219,10 @@ class RenewablePCode
   string _sprintf()
   {
     return tag_set ?
-      sprintf ("RXML.RenewablePCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
-      sprintf ("RXML.RenewablePCode(%O)%s", type, OBJ_COUNT);
+      sprintf ("RXML.RenewablePCode(%s,%O,%O)%s",
+	       format_short (source), type, tag_set, OBJ_COUNT) :
+      sprintf ("RXML.RenewablePCode(%s,%O)%s",
+	       format_short (source), type, OBJ_COUNT);
   }
 }
 
