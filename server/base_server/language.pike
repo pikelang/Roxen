@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.33 2000/09/19 12:45:11 lange Exp $
+// $Id: language.pike,v 1.34 2000/09/24 13:35:49 nilsson Exp $
 
 // #pragma strict_types
 
@@ -69,19 +69,11 @@ string verify_locale(string lang) {
 
   string set;
   if(sizeof(lang)==3 &&
-#if constant(Standards.ISO639_2)
      Standards.ISO639_2.get_language(lang)
-#else
-     RoxenLocale.ISO639_2.get_language(lang)
-#endif
      )
     return lang;
   else if(sizeof(lang)==2 &&
-#if constant(Standards.ISO639_2)
 	  (set = Standards.ISO639_2.map_639_1(lang))
-#else
-	  (set = RoxenLocale.ISO639_2.map_639_1(lang))
-#endif
 	  )
     return set;
   else
@@ -131,10 +123,10 @@ void initiate_languages(string def_loc)
 
   set_default_locale(def_loc);
 
-  __LOCALEMODULE.register_project(PROJECT, "languages/_xml_glue/%L.xml");
+  Locale.register_project(PROJECT, "languages/_xml_glue/%L.xml");
 
   // Atleast read the default_locale, to make sure that fallback is ok.
-  if(!__LOCALEMODULE.get_object(PROJECT, default_locale))
+  if(!Locale.get_object(PROJECT, default_locale))
     report_fatal("\n* The default language %O is not available!\n"
 		 "* This is a serious error.\n"
 		 "* Several RXML tags might not work as expected!\n",
@@ -161,15 +153,15 @@ public function language(string lang, string func, object|void id)
 #ifdef LANGUAGE_DEBUG
   werror("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
 #endif
-  return __LOCALEMODULE.call(PROJECT, verify_locale(lang), 
-			     func, default_page_locale) || nil;  
+  return Locale.call(PROJECT, verify_locale(lang), 
+		     func, default_page_locale) || nil;  
 }
 
 array(string) list_languages() {
-  return __LOCALEMODULE.list_languages(PROJECT);
+  return Locale.list_languages(PROJECT);
 }
 
 object language_low(string lang) {
-  return [object]__LOCALEMODULE.get_object( PROJECT, 
-					    verify_locale(lang) )->functions;
+  return [object]Locale.get_object( PROJECT, 
+				    verify_locale(lang) )->functions;
 }

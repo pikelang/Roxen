@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.119 2000/09/23 02:41:25 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.120 2000/09/24 13:35:51 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -569,11 +569,7 @@ class TagLocaleplugin
   
   array get_dataset( mapping m, RequestID id )
   {
-#if constant(Locale.list_languages)
      array(string) langs=Locale.list_languages("roxen_config");
-#else
-     array(string) langs=RoxenLocale.list_languages("roxen_config");
-#endif
      return map( sort(langs),
                  lambda( string l )
                  {
@@ -585,11 +581,7 @@ class TagLocaleplugin
                    return ([
                      "name":l,
                      "latin1-name":
-#if constant(Standards.ISO639_2)
                      Standards.ISO639_2.get_language(l),
-#else
-                     RoxenLocale.ISO639_2.get_language(l),
-#endif
                      "path":fix_relative( "/"+l+"/"+ q +
                                           (id->misc->path_info?
                                            id->misc->path_info:"")+

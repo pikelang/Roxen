@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.17 2000/07/19 20:11:32 lange Exp $
+// $Id: roxen.h,v 1.18 2000/09/24 13:35:51 nilsson Exp $
 // -*- Pike -*-
 
 #ifndef _ROXEN_H_
@@ -12,14 +12,6 @@
 
 // Localization support
 
-#ifndef __LOCALEMODULE
-#if constant(Locale.translate)
-#define __LOCALEMODULE Locale
-#else /* !constant(Locale.translate) */
-#define __LOCALEMODULE RoxenLocale
-#endif /* constant(Locale.translate) */
-#endif /* !__LOCALEMODULE */
-
 #ifndef __LOCALEOBJECT
 #ifdef IN_ROXEN
 #define __LOCALEOBJECT locale
@@ -30,12 +22,12 @@
 
 #ifndef _STR_LOCALE
 #define _STR_LOCALE(X, Y, Z)	\
-    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get(), Y, Z))
+    (Locale.translate(X, __LOCALEOBJECT->get(), Y, Z))
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
 #define _DEF_LOCALE(X, Y, Z)	\
-    ([string](mixed)__LOCALEMODULE.DeferredLocale(X, GETLOCLANG, Y, Z))
+    ([string](mixed)Locale.DeferredLocale(X, GETLOCLANG, Y, Z))
 #endif /* !_DEF_LOCALE */
 
 #ifndef USE_DEFERRED_LOCALE
@@ -47,7 +39,7 @@
 
 #ifndef _LOCALE_FUN
 #define _LOCALE_FUN(X, Y, Z)	\
-    (__LOCALEMODULE.call(X, __LOCALEOBJECT->get(), Y, Z))
+    (Locale.call(X, __LOCALEOBJECT->get(), Y, Z))
 #endif /* !_LOCALE_FUN */
 
 

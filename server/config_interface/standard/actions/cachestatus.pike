@@ -65,11 +65,7 @@ string parse( RequestID id )
   res += "</tr></table>" +
     (roxen->query("cache")?"<br />"+ roxen->get_garb_info():"");
 
-#if constant(Locale.cache_status)
   mapping l=Locale.cache_status();
-#else
-  mapping l=RoxenLocale.cache_status();
-#endif
   res += "<br /><b>"+LOCALE(71, "Locale Cache")+"</b><br />"
     "<table>"
     "<tr><td>"+LOCALE(72, "Used languages:")+"</td><td>"+l->languages+"</td></tr>"

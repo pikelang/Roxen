@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.46 2000/09/19 12:55:09 per Exp $
+// $Id: global_variables.pike,v 1.47 2000/09/24 13:35:49 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -525,11 +525,7 @@ void define_global_variables(  )
 
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
-#if constant(Locale.list_languages)
 			   Locale.list_languages("roxen_config"),
-#else
-			   RoxenLocale.list_languages("roxen_config"),
-#endif
 			   0, LOCALE(158, "Default language"), 
 			   LOCALE(159, "Locale, used to localize all "
 				  "messages in Roxen. Standard means using "

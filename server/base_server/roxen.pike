@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.558 2000/09/23 02:40:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.559 2000/09/24 13:35:50 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2777,11 +2777,7 @@ string decode_charset( string charset, string data )
 void create()
 {
   // Register localization projects
-#if constant(Locale.register_project)
 #define __REG_PROJ Locale.register_project
-#else  /* !Locale.register_project */
-#define __REG_PROJ RoxenLocale.register_project
-#endif /* Locale.register_project */
   __REG_PROJ("roxen_start",   "translations/%L/roxen_start.xml");
   __REG_PROJ("roxen_config",  "translations/%L/roxen_config.xml");
   __REG_PROJ("roxen_message", "translations/%L/roxen_message.xml");

@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.202 2000/09/24 01:48:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.203 2000/09/24 13:35:50 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1250,20 +1250,20 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 0.7
+#if __VERSION__ < 7.1
   report_debug(
 #"
 
 
 ******************************************************
-Roxen 2.1 requires pike 7.
+Roxen 2.1 requires pike 7.1.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 0.7 */
+#endif /* __VERSION__ < 7.1 */
 
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
@@ -1463,9 +1463,6 @@ library should be enough.
   add_constant( "Image", nm_resolv("Image") );
   add_constant( "Locale", nm_resolv("Locale") );
   add_constant( "Locale.Charset", nm_resolv("Locale.Charset") );
-#if !constant(Locale.translate)
-  add_constant( "RoxenLocale", nm_resolv("RoxenLocale") );
-#endif
 
   add_constant("RequestID", RequestID );
   add_constant("RoxenModule", RoxenModule );

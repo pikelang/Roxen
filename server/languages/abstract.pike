@@ -1,7 +1,7 @@
-/*
- * name = "Abstract language class";
- * doc = "Handles the conversion of numbers and dates. You have to restart the server for updates to take effect.";
- */
+//
+// --- Abstract language class ---
+// Handles the conversion of numbers and dates. You have to restart the server for updates to take effect.
+//
 
 // Array(string) with the months of the year, beginning with January
 constant months = ({ "", "", "", "", "", "", "", "", "", "", "", "" });
@@ -40,32 +40,18 @@ array aliases()
 
 string language(string code)
 {
-#if constant(Standards.ISO639_2)
   if(sizeof(code)==2)
     code=Standards.ISO639_2.map_639_1(code);
   if(sizeof(code)!=3) return 0;
   if(languages[code]) return languages[code];
   return Standards.ISO639_2.get_language(code);
-#else
-  if(sizeof(code)==2)
-    code=RoxenLocale.ISO639_2.map_639_1(code);
-  if(sizeof(code)!=3) return 0;
-  if(languages[code]) return languages[code];
-  return RoxenLocale.ISO639_2.get_language(code);
-#endif
 }
 
 mapping list_languages()
 {
-#if constant(Standards.ISO639_2)
   mapping iso639_1=Standards.ISO639_2.list_639_1();
   return Standards.ISO639_2.list_languages()+
     mkmapping(indices(iso639_1), map(values(iso639_1), Standards.ISO639_2.get_language));
-#else
-  mapping iso639_1=RoxenLocale.ISO639_2.list_639_1();
-  return RoxenLocale.ISO639_2.list_languages()+
-    mkmapping(indices(iso639_1), map(values(iso639_1), RoxenLocale.ISO639_2.get_language));
-#endif
 }
 
 string number(int i)

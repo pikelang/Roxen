@@ -17,7 +17,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.60 2000/09/21 23:35:27 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.61 2000/09/24 13:35:51 nilsson Exp $";
 
 constant path = "config_interface/";
 object charset_decoder;
@@ -111,13 +111,8 @@ mixed find_dir( string f, object id )
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
   
-  if (f == "") {
-#if constant(Locale.list_languages)
+  if (f == "")
     return Locale.list_languages("roxen_config");
-#else
-    return RoxenLocale.list_languages("roxen_config");
-#endif
-  }
 
   string locale;
   string rest;
@@ -130,11 +125,7 @@ mixed find_dir( string f, object id )
   }
 
   multiset languages;
-#if constant(Locale.list_languages)
     languages=(multiset)Locale.list_languages("roxen_config");
-#else
-    languages=(multiset)RoxenLocale.list_languages("roxen_config");
-#endif
 
   if (rest || languages[locale]) {
     return get_dir(path + "standard/" + (rest || ""));

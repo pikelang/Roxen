@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.21 2000/09/22 14:17:35 jonasw Exp $
+// $Id: module.pmod,v 1.22 2000/09/24 13:35:51 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -10,13 +10,8 @@ static inline string getloclang() {
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
-#if constant(Locale.DeferredLocale)
 #define LOCALE(X,Y)	\
   ([string](mixed)Locale.DeferredLocale("roxen_config",getloclang,X,Y))
-#else  /* !Locale.DeferredLocale */
-#define LOCALE(X,Y)	\
-  ([string](mixed)RoxenLocale.DeferredLocale("roxen_config",getloclang,X,Y))
-#endif /* Locale.DeferredLocale */
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;

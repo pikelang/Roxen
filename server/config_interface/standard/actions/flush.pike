@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.7 2000/09/01 12:15:52 nilsson Exp $
+ * $Id: flush.pike,v 1.8 2000/09/24 13:35:50 nilsson Exp $
  */
 #include <config_interface.h>
 #include <roxen.h>
@@ -38,11 +38,7 @@ mixed doit()
   roxen->modules = ([ ]);
 
   // Flush the locale cache.
-#if constant(Locale.flush_cache)
   Locale.flush_cache();
-#else
-  RoxenLocale.flush_cache();
-#endif
 
   gc();
 }
