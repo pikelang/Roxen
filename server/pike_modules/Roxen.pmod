@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.187 2004/05/24 14:02:29 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.188 2004/05/24 17:31:44 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1401,62 +1401,34 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in,
-			   void|int preserve_roxen_entities)
+string make_tag_attributes(mapping(string:string) in)
 {
-  if (!in || !sizeof(in))
-    return "";
+  if(!in) return "";
+  m_delete(in, "/");
+  if(!sizeof(in)) return "";
 
-  //  Special quoting which leaves Roxen entities (e.g. &page.path;)
-  //  unescaped.
-  string quote_fn(string text)
-  {
-    string out = "";
-    int pos = 0;
-    while ((pos = search(text, "&")) >= 0) {
-      if ((sscanf(text[pos..], "&%[^ <>;&];", string entity) == 1) &&
-	  search(entity, ".") >= 0) {
-	out += html_encode_string(text[..pos - 1]) + "&" + entity + ";";
-	text = text[pos + strlen(entity) + 2..];
-      } else {
-	out += html_encode_string(text[..pos]);
-	text = text[pos + 1..];
-      }
-    }
-    return out + html_encode_string(text);
-  };
-  
   string res = "";
-  if (preserve_roxen_entities) {
-    foreach(indices(in), string a)
-      res += " " + a + "=\"" + quote_fn((string) in[a]) + "\"";
-  } else {
-    foreach(indices(in), string a)
-      res += " " + a + "=\"" + html_encode_string((string) in[a]) + "\"";
-  }
+  foreach(in; string attr; string val)
+    res += " " + attr + "=\"" + html_encode_string((string)val) + "\"";
   return res;
 }
 
-string make_tag(string name, mapping(string:string) args, void|int xml,
-		void|int preserve_roxen_entities)
+string make_tag(string name, mapping(string:string) args, void|int xml)
 //! Returns an empty element tag @[name], with the tag arguments dictated
 //! by the mapping @[args]. If the flag @[xml] is set, slash character will
 //! be added in the end of the tag. Use RXML.t_xml->format_tag(name, args)
 //! instead.
 {
-  string attrs = make_tag_attributes(args, preserve_roxen_entities);
+  string attrs = make_tag_attributes(args);
   return "<" + name + attrs + (xml ? " /" : "" ) + ">";
 }
 
-string make_container(string name, mapping(string:string) args, string content,
-		      void|int preserve_roxen_entities)
+string make_container(string name, mapping(string:string) args, string content)
 //! Returns a container tag @[name] encasing the string @[content], with
 //! the tag arguments dictated by the mapping @[args]. Use
 //! RXML.t_xml->format_tag(name, args, content) instead.
 {
-  if(args["/"]=="/") m_delete(args, "/");
-  return make_tag(name, args, 0,
-		  preserve_roxen_entities) + content + "</" + name + ">";
+  return make_tag(name, args, 0) + content + "</" + name + ">";
 }
 
 string add_config( string url, array config, multiset prestate )
@@ -1583,12 +1555,6 @@ string number2string(int n, mapping m, array|function names)
     case "capitalize": return capitalize(s);
   }
 
-#ifdef old_rxml_compat
-  if (m->lower) return lower_case(s);
-  if (m->upper) return upper_case(s);
-  if (m->cap||m->capitalize) return capitalize(s);
-#endif
-
   return s;
 }
 
@@ -1633,7 +1599,7 @@ string html_encode_tag_value(LocaleString str)
 }
 
 string strftime(string fmt, int t,
-		void|string lang, void|RequestID id)
+		void|string lang, void|mixed totally_useless_variable)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
@@ -1988,7 +1954,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id)
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
-    return strftime(m->strftime, t, lang, id);
+    return strftime(m->strftime, t, lang);
 
   if (m->part)
   {
@@ -2035,11 +2001,9 @@ string tagtime(int t, mapping(string:string) m, RequestID id)
       return number2string(localtime(t)->hour, m,
 			   get_core()->language(lang, sp||"number"));
 
-     case "min":  // Not part of RXML 2.0, NGSERVER remove
      case "minute":
       return number2string(localtime(t)->min, m,
 			   get_core()->language(lang, sp||"number"));
-     case "sec":  // Not part of RXML 2.0, NGSERVER remove
      case "second":
       return number2string(localtime(t)->sec, m,
 			   get_core()->language(lang, sp||"number"));
@@ -2087,25 +2051,6 @@ string tagtime(int t, mapping(string:string) m, RequestID id)
      case "capitalize": return capitalize(res);
     }
 
-  // NGSERVER remove
-#ifdef old_rxml_compat
-  // Not part of RXML 2.0
-  if (m->upper) {
-    res=upper_case(res);
-    report_warning("Old RXML in "+(id->query||id->not_query)+
-      ", contains upper attribute in a tag. Use case=\"upper\" instead.");
-  }
-  if (m->lower) {
-    res=lower_case(res);
-    report_warning("Old RXML in "+(id->query||id->not_query)+
-      ", contains lower attribute in a tag. Use case=\"lower\" instead.");
-  }
-  if (m->cap||m->capitalize) {
-    res=capitalize(res);
-    report_warning("Old RXML in "+(id->query||id->not_query)+
-      ", contains capitalize or cap attribute in a tag. Use case=\"capitalize\" instead.");
-  }
-#endif
   return res;
 }
 
