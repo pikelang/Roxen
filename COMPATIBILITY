@@ -124,16 +124,24 @@ and Roxen WebServer 4.0.
  - Support for <expire-time />, <cache />, <nocache /> and <set-max-cache />
    has been moved to the module cache.pike
 
- - Support for <debug />, <gauge >, <help />, <trace />, <insert variables />,
-   <insert scopes />, <if debug /> and <if module-debug />
+ - Support for <debug />, <gauge />, <help />, <trace />, <insert variables />,
+   <insert scopes />, <if debug />, <if module-debug />, <emit fonts />,
+   <emit sources />, <if false />, and <if true />
    has been moved to the module development.pike
 
  - Support for <if date />, <if time />, <if user />, <if group />,
-   <autoformat />, <smallcaps />, and <random />
+   <autoformat />, <smallcaps />, <random />, <aconf />, <apre />,
+   <charset />, <emit known-langs />, <if internal-exists />,
+   <if nserious />, <insert locate />, <insert realfile />,
+   <insert variable />, <recode />, <strlen />, and <?cdata ?>
    has been moved to the module additional_rxml.pike
 
- - Existing Admin-Interface virtual servers should load two extra modules
-   to keep working: "roxenwebserver" and "development"
+ - Support for <undefine />, <use />, <define />, <maketag />, <noparse />,
+   and <?noparse ?>
+   has been moved to the module usertags.pike
+
+ - Existing Admin-Interface virtual servers should load three extra modules
+   to keep working: "roxenwebserver", "development" and "usertags"
 
  - /internal-gopher- generation has moved to the diremit module.
 

@@ -17,7 +17,7 @@
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.4 2004/05/31 02:43:31 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.5 2004/05/31 14:42:33 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -55,14 +55,26 @@ void set_entities(RXML.Context c)
 
 // ----------------- Rest ----------------------
 
+static mapping(string:int) hitcounts=([]);
+
 string status() {
-  return "";
+  string s="<tr><td colspan=2>None yet</td></tr>";
+  if(sizeof(hitcounts))
+   { s="";
+     foreach(sort(indices(hitcounts)),string scope)
+        s+=sprintf("<tr><td>%s</td><td align=right>%d</td></tr>",
+         scope,hitcounts[scope]);
+   }
+  return "<table border=1><tr><th>Tag</th><th>Nr. of uses</th></tr>"+
+   s+"</table>";
 }
-  
-void start()
+
+void start(int n, Configuration c)
 {
   query_tag_set()->prepare_context=set_entities;
   add_api_function("query_modified", api_query_modified, ({ "string" }));
+  if( c )
+    module_dependencies(c, ({ "usertags" }) );
 }
 
 mapping first_try(RequestID id)
@@ -71,7 +83,10 @@ mapping first_try(RequestID id)
   string m=id->not_query;
 
   if(sizeof(m)>sizeof(introxen) && has_prefix(m,introxen))
+  {
+    hitcounts->internal_roxen_++;
     id->not_query = "/*/" + m[sizeof(introxen)..];
+  }
 
   if(!id->misc->_roxenwebserver)
   {
@@ -96,6 +111,7 @@ class TagCombinePath {
     inherit RXML.Frame;
     
     array do_return(RequestID id) {
+      hitcounts->combine_path++;
       return ({ combine_path_unix(args->base, args->path) });
     }
   }
@@ -112,6 +128,7 @@ class TagFSize {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      hitcounts->fsize++;
       catch {
 	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
 	if (s && (s[1]>= 0)) {
@@ -142,6 +159,7 @@ class TagCoding {
                       210, 194, 127, 125, 190, 210, 209, 204, 208, 209, 190, 207, 209, 154,
                       127, 209, 207, 210, 194, 127, 125, 140, 155});
     array do_return(RequestID id) {
+      hitcounts->x266a++;
       result = sprintf("%{%c%}", space[*]-sizeof(space));
     }
   }
@@ -158,6 +176,7 @@ class TagConfigImage {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      hitcounts->configimage++;
       if (args->src[sizeof(args->src)-4..][0] == '.')
 	args->src = args->src[..sizeof(args->src)-5];
 
@@ -174,7 +193,7 @@ class TagConfigImage {
 
 string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 {
-
+  hitcounts->modified++;
   if(m->by && !m->file && !m->realfile)
     m->file = id->virtfile;
   
@@ -218,6 +237,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 
 string|array(string) tag_user(string tag, mapping m, RequestID id)
 {
+  hitcounts->user++;
   if (!m->name)
     return "";
   
@@ -282,6 +302,7 @@ class TagCSet {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      hitcounts->cset++;
       if( !args->variable ) parse_error("Variable not specified.\n");
       if(!content) content="";
       if( args->quote != "none" )
@@ -301,6 +322,7 @@ class TagCrypt {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      hitcounts->crypt++;
       if(args->compare) {
 	_ok=crypt(content,args->compare);
 	return 0;
@@ -313,6 +335,7 @@ class TagCrypt {
 
 string simpletag_sort(string t, mapping m, string c, RequestID id)
 {
+  hitcounts->sort++;
   if(!m->separator)
     m->separator = "\n";
 
@@ -341,6 +364,7 @@ string simpletag_sort(string t, mapping m, string c, RequestID id)
 string api_query_modified(RequestID id, string f, int|void by)
 {
   mapping m = ([ "by":by, "file":f ]);
+  hitcounts->api_query_modified++;
   return tag_modified("modified", m, id, id);
 }
 
@@ -517,6 +541,20 @@ Ah,</sort></ex>
 or
 :-)
 maybe</sort></ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"combine-path":#"<desc type='tag'><p><short>
+ Combines paths.</short>
+</p></desc>
+
+<attr name='base' value='string' required='required'>
+ <p>The base path.</p>
+</attr>
+
+<attr name='path' value='number' required='required'>
+ <p>The path to be combined (appended) to the base path.</p>
 </attr>",
 
 //----------------------------------------------------------------------

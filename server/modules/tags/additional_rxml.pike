@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.30 2004/05/31 08:51:46 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.31 2004/05/31 14:42:34 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -551,6 +551,202 @@ class TagIfNserious {
   }
 }
 
+class TagInsertRealfile {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "realfile";
+
+  string get_data(string var, mapping args, RequestID id) {
+    string filename=id->conf->real_file(Roxen.fix_relative(var, id), id);
+    if(!filename)
+      RXML.run_error("Could not find the file %s.\n", Roxen.fix_relative(var, id));
+    Stdio.File file=Stdio.File(filename, "r");
+    if(file)
+      return file->read();
+    RXML.run_error("Could not open the file %s.\n", Roxen.fix_relative(var, id));
+  }
+}
+
+string simpletag_apre(string tag, mapping m, string q, RequestID id)
+{
+  string href;
+
+  if(m->href) {
+    href=m_delete(m, "href");
+    array(string) split = href/":";
+    if ((sizeof(split) > 1) && (sizeof(split[0]/"/") == 1))
+      return RXML.t_xml->format_tag("a", m, q);
+    href=Roxen.strip_prestate(Roxen.fix_relative(href, id));
+  }
+  else
+    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
+
+  if(!strlen(href))
+    href="";
+
+  multiset prestate = (< @indices(id->prestate) >);
+
+  // FIXME: add and drop should handle t_array
+  if(m->add)
+    foreach((m_delete(m, "add") - " ")/",", string s)
+      prestate[s]=1;
+
+  if(m->drop)
+    foreach((m_delete(m,"drop") - " ")/",", string s)
+      prestate[s]=0;
+
+  m->href = Roxen.add_pre_state(href, prestate);
+  return RXML.t_xml->format_tag("a", m, q);
+}
+
+string simpletag_aconf(string tag, mapping m,
+		       string q, RequestID id)
+{
+  string href;
+
+  if(m->href) {
+    href=m_delete(m, "href");
+    if (search(href, ":") == search(href, "//")-1)
+      RXML.parse_error("It is not possible to add configs to absolute URLs.\n");
+    href=Roxen.fix_relative(href, id);    
+  }
+  else
+    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
+
+  array cookies = ({});
+  // FIXME: add and drop should handle t_array
+  if(m->add)
+    foreach((m_delete(m,"add") - " ")/",", string s)
+      cookies+=({s});
+
+  if(m->drop)
+    foreach((m_delete(m,"drop") - " ")/",", string s)
+      cookies+=({"-"+s});
+
+  m->href = Roxen.add_config(href, cookies, id->prestate);
+  return RXML.t_xml->format_tag("a", m, q);
+}
+
+class TagPathplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "path";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    string fp = "";
+    array res = ({});
+    string p = m->path || id->not_query;
+    if( m->trim )
+      sscanf( p, "%s"+m->trim, p );
+    if( has_suffix(p, "/") )
+      p = p[..strlen(p)-2];
+    array q = p / "/";
+    if( m->skip )
+      q = q[(int)m->skip..];
+    if( m["skip-end"] )
+      q = q[..sizeof(q)-((int)m["skip-end"]+1)];
+    foreach( q, string elem )
+    {
+      fp += "/" + elem;
+      fp = replace( fp, "//", "/" );
+      res += ({
+        ([
+          "name":elem,
+          "path":fp
+        ])
+      });
+    }
+    return res;
+  }
+}
+
+class TagInsertVariable {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "variable";
+
+  string get_data(string var, mapping args, RequestID id) {
+    if(zero_type(RXML.user_get_var(var, args->scope)))
+      RXML.run_error("No such variable ("+var+").\n", id);
+    if(args->index) {
+      mixed data = RXML.user_get_var(var, args->scope);
+      if(intp(data) || floatp(data))
+	RXML.run_error("Can not index numbers.\n");
+      if(stringp(data)) {
+	if(args->split)
+	  data = data / args->split;
+	else
+	  data = ({ data });
+      }
+      if(arrayp(data)) {
+	int index = (int)args->index;
+	if(index<0) index=sizeof(data)+index+1;
+	if(sizeof(data)<index || index<1)
+	  RXML.run_error("Index out of range.\n");
+	else
+	  return data[index-1];
+      }
+      if(data[args->index]) return data[args->index];
+      RXML.run_error("Could not index variable data\n");
+    }
+    return (string)RXML.user_get_var(var, args->scope);
+  }
+}
+
+class TagPICData
+{
+  inherit RXML.Tag;
+  constant name = "cdata";
+  constant flags = RXML.FLAG_PROC_INSTR;
+  RXML.Type content_type = RXML.t_text;
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return (RequestID id)
+    {
+      result_type = RXML.t_text;
+      result = content[1..];
+      return 0;
+    }
+  }
+}
+
+class TagStrLen {
+  inherit RXML.Tag;
+  constant name = "strlen";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return() {
+      if(!stringp(content)) {
+	result="0";
+	return 0;
+      }
+      result = (string)strlen(content);
+    }
+  }
+}
+
+class TagNumber {
+  inherit RXML.Tag;
+  constant name = "number";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      if(args->type=="roman") return ({ String.int2roman((int)args->num) });
+      if(args->type=="memory") return ({ String.int2size((int)args->num) });
+      result=core.language(args->lang||args->language||
+                            RXML_CONTEXT->misc->theme_language,
+			    args->type||"number",id)( (int)args->num );
+    }
+  }
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
@@ -761,6 +957,240 @@ constant tagdoc=([
   </else>
 </ex-box>
 </attr>",
+
+//----------------------------------------------------------------------
+
+"insert#realfile":#"<desc type='plugin'><p><short>
+ Inserts a raw, unparsed file.</short> The disadvantage with the
+ realfile plugin compared to the file plugin is that the realfile
+ plugin needs the inserted file to exist, and can't fetch files from e.g.
+ an arbitrary location module. Note that the realfile insert plugin
+ can not fetch files from outside the virtual file system.
+</p></desc>
+
+<attr name='realfile' value='string'>
+ <p>The virtual path to the file to be inserted.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"apre":#"<desc type='cont'><p><short>
+
+ Creates a link that can modify prestates.</short> Prestates can be
+ seen as valueless cookies or toggles that are easily modified by the
+ user. The prestates are added to the URL. If you set the prestate
+ \"no-images\" on \"http://www.demolabs.com/index.html\" the URL would
+ be \"http://www.demolabs.com/(no-images)/\". Use <xref
+ href='../if/if_prestate.tag' /> to test for the presence of a
+ prestate. <tag>apre</tag> works just like the <tag>a href='...'</tag>
+ container, but if no \"href\" attribute is specified, the current
+ page is used. </p>
+
+</desc>
+
+<attr name='href' value='uri'>
+ <p>Indicates which page should be linked to, if any other than the
+ present one.</p>
+</attr>
+
+<attr name='add' value='string'>
+ <p>The prestate or prestates that should be added, in a comma
+ separated list.</p>
+</attr>
+
+<attr name='drop' value='string'>
+ <p>The prestate or prestates that should be dropped, in a comma separated
+ list.</p>
+</attr>
+
+<attr name='class' value='string'>
+ <p>This cascading style sheet (CSS) class definition will apply to
+ the a-element.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"autoformat":#"<desc type='cont'><p><short hide='hide'>
+ Replaces newlines with <tag>br/</tag>:s'.</short>Replaces newlines with
+ <tag>br /</tag>:s'.</p>
+
+<ex><autoformat>
+It is almost like
+using the pre tag.
+</autoformat></ex>
+</desc>
+
+<attr name='p'>
+ <p>Replace empty lines with <tag>p</tag>:s.</p>
+<ex><autoformat p=''>
+It is almost like
+
+using the pre tag.
+</autoformat></ex>
+</attr>
+
+<attr name='nobr'>
+ <p>Do not replace newlines with <tag>br /</tag>:s.</p>
+</attr>
+
+<attr name='nonbsp'><p>
+ Do not turn consecutive spaces into interleaved
+ breakable/nonbreakable spaces. When this attribute is not given, the
+ tag will behave more or less like HTML:s <tag>pre</tag> tag, making
+ whitespace indention work, without the usually unwanted effect of
+ really long lines extending the browser window width.</p>
+</attr>
+
+<attr name='class' value='string'>
+ <p>This cascading style sheet (CSS) definition will be applied on the
+ p elements.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"aconf":#"<desc type='cont'><p><short>
+ Creates a link that can modify the config states in the cookie
+ RoxenConfig.</short> In practice it will add &lt;keyword&gt;/ right
+ after the server in the URL. E.g. if you want to remove the config
+ state bacon and add config state egg the
+ first \"directory\" in the path will be &lt;-bacon,egg&gt;. If the
+ user follows this link the WebServer will understand how the
+ RoxenConfig cookie should be modified and will send a new cookie
+ along with a redirect to the given url, but with the first
+ \"directory\" removed. The presence of a certain config state can be
+ detected by the <xref href='../if/if_config.tag'/> tag.</p>
+</desc>
+
+<attr name='href' value='uri'>
+ <p>Indicates which page should be linked to, if any other than the
+ present one.</p>
+</attr>
+
+<attr name='add' value='string'>
+ <p>The config state, or config states that should be added, in a comma
+ separated list.</p>
+</attr>
+
+<attr name='drop' value='string'>
+ <p>The config state, or config states that should be dropped, in a comma
+ separated list.</p>
+</attr>
+
+<attr name='class' value='string'>
+ <p>This cascading style sheet (CSS) class definition will apply to
+ the a-element.</p>
+
+ <p>All other attributes will be inherited by the generated <tag>a</tag> tag.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"emit#path":({ #"<desc type='plugin'><p><short>
+ Prints paths.</short> This plugin traverses over all directories in
+ the path from the root up to the current one.</p>
+</desc>
+
+<attr name='path' value='string'><p>
+   Use this path instead of the document path</p>
+</attr>
+
+<attr name='trim' value='string'><p>
+ Removes all of the remaining path after and including the specified
+ string.</p>
+</attr>
+
+<attr name='skip' value='number'><p>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the root.</p>
+</attr>
+
+<attr name='skip-end' value='number'><p>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the end.</p>
+</attr>",
+	       ([
+"&_.name;":#"<desc type='entity'><p>
+ Returns the name of the most recently traversed directory.</p>
+</desc>",
+
+"&_.path;":#"<desc type='entity'><p>
+ Returns the path to the most recently traversed directory.</p>
+</desc>"
+	       ])
+}),
+
+//----------------------------------------------------------------------
+
+"insert#variable":#"<desc type='plugin'><p><short>
+ Inserts the value of a variable.</short>
+</p></desc>
+
+<attr name='variable' value='string'>
+ <p>The name of the variable.</p>
+</attr>
+
+<attr name='scope' value='string'>
+ <p>The name of the scope, unless given in the variable attribute.</p>
+</attr>
+
+<attr name='index' value='number'>
+ <p>If the value of the variable is an array, the element with this
+ index number will be inserted. 1 is the first element. -1 is the last
+ element.</p>
+</attr>
+
+<attr name='split' value='string'>
+ <p>A string with which the variable value should be splitted into an
+ array, so that the index attribute may be used.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"?cdata": #"<desc type='pi'><p><short>
+ The content is inserted as a literal.</short> I.e. any XML markup
+ characters are encoded with character references. The first
+ whitespace character (i.e. the one directly after the \"cdata\" name)
+ is discarded.</p>
+
+ <p>This processing instruction is just like the &lt;![CDATA[ ]]&gt;
+ directive but parsed by the RXML parser, which can be useful to
+ satisfy browsers that does not handle &lt;![CDATA[ ]]&gt; correctly.</p>
+</desc>",
+
+//----------------------------------------------------------------------
+
+"number":#"<desc type='tag'><p><short>
+ Prints a number as a word.</short>
+</p></desc>
+
+<attr name='num' value='number' required='required'><p>
+ Print this number.</p>
+<ex><number num='4711'/></ex>
+</attr>
+
+<attr name='language' value='langcodes'><p>
+ The language to use.</p>
+ <p><lang/></p>
+ <ex>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
+ <ex>Il mio numero preferito è <number num='15' language='it'/>.</ex>
+</attr>
+
+<attr name='type' value='number|ordered|roman|memory' default='number'><p>
+ Sets output format.</p>
+
+ <ex>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
+ <ex>Only <number num='274589226' type='memory'/> left on the Internet.</ex>
+ <ex>Spock Garfield <number num='17' type='roman'/> rests here.</ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"strlen":#"<desc type='cont'><p><short>
+ Returns the length of the contents.</short></p>
+
+ <ex>There are <strlen>foo bar gazonk</strlen> characters
+ inside the tag.</ex>
+</desc>",
 
 //----------------------------------------------------------------------
 

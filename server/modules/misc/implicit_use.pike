@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.9 2004/05/30 23:26:12 _cvs_stephen Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.10 2004/05/31 14:42:33 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -20,8 +20,10 @@ void create() {
 
 mapping(string:array(string)) matches;
 
-void start()
+void start(int n, Configuration c)
 {
+  if( c )
+    module_dependencies(c, ({ "usertags" }) );
   matches=([]);
   string uses=query("uses")-"\r";
   foreach(uses/"\n", string pair) {

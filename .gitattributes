@@ -259,6 +259,7 @@ worldmap binary
 /server/modules/tags/snmp.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/translation_mod.pike foreign_ident
+/server/modules/tags/usertags.pike foreign_ident
 /server/modules/tags/vform.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
 /server/modules/tags/wizz.pike foreign_ident

@@ -9,7 +9,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: development.pike,v 1.1 2004/05/31 02:43:31 _cvs_stephen Exp $";
+ "$Id: development.pike,v 1.2 2004/05/31 14:42:34 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -383,6 +383,47 @@ class TagIfDebug {
   }
 }
 
+class TagEmitFonts
+{
+  inherit RXML.Tag;
+  constant name = "emit", plugin_name = "fonts";
+  array get_dataset(mapping args, RequestID id)
+  {
+    return roxen->fonts->get_font_information(args->ttf_only);
+  }
+}
+
+class TagEmitSources {
+  inherit RXML.Tag;
+  constant name="emit";
+  constant plugin_name="sources";
+
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    return Array.map( indices(RXML_CONTEXT->tag_set->get_plugins("emit")),
+		      lambda(string source) { return (["source":source]); } );
+  }
+}
+
+class TagIfTrue {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "true";
+
+  int eval(string u, RequestID id) {
+    return _ok;
+  }
+}
+
+class TagIfFalse {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "false";
+
+  int eval(string u, RequestID id) {
+    return !_ok;
+  }
+}
+
 // --------------------- Documentation -----------------------
 
 TAGDOCUMENTATION;
@@ -494,6 +535,92 @@ constant tagdoc=([
 </p></desc>",
 
 //----------------------------------------------------------------------
+
+"emit#sources":({ #"<desc type='plugin'><p><short>
+ Provides a list of all available emit sources.</short>
+</p></desc>",
+  ([ "&_.source;":#"<desc type='entity'><p>
+  The name of the source.</p></desc>" ]) }),
+
+//----------------------------------------------------------------------
+
+"emit#fonts":({ #"<desc type='plugin'><p><short>
+ Prints available fonts.</short> This plugin makes it easy to list all
+ available fonts in ChiliMoon.
+</p></desc>
+
+<attr name='type' value='ttf|all'>
+ <p>Which font types to list. ttf means all true type fonts, whereas all
+ means all available fonts.</p>
+</attr>",
+		([
+"&_.name;":#"<desc type='entity'><p>
+ Returns a font identification name.</p>
+
+<p>This example will print all available ttf fonts in gtext-style.</p>
+<ex-box><emit source='fonts' type='ttf'>
+  <gtext font='&_.name;'>&_.expose;</gtext><br />
+</emit></ex-box>
+</desc>",
+"&_.copyright;":#"<desc type='entity'><p>
+ Font copyright notice. Only available for true type fonts.
+</p></desc>",
+"&_.expose;":#"<desc type='entity'><p>
+ The preferred list name. Only available for true type fonts.
+</p></desc>",
+"&_.family;":#"<desc type='entity'><p>
+ The font family name. Only available for true type fonts.
+</p></desc>",
+"&_.full;":#"<desc type='entity'><p>
+ The full name of the font. Only available for true type fonts.
+</p></desc>",
+"&_.path;":#"<desc type='entity'><p>
+ The location of the font file.
+</p></desc>",
+"&_.postscript;":#"<desc type='entity'><p>
+ The fonts postscript identification. Only available for true type fonts.
+</p></desc>",
+"&_.style;":#"<desc type='entity'><p>
+ Font style type. Only available for true type fonts.
+</p></desc>",
+"&_.format;":#"<desc type='entity'><p>
+ The format of the font file, e.g. ttf.
+</p></desc>",
+"&_.version;":#"<desc type='entity'><p>
+ The version of the font. Only available for true type fonts.
+</p></desc>",
+"&_.trademark;":#"<desc type='entity'><p>
+ Font trademark notice. Only available for true type fonts.
+</p></desc>",
+		])
+	     }),
+
+//----------------------------------------------------------------------
+
+"if#true":#"<desc type='plugin'><p><short>
+ This will always be true if the truth value is set to be
+ true.</short> Equivalent with <xref href='then.tag' />.
+ This is a <i>State</i> plugin.
+</p></desc>
+
+<attr name='true' required='required'><p>
+ Show contents if truth value is false.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"if#false":#"<desc type='plugin'><p><short>
+ This will always be true if the truth value is set to be
+ false.</short> Equivalent with <xref href='else.tag' />.
+ This is a <i>State</i> plugin.</p>
+</desc>
+
+<attr name='false' required='required'><p>
+ Show contents if truth value is true.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
 
     ]);
 #endif
