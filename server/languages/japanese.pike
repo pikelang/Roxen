@@ -8,7 +8,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.18 2000/12/18 17:10:05 jhs Exp $";
+constant cvs_version = "$Id: japanese.pike,v 1.19 2003/07/15 08:50:47 anders Exp $";
 constant _id = ({ "kj", "japanese", "日本語" });
 constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
 			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
@@ -118,10 +118,20 @@ string month(int num)
   return mknumber(num)+"月";
 }
 
+string short_month(int num)
+{
+  return month(num);
+}
+
 string day(int num)
 {
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
 	    "曜日";
+}
+
+string short_day(int num)
+{
+  return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ];
 }
 
 static void create()

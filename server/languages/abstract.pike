@@ -28,9 +28,19 @@ string month(int num)
   return months[ num - 1 ];
 }
 
+string short_month(int num)
+{
+  return months[ num - 1 ][..2];
+}
+
 string day(int num)
 {
   return days[ num - 1 ];
+}
+
+string short_day(int num)
+{
+  return days[ num - 1 ][..1];
 }
 
 array aliases()
