@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.174 2000/09/15 02:01:07 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.175 2000/09/16 19:56:19 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -697,9 +697,9 @@ class TagCoding {
 		     201, 204, 188, 121, 119, 195, 198, 198, 199, 148, 121, 203, 201, 204,
 		     188, 121, 149});
     array do_return(RequestID id) {
-      result=Array.map(space, lambda(int|string c) {
-				return intp(c)?(string)({c-(sizeof(space))}):c;
-			      } )*"";
+      result=map(space, lambda(int|string c) {
+			  return intp(c)?(string)({c-(sizeof(space))}):c;
+			} )*"";
     }
   }
 }
@@ -841,10 +841,10 @@ class TagInsertVariables {
   string get_data(string var, mapping args) {
     RXML.Context context=RXML.get_context();
     if(var=="full")
-      return Array.map(sort(context->list_var(args->scope)),
-		       lambda(string s) {
-			 return sprintf("%s=%O", s, context->user_get_var(s, args->scope) );
-		       } ) * "\n";
+      return map(sort(context->list_var(args->scope)),
+		 lambda(string s) {
+		   return sprintf("%s=%O", s, context->user_get_var(s, args->scope) );
+		 } ) * "\n";
     return String.implode_nicely(sort(context->list_var(args->scope)));
   }
 }
@@ -860,11 +860,11 @@ class TagInsertScopes {
       string result = "";
       foreach(sort(context->list_scopes()), string scope) {
 	result += scope+"\n";
-	result += Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
-						     lambda(string s) {
-						       return sprintf("%s.%s=%O", scope, s,
-								      context->get_var(s, args->scope) );
-						     } ) * "\n");
+	result += Roxen.html_encode_string(map(sort(context->list_var(args->scope)),
+					       lambda(string s) {
+						 return sprintf("%s.%s=%O", scope, s,
+								context->get_var(s, args->scope) );
+					       } ) * "\n");
 	result += "\n";
       }
       return result;

@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.55 2000/09/10 16:35:08 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.56 2000/09/16 19:57:41 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -394,11 +394,11 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
   }
 
   id->misc->tmp_colmax=0;
-  rows = Array.map(rows,lambda(string r, string s){
-			  array t=r/s;
-			  if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
-			  return t;
-			}, sep);
+  rows = map(rows,lambda(string r, string s){
+		    array t=r/s;
+		    if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
+		    return t;
+		  }, sep);
 
   if(m["interactive-sort"]) {
     m->state=Page_state(id);
@@ -419,7 +419,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
       case "economic-int":
       case "float":
       case "economic-float":
-        rows = Array.map(rows, lambda(array a, int c) { return ({ (float)a[c] })+a; }, sortcol);
+        rows = map(rows, lambda(array a, int c) { return ({ (float)a[c] })+a; }, sortcol);
         sortcol=0;
         num=1;
       }
@@ -428,7 +428,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     if((int)m->sortcol<0)
       rows=reverse(rows);
     if(num)
-      rows = Array.map(rows, lambda(array a) { return a[1..]; });
+      rows = map(rows, lambda(array a) { return a[1..]; });
   }
 
   if(m->min || m->max) {
