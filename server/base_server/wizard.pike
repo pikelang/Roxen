@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.57 1998/03/12 20:08:54 mirar Exp $
+/* $Id: wizard.pike,v 1.58 1998/03/13 16:51:23 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -181,11 +181,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      mapping m2 = copy_value(m);
      m_delete(m2, "choices");
      m_delete(m2, "options");
+     //escape the characters we need for internal purposes..
+     m->choices=replace(m->choices,
+			({"\\,", "\\:"}), 
+			({"__CoMma__", "__CoLon__"}));
+
      return make_container("select", m2, Array.map(m->choices/",",
 						   lambda(string s, string c) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
+	s=replace(s,({"__CoMma__", 
+		      "__CoLon__"}),({",",":"})); //can't be done before.
+	t=replace(t,({"__CoMma__", 
+		      "__CoLon__"}),({",",":"}));
+
         return "<option value='"+s+"' "+(s==c?" selected":"")+">"+html_encode_string(t)+"\n";
      },current)*"");
 
@@ -199,11 +209,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m2, "choices");
     m_delete(m2, "options");
     m2->multiple="1";
+    //escape the characters we need for internal purposes..
+    m->choices=replace(m->choices,
+		       ({"\\,", "\\:"}), 
+		       ({"__CoMma__", "__CoLon__"}));
+
     return make_container("select", m2, Array.map(m->choices/",",
 				 lambda(string s, array c) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
         t = s;
+      s=replace(s,({"__CoMma__", 
+		    "__CoLon__"}),({",",":"})); //can't be done before.
+      t=replace(t,({"__CoMma__", 
+		    "__CoLon__"}),({",",":"}));
+
       return "<option value='"+s+"' "+(search(c,s)!=-1?"selected":"")+">"+html_encode_string(t)+"\n";
     },(current||"")/"\0")*"");
   }
@@ -255,7 +275,8 @@ string parse_wizard_help(string t, mapping m, string contents, object id,
 
 string make_title()
 {
-  string s = (this_object()->wizard_name||this_object()->name) - "<p>";
+  string s = (this_object()->wizard_name||this_object()->name||"No name") -
+    "<p>";
   sscanf(s, "%*s//%s", s);
   sscanf(s, "%*d:%s", s);
   return s;
@@ -420,6 +441,10 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
     if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
     if(data = pg(id,@args)) break;
   }
+  // If it's a mapping we can presume it is an http response, and return
+  // it directly.
+  if (mappingp(data))
+    return data;
   return parse_wizard_page(data,id,wiz_name);
 }
 
