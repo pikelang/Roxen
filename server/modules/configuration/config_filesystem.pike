@@ -17,7 +17,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.59 2000/09/19 13:10:44 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.60 2000/09/21 23:35:27 per Exp $";
 
 constant path = "config_interface/";
 object charset_decoder;
@@ -144,65 +144,67 @@ mixed find_dir( string f, object id )
 
 mixed find_file( string f, object id )
 {
-  if( !id->misc->config_user )
-    return http_auth_required( "Roxen configuration" );
-  if( (f == "") && !id->misc->pathinfo )
-    return http_redirect(fix_relative( "/standard/", id ), id );
-
-
-  string encoding = config_setting( "charset" );
-  if( encoding != "utf-8" )
-    catch { charset_decoder=Locale.Charset.decoder( encoding ); };
-  else
-    charset_decoder = 0;
-  id->set_output_charset( encoding );
-
-
-  id->since = 0;
-  catch 
+  if( !id->misc->internal_get )
   {
-    if( !id->misc->request_charset_decoded )
-    {
-      id->misc->request_charset_decoded = 1;
+    if( !id->misc->config_user )
+      return http_auth_required( "Roxen configuration" );
+    if( (f == "") && !id->misc->pathinfo )
+      return http_redirect(fix_relative( "/standard/", id ), id );
 
-      if( charset_decoder )
+    string encoding = config_setting( "charset" );
+    if( encoding != "utf-8" )
+      catch { charset_decoder=Locale.Charset.decoder( encoding ); };
+    else
+      charset_decoder = 0;
+    id->set_output_charset( encoding );
+
+    id->since = 0;
+    catch 
+    {
+      if( !id->misc->request_charset_decoded )
       {
-        void decode_variable( string v )
+        id->misc->request_charset_decoded = 1;
+
+        if( charset_decoder )
         {
-          id->variables[v] = charset_decoder->clear()->
-                           feed(id->variables[v])->drain();
-        };
-        f = charset_decoder->clear()->feed( f )->drain();
-        id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
-        map( indices(id->variables), decode_variable );
-      }
-      else
-      {
-        void decode_variable( string v )
+          void decode_variable( string v )
+          {
+            id->variables[v] = charset_decoder->clear()->
+                             feed(id->variables[v])->drain();
+          };
+          f = charset_decoder->clear()->feed( f )->drain();
+          id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
+          map( indices(id->variables), decode_variable );
+        }
+        else
         {
-          id->variables[v] = utf8_to_string( id->variables[v] );
-        };
-        f = utf8_to_string( f );
-        id->not_query = utf8_to_string( id->not_query );
-        map( indices(id->variables), decode_variable );
+          void decode_variable( string v )
+          {
+            id->variables[v] = utf8_to_string( id->variables[v] );
+          };
+          f = utf8_to_string( f );
+          id->not_query = utf8_to_string( id->not_query );
+          map( indices(id->variables), decode_variable );
+        }
       }
-    }
-  };
+    };
+  }
+
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
 
-  string locale;
-  string rest;
+  string locale, df, rest, type="";
+  mixed retval;
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  id->misc->cf_locale = locale;
+  if( !id->misc->internal_get )
+  {
+    id->misc->cf_locale = locale;
+    // add template to all rxml/html pages...
+    type = id->conf->type_from_filename( id->not_query );
+  }
 
-  // add template to all rxml/html pages...
-  string type = id->conf->type_from_filename( id->not_query );
-
-  string df;
-  mixed retval;
   if( tar && rest && (sscanf( rest, "docs/%s", df ) ))
   {
     object s = tar->stat( df );
@@ -235,9 +237,7 @@ mixed find_file( string f, object id )
     [string realfile, array stat] = stat_info;
     switch( stat[ ST_SIZE ] )
     {
-     case -1:
-     case -3:
-     case -4:
+     case -1:  case -3: case -4:
        return 0; /* Not suitable (device or no file) */
      case -2: /* directory */
        return -1;
@@ -247,6 +247,8 @@ mixed find_file( string f, object id )
     }
     id->realfile = realfile;
     retval = Stdio.File( realfile, "r" );
+    if( id->misc->internal_get )
+      return retval;
   }
 
   if( id->variables["content-type"] )
@@ -255,54 +257,52 @@ mixed find_file( string f, object id )
   if( locale != "standard" ) 
     roxen.set_locale( locale );
 
-  switch( type )
+  if( type  == "text/html" )
   {
-   case "text/html":
-     string data, title="", pre;
-     if( stringp( retval ) )
-       data = retval;
-     else
-       data = retval->read();
+    string data, title="", pre;
+    if( stringp( retval ) )
+      data = retval;
+    else
+      data = retval->read();
 
-     if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
-       data = pre+data;
+    if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
+      data = pre+data;
 
-     string tmpl = (template_for(locale+"/"+f,id) ||
-                    template_for("standard/"+f,id));
+    string tmpl = (template_for(locale+"/"+f,id) ||
+                   template_for("standard/"+f,id));
 
-     if(tmpl)
-       data = sprintf(base,tmpl,title,data);
+    if(tmpl)
+      data = sprintf(base,tmpl,title,data);
 
-     if( !id->misc->stat )
-       id->misc->stat = allocate(10);
+    if( !id->misc->stat )
+      id->misc->stat = allocate(10);
 
-     id->misc->stat[ ST_MTIME ] = time(1);
-     if(!id->misc->defines)
-       id->misc->defines = ([]);
-     id->misc->defines[" _stat"] = id->misc->stat;
+    id->misc->stat[ ST_MTIME ] = time(1);
+    if(!id->misc->defines)
+      id->misc->defines = ([]);
+    id->misc->defines[" _stat"] = id->misc->stat;
      
-//      return http_string_answer( data, type );
-     retval = http_rxml_answer( data, id );
+    //      return http_string_answer( data, type );
+    retval = http_rxml_answer( data, id );
 
 
-     NOCACHE();
-     retval->stat = 0;
-     retval->len = strlen( retval->data );
-     retval->expires = time(1);
-     if( locale != "standard" ) 
-       roxen.set_locale( "standard" );
+    NOCACHE();
+    retval->stat = 0;
+    retval->len = strlen( retval->data );
+    retval->expires = time(1);
+    if( locale != "standard" ) 
+      roxen.set_locale( "standard" );
   }
-
+//   foreach( glob( "cf_goto_*", indices( id->variables ) - ({ 0 }) ), string q )
+//     if( sscanf( q, "cf_goto_%s.x", q ) )
+//     {
+//       while( id->misc->orig ) id = id->misc->orig;
+//       q = fix_relative( q, id );
+//       return http_redirect( q, id );
+//     }
   if( stringp( retval ) )
     retval = http_string_answer( retval, type );
 
-  foreach( glob( "cf_goto_*", indices( id->variables ) - ({ 0 }) ), string q )
-    if( sscanf( q, "cf_goto_%s.x", q ) )
-    {
-      while( id->misc->orig ) id = id->misc->orig;
-      q = fix_relative( q, id );
-      return http_redirect( q, id );
-    }
   return retval;
 }
 
