@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.6 2000/02/13 16:27:51 per Exp $
+ * $Id: listfonts.pike,v 1.7 2000/03/14 04:39:04 mast Exp $
  */
 
 constant action = "maintenance";
@@ -14,14 +14,15 @@ string versions(string font)
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
-    res += ({ "<input type=hidden name='"+(font+"/"+t)+"'>"+m[t] });
+    res += ({ "<input type=hidden name='"+(font+"/"+t)+"'>"+
+	      Roxen.html_encode_string(m[t]) });
   return String.implode_nicely(res);
 }
 
 string list_font(string font)
 {
-  return (map(replace(font,"_"," ")/" ",capitalize)*" "+
-          " <font size=-1>"+ versions(font)+"</font><br>");
+  return (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
+          " <font size=-1>"+versions(font)+"</font><br>");
 }
 
 string page_0(object id)
@@ -30,7 +31,7 @@ string page_0(object id)
               "<input type=hidden name=doit value=indeed>"
               "<font size=+1>All available fonts</font><p>");
   foreach(roxen->fonts->available_fonts(1), string font)
-  res+=list_font(font);
+    res+=list_font(font);
   // FIXME: locale?
   res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
           "&locale.font_test_string;'><p>"
@@ -45,7 +46,9 @@ string page_1(object id)
   string res="";
   mapping v = id->variables;
   foreach(roxen->fonts->available_fonts(), string fn)
-    res += fn+": <gtext align=top font='"+fn+"'>"+v->text+"</gtext><p>";
+    res += Roxen.html_encode_string (fn)+": "
+      "<gtext align=top font='"+fn+"'>"+
+      Roxen.html_encode_string (v->text)+"</gtext><p>";
   return res+"<br><p>\n<cf-ok>";
 }
 
