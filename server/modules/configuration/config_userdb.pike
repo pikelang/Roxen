@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.52 2000/09/07 18:25:58 mast Exp $
+// $Id: config_userdb.pike,v 1.53 2000/09/11 10:49:33 lange Exp $
 
 inherit "module";
 #include <config_interface.h>
@@ -95,64 +95,61 @@ class ConfigurationSettings
                                     "Theme",
                                     "The theme to use" ) );
     defvar( "configlistmode", 0,
-            LOCALE( "", "Compact site list" ),
+            LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
-            LOCALE( "", "If true, the list list will be presented in a "
-                    "compact format suitable for servers with many sites" ));
-
-
+            LOCALE(279, "If true, the list list will be presented in a "
+                    "compact format suitable for servers with many sites." ));
 
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
-            TYPE_FLAG, LOCALE(175, "Show the variable documentation."),
-            0, 0 );
+            TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
 
     defvar( "more_mode", 1, LOCALE(176, "Show advanced configuration options"),
-	    TYPE_FLAG, LOCALE(177, "Show all possible configuration options, not only "
-			      "the ones that are most often changed."),
-	    0, 0 );
+	    TYPE_FLAG, 
+	    LOCALE(177, "Show all possible configuration options, not only "
+		   "the ones that are most often changed."));
 
-    defvar( "translations", 0, LOCALE(178, "Show the incomplete translations"),
-            TYPE_FLAG, LOCALE(179, "Show the language selection flags. The translation "
-			      "of the configuration interface is not done yet, so this is "
-			      "mostly useful for the curious or the translator."),
-	    0, 0 );
+    defvar( "translations", 0, LOCALE(178, "Show all translations"),
+            TYPE_FLAG, 
+	    LOCALE(179, "Show the language selection flags. All translations "
+		   "will be listed, more or less completed."));
 
     defvar( "devel_mode", 1, LOCALE(180, "Show developer options and actions"),
-	    TYPE_FLAG, LOCALE(181, "Show settings and actions that are not normaly "
-			      "useful for non-developer users. If you develop your own "
-			      "roxen modules, this option is for you."),
-	    0, 0 );
+	    TYPE_FLAG, 
+	    LOCALE(181, "Show settings and actions that are not normaly "
+		   "useful for non-developer users. If you develop your own "
+		   "Roxen modules, this option is for you."));
 
     defvar( "bgcolor", "white", LOCALE(182, "Background color"),
-	    TYPE_STRING, LOCALE(183, "Administration interface background color."),
-	    0, 0 );
+	    TYPE_STRING, 
+	    LOCALE(183, "Administration interface background color."));
 
     defvar( "fgcolor", "black", LOCALE(184, "Text color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."),
-	    0, 0 );
+	    TYPE_STRING, LOCALE(185, "Administration interface text color."));
 
     defvar( "linkcolor", "darkblue", LOCALE(186, "Link color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."),
-	    0, 0 );
+	    TYPE_STRING, LOCALE(185, "Administration interface text color."));
 
     defvar( "font", "franklin gothic demi", LOCALE(187, "Font"),
-	    TYPE_FONT, LOCALE(188, "Administration interface font."),
-	    0, 0 );
+	    TYPE_FONT, LOCALE(188, "Administration interface font."));
 
-    defvar( "addmodulemethod", "normal", LOCALE(189, "Add/Delete module page type"),
-            TYPE_STRING_LIST, LOCALE(190, "<dl>\n"
-	     "<dt>normal</dt><dd>Show module name and documentation with images.</dd>\n"
-	     "<dt>fast</dt><dd>Like normal, but no type images.</dd>\n"
-	     "<dt>faster</dt><dd>Like normal, but allows to select multiple modules at once.</dd>\n"
-	     "<dt>compact</dt><dd>Only show the names of modules, and allow "
-	     "addition/deletion of multiple modules at once.</dd>\n"
-	     "<dt>really compact</dt><dd>Like compact, but no module classes.</dd>\n"
-	     "</dl>"),
-({ "normal","fast","faster","compact","really compact"}),
- 0, 
-(["svenska":([ "normal":"normal","fast":"snabb","faster":"snabbare","compact":"kompakt","really compact":"kompaktare"]),
- ])
-            );
+    defvar( "addmodulemethod", "normal", 
+	    LOCALE(189, "Add/Delete module page type"),
+            TYPE_STRING_LIST, 
+	    ("<dl>\n<dt>"+LOCALE(280, "normal")+"</dt><dd>"+
+	     LOCALE(281,"Show module name and documentation with images.")+
+	     "</dd>\n<dt>"+LOCALE(282, "fast")+"</dt><dd>"+
+	     LOCALE(283,"Like normal, but no type images.")+
+	     "</dd>\n<dt>"+LOCALE(284,"faster")+"</dt><dd>"+
+	     LOCALE(285, "Like normal, but allows selecting multiple modules "
+		    "at once.")+
+	     "</dd>\n<dt>"+LOCALE(286,"compact")+"</dt><dd>"+
+	     LOCALE(287,"Only show the names of modules, and allow "
+		    "addition/deletion of multiple modules at once.")+
+	     "</dd>\n<dt>"+LOCALE(288,"really compact")+"</dt><dd>"+
+	     LOCALE(289,"Like compact, but no module classes.")+"</dd>\n</dl>"),
+	    ([ "normal":LOCALE(280, "normal"), "fast":LOCALE(282, "fast"),
+	       "faster":LOCALE(284, "faster"), "compact":LOCALE(286, "compact"),
+	       "really compact":LOCALE(288, "really compact")  ]));
 
     if( vv )
       foreach( indices( vv ), string i )

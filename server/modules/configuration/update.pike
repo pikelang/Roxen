@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.23 2000/09/10 16:40:28 nilsson Exp $
+ * $Id: update.pike,v 1.24 2000/09/11 10:49:34 lange Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -866,10 +866,10 @@ class UpdateInfoFiles
     array(int) delete_packages=decode_ranges(lines[2]);
 
     if(sizeof(new_packages))
-      report_notice(LOC_S(5, "Update: Found new packages: %s\n"),
+      report_notice(LOC_S(5, "Update: Found new packages: %s")+"\n",
 		    ((array(string))new_packages)*", ");
     else
-      report_notice(LOC_S(6, "Update: No new packages found.\n"));
+      report_notice(LOC_S(6, "Update: No new packages found.")+"\n");
 
     if(sizeof(delete_packages))
       report_notice("Update: Deleting packages: "+
