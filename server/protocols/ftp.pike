@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.4 1997/03/04 13:52:21 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.5 1997/03/09 13:42:22 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -20,13 +20,16 @@ inherit "http"; /* For the variables and such.. (Per) */
 #include <module.h>
 #include <stat.h>
 
+import Array;
+
+#define perror	roxen_perror
+
 string dataport_addr, cwd ="/", remote_addr, prot, method;
 int dataport_port;
 int GRUK = random(_time(1));
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
-
 
 /********************************/
 /* private functions            */
@@ -42,6 +45,33 @@ private string reply_enumerate(string s,string num)
       return num+"-"+(ss[0..sizeof(ss)-2]*("\n"+num+"-"))+
 	     "\n"+num+" "+ss[-1]+"\n";
    return num+" "+ss[-1]+"\n";
+}
+
+private static multiset|int allowed_shells = 0;
+
+private int check_shell(string shell)
+{
+  if (Query("shells") != "") {
+    if (!allowed_shells) {
+      object(files.file) file = files.file();
+
+      if (file->open(Query("shells"), "r")) {
+	allowed_shells = aggregate_multiset(@(map(file->read(0x7fffffff)/"\n",
+						  lambda(string line) {
+	  return((((line/"#")[0])/"" - ({" ", "\t"}))*"");
+	} )-({""})));
+#ifdef DEBUG
+	perror(sprintf("ftp.pike(): allowed_shells:%O\n", allowed_shells));
+#endif /* DEBUG */
+      } else {
+	perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
+		       Query("shells")));
+	return(0);
+      }
+    }
+    return(allowed_shells[shell]);
+  }
+  return(0);
 }
 
 /********************************/
@@ -191,11 +221,13 @@ int connect_and_send(mapping file)
   fd = files.file();
   if(!fd->open_socket())
   {
+    perror("ftp.pike: Open of socket failed\n");
     destruct(fd);
     return 0;
   }
   if(!fd->connect(dataport_addr, dataport_port))
   {
+    perror("ftp.pike: Connect failed\n");
     destruct(fd);
     return 0;
   }
@@ -411,8 +443,17 @@ void got_data(mixed fooid, string s)
       else {	
 	y = ({ "Basic", rawauth+":"+arg});
 	realauth = y[1];
-	if(conf && conf->auth_module)
+	if(conf && conf->auth_module) {
 	  y = conf->auth_module->auth( y, this_object() );
+
+	  if (y[0] == 1) {
+	    /* Authentification successfull */
+	    if (Query("named_ftp") && !check_shell(misc->shell)) {
+	      reply("432 You are not allowed to use named-ftp. Try using anonymous\n");
+	      break;
+	    }
+	  }
+	}
 	auth=y;
 	reply("230 User "+rawauth+" logged in.\n"); 
       }
@@ -445,13 +486,19 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
-      if(!(st = roxen->stat_file(ncwd, this_object())))
-      {
+      if (auth && auth[0] == 1) {
+	/* Named ftp */
+	/* Should change to correct user here */
+	perror("Named directory:%s\n", ncwd);
+	st = file_stat(ncwd);
+      } else {
+	st = roxen->stat_file(ncwd, this_object());
+      }
+      if(!st) {
 	reply("550 "+arg+": No such file or directory.\n");
 	break;
       }
-      if(st[1] > -1)
-      {
+      if(st[1] > -1) {
 	reply("550 "+arg+": Not a directory.\n");
 	break;
       }
