@@ -90,6 +90,7 @@ call_container(string tag, mapping args, string contents, int line,
 string do_parse(string to_parse, object id, object file, mapping defines,
 		object my_fd)
 {
+  if(!tag_callers) build_callers();
   if(!id->misc->_tags)
     id->misc->_tags = copy_value(tag_callers[0]);
   if(!id->misc->_containers)
