@@ -2,9 +2,10 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.12 2000/07/03 05:14:21 nilsson Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.13 2001/03/30 14:49:24 jhs Exp $";
 inherit "module";
-constant thread_safe=1;
+#include <request_trace.h>
+constant thread_safe = 1;
 
 int unsuccessful = 0;
 array(string) encodings = ({ "utf-8", "macintosh", "iso-2022" });
@@ -38,26 +39,31 @@ string status()
 		  sort((array)redirs) );
 }
 
-#define DECODE(what, encoding) decoders[ encoding ](what)
-
 mapping last_resort(object id)
 {
   function decode;
   string iq;
+  int tries;
   foreach(encodings, string encoding)
   {
     decode = decoders[ encoding ];
     if( !catch( iq = decode( id->not_query ) ) &&
 	(iq != id->not_query) )
     {
+      TRACE_ENTER("Decoding request as " + encoding + " turns " +
+		  id->not_query + " into " + iq + ".\n", 0);
       object id2 = id->clone_me();
       id2->decode_charset_encoding( decode );
       mapping q = id->conf->get_file( id2 );
       if( q )
       {
+	TRACE_LEAVE("Wee! Document found!\n");
 	redirs[encoding]++;
 	return q;
       }
+      TRACE_LEAVE((tries ? "Rats" : "Nope") +
+		  ", that didn't quite cut it" +
+		  (tries++ ? " either" : "") + ".\n");
     }
   }
   unsuccessful++;
