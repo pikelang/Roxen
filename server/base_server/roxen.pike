@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.118 1997/09/01 01:01:39 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.119 1997/09/01 14:20:19 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1596,7 +1596,7 @@ private void define_global_variables( int argc, array (string) argv )
 
 #ifdef THREADS
   globvar("numshufflethreads", 1,
-	  "Number of shuffler threads to run", TYPE_INT,
+	  "Number of shuffler threads to run", TYPE_INT|VAR_EXPERT,
 	  "The number of simultaneous threads roxen will use "
 	  "to shuffle data, using a select loop based system.\n"
 	  "<i>This is quite useful if you have more than one CPU in "
@@ -2104,9 +2104,9 @@ void start_shuffler_threads()
   report_notice("Using threads");
   if (QUERY(numshufflethreads) <= 1) {
     QUERY(numshufflethreads) = 1;
-    perror("Starting 1 thread to shuffle data.\n");
+//  perror("Starting 1 thread to shuffle data.\n");
   } else {
-    perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
+//  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
   }
   for(int i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
     thread_create( shuffle_thread, i );
