@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.79 2000/01/25 15:03:48 nilsson Exp $
+ * $Id: rxml.pike,v 1.80 2000/01/25 16:48:56 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -161,7 +161,24 @@ RXML.Scope scope_page=Scope_page();
 
 // ------------------------- RXML Parser ------------------------------
 
+RXML.TagSet entities_tag_set = class
+// This tag set always has the lowest priority.
+{
+  inherit RXML.TagSet;
+
+  // These are only used in new style tags.
+  constant low_entities = ([
+    "quot": "\"",
+    "amp": "&",
+    "lt": "<",
+    "gt": ">",
+    "nbsp": "\240",
+    // FIXME: More...
+  ]);
+} ("entities_tag_set");
+
 RXML.TagSet rxml_tag_set = class
+// This tag set always has the highest priority.
 {
   inherit RXML.TagSet;
 
@@ -177,21 +194,21 @@ RXML.TagSet rxml_tag_set = class
     c->extend_scope("var", ([]) );
   }
 
-  array(RoxenModule) modules = ({});
+  array(RoxenModule) modules;
   // Each element in the imported array is the registered tag set of a
   // parser module. This array contains the corresponding module
   // object.
 
   void sort_on_priority()
   {
-    array(int) priorities = modules->query ("_priority", 1);
+    array(RXML.TagSet) new_imported = imported[..sizeof (imported) - 2];
+    array(RoxenModule) new_modules = modules[..sizeof (modules) - 2];
+    array(int) priorities = new_modules->query ("_priority", 1);
     priorities = replace (priorities, 0, 4);
-    array(RXML.TagSet) new_imported = imported + ({});
-    array(RoxenModule) new_modules = modules + ({});
     sort (priorities, new_imported, new_modules);
-    new_imported = reverse (new_imported);
+    new_imported = reverse (new_imported) + ({imported[-1]});
     if (equal (imported, new_imported)) return;
-    new_modules = reverse (new_modules);
+    new_modules = reverse (new_modules) + ({modules[-1]});
     imported = new_imported, modules = new_modules;
   }
 
@@ -201,22 +218,13 @@ RXML.TagSet rxml_tag_set = class
     modules = _modules;
   }
 
-} ("rxml_tag_set");
-
-RXML.TagSet entities_tag_set = class
-{
-  inherit RXML.TagSet;
-
-  // These are only used in new style tags.
-  constant low_entities = ([
-    "quot": "\"",
-    "amp": "&",
-    "lt": "<",
-    "gt": ">",
-    "nbsp": "\240",
-    // FIXME: More...
-  ]);
-} ("entities_tag_set");
+  void create (string name, object rxml_object)
+  {
+    ::create (name);
+    imported = ({entities_tag_set});
+    modules = ({rxml_object});
+  }
+} ("rxml_tag_set", this_object());
 
 RXML.Type t_html_parse_varrefs = RXML.t_html (RXML.PHtmlCompat);
 
