@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.50 2000/09/08 17:09:29 mast Exp $
+// $Id: read_config.pike,v 1.51 2000/09/19 15:04:31 per Exp $
 
 #include <module.h>
 
@@ -197,7 +197,12 @@ void remove_configuration( string name )
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   
     f = configuration_dir+name;
-  if( !rm(f) && file_stat(f) )
+  catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
+  catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
+  catch(rm( f ));
+  last_read = 0; last_data = 0;
+
+  if( file_stat( f ) )
     error("Failed to remove configuration file ("+f+")!\n");
 }
 
