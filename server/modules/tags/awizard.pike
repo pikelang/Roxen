@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.9 1999/11/27 07:50:06 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.10 1999/12/02 23:44:28 peter Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -295,9 +295,8 @@ class Page
 #ifndef OLD_PARSE_HTML
       for (object p = id->misc->_parser_obj; p; p = p->up)
         p->add_tag( s, TagCaller( my_tags[s] )->call );
-#else
-       id->misc->_tags[ s ] = my_tags[ s ];
 #endif
+      id->misc->_tags[ s ] = my_tags[ s ];
     }
 
     foreach(indices(my_containers), string s)
@@ -305,9 +304,8 @@ class Page
 #ifndef OLD_PARSE_HTML
       for (object p = id->misc->_parser_obj; p; p = p->up)
         p->add_container( s, ContainerCaller( my_containers[s] )->call );
-#else
-       id->misc->_containers[ s ] = my_containers[ s ];
 #endif
+      id->misc->_containers[ s ] = my_containers[ s ];
     }
 //     id->misc->_tags["var"] = call_var;
 //     id->misc->_containers["cvar"] = call_cvar;
