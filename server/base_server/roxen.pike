@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.824 2003/03/05 13:47:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.825 2003/03/05 15:51:50 mast Exp $";
 
 //! @appears roxen
 //!
@@ -61,6 +61,16 @@ Thread.Thread backend_thread;
 # define THREAD_WERR(X) report_debug("Thread: "+X+"\n")
 #else
 # define THREAD_WERR(X)
+#endif
+
+// Needed to get core dumps of seteuid()'ed processes on Linux.
+#if constant(System.dumpable)
+#define enable_coredumps(X)	System.dumpable(X)
+#elif constant(system.dumpable)
+// Pike 7.2.
+#define enable_coredumps(X)   system.dumpable(X)
+#else
+#define enable_coredumps(X)
 #endif
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
@@ -3775,7 +3785,6 @@ int set_u_and_gid (void|int from_handler_thread)
 #ifdef TEST_EUID_CHANGE
     werror ("euid change effective in handler thread.\n");
 #endif
-    enable_coredumps (1);
     return 1;
   }
 
