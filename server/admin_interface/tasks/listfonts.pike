@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.23 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: listfonts.pike,v 1.24 2002/11/14 23:16:09 agehall Exp $
  */
 
 constant task = "status";
@@ -60,7 +60,7 @@ string page_0(RequestID id)
 {
   array q = roxen.fonts.get_font_information();
   info = mkmapping( q->name, q );
-  string res=("<input type='hidden' name='task' value='listfonts.pike'/>"
+  string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
               "<font size='+1'><b>Available font loaders</b></font><p>"+
               font_loaders()+"<font size='+1'><b>All available fonts</b></font><p>");
@@ -82,9 +82,9 @@ string page_1(RequestID id)
   string txt = v->text && v->text[0];
   foreach(roxen.fonts.available_fonts(), string fn)
     res += Roxen.html_encode_string( fn )+":<br />\n"
-      "<gtext fontsize=16 align='top' font='"+fn+"'>"+Roxen.html_encode_string(txt)+"</gtext><br>"
-      "<gtext fontsize=32 align='top' font='"+fn+"'>"+Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
-      "<gtext fontsize=48 align='top' font='"+fn+"'>"+Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
+      "<gtext fontsize=16 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(txt)+"</gtext><br>"
+      "<gtext fontsize=32 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
+      "<gtext fontsize=48 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok/></p>";
 }
 
