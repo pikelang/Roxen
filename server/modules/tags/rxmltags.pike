@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.66 2000/02/13 18:25:59 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.67 2000/02/14 09:24:09 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -545,6 +545,20 @@ class TagCoding {
 			      } )*"";
     }
   }
+}
+
+
+string container_charset( string t, mapping m, string c, RequestID id )
+{
+  if( m->in )
+    if( catch {
+      c = Locale.Charset.decoder( m->in )->feed( c )->drain();
+    })
+      RXML.run_error( "Illegal charset, or unable to decode data: "+
+                      m->in+"\n" );
+  if( m->out && id->set_output_charset)
+    id->set_output_charset( m->out );
+  return c;
 }
 
 array(string)|string tag_configimage(string t, mapping m, RequestID id)
