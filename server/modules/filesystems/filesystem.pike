@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.52 1999/05/05 20:19:59 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.53 1999/05/05 20:20:31 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -931,7 +931,7 @@ mixed find_file( string f, object id )
     privs = 0;
     deletes++;
 
-    if (id->misc->quota_obj) {
+    if (id->misc->quota_obj && (size > 0)) {
       id->misc->quota_obj->deallocate(oldf, size);
     }
 
