@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.490 2000/06/26 17:46:03 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.491 2000/07/10 22:22:18 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -91,6 +91,7 @@ class RoxenModule
 class RequestID
 {
   object conf; // Really Configuration, but that's sort of recursive.
+  Protocol port_obj;
   int time;
   string raw_url;
   int do_not_disconnect;

@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.34 2000/03/29 10:21:49 grubba Exp $
+ * $Id: ftp.pike,v 2.35 2000/07/10 22:22:23 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1526,7 +1526,7 @@ class FTPSession
   int local_port;
 
   // The listen port object
-  object port_obj;
+  roxen.Protocol port_obj;
 
   /*
    * Misc
@@ -3487,6 +3487,7 @@ class FTPSession
     master_session = RequestID2();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
     master_session->conf = conf;
+    master_session->port_obj = c;
     master_session->my_fd = fd;
     master_session->misc->defaulted = 1;
     ::create(fd, got_command, 0, con_closed, ([]));
