@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.295 2001/01/11 16:38:55 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.296 2001/01/19 16:39:22 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1976,9 +1976,9 @@ void got_data(mixed fooid, string s)
     {
       y[1] = MIME.decode_base64(y[1]);
       realauth = y[1];
-      if (conf->auth_module)
-        y = conf->auth_module->auth(y, this_object());
-      auth = y;
+//    if (conf->auth_module)
+//      y = conf->auth_module->auth(y, this_object());
+//    auth = y;
     }
   }
 
