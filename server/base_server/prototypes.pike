@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.64 2003/07/07 19:06:20 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.65 2003/12/15 09:47:59 grubba Exp $";
 
 class Variable
 {
@@ -1107,8 +1107,8 @@ class XMLPropStatNode
     http_code = code || 200;
 
     ::create("DAV:propstat", ([]));
-    add_child(prop_node = ElementNode("DAV:prop", ([])));
     add_child(XMLStatusNode(code, message));
+    add_child(prop_node = ElementNode("DAV:prop", ([])));
   }
 }
 
@@ -1156,14 +1156,19 @@ class MultiStatus
     if (!(stat_nodes = status_set[href])) {
       status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
     } else {
-      foreach(stat_nodes, Node n) {
+      int index;
+      foreach(stat_nodes; index; Node n) {
 	if (n->http_code == code) {
 	  stat_node = n;
 	  break;
 	}
+	if (n->http_code > code) break;
       }
       if (!stat_node) {
-	status_set[href] += ({ stat_node = XMLPropStatNode(code, message) });
+	status_set[href] =
+	  status_set[href][..index-1] +
+	  ({ stat_node = XMLPropStatNode(code, message) }) +
+	  status_set[href][index..];
       }
     }
     if (message) {
@@ -1186,7 +1191,8 @@ class MultiStatus
     werror("Generating XML Nodes for status_set:%O\n",
 	   status_set);
 
-    foreach(status_set; string href; array(Node) responses) {
+    foreach(sort(indices(status_set)), string href) {
+      array(Node) responses = status_set[href];
       Node href_node = ElementNode("DAV:href", ([]));
       href_node->add_child(TextNode(href));
       (response_xml[i++] =
@@ -1261,7 +1267,7 @@ class RoxenModule
   string query_internal_location();
   string query_location();
   string query_provides();
-  array query_seclevels();
+  function(RequestID:int|mapping) query_seclevels();
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
@@ -1578,40 +1584,40 @@ class UserDB
   User find_user( string s, RequestID|void id );
   //! Find a user
 
-  User find_user_from_uid( int id )
+  User find_user_from_uid( int uid, RequestID|void id )
   //! Find a user given a UID. The default implementation loops over
   //! list_users() and checks the uid() of each one.
   {
-    User uid;
+    User user;
     foreach( list_users(), string u )
-      if( (uid = find_user( u )) && (uid->uid() == id) )
-	return uid;
+      if( (user = find_user( u )) && (user->uid() == uid) )
+	return user;
   }    
 
-  Group find_group( string group )
+  Group find_group( string group, RequestID|void id )
   //! Find a group object given a group name.
   //! The default implementation returns 0.
   {
   }
   
-  Group find_group_from_gid( int id )
+  Group find_group_from_gid( int gid, RequestID|void id )
   //! Find a group given a GID. The default implementation loops over
   //! list_groups() and checks the gid() of each one.
   {
-    Group uid;
+    Group group;
     foreach( list_groups(), string u )
-      if( (uid = find_group( u )) && (uid->gid() == id) )
-	return uid;
+      if( (group = find_group( u )) && (group->gid() == gid) )
+	return group;
   }
   
-  array(string) list_groups( )
+  array(string) list_groups( RequestID|void id )
   //! Return a list of all groups handled by this database module.
   //! The default implementation returns the empty array.
   {
     return ({});
   }
 
-  array(string) list_users( );
+  array(string) list_users( RequestID|void id );
   //! Return a list of all users handled by this database module.
 
   User create_user( string s )
