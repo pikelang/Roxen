@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.168 2000/09/05 14:45:11 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.169 2000/09/05 16:02:03 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -575,8 +575,7 @@ class TagImgs {
 	  RXML.run_error("Virtual path failed.\n");
 
 	if(!args->alt) {
-	  array src=args->src/"/";
-	  string src=src[sizeof(src)-1];
+	  string src=(args->src/"/")[-1];
 	  sscanf(src, "internal-roxen-%s", src);
 	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
 	}
@@ -995,7 +994,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     // FIXME: The next row is defunct. last_modified_by does not exists.
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
-    return tag_user(tag, m, id, file);
+    return tag_user(tag, m, id);
   }
 
   if(m->file)
@@ -1015,7 +1014,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
       m->name = id->conf->last_modified_by(f, id);
       destruct(f);
       CACHE(10);
-      return tag_user(tag, m, id, file);
+      return tag_user(tag, m, id);
     }
     return "A. Nonymous.";
   }
@@ -1039,10 +1038,8 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   RXML.run_error("Couldn't stat file.\n");
 }
 
-string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File file)
+string|array(string) tag_user(string tag, mapping m, RequestID id )
 {
-  array(string) u;
-
   if(!id->conf->auth_module)
     RXML.run_error("Requires a user database.\n");
 
