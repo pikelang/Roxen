@@ -401,6 +401,11 @@ e</result>
 <result><![CDATA[ hej ]]></result>
 </test>
 
+<test>
+  <rxml><maketag name="x" type="tag"><attrib name="y"/></maketag></rxml>
+  <result><x y=""/></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Form defaults</comment>
