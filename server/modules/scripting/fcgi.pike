@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.10 1997/08/31 04:12:47 peter Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.11 1997/10/14 14:00:43 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -21,14 +21,13 @@ void create()
   defvar("numsimul", 1,
 	 "Number of simultaneous copies to run", TYPE_INT,
 	 "This many copies will be started simultaneousy of each script. "
-	 "This is very "
-	 "useful for scripts that take a long time to finish. A tip is to "
-	 "us another extension and/or cgi-bin directory for these scripts. "
-	 "Remember to code your scripts multi-process safe.");
+	 "This is very useful for scripts that take a long time to finish. "
+	 "A tip is to use another extension and/or cgi-bin directory for "
+	 "these scripts. Remember to code your scripts multi-process safe.");
   
   defvar("ex", 1, "Handle *.fcgi", TYPE_FLAG,
 	 "Also handle all '.fcgi' files as Fast-CGI scripts, as well "
-	 " as files in the cgi-bin directory. This emulates the behaviour "
+	 "as files in the cgi-bin directory. This emulates the behaviour "
 	 "of the NCSA server (the extensions to handle can be set in the "
 	 "CGI-script extensions variable).");
 
@@ -39,12 +38,15 @@ void create()
 
 mixed *register_module()
 {
-  if(file_stat("bin/fcgi"))
+  if(file_stat("bin/fcgi")) {
     return ({ 
       MODULE_FIRST | MODULE_LOCATION | MODULE_FILE_EXTENSION,
-	"Fast-CGI executable support", 
-	"Partial support for the <a href=http://www.fastcgi.com>Fast-CGI interface</a>. This module is useful, but not finished."
-	});
+      "Fast-CGI executable support", 
+      "Partial support for the "
+      "<a href=http://www.fastcgi.com>Fast-CGI interface</a>. "
+      "This module is useful, but not finished."
+    });
+  }
 }
 
 
