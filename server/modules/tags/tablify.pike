@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.37 1999/08/16 11:01:41 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.38 1999/08/21 10:42:16 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -138,7 +138,7 @@ string make_table(array subtitles, array table, mapping opt, object id)
 
   m_delete(id->misc, "tmp_colmax");
   if(opt->nice || opt->nicer)
-    return r+"</table></td></tr>\n</table>"+(opt->noxml?"<br>":"<br />")+"\n";
+    return r+"</table></td></tr>\n</table>\n";
 
   m_delete(opt, "cellalign");
   m_delete(opt, "cellvalign");
