@@ -61,12 +61,8 @@
 </define>
 
 <define container=submit-gbutton default_align=baseline>
-
-<cset variable=gbutton_url preparse
-><gbutton-url font='&usr.font;' preparse><contents></gbutton-url
-></cset>
 <input align=&align; type=image name='<contents>' value='<contents>'
-       src='&form.gbutton_url;' border=0>
+       src='<gbutton-url font='&usr.font;' preparse><contents></gbutton-url>' border=0>
 </define>
 
 <define container=tmpl>
@@ -115,8 +111,6 @@
 </define>
 
 
-<define tag=cf-save what=Global>
-  <!-- cf-perm perm="Edit &what; Variables" -->
-    <submit-gbutton align=right preparse> <cf-locale get=save> </submit-gbutton>
-  <!-- /cf-perm -->
+<define tag=cf-save>
+  <submit-gbutton align=right> <cf-locale get=save> </submit-gbutton>
 </define>
