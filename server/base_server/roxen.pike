@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.287 1999/05/24 12:39:18 grubba Exp $
+ * $Id: roxen.pike,v 1.288 1999/05/25 09:49:02 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.287 1999/05/24 12:39:18 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.288 1999/05/25 09:49:02 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1904,7 +1904,7 @@ class ImageCache
   static void draw( string name, RequestID id )
   {
     mapping args = argcache->lookup( name );
-    mixed reply = draw_function( args, id );
+    mixed reply = draw_function( copy_value(args), id );
 
     mapping meta;
     string data;
@@ -1919,6 +1919,9 @@ class ImageCache
 
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
+
+      if(  dither == "random" )
+	dither = "random_dither";
 
       if( format == "jpg" ) 
         format = "jpeg";
@@ -1965,10 +1968,13 @@ class ImageCache
 
       if( quant || (format=="gif") )
       {
-        ct = Image.Colortable( reply, quant||id->misc->defquant||16 );
+        int ncols = quant||id->misc->defquant||16;
+        if( ncols > 200 )
+          ncols = 250;
+        ct = Image.Colortable( reply, ncols );
         if( dither )
-          if( ct[dither] )
-            ct[dither]();
+          if( ct[ dither ] )
+            ct[ dither ]();
           else
             ct->ordered();
       }
@@ -1989,11 +1995,14 @@ class ImageCache
       switch(format)
       {
        case "gif":
-	 if( alpha )
-	   data = Image.GIF.encode_trans( reply, ct, alpha );
-	 else
-	   data = Image.GIF.encode( reply, ct );
-        break;
+         if( catch {
+           if( alpha )
+             data = Image.GIF.encode_trans( reply, ct, alpha );
+           else
+             data = Image.GIF.encode( reply, ct );
+         })
+           data = Image.GIF.encode( reply );
+         break;
        case "png":
          if( ct )
            enc_args->palette = ct;
@@ -2287,7 +2296,7 @@ class ArgCache
     string id = create_key( data );
 
     cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = args;
+    cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
     cache[ id ] = data;
 
@@ -2302,6 +2311,7 @@ class ArgCache
 
   mapping lookup( string id )
   {
+    LOCK();
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
