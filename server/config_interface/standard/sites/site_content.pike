@@ -1,4 +1,6 @@
+inherit "roxenlib";
 inherit "../inheritinfo.pike";
+#include <module.h>
 
 string module_global_page( RequestID id, Configuration conf )
 {
@@ -25,6 +27,73 @@ string _translate( mixed what, object id )
   return what;
 }
 
+string describe_exts( object m, string func )
+{
+  return String.implode_nicely( m[func]() );
+}
+
+string describe_location( object m )
+{
+  return m->query_location();
+}
+
+string make_if( string q )
+{
+  return "<if "+q+"=?></if>";
+}
+
+string describe_tags( object m )
+{
+  return html_encode_string(String.implode_nicely( map(indices(m->query_tag_callers()),make_tag,([]))+
+                            map(indices(m->query_container_callers()),
+                                make_container,([]),"")+
+                            map(indices(m->query_if_callers()),make_if)));
+}
+
+string describe_provides( object m )
+{
+  if( arrayp( m->query_provides() ) )
+    return String.implode_nicely( m->query_provides() );
+  return m->query_provides();
+}
+
+string describe_type( object m, int t )
+{
+  string res = "";
+
+#define T(X,Y,Z)                                                        \
+do                                                                      \
+{                                                                       \
+   if(t&X)                                                              \
+     if( Y )                                                            \
+       res += ("<table border=0 cellspacing=2 cellpadding=0><tr><td valign=top>|<b>" + #X + "</b>(</td>"     \
+               "<td valign=top>"+Y(m,Z)+"  )</td></tr></table><br>");   \
+     else                                                               \
+       res += "|<b>" + #X + "</b><br>";                                 \
+} while(0)
+
+  T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
+  T(MODULE_LOCATION,   describe_location,                        0);
+  T(MODULE_URL,                        0,                        0);
+  T(MODULE_FILE_EXTENSION, describe_exts,  "query_file_extensions");
+  T(MODULE_PARSER,         describe_tags,                        0);
+  T(MODULE_LAST,                       0,                        0);
+  T(MODULE_FIRST,                      0,                        0);
+  T(MODULE_AUTH,                       0,                        0);
+  T(MODULE_TYPES,                      0,                        0);
+  T(MODULE_DIRECTORIES,                0,                        0);
+  T(MODULE_PROXY,                      0,                        0);
+  T(MODULE_LOGGER,                     0,                        0);
+  T(MODULE_FILTER,                     0,                        0);
+  T(MODULE_PROVIDER,   describe_provides,                        0);
+  T(MODULE_PROTOCOL,                   0,                        0);
+  T(MODULE_CONFIG,                     0,                        0);
+  T(MODULE_SECURITY,                   0,                        0);
+  T(MODULE_EXPERIMENTAL,               0,                        0);
+
+  return res;
+}
+
 string find_module_doc( string cn, string mn, object id )
 {
   object c = roxen.find_configuration( cn );
@@ -37,14 +106,18 @@ string find_module_doc( string cn, string mn, object id )
   if(!m)
     return "";
 
+  roxen.Module mi = roxen.find_module( (mn/"!")[0] );
+
   return replace( "<p><b><font size=+2>"
                   + translate(m->register_module()[1]) + "</font></b><br>"
                   + translate(m->info()) + "<p>"
                   + translate(m->status()||"") +"<p>"+
                   ( id->misc->config_settings->query( "devel_mode" ) ?
+                    
                     "<hr noshade size=1><h2>Developer information</h2>"+
-                    translate(m->file_name_and_stuff())
-                    + "<dl>"+
+                    "<b>Identifier:</b> " + mi->sname+" <br>"
+                    "<table><tr><td valign=top><b>Type:</b></td><td valign=top>"+describe_type( m,mi->type )+"</td></table><br>"+
+                    translate(m->file_name_and_stuff())+ "<dl>"+
                     rec_print_tree( Program.inherit_tree( object_program(m) ) )
                     +"</dl>" : ""),
                   ({ "/image/", }), ({ "/internal-roxen-" }));
@@ -77,6 +150,9 @@ string parse( RequestID id )
 {
   array path = ((id->misc->path_info||"")/"/")-({""});
   
+  if( id->variables->section )
+    sscanf( id->variables->section, "%s\0", id->variables->section );
+
   if( !sizeof( path )  )
     return "Hm?";
   

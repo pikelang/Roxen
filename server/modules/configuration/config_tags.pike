@@ -51,6 +51,8 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
       targs->txtcolor = "white";
       targs->fgcolor = "white";
     }
+    if( i->first ) targs->first=i->first;
+    if( i->last )  targs->last=i->last;
     targs->href = i->href;
     c->top += make_container( "tab", targs, " "+i->title+" " );
   }
@@ -348,15 +350,12 @@ string set_variable( string v, object in, mixed to, object id )
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )
          val = (int)val;
-       mapping translate = 
-               LOW_LOCALE->module_doc_string(in, v, 2);
-      if(!translate)
-	translate = mkmapping(var[ VAR_MISC ],var[ VAR_MISC ]);
-      mixed tmp;
-      if( ( tmp = search( translate, val ) )||
-          search( var[ VAR_MISC ], val ) != -1 )
-        return "";
-      val = tmp;
+//        mapping translate = 
+//                LOW_LOCALE->module_doc_string(in, v, 2);
+//       if(!translate)
+// 	translate = mkmapping(var[ VAR_MISC ],var[ VAR_MISC ]);
+//       if( mixed tmp = search( translate, val ) )
+//         val = tmp;
      }
      break;
 
@@ -834,10 +833,14 @@ string container_configif_output(string t, mapping m, string c, object id)
        id->variables->info_section_is_it = "1";
        variables[0]->selected="selected";
      }
+     variables[0]->last = "first";
+     variables[-1]->first = "last";
      break;
 
    case "global-variables-sections":
      variables = get_variable_sections( roxen, m, id );
+     variables[0]->last = "last";
+     variables[-1]->first = "first";
      break;
 
    case "global-variables":

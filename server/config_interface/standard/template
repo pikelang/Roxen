@@ -37,7 +37,7 @@
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
-    <item perm="View Settings"
+    <item first perm="View Settings"
           title="<cf-locale get=sites>" href="&base;sites/" 
       <if match="&selected; is sites"> selected</if> />
     <item perm="View Settings"
@@ -48,7 +48,7 @@
           <if match="&selected; is globals"> selected</if> />
     <item perm="Actions" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
-    <item title="<cf-locale get=home>" href="&base;" 
+    <item last title="<cf-locale get=home>" href="&base;" 
           <if match="&selected; is home"> selected</if> />
   </top-menu>
 </define>

@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.24 1999/11/15 02:47:14 per Exp $
+ * $Id: tablist.pike,v 1.25 1999/11/17 23:25:49 per Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: per $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.24 1999/11/15 02:47:14 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.25 1999/11/17 23:25:49 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -74,6 +74,8 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
    "gamma": a->gamma  || d->gamma   || 0,
   "format": a->format || d->format  || "gif",
     "sel" : a->selected,
+  "first" : a->first,
+  "last"  : a->last,
     "bg"  : parse_color(a->bgcolor || d->bgcolor || "white"),
     "fg"  : parse_color(a->selcolor || d->selcolor || "white"),
     "dim" : parse_color(a->dimcolor || d->dimcolor || "#003366"),
@@ -134,7 +136,7 @@ object button_font = resolve_font("haru 32");
 Image.Image draw_tab(mapping args, string txt)
 {
   Image.Image text = button_font->write( txt )
-                      ->scale(0, frame_image->ysize());
+                     ->scale(0, frame_image->ysize());
 
   //  Create image with proper background
   Image.Image i = Image.Image(frame_image->xsize() * 2 + text->xsize(),
@@ -166,6 +168,24 @@ Image.Image draw_tab(mapping args, string txt)
 
   if (!args->sel)
     i->line(0, i->ysize() - 1, i->xsize(), i->ysize() - 1, 0, 0, 0);
+
+  if( args->first )
+  {
+    i = i->copy( -10,0, i->xsize()-1, i->ysize()-1, args->bg );
+    for( int x=0; x<10; x++)
+      i->setpixel( 10-x,
+                   i->ysize()-1,
+                   (args->bg[0]*x)/10, (args->bg[1]*x)/10, (args->bg[2]*x)/10);
+  }
+
+  if( args->last )
+  {
+    i = i->copy( 0,0, i->xsize()+9, i->ysize()-1, args->bg );
+    for( int x=0; x<10; x++)
+      i->setpixel( i->xsize()-11+x,
+                   i->ysize()-1,
+                   (args->bg[0]*x)/10, (args->bg[1]*x)/10, (args->bg[2]*x)/10);
+  }
   
   return i;
 }

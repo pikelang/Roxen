@@ -23,6 +23,9 @@ string module_page( RequestID id, string conf, string module )
 string parse( RequestID id )
 {
   array path = ((id->misc->path_info||"")/"/")-({""});
+
+  if( id->variables->section )
+    sscanf( id->variables->section, "%s\0", id->variables->section );
   
   if( !sizeof( path )  )
     return "Hm?";
@@ -33,10 +36,14 @@ string parse( RequestID id )
   {
     string res="";
     string q = id->variables->config_page;
-    foreach ( ({
+
+    array pages = 
+    ({
       ({ "event_log", "eventlog", 0, 0 }),
       ({ 0, "status", 0, 0 }),
-    }), array page )
+    });
+
+    foreach ( pages, array page )
     {
       string tpost = "";
       if( page[2] )
@@ -52,6 +59,8 @@ string parse( RequestID id )
     
       if( page[0] )
         res += "<tab href='?config_page="+page[0]+"'"+
+            (page == pages[0]?" first ":
+             (page == pages[-1]?" last ":""))+
             ((page[0] == q)?" selected":"")+">";
       else
         res += "<tab href=''"+((page[0] == q)?" selected":"")+">";
