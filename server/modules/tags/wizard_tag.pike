@@ -2,7 +2,7 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.25 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.26 2000/03/20 17:31:04 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -57,6 +57,16 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		 sprintf("# "+id->misc->line+" %O\n"
 			 "string name = %O;\n",
 			 id->not_query, (args->name||"unnamed")));
+
+  if (args->method || args->enctype) {
+    string method = "";
+    if (args->method)
+      method += " method=" + Roxen.html_encode_tag_value (args->method);
+    if (args->enctype)
+      method += " enctype=" + Roxen.html_encode_tag_value (args->enctype);
+    pike += sprintf ("constant wizard_method = %O;\n", method);
+  }
+
   int p;
   foreach(glob("*-label", indices(args)), string a)
   {
