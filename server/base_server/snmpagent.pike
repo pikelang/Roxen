@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.12 2001/08/23 18:06:07 nilsson Exp $
+ * $Id: snmpagent.pike,v 1.13 2001/08/28 14:39:05 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -119,6 +119,23 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".7"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
+
+#if !efunc(Array.oid_sort_func)
+int oid_sort_func(string a0,string b0) {
+    string a2="",b2="";
+    int a1, b1;
+    sscanf(a0,"%d.%s",a1,a2);
+    sscanf(b0,"%d.%s",b1,b2);
+    if (a1>b1) return 1;
+    if (a1<b1) return 0;
+    if (a2==b2) return 0;
+    return oid_sort_func(a2,b2);
+}
+#define OID_SORT_FUNC	oid_sort_func
+#else
+#define OID_SORT_FUNC	Array.oid_sort_func
+#endif
+
 
 //!
 class SNMPagent {
@@ -286,6 +303,7 @@ class SNMPagent {
     if(!sizeof(rdata)) {
       if (!errnum) LOG_EVENT("No such name", pdata[msgid]);
       fd->get_response(([attrname:({"oid", attrname})]), pdata, errnum || 2 /*SNMP_NOSUCHNAME*/);
+      // future note: v2c, v3 protos want to return "endOfMibView"
     } else
       fd->get_response(rdata, pdata);
   }
@@ -573,9 +591,10 @@ class SubMIBManager {
   //! Returns array ({ nextoid, type, val }) or 0
   array|int getnext(string oid, mapping|void pkt) {
 
-    array(string) idxnums = Array.sort(indices(submibtab));
+    //array(string) idxnums = Array.sort(indices(submibtab));
+    array idxnums = Array.sort_array(indices(submibtab), OID_SORT_FUNC);
     int idx;
-    string soid;
+    string soid, manoid;
     array s;
 
     SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
@@ -588,12 +607,9 @@ class SubMIBManager {
       if(idx < sizeof(idxnums)-1)
 	return (({ MIBTREE_BASE+"."+(string)idxnums[idx+1],
                    @submibtab[idxnums[idx+1]]() }));
-      else
-	return 0;
     } else {
       int tlen = sizeof(tree/".");
       array sarr = soid/".";
-      //if(soid[..(sizeof(tree)-1)] == tree) { // only inside owned subtree
       if(sizeof(sarr)>=tlen && (sarr[..tlen-1]*".") == tree) {
         SNMPAGENT_MSG(name+": owned subtree found.");
         // hmm, now we have to find nearest subtree
@@ -604,24 +620,47 @@ class SubMIBManager {
 		     @submibtab[idxnums[idx]]() }));
 	  }
       }
+    }
 
-      SNMPAGENT_MSG(name+": foreign object detected.");
-      s = soid/".";
-      // hmm, now we have to try some of the registered managers
-      for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
-	SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
-        if(subtreeman[s[..cnt]*"."]) {
-	  // good, subtree manager exists
-	  string manoid = s[..cnt]*".";
-          SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
+    SNMPAGENT_MSG(name+": trying foreign object");
+    s = soid/".";
+    // hmm, now we have to try some of the registered managers
+    for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
+      SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
+      if(subtreeman[s[..cnt]*"."]) {
+	// good, subtree manager exists
+	manoid = s[..cnt]*".";
+	SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
 				subtreeman[manoid]->name, manoid));
-	  return subtreeman[manoid]->getnext(oid, pkt);
-        }
+	return subtreeman[manoid]->getnext(oid, pkt);
       }
+    }
 
+    SNMPAGENT_MSG(name+": trying nearest manager");
+    // OK, we have to find nearest oid manager
+    //idxnums = Array.sort(indices(subtreeman));
+    idxnums = Array.sort_array(indices(subtreeman), OID_SORT_FUNC);
+    idx = Array.search_array(idxnums, OID_SORT_FUNC, soid);
+SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
+    if(idx >= 0) {
+      manoid = idxnums[idx];
+      SNMPAGENT_MSG(sprintf("found nearest manager: %s(%O)",
+				subtreeman[manoid]->name, manoid));
+      return subtreeman[manoid]->getnext(MIBTREE_BASE+"."+manoid, pkt);
     }
 
     SNMPAGENT_MSG("Not found any suitable manager");
+    return 0;
+  }
+
+  int compare_oid(string oid1, string oid2) {
+
+    array o1 = oid1/".", o2 = oid2/".";
+    int len = sizeof(o1)<sizeof(o2)?sizeof(o1):sizeof(o2);
+
+    for (int idx = 0; idx < len; idx++)
+      if(o1[idx] > o2[idx])
+	return 1;
     return 0;
   }
 
@@ -650,15 +689,6 @@ class SubMIBManager {
     return ({ 0, 0});
   }
 
-  //! Tries to guess next OID. Usable to situation when GET_NEXT op
-  //! contains OID without .0
-  string|int oid_guess_next(string oid) {
-
-    if(oid_check(oid+".0"))
-      return oid+".1";
-    return 0;
-  }
-
   //! External function for MIB object returning nothing
   array get_null() { return OBJ_COUNT(0); }
 
@@ -668,7 +698,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.12 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.13 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -733,6 +763,21 @@ class SubMIBSystem {
 	]);
   } // create
 
+  array|int getnext(string oid, mapping|void pkt) {
+
+    array rv = ::getnext(oid, pkt);
+    mapping sm = ::subtreeman;
+
+SNMPAGENT_MSG(sprintf("DEB: rv: %O", rv));
+    if(intp(rv)) {
+      ::subtreeman = subtreeman;
+      rv = ::getnext(oid, pkt);
+      ::subtreeman = sm;
+    }
+      return rv;
+  }
+   
+      
 } // SubMIBsystem
 
 
@@ -1024,7 +1069,7 @@ class SubMIBRoxenBoot {
   
   void create(object agentp) {
     agent = agentp;
-    submibtab = ([ ]);
+    submibtab = ([ tree+".0": get_null ]);
   }
 
   // HACK! For testing purpose only!
