@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.86 1999/03/23 22:24:48 mast Exp $
+ * $Id: roxenloader.pike,v 1.87 1999/03/27 22:17:06 marcus Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.86 1999/03/23 22:24:48 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.87 1999/03/27 22:17:06 marcus Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -747,7 +747,7 @@ int main(mixed ... args)
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
-    //    add_program_path(p);
+    add_program_path(p);
   }
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
