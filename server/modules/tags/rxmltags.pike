@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.331 2001/12/04 16:05:19 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.332 2002/01/02 15:38:27 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -314,16 +314,25 @@ class TagAuthRequired {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      mapping hdrs = Roxen.http_auth_required (args->realm||"document access", args->message);
+      // omitting the 'database' arg is OK, find_user_datbase will
+      // return 0. 
+      mapping hdrs = 
+        id->conf->authenticate_throw(id, 
+	      id->conf->find_user_database(args->database)) ||
+	Roxen.http_auth_required(args->realm || "document access",
+				 args->message);
       if (hdrs->error)
 	RXML_CONTEXT->set_misc (" _error", hdrs->error);
       if (hdrs->extra_heads)
-	RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + hdrs->extra_heads);
+	RXML_CONTEXT->set_misc (" _extra_heads",
+				_extra_heads + hdrs->extra_heads);
       // We do not need this as long as hdrs only contains strings and numbers
       //   foreach(indices(hdrs->extra_heads), string tmp)
       //      Roxen.add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
       if (hdrs->text)
 	RXML_CONTEXT->set_misc (" _rettext", hdrs->text);
+      result = hdrs->data || args->message ||
+	"<h1>Authentication failed.\n</h1>";
       return 0;
     }
   }
