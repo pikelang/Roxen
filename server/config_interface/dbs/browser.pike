@@ -449,7 +449,10 @@ mapping|string parse( RequestID id )
       return tmp;
   }
 
-  Sql.Sql db = DBManager.get( id->variables->db );
+  Sql.Sql db;
+  catch {
+    db = DBManager.get( id->variables->db );
+  };
   string url = DBManager.db_url( id->variables->db );
 
   string qres="";
@@ -493,7 +496,7 @@ mapping|string parse( RequestID id )
     };
   }
 
-  if( id->variables["run_q.x"] )
+  if(db && id->variables["run_q.x"])
   {
     hs->query()[ id->variables->db+"."+id->variables->table ]
       = id->variables->query-"\r";
