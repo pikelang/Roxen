@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.21 1998/03/20 16:37:46 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.22 1998/05/20 23:04:13 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -110,7 +110,7 @@ class Dirnode
       root = foo;
 
     if(describer)
-      tmp = describer(this_object());
+      tmp = describer(this_object(), id);
 #ifdef NODE_DEBUG
     else
       perror("No describer in node "+path(1)+"\n");
@@ -277,7 +277,7 @@ string foot_dir_mac()
 #define TYPE_MP  "    Module location"
 #define TYPE_DIR "    Directory"
 object gid;
-array|string describe_dir_node_mac(object node)
+array|string describe_dir_node_mac(object node, object id)
 {
   string type, filename, icon, path;
   int len;
@@ -285,7 +285,7 @@ array|string describe_dir_node_mac(object node)
   filename = node->data;
   path = node->path(0);
   
-  if(node->stat = roxen->stat_file( path, gid ))
+  if(node->stat = id->conf->stat_file( path ))
   {
     switch(-(len=node->stat[1]))
     {
