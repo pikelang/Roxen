@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.52 2000/09/14 13:51:13 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.53 2000/09/14 21:34:26 mast Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
@@ -278,7 +278,7 @@ void start(int n, Configuration cfg)
   catch(tar = Filesystem.Tar( "config_interface/docs.tar" ));
   if(!tar)
     report_notice( "Failed to open documentation tar-file. "
-                   "Documentation will not be available." ); 
+                   "Documentation will not be available.\n" );
   if( cfg )
   {
     charset_decoder = 0;
