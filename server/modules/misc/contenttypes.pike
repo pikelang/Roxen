@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.8 1997/08/31 03:47:22 peter Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.9 1997/10/05 03:37:15 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,17 +17,16 @@ mapping  (string:int) accessed=([]);
 
 void create()
 {
-  defvar("exts", "\
-# This will include the defaults from a file.\
-# Feel free to add to this, but do it after the #include line if\
-# you want to override any defaults\
-\
-#include <etc/extensions>\
-", "Extensions", 
+  defvar("exts", "\n"
+	 "# This will include the defaults from a file.\n"
+	 "# Feel free to add to this, but do it after the #include line if\n"
+	 "# you want to override any defaults\n"
+	 "\n"
+	 "#include <etc/extensions>\n\n", "Extensions", 
 	 TYPE_TEXT_FIELD, 
-	 "This is file extension "+
-	 "to contenttype mapping. The format is as follows:\n"+
-	 "<pre>extension type encoding\ngif image/gif\n"+
+	 "This is file extension "
+	 "to contenttype mapping. The format is as follows:\n"
+	 "<pre>extension type encoding\ngif image/gif\n"
 	 "gz STRIP application/gnuzip\n</pre>"
 	 "For a list of types, see <a href=ftp://ftp.isi.edu/in-"
 	 "notes/iana/assignments/media-types/media-types>ftp://ftp"
