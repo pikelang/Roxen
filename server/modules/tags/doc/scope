@@ -1,0 +1,21 @@
+<b>Syntax:</b>
+<kbd>
+<b>{scope [extend]} ... {/scope}</b>
+</kbd>
+<p>
+<b>Attributes</b>
+<p>
+<dl compact>
+<dt><kbd>extend</kbd>
+<dd>Copy all variables from the outer scope.
+</dl>
+<p>
+<b>Purpose</b>
+<p>
+Creates a new variable scope, so that any variable changes
+(see <kbd><b>{set}</b></kbd>) in the scope won't affect later code.<br>
+Also usefull for controling which (if any) variables that are visible
+to included CGI-scripts:<br>
+<kbd><b>{scope}</b>
+{set variable=id value=test}{insert file=foo.cgi}
+<b>{/scope}</b></kbd>
