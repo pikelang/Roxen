@@ -10,10 +10,15 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.119 2001/08/31 17:11:39 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.120 2001/09/03 20:43:53 marcus Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
+
+#if !constant(PIKE_MODULE_RELOC)
+#define relocate_module(x) (x)
+#define unrelocate_module(x) (x)
+#endif
 
 #define SECURITY_DEBUG 1
 
@@ -565,9 +570,13 @@ program low_findprog(string pname, string ext, object|void handler)
   };
 #endif
 
+#if constant(PIKE_MODULE_RELOC)
+  fname = unrelocate_module(fname);
+#endif
+
   if( !handler ) handler = get_inhibit_compile_errors();
 
-  if( (s=master_file_stat( fname )) && s[1]>=0 )
+  if( (s=master_file_stat( relocate_module(fname) )) && s[1]>=0 )
   {
     if( load_time[ fname ] > s[ 3 ] )
       if( !zero_type (ret = programs[fname]) )
@@ -644,7 +653,7 @@ program low_findprog(string pname, string ext, object|void handler)
       break;
 #if constant(load_module)
     case ".so":
-      ret=load_module(fname);
+      ret=load_module(relocate_module(fname));
 #endif
     }
     program_names[ret] = fname;

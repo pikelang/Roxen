@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.282 2001/09/03 14:41:53 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.283 2001/09/03 20:43:53 marcus Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1858,6 +1858,7 @@ and rebuild Pike from scratch.
   start_mysql();
 
   if (err = catch {
+    if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
   }) {
     werror("Initialization of Roxen's master failed:\n"
