@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.37 2001/08/30 18:47:58 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.38 2001/08/30 19:02:43 grubba Exp $";
 
 class Variable
 {
@@ -1033,7 +1033,7 @@ class UserDB
 
   constant name = "db name";
 
-  User find_user( string s );
+  User find_user( string s, RequestID id );
   //! Find a user
 
   User find_user_from_uid( int id )
