@@ -54,6 +54,12 @@ nn binary
 /server/bin/lsquota.pike foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
+/server/config_interface/standard/actions/flush.pike foreign_ident
+/server/config_interface/standard/actions/locks.pike foreign_ident
+/server/config_interface/standard/actions/proc.pike foreign_ident
+/server/config_interface/standard/actions/processstatus.pike foreign_ident
+/server/config_interface/standard/actions/requeststatus.pike foreign_ident
+/server/config_interface/standard/actions/resolv.pike foreign_ident
 /server/config_interface/standard/debug_info.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident

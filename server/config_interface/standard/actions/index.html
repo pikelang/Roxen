@@ -4,5 +4,20 @@
 <topmenu base="../" selected=actions>
 
 <content>
-  <insert file=list_actions.pike>
+<subtablist preparse>
+  <st-tabs><insert file=tablist.pike nocache></st-tabs>
+  <st-page><blockquote><br>
+   <if variable=action>
+      <input type=hidden name=class value=&form.class;>
+      <insert file=&form.action; nocache>
+   </if>
+   <else>
+     <define container=action>
+       <font size=+1><a href=?action=&fname;&class=&form.class;>&name;</a></font><br><blockquote>
+      <contents></blockquote>
+    </define>
+   <insert file=list_actions.pike nocache>
+   </else>
+</blockquote></st-page>
+</subtablist>
 </content>

@@ -1,4 +1,15 @@
 inherit "wizard";
+constant action = "debug_info";
+
+constant name = "Pike module list";
+constant name_svenska = "Pikemodullista";
+
+constant doc =
+"show information about which features and modules are "
+"available in the pike this roxen is using";
+constant doc_svenska =
+"Visa information om vilka features och moduler som är tillgängliga "
+"i den pike som den här roxenservern använder";
 
 mapping(string:int) modules = ([]);
 
@@ -19,7 +30,7 @@ void find_modules()
   modules["threads"] = -1;
 #endif /* thread_create */
 
-  foreach(m->pike_module_path, string p) 
+  foreach(m->pike_module_path, string p)
   {
     array files;
     catch { files = get_dir(p); };
@@ -73,13 +84,13 @@ mixed page_0(object id, object mc)
   }
   string res = "<font size=+1><cf-locale get=features></font>"+
          "<ul>\n";
-  foreach(({ "dynamic_modules", "threads", 
-             "_Crypto", 
+  foreach(({ "dynamic_modules", "threads",
+             "_Crypto",
              "CommonLog",
-	     "Gmp", "Gz", 
-             "MIME", 
-             "_Image_TTF", "_Image_JPEG", 
-	     "Msql", "Mysql", "Odbc", "Oracle", "Postgres", 
+	     "Gmp", "Gz",
+             "MIME",
+             "_Image_TTF", "_Image_JPEG",
+	     "Msql", "Mysql", "Odbc", "Oracle", "Postgres",
              "Yp" }), string s) {
     if (modules[s] == 1) {
       res += " "+fix_module_name(s);
