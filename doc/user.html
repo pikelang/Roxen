@@ -1,0 +1,235 @@
+<html>
+<head>
+<title>User's Guide for AutoSite</title>
+</head>
+
+<body alink=#dd0000 bgcolor=#ffffff fgcolcor=#000000 link=#0000dd vlink=#000066>
+<h1>User's Guide for AutoSite</h1>
+
+
+<h2>AutoWeb</h2>
+
+AutoWeb is the web site part of AutoSite.
+
+
+<h3>AutoWeb Administration</h3>
+
+
+<h4>Logging in</h4>
+
+The AutoWeb administration interface is found by adding
+<i>/webadm/</i> to the domain URL of your site in your browser, like
+this: <tt>http://www.<i>domainname</i>/webadm/</tt>
+
+<p>You will be asked for the administrator's username and password. If
+you give a correct username and password you will be asked to choose
+one of the following tabs: <i>Template Editor, HTML Editor</i> and
+<i>Menu Editor</i>. If one of the LogView modules is enabled a tab
+called <i>Statistics</i> or <i>Simple Statistics</i> will also be
+found.
+
+
+<h3>Template Editor</h3>
+
+This is where the layout of the site is configured.
+
+
+<h4>Layout</h4>
+
+Clicking on one of the headings will allow you to change the
+properties of the background, title, headings etc.
+
+
+<h4>Navigation</h4>
+
+Clicking on one of the headings will allow you to change the
+properties for the background, text style and colors of the navigation
+menus.
+
+
+<h4>Template Functions</h4>
+
+The <i>Load...</i> button will allow you to load a new template to the
+active template. The properties of the layout and navigation will be
+changed.
+
+<p>The <i>New...</i> button will create a new template that will be
+chosen as active template.
+
+<p>The <i>Change...</i> button will change the active template.
+
+<p>The <i>Remove..</i> button will allow you to remove one of the
+templates if there is more than one.
+
+
+<h3>HTML Editor</h3>
+
+The HTML editor is where you find the file system of the site. Here
+you can create or upload new files, edit contents, moving or deleting
+existing files. 
+
+
+<h4>Handling Files</h4>
+
+Click on the name of a file or directory to focus on the file or enter
+the directory.
+
+
+<h3>Menu Editor</h3>
+
+Here you can configure the menu file. Adding new items to the menu
+file is done by clicking the <i>New...</i> button and follow th
+instructions in the wizard or by chosing "Add to Menu" in the HTML
+Editor when focusing on a file or a directory.
+
+<p>If you want to move or delete a menu item first select it by
+clicking the corresponing radio button in the Select column, then
+click on one of the buttons <i>Move Up, Move Down</i> or
+<i>Delete</i>.
+
+
+<h3>Statistics</h3>
+
+This tab will be available when the <i>LogView</i> module is enabled
+for the site. Clicking on the tab you will be able to choose from
+various log analyzing tools.
+
+
+<h3>Simple Statistics</h3>
+
+This table will be shown when the <i>Simple LogView</i> module is
+enabled for the site. Choosing the tab will provide a graph showing
+the hitrate for the last month(s).
+
+
+<h2>Creating HTML pages</h2>
+
+The creation and handling of files is done in the HTML editor
+described above. There are a few aspects unique to AutoSite that
+should be considered when creating the HTML pages.
+
+
+<h3>The &lt;search&gt; Tag</h3>
+
+When the IntraSeek module is enabled for a site, the &lt;search&gt;
+tag can be used in the content files to add a search tool on the page.
+Simply put the &lt;search&gt; tag in the HTML/RXML code where you want
+the search tool to appear on your page.
+
+<p>The search tool will allow a vistor to search the content of the
+pages on the site.
+
+
+<h3>&lt;formsmailer&gt;...&lt;/formsmailer&gt;</h3>
+
+
+<h3>Gtext Headings</h3>
+
+The large headings, &lt;h1&gt;&lt;/h1&gt; and &lt;h2&lgt;&lt;/h2&lgt;
+used in the content files on the site will be shown as gtext, making
+them widely configurable and nice looking. Since gtext is shown as gif
+images extensive use of gtext headings can make a page slow to load.
+
+
+<h2>AutoMail</h2>
+
+Roxen Mail is a complete mail system with a mail server, for this
+system the server is <i>tifa.idonex.se</i>, and a web based mail
+client, Roxen WebMail.
+
+
+<h3>Different Protocols</h3>
+
+There are a few different protcols used when fetching mail from a
+server using different methods of fetching and storing the mail. This
+system supports the two currently most popular protocols, POP and
+IMAP, and also provides its own web based mail client.
+
+<p>POP: Clients using POP copies the mail to the local file system.
+Most clients can be configured to leave a copy on the server, but when
+reading the mail with another client or from another computer the old
+mails will be shown as unread.
+
+<p>IMAP: The IMAP protocol stores the mail on the mail server which
+means that the information about mail that has been read etc is
+available using any IMAP client connecting to the server.
+
+<p>WebMail: Roxen WebMail is a web based mail client that can be used
+from your web browser without installing 
+
+
+<h3>POP3: Choosing server</h3>
+
+If you read mail with a client using POP, choose <i>tifa.idonex.se</i>
+as POP server.
+
+
+<h3>IMAP4: Choosing server</h3>
+
+If you read mail with a client using IMAP, choose
+<i>tifa.idonex.se</i> as IMAP server.
+
+
+<h3>Roxen WebMail</h3>
+
+To use Roxen WebMail add /mail/ to the domain URL of your site like
+this: <tt>http://www.<i>domainname</i>/mail/</tt>
+
+<p>When asked you are asked for a username and a password type
+<i>username*domainname</i> as a username.
+
+
+<h4>Listing Mailboxes</h4>
+
+Clicking on this button you will se a table showing all your
+mailboxes. Click on the name to view the contents of a mailbox.
+
+
+<h4>Reading Mail</h4>
+
+To get new mail click on the <i>List all mailboxes</i> button and
+choose the <i>Incoming</i> mailbox. Unread mail is marked <i>New!</i>
+in the <i>Flag</i> column. Click on one of the text columns to read
+the mail.
+
+
+<h4>Delete Mail</h4>
+
+When focusing on a mail a 
+
+<p>To delete a mail from a mailbox select it by clicking on the button
+in the <i>Flag</i> column and then click the <i>Delete</i> button.
+Several mails can be selected simultaneously so be alert that only the
+mails you really want to delete are seleted.
+
+
+<h4>Write/Send Mail</h4>
+
+To write a new mail click on the <i>Compose Message</i> button.
+
+
+<h4>Create Mailbox</h4>
+
+A folder called inbox is created automatically when a new user is
+added. When composing a new message a <i>draft</i> folder will be
+created and when the first message is sent a <i>sent</i> folder will
+be created.
+
+<p>If you want to create a new mailbox, click on the <i>Create
+Mailbox</i> button.
+
+
+<h4>Delete Mailbox</h4>
+
+Clicking on the <i>Delete mailbox</i> button you will be able to
+delete the mailbox of you choice. All mail currently in that mailbox
+will be deleted permanently.
+
+
+<h4>User Settings</h4>
+
+Clicking on this button will allow you to edit a signature file or
+change the personal data that is sent when sending mail.
+
+</body>
+</html>
