@@ -1,8 +1,9 @@
 // This is Roxen state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: state.pike,v 1.12 2000/02/20 17:41:34 nilsson Exp $
+// $Id: state.pike,v 1.13 2000/03/11 03:32:59 nilsson Exp $
 
+#define strict_types
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
 class Page_state {
