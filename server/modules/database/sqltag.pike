@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.61 2000/10/16 15:58:25 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.62 2000/10/18 21:27:12 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -319,12 +319,18 @@ void create()
   defvar("hostname", "localhost", "Default database",
 	 TYPE_STRING | VAR_INITIAL,
 	 "The default database that will be used if no <i>host</i> "
-	 "attribute is given to the tags. Usually the <i>host</i> "
-	 "attribute should be used with a symbolic database name definied "
-	 "in the <i>SQL databases</i> module."
-	 "<p>The default database is specified as a database URL in the "
-	 "format "
-	 "<tt>driver://user name:password@host:port/database</tt>.\n");
+	 "attribute is given to the tags. "
+	 "The value is a database URL in this format:\n"
+	 "<p><blockquote><pre>"
+	 "<i>driver</i><b>://</b>"
+	 "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
+	 "<i>host</i>[<b>:</b><i>port</i>]"
+	 "[<b>/</b><i>database</i>]\n"
+	 "</pre></blockquote>\n"
+	 "<p>If the <i>SQL databases</i> module is loaded, it's also "
+	 "possible to use an alias registered there. That's the "
+	 "recommended way, since this (usually sensitive) data is "
+	 "collected in one place then.");
 }
 
 
@@ -338,6 +344,8 @@ void start(int level, Configuration _conf)
 
 string status()
 {
+  if (!sizeof (QUERY (hostname))) return "";
+
   if (mixed err = catch {
     object o;
     if (conf->sql_connect)
@@ -345,11 +353,16 @@ string status()
     else
       o = Sql.sql(QUERY(hostname));
 
-    return(sprintf("Connected to %s server on %s<br />\n",
-		   o->server_info(), o->host_info()));
-  })
+    return(sprintf("The default database is connected to %s server on %s.<br />\n",
+		   Roxen.html_encode_string (o->server_info()),
+		   Roxen.html_encode_string (o->host_info())));
+  }) {
+#if 0
+    werror ("Default database connection error: " + describe_backtrace (err));
+#endif
     return
-      "<font color=\"red\">Not connected:</font> " +
+      "<font color=\"red\">The default database is not connected:</font><br />\n" +
       replace (Roxen.html_encode_string (describe_error(err)), "\n", "<br />\n") +
       "<br />\n";
+  }
 }
