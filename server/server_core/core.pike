@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.862 2004/05/22 21:52:10 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.863 2004/05/23 02:23:21 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -55,9 +55,6 @@ Thread.Thread backend_thread;
 // Needed to get core dumps of seteuid()'ed processes on Linux.
 #if constant(System.dumpable)
 #define enable_coredumps(X)	System.dumpable(X)
-#elif constant(system.dumpable)
-// Pike 7.2.
-#define enable_coredumps(X)   system.dumpable(X)
 #else
 #define enable_coredumps(X)
 #endif
@@ -453,7 +450,7 @@ private void low_shutdown(int exit_code)
 #ifdef THREADS
     catch (stop_handler_threads());
 #endif /* THREADS */
-    roxenloader.real_exit(exit_code);
+    loader.real_exit(exit_code);
   }
   if (_recurse++) return;
 
@@ -1687,7 +1684,7 @@ class SSLProtocol
     {
       if( catch{ f = lopen(String.trim_whites(cert_file), "r")->read(); } )
       {
-	report_error("SSL3: Reading cert-file '%s' failed!\n",
+	report_error("SSL3: Reading cert-file %O failed!\n",
 		     cert_file);
 	return;
       }
@@ -1695,7 +1692,7 @@ class SSLProtocol
       if( strlen(query_option("ssl_key_file")) &&
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
-	report_error("SSL3: Reading key-file '%s' failed!\n",
+	report_error("SSL3: Reading key-file %O failed!\n",
 		     query_option("ssl_key_file"));
 	return;
       }
@@ -2023,13 +2020,13 @@ int register_url( string url, Configuration conf )
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
   if (!host || !stringp(host))
   {
-    report_error("Bad URL '%s' for server `%s'\n", url, conf->query_name());
+    report_error("Bad URL %O for server %O.\n", url, conf->query_name());
     return 0;
   }
 
   if( !protocols[ protocol ] )
   {
-    report_error("The protocol '%s' is not available\n", protocol);
+    report_error("The protocol %O is not available.\n", protocol);
     return 0;
   }
 
@@ -4404,9 +4401,9 @@ void initiate_argcache()
 		  describe_error(e) +
 #endif /* DEBUG */
 		  "\n");
-    roxenloader.real_exit(1);
+    loader.real_exit(1);
   }
-  add_constant( "roxen.argcache", argcache );
+  add_constant( "core.argcache", argcache );
   report_debug("\bDone [%.2fms]\n", (gethrtime()-t)/1000.0);
 }
 
@@ -5147,7 +5144,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	code += "    userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
 	m->report_notice( "Syntax error in security patterns: "
-			  "Cannot find the user database '%s'\n",
+			  "Cannot find the user database %O.\n",
 			  line);
       else
 	code +=
@@ -5162,7 +5159,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	code += "    authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
 	m->report_notice( "Syntax error in security patterns: "
-			  "Cannot find the auth method '%s'\n",
+			  "Cannot find the auth method %O.\n",
 			  line);
       else
 	code +=
