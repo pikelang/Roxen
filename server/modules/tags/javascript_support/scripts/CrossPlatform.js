@@ -4,6 +4,10 @@ var insideWindowWidth;
 var range = "";
 var styleObj = "";
 
+// Create a dummy event variable for non navigator browsers.
+if(window.event + "" == "undefined")
+  event = null;
+
 if (navigator.appVersion.charAt(0) == "4") {
   if (navigator.appName == "Netscape") {
     isNav4 = true;
@@ -24,15 +28,16 @@ if (navigator.appVersion.charAt(0) == "4") {
 
 // Convert object name string or object reference
 // into a valid object reference
-function getObject(obj) {
-    if (typeof obj == "string") {
-	if (isNav5)
-	    return document.getElementById(obj);
-	else
-	    return eval("document." + range + obj);
-    }
+function getObject(obj)
+{
+  if (typeof obj == "string") {
+    if (isNav5)
+      return document.getElementById(obj);
     else
-	return obj;
+      return eval("document." + range + obj);
+  }
+  else
+    return obj;
 }
 
 // Positioning an object at a specific pixel coordinate
@@ -64,7 +69,6 @@ function shiftBy(obj, deltaX, deltaY) {
 function setZIndex(obj, zOrder) {
   if (isNav4) getObject(obj).zIndex = zOrder;
   else getObject(obj).style.zIndex = zOrder;
-      
 }
 
 // Setting the background color of an object
@@ -103,13 +107,29 @@ function hidden(obj) {
 // Retrieving the x coordinate of a positionable object
 function getObjectLeft(obj)  {
   if (isNav4) return getObject(obj).left;
+  if (isNav5) return getObject(obj).offsetLeft;
   else return getObject(obj).style.pixelLeft;
 }
 
 // Retrieving the y coordinate of a positionable object
 function getObjectTop(obj)  {
   if (isNav4) return getObject(obj).top;
+  if (isNav5) return getObject(obj).offsetTop;
   else return getObject(obj).style.pixelTop;
+}
+
+// Retrieving the x coordinate of a non positionable object
+function getRelativeObjectLeft(obj)  {
+  alert(obj);
+  if (isNav4) return getObject(obj).pageX;
+  else return getObject(obj).offsetLeft;
+}
+
+// Retrieving the y coordinate of a non positionable object
+function getRelativeObjectTop(obj)  {
+  showProps(obj.offsetParent);
+  if (isNav4) return getObject(obj).pageY;
+  else return getObject(obj).offsetTop;
 }
 
 // Retrieving the height of a positionable object
@@ -257,6 +277,25 @@ function getTargetY(e)
   if(isIE4){
     return getRecursiveTop(window.event.srcElement);
   }
+}
+
+function captureMouseEvent(callback)
+{
+  if(isNav4)
+  {
+    document.captureEvents(Event.MOUSEMOVE);
+    document.onMouseMove = callback;
+  }
+  else
+    document.onmousemove = callback;
+}
+
+function releaseMouseEvent()
+{
+  if(isNav4)
+    document.releaseEvents(Event.MOUSEMOVE);
+  else
+    document.onmousemove = null;
 }
 
 function retFromEvent(r)

@@ -1,166 +1,185 @@
 popups = new Array(0);
 
+// Removes all hide timers.
+function clearHideTimers()
+{
+  for(var i = popups.length - 1; i >= 0; i--)
+    if(popups[i].hide_timer) {
+      clearTimeout(popups[i].hide_timer);
+      popups[i].hide_timer = null;
+    }
+}
+
 function checkPopupCoord(x, y, popup_index)
 {
+  var parent = (popup_index > 0 ? popups[popup_index - 1].name : "none");
   if(popup_index < 0)
     return;
   p = popups[popup_index];
-  p.w = getObjectWidth(p.name);
-  p.h = getObjectHeight(p.name) + p.oy;
-  //setStatus("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+" " +
-  //	    "p.x:"+p.x+", p.y:"+p.y+", p.w:"+p.w+", p.h:"+p.h+".");
+  //setStatus("x:"+x+", y:"+y+", i:"+p.inside+", p:"+popup_index+
+  //		    ", p.x:"+p.x+", p.y:"+p.y+", p.w:"+p.w+", p.h:"+p.h+
+  //		    ", p.t:"+p.hide_timer+".");
   //alert("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+".");
-  if((x > p.x && x < p.x + p.w) && (y > p.y+p.oy && y < p.y + p.h)) {
-    if(!p.inside) p.inside = true;
+  if((x > p.x && x < p.x + p.w) && (y > p.y && y < p.y + p.h)) {
+    p.inside = true;
+    clearHideTimers();
   } else {
     if(p.inside) {
-      clearToPopup(p.parent);
-      if(popups.length == 0) {
-	if(isNav4)
-	  document.releaseEvents(Event.MOUSEMOVE);
-	else
-	  document.onMouseMove = 0; 
+      if(!p.hide_timer) {
+	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", 500);
       }
+      if(popups.length == 0)
+	releaseMouseEvent();
     }
     checkPopupCoord(x, y, popup_index - 1);
   }
 }
 
 function popupMove(e)
-{
-  //showProps(e);
+{ 
   checkPopupCoord(getEventX(e), getEventY(e), popups.length-1);
 }
 
-function popup_coord(name, parent, x, y, w, h, oy)
+function PopupInfo(name, x, y, w, h, properties)
 {
   this.name = name;
-  this.parent = parent;
   this.x = x;
   this.y = y;
   this.w = w;
   this.h = h;
-  this.oy = oy;
+  this.properties = properties;
   this.inside = false;
+  this.hide_timer = null;
 }
 
+function addPopup(name, properties)
+{
+  popups[popups.length] =
+    new PopupInfo(name, getObjectLeft(name), getObjectTop(name),
+		  getObjectWidth(name), getObjectHeight(name), properties);
+}
+
+// Remove all popups above the given one.
 function clearToPopup(popup)
 {
-  if(popups.length <= 0)
-    return;
-  if(popup != popups[popups.length - 1].name) {
-    hideTopPopup();
-    clearToPopup(popup);
+  // Remove all hide timers
+  clearHideTimers();
+  while(popups.length > 0 && popup != popups[popups.length - 1].name)
+  {
+    hide(popups[popups.length - 1].name);
+    popups.length--;
   }
 }
 
-function showPopup(name, parent, ox, oy, od, e)
+function boundPopup(name)
 {
-  //if(getButton(e) != 3)
-  //  return true;
-
-  if(oy == 0)
-    oy = 15;
-
-  if(od == 0)
-    od = 10;
-
-  if(isNav5 || isMac) {
-    if (isMac)
-      ox += 10;
-    else
-      ox += 8;
-
-    if (oy == -1)
-      oy += 1;
-    if (isMac)
-      oy += 15;
-    else
-      oy += 8;
-  }
+  var p_l = getObjectLeft(name);    // this.left
+  var p_t = getObjectTop(name);     // this.top
+  var p_h = getObjectHeight(name);  // clip.height 
+  var p_w = getObjectWidth(name);   // clio.width
+  var c_h = getClientHeight() - 16; // window.innerHeight
+  var c_w = getClientWidth()  - 16; // window.innerWidth
+  var s_l = getScrollLeft();        // window.pageXOffset
+  var s_t = getScrollTop();         // window.pageYOffset
   
+  if((p_l + p_w - s_l) > c_w)
+    p_l = Math.max(0, c_w - p_w + s_l);
+  
+  if((p_t + p_h - s_t) > c_h)
+    p_t = Math.max(0, c_h - p_h + s_t);
+  
+  shiftTo(name, p_l, p_t);
+  //alert(p_w+'×'+p_h+'@'+p_l+','+p_t+' '+c_w+'×'+c_h+'@'+s_l+','+s_t);
+}
+
+function TriggerCoord(e, parent_popup_pos, name)
+{
+  this.x = getTargetX(e);
+  this.y = getTargetY(e);
+  // If netscape add the parent offset.
+  if(isNav4 && parent_popup_pos)
+  {
+    this.x += parent_popup_pos.x;
+    this.y += parent_popup_pos.y;
+  }
+}
+
+function PopupCoord(name)
+{
+  this.x = getObjectLeft(name);
+  this.y = getObjectTop(name);
+  this.h = getObjectHeight(name);
+  this.w = getObjectWidth(name);
+}
+
+function showPopup(e, name, parent, properties)
+{
   if(popups.length != 0) {
-    if(popups[popups.length - 1].name == name)
-      // The corect popup is allredy there.
+    if(popups[popups.length - 1].name == name) {
+      // The correct popup is allredy there.
+      if(popups[popups.length - 1].hide_timer) {
+	clearTimeout(popups[popups.length - 1].hide_timer);
+	popups[popups.length - 1].hide_timer = null;
+	popups[popups.length - 1].inside = false;
+      }
       return retFromEvent(false);
+    }
   }
-  
   clearToPopup(parent);
 
   var popup = getObject(name);
 
-  if (!popup) {
-    alert("Unknown object: " + name);
-    return;
-  }
-  
-  var p_x = getTargetX(e);
-  var p_y = getTargetY(e);
-  
-  var p_h = getObjectHeight(name);
-  var p_w = getObjectWidth(name);
-  var c_h = getClientHeight();
-  var c_w = getClientWidth();
-  var s_l = getScrollLeft();
-  var s_t = getScrollTop();
-
-  // If netscape add the parent offset.
-  if(isNav4) {
-    if(parent == "none" && getObject("menu")) {
-      p_x += getObjectLeft("menu");
-      p_y += getObjectTop("menu");
-    } else if(parent != "none") {
-      p_x += getObjectLeft(parent);
-      p_y += getObjectTop(parent);
-    }
-  }
-
-  // Offset the popup to a better place.
-  if(parent != "none") {
-    p_x += popups[popups.length - 1].w - od;
-  } else {
-    p_x += ox;
-    p_y += oy;
-  }
-  
-  
-  //alert("px:"+p_x+" pw:"+p_w+" sl:"+s_l+" cw"+c_w);
-  //If the popup is placed outside the screen move it inside.
-  if(p_x + p_w > s_l + c_w)
-    p_x = Math.max(0, s_l + c_w - p_w);
-  
-  if(p_y + p_h > s_t + c_h)
-    p_y = Math.max(0, s_t + c_h - p_h);
-  
-  //alert("D, "+p_x);
-  popups[popups.length] = new popup_coord(name, parent,
-					  p_x, p_y - (parent == "none"?oy:0),
-					  p_w, p_h + (parent == "none"?oy:0),
-					  (parent == "none"?oy:0));
-  //popups.push(new popup_coord(name, parent,
-  //				p_x, p_y - (parent == "none"?oy:0),
-  //				p_w, p_h + (parent == "none"?oy:0)));
-
-  shiftTo(popup, p_x,  p_y);
+  if (!popup) { alert("Unknown object: " + name); return; }
+  var parentCoord = (parent != "none"? new PopupCoord(parent): 0);
+  var pos = new properties.LayerPosition(new TriggerCoord(e, parentCoord, name),
+					 parentCoord, properties);
+  shiftTo(popup, pos.x, pos.y);
+  boundPopup(popup);
+  addPopup(name, properties);
   show(popup);
-  if(isNav4) {
-    document.captureEvents(Event.MOUSEMOVE);
-    document.onMouseMove = popupMove;
-  } else {
-    document.onmousemove = popupMove;
+  captureMouseEvent(popupMove);
+  return retFromEvent(false);
+}
+
+function LayerPosition(trigger_pos, parent_popup_pos, properties)
+{
+  this.x = trigger_pos.x;
+  this.y = trigger_pos.y;
+  if(parent_popup_pos && properties.pox)
+    this.x += parent_popup_pos.w - properties.pox;
+  else if(trigger_pos.w && properties.pox)
+    this.x += trigger_pos.w - properties.pox;
+  else
+    this.x += properties.ox;
+  
+  if(parent_popup_pos && properties.poy)
+    this.y += parent_popup_pos.h - properties.poy;
+  else if(trigger_pos.h && properties.poy)
+    this.y += trigger_pos.h - properties.poy;
+  else
+    this.y += properties.oy;
+}
+
+function PopupProperties(hide_delay, ox, oy, pox, poy)
+{
+  this.hide_delay = hide_delay||300;
+  this.ox = ox;
+  this.oy = oy;
+  this.pox = pox;
+  this.poy = poy;
+  this.LayerPosition = LayerPosition;
+
+  // Modify the offsets
+  if(isNav5) {
+    this.ox += 8;
+    this.oy += 8;
   }
-  return retFromEvent(false);
+  if(isMac) {
+    this.ox += 10;
+    this.oy += 15;
+  }
 }
 
-function hidePopup(e)
-{
-  return;
-}
+// Default popup properties
+default_props = new PopupProperties(300, 15, 0, 0, 0);
 
-function hideTopPopup()
-{
-  hide(getObject(popups[popups.length - 1].name));
-  popups.length = popups.length - 1;
-  //hide(getObject(popups.pop().name));
-  return retFromEvent(false);
-}
