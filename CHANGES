@@ -1,3 +1,16 @@
+Changes since Roxen Challenger 1.2.25 Yellow
+-----------------------------------------------
+
+o Added support for the following commands to ftp2.pike:
+   CLNT		set CLieNT
+   FEAT		list FEATures
+   RNFR		ReName FRom
+   RNTO		ReName TO
+   MLSD		Machine processing LiSt Directory
+   MLST		Machine processing LiST
+   SITE CHMOD	SITE specific command "CHMOD"
+  
+
 Changes since Roxen Challenger 1.2.24 Yellow
 -----------------------------------------------
 
