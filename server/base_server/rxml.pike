@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.120 2000/02/11 10:41:17 per Exp $
+ * $Id: rxml.pike,v 1.121 2000/02/12 21:31:57 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -445,16 +445,6 @@ string do_parse(string to_parse, RequestID id,
   RXML.Context ctx;
 
   if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
-#ifdef DEBUG
-    if (ctx != RXML.get_context())
-      error ("Odd context switch."
-#ifdef OBJ_COUNT_DEBUG
-	     " Expected %O, got %O.\n", RXML.get_context(), ctx
-#else
-	     "\n"
-#endif
-	    );
-#endif
     parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
     parser->_parent = parent_parser;
   }
@@ -482,7 +472,7 @@ string do_parse(string to_parse, RequestID id,
 #endif
 
   if (mixed err = catch {
-    if (parent_parser)
+    if (parent_parser && ctx == RXML.get_context())
       parser->finish (to_parse);
     else
       parser->write_end (to_parse);
@@ -572,8 +562,8 @@ void remove_parse_module (RoxenModule mod)
   int i = search (rxml_tag_set->modules, mod);
   if (i >= 0) {
     RXML.TagSet tag_set = rxml_tag_set->imported[i];
-//     rxml_tag_set->set_modules (
-//       rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..] );
+    rxml_tag_set->modules =
+      rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..];
     rxml_tag_set->imported =
       rxml_tag_set->imported[..i - 1] + rxml_tag_set->imported[i + 1..];
     if (tag_set) destruct (tag_set);
