@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.268 2002/04/03 12:48:30 mast Exp $
+// $Id: module.pmod,v 1.269 2002/04/17 00:44:12 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2020,7 +2020,9 @@ class Context
     make_p_code = 1;
     Parser parser = type->get_parser (
       this_object(), tag_set, 0,
-      stale_safe ? RenewablePCode (type, tag_set) : PCode (type, tag_set));
+      stale_safe ?
+      RenewablePCode (type, this_object(), tag_set) :
+      PCode (type, this_object(), tag_set));
 
     mixed res;
     PCode p_code;
@@ -2162,7 +2164,7 @@ class Context
   // changed. Never negative.
 
   PikeCompile p_code_comp;
-  // The PikeCompile object for collecting any produce Pike byte code
+  // The PikeCompile object for collecting any produced Pike byte code
   // during p-code compilation.
 
   static void create (void|TagSet _tag_set, void|RequestID _id)
@@ -3205,7 +3207,7 @@ class Frame
 	      {
 		PCode p_code = 0;
 		if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
-		  p_code = RenewablePCode (result_type, ctx->tag_set);
+		  p_code = RenewablePCode (result_type, ctx, ctx->tag_set);
 		  p_code->source = [string] elem;
 		}
 		subparser = result_type->get_parser (ctx, ctx->tag_set, evaler, p_code);
@@ -3467,13 +3469,13 @@ class Frame
 	    if (make_p_code) {
 	      fn_text_add = (fn_text = String.Buffer())->add;
 	      fn_text_add ("mixed tmp;\n");
-	      sub_p_code = PCode (0);
+	      sub_p_code = PCode (0, 0);
 	      comp = ctx->p_code_comp;
 	    }
 
 	    if (splice_arg) {
 	      // Note: This assumes an XML-like parser.
-	      if (make_p_code) sub_p_code->create (splice_arg_type, ctx->tag_set);
+	      if (make_p_code) sub_p_code->create (splice_arg_type, ctx, ctx->tag_set);
 	      Parser parser = splice_arg_type->get_parser (ctx, ctx->tag_set, 0,
 							   sub_p_code);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
@@ -3524,7 +3526,7 @@ class Frame
 		foreach (indices (raw_args), string arg) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
-		    sub_p_code->create (t, ctx_tag_set);
+		    sub_p_code->create (t, ctx, ctx_tag_set);
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
 				    "argument value %s with %O\n",
@@ -3859,7 +3861,7 @@ class Frame
 		    finished = 0; // Continuing an unwound subevaler.
 		  else if (!in_content || in_content == "") {
 		    if (flags & FLAG_GET_EVALED_CONTENT) {
-		      this_object()->evaled_content = PCode (content_type);
+		      this_object()->evaled_content = PCode (content_type, ctx);
 		      this_object()->evaled_content->finish();
 		    }
 		    break eval_content; // No content to handle.
@@ -3876,10 +3878,10 @@ class Frame
 			if (TagSet local_tags =
 			    [object(TagSet)] this_object()->local_tags) {
 			  PCode p_code = unevaled_content =
-			    ctx->make_p_code && PCode (content_type, local_tags);
+			    ctx->make_p_code && PCode (content_type, ctx, local_tags);
 			  if (flags & FLAG_GET_EVALED_CONTENT) {
 			    PCode more_p_code = this_object()->evaled_content =
-			      PCode (content_type, local_tags, ctx);
+			      PCode (content_type, ctx, local_tags, 1);
 			    if (p_code) p_code->p_code = more_p_code;
 			    else p_code = more_p_code;
 			  }
@@ -3895,10 +3897,10 @@ class Frame
 			}
 			else {
 			  PCode p_code = unevaled_content =
-			    ctx->make_p_code && PCode (content_type, ctx->tag_set);
+			    ctx->make_p_code && PCode (content_type, ctx, ctx->tag_set);
 			  if (flags & FLAG_GET_EVALED_CONTENT) {
 			    PCode more_p_code = this_object()->evaled_content =
-			      PCode (content_type, ctx->tag_set, ctx);
+			      PCode (content_type, ctx, ctx->tag_set, 1);
 			    if (p_code) p_code->p_code = more_p_code;
 			    else p_code = more_p_code;
 			  }
@@ -3929,7 +3931,7 @@ class Frame
 		    subevaler = in_content;
 		    if (flags & FLAG_GET_EVALED_CONTENT) {
 		      PCode p_code = this_object()->evaled_content =
-			PCode (content_type, subevaler->tag_set, ctx);
+			PCode (content_type, ctx, subevaler->tag_set, 1);
 		      if (subevaler->recover_errors)
 			p_code->recover_errors = 1;
 		    }
@@ -5189,10 +5191,8 @@ class Type
   //! directly, otherwise a new object is created.
   {
     PCode p_code = 0;
-    if (make_p_code) {
-      p_code = objectp (make_p_code) ? make_p_code : PCode (this_object(), tag_set);
-      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
-    }
+    if (make_p_code)
+      p_code = objectp (make_p_code) ? make_p_code : PCode (this_object(), ctx, tag_set);
 
     Parser p;
     if (_p_cache) {		// It's a tag set parser.
@@ -6520,10 +6520,12 @@ class CompiledError
 #endif
 
 static class PikeCompile
-//! Helper class to paste together a Pike program from strings.
+//! Helper class to paste together a Pike program from strings. This
+//! is thread safe.
 {
   static int idnr = 0;
   static inherit String.Buffer: code;
+  static inherit Thread.Mutex: mutex;
   static mapping(string:mixed) bindings = ([]);
   static mapping(string:int) cur_ids = ([]);
   static mapping(mixed:mixed) delayed_resolve_places = ([]);
@@ -6539,15 +6541,21 @@ static class PikeCompile
   string add_var (string type, void|string init)
   {
     string id = "v" + idnr++;
+    string txt;
+
     if (init) {
       COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      code::add (sprintf ("%s %s = %s;\n", type, id, init));
+      txt = sprintf ("%s %s = %s;\n", type, id, init);
     }
     else {
       COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      code::add (sprintf ("%s %s;\n", type, id));
+      txt = sprintf ("%s %s;\n", type, id);
     }
+
+    code::add (txt);
+    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
+
     return id;
   }
 
@@ -6556,8 +6564,12 @@ static class PikeCompile
     string id = "f" + idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    code::add (sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def));
+    string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
+
+    code::add (txt);
+    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
+
     return id;
   }
 
@@ -6581,16 +6593,12 @@ static class PikeCompile
 #endif
     mixed resolved;
     if (zero_type (resolved = bindings[what[index]])) {
-#ifdef DEBUG
-      if (!cur_ids[what[index]])
-	error ("Unknown binding %O.\n", what[index]);
-#endif
-      COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
       delayed_resolve_places[what] = index;
+      COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
     }
     else {
-      COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
       what[index] = resolved;
+      COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
     }
   }
 
@@ -6614,38 +6622,45 @@ static class PikeCompile
 
   object compile()
   {
+    Thread.MutexKey lock = mutex::lock();
     object compiled = 0;
 
-    if (code::_sizeof()) {
+    // vvv Relying on the interpreter lock from here.
+    string txt = code::get();
+    mapping(string:int) loc_cur_ids = cur_ids;
+    cur_ids = ([]);
+    // ^^^ Relying on the interpreter lock to here.
+
+    if (txt != "") {
       COMP_MSG ("%O compile\n", this_object());
-      code::add("mixed _encode() { } void _decode(mixed v) { }\n"
-		"constant is_RXML_pike_code = 1;\n"
-		"constant is_RXML_encodable = 1;\n"
+
+      txt +=
+	"mixed _encode() { } void _decode(mixed v) { }\n"
+	"constant is_RXML_pike_code = 1;\n"
+	"constant is_RXML_encodable = 1;\n"
 #ifdef RXML_OBJ_DEBUG
-		// Don't want to encode the cloning of
-		// RoxenDebug.ObjectMarker in the __INIT that is
-		// dumped, since that debug might not be wanted when
-		// the dump is decoded.
-		"mapping|object __object_marker = ",
-		bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+	// Don't want to encode the cloning of RoxenDebug.ObjectMarker
+	// in the __INIT that is dumped, since that debug might not be
+	// wanted when the dump is decoded.
+	"mapping|object __object_marker = ",
+	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")), ";\n"
 #else
-		LITERAL (MARK_OBJECT) ";\n"
+	LITERAL (MARK_OBJECT) ";\n"
 #endif
 #ifdef DEBUG
-		"string _sprintf() {return \"object(compiled RXML code)\" + "
-		LITERAL (OBJ_COUNT)
-		";}\n"
+	"string _sprintf() {return \"object(compiled RXML code)\" + "
+	LITERAL (OBJ_COUNT)
+	";}\n"
 #endif
-	       );
+	;
 
       program res;
-      string txt = code::get();
 #ifdef DEBUG
       if (mixed err = catch {
 #endif
-	res = predef::compile (txt, Resolver (master()));
+	  res = predef::compile (txt, Resolver (master()));
 #ifdef DEBUG
-      }) {
+	}) {
 	report_debug ("Failed program: %s\n", txt);
 	throw (err);
       }
@@ -6653,19 +6668,18 @@ static class PikeCompile
 
       compiled = res();
 
-      foreach (indices (cur_ids), string i)
+      foreach (indices (loc_cur_ids), string i)
 	bindings[i] = compiled[i];
-      cur_ids = ([]);
     }
 
     foreach (indices (delayed_resolve_places), mixed what) {
       mixed index = m_delete (delayed_resolve_places, what);
-#ifdef DEBUG
       if (zero_type (bindings[what[index]]))
-	error ("Unknown delayed id %O.\n", what[index]);
-#endif
-      COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
-      what[index] = bindings[what[index]];
+	delayed_resolve_places[what] = index;
+      else {
+	what[index] = bindings[what[index]];
+	COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
+      }
     }
 
     return compiled;
@@ -6674,6 +6688,17 @@ static class PikeCompile
   static void destroy()
   {
     compile();			// To clean up delayed_resolve_places.
+#ifdef DEBUG
+    if (sizeof (delayed_resolve_places)) {
+      string errmsg = "Still got unresolved delayed resolve places:\n";
+      foreach (indices (delayed_resolve_places), mixed what) {
+	mixed index = m_delete (delayed_resolve_places, what);
+	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+			   "\n", "\n  ") + "\n";
+      }
+      error (errmsg);
+    }
+#endif
   }
 
   //! @ignore
@@ -6807,14 +6832,15 @@ class PCode
     return piece;
   }
 
-  void create (Type _type, void|TagSet _tag_set, void|Context collect_results)
+  void create (Type _type, Context ctx, void|TagSet _tag_set, void|int collect_results)
+  // Not static since this is also used to reset p-code objects.
   {
     if (collect_results) {
       // Yes, the internal interaction between create, reset, the
       // context and CTX_ALREADY_GOT_VC is ugly.
       flags = COLLECT_RESULTS;
-      if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
-      collect_results->misc->variable_changes = ([]);
+      if (ctx->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
+      ctx->misc->variable_changes = ([]);
     }
     else flags = 0;
     if (_type) {
@@ -6827,6 +6853,7 @@ class PCode
       length = 0;
       flags |= UPDATED;
       protocol_cache_time = -1;
+      p_code_comp = ctx->p_code_comp || (ctx->p_code_comp = PikeCompile());
       if (flags & COLLECT_RESULTS)
 	PCODE_MSG ("create or reset for result collection\n");
       else
@@ -6843,7 +6870,6 @@ class PCode
   /*static*/ int length;
 
   /*static*/ int flags;
-  static constant FULLY_RESOLVED = 0x1;
   static constant COLLECT_RESULTS = 0x2;
   static constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
   static constant UPDATED = 0x8;
@@ -6860,6 +6886,8 @@ class PCode
   // The ctx->id->misc->cacheable setting when result collected p-code
   // is finished. It's reinstated on entry whenever the p-code is used
   // to ensure that the protocol cache doesn't overcache.
+
+  static PikeCompile p_code_comp;
 
   void add (Context ctx, mixed entry, mixed evaled_value)
   {
@@ -6962,7 +6990,7 @@ class PCode
       else {
 	frame_state = exec[length + 2] = frame->_save();
 	if (stringp (frame_state[0]))
-	  ctx->p_code_comp->delayed_resolve (frame_state, 0);
+	  p_code_comp->delayed_resolve (frame_state, 0);
 	RESET_FRAME (frame);
       }
 
@@ -7148,22 +7176,22 @@ class PCode
 	    parts[ppos++] = errmsgs;					\
 	} while (0)
 
-	if (flags & FULLY_RESOLVED)
-	  EVAL_LOOP (;, ;);
-	else
+	if (p_code_comp)
 	  EVAL_LOOP ({
 	    array frame_state = exec[pos + 2];
 	    if (stringp (frame->args))
 	      if (stringp (frame_state[0]))
 		frame->args = frame_state[0] =
-		  ctx->p_code_comp->resolve (frame_state[0]);
+		  p_code_comp->resolve (frame_state[0]);
 	      else
 		frame->args = frame_state[0];
 	  }, {
 	    array frame_state = exec[pos + 2];
 	    if (stringp (frame_state[0]))
-	      frame_state[0] = ctx->p_code_comp->resolve (frame_state[0]);
+	      frame_state[0] = p_code_comp->resolve (frame_state[0]);
 	  });
+	else
+	  EVAL_LOOP (;, ;);
 
 	ctx->eval_finish();
 	if (ctx->state_updated > update_count) flags |= UPDATED;
@@ -7334,9 +7362,9 @@ class PCode
 	if (exec[pos + 1]) exec[pos + 1]->args = encode_p_code[pos + 2][0];
       }
     }
-    flags |= FULLY_RESOLVED;
+    p_code_comp = 0;
 
-    return ({P_CODE_VERSION, flags & (COLLECT_RESULTS|FULLY_RESOLVED|FINISHED),
+    return ({P_CODE_VERSION, flags & (COLLECT_RESULTS|FINISHED),
 	     tag_set, tag_set && tag_set->get_hash(),
 	     type, recover_errors, encode_p_code, protocol_cache_time});
   }
@@ -7399,7 +7427,7 @@ class RenewablePCode
       if (mixed err = catch {
 	ctx->make_p_code = 1;
 	if (!parser) {
-	  renewed_p_code = PCode (type, tag_set);
+	  renewed_p_code = PCode (type, ctx, tag_set);
 	  renewed_p_code->recover_errors = recover_errors;
 	  renewed_p_code->p_code = new_p_code;
 	  parser = type->get_parser (ctx, tag_set, 0, renewed_p_code);
