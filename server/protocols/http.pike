@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.285 2000/12/04 22:31:10 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.286 2001/01/10 21:32:25 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -419,7 +419,7 @@ private int really_set_config(array mod_config)
     REQUEST_WERR("Setting cookie..\n");
     if(mod_config)
       foreach(mod_config, m)
-	if(m[-1]=='-')
+	if(m[0]=='-')
 	  config[m[1..]]=0;
 	else
 	  config[m]=1;
@@ -438,13 +438,17 @@ private int really_set_config(array mod_config)
 		 "Set-Cookie: "
 		  + Roxen.http_roxen_config_cookie(indices(config) * ",") + "\r\n"
 		 "Location: " + url + "\r\n"
+		 "Connection: close\r\n"
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
+    my_fd->close();
+    my_fd = 0;
+    end();
   } else {
     REQUEST_WERR("Setting {config} for user without Cookie support..\n");
     if(mod_config)
       foreach(mod_config, m)
-	if(m[-1]=='-')
+	if(m[0]=='-')
 	  prestate[m[1..]]=0;
 	else
 	  prestate[m]=1;
@@ -465,11 +469,15 @@ private int really_set_config(array mod_config)
     } else {
       url = base + url;
     }
-
+    
     my_fd->write(prot + " 302 Config In Prestate!\r\n"
-		 "\r\nLocation: " + url + "\r\n"
+		 "Location: " + url + "\r\n"
+		 "Connection: close\r\n"
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
+    my_fd->close();
+    my_fd = 0;
+    end();
   }
   return 2;
 }
