@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.83 1998/03/06 21:58:02 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.84 1998/03/07 00:05:14 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -312,8 +312,11 @@ string itag_data(mapping tag, mapping m, string contents,
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  if (sep!=" ")
+  if ((sep!=" ")&&(linesep!=" "))
     contents = contents - " ";
+
+  if ((sep!="\t")&&(linesep!="\t"))
+    contents = contents - "\t";
 
   array lines = contents/linesep-({""});
   array foo = ({});
@@ -332,7 +335,7 @@ string itag_data(mapping tag, mapping m, string contents,
       if (gaz==voidsep)
 	foo+=({ VOIDSYMBOL });  //FIXME?
       else
-	foo += ({ (float)gaz });
+	foo += ({ gaz });
     if (sizeof(foo)>maxsize)
       maxsize=sizeof(foo);
     bar += ({ foo });
@@ -362,6 +365,17 @@ string itag_data(mapping tag, mapping m, string contents,
   else
     res->data=bar;
 
+  if ((m->xnames)&&(sizeof(res->data)>0))
+    {
+      res->xnames=res->data[0];
+      res->data=res->data[1..];
+    }
+  bar=res->data;
+  for(int i=0; i<sizeof(bar); i++)
+    for(int j=0; j<sizeof(bar[i]); j++)
+      if (bar[i][j]!=VOIDSYMBOL)
+	bar[i][j]=(float)bar[i][j];
+  res->data=bar;
   return 0;
 }
 
