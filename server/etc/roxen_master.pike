@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.8 1997/03/07 02:07:38 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.9 1997/03/11 04:26:01 grubba Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -65,6 +65,7 @@ void create()
   }
 
   programs["/master"] = object_program(this_object());
+  objects[object_program(this_object())] = this_object();
 
   /* make ourselves known */
   add_constant("_master",this_object());
