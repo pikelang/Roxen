@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.380 2004/05/17 00:31:45 mani Exp $
+// $Id: loader.pike,v 1.381 2004/05/20 16:04:14 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.380 2004/05/17 00:31:45 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.381 2004/05/20 16:04:14 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -781,7 +781,6 @@ void load_core()
 {
 
   add_constant("cd", restricted_cd());
-  add_constant("exit", trace_exit);
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
 #endif /* TRACE_DESTRUCT */
@@ -2112,7 +2111,6 @@ void do_main( int argc, array(string) argv )
   add_constant("report_fatal",  report_fatal);
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
-  add_constant("werror",        roxen_werror);
   // NGSERVER: Remove roxenp
   add_constant("roxenp",        lambda() { return core; });
   add_constant("get_core",      lambda() { return core; });

@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.52 2004/01/25 18:27:57 norrby Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.53 2004/05/20 16:04:11 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -342,7 +342,7 @@ class TagJSExternal
 
     array do_return(RequestID id)
     {
-      string key = Crypto.md5()->update(string_to_utf8(content))->digest();
+      string key = Crypto.MD5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
       return ({ "<script language=\"javascript\" src=\""+

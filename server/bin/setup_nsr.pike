@@ -1,4 +1,4 @@
-// $Id: setup_nsr.pike,v 1.1 2004/05/02 14:10:43 mani Exp $
+// $Id: setup_nsr.pike,v 1.2 2004/05/20 16:04:09 _cvs_stephen Exp $
 //
 // Setup .nsr (Networker) files for logfile directories if appropriate.
 // NOTE: We must be paranoid; we must not alter files that the user
@@ -22,7 +22,7 @@ void update_nsr_file(string directory)
   }
 
   int this_rev = -1;
-  if (sscanf("$Revision: 1.1 $", "$""Revision: 1.%d $", this_rev) != 1) {
+  if (sscanf("$Revision: 1.2 $", "$""Revision: 1.%d $", this_rev) != 1) {
     vwerror("Failed to parse own revision $Rev$\n");
     return;
   }
@@ -44,7 +44,7 @@ void update_nsr_file(string directory)
       vwerror("No checksum.\n");
       return;
     }
-    if (Crypto.string_to_hex(Crypto.md5()->update(old_content)->digest()) !=
+    if (Crypto.string_to_hex(Crypto.MD5()->update(old_content)->digest()) !=
 	csum) {
       vwerror("Bad checksum.\n");
       return;
@@ -79,7 +79,7 @@ void update_nsr_file(string directory)
   Stdio.write_file(nsr_file,
 		   sprintf("# Roxen nsr-checksum: %s\n"
 			   "%s",
-			   Crypto.string_to_hex(Crypto.md5()->
+			   Crypto.string_to_hex(Crypto.MD5()->
 						update(new_content)
 						->digest()),
 			   new_content));
@@ -107,7 +107,7 @@ int main(int argc, array(string) argv)
       verbose++;
       break;
     case "version":
-      write("$Id: setup_nsr.pike,v 1.1 2004/05/02 14:10:43 mani Exp $\n");
+      write("$Id: setup_nsr.pike,v 1.2 2004/05/20 16:04:09 _cvs_stephen Exp $\n");
       break;
     }
   }

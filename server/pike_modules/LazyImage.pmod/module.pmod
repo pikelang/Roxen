@@ -1890,7 +1890,7 @@ class Polygone
 
 static string low_hash( program|object p, mapping a )
 {
-  object o = Crypto.md5();
+  object o = Crypto.MD5();
   if(!a)
     error("low_hash called before set_args\n");
   o->update( p->operation_name );

@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.301 2004/05/16 23:22:31 mani Exp $
+// $Id: module.pmod,v 1.302 2004/05/20 16:04:12 _cvs_stephen Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -918,7 +918,7 @@ class TagSet
   //! @[generation] to track changes in the tag set.
   {
     if (!hash)
-      hash = Crypto.md5()->update (encode_value_canonic (get_hash_data()))->digest();
+      hash = Crypto.MD5()->update (encode_value_canonic (get_hash_data()))->digest();
     return hash;
   }
 

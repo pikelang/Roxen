@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.859 2004/04/28 14:46:33 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.860 2004/05/20 16:04:13 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -58,6 +58,8 @@ static function sol = master()->set_on_load;
 #ifdef TEST_EUID_CHANGE
 int test_euid_change;
 #endif
+
+static array(Shuffler.Shuffler) shufflers = ({ Shuffler.Shuffler() });
 
 // FIXME: Kludge for bug in socket callbacks.
 class ShuffleWrapper (Stdio.File fd) {
@@ -669,8 +671,6 @@ int busy_threads;
 
 static array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
-
-static array(Shuffler.Shuffler) shufflers = ({ Shuffler.Shuffler() });
 
 void backend_thread_func( Pike.Backend backend )
 {
