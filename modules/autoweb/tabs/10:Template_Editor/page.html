@@ -31,7 +31,8 @@
 	<cset preparse variable=options><pike>
 	  string query=
 	    "<sqloutput quote='£' query="
-	    "\"select * from templates where category='¤category¤'\">"
+	    "\"select * from template_vars_opts where"
+	    " variable_id='#id:quote=mysql#'\">"
             "£name£,</sqloutput>";
           return ((parse_rxml(query, id)/",")-({ "" }))*",";
 	  </pike></cset>
@@ -39,7 +40,8 @@
 	  return
 	    "<sqloutput quote='£' query="
 	    "\"select * from customers_preferences "
-	    "where customer_id='¤customer_id¤' and variable_id='#id#'\">"
+	    "where customer_id='¤customer_id:quote=mysql¤' and"
+	    " variable_id='#id:quote=mysql#'\">"
 	    "£value£</sqloutput>";
           </pike></cset>
 	<formoutput quote='$'>
@@ -48,24 +50,20 @@
 	</formoutput>
 	<br>
         #help#<br>
-	<comment>
-	  name=variable_#id# type=#type# <br>
-          <tablify preparse nice cellseparator='='>Variable=Value
-            <insert variables=full></tablify>
-	</comment>
       </page>
     </sqloutput>
     <noparse><noparse>
     <done>
       <pike>
-        werror("%O\n\n",id->variables);
+        //werror("\nSaving to database customer: ¤customer_id¤\n");
         string r = "";
-	
-	foreach(indices(id->variables), string variable) {
-          if(sscanf(variable, "variable_%d%*s", int variable_id)>0) {
+	foreach(indices(id->variables), string variable)
+          if((sscanf(variable, "variable_%d%s",
+	            int variable_id, string slask)>0)&&(slask=="")) {
+	    //werror("%s=%s\n", variable, id->variables[variable]);
             r += "<sqlquery query=\""
 	         "delete from customers_preferences "
-		 "where customer_id='¤customer_id¤' and "
+	  	 "where customer_id='¤customer_id¤' and "
 		 "variable_id='"+variable_id+"'"
 		 "\">\n";
 	    r += "<sqlquery query=\""
@@ -75,7 +73,6 @@
 		 id->variables[variable]+"')"+
 		 "\">\n";
 	  }
-	}
         return r;
       </pike>
     </done></noparse></noparse>
@@ -112,8 +109,6 @@
     <autosite-webadm-update-template>
   </if>
 </if>
-
-
 
 <comment>
 <tablify preparse nice cellseparator='='>Variable=Value
