@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.114 2004/05/10 17:19:42 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.115 2004/05/10 19:10:14 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1424,7 +1424,14 @@ class RequestID
 
   void end(string|void s, int|void keepit){}
   void ready_to_receive(){}
-  void send_result(mapping|void result){}
+
+  void send_result(mapping|void result)
+  {
+#ifdef DEBUG
+    error ("send_result not overridden.\n");
+#endif
+  }
+
   RequestID clone_me()
   {
     object c,t;
