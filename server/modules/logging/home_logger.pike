@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.29 2000/08/28 05:31:55 per Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.30 2000/11/13 08:52:07 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -289,7 +289,7 @@ object find_cache_file(string f)
     }
   } while(c->next && (c=c->next));
 
-  c->close();
+  catch(c->close());
   if(c->open(f))
     return c;
   return 0;
@@ -346,7 +346,8 @@ int log(RequestID id, mapping file)
   string s;
   object fnord;
 
-  if((s = home(id->not_query, id)) && (fnord=find_cache_file(s)))
+  if((s = home(http_decode_string( id->raw_url ), id))
+     && (fnord=find_cache_file(s)))
   {
     fnord->wait(); // Tell it not to die
     do_log(file,id,fnord->write);
