@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.66 2000/02/19 23:45:38 mast Exp $
+//! $Id: module.pmod,v 1.67 2000/02/20 02:05:32 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -635,8 +635,6 @@ class Context
     else if (compatible_scope)
       scope_name = scope_name || "form";
 #endif
-    else
-      scope_name = scope_name || "_";
     return ({ scope_name, splitted[-1] });
   }
 
@@ -675,8 +673,8 @@ class Context
 	else
 	  return val;
     }
-    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
-    else parse_error ("No current scope.\n");
+    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
@@ -692,8 +690,6 @@ class Context
     else if (compatible_scope)
       scope_name = scope_name || "form";
 #endif
-    else
-      scope_name = scope_name || "_";
     return get_var(splitted[-1], scope_name, want_type);
   }
 
@@ -706,8 +702,8 @@ class Context
 	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
       else
 	return vars[var] = val;
-    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
-    else parse_error ("No current scope.\n");
+    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
@@ -723,8 +719,6 @@ class Context
     else if (compatible_scope)
       scope_name = scope_name || "form";
 #endif
-    else
-      scope_name = scope_name || "_";
     return set_var(splitted[-1], val, scope_name);
   }
 
@@ -737,8 +731,8 @@ class Context
 	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
       else
 	m_delete ([mapping(string:mixed)] vars, var);
-    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
-    else parse_error ("No current scope.\n");
+    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   void user_delete_var (string var, void|string scope_name)
@@ -754,8 +748,6 @@ class Context
     else if (compatible_scope)
       scope_name = scope_name || "form";
 #endif
-    else
-      scope_name = scope_name || "_";
     delete_var(splitted[-1], scope_name);
   }
 
@@ -768,8 +760,8 @@ class Context
 	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
       else
 	return indices ([mapping(string:mixed)] vars);
-    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
-    else parse_error ("No current scope.\n");
+    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   array(string) list_scopes()
@@ -905,12 +897,19 @@ class Context
       for (object(PCode)|object(Parser) e = evaluator->_parent; e; e = e->_parent)
 	e->error_count++;
       if (id && id->conf)
-	msg = (err->type == "run" ?
-	       ([function(Backtrace,Type:string)]
-		([object] id->conf)->handle_run_error) :
-	       ([function(Backtrace,Type:string)]
-		([object] id->conf)->handle_parse_error)
-	      ) ([object(Backtrace)] err, evaluator->type);
+	while (evaluator) {
+	  if (evaluator->report_error && evaluator->type->free_text) {
+	    string msg = (err->type == "run" ?
+			  ([function(Backtrace,Type:string)]
+			   ([object] id->conf)->handle_run_error) :
+			  ([function(Backtrace,Type:string)]
+			   ([object] id->conf)->handle_parse_error)
+			 ) ([object(Backtrace)] err, evaluator->type);
+	    if (evaluator->report_error (msg))
+	      break;
+	  }
+	  evaluator = evaluator->_parent;
+	}
       else {
 #ifdef MODULE_DEBUG
 	report_notice (describe_backtrace (err));
@@ -918,13 +917,6 @@ class Context
 	report_notice (err->msg);
 #endif
       }
-      if (msg)
-	while (evaluator) {
-	  if (evaluator->report_error && evaluator->type->free_text &&
-	      evaluator->report_error (msg))
-	    break;
-	  evaluator = evaluator->_parent;
-	}
     }
     else throw_fatal (err);
   }
