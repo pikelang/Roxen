@@ -1,13 +1,13 @@
 -*- html -*-
 <info>
-version="$Id: roxenlogo,v 1.9 2000/03/13 02:23:52 nilsson Exp $";
+version="$Id: roxenlogo,v 1.10 2000/03/19 16:29:03 nilsson Exp $";
 name="roxenlogo";
 doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 10.";
 help=1;
 </info>
 
 <define tag="x"><attrib name="r">1</attrib><attrib name="c">1</attrib>
-<td colspan="&_.c;" rowspan="&_.r;" ::="&_.args;"><img src="internal-roxen-unit" width="1" height="1" alt="" /></td></define>
+<td colspan="&_.c;" rowspan="&_.r;" ::="&_.rest-args;"><img src="internal-roxen-unit" width="1" height="1" alt="" /></td></define>
 
 <define tag="u"><attrib name="w">0</attrib><attrib name="h">0</attrib><attrib name="s">1</attrib>
 <set variable="var.w" expr="(int)(&_.w;/10.0*&_.s;)+1"/><set variable="var.h" expr="(int)(&_.h;/10.0*&_.s;)+1"/>
