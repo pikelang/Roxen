@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.393 2002/11/05 02:17:12 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.394 2002/11/07 15:11:43 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4979,25 +4979,6 @@ class TagIfExpr {
 }
 
 
-class TagIfTestLicense {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "test-license";
-  int eval(string u, RequestID id, mapping args)
-  {
-    License.Key key = id->conf->getvar("license")->get_key();
-    if(!key)
-      RXML.run_error("No license key defined for this configuration.");
-    
-    //  Expects a string on the form "module#feature"
-    if(sscanf(u, "%s#%s", string module, string feature) == 2) {
-      return !!key->get_module_feature(module, feature);
-    }
-    RXML.parse_error("Wrong syntax!");
-  }
-}
-
-
 // --------------------- Emit plugins -------------------
 
 class TagEmitSources {
@@ -5129,26 +5110,6 @@ class TagEmitFonts
   }
 }
 
-
-class TagEmitLicenseWarnings {
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "license-warnings";
-  array get_dataset(mapping args, RequestID id)
-  {
-    // This emit plugin can be used to list warnings in the loaded
-    // license for a configuration. It can also be used within
-    // <license> or emit#licenses.
-    License.Key key = (( RXML.get_context()->current_scope() &&
-			 RXML.get_context()->get_var("key") )||
-		       id->conf->getvar("license")->get_key());
-    if(!key) {
-      RXML.parse_error("No license key defined in the configuration\n");
-      return ({});
-    }
-    return key->get_warnings();
-  }
-}
 
 // ---------------- API registration stuff ---------------
 
