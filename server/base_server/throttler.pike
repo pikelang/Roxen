@@ -11,7 +11,8 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.11 2002/06/14 16:05:04 jhs Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.12 2002/07/03 14:51:26 per Exp $";
+this_program parent;
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
@@ -23,10 +24,11 @@ constant cvs_version="$Id: throttler.pike,v 1.11 2002/06/14 16:05:04 jhs Exp $";
 # define THROTTLING_DEBUG(X)
 #endif
 
+private System.Timer last_fill = System.Timer();
+
 private int bucket=0;
 private int fill_rate=0;    //if 0, no throttling is done
 private int depth;          //the max bucket depth
-private int last_fill=0;
 
 private int min_grant=0;    //if we'd grant less than this, don't grant at all.
 private int max_grant=0;    //maximum granted size for a single request
@@ -52,7 +54,7 @@ void throttle (int r, int d, int|void initial,
   max_grant=(zero_type(maxgrant)?DEFAULT_MAXGRANT:maxgrant);
   if( !requests_queue ) // First time.
   {
-    last_fill=time(1);
+    last_fill->get();
     requests_queue=ADT.Queue();
   }
   remove_call_out(safety_net);
@@ -64,10 +66,9 @@ private void fill_bucket() {
   int toadd;
   if (!fill_rate) //nothing to do.
     return;
-  toadd=((time(1)-last_fill)*fill_rate);
+  toadd=(int)(last_fill->get()*fill_rate);
   bucket+=toadd;
   THROTTLING_DEBUG("adding "+toadd+" tokens");
-  last_fill=time(1);
   if (bucket>depth)
   {
     bucket=depth;
@@ -108,8 +109,8 @@ private void wake_up_some () {
 
 //handles a single request. It assumes it has been granted, otherwise
 //it will allow going over quota.
-private void grant (int howmuch, function callback, string host,
-		    array(mixed) cb_args ) {
+private void grant (int howmuch, function callback, string host )
+{
   THROTTLING_DEBUG("grant("+howmuch+"). bucket="+bucket);
   if (!callback) {
     THROTTLING_DEBUG("no callback. Exiting");
@@ -120,18 +121,24 @@ private void grant (int howmuch, function callback, string host,
     howmuch=bucket;
   }
   bucket-=howmuch;
-  callback(howmuch,@cb_args);
+  if( parent )
+    parent->request( 0, howmuch, callback, host );
+  else
+    callback(howmuch);
 }
 
 
-//request for permission to send this much data.
-//when granted, callback will be called. First arg is the number
-//of allowed bytes. Then the hereby supplied args.
-void request (int howmuch, function(int,mixed ...:void) callback,
-	      string host, mixed ... cb_args) {
+// request for permission to send this much data. when granted,
+// callback will be called. First arg is the number of allowed bytes. 
+// Then the hereby supplied args.
+void request ( Shuffler.Shuffle shuf,
+	       int howmuch,
+	       function(int,mixed ...:void) callback,
+	       string host )
+{
   if (!fill_rate) { //no throttling is actually done
     THROTTLING_DEBUG("auto-grant (not throttling)");
-    callback(howmuch,@cb_args);
+    callback(howmuch);
     return;
   }
 
@@ -140,24 +147,25 @@ void request (int howmuch, function(int,mixed ...:void) callback,
     howmuch=max_grant;
   }
 
-//    fill_bucket(); //maybe we can squeeze some more bandwidth.
-
   if (bucket <= min_grant ) { //bad luck. Nothing to allow. Enqueue
     THROTTLING_DEBUG("no tokens, enqueueing");
-    requests_queue->put( ({howmuch,callback,host,cb_args}) );
+    requests_queue->put( ({howmuch,callback,host}) );
     return;
   }
 
   THROTTLING_DEBUG("granting");
-  grant (howmuch, callback, host, cb_args);
+  grant (howmuch, callback, host);
 }
 
 
 //after a request has been granted, if the request doesn't use all of the
 //assigned bandwidth, it can return the unused amount.
-void report_unused (int howmuch) {
+void give_back ( Shuffler.Shuffle s, int howmuch, string host )
+{
   THROTTLING_DEBUG("got an unused bandwidth report ("+howmuch+")");
   bucket+=howmuch;
+  if( parent )
+    parent->give_back( s, howmuch, host );
 }
 
 //a call_out cycle, in order to make sure that we fill the bucket at least
@@ -177,7 +185,11 @@ void destruct () {
 }
 
 #ifdef THROTTLING_DEBUG
-void create() {
+void create(this_program _parent, int|void rate)
+{
+  parent = _parent;
+  if( rate )
+    throttle( rate, rate );
   THROTTLING_DEBUG("creating");
 }
 #endif
