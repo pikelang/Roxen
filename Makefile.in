@@ -14,12 +14,13 @@ clean:
 
 install: all
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
+        -@mv -f $(prefix)/server $(prefix)/server.old
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/src/pike $(prefix)/roxen/server/bin
-	@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
-	@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
+	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
+	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
 	@(cd extern;$(MAKE) install;cd ../)
 
 
