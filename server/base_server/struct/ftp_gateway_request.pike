@@ -1,6 +1,10 @@
 
-#define VERSION "1.7b4"
+#define VERSION "1.8"
 // changelog:
+// 1.8   nov19 kg
+//       Update to newer Pike/Roxen.
+//       Handle passwords.
+//       Do not reuse sessions with same host but different users.
 // 1.7b4 oct4 david
 //       Fixed the case when you open a directory that is a link.
 //       Some 'stat' replies with 212 instead of 211. 
@@ -50,7 +54,7 @@ inherit "roxenlib";
 object id,master;
 object server,datacon,dataport;
 
-string host,file,effect,user;
+string host,file,effect,user,passw;
 int port;
 int portno;
 function read_state;
@@ -86,7 +90,8 @@ void save_stuff()
       }
       else
       {
-	 master->save_connection(host+":"+port,server,server_info);
+	 master->save_connection((user||"")+"@"+host+":"+port,
+				 server,server_info);
       }
    
    dataport=0;
@@ -416,7 +421,8 @@ string parse_directory()
 	    !(res=parse_uwp_directory()))
    {
       /* unknown, return preformatted */
-      perror("FTP GATEWAY: unknown list format at "+host+":"+port+"/"+file+"\n");
+      perror("FTP GATEWAY: unknown list format at "+
+	     (user?user+"@":"")+host+":"+port+"/"+file+"\n");
       res="(Unrecognized directory type)<br>\n<pre>"+buffer+"</pre>";
    }
    if(res == -1)
@@ -476,7 +482,7 @@ void dir_completed()
       return;
    }
 
-   pipe=clone((program)"/precompiled/pipe");
+   pipe=Pipe();
    pipe->write("HTTP/1.0 200 Yeah, it's a FTP directory\r\n"
 	       "Content-type: text/html\r\n"
 	       "Content-length: "+strlen(res)+"\r\n");
@@ -532,9 +538,9 @@ void transfer()
       return;
    }
 
-   type=id->conf->types_fun(file);
+   type=roxen->type_from_filename(file);
 
-   pipe=clone((program)"/precompiled/pipe");
+   pipe=Pipe();
    pipe->write("HTTP/1.0 200 FTP transfer initiated\r\n");
 
    tmp=roxen->type_from_filename(file,1);
@@ -804,14 +810,17 @@ void passwd(string r,string arg)
 {
   if (r=="331") /* Send your password, please */
   {
-   array f;
-    if(user && 0)
+    array f;
+    if(0)
       if(id->realauth && sizeof(f = id->realauth/":") == 2)
 	write_server("pass "+f[1]);
       else
 	id->end(AUTH_REQUIRED);
+    else if (passw)
+      write_server("pass "+passw);
     else
-      write_server("pass roxen_ftp_gateway@"+roxen->query("Domain"));
+      // I WANT a query() function in conf. hrmpf! /kg
+      write_server("pass roxen_ftp_gateway@"+id->conf->variables->Domain[0]);
     read_state=password_response;
   } else if (r=="230") /* user logged in, proceed */
   {
@@ -834,10 +843,10 @@ void login()
     selfdestruct();
     return; 
   }
-  if(user && 0)
+  if(user)
     write_server("user "+user);
   else    
-    write_server("user ftp");
+    write_server("user anonymous");
   read_state=passwd;
 }
 
@@ -978,7 +987,7 @@ void connected(object con)
 }
 
 void create(object rid,object rmaster,
-	    string rhost,int rport,string rfile, string u)
+	    string rhost,int rport,string rfile, string u, string p)
 {
    mixed m;
 
@@ -988,6 +997,7 @@ void create(object rid,object rmaster,
    id=rid;
    host=rhost;
    user = u;
+   passw = p;
    if (rfile!=""&&rfile[0]=='(')
       sscanf(rfile,"(%s)%s",effect,rfile);
    else effect=0;
@@ -997,7 +1007,7 @@ void create(object rid,object rmaster,
        search(file,"?")!=-1) trystat=1; else trystat=0;
    
    port=rport;
-   if ((m=master->ftp_connection(host+":"+port)) && m[0])
+   if ((m=master->ftp_connection((user||"")+"@"+host+":"+port)) && m[0])
    {
       server=m[0];
       server_info=m[1];
@@ -1015,8 +1025,8 @@ void create(object rid,object rmaster,
 string comment()
 {
    string url;
-   url="ftp://"+host+(port!=21?":"+port:"")+"/";
-   return "<a href="+url+">"+host+"</a>; <a href="+url+
+   url="ftp://"+(user?user+"@":"")+host+(port!=21?":"+port:"")+"/";
+   return "<a href="+url+">"+(user?user+"@":"")+host+"</a>; <a href="+url+
           (file[0]=='/'?file[1..10000]:file)+">"+file+"</a> - "+what_now;
 }
 
