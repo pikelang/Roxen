@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.113 2004/06/20 16:10:45 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.114 2004/06/20 16:12:58 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -304,7 +304,7 @@ class TagSQLQuery {
       NOCACHE();
 
       if(args["mysql-insert-id"]) {
-        object con = do_sql_query(args, id, 0, 2);
+        object con = do_sql_query(args, id, 2);
 	if(con && con->master_sql->insert_id)
 	  RXML.user_set_var(args["mysql-insert-id"],
 			    con->master_sql->insert_id());
