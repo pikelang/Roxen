@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.17 2002/12/16 15:04:46 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.18 2003/04/24 12:36:44 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -151,7 +151,7 @@ class TagForceSessionID {
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  RXML_CONTEXT->extend_scope ("headers", r->extra_heads);
+	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 	return 0;
       }
     }
