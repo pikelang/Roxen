@@ -1,10 +1,275 @@
-<b><kbd>{aconf href=... [+config -config ...]}:</kbd></b>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;aconf&gt;&nbsp;...&nbsp;&lt;/aconf&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;aconf&gt; is defined in the Main RXML parser module.
+<p> 
+Adds or removes config options.
+
+<p>Config options are simple toggles that are stored in the cookie
+<i>roxen-config</i>. This ensures that they are persistent for that
+user, the same user will have the same config options even if he
+returns to the site another day. If cookies cannot be used, prestate
+variables are used instead.
+
+<p>Use <doc><tt>{if config=...}</font></tt></doc> to test for the presence of a config
+option. <tt>&lt;aconf&gt;</tt> works just like the <doc><tt>{a href=...}</font></tt></doc>
+container tag, but if no <tt>href</tt> attribute is specified, the
+current page is used.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <p>
- Adds or removes a config option. Config options are simple toggles,
-and are always server-global but client-local. If the server supports
-cookies, they are placed in the 'roxen-config' cookie, otherwise they
-are added as prestate variables. Use {if config=...} to test for
-the presence of a prestate.. {aconf} works just like the {a
-href=...} container, but if no 'href' attribute is specified, the
-current page is used.
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<aconf +foo>Add the option</aconf>
+<br><aconf -foo>Remove the option</aconf>
+
+<p>if config=foo>
+The option is set.
+</if>
+<else>
+The option is not set.
+</else>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<aconf +foo>Add the option</aconf>
+<br><aconf -foo>Remove the option</aconf>
+
+<p>if config=foo>
+The option is set.
+</if>
+<else>
+The option is not set.
+</else>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

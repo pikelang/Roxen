@@ -1,33 +1,383 @@
-<b>Syntax:</b>
-<kbd>
-<b>{set variable=variable-to-set [value=value] [from=another-variable-name] 
-     [other=...] [define=...]}</b>
-</kbd>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;variable&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;variable&gt; is defined in the Main RXML parser module.
 <p>
-<b>Attributes</b>
+Sets a variable to a new value.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#variable">variable</a>,
+<a href="#debug">debug</a>,
+<a href="#define">define</a>,
+<a href="#expr">expr</a>,
+<a href="#eval">eval</a>,
+<a href="#from">from</a>,
+<a href="#other">other</a>,
+<a href="#value">value</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <p>
-<dl compact>
-<dt><kbd>variable=...</kbd> 
-<dd>Set this variable
-<dt><kbd>value=...</kbd>
-<dd>The exact value to set the variable to
-<dt><kbd>expr=...</kbd>
-<dd>Set the variable to the result of a simple mathematical
-    expression.  Allowed operators are +,-,*,/,%,& and |, only numerical
-    values can be used in the expression.
-<dt><kbd>from=...</kbd>
-<dd>Set the variable to the value of this variable
-<dt><kbd>other=...</kbd>
-<dd>As from, but uses the value of a 'misc' variable. That is,
-id->misc->variables, not id->variables. Mostly useful for pike-script
-and pike-module programmers
-<dt><kbd>define=...</kbd>
-<dd>Use the value of this define.
-<dt><kdb>eval=...</kbd>
-<dd>Use the result of some evaluated RXML
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="variable">variable</a></b></tt>=<i>variable</i>
+<dd>
+The variable to set.
+
+
+
+
+<p><dt><tt><b><a name="debug">debug</a></b></tt>
+
+<dd>
+Provide debug messages in case the operation fails. <tt>&lt;set&gt;</tt>
+will normally fail silently.
+
+
+
+<p><dt><tt><b><a name="define">define</a></b></tt>=<i>define</i>
+<dd>
+Set the variable to the contents of this define.
+
+
+
+
+<p><dt><tt><b><a name="expr">expr</a></b></tt>=<i>expression</i>
+<dd>
+Set the variable to the result of a simple mathematical
+expression. Operators that can be used are +, -, *, /, % and |. Only
+numerical values can be used in the expression.
+
+
+
+
+<p><dt><tt><b><a name="eval">eval</a></b></tt>=<i>rxml expression</i>
+<dd>
+Set the variable to the result of this rxml expression.
+
+
+
+
+<p><dt><tt><b><a name="from">from</a></b></tt>=<i>variable</i>
+<dd>
+Set the variable to the value of the named variable.
+
+
+
+
+<p><dt><tt><b><a name="other">other</a></b></tt>=<i>variable</i>
+<dd>
+Set the variable to the value of this <i>other</i> variable. This is
+mostly useful from within <i>output</i> tags like
+<tt>&lt;sqloutput&gt;</tt> where all columns from the SQL result will be
+available as <i>other</i> variables.
+
+
+
+
+<p><dt><tt><b><a name="value">value</a></b></tt>=<i>string</i>
+<dd>
+Set the variable to this value.
+
+
+
 </dl>
-If none of the above attributes are specified, the variable is unset.
-If debug is currently on, more specific debug information is provided
-if the operation failed.
-<p> 
-<b>See also:</b> {append help} {debug help}
+
+<p>
+If none of the above attributes are specified, the variable is
+unset. If debug is currently on, more specific debug information is
+provided if the operation failed.
+
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<set variable=foo value="Hello World">
+
+<insert variable=foo>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<set variable=foo value="Hello World">
+
+<insert variable=foo>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<set variable=foo eval="<date>">
+
+<insert variable=foo>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<set variable=foo eval="<date>">
+
+<insert variable=foo>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

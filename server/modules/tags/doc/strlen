@@ -1,13 +1,256 @@
-<kbd><b>{strlen}string{/strlen}</b></kbd><p>
-returns the length of the enclosed string.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;strlen&gt;&nbsp;...&nbsp;&lt;/strlen&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;strlen&gt; is defined in the Main RXML parser module.
 <p>
-<b>Examples:</b>
-<br>
+Returns the length of the contents.
 
-{strlen}foo{/strlen}: <strlen>foo</strlen><br>
-{strlen}{/strlen}: <strlen></strlen><br>
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <p>
-<b>What is it good for?</b><br>
-Strlen can be used with {if eval=...} to test the length of variables.
+<b><font color=#113377 size=+2 >Attributes</font></b>
 
 
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<cset variable=num preparse>
+<strlen>Roxen</strlen>
+</cset>
+
+Roxen is a <formoutput><number num=#num#></formoutput> letter word.
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<cset variable=num preparse>
+<strlen>Roxen</strlen>
+</cset>
+
+Roxen is a <formoutput><number num=#num#></formoutput> letter word.
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

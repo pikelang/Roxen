@@ -1,0 +1,273 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;gclock&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;gclock&gt; is defined in the Pike Image Module module.
+<p>
+Draw an analogue clock that will always show the right time through
+creative usage of GIF animations.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#background_image">background_image</a>,
+<a href="#delay">delay</a>,
+<a href="#time_offset">time_offset</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="background_image">background_image</a></b></tt>=<i>path</i>
+<dd>
+Set the background image to use.
+
+
+
+
+<p><dt><tt><b><a name="delay">delay</a></b></tt>
+
+<dd>
+Set the delay between the frames in the animation.
+
+
+
+<p><dt><tt><b><a name="time_offset">time_offset</a></b></tt>
+
+<dd>
+Add or subtract a number of seconds to the actual time.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<gclock>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<gclock>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

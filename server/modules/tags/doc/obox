@@ -1,42 +1,382 @@
-<h3>Obox options</h3>
 
-<blockquote><dl>
-<dt><b>help</b><dd>
-         Display this text.
-<dt><b>left</b>=<tt>size</tt><dd>
-         Length of line on the left side of the title.
-<dt><b>right</b>=<tt>size</tt><dd>
-         Length of line on the right side of to the title. Notice that left
-         and right arguments are constrained by the width argument,
-         if specified.
-<dt><b>spacing</b>=<tt>size</tt><dd>
-         Width of the space inside the box.
-<dt><b>titlecolor</b>=<tt>color</tt><dd>
-         Color of the title of the box.
-<dt><b>outlinecolor</b>=<tt>color</tt><dd>
-         Color of the outline.
-<dt><b>outlinewidth</b>=<tt>size</tt><dd>
-         Width (in pixels) of the outline.
-<dt><b>bgcolor</b>=<tt>color</tt><dd>
-         Color of the background and title label
-<dt><b>textcolor</b>=<tt>color</tt><dd>
-         Color of the text inside the box
-<dt><b>align</b>=<tt>[left|right]</tt><dd>
-         How to align the box.
-<dt><b>width</b>=<tt>size</tt><dd>
-         Width of the generated box.
-<dt><b>style</b>=<tt>[caption|groupbox]</tt><dd>
-         Style of the generated box. Default is <tt>groupbox</tt>.
-</dl></blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;obox&gt;&nbsp;...&nbsp;&lt;/obox&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;obox&gt; is defined in the Outlined box module.
 <p>
-If the title is not specified in the argument list,
-you can put it inside the box text, in a <tt>{title}</tt> HTML container,
-should it be needed for HTML clarity.
+This tag draws outlined boxes.
 
-<h3>Obox example</h3>
 
-<blockquote><pre>
- {obox title="Sample title"}
- Anything, html, text, ...
- {/obox}
-</pre></blockquote>
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#align">align</a>,
+<a href="#bgcolor">bgcolor</a>,
+<a href="#left">left</a>,
+<a href="#outlinecolor">outlinecolor</a>,
+<a href="#outlinewidth">outlinewidth</a>,
+<a href="#right">right</a>,
+<a href="#spacing">spacing</a>,
+<a href="#style">style</a>,
+<a href="#textcolor">textcolor</a>,
+<a href="#titlecolor">titlecolor</a>,
+<a href="#width">width</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="align">align</a></b></tt>=left
+right
+
+<dd>
+Vertical alignment of the box.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="bgcolor">bgcolor</a></b></tt>=<i>color</i>
+<dd>
+Color of the background and title label.
+
+
+
+
+<p><dt><tt><b><a name="left">left</a></b></tt>=<i>number</i>
+<dd>
+Length of the line on the left of the title.
+
+
+
+
+<p><dt><tt><b><a name="outlinecolor">outlinecolor</a></b></tt>=<i>color</i>
+<dd>
+Color of the outline.
+
+
+
+
+<p><dt><tt><b><a name="outlinewidth">outlinewidth</a></b></tt>=<i>number</i>
+<dd>
+Width, in pixels, of the outline.
+
+
+
+
+<p><dt><tt><b><a name="right">right</a></b></tt>=<i>number</i>
+<dd>
+Length of the line on the right of the title.
+
+
+
+</dl>
+
+<p>
+Note that the <tt>left</tt> and <tt>right</tt> attributes
+are constrained by the width argument.
+
+
+<dl>
+
+<p><dt><tt><b><a name="spacing">spacing</a></b></tt>=<i>number</i>
+<dd>
+Width, in pixels, of the space in the box.
+
+
+
+
+<p><dt><tt><b><a name="style">style</a></b></tt>=caption
+groupbox
+
+<dd>
+Style of the box. Groupbox is default
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="textcolor">textcolor</a></b></tt>=<i>color</i>
+<dd>
+Color of the text inside the box.
+
+
+
+
+<p><dt><tt><b><a name="titlecolor">titlecolor</a></b></tt>=<i>color</i>
+<dd>
+Color of the title text.
+
+
+
+
+<p><dt><tt><b><a name="width">width</a></b></tt>=<i>number</i>
+<dd>
+Width, in pixels, of the box.
+
+
+
+</dl>
+
+<p>
+If the title is not specified in the argument list, you can put
+it in a <doc><tt>{title}</font></tt></doc> container in the obox contents.
+
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<obox align=left
+      outlinewidth=5
+      outlinecolor="#555555"
+      width=200>
+<title>Sample box</title>
+
+This is just a sample box.
+
+</obox>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<obox align=left
+      outlinewidth=5
+      outlinecolor="#555555"
+      width=200>
+<title>Sample box</title>
+
+This is just a sample box.
+
+</obox>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

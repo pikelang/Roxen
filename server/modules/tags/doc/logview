@@ -1,0 +1,282 @@
+ <html>
+<head>
+<title>Appendix B: The LogView Tag</title>
+</head>
+
+<body bgcolor=#ffffff text=#000000>
+<table border=0 cellpadding=10>
+<tr><td valign=top width=1%>
+<a href=http://www.roxen.com/>
+<img src=/img/logga.gif width=102 height=40 border=0 alt=""></a>
+
+
+
+
+
+<a href=/>Table&nbsp;of&nbsp;Contents</a>
+
+<p> 
+
+<a href="/LogView1.0/Introduction/">Introduction</a><br>
+
+ 
+
+<a href="/LogView1.0/Administrator/">Administrator</a><br>
+
+ 
+
+<a href="/LogView1.0/User/">User</a><br>
+
+ 
+<b>Appendix</b><br>
+
+<table cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td>
+<img src=/internal-roxen-unit width=13 height=1 alt=""></td>
+<td>
+
+
+
+<a href="/LogView1.0/References/index.html">Appendix</a><br>
+
+
+
+
+<a href="/LogView1.0/References/functions.html">Appendix A: Available Functions</a><br>
+
+
+
+<b>Appendix B: The LogView Tag</b><br>
+
+
+
+
+
+<a href="/LogView1.0/References/regexp.html">Appendix C: Pike Regexp Syntax</a><br>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</td>
+<td valign=top>
+
+<br><b><font size=+3 ><sb-meta var=title></font></b><br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<b><font size=+3 color=#000060>Appendix B: The LogView Tag</font></b><br>
+
+The LogView module provides a special RXML tag, <logview>, which
+provides an easy way of inserting statistics reports in ordinary RXML
+documents. The usage is simple:
+
+<p><dd><tt>&lt;logview <i>options</i>&gt;</tt>
+
+<p>where the options are some of the following:
+
+
+<p><a name="LogView options">
+<b><font size=+2 color=#000060>LogView options</font></a></b>
+
+<br>
+
+<dl>
+<p><dt><b>help</b><dd>Display this text. 
+
+<p><dt><b>manual</b><dd>Display the LogView manual. 
+
+<p><dt><b>list-groups</b><dd>List all statistics groups. 
+
+<p><dt><b>list-reports</b><dd>List all available reports. 
+
+<p><dt><b>list-defaults</b><dd>Report variable values, including default
+values.
+
+<p><dt><b>group</b>=<tt>statistics-group</tt><dd>Select the statistics
+group for which to make a report.
+
+<p><dt><b>report</b>=<tt>report</tt><dd>Select what to report. Some
+available report types are 'Hits', 'Bandwidth', 'Popular pages',
+'Average session length' and 'Return code summary'. Exactly which
+types are available may depend on the exact version and configuration
+of your LogView installation; use the list-reports option to find out
+which report types are available on a particular server.
+<p><dt><b>op</b>=<tt>[append|sum]</tt><dd>This option is used to select
+whether to 'append' or 'sum' the statistics over the specified period
+(see below).
+
+<p><dt><b>display</b>=</tt>[table|line-chart|bar-chart| sum-bars|pie-chart|3d-pie-chart|ascii|export]</tt><dd>This selects the format in which to display the report.
+
+<p><dt><b>max</b>=<tt>num</tt><dd>Maximum number of rows in the result.
+
+<p><dt><b>unit</b>=<tt>[year|month|week|day|hour]</tt><dd>Select the
+granularity of the report to be produced.
+
+<p><dt><b>per</b>=<tt>[year|month|week|day|hour]</tt><dd>Selects a second
+level of reported time resolution, and must have a values greater or
+equal to unit. Available units are the same as for unit. The
+difference between unit and per is that the former determines the
+width of the periods to sum to produce individual sample points, while
+the latter only affects how the values should be reported. The
+difference is perhaps easiest to see in the bar chart report type,
+where granularity determines the number of bars, while per determines
+how to label the bars; if granularity is greater than per, bars within
+the same per period will have the same label.
+
+<p>When using op=sum, corresponding unit values from different per
+periods will be totaled, instead of being presented separately. For
+instance, with:
+
+<p><dl><dd><tt>report=bandwidth op=sum unit=hour per=day</tt></dl>
+
+<p>the diagram/table produced will show how the bandwidth usage varies
+at different times of day, during the specified time period (see
+below).
+
+<p>Setting unit and per to the same value, and using op=sum, will have
+the effect of producing a single sum for the whole time period
+specified (this is really only useful for report=table).
+
+<p><dt><b>from-year, from-month, from-day</b><dd>These options select
+the start of the time period for which to produce a report. Apart from
+plain digit values, the values can be specified with a '-' prefix,
+indicating an offset from the current day/month/year, so that e.g.
+
+<p><dl><dd><tt>from-day=-3</tt></dl>
+
+<p>means "three days ago". <tt>from-day</tt> can also take values like
+<tt>this-friday</tt> and <tt>last-tuesday</tt>, as well as
+<tt>today</tt> and <tt>yesterday</tt>. <tt>from-month</tt> can take
+month names, as well as <tt>this-month</tt> and <tt>last-month</tt>.
+
+<p><dt><b>to-year, to-month, to-day</b><dd>These options select the end
+of the time period for which to produce a report. The values are
+specified just as for the corresponding from- options.
+</dl>
+
+
+<p><a name="LogView example">
+<b><font size=+2 color=#000060>LogView example</font></a></b>
+
+<br>
+
+<p><center>
+<table bgcolor=#d0d0d0 cellpadding=12 cellspacing=0 border=0>
+<tr><td>
+<tt>&lt;logview report='Hits' unit=day per=month
+display=line-chart&gt;</tt>
+</td></tr>
+</table>
+</center>
+
+
+
+</td></tr>
+</table>
+</body>
+</html>
+
+

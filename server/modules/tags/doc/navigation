@@ -1,0 +1,349 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;navigation&gt;&nbsp;...&nbsp;&lt;/navigation&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;navigation&gt; is defined in the Navigation module.
+<p>
+The <tt>&lt;navigation&gt;</tt> generates graphical menus. Within it the
+<tt>&lt;textstyle&gt;</tt>, <tt>&lt;boxstyle&gt;</tt>, <tt>&lt;mi&gt;</tt> and
+<tt>&lt;submenu&gt;</tt> tags are used to specify the appearance of the
+menu. The <tt>&lt;submenu&gt;</tt> tag use the same attributes as
+<tt>&lt;navigation&gt;</tt> and is used for making nested menus.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#bg">bg</a>,
+<a href="#bgsrc">bgsrc</a>,
+<a href="#fs">fs</a>,
+<a href="#height">height</a>,
+<a href="#horiz">horiz</a>,
+<a href="#imgbase">imgbase</a>,
+<a href="#indent">indent</a>,
+<a href="#maxwidth">maxwidth</a>,
+<a href="#mirrortile">mirrortile</a>,
+<a href="#preload">preload</a>,
+<a href="#quant">quant</a>,
+<a href="#scaletofit">scaletofit</a>,
+<a href="#selected">selected</a>,
+<a href="#tile">tile</a>,
+<a href="#transparent">transparent</a>,
+<a href="#width">width</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="bg">bg</a></b></tt>=<i>color</i>
+<dd>
+Sets the background color of the background image.
+
+
+
+
+<p><dt><tt><b><a name="bgsrc">bgsrc</a></b></tt>=<i>path</i>
+<dd>
+Sets the background to the given image. 
+
+
+
+
+<p><dt><tt><b><a name="fs">fs</a></b></tt>
+
+<dd>
+Applies a Floyd-Steinberg dither to the result.
+
+
+
+<p><dt><tt><b><a name="height">height</a></b></tt>=<i>number</i>
+<dd>
+Sets the height of the generated menu. If not set, the height will
+adjust itself.
+
+
+
+
+<p><dt><tt><b><a name="horiz">horiz</a></b></tt>
+
+<dd>
+Makes the menu horizontal, all box-styles are rotated 90 degrees
+counter-clockwise.
+
+
+
+<p><dt><tt><b><a name="imgbase">imgbase</a></b></tt>=<i>path</i>
+<dd>
+Imgbase can be used to simplify the use of graphics in your menu. The
+path specified will be used as a prefix to all image paths. 
+
+
+
+
+<p><dt><tt><b><a name="indent">indent</a></b></tt>=<i>number</i>
+<dd>
+Sets the amount of indentation.
+
+
+
+
+<p><dt><tt><b><a name="maxwidth">maxwidth</a></b></tt>=<i>number</i>
+<dd>
+The max width of the text column. If the text in a menu box is wider
+than this, it will be word wrapped to fit.
+
+
+
+
+<p><dt><tt><b><a name="mirrortile">mirrortile</a></b></tt>
+
+<dd>
+Mirrortiles the background image.
+
+
+
+<p><dt><tt><b><a name="preload">preload</a></b></tt>
+
+<dd>
+Generates extra Java Script code used to pre load all images used in
+the menu. This may speed up the delivery of the pages since the
+requested images will already be in the client's local cache when
+requested.
+
+
+
+<p><dt><tt><b><a name="quant">quant</a></b></tt>=<i>number</i>
+<dd>
+Quantifies the image with the specified number of colors. The default
+is set in the configuration interface. At most 255 colors can be
+used.
+
+
+
+
+<p><dt><tt><b><a name="scaletofit">scaletofit</a></b></tt>
+
+<dd>
+Scales the background image to fit the size of the generated menu.
+
+
+
+<p><dt><tt><b><a name="selected">selected</a></b></tt>=<i>number</i>
+<dd>
+Determines which menu item should be selected. Starts from 1. A
+number out of range will generate the menu without any selected
+item. Note that the preferred way to determine which menu items should
+be select is by using the <tt>selected</tt> attribute in a
+<tt>&lt;mi&gt;</tt> tag.
+
+
+
+
+<p><dt><tt><b><a name="tile">tile</a></b></tt>
+
+<dd>
+Tiles the background image.
+
+
+
+<p><dt><tt><b><a name="transparent">transparent</a></b></tt>=<i>color</i>
+<dd>
+Makes the resulting GIF image transparent at pixels with the specified
+color. Defaults to the background color of the current document, set
+in the standard HTML <doc><tt>{body}</font></tt></doc> tag. Detection of HTML colors is
+done by the <i>Graphics Text</i> module.
+
+
+
+
+<p><dt><tt><b><a name="width">width</a></b></tt>=<i>number</i>
+<dd>
+Sets the width of the generated menu. If not used, the width will
+adjust itself.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

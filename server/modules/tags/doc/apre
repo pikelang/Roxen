@@ -1,5 +1,295 @@
-<kbd><b>{apre href=... [+state -state ...]}</b></kbd>: Adds or removes a prestate
-option. Prestate options are simple toggles, and are added to the URL
-of the page. Use {if prestate=...} to test for the presence of a
-prestate. {apre} works just like the {a href=...} container, but if no
-'href' attribute is specified, the current page is used.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;apre&gt;&nbsp;...&nbsp;&lt;/apre&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;apre&gt; is defined in the Main RXML parser module.
+<p>
+Adds or removes prestate options. 
+
+<p>Prestate options are simple true/false flags that are added to the URL
+of the page. Use <doc><tt>{if prestate=...}</font></tt></doc> to test for the presence of a
+prestate. <tt>&lt;apre&gt;</tt> works just like a <doc><tt>{a href=...}</font></tt></doc>
+container tag, but the <tt>href</tt> attribute can be omitted in
+which case the current page is used.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#option">option</a>,
+<a href="#-option">-option</a>,
+<a href="#href">href</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="option">option</a></b></tt>
+
+<dd>
+Add the prestate option.
+
+
+
+<p><dt><tt><b><a name="-option">-option</a></b></tt>
+
+<dd>
+Remove the prestate option.
+
+
+
+<p><dt><tt><b><a name="href">href</a></b></tt>
+
+<dd>
+Make the generated link point to this URL. The URL must be local to
+this web site.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<apre foo>Add the option</apre>
+<br><apre -foo>Remove the option</apre>
+
+<p><if prestate=foo>
+The option is set.
+</if>
+<else>
+The option is not set.
+</else>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<apre foo>Add the option</apre>
+<br><apre -foo>Remove the option</apre>
+
+<p><if prestate=foo>
+The option is set.
+</if>
+<else>
+The option is not set.
+</else>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

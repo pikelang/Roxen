@@ -1,0 +1,683 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;gtext&gt;&nbsp;...&nbsp;&lt;/gtext&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;gtext&gt; is defined in the Graphics text module.
+<p>
+Renders a GIF image from the text in the contents.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#alpha">alpha</a>,
+<a href="#alt">alt</a>,
+<a href="#background">background</a>,
+<a href="#bevel">bevel</a>,
+<a href="#pressed">pressed</a>,
+<a href="#bg">bg</a>,
+<a href="#black">black</a>,
+<a href="#bold">bold</a>,
+<a href="#border">border</a>,
+<a href="#fadein">fadein</a>,
+<a href="#fg">fg</a>,
+<a href="#fs">fs</a>,
+<a href="#fuzz">fuzz</a>,
+<a href="#ghost">ghost</a>,
+<a href="#glow">glow</a>,
+<a href="#href">href</a>,
+<a href="#italic">italic</a>,
+<a href="#light">light</a>,
+<a href="#magic">magic</a>,
+<a href="#magic_</b></tt><i>argument</i></tt></b>">magic_</b></tt><i>argument</i></tt></b></a>,
+<a href="#magicbg">magicbg</a>,
+<a href="#maxlen">maxlen</a>,
+<a href="#mirrortile">mirrortile</a>,
+<a href="#move">move</a>,
+<a href="#nfont">nfont</a>,
+<a href="#notrans">notrans</a>,
+<a href="#opague">opague</a>,
+<a href="#quant">quant</a>,
+<a href="#rescale">rescale</a>,
+<a href="#rotate">rotate</a>,
+<a href="#scale">scale</a>,
+<a href="#scolor">scolor</a>,
+<a href="#scroll">scroll</a>,
+<a href="#shadow">shadow</a>,
+<a href="#size">size</a>,
+<a href="#spacing">spacing</a>,
+<a href="#split">split</a>,
+<a href="#split">split</a>,
+<a href="#talign">talign</a>,
+<a href="#textbelow">textbelow</a>,
+<a href="#textbox">textbox</a>,
+<a href="#texture">texture</a>,
+<a href="#tile">tile</a>,
+<a href="#turbulence">turbulence</a>,
+<a href="#verbatim">verbatim</a>,
+<a href="#xpad">xpad</a>,
+<a href="#xsize">xsize</a>,
+<a href="#xspacing">xspacing</a>,
+<a href="#ysize">ysize</a>,
+<a href="#yspacing">yspacing</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="alpha">alpha</a></b></tt>=<i>path</i>
+<dd>
+Use the specifed image as an alpha channel, together with the
+<tt>background</tt> attribute.
+
+
+
+
+<p><dt><tt><b><a name="alt">alt</a></b></tt>=<i>string</i>
+<dd>
+Sets the <tt>alt</tt> attribute of the generated <doc><tt>{img}</font></tt></doc>
+tag. Will be default set to the alt attribute of the contents of the
+<tt>&lt;gtext&gt;</tt> tag.
+
+
+
+
+<p><dt><tt><b><a name="background">background</a></b></tt>=<i>path|color</i>
+<dd>
+Specifies the image or color to use as background.
+
+
+
+
+<p><dt><tt><b><a name="bevel">bevel</a></b></tt>=<i>width</i>
+<dd>
+Draws a bevel box. 
+
+
+
+
+<p><dt><tt><b><a name="pressed">pressed</a></b></tt>
+
+<dd>
+Inverts the direction of the bevel box, to make it look like a button
+that is pressed down.
+
+
+
+<p><dt><tt><b><a name="bg">bg</a></b></tt>=<i>color</i>
+<dd>
+Tells the <tt>&lt;gtext&gt;</tt> tag what the background color of the page
+is. This is used for anti-alias purposes. The module can be configured
+to try to find out this by itself, by parsing at appropriate HTML tags.
+
+
+
+
+<p><dt><tt><b><a name="black">black</a></b></tt>
+
+<dd>
+Use a black, or heavy, version of the font, if available.
+
+
+
+<p><dt><tt><b><a name="bold">bold</a></b></tt>
+
+<dd>
+Use a bold version of the font, if available.
+
+
+
+<p><dt><tt><b><a name="border">border</a></b></tt>=<i>width,color</i>
+<dd>
+Draws a border around the text of the specified width and color.
+
+
+
+
+<p><dt><tt><b><a name="fadein">fadein</a></b></tt>=<i>blur,steps,delay,initialdelay</i>
+<dd>
+Generates an animated GIF file of a fade-in effect.
+
+
+
+
+<p><dt><tt><b><a name="fg">fg</a></b></tt>=<i>color</i>
+<dd>
+Sets the color or the rendered text. The module can be configured to
+try to find out an appropriate color by parsing HTML tags.
+
+
+
+
+<p><dt><tt><b><a name="fs">fs</a></b></tt>
+
+<dd>
+Apply floyd-steinberg dithering to the resulting image.
+
+
+
+<p><dt><tt><b><a name="fuzz">fuzz</a></b></tt>=<i>color</i>
+<dd>
+Apply a glow effect.
+
+
+
+
+<p><dt><tt><b><a name="ghost">ghost</a></b></tt>=<i>dist,blur,color</i>
+<dd>
+Apply a ghost effect. Cannot be used together with <tt>shadow</tt>
+or <tt>magic</tt>.
+
+
+
+
+<p><dt><tt><b><a name="glow">glow</a></b></tt>=<i>color</i>
+<dd>
+Apply a glowing outline around the text.
+
+
+
+
+<p><dt><tt><b><a name="href">href</a></b></tt>=<i>URL</i>
+<dd>
+Link the image to the specified URL. The link color of the
+document will be used as the default foreground rather than the
+foreground color.
+
+
+
+
+<p><dt><tt><b><a name="italic">italic</a></b></tt>
+
+<dd>
+Use an italic version of the font, if available.
+
+
+
+<p><dt><tt><b><a name="light">light</a></b></tt>
+
+<dd>
+Use a light version of the font, if available.
+
+
+
+<p><dt><tt><b><a name="magic">magic</a></b></tt>=<i>message</i>
+<dd>
+Used together with the <tt>href</tt> attribute to generate a
+JavaScript that will hightlight the image when the mouse is moved over
+it.
+
+
+
+
+<p><dt><tt><b><a name="magic_</b></tt><i>argument</i></tt></b>">magic_</b></tt><i>argument</i></tt></b></a></b></tt>=<i>value</i>
+<dd>
+Same as for any <tt>&lt;gtext&gt;</tt> attribute, except for the highlighting
+image. 
+
+
+
+
+<p><dt><tt><b><a name="magicbg">magicbg</a></b></tt>=<i>color|path</i>
+<dd>
+Same as the <tt>background</tt> attribure, except for the highlighting
+image. 
+
+
+
+
+<p><dt><tt><b><a name="maxlen">maxlen</a></b></tt>=<i>number</i>
+<dd>
+Sets the maximum length of the rendered text, by default 300.
+
+
+
+
+<p><dt><tt><b><a name="mirrortile">mirrortile</a></b></tt>
+
+<dd>
+Tiles the background and forground images around x-axis and y-axis for odd
+frames, creating seamless textures.
+
+
+
+<p><dt><tt><b><a name="move">move</a></b></tt>=<i>x,y</i>
+<dd>
+Moves the text relative to the upper left corner of the background
+image. This will not change the size of the image.
+
+
+
+
+<p><dt><tt><b><a name="nfont">nfont</a></b></tt>=<i>font</i>
+<dd>
+Use this font. If no font is specified, the define <tt>nfont</tt> will
+be used, or the default font, if there is no define.
+
+
+
+
+<p><dt><tt><b><a name="notrans">notrans</a></b></tt>
+
+<dd>
+By default, the background of the image is set as a transparent
+color. This option overrides that behavior.
+
+
+
+<p><dt><tt><b><a name="opague">opague</a></b></tt>=<i>percentage</i>
+<dd>
+Generate text with this amount of opaqueness. 100% is default.
+
+
+
+
+<p><dt><tt><b><a name="quant">quant</a></b></tt>=<i>number</i>
+<dd>
+Use this number of colors in the generated image.  For GIF images,
+fewer colors implies smaller images but also aliasing effects. It is
+advisable to use powers of 2 to optimize the palette allocation.
+
+
+
+
+<p><dt><tt><b><a name="rescale">rescale</a></b></tt>
+
+<dd>
+Rescale the background to fill the whole image.
+
+
+
+<p><dt><tt><b><a name="rotate">rotate</a></b></tt>=<i>angle</i>
+<dd>
+Rotates the image this number of degrees counter-clockwise.
+
+
+
+
+<p><dt><tt><b><a name="scale">scale</a></b></tt>=<i>float</i>
+<dd>
+Scale the font this much.
+
+
+
+
+<p><dt><tt><b><a name="scolor">scolor</a></b></tt>=<i>color</i>
+<dd>
+Use this color for the shadow. Used with the <tt>shadow</tt>
+attribute.
+
+
+
+
+<p><dt><tt><b><a name="scroll">scroll</a></b></tt>=<i></i>
+<dd>
+Generate an animated GIF image of the text scrolling.
+
+
+
+
+<p><dt><tt><b><a name="shadow">shadow</a></b></tt>=<i>intensity,distance</i>
+<dd>
+Draw a drop-shadow with the specified intensity and distance. The
+intensity is specified as a percentage.
+
+
+
+
+<p><dt><tt><b><a name="size">size</a></b></tt>=<i>width,height</i>
+<dd>
+Set the size of the image.
+
+
+
+
+<p><dt><tt><b><a name="spacing">spacing</a></b></tt>=<i>number</i>
+<dd>
+Add space around the text.
+
+
+
+
+<p><dt><tt><b><a name="split">split</a></b></tt>
+
+<dd>
+Generate a separate GIF image out of each word. This will allow the
+browser to word-wrap the text, but will disable certain attributes
+like <tt>magic</tt>. 
+
+
+
+<p><dt><tt><b><a name="split">split</a></b></tt>=<i>character</i>
+<dd>
+Split the string also at each occurance of the character.
+
+
+
+
+<p><dt><tt><b><a name="talign">talign</a></b></tt>=left
+eight
+center
+
+<dd>
+Justify the text.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="textbelow">textbelow</a></b></tt>=<i>color</i>
+<dd>
+Place the text in a colored box.
+
+
+
+
+<p><dt><tt><b><a name="textbox">textbox</a></b></tt>=<i>opaque,color</i>
+<dd>
+Draw a box with an opaque value below the text of the specified color.
+
+
+
+
+<p><dt><tt><b><a name="texture">texture</a></b></tt>=<i>path</i>
+<dd>
+Uses the specified images as a field texture.
+
+
+
+
+<p><dt><tt><b><a name="tile">tile</a></b></tt>
+
+<dd>
+Tiles the background and foreground images if they are smaller than
+the actual image.
+
+
+
+<p><dt><tt><b><a name="turbulence">turbulence</a></b></tt>=<i>frequency,color;frequency,color;frequency,color</i>
+<dd>
+Apply a turbulence effect.
+
+
+
+
+<p><dt><tt><b><a name="verbatim">verbatim</a></b></tt>
+
+<dd>
+Allows the gtext parser to not be typographically correct.
+
+
+
+<p><dt><tt><b><a name="xpad">xpad</a></b></tt>=<i>percentage</i>
+<dd>
+Increases padding between characters.
+
+
+
+
+<p><dt><tt><b><a name="xsize">xsize</a></b></tt>=<i>number</i>
+<dd>
+Sets the width.
+
+
+
+
+<p><dt><tt><b><a name="xspacing">xspacing</a></b></tt>=<i>number</i>
+<dd>
+Sets the horizontal spacing.
+
+
+
+
+<p><dt><tt><b><a name="ysize">ysize</a></b></tt>=<i>number</i>
+<dd>
+Sets the height.
+
+
+
+
+<p><dt><tt><b><a name="yspacing">yspacing</a></b></tt>=<i>number</i>
+<dd>
+Sets the vertical spacing.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<gtext>The time is <date time></gtext>
+<br><gtext href=http://www.roxen.com/ magic>Roxen Platform</gtext>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<gtext>The time is <date time></gtext>
+<br><gtext href=http://www.roxen.com/ magic>Roxen Platform</gtext>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

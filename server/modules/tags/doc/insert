@@ -1,92 +1,335 @@
-<b>Syntax:</b><br>
-<kbd>
-{insert [file=file-to-insert] [define=define-to-insert] [variable=variable-to-insert] [cookie=cookie-to-insert] [variables[=full]] [cookies[=full]] [from=to]}
-</kbd>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;insert&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;insert&gt; is defined in the Main RXML parser module.
 <p>
-<b>Attributes</b>
+Inserts values from files, cookies, defines or variables.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#cookie">cookie</a>,
+<a href="#cookies">cookies</a>,
+<a href="#define">define</a>,
+<a href="#file">file</a>,
+<a href="#</b></tt><i>fromword</i><tt><b>"></b></tt><i>fromword</i><tt><b></a>,
+<a href="#nocache">nocache</a>,
+<a href="#variable">variable</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
 <dl>
-<dt><kbd><b>cookie=foo</b></kbd>
-<dd>Inserts the value of the cookie named <kbd>name</kbd>.
-    
-<p>
-<dt><kbd><b>cookies[=full]</b></kbd>
-<dd>Inserts the values of all cookies, more or less verbose. 
-    
-<p>
-<dt><kbd><b>file=path</b></kbd>
-<dd>Inserts the file <kbd>path</kbd>. This file will then be fetched
-    just as if someone had tried to fetch it with an HTTP
-    request. This makes it possible to include things like Pike script
-    results and such. 
-    
-<p>
-If <kbd><b>path</b></kbd> does not begin with "/", it is assumed to be a 
-    URL relative to the directory containing the file that has the 
-    <kbd>{insert}</kbd> tag in it, i.e. the file where the 
-    inserted text is finally parsed. 
-    
 
- <br>
-Note that included files will be parsed if they are named with the 
-    extension<kbd> .html</kbd> (or whatever extension the RXML 
-    parser should parse according to configurations in the main RXML 
-    parser module). It's not a good idea to name include files like 
-    this, because it might render define tags unusable. 
-    
-<p>
-If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file 
-    <kbd>ccc.html</kbd> and <kbd>aaa/bbb</kbd> contains 
-    <kbd>{insert file=ddd}</kbd>, Roxen will look for 
-    <kbd>ddd</kbd> in the directory where <kbd>ccc.html</kbd> 
-    is. If we change the first <kbd>{insert}</kbd> to 
-    <kbd>{insert file="aaa/bbb.html"}</kbd> and rename 
-    <kbd>aaa/bbb</kbd> to <kbd>aaa/bbb.html</kbd>, Roxen 
-    will instead look for <kbd>ddd</kbd> in  the directory
-    <kbd>aaa/</kbd>. <p>
+<p><dt><tt><b><a name="cookie">cookie</a></b></tt>=<i>cookie</i>
+<dd>
+Inserts the value of the cookie.
 
-<dt><kbd><b>fromword=toword</b></kbd>
-<dd>Replaces <kbd>fromword</kbd> with 
-    <kbd>toword</kbd> in the macro or file. Note that only lowercase
-    character sequences can be replaced.<p>
-    <p>
-<dt><kbd><b><a name=macroname>name=macroname</a></b></kbd>
-<dd>Inserts this macro, which should have 
-    been defined by <kbd>{define}</kbd> before it is used. If it
-    resides in another file, you have to <kbd>{insert
-    file=filename}</kbd> before you can insert the macro, see
-    example below.  
+
+
+
+<p><dt><tt><b><a name="cookies">cookies</a></b></tt>=full
+
+<dd>
+Inserts the value of all cookies. With the optional argument full the
+insertion will be more verbose.
+
+
+
+<dl>
+
 </dl>
-<p> 
-<b>Example</b>
-Lets</a> define a macro called "foo", saving it in the file "mymacro"<br> 
 
-<kbd>{define name=foo&gt;This is a foo{/define&gt;</kbd> <p>
 
-Then we insert this macro somewhere: <br>
-<kbd>{insert file=mymacro} </kbd><br>
-<kbd>{insert name=foo} </kbd><p>
 
-The text sent to the client is:<br> 
-<kbd>This is a foo </kbd><p>
+<p><dt><tt><b><a name="define">define</a></b></tt>=<i>name</i>
+<dd>
+Inserts this define, which must have been defined by the
+<tt>&lt;define&gt;</tt> tag before it is used. The define can be done in
+another file, if you have inserted the file. 
 
-If we insert the above macro but tell Roxen to replace the word
-<kbd>foo</kbd> <br> with the word <kbd>cat</kbd>:<br>
-<kbd>{insert name=foo foo=cat} </kbd>
 
-<p>
-we will get:<br> 
-<kbd>This is a cat </kbd>
 
-<p>
-Let's try another example:<br>
-<kbd>{insert name=foo a=some foo=cats is=are}</kbd>
-<br>
-Result:<kbd>There are some cats</kbd><p>
 
-Note that even parts of words are exchanged; "This" becomes "There".<br>
-Notice also that only lowercase characters can be replaced:<p>
-<kbd>{insert name=foo This=foo a=fun foo=""}</kbd><br>
-    will result in:<br> <kbd>This is fun</kbd>. Note that the 'This'
-word was _not_ replaced.
-<p>
-<b>See also:</b> {set help} {insert help} {debug help}
+<p><dt><tt><b><a name="file">file</a></b></tt>=<i>path</i>
+<dd>
+Inserts the file. This file will then be fetched just as if someone
+had tried to fetch it through a HTTP request. This makes it possible to
+include things like the result of Pike scripts.
+
+<p>If path does not begin with <i>/</i>, it is assumed to be a URL
+relative to the directory containing the page with the
+<tt>&lt;insert&gt;</tt> tag. Note that included files will be parsed if they
+are named with a extension the main RXML parser handles. This might
+cause unexpected behaviour, it will for example not be possible to
+share any macros defined by the <tt>&lt;define&gt;</tt> tags. 
+
+<p>If you want to have a file with often used macros you should name
+it with an extension that won't be parsed, for example
+<i>.txt</i>.
+
+
+
+
+<p><dt><tt><b><a name="</b></tt><i>fromword</i><tt><b>"></b></tt><i>fromword</i><tt><b></a></b></tt>=<i>toword</i>
+<dd>
+Replaces fromword with toword in the macro or file, before insering
+it. Note that only lower case character sequences can be replaced.
+
+
+
+
+<p><dt><tt><b><a name="nocache">nocache</a></b></tt>
+
+<dd>
+Don't cache results when inserting files but always fetch the file. 
+
+
+
+<p><dt><tt><b><a name="variable">variable</a></b></tt>=<i>variable</i>
+<dd>
+Insert the variable.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<define name=foo>This is a foo</define>
+
+<insert name=foo>
+<br><insert name=foo foo=cat>
+<br><insert name=foo a=some foo=cats is=are>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<define name=foo>This is a foo</define>
+
+<insert name=foo>
+<br><insert name=foo foo=cat>
+<br><insert name=foo a=some foo=cats is=are>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

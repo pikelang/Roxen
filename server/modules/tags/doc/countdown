@@ -1,0 +1,517 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;countdown&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;countdown&gt; is defined in the Countdown module.
+<p>
+This tag counts the time to or from a specified date. 
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#day">day</a>,
+<a href="#hour">hour</a>,
+<a href="#iso">iso</a>,
+<a href="#mday">mday</a>,
+<a href="#min">min</a>,
+<a href="#month">month</a>,
+<a href="#sec">sec</a>,
+<a href="#year">year</a>,
+<a href="#combined">combined</a>,
+<a href="#days">days</a>,
+<a href="#dogyears">dogyears</a>,
+<a href="#hours">hours</a>,
+<a href="#lang">lang</a>,
+<a href="#minutes">minutes</a>,
+<a href="#months">months</a>,
+<a href="#nowp">nowp</a>,
+<a href="#prec">prec</a>,
+<a href="#seconds">seconds</a>,
+<a href="#since">since</a>,
+<a href="#type">type</a>,
+<a href="#weeks">weeks</a>,
+<a href="#when">when</a>,
+<a href="#years">years</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+</dl>
+
+<p>
+Time related attributes
+
+
+<dl>
+
+<p><dt><tt><b><a name="day">day</a></b></tt>=<i>number, weekday</i>
+<dd>
+Sets the weekday.
+
+
+
+
+<p><dt><tt><b><a name="hour">hour</a></b></tt>=<i>number</i>
+<dd>
+Sets the hour.
+
+
+
+
+<p><dt><tt><b><a name="iso">iso</a></b></tt>=<i>year-month-day</i>
+<dd>
+Sets the year, month and day, all at once.
+
+
+
+
+<p><dt><tt><b><a name="mday">mday</a></b></tt>=<i>number</i>
+<dd>
+Sets the day of month.
+
+
+
+
+<p><dt><tt><b><a name="min">min</a></b></tt>=<i>number</i>
+<dd>
+Sets the minute.
+
+
+
+
+<p><dt><tt><b><a name="month">month</a></b></tt>=<i>number, month</i>
+<dd>
+Sets the month.
+
+
+
+
+<p><dt><tt><b><a name="sec">sec</a></b></tt>=<i>number</i>
+<dd>
+Sets the second.
+
+
+
+
+<p><dt><tt><b><a name="year">year</a></b></tt>=<i>number</i>
+<dd>
+Sets the year.
+
+
+
+</dl>
+
+<p>
+Presentation related attributes
+
+
+<dl>
+
+<p><dt><tt><b><a name="combined">combined</a></b></tt>
+
+<dd>
+Shows an english text describing the time period. Example: 2 days, 1
+hour and 5 seconds. You may use the <tt>prec</tt> attribute to limit
+how precise the description should be. You can also use the
+<tt>month</tt> attribute if you want to see years/months/days
+instead of years/weeks/days.
+
+
+
+<p><dt><tt><b><a name="days">days</a></b></tt>
+
+<dd>
+Prints the number of days until the time.
+
+
+
+<p><dt><tt><b><a name="dogyears">dogyears</a></b></tt>
+
+<dd>
+Prints the number of dog years until the time, with one decimal.
+
+
+
+<p><dt><tt><b><a name="hours">hours</a></b></tt>
+
+<dd>
+Prints the number of hours until the time.
+
+
+
+<p><dt><tt><b><a name="lang">lang</a></b></tt>=ca
+es_CA
+hr
+cs
+nl
+en
+fi
+fr
+de
+hu
+it
+jp
+mi
+no
+pt
+ru
+sr
+si
+es
+sv
+
+<dd>
+Will print the result as words in the choosen language if used
+together with <tt>type=string</tt>. Available languages are ca,
+es_CA (catalan), hr (croatian), cs (czech), nl (dutch), en (english),
+fi (finnish), fr (french), de (german), hu (hungarian), it (italian),
+jp (japanese), mi (maori), no (norweigan), pt (portuguese), ru
+(russian), sr (serbian), si (slovenian), es (spanish) and sv
+(swedish).
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="minutes">minutes</a></b></tt>
+
+<dd>
+Prints the number of minutes until the time.
+
+
+
+<p><dt><tt><b><a name="months">months</a></b></tt>
+
+<dd>
+Prints the number of month until the time.
+
+
+
+<p><dt><tt><b><a name="nowp">nowp</a></b></tt>
+
+<dd>
+Returns 1 if the specified time is now, otherwize 0. How precise now
+should be interpreted is definied by the <tt>prec</tt>
+attributes. The default precision is one day.
+
+
+
+<p><dt><tt><b><a name="prec">prec</a></b></tt>=year
+month
+week
+day
+hour
+minute
+second
+
+<dd>
+A modifier for the <tt>nowp</tt> and <tt>combined</tt>
+attributes. Sets the precition for these attributes.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="seconds">seconds</a></b></tt>
+
+<dd>
+Prints how many seconds until the time.
+
+
+
+<p><dt><tt><b><a name="since">since</a></b></tt>
+
+<dd>
+Counts from a time rather than towards it.
+
+
+
+<p><dt><tt><b><a name="type">type</a></b></tt>=string
+number
+ordered
+
+<dd>
+How to present the result.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="weeks">weeks</a></b></tt>
+
+<dd>
+Prints the number of weeks until the time.
+
+
+
+<p><dt><tt><b><a name="when">when</a></b></tt>
+
+<dd>
+Prints when the time will occur. All valid <tt>&lt;date&gt;</tt> tag
+attributes can be used.
+
+
+
+<p><dt><tt><b><a name="years">years</a></b></tt>
+
+<dd>
+Prints the number of years until the time.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<p>I am <countdown iso=1980-06-28 since years type=string> years old.</p>
+
+<p>There are <countdown year2000 days> days left until year 2000.</p>
+
+<p>Is this a Sunday?
+<br><if eval='<countdown day=sunday nowp>'>Yes, this is a Sunday.</if>
+<else>No, it isn´t.</else>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<p>I am <countdown iso=1980-06-28 since years type=string> years old.</p>
+
+<p>There are <countdown year2000 days> days left until year 2000.</p>
+
+<p>Is this a Sunday?
+<br><if eval='<countdown day=sunday nowp>'>Yes, this is a Sunday.</if>
+<else>No, it isn´t.</else>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

@@ -1,3 +1,360 @@
-<kbd><b>{set_cookie name=... value=... [persistent|hours=... minutes=... seconds=... days=... weeks=... months=... years=...] [path=...]}:</b></kbd> Adds a cookie named 'name' with the value 'value'<br>
 
-If persistent is specified; the cookie will be persistent until year 2038, otherwise, the specified delays are used, just as for &lt;expire_time&gt; (<expire_time help>).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;set_cookie&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;set_cookie&gt; is defined in the Main RXML parser module.
+<p>
+Sets a cookie that will be stored by the user's browser. This is a
+simple and effective way of storing data that is local to the
+user. The cookie will be persistent, the next time the user visits the
+site, she will bring the cookie with her.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#name">name</a>,
+<a href="#value">value</a>,
+<a href="#persistent">persistent</a>,
+<a href="#hours">hours</a>,
+<a href="#minutes">minutes</a>,
+<a href="#seconds">seconds</a>,
+<a href="#days">days</a>,
+<a href="#weeks">weeks</a>,
+<a href="#months">months</a>,
+<a href="#years">years</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="name">name</a></b></tt>=<i>string</i>
+<dd>
+The name of the cookie.
+
+
+
+
+<p><dt><tt><b><a name="value">value</a></b></tt>=<i>string</i>
+<dd>
+The value the cookie will be set to.
+
+
+
+
+<p><dt><tt><b><a name="persistent">persistent</a></b></tt>
+
+<dd>
+Keep the cookie for two years.
+
+
+
+<p><dt><tt><b><a name="hours">hours</a></b></tt>=<i>number</i>
+<dd>
+Add this number of hours to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="minutes">minutes</a></b></tt>=<i>number</i>
+<dd>
+Add this number of minutes to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="seconds">seconds</a></b></tt>=<i>number</i>
+<dd>
+Add this number of seconds to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="days">days</a></b></tt>=<i>number</i>
+<dd>
+Add this number of days to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="weeks">weeks</a></b></tt>=<i>number</i>
+<dd>
+Add this number of weeks to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="months">months</a></b></tt>=<i>number</i>
+<dd>
+Add this number of months to the time the cookie is kept.
+
+
+
+
+<p><dt><tt><b><a name="years">years</a></b></tt>=<i>number</i>
+<dd>
+Add this number of years to the time the cookie is kept.
+
+
+
+</dl>
+
+<p>
+It is not possible to set the date beyond year 2038. By default the
+cookie will be kept until the year 2038.
+
+
+<dl>
+</dl>
+
+<p>
+Note that the change of a cookie will not take effect until the next
+page load. Therefore, a reload will be needed to see the effect of the
+example. 
+
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<apre foo>Set the cookie</apre>
+<br><apre -foo>Remove the cookie</apre>
+
+<if prestate=foo><set_cookie name=foo value="Hello World"></if>
+<else><remove_cookie name=foo></else>
+
+<p><insert cookie=foo>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<apre foo>Set the cookie</apre>
+<br><apre -foo>Remove the cookie</apre>
+
+<if prestate=foo><set_cookie name=foo value="Hello World"></if>
+<else><remove_cookie name=foo></else>
+
+<p><insert cookie=foo>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

@@ -1,14 +1,432 @@
-<font size=+1><code>{date [unix_time=..] [day=..] [hour=..] [minute=..] [second=..] [brief] [normal date attributes (see below)]}</code></font>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;date&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;date&gt; is defined in the Main RXML parser module.
+<p>
+This tag prints the date and time.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#brief">brief</a>,
+<a href="#capitalize">capitalize</a>,
+<a href="#date">date</a>,
+<a href="#day">day</a>,
+<a href="#hour">hour</a>,
+<a href="#lang">lang</a>,
+<a href="#lower">lower</a>,
+<a href="#minute">minute</a>,
+<a href="#part">part</a>,
+<a href="#second">second</a>,
+<a href="#time">time</a>,
+<a href="#type">type</a>,
+<a href="#unix_time">unix_time</a>,
+<a href="#upper">upper</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <p>
-All attributes except the 'brief' and 'unix_time=' attribute adds the
-specified time to the current time. (example: {date brief day=1} gives <date brief day=1>)
+<b><font color=#113377 size=+2 >Attributes</font></b>
 
-<p> unix_time uses the specified unix time_t time as the starting time
-(instead of the current time). This is mostly useful when the
-{date} tag is used from a pike-script or roxen module.
 
-<p> When brief is specified, roxen tries to genereate as brief a date
-as possible.
-<p>
-<date-attributes>
+
+<dl>
+
+<p><dt><tt><b><a name="brief">brief</a></b></tt>
+
+<dd>
+Generates as brief a date as possible.
+
+
+
+<p><dt><tt><b><a name="capitalize">capitalize</a></b></tt>
+
+<dd>
+Capitalizes the first letter of the result.
+
+
+
+<p><dt><tt><b><a name="date">date</a></b></tt>
+
+<dd>
+Shows the date only.
+
+
+
+<p><dt><tt><b><a name="day">day</a></b></tt>=<i>number</i>
+<dd>
+Adds this number of days to the current date.
+
+
+
+
+<p><dt><tt><b><a name="hour">hour</a></b></tt>=<i>number</i>
+<dd>
+Adds this number of hours to the current date.
+
+
+
+
+<p><dt><tt><b><a name="lang">lang</a></b></tt>=ca
+es_CA
+hr
+cs
+nl
+en
+fi
+fr
+de
+hu
+it
+jp
+mi
+no
+pt
+ru
+sr
+si
+es
+sv
+
+<dd>
+Used together with <tt>type=string</tt> and the <tt>part</tt>
+attribute to get written dates in the specified langauge. Available
+languages are ca, es_CA (catala), hr (croatian), cs (czech), nl
+(dutch), en (english), fi (finnish), fr (french), de (german), hu
+(hungarian), it (italian), jp (japanese), mi (maori), no (norweigan), 
+pt (portuguese), ru (russian), sr (serbian), si (slovenian), es
+(spanish) and sv (swedish).
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="lower">lower</a></b></tt>
+
+<dd>
+Prints the results in lower case.
+
+
+
+<p><dt><tt><b><a name="minute">minute</a></b></tt>=<i>number</i>
+<dd>
+Adds this number of minutes to tha current date.
+
+
+
+
+<p><dt><tt><b><a name="part">part</a></b></tt>=year
+month
+day
+date
+hour
+minute
+second
+yday
+
+<dd>
+<ul>
+<li><kbd>year</kbd>; The year
+<li><kbd>month</kbd>; The month
+<li><kbd>day</kbd>; The weekday, starting with Sunday.
+<li><kbd>date</kbd>; The number of days since the first this month.
+<li><kbd>hour</kbd>; The number of hours since midnight.
+<li><kbd>minute</kbd>; The number of minutes since the last full hour.
+<li><kbd>second</kbd>; The number of seconds since the last full minute.
+<li><kbd>yday</kbd>; The day since the first of january.
+</ul>
+
+<p>The return value of these parts are modified by both
+    <kbd>type</kbd> and <kbd>lang</kbd>.  
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="second">second</a></b></tt>=<i>number</i>
+<dd>
+Adds this number of seconds to the current date.
+
+
+
+
+<p><dt><tt><b><a name="time">time</a></b></tt>
+
+<dd>
+Print the time only.
+
+
+
+<p><dt><tt><b><a name="type">type</a></b></tt>=number
+string
+roman
+iso
+discordian
+stardate
+
+<dd>
+Specifies what type of date you want. Discordian and stardate only
+make a difference when <i>not</i> using <tt>part</tt>. Note that
+<tt>type=stardate</tt> has a separate companion attribute,
+<tt>prec</tt>, which sets the precision.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="unix_time">unix_time</a></b></tt>=<i>time_t</i>
+<dd>
+This attribute uses the specified unix time_t time as the starting
+time, instead of the current time. This is mostly useful when the
+<tt>&lt;date&gt;</tt> tag is used from a pike-script or roxen module.
+
+
+
+
+<p><dt><tt><b><a name="upper">upper</a></b></tt>
+
+<dd>
+Print the result in upper case.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<date part=day type=string lang=de>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<date part=day type=string lang=de>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

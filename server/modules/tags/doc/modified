@@ -1,9 +1,300 @@
-<b><kbd>{modified [by] [file=...] [realfile=...]}</kbd></b>: <br>
 
-Returns a date, or username indicating the last modification of the
-specified file (if no file is specified, the current file is used). If
-by is specified, the tag takes the same argument as the 'user' tag
-(<user help>) in addition to the normal ones. If 'by' is not
-specified, the tag takes these arguments in addition to the normal ones:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;modified&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;modified&gt; is defined in the Main RXML parser module.
 <p>
-<date-attributes>
+Prints when or by whom a page was last modified, by default the
+current page.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#by">by</a>,
+<a href="#capitalize">capitalize</a>,
+<a href="#date">date</a>,
+<a href="#file">file</a>,
+<a href="#lower">lower</a>,
+<a href="#realfile">realfile</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="by">by</a></b></tt>
+
+<dd>
+Print by whom the page was modified. Takes the same attributes as the
+<tt>&lt;user&gt;</tt> tag.
+
+
+
+<p><dt><tt><b><a name="capitalize">capitalize</a></b></tt>
+
+<dd>
+Capitalizes the first letter of the result.
+
+
+
+<p><dt><tt><b><a name="date">date</a></b></tt>
+
+<dd>
+Print the modification date. All attributes from the <tt>&lt;date&gt;</tt>
+tag can be used.
+
+
+
+<p><dt><tt><b><a name="file">file</a></b></tt>=<i>path</i>
+<dd>
+Get information from this file rather than the current page.
+
+
+
+
+<p><dt><tt><b><a name="lower">lower</a></b></tt>
+
+<dd>
+Print the result in lower case.
+
+
+
+<p><dt><tt><b><a name="realfile">realfile</a></b></tt>=<i>path</i>
+<dd>
+Get information from this file in the computers filesystem rather than
+Challenger's virtual filesystem.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+This page was last modified <modified date type=string>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+This page was last modified <modified date type=string>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

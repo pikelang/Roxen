@@ -1,0 +1,737 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;diagram&gt;&nbsp;...&nbsp;&lt;/diagram&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;diagram&gt; is defined in the Business Graphics module.
+<p>
+The <tt>&lt;diagram&gt;</tt> container tag is used to draw pie, bar, or line
+charts as well as graphs. It is quite complex with six internal
+container tags. 
+
+
+<br>&nbsp;&nbsp;<a href="#Internal Tags"><define name=kludge2>Internal Tags</define><insert name=kludge2 " "=&nbsp;></a>
+
+
+<dl><dt><tt><b>&lt;data&gt;</b></tt><dd>
+The data the diagram is to visualize, in tabular form.
+
+<p><dt><tt><b>&lt;colors&gt;</b></tt><dd>
+The colors for different pie slices, bars or lines.
+
+<p><dt><tt><b>&lt;legend&gt;</b></tt><dd>
+A separate legend with description of the different pie slices, bars
+or lines. 
+
+<p><dt><tt><b>&lt;xaxis&gt;</b></tt><dd>
+Used for specifying the quantity and unit of the x-axis, as well as its
+scale, in a graph.
+
+<p><dt><tt><b>&lt;yaxis&gt;</b></tt><dd>
+Used for specifying the quantity and unit of the x-axis, as well as its
+scale, in a graph or line chart.
+
+<p><dt><tt><b>&lt;xnames&gt;</b></tt><dd>
+Separate tag that can be used to give names to put along the pie
+slices or under the bars. The names are usually part of the data.
+</dl>
+
+
+<br>&nbsp;&nbsp;<a href="#Pie"><define name=kludge2>Pie</define><insert name=kludge2 " "=&nbsp;></a>
+
+<source separator="Results in">
+<diagram type=pie width=200 height=200 name='Population'
+  tonedbox='lightblue,lightblue,white,white'>
+<data separator=,>5305048,5137269,4399993,8865051</data>
+<legend separator=,>Denmark,Finland,Norway,Sweden</legend>
+</diagram>
+</source>
+
+
+<br>&nbsp;&nbsp;<a href="#Bar"><define name=kludge2>Bar</define><insert name=kludge2 " "=&nbsp;></a>
+
+<source separator="Results in">
+<diagram type=bar width=200 height=250 name='Population'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames separator=,>Denmark,Finland,Norway,Sweden
+5305048,5137269,4399993,8865051</data>
+</diagram>
+</source>
+
+<p><source separator="Results in"><diagram type=bar width=200 height=250 name='Age structure'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames form=column separator=,>Denmark,951175,3556339,797534
+Finland,966593,3424107,746569
+Norway,857952,2846030,696011
+Sweden,1654180,5660410,1550461</data>
+<legend separator=,>0-14,15-64,65-</legend>
+</diagram>
+</source>
+
+
+<br>&nbsp;&nbsp;<a href="#Sumbar"><define name=kludge2>Sumbar</define><insert name=kludge2 " "=&nbsp;></a>
+
+<br><source separator="Results in"><diagram type=sumbar width=200 height=250 name='Land Use'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames form=column separator=,>Denmark,27300,4200,10500
+Finland,24400,231800,48800
+Norway,9240,83160,215600
+Sweden,32880,279480,102750</data>
+<legend separator=,>Arable,Forests,Other</legend>
+<yaxis quantity=area>
+<yaxis unit=km^2>
+</diagram></source>
+
+
+<br>&nbsp;&nbsp;<a href="#Normalized Sumbar"><define name=kludge2>Normalized Sumbar</define><insert name=kludge2 " "=&nbsp;></a>
+
+<source separator="Results in"><diagram type=normsumbar width=200 height=250 name='Land Use'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames, form=column separator=,>Denmark,27300,4200,10500
+Finland,24400,231800,48800
+Norway,9240,83160,215600
+Sweden,32880,279480,102750
+<legend separator=,>Arable,Forests,Other</legend>
+<yaxis quantity=%>
+</diagram></source>
+
+
+<br>&nbsp;&nbsp;<a href="#Line Chart"><define name=kludge2>Line Chart</define><insert name=kludge2 " "=&nbsp;></a>
+
+<source separator="Results in"><diagram type=line width=200 height=250 name='Exchange Rates'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<data form=row separator=,>1992,1993,1994,1995,1996
+0.166,0.154,0.157,0.179,0.172
+0.223,0.175,0.191,0.229,0.218
+0.161,0.141,0.142,0.158,0.155
+0.172,0.128,0.130,0.149,0.140</data>
+<yaxis start=0.09 stop=0.25>
+<legend separator=,>Danish kroner (DKr),Markkaa (FMk),Norwegian kronor (NKr),Swedish kronor (SKr)</legend>
+<xaxis quantity=year>
+<yaxis quantity=US$>
+</diagram></source>
+
+
+<br>&nbsp;&nbsp;<a href="#Graph"><define name=kludge2>Graph</define><insert name=kludge2 " "=&nbsp;></a>
+
+<source separator="Results in"><diagram type=graph width=200 height=300 name='Simple Functions'
+  horgrid tonedbox='lightblue,lightblue,white,white'>
+<colors separator=" ">#60b0ff darkred</colors>
+<data separator=,><pike>
+  float c;
+  
+  for (c=-2.0; c < 2.0; c+=0.1)
+    output( "%f,%f,", c, c * c );
+  output( "%f,%f", 2.0, 2.0 * 2.0 );
+  return flush();
+</pike>
+<pike>
+  float c;
+  
+  for (c=-2.0; c < 2.0; c+=0.1)
+    output( "%f,%f,", c, c * c * c );
+  output( "%f", 2.0, 2.0 * 2.0 * 2.0 );
+  return flush();
+</pike></data>
+<axis start=-2.1 stop=2.1>
+<axis start=-6.1 stop=6.1>
+<legend separator=,>x^2,x^3</legend>
+</diagram></source>
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#3d">3d</a>,
+<a href="#background">background</a>,
+<a href="#bgcolor">bgcolor</a>,
+<a href="#center">center</a>,
+<a href="#eng">eng</a>,
+<a href="#font">font</a>,
+<a href="#fontsize">fontsize</a>,
+<a href="#height">height</a>,
+<a href="#horgrid">horgrid</a>,
+<a href="#labelcolor">labelcolor</a>,
+<a href="#legendfontsize">legendfontsize</a>,
+<a href="#name">name</a>,
+<a href="#namecolor">namecolor</a>,
+<a href="#namefont">namefont</a>,
+<a href="#namesize">namesize</a>,
+<a href="#neng">neng</a>,
+<a href="#notrans">notrans</a>,
+<a href="#rotate">rotate</a>,
+<a href="#textcolor">textcolor</a>,
+<a href="#tonedbox">tonedbox</a>,
+<a href="#turn">turn</a>,
+<a href="#type">type</a>,
+<a href="#vertgrid">vertgrid</a>,
+<a href="#voidsep">voidsep</a>,
+<a href="#width">width</a>,
+<a href="#xgridspace">xgridspace</a>,
+<a href="#ygridspace">ygridspace</a>,
+<a href="#form">form</a>,
+<a href="#lineseparator">lineseparator</a>,
+<a href="#noparse">noparse</a>,
+<a href="#separator">separator</a>,
+<a href="#xnames">xnames</a>,
+<a href="#xnamesvert">xnamesvert</a>,
+<a href="#separator">separator</a>,
+<a href="#separator">separator</a>,
+<a href="#start">start</a>,
+<a href="#stop">stop</a>,
+<a href="#quantity">quantity</a>,
+<a href="#unit">unit</a>,
+<a href="#separator">separator</a>,
+<a href="#orient">orient</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="3d">3d</a></b></tt>=<i>number</i>
+<dd>
+Draws a piechart on top of a cylinder, takes the height of the
+cylinder as argument.
+
+
+
+
+<p><dt><tt><b><a name="background">background</a></b></tt>=<i>path</i>
+<dd>
+Use the image as background.
+
+
+
+
+<p><dt><tt><b><a name="bgcolor">bgcolor</a></b></tt>=<i>color</i>
+<dd>
+Set the background color to use for anti-aliasing.</p>
+
+
+
+
+<p><dt><tt><b><a name="center">center</a></b></tt>=<i>number</i>
+<dd>
+Centers a pie chart around that slice.
+
+
+
+
+<p><dt><tt><b><a name="eng">eng</a></b></tt>
+
+<dd>
+Write numbers in engineering fashion, i.e like 1.2M.
+
+
+
+<p><dt><tt><b><a name="font">font</a></b></tt>=<i>font</i>
+<dd>
+Use this font. Can be overridden in the <tt>&lt;legend&gt;</tt>,
+<tt>&lt;xaxis&gt;</tt>, <tt>&lt;yaxis&gt;</tt> and <tt>&lt;names&gt;</tt> tags.
+
+
+
+
+<p><dt><tt><b><a name="fontsize">fontsize</a></b></tt>=<i>number</i>
+<dd>
+Height of the text.</p>
+
+
+
+
+<p><dt><tt><b><a name="height">height</a></b></tt>=<i>number</i>
+<dd>
+Height of the diagram. Will not have effect below 100.
+
+
+
+
+<p><dt><tt><b><a name="horgrid">horgrid</a></b></tt>
+
+<dd>
+Draw a horizontal grid.
+
+
+
+<p><dt><tt><b><a name="labelcolor">labelcolor</a></b></tt>=<i>color</i>
+<dd>
+Set the color for the labels of the axis.
+
+
+
+
+<p><dt><tt><b><a name="legendfontsize">legendfontsize</a></b></tt>=<i>number</i>
+<dd>
+Height of the legend text.
+
+
+
+
+<p><dt><tt><b><a name="name">name</a></b></tt>=<i>string</i>
+<dd>
+Write a name at the top of the diagram.
+
+
+
+
+<p><dt><tt><b><a name="namecolor">namecolor</a></b></tt>=<i>color</i>
+<dd>
+Set the color of the name, by default <tt>textcolor</tt>.
+
+
+
+
+<p><dt><tt><b><a name="namefont">namefont</a></b></tt>=<i>font</i>
+<dd>
+Set the font for the name.
+
+
+
+
+<p><dt><tt><b><a name="namesize">namesize</a></b></tt>=<i>number</i>
+<dd>
+Sets the height of the name, by default <tt>fontsize</tt>.
+
+
+
+
+<p><dt><tt><b><a name="neng">neng</a></b></tt>
+
+<dd>
+As eng, but 0.1-1.0 is written as 0.xxx.
+
+
+
+<p><dt><tt><b><a name="notrans">notrans</a></b></tt>
+
+<dd>
+Make bgcolor opaque.
+
+
+
+<p><dt><tt><b><a name="rotate">rotate</a></b></tt>=<i>degree</i>
+<dd>
+Rotate a pie chart this much.
+
+
+
+
+<p><dt><tt><b><a name="textcolor">textcolor</a></b></tt>
+
+<dd>
+Set the color for all text.
+
+
+
+<p><dt><tt><b><a name="tonedbox">tonedbox</a></b></tt>=<i>color1,color2,color3,color4</i>
+<dd>
+Create a background shading between the colors assigned to each of the
+four corners.
+
+
+
+
+<p><dt><tt><b><a name="turn">turn</a></b></tt>
+
+<dd>
+Turn the diagram 90 degrees.
+
+
+
+<p><dt><tt><b><a name="type">type</a></b></tt>=sumbars
+normsum
+line
+bar
+pie
+graph
+
+<dd>
+The type of the diagram.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="vertgrid">vertgrid</a></b></tt>
+
+<dd>
+Draw vertical grid lines.
+
+
+
+<p><dt><tt><b><a name="voidsep">voidsep</a></b></tt>=<i>string</i>
+<dd>
+Change the string that means no such value, by default VOID.
+
+
+
+
+<p><dt><tt><b><a name="width">width</a></b></tt>=<i>number</i>
+<dd>
+Set the width of the diagram.
+
+
+
+
+<p><dt><tt><b><a name="xgridspace">xgridspace</a></b></tt>=<i>number</i>
+<dd>
+Set the space between two vertical grid lines. The unit is the same as for
+the data.
+
+
+
+
+<p><dt><tt><b><a name="ygridspace">ygridspace</a></b></tt>
+
+<dd>
+Set the space between two horizontal grid lines. The unit is the same
+as for the data.
+
+
+</dl>
+
+<p>
+Regular <doc><tt>{img}</font></tt></doc> arguments will be passed on to the
+generated <doc><tt>{img}</font></tt></doc> tag.
+
+
+<dl>
+</dl>
+
+<p>
+Attributes for the internal <tt>&lt;data&gt;</tt> container tag.
+
+
+<dl>
+
+<p><dt><tt><b><a name="form">form</a></b></tt>
+
+<dd>
+column
+
+row
+
+
+How to interpret the tabular data, by default row.
+
+
+
+
+
+<p><dt><tt><b><a name="lineseparator">lineseparator</a></b></tt>
+
+<dd>
+Set the separator between rows, by default newline.
+lineseparator.
+
+
+
+<p><dt><tt><b><a name="noparse">noparse</a></b></tt>
+
+<dd>
+Do not parse the contents by the RXML parser, before data extraction
+begins.
+
+
+
+<p><dt><tt><b><a name="separator">separator</a></b></tt>
+
+<dd>
+Set the separator between elements, by default tab.
+
+
+
+<p><dt><tt><b><a name="xnames">xnames</a></b></tt>
+
+<dd>
+Treat the first row or column as names for the data to come. The name
+will be written along the pie slice or under the bar.
+
+
+
+<p><dt><tt><b><a name="xnamesvert">xnamesvert</a></b></tt>
+
+<dd>
+Write the names vertically.
+
+
+</dl>
+
+<p>
+Attributes for the internal <tt>&lt;colors&gt;</tt> container tag.
+
+
+<dl>
+
+<p><dt><tt><b><a name="separator">separator</a></b></tt>
+
+<dd>
+Set the separator between colors, by default tab.
+
+
+</dl>
+
+<p>
+Attributes for the internal <tt>&lt;legend&gt;</tt> container tag.
+
+
+<dl>
+
+<p><dt><tt><b><a name="separator">separator</a></b></tt>
+
+<dd>
+Set the separator between legends, by default tab.
+
+
+</dl>
+
+<p>
+Attributes for the internal <tt>&lt;xaxis&gt;</tt> and <tt>&lt;yaxis&gt;</tt>
+container tags.
+
+
+<dl>
+
+<p><dt><tt><b><a name="start">start</a></b></tt>
+
+<dd>
+Limit the start of the diagram at this value. If set to <i>min</i> the
+axis starts at the lowest value in the data.
+
+
+
+<p><dt><tt><b><a name="stop">stop</a></b></tt>
+
+<dd>
+Limit the end of the diagram at this value.
+
+
+
+<p><dt><tt><b><a name="quantity">quantity</a></b></tt>
+
+<dd>
+Set the name of the quantity of this axis.
+
+
+
+<p><dt><tt><b><a name="unit">unit</a></b></tt>=<i>string</i>
+<dd>
+Set the name of the unit of this axis.
+
+
+
+</dl>
+
+<p>
+Attributes for the <tt>&lt;xnames&gt;</tt> container tag.
+
+
+<dl>
+
+<p><dt><tt><b><a name="separator">separator</a></b></tt>
+
+<dd>
+Set the separator between names, by default tab.
+
+
+
+<p><dt><tt><b><a name="orient">orient</a></b></tt>=vert
+horis
+
+<dd>
+How to write names, vertically or horizontally.
+
+
+
+<dl>
+
+</dl>
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

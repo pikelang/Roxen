@@ -1,25 +1,426 @@
 
-Generates wizards<p>
-	    Syntax:<br>
-<br>
-<pre>
-{wizard [next-label=...] [previous-label=...] [ok-label=...] 
-	[cancel-label=...] [page-label=...] 
-        name="A Name" cancel=url done=url}
-  {page}
-    A page (RXML code, with two extra tags, {var} and {cvar}, see below)<br>
-  {/page}
-  {page}
-    Another page...
-  {/page}
-{/wizard}
-<br>
-{var type=string|password|list|text|radio|checkbox|int|float|color|font|toggle|select|select_multiple</nobr>
-     name=var_name
-     options=foo,bar,gazonk    -- (for select and select_multiple) --
-     default=default value<
-     rows=num and cols=num       -- (for text) --
-     size=chars                  -- (for most) --}
-{cvar -- same as var,but the default value is the contents of the container --}
-{/cvar}
-</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;wizard&gt;&nbsp;...&nbsp;&lt;/wizard&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;wizard&gt; is defined in the Wizard generator module.
+<p>
+The <tt>&lt;wizard&gt;</tt> tag generates wizard-like user interfaces, where
+the user is guided through several pages of controls. It is very
+useful for making web applications in RXML.
+
+<p>The <tt>&lt;wizard&gt;</tt> tag must contain at least one <tt>&lt;page&gt;</tt>
+page container tag. The <tt>&lt;page&gt;</tt> tag can in turn contain
+<tt>&lt;var&gt;</tt> tags or <tt>&lt;cvar&gt;</tt> container tags.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#cancel">cancel</a>,
+<a href="#cancel-label">cancel-label</a>,
+<a href="#done">done</a>,
+<a href="#name">name</a>,
+<a href="#next-label">next-label</a>,
+<a href="#ok-label">ok-label</a>,
+<a href="#page-label">page-label</a>,
+<a href="#previous-label">previous-label</a>,
+<a href="#cols">cols</a>,
+<a href="#default">default</a>,
+<a href="#name">name</a>,
+<a href="#options">options</a>,
+<a href="#rows">rows</a>,
+<a href="#size">size</a>,
+<a href="#type">type</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="cancel">cancel</a></b></tt>=<i>URL</i>
+<dd>
+The URL to go to when the <i>cancel</i> button is pressed.
+
+
+
+
+<p><dt><tt><b><a name="cancel-label">cancel-label</a></b></tt>=<i>string</i>
+<dd>
+The text on the <i>cancel</i> button.
+
+
+
+
+<p><dt><tt><b><a name="done">done</a></b></tt>=<i>URL</i>
+<dd>
+The URL to go to when the <i>done</i> button is pressed.
+
+
+
+
+<p><dt><tt><b><a name="name">name</a></b></tt>=<i>string</i>
+<dd>
+The title of the wizard.
+
+
+
+
+<p><dt><tt><b><a name="next-label">next-label</a></b></tt>=<i>string</i>
+<dd>
+The text on the <i>next</i> button.
+
+
+
+
+<p><dt><tt><b><a name="ok-label">ok-label</a></b></tt>=<i>string</i>
+<dd>
+The text on the <i>ok</i> button.
+
+
+
+
+<p><dt><tt><b><a name="page-label">page-label</a></b></tt>=<i>text</i>
+<dd>
+The text <i>Page</i> in the upper right corner.
+
+
+
+
+<p><dt><tt><b><a name="previous-label">previous-label</a></b></tt>=<i>text</i>
+<dd>
+The text on the <i>previous</i> button.
+
+
+
+</dl>
+
+<p>Attributes for <tt>&lt;var&gt;</tt> and <tt>&lt;cvar&gt;</tt>
+
+<dl>
+
+<p><dt><tt><b><a name="cols">cols</a></b></tt>=<i>number</i>
+<dd>
+Sets the number of columns.
+
+
+
+
+<p><dt><tt><b><a name="default">default</a></b></tt>=<i>value</i>
+<dd>
+The default value.
+
+
+
+
+<p><dt><tt><b><a name="name">name</a></b></tt>=<i>name</i>
+<dd>
+The name of the variable.
+
+
+
+
+<p><dt><tt><b><a name="options">options</a></b></tt>=<i>option1,option2,...</i>
+<dd>
+Available for <i>select</i> or <i>select_multiple</i>variables.
+
+
+
+
+<p><dt><tt><b><a name="rows">rows</a></b></tt>=<i>number</i>
+<dd>
+Sets the number of rows.
+
+
+
+
+<p><dt><tt><b><a name="size">size</a></b></tt>=<i>number</i>
+<dd>
+Sets the size or the input form.
+
+
+
+
+<p><dt><tt><b><a name="type">type</a></b></tt>=string
+password
+list
+text
+radio
+checkbox
+int
+float
+color
+color-small
+font
+toggle
+select
+select_multiple
+
+<dd>
+The variable type.
+
+
+
+<dl>
+
+</dl>
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<page>
+<wizard name="Sample wizard" ok-label=Done 
+  done=wizard.html cancel=wizard.html>
+
+<page>
+<b>Message</b> <var name=message size=30 value="Hello World">
+
+<p><var name=color type=color>
+</page>
+
+<page>
+<formoutput><gtext fg=#color#>#message#</gtext></formoutput>
+</page>
+
+</wizard>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<page>
+<wizard name="Sample wizard" ok-label=Done 
+  done=wizard.html cancel=wizard.html>
+
+<page>
+<b>Message</b> <var name=message size=30 value="Hello World">
+
+<p><var name=color type=color>
+</page>
+
+<page>
+<formoutput><gtext fg=#color#>#message#</gtext></formoutput>
+</page>
+
+</wizard>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

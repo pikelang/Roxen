@@ -1,21 +1,295 @@
-<h3>SQL query</h3>
 
-The {sqlquery}-tag is used to run SQL queries with
-no result returned.
 
-<h3>SQL query options</h3>
-<blockquote><dl>
 
-<dt><b>host</b>=<tt>hostname or alias</tt><dd>
-          Use this SQL-URL to connect, or, alias as defined
-          in the SQL databases table.
 
-<dt><b>query</b>=<tt>SQL statement</tt><dd>
-          The actual SQL statement.
 
-<dt><b>mysql-insert-id</b>=<tt>form-variable</tt><dd>
-          Set <tt>form-variable</tt> to the insert id
-          used by Mysql for auto-incrementing columns. <br>
-          <i>Note: This is only available with Mysql.</i>
 
-</dl></blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;sqlquery&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;sqlquery&gt; is defined in the SQL module module.
+<p>
+Executes a SQL query, but doesn't do anything with the result. This is
+mostly used for SQL queries that change the contents of the database,
+for example INSERT or UPDATE.
+
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#host">host</a>,
+<a href="#query">query</a>,
+<a href="#quiet">quiet</a>,
+<a href="#parse">parse</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="host">host</a></b></tt>=<i>database</i>
+<dd>
+Which database to connect to, usually a symbolic name. If omitted the
+default database will be used.
+
+
+
+
+<p><dt><tt><b><a name="query">query</a></b></tt>=<i>SQL query</i>
+<dd>
+The actual SQL-query.
+
+
+
+
+<p><dt><tt><b><a name="quiet">quiet</a></b></tt>
+
+<dd>
+Do not show any errors in the page, in case the query fails.
+
+
+
+<p><dt><tt><b><a name="parse">parse</a></b></tt>
+
+<dd>
+If specified, the query will be parsed by the RXML parser. Useful if
+you wish to dynamically build the query.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<apre foo>Reset the database</apre>
+
+<if prestate=foo>
+  <sqlquery host=test
+    query="DELETE from test">
+</if>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<apre foo>Reset the database</apre>
+
+<if prestate=foo>
+  <sqlquery host=test
+    query="DELETE from test">
+</if>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

@@ -1,58 +1,414 @@
-<h3>Tablify</h3>
 
-The tablify container tag generates tables from, for example,
-tab separated fields in newline separated records (this is the default).<p>
 
-<h3>Tablify options</h3>
-<blockquote><dl>
-<dt><b>help</b><dd>
-         Display this text.
-<dt><b>cellseparator</b>=<tt>str</tt><dd>
-         Use <tt>str</tt> as the column separator. Tab is default.
-<dt><b>rowseparator</b>=<tt>str</tt><dd>
-         Use <tt>str</tt> as the row separator. Newline is default.
-<dt><b>cellalign</b>=<tt>[left|right|center]</tt><dd>
-         Align the contents of the cells.
-<dt><b>rowalign</b>=<tt>[left|right|center]</tt><dd>
-         Align the contents of the rows.
-<dt><b>nice</b><dd>
-         Generate ``nice'' tables. The first row is the title row.
-         There are several additional arguments available with <tt>nice</tt>
-         (see below).
-<dt><b>bgcolor</b>=<tt>color</tt>,
-    <b>titlebgcolor</b>=<tt>color</tt>,
-    <b>titlecolor</b>=<tt>color</tt>,
-    <b>fgcolor0</b>=<tt>color</tt>,
-    <b>fgcolor1</b>=<tt>color</tt><dd>
-         Color definitions.
-<dt><b>modulo</b>=<tt>mod</tt><dd>
-         Sets the number of rows using the same color to <tt>mod</tt>.
-<dt><b>{fields}</b><tt>[num|text, ...]</tt><b>{/fields}</b><dd>
-         This container tag sets the field type for each
-         column. Numerical fields will be right aligned and formated.
-<dt><b>nicer</b><dd>
-         Generate ``even nicer'' tables. The first row is the title row.
-	 All arguments from <tt>nice</tt> are available.
-         There are several additional arguments available with <tt>nicer</tt>
-         (see below).
-<dt><b>font</b><dd>What gtext font to use.
-<dt><b>scale</b><dd>What gtext scale to use.
-<dt><b>face</b><dd>What face to use for HTML text.
-<dt><b>size</b><dd>What size to use for HTML text.
-</dl></blockquote>
 
-<h3>Tablify examples</h3>
 
-<blockquote>
-<pre>
-{tablify nice cellseparator='#'}Item#Quantity
-Orange#123452
-Banana#42432
-Mango#1723{/tablify}
 
-{tablify nice cellseparator='#'}{fields}text#num{/fields}Item#Quantity
-Orange#123452
-Banana#42432
-Mango#1723{/tablify}
-</pre>
-</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;tablify&gt;&nbsp;...&nbsp;&lt;/tablify&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;tablify&gt; is defined in the Tablify module.
+<p>
+This tag generates tables from the contents, by default in tab
+separated form. This simplifies making tables significantly.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#cellalign">cellalign</a>,
+<a href="#cellseparator">cellseparator</a>,
+<a href="#fields">fields</a>,
+<a href="#nice">nice</a>,
+<a href="#nicer">nicer</a>,
+<a href="#rowalign">rowalign</a>,
+<a href="#rowseparator">rowseparator</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="cellalign">cellalign</a></b></tt>=left
+center
+right
+
+<dd>
+Alignment of the contents of the cells.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="cellseparator">cellseparator</a></b></tt>=<i>string</i>
+<dd>
+The separator for separating columns, default is tab.
+
+
+
+
+<p><dt><tt><b><a name="fields">fields</a></b></tt>=num
+text
+
+<dd>
+This is not an argument but rather a container tag used in the
+contents that sets the field type for each column. Fields marked
+numerical will be right aligned and formatted
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="nice">nice</a></b></tt>
+
+<dd>
+Generates tables with customable layouts. The first row is referred to
+as the title row. The additional attributes are:
+
+
+
+<dl>
+
+<p><dt><tt><b>bgcolor</b></tt>=<i>color</i>
+<dd>
+Sets the background color of your table.
+
+
+
+
+<p><dt><tt><b>titlebgcolor</b></tt>=<i>color</i>
+<dd>
+Sets the background color of the title cell.
+
+
+
+
+<p><dt><tt><b>titlecolor</b></tt>=<i>color</i>
+<dd>
+Sets the font color of the title cell.
+
+
+
+
+<p><dt><tt><b>fgcolorX</b></tt>=<i>color</i>
+<dd>
+Sets the background color of cell X.
+
+
+
+
+</dl>
+
+
+<p><dt><tt><b><a name="nicer">nicer</a></b></tt>
+
+<dd>
+Generates tables with even more customable layouts and gtext font
+capabilities for the title field. Nicer uses the same attributes as
+nice plus these:
+
+
+
+<dl>
+
+<p><dt><tt><b>font</b></tt>=<i>font</i>
+<dd>
+Selects which gtext font to use for the title field.
+
+
+
+
+<p><dt><tt><b>scale</b></tt>=<i>factor</i>
+<dd>
+Sets the scaling of the gtext font.
+
+
+
+
+<p><dt><tt><b>face</b></tt>=<i>font</i>
+<dd>
+Sets the font face to use for the HTML text.
+
+
+
+
+<p><dt><tt><b>size</b></tt>=<i>number</i>
+<dd>
+Sets the font size to use for the HTML text.
+
+
+
+
+<p><dt><tt><b>modulo</b></tt>=<i>number</i>
+<dd>
+The number of rows that are to use the same color, default is one. 
+
+
+
+
+</dl>
+
+
+<p><dt><tt><b><a name="rowalign">rowalign</a></b></tt>=left
+center
+right
+
+<dd>
+This tag aligns the contents of the rows.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="rowseparator">rowseparator</a></b></tt>=<i>string</i>
+<dd>
+Sets the separator used for separating rows, default is newline.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<tablify nice cellseparator=,>
+ Country, Population
+ Sweden, 8 865 051
+ Denmark, 5 305 042
+</tablify> 
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<tablify nice cellseparator=,>
+ Country, Population
+ Sweden, 8 865 051
+ Denmark, 5 305 042
+</tablify> 
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

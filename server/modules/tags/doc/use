@@ -1,37 +1,288 @@
-<b>Syntax:</b><br>
-<pre>
-{use file=file-to-use-macros-from}
-{use package=rxml-package}
-</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;use&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;use&gt; is defined in the Main RXML module module.
 <p>
-<b>Attributes</b>
+Reads tags, container tags and defines from a file or package.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#file">file</a>,
+<a href="#package">package</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
 <dl>
-<dt><kbd><b>file=path</b></kbd>
-<dd>Read all macros and tag/container definitions from the file 'file'.
 
-<p> This file will be fetched just as if someone had tried to fetch it
-    with an HTTP request. This makes it possible to use Pike script
- results and other dynamic documents. <b>But:</b> beware: The
-    results of the parsing is heavily cached for performance reasons,
-    if you do not want this cache use <nobr><kbd>{insert
-    file=... nocache}</kbd></nobr> insead of <nobr><kbd>{use
-    file=...}</kbd></nobr>.  
-<p><dt><kbd><b>package=name</b></kbd>
+<p><dt><tt><b><a name="file">file</a></b></tt>=<i>path</i>
+<dd>
+Reads all tags and container tags and defines from the file.
 
-<dd>Read all macros and tag/container definitions from the package
-    'file'. Packages are files located in {roxen-dir}/rxml_packages/.
+<p>This file will be fetched just as if someone had tried to fetch it
+with an HTTP request. This makes it possible to use Pike script
+results and other dynamic documents. Note however that the results of the
+parsing are heavily cached for performance reasons, if you do not want
+this cache use <doc><tt>{insert file=... nocache}</font></tt></doc> instead.
 
-<p><b>Available packages:</b><p>
-<use packageinfo>
-<p>
+
+
+
+<p><dt><tt><b><a name="package">package</a></b></tt>=<i>name</i>
+<dd>
+Reads all tags, container tags and defines from the given
+package. Packages are files located in
+<i>local/rxml_packages/</i>. 
+
+<p>By default the package <i>gtext_headers</i> is available, that
+replaces normal headers with graphical headers. It redefines the h1,
+h2, h3, h4, h5 and h6 container tags.
+
+
+
 </dl>
 
 <p>
+The <tt>&lt;use&gt;</tt> tag is much faster than the <tt>&lt;include&gt;</tt>,
+since the parsed definitions is cached.
 
-The primary use of this tag is for site-wide tags and containers. It
-is much faster to use {use} than {include} when defining tags and
-macros, since the parsed definitions is cached rather than the
-contents of the file
 
-<p>
-<b>See also:</b> {define help} {undefine help} {use help}
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<use package=gtext_headers>
+
+<h1>Hello World</h1>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<use package=gtext_headers>
+
+<h1>Hello World</h1>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

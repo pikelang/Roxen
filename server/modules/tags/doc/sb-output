@@ -1,0 +1,432 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;sb-output&gt;&nbsp;...&nbsp;&lt;/sb-output&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;sb-output&gt; is defined in the SiteBuilder tags module.
+<p>
+<tt>&lt;sb-output&gt;</tt> is an output tag like <tt>&lt;formoutput&gt;</tt> or
+<tt>&lt;sqloutput&gt;</tt>, that can be user to get SiteBuilder specific
+information. All attributes that can be used with
+<tt>&lt;formoutput&gt;</tt> can also be used with <tt>&lt;sb-output&gt;</tt>. It
+can either be used to get metadata and information about files or to
+get information about the current user.
+
+<p>When the <tt>&lt;sb-output&gt;</tt> tag is used to get information about
+files or directories it uses the same attributes as the
+<tt>&lt;sb-menu&gt;</tt> tag. It is possible to get information of all files
+or directories listed in a menu file. For directories the metadata is
+fetched from the <i>index.html</i> file. Since the
+<i>index.html</i> is treated as the contens for the directory
+itself it will not be included in any listing of files within a
+directory.
+
+<p>One file in a list of files or directories might be selected. This
+is usually the current file, but in the case of directories it might
+be any directory that is part of the path to the current file.
+
+<p>The variables that <tt>&lt;sb-output&gt;</tt> handled when listing files
+or directories is:
+
+<p><dl>
+<dt><tt><b>url</b></tt><dd>
+A URL to the file or directory.
+
+<p><dt><tt><b>selected</b></tt><dd>
+Whether this file is the current file or if this directory is a
+directory within the path to the current file. Only one entry will be
+selected.
+
+<p><dt><tt><b>title</b></tt><dd>
+The title of the file or <i>index.html</i> file in a directory.
+
+<p><dt><tt><b>description</b></tt><dd>
+The description of the file or <i>index.html</i> file in a directory.
+
+<p><dt><tt><b>keywords</b></tt><dd>
+The keywords of the file or <i>index.html</i> file in a directory.
+
+<p><dt><tt><b>language</b></tt><dd>
+The langauge of the file or <i>index.html</i> file in a directory.
+The language of the document, from the metadata.
+
+<p><dt><tt><b>type</b></tt><dd>
+The type of the file or <i>directory</i> for a directory.
+
+<p><dt><tt><b>type-img</b></tt><dd>
+A URL to the icon for that type of file.
+
+<p><dt><tt><b>status-img</b></tt><dd>
+A URL to the icon representing the status of the file or
+<i>index.html</i> file in a directory. This is the same status
+icon as used by the Content Editor.
+
+<p><dt><tt><b>permission</b></tt><dd>
+The users permission on to the file or directory. Is either
+<i>read</i> or <i>write</i>.
+
+<p><dt><tt><b>content-editor</b></tt><dd>
+A URL to the Content Editor, focusing on the file or
+<i>index.html</i> file in a directory.
+
+<p><dt><tt><b>workarea</b></tt><dd>
+The name of the workarea.
+
+<p><dt><tt><b>workarea-id</b></tt><dd>
+The unique id of the workarea. For use when doing web applications.
+</dl>
+
+<p>The variables available when getting information about the current
+user is:
+
+<p><dl>
+<dt><tt><b>user-id</b></tt><dd>
+The unique user id. For use when doing web applications.
+
+<p><dt><tt><b>user-name</b></tt><dd>
+The user's name, as used at the login prompt.
+
+<p><dt><tt><b>full-name</b></tt><dd>
+The user's full name.
+</dl>
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#user">user</a>,
+<a href="#file">file</a>,
+<a href="#menu">menu</a>,
+<a href="#history">history</a>,
+<a href="#dirs">dirs</a>,
+<a href="#glob">glob</a>,
+<a href="#type">type</a>,
+<a href="#path">path</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="user">user</a></b></tt>
+
+<dd>
+Get information about the current user. Cannot be combined with other
+attributes. 
+
+
+
+<p><dt><tt><b><a name="file">file</a></b></tt>
+
+<dd>
+Get information about the current file. Cannot be combined with other
+attributes. 
+
+
+
+<p><dt><tt><b><a name="menu">menu</a></b></tt>=<i>filename</i>
+<dd>
+Get information about files or directories listed in a menu file with
+this name. If there are no menu file in the current directory and a
+<tt>dir</tt>, <tt>type</tt> or <tt>glob</tt> attribute is
+present, a directory listing will be read instead. If not, the tag
+will search for a menu file with this name in the parent directory and
+its parent directory until a suitable menu file is found or all
+directories has been tried.
+
+
+
+
+<p><dt><tt><b><a name="history">history</a></b></tt>
+
+<dd>
+Get information about all directories in the path, including the
+current directory.
+
+
+
+<p><dt><tt><b><a name="dirs">dirs</a></b></tt>
+
+<dd>
+Get information about all directories in the directory specified by
+the <tt>path</tt> or the current directory. Can be combined with the
+<tt>glob</tt> and <tt>type</tt> attributes as well as the
+<tt>menu</tt> attribute. 
+
+
+
+<p><dt><tt><b><a name="glob">glob</a></b></tt>=<i>glob-pattern,glob-pattern,...</i>
+<dd>
+Get information about files who's name match one of the glob
+patterns. It searches for files in the directory specified with the
+<tt>path</tt> attribute or the current directory. Can be combined
+with the <tt>dirs</tt> and <tt>type</tt> attributes as well as the
+<tt>menu</tt> attribute. 
+
+
+
+
+<p><dt><tt><b><a name="type">type</a></b></tt>=<i>glob-pattern,glob-pattern,...</i>
+<dd>
+Get information about the files who's content type match one of the
+glob patterns. It searches for files in the directory specified by the
+<tt>path</tt> attribute or the current directory. Can be combined with
+the <tt>dirs</tt> and <tt>glob</tt> attributes as well as the
+<tt>menu</tt> attribute. 
+
+
+
+
+<p><dt><tt><b><a name="path">path</a></b></tt>=<i>path</i>
+<dd>
+Change which directory the <tt>dirs</tt>, <tt>glob</tt> and
+<tt>type</tt> attributes should work on.
+
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-if.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-if&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-login.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-login&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-menu.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-menu&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-output.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-output&gt;</a><br>
+
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-if.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-if&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-login.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-login&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-menu.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-menu&gt;</a><br>
+
+<a href=/SiteBuilder1.0/Templates/tags/sb-output.html><img src=https://manualer.idonex.se/admin/img/types/html.gif border=0> &lt;sb-output&gt;</a><br>
+
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>

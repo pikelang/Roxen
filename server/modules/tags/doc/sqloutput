@@ -1,0 +1,379 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;sqloutput&gt;&nbsp;...&nbsp;&lt;/sqloutput&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+&lt;sqloutput&gt; is defined in the SQL module module.
+<p>
+Insert the results of a SQL query into HTML or
+RXML. <tt>&lt;sqloutput&gt;</tt> works like all <i>output</i> tags. By default
+anything within #'s will be interpreted as a variable. Thus #column#
+will be replaced by the column value. ## will be replaced by a #. The
+inserted SQL results will by default be HTML quoted, &lt; will for
+example be quoted to &amp;lt;. See the <a
+href=../variable/formoutput.html>formoutput page</a> for more
+information about quoting.
+
+<p>The <tt>&lt;sqloutput&gt;</tt> tag will copy its contents and replace the
+columns for each row in the result of the query. If the result is
+empty, the <tt>&lt;sqloutput&gt;</tt> will not return anything.
+
+<p>Within the <tt>&lt;sqloutput&gt;</tt> the column values can be accessed
+as <i>other</i> variables. This is useful for transfering the result
+to normal RXML variables.
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#host">host</a>,
+<a href="#query">query</a>,
+<a href="#quiet">quiet</a>,
+<a href="#parse">parse</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="host">host</a></b></tt>=<i>database</i>
+<dd>
+Which database to connect to, usually a symbolic name. If omitted the
+default database will be used.
+
+
+
+
+<p><dt><tt><b><a name="query">query</a></b></tt>=<i>SQL query</i>
+<dd>
+The actual SQL-query.
+
+
+
+
+<p><dt><tt><b><a name="quiet">quiet</a></b></tt>
+
+<dd>
+Do not show any errors in the page, in case the query fails.
+
+
+
+<p><dt><tt><b><a name="parse">parse</a></b></tt>
+
+<dd>
+If specified, the query will be parsed by the RXML parser. Useful if
+you wish to dynamically build the query.
+
+
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<table>
+  <tr>
+    <th>Country</th>
+    <th>Population</th>
+  </tr>
+  <sqloutput host=test 
+    query="SELECT country, population FROM countries ORDER BY country">
+    <tr>
+      <th>#country#</th>
+      <th>#population#</th>
+    </tr>
+  </sqloutput>
+</table>
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<table>
+  <tr>
+    <th>Country</th>
+    <th>Population</th>
+  </tr>
+  <sqloutput host=test 
+    query="SELECT country, population FROM countries ORDER BY country">
+    <tr>
+      <th>#country#</th>
+      <th>#population#</th>
+    </tr>
+  </sqloutput>
+</table>
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+<table border=0 cellpadding=1 cellspacing=0 bgcolor=#000000>
+<tr>
+<td>
+<table border=0 cellspacing=0 cellpadding=4>
+ <tr>
+  <td valign=top bgcolor=#113377>
+   <font color=#ffffff><b>source code</b></font>
+  </td>
+  <td bgcolor=white>
+<pre><define name=foo>
+<sqloutput host=test
+  query="SELECT population FROM countries WHERE country='Sweden'">
+  <set variable=swepop other=population>
+</sqloutput>
+
+Sweden's population is <insert variable=swedpop>.
+</define>
+<insert name=foo "<"=&lt; ">"=&gt; ></pre>
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+  </td>
+ </tr>
+ <tr>
+  <td height=1 bgcolor=#113377><img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td height=1 bgcolor=#ffffff>
+
+   <table border=0 cellpadding=0 cellspacing=0 width=100%>
+    <tr>
+     <td bgcolor=#000000>
+     <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    </tr>
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top bgcolor=#113377>
+  <font color=#ffffff><b>result</b></font>
+</td>
+<td valign=top bgcolor=#ffffff>
+
+
+<sqloutput host=test
+  query="SELECT population FROM countries WHERE country='Sweden'">
+  <set variable=swepop other=population>
+</sqloutput>
+
+Sweden's population is <insert variable=swedpop>.
+
+
+   <br clear=all>
+   <img src=/internal-roxen-unit width=1 height=1 alt="">
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table><p>
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+</if not cookie=rxml-help>
