@@ -17,6 +17,7 @@ string|mapping parse( object id )
 
   rm( roxen.configuration_dir + "/" + cf->name );
   roxen->configurations -= ({ cf });
+  roxen->remove_configuration( cf->name );
   cf->stop();
   destruct( cf );
   return http_redirect( "", id );
