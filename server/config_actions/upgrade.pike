@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.34 1998/05/19 11:37:38 grubba Exp $
+ * $Id: upgrade.pike,v 1.35 1998/06/05 19:35:59 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -81,7 +81,7 @@ mixed parse_expression(string expr)
 
 void recurse_one_dir(string d)
 {
-  foreach(get_dir(d), string f)
+  foreach(get_dir(d)||({}), string f)
   {
     if(search(f, "#")!=-1) continue;
     if(search(f, "~")!=-1) continue;
