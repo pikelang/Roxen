@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.160 2000/03/18 03:00:59 mast Exp $
+// $Id: roxenlib.pike,v 1.161 2000/03/19 16:45:21 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -20,7 +20,7 @@ string gif_size(Stdio.File gif)
   return "width="+xy[0]+" height="+xy[1];
 }
 
-static string extract_query(string from)
+string extract_query(string from)
 {
   if(!from) return "";
   if(sscanf(from, "%*s?%s%*[ \t\n]", from))
@@ -28,7 +28,7 @@ static string extract_query(string from)
   return "";
 }
 
-static mapping build_env_vars(string f, RequestID id, string path_info)
+mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   string|array|object(Stdio.File) tmp;
@@ -188,7 +188,7 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
   return new;
 }
 
-static mapping build_roxen_env_vars(RequestID id)
+mapping build_roxen_env_vars(RequestID id)
 {
   mapping new = ([]);
   string tmp;
@@ -246,7 +246,7 @@ static mapping build_roxen_env_vars(RequestID id)
   return new;
 }
 
-static string decode_mode(int m)
+string decode_mode(int m)
 {
   string s;
   s="";
@@ -284,23 +284,13 @@ static string decode_mode(int m)
   return s;
 }
 
-static int _match(string w, array (string) a)
+int _match(string w, array (string) a)
 {
-  string q;
   if(!stringp(w)) // Internal request..
     return -1;
-  foreach(a, q)
+  foreach(a, string q)
     if(stringp(q) && strlen(q) && glob(q, w))
       return 1;
-}
-
-// OBSOLETED by parse_since()
-static int is_modified(string a, int t, void|int len)
-{
-  array vals=roxen->parse_since(a);
-  if(len && len!=vals[1]) return 0;
-  if(vals[0]<t) return 0;
-  return 1;
 }
 
 string short_name(string long_name)
@@ -325,7 +315,7 @@ string strip_prestate(string from)
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 
-static string parse_rxml(string what, RequestID id,
+string parse_rxml(string what, RequestID id,
 			 void|Stdio.File file,
 			 void|mapping defines)
 {
@@ -599,17 +589,17 @@ constant replace_values  =values( iso88591 )+values( international )+values( sym
 constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({""})*sizeof(safe_characters);
 
-static int is_safe_string(string in)
+int is_safe_string(string in)
 {
   return strlen(in) && !strlen(replace(in, safe_characters, empty_strings));
 }
 
-static string make_entity( string q )
+string make_entity( string q )
 {
   return "&"+q+";";
 }
 
-static string make_tag_attributes(mapping in)
+string make_tag_attributes(mapping in)
 {
   if(!in || !sizeof(in)) return "";
   int sl=0;
@@ -629,18 +619,18 @@ static string make_tag_attributes(mapping in)
   return res[..sizeof(res)-2];
 }
 
-static string make_tag(string s, mapping in)
+string make_tag(string s, mapping in)
 {
   return "<"+s+make_tag_attributes(in)+">";
 }
 
-static string make_container(string s, mapping in, string contents)
+string make_container(string s, mapping in, string contents)
 {
   if(in["/"]) m_delete(in, "/");
   return make_tag(s,in)+contents+"</"+s+">";
 }
 
-static string dirname( string file )
+string dirname( string file )
 {
   if(!file)
     return "/";
@@ -655,12 +645,12 @@ static string dirname( string file )
   return tmp[0..sizeof(tmp)-2]*"/";
 }
 
-static string conv_hex( int color )
+string conv_hex( int color )
 {
   return sprintf("#%06X", color);
 }
 
-static string add_config( string url, array config, multiset prestate )
+string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config))
     return url;
@@ -699,7 +689,7 @@ string extension( string f, RequestID|void id)
   return ext;
 }
 
-static int backup_extension( string f )
+int backup_extension( string f )
 {
   if(!strlen(f))
     return 1;
@@ -708,20 +698,13 @@ static int backup_extension( string f )
 	  || (f[-1] == 'k' && sscanf(f, "%*s.bak")));
 }
 
-/* ================================================= */
-/* Arguments: Anything Returns: Memory usage of the argument.  */
-function get_size = cache.get_size;
-
-
-static int ipow(int what, int how)
+int ipow(int what, int how)
 {
   return (int)pow(what, how);
 }
 
-/* This one will remove .././ etc. in the path. Might be useful :) */
-/* ================================================= */
-
-static string simplify_path(string file)
+string simplify_path(string file)
+  //! This one will remove .././ etc. in the path.
 {
   // Faster for most cases since "./" and "../" rarely exists.
   if(!strlen(file) || ((search(file, "./") == -1) && (file[-1] != '.')))
@@ -746,13 +729,8 @@ static string simplify_path(string file)
   return file;
 }
 
-/* Returns a short date string from a time-int
-   ===========================================
-   Arguments: int (time)
-   Returns:   string ("short_date")
-   */
-
-static string short_date(int timestamp)
+string short_date(int timestamp)
+  //! Returns a short date string from a time-int
 {
   int date = time(1);
 
@@ -762,12 +740,7 @@ static string short_date(int timestamp)
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
-int httpdate_to_time(string date)
-{
-  return roxen->parse_since(date)[0]||-1;
-}
-
-static string int2roman(int m)
+string int2roman(int m)
 {
   string res="";
   if (m>10000000||m<0) return "que";
@@ -787,7 +760,7 @@ static string int2roman(int m)
   return res;
 }
 
-static string number2string(int n, mapping m, array|function names)
+string number2string(int n, mapping m, array|function names)
 {
   string s;
   switch (m->type)
@@ -824,7 +797,7 @@ static string number2string(int n, mapping m, array|function names)
   return s;
 }
 
-static string image_from_type( string t )
+string image_from_type( string t )
 {
   if(t)
   {
@@ -846,7 +819,7 @@ static string image_from_type( string t )
 }
 
 #define  PREFIX ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
-static string sizetostring( int size )
+string sizetostring( int size )
 {
   if(size<0) return "--------";
   float s = (float)size;
@@ -888,20 +861,20 @@ string program_directory()
 }
 
 string html_encode_string(string str)
-// Encodes str for use as a literal in html text.
+  //! Encodes str for use as a literal in html text.
 {
   return replace(str, ({"&", "<", ">", "\"", "\'", "\000" }),
 		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
 }
 
 string html_decode_string(string str)
-// Decodes str, opposite to html_encode_string()
+  //! Decodes str, opposite to html_encode_string()
 {
   return replace(str, replace_entities, replace_values);
 }
 
 string html_encode_tag_value(string str)
-// Encodes str for use as a value in an html tag.
+  //! Encodes str for use as a value in an html tag.
 {
   return "\"" + replace(str, ({"&", "\""}), ({"&amp;", "&quot;"})) + "\"";
 }
@@ -1034,8 +1007,8 @@ string strftime(string fmt, int t)
 }
 
 RoxenModule get_module (string modname)
-// Resolves a string as returned by get_modname to a module object if
-// one exists.
+  //! Resolves a string as returned by get_modname to a module object if
+  //! one exists.
 {
   string cname, mname;
   int mid = 0;
@@ -1054,8 +1027,8 @@ RoxenModule get_module (string modname)
 }
 
 string get_modname (RoxenModule module)
-// Returns a string uniquely identifying the given module on the form
-// `<config name>/<module short name>#<copy>'.
+  //! Returns a string uniquely identifying the given module on the form
+  //! `<config name>/<module short name>#<copy>'.
 {
   if (!module) return 0;
 
@@ -1068,9 +1041,9 @@ string get_modname (RoxenModule module)
   return 0;
 }
 
-// This determines the full module name in approximately the same way
-// as the config UI.
 string get_modfullname (RoxenModule module)
+  //! This determines the full module name in approximately the same way
+  //! as the config UI.
 {
   if (module) {
     string name = 0;
@@ -1081,8 +1054,8 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-//Quote content in a multitude of ways. Used primarily bu do_output_tag
 string roxen_encode( string val, string encoding )
+  //! Quote content in a multitude of ways. Used primarily bu do_output_tag
 {
   switch (encoding) {
    case "none":
@@ -1166,9 +1139,9 @@ string roxen_encode( string val, string encoding )
   }
 }
 
-// This method needs lot of work... but so do the rest of the system too
-// RXML needs types
 private int compare( string a, string b )
+  //! This method needs lot of work... but so do the rest of the system too
+  //! RXML needs types
 {
   if (!a)
     if (b)
@@ -1193,14 +1166,14 @@ private int compare( string a, string b )
       return 0;
 }
 
-// method for use by tags that replace variables in their content, like
-// formoutput, sqloutput and others.
-//
-// NOTE: This function is obsolete. This kind of functionality is now
-// provided intrinsicly by the new RXML parser framework, in a way
-// that avoids many of the problems that stems from this function.
 string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      RequestID id )
+  //! method for use by tags that replace variables in their content, like
+  //! formoutput, sqloutput and others.
+  //!
+  //! NOTE: This function is obsolete. This kind of functionality is now
+  //! provided intrinsicly by the new RXML parser framework, in a way
+  //! that avoids many of the problems that stems from this function.
 {
   string quote = args->quote || "#";
   mapping other_vars = id->misc->variables;
