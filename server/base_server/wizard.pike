@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.65 1998/06/07 18:41:12 grubba Exp $
+/* $Id: wizard.pike,v 1.66 1998/06/29 15:01:26 marcus Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -444,7 +444,14 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 
   for(; !data; v->_page=PAGE(offset))
   {
-    function pg=this_object()[wiz_name+((int)v->_page)];
+    function c, pg=this_object()[wiz_name+((int)v->_page)];
+    if(!pg && functionp(c=this_object()["wizard_done"])) {
+      mixed res = c(id,@args);
+      if(res != -1) 
+	return (res
+		|| http_redirect(cancel||id->not_query, 
+				 @(id->conf?({id}):({}))));
+    }
     if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
     if(data = pg(id,@args)) break;
   }
