@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.54 1999/05/24 06:23:24 mast Exp $
+/* $Id: ssl3.pike,v 1.55 1999/07/14 14:28:40 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -340,6 +340,12 @@ void send_result(mapping|void result)
   } else {
     if((file->file == -1) || file->leave_me) 
     {
+      if(do_not_disconnect) {
+	file = 0;
+	pipe = 0;
+	return;
+      }
+
       my_fd = 0;
       file = 0;
       return;
