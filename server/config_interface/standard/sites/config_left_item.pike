@@ -55,6 +55,12 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
          break;
 
        case "modules":
+	 pre+=sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='../../../add_module.pike?config=%s'> "
+		      "<cf-locale get=add_module> </gbutton>",
+		      http_encode_string( c->name ) )+
+	   sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='../../../drop_module.pike?config=%s'> "
+		   "<cf-locale get=drop_module> </gbutton><br>",
+		   http_encode_string( c->name ) );
          string qurl = url;
          if( search( qurl, "!" ) != -1 )
            qurl += "../";
