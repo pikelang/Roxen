@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.14 1999/09/24 16:55:20 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.15 1999/10/21 11:30:43 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ void create()
 	 "# Feel free to add to this, but do it after the #include line if\n"
 	 "# you want to override any defaults\n"
 	 "\n"
-	 "#include <etc/more_extensions/vanilla>\n\n", "Extensions", 
+	 "#include <etc/extensions>\n\n", "Extensions", 
 	 TYPE_TEXT_FIELD, 
 	 "This is file extension "
 	 "to content type mapping. The format is as follows:\n"
