@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.309 2003/03/31 12:50:21 mast Exp $
+// $Id: module.pmod,v 1.310 2003/03/31 12:58:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7105,6 +7105,7 @@ class CompiledCallback (static function|string callback, static array args)
     }
     else
       callback (@args);
+    return nil;
   }
 
   array _encode() {return ({callback, args});}
