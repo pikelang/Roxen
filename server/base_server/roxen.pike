@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.816 2002/12/09 12:53:57 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.817 2003/01/13 15:07:37 mast Exp $";
 
 //! @appears roxen
 //!
@@ -96,7 +96,7 @@ string filename( program|object o )
 // cache static optimization for tags such as <if> and <emit> inside
 // <cache> since that optimization can give tricky incompatibilities
 // with 2.4.
-array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5", "3.3"});
+array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5", "3.3", "3.4"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -3507,8 +3507,11 @@ class ArgCache
       error("Requesting unknown key\n");
     array a = low_lookup( i[0] );
     array b = low_lookup( i[1] );
-    if( a && b )
-      return (cache[id] = mkmapping( a, b ))+([]);
+    if (!arrayp (a) || !arrayp (b) || sizeof (a) != sizeof (b))
+      // Got lookup with ids from an old cache which has been zapped,
+      // and the entries are now used for something else.
+      error("Requesting unknown key\n");
+    return (cache[id] = mkmapping( a, b ))+([]);
   }
 
   array low_lookup( int id )
