@@ -1185,7 +1185,7 @@ string container_configif_output(string t, mapping m, string c, object id)
   }
   m_delete( m, "source" );
 
-#ifndef SERIOUS
+#ifdef NSERIOUS
   return replace(do_output_tag( m, variables, c, id ), "Default Theme", "Toxic Orange");
 #endif
 

@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.60 2000/03/20 13:57:28 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.61 2000/05/17 15:26:20 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -35,10 +35,9 @@ void create()
 	 " This should be set if you have a busy site! It does have at least "
 	 " one disadvantage: The user has to press reload to get the new "
 	 ".htaccess file parsed."
-#ifndef SERIOUS
+#ifdef NSERIOUS
 	 " Since the poor user is quite used to reloading,"
 	 " that is not usually a problem. Just blame the client-side cache. "
-	 ":-)"
 #endif
     );
   defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
