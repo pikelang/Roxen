@@ -6,8 +6,12 @@ constant base = #"
 <topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>
  <input type='hidden' name='name' value='&form.name;' />
+ <table border='0' cellspacing='0' cellpadding='10'>
+ <tr><td>
  %s
  %s
+ </td></tr>
+ </table>
 </st-page></subtablist></cv-split></content></tmpl>
 ";
 
@@ -120,7 +124,7 @@ string|mapping parse( RequestID id )
       q = p();
       if( q->site_template )
       {
-        string name, doc;
+        string name, doc, group;
         if( q[ "name_"+id->misc->cf_locale ] )
           name = q[ "name_"+id->misc->cf_locale ];
         else
@@ -131,6 +135,11 @@ string|mapping parse( RequestID id )
         else
           doc = q->doc;
 
+        if( q[ "group_"+id->misc->cf_locale ] )
+          group = q[ "group_"+id->misc->cf_locale ];
+        else
+          group = q->group;
+	
 	string button;
 	if(q->locked && !(license->get_key() && q->unlocked(license->get_key())))
 	  button = "<gbutton width='400' "
@@ -148,7 +157,16 @@ string|mapping parse( RequestID id )
 		   "</gbutton-url></cset>"
 		   "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
 	
-        sts += ({({ name, button+"<blockquote>"+doc+"</blockquote>" })});
+	//  Build a sort identifier on the form "999|Group name|template name"
+	//  where 999 is a number which orders the groups. The group name is
+	//  the only string which the user will see. All templates which don't
+	//  contain a number will default to position 500.
+	string sort_id = group || "Roxen WebServer";
+	if (!has_value(sort_id, "|"))
+	  sort_id = "500|" + sort_id;
+	sort_id += "|" + name;
+        sts += ({ ({ sort_id, name,
+		     button + "<blockquote>" + doc + "</blockquote>" }) });
       }
     };
     if (err) {
@@ -158,8 +176,21 @@ string|mapping parse( RequestID id )
     }
   }
 
+  string last_group;
   sort( sts );
-  foreach( sts, array q ) res += q[1]+"\n\n\n";
+  res += "<hr>";
+  foreach( sts, array q ) {
+    //  Extract group name and create divider if different from last one
+    string group = (q[0] / "|")[1];
+    if (group != last_group) {
+      res +=
+	"<br>"
+	"<h3>" + group + "</h3>\n";
+      last_group = group;
+    }
+    res += q[2] + "\n\n\n";
+  }
+
 
   if( strlen( e->get() ) ) {
     res += ("Compile errors:<pre>"+
@@ -168,7 +199,6 @@ string|mapping parse( RequestID id )
     report_error("Compile errors: "+e->get()+"\n");
   }
   master()->set_inhibit_compile_errors( 0 );
-
 
 
   // License stuff
