@@ -18,12 +18,15 @@
 #define TDBG "#d9dee7"
 
 string mktable(array table) {
-  string ret="<table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">\n"
-    "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n";
+  string ret="<table boder='0' cellpadding='0' border='0'>"
+    "<tr><td bgcolor='#000000'>\n"
+    "<table border='0' cellspacing='1' cellpadding='5'>\n";
 
   foreach(table, array row)
-    ret+="<tr valign=\"top\"><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">"+
-      row*("</font></td><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">")+"</font></td></tr>\n";
+    ret+="<tr valign='top'>"
+      "<td bgcolor='"+TDBG+"'><font color='#000000'>"+
+      row*("</font></td><td bgcolor='"+TDBG+"'><font color='#000000'>")+
+      "</font></td></tr>\n";
 
   ret+="</table></tr></td></table>";
   return ret;
@@ -31,7 +34,8 @@ string mktable(array table) {
 
 string available_languages(object id) {
   string pl;
-  if(id && id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
+  if(id && id->misc->pref_languages &&
+     (pl=id->misc->pref_languages->get_language()))
     if(!has_value(core.list_languages(),pl)) pl="eng";
   else
     pl="eng";
@@ -87,7 +91,7 @@ static string attr_cont(TagdocParser parser, mapping m, string c)
 			 m->default?" ("+m->default+")":""
 			 );
   if(m->required) p+="<i>This attribute is required.</i><br />";
-  p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</p></dl>",m->name,p,c);
+  p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</dd></dl></p>",m->name,p,c);
 
   if (!parser->misc->got_attrs) {
     parser->misc->got_attrs = 1;
@@ -101,7 +105,8 @@ static string attr_vals(string v)
 {
   if(has_value(v,"|")) return "{"+(v/"|")*", "+"}";
   // FIXME Use real config url
-  // if(v=="langcodes") return "<a href=\"/help/langcodes.pike\">language code</a>";
+  // if(v=="langcodes")
+  //   return "<a href='/help/langcodes.pike'>language code</a>";
   return v;
 }
 
@@ -111,14 +116,19 @@ static string noex_cont(TagdocParser parser, mapping m, string c) {
 }
 
 static string ex_quote(string in) {
-  return "<pre>"+replace(in, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  string s = replace(in, "&lt;", "&LT;");
+  s = "<pre>"+replace(s, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  return replace(s, "&LT;", "&lt;");
 }
 
-static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
+static string ex_cont(TagdocParser parser, mapping m, string c, string rt,
+		      void|object id)
 {
-  c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
-					  return "&amp;"+c+";"; 
-					} )->
+  c=Parser.HTML()->add_container("ent",
+				 lambda(Parser.HTML parser, mapping m,
+					string c) {
+				   return "&amp;"+c+";";
+				 } )->
     add_quote_tag("!--","","--")->feed(c)->read();
   string quoted = ex_quote(c);
   if(m->type=="box")
@@ -146,17 +156,21 @@ static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|
   }
 }
 
-static string ex_box_cont(TagdocParser parser, mapping m, string c, string rt) {
+static string ex_box_cont(TagdocParser parser, mapping m, string c, string rt)
+{
   return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
 }
 
-static string ex_html_cont(TagdocParser parser, mapping m, string c, string rt) {
+static string ex_html_cont(TagdocParser parser, mapping m, string c, string rt)
+{
   return "<br />" + mktable( ({ ({ c }) }) );
 }
 
-static string ex_src_cont(TagdocParser parser, mapping m, string c, string rt, void|object id) {
+static string ex_src_cont(TagdocParser parser, mapping m, string c, string rt,
+			  void|object id) {
   string quoted = ex_quote(c);
-  string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>", id);
+  string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>",
+			     id);
   return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
@@ -277,7 +291,8 @@ static string format_doc(string|mapping doc, string name, void|object id)
 
 // ------------------ Parse docs in mappings --------------
 
-static string parse_doc(string|mapping|array doc, string name, void|object id) {
+static string parse_doc(string|mapping|array doc, string name, void|object id)
+{
   if(arrayp(doc) && (sizeof( doc ) == 2) )
     return format_doc(doc[0], name, id)+
       "<dl><dd>"+parse_mapping(doc[1], id)+"</dd></dl>";
