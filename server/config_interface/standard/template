@@ -31,10 +31,10 @@
       <roxen-config preparse>
         <middle title="<version> <cf-locale get=administration_interface>">
           <configif-output quote=¤ source=locales>
-            <a href="¤path¤">
-              <img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
-                   alt="¤latin1-name¤" border=0 height=16>
-            </a> 
+            <a href="¤path¤"><img
+              src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
+              alt="¤latin1-name¤" border=0 height=16
+            ></a> 
           </configif-output>
         </middle>
         <contents>
