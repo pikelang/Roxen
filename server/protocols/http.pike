@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.360 2002/02/26 19:04:36 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.361 2002/03/20 18:45:55 per-bash Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -372,7 +372,7 @@ private void setup_pipe()
 
 void send (string|object what, int|void len)
 {
-  if( len && port_obj && port_obj->minimum_byterate )
+  if( len>0 && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
 
   if(!what) return;
