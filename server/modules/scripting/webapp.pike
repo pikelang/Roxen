@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.13 2002/04/09 09:56:17 jonasw Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.14 2002/04/11 11:58:56 anders Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -518,7 +518,7 @@ void start(int x, Configuration conf)
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
     //conf_ctx = Servlet.conf_context(conf);
-    conf_ctx = Servlet.context(conf, this_object());
+    conf_ctx = Servlet.context(conf, this_object(), roxen_path("$VVARDIR/servlettmp/"));
   };
   
   if(exc2)
