@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.12 2000/12/18 11:16:52 jhs Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.13 2001/01/18 10:43:48 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -295,7 +295,7 @@ constant tagdoc=([
  numbers, weekdays et c (for example for the number and date tags).
 </short></p></desc>
 
- <ex type='vert'><emit source='known-langs' sort='englishname'>
+ <ex type='box'><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
 </emit></ex>",
 			([
