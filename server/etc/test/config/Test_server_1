@@ -1,0 +1,141 @@
+<?XML version="1.0" encoding="UTF-8"?>
+
+<region name='EnabledModules'>
+  <var name='contenttypes#0'>    <int>1</int> </var>
+  <var name='directories#0'>     <int>1</int> </var>
+  <var name='filesystem#0'>      <int>1</int> </var>
+  <var name='roxen_test#0'>      <int>1</int> </var>
+  <var name='rxmlparse#0'>       <int>1</int> </var>
+  <var name='rxmltags#0'>        <int>1</int> </var>
+</region>
+
+<region name='contenttypes#0'>
+  <var name='_priority'>         <int>0</int> </var>
+  <var name='default'>           <str>application/octet-stream</str> </var>
+  <var name='exts'><str># This will include the defaults from a file.
+# Feel free to add to this, but do it after the #include
+# line if you want to override any defaults
+
+#include %3cetc/extensions%3e</str></var>
+</region>
+
+<region name='directories#0'>
+  <var name='_priority'>         <int>0</int> </var>
+  <var name='default-template'>  <int>1</int> </var>
+  <var name='indexfiles'><a>
+    <str>index.html</str>
+    <str>index.xml</str>
+    <str>index.htm</str>
+    <str>index.pike</str>
+    <str>index.cgi</str>
+  </a></var>
+  <var name='override'>          <int>0</int> </var>
+  <var name='template'>          <str></str> </var>
+</region>
+
+<region name='filesystem#0'>
+  <var name='.files'>            <int>0</int> </var>
+  <var name='access_as_user'>    <int>0</int> </var>
+  <var name='charset'>           <str>iso-8859-1</str> </var>
+  <var name='check_auth'>        <int>1</int> </var>
+  <var name='delete'>            <int>0</int> </var>
+  <var name='dir'>               <int>1</int> </var>
+  <var name='internal_files'>    <a></a> </var>
+  <var name='mountpoint'>        <str>/</str> </var>
+  <var name='no_symlinks'>       <int>0</int> </var>
+  <var name='nobrowse'><a>
+    <str>.www_not_browsable</str>
+    <str>.nodiraccess</str>
+  </a></var>
+  <var name='path_encoding'>     <str>iso-8859-1</str> </var>
+  <var name='put'>               <int>0</int> </var>
+  <var name='searchpath'>        <str>etc/roxen_test/filesystem/</str> </var>
+  <var name='stat_cache'>        <int>0</int> </var>
+  <var name='tilde'>             <int>0</int> </var>
+</region>
+
+<region name='rxmlparse#0'>
+  <var name='logerrorsp'>        <int>1</int> </var>
+  <var name='logerrorsr'>        <int>1</int> </var>
+  <var name='parse_exec'>        <int>1</int> </var>
+  <var name='quietp'>            <int>0</int> </var>
+  <var name='quietr'>            <int>0</int> </var>
+  <var name='require_exec'>      <int>0</int> </var>
+  <var name='skul'>              <int>3</int> </var>
+  <var name='toparse'><a>
+    <str>html</str>
+    <str>htm</str>
+    <str>rxml</str>
+  </a></var>
+</region>
+
+<region name='rxmltags#0'>
+</region>
+
+<region name='spider#0'>
+  <var name='Domain'>            <str>nowhere</str> </var>
+  <var name='InternalLoc'>       <str>/_internal/</str> </var>
+  <var name='Log'>               <int>0</int> </var>
+  <var name='LogFile'>           <str>$LOGDIR/roxen_test</str> </var>
+  <var name='LogFormat'><str>404: $host $referer - [$cern_date] "$method $resource $protocol" 404 -
+500: $host $referer ERROR [$cern_date] "$method $resource $protocol" 500 -
+*: $host - - [$cern_date] "$method $resource $protocol" $response $length</str></var>
+  <var name='MyWorldLocation'>   <str></str> </var>
+  <var name='NoLog'>             <a></a> </var>
+  <var name='URLs'><a>
+    <str>http://*:17369/</str>
+  </a></var>
+  <var name='ZNoSuchFile'><str>%3chtml%3e%3chead%3e
+%3ctitle%3e404 - Page not found%3c/title%3e
+%3c/head%3e
+
+%3cbody alink="#000000" bgcolor="#ffffff" bottommargin="0" leftmargin="0" link="#ce5c00" marginheight="2" marginwidth="0" rightmargin="0" text="#333333" topmargin="2" vlink="#ce5c00"%3e
+
+%3cif nserious=''%3e%3cset variable='var.404' value='-sorry' /%3e%3c/if%3e
+
+%3ctable width="100%25"  border="0" cellspacing="0" cellpadding="0"%3e
+  %3ctr%3e
+    %3ctd%3e%3cimg src="/internal-roxen-page-not-found&var.404;" border="0" alt="Page not found" width="404" hspace="2" /%3e%3c/td%3e
+    %3ctd%3e&nbsp;%3c/td%3e
+    %3ctd align="right"%3e%3cfont face="lucida,helvetica,arial"%3e
+      %3cb%3eRoxen WebServer &roxen.base-version;%3c/b%3e%3c/font%3e%3c/td%3e
+  %3c/tr%3e
+  %3ctr%3e
+    %3ctd width="100%25" height="21" colspan="3" background="/internal-roxen-tile"%3e%3cimg src="/internal-roxen-unit" alt="" /%3e%3c/td%3e
+  %3c/tr%3e
+%3c/table%3e
+
+%3cfont face="lucida,helvetica,arial"%3e
+%3ch2%3e&nbsp;Unable to retrieve &page.virtfile;.%3c/h2%3e
+%3cbr /%3e%3cbr /%3e
+%3cblockquote%3e
+
+If you feel that this is a configuration error,
+please contact the administrators of this
+webserver or the author of the
+%3cif referrer=''%3e
+%3ca href="&client.referrer;"%3ereferring%3c/a%3e
+%3c/if%3e%3celse%3e
+referring
+%3c/else%3e
+page.
+
+%3c/blockquote%3e
+%3c/font%3e
+%3c/body%3e
+</str></var>
+  <var name='comment'>           <str></str> </var>
+  <var name='data_cache_file_max_size'> <int>50</int> </var>
+  <var name='data_cache_size'>   <int>2048</int> </var>
+  <var name='default_server'>    <int>0</int> </var>
+  <var name='name'>              <str></str> </var>
+  <var name='no_delayed_load'>   <int>0</int> </var>
+  <var name='req_throttle'>      <int>0</int> </var>
+  <var name='req_throttle_depth_mult'> <flt>60.000000</flt> </var>
+  <var name='req_throttle_min'>  <int>1024</int> </var>
+  <var name='throttle'>          <int>0</int> </var>
+  <var name='throttle_bucket_depth'> <int>1024000</int> </var>
+  <var name='throttle_fill_rate'> <int>102400</int> </var>
+  <var name='throttle_max_grant'> <int>14900</int> </var>
+  <var name='throttle_min_grant'> <int>1300</int> </var>
+</region>
