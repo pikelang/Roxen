@@ -26,11 +26,10 @@ mixed parse( RequestID id )
 	      "</gbutton><br />");
     else
       res += 
-          ("<a href='user_delete.pike?delete_user="
+          ("<gbutton width='300' font='&usr.gbutton-font;' href='user_delete.pike?delete_user="
            + Roxen.html_encode_string(uid) +"&page=delete_user'>"
-           + "<gbutton width='300' font='&usr.gbutton-font;'> "
            + LOCALE(227, "Delete") +" "+ u->real_name+" ("+uid+")"
            + "</gbutton><br />\n\n");
   }
-  return res;
+  return Roxen.http_string_answer( res );
 }
