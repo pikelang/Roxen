@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.399 2000/11/27 14:09:10 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.400 2000/12/05 22:27:18 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -18,8 +18,6 @@ constant cvs_version = "$Id: configuration.pike,v 1.399 2000/11/27 14:09:10 per 
 #define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 #define LOC_M(X,Y)  _STR_LOCALE("roxen_message",X,Y)
 #define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
-#define CALL(X,Y)    _LOCALE_FUN("roxen_config",X,Y)
-
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
