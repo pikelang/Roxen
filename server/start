@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.206 2003/09/24 10:57:04 grubba Exp $
+# $Id: start,v 1.207 2003/10/13 14:20:42 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -760,9 +760,6 @@ start_roxen() {
     fi
     rm .gdbinit
   fi
-  if [ x$once = x1 ] ; then 
-   signal_exit
-  fi
 }
 
 
@@ -930,5 +927,10 @@ if [ -z "$once" ] ; then
   exec </dev/null
 else
   start_roxen
+  if [ "$once" = "1" -a "$exitcode" = "50" ]; then
+    dp "Failed to open any port. Shutdown."
+    keep_mysql=1
+  fi
+  signal_exit
 fi
 
