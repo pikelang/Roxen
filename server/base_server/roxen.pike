@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.327 1999/05/22 04:29:15 peter Exp $
+ * $Id: roxen.pike,v 1.328 1999/05/23 00:04:04 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.327 1999/05/22 04:29:15 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.328 1999/05/23 00:04:04 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -156,7 +156,7 @@ private static void really_low_shutdown(int exit_code)
   array f=indices(portno);
   for(int i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
-#else /* !constant(fork) || !constant(thread_create) */
+#else /* !constant(fork) || constant(thread_create) */
 
   // FIXME:
   // Should probably attempt something similar to the above,

@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.176 1999/05/19 09:20:51 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.177 1999/05/23 00:04:04 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -229,9 +229,9 @@ void create()
 	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
-  defvar("noparse", ({  }), "Extensions to accesscount",
+  defvar("noparse", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
-         "Always access-count all files ending with these extensions.");
+         "Always access count all files ending with these extensions.");
  
   
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 

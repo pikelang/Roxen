@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.29 1998/05/17 20:13:19 neotron Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.30 1999/05/23 00:04:04 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -145,9 +145,9 @@ void create()
 	 "the GECOS field of the user database.");
 
   defvar("update", 60,
-	 "Intervall between automatic updates of the user database",
+	 "Interval between automatic updates of the user database",
 	 TYPE_INT|VAR_MORE,
-	 "This specifies the intervall in minutes between automatic updates "
+	 "This specifies the interval in minutes between automatic updates "
 	 "of the user database.");
 }
 

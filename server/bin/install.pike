@@ -2,10 +2,10 @@
 
 /*
  * name = "Roxen Install Script ";
- * doc = "Main part of the installscript that is run upon installation of roxen";
+ * doc = "Main part of the install script that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.38 1999/05/08 00:29:27 marcus Exp $";
+string cvs_version = "$Id: install.pike,v 1.39 1999/05/23 00:04:04 mast Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
