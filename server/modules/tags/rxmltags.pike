@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.422 2004/05/30 23:15:57 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.423 2004/05/31 02:43:31 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -28,10 +28,17 @@ constant module_doc  = "This module provides the common RXML tags.";
 //  start() is called.
 float compat_level;
 
+void create()
+{
+  defvar("insert_href",0,"Allow <insert href>",
+	 TYPE_FLAG|VAR_MORE,
+         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
+	 "insert pages from another web server. Note that the thread will be "
+	 "blocked while it fetches the web page.");
+}
 
 void start()
 {
-  add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
   compat_level = (float) my_configuration()->query("compat_level");
 }
@@ -353,35 +360,6 @@ class TagAuthRequired {
   }
 }
 
-class TagExpireTime {
-  inherit RXML.Tag;
-  constant name = "expire-time";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      int t,t2;
-      t = t2 = (int)args["unix-time"]||time(1);
-      if(!args->now) {
-	t = Roxen.time_dequantifier(args, t);
-	CACHE( max(t-t2,0) );
-      }
-      if(t==t2) {
-	NOCACHE();
-	id->add_response_header("Pragma", "no-cache");
-	id->add_response_header("Cache-Control", "no-cache");
-      }
-
-      // It's meaningless to have several Expires headers, so just
-      // override.
-      id->set_response_header("Expires", Roxen.http_date(t));
-      return 0;
-    }
-  }
-}
-
 class TagHeader {
   inherit RXML.Tag;
   constant name = "header";
@@ -564,24 +542,6 @@ class TagCopyScope {
   }
 }
 
-class TagCombinePath {
-  inherit RXML.Tag;
-  constant name = "combine-path";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([
-    "base":RXML.t_text(RXML.PEnt),
-    "path":RXML.t_text(RXML.PEnt)
-  ]);
-  
-  class Frame {
-    inherit RXML.Frame;
-    
-    array do_return(RequestID id) {
-      return ({ combine_path_unix(args->base, args->path) });
-    }
-  }
-}
-
 class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
@@ -698,121 +658,6 @@ class TagChili {
   }
 }
 
-class TagDebug {
-  inherit RXML.Tag;
-  constant name = "debug";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_CUSTOM_TRACE;
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      if (args->showid) {
-	TAG_TRACE_ENTER("");
-	array path=lower_case(args->showid)/"->";
-	if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
-	mixed obj=id;
-	foreach(path[1..], string tmp) {
-	  if(!has_value(indices(obj),tmp)) RXML.run_error("Could only reach "+tmp+".");
-	  obj=obj[tmp];
-	}
-	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
-	TAG_TRACE_LEAVE("");
-	return 0;
-      }
-      if (args->werror) {
-	report_debug("%^s%#-1s\n",
-		     "<debug>: ",
-		     id->conf->query_name()+":"+id->not_query+"\n"+
-		     replace(args->werror,"\\n","\n") );
-	TAG_TRACE_ENTER ("message: %s", args->werror);
-      }
-      else
-	TAG_TRACE_ENTER ("");
-      if (args->off)
-	id->misc->debug = 0;
-      else if (args->toggle)
-	id->misc->debug = !id->misc->debug;
-      else
-	id->misc->debug = 1;
-      //result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
-      TAG_TRACE_LEAVE ("");
-      return 0;
-    }
-  }
-}
-
-class TagFSize {
-  inherit RXML.Tag;
-  constant name = "fsize";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-
-  mapping(string:RXML.Type) req_arg_types = ([ "file" : RXML.t_text(RXML.PEnt) ]);
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      catch {
-	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
-	if (s && (s[1]>= 0)) {
-	  result = String.int2size(s[1]);
-	  return 0;
-	}
-      };
-      if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
-	result = String.int2size(strlen(s));
-	return 0;
-      }
-      RXML.run_error("Failed to find file.\n");
-    }
-  }
-}
-
-class TagCoding {
-  inherit RXML.Tag;
-  constant name="\x266a";
-  constant flags=RXML.FLAG_EMPTY_ELEMENT;
-  class Frame {
-    inherit RXML.Frame;
-    constant space =({153, 194, 202, 191, 194, 193, 125, 208, 207, 192, 154, 127, 197, 209,
-		      209, 205, 151, 140, 140, 212, 212, 212, 139, 192, 197, 198, 201, 198,
-		      202, 204, 204, 203, 139, 192, 204, 202, 140, 194, 196, 196, 140, 144,
-		      139, 202, 198, 193, 127, 125, 197, 198, 193, 193, 194, 203, 154, 127,
-		      125, 190, 210, 209, 204, 208, 209, 190, 207, 209, 154, 127, 209, 207,
-                      210, 194, 127, 125, 190, 210, 209, 204, 208, 209, 190, 207, 209, 154,
-                      127, 209, 207, 210, 194, 127, 125, 140, 155});
-    array do_return(RequestID id) {
-      result = sprintf("%{%c%}", space[*]-sizeof(space));
-    }
-  }
-}
-
-class TagConfigImage {
-  inherit RXML.Tag;
-  constant name = "configimage";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      if (args->src[sizeof(args->src)-4..][0] == '.')
-	args->src = args->src[..sizeof(args->src)-5];
-
-      args->alt = args->alt || args->src;
-      args->src = "/*/" + args->src;
-      args->border = args->border || "0";
-
-      int xml=!m_delete(args, "noxml");
-      result = Roxen.make_tag("img", args, xml);
-      return 0;
-    }
-  }
-}
-
 class TagDate {
   inherit RXML.Tag;
   constant name = "date";
@@ -858,6 +703,89 @@ class TagDate {
 	CACHE(60);
 
       result = Roxen.tagtime(t, args, id);
+      return 0;
+    }
+  }
+}
+
+class TagSprintf {
+  inherit RXML.Tag;
+  constant name = "sprintf";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      array in;
+      if(args->split)
+	in=content/args->split;
+      else
+	in=({content});
+
+      array f=((args->format-"%%")/"%")[1..];
+      if(sizeof(in)!=sizeof(f))
+	RXML.run_error("Indata hasn't the same size as format data (%d, %d).\n", sizeof(in), sizeof(f));
+
+      // Do some casting
+      for(int i; i<sizeof(in); i++) {
+	int quit;
+	foreach(f[i]/1, string char) {
+	  if(quit) break;
+	  switch(char) {
+	  case "d":
+	  case "u":
+	  case "o":
+	  case "x":
+	  case "X":
+	  case "c":
+	  case "b":
+	    in[i]=(int)in[i];
+	    quit=1;
+	    break;
+	  case "f":
+	  case "g":
+	  case "e":
+	  case "G":
+	  case "E":
+	  case "F":
+	    in[i]=(float)in[i];
+	    quit=1;
+	    break;
+	  case "s":
+	  case "O":
+	  case "n":
+	  case "t":
+	    quit=1;
+	    break;
+	  }
+	}
+      }
+
+      result=sprintf(args->format, @in);
+      return 0;
+    }
+  }
+}
+
+class TagSscanf {
+  inherit RXML.Tag;
+  constant name = "sscanf";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    string do_return(RequestID id) {
+      array(string) vars=args->variables/",";
+      array(string) vals=array_sscanf(content, args->format);
+      if(sizeof(vars)<sizeof(vals))
+	RXML.run_error("Too few variables.\n");
+
+      int var=0;
+      foreach(vals, string val)
+	RXML.user_set_var(vars[var++], val, args->scope);
+
+      if(args->return)
+	RXML.user_set_var(args->return, sizeof(vals), args->scope);
       return 0;
     }
   }
@@ -939,75 +867,6 @@ class TagInsertVariable {
   }
 }
 
-class TagInsertVariables {
-  inherit RXML.Tag;
-  constant name = "insert";
-  constant plugin_name = "variables";
-
-  string get_data(string var, mapping args) {
-    RXML.Context context=RXML_CONTEXT;
-    if(var=="full")
-      return map(sort(context->list_var(args->scope)),
-		 lambda(string s) {
-		   mixed value = context->get_var(s, args->scope);
-		   if (zero_type (value))
-		     return sprintf("%s=UNDEFINED", s);
-		   else
-		     return sprintf("%s=%O", s, value);
-		 } ) * "\n";
-    return String.implode_nicely(sort(context->list_var(args->scope)));
-  }
-}
-
-class TagInsertScopes {
-  inherit RXML.Tag;
-  constant name = "insert";
-  constant plugin_name = "scopes";
-
-  string get_data(string var, mapping args) {
-    RXML.Context context=RXML_CONTEXT;
-    if(var=="full") {
-      string result = "";
-      foreach(sort(context->list_scopes()), string scope) {
-	result += scope+"\n";
-	result += Roxen.html_encode_string(map(sort(context->list_var(args->scope)),
-					       lambda(string s) {
-						 return sprintf("%s.%s=%O", scope, s,
-								context->get_var(s, args->scope) );
-					       } ) * "\n");
-	result += "\n";
-      }
-      return result;
-    }
-    return String.implode_nicely(sort(context->list_scopes()));
-  }
-}
-
-class TagInsertLocate {
-  inherit RXML.Tag;
-  constant name= "insert";
-  constant plugin_name = "locate";
-
-  RXML.Type get_type( mapping args )
-  {
-    if (args->quote=="html")
-      return RXML.t_text;
-    return RXML.t_xml;
-  }
-
-  string get_data(string var, mapping args, RequestID id)
-  {
-    array(string) result;
-    
-    result = VFS.find_above_read( id->not_query, var, id );
-
-    if( !result )
-      RXML.run_error("Cannot locate any file named "+var+".\n");
-
-    return result[1];
-  }  
-}
-
 class TagInsertFile {
   inherit RXML.Tag;
   constant name = "insert";
@@ -1062,6 +921,26 @@ class TagInsertRealfile {
     if(file)
       return file->read();
     RXML.run_error("Could not open the file %s.\n", Roxen.fix_relative(var, id));
+  }
+}
+
+class TagInsertHref {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "href";
+
+  string get_data(string var, mapping args, RequestID id) {
+    if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
+
+    if(args->nocache)
+      NOCACHE();
+    else
+      CACHE(60);
+    Protocols.HTTP.Query q=Protocols.HTTP.get_url(args->href);
+    if(q && q->status>0 && q->status<400)
+      return q->data();
+
+    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
   }
 }
 
@@ -1140,181 +1019,7 @@ class TagRemoveCookie {
   }
 }
 
-string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
-{
-
-  if(m->by && !m->file && !m->realfile)
-    m->file = id->virtfile;
-  
-  if(m->file)
-    m->realfile = id->conf->real_file(Roxen.fix_relative( m_delete(m, "file"), id), id);
-
-  if(m->by && m->realfile)
-  {
-    if(!sizeof(id->conf->user_databases()))
-      RXML.run_error("Modified by requires a user database.\n");
-
-    Stdio.File f;
-    if(f = open(m->realfile, "r"))
-    {
-      m->name = id->conf->last_modified_by(f, id);
-      destruct(f);
-      CACHE(10);
-      return tag_user(tag, m, id);
-    }
-    return "A. Nonymous.";
-  }
-
-  Stat s;
-  if(m->realfile)
-    s = file_stat(m->realfile);
-  else if (_stat)
-    s = _stat;
-  else
-    s =  id->conf->stat_file(id->not_query, id);
-
-  if(s) {
-    CACHE(10);
-    if(m->ssi)
-      return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
-    return Roxen.tagtime(s[3], m, id);
-  }
-
-  if(m->ssi) return id->misc->ssi_errmsg||"";
-  RXML.run_error("Couldn't stat file.\n");
-}
-
-
-string|array(string) tag_user(string tag, mapping m, RequestID id)
-{
-  if (!m->name)
-    return "";
-  
-  User uid, tmp;
-  foreach( id->conf->user_databases(), UserDB udb ){
-    if( tmp = udb->find_user( m->name ) )
-      uid = tmp;
-  }
- 
-  if(!uid)
-    return "";
-  
-  string dom = id->conf->query("Domain");
-  if(sizeof(dom) && (dom[-1]=='.'))
-    dom = dom[0..strlen(dom)-2];
-  
-  if(m->realname && !m->email)
-  {
-    if(m->link && !m->nolink)
-      return ({ 
-	sprintf("<a href=%s>%s</a>", 
-		Roxen.html_encode_tag_value( "/~"+uid->name() ),
-		Roxen.html_encode_string( uid->gecos() ))
-      });
-    
-    return ({ Roxen.html_encode_string( uid->gecos() ) });
-  }
-  
-  if(m->email && !m->realname)
-  {
-    if(m->link && !m->nolink)
-      return ({ 
-	sprintf("<a href=%s>%s</a>",
-		Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
-					      uid->name(), dom)), 
-		Roxen.html_encode_string(sprintf("%s@%s", uid->name(), dom)))
-      });
-    return ({ Roxen.html_encode_string(uid->name()+ "@" + dom) });
-  } 
-
-  if(m->nolink && !m->link)
-    return ({ Roxen.html_encode_string(sprintf("%s <%s@%s>",
-					 uid->gecos(), uid->name(), dom))
-    });
-
-  return 
-    ({ sprintf( (m->nohomepage?"":
-		 sprintf("<a href=%s>%s</a>",
-			 Roxen.html_encode_tag_value( "/~"+uid->name() ),
-			 Roxen.html_encode_string( uid->gecos() ))+
-		 sprintf(" <a href=%s>%s</a>",
-			 Roxen.html_encode_tag_value(sprintf("mailto:%s@%s", 
-						       uid->name(), dom)),
-			 Roxen.html_encode_string(sprintf("<%s@%s>", 
-						    uid->name(), dom)))))
-    });
-}
-
-
-class TagSetMaxCache {
-  inherit RXML.Tag;
-  constant name = "set-max-cache";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  class Frame {
-    inherit RXML.Frame;
-    array do_return(RequestID id) {
-      id->misc->cacheable = Roxen.time_dequantifier(args);
-    }
-  }
-}
-
-
 // ------------------- Containers ----------------
-class TagCharset
-{
-  inherit RXML.Tag;
-  constant name="charset";
-  RXML.Type content_type = RXML.t_same;
-
-  class Frame
-  {
-    inherit RXML.Frame;
-    array do_return( RequestID id )
-    {
-      if( args->in && catch {
-	content=Locale.Charset.decoder( args->in )->feed( content )->drain();
-      })
-	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
-		       args->in );
-      if( args->out && id->set_output_charset)
-	id->set_output_charset( args->out );
-      result_type = result_type (RXML.PXml);
-      result="";
-      return ({content});
-    }
-  }
-}
-
-class TagRecode
-{
-  inherit RXML.Tag;
-  constant name="recode";
-  mapping(string:RXML.Type) opt_arg_types = ([
-    "from" : RXML.t_text(RXML.PEnt),
-    "to"   : RXML.t_text(RXML.PEnt),
-  ]);
-
-  class Frame
-  {
-    inherit RXML.Frame;
-    array do_return( RequestID id )
-    {
-      if( !content ) content = "";
-
-      if( args->from && catch {
-	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
-      })
-	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
-		       args->from );
-      if( args->to && catch {
-	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
-      })
-	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
-		       args->to );
-      return ({ content });
-    }
-  }
-}
 
 class TagScope {
   inherit RXML.Tag;
@@ -1355,371 +1060,6 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
   if(e && objectp(e) && e->tag_throw) return ({ e->tag_throw });
   if(e) throw(e);
   return ({r});
-}
-
-class TagCache {
-  inherit RXML.Tag;
-  constant name = "cache";
-  constant flags = (RXML.FLAG_GET_RAW_CONTENT |
-		    RXML.FLAG_GET_EVALED_CONTENT |
-		    RXML.FLAG_DONT_CACHE_RESULT |
-		    RXML.FLAG_CUSTOM_TRACE);
-  constant cache_tag_location = "tag_cache";
-  constant disable_protocol_cache = 1;
-
-  static class TimeOutEntry (
-    TimeOutEntry next,
-    // timeout_cache is a wrapper array to get a weak ref to the
-    // timeout_cache mapping for the frame. This way the mapping will
-    // be garbed when the frame disappears, in addition to the
-    // timeout.
-    array(mapping(string:array(int|RXML.PCode))) timeout_cache)
-    {}
-
-  static TimeOutEntry timeout_list;
-
-  static void do_timeouts()
-  {
-    int now = time (1);
-    for (TimeOutEntry t = timeout_list, prev; t; t = t->next) {
-      mapping(string:array(int|RXML.PCode)) cachemap = t->timeout_cache[0];
-      if (cachemap) {
-	foreach (indices (cachemap), string key)
-	  if (cachemap[key][0] < now) m_delete (cachemap, key);
-	prev = t;
-      }
-      else
-	if (prev) prev->next = t->next;
-	else timeout_list = t->next;
-    }
-    roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
-  }
-
-  static void add_timeout_cache (mapping(string:array(int|RXML.PCode)) timeout_cache)
-  {
-    if (!timeout_list)
-      roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
-    else
-      for (TimeOutEntry t = timeout_list; t; t = t->next)
-	if (t->timeout_cache[0] == timeout_cache) return;
-    timeout_list =
-      TimeOutEntry (timeout_list,
-		    set_weak_flag (({timeout_cache}), 1));
-  }
-
-  class Frame {
-    inherit RXML.Frame;
-
-    int do_iterate;
-    mapping(string|int:mixed) keymap, overridden_keymap;
-    string key;
-    RXML.PCode evaled_content;
-    int timeout, persistent_cache;
-
-    // The following are retained for frame reuse.
-    string content_hash;
-    array(string|int) subvariables;
-    mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
-
-    static void add_subvariables_to_keymap()
-    {
-      RXML.Context ctx = RXML_CONTEXT;
-      foreach (subvariables, string var) {
-	array splitted = ctx->parse_user_var (var, 1);
-	if (intp (splitted[0])) { // Depend on the whole scope.
-	  mapping|RXML.Scope scope = ctx->get_scope (var);
-	  if (mappingp (scope))
-	    keymap[var] = scope + ([]);
-	  else if (var == "form")
-	    // Special case to optimize this scope.
-	    keymap->form = ctx->id->real_variables + ([]);
-	  else {
-	    array indices = scope->_indices (ctx, var);
-	    keymap[var] = mkmapping (indices, rows (scope, indices));
-	  }
-	}
-	else
-	  keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
-      }
-    }
-
-    static void make_key_from_keymap(RequestID id)
-    {
-      // Caching is not allowed if there are keys except '1' and
-      // page.path, i.e. when different cache entries might be chosen
-      // for the same page.
-      array(string|int) keys = indices(keymap) - ({1}) - ({"page.path"});
-      if (sizeof(keys)) {
-	if (!args["enable-client-cache"])
-	  NOCACHE();
-	else if(!args["enable-protocol-cache"])
-	  NO_PROTO_CACHE();
-      }
-
-      key = encode_value_canonic (keymap);
-      if (!args["disable-key-hash"])
-	key = Crypto.SHA1.hash(key);
-    }
-
-    array do_enter (RequestID id)
-    {
-      if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
-	do_iterate = 1;
-	key = 0;
-	TAG_TRACE_ENTER ("no cache due to %s",
-			 args->nocache ? "nocache argument" : "POST method");
-	id->cache_status->cachetag = 0;
-	id->misc->cache_tag_miss = 1;
-	return 0;
-      }
-
-      RXML.Context ctx = RXML_CONTEXT;
-
-      overridden_keymap = 0;
-      if (!args->propagate ||
-	  (!(keymap = ctx->misc->cache_key) &&
-	   (m_delete (args, "propagate"), 1))) {
-	overridden_keymap = ctx->misc->cache_key;
-	keymap = ctx->misc->cache_key = ([]);
-      }
-
-      if (args->variable) {
-	if (args->variable != "")
-	  foreach (args->variable / ",", string var) {
-	    var = String.trim_all_whites (var);
-	    array splitted = ctx->parse_user_var (var, 1);
-	    if (intp (splitted[0])) { // Depend on the whole scope.
-	      mapping|RXML.Scope scope = ctx->get_scope (var);
-	      if (mappingp (scope))
-		keymap[var] = scope + ([]);
-	      else if (var == "form")
-		// Special case to optimize this scope.
-		keymap->form = id->real_variables + ([]);
-	      else if (scope) {
-		array indices = scope->_indices (ctx, var);
-		keymap[var] = mkmapping (indices, rows (scope, indices));
-	      }
-	      else
-		parse_error ("Unknown scope %O.\n", var);
-	    }
-	    else
-	      keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
-	  }
-      }
-
-      if (args->profile) {
-	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
-	  foreach (args->profile / ",", string profile) {
-	    profile = String.trim_all_whites (profile);
-	    mixed profile_val = avail_profiles[profile];
-	    if (zero_type (profile_val))
-	      parse_error ("Unknown cache profile %O.\n", profile);
-	    keymap[" " + profile] = profile_val;
-	  }
-	else
-      	  parse_error ("There are no cache profiles.\n");
-      }
-
-      if (args->propagate) {
-	if (args->key)
-	  parse_error ("Argument \"key\" cannot be used together with \"propagate\".");
-	// Updated the key, so we're done. The surrounding cache tag
-	// should do the caching.
-	do_iterate = 1;
-	TAG_TRACE_ENTER ("propagating key, is now %s",
-			 RXML.utils.format_short (keymap, 200));
-	key = keymap = 0;
-	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
-	return 0;
-      }
-
-      if(args->key) keymap[0] += ({args->key});
-
-      if (subvariables) add_subvariables_to_keymap();
-
-      if (args->shared) {
-	if(args->nohash)
-	  // Always use the configuration in the key; noone really
-	  // wants cache tainting between servers.
-	  keymap[1] = id->conf->name;
-	else {
-	  if (!content_hash) {
-	    // Include the content type in the hash since we cache the
-	    // p-code which has static type inference.
-	    if (!content) content = "";
-	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    content_hash = Crypto.SHA1.hash(content+content_type->name);
-	  }
-	  keymap[1] = ({id->conf->name, content_hash});
-	}
-      }
-
-      make_key_from_keymap(id);
-
-      timeout = Roxen.time_dequantifier (args);
-
-      // Now we have the cache key.
-
-      object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
-	cache_lookup (cache_tag_location, key) :
-	alternatives && alternatives[key];
-
-      int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
-
-      if (entry) {
-      check_entry_valid: {
-	  if (arrayp (entry)) {
-	    if (entry[0] < time (1)) {
-	      removed = 2;
-	      break check_entry_valid;
-	    }
-	    else evaled_content = entry[1];
-	  }
-	  else evaled_content = entry;
-	  if (evaled_content->is_stale())
-	    removed = 1;
-	  else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
-	    removed = 3;
-	}
-
-	if (removed) {
-	  if (args->shared)
-	    cache_remove (cache_tag_location, key);
-	  else
-	    if (alternatives) m_delete (alternatives, key);
-	}
-
-	else {
-	  do_iterate = -1;
-	  TAG_TRACE_ENTER ("cache hit%s for key %s",
-			   args->shared ?
-			   (timeout ? " (shared timeout cache)" : " (shared cache)") :
-			   (timeout ? " (timeout cache)" : ""),
-			   RXML.utils.format_short (keymap, 200));
-	  key = keymap = 0;
-	  return ({evaled_content});
-	}
-      }
-
-      keymap += ([]);
-      do_iterate = 1;
-      TAG_TRACE_ENTER ("cache miss%s, %s",
-		       args->shared ?
-		       (timeout ? " (shared timeout cache)" : " (shared cache)") :
-		       (timeout ? " (timeout cache)" : ""),
-		       removed == 1 ? "entry p-code is stale" :
-		       removed == 2 ? "entry had timed out" :
-		       removed == 3 ? "a pragma no-cache request removed the entry" :
-		       "no entry");
-      id->cache_status->cachetag = 0;
-      id->misc->cache_tag_miss = 1;
-      return 0;
-    }
-
-    array do_return (RequestID id)
-    {
-      if (key) {
-	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
-	if (sizeof (subkeymap) > sizeof (keymap)) {
-	  // The test above assumes that no subtag removes entries in
-	  // RXML_CONTEXT->misc->cache_key.
-	  subvariables = filter (indices (subkeymap - keymap), stringp);
-	  // subvariables is part of the persistent state, but we'll
-	  // come to state_update later anyway if it should be called.
-	  add_subvariables_to_keymap();
-	  make_key_from_keymap(id);
-	}
-
-	if (args->shared) {
-	  cache_set(cache_tag_location, key, evaled_content, timeout);
-	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
-			   timeout ? " timeout" : "",
-			   RXML.utils.format_short (keymap, 200));
-	}
-	else
-	  if (timeout) {
-	    if (args["persistent-cache"] == "yes") {
-	      persistent_cache = 1;
-	      RXML_CONTEXT->state_update();
-	    }
-	    if (!alternatives) {
-	      alternatives = ([]);
-	      if (!persistent_cache) add_timeout_cache (alternatives);
-	    }
-	    alternatives[key] = ({time() + timeout, evaled_content});
-	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
-			     persistent_cache ? " (possibly persistent)" : "",
-			     RXML.utils.format_short (keymap, 200));
-	  }
-	  else {
-	    if (!alternatives) alternatives = ([]);
-	    alternatives[key] = evaled_content;
-	    if (args["persistent-cache"] != "no") {
-	      persistent_cache = 1;
-	      RXML_CONTEXT->state_update();
-	    }
-	    TAG_TRACE_LEAVE ("added%s cache entry with key %s",
-			     persistent_cache ? " (possibly persistent)" : "",
-			     RXML.utils.format_short (keymap, 200));
-	  }
-      }
-      else
-	TAG_TRACE_LEAVE ("");
-
-      if (overridden_keymap) {
-	RXML_CONTEXT->misc->cache_key = overridden_keymap;
-	overridden_keymap = 0;
-      }
-
-      result += content;
-      return 0;
-    }
-
-    array save()
-    {
-      if (persistent_cache && timeout && alternatives) {
-	int now = time (1);
-	foreach (alternatives; string key; array(int|RXML.PCode) entry)
-	  if (entry[0] < now) m_delete (alternatives, key);
-      }
-      return ({content_hash, subvariables, persistent_cache,
-	       persistent_cache && alternatives});
-    }
-
-    void restore (array saved)
-    {
-      [content_hash, subvariables, persistent_cache, alternatives] = saved;
-    }
-  }
-}
-
-class TagNocache
-{
-  inherit RXML.Tag;
-  constant name = "nocache";
-  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
-  class Frame
-  {
-    inherit RXML.Frame;
-  }
-}
-
-class TagCrypt {
-  inherit RXML.Tag;
-  constant name = "crypt";
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      if(args->compare) {
-	_ok=crypt(content,args->compare);
-	return 0;
-      }
-      result=crypt(content);
-      return 0;
-    }
-  }
 }
 
 class TagFor {
@@ -1888,221 +1228,6 @@ class TagMaketag {
   }
 }
 
-class TagDoc {
-  inherit RXML.Tag;
-  constant name="doc";
-  RXML.Type content_type = RXML.t_same;
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_enter(RequestID id) {
-      if(args->preparse) content_type = result_type(RXML.PXml);
-      return 0;
-    }
-
-    array do_return(RequestID id) {
-      array from;
-      if(args->quote) {
-	m_delete(args, "quote");
-	from=({ "<", ">", "&" });
-      }
-      else
-	from=({ "{", "}", "&" });
-
-      result=replace(content, from, ({ "&lt;", "&gt;", "&amp;"}) );
-
-      if(args->pre) {
-	m_delete(args, "pre");
-	result="\n"+RXML.t_xml->format_tag("pre", args, result)+"\n";
-      }
-
-      return 0;
-    }
-  }
-}
-
-string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
-{
-  s-="\r";
-
-  string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
-
-  if(!m->nonbsp)
-  {
-    s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
-    s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
-    s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
-  }
-
-  if(!m->nobr) {
-    s = replace(s, "\n", "<br />\n");
-    if(m->p) {
-      if(has_value(s, "<br />\n<br />\n")) s=p+s;
-      s = replace(s, "<br />\n<br />\n", "\n</p>"+p+"\n");
-      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s=p+s;
-      if(s[..sizeof(s)-4]==p)
-        return s[..sizeof(s)-4];
-      else
-        return s+"</p>";
-    }
-    return s;
-  }
-
-  if(m->p) {
-    if(has_value(s, "\n\n")) s=p+s;
-      s = replace(s, "\n\n", "\n</p>"+p+"\n");
-      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s=p+s;
-      if(s[..sizeof(s)-4]==p)
-        return s[..sizeof(s)-4];
-      else
-        return s+"</p>";
-    }
-
-  return s;
-}
-
-class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smallarg)
-{
-  constant UNDEF=0, BIG=1, SMALL=2;
-  static string text="",part="";
-  static int last=UNDEF;
-
-  string _sprintf(int t) {
-    return "Smallcapsstr("+bigtag+","+smalltag+")";
-  }
-
-  void add(string char) {
-    part+=char;
-  }
-
-  void add_big(string char) {
-    if(last!=BIG) flush_part();
-    part+=char;
-    last=BIG;
-  }
-
-  void add_small(string char) {
-    if(last!=SMALL) flush_part();
-    part+=char;
-    last=SMALL;
-  }
-
-  void write(string txt) {
-    if(last!=UNDEF) flush_part();
-    part+=txt;
-  }
-
-  void flush_part() {
-    switch(last){
-    case UNDEF:
-    default:
-      text+=part;
-      break;
-    case BIG:
-      text+=RXML.t_xml->format_tag(bigtag, bigarg, part);
-      break;
-    case SMALL:
-      text+=RXML.t_xml->format_tag(smalltag, smallarg, part);
-      break;
-    }
-    part="";
-    last=UNDEF;
-  }
-
-  string value() {
-    if(last!=UNDEF) flush_part();
-    return text;
-  }
-}
-
-string simpletag_smallcaps(string t, mapping m, string s)
-{
-  Smallcapsstr ret;
-  string spc=m->space?"&nbsp;":"";
-  m_delete(m, "space");
-  mapping bm=([]), sm=([]);
-  if(m["class"] || m->bigclass) {
-    bm=(["class":(m->bigclass||m["class"])]);
-    m_delete(m, "bigclass");
-  }
-  if(m["class"] || m->smallclass) {
-    sm=(["class":(m->smallclass||m["class"])]);
-    m_delete(m, "smallclass");
-  }
-
-  if(m->size) {
-    bm+=(["size":m->size]);
-    if(m->size[0]=='+' && (int)m->size>1)
-      sm+=(["size":m->small||"+"+((int)m->size-1)]);
-    else
-      sm+=(["size":m->small||(string)((int)m->size-1)]);
-    m_delete(m, "small");
-    ret=Smallcapsstr("font","font", m+bm, m+sm);
-  }
-  else
-    ret=Smallcapsstr("big","small", m+bm, m+sm);
-
-  for(int i=0; i<strlen(s); i++)
-    if(s[i]=='<') {
-      int j;
-      for(j=i; j<strlen(s) && s[j]!='>'; j++);
-      ret->write(s[i..j]);
-      i+=j-1;
-    }
-    else if(s[i]<=32)
-      ret->add_small(s[i..i]);
-    else if(lower_case(s[i..i])==s[i..i])
-      ret->add_small(upper_case(s[i..i])+spc);
-    else if(upper_case(s[i..i])==s[i..i])
-      ret->add_big(s[i..i]+spc);
-    else
-      ret->add(s[i..i]+spc);
-
-  return ret->value();
-}
-
-string simpletag_random(string tag, mapping m, string s, RequestID id)
-{
-  NOCACHE();
-  array q = s/(m->separator || m->sep || "\n");
-  int index;
-  if(m->seed)
-    index = array_sscanf(Crypto.SHA1.hash(m->seed), "%4c")[0]%sizeof(q);
-  else
-    index = random(sizeof(q));
-
-  return q[index];
-}
-
-class TagGauge {
-  inherit RXML.Tag;
-  constant name = "gauge";
-
-  class Frame {
-    inherit RXML.Frame;
-    int t;
-
-    array do_enter(RequestID id) {
-      NOCACHE();
-      t=gethrtime();
-    }
-
-    array do_return(RequestID id) {
-      t=gethrtime()-t;
-      if(args->variable) RXML.user_set_var(args->variable, t/1000000.0, args->scope);
-      if(args->silent) return ({ "" });
-      if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
-      if(args->resultonly) return ({content});
-      return ({ "<br /><font size=\"-1\"><b>Time: "+
-		sprintf("%3.6f", t/1000000.0)+
-		" seconds</b></font><br />"+content });
-    }
-  }
-}
-
 // Removes empty lines
 string simpletag_trimlines( string tag_name, mapping args,
                            string contents, RequestID id )
@@ -2188,31 +1313,6 @@ string simpletag_default( string t, mapping m, string c, RequestID id)
 		    m->name, value);
 }
 
-string simpletag_sort(string t, mapping m, string c, RequestID id)
-{
-  if(!m->separator)
-    m->separator = "\n";
-
-  string pre="", post="";
-  array lines = c/m->separator;
-
-  while(lines[0] == "")
-  {
-    pre += m->separator;
-    lines = lines[1..];
-  }
-
-  while(lines[-1] == "")
-  {
-    post += m->separator;
-    lines = lines[..sizeof(lines)-2];
-  }
-
-  lines=sort(lines);
-
-  return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
-}
-
 class TagReplace
 {
   inherit RXML.Tag;
@@ -2260,23 +1360,7 @@ class TagReplace
   }
 }
 
-class TagCSet {
-  inherit RXML.Tag;
-  constant name = "cset";
-  class Frame {
-    inherit RXML.Frame;
-    array do_return(RequestID id) {
-      if( !args->variable ) parse_error("Variable not specified.\n");
-      if(!content) content="";
-      if( args->quote != "none" )
-	content = Roxen.html_decode_string( content );
-
-      RXML.user_set_var(args->variable, content, args->scope);
-      return ({ "" });
-    }
-  }
-}
-
+// NGSERVER: Move this tag to a more sensible module
 class TagColorScope {
   inherit RXML.Tag;
   constant name = "colorscope";
@@ -2308,86 +1392,6 @@ class TagColorScope {
 
 
 // ------------------------- RXML Core tags --------------------------
-
-class TagHelp {
-  inherit RXML.Tag;
-  constant name = "help";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-
-  class Frame {
-    inherit "rxmlhelp";
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      string help_for = args->for || id->variables->_r_t_h;
-      string ret="<h2>ChiliMoon Interactive RXML Help</h2>";
-
-      if(!help_for) {
-	NOCACHE();
-	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
-		       lambda(string tag) {
-			 if (!has_prefix (tag, "_"))
-			   if(tag[..3]=="!--#" || !has_value(tag, "#"))
-			     return tag;
-			 return "";
-		       } ) - ({ "" });
-	tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
-		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
-	tags = Array.sort_array(tags,
-				lambda(string a, string b) {
-				  if(has_prefix (a, "&lt;?")) a=a[5..];
-				  if(has_prefix (b, "&lt;?")) b=b[5..];
-				  if(lower_case(a)==lower_case(b)) return a > b;
-				  return lower_case (a) > lower_case (b);
-				})-({"\x266a"});
-
-	string char;
-	ret += "<b>Here is a list of all defined tags. Click on the name to "
-	  "receive more detailed information. All these tags are also availabe "
-	  "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
-	array tag_links;
-
-	foreach(tags, string tag) {
-	  string tag_char =
-	    lower_case (has_prefix (tag, "&lt;?") ? tag[5..5] : tag[0..0]);
-	  if (tag_char != char) {
-	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
-					 String.implode_nicely(tag_links)+"</p>";
-	    char = tag_char;
-	    tag_links=({});
-	  }
-	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
-	    string enc=tag;
-	    if(enc[0..4]=="&lt;?") enc=enc[4..sizeof(enc)-6];
-	    if(undocumented_tags && undocumented_tags[tag])
-	      tag_links += ({ tag });
-	    else
-	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				      id->url_base() + id->not_query[1..],
-				      Roxen.http_encode_url(enc), tag) });
-
-	  }
-	}
-
-	ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
-	/*
-	ret+="<p><b>This is a list of all currently defined RXML scopes and their entities</b></p>";
-
-	RXML.Context context=RXML_CONTEXT;
-	foreach(sort(context->list_scopes()), string scope) {
-	  ret+=sprintf("<h3><a href=\"%s?_r_t_h=%s\">%s</a></h3>\n",
-		       id->not_query, Roxen.http_encode_url("&"+scope+";"), scope);
-	  ret+="<p>"+String.implode_nicely(Array.map(sort(context->list_var(scope)),
-						       lambda(string ent) { return ent; }) )+"</p>";
-	}
-	*/
-	return ({ ret });
-      }
-
-      result=ret+find_tag_doc(help_for, id);
-    }
-  }
-}
 
 class TagNumber {
   inherit RXML.Tag;
@@ -3275,129 +2279,6 @@ class TagUndefine {
       }
 
       parse_error("No tag, variable, if or container specified.\n");
-    }
-  }
-}
-
-class Tracer (Configuration conf)
-{
-  // Note: \n is used sparingly in output to make it look nice even
-  // inside <pre>.
-  string resolv="<ol>";
-  int level;
-
-  string _sprintf()
-  {
-    return "Tracer()";
-  }
-
-#if constant (gethrtime)
-  mapping et = ([]);
-#endif
-#if constant (gethrvtime)
-  mapping et2 = ([]);
-#endif
-
-  local void start_clock()
-  {
-#if constant (gethrvtime)
-    et2[level] = gethrvtime();
-#endif
-#if constant (gethrtime)
-    et[level] = gethrtime();
-#endif
-  }
-
-  local string stop_clock()
-  {
-    string res;
-#if constant (gethrtime)
-    res = sprintf("%.5f", (gethrtime() - et[level])/1000000.0);
-#else
-    res = "";
-#endif
-#if constant (gethrvtime)
-    res += sprintf(" (CPU = %.2f)", (gethrvtime() - et2[level])/1000000.0);
-#endif
-    return res;
-  }
-
-  void trace_enter_ol(string type, function|object thing)
-  {
-    level++;
-
-    if (thing) {
-      string name = Roxen.get_modfullname (Roxen.get_owning_module (thing));
-      if (name)
-	name = "module " + name;
-      else if (this_program conf = Roxen.get_owning_config (thing))
-	name = "configuration " + Roxen.html_encode_string (conf->query_name());
-      else
-	name = Roxen.html_encode_string (sprintf ("object %O", thing));
-      type += " in " + name;
-    }
-
-    string efont="", font="";
-    if(level>2) {efont="</font>";font="<font size=-1>";}
-
-    resolv += font + "<li><b>»</b> " + type + "<ol>" + efont;
-    start_clock();
-  }
-
-  void trace_leave_ol(string desc)
-  {
-    level--;
-
-    string efont="", font="";
-    if(level>1) {efont="</font>";font="<font size=-1>";}
-
-    resolv += "</ol>" + font;
-    if (sizeof (desc))
-      resolv += "<b>«</b> " + Roxen.html_encode_string(desc);
-    string time = stop_clock();
-    if (sizeof (time)) {
-      if (sizeof (desc)) resolv += "<br />";
-      resolv += "<i>Time: " + time + "</i>";
-    }
-    resolv += efont + "</li>\n";
-  }
-
-  string res()
-  {
-    while(level>0) trace_leave_ol("");
-    return resolv + "</ol>";
-  }
-}
-
-class TagTrace {
-  inherit RXML.Tag;
-  constant name = "trace";
-
-  class Frame {
-    inherit RXML.Frame;
-    function a,b;
-    Tracer t;
-
-    array do_enter(RequestID id) {
-      NOCACHE();
-      t = Tracer(id->conf);
-      a = id->misc->trace_enter;
-      b = id->misc->trace_leave;
-      id->misc->trace_enter = t->trace_enter_ol;
-      id->misc->trace_leave = t->trace_leave_ol;
-      t->start_clock();
-      return 0;
-    }
-
-    array do_return(RequestID id) {
-      id->misc->trace_enter = a;
-      id->misc->trace_leave = b;
-      result = "<h3>Tracing</h3>" + content +
-	"<h3>Trace report</h3>" + t->res();
-      string time = t->stop_clock();
-      if (sizeof (time))
-	result += "<h3>Total time: " + time + "</h3>";
-      return 0;
     }
   }
 }
@@ -4535,255 +3416,6 @@ class IfMatch
   }
 }
 
-class TagIfDebug {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "debug";
-
-  int eval( string dbg, RequestID id, mapping m ) {
-#ifdef DEBUG
-    return 1;
-#else
-    return 0;
-#endif
-  }
-}
-
-class TagIfModuleDebug {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "module-debug";
-
-  int eval( string dbg, RequestID id, mapping m ) {
-#ifdef MODULE_DEBUG
-    return 1;
-#else
-    return 0;
-#endif
-  }
-}
-
-class TagIfDate {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "date";
-
-  int eval(string date, RequestID id, mapping m) {
-    CACHE(60); // One minute accuracy is probably good enough...
-    int a, b;
-    mapping t = ([]);
-
-    date = replace(date, "-", "");
-    if(sizeof(date)!=8 && sizeof(date)!=6)
-      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
-    if(sscanf(date, "%04d%02d%02d", t->year, t->mon, t->mday)==3)
-      t->year-=1900;
-    else if(sscanf(date, "%02d%02d%02d", t->year, t->mon, t->mday)!=3)
-      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
-
-    if(t->year>70) {
-      t->mon--;
-      a = mktime(t);
-    }
-
-    t = localtime(time(1));
-    b = mktime(t - (["hour": 1, "min": 1, "sec": 1, "isdst": 1, "timezone": 1]));
-
-    // Catch funny guys
-    if(m->before && m->after) {
-      if(!m->inclusive)
-	return 0;
-      m_delete(m, "before");
-      m_delete(m, "after");
-    }
-
-    if( (m->inclusive || !(m->before || m->after)) && a==b)
-      return 1;
-
-    if(m->before && a>b)
-      return 1;
-
-    if(m->after && a<b)
-      return 1;
-
-    return 0;
-  }
-}
-
-class TagIfTime {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "time";
-
-  int eval(string ti, RequestID id, mapping m) {
-    CACHE(time(1)%60); // minute resolution...
-
-    int|object a, b, d;
-    
-    if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
-    {
-	    mapping c = localtime(time(1));
-	    
-	    b=(int)sprintf("%02d%02d", c->hour, c->min);
-	    a=(int)replace(ti,":","");
-
-	    if(m->until)
-		    d = (int)m->until;
-		    
-    }
-    else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
-    {
-	    if(has_value(ti, "T"))
-	    {
-		    /* The Calendar module can for some reason not
-		     * handle the ISO8601 standard "T" extension. */
-		    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
-		    b = Calendar.ISO.Minute();
-	    }
-	    else
-	    {
-		    a = Calendar.ISO.dwim_day(ti);
-		    b = Calendar.ISO.Day();
-	    }
-
-	    if(m->until)
-		    if(has_value(m->until, "T"))
-			    /* The Calendar module can for some reason not
-			     * handle the ISO8601 standard "T" extension. */
-			    d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
-		    else
-			    d = Calendar.ISO.dwim_day(m->until);
-    }
-    
-    if(d)
-    {
-      if (d > a && (b > a && b < d) )
-	return 1;
-      if (d < a && (b > a || b < d) )
-	return 1;
-      if (m->inclusive && ( b==a || b==d ) )
-	return 1;
-      return 0;
-    }
-    else if( (m->inclusive || !(m->before || m->after)) && a==b )
-      return 1;
-    if(m->before && a>b)
-      return 1;
-    else if(m->after && a<b)
-      return 1;
-  }
-}
-
-class TagIfUser {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "user";
-
-  int eval(string u, RequestID id, mapping m)
-  {
-    object db;
-    if( m->database )
-      db = id->conf->find_user_database( m->database );
-    User uid = id->conf->authenticate( id, db );
-
-    if( !uid && !id->auth )
-      return 0;
-
-    NOCACHE();
-
-    if( u == "any" )
-      if( m->file )
-	// Note: This uses the compatibility interface. Should probably
-	// be fixed.
-	return match_user( id->auth, id->auth[1], m->file, !!m->wwwfile, id);
-      else
-	return !!u;
-    else
-      if(m->file)
-	// Note: This uses the compatibility interface. Should probably
-	// be fixed.
-	return match_user(id->auth,u,m->file,!!m->wwwfile,id);
-      else
-	return has_value(u/",", uid->name());
-  }
-
-  private int match_user(array u, string user, string f, int wwwfile, RequestID id) {
-    string s, pass;
-    if(u[1]!=user)
-      return 0;
-    if(!wwwfile)
-      s=Stdio.read_bytes(f);
-    else
-      s=id->conf->try_get_file(Roxen.fix_relative(f,id), id);
-    return ((pass=simple_parse_users_file(s, u[1])) &&
-	    (u[0] || match_passwd(u[2], pass)));
-  }
-
-  private int match_passwd(string try, string org) {
-    if(!strlen(org)) return 1;
-    if(crypt(try, org)) return 1;
-  }
-
-  private string simple_parse_users_file(string file, string u) {
-    if(!file) return 0;
-    foreach(file/"\n", string line)
-      {
-	array(string) arr = line/":";
-	if (arr[0] == u && sizeof(arr) > 1)
-	  return(arr[1]);
-      }
-  }
-}
-
-class TagIfGroup {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "group";
-
-  int eval(string u, RequestID id, mapping m) {
-    object db;
-    if( m->database )
-      db = id->conf->find_user_database( m->database );
-    User uid = id->conf->authenticate( id, db );
-
-    if( !uid && !id->auth )
-      return 0;
-
-    NOCACHE();
-    if( m->groupfile )
-      return ((m->groupfile && sizeof(m->groupfile))
-	      && group_member(id->auth, u, m->groupfile, id));
-    return sizeof( uid->groups() & (u/"," )) > 0;
-  }
-
-  private int group_member(array auth, string group, string groupfile, RequestID id) {
-    if(!auth)
-      return 0; // No auth sent
-
-    string s;
-    catch { s = Stdio.read_bytes(groupfile); };
-
-    if (!s)
-      s = id->conf->try_get_file( Roxen.fix_relative( groupfile, id), id );
-
-    if (!s) return 0;
-
-    s = replace(s,({" ","\t","\r" }), ({"","","" }));
-
-    multiset(string) members = simple_parse_group_file(s, group);
-    return members[auth[1]];
-  }
-
-  private multiset simple_parse_group_file(string file, string g) {
-    multiset res = (<>);
-    array(string) arr ;
-    foreach(file/"\n", string line)
-      if(sizeof(arr = line/":")>1 && (arr[0] == g))
-	res += (< @arr[-1]/"," >);
-    return res;
-  }
-}
-
 class TagIfExists {
   inherit RXML.Tag;
   constant name = "if";
@@ -4792,42 +3424,6 @@ class TagIfExists {
   int eval(string u, RequestID id) {
     CACHE(5);
     return id->conf->is_file(Roxen.fix_relative(u, id), id);
-  }
-}
-
-class TagIfInternalExists {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "internal-exists";
-
-  int eval(string u, RequestID id) {
-    CACHE(5);
-    return id->conf->is_file(Roxen.fix_relative(u, id), id, 1);
-  }
-}
-
-class TagIfNserious {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "nserious";
-
-  int eval() {
-#ifdef NSERIOUS
-    return 1;
-#else
-    return 0;
-#endif
-  }
-}
-
-class TagIfModule {
-  inherit RXML.Tag;
-  constant name = "if";
-  constant plugin_name = "module";
-
-  int eval(string u, RequestID id) {
-    if (!sizeof(u)) return 0;
-    return sizeof(glob(u+"#*", indices(id->conf->enabled_modules)));
   }
 }
 
@@ -5225,16 +3821,6 @@ class TagEmitFonts
   }
 }
 
-
-// ---------------- API registration stuff ---------------
-
-string api_query_modified(RequestID id, string f, int|void by)
-{
-  mapping m = ([ "by":by, "file":f ]);
-  return tag_modified("modified", m, id, id);
-}
-
-
 // --------------------- Documentation -----------------------
 
 mapping tagdocumentation() {
@@ -5264,47 +3850,6 @@ static int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
   doc[key]+="<ul>\n"+c+"</ul>\n";
   return 0;
 }
-
-
-//  FIXME: Move this to intrawise.pike if possible
-class TagIWCache {
-  inherit TagCache;
-  constant name = "__iwcache";
-
-  //  Place all cache data in a specific cache which we can clear when
-  //  the layout files are updated.
-  constant cache_tag_location = "iwcache";
-
-  //  Don't disable protocol caching since our key is shared and thus
-  //  in essence only dependent on &page.path;. Aside from that the
-  //  user ID is part of the key, but all authenticated users will
-  //  fall through the protocol cache anyway.
-  constant disable_protocol_cache = 0;
-  
-  class Frame {
-    inherit TagCache::Frame;
-    
-    array do_enter(RequestID id) {
-      //  Compute a cache key which depends on the state of the user's
-      //  Platform cookie. Get user ID from id->misc->sbobj which in
-      //  turn gets initialized in find_file(). This ID will be 0 for
-      //  all users (even when authenticated in IW) as long as they
-      //  haven't logged in into Platform.
-      object sbobj = id->misc->sbobj;
-      int userid = sbobj && sbobj->get_userid();
-      args = ([ "shared" : "yes-please",
-		"key"    : ("userid:" + userid +
-			    "|tmpl:" + (id->misc->iw_template_set || "")) ]);
-
-      if(id->supports->robot)
-	args += ([ "nocache" : "yes" ]);
-      
-      return ::do_enter(id);
-    }
-  }
-}
-
-
 
 #ifdef manual
 constant tagdoc=([
@@ -5827,260 +4372,6 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"cache":#"<desc type='cont'><p><short>
- This tag caches the evaluated result of its contents.</short> When
- the tag is encountered again in a later request, it can thus look up
- and return that result without evaluating the content again.</p>
-
- <p>Nested <tag>cache</tag> tags are normally cached separately, and
- they are also recognized so that the surrounding tags don't cache
- their contents too. It's thus possible to change the cache parameters
- or completely disable caching of a certain part of the content inside
- a <tag>cache</tag> tag.</p>
- 
- <note><p>This implies that many RXML tags that surrounds the inner
- <tag>cache</tag> tag(s) won't be cached. The reason is that those
- surrounding tags use the result of the inner <tag>cache</tag> tag(s),
- which can only be established when the actual context in each request
- is compared to the cache parameters. See the section below about
- cache static tags, though.</p></note>
-
- <p>Besides the value produced by the content, all assignments to RXML
- variables in any scope are cached. I.e. an RXML code block which
- produces a value in a variable may be cached, and the same value will
- be assigned again to that variable when the cached entry is used.</p>
-
- <p>When the content is evaluated, the produced result is associated
- with a key that is specified by the optional attributes \"variable\",
- \"key\" and \"profile\". This key is what the the cached data depends
- on. If none of the attributes are used, the tag will have a single
- cache entry that always matches.</p>
-
- <note><p>It is easy to create huge amounts of cached values if the
- cache parameters are chosen badly. E.g. to depend on the contents of
- the form scope is typically only acceptable when combined with a
- fairly short cache time, since it's otherwise easy to fill up the
- memory on the server simply by making many requests with random
- variables.</p></note>
-
- <h1>Shared caches</h1>
-
- <p>The cache can be shared between all <tag>cache</tag> tags with
- identical content, which is typically useful in <tag>cache</tag> tags
- used in templates included into many pages. The drawback is that
- cache entries stick around when the <tag>cache</tag> tags change in
- the RXML source, and that the cache cannot be persistent (see below).
- Only shared caches have any effect if the RXML pages aren't compiled
- and cached as p-code.</p>
-
- <p>If the cache isn't shared, and the page is compiled to p-code
- which is saved persistently then the produced cache entries can also
- be saved persistently. See the \"persistent-cache\" attribute for
- more details.</p>
-
- <note><p>For non-shared caches, this tag depends on the caching in
- the RXML parser to work properly, since the cache is associated with
- the specific tag instance in the compiled RXML code. I.e. there must
- be some sort of cache on the top level that can associate the RXML
- source to an old p-code entry before the cache in this tag can have
- any effect. E.g. if the RXML parser module in WebServer is used, you
- have to make sure page caching is turned on in it. So if you don't
- get cache hits when you think there should be, the cache miss might
- not be in this tag but instead in the top level cache that maps the
- RXML source to p-code.</p>
-
- <p>Also note that non-shared timeout caches are only effective if the
- p-code is cached in RAM. If it should work for p-code that is cached
- on disk but not in RAM, you need to add the attribute
- \"persistent-cache=yes\".</p></note>
-
- <h1>Cache static tags</h1>
-
- <note><p>Note that this is only applicable if the compatibility level
- is set to 2.5 or higher.</p></note>
-
- <p>Some common tags, e.g. <tag>if</tag> and <tag>emit</tag>, are
- \"cache static\". That means that they are cached even though there
- are nested <tag>cache</tag> tag(s). That can be done since they
- simply let their content pass through (repeated zero or more
- times).</p>
-
- <p>Cache static tags are always evaluated when the surrounding
- <tag>cache</tag> generates a new entry. Other tags are evaluated when
- the entry is used, providing they contain or might contain nested
- <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
- consider this example:</p>
-
-<ex-box>
-<cache>
-  <registered-user>
-    <nocache>Your name is &registered-user.name;</nocache>
-  </registered-user>
-</cache>
-</ex-box>
-
- <p>Assume the tag <tag>registered-user</tag> is a custom tag that
- ignores its content whenever the user isn't registered. If it isn't
- cache static, the nested <tag>nocache</tag> tag causes it to stay
- unevaluated in the surrounding cache, and the test of the user is
- therefore kept dynamic. If it on the other hand is cache static, that
- test is cached and the cache entry will either contain the
- <tag>nocache</tag> block and a cached assignment to
- <ent>registered-user.name</ent>, or none of the content inside
- <tag>registered-user</tag>. The dependencies of the outer cache must
- then include the user for it to work correctly.</p>
-
- <p>Because of this, it's important to know whether a tag is cache
- static or not, and it's noted in the doc for all such tags.</p>
-
- <h1>Compatibility</h1>
-
- <p>If the compatibility level of the site is lower than 2.2 and there
- is no \"variable\" or \"profile\" attribute, the cache depends on the
- contents of the form scope and the path of the current page (i.e.
- <ent>page.path</ent>). This is often a bad policy since it's easy for
- a client to generate many cache entries.</p>
-
- <p>None of the standard RXML tags are cache static if the
- compatibility level is 2.4 or lower.</p>
-</desc>
-
-<attr name='variable' value='string'>
- <p>This is a comma-separated list of variables and scopes that the
- cache should depend on. The value can be an empty string, which is
- useful to only disable the default dependencies in compatibility
- mode.</p>
-
- <p>Since it's important to keep down the size of the cache, this
- should typically be kept to only a few variables with a limited set
- of possible values, or else the cache should have a timeout.</p>
-</attr>
-
-<attr name='key' value='string'>
- <p>Use the value of this attribute directly in the key. This
- attribute mainly exist for compatibility; it's better to use the
- \"variable\" attribute instead.</p>
-
- <p>It is an error to use \"key\" together with \"propagate\", since
- it wouldn't do what you'd expect: The value for \"key\" would not be
- reevaluated when an entry is chosen from the cache, since the nested,
- propagating <tag>cache</tag> isn't reached at all then.</p>
-</attr>
-
-<attr name='profile' value='string'>
- <p>A comma-separated list to choose one or more profiles from a set
- of preconfigured cache profiles. Which cache profiles are available
- depends on the RXML parser module in use; the standard RXML parser
- currently has none.</p>
-</attr>
-
-<attr name='shared'>
- <p>Share the cache between different instances of the
- <tag>cache</tag> with identical content, wherever they may appear on
- this page or some other in the same server. See the tag description
- for details about shared caches.</p>
-</attr>
-
-<attr name='persistent-cache' value='yes|no'>
-  <p>If the value is \"yes\" then the cache entries are saved
-  persistently, providing the RXML p-code is saved. If it's \"no\"
-  then the cache entries are not saved. If it's left out then the
-  default is to save if there's no timeout on the cache, otherwise
-  not. This attribute has no effect if the \"shared\" attribute is
-  used; shared caches can not be saved persistently.</p>
-</attr>
-
-<attr name='nocache'>
- <p>Do not cache the content in any way. Typically useful to disable
- caching of a section inside another cache tag.</p>
-</attr>
-
-<attr name='propagate'>
- <p>Propagate the cache dependencies to the surrounding
- <tag>cache</tag> tag, if there is any. Useful to locally add
- dependencies to a cache without introducing a new cache level. If
- there is no surrounding <tag>cache</tag> tag, this attribute is
- ignored.</p>
-
- <p>Note that only the dependencies are propagated, i.e. the settings
- in the \"variable\", \"key\" and \"profile\" attributes. The other
- attributes are used only if there's no surrounding <tag>cache</tag>
- tag.</p>
-</attr>
-
-<attr name='nohash'>
- <p>If the cache is shared, then the content won't be made part of the
- cache key. Thus the cache entries can be mixed up with other
- <tag>cache</tag> tags.</p>
-</attr>
-
-<attr name='not-post-method'>
- <p>By adding this attribute all HTTP requests using the POST method will
- be unaffected by the caching. The result will be calculated every time,
- and the result will not be stored in the cache. The contents of the cache
- will however remain unaffected by the POST request.</p>
-</attr>
-
-<attr name='flush-on-no-cache'>
- <p>If this attribute is used the cache will be flushed every time a client
- sends a pragma no-cache header to the server. These are e.g. sent when
- shift+reload is pressed in Netscape Navigator.</p>
-</attr>
-
-<attr name='enable-client-cache'>
-</attr>
-
-<attr name='enable-protocol-cache'>
-</attr>
-
-<attr name='years' value='number'>
- <p>Add this number of years to the time this entry is valid.</p>
-</attr>
-<attr name='months' value='number'>
- <p>Add this number of months to the time this entry is valid.</p>
-</attr>
-<attr name='weeks' value='number'>
- <p>Add this number of weeks to the time this entry is valid.</p>
-</attr>
-<attr name='days' value='number'>
- <p>Add this number of days to the time this entry is valid.</p>
-</attr>
-<attr name='hours' value='number'>
- <p>Add this number of hours to the time this entry is valid.</p>
-</attr>
-<attr name='beats' value='number'>
- <p>Add this number of beats to the time this entry is valid.</p>
-</attr>
-<attr name='minutes' value='number'>
- <p>Add this number of minutes to the time this entry is valid.</p>
-</attr>
-<attr name='seconds' value='number'>
- <p>Add this number of seconds to the time this entry is valid.</p>
-</attr>",
-
-// Intentionally left undocumented:
-//
-// <attr name='disable-key-hash'>
-//  Do not hash the key used in the cache entry. Normally the
-//  produced key is hashed to reduce memory usage and improve speed,
-//  but since that makes it theoretically possible that two cache
-//  entries clash, this attribute may be used to avoid it.
-// </attr>
-
-//----------------------------------------------------------------------
-
-"nocache": #"<desc type='cont'><p><short>
- Avoid caching of a part inside a <tag>cache</tag> tag.</short> This
- is the same as using the <tag>cache</tag> tag with the nocache
- attribute.</p>
-
- <p>Note that when a part inside a <tag>cache</tag> tag isn't cached,
- it implies that any RXML tags that surround the <tag>nocache</tag>
- tag inside the <tag>cache</tag> tag also aren't cached.</p>
-</desc>",
-
-//----------------------------------------------------------------------
-
 "catch":#"<desc type='cont'><p><short>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents.</short> If something does go wrong, the error
@@ -6088,125 +4379,6 @@ using the pre tag.
  href='throw.tag' />.
 </p>
 </desc>",
-
-//----------------------------------------------------------------------
-
-"charset":#"<desc type='both'><p>
- <short>Set output character set.</short>
- The tag can be used to decide upon the final encoding of the resulting page.
- All character sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a>
- are supported.
-</p>
-</desc>
-
-<attr name='in' value='Character set'><p>
- Converts the contents of the charset tag from the character set indicated
- by this attribute to the internal text representation.</p>
-
- <note><p>This attribute is depricated, use &lt;recode 
- from=\"\"&gt;...&lt;/recode&gt; instead.</p></note>
-</attr>
-
-<attr name='out' value='Character set'><p>
- Sets the output conversion character set of the current request. The page
- will be sent encoded with the indicated character set.</p>
-</attr>
-",
-
-
-
-//----------------------------------------------------------------------
-
-"recode":#"<desc type='cont'><p>
- <short>Converts between character sets.</short>
- The tag can be used both to decode texts encoded in strange character
- encoding schemas, and encode internal data to a specified encoding
- scheme. All character sets listed in <a
- href='http://rfc.roxen.com/1345'>RFC 1345</a> are supported.
-</p>
-</desc>
-
-<attr name='from' value='Character set'><p>
- Converts the contents of the charset tag from the character set indicated
- by this attribute to the internal text representation. Useful for decoding
- data stored in a database.</p>
-</attr>
-
-<attr name='to' value='Character set'><p>
- Converts the contents of the charset tag from the internal representation
- to the character set indicated by this attribute. Useful for encoding data
- before storing it into a database.</p>
-</attr>
-",
-
-//----------------------------------------------------------------------
-
-"configimage":#"<desc type='tag'><p><short>
- Returns one of the internal Roxen configuration images.</short> The
- src attribute is required.
-</p></desc>
-
-<attr name='src' value='string'>
- <p>The name of the picture to show.</p>
-</attr>
-
-<attr name='border' value='number' default='0'>
- <p>The image border when used as a link.</p>
-</attr>
-
-<attr name='alt' value='string' default='The src string'>
- <p>The picture description.</p>
-</attr>
-
-<attr name='class' value='string'>
- <p>This cascading style sheet (CSS) class definition will be applied to
- the image.</p>
-
- <p>All other attributes will be inherited by the generated img tag.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"configurl":#"<desc type='tag'><p><short>
- Returns a URL to the administration interface.</short>
-</p></desc>",
-
-//----------------------------------------------------------------------
-
-"cset":#"<desc type='cont'><p>
- Sets a variable with its content. This is deprecated in favor of
- using the &lt;set&gt;&lt;/set&gt; construction.</p>
-</desc>
-
-<attr name='variable' value='name'>
- <p>The variable to be set.</p>
-</attr>
-
-<attr name='quote' value='html|none'>
- <p>How the content should be quoted before assigned to the variable.
- Default is html.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"crypt":#"<desc type='cont'><p><short>
- Encrypts the contents as a Unix style password.</short> Useful when
- combined with services that use such passwords.</p>
-
- <p>Unix style passwords are one-way encrypted, to prevent the actual
- clear-text password from being stored anywhere. When a login attempt
- is made, the password supplied is also encrypted and then compared to
- the stored encrypted password.</p>
-</desc>
-
-<attr name='compare' value='string'>
- <p>Compares the encrypted string with the contents of the tag. The tag
- will behave very much like an <xref href='../if/if.tag' /> tag.</p>
-<ex><crypt compare=\"LAF2kkMr6BjXw\">Roxen</crypt>
-<then>Yepp!</then>
-<else>Nope!</else>
-</ex>
-</attr>",
 
 //----------------------------------------------------------------------
 
@@ -6432,45 +4604,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
-"debug":#"<desc type='tag'><p><short>
- Helps debugging RXML-pages as well as modules.</short> When debugging mode is
- turned on, all error messages will be displayed in the HTML code.
-</p></desc>
-
-<attr name='on'>
- <p>Turns debug mode on.</p>
-</attr>
-
-<attr name='off'>
- <p>Turns debug mode off.</p>
-</attr>
-
-<attr name='toggle'>
- <p>Toggles debug mode.</p>
-</attr>
-
-<attr name='showid' value='string'>
- <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
-</attr>
-
-<attr name='werror' value='string'>
-  <p>When you have access to the server debug log and want your RXML
-     page to write some kind of diagnostics message or similar, the
-     werror attribute is helpful.</p>
-
-  <p>This can be used on the error page, for instance, if you'd want
-     such errors to end up in the debug log:</p>
-
-  <ex-box><debug werror='File &page.url; not found!
-(linked from &client.referrer;)'/></ex-box>
-
-  <p>The message is also shown the request trace, e.g. when
-  \"Tasks\"/\"Debug information\"/\"Resolve path...\" is used in the
-  configuration interface.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
 "dec":#"<desc type='tag'><p><short>
  Subtracts 1 from a variable.</short>
 </p></desc>
@@ -6565,58 +4698,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
-"expire-time":#"<desc type='tag'><p><short hide='hide'>
- Sets client cache expire time for the document.</short>
- Sets client cache expire time for the document by sending the HTTP header
- \"Expires\". Note that on most systems the time can only be set to dates
- before 2038 due to operating software limitations.
-</p></desc>
-
-<attr name='now'>
- <p>Notify the client that the document expires now. The headers
- \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
- will also be sent, besides the \"Expires\" header.</p>
-</attr>
-
-<attr name='unix-time' value='number'>
- <p>The exact time of expiration, expressed as a posix time integer.</p>
-</attr>
-
-<attr name='years' value='number'>
- <p>Add this number of years to the result.</p>
-</attr>
-
-<attr name='months' value='number'>
-  <p>Add this number of months to the result.</p>
-</attr>
-
-<attr name='weeks' value='number'>
-  <p>Add this number of weeks to the result.</p>
-</attr>
-
-<attr name='days' value='number'>
-  <p>Add this number of days to the result.</p>
-</attr>
-
-<attr name='hours' value='number'>
-  <p>Add this number of hours to the result.</p>
-</attr>
-
-<attr name='beats' value='number'>
-  <p>Add this number of beats to the result.</p>
-</attr>
-
-<attr name='minutes' value='number'>
-  <p>Add this number of minutes to the result.</p>
-</attr>
-
-<attr name='seconds' value='number'>
-   <p>Add this number of seconds to the result.</p>
-
-</attr>",
-
-//----------------------------------------------------------------------
-
 "for":#"<desc type='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
 
@@ -6637,42 +4718,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='variable' value='name'>
  <p>Name of the loop variable.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"fsize":#"<desc type='tag'><p><short>
- Prints the size of the specified file.</short>
-</p></desc>
-
-<attr name='file' value='string'>
- <p>Show size for this file.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"gauge":#"<desc type='cont'><p><short>
- Measures how much CPU time it takes to run its contents through the
- RXML parser.</short> Returns the number of seconds it took to parse
- the contents.
-</p></desc>
-
-<attr name='variable' value='string'>
- <p>The result will be put into a variable. E.g. variable=\"var.gauge\" will
- put the result in a variable that can be reached with <ent>var.gauge</ent>.</p>
-</attr>
-
-<attr name='silent'>
- <p>Don't print anything.</p>
-</attr>
-
-<attr name='timeonly'>
- <p>Only print the time.</p>
-</attr>
-
-<attr name='resultonly'>
- <p>Only print the result of the parsing. Useful if you want to put the time in
- a database or such.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6742,6 +4787,58 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
+"sscanf":#"<desc type='cont'><p><short>
+ Extract parts of a string and put them in other variables.</short> Refer to
+ the sscanf function in the Pike reference manual for a complete
+ description.</p>
+</desc>
+
+<attr name='variables' value='list' required='required'><p>
+ A comma separated list with the name of the variables that should be set.</p>
+<ex>
+<sscanf variables='form.year,var.month,var.day'
+format='%4d%2d%2d'>19771003</sscanf>
+&form.year;-&var.month;-&var.day;
+</ex>
+</attr>
+
+<attr name='scope' value='name' required='required'><p>
+ The name of the fallback scope to be used when no scope is given.</p>
+<ex>
+<sscanf variables='year,month,day' scope='var'
+ format='%4d%2d%2d'>19801228</sscanf>
+&var.year;-&var.month;-&var.day;<br />
+<sscanf variables='form.year,var.month,var.day'
+ format='%4d%2d%2d'>19801228</sscanf>
+&form.year;-&var.month;-&var.day;
+</ex>
+</attr>
+
+<attr name='return' value='name'><p>
+ If used, the number of successfull variable 'extractions' will be
+ available in the given variable.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+  "sprintf":#"<desc type='cont'><p><short>
+ Prints out variables with the formating functions availble in the
+ Pike function sprintf.</short> Refer to the Pike reference manual for
+ a complete description.</p></desc>
+
+<attr name='format' value='string'><p>
+  The formatting string.</p>
+</attr>
+
+<attr name='split' value='charater'><p>
+  If used, the tag content will be splitted with the given string.</p>
+<ex>
+<sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
+</ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
 "insert":#"<desc type='tag'><p><short>
  Inserts a file, variable or other object into a webpage.</short>
 </p></desc>
@@ -6774,41 +4871,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='split' value='string'>
  <p>A string with which the variable value should be splitted into an
  array, so that the index attribute may be used.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"insert#variables":#"<desc type='plugin'><p><short>
- Inserts a listing of all variables in a scope.</short></p><note><p>It is
- possible to create a scope with an infinite number of variables set.
- In this case the programmer of that scope decides which variables that
- should be listable, i.e. this will not cause any problem except that
- all variables will not be listed. It is also possible to hide
- variables so that they are not listed with this tag.
-</p></note></desc>
-
-<attr name='variables' value='full|plain'>
- <p>Sets how the output should be formatted.</p>
-
- <ex><pre>
-<insert variables='full' scope='roxen'/>
-</pre></ex>
-</attr>
-
-<attr name='scope'>
- <p>The name of the scope that should be listed, if not the present scope.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"insert#scopes":#"<desc type='plugin'><p><short>
- Inserts a listing of all present variable scopes.</short>
-</p></desc>
-
-<attr name='scopes' value='full|plain'>
- <p>Sets how the output should be formatted.</p>
-
- <ex><insert scopes='plain'/></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6902,53 +4964,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
    </attr>"
  ])
    }),
-
-//----------------------------------------------------------------------
-
-"modified":#"<desc type='tag'><p><short hide='hide'>
- Prints when or by whom a page was last modified.</short> Prints when
- or by whom a page was last modified, by default the current page.
- In addition to the attributes below, it also handles the same
- attributes as <xref href='date.tag'/> for formating date output.
-</p></desc>
-
-<attr name='by'>
- <p>Print by whom the page was modified. Takes the same attributes as
- <xref href='user.tag' />. This attribute requires a user database.
- </p>
-
- <ex-box>This page was last modified by <modified by='1'
- realname='1'/>.</ex-box>
-</attr>
-
-<attr name='file' value='path'>
- <p>Get information about this file rather than the current page.</p>
-</attr>
-
-<attr name='realfile' value='path'>
- <p>Get information from this file in the computer's filesystem rather
- than Roxen Webserver's virtual filesystem.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"random":#"<desc type='cont'><p><short>
- Randomly chooses a message from its contents.</short>
-</p></desc>
-
-<attr name='separator' value='string'>
- <p>The separator used to separate the messages, by default newline.</p>
-
-<ex><random separator='#'>Foo#Bar#Baz</random></ex>
-</attr>
-
-<attr name='seed' value='string'>
- <p>Enables you to use a seed that determines which message to choose.</p>
-
-<ex-box>Tip of the day:
-<set variable='var.day'><date type='iso' date=''/></set>
-<random seed='var.day'><insert file='tips.txt'/></random></ex-box>
-</attr>",
 
 //----------------------------------------------------------------------
 
@@ -7276,109 +5291,6 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
-"set-max-cache":#"<desc type='tag'><p><short>
- Sets the maximum time this document can be cached in any ram
- caches.</short></p>
-
- <p>Default is to get this time from the other tags in the document
- (as an example, <xref href='../if/if_supports.tag' /> sets the time to
- 0 seconds since the result of the test depends on the client used.</p>
-
- <p>You must do this at the end of the document, since many of the
- normal tags will override this value.</p>
-</desc>
-
-<attr name='years' value='number'>
- <p>Add this number of years to the time this page was last loaded.</p>
-</attr>
-<attr name='months' value='number'>
- <p>Add this number of months to the time this page was last loaded.</p>
-</attr>
-<attr name='weeks' value='number'>
- <p>Add this number of weeks to the time this page was last loaded.</p>
-</attr>
-<attr name='days' value='number'>
- <p>Add this number of days to the time this page was last loaded.</p>
-</attr>
-<attr name='hours' value='number'>
- <p>Add this number of hours to the time this page was last loaded.</p>
-</attr>
-<attr name='beats' value='number'>
- <p>Add this number of beats to the time this page was last loaded.</p>
-</attr>
-<attr name='minutes' value='number'>
- <p>Add this number of minutes to the time this page was last loaded.</p>
-</attr>
-<attr name='seconds' value='number'>
- <p>Add this number of seconds to the time this page was last loaded.</p>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"smallcaps":#"<desc type='cont'><p><short>
- Prints the contents in smallcaps.</short> If the size attribute is
- given, font tags will be used, otherwise big and small tags will be
- used.</p>
-
-<ex><smallcaps>ChiliMoon</smallcaps></ex>
-</desc>
-
-<attr name='space'>
- <p>Put a space between every character.</p>
-<ex><smallcaps space=''>ChiliMoon</smallcaps></ex>
-</attr>
-
-<attr name='class' value='string'>
- <p>Apply this cascading style sheet (CSS) style on all elements.</p>
-</attr>
-
-<attr name='smallclass' value='string'>
- <p>Apply this cascading style sheet (CSS) style on all small elements.</p>
-</attr>
-
-<attr name='bigclass' value='string'>
- <p>Apply this cascading style sheet (CSS) style on all big elements.</p>
-</attr>
-
-<attr name='size' value='number'>
- <p>Use font tags, and this number as big size.</p>
-</attr>
-
-<attr name='small' value='number' default='size-1'>
- <p>Size of the small tags. Only applies when size is specified.</p>
-
- <ex><smallcaps size='6' small='2'>ChiliMoon</smallcaps></ex>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"sort":#"<desc type='cont'><p><short>
- Sorts the contents.</short></p>
-
- <ex><sort>Understand!
-I
-Wee!
-Ah,</sort></ex>
-</desc>
-
-<attr name='separator' value='string'>
- <p>Defines what the strings to be sorted are separated with. The sorted
- string will be separated by the string.</p>
-
- <ex><sort separator='#'>way?#perhaps#this</sort></ex>
-</attr>
-
-<attr name='reverse'>
- <p>Reversed order sort.</p>
-
- <ex><sort reverse=''>backwards?
-or
-:-)
-maybe</sort></ex>
-</attr>",
-
-//----------------------------------------------------------------------
-
 "throw":#"<desc type='cont'><p><short>
  Throws a text to be caught by <xref href='catch.tag' />.</short>
  Throws an exception, with the enclosed text as the error message.
@@ -7413,44 +5325,6 @@ just got zapped?
 &var.jump;
 <unset variable='var.jump'/>
 &var.jump;</ex>
-</attr>",
-
-//----------------------------------------------------------------------
-
-"user":#"<desc type='tag'><p><short>
- Prints information about the specified user.</short> By default, the
- full name of the user and her e-mail address will be printed, with a
- mailto link and link to the home page of that user.</p>
-
- <p>The <tag>user</tag> tag requires an authentication module to work.</p>
-</desc>
-
-<attr name='email'>
- <p>Only print the e-mail address of the user, with no link.</p>
- <ex-box>Email: <user name='foo' email='1'/></ex-box>
-</attr>
-
-<attr name='link'>
- <p>Include links. Only meaningful together with the realname or email attribute.</p>
-</attr>
-
-<attr name='name'>
- <p>The login name of the user. If no other attributes are specified, the
- user's realname and email including links will be inserted.</p>
-<ex-box><user name='foo'/></ex-box>
-</attr>
-
-<attr name='nolink'>
- <p>Don't include the links.</p>
-</attr>
-
-<attr name='nohomepage'>
- <p>Don't include homepage links.</p>
-</attr>
-
-<attr name='realname'>
- <p>Only print the full name of the user, with no link.</p>
-<ex-box><user name='foo' realname='1'/></ex-box>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -8080,37 +5954,6 @@ the respective attributes below for further information.</p></desc>
 
 //----------------------------------------------------------------------
 
-"if#date":#"<desc type='plugin'><p><short>
- Is the date yyyymmdd?</short> The attributes before, after and
- inclusive modifies the behavior. This is a <i>Utils</i> plugin.
-</p></desc>
-<attr name='date' value='yyyymmdd | yyyy-mm-dd' required='required'><p>
- Choose what date to test.</p>
-</attr>
-
-<attr name='after'><p>
- The date after todays date.</p>
-</attr>
-
-<attr name='before'><p>
- The date before todays date.</p>
-</attr>
-
-<attr name='inclusive'><p>
- Adds todays date to after and before.</p>
-
- <ex>
-  <if date='19991231' before='' inclusive=''>
-     - 19991231
-  </if>
-  <else>
-    20000101 -
-  </else>
- </ex>
-</attr>",
-
-//----------------------------------------------------------------------
-
 "if#defined":#"<desc type='plugin'><p><short>
  Tests if a certain RXML define is defined by use of the <xref
  href='../variable/define.tag' /> tag, and in that case tests its
@@ -8325,41 +6168,6 @@ the respective attributes below for further information.</p></desc>
 
 //----------------------------------------------------------------------
 
-"if#time":#"<desc type='plugin'><p><short>
- Is the time hhmm, hh:mm, yyyy-mm-dd or yyyy-mm-ddThh:mm?</short> The attributes before, after,
- inclusive and until modifies the behavior. This is a <i>Utils</i> plugin.
-</p></desc>
-<attr name='time' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm' required='required'><p>
- Choose what time to test.</p>
-</attr>
-
-<attr name='after'><p>
- The time after present time.</p>
-</attr>
-
-<attr name='before'><p>
- The time before present time.</p>
-</attr>
-
-<attr name='until' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm'><p>
- Gives true for the time range between present time and the time value of 'until'.</p>
-</attr>
-
-<attr name='inclusive'><p>
- Adds present time to after and before.</p>
-
-<ex-box>
-  <if time='1200' before='' inclusive=''>
-    ante meridiem
-  </if>
-  <else>
-    post meridiem
-  </else>
-</ex-box>
-</attr>",
-
-//----------------------------------------------------------------------
-
 "if#user":#"<desc type='plugin'><p><short>
  Has the user been authenticated as one of these users?</short> If any
  is given as argument, any authenticated user will do. This is a
@@ -8515,13 +6323,6 @@ the respective attributes below for further information.</p></desc>
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
  if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
-
-//----------------------------------------------------------------------
-
-"trace":#"<desc type='cont'><p><short>
- Executes the contained RXML code and makes a trace report about how
- the contents are parsed by the RXML parser.</short>
-</p></desc>",
 
 //----------------------------------------------------------------------
 
@@ -8826,6 +6627,26 @@ the respective attributes below for further information.</p></desc>
 
 	  ])
        }),
+
+//----------------------------------------------------------------------
+
+  "insert#href":#"<desc type='plugin'><p><short>
+ Inserts the contents at that URL.</short> This function has to be
+ enabled in the <module>Additional RXML tags</module> module in the
+ ChiliMoon administration interface. The page download will block
+ the current thread, and if running unthreaded, the whole server.
+ There is no timeout in the download, so if the server connected to
+ hangs during transaction, so will the current thread in this server.</p></desc>
+
+<attr name='href' value='string'><p>
+ The URL to the page that should be inserted.</p>
+</attr>
+
+<attr name='nocache' value='string'><p>
+ If provided the resulting page will get a zero cache time in the RAM cache.
+ The default time is up to 60 seconds depending on the cache limit imposed by
+ other RXML tags on the same page.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 

@@ -4,167 +4,11 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.28 2004/05/23 21:18:42 mani Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.29 2004/05/31 02:43:31 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
-
-void create() {
-  defvar("insert_href",0,"Allow <insert href>",
-	 TYPE_FLAG|VAR_MORE,
-         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
-	 "insert pages from another web server. Note that the thread will be "
-	 "blocked while it fetches the web page.");
-}
-
-class TagInsertHref {
-  inherit RXML.Tag;
-  constant name = "insert";
-  constant plugin_name = "href";
-
-  string get_data(string var, mapping args, RequestID id) {
-    if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
-
-    if(args->nocache)
-      NOCACHE();
-    else
-      CACHE(60);
-    Protocols.HTTP.Query q=Protocols.HTTP.get_url(args->href);
-    if(q && q->status>0 && q->status<400)
-      return q->data();
-
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
-  }
-}
-
-string container_recursive_output (string tagname, mapping args,
-                                  string contents, RequestID id)
-{
-  int limit;
-  array(string) inside, outside;
-  if (id->misc->recout_limit)
-  {
-    limit = id->misc->recout_limit - 1;
-    inside = id->misc->recout_outside, outside = id->misc->recout_inside;
-  }
-  else
-  {
-    limit = (int) args->limit || 100;
-    inside = args->inside ? args->inside / (args->separator || ",") : ({});
-    outside = args->outside ? args->outside / (args->separator || ",") : ({});
-    if (sizeof (inside) != sizeof (outside))
-      RXML.parse_error("'inside' and 'outside' replacement sequences "
-		       "aren't of same length.\n");
-  }
-
-  if (limit <= 0) return contents;
-
-  int save_limit = id->misc->recout_limit;
-  string save_inside = id->misc->recout_inside, save_outside = id->misc->recout_outside;
-
-  id->misc->recout_limit = limit;
-  id->misc->recout_inside = inside;
-  id->misc->recout_outside = outside;
-
-  string res = Roxen.parse_rxml (
-    parse_html (
-      contents,
-      (["recurse": lambda (string t, mapping a, string c) {return c;}]),
-      ([]),
-      "<" + tagname + ">" + replace (contents, inside, outside) +
-      "</" + tagname + ">"),
-    id);
-
-  id->misc->recout_limit = save_limit;
-  id->misc->recout_inside = save_inside;
-  id->misc->recout_outside = save_outside;
-
-  return res;
-}
-
-class TagSprintf {
-  inherit RXML.Tag;
-  constant name = "sprintf";
-
-  class Frame {
-    inherit RXML.Frame;
-
-    array do_return(RequestID id) {
-      array in;
-      if(args->split)
-	in=content/args->split;
-      else
-	in=({content});
-
-      array f=((args->format-"%%")/"%")[1..];
-      if(sizeof(in)!=sizeof(f))
-	RXML.run_error("Indata hasn't the same size as format data (%d, %d).\n", sizeof(in), sizeof(f));
-
-      // Do some casting
-      for(int i; i<sizeof(in); i++) {
-	int quit;
-	foreach(f[i]/1, string char) {
-	  if(quit) break;
-	  switch(char) {
-	  case "d":
-	  case "u":
-	  case "o":
-	  case "x":
-	  case "X":
-	  case "c":
-	  case "b":
-	    in[i]=(int)in[i];
-	    quit=1;
-	    break;
-	  case "f":
-	  case "g":
-	  case "e":
-	  case "G":
-	  case "E":
-	  case "F":
-	    in[i]=(float)in[i];
-	    quit=1;
-	    break;
-	  case "s":
-	  case "O":
-	  case "n":
-	  case "t":
-	    quit=1;
-	    break;
-	  }
-	}
-      }
-
-      result=sprintf(args->format, @in);
-      return 0;
-    }
-  }
-}
-
-class TagSscanf {
-  inherit RXML.Tag;
-  constant name = "sscanf";
-
-  class Frame {
-    inherit RXML.Frame;
-
-    string do_return(RequestID id) {
-      array(string) vars=args->variables/",";
-      array(string) vals=array_sscanf(content, args->format);
-      if(sizeof(vars)<sizeof(vals))
-	RXML.run_error("Too few variables.\n");
-
-      int var=0;
-      foreach(vals, string val)
-	RXML.user_set_var(vars[var++], val, args->scope);
-
-      if(args->return)
-	RXML.user_set_var(args->return, sizeof(vals), args->scope);
-      return 0;
-    }
-  }
-}
 
 class TagDice {
   inherit RXML.Tag;
@@ -225,6 +69,463 @@ class TagEmitKnownLangs
   }
 }
 
+class TagInsertLocate {
+  inherit RXML.Tag;
+  constant name= "insert";
+  constant plugin_name = "locate";
+
+  RXML.Type get_type( mapping args )
+  {
+    if (args->quote=="html")
+      return RXML.t_text;
+    return RXML.t_xml;
+  }
+
+  string get_data(string var, mapping args, RequestID id)
+  {
+    array(string) result;
+    
+    result = VFS.find_above_read( id->not_query, var, id );
+
+    if( !result )
+      RXML.run_error("Cannot locate any file named "+var+".\n");
+
+    return result[1];
+  }  
+}
+
+class TagCharset
+{
+  inherit RXML.Tag;
+  constant name="charset";
+  RXML.Type content_type = RXML.t_same;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      if( args->in && catch {
+	content=Locale.Charset.decoder( args->in )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+		       args->in );
+      if( args->out && id->set_output_charset)
+	id->set_output_charset( args->out );
+      result_type = result_type (RXML.PXml);
+      result="";
+      return ({content});
+    }
+  }
+}
+
+class TagRecode
+{
+  inherit RXML.Tag;
+  constant name="recode";
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from" : RXML.t_text(RXML.PEnt),
+    "to"   : RXML.t_text(RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      if( !content ) content = "";
+
+      if( args->from && catch {
+	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+		       args->from );
+      if( args->to && catch {
+	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
+		       args->to );
+      return ({ content });
+    }
+  }
+}
+
+string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
+{
+  s-="\r";
+
+  string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
+
+  if(!m->nonbsp)
+  {
+    s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
+    s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
+    s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
+  }
+
+  if(!m->nobr) {
+    s = replace(s, "\n", "<br />\n");
+    if(m->p) {
+      if(has_value(s, "<br />\n<br />\n")) s=p+s;
+      s = replace(s, "<br />\n<br />\n", "\n</p>"+p+"\n");
+      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
+        s=p+s;
+      if(s[..sizeof(s)-4]==p)
+        return s[..sizeof(s)-4];
+      else
+        return s+"</p>";
+    }
+    return s;
+  }
+
+  if(m->p) {
+    if(has_value(s, "\n\n")) s=p+s;
+      s = replace(s, "\n\n", "\n</p>"+p+"\n");
+      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
+        s=p+s;
+      if(s[..sizeof(s)-4]==p)
+        return s[..sizeof(s)-4];
+      else
+        return s+"</p>";
+    }
+
+  return s;
+}
+
+class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smallarg)
+{
+  constant UNDEF=0, BIG=1, SMALL=2;
+  static string text="",part="";
+  static int last=UNDEF;
+
+  string _sprintf(int t) {
+    return "Smallcapsstr("+bigtag+","+smalltag+")";
+  }
+
+  void add(string char) {
+    part+=char;
+  }
+
+  void add_big(string char) {
+    if(last!=BIG) flush_part();
+    part+=char;
+    last=BIG;
+  }
+
+  void add_small(string char) {
+    if(last!=SMALL) flush_part();
+    part+=char;
+    last=SMALL;
+  }
+
+  void write(string txt) {
+    if(last!=UNDEF) flush_part();
+    part+=txt;
+  }
+
+  void flush_part() {
+    switch(last){
+    case UNDEF:
+    default:
+      text+=part;
+      break;
+    case BIG:
+      text+=RXML.t_xml->format_tag(bigtag, bigarg, part);
+      break;
+    case SMALL:
+      text+=RXML.t_xml->format_tag(smalltag, smallarg, part);
+      break;
+    }
+    part="";
+    last=UNDEF;
+  }
+
+  string value() {
+    if(last!=UNDEF) flush_part();
+    return text;
+  }
+}
+
+string simpletag_smallcaps(string t, mapping m, string s)
+{
+  Smallcapsstr ret;
+  string spc=m->space?"&nbsp;":"";
+  m_delete(m, "space");
+  mapping bm=([]), sm=([]);
+  if(m["class"] || m->bigclass) {
+    bm=(["class":(m->bigclass||m["class"])]);
+    m_delete(m, "bigclass");
+  }
+  if(m["class"] || m->smallclass) {
+    sm=(["class":(m->smallclass||m["class"])]);
+    m_delete(m, "smallclass");
+  }
+
+  if(m->size) {
+    bm+=(["size":m->size]);
+    if(m->size[0]=='+' && (int)m->size>1)
+      sm+=(["size":m->small||"+"+((int)m->size-1)]);
+    else
+      sm+=(["size":m->small||(string)((int)m->size-1)]);
+    m_delete(m, "small");
+    ret=Smallcapsstr("font","font", m+bm, m+sm);
+  }
+  else
+    ret=Smallcapsstr("big","small", m+bm, m+sm);
+
+  for(int i=0; i<strlen(s); i++)
+    if(s[i]=='<') {
+      int j;
+      for(j=i; j<strlen(s) && s[j]!='>'; j++);
+      ret->write(s[i..j]);
+      i+=j-1;
+    }
+    else if(s[i]<=32)
+      ret->add_small(s[i..i]);
+    else if(lower_case(s[i..i])==s[i..i])
+      ret->add_small(upper_case(s[i..i])+spc);
+    else if(upper_case(s[i..i])==s[i..i])
+      ret->add_big(s[i..i]+spc);
+    else
+      ret->add(s[i..i]+spc);
+
+  return ret->value();
+}
+
+string simpletag_random(string tag, mapping m, string s, RequestID id)
+{
+  NOCACHE();
+  array q = s/(m->separator || m->sep || "\n");
+  int index;
+  if(m->seed)
+    index = array_sscanf(Crypto.SHA1.hash(m->seed), "%4c")[0]%sizeof(q);
+  else
+    index = random(sizeof(q));
+
+  return q[index];
+}
+
+class TagIfDate {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "date";
+
+  int eval(string date, RequestID id, mapping m) {
+    CACHE(60); // One minute accuracy is probably good enough...
+    int a, b;
+    mapping t = ([]);
+
+    date = replace(date, "-", "");
+    if(sizeof(date)!=8 && sizeof(date)!=6)
+      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
+    if(sscanf(date, "%04d%02d%02d", t->year, t->mon, t->mday)==3)
+      t->year-=1900;
+    else if(sscanf(date, "%02d%02d%02d", t->year, t->mon, t->mday)!=3)
+      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
+
+    if(t->year>70) {
+      t->mon--;
+      a = mktime(t);
+    }
+
+    t = localtime(time(1));
+    b = mktime(t - (["hour": 1, "min": 1, "sec": 1, "isdst": 1, "timezone": 1]));
+
+    // Catch funny guys
+    if(m->before && m->after) {
+      if(!m->inclusive)
+	return 0;
+      m_delete(m, "before");
+      m_delete(m, "after");
+    }
+
+    if( (m->inclusive || !(m->before || m->after)) && a==b)
+      return 1;
+
+    if(m->before && a>b)
+      return 1;
+
+    if(m->after && a<b)
+      return 1;
+
+    return 0;
+  }
+}
+
+class TagIfTime {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "time";
+
+  int eval(string ti, RequestID id, mapping m) {
+    CACHE(time(1)%60); // minute resolution...
+
+    int|object a, b, d;
+    
+    if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
+    {
+	    mapping c = localtime(time(1));
+	    
+	    b=(int)sprintf("%02d%02d", c->hour, c->min);
+	    a=(int)replace(ti,":","");
+
+	    if(m->until)
+		    d = (int)m->until;
+		    
+    }
+    else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
+    {
+	    if(has_value(ti, "T"))
+	    {
+		    /* The Calendar module can for some reason not
+		     * handle the ISO8601 standard "T" extension. */
+		    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
+		    b = Calendar.ISO.Minute();
+	    }
+	    else
+	    {
+		    a = Calendar.ISO.dwim_day(ti);
+		    b = Calendar.ISO.Day();
+	    }
+
+	    if(m->until)
+		    if(has_value(m->until, "T"))
+			    /* The Calendar module can for some reason not
+			     * handle the ISO8601 standard "T" extension. */
+			    d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
+		    else
+			    d = Calendar.ISO.dwim_day(m->until);
+    }
+    
+    if(d)
+    {
+      if (d > a && (b > a && b < d) )
+	return 1;
+      if (d < a && (b > a || b < d) )
+	return 1;
+      if (m->inclusive && ( b==a || b==d ) )
+	return 1;
+      return 0;
+    }
+    else if( (m->inclusive || !(m->before || m->after)) && a==b )
+      return 1;
+    if(m->before && a>b)
+      return 1;
+    else if(m->after && a<b)
+      return 1;
+  }
+}
+
+class TagIfUser {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "user";
+
+  int eval(string u, RequestID id, mapping m)
+  {
+    object db;
+    if( m->database )
+      db = id->conf->find_user_database( m->database );
+    User uid = id->conf->authenticate( id, db );
+
+    if( !uid && !id->auth )
+      return 0;
+
+    NOCACHE();
+
+    if( u == "any" )
+      if( m->file )
+	// Note: This uses the compatibility interface. Should probably
+	// be fixed.
+	return match_user( id->auth, id->auth[1], m->file, !!m->wwwfile, id);
+      else
+	return !!u;
+    else
+      if(m->file)
+	// Note: This uses the compatibility interface. Should probably
+	// be fixed.
+	return match_user(id->auth,u,m->file,!!m->wwwfile,id);
+      else
+	return has_value(u/",", uid->name());
+  }
+
+  private int match_user(array u, string user, string f, int wwwfile, RequestID id) {
+    string s, pass;
+    if(u[1]!=user)
+      return 0;
+    if(!wwwfile)
+      s=Stdio.read_bytes(f);
+    else
+      s=id->conf->try_get_file(Roxen.fix_relative(f,id), id);
+    return ((pass=simple_parse_users_file(s, u[1])) &&
+	    (u[0] || match_passwd(u[2], pass)));
+  }
+
+  private int match_passwd(string try, string org) {
+    if(!strlen(org)) return 1;
+    if(crypt(try, org)) return 1;
+  }
+
+  private string simple_parse_users_file(string file, string u) {
+    if(!file) return 0;
+    foreach(file/"\n", string line)
+      {
+	array(string) arr = line/":";
+	if (arr[0] == u && sizeof(arr) > 1)
+	  return(arr[1]);
+      }
+  }
+}
+
+class TagIfGroup {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "group";
+
+  int eval(string u, RequestID id, mapping m) {
+    object db;
+    if( m->database )
+      db = id->conf->find_user_database( m->database );
+    User uid = id->conf->authenticate( id, db );
+
+    if( !uid && !id->auth )
+      return 0;
+
+    NOCACHE();
+    if( m->groupfile )
+      return ((m->groupfile && sizeof(m->groupfile))
+	      && group_member(id->auth, u, m->groupfile, id));
+    return sizeof( uid->groups() & (u/"," )) > 0;
+  }
+
+  private int group_member(array auth, string group, string groupfile, RequestID id) {
+    if(!auth)
+      return 0; // No auth sent
+
+    string s;
+    catch { s = Stdio.read_bytes(groupfile); };
+
+    if (!s)
+      s = id->conf->try_get_file( Roxen.fix_relative( groupfile, id), id );
+
+    if (!s) return 0;
+
+    s = replace(s,({" ","\t","\r" }), ({"","","" }));
+
+    multiset(string) members = simple_parse_group_file(s, group);
+    return members[auth[1]];
+  }
+
+  private multiset simple_parse_group_file(string file, string g) {
+    multiset res = (<>);
+    array(string) arr ;
+    foreach(file/"\n", string line)
+      if(sizeof(arr = line/":")>1 && (arr[0] == g))
+	res += (< @arr[-1]/"," >);
+    return res;
+  }
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
@@ -239,72 +540,92 @@ constant tagdoc=([
  The character 'T' may be used instead of 'D'.</p>
 </attr>",
 
-  "insert#href":#"<desc type='plugin'><p><short>
- Inserts the contents at that URL.</short> This function has to be
- enabled in the <module>Additional RXML tags</module> module in the
- ChiliMoon administration interface. The page download will block
- the current thread, and if running unthreaded, the whole server.
- There is no timeout in the download, so if the server connected to
- hangs during transaction, so will the current thread in this server.</p></desc>
+//----------------------------------------------------------------------
 
-<attr name='href' value='string'><p>
- The URL to the page that should be inserted.</p>
-</attr>
+"smallcaps":#"<desc type='cont'><p><short>
+ Prints the contents in smallcaps.</short> If the size attribute is
+ given, font tags will be used, otherwise big and small tags will be
+ used.</p>
 
-<attr name='nocache' value='string'><p>
- If provided the resulting page will get a zero cache time in the RAM cache.
- The default time is up to 60 seconds depending on the cache limit imposed by
- other RXML tags on the same page.</p>
-</attr>",
-
-"sscanf":#"<desc type='cont'><p><short>
- Extract parts of a string and put them in other variables.</short> Refer to
- the sscanf function in the Pike reference manual for a complete
- description.</p>
+<ex><smallcaps>ChiliMoon</smallcaps></ex>
 </desc>
 
-<attr name='variables' value='list' required='required'><p>
- A comma separated list with the name of the variables that should be set.</p>
-<ex>
-<sscanf variables='form.year,var.month,var.day'
-format='%4d%2d%2d'>19771003</sscanf>
-&form.year;-&var.month;-&var.day;
-</ex>
+<attr name='space'>
+ <p>Put a space between every character.</p>
+<ex><smallcaps space=''>ChiliMoon</smallcaps></ex>
 </attr>
 
-<attr name='scope' value='name' required='required'><p>
- The name of the fallback scope to be used when no scope is given.</p>
-<ex>
-<sscanf variables='year,month,day' scope='var'
- format='%4d%2d%2d'>19801228</sscanf>
-&var.year;-&var.month;-&var.day;<br />
-<sscanf variables='form.year,var.month,var.day'
- format='%4d%2d%2d'>19801228</sscanf>
-&form.year;-&var.month;-&var.day;
-</ex>
+<attr name='class' value='string'>
+ <p>Apply this cascading style sheet (CSS) style on all elements.</p>
 </attr>
 
-<attr name='return' value='name'><p>
- If used, the number of successfull variable 'extractions' will be
- available in the given variable.</p>
+<attr name='smallclass' value='string'>
+ <p>Apply this cascading style sheet (CSS) style on all small elements.</p>
+</attr>
+
+<attr name='bigclass' value='string'>
+ <p>Apply this cascading style sheet (CSS) style on all big elements.</p>
+</attr>
+
+<attr name='size' value='number'>
+ <p>Use font tags, and this number as big size.</p>
+</attr>
+
+<attr name='small' value='number' default='size-1'>
+ <p>Size of the small tags. Only applies when size is specified.</p>
+
+ <ex><smallcaps size='6' small='2'>ChiliMoon</smallcaps></ex>
 </attr>",
 
-  "sprintf":#"<desc type='cont'><p><short>
- Prints out variables with the formating functions availble in the
- Pike function sprintf.</short> Refer to the Pike reference manual for
- a complete description.</p></desc>
+//----------------------------------------------------------------------
 
-<attr name='format' value='string'><p>
-  The formatting string.</p>
+"charset":#"<desc type='both'><p>
+ <short>Set output character set.</short>
+ The tag can be used to decide upon the final encoding of the resulting page.
+ All character sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a>
+ are supported.
+</p>
+</desc>
+
+<attr name='in' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation.</p>
+
+ <note><p>This attribute is depricated, use &lt;recode 
+ from=\"\"&gt;...&lt;/recode&gt; instead.</p></note>
 </attr>
 
-<attr name='split' value='charater'><p>
-  If used, the tag content will be splitted with the given string.</p>
-<ex>
-<sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
-</ex>
-</attr>",
+<attr name='out' value='Character set'><p>
+ Sets the output conversion character set of the current request. The page
+ will be sent encoded with the indicated character set.</p>
+</attr>
+",
 
+//----------------------------------------------------------------------
+
+"recode":#"<desc type='cont'><p>
+ <short>Converts between character sets.</short>
+ The tag can be used both to decode texts encoded in strange character
+ encoding schemas, and encode internal data to a specified encoding
+ scheme. All character sets listed in <a
+ href='http://rfc.roxen.com/1345'>RFC 1345</a> are supported.
+</p>
+</desc>
+
+<attr name='from' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation. Useful for decoding
+ data stored in a database.</p>
+</attr>
+
+<attr name='to' value='Character set'><p>
+ Converts the contents of the charset tag from the internal representation
+ to the character set indicated by this attribute. Useful for encoding data
+ before storing it into a database.</p>
+</attr>
+",
+
+//----------------------------------------------------------------------
 
 "emit#known-langs":({ #"<desc type='plugin'><p><short>
  Outputs all languages partially supported by roxen for writing
@@ -329,6 +650,96 @@ format='%4d%2d%2d'>19771003</sscanf>
 			  "&_.englishname;":#"<desc type='entity'>
  <p>The name of the language in English.</p>
 </desc>",
+
+//----------------------------------------------------------------------
+
+"random":#"<desc type='cont'><p><short>
+ Randomly chooses a message from its contents.</short>
+</p></desc>
+
+<attr name='separator' value='string'>
+ <p>The separator used to separate the messages, by default newline.</p>
+
+<ex><random separator='#'>Foo#Bar#Baz</random></ex>
+</attr>
+
+<attr name='seed' value='string'>
+ <p>Enables you to use a seed that determines which message to choose.</p>
+
+<ex-box>Tip of the day:
+<set variable='var.day'><date type='iso' date=''/></set>
+<random seed='var.day'><insert file='tips.txt'/></random></ex-box>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"if#date":#"<desc type='plugin'><p><short>
+ Is the date yyyymmdd?</short> The attributes before, after and
+ inclusive modifies the behavior. This is a <i>Utils</i> plugin.
+</p></desc>
+<attr name='date' value='yyyymmdd | yyyy-mm-dd' required='required'><p>
+ Choose what date to test.</p>
+</attr>
+
+<attr name='after'><p>
+ The date after todays date.</p>
+</attr>
+
+<attr name='before'><p>
+ The date before todays date.</p>
+</attr>
+
+<attr name='inclusive'><p>
+ Adds todays date to after and before.</p>
+
+ <ex>
+  <if date='19991231' before='' inclusive=''>
+     - 19991231
+  </if>
+  <else>
+    20000101 -
+  </else>
+ </ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"if#time":#"<desc type='plugin'><p><short>
+ Is the time hhmm, hh:mm, yyyy-mm-dd or yyyy-mm-ddThh:mm?</short> The attributes before, after,
+ inclusive and until modifies the behavior. This is a <i>Utils</i> plugin.
+</p></desc>
+<attr name='time' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm' required='required'><p>
+ Choose what time to test.</p>
+</attr>
+
+<attr name='after'><p>
+ The time after present time.</p>
+</attr>
+
+<attr name='before'><p>
+ The time before present time.</p>
+</attr>
+
+<attr name='until' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm'><p>
+ Gives true for the time range between present time and the time value of 'until'.</p>
+</attr>
+
+<attr name='inclusive'><p>
+ Adds present time to after and before.</p>
+
+<ex-box>
+  <if time='1200' before='' inclusive=''>
+    ante meridiem
+  </if>
+  <else>
+    post meridiem
+  </else>
+</ex-box>
+</attr>",
+
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
 			]) }),
 
 #if 0

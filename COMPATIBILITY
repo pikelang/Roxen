@@ -107,7 +107,33 @@ and Roxen WebServer 4.0.
 
    In the compatibility module:	 	  Should become in ChiliMoon:
     /internal-roxen-			   /*/
-    &roxen.				   &system.
+    &roxen.;	  			   &system.;
+    <combine-path />
+    <fsize />				   <emit source=dir />
+    <modified />
+    <user />
+    <\x266a />
+    <configimage />			   <img src="/*/..." />
+    <crypt />
+    <cset />				   <define preparse />
+    <sort />
+
+ - Support for <sscanf />, <sprintf /> and <insert href /> has been moved
+   to the module rxmltags.pike
+
+ - Support for <expire-time />, <cache />, <nocache /> and <set-max-cache />
+   has been moved to the module cache.pike
+
+ - Support for <debug />, <gauge >, <help />, <trace />, <insert variables />,
+   <insert scopes />, <if debug /> and <if module-debug />
+   has been moved to the module development.pike
+
+ - Support for <if date />, <if time />, <if user />, <if group />,
+   <autoformat />, <smallcaps />, and <random />
+   has been moved to the module additional_rxml.pike
+
+ - Existing Admin-Interface virtual servers should load two extra modules
+   to keep working: "roxenwebserver" and "development"
 
  - /internal-gopher- generation has moved to the diremit module.
 
