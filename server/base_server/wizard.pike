@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.81 1999/01/05 02:44:01 mast Exp $
+/* $Id: wizard.pike,v 1.82 1999/01/09 09:24:17 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -711,7 +711,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 	    page_state[dir] (id, v->_page, @args) : page_state[dir];
 	  DEBUGMSG ("Wizard: No data from page function; going to " +
 		    (stringp (v->_page) ? (offset > 0 ? "next" : "previous") +
-		     " page " + v->_page : "done page"));
+		     " page " + v->_page : "done page") + "\n");
 	  if (!stringp (v->_page)) v->_page = 0;
 	}
       }
