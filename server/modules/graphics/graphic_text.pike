@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.211 2000/03/15 20:35:08 wellhard Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.212 2000/03/16 00:32:53 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -37,16 +37,12 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant gtextargs=#"
 <attr name=afont>
- <ex>
-  <gtext afont>foo</gtext>
- </ex>
+
 </attr>
 
 <attr name=alpha value=path>
  Use the specified image as an alpha channel, together with the
  background attribute.
- <ex>
-  <gtext
 </attr>
 
 <attr name=background value=path>
@@ -63,14 +59,14 @@ constant gtextargs=#"
 
  <p>If you set the background color, it is probably best to add the
  notrans attribute as well.</p>
-<ex type=vert>
- <gtext notrans bgcolor=pink>Pink</gtext>
- <gtext notrans bgcolor=red>Red</gtext>
- <gtext notrans bgcolor=%50,0,100,0>%50,0,100,0</gtext>
-</ex>
+ <ex type=vert>
+<gtext notrans=\"\" bgcolor=\"pink\">Pink</gtext>
+<gtext notrans=\"\" bgcolor=\"#ff0000\">Red</gtext>
+<gtext notrans=\"\" bgcolor=\"%50,0,100,0\">%50,0,100,0</gtext>
+ </ex>
 </attr>
 
-<attr name=bgturbulence value=frequency,color;frequency,color;frequency,color>
+<attr name=bgturbulence value=frequency,color;frequency,color...>
  Apply a turbulence effect.
 </attr>
 
@@ -88,17 +84,17 @@ constant gtextargs=#"
  negative values for distance is possible, but you might have to add
  'spacing'.
  <ex type=vert>
-  <gtext scale=0.8 fgcolor=darkblue quant=200 bshadow=1>&lt;gtext quant=100 bshadow=1&gt;</gtext><br>
-  <gtext scale=0.8 fgcolor=darkblue quant=200 bshadow=2>&lt;gtext quant=100 bshadow=2&gt;</gtext>
+<gtext scale=\"0.8\" fgcolor=\"#FF6600\" quant=\"200\" bshadow=\"1\">&lt;gtext bshadow=1&gt;</gtext><br />
+<gtext scale=\"0.8\" fgcolor=\"#FF6600\" quant=\"200\" bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
  </ex>
 </attr>
 
 <attr name=chisel>
  Make the text look like it has been cut into the background.
  <ex type=vert>
-  <gtext bold quant=200 ypad=-40% xpad=-20% chisel talign=center
-  opaque=70 fgcolor=gold bevel=2 background=tiles.jpg> Chisel
-  opaque=70</gtext>
+<gtext bold=\"\" quant=\"200\" ypad=\"-40%\" xpad=\"-20%\" chisel=\"\" talign=\"center\"
+opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"tiles.jpg\"> Chisel
+opaque=70</gtext>
  </ex>
 </attr>
 
@@ -118,7 +114,7 @@ constant gtextargs=#"
  Sets the text color.
 
  <ex type=vert>
-  <gtext fgcolor=#0080FF>#0080FF</gtext>
+<gtext fgcolor=\"#0080FF\">#0080FF</gtext>
  </ex>
 </attr>
 
@@ -141,20 +137,13 @@ constant gtextargs=#"
  images dithering is O.K.
 </attr>
 
-<attr name=fuzz value=color>
- Apply a glow effect.
- <ex type=vert>
-  <gtext fuzz=pink>fuzz=pink</gtext>
- </ex>
-</attr>
-
 <attr name=ghost value=dist,blur,color>
  Apply a ghost effect. Cannot be used together with shadow or magic
  coloring.
  <ex type=vert>
-  <gtext spacing=2 crop quant=200 ghost=1,1,red>ghost=1,1,red</gtext>
-  <gtext spacing=2 crop quant=200 ghost=1,3,blue>ghost=1,3,blue</gtext>
-  <gtext spacing=2 crop bshadow=1 opaque=90 ghost=-1,1,yellow>ghost=-1,1,yellow opaque=90 bshadow=1</gtext>
+<gtext spacing=\"2\" crop=\"\" quant=\"200\" ghost=\"1,1,red\">ghost=1,1,red</gtext>
+<gtext spacing=\"2\" crop=\"\" quant=\"200\" ghost=\"1,3,blue\">ghost=1,3,blue</gtext>
+<gtext spacing=\"2\" crop=\"\" bshadow=\"1\" opaque=\"90\" ghost=\"-1,1,yellow\">ghost=-1,1,yellow opaque=90 bshadow=1</gtext>
  </ex>
 </attr>
 
@@ -163,7 +152,7 @@ constant gtextargs=#"
  better on a dark background, where a real 'glow' effect can be
  achieved.
  <ex type=vert>
-  <gtext quant=200 glow=red>&lt;gtext glow=red&gt;</gtext>
+<gtext quant=\"200\" glow=\"red\">&lt;gtext glow=red&gt;</gtext>
  </ex>
 </attr>
 
@@ -203,14 +192,14 @@ constant gtextargs=#"
  render the text, otherwise the closest match will be used.</p>
 
  <ex type=vert>
-  <gtext nfont=futura light       >Light</gtext>
-  <gtext nfont=futura light italic>Italic</gtext>
-  <gtext nfont=futura             >Normal</gtext>
-  <gtext nfont=futura italic      >Italic</gtext>
-  <gtext nfont=futura bold        >Bold</gtext>
-  <gtext nfont=futura bold italic >Italic</gtext>
-  <gtext nfont=futura black       >Black</gtext>
-  <gtext nfont=futura black italic>Italic</gtext>
+<gtext nfont=\"futura\" light=\"\"            >Light</gtext>
+<gtext nfont=\"futura\" light=\"\" italic=\"\">Italic</gtext>
+<gtext nfont=\"futura\"                       >Normal</gtext>
+<gtext nfont=\"futura\" italic=\"\"           >Italic</gtext>
+<gtext nfont=\"futura\" bold=\"\"             >Bold</gtext>
+<gtext nfont=\"futura\" bold=\"\"  italic=\"\">Italic</gtext>
+<gtext nfont=\"futura\" black=\"\"            >Black</gtext>
+<gtext nfont=\"futura\" black=\"\" italic=\"\">Italic</gtext>
  </ex>
 </attr>
 
@@ -218,8 +207,8 @@ constant gtextargs=#"
  Do not make the background transparent. Useful when making 'boxes' of
  color around the text.
  <ex type=vert>
-  <gtext bgcolor=red>&lt;gtext bgcolor=red&gt;</gtext>
-  <gtext bgcolor=red notrans>&lt;gtext bgcolor=red notrans&gt;</gtext>
+<gtext bgcolor=\"red\">&lt;gtext bgcolor=red&gt;</gtext>
+<gtext bgcolor=\"red\" notrans=\"\">&lt;gtext bgcolor=red notrans&gt;</gtext>
  </ex>
 </attr>
 
@@ -230,7 +219,7 @@ constant gtextargs=#"
 <attr name=opaque value=percentage>
  Generate text with this amount of opaqueness. 100% is default.
  <ex>
-  <gtext fgcolor=blue opaque=50>Opaque</gtext>
+<gtext fgcolor=\"blue\" opaque=\"50\">Opaque</gtext>
  </ex>
 </attr>
 
@@ -260,8 +249,8 @@ constant gtextargs=#"
 <attr name=scale value=number>
  Sets the scale of the image. Larger than 1.0 is enlargement.
  <ex type=vert>
-  <gtext scale=1.0>&lt;gtext scale=1.0&gt;</gtext>
-  <gtext scale=0.5>&lt;gtext scale=0.5&gt;</gtext>
+<gtext scale=\"1.0\">&lt;gtext scale=1.0&gt;</gtext>
+<gtext scale=\"0.5\">&lt;gtext scale=0.5&gt;</gtext>
  </ex>
 </attr>
 
@@ -365,14 +354,14 @@ constant tagdoc=([
  default the alt attribute will be set to the contents of the
  <tag>gtext</tag> tag.
  <ex type=vert>
-  <gtext fgcolor=blue alt=\"Hello!\">Point your mouse here</gtext>
+<gtext fgcolor=\"blue\" alt=\"Hello!\">Welcome!</gtext>
  </ex>
 </attr>
 
 <attr name=border value=width,color>
  Draws a border around the text of the specified width and color.
  <ex type=vert>
-  <gtext fgcolor=blue border=1,pink>Pink border</gtext>
+<gtext fgcolor=\"blue\" border=\"2,red\">Red border</gtext>
  </ex>
 </attr>
 
@@ -387,19 +376,15 @@ constant tagdoc=([
  will highlight the image when the mouse is moved over it. The message
  is shown in the browser's status bar.
  <ex type=vert>
-  <gtext href=http://www.roxen.com magic=HERE!>www.roxen.com</gtext>
+<gtext href=\"http://www.roxen.com\" magic=\"Roxen\">www.roxen.com</gtext>
  </ex>
 </attr>
 
-<attr name=magic_attribute value=value> Same as for any
+<attr name=magic-attribute value=value> Same as for any
  <tag>gtext</tag> attribute, except for the highlighted image.
  <ex type=vert>
-  <gtext fgcolor=blue>Magic_attribute</gtext>
+<gtext fgcolor=\"blue\" magic-fgcolor=\"darkgreen\" magic=\"\">Magic_attribute</gtext>
  </ex>
-</attr>
-
-<attr name=magicbg value=color,path>
- Same as the background attribute, except for the highlighted image.
 </attr>
 
 <attr name=noxml>
@@ -416,14 +401,14 @@ constant tagdoc=([
  <p>This will allow the browser to word-wrap the text, but will disable certain attributes like magic.</p>
 
  <ex type=vert>
-  <gtext scale=0.4 split>Make each word..</gtext>
+<gtext scale=\"0.4\" split=\"\">Make each word..</gtext>
  </ex>
 </attr>
 
 <attr name=submit>
  Creates a submit-button for forms. Does not work together with split
  or magic arguments.
-</attr>",
+</attr>"+gtextargs,
 
 "gtext-id":#"<desc tag></desc>
 <attr name=href value=URL>
@@ -434,7 +419,7 @@ constant tagdoc=([
 
 <attr name=short>
 
-</attr>",
+</attr>"+gtextargs,
 
 "gtext-url":#"<desc cont></desc>
 
@@ -446,7 +431,7 @@ constant tagdoc=([
 
 <attr name=short>
 
-</attr>",]);
+</attr>"+gtextargs,]);
 #endif
 
 
@@ -738,12 +723,8 @@ string fix_text(string c, mapping m, RequestID id) {
     m_delete(m, "nowhitespace");
   }
 
-  if(!m->noparse && !m->preparse)
-    c = parse_rxml(c, id);
-  else {
-    m_delete(m, "noparse");
-    m_delete(m, "preparse");
-  }
+  m_delete(m, "noparse");
+  m_delete(m, "preparse");
 
   c=replace(c, replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
 	    replace_values+({" ", " ", "\n", "\n", ""}));
@@ -759,7 +740,7 @@ string fix_text(string c, mapping m, RequestID id) {
 
 // ----------------- gtext tags and containers -------------------
 
-string container_gtext_url(string t, mapping arg, string c, RequestID id) {
+string simpletag_gtext_url(string t, mapping arg, string c, RequestID id) {
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
   if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
@@ -770,7 +751,7 @@ string container_gtext_url(string t, mapping arg, string c, RequestID id) {
   return "+"+image_cache->store( ({p,c}), id )+ext;
 }
 
-string tag_gtext_id(string t, mapping arg, RequestID id) {
+string simpletag_gtext_id(string t, mapping arg, string c, RequestID id) {
   mapping p=mk_gtext_arg(arg,id);
   if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
   if(!arg->short)
@@ -778,7 +759,7 @@ string tag_gtext_id(string t, mapping arg, RequestID id) {
   return "+"+image_cache->store(p, id )+"/foo";
 }
 
-string container_gtext(string t, mapping arg, string c, RequestID id)
+string simpletag_gtext(string t, mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
 
@@ -848,13 +829,14 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
 
     if(p->bevel) p->pressed=1;
 
+    m_delete(p, "fgcolor");
     foreach(glob("magic-*", indices(arg)), string q)
     {
       p[q[6..]]=arg[q];
       m_delete(arg, q);
     }
 
-    if(!arg->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
+    if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
 			id->misc->defines->alink||"#ff0000";
 
     string num2 = image_cache->store( ({ p, c }),id );
@@ -902,33 +884,32 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
   return sprintf(lp,make_tag("img",arg));
 }
 
-array(string) container_gh(string t, mapping m, string c, RequestID id) {
+array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
   int i;
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
   if(!m->valign) m->valign="top";
- return ({ "<p>"+container_gtext("",m,c,id)+"<br>" });
+ return ({ "<p>"+simpletag_gtext("",m,c,id)+"<br>" });
 }
 
-array(string) container_anfang(string t, mapping m, string c, RequestID id) {
+array(string) simpletag_anfang(string t, mapping m, string c, RequestID id) {
   if(!m->align) m->align="left";
-  return ({ "<br clear=\"left\">"+container_gtext("",m,c[0..0],id)+c[1..] });
+  return ({ "<br clear=\"left\">"+simpletag_gtext("",m,c[0..0],id)+c[1..] });
 }
 
 
 // --------------- tag and container registration ----------------------
 
-mapping query_tag_callers()
-{
-  return ([ "gtext-id":tag_gtext_id ]);
-}
-
-mapping query_container_callers()
-{
-  return ([ "anfang":container_anfang,
-            "gtext-url":container_gtext_url, "gh":container_gh,
-	    "gh1":container_gh, "gh2":container_gh,
-	    "gh3":container_gh, "gh4":container_gh,
-	    "gh5":container_gh, "gh6":container_gh,
-	    "gtext":container_gtext ]);
+mapping query_simpletag_callers() {
+  return ([ "gtext-id" : ({ RXML.FLAG_EMPTY_ELEMENT, simpletag_gtext_id }),
+	    "gtext-url" : ({ 0, simpletag_gtext_url }),
+	    "anfang" : ({ 0, simpletag_anfang }),
+	    "gh1" : ({ 0, simpletag_gh }),
+	    "gh2" : ({ 0, simpletag_gh }),
+	    "gh3" : ({ 0, simpletag_gh }),
+	    "gh4" : ({ 0, simpletag_gh }),
+	    "gh5" : ({ 0, simpletag_gh }),
+	    "gh6" : ({ 0, simpletag_gh }),
+	    "gtext" : ({ 0, simpletag_gtext }),
+  ]);
 }
