@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.47 1998/07/23 01:20:39 neotron Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.48 1998/10/17 01:54:05 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -49,9 +49,13 @@ object findmodule(string fullname)
     if (!programs[fullname]) {
       programs[fullname] = object_program(res);
     }
-    foreach(indices(res), string foo) {
-      if(programp(res[foo]) && !programs[fullname+"."+foo]) {
-	programs[fullname+"."+foo] = res[foo];
+    // Don't call indices on directory modules
+    // to avoid loading everything recursively.
+    if (object_program(res) != dirnode) {
+      foreach(indices(res), string foo) {
+	if(programp(res[foo]) && !programs[fullname+"."+foo]) {
+	  programs[fullname+"."+foo] = res[foo];
+	}
       }
     }
   }
@@ -74,6 +78,18 @@ void name_program(program foo, string name)
   programs[name] = foo;
   saved_names[foo] = name;
   saved_names[(program)foo] = name;
+}
+
+mapping module_names = ([]);
+
+mixed resolv(string identifier, string|void current_file)
+{
+  mixed ret = ::resolv(identifier, current_file);
+
+  if (ret) {
+    module_names[ret] = identifier;
+  }
+  return(ret);
 }
 
 private static int mid = 0;
