@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.438 2001/06/17 20:30:20 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.439 2001/06/21 10:23:27 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1251,7 +1251,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   {
     werror("a: "+id->not_query+"\n");
     int ss = (<'/','\\'>)[ id->not_query[0] ];
-    id->not_query = combine_path("/",replace(X,"\\","/"));
+    id->not_query = combine_path("/",replace(id->not_query,"\\","/"));
     if( !ss )  id->not_query = id->not_query[1..];
     werror("b: "+id->not_query+"\n");
   }
