@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.163 1998/11/26 19:37:09 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.164 1998/11/30 04:02:07 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1734,6 +1734,11 @@ class StringFile
 
   string read(int nbytes)
   {
+    if(!nbytes)
+    {
+      offset = strlen(data);
+      return data;
+    }
     string d = data[offset..offset+nbytes-1];
     offset += strlen(d);
     return d;
@@ -1764,8 +1769,8 @@ public array open_file(string fname, string mode, object id)
   string oq = id->not_query;
   function funp;
   mapping file;
-  // FIXME: Shouldn't id->not_query be set to fname here?
-  // grubba 1998-10-01
+
+  id->not_query = fname;
   foreach(oc->first_modules(), funp)
     if(file = funp( id )) 
       break;
@@ -2391,8 +2396,10 @@ object enable_module( string modname )
   {
     me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 	       "The priority of the module. 9 is highest and 0 is lowest."
-	       " Modules with the same priority can be assumed to be "
-	       "called in random order", 
+	       " Modules with the same priority can be assumed to be"
+	       " called in random order"
+	       "<p>You have to restart Roxen to ensure that the new"
+	       " priority is applied.",
 	       ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       
     if(module->type != MODULE_LOGGER &&
