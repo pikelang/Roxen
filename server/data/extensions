@@ -1,42 +1,54 @@
-# $Id: extensions,v 1.49 2001/11/21 11:51:53 grubba Exp $
+# $Id: extensions,v 1.50 2002/06/13 00:23:56 nilsson Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
 # (example: *.gif to image/gif). Lines are commented with ## to resolve name
-# conflicts (same extension mapping to several MIME-types). Up to date with IANA
-# MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
-# quite a few other mime types. They can be found in the file
-# more_extensions/chemical.
+# conflicts (same extension mapping to several MIME-types).
 #
-# Last synchronized with IANA media types list: 2000-09-20
+# Last synchronized with IANA media types list: 2002-02-05 (except applications)
 
 # -------------------- Audio ---------------------
 
 # IANA registered
 
+726	audio/32kadpcm
 au	audio/basic
 snd	audio/basic
-# audio/32kadpcm
-# audio/vnd.qcelp
-# audio/vnd.digital-winds
-# audio/vnd.lucent.voice
-# audio/vnd.octel.sbc
-# audio/vnd.rhetorex.32kadpcm
-# audio/vnd.vmx.cvsd
-# audio/vnd.nortel.vbk
-# audio/vnd.cns.anp1
-# audio/vnd.cns.inf1
-# audio/L16
-# audio/vnd.everad.plj
+# audio/DAT12
+# audio/G.722.1
+l16	audio/L16
+# audio/L20
+# audio/L24
+# audio/MP4A-LATM
+# audio/mpa-robust
+abs	audio/mpeg
+mp2	audio/mpeg
+mp3	audio/mpeg
+##mpa	audio/mpeg
+mpega	audio/mpeg
+# audio/parityfec
+sid	audio/prs.sid
+psid	audio/prs.sid
 # audio/telephone-event
 # audio/tone
-sid	audio/prs.sid
-# vnd.nuera.ecelp4800
-# vnd.nuera.ecelp7470
+# audio/vnd.3gpp.iufp
+# audio/vnd.cisco.nse
+# audio/vnd.cns.anp1
+# audio/vnd.cns.inf1
+eol	audio/vnd.digital-winds
+plj	audio/vnd.everad.plj
+lvp	audio/vnd.lucent.voice
+vbk	audio/vnd.nortel.vbk
+ecelp4800	audio/vnd.nuera.ecelp4800
+ecelp7470	audio/vnd.nuera.ecelp7470
+ecelp9600	audio/vnd.nuera.ecelp9600
+# audio/vnd.octel.sbc
+qcp	audio/vnd.qcelp
+# audio/vnd.rhetorex.32kadpcm
+# audio/vnd.vmx.cvsd
 
 # Other
 
-abs	audio/mpeg
 aif	audio/x-aiff
 aifc	audio/x-aiff
 aiff	audio/x-aiff
@@ -50,13 +62,8 @@ m3u	audio/x-mpegurl
 mid	audio/midi
 midi	audio/midi
 mod	audio/x-mod
-mp2	audio/mpeg
-mp3	audio/mpeg
 mp3url	audio/x-mpegurl
-##mpa	audio/mpeg
-mpega	audio/mpeg
 pls	audio/x-mpegurl
-psid	audio/x-psid
 ra	audio/x-pn-realaudio
 ram	audio/x-pn-realaudio
 rmi	audio/midi
@@ -64,7 +71,6 @@ rmm	audio/x-pn-realaudio
 rmf	audio/rmf
 rpm	audio/x-pn-realaudio-plugin
 sd2	audio/x-sd2
-sid	audio/x-psid
 tsi	audio/tsplayer
 vqf	audio/x-twinvq
 vqe	audio/x-twinvq-plugin
@@ -78,36 +84,39 @@ wtx	audio/x-wtx
 
 # IANA registered
 
+cgm	image/cgm
+# image/g3fax
+gif	image/gif
+ief	image/ief
 jfif	image/jpeg
 jpe	image/jpeg
 jpeg	image/jpeg
 jpg	image/jpeg
 pjp	image/jpeg
 pjpg	image/jpeg
-gif	image/gif
-ief	image/ief
-# image/g3fax
+# image/naplps
+png	image/png
+btif	image/prs.btif
+btf	image/prs.btif
+pti	image/prs.pti
 tif	image/tiff
 tiff	image/tiff
-# image/cgm
-# image/naplps
-# image/vnd.dwg
-# image/vnd.svf
-# image/vnd.dxf
-png	image/png
-fpx	image/vnd.fpx
-# Also known as image/x-fpx and image/net-fpx
-# image/vnd.xiff
-# image/prs.btif
-# image/vnd.fastbidsheet
-wbmp    image/vnd.wap.wbmp
-# Also known as image/x-wap.wbmp
-# image/prs.pti
 # image/vnd.cns.inf2
+djvu	image/vnd.djvu
+djv	image/vnd.djvu
+dwg	image/vnd.dwg
+dxf	image/vnd.dxf
+fbs	image/vnd.fastbidsheet
+fpx	image/vnd.fpx
+fst	image/vnd.fst
+mmr	image/vnd.fujixerox.edmics-mmr
+rlc	image/vnd.fujixerox.edmics-rlc
 # image/vnd.mix
-# image/vnd.fujixerox.edmics-rlc
-# image/vnd.fujixerox.edmics-mmr
-# image/vnd.fst
+# image/vnd.net-fpx
+svf	image/vnd.svf
+wbmp    image/vnd.wap.wbmp
+xif	image/vnd.xiff
+
 
 # Pending registration
 
@@ -165,6 +174,8 @@ xwd	image/x-xwindowdump
 
 # IANA registered
 
+# video/DV
+# video/MP4V-ES
 m1v	video/mpeg
 mpa	video/mpeg
 mpe	video/mpeg
@@ -173,15 +184,19 @@ mpegv	video/mpeg
 mpg	video/mpeg
 mpv	video/mpeg
 vbs	video/mpeg
+# video/prityfec
+# video/pointer
 moov	video/quicktime
 mov	video/quicktime
 qt	video/quicktime
-viv     video/vnd.vivo
-vivo    video/vnd.vivo
+fvt	video/vnd.fvt
 # video/vnd.motorola.video
 # video/vnd.motorola.videop
-# video/vnd.fvt
-# video/pointer
+mxu	video/vnd.mpegurl
+m4u	video/vnd.mpegurl
+nim	video/vnd.nokia.interleaved-multimedia
+viv     video/vnd.vivo
+vivo    video/vnd.vivo
 
 # Other
 
@@ -215,13 +230,11 @@ xdr	video/x-videogram
 
 # IANA registered
 
-bat	text/plain
-java	text/plain
-text	text/plain
-txt	text/plain
-rtx	text/richtext
+ics	text/calendar
+ifb	text/calendar
+css	text/css
+# text/directory
 # text/enriched
-tsv	text/tab-separated-values
 htm	text/html
 html	text/html
 htp	text/html
@@ -229,33 +242,43 @@ rxml	text/html
 shtml	text/html
 spider	text/html
 spml	text/html
+# text/parityfec
+bat	text/plain
+java	text/plain
+text	text/plain
+txt	text/plain
+tag	text/prs.lines.tag
+dsc	text/prs.lines.tag
+# text/rfc822-headers
+rtx	text/richtext
+rtf	text/rtf
 sgm	text/sgml
 sgml	text/sgml
-# text/vnd.latex-z
-# text/vnd.fmi.flexstor
-# text/uri-list
-# text/vnd.abc
-# text/rfc822-headers
-# text/vnd.in3d.3dml
-# text/prs.lines.tag
-# text/vnd.in3d.spot
-css	text/css
-xml	text/xml
-rtf	text/rtf
-# text/directory
-# text/calendar
-wml	text/vnd.wap.wml
-# Also known as text/x-wap.wml
-wmls	text/vnd.wap.wmlscript
-# text/vnd.motorola.reflex
-# text/vnd.fly
-# text/wap.sl
-# text/wap.si
 # text/t140
-# text/vnd.ms-mediapackage
+tsv	text/tab-separated-values
+uris	text/uri-list
+uri	text/uri-list
+abc	text/vnd.abc
+curl	text/vnd.curl
+dms	text/DMClientScript
+fly	text/vnd.fly
+flx	text/vnd.fmi.flexstor
+##3dml,3dm text/vnd.in3d.3dml
+spot	text/vnd.in3d.spot
+spo	text/vnd.in3d.spot
 # text/vnd.IPTC.NewsML
 # text/vnd.IPTC.NITF
-# text/vnd.curl
+# text/vnd.latex-z
+# text/vnd.motorola.reflex
+mpf	text/vnd.ms-mediapackage
+ccc	text/vnd.net2phone.commcenter.command
+jad	text/vnd.sun.jme2.app-descriptor
+si	text/wap.si
+sl	text/wap.sl
+wml	text/vnd.wap.wml
+wmls	text/vnd.wap.wmlscript
+xml	text/xml
+# text/xml-external-parsed-entity
 
 # Other
 
@@ -357,7 +380,6 @@ fdf     application/vnd.fdf
 # application/vnd.xara
 # application/sgml-open-catalog
 # application/vnd.rapid
-vnd.enliven
 # application/vnd.japannet-registration-wakeup
 # application/vnd.japannet-verification-wakeup
 # application/vnd.japannet-payment-wakeup
@@ -595,7 +617,7 @@ cu	application/x-cu-seeme
 dcr	application/x-director
 der	application/x-x509-ca-cert
 dir	application/x-director
-dms	application/x-diskmasher
+##dms	application/x-diskmasher
 dnt	application/donut
 donut	application/donut
 dst	application/tajima
@@ -745,51 +767,36 @@ vms application/x-dreamcast-vms
 # IANA registered
 
 # model/iges
+# model/mesh
+dwf	model/vnd.dwf
+3dml	model/vnd.flatland.3dml
+3dm	model/vnd.flatland.3dml
+gdl	model/vnd.gdl
+##gsm	model/vnd.gdl
+win	model/vnd.gdl
+dor	model/vnd.gdl
+lmp	model/vnd.gdl
+rsm	model/vnd.gdl
+msm	model/vnd.gdl
+ism	model/vnd.gdl
+# model/vnd.gs-gdl
+gtw	model/vnd.gtw
+mts	model/vnd.mts
+x_b	model/vnd.parasolid.transmit.binary
+xmt_bin	model/vnd.parasolid.transmit.binary
+x_t	model/vnd.parasolid.transmit.text
+xmt_txt	model/vnd.parasolid.transmit.text
+vtu	model/vnd.vtu
 vrml	model/vrml
 wrl	model/vrml
 wrml    model/vrml
-# model/mesh
-# model/vnd.dwf
-# model/vnd.gtw
-# model/vnd.flatland.3dml
-# model/vnd.vtu
-# model/vnd.mts
-# model/vnd.gdl
-# model/vnd.gs-gdl
-
-
-# ------------------ Multipart -------------------
-
-# IANA registered
-
-dig	multipart/mixed
-# multipart/alternative
-# multipart/digest
-# multipart/parallel
-# multipart/appledouble
-# multipart/header-set
-# multipart/form-data
-# multipart/related
-# multipart/report
-# multipart/voice-message
-# multipart/signed
-# multipart/encrypted
-# multipart/byteranges
-
-# Other
-
-push	multipart/x-mixed-replace
 
 
 # -------------------- Other ---------------------
 
-# AutoCad (AutoDesk)
-dwf	drawing/x-dwf
-
 # LivePicture PhotoVista RealSpace
 ivr	i-world/i-vrml
 
-3dm	x-world/x-3dmf
 3dmf	x-world/x-3dmf
 qd3	x-world/x-3dmf
 qd3d	x-world/x-3dmf
@@ -809,11 +816,11 @@ u98     urdu/urdu98
 ice     x-conference/x-cooltalk
 
 # This is supposed to be just 'gzip' and 'compress', but Netscape
-# barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
-Z	STRIP			x-compress
-gz	STRIP			x-gzip
-bz	STRIP			x-bzip
-bz2	STRIP			x-bzip2
-
-uu	STRIP			uuencode
-b64	STRIP			base64
+# barfs.. Fixed in Netscape 3.*
+Z     STRIP                   x-compress
+gz    STRIP                   x-gzip
+bz    STRIP                   x-bzip
+bz2   STRIP                   x-bzip2
+ 
+uu    STRIP                   uuencode
+b64   STRIP                   base64
