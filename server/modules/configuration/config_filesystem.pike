@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.29 2000/03/13 06:20:47 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.30 2000/03/14 02:20:00 per Exp $";
 
 constant path = "config_interface/";
 
@@ -39,8 +39,7 @@ array(string|array) low_stat_file(string locale, string f, object id)
     {
       ret = low_stat_file(locale, "", id);
 
-      if (ret) 
-        return ret;
+      if (ret) return ret;
 
       // Support stuff like /template  =>  /standard/template
       f = locale;
@@ -51,10 +50,7 @@ array(string|array) low_stat_file(string locale, string f, object id)
     string p;
     ret = file_stat(p = path+locale+"/"+f);
     if (!ret && (locale != "standard")) 
-    {
-      locale = "standard";
-      ret = file_stat(p = path+locale+"/"+f);
-    }
+      ret = file_stat(p = path+"standard/"+f);
     if( ret )
       return ({ p, ret });
   }
