@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.39 2000/09/18 13:43:49 grubba Exp $
+ * $Id: ftp.pike,v 2.40 2000/09/18 17:21:34 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2475,16 +2475,68 @@ class FTPSession
   }
 
   /*
+   * Session handling
+   */
+
+  int login()
+  {
+    int session_limit = port_obj->query_option("ftp_user_session_limit");
+
+    if (session_limit > 0) {
+
+      if (session_limit <= (port_obj->ftp_sessions[user])) {
+	return 0;		// Session limit reached.
+      }
+
+      if (logged_in) {
+	report_error("Internal error in session-handler.");
+	return 1;
+      }
+
+      DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
+      port_obj->ftp_sessions[user]++;
+    }
+    logged_in = (user != 0) || -1;
+
+    return 1;
+  }
+
+  void logout()
+  {
+    if (!logged_in) return;
+
+    int session_limit = port_obj->query_option("ftp_user_session_limit");
+
+    if (session_limit > 0) {
+
+      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+      if ((--port_obj->ftp_sessions[user]) < 0) {
+	port_obj->ftp_sessions[user] = 0;
+      }
+    }
+    logged_in = 0;
+  }
+
+  int check_login()
+  {
+    int session_limit = port_obj->query_option("ftp_user_session_limit");
+
+    if (session_limit <= 0) return 1;
+
+    if (session_limit <= (port_obj->ftp_sessions[user])) {
+      return 0;		// Session limit reached.
+    }
+
+    return 1;
+  }
+
+  /*
    * FTP commands begin here
    */
 
   void ftp_REIN(string|int args)
   {
-    if (user && port_obj->query_option("ftp_user_session_limit") > 0) {
-      // Logging out...
-      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-      port_obj->ftp_sessions[user]--;
-    }
+    logout();
 
     master_session->auth = 0;
     dataport_addr = 0;
@@ -2508,11 +2560,8 @@ class FTPSession
 
   void ftp_USER(string args)
   {
-    if (user && port_obj->query_option("ftp_user_session_limit") > 0) {
-      // Logging out...
-      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-      port_obj->ftp_sessions[user]--;
-    }
+    logout();
+
     auth = 0;
     user = args;
     password = 0;
@@ -2523,45 +2572,41 @@ class FTPSession
       master_session->not_query = "Anonymous";
       user = 0;
       if (port_obj->query_option("anonymous_ftp")) {
-	logged_in = -1;
+	if (check_login()) {
 #if 0
-	send(200, ({ "Anonymous ftp, at your service" }));
+	  send(200, ({ "Anonymous ftp, at your service" }));
 #else /* !0 */
-	// ncftp doesn't like the above answer -- stupid program!
-	send(331, ({ "Anonymous ftp accepted, send "
-		     "your complete e-mail address as password." }));
+	  // ncftp doesn't like the above answer -- stupid program!
+	  send(331, ({ "Anonymous ftp accepted, send "
+		       "your complete e-mail address as password." }));
 #endif /* 0 */
-	conf->log(([ "error":200 ]), master_session);
+	  conf->log(([ "error":200 ]), master_session);
+	} else {
+	  send(530, ({
+	    sprintf("Too many anonymous users (%d).",
+		    port_obj->query_option("ftp_user_session_limit"))
+	  }));
+	  conf->log(([ "error":403 ]), master_session);
+	}
       } else {
 	send(530, ({ "Anonymous ftp disabled" }));
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
-      if (port_obj->query_option("ftp_user_session_limit") > 0) {
-	if (!port_obj->ftp_sessions) {
-	  port_obj->ftp_sessions = ([]);
-	}
-	DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
-	if (port_obj->ftp_sessions[user]++ >=
-	    port_obj->query_option("ftp_user_session_limit")) {
-	  // Session limit exceeded.
-	  send(530, ({
-	    sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
-		    port_obj->query_option("ftp_user_session_limit"), user)
-	  }));
-	  conf->log(([ "error":403 ]), master_session);
-
-	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
-	  port_obj->ftp_sessions[user]--;
-
-	  user = 0;
-	  return;
-	}
-
+      if (check_login()) {
+	send(331, ({ sprintf("Password required for %s.", user) }));
+	master_session->not_query = user;
+	conf->log(([ "error":407 ]), master_session);
+      } else {
+	// Session limit exceeded.
+	send(530, ({
+	  sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
+		  port_obj->query_option("ftp_user_session_limit"), user)
+	}));
+	conf->log(([ "error":403 ]), master_session);
+	user = 0;
+	return;
       }
-      send(331, ({ sprintf("Password required for %s.", user) }));
-      master_session->not_query = user;
-      conf->log(([ "error":407 ]), master_session);
     }
   }
 
@@ -2569,16 +2614,26 @@ class FTPSession
   {
     if (!user) {
       if (port_obj->query_option("anonymous_ftp")) {
-	send(230, ({ "Guest login ok, access restrictions apply." }));
-	master_session->method = "LOGIN";
-	master_session->not_query = "Anonymous User:"+args;
-	conf->log(([ "error":200 ]), master_session);
-	logged_in = -1;
+	if (login()) {
+	  send(230, ({ "Guest login ok, access restrictions apply." }));
+	  master_session->method = "LOGIN";
+	  master_session->not_query = "Anonymous User:"+args;
+	  conf->log(([ "error":200 ]), master_session);
+	  logged_in = -1;
+	} else {
+	  send(530, ({
+	    sprintf("Too many anonymous users (%d).",
+		    port_obj->query_option("ftp_user_session_limit"))
+	  }));
+	  conf->log(([ "error":403 ]), master_session);
+	}
       } else {
 	send(503, ({ "Login with USER first." }));
       }
       return;
     }
+
+    logout();
 
     password = args||"";
     args = "CENSORED_PASSWORD";	// Censored in case of backtrace.
@@ -2610,10 +2665,21 @@ class FTPSession
 	conf->log(([ "error":401 ]), master_session);
 	master_session->auth = 0;
       } else {
-	send(230, ({ sprintf("Guest user %s logged in.", user) }));
-	logged_in = -1;
-	conf->log(([ "error":200 ]), master_session);
-	DWRITE(sprintf("FTP: Guest-user: %O\n", master_session->auth));
+	// Guest user.
+	string u = user;
+	user = 0;
+	if (login()) {
+	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
+	  logged_in = -1;
+	  conf->log(([ "error":200 ]), master_session);
+	  DWRITE(sprintf("FTP: Guest-user: %O\n", master_session->auth));
+	} else {
+	  send(530, ({
+	    sprintf("Too many anonymous/guest users (%d).",
+		    port_obj->query_option("ftp_user_session_limit"))
+	  }));
+	  conf->log(([ "error":403 ]), master_session);
+	}
       }
       return;
     }
@@ -2626,6 +2692,15 @@ class FTPSession
 		   "Try using anonymous, or check /etc/shells" }));
       conf->log(([ "error":402 ]), master_session);
       master_session->auth = 0;
+      return;
+    }
+
+    if (!login()) {
+      send(530, ({
+	sprintf("Too many concurrent sessions (limit is %d).",
+		port_obj->query_option("ftp_user_session_limit"))
+      }));
+      conf->log(([ "error":403 ]), master_session);
       return;
     }
 
@@ -3455,15 +3530,7 @@ class FTPSession
 
   void destroy()
   {
-    if (port_obj->query_option("ftp_user_session_limit") > 0) {
-      if (user) {
-	// Logging out...
-	DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-	port_obj->ftp_sessions[user]--;
-      } else {
-	DWRITE("Exiting with no user.\n");
-      }
-    }
+    logout();
 
     conf->extra_statistics->ftp->sessions--;
     conf->misc->ftp_users_now--;
@@ -3480,6 +3547,7 @@ class FTPSession
     if (!conf->inited) {
       conf->enable_all_modules();
     }
+
 #if 0
     werror("FTP: conf:%O\n"
 	   "FTP:urls:%O\n",
