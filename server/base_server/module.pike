@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.201 2004/05/12 19:56:46 mast Exp $
+// $Id: module.pike,v 1.202 2004/05/12 20:12:52 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1322,11 +1322,42 @@ static mapping(string:mixed) copy_collection(string source,
       //   destination resource.
       TRACE_ENTER("Destination exists and overwrite is on.", this);
       mapping(string:mixed) res = recurse_delete_files(destination, id, result);
-      if (res && (res->error >= 300)) {
+      if (res && (!sizeof (res) || res->error >= 300)) {
 	// Failed to delete something.
 	TRACE_LEAVE("Deletion failed.");
 	TRACE_LEAVE("Copy collection failed.");
+	// RFC 2518 9.6 says:
+	//
+	//   If a COPY or MOVE is not performed due to the value of
+	//   the Overwrite header, the method MUST fail with a 412
+	//   (Precondition Failed) status code.
+	//
+	// That can perhaps be interpreted as that we should return
+	// 412 here. But otoh, in RFC 2518 8.8.5 COPY status codes:
+	//
+	//    412 (Precondition Failed) - /.../ the Overwrite header
+	//    is "F" and the state of the destination resource is
+	//    non-null.
+	//
+	// That clearly doesn't include this case. Also, common sense
+	// says that the error from the failed delete is more useful
+	// to the client.
+#if 0
 	return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+#else
+	if (sizeof (res)) {
+	  // RFC 2518 8.8.3:
+	  //   If an error in executing the COPY method occurs with a
+	  //   resource other than the resource identified in the
+	  //   Request-URI then the response MUST be a 207
+	  //   (Multi-Status).
+	  //
+	  // So if the failure was on the root destination resource we
+	  // have to convert it to a multi-status.
+	  result->add_status (destination, res);
+	}
+	return ([]);
+#endif
       }
       TRACE_LEAVE("Deletion ok.");
       break;
