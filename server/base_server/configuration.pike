@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.70 1997/08/31 02:45:37 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.71 1997/08/31 18:36:20 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -659,7 +659,7 @@ public string status()
 		   "<td><b>FTP users (now):</b></td><td>%d</td></tr>\n",
 		   misc->ftp_users, (float)tmp/(float)10, misc->ftp_users_now);
   }
-  res += "</table>";
+  res += "</table><p>\n\n";
 
   if ((roxen->configuration_interface()->more_mode) &&
       (extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
