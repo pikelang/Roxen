@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.10 1998/09/28 00:44:41 grubba Exp $
+ * $Id: pop3.pike,v 1.11 1998/09/28 00:59:51 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.10 1998/09/28 00:44:41 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.11 1998/09/28 00:59:51 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -23,6 +23,8 @@ static class Pop_Session
 
   static object user;
   static string username;
+
+  static multiset(object) deleted = (<>);
 
   static void send(string s)
   {
@@ -88,11 +90,7 @@ static class Pop_Session
     disconnect();
     if (user) {
       array(object) mail = user->get_incoming()->mail();
-      foreach(mail, object m) {
-	if (m->flags()->pop_delete) {
-	  m->delete();
-	}
-      }
+      indices(deleted)->delete();
     }
   }
 
@@ -100,10 +98,7 @@ static class Pop_Session
   {
     object mbox = user->get_incoming();
 
-    array(object) mail = Array.filter(mbox->mail(),
-				      lambda(object m) {
-					return !(m->flags()->pop_delete);
-				      });
+    array(object) mail = mbox->mail() - indices(deleted);
     int num = sizeof(mail);
     int sz = `+(@(mail->get_size()));
     send_ok(sprintf("%d %d", num, sz));
@@ -112,10 +107,7 @@ static class Pop_Session
   void pop_LIST()
   {
     object mbox = user->get_incoming();
-    array(object) mail = Array.filter(mbox->mail(),
-				      lambda(object m) {
-					return !(m->flags()->pop_delete);
-				      });
+    array(object) mail = mbox->mail() - indices(deleted);
     int num = sizeof(mail);
     
     int sz = `+(@(mail->get_size()));
@@ -140,7 +132,7 @@ static class Pop_Session
       return;
     }
 
-    if (mail->flags()->pop_delete) {
+    if (deleted[mail]) {
       send_error(sprintf("Mail %s is deleted.", args[0]));
       return;
     }
@@ -169,11 +161,11 @@ static class Pop_Session
       return;
     }
 
-    if (mail->flags()->pop_delete) {
+    if (deleted[mail]) {
       send_error(sprintf("message %s already deleted.", args[0]));
       return;
     }
-    mail->set_flag("pop_delete");
+    deleted[mail] = 1;
     send_ok(sprintf("message %s deleted.", args[0]));
   }
 
@@ -184,10 +176,10 @@ static class Pop_Session
 
   void pop_RSET()
   {
+    deleted = (<>);
+
     object mbox = user->get_incoming();
     array(object) mail = mbox->mail();
-
-    mail->clear_flag("pop_delete");
 
     int num = sizeof(mail);
     int sz = `+(@(mail->get_size()));
@@ -209,7 +201,7 @@ static class Pop_Session
       return;
     }
 
-    if (mail->flags()->pop_delete) {
+    if (deleted[mail]) {
       send_error(sprintf("message %s is deleted.", args[0]));
       return;
     }
@@ -256,7 +248,7 @@ static class Pop_Session
 	send_error(sprintf("No such message %s.", args[0]));
 	return;
       }
-      if (mail->flags()->pop_delete) {
+      if (deleted[mail]) {
 	send_error(sprintf("Message %s is deleted.", args[0]));
 	return;
       }
@@ -264,10 +256,8 @@ static class Pop_Session
       return;
     } else {
       send_ok("");
-      foreach(user->get_incoming()->mail(), object m) {
-	if (!(m->flags()->pop_delete)) {
-	  send(sprintf("%s %s\r\n", m->id, m->id));
-	}
+      foreach(user->get_incoming()->mail() - indices(deleted), object m) {
+	send(sprintf("%s %s\r\n", m->id, m->id));
       }
       send(".\r\n");
       return;
