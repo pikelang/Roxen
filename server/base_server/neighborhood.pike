@@ -1,5 +1,5 @@
 #define DELAY 20
-#define NEIGH_DEBUG
+// #define NEIGH_DEBUG
 mapping neighborhood = ([ ]);
 object udp_broad=spider.dumUDP();
 
@@ -33,7 +33,7 @@ class TCPNeigh {
   {
     if(objectp(f)) me=f;
     else me = files.file();
-    if(port)
+    if(port && f && strlen(f))
     {
 #ifdef NEIGH_DEBUG
       werror("Neighbourhood: Connecting to "+(f||"127.0.0.1")+"\n");
@@ -49,37 +49,58 @@ class TCPNeigh {
       }
     }
     master=m;
-    me->set_nonblocking(read,0,done);
+    catch(me->set_nonblocking(read,0,done));
   }
 };
 
 object udp_sock;
-
+mapping seen_on_udp = ([]);
 class UDPNeigh
 {
   object master;
   int port;
-  string net;
+  string net, last_from;
   int nobr=1;
 
   static void read()
   {
     mapping r = master->udp_sock->read();
-    if(r) return master->low_got_info(r->data, this_object());
+    if(r) {
+      last_from = r->ip;
+      master->seen_on_udp[last_from]++;
+      return master->low_got_info(r->data, this_object());
+    }
     else {
       master->udp_sock->set_read_callback(0);
       call_out(master->udp_sock->set_read_callback, 2, read);
     }
   }
 
-  void send(string s)
+  void send(string s, string from)
   {
-    if(!nobr)
+    if(net)
     {
+      if(from)
+      {
+	string nnet;
+	if(!sscanf(net, "%s.255", nnet)) sscanf(net, "%s.0", nnet);
+	if(nnet && (!search(from,nnet)))
+	{
+	  if(master->seen_on_udp[from])
 #ifdef NEIGH_DEBUG
-      werror("Neighbourhood: UDP Send to "+net+":"+port+"\n");
+	    werror("Not sending to "+net+", this is the origining network!\n");
 #endif
-      return master->udp_sock->send(net,port,s);
+	  return;
+	}
+      }
+
+      if(!nobr)
+      {
+#ifdef NEIGH_DEBUG
+	werror("Neighbourhood: UDP Send to "+net+":"+port+"\n");
+#endif
+	return master->udp_sock->send(net,port,s);
+      }
     }
   }
 
@@ -93,8 +114,11 @@ class UDPNeigh
 #ifdef NEIGH_DEBUG
       werror("Neighbourhood: Listening to UDP\n");
 #endif
-      if(!master->udp_sock->bind( p ))
+      if(!master->udp_sock->bind( p )) {
+#ifdef NEIGH_DEBUG
 	werror("Bind failed.\n");
+#endif
+      }
       master->udp_sock->set_nonblocking(read);
     } else
       nobr=0;
@@ -107,12 +131,12 @@ mapping neighbours = ([ ]);
 
 string network_numbers()
 {
-  return roxen->query("neigh_ips");
+  return roxen->query("neigh_ips")-({""});
 }
 
 string tcp_numbers()
 {
-  return roxen->query("neigh_tcp_ips");
+  return roxen->query("neigh_tcp_ips")-({""});
 }
 
 int seq;
@@ -128,10 +152,10 @@ void add_neighbour(object neigh)
 
 object master;
 
-mapping sent_to = ([]);
 
 void send_to_all(string f, object from)
 {
+  mapping sent_to = ([]);
   if(from)
   {
     string ip = from->me?(((from->me->query_address()||"")/" ")[0]):from->net;
@@ -140,9 +164,13 @@ void send_to_all(string f, object from)
   foreach(indices(low_neighbours), object o)
     if(objectp(o) && (o!=from))
     {
-      string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
-      if(ip=="") this_object()->remove_neighbour(o);
-      if(!sent_to[ip]++) o->send(f);
+      catch
+      {
+	string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
+	if(ip=="") this_object()->remove_neighbour(o);
+	if(!sent_to[ip]++)
+	  o->send(f,from?from->me?from->me->query_address():from->last_from:0);
+      };
     }
 }
 
@@ -194,14 +222,22 @@ void low_got_info(string data, object from)
   mapping ns, m;
   m = decode_value(data);
   if(m->sequence) m->seq = m->sequence;
-  if(!neighborhood[m->configurl]) neighborhood[m->configurl]=([]);
+  if(!neighborhood[m->configurl]) neighborhood[m->configurl]=(["seq":-1]);
   ns = neighborhood[m->configurl];
-  if(!ns->ok || (m->seq != ns->seq))
+  if(m->last_reboot > ns->last_reboot)
+  {
+    ns->seq = m->seq -1;
+#ifdef NEIGH_DEBUG
+    werror("Neighbourhood: Resetting info for "+m->configurl+" ("+m->seq+")\n");
+#endif
+  }
+    
+  if(m->seq > ns->seq)
   {
     ns->ok=1;
     ns->seq = m->seq;
 #ifdef NEIGH_DEBUG
-    werror("Neighbourhood: Got info for "+m->configurl+"\n");
+    werror("Neighbourhood: Got info for "+m->configurl+" ("+m->seq+")\n");
 #endif
     m->rec_time = time();
     if(m->last_reboot > ns->last_reboot) {
@@ -212,6 +248,9 @@ void low_got_info(string data, object from)
     }
     send_to_all(data, from);
   }
+#ifdef NEIGH_DEBUG
+  else werror("Neighbourhood: Rejecting old info for "+m->configurl+" ("+m->seq+" vs "+ns->seq+")\n");
+#endif
   neighborhood[m->configurl] = ns | m;
 }
 
