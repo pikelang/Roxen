@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.23 1998/11/22 17:31:08 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.24 1999/02/01 21:10:18 mast Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -204,9 +204,9 @@ string http_encode_cookie(string f)
 
 string http_encode_url (string f)
 {
-  return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"",
+  return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
 		       "&", "?", "=", "/", ":"}),
-		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22",
+		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
 		    "%26", "%3f", "%3d", "%2f", "%3a"}));
 }
 
