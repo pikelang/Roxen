@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.285 2001/03/15 01:01:25 nilsson Exp $
+// $Id: rxml.pike,v 1.286 2001/03/15 18:36:38 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1535,8 +1535,12 @@ class TagEmit {
 
       if(plugin->skiprows && args->skiprows)
 	m_delete(args, "skiprows");
-      if(plugin->maxrows && args->maxrows)
-	m_delete(args, "maxrows");
+      if(args->maxrows) {
+	if(plugin->maxrows)
+	  m_delete(args, "maxrows");
+	else
+	  args->maxrows = (int)args->maxrows;
+      }
 
       // Parse the filter argument
       if(args->filter) {
@@ -1560,19 +1564,24 @@ class TagEmit {
       id->misc->emit_filter = filter;
 
       if(objectp(res))
-	if(args->sort)
+	if(args->sort ||
+	   (args->skiprows && args->skiprows[0]=='-') )
 	  res = expand(res);
+	else if(filter) {
+	  do_iterate = object_filter_iterate;
+	  id->misc->emit_rows = res;
+	  if(args->skiprows) args->skiprows = (int)args->skiprows;
+	  return 0;
+	}
 	else {
 	  do_iterate = object_iterate;
+	  id->misc->emit_rows = res;
 
 	  if(args->skiprows) {
-	    // FIXME '-'
 	    int loop = (int)args->skiprows;
 	    while(loop--)
 	      res->skip_row();
 	  }
-
-	  id->misc->emit_rows = res;
 
 	  return 0;
 	}
@@ -1654,10 +1663,10 @@ class TagEmit {
 	  }
 
 	  if(args->remainderinfo)
-	    RXML.user_set_var(args->remainderinfo, (int)args->maxrows?
-			      max(sizeof(res)-(int)args->maxrows, 0): 0);
+	    RXML.user_set_var(args->remainderinfo, args->maxrows?
+			      max(sizeof(res)-args->maxrows, 0): 0);
 
-	  if(args->maxrows) res=res[..(int)args->maxrows-1];
+	  if(args->maxrows) res=res[..args->maxrows-1];
 	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
 	  do_iterate = array_iterate;
@@ -1681,16 +1690,39 @@ class TagEmit {
 
     int(0..1) object_iterate(RequestID id) {
       int counter = vars->counter;
-      if(args->maxrows && counter == (int)args->maxrows)
+
+      if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
-      while(should_filter(vars=res->get_row(), filter || ([]) ));
+
+      if(mappingp(vars=res->get_row())) {
+	vars->counter = ++counter;
+	return 1;
+      }
+
+      vars = (["counter":counter]);
+      return do_once_more();
+    }
+
+    int(0..1) object_filter_iterate(RequestID id) {
+      int counter = vars->counter;
+
+      if(args->maxrows && counter == args->maxrows)
+	return do_once_more();
+
+      if(args->skiprows>0)
+	while(args->skiprows-->-1)
+	  while((vars=res->get_row()) &&
+		should_filter(vars, filter));
+      else
+	while((vars=res->get_row()) &&
+	      should_filter(vars, filter));
 
       if(mappingp(vars)) {
 	vars->counter = ++counter;
 	return 1;
       }
 
-      vars = ([]);
+      vars = (["counter":counter]);
       return do_once_more();
     }
 
@@ -1708,7 +1740,7 @@ class TagEmit {
 
       if(real_counter>=sizeof(res)) return do_once_more();
 
-      if(args->maxrows && counter == (int)args->maxrows)
+      if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
       while(should_filter(res[real_counter++], filter))
@@ -1733,19 +1765,23 @@ class TagEmit {
 	RXML.user_set_var(args->rowinfo, rounds);
       LAST_IF_TRUE = !!rounds;
 
-      if(args->filter && args->remainderinfo) {
-	int rem;
-	if(arrayp(res)) {
-	  foreach(res[vars["real-counter"]+1..], mapping v)
-	    if(!should_filter(v, filter))
-	      rem++;
-	} else {
-	  mapping v;
-	  while( v=res->get_row() )
-	    if(!should_filter(v, filter))
-	      rem++;
+      if(args->remainderinfo) {
+	if(args->filter) {
+	  int rem;
+	  if(arrayp(res)) {
+	    foreach(res[vars["real-counter"]+1..], mapping v)
+	      if(!should_filter(v, filter))
+		rem++;
+	  } else {
+	    mapping v;
+	    while( v=res->get_row() )
+	      if(!should_filter(v, filter))
+		rem++;
+	  }
+	  RXML.user_set_var(args->remainderinfo, rem);
 	}
-	RXML.user_set_var(args->remainderinfo, rem);
+	else if( do_iterate == object_iterate )
+	  RXML.user_set_var(args->remainderinfo, res->num_rows_left());
       }
       return 0;
     }
