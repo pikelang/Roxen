@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.69 1999/06/03 21:23:17 grubba Exp $
+# $Id: configure.in,v 1.70 1999/06/03 21:27:21 grubba Exp $
 #
 
 prefix=$PWD
@@ -300,10 +300,10 @@ case "$roxen_cv_sys_os" in
     esac
   ;;
   UnixWare*)
-    if test "$GCC" != "yes"; then
+    if test "$GCC" = "yes"; then :; else
       # Try using the built-in alloca function
       AC_SYS_COMPILER_FLAG(-Kalloca,Kalloca,CFLAGS)
-    else :; fi
+    fi
   ;;
 esac
 
