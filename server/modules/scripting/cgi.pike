@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.19 1997/04/13 00:42:02 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.20 1997/04/17 15:38:07 per Exp $";
 
 #include <module.h>
 
@@ -25,7 +25,7 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 {
   mapping new = build_env_vars(f,id,path_info);
   if(QUERY(rawauth) && id->rawauth)
-    new["HTTP_AUTHORIZATION"] = id->rawauth;
+    new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
   if(QUERY(clearpass) && id->realauth)
     new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
 
@@ -387,8 +387,8 @@ mixed find_file(string f, object id)
 	pipe1->dup2(files.file("stderr"));
       catch(((program)"privs")("CGI script", uid));
       if(QUERY(use_wrapper))
-	exece(combine_path(oldwd, QUERY(wrapper)),
-	      ({f})+make_args(id->rest_query), 
+	exece(combine_path(oldwd, (QUERY(wrapper)||"bin/cgi")),
+	      ({f})+make_args(id->rest_query),
 	      my_build_env_vars(f, id, path_info));
       exece(f, make_args(id->rest_query), my_build_env_vars(f, id, path_info));
     };
