@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.5 1999/11/16 11:01:13 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.6 1999/11/16 13:53:02 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -298,9 +298,11 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
   }
   
   //  Make button clickable if not dimmed
-  if (args->href && !new_args->dim)
-    return make_container("a", ([ "href" : args->href ]),
-			  make_tag("img", img_attrs));
-  else
+  if (args->href && !new_args->dim) {
+    mapping a_attrs = ([ "href" : args->href ]);
+    if (args->target)
+      a_attrs->target = args->target;
+    return make_container("a", a_attrs, make_tag("img", img_attrs));
+  } else
     return make_tag("img", img_attrs);
 }
