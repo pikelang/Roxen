@@ -4,6 +4,7 @@ AutoSite
 logview_sql
 intraseek
 navigation
+weblayout
 menumaker
 
 Database setup from scratch for Mysql
