@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.170 1999/04/24 14:40:17 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.171 1999/04/24 16:38:44 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2593,7 +2593,10 @@ string tag_expire_time(string tag, mapping m, object id, object file,
 
   add_header(_extra_heads, "Expires", http_date(t));
   if(m->now)
+  {
     add_header(_extra_heads, "Last-Modified", http_date(t+1));
+    id->since=http_date(0);
+  }
   return "";
 }
 
