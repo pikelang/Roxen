@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.12 2001/11/15 10:49:12 anders Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.13 2002/02/06 12:32:23 jonasw Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -152,7 +152,7 @@ class TTFWrapper
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    return rr;
+    return rr->scale(0.5);
 
   }
 
@@ -169,7 +169,7 @@ class TTFWrapper
     fake_italic = fi;
     real = r;
     size = s;
-    real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
+    real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
 
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
