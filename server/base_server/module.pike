@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.61 1999/12/28 00:35:48 nilsson Exp $ */
+/* $Id: module.pike,v 1.62 2000/01/05 17:29:53 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -12,9 +12,20 @@ constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
 constant module_unique = 1;
 
+private string _module_identifier;
+string module_identifier()
+{
+  if (!_module_identifier) {
+    string|mapping name = register_module()[1];
+    if (mappingp (name)) name = name->standard;
+    _module_identifier = sprintf ("%s,%O", name || module_name, my_configuration());
+  }
+  return _module_identifier;
+}
+
 string _sprintf()
 {
-  return sprintf("RoxenModule("+register_module()[1]+",%s)", my_configuration());
+  return "RoxenModule(" + module_identifier() + ")";
 }
 
 array register_module()
@@ -643,6 +654,15 @@ mapping query_if_callers()
     if(functionp( this_object()[q] ))
       m[replace(q[3..], "_", "-")] = this_object()[q];
   return m;
+}
+
+RXML.TagSet query_tagset()
+{
+  return RXML.TagSet (module_identifier(),
+		      filter (rows (this_object(),
+				    glob ("Tag*",
+					  indices (this_object()))),
+			      functionp));
 }
 
 mixed get_value_from_file(string path, string index, void|string pre)
