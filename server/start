@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.120 2000/08/09 02:34:34 per Exp $
+# $Id: start,v 1.121 2000/08/17 01:16:06 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -101,7 +101,7 @@ export CLASSPATH
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DKEEP_ALIVE"
+DEFINES="$DEFINES -DRAM_CACHE"
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
@@ -159,6 +159,12 @@ parse_args() {
   ;;
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
+  ;;
+  '--without-ram-cache'|'--disable-ram-cache')
+    DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
+  ;;
+  '--without-ram-cache-stat'|'--disable-ram-cache-stat')
+    DEFINES="`-DRAM_CACHE_ASUME_STATIC_CONTENT`"
   ;;
   '--dump-debug'|'--with-dump-debug'|'--enable-dump-debug')
     DEFINES="-DDUMP_DEBUG $DEFINES"
@@ -256,6 +262,16 @@ the default arguments.
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
 				  Defaults to .B../configurationB..
+
+      .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
+				  things up. Saves RAM at the cost of speed.
+
+      .B--without-ram-cache-statB.:   Disable the stat that is usualy done
+                                  for files in the ram cache to ensure that
+				  they are not  changed before they are sent.
+                                  Improves performance at the cost of constant
+                                  aggrevation if the site is edited. Useful for
+				  truly static sites.
 
       .B--with-threadsB.:             If threads are available, use them.
 

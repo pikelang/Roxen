@@ -2,11 +2,9 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.249 2000/08/17 00:38:34 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.250 2000/08/17 01:16:06 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
-#define RAM_CACHE
-
 
 #undef OLD_RXML_COMPAT
 
@@ -1114,15 +1112,10 @@ void end(string|void s, int|void keepit)
 
 static void do_timeout()
 {
-  // werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
-  int elapsed = _time()-time;
+  int elapsed = _time(1)-time;
   if(time && elapsed >= 30)
   {
     MARK_FD("HTTP timeout");
-    // Do not under any circumstances send any data as a reply here.
-    // This is an easy reason why: It breaks keep-alive totaly.
-    // It is not a very good idea to do that, since it might be enabled
-    // per deafult any century now..
     end();
   } else {
     // premature call_out... *¤#!"
@@ -1940,9 +1933,9 @@ void got_data(mixed fooid, string s)
   int tmp;
 
   MARK_FD("HTTP got data");
-  remove_call_out(do_timeout);
-  call_out(do_timeout, 30); // Close down if we don't get more data
-                         // within 30 seconds. Should be more than enough.
+//   remove_call_out(do_timeout);
+//   call_out(do_timeout, 30); // Close down if we don't get more data
+//                          // within 30 seconds. Should be more than enough.
   time = _time(1); // Check is made towards this to make sure the object
   		  // is not killed prematurely.
   if(!raw)
@@ -1984,7 +1977,7 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
-  misc->cacheable = 30; // FIXME: Make configurable.
+  misc->cacheable = 300; // FIXME: Make configurable.
 
 
   mixed q;
@@ -2082,9 +2075,11 @@ void got_data(mixed fooid, string s)
     string d = cv[ 0 ];
     file = cv[1];
     array st;
+#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
     if( !file->rf || !file->mtime || 
         ((st = file_stat( file->rf )) &&
          st[ST_MTIME] == file->mtime ) )
+#endif
     {
       conf->hsent += file->hs;
       if( strlen( d ) < 4000 )
@@ -2192,7 +2187,7 @@ static void create(object f, object c, object cc)
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = _time(1);
-    call_out(do_timeout, 30);
+    call_out(do_timeout, 90);
 //     string q = f->read( 8192, 1 );
 //     if( q ) got_data( 0, q );
   }
@@ -2213,7 +2208,7 @@ void chain(object f, object c, string le)
   {
     // If no pipelined data is available, call out...
     remove_call_out(do_timeout);
-    call_out(do_timeout, 150);
+    call_out(do_timeout, 90);
   }
 
   if(!my_fd)
