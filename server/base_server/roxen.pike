@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.413 2000/02/04 04:15:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.414 2000/02/04 04:55:04 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1872,7 +1872,9 @@ class ConfigIFCache
   string dir;
   void create( string name )
   {
-    dir = "config_caches/"+replace(configuration_dir-".", "/", "-") + "/" + name + "/";
+    dir = (".config_settings/"+
+           replace(configuration_dir-".", "/", "-") +
+           "/" + name + "/");
     mkdirhier( dir+"/foo" );
   }
 
