@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.31 1999/06/10 00:28:54 mast Exp $ */
+/* $Id: low_describers.pike,v 1.32 1999/06/10 00:51:20 mast Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -268,10 +268,10 @@ string all_ip_numbers_as_selection(int id, string sel)
 		 }, sel)*"") +
 	    "</select>\n"+
 	    LOCALE->other_ip_nummer()
-	    +" <input type=string name=other_" +
+	    +" <input type=string size=15 name=other_" +
             id + " value=\""+sel+"\">");
   } else {
-    return "<input type=string name=ip_number_"+id+" value='"+sel+"'>";
+    return "<input type=string size=15 name=ip_number_"+id+" value='"+sel+"'>";
   }
 }
 
@@ -310,7 +310,8 @@ string encode_one_port(array port, int id)
     "<tr>\n  <td><input size=5,1 name=port_"+id+" value="+
     port[0]+"></td>\n    <td>"+all_protocols_as_selection(id, port[1])+
     "</td>\n    <td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
-    "</tr>\n";
+    "</tr>\n"
+    "</table>";
   switch(lower_case(port[1]))
   {
    case "ssl3":
@@ -318,16 +319,15 @@ string encode_one_port(array port, int id)
     string cf, kf;
     sscanf(port[3], "%*scert-file %s\n", cf);
     sscanf(port[3], "%*skey-file %s\n", kf);
-    res += ("<tr><td colspan=3>"
-	    "<table width=100% cellspacing=0 border=0 bgcolor=#f0f0ff>\n"
+    res += ("\n<table width=100% cellspacing=0 border=0 bgcolor=#f0f0ff>\n"
 	    "<tr><td colspan=2><b>"+
 	    LOCALE->ssl_options()+"</b></td></tr>\n");
     res += LOCALE->ssl_variables(cf,kf,id);
-    res += "</table></td></tr>\n";
+    res += "</table>\n";
     break;
   } 
   return res +
-   ("</table></td>\n<td>"+port_buttons(port,id)+"</td>\n</tr>\n");
+   ("</td>\n<td>"+port_buttons(port,id)+"</td>\n</tr>\n");
 }
 
 string encode_ports(array from)
