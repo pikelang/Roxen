@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.21 2000/12/19 23:59:02 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.22 2001/01/20 23:03:29 hop Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -576,8 +576,8 @@ array|int auth (array(string) auth, object id)
 		    break;
 
 		case "{CRYP" :
-		    if (sizeof(pw) > 7 && pw[5..7] == "T}") {
-			pok = !crypt(p,pw[8..]);
+		    if (sizeof(pw) > 7 && pw[5..6] == "T}") {
+			pok = !crypt(p,pw[7..]);
 			DEBUGLOG ("Trying CRYPT digest ...");
 		    }
 		    break;
