@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.32 2005/04/01 14:50:52 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.33 2005/04/04 14:35:18 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -51,14 +51,14 @@ constant tagdoc=([
  </p>
 </attr>
 
-<attr name='password' value='password'><p>
- User password for connection to the directory server. If omitted the
- default will be used.</p>
- </attr>
-
 <attr name='binddn' value='distinguished name'><p>
- User for connecting to the directory server.</p>
- </attr>
+ Bind DN used for authentication in the directory server.</p>
+</attr>
+
+<attr name='password' value='password'><p>
+ Password for authentication in the directory server. If omitted the
+ empty string will be used.</p>
+</attr>
 
 <attr name='dn' value='distinguished name' required='required'><p>
  Distinguished name of object.</p>
@@ -129,9 +129,13 @@ constant tagdoc=([
  the corresponding part of URL.</p>
 </attr>
 
-<attr name='password' value='user password'><p>
- User password for connection to the directory server. If omitted the
- default will be used.</p>
+<attr name='binddn' value='distinguished name'><p>
+ Bind DN used for authentication in the directory server.</p>
+</attr>
+
+<attr name='password' value='password'><p>
+ Password for authentication in the directory server. If omitted the
+ empty string will be used.</p>
 </attr>"
 ]);
 #endif
