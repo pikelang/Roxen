@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.68 2000/01/05 06:09:10 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.69 2000/01/05 11:24:28 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -189,6 +189,7 @@ program low_findprog(string pname, string ext, object|void handler)
 
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
+	load_time[fname] = time();
 	programs[fname]=0;
         if(arrayp(e) &&
            sizeof(e)==2 &&
