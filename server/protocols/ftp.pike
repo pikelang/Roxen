@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4 1996/12/16 22:11:39 neotron Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.1 1997/03/01 17:40:41 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -15,7 +15,7 @@ string cvs_version = "$Id: ftp.pike,v 1.4 1996/12/16 22:11:39 neotron Exp $";
       should not be used, due to security reasons. */
 
 
-inherit "protocols/http"; /* For the variables and such.. (Per) */ 
+inherit "http"; /* For the variables and such.. (Per) */ 
 #include <config.h>
 #include <module.h>
 #include <stat.h>
@@ -387,9 +387,9 @@ void got_data(mixed fooid, string s)
     cmd=lower_case(cmd);
 #ifdef DEBUG
     if(cmd == "pass")
-      stdout->write("recieved 'PASS xxxxxxxx' "+GRUK+"\n");
+      perror("recieved 'PASS xxxxxxxx' "+GRUK+"\n");
     else
-      stdout->write("recieved '"+cmdlin+"' "+GRUK+"\n");
+      perror("recieved '"+cmdlin+"' "+GRUK+"\n");
 #endif
     switch (cmd)
     {
@@ -407,7 +407,7 @@ void got_data(mixed fooid, string s)
      case "pass": 
       if(!rawauth)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
-      else {
+      else {	
 	y = ({ "Basic", rawauth+":"+arg});
 	realauth = y[1];
 	if(conf && conf->auth_module)
