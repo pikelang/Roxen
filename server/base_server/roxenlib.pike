@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.84 1998/10/20 06:38:12 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.85 1999/01/09 20:26:18 js Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -518,8 +518,8 @@ static string make_tag_attributes(mapping in)
       if(is_safe_string(b[i]))
 	a[i]+="="+b[i];
       else
-	a[i]+="=\""+replace(b[i], ({ "\"", "<", ">" }) ,
-			    ({ "&quot;", "&lt;", "&gt;" }))+"\"";
+	a[i]+="=\""+replace(b[i], ({ "\"", "<", ">", "&" }) ,
+			    ({ "&quot;", "&lt;", "&gt;", "&amp;" }))+"\"";
   return a*" ";
 }
 
