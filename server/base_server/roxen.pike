@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.344 1999/11/05 07:17:05 per Exp $
+ * $Id: roxen.pike,v 1.345 1999/11/06 08:24:49 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.344 1999/11/05 07:17:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.345 1999/11/06 08:24:49 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2756,8 +2756,6 @@ int main(int argc, array argv)
 
               dump( "base_server/state.pike" );
               dump( "base_server/struct/node.pike" );
-              dump( "base_server/persistent.pike");
-              dump( "base_server/restorable.pike");
               dump( "base_server/highlight_pike.pike");
               dump( "base_server/dates.pike");
               dump( "base_server/wizard.pike" );
