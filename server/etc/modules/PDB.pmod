@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.13 1997/10/11 14:00:04 noring Exp $
+ * $Id: PDB.pmod,v 1.14 1997/10/11 14:10:09 noring Exp $
  */
 
 #if constant(thread_create)
@@ -487,7 +487,6 @@ class db
     if((file_stat(f)||({0,0}))[1] == -2)  // directory
       foreach(get_dir(f)||({}), string file)
 	rm(f+"/"+file);  // delete file
-    werror("###### rm("+f+")\n");
     rm(f);  // delete file/directory
   }
 
