@@ -2,9 +2,7 @@
 // Copyright © 1996 - 2001, Roxen IS.
 //
 // ChiliMoon bootstrap program. Sets up the environment,
-// replces the master, adds custom functions and starts core.pike.
-
-// $Id: loader.pike,v 1.392 2004/07/12 00:44:28 _cvs_stephen Exp $
+// replaces the master, adds custom functions and starts core.pike.
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +26,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.392 2004/07/12 00:44:28 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.393 2004/07/12 00:49:52 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
