@@ -7,20 +7,13 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.11 2000/02/02 18:41:57 jonasw Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.12 2000/02/10 05:29:53 nilsson Exp $";
 constant tagdesc="Provides the tag 'cimg' that can be used to convert images "
   "between different image formats.";
 
-array register_module()
-{
-   return
-   ({
-      MODULE_PARSER,
-      "Image converter",
-      tagdesc,
-      0,1
-   });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Image converter";
+constant module_doc  = tagdesc;
 
 TAGDOCUMENTATION
 #ifdef manual

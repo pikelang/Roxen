@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $
+ * $Id: ldaptag.pike,v 1.4 2000/02/10 05:40:34 nilsson Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -36,7 +36,7 @@
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.4 2000/02/10 05:40:34 nilsson Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -62,12 +62,15 @@ string ldap_last_error = "";
  * Module interface functions
  */
 
-array register_module()
-{
-  return( ({ MODULE_PARSER,
-	     "LDAP module",
-	     "This module gives the tag &lt;LDAP&gt; and containers"
-	     " &lt;LDAPOUTPUT&gt;, &lt;LDAPFOR&gt; and &lt;LDAPELSE&gt;<br>\n"
+constant module_type = MODULE_PARSER;
+constant module_name = "LDAP module";
+constant module_doc  = "This module gives the tag &lt;LDAP&gt; and containers"
+  " &lt;LDAPOUTPUT&gt;, &lt;LDAPFOR&gt; and &lt;LDAPELSE&gt;<br>\n";
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([]);
+/*
 	     "Usage:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>&lt;ldap&gt;</b></td>\n"
@@ -167,11 +170,10 @@ array register_module()
 	     "to be a security hole if the module is not loaded for some "
 	     "reason.<br>\n"
 	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
-	     "useful to generate the queries.<br>\n"
+ 	     "useful to generate the queries.<br>\n"
              "<p>&copy; 1998,99 Honza Petrous, distributed freely under GPL license.",
-	     0,
-	     1 }) );
-}
+*/
+#endif
 
 /*
  * Tag handlers

@@ -6,11 +6,17 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.119 1999/11/24 15:03:14 per Exp $";
-constant thread_safe=1;
-
 #include <module.h>
 #include <roxen.h>
+
+constant cvs_version = "$Id: business.pike,v 1.120 2000/02/10 05:29:54 nilsson Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_PARSER|MODULE_LOCATION;
+constant module_name = "Business Graphics";
+constant module_doc  = "The Business Graphics tag. This module draws\n"
+  "line charts, pie charts, graphs and bar charts.<p>\n"
+  "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n";
+
 
 #define VOIDSYMBOL "\n"
 #define SEP "\t"
@@ -30,16 +36,10 @@ mapping bg_timers = ([]);
 
 int loaded;
 
-array register_module()
-{
-  return ({ 
-    MODULE_PARSER|MODULE_LOCATION,
-    "Business Graphics",
-    (  !loaded?
-       "The Business Graphics tag. This module draws\n"
-       "line charts, pie charts, graphs and bar charts.<p>\n"
-       "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n"
-       :
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([]);
+/*
        "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
        "Draws different kinds of diagrams.<br>"
        "<p><pre>"
@@ -145,9 +145,8 @@ array register_module()
        "  <b>quantity</b>       Name things represented in the diagram.\n"
        "  <b>unit</b>           Name the unit.\n"
        "</pre>"
-       ), ({}), 1,
-    });
-}
+*/
+#endif
 
 roxen.ImageCache image_cache;
 

@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.28 1999/12/11 21:04:20 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.29 2000/02/10 05:29:53 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -47,11 +47,9 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed" }));
 }
 
-array register_module()
-{
-  return ({ MODULE_PARSER | MODULE_PROVIDER, "Graphical Counter",
-    "Generates graphical counters.", 0, 1 });
-}
+constant module_type = MODULE_PARSER | MODULE_PROVIDER;
+constant module_name = "Graphical Counter";
+constant module_doc  = "Generates graphical counters.";
 
 void create()
 {

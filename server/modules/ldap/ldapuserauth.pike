@@ -53,7 +53,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.13 1999/12/14 16:12:37 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.14 2000/02/10 05:40:34 nilsson Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -594,17 +594,9 @@ array|int auth (string *auth, object id)
  * Registration and initialization
  */
 
-array register_module()
-{
-
-    return(({ MODULE_AUTH || MODULE_EXPERIMENTAL,
-	"LDAP directory authorization",
-	"Experimental module for authorization using "
-	"Pike's internal Ldap directory interface."
-	"<p>&copy; 1998,99 Honza Petrous (with enhancements by Wim Bonis)<br>"
-	"distributed freely under GPL license.",
-
-	({}), 1 }));
-}
-
-
+constant module_type = MODULE_AUTH || MODULE_EXPERIMENTAL;
+constant module_name = "LDAP directory authorization";
+constant module_doc  = "Experimental module for authorization using "
+  "Pike's internal Ldap directory interface."
+  "<p>&copy; 1998,99 Honza Petrous (with enhancements by Wim Bonis)</p>"
+  "distributed freely under GPL license.";

@@ -3,15 +3,10 @@ inherit "roxenlib";
 inherit "module";
 
 /*  ------------------------------------------- MODULE GLUE */
-array register_module()
-{
-  return ({ 
-    MODULE_PARSER,
-    "Roxen image manipulation tag",
-    "Layer base image manipulation tag with plugins",
-    0,1 
-  });
-} 
+
+constant module_type = MODULE_PARSER;
+constant module_name = "Roxen image manipulation tag";
+constant module_doc  = "Layer base image manipulation tag with plugins";
 
 /*  --------------------------------------- RENDERING FUNCTIONS */
 

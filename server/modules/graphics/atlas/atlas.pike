@@ -5,44 +5,18 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.2 1999/06/11 13:50:43 mast Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.3 2000/02/10 05:29:54 nilsson Exp $";
 
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
 
-static private int loaded = 0;
-
-static private string doc()
-{
-  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/atlas") || "",
-			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
-}
-
-array register_module()
-{
-  return ({ MODULE_PARSER | MODULE_EXPERIMENTAL,
-	    "Atlas",
-	    "Draws maps.<p>"
-	    "See <tt>&lt;atlas help&gt;&lt;/atlas&gt;</tt> for "
-	    "more information.\n<p>"+doc(),
-	    0, 1
-         });
-}
-
-mapping query_container_callers()
-{
-  return ([ "atlas":container_atlas,
-	    "atlas-list-regions":container_list_regions,
-	    "atlas-list-countries":container_list_countries
-  ]);
-}
-
-void start(int|void val, object|void conf)
-{
-  loaded = 1;
-}
+constant module_type = MODULE_PARSER | MODULE_EXPERIMENTAL;
+constant module_name = "Atlas";
+constant module_doc  = "Draws maps.<p>"
+  "See <tt>&lt;atlas help&gt;&lt;/atlas&gt;</tt> for "
+  "more information.\n</p>";
 
 /* Temporary cache. */
 
@@ -92,8 +66,8 @@ static private mixed cache_get_meta(string key)
 
 /* Tags. */
 
-array(string) container_list_regions(string t, mapping arg, string contents,
-				     object id)
+array(string) container_atlas_list_regions(string t, mapping arg, string contents,
+				     RequestID id)
 {
   return ({do_output_tag(arg, Array.map(.Map.Earth()->regions(),
 					lambda(string c)
@@ -101,8 +75,8 @@ array(string) container_list_regions(string t, mapping arg, string contents,
 			 contents, id)});
 }
 
-array(string) container_list_countries(string t, mapping arg, string contents,
-				       object id)
+array(string) container_atlas_list_countries(string t, mapping arg, string contents,
+				       RequestID id)
 {
   return ({do_output_tag(arg, Array.map(.Map.Earth()->countries(),
 					lambda(string c)
@@ -110,7 +84,7 @@ array(string) container_list_countries(string t, mapping arg, string contents,
 			 contents, id)});
 }
 
-string container_atlas_country(string t, mapping arg, mapping state)
+string cont_atlas_country(string t, mapping arg, mapping state)
 {
   string name;
 
@@ -124,21 +98,15 @@ string container_atlas_country(string t, mapping arg, mapping state)
   return "";
 }
 
-string container_atlas(string t, mapping arg, string contents,
-		       object id, object foo, mapping defines)
+string container_atlas(string t, mapping arg, string contents, RequestID id)
 {
-  if(arg->help)
-  {
-    return doc();
-  }
-  
   /* Construct a state which will be used
      in order to draw the image later on. */
   mapping state = ([ "arg":arg, "color":([]) ]);
 
   /* Parse internal tags. */
   parse_html(contents,
-	     ([ "atlas-country":container_atlas_country ]),
+	     ([ "atlas-country":cont_atlas_country ]),
 	     ([]),
 	     state);
 
@@ -163,7 +131,7 @@ string container_atlas(string t, mapping arg, string contents,
          " src=" + query_internal_location() + cache_set(state) + ">";
 }
 
-mapping find_internal(string filename, object id)
+mapping find_internal(string filename, RequestID id)
 {
   string r = cache_get_meta(filename);
 

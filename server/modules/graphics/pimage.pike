@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.18 1999/12/15 03:44:21 marcus Exp $";
+string cvs_version="$Id: pimage.pike,v 1.19 2000/02/10 05:29:54 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -354,23 +354,20 @@ class Constructors
 
 mapping compiled = ([]);
 
-array register_module()
-{
-  return ({ MODULE_PARSER,
-	      "Pike Image Module",
-	      "This module adds two new tags, &lt;gclock&gt; and "
-   	      "&lt;pimage&gt;&lt;/pimage&gt;. GClock draws clocks, and "
-	      " pimage draws an image from pike-code. <p> "
-	      "There are several predefined images-constructors to use "
-	      "in pimage: <p>"
-	      "Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
-	      "Progress( callback_function ); Animated progress bar.<br>"
-	      "load( \"file_name\" ); Loads an image file.<br>"
-	      "PPM( \"file_name\" ); Loads an image file (compat).<br>"
-	      "PImage(xs,ys, bg_color ); Simple (cleared) image<br>"
-	      "Text( \"font\", \"string\", fg_color, bg_color ); <br>"
-	      "Draws some text..<br>", 0, 1 });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Pike Image Module";
+constant module_doc  = "This module adds two new tags, &lt;gclock&gt; and "
+  "&lt;pimage&gt;&lt;/pimage&gt;. GClock draws clocks, and "
+  " pimage draws an image from pike-code. <p> "
+  "There are several predefined images-constructors to use "
+  "in pimage:"
+  "<p>Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
+  "Progress( callback_function ); Animated progress bar.<br>"
+  "load( \"file_name\" ); Loads an image file.<br>"
+  "PPM( \"file_name\" ); Loads an image file (compat).<br>"
+  "PImage(xs,ys, bg_color ); Simple (cleared) image<br>"
+  "Text( \"font\", \"string\", fg_color, bg_color ); <br>"
+  "Draws some text..</p>";
 
 void create()
 {
