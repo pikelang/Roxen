@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.297 2001/08/20 11:40:01 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.298 2001/08/20 11:42:24 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1888,7 +1888,7 @@ void send_result(mapping|void result)
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
                                   // fix non-keep-alive when sending from cache
-                                  "raw":(file->raw||misc->connection=="close"),
+                                  "raw":file->raw,
                                   "error":file->error,
                                   "mtime":(file->stat && file->stat[ST_MTIME]),
                                   "rf":realfile,
@@ -1896,7 +1896,7 @@ void send_result(mapping|void result)
                                 misc->cacheable );
 	  file = ([
 	    "data":data,
-	    "raw":file->raw
+	    "raw":file->raw,
 	  ]);
         }
       }
