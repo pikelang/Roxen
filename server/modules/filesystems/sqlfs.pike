@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.1 2001/10/04 12:35:29 per Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.2 2001/10/04 13:46:15 per Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -31,10 +31,12 @@ void create()
 	 _(0,"Where the module will be mounted in the site's virtual "
 	   "file system."));
 
-  defvar("db", Variables.DatabaseChoice( "docs", 0 ) )
+  defvar("db", Variable.DatabaseChoice( "docs", 0,
+				      _(0,"Filesystem database"),
+				      _(0,"The database to use")) )
     ->set_configuration_pointer( my_configuration );
   
-  defvar("table", Variables.TableChoice( "docs", 0,
+  defvar("table", Variable.TableChoice( "docs", 0,
 				 _(0,"Filesystem table"),
 				 _(0,"The table that cotains the files."
 				  " The table should contain at least the "
@@ -43,21 +45,21 @@ void create()
 				   "'uid' and 'gid'."),
 					 getvar("db") ) );
 
-  defvar("charset", "iso-8859-1", LOCALE(39,"File contents charset"),
+  defvar("charset", "iso-8859-1", _(0,"File contents charset"),
 	 TYPE_STRING,
-	 LOCALE(40,"The charset of the contents of the files on this file "
-		"system. This variable makes it possible for Roxen to use "
-		"any text file, no matter what charset it is written in. If"
-		" necessary, Roxen will convert the file to Unicode before "
-		"processing the file."));
+	 _(0,"The charset of the contents of the files on this file "
+	   "system. This variable makes it possible for Roxen to use "
+	   "any text file, no matter what charset it is written in. If"
+	   " necessary, Roxen will convert the file to Unicode before "
+	   "processing the file."));
 
-  defvar("path_encoding", "iso-8859-1", LOCALE(41,"Filename charset"),
+  defvar("path_encoding", "iso-8859-1", _(0,"Filename charset"),
 	 TYPE_STRING,
-	 LOCALE(42,"The charset of the file names of the files on this file "
-		"system. Unlike the <i>File contents charset</i> variable, "
-		"this might not work for all charsets simply because not "
-		"all browsers support anything except ISO-8859-1 "
-		"in URLs."));
+	 _(0,"The charset of the file names of the files on this file "
+	   "system. Unlike the <i>File contents charset</i> variable, "
+	   "this might not work for all charsets simply because not "
+	   "all browsers support anything except ISO-8859-1 "
+	   "in URLs."));
 }
 
 void start( )
@@ -75,7 +77,7 @@ private mapping last_file;
 private Thread.Mutex lfm = Thread.Mutex();
 #endif
 
-static string decode_path( string path )
+static string decode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
     p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
@@ -88,6 +90,10 @@ static string decode_path( string path )
 
 static array low_stat_file( string f, RequestID id )
 {
+  if( f == "/" )
+    return dir_stat;
+  if( has_value( f, "%" ) )
+    return 0;
 #ifdef THREADS
   Thread.MutexKey k = lfm->lock();
 #endif
@@ -105,7 +111,7 @@ static array low_stat_file( string f, RequestID id )
       }
     }
   }
-  if( last_file->name == f )
+  if( last_file && last_file->name == f )
     return
       ({
 	({
@@ -119,6 +125,12 @@ static array low_stat_file( string f, RequestID id )
 	}),
 	last_file
       });
+
+  if( f[-1] != '/' ) f+= "/";
+  if( sizeof( sql_query( "SELECT name FROM  "+
+			 table+" WHERE name LIKE %s  LIMIT 1",
+			 f+"%" ) ) )
+    return ({ dir_stat, 0 });
   return ({ 0, 0 });
 }
 
@@ -128,31 +140,14 @@ constant dir_stat = ({	0777|S_IFDIR, -1, 10, 10, 10, 0, 0 });
 
 Stat stat_file( string f, RequestID id )
 {
-  if( has_value( f, "%" ) )
-    return 0;
-  if( !strlen(f) )
-    return dir_stat;
-
-  f = decode_path( f );
-
-  if( f[-1] == '/' )
-    if( sizeof( sql_query( "SELECT name FROM  "+table+" WHERE name like %s",
-			   f+"% LIMIT 1" ) ) )
-      return dir_stat;
-
-  array r = low_stat_file( f, id )[0];
-
-  if( !r )
-  {
-    if( sizeof( sql_query( "SELECT name FROM  "+table+" WHERE name LIKE %s",
-			   f+"/% LIMIT 1" ) ) )
-      return dir_stat;
-  }
+  return low_stat_file( decode_path( "/"+f ), id )[0];
 }
 
-int|Stdio.File find_file(  string f, RequestID id )
+int|object find_file(  string f, RequestID id )
 {
-  f = decode_path( f );
+  if( !strlen( f ) )
+    return -1;
+  f = decode_path( "/"+f );
   [array st,mapping d] = low_stat_file( f, id );
   if( !st )            return 0;
   if( st[1] == -1 )    return -1;
@@ -162,14 +157,16 @@ int|Stdio.File find_file(  string f, RequestID id )
 
 array(string) find_dir( string f, RequestID id )
 {
-  f = decode_path( f );
+  f = decode_path( "/"+f );
 
-  if( !strlen(f) || f[-1] != "/" )
+  if(  f[-1] != '/' )
     f += "/";
 
   multiset dir = (<>);
+
   foreach( sql_query( "SELECT name FROM "+table+" WHERE name LIKE %s",f+"%")
 	   ->name, string p )
-    dir[ p[ strlen(f) .. ] / "/" ] = 1;
+    dir[ (p[ strlen(f) .. ] / "/")[0] ] = 1;
+
   return (array)dir;
 }
