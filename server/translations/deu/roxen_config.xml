@@ -45,21 +45,18 @@
 <file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
-<new/>
 <o>Sent data:</o>
-<t></t>
+<t>Transfervolumen Sendedaten:</t>
 </str>
 
 <str id="3">
-<new/>
 <o>sec</o>
-<t></t>
+<t>s</t>
 </str>
 
 <str id="4">
-<new/>
 <o>Sent headers:</o>
-<t></t>
+<t>Transfervolumen Kopfzeilen:</t>
 </str>
 
 <str id="6">
@@ -69,21 +66,18 @@
 </str>
 
 <str id="7">
-<new/>
 <o>Received data:</o>
-<t></t>
+<t>Transfervolumen Empfangsdaten:</t>
 </str>
 
 <str id="8">
-<new/>
 <o>FTP users (total):</o>
-<t></t>
+<t>FTP-Benutzer (gesamt)</t>
 </str>
 
 <str id="9">
-<new/>
 <o>FTP users (now):</o>
-<t></t>
+<t>FTP-Benutzer (aktuell)</t>
 </str>
 
 <str id="10">
@@ -92,93 +86,116 @@
 </str>
 
 <str id="11">
-<new/>
 <o>Reloaded %s.</o>
-<t></t>
+<t>%s erneut geladen.</t>
 </str>
 
 <str id="12">
-<new/>
 <o>Priority</o>
-<t></t>
+<t>Priorität</t>
 </str>
 
 <str id="13">
 <o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
-<t>Modul Priorität. 9 höchste, 0 niedrigste. Module mit gleicher Priorität werden in zufälliger Reihenfolge aufgerufen.</t>
+<t>Die Priorität des Moduls. 9 ist die Höchste, 0 die Niedrigste. Module mit gleicher Priorität werden in zufälliger Reihenfolge aufgerufen.</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Security: Realm</o>
-<t></t>
+<t>Sicherheit: "Realm"</t>
 </str>
 
 <str id="15">
 <o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
-<t>Bereichsname, der benutzt werden soll, wenn vom Webbrowser ein Passwort angefordert werden soll. Wird üblicherweise als informativer Hinweis für den Benutzer verwendet.</t>
+<t>Bereich (engl. realm) für die Gültigkeit von Konto und Kennwort bei der Anmeldung im Webbrowser. Wird üblicherweise im Anmelde-Fenster angezeigt.</t>
 </str>
 
 <str id="16">
-<new/>
 <o>Security: Patterns</o>
-<t></t>
+<t>Sicherheit: Muster</t>
 </str>
 
 <str id="17">
 <o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
-<t>Dies ist die Liste der Sicherheitsmuster.&lt;p&gt;Jede Sicherheitsebene kann aus einem oder mehr der folgenden Einträgen bestehen: &lt;hr noshade&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;allow user=&lt;i&gt;Benutzername&lt;/i&gt;,...&lt;br&gt;deny ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;IP-nummer&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;&lt;hr noshade&gt;Bei den Mustern trifft '*' auf ein oder mehrere Zeichen zu, '?' auf genau ein Zeichen.&lt;p&gt; Bei den Benutzernamen steht 'any' für jeden gültigen Benutzernamen (aus einer .htaccess-Datei oder jedem anderen Auth-Modul)  Der Standard-Wert (wenn keine Eingaben gemacht wurden), ist 'allow ip=*', d.h. jeder darf auf das Modul zugreifen.</t>
+<t>Dies ist die Liste der Sicherheitsmuster.&lt;p&gt;Jede Sicherheitsebene kann aus einem oder mehr der folgenden Einträgen bestehen: &lt;hr noshade&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;allow user=&lt;i&gt;Konto&lt;/i&gt;,...&lt;br&gt;deny ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;IP-nummer&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;&lt;hr noshade&gt;Bei den Mustern trifft '*' auf ein oder mehrere Zeichen zu, '?' auf genau ein Zeichen.&lt;p&gt; Bei den Benutzer-Konten steht 'any' für jedes gültige Konto (aus einer .htaccess-Datei oder jedem anderen Auth-Modul)  Der Standard-Wert (wenn keine Eingaben gemacht wurden), ist 'allow ip=*', d.h. jeder darf auf das Modul zugreifen.</t>
 </str>
 
 <str id="18">
-<new/>
 <o>Security: Security level</o>
-<t></t>
+<t>Sicherheit: Sicherheitsstufe</t>
 </str>
 
 <str id="20">
-<new/>
 <o>Default site</o>
-<t></t>
+<t>Standard-Website</t>
 </str>
 
 <str id="21">
-<new/>
 <o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
-<t></t>
+<t>Bei Aktivierung wird diese Website verwendet, falls virtuelle Websites existieren, aber der Client per HTTP-Protokoll keine oder keine gültige Website auswählt (kein "host header").</t>
 </str>
 
 <str id="22">
-<new/>
 <o>Site comment</o>
-<t></t>
+<t>Kommentar zur Website</t>
 </str>
 
 <str id="23">
 <o>This text will be visible in the administration interface, it can be quite useful to use as a memory helper.</o>
-<t>Ein Kommentar, der im Konfigurations-Interface sichtbar ist und als Dokumentation nützlich ist.</t>
+<t>Dieser Kommentar wird im Konfigurations-Menü angezeigt und dient der Dokumentation.</t>
 </str>
 
 <str id="24">
-<new/>
 <o>Site name</o>
-<t></t>
+<t>Name der Web-Site</t>
 </str>
 
 <str id="25">
 <o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
-<t>Dies ist der Name, der im Konfigurations-Interface für den
-  virtuellen Server benutzt wird.  Wird dieses Feld leer gelassen,
-  wird der eigentliche Name des virtuellen Servers benutzt.</t>
+<t>Dieser ausführliche Name wird im Konfigurations-Menü für den
+  virtuellen Server benutzt. Wird dieses Feld leer gelassen,
+  wird der interne kurze Name des virtuellen Servers benutzt.</t>
 </str>
 
 <str id="26">
-<new/>
 <o>Logging: Format</o>
-<t></t>
+<t>Protokollierung: Format</t>
 </str>
 
 <str id="27">
+<changed from="What format to use for logging. The syntax is:
+&lt;pre&gt;response-code or *: Log format for that response code
+
+Log format is normal characters, or one or more of the variables below:
+
+\n \t \r       -- As in C, newline, tab and linefeed
+$char(int)     -- Insert the (1 byte) character specified by the integer.
+$wchar(int)    -- Insert the (2 byte) word specified by the integer.
+$int(int)      -- Insert the (4 byte) word specified by the integer.
+$^             -- Supress newline at the end of the logentry
+$host          -- The remote host name, or ip number.
+$ip_number     -- The remote ip number.
+$bin-ip_number -- The remote host id as a binary integer number.
+
+$cern_date     -- Cern Common Log file format date.
+$bin-date      -- Time, but as an 32 bit integer in network byteorder
+
+$method        -- Request method
+$resource      -- Resource identifier
+$full_resource -- Full requested resource, including any query fields
+$protocol      -- The protocol used (normally HTTP/1.0)
+$response      -- The response code sent
+$bin-response  -- The response code sent as a binary short number
+$length        -- The length of the data section of the reply
+$bin-length    -- Same, but as an 32 bit integer in network byteorder
+$request-time  -- The time the request took (seconds)
+$referer       -- the header 'referer' from the request, or '-'.
+$user_agent    -- the header 'User-Agent' from the request, or '-'.
+
+$user          -- the name of the auth user used, if any
+$user_id       -- A unique user ID, if cookies are supported,
+                  by the client, otherwise '0'
+&lt;/pre&gt;"/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -212,7 +229,7 @@ $user          -- the name of the auth user used, if any
 $user_id       -- A unique user ID, if cookies are supported,
                   by the client, otherwise '0'
 &lt;/pre&gt;</o>
-<t>Welches Format soll für die Logfiles benutzt werden.
+<t>Welches Format für die Protokolldateien benutzt werden soll.
 &lt;pre&gt;
 Antwort-Code oder *: Loggingformat für diesen Antwort-Code (z.B 404)
 
@@ -246,31 +263,34 @@ $user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
 </str>
 
 <str id="28">
-<new/>
 <o>Logging: Enabled</o>
-<t></t>
+<t>Protokollierung: Aktiviert</t>
 </str>
 
 <str id="29">
-<new/>
 <o>Log requests</o>
-<t></t>
+<t>Protokolliere Zugriffe</t>
 </str>
 
 <str id="30">
-<new/>
 <o>Logging: Log file</o>
-<t></t>
+<t>Protokollierung: Zugriffe auf Dateien</t>
 </str>
 
 <str id="31">
+<changed from="The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+%m    Month (e.g. '08')
+%d    Date  (e.g. '10' for the tenth)
+%h    Hour  (e.g. '00')
+%H    Hostname
+&lt;/pre&gt;"/>
 <o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
 %h    Hour  (e.g. '00')
 %H    Hostname
 &lt;/pre&gt;</o>
-<t>Ein Dateiname. Einige Ersetzungen werden vorgenommen:
+<t>Der Name der Protokolldatei. Folgende Ersetzungen werden vorgenommen:
 &lt;pre&gt;
 %y    Jahr     (z.B. '1997')
 %m    Monat    (z.B. '08')
@@ -280,38 +300,34 @@ $user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
 </str>
 
 <str id="32">
-<new/>
 <o>Logging: No Logging for</o>
-<t></t>
+<t>Protokollierung: Keine Protokollierung für</t>
 </str>
 
 <str id="33">
 <o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
-<t>Für die folgenden IP-Adressen werden keine Log-Einträge vorgenommen.
-Dies hat auch Einfluss auf den Access-Counter.</t>
+<t>Keine Protokollierung für Host, deren IP-Adresse auf Muster in dieser Liste passt. Dies hat auch Einfluss auf den Access-Counter.</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Domain</o>
-<t></t>
+<t>Domäne</t>
 </str>
 
 <str id="35">
 <o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
-<t>Der Domainname des Servers, der für die Generierung der
-Standard-URLs und Email-Adressen verwendet wird.</t>
+<t>Der Domänenname des Servers. Dieser Name wird für die Generierung der
+Standard-URLs und E-Mail-Adressen verwendet.</t>
 </str>
 
 <str id="36">
-<new/>
 <o>Primary Server URL</o>
-<t></t>
+<t>Primäre Server-URL</t>
 </str>
 
 <str id="37">
 <o>This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable.</o>
-<t>Dies ist die URL des Haupt-Servers, auf dem die Startseite abgelegt ist.</t>
+<t>Dies ist die URL des primären Servers, auf dem die Startseite abgelegt ist.</t>
 </str>
 
 <str id="38">
@@ -321,125 +337,109 @@ Standard-URLs und Email-Adressen verwendet wird.</t>
 </str>
 
 <str id="39">
-<new/>
+<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules), https, ftp, ftps, gopher and tetris."/>
 <o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
-<t></t>
+<t>Binde (horche) auf diese URLs. Hostnamen wie IP-Adressen sind zulässig. Die Meta-Zeichen '*' und '?' können als Joker verwendet werden, um auf alle verfügbaren IP-Adressen einer Maschine zu binden. Mögliche Protokolle sind http, fhttp (eine schenllere version des normalen HTTP protocols, die aber nicht mit allen Modulen 100% kompatibel ist), https, ftps, gopher und tetris.</t>
 </str>
 
 <str id="40">
-<new/>
 <o>Internal module resource mountpoint</o>
-<t></t>
+<t>Interner Montagepunkt für das Modul</t>
 </str>
 
 <str id="41">
 <o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
 <t>Einige Module erzeugen Links auf interne Ressourcen. Diese Einstellung
-bestimmt eine intern verwandte Position im virtuellen Dateisystem, um
-solche Zwecke zu erfüllen.  Es sollte ein Wert benutzt werden, der nicht
-durch andere Ressourcen benutzt wird.</t>
+bestimmt eine intern verwendete Position im virtuellen Dateisystem für
+solche Zwecke.  Es sollte ein Wert eingetragen werden, der auch zukünftig
+nicht durch andere Ressourcen benutzt wird.</t>
 </str>
 
 <str id="42">
-<new/>
 <o>Throttling: Server; Enabled</o>
-<t></t>
+<t>Drosselung: Server, aktiviert</t>
 </str>
 
 <str id="43">
 <o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
-<t>Wenn gesetzt, wird pro Server eine Bandbreitenbegrenzung aktiviert.
+<t>Bei Aktivierung wird pro Server eine Drosselung der Bandbreite vorgenommen.
 Dadurch kann man die zur Verfügung stehende Bandbreite für diesen
 virtuellen Server begrenzen.&lt;br&gt;</t>
 </str>
 
 <str id="44">
-<new/>
 <o>Throttling: Server; Average available bandwidth</o>
-<t></t>
+<t>Drosselung: Server, durchschnittlich verfügbare Bandbreite</t>
 </str>
 
 <str id="45">
 <o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
-<t>Dies ist die durchschnittliche Bandbreite, die für diesen virtuellen Server zur Verfügung steht. (in Bytes/Sekunde).</t>
+<t>Dies ist die durchschnittliche Bandbreite in Byte/Sekunde, die für diesen virtuellen Server zur Verfügung steht.</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Throttling: Server; Bucket Depth</o>
-<t></t>
+<t>Drosselung: Server, "Bucket Depth"</t>
 </str>
 
 <str id="47">
-<new/>
 <o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
-<t></t>
+<t>Dies ist die maximale </t>
 </str>
 
 <str id="48">
-<new/>
 <o>Throttling: Server; Minimum Grant</o>
-<t></t>
+<t>Drosselung: Server, minimale Zuteilung</t>
 </str>
 
 <str id="49">
-<new/>
 <o>When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead).</o>
-<t></t>
+<t>Sinkt die Bandbreite aufgrund zu vieler Verbindungen unter diesen Wert, dann werden neue Verbindungen herausgezögert. So sollen zu kleine IP-Pakete verhindert werden, bei denen die Nutzlast unter den Faktor 1 sinkt (mehr Verwaltungsinformation als Nutzlast).</t>
 </str>
 
 <str id="50">
-<new/>
 <o>Throttling: Server; Maximum Grant</o>
-<t></t>
+<t>Drosselung: Server, maximale Zuteilung</t>
 </str>
 
 <str id="51">
-<new/>
 <o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
-<t></t>
+<t>Maximale Anzahl von Bytes, die einer. Niedrige Werte sorgen für eine gleichmässige Zuteilung von Bandbreite zu den Verbindungen, senken aber die Nutzlast und erhöhen marginal die CPU-Belastung. Der empfohlene Wert ist XXX</t>
 </str>
 
 <str id="52">
-<new/>
 <o>Throttling: Request; Enabled</o>
-<t></t>
+<t>Drosselung: Zugriff, aktiviert</t>
 </str>
 
 <str id="53">
-<new/>
 <o>If set, per-request bandwidth throttling will be enabled.</o>
-<t></t>
+<t>Bei Aktivierung wird eine Bandbreiten-Drosselung pro Zugriff eingeschaltet.</t>
 </str>
 
 <str id="54">
-<new/>
 <o>Throttling: Request; Minimum guarranteed bandwidth</o>
-<t></t>
+<t>Drosselung: Zugriff, mininale garanierte Bandbreite</t>
 </str>
 
 <str id="55">
-<new/>
 <o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
-<t></t>
+<t>XXX</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Throttling: Request; Bucket Depth Multiplier</o>
-<t></t>
+<t>Drosselung: Zugriff, XXX</t>
 </str>
 
 <str id="57">
-<new/>
 <o>The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor.</o>
-<t></t>
+<t>XXX</t>
 </str>
 
 <str id="58">
-<new/>
 <o>No such file message</o>
-<t></t>
+<t>Text für 404-Fehler</t>
 </str>
 
 <str id="59">
@@ -450,220 +450,189 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="60">
-<new/>
 <o>Welcome text</o>
-<t></t>
+<t>Willkommens-Text</t>
 </str>
 
 <str id="61">
-<new/>
 <o>The text shown to the user on connect</o>
-<t></t>
+<t>Dieser Text wird dem Anwender zu Beginn der Verbindung angezeigt</t>
 </str>
 
 <str id="62">
-<new/>
 <o>User session limit</o>
-<t></t>
+<t>Verbindungs-Begrenzung</t>
 </str>
 
 <str id="63">
-<new/>
 <o>The maximum number of times a user can connect at once. 0 means unlimited.</o>
-<t></t>
+<t>Die maximale Anzahl von gleichzeitigen Verbindung desselben Kontos. 0 bedeutet unbegrenzt.</t>
 </str>
 
 <str id="64">
-<new/>
 <o>Allow named ftp</o>
-<t></t>
+<t>Erlaube Nicht-anonymes FTP </t>
 </str>
 
 <str id="65">
-<new/>
 <o>If yes, non-anonymous users can connect</o>
-<t></t>
+<t>Bei Aktivierung können Anwender mit anderen Konten als dem anonymen eine Verbindung herstellen.</t>
 </str>
 
 <str id="66">
-<new/>
 <o>Allow login with incorrect password/user</o>
-<t></t>
+<t>Erlaube Anmeldung mit falschem Kennwort oder Konto</t>
 </str>
 
 <str id="67">
-<new/>
 <o>If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user.</o>
-<t></t>
+<t>Bei Aktivierung können Anwender trotz fehlgeschlagener Anmeldung eine Verbindung herstellen. Diese Einstellung ist nützlich in Fällen, bei denen Anwender im Verlaufe der Sitzung sowieso eine Anmeldung</t>
 </str>
 
 <str id="68">
-<new/>
 <o>Allow anonymous ftp</o>
-<t></t>
+<t>Erlaube anonymes FTP</t>
 </str>
 
 <str id="69">
-<new/>
+<changed from="If yes, anonymous users are allowed to connect."/>
 <o>If yes, anonymous users is allowed to connect.</o>
-<t></t>
+<t>Bei Aktivierung werden anonyme FTP-Verbindungen zugelassen.</t>
 </str>
 
 <str id="70">
-<new/>
 <o>Shell database</o>
-<t></t>
+<t>Liste der Shells</t>
 </str>
 
 <str id="71">
-<new/>
 <o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
-<t></t>
+<t>Unter Unix ist jedem Benutzer-Konto ist eine Shell zugewiesen und diese Shell muss in der angegebenen Datei verzeichnet sein, damit sich der Anwender anmelden kann.. Falls das Feld leer gelassen wird, ist die Funktion inaktiv.</t>
 </str>
 
 <str id="72">
-<new/>
 <o>Show internal errors</o>
-<t></t>
+<t>Zeige interne Fehler</t>
 </str>
 
 <str id="73">
 <o>Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts.</o>
-<t>Anzeige von internen Server-Fehlern an den Benutzer.
-Dies ist bei der Entwicklung und bei der Fehlersuche von eigenen Modulen
-oder Pike-Scripten nützlich.</t>
+<t>Dem Anwender interne Server-Fehler zeigen? Diese Funktion ist bei der Entwicklung und bei der Fehlersuche in eigenen Modulen oder Pike-Scripten nützlich.</t>
 </str>
 
 <str id="74">
-<new/>
 <o>Logging: Set unique user id cookies</o>
-<t></t>
+<t>Protokollierung: Setze eindeutige User-ID-Cookies?</t>
 </str>
 
 <str id="75">
 <o>If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users.</o>
-<t>An alle Benutzer der Website wird ein eindeutiger Benutzer-Cookie geschickt,
-sofern deren Browser Cookies annimmt.  Dieser kann in Scripten und im Logfile
-zur Identifizierung einzelner Benutzer verwendet werden.</t>
+<t>Bei Aktivierung wird allen Besuchern der Website ein eindeutiger sogenannter Benutzer-Cookie gesetzt, sofern deren Browser Cookies annimmt.  Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
 </str>
 
 <str id="76">
-<new/>
 <o>Logging: Set ID cookies only once</o>
-<t></t>
+<t>Protokollierung: Setze User-ID-Cookie nur einmal</t>
 </str>
 
 <str id="77">
 <o>If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
-<t>Dem Benutzer wird nur beim ersten Aufruf ein eindeutiger Benutzer-Cookie
-geschickt. Dadurch wird der Benutzer nur einmal aufgefordert, einen Cookie
-anzunehmen.</t>
+<t>Bei Aktivierung wird dem Anwender nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
 </str>
 
 <str id="78">
-<new/>
 <o>Logging method</o>
-<t></t>
+<t>Protokollierungs-Methode</t>
 </str>
 
 <str id="79">
 <o>None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through Roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits Roxen to less than 1k requests/second.&lt;/p&gt;</o>
-<t>Keine - Kein Logfile&lt;br /&gt;CommonLog - Logging nach dem CommonLog-Format&lt;br /&gt;Compat - Mit Roxen's normalem Format arbeiten.&lt;br /&gt;&lt;p&gt;Hinweis: Die Compat-Methode beschränkt Roxen auf 1000 Zugriffe/Sekunde.</t>
+<t>Keine - Keine Protokolldatei&lt;br /&gt;CommonLog - Protokollierung in eine Datei im CommonLog-Format&lt;br /&gt;Compat - Mit Roxens normalem Format arbeiten.&lt;br /&gt;&lt;p&gt;Hinweis: Die Compat-Methode beschränkt Roxen auf 1000 Zugriffe/Sekunde.</t>
 </str>
 
 <str id="80">
-<new/>
 <o>Log file</o>
-<t></t>
+<t>Protokolldatei</t>
 </str>
 
 <str id="81">
 <o>This file is used if logging is done using the CommonLog method.</o>
-<t>Logdatei</t>
+<t>Der Name der Datei für die Protokollierungs-Methode CommonLog.</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Ram cache</o>
-<t></t>
+<t>RAM-Cache</t>
 </str>
 
 <str id="83">
 <o>The size of the ram cache, in MegaBytes</o>
-<t>Speicher-Cache</t>
+<t>Die Grösse des RAM-Caches in Megabyte</t>
 </str>
 
 <str id="84">
-<new/>
 <o>Client timeout</o>
-<t></t>
+<t>Client-Zeitschranke</t>
 </str>
 
 <str id="85">
-<new/>
 <o>The maximum time Roxen will wait for a client before giving up, and close the connection, in seconds</o>
-<t></t>
+<t>Die maximale Zeit in Sekunden, die Roxen auf die Antwort eines Clients wartet. Nach Ablauf dieser Zeit gibt Roxen auf und schliesst die Verbindung.</t>
 </str>
 
 <str id="86">
-<new/>
 <o>SSL certificate file</o>
-<t></t>
+<t>Datei mit SSL-Zertifikat</t>
 </str>
 
 <str id="87">
 <o>The SSL certificate file to use. The path is relative to %s</o>
-<t>SSL-Zertifikatsdatei. Der Pfad ist relativ zu %s</t>
+<t>Der Name der Datei mit dem SSL-Zertifikat im PEM-Format. Der Pfad ist relativ zu %s</t>
 </str>
 
 <str id="88">
-<new/>
 <o>SSL key file</o>
-<t></t>
+<t>Datei mit SSL-Schlüssel</t>
 </str>
 
 <str id="89">
 <o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
-<t>Die SSL-Schlüsseldatei, die verwendet werden soll. Der Pfad ist relativ zu %s. Die Schlüsseldatei muß nicht angeben werden, sondern man kann dieses Feld leer lassen und nur mit der Zertifikatsdatei arbeiten</t>
+<t>Der Name der Datei mit dem SSL-Schlüssel. Der Pfad ist relativ zu %s. Der Schlüssel kann auch in der obigen Zertifikats-Datei mit angegeben werden; dann muss dieses Feld leer bleiben.</t>
 </str>
 
 <str id="90">
-<new/>
 <o>Logging: Log entire file length in restored connections</o>
-<t></t>
+<t>Protokollierung: Vollständige Dateilänge bei wieder aufgenommenen Verbindungen</t>
 </str>
 
 <str id="91">
 <o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
-<t>Bei wiederaufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Bytes einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Bytes überträgt, werden im Logfile die gesamten 1000 Bytes verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.</t>
+<t>Bei wieder aufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Byte einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Byte überträgt, werden im Logfile die gesamten 1000 Byte verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.</t>
 </str>
 
 <str id="92">
-<new/>
 <o>Default font</o>
-<t></t>
+<t>Standard-Schriftart</t>
 </str>
 
 <str id="93">
 <o>The default font to use when modules request a font.</o>
-<t>Die Schriftart, die von Modulen benutzt werden soll.</t>
+<t>Die voreingestellte Schriftart für die Verwendung durch Module.</t>
 </str>
 
 <str id="94">
-<new/>
 <o>Font directories</o>
-<t></t>
+<t>Ordner mit Schriftarten</t>
 </str>
 
 <str id="95">
 <o>This is where the fonts are located.</o>
-<t>In diesen Verzeichnissen befinden sich Schriftarten.</t>
+<t>Pfadname des Orders mit den Schriftarten.</t>
 </str>
 
 <str id="96">
-<new/>
 <o>Logging: Log directory prefix</o>
-<t></t>
+<t>Protokollierung: XXX</t>
 </str>
 
 <str id="97">
@@ -690,7 +659,7 @@ anzunehmen.</t>
 
 <str id="101">
 <o>Minimum number of Megabytes removed when a garbage collect is done.</o>
-<t>Wird der Cache geleert, werden mindestens soviel Megabytes entfernt.</t>
+<t>Wird der Cache geleert, werden mindestens soviel Megabyte entfernt.</t>
 </str>
 
 <str id="102">
@@ -812,6 +781,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="123">
+<changed from="In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
+&lt;br /&gt;Note: It can be overridden by the command line option."/>
 <o>In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
 &lt;br /&gt;Note: It can be overridden by the command line option.</o>
 <t>In dieser Datei legt der Server seine eigene PID und die des start-Scripts ablegen. $pid wird mit der PID ersetzt und $uid mit der UID des ausführenden Benutzers.</t>
@@ -889,6 +860,8 @@ durchsucht.</t>
 </str>
 
 <str id="135">
+<changed from="What do the different clients support?
+&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory."/>
 <o>What do the different clients support?
 &lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
 <t>Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
@@ -993,6 +966,9 @@ Logs angehängt.</t>
 </str>
 
 <str id="151">
+<changed from="The number of simultaneous threads Roxen will use.
+&lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
+&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;"/>
 <o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
 &lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;</o>
