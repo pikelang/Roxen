@@ -1,15 +1,15 @@
 <!-- -*- html -*- -->
 <define container=st-tabs>
-  <cset quote=none variable=__tabs><contents></cset>
+  <cset quote=none variable=form.__tabs><contents></cset>
 </define>
 
 <define container=st-page>
-  <cset quote=none variable=__contents><contents></cset>
+  <cset quote=none variable=form.__contents><contents></cset>
 </define>
 
 
 <define container=cv-leftside>
-  <cset quote=none variable=leftside><contents></cset>
+  <cset quote=none variable=form.leftside><contents></cset>
 </define>
 
 <define container=cv-split>
@@ -71,11 +71,11 @@
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>
- <cset quote=none variable=_top_content preparse><insert file=/standard/topmenu.pike nocache></cset>
+ <cset quote=none variable=form._top_content preparse><insert file=/standard/topmenu.pike nocache></cset>
 </define>
 
 <define container=submit-gbutton default_align=baseline>
-  <cset variable=url preparse><gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url></cset>
+  <cset variable=form.url preparse><gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url></cset>
    <input align=&align; type=image name='<contents>' value='<contents>'
           src='&form.url;' border=0>
 </define>
@@ -92,7 +92,7 @@
    <submit-gbutton preparse href='&href;'> &locale.next; > </submit-gbutton>
 </define>
 
-<define container=content><cset quote=none preparse variable=content><contents></cset></define>
+<define container=content><cset quote=none preparse variable=form.content><contents></cset></define>
 
 <define container=tmpl>
 <title>&roxen.version; &locale.administration_interface; &title;</title>
@@ -152,7 +152,7 @@
 
    <form method=POST action='&cf.current-url;'>
      <roxen-automatic-charset-variable>
-     <insert variable=content quote=none>
+     <insert variable=form.content quote=none>
    </form>
     <div align=right>
     <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
