@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.4 2000/08/22 14:58:49 leif Exp $
+// $Id: ExtScript.pmod,v 1.5 2000/08/22 15:07:10 leif Exp $
 
 #define THREADS 1
 
@@ -164,7 +164,7 @@ class Handler
       mapping ee = id->misc->explicit_script_env;
       if (mappingp(ee))
         foreach(indices(ee), mixed v)
-          if (stringp(v) && stringp(ee[v]) && strlen(ee[v]) < 2000)
+          if (stringp(v) && stringp(ee[v]) && strlen(ee[v]) < 25000)
             putvar("E", v, ee[v]);
 
       // Transfer request headers
