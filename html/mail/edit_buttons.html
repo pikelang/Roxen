@@ -3,6 +3,12 @@
 <body bgcolor="#ffffff" text="#000000" link="#000088"
       vlink="#000088" alink="#880000">
 
+<define tag=actionbutton><gtext notrans scale=0.3 fg=black 
+                                bg=#fea bevel=3  xspacing=20 yspacing=8 
+                               magic="&text;" 
+                href='&act;&button=&id;'
+                >&text;</gtext></define>
+
 <gauge resultonly>
   <expire-time now>
   <obox title=Editor>
@@ -10,41 +16,50 @@
     <table>
       <show-mail-user-buttons>
          <tr><td><b>#name#</b></td>
-         <td><gtext scale=0.4 bg=##fed bevel=3 magic="Move button up" 
-                href='move_button.pike?dir=-1&button=#id#'
-                >^ Move up  </gtext>
-         <gtext scale=0.4 bg=##fed bevel=3 magic="Move button down" 
-                href='move_button.pike?dir=1&button=#id#'
-                >v Move down  </gtext>
-         <gtext scale=0.4 bg=##fed bevel=3 magic="Delete button" 
-                href='delete_button.pike?button=#id#'
-                >  Delete   </gtext></td></tr>
+         <td>
+       <actionbutton text="^ Move up  " id=#id# act="move_button.pike?dir=-1">
+       <actionbutton text="v Move down  " id=#id# act="move_button.pike?dir=1">
+       <actionbutton text="  Delete  " id=#id#  act="delete_button.pike?foo=1">
          <tr><td colspan=2><b><dl><dt><dd>#desc#</dl></td></b></tr>
       </show-mail-user-buttons>
      </table>
-         <gtext scale=0.4 bg=#fed bevel=3  magic="New button" 
-                href='make_userbutton.pike'> New button </gtext>
-         <gtext scale=0.4 bg=#fed bevel=3  magic="New button" 
-                href='make_separator.pike'> New separator </gtext>
+         <gtext notrans scale=0.4 bg=#fea bevel=3 xspacing=20 yspacing=8 
+                magic="New button" 
+                href='make_userbutton.pike'> New button </gtext notrans>
+         <gtext notrans scale=0.4 bg=#fea bevel=3  xspacing=20 yspacing=8 
+                magic="New separator" 
+                href='make_separator.pike'> New separator </gtext notrans>
 
-<define tag=gbutton><formoutput><img valign=bottom border=0 type=image name=&name; src="#gtextid&selected;:quote=http#&value;"></formoutput></define>
-  <set variable="gtextid&selected;" 
-       eval="<gtext-id talign=center xspacing=20 yspacing=8 
-                       bg=#fea fg=black scale=0.3 notrans 
-                       bevel=3 quant=14>$">
-  <gh3>Mail page preview</gh3>
-  <set variable=mail_id value="">
-  <user-buttons type=mail>
-  
-  <unset variable=mail_id>
-  <unset variable=mailbox_id value="">
-  <gh3>Mailbox page preview</gh3>
-  <user-buttons type=mailbox>
+</obox>
+  <gh2 href="" magic=Done>Done</gh2>
+
 
 <p>
 <br>
-</obox>
-  <gh2 href="" magic=Done>Done</gh2>
+<p>
+<br>
+
+<define tag=gbutton><formoutput><img valign=bottom border=0 type=image name=&name; src="#gtext notransid&selected;:quote=http#&value;"></formoutput></define>
+  <set variable="gtext notransid&selected;" 
+       eval="<gtext-id notrans talign=center xspacing=20 yspacing=8 
+                       bg=#fea fg=black scale=0.3 notrans 
+                       bevel=3 quant=14>$">
+  <obox title="Mail page preview">
+  <set variable=mail_id value="">
+   <hr noshade>
+     <table width=100%><tr><td>
+    1/30 </td><td><user-buttons type=mail></td></tr></table>
+   <hr noshade>
+</obox>  
+  <unset variable=mail_id>
+  <unset variable=mailbox_id value="">
+  <obox title="Mailbox page preview">
+  <hr noshade>
+    <table width=100%><tr><td>&nbsp;</td><td>
+     <user-buttons type=mailbox>
+    </td></tr></table>
+   <hr noshade>
+
 </gauge>
 <p>
 <br>Time: <b><insert name=gauge_time></b>
