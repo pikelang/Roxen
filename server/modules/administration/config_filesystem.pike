@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.116 2002/06/19 23:02:19 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.117 2002/10/01 22:44:23 nilsson Exp $";
 
 constant path = "admin_interface/";
 
@@ -411,7 +411,7 @@ void start(int n, Configuration cfg)
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
-      "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
+      "pikescript",  "rxmlparse",       "rxmltags",
       "tablist",     "cimg",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
