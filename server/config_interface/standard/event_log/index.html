@@ -1,11 +1,10 @@
 <topmenu base="../" selected="event_log"/>
 
 <content>
-
 <cv-split>
 <subtablist width="100%">
   <st-tabs>
-  <if not="" variable="reversed is 1">
+  <if not="" variable="form.reversed is 1">
     <tab selected="" href="?"> <translate id="245">Normal</translate> </tab>
     <tab href="?reversed=1"> <translate id="246">Reversed</translate> </tab>
   </if>
