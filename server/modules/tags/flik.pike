@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.6 1997/08/14 12:30:35 grubba Exp $
+// $Id: flik.pike,v 1.7 1997/08/24 01:01:01 marcus Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.6 1997/08/14 12:30:35 grubba Exp $";
+string cvs_version = "$Id: flik.pike,v 1.7 1997/08/24 01:01:01 marcus Exp $";
 #include <module.h>
 
 inherit "module";
@@ -79,7 +79,7 @@ string encode_url(object id,
 {
    return 
       (id->not_query/"/")[-1]+"?fl="+id->variables->fl
-      +"&flc"+flno+"="+dest;
+      +"&flc"+flno+"="+dest+"#fl_"+flno;
 }
 
 string tag_fl_postparse( string tag, mapping m, string cont, object id,
@@ -114,14 +114,16 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
       return "<!--"+m->id+"-->"
-	     "<a target=_self href='"+encode_url(id,m->id,2)+"'>"
+	     "<a name=fl_"+m->id+" target=_self href='"+
+	     encode_url(id,m->id,2)+"'>"
 	     "<img width=20 height=20 src=internal-roxen-unfold border=0 "
 	     "alt='--'></a>"+cont;
    }
    else
    {
       return "<!--"+m->id+"-->"
-	     "<a target=_self href='"+encode_url(id,m->id,1)+"'>"
+	     "<a name=fl_"+m->id+" target=_self href='"+
+	     encode_url(id,m->id,1)+"'>"
 	     "<img width=20 height=20 src=internal-roxen-fold border=0 "
 	     "alt='\/'></a>"+cont;
    }
