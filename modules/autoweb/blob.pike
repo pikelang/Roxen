@@ -95,7 +95,7 @@ mapping find_file(string f, object request_id)
 void create()
 {
   defvar("mountpoint", "/blob/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	 "Mountpointen for the blob module.");
+	 "Mountpoint for the blob module.");
 }
 
 array register_module()
