@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.149 1998/08/28 17:43:48 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.150 1998/09/11 22:18:30 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -853,7 +853,14 @@ array(int)|string write_text(int _args, string text, int size, object id)
 
 //  cache_set(key, text, "rendering");
 
-    if(args->nfont)
+#if efun(resolve_font)
+    if(args->afont)
+    {
+      data = resolve_font(args->afont);
+    } 
+    else 
+#endif
+      if(args->nfont)
     {
       int bold, italic;
       if(args->bold) bold=1;
@@ -866,23 +873,10 @@ array(int)|string write_text(int _args, string text, int size, object id)
     }
     else if(args->font)
     {
-      int bold, italic;
-      if(args->bold) bold=1;
-      if(args->light) bold=-1;
-      if(args->italic) italic=1;
-      if(args->black) bold=2;
-      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
-		      lower_case(args->talign||"left"),
-		      (float)(int)args->xpad, (float)(int)args->ypad);
+      data = resolve_font(args->font);
       if(!data)
 	data = load_font(args->font, lower_case(args->talign||"left"),
 			 (int)args->xpad,(int)args->ypad);
-    }
-    else if(args->afont)
-    {
-#if efun(resolve_font)
-      data = resolve_font(args->afont);
-#endif
     } else {
       int bold, italic;
       if(args->bold) bold=1;
@@ -1106,19 +1100,22 @@ void save_cached_args()
   if(!args_restored) restore_cached_args();
   if(on > number) number=on;
   object o = open(ARGHASH, "wct");
+  if(o)
+  {
 #ifndef __NT__
 #if efun(chmod)
-  // FIXME: Should this error be propagated?
-  catch { chmod( ARGHASH, 0666 ); };
+    // FIXME: Should this error be propagated?
+    catch { chmod( ARGHASH, 0666 ); };
 #endif
 #endif
-  string data=encode_value(cached_args);
-  catch {
-    object q;
-    if(sizeof(indices(q=Gz)))
-      data=q->deflate()->deflate(data);
-  };
-  o->write(data);
+    string data=encode_value(cached_args);
+    catch {
+      object q;
+      if(sizeof(indices(q=Gz)))
+	data=q->deflate()->deflate(data);
+    };
+    o->write(data);
+  }
 }
 
 mapping find_cached_args(int num)
@@ -1236,14 +1233,9 @@ string tag_gtext_id(string t, mapping arg,
   extra_args(arg);        m_delete(arg,"split");
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-#if efun(get_font)
-  if(!arg->nfont) arg->nfont=defines->nfont;
-#endif
-  if(!arg->font) arg->font=defines->font
-#if !efun(get_font)
-		   ||QUERY(default_font)
-#endif
-		   ;
+  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
+  if(defines->afont && !arg->afont) arg->afont=defines->afont;
+  if(defines->font &&  !arg->font) arg->font=defines->font;
 
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
@@ -1340,12 +1332,13 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(!arg->nfont) arg->nfont=defines->nfont;
-  if(!arg->font) arg->font=defines->font;
-  if(!arg->bold) arg->bold=defines->bold;
-  if(!arg->italic) arg->italic=defines->italic;
-  if(!arg->black) arg->black=defines->black;
-  if(!arg->narrow) arg->narrow=defines->narrow;
+  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
+  if(defines->afont && !arg->afont) arg->afont=defines->afont;
+  if(defines->font &&  !arg->font) arg->font=defines->font;
+  if(defines->bold && !arg->bold) arg->bold=defines->bold;
+  if(defines->italic && !arg->italic) arg->italic=defines->italic;
+  if(defines->black && !arg->black) arg->black=defines->black;
+  if(defines->narrow && !arg->narrow) arg->narrow=defines->narrow;
 
   if(arg->split)
   {
