@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.17 2002/02/15 07:25:41 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.18 2002/04/24 10:54:40 anders Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.17 $"/" ")[1];
+string revision = ("$Revision: 1.18 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -371,9 +371,9 @@ class TagEmail {
 
      if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
        m=MIME.Message(body, ([ "MIME-Version":"1.0",
-			     "content-type":(args->mimetype||"text/plain")
+			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
 				+ chs,
-			     "content-transfer-encoding":"8bit",
+			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||"8bit"),
 			   ]));
        error = catch(
          m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
@@ -390,9 +390,9 @@ class TagEmail {
        m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
 			     "from":nice_from_h(fromx),
 			     "to":replace(tox, split, ","),
-			     "content-type":(args->mimetype||"text/plain")
+			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
 				+ chs,
-			     "content-transfer-encoding":"8bit",
+			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||"8bit"),
 			     "x-mailer":"Roxen's email, r"+revision
 			   ]) + headers)
      );
