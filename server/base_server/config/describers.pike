@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.26 1997/05/31 22:01:19 grubba Exp $ */
+/* $Id: describers.pike,v 1.27 1997/06/11 17:41:56 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -213,6 +213,9 @@ string describe_module(object node)
   if(node->folded)
     return ("<font size=+1>" + link(name) + "</font>");
 
+  if (!node->data->master) {
+    return("Module without copies:"+name);
+  }
   return ("<font size=+1>" + link(name) +  "</font><dd>" +
           shorten(node->data->master->info(),node) 
 	  + (strlen(com)?"<p><i>"+com+"</i></p>":""));
