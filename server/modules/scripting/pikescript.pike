@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.64 2000/08/09 02:31:56 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.65 2000/08/10 16:20:21 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -203,7 +203,7 @@ mapping handle_file_extension(object f, string e, object got)
 
     object e = ErrorContainer();
     master()->set_inhibit_compile_errors(e);
-    catch
+    mixed re = catch
     {
       object key = Roxen.add_scope_constants( "rxml_scope_" );
       if(got->realfile)
@@ -228,7 +228,7 @@ mapping handle_file_extension(object f, string e, object got)
         return Roxen.http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
                                   Roxen.html_encode_string(e->get())+"</pre>");
       }
-      return Roxen.http_string_answer("<h1>Error while compiling pike script</h1>\n");
+      throw( re );
     }
 
 #if constant(__builtin.security)
