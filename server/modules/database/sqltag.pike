@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.58 2000/05/26 00:24:50 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.59 2000/10/16 15:57:55 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -225,7 +225,7 @@ string tag_sqltable(string tag, mapping args, RequestID id)
 
     while(arrayp(row=res->fetch_row())) {
       if (ascii)
-        ret += row * "\t" + "\n";
+        ret += ((array(string))row) * "\t" + "\n";
       else {
         ret += "<tr>";
         foreach(row, mixed value)
