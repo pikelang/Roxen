@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: socket.pike,v 1.26 2003/01/26 02:10:47 mani Exp $
+// $Id: socket.pike,v 1.27 2004/05/22 17:22:28 _cvs_stephen Exp $
 
 #define core get_core()
 
@@ -92,7 +92,7 @@ void async_connect(string host, int port, function|void callback,
 }
 
 
-private void my_pipe_done(Pipe.pipe which)
+void my_pipe_done(Pipe.pipe which)
 {
   if(objectp(which))
   {
