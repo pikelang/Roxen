@@ -345,6 +345,8 @@ int image_id = time() ^ gethrtime();
 
 string is_image( string x )
 {
+  if( !stringp(x) )
+    return 0;
   if( has_prefix( x, "GIF" ) )
     return "gif";
   if( has_value( x, "JFIF" ) )
@@ -356,6 +358,8 @@ string is_image( string x )
 
 int is_encode_value( string what )
 {
+  if( !stringp(what) )
+    return 0;
   return strlen(what) >= 5 && !search( what, "¶ke" );
 }
 
@@ -395,6 +399,29 @@ string store_image( string x )
     "len":strlen(x),
   ]);
   return id;
+}
+
+string format_float( float x )
+{
+  if( x >= 10000.0 )    return (string)((int)x);
+  if( x >= 100.0 )      return sprintf("%.1f", x );
+  if( x >= 10.0 )       return sprintf("%.2f", x );
+  return sprintf("%.3f", x );
+}
+
+int is_int( mixed what )
+{
+  return stringp(what) && equal(({what}),array_sscanf(what, "%[0-9]"));
+}
+
+int is_float( mixed what )
+{
+  return stringp(what) && equal(what/".",array_sscanf(what, "%[0-9].%[0-9]"));
+}
+
+string format_int( int x )
+{
+  return (string)x;
 }
 
 mapping|string parse( RequestID id )
@@ -519,7 +546,12 @@ mapping|string parse( RequestID id )
 	    qres += "<tr valign=top>";
 	    for( int i = 0; i<sizeof(q); i++ )
 	      if( !q[i] )
-		qres += "<td><i>NULL</i></td>";
+		qres +=
+		  "<td align=right><i><font size=-2>NULL</font></i></td>";
+	      else if( floatp( q[i] ) || is_float(q[i]) )
+		qres += "<td align=right>"+format_float((float)q[i])+"</td>";
+	      else if( intp( q[i] ) || is_int(q[i]) )
+		qres += "<td align=right>"+format_int((int)q[i])+"</td>";
 	      else if( is_image( q[i] ) )
 		qres +=
 		  "<td><img src='browser.pike?image="+store_image( q[i] )+
@@ -537,7 +569,8 @@ mapping|string parse( RequestID id )
       };
       if( e )
 	qres += "<tr><td> <font color='&usr.warncolor;'>"+
-	  sprintf((string)_(380,"While running %s: %s"), q,describe_error(e) )+
+	  sprintf((string)_(380,"While running %s: %s"), q,
+		  describe_error(e) )+
 	  "</td></tr>\n";
       qres += "</table>"+
 	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
@@ -651,7 +684,9 @@ mapping|string parse( RequestID id )
       res += "<td align=right> <font size=-1>"+
 	tbi->rows+" "+_(374,"rows")+"</font></td><td align=right>"
 	"<font size=-1>"+
-	( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB")+
+	(( (int)tbi->data_length+(int)tbi->index_length) ? 	
+	 ( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB"):
+	 "")+
 	"</font></td>";
 
     if( id->variables->table == table )

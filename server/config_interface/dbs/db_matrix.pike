@@ -145,9 +145,11 @@ string|mapping parse( RequestID id )
         url = "internal";
       else
       {
-	if( catch( DBManager.cached_get( db )->query("select 1") ) )
+	mixed err;
+	if( err = catch( DBManager.cached_get( db ) ) )
 	  url="<font color='&usr.warncolor;'>"+
-	    _(381,"Failed to connect")+"</font>";
+	    _(381,"Failed to connect")+": "+
+	    describe_error(err)+"</font>";
 	else
 	  url = "remote";
       }

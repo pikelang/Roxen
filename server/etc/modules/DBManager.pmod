@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.46 2001/10/04 13:57:40 per Exp $
+// $Id: DBManager.pmod,v 1.47 2001/10/05 14:16:48 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -302,8 +302,26 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 //! the protocol handler. Otherwise returns 0.
 {
   Sql.Sql db = cached_get( name );
-  if( db->list_fields )
-    return db->list_fields( table );
+  catch {
+    if( db->list_fields )
+      return db->list_fields( table );
+  };
+  // Now, this is slow, but very generic. :-)
+  mixed err = catch {
+    array res = ({});
+    foreach( db->big_query( "SELECT * FROM "+table )->fetch_fields(),
+	     object q )
+    {
+      res += ({
+	([
+	  "name":q->name,
+	  "type":q->type,
+	])
+      });
+    }
+    return res;
+  };
+  // No dice.
   return 0;
 }
 
@@ -312,16 +330,59 @@ array(string) db_tables( string name )
 //! the list.
 {
   object db = get(name);
-  array rows = ({}), row;
-  mixed res;
+  array(string) res;
   if( db->list_tables )
   {
-    if( arrayp( res = db->list_tables() ) )
-      return res;
-    while( row = res->fetch_row()  )
-      rows += row[0];
+    catch {
+      if( res =  db->list_tables() )
+	return res;
+    };
   }
-  return rows;
+
+  // Well, let's try some specific solutions then. The main problem if
+  // we reach this stage is probably that we are using a ODBC driver
+  // which does not support the table enumeration interface, this
+  // causing list_tables to throw an error.
+
+  switch( db_driver( name ) )
+  {
+    case "mysql":
+      return 0;
+
+    case "odbc":
+      // Oracle.
+      catch {
+	res = db->query( "select tname from tab")->tname;
+	return res;
+      };
+      // fallthrough.
+
+      // Microsoft SQL (7.0 or newer)
+      catch {
+	res = ({});
+	foreach( db->query("SELECT * FROM information_schema.tables"),
+		 mapping row )
+	  if( has_prefix( lower_case(row->TABLE_TYPE), "base" ) )
+	    res += ({ row->TABLE_NAME });
+	return res;
+      };
+
+      
+    case "postgres":
+      // Postgres
+      catch {
+	res = db->query("SELECT a.relname AS name FROM pg_class a, "
+			"pg_user b WHERE ( relkind = 'r') and "
+			"relname !~ '^pg_' "
+			"AND relname !~ '^xin[vx][0-9]+' AND "
+			"b.usesysid = a.relowner AND "
+			"NOT (EXISTS (SELECT viewname FROM pg_views "
+			"WHERE viewname=a.relname)) ")->name;
+	return res;
+      };
+  }
+
+  return ({});
 }
 
 mapping db_table_information( string db, string table )
@@ -341,9 +402,10 @@ mapping db_table_information( string db, string table )
       }
     }
     default:
-      catch{
+      mixed err = catch{
 	return ([
-	  "rows":(int)get(db)->query( "SELECT COUNT(*) AS cnt FROM "+table )[0]->cnt,
+	  "rows":
+	  (int)(get(db)->query( "SELECT COUNT(*) AS C FROM "+table )[0]->C),
 	]);
       };
   }
@@ -709,7 +771,8 @@ void create_db( string name, string path, int is_internal,
 {
   if( get( name ) )
     error("The database "+name+" already exists\n");
-
+  if( has_value( name, " " ) )
+    error("Please do not use space in the database names\n");
   if( has_value( name, "-" ) )
     name = replace( name, "-", "_" );
   if( group )
