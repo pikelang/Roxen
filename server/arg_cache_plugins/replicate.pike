@@ -5,6 +5,15 @@
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)
 
+#define CATCH_DUPLICATE(X)                                            \
+  do {                                                                \
+    mixed err = catch { X };                                          \
+    if(err)                                                           \
+      if(!arrayp(err) || !sizeof(err) || !sizeof(err[0]) ||           \
+         !glob("*duplicate entry*", lower_case(err[0])))              \
+         throw(err);                                                  \
+  } while(0)
+
 static int off;
 object cache;
 
@@ -49,19 +58,25 @@ static mapping quick_cache = ([]);
 
 static void init_replicate_db()
 {
-  mixed err = catch {
+  if(catch {
     // Avoid the 'IF NOT EXISTS' feature here to be more compatible.
     sQUERY( "CREATE TABLE "+cache->name+" ("
 	    "   server varchar(80) not null, "
 	    "   id int not null, "
 	    "   dat_content blob not null, "
 	    "   ctime int unsigned not null, "
+	    "   PRIMARY KEY(server, id), "
 	    "   INDEX k (id), "
 	    "   INDEX s (server), "
 	    "   INDEX c (ctime) "
 	    ")" );
-  };
-  err = catch {
+  })
+    catch {
+      // If the table exists, add a primary key to the remote arguments table. 
+      sQUERY( "ALTER IGNORE TABLE "+cache->name+
+	      "  ADD PRIMARY KEY (server, id)" );
+    };
+  catch {
     sQUERY( "CREATE TABLE servers ("
 	    "   secret varchar(255) not null primary key"
 	    ")" );
@@ -108,18 +123,20 @@ static void create( object c )
       off = 1;
       return;
     }
-  };
-
+   };
+  
    // local cache.
-   QUERY( "CREATE TABLE IF NOT EXISTS "+cache->name+"_foreign ("
-	  " remote varchar(255) not null, "
-	  " id  varchar(255) not null, "
+   QUERY( "CREATE TABLE IF NOT EXISTS "+cache->name+"_replicated ("
+	  " remote    VARCHAR(255) NOT NULL, "
+	  " index_id  INT UNSIGNED NOT NULL, "
+	  " value_id  INT UNSIGNED NOT NULL, "
+	  " PRIMARY KEY (remote, index_id, value_id), "
 	  " INDEX k (remote) )" );
 
   DBManager.is_module_table( 0, "local",
-			     cache->name+"_foreign",
-			     "Used to cache the mapping of foreign cache keys "
-			     "to local IDs");
+			     cache->name+"_replicated",
+			     "Used to cache the mapping of replicated "
+			     "cache keys to local IDs");
 
   if( !d )
   {
@@ -131,7 +148,8 @@ static void create( object c )
   init_replicate_db();
 }
 
-static int get_and_store_data_from_server( Server server, int id )
+static int get_and_store_data_from_server( Server server, int id,
+					   int|void index_id )
 {
   string data = server->lookup( id );
   if( !data )
@@ -139,7 +157,7 @@ static int get_and_store_data_from_server( Server server, int id )
     off = -1;
     return -1;
   }
-  return cache->create_key( data );
+  return cache->create_key( data, 0, index_id );
 }
 
 static array(int) server_secret_decode( string a, string secret )
@@ -175,19 +193,42 @@ static array(int) server_secret_decode( string a, string secret )
   }
 
 
-int create_key( int id, string data )
+int create_key( int id, string data, string|void server )
 {
   ENSURE_NOT_OFF( 0 );
+  if(server && !servers[server]) {
 #ifdef REPLICATE_DEBUG
-  werror("Create new key %O for %O\n", id, cache->secret );
+    werror("Adding new server %O\n", server );
 #endif
-  sQUERY( "INSERT INTO "+cache->name+" (server,id,dat_content,ctime) "
-	  "VALUES (%s,%d,%s,%d)", cache->secret, id, data, time() );
+    catch {
+      sQUERY( "INSERT INTO servers (secret) VALUES (%s)", server );
+    };
+    initiate_servers();
+  }
+  string secret = server||cache->secret;
+  
+#ifdef REPLICATE_DEBUG
+  werror("Create new remote key %O for %O\n", id, secret );
+#endif
+  // Catch "Duplicate entry" errors.
+  catch {
+    sQUERY( "INSERT INTO "+cache->name+" (server,id,dat_content,ctime) "
+	    "VALUES (%s,%d,%s,%d)", secret, id, data, time() );
+  };
+}
+
+static void add_replicated_key(int local_index_id, int local_value_id,
+			       string remote_key)
+{
+  CATCH_DUPLICATE(
+    QUERY( "INSERT INTO "+cache->name+"_replicated "
+	   " (remote, index_id, value_id) VALUES (%s, %d, %d)",
+	   remote_key, local_index_id, local_value_id );
+  );
 }
 
 array(int) decode_id( string data )
 {
-  ENSURE_NOT_OFF( 0 );
 #ifdef REPLICATE_DEBUG
   werror("Request for ID %O\n", data );
 #endif
@@ -199,15 +240,17 @@ array(int) decode_id( string data )
 #endif
     return quick_cache[ data ];
   }
-  if( sizeof(res = QUERY( "SELECT id FROM "+cache->name+
-		           "_foreign WHERE remote=%s", data ) ) )
+  if( sizeof(res = QUERY( "SELECT index_id, value_id FROM "+cache->name+
+			  "_replicated WHERE remote=%s", data ) ) )
   {
 #ifdef REPLICATE_DEBUG
     werror("Found in local cache.\n" );
 #endif
-    return quick_cache[data]=(array(int))(res[0]->id/",");
+    return quick_cache[data]=
+      ({ (int)res[0]->index_id, (int)res[0]->value_id });
   }
 
+  ENSURE_NOT_OFF( 0 );
   foreach( indices(servers), string server )
   {
     string sec = servers[server]->secret;
@@ -217,7 +260,7 @@ array(int) decode_id( string data )
       catch ( key = cache->mutex->lock() );
 
       id[0] = get_and_store_data_from_server( servers[server], id[0] );
-      id[1] = get_and_store_data_from_server( servers[server], id[1] );
+      id[1] = get_and_store_data_from_server( servers[server], id[1], id[0] );
 
       if( off == -1 )
 	return 0;
@@ -225,12 +268,44 @@ array(int) decode_id( string data )
 #ifdef REPLICATE_DEBUG
       werror("Found in remote cache. Server is %O\n", server );
 #endif
-      QUERY( "INSERT INTO "+cache->name+"_foreign (id,remote) VALUES (%s,%s)",
-	     ((array(string))id)*",", data );
+      add_replicated_key(id[0], id[1], data);
       return quick_cache[data] = id;
     }
   }
   return 0;
+}
+
+array(int) get_local_ids(int|void from_time)
+{
+  Thread.MutexKey key = cache->mutex->lock();
+  array have = (array(int))
+    cache->db->query( "SELECT id from "+cache->name+
+		      " WHERE atime >= %d", from_time )->id;
+
+  array shave = (array(int))
+    sQUERY( "SELECT id FROM "+cache->name+
+	    " WHERE server!=%s", cache->secret )->id;
+  return have-shave;
+}
+
+void create_remote_key(int id, string key,
+		       int index_id, string index_key,
+		       string server)
+{
+  Thread.MutexKey mutex_key = cache->mutex->lock();
+  
+  // Create a record in the remote database.
+  create_key(id, key, server);
+
+  // If an index id is specified create a record in the remote
+  // database and create local records for index key and value
+  // key. Also create a record in the arguments_replicated table.
+  if(index_id >= 0) {
+    create_key(index_id, index_key, server);
+    add_replicated_key(cache->create_key(index_key, 0),
+		       cache->create_key(key, 0, index_id),
+		       cache->encode_id(index_id, id, server));
+  }
 }
 #else
 constant disabled = 1;
