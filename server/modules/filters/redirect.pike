@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.37 2004/10/27 13:03:04 jonasw Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.38 2005/02/17 15:05:02 wellhard Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -152,7 +152,8 @@ mixed first_try(object id)
       if(has_prefix(m, f))
       {
 	to = redirect_to[i] + m[strlen(f)..];
-	sscanf(to, "%s?", to);
+	//  Do not explicitly remove the query part of the URL.
+	// sscanf(to, "%s?", to);
 	break;
       } else if( has_value(f, "*") || has_value( f, "(") ) {
 	array foo;
