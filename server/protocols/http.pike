@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.349 2001/11/27 17:56:21 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.350 2001/11/27 18:06:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2247,12 +2247,7 @@ object clone_me()
 
   c->real_variables = copy_value( real_variables );
   c->variables = FakedVariables( c->real_variables );
-
-  mapping common = misc->common;
-  misc->common = 0;		// Possible concurrency problem.
   c->misc = copy_value( misc );
-  misc->common = c->misc->common = common;
-
   c->misc->orig = t;
 
   c->prestate = prestate;
