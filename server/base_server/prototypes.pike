@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.83 2004/04/14 14:24:51 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.84 2004/04/19 16:45:07 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -247,7 +247,7 @@ class Configuration
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
   array(int)|object(Stdio.Stat) stat_file(string file, RequestID id);
-  array open_file(string fname, string mode, RequestID id, void|int ig);
+  array open_file(string fname, string mode, RequestID id, void|int ig, void|int rc);
   mapping(string:array(mixed)) find_dir_stat(string file, RequestID id);
   array access(string file, RequestID id);
   string real_file(string file, RequestID id);
