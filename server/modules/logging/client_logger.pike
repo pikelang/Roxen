@@ -2,7 +2,7 @@
 
 // Logs the User-agent fields in a separate log.
 
-constant cvs_version = "$Id: client_logger.pike,v 1.11 2000/03/02 04:38:12 nilsson Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.12 2000/03/13 06:23:00 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -18,7 +18,7 @@ constant module_doc  = "This is a client logger. It simply logs the 'user-agent'
 
 void create()
 {
-  defvar("logfile", GLOBVAR(logdirprefix)+"/Clients", "Client log file",
+  defvar("logfile", "$LOGDIR/Clients", "Client log file",
 	 TYPE_STRING,
 	 "This is the file into which all client names will be put.\n");
 }
