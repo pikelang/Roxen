@@ -547,7 +547,8 @@ class LazyImage( LazyImage parent )
     return guides[ limit_index( index ) ];
   }
 
-  static string handle_variable( string variable, Image.Image|Image.Layer cl )
+  static string handle_variable( string variable, Image.Image|Image.Layer cl,
+				 Layers l)
   {
     array(string) v = (variable/".");
     string exts_ind( mapping exts, int i)
@@ -585,24 +586,44 @@ class LazyImage( LazyImage parent )
 	else
 	  exts = ([ "w":cl->xsize(), "h":cl->ysize(), ]);
 	return exts_ind( exts, v[1][0] );
+      case "layers":
+	if (!sizeof(l))
+	  RXML.parse_error( "No layers (while parsing "+variable+" in "+
+			    operation_name+")\n");
+	exts = ([]);
+	Layers layers = find_layers(v[1], l);
+	if (!sizeof(layers))
+	  RXML.parse_error( "No such layer (while parsing "+variable+" in "+
+			    operation_name+")\n");
+	Image.Layer tl = layers[0];
+	if( tl->xoffset )
+	  exts = ([
+	    "x0":tl->xoffset(), "y0":tl->yoffset(),
+	    "w":tl->xsize(),    "h":tl->ysize(),
+	  ]);
+	else
+	  exts = ([ "w":tl->xsize(), "h":tl->ysize(), ]);
+	return exts_ind( exts, v[2][0] );
     }
   }
   
 
-  static string parse_variables( string from, Image.Layer|Image.Image cl )
+  static string parse_variables( string from, Image.Layer|Image.Image cl,
+				 Layers l)
   {
     if( !from )
       return 0;
     string a, b, v;
     while( sscanf( from, "%s$[%s]%s", a, v, b ) == 3 )
-      from = a+handle_variable( v,cl )+b;
+      from = a+handle_variable( v,cl,l )+b;
     return from;
   }
   
-  static int translate_coordinate( string from, Image.Layer|Image.Image cl )
+  static int translate_coordinate( string from, Image.Layer|Image.Image cl,
+				   Layers l)
   {
     if( !from ) return 0;
-    return (int)parse_sexpr( parse_variables( from, cl ) );
+    return (int)parse_sexpr( parse_variables( from, cl, l ) );
   }
 
   static int translate_cap_style( string style )
@@ -632,10 +653,11 @@ class LazyImage( LazyImage parent )
   }
 
   static float translate_coordinate_f( string from,
-				       Image.Layer|Image.Image cl )
+				       Image.Layer|Image.Image cl,
+				       Layers l)
   {
     if( !from ) return 0;
-    return (float)parse_sexpr( parse_variables( from, cl ) );
+    return (float)parse_sexpr( parse_variables( from, cl, l ) );
   }
   
   static Image.Layer copy_layer_data( Image.Layer l )
@@ -884,17 +906,17 @@ class Text
 
       string font =
 	(args->font||"default")+" "+
-	(translate_coordinate(args->fontsize,0)||32);
+	(translate_coordinate(args->fontsize,0,l)||32);
       f = resolve_font( font );
 
       if( !f )
 	RXML.parse_error("Cannot find the font ("+font+")\n");
 
-      Image.Image text = f->write( @(parse_variables(args->text,0)/"\n") );
+      Image.Image text = f->write( @(parse_variables(args->text,0,l)/"\n") );
       
 
-      int x = translate_coordinate( args->x,text );
-      int y = translate_coordinate( args->y,text );
+      int x = translate_coordinate( args->x,text,l );
+      int y = translate_coordinate( args->y,text,l );
       if( args["modulate-alpha"] )
 	foreach( on, int i )
 	{
@@ -917,18 +939,18 @@ class Text
 			  , text, translate_mode( args->mode ) );
 	ti->set_offset( x,y );
 	ti->set_misc_value( "name", parse_variables(args->name || args->text,
-						    ti));
+						    ti,l));
 
 	if( !on )  return (l||({})) + ({ ti });
 	foreach( on, int i )
 	{
 	  ti = copy_layer( ti );
 	  if( string n = l[i]->get_misc_value( "name" ) )
-	    ti->set_misc_value( "name", parse_variables(n,ti) );
+	    ti->set_misc_value( "name", parse_variables(n,ti,l) );
 	  else
 	    ti->set_misc_value( "name",
 				parse_variables(args->name || args->text,
-						ti) );
+						ti,l) );
 	  l[ i ] = ({ l[i], ti });
 	}
 	return Array.flatten( l );
@@ -1180,8 +1202,8 @@ class MoveLayer
       if( args->layers )      q=find_layers( args->layers, l );
       if( args["layers-id"] ) q=find_layers_id(args["layers-id"], l);
 
-      int x = translate_coordinate( args->x,0 );
-      int y = translate_coordinate( args->y,0 );
+      int x = translate_coordinate( args->x,0,l );
+      int y = translate_coordinate( args->y,0,l );
       
       if( !args["absolute"] )
 	foreach( q, Image.Layer l )
@@ -1218,8 +1240,8 @@ class NewLayer
     Layers process( Layers l )
     {
       Image.Layer new_layer = Image.Layer();
-      int xs = translate_coordinate( args->xsize,0 ),
-	  ys = translate_coordinate( args->ysize,0 );
+      int xs = translate_coordinate( args->xsize,0,l ),
+	  ys = translate_coordinate( args->ysize,0,l );
 
       Image.Image i = Image.Image( xs,ys,
 				   translate_color(args->color||"000" ));
@@ -1231,8 +1253,8 @@ class NewLayer
 
       new_layer->set_image( i, a );
       new_layer->set_mode( translate_mode( args->mode ) );
-      int xo = translate_coordinate( args->xoffset, new_layer),
-	  yo = translate_coordinate( args->yoffset, new_layer);
+      int xo = translate_coordinate( args->xoffset, new_layer, l),
+	  yo = translate_coordinate( args->yoffset, new_layer, l);
       new_layer->set_offset( xo, yo );
       if( args->tiled )
 	new_layer->set_tiled( 1 );
@@ -1252,10 +1274,10 @@ class Crop
   static {
     Layers process( Layers layers )
     {
-      int x0 = translate_coordinate( args->x, 0 );
-      int y0 = translate_coordinate( args->y, 0 );
-      int width = translate_coordinate(args->width, 0 );
-      int height = translate_coordinate( args->height, 0 );
+      int x0 = translate_coordinate( args->x, 0, layers );
+      int y0 = translate_coordinate( args->y, 0, layers );
+      int width = translate_coordinate(args->width, 0, layers );
+      int height = translate_coordinate( args->height, 0, layers );
 
       foreach( layers, Image.Layer l )
       {
@@ -1310,23 +1332,29 @@ class Scale
   static {
     Layers process( Layers layers )
     {
+      Layers victims = layers;
+      if( args->layers )
+	victims = find_layers( args->layers, layers );
+      else if( args["layers-id"] )
+	victims = find_layers( args["layers-id"], layers );
+
       int|float width, height, max_width, max_height;
       if( args->mode == "relative" )
       {
-	width = translate_coordinate_f( args->width, 0 ) / 100.0;
-	height = translate_coordinate_f( args->height, 0 ) / 100.0;
+	width = translate_coordinate_f( args->width, 0, layers ) / 100.0;
+	height = translate_coordinate_f( args->height, 0, layers ) / 100.0;
       }
       else
       {
-	width = translate_coordinate( args->width, 0 );
-	height = translate_coordinate( args->height, 0 );
+	width = translate_coordinate( args->width, 0, layers );
+	height = translate_coordinate( args->height, 0, layers );
       }
       if (args["max-width"])
-	max_width = translate_coordinate( args["max-width"], 0 );
+	max_width = translate_coordinate( args["max-width"], 0, layers );
       if (args["max-height"])
-	max_height = translate_coordinate( args["max-height"], 0 );
+	max_height = translate_coordinate( args["max-height"], 0, layers );
       
-      foreach( layers, Image.Layer l )
+      foreach( victims, Image.Layer l )
       {
 	if( max_width || max_height )
 	{
@@ -1533,10 +1561,12 @@ class X									\
 
 //! @ignore
 BASIC_I_OR_A_OPERATION( Gamma, "gamma", gamma,
-			translate_coordinate_f(args->gamma,0) );
+			translate_coordinate_f(args->gamma,0,layers) );
 BASIC_I_OR_A_OPERATION( Invert, "invert", invert, );
 BASIC_I_OR_A_OPERATION( Grey,   "grey", grey, );
 BASIC_I_OR_A_OPERATION( Color,  "color", color,
+			translate_color(args->color));
+BASIC_I_OR_A_OPERATION( Clear,  "clear", clear,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( MirrorX, "mirror-x", mirrorx, );
 BASIC_I_OR_A_OPERATION( MirrorY, "mirror-y", mirrory, );
@@ -1545,8 +1575,8 @@ BASIC_I_OR_A_OPERATION( RGB2HSV, "rgb-to-hsv", rgb_to_hsv, );
 BASIC_I_OR_A_OPERATION( Distance,"color-distance",distancesq,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( SelectFrom,"select-from",select_from,
-			@({translate_coordinate( args->x,0 ),
-			   translate_coordinate( args->y,0 )}));
+			@({translate_coordinate( args->x,0,layers ),
+			   translate_coordinate( args->y,0,layers )}));
 //! @endignore
 
 class Expand
@@ -1619,8 +1649,8 @@ class Line
       if( args->layers )      on = find_layers( args->layers, layers );
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
-      int x = translate_coordinate( args->xsize, 0 ),
-	  y = translate_coordinate( args->ysize, 0 );
+      int x = translate_coordinate( args->xsize, 0, layers ),
+	  y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
@@ -1635,13 +1665,13 @@ class Line
 
       foreach(args->coordinates/",", string c)
 	coordinates += ({
-	  translate_coordinate_f( c, pi )
+	  translate_coordinate_f( c, pi, layers )
 	});
 
       if( args["coordinate-system"] )
       {
 	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi),
+	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
 		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
 	  RXML.parse_error("Illegal syntax for coordinate-system. "
 			   "Expected x0,y0-x1,y1\n");
@@ -1666,7 +1696,8 @@ class Line
       pi->setcolor( 255,255,255 );
 
       array(array(float)) coords =
-	make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi ),
+	make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi,
+							layers ),
 				coordinates,
 				translate_cap_style( args->cap ),
 				translate_join_style( args->join ) );
@@ -1682,9 +1713,9 @@ class Line
       {
 	Image.Layer l = Image.Layer( );
 	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi) );
-	l->set_offset( translate_coordinate( args->xoffset, pi ),
-		       translate_coordinate( args->yoffset, pi ) );
+			   parse_variables(args->name || "poly", pi, layers) );
+	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+		       translate_coordinate( args->yoffset, pi, layers ) );
 
 	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
 		      pi );
@@ -1731,8 +1762,8 @@ class Polygone
       if( args->layers )      on = find_layers( args->layers, layers );
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
-      int x = translate_coordinate( args->xsize, 0 ),
-	  y = translate_coordinate( args->ysize, 0 );
+      int x = translate_coordinate( args->xsize, 0, layers ),
+	  y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
@@ -1747,13 +1778,13 @@ class Polygone
 
       foreach(args->coordinates/",", string c)
 	coordinates += ({
-	  translate_coordinate_f( c, pi )
+	  translate_coordinate_f( c, pi, layers )
 	});
 
       if( args["coordinate-system"] )
       {
 	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi),
+	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
 		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
 	  RXML.parse_error("Illegal syntax for coordinate-system. "
 			   "Expected x0,y0-x1,y1\n");
@@ -1785,9 +1816,9 @@ class Polygone
       {
 	Image.Layer l = Image.Layer( );
 	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi) );
-	l->set_offset( translate_coordinate( args->xoffset, pi ),
-		       translate_coordinate( args->yoffset, pi ) );
+			   parse_variables(args->name || "poly", pi, layers) );
+	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+		       translate_coordinate( args->yoffset, pi, layers ) );
 
 	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
 		      pi );
