@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.370 2002/06/27 12:48:50 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.371 2002/07/02 12:15:33 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1881,7 +1881,7 @@ void handle_request( )
   if(prestate->old_error)
   {
     array err = get_error(variables->error);
-    if(err)
+    if(err && arrayp(err))
     {
       if(prestate->plain)
       {
