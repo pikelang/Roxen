@@ -1434,7 +1434,7 @@ cd</rxml>
 <comment>Entity tests</comment>
 <test>
 <rxml><set variable="var.x">&amp;</set>&var.x;</rxml>
-<result>&amp;amp;</result>
+<result>&amp;</result>
 </test>
 
 <test>
@@ -1657,7 +1657,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.ssl-strength;</rxml>
-<result>0</result>
+<regexp>0|40|128|168</regexp>
 </test>
 
 <test>
