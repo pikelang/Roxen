@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.64 1999/12/21 16:47:24 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.65 1999/12/21 23:49:04 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -141,7 +141,6 @@ array(string) query_precompiled_names(string fname)
   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
 }
 
-#if 0
 program low_findprog(string pname, string ext, object|void handler)
 {
   program ret;
@@ -158,7 +157,8 @@ program low_findprog(string pname, string ext, object|void handler)
     {
     case "":
     case ".pike":
-      foreach( ({ make_ofilename( fname ), fname+".o" }), string ofile ) {
+      foreach(query_precompiled_names(fname), string ofile ) 
+      {
         if(array s2=master_file_stat( ofile ))
         {	
           if(s2[1]>0 && s2[3]>=s[3])
@@ -179,14 +179,7 @@ program low_findprog(string pname, string ext, object|void handler)
 			      sprintf("Decode failed:\n"
 				      "\t%s", err[0]));
 	    }
-	  } else {
-	    if (handler) {
-	      handler->compile_warning(ofile, 0,
-				       "Compiled file is out of date\n");
-	    } else {
-	      compile_warning(ofile, 0, "Compiled file is out of date\n");
-	    }
-          }
+	  }
         }
       }
 
@@ -206,21 +199,17 @@ program low_findprog(string pname, string ext, object|void handler)
     load_time[fname] = time();
     return programs[fname] = ret;
   }
-  // werror("Failed to find program: %O\n", fname);
   return UNDEFINED;
 }
-
-#endif /* 0 */
 
 mapping resolv_cache = ([]);
 mixed resolv(string a, string b)
 {
-  // werror("resolv(%O, %O)\n", a, b);
-  if( resolv_cache[a] )
-    return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
-  // werror("Not in cache\n");
-  resolv_cache[a] = ([ "value":(::resolv(a,b)) ]);
-  return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
+  string ci = (string)a+(string)b;
+  if( resolv_cache[ci] )
+    return resolv_cache[ci]->value ? resolv_cache[ci]->value : ([])[0];
+  resolv_cache[ci] = ([ "value":(::resolv(a,b)) ]);
+  return resolv_cache[ci]->value ? resolv_cache[ci]->value : ([])[0];
 }
 
 int refresh( program p, int|void force )
