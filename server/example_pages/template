@@ -1,6 +1,7 @@
 <define container="page">
 <html><head>
 <title>&_.title;</title>
+<meta name="keywords" content="bananstruvebagare" />
 </head>
 <body alink="#000000" bgcolor="#ffffff" bottommargin="0" leftmargin="0" link="#ce5c00" marginheight="2" marginwidth="0" rightmargin="0" text="#333333" topmargin="2" vlink="#ce5c00">
 
