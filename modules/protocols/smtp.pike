@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.24 1998/09/12 13:39:25 grubba Exp $
+ * $Id: smtp.pike,v 1.25 1998/09/12 13:40:39 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.24 1998/09/12 13:39:25 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.25 1998/09/12 13:40:39 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -26,7 +26,7 @@ inherit "module";
  * 	string desc(string addr, object o);
  *	multiset(string) query_domain();
  *	int put(string sender, string user, string domain,
- * 	        string spooler_id, object o);
+ * 	        object spoolfile, object o);
  *
  * smtp_filter:
  *	int verify_sender(string sender);
@@ -36,7 +36,7 @@ inherit "module";
  *
  * smtp_relay:
  * 	int relay(string sender, string user, string domain,
- * 	          string spooler_id, object o);
+ * 	          object spoolfile, object o);
  */
 
 static class Mail {
