@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.87 1998/05/22 21:03:59 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.88 1998/06/27 15:46:35 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -576,8 +576,15 @@ class spawn_cgi
 	  exece(f, args, env);
 	}
       };
-      catch(roxen_perror("CGI: Exec failed!\n%O\n",
-			 describe_backtrace((array)err)));
+      catch {
+	if (err) {
+	  roxen_perror("CGI: Exec failed!\n%O\n",
+		       describe_backtrace((array)err));
+	} else {
+	  roxen_perror("CGI: Exec failed!\n"
+		       "CGI: CGI-wrapper not executable by the CGI user?\n");
+	}
+      };
       exit(0);
     } else if (pid == -1) {
       // fork() failed!
