@@ -1200,6 +1200,26 @@ b</strlen></rxml>
 <result>.a</result>
 </test>
 
+<test>
+<rxml><emit source="TESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<result>aa,,01,</result>
+</test>
+
+<test><!-- make sure the emit source is resetted -->
+<rxml><emit source="TESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<result>aa,,01,</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<result>aa,,01,</result>
+</test>
+
+<test><!-- make sure the emit source is resetted -->
+<rxml><emit source="OTESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<result>aa,,01,</result>
+</test>
+
 
 <comment>Missing test: values emit plugin</comment>
 
