@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.70 2000/01/19 16:52:27 mast Exp $
+ * $Id: rxml.pike,v 1.71 2000/01/21 15:19:17 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -81,10 +81,11 @@ RXML.TagSet rxml_tag_set = class
   string prefix = RXML_NAMESPACE;
 
   void prepare_context (RXML.Context c) {
-    c->add_scope("roxen",scope_roxen);
-    c->add_scope("cookie" ,c->id->cookies);
-    c->add_scope("form", c->id->variables);
-    c->add_scope("var", ([]) );
+    c->extend_scope("roxen",scope_roxen);
+    c->extend_scope("cookie" ,c->id->cookies);
+    c->extend_scope("form", c->id->variables);
+    c->extend_scope("client", c->id->client_var);
+    c->extend_scope("var", ([]) );
   }
 
   array(RoxenModule) modules = ({});
@@ -536,7 +537,8 @@ string tag_help(string t, mapping args, RequestID id)
 	char=tag[0..0];
 	tag_links=({});
       }
-      if(tag[0..2]!=RXML_NAMESPACE) tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
+      if(tag[0..sizeof(RXML_NAMESPACE)+1]!=RXML_NAMESPACE+":")
+	tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
     }
 
     return ret + "<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
