@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.48 1997/08/31 17:07:25 grubba Exp $
+ * $Id: ftp.pike,v 1.49 1997/09/02 22:35:56 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -561,6 +561,11 @@ class ls_program {
     return(args * ({}));
   }
 
+  void destroy()
+  {
+    destruct(output);
+  }
+
   void create(string arg, object _id)
   {
     mixed err;
@@ -605,7 +610,7 @@ class ls_program {
       }
       
       if (!sizeof(args)) {
-	args = ({ "." });
+	args = ({ "./" });
       }
 
       output = list_stream(id);
@@ -1016,6 +1021,8 @@ void timeout()
   end();
 }
 
+object ls_session;
+
 void got_data(mixed fooid, string s)
 {
   string cmdlin;
@@ -1253,7 +1260,7 @@ void got_data(mixed fooid, string s)
 	break;
       }
 
-      ls_program(arg, this_object());
+      ls_session = ls_program(arg, this_object());
 
 #if 0
       if(sscanf(arg, "-%s %s", args, arg)!=2)
@@ -1524,6 +1531,9 @@ void destroy()
 {
   if (is_connection) {
     conf->misc->ftp_users_now--;
+  }
+  if (ls_session) {
+    destruct(ls_session);
   }
 }
 
