@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2001, Roxen IS.
 #include <module.h>
 
 // Some defines for the translation system
@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.2 2001/10/09 15:03:43 per Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.3 2001/10/09 18:07:50 nilsson Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
@@ -188,7 +188,7 @@ class ExGroup
   {
     // All our users are members of this group, the default
     // implementation would work, bit it would be rather inefficient.
-    return list_users();
+    return ::list_users();
   }
 }
 
@@ -198,7 +198,7 @@ static ExGroup the_one_and_only_group = ExGroup();
 array(string) list_users( RequestID id )
 //! Return a list of all users handled by this database module.
 {
-  return column( map( query( users ), ´/, ":" ), 0 );
+  return column( map( query( "users" ), `/, ":" ), 0 );
 }
 
 array(string) list_groups( RequestID id )
