@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.367 2002/12/07 13:02:24 mani Exp $
+// $Id: loader.pike,v 1.368 2003/01/14 20:54:47 marcus Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.367 2002/12/07 13:02:24 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.368 2003/01/14 20:54:47 marcus Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1714,9 +1714,9 @@ void low_start_mysql( string datadir,
 #endif
   
 #ifdef __NT__
-  string binary = "bin/roxen_mysql.exe";
+  string binary = "bin/chili_mysql.exe";
 #else
-  string binary = "bin/roxen_mysql";
+  string binary = "bin/chili_mysql";
 #endif
   rm( binary );
 #if constant(hardlink)
