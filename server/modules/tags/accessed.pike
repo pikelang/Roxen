@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.49 2002/01/30 00:21:13 mast Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.50 2002/04/05 11:55:08 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -506,11 +506,10 @@ int log(RequestID id, mapping file) {
 
   // Although we are not 100% sure we should make a count,
   // nothing bad happens if we shouldn't and still do.
-  int a, b=sizeof(id->realfile);
+  string f = id->not_query;
   foreach(query("extcount"), string tmp)
-    if(a=sizeof(tmp) && b>a &&
-       id->realfile[b-a..]=="."+tmp) {
-      counter->add(id->not_query, 1);
+    if(has_suffix(f, "."+tmp)) {
+      counter->add(f, 1);
       id->misc->accessed = "1";
     }
 
