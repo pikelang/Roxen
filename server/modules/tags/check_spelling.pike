@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.20 2004/08/05 12:03:54 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.21 2004/08/05 14:07:35 noring Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
@@ -217,7 +217,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
 
   file1->write(stringp(words) ?
                " "+words /* Extra space to ignore aspell commands
-                            (potential secyurity problem), compensated
+                            (potential security problem), compensated
                             below. */ :
                " "+words*"\n "+"\n" /* Compatibility mode. */);
   file1->close();
@@ -294,11 +294,13 @@ class TagEmitSpellcheck {
 	      entries += ({ ([ "word":word,
 			       "offset":offset-1 /* For extra space (see above)! */,
 			       "suggestions":suggestions ]) });
+	    continue;
 	    
 	  case '#':
 	    if(sscanf(line, "# %s %d", string word, int offset) == 2)
 	      entries += ({ ([ "word":word,
 			       "offset":offset-1 /* For extra space (see above)! */ ]) });
+	    continue;
 	}
       }
 
