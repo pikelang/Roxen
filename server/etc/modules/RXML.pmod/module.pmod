@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.77 2000/03/11 03:26:15 nilsson Exp $
+//! $Id: module.pmod,v 1.78 2000/03/13 00:42:04 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1552,7 +1552,7 @@ class Frame
 
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       mapping(string:mixed)|mapping(object:array) ustate;
-      if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece))
+      if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece)) {
 	// Subframe wants to stream. Update stream_piece and send it on.
 	if (result_type->quoting_scheme != parser->type->quoting_scheme)
 	  res = parser->type->quote (res);
@@ -1560,6 +1560,7 @@ class Frame
 	  ustate->stream_piece = res + ustate->stream_piece;
 	else if (ustate->stream_piece == Void)
 	  ustate->stream_piece = res;
+      }
       ustate->exec_left = exec[i..]; // Left to execute.
       if (subparser)
 	// Replace the string with the subparser object so that we'll
