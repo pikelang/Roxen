@@ -19,8 +19,6 @@
   &nbsp;
 </define>
 
-<update-show-backtrace/>
-
   <if variable="form.uninstall_package">
     <update-uninstall-package package="&form.uninstall_package;">
   </if>
@@ -34,7 +32,7 @@
   Launched a package list update request.<br />
 </if>
 
-This information was last synchronized with the main server &update.last_updated; ago.
+This information was last synchronized with the main server &var.last_updated; ago.
 
 <cat-list name="idonex" title="Products" />
 <cat-list name="security" title="Security fixes" />
