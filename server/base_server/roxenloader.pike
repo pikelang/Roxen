@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.203 2000/09/24 13:35:50 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.204 2000/09/24 17:14:52 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1256,7 +1256,7 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 2.1 requires pike 7.1.
+Roxen 2.2 requires pike 7.1.
 Please install a newer version of Pike.
 ******************************************************
 
