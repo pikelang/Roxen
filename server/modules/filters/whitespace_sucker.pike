@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.3 2001/04/08 21:18:19 nilsson Exp $";
+constant cvs_version = "$Id: whitespace_sucker.pike,v 1.4 2001/04/18 23:31:55 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
@@ -41,6 +41,10 @@ static array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
   return ({ Array.transpose( ws_nws ) * ({}) * "" });
 }
 
+array(string) verbatim(Parser.HTML p, mapping(string:string) args, string c) {
+  return ({ p->current() });
+}
+
 mapping filter(mapping result, RequestID id)
 {
   if(!result
@@ -51,10 +55,10 @@ mapping filter(mapping result, RequestID id)
     return 0;
 
   result->data = Parser.HTML()
-    ->add_container("pre", lambda(Parser.HTML p, mapping(string:string) args, string c) {
-			     if(!sizeof(args)) return ({ "<pre>"+c+"</pre>" });
-			     return ({ Roxen.make_container("pre", args, c) });
-			   })
+    ->add_containers( ([ "pre":verbatim,
+			 "textarea":verbatim,
+			 "script":verbatim,
+			 "style":verbatim ]) )
     ->add_quote_tag("!--", query("comment")&&"", "--")
     ->_set_data_callback( remove_consecutive_whitespace )
     ->finish( result->data )
