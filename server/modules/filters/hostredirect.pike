@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.8 1997/03/26 05:54:11 per Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.9 1997/05/13 15:46:21 peter Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -160,7 +160,7 @@ mixed first_try(object id)
 #ifdef HOSTREDIRECT_DEBUG
     perror(to+"\n");
 #endif     
-  string url = roxen->query("MyWorldLocation");
+  string url = id->conf->query("MyWorldLocation");
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
 #ifdef HOSTREDIRECT_DEBUG
