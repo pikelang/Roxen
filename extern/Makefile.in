@@ -74,7 +74,16 @@ ssl-localinstall:	ssl
 	/bin/cp -f ssl $(SRCDIR)/../server/bin
 
 install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
-	/bin/cp -f roxen_hostname fcgi cgi $(prefix)/roxen/server/bin
+	@for f in roxen_hostname fcgi cgi; do \
+		if [ -f $f ]; then \
+			echo Installing $f; \
+			/bin/rm -f $(prefix)/roxen/server/bin/$f; \
+			if /bin/cp $f $(prefix)/roxen/server/bin/ then :; \
+			else exit 1; fi; \
+		else \
+			echo $f was not successfully compiled; \
+		fi \
+	done
 	@echo Done.
 
 localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-localinstall
