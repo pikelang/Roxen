@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.8 2001/08/24 21:57:41 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.9 2001/09/03 17:11:04 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -211,10 +211,10 @@ constant tagdoc=([
 <attr name='list' value='regions|countries'><p>
  Select what type of objects to list.</p>
 
-<ex type='vert'>
+<ex>
 <b>Available regions</b><br />
 <emit source='atlas' list='regions'>
-<ent>_.name</ent><br />
+&_.name;<br />
 </emit>
 </ex>
 </attr>",
@@ -231,9 +231,9 @@ constant tagdoc=([
  Draws a map.</short> The map shows either the world, regions (Africa, Europe,
  etc) or countries. It's a known bug that the map is not entierly up to date.</p>
 
-<ex type='vert'><atlas/></ex>
+<ex><atlas/></ex>
 
-<ex type='vert'><atlas fgcolor='#425A84' bgcolor='#dee2eb'>
+<ex><atlas fgcolor='#425A84' bgcolor='#dee2eb'>
 <country domain='se' color='orange'/>
 <country domain='jp' color='orange'/>
 <marker x='100' y='90'/>
@@ -246,7 +246,7 @@ constant tagdoc=([
  that emit plugin <xref href='../output/emit_atlas.tag'>atlas</xref>
  returns.</p>
 
-<ex type='vert'><atlas region='europe' width='200'/></ex>
+<ex><atlas region='europe' width='200'/></ex>
 </attr>
 
 <attr name='width' value='number'><p>
