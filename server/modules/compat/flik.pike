@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.2 1999/12/14 02:22:21 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.3 2000/01/23 03:03:57 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -57,7 +57,7 @@ void gc()
 
 array (mixed) register_module()
 {
-  return ({ MODULE_PARSER, "Folder list tag",
+  return ({ MODULE_PARSER, "Old Folding List Tag",
               "This is the older version of \"Folding list tag\". " 
 	      "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
 	       " This makes it easy to build a folder list or an outline. "
