@@ -1,12 +1,17 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.62 1999/11/29 22:13:43 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.63 1999/12/09 01:51:24 grubba Exp $";
 
 /*
  * name = "Roxen Master";
  * doc = "Roxen's customized master.";
  */
+
+// Disable the precompiled file is out of date warning.
+#ifndef OUT_OF_DATE_WARNING
+constant out_of_date_warning = 0;
+#endif /* !OUT_OF_DATE_WARNING */
 
 class MyCodec
 {
@@ -344,8 +349,12 @@ string stupid_describe(mixed m, int maxlen)
 }
 
 
+constant bt_max_string_len = 99999999;
+
 string describe_backtrace(mixed trace, void|int linewidth)
 {
+  return ::describe_backtrace(trace, 999999);
+
   int e;
   string ret;
   linewidth=999999;
