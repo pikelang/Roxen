@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.346 2002/10/22 01:23:48 nilsson Exp $
+// $Id: loader.pike,v 1.347 2002/10/23 14:59:30 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.346 2002/10/22 01:23:48 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.347 2002/10/23 14:59:30 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -728,7 +728,7 @@ Roxen really_load_roxen()
   report_debug("Loading server core ... \b");
   Roxen res;
   mixed err = catch {
-    res = ((program)"server_core/roxen.pike")();
+    res = ((program)"server_core/core.pike")();
   };
   if (err) 
   {
@@ -2059,6 +2059,8 @@ void do_main( int argc, array(string) argv )
   add_constant("r_mv", mv);
   add_constant("r_get_dir", r_get_dir);
   add_constant("r_file_stat", file_stat);
+  add_constant("loader", this_object());
+  // NGSERVER: Remove compatibility constant roxenloader.
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
 
