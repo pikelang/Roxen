@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.215 2000/08/07 17:11:58 kuntri Exp $
+// $Id: rxml.pike,v 1.216 2000/08/07 21:05:58 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -492,8 +492,19 @@ class TagHelp {
 				      id->not_query, Roxen.http_encode_url(tag), tag) });
 	}
 
-	result=ret+"<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
-	return 0;
+	ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
+	/*
+	ret+="<p><b>This is a list of all currently defined RXML scopes and their entities</b></p>";
+
+	RXML.Context context=RXML.get_context();
+	foreach(sort(context->list_scopes()), string scope) {
+	  ret+=sprintf("<h3><a href=\"%s?_r_t_h=%s\">%s</a></h3>\n",
+		       id->not_query, Roxen.http_encode_url("&"+scope+";"), scope);
+	  ret+="<p>"+String.implode_nicely(Array.map(sort(context->list_var(scope)),
+						       lambda(string ent) { return ent; }) )+"</p>";
+	}
+	*/
+	return ({ ret });
       }
 
       result=ret+find_tag_doc(help_for, id);
@@ -1868,6 +1879,23 @@ class TagIfVariable {
     mixed var=RXML.user_get_var(s);
     if(!var) return var;
     return RXML.t_text->convert (var);
+  }
+}
+
+class TagIfSizeof {
+  inherit IfIs;
+  constant plugin_name = "sizeof";
+  constant cache = 1;
+  int source(RequestID id, string s) {
+    mixed var=RXML.user_get_var(s);
+    if(!var) {
+      if(zero_type(RXML.user_get_var(s))) return 0;
+      return 1;
+    }
+    if(stringp(var) || arrayp(var) ||
+       multisetp(var) || mappingp(var)) return sizeof(var);
+    if(objectp(var) && var->_sizeof) return sizeof(var);
+    return sizeof((string)var);
   }
 }
 
