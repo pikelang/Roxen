@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.165 1999/01/17 13:48:31 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.166 1999/02/15 01:02:56 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2144,6 +2144,15 @@ void start(int num)
 			     server_name, port[1]));
       // Note: Change in-place.
       port[1] = "ssl3";
+      // FIXME: Should probably mark node as changed.
+    }
+    if ((< "ftp2" >)[port[1]]) {
+      // Obsolete versions of the FTP protocol.
+      report_warning(sprintf("%s: Obsolete FTP protocol-module \"%s\". "
+			     " Converted to FTP.\n",
+			     server_name, port[1]));
+      // Note: Change in-place.
+      port[1] = "ftp";
       // FIXME: Should probably mark node as changed.
     }
     string key = MKPORTKEY(port);

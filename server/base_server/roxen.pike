@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.299 1999/02/14 13:43:24 peter Exp $
+ * $Id: roxen.pike,v 1.300 1999/02/15 01:03:09 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.299 1999/02/14 13:43:24 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.300 1999/02/15 01:03:09 peter Exp $";
 
 
 // Some headerfiles
@@ -2065,6 +2065,12 @@ void initiate_configuration_port( int|void first )
       report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
 		     "Converted to SSL3.\n");
       port[1] = "ssl3";
+    }
+    if ((< "ftp2" >)[port[1]]) {
+      // Obsolete versions of the SSL protocol.
+      report_warning("Obsolete FTP protocol-module \""+port[1]+"\"."
+		     " Converted to FTP.\n");
+      port[1] = "FTP";
     }
     string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {
