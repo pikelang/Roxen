@@ -1,15 +1,30 @@
+multiset illegal_chars =
+(<
+  // Characters that generate problems when used with Unix _or_ NT
+  // filesystems Also a few special characters to ease quoting
+  // problems in the config IF (such as '!')
+  "?",  "!",  "/",  "\\",  "~",  "\"",  "'",  "`",
+  "#",  "$",  "%",  "&", "=", ";", ":", "_", "\t",
+  "<", ">", "|", "*"
+>);
+
 int check_config_name(string name)
 {
-  if((name == "") || (name[-1] == '~') || (search(name, "/") != -1) ||
-     (search(name, "#")!=-1) || (search(name,"_")!=-1))
+  if( strlen( name ) < 2 )
     return 1;
-  
+
+  if( name[0] == ' ' || name[-1] == ' ' )
+    return 1;
+
   name = lower_case(name);
 
+  if( sizeof( rows( illegal_chars, name/"" ) -({ 0 }) ) )
+    return 1;
+  
   foreach(roxen->configurations, object c)
     if(lower_case(c->name) == name)
       return 1;
-  return (< " ", "\t", "cvs", "global variables" >)[ name ];
+  return (< " ", "cvs", "global variables" >)[ name ];
 }
 
 mixed parse( RequestID id )
