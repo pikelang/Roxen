@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.100 2002/06/24 23:09:40 nilsson Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.101 2003/01/23 16:47:49 mani Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -73,6 +73,20 @@ constant tagdoc=([
  and will have no effect if the servers compatibility level is above 2.1.</p>
 </attr>
 
+<attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
+Specifies binding variables to use with this query. This is comma separated
+list of binding variable names and RXML variables to assign to those
+binding variables.
+<i>Note:</i> For some databases it is necessary to use binding variables when
+inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
+<ex-box>
+<set variable='var.foo' value='texttexttext' />
+<sqlquery query='insert into mytable VALUES (4,:foo,:bar)' 
+          bindings='foo=var.foo,bar=form.bar' />
+</ex-box>
+</p>
+</attr>
+
 <attr name='mysql-insert-id' value='variable'><p>
  Set the given variable to the insert id used by Mysql for
  auto-incrementing columns. Note: This is only available with Mysql.</p>
@@ -94,6 +108,20 @@ constant tagdoc=([
 
 <attr name='query' value='SQL statement'><p>
  The actual SQL-statement.</p>
+</attr>
+
+<attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
+Specifies binding variables to use with this query. This is comma separated
+list of binding variable names and RXML variables to assign to those
+binding variables.
+<i>Note:</i> For some databases it is necessary to use binding variables when
+inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
+<ex-box>
+<set variable='var.foo' value='texttexttext' />
+<sqlquery query='insert into mytable VALUES (4,:foo,:bar)' 
+          bindings='foo=var.foo,bar=form.bar' />
+</ex-box>
+</p>
 </attr>"
 ]);
 #endif
@@ -132,6 +160,18 @@ array|object do_sql_query(mapping args, RequestID id,
   mixed error;
   int ro = !!args["read-only"];
 
+  mapping bindings;
+  
+  if(args->bindings) {
+    bindings = ([ ]);
+    foreach(args->bindings / ",", string tmp) {
+      string tmp2,tmp3;
+      if(sscanf(String.trim_all_whites(tmp),"%s=%s", tmp2, tmp3) == 2) {
+	bindings[tmp2] = RXML.user_get_var( tmp3 );
+      }
+    }
+  }
+
   if( args->module )
   {
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
@@ -145,7 +185,9 @@ array|object do_sql_query(mapping args, RequestID id,
     if( catch
     {
       string f=(big_query?"big_query":"query")+(ro?"_ro":"");
-      result = module["sql_"+f]( args->query );
+      result = bindings ?  
+	module["sql_"+f]( args->query, bindings ) :
+	module["sql_"+f]( args->query );
     } )
     {
       error = con->error();
@@ -168,8 +210,8 @@ array|object do_sql_query(mapping args, RequestID id,
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
 
-    if( catch(result = (big_query?con->big_query:con->query)(args->query)) )
-    {
+    function query_fn = (big_query ? con->big_query : con->query); 
+    if( catch(result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
       error = con->error();
       if (error) error = ": " + error;
       error = sprintf("Query failed%s\n", error||".");
