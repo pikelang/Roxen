@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.493 2001/11/07 14:02:17 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.494 2001/11/09 15:55:43 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -348,8 +348,8 @@ private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
 void unregister_urls()
 {
-  foreach( registered_urls, string url )
-    roxen.unregister_url(url);
+  foreach( registered_urls + failed_urls, string url )
+    roxen.unregister_url(url, this_object());
   registered_urls = ({});
 }
 
@@ -2351,7 +2351,7 @@ void start(int num)
 #if 0
   report_debug(sprintf("configuration:start():\n"
 		       "  registered_urls: ({ %{%O, %}})\n"
-		       "  faileded_urls:   ({ %{%O, %}})\n"
+		       "  failed_urls:     ({ %{%O, %}})\n"
 		       "  URLs:            ({ %{%O, %}})\n",
 		       registered_urls,
 		       failed_urls,
@@ -2362,7 +2362,7 @@ void start(int num)
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
     registered_urls -= ({ url });
-    roxen.unregister_url( url );
+    roxen.unregister_url(url, this_object());
   }
 
   failed_urls = ({ });

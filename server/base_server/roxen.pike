@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.753 2001/11/07 14:02:00 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.754 2001/11/09 15:55:42 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1705,7 +1705,7 @@ array(string) find_ips_for( string what )
     return Array.uniq(res[1]);
 }
 
-void unregister_url( string url )
+void unregister_url(string url, Configuration conf)
 {
   string ourl = url;
   url = lower_case( url );
@@ -1740,7 +1740,8 @@ void unregister_url( string url )
 
   report_debug("Unregister "+url+"\n");
 
-  if( urls[ url ] && urls[ url ]->port )
+  if (urls[url] && (!conf || !urls[url]->conf || (urls[url]->conf == conf)) &&
+      urls[url]->port)
   {
     urls[ url ]->port->unref(url);
     m_delete( urls, url );
