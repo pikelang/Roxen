@@ -6,13 +6,13 @@ constant doc  = "Standard roxen site, with most of the commonly used modules";
 
 constant modules = ({
   "awizard",
-  "cgi",
+//"cgi",
   "contenttypes",
   "directories",
   "gbutton",
   "graphic_text",
   "obox",
-  "pikescript",
+//"pikescript",
   "rxmlparse",
   "rxmltags",
   "tablist",
