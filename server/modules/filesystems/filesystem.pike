@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.61 1999/12/28 03:12:21 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.62 2000/01/06 22:34:11 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -120,8 +120,13 @@ void create()
 
   defvar("stat_cache", 0, "Cache the results of stat(2)",
 	 TYPE_FLAG|VAR_MORE,
-	 "This can speed up the retrieval of files up to 60/70% if you"
-	 " use NFS, but it does use some memory.");
+	 "This can speed up the retrieval of files up to 60/70% if you "
+	 "use NFS, but it does use some memory.\n"
+	 "<p>Also note that the cached results are only rechecked when the "
+	 "file is fetched with the no-cache pragma (produced e.g. by "
+	 "Alt-Ctrl-Reload in Netscape) and when the module is reloaded. "
+	 "Thus, it's not recommended to use this on filesystems that "
+	 "change a lot, e.g. where users are allowed to upload.");
 
   defvar("access_as_user", 0, "Access file as the logged in user",
 	 TYPE_FLAG|VAR_MORE,
@@ -151,6 +156,7 @@ void start()
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
   FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
+  cache_expire("stat_cache");
 }
 
 string query_location()
