@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.166 2000/03/20 03:31:03 mast Exp $
+// $Id: roxenlib.pike,v 1.167 2000/04/04 13:47:06 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -585,8 +585,8 @@ constant greek
      "&omega;":   "\x3C9",
 ]);
 
-constant replace_entities=indices( iso88591 )+indices( international )+indices( symbols )+indices( greek )+({"&lt;","&gt;","&amp;","&quot;","&#022;","&#34;","&#39;","&#0;"});
-constant replace_values  =values( iso88591 )+values( international )+values( symbols )+values( greek )+({"<",">","&","\"","\"","\"","\'","\000"});
+constant replace_entities=indices( iso88591 )+indices( international )+indices( symbols )+indices( greek )+({"&lt;","&gt;","&amp;","&quot;","&apos;","&#x22;","&#34;","&#39;","&#0;"});
+constant replace_values  =values( iso88591 )+values( international )+values( symbols )+values( greek )+({"<",">","&","\"","\'","\"","\"","\'","\000"});
 
 constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({""})*sizeof(safe_characters);
