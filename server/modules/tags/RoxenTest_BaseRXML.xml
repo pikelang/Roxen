@@ -495,7 +495,7 @@ b</strlen></rxml>
 </test>
 
 
-<comment>If test</comment>
+<comment>If tests</comment>
 <test>
 <rxml><define if=p><true/></define><define if=q><false/></define><if p and q>p&q</if><if p and p>p</if><if q and q>q</if></rxml>
 <result>p</result>
@@ -738,3 +738,65 @@ b</strlen></rxml>
 <rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;<delimiter>:</delimiter></emit></rxml>
 <result>c:a:d:e:a</result>
 </test>
+
+
+<comment>Use tests</comment>
+<test>
+<rxml><use package="test_rxml_package"/><bä/></rxml>
+<result>Mu!</result>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/><bä x="Boo"/></rxml>
+<result>Boo!</result>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/><gazonkx/></rxml>
+<resultat><gazonkx/></resultat>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/><bold>x</bold></rxml>
+<result><b>x</b></result>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/><italic>y</italic></rxml>
+<result><italic>y</italic></result>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/>&var.a;</rxml>
+<result>AA</result>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package"/>&var.b;.</rxml>
+<result>.</result>
+</test>
+
+<test>
+<rxml><if rxml_test="xyz">1</if><use package="test_rxml_package"/><if rxml_test="xyz">2</if><if rxml_test="a">3</if></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><if rxml_test2="abc">1</if><use package="test_rxml_package"/><if rxml_test2="abc">2</if><if rxml_test2="a">3</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><use packageinfo="1"/></rxml>
+<has-value>roxenlogo</has-value>
+<has-value>test_rxml_package</has-value>
+<has-value>RXML test package</has-value>
+</test>
+
+<test>
+<rxml><use package="test_rxml_package" info="1"/></rxml>
+<has-value not="1">roxenlogo</has-value>
+<has-value>test_rxml_package</has-value>
+<has-value>RXML test package</has-value>
+</test>
+
