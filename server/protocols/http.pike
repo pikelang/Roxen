@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.140 1999/07/04 18:39:12 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.141 1999/07/05 17:58:00 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1169,7 +1169,8 @@ class MultiRangeWrapper
     return out ; // We are finally done.
   }
   
-  mixed `->(string what) {
+  mixed `->(string what)
+  {
     switch(what) {
      case "read":
       return read;
@@ -1178,7 +1179,7 @@ class MultiRangeWrapper
       return 0;
 
      case "query_fd":
-      return lambda() { return 0; };
+      return lambda() { return -1; };
       
      default:
       return file[what];
