@@ -2,17 +2,43 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>swe</language>
-<dumped>966022474</dumped>
-<added id="1"/>
+<dumped>968472146</dumped>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/global_variables.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../modules/configuration/config_tags.pike</file>
+<file>../modules/configuration/config_userdb.pike</file>
+<file>../modules/configuration/config_filesystem.pike</file>
+<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/logutil.pike</file>
+<file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/topmenu.pike</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/users.html</file>
+<file>../config_interface/standard/user_form.pike</file>
+<file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/index.html</file>
+<file>../config_interface/standard/event_log/log.pike</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/index.html</file>
+<file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/site_content.pike</file>
+<file>../config_interface/standard/sites/site_header.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/site_templates/common.pike</file>
 
-<str id="1">
-<o>No virtual servers enabled</o>
-<t>Inga aktiva virtuella servrar</t>
-</str>
+
 
 <str id="2">
-<o>Sent data</o>
-<t>Skickad data</t>
+<o>Sent data:</o>
+<t>Skickad data:</t>
 </str>
 
 <str id="3">
@@ -21,13 +47,13 @@
 </str>
 
 <str id="4">
-<o>Sent headers</o>
-<t>Skickade headrar</t>
+<o>Sent headers:</o>
+<t>Skickade headrar:</t>
 </str>
 
 <str id="5">
-<o>Number of requests</o>
-<t>Antal träffar</t>
+<o>Number of requests:</o>
+<t>Antal träffar:</t>
 </str>
 
 <str id="6">
@@ -36,23 +62,23 @@
 </str>
 
 <str id="7">
-<o>Received data</o>
-<t>Mottagen data</t>
+<o>Received data:</o>
+<t>Mottagen data:</t>
 </str>
 
 <str id="8">
-<o>FTP users (total)</o>
-<t>FTP-användare (totalt)</t>
+<o>FTP users (total):</o>
+<t>FTP-användare (totalt):</t>
 </str>
 
 <str id="9">
-<o>FTP users (now)</o>
-<t>FTP-användare (nu)</t>
+<o>FTP users (now):</o>
+<t>FTP-användare (nu):</t>
 </str>
 
 <str id="10">
-<o>FTP statistics</o>
-<t>FTP-statistik</t>
+<o>FTP statistics:</o>
+<t>FTP-statistik:</t>
 </str>
 
 <str id="11">
@@ -1183,13 +1209,13 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="178">
-<o>Show the incomplete translations</o>
-<t>Visa översättningarna</t>
+<o>Show all translations</o>
+<t>Visa alla översättningar</t>
 </str>
 
 <str id="179">
-<o>Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator.</o>
-<t>Visa språkvalsflaggorna. Allt är ännu inte översatt.</t>
+<o>Show the language selection flags. All translations will be listed, more or less completed.</o>
+<t>Visa språkvalsflaggorna, oavsett hur färdiga översättningarna är.</t>
 </str>
 
 <str id="180">
@@ -1198,7 +1224,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="181">
-<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own roxen modules, this option is for you.</o>
+<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
 <t>Visa inställningar och funktioner som normalt inte är användbara för icke-utvecklare. Om du utvecklar egna Roxenmoduler bör du aktivera detta val.</t>
 </str>
 
@@ -1240,26 +1266,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <str id="189">
 <o>Add/Delete module page type</o>
 <t>Listtyp vid moduladdering</t>
-</str>
-
-<str id="190">
-<changed>
-<o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows to select multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;</o>
-<t>
-&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamnet, dokumentationen och typbilder.&lt;/dd&gt;
-&lt;dt&gt;snabb&lt;/dt&gt;&lt;dd&gt;Som normal, men inga typbilder.&lt;/dd&gt;
-&lt;dt&gt;kompakt&lt;/dt&gt;&lt;dd&gt;Visa bara namnet, och tillåt adderande av flera
-moduler på samma gång.&lt;/dd&gt;
-&lt;dt&gt;kompaktare&lt;/dt&gt;&lt;dd&gt;Som kompakt, men utan modulkategorier.&lt;/dd&gt;
-&lt;/dl&gt;
-</t>
 </str>
 
 <str id="191">
@@ -1462,106 +1468,6 @@ moduler på samma gång.&lt;/dd&gt;
 <t>Status</t>
 </str>
 
-<str id="229">
-<o>Maintenance</o>
-<t>Underhåll</t>
-</str>
-
-<str id="230">
-<o>SSL</o>
-<t>SSL</t>
-</str>
-
-<str id="231">
-<o>Debug information</o>
-<t>Debuginformation</t>
-</str>
-
-<str id="232">
-<o>All memory caches have been flushed.</o>
-<t>Alla minnescachar har rensats.</t>
-</str>
-
-<str id="233">
-<o>Roxen will restart automatically.</o>
-<t>Roxen kommer starta om automatiskt</t>
-</str>
-
-<str id="234">
-<o>You might see the old process for a while in the process table
-when doing 'ps' or running 'top'. This is normal. Roxen waits for a
-while for all connections to finish, the process will go away after at
-most 15 minutes.</o>
-<t>Det är möjligt att den gamla processen ligger kvar ett tag.
-Detta är normalt. Roxen väntar ett tag på att alla anslutningar ska avslutas,
-processen försvinner efter senast 15 minuter.</t>
-</str>
-
-<str id="235">
-<o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t>Roxen kommer &lt;b&gt;inte&lt;/b&gt; starta om automatiskt." --&gt;</t>
-</str>
-
-<str id="dH">
-<o>Not available.</o>
-<t>Ej tillgänglig.</t>
-</str>
-
-<str id="dI">
-<o>All available fonts</o>
-<t>Alla tillgängliga typsnitt</t>
-</str>
-
-<str id="236">
-<o>Example text</o>
-<t>Exempeltext</t>
-</str>
-
-<str id="237">
-<o>Jackdaws love my big sphinx of quartz.</o>
-<t>Gud hjälpe W. Zorns mö qvickt få byxa.</t>
-</str>
-
-<str id="238">
-<o>Features</o>
-<t>Finesser</t>
-</str>
-
-<str id="dM">
-<o>Disabled modules</o>
-<t>Icke tillgängliga moduler</t>
-</str>
-
-<str id="239">
-<o>All modules</o>
-<t>Alla moduler</t>
-</str>
-
-<str id="240">
-<o>Name</o>
-<t>Namn</t>
-</str>
-
-<str id="241">
-<o>State</o>
-<t>Status</t>
-</str>
-
-<str id="242">
-<o>Disabled</o>
-<t>Inaktiv</t>
-</str>
-
-<str id="243">
-<o>N/A</o>
-<t>-</t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t>Aktiv</t>
-</str>
-
 <str id="245">
 <o>Normal</o>
 <t>Normal</t>
@@ -1623,42 +1529,6 @@ processen försvinner efter senast 15 minuter.</t>
 <o>Drop module</o>
 <t>Ta bort modul</t>
 </str>
-
-
-<pike>
-
-string full_status(string real_version, int boot_time,
-     		   int days, int hrs, int min, int sec, string sent_data,
-		   float kbps, string sent_headers, int num_requests,
-		   float rpm, string received_data) {
-  return(sprintf("<table>"
-		 "<tr><td><b>Version:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Startad:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Uptime:</b></td>"
-		 "<td colspan=\"2\">%d dag%s, %02d:%02d:%02d</td></tr>\n"
-		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
-		 "<tr><td><b>Skickad data:</b></td><td>%s"
-		 "</td><td>%.2f Kbit/sec</td></tr><tr>\n"
-		 "<td><b>Skickade headrar:</b></td><td>%s</td></tr>\n"
-
-		 "<tr><td><b>Antal träffar:</b></td>"
-		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
-		 "<tr><td><b>Mottagen data:</b></td>"
-		 "<td>%s</td></tr>\n"
-		 "</table>",
-		 real_version, ctime(boot_time),
-		 days, (days==1?"":"ar"), hrs, min, sec,
-		 sent_data, kbps, sent_headers,
-		 num_requests, rpm, received_data));
-}
-
-string ftp_stat_line(string cmd, int times) {
-  return(sprintf("<tr align=\"right\"><td><b>%s</b></td>"
-		 "<td align=\"right\">%d</td><td> gång%s</td></tr>\n",
-		 cmd, times, (times == 1)?"":"er"));
-}
-
-</pike>
 
 <str id="251">
 <o>Add Module</o>
@@ -1727,11 +1597,6 @@ string ftp_stat_line(string cmd, int times) {
 <t>Visa</t>
 </str>
 
-<str id="268">
-<o>Configuration gone!</o>
-<t>Konfigurationen borta!</t>
-</str>
-
 <str id="269">
 <o>Site name:</o>
 <t>Sajtens namn:</t>
@@ -1771,4 +1636,196 @@ tecknen / och \ får inte användas.
 <str id="273">
 <o>Select one or several modules to add.</o>
 <t>Markera en eller flera moduler som ska läggas till.</t>
+</str>
+
+<str id="274">
+<new/>
+<o>Data Cache:Cache size</o>
+<t></t>
+</str>
+
+<str id="275">
+<new/>
+<o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
+<t></t>
+</str>
+
+<str id="276">
+<new/>
+<o>Data Cache:Max file size</o>
+<t></t>
+</str>
+
+<str id="277">
+<new/>
+<o>The maximum size of a file that is to be considered for the cache</o>
+<t></t>
+</str>
+
+<str id="278">
+<new/>
+<o>Compact site list</o>
+<t></t>
+</str>
+
+<str id="279">
+<new/>
+<o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
+<t></t>
+</str>
+
+<str id="280">
+<new/>
+<o>normal</o>
+<t></t>
+</str>
+
+<str id="281">
+<new/>
+<o>Show module name and documentation with images.</o>
+<t></t>
+</str>
+
+<str id="282">
+<new/>
+<o>fast</o>
+<t></t>
+</str>
+
+<str id="283">
+<new/>
+<o>Like normal, but no type images.</o>
+<t></t>
+</str>
+
+<str id="284">
+<new/>
+<o>faster</o>
+<t></t>
+</str>
+
+<str id="285">
+<new/>
+<o>Like normal, but allows selecting multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="286">
+<new/>
+<o>compact</o>
+<t></t>
+</str>
+
+<str id="287">
+<new/>
+<o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="288">
+<new/>
+<o>really compact</o>
+<t></t>
+</str>
+
+<str id="289">
+<new/>
+<o>Like compact, but no module classes.</o>
+<t></t>
+</str>
+
+<str id="290">
+<new/>
+<o>Module event log for '%s' cleared by %s (%s) from %s</o>
+<t></t>
+</str>
+
+<str id="291">
+<new/>
+<o>handled by</o>
+<t></t>
+</str>
+
+<str id="292">
+<new/>
+<o>Cache status</o>
+<t></t>
+</str>
+
+<str id="293">
+<new/>
+<o>Hits</o>
+<t></t>
+</str>
+
+<str id="294">
+<new/>
+<o>Misses</o>
+<t></t>
+</str>
+
+<str id="295">
+<new/>
+<o>Entries</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Illegal site name</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>New row</o>
+<t></t>
+</str>
+
+<str id="yes">
+<new/>
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="no">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="298">
+<new/>
+<o>Event log cleared by %s from %s</o>
+<t></t>
+</str>
+
+<str id="299">
+<new/>
+<o>Information</o>
+<t></t>
+</str>
+
+<str id="300">
+<new/>
+<o>This port was requested, but binding it failed.</o>
+<t></t>
+</str>
+
+<str id="301">
+<new/>
+<o>Not open</o>
+<t></t>
+</str>
+
+<str id="1">
+<new/>
+<o>Initial variables for </o>
+<t></t>
+</str>
+
+<str id="190">
+<new/>
+<o>Initial variables for the site</o>
+<t></t>
 </str>

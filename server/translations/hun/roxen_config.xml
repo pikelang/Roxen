@@ -2,17 +2,43 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>hun</language>
-<dumped>966020810</dumped>
+<dumped>968472148</dumped>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/global_variables.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../modules/configuration/config_tags.pike</file>
+<file>../modules/configuration/config_userdb.pike</file>
+<file>../modules/configuration/config_filesystem.pike</file>
+<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/logutil.pike</file>
+<file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/topmenu.pike</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/users.html</file>
+<file>../config_interface/standard/user_form.pike</file>
+<file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/index.html</file>
+<file>../config_interface/standard/event_log/log.pike</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/index.html</file>
+<file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/site_content.pike</file>
+<file>../config_interface/standard/sites/site_header.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/site_templates/common.pike</file>
 
-<str id="1">
-<new/>
-<o>No virtual servers enabled</o>
-<t></t>
-</str>
+
 
 <str id="2">
 <new/>
-<o>Sent data</o>
+<o>Sent data:</o>
 <t></t>
 </str>
 
@@ -24,13 +50,13 @@
 
 <str id="4">
 <new/>
-<o>Sent headers</o>
+<o>Sent headers:</o>
 <t></t>
 </str>
 
 <str id="5">
 <new/>
-<o>Number of requests</o>
+<o>Number of requests:</o>
 <t></t>
 </str>
 
@@ -42,25 +68,25 @@
 
 <str id="7">
 <new/>
-<o>Received data</o>
+<o>Received data:</o>
 <t></t>
 </str>
 
 <str id="8">
 <new/>
-<o>FTP users (total)</o>
+<o>FTP users (total):</o>
 <t></t>
 </str>
 
 <str id="9">
 <new/>
-<o>FTP users (now)</o>
+<o>FTP users (now):</o>
 <t></t>
 </str>
 
 <str id="10">
 <new/>
-<o>FTP statistics</o>
+<o>FTP statistics:</o>
 <t></t>
 </str>
 
@@ -1116,13 +1142,13 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="178">
 <new/>
-<o>Show the incomplete translations</o>
+<o>Show all translations</o>
 <t></t>
 </str>
 
 <str id="179">
 <new/>
-<o>Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator.</o>
+<o>Show the language selection flags. All translations will be listed, more or less completed.</o>
 <t></t>
 </str>
 
@@ -1134,7 +1160,7 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="181">
 <new/>
-<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own roxen modules, this option is for you.</o>
+<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
 <t></t>
 </str>
 
@@ -1183,18 +1209,6 @@ Standard means using the default locale, which varies according to the value of 
 <str id="189">
 <new/>
 <o>Add/Delete module page type</o>
-<t></t>
-</str>
-
-<str id="190">
-<new/>
-<o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows to select multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;</o>
 <t></t>
 </str>
 
@@ -1424,123 +1438,6 @@ Standard means using the default locale, which varies according to the value of 
 <t></t>
 </str>
 
-<str id="229">
-<new/>
-<o>Maintenance</o>
-<t></t>
-</str>
-
-<str id="230">
-<new/>
-<o>SSL</o>
-<t></t>
-</str>
-
-<str id="231">
-<new/>
-<o>Debug information</o>
-<t></t>
-</str>
-
-<str id="232">
-<new/>
-<o>All memory caches have been flushed.</o>
-<t></t>
-</str>
-
-<str id="233">
-<new/>
-<o>Roxen will restart automatically.</o>
-<t></t>
-</str>
-
-<str id="234">
-<new/>
-<o>You might see the old process for a while in the process table
-when doing 'ps' or running 'top'. This is normal. Roxen waits for a
-while for all connections to finish, the process will go away after at
-most 15 minutes.</o>
-<t></t>
-</str>
-
-<str id="235">
-<new/>
-<o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t></t>
-</str>
-
-<str id="dH">
-<new/>
-<o>Not available.</o>
-<t></t>
-</str>
-
-<str id="dI">
-<new/>
-<o>All available fonts</o>
-<t></t>
-</str>
-
-<str id="236">
-<new/>
-<o>Example text</o>
-<t></t>
-</str>
-
-<str id="237">
-<new/>
-<o>Jackdaws love my big sphinx of quartz.</o>
-<t></t>
-</str>
-
-<str id="238">
-<new/>
-<o>Features</o>
-<t></t>
-</str>
-
-<str id="dM">
-<new/>
-<o>Disabled modules</o>
-<t></t>
-</str>
-
-<str id="239">
-<new/>
-<o>All modules</o>
-<t></t>
-</str>
-
-<str id="240">
-<new/>
-<o>Name</o>
-<t></t>
-</str>
-
-<str id="241">
-<new/>
-<o>State</o>
-<t></t>
-</str>
-
-<str id="242">
-<new/>
-<o>Disabled</o>
-<t></t>
-</str>
-
-<str id="243">
-<new/>
-<o>N/A</o>
-<t></t>
-</str>
-
-<str id="244">
-<new/>
-<o>Enabled</o>
-<t></t>
-</str>
-
 <str id="245">
 <o>Normal</o>
 <t>Normal</t>
@@ -1608,42 +1505,6 @@ most 15 minutes.</o>
 <o>Drop module</o>
 <t></t>
 </str>
-
-
-<pike>
-
-string full_status(string real_version, int boot_time,
-     		   int days, int hrs, int min, int sec, string sent_data,
-		   float kbps, string sent_headers, int num_requests,
-		   float rpm, string received_data) {
-  return(sprintf("<table>"
-		 "<tr><td><b>Version:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Booted on:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Uptime:</b></td>"
-		 "<td colspan=\"2\">%d day%s, %02d:%02d:%02d</td></tr>\n"
-		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
-		 "<tr><td><b>Sent data:</b></td><td>%s"
-		 "</td><td>%.2f Kbit/sec</td></tr><tr>\n"
-		 "<td><b>Sent headers:</b></td><td>%s</td></tr>\n"
-
-		 "<tr><td><b>Number of requests:</b></td>"
-		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
-		 "<tr><td><b>Received data:</b></td>"
-		 "<td>%s</td></tr>\n"
-		 "</table>",
-		 real_version, ctime(boot_time),
-		 days, (days==1?"":"s"), hrs, min, sec,
-		 sent_data, kbps, sent_headers,
-		 num_requests, rpm, received_data));
-}
-
-string ftp_stat_line(string cmd, int times) {
-  return(sprintf("<tr align=\"right\"><td><b>%s</b></td>"
-		 "<td align=\"right\">%d</td><td> time%s</td></tr>\n",
-		 cmd, times, (times == 1)?"":"s"));
-}
-
-</pike>
 
 <str id="251">
 <o>Add Module</o>
@@ -1723,12 +1584,6 @@ string ftp_stat_line(string cmd, int times) {
 <t></t>
 </str>
 
-<str id="268">
-<new/>
-<o>Configuration gone!</o>
-<t></t>
-</str>
-
 <str id="269">
 <new/>
 <o>Site name:</o>
@@ -1766,5 +1621,197 @@ as the name of its log file directory.
 <str id="273">
 <new/>
 <o>Select one or several modules to add.</o>
+<t></t>
+</str>
+
+<str id="274">
+<new/>
+<o>Data Cache:Cache size</o>
+<t></t>
+</str>
+
+<str id="275">
+<new/>
+<o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
+<t></t>
+</str>
+
+<str id="276">
+<new/>
+<o>Data Cache:Max file size</o>
+<t></t>
+</str>
+
+<str id="277">
+<new/>
+<o>The maximum size of a file that is to be considered for the cache</o>
+<t></t>
+</str>
+
+<str id="278">
+<new/>
+<o>Compact site list</o>
+<t></t>
+</str>
+
+<str id="279">
+<new/>
+<o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
+<t></t>
+</str>
+
+<str id="280">
+<new/>
+<o>normal</o>
+<t></t>
+</str>
+
+<str id="281">
+<new/>
+<o>Show module name and documentation with images.</o>
+<t></t>
+</str>
+
+<str id="282">
+<new/>
+<o>fast</o>
+<t></t>
+</str>
+
+<str id="283">
+<new/>
+<o>Like normal, but no type images.</o>
+<t></t>
+</str>
+
+<str id="284">
+<new/>
+<o>faster</o>
+<t></t>
+</str>
+
+<str id="285">
+<new/>
+<o>Like normal, but allows selecting multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="286">
+<new/>
+<o>compact</o>
+<t></t>
+</str>
+
+<str id="287">
+<new/>
+<o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="288">
+<new/>
+<o>really compact</o>
+<t></t>
+</str>
+
+<str id="289">
+<new/>
+<o>Like compact, but no module classes.</o>
+<t></t>
+</str>
+
+<str id="290">
+<new/>
+<o>Module event log for '%s' cleared by %s (%s) from %s</o>
+<t></t>
+</str>
+
+<str id="291">
+<new/>
+<o>handled by</o>
+<t></t>
+</str>
+
+<str id="292">
+<new/>
+<o>Cache status</o>
+<t></t>
+</str>
+
+<str id="293">
+<new/>
+<o>Hits</o>
+<t></t>
+</str>
+
+<str id="294">
+<new/>
+<o>Misses</o>
+<t></t>
+</str>
+
+<str id="295">
+<new/>
+<o>Entries</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Illegal site name</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>New row</o>
+<t></t>
+</str>
+
+<str id="yes">
+<new/>
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="no">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="298">
+<new/>
+<o>Event log cleared by %s from %s</o>
+<t></t>
+</str>
+
+<str id="299">
+<new/>
+<o>Information</o>
+<t></t>
+</str>
+
+<str id="300">
+<new/>
+<o>This port was requested, but binding it failed.</o>
+<t></t>
+</str>
+
+<str id="301">
+<new/>
+<o>Not open</o>
+<t></t>
+</str>
+
+<str id="1">
+<new/>
+<o>Initial variables for </o>
+<t></t>
+</str>
+
+<str id="190">
+<new/>
+<o>Initial variables for the site</o>
 <t></t>
 </str>

@@ -2,24 +2,24 @@
 <locale version="1.0"/>
 <project>roxen_start</project>
 <language>eng</language>
-<dumped>966022489</dumped>
+<dumped>968470415</dumped>
+<file>../base_server/roxen.pike</file>
+<file>../base_server/configuration.pike</file>
+<file>../modules/configuration/update.pike</file>
 
 
 <str id="1">
-<o>Starting one thread to handle requests.
-</o>
+<o>Starting one thread to handle requests.</o>
 <t></t>
 </str>
 
 <str id="2">
-<o>Starting %s threads to handle requests.
-</o>
+<o>Starting %d threads to handle requests.</o>
 <t></t>
 </str>
 
 <str id="3">
-<o>Registered %s for %s
-</o>
+<o>Registered %s for %s</o>
 <t></t>
 </str>
 

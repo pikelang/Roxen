@@ -2,18 +2,43 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>ces</language>
-<dumped>966020809</dumped>
+<dumped>968472147</dumped>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/global_variables.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../modules/configuration/config_tags.pike</file>
+<file>../modules/configuration/config_userdb.pike</file>
+<file>../modules/configuration/config_filesystem.pike</file>
+<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/logutil.pike</file>
+<file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/topmenu.pike</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/users.html</file>
+<file>../config_interface/standard/user_form.pike</file>
+<file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/index.html</file>
+<file>../config_interface/standard/event_log/log.pike</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/index.html</file>
+<file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/site_content.pike</file>
+<file>../config_interface/standard/sites/site_header.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/site_templates/common.pike</file>
 
-<str id="1">
-<new/>
-<o>No virtual servers enabled</o>
-<t>®ádný virtuální server není povolen</t>
-</str>
+
 
 <str id="2">
-<new/>
-<o>Sent data</o>
-<t>Odeslaná data</t>
+<o>Sent data:</o>
+<t>Odeslaná data:</t>
 </str>
 
 <str id="3">
@@ -23,15 +48,13 @@
 </str>
 
 <str id="4">
-<new/>
-<o>Sent headers</o>
-<t>Odeslané hlavièky</t>
+<o>Sent headers:</o>
+<t>Odeslané hlavièky:</t>
 </str>
 
 <str id="5">
-<new/>
-<o>Number of requests</o>
-<t>Poèet ¾ádostí</t>
+<o>Number of requests:</o>
+<t>Poèet ¾ádostí:</t>
 </str>
 
 <str id="6">
@@ -41,26 +64,23 @@
 </str>
 
 <str id="7">
-<new/>
-<o>Received data</o>
-<t>Pøijatá data</t>
+<o>Received data:</o>
+<t>Pøijatá data:</t>
 </str>
 
 <str id="8">
-<new/>
-<o>FTP users (total)</o>
-<t>FTP u¾ivatelù (celkem)</t>
+<o>FTP users (total):</o>
+<t>FTP u¾ivatelù (celkem):</t>
 </str>
 
 <str id="9">
-<new/>
-<o>FTP users (now)</o>
-<t>FTP u¾ivatelù (nyní)</t>
+<o>FTP users (now):</o>
+<t>FTP u¾ivatelù (nyní):</t>
 </str>
 
 <str id="10">
-<o>FTP statistics</o>
-<t>FTP statistika</t>
+<o>FTP statistics:</o>
+<t>FTP statistika:</t>
 </str>
 
 <str id="11">
@@ -71,19 +91,16 @@
 </str>
 
 <str id="12">
-<new/>
 <o>Priority</o>
 <t>Priorita</t>
 </str>
 
 <str id="13">
-<new/>
 <o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
 <t>Priorita modulu. Hodnota mezi 0 (nejni¾¹í) a 9 (nejvy¹¹í). Moduly se stejnou prioritou jsou zpracovávány v náhodném poøadí.</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Security: Realm</o>
 <t>Bezpeènost: Realm</t>
 </str>
@@ -95,7 +112,6 @@
 </str>
 
 <str id="16">
-<new/>
 <o>Security: Patterns</o>
 <t>Bezpeènost: ©ablona</t>
 </str>
@@ -107,7 +123,6 @@
 </str>
 
 <str id="18">
-<new/>
 <o>Security: Security level</o>
 <t>Bezpeènost: Bezpeènostní úroveò</t>
 </str>
@@ -124,7 +139,6 @@
 </str>
 
 <str id="20">
-<new/>
 <o>Default site</o>
 <t>Implicitní server</t>
 </str>
@@ -1006,7 +1020,6 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="160">
-<new/>
 <o>Auto Restart: Enable Automatic Restart</o>
 <t>Auto Restart: Povolit automatický restart</t>
 </str>
@@ -1024,13 +1037,11 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="163">
-<new/>
 <o>Automatically restart the server after this many days.</o>
 <t>Restartovat server server po tolika dnech.</t>
 </str>
 
 <str id="164">
-<new/>
 <o>Cache: Store the argument cache in a mysql database</o>
 <t>Cache: Ukládat argument cache do mysql databáze</t>
 </str>
@@ -1115,13 +1126,13 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="178">
 <new/>
-<o>Show the incomplete translations</o>
+<o>Show all translations</o>
 <t></t>
 </str>
 
 <str id="179">
 <new/>
-<o>Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator.</o>
+<o>Show the language selection flags. All translations will be listed, more or less completed.</o>
 <t></t>
 </str>
 
@@ -1133,7 +1144,7 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="181">
 <new/>
-<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own roxen modules, this option is for you.</o>
+<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
 <t></t>
 </str>
 
@@ -1185,26 +1196,12 @@ Standard means using the default locale, which varies according to the value of 
 <t></t>
 </str>
 
-<str id="190">
-<new/>
-<o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows to select multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;</o>
-<t></t>
-</str>
-
 <str id="191">
-<new/>
 <o>All Permissions</o>
 <t>V¹echna práva</t>
 </str>
 
 <str id="192">
-<new/>
 <o>View Settings</o>
 <t>Zobrazit nastavení</t>
 </str>
@@ -1243,13 +1240,11 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="199">
-<new/>
 <o>Create Sites</o>
 <t>Vytvoøit virtuální servery</t>
 </str>
 
 <str id="200">
-<new/>
 <o>Add Modules</o>
 <t>Pøidat moduly</t>
 </str>
@@ -1285,7 +1280,6 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="206">
-<new/>
 <o>User</o>
 <t>U¾ivatel</t>
 </str>
@@ -1346,7 +1340,6 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="217">
-<new/>
 <o>Docs</o>
 <t>Dokumentace</t>
 </str>
@@ -1382,7 +1375,6 @@ Standard means using the default locale, which varies according to the value of 
 </str>
 
 <str id="224">
-<new/>
 <o>Create User</o>
 <t>Vytvoøit u¾ivatele</t>
 </str>
@@ -1409,112 +1401,6 @@ Standard means using the default locale, which varies according to the value of 
 <t></t>
 </str>
 
-<str id="229">
-<o>Maintenance</o>
-<t>Údr¾ba</t>
-</str>
-
-<str id="230">
-<new/>
-<o>SSL</o>
-<t></t>
-</str>
-
-<str id="231">
-<o>Debug information</o>
-<t>Ladící info</t>
-</str>
-
-<str id="232">
-<o>All memory caches have been flushed.</o>
-<t>V¹echny pamì»ové cache byly vymazány.</t>
-</str>
-
-<str id="233">
-<new/>
-<o>Roxen will restart automatically.</o>
-<t>Roxen se bude automaticky restartovat.</t>
-</str>
-
-<str id="234">
-<new/>
-<o>You might see the old process for a while in the process table
-when doing 'ps' or running 'top'. This is normal. Roxen waits for a
-while for all connections to finish, the process will go away after at
-most 15 minutes.</o>
-<t></t>
-</str>
-
-<str id="235">
-<new/>
-<o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t></t>
-</str>
-
-<str id="dH">
-<new/>
-<o>Not available.</o>
-<t>Nedostupné.</t>
-</str>
-
-<str id="dI">
-<new/>
-<o>All available fonts</o>
-<t>V¹echny dostupné fonty</t>
-</str>
-
-<str id="236">
-<new/>
-<o>Example text</o>
-<t>Pøíklad</t>
-</str>
-
-<str id="237">
-<o>Jackdaws love my big sphinx of quartz.</o>
-<t>Pøíli¹ ¾lu»ouèký kùò úpìl ïábelské ódy.</t>
-</str>
-
-<str id="238">
-<o>Features</o>
-<t>Vlastnosti</t>
-</str>
-
-<str id="dM">
-<o>Disabled modules</o>
-<t>Zakázané moduly</t>
-</str>
-
-<str id="239">
-<o>All modules</o>
-<t>V¹echny moduly</t>
-</str>
-
-<str id="240">
-<new/>
-<o>Name</o>
-<t>Jméno</t>
-</str>
-
-<str id="241">
-<o>State</o>
-<t>Stav</t>
-</str>
-
-<str id="242">
-<o>Disabled</o>
-<t>Zakázán</t>
-</str>
-
-<str id="243">
-<o>N/A</o>
-<t>N/A</t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t>Povolen</t>
-</str>
-
 <str id="245">
 <o>Normal</o>
 <t>Normálnì</t>
@@ -1536,7 +1422,6 @@ most 15 minutes.</o>
 </str>
 
 <str id="249">
-<new/>
 <o>Drop old site</o>
 <t>Smazat server</t>
 </str>
@@ -1570,52 +1455,14 @@ most 15 minutes.</o>
 </str>
 
 <str id="258">
-<new/>
 <o>Add module</o>
 <t>Pøidat modul</t>
 </str>
 
 <str id="259">
-<new/>
 <o>Drop module</o>
 <t>Smazat modul</t>
 </str>
-
-
-<pike>
-
-string full_status(string real_version, int boot_time,
-     		   int days, int hrs, int min, int sec, string sent_data,
-		   float kbps, string sent_headers, int num_requests,
-		   float rpm, string received_data) {
-  return(sprintf("<table>"
-		 "<tr><td><b>Version:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Booted on:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Uptime:</b></td>"
-		 "<td colspan=\"2\">%d day%s, %02d:%02d:%02d</td></tr>\n"
-		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
-		 "<tr><td><b>Sent data:</b></td><td>%s"
-		 "</td><td>%.2f Kbit/sec</td></tr><tr>\n"
-		 "<td><b>Sent headers:</b></td><td>%s</td></tr>\n"
-
-		 "<tr><td><b>Number of requests:</b></td>"
-		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
-		 "<tr><td><b>Received data:</b></td>"
-		 "<td>%s</td></tr>\n"
-		 "</table>",
-		 real_version, ctime(boot_time),
-		 days, (days==1?"":"s"), hrs, min, sec,
-		 sent_data, kbps, sent_headers,
-		 num_requests, rpm, received_data));
-}
-
-string ftp_stat_line(string cmd, int times) {
-  return(sprintf("<tr align=\"right\"><td><b>%s</b></td>"
-		 "<td align=\"right\">%d</td><td> time%s</td></tr>\n",
-		 cmd, times, (times == 1)?"":"s"));
-}
-
-</pike>
 
 <str id="251">
 <o>Add Module</o>
@@ -1633,25 +1480,21 @@ string ftp_stat_line(string cmd, int times) {
 </str>
 
 <str id="254">
-<new/>
 <o>Module homepage</o>
 <t>Domovská stránka modulu</t>
 </str>
 
 <str id="260">
-<new/>
 <o>Request status</o>
 <t>®ádosti</t>
 </str>
 
 <str id="261">
-<new/>
 <o>Inherit tree</o>
 <t>Strom dìdictví</t>
 </str>
 
 <str id="dt">
-<new/>
 <o>Administrator logged on as %s from %s.
 </o>
 <t>Administrátor %s se pøipojil z %s.
@@ -1694,12 +1537,6 @@ string ftp_stat_line(string cmd, int times) {
 <t></t>
 </str>
 
-<str id="268">
-<new/>
-<o>Configuration gone!</o>
-<t></t>
-</str>
-
 <str id="269">
 <new/>
 <o>Site name:</o>
@@ -1736,5 +1573,197 @@ as the name of its log file directory.
 <str id="273">
 <new/>
 <o>Select one or several modules to add.</o>
+<t></t>
+</str>
+
+<str id="274">
+<new/>
+<o>Data Cache:Cache size</o>
+<t></t>
+</str>
+
+<str id="275">
+<new/>
+<o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
+<t></t>
+</str>
+
+<str id="276">
+<new/>
+<o>Data Cache:Max file size</o>
+<t></t>
+</str>
+
+<str id="277">
+<new/>
+<o>The maximum size of a file that is to be considered for the cache</o>
+<t></t>
+</str>
+
+<str id="278">
+<new/>
+<o>Compact site list</o>
+<t></t>
+</str>
+
+<str id="279">
+<new/>
+<o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
+<t></t>
+</str>
+
+<str id="280">
+<new/>
+<o>normal</o>
+<t></t>
+</str>
+
+<str id="281">
+<new/>
+<o>Show module name and documentation with images.</o>
+<t></t>
+</str>
+
+<str id="282">
+<new/>
+<o>fast</o>
+<t></t>
+</str>
+
+<str id="283">
+<new/>
+<o>Like normal, but no type images.</o>
+<t></t>
+</str>
+
+<str id="284">
+<new/>
+<o>faster</o>
+<t></t>
+</str>
+
+<str id="285">
+<new/>
+<o>Like normal, but allows selecting multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="286">
+<new/>
+<o>compact</o>
+<t></t>
+</str>
+
+<str id="287">
+<new/>
+<o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
+<t></t>
+</str>
+
+<str id="288">
+<new/>
+<o>really compact</o>
+<t></t>
+</str>
+
+<str id="289">
+<new/>
+<o>Like compact, but no module classes.</o>
+<t></t>
+</str>
+
+<str id="290">
+<new/>
+<o>Module event log for '%s' cleared by %s (%s) from %s</o>
+<t></t>
+</str>
+
+<str id="291">
+<new/>
+<o>handled by</o>
+<t></t>
+</str>
+
+<str id="292">
+<new/>
+<o>Cache status</o>
+<t></t>
+</str>
+
+<str id="293">
+<new/>
+<o>Hits</o>
+<t></t>
+</str>
+
+<str id="294">
+<new/>
+<o>Misses</o>
+<t></t>
+</str>
+
+<str id="295">
+<new/>
+<o>Entries</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Illegal site name</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>New row</o>
+<t></t>
+</str>
+
+<str id="yes">
+<new/>
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="no">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="298">
+<new/>
+<o>Event log cleared by %s from %s</o>
+<t></t>
+</str>
+
+<str id="299">
+<new/>
+<o>Information</o>
+<t></t>
+</str>
+
+<str id="300">
+<new/>
+<o>This port was requested, but binding it failed.</o>
+<t></t>
+</str>
+
+<str id="301">
+<new/>
+<o>Not open</o>
+<t></t>
+</str>
+
+<str id="1">
+<new/>
+<o>Initial variables for </o>
+<t></t>
+</str>
+
+<str id="190">
+<new/>
+<o>Initial variables for the site</o>
 <t></t>
 </str>
