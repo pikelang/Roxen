@@ -64,7 +64,7 @@ static string attr_cont(string t, mapping m, string c)
 			 m->default?" ("+m->default+")":""
 			 );
   if(m->required) p+="<i>This attribute is required.</i><br />";
-  return sprintf("<p><b>%s</b><br />%s%s</p>",m->name,p,c);
+  return sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</p></dl>",m->name,p,c);
 }
 
 static string attr_vals(string v)
@@ -106,10 +106,49 @@ static string ex_cont(string t, mapping m, string c, string rt, void|object id)
   }
 }
 
-static string format_doc(string|mapping doc, string name, void|object id) {
+static string list_cont( string t, mapping m, string c )
+{
+  if( m->type == "ol" )
+    return "<ol>"+replace( c, ({"<item>","</item>", "<item/>"}), 
+                           ({"<li>","","<li>"}) )+"</ol>";
+  return "<ul>"+replace( c, ({"<item>","</item>", "<item/>"}), 
+                         ({"<li>","","<li>"}) )+"</ul>";
+}
+
+static string xtable_cont( mixed a, mixed b, string c )
+{
+  return "<table>"+c+"</table>";
+}
+
+static string module_cont( mixed a, mixed b, string c )
+{
+  return "<i>"+c+"</i>";
+}
+
+static string xtable_row_cont( mixed a, mixed b, string c )
+{
+  return "<tr>"+c+"</tr>";
+}
+
+static string xtable_c_cont( mixed a, mixed b, string c )
+{
+  return "<td>"+c+"</td>";
+}
+
+static string help_tag( mixed a, mapping m, string c )
+{
+  if( m["for"] )
+    return find_tag_doc( m["for"] );
+  return 0; // keep.
+}
+
+
+static string format_doc(string|mapping doc, string name, void|object id) 
+{
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
-      foreach(id->misc->pref_languages->get_languages()+({"en"}), string code) {
+      foreach(id->misc->pref_languages->get_languages()+({"en"}), string code)
+      {
 	object lang=roxen->language_low(code);
 	if(lang) {
 	  array lang_id=lang->id();
@@ -131,19 +170,27 @@ static string format_doc(string|mapping doc, string name, void|object id) {
   name=replace(name, ({ "<", ">" }), ({ "&lt;", "&gt;" }) );
 
   return Parser.HTML()->
-    add_tag( "lang",
-	     lambda() { return available_languages(id); }
-	     )->
-    add_containers( ([
-      "desc":desc_cont,
-      "attr":attr_cont,
-      "ex":ex_cont,
-      "noex":noex_cont,
-      "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
-      "ref":lambda(string tag, mapping m, string c) { return c; },
-      "short":lambda(string tag, mapping m, string c) { return m->hide?"":c; },
-    ]) )->
-    set_extra(name, id)->feed(doc)->read();
+         add_tag( "lang",lambda() { return available_languages(id); } )->
+         add_tag( "help", help_tag )->
+         add_containers( ([
+           "list":list_cont,
+           "xtable":xtable_cont,
+           "row":xtable_row_cont,
+           "c":xtable_c_cont,
+           "module":module_cont,
+           "desc":desc_cont,
+           "attr":attr_cont,
+           "ex":ex_cont,
+           "noex":noex_cont,
+           "tag":lambda(string tag, mapping m, string c) { 
+                   return "&lt;"+c+"&gt;"; 
+                 },
+           "ref":lambda(string tag, mapping m, string c) { return c; },
+           "short":lambda(string tag, mapping m, string c) { 
+                     return m->hide?"":c; 
+                   },
+         ]) )->
+         set_extra(name, id)->feed(doc)->read();
 }
 
 

@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.247 2000/09/19 12:24:39 wing Exp $
+// $Id: rxml.pike,v 1.248 2000/09/19 15:33:16 per Exp $
 
 
 inherit "rxmlhelp";
@@ -513,7 +513,7 @@ class TagHelp {
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
 	    string enc=tag;
 	    if(enc[0..4]=="&lt;?") enc="<?"+enc[5..sizeof(enc)-6];
-	    if(undocumented_tags[tag])
+	    if(undocumented_tags && undocumented_tags[tag])
 	      tag_links += ({ tag });
 	    else
 	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
