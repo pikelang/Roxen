@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.69 2001/02/20 09:48:09 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.70 2001/03/28 09:50:08 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -135,10 +135,10 @@ constant gbuttonattr=#"
  Set icon alignment.</p>
 
 <xtable>
-<row><c>left</c><c>Place icon on the left side of the text.</c></row>
-<row><c>center-before</c><c>Center the icon before the text.Requires the <att>align='center'</att> attribute.</c></row>
-<row><c>center-after</c><c>Center the icon after the text. Requires the <att>align='center'</att> attribute.</c></row>
-<row><c>right</c><c>Place icon on the right side of the text.</c></row>
+<row><c><p>left</p></c><c><p>Place icon on the left side of the text.</p></c></row>
+<row><c><p>center-before</p></c><c><p>Center the icon before the text.Requires the <att>align='center'</att> attribute.</p></c></row>
+<row><c><p>center-after</p></c><c><p>Center the icon after the text. Requires the <att>align='center'</att> attribute.</p></c></row>
+<row><c><p>right</p></c><c><p>Place icon on the right side of the text.</p></c></row>
 </xtable>
 
 <p></p>

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.198 2001/03/02 12:54:50 hop Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.199 2001/03/28 09:55:40 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2256,12 +2256,12 @@ using the pre tag.
  the precision.</p>
 
 <xtable>
-<row><c><i>type=discordian</i></c><c><ex ><date date='' type='discordian'/> </ex></c></row>
-<row><c><i>type=iso</i></c><c><ex ><date date='' type='iso'/></ex></c></row>
-<row><c><i>type=number</i></c><c><ex ><date date='' type='number'/></ex></c></row>
-<row><c><i>type=ordered</i></c><c><ex ><date date='' type='ordered'/></ex></c></row>
-<row><c><i>type=stardate</i></c><c><ex ><date date='' type='stardate'/></ex></c></row>
-<row><c><i>type=string</i></c><c><ex ><date date='' type='string'/></ex></c></row>
+<row><c><p><i>type=discordian</i></p></c><c><p><ex ><date date='' type='discordian'/> </ex></p></c></row>
+<row><c><p><i>type=iso</i></p></c><c><p><ex ><date date='' type='iso'/></ex></p></c></row>
+<row><c><p><i>type=number</i></p></c><c><p><ex ><date date='' type='number'/></ex></p></c></row>
+<row><c><p><i>type=ordered</i></p></c><c><p><ex ><date date='' type='ordered'/></ex></p></c></row>
+<row><c><p><i>type=stardate</i></p></c><c><p><ex ><date date='' type='stardate'/></ex></p></c></row>
+<row><c><p><i>type=string</i></p></c><c><p><ex ><date date='' type='string'/></ex></p></c></row>
 </xtable>
 </attr>
 
@@ -2272,19 +2272,19 @@ using the pre tag.
  ordered applies when the part attribute is used.</p>
 
 <xtable>
-<row><c><i>part=year</i></c><c>Display the year.<ex ><date part='year' type='number'/></ex></c></row>
-<row><c><i>part=month</i></c><c>Display the month. <ex ><date part='month' type='ordered'/></ex></c></row>
-<row><c><i>part=day</i></c><c>Display the weekday, starting with Sunday. <ex ><date part='day' type='ordered'/></ex></c></row>
-<row><c><i>part=wday</i></c><c>Display the weekday. Same as 'day'. <ex ><date part='wday' type='string'/></ex></c></row>
-<row><c><i>part=date</i></c><c>Display the day of this month. <ex ><date part='date' type='ordered'/></ex></c></row>
-<row><c><i>part=mday</i></c><c>Display the number of days since the last full month. <ex ><date part='mday' type='number'/></ex></c></row>
-<row><c><i>part=hour</i></c><c>Display the numbers of hours since midnight. <ex ><date part='hour' type='ordered'/></ex></c></row>
-<row><c><i>part=minute</i></c><c>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></c></row>
-<row><c><i>part=second</i></c><c>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></c></row>
-<row><c><i>part=yday</i></c><c>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></c></row>
-<row><c><i>part=beat</i></c><c>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></c></row>
-<row><c><i>part=week</i></c><c>Display the number of the current week.<ex ><date part='week' type='number'/></ex></c></row>
-<row><c><i>part=seconds</i></c><c>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></c></row>
+<row><c><p><i>part=year</i></p></c><c><p>Display the year.<ex ><date part='year' type='number'/></ex></p></c></row>
+<row><c><p><i>part=month</i></p></c><c><p>Display the month. <ex ><date part='month' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=day</i></p></c><c><p>Display the weekday, starting with Sunday. <ex ><date part='day' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=wday</i></p></c><c><p>Display the weekday. Same as 'day'. <ex ><date part='wday' type='string'/></ex></p></c></row>
+<row><c><p><i>part=date</i></p></c><c><p>Display the day of this month. <ex ><date part='date' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=mday</i></p></c><c><p>Display the number of days since the last full month. <ex ><date part='mday' type='number'/></ex></p></c></row>
+<row><c><p><i>part=hour</i></p></c><c><p>Display the numbers of hours since midnight. <ex ><date part='hour' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=minute</i></p></c><c><p>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></p></c></row>
+<row><c><p><i>part=second</i></p></c><c><p>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></p></c></row>
+<row><c><p><i>part=yday</i></p></c><c><p>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=beat</i></p></c><c><p>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></p></c></row>
+<row><c><p><i>part=week</i></p></c><c><p>Display the number of the current week.<ex ><date part='week' type='number'/></ex></p></c></row>
+<row><c><p><i>part=seconds</i></p></c><c><p>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></p></c></row>
 </xtable>
 </attr>
 
@@ -2293,42 +2293,42 @@ using the pre tag.
  according to the argument string.</p>
 
  <xtable>
- <row><c>%%</c><c>Percent character</c></row>
- <row><c>%a</c><c>Abbreviated weekday name, e.g. \"Mon\"</c></row>
- <row><c>%A</c><c>Weekday name</c></row>
- <row><c>%b</c><c>Abbreviated month name, e.g. \"Jan\"</c></row>
- <row><c>%B</c><c>Month name</c></row>
- <row><c>%c</c><c>Date and time, e.g. \"%a %b %d  %H:%M:%S %Y\"</c></row>
- <row><c>%C</c><c>Century number, zero padded to two charachters.</c></row>
- <row><c>%d</c><c>Day of month (1-31), zero padded to two characters.</c></row>
- <row><c>%D</c><c>Date as \"%m/%d/%y\"</c></row>
- <row><c>%e</c><c>Day of month (1-31), space padded to two characters.</c></row>
- <row><c>%H</c><c>Hour (24 hour clock, 0-23), zero padded to two characters.</c></row>
- <row><c>%h</c><c>See %b</c></row>
- <row><c>%I</c><c>Hour (12 hour clock, 1-12), zero padded to two charcters.</c></row>
- <row><c>%j</c><c>Day numer of year (1-366), zero padded to three characters.</c></row>
- <row><c>%k</c><c>Hour (24 hour clock, 0-23), space padded to two characters.</c></row>
- <row><c>%l</c><c>Hour (12 hour clock, 1-12), space padded to two characters.</c></row>
- <row><c>%m</c><c>Month number (1-12), zero padded to two characters.</c></row>
- <row><c>%M</c><c>Minute (0-59), zero padded to two characters.</c></row>
- <row><c>%n</c><c>Newline</c></row>
- <row><c>%p</c><c>\"a.m.\" or \"p.m.\"</c></row>
- <row><c>%r</c><c>Time in 12 hour clock format with %p</c></row>
- <row><c>%R</c><c>Time as \"%H:%M\"</c></row>
- <row><c>%S</c><c>Seconds (0-61), zero padded to two characters.</c></row>
- <row><c>%t</c><c>Tab</c></row>
- <row><c>%T</c><c>Time as \"%H:%M:%S\"</c></row>
- <row><c>%u</c><c>Weekday as a decimal number (1-7), 1 is Sunday.</c></row>
- <row><c>%U</c><c>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
-    zero padded to two characters.</c></row>
- <row><c>%V</c><c>ISO week number of the year as a decimal number (1-53), zero padded to two characters.</c></row>
- <row><c>%w</c><c>Weekday as a decimal number (0-6), 0 is Sunday.</c></row>
- <row><c>%W</c><c>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
-    zero padded to two characters.</c></row>
- <row><c>%x</c><c>Date as \"%a %b %d %Y\"</c></row>
- <row><c>%X</c><c>See %T</c></row>
- <row><c>%y</c><c>Year (0-99), zero padded to two characters.</c></row>
- <row><c>%Y</c><c>Year (0-9999), zero padded to four characters.</c></row>
+ <row><c><p>%%</p></c><c><p>Percent character</p></c></row>
+ <row><c><p>%a</p></c><c><p>Abbreviated weekday name, e.g. \"Mon\"</p></c></row>
+ <row><c><p>%A</p></c><c><p>Weekday name</p></c></row>
+ <row><c><p>%b</p></c><c><p>Abbreviated month name, e.g. \"Jan\"</p></c></row>
+ <row><c><p>%B</p></c><c><p>Month name</p></c></row>
+ <row><c><p>%c</p></c><c><p>Date and time, e.g. \"%a %b %d  %H:%M:%S %Y\"</p></c></row>
+ <row><c><p>%C</p></c><c><p>Century number, zero padded to two charachters.</p></c></row>
+ <row><c><p>%d</p></c><c><p>Day of month (1-31), zero padded to two characters.</p></c></row>
+ <row><c><p>%D</p></c><c><p>Date as \"%m/%d/%y\"</p></c></row>
+ <row><c><p>%e</p></c><c><p>Day of month (1-31), space padded to two characters.</p></c></row>
+ <row><c><p>%H</p></c><c><p>Hour (24 hour clock, 0-23), zero padded to two characters.</p></c></row>
+ <row><c><p>%h</p></c><c><p>See %b</p></c></row>
+ <row><c><p>%I</p></c><c><p>Hour (12 hour clock, 1-12), zero padded to two charcters.</p></c></row>
+ <row><c><p>%j</p></c><c><p>Day numer of year (1-366), zero padded to three characters.</p></c></row>
+ <row><c><p>%k</p></c><c><p>Hour (24 hour clock, 0-23), space padded to two characters.</p></c></row>
+ <row><c><p>%l</p></c><c><p>Hour (12 hour clock, 1-12), space padded to two characters.</p></c></row>
+ <row><c><p>%m</p></c><c><p>Month number (1-12), zero padded to two characters.</p></c></row>
+ <row><c><p>%M</p></c><c><p>Minute (0-59), zero padded to two characters.</p></c></row>
+ <row><c><p>%n</p></c><c><p>Newline</p></c></row>
+ <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
+ <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
+ <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
+ <row><c><p>%S</p></c><c><p>Seconds (0-61), zero padded to two characters.</p></c></row>
+ <row><c><p>%t</p></c><c><p>Tab</p></c></row>
+ <row><c><p>%T</p></c><c><p>Time as \"%H:%M:%S\"</p></c></row>
+ <row><c><p>%u</p></c><c><p>Weekday as a decimal number (1-7), 1 is Sunday.</p></c></row>
+ <row><c><p>%U</p></c><c><p>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
+    zero padded to two characters.</p></c></row>
+ <row><c><p>%V</p></c><c><p>ISO week number of the year as a decimal number (1-53), zero padded to two characters.</p></c></row>
+ <row><c><p>%w</p></c><c><p>Weekday as a decimal number (0-6), 0 is Sunday.</p></c></row>
+ <row><c><p>%W</p></c><c><p>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
+    zero padded to two characters.</p></c></row>
+ <row><c><p>%x</p></c><c><p>Date as \"%a %b %d %Y\"</p></c></row>
+ <row><c><p>%X</p></c><c><p>See %T</p></c></row>
+ <row><c><p>%y</p></c><c><p>Year (0-99), zero padded to two characters.</p></c></row>
+ <row><c><p>%Y</p></c><c><p>Year (0-9999), zero padded to four characters.</p></c></row>
  </xtable>
 
 <ex><date strftime=\"%Y%m%d\"/></ex>
