@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.129 1999/06/09 18:25:12 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.130 1999/07/07 20:29:47 grubba Exp $";
 
 class Shuffle
 {
@@ -346,6 +346,11 @@ class Wrapper
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
     tofd = tofdremote->pipe( );// Stdio.PROP_NONBLOCK );
+
+    if (!tofd) {
+      // FIXME: Out of fd's?
+    }
+
     fromfd->set_nonblocking( read_callback, 0, close_callback );
     
 #ifdef CGI_DEBUG
@@ -763,7 +768,9 @@ class CGIScript
     } else {
       m_delete(environment, "REMOTE_PASSWORD");
     }
-    environment["AUTH_TYPE"] = "Basic";
+    if (id->rawauth) {
+      environment["AUTH_TYPE"] = (id->rawauth/" ")[0];
+    }
 
     if(environment->INDEX)
       arguments = environment->INDEX/"+";
