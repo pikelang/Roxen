@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.95 2000/02/16 23:46:29 mast Exp $
+# $Id: start,v 1.96 2000/02/17 05:26:13 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -33,11 +33,22 @@ CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/clas
 export CLASSPATH
 
 
-pike=`type pike|head -1|sed -e's,.*is ,,'`
+pike=`type pike|head -1|sed -e 's,.*is ,,'`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+fi
+
+
+if [ x"$pike" = "x" ] ; then
+  echo "No pike binary found. Aborting."
+  exit 1
+fi
+
+if [ ! -f "$pike" ] ; then
+  echo "No pike binary found. Aborting."
+  exit 1
 fi
 
 ####### BEGIN ARGUMENT PARSING
