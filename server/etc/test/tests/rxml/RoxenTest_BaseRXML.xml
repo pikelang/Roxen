@@ -155,6 +155,11 @@
 </test>
 
 <test>
+<rxml><define variable="var.i" trimwhites="1" />&var.i;</rxml>
+<result></result>
+</test>
+
+<test>
 <rxml><define container='x'><p ::='&_.args;'><contents/></p></define><x align='center'>hej</x></rxml>
 <result><p align="center">hej</p></result>
 </test>
@@ -210,8 +215,13 @@
 </test>
 
 <test>
+<rxml><define tag="x" trimwhites="1" /><x trimwhites="1"/></rxml>
+<result></result>
+</test>
+
+<test>
 <rxml><define tag="x"> <attrib name="y"> </attrib> a&_.y; </define><x trimwhites="1"/></rxml>
-<result>  a  </result>
+<result> a  </result>
 </test>
 
 <test>
@@ -237,6 +247,18 @@
 <test>
 <rxml><define tag="x" preparse="1">&var.x;</define><set variable="var.x">y</set><x/></rxml>
 <result></result>
+</test>
+
+<test>
+<rxml><define tag="x"> 		
+	<attrib name="y">1</attrib> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> &_.y;:&_.z;</define><x/></rxml>
+<result> </attrib> <attrib name="z">2</attrib> 1:</result>
+</test>
+
+<test>
+<rxml><define tag="x"><attrib name="y">hej</attrib><maketag type="tag" name="&_.y;">
+<attrib name="foo">bar</attrib></maketag></define><x/></rxml>
+<result><hej foo="bar" /></result>
 </test>
 
 
