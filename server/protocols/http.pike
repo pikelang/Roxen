@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.153 1999/09/05 01:42:22 per Exp $
+// $Id: http.pike,v 1.154 1999/09/26 02:39:42 mast Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.153 1999/09/05 01:42:22 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.154 1999/09/26 02:39:42 mast Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -28,7 +28,7 @@ int req_time = HRTIME();
 #endif
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define DPERROR(X)	bartime = gethrtime()-footime; werror((X)+" (%d)\n", bartime);footime=gethrtime()
+#define DPERROR(X)	bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
 #else
 #define DPERROR(X)
 #endif
@@ -723,7 +723,9 @@ private int parse_got()
 void disconnect()
 {
   file = 0;
-  MARK_FD("my_fd in HTTP disconnected?");
+#ifdef REQUEST_DEBUG
+  if (my_fd) MARK_FD("my_fd in HTTP disconnected?");
+#endif
   if(do_not_disconnect)return;
   destruct();
 }
