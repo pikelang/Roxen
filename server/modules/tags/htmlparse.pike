@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.69 1998/01/24 13:27:33 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.70 1998/01/29 14:21:40 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -347,7 +347,8 @@ string call_tag(string tag, mapping args, int i,
 		object id, object file, mapping defines,
 		object client)
 {
-  function rf = real_tag_callers[tag][i];
+  string|function rf = real_tag_callers[tag][i];
+  if(stringp(rf)) return rf;
   if(!rf)
   {
     report_error("Call to non-registered tag from parse module.\n");
@@ -362,7 +363,8 @@ string call_container(string tag, mapping args, string contents, int i,
 		      object id, object file, mapping defines,
 		      object client)
 {
-  function rf = real_container_callers[tag][i];
+  string|function rf = real_container_callers[tag][i];
+  if(stringp(rf)) return rf;
   if(!rf)
   {
     report_error("Call to non-registered container from parse module.\n");
@@ -2064,19 +2066,27 @@ string tag_formoutput(string tag_name, mapping args, string contents,
 }
 
 string tag_gauge(string t, mapping args, string contents, 
-		 object id, mapping defines)
+		 object id, object f, mapping defines)
 {
-  int t = gauge { contents = parse_rxml( contents, id ); };
+#if constant(gethrtime)
+  int t = gethrtime();
+  contents = parse_rxml( contents, id );
+  t = gethrtime()-t;
+#else
+  int t = gauge {
+    contents = parse_rxml( contents, id );
+  } * 1000;
+#endif
   string define = args->define?args->define:"gauge";
 
-  defines[define+"_time"] = sprintf("%3.2f", t/1000.0);
+  defines[define+"_time"] = sprintf("%3.6f", t/1000000.0);
   defines[define+"_time"] = contents;
 
   if(args->silent) return "";
-  if(args->timeonly) return sprintf("%3.2f", t/1000.0);
+  if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
   if(args->resultonly) return contents;
   return ("<br><font size=-1><b>Time: "+
-	  sprintf("%3.2f", t/1000.0)+
+	  sprintf("%3.6f", t/1000000.0)+
 	  " seconds</b></font><br>"+contents);
 } 
 
