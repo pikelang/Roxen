@@ -1,3 +1,18 @@
+          Installing Roxen Plattform 1.0
+          ++++++++++++++++++++++++++++++
+
+  1. Install Roxen Challenger as described in "Installing Roxen
+     Challenger" below, but optionally skip section 9.
+
+  2. Go to "Global Variables->Module directories" in the configuration
+     interface. Add "../platform/" to the list of directories. Don't
+     forget the comma.
+
+  3. Make a new virtual server choosing "Sitebuilder server" as
+     configuration type.
+
+  4. Set up the nessesary variables.
+
           Installing Roxen Challenger 1.2 - the Source distribution
           +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
