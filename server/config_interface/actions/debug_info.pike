@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.12 2001/08/28 14:00:58 mast Exp $
+ * $Id: debug_info.pike,v 1.13 2001/08/28 15:55:35 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -242,110 +242,77 @@ mixed page_0( object id )
                               }));
   res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 
-#if efun(_dump_obj_table)
-  table = ({ });
+  mapping(string:array(string)) allobj = ([]);
+  int destructed = 0;
 
-  foo = _dump_obj_table();
-  mapping allobj = ([]);
-  string a = getcwd(), s;
-  if(a[-1] != '/')
-    a += "/";
-  int i;
-  for(i = 0; i < sizeof(foo); i++)
-  {
-    string s = foo[i][0];
-    if(!stringp(s))
-      continue;
-    allobj[s]++;
+  object start = this_object();
+  for (object o = start; o; o = _prev (o))
+    if (program p = object_program (o))
+      allobj[Program.defined (p)] += ({sprintf ("%O", o)});
+    else
+      destructed++;
+  start = _next (start);
+  for (object o = start; o; o = _next (o))
+    if (program p = object_program (o))
+      allobj[Program.defined (p)] += ({sprintf ("%O", o)});
+    else
+      destructed++;
+
+  table = (array) allobj;
+
+  string cwd = getcwd() + "/";
+  for (int i = 0; i < sizeof (table); i++) {
+    [string progstr, array(string) objs] = table[i];
+
+    if (sizeof (objs) > 2) {
+      if (has_prefix (progstr, cwd))
+	progstr = progstr[sizeof (cwd)..];
+
+      string objstr = String.common_prefix (objs)[..30];
+      if (!(<"", "object">)[objstr]) {
+	int next = 0;
+	sscanf (objstr, "%*[^]`'\")}({[]%c", next);
+	if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
+	if (int c = (['(': ')', '[': ']', '{': '}'])[next])
+	  if (objstr[-1] != c)
+	    objstr += (string) ({c});
+      }
+      else objstr = "";
+
+      int change = sizeof (objs) - bar[progstr];
+      bar[progstr] = sizeof (objs);
+
+      table[i] = ({progstr, objstr, sizeof (objs), change});
+    }
+    else table[i] = 0;
   }
 
-  foreach(Array.sort_array(indices(allobj),lambda(string a, string b ) {
-    return allobj[a] < allobj[b];
-  }), s)
-    if((search(s, "Destructed?") == -1) && allobj[s]>2)
-    {
-      string n = s-a;
-      if( sscanf( n, "%*ssrc/%s.c", n ) )
-        continue;
+  table = Array.sort_array (table - ({0}),
+			    lambda (array a, array b) {
+			      return a[2] < b[2] || a[2] == b[2] && (
+				a[1] < b[1] || a[1] == b[1] && (
+				  a[0] < b[0]));
+			    });
 
-      string f = (n/":")[0];
-      int line = (int)(n/":"+({"0"}))[1];
-      switch( f )
-      {
-       case "protocols/http.pike":
-         f = "RequestID(http)";
-         line=0;
-         break;
-       case "protocols/ftp.pike":
-         f = "RequestID(ftp)";
-         line=0;
-         break;
-       case "protocols/gopher.pike":
-         f = "RequestID(gopher)";
-         line=0;
-         break;
-       case "base_server/module_support.pike":
-         f = "roxen."+find_class( f, line );
-         line=0;
-         break;
-       case "base_server/rxml.pike":
-         switch( line )
-         {
-          case 0..200:
-            f = "rxml.Parser()";
-            line=0;
-            break;
-         }
-         if( !line )
-           break;
-         /* intentional */
-       default:
-         string fn = f - "/module.pmod";
-         string n = (reverse((reverse( fn ) / "/") [0])/".")[0];
-         string q = find_class( f, line );
-         if( q )
-           f = n+"."+q;
-         else
-           f = n+":"+line+"()";
-         f = replace( f, ".()", "()");
-         line=0;
-         break;
-      }
+  constant inc_font  = "<font color='&usr.warncolor;'>";
+  constant dec_font  = "<font color='&usr.fade2;'    >";
+  constant same_font = "<font color='&usr.fgcolor;'  >";
 
-      string col = "'&usr.warncolor;'";
-
-      if( bar[ s ] > allobj[s] )
-	col="'&usr.fade2;'    ";
-      else if( bar[ s ] == allobj[s] )
-	col="'&usr.fgcolor;'  ";
-
-      string color = "<font color="+col+">";
-      string nocolor = "</font>";
-
-      if( line )
-        table +=
-          ({
-            ({ color+f+":"+line, allobj[s],
-               (allobj[ s ]-bar[ s ])+nocolor }),
-          });
-      else
-        table +=
-        ({
-          ({ color+f, allobj[s], (allobj[ s ]-bar[ s ])+nocolor }),
-        });
-      bar[ s ] = allobj[ s ];
-    }
+  foreach (table, array entry) {
+    string font;
+    if (entry[3] > 0) font = inc_font, entry[3] = "+" + entry[3];
+    else if (entry[3] < 0) font = dec_font;
+    else font = same_font;
+    entry[0] = font + entry[0];
+    entry[3] += "</font>";
+  }
 
   roxen->set_var("__num_clones", bar);
-  t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >File",  "Clones", "Change</font>"}),
-                              ({ 0, ([ "type":"num" ]),([ "type":"num" ])}));
+  t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >Source", "Program",  "Clones", "Change</font>"}),
+		       ({ 0, 0, ([ "type":"num" ]),([ "type":"num" ])}));
   res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
 
-#endif
-
-#if efun(_num_objects)
-  res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
-#endif
+  res += "Number of destructed objects: " + destructed +"<br />\n";
 
   return res;
 }
@@ -353,8 +320,10 @@ mixed page_0( object id )
 mixed parse( RequestID id )
 {
   return page_0( id )
+#if 0
 #if constant( get_profiling_info )
          + page_1( id )
+#endif
 #endif
     + "<p><cf-ok/></p>";
 }
