@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.24 1998/03/11 19:42:36 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.25 1998/03/16 19:21:19 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -132,7 +132,7 @@ mixed find_file(string f, object got)
       redirects++;
       return http_redirect(got->not_query+"/",got);
     }
-    if(!dude_ok[ u ])
+    if(!dude_ok[ u ] || f == "")
     {
       us = got->conf->userinfo( u, got );
       // No user, or access denied.
@@ -147,14 +147,14 @@ mixed find_file(string f, object got)
       string dir;
 
       if (QUERY(homedir))
-	dir =  replace(us[ 5 ] + "/" + QUERY(pdir) + "/", "//", "/");
+	dir =  us[ 5 ] + "/" + QUERY(pdir) + "/";
       else
 	dir = QUERY(searchpath) + "/" + u + "/";
 
       dir = replace(dir, "//", "/");
 
       // If public dir does not exist, or is not a directory 
-      st = stat_file(dude_ok[u], got);
+      st = stat_file(dir, got);
       if(!st || st[1] != -2) {
 	return 0;	// File not found.
       }
@@ -167,7 +167,7 @@ mixed find_file(string f, object got)
 	us = got->conf->userinfo( u, got );
       }
 
-      st = stat_file(f,got);
+      st = stat_file(f, got);
 
       if(!st || (st[5] != (int)(us[2])))
         return 0;
