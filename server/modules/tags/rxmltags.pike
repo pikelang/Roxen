@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.303 2001/09/19 10:57:02 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.304 2001/09/19 10:59:20 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4810,19 +4810,19 @@ constant tagdoc=([
  Set the text color to this value within the scope.</p>
 </attr>
 
-<attr name='bgcolor' value='color'<p>
+<attr name='bgcolor' value='color'><p>
  Set the background color to this value within the scope.</p>
 </attr>
 
-<attr name='link' value='color'<p>
+<attr name='link' value='color'><p>
  Set the link color to this value within the scope.</p>
 </attr>
 
-<attr name='alink' value='color'<p>
+<attr name='alink' value='color'><p>
  Set the active link color to this value within the scope.</p>
 </attr>
 
-<attr name='vlink' value='color'<p>
+<attr name='vlink' value='color'><p>
  Set the visited link color to this value within the scope.</p>
 </attr>",
 
