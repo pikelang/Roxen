@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.220 2004/04/04 14:26:44 mani Exp $
+// $Id: roxenlib.pike,v 1.221 2004/05/17 00:45:23 mani Exp $
 
 //#pragma strict_types
 
@@ -101,7 +101,8 @@ static string http_res_to_string( mapping file, RequestID id )
   if(mappingp(([mapping(string:mixed)]id->misc)->moreheads))
     heads |= ([mapping(string:mixed)]id->misc)->moreheads;
 
-  array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
+  array myheads=({id->prot+" "+
+		  replace (file->rettext||errors[file->error], "\n", " ")});
   foreach(indices(heads), string h)
     if(arrayp(heads[h]))
       foreach([array(string)]heads[h], string tmp)
