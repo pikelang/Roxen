@@ -1,4 +1,4 @@
-<kbd>{recursive-output [inside=<i>string,...</i>} [outside=<i>string,...</i>] [multisep=<i>string</i>] [limit=<i>n</i>]}<br>
+<kbd>{recursive-output [inside=<i>string,...</i>] [outside=<i>string,...</i>] [multisep=<i>string</i>] [limit=<i>n</i>]}<br>
 ...<br>
 {recurse}<br>
 ...<br>
