@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.33 1998/05/15 00:08:36 grubba Exp $
+ * $Id: ftp2.pike,v 1.34 1998/05/15 06:10:01 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -79,7 +79,7 @@
 #include <module.h>
 #include <stat.h>
 
-//  #define FTP2_DEBUG
+#define FTP2_DEBUG
 
 #define FTP2_XTRA_HELP ({ "Report any bugs to roxen-bugs@roxen.com." })
 
@@ -524,6 +524,10 @@ class LSFile
   // FIXME: Should convert output somewhere below.
   static void output(string s)
   {
+    if(stringp(s)) {
+      // ls is always ASCII-mode...
+      s = replace(s, "\n", "\r\n");
+    }
     output_queue += ({ s });
   }
 
@@ -1178,8 +1182,9 @@ class FTPSession
 
   static private constant site_help = ([
     "PRESTATE":"<sp> prestate",
+    "CHMOD":"<sp> mode <sp> file",
   ]);
-
+  
   static private constant modes = ([
     "I":"BINARY",
     "A":"ASCII",
@@ -1487,7 +1492,7 @@ class FTPSession
     if (arrayp(file)) {
       array st = file;
       file = 0;
-      if (st && (st[1] < 0) && (cmd != "RMD")) {
+      if (st && (st[1] < 0) && !((<"RMD", "CHMOD">)[cmd])) {
 	send(550, ({ sprintf("%s: not a plain file.", fname) }));
 	return 0;
       }
@@ -2797,6 +2802,47 @@ class FTPSession
     }
   }
 
+  void ftp_SITE_CHMOD(array(string) args)
+  {
+    if (sizeof(args) < 2) {
+      send(501, ({ sprintf("'SITE CHMOD %s': incorrect arguments",
+			   args*" ") }));
+      return;
+    }
+    
+    int mode;
+    foreach(args[0] / "", string m)
+      // We do this loop, instead of using a sscanf or cast to be able
+      // to catch arguments which aren't an octal number like 0891.
+    {
+      mode *= 010;
+      if(m[0] < '0' || m[0] > '7')
+      {
+	// This is not an octal number...
+	mode = -1;
+	break;
+      }
+      mode += (int)("0"+m);
+    }
+    if(mode == -1 || mode > 0777)
+    {
+      send(501, ({ "SITE CHMOD: mode should be between 0 and 0777" }));
+      return;
+    }
+
+    string fname = fix_path(args[1..]*" ");
+    object session = RequestID(master_session);
+    
+    session->method = "CHMOD";
+    session->misc->mode = mode;
+    session->not_query = fname;
+    if (open_file(fname, session, "CHMOD")) {
+      send(250, ({ sprintf("Changed permissions of %s to 0%o.",
+			   fname, mode) }));
+      session->conf->log(([ "error":200 ]), session);
+    }
+  }
+  
   void ftp_SITE_PRESTATE(array(string) args)
   {
     if (!sizeof(args)) {

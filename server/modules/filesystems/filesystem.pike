@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.37 1998/05/14 15:58:34 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.38 1998/05/15 06:10:00 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -29,7 +29,7 @@ constant thread_safe=1;
 
 
 int redirects, accesses, errors, dirlists;
-int puts, deletes, mkdirs, moves;
+int puts, deletes, mkdirs, moves, chmods;
 
 static int do_stat = 1;
 
@@ -41,7 +41,9 @@ string status()
 	   :"No file accesses<br>")+
 	  (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
 	  (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
-	  (QUERY(put)&&moves?"<b>Moved files</b>: "+moves+"<br>":"")+
+	  (QUERY(put)&&QUERY(delete)&&moves?
+	   "<b>Moved files</b>: "+moves+"<br>":"")+
+	  (QUERY(put)&&chmods?"<b>CHMODs</b>: "+chmods+"<br>":"")+
 	  (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
 	  (errors?"<b>Permission denied</b>: "+errors
 	   +" (not counting .htaccess)<br>":"")+
@@ -514,6 +516,62 @@ mixed find_file( string f, object id )
     return http_pipe_in_progress();
     break;
 
+   case "CHMOD":
+    // Change permission of a file. 
+    
+    if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("CHMOD disallowed (since PUT is disallowed)");
+      return 0;
+    }    
+
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("CHMOD: Permission denied");
+      return http_auth_required("foo",
+				"<h1>Permission to 'CHMOD' files denied</h1>");
+    }
+    
+    object privs;
+    
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
+      privs=Privs("CHMODing file", (int)id->misc->uid, (int)id->misc->gid );
+    }
+    // #endif
+    
+    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("CHMOD: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    chmods++;
+
+    TRACE_ENTER("CHMOD: Accepted", 0);
+
+    if (stat_cache) {
+      cache_set("stat_cache", f, 0);
+    }
+#ifdef DEBUG
+    report_notice(sprintf("CHMODing file "+f+" to 0%o\n", id->misc->mode));
+#endif
+    array err = catch(chmod(f, id->misc->mode));
+    privs = 0;
+    
+    if(err)
+    {
+      id->misc->error_code = 403;
+      TRACE_LEAVE("CHMOD: Failure");
+      TRACE_LEAVE("Failure");
+      return 0;
+    }
+    TRACE_LEAVE("CHMOD: Success");
+    TRACE_LEAVE("Success");
+    return http_string_answer("Ok");
+    
    case "MV":
     // This little kluge is used by ftp2 to move files. 
     
