@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.140 2000/07/20 23:40:28 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.141 2000/07/25 09:35:23 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -641,12 +641,12 @@ class TagFSize {
       catch {
 	array s = id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
 	if (s && (s[1]>= 0)) {
-	  result = (string)s[1];
+	  result = Roxen.sizetostring(s[1]);
 	  return 0;
 	}
       };
-      if(string s=id->conf->try_get_file(args->file, id) ) {
-	result = (string)strlen(s);
+      if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
+	result = Roxen.sizetostring(strlen(s));
 	return 0;
       }
       RXML.run_error("Failed to find file.\n");
