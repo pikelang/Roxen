@@ -1,5 +1,5 @@
 // Roxen AutoMail POP3 Server
-// $Id: pop3.pike,v 1.6 1998/09/24 20:53:50 leif Exp $
+// $Id: pop3.pike,v 1.7 1998/09/27 20:50:41 grubba Exp $
 // Leif Stensson, September 1998.
 
 #include <module.h>
@@ -183,7 +183,7 @@ void pop3_delete_mail(mapping id, mapping mail)
    * and other ways of accessing the mail database can still
    * find it.
    */
-//  clientlayer->delete_mail(mail->refno);
+  clientlayer->delete_mail(mail->refno);
 }
 
 void client_read_callback(mixed id, string data)
@@ -416,7 +416,7 @@ void client_read_callback(mixed id, string data)
         id->clientport->close();
         if (id->state == "TRANSACTION")
         { foreach (id->maildrop, mapping mail)
-          { if (mail->deleted)
+          { if (mail && mail->deleted)
             { /* The mail was marked for deletion, so delete it. */
               pop3_delete_mail(id, mail);
             }
