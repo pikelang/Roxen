@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.107 2000/03/31 02:26:04 nilsson Exp $
+# $Id: start,v 1.108 2000/03/31 16:45:03 leif Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -59,8 +59,7 @@ fi
 
 # If environment file doesn't exist, try to create it.
 if
-  test ! -f $LOCALDIR/environment
-  test -f bin/buildenv.pike
+  test ! -f $LOCALDIR/environment && test -f bin/buildenv.pike
 then
   $pike bin/buildenv.pike
 fi
