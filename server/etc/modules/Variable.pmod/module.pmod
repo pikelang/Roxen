@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.85 2004/06/09 08:47:17 grubba Exp $
+// $Id: module.pmod,v 1.86 2004/10/20 15:40:41 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -606,6 +606,26 @@ class Variable
   }
 }
 
+class NoLimit
+{
+  string _sprintf (int flag)
+  {
+    switch (flag) {
+      case 's': return "n/a";
+      case 'O': return this == no_limit ? "no_limit" : "<bogus no_limit clone>";
+      default: return 0;
+    }
+  }
+}
+
+NoLimit no_limit = NoLimit();
+//! @[no_limit] is used as value in a limit setting to signify that it
+//! isn't applicable, to allow open ended intervals in e.g. @[Float]
+//! and @[Int].
+//!
+//! @note
+//! Always use the @[no_limit] object, never instance another one from
+//! the @[NoLimit] class.
 
 
 
@@ -618,11 +638,13 @@ class Float
 {
   inherit Variable;
   constant type = "Float";
-  static float _max, _min;
+  static float|NoLimit _max = no_limit, _min = no_limit;
   static int _prec = 2;
 
-  static string _format( float m )
+  static string _format( float|NoLimit m )
   {
+    if (m == no_limit)
+      return "n/a";
     if( !_prec )
       return sprintf( "%d", (int)m );
     return sprintf( "%1."+_prec+"f", m );
@@ -634,12 +656,18 @@ class Float
       return "("+_format(default_value())+")";
   }
   
-  void set_range(float minimum, float maximum )
-    //! Set the range of the variable, if minimum and maximum are both
-    //! 0.0 (the default), the range check is removed.
+  void set_range(float|NoLimit minimum, float|NoLimit maximum )
+    //! Set the range of the variable.
+    //!
+    //! As a compatibility measure, the range check is removed if
+    //! maximum < minimum.
   {
-    _max = maximum;
-    _min = minimum;
+    if (maximum < minimum)
+      _max = _min = no_limit;
+    else {
+      _max = maximum;
+      _min = minimum;
+    }
   }
 
   void set_precision( int prec )
@@ -653,13 +681,13 @@ class Float
   array(string|float) verify_set( float new_value )
   {
     string warn;
-    if( new_value > _max && _max > _min)
+    if(_max != no_limit && new_value > _max)
     {
       warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
 		     _format(_max) );
       new_value = _max;
     }
-    else if( new_value < _min && _min < _max)
+    else if(_min != no_limit && new_value < _min)
     {
       warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
 		     _format(_min) );
@@ -693,7 +721,7 @@ class Float
   string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 15;
-    if( _max != _min ) 
+    if( _max != no_limit && _min != no_limit )
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
     return input(path(), (query()==""?"":_format((float)query())), size, additional_args);
   }
@@ -711,14 +739,20 @@ class Int
 {
   inherit Variable;
   constant type = "Int";
-  static int _max, _min;
+  static int|NoLimit _max = no_limit, _min = no_limit;
 
-  void set_range(int minimum, int maximum )
-    //! Set the range of the variable, if minimum and maximum are both
-    //! 0 (the default), the range check is removed.
+  void set_range(int|NoLimit minimum, int|NoLimit maximum )
+    //! Set the range of the variable.
+    //!
+    //! As a compatibility measure, the range check is removed if
+    //! maximum < minimum.
   {
-    _max = maximum;
-    _min = minimum;
+    if (maximum < minimum)
+      _max = _min = no_limit;
+    else {
+      _max = maximum;
+      _min = minimum;
+    }
   }
 
   string diff( int render )
@@ -733,13 +767,13 @@ class Int
     if(!intp( new_value ) )
       return ({ sprintf(LOCALE(152,"%O is not an integer"),new_value),
 		query() });
-    if( new_value > _max && _max > _min )
+    if( _max != no_limit && new_value > _max)
     {
       warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
 		     (string)_max );
       new_value = _max;
     }
-    else if( new_value < _min && _min < _max)
+    else if( _min != no_limit && new_value < _min)
     {
       warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
 		     (string)_min );
@@ -768,7 +802,7 @@ class Int
   string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 10;
-    if( _min != _max ) 
+    if( _min != no_limit && _max != no_limit )
       size = max( strlen((string)_max), strlen((string)_min) )+2;
     return input(path(), (string)query(), size, additional_args);
   }
