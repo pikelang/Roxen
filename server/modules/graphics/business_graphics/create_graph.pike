@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.75 1997/10/28 12:32:22 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.76 1997/10/28 12:38:45 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -878,9 +878,12 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     }
  
 
-
   if (!(diagram_data["values_for_xnames"]))
     {
+      if ((diagram_data["xspace"]<LITET)&&
+	  (diagram_data["xspace"]>-LITET))
+	throw( ({"Very bad error because xspace is zero!\n",
+		 backtrace()}));
       float start;
       start=diagram_data["xminvalue"];
       start=diagram_data["xspace"]*ceil((start)/diagram_data["xspace"]);
@@ -891,6 +894,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     }
   if (!(diagram_data["values_for_ynames"]))
     {
+      if ((diagram_data["yspace"]<LITET)&&
+	  (diagram_data["yspace"]>-LITET))
+	throw( ({"Very bad error because yspace is zero!\n",
+		 backtrace()}));
+
       float start;
       start=diagram_data["yminvalue"];
       start=diagram_data["yspace"]*ceil((start)/diagram_data["yspace"]);

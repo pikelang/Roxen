@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.47 1997/10/24 22:16:52 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.48 1997/10/28 12:41:58 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -97,7 +97,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
 
   if (1)
-    {
+    {  
       float start;
       start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
       diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
@@ -106,6 +106,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     }
   if (!(diagram_data["values_for_ynames"]))
     {
+      if ((diagram_data["yspace"]<LITET)&&
+	  (diagram_data["yspace"]>-LITET))
+	throw( ({"Very bad error because yspace is zero!\n",
+		 backtrace()}));
       float start;
       start=diagram_data["yminvalue"];
       start=diagram_data["yspace"]*ceil((start)/diagram_data["yspace"]);
