@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.12 1997/08/24 03:51:11 per Exp $
+ * $Id: upgrade.pike,v 1.13 1997/08/25 20:39:24 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -25,9 +25,6 @@ int is_older(string v1, string v2)
       return (int)a1[i]<(int)a2[i];
   return def;
 }
-
-
-
 
 // Scan dirs to find currently installed components
 mapping comps=([]);
@@ -86,10 +83,7 @@ void update_comps()
 }
 
 
-
-
 mapping modules;
-
 
 mapping extract_module_info(array from)
 {
@@ -157,9 +151,9 @@ string page_0(object id)
      "<var type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
      "<var type=radio name=how default=1 value=0> Only currently "
      "enabled modules (from all virtual servers) <br>\n"
-     "<var type=checkbox name='how2'> Also search for new (previously "
+     "<var type=checkbox name=how2> Also search for new (previously "
      "uninstalled) modules<br>\n"
-     "<var type=checkbox name='how3' default=1> Also search for actions "
+     "<var type=checkbox name=how3 default=1> Also search for actions "
      "and server templates ");
 }
 
@@ -227,7 +221,7 @@ string upgrade_module(string m, object rpc)
 
 string page_3(object id)
 {
-  if(id->variables["how3"]=="0")
+  if(id->variables["how2"]=="0")
     return 0;
 
  object rpc;
@@ -271,7 +265,8 @@ string page_3(object id)
 string page_2(object id)
 {
   object rpc;
-  if(id->variables["how3"]=="0") return 0;
+  perror("*\n%O\n%O\n%O\n*\n", id->variables["how"], id->variables["how2"], id->variables["how3"]);
+  if(id->variables["how2"]=="0") return 0;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
