@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.45 2000/03/19 14:17:03 stewa Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.46 2000/03/19 23:36:18 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1426,7 +1426,7 @@ class Request
     }
 
     if(headers["expires"] &&
-       !is_modified(headers["expires"],
+       !Roxen.is_modified(headers["expires"],
 	 time() - cache_expired_cheat))
     {
       //REQUEST_DEBUG("headers_cache_is_wanted - expired("+headers["expires"]+")")
