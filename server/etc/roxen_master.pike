@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.74 2000/02/14 10:43:04 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.75 2000/02/16 07:12:12 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -19,6 +19,8 @@ class MyCodec
   string nameof(mixed x)
   {
     if(zero_type(x)) return ([])[0];
+    if( x == 0 )     return 0;
+
     if(p!=x)
       if(mixed tmp=search(all_constants(),x))
 	return "efun:"+tmp;
@@ -64,16 +66,18 @@ class MyCodec
 
   object objectof(string x)
   {
+    if(!stringp(x))
+      return class{}();
+
     if(sscanf(x,"efun:%s",x))
     {
       if( !objectp( all_constants()[x] ) )
-        werror("Failed to decode object efun:%s\n", x );
+        error("Failed to decode object efun:%s\n", x );
       return all_constants()[x];
     }
     object tmp;
     if(objectp(tmp=(object)x))
       return tmp;
-    werror("Failed to decode object %s\n",x);
     return 0;
   }
 
