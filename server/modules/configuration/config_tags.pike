@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.186 2004/10/11 19:05:56 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.187 2004/11/17 17:43:01 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -718,7 +718,7 @@ class TagCFBoxes
         left+=get_box( f,id )->parse( id )+"<br />";
       foreach( sort_boxes(config_setting( "right_boxes" ),id), string f )
         right+=get_box( f,id )->parse( id )+"<br />";
-      result="<table><tr valign=top><td>"+left+"</td><td>"+
+      result="<table><tr valign=top><td width='100%'>"+left+"</td><td>"+
                          right+"</td></tr></table>";
     }
   }
