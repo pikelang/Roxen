@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.102 1999/05/01 21:56:47 grubba Exp $
+ * $Id: ftp.pike,v 1.103 1999/05/06 20:48:36 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -130,6 +130,11 @@ class RequestID2
 
   void send_result(mapping|void result)
   {
+    if (mappingp(result) && my_fd && my_fd->done) {
+      my_fd->done(result);
+      return;
+    }
+
     error("Assync sending with send_result() not supported yet.\n");
   }
 
@@ -337,8 +342,10 @@ class PutFileWrapper
   static int response_code = 226;
   static string response = "Stored.";
   static string gotdata = "";
-  static int done, recvd;
+  static int closed, recvd;
   static function other_read_callback;
+
+#include <variables.h>
 
   int bytes_received()
   {
@@ -349,9 +356,9 @@ class PutFileWrapper
   {
     DWRITE("FTP: PUT: close()\n");
     ftpsession->touch_me();
-    if(how != "w" && !done) {
+    if(how != "w" && !closed) {
       ftpsession->send(response_code, ({ response }));
-      done = 1;
+      closed = 1;
       session->conf->received += recvd;
       session->file->len = recvd;
       session->conf->log(session->file, session);
@@ -406,6 +413,11 @@ class PutFileWrapper
       from_fd->set_nonblocking(@args);
   }
 
+  void set_blocking()
+  {
+    from_fd->set_blocking();
+  }
+
   void set_id(mixed id)
   {
     from_fd->set_id(id);
@@ -433,6 +445,21 @@ class PutFileWrapper
       gotdata = gotdata[n+1..];
     }
     return strlen(data);
+  }
+
+  void done(mapping result)
+  {
+    if (result->error < 300) {
+      response_code = 226;
+    } else {
+      response_code = 550;
+    }
+
+    // Cut away the code.
+    response = ((result->rettext || errors[result->error])/" ")[1..] * " ";
+    gotdata = result->data || "";
+
+    close();
   }
 
   string query_address(int|void loc)
@@ -1711,7 +1738,7 @@ class FTPSession
 
     session->file = file;
 
-    if (!file || (file->error && (file->error/100 <= 2))) {
+    if (!file || (file->error && (file->error > 200))) {
       DWRITE(sprintf("FTP: open_file(\"%s\") failed: %O\n", fname, file));
       send_error(cmd, fname, file, session);
       return 0;
