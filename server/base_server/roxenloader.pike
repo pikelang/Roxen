@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.110 1999/11/17 15:15:49 per Exp $
+ * $Id: roxenloader.pike,v 1.111 1999/11/19 10:09:18 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.110 1999/11/17 15:15:49 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.111 1999/11/19 10:09:18 per Exp $";
 
 #define perror roxen_perror
 
@@ -114,6 +114,16 @@ string short_time()
   return ct;
 }
 
+string possibly_encode( string what )
+{
+  if( catch {
+    if( String.width( what ) > 8 )
+      return string_to_utf8( what );
+  } )
+    return string_to_utf8( what );
+  return what;
+}
+
 int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
@@ -153,6 +163,8 @@ void roxen_perror(string format, mixed ... args)
 
   array(string) a = format/"\n";
   int i;
+
+  a = map( a, possibly_encode );
 
   for(i=0; i < sizeof(a)-1; i++) {
     stderr->write(short_time() + a[i] + "\n");
