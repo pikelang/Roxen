@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.243 2001/08/29 14:54:01 mast Exp $
+// $Id: module.pmod,v 1.244 2001/08/31 21:43:38 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1788,7 +1788,9 @@ class Context
 #ifdef DEBUG
       if (!oldvars) fatal_error ("I before e except after c.\n");
 #endif
-      foreach (indices(vars), string var)
+      foreach (objectp (vars) ?
+	       ([object(Scope)] vars)->_indices (this_object(), scope_name || "_") :
+	       indices(vars), string var)
 	set_var(var, vars[var], scope_name);
     }
 
