@@ -1,0 +1,42 @@
+<body _bgcolor=#ffffff bgcolor="#e6e6e6" text="#000000" link="#000088"
+      vlink="#000088" alink="#880000">
+<comment>
+  rightmargin=0 hspace=0 marginheight=0 marginwidth=0
+      topmargin=0 vspace=0 margin=0 bottommargin=0 leftmargin=0
+</comment>
+      
+<head>
+  <title><tmplinsert tag=title></title>
+</head>
+
+<define container=nav>
+   <gtext magic fg=black magic_fg=black magic_bg=#c0c0ff 
+  href=&href; 4 spacing=5 notrans bg=#8080b5 text=black><contents></gtext>
+</define>
+
+
+<table border=0 cellpadding=5 cellspacing=0 bgcolor="#cbcbea" width=100%
+       height=50>
+<tr>
+  <td><a href="http://www.roxen.com/"><img border=0
+  src=/img/roxenmail.gif width=100 height=40></a></td>
+  <td width=10><img src=/internal-roxen-unit></td>
+  <td valign=middle width=100%><img src=/internal-roxen-unit height=6 width=1>
+    <font face="helvetica,arial" size=+2><tmplinsert tag=headline></font>
+  </td>
+</tr>
+<tr bgcolor=#404085 width=100%>
+  <td colspan=3 bgcolor=#404085 width=100%>
+  <nav href=./>List all mailboxes</nav>
+  <nav href=edit.html>Compose a new message</nav>
+  <nav href=new_mailbox.pike>Create mailbox</nav>
+  <nav href=delete_mailbox.pike>Delete mailbox</nav>
+  <nav href=edit_options.html>User settings</nav>
+  </td>
+  
+</tr>
+</table>
+
+<tmplinsert tag=content>
+
+</body>
