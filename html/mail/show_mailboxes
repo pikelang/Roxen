@@ -1,17 +1,31 @@
-<gbutton name=list_boxes value="Toplevel">
-<font size=-1>
-<select onChange='document.forms[0].submit();' 
-        name=mailbox_id>
+<gbutton name=list_boxes value=" Back to mailboxes "><br>
+
+Displaying mailbox 
   <list-mailboxes>
+  <if variable="mailbox_id is #id#">
+     <b>#name#</b> for <mail-userinfo>: <b>#unread#</b> unread, <b>#mail#</b> mail
+    <set variable=nummail value="#mail#">
+  </if>
+  </list-mailboxes>
+<br>
+<br>
+<b>Filter: </b>
+<input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
+<comment>
+<font size=-1>
+<script language=javascript>
+  document.forms[0].list_all
+  document.forms[0].submit();
+</script>
+
+<select onChange='twiddle();' 
+        name=mailbox_id>
     <option 
-<if variable="mailbox_id is #id#">
      selected
-</if>
      value=#id#>#name# (unread: #unread#/#mail#)
   </list-mailboxes>
 </select>
-</font> 
-
+</font></comment>
 <if not variable=listall
 ><gbutton selected name=list_unread value="Unread"
 ><gbutton name=list_all value="All"></if><else
@@ -22,3 +36,4 @@
 <if variable=mail_match><gbutton name=list_clear_match value="Clear"></if>
 <gbutton name=list_match value="Ok"></formoutput></font>
 
+<br>

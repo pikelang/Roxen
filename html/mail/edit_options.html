@@ -1,0 +1,89 @@
+<mail-verify-login>
+<define tag=apply-settings>
+<nooutput>
+<formoutput>
+   <amail-user-variable variable=realname set="#firstname:quote=dtag# #lastname:quote=dtag#">
+   <amail-user-variable variable=signature set="#signature:quote=dtag#">
+   <amail-user-variable variable=email set="#email:quote=dtag#">
+</formoutput>
+</nooutput>
+</define>
+
+<if variable=tm>
+  <unset variable=tm>
+  <apply-settings>
+</if>
+
+<if variable=ok>
+  <unset variable=ok>
+  <apply-settings>
+  <redirect to="./">
+</if>
+
+<if variable=ca>
+  <unset variable=ca>
+  <redirect to="./">
+</if>
+
+<title>Automail: Settings for <mail-userinfo address></title>
+
+<body bgcolor="#ffffff" text="#000000" link="#000088" vlink="#000088" alink="#880000">
+
+<cset variable=signature preparse><amail-user-variable default="" variable=signature></cset>
+<cset variable=firstname preparse><mail-userinfo firstname></cset>
+<cset variable=lastname preparse><mail-userinfo lastname></cset>
+<cset variable=email preparse><mail-userinfo email></cset>
+<cset variable=organization preparse><mail-userinfo organization></cset>
+
+<gauge resultonly>
+  <form action="edit_options.html">
+  <expire-time now>
+  <obox title=Options>
+   <formoutput>
+   <table>
+     <tr>
+        <td>First Name</td>
+        <td><input type=string name=firstname value='#firstname#'></td>
+     </tr>
+     <tr>
+        <td>Last Name</td>
+        <td><input type=string name=lastname value='#lastname#'></td>
+    </tr>
+
+     <tr>
+        <td>E-Mail</td>
+        <td><input type=string name=email value='#email#'></td>
+    </tr>
+     <tr>
+        <td>Organization</td>
+        <td><input type=string name=org value='#org#'></td>
+    </tr>
+    <tr><td colspan=2><blockquote><i>Your real name is sent with each
+    mail, in the 'from' address.<br>Your current from address is <nobr></i><b><mail-userinfo address></b></nobr>.</blockqupte></td></tr>
+
+    <tr> <td>Signature</td></tr>
+    <tr> <td colspan=2><textarea cols=70 rows=3 name=signature>#signature:quote=html#</textarea></td></tr>
+
+    <tr><td colspan=2><blockquote><i>The signature will be
+    automatically appended to each mail you write.<p>It is considered
+    good netiquette to keep the signature short, if possible keep it
+    below 4 lines of text.</i></blockquote></td></tr>
+
+   </table>
+   <input name=ok type=submit value="    Ok    "> &nbsp; &nbsp;
+   <input name=tm type=submit value="  Apply   "> &nbsp; &nbsp;
+   <input name=ca type=submit value="  Cancel  "> &nbsp; &nbsp;
+  </obox>
+</gauge>
+
+<comment>
+   <table width=100%>
+    <tr>
+       <td align=left><gh3 href="" magic=Ok>OK</gh3></td>
+       <td width=100% align=right><gh3 href="" magic=Ok>Cancel</gh3></td>
+    </tr>
+   </table>
+</comment>
+
+<p>
+<br>Time: <b><insert name=gauge_time></b>

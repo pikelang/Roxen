@@ -1,5 +1,12 @@
 <formoutput quote=$ noparse>
   <get-mail mail=$mail_id$ noparse>
+    <set variable=foo value=#flag_am_editable#>
+    <if not variable="foo is "> 
+       <formoutput quote=%>
+         <redirect to='edit.html?mail_id=%mail_id%'>
+       </formoutput><br>
+    </if>
+    <else>
     <table cellspacing=0 border=0 cellpadding=1 bgcolor=black><tr><td>
     <table cellspacing=0 border=0 cellpadding=2 bgcolor=##ffeedd
       <tr>
@@ -23,5 +30,6 @@
       </tr>
     </table></td></tr></table>
     <mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts>
+    </else>
   </get-mail>
 </formoutput>

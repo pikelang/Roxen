@@ -3,6 +3,9 @@
 
 
 <gauge resultonly>
+  <expire_time now>
+  <body bgcolor="#ffffff" text="#000000" link="#000088"
+        vlink="#000088" alink="#880000">
   <use file=macros>
   <set variable="gtextid&selected;" 
        eval="<gtext-id talign=center xspacing=20 yspacing=8 
@@ -16,12 +19,10 @@
   <process-user-buttons>
   <process-move-actions>
   <process-mail-actions>
-  <expire_time now>
-  <body bgcolor="#ffffff" text="#000000" link="#000088"
-        vlink="#000088" alink="#880000">
   <form action="" method=get>
   <if not variable=mailbox_id>
     <insert file=show_toplevel>
+    <user-buttons>
   </if>
   <else>
     <insert file=show_mailboxes>

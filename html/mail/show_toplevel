@@ -11,5 +11,18 @@
 <glinkbutton value="Create a new mailbox" href=new_mailbox.pike>
 <glinkbutton value="Delete a mailbox"     href=delete_mailbox.pike>
 
+<gh2>Actions</gh2>
+<blockquote>
+ <gtext scale=0.5 href=edit.html magic="Send a new mail">Send a new mail</gtext>
+</blockquote>
+
 <gh2>Preferences</gh2>
   
+<blockquote>
+  <gtext scale=0.5 href=edit_options.html magic="Email options">Email options</gtext><br>
+<br>
+<blockquote><i>Configure your name, email address and signature.</i></blockquote>
+  <gtext scale=0.5 href=edit_buttons.html magic="Edit buttons">Edit buttons</gtext><br>
+<blockquote><i>This options is for advanced users only.</i></blockquote>
+</blockquote>
+

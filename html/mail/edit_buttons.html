@@ -1,0 +1,51 @@
+<mail-verify-login>
+<title>Automail: edit buttons for <mail-userinfo real> &lt;<mail-userinfo email>&gt;</title>
+<body bgcolor="#ffffff" text="#000000" link="#000088"
+      vlink="#000088" alink="#880000">
+
+<gauge resultonly>
+  <expire-time now>
+  <obox title=Editor>
+  <gh3>Current buttons</gh3>
+    <table>
+      <show-mail-user-buttons>
+         <tr><td><b>#name#</b></td>
+         <td><gtext scale=0.4 bg=##fed bevel=3 magic="Move button up" 
+                href='move_button.pike?dir=-1&button=#id#'
+                >^ Move up  </gtext>
+         <gtext scale=0.4 bg=##fed bevel=3 magic="Move button down" 
+                href='move_button.pike?dir=1&button=#id#'
+                >v Move down  </gtext>
+         <gtext scale=0.4 bg=##fed bevel=3 magic="Delete button" 
+                href='delete_button.pike?button=#id#'
+                >  Delete   </gtext></td></tr>
+         <tr><td colspan=2><b><dl><dt><dd>#desc#</dl></td></b></tr>
+      </show-mail-user-buttons>
+     </table>
+         <gtext scale=0.4 bg=#fed bevel=3  magic="New button" 
+                href='make_userbutton.pike'> New button </gtext>
+         <gtext scale=0.4 bg=#fed bevel=3  magic="New button" 
+                href='make_separator.pike'> New separator </gtext>
+
+<define tag=gbutton><formoutput><img valign=bottom border=0 type=image name=&name; src="#gtextid&selected;:quote=http#&value;"></formoutput></define>
+  <set variable="gtextid&selected;" 
+       eval="<gtext-id talign=center xspacing=20 yspacing=8 
+                       bg=#fea fg=black scale=0.3 notrans 
+                       bevel=3 quant=14>$">
+  <gh3>Mail page preview</gh3>
+  <set variable=mail_id value="">
+  <user-buttons type=mail>
+  
+  <unset variable=mail_id>
+  <unset variable=mailbox_id value="">
+  <gh3>Mailbox page preview</gh3>
+  <user-buttons type=mailbox>
+
+<p>
+<br>
+</obox>
+  <gh2 href="" magic=Done>Done</gh2>
+</gauge>
+<p>
+<br>Time: <b><insert name=gauge_time></b>
+

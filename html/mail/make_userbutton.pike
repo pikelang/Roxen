@@ -6,14 +6,12 @@ constant common_actions = ({
   ({ "delete", "Delete mail", 0 }),
   ({ "move_mail", "Move mail to mailbox <var name=move_mailbox type=select options='#mboxes#'>", 0 }),
   ({ "copy_mail", "Copy mail to mailbox <var name=copy_mailbox type=select options='#mboxes#'>", 1 }),
-  ({ "forward_mail", "Forward mail to email <font size=-1><var size=30 name=email></font>", 1 }),
+  ({ "bounce_mail", "Forward mail to email <font size=-1><var size=30 name=email></font>", 1 }),
 });
 
 constant mail_actions = ({
   ({ "next", "Move to next mail", 0 }),
-  ({ "next_unread", "Move to next unread mail", 0 }),
   ({ "previous", "Move to previous mail", 1 }),
-  ({ "previous_unread", "Move to previous unreda mail", 1 }),
   ({ "show_unread", "Go to mailbox page and show unread mail", 1 }),
   ({ "show_all", "Go to mailbox page and show all mail", 1 }),
 });
@@ -96,7 +94,7 @@ the current mail</blockquote><p>";
 // }
 
 
-void wizard_done( object id )
+mapping wizard_done( object id )
 {
   multiset actions = (< >);
   filter_checkbox_variables( id->variables );
@@ -137,4 +135,7 @@ void wizard_done( object id )
   if(!b) b = ({});
   b += ({ button });
   UID->set( "html_buttons", b );
+
+
+  return http_redirect( "edit_buttons.html", id );
 }
