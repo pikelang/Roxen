@@ -1,25 +1,64 @@
 <define tag=uservar><b>&title;</b> /// <input size=&size; type=&type; name=&name;>\\\</define>
 <formoutput quote='¤'>
   <if variable=save>
-   <sqloutput query="select * from customers where user_id='¤user_id:quote=mysql¤' and
+   <sqloutput query="select * from customers where
+    user_id='¤user_id:quote=mysql¤' and
     name='¤name:quote=mysql¤'"><set variable=notok value=1></sqloutput>
 
    <if not variable=notok>
-     <sqlquery query="insert into customers
-                      values(NULL,
-	                     '¤user_id:quote=mysql¤',
-	                     '¤password:quote=mysql¤',
-		             '¤name:quote=mysql¤',
-		 	     1,1,
-		             '¤sms:quote=mysql¤',
-		             '¤fax:quote=mysql¤',NULL)">
-     <sqloutput query="select * from customers where user_id='¤user_id:quote=mysql¤' and
-      name='¤name:quote=mysql¤'"><set variable=id value=#id#></sqloutput>
-     <formoutput quote='#'>
-       <sqlquery query="insert into dns values(NULL,#id#,'#domain:quote=mysql#','','A','')">
-       <sqlquery query="insert into dns values(NULL,#id#,'#domain:quote=mysql#','www','A','')">
-       <sqlquery query="insert into dns values(NULL,#id#,'#domain:quote=mysql#','','MX','10 #domain:quote=mysql#')">
-       <autosite-fs-init-home-dir id=#id#>
+     
+     <comment><--  Create customer  --></comment>
+     <sqlquery mysql-insert-id=customer_id
+       query="insert into customers
+              values(NULL,
+	             '¤user_id:quote=mysql¤',
+	             '¤password:quote=mysql¤',
+		     '¤name:quote=mysql¤',
+		     1,1,
+	             '¤sms:quote=mysql¤',
+	             '¤fax:quote=mysql¤',NULL,1)">
+
+     <comment><--  Randomize default scheme  --></comment>
+     <cset preparse variable=scheme_id><random preparse separator=','><pike>
+       string query=
+         "<sqloutput quote='£' query="
+	 "\"select * from template_schemes where "
+	 "customer_id='0'\">"
+	 "£id£,</sqloutput>";
+       return ((parse_rxml(query, id)/",")-({ "" }))*",";
+     </pike></random></cset>
+		     
+     <comment><--  New scheme  --></comment>		     
+     <formoutput quote='$'>
+       <sqlquery mysql-insert-id=new_scheme_id
+         query="insert into template_schemes (customer_id,name) values
+	                                     ('$customer_id$','Default')">
+     </formoutput>
+     
+     <comment><--  Init scheme  --></comment>
+     <formoutput quote='$'>
+       <sqlquery query="update customers set
+                        template_scheme_id='$new_scheme_id$'
+                        where id='$customer_id$'">
+       <sqloutput quote='£'
+         query="select * from template_schemes_vars
+	        where scheme_id='$scheme_id$'">
+         <sqlquery query="insert into  template_schemes_vars
+	                  (scheme_id,variable_id,value) values
+		          ('$new_scheme_id$','£variable_id£',
+			   '£value:quote=mysql£')">
+	</sqloutput>
+       
+       <comment><--  Init DNS  --></comment>
+       <sqlquery query="insert into dns
+         values(NULL,'$customer_id$','$domain:quote=mysql$','','A','')">
+       <sqlquery query="insert into dns
+         values(NULL,'$customer_id$','$domain:quote=mysql$','www','A','')">
+       <sqlquery query="insert into dns
+         values(NULL,'$customer_id$','$domain:quote=mysql$','','MX',
+        '10 $domain:quote=mysql$')">
+       <autosite-fs-init-home-dir id=$customer_id$>
+       
      </formoutput>
      <b>Information saved.<br>
       <autosite-dns-update><br>
