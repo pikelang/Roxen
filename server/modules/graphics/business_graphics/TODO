@@ -1,0 +1,14 @@
+Fixa följande kollar i init:
+om labels saknas: sätt labelsize till 0
+
+
+Övriga kollar:
+Graph:
+se till att label för x inte är för lång.
+se till att labelcolor finns!
+
+Graph och bars:
+se till att x-texten inte är för lång.
+se till att den inte är för hög.
+-"- y-texten
+
