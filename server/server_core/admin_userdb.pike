@@ -602,7 +602,7 @@ class AdminUser
                 <input type='image' border='0' alt=' Set ' value=' Set ' src='"+
        set_src+"' />"
       +"</pre></td>"
-      "<td><img src=\"/internal-roxen-unit\" height=\"5\" /><br />\n\n";
+      "<td><img src=\"/%01/unit\" height=\"5\" /><br />\n\n";
 
     int is_me = this_object() == id->misc->config_user;
 
