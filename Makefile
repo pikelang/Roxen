@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.39 1998/07/06 22:17:17 mast Exp $
+# $Id: Makefile,v 1.40 1998/07/14 20:06:39 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -187,10 +187,10 @@ censor_crypto :
 	@for d in pike/*/src/. pike/src/.; do \
 	  if test -d $$d ; then \
 	    echo "$$d..."; \
-	    rm -rf $$d/modules/_Crypto $$d/../lib/modules/Crypto/rsa.pike $$d/../lib/modules/SSL.pmod; \
+	    rm -rf $$d/modules/Ssleay $$d/modules/_Crypto $$d/../lib/modules/Crypto/rsa.pike $$d/../lib/modules/SSL.pmod; \
 	  else : ; fi; \
 	done
-	-@rm -rf server/protocols/ssl3.pike pike/src/modules/Ssleay || true
+	-@rm -rf server/protocols/ssl3.pike || true
 
 censor_dbapi :
 	@echo "Censoring the DBAPI..."
