@@ -30,7 +30,6 @@
 /modules/mail/filters/verify_addr.pike foreign_ident
 /modules/mail/mailadmin.pike foreign_ident
 /modules/mail/mailtags.pike foreign_ident
-/modules/mail/pop3.pike foreign_ident
 /modules/mail/smtprelay.pike foreign_ident
 /modules/mail/testrcpt.pike foreign_ident
 /modules/protocols/imap.pike foreign_ident
