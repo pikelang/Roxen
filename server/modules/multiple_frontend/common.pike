@@ -19,7 +19,7 @@ class Command
   static Command `+( Command what )
   {
     if( cmd != "multi" )
-      return error("cmd != multi\n");
+      error("cmd != multi\n");
     data += ({ what });
     return this_object(); // always destructive..
   }
@@ -27,7 +27,7 @@ class Command
   static Command `-( Command what )
   {
     if( cmd != "multi" )
-      return error("cmd != multi\n");
+      error("cmd != multi\n");
     data -= ({ what });
     return this_object(); // always destructive..
   }
