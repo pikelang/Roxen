@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.69 2002/07/03 12:41:47 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.70 2002/10/22 00:28:53 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -142,7 +142,7 @@ static array(string) find_user(string f, RequestID id)
     NOCACHE();
     if(id->misc->host) {
       string host = (id->misc->host / ":")[0];
-      if(search(host, ".") != -1) {
+      if(has_value(host, ".")) {
 	sscanf(host, "%s.%*s", u);
       } else {
 	u = host;
@@ -335,7 +335,8 @@ mapping|array find_dir(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(search(query("banish_list"), u) != -1)             return 0;
+      if(query("banish_list")[u])
+	return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + query("pdir") + f;
       else
@@ -372,7 +373,8 @@ array(int) stat_file(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(search(query("banish_list"), u) != -1) return 0;
+      if(query("banish_list")[u])
+	return 0;
       if(us[5] == "") {
 	// No home directory.
 	return 0;
