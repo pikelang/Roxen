@@ -1,4 +1,7 @@
-constant cvs_version = "$Id: cgi.pike,v 2.33 2000/02/17 18:17:19 nilsson Exp $";
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+//
+
+constant cvs_version = "$Id: cgi.pike,v 2.34 2000/02/24 04:45:54 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1154,10 +1157,6 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   if(!query("cgi_tag"))
     return 0;
 
-  if(args->help)
-    return ("<b>&lt;"+tag+" script=path [cache=seconds] [default-argument=value] "
-            "[argument=value]&gt;:</b>");
-
   if(!args->cache)
     NOCACHE();
   else {
@@ -1169,7 +1168,7 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   string file = args->script;
   m_delete(args, "script");
   if(!file)
-    return rxml_error(tag,"No \"script\" argument to the CGI tag.", id);
+    RXML.parse_error("No \"script\" argument to the CGI tag.");
   fid->not_query = fix_relative( file, id );
 
 #ifdef OLD_RXML_COMPAT
