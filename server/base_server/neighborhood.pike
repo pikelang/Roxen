@@ -148,12 +148,12 @@ class UDPNeigh
 mapping neighbours = ([ ]);
 
 
-string network_numbers()
+array (string) network_numbers()
 {
   return roxen->query("neigh_ips")-({""});
 }
 
-string tcp_numbers()
+array (string) tcp_numbers()
 {
   return roxen->query("neigh_tcp_ips")-({""});
 }
