@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.139 2002/04/09 15:26:57 wellhard Exp $
+// $Id: Roxen.pmod,v 1.140 2002/04/15 12:16:49 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2999,6 +2999,9 @@ class ScopeRoxen {
      case "license-type":
        object key = c->id->conf->getvar("license")->get_key();
        return ENCODE_RXML_TEXT(key?key->type():"none", type);
+     case "license-warnings":
+       object key = c->id->conf->getvar("license")->get_key();
+       return ENCODE_RXML_TEXT(key?sizeof(key->get_warnings()):0, type);
     }
     mixed val = c->misc->scope_roxen[var];
     if (zero_type(val)) return RXML.nil;
