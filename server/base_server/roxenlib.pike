@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.162 2000/03/19 22:09:01 nilsson Exp $
+// $Id: roxenlib.pike,v 1.163 2000/03/20 00:17:32 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1580,17 +1580,12 @@ string tagtime(int t, mapping m, RequestID id, function language)
 
 string read_file(RequestID id, string file)
 {
-  id = id->clone_me();
   file = fix_relative(file, id);
 
-  if(id->scan_for_query)
-    file = id->scan_for_query( file );
   string s = id->conf->try_get_file(file, id);
+  if(s) return s;
 
-  if(s) {
-    destruct(id);
-    return s;
-  }
+  id = id->clone_me();
 
   // Might be a PATH_INFO type URL.
   array a = id->conf->open_file( file, "r", id );
