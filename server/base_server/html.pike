@@ -1,15 +1,16 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: html.pike,v 1.10 2000/03/06 23:45:24 nilsson Exp $
+// $Id: html.pike,v 1.11 2000/04/06 05:01:13 per Exp $
 
 #pragma strict_types
 
 string input(string name, string|void val, int|void t)
 {
-  name = replace (name, ({"&", "\""}), ({"&amp;", "&quot;"}));
+//name = replace (name, ({"&", "\""}), ({"&amp;", "&quot;"}));
   if(!stringp(val))
     val = sprintf ("%O", val);
-  val = replace (val, ({"&", "\""}), ({"&amp;", "&quot;"}));
+  val = replace (val, ({"&", "\"", "<", ">"}), 
+                 ({"&amp;", "&quot;", "&lt;", "&gt;"}));
   if(!t)
     return "<input type=\"hidden\" name=\"" + name + "\" value=\"" + val + "\">";
   return "<input size=\"" + t + "\" name=\"" + name + "\" value=\"" + val + "\">";
