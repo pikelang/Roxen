@@ -1,5 +1,10 @@
-/* ssl3.pike
+/* $Id: ssl3.pike,v 1.1.2.2 1997/03/26 20:47:27 grubba Exp $
  *
+ * © 1997 Informationsvävarna AB
+ *
+ * This is unpublished alpha source code of Infovav AB.
+ *
+ * Do NOT redistribute!
  */
 
 inherit "protocols/http" : http;
