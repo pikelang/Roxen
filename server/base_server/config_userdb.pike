@@ -231,6 +231,17 @@ class ConfigurationSettings
 	    LOCALE(179, "Show the language selection flags. All translations "
 		   "will be listed, more or less completed."));
 
+  defvar("locale",
+	 Variable.Language("Standard", ({ "Standard" }) +
+			   Locale.list_languages("roxen_config"),
+			   0, LOCALE(0, "Interface language"), 
+			   LOCALE(0, "Select the Administration interface "
+				  "language.")))
+    ->set_changed_callback( lambda(Variable.Variable s) {
+			      roxenp()->set_locale();
+			    } );
+
+
     defvar( "devel_mode", 1, LOCALE(180, "Show developer options and actions"),
 	    TYPE_FLAG, 
 	    LOCALE(181, "Show settings and actions that are not normaly "

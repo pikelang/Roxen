@@ -7,3 +7,6 @@
   <cfg-variables source='config-settings'/>
 </cv-startpage></content>
 
+<if variable="form.save..x" match="&page.language; != &usr.locale;">
+<redirect to="/&usr.locale;/settings.html" />
+</if>
