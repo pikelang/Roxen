@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_newstyle_fnord</project>
+<language>eng</language>
+<file>../modules/examples/newstyle_fnord.pike</file>
+
+<str id="3">
+<o>Newstyle Fnord!</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Adds an extra container tag, &amp;lt;fnord&amp;gt; that's supposed to make things invisible unless the "fnord" prestate is present.&lt;p&gt;This module is here as an example of how to write a very simple newstyle RXML-parsing module.&lt;/p&gt;</o>
+<t></t>
+</str>

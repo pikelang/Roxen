@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_perl</project>
+<language>eng</language>
+<file>../modules/scripting/perl.pike</file>
+
+<str id="1">
+<o>Extensions</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>List of URL extensions that indicate that the document is a Perl script.</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Roxen Perl Directory</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>This is the name of a directory with Roxen-related Perl stuff. It should normally point to `perl' in the Roxen server directory, but you may want to point it elsewhere if you want to modify the code.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Show Backtraces</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>This setting decides whether to deliver a backtrace in the document if an error is caught while a script runs.</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Enable Perl Tag</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>This setting decides whether to enable parsing of Perl code in RXML pages, in &amp;lt;perl&amp;gt;..&amp;lt;/perl&amp;gt; containers.</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Script output</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>How to treat script output. HTML means treat it as a plain HTML document. RXML is similar, but passes it through the RXML parser before returning it to the client. HTTP is the traditional CGI output style, where the script is responsible for producing the HTTP headers before the document, as well as the main document data.</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>RXML-parse tag results</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>Whether to RXML parse tag results or not.</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Perl Helper</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Path to the helper program used to start a Perl subprocess. The default for this setting is `perl/bin/ntperl.pl'.</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Path to the helper program used to start a Perl subprocess. The default for this setting is `perl/bin/perlrun'.</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Parallel scripts</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>Number of scripts/tags that may be evaluated in parallel. Don't set this higher than necessary, since it may cause the server to block (by using all available threads). The default for this setting is 3.</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>Cache output</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Whether to cache the result of scripts. This is usually not desirable, so the default for this setting is No.</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Run Perl as...</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>User and group to run Perl scripts and tags as. The default for this option is `nobody:*'. Note that Roxen can't change user ID unless it has sufficient permissions to do so. `*' means `use same as Roxen'.</o>
+<t></t>
+</str>

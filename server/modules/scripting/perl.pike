@@ -5,16 +5,16 @@
 #include <roxen.h>
 #include <module.h>
 
-//<locate-token project="perl_module">LOCALE</locale-token>
+//<locale-token project="mod_perl">LOCALE</locale-token>
 // USE_DEFERRED_LOCALE;
-#define LOCALE(X,Y)  _DEF_LOCALE("perl_module",X,Y)
+#define LOCALE(X,Y)  _DEF_LOCALE("mod_perl",X,Y)
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.23 2002/01/30 00:19:42 mast Exp $";
+       "$Id: perl.pike,v 2.24 2003/06/26 15:59:22 anders Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -43,32 +43,32 @@ static object mutex = Thread.Mutex();
 void create()
 {
   defvar("extensions", ({ "pl", "perl" }),
-    LOCALE(0,"Extensions"), TYPE_STRING_LIST,
-    LOCALE(0,"List of URL extensions that indicate that the document "
+    LOCALE(1,"Extensions"), TYPE_STRING_LIST,
+    LOCALE(2,"List of URL extensions that indicate that the document "
 	   "is a Perl script."));
 
 #if 0
   defvar("libdir", "./perl",
-    LOCALE(0, "Roxen Perl Directory"), TYPE_DIR,
-    LOCALE(0, "This is the name of a directory with Roxen-related Perl "
+    LOCALE(3, "Roxen Perl Directory"), TYPE_DIR,
+    LOCALE(4, "This is the name of a directory with Roxen-related Perl "
     "stuff. It should normally point to `perl' in the Roxen server directory, "
     "but you may want to point it elsewhere if you want to modify the "
     "code."));
 #endif
 
   defvar("showbacktrace", 0,
-    LOCALE(0, "Show Backtraces"), TYPE_FLAG,
-    LOCALE(0, "This setting decides whether to deliver a backtrace in the "
+    LOCALE(5, "Show Backtraces"), TYPE_FLAG,
+    LOCALE(6, "This setting decides whether to deliver a backtrace in the "
 	   "document if an error is caught while a script runs."));
 
   defvar("tagenable", 0,
-    LOCALE(0, "Enable Perl Tag"), TYPE_FLAG,
-    LOCALE(0, "This setting decides whether to enable parsing of Perl code "
+    LOCALE(7, "Enable Perl Tag"), TYPE_FLAG,
+    LOCALE(8, "This setting decides whether to enable parsing of Perl code "
 	   "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers."));
 
   defvar("scriptout", "HTTP",
-    LOCALE(0, "Script output"), TYPE_MULTIPLE_STRING,
-    LOCALE(0, "How to treat script output. HTML means treat it as a plain "
+    LOCALE(9, "Script output"), TYPE_MULTIPLE_STRING,
+    LOCALE(10, "How to treat script output. HTML means treat it as a plain "
     "HTML document. RXML is similar, but passes it through the RXML parser "
     "before returning it to the client. HTTP is the traditional CGI "
     "output style, where the script is responsible for producing the "
@@ -78,40 +78,40 @@ void create()
         );
 
   defvar("rxmltag", 0,
-    LOCALE(0, "RXML-parse tag results"), TYPE_FLAG,
-    LOCALE(0, "Whether to RXML parse tag results or not."));
+    LOCALE(11, "RXML-parse tag results"), TYPE_FLAG,
+    LOCALE(12, "Whether to RXML parse tag results or not."));
 
 #if constant(system.NetWkstaUserEnum)
   // WinNT.
   defvar("helper", "perl/bin/ntperl.pl",
-    LOCALE(0, "Perl Helper"), TYPE_FILE,
-    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
+    LOCALE(13, "Perl Helper"), TYPE_FILE,
+    LOCALE(14, "Path to the helper program used to start a Perl subprocess. "
     "The default for this setting is `perl/bin/ntperl.pl'."));
 #else
   // Assume Unix.
   defvar("helper", "perl/bin/perlrun",
-    LOCALE(0, "Perl Helper"), TYPE_FILE,
-    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
+    LOCALE(13, "Perl Helper"), TYPE_FILE,
+    LOCALE(15, "Path to the helper program used to start a Perl subprocess. "
     "The default for this setting is `perl/bin/perlrun'."));
 #endif
 
   defvar("parallel", 3,
-    LOCALE(0, "Parallel scripts"), TYPE_MULTIPLE_INT,
-    LOCALE(0, "Number of scripts/tags that may be evaluated in parallel. "
+    LOCALE(16, "Parallel scripts"), TYPE_MULTIPLE_INT,
+    LOCALE(17, "Number of scripts/tags that may be evaluated in parallel. "
     "Don't set this higher than necessary, since it may cause the server "
     "to block (by using all available threads). The default for this "
     "setting is 3."),
          ({ 1, 2, 3, 4, 5, 6 }) );
 
   defvar("caching", 0,
-	 LOCALE(0, "Cache output"), TYPE_FLAG,
-	 LOCALE(0, "Whether to cache the result of scripts. This is usually "
+	 LOCALE(18, "Cache output"), TYPE_FLAG,
+	 LOCALE(19, "Whether to cache the result of scripts. This is usually "
 		"not desirable, so the default for this setting is No."));
 
 #if constant(getpwnam)
   defvar("identity", "nobody:*",
-    LOCALE(0, "Run Perl as..."), TYPE_STRING,
-    LOCALE(0, "User and group to run Perl scripts and tags as. The default "
+    LOCALE(20, "Run Perl as..."), TYPE_STRING,
+    LOCALE(21, "User and group to run Perl scripts and tags as. The default "
     "for this option is `nobody:*'. Note that Roxen can't change user ID "
     "unless it has sufficient permissions to do so. `*' means `use "
     "same as Roxen'."));
