@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.111 1999/11/19 10:09:18 per Exp $
+ * $Id: roxenloader.pike,v 1.112 1999/11/23 06:40:18 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.111 1999/11/19 10:09:18 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.112 1999/11/23 06:40:18 per Exp $";
 
 #define perror roxen_perror
 
@@ -628,26 +628,93 @@ void load_roxen()
 
 // Temporary kludge to get wide string rxml parsing.
 
+class TagCallerNoLine
+{
+  mixed what;
+  string _sprintf()
+  {
+    return sprintf( "Tag(%O)", what );
+  }
+
+  void call (object parser, mapping args, mixed... extra) 
+  {
+    return what (parser->tag_name(), args, @extra);
+  }
+  void create( mixed f ) 
+  {
+    what = f;
+  }
+}
+
+class ContainerCallerNoLine
+{
+  mixed what;
+  string _sprintf()
+  {
+    return sprintf( "Container(%O)", what );
+  }
+  void call (object parser, mapping args, string contents, mixed... extra) 
+  {
+    return what (parser->tag_name(), args, contents, @extra);
+  }
+  void create( mixed f ) 
+  {
+    what = f;
+  }
+}
+
+class TagCaller
+{
+  mixed what;
+  string _sprintf()
+  {
+    return sprintf( "Tag(%O)", what );
+  }
+  void call (object parser, mapping args, mixed... extra) 
+  {
+    return what (parser->tag_name(), args, parser->at_line(), @extra);
+  }
+  void create( mixed f ) 
+  {
+    what = f;
+  }
+}
+
+class ContainerCaller
+{
+  mixed what;
+  string _sprintf()
+  {
+    return sprintf( "Container(%O)", what );
+  }
+
+  void call (object parser, mapping args, string contents, mixed... extra) 
+  {
+    return what(parser->tag_name(), args, contents, parser->at_line(), @extra);
+  }
+  void create( mixed f ) 
+  {
+    what = f;
+  }
+}
+
+mapping caller_cache = ([]);
+int num;
+function make_caller( mixed fun, program p )
+{
+  if( !caller_cache[ p ] )
+    caller_cache[ p ]  = set_weak_flag( ([]), 1 );
+  if( !caller_cache[ p ][ fun ] )
+    caller_cache[ p ][ fun ] = p( fun );
+  return caller_cache[ p ][ fun ]->call;
+}
+
 string parse_html (string data, mapping tags, mapping containers,
 		   mixed... args)
 {
   Parser.HTML parser = Parser.HTML();
-  parser->add_tags (map (
-    tags,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, mixed... extra) {
-	  return what (parser->tag_name(), args, @extra);
-	};
-    }));
-  parser->add_containers (map (
-    containers,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, string contents, mixed... extra) {
-	  return what (parser->tag_name(), args, contents, @extra);
-	};
-    }));
+  parser->add_tags (map ( tags, make_caller, TagCallerNoLine ) );
+  parser->add_containers(map (containers, make_caller, ContainerCallerNoLine));
   parser->_set_tag_callback (
     lambda (object parser, string str) {
       parser->feed_insert (str[1..]);
@@ -661,22 +728,8 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 			 mixed... args)
 {
   Parser.HTML parser = Parser.HTML();
-  parser->add_tags (map (
-    tags,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, mixed... extra) {
-	  return what (parser->tag_name(), args, parser->at_line(), @extra);
-	};
-    }));
-  parser->add_containers (map (
-    containers,
-    lambda (function|string what) {
-      return stringp (what) ? what :
-	lambda (object parser, mapping args, string contents, mixed... extra) {
-	  return what (parser->tag_name(), args, contents, parser->at_line(), @extra);
-	};
-    }));
+  parser->add_tags (map ( tags, make_caller, TagCaller ) );
+  parser->add_containers(map (containers, make_caller, ContainerCaller));
   parser->_set_tag_callback (
     lambda (object parser, string str) {
       parser->feed_insert (str[1..]);
@@ -975,6 +1028,7 @@ int main(int argc, array argv)
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
 //   add_constant("open_db", open_db);
+  add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
