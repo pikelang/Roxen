@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.99 1998/03/08 16:46:44 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.100 1998/03/09 23:40:35 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -964,7 +964,7 @@ int write_name(mapping diagram_data)
     -> paste_alpha_color( text, @(color),
 			  diagram_data["xsize"]/2-text->xsize()/2, 2 );
 	  
-  return text->ysize();
+  return text->ysize()+2;
 }
 
 mapping(string:mixed) create_graph(mapping diagram_data)

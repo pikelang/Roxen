@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.38 1998/03/07 14:24:36 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.39 1998/03/09 23:40:40 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -137,27 +137,38 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	    ymaxtext=text[i]->ysize();
 	  
 	}
+    else
+       throw(({"Missing font or similar error!\n", backtrace() }));
+
+  int nameheight=write_name(diagram_data);
 
   //Some calculations
   if (twoD)
     {
       xc=diagram_data["xsize"]/2;
-      yc=diagram_data["ysize"]/2;
+      yc=diagram_data["ysize"]/2+nameheight/2;
       xr=(int)min(xc-xmaxtext-ymaxtext-1-diagram_data["linewidth"], 
-		  yc-2*ymaxtext-1-diagram_data["linewidth"]);
+		  yc-2*ymaxtext-
+		  1-diagram_data["linewidth"]-nameheight);
       yr=xr;
     }
   else
     {
       xc=diagram_data["xsize"]/2;
-      yc=diagram_data["ysize"]/2-diagram_data["3Ddepth"];
-      yr=(int)(min(xc-xmaxtext-ymaxtext-1-diagram_data["3Ddepth"], yc-2*ymaxtext-1)
+      yc=diagram_data["ysize"]/2-diagram_data["3Ddepth"]/2+nameheight/2;
+      yr=(int)(min(xc-xmaxtext-ymaxtext-1-diagram_data["3Ddepth"]/2, 
+		   yc-2*ymaxtext-1-nameheight)
 	       -diagram_data["linewidth"]);
-      xr=(int)(min(xc-xmaxtext-ymaxtext-1, yc+diagram_data["3Ddepth"]-2*ymaxtext-1)-
+      xr=(int)(min(xc-xmaxtext-ymaxtext-1, 
+		   yc+diagram_data["3Ddepth"]/2-
+		   2*ymaxtext-1-nameheight)-
 	       diagram_data["linewidth"]);
     }
   float w=diagram_data["linewidth"];
 
+  if (xr<2)
+    throw(({"Image to small for this pie-diagram.\n"
+	    "Try smaller font or bigger image!\n", backtrace() }));
 
   //initiate the 0.25*% for different numbers:
   //Ex: If numbers is ({3,3}) pnumbers will be ({200, 200}) 
