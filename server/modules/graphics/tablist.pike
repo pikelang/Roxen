@@ -1,5 +1,5 @@
 // The Tab lists tag module.
-string cvs_version = "$Id: tablist.pike,v 1.12 1999/01/15 12:35:02 neotron Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.13 1999/01/21 23:38:35 marcus Exp $";
 #include <module.h>
 
 inherit "module";
@@ -178,7 +178,7 @@ object tab(string name, int select, int n, int last, string font,
 array register_module()
 {
   return ({
-    MODULE_PARSER | MODULE_LOCATION,
+    MODULE_PARSER,
       "Tab lists",
       ("This module makes graphical tablists.<p>"
        "<b>NOTE:</b> This module is not supported and is only here "
@@ -204,17 +204,11 @@ array register_module()
 
 void create()
 {
-  defvar("foo", "/tablists/", "mount point", TYPE_LOCATION|VAR_MORE, "");
   defvar("fontpath", DEFAULT_PATH, "font path", TYPE_DIR|VAR_MORE, "");
   defvar("defaultfont", DEFAULT_FONT, "default font", TYPE_FILE|VAR_MORE, "");
 }
 
-string query_location()
-{
-  return query("foo");
-}
-
-mapping find_file(string filename, object request_id)
+mapping find_internal(string filename, object request_id)
 {
   string s;
   if(s = cache_lookup("tabs", filename))
@@ -259,12 +253,12 @@ string tag_tablist(string tag_name, mapping arguments, object request_id)
 	   "<img border=0 "
 	   "alt=\""+((n==1||(n==(int)arguments->selected))?"/":"")+name+
  	    ((n+1==(int)arguments->selected)?"":"\\")+"\" "+
-	   "src="+query_location()+make_filename(arguments)+"></a>";
+	   "src="+query_internal_location()+make_filename(arguments)+"></a>";
     else
       s += "<img border=0 "
 	   "alt=\""+((n==1||(n==(int)arguments->selected))?"/":"")+name+
 	    ((n+1==(int)arguments->selected)?"":"\\")+"\" "+
-	   "src="+query_location()+make_filename(arguments)+">";
+	   "src="+query_internal_location()+make_filename(arguments)+">";
     s += "</td>";
   }
   s += "</tr></table>";
