@@ -145,6 +145,7 @@ nn binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
+/server/mkdir foreign_ident
 /server/modules/compat/configtablist.pike foreign_ident
 /server/modules/compat/flik.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
