@@ -1,1 +1,3 @@
 // Compatibility file.
+
+inherit Roxen;
