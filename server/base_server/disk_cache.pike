@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.24 1997/06/14 18:34:07 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.25 1997/06/14 19:09:39 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -92,7 +92,7 @@ class CacheStream
     if(!(headers[" returncode"] = get_code(line)))
       return 0;
 
-    while(s=strlen(line = replace((gets()||""), ({"\r", "\n"}), ({"", ""}))))
+    while(strlen(line = replace((gets()||""), ({"\r", "\n"}), ({"", ""}))))
     {
       if(sscanf(line, "%s:%s", name, value) == 2)
       {
