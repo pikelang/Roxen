@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.28 2000/02/11 10:46:05 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.29 2000/02/21 17:50:48 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -142,38 +142,42 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
 
   mapping ll = ([]);
 
-  if( args->border_image )
+  void set_image( array layers )
   {
-    array layers = roxen.load_layers(args->border_image, id);
-    if(layers)
-      foreach( layers, object l )
-      {
-        ll[l->get_misc_value( "name" )] = l;
-	switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
-	{
-	case "background": background = l; break;
-	case "frame":      frame = l;     break;
-	case "mask":       mask = l;     break;
-	}
-      }
-  }
-
-  //  otherwise load default images
-  if ( !frame )
-  {
-    array layers = roxen.load_layers("roxen-images/gbutton.xcf", id);
-    foreach( layers, object l )
+    foreach( layers||({}), object l )
     {
-      ll[l->get_misc_value( "name" )] = l;
-      switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
+      if(!l->get_misc_value( "name" ) ) // Hm.
+        continue;
+      ll[lower_case(l->get_misc_value( "name" ))] = l;
+      switch( lower_case(l->get_misc_value( "name" )) )
       {
        case "background": background = l; break;
        case "frame":      frame = l;     break;
        case "mask":       mask = l;     break;
       }
     }
-  }
+  };
 
+  if( args->border_image )
+    set_image( roxen.load_layers(args->border_image, id) );
+
+  //  otherwise load default images
+  if ( !frame )
+    set_image( roxen.load_layers("roxen-images/gbutton.xcf", id) );
+
+
+  // Translate frame image to 0,0 (left layers are most likely to the
+  // left of the frame image)
+
+  int x0 = frame->xoffset();
+  int y0 = frame->yoffset();
+  if( x0 || y0 )
+    foreach( values( ll ), object l )
+    {
+      int x = l->xoffset();
+      int y = l->yoffset();
+      l->set_offset( x-x0, y-y0 );
+    }
 
   if( !mask )
     mask = frame;
@@ -183,13 +187,16 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   foreach( frame->get_misc_value( "image_guides" ), object g )
     if( g->pos < 4096 )
       if( g->vertical )
-	x += ({ g->pos });
+	x += ({ g->pos-x0 });
       else
-	y += ({ g->pos });
+	y += ({ g->pos-y0 });
 
-  sort( y ); sort( x );
+  sort( y );
+  sort( x );
+
   if(sizeof( x ) < 2)
     x = ({ 5, frame->xsize()-5 });
+
   if(sizeof( y ) < 2)
     y = ({ 2, frame->ysize()-2 });
 
@@ -295,32 +302,36 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     foreach( args->extra_frame_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
-    if( sizeof( l ) )
-      mask = Image.lay( l );
+    if( sizeof( l ) > 1)
+      frame = Image.lay( l );
   }
 
   if( args->extra_mask_layers )
   {
     array l = ({ });
-    if( mask )
-      l = ({ mask });
     foreach( args->extra_mask_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
     if( sizeof( l ) )
+    {
+      if( mask )
+        l = ({ mask })+l;
       mask = Image.lay( l );
+    }
   }
 
   if( args->extra_background_layers )
   {
     array l = ({ });
-    if( background )
-      l = ({ background });
     foreach( args->extra_background_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
     if( sizeof( l ) )
+    {
+      if( background )
+        l = ({ background })+l;
       background = Image.lay( l );
+    }
   }
 
 
@@ -405,6 +416,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if(text_img)
     button->paste_alpha_color(text_img, args->txt, txt_x, top);
 
+  // 'plain' extra layers are added on top of everything else
   if( args->extra_layers )
   {
     array l = ({ });
@@ -419,8 +431,50 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     }
   }
 
+  // left layers are added to the left of the image, and the mask is
+  // extended using their mask. There is no corresponding 'mask' layers
+  // for these, but that is not a problem most of the time.
+  if( args->extra_left_layers )
+  {
+    array l = ({ });
+    foreach( args->extra_left_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    if( sizeof( l ) )
+    {
+      object q = Image.lay( l );
+      object b2 = Image.Image( button->xsize()+q->xsize(),
+                               button->ysize(), @args->pagebg );
+      b2->paste( button, q->xsize() );
+      b2->paste_mask( q->image(), q->alpha() );
+      button = b2;
+      mask = Image.lay( ({q, mask->set_offset( q->xsize(),0 )}) );
+    }
+  }
 
-  return ([
+  // right layers are added to the right of the image, and the mask is
+  // extended using their mask. There is no corresponding 'mask' layers
+  // for these, but that is not a problem most of the time.
+  if( args->extra_right_layers )
+  {
+    array l = ({ });
+    foreach( args->extra_right_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    if( sizeof( l ) )
+    {
+      object q = Image.lay( l );
+      object b2 = Image.Image( button->xsize()+q->xsize(),
+                               button->ysize(), @args->pagebg );
+      b2->paste( button );
+      b2->paste_mask( q->image(), q->alpha(), button->xsize(), 0 );
+      button = b2;
+      mask = Image.lay( ({q->set_offset( mask->xsize(),0), mask }) );
+    }
+  }
+
+  return
+  ([
     "img":button,
     "alpha":mask->alpha()->threshold( 40 ),
   ]);
@@ -462,6 +516,8 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
              roxen->query("default_font")),
     "border_image":fi,
     "extra_layers":args["extra-layers"],
+    "extra_left_layers":args["extra-left-layers"],
+    "extra_right_layers":args["extra-right-layers"],
     "extra_background_layers":args["extra-background-layers"],
     "extra_mask_layers":args["extra-mask-layers"],
     "extra_frame_layers":args["extra-frame-layers"],
