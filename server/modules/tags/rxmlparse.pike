@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.29 1999/10/18 18:41:33 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.30 1999/11/15 16:10:31 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -36,17 +36,17 @@ void create(object c)
 	 "Note: This module must be reloaded for a change here to take "
 	 "effect.");
 
-  defvar("parse_exec", 0, "Require exec bit on files for parsing",
+  defvar("require_exec", 0, "Require exec bit on files for parsing",
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, files has to have the execute bit (any of them) set "
 	 "in order for them to be parsed by this module. The exec bit "
 	 "is the one that is set by 'chmod +x filename'");
 
-  defvar("no_parse_exec", 0, "Don't Parse files with exec bit",
+  defvar("parse_exec", 1, "Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, no files with the exec bit set will be parsed. This is the "
-	 "reverse of the 'Require exec bit on files for parsing' flag. "
-	 "It is not very useful to set both variables.");
+	 "If set, files with the exec bit set will be parsed. If not set, "
+	 "and the 'Require exec bit on files for parsing' flag is set, no "
+	 "parsing will occur.");
 
   defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
@@ -90,8 +90,8 @@ mapping handle_file_extension(object file, string e, object id)
     stat=_stat=id->misc->stat || file->stat();
   }
 
-  if(QUERY(parse_exec) &&   !(stat[0] & 07111)) return 0;
-  if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
+  if(QUERY(require_exec) && !(stat[0] & 07111)) return 0;
+  if(!QUERY(parse_exec) && (stat[0] & 07111)) return 0;
 
   bytes += strlen(to_parse = file->read());
 
