@@ -213,8 +213,9 @@ string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
     id = id->misc->orig;
-  if((id->variables->section == "Information") ||
-     id->variables->info_section_is_it)
+  if((id->variables->section == "Information") 
+     ||!(id->variables->section)
+     ||id->variables->info_section_is_it)
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   return #"<formoutput quote=\"¤\">

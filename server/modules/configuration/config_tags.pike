@@ -825,7 +825,9 @@ string container_configif_output(string t, mapping m, string c, object id)
      ({ ([
        "section":"Information",
        "selected":
-       (id->variables->section=="Information"?"selected":""),
+       (((id->variables->section=="Information")||
+         !id->variables->section)?
+        "selected":""),
      ]) });
      if( sizeof( variables ) == 1 )
      {
@@ -834,8 +836,18 @@ string container_configif_output(string t, mapping m, string c, object id)
        id->variables->info_section_is_it = "1";
        variables[0]->selected="selected";
      }
-     variables[0]->last = "first";
-     variables[-1]->first = "last";
+
+     int hassel;
+     foreach( reverse(variables), mapping q )
+     {
+       if( hassel )
+         q->selected = "";
+       else
+         hassel = strlen(q->selected);
+     }
+
+     variables[0]->first = " first ";
+     variables[-1]->last = " last=30 ";
      break;
 
    case "global-variables-sections":
