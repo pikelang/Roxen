@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.74 1998/02/28 10:14:37 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.75 1998/03/07 03:13:56 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -424,7 +424,7 @@ class spawn_cgi
     mapping options = ([ "cwd":wd,
 			 "stdin":pipe3,
 			 "stdout":pipe1,
-			 "toggle_uid":1,
+			 "env":env,
 			 "uid":uid || 65534,
     ]);
     if (dup_err) {
