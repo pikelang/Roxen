@@ -20,6 +20,17 @@ o Removed some dead code from the rimage module.
 
 o Fixed logging bug in ftp2.pike.
 
+o Added support for MySQL on NT.
+
+o Added new variable to decide what tags will be parsed for colors in
+  gtext.
+
+  OBSERVE: All setting concerning parsing for colors in gtext will
+           return to the default values with this release. So you will
+           have to reconfigure if you have earlier disabled parsing of
+           some tags.
+
+o Fixed some bugs that prevented the language module from working.
 
 Changes since Roxen Challenger 1.2.31 Yellow
 -----------------------------------------------
