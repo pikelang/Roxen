@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.259 2000/08/28 07:05:27 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.260 2000/08/28 09:53:59 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -100,7 +100,7 @@ mapping (string:string) client_var      = ([ ]);
 
 multiset (string) prestate  = (< >);
 multiset (string) config    = (< >);
-multiset (string) supports  = (< >);
+multiset (string) supports;
 multiset (string) pragma    = (< >);
 
 string remoteaddr, host;
@@ -632,7 +632,7 @@ void things_to_do_when_not_sending_from_cache( )
 
   not_query = Roxen.simplify_path(f);
 #ifndef DISABLE_SUPPORTS
-  if( !sizeof(supports) )
+  if( !supports )
   {
     if( !client )
     {
@@ -953,12 +953,12 @@ private int parse_got( string new_data )
          misc[linename] = lower_case(contents);
          break;
 
-       case "accept-encoding":
-         foreach((contents-" ")/",", string e) {
-           if (lower_case(e) == "gzip") {
-             supports["autogunzip"] = 1;
-           }
-         }
+//        case "accept-encoding":
+//          foreach((contents-" ")/",", string e) {
+//            if (lower_case(e) == "gzip") {
+//              supports["autogunzip"] = 1;
+//            }
+//          }
       }
 #if !constant(Roxen.HeaderParser)
     }
