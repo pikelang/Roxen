@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.17 2000/05/19 14:19:21 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.18 2000/08/17 01:16:31 per Exp $";
 
 //#define DEBUG
 
@@ -125,7 +125,7 @@ void current_cache_message()
 {
   if(!gc_log)
     return;
-  string now = ctime(time())-"\n";
+  string now = ctime(time(1))-"\n";
   
   LOGGER(sprintf("Cache(%s): %1.3f MB data (%1.2f%%)\n",
 		 now,

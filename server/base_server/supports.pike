@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.21 2000/08/01 00:27:10 nilsson Exp $
+// $Id: supports.pike,v 1.22 2000/08/17 01:16:31 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -191,101 +191,4 @@ array(multiset(string)|
   ret[0]|=existing_sup;
   ret[1]|=existing_cv;
   return ret;
-}
-
-
-//------------------- Code that updates the supports database --------------
-
-array _new_supports = ({});
-
-void done_with_roxen_com()
-{
-  string new, old;
-  new = _new_supports * "";
-  new = (new/"\r\n\r\n")[1..]*"\r\n\r\n";
-  catch( old = lopen( "etc/supports","r" )->read() );
-
-  if(strlen(new) < strlen(old)-200) // Error in transfer?
-    return;
-
-  if(old != new) {
-    report_debug("Got new supports data from www.roxen.com\n"
-		 "Replacing old file with new data.\n");
-    mkdirhier( "../local/etc/supports" );
-    rm("../local/etc/supports~");
-    mv("../local/etc/supports", "../local/etc/supports~");
-    catch(open("../local/etc/supports","wct",0666)->write(new));
-    catch(old = lopen( "etc/supports","r" )->read());
-
-    if(old != new)
-    {
-      report_debug("FAILED to update the supports file.\n");
-      mv("../local/etc/supports~", "../local/etc/supports");
-    } else {
-      initiate_supports();
-    }
-  }
-#ifdef DEBUG
-  else
-    werror("No change to the supports file.\n");
-#endif
-}
-
-void got_data_from_roxen_com(object this, string foo)
-{
-  if(!foo)
-    return;
-  _new_supports += ({ foo });
-}
-
-void connected_to_roxen_com(object(Stdio.File) port)
-{
-  if(!port)
-  {
-#ifdef DEBUG
-    werror("Failed to connect to www.roxen.com:80.\n");
-#endif
-    return 0;
-  }
-#ifdef DEBUG
-  werror("Connected to www.roxen.com.:80\n");
-#endif
-  _new_supports = ({});
-  port->set_id(port);
-  string v = roxenp()->version();
-  if (v != roxenp()->real_version) {
-    v = v + " (" + roxenp()->real_version + ")";
-  }
-  port->write("GET /supports HTTP/1.0\r\n"
-	      "User-Agent: " + v + "\r\n"
-	      "Host: www.roxen.com:80\r\n"
-	      "Pragma: no-cache\r\n"
-	      "\r\n");
-  port->set_nonblocking(got_data_from_roxen_com,
-			got_data_from_roxen_com,
-			done_with_roxen_com);
-}
-
-public void update_supports_from_roxen_com()
-{
-  // FIXME:
-  // This code has a race-condition, but it only occurs once a week...
-  if([int]roxenp()->query("next_supports_update") <= time())
-  {
-    if([int(0..1)]roxenp()->query("AutoUpdate"))
-    {
-      async_connect("www.roxen.com.", 80, connected_to_roxen_com);
-#ifdef DEBUG
-      werror("Connecting to www.roxen.com.:80\n");
-#endif
-    }
-    remove_call_out( update_supports_from_roxen_com );
-
-  // Check again in one week.
-    ([object(Variable.Variable)]roxenp()->variables["next_supports_update"])
-      ->set(3600*24*7 + time(1));
-    roxenp()->store("Variables", roxenp()->variables, 0, 0);
-  }
-  call_out(update_supports_from_roxen_com,
-	   [int]roxenp()->query("next_supports_update")-time(1));
 }

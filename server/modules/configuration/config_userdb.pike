@@ -453,6 +453,6 @@ void first_try( RequestID id )
     report_notice(SLOCALE("dt", "Administrator logged on as %s from %s.\n"),
 		  u, host+" ("+id->remoteaddr+")" );
 
-  logged_in[ u+host ] = time();
+  logged_in[ u+host ] = time(1);
   get_context( u, host, id );
 }

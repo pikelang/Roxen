@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.121 2000/08/08 17:48:23 mast Exp $
+// $Id: wizard.pike,v 1.122 2000/08/17 01:16:31 per Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -800,7 +800,7 @@ object get_wizard(string act, string dir, mixed ... args)
   return w;
 }
 
-int zonk=time();
+int zonk=time(1);
 mapping get_actions(RequestID id, string base,string dir, array args)
 {
   mapping acts = ([  ]);

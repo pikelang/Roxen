@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.50 2000/07/09 14:11:05 per Exp $
+// $Id: disk_cache.pike,v 1.51 2000/08/17 01:16:30 per Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -433,7 +433,7 @@ object new_cache_stream(object fp, string fn)
 #ifdef CACHE_DEBUG
 string age(int x)
 {
-  int y = time() - x;
+  int y = time(1) - x;
   return sprintf("age: %d+%02d:%02d:%02d (%d)", y/(DAY), (y%DAY)/(60*60), (y%(60*60))/60, y%60, y);
 }
 #endif
@@ -515,7 +515,7 @@ object cache_file(string cl, string entry)
 
   if(cf->headers["expires"])
   {
-    if(!Roxen.is_modified(cf->headers["expires"], time()))
+    if(!Roxen.is_modified(cf->headers["expires"], time(1)))
     {
       CACHE_WERR("refresh(expired): " + name + "(" + entry +
 		 "), " + age(stat[ST_CTIME]) +
@@ -528,7 +528,7 @@ object cache_file(string cl, string entry)
   {
     if(QUERY(cache_check_last_modified) &&
        Roxen.is_modified(cf->headers["last-modified"],
-		   stat[ST_CTIME] - time() + stat[ST_CTIME]))
+		   stat[ST_CTIME] - time(1) + stat[ST_CTIME]))
     {
       CACHE_WERR("refresh(last-modified): " + name + "(" + entry +
 		 "), " + age(stat[ST_CTIME]) +
@@ -539,7 +539,7 @@ object cache_file(string cl, string entry)
   }
   else if(QUERY(cache_last_resort))
   {
-    if((stat[ST_CTIME] + cache->last_resort) < time())
+    if((stat[ST_CTIME] + cache->last_resort) < time(1))
     {
       CACHE_WERR("refresh(last resort=" + cache->last_resort + "): " + name +
 		 "(" + entry + "), " + age(stat[ST_CTIME]));
@@ -740,7 +740,7 @@ void http_check_cache_file(object cachef)
       stat[ST_SIZE] - cachef->headers->headers_size;
 
   if(cachef->headers["expires"]&&
-     !Roxen.is_modified(cachef->headers["expires"], time())) {
+     !Roxen.is_modified(cachef->headers["expires"], time(1))) {
     CACHE_WERR(cachef->rfile + "(" + cachef->headers->name +
 	       "): already expired " + cachef->headers["expires"]);
     DELETE_AND_RETURN();

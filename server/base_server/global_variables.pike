@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.38 2000/07/21 17:37:34 lange Exp $
+// $Id: global_variables.pike,v 1.39 2000/08/17 01:16:30 per Exp $
 
 /*
 #pragma strict_types
@@ -467,6 +467,7 @@ void define_global_variables(  )
 	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"));
 #endif
 
+#if 0
   defvar("AutoUpdate", 1, 
 	 LOCALE(152, "Update the supports database automatically"),
 	 TYPE_FLAG,
@@ -475,7 +476,8 @@ void define_global_variables(  )
 		"recomended, since you will then automatically get supports "
 		"information for new clients, and new versions of old ones."));
 
-  defvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
+  defvar("next_supports_update", time(1)+3600, "", TYPE_INT,"",0,1);
+#endif
 
 #ifndef __NT__
   defvar("abs_engage", 0, LOCALE(154, "ABS: Enable Anti-Block-System"), 

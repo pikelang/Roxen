@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.523 2000/08/16 18:55:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.524 2000/08/17 01:16:30 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1763,7 +1763,7 @@ mapping(string:array(int)) error_log=([]);
 void nwrite(string s, int|void perr, int|void errtype,
             object|void mod, object|void conf)
 {
-  int log_time = time();
+  int log_time = time(1);
   string reference = (mod ? Roxen.get_modname(mod) : conf && conf->name) || "";
   string log_index = sprintf("%d,%s,%s", errtype, reference, s);
   if(!error_log[log_index])
@@ -1864,7 +1864,7 @@ int increase_id()
   if(!current_user_id_file)
   {
     restore_current_user_id_number();
-    return current_user_id_number+time();
+    return current_user_id_number+time(1);
   }
   if(current_user_id_file->stat()[2] != current_user_id_file_last_mod)
     restore_current_user_id_number();
@@ -1906,7 +1906,7 @@ public string full_status()
       foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
   }
 
-  int uptime = time()-start_time;
+  int uptime = time(1)-start_time;
   int days = uptime/(24*60*60);
   int hrs = uptime/(60*60);
   int min = uptime/60 - hrs*60;
@@ -2638,7 +2638,7 @@ class ArgCache
       array res = db->query("select contents from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
-        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
+        db->query("update "+name+" set atime='"+time(1)+"' where id='"+id+"'");
         return res[0]->contents;
       }
       return 0;
@@ -3476,9 +3476,6 @@ int main(int argc, array tmp)
 
   argv -= ({ 0 });
   argc = sizeof(argv);
-
-  call_out(update_supports_from_roxen_com,
-	   QUERY(next_supports_update)-time());
 
   initiate_languages(query("locale"));
   set_locale();

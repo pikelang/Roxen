@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.15 2000/07/21 04:52:48 lange Exp $
+ * $Id: update.pike,v 1.16 2000/08/17 01:16:32 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -156,7 +156,7 @@ class Scope_update
       int t;
       if(catch(t=misc["last_updated"]) || t==0)
 	return "infinitely long";
-      return describe_time_period(time()-t);
+      return describe_time_period(time(1)-t);
     }
   }
 
@@ -811,7 +811,7 @@ class UpdateInfoFiles
     foreach(delete_packages, int i)
       catch(pkginfo->delete((string)i));
 
-    catch(misc["last_updated"]=time());
+    catch(misc["last_updated"]=time(1));
   }
   
   void request_ok(object httpquery)

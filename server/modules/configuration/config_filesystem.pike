@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.42 2000/07/21 17:46:01 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.43 2000/08/17 01:16:31 per Exp $";
 
 constant path = "config_interface/";
 
@@ -218,7 +218,7 @@ mixed find_file( string f, object id )
 
      if( !id->misc->stat )
        id->misc->stat = allocate(10);
-     id->misc->stat[ ST_MTIME ] = time();
+     id->misc->stat[ ST_MTIME ] = time(1);
      if(!id->misc->defines)
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
@@ -236,7 +236,7 @@ mixed find_file( string f, object id )
      NOCACHE();
      retval->stat = 0;
      retval->len = strlen( retval->data );
-     retval->expires = time();
+     retval->expires = time(1);
      if( locale != "standard" ) 
        roxen.set_locale( "standard" );
   }

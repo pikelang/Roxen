@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.225 2000/08/16 02:59:19 per Exp $
+// $Id: rxml.pike,v 1.226 2000/08/17 01:16:31 per Exp $
 
 
 inherit "rxmlhelp";
@@ -1611,7 +1611,7 @@ class TagIfTime {
 
     int tok, a, b, d;
     mapping c;
-    c=localtime(time());
+    c=localtime(time(1));
 
     b=(int)sprintf("%02d%02d", c->hour, c->min);
     a=(int)replace(ti,":","");
