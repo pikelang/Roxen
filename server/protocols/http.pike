@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.117 1998/10/01 23:37:39 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.118 1998/11/04 20:32:01 peter Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -324,7 +324,7 @@ private int parse_got(string s)
 
   DPERROR(sprintf("After query scan:%O", f));
 
-//  f = http_decode_string( f );
+  f = http_decode_string( f );
 
   if (sscanf(f, "/<%s>/%s", a, f)==2)
   {
@@ -343,7 +343,7 @@ private int parse_got(string s)
 
   DPERROR(sprintf("After prestate scan:%O", f));
   
-  not_query = simplify_path(http_decode_string(f));
+  not_query = simplify_path(f);
 
   DPERROR(sprintf("After simplify_path == not_query:%O", not_query));
 
@@ -1260,7 +1260,7 @@ void got_data(mixed fooid, string s)
 
   switch(-tmp)
   { 
-  case 0:
+   case 0:
     if(this_object()) 
       cache = ({ s });		// More on the way.
     return;
