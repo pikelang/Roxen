@@ -1,6 +1,6 @@
 #ifndef __NT__
 /*
- * $Id: openports.pike,v 1.10 1998/04/29 03:57:55 grubba Exp $
+ * $Id: openports.pike,v 1.11 1998/05/10 22:57:01 grubba Exp $
  */
 
 inherit "wizard";
@@ -175,7 +175,7 @@ mixed page_0(object id)
   }
 
   // Fool the compiler... (backward compatibility).
-  function fun = roxen->get_configuration_ports;
+  mixed fun = roxen->get_configuration_ports;
 
   foreach(((fun && fun()) || roxen->configuration_ports), object o)
   {
