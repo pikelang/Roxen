@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.18 1997/04/05 01:25:45 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.19 1997/05/28 00:42:28 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -138,11 +138,13 @@ object (Image) draw_config_button(string name, object font, int lm, int rm)
   {
     object s=ruta->select_from(0,0);
     ruta->paste_mask(Image(25,20, dR,dG,dB), s, 0,0);
+    ruta->setpixel(0,0, dR, dG, dB);
   }
   if(rm)
   {
     object s=ruta->select_from(20,18);
     ruta->paste_mask(Image(200,20, dR,dG,dB), s, 0,0);
+    ruta->setpixel(20,18, dR, dG, dB);
   }
   txt=linje=0;
   return ruta->scale(0,15);
@@ -163,10 +165,12 @@ object (Image) draw_unselected_button(string name, object font)
   ruta=ruta->paste_mask(Image(30,20,hR,hG,hB), linje_mask);
   s=ruta->select_from(0,0);
   ruta->paste_mask(Image(40,40,dR,dG,dB), s);
+  ruta->setpixel(0,0, dR, dG, dB);
   linje_mask = linje_mask->mirrory()->color(196,196,196);
   ruta->paste_mask(Image(20,20,0,0,0), linje_mask,txt->xsize()+27,0);
   s=ruta->select_from(txt->xsize()+34,0);
   ruta->paste_mask(Image(400,40,dR,dG,dB), s);
+  ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
   txt=linje=0;
   ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
   ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);

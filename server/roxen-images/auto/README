@@ -1,0 +1,6 @@
+These files are generated automatically by the configuration interface
+if they do not exist. Supplied to speed up loading of configuration pages.
+
+If you remove this directory, no configuration images will be saved, but 
+nothing should break.
+

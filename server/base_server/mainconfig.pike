@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.38 1997/05/26 00:28:16 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.39 1997/05/28 00:42:26 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -819,10 +819,14 @@ string tablist(array(string) nodes, array(string) links, int selected)
   array res = ({});
   for(int i=0; i<sizeof(nodes); i++)
     if(i!=selected)
-      PUSH("<a href=\""+links[i]+"\"><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/unselected/"+replace(nodes[i]," ","%20")+" border=0></a>");
+      PUSH("<a href=\""+links[i]+"\"><img alt=\"_/"+
+	   nodes[i][1..strlen(nodes[i])-2]+"\\__\" src=/auto/unselected/"+
+	   replace(nodes[i]," ","%20")+" border=0></a>");
     else
-      PUSH("<a href=\""+links[i]+"\"><b><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/selected/"+replace(nodes[i]," ","%20")+" border=0></b></a>");
-//  PUSH("<br>");
+      PUSH("<a href=\""+links[i]+"\"><b><img alt=\"_/"+
+	   nodes[i][1..strlen(nodes[i])-2]+"\\__\" src=/auto/selected/"+
+	   replace(nodes[i]," ","%20")+" border=0></b></a>");
+//PUSH("<br>");
   return res*"";
 }
 
@@ -853,16 +857,20 @@ string display_tabular_header(object node)
 {
   string p, s;
   
-  s = extract_almost_top(node) - "/";
-  selected_nodes[s] = node->path(1);
-
   array links = ({
     selected_nodes[tabs[0]]+"?"+(bar++),
     selected_nodes[tabs[1]]+"?"+(bar++),
     selected_nodes[tabs[2]]+"?"+(bar++),
     selected_nodes[tabs[3]]+"?"+(bar++),
   });
-  links[search(tabs,s)]="/"+s+"/"+"?"+(bar++);
+
+  if(node != root)
+  {
+    s = extract_almost_top(node) - "/";
+    selected_nodes[s] = node->path(1);
+
+    links[search(tabs,s)]="/"+s+"/"+"?"+(bar++);
+  }
   return tablist(tab_names, links, search(tabs,s));
 }
 
@@ -889,7 +897,11 @@ mapping auto_image(string in, object id)
   mixed e;
   object i;
 
-  if(r=cache_lookup("config_images", in))  return r;
+  string img_key = "auto/"+replace(in,"/","_")+".gif"-" ";
+  
+  if(e=file_image(img_key))
+    return e;
+  
   if(!sscanf(in, "%s/%s", key, value)) key=in;
 
   switch(key)
@@ -931,12 +943,16 @@ mapping auto_image(string in, object id)
   }
   if(i)
   {
-    i->map_closest(i->select_colors(64)+({trans}));
-    r = http_string_answer(i->togif(@trans),"image/gif");
+    object o = open("roxen-images/"+img_key,"wct");
+    e=i->map_closest(i->select_colors(64)+({trans}))->togif(@trans);
+    i=0;
+    if(o) { o->write(e); o=0; }
+#ifdef DEBUG
+    else {perror("Cannot open file for "+in+"\n");}
+#endif
+    return http_string_answer(e,"image/gif");
   }
-  i=0;
-  cache_set("config_images", in, r);
-  return r;
+  return 0;
 }
 
 
@@ -1004,6 +1020,7 @@ mapping configuration_parse(object id)
       id->variables = ([ ]);
   }
 
+  // Automatically generated image?
   if(sscanf(id->not_query, "/auto/%s", tmp))
     return auto_image(tmp,id) || (["data":"No such image"]);
 
