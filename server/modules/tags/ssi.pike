@@ -38,8 +38,7 @@ void create(object c) {
 	 "commands with.");
 }
 
-string tag_compat_echo(string tag,mapping m,object id,object file,
-			  mapping defines)
+string tag_echo(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("This tag outputs the value of different configuration and "
@@ -51,8 +50,7 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
     else 
-      return id->misc->debug?
-        "Que? You have to select which variable to echo":"";
+      return rxml_error(tag,"You have to select which variable to echo.",id);
   }
 
   if(id->misc->ssi_variables && id->misc->ssi_variables[m->var])
@@ -66,23 +64,23 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
   {
    case "sizefmt":
    case "errmsg":
-    return defines[m->var] || "";
+    return id->misc->defines[m->var] || "";
    case "timefmt":
-    return defines[m->var] || "%c";
+    return id->misc->defines[m->var] || "%c";
     
    case "date_local":
     NOCACHE();
-    return strftime(defines->timefmt || "%c", time(1));
+    return strftime(id->misc->defines->timefmt || "%c", time(1));
 
    case "date_gmt":
     NOCACHE();
-    return strftime(defines->timefmt || "%c", time(1) + localtime(time(1))->timezone);
+    return strftime(id->misc->defines->timefmt || "%c", time(1) + localtime(time(1))->timezone);
       
    case "query_string_unescaped":
     return id->query || "";
 
    case "last_modified":
-     // FIXME: Use defines->timefmt
+     // FIXME: Use id->misc->defines->timefmt
      return make_tag("modified", m+(["ssi":1])); //FIXME: Performance
       
    case "server_software":
@@ -134,76 +132,50 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
       return myenv[m->var];
     }
 
-    return "<i>Unknown variable</i>: '"+m->var+"'";
+    return rxml_error(tag,"Unknown variable ("+m->var+").",id);
   }
 }
 
-string tag_compat_config(string tag,mapping m,object id,object file,
-			 mapping defines)
+string tag_config(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("See the Apache documentation.");
 
   if (m->sizefmt) {
     if ((< "abbrev", "bytes" >)[lower_case(m->sizefmt||"")]) {
-      defines->sizefmt = lower_case(m->sizefmt);
+      id->misc->defines->sizefmt = lower_case(m->sizefmt);
     } else {
-      return(sprintf("Unknown SSI sizefmt:%O", m->sizefmt));
+      return rxml_error(tag,"Unknown SSI sizefmt ("+m->sizefmt+").",id);
     }
   }
   if (m->errmsg) {
     // FIXME: Not used yet. What would it be used for, really?
-    defines->errmsg = m->errmsg;
+    id->misc->defines->errmsg = m->errmsg;
   }
   if (m->timefmt) {
     // now used by echo tag and last modified
-    defines->timefmt = m->timefmt;
+    id->misc->defines->timefmt = m->timefmt;
   }
   return "";
 }
 
-string tag_compat_include(string tag,mapping m,object id,object file,
-			  mapping defines)
+string tag_include(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("This tag is more or less equivalent to the "
             "RXML command \"insert\", so why not use that one instead.");
 
   if(m->virtual) {
-    string s;
-    string f;
-    f = fix_relative(m->virtual, id);
-    id = id->clone_me();
-
-    if(id->scan_for_query)
-      f = id->scan_for_query( f );
-    s = id->conf->try_get_file(f, id);
-
-
-    if(!s) {
-      if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
-	s = id->conf->try_get_file(f[..sizeof(f)-3], id);
-      }
-      if (!s) {
-
-	// Might be a PATH_INFO type URL.
-	array a = id->conf->open_file( f, "r", id );
-	if(a && a[0])
-	{
-	  s = a[0]->read();
-	  if(a[1]->raw)
-	  {
-	    s -= "\r";
-	    if(!sscanf(s, "%*s\n\n%s", s))
-	      sscanf(s, "%*s\n%s", s);
-	  }
-	}
-	if(!s)
-	  return id->misc->debug?"No such file: "+f+"!":"";
-      }
+    string ret=id->conf->api_functions()->read_file[0](id, m->virtual);
+    
+    if(ret=="" && sizeof(m->virtual)>2 && m->virtual[sizeof(m->virtual)-2..]=="--") {
+      ret=id->conf->api_functions()->read_file[0](id, m->virtual[..sizeof(m->virtual)-3]);
     }
 
-    return s;
+    if(ret=="")
+      return rxml_error(tag,"No such file ("+m->virtual+")",id);
+
+    return ret;
   }
 
   if(m->file)
@@ -233,11 +205,10 @@ string tag_compat_include(string tag,mapping m,object id,object file,
 	    "!"):
            ""));
   }
-  return "<!-- Hm? #include what, my dear? -->";
+  return rxml_error(tag, "Hm? #include what, my dear?", id);
 }
 
-string tag_compat_set(string tag,mapping m,object id,object file,
-			  mapping defines)
+string tag_set(string tag, mapping m, object id)
 {
   if(m->var && m->value)
   {
@@ -250,8 +221,7 @@ string tag_compat_set(string tag,mapping m,object id,object file,
   return "";
 }
 
-string tag_compat_fsize(string tag,mapping m,object id,object file,
-			mapping defines)
+string tag_fsize(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("Returns the size of the file specified (as virtual=... or file=...)");
@@ -278,21 +248,20 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
     {
       if(tag == "!--#fsize")
       {
-	if(defines->sizefmt=="bytes")
+	if(id->misc->defines->sizefmt=="bytes")
 	  return (string)s[1];
 	else
 	  return sizetostring(s[1]);
       } else {
-	return strftime(defines->timefmt || "%c", s[3]);
+	return strftime(id->misc->defines->timefmt || "%c", s[3]);
       }
     }
-    return "Error: Cannot stat file";
+    return rxml_error(tag, "Couldn't stat file.", id);
   }
-  return id->misc->debug?"No such file?":"";
+  return rxml_error(tag, "No such file.", id);
 }
 
-string tag_compat_exec(string tag,mapping m,object id,object file,
-		       mapping defines)
+string tag_exec(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("See the Apache documentation. This tag is more or less "
@@ -327,28 +296,21 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
 		   | build_roxen_env_vars(id)
 		   | build_env_vars(id->not_query, id, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
-    } else {
-      return "<b>Execute command support disabled."+
-        (id->misc->debug?
-	"Check \"Main RXML Parser\"/\"SSI support\".":
-	"<!-- Check \"Main RXML Parser\"/\"SSI support\". -->"
-        )+"</b>";
     }
+    else
+      return rxml_error(tag, "Execute command support disabled.", id);
   }
-  return id->misc->debug?
-    "No arguments given to SSI-#exec":
-    "<!-- exec what? -->";
+  return rxml_error(tag, "No arguments given.", id);
 }
-
 
 mapping query_tag_callers() {
   return ([
-    "!--#echo":tag_compat_echo,
-    "!--#exec":tag_compat_exec,
-    "!--#flastmod":tag_compat_fsize,
-    "!--#fsize":tag_compat_fsize, 
-    "!--#set":tag_compat_set, 
-    "!--#include":tag_compat_include, 
-    "!--#config":tag_compat_config
+    "!--#echo":tag_echo,
+    "!--#exec":tag_exec,
+    "!--#flastmod":tag_fsize,
+    "!--#fsize":tag_fsize, 
+    "!--#set":tag_set, 
+    "!--#include":tag_include, 
+    "!--#config":tag_config
   ]);
 }   
