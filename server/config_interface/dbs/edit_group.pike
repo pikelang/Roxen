@@ -19,6 +19,8 @@
   }									\
 } while(0)
 
+#define CU_AUTH id->misc->config_user->auth
+
 string trim_sl( string x )
 {
   while( strlen(x) && x[-1] == '/' )
@@ -36,7 +38,11 @@ string parse( RequestID id )
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
     "<input type=hidden name=group value='&form.group;'/>";
 
-  if( id->variables->action == "delete" )
+  int view_mode;
+  if ( !(CU_AUTH( "Edit Global Variables" )) )
+    view_mode = 1;
+
+  if( id->variables->action == "delete" && !view_mode)
   {
     mixed tmp = delete_group( id->variables->group, id );
     if( stringp( tmp ) )
@@ -46,7 +52,7 @@ string parse( RequestID id )
   }
 
 
-  if( id->variables->lname )
+  if( id->variables->lname && !view_mode)
   {
     if( strlen(id->variables->pattern) )
       id->variables->pattern = "mysql://"+trim_sl(id->variables->pattern)+"/";
@@ -63,19 +69,29 @@ string parse( RequestID id )
   res += "<blockquote><br /><h2>"+c->lname+"</h2>"
     ""+c->comment+"<table>";
 
-  res += "<tr><td><b>Name:</b></td><td> <input size=50 name=lname value='"+
-    Roxen.html_encode_string(c->lname)+"' /></td></tr>";
+  res += "<tr><td><b>Name:</b></td><td> "+
+    (view_mode ? Roxen.html_encode_string(c->lname) :
+     "<input size=50 name=lname value='"+
+     Roxen.html_encode_string(c->lname)+"' />")+
+    "</td></tr>";
   
   res += "<tr><td><b>URL:</b> </td><td> "
-    "mysql://<input size=42 name=pattern value='"+
+    "mysql://"+
+    (view_mode ? Roxen.html_encode_string(trim_sl((c->pattern/"://")[-1]))
+     : "<input size=42 name=pattern value='"+
     Roxen.html_encode_string(trim_sl((c->pattern/"://")[-1]))+
-    "' /></td></tr>";
+    "' />")+"</td></tr>";
   
-  res += "<tr><td valign=top><b>Comment:</b></td><td valign=top> <textarea cols='50' rows=4 name=comment>"+
-    Roxen.html_encode_string(c->comment)+"</textarea></td></tr>";
+  res += "<tr><td valign=top><b>Comment:</b></td><td valign=top> "+
+    (view_mode ? Roxen.html_encode_string(c->comment) :
+     "<textarea cols='50' rows=4 name=comment>"+
+     Roxen.html_encode_string(c->comment)+"</textarea>")+
+    "</td></tr>";
 
 
-  res += "<tr><td></td><td align=right><cf-save /></td></tr>";
+  res += "<tr><td></td><td align=right>"
+    +(view_mode ? "" : "<cf-save />")+
+    "</td></tr>";
   res += "</table>";
 
   res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
@@ -86,7 +102,10 @@ string parse( RequestID id )
   if( sizeof(groups) )
     foreach( groups, string d )
     {
-      res += "<dt><b><a href=browser.pike?db="+d+">"+d+"</a></b>";
+      res += "<dt><b>"+
+	(view_mode ? "" : "<a href=browser.pike?db="+d+">")+d+
+	(view_mode ? "" : "</a>")+
+	"</b>";
       if( string cm = DBManager.module_table_info( d, "" )->comment )
 	res += "<dd>"+cm+"</dd>";
       res += "</dt>\n";
@@ -95,15 +114,18 @@ string parse( RequestID id )
     res += _(0,"(none)");
   res += "</dl>\n";
 
-  string button;
-  if ( sizeof(DBManager.group_dbs(id->variables->group)) )
-    button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
-		     _(0, "Delete group"));
-  else
-    button = sprintf("<a href='%s?group=%s&action=%s'><gbutton>%s</gbutton></a>",
-		     id->not_query, id->variables->group, "delete",
-		     _(0, "Delete group"));
-  res += "<br />"+button;
+  if (!view_mode)
+  {
+    string button;
+    if ( sizeof(DBManager.group_dbs(id->variables->group)) )
+      button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
+		       _(0, "Delete group"));
+    else
+      button = sprintf("<a href='%s?group=%s&action=%s'><gbutton>%s</gbutton></a>",
+		       id->not_query, id->variables->group, "delete",
+		       _(0, "Delete group"));
+    res += "<br />"+button;
+  }
 
   return res + "\n</blockquote></st-page></content></tmpl>";
 }
