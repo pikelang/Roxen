@@ -79,7 +79,9 @@ class ConfigurationSettings
 
   void save()
   {
+#if 0
     werror("Saving settings for "+name+"\n");
+#endif
     settings->set( name, trim_variables(variables) );
   }
 
