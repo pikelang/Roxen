@@ -1,7 +1,7 @@
 // Config tablist look-a-like module. Copyright © 1999, Idonex AB.
 //
 
-constant cvs_version="$Id: configtablist.pike,v 1.5 1999/12/03 14:00:34 nilsson Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.6 1999/12/14 02:22:21 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -20,6 +20,7 @@ void start() {
 RoxenModule rxml_warning_cache;
 void old_rxml_warning(RequestID id, string no, string yes) {
   if(!rxml_warning_cache) rxml_warning_cache=my_configuration()->get_provider("oldRXMLwarning");
+  if(!rxml_warning_cache) return;
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 

@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.1 1999/12/09 07:39:38 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.2 1999/12/14 02:22:21 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -140,6 +140,13 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    }
 }
 
+RoxenModule rxml_warning_cache;
+void old_rxml_warning(RequestID id, string no, string yes) {
+  if(!rxml_warning_cache) rxml_warning_cache=my_configuration()->get_provider("oldRXMLwarning");
+  if(!rxml_warning_cache) return;
+  rxml_warning_cache->old_rxml_warning(id, no, yes);
+}
+
 string tag_fl( string tag, mapping arg, string cont, 
 	       object ma, string id, mapping defines)
 {
@@ -157,7 +164,7 @@ string tag_fl( string tag, mapping arg, string cont,
 
    if (defines) defines[" fl "]=m;
 
-   ma->conf->api_functions()->old_rxml_warning[0](ma, "fl tag ","foldlist");
+   old_rxml_warning(ma, "fl tag ","foldlist");
    return "<dl>"+m->cont+"</dl>";
 }
 

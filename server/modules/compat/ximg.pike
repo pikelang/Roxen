@@ -1,4 +1,4 @@
-constant cvs_version="$Id: ximg.pike,v 1.3 1999/12/03 14:00:35 nilsson Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.4 1999/12/14 02:22:22 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -14,6 +14,7 @@ array register_module()
 RoxenModule rxml_warning_cache;
 void old_rxml_warning(RequestID id, string no, string yes) {
   if(!rxml_warning_cache) rxml_warning_cache=my_configuration()->get_provider("oldRXMLwarning");
+  if(!rxml_warning_cache) return;
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 
