@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.290 2001/04/07 23:45:18 nilsson Exp $
+// $Id: rxml.pike,v 1.291 2001/04/18 04:41:49 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -721,15 +721,19 @@ class UserTagContents
   class Frame
   {
     inherit RXML.Frame;
-    RXML.Frame user_tag_up;
+    constant is_user_tag_contents = 1;
     array do_return()
     {
+      int nest = 1;
       RXML.Frame frame = up;
-      while (frame && !frame->user_tag_contents)
-	frame = frame->user_tag_up || frame->up;
-      if (!frame) parse_error ("No contents to insert.\n");
-      user_tag_up = frame->up;
-      return ({frame->user_tag_contents});
+      for (; frame; frame = frame->up)
+	if (frame->is_user_tag) {
+	  if (!--nest) break;
+	}
+	else if (frame->is_user_tag_contents) nest++;
+      if (!frame)
+	parse_error ("No associated defined tag to get contents from.\n");
+      return ({frame->user_tag_contents || ""});
     }
   }
 }
@@ -741,7 +745,7 @@ class UserTag {
   inherit RXML.Tag;
   string name;
   int flags = 0;
-  RXML.Type content_type = RXML.t_same;
+  RXML.Type content_type = RXML.t_xml;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   string c;
@@ -762,6 +766,7 @@ class UserTag {
     RXML.TagSet additional_tags = user_tag_contents_tag_set;
     mapping vars;
     string scope_name;
+    constant is_user_tag = 1;
     string user_tag_contents;
 
     array do_return(RequestID id) {
@@ -805,6 +810,8 @@ class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  RXML.Type content_type = RXML.t_xml (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -818,7 +825,6 @@ class TagDefine {
     }
 
     array do_return(RequestID id) {
-      result = "";
       string n;
 
       if(n=args->variable) {
