@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.476 2001/08/30 04:09:17 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.477 2001/08/30 14:43:50 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2241,6 +2241,7 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->raw_url=s;
   fake_id->not_query=s;
+  fake_id->method = "GET";
 
   if(!(m = get_file(fake_id,0,!not_internal))) {
     // Might be a PATH_INFO type URL.
