@@ -1,7 +1,6 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.92 1998/02/05 00:59:16 js Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.93 1998/02/05 01:09:55 grubba Exp $";
 //inherit "roxenlib";
-import Image;
 
 inherit "config/draw_things";
 
@@ -37,8 +36,6 @@ multiset changed_port_servers;
 
 class Node {
   inherit "struct/node";
-
-  import Simulate;
 
   mixed original;
   int changed, moredocs;
@@ -1129,13 +1126,13 @@ mapping auto_image(string in, object id)
   object ct;
 
   if (!(ct=my_colortable[key]))
-     ct=my_colortable[key]=colortable(i,256,4,4,4);
+     ct=my_colortable[key]=Image.colortable(i,256,4,4,4);
 //		  colortable(4,4,8,
 //			     ({0,0,0}),({255,255,0}),16,
 //			     ({0,0,0}),({170,170,255}),48,
 //			     )
   object o = open("roxen-images/"+img_key,"wct"); 
-  e=GIF.encode(i,ct);
+  e=Image.GIF.encode(i,ct);
   i=0;
   if(o) { o->write(e); o=0; }
 #ifdef DEBUG
