@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.448 2004/02/17 20:05:18 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.449 2004/02/25 16:47:47 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5713,7 +5713,7 @@ constant tagdoc=([
 </p>
 
 <ex-box><form>
-  <roxen_automatic_charset_variable/>
+  <roxen-automatic-charset-variable/>
   Name: <input name='name'/><br />
   Mail: <input name='mail'/><br />
   <input type='submit'/>
