@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.382 2000/09/30 19:19:49 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.383 2000/10/04 21:29:20 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -183,7 +183,7 @@ array (Priority) allocate_pris()
 private mapping (int:string) log_format = ([]);
 
 // A list of priority objects
-private array (Priority) pri = allocate_pris();
+array (Priority) pri = allocate_pris();
 
 public mapping modules = ([]);
 //! All enabled modules in this site.
