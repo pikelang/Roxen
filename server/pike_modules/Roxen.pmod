@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.169 2004/05/16 21:30:31 mani Exp $
+// $Id: Roxen.pmod,v 1.170 2004/05/16 21:36:54 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1866,8 +1866,13 @@ string fix_relative( string file, RequestID id )
     ;
   else if(file != "" && file[0] == '#')
     file = path + file;
-  else
-    file = dirname(path) + "/" +  file;
+  else {
+    string dir = dirname(path);
+    if(dir=="/")
+      file = "/" + file;
+    else
+      file = dir + "/" + file;
+  }
   return simplify_path(prefix + file);
 }
 
@@ -2879,7 +2884,6 @@ class ScopeRoxen {
   string pike_version=predef::version();
   int ssl_strength=0;
 
-#if constant(SSL)
   void create() {
     ssl_strength=40;
 #if constant(SSL.constants.CIPHER_des)
@@ -2889,7 +2893,6 @@ class ScopeRoxen {
       ssl_strength=168;
 #endif /* !constant(SSL.constants.CIPHER_des) */
   }
-#endif
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
