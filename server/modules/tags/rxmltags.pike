@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.357 2002/03/19 13:26:41 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.358 2002/03/25 16:56:27 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3970,7 +3970,14 @@ class TagComment {
     inherit RXML.Frame;
     int do_iterate;
     array do_enter() {
-      do_iterate = args && args->preparse ? 1 : -1;
+      if (args && args->preparse)
+	do_iterate = 1;
+      else {
+	do_iterate = -1;
+	// Argument existence can be assumed static, so we can set
+	// FLAG_MAY_CACHE_RESULT here.
+	flags |= RXML.FLAG_MAY_CACHE_RESULT;
+      }
       return 0;
     }
     array do_return = ({});
@@ -3979,7 +3986,7 @@ class TagComment {
 
 class TagPIComment {
   inherit TagComment;
-  constant flags = RXML.FLAG_PROC_INSTR;
+  constant flags = RXML.FLAG_PROC_INSTR|RXML.FLAG_MAY_CACHE_RESULT;
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 }
