@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.23 2000/02/29 13:17:24 kuntri Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.24 2000/02/29 20:53:53 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -26,7 +26,7 @@ constant module_doc  ="This module provides an accessed counter, both through th
 
 string status()
 {
-  return sizeof(fton)+" entries in the accessed database.<br>";
+  return sizeof(fton)+" entries in the accessed database.<br />";
 }
 
 void create(Configuration c)
@@ -53,7 +53,8 @@ void create(Configuration c)
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-  "&page.accessed;":#"<desc ent>Generates an access counter that shows how many times the page has been accessed. The <module>Accessed counter</module> module must be added, else the entity won't work.</desc>",
+  "&page.accessed;":#"<desc ent>Generates an access counter that shows how many
+ times the page has been accessed.</desc>",
 
   "accessed":#"<desc tag>Generates an access counter that shows how many
  times the page has been accessed. A file, AccessedDB, in the logs directory is used to
