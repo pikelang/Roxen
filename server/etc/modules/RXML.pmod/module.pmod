@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.257 2001/11/20 17:46:05 mast Exp $
+// $Id: module.pmod,v 1.258 2001/11/21 12:26:47 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6307,7 +6307,7 @@ class VarRef (string scope, string|array(string|int) var,
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
-class VariableChange (static mapping settings)
+class VariableChange (/*static*/ mapping settings)
 // A compiled-in change of some scope variables. Used when caching
 // results.
 {
@@ -6362,13 +6362,41 @@ class VariableChange (static mapping settings)
     return nil;
   }
 
+  void add (VariableChange later_chg)
+  {
+    settings += later_chg->settings;
+  }
+
   mapping(string:mixed) _encode() {return settings;}
   void _decode (mapping(string:mixed) saved) {settings = saved;}
 
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.VariableChange" + OBJ_COUNT;}
+
+  string _sprintf()
+  {
+    string ind = "";
+    foreach (indices (settings), mixed encoded_var) {
+      mixed var;
+      if (stringp (encoded_var)) {
+	var = decode_value (encoded_var);
+	if (arrayp (var)) {
+	  var = map ((array(string)) var, replace, ".", "..") * ".";
+	  if (sizeof (var) == 1)
+	    if (settings[encoded_var]) ind += sprintf (", %O", var);
+	    else ind += sprintf (", del %O", var);
+	  else
+	    if (settings[encoded_var] != nil) ind += sprintf (", %O", var);
+	    else ind += sprintf (", del %O", var);
+	  continue;
+	}
+      }
+      else var = encoded_var;
+      ind += sprintf (", misc %O", var);
+    }
+    return "RXML.VariableChange(" + ind[2..] + ")" + OBJ_COUNT;
+  }
 }
 
 class CompiledError
@@ -6894,6 +6922,7 @@ class PCode
       length = 0;
       for (int pos = 0; pos < max; pos++) {
 	mixed item = exec[pos];
+
       process_entry: {
 	  if (objectp (item))
 	    if (item->is_RXML_p_code_frame) {
@@ -6905,15 +6934,40 @@ class PCode
 	      break process_entry;
 	    else if (item == nil)
 	      continue;
+
 	  int end = pos + 1;
-	  while (end < max &&
-		 (!objectp (exec[end]) || !exec[end]->is_RXML_p_code_entry))
+	  VariableChange var_chg = 0;
+	  while (end < max) {
+	    item = exec[end];
+	    if (objectp (item))
+	      if (item->is_RXML_VariableChange) {
+		// Try to compact VariableChange entries separated by
+		// constants.
+		if (var_chg) var_chg->add (item);
+		else var_chg = item;
+		exec[end] = nil; // Ignore in the `+ below.
+	      }
+	      else if (var_chg && item != nil)
+		// Do not allow a VariableChange to switch places with
+		// any object value, since it might look at variables
+		// when it's actually used.
+		break;
+	      else if (item->is_RXML_p_code_entry)
+		break;
 	    end++;
-	  if (pos < --end) {
+	  }
+
+	  if (pos + !!var_chg < --end) {
 	    exec[length++] = `+ (@exec[pos..pos = end]);
+	    if (var_chg) exec[length++] = var_chg;
+	    continue;
+	  }
+	  if (var_chg) {
+	    exec[length++] = var_chg;
 	    continue;
 	  }
 	}
+
 	exec[length++] = exec[pos];
       }
     }
@@ -6932,6 +6986,8 @@ class PCode
     array parts;
     int ppos = 0;
     int update_count = ctx->state_updated;
+
+    TAG_DEBUG (ctx->frame, "eval %s\n", _sprintf ('O', (["verbose": 1])));
 
 #if 0
     // This check doesn't work in some "chicken-and-egg" cases when
@@ -7139,11 +7195,30 @@ class PCode
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf (int flag, mapping args)
   {
-    return tag_set ?
-      sprintf ("RXML.PCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
-      sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
+    string intro = tag_set ?
+      sprintf ("%s(%O,%O", args->this_name || "RXML.PCode", type, tag_set) :
+      sprintf ("%s(%O", args->this_name || "RXML.PCode", type);
+    if (args->verbose)
+      if (!exec || !sizeof (exec))
+	return intro + ": no code)" + OBJ_COUNT;
+      else {
+	array compacted = allocate (sizeof (exec));
+	int ci = 0;
+	for (int i = 0; i < sizeof (exec); i++) {
+	  compacted[ci++] = exec[i];
+	  if (objectp (exec[i]) && exec[i]->is_RXML_p_code_frame) i += 2;
+	}
+	compacted = compacted[..ci - 1];
+	if (sizeof (compacted) == 1)
+	  return sprintf ("%s: %s)%s", intro, format_short (compacted[0]), OBJ_COUNT);
+	else
+	  return sprintf ("%s:\n  %s)%s",
+			  intro, map (compacted, format_short) * ",\n  ", OBJ_COUNT);
+      }
+    else
+      return intro + ")" + OBJ_COUNT;
   }
 
   constant P_CODE_VERSION = 2;
@@ -7263,13 +7338,9 @@ class RenewablePCode
     source = encoded[1];
   }
 
-  string _sprintf()
+  string _sprintf (int flag, mapping args)
   {
-    return tag_set ?
-      sprintf ("RXML.RenewablePCode(%s,%O,%O)%s",
-	       format_short (source), type, tag_set, OBJ_COUNT) :
-      sprintf ("RXML.RenewablePCode(%s,%O)%s",
-	       format_short (source), type, OBJ_COUNT);
+    return ::_sprintf (flag, args + (["this_name": "RXML.RenewablePCode"]));
   }
 }
 
