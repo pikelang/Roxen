@@ -9,5 +9,5 @@ void create (object content_editor)
 
 mapping|string handle (string sub, object id)
 {
-  return "hej";
+  return "Nothing here yet...";
 }

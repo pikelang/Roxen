@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.3 1998/07/16 16:30:11 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.4 1998/07/16 18:57:00 js Exp $";
 
 mapping host_to_id;
 
@@ -145,7 +145,7 @@ string tag_init_home_dir(string tag_name, mapping args, object id)
 {
   if(!args->id)
     return "error";
-  string dir=combine_path(query("searchpath"),args->id);
+  string dir=combine_path(query("searchpath"),(string)(int)args->id);
   // I don't know why, but this feels dangerous...
   Process.popen("rm -rf "+dir);
   mkdir(dir);

@@ -1,6 +1,5 @@
 <define tag=uservar><b>&title;</b> /// <input size=&size; type=&type; name=&name; value='#&name;#'>\\\</define>
 
-
 <formoutput quote='¤'>
   <if variable=save>
     <b>Information saved.</b><p>
@@ -27,4 +26,12 @@
       </form>
     </preparse>
   </preparse>
+  <comment>
+    <hr noshade size=1>
+    ¤customer¤
+    <form method=get>
+      <input type=hidden name=id value=¤customer¤>
+      <input type=submit name=delete value='Delete this customer'>
+    </form>
+    </comment>
 </formoutput>  

@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.3 1998/07/15 22:54:24 js Exp $
+# $Id: db.spec,v 1.4 1998/07/16 18:56:41 js Exp $
 
 drop table customers;
 drop table dns;
@@ -23,6 +23,7 @@ create table dns (
              customer_id             int,
              rr_type		     varchar(8),
              rr_value		     varchar(255)
+	     domain		     varchar(255)
      );
 	    
 create table messages (
