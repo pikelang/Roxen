@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.133 1998/07/06 09:21:59 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.134 1998/07/19 17:57:41 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1137,15 +1137,15 @@ string magic_image(string url, int xs, int ys, string sn,
 
   return
     ("<script>\n"
-     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
-     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
-     "</script>\n"+
+     "  "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
+     "  "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
+     "</script>"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout='top.window.status=\"\";document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
-      " border=0 alt=\""+alt+"\" ></a>\n"));
+      " border=0 alt=\""+alt+"\" ></a>"));
 }
 
 
