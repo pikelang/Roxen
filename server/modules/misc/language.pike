@@ -2,6 +2,8 @@
 inherit "module";
 inherit "roxenlib";
 
+string cvsid = "$Id: language.pike,v 1.6 1997/05/31 22:01:25 grubba Exp $";
+
 #define WATCH(b,a) (perror( sprintf( b + ":%O\n", (a) ) ), (a))
 
 /************** Generic module stuff ***************/

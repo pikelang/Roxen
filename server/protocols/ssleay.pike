@@ -1,4 +1,4 @@
-/* ssleay.pike
+/* $Id: ssleay.pike,v 1.6 1997/05/31 22:01:26 grubba Exp $
  *
  */
 

@@ -1,3 +1,5 @@
+/* $Id: describers.pike,v 1.26 1997/05/31 22:01:19 grubba Exp $ */
+
 #include <module.h>
 int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")

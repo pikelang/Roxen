@@ -1,3 +1,4 @@
+/* $Id: savers.pike,v 1.4 1997/05/31 22:01:21 grubba Exp $ */
 #include <confignode.h>
 #include <module.h>
 

@@ -1,3 +1,4 @@
+/* $Id: node.pike,v 1.4 1997/05/31 22:01:23 grubba Exp $ */
 int folded=1, type;
 mixed data;
 function describer;

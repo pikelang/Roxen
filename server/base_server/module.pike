@@ -1,3 +1,5 @@
+/* $Id: module.pike,v 1.14 1997/05/31 22:01:14 grubba Exp $ */
+
 #include <module.h>
 
 mapping (string:mixed *) variables=([]);

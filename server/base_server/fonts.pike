@@ -1,3 +1,5 @@
+/* $Id: fonts.pike,v 1.6 1997/05/31 22:01:12 grubba Exp $ */
+
 #include <module.h>
 
 import Image;

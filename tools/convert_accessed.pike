@@ -1,5 +1,8 @@
 #!/usr/local/bin/pike
 
+/* $Id: convert_accessed.pike,v 1.4 1997/05/31 22:01:27 grubba Exp $
+ */
+
 #include <process.h>
 #include <stdio.h>
 

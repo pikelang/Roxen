@@ -1,4 +1,5 @@
-// Theese does _not_ use any nodes, instead, they are called from the node
+/* $Id: low_describers.pike,v 1.8 1997/05/31 22:01:20 grubba Exp $ */
+// These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
 

@@ -1,3 +1,5 @@
+/* $Id: proxyauth.pike,v 1.4 1997/05/31 22:01:15 grubba Exp $ */
+
 inherit "http";
 
 mapping proxy_auth_needed(object id)

@@ -1,3 +1,5 @@
+/* $Id: restorable.pike,v 1.4 1997/05/31 22:01:16 grubba Exp $ */
+
 static private array __vars=({});
 
 static private array save_variables()
