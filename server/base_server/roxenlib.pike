@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.85 1998/10/27 00:29:22 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.86 1998/10/27 00:30:36 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -60,7 +60,7 @@ static mapping build_env_vars(string f, object id, string path_info)
     while(1)
     {
       // Fix PATH_TRANSLATED correctly.
-      t2 = roxen->real_file(path_info, id);
+      t2 = id->conf->real_file(path_info, id);
       if(t2)
       {
 	new["PATH_TRANSLATED"] = t2 + t;
