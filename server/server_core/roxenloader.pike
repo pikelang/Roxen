@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.342 2002/10/01 22:43:38 nilsson Exp $
+// $Id: roxenloader.pike,v 1.343 2002/10/01 23:18:57 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.342 2002/10/01 22:43:38 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.343 2002/10/01 23:18:57 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -600,7 +600,7 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 static private object initiate_cache()
 {
   object cache;
-  cache=((program)"base_server/cache")();
+  cache=((program)"server_core/cache")();
 
   add_constant("http_decode_string", _Roxen.http_decode_string );
   add_constant("cache_set",    cache->cache_set);
@@ -728,7 +728,7 @@ Roxen really_load_roxen()
   report_debug("Loading roxen ... \b");
   Roxen res;
   mixed err = catch {
-    res = ((program)"base_server/roxen.pike")();
+    res = ((program)"server_core/roxen.pike")();
   };
   if (err) 
   {
@@ -2224,8 +2224,8 @@ void do_main( int argc, array(string) argv )
 
   // Load prototypes (after the master is replaces, thus making it
   // possible to dump them to a .o file (in the mysql))
-  object prototypes = (object)"base_server/prototypes.pike";
-  dump( "base_server/prototypes.pike", object_program( prototypes ) );
+  object prototypes = (object)"server_core/prototypes.pike";
+  dump( "server_core/prototypes.pike", object_program( prototypes ) );
   
   add_constant("Prototypes",    prototypes);
   add_constant("Protocol",      prototypes->Protocol );

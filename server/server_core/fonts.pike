@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.86 2002/07/17 17:33:06 nilsson Exp $
+// $Id: fonts.pike,v 1.87 2002/10/01 23:18:57 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -392,7 +392,7 @@ static void create()
 {
   int h = gethrtime();
   // Must have this _before_ the add_contant()s
-  roxen.dump( "base_server/fonts.pike", object_program(this_object()) );
+  roxen.dump( "server_core/fonts.pike", object_program(this_object()) );
   add_constant( "FontHandler", FontHandler );
   add_constant( "Font", Font );
   add_constant("get_font", get_font);

@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>swe</language>
-<file>../base_server/wizard.pike</file>
+<file>../server_core/wizard.pike</file>
 
 <str id="16">
 <o>Remove</o>

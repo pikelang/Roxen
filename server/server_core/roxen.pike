@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.821 2002/10/01 22:19:53 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.822 2002/10/01 23:18:57 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -144,7 +144,7 @@ static class Privs
   static private string dbt(array t)
   {
     if(!arrayp(t) || (sizeof(t)<2)) return "";
-    return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
+    return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"server_core/")+":"+t[1]+"\n";
   }
 
 #ifdef THREADS
@@ -2207,7 +2207,7 @@ class ImageCache
 
   string documentation(void|string tag_n_args)
   {
-    string doc = Stdio.read_file("base_server/image_cache.xml");
+    string doc = Stdio.read_file("server_core/image_cache.xml");
     if(!doc) return "";
     if(!tag_n_args)
       return Parser.HTML()->add_container("ex", "")->
@@ -3579,7 +3579,7 @@ void create()
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
-//   add_constant( "DBManager", ((object)"base_server/dbs.pike") );
+//   add_constant( "DBManager", ((object)"server_core/dbs.pike") );
 
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
@@ -3595,19 +3595,19 @@ void create()
   // Already loaded. No delayed dump possible.
   dump( "data/roxen_master.pike" );
   dump( "pike_modules/Roxen.pmod" );
-  dump( "base_server/admin_userdb.pike" );
-  dump( "base_server/disk_cache.pike" );
-  dump( "base_server/roxen.pike" );
-  dump( "base_server/basic_defvar.pike" );
-  dump( "base_server/newdecode.pike" );
-  dump( "base_server/read_config.pike" );
-  dump( "base_server/global_variables.pike" );
-  dump( "base_server/module_support.pike" );
-  dump( "base_server/socket.pike" );
-  dump( "base_server/cache.pike" );
-  dump( "base_server/supports.pike" );
-  dump( "base_server/hosts.pike");
-  dump( "base_server/language.pike");
+  dump( "server_core/admin_userdb.pike" );
+  dump( "server_core/disk_cache.pike" );
+  dump( "server_core/roxen.pike" );
+  dump( "server_core/basic_defvar.pike" );
+  dump( "server_core/newdecode.pike" );
+  dump( "server_core/read_config.pike" );
+  dump( "server_core/global_variables.pike" );
+  dump( "server_core/module_support.pike" );
+  dump( "server_core/socket.pike" );
+  dump( "server_core/cache.pike" );
+  dump( "server_core/supports.pike" );
+  dump( "server_core/hosts.pike");
+  dump( "server_core/language.pike");
 
 #ifndef __NT__
   if(!getuid())
@@ -3619,10 +3619,10 @@ void create()
     });
 
 
-  DDUMP( "base_server/roxenlib.pike");
+  DDUMP( "server_core/roxenlib.pike");
   DDUMP( "pike_modules/Dims.pmod");
   DDUMP( "admin_interface/boxes/Box.pmod" );
-  dump( "base_server/html.pike");
+  dump( "server_core/html.pike");
 
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
@@ -3637,8 +3637,8 @@ void create()
 
 //int s = gethrtime();
   _configuration = (program)"configuration";
-  dump( "base_server/configuration.pike" );
-  dump( "base_server/rxmlhelp.pike" );
+  dump( "server_core/configuration.pike" );
+  dump( "server_core/rxmlhelp.pike" );
 
   // Override the one from prototypes.pike
   add_constant( "Configuration", _configuration );
@@ -4196,13 +4196,13 @@ int main(int argc, array tmp)
     ( 0, "local", "compiled_formats",
       "Compiled and cached log and security pattern code. ");
   
-  slowpipe = ((program)"base_server/slowpipe");
-  fastpipe = ((program)"base_server/fastpipe");
+  slowpipe = ((program)"server_core/slowpipe");
+  fastpipe = ((program)"server_core/fastpipe");
   dump( "pike_modules/DBManager.pmod" );
   dump( "pike_modules/VFS.pmod" );
-  dump( "base_server/slowpipe.pike" );
-  dump( "base_server/fastpipe.pike" );
-  dump( "base_server/throttler.pike" );
+  dump( "server_core/slowpipe.pike" );
+  dump( "server_core/fastpipe.pike" );
+  dump( "server_core/throttler.pike" );
 
   if (!has_value (compat_levels, __roxen_version__))
     report_debug ("Warning: The current version %s does not exist in "
@@ -4225,10 +4225,10 @@ int main(int argc, array tmp)
 	   -({"Language.pike", "Schedule.pike"}), string f )
     DDUMP( "pike_modules/Variable.pmod/"+f );
   
-  DDUMP(  "base_server/state.pike" );
-  DDUMP(  "base_server/wizard.pike" );
-  DDUMP(  "base_server/module.pike" );
-  DDUMP(  "base_server/throttler.pike" );
+  DDUMP(  "server_core/state.pike" );
+  DDUMP(  "server_core/wizard.pike" );
+  DDUMP(  "server_core/module.pike" );
+  DDUMP(  "server_core/throttler.pike" );
 
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
@@ -4261,9 +4261,8 @@ int main(int argc, array tmp)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
-  fonts = ((program)"base_server/fonts.pike")();
+  fonts = ((program)"server_core/fonts.pike")();
 
-  DDUMP( "languages/abstract.pike" );
   initiate_languages(query("locale"));
 
   set_locale();

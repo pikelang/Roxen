@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.380 2002/07/17 17:57:22 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.381 2002/10/01 23:19:36 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1860,7 +1860,7 @@ void adjust_for_config_path( string p )
 string url_base()
 // See the RequestID class for doc.
 {
-  // Note: Code duplication in base_server/prototypes.pike.
+  // Note: Code duplication in server_core/prototypes.pike.
 
   if (!cached_url_base) {
     // First look at the host header in the request.
