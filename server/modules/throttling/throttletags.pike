@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.8 2000/04/14 22:30:31 kuntri Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.9 2000/04/24 22:40:29 kuntri Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -25,8 +25,35 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["throttle":#"<desc tag><short>This tag determines a request's allocated bandwidth.</short></desc>
 
-<attr name=''>
+<attr name='not'>
+Disables all and any throttling for the current request. Implies the
+'final' arg.
+</attr>
 
+<attr name='add' value='rate'>
+Adds 'rate' bytes/sec to the current rate for the current request.
+</attr>
+
+<attr name='subtract' value='rate'>
+Subtracts 'rate' bytes/sec from the current rate for the current
+request.
+</attr>
+
+<attr name='multiply' value='float'>
+Multiplies this requests' bandwidth by 'float'.
+</attr>
+
+<attr name='divide' value='float'>
+Divides this requests' bandwidth by 'float'.
+</attr>
+
+<attr name='rate' value='value'>
+Sets this request's bandwidth to 'value'.
+</attr>
+
+<attr name='final' required>
+No subsequent modifications will be done to this request's bandwidth
+after the current one.
 </attr>",
 
 ]);
