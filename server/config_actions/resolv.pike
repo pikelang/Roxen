@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.11 1998/03/06 15:17:54 grubba Exp $
+ * $Id: resolv.pike,v 1.12 1998/03/17 16:02:48 grubba Exp $
  */
 
 inherit "wizard";
@@ -85,9 +85,9 @@ void trace_leave_table(string desc)
   if(level>1) {font="<font size=-1>";} 
   resolv += ("</td></tr></table><br>"+font+
 #if efun(gethrtime)
-	     "Time: "+sprintf("%.5f",delay/1000000.0)
+	     "Time: "+sprintf("%.5f",delay/1000000.0)+
 #endif
-	     +"<br>"+desc+efont)+"</td></tr>";
+	     "<br>"+desc+efont)+"</td></tr>";
 }
 
 string page_0(object id)
