@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.222 1998/07/18 19:54:54 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.223 1998/07/20 08:46:04 noring Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -26,6 +26,14 @@ inherit "language";
 constant pipe = (program)"smartpipe";
 #else
 constant pipe = Pipe.pipe;
+#endif
+
+/* Pike 0.5 does not have _exit. */
+#if !constant(_exit)
+void _exit(int n)
+{
+  kill(getpid(), 9);
+}
 #endif
 
 // This is the real Roxen version. It should be changed before each
