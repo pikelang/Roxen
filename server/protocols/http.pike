@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.237 2001/02/01 03:16:21 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.238 2001/02/24 19:57:14 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -656,7 +656,6 @@ private int parse_got()
     }
     if(!remoteaddr) {
       REQUEST_WERR("HTTP: parse_request(): No remote address.");
-      end();
       return 2;
     }
   }
