@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.169 1999/05/09 07:16:34 neotron Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.170 1999/05/19 09:33:26 peter Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1607,6 +1607,18 @@ string tag_cache(string tag, mapping args, string contents, object id)
 #undef HASH
 }
 
+string tag_fsize(string tag, mapping args, object id)
+{
+  array s;
+  catch
+  {
+    id->conf->stat_file( fix_relative( args->file, id ), id );
+    return (string)s[1];
+  };
+  if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
+    return (string)strlen(s);
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -1644,6 +1656,7 @@ mapping query_tag_callers()
 	    "user":tag_user,
  	    "quote":tag_quote,
 	    "echo":tag_echo,           
+	    "fsize":tag_fsize,           
 	    "!--#echo":tag_compat_echo,           /* These commands are */
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */
