@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.61 2002/01/14 13:48:51 grubba Exp $
+// $Id: read_config.pike,v 1.62 2002/03/26 16:20:24 tomas Exp $
 
 #include <module.h>
 
@@ -46,19 +46,25 @@ array(string) list_all_configurations()
 
 
 mapping call_outs = ([]);
+Thread.Mutex call_outs_mutex = Thread.Mutex();
+int counter = 0;
 void save_it(string cl, mapping data)
 {
+  Thread.MutexKey lock = call_outs_mutex->lock();
   if( call_outs[ cl ] )
-    remove_call_out( call_outs[ cl ][ 0 ] );
+    remove_call_out( call_outs[ cl ]->callout );
   data = COPY(data);
-  call_outs[ cl ] = ({call_out( really_save_it, 0.1, cl, data ), data});
+  counter++;
+  call_outs[ cl ] = ([ "callout" : call_out( really_save_it, 0.1,
+                                             cl, data, counter ),
+                       "data" : data,
+                       "counter" : counter ]);
 }
 
-void really_save_it( string cl, mapping data )
+void really_save_it( string cl, mapping data, int counter )
 {
   Stdio.File fd;
   string f, new;
-  m_delete( call_outs, cl );
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
@@ -128,6 +134,23 @@ void really_save_it( string cl, mapping data )
 	      " (" + strerror (errno()) + ")!\n");
       error(msg);
     }
+
+    Thread.MutexKey lock = call_outs_mutex->lock();
+    if( call_outs[ cl ] )
+    {
+      // Check if it's my entry in call_outs
+      if (call_outs[ cl ]->counter == counter)
+        m_delete( call_outs, cl );
+
+#ifdef DEBUG_CONFIG
+      report_debug("CONFIG: call_outs=%O\n",
+                   mkmapping(indices(call_outs), values(call_outs)->counter));
+#endif
+    }
+
+#ifdef DEBUG_CONFIG
+    report_debug("CONFIG: Writing configuration file for cl "+cl+" DONE.\n");
+#endif
     return;
   };
   if( !file_stat( f ) ) // Oups. Gone.
@@ -157,7 +180,7 @@ Stat config_is_modified(string cl)
 mapping read_it(string cl)
 {
   if (call_outs[cl])
-    return call_outs[cl][1];
+    return call_outs[cl]->data;
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
