@@ -16,13 +16,14 @@
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
     <CustomAction Id="CreatePikeLocation" Script="vbscript"
-      Execute="immediate">
-      Dim fso, tf, serverdir
-      Set fso = CreateObject("Scripting.FileSystemObject")
-      Set serverdir = Session.Property("SERVERDIR")
-      Set tf = fso.CreateTextFile(serverdir &amp; "\pikelocation,txt", True)
-      tf.WriteLine(serverdir &amp; "\pike\bin\pike") 
-      tf.Close
+      Execute="deferred">
+      Dim fso, tf, serverdir
+      Set fso = CreateObject("Scripting.FileSystemObject")
+      Set serverdir = Session.Property("SERVERDIR")
+      Set tf = fso.CreateTextFile(serverdir &amp; "pikelocation,txt", True)
+      tf.WriteLine(serverdir &amp; "pike\bin\pike")
+      tf.Close
+      
     </CustomAction>
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
