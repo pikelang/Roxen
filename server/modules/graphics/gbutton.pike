@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.100 2004/05/22 19:30:23 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.101 2004/05/24 21:32:17 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -845,13 +845,6 @@ class ButtonFrame {
     
     if( fi ) {
       new_args->stat = get_file_stat( fi, id );
-#if constant(Sitebuilder)
-      //  The file we called get_file_stat() on above may be a SiteBuilder
-      //  file. If so we need to extend the argument data with e.g.
-      //  current language fork.
-      if (Sitebuilder.sb_prepare_imagecache)
-	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
-#endif
     }
 
     new_args->quant = args->quant || 128;
