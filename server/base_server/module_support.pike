@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.100 2001/08/23 19:30:27 mast Exp $
+// $Id: module_support.pike,v 1.101 2001/08/23 22:21:35 per Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -172,6 +172,7 @@ class FakeModuleInfo( string sname )
   class NotAModule
   {
     inherit BasicModule;
+    constant not_a_module = 1;
     array register_module()
     {
       return ({
@@ -231,6 +232,7 @@ class ModuleInfo( string sname, string filename )
   static class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
   {
     inherit BasicModule;
+    constant not_a_module = 1;
 
     string get_compile_errors()
     {
