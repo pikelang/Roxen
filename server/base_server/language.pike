@@ -2,7 +2,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.20 1999/12/28 00:24:01 nilsson Exp $
+ * $Id: language.pike,v 1.21 2000/01/10 09:05:55 nilsson Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -48,6 +48,7 @@ void initiate_languages()
                                   "date":l->date,
                                   "day":l->day,
                                   "number":l->number,
+				  "language":l->language
 			       ]);
 	  }
 	} 
