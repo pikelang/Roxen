@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.16 2001/09/21 15:58:08 jhs Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.17 2002/06/14 10:21:57 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -17,7 +17,7 @@ inherit "module";
 // Some defines for the translation system
 // 
 //<locale-token project="mod_fnord">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_fnord",X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("mod_fnord",X,Y)
 // end of the locale related stuff
 
 // Documentation:
@@ -79,18 +79,20 @@ string simpletag_fnord(string tag_name, mapping arguments, string contents,
     return contents;
   if (arguments->alt)
     return arguments->alt;
+  if (arguments["show-fnord"])
+    return LOCALE(5, "FNORD");
   return "";
 }
 
 
 // Some constants that are needed to register the module in the RXML parser.
 constant module_type = MODULE_TAG;
-LocaleString module_name = LOCALE(1,"Fnord!");
-LocaleString module_doc  =
-  LOCALE(2,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
-	 "to make things invisible unless the \"fnord\" prestate is present."
-	 "<p>This module is here as an example of how to write a "
-	 "very simple RXML-parsing module.</p>" );
+constant module_name = "Fnord!";
+constant module_doc  =
+  ("Adds an extra container tag, &lt;fnord&gt; that's supposed "
+   "to make things invisible unless the \"fnord\" prestate is present."
+   "<p>This module is here as an example of how to write a "
+   "very simple RXML-parsing module.</p>" );
 
 
 // Last, but not least, we want a documentation that can be integrated in the
