@@ -1,3 +1,6 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2001, Roxen IS.
+
 #if constant(REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)

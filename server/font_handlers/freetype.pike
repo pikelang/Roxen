@@ -1,3 +1,6 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2001, Roxen IS.
+
 #if constant(Image.FreeType.Face)
 constant name = "FreeType fonts";
 constant doc = "Freetype 2.0 font loader. Uses freetype to render text from, among other formats, TrueType, OpenType and Postscript Type1 fonts.";

@@ -1,10 +1,13 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2001, Roxen IS.
+
 #include <config.h>
 #if constant(Image.FreeType.Face)
 inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.12 2001/09/03 16:32:04 per Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.13 2001/09/25 22:54:42 nilsson Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
