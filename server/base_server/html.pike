@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: html.pike,v 1.13 2001/02/17 15:31:58 nilsson Exp $
+// $Id: html.pike,v 1.14 2001/04/27 13:23:48 norlin Exp $
 
 #pragma strict_types
 
@@ -109,7 +109,7 @@ string select(string name, array(string)|array(array(string)) choices,
 		  void|string selected) {
   string ret = "<select name=\"" + name + "\">\n";
 
-  if(arrayp(choices[0])) {
+  if(sizeof(choices) && arrayp(choices[0])) {
     foreach([array(array(string))]choices, array(string) value)
       ret += "<option value=\"" + value[0] + "\"" +
 	(value[0]==selected?" selected=\"selected\"":"") +
