@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.48 1999/04/30 11:30:21 js Exp $
+/* $Id: ssl3.pike,v 1.49 1999/05/06 01:04:04 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -328,14 +328,12 @@ static void write_more_file()
   }
 }
 
-#if 1
 void send_result(mapping|void result)
 {
   array err;
   int tmp;
   mapping heads;
   string head_string;
-  object thiso = this_object();
 
   if (result) {
     file = result;
@@ -348,7 +346,7 @@ void send_result(mapping|void result)
     else
       file=http_low_answer(404,
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),
-					      thiso),
+					      this_object()),
 				   ({"$File", "$Me"}), 
 				   ({not_query,
 				       conf->query("MyWorldLocation")})));
@@ -440,12 +438,6 @@ void send_result(mapping|void result)
     file->file = 0;
   }
 
-  
-  if(conf) {
-    conf->sent+=(file->len>0 ? file->len : 1000);
-    conf->log(file, thiso);
-  }
-
   file->head = head_string;
   to_send = copy_value(file);
 
@@ -459,6 +451,7 @@ void send_result(mapping|void result)
       to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
     }
   } else {
+#ifdef  SSL3_CLOSE_BUG_STILL_EXISTS
     if (my_fd->is_closed_) {
 #ifdef SSL3_CLOSE_DEBUG
       report_error(sprintf("SSL3: my_fd was closed from\n"
@@ -470,9 +463,20 @@ void send_result(mapping|void result)
     } else {
       my_fd->set_nonblocking(0, write_more, end);
     }
+#else
+    my_fd->set_nonblocking(0, write_more, end);
+#endif
   }
+
+  if(conf) {
+    conf->sent+=(file->len>0 ? file->len : 1000);
+    conf->log(file, this_object());
+  }
+
+#ifndef SSL3_CLOSE_BUG_STILL_EXISTS
+  destruct_my_fd();
+#endif
 }
-#endif /* 1 */
 
 class fallback_redirect_request {
   string in = "";
@@ -628,25 +632,31 @@ class roxen_sslfile {
   object raw_file;
   object config;
 
+#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
   constant no_destruct=1; /* Kludge to avoid http.pike destructing us */
 
   mixed is_closed_;  /* Used for checking if the conection has been closed. */
 
-#if 0
   int leave_me_alone; /* If this is set, don't let
 		       * the ssl-code shut down the connection. */
+#endif
+
+  int selfdestruct;
 
   void die(int status)
   {
 #ifdef SSL3_DEBUG
     roxen_perror(sprintf("SSL3:roxen_sslfile::die(%d)\n", status));
 #endif /* SSL3_DEBUG */
-//    werror("ssl3.pike, roxen_ssl_file: die called\n");
+#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
     if (!leave_me_alone)
-      ssl::die(status);
-  }
 #endif
+      ssl::die(status);
 
+    if (selfdestruct) destruct();
+  }
+
+#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
   void close()
   {
     ssl::close();
@@ -656,7 +666,8 @@ class roxen_sslfile {
     is_closed_ = 1;
 #endif /* SS3_CLOSE_DEBUG */
   }
-  
+#endif
+
   void create(object f, object ctx, object id)
   {
 #ifdef SSL3_DEBUG
@@ -667,6 +678,25 @@ class roxen_sslfile {
     ssl::create(f, ctx);
   }
 }
+
+#ifndef SSL3_CLOSE_BUG_STILL_EXISTS
+private object my_fd_for_destruct; // Used to keep my_fd around for destruct_my_fd().
+
+void destruct_my_fd()
+{
+  catch {
+    // When the request disappear there's noone else interested in
+    // my_fd, so it should destruct itself asap.
+    my_fd_for_destruct->selfdestruct = 1;
+    if (my_fd_for_destruct->is_closed) destruct (my_fd);
+  };
+}
+
+void destroy()
+{
+  destruct_my_fd();
+}
+#endif
 
 void create(object f, object c)
 {
@@ -692,7 +722,7 @@ void create(object f, object c)
       roxen_perror("ssl3.pike: No SSL context!\n");
       throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
     }
-    my_fd = roxen_sslfile(f, ctx, c);
+    my_fd_for_destruct = my_fd = roxen_sslfile(f, ctx, c);
     if(my_fd->set_alert_callback)
       my_fd->set_alert_callback(http_fallback);
     my_fd->set_accept_callback(ssl_accept_callback);
