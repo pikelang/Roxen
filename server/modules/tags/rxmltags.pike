@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.120 2000/05/05 15:56:31 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.121 2000/05/09 11:22:45 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1591,6 +1591,12 @@ documentation for that module.</desc>",
 
 "autoformat":#"<desc cont><short hide>
  Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
+
+<ex><autoformat>
+It is almost like
+using the pre tag.
+</autoformat></ex>
+
 </desc>
 
 <attr name=nobr>
@@ -1599,6 +1605,11 @@ documentation for that module.</desc>",
 
 <attr name=p>
  Replace double newlines with <tag>p</tag>:s.
+<ex><autoformat p=''>
+It is almost like
+
+using the pre tag.
+</autoformat></ex>
 </attr>
 
 <attr name=class value=string>
@@ -1914,12 +1925,32 @@ Pike-script or Roxen module.
 </desc>
 
 <attr name=quote>
- Instead of replacing \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
+ Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
  and \"&amp;gt;\".
+
+<ex><doc quote=''>
+<table>
+ <tr>
+    <td> First cell </td>
+    <td> Second cell </td>
+ </tr>
+</table>
+</doc>
+</ex>
+
 </attr>
 
 <attr name=pre>
  The result is encapsulated within a <tag>pre</tag> container.
+<ex><doc pre=''>
+{table}
+ {tr}
+    {td} First cell {/td}
+    {td} Second cell {/td}
+ /tr}
+{/table}
+</doc>
+</ex>
 </attr>
 
 <attr name=class value=string>
@@ -2150,6 +2181,12 @@ Pike-script or Roxen module.
 
 <attr name=separator value=string>
  The separator used to separate the messages, by default newline.
+
+<ex><random separator=#>
+Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
+</random>
+</ex>
+
 </attr>",
 
 "recursive-output":#"<desc cont>
@@ -2507,7 +2544,7 @@ Sets a variable.</short>
 
 <attr name=email>
  Only print the e-mail address of the user, with no link.
- <ex>Email: <user name='kuntri' email=''/></ex>
+ <ex type='box'>Email: <user name='foo' email=''/></ex>
 </attr>
 
 <attr name=link>
@@ -2517,7 +2554,7 @@ Sets a variable.</short>
 <attr name=name>
  The login name of the user. If no other attributes are specified, the
  user's realname and email including links will be inserted.
-<ex><user name='kuntri'/></ex>
+<ex type='box'><user name='foo'/></ex>
 </attr>
 
 <attr name=nolink>
@@ -2530,7 +2567,7 @@ Sets a variable.</short>
 
 <attr name=realname>
  Only print the full name of the user, with no link.
-<ex><user name='kuntri' realname=''/></ex>
+<ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
 "if#expr":#"<desc plugin>
