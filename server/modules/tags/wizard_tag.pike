@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.13 1998/08/05 14:38:54 grubba Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.14 1998/08/17 04:24:00 peter Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -41,16 +41,16 @@ object old_wizard = 0;
 string tag_wizard(string t, mapping args, string contents, object id,
 		  object file, mapping defines)
 {
-  if(!defines->line)
-    defines->line=-1;
+  if(!id->misc->line)
+    id->misc->line=-1;
   mapping f = ([ "pages":({}) ]);
   string pike = ("inherit \"wizard\";\n" +
 #if (__VERSION__ >= 0.6)
-		 sprintf("# "+defines->line+" %O\n"
+		 sprintf("# "+id->misc->line+" %O\n"
 			 "string name = %O;\n",
 			 id->not_query, (args->name||"unnamed"))
 #else
-		 "# "+defines->line+" \""+id->not_query+"\"\n"
+		 "# "+id->misc->line+" \""+id->not_query+"\"\n"
 		 "string name=\""+(args->name||"unnamed") + "\";\n"
 #endif /* __VERSION__ >= 0.6 */
 		 );
@@ -58,13 +58,13 @@ string tag_wizard(string t, mapping args, string contents, object id,
   foreach(glob("*-label", indices(args)), string a)
   {
 #if __VERSION__ >= 0.6
-    pike += sprintf("# "+defines->line+" %O\n",
+    pike += sprintf("# "+id->misc->line+" %O\n",
 		    id->not_query);
     pike += sprintf("  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
 					({"","","",""}))+ 
 		    " = %O;\n", args[a]);
 #else
-    pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
+    pike += ("# "+id->misc->line+" \""+id->not_query+"\"\n");
     pike += "  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
 				({"","","",""}))+ 
       " = \""+replace(args[a], ({"\"","\n","\r", "\\"}), 
@@ -76,7 +76,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
   if(args->ok)
   {
 #if __VERSION__ >= 0.6
-    pike += sprintf("# "+defines->line+" %O\n", id->not_query);
+    pike += sprintf("# "+id->misc->line+" %O\n", id->not_query);
     pike += sprintf("mixed wizard_done(object id)\n"
 		    "{\n"
 		    "  id->not_query = %O;\n\""+
@@ -84,7 +84,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		    "}\n\n",
 		    fix_relative(args->ok, id));
 #else
-    pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
+    pike += ("# "+id->misc->line+" \""+id->not_query+"\"\n");
     pike += ("mixed wizard_done(object id)\n"
 	     "{\n"
 	     "  id->not_query = \""+
@@ -99,7 +99,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		   ([]),
 		   ([ "page":internal_page,
 		      "done":internal_done ]), 
-		   (int)defines->line,f);
+		   (int)id->misc->line,f);
   if (f->done && !args->ok) {
 #if __VERSION__ >= 0.6
     pike += sprintf("mixed wizard_done(object id)\n"

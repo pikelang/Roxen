@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.130 1998/08/10 21:39:17 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.131 1998/08/17 04:23:58 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -386,7 +386,7 @@ string call_tag(string tag, mapping args, int line, int i,
 		object client)
 {
   string|function rf = real_tag_callers[tag][i];
-  defines->line = (string)line;
+  id->misc->line = (string)line;
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
   {
     TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
@@ -414,7 +414,7 @@ string call_container(string tag, mapping args, string contents, int line,
 		      object id, object file, mapping defines,
 		      object client)
 {
-  defines->line = (string)line;
+  id->misc->line = (string)line;
   string|function rf = real_container_callers[tag][i];
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
   {
@@ -841,7 +841,7 @@ string tag_set( string tag, mapping m, object id )
       m_delete( id->variables, m->variable );
     return("");
   } else if (id->misc->defines) {
-    return("<!-- set (line "+id->misc->defines->line+"): variable not specified -->");
+    return("<!-- set (line "+id->misc->line+"): variable not specified -->");
   } else {
     return("<!-- set: variable not specified -->");
   }
@@ -2437,7 +2437,7 @@ string tag_list_tags( string t, mapping args, object id, object f )
 	res += "<blockquote><table><tr><td>";
 	string tr;
 	catch(tr=call_tag(tag, (["help":"help"]), 
-			  id->misc->defines->line,i,
+			  id->misc->line,i,
 			  id, f, id->misc->defines, id->my_fd ));
 	if(tr) res += tr; else res += "no help";
 	res += "</td></tr></table></blockquote>";
@@ -2456,7 +2456,7 @@ string tag_list_tags( string t, mapping args, object id, object f )
 	res += "<blockquote><table><tr><td>";
 	string tr;
 	catch(tr=call_container(tag, (["help":"help"]), "",
-				id->misc->defines->line,
+				id->misc->line,
 				i, id,f, id->misc->defines, id->my_fd ));
 	if(tr) res += tr; else res += "no help";
 	res += "</td></tr></table></blockquote>";
@@ -2468,7 +2468,7 @@ string tag_list_tags( string t, mapping args, object id, object f )
 
 string tag_line( string t, mapping args, object id)
 {
-  return id->misc->defines->line;
+  return id->misc->line;
 }
 
 string tag_help(string t, mapping args, object id)
