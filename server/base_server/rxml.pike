@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.41 1999/12/07 22:01:54 mast Exp $
+ * $Id: rxml.pike,v 1.42 1999/12/07 22:48:42 grubba Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -378,11 +378,15 @@ string tag_help(string t, mapping args, RequestID id)
       tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>", tag, tag) });
     }
     return out + String.implode_nicely(tag_links);
-  } else if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
-    string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
-    return h;
   } else {
-    return "<h3>No help available for "+help_for+".</h3>";
+    help_for -= "/";
+
+    if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
+      string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
+      return h;
+    } else {
+      return "<h3>No help available for "+help_for+".</h3>";
+    }
   }
 }
 
