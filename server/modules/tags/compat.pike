@@ -22,11 +22,17 @@ string tag_preparse( string tag_name, mapping args, string contents,
 			 parse_rxml( contents, id ) );
 }
 
+string tag_signature(string tag, mapping m, object id, object file,
+		     mapping defines)
+{
+  return "<right><address>"+make_tag("user", m)+"</address></right>";
+}
 
 
 mapping query_tag_callers()
 {
   return ([
+    "signature":tag_signature
   ]);
 }
 

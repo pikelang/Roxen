@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.179 1999/07/24 20:58:30 nilsson Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.180 1999/07/26 13:16:39 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1175,12 +1175,6 @@ string tag_clientname(string tag, mapping m, object id)
   } 
 }
 
-string tag_signature(string tag, mapping m, object id, object file,
-		     mapping defines)
-{
-  return "<right><address>"+tag_user(tag, m, id, file,defines)+"</address></right>";
-}
-
 string tag_user(string tag, mapping m, object id, object file,mapping defines)
 {
   string *u;
@@ -1652,7 +1646,6 @@ mapping query_tag_callers()
 	    "redirect":tag_redirect,
 	    "auth-required":tag_auth_required,
 	    "expire-time":tag_expire_time,
-	    "signature":tag_signature,
 	    "user":tag_user,
  	    "quote":tag_quote,
 	    "echo":tag_echo,           
