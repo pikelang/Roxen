@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.23 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.24 2000/02/14 14:22:38 wellhard Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -134,8 +134,8 @@ string tag_wizard(string t, mapping args, string contents, object id,
 
   if(mappingp(res))
   {
-    defines[" _error"] = res->error;
-    defines[" _extra_heads"] = res->extra_heads;
+    id->misc->defines[" _error"] = res->error;
+    id->misc->defines[" _extra_heads"] = res->extra_heads;
     return res->data||(res->file&&res->file->read())||"";
   }
   return res;
