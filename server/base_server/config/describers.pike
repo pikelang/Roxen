@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.48 1997/09/05 22:34:54 per Exp $ */
+/* $Id: describers.pike,v 1.49 1997/09/10 12:48:49 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -291,8 +291,8 @@ string describe_module_subnode(object node)
 }  
 
 
-#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
-#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/More%20Documentation></a>")
+#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/Less%20Documentation></a>")
 
 string shorten(string in, object node)
 {
