@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.66 1997/10/20 15:17:00 grubba Exp $
+ * $Id: ftp.pike,v 1.67 1997/10/24 23:47:42 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -41,6 +41,14 @@ constant Privs=((program)"privs");
 import Array;
 
 #define perror	roxen_perror
+
+// #define FTP_LS_DEBUG
+
+#ifdef FTP_LS_DEBUG
+#define DWRITE(X)	roxen_perror(X)
+#else /* DEBUG */
+#define DWRITE(X)
+#endif /* DEBUG */
 
 string controlport_addr, dataport_addr, cwd ="/";
 int controlport_port, dataport_port;
@@ -209,6 +217,7 @@ constant decode_mode = ({
 
 string file_ls(array (int) st, string file, int flags)
 {
+  DWRITE(sprintf("file_ls(\"%s\", %08x)\n", file, flags));
   int mode = st[0] & 007777;
   array(string) perm = "----------"/"";
   
@@ -298,16 +307,17 @@ class ls_program {
     }
   }
 
-  string list_files(mapping(string:array(mixed)) files, string dir, int flags)
+  string list_files(mapping(string:array(mixed)) _files, string dir, int flags)
   {
+    DWRITE(sprintf("list_files(\"%s\", 0x%08x)\n", dir, flags));
     int i;
-    array(string) file_order = indices(files);
+    array(string) file_order = indices(_files);
 
     if (!(flags & LS_FLAG_U)) {
       if (flags & LS_FLAG_t) {
 	array(int) times = allocate(sizeof(file_order));
 	for (i=0; i < sizeof(file_order); i++) {
-	  array st = files[file_order[i]];
+	  array st = _files[file_order[i]];
 	  if (st) {
 	    times[i] = st[-4];
 	  } else {
@@ -331,7 +341,7 @@ class ls_program {
     }
     string res = "";
     foreach(file_order, string short) {
-      array st = files[short];
+      array st = _files[short];
       if (st) {
 	if (flags & LS_FLAG_F) {
 	  if (st[1] < 0) {
@@ -369,12 +379,16 @@ class ls_program {
     int query_fd() { return -1; }
     void write_out()
     {
+      DWRITE("list_stream->write_out()\n");
       while (!data->is_empty()) {
 	string block = data->get();
 	if (block) {
+	  DWRITE(sprintf("list_stream->write_out(): Sending \"%s\"\n",
+			 block));
 	  read_callback(nb_id, block);
 	  sent += sizeof(block);
 	} else {
+	  DWRITE(sprintf("list_stream->write_out(): EOD\n"));
 	  // End of data marker
 	  call_out(close_callback, 0, nb_id);
 	}
@@ -382,6 +396,7 @@ class ls_program {
     }
     void write(string s)
     {
+      DWRITE(sprintf("list_stream->write(\"%O\")\n", (string)s));
       // write 0 to mark end of stream.
       data->put(s && replace(s, "\n", "\r\n"));
       if (read_callback) {
@@ -401,74 +416,92 @@ class ls_program {
     object id;
     void create(object _id)
     {
+      DWRITE("list_stream()\n");
       id = _id;
     }
     void destroy()
     {
+      DWRITE("list_stream() TERMINATING\n");
+      catch { id->ls_session = 0; };
       roxen->log(([ "error": 200, "len": sent ]), id);
     }
-    void close() { destruct(); }
+    void close()
+    {
+      DWRITE("list_stream->close()\n");
+      catch { id->ls_session = 0; };
+      destruct();
+    }
     void set_blocking() {}
   };
 
   object(list_stream) output;
 
-  int|void do_assynch_dir_ls()
+  int|void do_assynch_dir_ls() 
   {
+    DWRITE("do_assynch_dir_ls()\n");
     if (output) {
       if (dir_stack->ptr) {
 	string short = dir_stack->pop();
 	string long = combine_path(id->cwd, short);
-	mapping(string:array(mixed)) dir = id->conf->find_dir_stat(long+"/", id);
+	if ((!sizeof(long)) || (long[-1] != '/')) {
+	  long += "/";
+	}
+	mapping(string:array(mixed)) _dir = id->conf->find_dir_stat(long, id);
+	DWRITE(sprintf("do_assynch_dir_ls(): find_dir_stat(\"%s\") => %O\n",
+		       long, _dir));
 	if ((flags & LS_FLAG_a) &&
 	    (long != "/")) {
-	  if (dir) {
-	    dir[".."] = roxen->stat_file(combine_path(long,"../"), id);
+	  if (_dir) {
+	    _dir[".."] = roxen->stat_file(combine_path(long,"../"), id);
 	  } else {
-	    dir = ([ "..":roxen->stat_file(combine_path(long,"../"), id) ]);
+	    _dir = ([ "..":roxen->stat_file(combine_path(long,"../"), id) ]);
 	  }
 	}
-	string s = "";
-	if (dir && sizeof(dir)) {
+	string s = "\n";
+	if (_dir && sizeof(_dir)) {
 	  if (!(flags & LS_FLAG_A)) {
-	    foreach(indices(dir), string f) {
+	    foreach(indices(_dir), string f) {
 	      if (sizeof(f) && (f[0] == '.')) {
-		m_delete(dir, f);
+		m_delete(_dir, f);
 	      }
 	    }
 	  } else if (!(flags & LS_FLAG_a)) {
-	    foreach(indices(dir), string f) {
+	    foreach(indices(_dir), string f) {
 	      if ((f - ".") == "") {
-		m_delete(dir, f);
+		m_delete(_dir, f);
 	      }
 	    }
 	  }
 	  if (flags & LS_FLAG_R) {
-	    foreach(indices(dir), string f) {
+	    foreach(indices(_dir), string f) {
 	      if (!((<".","..">)[f])) {
-		array(mixed) st = dir[f];
+		array(mixed) st = _dir[f];
 		if (st && (st[1] < 0)) {
-		  m_delete(dir, f);
+		  m_delete(_dir, f);
 		  if (short[-1] != '/') {
 		    f = short + "/" + f;
 		  } else {
 		    f = short + f;
 		  }
-		  dir[f] = st;
+		  _dir[f] = st;
 		  name_directories=1;
 		  dir_stack->push(f);
 		}
 	      }
 	    }
 	  }
-	  if (sizeof(dir)) {
-	    s = list_files(dir, combine_path(id->cwd, short)+"/", flags) || "\n";
+	  if (sizeof(_dir)) {
+	    s = list_files(_dir, combine_path(id->cwd, short)+"/", flags) || "\n";
 	  }
+	} else {
+	  DWRITE("do_assynch_dir_ls(): NO FILES!\n");
 	}
 	if (name_directories) {
 	  s = "\n" + short + ":\n" + s;
 	}
-	output->write(s);
+	if (s != "") {
+	  output->write(s);
+	}
 
 	// Call me again.
 #ifdef THREADS
@@ -484,6 +517,7 @@ class ls_program {
 
   void do_ls(mapping(string:mixed) args)
   {
+    DWRITE("do_ls()\n");
     if (output) {
       foreach(indices(args), string short) {
 	array st = id->my_stat_file(id->not_query =
@@ -506,10 +540,10 @@ class ls_program {
       }
       
       if (sizeof(args)) {
-	output->write(list_files(Array.map(indices(args),
-					   lambda(string s, object id) {
-	  return (({ s, id->my_stat_file(combine_path(id->cwd, s)) }));
-	}, id), id->cwd, flags));
+	foreach(indices(args), string s) {
+	  args[s] = id->my_stat_file(combine_path(id->cwd, s));
+	}
+	output->write(list_files(args, id->cwd, flags));
       }
       int name_directories;
       if ((dir_stack->ptr > 1) || (sizeof(files))) {
@@ -520,7 +554,7 @@ class ls_program {
       // No need to do it asynchronously, we'd just tie up the backend.
       while(do_assynch_dir_ls())
 	;
-#else
+#else /* THREADS */
       call_out(do_assynch_dir_ls, 0);
 #endif /* THREADS */
     }
@@ -528,6 +562,7 @@ class ls_program {
 
   array(string) glob_expand_command_line(string arg)
   {
+    DWRITE(sprintf("glob_expand_command_line(\"%s\")\n", arg));
     array(string|array(string)) args = (replace(arg, "\t", " ")/" ") -
       ({ "" });
     int index;
@@ -617,6 +652,7 @@ class ls_program {
 
   void destroy()
   {
+    DWRITE("ls_program() TERMINATED\n");
     if (output) {
       destruct(output);
     }
@@ -624,6 +660,7 @@ class ls_program {
 
   void create(string arg, object _id)
   {
+    DWRITE(sprintf("ls_program(\"%s\")\n", arg));
     mixed err;
     err = catch {
       id = _id;
