@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.504 2002/03/27 17:48:40 per-bash Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.505 2002/04/09 11:08:58 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2560,7 +2560,7 @@ static int enable_module_batch_msgs;
 
 RoxenModule enable_module( string modname, RoxenModule|void me, 
                            ModuleInfo|void moduleinfo, 
-                           int|void nostart )
+                           int|void nostart, int|void nosave )
 {
   MODULE_LOCK (2);
   int id;
@@ -2789,10 +2789,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if( !enabled_modules[modname+"#"+id] )
   {
     enabled_modules[modname+"#"+id] = 1;
-    store( "EnabledModules", enabled_modules, 1, this_object());
+    if(!nosave)
+      store( "EnabledModules", enabled_modules, 1, this_object());
   }
 
-  if (!has_stored_vars)
+  if (!has_stored_vars && !nosave)
     store (modname + "#" + id, me->query(), 0, this_object());
 
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
