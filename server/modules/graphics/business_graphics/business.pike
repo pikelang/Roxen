@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.30 1997/10/17 22:50:34 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.31 1997/10/17 23:27:27 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -464,6 +464,19 @@ mapping find_file(string f, object id)
     object g=Gz;
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
     res = decode_value(f);  
+    /*FIXME
+Rad 466 returnerar:
+Error: Internal server error.
+
+Format Error: Error in format string, invalid integer.
+find_file(string[467],object) in line 466 in Business_graphics/business.pike
+low_get_file(object,0) in line 1004 in /home/peter/hack/roxen/server/base_server/configuration.pike
+get_file(object,0) in line 1090 in /home/peter/hack/roxen/server/base_server/configuration.pike
+handle_request() in line 814 in protocols/http.pike
+handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen.pike
+
+
+    */
   }
   else
     return 0;
