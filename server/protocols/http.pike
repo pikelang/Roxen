@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.400 2003/04/22 13:48:53 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.401 2003/06/18 11:40:38 tomas Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -87,6 +87,7 @@ mapping (string:mixed)  misc            =
 		}
 #endif // REQUEST_DEBUG
 ]);
+mapping (string:mixed)  connection_misc = ([ ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
 mapping (string:string) client_var      = ([ ]);
@@ -867,6 +868,7 @@ void end(int|void keepit)
     o->host = host;
     o->conf = conf;
     o->pipe = pipe;
+    o->connection_misc = connection_misc;
     o->kept_alive = kept_alive+1;
     MARK_FD("HTTP kept alive");
     object fd = my_fd;
@@ -2187,6 +2189,8 @@ object clone_me()
   c->variables = FakedVariables( c->real_variables );
   c->misc = copy_value( misc );
   c->misc->orig = t;
+
+  c->connection_misc = connection_misc;
 
   c->prestate = prestate;
   c->supports = supports;

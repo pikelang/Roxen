@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.59 2003/04/22 13:48:24 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.60 2003/06/18 11:40:34 tomas Exp $";
 
 class Variable
 {
@@ -565,6 +565,12 @@ class RequestID
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
 
+  mapping (string:mixed) connection_misc;
+  //! This mapping contains miscellaneous non-standardized information, and
+  //! is the typical location to store away your own connection-local data
+  //! for passing between requests on the same connection et cetera. Be sure
+  //! to use a key unique to your own application.
+
   mapping (string:string) cookies;
   //! The indices and values map to the names and values of the cookies sent
   //! by the client for the requested page. All data (names and values) are
@@ -980,6 +986,8 @@ class RequestID
     c->variables = FakedVariables( c->real_variables );
     c->misc = copy_value( misc );
     c->misc->orig = t;
+
+    c->connection_misc = connection_misc;
 
     c->prestate = prestate;
     c->supports = supports;
