@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.50 1999/11/09 15:50:14 peter Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.51 2000/03/20 13:54:34 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -510,7 +510,7 @@ mapping|string|int htaccess(mapping access, object id)
 
   string htaccess, aname, userfile, tmp2, groupfile, hname, method, errorfile;
 
-  TRACE_ENTER("htaccess->htaccess()", access);
+  TRACE_ENTER("htaccess->htaccess()", htaccess);
 
   if(access->redirect)
   {
@@ -533,7 +533,7 @@ mapping|string|int htaccess(mapping access, object id)
   werror("HTACCESS: Verifying access.\n");
 #endif
 
-  TRACE_ENTER("Checking method", id->method);
+  TRACE_ENTER("Checking method :" + id->method, htaccess);
 
   if(!access[method = lower_case(id->method)])
   {
@@ -838,7 +838,7 @@ mapping try_htaccess(object id)
   mixed tmp;
   mapping access = ([]);
 
-  TRACE_ENTER("htaccess->try_htaccess()", 0);
+  TRACE_ENTER("htaccess->try_htaccess()", try_htaccess);
 
   if(!(tmp = find_htaccess_file(id)))
   {
@@ -933,7 +933,7 @@ mapping last_resort(object id)
 {
   mapping access_violation;
 
-  TRACE_ENTER("htaccess->last_resort()", 0);
+  TRACE_ENTER("htaccess->last_resort()", last_resort);
 
   if(IS_PATH)
     if(access_violation = htaccess_no_file( id )) {
@@ -947,7 +947,7 @@ mapping remap_url(object id)
 {
   mapping access_violation;
 
-  TRACE_ENTER("htaccess->remap_url()", 0);
+  TRACE_ENTER("htaccess->remap_url()", remap_url);
 
   if(IS_PATH)
   {
