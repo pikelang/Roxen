@@ -444,7 +444,7 @@ also set 'URLs'.</o>
 </str>
 
 <str id="75">
-<o>If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
+<o>If set to Yes, all clients that accept cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
 <t></t>
 </str>
 
@@ -464,7 +464,7 @@ also set 'URLs'.</o>
 </str>
 
 <str id="87">
-<o>The SSL certificate file to use. The path is relative to %s.</o>
+<o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
 <t></t>
 </str>
 
@@ -474,7 +474,7 @@ also set 'URLs'.</o>
 </str>
 
 <str id="89">
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only.</o>
+<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
 <t></t>
 </str>
 
@@ -2047,7 +2047,9 @@ modules.&lt;/p&gt;
   issues with 2.4, notably the optimization of cache static tags in
   the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 3.3.&lt;/td&gt;&lt;/tr&gt;
+  &lt;td&gt;Corresponds to Roxen 3.3.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
@@ -2793,11 +2795,6 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="513">
-<o>Content Editor (Advanced Edition)</o>
-<t></t>
-</str>
-
 <str id="514">
 <o>Web Developer</o>
 <t></t>
@@ -2875,5 +2872,10 @@ server must be a MySQL server, nothing else will work.
 
 <str id="523">
 <o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<o>Content Editor</o>
 <t></t>
 </str>

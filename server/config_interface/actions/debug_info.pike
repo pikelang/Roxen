@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.25 2003/01/15 21:31:09 mast Exp $
+ * $Id: debug_info.pike,v 1.26 2003/01/20 10:36:20 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -230,15 +230,15 @@ mixed page_0( object id )
 
   string res = "<p>";
   if (id->real_variables->do_gc)
-    res += sprintf (LOCALE (0, "The garbage collector freed %d of %d things (%f%%).\n"),
+    res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%f%%).\n"),
 		    gc_freed, gc_freed + num_objs_afterwards,
 		    (float) gc_freed / (gc_freed + num_objs_afterwards) * 100);
   else
-    res += sprintf (LOCALE (0, "%d seconds since last garbage collection.\n"),
+    res += sprintf (LOCALE(170, "%d seconds since last garbage collection.\n"),
 		    time() - gc_status->last_gc);
   res += "<br /><input type='checkbox' name='do_gc' value='yes'" +
     (id->real_variables->do_gc ? " checked='checked'" : "") +
-    " /> " + LOCALE (0, "Run the garbage collector first.") + "</p>\n";
+    " /> " + LOCALE(171, "Run the garbage collector first.") + "</p>\n";
 
   string first="";
   foo->total_usage = 0;
@@ -404,7 +404,7 @@ mixed page_0( object id )
   if (gc_status->non_gc_time)
     gc_status->gc_time_ratio = (float) gc_status->gc_time / gc_status->non_gc_time;
 
-  res += "<p><b>" + LOCALE (0,"Status from last garbage collection") + "</b><br />\n"
+  res += "<p><b>" + LOCALE(172,"Status from last garbage collection") + "</b><br />\n"
     "<table border='0' cellpadding='0'>\n";
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +

@@ -505,7 +505,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="75">
-<o>If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
+<changed from="If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users."/>
+<o>If set to Yes, all clients that accept cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
 <t>Bei Aktivierung wird allen Clients, die Cookies unterstützen, ein eindeutiger Cookie 'user-id-cookie' gesetzt. Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
 </str>
 
@@ -525,7 +526,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="87">
-<o>The SSL certificate file to use. The path is relative to %s.</o>
+<changed from="The SSL certificate file to use. The path is relative to %s."/>
+<o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
 <t>Der Name der Datei mit dem SSL-Zertifikat im PEM-Format. Der Pfad ist relativ zu %s.</t>
 </str>
 
@@ -535,7 +537,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="89">
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only.</o>
+<changed from="The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only."/>
+<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
 <t>Der Name der Datei mit dem SSL-Schlüssel. Der Pfad ist relativ zu %s. Der Schlüssel kann auch in der obigen Zertifikats-Datei mit angegeben werden; dann muss dieses Feld leer bleiben.</t>
 </str>
 
@@ -2218,7 +2221,9 @@ modules.&lt;/p&gt;
   issues with 2.4, notably the optimization of cache static tags in
   the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 3.3.&lt;/td&gt;&lt;/tr&gt;
+  &lt;td&gt;Corresponds to Roxen 3.3.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
 
@@ -2994,11 +2999,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t>Content Editor (Instant Edition)</t>
 </str>
 
-<str id="513">
-<o>Content Editor (Advanced Edition)</o>
-<t>Content Editor (Advanced Edition)</t>
-</str>
-
 <str id="514">
 <o>Web Developer</o>
 <t>Web Developer</t>
@@ -3080,5 +3080,11 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="523">
 <new/>
 <o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<new/>
+<o>Content Editor</o>
 <t></t>
 </str>

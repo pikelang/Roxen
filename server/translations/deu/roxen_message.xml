@@ -45,12 +45,14 @@ und dass die Gruppen-Datenbank korrekt ist.
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file failed!</o>
+<changed from="SSL3: Reading cert-file failed!"/>
+<o>SSL3: Reading cert-file '%s' failed!</o>
 <t>SSL3: Zertifikat-Datei kann nicht gelesen werden!</t>
 </str>
 
 <str id="9">
-<o>SSL3: Reading key-file failed!</o>
+<changed from="SSL3: Reading key-file failed!"/>
+<o>SSL3: Reading key-file '%s' failed!</o>
 <t>SSL3: Schlüssel-Datei kann nicht gelesen werden!</t>
 </str>
 

@@ -980,3 +980,25 @@ change the currently running version.</o>
 <o>Upload a new roxen license file.</o>
 <t></t>
 </str>
+
+<str id="169">
+<o>The garbage collector freed %d of %d things (%f%%).
+</o>
+<t></t>
+</str>
+
+<str id="170">
+<o>%d seconds since last garbage collection.
+</o>
+<t></t>
+</str>
+
+<str id="171">
+<o>Run the garbage collector first.</o>
+<t></t>
+</str>
+
+<str id="172">
+<o>Status from last garbage collection</o>
+<t></t>
+</str>

@@ -42,12 +42,12 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file failed!</o>
+<o>SSL3: Reading cert-file '%s' failed!</o>
 <t></t>
 </str>
 
 <str id="9">
-<o>SSL3: Reading key-file failed!</o>
+<o>SSL3: Reading key-file '%s' failed!</o>
 <t></t>
 </str>
 
