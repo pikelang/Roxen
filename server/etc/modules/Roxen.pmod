@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.105 2001/07/21 09:28:40 mast Exp $
+// $Id: Roxen.pmod,v 1.106 2001/07/21 10:55:50 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -351,7 +351,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
   // Add protocol and host to local absolute URLs.
   if(url[0]=='/') {
     if(id) {
-      url = id->url_base();
+      url = id->url_base() + url[1..];
       if (!prestates) prestates = id->prestate;
     }
     else {
@@ -3151,7 +3151,7 @@ void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
 }
 
 string get_server_url(Configuration c)
-//! Returns an URL that the given configuration answers on.
+//! Returns a URL that the given configuration answers on.
 //!
 //! @note
 //! If there is a @[RequestID] object available, you probably want to
@@ -3159,10 +3159,7 @@ string get_server_url(Configuration c)
 //! takes into account information sent by the client and the port the
 //! request came from. (It's often faster too.)
 {
-  string url=c->query("MyWorldLocation");
-  if(stringp(url) && sizeof(url)) return url;
-  array(string) urls=c->query("URLs");
-  return get_world(urls);
+  return c->get_url();
 }
 
 string get_world(array(string) urls) {
