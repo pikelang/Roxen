@@ -1028,6 +1028,16 @@ hej</result>
 
 <test>
   <rxml type="string">
+    <cache>
+      <charset in="ascii">foo</charset> <!-- Any tag that isn't cache static and doesn't loop. -->
+      <emit source="values" values="1,2" split=",">[&_.value;]</emit>
+    </cache>
+  </rxml>
+  <result>foo[1][2]</result>
+</test>
+
+<test>
+  <rxml type="string">
     <cache>&test.pass;</cache>
   </rxml>
   <result>1</result>
