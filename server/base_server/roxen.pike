@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.338 1999/10/10 20:47:03 kinkie Exp $
+ * $Id: roxen.pike,v 1.339 1999/10/11 14:10:29 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.338 1999/10/10 20:47:03 kinkie Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.339 1999/10/11 14:10:29 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -711,7 +711,10 @@ class Protocol
       if( glob( in+"*", url ) )
       {
 	if( urls[in]->path )
+        {
 	  id->not_query = id->not_query[strlen(urls[in]->path)..];
+          id->misc->site_prefix_path = urls[in]->path;
+        }
 	return urls[ in ]->conf;
       }
     }
@@ -1263,11 +1266,14 @@ int register_url( string url, object conf )
 
 object find_configuration( string name )
 {
-  name = replace( lower_case( name )-" ", "/", "-" );
+  name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
   foreach( configurations, object o )
+  {
     if( (lower_case( replace( o->name - " " , "/", "-" ) ) == name) ||
         (lower_case( replace( o->query_name() - " " , "/", "-" ) ) == name) )
       return o;
+    werror(" is not '"+o->name+"'\n" );
+  }
 }
 
 // Create a new configuration from scratch.
