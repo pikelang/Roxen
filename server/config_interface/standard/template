@@ -78,7 +78,7 @@
 </define>
 
 <define container="cv-split">
- <table ::="&usr.content-toptableargs:none;">
+ <table ::="&usr.content-toptableargs:none;" width="100%">
    <tr>
      <td width="10"><img src="/internal-roxen-unit" width="10" height="1" alt="" /></td>
      <td ::="&usr.left-tableargs:none;">
