@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.26 1997/05/14 13:26:22 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.27 1997/05/24 19:00:51 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -440,8 +440,7 @@ array filter_modules(object id)
 // beautiful, really. 
 void init_log_file()
 {
-  int possfd;
-  object lf;
+  int possfd;	// FIXME: Is this used?
 
   remove_call_out(init_log_file);
 
@@ -453,33 +452,39 @@ void init_log_file()
   
   if(query("Log")) // Only try to open the log file if logging is enabled!!
   {
-    if(query("LogFile") == "stdout")
+    string logfile = query("LogFile");
+
+    if(logfile == "stdout")
     {
       log_function=Stdio.stdout->write;
       possfd=-1;
-    } else if(query("LogFile") == "stderr") {
+    } else if(logfile == "stderr") {
       log_function=Stdio.stderr->write;
     } else {
-      if(strlen(query("LogFile")))
+      if(strlen(logfile))
       {
-	int opened;
-	lf=files.file();
-	opened=lf->open( query("LogFile"), "wac");
-	if(!opened)
-	  mkdirhier(query("LogFile"));
-	if(!opened && !(lf->open( query("LogFile"), "wac")))	
-	{
-	  destruct(lf);
-	  report_error("Failed to open logfile. ("+query("LogFile")+")\n" +
-		       "No logging will take place!\n");
-	  log_function=0;
-	} else {
-	  mark_fd(lf->query_fd(), "Roxen log file ("+query("LogFile")+")");
+	do {
+	  object lf=files.file();
+	  object privs = ((program)"privs")("Opening logfile \""+logfile+"\"");
+	  int opened=lf->open( logfile, "wac");
+	  if(!opened) {
+	    mkdirhier(logfile);
+	    if(!(lf->open( logfile, "wac"))) {
+	      destruct(lf);
+	      privs = 0;
+	      report_error("Failed to open logfile. ("+logfile+")\n" +
+			   "No logging will take place!\n");
+	      log_function=0;
+	      break;
+	    }
+	  }
+	  privs=0;
+	  mark_fd(lf->query_fd(), "Roxen log file ("+logfile+")");
 	  log_function=lf->write;	
 	  // Function pointer, speeds everything up (a little..).
 	  possfd=lf->query_fd();
 	  lf=0;
-	}
+	} while(0);
       } else
 	log_function=0;	
     }
