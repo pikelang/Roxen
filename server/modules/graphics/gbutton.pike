@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.34 2000/02/24 17:13:49 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.35 2000/02/25 17:12:41 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -490,7 +490,8 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
   if( fi )
     fi = fix_relative( fi, id );
   mapping new_args = ([
-    "pagebg" :parse_color(id->misc->defines->theme_bgcolor ||
+    "pagebg" :parse_color(args->pagebgcolor ||
+                          id->misc->defines->theme_bgcolor ||
                           id->misc->defines->bgcolor ||
                           args->bgcolor ||
                           "#eeeeee"), // _page_ background color
