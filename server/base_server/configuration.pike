@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.439 2001/06/21 10:23:27 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.440 2001/06/22 02:59:33 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1921,8 +1921,9 @@ mapping error_file( RequestID id )
   data = replace(data,({"$File", "$Me"}),
                  ({"&page.virtfile;", "&roxen.server;"}));
 #endif
-  id->misc->defines = ([ " _error":404 ]);
-  return Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  res->error = 404;
+  return res;
 }
 
 // this is not as trivial as it sounds. Consider gtext. :-)
