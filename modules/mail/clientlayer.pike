@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.20 1998/09/24 19:00:17 per Exp $
+ * $Id: clientlayer.pike,v 1.21 1998/09/27 18:01:42 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.20 1998/09/24 19:00:17 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.21 1998/09/27 18:01:42 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -150,6 +150,7 @@ Stdio.File load_body_get_obj(string body_id)
 
 string get_unique_body_id()
 {
+  // FIXME: How is this table initialized?
   string id;
   object key = lock->lock(); /* Do this transaction locked. */
   squery("update message_body_id set last=last+1");
