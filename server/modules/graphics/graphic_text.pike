@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.248 2000/09/21 23:03:45 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.249 2000/09/26 15:50:35 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -363,7 +363,7 @@ opaque=70</gtext>
 </attr>
 
 <attr name=yspacing value=number>
- Sets the vertical spacing.
+ Sets the verticals pacing.
 </attr>";
 
 
@@ -379,7 +379,7 @@ and here it ends.</ex>
  /</tag></ref> tag. <ref type='tag'><tag>gh /</tag></ref> is
  eqvivalent to the <tag>h1 /</tag> through <tag>h6 /</tag> tags used
  in HTML. There are 6 different sizes of headers to choose from; <ref
- type='tag'><tag>gh1 /<tag></ref> through <ref type='tag'><tag>gh6
+ type='tag'><tag>gh1 /</tag></ref> through <ref type='tag'><tag>gh6
  /</tag></ref>.
 </desc>
 <noex>"+gtextargs+"</noex>",
@@ -468,6 +468,8 @@ and here it ends.</ex>
 </attr>"+gtextargs,
 
 "gtext-id":#"<desc tag></desc>
+
+
 <attr name=href value=URL>
  Link the image to the specified URL. The link color of the document
  will be used as the default foreground rather than the foreground
