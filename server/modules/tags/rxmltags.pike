@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.92 2000/03/10 00:40:29 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.93 2000/03/10 03:36:49 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -886,11 +886,22 @@ array(string) container_cache(string tag, mapping args,
 #undef HASH
 }
 
-string|array(string) container_crypt( string s, mapping m,
-                                      string c, RequestID id )
-{
-  if(m->compare) return crypt(c,m->compare)?"<true />":"<false />";
-  return ({ crypt(c) });
+class TagCrypt {
+  inherit RXML.Tag;
+  constant name = "crypt";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(args->compare) {
+	_ok=crypt(content,args->compare);
+	return 0;
+      }
+      result=crypt(content);
+      return 0;
+    }
+  }
 }
 
 class TagFor {
@@ -918,7 +929,6 @@ class TagFor {
 	to=from;
 	return diff;
       }
-      werror("%d\n",count);
       count+=step;
       RXML.user_set_var(args->variable, count, args->scope);
       if(to<from) return count>=to;
@@ -1296,7 +1306,7 @@ array(string) container_default( string t, mapping m, string c, RequestID id)
 {
   multiset value=(<>);
   if(m->value) value=mkmultiset((m->value||"")/(m->separator||","));
-  if(m->variable) value+=mkmultiset(({id->variables[m->variable]}));
+  if(m->variable) value+=(<RXML.user_get_var(m->variable, m->scope)>);
   c = parse_rxml(c, id );
   if(value==(<>)) return ({c});
 
@@ -1459,7 +1469,7 @@ class TagIfExpr {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "expr";
-  int `() (string u) {
+  int eval(string u) {
     return (int)sexpr_eval(u);
   }
 }
@@ -1472,6 +1482,7 @@ string api_query_modified(RequestID id, string f, int|void by)
   mapping m = ([ "by":by, "file":f ]);
   return tag_modified("modified", m, id, id);
 }
+
 
 // --------------------- Documentation -----------------------
 
