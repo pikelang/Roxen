@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.120 1999/05/02 19:52:52 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.121 1999/05/04 23:03:28 neotron Exp $";
 
 class Shuffle
 {
@@ -468,7 +468,6 @@ class CGIScript
   object mid;
 #if UNIX
   mapping (string:int)    limits;
-  int nice_value; // Can be used to replace 'priority' on unix.
   int uid, gid;  
   array(int) extra_gids;
 #endif
@@ -570,10 +569,10 @@ class CGIScript
       if( !uid && QUERY(warn_root_cgi) )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
     }
-    if(nice_value)
+    if(QUERY(nice))
     {
       m_delete(options, "priority");
-      options->nice = nice_value;
+      options->nice = QUERY(nice);
     }
     if( limits )
       options->rlimit = limits;
