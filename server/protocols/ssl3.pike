@@ -1,10 +1,6 @@
-/* $Id: ssl3.pike,v 1.26 1998/03/11 19:42:44 neotron Exp $
+/* $Id: ssl3.pike,v 1.27 1998/03/17 14:10:46 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
- *
- * This is unpublished alpha source code of Idonex AB.
- *
- * Do NOT redistribute!
  */
 
 // #define SSL3_DEBUG
