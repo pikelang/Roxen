@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.50 1998/09/19 18:42:24 grubba Exp $
+ * $Id: smtp.pike,v 1.51 1998/09/19 18:55:29 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.50 1998/09/19 18:42:24 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.51 1998/09/19 18:55:29 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -574,6 +574,63 @@ static class Smtp_Connection {
 	if (sizeof(a)) {
 	  current_mail->set_from(@do_parse_address(a[0]));
 	    
+	  // Check size limits.
+
+	  int limit = 0x7fffffff;	// MAXINT
+	  int hard = 1;			// hard limit initially.
+
+	  mapping fss = filesystem_stat(parent->query_spooldir());
+
+	  if (!fss) {
+	    send(452, "Spooldirectory not available. Try later.");
+	    return;
+	  }
+
+	  if (fss->favail < 10) {
+	    send(452, "Out of inodes. Try later.");
+	    return;
+	  }
+
+	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
+	    if (o->check_size) {
+	      int l = o->check_size(sz, current_mail);
+	      if (l) {
+		if (l < 0) {
+		  // Negative: Soft limit.
+		  l = -l;
+		  if (l < limit) {
+		    hard = 0;
+		    limit = l;
+		  }
+		} else {
+		  // Positive: Hard limit.
+		  if (l < limit) {
+		    hard = 1;
+		    limit = l;
+		  }
+		}
+	      }
+	    }
+	  }
+
+	  float szfactor = parent->query_size_factor();
+
+	  if (fss->bfree * szfactor <= (limit / (fss->blocksize || 512))) {
+	    if (fss->blocks * szfactor <= (limit / (fss->blocksize || 512))) {
+	      limit = (fss->blocksize || 512) * fss->blocks * szfactor;
+	      hard = 1;
+	    } else {
+	      limit = (fss->blocksize || 512) * fss->bfree * szfactor;
+	      hard = 0;
+	    }
+	  }
+		  
+	  current_mail->set_limit(limit);
+
+	  // Limit checks done.
+
+	  // Now check if there were any extensions.
+
 	  a = a[1..];
 
 	  if (sizeof(a)) {
@@ -602,53 +659,6 @@ static class Smtp_Connection {
 		  // FIXME: 32bit wraparound.
 		  int sz = (int)extensions->SIZE;
 
-		  mapping fss = filesystem_stat(parent->query_spooldir());
-
-		  if (!fss) {
-		    send(452, "Spooldirectory not available. Try later.");
-		    return;
-		  }
-
-		  if (fss->favail < 10) {
-		    send(452, "Out of inodes. Try later.");
-		    return;
-		  }
-
-		  if (fss->bfree * parent->query_size_factor() <=
-		      (sz / (fss->blocksize || 512))) {
-		    if (fss->blocks <= (sz / (fss->blocksize || 512))) {
-		      send(552, "Mail too large.");
-		    } else {
-		      send(452, "Spooldirectory full. Try later.");
-		    }
-		    return;
-		  }
-		  
-		  int limit = 0x7fffffff;	// MAXINT
-		  int hard = 1;			// hard limit initially.
-
-		  foreach(conf->get_providers("smtp_filter")||({}),
-			  object o) {
-		    if (o->check_size) {
-		      int l = o->check_size(sz, current_mail);
-		      if (l) {
-			if (l < 0) {
-			  // Negative: Soft limit.
-			  l = -l;
-			  if (l < limit) {
-			    hard = 0;
-			    limit = l;
-			  }
-			} else {
-			  // Positive: Hard limit.
-			  if (l < limit) {
-			    hard = 1;
-			    limit = l;
-			  }
-			}
-		      }
-		    }
-		  }
 		  if (sz > limit) {
 		    if (hard) {
 		      send(552, sprintf("Size %d exceeds hard limit %d.\n",
@@ -659,7 +669,6 @@ static class Smtp_Connection {
 		    }
 		    return;
 		  }
-		  current_mail->set_limit(limit);
 		}
 
 		break;
