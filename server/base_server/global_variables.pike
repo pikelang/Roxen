@@ -787,7 +787,7 @@ så här ofta. Tiden är angiven i dagar");
                "här directoryt.");
 
   globvar("mem_cache_gc", 300,
-	  "Cache: Memory Cache Garbage Collect Time",
+	  "Cache: Memory Cache Garbage Collect Interval",
 	  TYPE_INT,
 	  "The number of seconds between every garbage collect "
 	  "(removal of old content) from the memory cache. The "
@@ -797,8 +797,8 @@ så här ofta. Tiden är angiven i dagar");
 	       "Cache: Minnescachens städningsintervall",
 	       "Hur många sekunder som ska gå mellan varje gång som "
 	       "allt gammalt innehåll i cachen städas bort. Minnescachen "
-	       "används för många olika saker som t.ex. att komma ihåg "
-	       "vilka supports flaggor som hör till vilken klient.");
+	       "används till många olika saker som till exempel att komma "
+	       "ihåg vilka supportsflaggor som hör till vilken klient.");
 
   setvars(retrieve("Variables", 0));
 
