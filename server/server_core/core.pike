@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.860 2004/05/20 16:04:13 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.861 2004/05/22 21:48:17 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -50,6 +50,16 @@ Thread.Thread backend_thread;
 # define THREAD_WERR(X) report_debug("Thread: "+X+"\n")
 #else
 # define THREAD_WERR(X)
+#endif
+
+// Needed to get core dumps of seteuid()'ed processes on Linux.
+#if constant(System.dumpable)
+#define enable_coredumps(X)	System.dumpable(X)
+#elif constant(system.dumpable)
+// Pike 7.2.
+#define enable_coredumps(X)   system.dumpable(X)
+#else
+#define enable_coredumps(X)
 #endif
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
@@ -103,7 +113,9 @@ string filename( program|object o )
   return fname-(getcwd()+"/");
 }
 
-array(string) compat_levels = ({"2.1", "2.2", "2.5", "2003", "2004"});
+static int once_mode;
+
+array(string) compat_levels = ({"4.0", "2004"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -224,8 +236,8 @@ static class Privs
       {
 	if (intp(uid) && (uid >= 60000))
         {
-	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
-				 "Assuming nobody.\n", uid));
+	  report_warning("Privs: User %d is not in the password database.\n"
+				 "Assuming nobody.\n", uid);
 	  // Nobody.
 	  gid = gid || uid;	// Fake a gid also.
 	  u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
@@ -294,6 +306,7 @@ static class Privs
     }
     if(getgid()!=gid) setgid(gid||getgid());
     seteuid(new_uid = uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 
@@ -367,6 +380,7 @@ static class Privs
     }
     setegid(saved_gid);
     seteuid(saved_uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 #else /* efun(seteuid) */
@@ -412,8 +426,16 @@ private void really_low_shutdown(int exit_code)
 #ifdef THREADS
   catch (stop_handler_threads());
 #endif /* THREADS */
+  if (!exit_code || once_mode) {
+    // We're shutting down; Attempt to take mysqld with us.
+    catch { report_notice("Shutting down MySQL.\n"); };
+    catch {
+      Sql.Sql db = connect_to_my_mysql(0, "mysql");
+      db->shutdown();
+    };
+  }
   destruct (cache);
-  exit( exit_code );		// Now we die...
+  loader.real_exit( exit_code );	// Now we die...
 }
 
 private int _recurse;
@@ -431,7 +453,7 @@ private void low_shutdown(int exit_code)
 #ifdef THREADS
     catch (stop_handler_threads());
 #endif /* THREADS */
-    exit(exit_code);
+    roxenloader.real_exit(exit_code);
   }
   if (_recurse++) return;
 
@@ -534,6 +556,7 @@ class Queue
     return tmp;
   }
 
+  // Warning: This function isn't thread safe.
   void write(mixed v)
   {
     if(w_ptr >= sizeof(buffer))
@@ -592,6 +615,7 @@ local static void handler_thread(int id)
 #endif
   while(1)
   {
+    int thread_flagged_as_busy;
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
@@ -601,9 +625,11 @@ local static void handler_thread(int id)
 				id, h[0], h[1] / 1));
 	  set_locale();
 	  busy_threads++;
+	  thread_flagged_as_busy = 1;
 	  h[0](@h[1]);
 	  h=0;
 	  busy_threads--;
+	  thread_flagged_as_busy = 0;
 	} else if(!h) {
 	  // ChiliMoon is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -635,6 +661,8 @@ local static void handler_thread(int id)
 	}
       } while(1);
     }) {
+      if (thread_flagged_as_busy)
+	busy_threads--;
       if (h = catch {
 	report_error(/* "Uncaught error in handler thread: %s"
 		       "Client will not get any response from ChiliMoon.\n",*/
@@ -933,7 +961,7 @@ function async_sig_start( function f, int really )
 }
 
 #ifdef THREADS
-static Queue bg_queue = Queue();
+static Thread.Queue bg_queue = Thread.Queue();
 static int bg_process_running;
 
 // Use a time buffer to strike a balance if the server is busy and
@@ -956,7 +984,10 @@ static void bg_process_queue()
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
 
   if (mixed err = catch {
-    while (array task = bg_queue->tryread()) {
+    while (bg_queue->size()) {
+      // Not a race here since only one thread is reading the queue.
+      array task = bg_queue->read();
+
       // Wait a while if another thread is busy already.
       if (busy_threads > 1) {
 	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.04));
@@ -968,7 +999,7 @@ static void bg_process_queue()
       }
 
 #ifdef DEBUG_BACKGROUND_RUN
-      report_debug ("background run %s (%s)\n",
+      report_debug ("background_run run %s (%s)\n",
 		    functionp (task[0]) ?
 		    sprintf ("%s: %s", Function.defined (task[0]),
 			     master()->describe_function (task[0])) :
@@ -1008,15 +1039,28 @@ void background_run (int|float delay, function func, mixed... args)
 //! @[background_run] to queue it up again after some work has been
 //! done, or use @[BackgroundProcess].
 {
+#ifdef DEBUG_BACKGROUND_RUN
+  report_debug ("background_run enqueue %s (%s)\n",
+		functionp (func) ?
+		sprintf ("%s: %s", Function.defined (func),
+			 master()->describe_function (func)) :
+		programp (func) ?
+		sprintf ("%s: %s", Program.defined (func),
+			 master()->describe_program (func)) :
+		sprintf ("%O", func),
+		map (args, lambda (mixed arg)
+			     {return sprintf ("%O", arg);}) * ", ");
+#endif
+
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
     return;
 
-  void enqueue()
+  function enqueue = lambda()
   {
     bg_queue->write (({func, args}));
-    if (bg_queue->size() == 1)
+    if (!bg_process_running)
       handle (bg_process_queue);
   };
 
@@ -1024,6 +1068,8 @@ void background_run (int|float delay, function func, mixed... args)
     call_out (enqueue, delay);
   else
     enqueue();
+
+  enqueue = 0;			// To avoid garbage.
 
 #else
   // Can't do much better when we haven't got threads..
@@ -1093,51 +1139,74 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
-Configuration find_configuration_for_url(object url, void|string url_base)
+#ifdef DEBUG_URL2CONF
+#define URL2CONF_MSG(X...) report_debug (X)
+#else
+#define URL2CONF_MSG(X...)
+#endif
+
+static mapping(string:int(0..1)) host_is_local_cache = ([]);
+
+//! Check if @[hostname] is local to this machine.
+int(0..1) host_is_local(string hostname)
+{
+  int(0..1) res;
+  if (!zero_type(res = host_is_local_cache[hostname])) return res;
+  
+  // Look up the IP.
+  string ip = blocking_host_to_ip(hostname);
+
+  // Can we bind to it?
+  Stdio.Port port = Stdio.Port();
+  res = port->bind(0, 0, ip);
+
+  destruct(port);
+  return host_is_local_cache[hostname] = res;
+}
+
+Configuration find_configuration_for_url(Standards.URI url,
+					 void|Configuration only_this_conf)
 //! Tries to to determine if a request for the given url would end up
 //! in this server, and if so returns the corresponding configuration.
+//!
+//! If @[only_this_conf] has been specified only matches against it
+//! will be returned.
 {
   Configuration c;
   string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
 				 url->port,
 				 (sizeof(url->path)?url->path:"/"));
+
+  URL2CONF_MSG("URL with port: %s\n", url_with_port);
+
   foreach( indices(urls), string u )
   {
     mixed q = urls[u];
+    URL2CONF_MSG("Trying %O:%O\n", u, q);
     if( glob( u+"*", url_with_port ) )
     {
-      if( (c = q->port->find_configuration_for_url((string)url, 0, 1 )) )
+      URL2CONF_MSG("glob match\n");
+      if( q->port &&
+	  (c = q->port->find_configuration_for_url(url_with_port, 0, 1 )) )
       {
-	if (search(u, "*") != -1 ||
-	    search(u, "?") != -1)
-	{
-	  // Something like "http://*:80/"
+	URL2CONF_MSG("Found config: %O\n", c);
 
-	  // Base url
-	  if (url_base)
-	  {
-	    Standards.URI base = Standards.URI(url_base);
-	    if (url->host == base->host &&
-		url->port == base->port &&
-		url->scheme == base->scheme)
-	      break;
-	  }
-
-	  // Confguration location
-	  Standards.URI config = Standards.URI(c->get_url());
-	  if (url->host == config->host &&
-	      url->port == config->port &&
-	      url->scheme == config->scheme)
-  	    break;
-
-	  // Do not match
+	if ((only_this_conf && (c != only_this_conf)) ||
+	    ((search(u, "*") != -1 || search(u, "?") != -1) &&
+	     // u is something like "http://*:80/"
+	     (!host_is_local(url->host)))) {
+	  // Bad match.
+	  URL2CONF_MSG("Bad match: only_this_conf:%O, host_is_local:%O\n",
+		       (only_this_conf && (c == only_this_conf)),
+		       (!host_is_local(url->host)));
 	  c = 0;
+	  continue;
 	}
-	else
-	  break;
+	break;
       }
     }
   }
+  URL2CONF_MSG("Result: %O\n", c);
   return c;
 }
 
@@ -1176,51 +1245,14 @@ class InternalRequestID
 
   this_program set_url( string url )
   {
-    sscanf( url, "%s://%s/%s", prot, misc->host, string path );
-    prot = upper_case( prot );
+    object uri = Standards.URI(url);
+    prot = upper_case(uri->scheme);
+    misc->host = uri->host;
+    string path = uri->path;
+    raw_url = path;
     method = "GET";
-    raw = "GET /" + url + " HTTP/1.1\r\n\r\n";
-    raw_url = "/" + path;
-
-    Configuration c;
-    foreach( urls; string u; mapping q )
-    {
-      if( glob( u+"*", url ) )
-	if( (c = q->port->find_configuration_for_url(url, this, 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-    }
-
-    if(!c)
-    {
-      // pass 2: Find a configuration with the 'default' flag set.
-      foreach( configurations, c )
-	if( c->query( "default_server" ) )
-	{
-	  conf = c;
-	  break;
-	}
-	else
-	  c = 0;
-    }
-
-    if(!c)
-    {
-      // pass 3: No such luck. Let's allow default fallbacks.
-      foreach( urls; string u; mapping q )
-      {
-	if( (c = q->port->find_configuration_for_url( url,this, 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-      }
-    }
-
+    raw = "GET " + raw_url + " HTTP/1.1\r\n\r\n";
+    conf = find_configuration_for_url(uri);
     return set_path( raw_url );
   }
 
@@ -1238,7 +1270,10 @@ class InternalRequestID
     variables = FakedVariables( real_variables );
     root_id = this;
 
-    misc = ([ "pref_languages":PrefLanguages() ]);
+    misc = ([ "pref_languages": PrefLanguages(),
+	      "cacheable": INITIAL_CACHEABLE,
+    ]);
+    connection_misc = ([]);
     cookies = ([]);
     throttle = ([]);
     client_var = ([]);
@@ -1331,6 +1366,9 @@ class Protocol
 		 name, ip, port, _name, refs);
 #endif /* PORT_DEBUG */
     if( !--refs ) {
+      if (retries) {
+	remove_call_out(bind);
+      }
       if (port_obj) {
 	destruct(port_obj);
       }
@@ -1394,12 +1432,6 @@ class Protocol
       c->enable_all_modules();		\
   } while(0)
 
-#ifdef DEBUG_URL2CONF
-#define URL2CONF_MSG(X...) report_debug (X)
-#else
-#define URL2CONF_MSG(X...)
-#endif
-
   Configuration find_configuration_for_url( string url, RequestID id, 
                                             int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
@@ -1408,11 +1440,11 @@ class Protocol
   //! any time.
   {
     Configuration c;
-    if( sizeof( urls ) == 1 )
+    if( sizeof( urls ) == 1 && !no_default)
     {
       if(!mu) mu=urls[sorted_urls[0]];
       INIT( mu );
-      URL2CONF_MSG ("%O %O cached: %O\n", this, url, c);
+      URL2CONF_MSG ("%O %O Only one configuration: %O\n", this, url, c);
       return c;
     } else if (!sizeof(sorted_urls)) {
       URL2CONF_MSG("%O %O No active URLS!\n", this, url);
@@ -1420,6 +1452,8 @@ class Protocol
     }
 
     url = lower_case( url );
+    URL2CONF_MSG("sorted_urls: %O\n"
+		 "url: %O\n", sorted_urls, url);
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
     // ones (such as http://*.chilimoon.com/)
@@ -1514,6 +1548,36 @@ class Protocol
       set( kv[0], kv[1] );
   }
 
+  static int retries;
+  static void bind()
+  {
+    if (bound) return;
+    if (!port_obj) port_obj = Stdio.Port();
+    if (port_obj->bind(port, got_connection, ip))
+    {
+      bound = 1;
+      return;
+    }
+    report_error("Failed to bind %s://%s:%d/ (%s)\n", 
+		 (string)name, (ip||"*"), (int)port,
+		 strerror(port_obj->errno()));
+#if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
+    if (
+#if constant(System.EADDRINUSE)
+	(port_obj->errno() == System.EADDRINUSE) && 
+#else /* !constant(System.EADDRINUSE) */
+	(port_obj->errno() == system.EADDRINUSE) && 
+#endif /* constant(System.EADDRINUSE) */
+	(retries++ < 10)) {
+      // We may get spurious failures on rebinding ports on some OS'es
+      // (eg Linux, WIN32). See [bug 3031].
+      report_notice("Attempt %d. Retrying in 1 minute.\n",
+		    retries);
+      call_out(bind, 60);
+    }
+#endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+  }
+
   static void create( int pn, string i )
   //! Constructor. Bind to the port 'pn' ip 'i'
   {
@@ -1530,14 +1594,10 @@ class Protocol
     if( !requesthandler )
       requesthandler = (program)(rrhf);
 #endif
-    port_obj = Stdio.Port();
-    if(!port_obj->bind( port, got_connection, ip ))
-    {
-      report_error("Failed to bind %s://%s:%d/ (%s)\n",
-		   (string)name, (ip||"*"), port, strerror( errno() ));
-      bound = 0;
-    } else
-      bound = 1;
+    bound = 0;
+    port_obj = 0;
+    retries = 0;
+    bind();
   }
 
   static string _sprintf(int t) {
@@ -1622,18 +1682,21 @@ class SSLProtocol
     string f, f2;
     ctx->certificates = ({});
 
-    foreach( query_option("ssl_cert_file")/",", string cert_file )
+    foreach( map(query_option("ssl_cert_file"), String.trim_whites),
+	     string cert_file )
     {
       if( catch{ f = lopen(String.trim_whites(cert_file), "r")->read(); } )
       {
-	report_error("SSL3: Reading cert-file failed!\n");
+	report_error("SSL3: Reading cert-file '%s' failed!\n",
+		     cert_file);
 	return;
       }
 
       if( strlen(query_option("ssl_key_file")) &&
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
-	report_error("SSL3: Reading key-file failed!\n");
+	report_error("SSL3: Reading key-file '%s' failed!\n",
+		     query_option("ssl_key_file"));
 	return;
       }
 
@@ -1840,24 +1903,28 @@ mapping(string:Protocol) build_protocols_mapping()
 
 mapping protocols;
 
-mapping(string:mapping) open_ports = ([ ]);
+// prot:ip:port ==> Protocol.
+mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
+
+// url:"port" ==> Protocol.
 mapping(string:mapping(string:string|Configuration)) urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
-    return 0;
+    return ({ 0 });	// ANY
 
   if( is_ip( what ) )
     return ({ what });
 
   array res = gethostbyname( what );
-  if( !res || !sizeof( res[1] ) )
-    report_error("Cannot possibly bind to %O, that host is "
-		 "unknown. Substituting with ANY\n", what);
-  else
+  if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
+
+  report_error("Cannot possibly bind to %O, that host is "
+		     "unknown. Substituting with ANY\n", what);
+  return 0;		// FAIL
 }
 
 string normalize_url(string url)
@@ -2012,17 +2079,24 @@ int register_url( string url, Configuration conf )
   if( !port )
     port = prot->default_port;
 
-  array(string) required_hosts;
+  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  urls[ ourl ] = urls[url] + ([]);
+  sorted_urls += ({ url });
+
+  array(string)|int(-1..0) required_hosts;
 
   if (is_ip(host))
     required_hosts = ({ host });
-  else if( is_ip(opts->ip) )
-    required_hosts = ({ opts->ip });
-  else
+  else if(!sizeof(required_hosts =
+		  filter(replace(opts->ip||"", " ","")/",", is_ip)) )
     required_hosts = find_ips_for( host );
 
-  if (!required_hosts)
-    required_hosts = ({ 0 });	// ANY
+  if (!required_hosts) {
+    // FIXME: Used to fallback to ANY.
+    //        Will this work with glob URLs?
+    report_error("Cannot register URL %s!\n", url);
+    return 0;
+  }
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
@@ -2042,10 +2116,6 @@ int register_url( string url, Configuration conf )
     // on Solaris, but fails on linux)
     required_hosts = ({ 0 });
 
-  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
-  urls[ ourl ] = urls[url] + ([]);
-  sorted_urls += ({ url });
-
   int failures;
 
   foreach(required_hosts, string required_host)
@@ -2064,8 +2134,8 @@ int register_url( string url, Configuration conf )
 
     mixed err;
     if (err = catch {
-      m[ required_host ][ port ] = prot( port, required_host );
-    }) {
+	m[ required_host ][ port ] = prot( port, required_host );
+      }) {
       failures++;
       report_error("Initializing the port handler for URL " +
 		   url + " failed!\n%s\n",
@@ -2100,7 +2170,6 @@ int register_url( string url, Configuration conf )
   sort_urls();
   report_notice(" Registered %s for %s\n",
 		url, conf->query_name() );
-
   return 1;
 }
 
@@ -2123,6 +2192,42 @@ Configuration find_configuration( string name )
       return o;
   }
   return 0;
+}
+
+static int last_hrtime = gethrtime(1)/100;
+static int clock_sequence = random(0x4000);
+static string hex_mac_address =
+  String.string2hex(Crypto.Random.random_string(6)|
+		       "\1\0\0\0\0\0");	// Multicast bit.
+// Generate an uuid string.
+string new_uuid_string()
+{
+  int now = gethrtime(1)/100;
+  if (now != last_hrtime) {
+    clock_sequence = random(0x4000);
+    last_hrtime = now;
+  }
+  int seq = clock_sequence++;
+  // FIXME: Check if clock_sequence has wrapped during this @[now].
+
+  // Adjust @[now] with the number of 100ns intervals between
+  // 1582-10-15 00:00:00.00 GMT and 1970-01-01 00:00:00.00 GMT.
+#if 0
+  now -= Calendar.parse("%Y-%M-%D %h:%m:%s.%f %z",
+			"1582-10-15 00:00:00.00 GMT")->unix_time() * 10000000;
+#else /* !0 */
+  now += 0x01b21dd213814000;	// Same as above.
+#endif /* 0 */
+  now &= 0x0fffffffffffffff;
+  now |= 0x1000000000000000;	// DCE version 1.
+  clock_sequence &= 0x3fff;
+  clock_sequence |= 0x8000;	// DCE variant of UUIDs.
+  return sprintf("%08x-%04x-%04x-%04x-%s",
+		 now & 0xffffffff,
+		 (now >> 32) & 0xffff,
+		 (now >> 48) & 0xffff,
+		 clock_sequence,
+		 hex_mac_address);
 }
 
 mapping(string:array(int)) error_log=([]);
@@ -2274,8 +2379,10 @@ void restart_if_stuck (int force)
 	     return;
 	   }
 	   report_debug("**** %s: ABS engaged!\n"
+			"Waited more than %d minute(s).\n"
 			"Trying to dump backlog: \n",
-			ctime(time()) - "\n");
+			ctime(time()) - "\n",
+			query("abs_timeout"));
 	   catch {
 	     // Catch for paranoia reasons.
 	     describe_all_threads();
@@ -2290,6 +2397,7 @@ void restart_if_stuck (int force)
 }
 #endif
 
+function(string:Sql.Sql) dbm_cached_get;
 
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
@@ -2301,7 +2409,7 @@ class ImageCache
   string name;
   string dir;
   function draw_function;
-  mapping meta_cache = ([]);
+  mapping(string:array(mapping|int)) meta_cache = ([]);
 
   string documentation(void|string tag_n_args)
   {
@@ -2319,9 +2427,11 @@ class ImageCache
     werror("MD insert for %O: %O\n", i, what );
 #endif
     if( sizeof( meta_cache ) > 1000 )
-      meta_cache = ([ ]);
-    if( what )
-      return meta_cache[i] = what;
+      sync_meta();
+    if( what ) {
+      meta_cache[i] = ({ what, 0 });
+      return what;
+    }
     else
       m_delete( meta_cache, i );
     return 0;
@@ -2444,7 +2554,7 @@ class ImageCache
 	y1 = (int)(args["y-size"]||args["height"]);
 
       array xguides, yguides;
-      void sort_guides()
+      function sort_guides = lambda()
       {
 	xguides = ({}); yguides = ({});
 	if( guides )
@@ -2507,20 +2617,21 @@ class ImageCache
 	    break;
 	  case "auto":
 	    [ x0, y0, x1, y1 ] = reply->find_autocrop();
-	    x1 -= x0;
-	    y1 -= y0;
+	    x1 = x1 - x0 + 1;
+	    y1 = y1 - y0 + 1;
 	}
       }
+      sort_guides = 0;		// To avoid garbage.
 
 #define SCALEI 1
 #define SCALEF 2
 #define SCALEA 4
 #define CROP   8
 
-      void do_scale_and_crop( int x0, int y0,
-			      int x1, int y1,
-			      int|float w,  int|float h,
-			      int type )
+      function do_scale_and_crop = lambda ( int x0, int y0,
+					    int x1, int y1,
+					    int|float w,  int|float h,
+					    int type )
       {
 	if( (type & CROP) && x1 && y1 
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
@@ -2591,7 +2702,7 @@ class ImageCache
 	{
 	  if( w && h )
 	  {
-	    if( w / (float)reply->xsize() < h / (float)reply->ysize() )
+	    if( (w * (float)reply->ysize()) < (h * (float)reply->xsize()) )
 	      h = 0;
 	    else
 	      w = 0;
@@ -2624,6 +2735,7 @@ class ImageCache
       }
       else
 	do_scale_and_crop( x0, y0, x1, y1, 0, 0, CROP );
+      do_scale_and_crop = 0;	// To avoid garbage.
 
       if( args["span-width"] || args["span-height"] )
       {
@@ -2847,28 +2959,21 @@ class ImageCache
 #endif
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    if( catch {
-      QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, "
-	     "data=%s WHERE id=%s",
-	     strlen(data)+strlen(meta_data), time(1), meta_data, data, id );
 #ifdef ARG_CACHE_DEBUG
-      werror("updated entry for %O, existed before\n", id );
+    werror("Replacing entry for %O\n", id );
 #endif
-    } )
-    {
-#ifdef ARG_CACHE_DEBUG
-      werror("new entry for %O\n", id );
-#endif
-      QUERY("INSERT INTO "+name+
-	    " (id,size,atime,meta,data) VALUES (%s,%d,%d,%s,%s)",
-	    id, strlen(data)+strlen(meta_data), time(1), meta_data, data );
-    }
+    QUERY("REPLACE INTO "+name+
+	  " (id,size,atime,meta,data) VALUES (%s,%d,UNIX_TIMESTAMP(),%s,%s)",
+	  id, strlen(data)+strlen(meta_data), meta_data, data );
   }
 
   static mapping restore_meta( string id, RequestID rid )
   {
     if( meta_cache[ id ] )
-      return meta_cache[ id ];
+    {
+      meta_cache[ id ][ 1 ] = time(1); // Update cached atime.
+      return meta_cache[ id ][ 0 ];
+    }
 
 #ifdef ARG_CACHE_DEBUG
     werror("restore meta %O\n", id );
@@ -2892,6 +2997,17 @@ class ImageCache
     return meta_cache_insert( id, m );
   }
 
+  static void sync_meta()
+  {
+    // Sync cached atimes.
+    foreach(indices(meta_cache), string id) {
+      if (meta_cache[id][1])
+	QUERY("UPDATE "+name+" SET atime=%d WHERE id=%s",
+	      meta_cache[id][1], id);
+    }
+    meta_cache = ([]);
+  }
+
   void flush(int|void age)
   //! Flush the cache. If an age (an integer as returned by
   //! @[time()]) is provided, only images with their latest access before
@@ -2902,11 +3018,14 @@ class ImageCache
     int t = gethrtime();
     report_debug("Cleaning "+name+" image cache ... ");
 #endif
-    meta_cache = ([]);
+    sync_meta();
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
+#ifdef DEBUG
+      report_debug("cleared\n");
+#endif
       QUERY( "DELETE FROM "+name );
       num = -1;
       return;
@@ -2919,7 +3038,7 @@ class ImageCache
 
     int q;
     while(q<sizeof(ids)) {
-      string list = ids[q..q+99] * "','";
+      string list = map(ids[q..q+99], get_db()->quote) * "','";
       q+=100;
       QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
@@ -2933,7 +3052,6 @@ class ImageCache
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 
-    meta_cache = ([]);
 #ifdef DEBUG
     report_debug("%s removed, %dms\n",
 		 (num==-1?"all":num?(string)num:"none"),
@@ -3025,11 +3143,9 @@ class ImageCache
       string uid = "";
       if( u ) uid = u->name();
       // Might have been insterted from elsewhere.
-      catch {
-	QUERY("INSERT INTO "+name+
-	      " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-	      id, uid );
-      };
+      QUERY("REPLACE INTO "+name+
+	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+	    id, uid );
     }
     
     return 0;
@@ -3073,10 +3189,13 @@ class ImageCache
       })) {
 	// File not found.
 	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
-	   err[0][0..21] == "Requesting unknown key")
-	  report_debug("Requesting unknown key %O from %O\n",
+	   sscanf(err[0], "Requesting unknown key %s\n", string message) == 1)
+	{
+	  report_debug("Requesting unknown key %s %O from %O\n",
+		       message,
 		       id->not_query,
 		       (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	}
 	else
 	  report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
@@ -3092,8 +3211,8 @@ class ImageCache
     //  sessions. However, this flag also controls whether the file should
     //  be placed in the protocol-level cache, so we'll counter by setting a
     //  separate flag.
-    id->misc->cacheable = INITIAL_CACHEABLE;
-    id->misc->no_proto_cache = 1;
+    RAISE_CACHE(INITIAL_CACHEABLE);
+    NO_PROTO_CACHE();
     return res;
   }
 
@@ -3133,7 +3252,7 @@ class ImageCache
   //! will be called like <pi>callback( @@data, id )</pi>.
   {
     string ci, user;
-    void update_args( mapping a )
+    function update_args = lambda ( mapping a )
     {
       if (!a->format)
 	//  Make implicit format choice explicit
@@ -3162,14 +3281,16 @@ class ImageCache
       ci = map( map( data, tomapp ), argcache->store )*"$";
     } else
       ci = data;
+    update_args = 0;		// To avoid garbage.
 
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
-		       user||"", ci )) )
-	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
-	      ci, user||"", time(1) );
+      if( catch(QUERY("INSERT INTO "+name+" "
+		      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+		      ci, user||"")) )
+	QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
+	       user||"", ci );
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
@@ -3221,13 +3342,13 @@ class ImageCache
 
   static void init_db( )
   {
-    meta_cache = ([]);
+    catch(sync_meta());
     setup_tables();
   }
 
   void do_cleanup( )
   {
-    call_out( do_cleanup, 3600*10+random(4711) );
+    background_run( 3600*10+random(4711), do_cleanup );
     flush(time()-7*3600*24);
   }
   
@@ -3248,7 +3369,13 @@ class ImageCache
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
 
     // Always remove entries that are older than one week.
-    call_out( do_cleanup, 10 );
+    background_run( 10, do_cleanup );
+  }
+
+  void destroy()
+  {
+    if (mixed err = catch(sync_meta()))
+      report_warning("Failed to sync cached atimes for "+name+"\n");
   }
 
   string _sprintf(int t) {
@@ -3368,6 +3495,8 @@ class ArgCache
     QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
 	   "(%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")", long_key, md );
     int id = (int)db->master_sql->insert_id();
+    if(!id)
+      error("ArgCache::create_key() insert_id returned 0.\n");
 #ifdef REPLICATE_DEBUG
     werror("Create new local key: id: %d, index_id: %d.\n", id, index_id);
 #endif
@@ -3517,11 +3646,19 @@ class ArgCache
       return cache[id]+([]);
     array i = decode_id( id );
     if( !i )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (decode failed)\n");
     array a = low_lookup( i[0] );
     array b = low_lookup( i[1] );
-    if( a && b )
-      return (cache[id] = mkmapping( a, b ))+([]);
+    if (!arrayp (a) || !arrayp (b) || sizeof (a) != sizeof (b))
+    {
+      // Got lookup with ids from an old cache which has been zapped,
+      // and the entries are now used for something else.
+#ifdef ARG_CACHE_DEBUG
+      werror("lookup(%O) a: %O, b: %O\n", id, a, b);
+#endif
+      error("Requesting unknown key (size missmatch)\n");
+    }
+    return (cache[id] = mkmapping( a, b ))+([]);
   }
 
   array low_lookup( int id )
@@ -3531,7 +3668,7 @@ class ArgCache
       return v;
     string q = read_args( id );
     if( !q )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (not found in db)\n");
     mixed data = decode_value(q);
     string hl = Crypto.MD5.hash( q );
     cache[ hl ] = id;
@@ -3542,6 +3679,7 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
+    LOCK();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
@@ -3563,35 +3701,50 @@ class ArgCache
   // entries created after from_time to a file. Returns 0 if faled, 1
   // otherwise.
   {
-    array(int) ids;
-    if(!sizeof(plugins)) {
-      if(from_time)
-	ids = (array(int))
-          QUERY( "SELECT id from "+name+
-		 " WHERE atime >= %d "
-		 "   AND index_id IS NOT NULL", from_time )->id;
-      else
-	ids = (array(int))
-          QUERY( "SELECT id from "+name )->id;
-    }
-    else
-      ids = ((plugins->get_local_ids-({0}))(from_time)) * ({});
+    constant FETCH_ROWS = 10000;
     
     if(sizeof(secret+"\n") != file->write(secret+"\n"))
       return 0;
 
-    foreach(ids, int id) {
-      int index_id = read_index_id(id);
+    // The server does only need to use file based argcache
+    // replication if the server don't participate in a replicate
+    // setup with a shared database.
+    if( !has_value((plugins->is_functional-({0}))(), 1) )
+    {
+      int cursor;
+      array(int) ids;
+      do {
+	if(from_time)
+	  // Only replicate entries accessed during the prefetch crawling.
+	  ids = 
+	    (array(int))
+	    QUERY( "SELECT id from "+name+
+		   " WHERE atime >= %d "
+		   "   AND index_id IS NOT NULL"
+		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS)->id;
+	else
+	  // Make sure _every_ entry is replicated when a dump is created.
+	  ids = 
+	    (array(int))
+	    QUERY( "SELECT id from "+name+
+		   " LIMIT %d, %d", cursor, FETCH_ROWS)->id;
+	
+	cursor += FETCH_ROWS;
+	
+	foreach(ids, int id) {
+	  int index_id = read_index_id(id);
 #ifdef REPLICATE_DEBUG
-      werror("write_dump: argcache id: %d, index_id: %d.\n", id, index_id);
+	  werror("write_dump: argcache id: %d, index_id: %d.\n", id, index_id);
 #endif
-
-      string s = 
-	MIME.encode_base64(encode_value(({ id, read_args(id),
-					   index_id, read_args(index_id) })),
-			   1)+"\n";
-      if(sizeof(s) != file->write(s))
-	return 0;
+	  
+	  string s = 
+	    MIME.encode_base64(encode_value(({ id, read_args(id),
+					       index_id, read_args(index_id) })),
+			       1)+"\n";
+	  if(sizeof(s) != file->write(s))
+	    return 0;
+	}
+      } while(sizeof(ids) == FETCH_ROWS);
     }
     return file->write("EOF\n") == 4;
   }
@@ -3637,7 +3790,8 @@ class ArgCache
   {
     array i = decode_id( id );
     if( !i )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (decode failed)\n");
+    LOCK();
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[0]);
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
@@ -3672,6 +3826,10 @@ void create()
 
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
+
+  if (all_constants()["core"]) {
+    error("Duplicate core object!\n");
+  }
 
   // simplify dumped strings.
   add_constant( "roxen", this); // NGSERVER Remove this
@@ -3894,6 +4052,8 @@ int set_u_and_gid (void|int from_handler_thread)
 #endif
       }
 
+      enable_coredumps(1);
+
 #ifdef THREADS
       // Paranoia.
       mutex_key = 0;
@@ -4075,7 +4235,7 @@ mapping low_decode_image(string data, void|mixed tocolor)
 
 constant decode_layers = Image.decode_layers;
 
-mapping low_load_image(string f, RequestID id)
+mapping low_load_image(string f, RequestID id, void|mapping err)
 {
   string data;
   Stdio.File file;
@@ -4083,7 +4243,7 @@ mapping low_load_image(string f, RequestID id)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id)))
+    if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, err)))
     {
       //  This is a major security hole! It can load any (image) file
       //  in the low-level file system using the server's user privileges.
@@ -4176,7 +4336,9 @@ void create_pid_file(string where)
 //   where = replace(where, ({ "$pid", "$uid" }),
 // 		  ({ (string)getpid(), (string)getuid() }));
 
+  object privs = Privs("Deleting old pid file.");
   r_rm(where);
+  privs = 0;
   if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
     report_debug("I cannot create the pid file ("+where+").\n");
 #endif
@@ -4190,7 +4352,7 @@ void describe_all_threads()
   // have the backtraces. It also gives an atomic view of the state.
   object threads_disabled = _disable_threads();
 
-  report_debug("### Describing all pike threads:\n\n");
+  report_debug("### Describing all Pike threads:\n\n");
 
   array(Thread.Thread) threads = all_threads();
   array(string|int) thread_ids =
@@ -4215,7 +4377,7 @@ void describe_all_threads()
     report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
   }
 
-  report_debug ("### Total %d pike threads\n", sizeof (threads));
+  report_debug ("### Total %d Pike threads\n", sizeof (threads));
 
   threads = 0;
   threads_disabled = 0;
@@ -4223,6 +4385,8 @@ void describe_all_threads()
   report_debug("Describing single thread:\n%s\n",
 	       describe_backtrace (backtrace()));
 #endif
+
+  report_debug (RoxenDebug.report_leaks());
 }
 
 constant dump = loader.dump;
@@ -4240,7 +4404,7 @@ void initiate_argcache()
 		  describe_error(e) +
 #endif /* DEBUG */
 		  "\n");
-    exit(1);
+    roxenloader.real_exit(1);
   }
   add_constant( "roxen.argcache", argcache );
   report_debug("\bDone [%.2fms]\n", (gethrtime()-t)/1000.0);
@@ -4263,11 +4427,27 @@ void show_timers()
 #endif
 
 
+class GCTimestamp
+{
+  array self_ref;
+  static void create() {self_ref = ({this_object()});}
+  static void destroy() {
+    werror ("GC runs at %s", ctime(time()));
+    GCTimestamp();
+  }
+}
+
+
 array argv;
 int main(array(string) tmp)
 {
+  // __builtin.gc_parameters((["enabled": 0]));
   argv = tmp;
   tmp = 0;
+
+#ifdef LOG_GC_TIMESTAMPS
+  GCTimestamp();
+#endif
 
   dbm_cached_get = master()->resolv( "DBManager.cached_get" );
 
@@ -4315,6 +4495,8 @@ int main(array(string) tmp)
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
+
+  once_mode = (int)Getopt.find_option(argv, "o", "once");
 
   // NGSERVER: Remove this.
   configuration_dir = loader.query_configuration_dir();
@@ -4378,9 +4560,12 @@ int main(array(string) tmp)
 
   enable_configurations();
 
+  string pid_file = Getopt.find_option(argv, "p", "pid-file");
+  if (pid_file && query("permanent_uid")) rm(pid_file);
+
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file"));
+  create_pid_file(pid_file);
 
   // Done before the modules are dumped.
 
@@ -4547,8 +4732,6 @@ static string _sprintf(int t)
   }
 }
 
-function(string:Sql.Sql) dbm_cached_get;
-
 // Support for logging in configurations and modules.
 
 class LogFormat
@@ -4711,8 +4894,7 @@ function compile_log_format( string fmt )
     string enc = encode_value(res, master()->MyCodec(res));
     object con = dbm_cached_get("local");
   
-    con->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5);
-    con->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+  con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	       kmd5, fmt, enc);
   };
   return compiled_formats[ fmt ] = res()->log;
@@ -4721,16 +4903,18 @@ function compile_log_format( string fmt )
 // This array contains the compilation information for the different
 // security checks for e.g. htaccess. The layout of the top array is
 // triplet of sscanf string that the security command should match,
-// the number of arugments that it takes and an array with the actual
+// the number of arguments that it takes and an array with the actual
 // compilation information.
 //
-// ({ command_sscanf_string, number_of_arguments, actual_tests })*n
+// ({ command_sscanf_string, number_of_arguments, actual_tests,
+//    state_symbol_string,
+// })
 // 
 
 // In the tests array the following types has the following meaning:
 // function
 //   The function will be run during compilation. It gets the values
-//   aquired though sscanf-ing the command as input and should return
+//   acquired through sscanf-ing the command as input and should return
 //   an array with corresponding data.
 // string
 //   The string will be compiled into the actual test code. It is
@@ -4742,92 +4926,93 @@ function compile_log_format( string fmt )
 //   Strings in a multiset will be added before the string above.
 //   should typically be used for variable declarations.
 // int
-//   Signals that a authentication request should be sent to the user
+//   Signals that an authentication request should be sent to the user
 //   upon failure.
 // 
 // 
 // NOTE: It's up to the security checks in this file to ensure that
-// nothing is overcached. All patterns that does checks using
+// nothing is overcached. All patterns that perform checks using
 // information from the client (such as remote address, referer etc)
-// _has_ to use NOCACHE(). It's not nessesary, however, to do that for
-// checks that use the authentication module API, since it's up to the
-// user database and authentication modules to ensure that nothing is
-// overcached in that case.
-array security_checks = ({
-  "ip=%s:%s",2,({
+// _have_ to use NOCACHE() or NO_PROTO_CACHE(). It's not necessary, however,
+// to do that for checks that use the authentication module API, since
+// then it's up to the user database and authentication modules to ensure
+// that nothing is overcached in that case.
+array(array(string|int|array)) security_checks = ({
+  ({ "ip=%s:%s",2,({
     lambda( string a, string b ){
       int net  = Roxen.ip_to_int( a );
       int mask = Roxen.ip_to_int( b );
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NOCACHE();\n"
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s/%d",2,({
+    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d)",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip" }),
+  ({ "ip=%s/%d",2,({
     lambda( string a, int b ){
       int net  = Roxen.ip_to_int( a );
       int mask = ((~0<<(32-b))&0xffffffff);
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NOCACHE();\n"
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s",1,({
-    " NOCACHE();\n"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,id->remoteaddr);\n"
-    "           })) )"
-  }),
-  "user=%s",1,({ 1,
+    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d) ",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "ip=%s",1,({
+    "    if (sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){\n"
+    "                        return glob(q,id->remoteaddr);\n"
+    "                      })))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "user=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
 
+    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "         && ((%[0]s->any) || (%[0]s[user->name()]))) ",
+    (<"  User user" >),
    // No need to NOCACHE () here, since it's up to the
    // auth-modules to do that.
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
-    (<  "  User user" >),
-  }),
-  "group=%s",1,({ 1,
+  }), "user", }),
+  ({ "group=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
+    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "        && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
+    (<"  User user" >),
    // No need to NOCACHE () here, since it's up to the
    // auth-modules to do that.
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
-    (<"  User user" >),
-  }),
-  "dns=%s",1,({
-    "NOCACHE();"
-    "  if(!dns && \n"
-    "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
-    "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
-    "      return Roxen.http_try_again( 0.1 );\n"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){return glob(q,dns);})) )",
+  }), "group", }),
+  ({ "dns=%s",1,({
+    "    if(!dns && \n"
+    "       ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
+    "      if( (id->misc->delayed+=0.1) < 1.0 )\n"
+    "        return Roxen.http_try_again( 0.1 );\n"
+    "    if (sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(q,dns);})))",
     (< "  string dns" >),
-  }),
-  "time=%d:%d-%d:%d",4,({
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
     (< "  int th = l->hour, tm = l->min" >),
     // No need to NOCACHE() here, does not depend on client.
-    " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
-    "     ((th <= %[2]d) && (tm <= %[3]d)) )",
-  }),
-  "referer=%s", 1, ({
+    "    if (((th >= %[0]d) && (tm >= %[1]d)) &&\n"
+    "        ((th <= %[2]d) && (tm <= %[3]d)))",
+  }), "time", }),
+  ({ "referer=%s", 1, ({
     (<
       "  string referer = sizeof(id->referer||({}))?"
       "id->referer[0]:\"\"; "
     >),
-    "  NOCACHE();"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,referer);\n"
-    "           })) )"
-  }),
-  "day=%s",1,({
+    "    if( sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(q,referer);})))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "referer", }),
+  ({ "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
       foreach( q/",", string w )
@@ -4841,19 +5026,19 @@ array security_checks = ({
     },
     (< "  mapping l = localtime(time(1))" >),
     // No need to NOCACHE() here, does not depend on client.
-    " if( %[0]s[l->wday] )"
-  }),
-  "accept_language=%s",1,({
-    "  NOCACHE(); "
-    "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
-  }),
-  "luck=%d%%",1,({
+    "    if (%[0]s[l->wday])"
+  }), "day", }),
+  ({ "accept_language=%s",1,({
+    "    if (has_value(id->misc->pref_languages->get_languages(), %O))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "language", }),
+  ({ "luck=%d%%",1,({
     lambda(int luck) { return ({ 100-luck }); },
     // Not really any need to NOCACHE() here, since it does not depend
     // on client. However, it's supposed to be totally random.
-    " NOCACHE();"
-    " if( random(100)<%d )",
-  }),
+    "    if( random(100)<%d )",
+    (<"  NOCACHE()" >),
+  }), "luck", }),
 });
 
 #define DENY  0
@@ -4930,8 +5115,15 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   array variables = ({ "  object userdb_module",
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
-		       "  int|mapping fail" });
-  int shorted, patterns, cmd;
+		       "  mapping(string:int|mapping) state = ([])",
+  });
+
+  // Some state variables for optimizing.
+  int all_shorted = 1;			// All allow patterns have return.
+  int need_auth = 0;			// We need auth for some checks.
+  int max_short_code = 0;		// Max fail code for return checks.
+  int patterns;				// Number of patterns.
+  multiset(string) checks = (<>);	// Checks in state.
 
   foreach( pattern/"\n", string line )
   {
@@ -4939,6 +5131,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     if( !strlen(line) || line[0] == '#' )
       continue;
     sscanf( line, "%[^#]#", line );
+
+    int cmd;
 
     if( sscanf( line, "allow %s", line ) )
       cmd = ALLOW;
@@ -4948,16 +5142,16 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "config_userdb" || line == "admin_userdb" ) // NGSERVER: No config_userdb
-	code += "  userdb_module = roxen.admin_userdb_module;\n";
+	code += "    userdb_module = roxen.admin_userdb_module;\n";
       else if( line == "all" )
-	code += "  userdb_module = 0;\n";
+	code += "    userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
 	m->report_notice( "Syntax error in security patterns: "
 			  "Cannot find the user database '%s'\n",
 			  line);
       else
 	code +=
-	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
+	  sprintf("    userdb_module = id->conf->find_user_database( %O );\n",
 		  line);
       continue;
     } 
@@ -4965,39 +5159,78 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "all" )
-	code += "  authmethod = id->conf;\n";
+	code += "    authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
 	m->report_notice( "Syntax error in security patterns: "
 			  "Cannot find the auth method '%s'\n",
 			  line);
       else
 	code +=
-	  sprintf("  authmethod = id->conf->find_auth_module( %O );\n",
+	  sprintf("    authmethod = id->conf->find_auth_module( %O );\n",
 		  line);
       continue;
     }
     else if( sscanf( line, "realm %s", line ) )
     {
       line = String.trim_all_whites( line );
-      code += sprintf( "  realm = %O;\n", line );
+      code += sprintf( "    realm = %O;\n", line );
+      continue;
     }
-    else
+    else {
       m->report_notice( "Syntax error in security patterns: "
 			"Expected 'allow' or 'deny'\n" );
-    shorted = sscanf( line, "%s return", line );
+      continue;
+    }
+    int shorted = sscanf( line, "%s return", line );
 
 
-    for( int i = 0; i<sizeof(  security_checks ); i+=3 )
+    // Notes on the variables @[state] and @[short_fail]:
+    //
+    // The variable @[state] has several potential entries
+    // (currently "ip", "user", "group", "time", "date",
+    //  "referer", "language" and "luck").
+    // An entry exists in the mapping if a corresponding accept directive
+    // has been executed.
+    //
+    // The variable @[short_fail] contains a non-zero entry if
+    // a potentially acceptable accept with return has been
+    // encountered.
+    //
+    // Valid values in @[state] and @[short_fail] are:
+    // @int
+    //   @value 0
+    //     Successful match.
+    //   @value 1
+    //     Plain failure.
+    //   @value 2
+    //     Fail with authenticate.
+    // @endint
+    //
+    // Shorted directives will only be regarded if all unshorted directives
+    // encountered at that point have succeeded.
+    // If the checking ends with an ok return unshorted directives of
+    // the same class will be disregarded as well as any potential
+    // short directives.
+    // If there are unshorted directives of type 2 and none of type 1,
+    // an auth request will be sent.
+    // If there are unshorted directives, and all of them have been
+    // satisfied an OK will be sent.
+    // If there is a potential short directive of type 2, an auth
+    // request will be sent.
+    // If there are no unshorted directives and no potential short
+    // directives an OK will be sent.
+    // Otherwise a FAIL will be sent.
+
+    foreach(security_checks, array(string|int|array) check)
     {
-      string check = security_checks[i];
       array args;      
-      if( sizeof( args = array_sscanf( line, check ) )
-	  == security_checks[i+1] )
+      if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
+	// Got a match for this security check.
 	patterns++;
-	int thr;
+	int thr_code = 1;
 	// run instructions.
-	foreach( security_checks[ i+2 ], mixed instr )
+	foreach(check[2], mixed instr )
 	{
 	  if( functionp( instr ) )
 	    args = instr( @args );
@@ -5007,37 +5240,110 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	      if( !has_value( variables, v ) )
 		variables += ({ v });
 	  }
-	  else if( intp( instr ) )
-	    thr = instr;
+	  else if( intp( instr ) ) {
+	    thr_code = 2;
+	    need_auth = 1;
+	  }
 	  else if( stringp( instr ) )
 	  {
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      if( thr )
-		code += "    return authmethod->authenticate_throw( id, realm );\n";
-	      else
-		code += "    return 1;\n";
+	      // Make sure we fail regardless of the setting
+	      // of all_shorted when we're done.
+	      if (thr_code < max_short_code) {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      if (short_fail < %d)\n"
+				"        short_fail = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code,
+				thr_code,
+				thr_code);
+	      } else {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      short_fail = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code,
+				thr_code);
+		max_short_code = thr_code;
+	      }
 	    }
 	    else
 	    {
-	      if( shorted )
-	      {
-		code += "    return fail;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    return authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    return fail || 1;\n";
-	      }
-	      else
-	      {
-		code += "    ;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    fail=authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    if( !fail ) fail=1;\n";
+	      if (shorted) {
+		// OK with return. Ignore FAIL/return.
+		if (all_shorted) {
+		  code +=
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+		    "    {\n"
+		    "      report_debug(\"  Result: 0 (fast return)\\n\");\n"
+		    "      return 0;\n"
+		    "    }\n";
+#else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
+		    "      return 0;\n";
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+		} else {
+		  code += "    {\n";
+		  if (checks[check[3]]) {
+		    code +=
+		      sprintf("      m_delete(state, %O);\n",
+			      check[3]);
+		  }
+		  if (max_short_code) {
+		    code += "      short_fail = 0;\n";
+		  }
+		  code +=
+		    "      break;\n"
+		    "    }\n";
+		}
+		// Handle the fail case.
+		if (sizeof(checks)) {
+		  // Check that we can satify all preceeding tests.
+		  code +=
+		    "    else if (!sizeof(filter(values(state),\n"
+		    "                            values(state))))\n";
+		} else {
+		  code += "    else\n";
+		}
+		// OK so far for non return tests.
+		if (thr_code < max_short_code) {
+		  code +=
+		    sprintf("      if (short_fail < %d)\n"
+			    "        short_fail = %d;\n",
+			    thr_code,
+			    thr_code);
+		} else {
+		  code +=
+		    sprintf("      short_fail = %d;\n", thr_code);
+		  max_short_code = thr_code;
+		}
+	      } else {
+		// OK without return. Mark as OK.
+		code +=
+		  sprintf("    {\n"
+			  "      state->%s = 0;\n"
+			  "    }\n",
+			  check[3]);
+		all_shorted = 0;
+		// Handle the fail case.
+		if (checks[check[3]]) {
+		  // If not marked
+		  // set the failure level.
+		  code +=
+		    sprintf("    else if (zero_type(state->%s))\n",
+			    check[3]);
+		} else {
+		  code += "    else\n";
+		}
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"    }\n",
+				check[3], thr_code);
+		checks[check[3]] = 1;
 	      }
 	    }
 	  }
@@ -5047,20 +5353,48 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     }
   }
   if( !patterns )  return 0;
+  code = ("  do {\n" +
+	  code +
+	  "  } while(0);\n");
   code = ("#include <module.h>\n"
 	  "int|mapping f( RequestID id )\n"
-	  "{\n" +variables *";\n" + ";\n" +
+	  "{\n" +
+	  (variables * ";\n") +
+	  ";\n" +
+	  (max_short_code?"  int short_fail;\n":"") +
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
 	  sprintf("  report_debug(\"Verifying against pattern:\\n\"\n"
 		  "%{               \"  \" %O \"\\n\"\n%}"
 		  "               \"...\\n\");\n"
-		  "%s"
-		  "  report_debug(\"  Result: %%O\\n\", fail);\n",
+		  "%s"+
+		  (max_short_code?
+		   "  report_debug(\"  Short code: %%O\\n\",\n"
+		   "                       short_fail);\n":"")+
+		  "  report_debug(\"  Result: %%O\\n\",\n"
+		  "                       state);\n",
 		  pattern/"\n", code) +
 #else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
 	  code +
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
-	  "  return fail;\n}\n" );
+
+	  (!all_shorted?
+	   "  int fail = 0;\n"
+	   "  foreach(values(state), int value) {\n"
+	   "    fail |= value;\n"
+	   "  }\n"
+	   "  if (!fail)\n"
+	   "    return 0;\n":
+	   "") +
+	  (max_short_code > 1?
+	   "  if (short_fail > 1)\n"
+	   "    return authmethod->authenticate_throw(id, realm);\n":
+	   "") +
+	  (!all_shorted && need_auth?
+	   "  if (fail == 2)\n"
+	   "    return authmethod->authenticate_throw(id, realm);\n":
+	   "") +
+	  "  return 1;\n"
+	  "}\n");
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
   report_debug("Compiling security pattern:\n"
 	       "%{    %s\n%}\n"
@@ -5072,9 +5406,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   mixed res = compile_string( code );
    
   dbm_cached_get( "local" )
-    ->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5 );
-  dbm_cached_get( "local" )
-    ->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+    ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	    kmd5,pattern,encode_value( res, master()->MyCodec( res ) ) );
   return compile_string(code)()->f;
 }

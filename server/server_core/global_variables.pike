@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.107 2004/05/20 12:58:53 _cvs_stephen Exp $
+// $Id: global_variables.pike,v 1.108 2004/05/22 21:48:18 _cvs_stephen Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -69,7 +69,10 @@ void set_up_ftp_variables( Protocol o )
           " 0 means unlimited." );
 
   defvar( "named_ftp", 1, "Allow named ftp", TYPE_FLAG,
-          "If yes, non-anonymous users can connect." );
+          "If yes, non-anonymous users can connect. "
+		 "Note that for password authentication to be performed "
+		 "you will need to have the \"Authentication: Password\" "
+		 "module in your site.");
 
   defvar( "guest_ftp", 1, 
 	  "Allow login with incorrect password/user",
@@ -122,7 +125,7 @@ void set_up_http_variables( Protocol o )
 
   defvar("set_cookie", 0, "Logging: Set unique browser id cookies",
 	 TYPE_FLAG,
-	 ("If set to Yes, all clients that accepts cookies will get "
+	 ("If set to Yes, all clients that accept cookies will get "
 	  "a unique 'user-id-cookie', which can then be used in the log "
 	  "and in scripts to track individual users."));
 
@@ -139,17 +142,24 @@ void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_cert_file", "demo_certificate.pem", "SSL certificate file",
-	  TYPE_STRING,
-	  "The SSL certificate file to use. The path is relative to "+combine_path(getcwd(), "../local/")+".\n" );
-
+  defvar( "ssl_cert_file", ({ "demo_certificate.pem" }),
+	  "SSL certificate file",
+	  TYPE_FILE_LIST,
+	  sprintf("The SSL certificate file(s) to use. "
+			 "If a path is relative, it will first be searched "
+			 "for relative to %s, "
+			 "and if not found there relative to %s.\n",
+		  combine_path(getcwd(), "../local"), getcwd() ));
 
   defvar( "ssl_key_file", "", "SSL key file",
 	  TYPE_STRING,
-	  ("The SSL key file to use. The path is "
-	   "relative to "+combine_path(getcwd(),"../local/")+", you do not have to specify a key "
-	   "file, leave this field empty to use the certificate "
-	   "file only.\n") );
+	  sprintf("The SSL key file to use. If the path is "
+			 "relative, it will first be searched for relative "
+			 "to %s, and if not found there relative to %s. "
+			 "You do not have to specify a key "
+			 "file, leave this field empty to use the certificate "
+			 "file only.\n",
+		  combine_path(getcwd(), "../local"), getcwd() ));
 }
 
 
