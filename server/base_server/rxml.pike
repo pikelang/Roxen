@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.308 2001/07/09 04:03:54 mast Exp $
+// $Id: rxml.pike,v 1.309 2001/07/16 03:10:40 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -37,6 +37,11 @@ RXML.TagSet rxml_tag_set = class
     int i = search (imported, Roxen.entities_tag_set);
     array(RXML.TagSet) new_imported = imported[..i-1] + imported[i+1..];
     array(RoxenModule) new_modules = modules[..i-1] + modules[i+1..];
+    array(string) module_ids = new_modules->module_identifier();
+    // Sort on the module identifiers first so that the order is well
+    // defined within the same priority. That's important to make
+    // get_hash return a stable value.
+    sort (module_ids, new_imported, new_modules);
     array(int) priorities = new_modules->query ("_priority", 1);
     priorities = replace (priorities, 0, 4);
     sort (priorities, new_imported, new_modules);
