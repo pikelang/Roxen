@@ -7,12 +7,11 @@
 <cv-leftside>
 <img src="internal-roxen-unit" height="16" /><br />
 <gbutton frame-image='&usr.left-buttonframe;' 
-         width='150' 
+         width='&usr.left-buttonwidth;'
          bgcolor='&usr.left-selbuttonbg;' 
          icon_src='&usr.selected-indicator;' 
          icon_align='left' 
          href=''><translate id="213">Sites</translate></gbutton>
-<br />
 <br />
 <if variable="usr.configlistmode is 1">
 <if variable='form.goto_site'>
@@ -39,7 +38,7 @@ Select site<br />
    <gbutton frame-image='&usr.left-buttonframe;' 
              bgcolor='&usr.left-buttonbg;' 
              href='site.html/&_.sname;/' 
-            width='150'>&_.name;</gbutton><br />
+            width='&usr.left-buttonwidth;'>&_.name;</gbutton><br />
   </cf-perm>
  </emit>
 </else>

@@ -26,6 +26,7 @@ Stand alone settings (no other settings are based on these):
   ---------------------------------------------------------
   setting                       default
   ---------------------------------------------------------
+  left-buttonwidth              150
   warncolor                     darkred
   background		        none
   content-background	        none
