@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.50 2001/03/05 14:14:10 stewa Exp $
+ * $Id: ftp.pike,v 2.51 2001/03/13 14:42:41 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -30,6 +30,7 @@
  * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
+ * RFC 2428	FTP Extensions for IPv6 and NATs
  *
  * IETF draft 12 Extended Directory Listing, TVFS,
  *		 and Restart Mechanism for FTP
@@ -1305,9 +1306,13 @@ class FTPSession
     "MLSD":"<sp> path-name (Machine Processing List Directory)",
     "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
 
+    // These are from RFC 2428
+    "EPRT":"<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)",
+    "EPSV":"[<sp> net-prt|ALL] (Extended Address Passive Mode)",
+
     // These are in RFC 1639
-    "LPRT":"<SP> <long-host-port> (Long port)",
-    "LPSV":"(Long passive)",
+    "LPRT":"<sp> <long-host-port> (Long Port)",
+    "LPSV":"(Long Passive)",
 
     // Commands in the order from RFC 959
 
@@ -2533,9 +2538,15 @@ class FTPSession
    * FTP commands begin here
    */
 
+  // Set to 1 by EPSV ALL.
+  int epsv_mode;
+
   void ftp_REIN(string|int args)
   {
     logout();
+
+    // FIXME: What about EPSV ALL mode? RFC 2428 doesn't say.
+    // I guess that it shouldn't be reset.
 
     dataport_addr = 0;
     dataport_port = 0;
@@ -2820,10 +2831,15 @@ class FTPSession
 
   void ftp_PORT(string args)
   {
+    if (epsv_only) {
+      send(530, ({ "'PORT': Method not allowed in EPSV ALL mode." }));
+      return;
+    }
+
     int a, b, c, d, e, f;
 
     if (sscanf(args||"", "%d,%d,%d,%d,%d,%d", a, b, c, d, e, f)<6)
-      send(501, ({ "I don't understand your parameters" }));
+      send(501, ({ "I don't understand your parameters." }));
     else {
       dataport_addr = sprintf("%d.%d.%d.%d", a, b, c, d);
       dataport_port = e*256 + f;
@@ -2836,9 +2852,60 @@ class FTPSession
     }
   }
 
+  void ftp_EPRT(string args)
+  {
+    if (epsv_only) {
+      send(530, ({ "'EPRT': Method not allowed in EPSV ALL mode." }));
+      return;
+    }
+
+    if (sizeof(args) < 3) {
+      send(501, ({ "I don't understand your parameters." }));
+      return;
+    }
+
+    string delimiter = args[0..0];
+    if ((delimiter[0] <= 32) || (delimiter >= 127)) {
+      send(501, ({ "Invalid delimiter." }));
+    }
+    array(string) segments = args/delimiter;
+
+    if (sizeof(args) != 4) {
+      send(501, ({ "I don't understand your parameters." }));
+      return;
+    }
+    if (segments[1] != "1") {
+      // FIXME: No support for IPv6 or ALL yet.
+      send(522, ({ "Network protocol not supported, use (1)" }));
+      return;
+    }
+    if ((sizeof(segments[2]/".") != 4) ||
+	sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
+      send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
+      return;
+    }
+    if (!((int)segemnts[3])) {
+      send(501, ({ sprintf("Bad port number: '%s'", segments[3]) }));
+      return;
+    }
+    dataport_addr = segemnts[2];
+    dataport_port = (int)segemnts[3];
+
+    if (pasv_port) {
+      destruct(pasv_port);
+    }
+    send(200, ({ "EPRT command ok ("+dataport_addr+
+		 " port "+dataport_port+")" }));
+  }
+
   void ftp_PASV(string args)
   {
     // Required by RFC 1123 4.1.2.6
+
+    if (epsv_only) {
+      send(530, ({ "'PASV': Method not allowed in EPSV ALL mode." }));
+      return;
+    }
 
     if(pasv_port)
       destruct(pasv_port);
@@ -2850,6 +2917,32 @@ class FTPSession
     send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
 			 replace(local_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
+  }
+
+  void ftp_EPSV(string args)
+  {
+    // Specified by RFC 2428:
+    // Extensions for IPv6 and NATs.
+
+    if (args && args != "1") {
+      if (lower_case(args) == "all") {
+	epsv_only = 1;
+	send(200, ({ "Entering EPSV ALL mode." }));
+      } else {
+	// FIXME: No support for IPv6 or ALL yet.
+	send(522, ({ "Network protocol not supported, use (1)" }));
+      }
+      return;
+    }
+    if (pasv_port)
+      destruct(pasv_port);
+    pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
+    /* FIXME: Hmm, getting the address from an anonymous port seems not
+     * to work on NT...
+     */
+    int port=(int)((pasv_port->query_address()/" ")[1]);
+    send(229, ({ sprintf("Entering Extended Passive Mode (|%d|%s|%d|)",
+			 1, local_addr, port) }));
   }
 
   void ftp_TYPE(string args)
