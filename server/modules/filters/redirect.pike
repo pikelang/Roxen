@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.29 2001/06/10 18:58:34 marcus Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.30 2001/08/15 16:54:01 per Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -106,8 +106,9 @@ void start()
 }
 
 constant module_type = MODULE_FIRST;
-constant module_name = "Redirect Module v2.0";
-constant module_doc  = "The redirect module. Redirects requests from one filename to "
+constant module_name = "Redirect Module";
+constant module_doc  =
+  "The redirect module. Redirects requests from one filename to "
   "another. This can be done using \"internal\" redirects (much"
   " like a symbolic link in unix), or with normal HTTP redirects.";
 constant module_unique = 0;
@@ -148,26 +149,30 @@ mixed first_try(object id)
   if(!ok)
     for (int i = 0; i < sizeof (redirect_from); i++) {
       string f = redirect_from[i];
-      if(!search(m, f))
+      if(has_prefix(m, f))
       {
 	to = redirect_to[i] + m[strlen(f)..];
 	sscanf(to, "%s?", to);
 	break;
-      } else if(search(f, "*")!=-1) {
+      } else if( has_value(f, "*") || has_value( f, "(") ) {
 	array foo;
 	function split;
 	if(f[0] != '^') f = "^" + f;
 	if(catch (split = Regexp(f)->split))
+	{
 	  report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
+	  continue;
+	}
 	
 	if((foo=split(m)))
 	{
 	  array bar = Array.map(foo, lambda(string s, mapping f) {
 				       return "$"+(f->num++);
 				     }, ([ "num":1 ]));
-	  foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1], id->not_query[1..] });
+	  foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1],
+		  id->not_query[1..] });
 	  bar +=({ "%f", "%p" });
-	  to = replace(redirect_to[i], (array(string)) bar, (array(string)) foo);
+	  to=replace(redirect_to[i], (array(string)) bar, (array(string)) foo);
 	  break;
 	}
       }
@@ -199,5 +204,3 @@ mixed first_try(object id)
     id->not_query = id->scan_for_query( to );
   }
 }
-
-
