@@ -1,4 +1,4 @@
-## $Id: supports,v 1.44 1997/09/19 20:36:32 grubba Exp $
+## $Id: supports,v 1.45 1997/10/06 14:11:15 grubba Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -264,10 +264,6 @@ cern.*linemode.*           nothing
 .*		robot	passagen
 # }
 
-#section intraseek {
-.*		robot	infovav
-# }
-
 #section webcrawler {
 .*		robot	webcrawler
 # }
@@ -275,6 +271,15 @@ cern.*linemode.*           nothing
 #section intraseek {
 .*		robot	intraseek infovav
 # }
+
+#section harvest {
+.*              robot   harvest
+# }
+
+#section checkbot {
+.*              robot   checkbot
+# }
+
 
 
 .*robot.*		robot   
