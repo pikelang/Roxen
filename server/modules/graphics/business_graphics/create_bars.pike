@@ -15,6 +15,11 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
+/*
+These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+Create_bars can draw normal bars, sumbars and normalized sumbars.
+*/ 
+
 
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
@@ -145,7 +150,11 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   int labely=0;
   if (diagram_data["labels"])
     {
-      label=diagram_data["labels"][0];
+      if (diagram_data["labels"][2] && sizeof(diagram_data["labels"][2]))
+	label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
+      else
+	label=diagram_data["labels"][0];
+
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
