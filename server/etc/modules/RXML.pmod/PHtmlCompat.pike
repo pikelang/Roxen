@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.5 2000/01/21 22:31:35 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.6 2000/01/28 16:27:12 mast Exp $
 
 #pragma strict_types
 
@@ -70,16 +70,6 @@ this_program add_containers (mapping(string:CONTAINER_TYPE) cdefs)
   foreach (indices (cdefs), string name)
     if (cdefs[name]) tagmap_containers[name] = cdefs[name];
     else m_delete (tagmap_containers, name);
-  return this_object();
-}
-
-this_program add_entity (string name, ENTITY_TYPE edef)
-{
-  return this_object();
-}
-
-this_program add_entities (mapping(string:ENTITY_TYPE) edefs)
-{
   return this_object();
 }
 
