@@ -1,7 +1,7 @@
 /*
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
- * $Id: http.pike,v 1.34 1999/12/28 00:21:38 nilsson Exp $
+ * $Id: http.pike,v 1.35 2000/02/17 05:28:12 per Exp $
  */
 
 #include <config.h>
@@ -40,7 +40,7 @@ string http_res_to_string( mapping file, RequestID id )
   {
     if(objectp(file->file))
       if(!file->stat && !(file->stat=id->misc->stat))
-	file->stat = (int *)file->file->stat();
+	file->stat = (array(int))file->file->stat();
     array fstat;
     if(arrayp(fstat = file->stat))
     {
