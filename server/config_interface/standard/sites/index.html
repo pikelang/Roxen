@@ -14,12 +14,33 @@
          href=''><translate id="213">Sites</translate></gbutton>
 <br />
 <br />
-<emit source='configurations'>
- <gbutton frame-image='&usr.left-buttonframe;' 
-          bgcolor='&usr.left-buttonbg;' 
-          href='site.html/&_.sname;/' 
-          width='150'>&_.name;</gbutton><br />
-</emit>
+<if variable="usr.configlistmode is 1">
+<if variable='form.goto_site'>
+<if not variable='form.goto_site is '>
+  <redirect to='site.html/&form.goto_site;/' />
+</if>
+</if>
+Select site<br />
+<select name='goto_site' onChange='form.submit();'>
+   <option value=''> -- </option>
+ <emit source='configurations'>
+   <option value='&_.sname;'>&_.name;</option>
+  </emit>
+ </select>
+<br />
+<input type=submit value=" Go " />
+</if>
+
+<else>
+ <emit source='configurations'>
+   <gbutton frame-image='&usr.left-buttonframe;' 
+             bgcolor='&usr.left-buttonbg;' 
+             href='site.html/&_.sname;/' 
+            width='150'>&_.name;</gbutton><br />
+ </emit>
+</else>
+
+
 </cv-leftside>
 
 <cv-split>

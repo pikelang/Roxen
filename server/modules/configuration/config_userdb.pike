@@ -91,6 +91,13 @@ class ConfigurationSettings
     defvar( "theme", ThemeVariable( "default", 0,
                                     "Theme",
                                     "The theme to use" ) );
+    defvar( "configlistmode", 0,
+            LOCALE( "", "Compact site list" ),
+            TYPE_FLAG,
+            LOCALE( "", "If true, the list list will be presented in a "
+                    "compact format suitable for servers with many sites" ));
+
+
 
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
             TYPE_FLAG, LOCALE(175, "Show the variable documentation."),
