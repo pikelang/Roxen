@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.1 2001/09/17 16:44:14 nilsson Exp $
+// $Id: HTML.pmod,v 1.2 2001/09/17 18:04:04 nilsson Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML complient as well as backwards compatible
@@ -74,7 +74,7 @@ string select(string name, array(string)|array(array(string)) choices,
 //!     if(y%2) return "<td bgcolor='#aaaaff'>"+contents+"</td>";
 //!     return "<td bgcolor='"+bgcolor+"'>"+contents+"</td>";
 //!   }
-//!   simple_obox(my_rows, "#0000a0", 0, 1, 3, cb);
+//!   simple_obox(my_rows, "#0000a0", 0, "1", "3", cb);
 //!
 //! @seealso
 //!   pad_rows
@@ -149,6 +149,9 @@ class OBox {
     mapping(string:string)|array(mapping(string:string)) args;
   }
 
+  //! @decl void create(void|string frame_color, void|string cell_color,@
+  //!   void|string width, void|string padding,@
+  //!   void|function(int, int, string, string : string) cell_callback)
   void create( void|string _frame_color, void|string _cell_color,
 	       void|string _width, void|string _padding,
 	       void|function(int, int, string, string : string) _cb) {
@@ -159,12 +162,18 @@ class OBox {
     if(_cb) cb = _cb;
   }
 
-  //!
+  //! @decl void set_cell_callback(@
+  //!   function(int, int, string, string : string) cell_callback)
   void set_cell_callback( function(int, int, string, string : string) _cb ) {
     cb = _cb;
   }
 
+  //! @decl void set_extra_args( mapping(string:string) extra_args )
+  //! The argument in the mapping will be added to all created table cells.
   //!
+  //! @decl void set_extra_args( array(mapping(string:string)) extra_args )
+  //! The argument in the mappings will be added to the cell in the
+  //! cooresponding column of the table.
   void set_extra_args( mapping(string:string)|array(mapping(string:string)) _args) {
     if(mappingp(_args)) {
       if(!_args->bgcolor) _args->bgcolor = cell_color;
@@ -176,18 +185,29 @@ class OBox {
     args = _args;
   }
 
-  //!
+  //! Adds this cell to the table unmodified, e.g. it should have an enclosing
+  //! td or th element.
   void add_raw_cell( string cell ) {
     rows[-1] += ({ cell });
     x++;
   }
 
-  void add_tagdata_cell( string tag, mapping args, string contents ) {
+  //! Creates a cell from the provided arguments and adds it to the table.
+  //!
+  //! @param tag
+  //!   The name of the element that should be produces. Typically
+  //!   "td" or "th".
+  //! @param args
+  //!   A mapping with the elements attributes.
+  //! @param contents
+  //!   The element contents.
+  void add_tagdata_cell( string tag, mapping(string:string) args, string contents ) {
     if(!args->bgcolor) args->bgcolor = cell_color;
     rows[-1] += ({ sprintf("<%s%{ %s='%s'%}>%s</%[0]s>",
 			   tag, (array)args, contents) });
   }
 
+  //! Adds a cell with the provided content.
   void add_cell( string contents ) {
     if(cb)
       rows[-1] += ({ cb(x, y, cell_color, contents) });
@@ -201,13 +221,16 @@ class OBox {
     x++;
   }
 
-  //!
+  //! Begin a new row. Succeeding cells will be added to this
+  //! row instead of the current.
   void new_row() {
     x = 0;
     y++;
     rows += ({ ({}) });
   }
 
+  //! Adds a complete row. If the current row is nonempty a
+  //! new row will be started.
   void add_row( array(string) cells ) {
     if(sizeof(rows[-1]))
       new_row();
@@ -215,13 +238,13 @@ class OBox {
       add_cell( cell );
   }
 
-  //!
+  //! Ensures that all rows have the same number of cells.
   void pad_rows() {
     rows = ::pad_rows(rows, "<td bgcolor='" + cell_color + "'>&nbsp;</td>");
   }
 
-  //!
-  string read() {
+  //! Returns the result.
+  string render() {
     return wrap_simple_obox( "<tr>" + map(rows, `*, "")*"</tr><tr>\n" + "</tr>",
 			     frame_color, width, padding );
   }
@@ -231,7 +254,7 @@ class OBox {
     if(to=="array")
       return rows;
     if(to=="string")
-      return read();
+      return render();
     error("Could not cast OBox object to %s.\n", to);
   }
 }
