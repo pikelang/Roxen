@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.146 2000/07/26 15:38:46 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.147 2000/07/28 15:54:44 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1763,7 +1763,7 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  </ex>
 </attr>
 
-</attr name=from value=string>
+<attr name=from value=string>
  The name of another variable that the value should be copied from.
 </attr>",
 
@@ -2405,7 +2405,9 @@ Display the time from another timezone.
 </attr>
 
 <attr name=href value=string>
- Inserts the contents at that URL.
+ Inserts the contents at that URL. This function has to be enabled in
+ the <module>RXML 2.0 tags</module> module in the Roxen WebServer
+ configuration interface.
 </attr>",
 
 "maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
