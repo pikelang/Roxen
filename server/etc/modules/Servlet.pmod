@@ -17,6 +17,7 @@ static object response_class = FINDCLASS("se/idonex/servlet/ServletResponse");
 static object stream_class = FINDCLASS("se/idonex/servlet/HTTPOutputStream");
 static object session_context_class = FINDCLASS("se/idonex/servlet/RoxenSessionContext");
 static object dictionary_class = FINDCLASS("java/util/Dictionary");
+static object hashtable_class = FINDCLASS("java/util/Hashtable");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
@@ -36,6 +37,7 @@ static object servlet_service = servlet_ifc->get_method("service", "(Ljavax/serv
 static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Ljava/lang/String;)V");
 static object context_init = context_class->get_method("<init>", "(I)V");
 static object context_id_field = context_class->get_field("id", "I");
+static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
 static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lse/idonex/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object response_init = response_class->get_method("<init>", "(Lse/idonex/servlet/HTTPOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
@@ -44,6 +46,7 @@ static object attrs_field = request_class->get_field("attributes", "Ljava/util/D
 static object headers_field = request_class->get_field("headers", "Ljava/util/Dictionary;");
 static object set_response_method = request_class->get_method("setResponse", "(Lse/idonex/servlet/ServletResponse;)V");
 static object dic_put = dictionary_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+static object hash_clear = hashtable_class->get_method("clear", "()V");
 static object stream_id_field = stream_class->get_field("id", "I");
 static object stream_init = stream_class->get_method("<init>", "(I)V");
 static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
@@ -272,6 +275,15 @@ class context {
   string get_server_info()
   {
     return roxen->version();
+  }
+
+  void set_init_parameters(mapping(string:string) pars)
+  {
+    object f = context_initpars_field->get(ctx);
+    hash_clear(f);
+    foreach(indices(pars), string key)
+      dic_put(f, key, pars[key]);
+    check_exception();
   }
 
 };

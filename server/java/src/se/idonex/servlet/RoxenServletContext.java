@@ -31,7 +31,7 @@ class RoxenServletContext implements ServletContext
   }
 
   Hashtable attributes = new Hashtable();
-
+  Hashtable initparameters = new Hashtable();
 
   /**
    * @deprecated  As of Java Servlet API 2.1, with no direct replacement. 
@@ -176,14 +176,12 @@ class RoxenServletContext implements ServletContext
 
   public String getInitParameter(String name)
   {
-    // FIXME
-    return null;
+    return (String)initparameters.get(name);
   }
 
   public Enumeration getInitParameterNames()
   {
-    // FIXME
-    return null;
+    return initparameters.keys();
   }
 
 }
