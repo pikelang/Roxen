@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
 
-constant cvs_version = "$Id: fpscript.pike,v 1.5 1999/04/24 23:40:57 marcus Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.6 1999/06/08 17:13:01 mast Exp $";
 
 mapping build_env_vars(string f, object id, string|void path_info)
 {
@@ -65,7 +65,7 @@ mixed *register_module()
     "differences are that this module is mainly a MODULE_FIRST. The reason "
     "for this is that otherwise you most likely would have to fight with "
     "priority levels to make it work correctly. It's there to make the setup "
-    "procedure easier. Also this module's default mountpath is <tt>/<tt>. The "
+    "procedure easier. Also this module's default mountpath is <tt>/</tt>. The "
     "reason for this is that we need to be able to handle Frontpage sub-webs. "
     "<p>Another feature is that you easily can modify the value of the "
     "environment variable SERVER_PORT. The reason for doing that is that "
