@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.34 1999/11/23 20:12:40 peter Exp $
+ * $Id: sqltag.pike,v 1.35 1999/12/15 13:44:08 mast Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.34 1999/11/23 20:12:40 peter Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.35 1999/12/15 13:44:08 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -73,6 +73,11 @@ array register_module()
 	     "RXML-parser</td></tr>\n"
 	     "<tr><td valign=top><b>quiet</b></td>"
 	     "<td>If specified, SQL-errors will be kept quiet.</td></tr>\n"
+	     "<tr><td valign=top><b>mysql-insert-id</b></td>"
+	     "<td>If the query creates a record, the variable specified by "
+	     "this argument will get the record unique number from the "
+	     "AUTO_INCREMENT column in the table. Only applicable for MySQL "
+	     "databases.</td></tr>\n"
 	     "</table></ul><p>\n"
 	     "The &lt;sqltable&gt; tag has an additional attribute "
 	     "<b>ascii</b>, which generates a tab-separated table (usefull "
