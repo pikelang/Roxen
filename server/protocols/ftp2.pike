@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.50 1998/05/25 19:21:26 grubba Exp $
+ * $Id: ftp2.pike,v 1.51 1998/05/25 20:50:29 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2999,7 +2999,7 @@ class FTPSession
 	send(0,0);
 	if (master_session->file) {
 	  if (objectp(master_session->file->file)) {
-	    destruct(master_session->file);
+	    destruct(master_session->file->file);
 	  }
 	  if (objectp(master_session->file->pipe)) {
 	    destruct(master_session->file->pipe);
