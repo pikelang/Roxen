@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.118 2000/04/18 23:50:37 nilsson Exp $
+// $Id: wizard.pike,v 1.119 2000/08/04 20:08:07 noring Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -415,6 +415,9 @@ string compress_state(mapping state)
   m_delete(state,"action");
   m_delete(state,"unique");
 
+  foreach(glob("!_*", indices(state)), string s)
+    m_delete(state, s);
+  
 //  werror(sprintf("State=%O\n", state));
 
   string from = encode_value(state);
