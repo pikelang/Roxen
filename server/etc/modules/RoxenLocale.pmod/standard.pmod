@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.2 2000/02/24 19:06:09 per Exp $
+ * $Id: standard.pmod,v 1.3 2000/03/07 22:47:40 mast Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -351,7 +351,7 @@ class _config_interface
     return "(Font)";
   }
   string location_hint() {
-    return "(A location in roxens virtual filesystem)";
+    return "(A location in the virtual filesystem)";
   }
   string file_hint() {
     return "(A filename in the real filesystem)";
