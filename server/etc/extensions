@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.24 1997/11/21 14:18:35 grubba Exp $
+# $Id: extensions,v 1.25 1997/11/26 17:12:36 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -168,6 +168,7 @@ vcd	application/x-cdlink
 vmd 	application/vocaltec-media-desc
 vmf 	application/vocaltec-media-file
 wpc     application/wpc 
+xls	application/vnd.ms-excel
 zip	application/zip
 
 wrl	x-world/x-vrml
