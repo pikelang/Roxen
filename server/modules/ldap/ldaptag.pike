@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.26 2001/11/21 16:19:29 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.27 2002/03/06 13:09:32 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -348,7 +348,7 @@ class TagLDAPplugin {
 	 avalnew += ([ attr:(elem[attr]*split) ]);
 #endif
        }
-       rv += ({ avalnew });
+       rv += ({ avalnew + ([ "_attributes": indices(avalnew)*split ]) });
      }
    } else
      rv = ({([])});
