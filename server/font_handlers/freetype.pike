@@ -124,7 +124,7 @@ class FTFont
     int w;
 
     for(int i = 0; i<sizeof(chars)-1; i++ )
-      w += (int)(chars[i]->advance*x_spacing + kerning[i+1]);
+      w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
     w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
     ys = chars[0]->height;
@@ -140,7 +140,7 @@ class FTFont
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
                               ys+c->descender-c->y );
-      xp += (int)(c->advance*x_spacing) + kerning[i+1];
+      xp += (int)(c->advance*x_spacing) + kerning[i+1]+(fake_bold>0?1:0);
     }  
     return res;
   }
