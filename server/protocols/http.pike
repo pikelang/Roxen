@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.383 2002/11/01 12:57:05 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.384 2002/11/18 17:46:04 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -59,6 +59,7 @@ constant _query          = roxen.query;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
+private static object(String.Buffer) data_buffer;
 
 #include <roxen.h>
 #include <module.h>
@@ -941,6 +942,7 @@ void end(int|void keepit)
     return;
   }
 
+  data_buffer = 0;
   pipe = 0;
   if(objectp(my_fd))
   {
@@ -1947,15 +1949,29 @@ void got_data(mixed fooid, string s)
 
   if(wanted_data)
   {
-    data += s;
+    // NOTE: No need to make a data buffer if it's a small request.
     if(strlen(s) + have_data < wanted_data)
     {
+      if (!data_buffer) {
+	data_buffer = String.Buffer(wanted_data);
+	data_buffer->add(data);
+	data = "";
+      }
+      data_buffer->add(s);
       have_data += strlen(s);
+
       // Reset timeout.
       remove_call_out(do_timeout);
       call_out(do_timeout, 90);
       REQUEST_WERR("HTTP: We want more data.");
       return;
+    }
+    if (data_buffer) {
+      data_buffer->add(s);
+      data = (string)data_buffer;
+      data_buffer = 0;
+    } else {
+      data += s;
     }
   }
 
