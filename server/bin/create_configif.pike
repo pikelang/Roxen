@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.24 2000/08/29 12:01:05 noring Exp $
+ * $Id: create_configif.pike,v 1.25 2000/08/29 13:33:46 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -37,34 +37,27 @@ class Readline
     signal(signum("SIGINT"));
   }
 
-  string read(mixed ... args)
-  {
-    string r = ::read(@args);
-    
-    if(!r)
+    private string safe_value(string r)
     {
-      /* C-d? */
-      werror("\nTerminal closed, exit.\n");
-      destruct(this_object());
-      exit(0);
+	if(!r)
+	{
+	    /* C-d? */
+	    werror("\nTerminal closed, exit.\n");
+	    destruct(this_object());
+	    exit(1);
+	}
+	
+	return r;
     }
     
-    return r;
+  string read(mixed ... args)
+  {
+    return safe_value(::read(@args));
   }
 
   string edit(mixed ... args)
   {
-    string r = ::edit(@args);
-    
-    if(!r)
-    {
-      /* C-d? */
-      werror("\nTerminal closed, exit.\n");
-      destruct(this_object());
-      exit(0);
-    }
-    
-    return r;
+    return safe_value(::edit(@args));
   }
   
   void create(mixed ... args)
@@ -77,7 +70,7 @@ class Readline
 string read_string(Readline rl, string prompt, string|void def,
 		   string|void batch)
 {
-  string res = batch || rl->read( prompt+(def? " ["+def+"]":"")+": " );
+  string res = batch || rl->edit(def || "", prompt+": ", ({ "bold" }));
   if( def && !strlen(res-" ") )
     res = def;
   return res;
@@ -208,7 +201,7 @@ int main(int argc, array argv)
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
     write("\n");
-  } while( strlen( passwd2 = read_string(rl, "Ok?", "y", batch->ok ) ) && passwd2[0]=='n' );
+  } while( strlen( passwd2 = read_string(rl, "Ok? (y/n)", "y", batch->ok ) ) && passwd2[0]=='n' );
 
   if( !admin )
   {
@@ -221,7 +214,7 @@ int main(int argc, array argv)
       write("   contact update servers at Roxen Internet Software over the Internet.\n\n");
       write("   Do you want to enable this?\n\n");
     }
-    if(!(strlen( passwd2 = read_string(rl, "Ok?", "y", batch->update ) ) && passwd2[0]=='n' ))
+    if(!(strlen( passwd2 = read_string(rl, "Ok? (y/n)", "y", batch->update ) ) && passwd2[0]=='n' ))
     {
       use_update_system=1;
       if(!batch->community_user) {
