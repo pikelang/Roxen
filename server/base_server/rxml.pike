@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.60 2000/01/10 21:52:41 mast Exp $
+ * $Id: rxml.pike,v 1.61 2000/01/11 02:02:55 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -39,8 +39,14 @@ string rxml_error(string tag, string error, RequestID id) {
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
-RXML.TagSet rxml_tag_set = RXML.TagSet ("rxml_tag_set");
+RXML.TagSet rxml_tag_set = lambda ()
+{
+  RXML.TagSet tag_set = RXML.TagSet ("rxml_tag_set");
+  tag_set->prefix = "rx:";
+  return tag_set;
+}();
 mapping(RoxenModule:RXML.TagSet) module_tag_sets = ([]);
+int parse_html_compat;
 
 RXML.TagSet entities_tag_set = class
 {
@@ -192,6 +198,7 @@ string do_parse(string to_parse, RequestID id,
     parser = RXML.t_text (RXML.PHtmlCompat)->get_parser (parent_parser->context);
   else
     parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
+  parser->parse_html_compat (parse_html_compat);
   parser->set_extra (id, file, defines);
   id->misc->_parser = parser;
 
@@ -213,8 +220,9 @@ string do_parse(string to_parse, RequestID id,
       parser->finish (to_parse);
     else
       parser->write_end (to_parse);
+    string result = parser->eval();
     id->misc->_parser = parent_parser;
-    return parser->eval();
+    return result;
   }) {
     id->misc->_parser = parent_parser;
     if (objectp (err) && err->thrown_at_unwind)
