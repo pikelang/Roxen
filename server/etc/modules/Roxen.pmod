@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.89 2001/05/16 20:56:19 nilsson Exp $
+// $Id: Roxen.pmod,v 1.90 2001/05/21 15:39:05 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -332,19 +332,24 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
 //! If no prestates are provided, the current prestates in the request id
-//! object will be added to the url.
+//! object will be added to the URL, if the url is a local absolute or relative
+//! URL.
 {
+  // If we don't get any URL we don't know what to do.
+  if(!url || !sizeof(url))
+    return http_low_answer(302, "") + ([ "extra_heads": ([ "Location":"" ]) ]);
+
+  // If the URL is a local relative URL we make it absolute.
   if(!has_value(url, "://") && url[0]!='/')
     url = fix_relative(url, id);
-  if(strlen(url) && url[0]=='/')
-  {
-    if(id)
-    {
+
+  // Add protocol and domain to local absolute URLs.
+  if(url[0]=='/') {
+    if(id) {
       if( id->misc->site_prefix_path )
-        url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
+	url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
       url = add_pre_state(url, prestates || id->prestate);
-      if(id->misc->host)
-      {
+      if(id->misc->host) {
 	array(string) h;
 	HTTP_WERR(sprintf("(REDIR) id->port_obj:%O", id->port_obj));
 	string prot = id->port_obj->name + "://";
@@ -359,7 +364,19 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
       } else
 	url = [string]id->conf->query("MyWorldLocation") + url[1..];
     }
+    else {
+      // Ok, no domain present in the URL and no ID object given.
+      // Perhaps one should dare throw an error here, but since most
+      // UA can handle the redirect it is nicer no to.
+    }
   }
+  // Add prestates to absolute URLs, if provided.
+  else if(prestates && sizeof(prestates)) {
+    string prot, host, path;
+    if(sscanf(url, "%s://%s/%s", prot, host, path)==3)
+      url = prot + "://" + host + add_pre_state("/"+path, prestates);
+  }
+
   HTTP_WERR("Redirect -> "+http_encode_string(url));
   return http_low_answer( 302, "")
     + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
