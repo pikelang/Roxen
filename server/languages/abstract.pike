@@ -40,7 +40,7 @@ string day(int num)
 
 string short_day(int num)
 {
-  return days[ num - 1 ][..1];
+  return days[ num - 1 ][..2];
 }
 
 array aliases()
