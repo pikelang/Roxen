@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.39 1997/09/06 16:08:14 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.40 1997/09/07 16:15:42 noring Exp $";
 
 #define perror roxen_perror
 
@@ -77,8 +77,15 @@ void mkdirhier(string from, int|void mode)
 object db;
 mapping dbs = ([ ]);
 
+#if constant(thread_create)
+static private inherit Thread.Mutex:db_lock;
+#endif
+
 object open_db(string id)
 {
+#if constant(thread_create)
+  object key = db_lock::lock();
+#endif
   if(!db) db = PDB->db("pdb_dir", "wcCr");
   if(dbs[id]) return dbs[id];
   return dbs[id]=db[id];
