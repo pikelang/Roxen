@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.5 2002/01/17 16:07:40 grubba Exp $
+ * $Id: make_site_template.pike,v 1.6 2002/01/28 10:25:06 grubba Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -70,10 +70,10 @@ string parse(RequestID id)
   } else {
     res += sprintf("<input type=hidden name='conf' value='%s' />\n",
 		   conf_name);
-    if (!id->variables->fname) {
+    if (!id->variables->fname || !sizeof(id->variables->fname)) {
       // Page 2
       //
-      // Select a filename
+      // Select a filename.
       res += sprintf("<p>%s: %s</p>\n",
 		     LOCALE(148, "Selected configuration"),
 		     Roxen.html_encode_string(conf_name));
@@ -82,7 +82,13 @@ string parse(RequestID id)
 		     "<input type='text' name='fname' value='%s'></p>\n",
 		     Roxen.http_encode_string(lower_case(replace(conf_name,
 								 " ", "_"))));
+
+      res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
+		     LOCALE(153, "Ok"));
     } else {
+      // Page 3
+      //
+      // Create the site template.
       res += sprintf("<input type=hidden name='fname' value='%s' />\n",
 		     Roxen.http_encode_string(id->variables->fname));
 
