@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.370 1999/12/15 07:59:52 per Exp $
+ * $Id: roxen.pike,v 1.371 1999/12/19 16:06:11 nilsson Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.370 1999/12/15 07:59:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.371 1999/12/19 16:06:11 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2189,7 +2189,7 @@ class ArgCache
   static string name;
   static string path;
   static int is_db;
-  static object db;
+  static Sql.sql db;
 
 #define CACHE_VALUE 0
 #define CACHE_SKEY  1
@@ -2249,7 +2249,7 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping res = db->query("select contents from "+name+" where id='"+id+"'");
+      array res = db->query("select contents from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
         db->query("update "+name+" set atime='"+
@@ -2268,7 +2268,7 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping data = db->query(sprintf("select id,contents from %s where lkey='%s'",
+      array data = db->query(sprintf("select id,contents from %s where lkey='%s'",
                                        name,long_key[..79]));
       foreach( data, mapping m )
         if( m->contents == long_key )
