@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.72 2002/02/04 17:22:40 jonasw Exp $
+ * $Id: ftp.pike,v 2.73 2002/02/04 17:28:52 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -158,6 +158,14 @@ class RequestID2
   {
   }
 
+  //  Response header functions may get called but needn't do anything
+  void add_response_header(string name, string value)
+  {
+  }
+  void set_response_header(string name, string value)
+  {
+  }
+
   void create(object|void m_rid)
   {
     DWRITE("REQUESTID: New request id.\n");
@@ -184,10 +192,6 @@ class RequestID2
 	}
       }
       o["misc"] = m_rid["misc"] + ([ ]);
-
-      //  Response header functions may get called but shouldn't do anything
-      o["add_response_header"] = o["set_response_header"] =
-	lambda(string name, string value) { };
     } else {
       // Defaults...
       client = ({ "ftp" });
