@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.75 1998/07/19 06:50:38 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.76 1998/07/19 09:48:22 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -930,20 +930,6 @@ string get_modfullname (object module)
 }
 
 // internal method for do_output_tag
-private string do_output_tag_var( mixed var, string multi_separator )
-{
-  if (arrayp( var ))
-    return var * multi_separator;
-  else {
-    var = (string) var;
-    if (search( var, "\000" ) != -1)
-      return var / "\000" * multi_separator;
-    else
-      return var;
-  }
-}
-
-// internal method for do_output_tag
 private string remove_leading_trailing_ws( string str )
 {
   sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
@@ -957,9 +943,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      object id )
 {
   string quote = args->quote || "#";
-  array exploded;
   object my_id = copy_value( id );
-  mapping parse_contents = ([ ]);
   string new_contents = "";
 
   // multi_separator must default to \000 since one sometimes need to
@@ -993,115 +977,157 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
       my_id->misc->variables = vars;
     if (!args->replace || lower_case( args->replace ) != "no")
     {
-      int c;
-      string result;
-      
-      exploded = contents / quote;
-      for (c=1; c < sizeof( exploded ); c+=2)
+      array exploded = contents / quote;
+      if (!(sizeof (exploded) & 1))
+	return "<b>Contents ends inside a replace field</b>";
+
+      for (int c=1; c < sizeof( exploded ); c+=2)
 	if (exploded[c] == "")
 	  exploded[c] = quote;
 	else
 	{
-	  array (string) options =  exploded[c] / ":";
-	  int done;
-	  
-	  options[0] = remove_leading_trailing_ws( options[0] );
-	  if (!vars[ options[0] ])
-	  {
+	  array(string) options =  exploded[c] / ":";
+	  string var = remove_leading_trailing_ws (options[0]);
+	  mixed val = vars[var];
+	  array(string) encodings = ({});
+	  string multisep = multi_separator;
+	  string empty = args->empty || "";
+
+	  if (!val) {
 	    if (args->debug || id->misc->debug)
-	      exploded[c] = "<b>No variable " + options[0] + "</b>";
+	      val = "<b>No variable " + options[0] + "</b>";
 	    else
-	      exploded[c] = "";
-	    continue;
+	      val = "";
 	  }
-	  if (sizeof( options ) > 1) {
-	    foreach(options[1..], string option) {
-	      array (string) foo = option / "=";
-	    
-	      if (sizeof( foo ) > 1)
-		switch (remove_leading_trailing_ws( foo[0] )) {
-		case "quote":
-		  done = 1;
-		  switch (remove_leading_trailing_ws( foo[1] )) {
+
+	  foreach(options[1..], string option) {
+	    array (string) foo = option / "=";
+	    string optval = remove_leading_trailing_ws (foo[1..] * "=");
+
+	    switch (lower_case (remove_leading_trailing_ws( foo[0] ))) {
+	      case "empty":
+		empty = optval;
+		break;
+	      case "multisep":
+	      case "multi_separator":
+		multisep = optval;
+		break;
+	      case "quote":	// For backward compatibility.
+		optval = lower_case (optval);
+		switch (optval) {
+		  case "mysql": case "sql": case "oracle":
+		    encodings += ({optval + "-dtag"});
+		    break;
 		  default:
-		    return "<b>Unknown quote option " +
-		      remove_leading_trailing_ws( foo[1] ) +
-		      " in variable " + options[0] + "</b>";
-		    break;
-		  case "none":
-		    exploded[c] = do_output_tag_var( vars[ options[0] ],
-						     multi_separator );
-		    break;
-		  case "url":
-		    // HTTP encoding, including special characters in
-		    // URL:s.
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 ({ "\000", "\"", "'", " ", "\t", "\n", "\r",
-				    "&", "?", "=", "%", "/", ":" }),
-				 ({ "%00", "%22", "%27", "%20", "%09", "%0A", "%0D",
-				    "%26", "%3F", "%3D", "%25", "%2F", "%3A" }) );
-		    break;
-		  case "mysql":
-		    // MySQL quoting followed by dtag quoting (see below).
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 ({ "\"", "'", "\\" }),
-				 ({ "\\\"'\"'\"", "\\'", "\\\\" }) );
-		    break;
-		    
-		  case "mysql-pike":
-		    // MySQL quoting followed by Pike string quoting
-		    // (for use in a <pike> tag inside an output tag).
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 ({ "\"", "'", "\\", "\n" }),
-				 ({ "\\\\\\\"", "\\\\'",
-				    "\\\\\\\\", "\\n" }) );
-		  
-		  case "sql":
-		  case "oracle":
-		    // SQL/Oracle quoting followed by dtag quoting.
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 ({ "'", "\"" }),
-				 ({ "''", "\"'\"'\"" }) );
-		    break;
-
-		  case "html":
-		    // For generic html text and in tag arguments. Does
-		    // not work in RXML tags (use dtag or stag instead).
-		    exploded[c]
-		      = html_encode_string( do_output_tag_var( vars[ options[0] ],
-							       multi_separator ));
-		    break;
-
-		  case "dtag":
-		    // Quote quotes for a double quoted tag. Only for
-		    // internal use, i.e. in arguments to other RXML tags.
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 "\"", "\"'\"'\"");
-
-		  case "stag":
-		    // Quote quotes for a double quoted tag. Only for
-		    // internal use, i.e. in arguments to other RXML tags.
-		    exploded[c]
-		      = replace( do_output_tag_var( vars[ options[0] ],
-						    multi_separator ),
-				 "'", "'\"'\"'");
-		  }
+		    encodings += ({optval});
 		}
+		break;
+	      case "encode":
+		encodings += Array.map (lower_case (optval) / ",",
+					remove_leading_trailing_ws);
+		break;
+	      default:
+		return "<b>Unknown option " + remove_leading_trailing_ws (foo[0]) +
+		  " in replace field " + ((c >> 1) + 1) + "</b>";
 	    }
 	  }
-	  if (!done)
-	    exploded[c] = html_encode_string ( do_output_tag_var( vars[ options[0] ],
-								  multi_separator ));
+
+	  if (arrayp( val ))
+	    val = Array.map (val, lambda (mixed v) {return (string) v;}) *
+	      multisep;
+	  else
+	    val = replace ((string) val, "\000", multisep);
+	  if (!sizeof (val)) val = empty;
+
+	  if (!sizeof (encodings)) encodings = ({"html"});
+	  foreach (encodings, string encoding)
+	    switch (encoding) {
+	      case "none":
+	      case "":
+		break;
+
+	      case "http":
+		// HTTP encoding.
+		val = http_encode_string (val);
+		break;
+
+	      case "cookie":
+		// HTTP cookie encoding.
+		val = http_encode_cookie (val);
+		break;
+
+	      case "url":
+		// HTTP encoding, including special characters in URL:s.
+		val = http_encode_url (val);
+		break;
+
+	      case "html":
+		// For generic html text and in tag arguments. Does
+		// not work in RXML tags (use dtag or stag instead).
+		val = html_encode_string (val);
+		break;
+
+	      case "dtag":
+		// Quote quotes for a double quoted tag argument. Only
+		// for internal use, i.e. in arguments to other RXML tags.
+		val = replace (val, "\"", "\"'\"'\"");
+		break;
+
+	      case "stag":
+		// Quote quotes for a single quoted tag argument. Only
+		// for internal use, i.e. in arguments to other RXML tags.
+		val = replace(val, "'", "'\"'\"'");
+		break;
+
+	      case "pike":
+		// Pike string quoting (e.g. for use in a <pike> tag).
+		val = replace (val,
+			       ({ "\"", "\\", "\n" }),
+			       ({ "\\\"", "\\\\", "\\n" }));
+		break;
+
+	      case "mysql":
+		// MySQL quoting.
+		val = replace (val,
+			       ({ "\"", "'", "\\" }),
+			       ({ "\\\"" , "\\'", "\\\\" }) );
+		break;
+
+	      case "sql":
+	      case "oracle":
+		// SQL/Oracle quoting.
+		val = replace (val, "'", "''");
+		break;
+
+	      case "mysql-dtag":
+		// MySQL quoting followed by dtag quoting.
+		val = replace (val,
+			       ({ "\"", "'", "\\" }),
+			       ({ "\\\"'\"'\"", "\\'", "\\\\" }));
+		break;
+
+	      case "mysql-pike":
+		// MySQL quoting followed by Pike string quoting.
+		val = replace (val,
+			       ({ "\"", "'", "\\", "\n" }),
+			       ({ "\\\\\\\"", "\\\\'",
+				  "\\\\\\\\", "\\n" }) );
+		break;
+
+	      case "sql-dtag":
+	      case "oracle-dtag":
+		// SQL/Oracle quoting followed by dtag quoting.
+		val = replace (val,
+			       ({ "'", "\"" }),
+			       ({ "''", "\"'\"'\"" }) );
+		break;
+
+	      default:
+		return "<b>Unknown encoding " + encoding +
+		  " in replace field " + ((c >> 1) + 1) + "</b>";
+	    }
+
+	  exploded[c] = val;
 	}
       new_contents += exploded * "";
     }
@@ -1136,5 +1162,3 @@ string fix_relative(string file, object id)
     file = dirname(id->not_query) + "/" +  file;
   return simplify_path(file);
 }
-
-
