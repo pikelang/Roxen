@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.160 2000/08/23 03:14:55 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.161 2000/08/23 03:17:48 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -72,12 +72,18 @@ class EntityPageVirtfile {
 
 class EntityPageQuery {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) { return c->id->query||""; }
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->query||"";
+  }
 }
 
 class EntityPageURL {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) { return c->id->raw_url; }
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->raw_url;
+  }
 }
 
 class EntityPageLastTrue {
@@ -87,7 +93,10 @@ class EntityPageLastTrue {
 
 class EntityPageLanguage {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->misc->defines->language || "";
+  }
 }
 
 class EntityPageScope {
@@ -202,6 +211,7 @@ class EntityClientHost {
 class EntityClientAuthenticated {
   inherit RXML.Value;
   int rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
     return c->id->auth&&c->id->auth[0]&&c->id->auth[1];
   }
 }
@@ -209,6 +219,7 @@ class EntityClientAuthenticated {
 class EntityClientUser {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
     return c->id->rawauth&&(c->id->rawauth/":")[0];
   }
 }
@@ -217,6 +228,7 @@ class EntityClientPassword {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
     array tmp;
+    c->id->misc->cacheable=0;
     return (c->id->auth 
 	    && !c->id->auth[0] 
 	    && c->id->rawauth
