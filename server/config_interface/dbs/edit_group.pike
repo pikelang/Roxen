@@ -4,12 +4,6 @@
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
-
-void save_edit()
-{
-  
-}
-
 string parse( RequestID id )
 {
   mapping c;
