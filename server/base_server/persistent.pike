@@ -1,6 +1,6 @@
-inherit "db";
+static private inherit "db";
 
-string cvs_version = "$Id: persistent.pike,v 1.3 1996/12/10 05:04:19 neotron Exp $";
+/* $Id: persistent.pike,v 1.4 1997/02/07 23:33:20 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -20,8 +20,9 @@ string cvs_version = "$Id: persistent.pike,v 1.3 1996/12/10 05:04:19 neotron Exp
 
 #define PRIVATE private static inline 
 
-object this = this_object();
-PRIVATE list __vars = (<>);
+static object this = this_object();
+
+PRIVATE multiset __vars = (<>);
 PRIVATE string __id;
 
 /*** Private code ***/
@@ -31,7 +32,7 @@ PRIVATE int save_call_out_list()
 {
   array ci;
   array res = ({});
-  array old = db_get(__id, "callouts");
+  array old = db_get(__id, "c") || ({});
   foreach(call_out_info(), ci)
   {
     if(ci[1] == this)
@@ -45,9 +46,9 @@ PRIVATE int save_call_out_list()
       res += ({ ({ ci[2], ci[0], time(1), ci[3..] }) });
     }
   }
-  if(sizeof(old) || sizeof(res))
-    db_set(__id, "callouts", res);
-  return sizeof(old) || sizeof(res);
+  if((old && sizeof(old)) || sizeof(res))
+    db_set(__id, "c", res);
+  return (old && sizeof(old)) || sizeof(res);
 }
 
 PRIVATE void save_variables()
@@ -60,25 +61,20 @@ PRIVATE void save_variables()
       b=this[a];
       if(!catch { this[a]=b; } ) // It can be assigned. Its a variable!
       {
-//	efun::write("Public variable: "+a+"\n");
 	__vars[a] = 1;
 	res += ({ ({ a, b }) });
-
       }
     }
   else
     foreach(indices(__vars), a)
-    {
-//    efun::write("Public variable: "+a+"\n");
       res += ({ ({ a, this[a] }) });
-    }
-  db_set(__id, "variables", res);
+  db_set(__id, "v", res);
 }
 
 PRIVATE void restore_variables()
 {
   array var;
-  if(var = db_get(__id, "variables"))
+  if(var = db_get(__id, "v"))
     foreach(var, var)
       catch { this[var[0]] = var[1]; };
 }
@@ -99,7 +95,7 @@ PRIVATE void restore_call_out_list()
    * each time the object is restored.
    */
 
-  if(var = db_get(__id, "callouts"))
+  if(var = db_get(__id, "c"))
   {
     foreach(call_out_info(), ci)
       if(ci[1] == this)
@@ -127,18 +123,11 @@ PRIVATE void do_auto_save(int t)
   array v;
   int save_needed = 0;
 
-//efun::write("Auto save?\n");
+  save_needed = save_call_out_list();
 
-  save_call_out_list();
-
-  foreach(db_get(__id, "variables"), v)
-  {
-//    efun::write(sprintf("Variable = %s; was %O is %O\n", 
-//			v[0], v[1], this[ v[0] ]));
+  foreach(db_get(__id, "v"), v)
     if(!equal(this[ v[0] ], v[ 1 ]))
       save_needed++;
-  }
-//efun::write("save needed == "+save_needed+"\n");
 
   if(save_needed)
     save_variables();
@@ -149,21 +138,14 @@ PRIVATE void do_auto_save(int t)
 
 
 
-/* Driver callbacks. Called when this object is destroyed. */
-/* Should we _really_ destroy our self now, that is, remove the db as
- * well?  
- */  
-
-void destroy()  
-{            
-  db_close(__id);
-}
-
 /* Public methods! */
-
+static int _____destroyed = 0;
 public void begone()
 {
+  _____destroyed = 1;
+  db_close(__id);
   db_destroy(__id);
+  destruct();
 }
 
 
@@ -194,8 +176,27 @@ public void save()
 {
   if(!__id)
     __id = nameof(this_object());
-//efun::write("Save ("+__id+")\n");
   /* "Simply" save all global (non-static) variables and callouts. */
   save_variables();
   save_call_out_list();
 }
+
+
+
+
+/* Driver callbacks. Called when this object is destroyed. 
+ * Should we _really_ destroy our self now, that is, remove the db as
+ * well?
+ *
+ * I think not.
+ */  
+void destroy()  
+{
+  if(!_____destroyed)
+  {
+    save();
+    db_close(__id);
+  }
+}
+    
+

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.24 1997/01/29 04:59:41 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.25 1997/02/07 23:33:20 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -881,13 +881,21 @@ string tag_body(string t, mapping args, object id, object file,
 
 #define FIX(Y,Z,X) do{if(!args->Y){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
-  FIX(bgcolor,"#c0c0c0",bg);
-  FIX(text,"#000000",fg);
-  FIX(link,"#0000ff",link);
-  FIX(alink,"#00ffff",alink);
-  FIX(vlink,"#2000ee",vlink);
-  if(changed)
-    return ("<body "+make_args(args)+">");
+  if(!search(id->client*"","Mosaic"))
+  {
+    FIX(bgcolor,"#bfbfbf",bg);
+    FIX(text,   "#000000",fg);
+    FIX(link,   "#0000b0",link);
+    FIX(alink,  "#3f0f7b",alink);
+    FIX(vlink,  "#ff0000",vlink);
+  } else {
+    FIX(bgcolor,"#c0c0c0",bg);
+    FIX(text,   "#000000",fg);
+    FIX(link,   "#0000ee",link);
+    FIX(alink,  "#ff0000",alink);
+    FIX(vlink,  "#551a8b",vlink);
+  }
+  if(changed) return ("<body "+make_args(args)+">");
 }
 
 string tag_fix_color(string tagname, mapping args, object id, object file,

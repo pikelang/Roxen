@@ -11,11 +11,12 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.18 1997/01/29 04:59:39 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.19 1997/02/07 23:33:20 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
 int unique_id=time();
+
 
 /* This function is called when an error occurs that is not caught
  * with catch(). It's argument consists of:
@@ -125,6 +126,87 @@ program handle_inherit(string pname, string current_file)
 
 mapping (string:object) objects=(["/master.pike":this_object()]);
 
+void name_program(program foo, string name)
+{
+  programs[name] = foo;
+}
+
+private static int mid = 0;
+
+string nameof(object|program|function fo)
+{
+  if(programp(fo)) return search(programs, fo);
+  string p,post="";
+  object foo ;
+  if(functionp(fo)) {
+    foo = function_object( fo );
+    post=sprintf("->%O", fo);
+  } else
+    foo = fo;
+  if(p=search(programs, object_program(foo)))
+    return p+"/#"+(functionp(foo->name)?foo->name():
+		  (stringp(foo->name)?foo->name:time(1)+":"+mid++))+
+      post;
+}
+
+program programof(string foo)
+{
+  return programs[foo] || cast_to_program(foo);
+}
+
+object objectof(string foo)
+{
+  string prg, id;
+  object o;
+  program p;
+  if(objects[foo]) return objects[foo];
+  if(!stringp(foo)) return 0;
+
+  sscanf(foo, "%s/#%s", prg,id);
+  if(!(p = programof(prg))) {
+    werror("objectof(): Failed to restore object (programof("+prg+
+	   ") failed).\n");
+    return 0;
+  }
+  catch {
+    o = p();
+    o->persist && o->persist( foo );
+
+    objects[ foo ] = o;
+    return o;
+  };
+  werror("objectof(): Failed to restore object"
+	 " from existing program "+foo+"\n");
+  return 0;
+}
+
+
+function functionof(string f)
+{
+  string ob, fn;
+  object o;
+  if(!stringp(f)) return 0;
+  if(!sscanf(f, "%s->%s", ob, fn))
+  {
+    werror("functionof(): Syntax error ("+f+")\n");
+    return 0;
+  }
+  o = objectof( ob );
+  if(!o)
+  {
+    werror("functionof(): objectof("+ob+") failed.\n");
+    return 0;
+  }
+  if(!functionp(o[fn])) {
+    werror("functionof(): "+f+" is not a function.\n");
+    destruct(o);
+    return 0;
+  }
+  return o[fn];
+}
+
+
+
 /* This function is called when the drivers wants to cast a string
  * to an object because of an implict or explicit cast. This function
  * may also receive more arguments in the future.
@@ -222,6 +304,11 @@ void _main(string *argv, string *env)
   string *q;
 
   foreach(env,a) if(sscanf(a,"%s=%s",a,b)) environment[a]=b;
+
+  add_constant("nameof", nameof);
+  add_constant("name_program", name_program);
+  add_constant("objectof", objectof);
+
   add_constant("getenv",getenv);
   add_constant("environment",environment);
   add_constant("putenv",putenv);
