@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.55 1997/11/29 19:48:28 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.56 1997/12/15 01:52:13 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1293,7 +1293,7 @@ string tag_allow(string a, mapping (string:string) m,
   if(m->module)
     TEST(got->conf && got->conf->modules[m->module]);
   
-  if(m->exists) TEST(roxen->try_get_file(fix_relative(m->module,got),got,1));
+  if(m->exists) TEST(roxen->try_get_file(fix_relative(m->exists,got),got,1));
   
   if(m->language)
     if(!got->misc["accept-language"])
@@ -1329,7 +1329,7 @@ string tag_allow(string a, mapping (string:string) m,
     }
     if(got && arrayp(got->referer) && sizeof(got->referer))
     {
-      if(m->referrer == "referer")
+      if(m->referrer-"r" == "efee")
       {
 	if(m->or) {
 	  if (QUERY(compat_if)) 
