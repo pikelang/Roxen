@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.184 2000/07/21 04:55:02 lange Exp $
+// $Id: roxenlib.pike,v 1.185 2000/07/23 15:20:46 nilsson Exp $
 
 //#pragma strict_types
 
@@ -1199,7 +1199,7 @@ string roxen_encode( string val, string encoding )
   }
 }
 
-private int compare( string a, string b )
+static int compare( string a, string b )
   //! This method needs lot of work... but so do the rest of the system too
   //! RXML needs types
 {

@@ -40,7 +40,7 @@ string available_languages(object id) {
 
 // --------------------- Help layout functions --------------------
 
-private string desc_cont(string t, mapping m, string c, string rt)
+static string desc_cont(string t, mapping m, string c, string rt)
 {
   string dt=rt;
   m->type=m->type||"";
@@ -53,7 +53,7 @@ private string desc_cont(string t, mapping m, string c, string rt)
   return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
 }
 
-private string attr_cont(string t, mapping m, string c)
+static string attr_cont(string t, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
@@ -66,7 +66,7 @@ private string attr_cont(string t, mapping m, string c)
   return sprintf("<p><b>%s</b><br />%s%s</p>",m->name,p,c);
 }
 
-private string attr_vals(string v)
+static string attr_vals(string v)
 {
   if(has_value(v,"|")) return "{"+(v/"|")*", "+"}";
   // FIXME Use real config url
@@ -74,11 +74,11 @@ private string attr_vals(string v)
   return v;
 }
 
-private string noex_cont(string t, mapping m, string c) {
+static string noex_cont(string t, mapping m, string c) {
   return Parser.HTML()->add_container("ex","")->feed(c)->read();
 }
 
-private string ex_cont(string t, mapping m, string c, string rt, void|object id)
+static string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   if(m->type=="box")
@@ -101,7 +101,7 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
   }
 }
 
-private string format_doc(string|mapping doc, string name, void|object id) {
+static string format_doc(string|mapping doc, string name, void|object id) {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
       foreach(id->misc->pref_languages->get_languages()+({"en"}), string code) {
@@ -142,14 +142,14 @@ private string format_doc(string|mapping doc, string name, void|object id) {
 
 // ------------------ Parse docs in mappings --------------
 
-private string parse_doc(string|mapping|array doc, string name, void|object id) {
+static string parse_doc(string|mapping|array doc, string name, void|object id) {
   if(arrayp(doc))
     return format_doc(doc[0], name, id)+
       "<dl><dd>"+parse_mapping(doc[1], id)+"</dd></dl>";
   return format_doc(doc, name, id);
 }
 
-private string parse_mapping(mapping doc, void|object id) {
+static string parse_mapping(mapping doc, void|object id) {
   string ret="";
   if(!mappingp(doc)) return "";
   foreach(sort(indices(doc)), string tmp) {
@@ -183,7 +183,7 @@ mapping call_tagdocumentation(RoxenModule o) {
   return doc;
 }
 
-private int generation;
+static int generation;
 multiset undocumented_tags=(<>);
 string find_tag_doc(string name, void|object id) {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
