@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.273 2001/08/17 19:44:51 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.274 2001/08/22 13:03:37 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1208,7 +1208,8 @@ class TagCache {
   constant name = "cache";
   constant flags = (RXML.FLAG_GET_RAW_CONTENT |
 		    RXML.FLAG_GET_EVALED_CONTENT |
-		    RXML.FLAG_DONT_CACHE_RESULT);
+		    RXML.FLAG_DONT_CACHE_RESULT |
+		    RXML.FLAG_CUSTOM_TRACE);
 
   static class TimeOutEntry (TimeOutEntry next,
 			     mapping(string:RXML.PCode) alternatives,
@@ -1260,10 +1261,13 @@ class TagCache {
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
+	TRACE_ENTER("tag &lt;cache&gt; no cache" +
+		    (args->nocache ? "" : " due to POST method"), tag);
 	return 0;
       }
 
       RXML.Context ctx = RXML_CONTEXT;
+      int default_key = 1;
 
       if (args->propagate) {
 	if (!(keymap = ctx->misc->cache_key)) m_delete (args, "propagate");
@@ -1272,32 +1276,32 @@ class TagCache {
 
       if(args->key) keymap[0] += ({args->key});
 
-      if (args->variable)
-	foreach (args->variable / ",", string var) {
-	  var = String.trim_all_whites (var);
-	  array splitted = ctx->parse_user_var (var, 1);
-	  if (intp (splitted[0])) { // Depend on the whole scope.
-	    mapping|RXML.Scope scope = ctx->get_scope (var);
-	    if (mappingp (scope))
-	      keymap[var] = scope + ([]);
-	    else if (var == "form")
-	      // Special case to optimize this scope.
-	      keymap->form = id->real_variables + ([]);
-	    else {
-	      array indices = scope->_indices (ctx, var);
-	      keymap[var] = mkmapping (indices, rows (scope, indices));
+      if (args->variable) {
+	if (args->variable != "")
+	  foreach (args->variable / ",", string var) {
+	    var = String.trim_all_whites (var);
+	    array splitted = ctx->parse_user_var (var, 1);
+	    if (intp (splitted[0])) { // Depend on the whole scope.
+	      mapping|RXML.Scope scope = ctx->get_scope (var);
+	      if (mappingp (scope))
+		keymap[var] = scope + ([]);
+	      else if (var == "form")
+		// Special case to optimize this scope.
+		keymap->form = id->real_variables + ([]);
+	      else if (scope) {
+		array indices = scope->_indices (ctx, var);
+		keymap[var] = mkmapping (indices, rows (scope, indices));
+	      }
+	      else
+		parse_error ("Unknown scope %O.\n", var);
 	    }
+	    else
+	      keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
 	  }
-	  else
-	    keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
-	}
-      else if (!args->propagate) {
-	// Include the form variables and the page path by default.
-	keymap->form = id->real_variables + ([]);
-	keymap["page.path"] = id->not_query;
+	default_key = 0;
       }
 
-      if (args->profile)
+      if (args->profile) {
 	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
 	  foreach (args->profile / ",", string profile) {
 	    profile = String.trim_all_whites (profile);
@@ -1308,6 +1312,8 @@ class TagCache {
 	  }
 	else
       	  parse_error ("There are no cache profiles.\n");
+	default_key = 0;
+      }
 
       if (args->propagate) {
 	// Updated the key, so we're done. The surrounding cache tag
@@ -1315,7 +1321,14 @@ class TagCache {
 	do_iterate = 1;
 	key = keymap = 0;
 	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
+	TRACE_ENTER("tag &lt;cache&gt; propagating key", tag);
 	return 0;
+      }
+
+      if (default_key) {
+	// Include the form variables and the page path by default.
+	keymap->form = id->real_variables + ([]);
+	keymap["page.path"] = id->not_query;
       }
 
       if (subvariables)
@@ -1369,6 +1382,7 @@ class TagCache {
 	    else {
 	      do_iterate = -1;
 	      key = keymap = 0;
+	      TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
 	      return ({evaled_content});
 	    }
       }
@@ -1388,6 +1402,7 @@ class TagCache {
 	      if (timeout) timeouts[key] = time() + timeout;
 	      do_iterate = -1;
 	      key = keymap = 0;
+	      TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
 	      return ({evaled_content});
 	    }
 	}
@@ -1396,10 +1411,13 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
+      TRACE_ENTER("tag &lt;cache&gt; cache miss" +
+		  (default_key ? " (using default dependencies)" : ""),
+		  tag);
       return 0;
     }
 
-    array do_return()
+    array do_return (RequestID id)
     {
       if (key) {
 	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
@@ -1409,8 +1427,10 @@ class TagCache {
 	  subvariables = indices (subkeymap - keymap);
 	  RXML_CONTEXT->state_update();
 	}
-	if (args->shared)
+	if (args->shared) {
 	  cache_set("tag_cache", key, evaled_content, timeout);
+	  TRACE_LEAVE ("added shared cache entry");
+	}
 	else {
 	  alternatives[key] = evaled_content;
 	  if (timeout) {
@@ -1419,12 +1439,17 @@ class TagCache {
 	      add_timeouts (alternatives, timeouts);
 	    }
 	    timeouts[key] = time() + timeout;
+	    TRACE_LEAVE ("added time limited cache entry");
 	  }
-	  else
+	  else {
 	    // Only caches without timeouts is worth saving.
 	    RXML_CONTEXT->state_update();
+	    TRACE_LEAVE ("added (possibly persistent) cache entry");
+	  }
 	}
       }
+      else
+	TRACE_LEAVE ("");
       result += content;
       return 0;
     }
@@ -4814,7 +4839,8 @@ using the pre tag.
  <p>This is a comma-separated list of variables and scopes that the
  cache should depend on. If it doesn't exist, the default is to depend
  on the form scope and <ent>page.path</ent>, i.e. it's the same as
- specifying variable=\"form, page.path\".</p>
+ specifying variable=\"form, page.path\". The value can be an empty
+ string to only disable the default dependencies.</p>
 
  <p>Since it's important to keep down the size of the cache, this
  should typically be kept to only a few variables with a limited set
@@ -4830,7 +4856,9 @@ using the pre tag.
  <p>A comma-separated list to choose one or more profiles from a set
  of preconfigured cache profiles. Which cache profiles are available
  depends on the RXML parser module in use; the standard RXML parser
- currently has none.</p>
+ currently has none. Like the variable argument, this one also
+ disables the default dependency on the form scope and
+ <ent>page.path</ent>.</p>
 </attr>
 
 <attr name=shared value=string>
