@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-constant cvsid = "$Id: language.pike,v 1.8 1997/08/19 05:51:54 peter Exp $";
+constant cvsid = "$Id: language.pike,v 1.9 1997/08/19 06:46:21 peter Exp $";
 
 array register_module()
 {
@@ -33,65 +33,66 @@ array register_module()
 void create()
 {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
-	 "The default language for this server. Is used when trying to "
-	 "decide which language to send when the user hasn't selected any. "
-	 "Also the language for the files with no language-extension." );
+	  "The default language for this server. Is used when trying to "
+	  "decide which language to send when the user hasn't selected any. "
+	  "Also the language for the files with no language-extension." );
 
-  defvar( "languages", "en	English\nde	Deutch		en\nsv	Svenska		en",
-	 "Languages", TYPE_TEXT_FIELD,
-	 "The languages supported by this site. One language on each row. "
-	 "Syntax: "
-	 "<br>language-code language-name optional-next-language-codes"
-	 "<br>For example:\n"
-	 "<pre>sv	Svenska		en de\n"
-	 "en	English		de\n"
-	 "de	Deutch		en\n"
-	 "</pre>"
-	 "<p>The next-language-code is used to determine what language should "
-	 "be used in case the chosen language is unavailable. To find a "
-	 "page with a suitable language the languages is tried as follows. "
-	 "<ol><li>The selected language, stored as a prestate"
-	 "<li>The user agent's accept-headers"
-	 "<li>The selected languages next-languages-codes if any"
-	 "<li>The default language"
-	 "<li>If there were no selected language, the default language's "
-	 "next-language-codes"
-	 "<li>All languages, in the order they appear in this text-field"
-	 "</ol>"
-	 "<p>Empty lines, lines beginning with # or // will be ignored. Lines "
-	 "with errors may be ignored, or execute a HCF instruction." );
+  defvar( "languages", "en	English\nde	Deutch		en\n"
+	  "sv	Svenska		en", "Languages", TYPE_TEXT_FIELD,
+	  "The languages supported by this site. One language on each row. "
+	  "Syntax: "
+	  "<br>language-code language-name optional-next-language-codes"
+	  "<br>For example:\n"
+	  "<pre>sv	Svenska		en de\n"
+	  "en	English		de\n"
+	  "de	Deutch		en\n"
+	  "</pre><p>"
+	  "The next-language-code is used to determine what language should "
+	  "be used in case the chosen language is unavailable. To find a "
+	  "page with a suitable language the languages is tried as follows. "
+	  "<ol><li>The selected language, stored as a prestate"
+	  "<li>The user agent's accept-headers"
+	  "<li>The selected languages next-languages-codes if any"
+	  "<li>The default language"
+	  "<li>If there were no selected language, the default language's "
+	  "next-language-codes"
+	  "<li>All languages, in the order they appear in this text-field"
+	  "</ol>"
+	  "<p>Empty lines, lines beginning with # or // will be ignored."
+	  " Lines with errors may be ignored, or execute a HCF instruction." );
 
   defvar( "flag_dir", "/icons", "Flag directory", TYPE_STRING,
-	 "A directory with small pictures of flags, or other symbols, "
-	 "representing the various languages. Each flag should exist in the "
-	 "following versions:"
-	 "<dl><dt>language-code.selected.gif"
-	 "<dd>Shown to indicate that the page is in that selected language, "
-	 "usually by the header-module."
-	 "<dt>language-code.available.gif"
-	 "<dd>Shown as a link to the page in that language. Will of course "
-	 "only be used if the page exists in that language."
-	 "<dt>language-code.unavailable.gif"
-	 "<dd>Shown to indicate that the user has selected an language that "
-	 "this page hasn't been translated to."
+	  "A directory with small pictures of flags, or other symbols, "
+	  "representing the various languages. Each flag should exist in the "
+	  "following versions:"
+	  "<dl><dt>language-code.selected.gif"
+	  "<dd>Shown to indicate that the page is in that selected language, "
+	  "usually by the header-module."
+	  "<dt>language-code.available.gif"
+	  "<dd>Shown as a link to the page in that language. Will of course "
+	  "only be used if the page exists in that language."
+	  "<dt>language-code.unavailable.gif"
+	  "<dd>Shown to indicate that the user has selected an language that "
+	  "this page hasn't been translated to."
 /*	 "<dt>language-code.dir.selected.gif"
 	 "<dd>Shown to indicate that the dir-entry will be shown in that "
 	 "language."
 	 "<dt>language-code.dir.available.gif"
 	 "<dd>Shown as a link to the dir-entry translated to that language."
 	 */
-	 "</dl>"
-	 "<p>It is of course not necessary to have all this pictures if "
-	 "their use is not enabled in this module nor the header module." );
+	  "</dl>"
+	  "<p>It is of course not necessary to have all this pictures if "
+	  "their use is not enabled in this module nor the header module." );
 
-/*  defvar( "flags_or_text", 1, "Flags in directory lists", TYPE_FLAG,
-	 "If set, the directory lists will include cute flags to indicate "
-	 "which language the entries exists in. Otherwise it will be shown "
-	 "with not-so-cure text. " );
-  defvar("directories", 1, "Directory parsing", TYPE_FLAG, 
-	 "If you set this flag to on, a directories will be "+
-	 "parsed to a file-list, if no index file is present. "+
-	 "If not, a 'No such file or directory' response will be generated.");
+/*
+  defvar( "flags_or_text", 1, "Flags in directory lists", TYPE_FLAG,
+	  "If set, the directory lists will include cute flags to indicate "
+	  "which language the entries exists in. Otherwise it will be shown "
+	  "with not-so-cure text. " );
+  defvar( "directories", 1, "Directory parsing", TYPE_FLAG, 
+	  "If you set this flag to on, a directories will be "+
+	  "parsed to a file-list, if no index file is present. "+
+	  "If not, a 'No such file or directory' response will be generated.");
 */  
   defvar( "configp", 1, "Use config (uses prestate otherwise).",
           TYPE_FLAG,
@@ -105,6 +106,7 @@ void create()
 
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
+  
   ::create();
 }
 
@@ -129,13 +131,8 @@ mixed fnord(mixed what) { return what; }
 
 void start()
 {
-  global_describer = this_object()["describe_dir_node_" "mac"];
-  head = this_object()["head_dir_"  "mac"];
-  foot = this_object()["foot_dir_"  "mac"];
   string tmp;
   array (string) tmpl;
-
-  //  key = "file:" + roxen->current_configuration->name;
 
   foreach (query( "languages" ) / "\n", tmp)
     if (strlen( tmp ) > 2 && tmp[0] != '#' && tmp[0..1] != "//")
@@ -153,7 +150,7 @@ void start()
     language_data[ tmp ][ LANGUAGE_DATA_NEXT_LANGUAGE ] &= indices( language_list );
   default_language = query( "default_language" );
   textonly = query( "textonly" );
-  //  flag_dir = query( "flag_dir" );
+  
   ::start();
 }
 
@@ -291,7 +288,6 @@ mixed remap_url( object id, string url )
 //  id->prestate -= language_list;
 //  id->prestate[ found_language ] = 1; // Is this smart?
 
-//  id->url = url;
   if (found_languages_orig[ found_language ])
     id->extra_extension += "." + found_language;
   // We don't change not_query incase it was a file without
