@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.4 1998/07/15 19:41:15 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.5 1998/11/05 01:29:27 peter Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -34,69 +34,118 @@ object db=0;
  * Utilities
  */
 
+static int database_empty()
+{
+  return(QUERY(database) != "");
+}
+
+static int dbuser_empty()
+{
+  return(QUERY(dbuser) != "");
+}
+
+static int dbpass_empty()
+{
+  return(QUERY(dbpass) != "");
+}
+
 /*
  * Object management and configuration variables definitions
  */
 void create() 
 {
-	defvar ("sqlserver","localhost","SQL server: Location",
-			TYPE_STRING, "This is the host running the SQL server with the "
-			"authentication information"
-			);
-	defvar ("database","passwd","SQL server: Database name",
-			TYPE_STRING, "This is the name of the authorizations database"
-			);
-	defvar ("dbuser","","SQL server: Database user's username",
-			TYPE_STRING, "This username will be used to authenticate when "
-			"connecting to the SQL server. Refer to your SQL server documentation, "
-			"this could be irrelevant."
-			);
-	defvar ("dbpass","", "SQL server: Database user's password",TYPE_STRING,
-			"This is the password used to authenticate the server when accessing "
-			"the database. Refer to your SQL server documentation, this could be "
-			"irrelevant"
-			);
-	defvar ("table","passwd","SQL server: Passwords table",TYPE_STRING,
-			"This is the table containing the data. It is  advisable not "
-			"to change it once the service has been started."
-			);
-	defvar ("disable_userlist",0,"Disable Userlist",TYPE_FLAG,
-			"If this is turned on, the module will NOT honor userlist answers. "
-			"Those are used if you have an user filesystem, and try to access "
-			"its mountpoint. It is recommended to turn this on if you have huge "
-			"users databases, since that feature would require much memory.");
-	defvar ("usecache",1,"Cache entries", TYPE_FLAG,
-			"This flag defines whether the module will cache the database "
-			"entries. Makes accesses faster, but changes in the database will "
-			"not show immediately. <B>Recommended</B>."
-			);
-	defvar ("closedb",1,"Close the database if not used",TYPE_FLAG,
-			"Setting this will save one filedescriptor without a small "
-			"performance loss."
-			);
-	defvar ("timer",60,"Database close timer", TYPE_INT,
-			"The timer after which the database is closed",0,
-			lambda(){return !QUERY(closedb);}
-			);
-	defvar ("defaultuid",geteuid(),"Defaults: User ID", TYPE_INT,
-			"Some modules require an user ID to work correctly. This is the "
-			"user ID which will be returned to such requests if the information "
-			"is not supplied by the database."
-			);
-	defvar ("defaultgid", getegid(), "Defaults: Group ID", TYPE_INT,
-			"Same as User ID, only it refers rather to the group."
-			);
-	defvar ("defaultgecos", "", "Defaults: Gecos", TYPE_STRING,
-			"The default Gecos."
-			);
-	defvar ("defaulthome","/", "Defaults: Home Directory", TYPE_DIR, 
-			"It is possible to specify an user's home "
-			"directory in the passwords database. This is used if it's "
-			"not provided."
-			);
-	defvar ("defaultshell", "/bin/sh", "Defaults: Login Shell", TYPE_FILE,
-			"Same as the default home, only referring to the user's login shell."
-			);
+  defvar ("sqlserver", "localhost", "SQL server",
+	  TYPE_STRING,
+	  "This is the host running the SQL server with the "
+	  "authentication information.<br>\n"
+	  "Specify an \"SQL-URL\":<ul>\n"
+	  "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
+	  "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre></ul><br>\n"
+	  "Valid values for \"sqlserver\" depend on which "
+	  "sql-servers your pike has support for, but the following "
+	  "might exist: msql, mysql, odbc, oracle, postgres.\n",
+	  );
+
+  defvar ("database", "", "OBSOLETE SQL settings: Database name",
+	  TYPE_STRING,
+	  "This is the name of the authorizations database.<br>\n"
+	  "<b>OBSOLETE. Specify the database name in the SQL-URL instead.</b>",
+	  0, database_empty);
+
+  defvar ("dbuser", "", "OBSOLETE SQL settings: Database user's username",
+	  TYPE_STRING,
+	  "This username will be used to authenticate when "
+	  "connecting to the SQL server. "
+	  "Refer to your SQL server documentation, "
+	  "this could be irrelevant.<br>\n"
+	  "<b>OBSOLETE. Specify the username in the SQL-URL instead.</b>",
+	  0, dbuser_empty);
+
+  defvar ("dbpass", "", "OBSOLETE SQL settings: Database user's password",
+	  TYPE_STRING,
+	  "This is the password used to authenticate the server "
+	  "when accessing the database. "
+	  "Refer to your SQL server documentation, "
+	  "this could be irrelevant.<br>\n"
+	  "<b>OBSOLETE. Specify the password in the SQL-URL instead.</b>",
+	  0, dbpass_empty);
+
+  defvar ("table", "passwd", "SQL server: Passwords table",
+	  TYPE_STRING,
+	  "This is the table containing the data. It is advisable not "
+	  "to change it once the service has been started."
+	  );
+
+  defvar ("disable_userlist", 0, "Disable Userlist",
+	  TYPE_FLAG,
+	  "If this is turned on, the module will NOT honor userlist "
+	  "answers. They are used if you have an user filesystem, "
+	  "and try to access its mountpoint. It is recommended to "
+	  "disable userlistings if you have huge users databases, "
+	  "since they feature would require much memory.");
+
+  defvar ("usecache", 1, "Cache entries",
+	  TYPE_FLAG,
+	  "This flag defines whether the module will cache the "
+	  "database entries. Makes accesses faster, but changes "
+	  "in the database will not show immediately. "
+	  "<B>Recommended</B>."
+	  );
+
+  defvar ("closedb", 1, "Close the database if not used", TYPE_FLAG,
+	  "Setting this will save one filedescriptor without a small "
+	  "performance loss."
+	  );
+
+  defvar ("timer", 60, "Database close timer", TYPE_INT,
+	  "The timer after which the database is closed",0,
+	  lambda(){return !QUERY(closedb);}
+	  );
+
+  defvar ("defaultuid", geteuid(), "Defaults: User ID", TYPE_INT,
+		"Some modules require an user ID to work correctly. "
+	  "This is the user ID which will be returned to such "
+	  "requests if the information is not supplied by the database."
+	  );
+
+  defvar ("defaultgid", getegid(), "Defaults: Group ID", TYPE_INT,
+	  "Same as User ID, only it refers rather to the group."
+	  );
+
+  defvar ("defaultgecos", "", "Defaults: Gecos", TYPE_STRING,
+	  "The default Gecos."
+	  );
+
+  defvar ("defaulthome", "/", "Defaults: Home Directory", TYPE_DIR, 
+	  "It is possible to specify an user's home "
+	  "directory in the passwords database. This is used if it's "
+	  "not provided."
+	  );
+
+  defvar ("defaultshell", "/bin/sh", "Defaults: Login Shell", TYPE_FILE,
+	  "Same as the default home, only referring to the user's "
+	  "login shell."
+	  );
 }
 
 /*
@@ -119,29 +168,30 @@ void close_db() {
 }
 
 void open_db() {
-	mixed err;
-	last_db_access=time(1);
-	db_accesses++; //I count DB accesses here, since this is called before each
-	if(objectp(db)) //already open
-		return;
-	err=catch{
-		db=Sql.sql(QUERY(sqlserver),QUERY(database),QUERY(dbuser),QUERY(dbpass));
-	};
-	if (err) {
-		perror ("SQLauth: Couldn't open authentication database!\n");
-		if (db)
-			perror("SQLauth: database interface replies: "+db->error()+"\n");
-		else
-			perror("SQLauth: unknown reason\n");
-		perror ("SQLauth: check the values in the configuration interface, and "
-				"that the user\n\trunning the server has adequate permissions to the "
-				"server\n");
-		db=0;
-		return;
-	}
-	DEBUGLOG("database successfully opened");
-	if(QUERY(closedb))
-		call_out(close_db,QUERY(timer));
+  mixed err;
+  last_db_access=time(1);
+  db_accesses++; //I count DB accesses here, since this is called before each
+  if(objectp(db)) //already open
+    return;
+  err=catch{
+    db=Sql.sql(QUERY(sqlserver), QUERY(database),
+	       QUERY(dbuser), QUERY(dbpass));
+  };
+  if (err) {
+    perror ("SQLauth: Couldn't open authentication database!\n");
+    if (db)
+      perror("SQLauth: database interface replies: "+db->error()+"\n");
+    else
+      perror("SQLauth: unknown reason\n");
+    perror ("SQLauth: check the values in the configuration interface, and "
+	    "that the user\n\trunning the server has adequate permissions "
+	    "to the server\n");
+    db=0;
+    return;
+  }
+  DEBUGLOG("database successfully opened");
+  if(QUERY(closedb))
+    call_out(close_db,QUERY(timer));
 }
 
 /*
