@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.14 1999/07/26 13:15:01 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.15 1999/08/16 20:40:37 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -79,9 +79,9 @@ static string title(mapping args)
 		   "%s</td></tr>\n"			/* empty */
 		   ,
 		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
-		   args->titlecolor ? "<FONT color=\""+args->titlecolor+"\">" : "",
+		   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
 		   args->title,
-		   args->titlecolor ? "</FONT>" : "",
+		   args->titlecolor ? "</font>" : "",
 		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
 		   args->outlinecolor,
 		   empty,
@@ -118,9 +118,9 @@ static string title(mapping args)
 		   "%s</td></tr>\n"			/* empty */
 		   ,
 		   args->outlinecolor ? " bgcolor=\""+args->outlinecolor+"\"" : "",
-		   args->titlecolor ? "<FONT color=\""+args->titlecolor+"\">" : "",
+		   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
 		   args->title,
-		   args->titlecolor ? "</FONT>" : "",
+		   args->titlecolor ? "</font>" : "",
 		   args->outlinecolor,
 		   empty,
 		   empty,
@@ -155,36 +155,30 @@ string container_obox(string name, mapping args,
     contents=parse_html(contents,([]),(["title":handle_title,]),args);
   }
 
-  switch (name) {
-  case "obox":
-    s = title(args);
-    s = "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"" +
-      (args->align?" align=\""+args->align+"\"":"") +
-      (args->width ? " width=\"" + args->width+"\"" : "") + ">\n" +
-      s +
-      "<tr" +
-      (args->bgcolor?" bgcolor=\""+args->bgcolor+"\"":"") +
-      "><td bgcolor=\"" + args->outlinecolor + "\">" +
-      img_placeholder(args) + "</td>\n"
-      "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=\"1\"" : "") +
-      (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=\"3\"" + ">\n"
-      "<table border=\"0\" cellspacing=\"0\" cellpadding=\"" + (args->padding || "5") + "\""+
-      (args->spacing?" width=\""+(string)args->spacing+"\"":"")+">"
-      "<tr><td>\n";
+  s = "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"" +
+    (args->align?" align=\""+args->align+"\"":"") +
+    (args->width ? " width=\"" + args->width+"\"" : "") + ">\n" +
+    title(args) +
+    "<tr" +
+    (args->bgcolor?" bgcolor=\""+args->bgcolor+"\"":"") +
+    "><td bgcolor=\"" + args->outlinecolor + "\">" +
+    img_placeholder(args) + "</td>\n"
+    "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=\"1\"" : "") +
+    (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=\"3\"" + ">\n"
+    "<table border=\"0\" cellspacing=\"0\" cellpadding=\"" + (args->padding || "5") + "\""+
+    (!args->spacing && args->width?" width=\""+(string)((int)args->width-((int)args->outlinewidth*2||2))+"\"":"")+
+    (args->spacing?" width=\""+(string)args->spacing+"\"":"")+">"
+    "<tr><td>\n";
 
-      if (args->textcolor) {
-	s += "<font color=\""+args->textcolor+"\">" + contents + "</font>";
-      } else {
-	s += contents;
-      }
+    if (args->textcolor)
+      s += "<font color=\""+args->textcolor+"\">" + contents + "</font>";
+    else
+      s += contents;
       
-      s += "</td></tr></table>\n"
-	"</td><td bgcolor=\"" + args->outlinecolor + "\">" +
-	img_placeholder(args) + "</td></tr>\n" +
-	horiz_line(args) + "</table>\n";
-
-    break;
-  }
+    s += "</td></tr></table>\n"
+      "</td><td bgcolor=\"" + args->outlinecolor + "\">" +
+      img_placeholder(args) + "</td></tr>\n" +
+      horiz_line(args) + "</table>\n";
   
   return s;
 }
