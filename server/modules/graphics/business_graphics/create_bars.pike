@@ -176,7 +176,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	(diagram_data["ymaxvalue"]-diagram_data["yminvalue"])+diagram_data["ystart"];
       
       int minpos;
-      minpos=max(labely, diagram_data["ymaxxnames"])+si/2.0;
+      minpos=max(labely, diagram_data["ymaxxnames"])+si/2;
       if (minpos>ypos_for_xaxis)
 	{
 	  ypos_for_xaxis=minpos;
@@ -188,7 +188,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["ysize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2.0)-
+	    (int)ceil(diagram_data["linewidth"]+si*2)-
 	    diagram_data["labelsize"];
 	  if (maxpos<ypos_for_xaxis)
 	    {
@@ -205,7 +205,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	// sätt x-axeln längst ner och diagram_data["ystart"] på samma ställe.
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2.0;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis;
       }
     else
@@ -213,7 +213,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//sätt x-axeln längst ner och diagram_data["ystart"] en aning högre
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2.0;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis+si*2;
       }
   
@@ -236,7 +236,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	(diagram_data["xmaxvalue"]-diagram_data["xminvalue"])+diagram_data["xstart"];
       
       int minpos;
-      minpos=diagram_data["xmaxynames"]+si/2.0;
+      minpos=diagram_data["xmaxynames"]+si/2;
       if (minpos>xpos_for_yaxis)
 	{
 	  xpos_for_yaxis=minpos;
@@ -248,7 +248,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2.0)-
+	    (int)ceil(diagram_data["linewidth"]+si*2)-
 	    labelx/2;
 	  if (maxpos<xpos_for_yaxis)
 	    {
@@ -267,7 +267,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2.0;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
     else
@@ -277,7 +277,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2.0;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
   
