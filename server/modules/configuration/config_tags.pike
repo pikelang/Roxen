@@ -254,7 +254,7 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
        <td align=right valign=top>"+c->middle+#"</td>
     </tr>
     <tr>
-      <td colspan=2 align=right width=100% valign=bottom>"+c->top+#"</td>
+      <td colspan=2 align=left width=100% valign=bottom>"+c->top+#"</td>
     </tr>
   </table>
 ";
