@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.1 2005/03/09 15:53:58 grubba Exp $
+// $Id: php.pike,v 2.2 2005/03/09 15:59:42 grubba Exp $
 //
 // Support for files with php markup.
 //
@@ -11,12 +11,14 @@
 
 inherit "cgi.pike";
 
+constant cvs_version = "$Id: php.pike,v 2.2 2005/03/09 15:59:42 grubba Exp $";
+
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
 constant module_doc  = "Support for the "
   "<a href=\"http://www.php.net/\">PHP</a> scripting engine.";
 
-#define PHP_DEBUG
+// #define PHP_DEBUG
 
 #ifdef PHP_DEBUG
 # define DWERR(X ...) werror("PHP: "+sprintf(X)+"\n")
