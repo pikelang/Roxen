@@ -133,9 +133,6 @@ private string parse_mapping(mapping doc, void|object id) {
 
 // --------------------- Find documentation --------------
 
-// Remember a tag documentation for 15 minutes.
-#define CACHE_TIMEOUT 900 
-
 mapping call_tagdocumentation(RoxenModule o) {
   mapping doc;
   string name;
@@ -153,10 +150,10 @@ mapping call_tagdocumentation(RoxenModule o) {
 #endif
   RXMLHELP_WERR(sprintf("tagdocumentation() returned %t.",doc));
   if(!doc || !mappingp(doc)) {
-    cache_set("tagdoc", name, 0, CACHE_TIMEOUT);
+    cache_set("tagdoc", name, 0);
     return 0;
   }
-  cache_set("tagdoc", name, doc, CACHE_TIMEOUT);
+  cache_set("tagdoc", name, doc);
   return doc;
 }
 
