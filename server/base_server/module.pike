@@ -1,10 +1,12 @@
-/* $Id: module.pike,v 1.52 1999/11/10 04:54:04 per Exp $ */
+/* $Id: module.pike,v 1.53 1999/11/17 15:14:32 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
 mapping (string:mixed *) variables=([]);
 object this = this_object();
+mapping(string:array(int)) error_log=([]);
 
+constant is_module = 1;
 constant module_type   = MODULE_PARSER;
 constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
@@ -101,25 +103,7 @@ string info(object conf)
   return (this->register_module(conf)[2]);
 }
 
-static class ConfigurableWrapper
-{
-  int mode;
-  function f;
-  int check(  int|void more, int|void expert )
-  {
-    if ((mode & VAR_EXPERT) && !expert)
-      return 1;
-    if ((mode & VAR_MORE) && !more)
-      return 1;
-    return f();
-  }
-  void create(int mode_, function f_)
-  {
-    mode = mode_;
-    f = f_;
-  }
-};
-
+constant ConfigurableWrapper = roxen.ConfigurableWrapper;
 constant reg_s_loc = Locale.Roxen.standard.register_module_doc;
 
 // Define a variable, with more than a little error checking...
