@@ -8,14 +8,13 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.17 1999/09/24 17:16:07 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.18 1999/12/14 06:45:11 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-//#define HOSTREDIRECT_DEBUG
 void create()
 {
   defvar("hostredirect", "", "Redirect rules", TYPE_TEXT_FIELD, 
@@ -50,7 +49,7 @@ void create()
        );
 }
 
-mapping patterns = ([ /* empty */ ]);
+mapping patterns = ([ ]);
 
 void start()
 {
@@ -66,14 +65,11 @@ void start()
       //if(a[0] != "default" && strlen(a[1]) > 1 && a[1][-1] == '/')
       //  a[1] = a[1][0..strlen(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
-#ifdef HOSTREDIRECT_DEBUG
-      perror("hostredirect: "+a[0]+" -> "+a[1]+"\n");
-#endif      
     }
   }
 }
 
-mixed register_module()
+array register_module()
 {
   return ({ MODULE_FIRST, 
             "Host Redirect, v2", 
@@ -81,25 +77,18 @@ mixed register_module()
              "depending on the hostname that was used to access the " 
              "server. It can be used as a cheap way (IP number wise) "
              "to do virtual hosting. <i>Note that this won't work with "
-             "all clients.</i><p>"
-             "v2 now also allows HTTP redirects"), 
-              ({}), 1, });
+             "all clients.</i>"
+             "<p>v2 now also allows HTTP redirects.</p>"), 
+             0, 1, });
 }
 
-mixed first_try(object id)
+int|mapping first_try(RequestID id)
 {
-#ifdef HOSTREDIRECT_DEBUG
-  perror("_________________________________________________\n");
-  perror(sprintf("raw_url: %O\n", id->raw_url));
-#endif     
   string host, to;
-  int path =0, stripped=0;
+  int path=0, stripped=0;
 
   if(id->misc->host_redirected || !sizeof(patterns))
   {
-#ifdef HOSTREDIRECT_DEBUG
-    perror("redirected\n");
-#endif     
     return 0;
   }  
 
@@ -125,14 +114,6 @@ mixed first_try(object id)
   }
   if(host=="default")
   {
-#ifdef HOSTREDIRECT_DEBUG
-    perror("thesearch: %d\n", 
-	   search(id->referer[0], 
-		  lower_case((id->prot / "/")[0])+"://"+id->misc->host));
-    perror(sprintf("referer: %O\nhost: %O\nraw: %O\nurl: %O\n",
-		   id->referer, id->misc->host, id->raw, 
-		   lower_case((id->prot /"/")[0])+"://"+id->misc->host));  
-#endif
     if((id->referrer) && (sizeof(id->referrer)) &&
        search(id->referer[0],
 	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0) {
@@ -156,16 +137,11 @@ mixed first_try(object id)
     // so we might be better off forcing the administrators to have a
     // directory with an automatically loaded index-file as the default
     // redirection anyway
-}
-#ifdef HOSTREDIRECT_DEBUG
-    perror(to+"\n");
-#endif     
+  }
+
   string url = id->conf->query("MyWorldLocation");
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
-#ifdef HOSTREDIRECT_DEBUG
-    perror("%u:"+to+"\n");
-#endif     
 
 
   if((host != "default") && (search(to, "%p") != -1))
@@ -176,14 +152,8 @@ mixed first_try(object id)
 
     to = replace(to, "%p", id->not_query);
     path = 1;
-#ifdef HOSTREDIRECT_DEBUG
-        perror("replacing %p\n");
-#endif     
   }
   
-#ifdef HOSTREDIRECT_DEBUG
-  perror("search: id->not_query: "+id->not_query+"\n");
-#endif     
   if(search(id->not_query, to) == 0) {
     // Already have the correct beginning...
     return 0;
@@ -194,20 +164,9 @@ mixed first_try(object id)
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-#ifdef HOSTREDIRECT_DEBUG
-          perror("return:"+to+"\n");
-#endif     
      return http_low_answer( 302, "") 
         + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
-#ifdef HOSTREDIRECT_DEBUG
-    // perror("search: %d\n",
-    // 	   search(id->referer[0],
-    // 		  lower_case((id->prot / "/")[0])+"://"+id->misc->host));
-    perror(sprintf("referer: %O\nhost: %O\nprotokoll: %O\nurl: %O\n",
-		   id->referer, id->misc->host, id->prot, 
-		   lower_case((id->prot /"/")[0])+"://"+id->misc->host));  
-#endif     
     //  if the default file contains images, they will not be found, 
     //  because they will be redirected just like the original request
     //  without id->not_query. maybe it's possible to check the referer
