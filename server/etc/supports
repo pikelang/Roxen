@@ -1,4 +1,4 @@
-## $Id: supports,v 1.21 1997/04/11 20:34:22 grubba Exp $
+## $Id: supports,v 1.22 1997/04/17 15:35:03 peter Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -151,6 +151,15 @@ cern.*linemode.*           nothing
 #section udiwww {
 # . . .
 .*	  basic, tables, imagealign, backgrounds, font
+# }
+
+#section IBrowse {
+# Amiga MUIbrowser
+.*			basic, center, pnginline, imageinline,\
+                        backgrounds, bigsmall, center, division,\
+                        font, fontcolor, imagealign, images,\
+                        jpeginline, pjpeginline, pnginline,\
+                        supsub, tables
 # }
 
 #section amiga-aweb {
