@@ -454,7 +454,9 @@ string parse( RequestID id )
  	 LOCALE(38,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
-         int open = roxen->urls[ url ] && roxen->urls[ url ]->port->bound;
+         int open = (roxen->urls[ url ] 
+                     && roxen->urls[ url ]->port 
+                     && roxen->urls[ url ]->port->bound);
          if( !open )
            res += url + " "+port_for(url)+(" <font color='&usr.warncolor;'>"+
                                            LOCALE(301, "Not open")+
