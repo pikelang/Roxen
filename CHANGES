@@ -4,6 +4,8 @@ Changes since Roxen Challenger 1.3.111 Yellow
 o Made a year 2000 compliance check. As exspected no year 2000 bugs
   were found, but a few other date-related bugs were found and fixed.
 
+o Added the Odbc-module to the GPLed Challenger.
+
 o Fixed <imgs> to work in virtual filesystems.
 
 o Fixed bug in the Crotatian, Czech and Italian language modules that
@@ -14,14 +16,20 @@ o Improved trace outputs from the Java servlets module.
 
 o Fixed the request count in the ip-less hosting module.
 
-o Added the Odbc-module to the GPLed Challenger.
-
 o Changed 1.2 to 1.3 in the documentation and test files.
 
 o Changed COPYING to better reflect the situation with RSA patents.
 
 o Brough back extern/README to reality as of 1999.
 
+o Disabled the socketpair kludge for Linux. Roxen needs more
+  functionailty than Linux broken socketpair provides, so let it fall
+  back on socketpair ultra instead. This will surely break CGI-scripts
+  on Linux, but now we have a chance of fixing it in pikes fallbacks.
+
+o Updated the manual.
+
+o Fixed bug in fontloader.
 
 
 Changes since Roxen Challenger 1.3.107 Yellow
