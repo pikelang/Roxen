@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.16 2000/11/14 01:13:20 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.17 2000/11/14 18:38:55 marcus Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -74,8 +74,12 @@ string status()
 
 string query_name()
 {
-  return sprintf("<i>%s</i> mounted on <i>%s</i>", query("classname"),
-		 query("location"));
+  if(query("ex"))
+    return sprintf("<i>%s</i> handling extension <i>%s</i>",
+		   query("classname"), query("ext")*", ");
+  else
+    return sprintf("<i>%s</i> mounted on <i>%s</i>",
+		   query("classname"), query("location"));
 }
 
 class RXMLParseWrapper
@@ -115,14 +119,18 @@ mixed find_file( string f, RequestID id )
   if(!servlet || query("ex"))
     return 0;
 
-  id->my_fd->set_read_callback(0);
-  id->my_fd->set_close_callback(0);
-  id->my_fd->set_blocking();
-  id->misc->path_info = f;
-  id->misc->mountpoint = query("location");
-  if(query("rxml"))
-    id->my_fd = RXMLParseWrapper(id->my_fd, id);
-  servlet->service(id);
+  if(id->my_fd == 0 && id->misc->trace_enter)
+    ; /* In "Resolve path...", kluge to avoid backtrace. */
+  else {
+    id->my_fd->set_read_callback(0);
+    id->my_fd->set_close_callback(0);
+    id->my_fd->set_blocking();
+    id->misc->path_info = f;
+    id->misc->mountpoint = query("location");
+    if(query("rxml"))
+      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+    servlet->service(id);
+  }
 
   return Roxen.http_pipe_in_progress();
 }
@@ -132,14 +140,18 @@ mixed handle_file_extension(object o, string e, RequestID id)
   if(!servlet || !query("ex"))
     return 0;
   
-  id->my_fd->set_read_callback(0);
-  id->my_fd->set_close_callback(0);
-  id->my_fd->set_blocking();
-  id->misc->path_info = id->not_query;
-  id->misc->mountpoint = "/";
-  if(query("rxml"))
-    id->my_fd = RXMLParseWrapper(id->my_fd, id);
-  servlet->service(id);
+  if(id->my_fd == 0 && id->misc->trace_enter)
+    ; /* In "Resolve path...", kluge to avoid backtrace. */
+  else {
+    id->my_fd->set_read_callback(0);
+    id->my_fd->set_close_callback(0);
+    id->my_fd->set_blocking();
+    id->misc->path_info = id->not_query;
+    id->misc->mountpoint = "/";
+    if(query("rxml"))
+      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+    servlet->service(id);
+  }
 
   return Roxen.http_pipe_in_progress();
 }
