@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.292 2002/10/22 00:26:05 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.293 2002/11/06 02:07:02 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1113,8 +1113,6 @@ private string do_gtext(mapping arg, string c, RequestID id)
       arg->width=(string)max(arg->xsize,size->xsize);
       arg->height=(string)max(arg->ysize,size->ysize);
     }
-
-    if(!id->supports->images) return sprintf(lp,arg->alt);
 
     string sn = "gtext" + id->root_id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
