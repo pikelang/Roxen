@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.58 1999/02/13 17:43:20 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.59 1999/02/13 17:57:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1008,7 +1008,7 @@ class backend
     }
 
     // array(Clientlayer Mail objects).
-    array(object) messages session->mailbox->fetch_mail(message_set)->mail;
+    array(object) messages = session->mailbox->fetch_mail(message_set)->mail;
 
     if (!messages || !sizeof(messages)) {
       // Nothing to copy.
