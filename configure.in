@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.46 1998/03/12 20:02:35 grubba Exp $
+# $Id: configure.in,v 1.47 1998/04/08 19:26:56 grubba Exp $
 #
 
 prefix=$PWD
@@ -203,27 +203,40 @@ done
 
 #############################################################################
 
+echo Searching for include-file directories...
 if test $cppflags_is_set = no -a x${C_INCLUDE_PATH-} = x ; then
-  for d in /usr/local /usr/gnu /opt/gnu /sw/gnu /home/GNU /sw /usr/freeware
+  for d in `echo ${with_include_path} | sed 's/:/ /g'` \
+    `echo $prefix | sed "s@^NONE@$ac_default_prefix@g"`/include \
+    /usr/local/include /sw/local/include /usr/gnu/include /opt/gnu/include \
+    /sw/gnu/include /sw/include /usr/freeware/include \
+    `echo /usr/X11*/include | sort -r`
   do
-    if test -d "$d/include" ; then
-      echo Adding $d/include to the include-path
-      CPPFLAGS="${CPPFLAGS} -I$d/include"
+    AC_MSG_CHECKING($d)
+    if test -d "$d/." ; then
+      AC_MSG_RESULT(added)
+      CPPFLAGS="${CPPFLAGS} -I$d"
     else
-      :
+      AC_MSG_RESULT(no)
     fi
   done
 else
   :
 fi
+
+echo Searching for library directories...
 if test $ldflags_is_set = no ; then
-  for d in /usr/local /usr/gnu /opt/gnu /sw/gnu /home/GNU /sw /usr/freeware
+  for d in `echo ${with_lib_path} | sed 's/:/ /g'` \
+    `echo $exec_prefix | sed "s@^NONE@$prefix@g" | sed "s@^NONE@$ac_default_prefix@g"` \
+    /usr/local/lib /sw/local/lib /sw/lib \
+    /usr/gnu/lib /opt/gnu/lib /sw/gnu/lib /usr/freeware/lib \
+    `echo /usr/X11*/lib | sort -r`
   do
-    if test -d "$d/lib" ; then
-      echo Adding $d/lib to the library-path
-      LDFLAGS="${LDFLAGS} -R$d/lib -L$d/lib"
+    AC_MSG_CHECKING($d)
+    if test -d "$d/." ; then
+      AC_MSG_RESULT(added)
+      LDFLAGS="${LDFLAGS} -R$d -L$d"
     else
-      :
+      AC_MSG_RESULT(no)
     fi
   done
 else
