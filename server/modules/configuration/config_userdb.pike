@@ -11,11 +11,10 @@ inherit "roxenlib";
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";
-constant module_doc    = "This userdatabase keeps the configuration users"
+constant module_doc    = "This user database keeps the configuration users "
                          "passwords and other settings";
 constant module_unique = 1;
 constant thread_safe   = 1;
-
 
 mapping settings_cache = ([ ]);
 
@@ -74,7 +73,7 @@ class ConfigurationSettings
             ]), TYPE_FLAG,
             ([ "english":"Show the language selection flags. The translation "
                "of the configuration interface is not done yet, so this is "
-               "mostly useful for the curious or the translator." 
+               "mostly useful for the curious or the translator."
 	    ]), 0, 0 );
 
     defvar( "devel_mode", 1,
