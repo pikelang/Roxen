@@ -8,14 +8,19 @@
 //! Objects of this class are usually created through
 //! @[RoxenModule()->query_properties()].
 
+#include <roxen.h>
+
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
 #else /* !DAV_DEBUG */
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
 
-//! Path for which these properties apply.
+//! Filesystem-relative path for which these properties apply.
 string path;
+
+//! Absolute path for which these properties apply.
+string abs_path;
 
 //! The current request.
 RequestID id;
@@ -23,19 +28,20 @@ RequestID id;
 //! Create a new property set.
 //!
 //! Usually called via @[query_properties()].
-static void create(string path, RequestID id)
+static void create(string path, string abs_path, RequestID id)
 {
   global::path = path;
+  global::abs_path = abs_path;
   global::id = id;
+
+  ASSERT_IF_DEBUG(has_prefix(abs_path, "/") && has_suffix(abs_path, path));
 }
 
 //! Destruction callback.
 //!
 //! Note that this function must unroll any uncommitted
 //! property changes.
-static void destroy()
-{
-}
+static void destroy();
 
 //! Return an @[Stdio.Stat] object for the resource. Its main use is
 //! to tell collections (i.e. directories) from non-collections.
@@ -293,7 +299,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     return get_response_headers()["Last-Modified"];
 
   case "DAV:lockdiscovery":	// RFC2518 13.8
-    return indices(id->conf->find_locks(path, 0, 0, id))->get_xml();
+    return indices(id->conf->find_locks(abs_path, 0, 0, id))->get_xml();
 
   case "DAV:resourcetype":	// RFC2518 13.9
     if (get_stat()->isdir) {
@@ -309,12 +315,13 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
 	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
       });
-      res->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])));
-      res[0]->get_last_child()->
+      res[0]->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])))->
 	add_child(Parser.XML.Tree.ElementNode("DAV:exclusive", ([])));
-      res[1]->get_last_child()->
-	add_child(Parser.XML.Tree.ElementNode("DAV:exclusive", ([])));
-      res->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
+      res[1]->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])))->
+	add_child(Parser.XML.Tree.ElementNode("DAV:shared", ([])));
+      res[0]->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
+	add_child(Parser.XML.Tree.ElementNode("DAV:write", ([])));
+      res[1]->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
 	add_child(Parser.XML.Tree.ElementNode("DAV:write", ([])));
       return res;
     }
@@ -374,20 +381,13 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   case "DAV:lastaccessed":	// MS
     return Roxen.iso8601_date_time(get_stat()->atime);
   case "DAV:href":		// MS
-    return sprintf("%s://%s%s%s%s",
-		   id->port_obj->prot_name,
-		   id->misc->host || id->port_obj->ip ||
-		   gethostname(),
-		   (id->port_obj->port == id->port_obj->port)?
-		   "":(":"+(string)id->port_obj->port),
-		   id->port_obj->path||"",
-		   combine_path(query_location(), path));
+    return id->url_base() + abs_path[1..];
   case "DAV:contentclass":	// MS
     return "";
   case "DAV:parentname":	// MS
     return "";
   case "DAV:name":		// MS
-    return combine_path(query_location(), path);
+    return abs_path;
 #endif /* 0 */
 
   default:
