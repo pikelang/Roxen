@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.90 1999/05/28 09:55:06 mast Exp $
+ * $Id: roxenloader.pike,v 1.91 1999/05/31 22:21:15 js Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.90 1999/05/28 09:55:06 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.91 1999/05/31 22:21:15 js Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -548,9 +548,7 @@ void load_roxen()
   // Attempt to resolv cross-references...
 #ifndef __NT__
   if(!getuid())
-#endif
     add_constant("Privs", myprivs(this_object()));
-#ifndef __NT__
   else  // No need, we are not running as root.
     add_constant("Privs", (Privs=empty_class));
   roxen = really_load_roxen();
@@ -561,6 +559,8 @@ void load_roxen()
     add_constant("Privs", Privs);
   }
 #else
+  /* NT */
+  add_constant("Privs", (Privs=empty_class));
   roxen = really_load_roxen();
 #endif
   perror("Roxen version "+roxen->cvs_version+"\n"
