@@ -108,7 +108,7 @@ string parse( RequestID id )
     roxen.restart( 0.1, 100 );
     return (string)_(47,"Changing roxen version");
   }
-  
+
   res += "<input type=hidden name='action' value='change_version.pike' />";
   
   res += "<table><tr>"    "<td><b>"+    _(48,"Version")+    "</b></td><td></td>"
@@ -152,7 +152,14 @@ string parse( RequestID id )
 	      combine_path(getcwd(),"../start") )
       +"</td></tr></table>";
 	      
-
+  res += "<table><tr><td valign='top'>"
+    "<img src='&usr.err-2;' alt='#' /></td>\n"
+    "<td>"+
+    _(0,"Note that the server will be automatically restarted with "
+      "the new version.")+
+    "</td>\n"
+    "</tr></table>\n";
+  
   res += "<submit-gbutton>"+_(138,"Change version")+"</submit-gbutton>";
 	      
   return res;
