@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.462 2001/08/14 01:47:16 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.463 2001/08/14 15:11:11 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2466,7 +2466,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mixed err;
   int module_type;
 
-  if( forcibly_added[modname] )
+  if( forcibly_added[modname] == 2 )
     return search(otomod, modname);
   
   if( datacache ) datacache->flush();
@@ -3013,7 +3013,7 @@ int disable_module( string modname, int|void nodest )
   if( !nodest )
   {
     m_delete( enabled_modules, modname + "#" + id );
-    forcibly_added[ modname + "#" + id ] = 0;
+    m_delete( forcibly_added, modname + "#" + id );
     store( "EnabledModules",enabled_modules, 1, this_object());
     destruct(me);
   }
@@ -3032,7 +3032,7 @@ RoxenModule find_module(string name)
   return 0;
 }
 
-multiset forcibly_added = (<>);
+mapping forcibly_added = ([]);
 int add_modules( array(string) mods, int|void now )
 {
 #ifdef MODULE_DEBUG
@@ -3052,8 +3052,9 @@ int add_modules( array(string) mods, int|void now )
 	else
 	  report_debug("Adding required module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
 #endif
-      enable_module( mod+"#0" );
       forcibly_added[ mod+"#0" ] = 1;
+      enable_module( mod+"#0" );
+      forcibly_added[ mod+"#0" ] = 2;
     }
   }
 #ifdef MODULE_DEBUG
@@ -3143,7 +3144,7 @@ void low_init(void|int modules_already_enabled)
     string tmp_string;
 
     array err;
-    forcibly_added = (<>);
+    forcibly_added = ([]);
     enable_module_batch_msgs = 1;
     foreach( modules_to_process, tmp_string )
     {
@@ -3161,7 +3162,7 @@ void low_init(void|int modules_already_enabled)
 // report_error( "While enabling modules in "+name+":\n"+ec->get() );
 // if( strlen( ec->get_warnings() ) )
 // report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
-    forcibly_added = (<>);
+    forcibly_added = ([]);
   }
     
   foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
