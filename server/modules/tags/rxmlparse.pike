@@ -15,8 +15,8 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.54 2001/03/08 14:35:47 per Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: rxmlparse.pike,v 1.55 2001/04/23 18:43:46 nilsson Exp $";
+constant thread_safe = 1;
 constant language = roxen->language;
 
 #include <config.h>
@@ -32,14 +32,7 @@ constant module_name = "Tags: RXML 2 parser";
 constant module_doc  = 
 #"This module handles RXML parsing of pages. Other modules can provide 
 additional tags that will be parsed. Most common RXML tags is provided by
-the <i>RXML 2.0 tags</i> module. This module provide some fundamental tags; 
-<tt>&lt;case&gt;</tt>, <tt>&lt;cond&gt;</tt>, <tt>&lt;comment&gt;</tt>, 
-<tt>&lt;define&gt;</tt>, <tt>&lt;elif&gt;</tt>, <tt>&lt;else&gt;</tt>, 
-<tt>&lt;elseif&gt;</tt>, <tt>&lt;emit&gt;</tt>, <tt>&lt;eval&gt;</tt>, 
-<tt>&lt;false&gt;</tt>, <tt>&lt;help&gt;</tt>, <tt>&lt;if&gt;</tt>, 
-<tt>&lt;nooutput&gt;</tt>, <tt>&lt;noparse&gt;</tt>, <tt>&lt;number&gt;</tt>, 
-<tt>&lt;strlen&gt;</tt>, <tt>&lt;then&gt;</tt>, <tt>&lt;trace&gt;</tt>, 
-<tt>&lt;true&gt;</tt>, <tt>&lt;undefine&gt;</tt> and <tt>&lt;use&gt;</tt>.";
+the <i>RXML 2.0 tags</i> module.";
 
 string status()
 {
@@ -232,27 +225,15 @@ void api_add_header(RequestID id, string h, string v)
 
 int api_set_cookie(RequestID id, string c, string v, void|string p)
 {
-  if(!c)
-    return 0;
-
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-    c+"="+Roxen.http_encode_cookie(v||"")+
-    "; expires="+Roxen.http_date(time(1)+(3600*24*365*2))+
-    "; path=" +(p||"/")
-  );
-
+  if(!c) return 0;
+  Roxen.set_cookie(id, c, v, 3600*24*365*2, 0, p);
   return 1;
 }
 
 int api_remove_cookie(RequestID id, string c, string v)
 {
-  if(!c)
-    return 0;
-
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-			c+"="+Roxen.http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
-  );
-
+  if(!c) return 0;
+  Roxen.remove_cookie(id, c, v);
   return 1;
 }
 
