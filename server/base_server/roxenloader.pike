@@ -3,15 +3,14 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.24 1997/05/15 23:39:56 neotron Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.25 1997/05/26 21:56:42 grubba Exp $";
 
 #define perror roxen_perror
 
-private static int perror_last_was_newline=1;
+private static int perror_status_reported=0;
 
 int pid = getpid();
 object stderr = files.file("stderr");
-
 
 void roxen_perror(string format,mixed ... args)
 {
@@ -19,6 +18,7 @@ void roxen_perror(string format,mixed ... args)
   if(sizeof(args)) format=sprintf(format,@args);
   if (format=="") return;
   stderr->write(format);
+  perror_status_reported=0;
 }
 
 mapping pwn=([]);
@@ -30,13 +30,18 @@ void pw_name(int uid)
 
 void report_status()
 {
+#ifdef DEBUG
   call_out(report_status, 60);
-  stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
+#endif /* DEBUG */
+  if (!perror_status_reported) {
+    stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
-		(geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
+		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
-		"   uid: "+pw_name(getuid())+
-		"    Time: "+(ctime(time())/" ")[-2]+"[0m\n");
+		  "   uid: "+pw_name(getuid())+
+		  "    Time: "+(ctime(time())/" ")[-2]+"[0m\n");
+    perror_status_reported=1;
+  }
 }
 
 mapping dbs = ([ ]);
