@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.31 1998/04/19 01:21:02 grubba Exp $
+# $Id: start,v 1.32 1998/04/28 18:19:25 grubba Exp $
 
 VERSION=201; BETA=.a;
 
@@ -58,6 +58,9 @@ fi
 if [ -d base_server ]; then
   DEFINES="$DEFINES -Ibase_server"
 fi
+
+# Extra program-path
+DEFINES="$DEFINES -P`pwd`"
 
 # Extra kludge for HPUX
 # HPUX doesn't like group 60001(nobody)
