@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.126 2004/04/20 21:10:46 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.127 2004/05/05 21:24:38 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -406,27 +406,24 @@ array find_dir( string f, RequestID id )
   return dir;
 }
 
-static MultiStatus recursive_rm(string real_dir, string relative_dir,
-				RequestID id, MultiStatus|void result)
+void recursive_rm(string real_dir, string virt_dir,
+		  RequestID id)
 {
   TRACE_ENTER(sprintf("Deleting all files in directory %O...", real_dir),
 	      this_object());
   foreach(get_dir(real_dir) || ({}), string fname) {
     string real_fname = combine_path(real_dir, fname);
-    string relative_fname = combine_path(relative_dir, fname);
+    string virt_fname = virt_dir + "/" + fname;
     Stat stat = file_stat(real_fname);
     TRACE_ENTER(sprintf("Deleting file %O.", real_fname),
 		this_object());
     if (!stat) {
-      if (!result) {
-	result = MultiStatus()->prefix(query_location());
-      }
-      result->add_response(relative_fname, XMLStatusNode(404));
+      id->set_status_for_path(virt_fname, 404);
       TRACE_LEAVE("File not found.");
       continue;
     }
     if (stat->isdir) {
-      result = recursive_rm(real_fname, relative_fname, id, result);
+      recursive_rm(real_fname, virt_fname, id);
     }
 
     /* Clear the stat-cache for this file */
@@ -439,10 +436,7 @@ static MultiStatus recursive_rm(string real_dir, string relative_dir,
       if (errno() != System.EEXIST)
 #endif
       {
-	if (!result) {
-	  result = MultiStatus()->prefix(query_location());
-	}
-	result->add_response(relative_fname, XMLStatusNode(403));
+	id->set_status_for_path(virt_fname, 403);
 	TRACE_LEAVE("Deletion failed.");
       }
 #if constant(System.EEXIST)
@@ -454,15 +448,13 @@ static MultiStatus recursive_rm(string real_dir, string relative_dir,
       deletes++;
 
       if (id->misc->quota_obj && stat->isreg()) {
-	id->misc->quota_obj->deallocate(combine_path(query_location(),
-						     relative_fname),
+	id->misc->quota_obj->deallocate(virt_fname,
 					stat->size());
       }
       TRACE_LEAVE("Ok.");
     }
   }
   TRACE_LEAVE("Done.");
-  return result;
 }
 
 mapping putting = ([]);
@@ -1324,15 +1316,16 @@ mixed find_file( string f, RequestID id )
 
       SETUID_TRACE("Deleting directory", 0);
 
-      MultiStatus result = recursive_rm(f, oldf, id);
+      int start_ms_size = id->multi_status_size();
+      recursive_rm(f, query_location() + oldf, id);
 
       if (!rm(f)) {
-	if (result) {
+	if (id->multi_status_size() > start_ms_size) {
 #if constant(system.EEXIST)
 	  if (errno() != system.EEXIST)
 #endif
 	  {
-	    result->add_response(oldf, XMLStatusNode(403));
+	    id->set_status_for_path(query_location() + oldf, 403);
 	  }
 	} else {
 	  TRACE_LEAVE("DELETE: Failed to delete directory.");
@@ -1340,9 +1333,9 @@ mixed find_file( string f, RequestID id )
 	}
       }
 
-      if (result) {
+      if (id->multi_status_size() > start_ms_size) {
 	TRACE_LEAVE("DELETE: Partial failure.");
-	return result->http_answer();
+	return ([]);
       }
     } else {
       report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
