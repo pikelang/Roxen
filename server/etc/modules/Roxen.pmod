@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.49 2000/11/06 22:10:27 per Exp $
+ * $Id: Roxen.pmod,v 1.50 2000/11/16 11:52:15 per Exp $
  *
  * Various helper functions.
  *
@@ -1149,7 +1149,8 @@ class FormScope( mapping variables )
   mixed `[]( string what )
   {
     mixed q = variables[ what ];
-    if(!q) return q;
+    if( !stringp(q) )
+      return q;
     q /= "\0";
     if( sizeof( q ) == 1 )
       return q[0];
