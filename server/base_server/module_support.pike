@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.66 2000/04/04 13:04:32 marcus Exp $
+// $Id: module_support.pike,v 1.67 2000/04/04 16:40:27 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -277,8 +277,9 @@ class ModuleInfo
       return name;
     if( mappingp( name ) )
     {
-      if( name[ roxenp()->locale->get()->name ] )
-        return name[ roxenp()->locale->get()->name ];
+      string q;
+      if( q = name[ roxenp()->locale->get()->name ] )
+        return q;
       return name[ "standard" ];
     }
   }
@@ -289,15 +290,15 @@ class ModuleInfo
       return description;
     if( mappingp( description ) )
     {
-      if( description[ roxenp()->locale->get()->name ] )
-        return description[ roxenp()->locale->get()->name ];
+      string q;
+      if( q = description[ roxenp()->locale->get()->name ] )
+        return q;
       return description[ "standard" ];
     }
   }
 
   object instance( object conf, void|int silent )
   {
-//     werror("Instantiate %O for %O.\n", this_object(), conf );
 #if constant(Java.jvm)
     if( filename[sizeof(filename)-6..]==".class" )
       return ((program)"javamodule.pike")(conf, filename);
@@ -388,11 +389,8 @@ class ModuleInfo
         if( strip_extention(file) == what )
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
-              (search( file, ".so" ) == strlen(file)-3 )
-#if constant(Java.jvm)
-              || (search( file, ".class" ) == strlen(file)-6 )
-#endif
-	      )
+              (search( file, ".so" ) == strlen(file)-3 ) ||
+              (search( file, ".class" ) == strlen(file)-6 ) )
           {
             Stdio.File f = Stdio.File( dir+file, "r" );
             if( (f->read( 4 ) != "#!NO" ) )
@@ -507,18 +505,32 @@ array rec_find_all_modules( string dir )
   return modules;
 }
 
+array(ModuleInfo) all_modules_cache;
+
+void clear_all_modules_cache()
+{
+  all_modules_cache = 0;
+}
+
 array(ModuleInfo) all_modules()
 {
+  if( all_modules_cache ) 
+    return all_modules_cache;
+
+  if( !modules )
+  {
+    modules = ([]);
+    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+  }
+
   array possible = ({});
+
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
-
-  foreach( possible, string p )
-    modules[ p ] = find_module( p );
-
+  map( possible, find_module );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
-  return tmp;
+  return all_modules_cache = tmp;
 }
 
 ModuleInfo find_module( string name )
@@ -526,7 +538,7 @@ ModuleInfo find_module( string name )
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" );
+    module_cache = roxenp()->ConfigIFCache( "modules" ); 
   }
 
   if( modules[ name ] )

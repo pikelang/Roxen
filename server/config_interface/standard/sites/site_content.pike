@@ -342,9 +342,11 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "valign=top>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br>" +
                     EC(translate(m->file_name_and_stuff())) +
-		    homepage + creators + "<dl>" +
-                    rec_print_tree( Program.inherit_tree( object_program(m) ) )
-                    + "</dl>" : homepage + creators),
+		    homepage + creators + "<h1>Inherit tree</h1>"+
+                    program_info( m ) +
+                    "<dl>" + 
+                    inherit_tree( m ) + 
+                    "</dl>" : homepage + creators),
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
@@ -429,9 +431,8 @@ string parse( RequestID id )
 
        if( id->misc->config_settings->query( "devel_mode" ) )
        {
-         res += "<h1>Inherit tree</h1><dl>";
-         res += rec_print_tree( Program.inherit_tree( object_program(conf) ) );
-         res += "</dl>";
+         res += "<h1>Inherit tree</h1>";
+         res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
        }
        return res+"<br>";
     }

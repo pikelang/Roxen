@@ -66,6 +66,10 @@ string page_base( RequestID id, string content )
                   "<subtablist width=100%%>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
+                  "<gbutton preparse "
+                  "href='add_module.pike?config=&form.config;"
+                       "&reload_module_list=yes' > "
+                  "Reload module list </gbutton><p>"
                   "\n%s\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", content );
@@ -77,7 +81,11 @@ array(string) get_module_list( function describe_module,
 {
   object conf = roxen.find_configuration( id->variables->config );
   object ec = roxenloader.LowErrorContainer();
+  int do_reload;
   master()->set_inhibit_compile_errors( ec );
+
+  if( id->variables->reload_module_list )
+    roxen->clear_all_modules_cache();
 
   array mods;
   roxenloader.push_compile_error_handler( ec );
@@ -388,6 +396,11 @@ mixed parse( RequestID id )
 
   if( id->variables->module_to_add )
     return do_it( id );
+
+  object conf = roxen.find_configuration( id->variables->config );
+  
+  if( !conf->inited )
+    conf->enable_all_modules();
 
   return this_object()["page_"+replace(config_setting( "addmodulemethod" )," ","_")]( id );
 }

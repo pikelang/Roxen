@@ -59,8 +59,10 @@ string program_name_version( program what )
   return name+" "+get_id( file )+" "+warning;
 }
 
-string program_info( program what )
+string program_info( object m )
 {
+  if( m->get_program_info )
+    return m->get_program_info( );
   return "";
 }
 
@@ -74,4 +76,11 @@ string rec_print_tree( array q )
     else
       res += "<dl> "+rec_print_tree( q[i] )+"</dl>";
   return res;
+}
+
+string inherit_tree( object m )
+{
+  if( m->get_inherit_tree )
+    return m->get_inherit_tree( );
+  return rec_print_tree( Program.inherit_tree( object_program(m) ) );
 }
