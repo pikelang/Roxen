@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.208 2001/03/08 14:35:47 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.209 2001/03/11 15:35:16 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2137,7 +2137,6 @@ using the pre tag.
  really long lines extending the browser window width.</p>
 </attr>
 
-
 <attr name=class value=string>
  <p>This cascading style sheet (CSS) definition will be applied on the
  p elements.</p>
@@ -2324,8 +2323,8 @@ using the pre tag.
 
 <attr name=unix-time value=number of seconds>
  <p>Display this time instead of the current. This attribute uses the
- specified Unix 'time_t' time as the starting time, (which is
- <i>01:00, January the 1st, 1970</i>) instead of the current time.
+ specified Unix 'time_t' time as the starting time (which is
+ <i>01:00, January the 1st, 1970</i>), instead of the current time.
  This is mostly useful when the <tag>date</tag> tag is used from a
  Pike-script or Roxen module.</p>
 
@@ -2547,19 +2546,18 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "default":#"<desc cont='cont'><p><short hide='hide'>
- Used to set default values for form elements.</short> Makes it easier
- to give default values to \"<tag>select</tag>\" or
- \"<tag>checkbox</tag>\" form elements.</p>
+ Used to set default values for form elements.</short> This tag makes it easier
+ to give default values to \"<tag>select</tag>\" and \"<tag>input</tag>\" form elements.
+ Simply put the <tag>default</tag> tag around the form elements to which it should give
+ default values.</p>
 
- <p>The <tag>default</tag> container tag is placed around the form
- element it should give a default value.</p>
-
- <p>This tag is particularly useful in combination with database
-tags.</p>
+ <p>This tag is particularly useful in combination with generated forms or forms with
+ generated default values, e.g. by database tags.</p>
 </desc>
 
 <attr name=value value=string>
- <p>The value to set.</p>
+ <p>The value or values to set. If several values are given, they are separated with the
+ separator string.</p>
 </attr>
 
 <attr name=separator value=string default=','>
@@ -2568,7 +2566,7 @@ tags.</p>
 </attr>
 
 <attr name=name value=string>
- <p>Only affect form element with this name.</p>
+ <p>If used, the default tag will only affect form element with this name.</p>
 </attr>
 
 <ex type='box'>
@@ -2579,9 +2577,18 @@ tags.</p>
       <option value='3'>Third</option>
     </select>
  </default>
-</ex>",
+</ex>
 
-//----------------------------------------------------------------------
+<ex type='box'>
+<form>
+<default value=\"&form.opt1;,&form.opt2;,&form.opt3;\">
+  <input name=\"opt1\" value=\"yes1\" type=\"checkbox\" /> Option #1
+  <input name=\"opt2\" value=\"yes2\" type=\"checkbox\" /> Option #2
+  <input name=\"opt3\" value=\"yes3\" type=\"checkbox\" /> Option #3
+  <input type=\"submit\" />
+</default>
+</form>
+",
 
 "doc":#"<desc cont='cont'><p><short hide='hide'>
  Eases code documentation by reformatting it.</short>Eases
@@ -2838,7 +2845,7 @@ tags.</p>
 //----------------------------------------------------------------------
 
 "insert#scopes":#"<desc plugin='plugin'><p><short>
- Inserts a listing of all present scopes.</short>
+ Inserts a listing of all present variable scopes.</short>
 </p></desc>
 
 <attr name=scopes value=full|plain>
@@ -2879,7 +2886,9 @@ tags.</p>
 "insert#realfile":#"<desc plugin='plugin'><p><short>
  Inserts a raw, unparsed file.</short> The disadvantage with the
  realfile plugin compared to the file plugin is that the realfile
- plugin needs the inserted file to exist, and can't fetch files from e.g. an arbitrary location module.
+ plugin needs the inserted file to exist, and can't fetch files from e.g.
+ an arbitrary location module. Note that the realfile insert plugin
+ can not fetch files from outside the virtual file system.
 </p></desc>
 
 <attr name=realfile value=string>
@@ -2971,7 +2980,11 @@ tags.</p>
 Roxen#Pike#Foo#Bar#roxen.com
 </random>
 </ex>
-</attr>",
+
+<attr name='seed' value='string'>
+Enables you to use a seed that determines which message to choose.
+</attr>
+",
 
 //----------------------------------------------------------------------
 
@@ -2980,8 +2993,8 @@ Roxen#Pike#Foo#Bar#roxen.com
  another page by sending a HTTP redirect header to the client.
 </p></desc>
 
-<attr name=to value=string required='required'>
- <p>Where the user should be sent to.</p>
+<attr name=to value=URL required='required'>
+ <p>The location to where the client should be sent.</p>
 </attr>
 
 <attr name=add value=string>
@@ -3205,7 +3218,7 @@ load.</p>
 </attr>
 
 <attr name=persistent>
- <p>Keep the cookie for two years.</p>
+ <p>Keep the cookie for five years.</p>
 </attr>
 
 <attr name=domain>
@@ -3221,7 +3234,6 @@ load.</p>
  the path argument from the sent cookie, thus making the cookie valid only
  for the present directory and below.</p>
 </attr>
-
 
  <p>Note that the change of a cookie will not take effect until the
  next page load.</p>
@@ -3360,7 +3372,10 @@ load.</p>
 //----------------------------------------------------------------------
 
 "throw":#"<desc cont='cont'><p><short>
- Throws a text to be caught by <xref href='catch.tag' />.</short> Throws an exception, with the enclosed text as the error message. This tag has a close relation to <xref href='catch.tag' />. The RXML parsing will stop at the <tag>throw</tag> tag.
+ Throws a text to be caught by <xref href='catch.tag' />.</short>
+ Throws an exception, with the enclosed text as the error message.
+ This tag has a close relation to <xref href='catch.tag' />. The
+ RXML parsing will stop at the <tag>throw</tag> tag.
  </p></desc>",
 
 //----------------------------------------------------------------------
