@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.398 2003/04/14 16:44:31 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.399 2003/04/22 08:08:51 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -100,7 +100,6 @@ mapping file;
 string rest_query="";
 string raw="";
 string extra_extension = ""; // special hack for the language module
-
 
 static mapping connection_stats = ([]);
 
@@ -580,6 +579,7 @@ private int parse_got( string new_data )
 private final int parse_got_2( )
 {
   TIMER_START(parse_got_2);
+  TIMER_START(parse_got_2_parse_line);
   string trailer, trailer_trailer;
   multiset (string) sup;
   string a, b, s="", linename, contents;
@@ -621,6 +621,7 @@ private final int parse_got_2( )
       else
       {
 	my_fd->write("PONG\r\n");
+	TIMER_END(parse_got_2);
 	return 2;
       }
       s = data = ""; // no headers or extra data...
@@ -632,6 +633,7 @@ private final int parse_got_2( )
       /* Not reached */
       break;
   }
+  TIMER_END(parse_got_2_parse_line);
   REQUEST_WERR(sprintf("HTTP: request line %O", line));
   REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
   REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
@@ -654,6 +656,7 @@ private final int parse_got_2( )
     }
   }
 
+  TIMER_START(parse_got_2_parse_headers);
   foreach( (array)request_headers, [string linename, array|string contents] )
   {
     if( arrayp(contents) ) contents = contents[0];
@@ -712,6 +715,8 @@ private final int parse_got_2( )
        break;
     }
   }
+  TIMER_END(parse_got_2_parse_headers);
+  TIMER_START(parse_got_2_more_data);
   if(misc->len)
   {
     if(!data) data="";
@@ -728,7 +733,8 @@ private final int parse_got_2( )
     leftovers = data[l+2..];
     data = data[..l+1];
 	
-    if (method == "POST") {
+    switch(method) {
+    case "POST":
       switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
       {
       default: 
@@ -782,8 +788,10 @@ private final int parse_got_2( )
 	}
 	break;
       }
+      break;
     }
   }
+  TIMER_END(parse_got_2_more_data);
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
@@ -793,6 +801,7 @@ private final int parse_got_2( )
 		   "Content-Length: 0\r\n"
 		   "Date: "+Roxen.http_date(predef::time())+"\r\n"
 		   "\r\n");
+      TIMER_END(parse_got_2);
       return 2;
     }
   }
@@ -829,6 +838,17 @@ void end(int|void keepit)
 {
   if( conf )
     conf->connection_drop( this_object() );
+
+  if (xml_data) {
+    catch {
+      // Disconnect the XML graph to make it easier on the gc.
+      xml_data->walk_postorder(lambda(Parser.XML.Tree.AbstractNode node) {
+				 node->mParent = 0;
+			       });
+      xml_data = 0;
+    };
+  }
+
   if(keepit
      && !file->raw
      && (misc->connection == "keep-alive" ||
@@ -1892,7 +1912,7 @@ void got_data(mixed fooid, string s)
     }
     if (data_buffer) {
       data_buffer->add(s);
-      data = (string)data_buffer;
+      data = data_buffer->get();
       data_buffer = 0;
     } else {
       data += s;
