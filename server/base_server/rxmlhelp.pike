@@ -143,11 +143,7 @@ mapping call_tagdocumentation(RoxenModule o) {
 
   if(doc=cache_lookup("tagdoc", name))
     return doc;
-#ifdef RXMLHELP_DEBUG
   doc=o->tagdocumentation();
-#else
-  catch { doc=o->tagdocumentation(); };
-#endif
   RXMLHELP_WERR(sprintf("tagdocumentation() returned %t.",doc));
   if(!doc || !mappingp(doc)) {
     cache_set("tagdoc", name, 0);
