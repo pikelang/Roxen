@@ -1,5 +1,5 @@
 /*
- * $Id: clearlog.pike,v 1.7 1997/12/18 21:05:01 neotron Exp $
+ * $Id: clearlog.pike,v 1.8 1998/11/23 16:04:38 grubba Exp $
  */
 
 inherit "wizard";
@@ -34,7 +34,7 @@ mixed wizard_done(object id)
     }
     roxen->last_error = "";
     report_notice("Event log cleared by admin from "+
-		  roxen->blocking_ip_to_host(id->remoteaddr)+".");
+		  roxen->blocking_ip_to_host(id->remoteaddr)+".\n");
   }
   return http_redirect(roxen->config_url()+"Errors/?"+time());
 }
