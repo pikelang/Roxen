@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.187 1999/09/05 01:43:07 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.188 1999/09/05 15:57:20 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -69,7 +69,7 @@ array (array(int)) make_matrix(int size)
   array res;
   int i;
   int j;
-  res = allocate(size)*size;
+  res = allocate(size, allocate)(size);
   for(i=0; i<size; i++)
     for(j=0; j<size; j++)
       res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
