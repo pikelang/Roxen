@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.132 2002/02/13 14:46:27 wellhard Exp $
+// $Id: Roxen.pmod,v 1.133 2002/02/13 15:56:54 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2078,16 +2078,16 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 {
   // Netscape seems to send "?" for characters that can't be represented
   // by the current character set while IE encodes those characters
-  // as entities.
+  // as entities, while Opera uses "\201" or "?x829f;"...
   string test = replace((едц/"\0")[0],
 			({ "&aring;", "&#229;", "&#xe5;",
 			   "&auml;", "&#228;", "&#xe4;",
 			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;" }),
+			   "&#33439;","&#x829f;", "\201", "?x829f;" }),
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?" }));
+			   "?", "?", "?", "?" }));
 			
   switch( test ) {
   case "edv":
