@@ -11,7 +11,7 @@ class gdbm
     {
       array err;
       err = catch(::store(@decode_value(fd->read(len))));
-      if(err) perror("Error while storing: %O\n", describe_backtrace(erR));
+      if(err) perror("Error while storing: %O\n", describe_backtrace(err));
     }
   }
 
