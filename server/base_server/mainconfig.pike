@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.55 1997/08/12 17:03:09 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.56 1997/08/12 19:25:09 peter Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -621,7 +621,7 @@ string new_module_form(object id, object node)
   res = ({default_head("Add a module")+"\n\n"+
 	  status_row(node)+
 //	  display_tabular_header(node)+
-	  "<table><tr><td>&nbsp<td><h2>Select a module to add"
+	  "<table><tr><td>&nbsp;<td><h2>Select a module to add"
 	  " from the list below, click on it's header to add it.</h2>" });
   
   foreach(mods, q)
@@ -1171,9 +1171,10 @@ string describe_node_path(object node)
 string status_row(object node)
 {
   return ("<table width=100% bgcolor=#dddddd border=0 cellpadding=0"
-	  " cellspacing=0><tr><td valign=center align=left><a href=$docurl><img border=0 "
-	  "src=/image/roxen-small.gif></a></td><td align=right valign=top>"+
-	  describe_node_path(node)+"</td><td>&nbsp</td></tr></table><br>");
+	  " cellspacing=0><tr><td valign=center align=left><a href=$docurl>"
+	  "<img border=0 src=/image/roxen-small.gif alt=\"Roxen\"></a></td>"
+	  "<td align=right valign=top>"+
+	  describe_node_path(node)+"</td><td>&nbsp;</td></tr></table><br>");
 }
 
 mapping logged = ([ ]);
