@@ -2,13 +2,12 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.3 2000/09/03 17:11:58 nilsson Exp $";
+constant cvs_version = "$Id: old.pike,v 1.4 2000/09/04 05:09:24 per Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = "Compatibility (bitmapped) fonts for Roxen 1.3 and earlier.";
 
 inherit FontHandler;
-
 
 array available_fonts()
 {
