@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.148 1998/08/28 17:43:21 wellhard Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.149 1998/08/28 17:43:48 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1188,7 +1188,7 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->netscape_javascript)
     return (!input)?
        ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
-       "alt=\""+alt+"\"></a>\n"):
+       "alt=\""+alt+"\"></a>"):
     ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
   return
@@ -1201,7 +1201,7 @@ string magic_image(string url, int xs, int ys, string sn,
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout='top.window.status=\"\";document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
-      " border=0 alt=\""+alt+"\" ></a>\n"));
+      " border=0 alt=\""+alt+"\" ></a>"));
 }
 
 
@@ -1272,7 +1272,12 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if((contents-" ")=="") 
     return "";
 //Allow <accessed> and others inside <gtext>.
-  
+  if(arg->nowhitespace)
+  {
+    sscanf(contents,"%*[ \n\r\t]%s",contents);
+    sscanf(reverse(contents),"%*[ \n\r\t]%s",contents);
+    contents=reverse(contents);
+  }
   if(t=="gtext" && arg->help)
     return doc();
   else if(arg->help)
