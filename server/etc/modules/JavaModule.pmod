@@ -536,8 +536,8 @@ class ModuleWrapper
 
   static void load(string filename)
   {
-    string path = filename;
-    array(string) dcomp = filename/"/";
+    string path = combine_path(getcwd(), filename);
+    array(string) dcomp = path/"/";
     string dir = dcomp[..sizeof(dcomp)-2]*"/";
     filename = dcomp[-1];
     object modcls;
