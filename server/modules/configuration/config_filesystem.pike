@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.97 2001/09/03 18:36:31 per Exp $";
+  "$Id: config_filesystem.pike,v 1.98 2001/10/04 13:57:39 per Exp $";
 
 constant path = "config_interface/";
 
@@ -343,49 +343,19 @@ void start(int n, Configuration cfg)
   if( cfg )
   {
     if( !(docs = DBManager.cached_get( "docs", cfg ) ) )
-    {
       if( DBManager.cached_get( "docs" ) )
         report_warning( "The database 'docs' exists, but this server can "
                         "not read from it.\n"
                         "Documentation will be unavailable.\n" );
-      else
+      else if( file_stat( getcwd()+"/etc/docs.frm" ) )
       {
-        Filesystem.System T;
-        catch(T = Filesystem.Tar( "config_interface/docs.tar" ));
-        if( !T )
-          report_notice( "Failed to open the documentation tar-file.\n");
-        else
-        {
-	  report_notice( "Creating the 'docs' database\n");
-          DBManager.create_db( "docs", "docs", 1 );
-	  foreach( roxen->configurations, Configuration c )
-	    DBManager.set_permission( "docs", c, DBManager.READ );
-          DBManager.set_permission( "docs", cfg, DBManager.WRITE );
-          docs = DBManager.get( "docs", cfg );
-          catch(docs->query( "DROP TABLE docs" ));
-          docs->query( "CREATE TABLE docs "
-                     "(name VARCHAR(80) PRIMARY KEY,contents MEDIUMBLOB)");
-	  DBManager.is_module_table( this_object(), "docs", "docs",
-				     "The Roxen documentation.");
-	  
-          void rec_process( string dir )
-          {
-            foreach( T->get_dir( dir ), string f )
-            {
-              if( T->stat( f )->isdir() )
-                rec_process( f );
-              else
-              {
-                if( search( f, "internal-roxen" ) != -1 ) continue;
-                docs->query( "INSERT INTO docs VALUES (%s,%s)", f,
-                             T->open(f, "r")->read());
-              }
-            }
-          };
-          rec_process("/");
-        }
+	// Restore from "backup".
+	report_notice("Creating the 'docs' database.\n");
+	DBManager.restore_backup( "docs", getcwd()+"/etc/" );
       }
-    }
+      else
+	report_warning( "There is no documentation available\n");
+
     string am = query( "auth_method" );
 
     foreach( ({ "auth_httpbasic", "auth_httpcookie" }), string s )

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.45 2001/10/02 12:21:18 per Exp $
+// $Id: DBManager.pmod,v 1.46 2001/10/04 13:57:40 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -832,13 +832,16 @@ static void create()
 {
   mixed err = 
   catch {
-  query("CREATE TABLE IF NOT EXISTS db_backups ("
-	" db varchar(80) not null, "
-	" tbl varchar(80) not null, "
-	" directory varchar(255) not null, "
-	" whn int unsigned not null, "
-	" INDEX place (db,directory))");
-
+    if( !catch(query("CREATE TABLE db_backups ("
+		     " db varchar(80) not null, "
+		     " tbl varchar(80) not null, "
+		     " directory varchar(255) not null, "
+		     " whn int unsigned not null, "
+		     " INDEX place (db,directory))") ) &&
+	file_stat( "etc/docs.frm" ) )
+      query("INSERT INTO db_backups (db,tbl,directory,whn) "
+	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
+       
   query("CREATE TABLE IF NOT EXISTS db_groups ("
 	" db varchar(80) not null, "
 	" groupn varchar(80) not null)");
