@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.407 2001/01/10 08:57:24 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.408 2001/01/13 17:43:28 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -149,19 +149,19 @@ string get_doc_for( string region, string variable )
 
 string query_internal_location(RoxenModule|void mod)
 {
-  return QUERY(InternalLoc)+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  return query("InternalLoc")+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
 }
 
 string query_name()
 {
-  if(strlen(QUERY(name)))
-    return QUERY(name);
+  if(strlen(query("name")))
+    return query("name");
   return name;
 }
 
 string comment()
 {
-  return QUERY(comment);
+  return query("comment");
 }
 
 /* A 'pri' is one of the ten priority objects. Each one holds a list
@@ -1033,13 +1033,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #endif
 
     // Locate internal location resources.
-    if(!search(file, QUERY(InternalLoc)))
+    if(!search(file, query("InternalLoc")))
     {
       TRACE_ENTER("Magic internal module location", 0);
       RoxenModule module;
       string name, rest;
       function find_internal;
-      if(2==sscanf(file[strlen(QUERY(InternalLoc))..], "%s/%s", name, rest) &&
+      if(2==sscanf(file[strlen(query("InternalLoc"))..], "%s/%s", name, rest) &&
 	 (module = find_module(replace(name, "!", "#"))) &&
 	 (find_internal = module->find_internal))
       {

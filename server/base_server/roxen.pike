@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.608 2001/01/10 08:57:25 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.609 2001/01/13 17:43:28 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -600,15 +600,15 @@ static array(object) handler_threads = ({});
 
 void start_handler_threads()
 {
-  if (QUERY(numthreads) <= 1) {
+  if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
     report_notice (LOC_S(1, "Starting one thread to handle requests.")+"\n");
   } else { 
     report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
-		   QUERY(numthreads) );
+		   query("numthreads") );
   }
   array(object) new_threads = ({});
-  for(; number_of_threads < QUERY(numthreads); number_of_threads++)
+  for(; number_of_threads < query("numthreads"); number_of_threads++)
     new_threads += ({ do_thread_create( "Handle thread [" +
 					number_of_threads + "]",
 					handler_thread, number_of_threads ) });
@@ -1490,10 +1490,10 @@ int start_time =time();
 string version()
 {
 #ifndef NSERIOUS
-  return QUERY(default_ident)?real_version:QUERY(ident);
+  return query("default_ident")?real_version:query("ident");
 #else
   multiset choices=(<>);
-  string version=QUERY(default_ident)?real_version:QUERY(ident);
+  string version=query("default_ident")?real_version:query("ident");
   return version+", "+ ({
     "Applier of Templates",
     "Beautifier of Layouts",
@@ -1585,7 +1585,7 @@ static int abs_started;
 void restart_if_stuck (int force)
 {
   remove_call_out(restart_if_stuck);
-  if (!(QUERY(abs_engage) || force))
+  if (!(query("abs_engage") || force))
     return;
   if(!abs_started)
   {
@@ -1607,7 +1607,7 @@ void restart_if_stuck (int force)
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
 	 });
-  alarm (60*QUERY(abs_timeout)+10);
+  alarm (60*query("abs_timeout")+10);
 }
 #endif
 
@@ -2491,7 +2491,7 @@ int set_u_and_gid()
   int uid, gid;
   array pw;
 
-  u=QUERY(User);
+  u=query("User");
   sscanf(u, "%s:%s", u, g);
   if(strlen(u))
   {
@@ -2543,7 +2543,7 @@ int set_u_and_gid()
       };
 #endif
 
-      if (QUERY(permanent_uid)) {
+      if (query("permanent_uid")) {
 #if constant(setuid)
 	if (g) {
 #  if constant(setgid)
@@ -3048,7 +3048,7 @@ int main(int argc, array tmp)
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
-		  || QUERY(pidfile));
+		  || query("pidfile"));
 
 #ifdef RUN_SELF_TEST
   enable_configurations_modules();
@@ -3080,8 +3080,8 @@ int main(int argc, array tmp)
   start_time=time();		// Used by the "uptime" info later on.
 
 
-  if (QUERY(suicide_engage))
-    call_out (restart,60*60*24*max(1,QUERY(suicide_timeout)));
+  if (query("suicide_engage"))
+    call_out (restart,60*60*24*max(1,query("suicide_timeout")));
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -3107,7 +3107,7 @@ string check_variable(string name, mixed value)
 
    case "suicide_engage":
     if (value)
-      call_out(restart,60*60*24*max(1,QUERY(suicide_timeout)));
+      call_out(restart,60*60*24*max(1,query("suicide_timeout")));
     else
       remove_call_out(restart);
     break;

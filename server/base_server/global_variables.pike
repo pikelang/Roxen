@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.57 2001/01/06 07:24:26 nilsson Exp $
+// $Id: global_variables.pike,v 1.58 2001/01/13 17:43:28 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -26,9 +26,9 @@ mixed save()
 // are not used. This makes the user-interface clearer and quite a lot
 // less clobbered.
 
-private int cache_disabled_p() { return !QUERY(cache);         }
-private int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
-private int ident_disabled_p() { return [int(0..1)]QUERY(default_ident); }
+private int(0..1) cache_disabled_p() { return !query("cache");         }
+private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
+private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
 
 
 // And why put these functions here, you might righfully ask.
@@ -117,7 +117,7 @@ void set_up_http_variables( object o, int|void fhttp )
 		  "again after some minutes). Thus, if the user doesn't allow "
 		  "the cookie to be set, she won't be bothered with "
 		  "multiple requests."),0 ,
-	   lambda() {return !QUERY(set_cookie);});
+	   lambda() {return !query("set_cookie");});
   }
 }
 
@@ -523,7 +523,7 @@ void define_global_variables(  )
 		"legal things (like generating many images), if set too high you might "
 		"get a long downtime if the server for some reason locks up."),
 	 ({1,2,3,4,5,10,15}),
-	 lambda() {return !QUERY(abs_engage);});
+	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
   defvar("locale",
@@ -536,7 +536,7 @@ void define_global_variables(  )
 				  "according to the value of "
 				  "the 'LANG' environment variable.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
-			      roxenp()->set_default_locale(QUERY(locale));
+			      roxenp()->set_default_locale(query("locale"));
 			      roxenp()->set_locale();
 			    } );
 
@@ -566,7 +566,7 @@ void define_global_variables(  )
 	 TYPE_INT_LIST|VAR_MORE,
 	 LOCALE(163, "Automatically restart the server after this many days."),
 	 ({1,2,3,4,5,6,7,14,30}),
-	 lambda(){return !QUERY(suicide_engage);});
+	 lambda(){return !query("suicide_engage");});
 
   defvar("mem_cache_gc",
 	 Variable.Int(300, 0, 
