@@ -1,3 +1,22 @@
+Changes since Roxen Challenger 1.2.42 Red
+-----------------------------------------------
+
+o Removed Wais and Gopher from the proxy template.
+
+o Moved hostredirect.pike to old_modules/.
+
+o Fixed bug in the Counter module.
+
+o Fixed bug in the Pathinfo module.
+
+o Made configuration of container name in the Indirect href module
+  inte an expert variable.
+
+o Fixed Bussiness Graphics to use the global default font.
+
+o Repaired support for multiple font dirs.
+
+
 Changes since Roxen Challenger 1.2.41 Yellow
 -----------------------------------------------
 
