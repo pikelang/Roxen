@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.5 2002/06/13 00:18:10 nilsson Exp $
+ * $Id: upload_license.pike,v 1.6 2002/07/03 13:36:26 nilsson Exp $
  */
 
 constant task = "maintenance";
@@ -33,7 +33,7 @@ mixed parse( RequestID id )
     </else>
     <if variable='var.ok'>
       <upload-license filename='&var.filename;' from='form.file'/>
-      License uploaded successfuly. <cf-ok/>
+      License uploaded successfully. <cf-ok/>
     </if>
   </if>
   <else>
