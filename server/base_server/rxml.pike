@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.210 2000/07/26 14:07:35 kuntri Exp $
+// $Id: rxml.pike,v 1.211 2000/07/26 14:12:37 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2076,7 +2076,7 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont><short hide>
- if is used to conditionally show its contents.</short><tag><ref
+ <if> is used to conditionally show its contents.</short><tag><ref
  type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
@@ -2105,10 +2105,10 @@ scope created within the define tag.
 
  <ex type='box'>
   <if variable='var.foo > 0' not=''>
-    &var.foo; &lt;= 0
+    &var.foo; is lesser than 0
   </if>
   <else>
-    &var.foo; &gt; 0
+    &var.foo; is greater than 0
   </else>
  </ex>
 
