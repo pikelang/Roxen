@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.46 1998/08/26 11:31:03 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.47 1998/10/18 22:14:40 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -673,6 +673,111 @@ mixed find_file( string f, object id )
     TRACE_LEAVE("MV: Success");
     TRACE_LEAVE("Success");
     return http_string_answer("Ok");
+
+  case "MOVE":
+    // This little kluge is used by NETSCAPE 4.5
+     
+    if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MOVE disallowed (since PUT is disallowed)");
+      return 0;
+    }    
+    if(size != -1)
+    {
+      id->misc->error_code = 404;
+      TRACE_LEAVE("MOVE failed (no such file)");
+      return 0;
+    }
+
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("MOVE: Permission denied");
+      return http_auth_required("foo",
+                                "<h1>Permission to 'MOVE' files denied</h1>");
+    }
+
+    if(!sizeof(id->misc["new-uri"] || "")) { 
+      id->misc->error_code = 405;
+      errors++;
+      TRACE_LEAVE("MOVE: No dest file");
+      return 0;
+    }
+    string mountpoint = QUERY(mountpoint);
+    string moveto = combine_path(mountpoint + "/" + oldf + "/..",
+				 id->misc["new-uri"]);
+
+    if (moveto[..sizeof(mountpoint)-1] != mountpoint) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MOVE: Dest file on other filesystem.");
+      return(0);
+    }
+    moveto = path + moveto[sizeof(mountpoint)..];
+
+    size = FILE_SIZE(moveto);
+
+    if(!QUERY(delete) && size != -1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MOVE disallowed (DELE disabled, can't overwrite file)");
+      return 0;
+    }
+ 
+    if(size < -1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MOVE: Cannot overwrite directory");
+      return 0;
+    }
+
+    object privs;
+
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
+      privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
+    }
+// #endif
+
+    if (QUERY(no_symlinks) &&
+        ((contains_symlinks(path, f)) ||
+         (contains_symlinks(path, moveto)))) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MOVE: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    TRACE_ENTER("MOVE: Accepted", 0);
+
+    moves++;
+
+    /* Clear the stat-cache for this file */
+#ifdef __NT__
+    //    if(movefrom[-1] == '/')
+    //      movefrom = move_from[..strlen(movefrom)-2];
+#endif
+    if (stat_cache) {
+      cache_set("stat_cache", moveto, 0);
+      cache_set("stat_cache", f, 0);
+    }
+#ifdef DEBUG
+    report_notice("Moving file " + f + " to " + moveto + "\n");
+#endif /* DEBUG */
+
+    int code = mv(f, moveto);
+    privs = 0;
+
+    if(!code)
+    {
+      id->misc->error_code = 403;
+      TRACE_LEAVE("MOVE: Move failed");
+      TRACE_LEAVE("Failure");
+      return 0;
+    }
+    TRACE_LEAVE("MOVE: Success");
+    TRACE_LEAVE("Success");
+    return http_string_answer("Ok");
+
    
   case "DELETE":
     if(!QUERY(delete) || size==-1)
