@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.36 1998/09/28 03:37:19 js Exp $
+# $Id: db.spec,v 1.37 1998/09/29 16:15:43 wellhard Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -199,6 +199,7 @@ CREATE TABLE template_vars (
              help                    BLOB,
              type                    VARCHAR(64) NOT NULL,
              option_group_id         INT,
+             default_value           BLOB,
              PRIMARY KEY(id),
              UNIQUE (name),
              INDEX name_index (name),
