@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.24 1998/06/27 13:18:00 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.25 1998/06/27 13:20:06 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -152,7 +152,7 @@ class Request {
 #ifdef FTP_GATEWAY_DEBUG
   void set_what_now(string s)
   {
-    perror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
+    roxen_perror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
     what_now=s;
   }
 #else
@@ -497,8 +497,8 @@ class Request {
 	     !(res=parse_directory_without_first_line()))
     {
       /* unknown, return preformatted */
-      perror("FTP GATEWAY: unknown list format at "+
-	     (user?user+"@":"")+host+":"+port+"/"+file+"\n");
+      roxen_perror("FTP GATEWAY: unknown list format at "+
+		   (user?user+"@":"")+host+":"+port+"/"+file+"\n");
       res="(Unrecognized directory type)<br>\n<pre>"+buffer+"</pre>";
     }
     if(res == -1)
@@ -582,7 +582,7 @@ class Request {
   void transfer_completed() /* called from pipe */
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: transfer_completed\n");
+    if (i_am_destructed) roxen_perror("I AM DESTRUCTED: transfer_completed\n");
 #endif
     id->end();
     save_stuff();
@@ -691,7 +691,8 @@ class Request {
   void active_transfer_accept(object port)
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
 #endif
     remove_call_out(data_connect_timeout);
     datacon=port->accept();
@@ -785,7 +786,8 @@ class Request {
   void got_passive_connection(object d)
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: got_passive_connection\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: got_passive_connection\n");
 #endif
     if (!d)
     {
@@ -933,7 +935,8 @@ class Request {
     string *ss;
 
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: read_server\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: read_server\n");
 #endif
 
     if (!objectp(id)) 
@@ -952,7 +955,7 @@ class Request {
       session+="<- "+s+"\n";
 #endif
 #ifdef DEBUG
-      perror("parse "+s+"\n");
+      roxen_perror("parse "+s+"\n");
 #endif
       if (strlen(s)<4||s[3]!=' '||
 	  s[0]<'0'||s[0]>'9'||
@@ -1012,7 +1015,8 @@ class Request {
   void server_close(mixed dummy_id)
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: server_close\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: server_close\n");
 #endif
     if (id) 
       id->end(ERROR_MESSAGE("Connection closed by <tt>"+host+"</tt>"));
@@ -1025,7 +1029,8 @@ class Request {
   void connection_timeout(object con)
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: connected\n\n\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: connected\n\n\n");
 #endif
     if (objectp(id)) 
     {
@@ -1040,7 +1045,8 @@ class Request {
   void connected(object con)
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) perror("I AM DESTRUCTED: connected\n\n\n");
+    if (i_am_destructed)
+      roxen_perror("I AM DESTRUCTED: connected\n\n\n");
 #endif
     remove_call_out(connection_timeout);
     if (!objectp(id)) 
@@ -1140,7 +1146,7 @@ void start()
     return;
 
 #ifdef PROXY_DEBUG
-  perror("FTP gateway online.\n");
+  roxen_perror("FTP gateway online.\n");
 #endif
 
   if(QUERY(logfile) == "stdout")
@@ -1328,7 +1334,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
   }
 
 #ifdef PROXY_DEBUG
-  perror("FTP PROXY: Connected.\n");
+  roxen_perror("FTP PROXY: Connected.\n");
 #endif
 
 //  new_request=Request();
@@ -1500,7 +1506,8 @@ void dataport_accept(object u)
   else 
   {
     object con;
-    perror("FTP GATEWAY: accept on forgotten port, cancelling connection\n");
+    roxen_perror("FTP GATEWAY: accept on forgotten port, "
+		 "cancelling connection\n");
     con=u->accept();
     if (con) { destruct(con); }
   }
