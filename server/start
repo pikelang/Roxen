@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.89 2000/02/02 20:39:31 per Exp $
+# $Id: start,v 1.90 2000/02/04 04:55:39 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -12,8 +12,10 @@ LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
-old_roxen_defines=".old_roxen_defines"
 
+pcdir="precompiled/`uname -m`.`uname -r`"
+old_roxen_defines="$pcdir/old_roxen_defines"
+./mkdir -p $pcdir
 
 # Default verbosity level.
 verbose=1
@@ -65,7 +67,7 @@ gdb=no
 
 remove_old_dot_o_files () {
   echo "$pre Removing old .o files ($1)"
-  find precompiled -name '*.o' | xargs rm -f
+  find $pcdir -name '*.o' | xargs rm -f
 }
 
 
