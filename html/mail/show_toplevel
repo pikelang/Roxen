@@ -28,17 +28,19 @@
 
 <comment>
 
- <gtext scale=0.5 href=edit.html>Send an email</gtext><br>
- <gtext scale=0.5 href=new_mailbox.pike>Create a new mailbox</gtext><br>
- <gtext scale=0.5 href=delete_mailbox.pike>Delete a mailbox</gtext><br>
+<formoutput>
+ <gtext scale=0.5 href='edit.html?randomness=%some_number%'>Send an email</gtext><br>
+ <gtext scale=0.5 href='new_mailbox.pike'>Create a new mailbox</gtext><br>
+ <gtext scale=0.5 href='delete_mailbox.pike'>Delete a mailbox</gtext><br>
+</formoutput>
 
 <gh2>Preferences</gh2>
   
 <blockquote>
-  <gtext scale=0.5 href=edit_options.html>Email options</gtext><br>
+  <gtext scale=0.5 href='edit_options.html?randomness=%some_number%'>Email options</gtext><br>
 <br>
 <blockquote><i>Configure your name, email address and signature.</i></blockquote>
-  <gtext scale=0.5 href=edit_buttons.html>Edit buttons</gtext><br>
+  <gtext scale=0.5 href='edit_buttons.html?randomness=%some_number%'>Edit buttons</gtext><br>
 <blockquote><i>This options is for advanced users only.</i></blockquote>
 </blockquote>
 

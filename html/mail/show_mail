@@ -9,14 +9,14 @@
         <if not variable="bar is "> 
            sent mail
         <ul>
-          <li><a href='edit.html?mail_id=%mail_id%'>Edit it again</a> 
-          <li><a href=?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%>delete it.</a>
+          <li><a href='edit.html?mail_id=%mail_id%&randomness=%sone_number%'>Edit it again</a> 
+          <li><a href='?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%&randomness=%sone_number%'>delete it.</a>
         </ul>
         </if>
         <else>draft
         <ul>
-          <li><a href='edit.html?mail_id=%mail_id%'>continue the editing</a> 
-          <li><a href=?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%>delete it.</a>
+          <li><a href='edit.html?mail_id=%mail_id%&randomness=%sone_number%'>continue the editing</a> 
+          <li><a href='?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%&randomness=%sone_number%'>delete it.</a>
         </ul>
         </else>
        </font>
