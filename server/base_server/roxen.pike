@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.198 1998/05/08 19:54:45 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.199 1998/05/08 19:56:26 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2300,6 +2300,7 @@ void exit_when_done()
   {
     werror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
+    add_constant("roxen", 0);	// Paranoia...
     exit(-1);	// Restart.
     // kill(getpid(), 9);
     // kill(0, -9);
@@ -2323,6 +2324,7 @@ void exit_when_done()
     {
       werror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
+      add_constant("roxen", 0);	// Paranoia...
       exit(-1);	// Restart.
       perror("Odd. I am not dead yet.\n");
     }
@@ -2330,6 +2332,7 @@ void exit_when_done()
   call_out(lambda(){
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
+    add_constant("roxen", 0);	// Paranoia...
     exit(0); // Restart.
   }, 600, 0); // Slow buggers..
 }
