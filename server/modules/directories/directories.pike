@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.63 2000/05/16 05:21:36 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.64 2000/05/17 04:32:02 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -42,9 +42,21 @@ void create()
 	 "<em>very</em> useful for debugging, but some people regard "
 	 "it as a security hole.");
 
-  defvar("template", 
+  defvar("default-template", 1, "Use the default template",
+         TYPE_FLAG,
+         "If true, use the default directory layout template" );
 
-#"
+  defvar("template", "", "Directorylisting template", TYPE_TEXT,
+         "The template for directory list generation.", 0, 
+         lambda(){ return query("default-template"); } );
+}
+
+void start(int n, Configuration c)
+{
+  indexfiles = query("indexfiles")-({""});
+  if( query("default-template" ) )
+    set( "template", 
+         #"
 <html>
   <head><title>Listing of $DIR$</title></head>
   <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
@@ -83,16 +95,9 @@ void create()
 
   </body>
 </html>
-"
+");
 
-, "Directorylisting template", TYPE_STRING,
-         "The template for directory list generation." );
 
-}
-
-void start(int n, Configuration c)
-{
-  indexfiles = query("indexfiles")-({""});
 }
 
 
@@ -116,6 +121,8 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
     mapping m = 
     ([
       "name":file,
+      "filename":file,
+      "dirname":d,
       "path":combine_path( d, file ),
       "atime-unix":st[ ST_ATIME ],
       "mtime-unix":st[ ST_MTIME ],
@@ -145,6 +152,36 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       m->type = id->conf->type_from_filename( file );
       m->size = Roxen.sizetostring( st[ ST_SIZE ] );
       m->icon = Roxen.image_from_type( m->type );
+    }
+
+    if( opt["real-file"] )
+    {
+      string file = m->path;
+      foreach( id->conf->location_modules( id ), mixed tmp )
+      {
+        if(!search(file, tmp[0]))
+        {
+#ifdef MODULE_LEVEL_SECURITY
+          if(id->conf->check_security(tmp[1], id)) 
+            continue;
+#endif
+          string s;
+          if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..], id))
+          {
+            m["real-filename"] = s;
+            m["real-dirname"]  = dirname( s );
+            m["vfs"] = function_object(tmp[1])->module_identifier();
+            m["vfs-root"] = function_object(tmp[1])->real_file( "", id );
+            break;
+          }
+        }
+      }
+      if( !m["real-file"] )
+      {
+        m["real-file"] = id->conf->real_file( m->path, id );
+        if( m["real-file"] )
+          m["real-dirname"] = dirname( m["real-file"] );
+      }
     }
 
     if( opt->thumbnail )
