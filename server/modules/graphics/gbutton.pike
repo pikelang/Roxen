@@ -10,7 +10,9 @@
 //     bgcolor         -- background color inside/outside button
 //     textcolor       -- button text color
 //     href            -- button URL
+//     target          -- target frame
 //     alt             -- alternative button alt text
+//     title           -- button tooltip
 //     border          -- image border
 //     state           -- enabled|disabled button state
 //     textstyle       -- normal|consensed text
@@ -25,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.99 2004/05/16 23:21:02 mani Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.100 2004/05/22 19:30:23 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -105,8 +107,16 @@ constant gbuttonattr=#"
  Alternative button and alt text.</p>
 </attr>
 
+<attr name='title' value='string'><p>
+ Button tooltip.</p>
+</attr>
+
 <attr name='href' value='uri'><p>
  Button URI.</p>
+</attr>
+
+<attr name='target' value='string'><p>
+ Button target frame.</p>
 </attr>
 
 <attr name='textstyle' value='normal|condensed'><p>
@@ -121,6 +131,10 @@ constant gbuttonattr=#"
  Set text alignment. There are some alignment restrictions: when text
  alignment is either <i>left</i> or <i>right</i>, icons must
  also be aligned <i>left</i> or <i>right</i>.</p>
+</attr>
+
+<attr name='img-align' value=''><p>
+ Alignment passed on to the resulting <tag>img</tag>.</p>
 </attr>
 
 <attr name='state' value='enabled|disabled'><p>
@@ -198,6 +212,11 @@ mapping(string:function) query_action_buttons() {
 
 void flush_cache() {
   button_cache->flush();
+  
+  //  It's possible that user code contains a number of stale URLs in
+  //  e.g. <cache> blocks so we can just as well flush the RAM cache to
+  //  reduce the risk of broken images.
+  cache.flush_memory_cache();
 }
 
 Image.Layer layer_slice( Image.Layer l, int from, int to )
@@ -244,6 +263,10 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 
   mapping ll = ([]);
 
+  //  Photoshop layers: don't let individual layers expand the image
+  //  beyond the bounds of the overall image.
+  mapping opts = ([ "crop_to_bounds" : 1 ]);
+
   void set_image( array layers )
   {
     foreach( layers||({}), object l )
@@ -263,7 +286,9 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 
   if( args->border_image )
   {
-    array(Image.Layer)|mapping tmp = roxen.load_layers(args->border_image, id);
+    array(Image.Layer)|mapping tmp =
+     roxen.load_layers(args->border_image, id, opts);
+    
     if (mappingp(tmp))
       if (tmp->error == 401)
 	return tmp;
@@ -353,11 +378,19 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   }
 
   //  Get icon
-  if (args->icn)
-    icon = roxen.low_load_image(args->icn, id);
-  else if (args->icd)
-    icon = roxen.low_decode_image(args->icd);
+  if (args->icn) {
+    //  Pass error mapping to find out possible errors when loading icon
+    mapping err = ([ ]);
+    icon = roxen.low_load_image(args->icn, id, err);
 
+    //  If icon loading fails due to missing authentication we reject the
+    //  gbutton request so that the browser can re-request it with proper
+    //  authentication headers.
+    if (!icon && err->error == 401)
+      return err;
+  } else if (args->icd)
+    icon = roxen.low_decode_image(args->icd);
+  
   int i_width = icon && icon->img->xsize();
   int i_height = icon && icon->img->ysize();
   int i_spc = i_width && sizeof(text) && 5;
@@ -365,26 +398,34 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   //  Generate text
   if (sizeof(text))
   {
-    int os, dir;
-    Font button_font;
-    int th = text_height;
-    do
-    {
-      button_font = resolve_font( args->font+" "+th );
+    int min_font_size = 0;
+    int max_font_size = text_height * 2;
+    do {
+      //  Use binary search to find an appropriate font size. Since we prefer
+      //  font sizes which err on the small side (so we never extend outside
+      //  the given boundaries) we must round up when computing the next size
+      //  or we risk missing a good size.
+      int try_font_size = (max_font_size + min_font_size + 1) / 2;
+      Font button_font = resolve_font(args->font + " " + try_font_size);
       text_img = button_font->write(text);
-      os = text_img->ysize();
-      if( !dir )
-        if( os < text_height )
-          dir = 1;
-        else if( os > text_height )
-          dir =-1;
-      if( dir > 0 && os > text_height ) break;
-      else if( dir < 0 && os < text_height ) dir = 1;
-      else if( os == text_height ) break;
-      th += dir;
-    } while( (text_img->ysize() - text_height)
-             && (th>0 && th<text_height*2));
-
+      int real_height = text_img->ysize();
+      
+      //  Early bail for fixed-point fonts which are too large
+      if (real_height > try_font_size * 2)
+	break;
+      
+      //  Go up or down in size?
+      if (real_height == text_height)
+	break;
+      if (real_height > text_height)
+	max_font_size = try_font_size - 1;
+      else {
+	if (min_font_size == max_font_size)
+	  break;
+	min_font_size = try_font_size;
+      }
+    } while (max_font_size - min_font_size >= 0);
+    
     // fonts that can not be scaled.
     if( abs(text_img->ysize() - text_height)>2 )
       text_img = text_img->scale(0, text_height );
@@ -704,22 +745,26 @@ mapping find_internal(string f, RequestID id)
   return button_cache->http_file_answer( (f/".")[0], id );
 }
 
-mapping __stat_cache = ([ ]);
 int get_file_stat( string f, RequestID id  )
 {
   int res;
-
-  //  -1 is used to cache negative results.
-  if (!id->misc->persistent_cache_crawler)
-    if (res = __stat_cache[f])
-      return (res > 0) && res;
+  mapping stat_cache;
   
-  call_out( m_delete, 10, __stat_cache, f );
+  //  -1 is used to cache negative results. When SiteBuilder crawler runs
+  //  we must let the stat_file() run unconditionally to register
+  //  dependencies properly.
+  if (stat_cache = id->misc->gbutton_statcache) {
+    if (!id->misc->persistent_cache_crawler)
+      if (res = stat_cache[f])
+	return (res > 0) && res;
+  } else
+    stat_cache = id->misc->gbutton_statcache = ([ ]);
+  
   int was_internal = id->misc->internal_get;
   id->misc->internal_get = 1;
-  res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
-			     || file_stat( f )
-			     || ({ 0,0,0,0 }))[ST_MTIME] || -1;
+  res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
+			   file_stat( f ) ||
+			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
   if (!was_internal)
     m_delete(id->misc, "internal_get");
   return (res > 0) && res;
@@ -735,6 +780,7 @@ class ButtonFrame {
 		 id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
+    m_delete(args, "frame-image");
     
     //  Harmonize some attribute names to RXML standards...
     args->icon_src = args["icon-src"]       || args->icon_src;
@@ -788,8 +834,25 @@ class ButtonFrame {
 	"gamma":args["gamma"],
 	"crop":args["crop"],
       ]);
-    if( fi )
+
+    //  Remove extra layer attributes to avoid *-* copying below
+    m_delete(args, "extra-layers");
+    m_delete(args, "extra-left-layers");
+    m_delete(args, "extra-right-layers");
+    m_delete(args, "extra-background-layers");
+    m_delete(args, "extra-mask-layers");
+    m_delete(args, "extra-frame-layers");
+    
+    if( fi ) {
       new_args->stat = get_file_stat( fi, id );
+#if constant(Sitebuilder)
+      //  The file we called get_file_stat() on above may be a SiteBuilder
+      //  file. If so we need to extend the argument data with e.g.
+      //  current language fork.
+      if (Sitebuilder.sb_prepare_imagecache)
+	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
+#endif
+    }
 
     new_args->quant = args->quant || 128;
     foreach(glob("*-*", indices(args)), string n)
@@ -841,6 +904,7 @@ class TagGButton {
       //  Peek at img-align and remove it so it won't be copied by "*-*" glob
       //  in mk_url().
       string img_align = args["img-align"];
+      string title = args->title;
       m_delete(args, "img-align");
       
       [string img_src, mapping new_args]=mk_url(id);
@@ -852,10 +916,13 @@ class TagGButton {
 			     "vspace" : args->vspace ]);
       if (img_align)
         img_attrs->align = img_align;
+      if (title)
+	img_attrs->title = title;
       
+      int no_draw = !id->misc->generate_images;
       if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
-						 id, 1)) {
-	//  Image in cache (1 above prevents generation on-the-fly, i.e.
+						 id, no_draw)) {
+	//  Image in cache (no_draw above prevents generation on-the-fly, i.e.
 	//  first image will lack sizes).
 	img_attrs->width = size->xsize;
 	img_attrs->height = size->ysize;
@@ -866,7 +933,8 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href" : args->href ]);
+	mapping a_attrs = ([ "href" : args->href,
+	]);
 
 	foreach(indices(args), string arg)
 	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/"
