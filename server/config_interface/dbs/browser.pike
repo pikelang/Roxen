@@ -8,9 +8,11 @@ mapping actions = ([
   // name         title                      function   must be internal
   "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
+  "group": ({  _(402,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
 ]);
+
 
 #define VERIFY(X) do {						\
   if( !id->variables["yes.x"] )					\
@@ -27,6 +29,28 @@ mapping actions = ([
   }									\
 } while(0)
 
+
+mixed change_group( string db, RequestID id )
+{
+  if( !id->variables->group )
+  {
+    string res ="<br /><blockquote>"
+    "<input type=hidden name=action value='&form.action;' />"
+      "<h2>"+sprintf(_(0,"Changing group for %s"), db )+"</h2>"
+      "<b>"+_(0,"Old group")+":</b> " +
+      DBManager.get_group(DBManager.db_group(db))->lname+"<br />"
+      "<b>"+_(0,"New group")+":</b> <select name='group'>";
+    foreach( DBManager.list_groups(), string g )
+      if( g == DBManager.db_group( db ) )
+	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
+      else
+	res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
+    return res + "</select><submit-gbutton2 name='ok'>"+(201,"Ok")+
+      "</submit-gbutton2>";
+  }
+  DBManager.set_db_group( db, id->variables->group );
+  return 0;
+}
 
 mixed backup_db( string db, RequestID id )
 {
@@ -561,7 +585,7 @@ mapping|string parse( RequestID id )
     "<gtext fontsize='20'>"+id->variables->db+
     "</gtext></colorscope></td></tr>"
     "<tr><td></td><td>";
-  
+
   if( !url )
     res += "<b>Internal database</b>";
   else
@@ -571,6 +595,14 @@ mapping|string parse( RequestID id )
 
   res += table_module_info( "" );
   
+  res +="<a href='edit_group.pike?group="+
+    Roxen.http_encode_string(DBManager.db_group( id->variables->db ))+"'>"+
+    sprintf( (string)
+	     _(0,"Member of the %s database group"),
+	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
+	     ->lname )
+    + "</a>";
+
   res += "<table>";
 
   array table_data = ({});
