@@ -3,7 +3,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.12 2000/01/05 18:21:06 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.13 2000/01/10 21:45:57 mast Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -261,7 +261,7 @@ class Page
       id->misc->_tags[ s ] = ({ id->conf->call_tag, my_tags[ s ] });
 
     foreach(indices(my_containers), string s)
-      id->misc->_tags[ s ] = ({ id->conf->call_container,my_containers[ s ] });
+      id->misc->_containers[ s ] = ({ id->conf->call_container,my_containers[ s ] });
 
     return parse_rxml(what, id);
   }
