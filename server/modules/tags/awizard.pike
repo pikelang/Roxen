@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.2 1999/11/02 01:38:47 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.3 1999/11/05 07:40:19 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -219,17 +219,65 @@ class Page
     return wizard_tag_var( tag, args, c, id );
   }
 
+  class TagCaller
+  {
+    string tag;
+    function fun;
+
+    void call(object parser, mapping args, mixed... extra)
+    {
+      return fun(parser->tag_name(), args, @extra);
+    }
+                   
+    void create( string n )
+    {
+      tag = n;
+      fun = my_tags[ n ];
+    }
+  }
+
+  class ContainerCaller
+  {
+    string tag;
+    function fun;
+
+    void call(object parser, mapping args, string c, mixed... extra)
+    {
+      return fun(parser->tag_name(), args, c, @extra);
+    }
+                   
+    void create( string n )
+    {
+      tag = n;
+      fun = my_tags[ n ];
+    }
+  }
+
   string eval(string what, object id)
   {
     if(!what) return "";
     id->misc->offset = line_offset;
+    my_tags["var"] = call_var;
+    my_containers["cvar"] = call_cvar;
     foreach(indices(my_tags), string s)
+    {
+#ifndef OLD_PARSE_HTML
+      for (object p = id->misc->_parser_obj; p; p = p->up)
+        p->add_tag( s, TagCaller( s )->call );
+#endif
       id->misc->_tags[ s ] = my_tags[ s ];
-    foreach(indices(my_containers), string s)
-      id->misc->_containers[ s ] = my_containers[ s ];
-    id->misc->_tags["var"] = call_var;
-    id->misc->_containers["cvar"] = call_cvar;
+    }
 
+    foreach(indices(my_containers), string s)
+    {
+#ifndef OLD_PARSE_HTML
+      for (object p = id->misc->_parser_obj; p; p = p->up)
+        p->add_tag( s, ContainerCaller( s )->call );
+#endif
+      id->misc->_containers[ s ] = my_containers[ s ];
+    }
+//     id->misc->_tags["var"] = call_var;
+//     id->misc->_containers["cvar"] = call_cvar;
     return parse_rxml(what, id);
   }
 
