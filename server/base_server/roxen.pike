@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.819 2003/01/16 14:06:22 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.820 2003/01/20 11:23:00 mast Exp $";
 
 //! @appears roxen
 //!
@@ -996,7 +996,7 @@ void background_run (int|float delay, function func, mixed... args)
     // stop_handler_threads is running; ignore more work.
     return;
 
-  void enqueue()
+  function enqueue = lambda()
   {
     bg_queue->write (({func, args}));
     if (bg_queue->size() == 1)
@@ -1007,6 +1007,8 @@ void background_run (int|float delay, function func, mixed... args)
     call_out (enqueue, delay);
   else
     enqueue();
+
+  enqueue = 0;			// To avoid garbage.
 
 #else
   // Can't do much better when we haven't got threads..
