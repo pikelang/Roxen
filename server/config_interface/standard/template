@@ -154,6 +154,6 @@
    </form>
     <div align="right">
     <b><font size="-1">&roxen.version; / &roxen.pike-version;</font></b>
-    </p>
+    </div>
  </body>
 </define>
