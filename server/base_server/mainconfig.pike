@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.101 1998/04/09 15:07:32 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.102 1998/04/09 15:18:40 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -228,6 +228,13 @@ mapping stores( string s )
 
 #define CONFIG_URL roxen->config_url()
 
+// Holds the default ports for various protocols.
+static private constant default_ports = ([
+  "ftp":21,
+  "http":80,
+  "https":443,
+]);
+
 mapping verify_changed_ports(object id, object o)
 {
   string res = default_head("Roxen Config: Setting Server URL") +
@@ -278,24 +285,36 @@ mapping verify_changed_ports(object id, object o)
       switch(port[1][0..2])
       {
        case "ssl":
-	prt = "https://";
+	prt = "https";
 	break;
        case "ftp":
-	prt = "ftp://";
+	prt = "ftp";
 	break;
 	
        default:
-	prt = port[1]+"://";
+	prt = port[1];
       }
-      if(port[2] && port[2]!="ANY")
+      int portno = default_ports[prt];
+
+      prt += "://";
+      if(port[2] && port[2]!="ANY") {
 	prt += port[2];
+      } else {
 #if efun(gethostname)
-      else
 	prt += (gethostname()/".")[0] + "." +
 	  (glob ? roxen->get_domain() : server->query("Domain"));
+#else
+	prt += "localhost";
 #endif
-      
-      prt += ":"+port[0]+"/";
+      }
+
+      if (portno && (port[0] == portno)) {
+	// Default port.
+	prt += "/";
+      } else {
+	prt += ":"+port[0]+"/";
+      }
+
       if(prt != def)
 	res += sprintf("     <input type=radio name=\"%s\" value=\"%s\">     %s\n",
 		       name, prt, prt);
@@ -1242,7 +1261,7 @@ void check_login(object id)
 {
   if(logged[id->remoteaddr] + 1000 < time()) {
     report_notice("Administrator logged on from " +
-		  roxen->blocking_ip_to_host(id->remoteaddr) + ".");
+		  roxen->blocking_ip_to_host(id->remoteaddr) + ".\n");
   }
   logged[id->remoteaddr] = time(1);
 }
