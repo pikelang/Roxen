@@ -1,38 +1,25 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
-// This module maintains an accessed database,
-// to be used by the <accessed> tag also provided
-// by this module.
-//
-
-constant cvs_version="$Id: accessed.pike,v 1.30 2000/04/06 06:37:00 wing Exp $";
-constant thread_safe=1;
-constant language = roxen->language;
 
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
-int cnum=0;
-mapping fton=([]); // Holds the access database
-
-Stdio.File database, names_file;
-
+constant cvs_version = "$Id: accessed.pike,v 1.31 2000/04/30 02:05:45 nilsson Exp $";
+constant thread_safe = 1;
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
-constant module_doc  =
-"This module provides accessed counters, through the "
+constant module_doc  = "This module provides accessed counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
-string status()
-{
-  return sizeof(fton)+" entries in the accessed database.<br />";
+constant language = roxen->language;
+
+string status() {
+  return counter->size()+" entries in the accessed database.<br />";
 }
 
-void create(Configuration c)
-{
-  defvar("Accesslog","$LOGDIR/"+short_name(c?c->name:".")+"/Accessed",
+void create(Configuration c) {
+  defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
 	 "Access database file", TYPE_FILE|VAR_MORE,
 	 "This file will be used to keep the database of file accesses.");
 
@@ -167,84 +154,21 @@ constant tagdoc=([
 </attr>"]);
 #endif
 
-static string olf; // Used to avoid reparsing of the accessed index file...
-static mixed names_file_callout_id;
-inline void open_names_file()
-{
-  if(objectp(names_file)) return;
-  remove_call_out(names_file_callout_id);
-  names_file=open(QUERY(Accesslog)+".names", "wrca");
-  names_file_callout_id = call_out(destruct, 1, names_file);
-}
+object counter;
 
-#ifdef THREADS
-object db_lock = Thread.Mutex();
-#endif /* THREADS */
-
-static void close_db_file(object db)
-{
-#ifdef THREADS
-  mixed key = db_lock->lock();
-#endif /* THREADS */
-  if (db) {
-    destruct(db);
-  }
-}
-
-static mixed db_file_callout_id;
-inline mixed open_db_file()
-{
-  mixed key;
-#ifdef THREADS
-  catch { key = db_lock->lock(); };
-#endif /* THREADS */
-  if(objectp(database)) return key;
-  if(!database)
-  {
-    if(db_file_callout_id) remove_call_out(db_file_callout_id);
-    database=open(QUERY(Accesslog)+".db", "wrc");
-    if (!database) {
-      throw(({ sprintf("Failed to open \"%s.db\". "
-		       "Insufficient permissions or out of fd's?\n",
-		       QUERY(Accesslog)), backtrace() }));
-    }
-    if (QUERY(close_db)) {
-      db_file_callout_id = call_out(close_db_file, 9, database);
-    }
-  }
-  return key;
-}
-
-void start()
-{
-  define_API_functions();
+void start() {
   query_tag_set()->prepare_context=set_entities;
-
-  if(olf != QUERY(Accesslog))
-  {
-    olf = QUERY(Accesslog);
-    mkdirhier(query("Accesslog"));
-    if(names_file=open(olf+".names", "wrca"))
-    {
-      cnum=0;
-      array tmp=parse_accessed_database(names_file->read(0x7ffffff));
-      fton=tmp[0];
-      cnum=tmp[1];
-      names_file = 0;
-    }
-  }
+  counter=FileCounter();
+  //  counter=MemCounter();
 }
 
 class Entity_page_accessed {
   int rxml_var_eval(RXML.Context c) {
-    int count;
-    if(c->id->misc->accessed)
-      count=query_num(c->id->not_query, 0);
-    else {
-      count=query_num(c->id->not_query, 1);
+    if(!c->id->misc->accessed) {
+      counter->add(c->id->not_query, 1);
       c->id->misc->accessed=1;
     }
-    return count;
+    return counter->query();
   }
 }
 
@@ -252,65 +176,125 @@ void set_entities(RXML.Context c) {
   c->set_var("accessed", Entity_page_accessed(), "page");
 }
 
-static int mdc;
-int main_database_created()
-{
-  if(!mdc)
+
+// --- File access database -------------------------
+
+class FileCounter {
+  // The old file based access database.
+
+  int cnum=0;
+  mapping fton=([]);
+
+  int size() {
+    return sizeof(fton);
+  }
+
+  Stdio.File database, names_file;
+
+  void create() {
+    if(olf != QUERY(Accesslog))
+    {
+      olf = QUERY(Accesslog);
+      mkdirhier(QUERY(Accesslog));
+      if(names_file=open(olf+".names", "wrca"))
+      {
+	cnum=0;
+	array tmp=parse_accessed_database(names_file->read(0x7ffffff));
+	fton=tmp[0];
+	cnum=tmp[1];
+	names_file = 0;
+      }
+    }
+  }
+
+  static string olf; // Used to avoid reparsing of the accessed index file...
+  static mixed names_file_callout_id;
+  inline void open_names_file()
   {
-    mixed key = open_db_file();
-    database->seek(0);
-    sscanf(database->read(4), "%4c", mdc);
+    if(objectp(names_file)) return;
+    remove_call_out(names_file_callout_id);
+    names_file=open(QUERY(Accesslog)+".names", "wrca");
+    names_file_callout_id = call_out(destruct, 1, names_file);
+  }
+
+#ifdef THREADS
+  object db_lock = Thread.Mutex();
+#endif /* THREADS */
+
+  static void close_db_file(object db)
+  {
+#ifdef THREADS
+    mixed key = db_lock->lock();
+#endif /* THREADS */
+    if (db) {
+      destruct(db);
+    }
+  }
+
+  static mixed db_file_callout_id;
+  inline mixed open_db_file()
+  {
+    mixed key;
+#ifdef THREADS
+    catch { key = db_lock->lock(); };
+#endif /* THREADS */
+    if(objectp(database)) return key;
+    if(!database)
+    {
+      if(db_file_callout_id) remove_call_out(db_file_callout_id);
+      database=open(QUERY(Accesslog)+".db", "wrc");
+      if (!database) {
+	throw(({ sprintf("Failed to open \"%s.db\". "
+			 "Insufficient permissions or out of fd's?\n",
+			 QUERY(Accesslog)), backtrace() }));
+      }
+      if (QUERY(close_db)) {
+	db_file_callout_id = call_out(close_db_file, 9, database);
+      }
+    }
+    return key;
+  }
+
+  static int mdc;
+  int main_database_created() {
+    if(!mdc) {
+      mixed key = open_db_file();
+      database->seek(0);
+      sscanf(database->read(4), "%4c", mdc);
+    }
     return mdc;
   }
-  return mdc;
-}
 
-int database_set_created(string file, void|int t)
-{
-  int p;
-
-  p=fton[file];
-  if(!p) return 0;
-  mixed key = open_db_file();
-  database->seek((p*8)+4);
-  return database->write(sprintf("%4c", t||time(1)));
-}
-
-int database_created(string file)
-{
-  int p,w;
-
-  p=fton[file];
-  if(!p) return main_database_created();
-  mixed key = open_db_file();
-  database->seek((p*8)+4);
-  sscanf(database->read(4), "%4c", w);
-  if(!w)
-  {
-    w=main_database_created();
-    database_set_created(file, w);
+  void database_set_created(string file, void|int t) {
+    int p=fton[file];
+    if(!p) return 0;
+    mixed key = open_db_file();
+    database->seek((p*8)+4);
+    database->write(sprintf("%4c", t||time(1)));
   }
-  return w;
-}
 
-int query_num(string file, int count)
-{
-  int p, n;
-  string f;
+  int creation_date(void|string file) {
+    if(!file) return main_database_created();
+    int p=fton[file];
+    if(!p) return 0;
+    mixed key = open_db_file();
+    database->seek((p*8)+4);
+    int w;
+    sscanf(database->read(4), "%4c", w);
+    if(!w) {
+      database_set_created(file, main_database_created() );
+      return 0;
+    }
+    return w;
+  }
 
-  mixed key = open_db_file();
-
-  // if(lock) lock->aquire();
-
-  if(!(p=fton[file]))
-  {
-    if(!cnum)
-    {
+  inline int create_entry(string file) {
+    if(!cnum) {
       database->seek(0);
       database->write(sprintf("%4c", time(1)));
     }
     fton[file]=++cnum;
-    p=cnum;
+    int p=cnum;
 
     open_names_file();
     names_file->write(file+":"+cnum+"\n");
@@ -318,76 +302,142 @@ int query_num(string file, int count)
     database->seek(p*8);
     database->write(sprintf("%4c", 0));
     database_set_created(file);
+    return p;
   }
-  if(database->seek(p*8) > -1)
-  {
-    sscanf(database->read(4), "%4c", n);
-    if (count)
-    {
-      n+=count;
+
+  void add(string file, void|int count) {
+    int p, n;
+
+    mixed key = open_db_file();
+
+    if(!(p=fton[file]))
+      p=create_entry(file);
+
+    if(database->seek(p*8) > -1) {
+      sscanf(database->read(4), "%4c", n);
+      n+=count||1;
       database->seek(p*8);
       database->write(sprintf("%4c", n));
     }
-    //lock->free();
+  }
+
+  int query(string file) {
+    int p,n;
+    if(!(p=fton[file])) return 0;
+
+    mixed key = open_db_file();
+    if(database->seek(p*8) > -1)
+      sscanf(database->read(4), "%4c", n);
     return n;
   }
-  //lock->free();
-  return 0;
+
+  void reset(string file) {
+    int p, n;
+
+    mixed key = open_db_file();
+
+    if(!(p=fton[file]))
+      p=create_entry(file);
+    else
+      database_set_created(file);
+
+    if(database->seek(p*8) > -1) {
+      database->seek(p*8);
+      database->write(sprintf("%4c", 0));
+    }
+  }
 }
 
-int log(RequestID id, mapping file)
-{
-  if(id->misc->accessed || query("extcount")==({})) {
+class SQLCounter {
+  // Very unfinished SQL counter.
+
+  Sql.sql db;
+
+  void create() {
+    db=Sql.sql(QUERY(database));
+    //db->query("CREATE TABLE accessed (path TEXT NOT NULL, hits INT UNSIGNED, made INT UNSIGNED, PRIMARY KEY (path))");
+    //db->query("INSERT INTO accessed path='///', made="+time(1) );
+  }
+
+  int creation_date(void|string file) {
+    array x;
+    if(!file) file="///";
+    x=db->query("SELECT made FROM accessed WHERE path='"+file+"'");
+    return x && sizeof(x) && (int)(x[0]->made);
+  }
+}
+
+class MemCounter {
+  //Proof-of-concept nonpersistent counter. 
+
+  mapping(string:int) db_count=([]);
+  mapping(string:int) db_time=([]);
+  int created;
+
+  void create() {
+    created=time(1);
+  }
+
+  int creation_date(void|string file) {
+    if(!file) return created;
+    return db_time[file];
+  }
+
+  void add(string file, void|int count) {
+    if(!db_time[file]) db_time[file]=time(1);
+    db_count[file]+=count||1;
+  }
+
+  int query(string file) {
+    return db_count[file];
+  }
+
+  void reset(string file) {
+    if(!db_time[file]) db_time[file]=time(1);
+    db_count[file]=0;
+  }
+
+  int size() {
+    return sizeof(db_count);
+  }
+}
+
+
+// --- Log callback ------------------------------------
+
+int log(RequestID id, mapping file) {
+  if(id->misc->accessed || QUERY(extcount)==({})) {
     return 0;
   }
 
-  // Although we are not 100% sure we should make a count, nothing bad happens if we shouldn't and still do.
-  foreach(query("extcount"), string tmp)
-    if(sizeof(tmp) && search(id->realfile,tmp)!=-1)
-    {
-      query_num(id->not_query, 1);
+  // Although we are not 100% sure we should make a count,
+  // nothing bad happens if we shouldn't and still do.
+  int a, b=sizeof(id->realfile);
+  foreach(QUERY(extcount), string tmp)
+    if(a=sizeof(tmp) && b>a &&
+       id->realfile[b-a..]=="."+tmp) {
+      counter->add(id->not_query, 1);
       id->misc->accessed = "1";
     }
 
   return 0;
 }
 
+
+// --- Tag definition ----------------------------------
+
 string tag_accessed(string tag, mapping m, RequestID id)
 {
-  int counts, n, prec, q, timep;
-  string real, res;
   NOCACHE();
-
-  if(m->file)
-  {
-    m->file = fix_relative(m->file, id);
-    if(m->add)
-      counts = query_num(m->file, (int)m->add||1);
-    else
-      counts = query_num(m->file, 0);
-
-  } else {
-    if(_match(id->remoteaddr, id->conf->query("NoLog")))
-      counts = query_num(id->not_query, 0);
-    else if(id->misc->accessed != "1")
-    {
-      counts = query_num(id->not_query, (int)m->add||1);
-      id->misc->accessed = "1";
-    } else {
-      counts = query_num(id->not_query, (int)m->add||0);
-    }
-
-    m->file=id->not_query;
-  }
 
   if(m->reset)
   {
     // FIXME: There are a few cases where users can avoid this.
+    // FIXME: Is this code working at all?
     if( !search( (dirname(m->file)+"/")-"//",
 		 (dirname(id->not_query)+"/")-"//" ) )
     {
-      query_num(m->file, -counts);
-      database_set_created(m->file, time(1));
+      counter->reset(m->file);
       return "Number of counts for "+m->file+" is now 0.<br>";
     }
     else
@@ -396,17 +446,33 @@ string tag_accessed(string tag, mapping m, RequestID id)
       RXML.run_error("You do not have access to reset this counter.");
   }
 
+  int counts = id->misc->accessed;
+
+  if(m->file) {
+    m->file = Roxen.fix_relative(m->file, id);
+    if(m->add) counter->add(m->file, (int)m->add);
+    counts = counter->query(m->file);
+  }
+  else {
+    if(!Roxen._match(id->remoteaddr, id->conf->query("NoLog")) &&
+       !id->misc->accessed) {
+      counter->add(id->not_query, (int)m->add);
+    }
+    m->file=id->not_query;
+    counts = counter->query(m->file);
+    id->misc->accessed = counts;
+  }
+ 
   if(m->silent)
     return "";
 
-  if(m->since)
-  {
+  if(m->since) {
     if(m->database)
-      return tagtime(database_created(0),m,id,language);
-    return tagtime(database_created(m->file),m,id,language);
+      return Roxen.tagtime(counter->creation_date(), m, id, language);
+    return Roxen.tagtime(counter->creation_date(m->file), m, id, language);
   }
 
-  real="<!-- ("+counts+") -->";
+  string real="<!-- ("+counts+") -->";
 
   counts += (int)m->cheat;
 
@@ -415,7 +481,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   if(m->per)
   {
-    timep=time(1) - database_created(m->file) + 1;
+    int timep=time(1) - counter->creation_date(m->file) + 1;
 
     switch(m->per)
     {
@@ -452,44 +518,36 @@ string tag_accessed(string tag, mapping m, RequestID id)
     }
   }
 
+  int prec, q;
   if(prec=(int)m->prec)
   {
-    n=ipow(10, prec);
+    int n=(int)pow(10, prec);
     while(counts>n) { counts=(counts+5)/10; q++; }
-    counts*=ipow(10, q);
+    counts*=(int)pow(10, q);
   }
+
+  string res;
 
   switch(m->type)
   {
    case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+language("eng", "number", id)(counts*ipow(10, q))
+    res="More than "+language("eng", "number", id)(counts*(int)pow(10, q))
         + " served.";
     break;
 
    case "linus":
-    res=counts+" since "+ctime(database_created(0));
+    res=counts+" since "+ctime(counter->creation_date());
     break;
 
    case "ordered":
     m->type="string";
-    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "ordered",id));
+    res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "ordered", id));
     break;
 
    default:
-    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "number",id));
+    res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "number", id));
   }
   return res+(m->addreal?real:"");
-}
-
-int api_query_num(RequestID id, string f, int|void i)
-{
-  NOCACHE();
-  return query_num(f, i);
-}
-
-void define_API_functions()
-{
-  add_api_function("accessed", api_query_num, ({ "string", 0,"int" }));
 }
