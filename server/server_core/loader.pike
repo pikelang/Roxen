@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.379 2004/05/16 02:51:21 mani Exp $
+// $Id: loader.pike,v 1.380 2004/05/17 00:31:45 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -19,6 +19,7 @@
 //	master and not the new one.
 //
 
+private static Calendar.YMD load_the_damn_calendar;
 private static __builtin.__master new_master;
 
 static int(0..1) remove_dumped;
@@ -27,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.379 2004/05/16 02:51:21 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.380 2004/05/17 00:31:45 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -134,13 +135,11 @@ string get_cvs_id(string from)
 
 void add_cvs_ids(mixed to)
 {
-  if (arrayp(to) && sizeof([array]to) >= 2 && arrayp(([array]to)[1]) ||
+  if (arrayp(to) && sizeof([array]to) >= 2 && !objectp(([array]to)[1]) &&
+      arrayp(([array]to)[1]) ||
       objectp (to) && ([object]to)->is_generic_error)
     to = ([array|object]to)[1];
   else if (!arrayp (to)) return;
-  // backtrace_frame is both objectp and arrayp but
-  // does not work with foreach. FIXME: Remove this
-  // kludge when backtrace_frames is foreach-compatible.
   if(objectp(to)) to=(array)to;
   foreach([array]to, mixed q)
     if(arrayp (q) && sizeof([array]q) && stringp(([array]q)[0])) {
@@ -495,9 +494,8 @@ void report_error_sparsely (LocaleString message, mixed... args)
 }
 
 //! @appears popen
-//! Starts the specified process and returns a string
-//! with the result. Mostly a compatibility functions, uses
-//! Process.create_process
+//! Starts the specified process and returns a string with the result.
+//! Mostly a compatibility function. Uses Process.create_process.
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   Stdio.File f = Stdio.File(), p = f->pipe(Stdio.PROP_IPC);
@@ -571,10 +569,11 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 {
   //! @ignore
   return Process.create_process(
+    ({
 #ifndef __NT__
-    ({getcwd()+"/start",
+    getcwd()+"/start",
 #else /* __NT__ */
-    ({getcwd()+"/../ntstart.exe",
+    getcwd()+"/../ntstart.exe",
 #endif /* __NT__ */
       "--cd",wd,
       "--quiet","--program"})+args,
@@ -621,7 +620,7 @@ void push_compile_error_handler( _error_handler q )
 
 void pop_compile_error_handler()
 {
-  if( !sizeof( compile_error_handlers ) )
+  if( !compile_error_handlers[0] )
   {
     master()->set_inhibit_compile_errors(0);
     return;
@@ -758,6 +757,15 @@ void trace_destruct(mixed x)
 }
 #endif /* TRACE_DESTRUCT */
 
+void trace_exit(int exitcode) {
+#ifdef TRACE_EXIT
+  catch (report_debug (describe_backtrace (backtrace())));
+#endif
+  exit (exitcode);
+}
+
+constant real_exit = exit;
+
 #define DC(X) add_dump_constant( X,nm_resolv(X) )
 function(string,mixed:mixed) add_dump_constant;
 mixed nm_resolv(string x )
@@ -773,6 +781,7 @@ void load_core()
 {
 
   add_constant("cd", restricted_cd());
+  add_constant("exit", trace_exit);
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
 #endif /* TRACE_DESTRUCT */
@@ -936,10 +945,9 @@ class mf
     res = ::open(what,mode);
     if(res)
     {
-      string file;
-      int line;
-      sscanf(((describe_backtrace(backtrace())/"\n")[2]-(getcwd()+"/")),
-	     "%*s line %d in %s", line, file);
+      array bt = backtrace();
+      string file = bt[-2][0];
+      int line = bt[-2][1];
       mark_fd(query_fd(), file+":"+line+" open(\""+ what+"\", "+mode+")");
     }
     return res;
@@ -1223,8 +1231,8 @@ int main(int argc, array(string) argv)
   {
     werror(
      "          : ----------------------------------------------------------\n"
-      "Notice: Not using the built-in mysql\n"
-      "Mysql path is "+my_mysql_path+"\n"
+      "Notice: Not using the built-in MySQL.\n"
+      "MySQL path is "+my_mysql_path+"\n"
     );
     mysql_path_is_remote = 1;
   }
@@ -1247,7 +1255,7 @@ void do_main_wrapper(int argc, array(string) argv)
       werror("ChiliMoon loader failed:\n%s\n", describe_backtrace(err));
     }
   };
-  exit(1);
+  trace_exit(1);
 }
 
 string query_mysql_dir()
@@ -1563,7 +1571,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
       throw( err );
 #ifdef DB_DEBUG
     else
-      werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
+      werror ("Couldn't connect to MySQL as %s: %s", ro, describe_error (err));
 #endif
   if( db != "mysql" )
     low_connect_to_my_mysql( 0, "mysql" )
@@ -1573,7 +1581,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 
 
 static mapping tailf_info = ([]);
-static void do_tailf( int loop, string f )
+static void do_tailf( int loop, string file )
 {
   string mysqlify( string what )
   {
@@ -1598,18 +1606,21 @@ static void do_tailf( int loop, string f )
   };
 
   int os, si, first;
-  if( tailf_info[f] )
-    os = tailf_info[f];
+  if( tailf_info[file] )
+    os = tailf_info[file];
   do
   {
-    Stdio.Stat s = file_stat( f );
-    if(!s) continue;
+    Stdio.Stat s = file_stat( file );
+    if(!s) {
+      os = tailf_info[ file ] = 0;
+      continue;
+    }
     si = s[ ST_SIZE ];
-    if(!first++ && !os)
-      os = si;
+    if( zero_type( tailf_info[ file ] ) )
+      os = tailf_info[ file ] = si;
     if( os != si )
     {
-      Stdio.File f = Stdio.File( f, "r" );
+      Stdio.File f = Stdio.File( file, "r" );
       if(!f) return;
       if( os < si )
       {
@@ -1618,7 +1629,7 @@ static void do_tailf( int loop, string f )
       }
       else
 	report_debug( mysqlify( f->read( si ) ) );
-      os = tailf_info[ f ] = si;
+      os = tailf_info[ file ] = si;
     }
     if( loop )
       sleep( 1 );
@@ -1658,6 +1669,7 @@ void low_start_mysql( string datadir,
 #ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
 		  "--socket="+replace(datadir, ":", "_") + "/pipe",
+		  "--enable-named-pipe",
 #else
 		  "--socket="+datadir+"/socket",
 		  "--pid-file="+pid_file,
@@ -1693,7 +1705,8 @@ void low_start_mysql( string datadir,
 		     "skip-innodb\n"
 #endif
 		     "skip-name-resolve\n"
-		     "bind-address = "+env->MYSQL_HOST+"\n");
+		     "bind-address = "+env->MYSQL_HOST+"\n"
+		     "user = "+uid+"\n");
 
 #ifdef __NT__
   cfg_file = replace(cfg_file, "\n", "\r\n");
@@ -1702,11 +1715,6 @@ void low_start_mysql( string datadir,
   rm( datadir+"/my.cfg" );
   catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
 
-#ifndef __NT__
-  if( uid == "root" )
-    args += ({ "--user="+uid });
-#endif
-  
 #ifdef __NT__
   string binary = "bin/chili_mysql.exe";
 #else
@@ -1748,6 +1756,16 @@ void start_mysql()
 {
   Sql.Sql db;
   int st = gethrtime();
+  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
+  string err_log = mysqldir+"/error_log";
+  string pid_file = mysqldir+"/mysql_pid";
+  int do_tailf_threaded = 0;
+#ifdef THREADS
+  // Linux pthreads hangs in mutex handling if uid is changed
+  // permanently and there are threads already running.
+  if (uname()->sysname != "Linux")
+    do_tailf_threaded = 1;
+#endif
   void assure_that_base_tables_exists( )
   {
     // 1: Create the 'ofiles' database.
@@ -1801,12 +1819,29 @@ void start_mysql()
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
       report_debug( "Warning: This is a very old Mysql. "
-                     "Please use 3.23.*\n");
+                     "Please use 3.23.* or later.\n");
 
+    if( !do_tailf_threaded ) do_tailf(0, err_log);
     assure_that_base_tables_exists();
   };
 
-  report_debug( "Starting mysql ... \b");
+  void start_tailf()
+  {
+    if( do_tailf_threaded ) {
+      thread_create( do_tailf, 1, err_log );
+      sleep(0.1);
+    } else {
+      do_tailf(0, err_log );
+      void do_do_tailf( )
+      {
+	call_out( do_do_tailf, 1 );
+	do_tailf( 0, err_log  );
+      };
+      call_out( do_do_tailf, 0 );
+    }
+  };
+
+  report_debug( "Starting MySQL ... \b");
   
   if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
@@ -1814,6 +1849,7 @@ void start_mysql()
 #endif
   }
   else {
+    start_tailf();
     connected_ok(1);
     return;
   }
@@ -1821,33 +1857,23 @@ void start_mysql()
   if( mysql_path_is_remote )
   {
     report_debug( "******************** FATAL ******************\n"
-		  "Cannot connect to the specified mysql, server\n"
+		  "Cannot connect to the specified MySQL, server\n"
 		  "                  Aborting\n"
 		  "******************** FATAL ******************\n" );
     exit(1);
   }
 
-  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
-  rm( mysqldir+"/mysql_pid" );
-  rm( mysqldir+"/error_log"  );
-#ifdef THREADS
-  thread_create( do_tailf, 1, mysqldir+"/error_log" );
-  sleep(0.1);
-#else
-  void do_do_tailf( )
-  {
-    call_out( do_do_tailf, 1 );
-    do_tailf( 0, mysqldir+"/error_log"  );
-  };
-  call_out( do_do_tailf, 0 );
-#endif
+  rm( pid_file );
+  rm( err_log );
+
+  start_tailf();
 
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
       !file_stat( mysqldir+"/mysql/db.MYD" ) )
   {
 #ifdef DEBUG
-    report_debug("Mysql data directory does not exist -- copying template\n");
+    report_debug("MySQL data directory does not exist -- copying template\n");
 #endif
     if (!file_stat(mysqldir)) {
 #ifdef DEBUG
@@ -1887,15 +1913,13 @@ void start_mysql()
     sleep( 0.1 );
     if( repeat++ > 100 )
     {
-#ifndef THREADS
-      do_tailf(0, mysqldir+"/error_log" );
-#endif
-      report_fatal("\nFailed to start mysql. Aborting\n");
+      if( !do_tailf_threaded ) do_tailf(0, err_log);
+      report_fatal("\nFailed to start MySQL. Aborting.\n");
       exit(1);
     }
     if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
-      werror ("Error connecting to local mysql: %s", describe_error (err));
+      werror ("Error connecting to local MySQL: %s", describe_error (err));
 #endif
     }
     else
@@ -1980,6 +2004,10 @@ void do_main( int argc, array(string) argv )
   // Hide main arguments in backtraces.
   array(string) hider = argv;
   argv = 0;
+
+#ifdef GC_TRACE
+  trace(1, "gc");
+#endif
 
   // Set start time and report server version info.
   int start_time = gethrtime();
@@ -2181,7 +2209,7 @@ void do_main( int argc, array(string) argv )
   }
 
   // These are here to allow dumping of core.pike to a .o file.
-  report_debug("Loading pike modules ... \b");
+  report_debug("Loading Pike modules ... \b");
 
   add_dump_constant = new_master->add_dump_constant;
   int t = gethrtime();
@@ -2282,22 +2310,10 @@ void do_main( int argc, array(string) argv )
   // possible to dump them to a .o file (in the mysql))
   object prototypes = (object)"server_core/prototypes.pike";
   dump( "server_core/prototypes.pike", [program]object_program( prototypes ) );
-  
-  add_constant("Prototypes",    prototypes);
-  add_constant("Protocol",      prototypes->Protocol );
-  add_constant("Configuration", prototypes->Configuration );
-  add_constant("StringFile",    prototypes->StringFile );
-  add_constant("RequestID",     prototypes->RequestID );
-  add_constant("RoxenModule",   prototypes->RoxenModule );
-  add_constant("ModuleInfo",    prototypes->ModuleInfo );
-  add_constant("ModuleCopies",  prototypes->ModuleCopies );
-  add_constant("FakedVariables",prototypes->FakedVariables );
-
-  // Specific module types
-  add_constant("AuthModule", prototypes->AuthModule );
-  add_constant("UserDB",     prototypes->UserDB );
-  add_constant("User",       prototypes->User );
-  add_constant("Group",      prototypes->Group );
+  add_constant("Prototypes", prototypes);
+  foreach(indices(prototypes), string id)
+    if(prototypes->globals[id])
+      add_constant(id, prototypes[id]);
 
   Cache cache = initiate_cache();
   load_core();
@@ -2308,7 +2324,7 @@ void do_main( int argc, array(string) argv )
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
   if( retval > -1 )
-    exit( retval );
+    trace_exit( retval );
   return;
 }
 
