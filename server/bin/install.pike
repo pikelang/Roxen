@@ -1,5 +1,5 @@
 #!bin/pike -m lib/pike/master.pike
-string cvs_version = "$Id: install.pike,v 1.11 1997/05/07 05:17:31 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.12 1997/05/08 23:51:02 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -359,8 +359,16 @@ void main(int argc, string *argv)
   write(sprintf("\nUsing %s, port %d...\n\n", host, port));
   
   setglobvar("_v",  CONFIGURATION_FILE_LEVEL);
-  setglobvar("ConfigPorts", ({ ({ port, "ssl3", "ANY", "cert-file testca.pem" }) }));
-  setglobvar("ConfigurationURL",  "https://"+host+":"+port+"/");
+  int have_gmp = 0;
+  catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
+  if (have_gmp) {
+    setglobvar("ConfigPorts", ({ ({ port, "ssl3", "ANY", "cert-file testca.pem" }) }));
+    setglobvar("ConfigurationURL",  "https://"+host+":"+port+"/");
+  } else {
+    write("No Gmp-module -- using HTTP\n");
+    setglobvar("ConfigPorts", ({ ({ port, "http", "ANY", "" }) }));
+    setglobvar("ConfigurationURL",  "http://"+host+":"+port+"/");
+  }    
   setglobvar("logdirprefix", log_dir);
 
   write(popen("./start "
@@ -388,12 +396,16 @@ void main(int argc, string *argv)
     client = tmp;
   if(client)
   {
-    write("Waiting for SSL3 to initialize...\n");
-    sleep(60);
-    write("Running "+ client +" "+ "https://"+host+":"+port+"/\n");
+    if (have_gmp) {
+      write("Waiting for SSL3 to initialize...\n");
+      sleep(60);
+    } else {
+      sleep(10);
+    }
+    write("Running "+ client +" "+ (have_gmp?"https":"http")+"://"+host+":"+port+"/\n");
     run((client/" ")[0], @(client/" ")[1..100000], 
-	"https://"+host+":"+port+"/");
+	(have_gmp?"https":"http")+"://"+host+":"+port+"/");
   } else
-    write("\nTune your favourite browser to https://"+host+":"+port+"/\n");
+    write("\nTune your favourite browser to "+(have_gmp?"https":"http")+"://"+host+":"+port+"/\n");
 }
 
