@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.2 1997/08/20 07:49:25 per Exp $
+/* $Id: wizard.pike,v 1.3 1997/08/20 08:02:37 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -14,14 +14,29 @@ string wizard_tag_var(string n, mapping m, object id)
     m->type = "string";
     m_delete(m,"default");
     m->value = current||"";
-    m->size="60,1";
+    if(!m->size)m->size="60,1";
     return make_tag("input", m);
+
+   case "text":
+    m_delete(m,"type");
+    m_delete(m,"default");
+    m->value = current||"";
+    if(!m->size)m->size="40,6";
+    return make_container("textarea", m, html_encode_string(current));
+
 
    case "int":
     m->type = "number";
     m_delete(m,"default");
-    m->value = current||"";
-    m->size="8,1";
+    m->value = (string)((int)current);
+    if(!m->size)m->size="8,1";
+    return make_tag("input", m);
+
+   case "float":
+    m->type = "number";
+    m_delete(m,"default");
+    m->value = (string)((float)current);
+    if(!m->size)m->size="14,1";
     return make_tag("input", m);
 
    case "toggle":
@@ -35,7 +50,7 @@ string wizard_tag_var(string n, mapping m, object id)
     m_delete(m,"type");
     return make_container("select", m, Array.map(m->choices/",",
 						 lambda(string s, string c) {
-      return "<option"+(s==c?" selected":"")+">"+s+"\n";
+      return "<option"+(s==c?" selected":"")+">"+html_encode_string(s)+"\n";
     },current)*"");
 
 
