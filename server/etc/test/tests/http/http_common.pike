@@ -22,7 +22,7 @@ void setup_timeout( )
   void timeout() {  exit( TIMEOUT ); };
 #ifndef __NT__
   signal( 14, timeout );
-  alarm( 5 );
+  alarm( 30 );
 #endif
 }
 
