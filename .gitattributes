@@ -241,6 +241,7 @@ nn binary
 /server/modules/tags/rxmlparse.pike foreign_ident
 /server/modules/tags/rxmltags.pike foreign_ident
 /server/modules/tags/sed.pike foreign_ident
+/server/modules/tags/session_scope.pike foreign_ident
 /server/modules/tags/ssi.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
