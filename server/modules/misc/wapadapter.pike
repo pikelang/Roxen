@@ -4,12 +4,13 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.5 2000/08/19 08:52:41 per Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.6 2000/11/03 05:00:39 nilsson Exp $";
 
-constant module_type = MODULE_FIRST|MODULE_FILTER;
+constant module_type = MODULE_FIRST|MODULE_FILTER|MODULE_TAG;
 constant module_name = "WAP Adapter";
 constant module_doc  = "Improves supports flags and variables as well as "
-  "doing a better job finding MIME types than the content type module for WAP clients.";
+  "doing a better job finding MIME types than the content type module for WAP clients. "
+  "It also defines the tag &lt;wimg&gt; that converts the image to an apropriate format for the client.";
 
 #include <module.h>
 
@@ -17,6 +18,10 @@ void create() {
   defvar("wap1", 0, "Support WAP 1.0", TYPE_FLAG,
 	 "Set correct MIME-types for WAP 1.0 clients. Not useful if you do not convert "
 	 "your pages to WML 1.0 when needed.");
+}
+
+void start(int num, Configuration conf) {
+  module_dependencies (conf, ({ "cimg" }));
 }
 
 void first_try(RequestID id)
@@ -54,4 +59,11 @@ mixed filter(mixed result, RequestID id) {
   }
 
   return result;
+}
+
+array tag_wimg(string t, mapping m, RequestID id) {
+  m->format="gif";
+  if(id->supports->wbmp0 && !id->supports->gifinline)
+    m->format="wbf";
+  ({ 1, "cimg", m });
 }
