@@ -40,5 +40,5 @@ void run_tests( Configuration c  )
   test( roxen.argcache.delete, key2 );
   
   test_error( roxen.argcache.lookup, key );
-  test_error( roxen.argcache.lookup, key );
+  test_error( roxen.argcache.lookup, key2 );
 }
