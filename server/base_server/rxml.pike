@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.200 2000/07/13 16:27:06 kuntri Exp $
+// $Id: rxml.pike,v 1.201 2000/07/14 16:19:46 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2102,7 +2102,8 @@ scope created within the define tag.
  statement will be matched as a glob, i.e. * is considered a
  multicharacter wildcard:</p>
 
- <ex type=vert>Your domain <if ip='130.236.*'>is</if><else>isn't</else> liu.se.</ex>
+ <ex type=vert>Your domain <if
+ ip='130.236.*'>is</if><else>isn't</else> liu.se.</ex>
 
  <p> If the if-plugin is of an <i>IfIs</i> type the if statement will
  be compared with one of the following operators 'is', '=', '==',
@@ -2345,20 +2346,24 @@ scope created within the define tag.
 <attr name=language value=langcodes>
  The language to use.
  <lang/>
-<ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
-<ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
-<ex type='vert'>Il mio numero preferito &egrave;<number num='15' language='it'/>.</ex>
+ <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
+ <ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
+ <ex type='vert'>Il mio numero preferito &egrave;<number num='15'
+ language='it'/>.</ex>
 </attr>
 
 <attr name=type value=number|ordered default=number>
  Sets output format.
-<ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
+
+ <ex type='vert'>It was his <number num='15' type='ordered'/> birthday
+ yesterday.</ex>
 </attr>",
 
 "strlen":#"<desc cont><short>
  Returns the length of the contents.</short>
 
-<ex>There is <strlen>foo bar gazonk</strlen> characters inside the tag.</ex>
+ <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
+ tag.</ex>
 </desc>",
 
 "then":#"<desc cont><short>
@@ -2386,12 +2391,12 @@ scope created within the define tag.
 <attr name=variable value=name>
  Undefines this variable.
 
-<ex>
-<define variable='var.hepp'>hopp</define>
- &var.hepp;
-<undefine variable='var.hepp'/>
- &var.hepp;
-</ex>
+ <ex>
+  <define variable='var.hepp'>hopp</define>
+  &var.hepp;
+  <undefine variable='var.hepp'/>
+  &var.hepp;
+ </ex>
 </attr>
 
 <attr name=tag value=name>
@@ -2437,9 +2442,11 @@ scope created within the define tag.
  <tag><ref type='tag'>insert</ref></tag>, since the parsed definitions
  is cached.",
 
-"eval":#"<desc cont><short>Postparses its content.</short> Useful when an entity contains
- RXML-code. <tag>eval</tag> is then placed around the entity to get its
- content parsed.</desc>",
+"eval":#"<desc cont><short>
+ Postparses its content.</short> Useful when an entity contains
+ RXML-code. <tag>eval</tag> is then placed around the entity to get
+ its content parsed.
+</desc>",
 
 "emit":#"<desc cont><short>Provides data, fetched from different sources, as
  entities</short></desc>
@@ -2457,7 +2464,8 @@ scope created within the define tag.
 </attr>
 
 <attr name=skiprows value=number>
- Makes it possible to skip the first rows of the result.
+ Makes it possible to skip the first rows of the result. Negative numbers means
+ to skip everything execept the last n rows.
 </attr>
 
 <attr name=rowinfo value=variable>
