@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.66 1998/02/17 09:14:24 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.67 1998/02/17 09:16:15 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -802,13 +802,11 @@ mapping find_file(string f, object id)
   //img = img->map_closest(img->select_colors(254)+({ back }));
   
   if (res->image)
-    return http_string_answer(Image.GIF.encode(img,
-					       Image.colortable(6,6,6, 
-								({0,0,0}),
-								({255,255,255}), 39)->
-					       floyd_steinberg(), 
-					       @back), "image/gif");  
+    return http_string_answer( Image.GIF.encode( img,
+	    Image.colortable( 6,6,6,
+			      ({0,0,0}),
+			      ({255,255,255}), 39)->floyd_steinberg(), 
+			      @back), "image/gif");  
   else
-    return http_string_answer(Image.GIF.encode(img,
-					       @back), "image/gif");      
+    return http_string_answer(Image.GIF.encode(img, @back), "image/gif");      
 }
