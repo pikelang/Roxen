@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.104 2002/02/14 16:08:08 mast Exp $ -->
+<!-- $Id: template,v 1.105 2002/03/06 13:06:32 grubba Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -162,10 +162,14 @@
   </table>
 
     <!-- enctype="multipart/form-data"  -->
-   <form method="POST" action="&cf.current-url;">
-     <roxen-automatic-charset-variable/>
+   <if not variable='_.noform'>
+     <form method="POST" action="&cf.current-url;">
+       <roxen-automatic-charset-variable/>
+       &var.content:none;
+     </form>
+   </if><else>
      &var.content:none;
-   </form>
+   </else>
 </gauge>
     <div align="right">
      <font size="-1"><b>&roxen.version; / &roxen.pike-version;</b><br />
