@@ -229,6 +229,7 @@ rbf binary
 /server/modules/proxies/gopher.pike foreign_ident
 /server/modules/proxies/port_forwarder.pike foreign_ident
 /server/modules/proxies/proxy.pike foreign_ident
+/server/modules/proxies/relay2.pike foreign_ident
 /server/modules/proxies/wais.pike foreign_ident
 /server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fastcgi.pike foreign_ident
