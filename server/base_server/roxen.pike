@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.455 2000/03/13 06:16:06 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.456 2000/03/13 18:29:43 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -132,6 +132,7 @@ class RequestID
   string remoteaddr;
   string host;
 
+  string version();
   void create(object|void master_request_id);
   void send(string|object what, int|void len);
   string scan_for_query( string in );
