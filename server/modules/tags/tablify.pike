@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.70 2001/09/21 15:58:17 jhs Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.71 2001/10/10 14:32:51 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -364,12 +364,14 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
   if (subtitles) {
     int col=0;
     if(opt->nice || opt->nicer)
-      r+="<tr bgcolor=\""+(opt->titlebgcolor||"#112266")+"\">\n";
+      r += "<tr bgcolor=\"" + (opt->titlebgcolor||"#112266") + "\">\n";
     else
-      r+="<tr>";
+      r += "<tr>";
+
     foreach(subtitles, string s) {
       col++;
-      r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id)+
+      r += "<th align=\"left\">" + (opt["interactive-sort"]?
+				    "<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id) +
 				"\" id=\"nofollow-" + RXML.get_var("counter", "page") + "\">":"");
       if(opt->nicer) {
 	mapping m = ([ "fgcolor":opt->titlecolor||"white",
@@ -392,53 +394,69 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
     r += "</tr>\n";
   }
 
-  for(int i = 0; i < sizeof(table); i++) {
-    if(opt->nice || opt->nicer)
-      r+="<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff")+"\"";
-    else
-      r+="<tr";
-    r+=opt->cellvalign?" valign=\""+opt->cellvalign+"\">":">";
+  opt->textcolor = opt->textcolor || "#000000";
+  opt->negativecolor = opt->negativecolor || "#ff0000";
+  opt->size = opt->size || "2";
+  opt->face = opt->face || "helvetica,arial";
+  opt->cellalign = opt->cellalign || "left";
 
-    for(int j = 0; j < sizeof(table[i]); j++) {
-      mixed s = table[i][j];
-      type=arrayp(opt->fields) && j<sizeof(opt->fields)?opt->fields[j]:"text";
-      switch(type){
+  int i;
+  foreach(table, array row) {
+    if(opt->nice || opt->nicer)
+      r += "<tr bgcolor=\"" +
+	((i++/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff") + "\"";
+    else
+      r += "<tr";
+
+    r += opt->cellvalign?" valign=\""+opt->cellvalign+"\">":">";
+
+    for(int j = 0; j < sizeof(row); j++) {
+      mixed s = row[j];
+      type = arrayp(opt->fields) && j<sizeof(opt->fields) ? opt->fields[j]:"text";
+      string font="",nofont="";
+
+      switch(type) {
 
       case "economic-float":
       case "float":
 	array a = s/".";
-        string font="",nofont="";
         if(opt->nicer || type=="economic-float"){
-          font="<font color=\""+
-            (type=="economic-float"?((int)a[0]<0?(opt->negativecolor||"#ff0000"):(opt->textcolor||"#000000")):
-              (opt->textcolor||"#000000"))+
-            "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
-            "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
-          nofont="</font>";
+          font = "<font color=\"" +
+            (type=="economic-float" && (int)a[0]<0 ?
+	     opt->negativecolor : opt->textcolor) +
+            "\"" +
+	    (opt->nicer?(" size=\"" + opt->size +
+			 "\" face=\"" + opt->face +
+			 "\">"):">");
+          nofont = "</font>";
 	}
 
         //The right way<tm> is to preparse the whole column and find the longest string of
         //decimals and use that to calculate the maximum width of the decimal cell, insted
         //of just saying width=30, which easily produces an ugly result.
-        r+="<td align=\"right\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"right\">"+
-          font+a[0]+nofont+"</td><td>"+font+"."+nofont+"</td><td align=\"left\" width=\"30\">"+font+
-          (sizeof(a)>1?a[1]:"0")+nofont;
+        r += "<td align=\"right\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">"
+	  "<tr><td align=\"right\">" +
+          font + a[0] + nofont + "</td><td>" + font + "." + nofont +
+	  "</td><td align=\"left\" width=\"30\">" + font +
+          (sizeof(a)>1?a[1]:"0") + nofont;
 
         r += "</td></tr></table>";
 	break;
 
       case "economic-int":
       case "int":
-        if(opt->nicer || type=="economic-int"){
-          font="<font color=\""+
-            (type=="economic-int"?((int)s<0?(opt->negativecolor||"#ff0000"):(opt->textcolor||"#000000")):
-              (opt->textcolor||"#000000"))+
-            "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
-            "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
-          nofont="</font>";
+        if(opt->nicer || type=="economic-int") {
+          font = "<font color=\"" +
+            (type=="economic-int" && (int)s<0 ?
+	     opt->negativecolor : opt->textcolor) +
+            "\"" +
+	    (opt->nicer?(" size=\"" + opt->size +
+			 "\" face=\"" +
+			 opt->face + "\">"):">");
+          nofont = "</font>";
 	}
 
-        r+="<td align=\"right\">"+font+(string)(int)round((float)s)+nofont;
+        r += "<td align=\"right\">" + font + (string)(int)round((float)s) + nofont;
 	break;
 
       case "num":
@@ -448,16 +466,21 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
       case "right":
       case "center":
       default:
-        r += "<td align=\""+(type!="text"?type:(opt->cellalign||"left"))+"\">";
-	if(opt->nicer) r += "<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
-          "\" face=\""+(opt->face||"helvetica,arial")+"\">";
-        r += s+(opt->nice||opt->nicer?"&nbsp;&nbsp;":"");
-        if(opt->nicer) r+="</font>";
+        r += "<td align=\"" + (type!="text"?type:opt->cellalign) + "\">";
+	if(opt->nicer)
+	  r += "<font color=\"" + opt->textcolor + "\" size=\"" + opt->size +
+	    "\" face=\"" + opt->face + "\">";
+        r += s + (opt->nice||opt->nicer?"&nbsp;&nbsp;":"");
+        if(opt->nicer)
+	  r += "</font>";
       }
 
       r += "</td>";
     }
-    if(sizeof(table[i])<id->misc->tmp_colmax) r+="<td colspan=\""+(id->misc->tmp_colmax-sizeof(table[i]))+"\">&nbsp;</td>";
+
+    if(sizeof(row)<id->misc->tmp_colmax)
+      r += "<td colspan=\"" + (id->misc->tmp_colmax-sizeof(row)) + "\">&nbsp;</td>";
+
     r += "</tr>\n";
   }
 
