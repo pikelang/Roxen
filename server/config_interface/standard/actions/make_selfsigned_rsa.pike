@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.1 2000/02/24 17:41:39 per Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.2 2000/03/16 17:54:56 nilsson Exp $
  */
 
 #if constant(_Crypto) &&  constant(Crypto.rsa)
@@ -171,7 +171,7 @@ mixed page_1(mixed id, mixed mc)
      "</blockquote>"
 
      "<b>Organization/Company</b><br>\n"
-     "<var name=organizationName type=string default=\"Idonex AB\"><br>"
+     "<var name=organizationName type=string default=\"Roxen IS\"><br>"
      "<blockquote>"
      "The organization name under which you are registered with some "
      "national or regional authority."
@@ -186,7 +186,7 @@ mixed page_1(mixed id, mixed mc)
      "</blockquote>"
 
      "<b>Common Name</b><br>\n"
-     "<var name=commonName type=string default=\"www.idonex.se\"><br>"
+     "<var name=commonName type=string default=\"www.roxen.com\"><br>"
      "This is the DNS name of your server (i.e. the host part of "
      "the URL).\n"
      "<blockquote>"
@@ -195,7 +195,7 @@ mixed page_1(mixed id, mixed mc)
      "if they don't match.<p>"
      "Some Certificate Authorities allow wild cards in the Common "
      "Name. This means that you can have a certificate for "
-     "<tt>*.idonex.se</tt> which will match all servers at Idonex. "
+     "<tt>*.roxen.com</tt> which will match all servers at Roxen. "
      "Thawte allows wild card certificates, while VeriSign does not."
      "</blockquote>");
 }
