@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.80 2003/03/04 13:44:31 grubba Exp $
+// $Id: cache.pike,v 1.81 2003/04/07 10:33:06 mast Exp $
 
 // #pragma strict_types
 
@@ -100,10 +100,15 @@ mapping(string:array(int)) status()
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
+    int size;
+    if (catch (size = sizeof(encode_value(cache[name]))))
+      // Bogus fallback, but using encode_value for this is fairly
+      // bogus in the first place.
+      size = 1024;
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
-			  sizeof(encode_value(cache[name])) });
+			  size });
     if (!zero_type(ret[show_name]))
       for (int idx = 0; idx < 3; idx++)
 	ret[show_name][idx] += entry[idx];
@@ -171,8 +176,9 @@ void cache_clean()
       else {
 	if(!c[SIZE]) {
 	  // Perform a size calculation.
-	  c[SIZE] = sizeof(encode_value(b));
-	  if (catch{ c[SIZE] += sizeof(encode_value(c[DATA]));}) {
+	  if (catch{
+	      c[SIZE] = sizeof(encode_value(b)) + sizeof(encode_value(c[DATA]));
+	    }) {
 	    // encode_value() failed,
 	    // probably because some object is in there...
 
@@ -180,11 +186,11 @@ void cache_clean()
 	    //        for PCode here.
 
 	    // We guess that it takes 1KB space.
-	    c[SIZE] += 1024;
+	    c[SIZE] = 1024;
 	  }
 	  c[SIZE] = (c[SIZE] + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
-          MORE_CACHE_WERR("     Cache entry size percieved as " +
+	  MORE_CACHE_WERR("     Cache entry size perceived as " +
 			  ([int]c[SIZE]*100) + " bytes\n");
 	}
 	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
@@ -242,9 +248,14 @@ void nongarbing_cache_flush(string cache_id) {
 mapping(string:array(int)) ngc_status() {
   mapping(string:array(int)) res = ([]);
 
-  foreach(indices(nongc_cache), string cache)
-    res[cache] = ({ sizeof(nongc_cache[cache]),
-		    sizeof(encode_value(nongc_cache[cache])) });
+  foreach(indices(nongc_cache), string cache) {
+    int size;
+    if (catch (size = sizeof(encode_value(nongc_cache[cache]))))
+      // Bogus fallback, but using encode_value for this is fairly
+      // bogus in the first place.
+      size = 1024;
+    res[cache] = ({ sizeof(nongc_cache[cache]), size});
+  }
 
   return res;
 }
