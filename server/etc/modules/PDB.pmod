@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.18 1998/02/20 19:37:19 noring Exp $
+ * $Id: PDB.pmod,v 1.19 1998/03/09 18:33:26 marcus Exp $
  */
 
 #if constant(thread_create)
@@ -26,7 +26,7 @@ class FileIO {
   {
     object o = Stdio.File();
     if(!o->open(f,m))
-      return PDB_ERR("Failed to open file. Premission problems?");
+      return PDB_ERR("Failed to open file. "+f+": "+strerror(o->errno()));
     return o;
   }
   
@@ -245,6 +245,7 @@ class Table
 
   void delete(string in)
   {
+    if(!write) return;
     LOCK();
     array i;
     if(i=index[in]) {
@@ -276,9 +277,9 @@ class Table
       bucket->set_entry(index[in][1], ts);
       return to;
     }
-    delete(in);
     int of = bucket->allocate_entry();
     if(bucket->set_entry(of, ts)) {
+      delete(in);
       index[in]=({ bucket->size, of });
       dirty = 1;
       log('C', in, index[in]);
@@ -329,6 +330,7 @@ class Table
   void purge()
   {
     // remove table...
+    if(!write) return;
     LOCK();
     foreach(_indices(), string d)
       delete(d);
@@ -360,6 +362,7 @@ class Table
 	purge = 1;
 	break;
       }
+    if(!write) return;
     if(purge) {
       rm(dir+".INDEX");
       dirty = sizeof(index)>0;
@@ -401,11 +404,16 @@ class db
   static void log(int major, int minor, mixed ... args)
   {
     LOCK();
-    if(logfile)
-      logfile->write(sprintf("%c%c%s\n", major, minor,
+    if(logfile) {
+      int rc;
+      string entry = sprintf("%c%c%s\n", major, minor,
 			     replace(encode_value(args),
 				     ({ "\203", "\n" }),
-				     ({ "\203\203", "\203n" }))));;
+				     ({ "\203\203", "\203n" })));
+      if((rc=logfile->write(entry)) != sizeof(entry))
+	PDB_ERR("Failed to write log: "+(rc<0? strerror(logfile->errno()):
+					 "Disk full (probably)"));
+    }
     UNLOCK();
   }
 
@@ -578,7 +586,10 @@ class db
     if (write) {
       logfile = Stdio.File();
       logfile->open(dir+"log.1", "cwa");
-      logfile->write("\n");
+      if(logfile->write("\n")!=1) {
+	destruct(this_object());
+	PDB_ERR("Failed to write a single byte to log.");
+      }
       sync();
     }
   }
