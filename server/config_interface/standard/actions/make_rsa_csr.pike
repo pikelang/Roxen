@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.1 2000/02/24 17:41:39 per Exp $
+ * $Id: make_rsa_csr.pike,v 1.2 2000/02/24 17:42:22 per Exp $
  */
 #if constant(Standards.ASN1) && constant( Crypto.rsa )
 inherit "wizard";
@@ -323,12 +323,6 @@ mixed page_4(object id, object mc)
 	  "<var type=string name=save_in_file default=my_rsa_csr.pem><br>"
 	  "This may be relative to " + getcwd() + ".\n"
 	  "</blockquote>");
-
-
-//   res += ("<p>"
-//           "<p><font size=+1><var type=checkbox name=send></font>"
-//           "<b>Send the request to Thawte</b><br>")   ;
-
   return res;
 }
 
@@ -342,11 +336,6 @@ mapping wizard_done( object id )
     Stdio.write_file( id->variables->save_in_file, id->variables->csr );
   }
 }
-
-
-/*
-  https://www.thawte.com/cgi/server/step1.exe
- */
 
 mixed parse(object id) { return wizard_for(id,0); }
 
