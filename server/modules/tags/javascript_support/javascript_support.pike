@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.2 1999/11/11 22:13:27 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.3 1999/11/26 11:28:49 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -98,6 +98,7 @@ string container_js_popup(string name, mapping args,
   if(largs->ox) m_delete(largs, "ox");
   if(largs->oy) m_delete(largs, "oy");
   if(!largs->href) largs->href = "javascript:void";
+  if(largs->event) m_delete(largs, "event");
 
   //if(args["empty-variable"]) {
   //  werror("%O\n", id->variables[args["empty-variable"]]);
@@ -120,8 +121,13 @@ string container_js_popup(string name, mapping args,
   
   string showpopup = "return showPopup('"+popupname+
 		     "', '"+popupparent+"', "+args->ox+", "+args->oy;
-  largs->onMouseOver = "if(isNav4) { "+showpopup+", event); } "
-		       "else { "+showpopup+"); }";
+  
+  string event = "onMouseOver";
+  if(lower_case(args->event) == "onclick")
+    event = "onClick";
+  
+  largs[event] = "if(isNav4) { "+showpopup+", event); } "
+		 "else { "+showpopup+"); }";
   
   add_to_insert("javascript1.2", 
 		"if(isNav4) document."+popupname+
