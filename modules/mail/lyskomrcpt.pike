@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.3 1999/03/23 13:53:09 peter Exp $
+ * $Id: lyskomrcpt.pike,v 1.4 1999/03/23 14:30:41 peter Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.3 1999/03/23 13:53:09 peter Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.4 1999/03/23 14:30:41 peter Exp $";
 
 /*
  * Roxen glue
@@ -22,7 +22,7 @@ array register_module()
 {
   return({ MODULE_PROVIDER,
 	   "AutoMail LysKOM recipient and relayer",
-	   "LysKOM module for the AutoMail system.",0,1 });
+	   "LysKOM module for the AutoMail system.",0,0 });
 }
 
 object conf;
@@ -210,8 +210,10 @@ string|multiset(string) expn(string addr, object o)
   roxen_perror("AutoMail RCPT: expn(%O, X)\n", addr);
   addr=remove_trailing_dot(addr);
 
-  if(sscanf(addr,sprintf("c%%*d@%s",query("handledomain"))))
+  if(sscanf(addr,sprintf("m%%*d@%s",query("handledomain"))))
     return addr;
+
+  return 0;
 
   if(sscanf(addr,sprintf("%%*s@%s",query("handledomain")))<1)
     return 0;
