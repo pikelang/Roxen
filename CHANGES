@@ -12,6 +12,8 @@ o Fixed race in gtext.
 o Replaced ftp with ftp2. Configurations will automaticly change from
   ftp2 to ftp.
 
+o Added better documentation for virtual user hosting.
+
 
 Changes since Roxen Challenger 1.2.76 Yellow
 -----------------------------------------------
