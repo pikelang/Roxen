@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.351 2001/12/04 18:39:55 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.352 2001/12/05 13:53:07 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -421,6 +421,8 @@ void start_sender( )
 
 string scan_for_query( string f )
 {
+  query=0;
+  rest_query="";
   if(sscanf(f,"%s?%s", f, query) == 2)
   {
     string v, a, b;
