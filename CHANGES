@@ -31,6 +31,7 @@ o Added new variable to decide what tags will be parsed for colors in
            some tags.
 
 o Fixed some bugs that prevented the language module from working.
+  Thanks to Peter Holzer <hjp@wsr.ac.at>.
 
 Changes since Roxen Challenger 1.2.31 Yellow
 -----------------------------------------------
