@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.53 2000/03/30 18:22:26 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.54 2000/03/31 05:20:48 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -38,13 +38,13 @@ constant tagdoc=([
  type=tag>tablify</ref> tags.
 </attr>
 
-<attr name=host type=database>
+<attr name=host value=database>
  Which database to connect to, usually a symbolic name set in the
  <module>SQL Databases</module> module. If omitted the default
  database will be used.
 </attr>
 
-<attr name=SQL statement>
+<attr name=query value='SQL statement'>
  The actual SQL-statement.
 </attr>
 
@@ -60,13 +60,13 @@ constant tagdoc=([
  contents of the database, for example INSERT or UPDATE.
 </desc>
 
-<attr name=host type=database>
+<attr name=host value=database>
  Which database to connect to, usually a symbolic name set in the
  <module>SQL Databases</module> module. If omitted the default
  database will be used.
 </attr>
 
-<attr name=query type=SQL statement>
+<attr name=query value='SQL statement'>
  The actual SQL-statement.
 </attr>
 
@@ -75,11 +75,26 @@ constant tagdoc=([
  you wish to dynamically build the query.
 </attr>
 
-<attr name=mysql-insert-id type=form-variable>
+<attr name=mysql-insert-id value=form-variable>
  Set form-variable to the insert id used by Mysql for
  auto-incrementing columns. Note: This is only available with Mysql.
+</attr>",
+
+"emit#sql":#"<desc plugin>Use this source to connect to and
+ query SQL databases for information. The result will be available in
+ variables named as the SQL columns.</desc>
+
+<attr name=host value=database>
+ Which database to connect to, usually a symbolic name set in the
+ <module>SQL Databases</module> module. If omitted the default
+ database will be used.
 </attr>
-"]);
+
+<attr name=query value='SQL statement'>
+ The actual SQL-statement.
+</attr>
+"
+]);
 #endif
 
 array|object do_sql_query(string tag, mapping args, RequestID id)
@@ -170,7 +185,7 @@ string tag_sqlquery(string tag, mapping args, RequestID id)
 
   if(args["mysql-insert-id"])
     if(args->dbobj && args->dbobj->master_sql)
-      id->variables[args["mysql-insert-id"]] = args->dbobj->master_sql->insert_id();
+      RXML.user_set_var(args["mysql-insert-id"], args->dbobj->master_sql->insert_id());
     else
       RXML.parse_error("No insert_id present.");
 
