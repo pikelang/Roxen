@@ -351,7 +351,7 @@ class ConfigurationSettings
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
-            LOCALE(279, "If true, the list list will be presented in a "
+            LOCALE(279, "If true, the list of sites will be presented in a "
                     "compact format suitable for servers with many sites." ));
 
     defvar( "charset", "utf-8", 
