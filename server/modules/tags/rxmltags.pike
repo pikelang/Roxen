@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.345 2002/02/14 03:28:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.346 2002/02/14 15:05:19 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2795,9 +2795,14 @@ class DefineContentsFrame
   array do_return()
   {
     RXML.Frame upframe = get_upframe();
-    string var = "__contents__" + ++upframe->last_contents_id;
-    upframe->preparsed_contents_tags[var] = user_tag_contents (args, content);
-    return ({"&_." + var + ";"});
+    if (mapping(string:RXML.Value) ctags = upframe->preparsed_contents_tags) {
+      string var = "__contents__" + ++upframe->last_contents_id;
+      ctags[var] = user_tag_contents (args, content);
+      return ({"&_." + var + ";"});
+    }
+    else
+      parse_error ("This tag is currently only supported in "
+		   "<define tag='...'> and <define container='...'>.\n");
   }
 }
 
@@ -2824,7 +2829,7 @@ class TagDefine {
     int do_iterate;
 
     // Used when we preparse.
-    RXML.Scope vars;
+    RXML.Scope|mapping vars;
     string scope_name;
 
     array do_enter(RequestID id) {
@@ -2839,10 +2844,19 @@ class TagDefine {
 	  if (compat_level >= 2.4) {
 	    // Older rxml code might use the _ scope and don't expect
 	    // it to be overridden in this situation.
-	    vars = identity_vars;
-	    scope_name = args->scope;
+	    if (args->tag || args->container) {
+	      vars = identity_vars;
+	      preparsed_contents_tags = ([]);
+	    }
+	    else
+	      // Even though there won't be any postparse fill-in of
+	      // &_.foo; etc we define a local scope for consistency.
+	      // This way we can provide special values in the future,
+	      // or perhaps fix postparse fill-in even for variables,
+	      // if plugins, etc.
+	      vars = ([]);
 	    additional_tags = define_contents_tag_set;
-	    preparsed_contents_tags = ([]);
+	    scope_name = args->scope;
 	  }
 	}
 	else
