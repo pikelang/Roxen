@@ -4,7 +4,7 @@
  *
  * Copyright © 1996 - 2000, Roxen IS.
  *
- * $Id: language.pike,v 1.26 2000/03/07 22:17:37 nilsson Exp $
+ * $Id: language.pike,v 1.27 2000/03/13 06:12:56 per Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default
@@ -15,9 +15,16 @@
 
 private mapping(string:object) languages = ([ ]);
 
+array(string) get_lldir()
+{
+  array(string) res;
+  catch { res = get_dir( "../local/languages" ); };
+  return res || ({});
+}
+
 void initiate_languages()
 {
-  array(string) langs = get_dir("languages")-({"abstract.pike"});
+  array(string) langs = get_dir("languages")-({"abstract.pike"}) + get_lldir();
 
   if(!langs)
   {
