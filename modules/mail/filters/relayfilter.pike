@@ -1,5 +1,5 @@
 /*
- * $Id: relayfilter.pike,v 1.3 1998/09/27 13:00:03 grubba Exp $
+ * $Id: relayfilter.pike,v 1.4 1998/09/27 13:08:07 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,10 +9,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: relayfilter.pike,v 1.3 1998/09/27 13:00:03 grubba Exp $";
+constant cvs_version="$Id: relayfilter.pike,v 1.4 1998/09/27 13:08:07 grubba Exp $";
 constant thread_safe=1;
 
-#define RELAYFILTER_DEBUG
+// #define RELAYFILTER_DEBUG
 
 /*
  * Programs
@@ -191,7 +191,7 @@ void create()
   defvar("cache_size", 1024, "Maximum cache size", TYPE_INT | VAR_MORE,
 	 "Maximum size the caches may have before they are cleared.");
   
-  defvar("connection_patterns", "", "Connection filter",
+  defvar("connection_patterns", "100\t*", "Connection filter",
 	 TYPE_TEXT_FIELD,
 	 "Syntax:<br><blockquote><pre>"
 	 "# Allow relaying from our local machines, and our friends.\n"
@@ -201,7 +201,7 @@ void create()
 	 "Note that IP address is matched against first, "
 	 "and then the resolved address (if any).");
 
-  defvar("connection_patterns_default", 100, "Default connection level",
+  defvar("connection_patterns_default", 0, "Default connection level",
 	 TYPE_INT | VAR_MORE,
 	 "The default connection trust level.");
 
