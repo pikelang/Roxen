@@ -25,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.9 2000/11/02 12:07:23 per Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.10 2001/10/29 06:26:24 hop Exp $";
 
 
 
@@ -35,6 +35,7 @@ constant module_doc  = "A basic port-forwarder"
   "&copy; 1998 Francesco Chemolli "
   "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\nfreely distributed "
   "under the terms of the GNU General Public License, version 2";
+constant module_unique  = 0;
 
 multiset(Connection) connections=(<>);
 int total_connections_number=0, total_transferred_kb=0;
