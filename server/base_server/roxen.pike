@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.349 1999/06/11 01:07:13 peter Exp $
+ * $Id: roxen.pike,v 1.350 1999/06/21 19:29:41 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.349 1999/06/11 01:07:13 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.350 1999/06/21 19:29:41 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -93,8 +93,8 @@ mapping portno=([]);
 
 // Function pointer and the root of the configuration interface
 // object.
-private function build_root;
-private object root;
+function build_root;
+object root;
 
 #ifdef THREADS
 // This mutex is used by privs.pike and set_u_and_gid().
@@ -524,6 +524,7 @@ object configuration_interface()
     array err = catch {
       configuration_interface_obj=((program)"mainconfig")();
       root = configuration_interface_obj->root;
+      build_root = configuration_interface_obj->build_root;
     };
     loading_config_interface = 0;
     if(!configuration_interface_obj) {
