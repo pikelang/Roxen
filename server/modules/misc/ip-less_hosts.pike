@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.15 1998/03/13 23:27:32 neotron Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.16 1998/04/17 12:51:05 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,70 +29,97 @@ mapping config_cache = ([ ]);
 
 object find_server_for(object id, string host)
 {
+  object old_conf = id->conf;
+
   host = lower_case(host);
-  if(config_cache[host]) return id->conf=config_cache[host];
+  if(config_cache[host]) {
+    id->conf=config_cache[host];
+  } else {
 
 #if constant(Array.diff_longest_sequence)
 
-  /* The idea of the algorithm is to find the server-url with the longest
-   * common sequence of characters with the host-string, and among those with
-   * the same correlation take the one which is shortest (ie least amount to
-   * throw away).
-   */
+    /* The idea of the algorithm is to find the server-url with the longest
+     * common sequence of characters with the host-string, and among those with
+     * the same correlation take the one which is shortest (ie least amount to
+     * throw away).
+     */
 
-  int best;
-  array a = host/"";
-  string hn;
-  object c;
+    int best;
+    array a = host/"";
+    string hn;
+    object c;
 #ifdef IP_LESS_DEBUG
-  roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
+    roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
 #endif /* IP_LESS_DEBUG */
-  foreach(roxen->configurations, object s) {
-    string h = lower_case(s->query("MyWorldLocation"));
+    foreach(roxen->configurations, object s) {
+      string h = lower_case(s->query("MyWorldLocation"));
 
-    // Remove http:// et al here...
-    // Would get interresting correlation problems with the "http" otherwise.
-    int i = search(h, "://");
-    if (i != -1) {
-      h = h[i+3..];
+      // Remove http:// et al here...
+      // Would get interresting correlation problems with the "http" otherwise.
+      int i = search(h, "://");
+      if (i != -1) {
+	h = h[i+3..];
+      }
+
+      array common = Array.diff_longest_sequence(a, h/"");
+      int corr = sizeof(common);
+#ifdef IP_LESS_DEBUG
+      string common_s = rows(h/"", common)*"";
+      roxen_perror(sprintf("IPLESS: h: \"%s\"\n"
+			   "IPLESS: common: %O (\"%s\")\n"
+			   "IPLESS: corr: %d\n",
+			   h, common, common_s, corr));
+#endif /* IP_LESS_DEBUG */
+      if ((corr > best) ||
+	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
+	/* Either better correlation,
+	 * or the same, but a shorter hostname.
+	 */
+#ifdef IP_LESS_DEBUG
+	roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+			     h, host, hn||""));
+#endif /* IP_LESS_DEBUG */
+	best = corr;
+	c = s;
+	hn = h;
+      }
     }
-
-    array common = Array.diff_longest_sequence(a, h/"");
-    int corr = sizeof(common);
-#ifdef IP_LESS_DEBUG
-    string common_s = rows(h/"", common)*"";
-    roxen_perror(sprintf("IPLESS: h: \"%s\"\n"
-			 "IPLESS: common: %O (\"%s\")\n"
-			 "IPLESS: corr: %d\n",
-			 h, common, common_s, corr));
-#endif /* IP_LESS_DEBUG */
-    if ((corr > best) ||
-	((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
-      /* Either better correlation,
-       * or the same, but a shorter hostname.
-       */
-#ifdef IP_LESS_DEBUG
-      roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
-			   h, host, hn||""));
-#endif /* IP_LESS_DEBUG */
-      best = corr;
-      c = s;
-      hn = h;
-    }
-  }
-  return id->conf = config_cache[host] = (c || id->conf);
+    id->conf = config_cache[host] = (c || id->conf);
   
 #else /* !constant(Array.diff_longest_sequence) */
-  array possible = ({});
-  foreach(roxen->configurations, object s)
-    if(search(lower_case(s->query("MyWorldLocation")), host)+1)
-      possible += ({ s });
-  return id->conf=config_cache[host]=
-    (sizeof(possible)?
-     Array.sort_array(possible,lambda(object s, string q) {
-       return (strlen(s->query("MyWorldLocation"))-strlen(q));},host)[0]:
-       ((sscanf(host, "%*[^.].%s", host)==2)?find_server_for(id,host):id->conf));
+    array possible = ({});
+    foreach(roxen->configurations, object s)
+      if(search(lower_case(s->query("MyWorldLocation")), host)+1)
+	possible += ({ s });
+    id->conf=config_cache[host]=
+      (sizeof(possible)?
+       Array.sort_array(possible,lambda(object s, string q) {
+	 return (strlen(s->query("MyWorldLocation"))-strlen(q));},host)[0]:
+	   ((sscanf(host, "%*[^.].%s", host)==2)?find_server_for(id,host):id->conf));
 #endif /* constant(Array.diff_longest_sequence) */
+  }
+
+  if (id->conf != oldconf) {
+    /* Need to re-authenticate with the new server */
+
+    if (id->rawauth) {
+      array(string) y = id->rawauth / " ";
+
+      id->realauth = 0;
+      id->auth = 0;
+
+      if (sizeof(y) >= 2) {
+	y[1] = MIME.decode_base64(y[1]);
+	id->realauth = y[1];
+	if (conf && conf->auth_module) {
+	  y = conf->auth_module->auth(y, id);
+	}
+	id->auth = y;
+      }
+    }
+  }
+
+  return id->conf;
 }
 
 mapping first_try(object id)
