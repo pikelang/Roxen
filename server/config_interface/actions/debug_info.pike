@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.13 2001/08/28 15:55:35 mast Exp $
+ * $Id: debug_info.pike,v 1.14 2001/08/28 16:03:54 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -243,20 +243,15 @@ mixed page_0( object id )
   res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 
   mapping(string:array(string)) allobj = ([]);
-  int destructed = 0;
 
   object start = this_object();
   for (object o = start; o; o = _prev (o))
     if (program p = object_program (o))
       allobj[Program.defined (p)] += ({sprintf ("%O", o)});
-    else
-      destructed++;
   start = _next (start);
   for (object o = start; o; o = _next (o))
     if (program p = object_program (o))
       allobj[Program.defined (p)] += ({sprintf ("%O", o)});
-    else
-      destructed++;
 
   table = (array) allobj;
 
@@ -312,7 +307,9 @@ mixed page_0( object id )
 		       ({ 0, 0, ([ "type":"num" ]),([ "type":"num" ])}));
   res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
 
-  res += "Number of destructed objects: " + destructed +"<br />\n";
+#if efun(_num_dest_objects)
+  res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
+#endif
 
   return res;
 }
