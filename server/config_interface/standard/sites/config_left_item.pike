@@ -80,6 +80,8 @@ string selected_item( string q, Configuration c, RequestID id, string module )
          object c = roxen->find_configuration(cfg);
          if( !c->inited )
            c->enable_all_modules();
+	 if( !config_perm( "Site:"+c->name ) )
+	   return "Permission denied";
          foreach( indices(c->modules), string q )
          {
            object mi = roxen->find_module( q );

@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.391 2000/11/06 22:10:54 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.392 2000/11/08 22:55:15 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2809,6 +2809,8 @@ DataCache datacache;
 static void create(string config)
 {
   name=config;
+
+  roxen.add_permission( "Site:"+config, LOC_C(0,"Site")+": "+config );
 
   // for now only theese two. In the future there might be more variables.
   defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),

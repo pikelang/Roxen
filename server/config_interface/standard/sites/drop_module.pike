@@ -30,6 +30,10 @@ mapping|string parse( RequestID id )
     return LOCALE(226, "Permission denied");
 
   object c = roxen.find_configuration( id->variables->config );
+
+  if( !config_perm( "Site:"+c->name ) )
+    return LOCALE(226,"Permission denied");
+
   if( id->variables->drop )
   {
     c->disable_module( replace(id->variables->drop,"!","#") );

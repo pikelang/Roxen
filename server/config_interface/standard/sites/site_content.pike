@@ -422,6 +422,9 @@ string parse( RequestID id )
 
   if( !conf->inited )
     conf->enable_all_modules();
+  
+  if( !config_perm( "Site:"+conf->name ) )
+    return "Permission denied";
 
   id->misc->current_configuration = conf;
 

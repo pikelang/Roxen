@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.56 2000/09/18 20:26:07 lange Exp $
+// $Id: config_userdb.pike,v 1.57 2000/11/08 22:55:48 per Exp $
 
 inherit "module";
 #include <config_interface.h>
@@ -23,12 +23,10 @@ constant thread_safe   = 1;
 void create()
 {
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
-  roxen.add_permission( "Edit Users", 
-                        LOCALE(193, "Edit Users"));
-  roxen.add_permission( "Edit Global Variables", 
-                        LOCALE(194, "Edit Global Variables"));
-  roxen.add_permission( "Edit Module Variables", 
-                        LOCALE(195, "Edit Module Variables"));
+  roxen.add_permission( "Edit Users",    LOCALE(193, "Edit Users"));
+  roxen.add_permission( "Update",    LOCALE(0, "Update Client"));
+  roxen.add_permission( "Edit Global Variables",
+			LOCALE(194, "Edit Global Variables"));
   roxen.add_permission( "Tasks", LOCALE(196, "Tasks"));
   roxen.add_permission( "Restart", LOCALE(197, "Restart"));
   roxen.add_permission( "Shutdown", LOCALE(198, "Shutdown"));

@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.122 2000/10/01 00:27:00 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.123 2000/11/08 22:54:57 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -312,12 +312,12 @@ string get_var_form( string s, object var, object mod, object id,
   } 
   else if( mod->register_module ) 
   {
-    if( !CU_AUTH( "Edit Module Variables" ) )
+    if( !CU_AUTH( "Site:"+mod->my_configuration()->name ) )
       view_mode = 1;
   } 
   else if( mod->find_module && mod->Priority ) 
   {
-    if( !CU_AUTH( "Edit Site Variables" ) )
+    if( !CU_AUTH( "Site:"+mod->name ) )
       view_mode = 1;
   }
 

@@ -623,6 +623,9 @@ mixed parse( RequestID id )
 
   object conf = roxen.find_configuration( id->variables->config );
   
+  if( !config_perm( "Site:"+conf->name ) )
+    return LOCALE(226,"Permission denied");
+
   if( !conf->inited )
     conf->enable_all_modules();
 
