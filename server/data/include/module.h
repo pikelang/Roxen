@@ -1,12 +1,13 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.55 2002/03/12 13:20:04 mast Exp $
+// $Id: module.h,v 1.56 2002/10/27 20:29:57 nilsson Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
 #include <roxen.h>
-// compat
+
+// NGSERVER: Remove this
 #define QUERY(var)	query( #var )
 
 // Like query, but for global variables.
@@ -20,9 +21,7 @@
 #define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
-#define ROXEN_MAJOR_VERSION 2
-#define ROXEN_MINOR_VERSION 4
-
+#define CHILIMOON_VERSION 2002
 
 #define TYPE_STRING            1
 #define TYPE_FILE              2
