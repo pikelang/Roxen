@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.150 1998/08/18 21:40:05 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.151 1998/08/21 23:00:11 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1362,7 +1362,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 #endif
       TRACE_ENTER("Calling find_file()...", 0);
       LOCK(tmp[1]);
-      fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
+      fid=tmp[1]( file[ strlen(loc) .. ], id);
       UNLOCK();
       TRACE_LEAVE(sprintf("find_file has returned %O", fid));
       if(fid)
@@ -1528,7 +1528,8 @@ mixed get_file(object id, int|void no_magic)
 public array find_dir(string file, object id)
 {
   string loc;
-  array dir = ({ }), d, tmp;
+  array dir = ({ }), tmp;
+  array | mapping d;
   TRACE_ENTER("List directory "+file, 0);
   file=replace(file, "//", "/");
   
@@ -1594,8 +1595,19 @@ public array find_dir(string file, object id)
 #endif
       if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..], id))
       {
-	TRACE_LEAVE("Got files");
-	dir |= d;
+	if(mappingp(d))
+	{
+	  if(d->files) { 
+	    dir |= d->files;
+	    TRACE_LEAVE("Got exclusive directory.");
+	    TRACE_LEAVE("Returning list of "+sizeof(dir)+" files");
+	    return dir;
+	  } else
+	    TRACE_LEAVE("");
+	} else {
+	  TRACE_LEAVE("Got files");
+	  dir |= d;
+	}
       } else
 	TRACE_LEAVE("");
     } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
@@ -2994,10 +3006,6 @@ int load_module(string module_file)
     report_error("Module loaded, but register_module() failed (" 
 		 + module_file + ").\n"  +
 		 describe_backtrace( err ));
-    return 0;
-  } else if (!module_data) {
-    // register_module() returns 0 => disabled module.
-    report_warning(sprintf("Module %O is disabled.\n", module_file));
     return 0;
   }
 
