@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.34 1999/09/18 00:27:36 nilsson Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.35 1999/09/25 14:57:45 nilsson Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -98,11 +98,6 @@ void create()
 	 "This might be changed in the script, but it will stop most mistakes "
 	 "like i=0; while(i<=0) i--;.. Setting this to 0 is not a good idea.");
 #endif
-}
-
-string comment()
-{
-  return query("exts")*" ";
 }
 
 array (string) query_file_extensions()

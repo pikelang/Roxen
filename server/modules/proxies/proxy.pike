@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.39 1999/09/05 01:44:30 per Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.40 1999/09/25 14:56:37 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1691,9 +1691,4 @@ class Request
 
     return sent;
   }
-}
-
-string comment()
-{
-  return QUERY(mountpoint);
 }

@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.27 1999/05/10 15:20:53 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.28 1999/09/25 14:56:37 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1447,8 +1447,6 @@ mixed|mapping find_file( string f, object id )
   log(key, "- New "+hostname(id->remoteaddr));
   return http_pipe_in_progress();
 }	  
-
-string comment() { return QUERY(mountpoint); }
 
 /************ optimization ************/
 
