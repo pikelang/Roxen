@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.163 2003/10/06 12:08:27 grubba Exp $
+// $Id: Roxen.pmod,v 1.164 2003/11/25 17:39:59 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2279,8 +2279,26 @@ inherit _Roxen;
 
 #undef CACHE
 #undef NOCACHE
+#ifdef DEBUG_CACHEABLE
+#define CACHE(id,seconds) do {                                                \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    min(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",          \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#define NOCACHE(id) do {                                                      \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
+  report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
+               __FILE__, __LINE__, old_cacheable,                             \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#else /* !DEBUG_CACHEABLE */
 #define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
 #define NOCACHE(id) ([mapping(string:mixed)]id->misc)->cacheable=0
+#endif /* DEBUG_CACHEABLE */
 
 
 class QuotaDB
@@ -3122,7 +3140,7 @@ class ScopePage {
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
-	c->id->misc->cacheable = 0;
+	NOCACHE(c->id);
 	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
 	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
       case "dir":
