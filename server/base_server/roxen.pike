@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.153 1997/12/04 04:26:47 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.154 1997/12/15 01:40:40 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -15,7 +15,7 @@ inherit "dummy_hosts";
 #else
 inherit "hosts";
 #endif
-
+inherit "module_support";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
@@ -1557,7 +1557,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  " has been opened. If you specify a symbolic username, the "
 	  "default group of that user will be used. "
 	  "The syntax is user[:group].");
-  
+
+#ifdef EXTERNAL_HOSTNAME_PROCESS
   globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
 	  TYPE_INT|VAR_MORE,
 	  "You can here state the number of simultaneos host-name lookup "
@@ -1571,7 +1572,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  "<li> 1 extra for each 300 000 accesses/day\n"
 	  "<li> 1 for each proxy\n"
 	  "<li> 1 for each 100 proxy users\n"
-	  "</ul>\n");
+	  "</ul>\n",0,1);
+#endif
   
   globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
@@ -1592,13 +1594,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  " from the list of features of that client. All patterns that match"
 	  " each given client-name are combined to form the final feature list"
 	  ". See the file etc/supports for examples.");
-  
-
-//  globvar("IfModified", 1, "Honor If-Modified-Since headers", TYPE_FLAG,
-//	  "If set, send a 'Not modified' response in reply to "
-//	  "if-modified-since headers, as "
-//	  "<a href=http://www.w3.org/pub/WWW/Protocols/HTTP/1.1/spec"
-//	  "#If-Modified-Since>specified by the HTTP draft.</a>");
   
   globvar("audit", 0, "Audit trail", TYPE_FLAG,
 	  "If Audit trail is set to Yes, all changes of uid will be"
@@ -2337,7 +2332,6 @@ varargs int main(int argc, array (string) argv)
 #if efun(send_fd)
   init_shuffler(); 
 #endif
-  create_host_name_lookup_processes();
 
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
