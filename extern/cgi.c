@@ -1,6 +1,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <stdio.h>
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif /* HAVE_SIGNAL_H */
 #include <sys/signal.h>
 #include <sys/time.h>
 
@@ -376,7 +379,7 @@ int is_nph(char *foo)
   return !(strncmp(foo+len, "nph", 3));
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int i;
   /* Insure that all filedecriptors except stdin, stdout and stderr are closed
