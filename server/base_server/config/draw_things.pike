@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.35 1999/02/15 23:22:39 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.36 1999/04/22 09:21:10 per Exp $";
 
 Image.image load_image(string f)
 {
@@ -29,33 +29,33 @@ Image.image load_image(string f)
   /*if(!first_icon){knappar->paste(pad,cxp,0);cxp+=pad->xsize();}*/\
   if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();first_icon=0;}\
   if(strlen(Y)) {\
-    object f = font->write(Y)->scale(0.45);\
+    object f=font->write(Y)->scale(0.5)->scale(0.5);\
+    knappar->paste_mask(Image.image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
     knappar->paste_mask(Image.image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
    }\
  }while(0)
 
-#define first_filter  load_image("1stfilt.ppm")->scale(0,48)
-#define last_filter   load_image("lastfilt.ppm")->scale(0,48)
-#define experimental  load_image("experimental.ppm")->scale(0,48)
-#define last          load_image("last.ppm")->scale(0,48)
-#define first         load_image("first.ppm")->scale(0,48)
-#define dir           load_image("dir.ppm")->scale(0,48)
-#define location      load_image("find.ppm")->scale(0,48)
-#define extension     load_image("extension.ppm")->scale(0,48)
-#define logger        load_image("log.ppm")->scale(0,48)
-#define proxy         load_image("proxy.ppm")->scale(0,48)
-#define security      load_image("security.ppm")->scale(0,48)
-#define tag           load_image("tag.ppm")->scale(0,48)
-#define fade          load_image("fade.ppm")->scale(0,48)
-#define pad           load_image("padding.ppm")->scale(0,48)
+#define first_filter  load_image("1stfilt.ppm")->scale(0,24)
+#define last_filter   load_image("lastfilt.ppm")->scale(0,24)
+#define experimental  load_image("experimental.ppm")->scale(0,24)
+#define last          load_image("last.ppm")->scale(0,24)
+#define first         load_image("first.ppm")->scale(0,24)
+#define dir           load_image("dir.ppm")->scale(0,24)
+#define location      load_image("find.ppm")->scale(0,24)
+#define extension     load_image("extension.ppm")->scale(0,24)
+#define logger        load_image("log.ppm")->scale(0,24)
+#define proxy         load_image("proxy.ppm")->scale(0,24)
+#define security      load_image("security.ppm")->scale(0,24)
+#define tag           load_image("tag.ppm")->scale(0,24)
+#define fade          load_image("fade.ppm")->scale(0,24)
+#define pad           load_image("padding.ppm")->scale(0,24)
 
 Image.image draw_module_header(string name, int type, object font)
 {
-  object result = Image.image(1000,48);
-  object knappar = Image.image(1000,48);
+  object result = Image.image(500,24);
+  object knappar = Image.image(500,24);
   object text;
   int cxp = 0, first_icon;
-  text = font->write(name);
   first_icon=1;PASTE(fade,"");first_icon=1;
   if(type&MODULE_EXPERIMENTAL) PASTE(experimental,"Experimental");
   if((type&MODULE_AUTH)||(type&MODULE_SECURITY)) PASTE(security,"");
@@ -74,14 +74,10 @@ Image.image draw_module_header(string name, int type, object font)
   knappar = knappar->autocrop();
 
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
-//result->line(0,0,1000,0,255,255,0);
-  result->paste_alpha_color(text, 255,255,0, 6,3);
+  result->paste_alpha_color(font->write(name)->scale(0.5), 255,255,0, 6,3);
+  result->paste_alpha_color(font->write(name)->scale(0.5), 255,255,0, 6,3);
   knappar = 0;
   text=0;
-
-//  result = result->autocrop(10,0,0,1,1);
-//  result = bevel(result, 4);
-  result = result->scale(0.5);
   return result;
 }
 
@@ -136,7 +132,7 @@ Image.image draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image.image(1,15, dR,dG,dB);
 
-  object txt = font->write(name)->scale(0.48);
+  object txt = font->write(name)->scale(0.5);
   int w = txt->xsize();
   object ruta = Image.image(w + (rm?40:20), 20, bR,bG,bB);
 
@@ -153,6 +149,7 @@ Image.image draw_config_button(string name, object font, int lm, int rm)
   }
 
   ruta->paste_alpha_color(txt, btR,btG,btB, 18, 0);
+  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 0);
 
   return ruta->scale(0,15);
 }
@@ -167,9 +164,15 @@ Image.image draw_tab( object tab, object text, array(int) bgcolor )
   for(int x = tab->xsize(); x<i->xsize()-tab->xsize(); x++ )
     i->paste( linje, x, 0 );
   if(`+(@tab->getpixel( tab->xsize()-1, tab->ysize()/2 )) < 200)
-    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 2 );
+  {
+    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 1 );
+    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 1 );
+  }
   else
-    i->paste_alpha_color( text, 0,0,0, tab->xsize(), 2 );
+  {
+//     i->paste_alpha_color( text, 128,128,128, tab->xsize(), 1 );
+    i->paste_alpha_color( text, 0,0,0, tab->xsize(), 1 );
+  }
   return i;
 }
 
