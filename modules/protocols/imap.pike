@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.15 1999/02/02 23:06:47 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.16 1999/02/03 01:41:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -222,6 +222,8 @@ class imap_mail
   
   // array collect(mixed ...args) { return args; }
   
+  // FIXME: This function is called below with a mapping as
+  //        the only argument.
   array fetch(array attrs)
   {
     return ({ "FETCH", 
@@ -666,43 +668,47 @@ class imap_mailbox
     }
 
   array get_permanent_flags()
-    {
-      /* All flags except \Recent are permanent */
-      return ({ "OK", imap_prefix(
-	({ "PERMANENTFLAGS",
-	   imap_list(
-	     ({ "\\Answered", "\\Deleted", "\\Draft",
-		"\\Flagged", "\\Seen",
-		@indices(flags)
-	     })) }) ) });
-    }
+  {
+    /* All flags except \Recent are permanent */
+    return ({
+      "OK",
+      imap_prefix( ({
+	"PERMANENTFLAGS",
+	imap_list( ({
+	  "\\Answered", "\\Deleted", "\\Draft",
+	  "\\Flagged", "\\Seen",
+	  @indices(flags)
+	}) )
+      }) )
+    });
+  }
 
   array fetch(object message_set, array(mapping) attrs)
-    {
-      array message_numbers =  message_set->expand(sizeof(contents));
-      array res
-	= `+( ({ }),
-	      @Array.map(message_numbers,
-			 lambda(int i, array attrs)
-			   {
-			     return Array.map(attrs,
-					      lambda(mixed attr, int i)
-						{
-						  return contents[i-1]->fetch(attr);
-						},
-					      i);
-			   },
-			 attrs));
+  {
+    array message_numbers =  message_set->expand(sizeof(contents));
+    array res
+      = `+( ({ }),
+	    @Array.map(message_numbers,
+		       lambda(int i, array attrs)
+		       {
+			 return Array.map(attrs,
+					  lambda(mixed attr, int i)
+					  {
+					    return contents[i-1]->fetch(attr);
+					  },
+					  i);
+		       },
+		       attrs));
       
-      /* Fetch was successful. Consider setting the \Read flag. */
-      if (sizeof(attrs->mark_as_read - ({ 0 }) ))
-      {
-	foreach(message_numbers, int i)
-	  contents[i-1]->mark_as_read();
-      }
-
-      return res;
+    /* Fetch was successful. Consider setting the \Read flag. */
+    if (sizeof(attrs->mark_as_read - ({ 0 }) ))
+    {
+      foreach(message_numbers, int i)
+	contents[i-1]->mark_as_read();
     }
+
+    return res;
+  }
 }
 
 // The IMAP protocol uses this object to operate on the mailboxes */
