@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.107 2002/02/26 13:23:40 wellhard Exp $
+// $Id: module_support.pike,v 1.108 2002/02/26 15:28:42 wellhard Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -364,7 +364,6 @@ class ModuleInfo( string sname, string filename )
   int init_module( string what )
   {
     filename = what;
-    werror("init_module: %O\n", filename);
     mixed q =catch
     {
       RoxenModule mod = instance( 0, 1 );
