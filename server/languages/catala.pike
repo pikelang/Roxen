@@ -9,7 +9,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: catala.pike,v 1.7 2000/01/17 21:03:19 nilsson Exp $";
+constant cvs_version = "$Id: catala.pike,v 1.8 2000/01/17 21:13:34 nilsson Exp $";
 constant _id = ({ "ca", "catala" });
 constant _aliases = ({ "ca", "cat", "catala", "es_CA" });
 
@@ -31,7 +31,7 @@ string ordered(int i)
     case 3: return "3r";
     case 4: return "4t";
     default: 
-            return i+"&egrave;";
+            return i+"è";
   }
 }
 
@@ -64,7 +64,7 @@ string date(int timestamp, mapping|void m)
       return "ahir, "+ ctime(timestamp)[11..15];
   
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
-      return "dem&agrave;, "+ ctime(timestamp)[11..15];
+      return "demà, "+ ctime(timestamp)[11..15];
   
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
@@ -137,6 +137,6 @@ string number(int num)
      return number(num/1000000)+" milions "+number(num%1000000);
 
    default:
-    return "molt&iacute;ssim";
+    return "moltíssim";
   }
 }
