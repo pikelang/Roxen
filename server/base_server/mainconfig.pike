@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.122 1999/05/14 02:42:29 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.123 1999/05/14 02:49:27 neotron Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -886,7 +886,7 @@ mapping new_module(object id, object node)
       new_module_copy(node, varname, id);
     varname = toadd[0];
   } else 
-    varname = id->variables->_newmodule;
+    varname = indices(id->variables)[0];
   return new_module_copy(node, varname, id);
 }
 
