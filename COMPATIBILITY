@@ -1,7 +1,7 @@
 This file lists the known compatibility issues between various
 versions of Roxen WebServer.
 
-Between InternetServer 2.4 and Roxen WebServer <= 2.4
+Between InternetServer 2.5 and Roxen WebServer <= 2.4
 
  - The font folder has moved from server/nfonts to data/fonts. The font
    directory setting must be updated in all configurations. This can

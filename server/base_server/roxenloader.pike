@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.335 2002/06/14 16:05:03 jhs Exp $
+// $Id: roxenloader.pike,v 1.336 2002/06/15 16:22:00 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.335 2002/06/14 16:05:03 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.336 2002/06/15 16:22:00 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1964,7 +1964,7 @@ void do_main( int argc, array(string) argv )
 
   if( (-1&0xffffffff) < 0 )
     feature_warn("WARNING", ({
-      "Roxen 2.4 requires bignum support in pike. "
+      "Roxen 2.5 requires bignum support in pike. "
       "Please recompile pike with gmp / bignum support to run Roxen.",
       "It might still be possible to start roxen, but the "
       "functionality will be affected, and stange errors might occur." }) );
@@ -1980,14 +1980,14 @@ void do_main( int argc, array(string) argv )
 
 #if __VERSION__ < 7.3
   feature_warn("FATAL", ({
-    "Roxen 2.4 requires pike 7.3. "
+    "Roxen 2.5 requires pike 7.3. "
     "Please install a newer version of Pike." }) );
   _exit(0); // 0 means stop start script looping
 #endif // __VERSION__ < 7.3
 
 #if !constant (Mysql.mysql)
   feature_warn("FATAL", ({
-    "Roxen 2.4 requires MySQL support in Pike. "
+    "Roxen 2.5 requires MySQL support in Pike. "
     "Your Pike has been compiled without support for MySQL. "
     "Please install MySQL client libraries and reconfigure "
     "and rebuild Pike from scratch." }) );

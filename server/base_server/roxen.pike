@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.807 2002/06/15 16:16:45 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.808 2002/06/15 16:21:59 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -81,7 +81,7 @@ string filename( program|object o )
   return fname-(getcwd()+"/");
 }
 
-array(string) compat_levels = ({"2.1", "2.2", "2.4"});
+array(string) compat_levels = ({"2.1", "2.2", "2.5"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
