@@ -3,10 +3,10 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.18 1999/04/18 06:02:44 peter Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.19 1999/04/24 23:45:31 marcus Exp $";
 
 #include <module.h>
-inherit "modules/scripting/cgi";
+inherit "modules/scripting/oldcgi";
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
