@@ -23,13 +23,13 @@ string normalize_path( string path )
   if( strlen( path ) )
   {
     int ss = (<'/','\\'>)[ path[0] ];
-    path = combine_path( "/",
+    path = combine_path_unix( "/",
 #if defined(__NT__) || defined(STRIP_BSLASH)
-			 replace(path,"\\","/")
+			      replace(path,"\\","/")
 #else
-			 path
+			      path
 #endif
-		       );
+			    );
     if( !ss )
       return path[1..];
   }
