@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.54 1997/08/12 12:01:35 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.55 1997/08/12 17:03:09 peter Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -962,11 +962,11 @@ string tablist(array(string) nodes, array(string) links, int selected)
   for(int i=0; i<sizeof(nodes); i++)
     if(i!=selected)
       PUSH("<a href=\""+links[i]+"\"><img alt=\"_/"+
-	   nodes[i][1..strlen(nodes[i])-2]+"\\__\" src=/auto/unselected/"+
+	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=/auto/unselected/"+
 	   replace(nodes[i]," ","%20")+" border=0></a>");
     else
       PUSH("<a href=\""+links[i]+"\"><b><img alt=\"_/"+
-	   nodes[i][1..strlen(nodes[i])-2]+"\\__\" src=/auto/selected/"+
+	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=/auto/selected/"+
 	   replace(nodes[i]," ","%20")+" border=0></b></a>");
 //PUSH("<br>");
   return res*"";
