@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.272 2000/12/30 10:33:51 nilsson Exp $
+// $Id: rxml.pike,v 1.273 2001/01/04 06:29:42 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -71,7 +71,7 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
   return describe_error (err);
 }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 RoxenModule rxml_warning_cache;
 void old_rxml_warning(RequestID id, string no, string yes) {
   if(!rxml_warning_cache) rxml_warning_cache=id->conf->get_provider("oldRXMLwarning");
@@ -208,7 +208,7 @@ string parse_rxml(string what, RequestID id,
     parser = rxml_tag_set (default_content_type, id);
     parser->recover_errors = 1;
     parent_parser = 0;
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) parser->context->compatible_scope = 1;
 #endif
   }
@@ -774,7 +774,7 @@ class UserTag {
       if(!(RXML.FLAG_EMPTY_ELEMENT&flags) && args->trimwhites)
 	content=String.trim_all_whites(content);
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if(old_rxml_compat) {
 	array replace_from, replace_to;
 	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
@@ -829,7 +829,7 @@ class TagDefine {
       }
 
       if (n=args->tag||args->container) {
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 	n = old_rxml_compat?lower_case(n):n;
 #endif
 	int tag=0;
@@ -841,7 +841,7 @@ class TagDefine {
 
 	mapping defaults=([]);
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 	if(old_rxml_compat)
 	  foreach( indices(args), string arg )
 	    if( arg[..7] == "default_" )
@@ -864,7 +864,7 @@ class TagDefine {
 	  m_delete (args, "trimwhites");
 	}
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 	if(old_rxml_compat) content = replace( content, indices(args), values(args) );
 #endif
 
@@ -879,7 +879,7 @@ class TagDefine {
 	return 0;
       }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if (n=args->name) {
 	id->misc->defines[n]=content;
 	old_rxml_warning(id, "attempt to define name ","variable");
@@ -916,7 +916,7 @@ class TagUndefine {
 	return 0;
       }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if (n=args->name) {
 	m_delete(id->misc->defines, args->name);
 	return 0;
@@ -1201,7 +1201,7 @@ class TagCase {
 		   String.capitalize (content)});
 	}
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if(args->lower) {
 	content = lower_case(content);
 	old_rxml_warning(id, "attribute lower","case=lower");
@@ -2222,7 +2222,7 @@ class TagIfClient {
   }
 }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 class TagIfName {
   inherit TagIfClient;
   constant plugin_name = "name";
@@ -2260,7 +2260,7 @@ class TagIfIP {
   }
 }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 class TagIfHost {
   inherit TagIfIP;
   constant plugin_name = "host";

@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.38 2000/09/10 16:37:49 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.39 2001/01/04 06:35:36 nilsson Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphical Counter";
 constant thread_safe = 1;
@@ -72,7 +72,7 @@ class TagCounter {
       foreach(a_args, string arg)
 	if(args[arg]) accessed_args[arg]=args[arg];
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 2.0
       if(args->nfont) gtext_args->font=args->nfont;
       if(args->style) gtext_args->font=args->style;
       if(args->len) accessed_args->minlength=args->len;
@@ -90,7 +90,7 @@ class TagCounter {
 	format_tag( gtext, gtext_args,
 		    RXML.t_xml->format_tag( "accessed", accessed_args ) );
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 2.0
       if(args->bordercolor)
 	res="<font color=\""+args->bordercolor+"\">"+res+"</font>";
 #endif
@@ -106,7 +106,7 @@ class TagCounterURL {
   constant gtext="gtext-url";
 }
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 2.0
 class TagCounter_URL {
   inherit TagCounter;
   constant name="counter_url";

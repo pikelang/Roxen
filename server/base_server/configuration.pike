@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.405 2001/01/03 04:08:11 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.406 2001/01/04 06:29:04 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1005,7 +1005,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     // This will save some time indeed.
     string type;
     if(sizeof(file) > 17 &&
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 2.1
        (file[0] == '/') &&
        sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3
 #else
@@ -1592,7 +1592,7 @@ mapping error_file( RequestID id )
 {
   string data = query("ZNoSuchFile");
   NOCACHE();
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 2.1
   data = replace(data,({"$File", "$Me"}),
                  ({"&page.virtfile;", "&roxen.server;"}));
 #endif

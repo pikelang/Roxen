@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.69 2001/01/02 15:26:56 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.70 2001/01/04 06:36:05 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -103,7 +103,7 @@ constant tagdoc=([
 ]);
 #endif
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 string compat_default_host;
 #endif
 string default_db;
@@ -127,7 +127,7 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
   array(mapping(string:mixed))|object result;
   mixed error;
   
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
   if( args->host || (!args->db && (query("db") == " none")) )
   {
     function sql_connect = id->conf->sql_connect;
@@ -172,7 +172,7 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 
 // -------------------------------- Tag handlers ------------------------------------
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
 class TagSQLOutput {
   inherit RXML.Tag;
   constant name = "sqloutput";
@@ -331,7 +331,7 @@ class DatabaseVar
 
 void create()
 {
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
   defvar("hostname", "mysql://localhost/",
          LOCALE(4,"Default database"),
 	 TYPE_STRING | VAR_INVISIBLE,
@@ -362,7 +362,7 @@ void create()
 
 void start(int level, Configuration _conf)
 {
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
   compat_default_host = query("hostname");
 #endif
   default_db          = query("db");
