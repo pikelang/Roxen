@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.68 2001/01/31 01:14:40 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.69 2001/01/31 01:17:31 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -793,8 +793,8 @@ array new_find_htaccess_file(RequestID id, string vpath)
 
     if (!(p = id->conf->real_file(subvpath, id))) {
       // No use checking any deeper.
-      HT_WERR("Not found.\n");
-      break;
+      // Is too / per
+      continue;
     }
     string fname = p + query("file");
     Stat st;
