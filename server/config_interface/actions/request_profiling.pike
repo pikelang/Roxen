@@ -1,5 +1,5 @@
 /*
- * $Id: request_profiling.pike,v 1.3 2004/05/25 11:16:37 anders Exp $
+ * $Id: request_profiling.pike,v 1.4 2004/05/25 16:31:05 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -8,8 +8,8 @@
 
 constant action = "debug_info";
 
-LocaleString name= LOCALE(0,"Request profiling information");
-LocaleString doc = LOCALE(0,"Show some information about how how much time "
+LocaleString name= LOCALE(181,"Request profiling information");
+LocaleString doc = LOCALE(182,"Show some information about how how much time "
 			  "has been spent in requests. "
 			  "Mostly useful for developers.");
 
@@ -24,19 +24,37 @@ mixed page_0(object id)
 {
   string res = "";
   foreach(roxen->configurations, Configuration conf) {
+    if (id->variables->reset) {
+      conf->profile_map = ([]);
+      continue;
+    }
     mapping(string:array(int)) prof = conf->profile_map;
     if (sizeof(prof)) {
       array(string) ind = indices(prof);
       array(array(int)) val = values(prof);
       // Make sure we get a nice, deterministic order.
       sort(ind, val);			// Sort after not_query.
-      sort(column(val, 0), ind, val);	// Sort after number of requets
+      sort(0-column(val, 0)[*], ind, val);	// Sort after number of requets
+      array(array(string)) data = (array(array(string)))
+	(((ind[*]/"?method=")[*]+val[*])[*]+((val[*][1][*]/val[*][0][*])/({}))[*]);
+      array(int) sizes = allocate(4);
+      map(data, lambda(array(string) row) {
+		  for(int i=2;i<=5;i++) {
+		    row[i] = reverse(reverse((string)row[i])/3.0*".");
+		    sizes[i-2] = max(sizes[i-2], sizeof(row[i]));
+		  }
+		  return row;
+		});
+      map(data, lambda(array(string) row) {
+		  for(int i=2;i<=5;i++)
+		    row[i] = sprintf("%:*s", sizes[i-2], row[i]);
+		  return row;
+		});
       res += "<br />\n"
 	"Configuration: "
 	"<b>"+Roxen.html_encode_string(conf->name)+"</b><br />\n"
 	"<pre>"+
-	ADT.Table.ASCII.encode(ADT.Table.table(((ind[*]/"?method=")[*]+val[*])[*]+
-					       ((val[*][1][*]/val[*][0][*])/({}))[*],
+    	ADT.Table.ASCII.encode(ADT.Table.table(data,
 					       ({ "Path", "Method",
 						  "Count", "Total(µs)",
 						  "Max(µs)", "Average(µs)"
@@ -51,16 +69,19 @@ mixed parse( RequestID id )
 {
   string ret =
     "<font size='+1'><b>"+
-    LOCALE(0,"Request profiling information")+
-    "</b></font><br />\n";
+    LOCALE(181,"Request profiling information")+
+    "</b></font><p />\n";
   if (roxen->configurations[0]->profile_map) {
     ret +=
-      LOCALE(0,"All times are in microseconds.") + "<br />\n"
+      LOCALE(183,"All times are in microseconds.") + "<br />\n"
       "<p />"
       "<input type='hidden' name='action' value='request_profiling.pike' />\n"
-      "<p><submit-gbutton name='refresh'> "
-      "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
-      "</submit-gbutton>\n"
+      "<p /><submit-gbutton2 name='refresh' width='75' align='center'>" +
+      LOCALE(186, "Refresh") + 
+      "</submit-gbutton2>\n"
+      "<submit-gbutton2 name='reset' width='75' align='center'>" +
+      LOCALE(187,"Reset") +
+      "</submit-gbutton2>\n"
       "<cf-cancel href='?class=&form.class;'/>\n"
       "<p />\n" +
       page_0( id );
@@ -68,8 +89,8 @@ mixed parse( RequestID id )
     ret +=
       "<p />\n"
       "<font color='&usr.warncolor;'>" +
-      LOCALE(0,"NOTE: This information is only available if the "
-	     "server has been stared with <tt>-DPROFILING</tt>.") +
+      LOCALE(184,"NOTE: This information is only available if the "
+	     "server has been stared with <tt>-DPROFILE</tt>.") +
       "</font>"
       "<p />\n"
       "<cf-ok-button href='?class=&form.class;'/>";
