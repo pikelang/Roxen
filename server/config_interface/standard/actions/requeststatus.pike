@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: requeststatus.pike,v 1.2 2000/04/05 23:40:18 per Exp $
  */
 
 inherit "wizard";
@@ -26,7 +26,7 @@ mixed page_1(object id)
   {
     if(!o->requests)
       continue;
-    res += sprintf("<h3>%s<br>%s</h3>\n",o->query_name(),o->status() );
+    res += sprintf("<h3>%s<br />%s</h3>\n",o->query_name(),o->status() );
   }
   if(!strlen(res))
     return "<b>There are no active virtual servers.</b>";

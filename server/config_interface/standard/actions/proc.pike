@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.4 2000/03/16 04:18:43 mast Exp $
+ * $Id: proc.pike,v 1.5 2000/04/05 23:40:18 per Exp $
  */
 
 inherit "wizard";
@@ -102,17 +102,17 @@ string cred(object id)
   int uid, gid;
   if(sscanf(proc("cred",id->variables->pid), "%*d:\te/r/suid=%d  "
 	    "e/r/sgid=%d\n\tgroups:%s\n", uid, gid, s) != 4)
-    return "-<br>";
+    return "-<br />";
   array groups = ((s||"")/" ") - ({ "" });
 #if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = (getgrgid((int)groups[i]) || ({ (string)groups[i] }))[0];
-  return sprintf("e/r/suid: %s<br>e/r/sgid: %s<br>groups: %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 (getgrgid(gid) || ({ (string)gid }))[0],
 		 String.implode_nicely(groups));
 #else
-  return sprintf("e/r/suid: %s<br>e/r/sgid: %d<br>groups: %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 gid,
 		 String.implode_nicely(groups));
@@ -133,7 +133,7 @@ mixed parse(object id)
   return ("<font size=+1>Process Tree for "+(id->variables->pid||getpid())+"</font><pre>\n"+
 	  tree+
 	  "</pre><font size=+1>Misc status for "+(id->variables->pid||getpid())
-	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials:<br>"+cred(id)+
+	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials:<br />"+cred(id)+
 	  "\nCurrent working directory: "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+

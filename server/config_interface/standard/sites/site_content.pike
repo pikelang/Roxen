@@ -7,12 +7,14 @@ inherit "../logutil.pike";
 string module_global_page( RequestID id, string conf )
 {
   if( config_perm("Add Module") )
-    return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
+    return sprintf("<gbutton preparse='' "
+                   "href='../../../add_module.pike?config=%s'> "
                    "&locale.add_module; </gbutton>",
                    http_encode_string( conf ) )+
-          sprintf("<gbutton preparse href='../../../drop_module.pike?config=%s'> "
-                  "&locale.drop_module; </gbutton>",
-                  http_encode_string( conf ) );
+           sprintf("<gbutton preparse='' "
+                   "href='../../../drop_module.pike?config=%s'> "
+                   "&locale.drop_module; </gbutton>",
+                   http_encode_string( conf ) );
   return "";
 }
 
@@ -46,19 +48,19 @@ string describe_location( RoxenModule m, RequestID id )
   }
   if(sizeof(url/"*") == 2)
     url = replace(url, "*", gethostname());
-  return url && mp ? sprintf("<a target=server_view href=\"%s%s\">%s</a>",
+  return url && mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
 			     url, mp[1..], mp)
 		   : mp || "";
 }
 
-string make_if( string q )
-{
-  return "<if "+q+"=?></if>";
-}
+// string make_if( string q )
+// {
+//   return "<if "+q+"=?></if>";
+// }
 
 string simplified_make_container( string tagname, mapping args, string c )
 {
-  return make_tag(tagname, args)+make_tag("/...",args);
+  return make_tag(tagname, args)+make_tag("/",([]));
 }
 
 string describe_tags( RoxenModule m, int q )
@@ -94,7 +96,8 @@ string describe_tags( RoxenModule m, int q )
     if(has_value(tag, "#"))
       conts-=(< tag >);
 
-  return html_encode_string(String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
+  return html_encode_string(String.implode_nicely(map(sort(indices(tags)-
+                                                           ({"\x266a"})),
 						      lambda(string tag) {
 							return make_tag(tag+(tag[0]=='/'?"":"/"), ([]));
 							  } ) +
@@ -121,10 +124,11 @@ do                                                                      \
 {                                                                       \
    if(t&X)                                                              \
      if( Y )                                                            \
-       res += ("<table border=0 cellspacing=0 cellpadding=0><tr><td valign=top><b>" + #X + "</b> (</td>"     \
-               "<td valign=top>"+Y(m,Z)+")</td></tr></table>");         \
+       res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
+               "<td valign='top'><b>" + #X + "</b> (</td>"     \
+               "<td valign='top'>"+Y(m,Z)+")</td></tr></table>");         \
      else                                                               \
-       res += "<b>" + #X + "</b><br>";                                 \
+       res += "<b>" + #X + "</b><br />";                                 \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
@@ -264,7 +268,7 @@ string niceerror( function tocall, string y )
         bt[1] = bt[1][i+2..];
         break;
       }
-    return sprintf("Error while calling "+ y+":<br><pre><font size=-1>"+
+    return sprintf("Error while calling "+ y+":<br /><pre><font size='-1'>"+
                    html_encode_string( describe_backtrace( bt ) )+
                    "</font></pre>" );
   }
@@ -294,7 +298,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string homepage = m->module_url;
   if(stringp(homepage) && sscanf(homepage, "%*[A-Za-z0-9+.-]:%*s")==2)
-    homepage = sprintf("<br><b>Module homepage:</b> <a href=\"%s\">%s</a>",
+    homepage = sprintf("<br /><b>Module homepage:</b> <a href=\"%s\">%s</a>",
 		       homepage, homepage);
   else homepage = "";
 
@@ -311,7 +315,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		      mail = sprintf("<a href=\"mailto:%s\">%s</a>", adr, name);
 		    return mail;
 		  });
-    creators = sprintf("<br><b>Module creator%s:</b> %s",
+    creators = sprintf("<br /><b>Module creator%s:</b> %s",
 		      (sizeof(creators)==1 ? "" : "s"),
 		      String.implode_nicely(creators));
   } else creators = "";
@@ -321,26 +325,26 @@ string find_module_doc( string cn, string mn, RequestID id )
   int my_accesses = accesses[m];
 #endif
 
-  return replace( "<br><b><font size=+2>"
+  return replace( "<br /><b><font size='+2'>"
                   + EC(translate(m->register_module()[1])) +
-                  "</font></b><br>"
-                  + EC(translate(m->info())) + "<p>"
-                  + EC(translate(m->status()||"")) + "<p>"
+                  "</font></b><br />"
+                  + EC(translate(m->info())) + "</p><p>"
+                  + EC(translate(m->status()||"")) + "</p><p>"
                   + eventlog +
                   ( config_setting( "devel_mode" ) ?
-		    dbuttons + "<br clear=all>"
+		    dbuttons + "<br clear='all' />\n"
 		    "<h2>Developer information</h2>" +
-                    "<b>Identifier:</b> " + mi->sname + "<br>"
+                    "<b>Identifier:</b> " + mi->sname + "<br />\n"
 		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../actions/?action"
-		    "=locks.pike&class=status'>more info</a>)</small><br>"
+		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
 		    "<b>Number of accesses:</b> " + my_accesses +
 #endif
-                    "<br><br><table border=0 cellspacing=0 cellpadding=0>"
-		    "<tr><td valign=top><b>Type:</b> </td><td "
-                    "valign=top>" + describe_type( m, mi->type, id ) +
-                    "</td></tr></table><br>" +
+                    "<br /><br />\n<table border='0' cellspacing='0' cellpadding='0'>"
+		    "<tr><td valign='top'><b>Type:</b> </td><td "
+                    "valign='top'>" + describe_type( m, mi->type, id ) +
+                    "</td></tr></table><br />\n" +
                     EC(translate(m->file_name_and_stuff())) +
 		    homepage + creators + "<h1>Inherit tree</h1>"+
                     program_info( m ) +
@@ -365,7 +369,7 @@ string module_page( RequestID id, string conf, string module )
 
   return #"
  <input type=hidden name=section value=\"&form.section;\">
- <cf-save what=Module><br clear=\"all\" />
+ <cf-save what='Module'/><br clear=\"all\" />
 <nooutput>
   This is necessary to update all the variables before showing them.
   <configif-output source=module-variables configuration=\""+
@@ -379,7 +383,7 @@ string module_page( RequestID id, string conf, string module )
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-    <cf-save what=Module>";
+    <cf-save what='Module'/>";
 }
 
 string port_for( string url )
@@ -418,19 +422,19 @@ string parse( RequestID id )
     switch( id->variables->config_page )
     {
      default: /* Status info */
-       string res="<br><blockquote><h1>Urls</h1>";
+       string res="<br />\n<blockquote><h1>Urls</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
 	 if(search(url, "*")==-1)
-           res += "<a target=server_view href='"+url+"'>"+
-	     url+"</a> "+port_for(url)+"<br>";
+           res += "<a target='server_view' href='"+url+"'>"+
+	     url+"</a> "+port_for(url)+"<br/>\n";
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += "<a target=server_view href='"+replace(url, "*", gethostname() )+"'>"+
-               url+"</a> "+port_for(url)+"<br>";
+	   res += "<a target='server_view' href='"+replace(url, "*", gethostname() )+"'>"+
+               url+"</a> "+port_for(url)+"<br />\n";
          else
-	   res += url + " "+port_for(url)+"<br>";
+	   res += url + " "+port_for(url)+"<br />\n";
        }
-       res+="<h1>&locale.eventlog;</h1><insert file=log.pike nocache>";
+       res+="<h1>&locale.eventlog;</h1><insert file='log.pike' nocache>";
 
        res +="<h1>Request status</h1>";
        res += conf->status();
@@ -440,24 +444,24 @@ string parse( RequestID id )
          res += "<h1>Inherit tree</h1>";
          res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
        }
-       return res+"<br>";
+       return res+"<br />\n";
     }
   } else {
     switch( path[ 1 ] )
     {
      case "settings":
        return
-#"<configif-output source=config-variables configuration=\""+
+#"<configif-output source='config-variables' configuration=\""+
 path[ 0 ]+#"\" section=\"&form.section;\"></configif-output>"+#"
 <input type=hidden name=section value=\"&form.section;\">
 <table>
-  <configif-output source=config-variables configuration=\""+
+  <configif-output source='config-variables' configuration=\""+
 path[ 0 ]+#"\" section=\"&form.section;\">
-    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
+    <tr><td width='20%'><b>#name#</b></td><td>#form:quote=none#</td></tr>
+    <tr><td colspan='2'>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-   <cf-save what=Site>";
+   <cf-save what='Site'/>";
        break;
 
      case "modules":

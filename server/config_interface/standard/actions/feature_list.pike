@@ -96,7 +96,7 @@ mixed page_0(object id, object mc)
       res += " "+fix_module_name(s);
     }
   }
-  res += "</ul><br>\n";
+  res += "</ul><br />\n";
   array disabled = sort(filter(indices(modules),
 			       lambda(string s, mapping m) {
 				 return(m[s] != 1);
@@ -105,7 +105,7 @@ mixed page_0(object id, object mc)
     res += "<font size=+1>&locale.module_disabled;</font>"+
         "<ul>\n";
     res += disabled * " ";
-    res += "</ul><br>\n";
+    res += "</ul><br />\n";
   }
   return(res);
 }

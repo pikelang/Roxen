@@ -2,7 +2,6 @@
 
 <content>
 
-<br><p>
 <cv-leftside>
 <img src="internal-roxen-unit" height="16"><br>
 <gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-selbuttonbg; icon_src=&usr.selected-indicator; icon_align=left href=''>&locale.sites;</gbutton><br><br>
@@ -11,17 +10,19 @@
 </configif-output>
 </cv-leftside>
 
+<br /><p>
 <cv-split>
   <subtablist><st-page>
   <cf-perm perm="Create Site">
        <h1>&locale.drop_old_site;</h1> 
     <blockquote>
        <configif-output source=configurations>
-          <gbutton width=300 href='drop_site.pike?site=#sname#' icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5> #name# </gbutton><br>
+          <gbutton width=300 href='drop_site.pike?site=#sname#' icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5> #name# </gbutton><br/>
       </configif-output><p>
      <insert file=drop_site_warning.txt nocache>
     </blockquote>
-  </cf-perm><br>
+  </cf-perm><br />
   </st-page></subtablist>
 </cv-split>
+</p>
 </content>

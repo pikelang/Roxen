@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.1 2000/02/24 17:41:39 per Exp $
+ * $Id: generate_rsa.pike,v 1.2 2000/04/05 23:40:18 per Exp $
  */
 
 inherit "wizard";
@@ -40,8 +40,8 @@ mixed page_0(object id, object mc)
   }
   
   return (msg || "" )
-    + ("<font size=+1>How large key do you want to generate?</font><p>"
-       "<var name=key_size type=int default=1024> Key size <br>\n"
+    + ("<font size='+1'>How large key do you want to generate?</font><p>"
+       "<var name='key_size' type='int' default='1024'> Key size <br />\n"
        "<help><blockquote>"
        "The desired key size. This is a security parameter; larger "
        "keys gives better security, but it also makes connecting to "
@@ -53,9 +53,9 @@ mixed page_0(object id, object mc)
        "applications, but of course you can you use an even larger key "
        "if you so wish."
        "</blockquote></help>"
-       "<var name=key_file type=string default=my_rsa_key.pem><br>\n"
+       "<var name='key_file' type='string' default='my_rsa_key.pem'><br />\n"
        "Where to store the secret key. May be relative to " + getcwd() +
-       ".<br>\n"
+       ".<br />\n"
        "<help><blockquote>"
        "A filename in the real filesystem, where the secret key should "
        "be stored. This is the filename you enter in the 'Key file'-field "

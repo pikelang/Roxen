@@ -41,10 +41,10 @@
   </update-package-output>
   </rul>
   <if not variable="_&name;">
-     Currently no packages in this category.<br>
+     Currently no packages in this category.<br />
   </if>
   <else>
-    <a href="update.html?category=&name;">[More..]</a><br>
+    <a href="update.html?category=&name;">[More..]</a><br />
   </else>
   &nbsp;
 </define>
@@ -132,7 +132,7 @@
 <if variable="form.update_list">
   <update-update-list/>
   <update-scan-local-packages/>
-  Launched a package list update request. <br>
+  Launched a package list update request. <br />
 </if>
 
 This information was last synchronized with the main server &update.last_updated; ago.
@@ -200,7 +200,7 @@ foobar
 </if>
 <if variable="form.yes">
 
-  <update-install-package package="&form.install;"><br>
+  <update-install-package package="&form.install;"><br />
   
   <a href="update.html">[Return]</a>
 </if>
@@ -221,8 +221,8 @@ foobar
 
 <if variable="form.show">
 
-  <input type=submit name="hide" value="Hide package contents"><br>
-  <br>
+  <input type=submit name="hide" value="Hide package contents"><br />
+  <br />
   <cv-obox title="The following files will be installed:">
   <table cellpadding="0">
     <tr>
@@ -243,8 +243,8 @@ foobar
 <else>
   <input type=submit name="show" value="Show package contents">
 </else> 
-<br>
-<br>
+<br />
+<br />
 <b>Do you really want to install this package?</b>
 <br />
 <input type="hidden" name="install" value="&form.install;">

@@ -13,8 +13,8 @@
 <h2>Manuals:</h2>
 <blockquote>
 <font size=+1><b>
- <li> <a href="docs/creator/">Web Site Creator Manual</a><br>
- <li> <a href="docs/administrator/">Administrator Manual</a><br>
- <li> <a href="docs/user/">User Manual</a><br>
+ <li> <a href="docs/creator/">Web Site Creator Manual</a><br />
+ <li> <a href="docs/administrator/">Administrator Manual</a><br />
+ <li> <a href="docs/user/">User Manual</a><br />
 </b></font>
 </blockquote>

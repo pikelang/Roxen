@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.8 2000/03/27 04:15:03 per Exp $
+ * $Id: resolv.pike,v 1.9 2000/04/05 23:40:18 per Exp $
  */
 
 inherit "wizard";
@@ -107,7 +107,7 @@ void trace_leave_ol(string desc)
 #if efun(gethrvtime)
 	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
 #endif /* efun(gethrvtime) */
-	     "<br>"+html_encode_string(desc)+efont)+"<p>";
+	     "<br />"+html_encode_string(desc)+efont)+"<p>";
 
 }
 
@@ -133,11 +133,11 @@ void trace_leave_table(string desc)
   level--;
   string efont="", font="";
   if(level>1) {font="<font size=-1>";}
-  resolv += ("</td></tr></table><br>"+font+
+  resolv += ("</td></tr></table><br />"+font+
 #if efun(gethrtime)
 	     "Time: "+sprintf("%.5f",delay/1000000.0)+
 #endif
-	     "<br>"+html_encode_string(desc)+efont)+"</td></tr>";
+	     "<br />"+html_encode_string(desc)+efont)+"</td></tr>";
 }
 
 void resolv_handle_request(object c, object nid)
@@ -193,7 +193,7 @@ string parse(object id)
 {
   string res = "";//"<nobr>Allow Cache <input type=checkbox></nobr>\n";
   res += "<input type=hidden name=action value=resolv.pike>";
-  res += "<br>URL: <input name=path value='&form.path;' size=60> \n";
+  res += "<br />URL: <input name=path value='&form.path;' size=60> \n";
   res += "<table cellpadding=0 cellspacing=10 border=0>"
          "<tr><td align=left>User: <input name=user  value='&form.user;' size=12></td>\n"
          "<td align=left>&nbsp;&nbsp;&nbsp;Password: <input name=password value='&form.password;' type=password size=12>"
@@ -231,7 +231,7 @@ string parse(object id)
       nid->pragma = (<>);
 
     resolv = "Resolving " + link(op, id->variables->path) + " in " + link_configuration(c) +
-           "<br><hr noshade size=1 width=100%>";
+           "<br /><hr noshade size=1 width=100%>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;

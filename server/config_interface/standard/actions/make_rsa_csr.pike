@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.3 2000/03/16 17:54:56 nilsson Exp $
+ * $Id: make_rsa_csr.pike,v 1.4 2000/04/05 23:40:18 per Exp $
  */
 #if constant(Standards.ASN1) && constant( Crypto.rsa )
 inherit "wizard";
@@ -41,7 +41,7 @@ mixed page_0(object id, object mc)
 
   return (msg || "" )
     + ("<font size=+1>How large key do you want to generate?</font><p>"
-       "<b>Key size</b><br>"
+       "<b>Key size</b><br/>"
        "<var name=key_size type=int default=1024><br>\n"
        "<blockquote>"
        "The desired key size. This is a security parameter; larger "

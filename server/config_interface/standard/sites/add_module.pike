@@ -59,18 +59,18 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file=/standard/template>\n"
-                  "<tmpl title=''>"
-                  "<topmenu base='&cf.num-dotdots;' selected=sites>\n"
+  return sprintf( "<use file='/standard/template'>\n"
+                  "<tmpl title='Add module'>"
+                  "<topmenu base='&cf.num-dotdots;' selected='sites'>\n"
                   "<content><cv-split>"
-                  "<subtablist width=100%%>"
+                  "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
-                  "<gbutton preparse "
+                  "<gbutton preparse='' "
                   "href='add_module.pike?config=&form.config;"
                        "&reload_module_list=yes' > "
                   "Reload module list </gbutton><p>"
-                  "\n%s\n"
+                  "\n%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", content );
 }
@@ -147,9 +147,31 @@ function describe_module_normal( int image )
     {
 return sprintf(
 #"
-    <tr><td colspan=2><table width='100%%'><td><font size=+2>%s</font></td><td align=right>%s</td></table></td></tr>
-    <tr><td valign=top><form method=post action='add_module.pike'><input type=hidden name=module_to_add value='%s'><input type=hidden name='config' value='&form.config;'><submit-gbutton preparse>&locale.add_module;</submit-gbutton></form></td><td valign=top>%s<p>%s</td>
-    </tr>
+  <tr>
+   <td colspan='2'>
+     <table width='100%%'>
+      <tr>
+       <td><font size='+2'>%s</font></td>
+       <td align='right'>%s</td>
+      </tr>
+     </table>
+     </td>
+   </tr>
+   <tr>
+     <td valign='top'>
+       <form method='post' action='add_module.pike'>
+         <input type='hidden' name='module_to_add' value='%s'>
+         <input type='hidden' name='config' value='&form.config;'>
+         <submit-gbutton preparse=''>&locale.add_module;</submit-gbutton>
+       </form>
+     </td>
+     <td valign=top>
+        %s
+       <p>
+         %s
+       </p>
+    </td>
+  </tr>
 ",
      module->get_name(),
      (image?module_image(module->type):""),
@@ -167,14 +189,17 @@ return sprintf(
 
 array(int|string) class_visible_normal( string c, string d, object id )
 {
-  string header = ("<tr><td colspan=2><table width=100% cellspacing=0 border=0 cellpadding=3 bgcolor=&usr.content-titlebg;><tr><td>UNFOLD</td><td width=100%>"
-                   "<font color=&usr.content-titlefg; size=+2>"+c+"</font>"
+  string header = ("<tr><td colspan='2'><table width='100%' "
+                   "cellspacing='0' border='0' cellpadding='3' "
+                   "bgcolor='&usr.content-titlebg;'><tr><td>"
+                   "UNFOLD</td><td width='100%'>"
+                   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
                    "<br>"+d+"</td></tr></table></td></tr>\n");
   if( id->variables->unfolded == c )
     return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
-                       "></a><gbutton preparse dim> View </gbutton>") });
+                       "></a><gbutton preparse='' dim=''> View </gbutton>") });
 
-  return ({ 0, replace(header,"UNFOLD","<gbutton preparse "
+  return ({ 0, replace(header,"UNFOLD","<gbutton preparse='' "
                        "href='add_module.pike?config=&form.config;"
                        "&unfolded="+http_encode_string(c)+
                        "#"+http_encode_string(c)+"' > "
@@ -205,11 +230,11 @@ string describe_module_faster( object module, object block)
   {
 return sprintf(
 #"
-    <tr><td colspan=2><table width='100%%'><td><font size=+2>%s</font></td>
-        <td align=right>%s</td></table></td></tr>
-    <tr><td valign=top><select multiple name=module_to_add>
+    <tr><td colspan='2'><table width='100%%'><td><font size='+2'>%s</font></td>
+        <td align='right'>%s</td></table></td></tr>
+    <tr><td valign='top'><select multiple name='module_to_add'>
                        <option value='%s'>%s</option></select>
-        </td><td valign=top>%s<p>%s</td>
+        </td><td valign='top'>%s<p>%s</p></td>
     </tr>
 ",
    module->get_name(),
@@ -228,16 +253,18 @@ return sprintf(
 
 array(int|string) class_visible_faster( string c, string d, object id )
 {
-  string header = ("<tr><td colspan=2><table width=100% cellspacing=0 border=0 cellpadding=3 bgcolor=&usr.content-titlebg;><tr><td>UNFOLD</td><td width=100%>"
-                   "<font color=&usr.content-titlefg; size=+2>"+c+"</font>"
-                   "<br>"+d+"</td></tr></table></td></tr>\n");
+  string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
+                   "border='0' cellpadding='3' bgcolor='&usr.content-titlebg;'>"
+                   "<tr><td>UNFOLD</td><td width='100%'>"
+                   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
+                   "<br />"+d+"</td></tr></table></td></tr>\n");
   if( id->variables->unfolded == c )
     return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
-                       "></a><gbutton preparse dim> View </gbutton>")+
+                       "></a><gbutton preparse='' dim=''> View </gbutton>")+
                        "<tr><td><submit-gbutton> &locale.add_module; "
                        "</submit-gbutton></td></tr>" });
 
-  return ({ 0, replace(header,"UNFOLD","<gbutton preparse "
+  return ({ 0, replace(header,"UNFOLD","<gbutton preparse='' "
                        "href='add_module.pike?config=&form.config;"
                        "&unfolded="+http_encode_string(c)+
                        "#"+http_encode_string(c)+"' > "
@@ -247,8 +274,8 @@ array(int|string) class_visible_faster( string c, string d, object id )
 string page_faster( RequestID id )
 {
   string content = "";
-  content += "<form method=post action='add_module.pike'>"
-             "<input type=hidden name='config' value='&form.config;'>"
+  content += "<form method='post' action='add_module.pike'>"
+             "<input type='hidden' name='config' value='&form.config;'>"
              "<table>";
   string desc, err;
   [desc,err] = get_module_list( describe_module_faster,
@@ -265,8 +292,8 @@ array(int|string) class_visible_compact( string c, string d, object id )
 {
   string res="";
   if(first++)
-    res = "</select><br><submit-gbutton> &locale.add_module; </submit-gbutton> ";
-  res += "<p><font size=+2>"+c+"</font><br>"+d+"<p><select multiple name=module_to_add>";
+    res = "</select><br /><submit-gbutton> &locale.add_module; </submit-gbutton> ";
+  res += "<p><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
   return ({ 1, res });
 }
 
@@ -284,9 +311,9 @@ string page_compact( RequestID id )
   [desc,err] = get_module_list( describe_module_compact,
                                 class_visible_compact, id );
   return page_base(id,
-                   "<form action=add_module.pike method=POST>"
-                   "<input type=hidden name=config value='&form.config;'>"+
-                   desc+"</select><br><submit-gbutton> "
+                   "<form action='add_module.pike' method='POST'>"
+                   "<input type='hidden' name='config' value='&form.config;'>"+
+                   desc+"</select><br /><submit-gbutton> "
                    "&locale.add_module; </submit-gbutton><p><pre>"
                    +html_encode_string(err)+"</pre></form>",
                    );
