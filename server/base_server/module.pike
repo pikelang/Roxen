@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.32 1998/06/29 13:26:22 grubba Exp $ */
+/* $Id: module.pike,v 1.33 1998/07/07 17:05:15 grubba Exp $ */
 
 #include <module.h>
 
@@ -78,6 +78,29 @@ string info(object conf)
 { 
   return (this->register_module(conf)[2]);
 }
+
+static class ConfigurableWrapper
+{
+  int mode;
+  function f;
+  int check()
+  {
+    if ((mode & VAR_EXPERT) &&
+	(!roxen->configuration_interface()->expert_mode)) {
+      return 1;
+    }
+    if ((mode & VAR_MORE) &&
+	(!roxen->configuration_interface()->more_mode)) {
+      return 1;
+    }
+    return(f());
+  }
+  void create(int mode_, function f_)
+  {
+    mode = mode_;
+    f = f_;
+  }
+};
 
 // Define a variable, with more than a little error checking...
 void defvar(string|void var, mixed|void value, string|void name,
@@ -236,15 +259,21 @@ void defvar(string|void var, mixed|void value, string|void name,
   variables[var][ VAR_TYPE ]=type&VAR_TYPE_MASK;
   variables[var][ VAR_DOC_STR ]=doc_str;
   variables[var][ VAR_NAME ]=name;
-  if((type&~VAR_TYPE_MASK) & VAR_EXPERT)
-    variables[var][ VAR_CONFIGURABLE ] = VAR_EXPERT;
-  else if((type&~VAR_TYPE_MASK) & VAR_MORE)
-    variables[var][ VAR_CONFIGURABLE ] = VAR_MORE;
-  else
-    if(intp(not_in_config))
-      variables[var][ VAR_CONFIGURABLE ]= !not_in_config;
-    else if(functionp(not_in_config))
-      variables[var][ VAR_CONFIGURABLE ]= not_in_config;
+
+  type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
+  type &= (VAR_EXPERT | VAR_MORE);
+  if (functionp(not_in_config)) {
+    if (type) {
+      variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
+    } else {
+      variables[var][ VAR_CONFIGURABLE ] = not_in_config;
+    }
+  } else if (type) {
+    variables[var][ VAR_CONFIGURABLE ] = type;
+  } else if(intp(not_in_config)) {
+    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
+  }
+
   variables[var][ VAR_MISC ]=misc;
   variables[var][ VAR_SHORTNAME ]= var;
 }
