@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.257 2000/02/06 12:04:34 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.258 2000/02/07 02:37:30 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -995,8 +995,11 @@ string draw_saturation_bar(int hue,int brightness, int where)
 private mapping internal_roxen_image(string from)
 {
   // changed 970820 by js to allow for jpeg images
+  // changed 20000203 by per to allow for xcf and png images
   sscanf(from, "%s.gif", from);
   sscanf(from, "%s.jpg", from);
+  sscanf(from, "%s.xcf", from);
+  sscanf(from, "%s.png", from);
 
   // Disallow "internal-roxen-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
@@ -1010,14 +1013,18 @@ private mapping internal_roxen_image(string from)
   if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
     return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
 
-  if(Stdio.File f=open("roxen-images/"+from+".gif", "r"))
+  Stdio.File f;
+
+  if(f = open("roxen-images/"+from+".gif", "r"))
     return (["file":f, "type":"image/gif"]);
-  else if (f = open("roxen-images/"+from+".jpg", "r")) {
+  if(f = open("roxen-images/"+from+".jpg", "r"))
     return (["file":f, "type":"image/jpeg"]);
-  } else {
-    // File not found.
-    return 0;
-  }
+  if(f = open("roxen-images/"+from+".png", "r"))
+    return (["file":f, "type":"image/png"]);
+  if(f = open("roxen-images/"+from+".xcf", "r"))
+    return (["file":f, "type":"image/x-gimp-image"]);
+  // File not found.
+  return 0;
 }
 
 
