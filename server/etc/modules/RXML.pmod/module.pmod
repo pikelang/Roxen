@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.191 2001/07/09 23:05:42 mast Exp $
+// $Id: module.pmod,v 1.192 2001/07/10 00:57:02 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -94,16 +94,17 @@ class RequestID { };
 #endif
 
 #ifdef RXML_VERBOSE
-#  define TAG_DEBUG_TEST(flags) 1
+#  define TAG_DEBUG_TEST(test) 1
 #elif defined (DEBUG)
-#  define TAG_DEBUG_TEST(flags) ((flags) & FLAG_DEBUG)
+#  define TAG_DEBUG_TEST(test) (test)
 #else
-#  define TAG_DEBUG_TEST(flags) 0
+#  define TAG_DEBUG_TEST(test) 0
 #endif
 
 #ifdef DEBUG
-#  define TAG_DEBUG(frame, msg, args...) \
-  (TAG_DEBUG_TEST(frame->flags) && report_debug ("%O: " + (msg), (frame), args), 0)
+#  define TAG_DEBUG(frame, msg, args...)				\
+  (TAG_DEBUG_TEST (frame->flags & FLAG_DEBUG) &&			\
+   report_debug ("%O: " + (msg), (frame), args), 0)
 #  define DO_IF_DEBUG(code...) code
 #else
 #  define TAG_DEBUG(frame, msg, args...) 0
@@ -1861,7 +1862,7 @@ class Backtrace
   {
     String.Buffer txt = String.Buffer();
     function(string...:void) add = txt->add;
-    add (no_msg ? "" : "RXML" + (type ? " " + type : "") + " error");
+    if (!no_msg) add ("RXML", type ? " " + type : "", " error");
     if (context) {
       if (!no_msg) add (": ", msg || "(no error message)\n");
       if (current_var) add (" | &", current_var, ";\n");
@@ -2552,10 +2553,12 @@ class Frame
   // Internals:
 
 #ifdef DEBUG
-#  define THIS_TAG_TOP_DEBUG(msg, args...) \
-     (TAG_DEBUG_TEST (flags) && report_debug ("%O: " + (msg), this_object(), args), 0)
-#  define THIS_TAG_DEBUG(msg, args...) \
-     (TAG_DEBUG_TEST (flags) && report_debug ("%O:   " + (msg), this_object(), args), 0)
+#  define THIS_TAG_TOP_DEBUG(msg, args...)				\
+     (TAG_DEBUG_TEST (flags & FLAG_DEBUG) &&				\
+      report_debug ("%O: " + (msg), this_object(), args), 0)
+#  define THIS_TAG_DEBUG(msg, args...)					\
+     (TAG_DEBUG_TEST (flags & FLAG_DEBUG) &&				\
+      report_debug ("%O:   " + (msg), this_object(), args), 0)
 #  define THIS_TAG_DEBUG_ENTER_SCOPE(ctx, this)				\
      if (this->vars && ctx->scopes["_"] != this->vars)			\
        THIS_TAG_DEBUG ("(Re)entering scope %O\n", this->scope_name)
@@ -4052,6 +4055,8 @@ class Parser
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
+    // Note: VarRef.get more or less duplicates this.
+
     string encoding;
     array(string|int) splitted;
     mixed val;
@@ -4076,7 +4081,7 @@ class Parser
     else {
       if (mixed err = catch {
 #ifdef DEBUG
-	if (context->frame)
+	if (TAG_DEBUG_TEST (context->frame))
 	  TAG_DEBUG (context->frame, "    Looking up variable %s in context of type %s\n",
 		     splitted * ".", (encoding ? t_any_text : want_type)->name);
 #endif
@@ -4092,14 +4097,14 @@ class Parser
 	  if (!(val = Roxen->roxen_encode (val + "", encoding)))
 	    parse_error ("Unknown encoding %O.\n", encoding);
 #ifdef DEBUG
-	  if (context->frame)
+	  if (TAG_DEBUG_TEST (context->frame))
 	    TAG_DEBUG (context->frame, "    Got value %s after conversion "
 		       "with encoding %s\n", utils->format_short (val), encoding);
 #endif
 	}
 #ifdef DEBUG
 	else
-	  if (context->frame)
+	  if (TAG_DEBUG_TEST (context->frame))
 	    TAG_DEBUG (context->frame, "    Got value %s\n", utils->format_short (val));
 #endif
 
@@ -5600,11 +5605,13 @@ class VarRef (string scope, string|array(string|int) var,
 
   mixed get (Context ctx)
   {
+    // Note: Parser.handle_var more or less duplicates this.
+
     ctx->frame_depth++;
 
     mixed err = catch {
 #ifdef DEBUG
-      if (ctx->frame)
+      if (TAG_DEBUG_TEST (ctx->frame))
 	TAG_DEBUG (ctx->frame, "    Looking up variable %s.%s in context of type %s\n",
 		   scope, arrayp (var) ? var * "." : var,
 		   (encoding ? t_any_text : want_type)->name);
@@ -5612,29 +5619,26 @@ class VarRef (string scope, string|array(string|int) var,
       mixed val;
       string varref;
 
+      COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
+      if (zero_type (val = ctx->get_var (var, scope, t_any_text)))
+	val = nil;
+      COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
+
       if (encoding) {
-	COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
-	val = ctx->get_var (var, scope, t_any_text);
-	COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
 	if (!(val = Roxen->roxen_encode (val + "", encoding)))
 	  parse_error ("Unknown encoding %O.\n", encoding);
 #ifdef DEBUG
-	if (ctx->frame)
+	if (TAG_DEBUG_TEST (ctx->frame))
 	  TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
 		     "with encoding %s\n", utils->format_short (val), encoding);
 #endif
       }
 
-      else {
-	COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
-	if (zero_type (val = ctx->get_var (var, scope, want_type)))
-	  val = nil;
-	COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
+      else
 #ifdef DEBUG
-	if (ctx->frame)
+	if (TAG_DEBUG_TEST (ctx->frame))
 	  TAG_DEBUG (ctx->frame, "    Got value %s\n", utils->format_short (val));
 #endif
-      }
 
       ctx->frame_depth--;
       return val;
