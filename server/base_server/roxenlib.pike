@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.131 1999/11/30 14:42:25 nilsson Exp $
+// $Id: roxenlib.pike,v 1.132 1999/12/06 16:13:24 grubba Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -301,6 +301,44 @@ static int _match(string w, array (string) a)
       return 1; 
 }
 
+static array(int) parse_since(string date)
+{
+  int t;
+  int length = -1;
+
+#if constant(mktime)
+  string extra;
+  sscanf(lower_case(date), "%*s, %s; %s", date, extra);
+  if(extra)
+    sscanf(extra, "length=%d", length);
+
+  int day, year, month, hour, minute, second, length;
+  string m;
+  if(search(date, "-") != -1)
+  {
+    sscanf(date, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second);
+    year += 1900;
+    month=MONTHS[m];
+  } else   if(search(date, ",") == 3) {
+    sscanf(date, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+    if(year < 1900) year += 1900;
+    month=MONTHS[m];
+  } else if(!(int)date) {
+    sscanf(date, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
+    month=MONTHS[m];
+  } else {
+    sscanf(date, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+    month=MONTHS[m];
+    if(year < 1900) year += 1900;
+  }
+  catch {
+    t = mktime(second, minute, hour, day, month, year-1900, -1, 0);
+  };
+#endif /* constant(mktime) */
+  return ({ t, length });
+}
+
+/* OBSOLETED by parse_since() above */
 static int is_modified(string a, int t, void|int len)
 {
   mapping t1;
