@@ -10,7 +10,10 @@
 <file>../config_interface/standard/actions/index.html</file>
 <file>../config_interface/standard/boxes/articles.pike</file>
 <file>../config_interface/standard/boxes/crunch.pike</file>
+<file>../config_interface/standard/boxes/doclinks.pike</file>
 <file>../config_interface/standard/boxes/ris_news.pike</file>
+<file>../config_interface/standard/boxes/slashdot.pike</file>
+<file>../config_interface/standard/boxes/welcome.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
@@ -1344,10 +1347,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t></t>
 </str>
 
-<str id="218">
-<o>Startpage</o>
-<t>Startseite</t>
-</str>
+
 
 <str id="219">
 <new/>
@@ -2222,5 +2222,95 @@ as the name of its log file directory.
 <str id="281">
 <new/>
 <o>The news headlines from www.roxen.com</o>
+<t></t>
+</str>
+
+<str id="283">
+<new/>
+<o>Unknown box %s</o>
+<t></t>
+</str>
+
+<str id="285">
+<new/>
+<o>Large Content Boxes</o>
+<t></t>
+</str>
+
+<str id="287">
+<new/>
+<o>Content boxes on the Startpage</o>
+<t></t>
+</str>
+
+<str id="289">
+<new/>
+<o>Small Content Boxes</o>
+<t></t>
+</str>
+
+<str id="327">
+<new/>
+<o>Theme</o>
+<t></t>
+</str>
+
+<str id="343">
+<new/>
+<o>The theme to use</o>
+<t></t>
+</str>
+
+<str id="358">
+<new/>
+<o>Changed</o>
+<t></t>
+</str>
+
+<str id="359">
+<new/>
+<o>Unchanged</o>
+<t></t>
+</str>
+
+<str id="360">
+<new/>
+<o>Home</o>
+<t></t>
+</str>
+
+<str id="361">
+<new/>
+<o>Slashdot headlines</o>
+<t></t>
+</str>
+
+<str id="362">
+<new/>
+<o>The headlines from Slashdot: News for nerds, stuff that matters</o>
+<t></t>
+</str>
+
+<str id="363">
+<new/>
+<o>Documentation links</o>
+<t></t>
+</str>
+
+<str id="364">
+<new/>
+<o>Links to the inline documentation</o>
+<t></t>
+</str>
+
+<str id="365">
+<new/>
+<o>Welcome message</o>
+<t></t>
+</str>
+
+<str id="366">
+<new/>
+<o>Roxen welcome message and news</o>
 <t></t>
 </str>

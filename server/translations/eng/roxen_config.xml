@@ -10,7 +10,10 @@
 <file>../config_interface/standard/actions/index.html</file>
 <file>../config_interface/standard/boxes/articles.pike</file>
 <file>../config_interface/standard/boxes/crunch.pike</file>
+<file>../config_interface/standard/boxes/doclinks.pike</file>
 <file>../config_interface/standard/boxes/ris_news.pike</file>
+<file>../config_interface/standard/boxes/slashdot.pike</file>
+<file>../config_interface/standard/boxes/welcome.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
@@ -1145,10 +1148,7 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="218">
-<o>Startpage</o>
-<t></t>
-</str>
+
 
 <str id="219">
 <o>Update</o>
@@ -1884,5 +1884,80 @@ as the name of its log file directory.
 
 <str id="281">
 <o>The news headlines from www.roxen.com</o>
+<t></t>
+</str>
+
+<str id="283">
+<o>Unknown box %s</o>
+<t></t>
+</str>
+
+<str id="285">
+<o>Large Content Boxes</o>
+<t></t>
+</str>
+
+<str id="287">
+<o>Content boxes on the Startpage</o>
+<t></t>
+</str>
+
+<str id="289">
+<o>Small Content Boxes</o>
+<t></t>
+</str>
+
+<str id="327">
+<o>Theme</o>
+<t></t>
+</str>
+
+<str id="343">
+<o>The theme to use</o>
+<t></t>
+</str>
+
+<str id="358">
+<o>Changed</o>
+<t></t>
+</str>
+
+<str id="359">
+<o>Unchanged</o>
+<t></t>
+</str>
+
+<str id="360">
+<o>Home</o>
+<t></t>
+</str>
+
+<str id="361">
+<o>Slashdot headlines</o>
+<t></t>
+</str>
+
+<str id="362">
+<o>The headlines from Slashdot: News for nerds, stuff that matters</o>
+<t></t>
+</str>
+
+<str id="363">
+<o>Documentation links</o>
+<t></t>
+</str>
+
+<str id="364">
+<o>Links to the inline documentation</o>
+<t></t>
+</str>
+
+<str id="365">
+<o>Welcome message</o>
+<t></t>
+</str>
+
+<str id="366">
+<o>Roxen welcome message and news</o>
 <t></t>
 </str>
