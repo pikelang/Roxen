@@ -119,12 +119,14 @@ raise_limit() {
   fi
   if [ "x$1" = "x" ] ; then
     nn="`ulimit -n`"
-    if [ "x$nn" = xunlimited ] ; then
-      dp "Maximum number of open FDs: unlimited (2147483648)"
-    else
-      dp "Maximum number of open FDs: $nn"
-      if [ "$nn" -lt 1024 ] 2>/dev/null; then
-        dp "Warning: This is dangerously low"
+    if [ $verbose -gt 0 ]; then
+      if [ "x$nn" = xunlimited ] ; then
+        dp "Maximum number of open FDs: unlimited (2147483648)"
+      else
+        dp "Maximum number of open FDs: $nn"
+        if [ "$nn" -lt 1024 ] 2>/dev/null; then
+          dp "Warning: This is dangerously low"
+        fi
       fi
     fi
   fi
