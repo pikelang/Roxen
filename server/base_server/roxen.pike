@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.756 2001/11/13 12:34:58 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.757 2001/11/14 13:12:37 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -385,7 +385,7 @@ class Fonts
 		string justification, float|int xspace, float|int yspace);
 
   Font resolve_font(string f, string|void justification);
-  array(string) available_fonts( );
+  array(string) available_fonts(int(0..1)|void force_reload);
 }
 Fonts fonts;
 
