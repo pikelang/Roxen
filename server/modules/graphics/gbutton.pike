@@ -8,7 +8,6 @@
 //
 //  <gbutton
 //     bgcolor         -- background color inside/outside button
-//     bordercolor     -- button border color
 //     textcolor       -- button text color
 //     href            -- button URL
 //     alt             -- alternative button alt text
@@ -25,7 +24,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.50 2000/06/01 14:36:54 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.51 2000/06/05 14:59:18 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -75,17 +74,10 @@ constant gbuttonattr=#"
 </ex>
 </attr>
 
-<attr name='bordercolor' value='color'>
- Button border color.
-<ex>
-<gbutton bordercolor='red'>Border</gbutton>
-</ex>
-</attr>
-
 <attr name='textcolor' value='color'>
  Button text color
 <ex>
-<gbutton textcolor='#ff6600'> Text</gbutton>
+<gbutton textcolor='#ff6600'>Text</gbutton>
 </ex>
 </attr>
 
@@ -97,10 +89,6 @@ constant gbuttonattr=#"
 <ex>
 <gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
 </ex>
-</attr>
-
-<attr name='border_image' value='path'>
- Use this image as border.
 </attr>
 
 <attr name='alt' value='string'>
@@ -182,7 +170,7 @@ constant gbuttonattr=#"
 <attr name='extra-frame-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
 
 <ex>
-<gbutton border_image='gbutton.xcf' alt='foo'>bu</gbutton>
+<gbutton frame-image='gbutton.xcf' alt='foo'>bu</gbutton>
 </ex>
 
 
