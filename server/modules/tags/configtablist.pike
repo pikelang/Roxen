@@ -1,32 +1,25 @@
 // Config tablist look-a-like module. Copyright © 1999, Idonex AB.
 //
 
-constant cvs_version="$Id: configtablist.pike,v 1.19 1999/09/29 10:27:05 nilsson Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.20 1999/11/03 22:56:45 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-#define old_rxml_compat 1
-
 array register_module() {
   return ({ MODULE_PARSER, "Old tab list module", "Use the <i>Tab list</i> module instead", 0, 1});
 }
 
-// This is heavy stuff, boys and girls. Do not try this at home!
-void create(object configuration, int q) {
-  werror("\nConfig tab list outdated. Add Tab list instead.");
+void start() {
+  object configuration = my_configuration();
+  werror("\n ***** Config tab list outdated. Adding Tab list instead.\n");
   if(configuration)
-    if(!configuration->modules["tablist"] ||
-       (!configuration->modules["tablist"]->copies &&
-        !configuration->modules["tablist"]->master)) {
+    if(!configuration->enabled_modules->tablist )
       configuration->enable_module("tablist#0");
-    if(roxen->root)
-      roxen->configuration_interface()->build_root(roxen->root);
-  }
+  call_out( configuration->disable_module, 0.5,  "configtablist#0" );
 }
 
-#if old_rxml_compat
 string tag_ctablist(string t, mapping a, string c) {
   return make_container("tablist",a,c);
 }
@@ -34,4 +27,3 @@ string tag_ctablist(string t, mapping a, string c) {
 mapping query_container_callers() {
   return ([ "config_tablist":tag_ctablist ]);
 }
-#endif
