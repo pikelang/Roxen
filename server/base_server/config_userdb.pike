@@ -624,7 +624,7 @@ class AdminUser
 				     permission_translations[ perm ]+
 				     "</gbutton-url>", id );
 	if( noclick )
-	  form += sprintf("<img src='%s' />", s);
+	  form += sprintf("<img src='%s' />\n", s);
 	else
 	  form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
 			   " src='%s'>\n", perm, s );
