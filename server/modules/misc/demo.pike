@@ -5,7 +5,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.15 2000/04/05 12:10:20 jhs Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.16 2000/04/05 14:38:27 jhs Exp $";
 
 void create()
 {
@@ -72,11 +72,11 @@ mixed find_file( string f, object id )
     if(!mdb[42])
       mdb[42]=
 #"<for variable=var.i from=99 to=1 step=-1>
-  <if not variable="var.i is 1">
-    <set variable=var.s value="s">
+  <if not variable=\"var.i is 1\">
+    <set variable=var.s value=\"s\">
   </if>
   <else>
-    <set variable=var.s value="">
+    <set variable=var.s value=\"\">
   </else>
   &var.i; bottle&var.s; of beer on the wall,<br><br>
   &var.i; bottle&var.s; of beer on the wall,<br>
