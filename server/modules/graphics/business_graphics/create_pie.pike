@@ -20,7 +20,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.41 1998/03/13 01:09:40 peter Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.42 1998/04/06 15:25:42 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -248,20 +248,28 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   
   int t=sizeof(diagram_data["datacolors"]);
 
+  float miniwxr;
+  float miniwyr;
+
   if (!twoD)
     {
       array arrfoo=copy_value(arr2);
-      for(int i=201; i<604; i+=2)
-	arrfoo[i]=arr2[i]+diagram_data["3Ddepth"];
+      miniwxr=max((w+xr)/2,(w+xr)-diagram_data["3Ddepth"]/10);
+      miniwyr=max((w+yr)/2,(w+yr)-diagram_data["3Ddepth"]/10);
+      for(int i=200; i<604; i+=2)
+	{
+	  arrfoo[i]=xc+miniwxr*sin((i*PI/400.0));
+	  arrfoo[i+1]=yc+miniwyr*sin(-PI/2+i*PI/400.0)+
+	    diagram_data["3Ddepth"];
+	}
+      //arrfoo[i]=arr2[i]+diagram_data["3Ddepth"];
       for(int i=0; i<401; i++)
 	{
 	  arrplus[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0)+FI);
 	  arrplus[1+2*i]=yc+(w+yr)*sin(-PI/2+i*2.0*PI/400.0+FI);
-	  arrpp[2*i]=xc+(xr+w)*sin((-i*2.0*PI/400.0)+FI);
-	  arrpp[1+2*i]=yc+(w+yr)*sin(-PI/2-i*2.0*PI/400.0+FI)+
+	  arrpp[2*i]=xc+miniwxr*sin((-i*2.0*PI/400.0)+FI);
+	  arrpp[1+2*i]=yc+miniwyr*sin(-PI/2-i*2.0*PI/400.0+FI)+
 	    diagram_data["3Ddepth"];
-	  
-	  
 	}
       object skugg;
       skugg=Image.image(piediagram->xsize(),piediagram->ysize(), 255,255,255);
@@ -288,6 +296,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 		      ({piediagram->xsize()-1,0,xc,0})
 		      );
       skugg->polyfill(
+		      arr2[200..201]+
 		      arrfoo[200..401]
 		      +
 		      ({xc,piediagram->ysize()-1,
@@ -295,6 +304,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 		      );
       skugg->polyfill(
 		      arrfoo[400..601]+
+		      arr2[600..601]+
 		      ({0,piediagram->ysize()-1,xc,piediagram->ysize()-1
 		      })
 		      );
@@ -427,7 +437,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  piediagram+=tbild;
 	}
 
-      //Horizontal lines below
+      //Vertical lines below
       edge_nr=(int)(FI*200.0/PI+0.5);
       piediagram->setcolor(0,0,0);
       for(int i=0; i<sizeof(pnumbers); i++)
@@ -437,12 +447,15 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	      
 	      float x1=xc+(xr+w/2.0)*sin((edge_nr*2.0*PI/400.0));
 	      float y1=yc+(w/2.0+yr)*sin(-PI/2+edge_nr*2.0*PI/400.0);
+	      float x2=xc+(miniwxr-w/2.0)*sin((edge_nr*2.0*PI/400.0));
+	      float y2=yc+diagram_data["3Ddepth"]
+		+(miniwyr-w/2.0)*sin(-PI/2+edge_nr*2.0*PI/400.0);
 	      piediagram=piediagram->
 		polygone(
 			 make_polygon_from_line(diagram_data["linewidth"],
 						({
 						  x1,y1,
-						  x1,y1+diagram_data["3Ddepth"]
+						  x2,y2
 						})
 						,
 						0, 1)[0]
