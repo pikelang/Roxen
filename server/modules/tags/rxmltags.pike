@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.400 2004/01/25 18:27:57 norrby Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.401 2004/04/03 16:18:12 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4471,7 +4471,7 @@ class IfMatch
   constant name = "if";
 
   constant cache = 0;
-  function source;
+  array|string source(RequestID id);
 
   int eval( string is, RequestID id, mapping args ) {
     array|string value=source(id);
