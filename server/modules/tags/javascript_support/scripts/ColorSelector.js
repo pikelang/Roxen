@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.4 2004/06/01 10:00:10 jonasw Exp $
+//  $Id: ColorSelector.js,v 1.5 2004/09/27 17:32:13 jonasw Exp $
 
 
 //  Known HTML color names
@@ -183,8 +183,18 @@ function rgb_string_to_hsv(rgb_str)
 
 function colsel_click(event, prefix, h, s, v, in_bar, in_cross)
 {
+  var scroll = 0;
+  if (isSafari) {
+    //  Don't use scrollTop
+  } else if (document.documentElement && document.documentElement.scrollTop) {
+    //  IE6
+    scroll = document.documentElement.scrollTop;
+  } else if (document.body.scrollTop) {
+    //  IE5
+    scroll = document.body.scrollTop;
+  }
   var x = (event.clientX - getTargetX(event)) * 2;
-  var y = (event.clientY - getTargetY(event)) * 2;
+  var y = (event.clientY - getTargetY(event) + scroll) * 2;
 
   //  Kludge to get correct coordinates. Only needed in MSIE browsers for
   //  unknown reasons.
