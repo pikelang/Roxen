@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.11 1998/04/29 20:05:34 grubba Exp $
+ * $Id: ftp2.pike,v 1.12 1998/04/29 20:13:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2660,6 +2660,10 @@ class FTPSession
 void create(object f, object c)
 {
   if (f) {
+    if (!c->variables["ftp_user_session_limit"]) {
+      // Backward compatibility...
+      c->variables["ftp_user_session_limit"] = ([]);
+    }
     if (!c->extra_statistics->ftp) {
       c->extra_statistics->ftp = ([ "sessions":1 ]);
     } else {
