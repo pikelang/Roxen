@@ -20,14 +20,12 @@
 </path>
 
 <content>
-  <formoutput quote="¤">
-  <input type=hidden name=section value="¤section¤">
+  <input type=hidden name=section value="&form.section;">
   <table>
-   <configif-output source=global-variables section="¤section:quote=dtag¤">
+   <configif-output source=global-variables section="&form.section;">
     <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
   <input type=submit value=" Apply " name=action>
-  </formoutput>
 </content>
