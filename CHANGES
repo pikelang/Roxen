@@ -17,6 +17,14 @@ o Changed the name of the 'Error Log' to 'Event Log', since that is a
 o Added a new tag: <pr>. Use <pr help> to get some help.
   Basicaly it just adds an 'Powered By Roxen' logo.
 
+o The FTP-protocol module now sends a nice message when it shuts down a
+  connection due to timeout.
+
+o The old SSL-protocol modules have at last been removed in favour of the
+  SSL3-module.
+
+o Module-level security improved again.
+
 
 Changes since Roxen Challenger 1.2 alpha 7
 -----------------------------------------------
