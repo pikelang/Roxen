@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.16 1998/04/17 12:51:05 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.17 1998/04/20 19:06:40 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -99,7 +99,7 @@ object find_server_for(object id, string host)
 #endif /* constant(Array.diff_longest_sequence) */
   }
 
-  if (id->conf != oldconf) {
+  if (id->conf != old_conf) {
     /* Need to re-authenticate with the new server */
 
     if (id->rawauth) {
