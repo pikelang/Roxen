@@ -300,10 +300,10 @@ bump_version: bump_version.stamp
 	      echo Done with $$d.); \
 	  else :; fi; \
 	done
-	if test -d platform/. ; then \
+	@if test -d platform/. ; then \
 	  extratag=-platform; \
 	else :; fi; \
-	@(cd $(SRCDIR)/server/base_server; \
+	(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping Roxen version...; \
 	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  newbuild=`echo $$build 1+p|dc`; \
