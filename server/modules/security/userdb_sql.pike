@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.1 2001/09/06 15:29:10 per Exp $";
+  "$Id: userdb_sql.pike,v 1.2 2001/09/21 13:22:38 hop Exp $";
 
 LocaleString module_name = _(0,"Authentication: SQL user database");
 LocaleString module_doc  = _(0,"This module implements a user database via "
@@ -33,6 +33,19 @@ class SqlUser
   array(string) groups()
   {
     return get_user_groups( uid() );
+  }
+
+  int password_authenticate(string password)
+  //! Return 1 if the password is correct, 0 otherwise.
+  {
+    switch(query("passwd_type")) {
+      case "password":
+	return (sql_query( "SELECT password('" + password + "') as psw" )[0]->psw == crypted_password());
+      case "crypt":
+	return (crypt(password, crypted_password()));
+      case "clear text":
+	return (password == crypted_password());
+    }
   }
 
   static void create( UserDB p, mapping e )
@@ -194,4 +207,15 @@ void create()
                        _(0,"Database"),
                        _(0,"This is the database that this module will "
 			      "store it's users in.") ) );
+
+  defvar( "passwd_type",
+          Variable.StringChoice("password",
+         ({ "password", "crypt", "clear text" }), 0,
+         "Password type",
+	 "Password hashing method. "
+         "By changing this variable you can select the meaning of password field. "
+	 "By default the passwords are supposed to be hashed by internal MySQL "
+	 "password() function."
+         "\n"));
+
 }
