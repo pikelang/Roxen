@@ -1,8 +1,0 @@
-<trans-reg project="update_client"/>
-<translate id="31">Installed packages:</translate>
-<rul>
-<update-package installed>
-  <rli>&_.title; <a href="update.html?page=details&details=&_.id;">
-    <translate id="3">[Details...]</translate></a></rli>
-</update-package>
-</rul>

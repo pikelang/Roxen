@@ -28,11 +28,11 @@
 *.rgs eol=crlf
 *.tar binary
 *.ttf binary
-/server/nfonts/Andover.txt eol=crlf
-/server/nfonts/Font.txt eol=crlf
-/server/nfonts/Hultog.txt eol=crlf
-/server/nfonts/Quadrang.txt eol=crlf
-/server/nfonts/Resegrg.txt eol=crlf
+*.txt eol=crlf
+/server/config_interface/sites/drop_site_warning.txt !eol
+/server/config_interface/welcome.txt !eol
+/server/nfonts/bastard.txt !eol
+/server/nfonts/puppyface.txt !eol
 *.xcf binary
 /server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
@@ -198,11 +198,11 @@ worldmap binary
 /server/modules/compat/secure_fs.pike foreign_ident
 /server/modules/compat/sqldb.pike foreign_ident
 /server/modules/compat/ssi.pike foreign_ident
+/server/modules/compat/update.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/config_tags.pike foreign_ident
 /server/modules/configuration/roxen_test.pike foreign_ident
-/server/modules/configuration/update.pike foreign_ident
 /server/modules/database/sqltag.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
