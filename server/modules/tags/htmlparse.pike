@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.129 1998/08/01 10:12:59 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.130 1998/08/10 21:39:17 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -763,7 +763,7 @@ string tagtime(int t,mapping m)
   return s;
 }
 
-string tag_date(string q, mapping m)
+string tag_date(string q, mapping m, object id)
 {
   int t=(int)m->unix_time || time(1);
   if(m->day)    t += (int)m->day * 86400;
@@ -776,12 +776,29 @@ string tag_date(string q, mapping m)
   if(!(m->brief || m->time || m->date))
     m->full=1;
 
+  if(!m->date)
+  {
+    if(!m->unix_time)
+      NOCACHE();
+  } else
+    CACHE(60); // One minute is good enough.
+
   return tagtime(t,m);
 }
 
 inline string do_replace(string s, mapping (string:string) m)
 {
   return replace(s, indices(m), values(m));
+}
+
+
+array permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
+		     "0", "-", "*", "+","/", "%", "&", "|", "(", ")" });
+string sexpr_eval(string what)
+{
+  array q = what/"";
+  what = "mixed foo(){ return "+(q-(q-permitted))*""+";}";
+  return (string)compile_string( what )()->foo();
 }
 
 string tag_set( string tag, mapping m, object id )
@@ -791,9 +808,12 @@ string tag_set( string tag, mapping m, object id )
 	    "by the 'variable' argument");
   if (m->variable)
   {
+
     if (m->value)
       // Set variable to value.
       id->variables[ m->variable ] = m->value;
+    else if (m->expr)
+      id->variables[ m->variable ] = sexpr_eval( m->expr );
     else if (m->from)
       // Set variable to the value of another variable
       if (id->variables[ m->from ])
@@ -972,7 +992,7 @@ string tag_use(string tag, mapping m, object id)
     id->misc->_containers[t] = res->_containers[t];
 
   if(id->misc->debug)
-    return sprintf("<!-- Using the file %s, got %O -->", m->file, res);
+    return sprintf("<!-- Using the file %s, id %O -->", m->file, res);
   else
     return "";
 }
@@ -1024,12 +1044,12 @@ string tag_define(string tag, mapping m, string str, object id, object file,
   return ""; 
 }
 
-string tag_modified(string tag, mapping m, object got, object file,
+string tag_modified(string tag, mapping m, object id, object file,
 		    mapping defines);
 
 
 
-string tag_echo(string tag,mapping m,object got,object file,
+string tag_echo(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
@@ -1043,7 +1063,7 @@ string tag_echo(string tag,mapping m,object got,object file,
   } else if(tag == "insert")
     return "";
       
-  string addr=got->remoteaddr || "Internal";
+  string addr=id->remoteaddr || "Internal";
   switch(lower_case(replace(m->var, " ", "_")))
   {
    case "sizefmt":
@@ -1053,29 +1073,31 @@ string tag_echo(string tag,mapping m,object got,object file,
     return "&lt;unimplemented&gt;";
       
    case "document_name": case "path_translated":
-    return got->conf->real_file(got->not_query, got);
+    return id->conf->real_file(id->not_query, id);
 
    case "document_uri":
-    return got->not_query;
+    return id->not_query;
 
    case "date_local":
+    NOCACHE();
     return replace(ctime(time(1)), "\n", "");
 
    case "date_gmt":
+    NOCACHE();
     return replace(ctime(time(1) + localtime(time(1))->timezone), "\n", "");
       
    case "query_string_unescaped":
-    return got->query || "";
+    return id->query || "";
 
    case "last_modified":
-    return tag_modified(tag, m, got, file, defines);
+    return tag_modified(tag, m, id, file, defines);
       
    case "server_software":
     return roxen->version();
       
    case "server_name":
     string tmp;
-    tmp=got->conf->query("MyWorldLocation");
+    tmp=id->conf->query("MyWorldLocation");
     sscanf(tmp, "%*s//%s", tmp);
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
@@ -1088,42 +1110,49 @@ string tag_echo(string tag,mapping m,object got,object file,
     return "HTTP/1.0";
       
    case "server_port":
-    tmp = objectp(got->my_fd) && got->my_fd->query_address(1);
+    tmp = objectp(id->my_fd) && id->my_fd->query_address(1);
     if(tmp)
       return (tmp/" ")[1];
     return "Internal";
 
    case "request_method":
-    return got->method;
+    return id->method;
       
    case "remote_host":
+    NOCACHE();
     return roxen->quick_ip_to_host(addr);
 
    case "remote_addr":
+    NOCACHE();
     return addr;
 
    case "auth_type":
     return "Basic";
       
    case "remote_user":
-    if(got->auth && got->auth[0])
-      return got->auth[1];
+    NOCACHE();
+    if(id->auth && id->auth[0])
+      return id->auth[1];
     return "Unknown";
       
    case "http_cookie": case "cookie":
-    return (got->misc->cookies || "");
+    NOCACHE();
+    return (id->misc->cookies || "");
 
    case "http_accept":
-    return (got->misc->accept && sizeof(got->misc->accept)? 
-	    got->misc->accept*", ": "None");
+    NOCACHE();
+    return (id->misc->accept && sizeof(id->misc->accept)? 
+	    id->misc->accept*", ": "None");
       
    case "http_user_agent":
-    return got->client && sizeof(got->client)? 
-      got->client*" " : "Unknown";
+    NOCACHE();
+    return id->client && sizeof(id->client)? 
+      id->client*" " : "Unknown";
       
    case "http_referer":
-    return got->referer && sizeof(got->referer) ? 
-      got->referer*", ": "Unknown";
+    NOCACHE();
+    return id->referer && sizeof(id->referer) ? 
+      id->referer*", ": "Unknown";
       
    default:
     if(tag == "insert")
@@ -1132,7 +1161,7 @@ string tag_echo(string tag,mapping m,object got,object file,
   }
 }
 
-string tag_insert(string tag,mapping m,object got,object file,mapping defines)
+string tag_insert(string tag,mapping m,object id,object file,mapping defines)
 {
   string n;
   mapping fake_id=([]);
@@ -1141,58 +1170,60 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   {
     m_delete(m, "name");
     return do_replace(defines[n]||
-		      (got->misc->debug?"No such define: "+n:""), m);
+		      (id->misc->debug?"No such define: "+n:""), m);
   }
 
   if (n=m->variable) 
   {
     m_delete(m, "variable");
-    return do_replace(got->variables[n]||
-		      (got->misc->debug?"No such variable: "+n:""), m);
+    return do_replace(id->variables[n]||
+		      (id->misc->debug?"No such variable: "+n:""), m);
   }
 
   if (n=m->variables) 
   {
     if(n!="variables")
-      return Array.map(indices(got->variables), lambda(string s, mapping m) {
+      return Array.map(indices(id->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
-      }, got->variables)*"\n";
-    return String.implode_nicely(indices(got->variables));
+      }, id->variables)*"\n";
+    return String.implode_nicely(indices(id->variables));
   }
 
   if (n=m->cookies) 
   {
+    NOCACHE();
     if(n!="cookies")
-      return Array.map(indices(got->cookies), lambda(string s, mapping m) {
+      return Array.map(indices(id->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
-      }, got->cookies)*"\n";
-    return String.implode_nicely(indices(got->cookies));
+      }, id->cookies)*"\n";
+    return String.implode_nicely(indices(id->cookies));
   }
 
   if (n=m->cookie) 
   {
+    NOCACHE();
     m_delete(m, "cookie");
-    return do_replace(got->cookies[n]||
-		      (got->misc->debug?"No such cookie: "+n:""), m);
+    return do_replace(id->cookies[n]||
+		      (id->misc->debug?"No such cookie: "+n:""), m);
   }
 
   if (m->file) 
   {
     string s;
     string f;
-    f = fix_relative(m->file, got);
+    f = fix_relative(m->file, id);
 
-    if(m->nocache) got->pragma["no-cache"] = 1;
+    if(m->nocache) id->pragma["no-cache"] = 1;
 
-    s = got->conf->try_get_file(f, got);
+    s = id->conf->try_get_file(f, id);
 
     if(!s) {
       if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
 	// Might be a compat insert.
-	s = got->conf->try_get_file(f[..sizeof(f)-3], got);
+	s = id->conf->try_get_file(f[..sizeof(f)-3], id);
       }
       if (!s) {
-	return got->misc->debug?"No such file: "+f+"!":"";
+	return id->misc->debug?"No such file: "+f+"!":"";
       }
     }
 
@@ -1200,13 +1231,12 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 
     return do_replace(s, m);
   }
-  return tag_echo(tag, m, got, file, defines);
+  return tag_echo(tag, m, id, file, defines);
 }
 
-string tag_compat_exec(string tag,mapping m,object got,object file,
+string tag_compat_exec(string tag,mapping m,object id,object file,
 		       mapping defines)
 {
-
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -1219,7 +1249,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
   {
     m->file = m->cgi;
     m_delete(m, "cgi");
-    return tag_insert(tag, m, got, file, defines);
+    return tag_insert(tag, m, id, file, defines);
   }
 
   if(m->cmd)
@@ -1227,19 +1257,20 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
     if(QUERY(exec))
     {
       string tmp;
-      tmp=got->conf->query("MyWorldLocation");
+      tmp=id->conf->query("MyWorldLocation");
       sscanf(tmp, "%*s//%s", tmp);
       sscanf(tmp, "%s:", tmp);
       sscanf(tmp, "%s/", tmp);
       string user;
       user="Unknown";
-      if(got->auth && got->auth[0])
-	user=got->auth[1];
-      string addr=got->remoteaddr || "Internal";
+      if(id->auth && id->auth[0])
+	user=id->auth[1];
+      string addr=id->remoteaddr || "Internal";
+      NOCACHE();
       return popen(m->cmd,
 		   getenv()
-		   | build_roxen_env_vars(got)
-		   | build_env_vars(got->not_query, got, 0),
+		   | build_roxen_env_vars(id)
+		   | build_env_vars(id->not_query, id, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
     } else {
       return "<b>Execute command support disabled."
@@ -1249,7 +1280,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
   return "<!-- exec what? -->";
 }
 
-string tag_compat_config(string tag,mapping m,object got,object file,
+string tag_compat_config(string tag,mapping m,object id,object file,
 			 mapping defines)
 {
   if(m->help) 
@@ -1260,7 +1291,7 @@ string tag_compat_config(string tag,mapping m,object got,object file,
     return "<!-- Config what? -->";
 }
 
-string tag_compat_include(string tag,mapping m,object got,object file,
+string tag_compat_include(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
@@ -1271,7 +1302,7 @@ string tag_compat_include(string tag,mapping m,object got,object file,
   if(m->virtual)
   {
     m->file = m->virtual;
-    return tag_insert("insert", m, got, file, defines);
+    return tag_insert("insert", m, id, file, defines);
   }
 
   if(m->file)
@@ -1281,14 +1312,14 @@ string tag_compat_include(string tag,mapping m,object got,object file,
     string fname2;
     if(m->file[0] != '/')
     {
-      if(got->not_query[-1] == '/')
-	m->file = got->not_query + m->file;
+      if(id->not_query[-1] == '/')
+	m->file = id->not_query + m->file;
       else
-	m->file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
+	m->file = ((tmp = id->not_query / "/")[0..sizeof(tmp)-2] +
 		   ({ m->file }))*"/";
-      fname1 = got->conf->real_file(m->file, got);
+      fname1 = id->conf->real_file(m->file, id);
       if ((sizeof(m->file) > 2) && (m->file[sizeof(m->file)-2..] == "--")) {
-	fname2 = got->conf->real_file(m->file[..sizeof(m->file)-3], got);
+	fname2 = id->conf->real_file(m->file[..sizeof(m->file)-3], id);
       }
     } else if ((sizeof(fname1) > 2) && (fname1[sizeof(fname1)-2..] == "--")) {
       fname2 = fname1[..sizeof(fname1)-3];
@@ -1302,15 +1333,15 @@ string tag_compat_include(string tag,mapping m,object got,object file,
   return "<!-- What? -->";
 }
 
-string tag_compat_echo(string tag,mapping m,object got,object file,
+string tag_compat_echo(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(!QUERY(ssi))
     return "SSI support disabled. Use &lt;echo var=name&gt; instead.";
-  return tag_echo(tag, m, got, file, defines);
+  return tag_echo(tag, m, id, file, defines);
 }
 
-string tag_compat_fsize(string tag,mapping m,object got,object file,
+string tag_compat_fsize(string tag,mapping m,object id,object file,
 			mapping defines)
 {
   if(m->help) 
@@ -1320,13 +1351,14 @@ string tag_compat_fsize(string tag,mapping m,object got,object file,
 
   if(m->virtual)
   {
-    m->file = got->conf->real_file(m->virtual, got);
+    m->file = id->conf->real_file(m->virtual, id);
     m_delete(m, "virtual");
   }
   if(m->file)
   {
     array s;
     s = file_stat(m->file);
+    CACHE(5);
     if(s)
     {
       if(tag == "!--#fsize")
@@ -1345,7 +1377,7 @@ string tag_compat_fsize(string tag,mapping m,object got,object file,
 }
 
 
-string tag_accessed(string tag,mapping m,object got,object file,
+string tag_accessed(string tag,mapping m,object id,object file,
 		    mapping defines)
 {
   int counts, n, prec, q, timep;
@@ -1354,25 +1386,26 @@ string tag_accessed(string tag,mapping m,object got,object file,
   if(!QUERY(ac))
     return "Accessed support disabled.";
 
+  NOCACHE();
   if(m->file)
   {
-    m->file = fix_relative(m->file, got);
+    m->file = fix_relative(m->file, id);
     if(m->add) 
       counts = query_num(m->file, (int)m->add||1);
     else
       counts = query_num(m->file, 0);
   } else {
-    if(_match(got->remoteaddr, got->conf->query("NoLog")))
-      counts = query_num(got->not_query, 0);
+    if(_match(id->remoteaddr, id->conf->query("NoLog")))
+      counts = query_num(id->not_query, 0);
     else if(defines->counted != "1") 
     {
-      counts =query_num(got->not_query, 1);
+      counts =query_num(id->not_query, 1);
       defines->counted = "1";
     } else {
-      counts = query_num(got->not_query, 0);
+      counts = query_num(id->not_query, 0);
     }
       
-    m->file=got->not_query;
+    m->file=id->not_query;
   }
   
   if(m->reset)
@@ -1471,7 +1504,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
 
 string tag_user(string a, mapping b, object foo, object file,mapping defines);
 
-string tag_modified(string tag, mapping m, object got, object file,
+string tag_modified(string tag, mapping m, object id, object file,
 		    mapping defines)
 {
   array (int) s;
@@ -1479,28 +1512,30 @@ string tag_modified(string tag, mapping m, object got, object file,
   
   if(m->by && !m->file && !m->realfile)
   {
-    if(!got->conf->auth_module)
+    if(!id->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = roxen->last_modified_by(file, got);
-    return tag_user(tag, m, got, file, defines);
+    m->name = roxen->last_modified_by(file, id);
+    CACHE(10);
+    return tag_user(tag, m, id, file, defines);
   }
 
   if(m->file)
   {
-    m->realfile = got->conf->real_file(fix_relative(m->file,got), got);
+    m->realfile = id->conf->real_file(fix_relative(m->file,id), id);
     m_delete(m, "file");
   }
 
   if(m->by && m->realfile)
   {
-    if(!got->conf->auth_module)
+    if(!id->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
 
     if(f = open(m->realfile, "r"))
     {
-      m->name = roxen->last_modified_by(f, got);
+      m->name = roxen->last_modified_by(f, id);
       destruct(f);
-      return tag_user(tag, m, got, file,defines);
+      CACHE(10);
+      return tag_user(tag, m, id, file,defines);
     }
     return "A. Nonymous.";
   }
@@ -1508,13 +1543,14 @@ string tag_modified(string tag, mapping m, object got, object file,
   if(m->realfile)
     s = file_stat(m->realfile);
 
-  if(!(_stat || s) && !m->realfile && got->realfile)
+  if(!(_stat || s) && !m->realfile && id->realfile)
   {
-    m->realfile = got->realfile;
-    return tag_modified(tag, m, got, file, defines);
+    m->realfile = id->realfile;
+    return tag_modified(tag, m, id, file, defines);
   }
+  CACHE(10);
   if(!s) s = _stat;
-  if(!s) s = got->conf->stat_file( got->not_query, got );
+  if(!s) s = id->conf->stat_file( id->not_query, id );
   return s ? tagtime(s[3], m) : "Error: Cannot stat file";
 }
 
@@ -1523,43 +1559,44 @@ string tag_version(string rag, mapping m)
   return roxen->version(); 
 }
 
-string tag_clientname(string tag, mapping m, object got)
+string tag_clientname(string tag, mapping m, object id)
 {
-  if (sizeof(got->client)) {
+  NOCACHE();
+  if (sizeof(id->client)) {
     if(m->full) 
-      return got->client * " ";
+      return id->client * " ";
     else 
-      return got->client[0];
+      return id->client[0];
   } else {
     return "";
   } 
 }
 
-string tag_signature(string tag, mapping m, object got, object file,
+string tag_signature(string tag, mapping m, object id, object file,
 		     mapping defines)
 {
-  return "<right><address>"+tag_user(tag, m, got, file,defines)+"</address></right>";
+  return "<right><address>"+tag_user(tag, m, id, file,defines)+"</address></right>";
 }
 
-string tag_user(string tag, mapping m, object got, object file,mapping defines)
+string tag_user(string tag, mapping m, object id, object file,mapping defines)
 {
   string *u;
   string b, dom;
 
-  if(!got->conf->auth_module)
+  if(!id->conf->auth_module)
     return "<!-- user requires an user database! -->\n";
 
   if (!(b=m->name)) {
-    return(tag_modified("modified", m | ([ "by":"by" ]), got, file,defines));
+    return(tag_modified("modified", m | ([ "by":"by" ]), id, file,defines));
   }
 
   b=m->name;
 
-  dom=got->conf->query("Domain");
+  dom=id->conf->query("Domain");
   if(dom[-1]=='.')
     dom=dom[0..strlen(dom)-2];
   if(!b) return "";
-  u=got->conf->userinfo(b, got);
+  u=id->conf->userinfo(b, id);
   if(!u) return "";
   
   if(m->realname && !m->email)
@@ -1602,7 +1639,7 @@ string simple_parse_users_file(string file, string u)
  return 0;
 }
 
-int match_user(array u, string user, string f, int wwwfile, object got)
+int match_user(array u, string user, string f, int wwwfile, object id)
 {
   string s, pass;
   if(!u)
@@ -1610,7 +1647,7 @@ int match_user(array u, string user, string f, int wwwfile, object got)
   if(!wwwfile)
     s=Stdio.read_bytes(f);
   else
-    s=got->conf->try_get_file(f, got);
+    s=id->conf->try_get_file(f, id);
   if(!s)
     return 0;
   if(u[1]!=user) return 0;
@@ -1671,8 +1708,8 @@ int group_member(array auth, string group, string groupfile, object id)
 				    ({ " ", "\t", "\r" }), ({ "", "", "" }))];
 }
 
-string tag_prestate(string tag, mapping m, string q, object got);
-string tag_client(string tag,mapping m, string s,object got,object file);
+string tag_prestate(string tag, mapping m, string q, object id);
+string tag_client(string tag,mapping m, string s,object id,object file);
 string tag_deny(string a,  mapping b, string c, object d, object e, 
 		mapping f, object g);
 
@@ -1694,7 +1731,7 @@ do { if(X) if(m->or) {if (QUERY(compat_if)) return "<true>"+s; else return s+"<t
 
 
 string tag_allow(string a, mapping (string:string) m, 
-		 string s, object got, object file, 
+		 string s, object id, object file, 
 		 mapping defines, object client)
 {
   int ok;
@@ -1704,31 +1741,37 @@ string tag_allow(string a, mapping (string:string) m,
   if(m->not)
   {
     m_delete(m, "not");
-    return tag_deny("", m, s, got, file, defines, client);
+    return tag_deny("", m, s, id, file, defines, client);
   }
 
-  if(m->eval) TEST((int)parse_rxml(m->eval, got));
+  if(m->eval) TEST((int)parse_rxml(m->eval, id));
 
   if(m->module)
-    TEST(got->conf && got->conf->modules[m->module]);
+    TEST(id->conf && id->conf->modules[m->module]);
   
-  if(m->exists) TEST(got->conf->try_get_file(fix_relative(m->exists,got),got,1));
+  if(m->exists) {
+    CACHE(10);
+    TEST(id->conf->try_get_file(fix_relative(m->exists,id),id,1));
+  }
   
   if(m->language)
-    if(!got->misc["accept-language"])
+  {
+    NOCACHE();
+    if(!id->misc["accept-language"])
     {
       if(!m->or)
 	return "<false>";
     } else {
-      TEST(_match(lower_case(got->misc["accept-language"]*" "),
+      TEST(_match(lower_case(id->misc["accept-language"]*" "),
 		  ("*"+(lower_case(m->language)/",")*"*,*"+"*")/","));
     }
-
+  }
   if(m->filename)
-    TEST(_match(got->not_query, m->filename/","));
+    TEST(_match(id->not_query, m->filename/","));
 
-  IS_TEST(variable, got->variables);
-  IS_TEST(cookie, got->cookies);
+  IS_TEST(variable, id->variables);
+  if(m->cookie) NOCACHE();
+  IS_TEST(cookie, id->cookies);
   IS_TEST(defined, defines);
 
   if (m->match) {
@@ -1738,20 +1781,23 @@ string tag_allow(string a, mapping (string:string) m,
   }
 
   if(m->accept)
-    if(!got->misc->accept)
+  {
+    NOCACHE();
+    if(!id->misc->accept)
     {
       if(!m->or)
 	return "<false>";
     } else {
-      TEST(glob("*"+m->accept+"*",got->misc->accept*" "));
+      TEST(glob("*"+m->accept+"*",id->misc->accept*" "));
     }
-
+  }
   if((m->referrer) || (m->referer))
   {
+    NOCACHE();
     if (!m->referrer) {
       m->referrer = m->referer;		// Backward compat
     }
-    if(got && arrayp(got->referer) && sizeof(got->referer))
+    if(id && arrayp(id->referer) && sizeof(id->referer))
     {
       if(m->referrer-"r" == "efee")
       {
@@ -1762,7 +1808,7 @@ string tag_allow(string a, mapping (string:string) m,
 	    return s + "<true>";
 	} else
 	  ok=1;
-      } else if (_match(got->referer*"", m->referrer/",")) {
+      } else if (_match(id->referer*"", m->referrer/",")) {
 	if(m->or) {
 	  if (QUERY(compat_if))
 	    return "<true>" + s;
@@ -1780,10 +1826,11 @@ string tag_allow(string a, mapping (string:string) m,
 
   if(m->date)
   {
+    CACHE(60);
+
     int tok, a, b;
     mapping c;
     c=localtime(time(1));
-    
     b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
     a=(int)m->date;
     if(a > 999999) a -= 19000000;
@@ -1801,6 +1848,8 @@ string tag_allow(string a, mapping (string:string) m,
 
   if(m->time)
   {
+    CACHE(60);
+
     int tok, a, b, d;
     mapping c;
     c=localtime(time(1));
@@ -1830,54 +1879,70 @@ string tag_allow(string a, mapping (string:string) m,
 
   if(m->supports || m->name)
   {
+    NOCACHE();
+
     string q;
-    q=tag_client("", m, s, got, file);
+    q=tag_client("", m, s, id, file);
     TEST(q != "" && q);
   }
 
-  if(m->wants) m->config = m->wants;
-  if(m->configured) m->config = m->configured;
+  if(m->wants)  m->config = m->wants;
+  if(m->configured)  m->config = m->configured;
 
   if(m->config)
   {
+    NOCACHE();
+
     string c;
     foreach(m->config/",", c)
-      TEST(got->config[c]);
+      TEST(id->config[c]);
   }
 
   if(m->prestate)
   {
     string q;
-    q=tag_prestate("", mkmapping(m->prestate/",",m->prestate/","), s, got);
+    q=tag_prestate("", mkmapping(m->prestate/",",m->prestate/","), s, id);
     TEST(q != "" && q);
   }
 
   if(m->host)
-    TEST(_match(got->remoteaddr, m->host/","));
+  {
+    NOCACHE();
+    TEST(_match(id->remoteaddr, m->host/","));
+  }
 
   if(m->domain)
-    TEST(_match(roxen->quick_ip_to_host(got->remoteaddr), m->domain/","));
+  {
+    NOCACHE();
+    TEST(_match(roxen->quick_ip_to_host(id->remoteaddr), m->domain/","));
+  }
   
   if(m->user)
+  {
+    NOCACHE();
+
     if(m->user == "any")
-      if(m->file && got->auth) {
+      if(m->file && id->auth) {
 	// FIXME: wwwfile attribute doesn't work.
-	TEST(match_user(got->auth,got->auth[1],fix_relative(m->file,got),
-			!!m->wwwfile, got));
+	TEST(match_user(id->auth,id->auth[1],fix_relative(m->file,id),
+			!!m->wwwfile, id));
       } else
-	TEST(got->auth && got->auth[0]);
+	TEST(id->auth && id->auth[0]);
     else
-      if(m->file && got->auth) {
+      if(m->file && id->auth) {
 	// FIXME: wwwfile attribute doesn't work.
-	TEST(match_user(got->auth,m->user,fix_relative(m->file,got),
-			!!m->wwwfile, got));
+	TEST(match_user(id->auth,m->user,fix_relative(m->file,id),
+			!!m->wwwfile, id));
       } else
-	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
+	TEST(id->auth && id->auth[0] && search(m->user/",", id->auth[1])
 	     != -1);
+  }
 
   if (m->group) {
+    NOCACHE();
+
     if (m->groupfile && sizeof(m->groupfile)) {
-      TEST(group_member(got->auth, m->group, m->groupfile, got));
+      TEST(group_member(id->auth, m->group, m->groupfile, id));
     } else {
       return("<!-- groupfile not specified --><false>");
     }
@@ -1911,25 +1976,25 @@ string tag_configimage(string f, mapping m)
   return ("<img border=0 "+args+">");
 }
 
-string tag_aprestate(string tag, mapping m, string q, object got)
+string tag_aprestate(string tag, mapping m, string q, object id)
 {
   string href, s, *foo;
   multiset prestate=(< >);
 
   if(!(href = m->href))
-    href=strip_prestate(strip_config(got->raw_url));
+    href=strip_prestate(strip_config(id->raw_url));
   else 
   {
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
       return make_container("a",m,q);
-    href=fix_relative(href, got);
+    href=fix_relative(href, id);
     m_delete(m, "href");
   }
   
   if(!strlen(href))
     href="";
 
-  prestate = (< @indices(got->prestate) >);
+  prestate = (< @indices(id->prestate) >);
 
   foreach(indices(m), s) {
     if(m[s]==s) {
@@ -1945,7 +2010,7 @@ string tag_aprestate(string tag, mapping m, string q, object got)
   return make_container("a",m,q);
 }
 
-string tag_aconfig(string tag, mapping m, string q, object got)
+string tag_aconfig(string tag, mapping m, string q, object id)
 {
   string href;
   mapping(string:string) cookies = ([]);
@@ -1953,14 +2018,14 @@ string tag_aconfig(string tag, mapping m, string q, object got)
   if(m->help) return "Alias for &lt;aconf&gt;";
 
   if(!m->href)
-    href=strip_prestate(strip_config(got->raw_url));
+    href=strip_prestate(strip_config(id->raw_url));
   else 
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
       return sprintf("<!-- Cannot add configs to absolute URLs -->\n"
 		     "<a href=\"%s\">%s</a>", href, q);
-    href=fix_relative(href, got);
+    href=fix_relative(href, id);
     m_delete(m, "href");
   }
 
@@ -1980,7 +2045,7 @@ string tag_aconfig(string tag, mapping m, string q, object got)
       }
     }
   }
-  m->href = add_config(href, indices(cookies), got->prestate);
+  m->href = add_config(href, indices(cookies), id->prestate);
   return make_container("a", m, q);
 }
 
@@ -1995,7 +2060,7 @@ string add_header(mapping to, string name, string value)
     to[name] = value;
 }
 
-string tag_add_cookie(string tag, mapping m, object got, object file,
+string tag_add_cookie(string tag, mapping m, object id, object file,
 		      mapping defines)
 {
   string cookies;
@@ -2029,7 +2094,7 @@ string tag_add_cookie(string tag, mapping m, object got, object file,
   return "";
 }
 
-string tag_remove_cookie(string tag, mapping m, object got, object file,
+string tag_remove_cookie(string tag, mapping m, object id, object file,
 			 mapping defines)
 {
   string cookies;
@@ -2043,11 +2108,11 @@ string tag_remove_cookie(string tag, mapping m, object got, object file,
   return "";
 }
 
-string tag_prestate(string tag, mapping m, string q, object got)
+string tag_prestate(string tag, mapping m, string q, object id)
 {
   if(m->help) return "DEPRECATED: This tag is here for compatibility reasons only";
   int ok, not=!!m->not, or=!!m->or;
-  multiset pre=got->prestate;
+  multiset pre=id->prestate;
   string s;
 
   foreach(indices(m), s)
@@ -2074,21 +2139,21 @@ string tag_prestate(string tag, mapping m, string q, object got)
   return ok?q:"";
 }
 
-string tag_false(string tag, mapping m, object got, object file,
+string tag_false(string tag, mapping m, object id, object file,
 		 mapping defines, object client)
 {
   _ok = 0;
   return "";
 }
 
-string tag_true(string tag, mapping m, object got, object file,
+string tag_true(string tag, mapping m, object id, object file,
 		mapping defines, object client)
 {
   _ok = 1;
   return "";
 }
 
-string tag_if(string tag, mapping m, string s, object got, object file,
+string tag_if(string tag, mapping m, string s, object id, object file,
 	      mapping defines, object client)
 {
   string res, a, b;
@@ -2097,30 +2162,30 @@ string tag_if(string tag, mapping m, string s, object got, object file,
   {
     // compat_if mode?
     if (QUERY(compat_if)) {
-      res=tag_allow(tag, m, a, got, file, defines, client);
+      res=tag_allow(tag, m, a, id, file, defines, client);
       if (res == "<false>") {
 	return b;
       }
     } else {
-      res=tag_allow(tag, m, a, got, file, defines, client) +
+      res=tag_allow(tag, m, a, id, file, defines, client) +
 	"<else>" + b + "</else>";
     }
   } else {
-    res=tag_allow(tag, m, s, got, file, defines, client);
+    res=tag_allow(tag, m, s, id, file, defines, client);
   }
   return res;
 }
 
-string tag_deny(string tag, mapping m, string s, object got, object file, 
+string tag_deny(string tag, mapping m, string s, object id, object file, 
 		mapping defines, object client)
 {
   if(m->help) return ("DEPRECATED. This tag is only here for compatibility reasons");
   if(m->not)
   {
     m->not = 0;
-    return tag_if(tag, m, s, got, file, defines, client);
+    return tag_if(tag, m, s, id, file, defines, client);
   }
-  if(tag_if(tag,m,s,got,file,defines,client) == "<false>") {
+  if(tag_if(tag,m,s,id,file,defines,client) == "<false>") {
     if (QUERY(compat_if)) {
       return "<true>"+s;
     } else {
@@ -2131,39 +2196,41 @@ string tag_deny(string tag, mapping m, string s, object got, object file,
 }
 
 
-string tag_else(string tag, mapping m, string s, object got, object file, 
+string tag_else(string tag, mapping m, string s, object id, object file, 
 		mapping defines) 
 { 
   return _ok?"":s; 
 }
 
-string tag_elseif(string tag, mapping m, string s, object got, object file, 
+string tag_elseif(string tag, mapping m, string s, object id, object file, 
 		  mapping defines, object client) 
 { 
   if(m->help) return ("alias for &lt;elseif&gt;");
-  return _ok?"":tag_if(tag, m, s, got, file, defines, client); 
+  return _ok?"":tag_if(tag, m, s, id, file, defines, client); 
 }
 
-string tag_client(string tag,mapping m, string s,object got,object file)
+string tag_client(string tag,mapping m, string s,object id,object file)
 {
   int isok, invert;
+
+  NOCACHE();
 
   if(m->help) return ("DEPRECATED, This is a compatibility tag");
   if (m->not) invert=1; 
 
   if (m->supports)
-    isok=!! got->supports[m->supports];
+    isok=!! id->supports[m->supports];
 
   if (m->support)
-    isok=!!got->supports[m->support];
+    isok=!!id->supports[m->support];
 
   if (!(isok && m->or) && m->name)
-    isok=_match(got->client*" ",
+    isok=_match(id->client*" ",
 		Array.map(m->name/",", lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }
 
-string tag_return(string tag, mapping m, object got, object file,
+string tag_return(string tag, mapping m, object id, object file,
 		  mapping defines)
 {
   if(m->code)_error=(int)m->code || 200;
@@ -2171,17 +2238,19 @@ string tag_return(string tag, mapping m, object got, object file,
   return "";
 }
 
-string tag_referer(string tag, mapping m, object got, object file,
+string tag_referer(string tag, mapping m, object id, object file,
 		   mapping defines)
 {
+  NOCACHE();
+
   if(m->help) 
     return ("Compatibility alias for referrer");
-  if(got->referer)
-    return sizeof(got->referer)?got->referer*"":m->alt?m->alt:"..";
+  if(id->referer)
+    return sizeof(id->referer)?id->referer*"":m->alt?m->alt:"..";
   return m->alt?m->alt:"..";
 }
 
-string tag_header(string tag, mapping m, object got, object file,
+string tag_header(string tag, mapping m, object id, object file,
 		  mapping defines)
 {
   if(m->name == "WWW-Authenticate")
@@ -2225,7 +2294,7 @@ string tag_redirect(string tag, mapping m, object id, object file,
   return("");
 }
 
-string tag_expire_time(string tag, mapping m, object got, object file,
+string tag_expire_time(string tag, mapping m, object id, object file,
 		       mapping defines)
 {
   int t=time();
@@ -2236,37 +2305,42 @@ string tag_expire_time(string tag, mapping m, object got, object file,
   if (m->weeks) t+=((int)(m->weeks))*(24*3600*7);
   if (m->months) t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
   if (m->years) t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
+
+  CACHE(max(t-time(),0));
+
   add_header(_extra_heads, "Expires", http_date(t));
   return "";
 }
 
-string tag_file(string tag, mapping m, object got)
+string tag_file(string tag, mapping m, object id)
 {
   if(m->raw)
-    return http_decode_string(got->raw_url);
+    return id->raw_url;
   else
-    return got->not_query;
+    return id->not_query;
 }
 
-string tag_realfile(string tag, mapping m, object got)
+string tag_realfile(string tag, mapping m, object id)
 {
-  return got->realfile || "unknown";
+  return id->realfile || "unknown";
 }
 
-string tag_vfs(string tag, mapping m, object got)
+string tag_vfs(string tag, mapping m, object id)
 {
-  return got->virtfile || "unknown";
+  return id->virtfile || "unknown";
 }
 
-string tag_language(string tag, mapping m, object got)
+string tag_language(string tag, mapping m, object id)
 {
-  if(!got->misc["accept-language"])
+  NOCACHE();
+
+  if(!id->misc["accept-language"])
     return "None";
 
   if(m->full)
-    return got->misc["accept-language"]*"";
+    return id->misc["accept-language"]*"";
   else
-    return (got->misc["accept-language"][0]/";")[0];
+    return (id->misc["accept-language"][0]/";")[0];
 }
 
 string tag_quote(string tagname, mapping m)
@@ -2331,7 +2405,7 @@ string tag_pr(string tagname, mapping m)
 
 string tag_number(string t, mapping args)
 {
-  return language(args->language||args->lang||"en", 
+  return language(args->language||args->lang, 
 		  args->type||"number")( (int)args->num );
 }
 
@@ -2434,6 +2508,9 @@ mapping query_tag_callers()
 	    "modified":tag_modified,
 	    "pr":tag_pr,
 	    "use":tag_use,
+	    "set-max-cache":lambda(string t, mapping m, object id) { 
+			      id->misc->cacheable = (int)m->time; 
+			    },
 	    "list-tags":tag_list_tags,
 	    "number":tag_number,
 	    "imgs":tag_ximage,
@@ -2477,7 +2554,7 @@ mapping query_tag_callers()
    ]);
 }
 
-string tag_source(string tag, mapping m, string s, object got,object file)
+string tag_source(string tag, mapping m, string s, object id,object file)
 {
   string sep;
   sep=m["separator"]||"";
@@ -2487,7 +2564,7 @@ string tag_source(string tag, mapping m, string s, object got,object file)
 	  +"</pre>"+sep+s);
 }
 
-string tag_source2(string tag, mapping m, string s, object got,object file)
+string tag_source2(string tag, mapping m, string s, object id,object file)
 {
   if(!m["magic"])
     if(m["pre"])
@@ -2503,7 +2580,7 @@ string tag_source2(string tag, mapping m, string s, object got,object file)
       return replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
 }
 
-string tag_autoformat(string tag, mapping m, string s, object got,object file)
+string tag_autoformat(string tag, mapping m, string s, object id,object file)
 {
   s-="\r";
   if(m->p)
@@ -2581,11 +2658,11 @@ string tag_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-string tag_right(string t, mapping m, string s, object got)
+string tag_right(string t, mapping m, string s, object id)
 {
   if(m->help) 
     return "DEPRECATED: compatibility alias for &lt;p align=right&gt;";
-  if(got->supports->alignright)
+  if(id->supports->alignright)
     return "<p align=right>"+s+"</p>";
   return "<table width=100%><tr><td align=right>"+s+"</td></tr></table>";
 }
@@ -2599,6 +2676,8 @@ string tag_formoutput(string tag_name, mapping args, string contents,
 string tag_gauge(string t, mapping args, string contents, 
 		 object id, object f, mapping defines)
 {
+  NOCACHE();
+
 #if constant(gethrtime)
   int t = gethrtime();
   contents = parse_rxml( contents, id );
@@ -2864,6 +2943,8 @@ class Tracer
 
 string tag_trace(string t, mapping args, string c , object id)
 {
+  NOCACHE();
+
   object t= Tracer();
   function a = id->misc->trace_enter;
   function b = id->misc->trace_leave;
@@ -2876,6 +2957,21 @@ string tag_trace(string t, mapping args, string c , object id)
   return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
 }
 
+string tag_for(string t, mapping args, string c, object id)
+{
+  string v = args->variable;
+  int from = (int)args->from;
+  int to = (int)args->to;
+  int step = (int)args->step||1;
+  
+  m_delete(args, "from");
+  m_delete(args, "to");
+  m_delete(args, "variable");
+  string res="";
+  for(int i=from; i<=to; i+=step)
+    res += "<set variable="+v+" value="+i+">"+c;
+  return res;
+}
 
 mapping query_container_callers()
 {
@@ -2886,6 +2982,7 @@ mapping query_container_callers()
 		     else
 		       return crypt(c);
 		   },
+	   "for":tag_for,
 	   "trace":tag_trace,
 	   "cset":lambda(string t, mapping m, string c, object id)
 		  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
@@ -2933,6 +3030,7 @@ mapping query_container_callers()
 
 int api_query_num(object id, string f, int|void i)
 {
+  NOCACHE();
   return query_num(f, i);
 }
 
@@ -2945,6 +3043,7 @@ string api_parse_rxml(object id, string r)
 string api_tagtime(object id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
+  NOCACHE();
   return tagtime( ti, m );
 }
 
@@ -3023,11 +3122,13 @@ int api_set_prestate(object id, string p)
 
 int api_supports(object id, string p)
 {
+  NOCACHE();
   return id->supports[p];
 }
 
 int api_set_supports(object id, string p)
 {
+  NOCACHE();
   return id->supports[p]=1;
 }
 
@@ -3040,6 +3141,7 @@ int api_set_return_code(object id, int c, string p)
 
 string api_get_referer(object id)
 {
+  NOCACHE();
   if(id->referer && sizeof(id->referer)) return id->referer*"";
   return ([])[0];
 }
@@ -3062,7 +3164,6 @@ string api_html_quote_attr(object id, string value)
   return sprintf("\"%s\"", replace(value, "\"", "&quot;"));
 }
 
-// compat code..  
 void add_api_function( string name, function f, void|array(string) types)
 {
   if(this_object()["_api_functions"])
