@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.355 2002/03/13 16:52:38 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.356 2002/03/14 12:25:21 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5301,7 +5301,7 @@ using the pre tag.
  and return that result without evaluating the content again.</p>
 
  <p>Nested <tag>cache</tag> tags are normally cached separately, and
- they are also recognized so that the surrounding tag doesn't cache
+ they are also recognized so that the surrounding tags don't cache
  their contents too. It's thus possible to change the cache parameters
  or completely disable caching of a certain part of the content inside
  a <tag>cache</tag> tag.</p>
@@ -5318,11 +5318,10 @@ using the pre tag.
  be assigned again to that variable when the cached entry is used.</p>
 
  <p>When the content is evaluated, the produced result is associated
- with a key that is built by taking the values of certain variables
- and other pieces of data, which thus are what the cache depends on.
- The attributes \"variable\", \"key\" and \"profile\" lets you specify
- these cache dependencies. If none of them are used, the tag will
- have a single cache entry that always matches.</p>
+ with a key that is specified by the optional attributes \"variable\",
+ \"key\" and \"profile\". This key is what the the cached data depends
+ on. If none of the attributes are used, the tag will have a single
+ cache entry that always matches.</p>
 
  <note><p>It is easy to create huge amounts of cached values if the
  cache parameters are chosen badly. E.g. to depend on the contents of
