@@ -55,12 +55,12 @@
        </emit>
       </table>
      <if variable="form.port is &port.port;"><br clear='all'/>
-      <cfg-variables nosave='' source='port-variables' port="&port.port;"/><br clear='all'/>
+      <cfg-variables nosave='' source='port-variables' port="&port.port;"/>
      </if>
    </emit>
     </if>
     <else>
-      <cfg-variables nosave='' source='global-variables' section='&form.section;'/>
+      <cfg-variables source='global-variables' section='&form.section;'/>
     </else>
   </else>
  </st-page>
