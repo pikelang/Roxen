@@ -1,8 +1,8 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.74 2001/07/25 22:47:57 mast Exp $
+// $Id: cache.pike,v 1.75 2001/08/01 11:07:35 per Exp $
 
-#pragma strict_types
+// #pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
