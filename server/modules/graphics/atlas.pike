@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.13 2002/11/17 17:55:44 mani Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.14 2003/01/23 16:51:49 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -15,9 +15,22 @@ constant module_doc  =
 possible to highlight countries on the generated world map.";
 
 roxen.ImageCache the_cache;
+int do_ext;
 
 void start() {
   the_cache = roxen.ImageCache( "atlas", generate_image );
+  do_ext = query("ext");
+}
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
 }
 
 string status() {
@@ -35,7 +48,9 @@ void flush_cache() {
 }
 
 mapping find_internal( string f, RequestID id ) {
-  return the_cache->http_file_answer( f, id );
+  //  Strip file extensions from filename. Since "." isn't a valid character
+  //  in the ID we can split at the first occurrence.
+  return the_cache->http_file_answer((f / ".")[0], id);
 }
 
 
@@ -166,6 +181,9 @@ class TagAtlas {
 
       args->src = query_absolute_internal_location(id) +
 	the_cache->store(state, id);
+      if(do_ext)
+	args->src += ".gif";
+
       if(!args->alt)
 	args->alt = state->region || "The World";
 
