@@ -269,12 +269,13 @@ string tag_exec(string tag, mapping m, object id)
             "any command. Please note that this can present a severe "
             " security hole when allowed.");
 
-  if(m->cgi)
+  if(m->cgi) {
     if(m->cache)
       CACHE((int)m->cache);
     else
       NOCACHE();
     return id->conf->api_functions()->read_file[0](id, http_decode_string(m->cgi));
+  }
 
   if(m->cmd)
   {
