@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.33 2000/09/10 16:35:08 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.34 2000/09/24 00:39:19 jonasw Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -115,12 +115,12 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='document name'>
- Name of the current document (= page). RXML counterpart: &amp;page.self;
+ Name of the current document (= page). RXML counterpart: <ent>page.self</ent>.
  <ex type=vert><!--#echo var=\"document name\" --></ex>
 </attr>
 
 <attr name=var value='document uri'>
- URI (URL) to the current page. RXML counterpart: &amp;page.url;
+ URI (URL) to the current page. RXML counterpart: <ent>page.url</ent>.
  <ex type=vert><!--#echo var=\"document uri\" --></ex>
 </attr>
 
@@ -135,23 +135,23 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='last modified'>
- Last time this document was modified. RXML counterpart: &lt;modified/&gt;
+ Last time this document was modified. RXML counterpart: <tag>modified/</tag>.
 </attr>
 
 <attr name=var value='server software'>
- The web server software. RXML counterpart: &amp;roxen.version;
+ The web server software. RXML counterpart: <ent>roxen.version</ent>.
 </attr>
 
 <attr name=var value='server name'>
- The web server name. RXML counterpart: &amp;roxen.domain;
+ The web server name. RXML counterpart: <ent>roxen.domain</ent>.
 </attr>
 
 <attr name=var value='remote host'>
- Name of client machine. RXML counterpart: &amp;client.host;
+ Name of client machine. RXML counterpart: <ent>client.host</ent>.
 </attr>
 
 <attr name=var value='remote addr'>
- Numeric IP address of client machine. RXML counterpart: &amp;client.ip;
+ Numeric IP address of client machine. RXML counterpart: <ent>client.ip</ent>.
 </attr>
 
 <attr name=var value='auth type'>
@@ -163,7 +163,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='http referrer'>
- URL of the referring page. RXML counterpart: &amp;client.referrer;
+ URL of the referring page. RXML counterpart: <ent>client.referrer</ent>.
 </attr>
 
 <attr name=var value='gateway interface'>
@@ -185,7 +185,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='http user agent'>
- The user agent string. RXML counterpart: &amp;client.Fullname;
+ The user agent string. RXML counterpart: <ent>client.Fullname</ent>.
 </attr>
 
 <attr name=var value='path translated'>
@@ -232,8 +232,8 @@ constant tagdoc=([
 "!--#flastmod":#"
 <desc tag><short hide>
  This tag prints the last modification date of the specified file,
- subject to timefmt format specification used in the <!--#config> SSI
- tag.</short> This tag prints the last modification date of the
+ subject to timefmt format specification used in the <tag>!--#config</tag>
+ SSI tag.</short> This tag prints the last modification date of the
  specified file, subject to timefmt format specification used in the
  <ref type=tag>!--#config</ref> SSI tag. </desc>
 
@@ -250,7 +250,7 @@ constant tagdoc=([
 <desc tag><short hide>
 
  Prints the size of the specified file, subject to the sizefmt format
- specification used in the <!--#config> SSI tag. </short>Prints the
+ specification used in the <tag>!--#config</tag> SSI tag. </short>Prints the
  size of the specified file, subject to the sizefmt format
  specification used in the <ref type=tag>!--#config</ref> SSI tag.
  </desc>
