@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.358 1999/08/04 21:23:53 neotron Exp $
+ * $Id: roxen.pike,v 1.359 1999/08/11 06:36:08 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.358 1999/08/04 21:23:53 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.359 1999/08/11 06:36:08 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1222,14 +1222,20 @@ void restart_if_stuck (int force)
     roxen_perror("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
-  signal(signum("SIGALRM"),lambda( int n ) {
-			     roxen_perror(master()->describe_backtrace( ({
-			       sprintf("**** %s: ABS engaged! Trying to dump backlog: \n",
-				       ctime(time()) - "\n"),
-			       backtrace() }) ) );
-			     _exit(1); 	// It might now quit correctly otherwise, if it's
-			     //  locked up
-			   });
+  signal(signum("SIGALRM"),
+	 lambda( int n ) {
+	   werror(sprintf("**** %s: ABS engaged!\n"
+			  "Trying to dump backlog: \n",
+			  ctime(time()) - "\n"));
+	   catch {
+	     // Catch for paranoia reasons.
+	     describe_all_threads();
+	   };
+	   werror(sprintf("**** %s: ABS exiting roxen!\n\n",
+			  ctime(time())));  
+	   _exit(1); 	// It might now quit correctly otherwise, if it's
+	   //  locked up
+	 });
   alarm (60*QUERY(abs_timeout)+10);
 #endif
 }
