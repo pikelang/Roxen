@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.256 2001/11/14 15:45:25 mast Exp $
+// $Id: module.pmod,v 1.257 2001/11/20 17:45:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -57,6 +57,7 @@ static object roxen;
 // #define OBJ_COUNT_DEBUG
 // #define RXML_OBJ_DEBUG
 // #define RXML_VERBOSE
+// #define RXML_REQUEST_VERBOSE
 // #define RXML_COMPILE_DEBUG
 // #define RXML_ENCODE_DEBUG
 // #define TYPE_OBJ_DEBUG
@@ -95,6 +96,9 @@ static object roxen;
 
 #ifdef RXML_VERBOSE
 #  define TAG_DEBUG_TEST(test) 1
+#elif defined (RXML_REQUEST_VERBOSE)
+#  define TAG_DEBUG_TEST(test)						\
+  ((test) || RXML_CONTEXT->id && RXML_CONTEXT->id->misc->rxml_verbose)
 #else
 #  define TAG_DEBUG_TEST(test) (test)
 #endif
@@ -3156,7 +3160,7 @@ class Frame
 		subparser = result_type->get_parser (ctx, ctx->tag_set, evaler, p_code);
 		if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 		  subparser->recover_errors = 1;
-		  if (p_code) p_code->recover_errors = 1;
+		  if (p_code) p_code->set_recover_errors (1);
 		}
 		THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
 				p_code ? " and compiling" : "",
@@ -3847,11 +3851,7 @@ class Frame
 			}
 			if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			  subevaler->recover_errors = 1;
-			  if (p_code) {
-			    p_code->recover_errors = 1;
-			    if ((p_code = p_code->p_code))
-			      p_code->recover_errors = 1;
-			  }
+			  if (p_code) p_code->set_recover_errors (1);
 			}
 		      }
 		      subevaler->finish (in_content); // Might unwind.
@@ -3860,9 +3860,12 @@ class Frame
 		  }
 		  else {
 		    subevaler = in_content;
-		    if (flags & FLAG_GET_EVALED_CONTENT)
-		      subevaler->p_code = this_object()->evaled_content =
+		    if (flags & FLAG_GET_EVALED_CONTENT) {
+		      PCode p_code = subevaler->p_code = this_object()->evaled_content =
 			PCode (content_type, subevaler->tag_set, ctx);
+		      if (subevaler->recover_errors)
+			p_code->set_recover_errors (1);
+		    }
 		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
 				    debug_iter,
 				    flags & FLAG_GET_EVALED_CONTENT ?
@@ -6802,6 +6805,8 @@ class PCode
 		  void|array frame_state)
   {
   add_frame: {
+      int frame_flags = frame->flags;
+
     add_evaled_value:
       if (flags & COLLECT_RESULTS) {
 	if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
@@ -6810,7 +6815,7 @@ class PCode
 	  ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
 	mapping var_chg = ctx->misc->variable_changes;
 	ctx->misc->variable_changes = ([]);
-	if (frame->flags & FLAG_DONT_CACHE_RESULT)
+	if (frame_flags & FLAG_DONT_CACHE_RESULT)
 	  PCODE_MSG ("frame %O not result cached\n", frame);
 	else {
 	  if (evaled_value == PCode) {
@@ -6818,7 +6823,7 @@ class PCode
 	    // signify that the frame produced no result to add (i.e. it
 	    // threw an exception instead). In that case we must keep
 	    // the frame unevaluated.
-	    frame->flags |= FLAG_DONT_CACHE_RESULT;
+	    frame_flags |= FLAG_DONT_CACHE_RESULT;
 	    PCODE_MSG ("frame %O not result cached due to exception\n", frame);
 	    break add_evaled_value;
 	  }
@@ -6833,12 +6838,11 @@ class PCode
 	}
       }
 
-      PCODE_MSG ("adding frame %O\n", frame);
       if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
       exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
       if (!stringp (frame->args) && !functionp (frame->args) &&
-	  (frame->flags & FLAG_PROC_INSTR ? frame->args != 0 : !mappingp (frame->args)))
+	  (frame_flags & FLAG_PROC_INSTR ? frame->args != 0 : !mappingp (frame->args)))
 	error ("Invalid args %s in frame about to be added to p-code.\n",
 	       format_short (frame->args));
 #endif
@@ -6851,10 +6855,29 @@ class PCode
 	  ctx->p_code_comp->delayed_resolve (frame_state, 0);
 	RESET_FRAME (frame);
       }
+
+      if (frame_flags != frame->flags) {
+	// Must copy the stored frame if we change the flags.
+	if (exec[length]->is_RXML_Tag)
+	  frame = exec[length]->Frame(), frame->tag = exec[length];
+	else
+	  exec[length] = frame = exec[length]->_clone_empty();
+	frame->_restore (exec[length + 2]);
+	frame->flags = frame_flags;
+	exec[length + 1] = frame;
+      }
+
       length += 3;
+      PCODE_MSG ("added frame %O\n", frame);
     }
 
     if (p_code) p_code->add_frame (ctx, frame, evaled_value, frame_state);
+  }
+
+  void set_recover_errors (int val)
+  {
+    recover_errors = val;
+    if (p_code) p_code->set_recover_errors (val);
   }
 
   void finish()
@@ -7123,7 +7146,7 @@ class PCode
       sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
   }
 
-  constant P_CODE_VERSION = 1;
+  constant P_CODE_VERSION = 2;
   // Version spec encoded with the p-code, so that we can detect and
   // reject incompatible p-code dumps even when the encoded format
   // hasn't changed in an obvious way.
