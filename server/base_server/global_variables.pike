@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.27 2000/03/17 18:19:13 mast Exp $
+// $Id: global_variables.pike,v 1.28 2000/03/21 09:46:24 mast Exp $
 
 #pragma strict_types
 #define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
@@ -1047,6 +1047,13 @@ så här ofta. Tiden är angiven i dagar");
                "Wieviele Sekunden sollen zwischen zwei Ausführungen "
                "einer Garbage Collection im Speicher-Cache liegen? "
                "Der Speicher-Cache enthält u.a. die Supports-Daten.");
+
+  globvar("config_file_comments", 0,
+	  "Commented config files",
+	  TYPE_FLAG, #"\
+Save the variable documentation strings as comments in the
+configuration files. Only useful if you read or edit the config files
+directly.");
 
   setvars(retrieve("Variables", 0));
 
