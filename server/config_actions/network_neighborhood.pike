@@ -1,4 +1,7 @@
-/* $Id: network_neighborhood.pike,v 1.18 1997/10/09 01:01:28 grubba Exp $ */
+/* $Id: network_neighborhood.pike,v 1.19 1997/10/09 01:35:55 grubba Exp $ */
+
+#include <config.h>
+
 #ifndef ENABLE_NEIGHBOURHOOD
 constant action_disabled = 1;
 #else /* ENABLE_NEIGHBOURHOOD */
