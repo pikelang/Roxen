@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.17 1998/03/29 01:33:12 neotron Exp $
+ * $Id: smartpipe.pike,v 1.18 1998/03/29 02:30:54 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -23,6 +23,18 @@ int bytes_sent()
 }
 
 void next_input();
+void finish();
+
+void check_for_closing()
+{
+  if(!outfd || !outfd->query_address()) {
+#ifdef FD_DEBUG
+    write("Detected closed FD. Self-Destructing.\n");
+#endif
+    finis();
+  } else
+    call_out(check_for_closing, 10);
+}
 
 void finish()
 {
@@ -37,6 +49,7 @@ void finish()
   current_input = 0;
   write_out = done_callback = 0;
   to_send = 0;
+  remote_call_back(check_for_closing);
   destruct(this_object());
 }
 
@@ -47,7 +60,9 @@ void write_more()
   len = write_out(current_input);
   if(len <= 0)
   {
+#ifdef FD_DEBUG
     write("Write failed. Self-Destructing.\n");
+#endif
     finish();
     return;
   }
@@ -90,6 +105,7 @@ void shuffle()
 
 void next_input()
 {
+  remote_call_back(check_for_closing);
   if(!sizeof(to_send))
   {
     finish();
@@ -108,7 +124,9 @@ void next_input()
 		    ?current_input->read(current_input_len)
 		    :current_input) || "");
     if(written == -1) {
+#ifdef FD_DEBUG
       write("Short write failed. Self-Destructing.\n");
+#endif
       finish();
     } else {
       sent += written;
@@ -119,7 +137,8 @@ void next_input()
 
   if(stringp(current_input))
   {
-    outfd->set_nonblocking(lambda() {}, write_more, finish);
+    outfd->set_nonblocking(0, write_more, 0);
+    call_out(check_for_closing, 10);
     return;
   }
   if(outfd->query_fd()>0 && current_input->query_fd()>0)
