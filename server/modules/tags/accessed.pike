@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.36 2000/09/10 16:35:04 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.37 2000/09/20 23:40:55 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -66,7 +66,7 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
   "&page.accessed;":#"<desc ent>Generates an access counter that shows how many
- times the page has been accessed.</desc>",
+ times the page has been accessed. Needs the accessed module.</desc>",
 
   "accessed":#"<desc tag><short>Generates an access counter that shows how many
  times the page has been accessed.</short> A file, AccessedDB, in the logs directory is used to
