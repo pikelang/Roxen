@@ -3,6 +3,8 @@
 //
 // Roxen bootstrap program.
 
+// $Id: roxenloader.pike,v 1.306 2001/12/04 18:39:26 mast Exp $
+
 #define LocaleString Locale.DeferredLocale|string
 
 // #pragma strict_types
@@ -26,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.305 2001/11/15 11:11:18 tomas Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.306 2001/12/04 18:39:26 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -114,6 +116,41 @@ int use_syslog, loggingfield;
 /*
  * Some efuns used by Roxen
  */
+
+static string last_id, last_from;
+string get_cvs_id(string from)
+{
+  if(last_from == from) return last_id;
+  last_from=from;
+  catch {
+    object f = open(from,"r");
+    string id;
+    id = f->read(1024);
+    if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
+      return last_id=" (version "+id+")";
+  };
+  last_id = "";
+  return "";
+}
+
+void add_cvs_ids(mixed to)
+{
+  if (arrayp (to) && sizeof (to) >= 2 && arrayp (to[1]) ||
+      objectp (to) && to->is_generic_error)
+    to = to[1];
+  else if (!arrayp (to)) return;
+  foreach(to, mixed q)
+    if(arrayp (q) && sizeof(q) && stringp(q[0])) {
+      string id = get_cvs_id(q[0]);
+      catch (q[0] += id);
+    }
+}
+
+string describe_backtrace (mixed err, void|int linewidth)
+{
+  add_cvs_ids (err);
+  return predef::describe_backtrace (err, 999999);
+}
 
 static int(0..5) last_was_change;
 int(2..2147483647) roxen_started = [int(2..2147483647)]time();
@@ -2032,6 +2069,10 @@ and recompile pike, after removing the file 'config.cache'
 
 ");
 #endif
+
+  add_constant ("get_cvs_id", get_cvs_id);
+  add_constant ("add_cvs_ids", add_cvs_ids);
+  add_constant ("describe_backtrace", describe_backtrace);
 
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
