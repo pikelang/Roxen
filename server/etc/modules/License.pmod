@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.4 2002/02/26 17:56:53 jonasw Exp $
+// $Id: License.pmod,v 1.5 2002/02/27 10:52:15 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -169,9 +169,9 @@ class Key
 }
 
 #ifdef INSIDE_ROXEN
-class Variable
+class LicenseVariable
 {
-  inherit .Variable.MultipleChoice;
+  inherit Variable.MultipleChoice;
   Configuration configuration;
   string license_dir;
   
@@ -222,7 +222,7 @@ class Variable
     return ({ 0, new_value });
   }
 
-  static int invisibility_check(RequestID id, .Variable.Variable var)
+  static int invisibility_check(RequestID id, Variable.Variable var)
   {
     return !Stdio.is_dir(license_dir);
   }

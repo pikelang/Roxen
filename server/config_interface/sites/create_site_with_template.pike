@@ -49,10 +49,10 @@ string|mapping parse( RequestID id )
     id->variables->site_template = t-".x";
   }
 
-  License.Variable license =
-    License.Variable("../license/", 0,
-		     "License file",
-		     "Use this license file for the new configuration.", 0);
+  License.LicenseVariable license =
+    License.LicenseVariable("../license/", 0,
+			    "License file",
+			    "Use this license file for the new configuration.", 0);
   license->set_path("license");
   if(id->variables[license->path()])
     license->set_from_form(id);

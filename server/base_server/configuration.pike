@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.499 2002/02/26 13:25:28 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.500 2002/02/27 10:52:16 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3495,10 +3495,11 @@ also set 'URLs'."));
 		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
 
   defvar("license",
-	 License.Variable("../license/", VAR_NO_DEFAULT,
-			  DLOCALE(0, "License file"),
-			  DLOCALE(0, "The license file for this configuration."),
-			  this_object()));
+	 License.
+	 LicenseVariable("../license/", VAR_NO_DEFAULT,
+			 DLOCALE(0, "License file"),
+			 DLOCALE(0, "The license file for this configuration."),
+			 this_object()));
   
   
 
