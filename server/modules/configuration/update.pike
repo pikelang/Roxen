@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.19 2000/06/29 13:00:30 noring Exp $
+ * $Id: update.pike,v 1.20 2000/06/29 13:22:28 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -40,7 +40,7 @@ constant module_doc = "This is the update client. "
                       "the settings tab.";
 
 object db;
-
+mixed init_error; // Used to store backtraces from yabu init
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
@@ -64,6 +64,9 @@ void post_start()
   //
   init_error = catch { db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"); };
   
+  if(init_error)
+    throw(init_error);
+
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
@@ -72,8 +75,6 @@ void post_start()
     updater=UpdateInfoFiles();
   UPDATE_NOISES("db == %O", ({ db }));
 
-  if(init_error)
-    throw(init_error);
 }
 
 void start(int num, Configuration conf)
@@ -168,10 +169,22 @@ array(array) menu = ({
 });
 
 
-string tag_show_backtrace(string t, mapping m, RequestID id)
+string tag_update_show_backtrace(string t, mapping m, RequestID id)
 {
   if(init_error)
-    throw(init_error);
+  {
+    string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
+    if(search(describe_backtrace(init_error), "Out-locked")!=-1)
+    {
+      s+="<h>Possible causes:</h2>";
+      s+="<ol><li>Yabu does not have permission to create/write/read its files. Solution: Change permissions on the relevant files.</li>";
+      s+="<li> Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files! Solution: Kill the offending Roxen processes.</li></ol><br/><br/>";
+    }
+    
+    s+="<h2>Backtrace:</h2><pre>"+describe_backtrace(init_error)+"</pre>";
+    id->variables->category="foo";
+    return s;
+  }
   else
     return "";
 }
@@ -219,6 +232,8 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
 // Arguments: package, reverse, type, limit
 string container_update_package_output(string t, mapping m, string c, RequestID id)
 {
+  if(init_error)
+    return "";
   UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ t, m, c }));
   array res=({ });
   int i=0;
