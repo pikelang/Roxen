@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.46 2000/09/20 18:17:40 nilsson Exp $
+# $Id: extensions,v 1.47 2000/11/20 02:21:24 nilsson Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -270,8 +270,8 @@ pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
 ##src	text/speech
 ##talk	text/speech
-vcf	text/x-vcard
-vcs	text/x-vcal
+vcf	text/x-vCard
+vcs	text/x-vCalendar
 
 
 # -------------------- Application ---------------------
