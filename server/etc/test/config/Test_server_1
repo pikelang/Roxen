@@ -40,7 +40,9 @@
   <var name='check_auth'>        <int>1</int> </var>
   <var name='delete'>            <int>0</int> </var>
   <var name='dir'>               <int>1</int> </var>
-  <var name='internal_files'>    <a></a> </var>
+  <var name='internal_files'><a>
+    <str>*.inv</str>
+  </a></var>
   <var name='mountpoint'>        <str>/</str> </var>
   <var name='no_symlinks'>       <int>0</int> </var>
   <var name='nobrowse'><a>
