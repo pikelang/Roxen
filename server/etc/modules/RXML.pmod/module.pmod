@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.293 2003/05/27 11:33:02 mast Exp $
+// $Id: module.pmod,v 1.294 2004/01/27 18:42:34 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1622,7 +1622,7 @@ class Context
       if (arrayp (var))
 	if (sizeof (var) > 1) {
 	  index = var[-1];
-	  array(string|int) path = var[..sizeof (var) - 1];
+	  array(string|int) path = var[..sizeof (var) - 2];
 	  vars = rxml_index (vars, path, scope_name, this_object());
 	  scope_name += "." + (array(string)) path * ".";
 	  if (mapping var_chg = misc->variable_changes)
@@ -1696,7 +1696,7 @@ class Context
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       if (arrayp (var))
 	if (sizeof (var) > 1) {
-	  array(string|int) path = var[..sizeof (var) - 1];
+	  array(string|int) path = var[..sizeof (var) - 2];
 	  vars = rxml_index (vars, path, scope_name, this_object());
 	  scope_name += "." + (array(string)) path * ".";
 	  if (mapping var_chg = misc->variable_changes)
