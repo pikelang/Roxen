@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.205 2000/02/19 06:12:32 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.206 2000/02/29 15:02:26 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -293,9 +293,15 @@ constant textarg=({"afont",
 
 constant theme=({"fgcolor","bgcolor","font"});
 
+constant hreffilter=(["split":1,"magic":1,"noxml":1,"alt":1]);
+
 mapping mk_gtext_arg(mapping arg, RequestID id) {
 
   mapping p=([]); //Picture rendering arguments.
+
+  m_delete(arg,"src");
+  m_delete(arg,"width");
+  m_delete(arg,"height");
 
   foreach(filearg, string tmp)
     if(arg[tmp]) {
@@ -394,16 +400,16 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     m_delete(arg,"submit");
   }
 
-  if(!arg->noxml) { arg["/"]="/"; m_delete(arg, "noxml"); }
-  if(!arg->border) arg->border=arg->border||"0";
-
   if(arg->href)
   {
     url = arg->href;
-    lp = replace(make_tag("a",arg),"%","%%")+"%s</a>";
+    lp = replace(make_tag("a",arg-hreffilter),"%","%%")+"%s</a>";
     if(!p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
     m_delete(arg, "href");
   }
+
+  if(!arg->noxml) { arg["/"]="/"; m_delete(arg, "noxml"); }
+  if(!arg->border) arg->border=arg->border||"0";
 
   if(arg->split)
   {
@@ -443,8 +449,6 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     string magic=replace(arg->magic,"'","`");
     m_delete(arg,"magic");
 
-    if(!arg->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
-			id->misc->defines->alink||"#ff0000";
     if(p->bevel) p->pressed=1;
 
     foreach(glob("magic-*", indices(arg)), string q)
@@ -452,6 +456,9 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
       p[q[6..]]=arg[q];
       m_delete(arg, q);
     }
+
+    if(!arg->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
+			id->misc->defines->alink||"#ff0000";
 
     string num2 = image_cache->store( ({ p, c }),id );
     size = image_cache->metadata( num2, id );
