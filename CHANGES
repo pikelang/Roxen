@@ -50,14 +50,18 @@ o The fonts are now loaded by plugins, it's relatively easy to add new
 
   The currently supported formats are:
    o Compatibility bitmap fonts
-   o The old font format, one file per font, uncompressed 8bpl bitmaps
+     The old font format, one file per font, uncompressed 8bpl bitmaps
+
    o TTF fonts
-   o TrueType fonts, using freetype
+     TrueType fonts, using freetype
+
    o Image directory
      A directory with a file 'fontname' and one image per character.
      The images can use any format Roxen knows.
+
    o Image TAR file
      Just like an image directory, but in a TAR file
+
    o Compact Image File
      Basically just like the image tar format, but more optimal. There
      is 8 bytes overhead per character, and 68 bytes header.
@@ -99,7 +103,7 @@ o Pike tag module
 
 o Perl module
   A module for embedded perl.
-  <?perl ... ?> and <perl></perl> in RXML pages.
+  <?perl ... ?> (and <perl></perl>) in RXML pages.
   .pl pages for CGI-like interface that is much faster than CGI.
 
 o Processing instructions in the low-level RXML parser
@@ -139,7 +143,7 @@ o The directory module
 o Emit
   o New sources
     o fonts - A list of all fonts available. 
-    o directory - Directory listings. 
+    o dir - Directory listings. 
     o path - Separate a path on '/'. 
     o values - Traverse a list, e.g. the response from a multivalue select. 
     o cimg - Like the <cimg> tag, but entity based. 
