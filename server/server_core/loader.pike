@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.387 2004/06/04 08:33:21 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.388 2004/06/16 01:00:16 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.387 2004/06/04 08:33:21 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.388 2004/06/16 01:00:16 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1269,15 +1269,12 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-mapping(string:array(MySQLTimeout)) sql_free_list = ([ ]);
+mapping(string:array(object)) sql_free_list = ([ ]);
+// FIXME check correct status support
 mapping sql_active_list = ([ ]);
-
-#ifdef DB_DEBUG
-static int sql_keynum;
-mapping(int:string) my_mysql_last_user = ([]);
-multiset all_sql_wrappers = set_weak_flag( (<>), Pike.WEAK );
-#endif /* DB_DEBUG */
-
+// FIXME make configurable?  It already is autoadapting to a certain extent
+constant max_sql_connections_cached = 16;
+private int lastdbinstance;
 
 //! @appears clear_connect_to_my_mysql_cache
 void clear_connect_to_my_mysql_cache( )
@@ -1285,262 +1282,77 @@ void clear_connect_to_my_mysql_cache( )
   sql_free_list = ([]);
 }
 
-class MySQLTimeout(static Sql.Sql real)
-{
-  // 5 minutes timeout.
-  static int timeout = time(1) + 5*60;
-
-  static int(0..1) `!()
-  {
-    if (timeout < time(1)) {
-      real = 0;
-    }
-    return !real;
+private void weed_sql_cache(string dbname) {
+  if(++lastdbinstance>=sizeof(sql_free_list))
+     lastdbinstance=0;
+  string dbinstance=indices(sql_free_list)[lastdbinstance];
+  if(dbname!=dbinstance) {
+     array flist=sql_free_list[dbinstance];
+     int n=sizeof(flist);
+     if(n>1)
+        sql_free_list[dbinstance]=flist[0..n-2];
+     else
+        m_delete(sql_free_list,dbinstance);
   }
-  Sql.Sql get()
-  {
-    if (timeout < time(1)) {
-      real = 0;
-    }
-    Sql.Sql res = real;
-    real = 0;
-    return res;
+  array flist=sql_free_list[dbname];
+  int n=sizeof(flist);
+  if(n>1)
+    sql_free_list[dbname]=flist[..n/2-1];
+}
+
+private Thread.Mutex mt = Thread.Mutex();
+
+class CSql {
+  inherit Sql.Sql;
+  string dbname;
+
+  static void create(string dbn, object|string url) {
+    dbname=dbn;
+    ::create(url);
   }
 
-  string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%O)", this_program, timeout);
+  private void destroy() {
+    Thread.MutexKey k=mt->lock();
+    if(sizeof(sql_free_list[dbname]+=({master_sql}))
+     >max_sql_connections_cached)
+      weed_sql_cache(dbname);
+    k=0;
   }
 }
 
-class MySQLResKey(static object real, static MySQLKey key)
-{
-  // Proxy functions:
-  static int num_rows()
-  {
-    return real->num_rows();
-  }
-  static int num_fields()
-  {
-    return real->num_fields();
-  }
-  static int eof()
-  {
-    return real->eof();
-  }
-  static array(mapping(string:mixed)) fetch_fields()
-  {
-    return real->fetch_fields();
-  }
-  static void seek(int skip)
-  {
-    real->seek(skip);
-  }
-  static int|array(string|int) fetch_row()
-  {
-    return real->fetch_row();
-  }
-
-  static int(0..1) `!()
-  {
-    return !real;
-  }
-
-  static mixed `[]( string what )
-  {
-    return `->( what );
-  }
-  static mixed `->(string what )
-  {
-    switch( what )
-    {
-    case "real":         return real;
-    case "num_rows":     return num_rows;
-    case "num_fields":   return num_fields;
-    case "eof":          return eof;
-    case "fetch_fields": return fetch_fields;
-    case "seek":         return seek;
-    case "fetch_row":    return fetch_row;
+Sql.Sql sq_cache_get(string dbname) {
+  if(sql_free_list[dbname]) {
+    array flist;
+#ifdef DB_DEBUG
+    if(dbname!="local:rw"&&dbname!="roxen:rw")
+      werror("%O found in free list\n", i );
+#endif
+    Thread.MutexKey k=mt->lock();
+    if(flist = sql_free_list[dbname]) {
+      object res = flist[-1];
+      int n=sizeof(flist);
+      if(n>1)
+        sql_free_list[dbname] = flist[..n-2];
+      else
+        m_delete(sql_free_list, dbname);
+      k=0;
+      return CSql(dbname, res);
     }
-    return real[what];
+    k=0;
   }
-
-  static string _sprintf(int type)
-  {
-    return type=='O' && sprintf( "%O( X, %O )", this_program, key );
-  }
-
-#if 0
-  static void destroy()
-  {
-    werror("Destroying %O\n", this);
-  }
-#endif /* 0 */
-}
-
-class MySQLKey
-{
-  object real;
-  string name;
-
-  static int `!( )  { return !real; }
-
-  array(mapping) query( string f, mixed ... args )
-  {
-    return real->query( f, @args );
-  }
-  
-  object big_query( string f, mixed ... args )
-  {
-    object o = real->big_query( f, @args );
-    return o && MySQLResKey(o, this);
-  }
-  
-#ifdef DB_DEBUG
-  static int num = sql_keynum++;
-  static string bt;
-#endif
-  static void create( object _real, string _name )
-  {
-    real = _real;
-    name = _name;
-#ifdef DB_DEBUG
-    if( !_real )
-      error("Creating SQL with empty real sql\n");
-
-    foreach( (array)all_sql_wrappers, object ro )
-    {
-      if( ro )
-	if( ro->real == real )
-	  error("Fatal: This databaseconnection is already used!\n");
-	else if( ro->real->master_sql == real->master_sql )
-	  error("Fatal: Internal share error: master_sql equal!\n");
-    }
-    all_sql_wrappers[this] = 1;
-
-    bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
-#endif /* DB_DEBUG */
-  }
-  
-  static void destroy()
-  {
-    // FIXME: Ought to be abstracted to an sq_cache_free().
-#ifdef DB_DEBUG
-    all_sql_wrappers[this]=0;
-#endif
-
-#ifndef NO_DB_REUSE
-    mixed key;
-    catch {
-      key = sq_cache_lock();
-    };
-    
-#ifdef DB_DEBUG
-    werror("%O:%d added to free list\n", name, num );
-    m_delete(my_mysql_last_user, num);
-#endif
-    if( !--sql_active_list[name] )
-      m_delete( sql_active_list, name );
-    sql_free_list[ name ] = ({ MySQLTimeout(real) }) +
-      (sql_free_list[ name ]||({}));
-    if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
-    {
-#ifdef DB_DEBUG
-      werror("Free list too large. Cleaning.\n" );
-#endif
-      clear_connect_to_my_mysql_cache();
-    }
-#else
-    // Slow'R'us
-    call_out(gc,0);
-#endif
-  }
-
-  static mixed `[]( string what )
-  {
-    return `->( what );
-  }
-  
-  static mixed `->(string what )
-  {
-    switch( what )
-    {
-      case "real":      return real;
-      case "query":     return query;
-      case "big_query": return big_query;
-    }
-    return real[what];
-  }
-
-  static string _sprintf(int type)
-  {
-#ifdef DB_DEBUG
-    switch(type) {
-    case 'd': return (string)num;
-    case 'O': sprintf( "SQL( %O:%d )", name, num );
-    }
-#else
-    return type=='O' && sprintf( "%O( %O )", this_program, name );
-#endif /* DB_DEBUG */
-  }
-}
-
-static Thread.Mutex mt = Thread.Mutex();
-mixed sq_cache_lock()
-{
-  return mt->lock();
-}
-
-mixed sq_cache_get( string i )
-{
-  while(sql_free_list[ i ])
-  {
-#ifdef DB_DEBUG
-    werror("%O found in free list\n", i );
-#endif
-    mixed res = sql_free_list[i][0];
-    if( sizeof( sql_free_list[ i ] ) > 1)
-      sql_free_list[ i ] = sql_free_list[i][1..];
-    else
-      m_delete( sql_free_list, i );
-    if (!res || !(res = res->get())) continue;
-    sql_active_list[i]++;
-    return MySQLKey( res, i );
-  }
-}
-
-mixed sq_cache_set( string i, mixed res )
-{
-  if( res )
-  {
-    sql_active_list[ i ]++;
-    return MySQLKey( res, i );
-  }
+  return UNDEFINED;
 }
 
 /* Not to be documented. This is a low-level function that should be
  * avoided by normal users. 
 */
-mixed connect_to_my_mysql( string|int ro, void|string db )
+Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 {
-#ifdef DB_DEBUG
-  gc();
-#endif
-  mixed key;
-  if (catch {
-    key = sq_cache_lock();
-  }) {
-    // Threads disabled.
-    // This can occurr if we are called from the compiler.
-    return low_connect_to_my_mysql(ro, db);
-  }
-  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  mixed res =
-    sq_cache_get(i) ||
-    sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
-
-  // Fool the optimizer so that key is not released prematurely
-  if( res )
-    return res;
+  string dbname = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
+  Sql.Sql res;
+  if(!(res=sq_cache_get(dbname)))
+    res=CSql(dbname, low_connect_to_my_mysql(ro, db));
+  return res;
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )

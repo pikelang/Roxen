@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.70 2004/06/15 22:11:02 _cvs_stephen Exp $
+// $Id: DBManager.pmod,v 1.71 2004/06/16 01:00:16 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -225,24 +225,22 @@ private
       return connect_to_my_mysql( user, db );
 
     // Otherwise it's a tad more complex...  
-    if( user[sizeof(user)-2..] == "ro" )
+    if(has_suffix(user, "ro"))
       // The ROWrapper object really has all member functions Sql.Sql
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
-      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d->path ) );
-    return sql_cache_get( d->path );
+      return
+       [object(Sql.Sql)](object)ROWrapper(sql_cache_get(d->path));
+    return sql_cache_get(d->path);
   }
 };
 
-mixed sql_cache_get(string what)
-{
-  mixed key = loader.sq_cache_lock();
-  string i = replace(what,":",";")+":-";
-  mixed res = loader.sq_cache_get( i ) ||
-    loader.sq_cache_set( i, Sql.Sql( what ) );
-  // Fool the optimizer so that key is not released prematurely
-  if( res )
-    return res; 
+private Sql.Sql sql_cache_get(string url) {
+  Sql.Sql db;
+  string dbname=replace(url,":",";")+":-";
+  if(!(db=loader.sq_cache_get(dbname)))
+    db=loader.CSql(dbname, Sql.Sql(url));
+  return db;
 }
 
 void add_dblist_changed_callback( function(void:void) callback )
