@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.266 2000/02/28 06:24:01 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.267 2000/03/01 01:58:21 neotron Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -214,6 +214,8 @@ void stop()
   for(int i=0; i<10; i++)
     CATCH("stopping priority group",
           (pri[i],pri[i]->stop,pri[i]->stop()));
+  foreach( registered_urls, string url )
+    roxen->unregister_url(url);
 }
 
 public string type_from_filename( string file, int|void to, string|void myext )
