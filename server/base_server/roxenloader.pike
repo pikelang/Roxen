@@ -4,7 +4,40 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.17 1997/04/13 00:42:01 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.18 1997/04/19 21:29:02 grubba Exp $";
+
+#define perror roxen_perror
+
+private static int perror_last_was_newline=1;
+
+int last_time = 0;
+int pid = getpid();
+object stderr = files.file("stderr");
+
+void roxen_perror(string format,mixed ... args)
+{
+  string s, ts="";
+  int lwn;
+
+  s=((args==({}))?format:sprintf(format,@args));
+
+  if (s=="") return;
+
+  if ( (lwn = (s[-1]=="\n") ))
+    s=s[..strlen(s)-2];
+
+  if((time()-last_time ) > 60)
+  {
+    stderr->write("Roxen is alive!     PID: "+pid+"    Time: "+ (ctime(time())
+/" ")[-2]+"\n");
+    last_time = time();
+  }
+
+  stderr->write(s);
+
+  perror_last_was_newline=lwn;
+}
+
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -103,11 +136,6 @@ object open_db(string id)
   return d;
 }
 
-
-
-
-void perror(string format,mixed ... args);
-
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p,p2;
@@ -201,22 +229,6 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   } 
   catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
   exit(0); 
-}
-
-private static int perror_last_was_newline=1;
-
-void perror(string format,mixed ... args)
-{
-   string s;
-   int lwn;
-   s=((args==({}))?format:sprintf(format,@args));
-   if (s=="") return;
-   if ( (lwn = s[-1]=="\n") )
-      s=s[0..strlen(s)-2];
-   werror((perror_last_was_newline?getpid()+": ":"")
-	  +replace(s,"\n","\n"+getpid()+": ")
-          +(lwn?"\n":""));
-   perror_last_was_newline=lwn;
 }
 
 object roxen;
@@ -383,8 +395,9 @@ object|void open(string filename, string mode)
 
 string make_path(string ... from)
 {
-  return Array.map(from, lambda(string a, string b){
-    return combine_path(b,a);
+  return Array.map(from, lambda(string a, string b) {
+    return (a[0]=='/')?combine_path("/",a):combine_path(b,a);
+    //return combine_path(b,a);
   }, getcwd())*":";
 }
 
