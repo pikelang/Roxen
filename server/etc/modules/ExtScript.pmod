@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.6 2000/09/05 15:06:40 per Exp $
+// $Id: ExtScript.pmod,v 1.7 2000/10/04 15:20:20 leif Exp $
 
 #define THREADS 1
 
@@ -61,7 +61,33 @@ class Handler
     pipe->write(vval);
   }
 
-  array launch(string how, string arg, object id)
+  static string launch_process(string how)
+  { /* must have locked the mutex to call this function */
+
+    if (proc && proc->status() == 0)
+      return 0;
+
+    pipe = Stdio.File();
+    pipe_other = pipe->pipe();
+    diag("(L1)");
+
+    mapping opts = ([ "fds": ({ pipe_other }) ]);
+    if (settings->set_uid) opts["set_uid"] = settings->set_uid;
+
+    runcount = 0; pipe_other = 0;
+
+    if (catch
+        (proc = Process.create_process( ({ binpath, "--cmdsocket=3" }), opts))
+       )
+    { diag("(LError)"); 
+      return "unable to start helper process";
+    }
+
+    diag("(LOk)");
+    return 0;
+  }
+
+  static array do_helper(string how, string arg, object id, void|mapping opts)
   {
 #ifdef THREADS
     object lock = mutex ? mutex->lock() : 0;
@@ -70,29 +96,17 @@ class Handler
 
     if (!proc || proc->status() != 0)
     {
-      pipe = Stdio.File();
-      pipe_other = pipe->pipe();
+      string err = launch_process("helper");
+      if (err) return ({ -1, err });
 
-      diag("(L1)");
-
-      mapping opts = ([ "fds": ({ pipe_other }) ]);
-      if (settings->set_uid) opts["set_uid"] = settings->set_uid;
-
-      if (catch (
-        proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
-                                       opts
-                                     )
-               ))
-         return ({ -1, "unable to start helper process" });
-
-      diag("(L2)");
-      runcount = 0;
-      pipe_other = 0;
       pipe->write("QP"); // send 'ping'
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
-              return ({ -1, "external process didn't respond"
-                + sprintf("(Got: %O)", res) });
+      { proc = 0; pipe = 0;
+        return
+           ({ -1, sprintf("external process didn't respond (Got: %O)", res) });
+      }
+
       diag("(NewSubprocess)");
       if (how == "run")
         putvar("L", "cd", dirname(arg));
@@ -146,7 +160,7 @@ class Handler
           putvar("E", "AUTH_TYPE", id->auth[0]);
           array arr = id->auth[1] / ":";
           putvar("I", "auth_user", arr[0]);
-          putvar("E", "REMOTE_USER", id->arr[0]);
+          putvar("E", "REMOTE_USER", arr[0]);
           if (sizeof(arr) > 1) putvar("I", "auth_passwd", arr[1]);
         }
         else if (sizeof(id->auth) == 3 && intp(id->auth[0]))
@@ -159,6 +173,9 @@ class Handler
           if (stringp(id->auth[2])) putvar("I", "auth_passwd", id->auth[2]);
         }
       }
+
+      if (stringp(id->query))
+        putvar("E", "QUERY_STRING", id->query);
 
       // Transfer explicit environment variables.
       mapping ee = id->misc->explicit_script_env;
@@ -184,7 +201,11 @@ class Handler
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
       { pipe = 0; proc = 0; diag("@"); lock = 0;
-        return launch(how, arg, id);
+        if (!opts || !opts->retry)
+          return do_helper(how, arg, id,
+                             (opts ? opts : ([ ])) + ([ "retry": 1 ]) );
+        else
+          return ({ -1, "Failed to start subprocess" });
       }
 
       // start operation
@@ -222,6 +243,7 @@ class Handler
       }
       diag("<Done.>");
       if (res == "" || res == 0)
+	if (output == "")
            return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000) proc = 0, pipe = 0;
@@ -234,11 +256,11 @@ class Handler
   }
 
   array run(string path, object id)
-  { return launch("run", path, id);
+  { return do_helper("run", path, id);
   }
 
   array eval(string expr, object id)
-  { return launch("eval", expr, id);
+  { return do_helper("eval", expr, id);
   }
 
   void create(string helper_program_path, void|mapping settings0)
