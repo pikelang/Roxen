@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.10 1996/12/10 00:15:39 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.10.2.1 1997/03/09 13:31:11 grubba Exp $";
 #include <module.h>
 /* A configuration.. */
 
@@ -111,7 +111,7 @@ class Bignum {
     return ((((float)lsb/1024.0/1024.0)+2048.0)+(msb*4096.0));
   }
 
-  void create(int num, int|void bnum, int|void d)
+  void create(int|void num, int|void bnum, int|void d)
   {
     if(!d)
       lsb = num-0x7ffffffe;
