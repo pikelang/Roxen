@@ -285,6 +285,7 @@ worldmap binary
 /server/server_core/html.pike foreign_ident
 /server/server_core/javamodule.pike foreign_ident
 /server/server_core/language.pike foreign_ident
+/server/server_core/loader.pike foreign_ident
 /server/server_core/module.pike foreign_ident
 /server/server_core/module_support.pike foreign_ident
 /server/server_core/newdecode.pike foreign_ident
@@ -292,7 +293,6 @@ worldmap binary
 /server/server_core/read_config.pike foreign_ident
 /server/server_core/roxen.pike foreign_ident
 /server/server_core/roxenlib.pike foreign_ident
-/server/server_core/roxenloader.pike foreign_ident
 /server/server_core/rxml.pike foreign_ident
 /server/server_core/snmpagent.pike foreign_ident
 /server/server_core/socket.pike foreign_ident

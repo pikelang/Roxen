@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.200 2002/10/22 00:06:44 nilsson Exp $
+# $Id: start,v 1.201 2002/10/23 14:59:02 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -64,7 +64,7 @@ esac
 DIR=../configurations
 LOGDIR=../logs
 FILES="default"
-program=server_core/roxenloader.pike
+program=server_core/loader.pike
 VARDIR=../var
 LOCALDIR=../local
 SELF_TEST_DIR=data/test
@@ -137,7 +137,7 @@ gdb=no
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
-  # to roxenloader instead.
+  # to loader instead.
   pass="$pass --remove-dumped"  
 }
 
@@ -772,7 +772,7 @@ LS="$LS `find server_core -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
-if [ "$program" = "server_core/roxenloader.pike" ] ; then
+if [ "$program" = "server_core/loader.pike" ] ; then
   if [ "`cat \"$old_roxen_defines\" 2>/dev/null`" != "$VERSION_DATA" ] ; then
     remove_old_dot_o_files "defines or pike version changed"
   fi
