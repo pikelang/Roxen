@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.160 1999/02/16 20:46:23 marcus Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.161 1999/02/26 15:52:34 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -74,7 +74,7 @@ void create(object c)
 	 GLOBVAR(logdirprefix)+
 	 short_name(c?c->name:".")+"/Accessed", 
 	 "Access log file", TYPE_FILE|VAR_MORE,
-	 "In this file all accesses to files using the &lt;accessd&gt;"
+	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
   defvar("noparse", ({  }), "Extensions to accesscount",
