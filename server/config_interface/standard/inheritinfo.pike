@@ -69,8 +69,8 @@ string rec_print_tree( array q )
   string res ="";
   for( int i = 0; i<sizeof( q ); i++ )
     if( programp( q[i] ) )
-      res += ("<dt>"+program_name_version( q[i] ) + "<dd>" +
-              program_info( q[i] ));
+      res += ("<dt>"+program_name_version( q[i] ) + "</dt><dd>" +
+              program_info( q[i] ) + "</dd>");
     else
       res += "<dl> "+rec_print_tree( q[i] )+"</dl>";
   return res;

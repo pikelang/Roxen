@@ -1,14 +1,14 @@
-<topmenu selected=home>
+<topmenu selected="home"/>
 
 <content>
 <cv-startpage>
-<br>
+<br />
 <blockquote>
 <rul>
-<define container=new-feature>
-  <rli><dl><dt><b><font size=+1>&name;</font></b>
-  <dd><contents>
-  <p></dl>
+<define container="new-feature">
+  <rli><dl><dt><b><font size=+1>&_.name;</font></b></dt>
+  <dd>&_.contents:none;</dd>
+  </dl>
 </define>
 
 <new-feature name="Java module interface">
@@ -25,16 +25,15 @@ latest specification.
  interface in roxen 2.0. It supports multiple users and multiple
  languages, and themes.
 <p>
-
  The event log has also been enhanced, and now includes information
  about which module in which configuration generated the
  message. There are also configuration and module local event logs.
-
+</p>
 <p>
-
  The configuration interface is written mostly in RXML, and can be
  found in the 'configuration_interface' directory in your roxen
  installation.
+</p>
 </new-feature>
 
 <new-feature name="New upgrade system">
@@ -59,14 +58,14 @@ The new RXML parser is XML compliant.
 
 <new-feature name="Bandwidth Throttling and fast HTTP">
   The normal HTTP module can now throttle the bandwidth, both for
-  requests and per virtual server.<p>
-
+  requests and per virtual server.
+<p>
   There is also an alternative HTTP module (called 'fhttp') that
   provides the maximum possible performance, mostly useful for
   <em>very</em> busy sites, or benchmarking. Speeds of over 20.000
   requests/second has been clocked on normal x86 hardware.<p>
   The normal HTTP protocol module has also been performance tuned, and
-  is now aproximately 10% faster than before.
+  is now aproximately 10% faster than before.</p>
 </new-feature>
 
 
@@ -81,6 +80,6 @@ The new RXML parser is XML compliant.
   Branding! Pike7, Roxen 2.0 osv...
 </comment>
 
-</blockquote><br>
+</blockquote><br />
 </cv-startpage>
 </content>

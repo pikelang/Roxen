@@ -14,28 +14,29 @@ string parse( RequestID id )
 </pike>
 <!-- /* -->
 
-<topmenu  selected=home>
+<topmenu selected="home"/>
 
 <content>
 <cv-startpage>
 <awizard>
 
-<page name=top><cf-perm perm="Edit Users">
+<page name="top"><cf-perm perm="Edit Users">
 
-  <table border=0 cellpadding=5 cellspacing=0><tr><td>
+  <table border="0" cellpadding="5" cellspacing="0"><tr><td>
   <button gbutton_title=" &locale.create_user; "
-          gbutton-icon_src=/internal-roxen-next  gbutton-preparse
-          gbutton-font=&usr.gbutton-font;
-          gbutton-width=200
-          gbutton-align_icon=right page=create_user>
-  <br>
+          gbutton-icon_src="/internal-roxen-next"  gbutton-preparse="1"
+          gbutton-font="&usr.gbutton-font;"
+          gbutton-width="200"
+          gbutton-align_icon="right" page="create_user"/>
+  <br />
   <button gbutton_title=" &locale.delete_user; "
-          gbutton-width=200
-          gbutton-font=&usr.gbutton-font;
-          gbutton-icon_src=/internal-roxen-next gbutton-preparse
-          gbutton-align_icon=right page=delete_user>
+          gbutton-width="200"
+          gbutton-font="&usr.gbutton-font;"
+          gbutton-icon_src="/internal-roxen-next" gbutton-preparse="1"
+          gbutton-align_icon="right" page="delete_user"/>
   </td></tr></table>
 </cf-perm>
+
 <!-- */ -->
 <pike>
 #include <config_interface.h>
@@ -48,8 +49,8 @@ string parse( RequestID id )
   foreach( sort( id->misc->list_config_users() ), string uid )
   {
     object u  = id->misc->get_config_user( uid );
-    res += "<table width=100%><tr><td bgcolor='"+config_setting2("bgcolor")+
-           "'><font size=+2>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
+    res += "<table width='100%'><tr><td bgcolor='"+config_setting2("bgcolor")+
+           "'><font size='+2'>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
     res += u->form( id );
   }
   return res;
@@ -58,8 +59,9 @@ string parse( RequestID id )
 <!-- /* -->
 </page>
 
-<page name=create_user><cf-perm perm="Edit Users">
-<table><tr><td>User ID:</td><td><input name=user_name></td><td><dbutton page=top gbutton-font=&usr.gbutton-font; gbutton_title=" Create User "></td></tr></table>
+<page name="create_user"><cf-perm perm="Edit Users">
+<table><tr><td>User ID:</td><td><input name="user_name" /></td>
+<td><dbutton page="top" gbutton-font="&usr.gbutton-font;" gbutton_title=" Create User "/></td></tr></table>
 <!-- */ -->
 <pike>
   if( !strlen(id->variables->user_name) )
@@ -71,7 +73,7 @@ string parse( RequestID id )
 </table>
 </cf-perm></page>
 
-<page name=delete_user><cf-perm perm="Edit Users">
+<page name="delete_user"><cf-perm perm="Edit Users">
 <!-- */ -->
 <pike>
   string res="";
@@ -80,21 +82,21 @@ string parse( RequestID id )
   {
     object u = id->misc->get_config_user( uid );
     if( u == id->misc->config_user )
-       res += ("<gbutton font=&usr.gbutton-font; dim width=300 preparse>&locale.delete; "
-               +u->real_name+" ("+uid+")</gbutton><br>");
+       res += ("<gbutton font='&usr.gbutton-font;' dim='1' width='300' preparse='1'>&locale.delete; "
+               +u->real_name+" ("+uid+")</gbutton><br />");
     else
-       res += ("<dbutton gbutton-width=300 gbutton-font=&usr.gbutton-font; gbutton-preparse "
+       res += ("<dbutton gbutton-width='300' gbutton-font='&usr.gbutton-font;' gbutton-preparse='1' "
                "gbutton_title='&locale.delete; "
-               +u->real_name+" ("+uid+")'>"
+               +u->real_name+" ("+uid+")'/>"
                " <pike> id->misc->delete_old_config_user( \""+uid+"\");"
-               "</pike></dbutton><br>");
+               "</pike></dbutton><br />");
   }
   return res;
 </pike>
 <!-- /* -->
 <p>
- <button gbutton-font=&usr.gbutton-font; gbutton_title=" &locale.cancel; " page=top gbutton-preparse>
-
+ <button gbutton-font="&usr.gbutton-font;" gbutton_title=" &locale.cancel; " page="top" gbutton-preparse="1"/>
+</p>
 </cf-perm></page>
 
 </awizard>
