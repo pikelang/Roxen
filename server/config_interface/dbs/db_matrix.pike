@@ -107,11 +107,11 @@ string parse( RequestID id )
     res +=
         "<tr><td bgcolor='"+ct+"'>"
         "<nobr>"
-        +(ii?"<a href='browser.pike?db="+db+"'>":"")+
+        +"<a href='browser.pike?db="+db+"'>"+
         "<cimg border='0' format='gif'"
         "      src='&usr.database-small;' alt='' max-height='12'/>"
         "  <gtext border='0' scale='0.4'>"+db+"</gtext> &nbsp;"
-        +(ii?"</a>":"")+
+        +"</a>"+
         "</nobr>"
         "</td>";
     foreach( sort(roxen->configurations->name), string conf )
