@@ -691,6 +691,16 @@ array(string) container_formoutput(string tag_name, mapping args,
   return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
 }
 
+array tag_set_cookie(string t, mapping m, RequestID id) {
+  old_rxml_warning(id, "set_cookie tag", "set-cookie tag");
+  return ({ 1, "set-cookie", m });
+}
+
+array tag_remove_cookie(string t, mapping m, RequestID id) {
+  old_rxml_warning(id, "remove_cookie tag", "remove-cookie tag");
+  return ({ 1, "remove-cookie", m });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -719,7 +729,9 @@ mapping query_tag_callers() {
     "vfs":tag_vfs,
     "set-max-cache":tag_set_max_cache,
     "configurl":"",
-    "accept-language":tag_accept_language
+    "accept-language":tag_accept_language,
+    "set_cookie":tag_set_cookie,
+    "remove_cookie":tag_remove_cookie,
   ]);
   return active;
 }
