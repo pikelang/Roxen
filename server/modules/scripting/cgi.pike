@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.20 1997/04/17 15:38:07 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.21 1997/04/17 15:40:27 per Exp $";
 
 #include <module.h>
 
@@ -206,6 +206,9 @@ static string path;
 void start(int n, object conf)
 {
   if(n==2) return;
+
+  if(intp(QUERY(wrapper)))
+    QUERY(wrapper)="bin/cgi";
 
   if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
