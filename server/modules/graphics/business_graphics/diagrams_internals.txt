@@ -16,7 +16,7 @@ Data lagras i ett data-mapping:
 diagram_data
 
 //behöver man följande två?
-string typ;
+string type;
 Är lika med "graph", "bars", "sumbars", "pie";
 
 string subtyp;
@@ -94,9 +94,20 @@ int xsize, ysize;
 "ystart": var_i_bilden_vi_kan_börja_rita_data-int, //Nerifrån!
 "xstop":int, //från höger
 "ystop":int //Nerifrån!
+
+"legendcolor":({int r, int g, int b}) 
+//bgfärgen på bakgrunden i legenden
+//Om legendcolor är 0 så är det bilden:
+
+"legendimage": object(image) 
+// som ska användas som bakgrundsbild.
+
 "bgcolor":({int r, int g, int b}) 
 //färgen på bakgrunden i bilden
 //Om bgcolor är 0 så är det bilden:
+
+"bgimage": object(image) 
+// som ska användas som bakgrundsbild.
 
 "axcolor":({int r, int g, int b}) 
 //Färgen på axlarna
@@ -104,9 +115,6 @@ int xsize, ysize;
 "datacolors":({({int r, int g, int b}), ... }) 
 //Färgen på linjerna/barsen/slicerna
 //För grapher måste de vara av samma antal som antalet uppsättningar data
-
-"bgimage": object(image) 
-// som ska användas som bakgrundsbild.
 
 "textcolor":({int r, int g, int b})
 // färgen på texten
