@@ -5,12 +5,13 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.27 1997/12/13 16:25:55 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.28 1997/12/15 20:05:14 peter Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
 
-#define DEBUG
+#undef DEBUG
+#undef DEBUG_LEVEL
 
 string version = "1.0";
 
@@ -139,8 +140,6 @@ string gets(void|int sp)
 #else
   string s="", tmp;
   
-  trace(100);
-
   while((tmp = stdin -> read(1)))
     switch(tmp)
     {
@@ -157,8 +156,6 @@ string gets(void|int sp)
 	break;
       }
      case "\n": case "\r":
-       trace(0);
-       write("gets("+sp+") returns \""+s+"\"\n");
       return s;
 	
      default:
@@ -391,6 +388,8 @@ void main(int argc, string *argv)
      configuration_dir != "../configurations/")
     configuration_dir_changed = 1;
 
+  mkdirhier("../local/modules/");
+
   int have_gmp = 0;
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
   int have_crypto = 0;
@@ -462,4 +461,3 @@ void main(int argc, string *argv)
   } else
     write("\nTune your favourite browser to "+prot_spec+host+":"+port+"/\n");
 }
-
