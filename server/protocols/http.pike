@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.239 2000/08/13 03:08:27 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.240 2000/08/13 04:03:30 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1697,7 +1697,7 @@ void send_result(mapping|void result)
     {
       if(objectp(file->file))
 	if(!file->stat && !(file->stat=misc->stat))
-	  file->stat = (array(int))file->file->stat();
+	  file->stat = file->file->stat();
       array fstat;
       if(arrayp(fstat = file->stat))
       {
@@ -1852,9 +1852,9 @@ void send_result(mapping|void result)
     {
       // Ordinary connection, and a short file.
       // Just do a blocking write().
-      my_fd->write(head_string);
-      my_fd->write(file->file?file->file->read(file->len):
-                   (file->data[..file->len-1]));
+      my_fd->write(head_string + 
+                   (file->file?file->file->read(file->len):
+                    (file->data[..file->len-1])));
       do_log();
       return;
     }
@@ -1930,7 +1930,7 @@ void handle_request( )
     INTERNAL_ERROR( e );
   
   TIMER("conf->handle_request");
-  if( file->try_again_later )
+  if( file && file->try_again_later )
   {
     call_out( handle_request, file->try_again_later );
     return;
