@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.2 2000/01/07 04:37:56 jhs Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.3 2000/01/08 07:52:44 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -84,7 +84,7 @@ int|array tag_body(string t, mapping args, RequestID id)
   }
 
   if(changed && QUERY(colormode))
-    return ({1, make_tag("body", args) });
+    return ({1, "body", args });
   return ({1});
 }
 
@@ -111,7 +111,7 @@ string|array push_color(string tagname, mapping args, RequestID id)
 #undef FIX
 
   if(changed && QUERY(colormode))
-    return ({1, make_tag(tagname, args) });
+    return ({1, tagname, args });
   return ({1});
 }
 
