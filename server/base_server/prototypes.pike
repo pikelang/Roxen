@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.112 2004/05/08 14:45:36 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.113 2004/05/09 17:55:02 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1731,6 +1731,7 @@ class MultiStatus
   //! the same as for @[Roxen.http_status].
   {
     if (sizeof (args)) message = sprintf (message, @args);
+    if (!status_code) error("Bad status code!\n");
     status_set[href] = MultiStatusStatus (status_code, message);
   }
 
