@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.773 2002/02/06 11:55:59 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.774 2002/02/06 16:35:27 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3215,7 +3215,7 @@ class ArgCache
     // Support that the 'local' database moves (not really nessesary,
     // but it won't hurt either)
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
-    call_out(get_plugins,0);
+    get_plugins();
   }
 
   string read_args( int id )
