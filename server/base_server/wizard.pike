@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.94 1999/10/04 12:22:29 nilsson Exp $
+/* $Id: wizard.pike,v 1.95 1999/10/04 14:11:58 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -977,7 +977,15 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	default:
 	  r += "<td nowrap=\"nowrap\">"+s;
 	}
-	r += "&nbsp;&nbsp;</td>";
+	//  Simple heuristics to detect cells containing a table, image etc
+	//  where trailing spaces will give really ugly results
+	if (!(stringp(s)
+	      && (strlen(s) > 2)
+	      && (< "<img ", "<tabl", "<gtex", "<var " >)[s[0..4]]
+	      && (s[-1] == '>' || s[-2] == '>'))) {
+	  r += "&nbsp;&nbsp;";
+	}
+	r += "</td>";
       }
     }
     r += "</tr>\n";
