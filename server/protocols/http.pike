@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.376 2002/10/07 12:23:52 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.377 2002/10/08 16:29:11 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1676,7 +1676,7 @@ void send_result(mapping|void result)
 //		   misc->last_modified,
 //		   misc->cacheable);
 
-      if(since)
+      if(since && (!file->error || file->error == 200))
       {
 	/* ({ time, len }) */
 	array(int) since_info = Roxen.parse_since( since );
