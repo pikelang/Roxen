@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.50 1998/02/15 14:09:26 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.51 1998/02/16 00:40:23 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -872,6 +872,19 @@ string get_modname (object module)
   }
 
   return 0;
+}
+
+string get_modfullname (object module)
+// This determines the full module name in approximately the same way
+// as the config UI.
+{
+  if (module) {
+    string name = 0;
+    if (module->query_name) name = module->query_name();
+    if (!name || !sizeof (name)) name = module->register_module()[1];
+    return name;
+  }
+  else return 0;
 }
 
 // internal method for do_output_tag
