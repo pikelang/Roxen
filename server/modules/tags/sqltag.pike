@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.39 1999/11/05 08:46:55 nilsson Exp $
+ * $Id: sqltag.pike,v 1.40 1999/11/23 14:19:35 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <sqltable>, <sqlquery> and <sqloutput>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.39 1999/11/05 08:46:55 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.40 1999/11/23 14:19:35 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 #define old_rxml_compat 1
@@ -153,7 +153,8 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
   }
 
   if (error = catch(result = tag=="sqltable"?con->big_query(args->query):con->query(args->query))) {
-    error = html_encode_string(sprintf("Query %O failed. %s", args->query, con->error()));
+    error = html_encode_string(sprintf("Query %O failed. %s", args->query,
+				       con->error()||""));
     if (!args->quiet) {
       if (args->log_error && QUERY(log_error)) {
         report_error(sprintf("SQLTAG: Query %O failed:\n"
