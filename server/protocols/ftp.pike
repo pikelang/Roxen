@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.48 2001/02/19 16:06:13 jonasw Exp $
+ * $Id: ftp.pike,v 2.49 2001/03/03 00:44:41 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -31,8 +31,8 @@
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  *
- * IETF draft 4	Extended Directory Listing, TVFS,
- *		and Restart Mechanism for FTP
+ * IETF draft 12 Extended Directory Listing, TVFS,
+ *		 and Restart Mechanism for FTP
  *
  * RFC's with recomendations and discussions:
  *
@@ -1598,6 +1598,7 @@ class FTPSession
   static private void ftp_async_accept(function(object,mixed ...:void) fun,
 				       mixed ... args)
   {
+    DWRITE(sprintf("FTP: async_accept(%O, %@O)...\n", fun, args));
     touch_me();
 
     if (sizeof(pasv_accepted)) {
@@ -1622,7 +1623,7 @@ class FTPSession
 
     if (!dataport_addr) {
       DWRITE("FTP: No dataport specified.\n");
-      fun(0, @args);
+      fun(0, "", @args);
       return;
     }
 
@@ -2455,6 +2456,14 @@ class FTPSession
     connect_and_send(session->file, session);
   }
 
+  void send_MLST_response(mapping(string:array) dir, object session)
+  {
+    dir = dir || ([]);
+    send(250,({ "OK" }) + 
+	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
+	 ({ "OK" }) );
+  }
+
   /*
    * Session handling
    */
@@ -3020,7 +3029,7 @@ class FTPSession
     if (st) {
       session->file = ([]);
       session->file->full_path = args;
-      send_MLSD_response(([ args:st ]), session);
+      send_MLST_response(([ args:st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
