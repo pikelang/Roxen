@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.138 1998/08/02 01:31:57 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.139 1998/08/02 03:13:06 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -775,19 +775,16 @@ array(int)|string write_text(int _args, string text, int size, object id)
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
       cache_remove(key, text);
-    perror("Cache (1)\n");
     if(size) return data[1];
     return data[0];
   } else if(data = get_cache_file( key, text )) {
     cache_set(key, text, data);
-    perror("Cache (2)\n");
     if(size) return data[1];
     return data[0];
   }
 
 
   // So. We have to actually draw the thing...
-  perror("Drawing...\n");
 
   err = catch
   {
