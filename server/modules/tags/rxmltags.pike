@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.459 2004/04/27 17:02:28 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.460 2004/04/28 15:07:59 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4063,8 +4063,8 @@ class TagEmit {
 
     string a2="",b2="";
     int a1,b1;
-    sscanf(a0,"%s%d%s",a0,a1,a2);
-    sscanf(b0,"%s%d%s",b0,b1,b2);
+    sscanf(a0,"%[^0-9]%d%s",a0,a1,a2);
+    sscanf(b0,"%[^0-9]%d%s",b0,b1,b2);
     if (a0>b0) return 1;
     if (a0<b0) return -1;
     if (a1>b1) return 1;
