@@ -2,6 +2,19 @@ inherit "roxenlib";
 
 object wa;
 
+int visible(object id)
+{
+  if(id->misc->autoweb_backdoor)
+    return 1;
+  if(sizeof(id->conf->get_provider("sql")->sql_object(id)->
+    query("select feature from features where feature='Template Editor' and"
+	  " customer_id='"+id->misc->customer_id+"'")))
+    return vis=1;
+  else
+    return vis=0;
+}
+
+
 void create (object webadm)
 {
   wa = webadm;
