@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.463 2001/08/14 15:11:11 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.464 2001/08/22 12:22:53 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1342,7 +1342,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  LOCK(find_internal);
 	  fid=find_internal( rest, id );
 	  UNLOCK();
-	  TRACE_LEAVE(sprintf("find_internal has returned %O", fid));
+	  //TRACE_LEAVE(sprintf("find_internal has returned %O", fid));
+	  TRACE_LEAVE("");
 	  PROF_LEAVE("find_internal","location");
 	  if(fid)
 	  {
