@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.150 1998/09/11 22:18:30 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.151 1998/09/14 21:15:29 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -814,7 +814,7 @@ array(int)|string write_text(int _args, string text, int size, object id)
 
     if(!sizeof(args))
     {
-      args=(["fg":"black","bg":"white","notrans":"1"]);
+      args=(["fg":"black","bg":"white","notrans":"1","nocache":"1"]);
       text="Please reload this page";
     }
     if(!args->verbatim)
