@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.530 2003/01/15 14:53:12 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.531 2003/01/21 13:08:14 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3382,7 +3382,7 @@ static void create()
   defvar( "data_cache_file_max_size", 100, DLOCALE(276, "Cache:Max file size"),
           TYPE_INT | VAR_PUBLIC,
           DLOCALE(277, "The maximum size of a file that is to be considered for "
-                  "the cache"));
+		  "the cache, in KBytes."));
 
 
   defvar("default_server", 0, DLOCALE(20, "Default site"),
