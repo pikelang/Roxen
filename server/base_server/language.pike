@@ -22,7 +22,7 @@ void initiate_languages()
   p = "Adding languages: ";
   foreach(langs, lang)
   {
-    if(lang[-1] == 'c')
+    if(lang[-1] == 'e')
     {
       array tmp;
       string alias;
