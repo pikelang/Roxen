@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.109 1999/07/15 19:16:18 grubba Exp $
+// $Id: roxenlib.pike,v 1.110 1999/07/19 21:47:20 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -779,6 +779,13 @@ static string number2string(int n,mapping m,mixed names)
   if (m->lower) s=lower_case(s);
   if (m->upper) s=upper_case(s);
   if (m->cap||m->capitalize) s=String.capitalize(s);
+
+  switch(m["case"]) {
+    case "lower": s=lower_case(s); break;
+    case "upper": s=upper_case(s); break;
+    case "capitalize": s=String.capitalize(s);
+  }
+
   return s;
 }
 
