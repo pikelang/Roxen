@@ -25,6 +25,7 @@
 
 <theme-set what=leftside-padwidth    to=160 />
 <theme-set what=toptabs-padwidth     to=190 />
+<theme-set what=left-buttonwidth     to=160 />
 
 <theme-set what=fade1   to="white"/>
 
@@ -36,7 +37,7 @@
 
 <theme-set what=left-buttonbg     to='white'/>
 <theme-set what=left-selbuttonbg  to='white'/>
-<theme-set what=left-tableargs    to="valign=top width='150'"/>
+<theme-set what=left-tableargs    to="valign=top width='160'"/>
 
 <!-- 
   Now, this is ugly. :-) The only reason is that the browsers
