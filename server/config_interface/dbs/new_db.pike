@@ -93,11 +93,13 @@ ERROR
         error= "<font color='&usr.warncolor;'>"
 	  +_(406,"Please specify an URL to define an external database")+
                "</font>";
-      else if( catch( Sql.Sql( id->variables->url ) ) )
+      else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"+
-                        _(407,"It is not possible to connect to %s")+
+                        _(407,"It is not possible to connect to %s.<br />")+
+			" (%s)"
                         "</font>",
-                        id->variables->url );
+                        id->variables->url,
+			describe_error(err));
     }
     if( !strlen( error ) )
       switch( id->variables->name )
