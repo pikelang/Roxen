@@ -3,6 +3,22 @@
 #include <roxen.h>
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
+#define VERIFY(X) do {						\
+  if( !id->variables["yes.x"] )					\
+  {								\
+    return							\
+      ("<table><tr><td colspan='2'>\n"+				\
+       sprintf((string)(X), group)+				\
+       "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
+       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
+       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
+      "?group="+\
+       Roxen.html_encode_string(id->variables->group)+"><gbutton> "+\
+       _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
+  }									\
+} while(0)
+
 string trim_sl( string x )
 {
   while( strlen(x) && x[-1] == '/' )
@@ -19,6 +35,16 @@ string parse( RequestID id )
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
     "<input type=hidden name=group value='&form.group;'/>";
+
+  if( id->variables->action == "delete" )
+  {
+    mixed tmp = delete_group( id->variables->group, id );
+    if( stringp( tmp ) )
+      return res+tmp+"\n</st-page></content></tmpl>";
+    if( tmp )
+      return tmp;
+  }
+
 
   if( id->variables->lname )
   {
@@ -55,13 +81,41 @@ string parse( RequestID id )
   res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
 		 "</b></font><br />", c->lname );
 
-  res += "<dl>";
-  foreach( DBManager.group_dbs( id->variables->group ), string d )
-  {
-    res += "<dt><b><a href=browser.pike?db="+d+">"+d+"</a></b>";
-    if( string cm = DBManager.module_table_info( d, "" )->comment )
-      res += "<dd>"+cm+"</dd>";
-  }
+  array groups = DBManager.group_dbs( id->variables->group );
+  res += "<dl>\n";
+  if( sizeof(groups) )
+    foreach( groups, string d )
+    {
+      res += "<dt><b><a href=browser.pike?db="+d+">"+d+"</a></b>";
+      if( string cm = DBManager.module_table_info( d, "" )->comment )
+	res += "<dd>"+cm+"</dd>";
+      res += "</dt>\n";
+    }
+  else
+    res += _(0,"(none)");
+  res += "</dl>\n";
+
+  string button;
+  if ( sizeof(DBManager.group_dbs(id->variables->group)) )
+    button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
+		     _(0, "Delete group"));
+  else
+    button = sprintf("<a href='%s?group=%s&action=%s'><gbutton>%s</gbutton></a>",
+		     id->not_query, id->variables->group, "delete",
+		     _(0, "Delete group"));
+  res += "<br />"+button;
 
   return res + "\n</blockquote></st-page></content></tmpl>";
+}
+
+
+mixed delete_group( string group, RequestID id )
+{
+  if( sizeof(DBManager.group_dbs( group )) )
+    return (string)_(0, "You can not delete this group because it is not empty.");
+  string msg = (string)_(0, "Are you sure you want to delete the group %s?");
+  VERIFY(msg);
+
+  DBManager.delete_group( group );
+  return Roxen.http_redirect( "/dbs/", id );
 }
