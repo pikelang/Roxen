@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Start the MySQL command line client and connect to the Roxen
+# internal MySQL database using the socket in the configuration
+# directory.
+#
+# The user defaults to "rw", which has read/write privileges
+# everywhere. Another user may be specified with -u, but it must be
+# the first argument then.
+#
+# $Id: mysql_client,v 1.1 2002/05/28 11:47:57 mast Exp $
+
+dn="`dirname $0`"
+case "$dn" in 
+  ""|".")
+    cd .. || exit 1
+    ;;
+  *)
+    test "$dn" != "`pwd`" && { cd "$dn"/.. || exit 1; }
+    ;;
+esac
+
+user="-urw"
+case "$1" in
+  "-u")
+    shift
+    user="-u$1"
+    shift
+    ;;
+  "-u*")
+    user="$1"
+    shift
+    ;;
+esac
+
+LD_LIBRARY_PATH="`pwd`/mysql/lib"
+export LD_LIBRARY_PATH
+exec mysql/bin/mysql "$user" -S "`pwd`/../configurations/_mysql/socket" "$@"
