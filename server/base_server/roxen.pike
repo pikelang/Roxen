@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.309 1999/07/27 04:02:10 per Exp $
+ * $Id: roxen.pike,v 1.310 1999/07/27 19:04:30 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.309 1999/07/27 04:02:10 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.310 1999/07/27 19:04:30 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -525,6 +525,10 @@ private static void accept_callback( object port )
   }
 }
 
+/*
+ * handle() stuff
+ */
+
 // handle function used when THREADS is not enabled.
 void unthreaded_handle(function f, mixed ... args)
 {
@@ -725,6 +729,64 @@ object create_listen_socket(mixed port_no, object conf,
   return port;
 }
 
+
+/*
+ * Port DB stuff.
+ */
+
+// ([ "prot" : ([ "ip" : ([ port : protocol_handler, ]), ]), ])
+static mapping(string:mapping(string:mapping(int:object))) handler_db = ([]);
+
+// ([ "prot" : protocol_program, ])
+static mapping(string:program) port_db = ([]);
+
+// Is there a handler for this port?
+object low_find_handler(string prot, string ip, int port)
+{
+  mixed res;
+  return((res = handler_db[prot]) && (res = res[ip]) && res[port]);
+}
+
+// Register a handler for a port.
+void register_handler(string prot, string ip, int port, object handler)
+{
+  mapping m;
+  if (m = handler_db[prot]) {
+    mapping mm;
+    if (mm = m[ip]) {
+      // FIXME: What if mm[port] already exists?
+      mm[port] = handler;
+    } else {
+      m[ip] = ([ port : handler ]);
+    }
+  } else {
+    handler_db[prot] = ([ ip : ([ port : handler ]) ]);
+  }
+}
+
+object find_handler(string prot, string ip, int port)
+{
+  object handler = low_find_handler(prot, ip, port);
+
+  if (!handler) {
+    program prog = port_db[prot];
+    if (!prog) {
+      return 0;
+    }
+    mixed err = catch {
+      handler = prog(prot, ip, port);
+    };
+    if (err) {
+      report_error(LOCALE->failed_to_open_port("?",
+					       sprintf("%s://%s:%d/",
+						       prot, ip, port),
+					       describe_backtrace(err)));
+    } else {
+      register_handler(prot, ip, port, handler);
+    }
+  }
+  return handler;
+}
 
 // The configuration interface is loaded dynamically for faster
 // startup-time, and easier coding in the configuration interface (the
