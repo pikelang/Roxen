@@ -1,12 +1,14 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
+#define _ok RXML_CONTEXT->misc[" _ok"]
+
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.24 2004/08/10 11:29:54 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.25 2004/08/11 08:41:34 noring Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -208,6 +210,7 @@ class TagSpell {
 }
 
 string run_spellcheck(string|array(string) words, void|string dict)
+// Returns 0 on failure.
 {
   object file1=Stdio.File();
   object file2=file1->pipe();
@@ -217,10 +220,11 @@ string run_spellcheck(string|array(string) words, void|string dict)
 
   if(stringp(words))
     words = replace(words, "\n", " ");
-  Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
-                         (stringp(words) ? ({ "-H" })       : ({})) +
-                         (dict           ? ({ "-d", dict }) : ({})),
-                         ([ "stdin":file2,"stdout":file4 ]));
+  Process p =
+    Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
+                           (stringp(words) ? ({ "-H" })       : ({})) +
+                           (dict           ? ({ "-d", dict }) : ({})),
+                           ([ "stdin":file2,"stdout":file4 ]));
 
   string text = stringp(words) ?
                " "+words /* Extra space to ignore aspell commands
@@ -231,21 +235,22 @@ string run_spellcheck(string|array(string) words, void|string dict)
   // FIXME: Aspell can be fed with other charsets.
   text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
 
-  file1->write(text);
-  file1->close();
+  Stdio.sendfile(({ text }), 0, 0, -1, 0, file1,
+                 lambda(int bytes) { file1->close(); });
+
   file2->close();
   file4->close();
   spell_res=file3->read();
   file3->close();
 
-  return spell_res;
+  return p->wait() == 0 ? spell_res : 0;
 }
 
 array spellcheck(array(string) words,string dict)
 {
   array res=({ });
 
-  array ispell_data = run_spellcheck(words, dict)/"\n";
+  array ispell_data = (run_spellcheck(words, dict) || "")/"\n";
 
   if(sizeof(ispell_data)>1) {
     int i,row=0,pos=0,pos2;
@@ -290,7 +295,14 @@ class TagEmitSpellcheck {
     string dict = args["dict"];
     string text = args["text"];
     if(text)
-      foreach(run_spellcheck(text, dict)/"\n", string line)
+    {
+      string s = run_spellcheck(text, dict);
+      if(!s)
+      {
+	_ok = 0;
+	return ({});
+      }
+      foreach(s/"\n", string line)
       {
 	if(!sizeof(line))
 	  continue;
@@ -315,7 +327,9 @@ class TagEmitSpellcheck {
 	    continue;
 	}
       }
+    }
 
+    _ok = 1;
     return entries;
   }
 }
