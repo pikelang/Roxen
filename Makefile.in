@@ -334,7 +334,7 @@ bump_version: bump_version.stamp
 #	  else :; fi; \
 #	done
 	@if test -d platform/. ; then \
-	  extratag=-platform; \
+	  extratag=-p; \
 	else :; fi; \
 	(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping Roxen version...; \
@@ -389,7 +389,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	fi
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
 	if test -d platform/. ; then \
-	  version=$$version-platform; \
+	  version=$$version-p; \
 	else :; fi; \
 	if ls -d $$version* >/dev/null 2>&1; then \
 	  echo Deleting old distributions...; \
@@ -422,7 +422,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 tar_dist:
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
 	if test -d platform/. ; then \
-	  version=$$version-platform; \
+	  version=$$version-p; \
 	else :; fi; \
 	echo "Altering some CVS files to point to developer.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
