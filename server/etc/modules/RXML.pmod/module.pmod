@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.87 2000/03/25 01:51:44 mast Exp $
+//! $Id: module.pmod,v 1.88 2000/04/15 00:33:58 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -677,7 +677,9 @@ class Context
   //! where the variable also contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return ([])[0];
-    array(string) splitted=var/".";
+    if(scope_name) return ({ scope_name, var });
+    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
+					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -732,7 +734,9 @@ class Context
   //! contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return ([])[0];
-    array(string) splitted=var/".";
+    if(scope_name) return get_var(var, scope_name, want_type);
+    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
+					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -761,7 +765,9 @@ class Context
   //! contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
-    array(string) splitted=var/".";
+    if(scope_name) return set_var(var, val, scope_name);
+    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
+					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -790,7 +796,12 @@ class Context
   //! contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return;
-    array(string) splitted=var/".";
+    if(scope_name) {
+      delete_var(var, scope_name);
+      return;
+    }
+    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
+					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -2290,7 +2301,9 @@ class Parser
   // appropriate error handling.
   {
     // We're always evaluating here, so context is always set.
-    array(string) split = varref / ".";
+    if(varref[0]==':') return ({ "&"+varref[1..]+";" });
+    array(string) split = Array.map( replace(varref, "..", ";") / ".",
+				     lambda(string in) { return replace(in, ";", "."); });
     if (sizeof (split) == 2)
       if (mixed err = catch {
 	sscanf (split[1], "%[^:]:%s", split[1], string encoding);
