@@ -1,3 +1,13 @@
+Changes since Roxen Challenger 1.2.41 Yellow
+-----------------------------------------------
+
+o Changed some configure rules for MySQL.
+
+o Updated documentation for security patterns.
+
+o Fixed the global tag attributes.
+
+
 Changes since Roxen Challenger 1.2.37 Yellow
 -----------------------------------------------
 
