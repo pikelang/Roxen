@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.84 2000/10/02 20:58:42 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.85 2000/10/12 12:43:08 wellhard Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -159,7 +159,7 @@ void start(int n, Configuration c)
     else
       template = query("template");
 
-    if( !(c->enabled_modules["sitebuilder_tags#0"] ||
+    if( !(c->enabled_modules["sbtags_2.0#0"] ||
           c->enabled_modules["sitebuilder#0"] ||
           c->enabled_modules["diremit#0"] ) )
         c->add_modules( ({ "diremit#0" }), 1 );
