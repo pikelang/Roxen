@@ -217,8 +217,8 @@ install_only:
 	else :; fi
 	@if test -d $(SRCDIR)/server/manual ; then \
 	  echo "Installing manual..."; \
-	  mkdir $(prefix)/server/manual; \
-	  cd $(prefix)/server/manual; \
+	  mkdir $(prefix)/roxen/server/manual; \
+	  cd $(prefix)/roxen/server/manual; \
           tar xf $(SRCDIR)/server/manual/parsed.tar; \
           tar xf $(SRCDIR)/server/manual/unparsed.tar; \
 	else :; fi
