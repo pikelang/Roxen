@@ -20,7 +20,7 @@ exterm: force
 	@(cd extern;$(MAKE) all)
 
 gmp: force
-	-@(cd gmp;$(MAKE) CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" all)
+	-@(cd gmp;$(MAKE) all)
 
 gdbm: force
 	-@(cd gdbm;$(MAKE) all)
