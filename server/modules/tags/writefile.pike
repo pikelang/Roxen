@@ -13,7 +13,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.15 2003/06/26 15:59:23 anders Exp $";
+ "$Id: writefile.pike,v 1.16 2003/09/24 09:49:37 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -104,12 +104,22 @@ class TagWritefile {
 	Stdio.append_path(((schroot+args->filename)[0]=='/'?
 			   rootpath:path),
 			  Stdio.append_path(schroot, args->filename));
-      string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
+      // Search for an existing real directory
+      string d = dirname(filename);
+      string real_dirname = id->conf->real_file(d+"/",id);
+      string new_dir = "";
+      while (!real_dirname && sizeof(d)) {
+	new_dir = Stdio.append_path(basename(d), new_dir);
+	d = dirname(d);
+	if (d == "/") d = "";
+	real_dirname = id->conf->real_file(d+"/",id);
+      }
       if (!real_dirname)
 	parse_error ("There is no file system for %O that supports this tag "
 		     "(i.e. implements real_file).\n", dirname(filename));
 
-      real_filename = Stdio.append_path(real_dirname, basename(filename));
+      real_filename = Stdio.append_path(real_dirname, new_dir,
+					basename(filename));
 
       if(args->remove) {
         if(!rm(real_filename))
@@ -143,7 +153,7 @@ class TagWritefile {
 	    }
 	  }
 	  else
-	    towrite=content;
+	    towrite=content||"";
 	  object privs;
 	  ;{ Stat st;
 	  string diro,dirn;
