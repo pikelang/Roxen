@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.112 1999/08/12 17:20:37 grubba Exp $
+// $Id: roxenlib.pike,v 1.113 1999/09/17 08:30:39 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1123,20 +1123,23 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				     
 				  foreach (order, string field)
 				  if (field[0] == '-')
-				    if (tmp = (m1[field[1..]]
-					       < m2[field[1..]]))
+				    if (!catch (tmp = (m1[field[1..]]
+						       < m2[field[1..]])) &&
+					tmp)
 				      return tmp;
 				    else
 				      ;
 				  else if (field[0] == '+')
-				    if (tmp = (m1[field[1..]]
-					       > m2[field[1..]]))
+				    if (!catch (tmp = (m1[field[1..]]
+						       > m2[field[1..]])) &&
+					tmp)
 				      return tmp;
 				    else
 				      ;
 				  else
-				    if (tmp = (m1[field]
-					       > m2[field]))
+				    if (!catch (tmp = (m1[field]
+						       > m2[field])) &&
+					tmp)
 				      return tmp;
 				  return 0;
 				}, order );
