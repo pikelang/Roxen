@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.21 1997/10/15 15:25:48 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.22 1997/10/15 15:39:02 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -350,6 +350,9 @@ string tag_diagram(string tag, mapping m, string contents,
   
   if(m->linewidth) res->linewidth=(float)m->linewidth;
   else res->linewidth=2.2;
+
+  if(m->sw) res->sw = 1;
+  else res->sw = 0;
 
   if(!m->image)
   {
