@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.472 2004/12/01 19:22:52 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.473 2004/12/07 14:45:29 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1388,8 +1388,11 @@ class TagScope {
 // #if ROXEN_COMPAT <= 1.3
 //       if(scope_name=="form") oldvar=id->variables;
 // #endif
-      if(args->extend)
-	vars=copy_value(RXML_CONTEXT->get_scope (scope_name));
+      if (string extend_scope = args->extend) {
+	mapping|object old = RXML_CONTEXT->get_scope (extend_scope);
+	if (!old) run_error ("There is no scope %O.\n", extend_scope);
+	vars=copy_value(old);
+      }
       else
 	vars=([]);
 // #if ROXEN_COMPAT <= 1.3
