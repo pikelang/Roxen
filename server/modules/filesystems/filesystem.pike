@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.49 1999/01/14 03:16:59 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.50 1999/04/21 15:42:54 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -240,7 +240,15 @@ void done_with_put( array(object) id )
 {
 //  perror("Done with put.\n");
   id[0]->close();
-  id[1]->write("HTTP/1.0 200 Transfer Complete.\r\nContent-Length: 0\r\n\r\n");
+  id[1]->set_blocking();
+  if (putting[id[1]]) {
+    // Truncated!
+    id[1]->write("400 Bad Request - Expected more data.\r\n"
+		 "Content-Length: 0\r\n\r\n");
+  } else {
+    id[1]->write("HTTP/1.0 200 Transfer Complete.\r\n"
+		 "Content-Length: 0\r\n\r\n");
+  }
   id[1]->close();
   m_delete(putting, id[1]);
   destruct(id[0]);
@@ -250,10 +258,27 @@ void done_with_put( array(object) id )
 void got_put_data( array (object) id, string data )
 {
 // perror(strlen(data)+" .. ");
-  id[0]->write( data );
-  putting[id[1]] -= strlen(data);
-  if(putting[id[1]] <= 0)
-    done_with_put( id );
+  // Truncate at end.
+  data = data[..putting[id[1]]];
+
+  int bytes = id[0]->write( data );
+  if (bytes < sizeof(data)) {
+    // Out of disk!
+    id[0]->close();
+    id[1]->set_blocking();
+    id[1]->write("HTTP/1.0 413 Disk full.\r\n"
+		 "Content-Length: 0\r\n\r\n");
+    id[1]->close();
+    m_delete(putting, id[1]);
+    destruct(id[0]);
+    destruct(id[1]);
+  } else {
+    putting[id[1]] -= bytes;
+    if(putting[id[1]] <= 0) {
+      putting[id[1]] = 0;	// Paranoia
+      done_with_put( id );
+    }
+  }
 }
 
 int _file_size(string X,object id)
@@ -516,7 +541,10 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("Failure");
       return 0;
     }
+
+    // FIXME: Race-condition.
     chmod(f, 0666 & ~(id->misc->umask || 022));
+
     putting[id->my_fd]=id->misc->len;
     if(id->data && strlen(id->data))
     {
