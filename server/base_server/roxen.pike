@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.260 1999/03/05 01:53:28 grubba Exp $
+ * $Id: roxen.pike,v 1.261 1999/03/11 04:28:29 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.260 1999/03/05 01:53:28 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.261 1999/03/11 04:28:29 mast Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -1284,6 +1284,7 @@ int set_u_and_gid()
 {
 #ifndef __NT__
   string u, g;
+  int uid, gid;
   array pw;
   
   u=QUERY(User);
@@ -1292,50 +1293,94 @@ int set_u_and_gid()
   {
     if(getuid())
     {
-      perror("It is not possible to change uid and gid if the server\n"
-             "is not started as root.\n");
+      report_error ("It is only possible to change uid and gid if the server "
+		    "is running as root.\n");
     } else {
-      if(pw = getpwnam(u))
-      {
-	u = (string)pw[2];
-	if(!g) g = (string)pw[3];
-      } else
-	pw = getpwuid((int)u);
+      if (g) {
+#if constant(getgrnam)
+	pw = getgrnam (g);
+	if (!pw)
+	  if (sscanf (g, "%d", gid)) pw = getgrgid (gid), g = (string) gid;
+	  else report_error ("Couldn't resolve group " + g + ".\n"), g = 0;
+	if (pw) g = pw[0], gid = pw[2];
+#else
+	if (!sscanf (g, "%d", gid))
+	  report_warning ("Can't resolve " + g + " to gid on this system; "
+			  "numeric gid required.\n");
+#endif
+      }
+
+      pw = getpwnam (u);
+      if (!pw)
+	if (sscanf (u, "%d", uid)) pw = getpwuid (uid), u = (string) uid;
+	else {
+	  report_error ("Couldn't resolve user " + u + ".\n");
+	  return 0;
+	}
+      if (pw) {
+	u = pw[0], uid = pw[2];
+	if (!g) gid = pw[3];
+      }
 #if constant(initgroups)
       catch {
-	if(pw)
-	  initgroups(pw[0], (int)g);
+	initgroups(pw[0], gid);
 	// Doesn't always work - David.
       };
 #endif
-#if constant(setuid)
-      if(QUERY(permanent_uid))
-      {
-#if constant(setgid)
-	setgid((int)g);
+
+#ifdef THREADS
+      object mutex_key, threads_disabled = _disable_threads();
+      catch { mutex_key = euid_egid_lock->lock(); };
 #endif
-	setuid((int)u);
-	report_notice(LOCALE->setting_uid_gid_permanently((int)u, (int)g));
-      } else {
-#endif
-#if constant(setegid)
-	setegid((int)g);
-#else
-	setgid((int)g);
-#endif
+
 #if constant(seteuid)
-	seteuid((int)u);
-#else
-	setuid((int)u);
+      if (geteuid() != getuid()) seteuid (getuid());
 #endif
-	report_notice(LOCALE->setting_uid_gid((int)u, (int)g));
-	return 1;
+
+      if (QUERY(permanent_uid)) {
 #if constant(setuid)
-      }
+	if (g) {
+#  if constant(setgid)
+	  setgid(gid);
+	  if (getgid() != gid) report_error ("Failed to set gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	setuid(uid);
+	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
+	if (u) report_notice(LOCALE->setting_uid_gid_permanently (uid, gid, u, g));
+#else
+	report_warning ("Setting uid not supported on this system.\n");
+	u = g = 0;
 #endif
+      }
+      else {
+#if constant(seteuid)
+	if (g) {
+#  if constant(setegid)
+	  setegid(gid);
+	  if (getegid() != gid) report_error ("Failed to set effective gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting effective gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	seteuid(uid);
+	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
+	if (u) report_notice(LOCALE->setting_uid_gid (uid, gid, u, g));
+#else
+	report_warning ("Setting effective uid not supported on this system.\n");
+	u = g = 0;
+#endif
+      }
+
+      return !!u;
     }
   }
 #endif
+  return 0;
 }
 
 static mapping __vars = ([ ]);
