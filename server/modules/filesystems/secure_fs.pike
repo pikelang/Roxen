@@ -5,17 +5,24 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.18 2000/03/20 04:11:27 nilsson Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.19 2000/04/06 01:49:41 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "filesystem";
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Secure file system module (Mk II)";
-constant module_doc  = "This is a (somewhat) more secure filesystem module. It "
-  "allows an per-regexp level security.\n"
-  "Mark 2 allows for authentication via a form.\n";
+constant module_name = "Secure file system module";
+constant module_doc  = 
+#"This is a file system module that allows for more fine-grained control
+over the Roxen's built-in module security. Instead of just having security 
+pattern for the whole module it is possible to create several patterns. 
+Glob patterns are used to decide which parts of the file system each
+pattern affects.
+
+<p>The module also supports from based authentication. The same type of
+access control can be achived, in a different way, by using the 
+<i>.htaccess support</i> module.\n";
 constant module_unique = 0;
 
 array seclevels = ({ });
@@ -80,28 +87,31 @@ int dont_use_page()
 void create()
 {
   defvar("sec", 
-	 "# Only allow from local host, or persons with a valid account\n"
+	 "# Only allow from localhost, or persons with a valid account\n"
 	 "*:  allow ip=127.0.0.1\n"
 	 "*:  allow user=any\n",
 	 "Security patterns",
 
-	 TYPE_TEXT_FIELD,
+	 TYPE_TEXT_FIELD|VAR_INITIAL,
 
-	 "This is the 'pattern: security level=value' list.<br>"
-	 "Each security level can be any or more from this list:<br>"
+	 "This is the security pattern list, which follows the format"
+	 "<br><tt>files: security pattern</tt><p>"
+	 "Each <i>security pattern</i> can be any from this list:<br>"
 	 "<hr noshade>"
 	 "allow ip=pattern<br>"
 	 "deny ip=pattern<br>"
-	 "allow user=username,...<br>"
+	 "allow user=user name,...<br>"
 	 "<hr noshade>"
-	 "In patterns: * is one or more characters, ? is one character.<p>");
-  defvar("page", 0, "Use FORM authentication", TYPE_FLAG,
-         "If set instead of returning a HTTP authentication needed header, "
-         "produce a page containing a login form.", 0);
-  defvar("expire", 60*15, "Time for page authentication to expire.",
+	 "<i>Files</i> are a glob pattern matching the files of the file "
+	 "system that will be affected by the security pattern. '*' will "
+	 "match one or more characters, '?' will match one character.");
+  defvar("page", 0, "Use form authentication", TYPE_FLAG,
+         "If set it will produce a page containing a login form instead "
+	 "of sending a HTTP authentication needed header.", 0 );
+  defvar("expire", 60*15, "Authentication expire time",
          TYPE_INT,
-         "New authentication is required if no page is requested within "
-	 "the given time.",
+         "New authentication will be required if no page has been requested "
+	 "within this time, in seconds.",
          0, dont_use_page);
   defvar("authpage",
 	 "<HTML><HEAD><TITLE>Authentication needed</TITLE></HEAD><BODY>\n"
@@ -111,11 +121,13 @@ void create()
          "<INPUT TYPE=submit VALUE=Authenticate>\n"
          "</FORM>\n"
          "</BODY></HTML>",
-         "Page to use to authenticate.",
+         "Form authentication page.",
          TYPE_TEXT_FIELD,
-         "Should contain an input with name httpuser and httppass. "
-         "The text $File will be replaced with the page accessed and "
-         "$Me with the current server root.",
+         "Should contain an form with input fields named <i>httpuser</i> "
+	 "and <i>httppass</i>. "
+         "The string $File will be replaced with the URL to the current "
+	 "page being accessed and "
+         "$Me with the URL to the site.",
          0, dont_use_page);
 
   ::create();

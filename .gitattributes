@@ -166,11 +166,13 @@ nn binary
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
+/server/modules/database/SQLuserdb.pike foreign_ident
+/server/modules/database/sqldb.pike foreign_ident
+/server/modules/database/sqltag.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
 /server/modules/examples/newstyle_fnord.pike foreign_ident
-/server/modules/filesystems/cvsfs.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/incoming.pike foreign_ident
 /server/modules/filesystems/restrictedfs.pike foreign_ident
@@ -246,6 +248,7 @@ nn binary
 /server/modules/throttling/throttling_bytype.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
+/server/more_modules/cvsfs.pike foreign_ident
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident

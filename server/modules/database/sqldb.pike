@@ -1,0 +1,81 @@
+// Associates a name with an SQL-database. Copyright © 1997 - 2000, Roxen IS.
+
+#include <module.h>
+
+inherit "module";
+
+constant cvs_version = "$Id: sqldb.pike,v 1.6 2000/04/06 01:49:51 wing Exp $";
+constant module_type = MODULE_ZERO;
+constant module_name = "SQL databases";
+constant module_doc  = 
+#"SQL databases provides symbolic names to any number of database URLs. The
+symbolic names can later be used instead of the database URL. This makes
+it unnecessary to store full database URLs in RXML pages, which enhances
+security. It also becomes possible to change database without having to
+change any RXML pages.";
+
+void create()
+{
+  defvar("table", "", "Database URL table", TYPE_TEXT_FIELD|VAR_INITIAL,
+	 "The table with database URLs in the format:"
+	 "<pre>name\tURL</pre>"
+	 "The database URL is specified as "
+	 "<tt>driver://user name:password@host:port/database</tt>.\n");
+}
+
+mapping(string:string) parse_table(string tab)
+{
+  mapping(string:string) res = ([]);
+
+  tab = replace(tab||"", "\r", "\n");
+
+  foreach(tab/"\n", string line) {
+    string line2 = replace(line, "\t", " ");
+    array(string) arr = (line2/" ") - ({ "" });
+    if ((sizeof(arr) >= 2) && (arr[0][0] != '#')) {
+      string name = arr[0];
+      string infix = arr[1];
+      string suffix = ((line/name)[1..])*name;
+      suffix = infix + ((suffix/infix)[1..])*infix;
+      res[name] = suffix;
+    }
+  }
+  return(res);
+}
+
+void start(int level, Configuration conf)
+{
+  conf->sql_urls = parse_table(QUERY(table));
+}
+
+string status()
+{
+  mapping sql_urls = parse_table(QUERY(table));
+
+  string res = "";
+
+  if (sizeof(sql_urls)) {
+    res += "<table border=\"0\">\n";
+    foreach(sort(indices(sql_urls)), string s) {
+      Sql.sql o;
+
+      catch {
+	o = Sql.sql(sql_urls[s]);
+      };
+
+      if (o) {
+	res += sprintf("<tr><td>Connection OK</td>"
+		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
+		       s, sql_urls[s]);
+      } else {
+	res += sprintf("<tr><td><font color=red>Connection Failed</font></td>"
+		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
+		       s, sql_urls[s]);
+      }
+    }
+    res += "</table>\n";
+  } else {
+    res += "No associations defined.<br>\n";
+  }
+  return(res);
+}

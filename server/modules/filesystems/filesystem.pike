@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.78 2000/04/03 03:50:18 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.79 2000/04/06 01:49:40 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -35,11 +35,10 @@ constant thread_safe=1;
 #endif
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Filesystem";
+constant module_name = "File system";
 constant module_doc =
-("This is a virtual filesystem. Use it to make files available to "
- "the users of your WWW-server. If you want to serve any 'normal' "
- "files from your server, you will have to have at least one filesystem.") ;
+("This is the basic file system module that makes it possible to mount a "
+ "directory structure on the virtual file system of your site.") ;
 constant module_unique = 0;
 
 int redirects, accesses, errors, dirlists;
@@ -78,77 +77,86 @@ string status()
 void create()
 {
   defvar("mountpoint", "/", "Mount point", TYPE_LOCATION|VAR_INITIAL,
-	 "This is where the module will be inserted in the "+
-	 "namespace of your server.");
+	 "Where the module will be mounted in the site's virtual file "
+	 "system.");
 
   defvar("searchpath", "NONE", "Search path", TYPE_DIR|VAR_INITIAL,
-	 "This is where the module will find the files in the real "+
-	 "file system.");
+	 "The directory that contains the files.");
 
   defvar(".files", 0, "Show hidden files", TYPE_FLAG|VAR_MORE,
-	 "If set, hidden files will be shown in dirlistings and you "
-	 "will be able to retrieve them.");
+	 "If set, hidden files, ie files that begin with a '.', "
+	 "will be shown in directory listings." );
 
   defvar("dir", 1, "Enable directory listings per default", TYPE_FLAG|VAR_MORE,
-	 "If set, you have to create a file named .www_not_browsable "
-	 "or .nodiraccess in a directory to disable directory listings."
-	 " If unset, a file named .www_browsable in a directory will "
-	 "_enable_ directory listings.\n");
+	 "If set, it will be possible to get a directory listings from "
+	 "directories in this file system. It is possible to force a "
+	 "directory to never be browsable by putting a "
+	 "<tt>.www_not_browsable</tt> or a <tt>.nodiraccess</tt> file "
+	 "in it. Similarly it is possible to let a directory be browsable, "
+	 "even if the file system is not, by putting a "
+	 "<tt>.www_browsable</tt> file in it.\n");
 
   defvar("tilde", 0, "Show backup files", TYPE_FLAG|VAR_MORE,
-	 "If set, files ending with '~' or '#' or '.bak' will "+
+	 "If set, files ending with '~', '#' or '.bak' will "+
 	 "be shown in directory listings");
 
   defvar("put", 0, "Handle the PUT method", TYPE_FLAG,
-	 "If set, PUT can be used to upload files to the server.");
+	 "If set, it will be possible to upload files with the HTTP "
+	 "method PUT, or through FTP.");
 
   defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
-	 "If set, DELETE can be used to delete files from the "
-	 "server.");
+	 "If set, it will be possible to delete files with the HTTP "
+	 "method DELETE, or through FTP.");
 
   defvar("check_auth", 1, "Require authentication for modification",
 	 TYPE_FLAG,
-	 "Only allow authenticated users to use methods other than "
-	 "GET and POST. If unset, this filesystem will be a <em>very</em> "
-	 "public one (anyone can edit files located on it)");
+	 "Only allow users authenticated by a authentication module to "
+         "use methods that can modify the files, such as PUT or DELETE. "
+	 "If this is not set the file system will be a <b>very</b> public "
+	 "one since anyone will be able to edit files.");
 
   defvar("stat_cache", 0, "Cache the results of stat(2)",
 	 TYPE_FLAG|VAR_MORE,
-	 "This can speed up the retrieval of files up to 70% if you "
-	 "use NFS, but it does use some memory.\n"
-	 "<p>Also note that the cached results are only rechecked when the "
-	 "file is fetched with the no-cache pragma (produced e.g. by "
-	 "Alt-Ctrl-Reload in Netscape), when the module is reloaded "
-	 "or when the cached entry has expired. "
-	 "Thus, it's not recommended to use this on filesystems that "
+	 "A performace option that can speed up retrieval of files from "
+	 "NFS with up to 70%. In turn it uses some memory and the file "
+	 "system might not notice that files have changed unless it gets "
+	 "a pragma no-cache request (produced e.g. by "
+	 "Alt-Ctrl-Reload in Netscape) or the module is reloaded. "
+	 "Therefore this option should not be used on file systems that "
 	 "change a lot.");
 
   defvar("access_as_user", 0, "Access file as the logged in user",
 	 TYPE_FLAG|VAR_MORE,
-	 "Access file as the logged in user. This is useful for eg "
-	 "named-ftp.<br>\n"
-	 "WARNING: This can have severe impact on performance when using "
-	 "threads, since all threads need to be locked every time such "
-	 "an access is done.");
+	 "If set, the module will access files as the authenticated user. "
+	 "This assumes that a authentication module which imports the "
+	 "users from the operating systems, such as the <i>User database</i> "
+	 "module is used. This option is very useful for named FTP sites, "
+	 "but it will have severe performance impacts since all threads "
+	 "will be locked for each access.");
 
   defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
-	 "Forbid access to paths containing symbolic links.<br>\n"
-	 "Note: This can cause <em>a lot</em> of lstat system calls to be "
-	 "performed and can make the server much slower.");
+	 "It set, the file system will not follow symbolic links. This "
+	 "option can lower performace by a lot." );
 
-  defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
-	 "The charset the files on disk have.");
+  defvar("charset", "iso-8859-1", "File contents charset", TYPE_STRING,
+	 "The charset of the contents of the files on this file system. "
+	 "This variable makes it possible for Roxen to use any text file, "
+	 "no matter what charset it is written in. If necessary, Roxen will "
+	 "convert to Unicode before processing the file.");
 
   defvar("path_encoding", "iso-8859-1", "Filename charset", TYPE_STRING,
-	 "The charset the filenames on disk have.");
+	 "The charset of the file names of the files on this file system. "
+	 "Unlike the <i>File contents charset</i> variable, this might not "
+	 "work for all charsets simply because not all browsers support "
+	 "anything other characters than ASCII or ISO-8859-1 in URLs.");
 
   defvar("internal_files", ({}), "Internal files", TYPE_STRING_LIST,
 	 "A list of glob patterns that matches files which should be "
-	 "considered internal. Internal files can't be requested directly "
-	 "from a client, won't show up in directory listings and can "
-	 "never be uploaded, moved or deleted from a client. They can "
-	 "only be accessed internally, e.g. with the RXML "
-	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
+	 "considered internal. Internal files cannot be requested directly "
+	 "from a browser, won't show up in directory listings and can "
+	 "never be uploaded, moved or deleted by a browser. They can "
+	 "only be accessed internally, e.g. with the RXML tags "
+	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>.");
 }
 
 string path;

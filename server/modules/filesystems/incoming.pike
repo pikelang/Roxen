@@ -3,13 +3,15 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.8 2000/03/16 18:44:38 nilsson Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.9 2000/04/06 01:49:41 wing Exp $";
 
 
 constant module_name = "Incoming filesystem";
-constant module_doc = ("This is a virtual filesystem than can be used only "
-		       "for uploads, not downloads.");
-
+constant module_doc = 
+#"This file system is used only for uploads, the files that are uploaded 
+can either not be downloaded, or they will be scrambled during the download. 
+This is considered a nice way to treat people who try to
+use your FTP site for warez distribution.";
 
 static class decaying_file {
 

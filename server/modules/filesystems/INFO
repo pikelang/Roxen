@@ -1,6 +1,7 @@
 <standard>
   <name>Filesystem modules</name>
-  <doc>Extends the virtual filesystem in roxen</doc>
+  <doc>Provides file systems that can be mounted in Roxen's virtual 
+       file system.</doc>
 </standard>
 
 <svenska>

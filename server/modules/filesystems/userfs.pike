@@ -20,15 +20,17 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.54 2000/03/22 19:21:50 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.55 2000/04/06 01:49:41 wing Exp $";
 constant module_type = MODULE_LOCATION;
-constant module_name = "User Filesystem";
-constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
-  "database) to find the home-dir of users, and then looks in a "
-  "specified directory in that directory for the files requested. "
-  "<p>Normaly mounted under /~, but / or /users/ would work equally well. "
-  " is quite useful for IPPs, enabling them to have URLs like "
-  " http://www.hostname.of.provider/customer/.</p>";
+constant module_name = "User file system";
+constant module_doc  = 
+#"A file system that gives access to files in the users' home
+directories.  The users and home directories are found through the
+current authentication module. The files from the home directories are
+mounted either in the virtual file system of the site or as sites of
+their own. So on one server the user Anne's files might be mounted on
+<tt>http://domain.com/home/anne/</tt> while another server might give
+Anne a web site of her own at <tt>http://anne.domain.com/</tt>.\n";
 constant module_unique = 0;
 
 #define BAD_PASSWORD(us)	(QUERY(only_password) && \
@@ -58,64 +60,64 @@ void create()
 	 "file system",
 	 0, hide_searchpath);
 
-  set("mountpoint", "/~");
+  set("mountpoint", "/home/");
 
   defvar("only_password", 1, "Password users only",
 	 TYPE_FLAG|VAR_INITIAL,
-         "Only users who have a valid password can be accessed "
-	 "through this module");
+         "Mount only home directories for users who has valid passwords.");
 
   defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG|VAR_INITIAL,
-	 "Enable a directory listing showing users with homepages. "
-	 "When the mountpoint is accessed.");
+	 "If set a listing of all users will be shown when you access the "
+	 "mount point.");
 
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
 			   "lp", "smtp", "uucp", "nuucp", "listen",
 			   "nobody", "noaccess", "ftp", "news",
 			   "postmaster" }), "Banish list",
-	 TYPE_STRING_LIST, "None of these users are valid.");
+	 TYPE_STRING_LIST, 
+	 "This is a list of users who's home directories will not be "
+	 "mounted.");
 
   defvar("own", 0, "Only owned files", TYPE_FLAG,
-	 "If set, users can only send files they own through the user "
-	 "filesystem. This can be a problem if many users are working "
-	 "together with a project, but it will enhance security, since it "
-	 "will not be possible to link to some file the user does not own.");
+	 "If set, only files actually owned by the user will be sent "
+	 "from her home directory. This prohibits users from making "
+	 "confidental files available by symlinking to them. On the other "
+	 "hand it also makes it harder for user to cooperate on projects.");
 
-  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG|VAR_INITIAL,
-	 "If set, virtual user hosting is enabled. This means that "
-	 "the module will look at the \"host\" header to determine "
-	 "which users directory to access. If this is set, you access "
-	 "the users directory with "
-	 "<tt><b>http://user.domain.com/&lt;mountpoint&gt;</b></tt> "
-	 "instead of "
-	 "<tt><b>http://user.domain.com/&lt;mountpoint&gt;user</b></tt>. "
-	 "Note that this means that you will usually want to set the "
-	 "mountpoint to \"/\". "
-	 "To set this up you need to add CNAME entries for all your "
-	 "users pointing to the IP(s) of this virtual server.");
+  defvar("virtual_hosting", 0, "Virtual user hosting", TYPE_FLAG|VAR_INITIAL,
+	 "If set, each user will get her own site. You access the user's "
+	 "with "
+	 "<br><tt>http://&lt;user&gt;.domain.com/&lt;mountpoint&gt;</tt> "
+	 "<br>instead of "
+	 "<br><tt>http://domain.com/&lt;mountpoint&gt;&lt;user&gt;</tt>. "
+	 "<p>This means that you normally set the mount point to '/'. "
+	 "<p>You need to set up CNAME entries in DNS for all users, or a "
+	 "regexp CNAME that matches all users, to get this to "
+	 "work.");
 
   defvar("useuserid", 1, "Run user scripts as the owner of the script",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, users cgi and pike scripts will be run as the user who "
-	 "owns the file, that is, not the actual file, but the user"
-	 " in whose dir the file was found. This only works if the server"
-	 " was started as root "
-	 "(however, it doesn't matter if you changed uid/gid after startup).",
+	 "If set, users' CGI and Pike scripts will be run as the user whos "
+	 "home directory the file was found in. This only works if the server "
+	 "was started as root.",
 	 0, uid_was_zero);
 
   defvar("pdir", "html/", "Public directory",
 	 TYPE_STRING|VAR_INITIAL,
-         "This is where the public directory is located. "
-	 "If the module is mounted on /~, and the file /~per/foo is "
-	 "accessed, and the home-dir of per is /home/per, the module "
-	 "will try to file /home/per/&lt;Public dir&gt;/foo.",
+         "This is the directory in the home directory of the users which "
+	 "contains the files that will be shown on the web. "
+	 "If the module is mounted on <tt>/home/</tt>, the file "
+	 "<tt>/home/anne/test.html</tt> is accessed and the home direcory "
+	 "of Anne is <tt>/export/users/anne/</tt> the module will fetch "
+	 "the file <tt>/export/users/anne/&lt;Public dir&gt;/test.html</tt>.",
 	 0, hide_pdir);
 
   defvar("homedir" ,1, "Look in users homedir", TYPE_FLAG|VAR_INITIAL,
-	 "If set, the user's files are looked for in the home directory "
-	 "of the user, according to the <em>Public directory</em> variable. "
-	 "Otherwise, the <em>Search path</em> is used to find a directory "
-	 "with the same name as the user.");
+	 "If set, the module will look for the files in the user's home "
+	 "directory, according to the <i>Public directory</i> variable. "
+	 "Otherwise the files are fetched from a directory with the same "
+	 "name as the user in the directory configured in the "
+	 "<i>Search path</i> variable." );
 }
 
 multiset banish_list;

@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.12 2000/03/16 18:44:38 nilsson Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.13 2000/04/06 01:49:41 wing Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -18,22 +18,24 @@ constant cvs_version = "$Id: restrictedfs.pike,v 1.12 2000/03/16 18:44:38 nilsso
 // import Array;
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Restricted filesystem";
-constant module_doc  = "This is a restricted filesystem, use it to make users home "
-  "directories available to them if they login.<br>\n"
-  "Usable for eg ftp-servers.";
+constant module_name = "Restricted file system";
+constant module_doc  = "The restricted file system makes a users home "
+"directory available to her. Very usable for FTP sites.";
 constant module_unique = 0;
 
 void create()
 {
   ::create();
-  defvar("remap_home", 0, "Hide path to the home-directory",
-	 TYPE_FLAG, "Hides the path to the homedirectory if enabled.<br>\n"
-	 "E.g.<br>\n<ul>\n"
-	 "If the user <i>foo</i> has the homedirectory <i>/home/foo</i> and "
-	 "this is enabled, he will see his files in <b>/</b>.<br>\n"
-	 "If this is not enabled, he would see them in <b>/home/foo</b>\n"
-	 "</ul>\n");
+  defvar("remap_home", 0, "Hide path to the home directory",
+	 TYPE_FLAG|VAR_INITIAL,
+	 "If set, the user's home directory will be available "
+	 "as the root of this file system. If not set the user's home "
+	 "directory will be available as its normal path, just as on an "
+	 "ordinary FTP site."
+	 "<p>If the users home directory is <tt>/home/me/</tt> and the "
+	 "restricted file system is mounted on <tt>/ftp/</tt> the home "
+	 "directory will be available as <tt>/ftp/</tt> if this option is "
+	 "set and as <tt>/ftp/home/me/</tt> if it is not set.");
 }
 
 mixed stat_file(string f, object id)
