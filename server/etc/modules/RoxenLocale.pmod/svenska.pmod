@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.2 2000/03/14 02:22:11 per Exp $
+ * $Id: svenska.pmod,v 1.3 2000/03/20 16:21:03 per Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -411,7 +411,10 @@ class _config_interface
 
   constant actions = "Funktioner";
   constant clear_log = "Töm loggen";
+
+  constant drop_old_site = "Ta bort en gammal sajt";
   constant create_new_site = "Skapa ny sajt";
+
   constant create_user = "Skapa ny användare";
   constant debug_info = "Debuginformation";
   constant delete = "Radera ";

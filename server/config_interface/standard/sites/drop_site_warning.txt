@@ -1,0 +1,3 @@
+Droping a site is a permanent action. There is no way to undo
+it. Pressing one of the above buttons will permanently remove the site
+configuraiton from this roxen server.

@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.6 2000/03/14 21:02:58 js Exp $
+ * $Id: standard.pmod,v 1.7 2000/03/20 16:21:03 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -468,6 +468,8 @@ class _config_interface
 
   constant maintenance = "Maintenance";
   constant developer = "Development";
+
+  constant drop_old_site = "Drop old site";
 
   constant create_new_site = "Create new site";
   constant with_template = "with template";
