@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.175 2000/05/17 18:21:47 nilsson Exp $
+// $Id: roxenlib.pike,v 1.176 2000/05/28 00:22:58 nilsson Exp $
 
 //#pragma strict_types
 
@@ -969,7 +969,7 @@ string strftime(string fmt, int t)
     case 'm':	// Month number [1,12]; 0-prefix
       res += sprintf("%02d", lt->mon + 1);
       break;
-    case 'M':	// Minute [00,59]
+    case 'M':	// Minute [00,59]; 0-prefix
       res += sprintf("%02d", lt->min);
       break;
     case 'n':	// Newline
@@ -1474,6 +1474,9 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   string lang;
   if(id->misc->defines->theme_language) lang=id->misc->defines->theme_language;
   if(m->lang) lang=m->lang;
+
+  if(m->strftime)
+    return strftime(m->strftime, t);
 
   if (m->part)
   {
