@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.31 1998/05/23 13:56:17 grubba Exp $ */
+/* $Id: module.pike,v 1.32 1998/06/29 13:26:22 grubba Exp $ */
 
 #include <module.h>
 
@@ -415,6 +415,24 @@ array query_seclevels()
 	}
 	break;
 
+      case "acceptip":
+	// Short-circuit version of allow ip.
+	array(string|int) arr;
+	if (sizeof(arr = (value/"/")) == 2) {
+	  // IP/bits
+	  arr[1] = (int)arr[1];
+	  patterns += ({ ({ MOD_ACCEPT, IP_with_mask(@arr) }) });
+	} else if ((sizeof(arr = (value/":")) == 2) ||
+		   (sizeof(arr = (value/",")) > 1)) {
+	  // IP:mask or IP,mask
+	  patterns += ({ ({ MOD_ACCEPT, IP_with_mask(@arr) }) });
+	} else {
+	  // Pattern
+	  value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
+	  patterns += ({ ({ MOD_ACCEPT, Regexp(value)->match, }) });
+	}
+	break;
+
       case "denyip":
 	array(string|int) arr;
 	if (sizeof(arr = (value/"/")) == 2) {
@@ -465,6 +483,43 @@ array query_seclevels()
 	  }
 	}
 	break;
+
+      case "acceptuser":
+	// Short-circuit version of allow user.
+	// NOTE: MOD_PROXY_USER is already short-circuit.
+	value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
+	array(string) users = (value/"," - ({""}));
+	int i;
+	
+	for(i=0; i < sizeof(users); i++) {
+	  if (lower_case(users[i]) == "any") {
+	    if(this->register_module()[0] & MODULE_PROXY) 
+	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
+	    else
+	      patterns += ({ ({ MOD_ACCEPT_USER, lambda(){ return 1; } }) });
+	    break;
+	  } else {
+	    users[i & 0x0f] = "(^"+users[i]+"$)";
+	  }
+	  if ((i & 0x0f) == 0x0f) {
+	    value = users[0..0x0f]*"|";
+	    if(this->register_module()[0] & MODULE_PROXY) {
+	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	    } else {
+	      patterns += ({ ({ MOD_ACCEPT_USER, Regexp(value)->match, }) });
+	    }
+	  }
+	}
+	if (i & 0x0f) {
+	  value = users[0..(i-1)&0x0f]*"|";
+	  if(this->register_module()[0] & MODULE_PROXY) {
+	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	  } else {
+	    patterns += ({ ({ MOD_ACCEPT_USER, Regexp(value)->match, }) });
+	  }
+	}
+	break;
+
       default:
 	report_error(sprintf("Unknown Security:Patterns directive: "
 			     "type=\"%s\"\n", type));
