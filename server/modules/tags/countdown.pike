@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.34 2000/05/02 20:12:19 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.35 2000/06/13 20:10:20 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
@@ -253,7 +253,22 @@ int weekday_handler(int when, mapping time_args) {
   return when;
 }
 
-string tag_countdown(string t, mapping m, object id)
+class TagCountdown {
+  inherit RXML.Tag;
+  constant name = "countdown";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      result = countdown(args, id);
+      return 0;
+    }
+  }
+}
+
+string countdown(mapping m, RequestID id)
 {
   if(m->sec || m->prec=="second")
     CACHE(1);
