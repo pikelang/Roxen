@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: kerberos.pike,v 1.1 2004/05/14 12:54:09 wellhard Exp $";
+constant cvs_version = "$Id: kerberos.pike,v 1.2 2004/05/14 13:55:03 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Support for kerberos authentication";
@@ -12,6 +12,7 @@ constant module_doc  = ("Adds a couple of tags to enable simple kerberos "
 			"authentication.");
 constant module_unique = 1;
 
+#if constant(Kerberos.Context)
 Kerberos.Context ctx = Kerberos.Context();
 
 class TagIfKerberosAuth {
@@ -29,6 +30,17 @@ class TagIfKerberosAuth {
     return ctx->authenticate(user, args->password);
   }
 }
+
+#lese /* !constant(Kerberos.Context) */
+
+constant dont_dump_program = 1;
+
+string status()
+{
+  return "<font color='&usr.warncolor;'>Kerberos not available in this roxen.</font>";
+}
+
+#endif /* constant(Kerberos.Context) */
 
 TAGDOCUMENTATION;
 #ifdef manual
