@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.99 1999/03/02 23:27:05 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.100 1999/03/02 23:30:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -332,12 +332,12 @@ class imap_mail
 #endif /* IMAP_DEBUG */
 
     array a = ({
-      string_to_imap(first_header(h->date)),
-      string_to_imap(first_header(h->subject)),
+      h->date && string_to_imap(first_header(h->date)),
+      h->subject && string_to_imap(first_header(h->subject)),
       from, sender, reply_to,
-      address_list_to_imap(first_header(h->to)),
-      address_list_to_imap(first_header(h->cc)),
-      address_list_to_imap(first_header(h->bcc)),
+      h->to && address_list_to_imap(first_header(h->to)),
+      h->cc && address_list_to_imap(first_header(h->cc)),
+      h->bcc && address_list_to_imap(first_header(h->bcc)),
       string_to_imap(first_header(h["in-reply-to"])),
       string_to_imap(first_header(h["message-id"]))
     });
