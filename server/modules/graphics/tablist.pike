@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.45 2000/05/01 06:25:01 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.46 2000/05/12 14:32:57 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -127,9 +127,9 @@ class TagTablist {
 	add_layers( args->result[-1][0], "last unselected" );
       add_layers( args->result[-1][0], "last" );
 
-      return ({ map( args->result, lambda( array q ) {
-			       return Roxen.make_container( "gbutton",q[0],q[1]);
-			     } )*"" });
+      return map( args->result, lambda( array q ) {
+				  return RXML.make_tag ("gbutton",q[0],q[1]);
+				} );
     }
   }
 }
