@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.91 2000/11/27 06:17:14 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.92 2000/12/29 15:09:18 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -233,7 +233,7 @@ mixed stat_file( string f, RequestID id )
 
 string real_file( string f, RequestID id )
 {
-  if(stat_file( f, id ))
+  if(local::stat_file( f, id ))
     return path + f;
 }
 
@@ -886,6 +886,7 @@ mixed find_file( string f, RequestID id )
     string new_uri = combine_path(URI + "/../",
 				  id->misc["new-uri"]);
 
+    // FIXME: The code below doesn't allow for this module being overloaded.
     if (new_uri[..sizeof(mountpoint)-1] != mountpoint) {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE: Dest file on other filesystem.");

@@ -10,10 +10,12 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.15 2000/07/19 22:31:10 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.16 2000/12/29 15:09:19 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
+
+#include <request_trace.h>
 
 // import Array;
 
@@ -51,23 +53,30 @@ string fix_slashes (string s)
 
 mixed stat_file(string f, object id)
 {
+  TRACE_ENTER("stat_file(\"" + f + "\")", 0);
   string home = id->misc->home;
   if (!stringp(home)) {
     // No home-directory
+    TRACE_LEAVE("No home directory.");
     return(0);
   }
   if (QUERY(remap_home)) {
-    return(::stat_file(fix_slashes (home) + f, id));
+    mixed res = ::stat_file(f = (fix_slashes (home) + f), id);
+    TRACE_LEAVE(sprintf(" => %O => %O", f, res));
+    return res;
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short.
       if ((home[1..sizeof(f)] != f) ||
 	  ((home[sizeof(f)] != '/') && (home[sizeof(f)+1] != '/'))) {
+	TRACE_LEAVE("Bad prefix.");
 	return(0);
       }
       // Short.
     }
-    return(::stat_file(f, id));
+    mixed res = ::stat_file(f, id);
+    TRACE_LEAVE(sprintf(" => %O => %O", f, res));
+    return res;
   }
 }
 
@@ -96,18 +105,24 @@ array find_dir(string f, object id)
 string real_file(string f, object id)
 {
   string home = id->misc->home;
+  TRACE_ENTER("real_file(\"" + f + "\")", 0);
   if (!stringp(home)) {
     // No home-directory
+    TRACE_LEAVE("No home directory.");
     return(0);
   }
   if (QUERY(remap_home)) {
-    return(::real_file(fix_slashes (home) + f, id));
+    string res = ::real_file(f = (fix_slashes(home) + f), id);
+    TRACE_LEAVE(sprintf("=> %O => %O", f, res));
+    return res;
   } else {
-    if (search("/" + f, home)) {
-      // Not a prefix, or short.
+    if (!has_prefix("/" + f, home)) {
+      TRACE_LEAVE("Bad prefix.");
       return(0);
     }
-    return(::real_file(f, id));
+    string res = ::real_file(f, id);
+    TRACE_LEAVE(sprintf("=> %O => %O", f, res));
+    return res;
   }
 }
 
@@ -119,17 +134,9 @@ mixed find_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    if (id->method == "MV") {
-      id->misc->move_from = fix_slashes(home) + id->misc->move_from;
-    } else if (id->method == "MOVE") {
-      if (sizeof(id->misc["new-uri"]||"") &&
-	  id->misc["new-uri"][0] == '/') {
-	id->misc["new-uri"] = fix_slashes(home) + id->misc["new-uri"];
-      }
-    }
     return(::find_file(fix_slashes (home) + f, id));
   } else {
-    if (search("/" + f, home)) {
+    if (!has_prefix("/" + f, home)) {
       // Not a prefix, or short.
       return(0);
     }
