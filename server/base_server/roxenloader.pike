@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $
+// $Id: roxenloader.pike,v 1.326 2002/08/20 16:28:36 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.326 2002/08/20 16:28:36 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1801,6 +1801,7 @@ void start_mysql()
 
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
+  rm( mysqldir+"/error_log"  );
 #ifdef THREADS
   thread_create( do_tailf, 1, mysqldir+"/error_log" );
   sleep(0.1);
@@ -1843,8 +1844,6 @@ void start_mysql()
 #endif
     }
   }
-
-  rm( mysqldir+"/error_log"  );
 
   low_start_mysql( mysqldir,query_mysql_dir(),
 #if constant(getpwuid)
