@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.17 2000/01/03 07:29:57 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.18 2000/01/03 15:50:49 nilsson Exp $";
 
 array register_module()
 {
@@ -59,7 +59,8 @@ constant tagdoc=(["!--#echo":"<desc tag></desc>",
     "!--#fsize":"<desc tag></desc>",
     "!--#set":"<desc tag></desc>",
     "!--#include":"<desc tag></desc>",
-    "!--#config":"<desc tag></desc>"
+    "!--#config":"<desc tag></desc>",
+    "!--#printenv":"<desc tag></desc>"
 ]);
 #endif
 
@@ -150,21 +151,6 @@ string get_var(string var, RequestID id)
     NOCACHE();
     return html_encode_string(id->misc->cookies || "");
 
-   case "http_accept":
-    NOCACHE();
-    return html_encode_string(id->misc->accept && sizeof(id->misc->accept)?
-			      id->misc->accept*", ": "None");
-
-   case "http_user_agent":
-    NOCACHE();
-    return html_encode_string(id->client && sizeof(id->client)?
-			      id->client*" " : "Unknown");
-
-   case "http_referer":
-    NOCACHE();
-    return html_encode_string(id->referer && sizeof(id->referer) ?
-			      id->referer*", ": "Unknown");
-
    default:
     var = upper_case(var);
     mapping myenv =  build_env_vars(0, id, 0);
@@ -174,6 +160,28 @@ string get_var(string var, RequestID id)
     }
   }
   return 0;
+}
+
+array(string) tag_printenv(string t, mapping m, RequestID id) {
+  string res="";
+  NOCACHE();
+  if(id->misc->ssi_variables)
+    foreach(indices(id->misc->ssi_variables), string var)
+      res+=var+" = "+id->misc->ssi_variables[var]+"\n";
+
+  foreach(({"sizefmt","errmsg","timefmt","date_local","date_gmt",
+	    "document_name","document_uri","query_string_unescaped",
+	    "last_modified","server_software","server_name",
+	    "gateway_interface","server_protocol","request_method",
+	    "auth_type","http_cookie","cookie","http_accept",
+	    "http_user_agent","http_referer"}), string var)
+    res+=var+" = "+get_var(var,id)+"\n";
+
+  mapping myenv =  build_env_vars(0, id, 0);
+  foreach(indices(myenv), string var)
+    res+=var+" = "+myenv[var]+"\n";
+
+  return ({res});
 }
 
 string fix_var(string s, RequestID id) {
@@ -291,6 +299,8 @@ mapping query_tag_callers() {
     "!--#fsize":tag_fsize,
     "!--#set":tag_set,
     "!--#include":tag_include,
-    "!--#config":tag_config
+    "!--#config":tag_config,
+    "!--#printenv":tag_printenv,
+    "!--#printenv--":tag_printenv
   ]);
 }
