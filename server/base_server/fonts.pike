@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.22 1998/08/20 07:34:27 per Exp $ */
+/* $Id: fonts.pike,v 1.23 1998/09/11 22:14:54 per Exp $ */
 
 #include <module.h>
 
@@ -107,6 +107,7 @@ object get_font(string f, int size, int bold, int italic,
   mixed err;
   
   key = f+size+bold+italic+justification+xspace+yspace;
+//   werror("load font: key="+key+"\n");
   if(fnt=cache_lookup("fonts", key))
     return fnt;
 
@@ -179,7 +180,14 @@ object resolve_font(string f, string|void justification)
     xspace = 20.0;
     f = a+b;
   }
-
+  if(sscanf(f, "%scenter%s", a, b)==2)
+  {
+    justification="center";
+  }
+  if(sscanf(f, "%sright%s", a, b)==2)
+  {
+    justification="right";
+  }
   return get_font((f/" ")[0], 32, bold, italic, justification||"left", xspace, 0.0);
 }
 
