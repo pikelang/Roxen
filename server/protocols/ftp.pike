@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.16 1999/10/29 20:27:52 grubba Exp $
+ * $Id: ftp.pike,v 2.17 1999/10/29 20:35:02 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -227,7 +227,7 @@ class FileWrapper
   {
     read_cb = r_cb;
     close_cb = c_cb;
-    remove_callout(delayed_nonblocking);
+    remove_call_out(delayed_nonblocking);
     if (r_cb) {
       if (data) {
 	// We need to call r_cb as soon as possible, but we can't do it here
@@ -245,7 +245,7 @@ class FileWrapper
   void set_blocking()
   {
     if (data) {
-      remove_callout(delayed_nonblocking);
+      remove_call_out(delayed_nonblocking);
     }
     f->set_blocking();
   }
