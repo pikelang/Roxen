@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.3 2000/10/11 11:55:37 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.4 2000/11/07 10:49:24 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -202,7 +202,12 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
+#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 234
+// only v2 support and argument required 
+	error = catch(result = (con->search(args->filter||"")));
+#else
 	error = catch(result = (con->search()));
+#endif
 	break;
 
     case "add":
@@ -374,7 +379,10 @@ void start(int level, Configuration _conf)
 
 string status()
 {
-      "<font color=\"red\">Not connected:</font> " +
-      replace (Roxen.html_encode_string ("BLAHBLAH..."), "\n", "<br />\n") +
-      "<br />\n";
+  string rv = "";
+
+#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 235
+    rv += "<br /><p><b>WARNING! Only LDAP version 2 support detected!</p>\n";
+    rv += "Use Pike 7.0.236 or better for version 3 LDAP support.\n";
+#endif
 }
