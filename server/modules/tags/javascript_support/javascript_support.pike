@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.35 2001/05/21 15:41:36 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.36 2001/06/11 14:47:36 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -52,8 +52,8 @@ mapping find_internal(string f, RequestID id)
   string file = combine_path(__FILE__, "../scripts", (f-".."));
   if(!file_stat(file))
     return 0;
-  return ([ "data":Stdio.File(file,"r"),
-	    "type":"application/x-javascript" ]);
+  return Roxen.http_file_answer(Stdio.File(file,"r"),
+				"application/x-javascript" );
 }
 
 // Provider function
