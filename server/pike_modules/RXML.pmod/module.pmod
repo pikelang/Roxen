@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.308 2004/05/22 01:49:40 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.309 2004/05/24 21:03:57 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1530,17 +1530,6 @@ class Context
   TagSet tag_set;
   //! The current tag set that will be inherited by subparsers.
 
-#ifdef OLD_RXML_COMPAT
-  int compatible_scope = 0;
-  //! If set, the @tt{user_*_var@} functions access the variables in
-  //! the scope "form" by default, and there's no subindex splitting
-  //! or ".." decoding is done (see @[parse_user_var]).
-  //! 
-  //! @note
-  //! This is only present when the @tt{OLD_RXML_COMPAT@} define is
-  //! set.
-#endif
-
   void state_update()
   //! Should be called whenever the persistent state changes. For tag
   //! implementors that means whenever the value that
@@ -1571,11 +1560,6 @@ class Context
   //! integer is converted to it. Note that it doesn't happen for the
   //! first index, since a variable in a scope always is a string.
   {
-#ifdef OLD_RXML_COMPAT
-    if (compatible_scope && !intp(scope_name))
-      return ({scope_name || "form", var});
-#endif
-
     array(string|int) splitted;
     if(has_value(var, "..")) {
       // The \0 stuff is really here for a reason: The _only_ special

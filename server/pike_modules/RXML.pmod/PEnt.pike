@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.24 2004/01/25 18:27:56 norrby Exp $
+//! $Id: PEnt.pike,v 1.25 2004/05/24 21:03:57 mani Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -24,24 +24,10 @@ static void init_entities()
 {
   if (!type->entity_syntax) {
     // Don't decode normal entities if we're outputting xml-like stuff.
-#ifdef OLD_RXML_COMPAT
-    clear_entities();
-    if (not_compat) {
-#endif
-      add_entities (tag_set->get_string_entities());
-#ifdef OLD_RXML_COMPAT
-    }
-#endif
+    add_entities (tag_set->get_string_entities());
   }
 
-#ifdef OLD_RXML_COMPAT
-  if (not_compat)
-#endif
-    _set_entity_callback (.utils.p_xml_entity_cb);
-#ifdef OLD_RXML_COMPAT
-  else
-    _set_entity_callback (.utils.p_xml_compat_entity_cb);
-#endif
+  _set_entity_callback (.utils.p_xml_entity_cb);
 }
 
 void reset (RXML.Context ctx, RXML.Type _type,
@@ -52,32 +38,17 @@ void reset (RXML.Context ctx, RXML.Type _type,
   if (tag_set != _tag_set) error ("Internal error: Tag set change in reset().\n");
 #endif
   initialize (ctx, _type, p_code, _tag_set);
-
-#ifdef OLD_RXML_COMPAT
-  int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
-  if (new_not_compat == not_compat) return;
-  not_compat = new_not_compat;
-  init_entities();
-#endif
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type,
 		    RXML.PCode p_code, RXML.TagSet tag_set)
 {
-#ifdef OLD_RXML_COMPAT
-  int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
-  if (new_not_compat != not_compat) return this_program (ctx, type, p_code, tag_set);
-#endif
   return [object(this_program)] _low_clone (ctx, type, p_code, tag_set, 1);
 }
 
 static void create (RXML.Context ctx, RXML.Type type,
 		    RXML.PCode p_code, RXML.TagSet tag_set, void|int cloned)
 {
-#ifdef OLD_RXML_COMPAT
-  not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
-#endif
-
   if (type->free_text)
     alternative = FREE_TEXT;
   else
