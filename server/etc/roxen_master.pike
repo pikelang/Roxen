@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.140 2004/06/17 15:59:21 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.141 2004/08/18 16:58:42 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -302,7 +302,6 @@ static mapping(mixed:string) __builtin_rev =
   mkmapping (values (__builtin), indices (__builtin));
 static mapping(mixed:string) _static_modules_rev =
   mkmapping (values (_static_modules), indices (_static_modules));
-static mapping(object:program) objects_rev = ([]);
 
 mixed add_dump_constant( string f, mixed what )
 {
@@ -310,6 +309,15 @@ mixed add_dump_constant( string f, mixed what )
   dump_constants_rev[ dump_constants[ f ] = what ] = f;
   catch(dump_constants_rev[ (program)what ] = f);
   return what;
+}
+
+void unregister(program p)
+{
+#ifdef DEBUG
+  werror ("UNREGISTER\n");
+#endif
+  m_delete (all_constants_object_program_rev, p);
+  ::unregister (p);
 }
 
 #if defined (DUMP_DEBUG_LOG) && !defined (DUMP_DEBUG)
@@ -399,7 +407,7 @@ class MyCodec
 	}
       }
     }
-    if(string tmp=search(programs, prog)) {
+    if(string tmp = programs_reverse_lookup (prog)) {
       nameof_program_cache[prog] = tmp;
       DUMP_DEBUG_RETURN(tmp);
     }
@@ -490,16 +498,12 @@ class MyCodec
 
       while (1)
       {
-	if (sizeof (objects) != sizeof (objects_rev))
-	  // We assume that objects doesn't shrink.
-	  objects_rev = mkmapping (values (objects), indices (objects));
-
-	if(mixed tmp=objects_rev[x])
+	if(program p = objects_reverse_lookup (x))
 	{
-	  if(tmp=search(programs,tmp))
+	  if(string pname = programs_reverse_lookup (p))
 	  {
-	    if (sizeof (ids)) DUMP_DEBUG_RETURN (tmp + "\0" + ids * "\0");
-	    else DUMP_DEBUG_RETURN (tmp);
+	    if (sizeof (ids)) DUMP_DEBUG_RETURN (pname + "\0" + ids * "\0");
+	    else DUMP_DEBUG_RETURN (pname);
 	  }
 	}
 
