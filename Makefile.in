@@ -57,7 +57,7 @@ install: all
 	-chmod a+x $(prefix)/roxen
 	-chmod a+x $(prefix)/roxen/server
 	-@for d in fonts nfonts modules etc bin base_rserver more_modules \
-	           language roxen-images protocols unfinishedmodules; do ; \
+	           language roxen-images protocols unfinishedmodules; do \
 	  echo Modifying permissions for directory $(prefix)/roxen/server/$$d... ; \
 	  find $(prefix)/roxen/server/$$d -type d -exec chmod a+x '{}' \; ; \
 	  chmod -R a+r $(prefix)/roxen/server/$$d ;\
