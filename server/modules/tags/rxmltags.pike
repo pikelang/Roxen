@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.260 2001/07/20 12:13:16 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.261 2001/07/20 12:46:00 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4350,7 +4350,7 @@ Kibibits.
 //----------------------------------------------------------------------
 
 "colorscope":#"<desc cont='cont'><p><short>
- Makes it possible to change the autodetected colors within the tag.
+ Makes it possible to change the autodetected colors within the tag.</short>
  Useful when out-of-order parsing occurs, e.g.</p>
 
 <ex type=box>
