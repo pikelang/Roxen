@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.137 2000/02/18 19:53:58 nilsson Exp $
+ * $Id: rxml.pike,v 1.138 2000/02/19 23:50:15 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -806,10 +806,37 @@ class TagUse {
   }
 }
 
+class UserTagContents
+{
+  inherit RXML.Tag;
+  constant name = "contents";
+  constant flags = RXML.FLAG_NONCONTAINER;
+  array(RXML.Type) result_types = ({RXML.t_any (RXML.PXml)});
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    RXML.Frame user_tag_up;
+    array do_return()
+    {
+      RXML.Frame frame = up;
+      while (frame && !frame->user_tag_contents)
+	frame = frame->user_tag_up || frame->up;
+      if (!frame) run_error ("No contents to insert.\n");
+      user_tag_up = frame->up;
+      return ({frame->user_tag_contents});
+    }
+  }
+}
+
+RXML.TagSet user_tag_contents_tag_set =
+  RXML.TagSet ("user_tag_contents", ({UserTagContents()}));
+
 class UserTag {
   inherit RXML.Tag;
   string name;
   int flags = 0;
+  RXML.Type content_type = RXML.t_same;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   string c;
@@ -824,8 +851,10 @@ class UserTag {
 
   class Frame {
     inherit RXML.Frame;
+    RXML.TagSet additional_tags = user_tag_contents_tag_set;
     mapping vars;
     string scope_name;
+    string user_tag_contents;
 
     array do_return(RequestID id) {
       mapping nargs=defaults+args;
@@ -839,20 +868,20 @@ class UserTag {
 
 #ifdef OLD_RXML_COMPAT
       if(parse_html_compat) {
-	array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
-	array replace_to = values(nargs)+({ make_tag_attributes(nargs), content||"" });
+	array replace_from = map(indices(nargs),make_entity)+({"#args#"});
+	array replace_to = values(nargs)+({ make_tag_attributes(nargs) });
 	string c2;
 	c2 = replace(c, replace_from, replace_to);
 	if(c2!=c) {
 	  vars=([]);
-	  return ({ c2 });
+	  return ({replace (c2, "<contents>", content)});
 	}
       }
 #endif
 
       vars->args = make_tag_attributes(nargs);
       vars["rest-args"] = make_tag_attributes(args - defaults);
-      vars->contents = content||"";
+      user_tag_contents = vars->contents = content;
       return ({ c });
     }
   }
