@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.551 2004/03/16 10:52:40 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.552 2004/04/13 18:59:03 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2337,8 +2337,44 @@ array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
   return res;
 }
 
+static RequestID make_fake_id (string s, RequestID id)
+{
+  RequestID fake_id;
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  fake_id = id->clone_me();
+
+  fake_id->misc->common = id->misc->common;
+  fake_id->conf = this_object();
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
+  s = Roxen.fix_relative (s, id);
+
+  fake_id->raw_url=s;
+  fake_id->not_query=s;
+
+  // FIXME: How much other info is there that really shouldn't be
+  // propagated? It actually looks fairly bogus to clone the current
+  // request. /mast
+  m_delete (fake_id->misc, "path_info");
+
+  return fake_id;
+}
+
 int|string try_get_file(string s, RequestID id,
-                        int|void status, int|void nocache,
+			int|void stat_only, int|void nocache,
 			int|void not_internal,
 			mapping|void result_mapping)
 //! Convenience function used in quite a lot of modules. Tries to read
@@ -2354,61 +2390,25 @@ int|string try_get_file(string s, RequestID id,
 //! sent directly to the client. Internal requests are recognized by
 //! the id->misc->internal_get flag being non-zero.
 {
-  string res, q, cache_key;
-  RequestID fake_id;
+  string res;
+  RequestID fake_id = make_fake_id (s, id);
   mapping m;
 
-  if(!objectp(id))
-    error("No ID passed to 'try_get_file'\n");
-
-  // id->misc->common is here for compatibility; it's better to use
-  // id->root_id->misc.
-  if ( !id->misc )
-    id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
-
-  fake_id = id->clone_me();
-
-  fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
-  fake_id->conf = this_object();
-
-  if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
-    s = fake_id->scan_for_query (s);
-
-  s = Roxen.fix_relative (s, id);
-
-  fake_id->raw_url=s;
-  fake_id->not_query=s;
   fake_id->method = "GET";
 
-  if(!(m = get_file(fake_id,0,!not_internal))) {
-    // Might be a PATH_INFO type URL.
-    m_delete (fake_id->misc, "path_info");
-    array a = open_file( s, "r", fake_id, !not_internal );
-    if(a && a[0]) {
-      m = a[1];
-      m->file = a[0];
-    }
-    else {
-      destruct (fake_id);
-      return 0;
-    }
+  array a = open_file( s, "r", fake_id, !not_internal );
+  if(a && a[0]) {
+    m = a[1];
+    m->file = a[0];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
   }
 
   CACHE( fake_id->misc->cacheable );
   destruct (fake_id);
-
-  if (!mappingp(m) && !objectp(m)) {
-    report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
-		 s, id, status, nocache, m);
-    return 0;
-  }
 
   if (result_mapping)
     foreach(indices(m), string i)
@@ -2417,7 +2417,7 @@ int|string try_get_file(string s, RequestID id,
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;
 
-  if(status) return 1;
+  if(stat_only) return 1;
 
   if(m->data)
     res = m->data;
@@ -2442,6 +2442,57 @@ int|string try_get_file(string s, RequestID id,
       sscanf(res, "%*s\n%s", res);
   }
   return res;
+}
+
+mapping(string:string) try_get_headers(string s, RequestID id,
+				       int|void not_internal)
+//! Like @[try_get_file] but performs a HEAD request and only returns
+//! the response headers. Note that the returned headers are as they
+//! would be in a formatted response by the http protocol module,
+//! which is completely different from a response mapping.
+{
+  RequestID fake_id = make_fake_id (s, id);
+  mapping m;
+
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->method = "HEAD";
+
+  array a = open_file( s, "r", fake_id, !not_internal );
+  if(a && a[1]) {
+    if (a[0]) a[0]->close();
+    m = a[1];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
+  }
+
+  CACHE( fake_id->misc->cacheable );
+
+  if (!m->raw)
+    m = fake_id->make_response_headers (m);
+
+  else {
+    Roxen.HeaderParser hp = Roxen.HeaderParser();
+    array res;
+
+    if(m->data)
+      res = hp->feed (m->data);
+
+    if (!res && objectp(m->file))
+    {
+      hp->feed (m->file->read());
+      if (m->file) {
+	// Some wrappers may destruct themselves in read()...
+	destruct(m->file);
+      }
+    }
+
+    m = res && res[2];
+  }
+
+  destruct (fake_id);
+  return m;
 }
 
 mapping(string:mixed) try_put_file(string path, string data, RequestID id)
