@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.306 2004/05/20 22:56:04 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.307 2004/05/21 23:30:01 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6656,7 +6656,7 @@ class TString
 	case TScalar.name:
       }
     if (arrayp(val) && name=="text/*")
-      val = val*"\0";
+      val = (array(string))val*", ";
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert %s to %s: %s",
 		 format_short (val), name, describe_error (err));
@@ -6770,7 +6770,7 @@ class TXml
     if (mixed err = catch { // The catch comes from the cast, if any
       // Cannot use Roxen.* here.
       if (arrayp(val) && name=="text/html")
-        val = val*"\0";
+        val = (array(string))val*", ";
       return _Roxen.html_encode_string( val );
     } )
       parse_error ("Cannot convert %s to %s: %s",
