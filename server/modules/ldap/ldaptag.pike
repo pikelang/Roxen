@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.17 2001/09/21 15:58:11 jhs Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.18 2001/10/01 14:14:08 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -347,7 +347,7 @@ class TagLDAPplugin {
 class TagLDAPQuery {
   inherit RXML.Tag;
   constant name = "ldap";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.4 2001/08/29 16:20:02 nilsson Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.5 2001/10/01 14:14:09 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -31,7 +31,7 @@ void start(int num, Configuration conf) {
 class PageForm {
   inherit RXML.Tag;
   constant name = "form";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   class Frame {
@@ -124,7 +124,7 @@ class PageFrame {
 class TagWizard {
   inherit RXML.Tag;
   constant name = "wizz";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  int flags = RXML.FLAG_SOCKET_TAG;
 
   // "Preparse" the content by only count the number of <page> tags.
   class PageNOP {

@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.10 2001/09/21 15:58:09 jhs Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.11 2001/10/01 14:14:07 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -66,7 +66,7 @@ class TagAtlas {
   class TagCountry {
     inherit RXML.Tag;
     constant name = "country";
-    constant flags = RXML.FLAG_EMPTY_ELEMENT;
+    int flags = RXML.FLAG_EMPTY_ELEMENT;
 
     class Frame {
       inherit RXML.Frame;
@@ -92,7 +92,7 @@ class TagAtlas {
   class TagMarker {
     inherit RXML.Tag;
     constant name = "marker";
-    constant flags = RXML.FLAG_EMPTY_ELEMENT;
+    int flags = RXML.FLAG_EMPTY_ELEMENT;
 
     class Frame {
       inherit RXML.Frame;

@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.11 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.12 2001/10/01 14:14:09 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -87,7 +87,7 @@ class TagSession {
 class TagClearSession {
   inherit RXML.Tag;
   constant name = "clear-session";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "id" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
@@ -103,7 +103,7 @@ class TagClearSession {
 class TagForceSessionID {
   inherit RXML.Tag;
   constant name = "force-session-id";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
