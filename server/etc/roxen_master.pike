@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.69 2000/01/05 11:24:28 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.70 2000/01/05 13:33:08 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -191,10 +191,7 @@ program low_findprog(string pname, string ext, object|void handler)
       {
 	load_time[fname] = time();
 	programs[fname]=0;
-        if(arrayp(e) &&
-           sizeof(e)==2 &&
-           arrayp(e[1]) &&
-           sizeof(e[1]) == sizeof(backtrace()))
+        if(arrayp(e) && sizeof(e) && e[0] == "Compilation failed.\n")
           e[1]=({});
 	throw(e);
       }
@@ -209,6 +206,16 @@ program low_findprog(string pname, string ext, object|void handler)
     return programs[fname] = ret;
   }
   return 0;
+}
+
+void handle_error(array(mixed)|object trace)
+{
+  if (arrayp (trace) && sizeof (trace) == 2 &&
+      arrayp (trace[1]) && !sizeof (trace[1]))
+    // Don't report the special compilation errors thrown above. Pike
+    // calls this if resolv() or similar throws.
+    return;
+  ::handle_error (trace);
 }
 
 int refresh( program p, int|void force )
