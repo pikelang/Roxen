@@ -26,16 +26,16 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.3 1999/12/28 04:48:27 nilsson Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.4 2000/02/06 20:11:56 kinkie Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG
 #endif
 
 #ifdef TCPFORWARDER_DEBUG
-# define TCPFWD_WERR(X) werror("TCPforwarder: "+X+"\n")
+#define debug_perror perror
 #else
-# define TCPFWD_WERR(X)
+#define debug_perror
 #endif
 
 #define THROW(X) throw( ({X,backtrace()}) )
@@ -61,7 +61,7 @@ class Connection
 
 	void send(object to_fd, string data) {
 		int sent=0;
-		TCPFWD_WERR("Connection::send("+data+")");
+		debug_perror("Connection::send("+data+")\n");
 		if(!strlen(buffer[to_fd]))
 			buffer[to_fd] = data[(sent=to_fd->write(data))..];
 		else
@@ -70,28 +70,29 @@ class Connection
 	}
 
 	void got_data(object f, string data) {
-	  TCPFWD_WERR("Got data from "+(f?f->query_address():"unknown")+": "+data);
-	  send(otherfd(f),data);
+    debug_perror ("Got data from "+(f?f->query_address():"unknown")+": "+data+"\n");
+		send(otherfd(f),data);
 	}
 
 	void client_closed() {
-	  TCPFWD_WERR("Connection: Client closed connection.");
-	  destruct(this_object());
+		debug_perror("Connection: Client closed connection.\n");
+		destruct(this_object());
 	}
 
 	void write_more(object f)
 	{
-	  TCPFWD_WERR("Write_more..");
+    debug_perror("Write_more..\n");
 		if(strlen(buffer[f]))
 		{
 			int written = otherfd(f)->write(buffer[f]);
 			traffic += written;
-			TCPFWD_WERR((string)written);
+			debug_perror((string)written);
 			if(written == 0)
 				client_closed();
 			else
 				buffer[f] = (buffer[f])[written..];
 		}
+    debug_perror("\n");
 	}
 
   //s=source filedes, d=dest filedes, m=the instantiating object
@@ -104,16 +105,17 @@ class Connection
 		d->set_nonblocking(got_data,write_more,client_closed);
 		d->set_id(d);
 		mastermodule=m;
-		TCPFWD_WERR("Got connection from "+s->query_address()+
-			    " to " + d->query_address());
+		debug_perror("Got connection from "+s->query_address()+
+				" to " + d->query_address()+"\n");
 	}
 
 	void destroy() {
 		mapping result;
-		TCPFWD_WERR("Destroying connection");
+		debug_perror("Destroying connection\n");
 		fdescs[0]->close();
 		fdescs[1]->close();
 		mastermodule->connections-=(<this_object()>);
+		mastermodule->total_transferred_kb+=(traffic/1024);
 	}
 };
 
@@ -129,23 +131,28 @@ array register_module() {
 }
 
 multiset connections=(<>);
+int total_connections_number=0, total_transferred_kb=0;
+
 
 string status() {
 	object req;
-	if (!sizeof(connections)) {
-		return "<B>No connections</B>";
-	}
 	string retval;
-	retval="<B>"+sizeof(connections)+" connections</B><BR>\n";
-	retval += "<TABLE border=1><TR><TH align=center>From<TH>To<TH>Traffic";
-	foreach(indices(connections),req) {
-		retval+=sprintf("<TR><TD>%s<TD>%s<TD>%d",
-				req->fdescs[0]->query_address(),
-				req->fdescs[1]->query_address(),
-				req->traffic
-				);
+	if (!sizeof(connections)) {
+		retval="<B>No connections</B><br>";
+	} else {
+		retval="<B>"+sizeof(connections)+" connections</B><BR>\n";
+		retval += "<TABLE border=1><TR><TH align=center>From<TH>To<TH>Traffic";
+		foreach(indices(connections),req) {
+			retval+=sprintf("<TR><TD>%s<TD>%s<TD>%d",
+					req->fdescs[0]->query_address(),
+					req->fdescs[1]->query_address(),
+					req->traffic
+					);
+		}
+		retval += "</TABLE>";
 	}
-	retval += "</TABLE>";
+	retval +="I've managed "+total_connections_number+" connections, "
+		"transferring about "+total_transferred_kb+" Kb.";
 	return retval;
 }
 
@@ -159,19 +166,26 @@ void create() {
 }
 
 void start() {
+	object privs;
+	int port;
+
+	port=QUERY(port);
   if (accept_port) //I wonder why (at least on my setup) stop isn't called..
     stop();
-  TCPFWD_WERR("Opening port "+QUERY(port));
+  debug_perror("Opening port "+port+"\n");
   accept_port=Stdio.Port();
   if (!accept_port)
     THROW("Can't create a port to listen on");
-  if (!accept_port->bind(QUERY(port),got_connection))
-    THROW("Can't bind");;
+	if (port<1024)
+		privs=Privs("Opening forwarded port");
+  if (!(accept_port->bind(port,got_connection)))
+    THROW("Can't bind (errno="+accept_port->errno()+": \""+strerror(accept_port->errno())+"\")\n");;
+	privs=0;
   accept_port->set_id(accept_port);
 }
 
 void stop() {
-  TCPFWD_WERR("Stopping module");
+  debug_perror("Stopping module\n");
   accept_port->set_id(0);
   destruct(accept_port);
   accept_port=0; //double-check there's no more references
@@ -183,6 +197,7 @@ void got_connection (mixed port) {
   in=port->accept();
   if (!in)
     THROW("Couldn't accept connection");
+	total_connections_number++;
   async_connect(QUERY(host),QUERY(r_port),connected,in);
 }
 
