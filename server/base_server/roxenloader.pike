@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.99 1999/09/23 18:26:59 mast Exp $
+ * $Id: roxenloader.pike,v 1.100 1999/09/25 04:43:26 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,10 +20,9 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.99 1999/09/23 18:26:59 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.100 1999/09/25 04:43:26 mast Exp $";
 
 #define perror roxen_perror
-private static int perror_status_reported=0;
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -137,16 +136,6 @@ void roxen_perror(string format, mixed ... args)
       format = format[i+1..];
       last_was_nl = 1;
     }
-  }
-
-  if ((perror_status_reported < t) && last_was_nl)
-  {
-    stderr->write(short_time()+"   pid: "+pid+"   ppid: "+getppid()+
-#if efun(geteuid)
-		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
-#endif
-		  "   uid: "+pw_name(getuid())+"\n");
-    perror_status_reported = t + 60;	// 60s delay.
   }
 
   string s;
@@ -799,11 +788,16 @@ void write_current_time()
     call_out( write_current_time, 10 );
     return;
   }
+  int t = time();
   roxen_perror("\n");
-  roxen_perror("Current time is "+
-               roxen->strftime("%Y-%m-%d %H:%M", time() )+"\n");
+  roxen_perror("** "+roxen->strftime("%Y-%m-%d %H:%M", t )+
+	       "   pid: "+pid+"   ppid: "+getppid()+
+#if efun(geteuid)
+	       (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
+#endif
+	       "   uid: "+pw_name(getuid())+"\n");
   roxen_perror("\n");
-  call_out( write_current_time, 3600 );
+  call_out( write_current_time, 3600 - t % 3600 );
 }
 
 // Roxen bootstrap code.
@@ -860,13 +854,11 @@ int main(int argc, array argv)
   add_constant("open", open);
   add_constant("mkdirhier", mkdirhier);
 
-  write_current_time(); 
-
   initiate_cache();
   load_roxen();
   int retval = roxen->main(argc,argv);
-  perror_status_reported = 0;
-  roxen_perror("\n-- Total boot time %2.1f seconds ---------------------------\n\n",
+  roxen_perror("\n-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
+  write_current_time();
   return(retval);
 }
