@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.55 2003/10/06 17:23:53 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.56 2004/02/16 21:12:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -221,6 +221,13 @@ void xml_use_module(string t, mapping m, string c,
   return;
 }
 
+string format_multiline_string (string s)
+{
+  // Used to present failed results: We want proper quoting, but
+  // it gets easier to read if newlines remain.
+  return replace (sprintf ("%O", s), "\\n", "\n");
+}
+
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
   ltests++;
@@ -331,7 +338,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     c = canon_html( c );
 			   if(res != c) {
 			     if(m->not) return;
-			     test_error("Failed (result %O != %O)\n", res, c);
+			     test_error("Failed (got %s, expected %s)\n",
+					format_multiline_string (res),
+					format_multiline_string (c));
 			     throw(1);
 			   }
 			   test_ok( );
@@ -341,8 +350,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -351,8 +361,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !has_value(res, c) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not contain %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not contain %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -361,8 +372,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !Regexp(c)->match(res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -550,7 +562,9 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 test_test(c);
 			 if(res != c) {
 			   if(m->not) return;
-			   test_error("Failed (result \"%s\" != \"%s\")\n", res, c);
+			   test_error("Failed (got %s, expected %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -560,8 +574,9 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
