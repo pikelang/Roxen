@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.156 2000/08/14 14:30:46 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.157 2000/08/16 03:01:32 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -108,6 +108,7 @@ class EntityPageSelf {
 class EntityPageSSLStrength {
   inherit RXML.Value;
   int rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable = 0;
     if (!c->id->my_fd || !c->id->my_fd->session) return 0;
     return c->id->my_fd->session->cipher_spec->key_bits;
   }
