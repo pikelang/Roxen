@@ -10,10 +10,11 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.67 2000/05/20 23:17:02 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.68 2000/05/21 03:11:07 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
+#include <module.h>
 inherit "module";
 
 array(string) readme, indexfiles;
@@ -417,6 +418,7 @@ string|mapping parse_directory(RequestID id)
   return Roxen.http_rxml_answer( query("template"), id );
 }
 
+TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "emit#directory":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
