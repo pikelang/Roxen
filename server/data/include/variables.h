@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.12 2000/12/10 02:41:40 per Exp $
+// $Id: variables.h,v 1.13 2004/05/16 00:57:01 mani Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
@@ -9,23 +9,26 @@ private static constant errors =
   102:"Processing",
 
   200:"OK",
-  201:"URI follows",	// Created
+  201:"URI follows",			// Created
   202:"Accepted",
   203:"Provisional Information",	// Non-Authoritative Information
   204:"No Content",
   205:"Reset Content",
-  206:"Partial Content", // Byte Ranges
+  206:"Partial Content",		// Byte Ranges
   207:"Multi-Status",
+  226:"IM Used",			// RFC 3229
 
-  300:"Moved",			// Multiple Choices
+  300:"Moved",				// Multiple Choices
   301:"Permanent Relocation",
-  302:"Temporary Relocation",
-  303:"Temporary Relocation method and URI",
+  302:"Found",
+  303:"See Other",
   304:"Not Modified",
   305:"Use Proxy",
+  // RFC 2616 10.3.7: 306 not used but reserved.
+  307:"Temporary Redirect",
 
   400:"Bad Request",
-  401:"Access denied",		// Unauthorized
+  401:"Access denied",			// Unauthorized
   402:"Payment Required",
   403:"Forbidden",
   404:"No such file or directory.",
@@ -56,7 +59,7 @@ private static constant errors =
   503:"Service unavailable",
   504:"Gateway Time-out",
   505:"HTTP Version not supported",
-  506:"Variant aldo negotiates",
+  506:"Variant also negotiates",
   507:"Insufficient Storage",
 ]);
 
