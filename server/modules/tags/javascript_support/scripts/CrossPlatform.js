@@ -409,12 +409,13 @@ function selectFirstInputField(focus_only)
     var inputs = document.getElementsByTagName("input");
     var first_input = null;
     for (var i = 0; i < inputs.length; i++) {
-      if (inputs[i].type == "text" && !inputs[i].disabled) {
-	first_input = inputs[i];
+      var inp = inputs[i];
+      if ((inp.type == "text" || inp.type == "password") && !inp.disabled) {
+	first_input = inp;
 	break;
       }
     }
-
+    
     //  Locate all <textarea> elements and pick the first one
     var textareas = document.getElementsByTagName("textarea");
     var first_textarea = null;
