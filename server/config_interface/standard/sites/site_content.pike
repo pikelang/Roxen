@@ -1,4 +1,3 @@
-inherit "roxenlib";
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
@@ -297,7 +296,7 @@ string find_module_doc( string cn, string mn, RequestID id )
     dbuttons = "<h2>"+LOCALE("cS", "Actions")+"</h2>"+buttons( c, mn, id );
   else
     dbuttons = "";
-  RoxenModule m = c->find_module( replace(mn,"!","#") );
+  Roxen.RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
     return "";
@@ -465,15 +464,17 @@ string parse( RequestID id )
     switch( id->variables->config_page )
     {
      default: /* Status info */
-       string res="<br />\n<blockquote><h1>Urls</h1>";
+       string res = "<br />\n<blockquote><h1>" +
+ 	 LOCALE("d2","Urls") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
 	 if(search(url, "*")==-1)
            res += "<a target='server_view' href='"+url+"'>"+
 	     url+"</a> "+port_for(url)+"<br />\n";
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += "<a target='server_view' href='"+replace(url, "*", gethostname() )+"'>"+
-               url+"</a> "+port_for(url)+"<br />\n";
+	   res += "<a target='server_view' href='"+
+	     replace(url, "*", gethostname() )+"'>"+
+	     url+"</a> "+port_for(url)+"<br />\n";
          else
 	   res += url + " "+port_for(url)+"<br />\n";
        }
