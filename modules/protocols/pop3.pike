@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.9 1998/09/28 00:40:21 grubba Exp $
+ * $Id: pop3.pike,v 1.10 1998/09/28 00:44:41 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.9 1998/09/28 00:40:21 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.10 1998/09/28 00:44:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -100,7 +100,10 @@ static class Pop_Session
   {
     object mbox = user->get_incoming();
 
-    array(object) mail = mbox->mail();
+    array(object) mail = Array.filter(mbox->mail(),
+				      lambda(object m) {
+					return !(m->flags()->pop_delete);
+				      });
     int num = sizeof(mail);
     int sz = `+(@(mail->get_size()));
     send_ok(sprintf("%d %d", num, sz));
@@ -109,7 +112,10 @@ static class Pop_Session
   void pop_LIST()
   {
     object mbox = user->get_incoming();
-    array(object) mail = mbox->mail();
+    array(object) mail = Array.filter(mbox->mail(),
+				      lambda(object m) {
+					return !(m->flags()->pop_delete);
+				      });
     int num = sizeof(mail);
     
     int sz = `+(@(mail->get_size()));
@@ -131,6 +137,11 @@ static class Pop_Session
 
     if (!mail) {
       send_error(sprintf("No such mail %s.", args[0]));
+      return;
+    }
+
+    if (mail->flags()->pop_delete) {
+      send_error(sprintf("Mail %s is deleted.", args[0]));
       return;
     }
 
