@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.14 1996/12/06 15:57:26 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.15 1996/12/06 23:01:19 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -86,7 +86,7 @@ object (Image) draw_module_header(string name, int type, object font)
   return result;
 }
 
-#define TABSIZE 16
+#define TABSIZE 15
 
 #define R 0x00
 #define G 0x40

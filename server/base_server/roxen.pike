@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.18 1996/12/05 08:46:53 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.19 1996/12/06 23:01:17 per Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -274,7 +274,8 @@ object create_listen_socket(mixed port_no, object conf,
     werror(sprintf("%O(%t), %O(%t), %O(%t)\n",
 		   port_no, port_no, accept_callback, accept_callback,
 		   ether, ether));
-#endif    
+#endif
+    
     if(!port->bind(port_no, accept_callback, ether))
     {
       if(ether==0 || !port->bind(port_no, accept_callback))
@@ -1478,13 +1479,10 @@ int startpid;
 
 mapping shutdown() 
 {
-#if efun(seteuid)
-  seteuid(getuid()); // Could be dangerous, for .1 seconds, Roxen is
-                    //  run as root.
-  setegid(getgid());
-  // Thats why we ZAP all listen ports here..
+  object privs = ((program)"privs")("Shutting down the server");
+  // Change to root user.
   catch(map_array(indices(portno)), destruct);
-#endif
+
 
   if(main_configuration_port && objectp(main_configuration_port))
   {
@@ -1679,10 +1677,6 @@ void start(int num)
 
   map_array(indices(current_configuration->open_ports), do_dest);
 
-#if efun(seteuid) // Change back to root, so the port can be opened.
-  int ouid = geteuid();
-  seteuid(getuid());
-#endif
   catch {
     foreach(query("Ports"), port )
     {
@@ -1694,6 +1688,9 @@ void start(int num)
       if(rp = ((object)("protocols/"+port[1]))->real_port)
 	if(tmp = rp(port))
 	  port = tmp;
+      object privs;
+      if(port[0] < 1024)
+	privs = ((program)"privs")("Opening listen port below 1024");
       if(!(o=create_listen_socket(port[0], current_configuration, port[2],
 				  (program)("protocols/"+port[1]))))
       {
@@ -1705,10 +1702,6 @@ void start(int num)
     }
   };
   
-#if efun(seteuid)
-  seteuid(ouid); // .. and back again to the normal uid.
-#endif
-
   if(!num && sizeof(query("Ports")))
   {
     if(err == sizeof(query("Ports")))
@@ -2203,6 +2196,9 @@ void enable_configuration(string config)
 #endif
 
 
+  defvar("audit", 0, "Logging: Audit", TYPE_FLAG,
+	 "If set, log all changes of uid in the debug log.");
+  
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>"
 	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
 	 "<p><hr noshade>"

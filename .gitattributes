@@ -43,6 +43,7 @@ font binary
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
 /server/base_server/persistent.pike foreign_ident
+/server/base_server/privs.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
@@ -76,6 +77,7 @@ font binary
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/relay.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident
+/server/modules/graphics/tablist.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
@@ -96,7 +98,6 @@ font binary
 /server/modules/tags/language.pike foreign_ident
 /server/modules/tags/lpctag.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
-/server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/variable.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident

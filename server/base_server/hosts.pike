@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.3 1996/12/01 19:18:28 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.4 1996/12/06 23:01:15 per Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -114,9 +114,9 @@ void got_one_result(object o, string res)
 
     if(strlen(from))
     /* Save them in the cache for a while, to speed things up a bit... */
-      cache_set("hosts", from, ({ to, time(0)+(to?3600:10) }));
+      cache_set("hosts", from, ({ to, time(1)+(to?3600:10) }));
     if(to && strlen(to))
-      cache_set("hosts", to , ({ from, time(0)+3600 }));
+      cache_set("hosts", to , ({ from, time(1)+3600 }));
     res=res[9+lenf+lent..100000];
   }
 }
@@ -186,10 +186,10 @@ varargs void ip_to_host(string ipnumber, function callback, mixed ... args)
   mixed *entry;
 
   if(!((int)ipnumber))
-    callback(ipnumber, @args);
+    return callback(ipnumber, @args);
 
   if(entry=cache_lookup("hosts", ipnumber))
-    if(entry[1] > time(0))
+    if((entry[1] > time(1)) && entry[0]) // No negative caching.
       return callback(entry[0], @args);
   if(!sizeof(out))
     return callback(ipnumber, @args);
@@ -218,7 +218,7 @@ varargs void host_to_ip(string host, function callback, mixed ... args)
   if((int)host) return callback(host,  @args);
 
   if(entry=cache_lookup("hosts", host))
-    if(entry[1] > time(0))
+    if((entry[1] > time(1)) && entry[0])
       return callback(entry[0], @args);
 
   if(!sizeof(out))

@@ -1,6 +1,6 @@
 void perror(string format,mixed ... args);
 
-string popen(string s, void|mapping env)
+string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p,p2;
 
@@ -10,7 +10,7 @@ string popen(string s, void|mapping env)
 
   if(!fork())
   {
-    array (int) olduid;
+    array (int) olduid = ({ -1, -1 });
     catch {
       if(p->query_fd() < 0)
       {
@@ -18,21 +18,24 @@ string popen(string s, void|mapping env)
 	exit(99);
       }
       p->dup2(File("stdout"));
-      
-      olduid = ({ geteuid(), getegid() });
-      seteuid(0);
-#if efun(setegid)
-      setegid(getgid());
+      if(uid || gid)
+      {
+	object privs = ((program)"privs")("Executing script as non-www user");
+	olduid = ({ uid, gid });
+	setgid(olduid[1]);
+	setuid(olduid[0]);
+#if efun(initgroups)
+	array pw = getpwuid((int)uid);
+	if(pw) initgroups(pw[0], (int)olduid[0]);
 #endif
-      setgid(olduid[1]);
-      setuid(olduid[0]);
+      }
       catch(exece("/bin/sh", ({ "-c", s }), (env||environment)));
     };
     exit(69);
   }else{
     string t;
     destruct(p);
-    t=p2->read(6553555);
+    t=p2->read(0x7fffffff);
     destruct(p2);
     return t;
   }
@@ -78,41 +81,17 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 	   object stdout, object stderr, void|string wd, void|array (int) uid)
 {
   int pid, *olduid = allocate(2, "int");
-  if(pid=fork())
-    return pid;
+  object privs;
+
+  if(pid=fork()) return pid;
+
   if(arrayp(uid) && sizeof(uid) == 2)
   {
-#if efun(seteuid)
-    olduid = ({ geteuid(), getegid() });
-    seteuid(0);
-#endif
-#if efun(setegid)
-    setegid(getgid());
-#endif
+    privs = ((program)"privs")("Executing program as non-www user (outside roxen)");
     setgid(uid[1]);
     setuid(uid[0]);
-    if(!getuid())
-    {
-#if efun(seteuid)
-      setgid(olduid[1]);
-      setuid(olduid[0]);
-#else
-      setgid(-1);
-      setuid(-1);
-#endif
-    } else {
-      olduid = ({ geteuid(), getegid() });
-#if efun(seteuid)
-      seteuid(0);
-#endif
-#if efun(setegid)
-      setegid(getgid());
-#endif
-      setgid(olduid[1]);
-      setuid(olduid[0]);
-    }
-  }
-  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd)); 
+  } 
+  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
   exit(0); 
 }
 

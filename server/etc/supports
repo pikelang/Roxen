@@ -51,11 +51,13 @@ mozilla/1\..*	-ssl, -frames, -java, -javascript
 mozilla.[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
 mozilla.[2-9].[0-9]b[2-9].*           -java
 
-#Old versions on Mac craches the entire mashine if you use javascript.
-.*2	        -javascript
-.*2.*solaris	 javascript
+#Old versions on Mac crash the entire mashine if you use javascript.
+mozilla/2.*	        -javascript
+mozilla/2.*solaris	 javascript
 
-.*3		tablecolor
+mozilla/3.*		tablecolor
+
+mozilla/4.*		stylesheets
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*msie		   -push, -java, -javascript
@@ -94,9 +96,9 @@ omniweb.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
 # Old Mosaic is not all that interresting..  Even though NCSA claims
 # to have table support, it does in fact not work at all, so, I do not
 # add that here.
-.*mosaic.*[2-9].[5-9]*.* supsub, pemauth
-.*mosaic.*[2-9].[6-9]*.* jpeginline
-.*mosaic.*[2-9].[7-9]*.* pnginline
+ncsa.mosaic.*[2-9].[5-9]*.* supsub, pemauth
+ncsa.mosaic.*[2-9].[6-9]*.* jpeginline
+ncsa.mosaic.*[2-9].[7-9]*.* pnginline
 
 # Mosaic "The Comet" final beta
 
@@ -148,25 +150,25 @@ cern.*linemode.*           nothing
 .*[2-9]\.[1-9].*	tables
 # }
 
-#section tiber {
+# section tiber {  --- I have not seen one for quite a while
 # TIBer = Teknema Internet Browser = VOL browser VOL = Video On Line;
 #   <URL:http://www.vol.it/>  - lack of configuration possibilities 
 #   - transparent GIF not supported
-
-.*           images, gifinline, forms, backgrounds, align, mailto, center
-
-# }
+#
+#.*           images, gifinline, forms, backgrounds, align, mailto, center
+#
+#  }
 
 # A couple more for IBM's Webexplorer (OS/2) Contributed by Jason
 #  Rumney <jasonr@pec.co.nz>
-# It would be useful to be able to use the 'section' syntax here, but
-#  I (Per) do not know what the clientname really starts with.
+# section ibm {
 .*webexplorer.*           basic, jpeginline, font, center 
 .*webexplorer.*1\.0[3-9]  tables, backgrounds, imagealign, mailto
 .*webexplorer.*1.1        tables, backgrounds, imagealign, mailto
 .*webexplorer.*9603.*beta java, javascript, livescript, tables,\
                           backgrounds, imagealign, mailto
- 
+# } 
+
 #section micr {
 # Micro$oft Browser.  I have only tested this on an exhibition
 # (ComNET '95/Sweden), so this is probably _very_ incomplete by now.

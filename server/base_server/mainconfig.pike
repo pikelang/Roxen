@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.24 1996/12/06 17:04:19 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.25 1996/12/06 23:01:16 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -419,9 +419,9 @@ string configuration_list()
 
 string new_configuration_form()
 {
-  return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
+  return replace(default_head("")+"<blockquote>"+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
-    "\n\n</body>";
+    "\n\n</blockquote></body>";
 }
 
 mapping module_nomore(string name, int type, object conf)
@@ -517,7 +517,7 @@ string new_module_form(object id, object node)
   }, a);
   
   res = ({default_head("Add a module")+"\n\n"+
-	  "<table width=500><tr><td width=500>"
+	  "<blockquote><table width=500><tr><td width=500>"
   "<h2>Select a module to add from the list below</h2>" });
   
   foreach(mods, q)
@@ -542,7 +542,7 @@ string new_module_form(object id, object node)
 		 "</a><br>"+a[q][1]+"<p><br><p>"});
     }
   }
-  return res*""+"</td></tr></table>";
+  return res*""+"</td></tr></table></blockquote>";
 }
 
 mapping new_module(object id, object node)
@@ -689,19 +689,19 @@ mapping new_configuration(object id)
 
   if(!id->variables->name)
     return stores(default_head("Bad luck")+
-		  "<h1>No configuration name?</h1>"
+		  "<blockquote><h1>No configuration name?</h1>"
 		  "Either you entered no name, or your WWW-browser "
-		  "failed to include it in the request");
+		  "failed to include it in the request</blockquote>");
   
   id->variables->name=(replace(id->variables->name,"\000"," ")/" "-({""}))*" ";
   if(!low_enable_configuration(id->variables->name, id->variables->type))
     return stores(default_head("Bad luck") +
-		  "<h1>Illegal configuration name</h1>"
+		  "<blockquote><h1>Illegal configuration name</h1>"
 		  "The name of the configuration must contain characters"
 		  " other than space and tab, it should not end with "
 		  "~, and it must not be 'CVS', 'Global Variables' or "
 		  "'global variables', nor the name of an existing "
-		  "configuration, and the character '/' cannot be included");
+		  "configuration, and the character '/' cannot be included</blockquote>");
   return std_redirect(root->descend("Configurations"), id);
 }
 
@@ -761,7 +761,7 @@ mapping initial_configuration(object id)
     }
   }
   
-  res = default_head("Welcome to Roxen Challenger") + "<hr noshade>";
+  res = default_head("Welcome to Roxen Challenger") + "<blockquote>";
 
   res += read_bytes("etc/welcome.html");
   if(error && strlen(error))
@@ -777,7 +777,7 @@ mapping initial_configuration(object id)
 //   /Peter
 //	  "IP-pattern <input name=pattern type=string>\n"
 	  "           <input type=submit value=\"Use these values\">\n"
-	  "</form></font></pre>");
+	  "</form></font></pre></blockquote>");
   
   return stores(res);
 }
@@ -1161,13 +1161,13 @@ mapping configuration_parse(object id)
        case NODE_CONFIGURATIONS:
 	return stores("You don't want to do that...\n");
       }
-      PUSH("<font size=+2><i>This action cannot be undone.\n\n<p></font>"+
+      PUSH("<blockquote><font size=+2><i>This action cannot be undone.\n\n<p></font>"+
 	   TABLEP("<table>", "") +"<tr><td><form action="+
 	   o->path(1)+">"
 	   "<input type=submit value=\"No, I do not want to delete it\"> "
 	   "</form></td><td><form action=/(really_delete)"+o->path(1)+
 	   "><input type=submit value=\"Go ahead\"></form></td></tr> "
-	   "</table>");
+	   "</table></blockquote>");
       
       return stores(res*"");
       break;

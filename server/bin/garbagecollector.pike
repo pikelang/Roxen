@@ -1,9 +1,10 @@
-/* There is some bug in this I haven't had time to find. */
+#include <stdio.h>
+#include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.3 1996/12/01 19:18:38 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.4 1996/12/06 23:01:19 per Exp $";
 //#define DEBUG
 
-string version = "$Id: garbagecollector.pike,v 1.3 1996/12/01 19:18:38 per Exp $";
+string version = cvs_version;
 
 #define MAX_LOG_SIZE 512
 
@@ -181,7 +182,7 @@ void find_all_files_and_log_it()
   perror(sprintf("Found %d files, in total %.2fMb data\n",
 		 num_files, (float)BLOCK_TO_KB(cache_size)/1024.0));
   remove_call_out(find_all_files_and_log_it);
-  call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+7200);
+  call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+19200);
 }
 
 
@@ -306,18 +307,6 @@ int removed, lastgc;
 
 mapping stat_cache = ([]);
 
-
-
-void cleandirs()  // Not really needed when using the 'hash' method.
-{
-//  object null = new(File);
-//  null->open("/dev/null", "rw");
-//  spawn("find . -type d | xargs rmdir", null, null, null);
-//  remove_call_out(cleandirs);
-//  call_out(cleandirs, (cache_size+3)*3600);
-}
-
-
 int remove_one_file(string fname, int last_access)
 {
   array s;
@@ -381,7 +370,6 @@ void gc(int cs)
     perror("--------- ("+(int)BLOCK_TO_KB(removed)+" Kb really removed)\n");
 #endif
   };
-//  cleandirs();
   stat_cache = ([]);
 }
 
@@ -397,7 +385,7 @@ string statistics()
 		      (float)removed/(1048576.0/BLOCK_SIZE),
 		      (time()-lastgc)/60);
   rm("statistics");
-  write_file("statistics",
+  write_bytes("statistics",
 	     sprintf("%2.2f Mb data in the cache\n%s",
 		     ((float)BLOCK_TO_KB(cache_size))/(1024.0),
 		     last_garb));
@@ -430,9 +418,8 @@ void create(string cdir, string logfiles, int cng, int mcs)
     if(lf != logfiles) // This function might be called more than once.
     {
       lf = logfiles;
-      cleandirs();
       create_cache(logfiles);
-//    find_all_files_and_log_it();
+      call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+3600);
     }
     check(0); // Open the 'size' file and, perhaps, do a garbage collect.
     perror("Garbage collector ("+version+") on-line, waiting for commands.\n");

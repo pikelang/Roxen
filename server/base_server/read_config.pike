@@ -2,7 +2,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.5 1996/12/02 14:05:37 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.6 1996/12/06 23:01:17 per Exp $";
 #else
 # include "base_server/newdecode.pike"
 #endif
@@ -52,25 +52,13 @@ void save_it(string cl)
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
+  object privs = ((program)"privs")("Saving config file"); // Change to root user.
 
-#if efun(seteuid)
-  int saved_uid;
-  if(geteuid() != getuid())
-  {
-    saved_uid = geteuid();
-    seteuid(0);
-  }
-#endif
-
-  
   f = configuration_dir + replace(cl, " ", "_");
   mv(f, f+"~");
   fd = open(f, "wc");
   if(!fd)
   {
-#if efun(seteuid)
-  if(saved_uid) seteuid(saved_uid);
-#endif
     error("Creation of configuration file failed ("+f+") "
 #if 0&&efun(strerror)
 	  " ("+strerror()+")"
@@ -83,9 +71,6 @@ void save_it(string cl)
   catch(num = fd->write(data));
   if(num != strlen(data))
   {
-#if efun(seteuid)
-    if(saved_uid) seteuid(saved_uid);
-#endif
     error("Failed to write all data to configuration file ("+f+") "
 #if 0&&efun(strerror)
 	  " ("+strerror()+")"
@@ -93,9 +78,6 @@ void save_it(string cl)
 	  "\n");
   }
   catch(fd->close("w"));
-#if efun(seteuid)
-  if(saved_uid) seteuid(saved_uid);
-#endif
   destruct(fd);
 }
 
@@ -141,14 +123,7 @@ private static void read_it(string cl)
 
   object fd;
 
-#if efun(seteuid)
-  int saved_uid;
-  if(geteuid() != getuid())
-  {
-    saved_uid = geteuid();
-    seteuid(0);
-  }
-#endif
+  object privs = ((program)"privs")("Reading config file"); // Change to root user.
 
   catch {
     fd = open(configuration_dir + replace(cl, " ", "_"), "r");
@@ -169,9 +144,6 @@ private static void read_it(string cl)
       destruct(fd);
     }
   };
-#if efun(seteuid)
-  if(saved_uid) seteuid(saved_uid);
-#endif
 }
 
 
@@ -195,32 +167,19 @@ void remove( string reg )
 void remove_configuration( string name )
 {
   string f;
-  
-#if efun(seteuid)
-  int saved_uid;
-  if(geteuid() != getuid())
-  {
-    saved_uid = geteuid();
-    seteuid(0);
-  }
-#endif
+
+  object privs = ((program)"privs")("Removing config file"); // Change to root user.
 
   f = configuration_dir + replace(name, " ", "_");
   if(file_size( f )==-1)   f = configuration_dir + name;
   if(!rm(f))
   {
-#if efun(seteuid)
-    if(saved_uid) seteuid(saved_uid);
-#endif
     error("Failed to remove configuration file ("+f+")! "+
 #if 0&&efun(strerror)
 	  strerror()
 #endif
 	  "\n");
   }
-#if efun(seteuid)
-  if(saved_uid) seteuid(saved_uid);
-#endif
 }
 
 void store( string reg, mapping vars, int q )

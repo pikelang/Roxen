@@ -10,7 +10,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.4 1996/11/27 14:05:26 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.5 1996/12/06 23:01:23 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -50,18 +50,13 @@ array|mapping call_script(function fun, object got, object file)
 {
   mixed result, err;
   string s;
+  object privs;
   if(!functionp(fun))
     return 0;
   array (int) uid, olduid, us;
 
   if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
-  {
-    uid = us[5..6];
-    olduid = ({ geteuid(), getegid() });
-    seteuid(0);
-    setegid(uid[1]);
-    seteuid(uid[0]);
-  }
+    privs = ((program)"privs")("Executing program as non-www user",@us[5..6]);
 
   if(sizeof(got->variables))
     foreach(indices(got->variables), s)
@@ -79,13 +74,8 @@ array|mapping call_script(function fun, object got, object file)
     remove_max_eval_time(); // Remove the limit.
 #endif
 
-  if(uid)
-  {
-    seteuid(0);
-    setegid(olduid[1]);
-    seteuid(olduid[0]);
-  }
-
+  if(privs) destruct(privs);
+  
   if(err)
     return ({ -1, err });
 

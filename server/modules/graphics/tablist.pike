@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.5 1996/12/02 04:32:50 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.1 1996/12/06 23:01:22 per Exp $";
 #include <module.h>
 
 inherit "module";

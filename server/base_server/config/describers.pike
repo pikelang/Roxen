@@ -247,8 +247,12 @@ string describe_global_debug(object node)
   foreach(ind, f)
     if(!search(f, "num_"))
     {
-      foo->num_total += foo[f];
-      string col="#ff0000";
+      string bg="black";
+      if(f!="num_total")
+	foo->num_total += foo[f];
+      else
+	bg="darkblue";
+      string col="red";
       if((foo[f]-last_usage[f]) < foo[f]/60)
 	col="yellow";
       if((foo[f]-last_usage[f]) == 0)
@@ -256,7 +260,7 @@ string describe_global_debug(object node)
       if((foo[f]-last_usage[f]) < 0)
 	col="#44ff55";
       
-      res += "<tr bgcolor=black><td><b><font color="+col+">"+f[4..]+"</font></b></td><td align=right><b><font color="+col+">"+
+      res += "<tr bgcolor="+bg+"><td><b><font color="+col+">"+f[4..]+"</font></b></td><td align=right><b><font color="+col+">"+
 	(foo[f])+"</font></b></td><td align=right><b><font color="+col+">"+
 	((foo[f]-last_usage[f]))+"</font></b><br></td>";
     }
@@ -270,25 +274,29 @@ string describe_global_debug(object node)
   foreach(ind, f)
     if(search(f, "num_"))
     {
-      foo->total_usage += foo[f];
-      string col="#ff6666";
+      string bg="black";
+      if((f!="total_usage"))
+	foo->total_usage += foo[f];
+      else
+	bg="darkblue";
+      string col="red";
       if((foo[f]-last_usage[f]) < foo[f]/60)
 	col="yellow";
       if((foo[f]-last_usage[f]) == 0)
 	col="white";
       if((foo[f]-last_usage[f]) < 0)
 	col="#44ff55";
-      res += "<tr bgcolor=black><td align=right><b><font color="+col+">"
+      res += "<tr bgcolor="+bg+"><td align=right><b><font color="+col+">"
 	+(foo[f]/1024)+"</font></b></td><td align=right><b><font color="+col+">"+((foo[f]-last_usage[f])/1024)+"</font></b><br></td>";
     }
   last_usage=foo;
   res+="</table></td></tr></table>";
 #endif
 #if efun(_dump_obj_table)
-  res+="<p>";
+  res+="<p><br><p>";
   res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
 	  "<tr align=left bgcolor=#000060><th  colspan=2>List of all "
-	  "programs with more than one clone:</th></tr>"
+	  "programs with more than five clones:</th></tr>"
 	  "<tr align=left bgcolor=darkblue>"
 	  "<th>Program name</th><th align=right>Clones</th></tr>");
   foo = _dump_obj_table();
@@ -298,15 +306,21 @@ string describe_global_debug(object node)
     a += "/";
   int i;
   for(i = 0; i < sizeof(foo); i++) {
-    allobj[foo[i][0]]++;
+    string s = foo[i][0];
+    if(search(s,"base_server/mainconfig.pike")!=-1) s="ConfigNode";
+    if(search(s,"base_server/configuration.pike")!=-1) s="Bignum or ConfPriObject";
+    if(!search(s,"")) s="Precompiled object";
+    allobj[s]++;
   }
   foreach(sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
     return allobj[a] < allobj[b];
   }, allobj), s) {
-    if((search(s, "Destructed?") == -1) && allobj[s]>1)
+    if((search(s, "Destructed?") == -1) && allobj[s]>5)
+    {
       res += sprintf("<tr bgcolor=black><td><b>%s</b></td>"
 		     "<td align=right><b>%d</b></td></tr>\n",
 		     s - a, allobj[s]);
+    }
   }
   res += "</table>";
 #endif

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.8 1996/12/01 19:18:27 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.9 1996/12/06 23:01:15 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -9,17 +9,17 @@ object this = this_object();
 #undef QUERY
 #define QUERY(x) roxenp()->variables->x[VAR_VALUE]
 
-string hash_file_name_r(string what, int nd, int hv)
+string file_name_r(string what, int nd, int hv)
 {
   if(nd)
-    return sprintf("%x/%s",(hv&511)%nd,hash_file_name_r(what, nd/512, hv/512));
+    return sprintf("%x/%s",(hv&511)%nd,file_name_r(what, nd/512, hv/512));
   return sprintf("%x",hv);
 }
 
-string hash_file_name(string what)
+string file_name(string what)
 {
   int hn = hash(what,0xffffffff);
-  return hash_file_name_r(what, QUERY(hash_num_dirs), hn);
+  return file_name_r(what, QUERY(hash_num_dirs), hn);
 }
 
 
@@ -47,13 +47,17 @@ class CacheStream {
   
   void parse_headers()
   {
-    object(FILE) cf;
+    object(FILE) cf = FILE();
     string line, name, value;
-    cf->open(QUERY(cachedir)+fname,"r");
+    if(!cf->open(QUERY(cachedir)+fname,"r"))
+    {
+      perror("open failed: "+QUERY(cachedir)+fname+"\n");
+      return;
+    }
     headers[" returncode"] = get_code((cf->gets()-"\r")-"\n");
     while(strlen( (line = (cf->gets()-"\r")-"\n") || "" ))
     {
-      if(sscanf(cf, "%s:%s", name, value) == 2)
+      if(sscanf(line, "%s:%s", name, value) == 2)
       {
 	sscanf(value, "%*[ \t]%s", value);
 	headers[lower_case(name-" ")] = value;
@@ -171,8 +175,8 @@ class Cache {
     }
     /* Child */
     lcs->dup2( File ("stdin") );
-    exec("bin/pike", "-m", "etc/master.pike",
-	 "bin/garbagecollector.pike");
+    object privs = ((program)"privs")("Starting the garbage collector");
+    exec("bin/pike", "-m", "etc/master.pike", "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
     perror("bin/pike: ");real_perror();
@@ -214,7 +218,6 @@ class Cache {
  | Internal functions
  |
  */
-function file_name;
 private int last_init;
 
 private object cache;
@@ -226,18 +229,8 @@ private object cache;
 
 public void reinit_garber()
 {
-  
   if(!QUERY(cache)) return;
 
-  
-  file_name = this[lower_case(QUERY(cachefname))+"_file_name"];
-  if(!file_name)
-  {
-    perror("Cache file_name method "+QUERY(cachefname)+" not found. "
-	   "Using hierarchy.\n");
-    file_name = this->hierarchy_file_name;
-  }
-  
   mkdirhier(QUERY(cachedir)+"logs/oo");
   if(file_size(QUERY(cachedir)+"logs")>-2)
   {
@@ -275,11 +268,6 @@ object new_cache_stream(object fp, string fn)
 object cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
-  if(!file_name)
-  {
-    perror("No file-name function\n");
-    return 0;
-  }
   string name = cl+"/"+file_name( entry )+".done";
   if(file_size( QUERY(cachedir)+name ) > 0)
   {
@@ -332,30 +320,33 @@ object cache_file(string cl, string entry)
   return 0;
 }
 
+void rmold(string name)
+{
+  int len;
+   
+  len = file_size(QUERY(cachedir)+name+".done");
+  if(rm(QUERY(cachedir)+name+".done")&& (len > 0))
+    cache->check(-len);
+   
+  len = file_size(QUERY(cachedir)+name+".head");
+  if(rm(QUERY(cachedir)+name+".head")&& (len > 0))
+    cache->check(-len);
+}
+
 object create_cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
-  if(!file_name)
-  {
-    perror("No file-name function\n");
-    return 0;
-  }
-  
   string name = cl+"/"+file_name( entry );
   int len;
   object cf;
 
-  
-  len = file_size(QUERY(cachedir)+name+".done");
-  if(len > 0)
+  // to reduce IO-load try open before making directories 14-Nov-96-wk
+  if(!(cf = open(QUERY(cachedir)+name, "rwc")))
   {
-    if(rm(QUERY(cachedir)+name+".done"))
-      cache->check(-len);
+    mkdirhier(QUERY(cachedir)+name);
+    cf = open(QUERY(cachedir)+name, "rwc");
   }
-
-  mkdirhier(QUERY(cachedir)+name);
   
-  cf = open(QUERY(cachedir)+name, "rwc");
   if(!cf)
   {
     perror("Cannot open new cachefile "+QUERY(cachedir)+name+"\n");
@@ -391,13 +382,14 @@ string get_garb_info()
 
 
 
-#define DELETE_AND_RETURN(){if(cachef){cachef->new=1;destruct(cachef);}return;}
+#define DELETE_AND_RETURN(){rmold(rfile);if(cachef){cachef->new=1;destruct(cachef);}return;}
+#define RETURN() {if(cachef){destruct(cachef);}return;}
 
 #include <stat.h>
 
 void http_check_cache_file(object cachef)
 {
-  if(!cachef->file) DELETE_AND_RETURN();
+  if(!cachef->file) RETURN();
   string rfile = QUERY(cachedir)+cachef->fname;
   array (int) stat = cachef->file->stat();
 
@@ -406,20 +398,21 @@ void http_check_cache_file(object cachef)
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();
 
   if((float)stat[ST_SIZE] >=
-     (float)QUERY(cachesize)*1024.0*1024.0)
+     (float)QUERY(cache_size)*1024.0*1024.0)
     DELETE_AND_RETURN();
 
   cachef->parse_headers();
-
+// keep 404 also                                              4-Dec-96-wk
   if((cachef->headers[" returncode"]/100 != 2) &&
+     (cachef->headers[" returncode"] != 404) &&
      (cachef->headers[" returncode"]/2 != 150))
     DELETE_AND_RETURN();
   
-  if(!is_modified(cachef->headers->expire, time()))
+  if(!is_modified(cachef->headers["expire"], time()))
     DELETE_AND_RETURN();
 
-  if(cachef->headers->pragma &&
-     (search(cachef->headers->pragma, "no-cache") != -1))
+  if(cachef->headers["pragma"] &&
+     (search(cachef->headers["pragma"], "no-cache") != -1))
     DELETE_AND_RETURN();
 
   if(cachef->headers["set-cookie"])
@@ -428,9 +421,6 @@ void http_check_cache_file(object cachef)
   if(!((int)cachef["content-length"] > stat[ST_SIZE]))
     DELETE_AND_RETURN();
 
-  if((int)cachef["content-length"] > stat[ST_SIZE])
-    DELETE_AND_RETURN();
-  
   cachef->save_headers();
 
   mv(rfile, rfile+".done");

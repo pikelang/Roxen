@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.6 1996/12/02 04:32:43 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.7 1996/12/06 23:01:23 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -167,13 +167,7 @@ void read_data()
   
   users=([]);
   uid2user=([]);
-#if efun(geteuid)
-  if(getuid() != geteuid())
-  {
-    saved_uid = geteuid();
-    seteuid(0);
-  }
-#endif
+  object privs = ((program)"privs")("Reading password database");
   switch(query("method"))
   {
    case "ypcat":
@@ -229,9 +223,6 @@ void read_data()
 #if efun(getpwent)
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
-#endif
-#if efun(geteuid)
-  if(saved_uid) seteuid(saved_uid);
 #endif
 }
 
