@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.56 1997/12/20 23:48:38 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.57 1997/12/21 19:32:51 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -307,7 +307,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
 	  diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
-	diagram_data["xstart"]=xpos_for_yaxis;
+	diagram_data["xstart"]=xpos_for_yaxis+si/2;
       }
     else
       {
