@@ -37,13 +37,11 @@
 </page>
 
 <page name="delete_user"><cf-perm perm="Edit Users">
-  <translate id="bC" variable="var.cancel_txt">Cancel</translate>
-  <translate id="dE" variable="var.delete_txt">Delete</translate>
-  <translate id="dy" variable="var.no_perm_txt">No such luck (permission denied)</translate>
   <insert file=user_delete.pike nocache=""/>
   <p>
-  <button gbutton-font="&usr.gbutton-font;" 
-   gbutton_title=" &var.cancel_txt; " page="top" gbutton-preparse="1"/>
+  <translate id="bC" variable="var.cancel_txt">Cancel</translate>
+  <button gbutton-font="&usr.gbutton-font;" gbutton-preparse="1"
+   gbutton_title=" &var.cancel_txt; " page="top"/>
   </p>
 </cf-perm>
 </page>
