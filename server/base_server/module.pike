@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.95 2000/08/22 02:35:37 mast Exp $
+// $Id: module.pike,v 1.96 2000/08/28 12:05:45 jhs Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -396,18 +396,18 @@ array query_seclevels()
   return patterns;
 }
 
-mixed stat_file(string f, RequestID id){}
-mixed find_dir(string f, RequestID id){}
-mapping(string:array(mixed)) find_dir_stat(string f, RequestID id)
+Stat stat_file(string f, RequestID id){}
+array(string) find_dir(string f, RequestID id){}
+mapping(string:Stat) find_dir_stat(string f, RequestID id)
 {
   TRACE_ENTER("find_dir_stat(): \""+f+"\"", 0);
 
   array(string) files = find_dir(f, id);
-  mapping(string:array(mixed)) res = ([]);
+  mapping(string:Stat) res = ([]);
 
   foreach(files || ({}), string fname) {
     TRACE_ENTER("stat()'ing "+ f + "/" + fname, 0);
-    array(mixed) st = stat_file(f + "/" + fname, id);
+    Stat st = stat_file(f + "/" + fname, id);
     if (st) {
       res[fname] = st;
       TRACE_LEAVE("OK");
@@ -420,7 +420,7 @@ mapping(string:array(mixed)) find_dir_stat(string f, RequestID id)
   return(res);
 }
 
-mixed real_file(string f, RequestID id){}
+string real_file(string f, RequestID id){}
 
 void add_api_function( string name, function f, void|array(string) types)
 {
