@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.205 2000/02/14 12:49:49 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.206 2000/02/15 00:18:06 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -23,7 +23,7 @@ int req_time = HRTIME();
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define REQUEST_WERR(X)	bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
+#define REQUEST_WERR(X) bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
 #else
 #define REQUEST_WERR(X)
 #endif
@@ -35,8 +35,7 @@ int footime, bartime;
 #endif
 
 constant decode          = MIME.decode_base64;
-constant find_supports   = roxen.find_supports;
-constant find_client_var = roxen.find_client_var;
+constant find_supports_and_vars = roxen.find_supports_and_vars;
 constant version         = roxen.version;
 constant _query          = roxen.query;
 constant _time           = predef::time;
@@ -59,12 +58,12 @@ mapping (string:mixed)  misc            =
 ([
 #ifdef REQUEST_DEBUG
   "trace_enter":lambda(mixed ...args) {
-		  DPERROR(sprintf("TRACE_ENTER(%{%O,%})", args));
+		  werror(sprintf("TRACE_ENTER(%{%O,%})\n", args));
 		},
   "trace_leave":lambda(mixed ...args) {
-		  DPERROR(sprintf("TRACE_LEAVE(%{%O,%})", args));
+		  werror(sprintf("TRACE_LEAVE(%{%O,%})\n", args));
 		}
-#endif /* REQUEST_DEBUG */
+#endif // REQUEST_DEBUG
 ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
@@ -889,13 +888,15 @@ private int parse_got()
 #ifndef DISABLE_SUPPORTS
   if(!client) {
     client = ({ "unknown" });
-    client_var = find_client_var("");
-    supports = find_supports("", supports); // This makes it somewhat faster.
+    array s_and_v = find_supports_and_vars("", supports);
+    supports = s_and_v[0];
+    client_var = s_and_v[1];
   }
   else {
     client_var->fullname=lower_case(client_var->Fullname);
-    client_var = find_client_var(client_var->fullname, client_var);
-    supports = find_supports(client_var->fullname, supports);
+    array s_and_v = find_supports_and_vars(client_var->fullname, supports, client_var);
+    supports = s_and_v[0];
+    client_var = s_and_v[1];
   }
 
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
@@ -1724,7 +1725,7 @@ void handle_request( )
   array e;
   if(e= catch(file = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
-  if( file && !file->pipe )
+  if( !file || !file->pipe )
     send_result();
 }
 
