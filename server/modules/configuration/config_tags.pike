@@ -11,6 +11,11 @@ inherit "roxenlib";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Configuration interface RXML tags";
 
+void start(int num, Configuration conf)
+{
+  conf->parse_html_compat=1;
+}
+
 string internal_topmenu_tag_item(string t, mapping m, 
 				 mapping c, RequestID id)
 {
