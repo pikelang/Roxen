@@ -388,6 +388,205 @@
   <result>pre<post/><date/>cca</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]"/>
+      &var.foo;
+      <contents copy-of="*[1]"/>
+      &var.foo;
+    </define>
+    <x>
+      <set variable="var.foo" value="first"/>
+      <set variable="var.foo" value="second"/>
+    </x>
+  </rxml>
+  <result>secondfirst</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>a="up"b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="y/@b"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <z a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="*[-1]"/>
+    </define>
+    <emit source="values" values="x">
+      <x>
+	<set variable="var.foo">first</set>
+	<set variable="var.foo"
+	  >start<!-- the start --><pp
+	  /><emit source="values" values="1,2" split=",">[&_.value;]</emit
+	  >stop<?foo bar
+	?></set>
+      </x>
+    </emit>
+  </rxml>
+  <result>start[x]stop</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="*/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>up</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="y/@b"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <z a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="@b"/>
+    </define>
+    <x a="1" b="2">
+      <y b="3" c="4"/>
+    </x>
+  </rxml>
+  <result>b="2"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" preparse="">
+      [<contents copy-of="*"/>]
+    </define>
+    <x>
+      <set variable="var.foo" value="x"/>
+      &var.foo;|<insert variable="var.foo"/>
+    </x>
+  </rxml>
+  <result>[x]</result>
+</test>
+
+<test>
+  <rxml
+    ><define tag="y" preparse=""
+      ><maketag type="tag" name="made"
+	><attrib name="attr"><contents value-of="@a"/></attrib
+      ></maketag
+    ></define
+    ><y a="1" b="2"
+  /></rxml>
+  <result><made attr="1" /></result>
+</test>
+
+<test>
+  <rxml><define variable="var.i" preparse=""><contents/></define></rxml>
+  <glob>[Error (parse): *]</glob>
+</test>
+
+<test>
+  <rxml
+    ><define tag="x"
+      ><define variable="var.i" preparse=""><contents/></define
+    ></define
+    ><x
+  /></rxml>
+  <glob>[Error (parse): *]</glob>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" scope="x">
+      <define variable="var.i" preparse=""><contents scope="x"/></define>
+      &var.i;
+    </define>
+    <x>wox</x>
+    &var.i;
+  </rxml>
+  <result>woxwox</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="values" values="y">
+      <define variable="var.i" preparse="">&_.value;</define>
+      &var.i;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
