@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.91 1998/02/17 20:34:16 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.92 1998/02/24 15:02:28 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -891,6 +891,44 @@ mapping(string:mixed) init_bg(mapping diagram_data)
 				    255,255,255);
 }
 
+int write_name(mapping diagram_data)
+{
+  if (!diagram_data["name"])
+    return 0;
+  object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
+  
+  if (!(notext))
+    throw(({"Missing font or similar error!\n", backtrace() }));
+
+  object text;
+  int y,x;
+  if (diagram_data["namesize"])
+    y=diagram_data["namesize"];
+  else
+    y=diagram_data["fontsize"];
+  
+  text=notext->write(diagram_data["name"])->scale(0,y);
+  
+  if (text->xsize()>=diagram_data["xsize"])
+    text->scale(diagram_data["xsize"]-1,0);
+  
+  array color;
+  if (diagram_data["namecolor"])
+    color=diagram_data["namecolor"];
+  else
+    color=diagram_data["textcolor"];
+  
+
+  diagram_data["image"]->
+    paste_alpha_color(text, 
+		      @(color), 
+		      diagram_data["xsize"]/2-text->xsize()/2,
+		      2      
+		      );
+	  
+  return text->ysize();
+}
+
 mapping(string:mixed) create_graph(mapping diagram_data)
 {
   //Supportar bara xsize>=100
@@ -1088,17 +1126,14 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       labelx=labelimg->xsize();
     }
   
-
-
-    
-
+  labely+=write_name(diagram_data);
 
   int ypos_for_xaxis; //avstånd NERIFRÅN!
   int xpos_for_yaxis; //avstånd från höger
   //Bestäm var i bilden vi får rita graf
   diagram_data["ystart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["ystop"]=diagram_data["ysize"]-
-    (int)ceil((float)diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+    (int)ceil((float)diagram_data["linewidth"]+si)-labely;
   if (((float)diagram_data["yminvalue"]>-LITET)&&
       ((float)diagram_data["yminvalue"]<LITET))
     diagram_data["yminvalue"]=0.0;
@@ -1124,7 +1159,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  int maxpos;
 	  maxpos=diagram_data["ysize"]-
 	    (int)ceil(diagram_data["linewidth"]+si*2)-
-	    diagram_data["labelsize"];
+	    labely;
 	  if (maxpos<ypos_for_xaxis)
 	    {
 	      ypos_for_xaxis=maxpos;
@@ -1139,7 +1174,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       {
 	// sätt x-axeln längst ner och diagram_data["ystart"] på samma ställe.
 	diagram_data["ystop"]=diagram_data["ysize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+	  (int)ceil(diagram_data["linewidth"]+si)-labely;
 	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis;
       }
@@ -1147,7 +1182,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       {
 	//sätt x-axeln längst ner och diagram_data["ystart"] en aning högre
 	diagram_data["ystop"]=diagram_data["ysize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+	  (int)ceil(diagram_data["linewidth"]+si)-labely;
 	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis+si*2;
       }
@@ -1327,7 +1362,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					  
 					  xpos_for_yaxis,
 					  si+
-					  diagram_data["labelsize"]
+					  labely
 					}), 
 					1, 1)[0]);
   else
@@ -1357,7 +1392,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    
 					    xpos_for_yaxis,
 					    si+
-					    diagram_data["labelsize"]
+					    labely
 					  }), 
 					  1, 1)[0]);
       }
@@ -1388,7 +1423,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    
 					      xpos_for_yaxis,
 					      si+
-					      diagram_data["labelsize"]
+					      labely
 					      
 					    }), 
 					    1, 1)[0]);
@@ -1403,17 +1438,17 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
 	       (float)si+
-	       diagram_data["labelsize"],
+	       labely,
 				      
 	       xpos_for_yaxis,
 	       diagram_data["linewidth"]/2.0+
-	       diagram_data["labelsize"],
+	       labely,
 	
 	       xpos_for_yaxis+
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
 	       (float)si+
-	       diagram_data["labelsize"]
+	       labely
 	     })); 
   
 
@@ -1557,7 +1592,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	graph->paste_alpha_color(labelimg, 
 				 @(diagram_data["labelcolor"]), 
 				 x,
-				 2);
+				 2+labely-labelimg->ysize());
       
       
 

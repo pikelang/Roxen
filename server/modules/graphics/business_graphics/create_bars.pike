@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.60 1998/01/21 16:38:05 grubba Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.61 1998/02/24 15:02:18 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -199,14 +199,14 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   else
     diagram_data["labelsize"]=0;
 
-
+  labely+=write_name(diagram_data);
 
   int ypos_for_xaxis; //avstånd NERIFRÅN!
   int xpos_for_yaxis; //avstånd från höger
   //Bestäm var i bilden vi får rita graf
   diagram_data["ystart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["ystop"]=diagram_data["ysize"]-
-    (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+    (int)ceil(diagram_data["linewidth"]+si)-labely;
   if (((float)diagram_data["yminvalue"]>-LITET)&&
       ((float)diagram_data["yminvalue"]<LITET))
     diagram_data["yminvalue"]=0.0;
@@ -232,7 +232,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  int maxpos;
 	  maxpos=diagram_data["ysize"]-
 	    (int)ceil(diagram_data["linewidth"]+si*2)-
-	    diagram_data["labelsize"];
+	    labely;
 	  if (maxpos<ypos_for_xaxis)
 	    {
 	      ypos_for_xaxis=maxpos;
@@ -247,7 +247,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       {
 	// sätt x-axeln längst ner och diagram_data["ystart"] på samma ställe.
 	diagram_data["ystop"]=diagram_data["ysize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+	  (int)ceil(diagram_data["linewidth"]+si)-labely;
 	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis;
       }
@@ -255,7 +255,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       {
 	//sätt x-axeln längst ner och diagram_data["ystart"] en aning högre
 	diagram_data["ystop"]=diagram_data["ysize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
+	  (int)ceil(diagram_data["linewidth"]+si)-labely;
 	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2;
 	diagram_data["ystart"]=ypos_for_xaxis+si*2;
       }
@@ -604,7 +604,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					    
 					    xpos_for_yaxis,
 					    si+
-					    diagram_data["labelsize"]
+					    labely
 					  }), 
 					  1, 1)[0]);
       else
@@ -617,7 +617,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					    
 					    xpos_for_yaxis,
 					    si+
-					    diagram_data["labelsize"]
+					    labely
 					  }), 
 					  1, 1)[0]);
 	
@@ -649,7 +649,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					    
 					    xpos_for_yaxis,
 					    si+
-					    diagram_data["labelsize"]
+					    labely
 					  }), 
 					  1, 1)[0]);
       }
@@ -680,7 +680,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					    
 					      xpos_for_yaxis, 
 					      si+
-					      diagram_data["labelsize"]
+					      labely
 					      
 					    }), 
 					    1, 1)[0]);
@@ -695,17 +695,17 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
 	       (float)si+
-	       diagram_data["labelsize"],
+	       labely,
 				      
 	       xpos_for_yaxis,
 	       diagram_data["linewidth"]/2.0+
-	       diagram_data["labelsize"],
+	       labely,
 	
 	       xpos_for_yaxis+
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
 	       (float)si+
-	       diagram_data["labelsize"]
+	       labely
 	     })); 
   
 
@@ -812,7 +812,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	barsdiagram->paste_alpha_color(labelimg, 
 				 @(diagram_data["labelcolor"]), 
 				 x,
-				 2);
+				 2+labely-labelimg->ysize());
       
       
 

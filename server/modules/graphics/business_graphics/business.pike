@@ -182,7 +182,7 @@ på alla saker du använder i mappingarna.
 
 */
 
-constant cvs_version = "$Id: business.pike,v 1.73 1998/02/24 09:56:46 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.74 1998/02/24 15:02:14 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -244,8 +244,14 @@ mixed *register_module()
        "  <b>height</b>         Height of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>fontsize</b>       Height of text in pixels.\n"
-       "  <b>legendfontsize</b> Height of legend text in pixels. Uses\n"
-       "                 <b>fontsize</b> if not defined.\n"
+       "  <b>legendfontsize</b> Height of legend text in pixels.\n"
+       "                 <b>fontsize</b> is used if this is undefined.\n"
+       "  <b>name</b>           Writes a name at the top of the diagram.\n"
+       "  <b>namecolor</b>      The color of the name-text. Textcolor\n"
+       "                 is used if this is not defined.\n"
+       "  <b>namesize</b>       Height of the name text in pixels.\n"
+       "                 <b>fontsize</b> is used if this is undefined.\n"
+
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
        " the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
@@ -262,7 +268,7 @@ mixed *register_module()
        "  <b>textcolor</b>      Sets the color for all text\n"
        "                 (Can be overrided)\n"
        "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
-       
+
        "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
        "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
        "  <b>xgridspace</b>     The space between two vertical grids in the\n"
@@ -616,6 +622,7 @@ constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 string tag_diagram(string tag, mapping m, string contents,
 		   object id, object f, mapping defines)
 {
+  int l=query("maxstringlength")-1;
   contents=replace(contents, "\r\n", "\n");
   contents=replace(contents, "\r", "\n");
 
@@ -637,6 +644,14 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->background)
     res->image = combine_path( dirname(id->not_query), (string)m->background);
 
+  if (m->name)
+    {
+      res->name=m->name[..l];
+      if (m->namesize)
+	res->namesize=(int)m->namesize;
+      if (m->namecolor)
+	res->namecolor=parse_color(m->namecolor);
+    }
   if(m->voidseparator)
     res->voidsep=m->voidseparator;
   else
@@ -662,6 +677,7 @@ string tag_diagram(string tag, mapping m, string contents,
      res->drawtype = "2D";
      break;
    case "bar":
+   case "bars":
    case "barc":
      res->type = "bars";
      res->subtype = "box";
