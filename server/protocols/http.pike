@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.89 1998/03/29 01:17:45 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.90 1998/03/31 20:00:40 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -451,8 +451,13 @@ private int parse_got(string s)
 	    misc[linename] = lower_case(contents);
 	    break;
 
-	  case "accept":
 	  case "accept-encoding":
+	    foreach((contents-" ")/",", string e) {
+	      if (lower_case(e) == "gzip") {
+		supports["autogunzip"] = 1;
+	      }
+	    }
+	  case "accept":
 	  case "accept-charset":
 	  case "accept-language":
 	  case "session-id":
