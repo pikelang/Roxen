@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.714 2001/08/24 13:19:30 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.715 2001/08/24 17:35:49 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -61,6 +61,10 @@ Thread.Thread backend_thread;
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
 static function sol = master()->set_on_load;
+
+#ifdef TEST_EUID_CHANGE
+int test_euid_change;
+#endif
 
 string query_configuration_dir()
 {
@@ -548,6 +552,16 @@ local static void handler_thread(int id)
 {
   THREAD_WERR("Handle thread ["+id+"] started");
   mixed h, q;
+  set_u_and_gid (1);
+#ifdef TEST_EUID_CHANGE
+  if (test_euid_change) {
+    Stdio.File f = Stdio.File();
+    if (f->open ("rootonly", "r") && f->read())
+      werror ("Handler thread %d can read rootonly\n", id);
+    else
+      werror ("Handler thread %d can't read rootonly\n", id);
+  }
+#endif
   while(1)
   {
     if(q=catch {
@@ -3356,7 +3370,7 @@ mixed get_locale( )
   return locale->get();
 }
 
-int set_u_and_gid()
+int set_u_and_gid (void|int from_handler_thread)
 //! Set the uid and gid to the ones requested by the user. If the
 //! sete* functions are available, and the define SET_EFFECTIVE is
 //! enabled, the euid and egid is set. This might be a minor security
@@ -3368,15 +3382,32 @@ int set_u_and_gid()
   int uid, gid;
   array pw;
 
+  if (from_handler_thread && geteuid()) {
+    // The euid switch in the backend thread worked here too, so
+    // there's no need to do anything.
+#ifdef TEST_EUID_CHANGE
+    werror ("euid change effective in handler thread.\n");
+#endif
+    return 1;
+  }
+
   u=query("User");
   sscanf(u, "%s:%s", u, g);
   if(strlen(u))
   {
     if(getuid())
     {
-      report_error(LOC_M(24, "It is only possible to change uid and gid "
-			 "if the server is running as root.")+"\n");
+      if (!from_handler_thread)
+	report_error(LOC_M(24, "It is only possible to change uid and gid "
+			   "if the server is running as root.")+"\n");
     } else {
+#ifdef TEST_EUID_CHANGE
+      if (Stdio.write_file ("rootonly",
+			    "Only root should be able to read this.\n",
+			    0600))
+	test_euid_change = 1;
+#endif
+
       if (g) {
 #if constant(getgrnam)
 	pw = getgrnam (g);
@@ -3405,8 +3436,13 @@ int set_u_and_gid()
 
 #ifdef THREADS
       Thread.MutexKey mutex_key;
-      catch { mutex_key = euid_egid_lock->lock(); };
-      object threads_disabled = _disable_threads();
+      object threads_disabled;
+      if (!from_handler_thread) {
+	// If this is necessary from every handler thread, these
+	// things are thread local and thus are no locks necessary.
+	catch { mutex_key = euid_egid_lock->lock(); };
+	threads_disabled = _disable_threads();
+      }
 #endif
 
 #if constant(seteuid)
@@ -3430,8 +3466,9 @@ int set_u_and_gid()
 	    g = 0;
 	  }
 #  else
-	  report_warning(LOC_M(26, "Setting gid not supported on this system.")
-			 +"\n");
+	  if (!from_handler_thread)
+	    report_warning(LOC_M(26, "Setting gid not supported on this system.")
+			   +"\n");
 	  g = 0;
 #  endif
 	}
@@ -3440,11 +3477,13 @@ int set_u_and_gid()
 	  report_error(LOC_M(27, "Failed to set uid.")+"\n"); 
 	  u = 0;
 	}
-	if (u) report_notice(CALL_M("setting_uid_gid_permanently",  "eng")
-			     (uid, gid, u, g));
+	if (u && !from_handler_thread)
+	  report_notice(CALL_M("setting_uid_gid_permanently",  "eng")
+			(uid, gid, u, g));
 #else
-	report_warning(LOC_M(28, "Setting uid not supported on this system.")
-		       +"\n");
+	if (!from_handler_thread)
+	  report_warning(LOC_M(28, "Setting uid not supported on this system.")
+			 +"\n");
 	u = g = 0;
 #endif
       }
@@ -3458,8 +3497,9 @@ int set_u_and_gid()
 	    g = 0;
 	  }
 #  else
-	  report_warning(LOC_M(30, "Setting effective gid not supported on "
-			       "this system.")+"\n");
+	  if (!from_handler_thread)
+	    report_warning(LOC_M(30, "Setting effective gid not supported on "
+				 "this system.")+"\n");
 	  g = 0;
 #  endif
 	}
@@ -3468,10 +3508,12 @@ int set_u_and_gid()
 	  report_error(LOC_M(31, "Failed to set effective uid.")+"\n");
 	  u = 0;
 	}
-	if (u) report_notice(CALL_M("setting_uid_gid", "eng")(uid, gid, u, g));
+	if (u && !from_handler_thread)
+	  report_notice(CALL_M("setting_uid_gid", "eng")(uid, gid, u, g));
 #else
-	report_warning(LOC_M(32, "Setting effective uid not supported on "
-			     "this system.")+"\n");
+	if (!from_handler_thread)
+	  report_warning(LOC_M(32, "Setting effective uid not supported on "
+			       "this system.")+"\n");
 	u = g = 0;
 #endif
       }
@@ -3990,6 +4032,16 @@ int main(int argc, array tmp)
   backend_thread = this_thread();
   name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
+
+#ifdef TEST_EUID_CHANGE
+  if (test_euid_change) {
+    Stdio.File f = Stdio.File();
+    if (f->open ("rootonly", "r") && f->read())
+      werror ("Backend thread can read rootonly\n");
+    else
+      werror ("Backend thread can't read rootonly\n");
+  }
+#endif
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
