@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.11 1998/09/03 17:03:55 grubba Exp $
+ * $Id: smtp.pike,v 1.12 1998/09/03 17:10:58 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.11 1998/09/03 17:03:55 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.12 1998/09/03 17:10:58 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -345,8 +345,19 @@ class Server {
 	}
 	if (!s) {
 	  foreach(expns, object o) {
-	    if (o->expn(a[i])) {
-	      s = "<" + a[i] + ">";
+	    string|multiset m;
+	    if (m = o->expn(a[i])) {
+	      if (stringp(m)) {
+		a[i] = m;
+		foreach(descs, object o) {
+		  if (s = o->desc(a[i])) {
+		    break;
+		  }
+		}
+	      }
+	      if (!s) {
+		s = "<" + a[i] + ">";
+	      }
 	      break;
 	    }
 	  }
