@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.87 2005/02/04 13:26:34 mast Exp $
+// $Id: module.pmod,v 1.88 2005/02/04 20:14:44 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -355,7 +355,13 @@ class Variable
   {
     return __doc || "";
   }
-  
+
+  void set_doc (LocaleString doc)
+  //! Set the (locale dependent) documentation for this variable.
+  {
+    __doc = doc;
+  }
+
   LocaleString name(  )
     //! Return the name of this variable (locale dependant).
     //! 
@@ -364,6 +370,12 @@ class Variable
   {
     return __name || LOCALE(326,"unnamed")+" "+_id;
   } 
+
+  void set_name (LocaleString name)
+  //! Set the (locale dependent) name for this variable.
+  {
+    __name = name;
+  }
 
   LocaleString type_hint(  )
     //! Return the type hint for this variable.
