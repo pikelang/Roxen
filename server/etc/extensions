@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.11 1997/06/11 11:12:55 grubba Exp $
+# $Id: extensions,v 1.12 1997/06/11 20:59:29 grubba Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -84,6 +84,7 @@ aam 	application/x-authorware-map
 aas 	application/x-authorware-seg
 ai	application/postscript
 arj	application/octet-stream
+asn     application/astound
 asp     application/x-asap 
 bcpio	application/x-bcpio
 bin	application/octet-stream
