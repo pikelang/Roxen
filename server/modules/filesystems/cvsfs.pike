@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.13 1997/10/03 15:38:41 nisse Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.14 1997/10/10 13:42:56 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -166,9 +166,10 @@ string find_binaries(array path, array|void extra)
 
 string find_cvs_dir(string path)
 {
+  path = combine_path(path, ".");
   array(string) components = path / "/";
-  if (strlen(components[0]))
-  {
+  string subpath = components[1..] * "/";
+  if (strlen(components[0])) {
     // werror("Looking for cvs submodule.\n");
     string name =
       lookup_cvs_module(cvs_program, query("cvsroot"),
@@ -178,12 +179,11 @@ string find_cvs_dir(string path)
       return "Module not found in CVS";
     if (!file_stat(query("cvsroot") + name))
       return "No such subdirectory"; 
-    cvs_module_path = combine_path(name, (components[1..] * "/"));
+    cvs_module_path = combine_path(name, subpath);
   } else {
-    string name = components[1..] * "/";
-    if (!file_stat(combine_path(query("cvsroot"), name)))
+    if (!file_stat(combine_path(query("cvsroot"), subpath)))
       return "No such directory";
-    cvs_module_path = name;
+    cvs_module_path = subpath;
   }
   // werror(sprintf("Using path '%s'\n", cvs_module_path));
   return 0;
@@ -268,7 +268,12 @@ string status()
 mixed stat_file(string name, object id)
 {
   // werror(sprintf("file_stat: Looking for '%s'\n", name));
-  name = combine_path(combine_path(query("cvsroot"), cvs_module_path), name);
+  // Strip .. and .
+  name = combine_path(name, ".");
+  while (sizeof(name) && (name[0] == '/')) {
+    name = name[1..];
+  }
+  name = combine_path(query("cvsroot"), cvs_module_path + "/" + name);
   return file_stat(name + ",v") || file_stat(name);
 }
 
@@ -298,46 +303,45 @@ object|mapping|int find_file(string name, object id)
   // werror(sprintf("cvs->find_file: Looking for '%s'\n", name));
 
   // werror("Real file '" + fname + "'\n");
-  if (cvs_module_path)
-    {
-      string fname = combine_path(combine_path(query("cvsroot"),
-					       cvs_module_path), name);
-      int is_text = 0;
-      if (file_stat(fname + ",v"))
-	{
-	  object f;
+  if (cvs_module_path) {
+    name = combine_path(name, ".");
+    string fname = combine_path(query("cvsroot"),
+				cvs_module_path + "/" + name);
+    int is_text = 0;
+    if (file_stat(fname + ",v")) {
+      object f;
 
-	  is_text = prestates->raw;
+      is_text = prestates->raw;
 
-	  if (stringp(prestates->revision)) {
-	    extra_args += ({ "-r"+prestates->revision });
-	  }
+      if (stringp(prestates->revision)) {
+	extra_args += ({ "-r"+prestates->revision });
+      }
 
-	  if (prestates->log) {
-	    f = run_cvs(rlog_program, 0, 0,
-			@extra_args, fname + ",v" );
-	    is_text = 1;
-	  } else if (stringp(prestates->diff) &&
-		     stringp(prestates->revision)) {
-	    
-	    extra_args += ({ "-r"+prestates->diff });
+      if (prestates->log) {
+	f = run_cvs(rlog_program, 0, 0,
+		    @extra_args, fname + ",v" );
+	is_text = 1;
+      } else if (stringp(prestates->diff) &&
+		 stringp(prestates->revision)) {
+	
+	extra_args += ({ "-r"+prestates->diff });
 
-	    f = run_cvs(rcsdiff_program, 0, 0,
-			@extra_args, fname + ",v" );
-	    is_text = 1;
-	  } else {
-	    f = run_cvs(cvs_program, 0, 0,
-			"-d", query("cvsroot"), "checkout", "-p",
-			@extra_args,
-			combine_path(cvs_module_path, name));
-	  }
-	  if (f)
-	    accesses++;
-	  return is_text ? http_file_answer(f, "text/plain") : f;
-	}
-      else if (file_stat(fname))
-	return -1;
+	f = run_cvs(rcsdiff_program, 0, 0,
+		    @extra_args, fname + ",v" );
+	is_text = 1;
+      } else {
+	f = run_cvs(cvs_program, 0, 0,
+		    "-d", query("cvsroot"), "checkout", "-p",
+		    @extra_args,
+		    combine_path(cvs_module_path + "/" + name, "."));
+      }
+      if (f)
+	accesses++;
+      return is_text ? http_file_answer(f, "text/plain") : f;
     }
+    else if (file_stat(fname))
+      return -1;
+  }
   else
     return 0;
 }
