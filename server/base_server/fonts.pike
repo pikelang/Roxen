@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.80 2001/11/14 13:18:20 grubba Exp $
+// $Id: fonts.pike,v 1.81 2002/01/30 10:18:49 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -348,7 +348,7 @@ static void create()
   foreach( r_get_dir( "font_handlers" ), string fh )
   {
     catch {
-      if( has_value( fh, ".pike" ) && fh[-1] == 'e' )
+      if(has_suffix(fh, ".pike"))
       {
         FontHandler f = ((program)( roxen_path( "font_handlers/"+fh ) ))( );
         roxen.dump( roxen_path( "font_handlers/"+fh ) );
