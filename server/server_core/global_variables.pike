@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.100 2002/11/25 10:41:15 agehall Exp $
+// $Id: global_variables.pike,v 1.101 2003/01/14 21:55:04 mani Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -56,11 +56,10 @@ void set_up_ftp_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-
   defvar( "FTPWelcome",
-          "              +------------------------------------------------\n"
-          "              +--    Welcome to the ChiliMoon FTP server    ---\n"
-          "              +------------------------------------------------\n",
+          "+------------------------------------------------\n"
+          "+--    Welcome to the ChiliMoon FTP server    ---\n"
+          "+------------------------------------------------\n",
 	  "Welcome text", TYPE_TEXT,
           "The text shown to the user on connect." );
 
