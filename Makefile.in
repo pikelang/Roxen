@@ -101,12 +101,12 @@ install_only:
 	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
 	test -d $(prefix)/roxen/server/lib/. || mkdir $(prefix)/roxen/server/lib
 	test -d $(prefix)/roxen/server/lib/pike/. || mkdir $(prefix)/roxen/server/lib/pike
-	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
+	@for d in `cd pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
 	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
 	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
 	  fi; \
 	done
-	@for d in `cd pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
+	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
 	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
 	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
 	  fi; \
