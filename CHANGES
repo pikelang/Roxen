@@ -1,6 +1,13 @@
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
 
+o When you save port changes in virtual servers (and also the
+  configuration ports), you get a page where you are prompted to
+  change the virtual server URL (or configuration URL). You can choose
+  between the different ports and the current one, which you can also
+  modify to something else. This should decrease the number of
+  misconfigured server URLs drastically.
+
 o Colors in the configuration interface changed to the official
   Infovav User Interface Colors. Some other changes to the layout as well.
 
