@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.1 2000/08/01 14:21:03 leif Exp $";
+       "$Id: perl.pike,v 2.2 2000/08/08 19:54:50 leif Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_PARSER;
@@ -182,6 +182,11 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
     return sprintf("SCRIPT ERROR: bad result: %O", result);
 
   return "<b>(No perl tag support?)</b>";
+}
+
+mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
+                     RXML.Frame frame)
+{ return simpletag_perl(tag, attr, contents, id, frame);
 }
 
 array(string) query_file_extensions()
