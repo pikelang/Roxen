@@ -7,7 +7,7 @@ inherit "roxen-module://filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.20 2002/07/17 17:39:03 nilsson Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.21 2002/09/26 23:10:03 nilsson Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1553,9 +1553,6 @@ class TagServlet
         WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
         if (m->query("tagtarget") == args->webapp)
         {
-          string uri = args->uri || id->raw_url;
-          RequestID fake_id;
-
           if(!objectp(id))
             error("No ID passed to 'TagServlet do_return'\n");
 
@@ -1566,30 +1563,32 @@ class TagServlet
           if ( !id->misc->common )
             id->misc->common = ([]);
 
-          fake_id = id->clone_me();
+          RequestID fake_id = id->clone_me();
 
           fake_id->misc->common = id->misc->common;
           fake_id->misc->internal_get = 1;
+	  // Restore headers.
+	  fake_id->request_headers = copy_value(id->request_headers);
+	  // Remove fake_id->raw to prevent the java bridge to use the
+	  // raw and incorrect url.
+	  fake_id->raw = 0;
 
-          if (fake_id->scan_for_query)
-            // FIXME: If we're using e.g. ftp this doesn't exist. But the
-            // right solution might be that clone_me() in an ftp id object
-            // returns a vanilla (i.e. http) id instead when this function is
-            // used.
-            uri = fake_id->scan_for_query (uri);
+          string uri;
+          if (args->uri) {
+	    // Use variables from provided uri, not id->real_variables.
+	    fake_id->real_variables = ([]);
+	    // Scan the provided uri for query variables.
+            uri = fake_id->scan_for_query (args->uri);
+	  } else
+	    uri = id->not_query;
 
           uri = Roxen.fix_relative (uri, id);
 
-          fake_id->raw_url=uri;
+          fake_id->raw_url=uri+(fake_id->query? "?"+fake_id->query: "");
           fake_id->not_query=uri;
 
 	  // Remove mountpoint from the faked uri.
 	  string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
-
-	  // Remove fake_id->raw to prevent the java bridge to use the raw and incorrect url.
-	  fake_id->raw = 0;
-	  // Restore headers.
-	  fake_id->request_headers = copy_value(id->request_headers);
 
           mapping hdrs = m->call_servlet(this_object(), fake_id,
                                          f, args->name || "");
