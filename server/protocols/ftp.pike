@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.67 2001/09/10 16:48:46 grubba Exp $
+ * $Id: ftp.pike,v 2.68 2001/09/11 11:14:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1166,6 +1166,9 @@ class TelnetSession {
     // RFC 1123 4.1.2.10
 
     array lines = s/"\r\n";
+
+    // Censor the raw string.
+    s = sprintf("string(%d bytes)", sizeof(s));
 
     int lineno;
     for(lineno = 0; lineno < sizeof(lines); lineno++) {
