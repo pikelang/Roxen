@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.61.2.3 1999/05/19 18:58:23 grubba Exp $
+ * $Id: ftp2.pike,v 1.61.2.4 1999/05/19 19:00:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -447,7 +447,7 @@ class PutFileWrapper
     }
 
     // Cut away the code.
-    response = ((result->retterxt || errors[result->error])/" ")[1..] * " ";
+    response = ((result->rettext || errors[result->error])/" ")[1..] * " ";
     gotdata = result->data || "";
     close();
   }
