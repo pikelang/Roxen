@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.12 2000/03/04 22:28:12 mast Exp $
+//! $Id: PEnt.pike,v 1.13 2000/03/16 10:39:06 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -58,7 +58,6 @@ void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
 #endif
 
 #ifdef OLD_RXML_COMPAT
-  if (!ctx) ctx = RXML.get_context();
   int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
   if (new_not_compat == not_compat) return;
   not_compat = new_not_compat;
@@ -68,33 +67,23 @@ void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  return [object(this_program)] _low_clone (ctx, type, tag_set, 1,
 #ifdef OLD_RXML_COMPAT
-					    not_compat
+  int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
+  if (new_not_compat != not_compat) return this_program (ctx, type, tag_set);
 #endif
-					   );
+  return [object(this_program)] _low_clone (ctx, type, tag_set, 1);
 }
 
 static void create (
-  RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int cloned,
-#ifdef OLD_RXML_COMPAT
-  void|int orig_not_compat
-#endif
-)
+  RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int cloned)
 {
 #ifdef OLD_RXML_COMPAT
-  if (!ctx) ctx = RXML.get_context();
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
 #endif
 
   _tag_set_parser_create (ctx, type, tag_set);
 
-  if (cloned
-#ifdef OLD_RXML_COMPAT
-      && not_compat == orig_not_compat
-#endif
-     )				// We're cloned.
-    return;
+  if (cloned) return;
 
   if (!type->free_text) {
     mixed_mode (1);
