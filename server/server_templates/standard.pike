@@ -1,6 +1,11 @@
-string name = "Generic server";
-string desc = "A virtual server with the most popular modules";
-array modules = ({
+/*
+ * $Id: standard.pike,v 1.2 1997/08/13 21:49:39 grubba Exp $
+ */
+
+constant default = 1;
+constant name = "Generic server";
+constant desc = "A virtual server with the most popular modules";
+constant modules = ({
   "cgi#0",
   "contenttypes#0",
   "ismap#0",

@@ -132,6 +132,7 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
 /server/protocols/ssl3.pike foreign_ident
+/server/server_templates/standard.pike foreign_ident
 /server/unfinishedmodules/deepthought.pike foreign_ident
 /server/unfinishedmodules/hedbor.pike foreign_ident
 /server/unfinishedmodules/mountserver.pike foreign_ident
