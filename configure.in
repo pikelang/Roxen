@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.57 1998/09/29 23:00:58 grubba Exp $
+# $Id: configure.in,v 1.58 1998/12/07 22:47:44 grubba Exp $
 #
 
 prefix=$PWD
@@ -636,6 +636,22 @@ if test -d $srcdir/gdbm/.; then
     fi
   fi
 fi
+
+#
+# Commercial modules?
+#
+
+MAKE_COM=""
+AC_SUBST(MAKE_COM)
+if test -d $srcdir/commercial_modules/.; then
+  echo Enabling supplied commercial modules...
+  MAKE_COM=commercial_modules
+  roxen_lib_subdirs="$roxen_lib_subdirs commercial_modules"
+else :; fi
+
+#
+# Some variables we want to export to the other configure scripts.
+#
 
 export CPPFLAGS LDFLAGS
 
