@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.390 2000/01/14 19:04:19 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.391 2000/01/17 16:48:09 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3078,40 +3078,44 @@ constant months=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
 static mapping(string:int) since_cache=([ ]);
 array(int) parse_since(string date)
 {
-  if(sizeof(date)<14) return({0,-1});
-  int t;
-  int length = -1;
+  if(!date || sizeof(date)<14) return({0,-1});
+  int t=0, length = -1;
+  string dat;
 
 #if constant(mktime)
-  sscanf(lower_case(date), "%*s, %s; length=%d", date, length);
+  // Tue, 28 Apr 1998 13:31:29 GMT
+  sscanf(lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
 
-  if(!(t=since_cache[date])) {
+  if(!(t=since_cache[dat])) {
     int day, year, month, hour, minute, second, length;
     string m;
-    if(sscanf(date, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
     {
       month=months[m];
-    } else   if(date[2]==',') {
-      sscanf(date, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+    } else if(dat[2]==',') { // I bet a buck that this never happens
+      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
       if(year >= 1900) year -= 1900;
       month=months[m];
-    } else if(!(int)date) {
-      sscanf(date, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
+    } else if(!(int)dat) {
+      sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
       month=months[m];
       year -= 1900;
     } else {
-      sscanf(date, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      sscanf(dat, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
       month=months[m];
       if(year >= 1900) year -= 1900;
     }
-    catch {
-      t = mktime(second, minute, hour, day, month, year, -1, 0);
-    };
-    if(t) {
-      if (sizeof(since_cache) > MAX_SINCE_CACHE)
-	since_cache = ([]);
-      since_cache[date]=t;
-    }
+
+    if(year)
+      catch {
+	t = mktime(second, minute, hour, day, month, year, -1, 0);
+      };
+    else
+      report_debug("Could not parse \""+date+"\" to a time int.");
+
+    if (sizeof(since_cache) > MAX_SINCE_CACHE)
+      since_cache = ([]);
+    since_cache[dat]=t;
   }
 #endif /* constant(mktime) */
   return ({ t, length });
