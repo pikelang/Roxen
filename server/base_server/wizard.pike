@@ -1,6 +1,10 @@
-/* $Id: wizard.pike,v 1.74 1998/09/16 21:23:58 wellhard Exp $
+/* Copyright © 1997, 1998, Idonex AB.
+ * Some modifications by Francesco Chemolli
+ *
+ * $Id: wizard.pike,v 1.75 1998/11/02 08:20:18 peter Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
+ * 
  */
 
 inherit "roxenlib";
@@ -76,13 +80,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       m->checked="checked";
     return make_tag("input",m);
 
+    // this should work, more or less. Now the case of two or more
+    // checkboxes sharing the same name with different values _is_
+    // supported, as is the case of a checkbox not having a value.
+    // What is not well supported is the case
+    // of a checkbox having value 0, so avoid it unless you're sure :)
+    // /Francesco
    case "checkbox":
     string res;
     m_delete(m,"default");
-    m_delete(m, m->name);
-    m_delete(id->variables, m->name);
-    if(current && current!="0") m->checked="checked";
-    res=make_tag("input", m);
+    if (!m->value) m->value="on";
+    if (current && current != "0" && mkmultiset(current/"\0")[m->value])
+      m->checked="checked";
+    res=make_tag("input",m);
     m->type="hidden";
     m->value="0";
     return res+make_tag("input", m);
