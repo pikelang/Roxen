@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.130 2001/01/09 09:03:20 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.131 2001/01/28 05:46:02 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -605,7 +605,7 @@ class TagCFBoxes
         master()->refresh( object_program( boxes[box] ), 1 );
         destruct( boxes[box] );
       }
-      return boxes[box]=(object)("config_interface/standard/boxes/"+box);
+      return boxes[box]=(object)("config_interface/boxes/"+box);
     }
 
     static object get_box( string box )
@@ -654,41 +654,6 @@ class TagConfigSettingsplugin
   array get_dataset( mapping m, RequestID id )
   {
     return get_variable_maps( id->misc->config_settings, m, id, !!m->noset);
-  }
-}
-
-class TagLocaleplugin
-{
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "locales";
-  
-  array get_dataset( mapping m, RequestID id )
-  {
-     array(string) langs=Locale.list_languages("roxen_config");
-     return map( sort(langs),
-                 lambda( string l )
-                 {
-                   string q = id->not_query;
-                   string tmp;
-                   sscanf( q, "/%[^/]/%s", tmp, q );
-                   string active = roxen.locale->get();
-
-                   return ([
-                     "name":l,
-                     "latin1-name":
-                     Standards.ISO639_2.get_language(l),
-                     "path":fix_relative( "/"+l+"/"+ q +
-                                          (id->misc->path_info?
-                                           id->misc->path_info:"")+
-                                          (id->query&&sizeof(id->query)?
-                                           "?" +id->query:""),
-                                          id),
-                     "selected":( l==active ? "selected": "" ),
-                     "-selected":( l==active ? "-selected": "" ),
-                     "selected-int":( l==active ? "1": "0" ),
-                   ]);
-                 } ) - ({ 0 });
   }
 }
 
@@ -960,7 +925,7 @@ string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
   if( !id->misc->cf_theme )
     id->misc->cf_theme = ([]);
   if( m->themefile )
-    m->to = "/standard/themes/"+config_setting2( "theme" )+"/"+m->to;
+    m->to = "/themes/"+config_setting2( "theme" )+"/"+m->to;
   if( m->integer )
     m->to = (int)m->to;
   id->misc->cf_theme[ m->what ] = m->to;
