@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.213 2001/06/17 20:07:10 nilsson Exp $
+// $Id: roxenlib.pike,v 1.214 2001/08/23 20:14:50 nilsson Exp $
 
 //#pragma strict_types
 
@@ -11,15 +11,25 @@
 
 inherit Roxen;
 
+//! The old Roxen standard library. Everything defined in this class,
+//! i.e. not the inherited, are to be considered deprecated. The
+//! inherited functions is available directly from @[Roxen] instead.
+
 #define roxen roxenp()
 
-// These functions are to be considered deprecated.
+//! Converted the integer @[color] into a six character hexadecimal
+//! value prepended with "#", e.g. "#FF8C00". Does the same thing as
+//! @code{
+//!    sprintf("#%06X", color);
+//! @}
 static string conv_hex( int color )
 {
   return sprintf("#%06X", color);
 }
 
-
+//! Creates a proxy authentication needed response (error 407)
+//! if no authentication is given, access denied (error 403)
+//! on failed authentication and 0 otherwise.
 mapping proxy_auth_needed(RequestID id)
 {
   int|mapping res = id->conf->check_security(proxy_auth_needed, id);
@@ -35,31 +45,23 @@ mapping proxy_auth_needed(RequestID id)
   return 0;
 }
 
-// Please use __FILE__ if possible.
+//! Figures out the filename of the file in which the program
+//! in which this functions i declare. Please use __FILE__
+//! instead if possible.
 string program_filename()
 {
   return master()->program_name(this_object())||"";
 }
 
+//! Returns the directory part of @[program_filename].
 string program_directory()
 {
   array(string) p = program_filename()/"/";
   return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
 }
 
-string msectos(int t)
-{
-  if(t<1000) /* One sec. */
-  {
-    return sprintf("0.%02d sec", t/10);
-  } else if(t<6000) {  /* One minute */
-    return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
-  } else if(t<3600000) { /* One hour */
-    return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
-  }
-  return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
-}
-
+//! Creats a HTTP response string from the internal
+//! file representation mapping @[file].
 static string http_res_to_string( mapping file, RequestID id )
 {
   mapping(string:string|array(string)) heads=
@@ -124,22 +126,33 @@ static string http_res_to_string( mapping file, RequestID id )
   return head_string;
 }
 
-
+//! Returns the dimensions of the file @[gif] as
+//! a string like "width=17 height=42". Use
+//! @[Dims] instead.
 static string gif_size(Stdio.File gif)
 {
   array(int) xy=Dims.dims()->get(gif);
   return "width="+xy[0]+" height="+xy[1];
 }
 
-static int ipow(int what, int how)
+//! Returns @[x] to the power of @[y].
+static int ipow(int x, int y)
 {
-  return (int)pow(what, how);
+  return (int)pow(x, y);
 }
 
-
+//! Compares @[a] with @[b].
+//!
+//! @returns
+//!   @int
+//!     @value 1
+//!       a > b
+//!     @value 0
+//!       a == b
+//!     @value -1
+//!       a < b
+//!   @endint
 static int compare( string a, string b )
-// This method needs lot of work... but so do the rest of the system too
-// RXML needs types
 {
   if (!a)
     if (b)
@@ -391,6 +404,8 @@ static string do_output_tag( mapping(string:string) args,
   return new_contents;
 }
 
+//! Works as @[Roxen.parse_rxml], but also takes the optional
+//! arguments @[file] and @[defines].
 string parse_rxml(string what, RequestID id,
 			 void|Stdio.File file,
 			 void|mapping(string:mixed) defines)
