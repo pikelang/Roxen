@@ -1,9 +1,10 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
+
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.3 2000/02/16 07:15:51 per Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.4 2000/03/09 19:05:13 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
@@ -12,8 +13,7 @@ constant module_doc  = "Handles documents in different languages. "
 	    "extra extension. index.html.sv would be a file in swedish "
             "while index.html.en would be one in english. ";
 
-void create()
-{
+void create() {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
 	  "The default language for this server. Is used when trying to "
 	  "decide which language to send when the user hasn't selected any. "
@@ -27,96 +27,172 @@ void create()
 	  "e.g. html make it so index.html.en gets parsed." );
 }
 
+string default_language;
+array languages;
+array rxml;
 
-#define MAX_FOUND_SIZE 4096
-mapping found_cache=([]);
-multiset(string) find_files(string url, RequestID id) {
-  if(found_cache[url]) return found_cache[url];
-
-  array split=url/"/";
-  string path=split[..sizeof(split)-2]*"/", file=split[-1];
-  multiset found=(<>);
-  if(path=="") return found;
-  array realdir=id->conf->find_dir(path, id);
-  if(!realdir) return found;
-  multiset dir=aggregate_multiset(@realdir);
-
-  foreach(query("languages"), string lang)
-    if(dir[file+"."+lang]) found+=(<lang>);
-
-  if(sizeof(found_cache)>MAX_FOUND_SIZE) found_cache=([]);
-  found_cache[url]=found;
-  return found;
+void start() {
+  default_language=query("default_language");
+  languages=query("languages");
+  rxml=query("rxml");
 }
+
+
+// ------------- Find the best language file -------------
 
 array(string) find_language(RequestID id) {
-  array langs=indices(id->prestate)+
-    (id->cookies->RoxemConfig?id->cookies->RoxenConfig/",":({}))+
-    (((id->request_headers["accept-language"]||"")-" ")/"," || ({}) )+
-    ({query("default_language")});
-  return langs-(langs-query("languages"));
+  array langs=id->misc->pref_languages->get_languages()+({default_language});
+  return langs-(langs-languages);
 }
 
-mixed remap_url( RequestID id, string url )
-{
-  if(id->misc->language_remap) return 0;
-  id->misc->language_remap=1;
+object remap_url(RequestID id, string url) {
+  if(!id->misc->language_remap) id->misc->language_remap=([]);
+  if(id->misc->language_remap[url]==1) return 0;
+  id->misc->language_remap[url]++;
+
   if(id->conf->stat_file(url, id)) return 0;
 
-  multiset found=find_files(url, id);
+  // find files
+
+  multiset(string) found;
+  mapping(string:string) files;
+  array split=cache_lookup("lang_mod",url);
+  if(!found) {
+    found=(<>);
+    files=([]);
+
+    split=url/"/";
+    string path=split[..sizeof(split)-2]*"/"+"/", file=split[-1];
+    if(path=="/") return 0;
+
+    id->misc->language_remap[path]=1;
+    array realdir=id->conf->find_dir(path, id);
+    if(!realdir) return 0;
+    multiset dir=aggregate_multiset(@realdir);
+
+    split=file/".";
+    if(!sizeof(split)) split=({""});
+    file=split[..sizeof(split)-2]*".";
+
+    string this;
+    foreach(languages, string lang) {
+      string this=file+"."+lang+"."+split[-1];
+      if(dir[this]) {
+	found+=(<lang>);
+	files+=([lang:path+this]);
+      }
+    }
+
+    cache_set("lang_mod", url, ({ found,files }) );
+  }
+  else
+    [found,files]=split;
+
+
+  // Remap
+
   foreach(find_language(id), string lang) {
     if(found[lang]) {
       url=fix_relative(url, id);
       string type=id->conf->type_from_filename(url);
-      if(search(query("rxml"),extension(url))!=-1) {
-	if(!id->misc->defines) id->misc->defines=([]);
-	id->misc->defines->language=lang;
-	return http_string_answer(parse_rxml(id->conf->try_get_file(url+"."+lang, id), id));
-      }
 
-      array path=id->conf->real_file(url+"."+lang, id)/"/";
-      return http_file_answer(Stdio.File(path[..sizeof(path)-2]*"/"+"/"+
-					 reverse(url/"/")[0]+"."+lang, "r"),
-			      type);
-      }
+      if(!id->misc->defines) id->misc->defines=([]);
+      id->misc->defines->language=lang;
+      id->not_query=files[lang];
+      id->misc->language_remap=([]);
+      return id;
+    }
   }
   return 0;
 }
 
-string tag_language(string t, mapping m, RequestID id) {
-  string lang=id->misc->defines->language;
-  if(m->type=="short") return lang;
-  object tmp=roxen->languages[lang];
-  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
-  return trans(lang);
+
+// ---------------- Tag definitions --------------
+
+function translator(array(string) client, RequestID id) {
+  client=({ id->misc->defines->language })+client+({ default_language });
+  array(string) _lang=roxen->list_languages();
+  foreach(client, string lang)
+    if(has_value(_lang,lang)) {
+      return roxen->language_low(lang)->language;
+    }
 }
 
-string tag_unavailable_language(string t, mapping m, RequestID id) {
-  string lang=find_language(id)[0];
-  if(lang==id->misc->defines->language) return "";
-  if(m->type=="short") return lang;
-  object tmp=roxen->languages[lang];
-  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
-  return trans(lang);
-}
+class TagLanguage {
+  inherit RXML.Tag;
+  constant name = "language";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-string container_languages(string t, mapping m, string c, RequestID id) {
-  object tmp=roxen->languages[find_language(id)[0]];
-  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
+  class Frame {
+    inherit RXML.Frame;
 
-  string ret="", url=strip_prestate(strip_config(id->raw_url));
-
-  array conf_langs=id->cookies->RoxenConfig?id->cookies->RoxenConfig/",":({});
-  conf_langs=Array.map(conf_langs-(conf_langs-query("languages")),
-		       lambda(string lang) { return "-"+lang; } );
-
-  foreach(query("languages"), string lang) {
-    ret+=replace(c, ({"&short;", "&long;", "&preurl;", "&confurl;" }),
-		 ({lang,
-		   trans(lang)||"",
-		   add_pre_state(url, id->prestate-aggregate_multiset(@query("languages"))+(<lang>)),
-		   add_config(url, conf_langs+({lang}), id->prestate)
-		 }) );
+    array do_return(RequestID id) {
+      string lang=id->misc->defines->language;
+      if(args->type=="short") {
+	result=lang;
+	return 0;
+      }
+      result=translator( ({}),id )(lang);
+      return 0;
+    }
   }
-  return ret;
+}
+
+class TagUnavailableLanguage {
+  inherit RXML.Tag;
+  constant name = "unavailable-language";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      string lang=find_language(id)[0];
+      if(lang==id->misc->defines->language) return 0;
+      if(args->type=="short") {
+	result=lang;
+	return 0;
+      }
+      result=translator( ({}),id )(lang);
+      return 0;
+    }
+  }
+}
+
+class TagLanguages {
+  inherit RXML.Tag;
+  constant name = "languages";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+    string scope_name="language";
+    mapping vars=([]);
+
+    string url;
+    array conf_langs;
+    int counter;
+    function(string:string) trans;
+
+    array do_enter(RequestID id) {
+      trans=translator(find_language(id), id);
+      url=strip_prestate(strip_config(id->raw_url));
+
+      conf_langs=id->cookies->RoxenConfig?id->cookies->RoxenConfig/",":({});
+      conf_langs=Array.map(conf_langs-(conf_langs-query("languages")),
+			   lambda(string lang) { return "-"+lang; } );
+      if(args->scope) scope_name=args->scope;
+      return 0;
+    }
+
+    int do_iterate(RequestID id) {
+      string lang=languages[counter];
+      vars->short=lang;
+      vars->long=trans(lang);
+      vars->preurl=add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>));
+      vars->confurl=add_config(url, conf_langs+({lang}), id->prestate);
+      counter++;
+      return counter<sizeof(languages);
+    }
+  }
 }
