@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.90 2002/08/16 13:13:16 mattias Exp $
+// $Id: global_variables.pike,v 1.91 2003/01/15 16:38:17 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -127,7 +127,7 @@ void set_up_http_variables( Protocol o )
 
   defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique browser id cookies"),
 	 TYPE_FLAG,
-	 LOCALE(75, "If set to Yes, all clients that accepts cookies will get "
+	 LOCALE(75, "If set to Yes, all clients that accept cookies will get "
 		"a unique 'user-id-cookie', which can then be used in the log "
 		"and in scripts to track individual users."));
 
@@ -145,19 +145,25 @@ void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_cert_file", "demo_certificate.pem",
+  defvar( "ssl_cert_file", ({ "demo_certificate.pem" }),
 	  LOCALE(86, "SSL certificate file"),
-	  TYPE_STRING,
-	  sprintf(LOCALE(87, "The SSL certificate file to use. The path "
-			 "is relative to %s.")+"\n", getcwd() ));
+	  TYPE_FILE_LIST,
+	  sprintf(LOCALE(87, "The SSL certificate file(s) to use. "
+			 "If a path is relative, it will first be searched "
+			 "for relative to %s, "
+			 "and if not found there relative to %s. ")+
+		  "\n", combine_path(getcwd(), "../local"), getcwd() ));
 
 
   defvar( "ssl_key_file", "", LOCALE(88, "SSL key file"),
 	  TYPE_STRING,
-	  sprintf(LOCALE(89, "The SSL key file to use. The path is "
-			 "relative to %s, you do not have to specify a key "
+	  sprintf(LOCALE(89, "The SSL key file to use. If the path is "
+			 "relative, it will first be searched for relative "
+			 "to %s, and if not found there relative to %s. "
+			 "You do not have to specify a key "
 			 "file, leave this field empty to use the certificate "
-			 "file only.")+"\n", getcwd() ));
+			 "file only.")+
+		  "\n", combine_path(getcwd(), "../local"), getcwd() ));
 }
 
 

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.817 2003/01/13 15:07:37 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.818 2003/01/15 16:38:16 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1600,7 +1600,7 @@ class SSLProtocol
     string f, f2;
     ctx->certificates = ({});
 
-    foreach( map(query_option("ssl_cert_file")/",", String.trim_whites),
+    foreach( map(query_option("ssl_cert_file"), String.trim_whites),
 	     string cert_file )
     {
       if( catch{ f = lopen(cert_file, "r")->read(); } )
@@ -2277,6 +2277,7 @@ void restart_if_stuck (int force)
 }
 #endif
 
+function(string:Sql.Sql) dbm_cached_get;
 
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
@@ -3664,6 +3665,10 @@ void create()
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
+  if (all_constants()["roxen"]) {
+    error("Duplicate Roxen object!\n");
+  }
+
   // simplify dumped strings.  
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
@@ -4296,6 +4301,7 @@ void show_timers()
 array argv;
 int main(int argc, array tmp)
 {
+  // __builtin.gc_parameters((["enabled": 0]));
   argv = tmp;
   tmp = 0;
 
@@ -4590,8 +4596,6 @@ static string _sprintf( )
 {
   return "roxen";
 }
-
-function(string:Sql.Sql) dbm_cached_get;
 
 // Support for logging in configurations and modules.
 
