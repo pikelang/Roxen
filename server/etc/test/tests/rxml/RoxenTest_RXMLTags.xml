@@ -1432,3 +1432,21 @@ e</random></rxml>
 <rxml><set variable="var.x" expr="INT()*2+INT(5)"/>&var.x;</rxml>
 <result>5</result>
 </test>
+
+<!-- ............................................................ -->
+<comment>Test elements</comment>
+<test>
+  <rxml type="string">
+    <set variable="var.foo">xyz</set>
+    <elements variable="var.foo"/>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" split=",">xy,z</set>
+    <elements variable="var.foo"/>
+  </rxml>
+  <result>2</result>
+</test>
