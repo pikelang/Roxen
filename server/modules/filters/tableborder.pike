@@ -1,7 +1,8 @@
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-constant cvs_version="$Id: tableborder.pike,v 1.1 1999/12/16 08:40:40 jhs Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.2 2000/02/03 23:22:39 jhs Exp $";
+constant thread_safe = 1;
 
 array register_module()
 {
