@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.6 2000/04/06 14:38:38 nilsson Exp $
+ * $Id: ldaptag.pike,v 1.7 2000/04/09 12:54:52 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -36,7 +36,7 @@
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.6 2000/04/06 14:38:38 nilsson Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.7 2000/04/09 12:54:52 grubba Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -66,114 +66,6 @@ constant module_type = MODULE_PARSER;
 constant module_name = "LDAP module";
 constant module_doc  = "This module gives the tag &lt;LDAP&gt; and containers"
   " &lt;LDAPOUTPUT&gt;, &lt;LDAPFOR&gt; and &lt;LDAPELSE&gt;<br>\n";
-
-TAGDOCUMENTATION;
-#ifdef manual
-constant tagdoc=([]);
-/*
-	     "Usage:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>&lt;ldap&gt;</b></td>\n"
-	     "<td>Executes an LDAP operation, but "
-	     "doesn't do anything with the result. This is useful if "
-	     "you do operation like ADD or MODIFY.</td></tr>\n"
-	     "<tr><td valign=top><b>&lt;ldapoutput&gt;</b></td>\n"
-	     "<td>Executes an LDAP search and "
-             "replaces #-quoted attributes with the results. Second, "
-	     "third, ... attribute value can be specified by "
-	     "suffix \":n\" before #.<br>"
-	     "Special attribute names are:<br>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top>dn</td>\n"
-	     "<td>gets DN of entry."
-	     "<tr><td valign=top>labeledURIAnchor</td>\n"
-	     "<td>gets anchor tag from attribute \"labeledURI\"</td>"
-	     "<tr><td valign=top>labeledURIuri</td>\n"
-	     "<td>gets URI part of attribute \"labeledURI\"</td>"
-	     "<tr><td valign=top>labeledURIlabel</td>\n"
-	     "<td>gets label part of attribute \"labeledURI\"</td>"
-	     "</table><br>\n"
-	     "# is "
-             "quoted as ##.<br>The content inbetween &lt;ldapoutput&gt; and "
-             "&lt;/ldapoutput&gt; is repeated once for every DN in the "
-             "result.</td></tr>\n"
-	     "<tr><td valign=top><b>&lt;ldapfor&gt;</b></td>\n"
-	     "<td>Repeats content of tag for multiple attribute values."
-	     "<br><b>Usable only within &lt;ldapoutput&gt; tag!</b><br>"
-	     "Variable quoted by # is replaced by value.</td></tr>\n"
-	     "<tr><td valign=top><b>&lt;ldapelse&gt;</b></td>\n"
-	     "<td>Is executed only if error ocurred with last &lt;ldap&gt; or "
-	     "&lt;ldapoutput&gt; tags.<br>"
-	     "Content is parsed and variable #ldaperror# is replaced "
-	     "with last error message.</td></tr>\n"
-	     "</table></ul>\n"
-	     "The following attributes are used commonly by tags "
-	     "&lt;ldap&gt; and &lt;ldapoutput&gt;:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>host<b></td>"
-	     "<td>The hostname of the machine the LDAP-server runs on.</td></tr>\n"
-	     "<tr><td valign=top><b>user</b></td>"
-	     "<td>The name of the user to access the directory with.</td></tr>\n"
-	     "<tr><td valign=top><b>password</b></td>"
-	     "<td>The password to access the directory.</td></tr>\n"
-	     "<tr><td valign=top><b>basedn</b></td>"
-	     "<td>The base DN to access the directory.</td></tr>\n"
-	     "</table></ul><p>\n"
-	     "The following attributes are used by &lt;ldap&gt; tag:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>dn</b></td>"
-	     "<td>The value of DN for operation. <b>(REQUIRED)</b></td></tr>\n"
-	     "<tr><td valign=top><b>op</b></td>"
-	     "<td>The mode operation of access the directory. <b>(REQUIRED)</b><br>"
-	     "Valid values are \"add\",\"delete\",\"modify\" and \"replace\".</td></tr>\n"
-	     "<tr><td valign=top><b>attr</b></td>"
-	     "<td>The attributes for operation.<p>"
-	     "<b>(</b><i>attr_name1</i><b>:</b>['<i>value1</i>'[,...]]<b>)</b>[(...)]<p>"
-	     "Example: attr=\"(cn:'Super User')(mail:'post@ahoy.org','root@bla.cz')(ou:)\"</td></tr>"
-	     "</table></ul><p>\n"
-	     "The following attributes are used by &lt;ldapoutput&gt; tag:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>filter</b></td>"
-	     "<td>The filter for search operation. <b>(REQUIRED)<b/></td></tr>\n"
-	     "<tr><td valign=top><b>scope</b></td>"
-	     "<td>The scope to access the directory.<br>Valid values are"
-	     " \"base\", \"onelevel\" and \"subtree\".<br>\n"
-	     "<b>Warning: Default value is \"base\" !!!</b></td></tr>\n"
-	     "<tr><td valign=top><b>parse</b></td>"
-	     "<td>If specified, the filter will be parsed by the "
-	     "RXML-parser</td></tr>"
-	     "<tr><td valign=top><b>sortby</b></td>"
-	     "<td>The output will be sorted according to the specified "
-	     "attribute</td></tr>"
-	     "<tr><td valign=top><b>sizelimit</b></td>"
-	     "<td>Restriction on size of returned objects"
-	     "</td></tr>"
-	     "<tr><td valign=top><b>timelimit</b></td>"
-	     "<td>Restriction on time of search operation on server side"
-	     "</td></tr>"
-	     "</table></ul><p>\n"
-	     "The following attributes are used by &lt;ldapfor&gt; tag:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>attr</b></td>"
-	     "<td>The parsed attribute name. <b>(REQUIRED)<b/></td></tr>\n"
-	     "<tr><td valign=top><b>index</b></td>"
-	     "<td>The initial index value.<br>Index starts from 1."
-	     "<br><i>Default value is 1 (from first value)</i>.</td></tr>\n"
-	     "<tr><td valign=top><b>step</b></td>"
-	     "<td>The increment value for index.<br><i>Default value "
-	     "is 1 (index=index+1).</i></td></tr>"
-	     "<tr><td valign=top><b>max</b></td>"
-	     "<td>If specified, \"max\" value is returned.</td></tr>"
-	     "</table></ul><p>\n"
-	     "\n"
-	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
-	     "to be a security hole if the module is not loaded for some "
-	     "reason.<br>\n"
-	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
- 	     "useful to generate the queries.<br>\n"
-             "<p>&copy; 1998,99 Honza Petrous, distributed freely under GPL license.",
-*/
-#endif
 
 /*
  * Tag handlers
