@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.59 2002/10/22 00:06:12 nilsson Exp $
+// $Id: prototypes.pike,v 1.60 2002/10/23 20:58:21 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -581,8 +581,7 @@ class RequestID
   //! The raw request body, containing non-decoded post variables et cetera.
 
   string leftovers;
-  string rawauth;
-  string realauth;
+  string rawauth, realauth; // Used by many modules, so let's keep this.
   string since;
 
   string remoteaddr;
@@ -712,6 +711,31 @@ class RequestID
     }
   }
 
+  array(string) output_charset = ({});
+  string input_charset;
+
+  void set_output_charset( string|function to, int|void mode )
+  {
+    if( has_value( output_charset, to ) ) // Already done.
+      return;
+
+    switch( mode )
+    {
+      case 0: // Really set.
+	output_charset = ({ to });
+	break;
+
+      case 1: // Only set if not already set.
+	if( !sizeof( output_charset ) )
+	  output_charset = ({ to });
+	break;
+
+      case 2: // Join.
+	output_charset |= ({ to });
+	break;
+    }
+  }
+
   string scan_for_query( string f )
   {
     if(sscanf(f,"%s?%s", f, query) == 2)
@@ -732,6 +756,13 @@ class RequestID
       rest_query=replace(rest_query, "+", "\000");
     }
     return f;
+  }
+
+  void adjust_for_config_path( string p )
+  {
+    if( not_query )  not_query = not_query[ strlen(p).. ];
+    raw_url = raw_url[ strlen(p).. ];
+    misc->site_prefix_path = p;
   }
 
   void end(string|void s, int|void keepit){}
