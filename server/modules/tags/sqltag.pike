@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.44 2000/02/05 04:29:04 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.45 2000/02/20 22:46:05 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -27,17 +27,62 @@ constant module_desc="This module gives the three tags &lt;SQLQUERY&gt;, "
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["sqltable":"<desc tag>SQL table</desc>",
-  "sqlquery":"<desc tag>SQL query</desc>","sqloutput":"<desc cont>SQL output</desc>"]);
+constant tagdoc=([
+"sqltable":"
+<desc tag>
+ Creates an HTML or ASCII table from the results of an SQL query.
+</desc>
+
+<attr name=ascii>
+ Create an ASCII table rather than a HTML table. Useful for
+ interacting with the <ref type=tag>diagram</ref> and <ref
+ type=tag>tablify</ref> tags.
+</attr>
+
+<attr name=host type=database>
+ Which database to connect to, usually a symbolic name. If omitted the
+ default database will be used.
+</attr>
+
+<attr name=query>
+ The actual SQL-query.
+</attr>
+
+<attr name=quiet>
+ Do not show any errors in the page, in case the query fails.
+</attr>
+
+<attribute name=parse>
+ If specified, the query will be parsed by the RXML parser.
+ Useful if you wish to dynamically build the query.
+</attribute>",
+
+"sqlquery":"
+<desc tag>
+ Executes an SQL query, but doesn't do anything with the result. This
+ is mostly used for SQL queries that change the contents of the
+ database, for example INSERT or UPDATE.
+</desc>
+
+<attr name=host type=database>
+ Which database to connect to, usually a symbolic name. If omitted the
+ default database will be used.
+</attr>
+
+<attr name=query type=SQL query>
+ The actual SQL-query.
+</attr>
+
+<attr name=quiet>
+ Do not show any errors in the page, in case the query fails.
+</attr>
+
+<attr name=parse>
+ If specified, the query will be parsed by the RXML parser. Useful if
+ you wish to dynamically build the query.
+</attr>"]);
 /*
-	     "Usage:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
-	     "<td>Executes an SQL query, and "
-	     "replaces #-quoted fieldnames with the results. # is "
-	     "quoted as ##. The content between &lt;sqloutput&gt; and "
-	     "&lt;/sqloutput&gt; is repeated once for every row in the "
-	     "result.</td></tr>\n"
+
 	     "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
 	     "<td>Executes an SQL query, but "
 	     "doesn't do anything with the result. This is useful if "
