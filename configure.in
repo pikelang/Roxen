@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.62 1999/01/15 08:14:58 neotron Exp $
+# $Id: configure.in,v 1.63 1999/03/27 17:24:21 grubba Exp $
 #
 
 prefix=$PWD
@@ -35,7 +35,7 @@ AC_ARG_WITH(mysql,                [  --without-mysql                  No support
 AC_ARG_WITH(odbc,                 [  --without-odbc                   No support for ODBC databases])
 AC_ARG_WITH(oob,                  [  --with-oob                       Enable out-of-band data handling])
 AC_ARG_WITH(oracle,               [  --without-oracle                 No support for the Oracle databases])
-AC_ARG_WITH(pike,                 [  --with-pike                      Specify version of Pike],[],[with_pike=0.5])
+AC_ARG_WITH(pike,                 [  --with-pike                      Specify version of Pike],[],[with_pike=0.7])
 AC_ARG_WITH(poll,                 [  --with-poll                      Use poll(2) instead of select(2)])
 AC_ARG_WITH(postgres,             [  --with(out)-postgres             Postgres95 DB server support])
 AC_ARG_WITH(postgres-include-dir, [  --with-postgres-include-dir=dir  Look for header-files in dir])
@@ -136,22 +136,16 @@ esac
 
 AC_MSG_CHECKING(version of Pike to use)
 case "$with_pike" in
-  0.5)
-    pike_version=0.5
-  ;;
-  0.6)
-    pike_version=0.6
-  ;;
   0.7)
     pike_version=0.7
   ;;
   dual|multi)
     with_pike=dual
-    pike_version=0.6
+    pike_version=0.7
   ;;
   *)
-    with_pike=0.5
-    pike_version=0.5
+    with_pike=0.7
+    pike_version=0.7
   ;;
 esac
 AC_MSG_RESULT($with_pike)
