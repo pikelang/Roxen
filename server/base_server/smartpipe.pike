@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.25 1998/06/13 20:58:43 grubba Exp $
+ * $Id: smartpipe.pike,v 1.26 1998/10/15 21:28:37 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -90,6 +90,11 @@ void shuffle()
 {
   outfd->set_blocking();
   function r = current_input->read;
+
+  if (!r) {
+    error("shuffle: No read function!\n");
+  }
+
   string q;
   while(q = r(min(8192,current_input_len),1))
   {
