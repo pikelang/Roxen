@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.844 2002/11/18 00:11:02 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.845 2002/11/19 21:37:01 agehall Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -5102,7 +5102,10 @@ class LogFile(string fname)
 			 (string)(m->year),(string)m->hour,
 			 cached_hostname,
 		      }));
-    mkdirhier( ff );
+
+    // FIXME: This is not safe for non-unix systems.
+    array path_elems = ff/"/";
+    mkdirhier( combine_path(@path_elems[0..sizeof(path_elems)-2]) );
     fd = open( ff, "wac" );
     if(!fd) 
     {
