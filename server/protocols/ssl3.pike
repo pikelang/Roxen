@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.19 1997/10/10 13:23:04 grubba Exp $
+/* $Id: ssl3.pike,v 1.20 1997/10/12 21:13:57 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -152,6 +152,29 @@ array|void real_port(array port, object cfg)
 
 #define CHUNK 15000
 
+string to_send_buffer;
+
+static void write_more();
+
+void got_data_to_send(mixed fooid, string data)
+{
+  if (!to_send_buffer) {
+    to_send_buffer = data;
+    my_fd->set_nonblocking(0, write_more, end);
+    return;
+  }
+  to_send_buffer += data;
+}
+
+void no_data_to_send(mixed fooid)
+{
+  if (to_send->file) {
+    to_send->file->set_blocking();
+    to_send->file->close();
+  }
+  to_send->file = 0;
+}
+
 string get_data()
 {
   string s;
@@ -169,16 +192,18 @@ string get_data()
     return s;
   }
 
-  if(to_send->file)
-  {
-    s = to_send->file->read(CHUNK, 1);
-    if(s && strlen(s))
-      return s;
-    // FIXME: There might be more data to get if s != 0
-    to_send->file = 0;
+  s = to_send_buffer;
+  to_send_buffer = 0;
+
+  if(to_send->file) {
+    /* There's a file, but no data yet
+     * disable ourselves until there is.
+     */
+    my_fd->set_nonblocking(0, 0, end);
+    return s || "";
   }
 
-  return 0;
+  return s;
 }
 
 string cache;
@@ -376,6 +401,9 @@ void handle_request( )
   to_send = copy_value(file);
   
   my_fd->set_nonblocking(0, write_more, end);
+  if (objectp(to_send->file)) {
+    to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
+  }
 
   if(conf) conf->log(file, thiso);
 }
