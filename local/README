@@ -1,0 +1,32 @@
+
+fonts/
+
+  Roxen WebServer will search for font files in this directory per
+  default. It is recommended that you place your own fonts here, if
+  you wish to add new fonts to your WebServer installation, instead
+  of placing them in the nfonts directory in the server directory.
+  That way you will avoid making your fonts unavailable if you
+  upgrade your server.
+
+modules/
+
+  Roxen WebServer will search for server modules in this directory
+  per default. It is recommended that you place your own modules
+  here, if you wish to add new modules to your WebServer
+  installation, instead of placing them in the modules directory
+  in the server directory. That way you will avoid making your
+  modules unavailable if you upgrade your server.
+
+packages/
+
+  The Roxen WebServer update client will put its downloaded packages
+  in this directory.
+
+pike_modules/
+
+  Pike will search for pike modules in this directory per default.
+  It is recommended that you place your own pike modules here, if
+  you wish to add new pike modules to your WebServer Pike
+  installation, instead of placing them in the modules directory
+  in the pike directory. That way you will avoid making your
+  pike modules unavailable if you upgrade your server.
