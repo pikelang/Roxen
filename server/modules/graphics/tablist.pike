@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.5 1997/04/09 20:16:33 marcus Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.6 1997/08/12 06:32:24 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -205,9 +205,9 @@ array register_module()
 
 void create()
 {
-  defvar("foo", "/tablists/", "mount point", TYPE_LOCATION, "");
-  defvar("fontpath", DEFAULT_PATH, "font path", TYPE_DIR, "");
-  defvar("defaultfont", DEFAULT_FONT, "default font", TYPE_FILE, "");
+  defvar("foo", "/tablists/", "mount point", TYPE_LOCATION|VAR_MORE, "");
+  defvar("fontpath", DEFAULT_PATH, "font path", TYPE_DIR|VAR_MORE, "");
+  defvar("defaultfont", DEFAULT_FONT, "default font", TYPE_FILE|VAR_MORE, "");
 }
 
 string query_location()

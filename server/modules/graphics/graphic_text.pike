@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.49 1997/07/11 06:00:06 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.50 1997/08/12 06:32:22 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -114,14 +114,14 @@ array (string) list_fonts()
 
 void create()
 {
-  defvar("deflen", 300, "Default maximum text-length", TYPE_INT,
+  defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
 	 "&lt;gh1&gt;&lt;/gh&gt;, which would otherwise parse the"
 	 " whole document. This can be overrided with maxlen=... in the "
 	 "tag.");
 
-  defvar("location", "/gtext/", "Mountpoint", TYPE_LOCATION,
+  defvar("location", "/gtext/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	 "The URL-prefix for the graphic characters.");
 
   defvar("cols", 16, "Default number of colors per image", TYPE_INT_LIST,

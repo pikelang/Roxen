@@ -49,7 +49,13 @@ class FakeID
 
 array register_module()
 {
-  return ({0,"Mirror Server", "Documentation here"});
+  return ({0,"Mirror Server",
+	     "This is the server end of the Roxen Mirror system.<br>\n"
+	     "Add this module to any server you want to mirror <b>on another "
+	     "server</b>. You can not mirror to the same Roxen server, since that "
+	     "would cause a deadlock (the mirror filesystem does a blocking "
+	     "request to the mirror server, which cannot serve it, since the "
+	     " mirror filesystem is blocking the Roxen server)\n" });
 }
 
 void create()

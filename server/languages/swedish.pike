@@ -1,6 +1,6 @@
 /* Bugs by: Per */
 
-string cvs_version = "$Id: swedish.pike,v 1.6 1997/01/29 04:59:40 per Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.7 1997/08/12 06:32:16 per Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -62,7 +62,7 @@ string _number(int num)
   switch(num)
   {
    case 0:  return "";
-   case 1:  return "ett";
+   case 1:  return "en";
    case 2:  return "två";
    case 3:  return "tre";
    case 4:  return "fyra";

@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.13 1997/05/16 17:38:26 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.14 1997/08/12 06:32:28 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1223,7 +1223,7 @@ void create()
 	 short_name(roxen->current_configuration->name)+"/ftp_proxy_log",
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
   
-  defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION,
+  defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION|VAR_MORE,
 	 "By default, this is ftp:/. If you set anything else, all "
 	 "normal WWW-clients will fail. But, other might be useful"
 	 ", like /ftp/. if you set this location, a link formed like "
@@ -1231,7 +1231,7 @@ void create()
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
   
-  defvar("Proxies", "", "Remote gateway regular expressions", TYPE_TEXT_FIELD,
+  defvar("Proxies", "", "Remote gateway regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
 	 "Here you can add redirects to remote gateways. If a file is "
 	 "requested from a host matching a pattern, the gateway will query the "
 	 "Ftp gateway server at the host and port specified.<p> "
@@ -1247,31 +1247,31 @@ void create()
 	 "Please note that this <b>must</b> be "
 	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
 
-  defvar("method", "Active", "FTP transfer method", TYPE_STRING_LIST,
+  defvar("method", "Active", "FTP transfer method", TYPE_STRING_LIST|VAR_MORE,
 	 "What method to use to transfer files. ",
 	 ({"Active","Passive"}));
 
-  defvar("keeptime", 60, "Connection timeout", TYPE_INT,
+  defvar("keeptime", 60, "Connection timeout", TYPE_INT|VAR_MORE,
 	 "How long time in <b>seconds</b> a connection to a ftp server is kept without usage before "+
 	 "it's killed");
-  defvar("portkeeptime", 60, "Port timeout", TYPE_INT,
+  defvar("portkeeptime", 60, "Port timeout", TYPE_INT|VAR_MORE,
 	 "How long time in <b>seconds</b> a dataport is kept open without usage before closage");
-  defvar("icons", "Yes", "Icons", TYPE_STRING_LIST,
+  defvar("icons", "Yes", "Icons", TYPE_STRING_LIST|VAR_MORE,
 	 "Icons in directory listnings",({"Yes","No"}));
 //  defvar("logo", "Yes", "Roxen logo", TYPE_STRING_LIST,
 //	 "Show a Roxen logo in the right-up corner on directories",({"Yes","No"}));
-  defvar("hold", "Yes", "Hold until response", TYPE_STRING_LIST,
+  defvar("hold", "Yes", "Hold until response", TYPE_STRING_LIST|VAR_MORE,
 	 "Hold data transfer until response from server; "+
 	 "if the server sends file size, size will be sent to the http client. "+
 	 "This may slow down a minimum of time.",({"Yes","No"}));
-  defvar("connection_timeout", 120, "Connection timeout", TYPE_INT,
+  defvar("connection_timeout", 120, "Connection timeout", TYPE_INT|VAR_MORE,
 	 "Time in seconds before a <i>connection attempt</i> is retried (!).");
-  defvar("data_connection_timeout", 30, "Data connection timeout", TYPE_INT,
+  defvar("data_connection_timeout", 30, "Data connection timeout", TYPE_INT|VAR_MORE,
 	 "Time in seconds before a <i>data connection</i> is timeouted and cancelled.");
-  defvar("save_dataports", "No", "Save dataports", TYPE_STRING_LIST,
+  defvar("save_dataports", "No", "Save dataports", TYPE_STRING_LIST|VAR_MORE,
 	 "Some ftpd's have problems when the same port is reused. Try this out on your own. :)",
 	 ({"Yes","No"}));
-  defvar("server_info", "Yes", "Show server information", TYPE_STRING_LIST,
+  defvar("server_info", "Yes", "Show server information", TYPE_STRING_LIST|VAR_MORE,
 	 "Should the gateway show information that the server gives at point of login at the bottom of directory listnings?",
 	 /*                  (    ((                              )                 )    (                               ) */
 	 ({"Yes","No"}));

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.36 1997/07/16 00:20:49 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.37 1997/08/12 06:32:33 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -77,33 +77,35 @@ void create()
   defvar("Accesslog", 
 	 GLOBVAR(logdirprefix)+
 	 short_name(roxen->current_configuration->name)+"/Accessed", 
-	 "Access log file", TYPE_FILE,
+	 "Access log file", TYPE_FILE|VAR_MORE,
 	 "In this file all accesses to files using the &lt;accessd&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
   defvar("noparse", ({  }), "Extensions to accesscount",
           TYPE_STRING_LIST,
-         "Accesscount all files ending with these extensions.");
+         "Always access-count all files ending with these extensions.");
  
   
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions.");
 
-  defvar("parse_exec", 0, "Require exec bit on files for parsing", TYPE_FLAG,
+  defvar("parse_exec", 0, "Require exec bit on files for parsing",
+	 TYPE_FLAG|VAR_MORE,
 	 "If set, files has to have the execute bit (any of them) set "
 	 "in order for them to be parsed by this module. The exec bit "
 	 "is the one that is set by 'chmod +x filename'");
 	 
-  defvar("no_parse_exec", 0, "Don't Parse files with exec bit", TYPE_FLAG,
+  defvar("no_parse_exec", 0, "Don't Parse files with exec bit",
+	 TYPE_FLAG|VAR_MORE,
 	 "If set, no files with the exec bit set will be parsed. This is the "
 	 "reverse of the 'Require exec bit on files for parsing' flag. "
 	 "It is not very useful to set both variables.");
 	 
   defvar("ac", 1, "Access log", TYPE_FLAG,
 	 "If unset, the &lt;accessed&gt; tag will not work, and no access log "
-	 "will be needed. This will save three file descriptors.");
+	 "will be needed. This will save one file descriptors.");
 
-  defvar("max_parse", 100, "Maximum file size", TYPE_INT,
+  defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
 
   defvar("ssi", 1, "SSI support: NSCA and Apache SSI support", 
@@ -117,7 +119,7 @@ void create()
 	 ssi_is_not_set);
 
   defvar("close_db", 1, "Close the database if it is not used",
-	 TYPE_FLAG,
+	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds");
 }
@@ -1695,14 +1697,63 @@ string tag_quote(string tagname, mapping m)
   return "";
 }
 
+string tag_ximage(string tagname, mapping m, object id)
+{
+  string img = id->conf->real_file(fix_relative(m->src||"", id));
+  if(img && search(img, ".gif")!=-1) {
+    object fd = open(img, "r");
+    if(fd) {
+      int x, y;
+      sscanf(gif_size(fd), "width=%d height=%d", x, y);
+      m->width=x;
+      m->height=y;
+    }
+  }
+  return make_tag("img", m);
+}
+
+mapping pr_sizes = ([]);
+string get_pr_size(string size, string color)
+{
+  if(pr_sizes[size+color]) return pr_sizes[size+color];
+  object fd = open("roxen-images/power-"+size+"-"+color+".gif", "r");
+  if(!fd) return "NONEXISTANT COMBINATION";
+  return pr_sizes[size+color] = gif_size( fd );
+}
+
+string tag_pr(string tagname, mapping m)
+{
+  string size = m->size || "small";
+  string color = m->color || "blue";
+  if(m->help)
+    return "Syntax: "
+      "&lt;pr [size=large|small|medium] [color=blue|brown|green|purple]&gt;"
+      "<br>All colors are not available in all sizes, available choices:<br>"
+      "<pr list><br>The default size is small, the default color is blue\n";
+
+  if(m->list)
+  {
+    string res = "<table><tr><td><b>size</b></td><td><b>color</b></td></tr>";
+    foreach(sort(get_dir("roxen-images")), string f)
+      if(sscanf(f, "power-%s", f))
+	res += "<tr><td>"+replace(f-".gif","-","</td><td>")+"</tr>";
+    return res + "</table>";
+  }
+  return ("<a href=http://www.roxen.com/><img border="+m->border+" "+
+	  get_pr_size(size,color)+" "+
+	  "src=/internal-roxen-power-"+size+"-"+color+"></a>");
+}
+
 
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
+	    "pr":tag_pr,
+	    "imgs":tag_ximage,
 	    "version":tag_version,
-	   "set_cookie":tag_add_cookie,
-	   "remove_cookie":tag_remove_cookie,
+ 	    "set_cookie":tag_add_cookie,
+ 	    "remove_cookie":tag_remove_cookie,
 	    "clientname":tag_clientname,
 	    "configurl":tag_configurl,
 	    "configimage":tag_configimage,
@@ -1739,11 +1790,18 @@ string tag_source(string tag,mapping m, string s,object got,object file)
 
 string tag_source2(string tag,mapping m, string s,object got,object file)
 {
-  if(m["pre"])
-    return "\n<pre>"
-      +replace(s, ({"{","}","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
-  else
-    return replace(s, ({ "{", "}", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
+  if(!m["magic"])
+    if(m["pre"])
+      return "\n<pre>"+
+	replace(s, ({"{","}","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
+    else
+      return replace(s, ({ "{", "}", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
+  else 
+    if(m["pre"])
+      return "\n<pre>"+
+	replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
+    else
+      return replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
 }
 
 string tag_smallcaps(string t, mapping m, string s)

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.47 1997/08/11 18:21:21 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.48 1997/08/12 06:31:57 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -82,10 +82,16 @@ varargs int defvar(string var, mixed value, string name, int type,
   variables[var][ VAR_DOC_STR ]      = doc_str;
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
-  if(intp(not_in_config))
-    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
+  
+  if((type&~VAR_TYPE_MASK) & VAR_EXPERT)
+    variables[var][ VAR_CONFIGURABLE ] = VAR_EXPERT;
+  else if((type&~VAR_TYPE_MASK) & VAR_MORE)
+    variables[var][ VAR_CONFIGURABLE ] = VAR_MORE;
   else
-    variables[var][ VAR_CONFIGURABLE ] = not_in_config;
+    if(intp(not_in_config))
+      variables[var][ VAR_CONFIGURABLE ]= !not_in_config;
+    else if(functionp(not_in_config))
+      variables[var][ VAR_CONFIGURABLE ]= not_in_config;
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
@@ -1539,12 +1545,12 @@ object enable_module( string modname )
       me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
     }
 
-    me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD,
+    me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
 	       "An optional comment. This has no effect on the module, it "
 	       "is only a text field for comments that the administrator "
 	       "might have (why the module are here, etc.)");
 
-    me->defvar("_name", "", " Module name", TYPE_STRING,
+    me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
 	       "An optional name. Set to something to remaind you what "
 	       "the module really does.");
 
@@ -2390,13 +2396,13 @@ void create(string config)
 	 "of the resource requested, and $Me with the URL of this server ");
 
 
-  defvar("comment", "", "Configuration interface comment",
-	 TYPE_TEXT_FIELD,
+  defvar("comment", "", "Virtual server comment",
+	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "This text will be visible in the configuration interface, it "
 	 " can be quite useful to use as a memory helper.");
   
-  defvar("name", "", "Configuration interface name",
-	 TYPE_STRING,
+  defvar("name", "", "Virtual server name",
+	 TYPE_STRING|VAR_MORE,
 	 "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used");
@@ -2408,7 +2414,7 @@ void create(string config)
 	 ,
 
 	 "Logging: Format", 
-	 TYPE_TEXT_FIELD,
+	 TYPE_TEXT_FIELD|VAR_MORE,
 	 
 	 "What format to use for logging. The syntax is:\n"
 	 "<pre>"
@@ -2452,7 +2458,7 @@ void create(string config)
 	 "a file name. May be relative to "+getcwd()+".",0, log_is_not_enabled);
   
   defvar("NoLog", ({ }), 
-	 "Logging: No Logging for", TYPE_STRING_LIST,
+	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, log_is_not_enabled);
@@ -2482,14 +2488,14 @@ void create(string config)
 	 "              +-- Welcome to the Roxen Challenger FTP server ---\n"
 	 "              +-------------------------------------------------\n",
 	 "Messages: FTP Welcome",
-	 TYPE_TEXT_FIELD,
+	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
 	 "<i>/welcome.msg</i> doesn't exist.\n");
   
-  defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG,
+  defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG|VAR_MORE,
 	 "Allow ftp to normal user-accounts (requires auth-module).\n");
 
-  defvar("shells", "/etc/shells", "Shell database", TYPE_FILE,
+  defvar("shells", "/etc/shells", "Shell database", TYPE_FILE|VAR_MORE,
 	 "File which contains a list of all valid shells.\n"
 	 "Usually /etc/shells\n");
 

@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.12 1997/08/09 20:57:27 grubba Exp $
+/* $Id: ssl3.pike,v 1.13 1997/08/12 06:32:36 per Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -535,7 +535,8 @@ void create(object f, object c)
       throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
     }
     my_fd = roxen_sslfile(f, ctx, c);
-    my_fd->set_alert_callback(http_fallback);
+    if(my_fd->set_alert_callback)
+      my_fd->set_alert_callback(http_fallback);
     my_fd->set_accept_callback(ssl_accept_callback);
     conf = c;
     my_fd->set_nonblocking(got_data,0,end);

@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.31 1997/08/05 16:17:40 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.32 1997/08/12 06:32:31 per Exp $";
 
 #include <module.h>
 
@@ -55,7 +55,7 @@ int uid_was_zero()
 
 void create()
 {
-  defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG,
+  defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG|VAR_MORE,
 	 "If defined, Roxen will export a few extra varaibles, namely "
 	 "VAR_variable_name: Parsed form variable (like CGI parse)<br>"
 	 "QUERY_variable_name: Parsed form variable<br>"
@@ -69,13 +69,13 @@ void create()
 	 " service one or more extensions, from anywhere in the "
 	 "namespace.");
 
-  defvar("searchpath", "", "Search path", TYPE_DIR,
-	 "This is where the module will find the files in the real "
+  defvar("searchpath", "NONE/", "Search path", TYPE_DIR,
+	 "This is where the module will find the files in the <b>real</b> "
 	 "file system.");
 
   defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
 	 "If this flag is set, non-executable files will be returned "
-	 "as-is to the client.");
+	 "as normal files to the client.");
 
   defvar("ls", 0, "Allow listing of cgi-bin directory", TYPE_FLAG,
 	 "If set, the users can get a listing of all files in the CGI-bin "
@@ -91,7 +91,7 @@ void create()
 	 "All files ending with these extensions, will be parsed as "+
 	 "CGI-scripts.");
 
-  defvar("env", 0, "Pass environment variables", TYPE_FLAG,
+  defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
 	 "If this is set, all environment variables will be passed to CGI "
 	 "scripts, not only those defined in the CGI/1.1 standard (with "
 	 "Roxen CGI enhancements added, if defined). This include LOGNAME "
@@ -104,18 +104,18 @@ void create()
 	 "env\n"
 	 "</pre>)");
 
-  defvar("err", 0, "Send stderr to client", TYPE_FLAG,
+  defvar("err", 0, "Send stderr to client", TYPE_FLAG|VAR_MORE,
 	 "It you set this, standard error from the scripts will be redirected"
 	 " to the client instead of the logs/debug/[name-of-configdir].1 "
 	 "log.\n");
 
-  defvar("rawauth", 0, "Raw user info", TYPE_FLAG,
+  defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script, "
 	 " in the HTTP_AUTHORIZATION environment variable. This is not "
 	 "recommended, but some scripts need it. Please note that this "
 	 "will give the scripts access to the password used.");
 
-  defvar("clearpass", 0, "Send decoded password", TYPE_FLAG,
+  defvar("clearpass", 0, "Send decoded password", TYPE_FLAG|VAR_MORE,
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
@@ -146,18 +146,18 @@ void create()
 
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This override the Run scripts as variable.", 0, uid_was_zero);
+	 "user. This overrides the Run scripts as variable.", 0, uid_was_zero);
 
-  defvar("nice", 1, "Nice value", TYPE_INT,
+  defvar("nice", 1, "Nice value", TYPE_INT|VAR_MORE,
 	 "The nice level to use when running scripts. "
 	 "20 is nicest, and 0 is the most aggressive available to "
 	 "normal users.");
   
-  defvar("coresize", 0, "Limits: Core dump size", TYPE_INT,
+  defvar("coresize", 0, "Limits: Core dump size", TYPE_INT|VAR_MORE,
 	 "The maximum size of a core-dump, in 512 byte blocks."
 	 " -2 is unlimited.");
 
-  defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST,
+  defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST|VAR_MORE,
 	 "The maximum time the script might run in seconds. -2 is unlimited.",
 	 ({ -2, 10, 30, 60, 120, 240 }));
 
@@ -169,14 +169,14 @@ void create()
 	 "is unlimited.");
 
   defvar("open_files", 64, "Limits: Maximum number of open files",
-	 TYPE_INT_LIST,
+	 TYPE_INT_LIST|VAR_MORE,
 	 "The maximum number of files the script can keep open at any time.",
 	 ({64,128,256,512,1024,2048}));
 
   defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
 	 "The maximum size of the stack used, in b. -2 is unlimited.");
 
-  defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD,
+  defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD|VAR_MORE,
 	 "Extra variables to be sent to the script, format:<pre>"
 	 "NAME=value\n"
 	 "NAME=value\n"

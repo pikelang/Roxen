@@ -8,7 +8,7 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.13 1997/05/16 15:39:32 grubba Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.14 1997/08/12 06:32:19 per Exp $";
 #include <module.h>
 
 inherit "filesystem";
@@ -45,7 +45,7 @@ void create()
 	 "will not be possible to link to some file the user does not own.");
   
   defvar("useuserid", 1, "Run user scripts as the owner of the script",
-	 TYPE_FLAG,
+	 TYPE_FLAG|VAR_MORE,
 	 "If set, users cgi and pike scripts will be run as the user who "
 	 "owns the file, that is, not the actual file, but the user"
 	 " in whose dir the file was found. This only works if the server"

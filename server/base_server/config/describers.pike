@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.28 1997/07/19 23:23:10 grubba Exp $ */
+/* $Id: describers.pike,v 1.29 1997/08/12 06:32:10 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -8,7 +8,8 @@ inherit "low_describers";
 inherit "config/low_describers";
 
 import Array;
-
+import String;
+#define ABS(X) ((X)<0?-(X):(X))
 string describe_configuration_global_variables(object node)
 {
   return link("<font size=+1><b>Server variables</b></font>");
@@ -23,8 +24,8 @@ string describe_holder(object node)
   while(o)
   {
     if(!((functionp(o->data[VAR_CONFIGURABLE])&&o->data[VAR_CONFIGURABLE]())
-	 ||((o->data[VAR_CONFIGURABLE]==VAR_EXPERT)
-	    &&!this_object()->expert_mode)))
+       ||((o->data[VAR_CONFIGURABLE]==VAR_EXPERT)&&!this_object()->expert_mode)
+       ||((o->data[VAR_CONFIGURABLE]==VAR_MORE)&&!this_object()->more_mode)))
     {
       num++;
       foo=o;
@@ -45,38 +46,79 @@ string describe_builtin_variables(object node)
   return link("<b>Builtin variables (security, comments etc.)</b>");
 }
 
-static private array(string) truncate(array(string) arr, int len)
+string describe_time(int t)
 {
-  if (sizeof(arr) <= len) {
-    return(arr);
-  } else {
-    return(({ (arr[..len-1]*", ")+"..." }));
+  return roxen->language("en","date")(t);
+}
+
+string describe_interval(int i)
+{
+  switch(i)
+  {
+   case 0..1:        return "second";
+   case 2..50:       return i+" seconds";
+   case 51..66:      return "minute";
+   case 67..3560:    return ((i+20)/60)+" minutes";
+   case 3561..3561*2:return "hour";
+   default: return ((i+300)/3600)+" hours";
   }
+}
+
+string describe_times(array (int) times)
+{
+  
+  if(sizeof(times) < 2)
+    return implode_nicely(map(times, describe_time));
+
+  int d, every=1;
+  int ot = times[0];
+  foreach(times[1..], int t)
+    if(d)
+    {
+      if(ABS(t-ot-d)>(d/4))
+      {
+	every=0;
+	break;
+      }
+      ot=t;
+    } else
+      d = t-ot;
+  if(every && (times[-1]+d) >= time(1)-10)
+    return "every "+describe_interval(d)+" since "+describe_time(times[0]);
+  return implode_nicely(map(times[..4], describe_time)+({"..."})+
+			map(times[sizeof(times)-3..], describe_time));
+}
+
+int last_time;
+string describe_error(string err, array (int) times)
+{
+  int code, nt;
+  if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
+  last_time=times[0]/60;
+  sscanf(err, "%d,%s", code, err);
+  return ("<table><tr><td valign=top><img src=/image/err_"+code+".gif>"
+	  "</td><td>"+(nt?"":describe_times(times)+"<br>")+
+	  replace(err,"\n","<br>\n")+"</table>");
 }
 
 string describe_errors(object node)
 {
-  if(node->folded)
-    return (link("<font size=+2>&nbsp;Error and debug log</font>"));
+//  if(node->folded)
+//    return (link("<font size=+2>&nbsp;Event log</font>"));
   array(string) report = ({ });
-
+  last_time=0;
   string err;
   array report = ({ }), r1=indices(node->data), r2;
-  r2 = Array.map(values(node->data), lambda(array a){ return a[0]; });
+  r2 = map(values(node->data), lambda(array a){ return a[0]; });
 
   sort(r2,r1);
   
   foreach(r1, err)
-    report += ({ (sizeof(node->data[err])>1?
-		  (sizeof(node->data[err]) + " times:<br>"):"")
-		   + "<font size=-1>"+
-		   truncate(Array.map(node->data[err],
-				      roxen->language("en","date")),5)*", "
-		   +"</font><br>" + err + "<p>\n" });
+    report += ({ describe_error(err, node->data[err]) });
 
-  return (link("<font size=+2>&nbsp;Error and debug log")
-	  + "</font><dd><pre>"+
-	  (sizeof(report)?(report*""):"Empty")+"</pre>");
+//  return (link("<font size=+2>&nbsp;Event log")+"</font><dd><pre>"+
+  return (sizeof(report)?(report*""):"Empty");
+//+"</pre>");
 }
 
 array|string describe_module_variable(object node)
@@ -84,6 +126,8 @@ array|string describe_module_variable(object node)
   string res, err;
 
   if((node->data[VAR_CONFIGURABLE] == VAR_EXPERT)&&!this_object()->expert_mode)
+    return 0;
+  if((node->data[VAR_CONFIGURABLE] == VAR_MORE)&&!this_object()->more_mode)
     return 0;
   if(functionp(node->data[VAR_CONFIGURABLE]) && node->data[VAR_CONFIGURABLE]())
     return 0;
@@ -274,25 +318,25 @@ string describe_global_debug(object node)
   res+=("<table cellpadding=0 cellspacing=0 border=0>"
 	"<tr valign=top><td valign=top>");
   res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=000060><td>&nbsp;</td>"
+	"<tr bgcolor=lightblue><td>&nbsp;</td>"
 	"<th colspan=2><b>number of</b></th></tr>"
-	"<tr bgcolor=darkblue><th align=left>Entry</th><th align"
+	"<tr bgcolor=lightblue><th align=left>Entry</th><th align"
 	"=right>Current</th><th align=right>Change</th></tr>");
   foreach(ind, f)
     if(!search(f, "num_"))
     {
-      string bg="black";
+      string bg="white";
       if(f!="num_total")
 	foo->num_total += foo[f];
       else
-	bg="darkblue";
-      string col="red";
+	bg="lightblue";
+      string col="darkred";
       if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="yellow";
+	col="brown";
       if((foo[f]-last_usage[f]) == 0)
-	col="white";
+	col="black";
       if((foo[f]-last_usage[f]) < 0)
-	col="#44ff55";
+	col="darkgreen";
       
       res += "<tr bgcolor="+bg+"><td><b><font color="+col+">"+f[4..]+"</font></b></td><td align=right><b><font color="+col+">"+
 	(foo[f])+"</font></b></td><td align=right><b><font color="+col+">"+
@@ -301,25 +345,25 @@ string describe_global_debug(object node)
   res+="</table></td><td>";
 
   res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=000060><th colspan=2><b>memory usage</b></th></tr>"
-	"<tr bgcolor=darkblue><th align=right>Current (KB)</th><th align=right>"
+	"<tr bgcolor=lightblue><th colspan=2><b>memory usage</b></th></tr>"
+	"<tr bgcolor=lightblue><th align=right>Current (KB)</th><th align=right>"
 	"Change (KB)</th></tr>");
 
   foreach(ind, f)
     if(search(f, "num_"))
     {
-      string bg="black";
+      string bg="white";
       if((f!="total_usage"))
 	foo->total_usage += foo[f];
       else
-	bg="darkblue";
-      string col="red";
+	bg="lightblue";
+      string col="darkred";
       if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="yellow";
+	col="brown";
       if((foo[f]-last_usage[f]) == 0)
-	col="white";
+	col="black";
       if((foo[f]-last_usage[f]) < 0)
-	col="#44ff55";
+	col="darkgreen";
       res += sprintf("<tr bgcolor="+bg+"><td align=right><b><font "
 		     "color="+col+">%.1f</font></b></td><td align=right>"
 		     "<b><font color="+col+">%.1f</font></b><br></td>",
@@ -331,9 +375,9 @@ string describe_global_debug(object node)
 #if efun(_dump_obj_table)
   res+="<p><br><p>";
   res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
-	  "<tr align=left bgcolor=#000060><th  colspan=2>List of all "
+	  "<tr align=left bgcolor=lightblue><th  colspan=2>List of all "
 	  "programs with more than two clones:</th></tr>"
-	  "<tr align=left bgcolor=darkblue>"
+	  "<tr align=left bgcolor=lightblue>"
 	  "<th>Program name</th><th align=right>Clones</th></tr>");
   foo = _dump_obj_table();
   mapping allobj = ([]);
@@ -348,12 +392,12 @@ string describe_global_debug(object node)
     if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
     allobj[s]++;
   }
-  foreach(Array.sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
+  foreach(sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
     return allobj[a] < allobj[b];
   }, allobj), s) {
     if((search(s, "Destructed?") == -1) && allobj[s]>2)
     {
-      res += sprintf("<tr bgcolor=black><td><b>%s</b></td>"
+      res += sprintf("<tr bgcolor=#f0f0ff><td><b>%s</b></td>"
 		     "<td align=right><b>%d</b></td></tr>\n",
 		     s - a, allobj[s]);
     }
@@ -364,20 +408,19 @@ string describe_global_debug(object node)
   res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
 #if efun(get_profiling_info)
-  res += "<p><br><p>";
+  res += "<p><br><p> Only functions that have been called more than "
+    "ten times are listed.<p>";
   res += "<table border=0 cellspacing=0 cellpadding=2 width=50%>\n"
-    "<tr bgcolor=#000060><th align=left colspan=2>Program</th>"
+    "<tr bgcolor=#ddddff><th align=left colspan=2>Program</th>"
     "<th>&nbsp;</th><th align=right>Times cloned</th></tr>\n"
-    "<tr bgcolor=#00008B><th>&nbsp;</th><th align=left>Function</th>"
+    "<tr bgcolor=#ddddff><th>&nbsp;</th><th align=left>Function</th>"
     "<th>&nbsp;</th><th align=right>Times called</th></tr>\n";
   mapping programs = master()->programs;
   foreach(sort(indices(programs)), string prog) {
+    string tf = "";
     array(int|mapping(string:array(int))) arr =
       get_profiling_info(programs[prog]);
 
-    res += sprintf("<tr bgcolor=#000060><td colspan=2><b>%s</b></td>"
-		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
-		   quote_html(prog), arr[0]);
     foreach(indices(arr[1]), string symbol) {
       arr[1][symbol] = arr[1][symbol][0];
     }
@@ -386,17 +429,24 @@ string describe_global_debug(object node)
     sort(num_calls, funs);
     int line = 0;
     foreach(reverse(funs), string fun) {
-      if ((line % 6)<3) {
-	res += sprintf("<tr bgcolor=#00008B><td>&nbsp;</td><td>%s()</td>"
-		       "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-		       quote_html(fun), arr[1][fun]); 
-      } else {
-	res += sprintf("<tr bgcolor=#00328B><td>&nbsp;</td><td>%s()</td>"
-		       "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-		       quote_html(fun), arr[1][fun]); 
+      if(arr[1][fun] > 10)
+      {
+	if ((line % 6)<3) {
+	  tf += sprintf("<tr bgcolor=#f0f0ff><td>&nbsp;</td><td>%s()</td>"
+			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
+			 quote_html(fun), arr[1][fun]); 
+	} else {
+	  tf += sprintf("<tr bgcolor=white><td>&nbsp;</td><td>%s()</td>"
+			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
+			 quote_html(fun), arr[1][fun]); 
+	}
+	line++;
       }
-      line++;
     }
+    if(line && strlen(tf))
+      res+=sprintf("<tr bgcolor=#e0e0ff><td colspan=2><b>%s</b></td>"
+		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
+		   quote_html(prog), arr[0]) + tf;
   }
   res += "</table>\n";
 #endif /* get_profiling_info */

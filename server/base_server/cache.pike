@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.12 1997/04/05 01:25:29 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.13 1997/08/12 06:43:58 per Exp $";
 
 #include <config.h>
 
@@ -50,7 +50,7 @@ mixed cache_lookup(string in, string what)
 string status()
 {
   string res, a;
-  res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=darkblue>"
+  res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=lightblue>"
     "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
@@ -75,7 +75,7 @@ string status()
   {
     if(ct[a])
     {
-      res += ("<tr align=right bgcolor="+(n/3%2?"black":"#000033")+
+      res += ("<tr align=right bgcolor="+(n/3%2?"#f0f0ff":"white")+
 	      "><td align=left>"+a+"</td><td>"+cb[a]+"</td><td>" +
 	      sprintf("%.1f", ((mem=c[i])/1024.0)) + "</td>");
       res += "<td>"+ch[a]+"</td><td>"+(ct[a]-ch[a])+"</td>";
@@ -91,7 +91,7 @@ string status()
     }
     i++;
   }
-  res += "<tr align=right bgcolor=darkblue><td align=left>Total</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
+  res += "<tr align=right bgcolor=lightblue><td align=left>Total</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
     res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
     if(totalr)
       res += "<td>"+(totalh*100)/totalr+"%</td>";

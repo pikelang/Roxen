@@ -47,6 +47,7 @@
 
 #define VAR_TYPE_MASK     255
 #define VAR_EXPERT        256
+#define VAR_MORE          512
 
 // Fast but unreliable.
 #define QUERY(var)      variables["var"][VAR_VALUE]

@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.15 1997/07/18 15:08:16 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.16 1997/08/12 06:32:21 per Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -738,7 +738,7 @@ mapping last_resort(object id)
       return access_violation;
 }
 
-mapping first_try(object id)
+mapping remap_url(object id)
 {
   mapping access_violation;
 

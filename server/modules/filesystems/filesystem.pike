@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.18 1997/07/06 18:29:11 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.19 1997/08/12 06:32:17 per Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -56,17 +56,17 @@ void create()
 	 "are really HTML files. This might be useful now and then.");
 #endif
 
-  defvar(".files", 0, "Show hidden files", TYPE_FLAG,
+  defvar(".files", 0, "Show hidden files", TYPE_FLAG|VAR_MORE,
 	 "If set, hidden files will be shown in dirlistings and you "
 	 "will be able to retrieve them.");
 
-  defvar("dir", 1, "Enable directory listings per default", TYPE_FLAG,
+  defvar("dir", 1, "Enable directory listings per default", TYPE_FLAG|VAR_MORE,
 	 "If set, you have to create a file named .www_not_browsable ("
 	 "or .nodiraccess) in a directory to disable directory listings."
 	 " If unset, a file named .www_browsable in a directory will "
 	 "_enable_ directory listings.\n");
 
-  defvar("tilde", 0, "Show backupfiles", TYPE_FLAG,
+  defvar("tilde", 0, "Show backupfiles", TYPE_FLAG|VAR_MORE,
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 
@@ -84,16 +84,16 @@ void create()
 	 "public one (anyone can edit files located on it)");
 
   defvar("stat_cache", 1, "Cache the results of stat(2)",
-	 TYPE_FLAG,
+	 TYPE_FLAG|VAR_MORE,
 	 "This can speed up the retrieval of files up to 60/70% if you"
 	 " use NFS, but it does use some memory.");
 
   defvar("access_as_user", 0, "Access file as the logged in user",
-	 TYPE_FLAG,
+	 TYPE_FLAG|VAR_MORE,
 	 "EXPERIMENTAL. Access file as the logged in user.<br>\n"
 	 "This is useful for eg named-ftp.");
 
-  defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG,
+  defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
 	 "EXPERIMENTAL.\n"
 	 "Forbid access to paths containing symbolic links.<br>\n"
 	 "NOTE: This can cause *alot* of lstat system-calls to be performed "

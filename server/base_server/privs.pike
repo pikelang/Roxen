@@ -1,9 +1,13 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.15 1997/08/10 00:41:20 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.16 1997/08/12 06:32:03 per Exp $";
 
 int saved_uid;
 int saved_gid;
+
+#if !constant(report_notice)
+#define report_notice werror
+#endif
 
 #define LOGP (roxen && roxen->variables && roxen->variables->audit && GLOBVAR(audit))
 
@@ -53,10 +57,10 @@ void create(string reason, int|string|void uid, int|void gid)
   }
 
   if(LOGP)
-    perror("Change to %s(%d):%d privs wanted (%s), from %s",
-	   (string)u[0], (int)uid, (int)gid,
-	   (string)reason,
-	   (string)dbt(backtrace()[-2]));
+    report_notice(sprintf("Change to %s(%d):%d privs wanted (%s), from %s",
+			  (string)u[0], (int)uid, (int)gid,
+			  (string)reason,
+			  (string)dbt(backtrace()[-2])));
 
   if(getuid()) return;
 
@@ -68,12 +72,12 @@ void create(string reason, int|string|void uid, int|void gid)
 #endif /* cleargroups */
   initgroups(u[0], u[3]);
   gid = gid || getgid();
-  int err = setegid(gid);
+  int err = (int)setegid(gid);
   if (err < 0) {
-    perror("privs.pike: WARNING: Failed to set the effective group id to %d!\n"
-	   "Check that your password database is correct for user %s(%d),\n"
-	   "and that your group database is correct.\n",
-	   gid, (string)u[0], (int)uid);
+    report_debug(sprintf("privs.pike: WARNING: Failed to set the effective group id to %d!\n"
+			 "Check that your password database is correct for user %s(%d),\n"
+			 "and that your group database is correct.\n",
+			 gid, (string)u[0], (int)uid));
     int gid2 = gid;
 #ifdef HPUX_KLUDGE
     if (gid >= 60000) {
@@ -115,7 +119,8 @@ void destroy()
 {
 #ifdef HAVE_EFFECTIVE_USER
   if(LOGP)
-    perror("Change back to uid#%d, from %s",saved_uid, dbt(backtrace()[-2]));
+    report_notice(sprintf("Change back to uid#%d, from %s",saved_uid,
+			  dbt(backtrace()[-2])));
 
   if(getuid()) return;
 

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.46 1997/08/04 07:52:30 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.47 1997/08/12 06:31:59 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -12,16 +12,16 @@ import Stdio;
 #include <confignode.h>
 #include <module.h>
 
-#define dR "00"
-#define dG "06"
-#define dB "30"
+#define dR "ff"
+#define dG "ff"
+#define dB "ff"
 
 #define bdR "00"
 #define bdG "50"
 #define bdB "90"
 
 
-#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
+#define BODY "<body "+(roxen->QUERY(BG)?"--background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=black link=0x000044 vlink=0x000044 alink=red>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -136,7 +136,7 @@ class Node {
 }
 
 object root=Node();
-int expert_mode;
+int expert_mode, more_mode;
 
 
 void create()
@@ -527,7 +527,7 @@ string new_module_form(object id, object node)
   }, a);
   
   res = ({default_head("Add a module")+"\n\n"+
-  "<h2>Select a module to add from the list below</h2>" });
+  "<table><tr><td>&nbsp<td><h2>Select a module to add from the list below</h2>" });
   
   foreach(mods, q)
   {
@@ -551,7 +551,7 @@ string new_module_form(object id, object node)
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
-  return res*"";
+  return res*""+"</table>";
 }
 
 mapping new_module(object id, object node)
@@ -896,7 +896,7 @@ array tab_names = ({
  " Virtual servers ", 
  " Global variables ",
  " Status info ",
- " Error log ",
+ " Event log ",
 });
 		
 
@@ -991,8 +991,8 @@ mapping auto_image(string in, object id)
   }
   if(i)
   {
-    object o = open("roxen-images/"+img_key,"wct");
-    e=i->map_closest(i->select_colors(64)+({trans}))->togif(@trans);
+    object o = open("roxen-images/"+img_key,"wct"); 
+   e=i->map_closest(i->select_colors(62)+({trans}))->togif(@trans);
     i=0;
     if(o) { o->write(e); o=0; }
 #ifdef DEBUG
@@ -1030,6 +1030,42 @@ int nfoldedr(object o)
     node=node->next; 
   }
   return i;
+}
+
+string dn(object node)
+{
+  if(!node) return "???";
+  string s = node->_path[-1];
+  if(((string)((int)s))==s)
+    return "Instance "+s;
+  return s;
+}
+
+string describe_node_path(object node)
+{
+  string q="", res="";
+  int cnt;
+  foreach(node->path(1)/"/", string p)
+  {
+    q+=p+"/";
+    if(cnt>=2)
+    {
+//      werror("q="+q+"\n");
+      res += "<font size=+1><a href="+q+">"+
+	dn(find_node(http_decode_string(q[..strlen(q)-2])))+"</a></font> -&gt; ";
+    }
+    else
+      cnt++;
+  }
+  return res[0..strlen(res)-8];
+}
+
+string status_row(object node)
+{
+  return ("<table width=100% bgcolor=#dddddd border=0 cellpadding=0"
+	  " cellspacing=0><tr><td align=left><a href=$docurl><img border=0 "
+	  "src=/image/roxen-small.gif></a></td><td align=right valign=top>"+
+	  describe_node_path(node)+"</td></tr></table><br>");
 }
 
 
@@ -1096,6 +1132,9 @@ mapping configuration_parse(object id)
       // 'expert' mode. It can be useful.
     case "expert":   expert_mode = 1;  break;
     case "noexpert": expert_mode = 0;  break;
+
+    case "morevars":   more_mode = 1;  break;
+    case "nomorevars": more_mode = 0;  break;
       
       // Fold and unfold nodes, this is _very_ simple, once all the
       // supporting code was writte.
@@ -1310,20 +1349,12 @@ mapping configuration_parse(object id)
 	  if(!sizeof(n->data->copies))
           {
 	    // No more instances in this module, let's zap the whole class.
-	    /* 
-	       object hmm=n->config();
-	       if(!hmm) error("Cannot find configuration node for module.\n");
-	       */
-
-	    // The configuration node. n->config() seems to be 
-	    // n->up->data...
 	    o=n->up; 
 	    
 	    n->change(-n->changed);
 	    n->dest();
 	    build_configuration(o);
 	    return std_redirect(o, 0); 
-	    // Bugs and returns to the top if id is set...
 	  } else
 	    o = n;
 	}
@@ -1331,7 +1362,6 @@ mapping configuration_parse(object id)
 	
        case NODE_MODULE_MASTER_COPY:
        case NODE_MODULE:
-	 // A 'one of a kind' module.
 	if(o->data->copies)
 	{
 	  if(sizeof(o->data->copies))
@@ -1434,9 +1464,10 @@ mapping configuration_parse(object id)
     return std_redirect(o, id);
   }
   
-  PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
+  PUSH(default_head("Roxen server configuration"));
+//  PUSH("<table><tr><td>&nbsp;<td>"
   PUSH("<dl>\n");
-  PUSH("\n"+display_tabular_header( o )+"\n");
+  PUSH("\n"+status_row(o)+"\n"+display_tabular_header( o )+"\n");
   PUSH("<p>");
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
@@ -1488,7 +1519,11 @@ mapping configuration_parse(object id)
 //  else if(nfoldedr(o))
 //    BUTTON(unfoldall, "Unfold all", left);
 
-  
+  if(!more_mode)
+    BUTTON(morevars, "More settings", left);
+  else
+    BUTTON(nomorevars, "Less settings", left);
+    
   if(!lm)
   {
     PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
@@ -1507,6 +1542,7 @@ mapping configuration_parse(object id)
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");
 //  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");
+//  PUSH("</table>");
   PUSH("</body>\n");
   return stores(res*"");
 }

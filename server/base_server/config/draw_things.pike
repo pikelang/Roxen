@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.19 1997/05/28 00:42:28 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.20 1997/08/12 06:32:12 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -95,9 +95,9 @@ object (Image) draw_module_header(string name, int type, object font)
 #define G 0x40
 #define B 0x80
 
-#define dR 0x00
-#define dG 0x06
-#define dB 0x30
+#define dR 0xff
+#define dG 0xff
+#define dB 0xff
 
 
 #define bR 0x00
@@ -155,14 +155,14 @@ object (Image) draw_unselected_button(string name, object font)
   if(!strlen(name)) return Image(1,15, R,G,B);
 
   object txt = font->write(name)->scale(0.48);
-  object ruta = Image(txt->xsize()+40, 20, R, G, B), s;
+  object ruta = Image(txt->xsize()+40, 20, 11, 33, 77), s;
   object linje = Image(2,30, hR,hG,hB);
   object linje_mask = Image(2,30, 128,128,128);
 
   linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
   
-  ruta=ruta->paste_mask(Image(txt->xsize(),20,tR,tG,tB), txt, 20, 0);
-  ruta=ruta->paste_mask(Image(30,20,hR,hG,hB), linje_mask);
+  ruta=ruta->paste_mask(Image(txt->xsize(),20,255,255,255), txt, 20, 0);
+  ruta=ruta->paste_mask(Image(30,20,0,0,0), linje_mask);
   s=ruta->select_from(0,0);
   ruta->paste_mask(Image(40,40,dR,dG,dB), s);
   ruta->setpixel(0,0, dR, dG, dB);
@@ -179,20 +179,28 @@ object (Image) draw_unselected_button(string name, object font)
 
 object (Image) draw_selected_button(string name, object font)
 {
-  if(!strlen(name)) return Image(1,15, dR, dG, dB);
+  if(!strlen(name)) return Image(1,15, R,G,B);
 
   object txt = font->write(name)->scale(0.48);
-  object ruta = Image(txt->xsize()+40, 20, dR, dG, dB), s;
+  object ruta = Image(txt->xsize()+40, 20, 0x88, 0xcc, 0xaa), s;
   object linje = Image(2,30, hR,hG,hB);
   object linje_mask = Image(2,30, 128,128,128);
 
   linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
   
-  ruta=ruta->paste_mask(Image(txt->xsize(),20,tR,tG,tB), txt, 20, 0);
-  ruta=ruta->paste_mask(Image(30,20,hR,hG,hB), linje_mask);
-  linje_mask = linje_mask->mirrory()->color(128,128,128);
-  ruta->paste_mask(Image(20,20,0,0,10), linje_mask,txt->xsize()+27,0);
+  ruta=ruta->paste_mask(Image(txt->xsize(),20,0,0,0), txt, 20, 0);
+  ruta=ruta->paste_mask(Image(30,20,0,0,0), linje_mask);
+  s=ruta->select_from(0,0);
+  ruta->paste_mask(Image(40,40,dR,dG,dB), s);
+  ruta->setpixel(0,0, dR, dG, dB);
+  linje_mask = linje_mask->mirrory()->color(196,196,196);
+  ruta->paste_mask(Image(20,20,0,0,0), linje_mask,txt->xsize()+27,0);
+  s=ruta->select_from(txt->xsize()+34,0);
+  ruta->paste_mask(Image(400,40,dR,dG,dB), s);
+  ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
   txt=linje=0;
+  ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
+  ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);
   return ruta->scale(0,TABSIZE);
 }
 
@@ -200,7 +208,7 @@ object (Image) draw_selected_button(string name, object font)
 object pil(int c)
 {
   object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:bR,c?255:bG,c?bR:bB);
+  f->setcolor(c?200:bR,c?0:bG,c?0:bB);
   for(int i=1; i<25; i++)
     f->line(25-i,i,25+i,i);
   return f;
@@ -218,12 +226,9 @@ object draw_fold(int c)
 
 object draw_back(int c)
 {
-  object f=pil(1)->color(0,255,255)->setcolor(0,255,0);
-  for(int i=0; i<10; i++){
-    f=f->line(25-i,24,25-i,50);
-    f=f->line(25+i,24,25+i,50);
-  }
-  f->setcolor(0,dG,dB);
-  f=f->rotate(45)->autocrop()->scale(15,0)->autocrop(5, 0,1,0,0, dR,dG,dB);
-  return f;
+  object f=Image(50,50,dR,dG,dB);
+  f->setcolor(0,0,100);
+  for(int i=1; i<25; i++)
+    f->line(25-i,i,25+i,i);
+  return f->setcolor(255,255,255)->rotate(45)->autocrop()->scale(15,0);
 }

@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.9 1997/05/28 00:29:14 grubba Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.10 1997/08/12 06:32:29 per Exp $";
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
@@ -40,7 +40,7 @@ string query_location() { return query("loc"); }
 
 void create()
 {
-  defvar("loc", "gopher:/", "Location", TYPE_LOCATION,
+  defvar("loc", "gopher:/", "Location", TYPE_LOCATION|VAR_MORE,
 	 "The mountpoint of the gopher proxy");
 }
 

@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.17 1997/07/11 06:00:03 per Exp $ */
+/* $Id: module.pike,v 1.18 1997/08/12 06:32:02 per Exp $ */
 
 #include <module.h>
 
@@ -174,7 +174,7 @@ varargs void defvar(string var, mixed value, string name, int type,
 			     roxen->filename(this), misc, misc));
       }
       if(misc && search(misc, value)==-1) {
-	report_error(sprintf("%s:\nPassing value (%t:%O) not present "
+	roxen_perror(sprintf("%s:\nPassing value (%t:%O) not present "
 			     "in the misc array.\n",
 			     roxen->filename(this), value, value));
       }
@@ -216,6 +216,8 @@ varargs void defvar(string var, mixed value, string name, int type,
   variables[var][ VAR_NAME ]=name;
   if((type&~VAR_TYPE_MASK) & VAR_EXPERT)
     variables[var][ VAR_CONFIGURABLE ] = VAR_EXPERT;
+  else if((type&~VAR_TYPE_MASK) & VAR_MORE)
+    variables[var][ VAR_CONFIGURABLE ] = VAR_MORE;
   else
     if(intp(not_in_config))
       variables[var][ VAR_CONFIGURABLE ]= !not_in_config;

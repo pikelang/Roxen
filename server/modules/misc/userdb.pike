@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.13 1997/07/19 23:23:55 grubba Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.14 1997/08/12 06:32:26 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -126,7 +126,7 @@ void create()
 #endif
 
   defvar("args", "", "Password command arguments",
-	 TYPE_STRING,
+	 TYPE_STRING|VAR_MORE,
 	 "Extra arguments to pass to either ypcat or niscat."
 	 "For ypcat the full command line will be 'ypcat <args> passwd'."
 	 " for niscat 'niscat <args> passwd.org_dir'"
@@ -135,18 +135,19 @@ void create()
 	 method_is_file_or_getpwent);
   
 
-  defvar("Swashii", 1, "Turn }{| into едц", TYPE_FLAG,
+  defvar("Swashii", 1, "Turn }{| into едц", TYPE_FLAG|VAR_MORE,
 	 "Will make the module turn }{| into едц in the Real Name "+
 	 "field in the userinfo database. This is useful in a european "+
 	 "country, Sweden.");
 
-  defvar("Strip", 1, "Strip finger information from fullname", TYPE_FLAG,
+  defvar("Strip", 1, "Strip finger information from fullname",
+	 TYPE_FLAG|VAR_MORE,
 	 "This will strip everyting after the first ',' character from "
 	 "the GECOS field of the user database.");
 
   defvar("update", 60,
 	 "Intervall between automatic updates of the user database",
-	 TYPE_INT,
+	 TYPE_INT|VAR_MORE,
 	 "This specifies the intervall in minutes between automatic updates "
 	 "of the user database.");
 }

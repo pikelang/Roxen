@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-string cvs_version = "$Id: home_logger.pike,v 1.8 1997/02/14 03:42:58 per Exp $";
+string cvs_version = "$Id: home_logger.pike,v 1.9 1997/08/12 06:32:25 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -93,11 +93,11 @@ private void parse_log_formats()
 
 string create()
 {
-  defvar("num", 5, "Maximum number of open user logfiles.", TYPE_INT,
+  defvar("num", 5, "Maximum number of open user logfiles.", TYPE_INT|VAR_MORE,
 	 "How many logfiles to keep open for speed (the same user often has "
 	 " her files accessed many times in a row)");
 
-  defvar("delay", 600, "Logfile garb timeout", TYPE_INT,
+  defvar("delay", 600, "Logfile garb timeout", TYPE_INT|VAR_MORE,
 	 "After how many seconds should the file be closed?");
 
   defvar("block", 0, "Only log in userlog", TYPE_FLAG,

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: module_support.pike,v 1.11 1997/04/05 01:25:35 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.12 1997/08/12 06:32:02 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -31,10 +31,14 @@ varargs int globvar(string var, mixed value, string name, int type,
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
   
-  if(intp(not_in_config))
-    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-  else
-    variables[var][ VAR_CONFIGURABLE ] = not_in_config;
+  if((type&~VAR_TYPE_MASK) & VAR_EXPERT)
+    variables[var][ VAR_CONFIGURABLE ] = VAR_EXPERT;
+  else if((type&~VAR_TYPE_MASK) & VAR_MORE)
+    variables[var][ VAR_CONFIGURABLE ] = VAR_MORE;
+  else if(intp(not_in_config))
+    variables[var][ VAR_CONFIGURABLE ]= !not_in_config;
+  else if(functionp(not_in_config))
+    variables[var][ VAR_CONFIGURABLE ]= not_in_config;
   variables[var][ VAR_SHORTNAME ] = var;
 }
 

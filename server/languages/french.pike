@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.3 1997/01/09 14:39:05 grubba Exp $";
+string cvs_version = "$Id: french.pike,v 1.4 1997/08/12 06:32:15 per Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -111,7 +111,9 @@ string number(int num)
    case 200: case 300: case 400: case 500:
    case 600: case 700: case 800: case 900:
      return number(num/100)+" cents";
-   case 100..199: case 201..299: case 301..399:
+   case 100..199:
+    return "cent "+number(num%100);
+   case 201..299: case 301..399:
    case 401..499: case 501..599: case 601..699:
    case 701..799: case 801..899: case 901..999: 
      return number(num/100)+" cent "+number(num%100);

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.92 1997/08/10 02:36:38 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.93 1997/08/12 06:32:06 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -342,15 +342,15 @@ mapping(string:array(int)) error_log=([]);
 string last_error="";
 
 // Write a string to the configuration interface error log and to stderr.
-void nwrite(string s, int|void perr)
+void nwrite(string s, int|void perr, int|void type)
 {
   last_error = s;
-  if (!error_log[s]) {
-    error_log[s] = ({ time(1) });
+  if (!error_log[type+","+s]) {
+    error_log[type+","+s] = ({ time() });
   } else {
-    error_log[s] += ({ time(1) });
+    error_log[type+","+s] += ({ time() });
   }
-  roxen_perror(s);
+  if(type>1) roxen_perror(s);
 }
  
 
@@ -985,6 +985,11 @@ object load_from_dirs(array dirs, string f, object conf)
 
 void create()
 {
+  catch
+  {
+    module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
+    allmodules = decode_value(Stdio.read_bytes(".allmodules"));
+  };
   add_constant("roxen", this_object());
   add_constant("spinner", this_object());
   add_constant("load",    load);
@@ -1171,6 +1176,7 @@ object enable_configuration(string name)
   object cf = Configuration(name);
   configurations += ({ cf });
   current_configuration = cf;
+  report_notice("Enabled the virtual server "+name);
   return cf;
 }
 
@@ -1257,12 +1263,12 @@ private void define_global_variables( int argc, array (string) argv )
   // dangerous (in the case of chroot, the variable is totally
   // removed.
   
-  globvar("set_cookie", 1, "Set unique user id cookies", TYPE_FLAG,
+  globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
 	  "If set, all users of your server whose clients supports "
 	  "cookies will get a unique 'user-id-cookie', this can then be "
 	  "used in the log and in scripts to track individual users.");
 
-  globvar("set_cookie_only_once",0,"Set ID cookies only once",TYPE_FLAG,
+  globvar("set_cookie_only_once",1,"Set ID cookies only once",TYPE_FLAG,
 	  "If set, Roxen will attempt to set unique user ID cookies only "
 	  "upon receiving the first request (and again after some minutes). "
 	  "Thus, if the user doesn't allow the cookie to be set, he won't be "
@@ -1274,34 +1280,19 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is very useful if you are debugging your own modules "
 	  "or writing Pike scripts.");
   
-  globvar("ConfigurationIP", "ANY", "Configuration interface: Interface",
-	  TYPE_STRING,
-          "The IP number to bind to. If set to 127.0.0.1, all configuration "
-	  "will have to take place from the localhost. This is most secure, "
-	  "but it will be more cumbersome to configure the server remotely.",
-	  0, 1);
-
-  globvar("ConfigurationPort", 22202, "Configuration interface: Port", 
-	  TYPE_INT, 
-	  "the portnumber of the configuration interface. Anything will do, "
-	  "but you will have to be able to remember it to configure "
-	  "the server.", 0, 1);
-
   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
     
-
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
 
   globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
-//  globvar("font_dir", "nfonts/", "Fonts: Font directory", TYPE_DIR,
-//	  "This is where the fonts are located.");
   globvar("font_dirs", ({"../nfonts/", "nfonts/" }),
 	  "Fonts: Font directories", TYPE_DIR_LIST,
 	  "This is where the fonts are located.");
 
-  globvar("logdirprefix", "../logs/", "Log directory prefix", TYPE_DIR,
+  globvar("logdirprefix", "../logs/", "Log directory prefix",
+	  TYPE_DIR|VAR_MORE,
 	  "This is the default file path that will be prepended to the log "
 	  " file path in all the default modules and the virtual server.");
   
@@ -1309,7 +1300,6 @@ private void define_global_variables( int argc, array (string) argv )
   // Cache variables. The actual code recides in the file
   // 'disk_cache.pike'
   
-
   globvar("cache", 0, "Proxy disk cache: Enabled", TYPE_FLAG,
 	  "Is the cache enabled at all?");
   
@@ -1393,17 +1383,18 @@ private void define_global_variables( int argc, array (string) argv )
   /// End of cache variables..
   
   globvar("docurl", "http://www.roxen.com", "Documentation URL",
-	  TYPE_STRING,
+	  TYPE_STRING|VAR_MORE,
 	 "The URL to prepend to all documentation urls throughout the "
 	 "server. This URL should _not_ end with a '/'.");
 
   globvar("pidfile", "/tmp/roxen_pid:$uid", "PID file",
-	  TYPE_FILE,
+	  TYPE_FILE|VAR_MORE,
 	  "In this file, the server will write out it's PID, and the PID "
 	  "of the start script. $pid will be replaced with the pid, and "
 	  "$uid with the uid of the user running the process.");
 
-  globvar("ident", replace(real_version," ","·"), "Identify as",  TYPE_STRING,
+  globvar("ident", replace(real_version," ","·"), "Identify as",
+	  TYPE_STRING|VAR_MORE,
 	  "What Roxen will call itself when talking to clients "
 	  "It might be useful to set this so that it does not include "
 	  "the actual version of Roxen, as recommended by "
@@ -1414,17 +1405,19 @@ private void define_global_variables( int argc, array (string) argv )
 	  "holes. Server implementors are encouraged to make this field "
 	  "a configurable option.</i></blockquote>");
 
-
-  globvar("BS", 0, "Configuration interface: Compact layout", TYPE_FLAG,
+// Does not work right now..
+  globvar("BS", 0, "Configuration interface: Compact layout",
+	  TYPE_FLAG|VAR_EXPERT,
 	  "Sick and tired of all those images? Set this variable to 'Yes'!");
-
-  globvar("DOC", 1, "Configuration interface: Help texts", TYPE_FLAG,
-	  "Do you want documentation? (this is an example of documentation)");
-
-  globvar("BG", 1,  "Configuration interface: Background", TYPE_FLAG,
+  globvar("BG", 1,  "Configuration interface: Background", TYPE_FLAG|VAR_EXPERT,
 	  "Should the background be set by the configuration interface?");
 
-  globvar("NumAccept", 1, "Number of accepts to attempt", TYPE_INT_LIST,
+
+  globvar("DOC", 1, "Configuration interface: Help texts", TYPE_FLAG|VAR_MORE,
+	  "Do you want documentation? (this is an example of documentation)");
+
+
+  globvar("NumAccept", 1, "Number of accepts to attempt", TYPE_INT_LIST|VAR_MORE,
 	  "The maximum number of accepts to attempt for each read callback "
 	  "from the main socket. <p> Increasing this will make the server"
 	  " faster for users making many simultaneous connections to it, or"
@@ -1456,7 +1449,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "a module is added, etc.).");
   
   globvar("ConfigurationPassword", "", "Configuration interface: Password", 
-	  TYPE_PASSWORD,
+	  TYPE_PASSWORD|VAR_MORE,
 	  "The password you will have to enter to use the configuration "
 	  "interface. Please note that changing this password in the "
 	  "configuration interface will _not_ require an additional entry "
@@ -1464,12 +1457,12 @@ private void define_global_variables( int argc, array (string) argv )
 	  "that you use the <a href=/(changepass)/Globals/>form instead</a>.");
   
   globvar("ConfigurationUser", "", "Configuration interface: User", 
-	  TYPE_STRING,
+	  TYPE_STRING|VAR_MORE,
 	  "The username you will have to enter to use the configuration "
 	  "interface");
   
   globvar("ConfigurationIPpattern", "*", "Configuration interface: IP-Pattern", 
-	  TYPE_STRING,
+	  TYPE_STRING|VAR_MORE,
 	  "The IP-pattern hosts trying to connect to the configuration "
 	  "interface will have to match.");
   
@@ -1482,7 +1475,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  " group id's, and not the symbolic ones.\n");
   
   globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
-	  TYPE_INT, 
+	  TYPE_INT|VAR_MORE, 
 	  "The number of simultaneos host-name lookup processes roxen should "
 	  "run. Roxen must be restarted for a change of this variable to "+
 	  "take effect. If you constantly see a large host name lookup "
@@ -1502,7 +1495,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  " The directories are searched in order for modules.");
   
   globvar("Supports", "#include <etc/supports>\n", 
-	  "Client supports regexps", TYPE_TEXT_FIELD,
+	  "Client supports regexps", TYPE_TEXT_FIELD|VAR_MORE,
 	  "What do the different clients support?\n<br>"
 	  "The default information is normally fetched from the file "+
 	  getcwd()+"etc/supports, and the format is:<pre>"
@@ -1522,10 +1515,10 @@ private void define_global_variables( int argc, array (string) argv )
 //	  "#If-Modified-Since>specified by the HTTP draft.</a>");
   
   globvar("audit", 0, "Audit trail", TYPE_FLAG,
-	 "If set, log all changes of uid in the debug log.");
+	 "If set, log all changes of uid in the event log.");
   
 #if efun(syslog)
-  globvar("LogA", "file", "Logging method", TYPE_STRING_LIST, 
+  globvar("LogA", "file", "Logging method", TYPE_STRING_LIST|VAR_MORE, 
 	  "What method to use for logging, default is file, but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
@@ -1557,7 +1550,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	  syslog_disabled);
   
-  globvar("LogNA", "Roxen", "Syslog: Log as", TYPE_STRING, 
+  globvar("LogNA", "Roxen", "Syslog: Log as", TYPE_STRING,
 	  "When syslog is used, use this as the id of the Roxen daemon"
 	  ". This will be appended to all logs.", 0, syslog_disabled);
 #endif
@@ -1813,6 +1806,7 @@ void scan_module_dir(string d)
 	    allmodules[ file-("."+extension(file)) ] = module_info;
 	  } else {
 	    // Load failed.
+	    module_stat_cache[path+file]=0;
 	    _master->errors += "\n";
 	    if (arrayp(err)) {
 	      _master->errors += path + file + ": " +
@@ -1820,17 +1814,14 @@ void scan_module_dir(string d)
 	    } else {
 	      _master->errors += path + file + ": " + err;
 	    }
-#if 0
-	    perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
-		   _master->errors);
-#endif
 	  }
 	}
 	MD_PERROR(("\n"));
       }
     }
     if(strlen(_master->errors)) {
-      nwrite("Errors found in "+d+":\n" + _master->errors+"\n");
+      report_debug("Compilation errors found while scanning modules in "+
+		    d+":\n"+ _master->errors+"\n");
     }
     _master->set_inhibit_compile_errors(0);
   }
@@ -1840,7 +1831,7 @@ void rescan_modules()
 {
   string file, path;
   mixed err;
-  
+  report_notice("Scanning module directories for modules");
   if (!allmodules) {
     allmodules=copy_value(somemodules);
   }
@@ -1850,10 +1841,18 @@ void rescan_modules()
     array err;
     err = catch(scan_module_dir( path ));
     if(err) {
-      nwrite("Error while scanning module dir (\""+path+"\"): " +
-	     describe_backtrace(err) + "\n");
+      report_error("While scanning module dir (\""+path+"\"): " +
+		   describe_backtrace(err) + "\n");
     }
   }
+  catch {
+    rm(".module_stat_cache");
+    rm(".allmodules");
+    Stdio.write_file(".module_stat_cache", encode_value(module_stat_cache));
+    Stdio.write_file(".allmodules", encode_value(allmodules));
+  };
+  report_notice("Done with module directory scan. Found "+
+		sizeof(allmodules)+" modules.");
 }
 
 // ================================================= 
@@ -2026,6 +2025,7 @@ function shuffle = _shuffle;
 int number_of_shuffler_threads;
 void start_shuffler_threads()
 {
+  report_notice("Using threads");
   if (QUERY(numshufflethreads) <= 1) {
     QUERY(numshufflethreads) = 1;
     perror("Starting 1 thread to shuffle data.\n");
@@ -2082,7 +2082,6 @@ void exit_when_done()
     do_dest(o);
 
   // Then wait for all sockets, but maximum 10 minutes.. 
-#if efun(_pipe_debug)
   call_out(lambda() { 
     call_out(Simulate.this_function(), 5);
     if(!_pipe_debug()[0])
@@ -2090,18 +2089,13 @@ void exit_when_done()
       werror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
       exit(0);
-      kill(getpid(), 9);
-      kill(0, -9);
       perror("Odd. I am not dead yet.\n");
     }
   }, 0.1);
-#endif
   call_out(lambda(){
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
     exit(0);
-    kill(getpid(), 9);
-    kill(0, -9);
   }, 600, 0); // Slow buggers..
 }
 
@@ -2126,6 +2120,8 @@ varargs int main(int argc, array (string) argv)
   start_time=time(1);
 
   add_constant("write", perror);
+
+  report_notice("Starting roxen\n");
   
   
   mark_fd(0, "Stdin");
@@ -2194,17 +2190,15 @@ varargs int main(int argc, array (string) argv)
 #endif
 #endif /* THREADS */
 #if efun(send_fd)
-  init_shuffler(); // No locking here.. Each process need one on it's own.
+  init_shuffler(); 
 #endif
   create_host_name_lookup_processes();
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
-    catch {
-      signal(signum(sig), exit_when_done);
-    };
+    catch { signal(signum(sig), exit_when_done); };
   }
 
   initiate_configuration_port( 1 );
-  perror("Time to boot: "+(time()-start_time)+" seconds.\n");
+  report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
   perror("-------------------------------------\n\n");
 
 //  start_time=time();		// Used by the "uptime" info later on.

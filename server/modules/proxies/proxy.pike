@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.22 1997/06/04 20:24:51 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.23 1997/08/12 06:32:30 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -167,7 +167,7 @@ void create()
   defvar("logfile", "", "Logfile", TYPE_FILE,
 	 "Empty the field for no log at all");
   
-  defvar("mountpoint", "http:/", "Location", TYPE_LOCATION,
+  defvar("mountpoint", "http:/", "Location", TYPE_LOCATION|VAR_MORE,
 	 "By default, this is http:/. If you set anything else, all "
 	 "normal WWW-clients will fail. But, other might be useful"
 	 ", like /http/. if you set this location, a link formed like "
@@ -175,16 +175,16 @@ void create()
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
 
-  defvar("NoCacheFor", "", "No cache for", TYPE_TEXT_FIELD,
+  defvar("NoCacheFor", "", "No cache for", TYPE_TEXT_FIELD|VAR_MORE,
 	 "This is a list of regular expressions. URLs that match "
 	 "any entry in this list will not be cached at all.");
 
-  defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG,
+  defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG|VAR_MORE,
 	 "If this option is set, documents with cookies will be cached. "
 	 "As such pages might be dynamically made depending on the values of "
 	 "the cookies, you might want to leave this option off.");
   
-  defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD,
+  defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
 	 "Here you can add redirects to remote proxy servers. If a file is "
 	 "requested from a host matching a pattern, the proxy will query the "
 	 "proxy server at the host and port specified.<p> "
@@ -203,7 +203,7 @@ void create()
 	 "Please note that this <b>must</b> be "
 	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
 
-  defvar("Filters", "", "External filter regular expressions", TYPE_TEXT_FIELD,
+  defvar("Filters", "", "External filter regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
 	 "External filters to run if the regular expression match. "
 	 "<p>Examples (this one works): "
 	 "<pre>"

@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.32 1997/08/05 17:04:26 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.33 1997/08/12 06:32:08 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -11,6 +11,15 @@ static string _cvs_version = "$Id: roxenlib.pike,v 1.32 1997/08/05 17:04:26 grub
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
+string gif_size(object gif)
+{
+  int x,y;
+  string d;
+  gif->seek(6);
+  d = gif->read(4);
+  x = (d[1]<<8) + d[0]; y = (d[3]<<8) + d[2];
+  return "width="+x+" height="+y;
+}
 
 static inline string extract_query(string from)
 {
@@ -597,7 +606,7 @@ static string short_date(int timestamp)
 static string int2roman(int m)
 {
   string res="";
-  if (m>100000||m<0) return "que";
+  if (m>10000000||m<0) return "que";
   while (m>999) { res+="M"; m-=1000; }
   if (m>899) { res+="CM"; m-=900; }
   else if (m>499) { res+="D"; m-=500; }
