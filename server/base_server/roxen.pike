@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.404 2000/02/02 12:11:36 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.405 2000/02/02 19:14:28 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -773,6 +773,7 @@ class Protocol
   void set_option_default(string option, mixed value)
   {
     mapping all_options = QUERY(port_options);
+    if (!all_options[""]) all_options[""] = ([]);
     all_options[""][option] = value;
 
     // FIXME: Mark as changed?
