@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.139 1998/06/29 13:19:19 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.140 1998/07/02 13:28:45 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -480,12 +480,26 @@ array (function) last_modules(object id)
   return last_module_cache;
 }
 
+#ifdef __NT__
+static mixed strip_fork_information(object id)
+{
+  array a = id->not_query/"::";
+  id->not_query = a[0];
+  id->misc->fork_information = a[1..];
+  return(0);
+}
+#endif /* __NT__ */
+
 array (function) first_modules(object id)
 {
   if(!first_module_cache)
   {
     int i;
-    first_module_cache=({ });
+    first_module_cache=({
+#ifdef __NT__
+      strip_fork_information,	// Always first!
+#endif /* __NT__ */
+    });
     for(i=9; i>=0; i--)
     {
       object *d, p;
