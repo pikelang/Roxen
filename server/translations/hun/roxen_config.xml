@@ -3400,3 +3400,9 @@ server must be a MySQL server, nothing else will work.
 <o>No</o>
 <t></t>
 </str>
+
+<str id="357">
+<new/>
+<o>Load of %s failed: Module not found.</o>
+<t></t>
+</str>

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.119 2004/07/07 10:11:50 grubba Exp $
+// $Id: module_support.pike,v 1.120 2004/07/20 10:07:57 anders Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -306,8 +306,8 @@ class ModuleInfo( string sname, string filename )
       } else {
 	return ({
 	  0, // type
-	  sprintf(LOCALE(0, "Load of %s failed: Module not found."), sname),
-	  sprintf(LOCALE(0, "The module %s (%s) could not be loaded."),
+	  sprintf(LOCALE(357, "Load of %s failed: Module not found."), sname),
+	  sprintf(LOCALE(351, "The module %s (%s) could not be loaded."),
 		  sname, get_name()||"unknown")+
 	  (sizeof(config_locked)?locked_desc:"")+
 	  get_compile_errors(),0,0
