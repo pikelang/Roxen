@@ -1,13 +1,13 @@
 #include <config_interface.h>
 inherit "roxenlib";
 
-constant tablist = #"
-<tablist preparse bgcolor=&usr.toptabs-bgcolor;
-         font=&usr.toptabs-font;
-         dimcolor=&usr.toptabs-dimcolor;
-         textcolor=&usr.toptabs-textcolor;
-         dimtextcolor=&usr.toptabs-dimtextcolor;
-         selcolor=&usr.toptabs-selcolor;>";
+constant tablist = #"<tablist preparse
+	 bgcolor=&usr.toptabs-bgcolor;
+	 font=&usr.toptabs-font;
+	 dimcolor=&usr.toptabs-dimcolor;
+	 textcolor=&usr.toptabs-textcolor;
+	 dimtextcolor=&usr.toptabs-dimtextcolor;
+	 selcolor=&usr.toptabs-selcolor;>";
 
 
 constant selections =
