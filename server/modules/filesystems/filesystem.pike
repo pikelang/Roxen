@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.102 2001/08/01 19:35:05 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.103 2001/08/13 18:18:48 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -208,11 +208,13 @@ mixed stat_file( string f, RequestID id )
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
+  f = path+f;
+
   if (FILTER_INTERNAL_FILE (f, id))
     return 0;
 
   if(stat_cache && !id->pragma["no-cache"] &&
-     (fs=cache_lookup("stat_cache",path+f)))
+     (fs=cache_lookup("stat_cache",f)))
     return fs[0];
   object privs;
   if (access_as_user && ((int)id->misc->uid) && ((int)id->misc->gid))
@@ -220,10 +222,10 @@ mixed stat_file( string f, RequestID id )
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
 
   /* No security currently in this function */
-  fs = file_stat(decode_path(path + f));
+  fs = file_stat(decode_path(f));
   privs = 0;
   if(!stat_cache) return fs;
-  cache_set("stat_cache", path+f, ({fs}));
+  cache_set("stat_cache", f, ({fs}));
   return fs;
 }
 
@@ -387,6 +389,9 @@ string decode_path( string p )
 #else
   while( strlen(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
+#endif
+#if constant( system.normalize_path )
+  p = system.normalize_path( p );
 #endif
   return p;
 }
