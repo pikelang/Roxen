@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.26 1997/05/28 00:29:17 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.27 1997/06/09 22:16:58 grubba Exp $";
 
 #include <module.h>
 
@@ -397,6 +397,8 @@ mixed find_file(string f, object id)
       }
       object privs;
       catch(privs = ((program)"privs")("CGI script", uid));
+      setgid(getegid());
+      setuid(getegid());
 
       /* Now that the correct privileges are set the current working
        * directory can be changed. This implies a check for user permissions
