@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.7 2000/09/05 15:06:47 per Exp $";
+constant cvs_version="$Id: vform.pike,v 1.8 2000/09/05 16:13:08 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -105,7 +105,8 @@ class TagVForm {
 	  break;
 	}
 
-	if(!id->variables["__clear"] && id->variables[args->name]) {
+	if(!id->variables["__clear"] && id->variables[args->name] &&
+	   !(args->optional && id->variables[args->name]=="") ) {
 	  mixed new_value=id->variables[args->name];
 	  if(args->trim) new_value=String.trim_whites(new_value);
 	  [warn, new_value]=var->verify_set(var->transform_from_form(new_value));
