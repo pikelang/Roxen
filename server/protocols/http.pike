@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.107 1998/07/03 15:57:55 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.108 1998/07/14 21:41:33 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -57,9 +57,10 @@ object conf;
 int time;
 string raw_url;
 int do_not_disconnect;
-mapping (string:string) variables = ([ ]);
-mapping (string:mixed)  misc      = ([ ]);
-mapping (string:string) cookies   = ([ ]);
+mapping (string:string) variables       = ([ ]);
+mapping (string:mixed)  misc            = ([ ]);
+mapping (string:string) cookies         = ([ ]);
+mapping (string:string) request_headers = ([ ]);
 
 multiset (string) prestate  = (< >);
 multiset (string) config    = (< >);
@@ -326,6 +327,8 @@ private int parse_got(string s)
   
   not_query = simplify_path(http_decode_string(f));
 
+  request_headers = ([]);	// FIXME: KEEP-ALIVE?
+
   if(sizeof(s)) {
 //    sscanf(s, "%s\r\n\r\n%s", s, data);
 
@@ -336,10 +339,12 @@ private int parse_got(string s)
     {
       linename=contents=0;
       sscanf(line, "%s:%s", linename, contents);
-      if(linename&&contents)
+      if(linename && contents)
       {
 	linename=lower_case(linename);
 	sscanf(contents, "%*[\t ]%s", contents);
+
+	request_headers[linename] = contents;
 	
 	if(strlen(contents))
 	{
