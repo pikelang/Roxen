@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.65 1998/06/30 02:04:33 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.66 1998/07/14 21:26:53 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -37,10 +37,6 @@ static mapping build_env_vars(string f, object id, string path_info)
   
   if(id->query && strlen(id->query))
     new->INDEX=id->query;
-    
-  new->REQUEST_METHOD=id->method||"GET";
-  new->SERVER_PORT = id->my_fd?
-    ((id->my_fd->query_address(1)||"foo unknown")/" ")[1]:"0";
     
   if(path_info && strlen(path_info))
   {
