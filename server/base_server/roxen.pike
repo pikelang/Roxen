@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.384 2000/01/05 17:45:28 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.385 2000/01/07 17:11:16 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3066,7 +3066,6 @@ array(int) parse_since(string date)
   int length = -1;
 
 #if constant(mktime)
-  string extra;
   sscanf(lower_case(date), "%*s, %s; length=%d", date, length);
 
   if(!(t=since_cache[date])) {
@@ -3099,4 +3098,13 @@ array(int) parse_since(string date)
   }
 #endif /* constant(mktime) */
   return ({ t, length });
+}
+
+object configuration_auth;
+mapping configuration_perm=([]);
+void add_permission(string name, mapping desc) {
+  if(objectp(configuration_auth))
+    configuration_auth->add_permission(name, desc);
+  else
+    configuration_perm[name]=desc;
 }
