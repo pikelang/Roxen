@@ -11,6 +11,7 @@
 //     textcolor       -- button text color
 //     href            -- button URL
 //     alt             -- alternative button alt text
+//     title           -- button tooltip
 //     border          -- image border
 //     state           -- enabled|disabled button state
 //     textstyle       -- normal|consensed text
@@ -25,7 +26,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.102 2003/10/30 12:58:50 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.103 2003/12/15 15:51:58 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -103,6 +104,10 @@ constant gbuttonattr=#"
 
 <attr name='alt' value='string'><p>
  Alternative button and alt text.</p>
+</attr>
+
+<attr name='title' value='string'><p>
+ Button tooltip.</p>
 </attr>
 
 <attr name='href' value='uri'><p>
@@ -874,6 +879,7 @@ class TagGButton {
       //  Peek at img-align and remove it so it won't be copied by "*-*" glob
       //  in mk_url().
       string img_align = args["img-align"];
+      string title = args->title;
       m_delete(args, "img-align");
       
       [string img_src, mapping new_args]=mk_url(id);
@@ -885,7 +891,9 @@ class TagGButton {
 			     "vspace" : args->vspace ]);
       if (img_align)
         img_attrs->align = img_align;
-
+      if (title)
+	img_attrs->title = title;
+      
       int no_draw = !id->misc->generate_images;
       if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
 						 id, no_draw)) {
