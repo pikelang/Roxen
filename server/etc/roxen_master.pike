@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.87 2000/04/04 14:33:31 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.88 2000/04/06 14:35:13 leif Exp $";
 
 /*
  * name = "Roxen Master";
@@ -150,15 +150,22 @@ string make_ofilename( string from )
 void dump_program( string pname, program what )
 {
   string outfile = make_ofilename( pname );
-  string data = encode_value( what, MyCodec( what ) );
-  mkdirhier( outfile );
+  string data;
+  if (!catch (data = encode_value( what, MyCodec( what ) ) ))
+  { mkdirhier( outfile );
 #if constant( chmod )
-  chmod( dirname( outfile ), 01777  );
+    chmod( dirname( outfile ), 01777  );
 #endif
-  _static_modules.files()->Fd(outfile,"wct")->write(data);
+    _static_modules.files()->Fd(outfile,"wct")->write(data);
 #if constant( chmod )
-  chmod( outfile, 0664  );
+    chmod( outfile, 0664  );
 #endif
+  }
+  else
+  { array parts = pname / "/";
+    if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
+    werror("Couldn't dump " + parts * "/" + "\n");
+  }
 }
 
 int loaded_at( program p )
