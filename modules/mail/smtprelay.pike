@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.38 1998/12/10 15:48:13 grubba Exp $
+ * $Id: smtprelay.pike,v 1.39 1999/03/09 15:59:54 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.38 1998/12/10 15:48:13 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.39 1999/03/09 15:59:54 grubba Exp $";
 
 /*
  * Some globals
@@ -379,6 +379,8 @@ class MailSender
   {
     string m = mail->read(0x7fffffff);
     if (sizeof(m)) { 
+      // Stupid Qmail doesn't allow single lf's in the body...
+      m = replace(m, ({ "\r\n", "\r", "\n" }), ({ "\r\n", "\r\n", "\r\n" }));
       if (m[0] == '.') {
 	// Not likely...
 	// Especially not since the first line is probably the
