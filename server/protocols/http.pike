@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.121 1998/11/18 04:54:36 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.122 1998/12/19 02:40:30 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -262,8 +262,9 @@ private int parse_got(string s)
 	    prot = "HTTP/1.1";
 	  } else {
 	    // Unknown protocol
+	    werror(sprintf("HTTP: Bad request: %O\n", line));
 	    my_fd->write(sprintf("400 Unknown Protocol HTTP/1.1\r\n\r\n"
-				 "Protocol is not HTTP.\r\n"));
+				 "Protocol %O is not HTTP.\r\n", prot));
 	    return -2;
 	  }
 	}
