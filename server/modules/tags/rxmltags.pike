@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.60 2000/02/07 18:26:56 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.61 2000/02/08 21:31:21 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -52,43 +52,53 @@ string sexpr_eval(string what)
 // ----------------- Entities ----------------------
 
 class EntityPageRealfile {
-  string rxml_var_eval(RXML.Context c) { return c->id->realfile||""; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->realfile||""; }
 }
 
 class EntityPageVirtroot {
-  string rxml_var_eval(RXML.Context c) { return c->id->virtfile||""; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->virtfile||""; }
 }
 
 class EntityPageVirtfile {
-  string rxml_var_eval(RXML.Context c) { return c->id->not_query; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->not_query; }
 }
 
 class EntityPageQuery {
-  string rxml_var_eval(RXML.Context c) { return c->id->query; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->query; }
 }
 
 class EntityPageURL {
-  string rxml_var_eval(RXML.Context c) { return c->id->raw_url; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->raw_url; }
 }
 
 class EntityPageLastTrue {
+  inherit RXML.Value;
   int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
 }
 
 class EntityPageLanguage {
-  string rxml_var_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
 }
 
 class EntityPageScope {
+  inherit RXML.Value;
   string rxml_var_eval(RXML.Context c) { return c->current_scope(); }
 }
 
 class EntityPageFileSize {
-  int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _stat"]?c->id->misc->defines[" _stat"][1]:-4; }
+  inherit RXML.Value;
+  int rxml_const_eval(RXML.Context c) { return c->id->misc->defines[" _stat"]?c->id->misc->defines[" _stat"][1]:-4; }
 }
 
 class EntityPageSelf {
-  string rxml_var_eval(RXML.Context c) { return (c->id->not_query/"/")[-1]; }
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) { return (c->id->not_query/"/")[-1]; }
 }
 
 mapping page_scope=(["realfile":EntityPageRealfile(),
@@ -103,7 +113,8 @@ mapping page_scope=(["realfile":EntityPageRealfile(),
 		     "self":EntityPageSelf()]);
 
 class EntityClientReferrer {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     array referrer=c->id->referer;
     return referrer && sizeof(referrer)?referrer[0]:"";
@@ -111,7 +122,8 @@ class EntityClientReferrer {
 }
 
 class EntityClientName {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     array client=c->id->client;
     return client && sizeof(client)?client[0]:"";
@@ -119,14 +131,16 @@ class EntityClientName {
 }
 
 class EntityClientIP {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     return c->id->remoteaddr;
   }
 }
 
 class EntityClientAcceptLanguage {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return "";
     return c->id->misc["accept-language"][0];
@@ -134,7 +148,8 @@ class EntityClientAcceptLanguage {
 }
 
 class EntityClientAcceptLanguages {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return "";
     return c->id->misc["accept-language"]*", ";
@@ -142,7 +157,8 @@ class EntityClientAcceptLanguages {
 }
 
 class EntityClientLanguage {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return "";
     return c->id->misc->pref_languages->get_language() || "";
@@ -150,7 +166,8 @@ class EntityClientLanguage {
 }
 
 class EntityClientLanguages {
-  string rxml_var_eval(RXML.Context c) {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return "";
     return c->id->misc->pref_languages->get_languages()*", ";
@@ -475,7 +492,7 @@ string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
     return ({ "<pre>"+html_encode_string(sprintf("%O",obj))+"</pre>" });
   }
   if (m->werror) {
-    werror(m->werror+"\n");
+    report_debug(replace(m->werror,"\\n","\n"));
   }
   if (m->off)
     id->misc->debug = 0;
