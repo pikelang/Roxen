@@ -1,5 +1,6 @@
-/* $Id: builders.pike,v 1.16 1998/10/12 22:13:12 per Exp $ */
+/* $Id: builders.pike,v 1.17 1998/10/16 21:05:47 grubba Exp $ */
 
+#include <roxen.h>
 #include <module.h>
 #include <confignode.h>
 inherit "describers";
@@ -24,8 +25,8 @@ void low_build_variables(object node, mapping from)
   m = copy_value(values(from));
 
   foreach(m, array q)
-    q[VAR_NAME] = roxen->locale->module_doc_string(node->module_object(),
-						   q[VAR_SHORTNAME],0);
+    q[VAR_NAME] = LOW_LOCALE->module_doc_string(node->module_object(),
+						q[VAR_SHORTNAME],0);
 
   sort(column(m,VAR_NAME),m);
   
@@ -293,6 +294,13 @@ void build_root(object root, void|int nodes)
     o->describer = describe_actions;
     o->data = 0;
     o->type = NODE_WIZARDS;
+
+#if 0
+    o=root->descend("Docs");
+    o->describer = describe_docs;
+    o->data = 0;
+    o->type = NODE_DOCS;
+#endif /* 0 */
    
     o=root->descend("Configurations");
     o->describer = describe_configurations;
