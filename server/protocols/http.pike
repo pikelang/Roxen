@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.124 1999/01/14 02:49:37 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.125 1999/02/15 23:24:30 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -38,11 +38,10 @@ int req_time = HRTIME();
 #endif
 
 constant decode        = MIME.decode_base64;
-constant find_supports = roxen->find_supports;
-constant version       = roxen->version;
-constant handle        = roxen->handle;
-constant _query        = roxen->query;
-constant thepipe       = roxen->pipe;
+constant find_supports = roxen.find_supports;
+constant version       = roxen.version;
+constant _query        = roxen.query;
+constant thepipe       = roxen.pipe;
 constant _time         = predef::time;
 
 private static array(string) cache;
@@ -233,7 +232,6 @@ private int parse_got(string s)
   string a, b, linename, contents;
   int config_in_url;
 
-//  roxen->httpobjects[my_id] = "Parsed data...";
   raw = s;
 
   if (!line) {
@@ -358,10 +356,8 @@ private int parse_got(string s)
 
   if(sizeof(s)) {
 //    sscanf(s, "%s\r\n\r\n%s", s, data);
-
 //     s = replace(s, "\n\t", ", ") - "\r"; 
 //     Handle rfc822 continuation lines and strip \r
-  
     foreach(s/"\r\n" - ({ "" }), line)
     {
       linename=contents=0;
@@ -750,7 +746,7 @@ string format_backtrace(array bt, int eid)
   // second is the actual function, 
   // rest is backtrace.
 
-  string reason = roxen->diagnose_error( bt );
+  string reason = roxen.diagnose_error( bt );
   if(sizeof(bt) == 1) // No backtrace?!
     bt += ({ "Unknown error, no backtrace."});
   string res = ("<title>Internal Server Error</title>"
@@ -802,8 +798,8 @@ string generate_bugreport(array from, string u, string rd)
 {
   add_id(from);
   return ("<pre>"+html_encode_string("Roxen version: "+version()+
-	  (roxen->real_version != version()?
-	   " ("+roxen->real_version+")":"")+
+	  (roxen.real_version != version()?
+	   " ("+roxen.real_version+")":"")+
 	  "\nRequested URL: "+u+"\n"
 	  "\nError: "+
 	  describe_backtrace(from)-(getcwd()+"/")+
@@ -820,9 +816,9 @@ string censor(string what)
 
 int store_error(array err)
 {
-  mapping e = roxen->query_var("errors");
-  if(!e) roxen->set_var("errors", ([]));
-  e = roxen->query_var("errors"); /* threads... */
+  mapping e = roxen.query_var("errors");
+  if(!e) roxen.set_var("errors", ([]));
+  e = roxen.query_var("errors"); /* threads... */
   
   int id = ++e[0];
   if(id>1024) id = 1;
@@ -832,7 +828,7 @@ int store_error(array err)
 
 array get_error(string eid)
 {
-  mapping e = roxen->query_var("errors");
+  mapping e = roxen.query_var("errors");
   if(e) return e[(int)eid];
   return 0;
 }
@@ -997,8 +993,6 @@ void send_result(mapping|void result)
   int tmp;
   mapping heads;
   string head_string;
-  object thiso = this_object();
-
   if (result) {
     file = result;
   }
@@ -1009,8 +1003,8 @@ void send_result(mapping|void result)
       file = http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
       file=http_low_answer(404,
-			   replace(conf->parse_rxml(conf->query("ZNoSuchFile"),
-					      thiso),
+			   replace(parse_rxml(conf->query("ZNoSuchFile"),
+                                              this_object()),
 				   ({"$File", "$Me"}), 
 				   ({not_query,
 				     conf->query("MyWorldLocation")})));
@@ -1161,10 +1155,6 @@ void send_result(mapping|void result)
 // Execute the request
 void handle_request( )
 {
-  mixed *err;
-  function funp;
-  object thiso=this_object();
-
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -1186,8 +1176,8 @@ void handle_request( )
 	  else
 	  {
 	    array auth = (realauth+":")/":";
-	    if((auth[0] != roxen->query("ConfigurationUser"))
-	       || !crypt(auth[1], roxen->query("ConfigurationPassword")))
+	    if((auth[0] != roxen.query("ConfigurationUser"))
+	       || !crypt(auth[1], roxen.query("ConfigurationPassword")))
 	      file = http_auth_required("admin");
 	    else
 	      file = ([
@@ -1202,41 +1192,20 @@ void handle_request( )
   }
 #endif /* MAGIC_ERROR */
 
-
   remove_call_out(do_timeout);
   MARK_FD("HTTP handling request");
-  if(!file && conf)
+
+  array e;
+  if(conf)
   {
-//  perror("Handle request, got conf.\n");
-    object oc = conf;
-    foreach(conf->first_modules(), funp) 
-    {
-      if(file = funp( thiso)) break;
-      if(conf != oc) {
-	handle_request();
-	return;
-      }
-    }    
-    if(!file) err=catch(file = conf->get_file(thiso));
-
-    if(err) internal_error(err);
-
-    if(!mappingp(file)) {
-      mixed ret;
-      foreach(conf->last_modules(), funp) if(ret = funp(thiso)) break;
-      if (ret == 1) {
-	// Recurse.
-	handle_request();
-	return;
-      }
-      file = ret;
-    }
-  } else if(!file &&
-	    (err=catch(file = roxen->configuration_parse( thiso )))) {
-    if(err==-1) return;
-    internal_error(err);
+    if(e= catch(file = conf->handle_request( this_object() )))
+      internal_error( e );
+  } 
+  else if(!file&&(e=catch(file=roxen.configuration_parse(this_object())))) 
+  {
+    if(e==-1) return;
+    internal_error(e);
   }
-
   send_result();
 }
 
@@ -1296,11 +1265,7 @@ void got_data(mixed fooid, string s)
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 
   processed=1;
-#ifdef THREADS
-  roxen->handle(this_object()->handle_request);
-#else
-  handle_request();
-#endif
+  roxen.handle(this_object()->handle_request);
 }
 
 /* Get a somewhat identical copy of this object, used when doing 
