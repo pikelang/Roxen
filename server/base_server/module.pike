@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.74 2000/02/04 01:58:10 per Exp $ */
+/* $Id: module.pike,v 1.75 2000/02/06 11:48:54 nilsson Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -629,15 +629,6 @@ mapping query_container_callers()
   foreach(glob("container_*", indices( this_object())), string q)
     if(functionp( this_object()[q] ))
       m[replace(q[10..], "_", "-")] = this_object()[q];
-  return m;
-}
-
-mapping query_if_callers()
-{
-  mapping m = ([]);
-  foreach(glob("if_*", indices( this_object())), string q)
-    if(functionp( this_object()[q] ))
-      m[replace(q[3..], "_", "-")] = this_object()[q];
   return m;
 }
 

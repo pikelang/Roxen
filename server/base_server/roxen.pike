@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.416 2000/02/04 23:55:56 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.417 2000/02/06 11:49:16 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -88,7 +88,6 @@ class RoxenModule
   mapping api_functions();
   mapping query_tag_callers();
   mapping query_container_callers();
-  mapping query_if_callers();
 
   string info(object conf);
   string comment();
