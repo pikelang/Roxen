@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.104 1998/02/20 11:16:39 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.105 1998/02/22 18:19:05 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1139,14 +1139,17 @@ mapping find_cached_args(int num)
 
 int find_or_insert(mapping find)
 {
+  mapping f2 = copy_value(find);
+  foreach(glob("magic_*", indices(f2)), string q) m_delete(f2,q);
   if(!args_restored) restore_cached_args();
   array a = indices(cached_args);
   array b = values(cached_args);
   int i;
+
   for(i=0; i<sizeof(a); i++)
-    if(equal(find, b[i])) {
+    if(equal(f2, b[i]))
       return a[i];
-    }
+
   cached_args[number]=find;
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
@@ -1239,42 +1242,6 @@ string tag_gtext_id(string t, mapping arg,
     return (string)num;
 }
 
-string internal_tag_on(string t, mapping args, mapping arglist, 
-		       object id, mapping defines)
-{
-  mapping arg = ([]);
-  if(arglist->text) arg->text = arglist->text;
-  if(args->delay)
-  {
-    args->type = "delay";
-  } else if(args->mouseover) {
-    args->type = "mouseover";
-    m_delete(args, "mouseover");
-  } else if(arg->mouseout) {
-    arg->type = "mouseover";
-    m_delete(args, "mouseout");
-  }
-  arg |= args;
-
-  for(int i=2; i<10; i++) 
-    if(arg[(string)i])
-    {
-      arg->scale = 1.0 / ((float)i*0.6);
-      m_delete(arg, (string)i);
-      break;
-    }
-
-  arglist->list += ({ arg });
-  return "";
-}
-
-string internal_tag_text(string t, mapping arg, string contents,
-			mapping arglist, object id, mapping defines)
-{
-  arglist->text = contents;
-  return "";
-}
-
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
@@ -1307,28 +1274,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   int i;
   string split;
 
-//   if(arg->alternatives)
-//   {
-//     mapping arg_list = (["list":({})]);
-//     parse_html(contents,(["on":internal_tag_on]),
-// 	       (["text":internal_tag_text, ]), arg_list, id, defines);
-
-//     string js = "", href="";
-//     mapping img_tag_args = ([]);
-//     array(int) nums = ({});
-//     foreach(arg_list->list, mapping q)
-//     {
-//       mapping w = copy_value(q);
-//       m_delete(w, "text"); m_delete(w, "type"); m_delete(w, "delay");
-//       m_delete(w, "href"); m_delete(w, "name"); m_delete(w, "align");
-//       nums += ({ find_or_insert( w ) });
-//       if(q->align) img_tag_args->align = q->align;
-//       if(q->name)  img_tag_args->name = q->name;
-//       if(q->href) href = make_tag("a", (["href":q->href, "name":q->name]));
-//     }
-//   }
-
- // No images here, let's generate an alternative..
+  // No images here, let's generate an alternative..
   if(!id->supports->images || id->prestate->noimages)
   {
     if(!arg->split) contents=replace(contents,"\n", "\n<br>\n");
@@ -1383,14 +1329,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-#if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
-#endif
-  if(!arg->font) arg->font=defines->font
-#if !efun(get_font)
-		   ||QUERY(default_font)
-#endif
-		   ;
+  if(!arg->font) arg->font=defines->font;
   if(!arg->bold) arg->bold=defines->bold;
   if(!arg->italic) arg->italic=defines->italic;
   if(!arg->black) arg->black=defines->black;
@@ -1398,9 +1338,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(arg->split)
   {
-    if (sizeof(split=arg->split) != 1) {
+    if (sizeof(split=arg->split) != 1)
       split = " ";
-    }
     m_delete(arg,"split");
   }
 
@@ -1455,12 +1394,10 @@ string tag_graphicstext(string t, mapping arg, string contents,
       if (split != " ") {
 	array arr = word/split;
 	int i;
-	for (i = sizeof(arr)-1; i--;) {
+	for (i = sizeof(arr)-1; i--;)
 	  arr[i] += split;
-	}
-	if (arr[-1] == "") {
+	if (arr[-1] == "")
 	  arr = arr[..sizeof(arr)-2];
-	}
 	foreach (arr, word) {
 	  array size = write_text(num,word,1,id);
 	  res += ({ "<img border=0 alt=\"" +
@@ -1484,22 +1421,20 @@ string tag_graphicstext(string t, mapping arg, string contents,
   }
   
   array size = write_text(num,gt,1,id);
-  if(!size) {
+  if(!size)
     return ("<font size=+1><b>Missing font or other similar error -- "
 	    "failed to render text</b></font>");
-  }
+
   if(magic)
   {
     string res = "";
     if(!arg->fg) arg->fg=defines->link||"#0000ff";
     arg = mkmapping(indices(arg), values(arg));
     if(arg->fuzz)
-    {
       if(arg->fuzz != "fuzz")
 	arg->glow = arg->fuzz;
       else
 	arg->glow = arg->fg;
-    }
     arg->fg = defines->alink||"#ff0000";
     if(arg->magicbg) arg->background = arg->magicbg;
     if(arg->bevel) arg->pressed=1;

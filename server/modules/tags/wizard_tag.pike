@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.4 1998/02/20 11:16:41 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.5 1998/02/22 18:19:06 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -15,7 +15,7 @@ mixed *register_module()
 	   ("Generates wizards<p>\n"
 	    "Syntax:<br>\n"
 "<br>"
-"&lt;wizard [next-label=...] [previous-label=...] [ok-label=...] [cancel-label=...] [page-label=...] name=\"A Name\" done=\"url to go to when ok or cancel is pressed\"&gt;<br>"
+"&lt;wizard [next-label=...] [previous-label=...] [ok-label=...] [cancel-label=...] [page-label=...] name=\"A Name\" cancel=\"url to go to when cancel is pressed\" done=\"url to go to when ok (or cancel, if not 'cancel' option is specified) is pressed\"&gt;<br>"
 "&nbsp;&nbsp;&lt;page&gt;<br>"
 "&nbsp;&nbsp;&nbsp;&nbsp;A page (RXML code, with two extra tags, &lt;var&gt; and &lt;cvar&gt;, see below)<br>"
 "&nbsp;&nbsp;&lt;/page&gt;<br>"
@@ -35,40 +35,78 @@ mixed *register_module()
 "&lt;/cvar&gt;<br>"),({}),1,});
 }
 
-string internal_page(string t, mapping args, string contents, mapping f)
+string internal_page(string t, mapping args, string contents, int l, int ol,
+		     mapping f)
 {
-  f->pages += ({contents});
+  f->pages +=({({contents,ol+l})});
 }
+
+string fix_relative(string file, object id)
+{
+  if(file != "" && file[0] == '/') return file;
+  file = combine_path(dirname(id->not_query) + "/",  file);
+  return file;
+}
+
+string old_pike = "";
+object old_wizard = 0;
 
 string tag_wizard(string t, mapping args, string contents, object id)
 {
   mapping f = ([ "pages":({}) ]);
   string pike = ("inherit \"wizard\";\n"
+		 "# "+id->misc->defines->line+" \""+id->not_query+"\"\n"
 		 "string name=\""+(args->name||"unnamed")+"\";\n");
   int p;
   foreach(glob("*-label", indices(args)), string a)
   {
+    pike += ("# "+id->misc->defines->line+" \""+id->not_query+"\"\n");
     pike += "  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
 				({"","","",""}))+ 
       " = \""+replace(args[a], ({"\"","\n","\r", "\\"}), 
 		      ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";\n";
   }
 
-  parse_html(contents, ([]), (["page":internal_page]),f);
-  foreach(f->pages, string d)
+
+  if(args->ok)
   {
+    pike += ("# "+id->misc->defines->line+" \""+id->not_query+"\"\n");
+    pike += ("mixed wizard_done(object id)\n"
+	     "{\n"
+	     "  id->not_query = \""+
+	     fix_relative(replace(args->ok, ({"\"","\n","\r", "\\"}), 
+				  ({"\\\"", "\\n", "\\r", "\\\\"})),id)+"\";\n"
+	     "  return roxen->get_file( id );\n"
+	     "}\n\n");
+  }
+  parse_html_lines(contents, ([]), (["page":internal_page]), 
+		   (int)id->misc->defines->line,f);
+  foreach(f->pages, array q)
+  {
+    pike += ("# "+q[1]+" \""+id->not_query+"\"\n");
     pike += ("string page_"+p+"(object id) {" +
-	     "return \""+replace(d, ({"\"","\n","\r", "\\"}), 
+	     "return \""+replace(q[0], ({"\"","\n","\r", "\\"}), 
 				 ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";}\n");
     p++;
   }
-//   werror("compiling:\n"+pike+"\n");
-  mixed res = compile_string(pike)()->wizard_for(id,args->done);
+  object w;
+  if(pike == old_pike)
+    w = old_wizard;
+  else
+  {
+    werror("compiling:\n"+pike+"\n");
+    old_wizard = w = compile_string(pike)();
+    old_pike = pike;
+  }
+
+
+  mixed res = w->wizard_for(id,fix_relative(args->cancel||args->done,id));
+
   if(mappingp(res))
   {
     id->misc->defines[" _error"] = res->error;
     id->misc->defines[" _extra_heads"] = res->extra_heads;
-    return "";
+    return res->data||(res->file&&res->file->read())||"";
   }
   return res;
 }
