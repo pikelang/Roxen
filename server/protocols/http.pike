@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.129 1999/04/16 15:28:04 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.130 1999/04/17 21:34:44 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -123,13 +123,13 @@ void send(string|object what, int|void len)
   }
 }
 
-static void send_done(int bytes)
+static void send_done(int bytes, function callback, array(mixed) args)
 {
   file->len = bytes;
-  do_log();
+  callback(@args);
 }
 
-static void start_sender()
+void start_sender(function callback, mixed ... args)
 {
   array(string) headers = result_headers;
   object file = result_file;
@@ -141,7 +141,7 @@ static void start_sender()
 
   // FIXME: Timeout handling!
 
-  Stdio.sendfile(headers, file, -1, len, 0, my_fd, send_done);
+  Stdio.sendfile(headers, file, -1, len, 0, my_fd, send_done, callback, args);
 }
 
 #else /* !constant(Stdio.sendfile) */
@@ -170,18 +170,19 @@ void send(string|object what, int|void len)
   else               pipe->input(what,len);
 }
 
-static void start_sender()
+void start_sender(function callback, mixed ... args)
 {
   if (pipe) {
     MARK_FD("HTTP really handled, piping "+not_query);
 #ifdef FD_DEBUG
     call_out(timer, 30, _time(1)); // Update FD with time...
 #endif
-    pipe->set_done_callback( do_log );
+    // FIXME: What about args?
+    pipe->set_done_callback( callback );
     pipe->output(my_fd);
   } else {
     MARK_FD("HTTP really handled, pipe done");
-    do_log();
+    callback(@args);
   }
 }
 
@@ -1234,7 +1235,7 @@ void send_result(mapping|void result)
   } else
     file->len = 1; // Keep those alive, please...
 
-  start_sender();
+  start_sender(do_log);
 }
 
 
