@@ -143,9 +143,13 @@ string page_2(object id)
     }
   }
 
-  return ("<font size=+1>Summary</font><p><ul><li>"+
-	  column(actions,0)*"\n<li>"+"</ul>");
-  
+  if (sizeof(actions)) {
+    return ("<font size=+1>Summary</font><p><ul><li>"+
+	    column(actions,0)*"\n<li>"+"</ul>");
+  } else {
+    return ("<font size=+1>Summary</font><p>\n"
+	    "<ul>No changes will be made.</ul>");
+  }
 }
 
 
