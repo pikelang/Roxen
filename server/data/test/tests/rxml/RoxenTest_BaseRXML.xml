@@ -950,11 +950,12 @@ a&auml; &amp; b  &gt;
 <test>
   <rxml type="string">
     <if variable="var.foo">1</if><else>0</else>
-    <if variable="var.foo is ">1<!-- Bogus 2.2 behavior. --></if><else>0<!-- 2.1 behavior. --></else>
+    <if variable="var.foo is ">1<!-- Bogus 2.2 behavior. --></if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>0100</result>
+  <result>00100</result>
 </test>
 
 <test>
@@ -962,21 +963,23 @@ a&auml; &amp; b  &gt;
     <set variable="var.foo" value=""/>
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>1100</result>
+  <result>11000</result>
 </test>
 
 <test>
   <rxml type="string">
-    <set variable="var.foo"></set>
+    <set variable="var.foo"></set> <!-- var.foo gets the value RXML.nil, i.e. it's still unset. -->
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>0100</result>
+  <result>00100</result>
 </test>
 
 <test>
@@ -984,10 +987,11 @@ a&auml; &amp; b  &gt;
     <set variable="var.foo" value="0"/>
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>1011</result>
+  <result>10111</result>
 </test>
 
 <test>
@@ -995,10 +999,11 @@ a&auml; &amp; b  &gt;
     <set variable="var.foo" expr="0"/> <!-- Same as value='0' in 2.1. -->
     <if variable="var.foo">1</if><else>0<!-- Reported 2.2 behavior. --></else>
     <if variable="var.foo is ">1<!-- Reported bogus 2.2 behavior. --></if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1<!-- Reported 2.1 compat issue. --></if><else>0<!-- Bogus 2.2 behavior. --></else>
-    <if variable="var.foo = ?*">1<!-- 2.1 behavior. --></if><else>0<!-- Bogus 2.2 behavior. --></else>
+    <if variable="var.foo = ?*">1</if><else>0<!-- Bogus 2.2 behavior. --></else>
   </rxml>
-  <result>0100</result>
+  <result>10111</result>
 </test>
 
 <test>
@@ -1006,10 +1011,11 @@ a&auml; &amp; b  &gt;
     <set variable="var.foo" value="1"/>
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>1001</result>
+  <result>10101</result>
 </test>
 
 <test>
@@ -1017,10 +1023,11 @@ a&auml; &amp; b  &gt;
     <set variable="var.foo" expr="1"/>
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>1001</result>
+  <result>10101</result>
 </test>
 
 
@@ -2948,7 +2955,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>Roxen/2\.4\.[0-9]+</regexp>
+<regexp>IS/2\.5\.[0-9]+</regexp>
 </test>
 
 <test>
