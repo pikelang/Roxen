@@ -7,7 +7,7 @@
  * in October -97
  */
 
-constant cvs_version = "$Id: business.pike,v 1.7 1997/10/14 05:19:12 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.8 1997/10/14 06:27:21 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -162,10 +162,7 @@ string tag_diagram(string tag, mapping m, string contents,
   else return syntax( "You must specify a type for your table" );
 
   if(m->background)
-  {
-    res->image = m->background;
-    res->not_query = id->not_query;
-  }  
+    res->image = (string)m->background;
 
   /* Piechart */
   if(res->type[0..2] == "pie")
@@ -301,9 +298,12 @@ mapping query_container_callers()
 
 object PPM(string fname, object id)
 {
-  string q = Stdio.read_bytes(fname);
-  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
-  if(!q) throw("Unknown PPM image '"+fname+"'");
+  string q;
+  //    roxen->try_get_file( dirname(id->not_query)+fname, id);
+  q = Stdio.read_file("girl.ppm");
+  //  q = Stdio.read_bytes(fname);
+  //  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
+  if(!q) perror("Unknown PPM image '"+fname+"'\n");
   mixed g = Gz;
   if (g->inflate) {
     catch {
@@ -337,6 +337,16 @@ mapping find_file(string f, object id)
 		      ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) });
 
   mapping(string:mixed) diagram_data;
+
+  array back = res->bg;
+
+  if(res->image)
+  {
+    res->bg = 0;
+    perror( res->image +"\n" );
+    res->image = PPM(res->image, id);
+  }
+
   diagram_data=(["type":      res->type,
 		 "subtype":   res->subtype,
 		 "drawtype":  res->dimensions,
@@ -360,12 +370,13 @@ mapping find_file(string f, object id)
 
 		 "labels":         res->labels,
 		 "labelsize":      res->labelsize,
-		 "legendfontsize": res->legenfontsize,
+		 "legendfontsize": res->legendfontsize,
 		 "legend_texts":   res->legend_texts,
 		 "labelcolor":     res->labelcolor,
 
 		 "linewidth": res->linewidth,
-		 "tone":      res->tone
+		 "tone":      res->tone,
+		 "image":     res->image
   ]);
   
 
@@ -391,10 +402,10 @@ mapping find_file(string f, object id)
   if(res->type == "sumbars")
     img = bars->create_sumbars(diagram_data)["image"];
 
-  img = img->map_closest(img->select_colors(254)+({res->bg}));
+  img = img->map_closest(img->select_colors(254)+({ back }));
 
-  perror("%O\n", res->xnames);
+  //  perror("%O\n", res->xnames);
   perror("\n");
 
-  return http_string_answer(img->togif(@res->bg), "image/gif");  
+  return http_string_answer(img->togif(@back), "image/gif");  
 }
