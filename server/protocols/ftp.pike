@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.95 1998/05/09 18:59:22 grubba Exp $
+ * $Id: ftp.pike,v 1.96 1998/06/30 20:50:14 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -411,7 +411,7 @@ class ls_program {
     void write_out()
     {
       DWRITE("list_stream->write_out()\n");
-      while (!data->is_empty()) {
+      while (this_object() && data && !data->is_empty()) {
 	string block = data->get();
 	if (block) {
 	  DWRITE(sprintf("list_stream->write_out(): Sending \"%s\"\n",
