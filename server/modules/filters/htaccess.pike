@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.14 1997/07/10 16:28:35 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.15 1997/07/18 15:08:16 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -52,8 +52,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
   if(!sizeof(m))
     m = ([ "all": 1 ]);
   
-  foreach(s / "\n", line)
-  {
+  foreach(s / "\n", line) {
     tmp = 0;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
@@ -61,7 +60,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
     if(!strlen(line))
       continue;
 
-    if(line[0] == ' ') /* There can be only one */
+    if(line[0] == ' ') /* There can be only one /Connor MacLeod */
       line = line[1..];
 
     if(sscanf(line, "deny from %s", data))
@@ -70,8 +69,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
       tmp = "allow";
     else if(sscanf(line, "require %s %s", ent, data) == 2)
       tmp = ent;
-    else if(sscanf(line, "satisfy %s", data))
-    {
+    else if(sscanf(line, "satisfy %s", data)) {
       tmp = "all";
       if(data == "all")
 	data = 1;
@@ -81,8 +79,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
       tmp = "valid-user";
       data = 1;
     }
-    if(sscanf(line, "order %s", data))
-    {
+    if(sscanf(line, "order %s", data)) {
       data = replace(data, " ", "");
       if(!search(data, "allow"))
 	data = 1;
@@ -91,19 +88,19 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
       else 
       	data = 0;
       tmpmap->order = data;
-    } else if(tmp)
-      if(stringp(data))
-	foreach(data / " ", item)
-	{
-	  if(strlen(item))
-	  {
+    } else if(tmp) {
+      if(stringp(data)) {
+	foreach(data / " ", item) {
+	  if(strlen(item)) {
 	    if(!multisetp(tmpmap[tmp]))
 	      tmpmap[ tmp ] = (<>);
 	    tmpmap[ tmp ] += (< item >);
 	  }
 	}
-      else
+      } else {
 	tmpmap[tmp] = data;
+      }
+    }
   }
   if(!tmpmap->all)
     tmpmap->all = 1;
@@ -147,8 +144,11 @@ mapping|int parse_htaccess(object f, object id, string rht)
 
   htaccess = parse_html(htaccess, ([]), (["limit": parse_limit ]), id, access);
 
-  foreach(htaccess / "\n"-({""}), line)
-  {
+  if ((!access["head"]) && access["get"]) {
+    access["head"] = access["get"];
+  }
+
+  foreach(htaccess / "\n"-({""}), line) {
     string cmd, rest;
 
     if(line[0] == "#")
@@ -166,23 +166,23 @@ mapping|int parse_htaccess(object f, object id, string rht)
 
     cmd = lower_case(cmd);    
 
-    switch(cmd)
-    {
-     case "redirecttemp":
-     case "redirecttemporary":
-     case "redirectperm":
-     case "redirectpermanent":
+    switch(cmd) {
+    case "redirecttemp":
+    case "redirecttemporary":
+    case "redirectperm":
+    case "redirectpermanent":
       cmd = "redirect";
 
-     case "authuserfile":
-     case "authname":
-     case "authgroupfile":
-     case "redirect":
-     case "errorfile": 
+      // FALL-THROUGH
+    case "authuserfile":
+    case "authname":
+    case "authgroupfile":
+    case "redirect":
+    case "errorfile": 
       access[cmd] = rest;
       break;
 
-     default:
+    default:
 #ifdef HTACCESS_DEBUG
       werror(".htaccess: Unsupported command: "+ cmd +"\n");
 #endif
