@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.141 2000/02/14 09:21:10 per Exp $
+ * $Id: roxenloader.pike,v 1.142 2000/02/15 17:14:13 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.141 2000/02/14 09:21:10 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.142 2000/02/15 17:14:13 grubba Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1055,20 +1055,36 @@ void paranoia_throw(mixed err)
 int global_count;
 
 // Roxen bootstrap code.
-int main(int argc, array argv)
+int main(int argc, array(string) argv)
 {
-  call_out( do_main, 0, argc, argv );
+  call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
   return -1;
 }
 
-void do_main( int argc, array argv )
+// Wrapper to make sure we die if loading fails.
+void do_main_wrapper(int argc, array(string) argv)
+{
+  mixed err = catch {
+    do_main(argc, argv);
+    return;
+  };
+  catch {
+    if (err) {
+      report_error(sprintf("Roxen loader failed:\n"
+			   "%s\n", describe_backtrace(err)));
+    }
+  };
+  exit(1);
+}
+
+void do_main( int argc, array(string) argv )
 {
   array hider = argv;
   argv = 0;
 
 #ifdef NOT_INSTALLED
-report_debug(
+  report_debug(
 #"
 
 
@@ -1086,7 +1102,7 @@ some environment variables are ignored.
 #endif
 
 #if __VERSION__ < 0.7
-report_debug(
+  report_debug(
 #"
 
 
@@ -1097,12 +1113,12 @@ Please install a newer pike version
 
 
 ");
- _exit(0); /* 0 means stop start script looping */
+  _exit(0); /* 0 means stop start script looping */
 #endif /* __VERSION__ < 0.7 */
 
 
 
- int start_time = gethrtime();
+  int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
   report_debug("\n"+version()+"\n");
@@ -1124,7 +1140,15 @@ Please install a newer pike version
   add_constant("throw", paranoia_throw);
 #endif /* INTERNAL_ERROR_DEBUG */
 
-  replace_master(new_master=(((program)"etc/roxen_master.pike")()));
+  mixed err;
+
+  if (err = catch {
+    replace_master(new_master=(((program)"etc/roxen_master.pike")()));
+  }) {
+    report_error(sprintf("Initialization of Roxen's master failed:\n"
+			 "%s\n", describe_backtrace(err)));
+    exit(1);
+  }
 
 //   add_constant("open_db", open_db);
   add_constant("roxenloader", this_object());
