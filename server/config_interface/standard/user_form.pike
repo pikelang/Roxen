@@ -1,20 +1,31 @@
+inherit "roxenlib";
+
 #include <config_interface.h>
-string parse( RequestID id )
+mapping parse( RequestID id )
 {
   string res="";
 
-  if( id->misc->orig )
-    id = id->misc->orig;
+  RequestID nid = id;
 
-  if(! id->misc->config_user->auth( "Edit Users" ) )
-    return "No such luck (permission denied)";
+  while( nid->misc->orig && !nid->my_fd )
+    nid = nid->misc->orig;
 
-  foreach( sort( id->misc->list_config_users() ), string uid )
+  if( !nid->misc->config_user->auth( "Edit Users" ) )
+    return http_string_answer("No such luck (permission denied)", "text/html");
+
+  foreach( sort( nid->misc->list_config_users() ), string uid )
   {
-    object u  = id->misc->get_config_user( uid );
+    object u  = nid->misc->get_config_user( uid );
     res += "<table width='100%'><tr><td bgcolor='"+config_setting2("bgcolor")+
            "'><font size='+2'>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
-    res += u->form( id );
+    res += u->form( nid );
   }
-  return res;
+
+  do
+  {
+    id->variables = nid->variables;
+    id = id->misc->orig;
+  } while( id );
+
+  return http_string_answer(res, "text/html");
 }
