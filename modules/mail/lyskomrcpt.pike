@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.2 1999/01/29 03:04:23 js Exp $
+ * $Id: lyskomrcpt.pike,v 1.3 1999/03/23 13:53:09 peter Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.2 1999/01/29 03:04:23 js Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.3 1999/03/23 13:53:09 peter Exp $";
 
 /*
  * Roxen glue
@@ -21,7 +21,7 @@ constant cvs_version = "$Id: lyskomrcpt.pike,v 1.2 1999/01/29 03:04:23 js Exp $"
 array register_module()
 {
   return({ MODULE_PROVIDER,
-	   "AutoMail LysKOM recipient",
+	   "AutoMail LysKOM recipient and relayer",
 	   "LysKOM module for the AutoMail system.",0,1 });
 }
 
@@ -30,6 +30,8 @@ object conf;
 
 void create()
 {
+  defvar("smtpserver", "y.idonex.se",
+	 "SMTP server to use" ,TYPE_STRING,"");
   defvar("handledomain", "kom.idonex.se",
 	 "Handle this domain" ,TYPE_STRING,"");
   defvar("komserver", "kom.idonex.se",
@@ -46,7 +48,6 @@ void create()
 object session;
 void start(int i, object c)
 {
-  werror("i: %d\n",i);
   if (c) {
     conf = c;
     if(!i)
@@ -56,11 +57,8 @@ void start(int i, object c)
      if(sizeof(myids)==1)
      {
        if(myids[0])
-       {
-	 werror("LysKOM: myid: %O", myids[0]);
-	 werror("LysKOM: kompassword: %O",query("kompassword"));
 	 werror("LysKOM: login: %O\n",session->login(myids[0],query("kompassword")));
-       }
+       call_out(check_queue,0.25);
      }
     }
   }
@@ -76,11 +74,98 @@ array(string)|multiset(string)|string query_provides()
   return (< "smtp_rcpt","automail_rcpt" >);
 }
 
+constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"});
+constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+static string mktimestamp(int t)
+{
+  mapping lt = localtime(t);
+    
+  string tz = "GMT";
+  int off;
+  
+  if (off = -lt->timezone) {
+    tz = sprintf("GMT%+d", off/3600);
+  }
+  if (lt->isdst) {
+    tz += "DST";
+    off += 3600;
+  }
+  
+  off /= 60;
+  
+  return(sprintf("%s, %02d %s %04d %02d:%02d:%02d %+03d%02d (%s)",
+		 weekdays[lt->wday], lt->mday, months[lt->mon],
+		 1900 + lt->year, lt->hour, lt->min, lt->sec,
+		 off/60, off%60, tz));
+}
+
+
+void check_queue()
+{
+  while(session->async_queue->size())
+  {
+    object msg = session->async_queue->read();
+    if(msg->code==0)
+    {
+      object db=conf->get_provider("sql")->sql_object();
+      object text=LysKOM.Abstract.Texts(session)[msg->text_no];
+
+      int sent=0;
+      foreach(text->comment_to->text_no, int commented)
+      {
+	string to=(db->query("select address from kom_receivers where type='to' "
+			     "and id='"+commented+"'")->address)*", ";
+	string cc=(db->query("select address from kom_receivers where type='cc' "
+			     "and id='"+commented+"'")->address)*", ";
+	string from_simple="c"+text->author->conf_no+"@"+query("handledomain");
+	string from=text->author->realname+" <"+from_simple+">";
+	string subject=text->subject;
+	sscanf(subject,"[%*s] %s",subject);
+	string message_id=sprintf("<%d@%s>",msg->text_no,query("handledomain"));
+	string in_reply_to;
+	mapping headers=(["mime-version":"1.0",
+			"subject":subject,
+			"from":from,
+			"to":to,
+			"cc":cc,
+			"message-id": message_id,
+			"date":mktimestamp(time()),
+			"content-type":
+			"text/plain;charset=iso-8859-1",
+			"content-transfer-encoding":"8bit"]);
+	array a=db->query("select message_id from message_ids where kom_id="+commented);
+	if(sizeof(a))
+	  headers["in-reply-to"]=a[0]->message_id;
+	string message=(string)MIME.Message(text->body,
+					    headers);
+	Protocols.SMTP.client()->
+	  send_message(from_simple,
+		       Array.map( (((to||"")/", ")+((cc||"")/", ")) - ({ "" }),
+				  get_addr),
+		       message);
+	db->query("insert into message_ids (kom_id,message_id) values ('"+
+		  msg->text_no+"','"+message_id+"')");
+
+	session->send_message(text->author,
+			      "Message sent:\n\n"
+			      "To: "+to+"\n"
+			      "Cc: "+cc);
+	sent=1;
+      }
+      if(!sent)
+	session->send_message(text->author,"No sender found!");
+    }
+  }
+  call_out(check_queue,0.25);
+}
+
 /*
  * Helper functions
  */
 
-static string get_addr(string addr)
+string get_addr(string addr)
 {
   array a = MIME.tokenize(addr);
 
@@ -127,6 +212,9 @@ string|multiset(string) expn(string addr, object o)
 
   if(sscanf(addr,sprintf("c%%*d@%s",query("handledomain"))))
     return addr;
+
+  if(sscanf(addr,sprintf("%%*s@%s",query("handledomain")))<1)
+    return 0;
   
   array(object) conferences = session->lookup_conference(replace((addr/"@")[0],
 								 "."," "),1);
@@ -145,11 +233,14 @@ string desc(string addr, object o)
   if(!sscanf(addr,"c%d@",conf_no))
     return 0;
 
+  if(sscanf(addr,sprintf("%%*s@%s",query("handledomain")))<1)
+    return 0;
+  
   object conference=LysKOM.Abstract.Conferences(session)[conf_no];
   if(conference)
     return conference->name;
   else
-    return "hej";
+    return 0;
 }
 
 
@@ -195,34 +286,63 @@ int put(string sender, string user, string domain,
 {
   roxen_perror("AutoMail LysKOM RCPT: put(%O, %O, %O, %O, %O, X)\n",
 	       sender, user, domain, mail, csum);
-  
+
+  if(lower_case(domain)!=query("handledomain"))
+    return 0;
   mail->seek(0);
   string x=mail->read();
   object msg=MIME.Message(x);
   mapping headers=decoded_headers(msg->headers);
 
   int res;
+  array(int) comment_to = ({ });
+  array(string) comment_to_ids = Array.map( ( ((headers["in-reply-to"]||"")/", ")+
+					  ((headers["references"]||"")/", "))
+					- ({ "" }), get_addr);
 
-  string in_reply_to=headers["in-reply-to"];
-  int comment_to;
-  if(in_reply_to)
-    sscanf(in_reply_to,"<%*d.%d@",comment_to);
+  object db=conf->get_provider("sql")->sql_object();
+  foreach(comment_to_ids, string comment_to_id)
+  {
+    array a=db->query("select kom_id from message_ids where message_id='<"+
+		      db->quote(comment_to_id)+">'");
+    if(sizeof(a))
+      comment_to += ({ (int)a[0]->kom_id });
+  }
+    
   int conf_no;
   sscanf(user,"c%d",conf_no);
+  if(!conf_no) return 1;
   object conference=LysKOM.Abstract.Conferences(session)[conf_no];
 
-  session->create_text(sprintf("[%s] %s",
-			       headers->from||"",
-			       headers->subject||""),
-		       get_real_body(msg)-"\r",
-		       conference,
-		       ({ }),
-// 		       get_confs(headers->to),
-// 		       get_confs(headers->cc),
-		       
-		       comment_to,
-		       0,
-		       0);
+  object db=conf->get_provider("sql")->sql_object();
+ 
+  int id = session->create_text(sprintf("[%s] %s",
+					headers->from||"",
+					headers->subject||""),
+				get_real_body(msg)-"\r",
+				conference,
+				({ }),
+				comment_to,
+				0,
+				0);
+
+  if(headers["message-id"])
+    db->query("insert into message_ids (kom_id,message_id) values ('"+
+	      id+"','"+db->quote(headers["message-id"])+"')");
+
+  if(headers->to)
+    foreach(headers->to/",", string to)
+      if(search(to,query("handledomain"))==-1)
+	db->query("insert into kom_receivers (id,type,address) "
+		  "values ('"+id+"','to','"+db->quote(to)+"')");
+  if(headers->from)
+    foreach(headers->from/",", string from)
+      db->query("insert into kom_receivers (id,type,address) "
+		"values ('"+id+"','to','"+db->quote(from)+"')");
+  if(headers->cc)
+    foreach(headers->cc/",", string cc)
+      db->query("insert into kom_receivers (id,type,address) "
+		"values ('"+id+"','cc','"+db->quote(cc)+"')");
   return 1;
 }
 
