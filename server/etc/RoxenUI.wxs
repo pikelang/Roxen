@@ -10,7 +10,7 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
     <CustomAction Id="SetRemoveOldService" Property="RemoveOldService"
-      Value="[SERVERDIR]" Execute="immediate" />
+      Value="[TARGETDIR]" Execute="immediate" />
     <CustomAction Id="RemoveOldService" BinaryKey="RoxenInstaller"
       VBScriptCall="RemoveOldService" Execute="deferred" />
     <CustomAction Id="SetCreateConfigInterface"
