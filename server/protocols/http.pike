@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.382 2002/11/01 10:48:16 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.383 2002/11/01 12:57:05 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1620,8 +1620,8 @@ void send_result(mapping|void result)
 //		 misc->cacheable);
 	if ( ((since_info[0] >= misc->last_modified) && 
 	      ((since_info[1] == -1) || (since_info[1] == file->len)))
-	     // never say 'not modified' if not cacheable at all.
-	     && (misc->cacheable != 0)
+	     // never say 'not modified' if cacheable has been lowered.
+	     && (misc->cacheable >= INITIAL_CACHEABLE)
 	     // actually ok, or...
 //	       || ((misc->cacheable>0) 
 //		   && (since_info[0] + misc->cacheable<= predef::time(1))
