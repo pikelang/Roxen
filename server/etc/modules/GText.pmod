@@ -125,9 +125,15 @@ array(Image.Image) make_text_image(
 {
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
-  Image.Image text_alpha=font->write(@(text/"\n"));
+  mapping text_info;
+  if(font->write_with_info)
+    text_info = font->write_with_info(@(text/"\n"));
+  else
+    text_info = ([ "img" : font->write(@(text/"\n")) ]);
+  Image.Image text_alpha= text_info->img;
   int extend_alpha = 0;
-  int xoffset=0, yoffset=0;
+  int overshoot = (int)text_info->overshoot;
+  int xoffset=0, yoffset= -overshoot;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
     text_alpha = Image.Image(10,10, 0,0,0);
@@ -139,7 +145,7 @@ array(Image.Image) make_text_image(
   int tysize=text_alpha->ysize(); // Size of the text, in pixels.
 
   int xsize=txsize; // image size, in pixels
-  int ysize=tysize;
+  int ysize=tysize - overshoot;
 
   if(args->bevel)
   {

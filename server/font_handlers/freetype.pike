@@ -98,7 +98,7 @@ class FTFont
   }
 
   static int line_height;
-  static Image.Image write_row( string text )
+  static mapping low_write_row(int do_overshoot, string text )
   {
     Image.Image res;
     int xp, ys;
@@ -118,7 +118,7 @@ class FTFont
     chars  -= ({ 0 });
     
     if( !sizeof( chars ) )
-      return Image.Image(1,1);
+      return ([ "overshoot":0, "img":Image.Image(1,1) ]);
 
     int oc;
     array kerning = ({});
@@ -138,19 +138,22 @@ class FTFont
 
     w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
     ys = chars[0]->ascender-chars[0]->descender;
+    int overshoot = do_overshoot ? max(ys, @map(chars, lambda(mapping m) 
+						       {return m->y-m->descender;})) - ys
+                                 : 0 ; 
     line_height = (int)chars[0]->height;
 			   
-    res = Image.Image( w, ys );
+    res = Image.Image( w, ys + overshoot );
 
     if( x_spacing < 0 )
       xp = w-(chars[0]->xsize+chars[0]->x);
 
 #ifdef FREETYPE_RENDER_DEBUG
     res->setcolor( 0,128,200 );
-    res->line( 0,0, res->xsize()-1, 0 );
-    res->line( 0,ys+chars[0]->descender, res->xsize()-1,
-	       ys+chars[0]->descender );
-    res->line( 0,res->ysize()-1, res->xsize()-1, res->ysize()-1 );
+    res->line( 0,0 + overshoot, res->xsize()-1, 0 + overshoot );
+    res->line( 0,ys+chars[0]->descender + overshoot, res->xsize()-1,
+	       ys+chars[0]->descender + overshoot );
+    res->line( 0,res->ysize()-1 + overshoot, res->xsize()-1, res->ysize()-1 + overshoot );
 #endif
     for( int i = 0; i<sizeof( chars); i++ )
     {
@@ -159,26 +162,42 @@ class FTFont
        res->paste_alpha_color( c->img->copy()->clear( 100,100,100 ),
  			      ({255,255,255}),
  			      xp+c->x,
- 			      ys+c->descender-c->y );
+ 			      ys+c->descender-c->y + overshoot );
 #endif
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
-                              ys+c->descender-c->y );
+                              overshoot + ys+c->descender-c->y );
       xp += (int)(c->advance*x_spacing) + kerning[i+1]+(fake_bold>0?1:0);
     }  
-    return res;
+    return ([ "overshoot":overshoot, "img":res]);
   }
+  static Image.Image write_row( string text ) {
+    return (Image.Image)((low_write_row(0, text))->img);
+  }	
 
   int fake_bold, fake_italic;
-  Image.Image write( string ... what )
+  Image.Image write( string ... what ) {
+    return ((low_write_with_info(0, @what))->img);
+  }
+
+  mapping write_with_info( string ... what ) {
+#ifdef FREETYPE_OVERSHOOT
+    return low_write_with_info(1, @what);
+#else
+    return low_write_with_info(0, @what);
+#endif
+  }
+
+  mapping low_write_with_info( int do_overshoot, string ... what )
   {
     object key = lock->lock();
-    if( roxen->query("font_oversampling") )
-      face->set_size( 0, size * 2);
+    int oversampling = roxen->query("font_oversampling") ? 2 : 1;
+    if( oversampling != 1 )
+      face->set_size( 0, size * oversampling );
     else
       face->set_size( 0, size );
     if( !sizeof( what ) )
-      return Image.Image( 1,height() );
+      return ([ "img" : Image.Image( 1,height() ) ]);
 
     // nbsp -> ""
     what = map( (array(string))what, replace, "\240", "" );
@@ -188,7 +207,8 @@ class FTFont
                                return encoder->clear()->feed(s)->drain();
                              });
     
-    array(Image.Image) res = map( what, write_row );
+    array(mapping) res_with_info = map( what, lambda(string s) { return low_write_row(do_overshoot, s); });
+    array(Image.Image) res = res_with_info->img;
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
 				  (int)(res[0]->ysize()+
@@ -196,17 +216,23 @@ class FTFont
 					    *y_spacing) ));
 
     float start;
-    if( y_spacing < 0 )
+    if( y_spacing < 0 ) {
       start = (float)rr->ysize()-res[0]->ysize();
+    }
+    int overshoot = res_with_info[0]->overshoot;
 
-    foreach( res, object r )
+    foreach( res_with_info, mapping ri )
     {
+      int yoffset = (int)start;
+      object r = ri->img;
+      //yoffset -= ri->overshoot;
+
       if( j_right )
-        rr->paste_alpha_color( r, 255,255,255, rr->xsize()-r->xsize(), (int)start );
+        rr->paste_alpha_color( r, 255,255,255, rr->xsize()-r->xsize(), yoffset );
       else if( j_center )
-        rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, (int)start );
+        rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, yoffset );
       else
-        rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
+        rr->paste_alpha_color( r, 255,255,255, 0, yoffset );
       start += floatp(y_spacing)?line_height*y_spacing:line_height+y_spacing;
     }
     if( fake_bold > 0 )
@@ -221,10 +247,12 @@ class FTFont
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    if( roxen->query("font_oversampling") )
-      return rr->scale(0.5);
-    else
-      return rr;
+    if( oversampling != 1 )
+      rr = rr->scale(1.0 / oversampling);
+    return ([ "oversampling" : oversampling,
+	      "overshoot" : overshoot / oversampling,
+	      "img" : rr, 
+    ]);
   }
 
   string _sprintf() {
