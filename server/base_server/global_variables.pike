@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.60 2001/01/19 12:41:33 per Exp $
+// $Id: global_variables.pike,v 1.61 2001/01/21 17:45:05 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -38,7 +38,7 @@ private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident");
 // is not.
 void set_up_hilfe_variables( Protocol o )
 {
-  function(DEFVAR) defvar = [function(DEFVAR)] o->defvar;
+  function(DEFVAR) defvar = o->defvar;
 
   defvar( "require_auth", 1,
 	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
@@ -50,8 +50,7 @@ void set_up_hilfe_variables( Protocol o )
 
 void set_up_ftp_variables( Protocol o )
 {
-  function(DEFVAR) defvar =
-   [function(DEFVAR)] o->defvar;
+  function(DEFVAR) defvar = o->defvar;
 
 
   defvar( "FTPWelcome",
@@ -91,8 +90,7 @@ void set_up_ftp_variables( Protocol o )
 
 void set_up_http_variables( Protocol o, int|void fhttp )
 {
-  function(DEFVAR) defvar =
-    [function(DEFVAR)] o->defvar;
+  function(DEFVAR) defvar = o->defvar;
 
   defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
 	 TYPE_FLAG,
@@ -123,8 +121,7 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 
 void set_up_fhttp_variables( Protocol o )
 {
-  function(BDEFVAR) defvar =
-    [function(BDEFVAR)] o->defvar;
+  function(BDEFVAR) defvar = o->defvar;
 
   defvar( "log", "None", LOCALE(78, "Logging method"),
 	  TYPE_STRING_LIST,
@@ -135,7 +132,7 @@ void set_up_fhttp_variables( Protocol o )
 		 "requests/second.</p>"),
           ({ "None", "CommonLog", "Compat" }));
 
-  defvar( "log_file", "$LOGDIR/clog-"+[string]o->ip+":"+[string]o->port,
+  defvar( "log_file", "$LOGDIR/clog-"+o->ip+":"+o->port,
 	  LOCALE(80, "Log file"),
 	  TYPE_FILE,
 	  LOCALE(81, "This file is used if logging is done using the "
@@ -156,8 +153,7 @@ void set_up_fhttp_variables( Protocol o )
 
 void set_up_ssl_variables( Protocol o )
 {
-  function(DEFVAR) defvar =
-    [function(DEFVAR)] o->defvar;
+  function(DEFVAR) defvar = o->defvar;
 
   defvar( "ssl_cert_file", "demo_certificate.pem",
 	  LOCALE(86, "SSL certificate file"),
