@@ -8,7 +8,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.19 2000/06/01 14:36:47 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.20 2000/07/05 12:36:23 per Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -105,8 +105,14 @@ mapping get_my_args( mapping args, object id )
     "data":args->data,
   ]);
 
-  a["background-color"] = id->misc->defines->bgcolor 
-                          || "#eeeeee";
+  if( a->src )
+    catch 
+    {
+      a->stat = (id->conf->stat_file( a->src,id ) ||
+                 file_stat( a->src ))[ ST_MTIME ];
+    };
+
+  a["background-color"] = id->misc->defines->bgcolor || "#eeeeee";
 
   foreach( glob( "*-*", indices(args)), string n )
     a[n] = args[n];
