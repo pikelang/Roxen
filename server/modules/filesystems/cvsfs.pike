@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.12 1997/08/31 03:47:18 peter Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.13 1997/10/03 15:38:41 nisse Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -167,15 +167,25 @@ string find_binaries(array path, array|void extra)
 string find_cvs_dir(string path)
 {
   array(string) components = path / "/";
-  string name =
-    lookup_cvs_module(cvs_program, query("cvsroot"),
-		      components[0] );
-  // werror(sprintf("components = %O\n", components));
-  if (! (name && strlen(name) ))
-    return "Module not found in CVS";
-  if (!file_stat(query("cvsroot") + name))
-    return "No such subdirectory"; 
-  cvs_module_path = name + "/" + (components[1..] * "/");
+  if (strlen(components[0]))
+  {
+    // werror("Looking for cvs submodule.\n");
+    string name =
+      lookup_cvs_module(cvs_program, query("cvsroot"),
+			components[0] );
+    // werror(sprintf("components = %O\n", components));
+    if (! (name && strlen(name) ))
+      return "Module not found in CVS";
+    if (!file_stat(query("cvsroot") + name))
+      return "No such subdirectory"; 
+    cvs_module_path = combine_path(name, (components[1..] * "/"));
+  } else {
+    string name = components[1..] * "/";
+    if (!file_stat(combine_path(query("cvsroot"), name)))
+      return "No such directory";
+    cvs_module_path = name;
+  }
+  // werror(sprintf("Using path '%s'\n", cvs_module_path));
   return 0;
 }
 
@@ -183,7 +193,7 @@ array register_module()
 {
   return ({ MODULE_LOCATION,
 	      "CVS File system",
-	      "Accessing files under CVS control",
+	      "Accessing files under CVS control.",
 	      0, 0 });
 }
 
@@ -199,9 +209,16 @@ void create()
 	 TYPE_STRING, "Colon separated list of directories to search for the cvs "
 	 "and rcs binaries.");
   defvar("cvsmodule", "NONE", "CVS (sub)module", TYPE_STRING,
-	 "<tt>module/subdirectory</tt>, where <tt>module</tt> is a module "
+	 "There are two ways to specify which directory tree in\n"
+	 "the repository is to be mounted:\n"
+	 "<dl><dt><tt>module/subdirectory</tt></dt>\n"
+	 "<dd>where <tt>module</tt> is a module "
 	 "defined in the CVS repository, and <tt>subdirectory</tt> "
-	 "is a path to a subdirectory of the module.");
+	 "is a (possibly empty) path to a subdirectory of the module.</dd>\n"
+	 "<dt><tt>/path</tt></dt>\n"
+	 "<dd>where <tt>path</tt> is the full path to a directory,\n"
+	 "starting at the cvs root. I.e., the module database\n"
+	 "in the CVS repository is not used.</dl>\n");
 }
 
 #if !efun(_static_modules)
@@ -251,7 +268,7 @@ string status()
 mixed stat_file(string name, object id)
 {
   // werror(sprintf("file_stat: Looking for '%s'\n", name));
-  name = query("cvsroot") + cvs_module_path + "/" + name;
+  name = combine_path(combine_path(query("cvsroot"), cvs_module_path), name);
   return file_stat(name + ",v") || file_stat(name);
 }
 
@@ -279,11 +296,12 @@ object|mapping|int find_file(string name, object id)
   mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
   // werror(sprintf("cvs->find_file: Looking for '%s'\n", name));
-  string fname = query("cvsroot") + cvs_module_path + "/" + name;
 
   // werror("Real file '" + fname + "'\n");
   if (cvs_module_path)
     {
+      string fname = combine_path(combine_path(query("cvsroot"),
+					       cvs_module_path), name);
       int is_text = 0;
       if (file_stat(fname + ",v"))
 	{
@@ -311,7 +329,7 @@ object|mapping|int find_file(string name, object id)
 	    f = run_cvs(cvs_program, 0, 0,
 			"-d", query("cvsroot"), "checkout", "-p",
 			@extra_args,
-			cvs_module_path + "/" + name);
+			combine_path(cvs_module_path, name));
 	  }
 	  if (f)
 	    accesses++;
@@ -337,7 +355,8 @@ string try_get_file(string name, object id)
 array find_dir(string name, object id)
 {
   array info;
-  string fname = query("cvsroot") + cvs_module_path + "/" + name;
+  string fname = combine_path(combine_path(query("cvsroot"),
+					   cvs_module_path), name);
   // werror(sprintf("find_dir: Looking for '%s'\n", name));
 
   if (cvs_module_path
