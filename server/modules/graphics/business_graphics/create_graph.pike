@@ -950,7 +950,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Bestäm positionen för y-axeln
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"])-max(si,labelx);
+    (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
@@ -992,7 +992,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
@@ -1002,7 +1002,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
@@ -1369,10 +1369,10 @@ int main(int argc, string *argv)
 		 "orient":"vert",
 		 "data": 
 		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
-		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 2.0, 16.0  }),
+		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 40.0, 4.0  }),
 		    ({1.2, 13.3, 1.5, 10.1 }),
 		    ({3.2, 13.3, 3.5, 13.7} )}),
-		 "fontsize":2,
+		 "fontsize":12,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
@@ -1384,15 +1384,15 @@ int main(int argc, string *argv)
 		 "legendfontsize":2,
 		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!" 
 }),
-		 "labelsize":3,
-		 "xminvalue":1,
+		 "labelsize":12,
+		 "xminvalue":0,
 		 "yminvalue":1,
 		 "vertgrind": 1,
 		 "grindwidth": 0.5
 
   ]);
 
-  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  //  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
