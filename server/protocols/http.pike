@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.442 2004/05/07 17:35:55 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.443 2004/05/08 14:41:32 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1766,7 +1766,7 @@ void send_result(mapping|void result)
 #endif
     MARK_FD("HTTP handled");
   
-    if( (method!="HEAD") && (file->error!=304) )
+    if( (method!="HEAD") && (file->error!=204) )
       // No data for these two...
     {
 #ifdef RAM_CACHE
@@ -1842,7 +1842,7 @@ void send_result(mapping|void result)
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Send =====================================================\n"
 		"%s\n",
-		replace (sprintf ("%O", data),
+		replace (sprintf ("%O", head_string),
 			 ({"\\r\\n", "\\n", "\\t"}),
 			 ({"\n",     "\n",  "\t"})));
 #else
