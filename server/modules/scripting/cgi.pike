@@ -39,7 +39,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.26 1999/08/12 21:18:42 marcus Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.27 1999/08/12 21:20:53 marcus Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -1111,11 +1111,6 @@ void create(object conf)
 	 "The maximum CPU time the script might use in seconds. -2 is unlimited.",
 	 ({ -2, 10, 30, 60, 120, 240 }));
 
-  defvar("kill_call_out", 0, "Limits: Time before killing scripts",
-	 TYPE_INT_LIST|VAR_MORE,
-	 "The maximum real time the script might run in minutes before it's "
-	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
-
   defvar("datasize", -2, "Limits: Memory size", TYPE_INT|VAR_EXPERT,
 	 "The maximum size of the memory used, in Kb. -2 is unlimited.");
 
@@ -1134,6 +1129,11 @@ void create(object conf)
   defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
 	 "The maximum size of the stack used, in kilobytes. -2 is unlimited.");
 #endif
+
+  defvar("kill_call_out", 0, "Limits: Time before killing scripts",
+	 TYPE_INT_LIST|VAR_MORE,
+	 "The maximum real time the script might run in minutes before it's "
+	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
 }
 
 int|string tag_runcgi( string tag, mapping args, string cont, RequestID id )
