@@ -6,7 +6,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.10 2000/05/11 17:52:43 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.11 2000/09/19 06:32:23 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -64,7 +64,7 @@ class TagEmitLanguages {
     else
       langs=defaults;
 
-    function localized=language_low(id->misc->pref_languages->get_language())->language;
+    function localized=language_low(id->misc->pref_languages->get_language()||"en")->language;
     string url=strip_prestate(strip_config(id->raw_url));
     array conf_langs=Array.map(indices(id->config) & languages,
 			       lambda(string lang) { return "-"+lang; } );
