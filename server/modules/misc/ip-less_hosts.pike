@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.21 1998/07/29 06:31:18 neotron Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.22 1998/08/28 01:04:51 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -28,12 +28,20 @@ array register_module()
 }
 
 mapping config_cache = ([ ]);
-
+mapping host_accuracy_cache = ([]);
 int is_ip(string s)
 {
   return(replace(s,
 		 ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." }),
 		 ({ "","","","","","","","","","","" })) == "");
+}
+
+void create() {
+  defvar("minmatch", 30, "Minimum Acceptable Match",
+	 TYPE_INT, 
+	 "If the best match results in a lower match percentage than this variable "
+	 "the access will be made to the default server (the one with this module).");
+
 }
 
 object find_server_for(object id, string host)
@@ -87,8 +95,11 @@ object find_server_for(object id, string host)
 	hn = h;
       }
     }
-    id->conf = config_cache[host] = (c || id->conf);
-
+    if(best >= QUERY(minmatch)) {
+      id->conf = config_cache[host] = (c || id->conf);
+    } else 
+      config_cache[host] = id->conf;
+    host_accuracy_cache[host] = best;
 #elif constant(Array.diff_longest_sequence)
 
     /* The idea of the algorithm is to find the server-url with the longest
@@ -137,7 +148,11 @@ object find_server_for(object id, string host)
 	hn = h;
       }
     }
-    id->conf = config_cache[host] = (c || id->conf);
+    if(best >= QUERY(minmatch))
+      id->conf = config_cache[host] = (c || id->conf);
+    else
+      config_cache[host] = id->conf;
+    host_accuracy_cache[host] = best;
   
 #else /* !constant(Array.diff_longest_sequence) */
     array possible = ({});
@@ -183,19 +198,29 @@ mapping first_try(object id)
 void clear_memory_cache()
 {
   config_cache = ([]);
+  host_accuracy_cache = ([]);  
 }
 
 void start()
 {
-  config_cache = ([]);
+  clear_memory_cache();
 }
 inherit "http";
 string status()
 {
-  string res="<table><tr bgcolor=lightblue><td>Host</td><td>Server</td></tr>";
-  foreach(sort(indices(config_cache)), string s)
+  //  return "Blaha";
+  string res="<table><tr bgcolor=lightblue><td>Host</td><td>Server</td><td>Match %</td></tr>";
+  foreach(sort(indices(config_cache)), string s) {
+    string match;
+    if(zero_type(host_accuracy_cache[s]))
+      match = "100";
+    else if(host_accuracy_cache[s] < QUERY(minmatch)) {
+      match = "less than minimum acceptable";
+    } else 
+      match = host_accuracy_cache[s];
     res+="<tr><td>"+s+"</td><td><a href=/Configurations/"+
       http_encode_string(config_cache[s]->name)+">"+
-      (config_cache[s]->name)+"</a></td></tr>";
+      (config_cache[s]->name)+"</a></td><td>"+match+"</td></tr>";
+  }
   return res+"</table>";
 }
