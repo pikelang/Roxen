@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.765 2001/12/04 12:53:42 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.766 2001/12/17 10:45:35 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2930,7 +2930,13 @@ class ImageCache
 	draw( na, id );
       })) {
 	// File not found.
-	werror("Error in draw: %s\n", describe_backtrace(err));
+	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
+	   err[0][0..21] == "Requesting unknown key")
+	  report_debug("Requesting unknown key %O from %O\n",
+		       id->not_query,
+		       (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	else
+	  report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
       }
       if( !(res = restore( na,id )) )
