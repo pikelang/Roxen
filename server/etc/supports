@@ -1,4 +1,4 @@
-## $Id: supports,v 1.35 1997/07/14 22:32:32 grubba Exp $
+## $Id: supports,v 1.36 1997/07/15 23:55:19 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -88,7 +88,7 @@ netsurfer.2\.[0-9].*      align, pjpeginline, tables, frames, java, font,\
 .*               	basic, center, jpeginline
 omniweb.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
                         fontcolor, imagealign, pjpeginline, pnginline,\
- 		        supsub, ssl, epsinline
+ 		        supsub, ssl, epsinline, cookies
 # }
 
 #section arena {
