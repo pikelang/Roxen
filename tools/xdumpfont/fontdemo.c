@@ -37,13 +37,25 @@ void main()
 	}
 	else if(col < 96)
 	{
-	  putchar('+');
-	  putchar('+');
+	  if(empty == '_')
+	  {
+	    putchar('±');
+	    putchar('±');
+	  } else {
+	    putchar('+');
+	    putchar('+');
+	  }
 	}
 	else if(col < 255)
 	{
-	  putchar('·');
-	  putchar('·');
+	  if(empty == '_')
+	  {
+	    putchar('_');
+	    putchar('_');
+	  } else {
+	    putchar('·');
+	    putchar('·');
+	  }
 	}
 	else 
 	{

@@ -1,5 +1,5 @@
 #include <simulate.h>
-array sizes=({ 8, 16, 32 });
+array sizes=({ 64,16 });
 
 
 array get_font_list()
@@ -31,6 +31,8 @@ array get_font_list()
 
 array fonts = get_font_list();
 
+#define SCALE 8
+
 void main()
 {
   int size;
@@ -41,8 +43,8 @@ void main()
     {
       mkdir("fonts/");
       mkdir("fonts/"+size);
-      perror("Generating "+sprintf(font[0],size*3)+"... ("+size+"/"+font[1]+")\n");
-      popen("time ./xdumpfont '"+sprintf(font[0],size*3)+"'");
+      perror("Generating "+sprintf(font[0],size*SCALE)+"... ("+size+"/"+font[1]+")\n");
+      popen("/usr/proc/bin/ptime ./xdumpfont '"+sprintf(font[0],size*SCALE)+"'");
       mv("font", "fonts/"+size+"/"+font[1]);
     }
   }

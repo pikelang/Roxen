@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.5 1996/12/01 19:18:26 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.6 1996/12/02 13:10:53 per Exp $";
 #include <module.h>
 /* A configuration.. */
 
@@ -75,8 +75,11 @@ class Bignum {
   int msb;
   int lsb=-0x7ffffffe;
 
+  object `-(int i);
   object `+(int i)
   {
+    if(!i) return this;
+    if(i<0) return `-(-i);
     object res = This(lsb+i,msb,2);
     if(res->lsb < lsb) res->msb++;
     return res;
@@ -84,6 +87,8 @@ class Bignum {
 
   object `-(int i)
   {
+    if(!i) return this;
+    if(i<0) return `+(-i);
     object res = This(lsb-i,msb,2);
     if(res->lsb > lsb) res->msb--;
     return res;

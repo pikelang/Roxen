@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.12 1996/12/02 04:32:35 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.13 1996/12/02 13:10:55 per Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
@@ -630,6 +630,10 @@ private inline string fix_logging(string s)
     s=sprintf("%s%2c%s", pre, c, post);
   while(sscanf(s, "%s$int(%d)%s", pre, c, post)==3)
     s=sprintf("%s%4c%s", pre, c, post);
+  if(!sscanf(s, "%s$^%s", pre, post))
+    s+="\n";
+  else
+    s=pre+post;
   return s;
 }
 

@@ -19,11 +19,8 @@ void print_char(unsigned char c, Font *mf)
     {
       int col;
       col = mf->c[c].data[ y*w + x ];
-      if(col < 16)
-      {
-/*	putchar(''); putchar('['); putchar('7'); putchar('m');*/
+      if(col < 16) {
 	putchar('Ø'); putchar('ß');
-/*	putchar(''); putchar('['); putchar('0'); putchar('m');*/
       } else if(col < 64) {
 	putchar('#'); putchar('*');
       }	else if(col < 96) {

@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#define SCALE 8
+
 static Display *display;
 static Pixmap me;
 static XFontStruct *font;
@@ -18,16 +20,12 @@ static int height, baseline;
 static void init_x(int argc, char *argv[])
 {
   /* Open window etc. */
-  XSizeHints size_hints;
-  XEvent report;
-  Colormap colormap;
   XGCValues GCvalues;
 
   char *fname;
 
   unsigned long valuemask;
   int screen_num;
-  int i, odepth;
 
   if(argc < 2)
   {
@@ -45,7 +43,7 @@ static void init_x(int argc, char *argv[])
     exit(1);
   }
   
-  me = XCreatePixmap(display, RootWindow(display, screen_num), 400, 400,
+  me = XCreatePixmap(display, RootWindow(display, screen_num), 1200, 1200,
 		     DefaultDepth(display, screen_num));
   font = XLoadQueryFont(display, fname);
 
@@ -55,7 +53,7 @@ static void init_x(int argc, char *argv[])
     exit(1);
   }
   height = font->ascent + font->descent;
-  baseline = font->ascent / 3;
+  baseline = font->ascent / SCALE;
   
 
   valuemask = GCForeground|GCFont|GCBackground;
@@ -82,21 +80,13 @@ struct char_t {
 void low_dump_char(unsigned char c, struct char_t *cid)
 {
   XImage *char_data;
-  int x, y, m, mx=0, my=0, pos=0, width=cid->width;
+  int x, y, pos=0, width=cid->width;
 
   if(width<=0 || cid->spacing<=0)
   {
     cid->width=0;
-    cid->spacing=0;
-    return;
-  }
-
-  
-  if(width > 400)
-  {
-    fprintf(stderr, "Odd width.\n");
-    width = cid->width = 0;
-    cid->spacing /= 3;
+    if(cid->spacing < 0)
+      cid->spacing=0;
     return;
   }
 
@@ -105,31 +95,28 @@ void low_dump_char(unsigned char c, struct char_t *cid)
   if(!char_data)
   {
     cid->width=0;
-    cid->spacing=0;
     return;
   }
 
-  for(y=0; y<height-2; y+=3)
+  for(y=0; y<height-SCALE+1; y+=SCALE)
   {
-    for(x=0; x<width-2; x+=3)
+    for(x=0; x<width-SCALE+1; x+=SCALE)
     {
-      int c = GetPixel(char_data,x,y) + GetPixel(char_data,x,y+1)
-	+ GetPixel(char_data,x,y+2)   + GetPixel(char_data,x+1,y)
-	+ GetPixel(char_data,x+1,y+1) + GetPixel(char_data,x+1,y+2)
-	+ GetPixel(char_data,x+2,y)   + GetPixel(char_data,x+2,y+1)
-	+ GetPixel(char_data,x+2,y+2);
-      (&cid->data)[pos++] = 255 - ((c*255)/9);
+      int xp, yp, c=0;
+      for(xp=0; xp<SCALE; xp++)
+	for(yp=0; yp<SCALE; yp++)
+	  c += GetPixel(char_data,x+xp,y+yp);
+      (&cid->data)[pos++] = 255 - ((c*255)/(SCALE*SCALE));
     }
-    if((x-3)/3 > mx) mx = (x-3)/3;
   }
-  cid->width  = mx+1;
-  cid->spacing = cid->spacing/3;
+  cid->width  = width/SCALE;
+  cid->spacing = cid->spacing/SCALE;
   XDestroyImage(char_data);
 }
 
 
 int font_size;
-struct char_t *chars[256];
+struct char_t *chars[65536];
 
 void dump_char(unsigned char c)
 {
@@ -146,15 +133,20 @@ void dump_char(unsigned char c)
 
   if((c>=font->min_char_or_byte2) && (c<=font->max_char_or_byte2))
   {
-    character =
-      (struct char_t *)
-      malloc(sizeof(struct char_t)+
-	     font->per_char[c-font->min_char_or_byte2].rbearing/2*height/2);
-    character->width = font->per_char[c-font->min_char_or_byte2].rbearing;
-    character->width *= 1.1;
+    int rw = font->per_char[c-font->min_char_or_byte2].rbearing;
+    
+    character =(struct char_t *)malloc(sizeof(struct char_t) +
+				       ((rw+rw/10)/SCALE+1) * (height/SCALE+1));
+    if(!character)
+    {
+      fprintf(stderr,"Malloc %d bytes failed.\n",
+	      sizeof(struct char_t)+((rw+rw/10)/SCALE+1)*(height/SCALE+1));
+      exit(0);
+    }
+    character->width = (int)((float)rw*1.1);
     character->spacing = width;
   } else {
-    character = (struct char_t *)malloc(sizeof(struct char_t));
+    character = (struct char_t *)malloc(sizeof(struct char_t)+4);
     character->width=0;
     character->spacing=width;
   }
@@ -164,13 +156,13 @@ void dump_char(unsigned char c)
   XFlush(display);
   
   low_dump_char(c, character);
-  font_size += ((sizeof(struct char_t)+character->width*(height/3)-1)/4+1)*4;
+  font_size+=((sizeof(struct char_t)+character->width*(height/SCALE)-1)/4+1)*4;
   chars[ c ] = character;
 }
 
 
 #define FONT_FILE_VERSION 1
-void concatenate_and_write_font()
+void concatenate_and_write_font(int numchars)
 {
   struct font {
     ulong cookie;
@@ -178,44 +170,47 @@ void concatenate_and_write_font()
     ulong numchars;
     ulong height;
     ulong baseline;
-    ulong offsets[256];
+    ulong offsets[numchars];
   } *font;
   char *data;
   unsigned int pos, clen, c;
-  FILE *f;
+  int fd;
   pos = sizeof(struct font);
-  data = (char *)malloc(font_size + sizeof(struct font));
+  /* Scratch buffer. Has to be big enough.. */
+  data = (char *)malloc(font_size*2 + sizeof(struct font));
   font = (struct font *)data;
 
   font->cookie = htonl(0x464f4e54);
   font->version = htonl(FONT_FILE_VERSION);
-  font->height = htonl(height);
+  font->height = htonl(height/SCALE);
   font->baseline = htonl(baseline);
-  font->numchars = htonl(256);
+  font->numchars = htonl(numchars);
   
-  for(c=0; c<256; c++)
+  for(c=0; c<numchars; c++)
   {
-    clen = ((sizeof(struct char_t)+chars[c]->width*height-1)/4+1)*4;
+    if(chars[c]->width)
+      clen = ((sizeof(struct char_t)+chars[c]->width*height/SCALE-1)/4+1)*4;
+    else
+      clen = sizeof(struct char_t);
     font->offsets[c]=htonl(pos);
     chars[c]->width = htonl(chars[c]->width);
     chars[c]->spacing = htonl(chars[c]->spacing);
     memcpy(data+pos, chars[c], clen);
     pos+=clen;
   }
-  f = fopen("font", "w");
-  fwrite(data, font_size+sizeof(struct font), 1, f);
-  fflush(f);
-  fclose(f);
+  fd = open("font", O_WRONLY|O_CREAT);
+  write(fd, data, pos);
+  close(fd);
 }
 
 void main(int argc, char *argv[])
 {
   int i;
+  int numchars = 256;
   XEvent xev;
   init_x(argc,argv);
-  for(i=0;i<256;i++) dump_char(i);
-  height /= 3;
-  concatenate_and_write_font();
+  for(i=0;i<numchars;i++) dump_char(i);
+  concatenate_and_write_font(numchars);
 } 
 
 

@@ -36,11 +36,11 @@ fcgi:
 	@(strip fcgi || echo)
 
 ssl:	ssl.c Makefile
-	gcc $(CFLAGS) -Wall -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o ssl $(SRCDIR)/ssl.c -lssl -lcrypto $(LIBS)
+	$(CC) $(CFLAGS) -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o ssl $(SRCDIR)/ssl.c -lssl -lcrypto $(LIBS)
 	@(strip ssl || echo)
 
 puressl: ssl.o	Makefile
-	purify gcc -Wall -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o puressl ssl.o -lssl -lcrypto $(LIBS)
+	purify $(CC) -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o puressl ssl.o -lssl -lcrypto $(LIBS)
 
 roxen_hostname: roxen_hostname.o Makefile
 	$(CC) $(ARGS) -o roxen_hostname roxen_hostname.o $(LIBS)

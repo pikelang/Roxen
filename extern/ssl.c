@@ -392,6 +392,7 @@ int next_accept(int from, char **name)
 	abort();
 	
       case EINTR: /* Just continue .. */
+       continue;
       }
     }
     

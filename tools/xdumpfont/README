@@ -7,7 +7,9 @@ readfont.c
   library for reading the resulting fontfiles
 
 makefonts.lpc 
-  o Generate a copy of each font in your X-server in 64, 32, 16 and 8 "points". Quite close to pixels :-)
+  o Generate a copy of each font in your X-server in 64, 32, 16 and 8
+    "points". Quite close to pixels :-)
 
 banner
-  o Test program. Reads the font 'font' in the current directory, and prints the arguments using that font to the tty.
+  o Test program. Reads the font 'font' in the current directory, and
+    prints the arguments using that font to the tty.
