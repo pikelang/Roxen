@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.117 1999/09/02 18:34:07 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.118 1999/09/05 01:43:40 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -171,11 +171,12 @@ void start(int num, object configuration)
 void stop()
 {
   /* Reload Pie, Bars and Graph */
+#ifdef MODULE_DEBUG
   mapping progs = master()->programs;
-  foreach(glob(combine_path(roxen->filename(this),"../*"), indices(progs)),
+  foreach(glob(combine_path(__FILE__,"../*"), indices(progs)),
           string to_delete)
     m_delete(progs, to_delete);
-  loaded = 0;
+#endif
 }
 
 void create()
