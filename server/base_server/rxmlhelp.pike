@@ -11,7 +11,30 @@
 # define RXMLHELP_WERR(X)
 #endif
 
-// --------------------- Help Layout --------------------
+// --------------------- Layout help functions --------------------
+
+string mktable(array table) {
+  string ret="<table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">\n"
+    "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n";
+
+  foreach(table, array row)
+    ret+="<tr><td bgcolor=\"#d9dee7\">"+(row*"</td><td bgcolor=\"#d9dee7\">")+"</td></tr>\n";
+
+  ret+="</table></tr></td></table>";
+  return ret;
+}
+
+string available_languages(object id) {
+  string pl="en";
+  if(id->misc->pref_languages && sizeof(id->misc->pref_languages)) {
+    pl=id->misc->pref_languages[0];
+    if(!roxen->languages[pl]) pl="en";
+  }
+  mapping languages=roxen->languages[pl]->languages;
+  return mktable( Array.map(indices(languages), lambda(string code) { return ({ code, languages[code] }); } ));
+}
+
+// --------------------- Help layout functions --------------------
 
 private string desc_cont(string t, mapping m, string c, string rt)
 {
@@ -48,25 +71,21 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
   case "hr":
     return c+"<hr>"+parsed;
   case "vert":
-    return "<br><table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">"
-      "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n"
-      "<tr><td bgcolor=\"#d9dee7\">"+c+"</td></tr>\n"
-      "<tr><td bgcolor=\"#d9dee7\">"+parsed+"</td></tr>\n"
-      "</table></tr></td></table>";
+    return "<br>"+mktable( ({ ({ c }), ({ parsed }) }) );
   case "hor":
   default:
-    return "<br><table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">"
-      "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n"
-      "<tr><td bgcolor=\"#d9dee7\">"+c+"</td><td bgcolor=\"d9dee7\">"+parsed+"</td></tr>\n"
-      "</table></tr></td></table>";
+    return "<br>"+mktable( ({ ({ c, parsed }) }) );
   }
 }
 
 private string format_doc(string|mapping doc, string name, void|object id) {
   if(mappingp(doc)) {
-    if(id && id->misc->pref_language) {
-      object lang=roxen->languages[id->misc->pref_language];
-      doc=doc[lang?lang->id[1]:"standard"];
+    if(id && id->misc->pref_languages) {
+      object lang=roxen->languages[id->misc->pref_languages[0]];
+      if(lang && doc[lang->id()[1]])
+	doc=doc[lang->id()[1]];
+      else
+	doc=doc["standard"];
     }
     else
       doc=doc->standard;
@@ -74,7 +93,8 @@ private string format_doc(string|mapping doc, string name, void|object id) {
   return parse_html(doc, ([]), ([
     "desc":desc_cont,
     "attr":attr_cont,
-    "ex":ex_cont
+    "ex":ex_cont,
+    "lang":lambda(string t, mapping m) { return available_languages(id); }
   ]), name, id);
 }
 
