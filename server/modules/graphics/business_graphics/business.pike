@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.103 1998/06/24 02:10:40 js Exp $";
+constant cvs_version = "$Id: business.pike,v 1.104 1998/06/24 10:57:11 wellhard Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -572,7 +572,7 @@ constant _diagram_args =
    "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
-   "usemymagicpalette"});
+   "colortable_cache"});
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args = 
@@ -602,7 +602,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->help) return register_module()[2];
 
-  if(m->usemymagicpalette) res->usemymagicpalette=m->usemymagicpalette;
+  if(m->colortable_cache) res->colortable_cache=m->colortable_cache;
   if(m->type) res->type = m->type;
   else return syntax("You must specify a type for your table.<br>"
 		     "Valid types are: "
@@ -1001,13 +1001,14 @@ mapping find_file(string f, object id)
     bg_timers+=diagram_data->bg_timers;
 #endif
   object ct;
-  if(res->usemymagicpalette)
+  if(res->colortable_cache)
   {
-    ct = palette_cache[res->usemymagicpalette];
+    ct = palette_cache[res->colortable_cache];
     if(ct)
       werror("Palette found in in cache...\n");
     if(!ct)
-      ct = palette_cache[res->usemymagicpalette] = Image.colortable(img)->nodither();
+      ct = palette_cache[res->colortable_cache] =
+	   Image.colortable(img)->nodither();
   }
 
 //   if (res->image)
