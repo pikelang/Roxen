@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.95 1997/08/13 02:58:31 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.96 1997/08/13 03:02:02 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1179,7 +1179,7 @@ object enable_configuration(string name)
   object cf = Configuration(name);
   configurations += ({ cf });
   current_configuration = cf;
-  report_notice("Enabled the virtual server "+name);
+  report_notice("Enabled the virtual server \""+name+"\".");
   return cf;
 }
 
@@ -1665,6 +1665,12 @@ void initiate_configuration_port( int|void first )
   {
     foreach(QUERY(ConfigPorts), port)
     {
+      if ((< "ssl", "ssleay" >)[port[1]]) {
+	// Obsolete versions of the SSL protocol.
+	report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+		       "Converted to SSL3.\n");
+	port[1] = "ssl3";
+      }
       program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
       function rp;
       array tmp;

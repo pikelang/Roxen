@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.51 1997/08/13 02:58:26 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.52 1997/08/13 03:01:09 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -652,7 +652,7 @@ public string status()
       "<ul><table>\n";
     foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
       res += sprintf("<tr align=right><td><b>%s</b></td>"
-		     "<td>%d time%s</td></tr>\n",
+		     "<td align=right>%d</td><td> time%s</td></tr>\n",
 		     upper_case(cmd), extra_statistics->ftp->commands[cmd],
 		     (extra_statistics->ftp->commands[cmd] == 1)?"":"s");
     }
@@ -1281,6 +1281,12 @@ void start(int num)
       array old = port;
       object o;
     
+      if ((< "ssl", "ssleay" >)[port[1]]) {
+	// Obsolete versions of the SSL protocol.
+	report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+		       "Converted to SSL3.\n");
+	port[1] = "ssl3";
+      }
       if(rp = ((object)("protocols/"+port[1]))->real_port)
 	if(tmp = rp(port, this_object()))
 	  port = tmp;
