@@ -69,7 +69,10 @@ function clearToPopup(popup)
   clearHideTimers(popups.length - 1);
   while(popups.length > 0 && popup != popups[popups.length - 1].name)
   {
-    hide(popups[popups.length - 1].name);
+    var p = popups[popups.length - 1];
+    hide(p.name);
+    if (p.properties.hide_callback)
+      p.properties.hide_callback(p.name);
     popups.length--;
   }
 }
