@@ -40,8 +40,8 @@ array(string) verify_set( string new_value ) {
 #endif
 
   if(check_domain) {
-    array dns=Protocols.DNS.client()->gethostbyname(domain);
-    if(!sizeof(dns) || !sizeof(dns[1]))
+    string dns=Protocols.DNS.client()->get_primary_mx(domain);
+    if(!dns)
       return ({ "The domain "+domain+" could not be found.", new_value });
   }
   // We could perhaps take this a step further and ask the mailserver if the account is present.
