@@ -1,8 +1,10 @@
 /*
- * $Id: feature_list.pike,v 1.1 1997/11/30 15:57:54 grubba Exp $
+ * $Id: feature_list.pike,v 1.2 1997/11/30 16:08:58 grubba Exp $
  */
 
 inherit "wizard";
+
+import Array;
 
 constant name = "Development//Pike feature-list";
 
@@ -83,7 +85,7 @@ mixed page_0(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  string res = "<b>Features:</b><ul>";
+  string res = "<b>Features:</b><ul>\n";
   foreach(({ "dynamic_modules", "threads", "_Crypto", "CommonLog",
 	     "Dbm", "Gdbm", "Gmp", "Gz", "MIME",
 	     "Msql", "Mysql", "Odbc", "Oracle", "Postgres", "Ssleay",
@@ -92,7 +94,16 @@ mixed page_0(object id, object mc)
       res += " "+s;
     }
   }
-  res += "</ul>";
+  res += "</ul><br>\n";
+  array disabled = sort(filter(indices(modules),
+			       lambda(string s, mapping m) {
+				 return(m[s] != 1);
+			       }, modules));
+  if (sizeof(disabled)) {
+    res += "<b>Disabled modules:</b><ul>\n";
+    res += disabled * " ";
+    res += "</ul><br>\n";
+  }
   return(res);
 }
 
@@ -103,13 +114,15 @@ mixed page_1(object id, object mc)
   }
   return("<b>All modules:</b><ul>\n" +
 	 html_table(({ "Module name", "State" }),
-		    Array.map(sort(indices(modules)),
-			      lambda(string s, mapping r) {
-				return ({
-				  s,
-				  ({ "Disabled", "N/A", "Enabled" })[ r[s] + 1]
-				});
-			      }, modules)) +
+		    map(sort(indices(modules)),
+			lambda(string s, mapping r) {
+			  return ({
+			    s,
+			    ({
+			      "<font color='#ff0000'><b>Disabled</b></font>",
+			      "N/A", "Enabled" })[ r[s] + 1]
+			  });
+			}, modules)) +
 	 "</ul>\n");
 }
 
