@@ -5,15 +5,7 @@ inherit "../logutil.pike";
 
 string module_global_page( RequestID id, Configuration conf )
 {
-  switch( id->variables->action )
-  {
-   default:
-     return "<insert file=global_module_page.inc nocache>\n";
-   case "add_module":
-     return "<insert file=add_module.inc nocache>\n";
-   case "delete_module":
-     return "<insert file=delete_module.inc nocache>\n";
-  }
+  return "<insert file=global_module_page.inc nocache>\n";
 }
 
 #define translate( X ) _translate( (X), id )
@@ -95,6 +87,13 @@ do                                                                      \
   return res;
 }
 
+int creation_date = time();
+int no_reload()
+{
+  return creation_date > file_stat( __FILE__ )[ST_MTIME];
+}
+
+mapping current_compile_errors = ([]);
 string devel_buttons( object c, string mn, object id )
 {
   object mod = c->find_module( replace( mn,"!","#" ) );
@@ -102,7 +101,19 @@ string devel_buttons( object c, string mn, object id )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == parse_rxml( "<cf-locale get=reload>",id ) )
+    {
+      object ec = roxenloader.LowErrorContainer();
+      roxenloader.push_compile_error_handler( ec );
       c->reload_module( replace(mn,"!","#" ) );
+      roxenloader.pop_compile_error_handler();
+      if( strlen( ec->get() ) )
+        current_compile_errors[ mn ] = html_encode_string(ec->get());
+      else
+        m_delete(current_compile_errors, mn );
+      mod = c->find_module( replace( mn,"!","#" ) );
+      if( !mod )
+        return "<h1>FAILED TO RELOAD MODULKE! FATAL! AJEN!</h1>";
+    }
     else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
     {
       mod->error_log = ([
@@ -112,7 +123,10 @@ string devel_buttons( object c, string mn, object id )
       ]);
     }
   }
-  return "<input type=hidden name=section value='"+id->variables->section+"'>"
+  return (current_compile_errors[ mn ] ?
+          "<font color=red><pre>"+current_compile_errors[ mn ]+
+          "</pre></font>" : "" )
+         +"<input type=hidden name=section value='"+id->variables->section+"'>"
          "<submit-gbutton preparse><cf-locale get=reload></submit-gbutton>"+
          (sizeof( mod->error_log ) ?
          "<submit-gbutton preparse><cf-locale get=clear_log></submit-gbutton>":
@@ -215,12 +229,15 @@ string parse( RequestID id )
 
   if( sizeof( path ) == 1 )
   {
+    /* Global information for the configuration */
     switch( id->variables->config_page )
     {
      default: /* Status info */
        string res="<br><blockquote><h1>Urls</h1>";
        foreach( conf->query( "URLs" ), string url )
          res += url+"<br>";
+
+       res+="<h1><cf-locale get=eventlog></h1><insert file=log.pike nocache>";
 
        res +="<h1>Request status</h1>";
        res += conf->status();
@@ -231,12 +248,8 @@ string parse( RequestID id )
          res += rec_print_tree( Program.inherit_tree( object_program(conf) ) );
          res += "</dl>";
        }
-
        return res+"<br>";
-     case "event_log":
-       return "<insert file=log.pike nocache>";
     }
-    /* Global information for the configuration */
   } else {
     switch( path[ 1 ] )
     {
