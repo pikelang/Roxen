@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.61 2003/06/11 15:46:41 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.62 2003/06/17 12:35:16 grubba Exp $";
 
 class Variable
 {
@@ -1031,79 +1031,65 @@ class RequestID
 
 #if constant(Parser.XML.Tree.XMLNSParser)
 
+static constant Node = Parser.XML.Tree.Node;
+static constant TextNode = Parser.XML.Tree.TextNode;
+static constant ElementNode = Parser.XML.Tree.ElementNode;
+
 class XMLStatusNode
 {
-  inherit Parser.XML.Tree.Node;
+  inherit ElementNode;
   static void create(int|string code)
   {
+    ::create("DAV:status", ([]));
     if (intp(code)) {
       code = sprintf("HTTP/1.1 %d %s", code,
 		     errors[code]||"Unknown status");
     }
-    ::create(Parser.XML.Tree.XML_ELEMENT,
-	     "DAV:status", ([]), "", "DAV:status");
-    add_child(Parser.XML.Tree.Node(Parser.XML.Tree.XML_TEXT,
-				   "", 0, code));
+    add_child(TextNode(code));
   }
 }
 
 class XMLPropStatNode
 {
-  inherit Parser.XML.Tree.Node;
+  inherit Parser.XML.Tree.ElementNode;
 
-  static constant Node = Parser.XML.Tree.Node;
-
-  static mapping(string:string|array(Node)|Node) properties = ([]);
+  static mapping(string:Node) properties = ([]);
   static multiset(string) descriptions = (<>);
 
-  array(Node) get_children()
-  {
-    Node prop_node;
-    foreach(::get_children(), Node n) {
-      if ((n->get_node_type() == Parser.XML.Tree.XML_ELEMENT) &&
-	  (n->get_full_name() == "DAV:prop")) {
-	prop_node = n;
-      }
-    }
-    prop_node->
-      replace_children(map(indices(properties),
-			   lambda(string prop_name) {
-			     string|array(Node)|Node value =
-			       properties[prop_name];
-			     if (stringp(value)) {
-			       value = Node(Parser.XML.Tree.XML_TEXT,
-					    "", 0, value);
-			     }
-			     Node n = Node(Parser.XML.Tree.XML_ELEMENT,
-					   prop_name, ([]), "", prop_name);
-			     if (value) {
-			       if (arrayp(value)) {
-				 n->replace_children(value);
-			       } else {
-				 n->replace_children(({ value }));
-			       }
-			     }
-			     return n;
-			   }));
-    if (sizeof(descriptions)) {
-      Node n = Node(Parser.XML.Tree.XML_ELEMENT,
-		    "DAV:responsedescription", ([]), "",
-		    "DAV:responsedescription");
-      n->add_child(Node(Parser.XML.Tree.XML_TEXT, "", 0,
-			indices(descriptions)*"\n"));
-      add_child(n);
-    }
-    return ::get_children();
-  }
+  static Node prop_node;
+  static Node description_node;
 
-  void add_property(string prop_name, string|array(Node)|Node value)
+  void add_property(string prop_name, void|string|array(Node)|Node value)
   {
-    properties[prop_name] = value;
+    Node n;
+    if (!(n = properties[prop_name])) {
+      n = ElementNode(prop_name, ([]));
+      properties[prop_name] = n;
+      prop_node->add_child(n);
+    }
+    if (value) {
+      if (stringp(value)) {
+	value = TextNode(value);
+      }
+      if (arrayp(value)) {
+	n->replace_children(value);
+      } else {
+	n->replace_children(({ value }));
+      }      
+    } else {
+      n->replace_children(({}));
+    }
   }
 
   void add_description(string description)
   {
+    if (descriptions[description]) return;
     descriptions[description] = 1;
+    if (!description_node) {
+      description_node = ElementNode("DAV:responsedescription", ([]));
+      add_child(description_node);
+    }
+    description_node->add_child(TextNode(description + "\n"));
   }
 
   int http_code;
@@ -1112,19 +1098,14 @@ class XMLPropStatNode
   {
     http_code = code || 200;
 
-    ::create(Parser.XML.Tree.XML_ELEMENT,
-	     "DAV:propstat", ([]), "",
-	     "DAV:propstat");
-    add_child(Node(Parser.XML.Tree.XML_ELEMENT,
-		   "DAV:prop", ([]), "",
-		   "DAV:prop"));
+    ::create("DAV:propstat", ([]));
+    add_child(prop_node = ElementNode("DAV:prop", ([])));
     add_child(XMLStatusNode(http_code));
   }
 }
 
 class MultiStatus
 {
-  static constant Node = Parser.XML.Tree.Node;
   static mapping(string:array(Node)) status_set = ([]);
 
   void add_response(string href, Node response_node)
@@ -1192,12 +1173,10 @@ class MultiStatus
 	   status_set);
 
     foreach(status_set; string href; array(Node) responses) {
-      Node href_node = Node(Parser.XML.Tree.XML_ELEMENT,
-			    "DAV:href", ([]), "", "DAV:href");
-      href_node->add_child(Node(Parser.XML.Tree.XML_TEXT, "", 0, href));
+      Node href_node = ElementNode("DAV:href", ([]));
+      href_node->add_child(TextNode(href));
       (response_xml[i++] =
-	Node(Parser.XML.Tree.XML_ELEMENT,
-	     "DAV:response", ([]), "", "DAV:response"))->
+	ElementNode("DAV:response", ([])))->
 	  replace_children(({href_node})+responses);
     }
     root->get_first_element("DAV:multistatus", 1)->
