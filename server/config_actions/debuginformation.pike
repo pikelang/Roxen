@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.10 1998/03/20 03:29:53 per Exp $
+ * $Id: debuginformation.pike,v 1.11 1998/03/25 00:07:58 per Exp $
  */
 
 inherit "wizard";
@@ -90,12 +90,13 @@ mixed page_1(object id, object mc)
     return res+mktable(({"Function",-60,"Time",7,"Calls",6,"Time/Call",10}),
 		       get_prof_info(id->variables->subnode));
 }
+#endif
+
 
 int wizard_done()
 { 
   return -1;
 }
-#endif
 
 mixed page_0(object id, object mc)
 {
