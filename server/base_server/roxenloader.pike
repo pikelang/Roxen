@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.359 2004/08/18 14:19:26 grubba Exp $
+// $Id: roxenloader.pike,v 1.360 2004/10/19 14:38:57 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.359 2004/08/18 14:19:26 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.360 2004/10/19 14:38:57 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1689,8 +1689,8 @@ void low_start_mysql( string datadir,
 		     "local-infile = 0\n"
 #endif
 		     "skip-name-resolve\n"
-		     "bind-address = "+env->MYSQL_HOST+"\n"
-		     "user = "+uid+"\n");
+		     "bind-address = "+env->MYSQL_HOST+"\n" +
+		     (uid ? "user = " + uid : "") + "\n");
 
 #ifdef __NT__
   cfg_file = replace(cfg_file, "\n", "\r\n");
@@ -1884,7 +1884,7 @@ void start_mysql()
 
   low_start_mysql( mysqldir,query_mysql_dir(),
 #if constant(getpwuid)
-		   getpwuid(getuid())[ 0 ]
+		   (getpwuid(getuid()) || ({0}))[ 0 ]
 #else /* Ignored by the start_mysql script */
 		0
 #endif
