@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.57 1998/06/26 15:42:17 grubba Exp $
+ * $Id: ftp2.pike,v 1.58 1998/06/26 15:47:13 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2208,6 +2208,7 @@ class FTPSession
     auth = 0;
     user = args;
     password = 0;
+    logged_in = 0;
     cwd = "/";
     master_session->method = "LOGIN";
     if ((< 0, "ftp", "anonymous" >)[user]) {
