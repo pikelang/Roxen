@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.165 2001/06/11 23:14:28 mast Exp $
+// $Id: module.pmod,v 1.166 2001/06/13 13:51:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2318,19 +2318,22 @@ class Frame
 
       else {
 	string s;
+	if (!args || !content && !(flags & FLAG_EMPTY_ELEMENT)) {
 #ifdef MODULE_DEBUG
-	if (mixed err = catch {
+	  if (mixed err = catch {
 #endif
-	  s = t_xml (PXml)->eval (this->raw_tag_text,
-				  get_context(), empty_tag_set);
+	    s = t_xml (PXml)->eval (this->raw_tag_text,
+				    get_context(), empty_tag_set);
 #ifdef MODULE_DEBUG
-	}) {
-	  if (objectp (err) && ([object] err)->thrown_at_unwind)
-	    fatal_error ("Can't save parser state when evaluating arguments.\n");
-	  throw_fatal (err);
+	  }) {
+	    if (objectp (err) && ([object] err)->thrown_at_unwind)
+	      fatal_error ("Can't save parser state when evaluating arguments.\n");
+	    throw_fatal (err);
+	  }
+#endif
+	  if (!args && !content) return s;
 	}
-#endif
-	if (!args && !content) return s;
+	else s = this->raw_tag_text;
 
 	[string name, mapping(string:string) parsed_args,
 	 string parsed_content] = t_xml->parse_tag (this->raw_tag_text);
@@ -2343,7 +2346,7 @@ class Frame
 		       tag->name, this->raw_tag_text);
 #endif
 	if (!args) args = parsed_args;
-	if (!content) content = parsed_content;
+	if (!content && !(flags & FLAG_EMPTY_ELEMENT)) content = parsed_content;
 	return result_type->format_tag (name, args, content, tag->flags);
       }
 #undef CHECK_RAW_TEXT
@@ -5063,14 +5066,15 @@ static class TXml
 	      throw (0);
 	    }
 	    else {
+	      string name = p->tag_name();
 	      p->_set_tag_callback (0);
-	      p->add_tag (p->tag_name(),
+	      p->add_tag (name,
 			  lambda (object p, mapping a) {
 			    res = p->tag();
 			    res[2] = 0;
 			    throw (0);
 			  });
-	      p->add_container (p->tag_name(),
+	      p->add_container (name,
 				lambda (object p, mapping a, string c) {
 				  res = ({p->tag_name(), a, c});
 				  throw (0);
@@ -5118,7 +5122,7 @@ static class TXml
 	  res->add (Roxen->html_encode_tag_value (args[arg]));
 	}
 
-    if (content && sizeof (content)) {
+    if (content) {
       res->add (">"), res->add (content);
       res->add ("</"), res->add (tagname), res->add (">");
     }
