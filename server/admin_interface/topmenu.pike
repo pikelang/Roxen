@@ -1,7 +1,5 @@
 #include <admin_interface.h>
 
-#define  tablist ("<tablist "+config_setting2("toptabs-args")+">")
-
 array selections =
 ({
   ({ "Home",    "hype",      ".",               0 }),
@@ -12,7 +10,7 @@ array selections =
 //({ "Events",  "event_log", "event_log/",      "View Settings"}),
   ({ "Tasks",   "tasks",     "tasks/",          "Tasks" }),
   ({ "DBs",     "dbs",       "dbs/",            "View Settings"}),
-  ({ "Docs",    "docs",      "docs/",           0 }),
+//({ "Docs",    "docs",      "docs/",           0 }),
 });
 
 // Reloading this program zaps the last-visited info, which is rather
@@ -26,7 +24,7 @@ mapping last_seen_on = ([]);
 
 string parse( RequestID id )
 {
-  string res = tablist;
+  string res = "<tablist "+config_setting2("toptabs-args")+">";
   foreach( selections, array t )
   {
     if(!t[3] || config_perm( t[3] ) )
