@@ -18,6 +18,7 @@ PIKEVERSION=@PIKEVERSION@
 all:	make_vpath @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 
 make_vpath: make_vpath.in
+	@touch $(SRCDIR)/make_vpath
 	@echo
 	@echo "Warning: $(MAKE) doesn't seem to understand VPATH"
 	@echo
@@ -458,3 +459,4 @@ tar_dist:
 
 dist: copy_dist tar_dist
 	@echo Distribution build complete.
+
