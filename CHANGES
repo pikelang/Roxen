@@ -1,3 +1,14 @@
+Changes since Roxen Challenger 1.2.46 Infra Red
+-----------------------------------------------
+
+o Improved Postgres configure tests.
+
+o Fixed PATH_INFO to work when using <insert>.
+
+o Modified <insert> so that appended query variables are sent to the
+  included script.
+
+
 Changes since Roxen Challenger 1.2.45 Yellow
 -----------------------------------------------
 
