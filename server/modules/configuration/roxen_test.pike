@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.17 2001/03/15 18:38:39 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.18 2001/03/24 02:34:41 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -141,7 +141,7 @@ void xml_test(string t, mapping args, string c) {
   Parser.HTML parser =
     Parser.HTML()->
     add_containers( ([ "rxml" :
-		       lambda(string t, mapping m, string c) {
+		       lambda(object t, mapping m, string c) {
 			 test_test( c );
 			 mixed err =
 			   catch( res = Roxen.parse_rxml( rxml, id ));
@@ -157,38 +157,48 @@ void xml_test(string t, mapping args, string c) {
 			   no_canon = 1;
 		       },
 		       "result" :
-		       lambda(string t, mapping m, string c) {
+		       lambda(object t, mapping m, string c) {
 			 if( !no_canon )
 			   c = canon_html( c );
 			 if(res != c) {
 			   if(m->not) return;
-			   test_error("Failed (%O != %O)\n", res, c);
+			   test_error("Failed (result %O != %O)\n", res, c);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
 		       "glob" :
-		       lambda(string t, mapping m, string c) {
+		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   test_error("Failed (%O does not match %O)\n",
+			   test_error("Failed (result %O does not match %O)\n",
 				      res, c);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
 		       "has-value" :
-		       lambda(string t, mapping m, string c) {
+		       lambda(object t, mapping m, string c) {
 			 if( !has_value(res, c) ) {
 			   if(m->not) return;
-			   test_error("Failed (%O does not contain %O)\n",
-				      rxml, res, c);
+			   test_error("Failed (result %O does not contain %O)\n",
+				      res, c);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+		       "regexp" :
+		       lambda(object t, mapping m, string c) {
+			 if( !Regexp(c)->match(res) ) {
+			   if(m->not) return;
+			   test_error("Failed (result %O does not match %O)\n",
+				      res, c);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
     ]) )
-    ->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
+    ->add_tags( ([ "add" : lambda(object t, mapping m, string c) {
 			     switch(m->what) {
 			       default:
 				 test_error("Could not <add> %O; "
@@ -225,7 +235,7 @@ void xml_test(string t, mapping args, string c) {
   return;
 }
 
-void xml_comment(string t, mapping m, string c) {
+void xml_comment(object t, mapping m, string c) {
   if(verbose)
     report_debug(c + (c[-1]=='\n'?"":"\n"));
 }
