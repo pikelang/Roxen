@@ -24,8 +24,8 @@ string|mapping parse( RequestID id )
       "<subtablist width='100%'>"
       "<st-tabs></st-tabs>"
       "<st-page>"+
-      sprintf(LOCALE(235,"Are you sure you want to disable the site %s?"),
-	      cf->name)+
+      (sprintf((string)(LOCALE(235,"Are you sure you want to disable the site %s?"))+"\n",
+               (cf->name||"")))+
       "<br /><table width='100%'><tr width='100%'>"
       "<input type=hidden name=site value='"+
       Roxen.html_encode_string(id->variables->site)+"' />"
