@@ -25,13 +25,14 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.82 2001/03/30 17:12:49 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.83 2001/04/03 07:29:40 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
 
 roxen.ImageCache  button_cache;
+int do_ext;
 
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GButton";
@@ -195,6 +196,7 @@ function TIMER( function f )
 void start()
 {
   button_cache = roxen.ImageCache("gbutton", TIMER(draw_button));
+  do_ext = query("ext");
 }
 
 string status() {
@@ -695,9 +697,15 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
 mapping find_internal(string f, RequestID id)
 {
-  if(strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
-    f = f[..strlen(f)-5];
-  return button_cache->http_file_answer(f, id);
+  // It's not enough to
+  //  1. Only do this check when the ext flag is set, old URLs might
+  //     live in caches
+  //
+  //  2. Check str[-4] for '.', consider .jpeg .tiff etc.
+  //
+  // However, . is not a valid character in the ID, so just cutting at
+  // the first one works.
+  return button_cache->http_file_answer( (f/".")[0], id );
 }
 
 mapping __stat_cache = ([ ]);
@@ -792,7 +800,7 @@ class ButtonFrame {
       query_absolute_internal_location(id) +
       button_cache->store( ({ new_args, content }), id);
 
-    if(query("ext"))
+    if(do_ext)
       img_src += "." + (new_args->format || "gif");
 
 //     werror("argcache->store took %dµs\n", gethrtime()-t );

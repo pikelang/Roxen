@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.40 2001/03/30 11:35:46 jhs Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.41 2001/04/03 07:29:34 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -110,6 +110,8 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 ]);
 #endif
 
+int do_ext;
+
 void create()
 {
   defvar("ext", Variable.Flag(0, VAR_MORE,
@@ -124,6 +126,7 @@ void create()
 void start()
 {
   the_cache = roxen.ImageCache( "cimg", generate_image );
+  do_ext = query("ext");
 }
 
 mapping(string:function) query_action_buttons() {
@@ -185,9 +188,15 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
 
 mapping find_internal( string f, RequestID id )
 {
-  if(strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
-    f = f[..strlen(f)-5];
-  return the_cache->http_file_answer( f, id );
+  // It's not enough to
+  //  1. Only do this check when the ext flag is set, old URLs might
+  //     live in caches
+  //
+  //  2. Check str[-4] for '.', consider .jpeg .tiff etc.
+  //
+  // However, . is not a valid character in the ID, so just cutting at
+  // the first one works.
+  return the_cache->http_file_answer( (f/".")[0], id );
 }
 
 mapping get_my_args( mapping args, RequestID id )
@@ -253,7 +262,7 @@ class TagCimgplugin
     catch // This code will fail if the image does not exist.
     {
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
-      if(query("ext"))
+      if(do_ext)
 	res->src += "." + (a->format || "gif");
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
@@ -282,7 +291,7 @@ class TagCImg
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
       string ext = "";
-      if(query("ext"))
+      if(do_ext)
 	ext = "." + (a->format || "gif");
       args->src = query_absolute_internal_location( id )
 		+ the_cache->store( a, id ) + ext;
@@ -313,7 +322,7 @@ class TagCImgURL {
     {
       result = query_absolute_internal_location(id)
 	     + the_cache->store(get_my_args(check_args( args ), id ), id)
-	     + (query("ext") ? "" : "." + (args->format || "gif"));
+	     + (do_ext ? "." + (args->format || "gif") : "");
       return 0;
     }
   }
