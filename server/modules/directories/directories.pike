@@ -11,10 +11,9 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.58 2000/05/01 05:30:29 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.59 2000/05/05 23:31:21 nilsson Exp $";
 constant thread_safe = 1;
 
-//#define DIRECTORIES_DEBUG
 #ifdef DIRECTORIES_DEBUG
 # define DIRS_WERR(X) werror("Directories: "+X+"\n");
 #else
@@ -23,7 +22,7 @@ constant thread_safe = 1;
 
 inherit "module";
 
-array readme, indexfiles, nobrowse;
+array readme, indexfiles;
 int filename_width, cache, config_id;
 
 string output_format(array(string) filenames)
@@ -45,7 +44,6 @@ void start(int n, Configuration c)
 {
   readme = query("Readme")-({""});
   indexfiles = query("indexfiles")-({""});
-  nobrowse = query("nobrowse")-({""});
   filename_width = query("fieldwidth");
   cache = query("cache");
   config_id = c->get_config_id();
@@ -59,7 +57,7 @@ void create()
 {
   defvar("indexfiles",
          ({ "index.html", "index.xml", "index.htm", "index.pike",
-            "index.cgi", "welcome.html", "Main.html" }),
+            "index.cgi" }),
 	 "Index files", TYPE_STRING_LIST|VAR_INITIAL,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
@@ -67,11 +65,6 @@ void create()
   defvar("Readme", ({ "README.html", "README" }),
 	 "Include readme files", TYPE_STRING_LIST|VAR_INITIAL,
 	 "Include one of these readme files, if present, in directory listings");
-
-  defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
-	 "List prevention files", TYPE_STRING_LIST|VAR_MORE,
-	 "All directories containing any of these files will not be "
-	 "browsable.");
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG|VAR_INITIAL,
 	 "If this variable is set, you can get a listing of all files "
@@ -123,7 +116,21 @@ class TagDirectoryInsert {
       if(args->dir) {
 	string old_base=id->misc->rel_base||"";
 	id->misc->rel_base=old_base+args->file;
-	result=describe_directory(args->file, id);
+	array dir=id->conf->find_dir(args->file, id, 1)||({});
+	result="";
+	if(!sizeof(dir)) return 0;
+	if(dir[0])
+	  result=describe_directory(args->file, dir, id);
+	else {
+	  string lock;
+	  foreach(dir[1..], string file) {
+	    string lock=id->conf->try_get_file(args->file+file, id);
+	    if(lock && sizeof(lock)) {
+	      result=lock;
+	      break;
+	    }
+	  }
+	}
 	id->misc->rel_base=old_base;
 	return 0;
       }
@@ -159,12 +166,10 @@ string find_readme(string d, RequestID id)
   return "";
 }
 
-string spartan_directory(string d, RequestID id)
+string spartan_directory(string d, array(string) dir, RequestID id)
 {
-  array(string) path = d/"/" - ({ "","." });
-  d = "/"+path*"/" + "/";
-  array(string) dir = id->conf->find_dir(d, id)||({});
-  if (sizeof(dir)) dir = sort(dir);
+  d="/"+((d/"/")-({".",""}))*"/"+"/";
+  if(d="//") d="/";
 
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
@@ -181,12 +186,10 @@ string spartan_directory(string d, RequestID id)
 			   }, d)*"\n");
 }
 
-string describe_directory(string d, RequestID id)
+string describe_directory(string d, array(string) dir, RequestID id)
 {
-  array(string) path = d/"/" - ({ "","." });
-  d = "/"+path*"/" + "/";
+  d="/"+((d/"/")-({".",""}))*"/"+"/";
   if(d=="//") d="/";
-  array(string) dir = id->conf->find_dir(d, id)||({});
   if (sizeof(dir)) dir = sort(dir);
 
   string result="";
@@ -199,13 +202,6 @@ string describe_directory(string d, RequestID id)
     if(sizeof(readme))
       result += find_readme(d, id);
     result += "<hr noshade=\"noshade\" /><pre>\n";
-  }
-  else {
-    DIRS_WERR("Looking for lock file in "+d);
-    foreach(nobrowse, string file) {
-      string lock=id->conf->try_get_file(d+file, id);
-      if(lock) return lock;
-    }
   }
 
   if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
@@ -372,20 +368,22 @@ string|mapping parse_directory(RequestID id)
   }
 
   DIRS_WERR("Looking for lock file in "+f);
-  foreach(nobrowse, string file) {
-    string lock=id->conf->try_get_file(f+file, id);
-    if(lock) {
-      if(sizeof(lock)) return Roxen.http_string_answer(lock)+(["error":403]);
-      return Roxen.http_redirect(f[..sizeof(f)-3], id);
+  array dir=id->conf->find_dir(f, id, 1)||({});
+  if(!sizeof(dir) || !dir[0])
+    foreach(dir[1..], string file) {
+      string lock=id->conf->try_get_file(f+file, id);
+      if(lock) {
+	if(sizeof(lock)) return Roxen.http_string_answer(lock)+(["error":403]);
+	return Roxen.http_redirect(f[..sizeof(f)-3], id);
+      }
     }
-  }
 
   string dirlist;
 
   DIRS_WERR("Deciding between fancy or slimmed down direcory view");
   if(query("spartan") || id->prestate->spartan_directory) {
     if(!(dirlist=cache_lookup("dir-s"+config_id,f))) {
-      dirlist=spartan_directory(f,id);
+      dirlist=spartan_directory(f, dir, id);
       if(cache) cache_set("dir-s"+config_id,f,dirlist);
     }
     return Roxen.http_string_answer(dirlist);
@@ -394,7 +392,7 @@ string|mapping parse_directory(RequestID id)
   if(!(dirlist=cache_lookup("dir-f"+config_id,f))) {
     id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
     id->misc->rel_base="";
-    dirlist=Roxen.parse_rxml(describe_directory(f,id),id);
+    dirlist=Roxen.parse_rxml(describe_directory(f, dir, id),id);
     if(cache) cache_set("dir-f"+config_id,f,dirlist);
   }
   return Roxen.http_string_answer(dirlist);
