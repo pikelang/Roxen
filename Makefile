@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.47 1999/05/06 14:37:26 marcus Exp $
+# $Id: Makefile,v 1.48 1999/05/18 19:48:48 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -33,12 +33,12 @@ hard : configure
 	@exit 1
 
 blurb :
-	@echo '	 Roxen 1.2 -- Easy Build '
+	@echo '	 Roxen 1.4 -- Easy Build '
 	@echo '	-------------------------'
 	@echo
-	@echo 'This will attempt to build Roxen 1.2 in a directory'
+	@echo 'This will attempt to build Roxen 1.4 in a directory'
 	@echo 'specific for this architecture. This allows for building'
-	@echo 'Roxen 1.2 for several operating systems at the same time.'
+	@echo 'Roxen 1.4 for several operating systems at the same time.'
 	@echo 'Unfortunately this requires a make which understands VPATH.'
 	@echo 'If make reports strange errors about missing files, your'
 	@echo 'make probably does not understand VPATH. If this is the'
@@ -73,7 +73,7 @@ configure_all : configure
 	./mkdir -p "$$builddir"; \
 	cd "$$builddir" && \
 	test -f stamp-h && (test "`cat stamp-h`" = $$pikeversion) || ( \
-	  echo "Configuring Roxen 1.2 in $$builddir ..."; \
+	  echo "Configuring Roxen 1.4 in $$builddir ..."; \
 	  echo; \
 	  CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion \
 	)
@@ -88,7 +88,7 @@ install :
 install_low : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Installing Roxen 1.2 from $$builddir ..."; \
+	echo "Installing Roxen 1.4 from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) install "prefix=$(prefix)"
@@ -102,7 +102,7 @@ localinstall :
 localinstall_low : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Installing Roxen 1.2 locally from $$builddir ..."; \
+	echo "Installing Roxen 1.4 locally from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) localinstall;
@@ -114,7 +114,7 @@ install_all : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
-	echo "Installing Roxen 1.2 and Pike $$pikeversion from $$builddir ..."; \
+	echo "Installing Roxen 1.4 and Pike $$pikeversion from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) install_all "prefix=$(prefix)"
@@ -140,7 +140,7 @@ install_pike : configure_all
 verify: configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Verifying Roxen 1.2 in $$builddir ..."; \
+	echo "Verifying Roxen 1.4 in $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) verify "prefix=$(prefix)"
@@ -151,7 +151,7 @@ verify: configure_all
 verbose_verify: configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Verifying Roxen 1.2 in $$builddir ..."; \
+	echo "Verifying Roxen 1.4 in $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) verbose_verify "prefix=$(prefix)"
