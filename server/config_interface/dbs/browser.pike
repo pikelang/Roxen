@@ -322,7 +322,7 @@ mixed delete_db( string db, RequestID id )
 		    " No data will be deleted from the remote datbase.");
     
   VERIFY(msg);
-  report_notice( _(424,"The database %s was deleted by b%s")+"\n",
+  report_notice( _(424,"The database %s was deleted by %s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
   return Roxen.http_redirect( "/dbs/", id );
