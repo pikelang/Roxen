@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.106 2000/02/07 18:11:26 nilsson Exp $
+ * $Id: rxml.pike,v 1.107 2000/02/08 00:02:46 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -486,7 +486,6 @@ class GenericTag {
   string name;
   int flags;
   function _do_return;
-  array(RXML.Type) result_types = ({ RXML.t_text(RXML.PHtml) });
 
   void create(string _name, int _flags,
 	      function __do_return) {
@@ -494,19 +493,17 @@ class GenericTag {
     flags=_flags;
     _do_return=__do_return;
     if(flags&RXML.FLAG_DONT_PREPARSE)
-      content_type = RXML.t_text;
+      content_type = RXML.t_same;
   }
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(_do_return) {
-	if(flags&RXML.FLAG_POSTPARSE)
-	  return ({ _do_return(name, args, content, id, this_object()) });
-	else
-	  result=_do_return(name, args, content, id, this_object());
-      }
+      if (flags & RXML.FLAG_POSTPARSE)
+	result_type = result_type (RXML.PHtml);
+      array|string res = _do_return(name, args, content, id, this_object());
+      return stringp (res) ? ({res}) : res;
     }
   }
 }
