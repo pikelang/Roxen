@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.262 2001/06/27 19:00:14 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.263 2001/06/30 13:09:45 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -155,12 +155,6 @@ static int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
-#ifdef RUN_SELF_TEST
-  if( sizeof( args ) )
-    stderr->write( possibly_encode( sprintf( format,@args ) ) );
- else
-    stderr->write( possibly_encode( format ) );
-#else
   if(sizeof(args))
     format=sprintf(format,@args);
 
@@ -205,6 +199,9 @@ void roxen_perror(string format, mixed ... args)
     if (last_was_nl == -1) stderr->write("\n");
     last_was_nl = format[-1] == '\n';
 
+#ifdef RUN_SELF_TEST
+    stderr->write( possibly_encode( format ) );
+#else
     array(string) a = format/"\n";
     int i;
 
@@ -216,10 +213,10 @@ void roxen_perror(string format, mixed ... args)
     if (!last_was_nl) {
       stderr->write(short_time() + a[-1]);
     }
+#endif
   }
 
   if (delayed_nl) last_was_nl = -1;
-#endif
 }
 
 // Make a directory hierachy
