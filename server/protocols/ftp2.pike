@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.21 1998/05/01 21:39:49 grubba Exp $
+ * $Id: ftp2.pike,v 1.22 1998/05/11 15:23:46 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1256,7 +1256,13 @@ class FTPSession
 
   static private string fix_path(string s)
   {
-    if (s[0] == '~') {
+    if (!sizeof(s)) {
+      if (cwd[-1] == '/') {
+	return(cwd);
+      } else {
+	return(cwd + "/");
+      }
+    } else if (s[0] == '~') {
       return(combine_path("/", s));
     } else if (s[0] == '/') {
       return(simplify_path(s));
