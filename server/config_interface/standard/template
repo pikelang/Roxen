@@ -104,8 +104,8 @@
 
 
 <define tag=cf-save what=Global>
-  <cf-perm perm="Edit &what; Variables">
+  <!-- cf-perm perm="Edit &what; Variables" -->
     <submit-gbutton align=right preparse> <cf-locale get=save> </submit-gbutton>
-  </cf-perm>
+  <!-- /cf-perm -->
 </define>
 
