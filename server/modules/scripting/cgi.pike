@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.53 1997/10/14 21:08:06 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.54 1997/11/27 22:42:05 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -392,6 +392,7 @@ class spawn_cgi
 	  destruct(pipe4);
 	
 	pipe3->dup2(files.file("stdin"));
+	destruct(pipe3);
 	pipe1->dup2(files.file("stdout"));
 	if(dup_err)
 	  pipe1->dup2(files.file("stderr"));
@@ -490,7 +491,11 @@ class spawn_cgi
     pipe4 = pipe4_;
     dup_err = dup_err_;
     kill_call_out = kill_call_out_;
+#ifdef THREADS
     call_out(do_cgi, 0);
+#else /* THREADS */
+    do_cgi();
+#endif /* THREADS */
   }
 };
 
