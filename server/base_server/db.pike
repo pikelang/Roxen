@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.5 1997/02/13 13:00:54 per Exp $ */
+/* $Id: db.pike,v 1.6 1997/02/13 15:11:12 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -11,6 +11,9 @@ private static string last;
 
 private static void sync()
 {
+#ifdef DEBUG_DB
+  perror("sync "+last+"\n");
+#endif
   if(last)
   {
     perror("save ("+ last +")\n");
@@ -30,9 +33,12 @@ private static void sync()
 
 public int db_open(string f)
 {
-  int res;
+#ifdef DEBUG_DB
+  perror("db_open "+f+"\n");
+#endif
   if(last != f)
   {
+    int res;
     perror("restore ("+ f +")\n");
     last = f;
     res = file::open(DIR+f, "rc");
@@ -55,23 +61,35 @@ public int db_open(string f)
 
 public void db_destroy()
 {
+#ifdef DEBUG_DB
+  perror("db_destroy "+last+"\n");
+#endif
   rm(DIR+last);
   last=0;
 }
 
 public void db_delete(string varname)
 {
+#ifdef DEBUG_DB
+  perror("db_delete "+varname+" ("+last+")\n");
+#endif
   m_delete(db, varname);
   sync();
 }
 
 public void db_set(string varname, mixed value)
 {
+#ifdef DEBUG_DB
+  perror("db_set "+varname+" ("+last+")\n");
+#endif
   db[varname] = value;
   sync();
 }
 
 public mixed db_get(string varname)
 {
+#ifdef DEBUG_DB
+  perror("db_get "+varname+" ("+last+")\n");
+#endif
   return db[varname];
 }

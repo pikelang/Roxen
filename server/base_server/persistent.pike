@@ -1,6 +1,6 @@
 static private inherit "db";
 
-/* $Id: persistent.pike,v 1.5 1997/02/13 13:00:58 per Exp $ */
+/* $Id: persistent.pike,v 1.6 1997/02/13 15:11:13 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -117,27 +117,6 @@ PRIVATE void restore_call_out_list()
 }
 
 
-PRIVATE void do_auto_save(int t)
-{
-  string a;
-  array v;
-  int save_needed = 0;
-
-  save_needed = save_call_out_list();
-
-  foreach(db_get("v"), v)
-    if(!equal(this[ v[0] ], v[ 1 ]))
-      save_needed++;
-
-  if(save_needed)
-    save_variables();
-
-  remove_call_out(do_auto_save);
-  call_out(do_auto_save, t, t);
-}
-
-
-
 /* Public methods! */
 static private int _____destroyed = 0; 
 public void begone()
@@ -165,13 +144,6 @@ public void persist(mixed id)
     this->persisted();
 }
 
-
-public void auto_save_mode(int t)
-{
-  call_out(do_auto_save, t, t);
-}
-
-
 public void save()
 {
   if(!__id)
@@ -180,6 +152,9 @@ public void save()
     if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
     db_open( __id );
   }
+#if 0
+  perror("save "+__id+"\n");
+#endif
   /* "Simply" save all global (non-static) variables and callouts. */
   save_variables();
   save_call_out_list();

@@ -38,7 +38,7 @@ array|string low_nameof(object|program|function fo)
   
   if(p=search(programs, object_program(foo)))
     return ({ p, (functionp(foo->name)?foo->name():
-		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)), post});
+		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)), post})-({"",0});
 
   werror("nameof: unknown thingie.\n");
 }
@@ -62,7 +62,7 @@ object objectof(array foo)
 
   if(!arrayp(foo)) return 0;
 
-  if(saved_names[foo]) return saved_names[foo];
+  if(saved_names[foo[0..1]*"\0"]) return saved_names[foo[0..1]*"\0"];
 
   if(!(p = programof(foo[0]))) {
     werror("objectof(): Failed to restore object (programof("+foo[0]+
@@ -73,12 +73,12 @@ object objectof(array foo)
     o = p();
     o->persist && o->persist( foo );
 
-    saved_names[ foo ] = o;
+    saved_names[ foo[0..1]*"\0" ] = o;
     saved_names[ o ] = foo;
     return o;
   };
   werror("objectof(): Failed to restore object"
-	 " from existing program "+foo*":"+"\n");
+	 " from existing program "+foo*"/"+"\n");
   return 0;
 }
 
@@ -86,6 +86,7 @@ object objectof(array foo)
 function functionof(array f)
 {
   object o;
+  werror(sprintf("Functionof %O\n", f));
   if(sizeof(f) != 3) return 0;
   o = objectof( f[..1] );
   if(!o)
@@ -93,7 +94,8 @@ function functionof(array f)
     werror("functionof(): objectof() failed.\n");
     return 0;
   }
-  if(!functionp(o[f[-1]])) {
+  if(!functionp(o[f[-1]]))
+  {
     werror("functionof(): "+f*"."+" is not a function.\n");
     destruct(o);
     return 0;
@@ -132,6 +134,7 @@ void create()
   /* make ourselves known */
   add_constant("_master",this_object());
   add_constant("master",lambda() { return this_object(); });
+
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
   add_constant("nameof", nameof);
