@@ -74,8 +74,10 @@ string page_base( RequestID id, string content, int|void noform )
                   "<st-page>"
                   "<if not='1' variable='form.initial'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
-                  "&reload_module_list=yes' > %s </gbutton> "
-                  "<gbutton href='site.html/&form.config;/'> %s </gbutton>"
+                  "&reload_module_list=yes' "
+		  "> %s </gbutton> "
+                  "<gbutton href='site.html/&form.config;/' "
+		  "> %s </gbutton>"
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
@@ -168,17 +170,18 @@ string pafeaw( string errors, string warnings)
         return q[sizeof(q)-2..]*"/";
       };
 
-#define RELOAD(X) sprintf("<gbutton "                                           \
-                          "href='add_module.pike?config=&form.config:http;"     \
-                          "&random=%d&only=%s&reload_module_list=yes#"          \
-                          "errors_and_warnings'> %s </gbutton>",                \
-                          random(4711111),                                      \
-                          (X),                                                  \
+#define RELOAD(X) sprintf("<gbutton "                                         \
+			  "img-align='middle' "                               \
+                          "href='add_module.pike?config=&form.config:http;"   \
+                          "&random=%d&only=%s&reload_module_list=yes#"        \
+                          "errors_and_warnings'> %s </gbutton>",              \
+                          random(4711111),                                    \
+                          (X),                                                \
                           "Reload")
 
       if( !header_added++ )
         da_string += 
-                  "<p><a name='errors_and_warnings'><br />"
+                  "<p><a name='errors_and_warnings'></a><br />"
                   "<font size='+2'><b><font color='&usr.warncolor;'>"
                   "Compile errors and warnings</font></b><br />"
                   "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
@@ -250,7 +253,8 @@ array(string) get_module_list( function describe_module,
     mixed r;
     if( c == "" )
       continue;
-    if( (r = class_visible( c, classes[c]->doc, id )) && r[0] )
+    if( (r = class_visible( c, classes[c]->doc, sizeof(classes[c]->modules), id )) &&
+	r[0] )
     {
       res += r[1];
       array m = classes[c]->modules;
@@ -276,7 +280,7 @@ string module_image( int type )
   return "";
 }
 
-string strip_leading( LocaleString what )
+string strip_leading( string what )
 {
   if( !what ) return 0;
   sscanf( (string)what, "%*s:%*[ \t]%s", what );
@@ -336,7 +340,8 @@ function describe_module_normal( int image )
   };
 }
 
-array(int|string) class_visible_normal( string c, string d, RequestID id )
+array(int|string) class_visible_normal( string c, string d, int size,
+					RequestID id )
 {
   int x;
   string header = ("<tr><td colspan='2'><table width='100%' "
@@ -411,7 +416,8 @@ return sprintf(
   }
 }
 
-array(int|string) class_visible_faster( string c, string d, RequestID id )
+array(int|string) class_visible_faster( string c, string d, int size,
+					RequestID id )
 {
   int x;
   string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
@@ -454,13 +460,15 @@ string page_faster( RequestID id )
 
 int first;
 
-array(int|string) class_visible_compact( string c, string d, RequestID id )
+array(int|string) class_visible_compact( string c, string d, int size,
+					 RequestID id )
 {
   string res="";
   if(first++)
     res = "</select><br /><submit-gbutton> Add Module </submit-gbutton> ";
   res += "<p><a name="+Roxen.http_encode_string(c)+
-    "></a><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
+    "></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
+    "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
   return ({ 1, res });
 }
 
@@ -470,9 +478,9 @@ string describe_module_compact( object module, object block )
     //string modname = strip_leading (module->get_name());
     string modname = module->get_name();
     return "<option value='"+module->sname+"'>"+
-      Roxen.html_encode_string(modname) +
-	"&nbsp;" * max (0, (int) ((40 - sizeof (modname)) * 1.6)) +
-	" (" + Roxen.html_encode_string(module->sname) + ")" +
+      Roxen.html_encode_string(modname)
+      + "&nbsp;" * max (0, (int) ((49 - sizeof (modname)))) +
+      " (" + Roxen.html_encode_string(module->sname) + ")"+
       "</option>\n";
   }
   return "";
@@ -518,7 +526,7 @@ string page_really_compact( RequestID id )
   mods = roxen->all_modules();
   loader.pop_compile_error_handler();
 
-  sort(map(mods->get_name(), lambda(LocaleString in) {
+  sort(map(mods->get_name(), lambda(string in) {
 			       in = lower_case((string)in);
 			       //sscanf(in, "%*s: %s", in);
 			       return in;
@@ -528,8 +536,8 @@ string page_really_compact( RequestID id )
   mixed r;
 
   if( (r = class_visible_compact( "Add module",
-				  "Select one or several modules to add."
-				  , id )) && r[0] ) {
+				  "Select one or several modules to add.",
+				  sizeof(mods), id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
       if( (!q->get_description() ||
@@ -639,9 +647,8 @@ mixed do_it_pass_2( array modules, Configuration conf,
     // set initial variables from form variables...
     if( num ) Roxen.parse_rxml( cf_form, id );
     foreach( modules, string mod )
-     conf->call_start_callbacks( conf->find_module( replace(mod,"!","#") ),
-                                 roxen.find_module( (mod/"!")[0] ),
-                                 conf->modules[ mod ] );
+     conf->call_high_start_callbacks( conf->find_module( replace(mod,"!","#") ),
+				      roxen.find_module( (mod/"!")[0] ) );
     already_added = ([ ]);
     conf->save( ); // save it all in one go
     conf->forcibly_added = ([]);
@@ -709,5 +716,5 @@ mixed parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  return this_object()["page_"+replace(config_setting( "addmodulemethod" )," ","_")]( id );
+  return this["page_"+replace(config_setting( "addmodulemethod" )," ","_")]( id );
 }

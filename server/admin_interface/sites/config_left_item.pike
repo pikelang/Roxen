@@ -17,7 +17,7 @@ mapping group( array(string) w )
     if( sscanf( (string)i->get_name(), "%s:%s", g, s ) == 2 )
       groups[ g ] += ({ n });
     else
-      groups[ "_misc" ] += ({ n });
+      groups[ "zz_misc" ] += ({ n });
   }
   return groups;
 }
@@ -36,17 +36,32 @@ string selected_item( string q, Configuration c, RequestID id,
   {
     RXML.set_var( "js-code", 
 		  "<js-include file='CrossPlatform.js'/>\n"
-	  "<js-include file='Popup.js'/>\n"
+		  "<js-include file='Popup.js'/>\n"
 		  "<style><js-insert name='style'/></style>"
 		  "<js-insert name='div'/>",
 		  "var" );
   }
+  pre +=
+    "<script langauge='javascript' "
+    "        charset='iso-8859-1' type='text/javascript' >\n"
+    "  function p_on(item)  { item.className = 'module-list-item-hover'; }\n"
+    "  function p_off(item) { item.className = 'module-list-item'; }\n"
+    "  function p_on_sub(item)  { item.className = 'module-sub-list-item-hover'; }\n"
+    "  function p_off_sub(item) { item.className = 'module-sub-list-item'; }\n"
+    "  function p_popup_on(item)"
+    "    { item.className = 'module-popup-list-item-hover'; }\n"
+    "  function p_popup_off(item)"
+    "    { item.className = 'module-popup-list-item'; }\n"
+    "</script>\n";
+
   pre += 
     ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
      "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
-     "textcolor='&usr.left-buttonfg;' icon_src='&usr.selected-indicator;' "
+     "icon_src='&usr.selected-indicator;' "
      "align_icon='left'>Sites</gbutton><br />"
-     "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+
+     "<img src='/%01/unit' width='1' height='1'/><br />"
+     "<gbutton frame-image='&usr.left-buttonframe;' "
+     "width='&usr.left-buttonwidth;' "+
      (module == "" ?
       "bgcolor='&usr.left-selbuttonbg;' textcolor='&usr.left-selbuttonfg;'" :
       "bgcolor='&usr.left-buttonbg;' textcolor='&usr.left-buttonfg;'") +
@@ -103,104 +118,251 @@ string selected_item( string q, Configuration c, RequestID id,
     module_groups += ({ ({gn, gg}) });
   }
 
-  sort( module_groups );
-  pre += "<table cellspacing='0' cellpadding='0'>\n";
+  module_groups = Array.sort_array( module_groups,
+				    lambda(array a, array b) {
+				      return a[0]>b[0]; });
+
+  int list = (RXML.get_var("module-list-style", "usr") == "list");
+
+  pre += "<box-frame width='100%' iwidth='100%' ::='&usr.module-list-frame;'>"+
+    (list ?
+     "<ul class='module-list'>" :
+     "<table width='100%' cellspacing='0' cellpadding='0' class='module-list'>")+
+    "\n";
+
+  if (!sizeof(module_groups))
+    pre += LOCALE(513,"No modules");
   
   foreach( module_groups, array gd )
   {
     int onlysel,fin;
-    string group_name = gd[0];
+    string real_group_name = gd[0];
     string r_module_group = module_group;
+    string group_name = (real_group_name == "zz_misc" ? LOCALE(525,"Other") :
+			 real_group_name);
     // Step 1: Is the selected module in this group?
     //         If so, force-select this group.
 
     foreach( gd[1], mapping data )
       if( data->sname == module )
-	r_module_group = group_name;
+	r_module_group = real_group_name;
 
-    // Step 2: If this group is not called '_misc' (the default one),
-    //         check if it should be unfolded.
-    if( (group_name != "_misc")  )
+
+    int fold;
+    fold = !!RXML.get_var("unfolded", "usr");
+    string sel;
+    if (fold) sel = "unfolded";
+    else sel = "selected-indicator";
+    string css_class = "selected-indicator";
+    if( real_group_name != r_module_group )
     {
-      string sel = "selected";
-      if( group_name != r_module_group )
+      if (fold) sel = "folded";
+      else sel = "item-indicator";
+      css_class = "item-indicator";
+      if (!unfolded)
+        onlysel = 1;
+    }
+    if( onlysel )
+    {
+      if (do_js)
       {
-	sel = "item";
-	if (!unfolded && sizeof( gd[1] ) > 1)
-	  onlysel = 1;
+	// Popup content
+	string popup_bg;
+	if (RXML.get_var("module-list-frame", "usr"))
+	  popup_bg = "&usr.obox-bodybg;";
+	else
+	  popup_bg = "&usr.bgcolor;";
+	pre +=
+	  "<js-popup ox=" + (list ? "130" : "130") + " oy=-2 event='onClick' "
+	  "args-variable='popup-args' "
+	  ">\n"
+	  "<table border=0 bgcolor='&usr.obox-border;' cellspacing='0' "
+	  " cellpadding='1'>\n"
+	  "<tr><td>"
+	  "<table border=0 bgcolor='"+popup_bg+"' cellspacing='0' "
+	  "cellpadding='1'>\n"
+	  "<tr><td>\n"
+	  "<table border='0' cellspacing='0' sellpadding='0' "
+	  "       class='module-popup-list'>\n"
+	  ;
+	
+	foreach( gd[1], mapping data ) {
+	  pre +=
+	    "<tr class='module-popup-list-item' "
+	    "    onMouseOver='p_popup_on(this);' "
+	    "    onMouseOut='p_popup_off(this);' "
+	    "    onClick=\"window.location='" +
+	    (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	     data->sname + "/") + "'\">"
+	    "<td>" +
+	    replace(Roxen.html_encode_string(data->name), " ", "&nbsp;") +
+	    (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	    "</td>\n</tr>\n";
+	}
+	pre +=
+	  "</table>\n</td></tr></table>\n</td>\n</tr>\n</table>\n"
+	  "\n</js-popup>\n";
       }
-      if( onlysel )
-      {
-	pre += ("\n<tr><td valign='top'><img src=\"&usr."+
-		sel+"-indicator;\" width='12' height='12' alt='' /></td>"
-		"<td>");
-	if( !do_js )
-	  pre += "<a "+
-	    " href=\""+quoted_url+Roxen.http_encode_string(group_name)+
-	    "!0/"+((module&&strlen(module))?module+"/":"")
-	    +"\">"+Roxen.html_encode_string(group_name)+
-	    ": ("+sizeof(gd[1])+") ...</a>\n";
+
+      // Folded group
+      if (list) {
+        if (!do_js)
+          pre +=
+	    "<li class='module-list-item' "
+            "    onMouseOver='p_on(this);' "
+	    "    onMouseOut='p_off(this);' "
+            "    onClick=\"window.location='" +
+            (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+             ((module&&strlen(module)) ? module + "/" : "")) + "';\">";
       }
       else
-      {
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr."+sel+"-indicator;\" width='12'"
-		" height='12' alt='' /></td>"
-		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
-	pre += "<table cellspacing='0' cellpadding='0'>\n";
-	fin = 1;
+        pre +=
+          "<tr>"
+          "<td valign='top' width='0%'>"
+          "<imgs src='&usr." + sel + ";' vspace='1' hspace='4' "
+          "alt='' /></td>"
+          "<td width='100%' "
+	  "    class='module-list-item' "
+          "    onMouseOver='p_on(this);' "
+	  "    onMouseOut='p_off(this);' "
+          +(do_js ? "::='&form.popup-args;'" :
+            "onClick=\"window.location='" +
+            (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+             ((module&&strlen(module)) ? module + "/" : "")) + "';\"") +
+	  ">";
+      if( !do_js )
+        pre +=
+          "<a href='" +
+          (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+           ((module&&strlen(module)) ? module + "/" : "")) + "'>" +
+          Roxen.html_encode_string(group_name) + "&nbsp;"
+          "("+sizeof(gd[1])+")</a>";
+      if (list) {
+        if (!do_js)
+          pre += "</li>\n";
       }
+      else
+        // </tr> ?
+        ;
     }
-    // If the group should be unfolded, or this is the _misc group,
-    // draw the module entries.
+    else
+    {
+      // Unfolded group
+      if (list)
+        pre +=
+          "<li class='"+css_class+"'>" +
+          Roxen.html_encode_string(group_name) +
+          "</li>"
+          "<ul class='module-sub-list'>\n";
+      else
+        pre +=
+          "<tr><td>"
+	  "<img src='/internal-roxen-unit' width=1 height=3 /></td></tr>\n"
+          "<tr><td valign='top' width='0%'>"
+          "<imgs src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
+	  "      vspace='1' hspace='4' alt='' /></td>"
+          "<td width='100%'>" +
+	  Roxen.html_encode_string(group_name) + "\n"
+          "<table cellspacing='0' cellpadding='0' "
+          "       width='100%' class='module-sub-list'>\n";
+      fin = 1;
+    }
+
+    // If the group should be unfolded draw the module entries.
     if( !onlysel )
+    {
       foreach( gd[1], mapping data )
       {
 	if( data->sname != module )
-	  pre += ("\n<tr><td valign='top'>"
-		  "<img src=\"&usr.item-indicator;\" width='12' "
-		  "height='12' alt='' /></td>"
-		  "<td><a href=\""+quoted_url+
-		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
-		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a></td></tr>\n");
+	{
+	  if (list)
+	    pre +=
+	      "<li class='module-list-item' "
+	      "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
+	      "    onClick=\"window.location='" +
+	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	       data->sname + "/") + "';\">"
+	      "<a href='" +
+	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	       data->sname + "/") + "'>" +
+	      Roxen.html_encode_string(data->name) +
+	      "</a>" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</li>\n";
+	  else
+	    pre +=
+	      "<tr>"
+	      "<td valign='top' width='0%'>"
+	      "<imgs src='&usr.item-indicator;' vspace='1' hspace='4' alt=''/>"
+	      "</td>"
+	      "<td width='100%' class='module-sub-list-item' "
+	      "onMouseOver='p_on_sub(this);' onMouseOut='p_off_sub(this);' "
+	      "onClick=\"window.location='" +
+	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	       data->sname+"/") + "';\">"
+	      "<a href='" +
+	      (quoted_url +
+	       Roxen.http_encode_string(group_name) + "!0/"+data->sname +
+	      "/'") + ">" +
+	      Roxen.html_encode_string(data->name) +
+	      "</a>" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</td></tr>\n";
+	}
 	else
-	  pre += ("\n<tr><td valign='top'>"
-		  "<img src=\"&usr.selected-indicator;\" width='12' "
-		  "height='12' alt='' /></td>"
-		  "<td><b>" + Roxen.html_encode_string(data->name) +
-		  "</b></td></tr>\n");
+	{
+	  if (list)
+	    pre +=
+	      "<li class='selected-indicator'>"
+	      "" + Roxen.html_encode_string(data->name) + "" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</li>\n";
+	  else
+	    pre +=
+	      "<tr>"
+	      "<td valign='top' width='0%'>"
+	      "<imgs src='&usr.selected-indicator;' vspace='1' hspace='4' "
+	      "      alt='' />"
+	      "</td>"
+	      "<td width='100%' class='selected-indicator'>"
+	      "" + Roxen.html_encode_string(data->name) + "" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</td></tr>\n";
+	}
       }
+    }
     else
     {
+      // Folded group, cont.
       if( do_js )
       {
-	pre += "\n<js-popup label='"+
-	  Roxen.html_encode_string(group_name)+": ("+sizeof(gd[1])+") ...'>"+
-	  "\n"
-	  "<table border=0 bgcolor='&usr.fgcolor;' cellspacing='0' "
-	  " cellpadding='1'>\n"
-	  "<tr><td>"
-	  "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' "
-	  "cellpadding='5'>\n"
-	  "<tr>\n<td>";
-	
-	foreach( gd[1], mapping data )
-	  pre += ("\n<img src=\"&usr.item-indicator;\" width='12' "
-		  "height='12' alt='' />"
-		  "<a href=\""+quoted_url+
-		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
-		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a><br />");
-	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
-	pre += "\n</js-popup>\n";
+	if (list)
+	  pre +=
+	    "<li class='module-list-item' "
+	    "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
+	    "    ::='&form.popup-args;'"
+	    ">";
+	pre +=
+	  "<a>" + Roxen.html_encode_string(group_name) +
+	  "&nbsp;(" + sizeof(gd[1]) + ")</a>";
+	if (list)
+	  pre += "</li>";
       }
-      pre += "</font></td></tr>";
+      if (!list)
+	pre += "</td></tr>\n";
     }
     if( fin )
-      pre += "</table></td></tr>";
+      if (list)
+	pre += "</ul>\n";
+      else
+	pre += "</table>\n</td></tr>\n";
   }
-  pre += "</table>\n";
+  if (list)
+    pre += "</ul>";
+  else
+    pre += "</table>";
+  pre += "</box-frame>\n"
+    "<br clear='all'/></br />\n";
 
   // Do not allow easy addition and removal of modules to and
   // from the administration interface server. Most of the time
