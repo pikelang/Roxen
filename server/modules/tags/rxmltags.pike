@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.309 2001/09/25 20:49:44 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.310 2001/09/26 15:07:43 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6684,16 +6684,16 @@ just got zapped?
 
 "else":#"<desc type='cont'><p><short>
 
- Show the contents if the previous <xref href='if.tag' /> tag didn't,
- or if there was a <xref href='false.tag' /> tag above.</short> This
- tag also detects if the page's truthvalue has been set to false.
- <xref href='../output/emit.tag' /> is an example of a tag that may
- change a page's truthvalue.</p>
+ Execute the contents if the previous <xref href='if.tag'/> tag didn't,
+ or if there was a <xref href='false.tag'/> tag above.</short> This
+ tag also detects if the page's truth value has been set to false, which
+ occurrs whenever a runtime error is encountered. The <xref
+ href='../output/emit.tag'/> tag, for one, signals this way when it did
+ not loop a single time.</p>
 
- <p>The result is undefined if there has been no <xref href='if.tag'
- />, <xref href='true.tag' /> or <xref href='false.tag' /> tag
- above.</p>
-
+ <p>The result is undefined if there has been no <xref href='if.tag'/>,
+ <xref href='true.tag'/>, <xref href='false.tag' /> or other tag that
+ touches the page's truth value earlier in the page.</p>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7314,7 +7314,10 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "then":#"<desc type='cont'><p><short>
- Shows its content if the truth value is true.</short></p>
+ Shows its content if the truth value is true.</short> This is useful in
+ conjunction with tags that leave status data there, such as the <xref
+ href='../output/emit.tag'/> or <xref href='../programming/crypt.tag'/>
+ tags.</p>
 </desc>",
 
 //----------------------------------------------------------------------
