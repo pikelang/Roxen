@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.44 2001/10/01 15:05:27 per Exp $
+// $Id: DBManager.pmod,v 1.45 2001/10/02 12:21:18 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -712,13 +712,15 @@ void create_db( string name, string path, int is_internal,
 
   if( has_value( name, "-" ) )
     name = replace( name, "-", "_" );
-
-  if( group && is_internal )
+  if( group )
   {
     set_db_group( name, group );
+    if( is_internal )
+    {
     path = get_group_path( name, group );
     if( path )
       is_internal = 0;
+    }
   }
   else
     query("INSERT INTO db_groups (db,groupn) VALUES (%s,%s)",
