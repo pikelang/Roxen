@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.148 2003/12/22 17:12:17 grubba Exp $
+// $Id: module.pike,v 1.149 2004/03/01 15:43:20 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -289,6 +289,11 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 
 //! Returns a multiset with the names of all supported properties.
 //!
+//! @param st
+//!   If set, this should be the stat that corresponds to @[path]. Its
+//!   only purpose is to save a call to @[stat_file] when the stat
+//!   already has been retrieved.
+//!
 //! @note
 //!   Only properties that should be listed by @tt{<DAV:allprop/>@}
 //!   are returned.
@@ -425,10 +430,12 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 //!
 //!	  Unknown definition.
 //!   @endstring
-multiset(string) query_all_properties(string path, RequestID id)
+multiset(string) query_all_properties(string path, RequestID id, void|Stat st)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return (<>);
+  if (!st) {
+    st = stat_file(path, id);
+    if (!st) return (<>);
+  }
   multiset(string) res = (<
     "DAV:creationdate",		// RFC2518 13.1
     "DAV:displayname",		// RFC2518 13.2
@@ -468,14 +475,22 @@ multiset(string) query_all_properties(string path, RequestID id)
 //! Returns the value of the specified property, or an error code
 //! mapping.
 //!
+//! @param st
+//!   If set, this should be the stat that corresponds to @[path]. Its
+//!   only purpose is to save a call to @[stat_file] when the stat
+//!   already has been retrieved.
+//!
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
 string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
-  query_property(string path, string prop_name, RequestID id)
+  query_property(string path, string prop_name, RequestID id, void|Stat st)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return Roxen.http_low_answer(404, "No such file or directory.");
+  if (!st) {
+    st = stat_file(path, id);
+    if (!st)
+      return Roxen.http_low_answer(404, "No such file or directory.");
+  }
   switch(prop_name) {
   case "DAV:creationdate":	// RFC2518 13.1
     int t = st->ctime;
@@ -699,18 +714,24 @@ mapping(string:mixed) remove_property(string path, string prop_name,
 //! @param filt
 //!   Optional multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
+//! @param st
+//!   If set, this should be the stat that corresponds to @[path]. Its
+//!   only purpose is to save a call to @[stat_file] when the stat
+//!   already has been retrieved.
 //!
 //! @note
 //!   id->not_query() does not necessarily contain the same value as @[path].
 void find_properties(string path, string mode, MultiStatus result,
-		     RequestID id, multiset(string)|void filt)
+		     RequestID id, multiset(string)|void filt, void|Stat st)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return;
+  if (!st) {
+    st = stat_file(path, id);
+    if (!st) return;
+  }
 
   switch(mode) {
   case "DAV:propname":
-    foreach(indices(query_all_properties(path, id)), string prop_name) {
+    foreach(indices(query_all_properties(path, id, st)), string prop_name) {
       result->add_property(path, prop_name, "");
     }
     return;
@@ -718,15 +739,15 @@ void find_properties(string path, string mode, MultiStatus result,
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
       // (draft-reschke-webdav-allprop-include-04).
-      filt |= query_all_properties(path, id);
+      filt |= query_all_properties(path, id, st);
     } else {
-      filt = query_all_properties(path, id);
+      filt = query_all_properties(path, id, st);
     }
     // FALL_THROUGH
   case "DAV:prop":
     foreach(indices(filt), string prop_name) {
       result->add_property(path, prop_name,
-			   query_property(path, prop_name, id));
+			   query_property(path, prop_name, id, st));
     }
     return;
   }
@@ -736,12 +757,14 @@ void find_properties(string path, string mode, MultiStatus result,
 
 void recurse_find_properties(string path, string mode, int depth,
 			     MultiStatus result,
-			     RequestID id, multiset(string)|void filt)
+			     RequestID id, multiset(string)|void filt, void|Stat st)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return;
+  if (!st) {
+    st = stat_file(path, id);
+    if (!st) return;
+  }
 
-  find_properties(path, mode, result, id, filt);
+  find_properties(path, mode, result, id, filt, st);
   if ((depth <= 0) || !st->isdir) return;
   depth--;
   foreach(find_dir(path, id), string filename) {
