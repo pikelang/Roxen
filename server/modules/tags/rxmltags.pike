@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.143 2000/07/20 23:39:46 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.144 2000/07/23 14:42:19 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -758,6 +758,13 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 {
   array (int) s;
   Stdio.File f;
+
+  if(!file) {
+    if(id->misc->_parser && id->misc->_parser->_source_file)
+      file=id->misc->_parser->_source_file;
+    else
+      m->realfile=id->realfile;
+  }
 
   if(m->by && !m->file && !m->realfile)
   {
