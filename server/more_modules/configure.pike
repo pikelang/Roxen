@@ -1,3 +1,10 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+string cvs_version = "$Id: configure.pike,v 1.2 1996/12/01 19:18:49 per Exp $";
+// Mounts the configuration interface on a location in the virtual
+// filesystem.
+
+
 #include <module.h>
 
 inherit "module";

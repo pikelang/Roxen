@@ -1,6 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+
+string cvs_version = "$Id: whois++.pike,v 1.3 1996/12/01 19:18:54 per Exp $";
 // Experimental whois++ *client* module
-// (c) Infovav 
-// Written by Pontus Hagland
+// Written by Pontus Hagland <law@infovav.se>
 #include <module.h>
 
 inherit "module";

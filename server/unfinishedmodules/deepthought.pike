@@ -1,3 +1,7 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+string cvs_version = "$Id: deepthought.pike,v 1.2 1996/12/01 19:18:50 per Exp $";
+// This module should have the strings in a separate file.. :)
 #include <module.h>
 inherit "module";
 

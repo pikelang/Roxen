@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.10 1996/11/30 00:46:32 nisse Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.11 1996/12/01 19:18:35 per Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
@@ -1507,18 +1507,37 @@ private string docurl;
 
 // I will remove this in a future version of roxen.
 private program __p;
+private mapping my_loaded = ([]);
 program last_loaded() { return __p; }
+
+string filename(object o)
+{
+  return my_loaded[object_program(o)];
+}
+
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
 #if defined(MODULE_DEBUG) && (DEBUG_LEVEL>20)
     perror(s+" ");
 #endif
   if(file_size(s+".pike")>0)
-    if(__p=compile_file(s+".pike")) return __p();
+    if(__p=compile_file(s+".pike"))
+    {
+      my_loaded[__p]=s+".pike";
+      return __p();
+    }
   if(file_size(s+".lpc")>0)
-    if(__p=compile_file(s+".lpc")) return __p();
+    if(__p=compile_file(s+".lpc"))
+    {
+      my_loaded[__p]=s+".lpc";
+      return __p();
+    }
   if(file_size(s+".module")>0)
-    if(__p=compile_file(s+".module")) return __p();
+    if(__p=compile_file(s+".module"))
+    {
+      my_loaded[__p]=s+".module";
+      return __p();
+    }
   return 0; // FAILED..
 }
 
@@ -2148,7 +2167,7 @@ void enable_configuration(string config)
 	 "configuration error, please contact "
 	 "the administrators or the author of the <if referer>"
 	 "<a href=<referer>>referring</a> </if> <else>referring</else> page."
-	 ".<p>\n</font>\n"
+	 "<p>\n</font>\n"
 	 "<hr noshade>"
 	 "<version>, at <a href=$Me>$Me</a>.\n", 
 

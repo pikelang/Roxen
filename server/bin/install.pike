@@ -1,4 +1,5 @@
 #!bin/pike -m etc/master.pike
+string cvs_version = "$Id: install.pike,v 1.5 1996/12/01 19:18:38 per Exp $";
 #include <simulate.h>
 #include <roxen.h>
 

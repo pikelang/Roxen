@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Lysator ACS, 1996.
+
+string cvs_version = "$Id: lysator.pike,v 1.3 1996/12/01 19:18:49 per Exp $";
+// Lysator specific parsing, used at www.lysator.liu.se
+
 #include <config.h>
 #include <module.h>
 

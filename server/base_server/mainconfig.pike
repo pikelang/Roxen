@@ -1,4 +1,5 @@
 inherit "config/builders";
+string cvs_version = "$Id: mainconfig.pike,v 1.5 1996/12/01 19:18:31 per Exp $";
 inherit "roxenlib";
 
 #include <confignode.h>

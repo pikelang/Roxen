@@ -1,3 +1,4 @@
+string cvs_version = "$Id: hosts.pike,v 1.3 1996/12/01 19:18:28 per Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7

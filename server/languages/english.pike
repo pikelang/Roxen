@@ -1,5 +1,6 @@
 /* Bugs by: Per */
 
+string cvs_version = "$Id: english.pike,v 1.2 1996/12/01 19:18:41 per Exp $";
 inline string month(int num)
 {
   return ({ "January", "February", "March", "April", "May",

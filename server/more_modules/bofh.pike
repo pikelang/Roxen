@@ -1,3 +1,4 @@
+string cvs_version = "$Id: bofh.pike,v 1.2 1996/12/01 19:18:47 per Exp $";
 #include <module.h>
 inherit "module";
 

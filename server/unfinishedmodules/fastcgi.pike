@@ -1,3 +1,4 @@
+string cvs_version = "$Id: fastcgi.pike,v 1.2 1996/12/01 19:18:52 per Exp $";
 #if 0
 // Native FAST-CGI support
 

@@ -1,5 +1,9 @@
 // This is a Clock Module.
-// Den finns bara här för att Pontus skulle lära sig moduler till spider 3.
+
+string cvs_version = "$Id: clock.pike,v 1.2 1996/12/01 19:18:48 per Exp $";
+// One of the first modules written for Spinner, here for nostalgical
+// reasons.  It could be used as an example of how to write a simple
+// location module.
 
 #include <module.h>
 

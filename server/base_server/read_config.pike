@@ -1,3 +1,4 @@
+string cvs_version = "$Id: read_config.pike,v 1.4 1996/12/01 19:18:34 per Exp $";
 #include <module.h>
 
 #ifndef IN_INSTALL

@@ -1,3 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+string cvs_version = "$Id: mountserver.pike,v 1.2 1996/12/01 19:18:53 per Exp $";
+// Mounts a virtual server on a location in the virtual filesystem of
+// another one (or, infact, the same one, but that is probably quite
+// useless).
 #include <module.h>
 
 #define TYPE_SERVER TYPE_STRING

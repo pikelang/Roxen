@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.7 1996/11/27 14:05:23 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.8 1996/12/01 19:18:46 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -40,7 +40,7 @@ function nf=lambda(){};
 
 void init_proxies();
 
-function (string:int) no_cache_for
+function (string:int) no_cache_for;
 
 void start()
 {

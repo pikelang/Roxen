@@ -1,5 +1,6 @@
 string describe_backtrace(mixed *trace);
 
+string cvs_version = "$Id: roxen_master.pike,v 1.7 1996/12/01 19:18:39 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -56,9 +57,6 @@ program cast_to_program(string pname)
   string d=getcwd(),p=pname;
 
   if(ret=programs[pname]) return ret;
-
-  if(pname[0]!='/')
-    pname=combine_path(d,pname);
 
   if(pname[sizeof(pname)-3..sizeof(pname)]==".pike")
     pname=pname[0..sizeof(pname)-5];

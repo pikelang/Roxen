@@ -1,5 +1,6 @@
 /* Kanji */
 
+string cvs_version = "$Id: japanese.pike,v 1.2 1996/12/01 19:18:44 per Exp $";
 string month(int num);
 
 

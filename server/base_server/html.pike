@@ -1,3 +1,4 @@
+string cvs_version = "$Id: html.pike,v 1.2 1996/12/01 19:18:29 per Exp $";
 #define __replace(X) (X)
 
 varargs string input(string name, string val, int t)

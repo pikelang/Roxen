@@ -1,5 +1,6 @@
 //#define USE_GDBM
 
+string cvs_version = "$Id: db.pike,v 1.2 1996/12/01 19:18:27 per Exp $";
 #ifdef USE_GDBM
 inherit "/precompiled/gdbm";
 #else

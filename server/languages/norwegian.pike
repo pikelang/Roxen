@@ -1,4 +1,5 @@
 /*
+string cvs_version = "$Id: norwegian.pike,v 1.2 1996/12/01 19:18:44 per Exp $";
   norwegian.lpc         morten@nvg.unit.no
   Støtte for norsk på www-serveren..
 */

@@ -1,4 +1,5 @@
 /* Language support for numbers and dates. Very simple,
+string cvs_version = "$Id: language.pike,v 1.5 1996/12/01 19:18:30 per Exp $";
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *

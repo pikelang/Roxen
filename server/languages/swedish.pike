@@ -1,5 +1,6 @@
 /* Bugs by: Per */
 
+string cvs_version = "$Id: swedish.pike,v 1.2 1996/12/01 19:18:46 per Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",

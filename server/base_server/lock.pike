@@ -1,4 +1,5 @@
 /* Handle a lock in a somewhat more abstract way than (roxen) uLPC does. */
+string cvs_version = "$Id: lock.pike,v 1.2 1996/12/01 19:18:31 per Exp $";
 private static  int lockid;
 private static  int aquired = 0;
 

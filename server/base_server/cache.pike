@@ -1,3 +1,4 @@
+string cvs_version = "$Id: cache.pike,v 1.2 1996/12/01 19:18:26 per Exp $";
 #include <config.h>
 
 inherit "roxenlib";

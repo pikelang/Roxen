@@ -1,4 +1,5 @@
 /* Roxen WWW-server version 1.0.
+string cvs_version = "$Id: http.pike,v 1.3 1996/12/01 19:18:29 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */

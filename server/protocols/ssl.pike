@@ -1,4 +1,10 @@
-#define SSL_DEBUG
+// This is a roxen protocol module. (c) Informationsvävarna AB 1996.
+
+string cvs_version = "$Id: ssl.pike,v 1.4 1996/12/01 19:18:03 per Exp $";
+// Support for SSL, using an external process. Work is in progress for
+// native SSL support.
+
+//#define SSL_DEBUG
 inherit "protocols/http";
 
 private static int free_port()

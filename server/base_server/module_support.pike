@@ -1,5 +1,6 @@
 inherit "read_config";
 
+string cvs_version = "$Id: module_support.pike,v 1.6 1996/12/01 19:18:32 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>

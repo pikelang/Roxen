@@ -1,3 +1,6 @@
+// Hedbor module. Quite 'hedbor.org' specific parsing.
+
+string cvs_version = "$Id: hedbor.pike,v 1.2 1996/12/01 19:18:52 per Exp $";
 inherit "module";
 #include <module.h>
 

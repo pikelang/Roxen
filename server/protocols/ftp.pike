@@ -1,4 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
+string cvs_version = "$Id: ftp.pike,v 1.3 1996/12/01 19:18:01 per Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 

@@ -1,3 +1,4 @@
+string cvs_version = "$Id: disk_cache.pike,v 1.8 1996/12/01 19:18:27 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>

@@ -1,3 +1,7 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/12/01 19:18:02 per Exp $";
+// Gopher protocol module
+
 inherit "protocols/http"; /* For the variables and such.. */
 #include <config.h>
 #include <module.h>

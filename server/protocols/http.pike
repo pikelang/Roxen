@@ -1,3 +1,7 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+string cvs_version = "$Id: http.pike,v 1.4 1996/12/01 19:18:02 per Exp $";
+// HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
 int first;

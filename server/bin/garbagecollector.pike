@@ -1,8 +1,9 @@
 /* There is some bug in this I haven't had time to find. */
 
+string cvs_version = "$Id: garbagecollector.pike,v 1.3 1996/12/01 19:18:38 per Exp $";
 //#define DEBUG
 
-string version = "$Id: garbagecollector.pike,v 1.2 1996/11/15 04:26:43 per Exp $";
+string version = "$Id: garbagecollector.pike,v 1.3 1996/12/01 19:18:38 per Exp $";
 
 #define MAX_LOG_SIZE 512
 

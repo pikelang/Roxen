@@ -1,3 +1,4 @@
+string cvs_version = "$Id: newdecode.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
 #include <simulate.h>
 // The magic below is for the 'install' program
 #ifndef roxenp

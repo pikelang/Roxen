@@ -1,4 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
+string cvs_version = "$Id: german.pike,v 1.2 1996/12/01 19:18:43 per Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,

@@ -1,4 +1,5 @@
 /* Created by Janne Edelman, Turku Unix Users Group ry, Turku, Finland
+string cvs_version = "$Id: finnish.pike,v 1.2 1996/12/01 19:18:42 per Exp $";
    http://www.tuug.utu.fi/~edelman/ or http://website.tuug.utu.fi/ 
    */
 

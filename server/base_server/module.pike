@@ -1,7 +1,21 @@
 #include <module.h>
-object this = this_object();
 
 mapping (string:mixed *) variables=([]);
+
+object this = this_object();
+
+string fix_cvs(string from)
+{
+  from = replace(from, ({ "$Id: module.pike,v 1.4 1996/12/01 19:18:32 per Exp $" }), ({"",""}));
+  sscanf(from, "%*s,v %s", from);
+  return from;
+}
+
+string file_name_and_stuff()
+{
+  return ("<b>Loaded from:</b> "+(roxen->filename(this))+"<br>"+
+	  (this->cvs_version?"<b>CVS Version: </b>"+fix_cvs(this->cvs_version)+"<nr>\n":""));
+}
 
 object my_configuration()
 {
@@ -27,8 +41,7 @@ void set_module_url(string to)
 
 int killvar(string var)
 {
-  if(!variables[var])
-    error("Killing undefined variable.\n");
+  if(!variables[var]) error("Killing undefined variable.\n");
   m_delete(variables, var);
   return 1;
 }
@@ -40,7 +53,7 @@ string status() {}
 
 string info()
 { 
-  return this->register_module()[2];
+  return (this->register_module()[2]);
 }
 
 // Define a variable, with more than a little error checking...

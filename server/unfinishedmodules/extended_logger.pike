@@ -1,3 +1,7 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+string cvs_version = "$Id: extended_logger.pike,v 1.2 1996/12/01 19:18:51 per Exp $";
+// NOT FINISHED AT ALL
+
 #include <module.h>
 inherit "module";
 

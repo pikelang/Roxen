@@ -1,5 +1,6 @@
 inherit "http";
 
+string _cvs_version = "$Id: roxenlib.pike,v 1.4 1996/12/01 19:18:36 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()

@@ -144,7 +144,8 @@ string describe_module_copy(object node)
   if(node->folded)
     return  ("<font size=+1>" + link( name ) + "</font>");
 
-  com = node->data->query("_comment");
+  com = (node->data->file_name_and_stuff()+
+	 (node->data->query("_comment")||""));
 
   return ("<font size=+1>" + link( name ) + "</font><dd>" 
 	  + (roxen->QUERY(DOC)?node->data->info():"")
@@ -161,12 +162,14 @@ string describe_module(object node)
     name = node->data->name;
 
   if(node->data->enabled)
-    com = node->data->master->query("_comment");
+    com = (node->data->master->file_name_and_stuff()+
+	   (node->data->master->query("_comment")||""));
 
   if(node->data->copies)
     return ("<font size=+1>" + link(name) + "</font>");
   if(node->folded)
     return ("<font size=+1>" + link(name) + "</font>");
+
   return ("<font size=+1>" + link(name) +  "</font><dd>"
 	  +  "<font size=+0>"  + node->data->master->info() 
 	  + (strlen(com)?"<p><i>"+com+"</i></p>":"")

@@ -1,5 +1,6 @@
 inherit "db";
 
+string cvs_version = "$Id: persistent.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for µLPC.  *
 * Variables and callouts are saved between restarts.          *

@@ -1,3 +1,4 @@
+string cvs_version = "$Id: configuration.pike,v 1.5 1996/12/01 19:18:26 per Exp $";
 #include <module.h>
 /* A configuration.. */
 
