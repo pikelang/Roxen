@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.16 1998/07/01 11:04:01 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.17 1998/07/01 11:29:38 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -13,9 +13,21 @@ inherit "wizard";
 
 static private int loaded;
 
+static private constant old_doc =
+  ("Generates tables from, as an example, tab separated fields in newline"
+   " separated records (this is the default)."
+   "<p>This module defines a tag, {tablify}<p>Arguments:<br>"
+   "help: This help<br>\n"
+   "nice: Generate \"nice\" tables. The first row is the title row<br>\n"
+   "cellseparator=str: Use str as the column-separator<br>\n"
+   "rowseparator=str: Use str as the row-separator<br>\n"
+   "cellalign=left|right|center: Align the contents of the cells<br>\n"
+   "rowalign=left|right|center: Align the contents of the rows<br>\n");
+
 static private string doc()
 {
-  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/tablify")||"",
+  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/tablify")||
+			    old_doc,
 			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
 }
 
@@ -44,7 +56,7 @@ string container_fields(string name, mapping arg, string q,
   return "";
 }
 
-string tag_tablify( string tag, mapping m, string q, mapping request_id,
+string tag_tablify( string tag, mapping m, string q, object request_id,
 		    object file, mapping defines)
 {
   array rows, res;
