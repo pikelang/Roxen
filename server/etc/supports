@@ -1,4 +1,4 @@
-## $Id: supports,v 1.25 1997/04/25 16:08:10 grubba Exp $
+## $Id: supports,v 1.26 1997/04/27 12:34:47 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -162,6 +162,7 @@ cern.*linemode.*           nothing
                         font, fontcolor, imagealign, images,\
                         jpeginline, pjpeginline, pnginline,\
                         supsub, tables
+.*1.11			frames
 # }
 
 #section amiga-aweb {
