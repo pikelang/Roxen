@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.65 1998/03/26 07:51:44 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.66 1998/03/28 20:56:21 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -683,7 +683,9 @@ int main(mixed ... args)
   roxen_perror("Roxen loader version "+cvs_version+"\n");
   roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
-  master()->pike_include_path = path/":";
+  foreach(path/":", string p) {
+    add_include_path(p);
+  }
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
