@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.363 1999/11/29 22:10:03 per Exp $
+ * $Id: roxen.pike,v 1.364 1999/12/06 23:40:21 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.363 1999/11/29 22:10:03 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.364 1999/12/06 23:40:21 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1372,11 +1372,14 @@ object find_configuration( string name )
   name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
   foreach( configurations, object o )
   {
-    if( (lower_case( replace( o->name - " " , "/", "-" ) ) == name) ||
-        (lower_case( replace( o->query_name() - " " , "/", "-" ) ) == name) )
+    if( (lower_case( replace( replace(o->name, "-"," ") - " " ,
+			      "/", "-" ) ) == name) ||
+        (lower_case( replace( replace(o->query_name(), "-", " ") - " " ,
+			      "/", "-" ) ) == name) )
       return o;
 //     werror(" is not '"+o->name+"'\n" );
   }
+  return 0;
 }
 
 // Create a new configuration from scratch.
