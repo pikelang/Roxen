@@ -725,10 +725,10 @@ class LoadImage
   {
     Layers process( Layers layers )
     {
-      array res = roxen.load_layers( args->src, RXML.get_context()->id );
+      array|mapping res = roxen.load_layers( args->src, RXML.get_context()->id );
       // handles relative and absolute virtual files.
       // Can also handle URLs
-      if( !res )
+      if( !res || mappingp(res) )
 	RXML.parse_error("Failed to load %O\n", args->src );
       if( args->tiled )
 	foreach( res, Image.Layer l )

@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.49 2001/10/08 12:32:52 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.50 2002/06/17 09:36:14 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -140,7 +140,7 @@ string status() {
 		 s[0], Roxen.sizetostring(s[1]));
 }
 
-array(Image.Layer) generate_image( mapping args, RequestID id )
+array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 {
   array layers;
   mapping opts = ([]);
@@ -156,7 +156,12 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
   if( args->data )
     layers = roxen.decode_layers( args->data, opts );
   else
-    layers = roxen.load_layers( args->src, id, opts );
+  {
+    mixed tmp = roxen.load_layers( args->src, id, opts );
+    if (mappingp(tmp) && tmp->error == 401)
+      return tmp;
+    else layers = tmp;
+  }
 
   if(!layers)
   {

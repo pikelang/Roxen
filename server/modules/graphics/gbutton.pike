@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.93 2001/10/09 16:58:44 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.94 2002/06/17 09:36:15 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -230,7 +230,7 @@ Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
   return o;
 }
 
-array(Image.Layer) draw_button(mapping args, string text, object id)
+array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 {
   Image.Image  text_img;
   mapping      icon;
@@ -262,7 +262,16 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   };
 
   if( args->border_image )
-    set_image( roxen.load_layers(args->border_image, id) );
+  {
+    array(Image.Layer)|mapping tmp = roxen.load_layers(args->border_image, id);
+    if (mappingp(tmp))
+      if (tmp->error == 401)
+	return tmp;
+      else
+	report_debug("GButton: Failed to load frame image: %O\n",
+		     args->border_image);
+    set_image( tmp );
+  }
 
 
   //  otherwise load default images

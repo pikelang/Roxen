@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.501 2002/06/10 16:55:24 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.502 2002/06/17 09:36:13 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2211,7 +2211,8 @@ string real_file(string file, RequestID id)
 
 int|string try_get_file(string s, RequestID id,
                         int|void status, int|void nocache,
-			int|void not_internal)
+			int|void not_internal,
+			mapping|void result_mapping)
 //! Convenience function used in quite a lot of modules. Tries to read
 //! a file into memory, and then returns the resulting string.
 //!
@@ -2279,6 +2280,10 @@ int|string try_get_file(string s, RequestID id,
 		 s, id, status, nocache, m);
     return 0;
   }
+
+  if (result_mapping)
+    foreach(indices(m), string i)
+      result_mapping[i] = m[i];
 
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.785 2002/06/13 11:34:09 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.786 2002/06/17 09:36:12 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2235,7 +2235,7 @@ class ImageCache
     return what;
   }
 
-  static void draw( string name, RequestID id )
+  static void|mapping draw( string name, RequestID id )
   {
 #ifdef ARG_CACHE_DEBUG
     werror("draw %O\n", name );
@@ -2722,6 +2722,9 @@ class ImageCache
     }
     else if( mappingp(reply) )
     {
+      // This could be an error from get_file()
+      if(reply->error)
+	return reply;
       meta = reply->meta;
       data = reply->data;
       if( !meta || !data )
@@ -2965,7 +2968,8 @@ class ImageCache
     {
       mixed err;
       if (nodraw || (err = catch {
-	draw( na, id );
+  	if (mapping res = draw( na, id ))
+  	  return res;
       })) {
 	// File not found.
 	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
@@ -4015,15 +4019,16 @@ mapping low_load_image(string f, RequestID id)
   return low_decode_image( data );
 }
 
-array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
+array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 {
   string data;
   Stdio.File file;
+  mapping res = ([]);
   if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id)))
+    if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, res)))
     {
       //  This is a major security hole! It can load any (image) file
       //  in the low-level file system using the server's user privileges.
@@ -4037,11 +4042,11 @@ array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
         };
 // #endif
       if( !data )
-	return 0;
+	return res;
     }
   }
   id->misc->_load_image_called = 0;
-  if(!data) return 0;
+  if(!data) return res;
   return decode_layers( data, opt );
 }
 
