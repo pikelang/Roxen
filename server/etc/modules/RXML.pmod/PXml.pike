@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.36 2000/02/21 18:55:16 mast Exp $
+//! $Id: PXml.pike,v 1.37 2000/03/04 19:09:22 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -57,6 +57,7 @@ static this_program _low_clone (mixed... args)
 static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
 				    RXML.TagSet tag_set, mixed... args)
   {TagSetParser::create (ctx, type, tag_set, @args);}
+string html_context() {return low_parser::context();}
 
 static void set_quote_tag_cbs()
 {
