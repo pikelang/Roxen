@@ -27,45 +27,38 @@
 <added id="1"/>
 
 <str id="1">
-<new/>
 <o>Pike memory usage information</o>
-<t></t>
+<t>Information om Pikes minnesanvändning</t>
 </str>
 
 <str id="2">
-<new/>
 <o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
-<t></t>
+<t>Visar en del information om hur Pike använder det minne som allokerats. Mest användbart för utvecklare.</t>
 </str>
 
 <str id="3">
-<new/>
 <o>Type</o>
-<t></t>
+<t>Typ</t>
 </str>
 
 <str id="4">
-<new/>
 <o>Number</o>
-<t></t>
+<t>Antal</t>
 </str>
 
 <str id="5">
-<new/>
 <o>Change</o>
-<t></t>
+<t>Förändring</t>
 </str>
 
 <str id="6">
-<new/>
 <o>Pike module list</o>
-<t></t>
+<t>Modul-lista</t>
 </str>
 
 <str id="7">
-<new/>
 <o>Show information about which features and modules are available in the Pike this Roxen is using.</o>
-<t></t>
+<t>Visa information om vilka moduler och finesser som är tillgängliga i den Pike som Roxen använder.</t>
 </str>
 
 <str id="238">
@@ -109,15 +102,13 @@
 </str>
 
 <str id="8">
-<new/>
 <o>Flush caches</o>
-<t></t>
+<t>Töm cachar</t>
 </str>
 
 <str id="9">
-<new/>
 <o>Flush all memory caches.</o>
-<t></t>
+<t>Rensa alla minnescachar.</t>
 </str>
 
 <str id="232">
@@ -126,15 +117,13 @@
 </str>
 
 <str id="10">
-<new/>
 <o>List fonts</o>
-<t></t>
+<t>Typsnittslista</t>
 </str>
 
 <str id="11">
-<new/>
 <o>List all available fonts</o>
-<t></t>
+<t>Visar information om alla tillgängliga typsnitt och exempel på deras användning.</t>
 </str>
 
 <str id="dH">
@@ -158,75 +147,63 @@
 </str>
 
 <str id="280">
-<new/>
 <o>Module lock status</o>
-<t></t>
+<t>Låsningsstatus för moduler</t>
 </str>
 
 <str id="281">
-<new/>
 <o>Shows various information about the module thread locks in Roxen.</o>
-<t></t>
+<t>Visar en del information om de moduler som behöver låsning vid användning av trådar i Roxen.</t>
 </str>
 
 <str id="12">
-<new/>
 <o>Unknown module</o>
-<t></t>
+<t>Okänd modul</t>
 </str>
 
 <str id="13">
-<new/>
 <o>Module lock status : Accesses to all modules</o>
-<t></t>
+<t>Låsningstatus för moduler: alla accesser</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Locked means that the access was done using a serializing lock since the module was not thread-safe, unlocked means that there was no need for a lock.</o>
-<t></t>
+<t>'Låst' innebär att anropen gjordes via en seriell låsning eftersom modulen inte var trådsäker; 'Ej låst' innebär att det inte fanns behov av låsning.</t>
 </str>
 
 <str id="15">
-<new/>
 <o>Locked accesses to a single module can inflict quite a severe performance degradation of the whole server, since a locked module will act as a bottleneck, blocking access for all other threads that want to access that module.</o>
-<t></t>
+<t>Låsta anrop till en enda modul kan innebära försämrad prestanda för hela servern, eftersom den modulen blir en flaskhals som tvingar andra trådar i behov av denna modul att vänta.</t>
 </str>
 
 <str id="17">
-<new/>
 <o>Module</o>
-<t></t>
+<t>Modul</t>
 </str>
 
 <str id="18">
-<new/>
 <o>File</o>
-<t></t>
+<t>Fil</t>
 </str>
 
 <str id="19">
-<new/>
 <o>Locked</o>
-<t></t>
+<t>Låst</t>
 </str>
 
 <str id="20">
-<new/>
 <o>Unlocked</o>
-<t></t>
+<t>Ej låst</t>
 </str>
 
 <str id="21">
-<new/>
 <o>Open files</o>
-<t></t>
+<t>Öppna filer</t>
 </str>
 
 <str id="22">
-<new/>
 <o>Show a list of all open files and network connections.</o>
-<t></t>
+<t>Visa en lista över alla öppna filer och nätverksanslutningar.</t>
 </str>
 
 <str id="23">
@@ -236,39 +213,33 @@
 </str>
 
 <str id="24">
-<new/>
 <o>Reload configurations from disk</o>
-<t></t>
+<t>Läs om alla konfigurationsfiler</t>
 </str>
 
 <str id="25">
-<new/>
 <o>Force a reload of all configuration information from the configuration files.</o>
-<t></t>
+<t>Gör så att alla inställningar läses om från konfigurationsfilerna.</t>
 </str>
 
 <str id="26">
-<new/>
 <o>All configurations reloaded from disk.</o>
-<t></t>
+<t>Alla inställningar omlästa.</t>
 </str>
 
 <str id="27">
-<new/>
 <o>Resolve path...</o>
-<t></t>
+<t>Visa sökväg</t>
 </str>
 
 <str id="28">
-<new/>
 <o>Check which modules handles the path you enter in the form</o>
-<t></t>
+<t>Kontrollera vilka moduler som hanterar en viss URL</t>
 </str>
 
 <str id="29">
-<new/>
 <o>URL</o>
-<t></t>
+<t>URL</t>
 </str>
 
 <str id="206">
@@ -277,33 +248,28 @@
 </str>
 
 <str id="30">
-<new/>
 <o>Password</o>
-<t></t>
+<t>Lösenord</t>
 </str>
 
 <str id="31">
-<new/>
 <o>There is no configuration available that matches this URL.</o>
-<t></t>
+<t>Det finns ingen sajt som hanterar en sådan URL.</t>
 </str>
 
 <str id="32">
-<new/>
 <o>Resolving</o>
-<t></t>
+<t>Slår upp</t>
 </str>
 
 <str id="33">
-<new/>
 <o>in</o>
-<t></t>
+<t>i</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Restart or shutdown</o>
-<t></t>
+<t>Starta om eller stäng ner</t>
 </str>
 
 <str id="197">
@@ -351,9 +317,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="37">
-<new/>
 <o>version</o>
-<t></t>
+<t>version</t>
 </str>
 
 <str id="38">
@@ -363,15 +328,13 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="39">
-<new/>
 <o>Thread</o>
-<t></t>
+<t>Tråd</t>
 </str>
 
 <str id="16">
-<new/>
 <o>This is only a problem if a significant percentage of the accesses are passed through non-threadsafe modules.</o>
-<t></t>
+<t>Det är bara ett problem om en signifikant del av serverns anrop passerar genom icke tråd-säkra moduler.</t>
 </str>
 
 <str id="228">
@@ -395,153 +358,128 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="40">
-<new/>
 <o>Version:</o>
-<t></t>
+<t>Version:</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Booted:</o>
-<t></t>
+<t>Startade:</t>
 </str>
 
 <str id="42">
-<new/>
 <o>Uptime:</o>
-<t></t>
+<t>Driftstid:</t>
 </str>
 
 <str id="43">
-<new/>
 <o>These are all active virtual servers. They are sorted by the number of requests they have received - the most active being first. Servers which haven't recieved any requests are not listed.</o>
-<t></t>
+<t>Detta är alla aktiva virtuella servrar som har fått något anrop. De är sorterade enligt flest anrop högst upp.</t>
 </str>
 
 <str id="44">
-<new/>
 <o>Server Overview</o>
-<t></t>
+<t>Totalöversikt</t>
 </str>
 
 <str id="45">
-<new/>
 <o>Access / request status</o>
-<t></t>
+<t>Anropsstatistik</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Shows the amount of data handled since last restart.</o>
-<t></t>
+<t>Visar mängd hanterad data sedan servern startade senast.</t>
 </str>
 
 <str id="47">
-<new/>
 <o>day</o>
-<t></t>
+<t>dag</t>
 </str>
 
 <str id="48">
-<new/>
 <o>days</o>
-<t></t>
+<t>dagar</t>
 </str>
 
 <str id="49">
-<new/>
 <o>Current FTP sessions</o>
-<t></t>
+<t>Nuvarande FTP-sessioner</t>
 </str>
 
 <str id="50">
-<new/>
 <o>List all active FTP sessions and what files they are currently transferring.</o>
-<t></t>
+<t>Visa alla aktiva FTP-sessioner och vilka filer som överförs.</t>
 </str>
 
 <str id="51">
-<new/>
 <o>anonymous</o>
-<t></t>
+<t>anonym</t>
 </str>
 
 <str id="52">
-<new/>
 <o>idle</o>
-<t></t>
+<t>inaktiv</t>
 </str>
 
 <str id="53">
-<new/>
 <o>From</o>
-<t></t>
+<t>Från</t>
 </str>
 
 <str id="54">
-<new/>
 <o>CWD</o>
-<t></t>
+<t>Sökväg</t>
 </str>
 
 <str id="55">
-<new/>
 <o>Action</o>
-<t></t>
+<t>Utför</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Transferred</o>
-<t></t>
+<t>Överfört</t>
 </str>
 
 <str id="57">
-<new/>
 <o>There are currently no active FTP sessions.</o>
-<t></t>
+<t>Inga aktiva FTP-sessioner för tillfället.</t>
 </str>
 
 <str id="58">
-<new/>
 <o>Available font loaders</o>
-<t></t>
+<t>Tillgängliga typsnitts-hanterare</t>
 </str>
 
 <str id="59">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Cachestatus</t>
 </str>
 
 <str id="60">
-<new/>
 <o>Show information about the main memory cache in Roxen</o>
-<t></t>
+<t>Visa information om Roxens minnescachar</t>
 </str>
 
 <str id="61">
-<new/>
 <o>WebServer Memory Cache</o>
-<t></t>
+<t>Webserverns minnescache</t>
 </str>
 
 <str id="62">
-<new/>
 <o>Class</o>
-<t></t>
+<t>Typ</t>
 </str>
 
 <str id="64">
-<new/>
 <o>Size</o>
-<t></t>
+<t>Storlek</t>
 </str>
 
 <str id="67">
-<new/>
 <o>Hit rate</o>
-<t></t>
+<t>Andel träffar</t>
 </str>
 
 <str id="68">
@@ -551,147 +489,123 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="69">
-<new/>
 <o>Fonts</o>
-<t></t>
+<t>Typsnitt</t>
 </str>
 
 <str id="70">
-<new/>
 <o>DNS</o>
-<t></t>
+<t>DNS</t>
 </str>
 
 <str id="71">
-<new/>
 <o>Locale Cache</o>
-<t></t>
+<t>Lokaliseringscache</t>
 </str>
 
 <str id="72">
-<new/>
 <o>Used languages:</o>
-<t></t>
+<t>Använda språk:</t>
 </str>
 
 <str id="73">
-<new/>
 <o>Registered projects:</o>
-<t></t>
+<t>Registrerade projekt:</t>
 </str>
 
 <str id="74">
-<new/>
 <o>Loaded projects:</o>
-<t></t>
+<t>Inlästa projekt:</t>
 </str>
 
 <str id="75">
-<new/>
 <o>Current cache size:</o>
-<t></t>
+<t>Nuvarande cachestorlek:</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Antal</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Träffar</t>
 </str>
 
 <str id="294">
-<new/>
 <o>Misses</o>
-<t></t>
+<t>Missar</t>
 </str>
 
 <str id="63">
-<new/>
 <o>Extended process status</o>
-<t></t>
+<t>Utökad processinformation</t>
 </str>
 
 <str id="65">
-<new/>
 <o>Shows detailed process status on Solaris 2.5 and later.</o>
-<t></t>
+<t>Visar detaljerad processinformaiton på Solaris 2.5 och senare.</t>
 </str>
 
 <str id="66">
-<new/>
 <o>shared</o>
-<t></t>
+<t>delat</t>
 </str>
 
 <str id="76">
-<new/>
 <o>private</o>
-<t></t>
+<t>privat</t>
 </str>
 
 <str id="77">
-<new/>
 <o>resident</o>
-<t></t>
+<t>resident</t>
 </str>
 
 <str id="78">
-<new/>
 <o>groups:</o>
-<t></t>
+<t>grupper:</t>
 </str>
 
 <str id="79">
-<new/>
 <o>and</o>
-<t></t>
+<t>och</t>
 </str>
 
 <str id="80">
-<new/>
-<o>Process Tree for %s</o>
-<t></t>
+<o>Process Tree for %d</o>
+<t>Processträd för %d</t>
 </str>
 
 <str id="81">
-<new/>
-<o>Misc status for %s</o>
-<t></t>
+<o>Misc status for %d</o>
+<t>Övrig status för %d</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Memory Usage:</o>
-<t></t>
+<t>Minnesanvändning:</t>
 </str>
 
 <str id="83">
-<new/>
 <o>Credentials:</o>
-<t></t>
+<t>Rättigheter:</t>
 </str>
 
 <str id="84">
-<new/>
 <o>Current working directory:</o>
-<t></t>
+<t>Nuvarande sökväg:</t>
 </str>
 
 <str id="85">
-<new/>
 <o>Process status</o>
-<t></t>
+<t>Processtatus</t>
 </str>
 
 <str id="86">
-<new/>
 <o>Shows various information about the Roxen process.</o>
-<t></t>
+<t>Visar diverse information om Roxenprocessen.</t>
 </str>
 
 <str id="87">
@@ -737,9 +651,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="94">
-<new/>
 <o>Key size</o>
-<t></t>
+<t>Nyckelstorlek</t>
 </str>
 
 <str id="95">
@@ -749,15 +662,13 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="96">
-<new/>
 <o>Key file</o>
-<t></t>
+<t>Nyckelfil</t>
 </str>
 
 <str id="97">
-<new/>
 <o>Where to store the file, may be relative to %s.</o>
-<t></t>
+<t>Var filen ska sparas, kan vara relatvit till %s i filsystemet.</t>
 </str>
 
 <str id="98">
@@ -876,9 +787,8 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="117">
-<new/>
 <o>Filename</o>
-<t></t>
+<t>Filnamn</t>
 </str>
 
 <str id="118">
@@ -984,7 +894,6 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="135">
-<new/>
 <o>Invalid key size.</o>
-<t></t>
+<t>Ogiltig nyckelstorlek.</t>
 </str>
