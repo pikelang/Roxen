@@ -55,11 +55,10 @@
             <formoutput>
               <gbutton href='/standard/change_user.html?uid=#config_user_uid#'
                        align=right bgcolor=##d9dee7 width=70>User:</gbutton> 
-             </formoutput>
           </td><td>
-            <font color=#78849c>
-            <pike>return id->misc->config_user->real_name+ " "+ "("+id->misc->config_user->name+")";</pike>
+            <font color=##78849c>#config_user_name# (#config_user_uid#)
            </td></tr>
+             </formoutput>
           </table>
         </middle>
         <contents>

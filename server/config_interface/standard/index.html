@@ -1,7 +1,7 @@
 <topmenu selected=home>
 
 <content>
-<h1>Welcome to Roxen Challenger jadajajajaj</h1>
+<p><br><p>
 
 <table align=right width=90% border=0 cellpadding=0 cellspacing=0>
 <tr><td width=100%><table width=100% border=0 callpadding=0 cellspacing=0><tr width=100%><td valign=bottom
@@ -31,52 +31,74 @@
 </tablist></td><td width=100% valign=bottom><img src=/internal-roxen-black-dot width=100% height=1></td></tr></table></td></tr>
 <tr><td bgcolor="#eeeeee">
 
-<pre>
+<h1>
+This is a pre-alpha view of the configuration interface
+
+<p>
+If your fonts are way to large (or small, depending on personal
+preferences), please adjust the unicode font size in your
+browser. This configuration interface uses UTF-8, and at least
+netscape has a diferent font size for unicode fonts (defaulting to 18)
+than normal fonts (defaulting to 12)
+
+<p> Edit -> Preferences -> Fonts -> (for the encoding ) Unicode (unicode-2-0) -> size
+
+<p>Known bugs (top 10 reported ones): 
+<ul>
+<li> Pages with &lt;pre&gt; text on them might extend beyond the width of the page.
+They will not be &lt;pre&gt; in the final version.
+<li> You are probably in read only mode. This is not a bug, really. :-)
+</ul>
+</ul>
+</h1>
+
+
+<dl>
+<dt>
 Event Log:
-  Local event log for each module (and configuration)
-
-Actions:
-  Rewrite all the old actions to new (htmlpage/pikescript awizard system)
-
-General:
-  Some code cleanup might be desireable.
-
-  UI Design of the interface.
-  Many pages are rather ugly right now.
-
-Configurations:
-  Inheritance of settings
-
-Virtual filesystem overview page:
-  Write one. :-)
+<dd>  Local event log for each module (and configuration)
+<p>
+<dt>Actions:
+<dd>  Rewrite all the old actions to new (htmlpage/pikescript awizard system)
+<p>
+<dt>General:
+<dd>  Some code cleanup might be desireable.
+<p>
+<dt>Configurations:
+<dd>  Inheritance of settings
+<p>
+<dt>Virtual filesystem overview page:
+<dd>  Write one. :-)<br>
   Quick remount: Edit mountpoints for virtual filesystems.
       Not always easy, simply edit the first TYPE_LOCATION variable
       found, perhaps, and see if query_location() changes, otherwise
       disable this feature for the specific module.
-
-RXML overview page:
-  Write one. :-)
+<p>
+<dt>RXML overview page:
+<dd>  Write one. :-)<br>
   Tag handler (select specific tags to enable/disable)
-  
-Priority overview page:
-  Write one. :-)
+<p>  
+<dt>Priority overview page:
+<dd>  Write one. :-)<br>
   Priority manager: Move modules up/down in priority with one mousclick.
+<p>
 
+<dt>Modules:
 
-Modules:
+<dd>  Global modules (such as protocol modules)<br>
+  (optional) Javascript pop-up description for the module addition page.<br>
+  Other add module page layout with more descriptions.<br>
+<p>
 
-  Global modules (such as protocol modules)
-  (optional) Javascript pop-up description for the module addition page.
-  Other add module page layout with more descriptions.
+<dt>Module variables:
 
-Module variables:
-
- VAR_DEVELOPER (support is there, but add it to variables)
+<dd> VAR_DEVELOPER (support is there, but add it to variables)<br>
  VAR_INITIAL   (should be configured immediately 
-                when the module is added (name?))
-
-Packages:
-  Add package support.
+                when the module is added (name?))<br>
+<p>
+<dt>Packages:
+<dd>  Add package support.
+</dl>
 </pre>
 </td></tr></table>
 </content>

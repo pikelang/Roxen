@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.1 1999/10/08 02:42:43 per Exp $
+ * $Id: debug_info.pike,v 1.2 1999/11/17 09:52:47 per Exp $
  */
 
 // inherit "wizard";
@@ -97,6 +97,7 @@ array get_prof_info(string|void foo)
 
 mixed page_1(object id)
 {
+  return "";
   string res = ("<font size=+1>Profiling information</font><br>"
 		"All times are in seconds, and real-time. Times incude"
 		" time of child functions. No callgraph is available yet.<br>"
@@ -112,7 +113,7 @@ mixed page_1(object id)
                                  "+chld",
                                  "t/call(ms)",
 				 "+chld(ms)"}));
-  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
+  return res;// + "\n\n<pre><font size=-20>"+ADT.Table.ASCII.encode( t )+"</font></pre>";
 }
 #endif
 
