@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.29 1997/02/22 13:02:50 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.30 1997/02/25 16:05:30 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -695,6 +695,26 @@ string extra_args(mapping in)
   return s;
 }
 
+string tag_gtext_id(string t, mapping arg,
+		    object id, object foo, mapping defines)
+{
+  int short=!!arg->short;
+  m_delete(arg, "short"); m_delete(arg, "maxlen");
+  m_delete(arg,"magic");  m_delete(arg,"submit");
+  extra_args(arg);        m_delete(arg,"split");
+  if(defines->fg && !arg->fg) arg->fg=defines->fg;
+  if(defines->bg && !arg->bg) arg->bg=defines->bg;
+  if(defines->font && !arg->font) arg->font=defines->font||QUERY(default_font);
+  if(!arg->font) arg->font = QUERY(default_font);
+
+  int num = find_or_insert( arg );
+
+  if(!short)
+    return query_location()+num+"/";
+  else
+    return (string)num;
+}
+
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
@@ -944,6 +964,7 @@ mapping query_tag_callers()
 {
   return ([
     "body":tag_body,
+    "gtext-id":tag_gtext_id,
     "font":tag_fix_color,
     "table":tag_fix_color,
     "tr":tag_fix_color,
