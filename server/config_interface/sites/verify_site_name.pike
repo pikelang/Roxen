@@ -34,7 +34,6 @@ mixed parse( RequestID id )
   int c;
   while( sscanf( n, "%s<%x>%s", p, c, e ) )
     n = p+sprintf("%c",c)+e;
-  werror("Name = %O\n", n );
   id->variables->name=
     (replace(n||"","\000"," ")/" "-({""}))*" ";
   if( check_config_name( id->variables->name ) )
