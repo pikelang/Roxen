@@ -38,7 +38,6 @@ private void parse_supports_string(string what, string current_section, mapping 
 {
   foreach(replace(what, "\\\n", " ")/"\n"-({""}), string line)
   {
-    array bar, gazonk;
     if(line[0] == '#')
     {
       string file;
@@ -50,9 +49,16 @@ private void parse_supports_string(string what, string current_section, mapping 
 	else
 	  report_error(LOCALE->supports_bad_include(file));
       }
-      else if(sscanf(line, "#define %[^ ] %s", name, to)) {
+      else if(sscanf(line, "#define %[^ \t]%*[ \t]%s", name, to)) {
 	name -= "\t";
-	defines[name] = to;
+	defines[name] = replace(to, ({"\t",","}), ({" "," "}) )/" "-({""});
+	array add=({});
+	foreach(defines[name], string sup)
+	  if(defines[sup]) {
+	    defines[name]-=({sup});
+	    add+=defines[sup];
+	  }
+	defines[name]+=add;
 //	werror("#defining '"+name+"' to "+to+"\n");
       }
       else if(sscanf(line, "#section %[^ ] {", name)) {
@@ -68,31 +74,22 @@ private void parse_supports_string(string what, string current_section, mapping 
 
     }
     else {
-      int rec = 10;
-      string q=replace(line,",", " ");
-      line="";
-
-      // Handle all defines.
-      while((strlen(line)!=strlen(q)) && --rec)
-      {
-	line=q;
-	q = replace(q, indices(defines), values(defines));
-      }
-
-      line=q;
-
-      if(!rec)
-	report_debug("Too deep recursion while replacing defines.\n");
-
 //    werror("Parsing supports line '"+line+"'\n");
-      bar = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
-      line="";
+      array sups = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
 
-      if(sizeof(bar) < 2)
+      array add=({});
+      foreach(sups, string sup)
+	if(defines[sup]) {
+	  sups-=({sup});
+	  add+=defines[sup];
+	}
+      sups+=add;
+
+      if(sizeof(sups) < 2)
 	continue;
 
-      if(bar[0] == "default") {
-	array tmp=split_supports(bar[1..]);
+      if(sups[0] == "default") {
+	array tmp=split_supports(sups[1..]);
 	default_supports = tmp[0]-tmp[1];
         default_client_var = tmp[2];
       }
@@ -100,7 +97,7 @@ private void parse_supports_string(string what, string current_section, mapping 
 	mixed err;
 	if (err = catch {
 	  supports[current_section]
-	    += ({ ({ Regexp(bar[0])->match }) + split_supports(bar[1..]) });
+	    += ({ ({ Regexp(sups[0])->match }) + split_supports(sups[1..]) });
 	})
 	  report_error(LOCALE->supports_bad_regexp(describe_backtrace(err)));
       }
@@ -115,12 +112,6 @@ public void initiate_supports()
   default_client_var = ([ ]);
   parse_supports_string(roxenp()->QUERY(Supports), 0, ([]) );
 }
-
-
-//---------------------- Returns the supports flags ------------------------
-
-
-// Return a list of 'supports' values for the current connection.
 
 private array(multiset|mapping) lookup_supports(string from)
 {
@@ -159,6 +150,10 @@ private array(multiset|mapping) lookup_supports(string from)
   return ret;
 }
 
+
+//---------------------- Returns the supports flags ------------------------
+
+// Return a list of 'supports' flags for the current connection.
 multiset(string) find_supports(string from, void|multiset existing_sup)
 {
   if(!strlen(from) || from == "unknown")
@@ -167,6 +162,7 @@ multiset(string) find_supports(string from, void|multiset existing_sup)
   return lookup_supports(from)[0]|existing_sup;
 }
 
+// Return a list of 'supports' variables for the current connection.
 mapping(string:string) find_client_var(string from, void|mapping existing_cv)
 {
   if(!strlen(from) || from == "unknown")
