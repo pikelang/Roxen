@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.127 1999/03/18 19:56:45 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.128 1999/03/18 20:35:40 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -264,11 +264,12 @@ private int parse_got(string s)
 
       int end;
 
-      while (!(end = search(l, " "))) {
+      if (!(end = search(l, " "))) {
 	// Seems the line has extra spaces at the end.
 	// Get rid of them.
 	sscanf(l, "%*[ ]%s", l);
 	line = line[..sizeof(l)+start];
+	end = search(l, " ");
       }
       if (end != -1) {
 	f = line[start+1..sizeof(line)-(end+2)];
