@@ -1,14 +1,15 @@
-// $Id: module.h,v 1.38 2000/07/04 03:44:36 per Exp $
+// $Id: module.h,v 1.39 2000/07/09 18:18:03 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
-// somewhat faster than 'query'
-#define QUERY(var)	variables[ #var ]->query()
+
+// compat
+#define QUERY(var)	query( #var )
 
 // Like query, but for global variables.
 #ifdef IN_ROXEN
-#define GLOBVAR(x) variables[ #x ]->query()
+#define GLOBVAR(x) query( #x )
 #else /* !IN_ROXEN */
-#define GLOBVAR(x) roxenp()->variables[ #x ]->query()
+#define GLOBVAR(x) roxenp()->query(#x)
 #endif /* IN_ROXEN */
 
 #define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
