@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: deflate.pike,v 1.4 2004/06/19 22:41:44 mani Exp $";
+ "$Id: deflate.pike,v 1.5 2004/06/19 22:50:28 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -29,14 +29,14 @@ constant module_doc =
 
 void create() {
   set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");
+
   defvar("compressionlevel", 1,
 	 "Compressionlevel", TYPE_INT,
-	 "Use 1 for fast compression, use 9 for slow compression."
-	 );
+	 "Use 1 for fast compression, use 9 for slow compression.");
+
   defvar("minfilesize", 1024,
 	 "Minimum file size", TYPE_INT,
-	 "Any data below this size limit will be sent uncompressed."
-	 );
+	 "Any data below this size limit will be sent uncompressed.");
 }
 
 int before, after, nosupport, success, nowant;
