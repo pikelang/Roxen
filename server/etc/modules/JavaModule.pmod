@@ -10,6 +10,12 @@ static object int_value = int_class->get_method("intValue", "()I");
 static object map_init = map_class->get_method("<init>", "(I)V");
 static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
+/* File I/O */
+static object reader_class = FINDCLASS("java/io/Reader");
+static object string_class = FINDCLASS("java/lang/String");
+static object _read = reader_class->get_method("read", "([C)I");
+static object string_init = string_class->get_method("<init>", "([CII)V");
+
 /* Class loading */
 static object class_class = FINDCLASS("java/lang/Class");
 static object classloader_class = FINDCLASS("java/lang/ClassLoader");
@@ -33,6 +39,7 @@ static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 
 /* Module interface */
+static object conf_class = FINDCLASS("se/idonex/roxen/RoxenConfiguration");
 static object module_class = FINDCLASS("se/idonex/roxen/Module");
 static object defvar_class = FINDCLASS("se/idonex/roxen/Defvar");
 static object location_ifc = FINDCLASS("se/idonex/roxen/LocationModule");
@@ -41,11 +48,15 @@ static object tagcaller_ifc = FINDCLASS("se/idonex/roxen/TagCaller");
 static object containercaller_ifc = FINDCLASS("se/idonex/roxen/ContainerCaller");
 static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
+static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
+static object conf_init = conf_class->get_method("<init>", "()V");
+static object _configuration = module_class->get_field("configuration", "Lse/idonex/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
 static object query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
 static object query_desc = module_class->get_method("queryDescription", "()Ljava/lang/String;");
 static object _status = module_class->get_method("status", "()Ljava/lang/String;");
 static object _getdefvars = module_class->get_method("getDefvars", "()[Lse/idonex/roxen/Defvar;");
+static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
 static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
@@ -60,13 +71,16 @@ static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
 static object dv_value = defvar_class->get_field("value", "Ljava/lang/Object;");
 static object dv_type = defvar_class->get_field("type", "I");
 static object _errno = response_class->get_field("errno", "I");
-static object _len = response_class->get_field("len", "I");
+static object _len = response_class->get_field("len", "J");
 static object _type = response_class->get_field("type", "Ljava/lang/String;");
 static object _data = response2_class->get_field("data", "Ljava/lang/String;");
+static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
 
-static object natives_bind1;
+static object natives_bind1, natives_bind2;
 
 static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
+static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
+static mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
 
 
 static void check_exception()
@@ -115,6 +129,50 @@ class ClassLoader
   }
 }
 
+static string stringify(object o)
+{
+  return o && (string)o;
+}
+
+static mixed valify(mixed o)
+{
+  if(!objectp(o))
+    return o;
+  else if(o->_values)
+    return map(values(o), valify);
+  else if(o->is_instance_of(int_class))
+    return int_value(o);
+  else
+    return (string)o;
+}
+
+class ReaderFile
+{
+  static private object _reader;
+
+  string read(int|void n)
+  {
+    if(zero_type(n))
+      n = 65536;
+    if(n<=0)
+      return "";
+    object a = jvm->new_char_array(n);
+    check_exception();
+    int r = _read(_reader, a);
+    check_exception();
+    if(r<=0)
+      return "";
+    object s = string_class->alloc();
+    string_init(s, a, 0, r);
+    check_exception();
+    return (string)s;
+  }
+
+  void create(object r)
+  {
+    _reader = r;
+  }
+}
 
 class ModuleWrapper
 {
@@ -154,27 +212,22 @@ class ModuleWrapper
   }
 
 
-  static object modobj;
+  static object modobj, confobj;
   static int modtype;
   static string modname, moddesc;
 
-  static string stringify(object o)
+  static object make_conf(object conf)
   {
-    return o && (string)o;
+    if(conftojo[conf])
+      return conftojo[conf];
+    object ob = conf_class->alloc();
+    conf_init(ob);
+    check_exception();
+    jotoconf[ob] = conf;
+    conftojo[conf] = ob;
+    return ob;
   }
 
-  static mixed valify(mixed o)
-  {
-    if(!objectp(o))
-      return o;
-    else if(o->_values)
-      return map(values(o), valify);
-    else if(o->is_instance_of(int_class))
-      return int_value(o);
-    else
-      return (string)o;
-  }
-    
   static object make_reqid(RequestID id)
   {
     /* FIXME */
@@ -211,6 +264,9 @@ class ModuleWrapper
     if(r->is_instance_of(response2_class) &&
        (s = _data->get(r)))
       rr->data = (string)s;
+    else if(r->is_instance_of(response3_class) &&
+	    (s = _file->get(r)))
+      rr->file = ReaderFile(s);
     check_exception();
     return rr;
   }
@@ -271,6 +327,13 @@ class ModuleWrapper
     return make_response(r);
   }
 
+  mixed find_internal(string f, RequestID id)
+  {
+    object r = _find_internal(modobj, f, make_reqid(id));
+    check_exception();
+    return make_response(r);
+  }
+
   static void load(string filename)
   {
     array(string) dcomp = filename/"/";
@@ -310,7 +373,8 @@ class ModuleWrapper
   static void init(object conf)
   {
     if(conf) {
-      /* FIXME */
+      _configuration->set(modobj, confobj = make_conf(conf));
+     check_exception();
     }
     modtype = query_type(modobj);
     check_exception();
@@ -327,9 +391,25 @@ static object native_query(object mod, object var)
   return mod && mod->query((string)var);
 }
 
+static object native_queryconf(object conf, object var)
+{
+  conf = jotoconf[conf];
+  return conf && conf->query((string)var);
+}
+
+static object native_queryconfinternal(object conf, object mod)
+{
+  conf = jotoconf[conf];
+  return conf && conf->query_internal_location(mod && jotomod[mod]);
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
+  }));
+  natives_bind2 = conf_class->register_natives(({
+    ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
+    ({"queryInternalLocation", "(Lse/idonex/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
   }));
 }
