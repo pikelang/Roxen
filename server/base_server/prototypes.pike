@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.134 2004/05/18 18:24:12 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.135 2004/05/19 13:04:06 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -298,6 +298,7 @@ class DAVLock
   }
 }
 
+//! Configuration information for a site.
 class Configuration
 {
   inherit BasicDefvar;
@@ -306,7 +307,7 @@ class Configuration
   mapping(string:array(int)) error_log=([]);
 
 #ifdef PROFILE
-  mapping profile_map = ([]);
+  mapping(string:array(int)) profile_map = ([]);
 #endif
 
   class Priority
