@@ -18,7 +18,7 @@ PIKEVERSION=@PIKEVERSION@
 # Used to avoid make compatibility problems.
 BIN_TRUE=":"
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_LIBIODBC@ @MAKE_PLATFORM@ pike extern
 	-@$(BIN_TRUE)
 
 pike: force
@@ -35,6 +35,9 @@ gdbm: force
 
 zlib: force
 	-@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
+
+libiodbc: force
+	-@(cd libiodbc;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) -static" libiodbc.la)
 
 # Does not work. The top level makefile contaminates the enviroment.
 #platform: force
@@ -70,6 +73,9 @@ verify_other: verify_extern
 	@if test "@MAKE_GMP@" = "gmp"; then \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_gmp; \
 	fi
+	@if test "@MAKE_LIBIODBC@" = "libiodbc"; then \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_libiodbc; \
+	fi
 
 verify_extern:
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
@@ -79,6 +85,9 @@ verify_zlib:
 
 verify_gmp:
 	@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" check)
+
+verify_libiodbc:
+	@(cd libiodbc;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" check)
 
 new_peep_engine:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)

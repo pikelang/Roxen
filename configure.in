@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.62 1999/03/27 17:28:16 marcus Exp $
+# $Id: configure.in,v 1.63 1999/04/22 23:27:17 marcus Exp $
 #
 
 prefix=$PWD
@@ -63,6 +63,7 @@ esac
 AC_ARG_WITH(gmp,     [  --with(out)-gmp        Support bignums],[],[with_gmp=yes])
 AC_ARG_WITH(zlib,    [  --with(out)-zlib       Support gzip compression],[],[with_zlib=yes])
 AC_ARG_WITH(gdbm,    [  --with(out)-gdbm       GNU database manager support ],[],[with_gdbm=yes])
+AC_ARG_WITH(iodbc,   [  --with(out)-iodbc      iODBC driver manager support ],[],[with_iodbc=yes])
 AC_ARG_WITH(pike,    [  --with-pike            Specify version of Pike],[],[with_pike=0.6])
 
 #
@@ -636,6 +637,36 @@ if test -d $srcdir/gdbm/.; then
     fi
   fi
 fi
+
+# libiodbc -- ODBC driver manager
+#--------------------------------
+
+MAKE_LIBIODBC=""
+AC_SUBST(MAKE_LIBIODBC)
+if test -d $srcdir/libiodbc/.; then
+  unset ac_cv_header_isql_h
+  unset ac_cv_lib_iodbc_SQLConnect
+  if test x$with_iodbc = xyes; then
+    AC_CHECK_HEADERS(isql.h)
+    AC_CHECK_LIB(iodbc, SQLConnect)
+    if test "$ac_cv_header_isql_h$ac_cv_lib_iodbc_SQLConnect" = "yesyes"; then
+      echo iODBC already installed.
+    else
+      echo Enabling supplied libiodbc...
+      MAKE_LIBIODBC=libiodbc
+      roxen_lib_subdirs="$roxen_lib_subdirs libiodbc"
+      # Fool Pike into believing iODBC is installed.
+      # It will be when Pike is being built.
+      ac_cv_header_isql_h=yes
+      ac_cv_header_isqlext_h=yes
+      ac_cv_lib_iodbc_SQLConnect=yes
+      PWD=`pwd`
+      CPPFLAGS="-I$srcdir/libiodbc -I$PWD/libiodbc ${CPPFLAGS}"
+      LDFLAGS="-L$PWD/libiodbc/.libs ${LDFLAGS}"
+    fi
+  fi
+fi
+
 
 #
 # Platform
