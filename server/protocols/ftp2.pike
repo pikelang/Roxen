@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.25 1998/05/14 08:22:50 neotron Exp $
+ * $Id: ftp2.pike,v 1.26 1998/05/14 16:18:48 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -476,12 +476,12 @@ class LS_L
 
     if (flags & LS_FLAG_G) {
       // No group.
-      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\r\n", perm*"",
+      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
 		     (string)st[-2], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     } else {
-      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\r\n", perm*"",
+      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\n", perm*"",
 		     (string)st[-2], st[-1], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
@@ -629,13 +629,13 @@ class LSFile
     }
     switch (flags & (LS_FLAG_l|LS_FLAG_C|LS_FLAG_m)) {
     case LS_FLAG_C:
-      res = sprintf("%#-79s\r\n", res);
+      res = sprintf("%#-79s\n", res);
       break;
     case LS_FLAG_m:
-      res = sprintf("%=-79s\r\n", (res/"\n")*", ");
+      res = sprintf("%=-79s\n", (res/"\n")*", ");
       break;
     case LS_FLAG_l:
-      res = "total " + total + "\r\n" + res;
+      res = "total " + total + "\n" + res;
       break;
     default:
       break;
@@ -717,7 +717,7 @@ class LSFile
 	DWRITE("FTP: LSFile->list_next_directory(): NO FILES!\n");
       }
       if (name_directories) {
-	listing = short + ":\r\n" + listing + "\r\n";
+	listing = short + ":\n" + listing + "\n";
       }
       if (listing != "") {
 	output(listing);
@@ -804,7 +804,7 @@ class LSFile
 	  files[n_files++] = short;
 	}
       } else {
-	output(short + ": not found\r\n");
+	output(short + ": not found\n");
 	session->conf->log(([ "error":404 ]), session);
       }
     }
@@ -2410,7 +2410,18 @@ class FTPSession
   {
     array(string) argv = glob_expand_command_line("/usr/bin/ls " + (args||""));
 
+    string old_mode = mode;
+    if (mode != "E") {
+      // The listings returned by a LIST or NLST command SHOULD use an
+      // implied TYPE AN, unless the current type is EBCDIC, in which
+      // case an implied TYPE EN SHOULD be used.
+      // RFC 1123 4.1.2.7
+      mode = "A";
+    }
+
     call_ls(argv);
+
+    mode = old_mode;
   }
 
   void ftp_LIST(string args)
