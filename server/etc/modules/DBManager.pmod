@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.41 2001/09/06 11:08:32 per Exp $
+// $Id: DBManager.pmod,v 1.42 2001/09/06 15:36:57 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -572,7 +572,11 @@ int create_group( string name,    string lname,
 array(string) group_dbs( string group )
 {
   return query( "SELECT db FROM db_groups WHERE groupn=%s", group )
-    ->db;
+    ->db
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      -({"roxen","mysql"})
+#endif
+    ;
 }
 
 string db_group( string db )
