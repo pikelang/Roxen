@@ -81,12 +81,16 @@ string|mapping parse( RequestID id )
   master()->set_inhibit_compile_errors( e );
   string res = "";
   array sts = ({});
-  foreach( glob( "*.pike", get_dir( SITE_TEMPLATES )), string st )
+  foreach( glob( "*.pike", get_dir( SITE_TEMPLATES ) |
+		           (get_dir( "../local/"+SITE_TEMPLATES )||({}))),
+	   string st )
   {
     st = SITE_TEMPLATES+st;
     catch
     {
-      object q = ((program)st)();
+      object q;
+      if( catch( q = ((program)("../local/"+st))( ) ) )
+	q = ((program)st)())
       if( q->site_template )
       {
         string name, doc;
