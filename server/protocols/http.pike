@@ -1,8 +1,8 @@
-// This is a roxen module.
+// This is a roxen protocol module.
 // Modified by Francesco Chemolli to add throttling capabilities.
-// Copyright © 1996 - 1998, Idonex AB.
+// Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.183 2000/01/05 17:48:51 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.184 2000/01/12 05:47:19 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -279,7 +279,11 @@ private int really_set_config(array mod_config)
 {
   string url, m;
   string base;
-  base = conf->query("MyWorldLocation")||"/";
+  if (conf)
+    base = conf->query("MyWorldLocation");
+  else
+    base = "/";
+
   if(supports->cookies)
   {
     REQUEST_WERR("Setting cookie..\n");
