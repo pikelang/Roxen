@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.33 2000/01/25 16:44:10 nilsson Exp $
+//! $Id: module.pmod,v 1.34 2000/01/25 18:06:51 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -623,24 +623,20 @@ class Context
     else scopes[scope_name] = vars;
   }
 
-  void extend_scope (string scope_name, SCOPE_TYPE vars)
+  int extend_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or extends the specified scope at a global level.
+  //! Returns 1 on success and 0 on failure.
   {
     if (!exist_scope(scope_name)) {
       add_scope (scope_name, vars);
-      return ;
+      return 1;
     }
-    if (objectp(vars)) {
-      if (!mappingp(scopes[scope_name])) {
-	add_scope (scope_name, vars);
-	return;
-      }
-      mapping tmp = scopes[scope_name];
-      add_scope (scope_name, vars);
-      vars = tmp;
+    if (!mappingp(vars)) {
+      return 0;
     }
     foreach (indices(vars), string var)
       set_var(var, vars[var], scope_name);
+    return 1;
   }
 
   void remove_scope (string scope_name)
