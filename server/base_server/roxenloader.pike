@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.319 2002/03/22 09:42:26 jonasw Exp $
+// $Id: roxenloader.pike,v 1.320 2002/04/05 13:32:45 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.319 2002/03/22 09:42:26 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.320 2002/04/05 13:32:45 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1634,7 +1634,8 @@ void low_start_mysql( string datadir,
   // enable mysql networking if necessary.
   mapping env = getenv();
   env->MYSQL_UNIX_PORT = datadir+"/socket";
-  if ((int)env->MYSQL_TCP_PORT) {
+  if ((int)env->ROXEN_MYSQL_TCP_PORT) {
+    env->MYSQL_TCP_PORT = env->ROXEN_MYSQL_TCP_PORT;
     args += ({ "--port="+env->MYSQL_TCP_PORT });
     if (!env->MYSQL_HOST) {
       env->MYSQL_HOST = "127.0.0.1";
