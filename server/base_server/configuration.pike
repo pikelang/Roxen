@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.125 1998/04/29 15:45:43 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.126 1998/05/07 21:50:23 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -6,6 +6,9 @@ string cvs_version = "$Id: configuration.pike,v 1.125 1998/04/29 15:45:43 grubba
 #ifdef PROFILE
 mapping profile_map = ([]);
 #endif
+
+#define CATCH(X)	do { mixed err; if(err = catch{X;}) report_error(describe_backtrace(err)); } while(0)
+
 
 /* A configuration.. */
 
@@ -135,13 +138,13 @@ class Priority
 
   void stop()
   {
-    foreach(url_modules, object m)      		catch { m->stop(); };
-    foreach(logger_modules, object m)   		catch { m->stop(); };
-    foreach(filter_modules, object m)  			catch { m->stop(); };
-    foreach(location_modules, object m)			catch { m->stop(); };
-    foreach(last_modules, object m)    			catch { m->stop(); };
-    foreach(first_modules, object m)    		catch { m->stop(); };
-    foreach(indices(provider_modules), object m) 	catch { m->stop(); };
+    foreach(url_modules, object m)      		CATCH(m->stop());
+    foreach(logger_modules, object m)   		CATCH(m->stop());
+    foreach(filter_modules, object m)  			CATCH(m->stop());
+    foreach(location_modules, object m)			CATCH(m->stop());
+    foreach(last_modules, object m)    			CATCH(m->stop());
+    foreach(first_modules, object m)    		CATCH(m->stop());
+    foreach(indices(provider_modules), object m) 	CATCH(m->stop());
   }
 }
 
@@ -275,11 +278,11 @@ private mapping (string:array (object)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
-  catch { parse_module->stop(); };
-  catch { types_module->stop(); };
-  catch { auth_module->stop(); };
-  catch { dir_module->stop(); };
-  for(int i=0; i<10; i++) catch { pri[i]->stop(); };
+  CATCH(parse_module->stop());
+  CATCH(types_module->stop());
+  CATCH(auth_module->stop());
+  CATCH(dir_module->stop());
+  for(int i=0; i<10; i++) CATCH(pri[i]->stop());
 }
 
 public string type_from_filename( string file, int|void to )
@@ -355,10 +358,9 @@ void map_providers(string provides, string fun, mixed ... args)
       continue;
     if(functionp(mod[fun])) 
       error = catch(mod[fun](@args));
-    else
-      error = 0;
     if(arrayp(error))
       werror(describe_backtrace(error + ({ "Error in map_providers:"})));
+    error = 0;
   }
 }
 
@@ -865,7 +867,8 @@ int|mapping check_security(function a, object id, void|int slevel)
   if(!sizeof(seclevels[0]))
     return 0; // Ok if there are no patterns.
 
-  catch {
+  mixed err;
+  err = catch {
     foreach(seclevels[0], level) {
       switch(level[0]) {
       case MOD_ALLOW: // allow ip=...
@@ -902,6 +905,13 @@ int|mapping check_security(function a, object id, void|int slevel)
       }
     }
   };
+
+  if (err) {
+    report_error(sprintf("Error during module security check:\n"
+			 "%s\n", describe_backtrace(err)));
+    return(1);
+  }
+
   if (ip_ok == 1) {
     // Bad IP.
     return(1);
@@ -1008,12 +1018,11 @@ object _lock(object|function f)
     if (l != -1)
     {
       // Allow recursive locks.
-      catch
-      {
+      CATCH({
 	//perror("lock %O\n", f);
 	locked[f]++;
 	key = l();
-      };
+      });
     } else
       thread_safe[f]++;
   } else if (f->thread_safe) {
