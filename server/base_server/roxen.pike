@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.229 1998/08/26 16:28:51 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.230 1998/09/01 13:48:07 marcus Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -86,6 +86,8 @@ private object root;
 #ifdef THREADS
 // This mutex is used by privs.pike
 object euid_egid_lock = Thread.Mutex();
+
+void stop_handler_threads(); // forward declaration
 #endif /* THREADS */
 
 int privs_level;
@@ -104,6 +106,10 @@ private static void fork_or_quit()
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: fork_or_quit()\n                 Bye!\n");
 #endif
+
+#ifdef THREADS
+  stop_handler_threads();
+#endif /* THREADS */
 
 #if constant(fork) && !defined(THREADS)
 
@@ -216,7 +222,8 @@ object do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
-object (Thread.Queue) handle_queue = Thread.Queue();
+static object (Thread.Queue) handle_queue = Thread.Queue();
+static int thread_reap_cnt;
 
 void handler_thread(int id)
 {
@@ -225,9 +232,14 @@ void handler_thread(int id)
   {
     if(q=catch {
       do {
-	if((h=handle_queue->read()) && h && h[0]) {
+	if((h=handle_queue->read()) && h[0]) {
 	  h[0](@h[1]);
 	  h=0;
+	} else if(!h) {
+	  // Roxen is shutting down.
+	  werror("Handle thread ["+id+"] stopped\n");
+	  thread_reap_cnt--;
+	  return;
 	}
       } while(1);
     }) {
@@ -265,6 +277,24 @@ void start_handler_threads()
 		   handler_thread, number_of_threads );
   if(number_of_threads > 0)
     handle = threaded_handle;
+}
+
+void stop_handler_threads()
+{
+  int timeout=30;
+  perror("Stopping all request handler threads.\n");
+  while(number_of_threads>0) {
+    number_of_threads--;
+    handle_queue->write(0);
+    thread_reap_cnt++;
+  }
+  while(thread_reap_cnt) {
+    if(--timeout<=0) {
+      perror("Giving up waiting on threads!\n");
+      return;
+    }
+    sleep(1);
+  }
 }
 
 mapping accept_threads = ([]);
@@ -1028,6 +1058,10 @@ void kill_me()
 #endif
   stop_all_modules();
   
+#ifdef THREADS
+  stop_handler_threads();
+#endif /* THREADS */
+
   if(main_configuration_port && objectp(main_configuration_port))
   {
     // Only _really_ do something in the main process.
