@@ -11,17 +11,21 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.6 2002/02/07 10:35:30 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.7 2002/02/13 13:54:04 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
 
 static inherit "http";
 
+#define WEBAPP_CHAINING
+
 #ifdef WEBAPP_DEBUG
 # define WEBAPP_WERR(X) werror("WebApp: "+X+"\n")
+# define WRAP_WERR(X) WEBAPP_WERR(sprintf("%s[%d]: ", clazz, _ident) + X)
 #else
 # define WEBAPP_WERR(X)
+# define WRAP_WERR(X)
 #endif
 
 #if constant(system.normalize_path)
@@ -65,6 +69,7 @@ mapping(string:mapping(string:string)) servletmaps = ([
   "exact" : ([ ]),
   "default" : ([ ]),
   "any" : ([ ]),
+  "chaining" : ([ ]),
 ]);
 
 // map from url-patterns to servlet name read from web.xml
@@ -82,6 +87,9 @@ mapping(string:string) webapp_info = ([ ]);
 // Context parameters from web.xml
 mapping(string:string) webapp_context = ([ ]);
 
+// Content type globs that are matched against the content type
+// returned from the servlet to determine if rxml parsing should be done
+array(string) rxmlmap;
 
 
 static mapping http_low_answer(int errno, string data, string|void desc)
@@ -124,6 +132,7 @@ void stop()
     "exact" : ([ ]),
     "default" : ([ ]),
     "any" : ([ ]),
+    "chaining" : ([ ]),
   ]);
 }
 
@@ -292,6 +301,22 @@ void parse_webapp(Node c)
       break;
     case "ejb-ref":
       break;
+    case "chaining-mapping":
+      data = ([ ]);
+      c->iterate_children(lambda (Node c, mapping(string:string) data) {
+                            switch (c->get_tag_name())
+                            {
+                              case "servlet-name":
+                                data["name"] = String.trim_all_whites(c->value_of_node());
+                                break;
+                              case "mime-pattern":
+                                data["type"] = String.trim_all_whites(c->value_of_node());
+                                break;
+                            }
+                          }, data);
+      if (data["type"] && data["name"])
+        servletmaps["chaining"][lower_case(data["type"])] = data["name"];
+      break;
   }
 }
 
@@ -310,6 +335,12 @@ void start(int x, Configuration conf)
   else
     if(x != 0)
       return;
+
+  if (query("rxml")) {
+    rxmlmap = replace(query("rxmltypes"), ({",", " ", ";"}), ({"\n"})*3)/"\n" - ({""});
+  }
+  else
+    rxmlmap = ({ });
 
   string warname = query("warname");
   if (has_suffix(warname, ".war"))
@@ -450,7 +481,7 @@ void start(int x, Configuration conf)
 
 string status()
 {
-  return "<h2>" + LOCALE(28, "Application: ") +
+  return "<h2>" +
     ( webapp_info["display-name"] && sizeof(webapp_info["display-name"]) > 0 ?
       webapp_info["display-name"] :
       webapp_info["webapp"] ) +
@@ -458,25 +489,53 @@ string status()
     (webapp_info["description"] ?
      webapp_info["description"] :
           "") +
-    LOCALE(8, "<h2>Servlets:</h2>")+
+    LOCALE(8, "<table border=0>")+
+    "<tr><td colspan=4><hr /></td></tr>" +
+    "<tr>" +
+    "<th align=left>Name</th>" +
+    "<th align=left>Mapping&nbsp;&nbsp;&nbsp;</th>" +
+    "<th align=left>Class</th>" +
+    "<th align=left>Description" +
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+    "</th>" +
+    "</tr>" +
+    "<tr><td colspan=4><hr /></td></tr>" +
+
     ((map(indices(servlets),
           lambda(string serv) {
-            string ret = "<h3>";
+            string ret = "<tr valign=top>";
+
+            ret += "<th align=left>";
             ret += ( servlets[serv]["display-name"] ||
                      servlets[serv]["servlet-name"] );
-            ret += "</h3>";
-            if (servlets[serv]->url)
-              ret += servlets[serv]->url +
-                LOCALE(9, " mapped to ") +
-                servlets[serv]["servlet-class"] +
-                "<br />";
+            ret += "</th>";
+
+            if (servlets[serv]->url) {
+              ret += "<td nowrap>";
+              ret += servlets[serv]->url;
+              ret += "</td>";
+              ret += "<td nowrap>";
+              ret += servlets[serv]["servlet-class"];
+              ret += "</td>";
+            }
+            else
+              ret += "<td></td><td></td>";
+
+            ret += "<td rowspan=2>";
             if (servlets[serv]->description)
-              ret += servlets[serv]->description + "<br />";
+              ret += servlets[serv]->description;
+            ret += "</td>";
+
+            ret += "</tr><tr valign=top>";
+
+            ret += "<td colspan=3>";
             if (servlets[serv]->initialized == 1)
               ret += servlets[serv]->servlet->info() ||
                 LOCALE(10, "<i>No servlet information available</i>");
             else if (!servlets[serv]->loaded)
-              ret += LOCALE(29, "<i>Servlet not loaded</i>");
+              ret += LOCALE(29, "<i>Servlet not loaded.</i>");
             else if (servlets[serv]->loaded == -1)
               {
                 ret += "<font color='&usr.warncolor;'>";
@@ -491,11 +550,14 @@ string status()
                 ret += LOCALE(32, "<b>Servlet failed to initialize!</b>");
                 ret += "</font>";
               }
+            ret += "</td>";
 
-            ret += "<br />";
+            ret += "</tr>";
             return ret;
           })
-      )*"<br /><br />") + status_info;
+      )*"<tr><td colspan=4><hr /></td></tr>") +
+    "<tr><td colspan=4><hr /></td></tr>" +
+    "</table>" + status_info;
 }
 
 string query_name()
@@ -527,23 +589,129 @@ void load_all()
   }
 }
 
-class RXMLParseWrapper
+
+static int ident=1;
+
+class BaseWrapper
 {
+  static constant clazz = "BaseWrapper";
   static object _file;
   static object _id;
   static string _data;
+  static string header;
+  static int _ident;
+  static int first=1;
+  int collect=0;
+  string content_type;
+
+  int check(string ct)
+  {
+    return 0;
+  }
+
+  void set_collect(int i)
+  {
+    collect = i;
+  }
 
   int write(string data)
   {
-    _data += data;
+    if (first) {
+      array(string) headers;
+      int hend;
+      _data += data;
+    
+      //WRAP_WERR(sprintf("got first:\n'%s'", data));
+
+      if ((hend=search(_data, "\r\n\r\n")) != -1) {
+        first=0;
+        header = _data[..hend+3];
+        _data = _data[hend+4..];
+
+        //WRAP_WERR(sprintf("found header:\n'%s'", header));
+        WRAP_WERR(sprintf("found header!"));
+        headers = (header/"\r\n")-({ "" });
+
+        if (lower_case((headers[0]/" ")[1]) != "200") {
+          WRAP_WERR(sprintf("status: '%s'",
+                              lower_case((headers[0]/" ")[1]) ));
+          set_collect(0);
+        }
+        else
+          foreach(headers, string h) {
+            if (lower_case((h/":")[0]) == "content-type") {
+              content_type = (h/":")[1];
+              content_type = String.trim_all_whites((content_type/";")[0]);
+              WRAP_WERR(sprintf("content-type: '%s'", content_type));
+              if (check(content_type)) {
+                set_collect(1);
+              }
+              break;
+            }
+          }
+
+        if (!collect) {
+          WRAP_WERR(sprintf("first collect:"));
+          flush();
+        }
+      }
+    }
+    else if (collect) {
+      WRAP_WERR(sprintf("more collect:"));
+      _data += data;
+      ;
+    }
+    else {
+      //WRAP_WERR(sprintf("got more:\n'%s'", data));
+      return _file->write(data);
+    }
+    
     return strlen(data);
+  }
+
+  void flush()
+  {
+    int len;
+    WRAP_WERR(sprintf("flush called:"));
+    while (sizeof(header) > 0) {
+      len = _file->write(header);
+      //WRAP_WERR(sprintf("flushed %d:\n'%s'", len,header));
+      header=header[len..];
+    }
+    while (sizeof(_data) > 0) {
+      len = _file->write(_data);
+      //WRAP_WERR(sprintf("flushed %d:\n'%s'", len,_data));
+      _data=_data[len..];
+    } 
   }
 
   int close(void|string how)
   {
-    _file->write(Roxen.parse_rxml(_data,_id));
-    _data="";
+    WRAP_WERR(sprintf("close called: first=%d, collect=%d",
+                        first, collect));
+    if (collect) {
+      return 1;
+    }
+    else if (first) {
+      flush();
+    }
     return _file->close(how);
+  }
+
+  string get_data(void|int clear)
+  {
+    string tmp = _data;
+    if (clear)
+      _data = "";
+    return tmp;
+  }
+
+  string get_header(void|int clear)
+  {
+    string tmp = header;
+    if (clear)
+      header = "";
+    return tmp;
   }
 
   mixed `->(string n)
@@ -553,9 +721,55 @@ class RXMLParseWrapper
 
   void create(object file, object id)
   {
+    _ident = ident++;
     _file = file;
     _id = id;
     _data = "";
+    WRAP_WERR("create called");
+  }
+}
+
+class RXMLParseWrapper
+{
+  inherit BaseWrapper;
+  
+  static constant clazz = "RXMLWrapper";
+
+  int check(string ct)
+  {
+    if (query("rxml")) {
+      return sizeof(filter(rxmlmap,
+                           lambda(string gl, string ct) { return glob(gl, ct); },
+                           ct)) > 0;
+    }
+  }
+
+  int close(void|string how)
+  {
+    if (collect) {
+      WRAP_WERR("Calling parse_rxml!");
+      //WRAP_WERR(sprintf("close header: '%s'", get_header()));
+      //WRAP_WERR(sprintf("close data: '%s'", get_data()));
+      _file->write(get_header(1));
+      _file->write(Roxen.parse_rxml(get_data(1), _id));
+      collect = 0;
+    }
+    else
+      WRAP_WERR("NOT calling parse_rxml!");
+
+    return ::close(how);
+  }
+}
+
+class ServletChainingWrapper
+{
+  inherit BaseWrapper;
+  
+  static constant clazz = "ChainingWrapper";
+
+  int check(string ct)
+  {
+    return map_servlet_chain(ct)?1:0;
   }
 }
 
@@ -749,6 +963,29 @@ mapping(string:string|mapping|Servlet.servlet) map_servlet(string f, RequestID i
   return 0;
 }
 
+mapping(string:string|mapping|Servlet.servlet) map_servlet_chain(string type)
+{
+  mapping(string:string|mapping|Servlet.servlet) serv;
+  string s = servletmaps["chaining"][lower_case(type)];
+
+  //WEBAPP_WERR(sprintf("trying chain type=%s", type));
+  //WEBAPP_WERR(sprintf("trying chainmap=%O", servletmaps["chaining"]));
+
+  if (s) {
+    WEBAPP_WERR(sprintf("match on chain=%s !!", s));
+    serv = servlets[s];
+  }
+
+  if (serv)
+    {
+      //WEBAPP_WERR(sprintf("match on chain servlet: %s !!", serv["servlet-name"]));
+      load_servlet(serv);
+      return serv;
+    }
+
+  return 0;
+}
+
 int is_special( string f, RequestID id )
 {
   string realfile = real_file(f, id);
@@ -773,16 +1010,6 @@ mixed find_file( string f, RequestID id )
   servlet = map_servlet(f, id);
 
   if (!servlet) {
-//     WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
-//            "servlets_exact=%O\n"
-//            "servlets_path=%O\n"
-//            "servlets_ext=%O\n"
-//            "servlets_default=%O\n"
-//            "servlets_any=%O\n"
-//            , f, servlets_exact, servlets_path, servlets_ext, servlets_default, servlets_any));
-//     WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
-//                         "servlets=%O\n"
-//                         , f, servlets));
     if (!is_special(f, id))
       return ::find_file(f, id);
     else 
@@ -797,12 +1024,47 @@ mixed find_file( string f, RequestID id )
           id->my_fd->set_read_callback(0);
           id->my_fd->set_close_callback(0);
           id->my_fd->set_blocking();
-          if(query("rxml"))
-            id->my_fd = RXMLParseWrapper(id->my_fd, id);
-//           WEBAPP_WERR(sprintf("servlet_war: servlet=%O\nid=%O,%O",
-//                               servlet, id->my_fd,
-//                               mkmapping(indices(id), values(id))));
+
+          id->my_fd = RXMLParseWrapper(id->my_fd, id);
+
+#ifdef WEBAPP_CHAINING
+          object old_fd = id->my_fd;
+          object chain_wrapper;
+          mapping(string:string|mapping|Servlet.servlet) serv;
+          int x=1;
+          do {
+            WEBAPP_WERR(sprintf("Chaining preparing: '%s'", servlet["servlet-name"]));
+            chain_wrapper = ServletChainingWrapper(old_fd, id);
+            id->my_fd = chain_wrapper;
+            servlet->servlet->service(id);
+            if (chain_wrapper->collect) {
+              serv = map_servlet_chain(chain_wrapper->content_type);
+              if (serv && serv->initialized == 1) {
+                id->data = chain_wrapper->get_data();
+                servlet = serv;
+              }
+              else
+                x=0xffff;
+            }
+            WEBAPP_WERR(sprintf("Chaining: x=%d, collect=%d",
+                                x, chain_wrapper->collect));
+            // Limit the chaining to 3 servlets!!
+          } while (x++<3 && chain_wrapper->collect);
+
+          if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
+            id->misc->cacheable = 5;
+            return http_low_answer(500, "<title>Servlet Error - chaining failed</title>"
+                                   "<h1>Servlet Error - chaining failed</h1>"
+                                   "<h2>Location: " +
+                                   loc + f + "</h2>"
+                                   "<b>The servlet you tried to run failed "
+                                   "during chaining. Please contact the "
+                                   "server administrator about this "
+                                   "problem.</b>");
+          }
+#else /* WEBAPP_CHAINING */
           servlet->servlet->service(id);
+#endif /* WEBAPP_CHAINING */
         }
         
         return Roxen.http_pipe_in_progress();
@@ -1082,6 +1344,11 @@ void create()
                 "this module will be RXML parsed. "
                 "NOTE: No data will be returned to the "
                 "client until the output is fully parsed.") );
+
+  defvar("rxmltypes", "text/xml text/html", LOCALE(0, "RXMLTypes"), TYPE_TEXT,
+	 LOCALE(23, "Content types that should be passed on to the "
+                "RXML Parser."), 0,
+         lambda() { return !query("rxml"); } );
 
   defvar("codebase",
          ClassPathList( ({""}), VAR_MORE,
