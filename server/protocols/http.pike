@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.90 1998/03/31 20:00:40 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.91 1998/04/02 23:43:00 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -58,7 +58,7 @@ mapping (string:string) cookies = ([ ]);
 
 multiset   (string) prestate     = (< >);
 multiset   (string) config       = (< >);
-multiset   (string) supports;
+multiset   (string) supports     = (< >);
 multiset (string) pragma    = (< >);
 
 string remoteaddr, host;
@@ -536,8 +536,7 @@ private int parse_got(string s)
     } 
   }
   if(!client) client = ({ "unknown" });
-  if(!supports)
-    supports = find_supports(lower_case(client*" "));
+  supports = find_supports(lower_case(client*" "), supports);
   if(!referer) referer = ({ });
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.

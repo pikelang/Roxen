@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.179 1998/03/26 11:37:30 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.180 1998/04/02 23:42:59 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -646,9 +646,9 @@ public void update_supports_from_roxen_com()
 
 // Return a list of 'supports' values for the current connection.
 
-public multiset find_supports(string from)
+public multiset find_supports(string from, void|multiset existing_sup)
 {
-  multiset (string) sup = (< >);
+  multiset (string) sup = existing_sup || (< >);
   multiset (string) nsup = (< >);
 
   array (function|multiset) s;
