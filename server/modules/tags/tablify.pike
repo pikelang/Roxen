@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.7 1997/11/14 16:40:39 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.8 1997/11/14 19:00:50 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -19,6 +19,8 @@ mixed *register_module()
       ("Generates tables from, as an example, tab separated fields in newline"
        " separated records (this is the default)."
        "<p>This module defines a tag, &lt;tablify&gt;<p>Arguments:<br>"
+       "help: This help<br>\n"
+       "nice: Generate \"nice\" tables. The first row is the title row<br>\n"
        "cellseparator=str: Use str as the column-separator<br>\n"
        "rowseparator=str: Use str as the row-separator<br>\n"
        "cellalign=left|right|center: Align the contents of the cells<br>\n"
@@ -36,6 +38,8 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   int i;
 
   if(tag == "htable") m->nice="nice";
+  
+  if(m->help) return register_module[2];
 
   if(sep = m->rowseparator)
     m->rowseparator = 0;
