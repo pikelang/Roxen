@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.467 2004/09/27 14:09:16 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.468 2004/10/27 14:43:17 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -389,7 +389,7 @@ class TagExpireTime {
 
     array do_return(RequestID id) {
       int t,t2;
-      t = t2 = (int)args["unix-time"]||time(1);
+      t = t2 = args["unix-time"] ? (int)args["unix-time"] : time(1);
       if(!args->now) {
 	t = Roxen.time_dequantifier(args, t);
 	CACHE( max(t-t2,0) );
@@ -873,7 +873,7 @@ class TagDate {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      int t=(int)args["unix-time"] || time(1);
+      int t = args["unix-time"] ? (int)args["unix-time"] : time(1);
 
       if(args["iso-time"])
       {
