@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.6 2000/09/15 19:44:24 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.7 2000/09/26 13:19:41 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -209,7 +209,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-  "dice":#"<desc cont>Simulates a D&D style dice algorithm.</desc>
+  "dice":#"<desc cont>Simulates a D&amp;D style dice algorithm.</desc>
 
 <attr name=type value=string default=D6>
  Describes the dices. A six sided dice is called 'D6' or '1D6', while
