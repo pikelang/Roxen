@@ -5,7 +5,7 @@ if [ -f /usr/sbin/mysqld ] ; then
   if [ -d /usr/share/mysql ] ; then
     ln -s /usr/sbin . ;
     mkdir share ;
-    ln -s /usr/share/mysql share/mysql ;
+    ln -s /usr/share/mysql share ;
     echo Ok.
     exit 0
   fi
@@ -16,7 +16,7 @@ if [ -f /usr/libexec/mysqld ] ; then
   if [ -d /usr/share/mysql ] ; then
     ln -s /usr/libexec . ;
     mkdir share;
-    ln -s /usr/share/mysql share/mysql ;
+    ln -s /usr/share/mysql share ;
     echo Ok.
     exit 0
   fi
