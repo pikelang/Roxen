@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.66 1999/12/27 12:36:16 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.67 1999/12/29 18:31:24 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -152,8 +152,8 @@ program low_findprog(string pname, string ext, object|void handler)
   if( (s=master_file_stat( fname )) && s[1]>=0 )
   {
     if( load_time[ fname ] > s[ 3 ] )
-      if( programs[fname] ) 
-        return programs[fname];
+      if( !zero_type (ret = programs[fname]) )
+        return ret;
 
     switch(ext)
     {
@@ -189,10 +189,9 @@ program low_findprog(string pname, string ext, object|void handler)
 
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
-	if(arrayp(e) && sizeof(e)==2 &&
-	   arrayp(e[1]) && sizeof(e[1]) == sizeof(backtrace()))
-	  e[1]=({});
-	throw(e);
+	if(arrayp(e) && sizeof(e) && stringp (e[0]))
+	  if (handler) handler->compile_error(fname, 0, e[0]);
+	  else compile_error(fname, 0, e[0]);
       }
       break;
 #if constant(load_module)
@@ -204,17 +203,7 @@ program low_findprog(string pname, string ext, object|void handler)
     load_time[fname] = time();
     return programs[fname] = ret;
   }
-  return UNDEFINED;
-}
-
-mapping resolv_cache = ([]);
-mixed resolv(string a, string b)
-{
-  string ci = (string)a+(string)b;
-  if( resolv_cache[ci] )
-    return resolv_cache[ci]->value ? resolv_cache[ci]->value : ([])[0];
-  resolv_cache[ci] = ([ "value":(::resolv(a,b)) ]);
-  return resolv_cache[ci]->value ? resolv_cache[ci]->value : ([])[0];
+  return 0;
 }
 
 int refresh( program p, int|void force )
