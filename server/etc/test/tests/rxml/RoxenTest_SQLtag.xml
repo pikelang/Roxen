@@ -1,4 +1,4 @@
-<add-module>sqltag</add-module>
+<use-module>sqltag</use-module>
 
 <test>
 <rxml><sqlquery db="local" query="CREATE TABLE __test (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -62,5 +62,3 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 <rxml><sqlquery db="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
-
-<drop-module>sqltag</drop-module>

@@ -1,4 +1,4 @@
-<add-module>session_tag</add-module>
+<use-module>session_tag</use-module>
 
 <test>
 <rxml><session id="1">1&_.x;<set variable="x" value="y"/>&_.x;</session></rxml>
@@ -35,4 +35,6 @@
 <result>7z</result>
 </test>
 
-<drop-module>session_tag</drop-module>
+<test>
+<rxml><clear-session id="2"/></rxml>
+</test>

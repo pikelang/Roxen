@@ -1,8 +1,6 @@
-<add-module>compat</add-module>
+<use-module>compat</use-module>
 
 <test>
 <rxml><pr></rxml>
 <result><a href="http://www.roxen.com/"><img border="0" alt="Powered by Roxen" width="60" src="/internal-roxen-power-medium-white" height="60" /></a></result>
 </test>
-
-<drop-module>compat</drop-module>
