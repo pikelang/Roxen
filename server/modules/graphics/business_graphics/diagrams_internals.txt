@@ -37,7 +37,8 @@ string drawtype;
  "2D" - ritar 2D boxar
  "3D" - flash!!!
  
-
+float|int 3Ddepth;
+//Anger hur djup 3D ska vara i pixel
 
 array(array(float)) data; 
 //Innehåller för graph 
@@ -136,7 +137,7 @@ int xsize, ysize;
 // som ska användas som bakgrundsbild.
 
 "axcolor":({int r, int g, int b}) 
-//Färgen på axlarna
+//Färgen på axlarna och på outlines i pie
 
 "datacolors":({({int r, int g, int b}), ... }) 
 //Färgen på linjerna/barsen/slicerna
