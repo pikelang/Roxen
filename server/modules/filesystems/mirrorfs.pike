@@ -118,6 +118,9 @@ void start(int arg, object conf)
 
 void get_remote_dir(string dir)
 {
+#ifdef MODULE_DEBUG
+  roxen_perror("get_remote_dir(\""+dir+"\")\n");
+#endif /* MODULE_DEBOG */
   string l = combine_path(path,combine_path("/",dir+"/")[1..]);
   array d ;
   if(rpc() && (d=rpc()->get_dir(dir)))
@@ -130,6 +133,9 @@ void get_remote_dir(string dir)
 
 void get_remote_file(string f)
 {
+#ifdef MODULE_DEBUG
+  roxen_perror("get_remote_file(\""+f+"\")\n");
+#endif /* MODULE_DEBOG */
   if(!strlen(f) || f[-1]=='/') f+="index.html";
   string l = combine_path(path,combine_path("/",f)[1..]);
   catch {
@@ -142,20 +148,35 @@ void get_remote_file(string f)
   };
 }
 
+mixed find_local_file(string f, object id)
+{
+  string old_method = id->method;
+  id->method="GET";
+  mixed res = ::find_file(f, id);
+  id->method=old_method;
+  return res;
+}
+
 array find_dir(string s, object id)
 {
   mixed res;
-  if(objectp(res=::find_file(s+".dirents",id)))
+#ifdef MODULE_DEBUG
+  roxen_perror("find_dir(\""+s+"\")\n");
+#endif /* MODULE_DEBOG */
+  if(objectp(res=find_local_file(s+".dirents",id)))
     if(res = decode_value(res->read(0x7ffffff)))
       if(res[0]==path) return res[1];
   get_remote_dir(s);
-  if(objectp(res=::find_file(s+".dirents",id)))
+  if(objectp(res=find_local_file(s+".dirents",id)))
     return decode_value(res->read(0x7ffffff))[1];
 }
 
 array stat_file(string s, object id)
 {
   array res;
+#ifdef MODULE_DEBUG
+  roxen_perror("stat_file(\""+s+"\")\n");
+#endif /* MODULE_DEBOG */
   if(res=::stat_file(s,id)) return res;
   return rpc() && rpc()->stat_file(s);
 }
@@ -164,6 +185,9 @@ array stat_file(string s, object id)
 mixed find_file(string s, object id)
 {
   mixed res;
+#ifdef MODULE_DEBUG
+  roxen_perror("find_file(\""+s+"\")\n");
+#endif /* MODULE_DEBOG */
   if(res=::find_file(s,id))
     return res;
   get_remote_file(s);
