@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.74 2001/03/12 20:46:42 jhs Exp $
+// $Id: Roxen.pmod,v 1.75 2001/03/12 23:46:05 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -11,7 +11,7 @@
 #define roxen roxenp()
 
 #ifdef HTTP_DEBUG
-# define HTTP_WERR(X) werror("HTTP: "+X+"\n");
+# define HTTP_WERR(X) report_debug("HTTP: "+X+"\n");
 #else
 # define HTTP_WERR(X)
 #endif
@@ -1784,7 +1784,7 @@ inherit _Roxen;
  */
 
 #ifdef QUOTA_DEBUG
-#define QD_WRITE(X)	werror(X)
+#define QD_WRITE(X)	report_debug(X)
 #else /* !QUOTA_DEBUG */
 #define QD_WRITE(X)
 #endif /* QUOTA_DEBUG */
@@ -2643,7 +2643,6 @@ class ScopePage {
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
 		       "theme-bgcolor":"theme_bgcolor", "theme-fgcolor":"theme_fgcolor",
 		       "theme-language":"theme_language"]);
-  constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     NOCACHE(c->id);
@@ -2651,7 +2650,7 @@ class ScopePage {
       case "pathinfo": return ENCODE(c->id->misc->path_info, t_text, type);
     }
     mixed val;
-    if(in_defines[var])
+    if(converter[var])
       val = c->id->misc->defines[converter[var]];
     else
       val = c->id->misc->scope_page[var];
@@ -2663,7 +2662,7 @@ class ScopePage {
     switch (var) {
       case "pathinfo": return c->id->misc->path_info = val;
     }
-    if(in_defines[var])
+    if(converter[var])
       return c->id->misc->defines[converter[var]]=val;
     return c->id->misc->scope_page[var]=val;
   }
@@ -2672,7 +2671,7 @@ class ScopePage {
     if(!c) return ({});
     NOCACHE(c->id);
     array ind=indices(c->id->misc->scope_page);
-    foreach(indices(in_defines), string def)
+    foreach(indices(converter), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
     return ind + ({"pathinfo"});
   }
@@ -2684,7 +2683,7 @@ class ScopePage {
 	predef::m_delete (c->id->misc, "pathinfo");
 	return;
     }
-    if(in_defines[var]) {
+    if(converter[var]) {
       if(var[0..4]=="theme")
 	predef::m_delete(c->id->misc->defines, converter[var]);
       else
@@ -3274,11 +3273,11 @@ int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..
   id->misc->wiretap_stack = ({});
 
 #ifdef WIRETAP_TRACE
-  werror ("Init wiretap stack for %O: "
-	  "fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
-	  id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
-	  id->misc->defines->alink, id->misc->defines->alink,
-	  id->misc->defines->vlink);
+  report_debug ("Init wiretap stack for %O: "
+		"fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
+		id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
+		id->misc->defines->alink, id->misc->defines->alink,
+		id->misc->defines->vlink);
 #endif
 
   return changed;
@@ -3309,9 +3308,9 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 #undef FIX
 
 #ifdef WIRETAP_TRACE
-  werror ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-	  sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
-	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+  report_debug ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+		sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
+		id->misc->defines->fgcolor, id->misc->defines->bgcolor);
 #endif
 
   return changed;
@@ -3334,9 +3333,9 @@ void pop_color (string tagname, RequestID id)
     id->misc->wiretap_stack = c[..sizeof(c)-i-2];
 
 #ifdef WIRETAP_TRACE
-  werror ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-	  sizeof (c) * 2, "", id, tagname,
-	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+  report_debug ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+		sizeof (c) * 2, "", id, tagname,
+		id->misc->defines->fgcolor, id->misc->defines->bgcolor);
 #endif
   }
 }
