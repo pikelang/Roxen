@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.597 2000/12/30 21:47:24 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.598 2000/12/31 05:51:48 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2215,154 +2215,79 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  static string name;
-  static string path;
-  static int is_db;
   static Sql.sql db;
+  static string name;
 
 #define CACHE_VALUE 0
 #define CACHE_SKEY  1
 #define CACHE_SIZE  600
 #define CLEAN_SIZE  100
 
-#ifdef THREADS
-  static Thread.Mutex mutex = Thread.Mutex();
-# define LOCK() object __key = mutex->lock()
-#else
-# define LOCK()
-#endif
+  static string lq, ulq;
+  class DBLock
+  {
+    static void create()
+    {
+      if(!lq)
+      {
+        lq = "select GET_LOCK('"+name+"',4)";
+        ulq = "select RELEASE_LOCK('"+name+"')";
+      }
+      db->query( lq );
+    }
+    static void destroy()
+    {
+      db->query( ulq );
+    }
+  }
+  
+# define LOCK() DBLock __ = DBLock()
 
   static mapping (string:mixed) cache = ([ ]);
 
   static void setup_table()
   {
     if(catch(db->query("select id from "+name+" where id=-1")))
-      if(catch(db->query("create table "+name+" ("
-                         "id int auto_increment primary key, "
-                         "lkey varchar(80) not null default '', "
-                         "contents blob not null default '', "
-                         "atime bigint not null default 0)")))
-        throw("Failed to create table in database\n");
+      db->query("create table "+name+" ("
+                "id int auto_increment primary key, "
+                "lkey char(10) not null default '', "
+                "atime bigint not null default 0, "
+                "contents blob not null default '' "
+                ")");
   }
 
-  void create( string _name,
-               string _path,
-               int _is_db )
+  void create( string _name )
   //! Instantiates an argument cache of your own.
-  //!
-  //! A value of 0 for the <tt>is_db</tt> parameter will make your
-  //! argument cache store its data in the regular filesystem, in a
-  //! directory <tt>name</tt> created at <tt>path</tt>.
-  //!
-  //! A value of 1 for the <tt>is_db</tt> parameter will make your
-  //! argument cache store its data in a database, <tt>path</tt> being
-  //! an <ref>SQL url</ref>, <tt>name</tt> being the name of the table
-  //! in that database.
   {
     name = _name;
-    path = _path;
-    is_db = _is_db;
-
-    if( is_db )
-    {
-      if( path == "internal" )
-      {
-        db = connect_to_my_mysql( 0, "mysql" );
-        catch(db->query( "create database cache" ));
-        catch(db->query( "use cache" ));
-      }
-      else
-        db = Sql.sql( path );
-      if(!db)
-        error("Failed to connect to database for argument cache\n");
-      setup_table( );
-    } else {
-      if(path[-1] != '/' && path[-1] != '\\')
-        path += "/";
-      path += replace(name, "/", "_")+"/";
-      mkdirhier( path + "/tmp" );
-      Stdio.File test;
-      if (!(test = open (path + "/.testfile", "wc")))
-        error ("Can't create files in the argument cache directory " + 
-               path + 
-#if constant(strerror)
-               " ("+strerror(errno())+
-#endif
-               "\n");
-//       else 
-//       {
-// 	rm (path + "/.testfile"); // It is better not to remove it, 
-// this way permission problems are detected rather early.
-//       }
-    }
+    db = connect_to_my_mysql( 0, "cache" );
+    setup_table( );
   }
 
   static string read_args( string id )
   {
-    if( is_db )
+    array res = db->query("select contents from "+name+" where id="+id);
+    if( sizeof(res) )
     {
-      array res = db->query("select contents from "+name+" where id='"+id+"'");
-      if( sizeof(res) )
-      {
-        db->query("update "+name+" set atime='"+time(1)+"' where id='"+id+"'");
-        return res[0]->contents;
-      }
-      return 0;
-    } else {
-      Stdio.File f;
-      if( search( id, "/" )<0 && (f = open(path+"/"+id, "r")))
-        return f->read();
+      db->query("update "+name+" set atime='"+time(1)+"' where id="+id);
+      return res[0]->contents;
     }
     return 0;
   }
 
-  string tohex( string what ) 
-  {
-#if constant(Gmp.mpz)
-    return sprintf( "%x", Gmp.mpz( what, 256 ) );
-#else
-    int i = 0; 
-    for( int q = 0; q<strlen(what); q++ )
-    {
-      i<<=8;
-      i |= what[strlen(what)-1-q];
-    }
-    return sprintf( "%x", i );
-#endif
-  }
-
   static string create_key( string long_key )
   {
-    if( is_db )
-    {
-      array data = db->query(sprintf("select id,contents from %s where lkey='%s'",
-                                       name,long_key[..79]));
-      foreach( data, mapping m )
-        if( m->contents == long_key )
-          return m->id;
+    array data = db->query(sprintf("select id,contents from %s where lkey='%s'",
+                                   name,db->quote(long_key[5..14])));
+    foreach( data, mapping m )
+      if( m->contents == long_key )
+        return m->id;
 
-      db->query( sprintf("insert into %s (contents,lkey,atime) values "
-                         "('%s','%s','%d')",
-                         name, long_key, long_key[..79], time() ));
-      return create_key( long_key );
-    } else {
-      string _key=tohex(Crypto.md5()->update(long_key)->digest());
-      _key = replace(_key-"=","/","=");
-      string short_key = _key[0..1];
-
-      Stdio.File f;
-      while( f = open( path+short_key, "r" ) )
-      {
-        if( f->read() == long_key )
-          return short_key;
-        short_key = _key[..strlen(short_key)];
-        if( strlen(short_key) >= strlen(_key) )
-          short_key += "."; // Not very likely...
-      }
-      f = open( path+short_key, "wct" );
-      f->write( long_key );
-      return short_key;
-    }
+    db->query( sprintf("insert into %s (contents,lkey,atime) values "
+                       "('%s','%s',%d)",
+                       name, db->quote(long_key),
+                       db->quote(long_key[5..14]), time() ));
+    return (string)db->master_sql->insert_id();
   }
 
 
@@ -2371,9 +2296,7 @@ class ArgCache
   //! if it was not present.
   {
     LOCK();
-    if( !is_db ) 
-      return !!open( path+key, "r" );
-    return !!read_args( key );
+    return sizeof( db->query( "select id from "+name+" where id="+(int)key));
   }
 
   string store( mapping args )
@@ -2381,9 +2304,8 @@ class ArgCache
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
   {
-    LOCK();
     array b = values(args), a = sort(indices(args),b);
-    string data = MIME.encode_base64(encode_value(({a,b})),1);
+    string data = encode_value(({a,b}));
 
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
@@ -2404,6 +2326,7 @@ class ArgCache
       }
     }
 
+    LOCK();
     string id = create_key( data );
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
@@ -2417,18 +2340,15 @@ class ArgCache
   //! may be supplied to get an error message stating the browser name
   //! in the event of the key not being present any more in the cache.
   {
-    LOCK();
     if(cache[id] && cache[ cache[id] ] )
       return cache[cache[id]][CACHE_VALUE];
 
+    LOCK();
     string q = read_args( id );
 
-    if(!q)
-      if( client )
-        error("Key does not exist! (Thinks "+ (client*"") +")\n");
-      else
-        error("Requesting unknown key\n");
-    mixed data = decode_value(MIME.decode_base64( q ));
+    if(!q) error("Requesting unknown key\n");
+
+    mixed data = decode_value(q);
     data = mkmapping( data[0],data[1] );
 
     cache[ q ] = ({0,0});
@@ -2447,10 +2367,7 @@ class ArgCache
       m_delete( cache, cache[id] );
       m_delete( cache, id );
     }
-    if( is_db )
-      db->query( "delete from "+name+" where id='"+id+"'" );
-    else
-      r_rm( path+id );
+    db->query( "delete from "+name+" where id='"+id+"'" );
   }
 }
 
@@ -3084,7 +3001,7 @@ void initiate_argcache()
 {
   int t = gethrtime();
   report_debug( "Initiating argument cache ... ");
-  if( mixed e = catch( argcache = ArgCache("arguments","internal",1) ) )
+  if( mixed e = catch( argcache = ArgCache("arguments") ) )
   {
     report_fatal( "Failed to initialize the global argument cache:\n"
                   + (describe_backtrace( e )/"\n")[0]+"\n");
