@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.101 2004/06/04 08:29:26 _cvs_stephen Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.102 2004/07/17 12:42:37 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -556,6 +556,7 @@ mapping remap_url(RequestID id)
   TRACE_LEAVE("OK");
 
   // HT_WERR(sprintf("id->misc: %O", id->misc));
+  return 0;
 }
 
 multiset denylist;
