@@ -12,7 +12,9 @@
 *.ppm binary
 *.rc eol=crlf
 *.ttf binary
-/server/nfonts/boomeran.txt eol=crlf
+*.txt eol=crlf
+/server/nfonts/bastard.txt !eol
+/server/nfonts/puppyface.txt !eol
 map binary
 
 # Handling of foreign (ie CVS) identifiers.
