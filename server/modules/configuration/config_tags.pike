@@ -783,7 +783,7 @@ array get_variable_maps( object mod, mapping m, object id )
                       q->form=("<font size=-1>"+q->form+"</font>");
                   } );
 
-  if( m->section && (m->section != "all"))
+  if( m->section && (m->section != "_all"))
   {
     if( !strlen( m->section ) || (search( m->section, "Settings" ) != -1 ))
       variables = filter( variables,
