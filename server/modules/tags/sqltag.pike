@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.37 1999/09/28 15:46:51 mast Exp $
+ * $Id: sqltag.pike,v 1.38 1999/10/11 11:41:02 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.37 1999/09/28 15:46:51 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.38 1999/10/11 11:41:02 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -170,6 +170,13 @@ mixed sqloutput_tag(string tag_name, mapping args, string contents,
       }
     } else if (result && sizeof(result))
     {
+      if(args["mysql-insert-id"])
+	if(con->master_sql->insert_id)
+	  request_id->variables[args["mysql-insert-id"]] =
+	    (string)con->master_sql->insert_id();
+	else
+	  return "<!-- No insert_id present. --><false>";
+
       res = ({do_output_tag( args, result, contents, request_id )});
       request_id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
@@ -262,9 +269,9 @@ string sqlquery_tag(string tag_name, mapping args,
       }
     }
     if(args["mysql-insert-id"])
-      if(con->master_sql)
+      if(con->master_sql->insert_id)
 	request_id->variables[args["mysql-insert-id"]] =
-	  con->master_sql->insert_id();
+	  (string)con->master_sql->insert_id();
       else
 	return "<!-- No insert_id present. --><false>";
     return("<true>");
