@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.16 2000/01/18 18:11:56 mast Exp $
+//! $Id: PXml.pike,v 1.17 2000/01/19 19:00:49 mast Exp $
 
 #pragma strict_types
 
@@ -135,9 +135,8 @@ static void create (
 	    ({0,
 	      [function(Parser.HTML,mapping(string:string),string:array)]
 	      tag->_handle_tag}) :
-	    ({({[function(Parser.HTML,mapping(string:string):array)]
-		tag->_handle_tag,
-		0}),		// Necessary as long as we use set_extra().
+	    ({[function(Parser.HTML,mapping(string:string):array)]
+	      tag->_handle_tag,
 	      0});
     }
 
@@ -154,9 +153,8 @@ static void create (
 	  ({0,
 	    [function(Parser.HTML,mapping(string:string),string:array)]
 	    tag->_handle_tag}) :
-	  ({({[function(Parser.HTML,mapping(string:string):array)]
-	      tag->_handle_tag,
-	      0}),		// Necessary as long as we use set_extra().
+	  ({[function(Parser.HTML,mapping(string:string):array)]
+	    tag->_handle_tag,
 	    0});
 
     foreach (indices (new_tagdefs), string name) {
@@ -202,8 +200,8 @@ mixed read()
 
 void report_error (string msg) {low_parser::write_out (msg);}
 
-// mixed feed (string in) {return low_parser::feed (in);}
-// void finish (void|string in) {low_parser::finish (in);}
+mixed feed (string in) {return low_parser::feed (in);}
+void finish (void|string in) {low_parser::finish (in);}
 
 
 // Runtime tags.

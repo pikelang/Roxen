@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.24 2000/01/18 18:11:17 mast Exp $
+//! $Id: module.pmod,v 1.25 2000/01/19 19:00:49 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1499,7 +1499,7 @@ class Parser
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
-      if (this_object()/*HMM*/->feed (in)) res = 1; // Might unwind.
+      if (feed (in)) res = 1; // Might unwind.
       if (res && data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
@@ -1533,7 +1533,7 @@ class Parser
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
-      this_object()/*HMM*/->finish (in); // Might unwind.
+      finish (in); // Might unwind.
       if (data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
@@ -1678,7 +1678,7 @@ class TagSetParser
 
   // Services.
 
-  mixed eval() {return this_object()/*HMM*/->read();}
+  mixed eval() {return read();}
 
   // Interface.
 
