@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.22 2000/09/28 02:22:10 per Exp $
+// $Id: module.pmod,v 1.23 2000/09/28 03:33:57 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -10,8 +10,13 @@ static inline string getloclang() {
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
-#define LOCALE(X,Y)	\
+#if constant(Locale.DeferredLocale)
+#define LOCALE(X,Y)    \
   ([string](mixed)Locale.DeferredLocale("roxen_config",getloclang,X,Y))
+#else  /* !Locale.DeferredLocale */
+#define LOCALE(X,Y)    \
+  ([string](mixed)RoxenLocale.DeferredLocale("roxen_config",getloclang,X,Y))
+#endif /* Locale.DeferredLocale */
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;
@@ -338,8 +343,10 @@ class Variable
                        "from verify_set_from_form\n" );
         return;
       }
-      if( q[0] ) set_warning( q[0] );
-      set( q[1] );
+      if( b ) {
+	if ( b[0] ) set_warning( b[0] );
+	set( b[1] );
+      }
     }
   }
   
