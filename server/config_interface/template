@@ -10,7 +10,7 @@
   <!--<emit ::='&_.args;'/>-->
   <set variable='var.oldchanged' value='0'/>
   <table cellspacing="0" cellpadding="4">
-    <eval><emit ::='&_.args;' noset=''>
+    <eval><emit ::='&_.args;'>
       <cf-render-variable/>
     </emit></eval>
   </table>
