@@ -1,10 +1,10 @@
-#undef SSL_DEBUG
+#define SSL_DEBUG
 inherit "protocols/http";
 
 private static int free_port()
 {
   int i;
-  object port = clone((program)"/precompiled/port");
+  object port = ((program)"/precompiled/port")();
   
   /* There has to be a better way. */
   /* This is quite ugly, really.  */
