@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.486 2000/05/26 22:19:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.487 2000/05/28 00:22:33 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -596,7 +596,9 @@ local static void handler_thread(int id)
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped\n");
 	  thread_reap_cnt--;
+#ifdef NSERIOUS
 	  if(!thread_reap_cnt) report_debug("+++ATH\n");
+#endif
 	  return;
 	}
       } while(1);
