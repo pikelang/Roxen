@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.55 2000/02/15 01:17:52 mast Exp $
+//! $Id: module.pmod,v 1.56 2000/02/15 02:12:08 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1436,7 +1436,7 @@ class Frame
 
   // Internals.
 
-  mixed _exec_array (TagSetParser parser, array exec)
+  mixed _exec_array (TagSetParser parser, array exec, int parent_scope)
   {
     Frame this = this_object();
     Context ctx = parser->context;
@@ -1445,7 +1445,7 @@ class Frame
     Parser subparser = 0;
 
     mixed err = catch {
-      if (flags & FLAG_PARENT_SCOPE) LEAVE_SCOPE (ctx, this);
+      if (parent_scope) LEAVE_SCOPE (ctx, this);
 
       for (; i < sizeof (exec); i++) {
 	mixed elem = exec[i], piece = Void;
@@ -1495,10 +1495,11 @@ class Frame
       }
 
       if (result_type->sequential) result += res;
-      if (flags & FLAG_PARENT_SCOPE) ENTER_SCOPE (ctx, this);
+      if (parent_scope) ENTER_SCOPE (ctx, this);
       return res;
     };
 
+    if (parent_scope) ENTER_SCOPE (ctx, this);
     if (result_type->sequential) result += res;
 
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
@@ -1705,7 +1706,8 @@ class Frame
 		_handle_runtime_tags (ctx, parser);
 	    }
 	    if (exec) {
-	      mixed res = _exec_array (parser, exec); // Might unwind.
+	      if (!(flags & FLAG_PARENT_SCOPE)) ENTER_SCOPE (ctx, this);
+	      mixed res = _exec_array (parser, exec, 0); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		if (ctx->unwind_state)
@@ -1720,12 +1722,16 @@ class Frame
 		ctx->unwind_state = (["stream_piece": res]);
 		throw (this);
 	      }
+	      exec = 0;
 	    }
 	  }
 	  eval_state = EVSTAT_ENTERED;
 
+	  /* Fall through. */
 	case EVSTAT_ENTERED:
 	case EVSTAT_LAST_ITER:
+	  ENTER_SCOPE (ctx, this);
+
 	  do {
 	    if (eval_state != EVSTAT_LAST_ITER) {
 	      int|function(RequestID:int) do_iterate =
@@ -1742,7 +1748,6 @@ class Frame
 		if (!iter) eval_state = EVSTAT_LAST_ITER;
 	      }
 	    }
-	    ENTER_SCOPE (ctx, this);
 	    for (; iter > 0; iter--) {
 
 	      if (raw_content) { // Got nested parsing to do.
@@ -1766,14 +1771,15 @@ class Frame
 		      if ((do_return =
 			   [array|function(RequestID,void|mixed:array)]
 			   this->do_return) &&
-			  functionp (do_return)) {
+			  !arrayp (do_return)) {
 			if (!exec) {
 			  exec = do_return (ctx->id, piece); // Might unwind.
 			  if (ctx->new_runtime_tags)
 			    _handle_runtime_tags (ctx, parser);
 			}
 			if (exec) {
-			  mixed res = _exec_array (parser, exec); // Might unwind.
+			  mixed res = _exec_array (
+			    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 			  if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 			    if (!zero_type (ctx->unwind_state->stream_piece))
@@ -1818,15 +1824,15 @@ class Frame
 	      if (array|function(RequestID,void|mixed:array) do_return =
 		  [array|function(RequestID,void|mixed:array)] this->do_return) {
 		if (!exec) {
-		  exec = functionp (do_return) ?
+		  exec = arrayp (do_return) ? [array] do_return :
 		    ([function(RequestID,void|mixed:array)] do_return) (
-		      ctx->id) : // Might unwind.
-		    [array] do_return;
+		      ctx->id); // Might unwind.
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, parser);
 		}
 		if (exec) {
-		  mixed res = _exec_array (parser, exec); // Might unwind.
+		  mixed res = _exec_array (
+		    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		  if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		    if (ctx->unwind_state)
@@ -1841,13 +1847,14 @@ class Frame
 		    ctx->unwind_state = (["stream_piece": res]);
 		    throw (this);
 		  }
+		  exec = 0;
 		}
 	      }
 
 	    }
-	    LEAVE_SCOPE (ctx, this);
 	  } while (eval_state != EVSTAT_LAST_ITER);
 
+	  /* Fall through. */
 	case EVSTAT_ITER_DONE:
 	  if (!this->do_return && result == Void)
 	    if (result_type->_parser_prog == PNone) {
@@ -1858,10 +1865,10 @@ class Frame
 	      if (stringp (content_type)) {
 		eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
 		if (!exec) exec = ({content});
-		if (!(flags & FLAG_PARENT_SCOPE)) ENTER_SCOPE (ctx, this);
-		_exec_array (parser, exec); // Might unwind.
-		LEAVE_SCOPE (ctx, this);
+		_exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+		exec = 0;
 	      }
+	  LEAVE_SCOPE (ctx, this);
       }
 
       if (ctx->new_runtime_tags)
