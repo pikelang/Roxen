@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.90 1998/04/13 15:15:12 grubba Exp $
+ * $Id: ftp.pike,v 1.91 1998/04/21 19:10:39 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -583,11 +583,13 @@ class ls_program {
 	}
       }
 
+      string files = "";
+
       if (sizeof(args)) {
 	foreach(indices(args), string s) {
 	  args[s] = id->my_stat_file(combine_path(id->cwd, s));
 	}
-	output->write(list_files(args, id->cwd, flags));
+	output->write(files = list_files(args, id->cwd, flags));
       }
 
       if ((dir_stack->ptr > 1) || (sizeof(files))) {
