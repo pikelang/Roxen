@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.25 1998/09/20 18:19:24 grubba Exp $
+ * $Id: smtprelay.pike,v 1.26 1998/09/20 23:33:55 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.25 1998/09/20 18:19:24 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.26 1998/09/20 23:33:55 grubba Exp $";
 
 /*
  * Some globals
@@ -783,24 +783,43 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
       } 
     }
 
-    string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
-				   "Received-From-MTA: DNS; %s\r\n"
-				   "Arrival-Date: %s\r\n"
-				   "\r\n"
-				   "Final-Recipient: RFC822; %s@%s\r\n"
-				   "Action: failed\r\n"
-				   "Status: %s\r\n"
-				   "Remote-MTA: DNS; %s\r\n"
-				   "Diagnostic-Code: SMTP; %s %s\r\n"
-				   "Last-Attempt-Date: %s\r\n",
-				   gethostname(),
-				   "Somewhere",
-				   mktimestamp((int)msg->received_at),
-				   msg->user, msg->domain,
-				   msg->status || "5.1.1",
-				   msg->remote_mta,
-				   code, sizeof(text)?text[-1]:"",
-				   mktimestamp((int)msg->last_attempt_at));
+    if (sizeof(msg->remotename)) {
+      string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
+				     "Received-From-MTA: DNS; %s\r\n"
+				     "Arrival-Date: %s\r\n"
+				     "\r\n"
+				     "Final-Recipient: RFC822; %s@%s\r\n"
+				     "Action: failed\r\n"
+				     "Status: %s\r\n"
+				     "Remote-MTA: DNS; %s\r\n"
+				     "Diagnostic-Code: SMTP; %s %s\r\n"
+				     "Last-Attempt-Date: %s\r\n",
+				     gethostname(),
+				     msg->remotename,
+				     mktimestamp((int)msg->received_at),
+				     msg->user, msg->domain,
+				     msg->status || "5.1.1",
+				     msg->remote_mta,
+				     code, sizeof(text)?text[-1]:"",
+				     mktimestamp((int)msg->last_attempt_at));
+    } else {
+      string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
+				     "Arrival-Date: %s\r\n"
+				     "\r\n"
+				     "Final-Recipient: RFC822; %s@%s\r\n"
+				     "Action: failed\r\n"
+				     "Status: %s\r\n"
+				     "Remote-MTA: DNS; %s\r\n"
+				     "Diagnostic-Code: SMTP; %s %s\r\n"
+				     "Last-Attempt-Date: %s\r\n",
+				     gethostname(),
+				     mktimestamp((int)msg->received_at),
+				     msg->user, msg->domain,
+				     msg->status || "5.1.1",
+				     msg->remote_mta,
+				     code, sizeof(text)?text[-1]:"",
+				     mktimestamp((int)msg->last_attempt_at));
+    }
 
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
 			  "Mailid:%s\r\n"
@@ -886,7 +905,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
  */
 
 int relay(string from, string user, string domain,
-	  object mail, string csum, object o)
+	  object mail, string csum, object|void smtp)
 {
 #ifdef RELAY_DEBUG
   roxen_perror(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
@@ -899,8 +918,6 @@ int relay(string from, string user, string domain,
   }
 
   // Some more filtering here?
-
-  // FIXME: Extract the non-local addresses from recipients.
 
   // Calculate the checksum if it isn't calculated already.
 
@@ -953,12 +970,25 @@ int relay(string from, string user, string domain,
     }
     spoolfile->close();
   }
-  
-  sql->query(sprintf("INSERT INTO send_q "
-		     "(sender, user, domain, mailid, received_at, send_at) "
-		     "VALUES('%s', '%s', '%s', '%s', %d, 0)",
-		     sql->quote(from), sql->quote(user),
-		     sql->quote(domain), sql->quote(csum), time()));
+ 
+  if (smtp) {
+    sql->query(sprintf("INSERT INTO send_q "
+		       "(sender, user, domain, mailid, received_at, send_at, "
+		       "remoteident, remoteip, remotename) "
+		       "VALUES('%s', '%s', '%s', '%s', %d, 0, "
+		       "'%s', '%s', '%s')",
+		       sql->quote(from), sql->quote(user),
+		       sql->quote(domain), sql->quote(csum), time(),
+		       smtp->remoteident, smtp->remoteip, smtp->remotename));
+  } else {
+    sql->query(sprintf("INSERT INTO send_q "
+		       "(sender, user, domain, mailid, received_at, send_at, "
+		       "remoteident, remoteip, remotename) "
+		       "VALUES('%s', '%s', '%s', '%s', %d, 0, "
+		       "'', '', '')",
+		       sql->quote(from), sql->quote(user),
+		       sql->quote(domain), sql->quote(csum), time()));
+  }
 
 #ifdef THREADS
   if (key) {
