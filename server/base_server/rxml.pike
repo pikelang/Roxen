@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.311 2001/08/09 23:28:19 mast Exp $
+// $Id: rxml.pike,v 1.312 2001/08/21 18:04:51 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -142,9 +142,17 @@ string parse_rxml(string what, RequestID id,
 {
   RXML.PXml parser;
   RXML.Context ctx = RXML_CONTEXT;
+  int orig_state_updated = -1;
 
-  if (ctx && ctx->id == id)
+  if (ctx && ctx->id == id) {
     parser = default_content_type->get_parser (ctx, ctx->tag_set, 0);
+    orig_state_updated = ctx->state_updated;
+#ifdef RXML_PCODE_UPDATE_DEBUG
+    report_debug ("%O: Saved p-code update count %d before parse_rxml "
+		  "with inherited context\n",
+		  ctx, orig_state_updated);
+#endif
+  }
   else {
     parser = rxml_tag_set->get_parser (default_content_type, id);
     ctx = parser->context;
@@ -169,13 +177,25 @@ string parse_rxml(string what, RequestID id,
     defines["_source file"] = file;
   }
 
-  if (mixed err = catch {
+  mixed err = catch {
     if (ctx == RXML_CONTEXT)
       parser->finish (what);	// Skip the unnecessary work in write_end. DDTAH.
     else
       parser->write_end (what);
     what = parser->eval();
-  }) {
+  };
+
+  if (file) m_delete (defines, "_source file");
+  if (orig_state_updated >= 0) {
+#ifdef RXML_PCODE_UPDATE_DEBUG
+    report_debug ("%O: Restoring p-code update count from %d to %d "
+		  "after parse_rxml with inherited context\n",
+		  ctx, ctx->state_updated, orig_state_updated);
+#endif
+    ctx->state_updated = orig_state_updated;
+  }
+
+  if (err) {
 #ifdef DEBUG
     if (!parser) {
       report_debug("RXML: Parser destructed!\n");
@@ -185,14 +205,12 @@ string parse_rxml(string what, RequestID id,
       error("Parser destructed!\n");
     }
 #endif
-    if (file) m_delete (defines, "_source file");
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
 	     "compatibility mode (error=%O).\n", err);
     else throw (err);
   }
 
-  if (file) m_delete (defines, "_source file");
   return what;
 }
 
