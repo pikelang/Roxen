@@ -698,6 +698,36 @@ b</strlen></rxml>
   <result>x</result>
 </test>
 
+<test>
+<rxml><cond><case match="1 == 2">a</case></cond></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2">a</case><default>b</default></cond></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 1">a</case><default>b</default></cond></rxml>
+<result>a</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2"/><default>b</default></cond></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 1"/><default>b</default></cond></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2"/><case match="1 == 1"/><case match="1 == 1">a</case></cond></rxml>
+<result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Loops (for)</comment>
