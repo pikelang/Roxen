@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.653 2001/03/17 00:05:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.654 2001/03/17 01:00:39 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -384,23 +384,29 @@ private void stop_all_configurations()
 }
 
 // Function that actually shuts down Roxen. (see low_shutdown).
-private static void really_low_shutdown(int exit_code)
+private void really_low_shutdown(int exit_code)
 {
   // Die nicely. Catch for paranoia reasons
+  catch
+  {
 #ifdef THREADS
-  catch( stop_handler_threads() );
+    stop_handler_threads();
 #endif /* THREADS */
+    if (exit_code)
+      report_notice("Restarting Roxen.\n");
+    else
+      report_notice("Shutting down Roxen.\n");
+  };
   exit( exit_code );		// Now we die...
 }
 
-static private int _recurse;
+private int _recurse;
 
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
-private static void low_shutdown(int exit_code)
+private void low_shutdown(int exit_code)
 {
-
   if(++_recurse > 4)
   {
     catch {
@@ -416,14 +422,6 @@ private static void low_shutdown(int exit_code)
 
   catch(stop_all_configurations());
   destruct(cache);
-  catch
-  {
-    if (exit_code)
-      report_notice("Restarting Roxen.\n");
-    else
-      report_notice("Shutting down Roxen.\n");
-  };
-
 
   call_out(really_low_shutdown, 0.1, exit_code);
 }
@@ -3495,7 +3493,7 @@ void create_pid_file(string where)
 		  ({ (string)getpid(), (string)getuid() }));
 
   r_rm(where);
-  if(catch(Stdio.write_file(where, sprintf("%d\n%d", getpid(), getppid()))))
+  if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
     report_debug("I cannot create the pid file ("+where+").\n");
 #endif
 }
@@ -3583,8 +3581,8 @@ void show_timers()
 array argv;
 int main(int argc, array tmp)
 {
-  tmp = 0;
   argv = tmp;
+  tmp = 0;
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "base_server/slowpipe.pike" );
