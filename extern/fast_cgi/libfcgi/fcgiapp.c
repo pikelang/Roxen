@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgiapp.c,v 1.2 1997/04/09 02:06:04 grubba Exp $";
+static const char rcsid[] = "$Id: fcgiapp.c,v 1.3 1997/05/26 22:23:24 grubba Exp $";
 #endif /* not lint */
 
 #include <fcgi_config.h>
@@ -873,7 +873,7 @@ int FCGX_FClose(FCGX_Stream *stream)
             stream->rdNext = stream->stop = stream->wrNext;
         }
     }
-    return (stream->errno == 0) ? 0 : EOF;
+    return (stream->errorno == 0) ? 0 : EOF;
 }
 
 /*
@@ -887,13 +887,13 @@ int FCGX_FClose(FCGX_Stream *stream)
  *
  *----------------------------------------------------------------------
  */
-static void SetError(FCGX_Stream *stream, int errno)
+static void SetError(FCGX_Stream *stream, int errorno)
 {
     /*
      * Preserve only the first error.
      */
-    if(stream->errno == 0) {
-        stream->errno = errno;
+    if(stream->errorno == 0) {
+        stream->errorno = errorno;
         stream->isClosed = TRUE;
     }
 }
@@ -909,7 +909,7 @@ static void SetError(FCGX_Stream *stream, int errno)
  *----------------------------------------------------------------------
  */
 int FCGX_GetError(FCGX_Stream *stream) {
-    return stream->errno;
+    return stream->errorno;
 }
 
 /*
@@ -922,7 +922,7 @@ int FCGX_GetError(FCGX_Stream *stream) {
  *----------------------------------------------------------------------
  */
 void FCGX_ClearError(FCGX_Stream *stream) {
-    stream->errno = 0;
+    stream->errorno = 0;
     /*
      * stream->isClosed = FALSE;
      * XXX: should clear isClosed but work is needed to make it safe
@@ -1735,7 +1735,7 @@ static FCGX_Stream *NewStream(
     stream->isReader = isReader;
     stream->isClosed = FALSE;
     stream->wasFCloseCalled = FALSE;
-    stream->errno = 0;
+    stream->errorno = 0;
     if(isReader) {
         stream->fillBuffProc = FillBuffProc;
         stream->emptyBuffProc = NULL;
