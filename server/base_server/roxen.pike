@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.379 1999/12/28 02:16:39 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.380 2000/01/02 01:03:49 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2032,7 +2032,6 @@ class ImageCache
     f->write( data );
   }
 
-
   static mapping restore_meta( string id )
   {
     Stdio.File f;
@@ -2042,6 +2041,26 @@ class ImageCache
     if( !f->open(dir+id+".i", "r" ) )
       return 0;
     return meta_cache_insert( id, decode_value( f->read() ) );
+  }
+
+  void flush(int|void age) {
+    report_debug("Flushing "+name+" image cache.\n");
+    foreach(get_dir(dir), string f)
+      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d') && (!age || age>file_stat(dir+f)[2]))
+	rm(dir+f);
+  }
+
+  array status(int|void age) {
+    int files=0, size=0, aged=0;
+    array stat;
+    foreach(get_dir(dir), string f)
+      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d')) {
+	files++;
+	stat=file_stat(dir+f,1);
+	if(stat[1]>0) size+=stat[1];
+        if(age<stat[2]) aged++;
+      }
+    return ({files, size, aged});
   }
 
   static mapping restore( string id )
@@ -3030,5 +3049,5 @@ mapping config_cache = ([ ]);
 mapping host_accuracy_cache = ([]);
 int is_ip(string s)
 {
-  return (replace(s,"0123456789."/"",({""})*11) == "");
+  return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
 }
