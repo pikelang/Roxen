@@ -410,7 +410,8 @@ function selectFirstInputField(focus_only)
     var first_input = null;
     for (var i = 0; i < inputs.length; i++) {
       var inp = inputs[i];
-      if ((inp.type == "text" || inp.type == "password") && !inp.disabled) {
+      if ((inp.type == "text" || inp.type == "password") &&
+	  !inp.disabled && !inp.className.match('no_select')) {
 	first_input = inp;
 	break;
       }
