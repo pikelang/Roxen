@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.50 2002/04/17 14:38:13 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.51 2002/06/11 00:01:54 nilsson Exp $";
 
 class Variable
 {
@@ -64,8 +64,6 @@ class BasicDefvar
   mixed query(string|void var, int|void ok);
   void definvisvar(string name, mixed value, int type, array|void misc);
 }
-
-
 
 class StringFile( string data, mixed|void _st )
 {
@@ -331,7 +329,6 @@ class Protocol
   void save();
   void restore();
 };
-
 
 class FakedVariables( mapping real_variables )
 {
@@ -801,7 +798,6 @@ class RequestID
   }
 }
 
-
 class RoxenModule
 {
   inherit BasicDefvar;
@@ -824,7 +820,7 @@ class RoxenModule
   string query_provides();
   array query_seclevels();
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
-  array(String) find_dir(string f, RequestID id);
+  array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
   string real_file(string f, RequestID id);
   void save();
@@ -1165,4 +1161,3 @@ class UserDB
     return 0;
   }
 }
-
