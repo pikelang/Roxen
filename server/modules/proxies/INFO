@@ -1,5 +1,4 @@
 <name>Proxy and relaying modules</name>
 <doc>
-  Modules that either relay requests to an other server, or acts as a proxy
-  for requests.
+  Modules that relay requests to other servers or acts as a proxy.
 </doc>

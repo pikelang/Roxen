@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.374 2000/09/19 12:10:04 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.375 2000/09/19 12:24:37 wing Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -179,7 +179,7 @@ private mapping (int:string) log_format = ([]);
 private array (Priority) pri = allocate_pris();
 
 public mapping modules = ([]);
-//! All enabled modules in this virtual server.
+//! All enabled modules in this site.
 //! The format is "module":{ "copies":([ num:instance, ... ]) }
 
 public mapping (RoxenModule:string) otomod = ([]);
@@ -2070,7 +2070,7 @@ RoxenModule reload_module( string modname )
     catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
 
     nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
-    // It's possible e.g. in the config interface that the module
+    // It's possible e.g. in the admin interface that the module
     // being reloaded is in use for the current request, so delay it a
     // little.
     //call_out (destruct, 2, old_module);
@@ -2701,7 +2701,7 @@ Sql.sql sql_connect(string db)
 
 // END SQL
 
-// This is the most likely URL for a virtual server.
+// This is the most likely URL for a site.
 private string get_my_url()
 {
   string s;
@@ -2916,16 +2916,16 @@ void create(string config)
 	 "header is supplied, or the supplied host header does not "
 	 "match the address of any of the other servers.") );
 
-  defvar("comment", "", DLOCALE(22, "Virtual server comment"),
+  defvar("comment", "", DLOCALE(22, "Site comment"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 DLOCALE(23, "This text will be visible in the administration "
 		 "interface, it can be quite useful to use as a memory helper."));
 
-  defvar("name", "", DLOCALE(24, "Virtual server name"),
+  defvar("name", "", DLOCALE(24, "Site name"),
 	 TYPE_STRING|VAR_MORE,
 	 DLOCALE(25, "This is the name that will be used in the administration "
 	 "interface. If this is left empty, the actual name of the "
-	 "virtual server will be used."));
+	 "site will be used."));
 
   defvar("LogFormat",
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
@@ -2993,7 +2993,7 @@ void create(string config)
 	 0, lambda(){ return !query("Log");});
 
   defvar("Domain", roxen->get_domain(), DLOCALE(34, "Domain"), TYPE_STRING,
-	 DLOCALE(35, "The domainname of the server. The domainname is used "
+	 DLOCALE(35, "The domain name of the server. The domain name is used "
 	 "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
@@ -3028,7 +3028,7 @@ void create(string config)
          DLOCALE(42, "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
 	 DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
 		 "It will allow you to limit the total available bandwidth for "
-		"this Virtual Server.<br />Bandwidth is assigned using a Token Bucket. "
+		"this site.<br />Bandwidth is assigned using a Token Bucket. "
 		"The principle under which it works is: for each byte we send we use a token. "
 		"Tokens are added to a repository at a constant rate. When there's not enough, "
 		"we can't transmit. When there's too many, they \"spill\" and are lost."));
@@ -3037,7 +3037,7 @@ void create(string config)
   defvar("throttle_fill_rate", 102400,
          DLOCALE(44, "Bandwidth Throttling: Server: Average available bandwidth"),
          TYPE_INT,
-	 DLOCALE(45, "This is the average bandwidth available to this Virtual Server in "
+	 DLOCALE(45, "This is the average bandwidth available to this site in "
 		"bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 

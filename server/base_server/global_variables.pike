@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.43 2000/09/19 09:26:28 per Exp $
+// $Id: global_variables.pike,v 1.44 2000/09/19 12:24:38 wing Exp $
 
 /*
 #pragma strict_types
@@ -256,7 +256,7 @@ void define_global_variables(  )
 	  "<p>This is useful if you want to know if downloads were successful "
 	  "(the user has the complete file downloaded). The drawback is that "
 	  "bandwidth statistics on the log file will be incorrect. The "
-	  "statistics in Roxen will continue being correct."));
+	  "statistics in Roxen will still be correct."));
 
   defvar("default_font", "franklin_gothic_demi", LOCALE(92, "Default font"), 
 	 TYPE_FONT,
@@ -272,7 +272,7 @@ void define_global_variables(  )
 	 TYPE_STRING|VAR_MORE,
 	 LOCALE(97, "This is the default file path that will be prepended "
 		"to the log file path in all the default modules and the "
-		"virtual server."));
+		"site."));
 
   defvar("cache", 0, LOCALE(98, "Cache: Proxy Disk Cache Enabled"), 
 	 TYPE_FLAG,
@@ -440,9 +440,10 @@ void define_global_variables(  )
 		"logged in the Event log."));
 
 #if efun(syslog)
-  defvar("LogA", "file", LOCALE(138, "Logging: Logging method"), 
+  defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"), 
 	 TYPE_STRING_LIST|VAR_MORE,
-	 LOCALE(139, "What method to use for logging, default is file, but "
+	 LOCALE(139, "What method to use for the debug log, default is file, "
+	  "but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
 	  "start script."),

@@ -1,8 +1,7 @@
-<name>Bandwidth throttling rule modules</name>
+<name>Bandwidth throttling</name>
 <doc>
 
-  Modules that limit the bandwidth used by this server. Please note that
-  you also have to enable throttling in the server settings to use
-  theese modules.
+  Modules that limit the bandwidth used by the site. It is necessary to 
+  enable bandwidth throttling in the site settings to use these modules.
 
 </doc>
