@@ -1,9 +1,11 @@
 /*
- * $Id: locks.pike,v 1.4 1997/09/16 01:35:03 per Exp $
+ * $Id: locks.pike,v 1.5 1997/10/09 01:04:35 grubba Exp $
  */
 #include <config.h>
 
-#ifdef THREADS
+#ifndef THREADS
+constant action_disabled = 1;
+#else /* THREADS */
 inherit "wizard";
 constant name= "Status//Thread status";
 constant doc = ("Shows various information about the threads in roxen.");
@@ -63,4 +65,4 @@ mixed page_0(object id, object mc)
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
-#endif
+#endif /* THREADS */
