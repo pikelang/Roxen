@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.5 2002/04/08 14:13:17 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.6 2002/04/12 16:33:19 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -25,6 +25,7 @@ mixed parse( RequestID id )
       <th align='left'>#</th>
       <th align='left'>Type</th>
       <th align='left'>Status</th>
+      <th align='left'>Used in</th>
     </tr>
     <emit source='licenses'>
       <tr>
@@ -47,6 +48,7 @@ mixed parse( RequestID id )
           </if>
           &nbsp;&nbsp;&nbsp;
         </td>
+        <td>&_.configurations;&nbsp;&nbsp;&nbsp;</td>
       </tr>
     </emit>
   </table>
