@@ -11,7 +11,7 @@ void really_do_create( RequestID id  )
     DBManager.is_module_db( 0, id->variables->name,
 			    id->variables->comment-"\r" );
   foreach( core->configurations, Configuration c )
-    DBManager.set_permission( id->variables->name, c, DBManager.READ );
+    DBManager.set_permission( id->variables->name, c, DBManager.NONE );
   DBManager.set_permission( id->variables->name, id->conf, DBManager.WRITE );
 }
 
