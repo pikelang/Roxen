@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.60 2002/11/17 23:57:38 mani Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.61 2004/05/24 23:22:47 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -149,6 +149,13 @@ void xml_use_module(string t, mapping m, string c,
   return;
 }
 
+string format_multiline_string (string s)
+{
+  // Used to present failed results: We want proper quoting, but
+  // it gets easier to read if newlines remain.
+  return replace (sprintf ("%O", s), "\\n", "\n");
+}
+
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
   ltests++;
@@ -259,7 +266,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     c = canon_html( c );
 			   if(res != c) {
 			     if(m->not) return;
-			     test_error("Failed (result %O != %O)\n", res, c);
+			     test_error("Failed (got %s, expected %s)\n",
+					format_multiline_string (res),
+					format_multiline_string (c));
 			     throw(1);
 			   }
 			   test_ok( );
@@ -269,8 +278,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -279,8 +289,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !has_value(res, c) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not contain %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not contain %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -289,8 +300,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 if( !Regexp(c)->match(res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -478,7 +490,9 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 test_test(c);
 			 if(res != c) {
 			   if(m->not) return;
-			   test_error("Failed (result \"%s\" != \"%s\")\n", res, c);
+			   test_error("Failed (got %s, expected %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -488,8 +502,9 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
-				      res, c);
+			   test_error("Failed (result %s does not match %s)\n",
+				      format_multiline_string (res),
+				      format_multiline_string (c));
 			   throw(1);
 			 }
 			 test_ok( );
@@ -536,15 +551,20 @@ void run_xml_tests(string data) {
     "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
-    add_quote_tag("!--","","--")->
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
-  data = Parser.get_xml_parser()->
-    add_quote_tag("!--","","--")->
-    finish(data)->read();
-  if(ltests<sizeof(data/"</test>")-1)
-    report_warning("Possibly XML error in testsuite.\n");
+  int test_tags = 0;
+
+  Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+			->add_tags ((["test": lambda () {test_tags++;},
+				      "tag-test": lambda () {test_tags++;}]))
+			->finish (data);
+
+  if(test_tags != ltests)
+    report_warning("Possibly XML error in testsuite - "
+		   "got %d test tags but did %d tests.\n",
+		   test_tags, ltests);
 
   // Go through them again, evaluation from the p-code this time.
   ltests=0;
@@ -555,7 +575,6 @@ void run_xml_tests(string data) {
     "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
-    add_quote_tag("!--","","--")->
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
@@ -707,6 +726,27 @@ class TagEmitTESTER {
 
   array(mapping(string:mixed)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "6":
+      return ({(["integer":  17,
+		 "float":    17.0,
+		 "string":   "foo",
+		 "array":    ({1, 2.0, "3"}),
+		 "multiset": (<1, 2.0, "3">),
+		 "mapping":  ([1: "one", 2.0: 2, "3": 3]),
+		 "object":   class {}(),
+		 "program":  class {},
+		 "zero_integer":   0,
+		 "zero_float":     0.0,
+		 "empty_string":   "",
+		 "empty_array":    ({}),
+		 "empty_multiset": (<>),
+		 "empty_mapping":  ([]),
+		 "zero_int_array": ({0}),
+		 "zero_float_array": ({0.0}),
+		 "empty_string_array": ({""}),
+		 "empty_array_array": ({({})}),
+	       ])});
+
     case "5":
       return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
 
@@ -718,7 +758,10 @@ class TagEmitTESTER {
       });
 
     case "3":
-      return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityDyn()]) });
+      return ({ (["data":"a"]),
+		(["data":RXML.nil]),
+		(["data":RXML.empty]),
+		(["data":EntityDyn()]) });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",

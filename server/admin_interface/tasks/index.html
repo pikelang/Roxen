@@ -1,5 +1,4 @@
-<set variable="var.tasks_title">Tasks</set>
-<left-menu title="&var.tasks_title;"/>
+<left-menu title="Tasks"/>
 
 <topmenu base="../" selected="tasks"/>
 
@@ -7,23 +6,23 @@
 <cv-split>
 <subtablist width="100%" preparse="" >
   <st-tabs><insert file="tablist.pike" nocache="" /></st-tabs>
-  <st-page><blockquote><br />
+  <st-page>
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if not variable="form.cancel">
-      <if variable="form.action">
+      <if variable="form.task">
 	<input type="hidden" name="class" value="&form.class;" />
-	<eval><insert file="&form.action;" nocache="" /></eval>
+	<eval><insert file="&form.task;" nocache="" /></eval>
 	<set variable="var.doing-task" value="yes"/>
       </if>
     </if>
     <if not variable="var.doing-task">
       <define container="task">
-	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
+	<font size="+1"><a href="?task=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
       </define>
       <eval><insert file="list_tasks.pike" nocache="" /></eval>
-    </else>
-  </blockquote></st-page>
+    </if>
+  </st-page>
 </subtablist>
 </cv-split>
 </content>

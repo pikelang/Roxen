@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.118 2002/11/10 02:02:10 mani Exp $";
+  "$Id: config_filesystem.pike,v 1.119 2004/05/24 23:22:46 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -116,6 +116,7 @@ mixed find_file( string f, RequestID id )
   int is_docs;
   User user;
   string locale = "standard";
+  string encoding;
 
   if( (time(1) - last_cache_clear_time) > 4 )
   {
@@ -156,7 +157,7 @@ mixed find_file( string f, RequestID id )
 			      roxen.admin_userdb_module );
     }
 
-    string encoding = config_setting( "charset" );
+    encoding = config_setting( "charset" );
     if( encoding != "utf-8" &&
 	encoding != "iso-8859-1")
       catch {
@@ -164,7 +165,6 @@ mixed find_file( string f, RequestID id )
       };
     else
       charset_decoder = 0;
-    id->set_output_charset( encoding );
     id->since = 0;
     catch 
     {
@@ -220,8 +220,10 @@ mixed find_file( string f, RequestID id )
 
     if( locale != "standard" ) 
       roxen.set_locale( locale );
-  }
 
+    if (glob("text*", type))
+      id->set_output_charset( encoding );
+  }
 
   if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
@@ -239,7 +241,23 @@ mixed find_file( string f, RequestID id )
         sscanf( data, "%*s<br clear=\"all\">%s", data );
         sscanf( data, "%s</body>", data );
         retval = "<topmenu selected='docs' base='"+query_location()+"'/>"
-               "<content>"+data+"</content>";
+	  "<define container='dox'>"
+	  "<if variable='usr.doc-content-box = ?*'>"
+	  "<subtablist><st-page>"
+	  "<contents/>"
+	  "</st-page></subtablist>"
+	  "</if>"
+	  "<else>"
+	  "<contents/>"
+	  "</else>"
+	  "</define>"
+	  "<content>"
+	  "<dox>"
+	  "<div class='doc'>"
+	  +data+
+	  "</div>"
+	  "</dox>"
+	  "</content>";
         if( title )
           retval="<title>: Docs "+Roxen.html_encode_string(title)+"</title>" +
                            retval;

@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.190 2004/05/16 02:54:20 mani Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.191 2004/05/24 23:22:46 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -64,6 +64,36 @@ class Scope_usr
     s->save();
   }
 
+  static string fade_color( int color_type, object c1,
+			    RXML.Context c, string scope, RXML.Type type)
+  {
+    int add;
+    switch( color_type )
+    {
+      case 1:  add = 0x21;color_type=1; break;
+      case 2:  add = 0x61;color_type=1; break;
+      case 11: add = 0x05;color_type=2; break;
+      case 12: add = 0x15;color_type=2; break;
+      case 21: add = 0x25;color_type=2; break;
+      case 22: add = 0x35;color_type=2; break;
+    }
+    switch( color_type )
+    {
+      case 1: /* RGB */
+	if( `+(0,@(array)c1) < 200 )
+	  return (string)Image.Color( @map(map((array)c1,`+,add),min,255));
+	return (string)Image.Color(@map(map((array)c1, `-,(add-0x10)),max,0));
+      case 2: /* HSV */
+	c1=Image.Color.guess(ALIAS("content-bg"));
+	array hsv = c1->hsv();
+	if( !hsv[2]  )
+	  hsv[2] = add;
+	else
+	  hsv[2] = max( hsv[2]-add, 0);
+	return ENCODE_RXML_TEXT( (string)Image.Color.hsv(@hsv), type);
+    }
+  }
+
   mixed `[]  (string var, void|RXML.Context c, void|string scope, void|RXML.Type type)
   {
     RequestID id = c->id;
@@ -79,11 +109,13 @@ class Scope_usr
       string q, res;
 
      case "left-buttonwidth": return ENCODE_RXML_INT(150, type);
+     case "gbutton-width": return ENCODE_RXML_INT(0, type);
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
+     case "leftside-padheight": return ENCODE_RXML_INT(1, type);
      case "favicon": return ENCODE_RXML_TEXT("favicon.png", type);
      case "logo-html":
-       return ENCODE_RXML_XML("<img border=\"0\" src="+QALIAS("logo")+" />", type);
+       return ENCODE_RXML_XML("<imgs border=\"0\" src="+QALIAS("logo")+" />", type);
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
@@ -97,6 +129,7 @@ class Scope_usr
        res += " textcolor="+QALIAS("toptabs-dimtextcolor" );
        res += " seltextcolor="+QALIAS("toptabs-seltextcolor" );
        res += " selcolor="+QALIAS("toptabs-selcolor" );
+       res += " quant=128";
        if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
          res += " "+q;
        return ENCODE_RXML_XML(res, type);
@@ -170,6 +203,9 @@ class Scope_usr
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
      case "content-toptableargs": return ENCODE_RXML_TEXT("", type);
+     case "split-tableargs":      return ENCODE_RXML_TEXT("", type);
+     case "split2-tableargs":     return ENCODE_RXML_TEXT("", type);
+     case "split2-width":         return ENCODE_RXML_TEXT("", type);
      case "left-image":           return ENCODE_RXML_TEXT("/%01/unit", type);
      case "selected-indicator":   return ENCODE_RXML_TEXT("/%01/next", type);
      case "database-small":       return ENCODE_RXML_TEXT("/%01/database_small", type);
@@ -181,7 +217,12 @@ class Scope_usr
      case "err-2":                return ENCODE_RXML_TEXT("/%01/err_2", type);
      case "err-3":                return ENCODE_RXML_TEXT("/%01/err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
+     case "padlock":              return ENCODE_RXML_TEXT("/internal-roxen-padlock", type);
+     case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
+     case "content-frame":        return ENCODE_RXML_TEXT("", type);
+     case "module-list-frame":    return ENCODE_RXML_TEXT("", type);
+     case "list-style-boxes":     return ENCODE_RXML_TEXT("", type);
 
 
       /* 1-st level */
@@ -195,6 +236,7 @@ class Scope_usr
      case "content-titlefg":      return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "gbutton-font":         return ENCODE_RXML_TEXT( ALIAS( "font" ), type);
      case "left-buttonframe":     return ENCODE_RXML_TEXT( ALIAS( "gbutton-frame-image" ), type);
+     case "gbutton-disabled-frame-image":  return ENCODE_RXML_TEXT( ALIAS("gbutton-frame-image"), type);
      case "obox-bodybg":          return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
      case "obox-bodyfg":          return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "obox-titlefg":         return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
@@ -237,46 +279,17 @@ class Scope_usr
     }
 
 
-    string fade_color( int color_type )
-    {
-      int add;
-      switch( color_type )
-      {
-	case 1:  add = 0x21;color_type=1; break;
-	case 2:  add = 0x61;color_type=1; break;
-	case 11: add = 0x05;color_type=2; break;
-	case 12: add = 0x15;color_type=2; break;
-	case 21: add = 0x25;color_type=2; break;
-	case 22: add = 0x35;color_type=2; break;
-      }
-      switch( color_type )
-      {
-       case 1: /* RGB */
-         if( `+(0,@(array)c1) < 200 )
-           return (string)Image.Color( @map(map((array)c1,`+,add),min,255));
-         return (string)Image.Color(@map(map((array)c1, `-,(add-0x10)),max,0));
-       case 2: /* HSV */
-	 c1=Image.Color.guess(ALIAS("content-bg"));
-         array hsv = c1->hsv();
-         if( !hsv[2]  )
-           hsv[2] = add;
-         else
-           hsv[2] = max( hsv[2]-add, 0);
-         return ENCODE_RXML_TEXT( (string)Image.Color.hsv(@hsv), type);
-      }
-    };
-
 #undef ALIAS
 #undef QALIAS
 
     switch( var )
     {
-     case "matrix11": return fade_color( 11 );
-     case "matrix12": return fade_color( 12 );
-     case "matrix21": return fade_color( 21 );
-     case "matrix22": return fade_color( 22 );
-     case "fade1":    return fade_color( 1 );
-     case "fade2":    return fade_color( 2 );
+     case "matrix11": return fade_color( 11, c1, c, scope, type );
+     case "matrix12": return fade_color( 12, c1, c, scope, type );
+     case "matrix21": return fade_color( 21, c1, c, scope, type );
+     case "matrix22": return fade_color( 22, c1, c, scope, type );
+     case "fade1":    return fade_color( 1,  c1, c, scope, type );
+     case "fade2":    return fade_color( 2,  c1, c, scope, type );
 
      case "fade3": {
        array sub = ({ 0x26, 0x21, 0x18 });
@@ -312,7 +325,7 @@ class Scope_usr
        return ENCODE_RXML_TEXT( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
      }
     }
-    return config_setting( var );
+    return config_setting(var) || id->prestate[var];
   }
 
   string _sprintf(int t) { return "RXML.Scope(usr)"; }
@@ -438,7 +451,8 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     if( !res["diff-txt"] && var->diff( 1 ) )
       res->diff = 
 	"<a target=rxdiff_"+var->path()+
-	" href='"+diff_url( id, mod, var )+"'><gbutton>Diff</gbutton></a>";
+	" href='"+diff_url( id, mod, var )+
+        "'><link-gbutton>Diff</link-gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
@@ -1023,14 +1037,16 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
          width='"+m->width+"' align='center' bgcolor='"+
     config_setting2("obox-border")+#"'>
  <tr><td>
-  <table cellpadding='2' cellspacing='0' border='0'
-          width='"+m->iwidth+#"' align='center'>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
   <tr bgcolor='"+config_setting2("obox-titlebg")+#"'>
-    <td valign='top'>
+    <th valign='top'>
       <font color='"+config_setting2( "obox-titlefg" )+#"' 
-            face='"+config_setting2("obox-titlefont")+
+            face='"+config_setting2("obox-titlefont")+#"'
+            style='"+config_setting2("obox-titlestyle")+
     "'><b>"+m->title+#"</b></font>
-    </td>
+    </th>
   </tr>
 
   <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
@@ -1038,6 +1054,25 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
   </table>
   </td></tr></table>";
 }
+string simpletag_box_frame( string t, mapping m, string c, RequestID id )
+{
+  if (!m["box-frame"]) return c;
+  string bodybg = m->bodybg || config_setting2("obox-bodybg");
+  return
+#"<table cellpadding='1' cellspacing='0' border='0'
+         width='"+m->width+"' align='left' bgcolor='"+
+    config_setting2("obox-border")+#"'>
+ <tr><td>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
+
+  <tr><td bgcolor='"+bodybg+"'><font color='"+
+    config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
+  </table>
+  </td></tr></table>";
+}
+
 
 string simpletag_cf_render_variable( string t, mapping m,
 				     string c, RequestID id )
@@ -1062,9 +1097,9 @@ string simpletag_cf_render_variable( string t, mapping m,
   }
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
-      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "
+      def = "<br /><submit-gbutton2 name='"+_("path")+"do_default'> "
 	"Restore default value "+_("diff-txt")+
-	" </submit-gbutton2> "+_("diff")+"<br />\n";
+	" </submit-gbutton2> "+_("diff")+"\n";
   
   switch( usr( "changemark" ) )
   {
@@ -1072,7 +1107,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       return
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>\n"
+	"<td valign='top'>"+_("form")+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
     default:
@@ -1081,7 +1116,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       return "<tr>\n"
 	"<td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top' "+extra+">"+_("form")+"<br />"+def+"</td>\n"
+	"<td valign='top' "+extra+">"+_("form")+def+"</td>\n"
 	"</tr>\n"
 	"<tr>\n"
 	"<td colspan='2'>"+dfs+_("doc")+dfe+"</td>\n"
