@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.136 1998/05/28 00:08:29 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.137 1998/06/02 10:45:47 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1976,8 +1976,19 @@ public int is_file(string what, object id)
   return !!stat_file(what, id);
 }
 
-static mapping(string:object) server_ports = ([]);
-#define MKPORTKEY(P)	((P)[1]+"://"+(P)[2]+":"+(P)[0])
+string MKPORTKEY(array(string) p)
+{
+  if (sizeof(p[3])) {
+    return(sprintf("%s://%s:%s/(%s)",
+		   p[1], p[2], (string)p[0],
+		   replace(p[3], ({"\n", "\r"}), ({ " ", " " }))));
+  } else {
+    return(sprintf("%s://%s:%s/",
+		   p[1], p[2], (string)p[0]));
+  }
+}
+
+mapping(string:object) server_ports = ([]);
 
 int ports_changed = 1;
 void start(int num)
