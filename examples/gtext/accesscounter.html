@@ -1,0 +1,87 @@
+<define name=nice_options>
+<font size=-1>
+<select name=$name>
+<pike>
+  foreach("$options"/",", string opt)
+    if(opt==(id->variables->$name||"$default"))
+      output("<option selected>"+opt+"\n");
+    else
+      output("<option>"+opt+"\n");
+  if(!id->variables->$name)id->variables->$name="$default";
+  return flush();
+</pike>
+</select></font>
+</define>
+<header name=Expires value="0">
+
+
+<body bgcolor=white>
+<form>
+Select access counter options:
+<br>
+<b>Language:</b>
+<insert name=nice_options $name=language
+        $options="catala,dutch,english,finnish,french,german,italian,maori,norwegian,portuguese,serbian,spanish,swedish"
+        $default="english">
+<b>Type:</b>
+<insert name=nice_options $name=type
+        $options="string,number,roman,mcdonalds,ordered"
+        $default="string">
+<b>Font:</b>
+<insert name=nice_options $name=font
+        $options="mistral,arial-rounded,braggadocio,hobo,nuptialscript,pepita,templategothic"
+        $default="mistral">
+<br><b>Scale colors from</b>
+<insert name=nice_options $name=c1
+        $options="red,yellow,blue,black,white,pink,green,brown,skyblue"
+        $default="red">
+<b>to</b>
+<insert name=nice_options $name=c2
+        $options="red,yellow,blue,black,white,pink,green,brown,skyblue"
+        $default="yellow">
+<br><b>Outline around the text:</b>
+<insert name=nice_options $name=outline $options="yes,no" $default="yes">
+<b>color</b>
+<insert name=nice_options $name=oc
+        $options="red,yellow,blue,black,white,pink,green,brown,skyblue"
+        $default="black">
+<br><b>Shadow:</b>
+<insert name=nice_options $name=shadow $options="yes,no" $default="yes">
+
+<br><input type=submit value="Show me this variation">
+<input type=submit name=show value="Also show how this is done">
+</form>
+
+<comment>You are visitor number<br> </comment>
+<pike>
+mapping v=id->variables;
+return "<gtext nocache nfont="+v->font+
+(v->shadow=="yes"?" bshadow=1":"")+
+" spacing=4"+
+(v->c1==v->c2?" fg="+v->c1:sprintf(" quant=200 textscale=%s,%s,%s,%s",v->c1,v->c1,v->c2,v->c2))+
+(v->outline=="yes"?" outline="+v->oc+",1":"")+">"
+"<accessed lang="+v->language+" type="+v->type+">"
+"</gtext>"
+</pike>
+
+
+<if variable=show>
+<br noshade>
+<p>
+<p><b>This source of the counter is, in this case:</b><p>
+<tt>
+<pike>
+mapping v=id->variables;
+return "&lt;gtext nocache nfont="+v->font+" "+
+(v->shadow=="yes"?"shadow="+(100-(int)v->si)+",1":"")+
+" spacing=4"+
+(v->c1==v->c2?" fg="+v->c1:sprintf("quant=200 textscale=%s,%s,%s,%s",v->c1,v->c1,v->c2,v->c2))+
+(v->outline=="yes"?" outline="+v->oc+",1":"")+"&gt;"
+"&lt;accessed lang="+v->language+" type="+v->type+"&gt;"
+"&lt;/gtext&gt;"
+</pike>
+</tt>
+<br><p>
+<p>
+</body>
+

@@ -1,0 +1,330 @@
+<body bgcolor=white alink=red>
+<gtext crop>Roxen: The Graphical Text Tags.</gtext><br>
+<p><h2>General</h2>
+
+The gtext tag first parse the contents of the tag, before any
+rendering is done.
+
+<p>It is therefore possible to make, as an example, quite nifty access
+counters, if you are into that kind of things.
+
+<h2>Attributes:</h2>
+<p>
+
+<dl>
+  <dt><b>bg=<a href=http://playground.infovav.se/gtextdemos/colors.html>color</a></b>
+  <dd>Sets the background color. Normally taken from the normal HTML
+      tags in your document (Currently: body, table, tr or td). <p>
+      If you set the background color, it is probably best to add the
+      <b>notrans</b> attribute as well.
+      <p>
+      <gtext notrans bg=pink>Pink</gtext>
+      <gtext notrans bg=red>red</gtext>
+      <gtext notrans bg=%50,0,100,0>%50,0,100,0</gtext>
+
+      <p>
+  <dt><b>fg=<a href=http://playground.infovav.se/gtextdemos/colors.html>color</a></b>
+  <dd>Sets the text color, 
+
+      
+      <p>
+  <dt><b>nfont="font name"</b>
+  <dd>Select a font using somewhat more memonic font-names.
+  You can get a font-list by accessing the configuration interface.
+<P>
+  there are several modifiers available:
+  <b>bold</b>, <b>italic</b>, <b>black</b> and <b>light</b>.
+  <p> If the requested version of the font is available, it will be
+  used to render the text, otherwise the closest match will be used.
+  <p>
+  Examples, using futura:<p>
+
+   <gtext nfont=futura light       >Light</gtext>
+   <gtext nfont=futura light italic>Italic</gtext><br>
+   <gtext nfont=futura             >Normal</gtext>
+   <gtext nfont=futura italic      >Italic</gtext><br>
+   <gtext nfont=futura bold        >Bold</gtext>
+   <gtext nfont=futura bold italic >Italic</gtext><br>
+   <gtext nfont=futura black       >Black</gtext>
+   <gtext nfont=futura black italic>Italic</gtext><br>
+
+
+  <br><p>  
+  <dt><b>scale=number</b>
+  <dd>Sets the scale of the image. Larger than 1.0 is enlargement.
+      
+      <p>
+      
+      <gtext scale=1.0>&lt;gtext scale=1.0&gt;</gtext>
+      <gtext scale=0.5>&lt;gtext scale=0.5&gt;</gtext>
+      
+      <p>
+  <dt><b>2 3 4 5 6 or 7</b>
+  <dd>Short for scale=num, where num is 1.0/([the argument]*0.6)
+      <p>
+      
+      <gtext crop 2>&lt;gtext 2&gt;</gtext>
+      <gtext crop 3>&lt;gtext 3&gt;</gtext>
+      <gtext crop 4>&lt;gtext 4&gt;</gtext>
+      <p>
+  <dt><b>notrans</b>
+
+  <dd>Do not make the background transparent. Useful when making
+      'boxes' of color around the text.
+
+      <gtext bg=red>&lt;gtext bg=red&gt;</gtext>
+      <gtext bg=red notrans>&lt;gtext bg=red notrans&gt;</gtext>
+      
+      <p>
+  <dt><b>crop</b>
+  <dd>Remove all white-space around the image
+  <p>
+  <dt><b>split</b>
+  <dd>
+
+      <gtext 4 split>Make each word into a separate gif image.
+	  Useful if you are writing a large text, and word wrap at the
+edges of the display is desired. This text is an example (try
+resisizing your browser window, the images should move just like normal
+text would)</gtext>
+      <p>
+      <dt><b>href=url</b>
+      <dd>Adds an normal &lt;a href=url&gt; around the image. Will
+	  also cause the image to be rendered in the 'link' color per default,
+	  instead of the 'text' color. <p><gtext 4 href="">a link to this document</gtext>
+	  <p>
+      <dt><b>quant=number_of_colors</b>
+      <dd>Quantifies the image with this number of colors. The default
+	  is set in the configuration interface. Normaly around 32. Using a
+	  lower number will decrease the image (file)size, but make the text
+	  look more 'edgy', and if you use complex backgrounds or image
+	  textures, more colors will be neded. At most 255 colors can be used,
+	  and less than 2 is quite useless.<br>
+
+	  <gtext 3 quant=200>200 colors</gtext><br>
+	  <gtext 3 quant=20>20 colors</gtext><br>
+	  <gtext 3 quant=6>6 colors</gtext><br>
+	  <gtext 3 quant=2>2 colors</gtext><br>
+	  <p>
+      <dt><b>magic=[message]</b>
+      <dd>Modifier to href, more flashy links. Does <b>not</b> work with 'split'.
+	  Uses the 'alink' color for the highlighting.
+	  
+	  <p><gtext 4 magic='a link to this document' href="">a link to this document</gtext>
+	  <p>
+      <dt><b>fuzz[=color,amount]</b>
+      <dd>Apply the 'glow' effect to the highlighted image, a modifier
+	  for the 'magic' argument. The defaults are black and 1,
+	  increasing the 'amount' argument will dramatically increase the
+	  computation time.
+	  
+	  <p><gtext 2 fuzz=black,5 quant=128 magic='a link to this document' href="">a link to this document</gtext>
+	  <p>
+      <dt><b>fs</b>
+      <dd>Apply a floyd-steinberg dithering to the result. Most of the
+	  time it is much better to increase the number of colors, instead
+	  of dithering the image, but sometimes when using very
+	  complex background images dithering is O.K.
+<p>
+      <dt><b>border=width,color</b>
+      <dd>Draw a border around the image.<br>
+	  <gtext  2 quant=100 border=1,red>Red border</gtext><br>
+	  <p>
+      <dt><b>spacing=spacing</b>
+      <dd>Add this amount of spacing around the text<br>
+	  
+	  <gtext spacing=10 2 quant=100 border=1,red>Spacing=10</gtext><br>
+	  <p>
+
+      <dt><b>xspacing=spacing</b>
+      <dd>Add this amount of spacing to the left and right of the text<br>
+	  
+	  <gtext xspacing=20 2 quant=100 border=1,red>Xspacing=20</gtext><br>
+	  <p>
+
+      <dt><b>yspacing=spacing</b>
+      <dd>Add this amount of spacing above and below the text<br>
+	  
+	  <gtext yspacing=10 2 quant=100 border=1,red>Yspacing=10</gtext><br>
+	  <p>
+
+      <dt><b>size=xsize[,ysize]</b>
+      <dd>Set the size of the image, before any scaling is done.
+	  If the image is smaller than the text size, the text will be
+	  croped to fit on the right and bottom sides. Same goes for any
+	  background image specified. If only one the xsize is
+	  specified, the ysize will be set to the same value.
+
+	  <p>
+	  <gtext notrans bg=red fg=white font=16/utopia_bold_r size=100 align=top>100x100</gtext>
+	  <gtext notrans bg=red fg=white font=16/utopia_bold_r size=100,20>100x20</gtext>
+	  <p>
+      <dt><b>xsize=xsize</b>, <b>ysize=ysize</b>
+
+      <dd>Sets the xsize, and/or the ysize. If one of the two is _not_
+	  specified, it is set the the smallest value that will fit the image,
+	  or the size of the background image, if one is selected,
+	  just like it is normally. Otherwise just like 'size=xsize,ysize'
+	  <p>
+      <dt><b>bevel=width</b>
+      <dd>Draws a bevel-box around the text.<br>
+	  <gtext 3 bg=grey notrans bevel=3>3 pixel bevel-box</gtext>
+	  <p>
+      <dt><b>pressed</b>
+      <dd>A modifier to 'bevel', draws the bevel as if it was pressed down.<br>
+	  <gtext 3 pressed bg=grey notrans bevel=3>3 pixel bevel-box</gtext>
+	  <p>
+	  The magic modifier will do this automatically, like this:<br>
+	  <gtext 3 magic bg=grey notrans bevel=3>3 pixel bevel-box</gtext>
+      <dt><b>talign=dir</b>
+      <dd>Sets the text-align to either left, right or center.
+	  <table>
+	  <tr>
+<td>
+<gtext 2 talign=left>Left
+justificated
+text</gtext>
+<td>
+<gtext 2 talign=center>Center
+justificated
+text</gtext>
+<td>
+<gtext 2 talign=right>Right
+justificated
+text</gtext>
+</tr></table><p>
+
+      <dt><b>textbox=opaque%[,color[,pad]]</b>
+
+<dd>	  Draw an (optionally transparent) box below the text. Pad
+defaults to '0', and is the distance from the edges of the text to the
+end of the box. A negative pad works.
+
+	  <gtext 3 textbox=100,pink notrans>&lt;gtext textbox=100,pink&gt;</gtext><br>
+	  <gtext 3 textbox=50,pink notrans>&lt;gtext textbox=50,pink&gt;</gtext><br>
+	  <gtext 3 textbox=100,red,-17 notrans>&lt;gtext textbox=100,red,-20&gt;</gtext><br>
+	  <p>
+
+      <dt><b>xpad=Xpad%</b>
+      <dd>Increase padding between characters with Xpad%. A negative
+	  '%' value works.
+	  <p>
+	  <gtext xpad=-30% 3>&lt;gtext  xpad=-30%&gt;</gtext><br>
+	  <gtext xpad=-10% 3>&lt;gtext  xpad=-10%&gt;</gtext><br>
+	  <gtext 3>&lt;gtext&gt;</gtext><br>
+	  <gtext xpad=10% 3>&lt;gtext xpad=10%&gt;</gtext><br>
+	  <gtext xpad=30% 3>&lt;gtext xpad=30%&gt;</gtext><br>
+<p>
+	  <dt><b>ypad=Ypad%</b>
+
+	  <dd>Just like xpad, but in increases and decreases the
+	      distance between the lines.</bb>
+	      <p>
+
+	  <dt><b>opaque=opaque%</b>
+	  <dd>Sets the 'opaque' value of the color used to draw the text.
+	      In the example below, notice how the text color mixes
+	      with the two background colors (light blue and pink :-)
+	      <p>
+	      <gtext quant=200 3 textbox=100,pink,-11 bg=lightblue notrans opaque=40 fg=black>&lt;gtext textbox=100,pink,-11 bg=lightblue notrans opaque=40&gt;</gtext><br>
+
+	      <p>
+	  <dt><b>shadow=white-mix[,distance]</b>
+
+	  <dd>Draw a black drop-shadow behind the text. Using 0 as
+	      distance does not currently place the shadow
+	      directly below the text. Using negative values for
+	      distance is possible, but you might be forced to add '<b>spacing</b>' to render the text correctly.
+	      <p>
+	      <gtext 2 shadow=40,0>&lt;gtext shadow=40,0&gt;</gtext><br>
+	      <gtext 2 shadow=40,2>&lt;gtext shadow=40,2&gt;</gtext><br>
+	      <p>
+	  <dt><b>bshadow=distance</b>
+              Draw a blured black drop-shadow behind the text. Using 0 as
+	      distance does not currently place the shadow
+	      directly below the text. Using negative values for
+	      distance is possible, but you might have to add '<b>spacing</b>'.
+	      <p>	  
+	      <gtext 2 fg=darkblue quant=200 bshadow=1>&lt;gtext quant=100 bshadow=1&gt;</gtext><br>
+	      <gtext 2 fg=darkblue quant=200 bshadow=2>&lt;gtext quant=100 bshadow=2&gt;</gtext><br>
+	      <p>
+	  <dt><b>ghost=distance,blurfactor,color</b>
+	      <p>	  
+	      Do a 'ghost text'. Magic coloring won't work with it<br>
+	      <gtext spacing=2 crop quant=200 ghost=1,1,red>ghost=1,1,red</gtext><br>
+	      <gtext spacing=2 crop quant=200 ghost=1,3,blue>ghost=1,3,blue</gtext><br>
+	      <gtext spacing=2 crop
+	      bshadow=1 opaque=90 ghost=-1,1,yellow
+>ghost=-1,1,yellow
+opaque=90
+bshadow=1</gtext><br>
+	      <p>
+	  <dt><b>glow=color,amount</b>
+	  <dd>Apply a 'glow' filter to the image. Quite a CPU
+	      eater. Looks much better on a dark background, where a
+	      real 'glow' effect can be achieved.<p>
+
+	      <gtext quant=200 glow=red>&lt;gtext glow=red&gt;</gtext><br>
+	      <p>
+
+	      
+	  <dt><b>rotate=angle[,color]</b>
+	  <dd>Rotate the whole thing angle degrees. Fill the newly
+	      created space with the specified color.
+	      <p>	
+	      <gtext align=right rotate=-90>-90 degrees</gtext>
+	      <gtext rotate=20>20 degrees, no color</gtext>
+	      <gtext rotate=-20,pink>-20 degrees, pink</gtext>
+
+	      <p>
+	  <dt><b>background=filename</b>
+	  <dd>Use the specified file as a background image. Currently
+	      only PPM images are supported. The whole filename of the
+	      file must be specified. The filename is the real
+	      filename of the file, the virtual filesystem in roxen is
+	      not used.
+	      <p>
+	      <gtext talign=center quant=200 background=/home/per/pics/sky.ppm>Black text on a
+sky background</gtext>
+
+
+	      <p>
+	  <dt><b>texture=filename</b>
+	  <dd>Use the specified file as the texture of the text
+	      <p>
+	      <gtext quant=200 texture=/home/per/pics/wood.ppm>Wood</gtext>
+	      <p>
+	  <dt><b>turbulence=frequency,color;freq,col;freq,col</b>
+	  <dd>Apply a turbulence filter, and use this as the
+	      background. Experiment with the values to see what they do.
+	      I am not sure how, but I have managed to generate a
+	      'marble' like pattern. :-)
+	      <p>
+	  <dt><b>maxlen=len</b>
+
+	  <dd>Do not render more than len characters of text. The
+	      default is set in the configuration interface. This argument is
+	      mostably useful if you want to increase the limit.
+<p>
+	  <dt><b>textscale=color,color,color,color</b>
+	  <dd>Apply a color filter to the text. The colors are,
+	      respectively, upper left, lower left, upper right and lower right.
+	      It is probably a good idea to increase the 'quant' value when
+	      using this argument.
+	      <p>
+	      <gtext quant=200 textscale=blue,red,black,darkgreen>Blue, red, black, darkgreen</gtext>
+<p>
+	  <dt><b>outline=color,extra-radius</b>
+
+	  <dd>Draw an outline around the text. Quite useful when
+	      combined with textscale.
+	      <br>
+	      <gtext quant=200 xspacing=4 textscale=red,red,yellow,yellow outline=black,1>black, 2 pixels</gtext>
+
+		  
+	  <dt><b>chisel</b>
+	  <dd>Make the text look like it has been cut into the background.<br>
+      <gtext quant=200 ypad=-40% xpad=-20% chisel talign=center opaque=70 fg=gold bevel=2 background=/home/per/pics/wood.ppm>Woodcut
+opaque=70</gtext>
+	      <br>
+	      <p>
