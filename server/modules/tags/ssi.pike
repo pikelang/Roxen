@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.19 2000/01/21 16:24:04 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.20 2000/02/02 18:09:24 kuntri Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -63,14 +63,217 @@ void set_entities(RXML.Context c) {
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["!--#echo":"<desc tag></desc>",
-    "!--#exec":"<desc tag></desc>",
-    "!--#flastmod":"<desc tag></desc>",
-    "!--#fsize":"<desc tag></desc>",
-    "!--#set":"<desc tag></desc>",
-    "!--#include":"<desc tag></desc>",
-    "!--#config":"<desc tag></desc>",
-    "!--#printenv":"<desc tag></desc>"
+constant tagdoc=([
+"!--#config":#"<desc tag>
+ The config command is used to configure how things should be printed.
+</desc>
+
+<attr name=errmsg value=string>
+ Where msg is a message that is sent back to the client if an error
+ occurs while parsing the SSI-tag.
+</attr>
+
+<attr name=sizefmt value=bytes,abbrev>
+ The value sets the format to be used when displaying the size of a
+ file. Bytes gives a count in bytes while abbrev gives a count in KB
+ or MB, as appropriate.
+</attr>
+
+<attr name=timefmt value=value>
+ The value is a string to be used when displaying SSI date output.
+</attr>",
+
+"!--#echo":#"
+<desc tag>
+ Prints a variable from the server or request. 
+
+ <p>Some of the most useful ones are \"http referrer\" (the page
+ which contained the link to the current page), \"last modified\"
+ (date of the file for this document), \"remote user\" (name of the
+ user), and \"remote addr\" (IP number of the user/client
+ machine).</p>
+
+ <p>Note that these variables are SSI-related. You cannot access them
+ as RXML variables, nor use this tag to print RXML variables.</p>
+</desc>
+
+<attr name=var value=sizefmt>
+ Print format for file sizes.
+ <ex type=vert><!--#echo var=sizefmt --></ex>
+</attr>
+
+<attr name=var value=document name>
+ Name of the current document (= page)
+ <ex type=vert><!--#echo var=\"document name\" --></ex>
+</attr>
+
+<attr name=var value=document uri>
+ URI (URL) to the current page.
+ <ex type=vert><!--#echo var=uri --></ex>
+</attr>
+
+<attr name=var value=date local>
+ Time and date, in current time zone.
+</attr>
+
+<attr name=var value=date gmt>
+ Time and date, GMT time zone.
+</attr>
+
+<attr name=var value=last modified>
+ Last time this document was modified.
+</attr>
+
+<attr name=var value=server software>
+ The web server software
+</attr>
+
+<attr name=var value=server name>
+ The web server name
+</attr>
+
+<attr name=var value=remote host>
+ Name of client machine
+</attr>
+
+<attr name=var value=remote addr>
+ Numeric IP address of client machine
+</attr>
+
+<attr name=var value=auth type>
+ Authentication type (typically Basic)
+</attr>
+
+<attr name=var value=remote user>
+ Client user name
+</attr>
+
+<attr name=var value=http referrer>
+ URL of the referring page
+</attr>
+
+<attr name=var value=gateway interface>
+
+</attr>
+
+<attr name=var value=http cookie>
+
+</attr>
+
+<attr name=var value=cookie>
+
+</attr>
+
+<attr name=var value=http accept>
+
+</attr>
+
+<attr name=var value=http user agent>
+
+</attr>
+
+<attr name=var value=path translated>
+ Translated path.
+</attr>
+
+<attr name=var value=query string unescaped>
+ The query string.
+</attr>
+
+<attr name=var value=request method>
+ Request method (typically GET)
+</attr>
+
+<attr name=var value=server protocol>
+ Protocol used for request.
+</attr>
+
+<attr name=var value=server port>
+ Server's port number
+</attr>",
+
+"!--#exec":#"
+<desc tag>
+ Executes a CGI script or shell command. This command has security
+ implications and therefore, might not be available on all web sites.
+
+</desc>
+
+<attr name=cgi value=URL> Path to the CGI script URL encoded. That is,
+ a character can be quoted by % followed by its hex value. The CGI
+ script is given the PATH_INFO and QUERY_STRING of the original
+ request from the client. The variables available in
+ <tag>!--#echo</tag> will be available to the script in addition to
+ the standard CGI environment. If the script returns a Location
+ header, then this will be translated into an HTML anchor.
+</attr>
+
+<attr name=cmd value=path>
+ The server will execute the command using /bin/sh. The variables
+ available in <tag>!--#echo</tag> will be available to the script.
+</attr>",
+
+"!--#flastmod":#"
+<desc tag>
+ This tag prints the last modification date of the specified file,
+ subject to timefmt format specification used in the <ref
+ type=tag>!--#config</ref> SSI tag.
+</desc>
+
+<attr name=file value=path>
+ Path to the file.
+</attr>
+
+<attr name=virtual value=URL>
+ Path to the file URL encoded. That is, a character can be quoted by %
+ followed by its hex value.
+</attr>",
+
+"!--#fsize":#"
+<desc tag>
+ Prints the size of the specified file, subject to the sizefmt format
+ specification used in the <ref type=tag>!--#config</ref> SSI tag.
+</desc>
+
+<attr name=file value=path>
+ Path to the file.
+</attr>
+
+<attr name=virtual value=URL>
+ Path to the file URL encoded. That is, a character can be quoted by %
+ followed by its hex value.
+</attr>",
+
+"!--#include":#"
+<desc tag>
+ Insert a text from another file into the page.
+</desc>
+
+<attr name=file value=path>
+ The file as a path relative to the directory containing the current
+ page. It cannot contain ../, nor can it be an absolute path.
+</attr>
+
+<attr name=virtual value=URL>
+ The path to the file, URL encoded. That is, a character can be quoted
+ by % followed by its hex value. The path may contain ../ and may be
+ absolute, i e starting with a /
+</attr>",
+
+"!--#printenv":#"
+<desc tag>
+ This tag outputs a listing of all existing variables and their
+ values. Attributes won't be printed.
+ <ex type=vert><!--#printenv --></ex>
+</desc>",
+
+"!--#set":#"<desc tag>
+ Sets a value of a variable.
+</desc>
+
+<attr name=var value=value>
+ The name of the variable to set. Value sets the variables value.
+</attr>",
 ]);
 #endif
 
