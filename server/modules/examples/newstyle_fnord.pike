@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 // This is a small sample module intended to show how a newstyle tag
 // is written. Note that this is only a very brief overview and that
@@ -8,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.14 2002/07/10 15:38:24 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.15 2004/05/22 18:13:13 _cvs_stephen Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
