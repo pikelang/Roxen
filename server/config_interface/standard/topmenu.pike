@@ -11,6 +11,7 @@ constant selections =
   ({ "ports",       "ports",  "ports/",           0 }),
   ({ "eventlog","event_log",  "event_log/",       0 }),
   ({ "actions",   "actions",  "actions/",   "Tasks" }),
+  ({ "docs",   "docs",  "docs/",   0 }),
 });
 
 string parse( object id )
