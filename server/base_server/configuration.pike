@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.301 2000/04/06 01:16:05 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.302 2000/04/11 04:53:44 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2866,11 +2866,11 @@ string check_variable(string name, mixed value)
 {
   switch(name)
   {
-   case "MyWorldLocation":
-    if(strlen(value)<7 || value[-1] != '/' ||
-       !(sscanf(value,"%*s://%*s/")==2))
-      return LOCALE->url_format();
-    return 0;
+//    case "MyWorldLocation":
+//     if(strlen(value)<7 || value[-1] != '/' ||
+//        !(sscanf(value,"%*s://%*s/")==2))
+//       return LOCALE->url_format();
+//     return 0;
   case "throttle":
     if (value) {
       THROTTLING_DEBUG("configuration: Starting throttler up");
@@ -3395,7 +3395,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
-         "Primary Server URL", TYPE_STRING,
+         "Primary Server URL", TYPE_URL,
 	 "This is the main server URL, where your start page is located. "
          "Please note that you also have to configure the 'URLs' variable");
 
@@ -3408,7 +3408,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 #"Det här är huvudURLen till din startsida. Den används av många
   moduler för att bygga upp absoluta URLer från en relativ URL.");
 
-  defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST|VAR_INITIAL,
+  defvar("URLs", ({"http://*/"}), "URLs", TYPE_URL_LIST|VAR_INITIAL,
          "Bind to these URLs. You can use '*' and '?' to perform globbing "
          "(using any of these will default to binding to all IP-numbers on "
          "your machine).  The possible protocols are http, fhttp (a faster "
