@@ -227,8 +227,10 @@ weak_cleanup:
 	  echo $$f; rm $$f || exit 1; \
 	done
 
-bump_version: bump_version.stamp
+bump_version.stamp:
 	@touch bump_version.stamp
+
+bump_version: bump_version.stamp
 	@if test -f $(SRCDIR)/server/base_server/roxen.pike.new; then \
 	  echo Deleting old $(SRCDIR)/server/base_server/roxen.pike.new...; \
 	  rm $(SRCDIR)/server/base_server/roxen.pike.new || exit 1; \
