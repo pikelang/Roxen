@@ -235,11 +235,20 @@ before <br>
 Used together with {if before date=yymmdd}. Shows the enclosed section if the current date is before yymmdd. 
 <p>
 file=X <br>
-Modifies the user=userid value. If this is specified, the user:password pairs will be taken from an external file of this format: 
-user name:encrypted-password 
-user name:encrypted-password 
+Modifies the user=userid value. If this is specified, the user:password pairs will be taken from an external file of this format: <br>
+user name:encrypted-password <br>
+user name:encrypted-password <br>
 <p>
 Unless wwwfile is present, it is assumed that the file 'X' is an absolute pathname in the real file system, like /usr/www/security/localpasswd. 
+<p>
+group=X <br>
+groupfile=Y <br>
+Checks if the current user is member of the group X according to the
+groupfile Y.
+<p>
+The groupfile is on the format: <br>
+group name:user1,user2,user3 <br>
+group name:user4 <br>
 <p>
 inclusive <br>
 Used together with {if date=yymmdd} and before or after. Shows the enclosed section if the current date is the same as or before/after yymmdd. 
