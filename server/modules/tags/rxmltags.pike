@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.127 2000/06/01 20:06:20 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.128 2000/06/02 13:26:55 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1897,6 +1897,8 @@ Pike-script or Roxen module.
  <tr><td>%y</td><td>Year (0-99), zero padded to two characters.</td></tr>
  <tr><td>%Y</td><td>Year (0-9999), zero padded to four characters.</td></tr>
  </table>
+
+<ex><date strftime=\"%Y%m%d\"/></ex>
 </attr>
 
 <attr name=lang value=langcode>
@@ -1904,23 +1906,16 @@ Pike-script or Roxen module.
  with <att>type=string</att> and the <att>part</att> attribute to get
  written dates in the specified language.
 
- Available languages:
- <lang/>
-<ex> <date part='day' type='string' lang='de'></ex>
-<ex><date type=\"string\" lang=\"sv\"/></ex>
+<ex><date part='day' type='string' lang='de'></ex>
 </attr>
 
 <attr name=case value=upper|lower|capitalize>
  Changes the case of the output to upper, lower or capitalize.
- <ex ><date part='day' type=string case='capitalize' lang='&client.accept-language;'></ex>
-<ex >Today is <date part='day' type=string case='lower'/>.</ex>
+<ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
  The number of decimals in the stardate.
-
-<ex ><date date='' lang='&client.language;' case='upper'/></ex>
-
 </attr>",
 
 "debug":#"<desc tag><short>
@@ -2227,14 +2222,15 @@ Pike-script or Roxen module.
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
  <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
- userdatabase.<ex type='vert'>This page was last modified by <modified by='' realname=''/>.</ex>
+ userdatabase.
+<ex type='box'>This page was last modified by <modified by='' realname=''/>.</ex>
 </attr>
 
 <attr name=date>
  Print the modification date. Takes all the date attributes in the
  <tag><ref type='tag'>date</ref></tag> tag.
 
-<ex type='vert'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
+<ex type='box'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
@@ -2645,10 +2641,3 @@ Sets a variable.</short>
 
     ]);
 #endif
-
-
-
-
-
-
-
