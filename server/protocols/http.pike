@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.424 2004/03/09 16:18:41 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.425 2004/04/13 09:54:06 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1590,16 +1590,18 @@ void send_result(mapping|void result)
 
       if( !zero_type(misc->cacheable) &&
 	  (misc->cacheable != INITIAL_CACHEABLE) ) {
-	if (misc->cacheable == 0)
-	  heads["Expires"] = Roxen.http_date( 0 );
-	else
+	if (!misc->cacheable) {
+	  // It expired a year ago.
+	  heads["Expires"] = Roxen.http_date( predef::time(1)-31557600 );
+	} else
 	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
-
+#if 0
 	if (misc->cacheable < INITIAL_CACHEABLE) {
 	  // Data with expiry is assumed to have been generated at the
 	  // same instant.
 	  misc->last_modified = predef::time(1);
 	}
+#endif /* 0 */
       }
 
       if (misc->last_modified)
@@ -1747,14 +1749,14 @@ void send_result(mapping|void result)
 
 	if (file->error == 204) {
 	  // 204 No Content.
-	  // We actually give some content c.f. comment below.
+	  // We actually give some content cf comment below.
 	  file->len = 2;
 	  file->data = "\r\n";
 	}
 //         if( file->len > 0 || (file->error != 200) )
 	heads["Content-Length"] = (string)file->len;
 
-        // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
+        // Some browsers, e.g. Netscape 4.7, don't trust a zero
         // content length when using keep-alive. So let's force a
         // close in that case.
         if( file->error/100 == 2 && file->len <= 0 )
@@ -1762,22 +1764,43 @@ void send_result(mapping|void result)
 	  heads->Connection = "close";
           misc->connection = "close";
         }
+#ifdef RAM_CACHE
+	if (!(misc->etag = heads->eTag) && file->len &&
+	    (file->data || file->file) &&
+	    (file->len < conf->datacache->max_file_size)) {
+	  string data = "";
+	  if (file->file) {
+	    data = file->file->read(file->len);
+	    if (file->data && (sizeof(data) < file->len)) {
+	      data += file->data[..file->len - (sizeof(data)+1)];
+	    }
+	    m_delete(file, file);
+	  } else if (file->data) {
+	    data = file->data[..file->len - 1];
+	  }
+	  file->data = data;
+	  heads->eTag = misc->etag =
+	    Crypto.string_to_hex(Crypto.md5()->update(data)->digest());
+	}
+#endif /* RAM_CACHE */
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
 #ifdef DEBUG
-	  report_debug ("Roxen.make_http_headers failed: " + describe_error (err));
+	  report_debug ("Roxen.make_http_headers failed: " +
+			describe_error (err));
 #endif
-	  foreach( indices( heads ), string x )
-	    if( stringp( heads[x] ) )
-	      head_string += x+": "+heads[x]+"\r\n";
-	    else if( arrayp( heads[x] ) )
-	      foreach( heads[x], string xx )
+	  foreach(heads; string x; string|array(string) val) {
+	    if (stringp(val))
+	      head_string += x+": "+val+"\r\n";
+	    else if( arrayp( val ) )
+	      foreach( val, string xx )
 		head_string += x+": "+xx+"\r\n";
 	    else if( catch {
-	      head_string += x+": "+(string)heads[x];
+	      head_string += x+": "+(string)val+"\r\n";
 	    } )
 	      error("Illegal value in headers array! "
 		    "Expected string or array(string)\n");
+	  }
 	  head_string += "\r\n";
 	}
 
