@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.21 2000/05/02 21:58:46 kuntri Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.22 2000/08/18 00:25:00 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -77,7 +77,11 @@ string encode_url(array states, object state, RequestID id){
       return id->not_query+"?state="+
         state->uri_encode(value);
   }
-  return id->not_query+"?state="+
+
+  string global_not_query=id->raw_url;
+  sscanf(global_not_query, "%s?", global_not_query);
+ 
+  return global_not_query+"?state="+
     state->uri_encode(value);
 }
 
