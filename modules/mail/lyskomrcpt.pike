@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.6 2003/09/03 11:20:58 grubba Exp $
+ * $Id: lyskomrcpt.pike,v 1.7 2003/12/16 12:09:14 grubba Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.6 2003/09/03 11:20:58 grubba Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.7 2003/12/16 12:09:14 grubba Exp $";
 
 /*
  * Roxen glue
@@ -45,19 +45,21 @@ void create()
 
 }
 
-object session;
+Protocols.LysKOM.Session session;
 void start(int i, object c)
 {
   if (c) {
     conf = c;
     if(!i)
     {
-     werror("LysKOM: Session(): %O\n",(session=LysKOM.Session(query("komserver"),query("komport"))));
-     array(object) myids=session->lookup_person(query("komuser"));
+     werror("LysKOM: Session(): %O\n",(session=Protocols.LysKOM.Session(query("komserver"),query("komport"))));
+     array(Protocols.LysKOM.ProtocolTypes.ConfZInfo) myids =
+       session->try_complete_person(query("komuser"));
      if(sizeof(myids)==1)
      {
        if(myids[0])
-	 werror("LysKOM: login: %O\n",session->login(myids[0],query("kompassword")));
+	 werror("LysKOM: login: %O\n",session->login(myids[0]->conf_no,
+						     query("kompassword")));
        call_out(check_queue,0.25);
      }
     }
@@ -110,7 +112,7 @@ void check_queue()
     if(msg->code==0)
     {
       object db=conf->get_provider("sql")->sql_object();
-      object text=LysKOM.Abstract.Texts(session)[msg->text_no];
+      object text=session->text(msg->text_no);
 
       int sent=0;
       foreach(text->comment_to->text_no, int commented)
@@ -238,7 +240,7 @@ string desc(string addr, object o)
   if(sscanf(addr,sprintf("%%*s@%s",query("handledomain")))<1)
     return 0;
   
-  object conference=LysKOM.Abstract.Conferences(session)[conf_no];
+  object conference=session->conference(conf_no);
   if(conference)
     return conference->name;
   else
@@ -314,7 +316,7 @@ int put(string sender, string user, string domain,
   int conf_no;
   sscanf(user,"m%d",conf_no);
   if(!conf_no) return 1;
-  object conference=LysKOM.Abstract.Conferences(session)[conf_no];
+  object conference=session->conferences(conf_no);
 
   int id = session->create_text(sprintf("[%s] %s",
 					headers->from||"",
