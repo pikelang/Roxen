@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.84 2002/10/27 20:32:52 nilsson Exp $
+ * $Id: ftp.pike,v 2.85 2002/11/10 01:48:25 mani Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -185,7 +185,7 @@ class RequestID2
 		"send", "scan_for_query", "send_result", "misc",
 		"url_base", "set_response_header",
 		"add_response_header", "set_output_charset",
-		"adjust_for_config_path",
+		"adjust_for_config_path", "PrefLanguages",
 		"destroy", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
@@ -208,7 +208,7 @@ class RequestID2
       clientprot = "FTP";
       real_variables = ([]);
       variables = FakedVariables( real_variables );
-      misc = ([]);
+      misc = ([ "pref_languages" : PrefLanguages() ]);
       cookies = ([]);
       throttle = ([]);
       client_var = ([]);
