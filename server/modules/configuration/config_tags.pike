@@ -342,7 +342,7 @@ string get_var_value( string s, object mod, object id )
     string name;
     array tmp;
    case TYPE_CUSTOM:
-     return var[VAR_MISC][0]( var, 1 );
+     return var[VAR_MISC][0]( var[VAR_SNAME], var[VAR_VALUE], id );
 
    case TYPE_PASSWORD:
      return "****";
@@ -678,7 +678,8 @@ string get_var_form( string s, object mod, object id )
   switch(var[VAR_TYPE])
   {
    case TYPE_CUSTOM:
-     return pre + var[VAR_MISC][1]( var, path );
+     return pre + var[VAR_MISC][1]( var[ VAR_SNAME ], var[VAR_VALUE], 
+                                    path, id );
      break;
    case TYPE_TEXT_FIELD:
      if( view_mode )
