@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.42 1999/11/23 15:14:04 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.43 1999/11/24 19:11:56 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -265,8 +265,7 @@ array|mapping call_script(function fun, object got, object file)
 mapping handle_file_extension(object f, string e, object got)
 {
   int mode = f->stat()[0];
-  if(!(mode & (int)query("exec-mask")) ||
-     (mode & (int)query("noexec-mask")))
+  if(!(mode & (int)query("exec-mask")) || (mode & (int)query("noexec-mask")))
     return 0;  // permissions does not match.
 
 
@@ -275,90 +274,65 @@ mapping handle_file_extension(object f, string e, object got)
   mixed err;
   program p;
   object o;
-  if(scripts[got->not_query])
+
+  if(scripts[ got->not_query ])
   {
-    if(got->pragma["no-cache"])
+    p = object_program(o=function_object(scripts[got->not_query]));
+    if( (master()->refresh_inherit( p )>0) /*|| got->pragma["no-cache"]*/ )
     {
+      werror("RELOAD RELOAD RELOAD RELOAD RELOAD\n");
       // Reload the script from disk, if the script allows it.
-      if(!(function_object(scripts[got->not_query])->no_reload
-	   && function_object(scripts[got->not_query])->no_reload(got)))
+      if(!(o->no_reload && o->no_reload(got)))
       {
-	destruct(function_object(scripts[got->not_query]));
-	scripts[got->not_query] = 0;
+        destruct(o);
+        m_delete( scripts, got->not_query);
       }
     }
   }
 
   function fun;
 
-  if (!functionp(fun = scripts[got->not_query])) {
-    file=f->read(655565);   // fix this?
+  if (!(fun = scripts[ got->not_query ]))
+  {
+    file=f->read(); 
 
-
-    array (function) ban = allocate(6);
-#ifndef __NT__
-#if efun(setegid)
-    ban[0] = setegid;
-    ban[2] = seteuid;
-#endif
-    ban[1] = setgid;
-    ban[3] = setuid;
-    //ban[4] = spawne;
-
-    add_constant("setegid", 0);
-    add_constant("seteuid", 0);
-    add_constant("setgid", 0);
-    add_constant("setuid", 0);
-    //add_constant("spawne", 0);
-#endif
-    ban[5] = cd;
-    add_constant("cd", 0);
     object e = ErrorContainer();
     master()->set_inhibit_compile_errors(e);
     catch
     {
       if(got->realfile)
-        p=compile_string(cpp(file, got->realfile), got->realfile);
+        p=(program)got->realfile;
       else
         p=compile_string(cpp(file));
     };
     master()->set_inhibit_compile_errors(0);
-#ifndef __NT__
-#if efun(setegid)
-    add_constant("setegid", ban[0]);
-    add_constant("seteuid", ban[2]);
-#endif
-    add_constant("setgid", ban[1]);
-    add_constant("setuid", ban[3]);
-    //add_constant("spawne", ban[4]);
-#endif
-    add_constant("cd", ban[5]);
 
-     if(strlen(e->get()))
-     {
-       werror(e->get());
-       return http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
- 				html_encode_string(e->get())+"</pre>");
-     } 
     if(!p) 
-      return 
-        http_string_answer("<h1>Error while compiling pike script</h1>\n");
+    {
+      if(strlen(e->get()))
+      {
+        werror(e->get());
+        return http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
+                                  html_encode_string(e->get())+"</pre>");
+      } 
+      return http_string_answer("<h1>Error while compiling pike script</h1>\n");
+    }
 
 #if constant(__builtin.security)
     luser_creds->apply(p);
 #endif /* constant(__builtin_security) */
 
     o=p();
-    if (!functionp(fun = scripts[got->not_query]=o->parse)) {
+    if (!(fun = scripts[got->not_query]=o->parse)) 
       /* Should not happen */
-      return http_string_answer("<h1>No string parse(object id) function in pike-script</h1>\n");
-    }
+      return http_string_answer("<h1>No string parse(object id) "
+                                "function in pike-script</h1>\n");
   }
-
   got->misc->cacheable=0;
   err=call_script(fun, got, f);
-  if(arrayp(err)) {
-    scripts[got->not_query] = 0;
+  if(arrayp(err)) 
+  {
+    m_delete( scripts, got->not_query );
     my_error(err[1]); // Will interrupt here.
   }
   return err;
