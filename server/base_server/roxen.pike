@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.372 1999/12/20 11:44:43 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.373 1999/12/21 16:46:36 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2315,7 +2315,7 @@ class ArgCache
     return id;
   }
 
-  mapping lookup( string id, string|void client )
+  mapping lookup( string id, array|void client )
   {
     LOCK();
     if(cache[id] && cache[ cache[id] ] )
@@ -2323,7 +2323,11 @@ class ArgCache
 
     string q = read_args( id );
 
-    if(!q) error("Key does not exist! (Thinks "+ client +")\n");
+    if(!q) 
+      if( client )
+        error("Key does not exist! (Thinks "+ (client*"") +")\n");
+      else
+        error("Requesting unknown key\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
 
@@ -2675,216 +2679,9 @@ void enable_configurations_modules()
                    config->name+":\n"+describe_backtrace(err)+"\n");
 }
 
-array(int) invert_color(array color )
-{
-  return ({ 255-color[0], 255-color[1], 255-color[2] });
-}
-
-
 mapping low_decode_image(string data, void|array tocolor)
 {
-  Image.image i, a;
-  string format;
-  if(!data)
-    return 0;
-
-#if constant(Image.GIF._decode)
-  // Use the low-level decode function to get the alpha channel.
-  catch
-  {
-    array chunks = Image.GIF._decode( data );
-
-    // If there is more than one render chunk, the image is probably
-    // an animation. Handling animations is left as an exercise for
-    // the reader. :-)
-    foreach(chunks, mixed chunk)
-      if(arrayp(chunk) && chunk[0] == Image.GIF.RENDER )
-        [i,a] = chunk[3..4];
-    format = "GIF";
-  };
-
-  if(!i) catch
-  {
-    i = Image.GIF.decode( data );
-    format = "GIF";
-  };
-#endif
-
-#if constant(Image.JPEG) && constant(Image.JPEG.decode)
-  if(!i) catch
-  {
-    i = Image.JPEG.decode( data );
-    format = "JPEG";
-  };
-#endif
-
-#if constant(Image.XCF) && constant(Image.XCF._decode)
-  if(!i) catch
-  {
-    mixed q = Image.XCF._decode( data,(["background":tocolor,]) );
-    tocolor=0;
-    format = "XCF Gimp file";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.PSD) && constant(Image.PSD._decode)
-  if(!i) catch
-  {
-    mixed q = Image.PSD._decode( data, ([
-      "background":tocolor,
-      ]));
-    tocolor=0;
-    format = "PSD Photoshop file";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.PNG) && constant(Image.PNG._decode)
-  if(!i) catch
-  {
-    mixed q = Image.PNG._decode( data );
-    format = "PNG";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.BMP) && constant(Image.BMP._decode)
-  if(!i) catch
-  {
-    mixed q = Image.BMP._decode( data );
-    format = "Windows bitmap file";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.TGA) && constant(Image.TGA._decode)
-  if(!i) catch
-  {
-    mixed q = Image.TGA._decode( data );
-    format = "Targa";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.PCX) && constant(Image.PCX._decode)
-  if(!i) catch
-  {
-    mixed q = Image.PCX._decode( data );
-    format = "PCX";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.XBM) && constant(Image.XBM._decode)
-  if(!i) catch
-  {
-    mixed q = Image.XBM._decode( data, (["bg":tocolor||({255,255,255}),
-                                    "fg":invert_color(tocolor||({255,255,255})) ]));
-    format = "XBM";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.XPM) && constant(Image.XPM._decode)
-  if(!i) catch
-  {
-    mixed q = Image.XPM._decode( data );
-    format = "XPM";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.TIFF) && constant(Image.TIFF._decode)
-  if(!i) catch
-  {
-    mixed q = Image.TIFF._decode( data );
-    format = "TIFF";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.ILBM) && constant(Image.ILBM._decode)
-  if(!i) catch
-  {
-    mixed q = Image.ILBM._decode( data );
-    format = "ILBM";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-
-#if constant(Image.PS) && constant(Image.PS._decode)
-  if(!i) catch
-  {
-    mixed q = Image.PS._decode( data );
-    format = "Postscript";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.XWD) && constant(Image.XWD.decode)
-  if(!i) catch
-  {
-    i = Image.XWD.decode( data );
-    format = "XWD";
-  };
-#endif
-
-#if constant(Image.HRZ) && constant(Image.HRZ._decode)
-  if(!i) catch
-  {
-    mixed q = Image.HRZ._decode( data );
-    format = "HRZ";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.AVS) && constant(Image.AVS._decode)
-  if(!i) catch
-  {
-    mixed q = Image.AVS._decode( data );
-    format = "AVS X";
-    i = q->image;
-    a = q->alpha;
-  };
-#endif
-
-#if constant(Image.PNM)
-  if(!i)
-    catch{
-      i = Image.PNM.decode( data );
-      format = "PNM";
-    };
-#endif
-
-  if(!i) // No image could be decoded at all.
-    return 0;
-
-  if( tocolor && i && a )
-  {
-    Image.image o = Image.image( i->xsize(), i->ysize(), @tocolor );
-    o->paste_mask( i,a );
-    i = o;
-  }
-
-  return ([
-    "format":format,
-    "alpha":a,
-    "img":i,
-  ]);
+  return Image._decode( data, tocolor );
 }
 
 mapping low_load_image(string f, RequestID id)
@@ -2899,11 +2696,16 @@ mapping low_load_image(string f, RequestID id)
     {
       file=Stdio.File();
       if(!file->open(f,"r") || !(data=file->read()))
+        catch
+        {
+          data = Protocols.HTTP.get_url_nice( f )[1];
+        };
+      if( !data )
 	return 0;
     }
   }
   id->misc->_load_image_called = 0;
-  if(!data)  return 0;
+  if(!data) return 0;
   return low_decode_image( data );
 }
 
