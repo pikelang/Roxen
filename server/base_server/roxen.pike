@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.214 1998/07/04 22:42:43 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.215 1998/07/07 19:00:39 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1006,6 +1006,18 @@ mapping restart()
 		  "type":"text/html" ]);
 } 
 
+static string MKPORTKEY(array(string) p)
+{
+  if (sizeof(p[3])) {
+    return(sprintf("%s://%s:%s/(%s)",
+		   p[1], p[2], (string)p[0],
+		   replace(p[3], ({"\n", "\r"}), ({ " ", " " }))));
+  } else {
+    return(sprintf("%s://%s:%s/",
+		   p[1], p[2], (string)p[0]));
+  }
+}
+
 // Is this only used to hold the config-ports?
 // Seems like it. Changed to a mapping.
 private mapping(string:object) configuration_ports = ([]);
@@ -1919,7 +1931,7 @@ void initiate_configuration_port( int|void first )
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
   foreach(QUERY(ConfigPorts), port) {
-    string key = port[1]+"://"+port[2]+":"+port[0];
+    string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {
       report_notice(sprintf("New configuration port: %s\n", key));
       new_ports[key] = port;
