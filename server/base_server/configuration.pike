@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.90 1998/01/30 02:59:00 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.91 1998/02/04 05:17:55 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -350,6 +350,12 @@ array (function) url_modules(object id)
     }
   }
   return url_module_cache;
+}
+
+mapping api_module_cache = ([]);
+array (function) api_functions(object id)
+{
+  return copy_value(api_module_cache);
 }
 
 array (function) logger_modules(object id)
@@ -1518,7 +1524,7 @@ public int is_file(string what, object id)
 }
 
 mapping (object:array) open_ports = ([]);
-
+int ports_changed = 1;
 void start(int num)
 {
   array port;
@@ -1528,48 +1534,55 @@ void start(int num)
 
   parse_log_formats();
   init_log_file();
-  map(indices(open_ports), do_dest);
 
-  perror("Opening ports for "+query_name()+"... ");
-  foreach(query("Ports"), port ) {
-    array old = port;
-    mixed erro;
-    erro = catch {
-      array tmp;
-      function rp;
-      object o;
+  if(ports_changed)
+  {
+    ports_changed=0;
+    perror("Opening ports for "+query_name()+"... ");
+    foreach(query("Ports"), port ) {
+      int already_open;
+      foreach(values(open_ports), array op)
+	if(equal(op,port)) { already_open=1;break; }
+      if(already_open) continue;
+      array old = port;
+      mixed erro;
+      erro = catch {
+	array tmp;
+	function rp;
+	object o;
     
-      if ((< "ssl", "ssleay" >)[port[1]]) {
-	// Obsolete versions of the SSL protocol.
-	report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
-		       "Converted to SSL3.\n");
-	// Note: Change in-place.
-	port[1] = "ssl3";
-	// FIXME: Should probably mark node as changed.
+	if ((< "ssl", "ssleay" >)[port[1]]) {
+	  // Obsolete versions of the SSL protocol.
+	  report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+			 "Converted to SSL3.\n");
+	  // Note: Change in-place.
+	  port[1] = "ssl3";
+	  // FIXME: Should probably mark node as changed.
+	}
+	perror(port[0]+" "+port[2]+" ("+port[1]+")... ");
+	if(rp = ((object)("protocols/"+port[1]))->real_port) {
+	  if(tmp = rp(port, this_object()))
+	    port = tmp;
+	}
+	object privs;
+	if(port[0] < 1024)
+	  privs = Privs("Opening listen port below 1024");
+	if(!(o=create_listen_socket(port[0], this, port[2],
+				    (program)("protocols/"+port[1]))))
+	{
+	  report_error("I failed to open the port "+old[0]+" at "+old[2]+
+		       " ("+old[1]+")\n");
+	  err++;
+	} else
+	  open_ports[o]=old;
+      };
+      if(erro) {
+	report_error("Failed to open port "+old[0]+" at "+old[2]+
+		     " ("+old[1]+"): "+
+		     (stringp(erro)?erro:describe_backtrace(erro)));
       }
-      perror(port[0]+" "+port[2]+" ("+port[1]+")... ");
-      if(rp = ((object)("protocols/"+port[1]))->real_port) {
-	if(tmp = rp(port, this_object()))
-	  port = tmp;
-      }
-      object privs;
-      if(port[0] < 1024)
-	privs = Privs("Opening listen port below 1024");
-      if(!(o=create_listen_socket(port[0], this, port[2],
-				  (program)("protocols/"+port[1]))))
-      {
-	report_error("I failed to open the port "+old[0]+" at "+old[2]+
-		     " ("+old[1]+")\n");
-	err++;
-      } else
-	open_ports[o]=old;
-    };
-    if(erro) {
-      report_error("Failed to open port "+old[0]+" at "+old[2]+
-		   " ("+old[1]+"): "+
-		   (stringp(erro)?erro:describe_backtrace(erro)));
+      perror("\n");
     }
-    perror("\n");
   }
   if(!num && sizeof(query("Ports")))
   {
@@ -1739,7 +1752,6 @@ object enable_module( string modname )
 #ifdef MODULE_DEBUG
     perror("Initializing ");
 #endif
-
     if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
 			MODULE_FILE_EXTENSION | MODULE_LOGGER |
 			MODULE_URL | MODULE_LAST |
@@ -1843,6 +1855,8 @@ object enable_module( string modname )
 		   module->name + "\n" + describe_backtrace(err));
       pr = 3;
     }
+
+    api_module_cache |= me->api_functions();
 
     if(module->type & MODULE_EXTENSION) {
       if (err = catch {
@@ -1972,10 +1986,14 @@ string check_variable(string name, string value)
 {
   switch(name)
   {
+   case "Ports":
+     ports_changed=1; 
+     return 0;
    case "MyWorldLocation":
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
       return "The URL should follow this format: protocol://computer[:port]/";
+    return 0;
   }
 }
 

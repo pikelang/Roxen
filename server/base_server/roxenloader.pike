@@ -4,7 +4,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.53 1998/01/28 01:49:18 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.54 1998/02/04 05:17:58 per Exp $";
 
 #define perror roxen_perror
 
@@ -269,8 +269,8 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   ]);
 
 #ifdef MODULE_DEBUG
-  report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
-		       ({ "/bin/sh", "-c", s }), opts));
+//   report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
+// 		       ({ "/bin/sh", "-c", s }), opts));
 #endif /* MODULE_DEBUG */
   object proc;
   proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);

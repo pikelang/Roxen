@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.27 1998/01/21 21:34:21 grubba Exp $ */
+/* $Id: module.pike,v 1.28 1998/02/04 05:17:56 per Exp $ */
 
 #include <module.h>
 
@@ -489,6 +489,17 @@ mapping(string:array(mixed)) find_dir_stat(string f, object id)
   return(res);
 }
 mixed real_file(string f, object id){}
+
+mapping _api_functions = ([]);
+void add_api_function( string name, function f, void|array(string) types)
+{
+  _api_functions[name] = ({ f, types });
+}
+
+mapping api_functions()
+{
+  return _api_functions;
+}
 
 object get_font_from_var(string base)
 {

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.160 1998/01/28 01:49:18 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.161 1998/02/04 05:17:57 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -76,6 +76,7 @@ object euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
 
 int privs_level;
+int die_die_die;
 
 // Fork, and then do a 'slow-quit' in the forked copy. Exit the
 // original copy, after all listen ports are closed.
@@ -163,9 +164,9 @@ private static void accept_callback( object port )
        default:
 #ifdef DEBUG
 	perror("Accept failed.\n");
-# if efun(real_perror)
+#if constant(real_perror)
 	real_perror();
-# endif
+#endif
 #endif /* DEBUG */
  	return;
 
@@ -191,6 +192,14 @@ void unthreaded_handle(function f, mixed ... args)
   f(@args);
 }
 
+object do_thread_create(string id, function f, mixed ... args)
+{
+  object t = thread_create(f, @args);
+  catch(t->set_name( id ));
+  werror(id+" started\n");
+  return t;
+}
+
 function handle = unthreaded_handle;
 
 #ifdef THREADS
@@ -200,35 +209,25 @@ object (Queue) handle_queue = Queue();
 
 void handler_thread(int id)
 {
-#ifdef THREAD_DEBUG
-  perror("Handler thread "+id+" started.\n");
-#endif
-  array (mixed) h;
+  array (mixed) h, q;
   while(1)
-    catch {
-      do
-      {
-#ifdef THREAD_DEBUG
-//    perror(id+" WAIT.\n");
-#endif
-	if((h=handle_queue->read()) && h && h[0])
-	{
-#ifdef THREAD_DEBUG
-//      perror(id+" START.\n");
-#endif
-	  h[0](@h[1]);
-#ifdef THREAD_DEBUG
-//      perror(id+" DONE.\n");
-#endif
-	  h=0;
-	}
-      } while(1);
-    };
+  {
+    if(q=catch {
+	 do
+	 {
+	   if((h=handle_queue->read()) && h && h[0])
+	   {
+	     h[0](@h[1]);
+	     h=0;
+	   }
+	 } while(1);
+       })
+      perror("Error in handle_thread: "+describe_backtrace(q));
+  }
 }
 
 void threaded_handle(function f, mixed ... args)
 {
-//  thread_create(f, @args);
   handle_queue->write(({f, args }));
 }
 
@@ -242,28 +241,29 @@ void start_handler_threads()
     perror("Starting "+QUERY(numthreads)+" threads to handle requests.\n");
   }
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
-    thread_create( handler_thread, number_of_threads );
+    do_thread_create( "Handle thread ["+number_of_threads+"]",
+		   handler_thread, number_of_threads );
   if(number_of_threads > 0)
     handle = threaded_handle;
 }
 
+mapping accept_threads = ([]);
 void accept_thread(object port,array pn)
 {
+  accept_threads[port] = this_thread();
   program port_program = pn[-1];
   mixed foo = pn[1];
   array err;
   object o;
-  catch {
-    while(1)
-    {
-      o = port->accept();
-      err = catch {
-	if(o) port_program(o,foo);
-      };
-      if(err)
-	perror("Error in accept_thread: %O\n",describe_backtrace(err));
-    }
-  };
+  while(!die_die_die)
+  {
+    o = port->accept();
+    err = catch {
+      if(o) port_program(o,foo);
+    };
+    if(err)
+      perror("Error in accept_thread: %O\n",describe_backtrace(err));
+  }
 }
 
 #endif /* THREADS */
@@ -309,7 +309,7 @@ object create_listen_socket(mixed port_no, object conf,
       ether=0;
     if(ether)
       sscanf(ether, "addr:%s", ether);
-#if 0&&defined(THREADS)
+#if defined(THREADS)
     if(!port->bind(port_no, 0, ether))
 #else
     if(!port->bind(port_no, accept_callback, ether))
@@ -324,8 +324,9 @@ object create_listen_socket(mixed port_no, object conf,
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
-#if 0&&defined(THREADS)
-  thread_create(accept_thread, port,portno[port]);
+#if defined(THREADS)
+  call_out(do_thread_create,0,"Accept thread ["+port_no+":"+(ether||"ANY]"),
+	   accept_thread, port,portno[port]);
 #endif
 #ifdef SOCKET_DEBUG
   perror("SOCKETS:    -> Ok.\n");
@@ -866,11 +867,14 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   return id->conf->try_get_file(s,id,status,nocache);
 }
 
+int config_ports_changed = 0;
 // Called from the configuration interface.
 string check_variable(string name, string value)
 {
   switch(name)
   {
+   case "ConfigPorts":
+     config_ports_changed = 1;
    case "cachedir":
     if(!sscanf(value, "%*s/roxen_cache"))
     {
@@ -922,8 +926,6 @@ int startpid, roxenpid;
 // of code to support this is in the 'start' script.
 void kill_me()
 {
-  catch(Array.map(indices(portno)), destruct);
-  
   object privs = Privs("Shutting down the server");
   // Change to root user.
   
@@ -933,8 +935,6 @@ void kill_me()
   {
     // Only _really_ do something in the main process.
     int pid;
-    catch(map(configuration_ports, destruct));
-  
     perror("Shutting down Roxen.\n");
 
 #ifdef USE_SHUTDOWN_FILE
@@ -1786,12 +1786,20 @@ void initiate_configuration_port( int|void first )
   object o;
   array port;
 
+  // Hm.
+  if(!first && !config_ports_changed )
+    return 0;
+  
+  config_ports_changed = 0;
+
+#ifndef THREADS  
   if(catch(map(configuration_ports, destruct)))
     catch(map(configuration_ports, do_dest));
   
   catch(do_dest(main_configuration_port));
   
   configuration_ports = ({ });
+#endif
   main_configuration_port=0;
 
   current_configuration = 0;
@@ -2187,9 +2195,8 @@ void start_shuffler_threads()
 //  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
   }
   int i;
-  for(i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
-    thread_create( shuffle_thread, i );
-  }
+  for(i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++)
+    do_thread_create( "Shuffle thread ["+i+"]", shuffle_thread, i );
   number_of_shuffler_threads = i;
 }
 #endif /* THREADS */
@@ -2212,9 +2219,11 @@ void init_shuffler()
     destruct(out2);
     shuffler = out;
     shuffle_fd = out->query_fd();
+    start_shuffler_threads();
   }
 }
 #endif /* send_fd */
+
 
 static private int _recurse;
 
@@ -2223,6 +2232,8 @@ void exit_when_done()
   object o;
   int i;
   perror("Interrupt request received. Exiting,\n");
+  die_die_die=1;
+//   trace(9);
   if(++_recurse > 4)
   {
     werror("Exiting roxen (spurious signals received).\n");
@@ -2233,9 +2244,16 @@ void exit_when_done()
   }
 
   // First kill off all listening sockets.. 
-  foreach(indices(portno)||({}), o) 
+  foreach(indices(portno)||({}), o)
+  {
+#ifdef THREADS
+    object fd = files.file();
+    fd->connect( portno[o][2]!="Any"?portno[o][2]:"127.0.0.1", portno[o][0] );
+    destruct(fd);
+#endif
     do_dest(o);
-
+  }
+  
   // Then wait for all sockets, but maximum 10 minutes.. 
   call_out(lambda() { 
     call_out(Simulate.this_function(), 5);
@@ -2345,12 +2363,13 @@ int main(int|void argc, array (string)|void argv)
     perror("Setting UID and GID ...\n");
 
 #ifdef THREADS
-  start_shuffler_threads();
   start_handler_threads();
+  catch( this_thread()->set_name("Backend") );
 #if efun(thread_set_concurrency)
   thread_set_concurrency(QUERY(numthreads)+QUERY(numshufflethreads)+1);
 #endif
 #endif /* THREADS */
+
 #if efun(send_fd)
   init_shuffler(); 
 #endif
@@ -2365,7 +2384,9 @@ int main(int|void argc, array (string)|void argv)
   }
 
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
-
+#ifdef __RUN_TRACE
+  trace(1);
+#endif
 //  start_time=time();		// Used by the "uptime" info later on.
   return -1;
 }
