@@ -1,15 +1,9 @@
 .ttffontcache
-.bgcache
 .pike-script-servers
 disabled_modules
-.HSResource
 .purify
 sqlnet.log
-.allmodules
-.module_stat_cache
-.gtext_args*
 .more_mode
 old_modules
 old_components
-CVSROOT
-content_editor_storage
+.old_roxen_defines
