@@ -34,7 +34,7 @@ void create()
 {
   udp_broad->bind(51521);
   udp_broad->set_read_callback(got_info);
-  if(roxen->query("neighborhood")
+  if(roxen->query("neighborhood"))
      broadcast();
   add_constant("neighborhood", neighborhood);
 }
