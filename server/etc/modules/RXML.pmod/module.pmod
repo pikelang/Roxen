@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.327 2004/03/30 20:21:01 mast Exp $
+// $Id: module.pmod,v 1.328 2004/04/19 17:16:13 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6780,6 +6780,10 @@ class TXml
     return charref_decode_parser->clone()->finish ([string] val)->read();
   }
 
+  string decode_charrefs (string val)
+  //! Decodes all character reference entities in @[val].
+    {return tolerant_charref_decode_parser->clone()->finish (val)->read();}
+
   string lower_case (string val)
     {return lowercaser->clone()->finish (val)->read();}
 
@@ -9114,7 +9118,8 @@ static Type splice_arg_type;
 
 static object/*(Parser.HTML)*/ xml_tag_parser;
 static object/*(Parser.HTML)*/
-  charref_decode_parser, lowercaser, uppercaser, capitalizer;
+  charref_decode_parser, tolerant_charref_decode_parser,
+  lowercaser, uppercaser, capitalizer;
 
 static void init_parsers()
 {
@@ -9144,6 +9149,9 @@ static void init_parsers()
 	    return ({(string) ({c})});
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
+  tolerant_charref_decode_parser = p;
+
+  p = p->clone();
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
