@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.79 1997/09/26 17:10:39 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.80 1997/09/26 17:11:46 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -815,7 +815,7 @@ mapping find_file(string f, object rid)
   if (sizeof(indices(g=Gz))) {
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
   } else if (sizeof(f)) {
-    if (f[0] == '$') {
+    if (f[0] == '$') {	// Illegal in BASE64
       f = f[1..];
     } else {
       catch(f = MIME.decode_base64(f));
@@ -836,7 +836,7 @@ string quote(string in)
     option=MIME.encode_base64(in);
   }
   if(search(in,"/")!=-1) return url_cache[in]=option;
-  string res="$";
+  string res="$";	// Illegal in BASE64
   for(int i=0; i<strlen(in); i++)
     switch(in[i])
     {
