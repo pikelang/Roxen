@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.826 2003/03/26 15:27:04 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.827 2003/03/26 15:38:50 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5062,6 +5062,22 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 			       "Expected 'allow' or 'deny'\n" ));
     shorted = sscanf( line, "%s return", line );
 
+
+    // Notes on the state variable:
+    //
+    // It has several potential entries (currently "ip", "user", "group",
+    // "time", "date", "referer", "language" and "luck").
+    // An entry exists in the mapping if a corresponding accept directive
+    // has been executed.
+    // The value in the mapping is 0 (zero) if a successful match against
+    // the directive has been executed.
+    // The value in the mapping is a mapping if authentication is required.
+    // Otherwise the value in the mapping is 1 (one).
+    //
+    // If any entry in the state mapping contains a mapping, that entry
+    // will be returned on exit. Otherwise, if there is any non-zero
+    // entry in the state mapping it will be returned. If the state
+    // mapping only contains zero's zero will be returned.
 
     foreach(security_checks, array(string|int|array) check)
     {
