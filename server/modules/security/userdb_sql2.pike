@@ -10,7 +10,7 @@
 //
 
 constant cvs_version =
- "$Id: userdb_sql2.pike,v 1.2 2004/05/23 14:14:41 _cvs_dirix Exp $";
+ "$Id: userdb_sql2.pike,v 1.3 2004/06/19 22:15:04 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -58,9 +58,11 @@ class getdb
 }
 
 private void initvars() {
+  catch {
   array r=mdb->query("SELECT vint FROM globals WHERE gname='usecache' LIMIT 1");
   if( r && sizeof(r))
     usecache=(int)r[0]->vint||1;
+  };
 }
 
 void create()
