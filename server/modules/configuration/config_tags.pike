@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.170 2002/03/07 16:46:16 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.171 2002/04/08 12:47:48 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1172,6 +1172,25 @@ class TagCfUserWants
 // License tags.
 constant license_dir = "../license";
 
+class TagGetPostFilename
+{
+  inherit RXML.Tag;
+  constant name = "get-post-filename";
+  mapping req_arg_types = ([ "filename":RXML.t_text(RXML.PXml),
+			     "js-filename":RXML.t_text(RXML.PXml) ]);
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return(RequestID id)
+    {
+      return
+	({ (replace(((args["js-filename"] && sizeof(args["js-filename"])) ?
+		     args["js-filename"] : args["filename"]),
+		    "\\", "/") / "/")[-1] });
+    }
+  }
+}
+
 class TagUploadLicense
 {
   inherit RXML.Tag;
@@ -1186,7 +1205,7 @@ class TagUploadLicense
     array do_return(RequestID id)
     {
       string filename = Stdio.append_path(license_dir, args["filename"]);
-      string tmpname = Stdio.append_path(license_dir, args["filename"]+"~");
+      string tmpname = filename+"~";
       string s = RXML.user_get_var(args["from"]);
       if(!s || sizeof(s) < 10)
 	RXML.run_error("Specified licens file is not valid %O.\n", filename);
