@@ -1,12 +1,17 @@
 /*
- * $Id: proc.pike,v 1.5 2000/04/05 23:40:18 per Exp $
+ * $Id: proc.pike,v 1.6 2000/09/08 22:28:39 lange Exp $
  */
 
 inherit "wizard";
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action="status";
-constant name= "Extended process status";
-constant doc = "Shows detailed process status on Solaris 2.5 and later.";
+
+string name= LOCALE(63, "Extended process status");
+string doc = LOCALE(65, 
+		    "Shows detailed process status on Solaris 2.5 and later.");
 
 void create()
 {
@@ -69,7 +74,9 @@ string process_map2(string in)
   string kbytes,resident,shared,priv;
   if(sscanf(((in/"\n")[-2]/" "-({""}))[2..]*" ",
             "%[^ ] %[^ ] %[^ ] %[^ ]",kbytes,resident,shared,priv)==4)
-    return sprintf("%d Kbytes, %d Kb shared, %d Kb private, %d Kb resident",
+    return sprintf("%d kb; %d kb "+LOCALE(66,"shared")+
+		   ", %d kb "+LOCALE(76,"private")+
+		   ", %d kb "+LOCALE(77,"resident"),
 		   (int)kbytes,(int)shared,(int)priv,(int)resident);
   return "Failed to parse output from pmap.";
 }
@@ -107,15 +114,17 @@ string cred(object id)
 #if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = (getgrgid((int)groups[i]) || ({ (string)groups[i] }))[0];
-  return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />groups: %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />"+
+		 LOCALE(78,"groups:")+" %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 (getgrgid(gid) || ({ (string)gid }))[0],
-		 String.implode_nicely(groups));
+		 String.implode_nicely(groups, LOCALE(79, "and")));
 #else
-  return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />groups: %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />"+
+		 LOCALE(78,"groups:")+" %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 gid,
-		 String.implode_nicely(groups));
+		 String.implode_nicely(groups, LOCALE(79, "and")));
 #endif /* constant(getgrgid) */
 }
 
@@ -130,12 +139,16 @@ mixed parse(object id)
   string tree = Array.map(proc("tree -a",(int)id->variables->pid)/"\n",format_proc_line,
 			  (int)id->variables->pid||getpid())*"";
 
-  return ("<font size=+1>Process Tree for "+(id->variables->pid||getpid())+"</font><pre>\n"+
+  return ("<font size='+1'>"+ 
+	  sprintf(LOCALE(80,"Process Tree for %s"),
+		  id->variables->pid||getpid())+"</font><pre>\n"+
 	  tree+
-	  "</pre><font size=+1>Misc status for "+(id->variables->pid||getpid())
-	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials:<br />"+cred(id)+
-	  "\nCurrent working directory: "+
+	  "</pre><font size='+1'>"+
+	  sprintf(LOCALE(81,"Misc status for %s"), id->variables->pid||getpid())+
+	  "</font><pre>"+LOCALE(82,"Memory Usage:")+" "+map+"\n\n"+
+	  LOCALE(83,"Credentials:")+"<br />"+cred(id)+"\n"+
+	  LOCALE(84,"Current working directory:")+" "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
-	  "</pre><p><cf-ok>");
+	  "</pre><p><cf-ok/></p>");
 }
