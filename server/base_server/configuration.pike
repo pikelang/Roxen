@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.384 2000/10/06 15:12:37 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.385 2000/10/10 14:15:30 jhs Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -466,7 +466,7 @@ array location_modules()
 	    level_locations += ({ location });
 	  }
 	}
-	sort(level_locations, level_find_files);
+	sort(map(level_locations, sizeof), level_locations, level_find_files);
 	int j;
 	for (j = sizeof(level_locations); j--;) {
 	  // Order after longest path first.
