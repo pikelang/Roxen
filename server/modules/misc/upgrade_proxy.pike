@@ -2,6 +2,7 @@
 inherit "module";
 object proxy;
 constant thread_safe = 1;
+constant cvs_version = "$Id: upgrade_proxy.pike,v 1.5 1997/10/09 00:16:35 grubba Exp $";
 
 array register_module()
 {
