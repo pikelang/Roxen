@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.577 2004/05/20 21:43:31 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.578 2004/05/21 13:12:11 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1049,8 +1049,6 @@ private mapping internal_gopher_image(string from)
   // File not found.
 }
 
-private static int nest = 0;
-
 #ifdef MODULE_LEVEL_SECURITY
 private mapping(RoxenModule:array) security_level_cache = set_weak_flag (([]), 1);
 
@@ -1782,9 +1780,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       {
 	mixed err;
 
-	nest ++;
+	id->misc->get_file_nest++;
 	err = catch {
-	  if( nest < 20 )
+	  if( id->misc->get_file_nest < 20 )
 	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	  else
 	  {
@@ -1793,7 +1791,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 		  +file+".\n");
 	  }
 	};
-	nest = 0;
+	id->misc->get_file_nest = 0;
 	if(err) throw(err);
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
@@ -2146,18 +2144,18 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
     if(objectp( remap ))
     {
       mixed err;
-      nest ++;
+      id->misc->find_dir_nest++;
 
       TRACE_LEAVE("Recursing");
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
+	if( id->misc->find_dir_nest < 20 )
 	  dir = (id->conf || this_object())->find_dir( file, id );
 	else
 	  error("Too deep recursion in roxen::find_dir() while mapping "
 		+file+".\n");
       };
-      nest = 0;
+      id->misc->find_dir_nest = 0;
       TRACE_LEAVE("");
       if(err)
 	throw(err);
@@ -2236,7 +2234,6 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 array(int)|Stat stat_file(string file, RequestID id)
 {
-  string loc;
   mixed s, tmp;
 #ifdef THREADS
   Thread.MutexKey key;
@@ -2247,70 +2244,69 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  foreach(url_modules(), function funp)
+  string of = id->not_query;
+  id->not_query = file;
+  foreach(url_module_cache||url_modules(), function funp)
   {
-    string of = id->not_query;
-    id->not_query = file;
-
     TRACE_ENTER("URL module", funp);
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
 
-    if(mappingp( tmp )) {
-      id->not_query = of;
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returned 'No thanks'.");
-      return 0;
-    }
-    if(objectp( tmp ))
-    {
-      file = id->not_query;
-
-      mixed err;
-      nest ++;
-      TRACE_LEAVE("Recursing");
-      err = catch {
-	if( nest < 20 )
-	  tmp = (id->conf || this_object())->stat_file( file, id );
-	else
-	  error("Too deep recursion in roxen::stat_file() while mapping "
-		+file+".\n");
-      };
-      nest = 0;
-      if(err)
-	throw(err);
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returning data");
-      return tmp;
+    if (tmp) {
+      if(mappingp( tmp )) {
+	id->not_query = of;
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returned 'No thanks'.");
+	return 0;
+      }
+      if(objectp( tmp ))
+      {
+	mixed err;
+	id->misc->stat_file_nest++;
+	id->not_query = of;
+	TRACE_LEAVE("Recursing");
+	err = catch {
+	    if( id->misc->stat_file_nest < 20 )
+	      tmp = (id->conf || this_object())->stat_file( file, id );
+	    else
+	      error("Too deep recursion in roxen::stat_file() while mapping "
+		    +file+".\n");
+	  };
+	id->misc->stat_file_nest = 0;
+	if(err)
+	  throw(err);
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returning data");
+	return tmp;
+      }
     }
     TRACE_LEAVE("");
-    id->not_query = of;
   }
+  id->not_query = of;
 #endif
 
   // Map location-modules.
-  foreach(location_modules(), tmp)
-  {
-    loc = tmp[0];
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function fun]) {
     if((file == loc) || ((file+"/")==loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
       TRACE_LEAVE("Exact match.");
       TRACE_LEAVE("");
-      return ({ 0775, -3, 0, 0, 0, 0, 0 });
+      return Stdio.Stat(({ 0775, -3, 0, 0, 0, 0, 0 }));
     }
-    if(!search(file, loc))
+    if(has_prefix(file, loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) {
+      if(check_security(fun, id)) {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied");
 	continue;
       }
 #endif
-      if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
+      if(s=function_object(fun)->stat_file(file[strlen(loc)..], id))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Stat ok.");
@@ -2452,11 +2448,11 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     if(objectp( tmp ))
     {
       mixed err;
-      nest ++;
+      id->misc->find_dir_stat_nest++;
 
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
+	if( id->misc->find_dir_stat_nest < 20 )
 	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
 	else {
 	  TRACE_LEAVE("Too deep recursion");
@@ -2464,7 +2460,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 		+file+".\n");
 	}
       };
-      nest = 0;
+      id->misc->find_dir_stat_nest = 0;
       if(err)
 	throw(err);
 #ifdef MODULE_DEBUG
