@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.106 2004/04/04 14:26:43 mani Exp $
+// $Id: global_variables.pike,v 1.107 2004/05/20 12:58:53 _cvs_stephen Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -399,7 +399,8 @@ The start script attempts to fix this for the standard file locations.</p>");
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
+  defvar("ModuleDirs", ({ "../local/modules/", "modules/",
+          "/usr/share/chilimoon/modules/", }),
 	 "Module directories",
 	 TYPE_DIR_LIST,
 	 ("This is a list of directories where ChiliMoon should look "
