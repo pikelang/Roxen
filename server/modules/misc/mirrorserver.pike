@@ -31,7 +31,7 @@ class MirrorServer {
 
   void create(object fi, string ba)
   {
-    perror("Mirror server ok..\n");
+    roxen_perror("Mirror server ok..\n");
     fid = fi;
     base=ba;
   }
