@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.114 1999/04/27 19:51:24 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.115 1999/04/27 19:53:50 neotron Exp $";
 
 class Shuffle
 {
@@ -695,7 +695,7 @@ mapping handle_file_extension(object o, string e, object id)
     // info parsing.
     return 0;
 #if UNIX
-  if(QUERY(noexec) && o && !(statt[0]&0111))
+  if(QUERY(noexec) && o && !(stat[0]&0111))
     return 0;
 #endif
   return http_stream( CGIScript( id )->run()->get_fd() );
