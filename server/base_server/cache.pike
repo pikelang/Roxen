@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.71 2001/06/17 20:07:09 nilsson Exp $
+// $Id: cache.pike,v 1.72 2001/07/02 23:19:29 nilsson Exp $
 
 #pragma strict_types
 
@@ -43,36 +43,7 @@ void flush_memory_cache() {
   all=([]);
 }
 
-// Calculates the size of an entry, though it isn't very good at it.
-constant svalsize = 4*4; // if pointers are 4 bytes..
-int get_size(mixed x, void|int iter)
-{
-  if(iter++>20) {
-    CACHE_WERR("Too deep recursion when examining entry size.\n");
-    return 0;
-  }
-  if(mappingp(x))
-    return svalsize + 64 + get_size(indices([mapping]x), iter) +
-      get_size(values([mapping]x), iter);
-  else if(stringp(x))
-    return strlen([string]x)+svalsize;
-  else if(arrayp(x))
-  {
-    int i;
-    foreach([array]x, mixed f)
-      i += get_size(f,iter);
-    return svalsize + 4 + i;    // (base) + arraysize
-  } else if(multisetp(x)) {
-    int i;
-    foreach(indices([multiset]x), mixed f)
-      i += get_size(f,iter);
-    return svalsize + i;    // (base) + arraysize
-  } else if(objectp(x) || functionp(x)) {
-    return svalsize + 128; // (base) + object struct + some extra.
-    // _Should_ consider size of global variables / refcount
-  }
-  return svalsize; // base
-}
+constant svalsize = 4*4;
 
 // Expire a whole cache
 void cache_expire(string in)
@@ -125,7 +96,7 @@ mapping(string:array(int)) status()
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
-			  get_size(cache[name]) });
+			  sizeof(encode_value(cache[name])) });
     if (!zero_type(ret[show_name]))
       for (int idx = 0; idx < 3; idx++)
 	ret[show_name][idx] += entry[idx];
@@ -193,7 +164,8 @@ void cache_clean()
       }
       else {
 	if(!c[SIZE]) {
-	  c[SIZE]=(get_size(b) + get_size(c[DATA]) + 5*svalsize + 4)/100;
+	  c[SIZE]=(sizeof(encode_value(b)) + sizeof(encode_value(c[DATA])) +
+		   5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
           MORE_CACHE_WERR("     Cache entry size percieved as " +
 			  ([int]c[SIZE]*100) + " bytes\n");
@@ -248,6 +220,16 @@ void nongarbing_cache_remove(string cache_id, string key) {
 //! Flush a cache in the non-garbing cache.
 void nongarbing_cache_flush(string cache_id) {
   m_delete(nongc_cache, cache_id);
+}
+
+mapping(string:array(int)) ngc_status() {
+  mapping(string:array(int)) res = ([]);
+
+  foreach(indices(nongc_cache), string cache)
+    res[cache] = ({ sizeof(nongc_cache[cache]),
+		    sizeof(encode_value(nongc_cache[cache])) });
+
+  return res;
 }
 
 
