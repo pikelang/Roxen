@@ -1049,14 +1049,14 @@ a&auml; &amp; b  &gt;
 
 <test>
   <rxml type="string">
-    <set variable="var.foo"></set> <!-- var.foo gets the value RXML.nil, i.e. it's still unset. -->
+    <set variable="var.foo"></set>
     <if variable="var.foo">1</if><else>0</else>
     <if variable="var.foo is ">1</if><else>0</else>
     <if variable="var.foo != ">1</if><else>0</else>
     <if variable="var.foo is 0">1</if><else>0</else>
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
-  <result>00100</result>
+  <result>11000</result>
 </test>
 
 <test>
@@ -1105,6 +1105,18 @@ a&auml; &amp; b  &gt;
     <if variable="var.foo = ?*">1</if><else>0</else>
   </rxml>
   <result>10101</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cset variable="var.foo"></cset>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>11000</result>
 </test>
 
 <test>
