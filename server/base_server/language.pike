@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.31 2000/07/31 00:57:49 nilsson Exp $
+// $Id: language.pike,v 1.32 2000/09/08 22:50:20 nilsson Exp $
 
 // #pragma strict_types
 
@@ -9,6 +9,9 @@
 
 string default_locale;
 //! Contains the default locale for the entire roxen server.
+
+string default_page_locale;
+//! Contains the default locale for web pages.
 
 #ifndef THREADS
 // Emulates a thread_local() object.
@@ -100,9 +103,6 @@ void initiate_languages(string def_loc)
     // Default locale from Globals
     tmp = def_loc;
   }
-  else if(getenv("ROXEN_LANG")) {
-    tmp = [string]getenv("ROXEN_LANG");
-  }
   else if(getenv("LANG")) {
     // Default locale from environment
     tmp = [string]getenv("LANG");
@@ -115,6 +115,12 @@ void initiate_languages(string def_loc)
     // Failed to set locale, fallback to English
     default_locale = "eng";
   }
+
+  if(getenv("ROXEN_LANG")) {
+    default_page_locale = verify_locale([string]getenv("ROXEN_LANG"));
+  }
+  else
+    default_page_locale = default_locale;
 
 #ifdef LANGUAGE_DEBUG
   werror("Default locale is set to %O.\n",default_locale);
@@ -134,7 +140,7 @@ void initiate_languages(string def_loc)
 
 
 
-// ------------- The old language support ------------
+// ------------- The language functions ------------
 
 static string nil()
 {
@@ -151,7 +157,7 @@ public function language(string lang, string func, object|void id)
   werror("Function: " + func + " in "+ verify_locale(lang) +"\n");
 #endif
   return __LOCALEMODULE.call(PROJECT, verify_locale(lang), 
-			     func, default_locale) || nil;  
+			     func, default_page_locale) || nil;  
 }
 
 array(string) list_languages() {
