@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.150 2002/10/23 22:54:34 nilsson Exp $
+// $Id: Roxen.pmod,v 1.151 2002/10/26 01:20:44 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1994,10 +1994,10 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 		     eris->hour, eris->min, eris->sec);
 
      case "discordian":
-       return Calendar.Discordian.Second("unix", t)->format_ext_time();
+       return Calendar.Discordian.Second("unix", t)->format_ext_ymd();
 
      case "stardate":
-       return Calendar.Stardate.Tick("unix", t)->nice_print();
+       return Calendar.Stardate.Tick("unix", t)->format_short((int)m->prec);
 
     }
   }
