@@ -2,6 +2,7 @@
 * text ident
 *.gif binary
 *.jpg binary
+*.pdf binary
 *.pnm binary
 *.ppm binary
 
