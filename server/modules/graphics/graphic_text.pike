@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.236 2000/09/10 23:24:44 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.237 2000/09/12 23:33:15 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -40,10 +40,6 @@ void create()
 TAGDOCUMENTATION;
 #ifdef manual
 constant gtextargs=#"
-<attr name=afont>
-
-</attr>
-
 <attr name=alpha value=path>
  Use the specified image as an alpha channel, together with the
  background attribute.
@@ -77,12 +73,29 @@ constant gtextargs=#"
  Apply a turbulence effect on the background.
 </attr>
 
-<attr name=black>
- Use a black, or heavy, version of the font, if available.
+<attr name=bold>
+ Use a bold version of the font, if available. Can not be used
+ together with the black or light attributes.
+<ex type=hor>
+<gtext font='lucida'>Aa3</gtext><br />
+<gtext font='lucida' bold=''>Aa3</gtext><br />
+<gtext font='lucida' italic''>Aa3</gtext><br />
+<gtext font='lucida' bold='' italic=''>Aa3</gtext><br />
+</ex>
 </attr>
 
-<attr name=bold>
- Use a bold version of the font, if available.
+<attr name=black>
+ Use a black, or heavy, version of the font, if available. Can
+ not be used together with the bold or light attributes.
+</attr>
+
+<attr name=light>
+ Use a light version of the font, if available. Can not be used
+ together with the bold or black attributes.
+</attr>
+
+<attr name=italic>
+ Use an italic version of the font, if available.
 </attr>
 
 <attr name=bshadow value=distance>
@@ -100,7 +113,7 @@ constant gtextargs=#"
  Make the text look like it has been cut into the background.
  <ex type=vert>
 <gtext bold=\"\" ypad=\"-40%\" xpad=\"-20%\" chisel=\"\" talign=\"center\"
-opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"tiles.jpg\"> Chisel
+opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"/internal-roxen-test\"> Chisel
 opaque=70</gtext>
  </ex>
 </attr>
@@ -125,11 +138,13 @@ opaque=70</gtext>
 </attr>
 
 <attr name=font value=string>
-
+ Selects which font to use. You can get a list of all available fonts
+ by using the list fonts task in the administration interface, or by
+ using the fonts emit plugin.
 </attr>
 
 <attr name=fontsize value=number>
-
+ Selects which size of the font that should be used.
 </attr>
 
 <attr name=format value=string>
@@ -162,14 +177,6 @@ opaque=70</gtext>
  </ex>
 </attr>
 
-<attr name=italic>
- Use an italic version of the font, if available.
-</attr>
-
-<attr name=light>
- Use a light version of the font, if available.
-</attr>
-
 <attr name=maxlen value=number>
  Sets the maximum length of the text that will be rendered into an
  image, by default 300.
@@ -187,26 +194,6 @@ opaque=70</gtext>
 
 <attr name=narrow>
  Use a narroe version of the font, if available.
-</attr>
-
-<attr name=nfont value=fontname>
- Select a font using somewhat more memonic font-names. You can get a
- font-list by accessing the administration interface.
-
- <p>There are several modifiers available: bold, italic, black and light.
- If the requested version of the font is available, it will be used to
- render the text, otherwise the closest match will be used.</p>
-
- <ex type=vert>
-<gtext nfont=\"futura\" light=\"\"            >Light</gtext>
-<gtext nfont=\"futura\" light=\"\" italic=\"\">Italic</gtext>
-<gtext nfont=\"futura\"                       >Normal</gtext>
-<gtext nfont=\"futura\" italic=\"\"           >Italic</gtext>
-<gtext nfont=\"futura\" bold=\"\"             >Bold</gtext>
-<gtext nfont=\"futura\" bold=\"\"  italic=\"\">Italic</gtext>
-<gtext nfont=\"futura\" black=\"\"            >Black</gtext>
-<gtext nfont=\"futura\" black=\"\" italic=\"\">Italic</gtext>
- </ex>
 </attr>
 
 <attr name=notrans>
@@ -573,7 +560,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    font = resolve_font((args->afont||args->font)+" "+(args["fontsize"]||32));
+    font = resolve_font(args->afont+" "+(args["fontsize"]||32));
   else
   {
     int bold=0, italic=0;
