@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.15 2000/02/03 19:54:01 wellhard Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.16 2000/02/07 03:57:39 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -34,8 +34,6 @@ inherit "roxenlib";
 
 
 roxen.ImageCache  button_cache;
-Image.Image button_border;
-Image.Image button_mask;
 
 
 //  Distance between icon image and text
@@ -118,18 +116,34 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   int          req_width, b_width, b_height, t_width, i_width, icn_x, txt_x;
   mapping      icon;
   object       button_font = resolve_font( args->font );
+  Image.Image button_border;
+  Image.Image button_mask;
 
-  //  Load images
+  if( args->border_image )
+  {
+    mapping q = roxen.low_load_image(args->border_image, id);
+    if( q  )
+    {
+      button_border = q->img;
+      if(!q->alpha)
+        button_mask = Image.Image( q->img->xsize(),q->img->ysize(),
+                                   255,255,255 );
+      else
+        button_mask = q->alpha;
+    }
+  }
+  //  otherwise load default images
   if (!button_border)
   {
-    button_border = roxen.load_image("roxen-images/gbutton_border.gif", id);
-    button_mask = roxen.load_image("roxen-images/gbutton_mask.gif", id);
+    mapping q = Image._load("roxen-images/gbutton_border.xcf");
+    button_border = q->img;
+    button_mask = q->alpha;
   }
 
   //  Colorize borders
   if (!args->dim)
   {
-    b = button_border->clone()->grey()->
+    b = button_border->grey()->
             modify_by_intensity(1, 1, 1, args->bo, args->bob );
   }
   else
@@ -229,6 +243,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     }
     break;
   }
+
   button = Image.Image(req_width, b_height, args->bg);
 
   //  Paste left and right edge of border
@@ -236,9 +251,20 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   button->paste_mask(tmp, button_mask->copy(0, 0,
 					    b_width / 2 - 1, b_height - 1));
   tmp = b->copy(b_width / 2, 0, b_width - 1, b_height - 1);
+
   button->paste_mask(tmp, button_mask->copy(b_width / 2, 0,
 					    b_width - 1, b_height - 1),
 		     req_width - b_width / 2, 0);
+
+  tmp = button_mask->copy(0, 0, b_width / 2 - 1, b_height - 1)
+      ->invert()->threshold(250);
+  button->paste_alpha_color(tmp, args->pagebg);
+  tmp = button_mask->copy(b_width / 2, 0, b_width - 1, b_height - 1)
+      ->invert()->threshold(250);
+  button->paste_alpha_color(tmp, args->pagebg,
+                            button->xsize()-tmp->xsize(), 0);
+
+
 
   //  Stretch top/bottom borders
   tmp = button->copy(b_width / 2 - 1, 0, b_width / 2 - 1, b_height - 1);
@@ -255,7 +281,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
       icon->alpha *= 0.3;
     button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
   }
-  
+
   //  Draw text
   if (args->dim)
     for (int i = 0; i < 3; i++)
@@ -275,9 +301,18 @@ mapping find_internal(string f, RequestID id)
 
 string tag_button(string tag, mapping args, string contents, RequestID id)
 {
+  string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
+  if( fi )
+    fi = fix_relative( fi, id );
   mapping new_args = ([
-    "bg"  : parse_color(args->bgcolor || id->misc->defines->theme_bgcolor ||
-			id->misc->defines->bgcolor || "#eeeeee"),     //  Background color
+    "pagebg" :parse_color(id->misc->defines->theme_bgcolor ||
+                          id->misc->defines->bgcolor ||
+                          args->bgcolor ||
+                          "#eeeeee"), // _page_ background color
+    "bg"  : parse_color(args->bgcolor ||
+                        id->misc->defines->theme_bgcolor ||
+			id->misc->defines->bgcolor ||
+                        "#eeeeee"),     //  Background color
     "txt" : parse_color(args->textcolor || id->misc->defines->theme_bgcolor ||
 			id->misc->defines->fgcolor || "#000000"),   //  Text color
     "cnd" : args->condensed ||                           //  Condensed text
@@ -289,7 +324,9 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left",                  //  Icon alignment
-    "font": (args->font||id->misc->defines->font||roxen->query("default_font")),
+    "font": (args->font||id->misc->defines->font||
+             roxen->query("default_font")),
+    "border_image":fi,
   ]);
 
   array hsv = Image.Color( @new_args->bg )->hsv( );
