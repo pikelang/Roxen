@@ -1,7 +1,7 @@
-#! /usr/env/bin pike
-// $Id: tetris.pike,v 1.9 2002/06/07 15:29:41 nilsson Exp $
-#if constant(roxen)
-constant A=roxen.store;void B(string X)catch{Q=roxen.retrieve(X,0)->idi;};}
+#! /usr/bin/env pike
+// $Id: tetris.pike,v 1.10 2003/01/22 00:19:34 mani Exp $ Be careful here!!
+#if constant(core)
+constant A=core.store;void B(string VAR){catch{Q=core.retrieve(VAR,0)->idi;};}
 #else
 constant A=({});void B(string X){Q=A;};
 #endif
