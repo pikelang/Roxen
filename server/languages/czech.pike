@@ -12,7 +12,7 @@
              		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.5 1998/12/01 03:00:28 peter Exp $";
+string cvs_version = "$Id: czech.pike,v 1.6 1999/06/21 15:22:45 marcus Exp $";
 string month(int num)
 {
   return ({ "ledna", "únor", "bøezna", "dubna", "kvìtna",
@@ -57,10 +57,10 @@ string date(int timestamp, mapping|void m)
     return (ctime(timestamp)[11..15]+", "+
 	   ordered(t1["mday"]) + " " + 
            month(t1["mon"]+1) + " " +
-           (t2["year"]+1900));
+           (t1["year"]+1900));
   if(m["date"])
     return (ordered(t1["mday"]) + " " + month(t1["mon"]+1) + " " +
-       (t2["year"]+1900));
+       (t1["year"]+1900));
   if(m["time"])
     return (ctime(timestamp)[11..15]);
 }

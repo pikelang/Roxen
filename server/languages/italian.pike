@@ -14,7 +14,7 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.8 1998/07/15 18:39:57 grubba Exp $";
+string cvs_version = "$Id: italian.pike,v 1.9 1999/06/21 15:22:46 marcus Exp $";
 
 string month(int num)
 {
@@ -138,10 +138,10 @@ string date(int timestamp, mapping|void m)
   if (m["full"])
     return "alle "+ ctime(timestamp)[11..15]+", "+
 			gendered_num(t1["mday"])+
-			" "+month(t1["mon"])+ " "+(string)(1900+(int)t2["year"]);
+			" "+month(t1["mon"])+ " "+(string)(1900+(int)t1["year"]);
   if(m["date"])
     return gendered_num(t1["mday"])+
-			" "+month(t1["mon"])+" "+(string)(1900+(int)t2["year"]);
+			" "+month(t1["mon"])+" "+(string)(1900+(int)t1["year"]);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
