@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.53 2002/02/07 12:56:21 wellhard Exp $
+// $Id: DBManager.pmod,v 1.54 2002/02/11 13:24:10 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -69,39 +69,34 @@ private
   static void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
 				    string|void password )
   {
-    if(password)
+    array q = db->query( "SELECT User FROM user WHERE User=%s AND Host=%s",
+			 short(c->name)+"_rw", host );
+    
+    if( sizeof( q ) )
     {
-      array q = db->query( "SELECT User FROM user "
-			   "  WHERE User=%s"
-			   "    AND Host=%s"
-			   "    AND Password=PASSWORD(%s)",
-			   short(c->name)+"_rw", host, password );
-      if( !sizeof( q ) )
-      {
-	db->query( "INSERT INTO user (Host,User,Password) "
-		   "VALUES (%s, %s, PASSWORD(%s))",
-		   host, short(c->name)+"_rw", password ); 
-	db->query( "INSERT INTO user (Host,User,Password) "
-		   "VALUES (%s, %s, PASSWORD(%s))",
-		   host, short(c->name)+"_ro", password );
-      }
+      db->query("DELETE FROM user WHERE User=%s AND Host=%s",
+		short(c->name)+"_rw", host );
+      db->query("DELETE FROM user WHERE User=%s AND Host=%s",
+		short(c->name)+"_ro", host );
+    }
+    
+    if( password )
+    {
+      db->query( "INSERT INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, PASSWORD(%s))",
+		 host, short(c->name)+"_rw", password ); 
+      db->query( "INSERT INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, PASSWORD(%s))",
+		 host, short(c->name)+"_ro", password );
     }
     else
     {
-      array q = db->query( "SELECT User FROM user "
-			   "  WHERE User=%s"
-			   "    AND Host=%s"
-			   "    AND Password=''",
-			   short(c->name)+"_rw", host );
-      if( !sizeof( q ) )
-      {
-	db->query( "INSERT INTO user (Host,User,Password) "
-		   "VALUES (%s, %s, '')",
-		   host, short(c->name)+"_rw" ); 
-	db->query( "INSERT INTO user (Host,User,Password) "
-		   "VALUES (%s, %s, '')",
-		   host, short(c->name)+"_ro" );
-      }
+      db->query( "INSERT INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, '')",
+		 host, short(c->name)+"_rw" ); 
+      db->query( "INSERT INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, '')",
+		 host, short(c->name)+"_ro" );
     }
   }
   
