@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.139 2000/02/20 02:52:34 nilsson Exp $
+ * $Id: rxml.pike,v 1.140 2000/02/20 04:19:45 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -36,8 +36,9 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
   // FIXME: Make this a user option.
   report_notice (describe_error (err));
 #endif
-  if (type->subtype_of (RXML.t_html))
-    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
+    return "<br clear=all />\n<pre>" +
+      html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
 
@@ -49,8 +50,9 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
   // FIXME: Make this a user option.
   report_notice (describe_error (err));
 #endif
-  if (type->subtype_of (RXML.t_html))
-    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
+    return "<br clear=all />\n<pre>" +
+      html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
 
@@ -358,6 +360,11 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   RXML.Frame orig_frame = ctx->frame;
   ctx->frame = BacktraceFrame (orig_frame, tag, args);
   mixed err = catch {
+    if (++ctx->frame_depth >= ctx->max_frame_depth) {
+      ctx->frame_depth--;
+      RXML.run_error ("Too deep recursion -- exceeding %d nested tags.\n",
+		      ctx->max_frame_depth);
+    }
     if (string splice_args = args["::"]) {
       // Somewhat kludgy solution for the time being.
       splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
@@ -370,6 +377,7 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
     result=rf(tag,args,id,parser->_source_file,parser->_defines);
   };
   ctx->frame = orig_frame;
+  ctx->frame_depth--;
   if (err) throw (err);
 
   TRACE_LEAVE("");
@@ -416,6 +424,11 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   RXML.Frame orig_frame = ctx->frame;
   ctx->frame = BacktraceFrame (orig_frame, tag, args);
   mixed err = catch {
+    if (++ctx->frame_depth >= ctx->max_frame_depth) {
+      ctx->frame_depth--;
+      RXML.run_error ("Too deep recursion -- exceeding %d nested tags.\n",
+		      ctx->max_frame_depth);
+    }
     if (string splice_args = args["::"]) {
       // Somewhat kludgy solution for the time being.
       splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
@@ -428,6 +441,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
     result=rf(tag,args,contents,id,parser->_source_file,parser->_defines);
   };
   ctx->frame = orig_frame;
+  ctx->frame_depth--;
   if (err) throw (err);
 
   TRACE_LEAVE("");
@@ -868,14 +882,20 @@ class UserTag {
 
 #ifdef OLD_RXML_COMPAT
       if(parse_html_compat) {
-	array replace_from = map(indices(nargs),make_entity)+({"#args#"});
-	array replace_to = values(nargs)+({ make_tag_attributes(nargs) });
+	array replace_from, replace_to;
+	if (flags & RXML.FLAG_NONCONTAINER) {
+	  replace_from = map(indices(nargs),make_entity)+({"#args#"});
+	  replace_to = values(nargs)+({ make_tag_attributes(nargs) });
+	}
+	else {
+	  replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
+	  replace_to = values(nargs)+({ make_tag_attributes(nargs), content });
+	}
 	string c2;
 	c2 = replace(c, replace_from, replace_to);
 	if(c2!=c) {
 	  vars=([]);
-	  //FIXME: When the parser provides proper empty variables the ||"" wont be needed.
-	  return ({replace (c2, "<contents>", content||"")});
+	  return ({c2});
 	}
       }
 #endif
@@ -965,6 +985,7 @@ class TagDefine {
 
 class TagUndefine {
   inherit RXML.Tag;
+  int flags = RXML.FLAG_NONCONTAINER;
   constant name = "undefine";
   class Frame {
     inherit RXML.Frame;
