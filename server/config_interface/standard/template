@@ -30,7 +30,7 @@
 <define container=cv-startpage>
   <cv-split>
     <subtablist>
-      <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
+      <st-tabs><insert file="/standard/cv_startpage_tabs.pike" nocache></st-tabs>
       <st-page><contents></st-page>
     </subtablist>
    </cv-split>
