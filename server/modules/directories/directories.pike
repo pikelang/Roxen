@@ -4,13 +4,13 @@
 //
 // Per Hedbor 2000-05-16
 //
-// TODO: 
+// TODO:
 //  o Perhaps add <fl> to default template?
 //  o Add readme support
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.74 2000/08/19 08:52:40 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.75 2000/08/21 11:20:21 jhs Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -59,8 +59,8 @@ void create()
 // "Include readme files", TYPE_STRING_LIST|VAR_INITIAL,
 // "Include one of these readme files, if present, in directory listings");
 
-  defvar("override", 0, "Allow directory index file overrides", 
-         TYPE_FLAG,
+  defvar("override", 0, "Allow directory index file overrides",
+         TYPE_FLAG|VAR_INITIAL,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' to the directory name. It is "
 	 "<em>very</em> useful for debugging, but some people regard "
@@ -71,7 +71,7 @@ void create()
          "If true, use the default directory layout template" );
 
   defvar("template", "", "Directorylisting template", TYPE_TEXT,
-         "The template for directory list generation.", 0, 
+         "The template for directory list generation.", 0,
          lambda(){ return query("default-template"); } );
 }
 
@@ -80,7 +80,7 @@ void start(int n, Configuration c)
   indexfiles = query("indexfiles")-({""});
   override = query("override");
   if( query("default-template" ) )
-    template = 
+    template =
 #"
 <if not='' variable='form.sort'>
   <set variable='form.sort' value='name' />
@@ -96,7 +96,7 @@ void start(int n, Configuration c)
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
+        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
 
@@ -133,13 +133,13 @@ void start(int n, Configuration c)
         <mitem order='modified' title='Last modified' align='right'/>
       </tr>
       <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
+        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
 
-      <emit source='directory' 
+      <emit source='directory'
             directory='&page.virtfile;'
-            sort-order='&form.sort;' 
+            sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
           <td align=left><a href='&_.path;'><img src='&_.icon;' border='0' /></a></td>
@@ -150,7 +150,7 @@ void start(int n, Configuration c)
         </tr>
       </emit>
       <tr>
-        <td width='100%' height='4' colspan='5' bgcolor='#ce5c00'><img 
+        <td width='100%' height='4' colspan='5' bgcolor='#ce5c00'><img
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
     </table>
@@ -167,7 +167,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
 {
   // Now..
 
-  string d = Roxen.fix_relative( args->directory, id ); 
+  string d = Roxen.fix_relative( args->directory, id );
 
   mapping a = id->conf->find_dir_stat( d, id );
 
@@ -180,7 +180,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
   {
     array st = a[ file ];
 
-    mapping m = 
+    mapping m =
     ([
       "name":file,
       "filename":file,
@@ -224,7 +224,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
         if(!search(file, tmp[0]))
         {
 #ifdef MODULE_LEVEL_SECURITY
-          if(id->conf->check_security(tmp[1], id)) 
+          if(id->conf->check_security(tmp[1], id))
             continue;
 #endif
           string s;
@@ -268,7 +268,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
          case "gif":
          case "jpeg":
          case "jpg":
-           catch 
+           catch
            {
              object fd = id->conf->open_file( m->path, "r", id )[0];
              array xy = Dims.dims()->get( fd );
@@ -277,7 +277,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
            };
            break;
          default:
-           catch 
+           catch
            {
              Image.Image i = roxen.load_image( m->path,id );
              m["x-size"] = (string)i->xsize();
@@ -349,13 +349,13 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
   return res;
 }
 
-class TagDirectoryplugin 
+class TagDirectoryplugin
 {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "directory";
 
-  array get_dataset(mapping m, RequestID id) 
+  array get_dataset(mapping m, RequestID id)
   {
     return get_directory_dataset(m, id);
   }
@@ -367,7 +367,7 @@ class TagPathplugin
   constant name = "emit";
   constant plugin_name = "path";
 
-  array get_dataset(mapping m, RequestID id) 
+  array get_dataset(mapping m, RequestID id)
   {
     string fp = "";
     array res = ({});
@@ -394,7 +394,7 @@ class TagPathplugin
   }
 }
 
-string|mapping parse_directory(RequestID id)
+mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
   // First fix the URL
@@ -404,10 +404,10 @@ string|mapping parse_directory(RequestID id)
   if(f == "" )
     return Roxen.http_redirect(id->not_query + "/", id);
 
-  if(f[-1]!='/' && f[-1]!='.') 
+  if(f[-1]!='/' && f[-1]!='.')
     return Roxen.http_redirect(f+"/", id);
 
-  if(f[-1]=='.' && override) 
+  if(f[-1]=='.' && override)
     return Roxen.http_redirect(f[..sizeof(f)-2], id);
 
   // If the pathname ends with '.', and the 'override' variable
@@ -529,4 +529,3 @@ constant tagdoc=([
 		 })
 ]);
 #endif
-
