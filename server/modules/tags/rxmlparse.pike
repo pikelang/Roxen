@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.14 1999/08/11 21:38:23 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.15 1999/08/12 21:54:01 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -933,7 +933,7 @@ string tag_quote(string tagname, mapping m)
 
 string tag_inc(string tag, mapping m, object id)
 {
-  if(m->variable && id->variable[m->variable]) {
+  if(m->variable && id->variables[m->variable]) {
     id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
     return "";
   }
@@ -942,7 +942,7 @@ string tag_inc(string tag, mapping m, object id)
 
 string tag_dec(string tag, mapping m, object id)
 {
-  if(m->variable && id->variable[m->variable]) {
+  if(m->variable && id->variables[m->variable]) {
     id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
     return "";
   }
@@ -1124,48 +1124,49 @@ string tag_doc(string tag, mapping m, string s)
   if(!m["quote"])
     if(m["pre"])
       return "\n<pre>"+
-	replace(s, ({"{","}","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
+	replace(s, ({"{","}","& "}),({"&lt;","&gt;","&amp; "}))+"</pre>\n";
     else
-      return replace(s, ({ "{", "}", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
+      return replace(s, ({ "{", "}", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
   else 
     if(m["pre"])
       return "\n<pre>"+
-	replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
+	replace(s, ({"<",">","& "}),({"&lt;","&gt;","&amp; "}))+"</pre>\n";
     else
-      return replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
+      return replace(s, ({ "<", ">", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
 }
 
 string tag_autoformat(string tag, mapping m, string s, object id)
 {
   s-="\r";
-  if(!m->nobr) {
-    s = replace(s, "\n", "<br>\n");
+
 #if old_rxml_compat
     // m->pre is not part of RXML 1.4
-    if(m->pre) api_old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
-    if(m->p || m->pre) {
-#else
-    if(m->p) {
+    if(m->pre) {
+      api_old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
+      m+=(["p":1]);
+    }
 #endif
+
+  if(!m->nobr) {
+    s = replace(s, "\n", "<br>\n");
+    if(m->p) {
       if(search(s, "<br>\n<br>\n")!=-1) s="<p>"+s;
       s = replace(s, "<br>\n<br>\n", "\n</p><p>\n");
       if(s[..sizeof(s)-4]=="<p>")
-        s=s[..sizeof(s)-4];
+        return s[..sizeof(s)-4];
       else
-        s+="</p>";
+        return s+"</p>";
     }
-#if old_rxml_compat
-  // m->pre is not part of RXML 1.4
-  } else if(m->p || m->pre) {
-#else
-  } else if(m->p) {
-#endif
+    return s;
+  }
+
+  if(m->p) {
     if(search(s, "\n\n")!=-1) s="<p>"+s;
       s = replace(s, "\n\n", "\n</p><p>\n");
       if(s[..sizeof(s)-4]=="<p>")
-        s=s[..sizeof(s)-4];
+        return s[..sizeof(s)-4];
       else
-        s+="</p>";
+        return s+"</p>";
     }
   
   return s;
@@ -1239,14 +1240,12 @@ string tag_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-array(string) tag_formoutput(string tag_name, mapping args, string contents,
-			     object id, mapping defines)
+array(string) tag_formoutput(string tag_name, mapping args, string contents, object id)
 {
   return ({do_output_tag( args, ({ id->variables }), contents, id )});
 }
 
-mixed tag_gauge(string t, mapping args, string contents,
-		object id, object f, mapping defines)
+mixed tag_gauge(string t, mapping args, string contents, object id)
 {
   NOCACHE();
 
@@ -1261,8 +1260,8 @@ mixed tag_gauge(string t, mapping args, string contents,
 #endif
   string define = args->define?args->define:"gauge";
 
-  defines[define+"_time"] = sprintf("%3.6f", t/1000000.0);
-  defines[define+"_result"] = contents;
+  id->misc->defines[define+"_time"] = sprintf("%3.6f", t/1000000.0);
+  id->misc->defines[define+"_result"] = contents;
 
   if(args->silent) return "";
   if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
@@ -1292,8 +1291,8 @@ private mixed tag_input( string tag_name, mapping args, string name,
       if (value[ args->value ])
 	if (args->checked)
 	  return 0;
-	else
-	  args->checked = "checked";
+        else
+          args->checked = "checked";
       else
 	if (args->checked)
 	  m_delete( args, "checked" );
@@ -1359,23 +1358,26 @@ private mixed tag_select( string tag_name, mapping args, string contents,
 
 // The default tag is used to give default values to forms elements,
 // without any fuss.
-array(string) tag_default( string tag_name, mapping args, string contents,
-			   object id, object f, mapping defines, object fd )
+array(string) tag_default( string tag_name, mapping args, string contents, object id)
 {
-  string multi_separator = args->multi_separator || "\000";
+  string separator = args->separator || "\000";
+#if old_rxml_compat
+  separator = args->multi_separator || "\000";
+#endif
+
 
   contents = parse_rxml( contents, id );
   if (args->value)
     return ({parse_html( contents, ([ "input" : tag_input ]),
 			 ([ "select" : tag_select ]),
 			 args->name, mkmultiset( args->value
-						 / multi_separator ) )});
+						 / separator ) )});
   else if (args->variable && id->variables[ args->variable ])
     return ({parse_html( contents, ([ "input" : tag_input ]),
 			 ([ "select" : tag_select ]),
 			 args->name,
 			 mkmultiset( id->variables[ args->variable ]
-				     / multi_separator ) )});
+				     / separator ) )});
   else    
     return ({contents});
 }
@@ -1400,11 +1402,16 @@ string tag_sort(string t, mapping m, string c, object id)
     lines = lines[..sizeof(lines)-2];
   }
 
-  return pre + sort(lines)*m->separator + post;
+  lines=sort(lines);
+
+  return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
 mixed tag_recursive_output (string tagname, mapping args, string contents, object id)
 {
+#if old_rxml_compat
+  if(args->multisep) args->separator=args->multisep;
+#endif
   int limit;
   array(string) inside, outside;
   if (id->misc->recout_limit) {
@@ -1413,8 +1420,8 @@ mixed tag_recursive_output (string tagname, mapping args, string contents, objec
   }
   else {
     limit = (int) args->limit || 100;
-    inside = args->inside ? args->inside / (args->multisep || ",") : ({});
-    outside = args->outside ? args->outside / (args->multisep || ",") : ({});
+    inside = args->inside ? args->inside / (args->separator || ",") : ({});
+    outside = args->outside ? args->outside / (args->separator || ",") : ({});
     if (sizeof (inside) != sizeof (outside))
       return "\n<b>'inside' and 'outside' replacement sequences "
 	"aren't of same length</b>\n";
