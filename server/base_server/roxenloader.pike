@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.352 2004/04/26 16:08:44 grubba Exp $
+// $Id: roxenloader.pike,v 1.353 2004/04/28 19:52:59 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.352 2004/04/26 16:08:44 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.353 2004/04/28 19:52:59 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2319,6 +2319,7 @@ library should be enough.
   dump( "base_server/prototypes.pike", object_program( prototypes ) );
   
   add_constant("Protocol",      prototypes->Protocol );
+  add_constant("DAVLock",	prototypes->DAVLock);
   add_constant("Configuration", prototypes->Configuration );
   add_constant("StringFile",    prototypes->StringFile );
   add_constant("PrefLanguages", prototypes->PrefLanguages);
