@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.571 2001/01/23 17:28:40 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.572 2001/02/05 14:43:32 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2754,12 +2754,16 @@ class ArgCache
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
   {
-    LOCK();
+    array q;
     array b = values(args), a = sort(indices(args),b);
     string data = MIME.encode_base64(encode_value(({a,b})),1);
+    
+    if( q = cache[ data ] )
+      return q[ CACHE_SKEY ];
 
-    if( cache[ data ] )
-      return cache[ data ][ CACHE_SKEY ];
+    LOCK();
+    if( q = cache[ data ] )
+      return q[ CACHE_SKEY ];
 
     if( sizeof( cache ) >= CACHE_SIZE )
     {
@@ -2778,9 +2782,7 @@ class ArgCache
     }
 
     string id = create_key( data );
-    cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = copy_value( args );
-    cache[ data ][ CACHE_SKEY ] = id;
+    cache[ data ] = ({ copy_value( args ), id });
     cache[ id ] = data;
     return id;
   }
@@ -2790,23 +2792,21 @@ class ArgCache
   //! may be supplied to get an error message stating the browser name
   //! in the event of the key not being present any more in the cache.
   {
+    mixed v ;
+    if( (v=cache[id]) && (v=cache[ v ]) )
+      return v[CACHE_VALUE];
     LOCK();
-    if(cache[id] && cache[ cache[id] ] )
-      return cache[cache[id]][CACHE_VALUE];
+    if( (v=cache[id]) && (v=cache[ v ]) )
+      return v[CACHE_VALUE];
 
     string q = read_args( id );
 
     if(!q)
-      if( client )
-        error("Key does not exist! (Thinks "+ (client*"") +")\n");
-      else
-        error("Requesting unknown key\n");
+      error("Requesting unknown key\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
 
-    cache[ q ] = ({0,0});
-    cache[ q ][ CACHE_VALUE ] = data;
-    cache[ q ][ CACHE_SKEY ] = id;
+    cache[ q ] = ({data,id});
     cache[ id ] = q;
     return data;
   }
