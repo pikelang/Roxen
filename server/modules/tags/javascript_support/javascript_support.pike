@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.19 2000/03/23 18:29:54 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.20 2000/03/24 21:45:36 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -234,7 +234,7 @@ static private string container_js_popup(string name, mapping args,
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
   
-  if(!largs->label)
+  if(!args->label)
     return "";
   
   return make_container_unquoted("a", largs, args->label);
