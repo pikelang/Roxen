@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.514 2000/07/31 00:57:49 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.515 2000/08/03 06:06:11 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3024,14 +3024,42 @@ void reload_all_configurations()
   }
   if(modified) {
     configurations = new_confs;
+    fix_config_lookup();
     config_stat_cache = config_cache;
   }
 }
 
+private mapping(string:object/*(Configuration)*/) config_lookup = ([]);
+// Maps config name to config object.
+
+void fix_config_lookup()
+{
+  config_lookup = mkmapping (configurations->name, configurations);
+#ifdef DEBUG
+  if (sizeof (configurations) != sizeof (config_lookup))
+    error ("Duplicate configuration names in configurations array: %O",
+	   configurations->name);
+#endif
+}
+
+object/*(Configuration)*/ get_configuration (string name)
+{
+#ifdef DEBUG
+  if (sizeof (configurations) != sizeof (config_lookup))
+    error ("config_lookup out of synch with configurations.\n");
+#endif
+  return config_lookup[name];
+}
+
 object enable_configuration(string name)
 {
+#ifdef DEBUG
+  if (get_configuration (name))
+    error ("A configuration called %O already exists.\n", name);
+#endif
   object cf = Configuration( name );
   configurations += ({ cf });
+  config_lookup[name] = cf;
   return cf;
 }
 
@@ -3040,6 +3068,7 @@ void enable_configurations()
 {
   array err;
   configurations = ({});
+  config_lookup = ([]);
 
   foreach(list_all_configurations(), string config)
   {
