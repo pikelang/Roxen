@@ -20,7 +20,7 @@ string parse( RequestID id )
     "<td align=\"right\">"+LOCALE(64, "Size")+"</td>"
     "<td align=\"right\">"+LOCALE(293, "Hits")+"</td>"
     "<td align=\"right\">"+LOCALE(294, "Misses")+"</td>"
-    "<td align=\"right\">"+LOCALE(67, "Hit rate")+"</td>";
+    "<td align=\"right\">"+LOCALE(67, "Hit rate")+"</td></tr>";
 
   mapping c=cache->status();
 
@@ -65,15 +65,44 @@ string parse( RequestID id )
   res += "</tr></table>" +
     (roxen->query("cache")?"<br />"+ roxen->get_garb_info():"");
 
-#if constant(Locale.cache_status)
+
+  // ---
+
+  c = cache->ngc_status();
+
+  if(sizeof(c)) {
+    res += "<br /><b>"+LOCALE(87, "Non-garbing Memory Cache")+"</b><br />"
+      "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
+      "<tr bgcolor=\"&usr.fade3;\">"
+      "<td>"+LOCALE(62, "Class")+"</td>"
+      "<td align=\"right\">"+LOCALE(295, "Entries")+"</td>"
+      "<td align=\"right\">"+LOCALE(64, "Size")+"</td></tr>";
+
+    i = totale = totalm = 0;
+    foreach(sort(indices(c)), string name) {
+      array ent = c[name];
+      res += ("<tr align=\"right\" bgcolor=\"" + (i/3%2?"&usr.bgcolor;":"&usr.fade1;") +
+	      "\"><td align=\"left\">"+ name +"</td><td>"+ ent[0] + "</td><td>" +
+	      Roxen.sizetostring(ent[1]) + "</td></tr>");
+      totale += ent[0];
+      totalm += ent[1];
+      i++;
+    }
+
+    res += "<tr align=\"right\" bgcolor=\"&usr.fade3;\"><td align=\"left\">&nbsp;</td><td>" +
+      totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td></tr></table>";
+  }
+
+  // ---
+
   mapping l=Locale.cache_status();
   res += "<br /><b>"+LOCALE(71, "Locale Cache")+"</b><br />"
     "<table>"
     "<tr><td>"+LOCALE(72, "Used languages:")+"</td><td>"+l->languages+"</td></tr>"
     "<tr><td>"+LOCALE(73, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>"
-    "<tr><td>"+LOCALE(74, "Loaded projects:")+"</td><td>"+l->load_proj+"</td></tr>"
+    "<tr><td>"+LOCALE(74, "Loaded project files:")+"</td><td>"+l->load_proj+"</td></tr>"
     "<tr><td>"+LOCALE(75, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
     "</table><br />";
-#endif
+
   return res +  "<p><cf-ok/></p>";
 }
