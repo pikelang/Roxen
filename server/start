@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.40 1998/07/08 19:53:38 mast Exp $
+# $Id: start,v 1.41 1998/07/09 00:07:25 mast Exp $
 
 VERSION=202; BETA=.b;
 
@@ -89,6 +89,7 @@ rotate () {
 start_roxen() {
   args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
   if [ "x$gdb" = "xno" ]; then
+    echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
     echo Executing $pike $args $@
     $pike $args $@
   else
