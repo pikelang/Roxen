@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.206 2002/11/03 20:06:42 mani Exp $
+# $Id: start,v 1.207 2002/11/17 18:40:19 mani Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -87,7 +87,7 @@ fi
 verbose=1
 
 # Do not default to using a relative path.
-roxendir="`pwd`"
+chilidir="`pwd`"
 
 # No debug by default.
 debug=-1
@@ -107,7 +107,7 @@ DEFINES="$DEFINES -DRAM_CACHE"
 # FIXME: Ought to use case...esac.
 
 # Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
+# Most other OS's have thread bugs that cause them or ChiliMoon to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
     # FIXME: What about Solaris 10+ (SunOS 5.10+)?
@@ -144,7 +144,7 @@ remove_old_dot_o_files () {
 ARGS=""
 
 setup_for_tests() {
-    # Kill roxen mysql if it's running...
+    # Kill ChiliMoon mysql if it's running...
     if [ -f "$VARDIR/test_config/_mysql/mysql_pid" ] ; then
       kill `cat "$VARDIR/test_config/_mysql/mysql_pid"`
     fi
@@ -279,7 +279,7 @@ parse_args() {
   '--cd')
     cd_to="$2"
     # Use the absolute path...
-    roxendir="`pwd`"
+    chilidir="`pwd`"
     once=${once:-1}
     shift
   ;;
@@ -296,7 +296,7 @@ parse_args() {
      pass="$pass --version"
    else
     if [ -f server_core/core.pike ]; then
-      echo "ChiliMoon `roxen_version`"
+      echo "ChiliMoon `chilimoon_version`"
       exit 0
     else
       echo 'server_core/core.pike not found!'
@@ -355,8 +355,9 @@ the default arguments.
       .B--debug-log=FILEB.:           Use an alternate debuglog file.
 				  Defaults to .B../logs/debug/B.configdirname.B.1B..
 
-      .B--pid-file=FILEB.:            Store the roxen and startscript pids in this
-				  file. Defaults to .B../configurations/_roxen_pidB..
+      .B--pid-file=FILEB.:            Store the ChiliMoon and startscript pids in
+                                  this file. Defaults to
+				  .B../configurations/_chilimoon_pidB..
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
                                   this argument must be the first one.
@@ -405,18 +406,19 @@ the default arguments.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
-      .B--programB.:                  Start a different program with the roxen
-				  Pike. As an example,
-                                  .B./start --program bin/install.pikeB. will
-				  start the installation program normally
-                                  started with .B./installB.
+      .B--programB.:                  Start a different program with the
+
+				  ChiliMoon Pike. As an example,
+				  .B./start --program bin/install.pikeB.
+                                  will start the installation program
+				  normally started with .B./installB.
 
       .B--with-debugB.:               Enable debug
 
       .B--without-debugB.:            Disable all debug. This is the default.
 
       .B--module-debugB.:             Enable more internal debug checks to
-                                  simplify debugging of Roxen modules.
+                                  simplify debugging of ChiliMoon modules.
 
       .B--fd-debugB.:                 Enable FD debug.
 
@@ -444,10 +446,12 @@ the default arguments.
 				  configure).
 
        .B-rtB.:                       Enable runtime typechecking.
-				  Things will run more slowly, but it is very
-                                  useful while developing code.
+				  Things will run more slowly, but it
+                                  is very useful while developing
+                                  code.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting ChiliMoon with
+				  --debug
 
        .B-rTB.:                       Enable strict types.
 				  Same as adding #pragma strict-types
@@ -460,11 +464,12 @@ the default arguments.
 				  object variable with an untyped
 				  object) will generate warnings.
 
-				  Useful for module and roxen core
+				  Useful for module and ChiliMoon core
 				  developers, but not so useful for
 				  the occasional pike-script-writer.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting ChiliMoon with
+                                  --debug
 
        .B-s<size>B.:                  Set the stack size.
 
@@ -543,9 +548,9 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
   # Pike default Master-program
   if [ "x$PIKE_MASTER" = "x" ]; then
     if [ -f lib/master.pike ]; then
-      DEFINES="$DEFINES \"-m$roxendir/lib/master.pike\""
+      DEFINES="$DEFINES \"-m$chilidir/lib/master.pike\""
     elif [ -f lib/pike/master.pike ]; then
-      DEFINES="$DEFINES \"-m$roxendir/lib/pike/master.pike\""
+      DEFINES="$DEFINES \"-m$chilidir/lib/pike/master.pike\""
     fi
   else
     # This is useful when using several different Pikes.
@@ -558,10 +563,10 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
 fi
 
 # Extra module-path
-DEFINES="$DEFINES \"-M$roxendir/pike_modules\""
+DEFINES="$DEFINES \"-M$chilidir/pike_modules\""
 
 # Extra include-path
-DEFINES="$DEFINES \"-I$roxendir/data/include\""
+DEFINES="$DEFINES \"-I$chilidir/data/include\""
 
 # Extra program-path
 DEFINES="$DEFINES \"-Pserver_core\" \"-P`pwd`\""
@@ -644,12 +649,12 @@ exit_fail() {
 
 # This is a trick to get $ROXEN_PID and arguments containing spaces
 # correct at the same time.
-fork_roxen() {
+fork_chilimoon() {
   "$@" &
   ROXEN_PID=$!
 }
 
-start_roxen() {
+start_chilimoon() {
   check_owner
   raise_limit
 
@@ -674,7 +679,7 @@ start_roxen() {
     fi
 
     if [ "x$once" = "x" ]; then
-      eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
+      eval "fork_chilimoon \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "ChiliMoon server pid $ROXEN_PID."
       wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
@@ -682,7 +687,7 @@ start_roxen() {
     else
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
-	  eval "fork_roxen \"$pike\" $args 2>&1"
+	  eval "fork_chilimoon \"$pike\" $args 2>&1"
 	  wait $ROXEN_PID 2>/dev/null 1>&2
 	  exitcode="$?"
 	  ROXEN_PID=""
@@ -737,21 +742,21 @@ if [ -z "$once" ]; then
   # Fix the pid file. We don't do this if once is set, since that
   # often signifies that it's not the real server starting up, but
   # instead some other process, e.g. one given with --program.
-  [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
+  [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_chilimoon_pid}"
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
   # Avoid duplicate start scripts if we got a pid file.
   mypid=$$
   test -f "$pidfile" && {
-    if read roxenpid && read scriptpid; then
+    if read chilimoonpid && read scriptpid; then
       if kill -0 $scriptpid 2>/dev/null; then
 	dp "According to the pid file $pidfile,"
 	dp "there is already a start script running with pid $scriptpid. Specify "
 	dp "another pid file with --pid-file if this is a different server."
 	dp "Server not started."
 	:
-      elif kill -0 $roxenpid 2>/dev/null; then
+      elif kill -0 $chilimoonpid 2>/dev/null; then
 	dp "According to the pid file $pidfile,"
-	dp "there is already a server running with pid $roxenpid, but its start "
+	dp "there is already a server running with pid $chilimoonpid, but its start "
 	dp "script seems to have died. You should shut it down and restart "
 	dp "it, since it won't restart automatically. Server not started."
 	:
@@ -824,7 +829,7 @@ if [ -z "$once" ] ; then
 	dp "Server start at `date`"
 	dp "Debug log in ${DEBUGLOG}.1"
 	rotate "$DEBUGLOG"
-	start_roxen
+	start_chilimoon
 
 	if [ "$exitcode" -eq "0" ] ; then
 	  # Clean shutdown.
@@ -887,6 +892,6 @@ if [ -z "$once" ] ; then
   exec >/dev/null
   exec </dev/null
 else
-  start_roxen
+  start_chilimoon
 fi
 

@@ -1,11 +1,11 @@
 #!/bin/sh
-# init.d script for Roxen. Set the variables below to something fitting..
-# This is only an example script.
+# init.d script for ChiliMoon. Set the variables below to something
+# fitting.. This is only an example script.
 #############
 
 # The server directory where the 'start' script is located.
 #
-roxenhome=/usr/local/roxen
+chilihome=/usr/local/ChiliMoon
 
 # Set these to kill all processes owned by wwwuser on stop. Useful to
 # reap CGI scripts.
@@ -31,13 +31,13 @@ umask 022
 # configuration directory, which ensures that it doesn't accidentally
 # overwrite the pid file for another server instance.
 #
-# pidfile=$configdir/_roxen_pid
+# pidfile=$configdir/_chilimoon_pid
 
 
 ### You should not _have_ to change anything below here...
 
 # chkconfig: - 90 20
-# description:  Roxen
+# description:  ChiliMoon
 
 if test x$configdir = x; then
   configdir=../configurations
@@ -45,23 +45,23 @@ else
   flags="$flags --config-dir=$configdir"
 fi
 
-test x$pidfile = x && pidfile=$configdir/_roxen_pid
+test x$pidfile = x && pidfile=$configdir/_chilimoon_pid
 flags="$flags --pid-file=$pidfile"
 
 find_server_dir()
 {
   (
-    cd "$roxenhome" >/dev/null 2>&1 &&
+    cd "$chilihome" >/dev/null 2>&1 &&
     for dir in server*; do
       ( cd "$dir" >/dev/null 2>&1 &&
 	test -f "$configdir/server_version" &&
-	echo "$roxenhome/`cat \"$configdir/server_version\"`"
+	echo "$chilihome/`cat \"$configdir/server_version\"`"
       ) && return
     done
-    echo "$roxenhome/server"
+    echo "$chilihome/server"
   )
 }
-roxenhome=`find_server_dir`
+chilihome=`find_server_dir`
 
 # Some systems have stupid rc scripts that are written in shells with job
 # support (read Linux/bash), and send SIGHUP when they finish.
@@ -69,37 +69,37 @@ trap "" 1
 
 case $1 in
   'start_msg')
-    echo "Start Roxen in $roxenhome."
+    echo "Start ChiliMOon in $chilihome."
     exit 0
   ;;
   'stop_msg')
-    echo "Stop Roxen in $roxenhome."
+    echo "Stop ChiliMoon in $chilihome."
     exit 0
   ;;
 
   'start')
-    echo "Starting Roxen in $roxenhome..."
-    cd $roxenhome && {
+    echo "Starting ChiliMoon in $chilihome..."
+    cd $chilihome && {
       test -f "$pidfile" && {
 	if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-	  echo "Roxen is already running (start script pid $pid)."
+	  echo "ChiliMoon is already running (start script pid $pid)."
 	  :
 	else false; fi
       } < $pidfile && exit 0
-      if [ -x $roxenhome/start ]; then
+      if [ -x $chilihome/start ]; then
 	./start $flags 2>/dev/null
-	echo "Roxen started."
+	echo "ChiliMoon started."
 	exit 0
       fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+      echo "Cannot find a ChiliMoon installation in $chilihome."
     }
   ;;
 
   'reload')
-    echo "Reloading configurations in Roxen in $roxenhome..."
-    cd $roxenhome && {
+    echo "Reloading configurations in ChiliMoon in $chilihome..."
+    cd $chilihome && {
       if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGHUP to Roxen process $pid."
+	echo "Sending SIGHUP to ChiliMoon process $pid."
 	kill -1 $pid && exit 0
       fi
       test -f "$pidfile" && {
@@ -108,16 +108,16 @@ case $1 in
 	  :
 	else false; fi
       } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
+      echo "ChiliMoon doesn't seem to be running."
       exit 1
     }
   ;;
 
   'restart')
-    echo "Restarting Roxen in $roxenhome..."
-    cd $roxenhome && {
+    echo "Restarting ChiliMoon in $chilihome..."
+    cd $chilihome && {
       if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGTERM to Roxen process $pid."
+	echo "Sending SIGTERM to ChiliMoon process $pid."
 	kill $pid && exit 0
       fi
       test -f "$pidfile" && {
@@ -126,20 +126,20 @@ case $1 in
 	  :
 	else false; fi
       } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
-      echo "Starting Roxen in $roxenhome."
-      if [ -x $roxenhome/start ]; then
+      echo "ChiliMoon doesn't seem to be running."
+      echo "Starting ChiliMoon in $chilihome."
+      if [ -x $chilihome/start ]; then
 	./start $flags 2>/dev/null
-	echo "Roxen started."
+	echo "ChiliMoon started."
 	exit 0
       fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+      echo "Cannot find a ChiliMoon installation in $chilihome."
     }
   ;;
 
   'stop')
-    echo "Stopping Roxen in $roxenhome..."
-    cd $roxenhome && {
+    echo "Stopping ChiliMoon in $chilihome..."
+    cd $chilihome && {
       test -f "$pidfile" && {
 	if read pid && read pid; then
 	  echo "Sending SIGTERM to start script process $pid."
@@ -147,7 +147,7 @@ case $1 in
 	    while kill -0 $pid 2>/dev/null; do
 	      sleep 1
 	    done
-	    echo "Roxen stopped."
+	    echo "ChiliMoon stopped."
 	    # Get all the CGI scripts... :-)
 	    if [ x$killallwww = xyes ] ; then
 	      echo "Killing all programs running as the $wwwuser user."
@@ -157,20 +157,20 @@ case $1 in
 	  else false; fi
 	else false; fi
       } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
+      echo "ChiliMoon doesn't seem to be running."
     }
   ;;
 
   'debug')
-    echo "Sending Roxen SIGQUIT..."
-    cd $roxenhome && {
+    echo "Sending ChiliMoon SIGQUIT..."
+    cd $chilihome && {
       test -f "$pidfile" && {
         if read pid && kill -QUIT "$pid" 2>/dev/null; then
-          echo "Roxen process found. Consult debug log for output."
+          echo "ChiliMoon process found. Consult debug log for output."
           :
         else echo "pid $pid"; fi
       } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
+      echo "ChiliMoon doesn't seem to be running."
       exit 1
     }
   ;;

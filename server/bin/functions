@@ -39,9 +39,9 @@ dp() {
   fi
 }
 
-roxen_version() {
-   VERSION="`sed <data/include/version.h -e '/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   BUILD="`sed <data/include/version.h -e '/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
+chilimoon_version() {
+   VERSION="`sed <data/include/version.h -e '/__chilimoon_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
+   BUILD="`sed <data/include/version.h -e '/__chilimoon_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
    if [ -f "RELEASE" ] ; then
      RELEASE="`head -1 <RELEASE`"
    else
@@ -93,9 +93,9 @@ change_owner( ) {
 # NGSERVER: Remove the roxen lines.
 find_pike() {
  pike="`fullpath pike`"
- if [ -x bin/pike ] ; then pike="$roxendir/bin/pike"; fi
- if [ -x bin/chilimoon ] ; then pike="$roxendir/bin/chilimoon"; fi
- if [ -x bin/roxen ] ; then  pike="$roxendir/bin/roxen"; fi
+ if [ -x bin/pike ] ; then pike="$chilidir/bin/pike"; fi
+ if [ -x bin/chilimoon ] ; then pike="$chilidir/bin/chilimoon"; fi
+ if [ -x bin/roxen ] ; then  pike="$chilidir/bin/roxen"; fi
  if [ -x "$LOCALDIR/bin/pike" ] ; then pike="$LOCALDIR/bin/pike"; fi
  if [ -x "$LOCALDIR/bin/chilimoon" ] ; then pike="$LOCALDIR/bin/chilimoon"; fi
  if [ -x "$LOCALDIR/bin/roxen" ] ; then pike="$LOCALDIR/bin/roxen"; fi
