@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.266 2000/12/11 17:46:18 nilsson Exp $
+// $Id: rxml.pike,v 1.267 2000/12/12 06:18:20 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1430,17 +1430,43 @@ class TagEmit {
   constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
 
+  int(0..1) should_filter(mapping vs, mapping filter) {
+    foreach(indices(filter), string v) {
+      if(!vs[v])
+	return 1;
+      if(!glob(filter[v], vs[v]))
+	return 1;
+    }
+    return 0;
+  }
+
   class TagDelimiter {
     inherit RXML.Tag;
     constant name = "delimiter";
+
+    // FIXME: Add lookahead here.
+    static int(0..1) more_rows(array res, mapping filter) {
+      if(!sizeof(res)) return 0;
+      foreach(res[RXML.get_var("real-counter")..], mapping v) {
+	if(!should_filter(v, filter))
+	  return 1;
+      }
+      return 0;
+    }
 
     class Frame {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	// FIXME: Must use look-ahead instead/also,
-	// to support streaming.
-	if( RXML.get_var("counter") < id->misc->emit_rowinfo )
+	if(!id->misc->emit_filter) {
+	  if( RXML.get_var("counter") < sizeof(id->misc->emit_rows) )
+	    result = content;
+	  return 0;
+	}
+	if(id->misc->emit_args->maxrows &&
+	   (int)id->misc->emit_args->maxrows == RXML.get_var("counter"))
+	  return 0;
+	if(more_rows(id->misc->emit_rows, id->misc->emit_filter))
 	  result = content;
 	return 0;
       }
@@ -1479,7 +1505,10 @@ class TagEmit {
     string scope_name;
     mapping vars;
 
-    int upper_size;
+    array outer_rows;
+    mapping outer_filter;
+    mapping outer_args;
+
     object plugin;
     array(mapping(string:mixed))|function res;
     mapping filter;
@@ -1499,7 +1528,6 @@ class TagEmit {
 	m_delete(args, "maxrows");
 
       if(functionp(res)) {
-	// FIXME: filters
 	// FIXME: API (function/object)
 	do_iterate=function_iterate;
 	if(args->skiprows) {
@@ -1508,7 +1536,6 @@ class TagEmit {
 	    res(args, id);
 	}
 	LAST_IF_TRUE = 1;
-	upper_size = 0;
 	return 0;
       }
 
@@ -1559,14 +1586,27 @@ class TagEmit {
 	     (args->skiprows && args->skiprows[-1]=='-')) {
 	    m_delete(args, "filter");
 	    for(int i; i<sizeof(res); i++)
-	      if(should_filter(res[i])) {
+	      if(should_filter(res[i], filter)) {
 		res = res[..i-1] + res[i+1..];
 		i--;
 	      }
 	  }
 	  else {
-	    args->skiprows = (int)args->skiprows;
-	    vars->real_counter = 0;
+
+	    if(args->skiprows) {
+	      int skiprows = (int)args->skiprows;
+	      if(skiprows > sizeof(res))
+		res = ({});
+	      else {
+		int i;
+		for(; i<sizeof(res) && skiprows; i++)
+		  if(!should_filter(res[i], filter))
+		    skiprows--;
+		res = res[i..];
+	      }
+	    }
+
+	    vars["real-counter"] = 0;
 	    do_iterate = array_filter_iterate;
 	  }
 	}
@@ -1586,12 +1626,15 @@ class TagEmit {
 	  if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
 	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
-	  if(id->misc->emit_rowinfo)
-	    upper_size = id->misc->emit_rowinfo;
-	  id->misc->emit_rowinfo = sizeof(res);
-
 	  do_iterate = array_iterate;
 	}
+
+	outer_rows = id->misc->emit_rows;
+	outer_filter = id->misc->emit_filter;
+	outer_args = id->misc->emit_args;
+	id->misc->emit_rows = res;
+	id->misc->emit_filter = filter;
+	id->misc->emit_args = args;
 
 	if(sizeof(res))
 	  LAST_IF_TRUE = 1;
@@ -1604,18 +1647,8 @@ class TagEmit {
       parse_error("Wrong return type from emit source plugin.\n");
     }
 
-    int(0..1) should_filter(mapping vs) {
-      foreach(indices(filter), string v) {
-	if(!vs[v])
-	  return 1;
-	if(!glob(filter[v], vs[v]))
-	  return 1;
-      }
-      return 0;
-    }
-
     int(0..1) do_once_more() {
-      if(vars->counter>0 || !args["do-once"]) return 0;
+      if(vars->counter || !args["do-once"]) return 0;
       vars = (["counter":1]);
       return 1;
     }
@@ -1624,9 +1657,9 @@ class TagEmit {
 
     int(0..1) function_iterate(RequestID id) {
       int counter = vars->counter;
-      if(args->maxrows && (int)args->maxrows>=counter)
-	return counter ? 0 : do_once_more();
-      vars=res(args, id);
+      if(args->maxrows && counter == (int)args->maxrows)
+	return do_once_more();
+      while(should_filter(vars=res(args, id), filter));
       vars->counter = counter++;
       return mappingp(vars) || do_once_more();
     }
@@ -1640,36 +1673,36 @@ class TagEmit {
     }
 
     int(0..1) array_filter_iterate(RequestID id) {
-      int real_counter = vars->real_counter;
+      int real_counter = vars["real-counter"];
       int counter = vars->counter;
 
       if(real_counter>=sizeof(res)) return do_once_more();
+
       if(args->maxrows && counter == (int)args->maxrows)
 	return do_once_more();
-      if(args->skiprows>0) {
-	if(args->skiprows > sizeof(res)) return do_once_more();
-	while(--args->skiprows)
-	  while(should_filter(res[real_counter++]))
-	    if(real_counter>=sizeof(res)) return do_once_more();
-      }
-      while(should_filter(res[real_counter++]))
+
+      while(should_filter(res[real_counter++], filter))
 	if(real_counter>=sizeof(res)) return do_once_more();
+
       vars=res[real_counter-1];
 
-      vars->real_counter = real_counter;
+      vars["real-counter"] = real_counter;
       vars->counter = counter+1;
       return 1;
     }
 
     array do_return(RequestID id) {
       result = content;
-      if(upper_size)
-	id->misc->emit_rowinfo = upper_size;
+
+      id->misc->emit_rows = outer_rows;
+      id->misc->emit_filter = outer_filter;
+      id->misc->emit_args = outer_args;
+
       if(args->filter && args->remainderinfo) {
 	int rem;
-	if(vars->real_counter < sizeof(res))
-	  for(int i=vars->real_counter; i<sizeof(res); i++)
-	    if(!should_filter(res[i]))
+	if(vars["real-counter"] < sizeof(res))
+	  for(int i=vars["real-counter"]; i<sizeof(res); i++)
+	    if(!should_filter(res[i], filter))
 	      rem++;
 	RXML.user_set_var(args->remainderinfo, rem);
       }
