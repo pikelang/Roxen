@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.426 2003/04/09 14:01:00 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.427 2003/04/22 09:44:03 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5477,7 +5477,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&client.language;":#"<desc type='entity'><p>
- The clients most preferred language. Usually the same value as
+ The client's most preferred language. Usually the same value as
  <ent>client.accept-language</ent>, but is possibly altered by
  a customization module like the Preferred language analyzer.
  It is recommended that this entity is used over the <ent>client.accept-language</ent>
@@ -5485,7 +5485,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&client.languages;":#"<desc type='entity'><p>
- An ordered list of the clients most preferred languages. Usually the
+ An ordered list of the client's most preferred languages. Usually the
  same value as <ent>client.accept-language</ent>, but is possibly altered
  by a customization module like the Preferred language analyzer, or
  reorganized according to quality identifiers according to the HTTP
@@ -5636,7 +5636,7 @@ constant tagdoc=([
 
 "&cookie;":#"<desc type='scope'><p><short>
  This scope contains the cookies sent by the client.</short> Adding,
- deleting or changing in this scope updates the clients cookies. There
+ deleting or changing in this scope updates the client's cookies. There
  are no predefined entities for this scope. When adding cookies to
  this scope they are automatically set to expire after two years.
 </p></desc>",
