@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.53 2000/01/07 04:55:54 mast Exp $
+ * $Id: rxml.pike,v 1.54 2000/01/07 05:11:40 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -174,43 +174,47 @@ void build_callers()
   parse_modules-=({0});
 
   foreach (parse_modules, RoxenModule mod) {
-    RXML.TagSet tag_set =
-      mod->query_tag_set ? mod->query_tag_set() :
-      RXML.TagSet (sprintf ("%O", mod));
-
     mapping(string:mixed) defs;
-    if (mod->query_tag_callers &&
-	mappingp (defs = mod->query_tag_callers()) &&
-	sizeof (defs)) {
-      tag_set->low_tags =
-	mkmapping (indices (defs),
-		   Array.transpose (({({call_tag}) * sizeof (defs),
-				      values (defs)})));
-      tag_set->changed();
-    }
-
-    if (mod->query_container_callers &&
-	mappingp (defs = mod->query_container_callers()) &&
-	sizeof (defs)) {
-      tag_set->low_containers =
-	mkmapping (indices (defs),
-		   Array.transpose (({({call_container}) * sizeof (defs),
-				      values (defs)})));
-      tag_set->changed();
-    }
-
-    if ((sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
-	 tag_set->low_tags || tag_set->low_containers) &&
-	mod != this_object()) {
-      tag_sets[mod] = tag_set;
-      ts_list += ({tag_set});
-      ts_priorities += ({mod->query("_priority", 1) || 4});
-    }
+    RXML.TagSet tag_set;
 
     if (mod->query_if_callers &&
 	mappingp (defs = mod->query_if_callers()) &&
 	sizeof (defs))
       real_if_callers |= defs;
+
+    if (!(tag_set = module_tag_sets[mod])) {
+      tag_set = mod->query_tag_set ? mod->query_tag_set() :
+	RXML.TagSet (sprintf ("%O", mod));
+
+      if (mod->query_tag_callers &&
+	  mappingp (defs = mod->query_tag_callers()) &&
+	  sizeof (defs)) {
+	tag_set->low_tags =
+	  mkmapping (indices (defs),
+		     Array.transpose (({({call_tag}) * sizeof (defs),
+					values (defs)})));
+	tag_set->changed();
+      }
+
+      if (mod->query_container_callers &&
+	  mappingp (defs = mod->query_container_callers()) &&
+	  sizeof (defs)) {
+	tag_set->low_containers =
+	  mkmapping (indices (defs),
+		     Array.transpose (({({call_container}) * sizeof (defs),
+					values (defs)})));
+	tag_set->changed();
+      }
+
+      if (!(sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
+	    tag_set->low_tags || tag_set->low_containers) ||
+	  mod == this_object())
+	continue;
+    }
+
+    tag_sets[mod] = tag_set;
+    ts_list += ({tag_set});
+    ts_priorities += ({mod->query("_priority", 1) || 4});
   }
 
   sort (ts_priorities, ts_list);
