@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.163 2000/03/20 00:17:32 nilsson Exp $
+// $Id: roxenlib.pike,v 1.164 2000/03/20 01:09:31 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1580,33 +1580,7 @@ string tagtime(int t, mapping m, RequestID id, function language)
 
 string read_file(RequestID id, string file)
 {
-  file = fix_relative(file, id);
-
-  string s = id->conf->try_get_file(file, id);
-  if(s) return s;
-
-  id = id->clone_me();
-
-  // Might be a PATH_INFO type URL.
-  array a = id->conf->open_file( file, "r", id );
-  if(a && a[0]) {
-    s = a[0]->read();
-    if(a[1]->raw) {
-      s -= "\r";
-      if(!sscanf(s, "%*s\n\n%s", s))
-	sscanf(s, "%*s\n%s", s);
-    }
-    if (id->since && a[0]->stat) {
-      array(int) st = a[0]->stat();
-      if (st && (st[3] > id->misc->last_modified)) {
-	id->misc->last_modified = st[3];
-      }
-    }
-  }
-
-  destruct(id);
-
-  return s;
+  return id->conf->try_get_file(fix_relative(file, id), id);
 }
 
 int time_dequantifier(mapping m)
