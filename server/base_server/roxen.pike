@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.428 2000/02/15 00:51:23 leif Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.429 2000/02/15 14:13:47 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -570,7 +570,7 @@ void start_handler_threads()
     report_notice("Starting one thread to handle requests.\n");
   } else {
     report_notice("Starting "+
-                 languages["en"]->number(  QUERY(numthreads) )
+                 language_low("en")->number(  QUERY(numthreads) )
                  +" threads to handle requests.\n");
   }
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
