@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright � 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.168 1999/11/16 14:53:11 grubba Exp $
+// $Id: http.pike,v 1.169 1999/11/19 06:55:52 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.168 1999/11/16 14:53:11 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.169 1999/11/19 06:55:52 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -93,6 +93,74 @@ string data, leftovers;
 array (int|string) auth;
 string rawauth, realauth;
 string since;
+
+void decode_map( mapping what, function decoder )
+{
+  foreach( indices( what ), mixed q )
+  {
+    string ni;
+    mixed val;
+    if( stringp( q ) )
+      ni = decoder( q );
+    val = what[q];
+    if( stringp( val ) )
+      val = decoder( val );
+    else if( arrayp( val ) )
+      val = map( val, lambda( mixed q ) {
+                        if( stringp( q ) )
+                          return decoder( q );
+                        return q;
+                      } );
+    else if( mappingp( val ) )
+      decode_map( val, decoder );
+    else if( multisetp( val ) )
+      val = mkmultiset( map( indices(val), lambda( mixed q ) {
+                                             if( stringp( q ) )
+                                               return decoder( q );
+                                             return q;
+                                           } ));
+    what[ni] = val;
+    if( q != ni )
+      m_delete( what, q );
+  }
+}
+
+void decode_charset_encoding( function decoder )
+{
+  misc->request_charset_decoded = 1;
+  if( !decoder )
+    return;
+  if( prot ) prot = decoder( prot );
+  if( clientprot )clientprot = decoder( clientprot );
+  if( method ) method = decoder( method );
+  if( rest_query ) rest_query = decoder( rest_query );
+  if( query ) query = decoder( query );
+  if( not_query ) not_query = decoder( not_query );
+  if( auth )
+  {
+    auth = map( auth, lambda( mixed q ) {
+                        if( stringp( q ) )
+                          return decoder( q );
+                        return q;
+                      } );
+    rawauth = decoder( rawauth );
+    realauth = decoder( realauth );
+  }
+  if( since ) 
+    since = decoder( since );
+
+  decode_map( variables, decoder );
+  decode_map( misc, decoder );
+  decode_map( cookies, decoder );
+  decode_map( request_headers, decoder );
+  if( client )
+    client = map( client, decoder );
+  if( referer )
+    referer = map( referer, decoder );
+  prestate = mkmultiset( map( (array(string))indices( prestate ), decoder ) );
+  config = mkmultiset( map( (array(string))indices( config ), decoder ) );
+  pragma = mkmultiset( map( (array(string))indices( pragma ), decoder ) );
+}
 
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
@@ -679,8 +747,11 @@ private int parse_got()
 
   // MSIE 5.0 sends all requests UTF8-encoded.
   if (supports->requests_are_utf8_encoded) {
-    catch {
-      f = utf8_to_string(f);
+    catch 
+    {
+      if( !variables->magic_roxen_automatic_charset_variable )
+        variables->magic_roxen_automatic_charset_variable = "åäö";
+//       f = utf8_to_string(f);
     };
   }
 #else
@@ -1583,6 +1654,10 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
+
+  mixed q;
+  if( q = variables->magic_roxen_automatic_charset_variable )
+    decode_charset_encoding( get_client_charset_decoder( q )  );
 
   if (misc->host) {
     // FIXME: port_obj->name & port_obj->default_port are constant
