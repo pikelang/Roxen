@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.209 1999/10/04 15:11:54 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.210 1999/10/04 18:49:47 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2492,7 +2492,8 @@ object enable_module( string modname )
 
     /* Clean up some broken references to this module. */
     m_delete(otomod, me);
-    m_delete(moduleinfo->copies, id);
+    if(module->copies)
+      m_delete(module->copies, id);
     destruct(me);
     return 0;
   }
