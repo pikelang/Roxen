@@ -1,17 +1,5 @@
 // This file is part of business graphics. Copyright © 1998 - 2000, Roxen IS.
-
-/*
- * name = "BG: diagram.h";
- * doc = "Business Graphics common things. You must upgrade this component to use newer versions of BG.";
- *
- * string cvs_version="$Id: diagram.h,v 1.8 2000/03/02 04:18:38 nilsson Exp $";
- */
-
-
-#define max(i, j) (((i)>(j)) ? (i) : (j))
-#define min(i, j) (((i)<(j)) ? (i) : (j))
-// #define abs(arg) ((arg)*(1-2*((arg)<0)))   // Don't do it this way! /grubba
-#define abs(arg) (((arg)<0) ? -(arg) : (arg))
+// $Id: diagram.h,v 1.9 2000/09/15 02:10:33 nilsson Exp $
 
 #define PI 3.14159265358979
 #define VOIDSYMBOL "\n"
@@ -23,5 +11,3 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e30;
 
 #define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
-
-//#define BG_DEBUG 1
