@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.11 1997/05/13 15:52:35 grubba Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.12 1997/06/15 02:42:05 grubba Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -283,7 +283,8 @@ void create_host_name_lookup_processes()
       error("Couldn't create pipe! Out of fd's?\n");
     }
     mark_fd(out[i]->query_fd(), "Host name lookup local end of pipe.\n");
-    spawne("bin/roxen_hostname", ({}),0, out2, out2, files.file("stderr"));
+    spawne("bin/roxen_hostname", ({}), 0, out2, out2, files.file("stderr"),
+           0, 0);
     destruct(out2);
     out[i]->set_nonblocking(got_one_result, nil, died);
   }
