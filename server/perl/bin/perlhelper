@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.4 2001/02/04 22:55:34 leif Exp $
+# $Id: perlhelper,v 1.5 2001/04/18 12:18:05 leif Exp $
 
 package Roxen::Internal;
  
@@ -405,6 +405,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
       $data = Getdata(3);
       alarm 150; # 2.5 minutes.
       $Roxen::Request::req_state = 5423522; # Magic number.
+      $ENV{GATEWAY_INTERFACE} = "CGI-PerlEx"; # Makes CGI.pm happier.
       if ($cmd eq "C")
       { my ($cmdin, $cmdout, $cmd);
         eval $data;
