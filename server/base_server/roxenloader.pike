@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.156 2000/03/13 22:08:19 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.157 2000/03/16 12:29:18 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.156 2000/03/13 22:08:19 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.157 2000/03/16 12:29:18 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -216,31 +216,6 @@ int mkdirhier(string from, int|void mode)
     return (file_stat(from)||({0,0}))[1] == -2;
   return 1;
 }
-
-/*
- * PDB support
- */
-// object db;
-// mapping dbs = ([ ]);
-
-// #if constant(thread_create)
-// static private inherit Thread.Mutex:db_lock;
-// #endif
-
-// object open_db(string id)
-// {
-// #if constant(thread_create)
-//   object key = db_lock::lock();
-// #endif
-// #if constant(myPDB)
-//   if(!db) db = myPDB.PDB()->db("pdb_dir", "wcCr"); //myPDB ignores 2nd arg.
-// #else
-//   if(!db) db = PDB->db("pdb_dir", "wcCr");
-// #endif
-//   if(dbs[id]) return dbs[id];
-//   return dbs[id]=db[id];
-// }
-
 
 // Help function used by low_spawne()
 mapping make_mapping(array(string) f)
