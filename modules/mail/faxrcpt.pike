@@ -1,5 +1,5 @@
 /*
- * $Id: faxrcpt.pike,v 1.8 2000/09/27 11:36:16 grubba Exp $
+ * $Id: faxrcpt.pike,v 1.9 2000/09/27 11:49:24 grubba Exp $
  *
  * A FAX module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.8 2000/09/27 11:36:16 grubba Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.9 2000/09/27 11:49:24 grubba Exp $";
 
 /*
  * Roxen glue
@@ -138,11 +138,17 @@ string desc(string addr, object o)
 
 string get_real_body(object msg)
 {
-  return ((msg->body_parts || ({ msg })) -> getdata() ) * "";
+  array parts=(msg->body_parts || ({ msg }));
+  parts=Array.filter(parts,lambda(object part)
+			   {
+			     return glob("text*",part->type);
+			   });
+  return parts*"";
 }
 
 string fontify_mail(mapping headers, string body)
 {
+  body=replace(body,"\033","");
   string s=helvetica_14_bold+"New mail\n\n";
   s+=times_12_bold+"From: "+times_12+(headers->from||"Unknown")+"\n";
   s+=times_12_bold+"To: "+times_12+(headers->to||"Unknown")+"\n";
@@ -201,10 +207,15 @@ int put(string sender, string user, string domain,
       string fn="/tmp/fax"+time()+random(1000000);
       Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(msg)) );
       string faxnumber=a->query_variable(u->id,query_automail_name(),"fax_number");
+      faxnumber = replace(faxnumber,
+			  ({" ","+","-","/","*","`","'","\"","\\","[","]"}),
+			  ({"", "", "", "", "", "", "", "",  "",  "", "" }));
       if(faxnumber)
       {
 	Process.popen("/usr/bin/faxlogon");
-	Process.popen("/usr/bin/faxsend '"+Process.sh_quote(faxnumber)+"' "+fn);
+	Process.popen(/* "/usr/bin/faxsend '"+ */
+		      "/usr/www/faxsend_ulimit "+
+		      Process.sh_quote(faxnumber)+" "+fn);
 	int customer_id=u->query_customer_id();
 	clientlayer->add_charge_to("fax",customer_id);
       }
