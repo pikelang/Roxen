@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.45 2001/01/19 18:34:46 per Exp $
+ * $Id: ftp.pike,v 2.46 2001/01/22 19:46:04 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -546,7 +546,7 @@ class PutFileWrapper(static object from_fd,
 #define LS_FLAG_U       0x40000
 #define LS_FLAG_v	0x80000
 
-class LS_L(static object master_session,
+class LS_L(static RequestID master_session,
 	   static int|void flags)
 {
   static constant decode_mode = ({
@@ -572,6 +572,7 @@ class LS_L(static object master_session,
 
   static string name_from_uid(int uid)
   {
+    // FIXME: Support the new auth API.
     string|array(string) user = master_session->conf->auth_module &&
       master_session->conf->auth_module->user_from_uid(uid);
     if (user) {
@@ -658,7 +659,7 @@ class LSFile
 
   static object conv;
 
-  static array|object stat_file(string long, object|void session)
+  static array|object stat_file(string long, RequestID|void session)
   {
     array|object st = stat_cache[long];
     if (zero_type(st)) {
@@ -823,7 +824,7 @@ class LSFile
       if ((!sizeof(long)) || (long[-1] != '/')) {
 	long += "/";
       }
-      object session = RequestID2(master_session);
+      RequestID session = RequestID2(master_session);
       session->method = "DIR";
 
       mixed err;
@@ -984,7 +985,7 @@ class LSFile
     int n_files;
 
     foreach(argv, string short) {
-      object session = RequestID2(master_session);
+      RequestID session = RequestID2(master_session);
       session->method = "LIST";
       string long = fix_path(short);
       array|object st = stat_file(long, session);
@@ -1011,7 +1012,7 @@ class LSFile
       }
       string s = list_files(files, cwd);	// May modify dir_stack (-R)
       output(s);
-      object session = RequestID2(master_session);
+      RequestID session = RequestID2(master_session);
       session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
@@ -1474,7 +1475,7 @@ class FTPSession
     }
   }
 
-  static private object master_session;
+  static private RequestID master_session;
 
   static private string dataport_addr;
   static private int dataport_port;
@@ -1483,7 +1484,9 @@ class FTPSession
 
   static private string cwd = "/";
 
-  static private array auth;
+  static private User auth_user;
+  //! Authenticated user.
+
   static private string user;
   static private string password;
   static private int logged_in;
@@ -1972,7 +1975,7 @@ class FTPSession
       break;
     }
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
     session->method = "PUT";
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
@@ -2171,7 +2174,7 @@ class FTPSession
             array(array(string)) new_matches = ({});
             foreach(matches, array(string) path) {
               array(string) dir;
-	      object id = RequestID2(master_session);
+	      RequestID id = RequestID2(master_session);
 	      id->method = "LIST";
               dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
               if (dir && sizeof(dir)) {
@@ -2352,7 +2355,7 @@ class FTPSession
       argv += ({ "./" });
     }
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
     session->method = "LIST";
     // For logging purposes...
     session->not_query = Array.map(argv[1..], fix_path)*" ";
@@ -2514,12 +2517,11 @@ class FTPSession
   {
     logout();
 
-    master_session->auth = 0;
     dataport_addr = 0;
     dataport_port = 0;
     mode = "A";
     cwd = "/";
-    auth = 0;
+    auth_user = 0;
     user = password = 0;
     curr_pipe = 0;
     restart_point = 0;
@@ -2538,7 +2540,7 @@ class FTPSession
   {
     logout();
 
-    auth = 0;
+    auth_user = 0;
     user = args;
     password = 0;
     logged_in = 0;
@@ -2622,14 +2624,12 @@ class FTPSession
                                                // the Authentication header
 
 //     master_session->auth = ({ 0, master_session->realauth, -1 });
+    auth_user = master_session->conf->authenticate(master_session);
 
-    /* FIXME: Use new auth API here. */ 
-    if (!master_session->auth ||
-	(master_session->auth[0] != 1)) {
+    if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
 	send(530, ({ sprintf("User %s access denied.", user) }));
 	conf->log(([ "error":401 ]), master_session);
-	master_session->auth = 0;
       } else {
 	// Guest user.
 	string u = user;
@@ -2638,7 +2638,7 @@ class FTPSession
 	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
 	  logged_in = -1;
 	  conf->log(([ "error":200 ]), master_session);
-	  DWRITE(sprintf("FTP: Guest-user: %O\n", master_session->auth));
+	  DWRITE(sprintf("FTP: Guest-user: %O\n", master_session->realauth));
 	} else {
 	  send(530, ({
 	    sprintf("Too many anonymous/guest users (%d).",
@@ -2657,7 +2657,7 @@ class FTPSession
       send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
       conf->log(([ "error":402 ]), master_session);
-      master_session->auth = 0;
+      auth_user = 0;
       return;
     }
 
@@ -2677,6 +2677,7 @@ class FTPSession
 	master_session->misc->home += "/";
       }
 
+      // FIXME: htaccess support.
       // NOTE: roxen->stat_file() might change master_session->auth.
       array auth = master_session->auth;
 
@@ -2865,7 +2866,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "GET";
     session->not_query = args;
@@ -2951,7 +2952,7 @@ class FTPSession
     }
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "STAT";
 
@@ -2974,7 +2975,7 @@ class FTPSession
     }
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "MV";
     session->misc->move_from = rename_from;
@@ -3007,7 +3008,7 @@ class FTPSession
   {
     args = fix_path(args || ".");
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "DIR";
 
@@ -3026,7 +3027,7 @@ class FTPSession
   {
     args = fix_path(args || ".");
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "DIR";
 
@@ -3056,7 +3057,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->data = 0;
     session->misc->len = 0;
@@ -3077,7 +3078,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->data = 0;
     session->misc->len = 0;
@@ -3119,7 +3120,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "MKDIR";
     session->data = 0;
@@ -3176,7 +3177,7 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array|object st = stat_file(args, session);
 
@@ -3194,7 +3195,7 @@ class FTPSession
     }
     args = fix_path(args);
 
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array|object st = stat_file(args, session);
 
@@ -3221,7 +3222,7 @@ class FTPSession
       return;
     }
     string long = fix_path(args);
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array|object st = stat_file(long);
 
@@ -3336,7 +3337,7 @@ class FTPSession
     }
 
     string fname = fix_path(args[1..]*" ");
-    object session = RequestID2(master_session);
+    RequestID session = RequestID2(master_session);
 
     session->method = "CHMOD";
     session->misc->mode = mode;
@@ -3452,13 +3453,17 @@ class FTPSession
       line = cmd + " CENSORED_PASSWORD";
     }
 
-    if (!conf->extra_statistics->ftp) {
+#if 0
+    if (!conf->extra_statistics) {
+      conf->extra_statistics = ([ "ftp": (["commands":([ cmd:1 ])])]);
+    } else if (!conf->extra_statistics->ftp) {
       conf->extra_statistics->ftp = (["commands":([ cmd:1 ])]);
     } else if (!conf->extra_statistics->ftp->commands) {
       conf->extra_statistics->ftp->commands = ([ cmd:1 ]);
     } else {
       conf->extra_statistics->ftp->commands[cmd]++;
     }
+#endif /* 0 */
 
     if (cmd_help[cmd]) {
       if (!logged_in) {
