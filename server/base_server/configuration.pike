@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.387 2001/04/03 12:37:32 wing Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.388 2001/04/08 22:01:55 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -859,9 +859,9 @@ mixed _lock(object|function f)
   object key;
   function|int l;
 
-  if (functionp(f)) {
-    f = function_object(f);
-  }
+
+  f = Roxen.get_owning_module( f ) || f;
+  
   if (l = locks[f])
   {
     if (l != -1)
@@ -874,7 +874,7 @@ mixed _lock(object|function f)
       };
     } else
       thread_safe[f]++;
-  } else if (f->thread_safe) {
+  } else if (objectp(f) && f->thread_safe) {
     locks[f]=-1;
     thread_safe[f]++;
   } else {
