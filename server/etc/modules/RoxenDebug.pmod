@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.8 2004/02/17 20:13:21 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.9 2004/09/20 18:08:33 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -90,7 +90,10 @@ class ObjectMarker
 	if (log_create_destruct)
 	  if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
 	  else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
-	if (--object_markers[id] <= 0) m_delete (object_markers, id);
+	if (--object_markers[id] <= 0) {
+	  m_delete (object_markers, id);
+	  m_delete (object_create_places, id);
+	}
       }
       if (flags && log_create_destruct) {
 	werror("destructing...\n"
