@@ -1,5 +1,10 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// Logs the User-agent fields in a separate log.
+
 #include <module.h>
 inherit "module";
+
 
 array register_module()
 {

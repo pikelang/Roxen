@@ -1,3 +1,12 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// Like the redirect module, but transparent to the user. This module
+// will connect to another server, and get the data from there, and
+// then return the new data to the user.  The same results can be
+// achieved using the proxy and the redirect module.  With
+// caching. This module is therefore quite obsolete, really.  But
+// since it is so small, I have left it here.
+
 #include <module.h>
 
 inherit "module";

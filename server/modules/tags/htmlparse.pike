@@ -1,7 +1,16 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+//
+// The main RXML parser. If this module is not added to a configuration,
+// no RXML parsing will be done at all.  This module also maintains an
+// accessed database, to be used by the <accessed> tag.
+//
+// It is in severe need of a cleanup in the code.
+//
 // This file *should* be split into multiple files, one with all
 // 'USER' related tags, one with all CLIENT related tags, etc.
 // 
 // the only thing that should be in this file is the main parser.  
+
 
 #pragma all_inline 
 
@@ -33,6 +42,7 @@ int _match(string w, array (string) a)
       return 1;
 }
 
+// Configuration interface fluff.
 string comment()
 {
   return query("toparse")*", ";
@@ -93,10 +103,7 @@ void create()
 	 "8 seconds");
 }
 
-static string olf;
-
-int __db_changed;
-
+static string olf; // Used to avoid reparsing of the accessed index file...
 
 static mixed names_file_callout_id;
 inline void open_names_file()
@@ -148,7 +155,6 @@ void start()
 
     if(names_file=open(olf+".names", "r"))
     {
-      __db_changed = names_file->stat()[3];
       cnum=0;
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
@@ -228,30 +234,12 @@ int query_num(string file, int count)
 
 //  perror(file + ": New entry.\n");
     open_names_file();
-    if(names_file->stat()[3] != __db_changed) /* Ouch */
-    {
-      mixed tmp;
-      // Somebody else added one or more entries to the database. This
-      // is not exactly great, since we don't know how many entries
-      // were added, so just reread the whole beast :-)
-      
-      names_file=open(query("Accesslog")+".names", "wrc");
-      perror("RXMLPARSE: Syncing accessed database...\n");
-      tmp=parse_accessed_database(names_file->read(0x7ffffff));
-      fton=tmp[0];
-      cnum=tmp[1];
-      __db_changed = names_file->stat()[3];
-      //lock->free();
-      return query_num(file, count);
-    }
 //  perror(file + ": Created new entry.\n");
     names_file->write(file+":"+cnum+"\n");
 
     database->seek(p*8);
     database->write(sprintf("%4c", 0));
     database_set_created(file);
-
-    __db_changed = names_file->stat()[3];
   }
   if(database->seek(p*8) > -1)
   {
@@ -286,12 +274,13 @@ string *query_file_extensions()
   return query("toparse") + query("noparse"); 
 }
 
-int *stat;
+
+// Ugly global variables, will have to be removed before this module
+// can be threaded.
+array (int) stat;
 int error;
 mapping extra_heads;
 string rettext;
-
-int in_parse;
 
 mapping handle_file_extension( object file, string e, object id)
 {
@@ -307,11 +296,9 @@ mapping handle_file_extension( object file, string e, object id)
   }
   
 #if efun(set_start_quote)
-  if(!in_parse)
-    set_start_quote(set_end_quote(0));
+  set_start_quote(set_end_quote(0));
 #endif
 
-  in_parse=1;
   ook=ok;
   ostat=stat;
   sizefmt = "abbrev"; 
@@ -323,7 +310,6 @@ mapping handle_file_extension( object file, string e, object id)
 
   if(stat[1] > (QUERY(max_parse)*1024))
   {
-    in_parse=0;
     return 0; // To large for me..
   }
   
@@ -343,7 +329,6 @@ mapping handle_file_extension( object file, string e, object id)
   file->close();
   destruct(file);
 
-  in_parse=0;
   ok=ook;
   err=stat; /* We need this later on.. */
   stat=ostat;

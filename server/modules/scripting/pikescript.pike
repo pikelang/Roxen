@@ -1,3 +1,11 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// Support for user Pike-scripts, like CGI, but handled internally in
+// the server, and thus much faster, but blocking, and somewhat less
+// secure.
+
+// This is an extension module.
+
 mapping scripts=([]);
 
 inherit "module";

@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// A somewhat more secure version of the normal filesystem. This
+// module user regular expressions to regulate the access of files.
+
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
@@ -6,8 +11,7 @@ array register_module()
   return ({ MODULE_LOCATION,
 	    "Secure file system module",
 	    "This is a (somewhat) more secure filesystem module. It "
-            "allows an per-regexp level security." 
-         });
+            "allows an per-regexp level security." });
 }
 
 array seclevels = ({ });
@@ -23,7 +27,7 @@ void start()
   string sl, sec;
   array ips=({ }), users=({ }), denys=({});
 
-  foreach(replace(query("sec"), ({" ","\t","\\\n"}), ({"","",""}))/"\n", sl)
+  foreach(replace(query("sec"),({" ","\t","\\\n"}),({"","",""}))/"\n", sl)
   {
     if(!strlen(sl) || sl[0]=='#')
       continue;
@@ -128,18 +132,7 @@ mixed not_allowed(string f, object id)
 }
 
 
-mixed find_dir(string f, object id)
-{
-// if(not_allowed(f, id)) return 0;
-  return ::find_dir(f, id);
-}
-
-mixed stat_file(string f, object id)
-{
-//  if(not_allowed(f, id)) return 0;
-  return ::stat_file(f, id);
-}
-
+// Overlay the normal find_file function, that's all this module has to do.
 mixed find_file(string f, object id)
 {
   mixed tmp, tmp2;

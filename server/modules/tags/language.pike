@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvvarna AB 1996.
+
+// Written by Mattias Wingstedt <wing@infovav.se>, contact him for
+// more info.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

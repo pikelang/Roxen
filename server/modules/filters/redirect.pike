@@ -1,3 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// The redirect module. Redirects requests from one filename to
+// another. This can be done using "internal" redirects (much like a
+// symbolik link in unix), or with normal HTTP redirects.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// An implementation of the CONNECT methos, used for SSL tunneling in
+// Netscape (the "Secure proxy" field)
+
 #include <module.h>
 
 inherit "module";

@@ -1,3 +1,9 @@
+// This is a roxen module.
+
+// A WAIS proxy module, not written by anyone at Infovav, and it would
+// seem that I have forgotten who wrote it.
+
+
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://roxen.com/>Roxen</a></font>"

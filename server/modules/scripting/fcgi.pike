@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// Support for the FastCGI interface, using an external fast-cgi
+// wrapper. This should be handled internally.
+
 #include <module.h>
 inherit "modules/scripting/cgi";
 

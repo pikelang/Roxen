@@ -1,3 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// HTTP Proxy module. Should be cleaned and optimized. Currently the
+// limit of proxy connections/second is somewhere around 70% of normal
+// requests, but there is no real reason for them to take longer.
+
 #include <module.h>
 #include <config.h>
 

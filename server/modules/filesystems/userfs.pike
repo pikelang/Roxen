@@ -1,3 +1,13 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// User filesystem. Used the userdatabase (and thus the system passwd
+// database) to find the home-dir of users, and then looks in a
+// specified directory in that directory for the files requested.
+
+// Normaly mounted under /~, but / or /users/ would work equally well.
+// / is quite useful for IPPs, enabling them to have URLs like
+// http://www.hostname.of.provider/customer/.
+
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 

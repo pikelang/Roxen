@@ -1,3 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// This module log the accesses of each user in their home dirs, iff
+// they create a file named 'AccessLog' in that directory, and allow
+// write access for roxen.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

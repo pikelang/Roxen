@@ -1,3 +1,6 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// A quite complex directory module. Generates macintosh like listings.
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -116,11 +119,6 @@ array register_module()
 
 void create()
 {
-
-  defvar("separateroots", 1, "Separate hosts", TYPE_FLAG,
-	 "If set, there will be a different unfold/fold status for each "
-	 "host accessing the server. This does use quite a lot of memory");
-
   defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html",
 			  "index.cgi", "index.lpc","index.pike" }),
 	 "Index files", TYPE_STRING_LIST,
@@ -164,9 +162,10 @@ void start()
 
 /*  Module specific stuff */
 
+object _root;
 object root(object id)
 {
-  return dirnode_program();
+  return _root||(_root=dirnode_program());
 }
 
 

@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// ISMAP image map support. Quite over-complex, really.  An example is
+// the support for index images, and chromatic distances.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

@@ -1,5 +1,10 @@
-// This is a virtual "file-system".
-// It will be located somewhere in the name-space of the server.
+// This is a roxen module. (c) Informationsvvarna AB 1996.
+
+// This module makes it possible to write symbolic names instead of
+// absoulte hrefs.
+// Written by Mattias Wingstedt, <wing@infovav.se>, please refer
+// to him for further info.
+
 #include <module.h>
 
 inherit "module";
@@ -11,27 +16,25 @@ string tagname;
 void create()
 {
   defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD, 
-	 "Syntax:\n"
-	 + "[name] = [URL]\n" );
+	 "Syntax:<br>\n"
+	  "[name] = [URL]\n" );
+
   defvar( "tagname", "newa", "Tagname", TYPE_STRING, 
 	 "Name of the tag\n"
-	 + "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
-	 + "&lt;a href=[URL]&gt;foo&lt;/a&gt;" );
+	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
+	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;" );
 }
 
-mixed *register_module()
+array (mixed) register_module()
 {
-  return ({ 
-    MODULE_PARSER,
-    "Indirect href", 
-    ("Indirect href")
-    });
+  return ({ MODULE_PARSER, "Indirect href", "Indirect href", });
 }
 
 void start()
 {
-  string *lines, line;
-  string variable, value, *foo;
+  array (string) lines, foo;
+  string line;
+  string variable, value;
   string dir = "";
   mapping all = ([ ]);
 

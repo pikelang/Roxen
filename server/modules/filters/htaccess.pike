@@ -1,11 +1,11 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// .htaccess compability by David Hedbor, neotron@infovav.se 
+//   Changed into module by Per Hedbor, per@infovav.se
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-
-/* .htaccess compability by David Hedbor, neotron@infovav.se 
- *   Changed into module by Per Hedbor, per@infovav.se
- */
-
 
 /*#define HTACCESS_DEBUG*/
 

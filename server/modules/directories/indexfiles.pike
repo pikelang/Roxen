@@ -1,8 +1,13 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// Index files only module, a directory module that will not try to
+// generate any directory listings, instead only using index files.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-/************** Generic module stuff ***************/
+//************** Generic module stuff ***************
 
 array register_module()
 {
@@ -23,26 +28,23 @@ void create()
 	 "be returned instead of 'no such file'.");
 }
 
+// The only important function in this file...
+// Given a request ID, try to find a matching index file.
+// If one is found, return it, if not, simply return "no such file" (0)
 mapping parse_directory(object id)
 {
-  string file;
+  // Redirect to an url with a '/' at the end, to make relative links
+  // work as expected.
+  if(id->not_query[-1] != '/') return http_redirect(id->not_query+"/", id);
 
-  if(id->not_query[-1] == '.' && id->not_query[-2]=='/')
-    return http_redirect(id->not_query[..strlen(id->not_query)-2], id);
-
-  if(id->not_query[-1] != '/')
-    return http_redirect(id->not_query+"/", id);
-  
   string oq = id->not_query;
-  mapping result;
+  string file;
   foreach(query("indexfiles"), file)
   {
+    mapping result;
     id->not_query = oq+file;
     if(result=roxen->get_file(id))
-    {
-      id->not_query = oq;
-      return result;
-    }
+      return result; // File found, return it.
   }
   id->not_query = oq;
   return 0;

@@ -1,15 +1,31 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+//
+// Adds support for inline pike in documents.
+//
+// Example:
+// <pike>
+//  return "Hello world!\n";
+// </pike>
+ 
 inherit "module";
 #include <module.h>;
 
 array register_module()
 {
   return ({ MODULE_PARSER,
-	    "µLPC tag", 
+	    "Pike tag", 
 	    "This module adds a new tag, <pike></pike>. It makes it possible."
 	    " to insert some pike code directly in the document.",
 	    ({}), 1 });
 }
 
+
+// Helper functions, to be used in the pike script.
+// output(string fmt, mixed ... args) is a fast way to add new
+// data to a dynamic buffer, flush() returns the contents of the
+// buffer as a string.  A flush() is done automatically if the
+// "script" does not return any data, thus, another way to write the
+// hello world script is <pike>output("Hello %s\n", "World");</pike>
 inline private nomask string functions()
 {
   return 
@@ -34,6 +50,7 @@ inline private nomask string functions()
     
 }
 
+// Preamble
 private nomask inline string pre(string what)
 {
   if(search(what, "parse(") != -1)
@@ -46,6 +63,7 @@ private nomask inline string pre(string what)
     "string parse(object id, mapping defines, object file, mapping args) { return ";
 }
 
+// Will be added at the end...
 private nomask inline string post(string what) 
 {
   if (what[-1] != ";")
@@ -54,8 +72,10 @@ private nomask inline string post(string what)
     return "}";
 }
 
-string tag_lpc(string tag, mapping m, string s, object got, object file,
-	     mapping defs)
+// Compile and run the contents of the tag (in s) as a pike
+// program. 
+string tag_pike(string tag, mapping m, string s, object request_id,
+		object file, mapping defs)
 {
   program p;
   object o;
@@ -69,10 +89,10 @@ string tag_lpc(string tag, mapping m, string s, object got, object file,
     _master->set_inhibit_compile_errors(1);
     if(err=catch {
       s=pre(s)+s+post(s);
-      p = compile_string(s, "LPCTAG");
+      p = compile_string(s, "Pike-tag");
     })
     {
-      perror(err[0]-"\n"+" while compiling "+got->not_query+"\n");
+      perror(err[0]-"\n"+" while compiling "+request_id->not_query+"\n");
       res = "<h1><font color=red size=7><i>"+err[0]+"</i></font></h1>";
     }
 
@@ -84,17 +104,17 @@ string tag_lpc(string tag, mapping m, string s, object got, object file,
     }
     _master->set_inhibit_compile_errors(0);
     if(err = catch{
-      res = (o=p())->parse(got, defs, file, m);
+      res = (o=p())->parse(request_id, defs, file, m);
     })
     {
-      perror(err[0]-"\n"+" in "+got->not_query+"\n");
+      perror(err[0]-"\n"+" in "+request_id->not_query+"\n");
       res = (o->flush()||"")+"<h1><font color=red size=7><i>"+err[0]+"</i></font></h1>";
     }
 #if efun(set_max_eval_time)
     remove_max_eval_time(); // Remove the limit.
   })
   {
-    perror(err[0]+" for "+got->not_query+"\n");
+    perror(err[0]+" for "+request_id->not_query+"\n");
     if(!res)
       res = (o->flush()||"")+"<h1><font color=darkred size=7><i>"+err[0]+"</i></font></h1>";
     else
@@ -116,5 +136,5 @@ mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {
-  return ([ "lpc":tag_lpc,  "pike":tag_lpc, "ulpc":tag_lpc, ]);
+  return ([ "lpc":tag_pike,  "pike":tag_pike, "ulpc":tag_pike, ]);
 }

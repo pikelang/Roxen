@@ -1,5 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
+// Also inherited by some of the other filesystems.
 #include <module.h>
 
 #if DEBUG_LEVEL > 20

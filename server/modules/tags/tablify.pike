@@ -1,3 +1,8 @@
+// Tablify module
+// Converts tab and newline separated lists to tables.
+
+
+
 #include <module.h>
 inherit "module";
 
@@ -11,7 +16,18 @@ mixed *register_module()
     });
 }
 
-string tag_tablify( string tag, mapping m, string q, mapping got )
+string tag_tablify( string tag, mapping m, string q, mapping request_id );
+
+mapping query_container_callers()
+{
+  return ([ "tablify" : tag_tablify ]);
+}
+
+
+// The meat of the module. Convert the contents of the tag (in 'q') to
+// a table.
+
+string tag_tablify( string tag, mapping m, string q, mapping request_id )
 {
   array rows, res;
   string sep, td, table;
@@ -55,7 +71,3 @@ string tag_tablify( string tag, mapping m, string q, mapping got )
   return table + td + rows*("</tr>\n"+td) + "</tr>\n</table>";
 }
 
-mapping query_container_callers()
-{
-  return ([ "tablify" : tag_tablify ]);
-}

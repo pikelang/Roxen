@@ -1,3 +1,8 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// User database. Reads the system password database and use it to
+// authentificate users.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

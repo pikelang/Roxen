@@ -1,3 +1,10 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// This module redirects requests to different places, depending on the
+// hostname that was used to access the server. It can be used as a
+// cheap way (IP number wise) to do virtual hosting. Note that this
+// won't work with all clients.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

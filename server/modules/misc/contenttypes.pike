@@ -1,3 +1,9 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+
+// This module handles all normal extension to contenttype
+// mapping. Given the file 'foo.html', it will per default
+// set the contenttype to 'text/html'
+
 #include <module.h>
 inherit "module";
 

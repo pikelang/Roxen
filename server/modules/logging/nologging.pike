@@ -1,3 +1,7 @@
+// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This module can be used to turn off logging for some files.
+
+
 #include <module.h>
 inherit "module";
 
