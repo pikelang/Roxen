@@ -4,8 +4,12 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-constant cvs_version= "$Id: filesystem.pike,v 1.27 1998/02/10 18:36:12 per Exp $";
-int thread_safe=1;
+inherit "module";
+inherit "roxenlib";
+inherit "socket";
+
+constant cvs_version= "$Id: filesystem.pike,v 1.28 1998/02/24 12:06:06 grubba Exp $";
+constant thread_safe=1;
 
 
 #include <module.h>
@@ -17,10 +21,6 @@ int thread_safe=1;
 #  define FILESYSTEM_DEBUG
 # endif
 #endif
-
-inherit "module";
-inherit "roxenlib";
-inherit "socket";
 
 // import Array;
 
