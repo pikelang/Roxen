@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.82 2001/04/18 05:11:40 per Exp $";
+  "$Id: config_filesystem.pike,v 1.83 2001/04/18 05:46:23 per Exp $";
 
 constant path = "config_interface/";
 
@@ -373,7 +373,11 @@ mixed find_file( string f, RequestID id )
 
   if( type  == "text/html" )
   {
-    string data, title="", pre;
+    string data, title=id->not_query, pre;
+    sscanf( title, "%s/%*[^/].html", title );
+    if( strlen( title ) && title[-1] == '/' )    title = title[..sizeof(title)-2];
+    if( strlen( title ) && title[0] == '/' )     title = title[1..];
+
     if( stringp( retval ) )
       data = retval;
     else 
@@ -414,7 +418,7 @@ mixed find_file( string f, RequestID id )
 
     if( id->method != "GET" && id->real_variables->__redirect )
     {
-      string url = id->not_query;
+      string url = id->raw_url;
       url+="?v="+random(4711)->digits(32);
       if( id->real_variables->section )
 	url += "&section="+id->real_variables->section[0];

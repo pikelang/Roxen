@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.145 2001/03/23 03:04:33 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.146 2001/04/18 05:46:23 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -347,7 +347,7 @@ string get_var_form( string s, object var, object mod, RequestID id,
   if( !view_mode && set )
   {
     var->set_from_form( id );
-    return 0;
+//     return 0;
   }
   string pre = var->get_warnings();
 
@@ -392,16 +392,16 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
   if( !mod ) return ([]);
   object var = mod->getvar( s );
 
-  if( !noset )
-  {
-    get_var_form( s, var, mod, id, 1 );
-    return ([]);
-  }
+//   if( !noset )
+//   {
+//     get_var_form( s, var, mod, id, 1 );
+//     return ([]);
+//   }
 
   mapping res = ([ "sname":s]);
 
   
-  if( res->form = get_var_form( s, var, mod, id, 0 ) )
+  if( res->form = get_var_form( s, var, mod, id, !noset ) )
   {
     // FIXME: Do lazy evaluation of all this. It's rather likely that
     // the variable will be filtered away in the calling function.
