@@ -667,6 +667,21 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.</t>
 <t>Sökväg till där typsnitten finns.</t>
 </str>
 
+<str id="521">
+<new/>
+<o>Font oversampling</o>
+<t></t>
+</str>
+
+<str id="522">
+<new/>
+<o>If set to Yes, fonts will be oversampled resulting
+   in higher quality but more fuzz. This will require clearing
+   of various graphics caches like the Graphic text and
+   GButton caches to take full effect.</o>
+<t></t>
+</str>
+
 <str id="96">
 <o>Logging: Log directory prefix</o>
 <t>Loggning: Loggningsbibliotekprefix</t>
