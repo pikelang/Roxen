@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.46 2000/03/19 23:36:18 nilsson Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.47 2000/03/20 00:45:43 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1117,8 +1117,7 @@ class Server
       //SERVER_DEBUG("got_hostname - async_connect ok")
     } else {
       //SERVER_DEBUG("got_hostname - async_connect failed")
-      if(roxen->__roxen_version__ == "1.3")
-	connected_to_server(0);
+      connected_to_server(0);
     }
   }
 
