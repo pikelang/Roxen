@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.129 1999/12/10 12:55:07 mast Exp $
+ * $Id: roxenloader.pike,v 1.130 1999/12/13 04:02:25 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.129 1999/12/10 12:55:07 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.130 1999/12/13 04:02:25 mast Exp $";
 
 #define perror roxen_perror
 
@@ -667,6 +667,10 @@ void load_roxen()
 	 "Running on NT\n"
 #endif
     );
+
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
+  master()->resolv("RXML")->refs;
 }
 
 
@@ -686,10 +690,12 @@ class ParseHtmlCompat
     m_containers = containers;
     add_containers (mkmapping (indices (m_containers),
 			       ({call_container}) * sizeof (m_containers)));
-    add_tag ("", "");		// Don't ask..
     _set_tag_callback (call_tag);
     set_extra (@extra);
+    case_insensitive_tag (1);
     lazy_entity_end (1);
+    match_tag (0);
+    ignore_unknown (1);
   }
 
   int|string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
@@ -698,22 +704,10 @@ class ParseHtmlCompat
     if (string|function tag = m_tags[name])
       if (stringp (tag)) return ({tag});
       else return tag (name, tag_args(), @extra);
-    else if (string|function container = m_containers[name]) {
+    else if (string|function container = m_containers[name])
       // A container has been added.
       add_container (name, call_container);
-      return 1;
-    }
-    else {
-      // Treat the tag as text by temporarily disabling unknown tag parsing.
-      _set_tag_callback (1);
-      _set_data_callback (lambda (object p, string data) {
-			    if (!sizeof (data)) return ({});
-			    _set_tag_callback (call_tag);
-			    _set_data_callback (0);
-			    return ({data});
-			  });
-      return 1;
-    }
+    return 1;
   }
 
   int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
@@ -723,11 +717,10 @@ class ParseHtmlCompat
     if (string|function container = m_containers[name])
       if (stringp (container)) return ({container});
       else return container (name, args, content, @extra);
-    else {
+    else
       // The container has disappeared from the mapping.
       add_container (name, 0);
-      return 1;
-    }
+    return 1;
   }
 }
 
@@ -747,22 +740,10 @@ class ParseHtmlLinesCompat
     if (string|function tag = m_tags[name])
       if (stringp (tag)) return ({tag});
       else return tag (name, tag_args(), at_line(), @extra);
-    else if (string|function container = m_containers[name]) {
+    else if (string|function container = m_containers[name])
       // A container has been added.
       add_container (name, call_container);
-      return 1;
-    }
-    else {
-      // Treat the tag as text by temporarily disabling unknown tag parsing.
-      _set_tag_callback (1);
-      _set_data_callback (lambda (object p, string data) {
-			    if (!sizeof (data)) return ({});
-			    _set_tag_callback (call_tag);
-			    _set_data_callback (0);
-			    return ({data});
-			  });
-      return 1;
-    }
+    return 1;
   }
 
   int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
@@ -772,11 +753,10 @@ class ParseHtmlLinesCompat
     if (string|function container = m_containers[name])
       if (stringp (container)) return ({container});
       else return container (name, args, content, at_line(), @extra);
-    else {
+    else
       // The container has disappeared from the mapping.
       add_container (name, 0);
-      return 1;
-    }
+    return 1;
   }
 }
 
