@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.7 1999/10/27 00:15:57 grubba Exp $
+ * $Id: smtprelay.pike,v 2.8 1999/10/27 18:25:27 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.7 1999/10/27 00:15:57 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.8 1999/10/27 18:25:27 grubba Exp $";
 
 /*
  * Some globals
@@ -189,6 +189,7 @@ static void async_connect_got_hostname(string host, int port,
     // DNS Failure
 
     cb(ACON_DNS_FAIL, @args);
+    return;
   }
 
   // Check that we aren't looping.
