@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.24 1998/07/15 16:04:55 js Exp $
+ * $Id: sqltag.pike,v 1.25 1998/07/21 15:28:09 per Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.24 1998/07/15 16:04:55 js Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.25 1998/07/21 15:28:09 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -140,16 +140,16 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     }
     if (error) {
       if (!args->quiet) {
-	contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	  ((master()->describe_backtrace(error)/"\n")*"<br>\n" + "<false>");
+	contents = ("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+		    html_encode_string(error[0]) + "<false>");
       } else {
 	contents = "<false>";
       }
     } else if (error = catch(result = con->query(args->query))) {
       if (!args->quiet) {
-	contents = "<h1>Query \"" + args->query + "\" failed: " +
-	  con->error() + "</h1>\n" +
-	  ((master()->describe_backtrace(error)/"\n")*"<br>\n" + "<false>");
+	contents = ("<h3>Query \"" + html_encode_string(args->query)
+		    + "\" failed: " + html_encode_string(con->error()) 
+		    + "</h1>\n<false>");
       } else {
 	contents = "<false>";
       }
@@ -217,18 +217,15 @@ string sqlquery_tag(string tag_name, mapping args,
     }
     if (error) {
       if (!args->quiet) {
-	return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
-		"<false>"));
+	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	       html_encode_string(error[0])+"<false>");
       } else {
 	return("<false>");
       }
     } else if (error = catch(res = con->query(args->query))) {
       if (!args->quiet) {
-	return("<h1>Query \"" + args->query + "\" failed: " +
-	       con->error() + "</h1>\n" +
-	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
-		"<false>"));
+	return("<h3>Query \"" + html_encode_string(args->query)+"\" failed: "
+	       + html_encode_string(con->error()) + "</h1>\n<false>");
       } else {
 	return("<false>");
       }
@@ -298,18 +295,16 @@ string sqltable_tag(string tag_name, mapping args,
     }
     if (error) {
       if (!args->quiet) {
-	return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
-		"<false>"));
+	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	       html_encode_string(error[0])+"<false>");
       } else {
 	return("<false>");
       }
     } else if (error = catch(result = con->big_query(args->query))) {
       if (!args->quiet) {
-	return("<h1>Query \"" + args->query + "\" failed: " +
-	       con->error() + "</h1>\n" +
-	       ((master()->describe_backtrace(error)/"\n")*"<br>\n" +
-		"<false>"));
+	return ("<h3>Query \"" + html_encode_string(args->query) +
+	        "\" failed: " + html_encode_string(con->error()) + "</h1>\n" +
+	        "<false>");
       } else {
 	return("<false>");
       }
