@@ -12,15 +12,15 @@
     <CustomAction Id="OldCreateConfigInterface" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
       Execute="deferred" />
-    <CustomAction Id="CreateConfigInterface" Script="vbscript"
-      Execute="deferred">
-	Dim WshShell
-	Set WshShell = Wscript.CreateObject("Wscript.Shell")
-	WshShell.Run """[SERVERDIR]pike\bin\pike"" ""[SERVERDIR]bin\create_configif.pike"" --batch server_dir ""[SERVERDIR]"" server_name ""[SERVER_NAME]"" server_url ""[SERVER_PROTOCOL]://*:[SERVER_PORT]/"" user ""[ADM_USER]"" password ""[ADM_PASS1]"" ok y update n", 0, True
-    </CustomAction>
+    <CustomAction Id="SetCreateConfigInterface"
+      Property="CreateConfigInterface"
+      Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
+      Execute="immediate" />
+    <CustomAction Id="CreateConfigInterface" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateConfigInterface" Execute="deferred" />
     <CustomAction Id="SetCreatePikeLocation" Property="CreatePikeLocation"
       Value="[SERVERDIR]" Execute="immediate" />
-    <CustomAction Id="CreatePikeLocation" BinaryKey="Installer"
+    <CustomAction Id="CreatePikeLocation" BinaryKey="RoxenInstaller"
       VBScriptCall="CreatePikeLocation" Execute="deferred" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
@@ -1127,13 +1127,14 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <RemoveExistingProducts After="InstallInitialize" />
-      <Custom Action="CreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
+      <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
+      <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
     <Binary Id="NewFldrBtn" src="NewFldrBtn.icon" />
-    <Binary Id="Installer" src="Win32Installer.vbs" />
+    <Binary Id="RoxenInstaller" src="Win32Installer.vbs" />
   </Fragment>
 </Wix>
