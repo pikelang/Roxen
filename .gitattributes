@@ -240,7 +240,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/flik.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
-/server/modules/tags/htmlparse.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/lisp.pike foreign_ident
