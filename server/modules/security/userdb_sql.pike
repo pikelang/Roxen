@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.3 2001/10/03 13:51:39 nilsson Exp $";
+  "$Id: userdb_sql.pike,v 1.4 2001/10/04 13:58:15 per Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -40,11 +40,16 @@ class SqlUser
   {
     switch(query("passwd_type")) {
       case "password":
-	return (sql_query( "SELECT password('" + password + "') as psw" )[0]->psw == crypted_password());
+	return sizeof(sql_query("SELECT PASSWORD(%s) as psw WHERE psw=%s",
+				password,crypted_password()));
       case "crypt":
 	return (crypt(password, crypted_password()));
       case "clear text":
 	return (password == crypted_password());
+#if constant(Crypto.crypt_md5)
+      case "md5 crypt":
+	return crypt_md5( password, crypted_password()) == crypted_password();
+#endif
     }
   }
 
@@ -73,7 +78,7 @@ class SqlGroup
     ent = e;
   }
 }
-  
+
 constant db_defs =
 ([
   "group_members":({
@@ -210,12 +215,21 @@ void create()
 
   defvar( "passwd_type",
           Variable.StringChoice("password",
-         ({ "password", "crypt", "clear text" }), 0,
-         "Password type",
-	 "Password hashing method. "
-         "By changing this variable you can select the meaning of password field. "
-	 "By default the passwords are supposed to be hashed by internal MySQL "
-	 "password() function."
-         "\n"));
+				([
+				  "password":_(0,"MySQL Password"),
+				  "crypt":_(0,"Unix crypt"),
+				  "clear text":_(0,"Clear text"),
+#if constant(Crypto.crypt_md5)
+				  "md5 crypt":_(0,"MD5 crypt"),
+#endif
+				]), 0,
+				_(0,"Password type"),
+				_(0,"Password hashing method. "
+				  "By changing this variable you can "
+				  "select the meaning of password field. "
+				  "By default the passwords are supposed "
+				  "to be hashed by internal MySQL PASSWORD() "
+				  "function.")
+				));
 
 }
