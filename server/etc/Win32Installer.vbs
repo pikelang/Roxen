@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.4 2004/12/01 12:49:58 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.5 2004/12/01 13:25:56 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -37,7 +37,7 @@ Function CreateConfigInterface()
     serverdir = match.Value
   Next
 
-  Set WshShell = Wscript.CreateObject("Wscript.Shell")
+  Set WshShell = WScript.CreateObject("WScript.Shell")
   WshShell.Run """" & serverdir & "pike\bin\pike"" """ & serverdir &_
     "bin\create_configif.pike"" --batch __semicolon_separated__ """ &_
     Session.Property("CustomActionData") & """ ok y update n", 0, True
