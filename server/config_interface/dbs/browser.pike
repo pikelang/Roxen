@@ -23,7 +23,9 @@ mapping actions = ([
       ("<table><tr><td colspan='2'>\n"+				\
        sprintf((string)(X), db)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
-       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
+       "<submit-gbutton2 name='yes' align='center' "		\
+       " width='&usr.gbutton-width;'>"+_(0,"Yes")+		\
+       "</submit-gbutton2></td>\n"				\
        "<td align=right><cf-no href="+Roxen.html_encode_string(id->not_query)+\
       "?db="+Roxen.html_encode_string(id->variables->db)+"/>"+	\
        "</td>\n</table>\n");					\
