@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.127 2001/03/07 14:52:41 jonasw Exp $
+// $Id: wizard.pike,v 1.128 2001/04/24 08:49:11 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -645,7 +645,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	}
 	if(res != -1)
 	  return (res
-		  || http_redirect(s->cancel_url||cancel||id->not_query,
+		  || http_redirect(cancel || id->not_query,
 				   @(id->conf?({id}):({}))));
 	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
