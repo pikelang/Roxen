@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.335 2003/02/19 10:28:31 grubba Exp $
+// $Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.335 2003/02/19 10:28:31 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1968,7 +1968,7 @@ it impossible for roxen to have any internal security at all.
     report_debug(
 #"
 ------- WARNING -----------------------------------------------
-Roxen 2.4 requires bignum support in pike.
+Roxen 2.4 or newer requires bignum support in pike.
 Please recompile pike with gmp / bignum support to run Roxen.
 
 It might still be possible to start roxen, but the 
@@ -1999,7 +1999,7 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 2.4 requires pike 7.2.
+Roxen 3.3 requires pike 7.2.
 Please install a newer version of Pike.
 ******************************************************
 
@@ -2013,7 +2013,7 @@ Please install a newer version of Pike.
 
 
 ******************************************************
-Roxen 2.4 requires MySQL support in Pike.
+Roxen 2.2 or newer requires MySQL support in Pike.
 Your Pike has been compiled without support for MySQL.
 Please install MySQL client libraries and reconfigure
 and rebuild Pike from scratch.
