@@ -51,9 +51,9 @@ void dump_to_db( )
     DBManager.is_module_table( this_object(), query("db"),
 			       "average_profiling",
 			       "Average profiling information taken from "
-			       "the built-in profiling system in Roxen. "
-			       "Start Roxen with the define AVERAGE_PROFILNG"
-			       " to collect data.");
+			       "the built-in profiling system in ChiliMoon. "
+			       "Start ChiliMoon with the define "
+			       "AVERAGE_PROFILNG to collect data.");
     sql->query( "CREATE TABLE average_profiling ( "
 		"           session INT,"
 		"           calls   INT,"

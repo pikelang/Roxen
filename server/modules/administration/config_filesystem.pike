@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.117 2002/10/01 22:44:23 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.118 2002/11/10 02:02:10 mani Exp $";
 
 constant path = "admin_interface/";
 
@@ -151,8 +151,9 @@ mixed find_file( string f, RequestID id )
     else
     {
       report_notice("Login attempt from %s\n",host);
-      return id->conf->authenticate_throw( id, "Roxen Administration Interface",
-					   roxen.admin_userdb_module );
+      return id->conf
+	->authenticate_throw( id, "ChiliMoon Administration Interface",
+			      roxen.admin_userdb_module );
     }
 
     string encoding = config_setting( "charset" );
