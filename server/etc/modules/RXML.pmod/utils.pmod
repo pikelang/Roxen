@@ -7,9 +7,13 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.26 2001/06/29 00:21:06 mast Exp $
+//! $Id: utils.pmod,v 1.27 2001/07/09 04:03:03 mast Exp $
 
 constant is_RXML_encodable = 1;
+
+#ifdef RXML_ENCODE_DEBUG
+string _sprintf() {return "RXML.utils.pmod";}
+#endif
 
 constant short_format_length = 40;
 
@@ -37,7 +41,8 @@ final string format_short (mixed val)
       if (sizeof (res) >= short_format_length) throw (0);
       array ind = sort (indices (val));
       for (int i = 0; i < sizeof (ind);) {
-	format_val (ind[i]) + ": ";
+	format_val (ind[i]);
+	res += ": ";
 	if (sizeof (res) >= short_format_length) throw (0);
 	format_val (val[ind[i]]);
 	if (++i < sizeof (ind)) res += ", ";
