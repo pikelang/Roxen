@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.292 2003/04/22 11:20:41 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.293 2003/10/03 11:40:46 wellhard Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1122,6 +1122,8 @@ private string do_gtext(mapping arg, string c, RequestID id)
     }
 
     string sn = "gtext" + id->root_id->misc->gtext_mi++;
+    RXML_CONTEXT->set_root_id_misc("gtext_mi", id->root_id->misc->gtext_mi);
+
     if(honor_supports && !id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
