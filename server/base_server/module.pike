@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.176 2004/05/05 13:54:32 grubba Exp $
+// $Id: module.pike,v 1.177 2004/05/05 13:54:58 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -960,11 +960,11 @@ mapping(string:mixed) access_path(string path, RequestID id)
 	break;
       case "etag":
 	// Not supported yet.
-	continue next_contition;	// Fail.
+	continue next_condition;	// Fail.
       case "lock":
 	if ((lock && lock->locktoken == token[1]) != negate) {
 	  // Lock mismatch.
-	  continue next_contition;	// Fail.
+	  continue next_condition;	// Fail.
 	}
 	negate = 0;
 	break;
