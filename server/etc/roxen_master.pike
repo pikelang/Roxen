@@ -1,12 +1,16 @@
+#if efun(version)
+#define VERSION		version()
+#else
 #if efun(__version)
 #define VERSION		__version()
 #else
 #define VERSION		"Pike v0.4pl2"
 #endif /* __version */
+#endif /* version */
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.12 1997/01/18 18:11:24 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.13 1997/01/18 23:14:04 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
