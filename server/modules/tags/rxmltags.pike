@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.80 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.81 2000/02/25 02:23:37 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -494,10 +494,10 @@ string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
   if (m->showid)
   {
     array path=lower_case(m->showid)/"->";
-    if(path[0]!="id" || sizeof(path)==1) return "Can only show parts of the id object.";
+    if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
     mixed obj=id;
     foreach(path[1..], string tmp) {
-      if(search(indices(obj),tmp)==-1) return "Could only reach "+tmp+".";
+      if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
       obj=obj[tmp];
     }
     return ({ "<pre>"+html_encode_string(sprintf("%O",obj))+"</pre>" });
@@ -584,9 +584,10 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variable)
   {
-    string var=RXML.get_context()->user_get_var(n, m->scope);
-    if(zero_type(var)) RXML.run_error(tag, "No such variable ("+n+").\n", id);
-    return m->quote=="none"?(string)var:({ html_encode_string((string)var) });
+    if(zero_type(RXML.get_context()->user_get_var(n, m->scope)))
+      RXML.run_error(tag, "No such variable ("+n+").\n", id);
+    string var=(string)RXML.get_context()->user_get_var(n, m->scope);
+    return m->quote=="none"?var:({ html_encode_string(var) });
   }
 
   if(n = m->variables || m->scope) {

@@ -334,6 +334,8 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n = m->variable)
   {
+    if(zero_type(RXML.get_context()->user_get_var(n, m->scope)))
+      RXML.run_error(tag, "No such variable ("+n+").\n", id);
     string var=(string)RXML.get_context()->user_get_var(n, m->scope);
     m_delete(m, "variable");
     return m->quote=="none"?do_replace(var, m-(["quote":""]), id):
