@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.12 2000/04/10 10:41:17 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.13 2000/05/24 11:59:24 grubba Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -218,7 +218,7 @@ string *userinfo (string u) {
 array(string) userlist() {
 	if (QUERY(disable_userlist))
 		return ({});
-	mixed err,tmp;
+	mixed err;
 	array data;
 
 	DEBUGLOG ("userlist()");
@@ -228,10 +228,7 @@ array(string) userlist() {
 		return ({});
 	}
 	data=db->query("select username from "+QUERY(table));
-	int i;
-	for (i=0; i < sizeof(data); i++) {
-	  data[i] = data[i]->username;
-	return data;
+	return data->username;
 }
 
 string user_from_uid (int u) 
