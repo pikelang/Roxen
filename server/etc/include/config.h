@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.33 2003/02/03 14:53:38 grubba Exp $
+ * $Id: config.h,v 1.34 2003/04/22 14:28:22 grubba Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -98,9 +98,9 @@
 
 #ifndef HTTP_BLOCKING_SIZE_THRESHOLD
 // Size at below which blocking writes may be performed without penalty.
-// Should correspond to the network buffer size (usually 4KB).
+// Should correspond to the network buffer size (usually 4KB or 1500 bytes).
 // Set to zero or negative to always use nonblocking I/O.
-#define HTTP_BLOCKING_SIZE_THRESHOLD	4000
+#define HTTP_BLOCKING_SIZE_THRESHOLD	1000
 #endif /* !HTTP_BLOCKING_SIZE_THRESHOLD */
 
 /*---------------- End of configurable options. */
