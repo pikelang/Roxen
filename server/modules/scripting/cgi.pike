@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.13 1999/05/23 22:50:36 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.14 1999/05/23 23:23:15 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -231,9 +231,13 @@ class Wrapper
   {
     DWERROR("CGI:Wrapper::get_fd()\n");
 
-    return tofdremote;
-    destruct(tofdremote);
-    tofdremote=0;
+    /* Get rid of the reference, so that it gets closed properly
+     * if the client breaks the connection.
+     */
+    object fd = tofdremote;
+    tofdremote = 0;
+
+    return fd;
   }
   
 
