@@ -1,7 +1,7 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.4 1999/09/23 10:52:55 jhs Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.5 1999/11/22 13:59:03 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -42,19 +42,20 @@ mapping last_resort(object id)
     if( !catch( iq = DECODE( id->not_query, encoding ) ) &&
 	(iq != id->not_query) )
     {
-      decode = lambda(string s) { return DECODE(s, encoding); };
+      decode = lambda(string s, string encoding) { return DECODE(s, encoding); };
       object id2 = id->clone_me();
       id2->not_query = iq;
-      id2->config = mkmultiset(Array.map( (array)id2->config, decode ));
+      id2->config = mkmultiset(Array.map( (array)id2->config, decode, encoding ));
       //id2->raw_url = DECODE(id2->raw_url, encoding);
       // Perhaps we should fix this too (%NN-quoted characters as
       // well), but it really isn't right IMHO.              /jhs
       if(sizeof(id2->prestate))
-	id2->prestate = mkmultiset(Array.map( (array)id2->prestate, decode ));
+	id2->prestate = mkmultiset(Array.map( (array)id2->prestate, decode, encoding ));
       if(sizeof(id2->variables))
 	id2->variables = (mapping)(Array.map( (array)id2->variables,
-					      lambda(array p)
-					      { return Array.map(p, decode); } ));
+					      lambda(array p, function decode, string encoding)
+					      { return Array.map(p, decode, encoding); },
+					      decode, encoding ));
       mapping q = id->conf->get_file( id2 );
 
       if( q )
