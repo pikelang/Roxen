@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.10 1998/03/06 15:13:04 grubba Exp $
+ * $Id: resolv.pike,v 1.11 1998/03/06 15:17:54 grubba Exp $
  */
 
 inherit "wizard";
@@ -34,19 +34,26 @@ void trace_enter_ol(string type, function|object module)
 #if efun(gethrvtime)
   et2[level] = gethrvtime();
 #endif
+#if efun(gethrtime)
   et[level] = gethrtime();
+#endif
 }
 
 void trace_leave_ol(string desc)
 {
+#if efun(gethrtime)
   int delay = gethrtime()-et[level];
+#endif
 #if efun(gethrvtime)
   int delay2 = gethrvtime()-et2[level];
 #endif
   level--;
   string efont="", font="";
   if(level>1) {efont="</font>";font="<font size=-1>";} 
-  resolv += (font+"</ol>"+"Time: "+sprintf("%.5f",delay/1000000.0)+
+  resolv += (font+"</ol>"+
+#if efun(gethrtime)
+	     "Time: "+sprintf("%.5f",delay/1000000.0)+
+#endif
 #if efun(gethrvtime)
 	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
 #endif /* efun(gethrvtime) */
@@ -63,16 +70,23 @@ void trace_enter_table(string type, function|object module)
 	     +(level>1?"<td width=1 bgcolor=blue><img src=/image/unit.gif alt=|></td>":"")
 	     +"<td width=100%>"+font+type+" "+module_name(module)+
 	     "<table width=100% border=0 cellspacing=10 border=0 cellpadding=0>");
+#if efun(gethrtime)
   et[level]= gethrtime();
+#endif
 }
 
 void trace_leave_table(string desc)
 {
+#if efun(gethrtime)
   int delay = gethrtime()-et[level];
+#endif
   level--;
   string efont="", font="";
   if(level>1) {font="<font size=-1>";} 
-  resolv += ("</td></tr></table><br>"+font+"Time: "+sprintf("%.5f",delay/1000000.0)
+  resolv += ("</td></tr></table><br>"+font+
+#if efun(gethrtime)
+	     "Time: "+sprintf("%.5f",delay/1000000.0)
+#endif
 	     +"<br>"+desc+efont)+"</td></tr>";
 }
 
