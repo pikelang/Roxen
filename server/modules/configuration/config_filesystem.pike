@@ -18,7 +18,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.35 2000/07/09 16:11:32 nilsson Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.36 2000/07/11 16:56:39 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -51,9 +51,8 @@ array(string|array) low_stat_file(string locale, string f, object id)
       f = locale;
       locale = "standard";
     }
-    //DEBUG
-    //    if (locale == "standard")
-    //  locale = roxen->default_locale->latin1_name;
+    if (locale == "standard")
+      locale = roxen.locale->get()->locale;
     string p;
     if( strlen( f ) )
       f = "/"+f;
@@ -103,19 +102,30 @@ mixed find_dir( string f, object id )
 {
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
-  //DEBUG
- if(f == "") return ({});
-  //  if (f == "") return indices(RoxenLocale) - ({ "Modules" });
+  
+  if (f == "") {
+#if constant(Locale.list_languages)
+    return Locale.list_languages("config_interface");
+#else
+    return RoxenLocale.list_languages("config_interface");
+#endif
+  }
 
   string locale;
   string rest;
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  //DEBUG
-  //  if (rest || RoxenLocale[locale]) {
-  //  return get_dir(path + "standard/" + (rest || ""));
-  //}
+  multiset languages;
+#if constant(Locale.list_languages)
+    languages=(multiset)Locale.list_languages("config_interface");
+#else
+    languages=(multiset)RoxenLocale.list_languages("config_interface");
+#endif
+
+  if (rest || languages[locale]) {
+    return get_dir(path + "standard/" + (rest || ""));
+  }
   return get_dir(path + "standard/" + locale);
 }
 
@@ -267,8 +277,8 @@ void start(int n, Configuration cfg)
 
 void create()
 {
-  defvar("encoding", "UTF-8", "Character encoding", TYPE_STRING,
-	 "Send pages to client in this character encoding.");
-  defvar( "location", "/", "Mountpoint", TYPE_LOCATION,
-          "Usually / is a good idea" );
+  defvar("encoding", "UTF-8", LOCALE("","Character encoding"), TYPE_STRING,
+	 LOCALE("","Send pages to client in this character encoding."));
+  defvar( "location", "/", LOCALE("","Mountpoint"), TYPE_LOCATION,
+          LOCALE("","Usually / is a good idea") );
 }
