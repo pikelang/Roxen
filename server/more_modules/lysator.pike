@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Lysator ACS, 1996.
 
-string cvs_version = "$Id: lysator.pike,v 1.5 1997/05/31 19:17:54 grubba Exp $";
+string cvs_version = "$Id: lysator.pike,v 1.6 1997/06/01 00:26:31 grubba Exp $";
 // Lysator specific parsing, used at www.lysator.liu.se
 
 #include <config.h>
@@ -178,11 +178,11 @@ string lys_header(string t, mapping m, string s, object id)
   return res;
 }
 
-object regexp = Regexp();
+object _regexp = Regexp();
 inline array regexp_match(string match, string in)
 {
-  regexp->create("^"+match+"$");
-  return regexp->split(in);
+  _regexp->create("^"+match+"$");
+  return _regexp->split(in);
 }
 
 #define MAINTAINERS "/usr/www/html/maintainers"
