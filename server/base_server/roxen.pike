@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.106 1997/08/20 08:59:20 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.107 1997/08/21 00:04:29 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -307,15 +307,17 @@ object configuration_interface()
   if(!configuration_interface_obj)
   {
     perror("Loading configuration interface.\n");
-    catch {
+    array err = catch {
       loading_config_interface = 1;
       configuration_interface_obj=((program)"mainconfig")();
       root = configuration_interface_obj->root;
       loading_config_interface = 0;
     };
+    if(!configuration_interface_obj) {
+      report_error(sprintf("Failed to load the configuration interface!\n"
+			   "%s\n", describe_backtrace(err)));
+    }
   }
-  if(!configuration_interface_obj)
-    report_error("Failed to load the configuration interface!\n");
   return configuration_interface_obj;
 }
 
