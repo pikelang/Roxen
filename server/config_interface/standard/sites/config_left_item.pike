@@ -25,15 +25,14 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
-  string pre = ("<gbutton href='"+id->not_query+"/"+
-                replace(c->name, " ", "%20" )+"/' "
-                +"width=150 "
-                +(subsel == "" ?
-                  "icon_src=/internal-roxen-next align_icon=right":
-                  "")+
-                ">"+c->query_name()+"</gbutton><br>");
+  string pre = ("<gbutton href='/standard/sites' width=150 icon_src=/internal-roxen-next "
+                "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
+                "<gbutton width=150 "+(subsel == ""?"bgcolor=d9dee7":
+			      "href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
+                " icon_src=/internal-roxen-next align_icon=left>"+
+                c->query_name()+"</gbutton><br><br>");
 
-  array sub = ({ "modules", "settings", });
+  array sub = ({ "settings", "modules" });
 //   if( subsel == "modules" )
 //     sub = reverse(sub);
 
@@ -42,7 +41,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     if( subsel == q )
     {
       pre += ("<gbutton icon_src=/internal-roxen-next align_icon=right "
-              "width=150 preparse href='"+DOTDOT(3)+q+"/'>"
+              "width=150 preparse bgcolor=d9dee7>"
               "<cf-locale get="+q+"></gbutton><br>");
 
       string url = id->not_query + id->misc->path_info;
