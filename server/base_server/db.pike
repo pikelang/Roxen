@@ -1,7 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.3 1997/02/07 23:33:18 per Exp $ */
-
+/* $Id: db.pike,v 1.4 1997/02/11 13:53:58 per Exp $ */
 
 private static inherit "/precompiled/file";
 private static mapping db;

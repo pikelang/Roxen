@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.19 1997/02/07 23:33:20 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.20 1997/02/11 13:54:36 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -133,21 +133,40 @@ void name_program(program foo, string name)
 
 private static int mid = 0;
 
-string nameof(object|program|function fo)
+string low_nameof(object|program|function fo)
 {
-  if(programp(fo)) return search(programs, fo);
+  if(objectp(fo) && search(objects, fo))
+    return search(objects, fo);
+
+  if(programp(fo))
+    return search(programs, fo);
+
   string p,post="";
   object foo ;
-  if(functionp(fo)) {
+  if(functionp(fo))
+  {
     foo = function_object( fo );
     post=sprintf("->%O", fo);
+    if(search(objects, fo))
+      return search(objects, fo)+post;
   } else
     foo = fo;
+
   if(p=search(programs, object_program(foo)))
     return p+"/#"+(functionp(foo->name)?foo->name():
 		  (stringp(foo->name)?foo->name:time(1)+":"+mid++))+
       post;
+
+  werror("nameof: unknown thingie.\n");
 }
+
+mapping saved_names = ([]);
+string nameof(mixed foo)
+{
+  werror(sprintf("Nameof %O...\m", foo));
+  return saved_names[foo] ||  (saved_names[foo] = low_nameof( foo ));
+}
+
 
 program programof(string foo)
 {

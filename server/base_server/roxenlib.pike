@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.13 1997/02/07 21:08:31 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.14 1997/02/11 13:54:35 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -12,7 +12,6 @@ static string _cvs_version = "$Id: roxenlib.pike,v 1.13 1997/02/07 21:08:31 per 
 #define ipaddr(x,y) (((x)/" ")[y])
 
 
-
 static inline string extract_query(string from)
 {
   if(!from) return "";
@@ -21,7 +20,7 @@ static inline string extract_query(string from)
   return "";
 }
 
-mapping build_env_vars(string f, object id, string path_info)
+static mapping build_env_vars(string f, object id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   mixed tmp;
@@ -140,7 +139,7 @@ mapping build_env_vars(string f, object id, string path_info)
   return new;
 }
 
-mapping build_ssi_env_vars(object id)
+static mapping build_ssi_env_vars(object id)
 {
   mapping new = ([]);
   array tmp;
@@ -157,7 +156,7 @@ mapping build_ssi_env_vars(object id)
 }
 
 
-mapping build_roxen_env_vars(object id)
+static mapping build_roxen_env_vars(object id)
 {
   mapping new = ([]);
   mixed tmp;
@@ -213,7 +212,7 @@ mapping build_roxen_env_vars(object id)
 }
 
 
-string decode_mode(int m)
+static string decode_mode(int m)
 {
   string s;
   s="";
@@ -255,7 +254,7 @@ string decode_mode(int m)
 		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,\
 	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,])
 
-int _match(string w, array (string) a)
+static int _match(string w, array (string) a)
 {
   string q;
   if(!stringp(w)) // Internal request..
@@ -265,7 +264,7 @@ int _match(string w, array (string) a)
       return 1; 
 }
 
-int is_modified(string a, int t, void|int len)
+static int is_modified(string a, int t, void|int len)
 {
   mapping t1;
   int day, year, month, hour, minute, second, length;
@@ -316,19 +315,19 @@ int is_modified(string a, int t, void|int len)
   return 1;
 }
 
-string short_name(string long_name)
+static string short_name(string long_name)
 {
   long_name = replace(long_name, " ", "_");
   return lower_case(long_name);
 }
 
-string strip_config(string from)
+static string strip_config(string from)
 {
   sscanf(from, "/<%*s>%s", from);
   return from;
 }
 
-string strip_prestate(string from)
+static string strip_prestate(string from)
 {
   sscanf(from, "/(%*s)%s", from);
   return from;
@@ -338,7 +337,7 @@ string strip_prestate(string from)
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 
-string parse_rxml(string what, void|object|mapping id, void|object file,
+static string parse_rxml(string what, void|object|mapping id, void|object file,
 		  void|mapping defines)
 {
   if(!defines)
@@ -371,15 +370,15 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
   return what;
 }
 
-constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
-constant empty_strings = map(safe_characters,lambda(){return "";});
+static constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
+static constant empty_strings = map(safe_characters,lambda(){return "";});
 
-int is_safe_string(string in)
+static int is_safe_string(string in)
 {
   return !strlen(replace(in, safe_characters, empty_strings));
 }
 
-string make_tag_attributes(mapping in)
+static string make_tag_attributes(mapping in)
 {
   array a=indices(in), b=values(in);
   for(int i=0; i<sizeof(a); i++)
@@ -394,13 +393,13 @@ string make_tag_attributes(mapping in)
   return a*" ";
 }
 
-string make_tag(string s,mapping in)
+static string make_tag(string s,mapping in)
 {
   string q = make_tag_attributes(in);
   return "<"+s+(strlen(q)?" "+q:"")+">";
 }
 
-string dirname( string file )
+static string dirname( string file )
 {
   mixed tmp;
   if(file[-1] == '/')
@@ -409,7 +408,7 @@ string dirname( string file )
   return tmp[0..sizeof(tmp)-2]*"/";
 }
 
-string conv_hex( int color )
+static string conv_hex( int color )
 {
   int c;
   string result;
@@ -445,7 +444,7 @@ string conv_hex( int color )
   
 }
 
-string add_pre_state( string url, multiset state )
+static string add_pre_state( string url, multiset state )
 {
   if(!url)
     error("URL needed for add_pre_state()\n");
@@ -457,7 +456,7 @@ string add_pre_state( string url, multiset state )
 }
 
 
-string add_config( string url, array config, multiset prestate )
+static string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config)) 
     return url;
@@ -466,7 +465,7 @@ string add_config( string url, array config, multiset prestate )
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
 }
 
-string msectos(int t)
+static string msectos(int t)
 {
   if(t<1000) /* One sec. */
   {
@@ -479,7 +478,7 @@ string msectos(int t)
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
 
-string extension( string f )
+static string extension( string f )
 {
   string q;
   sscanf(f, "%s?%*s", f); // Forms.
@@ -499,7 +498,7 @@ string extension( string f )
   return f;
 }
 
-int backup_extension( string f )
+static int backup_extension( string f )
 {
   if(!strlen(f)) 
     return 1;
@@ -510,7 +509,7 @@ int backup_extension( string f )
 
 /* ================================================= */
 /* Arguments: Anything Returns: Memory usage of the argument.  */
-int get_size(mixed x)
+static int get_size(mixed x)
 {
   if(mappingp(x))
     return 8 + 8 + get_size(indices(x)) + get_size(values(x));
@@ -537,7 +536,7 @@ int get_size(mixed x)
 }
 
 
-inline int ipow(int what, int how)
+static inline int ipow(int what, int how)
 {
   int r=what;
   if(!how) return 1;
@@ -549,7 +548,7 @@ inline int ipow(int what, int how)
 /* This one will remove .././ etc. in the path. Might be useful :) */
 /* ================================================= */
 
-inline string simplify_path(string file)
+static inline string simplify_path(string file)
 {
   string tmp;
   int t2,t1;
@@ -581,7 +580,7 @@ inline string simplify_path(string file)
    Returns:   string ("short_date")
    */
 
-string short_date(int timestamp)
+static string short_date(int timestamp)
 {
   int date = time(1);
   
@@ -591,7 +590,7 @@ string short_date(int timestamp)
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
-string int2roman(int m)
+static string int2roman(int m)
 {
   string res="";
   if (m>100000||m<0) return "que";
@@ -611,7 +610,7 @@ string int2roman(int m)
   return res;
 }
 
-string number2string(int n,mapping m,mixed names)
+static string number2string(int n,mapping m,mixed names)
 {
   string s;
   switch (m->type)
@@ -635,7 +634,7 @@ string number2string(int n,mapping m,mixed names)
 }
 
 
-string image_from_type( string t )
+static string image_from_type( string t )
 {
   if(t)
   {
@@ -656,7 +655,7 @@ string image_from_type( string t )
 }
 
 #define  prefix ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
-string sizetostring( int size )
+static string sizetostring( int size )
 {
   float s;
   if(size<0) 
