@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.583 2000/12/10 02:05:33 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.584 2000/12/12 13:11:30 noring Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -467,7 +467,13 @@ function async_sig_start( function f )
 {
   // call_out is not really useful here, since we probably want to run
   // the signal handler immediately, not whenever the backend thread
-  // is available. 
+  // is available.
+  //
+  // Calling directly like this may however lead to recursive mutex
+  // lock errors. The problem cannot be solved using lock(2) since the
+  // internal structures may be in an inconsistent state from the
+  // previous call, and waiting for the lock probably leads to a
+  // deadlock.
   return f;
 }
 #endif
