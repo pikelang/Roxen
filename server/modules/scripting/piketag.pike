@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.11 2000/08/09 07:25:05 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.12 2000/08/09 07:35:28 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -164,10 +164,10 @@ string read_roxen_file( string what, object id )
         cipup = 0;                                      \
       }
 
-#define CIP(X) if( X  )                                         \
+#define CIP(X) if( X )                                          \
         {                                                       \
-          flat[i]->text=flat[i]->trailing_whitespaces="";       \
           X->text += flat[i]->text[3..]+"\n";                   \
+          flat[i]->text=flat[i]->trailing_whitespaces="";       \
         }                                                       \
         else                                                    \
         {                                                       \
