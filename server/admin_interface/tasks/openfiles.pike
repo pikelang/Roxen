@@ -1,10 +1,7 @@
 /*
- * $Id: openfiles.pike,v 1.12 2002/06/13 00:28:52 nilsson Exp $
+ * $Id: openfiles.pike,v 1.13 2002/06/27 18:14:47 nilsson Exp $
  */
 inherit "wizard";
-
-// This file uses stuff from spider...
-import spider;
 
 #include <stat.h>
 
@@ -33,7 +30,7 @@ string parse( RequestID id )
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 
-     (Array.map(get_all_active_fd(),
+     (map(Stdio.get_all_active_fd(),
 	  lambda(int fd)
 	  {
 	    object f = Stdio.File(fd);
