@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.242 2001/06/21 02:45:21 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.243 2001/06/22 01:08:50 marcus Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2083,6 +2083,16 @@ class UserTag {
     name=_name;
     lookup_name = "tag\0" + name;
     if(tag) flags=RXML.FLAG_EMPTY_ELEMENT;
+  }
+
+  mixed _encode()
+  {
+    return ({ name, lookup_name, flags });
+  }
+
+  void _decode(mixed v)
+  {
+    [name, lookup_name, flags] = v;
   }
 
   class Frame {
