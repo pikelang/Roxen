@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.176 1999/01/21 23:31:21 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.177 1999/01/21 23:37:14 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1295,7 +1295,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 	if(find_internal)
 #endif
 	{
-	  TRACE_ENTER(LOCALE->calling_find_internal(), 0);
+	  TRACE_ENTER(LOCALE->calling_find_internal(), find_internal);
 	  LOCK(find_internal);
 	  fid=find_internal( rest, id );
 	  UNLOCK();
