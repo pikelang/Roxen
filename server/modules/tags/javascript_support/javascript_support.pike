@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.34 2001/05/21 09:56:51 kuntri Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.35 2001/05/21 15:41:36 wellhard Exp $";
 
 #include <module.h>
 inherit "module";
@@ -374,7 +374,7 @@ mapping filter(mapping response, RequestID id)
 
   if(!response			// 404
   || !response->type		// no response type
-  || !jssp(id)			// already filtered
+  || !jssp(id)			// nothing to filter
   || !stringp(response->data)	// got Stdio.File object
   || !glob("text/html*",	// only touch HTML files
 	   response->type))
