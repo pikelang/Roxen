@@ -4,7 +4,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.56 1998/02/05 00:59:18 js Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.57 1998/02/05 02:01:32 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -610,6 +610,7 @@ string make_path(string ... from)
 int main(mixed ... args)
 {
   string path = make_path("base_server", "etc/include", ".");
+  roxen_perror(version()+"\n");
   roxen_perror("Roxen loader version "+cvs_version+"\n");
   roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
