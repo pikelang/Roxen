@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.200 2000/06/29 19:37:54 mast Exp $
+// $Id: rxml.pike,v 1.201 2000/07/02 16:53:40 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -925,7 +925,6 @@ class TagDefine {
 	mapping defaults=([]);
 
 #ifdef OLD_RXML_COMPAT
-	// This is not part of RXML 2.0
 	if(old_rxml_compat)
 	  foreach( indices(args), string arg )
 	    if( arg[..7] == "default_" )
@@ -1991,6 +1990,7 @@ private int format_support(string t, mapping m, string c, mapping doc) {
 #ifdef manual
 constant tagdoc=([
 "&roxen;":#"<desc scope><short>This scope contains information specific to this Roxen WebServer.</short></desc>",
+"&roxen.domain;":#"<desc ent>The domain name of this virtual server.</desc>",
 "&roxen.hits;":#"<desc ent>The number of hits, i.e. requests the
  webserver has accumulated since it was last started.</desc>",
 "&roxen.hits-per-minute;":"<desc ent>The number of hits per minute, in average.</desc>",

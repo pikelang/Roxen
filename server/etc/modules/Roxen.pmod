@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.17 2000/07/01 23:16:26 grubba Exp $
+ * $Id: Roxen.pmod,v 1.18 2000/07/02 16:52:36 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -673,6 +673,13 @@ class ScopeRoxen {
        return time(1);
      case "server":
        return c->id->conf->query("MyWorldLocation");
+     case "domain":
+       string tmp=c->id->conf->query("MyWorldLocation");
+       sscanf(tmp, "%*s//%s", tmp);
+       sscanf(tmp, "%s:", tmp);
+       sscanf(tmp, "%s/", tmp);
+       return tmp;
+   
     }
     :: `[] (var, c, scope);
   }
