@@ -432,7 +432,6 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 
 array container_autoformat(string tag, mapping m, string c, RequestID id)
 {
-  werror ("compat: " + c + "\n");
   if(!m->pre) return ({1});
   old_rxml_warning(id, LOCALE(56,"pre attribute in <autoformat> tag"),
 		   LOCALE(57,"p attribute"));
@@ -800,14 +799,23 @@ array container_obox(string t, mapping m, string c, RequestID id) {
   return ({ 1, "obox", m, c });
 }
 
-/* This doesn't work, see [bug 1231]. Furthermore, the code below
-   replaces the content with "" if it doesn't contain the string
-   "<otherwise>"...
+array|string container_if(string t, mapping m, string c, RequestID id) {
+  if(id->misc->compat_if) return ({ 1 });
+  id->misc->compat_if = 1;
+  int only_once;
+  string rxml = Parser.HTML()
+    ->add_tag("otherwise", lambda(){
+			     only_once++;
+			     return only_once==1?"</if><if false='1'>":0; })
+    ->finish(c)->read();
+  if(only_once)
+    old_rxml_warning(id, "otherwise "+LOCALE(20,"tag"),
+		     "else "+LOCALE(20,"tag"));
 
-array container_if(string t, mapping m, string c, RequestID id) {
-  return ({ 1, "if", m, array_sscanf(c, "%s<otherwise>%s") * "</if><if false='1'>" });
+  rxml = parse_rxml(make_container("if", m, rxml), id);
+  m_delete(id->misc, "compat_if");
+  return rxml;
 }
-*/
 
 
 // --------------- Register tags, containers and if-callers ---------------
@@ -847,7 +855,7 @@ mapping query_tag_callers() {
 
 mapping query_container_callers() {
   mapping active=([
-    //"if":container_if,
+    "if":container_if,
   ]);
   if(enabled->tablify) active->tablify=container_tablify;
   if(enabled->graphic_text) active+=([
