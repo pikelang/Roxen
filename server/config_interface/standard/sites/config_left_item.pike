@@ -15,7 +15,7 @@ string dotdot( RequestID id, int n )
 
 #define DOTDOT( X ) dotdot( id, X )
 
-string selected_item( string q, roxen.Configuration c, RequestID id )
+string selected_item( string q, roxen.Configuration c, RequestID id, string module )
 {
   while ( id->misc->orig )
     id = id->misc->orig;
@@ -79,11 +79,13 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
 
          foreach( variables, mapping data )
          {
-           if( data->sname == id->variables->module )
-             pre += ("\n&nbsp;&nbsp;<a href=\""+qurl+data->sname+
+           if( data->sname != module )
+             pre += ("\n<img src=\"/internal-roxen-unit\" width=12 height=12>"
+		     "<a href=\""+qurl+data->sname+
                      "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
            else 
-             pre += ("\n&nbsp;&nbsp;<a href=\""+qurl+data->sname+
+             pre += ("\n<img src=\"/internal-roxen-next\" width=12 height=12>"
+		     "<a href=\""+qurl+data->sname+
                      "/\"><b>"+replace(data->name, " ", "&nbsp;")+"</b></a><br>\n");
          }
          break;
@@ -102,5 +104,8 @@ string parse( RequestID id )
   string site;
   if( !id->misc->path_info ) id->misc->path_info = "";
   sscanf( id->misc->path_info, "/%[^/]/", site );
-  return selected_item( site, roxen.find_configuration( site ), id );
+  array(string) path = ((id->misc->path_info||"")/"/")-({""});
+
+  return selected_item( site, roxen.find_configuration( site ), id,
+ 			(sizeof(path)>=3)?path[2]:"");
 }
