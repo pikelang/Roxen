@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.186 2000/08/03 19:22:03 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.187 2000/08/07 13:46:51 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -252,6 +252,11 @@ class RequestID
   //! Time of the request, standard unix time (seconds since the epoch; 1970).
   string raw_url;
   //! The nonparsed, nontouched, non-* URL requested by the client.
+  //! Hence, this path is unlike <ref>not_query</ref> and
+  //! <ref>virtfile</ref> not relative to the server URL and must be
+  //! used in conjunction with the former to generate absolute paths
+  //! within the server. Be aware that this string will contain any
+  //! URL variables present in the request as well as the file path.
   int do_not_disconnect;
   //! Typically 0, meaning the channel to the client will be disconnected upon
   //! finishing the request and the RequestID object destroyed with it.
@@ -317,8 +322,9 @@ class RequestID
   //! The protocol used for the request, e g "FTP", "HTTP/1.0", "HTTP/1.1".
   //! (Se also <ref>clientprot</ref>.)
   string clientprot;
-  //! The protocol the client wanted to use in the request. (See also
-  //! <ref>prot</ref>.)
+  //! The protocol the client wanted to use in the request. This may
+  //! not be the same as <ref>prot</ref>, if the client wanted to talk
+  //! a higher protocol version than the server supports to date.
   string method;
   //! The method used by the client in this request, e g "GET", "POST".
 
@@ -329,7 +335,7 @@ class RequestID
   //! The mountpoint of the location module that provided the requested file.
   //! Note that this is not accessable from location modules; you need to keep
   //! track of your mountpoint on your own using <ref>defvar()</ref> and
-  //! <ref>query()</ref>.
+  //! <ref>query()</ref>. This mountpoint is relative to the server URL.
   string rest_query;
   //! The scraps and leftovers of the requested URL's query part after
   //! removing all variables (that is, all key=value pairs) from it.
@@ -339,12 +345,14 @@ class RequestID
   //! The entire raw query part (all characters after the first question mark,
   //! '?') of the requested URL.
   string not_query;
-  //! The path segment of the requested URL (or, from HTTP's point of view,
-  //! everything of the requested resource that is not part of the query). In
-  //! other words, all characters from the leading slash, '/', to, but not
-  //! including, the first question mark, '?'.
+  //! The part of the path segment of the requested URL that is below
+  //! the virtual server's mountpoint. For a typical server
+  //! registering a URL with no ending path component, not_query will
+  //! contain all characters from the leading '/' to, but not
+  //! including, the first question mark ('?') of the URL.
   string extra_extension;
   string data;
+  //! The raw request body, containing non-decoded post variables et cetera.
   string leftovers;
   array (int|string) auth;
   string rawauth;
@@ -353,6 +361,7 @@ class RequestID
   string remoteaddr;
   //! The client's IP address.
   string host;
+  //! The client's hostname, if resolved.
 
   void create(object|void master_request_id);
   void send(string|object what, int|void len);
