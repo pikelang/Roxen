@@ -60,23 +60,23 @@ pureshuffle:	shuffle.o
 	purify $(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
 
 shuffle-install: shuffle
-	cp shuffle $(prefix)/roxen/server/bin
+	/bin/cp -f shuffle $(prefix)/roxen/server/bin
 
 shuffle-localinstall: shuffle
-	cp shuffle $(SRCDIR)/../server/bin
+	/bin/cp -f shuffle $(SRCDIR)/../server/bin
 
 ssl-install:	ssl
-	cp ssl $(prefix)/roxen/server/bin
+	/bin/cp -f ssl $(prefix)/roxen/server/bin
 
 ssl-localinstall:	ssl
-	cp ssl $(SRCDIR)/../server/bin
+	/bin/cp -f ssl $(SRCDIR)/../server/bin
 
 install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
-	cp roxen_hostname fcgi cgi $(prefix)/roxen/server/bin
+	/bin/cp -f roxen_hostname fcgi cgi $(prefix)/roxen/server/bin
 	@echo Done.
 
 localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-localinstall
-	cp fcgi roxen_hostname cgi $(SRCDIR)/../server/bin
+	/bin/cp -f fcgi roxen_hostname cgi $(SRCDIR)/../server/bin
 	@echo Done.
 
 .c.o:
