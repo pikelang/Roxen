@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.455 2004/04/14 16:27:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.456 2004/04/19 17:13:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2256,21 +2256,19 @@ class TagReplace
   inherit RXML.Tag;
   constant name = "replace";
 
-  RXML.Type content_type =
-    compat_level >= 4.0 ? RXML.t_text (RXML.PXml) : RXML.t_xml (RXML.PXml);
-
   class Frame
   {
     inherit RXML.Frame;
 
     array do_return (RequestID id)
     {
-      result_type = compat_level >= 4.0 ? RXML.t_text : RXML.t_xml;
+      if (content && result_type->decode_charrefs && compat_level >= 4.0)
+	content = result_type->decode_charrefs (content);
 
       if (!args->from)
 	result = content;
 
-      else
+      else {
 	switch(args->type)
 	{
 	  case "word":
@@ -2292,6 +2290,10 @@ class TagReplace
 	    result = replace(content,from,to);
 	    break;
 	}
+
+	if (result_type->entity_syntax)
+	  result = replace (result, "\0", "&#0;");
+      }
     }
   }
 }
