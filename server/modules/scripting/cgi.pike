@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.98 1998/07/27 06:50:45 peter Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.99 1998/07/31 19:30:08 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -601,7 +601,7 @@ class spawn_cgi
     }
 #else /* !constant(Process.create_process) */
     if (!(pid = fork())) {
-      werror("forked\n");
+      // werror("forked\n");
       mixed err = catch {
 	array us;
 	/* The COREDUMPSIZE should be set to zero here !!
