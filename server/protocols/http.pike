@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.100 1998/05/17 23:43:44 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.101 1998/05/17 23:51:06 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -346,7 +346,7 @@ private int parse_got(string s)
 
 	      leftovers = data[l+1..];
 	      data = data[..l];
-	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
+	      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
 	      {
 	      default: // Normal form data.
 		string v;
