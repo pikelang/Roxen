@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.256 2001/06/17 20:07:10 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.257 2001/06/24 03:51:47 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1010,8 +1010,36 @@ int main(int argc, array(string) argv)
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
 #if __VERSION__ > 7.2
-  werror("No.\n");
-  exit(1);
+    report_debug(
+#"
+
+
+
+
+------- WARNING -----------------------------------------------
+Roxen 2.2 should be run with Pike 7.2.
+
+It might still be possible to start roxen with Pike "+__VERSION__+#", 
+but the functionality and stability might be affected, and stange 
+errors might occurr. If this does happen, please do not report it 
+as a bug unless you have checked that it also occurs with Pike 7.2
+---------------------------------------------------------------
+
+
+
+
+
+");
+#endif
+
+#if __VERSION__ < 7.2
+    report_debug(
+#"
+------- FATAL -------------------------------------------------
+Roxen 2.2 should be run with Pike 7.2.
+---------------------------------------------------------------
+");
+	exit(1);
 #endif
 
   // (. Note: Optimal implementation. .)
