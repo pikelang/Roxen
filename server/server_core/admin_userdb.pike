@@ -478,7 +478,7 @@ class ConfigurationSettings
 	    TYPE_STRING, "Administration interface text color.")
       ->set_invisibility_check_callback( theme_can_change_colors );
 
-    defvar( "font", "roxen builtin", "Font",
+    defvar( "font", "luxi sans", "Font",
 	    TYPE_FONT, "Administration interface font.");
 
     defvar( "group_tasks", 1, "Group Tasks",
