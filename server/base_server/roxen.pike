@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.412 2000/02/04 02:48:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.413 2000/02/04 04:15:46 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3226,13 +3226,6 @@ string check_variable(string name, mixed value)
 {
   switch(name)
   {
-   case "ConfigurationURL":
-   case "MyWorldLocation":
-    if(strlen(value)<7 || value[-1] != '/' ||
-       !(sscanf(value,"%*s://%*s/")==2))
-      return(LOCALE->url_format());
-    break;
-
    case "abs_engage":
     if (value)
       restart_if_stuck(1);
