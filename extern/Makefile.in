@@ -1,3 +1,4 @@
+SRCDIR=@srcdir@
 VPATH=@srcdir@
 
 CC=@CC@
