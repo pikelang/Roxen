@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.121 2000/08/17 01:16:06 per Exp $
+# $Id: start,v 1.122 2000/08/29 23:28:32 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -45,6 +45,19 @@ roxen_version() {
    echo $VERSION.$BUILD
 }
 
+fullpath() {
+  (
+    IFS=:
+    for path in $PATH ; do
+      if [ -x "$path/$1" ] ; then
+	full="$path/$1"
+	break
+      fi
+    done
+    test "x$full" != "x" && echo $full
+  )
+}
+
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m`.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
 ./mkdir -p $pcdir
@@ -57,14 +70,18 @@ verbose=1
 roxendir="`pwd`"
 
 # Locate Pike binary.
-pike=`type pike 2>/dev/null|head -1|sed -e 's,.*is ,,'`
+pike=`fullpath pike`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
 if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE";
-  else dp "$PIKE is not executable."; fi
+  else
+    pikepath=`fullpath "$PIKE"`
+    if [ "x$pikepath" != "x" ]; then pike="$pikepath";
+    else dp "$PIKE is not executable - ignored."; fi
+  fi
 fi
 
 
@@ -438,19 +455,11 @@ umask 022
 if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
   # Pike default Master-program
   if [ "x$PIKE_MASTER" = "x" ]; then
-    if [ -d share/pike ]; then
-      # This is used with localinstall
-      DEFINES="$DEFINES -I$roxendir/share/pike/include"
-      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/share/pike/modules"
-    fi
     if [ -f lib/master.pike ]; then
-      DEFINES="$DEFINES -m$roxendir/lib/master.pike -I$roxendir/lib/include"
-      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/modules:$roxendir/share/modules"
+      DEFINES="$DEFINES -m$roxendir/lib/master.pike"
     elif [ -f lib/pike/master.pike ]; then
-      DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike -I$roxendir/lib/pike/include"
-      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/pike/modules:$roxendir/share/pike/modules"
+      DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike"
     fi
-    export PIKE_MODULE_PATH
   else
     # This is useful when using several different Pikes.
     # Specify include and module paths with
@@ -561,15 +570,25 @@ start_roxen() {
         dp "Using '$pike'"|sed -e "s!`pwd`!.!g"
       fi
     fi
-    $pike $args $@
+    $pike $args "$@"
   else
-    dp "Executing gdb $pike $args $@"
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
     echo >>.gdbinit handle SIGLWP nostop noprint pass
-    echo >>.gdbinit run $args $@
-    gdb $pike
+    firstline=`head -1 "$pike" 2>/dev/null`
+    if expr "x$firstline" : 'x#! */.*' >/dev/null; then
+      # Looks like a script. gdb won't grok it, so we try passing
+      # --gdb to it instead (which works in the special case of the
+      # bin/pike script that's built by the top level Makefile in the
+      # Pike source tree).
+      dp "Executing $pike --gdb $args $@"
+      $pike --gdb $args "$@"
+    else
+      dp "Executing gdb $pike $args $@"
+      echo >>.gdbinit run $args $@
+      gdb $pike
+    fi
     rm .gdbinit
   fi
 }
