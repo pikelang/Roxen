@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.326 2001/10/08 12:32:56 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.327 2001/10/22 12:31:11 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7512,7 +7512,7 @@ just got zapped?
 </attr>
 
 <attr name='from-scope' value='name'>
- Create a mapping out of a scope and give it as indata to the emit.
+ <p>Create a mapping out of a scope and give it as indata to the emit.</p>
 </attr>
 ",
 
