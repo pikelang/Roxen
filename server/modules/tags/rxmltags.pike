@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.262 2001/07/20 13:06:19 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.263 2001/07/20 13:19:29 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5280,7 +5280,7 @@ using the pre tag.
  The contents of the container will be put into the contents of the produced container.
 </p></desc>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  <p>The name of the tag that should be produced. This attribute is required for tags,
  containers and processing instructions, i.e. for the types 'tag', 'container' and 'pi'.</p>
 <ex type='shor'>
@@ -5289,12 +5289,12 @@ using the pre tag.
 </ex>
 </attr>
 
-<attr name=noxml>
+<attr name='noxml'>
  <p>Tags should not be terminated with a trailing slash. Only makes a difference for
  the type 'tag'.</p>
 </attr>
 
-<attr name=type value=tag|container|pi|comment|cdata>
+<attr name='type' value='tag|container|pi|comment|cdata'>
  <p>What kind of tag should be produced. The argument 'Pi' will produce a processing instruction tag.</p>
 <ex type='svert'>
 <maketag type='pi' name='PICS'>l gen true r (n 0 s 0 v 0 l 2)</maketag>
@@ -5326,8 +5326,9 @@ using the pre tag.
 </maketag>
 </eval>
 </ex>
-   <attr name=name value=string required=required><p>
-   The name of the attribute.</p>
+
+   <attr name='name' value='string' required='required'>
+   <p>The name of the attribute.</p>
    </attr>"
  ])
    }),
@@ -5888,8 +5889,8 @@ load.</p>
  This plugin evaluates a string as a pike expressions.</short>
  Available arithmetic operators are +, -, *, / and % (modulo).
  Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
- &gt;=. Available bitwise operators are &, | and ^, representing
- AND, OR and XOR. Available logical operators are && and ||,
+ &gt;=. Available bitwise operators are &amp;, | and ^, representing
+ AND, OR and XOR. Available logical operators are &amp;&amp; and ||,
  working as the pike AND and OR.</p>
 
  <p>Numbers can be represented as decimal integers when numbers
@@ -6055,15 +6056,15 @@ load.</p>
 <attr name='preparse'>
  Parse and execute any RXML inside the comment tag. This can be used
  to do stuff without producing any output in the response. This is a
- compatibility argument; the recommended way is to use <ref
- type='tag'><tag>nooutput</tag> instead.
+ compatibility argument; the recommended way is to use
+ <tag>nooutput</tag> instead.
 </attr>",
 
 //----------------------------------------------------------------------
 
 "?comment":#"<desc pi='pi'><p><short>
  Processing instruction tag for comments.</short> This tag is similar
- to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
+ to the RXML <tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.</p>
 
 <ex type='box'>
@@ -6086,9 +6087,9 @@ load.</p>
 //----------------------------------------------------------------------
 
 "define":({ #"<desc cont='cont'><p><short>
-
- Defines variables, tags, containers and if-callers.</short>
-</p></desc>
+ Defines variables, tags, containers and if-callers.</short></p>
+<p>The values of the attributes given to the defined tag are
+ available in the scope created within the define tag.</p></desc>
 
 <attr name='variable' value='name'><p>
  Sets the value of the variable to the contents of the container.</p>
@@ -6117,12 +6118,8 @@ load.</p>
 
 <attr name='preparse' value='preparse'><p>
  Sends the definition through the RXML parser when defining. (Without
- this attribute, the definition is only RXML parsed when it is invoked.)
-</attr>
-
- <p>The values of the attributes given to the defined tag are
- available in the scope created within the define tag.</p>
-",
+ this attribute, the definition is only RXML parsed when it is invoked.)</p>
+</attr>",
 
 	    ([
 "attrib":#"<desc cont='cont'><p>
@@ -6474,8 +6471,7 @@ load.</p>
 "if#exists":#"<desc plugin><short>
  Returns true if the file path exists.</short> If path does not begin
  with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag><ref
- type='tag'>if</ref></tag>-statement. Exists is a <i>Utils</i>
+ containing the page with the <tag>if</tag>-statement. Exists is a <i>Utils</i>
  plugin.
 </desc>
 <attr name='exists' value='path' required>
