@@ -1,0 +1,2 @@
+{redirect [to=...] [text=...]}:
+Adds a HTTP redirect header and return-code.
