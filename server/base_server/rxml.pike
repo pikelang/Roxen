@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.58 2000/01/10 18:47:50 nilsson Exp $
+ * $Id: rxml.pike,v 1.59 2000/01/10 19:27:47 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -7,6 +7,7 @@
  */
 
 inherit "roxenlib";
+inherit "rxmlhelp";
 #include <request_trace.h>
 
 #define old_rxml_compat 1
@@ -18,14 +19,6 @@ array (RoxenModule) parse_modules = ({  });
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
-}
-
-string parse_doc(string doc, string tag)
-{
-  return replace(doc, ({"{","}","<tag>","<roxen-languages>"}),
-		 ({"&lt;", "&gt;", tag, 
-		   String.implode_nicely(sort(indices(roxen->languages)), 
-					 "and")}));
 }
 
 // A note on tag overriding: It's possible for old style tags to
@@ -120,13 +113,13 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
 {
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
-  //  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-  //  {
-  //    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
-  //    string h = handle_help("modules/tags/doc/"+tag, tag, args);
-  //    TRACE_LEAVE("");
-  //    return h;
-  //  }
+  if(args->help)
+  {
+    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
+    string h = find_tag_doc(tag);
+    TRACE_LEAVE("");
+    return h;
+  }
   if(stringp(rf)) return rf;
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 #ifdef MODULE_LEVEL_SECURITY
@@ -154,13 +147,13 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
 {
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
-  //  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-  //  {
-  //    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
-  //    string h = handle_help("modules/tags/doc/"+tag, tag, args)+contents;
-  //    TRACE_LEAVE("");
-  //    return h;
-  //  }
+  if(args->help)
+  {
+    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
+    string h = find_tag_doc(tag);
+    TRACE_LEAVE("");
+    return h;
+  }
   if(stringp(rf)) return rf;
   TRACE_ENTER("container &lt;"+tag+"&gt", rf);
   if(args->preparse) contents = parse_rxml(contents, id);
@@ -406,37 +399,22 @@ string report_rxml_error (mixed err)
 
 string tag_help(string t, mapping args, RequestID id)
 {
-  array tags = sort(Array.filter(get_dir("modules/tags/doc/"),
-			     lambda(string tag) {
-			       if(tag[0] != '#' &&
-				  tag[-1] != '~' &&
-				  tag[0] != '.' &&
-				  tag != "CVS")
-				 return 1;
-			     }));
-  string help_for = args["for"] || id->variables->_r_t_h;
+  array tags = ({}); //FIXME: Return list of all known tags.
+  string help_for = args->for || id->variables->_r_t_h;
 
   if(!help_for)
   {
     string out = "<h3>Roxen Interactive RXML Help</h3>"
-      "<b>Here is a list of all documented tags. Click on the name to "
-      "receive more detailed information.</b><p>";
+      "<b>Here is a list of all defined tags. Click on the name to "
+      "receive more detailed information.</b><p>\n";
     array tag_links = ({});
     foreach(tags, string tag)
-    {
-      tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>", tag, tag) });
-    }
-    return out + String.implode_nicely(tag_links);
-  } else {
-    help_for = replace(help_for, ({"/", "\\"}), ({"",""}));
+      tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>\n", tag, tag) });
 
-    //    if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
-    //      string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
-    //      return h;
-    //    } else {
-    return "<h3>No help available for "+help_for+".</h3>";
-    //    }
+    return out + String.implode_nicely(tag_links)+"</p>";
   }
+
+  return find_tag_doc(help_for);
 }
 
 
