@@ -756,7 +756,7 @@ int main(int argc, string *argv)
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"
 }),
 		 "fontsize":42,
-		 "labels":({"xstor", "ystor", "xenhet super maga ultra futur mega plus", "yenhet super maga ultra futur mega plus"}),
+		 "labels":({"xstor", "ystor", "xenhet", "yenhet super maga ultra futur mega plus"}),
 		 "legendfontsize":25, 
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
 		 "labelsize":42,
@@ -768,10 +768,10 @@ int main(int argc, string *argv)
 		 "bw":3,
   ]);
 
-    diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  /*    diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
   diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
   diagram_data["image"]->ysize()-10);
-
+  */
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");

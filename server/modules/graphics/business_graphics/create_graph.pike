@@ -710,7 +710,8 @@ mapping(string:mixed) init_bg(mapping diagram_data)
 	diagram_data["ysize"]=diagram_data["image"]->ysize();
       }
     else
-      if (diagram_data["image"])
+      if (diagram_data["image"]&&(diagram_data["image"]->xsize()>4)&&
+	  (diagram_data["image"]->ysize()>4))
 	diagram_data["image"]=tileimage(diagram_data["image"], 
 					diagram_data["xsize"], 
 					diagram_data["ysize"]);
