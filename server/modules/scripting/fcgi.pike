@@ -3,16 +3,16 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.17 1998/08/10 21:37:50 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.18 1998/11/29 23:57:57 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
-void create()
+void create(object c)
 {
-  ::create();
+  ::create(c);
 
   set("mountpoint", "/fcgi-bin/");
 

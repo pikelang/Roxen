@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.5 1998/11/14 20:35:26 grubba Exp $";
+string cvs_version = "$Id: fpscript.pike,v 1.6 1998/11/29 23:57:23 grubba Exp $";
 
 // #define FPSCRIPT_DEBUG
 
@@ -25,9 +25,9 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 }
 
 
-void create()
+void create(object c)
 {
-  ::create();
+  ::create(c);
 
   defvar("FrontPagePort", 0, "Frontpage: Server Port", TYPE_INT,
 	 "If this variable is set (ie not zero) ");

@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.17 1998/11/18 04:54:21 per Exp $";
+string cvs_version = "$Id: language.pike,v 1.18 1998/11/29 23:54:26 grubba Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -141,7 +141,7 @@ int borderwidth;
 mixed fnord(mixed what) { return what; }
 
 
-void start()
+void start(int n, object c)
 {
   string tmp;
   array (string) tmpl;
@@ -164,7 +164,7 @@ void start()
   textonly = query( "textonly" );
   borderwidth = query( "borderwidth" );
   
-  ::start();
+  ::start(n, c);
 }
 
 multiset (string) find_files( string url, object id )
