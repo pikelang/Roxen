@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.80 2002/04/11 12:24:48 anders Exp $
+ * $Id: ftp.pike,v 2.81 2003/01/08 23:09:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2912,7 +2912,7 @@ class FTPSession
     }
     array(string) segments = args/delimiter;
 
-    if (sizeof(args) != 4) {
+    if (sizeof(args) != 5) {
       send(501, ({ "I don't understand your parameters." }));
       return;
     }
