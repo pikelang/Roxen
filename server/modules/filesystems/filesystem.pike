@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.13 1997/04/08 23:46:09 marcus Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.14 1997/05/25 11:00:53 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -247,6 +247,9 @@ mixed find_file( string f, object id )
     default:
       if(f[ -1 ] == '/') /* Trying to access file with '/' appended */
       {
+	/* Do not try redirect on top level directory */
+	if(sizeof(id->not_query) < 2)
+	  return 0;
 	redirects++;
 	return http_redirect(id->not_query[..sizeof(id->not_query)-2], id);
       }
