@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: whois++.pike,v 1.5 1997/05/24 13:51:37 grubba Exp $";
+string cvs_version = "$Id: whois++.pike,v 1.6 1997/10/03 17:44:27 grubba Exp $";
 // Experimental whois++ *client* module
 // Written by Pontus Hagland <law@infovav.se>
 #include <module.h>
@@ -63,7 +63,7 @@ void fixa_data(object pipe,string s)
 	  case "SERVICES":
 	    pipe->write("<tr></tr><tr></tr>\n");
 	    oldrow=0;
-	    map(v[1..10000],
+	    map(v[1..],
 		lambda(string s,object pipe)
 		{
 		  string t=0,u;
