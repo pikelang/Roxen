@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.332 1999/10/08 18:45:07 grubba Exp $
+ * $Id: roxen.pike,v 1.333 1999/10/09 21:30:33 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.332 1999/10/08 18:45:07 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.333 1999/10/09 21:30:33 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -827,6 +827,14 @@ class Protocol
 
   void create( int pn, string i )
   {
+    if (query_option("do_not_bind")) {
+      // This is useful if you run two Roxen processes,
+      // that both handle an URL which has two IPs, and
+      // use DNS round-robin.
+      report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
+			     name, ip, port));
+      destruct();
+    }
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
     port = pn;
@@ -835,17 +843,17 @@ class Protocol
     ::create();
 
     if(!bind( port, got_connection, ip )) {
-      werror(sprintf("Failed to bind %s://%s:%d/\n", name, ip, port));
+      report_error(sprintf("Failed to bind %s://%s:%d/\n", name, ip, port));
       destruct();
     }
   }
 }
 
-#if constant(SSL.sslfile)
-
 class SSLProtocol
 {
   inherit Protocol;
+
+#if constant(SSL.sslfile)
 
   // SSL context
   object ctx;
@@ -897,7 +905,7 @@ class SSLProtocol
       destruct(privs);
 
     if (!f) {
-      werror("ssl3: Reading cert-file failed!\n");
+      report_error("ssl3: Reading cert-file failed!\n");
       destruct();
       return;
     }
@@ -909,7 +917,7 @@ class SSLProtocol
     string cert;
   
     if (!part || !(cert = part->decoded_body())) {
-      werror("ssl3: No certificate found.\n");
+      report_error("ssl3: No certificate found.\n");
       destruct();
       return;
     }
@@ -917,7 +925,7 @@ class SSLProtocol
     if (query_option("ssl_key_file"))
     {
       if (!f2) {
-	werror("ssl3: Reading key-file failed!\n");
+	report_error("ssl3: Reading key-file failed!\n");
 	destruct();
 	return;
       }
@@ -935,14 +943,14 @@ class SSLProtocol
       string key;
 
       if (!(key = part->decoded_body())) {
-	werror("ssl3: Private rsa key not valid (PEM).\n");
+	report_error("ssl3: Private rsa key not valid (PEM).\n");
 	destruct();
 	return;
       }
       
       object rsa = Standards.PKCS.RSA.parse_private_key(key);
       if (!rsa) {
-	werror("ssl3: Private rsa key not valid (DER).\n");
+	report_error("ssl3: Private rsa key not valid (DER).\n");
 	destruct();
 	return;
       }
@@ -950,7 +958,7 @@ class SSLProtocol
       ctx->rsa = rsa;
     
 #ifdef SSL3_DEBUG
-      werror(sprintf("ssl3: RSA key size: %d bits\n", rsa->rsa_size()));
+      report_debug(sprintf("ssl3: RSA key size: %d bits\n", rsa->rsa_size()));
 #endif
     
       if (rsa->rsa_size() > 512)
@@ -964,12 +972,12 @@ class SSLProtocol
 
       object tbs = Tools.X509.decode_certificate (cert);
       if (!tbs) {
-	werror("ssl3: Certificate not valid (DER).\n");
+	report_error("ssl3: Certificate not valid (DER).\n");
 	destruct();
 	return;
       }
       if (!tbs->public_key->rsa->public_key_equal (rsa)) {
-	werror("ssl3: Certificate and private key do not match.\n");
+	report_error("ssl3: Certificate and private key do not match.\n");
 	destruct();
 	return;
       }
@@ -979,20 +987,20 @@ class SSLProtocol
       string key;
 
       if (!(key = part->decoded_body())) {
-	werror("ssl3: Private dsa key not valid (PEM).\n");
+	report_error("ssl3: Private dsa key not valid (PEM).\n");
 	destruct();
 	return;
       }
       
       object dsa = Standards.PKCS.DSA.parse_private_key(key);
       if (!dsa) {
-	werror("ssl3: Private dsa key not valid (DER).\n");
+	report_error("ssl3: Private dsa key not valid (DER).\n");
 	destruct();
 	return;
       }
 
 #ifdef SSL3_DEBUG
-      werror(sprintf("ssl3: Using DSA key.\n"));
+      report_debug(sprintf("ssl3: Using DSA key.\n"));
 #endif
 	
       dsa->use_random(r);
@@ -1005,7 +1013,7 @@ class SSLProtocol
       // FIXME: Add cert <-> private key check.
     }
     else {
-      werror("ssl3: No private key found.\n");
+      report_error("ssl3: No private key found.\n");
       destruct();
       return;
     }
@@ -1019,9 +1027,13 @@ class SSLProtocol
 
     ::create(pn, i);
   }
-}
-
+#else /* !constant(SSL.sslfile) */
+  void create(int pn, string i) {
+    report_error("No SSL support\n");
+    destruct();
+  }
 #endif /* constant(SSL.sslfile) */
+}
 
 class HTTP
 {
@@ -1032,8 +1044,6 @@ class HTTP
   constant default_port = 80;
 }
 
-#if constant(SSL.sslfile)
-
 class HTTPS
 {
   inherit SSLProtocol;
@@ -1043,6 +1053,7 @@ class HTTPS
   constant requesthandlerfile = "protocols/http.pike";
   constant default_port = 443;
 
+#if constant(SSL.sslfile)
   class http_fallback {
     object my_fd;
 
@@ -1108,9 +1119,8 @@ class HTTPS
     }
     return q;
   }
-}
-
 #endif /* constant(SSL.sslfile) */
+}
 
 class FTP
 {
@@ -1126,8 +1136,6 @@ class FTP
   int ftp_users_now;
 }
 
-#if constant(SSL.sslfile)
-
 class FTPS
 {
   inherit SSLProtocol;
@@ -1141,8 +1149,6 @@ class FTPS
   int ftp_users;
   int ftp_users_now;
 }
-
-#endif /* constant(SSL.sslfile) */
 
 class GOPHER
 {
@@ -1166,10 +1172,8 @@ mapping protocols = ([
   "http":HTTP,
   "ftp":FTP,
 
-#if constant(SSL.sslfile)
   "https":HTTPS,
   "ftps":FTPS,
-#endif /* constant(SSL.sslfile) */
 
   "gopher":GOPHER,
   "tetris":TETRIS,
@@ -1179,13 +1183,13 @@ mapping(string:mapping) open_ports = ([ ]);
 mapping(string:object) urls = ([]);
 array sorted_urls = ({});
 
-string find_ip_for( string what )
+array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
     return 0;
 
   if( !strlen( replace( what, "01234567890."/"", (" "*11)/"" ) ) )
-    return what;
+    return ({ what });
 
   array res = gethostbyname( what );
   if( !res || !sizeof( res[1] ) )
@@ -1193,7 +1197,10 @@ string find_ip_for( string what )
                   ", that host is unknown. "
                   "Substituting with ANY\n");
   else
-    return res[1][0];
+    return Array.uniq(res[1][0] + Array.filter(res[2],
+				    lambda(string ip) {
+      return !strlen( replace( what, "01234567890."/"", (" "*11)/"" ) );
+    }));
 }
 
 void unregister_url( string url ) 
@@ -1220,10 +1227,6 @@ int register_url( string url, object conf )
   int port;
   string path;
 
-  Protocol prot;
-
-  string required_host;
-
   url = replace( url, "/ANY", "/*" );
   url = replace( url, "/any", "/*" );
 
@@ -1248,6 +1251,8 @@ int register_url( string url, object conf )
     return 1;
   }
 
+  Protocol prot;
+
   if( !( prot = protocols[ protocol ] ) )
   {
     report_error( "Cannot register URL "+url+
@@ -1259,8 +1264,14 @@ int register_url( string url, object conf )
   if( !port )
     port = prot->default_port;
 
+  array(string) required_hosts;
+
   if( !prot->supports_ipless )
-    required_host = find_ip_for( host );
+    required_hosts = find_ips_for( host );
+
+  if (!required_hosts) {
+    required_hosts = ({ 0 });	// ANY
+  }
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
@@ -1268,27 +1279,40 @@ int register_url( string url, object conf )
     
   urls[ url ] = ([ "conf":conf, "path":path ]);
   sorted_urls += ({ url });
-  if( m[ required_host ] && m[ required_host ][ port ] )
-  {
+
+  int failures;
+
+  foreach(required_hosts, string required_host) {
+    if( m[ required_host ] && m[ required_host ][ port ] )
+    {
+      m[ required_host ][ port ]->ref(url, urls[url]);
+      urls[ url ]->port = prot;
+      continue;    /* No need to open a new port */
+    }
+
+    if( !m[ required_host ] )
+      m[ required_host ] = ([ ]);
+
+    m[ required_host ][ port ] = prot( port, required_host );
+    if( !( m[ required_host ][ port ] ) )
+    {
+      m_delete( m[ required_host ], port );
+      failures++;
+      if (required_host) {
+	report_warning("Binding the port on IP " + required_host +
+		       " failed for URL " + url + "!\n");
+      }
+      continue;
+    }
+    urls[ url ]->port = m[ required_host ][ port ];
     m[ required_host ][ port ]->ref(url, urls[url]);
-    urls[ url ]->port = prot;
-    sort_urls();
-    return 1;    /* No need to open a new port */
   }
-
-  if( !m[ required_host ] )
-    m[ required_host ] = ([ ]);
-
-  m[ required_host ][ port ] = prot( port, required_host );
-  if( !( m[ required_host ][ port ] ) )
-  {
+  if (failures == sizeof(required_hosts)) {
     m_delete( urls, url );
-    m_delete( m[ required_host ], port );
     report_error( "Cannot register URL "+url+", cannot bind the port!\n" );
+    sort_urls();
     return 0;
   }
-  urls[ url ]->port = m[ required_host ][ port ];
-  m[ required_host ][ port ]->ref(url, urls[url]);
   sort_urls();
   return 1;
 }
