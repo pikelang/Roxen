@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.2 2002/03/27 15:36:20 js Exp $
+ * $Id: debug_summary.pike,v 1.3 2002/04/17 13:25:13 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -131,11 +131,9 @@ string make_configuration_summary(string configuration)
   return res;
 }
 
-mixed parse( RequestID id )
+string make_summary()
 {
-  string res=make_headline("Debug summary")+"\n";
-
-  res += make_environment_summary()+"\n";
+  string res = make_environment_summary()+"\n";
 
 //    res +=make_headline("CVS file versions");
 //    res +=indent(get_cvs_versions(getcwd()), 1);
@@ -145,6 +143,28 @@ mixed parse( RequestID id )
     res+=make_headline("Configuration: "+configuration)+"\n";
     res+=indent(make_configuration_summary(configuration),1);
   }
+  return res;
+}  
 
-  return "<pre>"+Roxen.html_encode_string(res)+"</pre>";
+mixed parse( RequestID id )
+{
+  string res;
+
+  if (id->real_variables->download) {
+    res = make_headline("Debug summary")+"\n";
+    res += make_summary();
+    mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
+    ret["extra_heads"] = ([]);
+    Roxen.add_http_header(ret["extra_heads"], "Content-Disposition",
+			  "attachment; filename=debug-summary.txt");
+    return ret;
+  }
+  
+  res = "<h1>Debug summary</h1>\n";
+  res += "<link-gbutton href='debug_summary.pike?download=yes'>Download"
+    "</link-gbutton>";
+
+  res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>";
+
+  return res;
 }
