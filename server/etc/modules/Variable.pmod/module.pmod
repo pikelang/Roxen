@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.76 2002/04/19 13:40:17 anders Exp $
+// $Id: module.pmod,v 1.77 2002/05/13 16:17:49 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -9,18 +9,20 @@
 #define LOCALE(X,Y)    \
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
-// Increased for each variable, used to index the mappings below.
+// Increased for each variable, used to index the mappings below. The unique
+// prefix is needed to avoid clobbering variables after server restart.
 static int unique_vid;
+static string unique_prefix = (string) getpid();
 
 // The theory is that most variables (or at least a sizable percentage
 // of all variables) does not have these members. Thus this saves
 // quite a respectable amount of memory, the cost is speed. But
 // hopefully not all that great a percentage of speed.
-static mapping(int:mixed)  changed_values = ([]);
-static mapping(int:function(object:void)) changed_callbacks = ([]);
-static mapping(int:int)    all_flags      = ([]);
-static mapping(int:string) all_warnings   = ([]);
-static mapping(int:function(RequestID,object:int))
+static mapping(string:mixed)  changed_values = ([]);
+static mapping(string:function(object:void)) changed_callbacks = ([]);
+static mapping(string:int)    all_flags      = ([]);
+static mapping(string:string) all_warnings   = ([]);
+static mapping(string:function(RequestID,object:int))
                            invisibility_callbacks = set_weak_flag( ([]), 1 );
 
 mapping(string:Variable) all_variables = set_weak_flag( ([]), 1 );
@@ -192,11 +194,11 @@ class Variable
   constant type = "Basic";
   //! Mostly used for debug (sprintf( "%O", variable_obj ) uses it)
 
-  int _id = unique_vid++;
+  string _id = unique_prefix + "_" + (string) unique_vid++;
   // used for indexing the mappings.
 
   static mixed _initial; // default value
-  static string _path = sprintf("v%x",_id);   // used for forms
+  static string _path = sprintf("v%s",_id);   // used for forms
   static LocaleString  __name, __doc;
 
   string diff( int render )
