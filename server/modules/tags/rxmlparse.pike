@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.37 2000/01/22 00:10:04 mast Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.38 2000/01/25 15:23:51 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -78,13 +78,14 @@ function file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  array stat;
-  if(id->misc->defines)
-    stat=_stat;
-  else {
+  if(!id->misc->defines)
     id->misc->defines=([" _ok":1]);
+
+  array stat;
+  if(_stat)
+    stat=_stat;
+  else
     stat=_stat=id->misc->stat || file->stat();
-  }
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
