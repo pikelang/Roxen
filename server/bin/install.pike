@@ -1,10 +1,21 @@
 #!bin/pike -m lib/pike/master.pike
-string cvs_version = "$Id: install.pike,v 1.10 1997/04/05 01:25:50 per Exp $";
+string cvs_version = "$Id: install.pike,v 1.11 1997/05/07 05:17:31 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
 
 string version = "1.0";
+
+object stderr = files.file("stderr");
+
+void roxen_perror(string format,mixed ... args)
+{
+  string s;
+  if(sizeof(args)) format=sprintf(format,@args);
+  if (format=="") return;
+  stderr->write(format);
+}
+
 
 void report_error(string s)
 {
@@ -20,8 +31,9 @@ object|void open(string filename, string mode)
 {
   object o;
   o=File();
-  if(o->open(filename, mode))
+  if(o->open(filename, mode)) {
     return o;
+  }
   destruct(o);
 }
 
@@ -247,6 +259,9 @@ void main(int argc, string *argv)
   mixed tmp;
   int port, configuration_dir_changed, logdir_changed;
   add_constant("roxen", this_object());
+  add_constant("perror", roxen_perror);
+  add_constant("roxen_perror", roxen_perror);
+
 
   if(find_arg(argv, "?", "help"))
   {
@@ -344,14 +359,15 @@ void main(int argc, string *argv)
   write(sprintf("\nUsing %s, port %d...\n\n", host, port));
   
   setglobvar("_v",  CONFIGURATION_FILE_LEVEL);
-  setglobvar("ConfigPorts", ({ ({ port, "http", "ANY", "" }) }));
-  setglobvar("ConfigurationURL",  "http://"+host+":"+port+"/");
+  setglobvar("ConfigPorts", ({ ({ port, "ssl3", "ANY", "cert-file testca.pem" }) }));
+  setglobvar("ConfigurationURL",  "https://"+host+":"+port+"/");
   setglobvar("logdirprefix", log_dir);
-  write(popen("./start --no-chown "
+
+  write(popen("./start "
 	      +(configuration_dir_changed?"--config-dir="+configuration_dir
 		+" ":"")
 	      +(logdir_changed?"--log-dir="+log_dir+" ":"")
-	      +argv[1..1000] * " "));
+	      +argv[1..] * " "));
   
   if(configuration_dir_changed || logdir_changed)
     write("\nAs you use non-standard directories for the configuration \n"
@@ -372,13 +388,12 @@ void main(int argc, string *argv)
     client = tmp;
   if(client)
   {
-    sleep(5);
-    write("Running "+ client +" "+ "http://"+host+":"+port+"/\n");
+    write("Waiting for SSL3 to initialize...\n");
+    sleep(60);
+    write("Running "+ client +" "+ "https://"+host+":"+port+"/\n");
     run((client/" ")[0], @(client/" ")[1..100000], 
-	"http://"+host+":"+port+"/");
+	"https://"+host+":"+port+"/");
   } else
-    write("\nTune your favourite browser to http://"+host+":"+port+"/\n");
+    write("\nTune your favourite browser to https://"+host+":"+port+"/\n");
 }
-
-
 
