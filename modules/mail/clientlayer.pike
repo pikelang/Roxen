@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.10 1998/09/10 14:40:02 per Exp $
+ * $Id: clientlayer.pike,v 1.11 1998/09/10 14:46:38 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.10 1998/09/10 14:40:02 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.11 1998/09/10 14:46:38 per Exp $";
 constant thread_safe=1;
 
 
@@ -207,6 +207,7 @@ object get_any_obj(string|int id, program type, mixed ... moreargs)
 
 class Common
 {
+  string|int id;
   static int serial;
   final int get_serial()
   {
@@ -227,7 +228,7 @@ class Common
       return decode_binary( a[0]->data );
   }
 
-  final static mixed misc_set(string table, string var, mixed what)
+  final static mixed misc_set(string table, string name, mixed to)
   {
     modify();
     name = sql_quote( name );
@@ -243,7 +244,6 @@ class Mail
   inherit Common;
   inherit MIME.Message;
   string message_id;
-  string id;
   object user;
   object mailbox;
 
@@ -258,7 +258,7 @@ class Mail
 
   mixed set(string name, mixed to)
   {
-    return misc_set("mail_misc", var, to);
+    return misc_set("mail_misc", name, to);
   }
 
   Stdio.File body_fd()
@@ -313,7 +313,6 @@ class Mailbox
   inherit Common;
   static array _mails = ({ });
 
-  int id;
   object user;
   string name;
 
@@ -463,7 +462,6 @@ class User
 {
   inherit Common;
   array _mboxes;
-  int id;
 
   local static Mailbox create_mailbox( string name )
   {
@@ -479,7 +477,7 @@ class User
 
   mixed set(string name, mixed to)
   {
-    return misc_set("user_misc", var, to);
+    return misc_set("user_misc", name, to);
   }
 
   array(Mailbox) mailboxes(int|void force)
@@ -547,7 +545,7 @@ int find_user( string username_at_host )
 		   username_at_host);
   if(!sizeof(a)) return 0;
   if(sizeof(a)>1) error("Ambigious user list.\n");
-  return (int)o[0]->user_id;
+  return (int)a[0]->user_id;
 }
 
 int authenticate_user(string username_at_host, string passwordcleartext)
@@ -633,8 +631,8 @@ int delete_mail(string mail_id)
 
 int create_user_mailbox(int user, string mailbox)
 {
-  sql_query("insert into mailboxes values(NULL,'"+user+"','"
-	    + sql_quote(mailbox) + ")", 1);
+  squery("insert into mailboxes values(NULL,'%s','%s')",
+	 user,sql_quote(mailbox));
   return (int)get_sql()->master_sql->insert_id();
 }
 

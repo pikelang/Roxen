@@ -4,7 +4,7 @@
 inherit "module";
 inherit "roxenlib";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.7 1998/09/10 14:39:39 per Exp $";
+"$Id: mailtags.pike,v 1.8 1998/09/10 14:46:40 per Exp $";
 
 constant thread_safe = 1;
 
@@ -30,7 +30,6 @@ inherit ClientInit;
 
 /* Globals ---------------------------------------------------------*/
 
-static ClientLayer clientlayer;
 static MIME.Message mymesg = MIME.Message();
 static roxen.Configuration conf;
 static int debug, secure;

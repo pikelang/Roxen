@@ -36,7 +36,6 @@ class Mailbox
   Mail create_mail_from_fd( Stdio.File from );
   Mail create_mail_from_data( string from );
   Mail create_mail( MIME.Message from );
-
 }
 
 class User
@@ -50,15 +49,8 @@ class User
   Mailbox get_drafts();
 }
 
-
-// clientlayer->find_user(user)->get_incoming()->create_mail_from_fd( fd );
-
 class ClientLayer
 {
-  program(Mail)    Mail;
-  program(Mailbox) Mailbox;
-  program(User)    User;
-
   User get_user( string username, string password );
   User get_user_from_adress( string adress );
 
@@ -86,7 +78,7 @@ class ClientLayer
 
 class ClientInit
 {
-  Clientlayer clientlayer;
+  static local ClientLayer clientlayer;
 
   int init_clientlayer( roxen.Configuration c )
   {
