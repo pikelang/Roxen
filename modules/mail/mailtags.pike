@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.20 1998/09/29 03:05:33 per Exp $";
+"$Id: mailtags.pike,v 1.21 1998/10/01 04:11:14 per Exp $";
 
 constant thread_safe = 1;
 
@@ -133,7 +133,6 @@ void start(int q, roxen.Configuration c)
   else
     secure=0;
 }
-
 mapping find_file(string f, object id)
 {
   array path = f/"/";
@@ -141,9 +140,9 @@ mapping find_file(string f, object id)
   {
    case "scroll":
      return ([ "type":"image/gif", 
-	       "data":Image.GIF.encode(Image.image(1,50, 192,192,192)->
-				       paste(Image.image(1,(int)path[1]),
-					     0,(int)path[2]))
+	       "data":Image.GIF.encode(bevel1(Image.image(15,250,192,182,162)->
+		       paste(bevel(Image.image(11,max((int)path[1]*5,10))),
+				     2,((int)path[2]*5))))
      ]); 
 
    case "scroll_up":
@@ -158,18 +157,69 @@ mapping find_file(string f, object id)
 
 
 
+
+object bevel1(object from)
+{
+  from->line(0,0,from->xsize()-1, 0, 0, 0, 0);
+  from->line(1,1,from->xsize()-2, 1, 100, 90, 80);
+
+  from->line(0,0,0,from->ysize()-1, 0, 0, 0);
+  from->line(1,1,1,from->ysize()-2, 100, 90, 80);
+
+  from->line(from->xsize()-1,from->ysize()-1,from->xsize()-1,0, 250, 240, 220);
+  from->line(from->xsize()-1,from->ysize()-1, 0,from->ysize()-1, 
+	     250, 240, 220);
+  return from;
+}
+
+object bevel(object from)
+{
+  from->line(0,0,from->xsize()-1, 0, 250, 240, 220);
+  from->line(1,1,from->xsize()-2, 1, 200, 180, 160);
+  from->line(0,0,0,from->ysize()-1, 250, 240, 220);
+  from->line(1,1,1,from->ysize()-1, 250, 240, 160);
+  from->box(2,2,from->xsize()-3, from->ysize()-2, 192, 182, 100);
+  return from;
+}
+
 static string get_date( string from )
 {
   mapping h = extended_headers(([ "date":from ]));
   return h->reldate-" ago";
 }
 
+static array move(array in, int dx, int dy)
+{
+  array out = copy_value(in);
+  for(int i=0;i<sizeof(in);i+=2)
+  {
+    out[i]+=dx;
+    out[i+1]+=dy;
+  }
+  return out;
+}
+
 static Image.image arrow(int flip)
 {
-  Image.image o = Image.image(15,15,192,192,192);
+  array poly = 
+  ({
+    7.5,2,
+    13,13,
+    2,13,
+    7.5,2
+  });
+  Image.image o = Image.image(15,15,192,182,162);
+  o->setcolor( 250,240,220 );
+  o->polyfill(move(poly, -1, -1));
+  o->polyfill(move(poly, -1, 0));
+  o->polyfill(move(poly, 0, -1));
   o->setcolor( 0,0,0 );
-  o->polyfill(({ 7.5,0,15,15,0,15,7.5,0 }));
-  return flip?o->mirrory():o;
+  o->polyfill(move(poly, 1, 1));
+  o->polyfill(move(poly, 0, 1));
+  o->polyfill(move(poly, 1, 0));
+  o->setcolor( 192,182,100 );
+  o->polyfill(move(poly, 0, 0));
+  return bevel1(flip?o->mirrory():o);
 }
 
 // For multipart/alternative
@@ -637,14 +687,14 @@ static string trim_from( string from )
 {
   string q;
   from = replace(from , "\\\"", "''");
-  if(sscanf(from, "%*s\"%s\"%*s", q)==3) return q;
-  if(sscanf(from, "\"%s\"<%*s@%*s>", q)) return q;
-  if(sscanf(from, "%s<%*s@%*s>", q)) return q;
-  if(sscanf(from, "(\"%s\")%*s@%*s", q)) return q;
-  if(sscanf(from, "(%s)%*s@%*s", q)) return q;
-  if(sscanf(from, "%*s@%*s(\"%s\")", q)==3) return q;
-  if(sscanf(from, "%*s@%*s(%s)", q)==3) return q;
-  return from;
+  if(sscanf(from, "%*s\"%s\"%*s", q)==3) if(strlen(q)) return q;
+  if(sscanf(from, "\"%s\"<%*s@%*s>", q)) if(strlen(q)) return q;
+  if(sscanf(from, "%s<%*s@%*s>", q)) if(strlen(q)) return q;
+  if(sscanf(from, "(\"%s\")%*s@%*s", q)) if(strlen(q)) return q;
+  if(sscanf(from, "(%s)%*s@%*s", q)) if(strlen(q)) return q;
+  if(sscanf(from, "%*s@%*s(\"%s\")", q)==3) if(strlen(q)) return q;
+  if(sscanf(from, "%*s@%*s(%s)", q)==3) if(strlen(q)) return q;
+  return (from-"<")-">";
 }
 
 
@@ -687,6 +737,17 @@ static multiset trim_mail_addresses(multiset from)
 }
 
 /* Tag functions --------------------------------------------------- */
+
+string container_mailbox_has_mail( string t, mapping args, 
+				   string contents, object id )
+{
+  if(!UID->get_mailbox( args->box ) || 
+     !sizeof(UID->get_mailbox( args->box )->mail()))
+  {
+    return "<false>";
+  }
+  return contents+"<true>";
+}
 
 string tag_mail_trim_address_list( string t, mapping args, object id )
 {
@@ -969,7 +1030,7 @@ string tag__compose_mail( string t, mapping args, object id )
   return "";
 }
 
-//
+// <-decompose-mail>
 // Set variables from the contents of a mail.
 // More or less the reverse of <-compose-mail>
 //
@@ -994,6 +1055,7 @@ string tag__decompose_mail( string t, mapping args, object id )
 
 //
 // <mail-index>: Returns the index of the mail in the mailbox.
+// This could be faster..
 //
 string tag_mail_index( string t, mapping args, object id )
 {
@@ -1047,6 +1109,7 @@ string container_show_mail_user_buttons( string tag, mapping args,
   return do_output_tag( args, vars, contents, id );
 }
 
+//
 // <mail-userinfo firstname> --> First name
 // <mail-userinfo lastname>  --> Last name
 // <mail-userinfo email>     --> email address
@@ -1244,6 +1307,14 @@ string container_list_mailboxes(string tag, mapping args, string contents,
       m_delete(v, "_mb");
     }
   }
+
+  // This is slightly confusing for the user..
+#if 0
+  foreach(vars, mapping v)
+    if(v->mail == "0") 
+      vars -= ({ v });
+#endif
+
   return do_output_tag( args, vars, contents, id );
 }
 
@@ -1417,18 +1488,15 @@ string tag_process_move_actions( string tag, mapping args, object id )
     if(mbox)
     {
       Mailbox m = UID->get_or_create_mailbox( mbox );
-      if(id->variables->mail_id)
-      {
-	id->variables["next.x"]="1";
-	Mail mid = 
-	  clientlayer->get_cache_obj(clientlayer->Mail,
-				     id->variables->mail_id);
-	if(!mid)
-	  return "Unknown mail to move!\n";
-	m->add_mail( mid );
-	if(mid->mailbox != m )
-	  mid->mailbox->remove_mail( mid );
-      }
+      id->variables["next.x"]="1";
+      Mail mid = 
+	clientlayer->get_cache_obj(clientlayer->Mail,
+				   id->variables->mail_id);
+      if(!mid)
+	return "Unknown mail to move!\n";
+      m->add_mail( mid );
+      if(mid->mailbox != m )
+	mid->mailbox->remove_mail( mid );
     } else
       return "Unknown mailbox to move to!\n";
   }
@@ -1735,12 +1803,13 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
     if(start < 0)
       start = 0;
     mapping m = ([]);
-    pre = ("<td rowspan="+MAIL_PER_PAGE+">"+
+    pre = ("<td width=15 rowspan="+MAIL_PER_PAGE+">"+
 	   "<mail-scrollbar start="+start+" page="+MAIL_PER_PAGE+
 	   " num="+sizeof(mail)+"></td>");
     mail = mail[ start .. start+MAIL_PER_PAGE-1 ];
     id->variables->mail_list_start = (string)start;
-  }
+  } else
+    pre = "<td width=15 rowspan="+sizeof(mail)+">&nbsp; </td>";
   int first_line;
   string extra, toclear="";
   foreach(mail, Mail m)
@@ -1759,8 +1828,8 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
       res += `+("<tr bgcolor=#ffeedd>",
 		"<td align=right>",
 		m->flags()->read?"":"<new-mail-flag>",
-		"<font size=-1><input type=checkbox name=mail_flag_"+m->id+" ",
-		flagged[ m->id ]?"checked></font></td>":"></td>",
+		"<input type=checkbox name=mail_flag_"+m->id+" ",
+		flagged[ m->id ]?"checked></td>":"></td>",
 		f,
 		html_encode_string(trim_subject(h->subject)),
 		"</td>",
@@ -1845,8 +1914,9 @@ string tag_process_mail_actions( string tag, mapping args, object id )
 
     if(id->variables["followup.x"])
     {
-      return "<redirect to='reply.html?followup=1&mail_id="+
-	     id->variables->mail_id+"'>";
+      return 
+	("<redirect to='reply.html?followup=1&mail_id="+
+	 id->variables->mail_id+"'>");
     }
 
     if(id->variables["delete.x"])
@@ -1954,8 +2024,12 @@ string tag_process_mail_actions( string tag, mapping args, object id )
 	id->variables = copy_value(ov);
 	id->variables->mail_id = mail;
 	id->variables->noclear = 1;
+	DEBUG(("Move..."));
 	tag_process_move_actions( tag, args, id );
+	m_delete(id->variables, "next.x");
+	DEBUG(("Normal..."));
 	tag_process_mail_actions( tag, args, id );
+	DEBUG(("Ok\n"));
       }
       m_delete(id->variables,"noclear");
       m_delete(id->variables,"mail_id");
