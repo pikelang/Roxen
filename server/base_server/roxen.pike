@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.677 2001/06/26 09:41:40 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.678 2001/06/26 23:18:14 hop Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -22,6 +22,9 @@ ArgCache argcache;
 
 // Inherits
 inherit "global_variables";
+#ifdef SNMP_AGENT
+inherit "snmpagent";
+#endif
 inherit "hosts";
 inherit "disk_cache";
 // inherit "language";
@@ -425,6 +428,11 @@ private void low_shutdown(int exit_code)
     };
     exit(-1);	// Restart.
   }
+
+#ifdef SNMP_AGENT
+  if(objectp(snmpagent))
+    snmpagent->disable();
+#endif
 
   catch(stop_all_configurations());
   destruct(cache);
@@ -3793,6 +3801,19 @@ int main(int argc, array tmp)
   name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
 
+#ifdef SNMP_AGENT
+  //SNMPagent start
+  report_notice("SNMPagent configuration checking ... ");
+  if(query("snmp_agent")) {
+    // enabling SNMP agent
+    snmpagent = SNMPagent();
+    snmpagent->enable();
+    report_notice("enabled.\n");
+
+  } else
+    report_notice("disabled.\n");
+#endif // SNMP_AGENT
+
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
     catch( signal(signum(sig), async_sig_start(exit_when_done,0)) );
@@ -3837,6 +3858,22 @@ string check_variable(string name, mixed value)
     else
       remove_call_out(restart);
     break;
+
+#ifdef SNMP_AGENT
+    case "snmp_agent":
+      if (value && !snmpagent) {
+          report_notice("SNMPagent enabling ...\n");
+          snmpagent = SNMPagent();
+          snmpagent->enable();
+      }
+      if (!value && objectp(snmpagent)) {
+          report_notice("SNMPagent disabling ...\n");
+          snmpagent->disable();
+          snmpagent = 0;
+      }
+      break;
+#endif // SNMP_AGENT
+
   }
 }
 

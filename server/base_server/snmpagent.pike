@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.1 2001/06/25 21:43:44 hop Exp $
+ * $Id: snmpagent.pike,v 1.2 2001/06/26 23:18:14 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -23,14 +23,11 @@ Developer notes:
 
  Known issues:
 	- every reload spawne a new thread, I guess that old ones are never
-	  used then. [threads leak]
-	- every reload add a new record about opened UDP port (at least
-	  on Linux, try 'netstat -ap | grep udp-port-number'. [fd leak]
+	  used then. [threads leak] // FIXME: solved by switching to the async i/o
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
 	- 'basic' Roxen working variables
-	- leaking fixes
 
     v1.1 todo:
 	- trap handling
@@ -83,7 +80,7 @@ inherit Roxen;
 int get_null() { return 0; }
 //! External function for MIB object returning nothing
 
-string get_description() { return("Roxen Webserver generic SNMP agent v0.2 (development rel."); }
+string get_description() { return("Roxen Webserver SNMP agent v"+("$Revision: 1.2 $"/" ")[1]+" (devel. rel.)"); }
 //! External function for MIB object 'system.sysDescr'
 
 string get_sysoid() { return RISMIB_BASE_WEBSERVER; }
@@ -378,10 +375,10 @@ class SNMPmib {
       //fd = Stdio.UDP(); //Port();
 
 #if NO_THREADS
-      SNMPAGENT_MSG("Threads don't detected. Async I/O used intstead.");
+      //SNMPAGENT_MSG("Threads don't detected. Async I/O used intstead.");
       co = call_out( real_start, 1 );
 #else
-      SNMPAGENT_MSG("Threads detected. One thread will be created for agent processing.");
+      //SNMPAGENT_MSG("Threads detected. One thread will be created for agent processing.");
       th = thread_create( real_start );
 #endif
     }
@@ -398,6 +395,7 @@ class SNMPmib {
 #else
     th = 0;
 #endif
+    destruct(fd); // avoid fd leaking; FIXME: some cyclic dependencies in SNMP pmod.
     fd = 0;
     inited = 0;
     SNMPAGENT_MSG("Shutdown complete.");

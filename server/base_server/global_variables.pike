@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.71 2001/06/17 20:07:09 nilsson Exp $
+// $Id: global_variables.pike,v 1.72 2001/06/26 23:18:13 hop Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -28,6 +28,9 @@ private int(0..1) cache_disabled_p() { return !query("cache");         }
 private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
 
+#ifdef SNMP_AGENT
+private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
+#endif
 
 // And why put these functions here, you might righfully ask.
 
@@ -603,6 +606,61 @@ void define_global_variables(  )
 
   defvar("global_position",
 	 Variable.Variable(0, VAR_INVISIBLE));
+
+
+
+#ifdef SNMP_AGENT
+  // SNMP stuffs
+  defvar("snmp_agent", 0, LOCALE(999, "SNMP: Enable SNMP agent"),
+	 TYPE_FLAG|VAR_MORE,
+	 "If set, the Roxen SNMP agent will be anabled. "
+	 );
+  defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
+         TYPE_STRING_LIST,
+         "One community name per line. Default permissions are 'read-only'. "
+	 "'Read-write' permissions can be specified by append :rw to the community "
+	 "name (for example mypub:rw).",
+	 0, snmp_disabled);
+/*
+  defvar("snmp_mode", "smart", "SNMP: Agent mode",
+         TYPE_STRING_LIST,
+         "Standard SNMP server mode, muxed SNMP mode, "
+         "proxy, agentx or automatic (smart) mode.",
+         ({"smart", "agent", "agentx", "smux", "proxy" }));
+*/
+  defvar("snmp_hostport", "", "SNMP: IP address and port",
+         TYPE_STRING,
+         "Agent listenning IP adress and port. Format: [[host]:port] "
+         "If host isn't set then will be use IP address of config interface",
+	 0, snmp_disabled);
+/*
+  defvar("snmp_traphost","","SNMP traps destinations",
+         TYPE_STRING,
+         "...",
+	 0, snmp_disabled);
+*/
+  defvar("snmp_syscontact","","SNMP: System MIB - Contact",
+         TYPE_STRING,
+         "The textual identification of the contact person for this managed "
+         "node, together with information on how to contact this person.",
+	 0, snmp_disabled);
+  defvar("snmp_sysname","","SNMP: System MIB - Name",
+         TYPE_STRING,
+         "An administratively-assigned name for this managed node. By "
+         "convention, this is the node's fully-qualified domain name.",
+	 0, snmp_disabled);
+  defvar("snmp_syslocation","","SNMP: System MIB - Location",
+         TYPE_STRING,
+         "The physical location of this node (e.g., `telephone closet, 3rd "
+         "floor').",
+	 0, snmp_disabled);
+  defvar("snmp_sysservices",72,"SNMP: System MIB - Services",
+         TYPE_INT,
+         "A value which indicates the set of services that this entity "
+         "primarily offers.",
+	 0, snmp_disabled);
+#endif // SNMP_AGENT
+
 }
 
 
