@@ -37,14 +37,33 @@ case $1 in
           echo Done.
 	;;
 
-	*)
+	'restart')
+	  echo Restarting Roxen...
+	  if [ -f $pidfile ] ; then
+	    kill -HUP `cat $pidfile` || kill 1 `cat $pidfile`
+	    rm $pidfile
+	    echo Done.
+	    exit 0
+	  fi
+	  echo "Roxen doesn't seem to be running. Starting a new Roxen..."
+	  if [ -x $roxenhome/start ]; then
+ 	    cd $roxenhome
+	    if [ \! "$configdir" = "" ]; then
+	      ./start --config-dir=$configdir 2>/dev/null
+	    else
+	      ./start 2>/dev/null
+	    fi
+          else
+            echo I cannot find the Roxen dir '('$roxenhome')'
+	  fi
+          echo Done.
+	;;
+
+	'stop')
            echo Stopping Roxen...
 	   if [ -f $pidfile ] ; then
-             kill -USR1 `cat $pidfile` 2>/dev/null
-             sleep 4
-             kill `cat $pidfile` 2>/dev/null
-             sleep 1
-             kill -9 `cat $pidfile` 2>/dev/null
+	     kill -QUIT `cat $pidfile` || kill -QIT `cat $pidfile` || kill 3 `cat $pidfile`
+	     rm $pidfile
            fi
            # Get all the CGI scripts... :-)
            if [ x$killallwww = xyes ] ; then
