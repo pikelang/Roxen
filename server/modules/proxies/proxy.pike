@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.16 1997/05/07 23:07:47 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.17 1997/05/13 15:55:20 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -345,22 +345,43 @@ program Connection = class {
     //    proxy = previous_object(); 
     // Sometimes this was roxen, which caused.. problems. =)
     proxy = prox;
-    pipe = Pipe.pipe();
+    name = f;
+    my_clients = ({ i->remote_addr });
+    ids = ({ i });
+
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
       {
+	/* For fresh incoming cachefiles we have two pipe outputs
+	 * which is (not) yet handled by the global shuffle function
+	 */
+	pipe = Pipe.pipe();
 	pipe->output(cache->file);
 	cache->done_callback = roxen->http_check_cache_file;
+	pipe->set_done_callback(my_pipe_done, cache);
+	pipe->input(s);
+	pipe->output(i->my_fd);
+	return;
       }
     }
-    name = f;
+    // Using convenience-function instead of doing this manually.
+    // Send all from s to i->my_fd.
     roxen->shuffle(s, i->my_fd);
-// Using convenience-function instead of doing this manually.
-// Send all from s to i->my_fd.
-    my_clients = ({ i->remoteaddr });
-    ids = ({ i });
-    return my_pipe_done(0);
+    /* Call to logging function (my_pipe_done) has to be done differently
+     * if fallback in shuffle is used. The current way this is recognized
+     * "objectp(roxen->shuffler)" should probably replaced by introducing 
+     * a shuffle_set_done_callback function.
+     */
+    if(objectp(roxen->shuffler))
+      return my_pipe_done(cache);
+    else {
+      /* Without a callback we have a "contains no data" situation
+       * if fallback is used in shuffle
+       */
+      s->set_close_callback(lambda(){my_pipe_done(cache);});
+      return;
+    }
   }
     
   int send_to(object o, object b)
