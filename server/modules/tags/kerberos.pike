@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: kerberos.pike,v 1.2 2004/05/14 13:55:03 wellhard Exp $";
+constant cvs_version = "$Id: kerberos.pike,v 1.3 2004/05/14 16:22:21 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Support for kerberos authentication";
@@ -31,7 +31,7 @@ class TagIfKerberosAuth {
   }
 }
 
-#lese /* !constant(Kerberos.Context) */
+#else /* !constant(Kerberos.Context) */
 
 constant dont_dump_program = 1;
 
@@ -45,9 +45,9 @@ string status()
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"if#kerberos-auth;":#"<desc type='plugin'><p><short>
- Returns true if the kerberos authentication is sucessful. The username is
- provided in the plugin attribute. Example:</p>
+"if#kerberos-auth":#"<desc type='plugin'><p><short>
+ Returns true if the kerberos authentication is successful.</short>
+ The username is provided in the plugin attribute.</p>
 
 <ex-box>
 <if kerberos-auth=\"username\" password=\"password\">
