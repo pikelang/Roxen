@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.244 2001/06/25 17:30:12 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.245 2001/06/25 17:47:27 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -52,6 +52,7 @@ private object compile_handler = class {
 		"`%":`%,
 
 		"`!":`!,
+		"`!=":`!=,
 		"`&":`&,
 		"`|":`|,
 		"`^":`^,
@@ -5729,7 +5730,7 @@ load.</p>
 "if#expr":#"<desc plugin='plugin'><p><short>
  This plugin evaluates a string as a pike expressions.</short>
  Available arithmetic operators are +, -, *, / and % (modulo).
- Available relational operators are &lt;, &gt;, ==, &lt;= and
+ Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
  &gt;=. Available bitwise operators are &, | and ^, representing
  AND, OR and XOR. Available logical operators are && and ||,
  working as the pike AND and OR.</p>
