@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.232 1998/09/01 19:15:21 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.233 1998/09/05 13:42:50 grubba Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -63,6 +63,7 @@ int new_id(){ return idcount++; }
 #define MD_PERROR(X)
 #endif /* MODULE_DEBUG */
 
+int startpid, roxenpid;
 object roxen=this_object(), current_configuration;
 
 private program Configuration;	/*set in create*/
@@ -1098,7 +1099,6 @@ static string MKPORTKEY(array(string) p)
 // Is this only used to hold the config-ports?
 // Seems like it. Changed to a mapping.
 private mapping(string:object) configuration_ports = ([]);
-int startpid, roxenpid;
 
 // Used by openports.pike
 array(object) get_configuration_ports()
