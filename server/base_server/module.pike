@@ -1,9 +1,9 @@
-/* $Id: module.pike,v 1.57 1999/11/29 18:50:04 per Exp $ */
+/* $Id: module.pike,v 1.58 1999/11/29 22:09:05 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
 mapping (string:mixed *) variables=([]);
-object this = this_object();
+RoxenModule this = this_object();
 mapping(string:array(int)) error_log=([]);
 
 constant is_module = 1;
@@ -14,7 +14,7 @@ constant module_unique = 1;
 
 string _sprintf()
 {
-  return sprintf("Module("+register_module()[1]+",%s)", my_configuration());
+  return sprintf("RoxenModule("+register_module()[1]+",%s)", my_configuration());
 }
 
 array register_module()
@@ -35,7 +35,7 @@ string fix_cvs(string from)
   return replace(from,"/","-");
 }
 
-int module_dependencies(object configuration, 
+int module_dependencies(Configuration configuration, 
                         array (string) modules,
                         int|void now)
 {
@@ -60,14 +60,14 @@ Configuration my_configuration()
 {
   if(_my_configuration)
     return _my_configuration;
-  object conf;
+  Configuration conf;
   foreach(roxen->configurations, conf)
     if(conf->otomod[this])
       return _my_configuration = conf;
   return 0;
 }
 
-nomask void set_configuration(object c)
+nomask void set_configuration(Configuration c)
 {
   if(_my_configuration && _my_configuration != c)
     error("set_configuration() called twice.\n");
@@ -96,21 +96,21 @@ int killvar(string var)
 
 void free_some_sockets_please(){}
 
-void start(void|int num, void|object conf) {}
+void start(void|int num, void|Configuration conf) {}
 string status() {}
 
 
-string info(object conf)
+string info(Configuration conf)
 { 
-  return (this->register_module(conf)[2]);
+  return (this->register_module()[2]);
 }
 
 constant ConfigurableWrapper = roxen.ConfigurableWrapper;
 constant reg_s_loc = Locale.Roxen.standard.register_module_doc;
 
 // Define a variable, with more than a little error checking...
-void defvar(string|void var, mixed|void value, string|void name,
-	    int|void type, string|void doc_str, mixed|void misc,
+void defvar(string var, mixed value, string name,
+	    int type, string|void doc_str, mixed|void misc,
 	    int|function|void not_in_config)
 {
 #if defined(MODULE_DEBUG)
@@ -334,37 +334,11 @@ mixed query(string|void var, int|void ok)
   return variables;
 }
 
-void set_module_list(string var, string what, object to)
-{
-  int p;
-  p = search(variables[var][VAR_VALUE], what);
-  if(p == -1)
-  {
-#ifdef MODULE_DEBUG
-    perror("The variable '"+var+"': '"+what+"' found by hook.\n");
-    perror("Not found in variable!\n");
-#endif
-  } else 
-    variables[var][VAR_VALUE][p]=to;
-}
-
 void set(string var, mixed value)
 {
   if(!variables[var])
     error( "Setting undefined variable.\n" );
-  else
-    if(variables[var][VAR_TYPE] == TYPE_MODULE && stringp(value))
-      roxenp()->register_module_load_hook( value, set, var );
-    else if(variables[var][VAR_TYPE] == TYPE_MODULE_LIST)
-    {
-      variables[var][VAR_VALUE]=value;
-      if(arrayp(value))
-	foreach(value, value)
-	  if(stringp(value))
-	    roxenp()->register_module_load_hook(value,set_module_list,var,value);
-    }
-    else
-      variables[var][VAR_VALUE]=value;
+  variables[var][VAR_VALUE]=value;
 }
 
 int setvars( mapping (string:mixed) vars )
@@ -597,9 +571,9 @@ array query_seclevels()
   return patterns;
 }
 
-mixed stat_file(string f, object id){}
-mixed find_dir(string f, object id){}
-mapping(string:array(mixed)) find_dir_stat(string f, object id)
+mixed stat_file(string f, RequestID id){}
+mixed find_dir(string f, RequestID id){}
+mapping(string:array(mixed)) find_dir_stat(string f, RequestID id)
 {
   TRACE_ENTER("find_dir_stat(): \""+f+"\"", 0);
 
@@ -620,7 +594,7 @@ mapping(string:array(mixed)) find_dir_stat(string f, object id)
   TRACE_LEAVE("");
   return(res);
 }
-mixed real_file(string f, object id){}
+mixed real_file(string f, RequestID id){}
 
 mapping _api_functions = ([]);
 void add_api_function( string name, function f, void|array(string) types)
@@ -633,29 +607,9 @@ mapping api_functions()
   return _api_functions;
 }
 
-string rxml_error(string tag, string error, object id) {
+string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
 }
-
-object get_font_from_var(string base)
-{
-  int weight, slant;
-  switch(query(base+"_weight"))
-  {
-   case "light": weight=-1; break;
-   default: weight=0; break;
-   case "bold": weight=1; break;
-   case "black": weight=2; break;
-  }
-  switch(query(base+"_slant"))
-  {
-   case "obligue": slant=-1; break;
-   default: slant=0; break;
-   case "italic": slant=1; break;
-  }
-  return get_font(query(base+"_font"), 32, weight, slant, "left", 0, 0);
-}
-
 
 mapping query_tag_callers()
 {
@@ -686,7 +640,7 @@ mapping query_if_callers()
 
 mixed get_commented_value(string path, int start)
 {
-  object file=Stdio.File();
+  Stdio.File file=Stdio.File();
   if(!file->open(path,"r")) return 0;
   string in,comment;
   in=file->read();
