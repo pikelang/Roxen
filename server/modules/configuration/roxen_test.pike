@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.38 2001/08/15 17:59:44 wellhard Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.39 2001/08/17 19:25:29 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -31,30 +31,15 @@ void start(int n, Configuration c)
 
 RequestID get_id()
 {
-  object id = RequestID(index_file, port, conf);
-  id->conf = conf;
-  id->misc = ([]);
-  id->cookies=([]);
-  id->config=(<>);
-  id->real_variables=([]);
-  id->variables = FakedVariables( id->real_variables );
-  id->prestate=(<>);
-  id->supports=(< "images" >);
-  id->client_var=([]);
-
-  id->pragma=(<>);
-  id->client=({});
+  object id = roxen.InternalRequestID();
+  id->supports = (< "images" >);
+  id->client = ({ "RoxenTest" });
+  id->set_url("http://localhost/index.html");
 
   id->realfile=self_test_dir+"/filesystem/index.html";
-  id->query = "";
-  id->not_query="/index.html";
-  id->raw_url="/index.html";
-  id->method="GET";
-  id->request_headers=([]);
-  id->remoteaddr="127.0.0.1";
+  id->misc->stat = conf->stat_file("/index.html", id);
   NOCACHE();
 
-  id->misc->stat = conf->stat_file("/index.html", id);
   return id;
 }
 
