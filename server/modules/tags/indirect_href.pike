@@ -5,34 +5,29 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.18 2000/04/15 01:18:19 per Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: indirect_href.pike,v 1.19 2000/04/16 15:46:58 nilsson Exp $";
+constant thread_safe = 1;
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
 mapping hrefs;
-string tagname;
 
 void create()
 {
-  defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD,
-	  "The URL database with the syntax:<br>\n"
+  defvar( "hrefs", "roxen     = http://www.roxen.com\n"
+	  "community = http://community.roxen.com", "Indirect hrefs",
+	  TYPE_TEXT_FIELD, "The URL database with the syntax:<br>\n"
 	  "[name] = [URL]\n" );
-
-  //This pollutes namespace and makes the life hard on the manual writers.
-  //Thus it's turned of for normal users.
-  //  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,
-  //	  "Name of the tag\n"
-  //	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
-  //	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;"
-  //	  "if the name is changed, the module has to be reloaded for the "
-  //	  "namechange to take effect)" );
+  /*
+  defvar( "tagname", "ai", "Tag name", TYPE_STRING,
+	  "The name of the tag." );
+  */
 }
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Indirect href";
+//constant module_unique = 0;
 constant module_doc  =
 #"Indirect href. Adds a new tag <tt>&lt;ai name=&gt;</tt> that works like 
 <tt>&lt;a href=&gt;</tt> but uses a symbolic name instead of a URL. The 
@@ -46,35 +41,45 @@ change it, no matter how many links use it. As an extra bonus the name
 
 void start()
 {
-  array (string) lines;
+  array(string) lines;
   string variable, value;
-  mapping all = ([ ]);
 
   hrefs = ([ ]);
   if (lines = (query( "hrefs" )-" "-"\t") /"\n")
     foreach (lines, string line)
       if (sscanf( line, "%s=%s", variable, value ) >= 2)
 	hrefs[ variable ] = value;
-  tagname = "ai";//query( "tagname" );
 }
 
-string newa(string tag, mapping m, string q)
-{
-  if(!m->name && !m->random) return q;
-  if(m->name) {
-    m->href=hrefs[m->name];
-    m_delete(m, "name");
-  }
-  if(m->random) {
-    m->href=values(hrefs)[random(sizeof(hrefs))];
-    m_delete(m, "random");
-  }
-  return make_container("a",m,q);
-}
+class TagAI {
+  inherit RXML.Tag;
+  string name;
 
-mapping query_simpletag_callers()
-{
-  return ([ tagname : ({ 0, newa }) ]);
+  void create() {
+    if(variables->tagname)
+      name = query("tagname");
+    else
+      name = "ai";
+  }
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return() {
+      if(!args->name || !sizeof(hrefs)) {
+	result = content;
+	return 0;
+      }
+
+      if(!(hrefs->random) && args->name=="random")
+	args->href=values(hrefs)[random(sizeof(hrefs))];
+      else
+	args->href=hrefs[args->name];
+      m_delete(args, "name");
+
+      result = Roxen.make_container("a", args, content);
+      return 0;
+    }
+  }
 }
 
 TAGDOCUMENTATION;
@@ -92,10 +97,6 @@ constant tagdoc=([
  Which link to fetch from the database. There is a special case,
  <att>name='random'</att> that will choose a random link from the
  database.
-
- <ex>
- <ai name='roxen'>Roxen WebServer</ai>
- </ex>
  </attr>",
     ]);
 #endif
