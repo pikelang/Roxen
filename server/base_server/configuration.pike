@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.497 2002/03/25 13:25:17 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.498 2002/04/15 08:29:19 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -224,7 +224,7 @@ class DataCache
 
   void set( string url, string data, mapping meta, int expire )
   {
-    if( strlen( data ) > max_size ) return;
+    if( strlen( data ) > max_file_size ) return;
     call_out( expire_entry, expire, url );
     current_size += strlen( data );
     cache[url] = ({ data, meta });
