@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.249 2000/09/28 02:18:15 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.250 2000/09/29 07:52:28 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -798,8 +798,7 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
     {
       if(a[0..5]!="magic-") {
 	p[a]=arg[a]; // ,id
-	i-=({a});
-	m_delete(arg,a);
+	i-=({ m_delete(arg,a) });
       }
     }
 
@@ -834,10 +833,8 @@ string fix_text(string c, mapping m, RequestID id) {
   c=replace(c, Roxen.replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
 	    Roxen.replace_values+({" ", " ", "\n", "\n", ""}));
 
-  if(m->maxlen) {
-    c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
-    m_delete(m, "maxlen");
-  }
+  if(m->maxlen)
+    c = c[..(( (int)m_delete(m,"maxlen") || QUERY(deflen))-1)];
 
   return c;
 }
@@ -934,8 +931,7 @@ string do_gtext(mapping arg, string c, RequestID id)
       m_delete(arg, name);
     }
 
-  int xml=!arg->noxml;
-  m_delete(arg, "noxml");
+  int xml=!m_delete(arg, "noxml");
 
   if(!arg->border) arg->border="0";
 
@@ -974,17 +970,13 @@ string do_gtext(mapping arg, string c, RequestID id)
 
   if(arg->magic)
   {
-    string magic=replace(arg->magic,"'","`");
-    m_delete(arg,"magic");
+    string magic=replace(m_delete(arg,"magic"), "'", "`");
 
     if(p->bevel) p->pressed=1;
 
     m_delete(p, "fgcolor");
     foreach(glob("magic-*", indices(arg)), string q)
-    {
-      p[q[6..]]=arg[q];
-      m_delete(arg, q);
-    }
+      p[q[6..]]=m_delete(arg, q);
 
     if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
 			id->misc->defines->alink||"#ff0000";
@@ -1006,14 +998,14 @@ string do_gtext(mapping arg, string c, RequestID id)
     }
 
     arg->name=sn;
-    string res="\n<script>\n";
+    string res="<script>\n";
     if(!id->misc->gtext_magic_java) {
       res += "function i(ri,hi,txt)\n"
         "{\n"
         "  document.images[ri].src = hi.src;\n"
         "  if( txt != 0 )\n"
         "    setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
-	"}\n";
+	"}";
     }
     id->misc->gtext_magic_java="yes";
 
