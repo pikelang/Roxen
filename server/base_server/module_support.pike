@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.49 1999/12/28 00:57:47 nilsson Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.50 1999/12/30 00:44:17 mast Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -129,23 +129,12 @@ mixed set(string var, mixed val)
   error("set("+var+"). Unknown variable.\n");
 }
 
-int remove_dumped_mark = lambda ()
-{
-  array stat = file_stat (combine_path (
-    getcwd(), __FILE__ + "/../../.remove_dumped_mark"));
-  return stat && stat[ST_MTIME];
-}();
-
 program my_compile_file(string file)
 {
   if( file[0] != '/' )
     file = replace(getcwd()+"/"+file, "//", "/");
 
   string ofile = master()->make_ofilename( file );
-
-  if (file_stat (ofile) &&
-      file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
-    rm (ofile);
 
   program p;
 
@@ -165,7 +154,7 @@ program my_compile_file(string file)
   }
   if ( strlen(q) )
   {
-    report_debug(sprintf("Warnings during compilation of module %O:\n"
+    report_debug(sprintf("Warnings during compilation of module %s:\n"
 			 "%s", file, q));
   }
   if( !file_stat( ofile ) ||
@@ -173,12 +162,12 @@ program my_compile_file(string file)
     if( catch ( master()->dump_program( file, p ) ) )
     {
 #ifdef MODULE_DEBUG
-      werror("\b [nodump] \b");
+      report_debug("\b[nodump] \b");
 #endif
       catch( Stdio.File( ofile, "wct" ) );
     } else {
 #ifdef MODULE_DEBUG
-      werror("\b [dump] \b");
+      report_debug("\b[dump] \b");
 #endif
     }
   return p;
