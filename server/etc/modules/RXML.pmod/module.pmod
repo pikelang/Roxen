@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.206 2001/07/19 00:05:27 mast Exp $
+// $Id: module.pmod,v 1.207 2001/07/19 00:42:20 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5775,7 +5775,8 @@ class VarRef (string scope, string|array(string|int) var,
       string varref;
 
       COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
-      if (zero_type (val = ctx->get_var (var, scope, t_any_text)))
+      if (zero_type (val = ctx->get_var (
+		       var, scope, encoding ? t_any_text : want_type)))
 	val = nil;
       COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
 
