@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.14 1998/03/18 18:50:44 neotron Exp $
+// $Id: counter.pike,v 1.15 1998/03/18 19:30:31 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,10 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.14  1998/03/18 18:50:44  neotron
+// Fixed a bunch of bugs. Before, the first time a font was used, it turned out
+// as 012345, due to an error in the colormap making...
+//
 // Revision 1.13  1998/03/17 23:35:55  neotron
 // Changed counter default dir, and added default ppm fonts (a).
 //
@@ -72,7 +76,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.14 1998/03/18 18:50:44 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.15 1998/03/18 19:30:31 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -248,13 +252,13 @@ array (int) mkcolor(string color)
 //
 mapping find_file_font( string f, object id )
 {
-  string fontname, strcounter, fg, bg;
-  int len, counter, trans, type, rot;
+  string fontname, fg, bg, counter;
+  int len, trans, type, rot;
   float scale;
 
-  if(sscanf(f, "%d/%s/%s/%d/%d/%f/%d/%s/%d", 
+  if(sscanf(f, "%d/%s/%s/%d/%d/%f/%d/%s/%s.%*s", 
 	    type, bg, fg, trans, len, scale, rot,  
-	    fontname, counter) != 9 )
+	    fontname, counter) != 10 )
     return 0;
 
   if(fontname=="ListAllFonts")
@@ -264,17 +268,15 @@ mapping find_file_font( string f, object id )
   if( scale > 2.0 )
     scale = 2.0;
   
-  if( len > 10 )
-    len = 10;
-  else if(len < 1)
-    len = 6;
-  
   object fnt;
   fnt=get_font(fontname, 32 ,0, 0, "left", 0, 0);
 
   if(!fnt)
     return fontlist(bg,fg,(int)(scale*5.0));
-  object txt  = fnt->write(sprintf("%0*d", len, counter));	
+  while(strlen(counter) < len)
+    counter = "0" + counter;
+  
+  object txt  = fnt->write(counter);
   object img  = image(txt->xsize(), txt->ysize(), @mkcolor(bg));
 
   if(scale != 1)
@@ -317,24 +319,24 @@ mapping find_file_font( string f, object id )
 mapping find_file_ppm( string f, object id )
 {
   string fontname, fg, bg, user;
-  int len, counter, trans, rot;
+  int len, trans, rot;
+  string counter;
   object digit, result;
   float scale;
   string buff, dir, *us;
   array (string)strcounter;
-  if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%d", 
-	    user, bg, fg, trans, len, scale, rot, fontname, counter) != 9 )
+  if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%s.%*s", 
+	    user, bg, fg, trans, len, scale, rot, fontname, counter) != 10 )
     return 0;
 
   scale /= 5;
   if( scale > 2.0 )
     scale = 2.0;
-
-  if( len > 10 )
-    len = 10;
-  else if(len < 1)
-    len = 6;
-  strcounter = sprintf("%0*d", len, counter ) / "";
+  
+  strcounter = counter / "";
+  while(sizeof(strcounter) < len)
+    strcounter = ({0}) + strcounter;
+    
   int numdigits = sizeof(strcounter);
   int currx;
 
@@ -388,11 +390,9 @@ mapping find_file_ppm( string f, object id )
   for( int dn=0; dn < numdigits; dn++ )
   {
     int c = (int)strcounter[dn];
-    werror(sprintf("%O:", c));
     result = result->paste(digits[c], currx, 0);
     currx += digits[c]->xsize();
   }	  
-  write("\n");
   // Apply Color Filter 	
   //
   result = result->copy(0,0,currx-1,result->ysize()-1);
@@ -450,7 +450,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.14 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.15 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
@@ -468,7 +468,16 @@ string tag_counter( string tagname, mapping args, object id )
 
   pre = "<IMG SRC=\"";
   url = query("mountpoint");
-	
+  int len;
+  if(!args->len)
+    len = 6;
+  else if((int)args->len > 10 )
+    len = 10;
+  else if((int)args->len < 1)
+    len = 1;
+  else
+    len = (int)args->len;
+  
   if( args->nfont ) {
 	
     //
@@ -478,10 +487,10 @@ string tag_counter( string tagname, mapping args, object id )
       + (args->bg?(args->bg-"#"):"000000") + "/"
       + (args->fg?(args->fg-"#"):"ffffff") + "/"
       + (args->trans?"1":"0") + "/"
-      + (args->len?args->len:"6") + "/" 
+      + (string)len + "/" 
       + (args->size?args->size:"5") + "/" 
       + (args->rotate?args->rotate:"0") + "/" 
-+ args->nfont;
+      + args->nfont;
 
   } else {
 	
@@ -492,7 +501,7 @@ string tag_counter( string tagname, mapping args, object id )
       + (args->bg?(args->bg-"#"):"n") + "/"	
       + (args->fg?(args->fg-"#"):"n") + "/"
       + (args->trans?"1":"0") + "/"
-      + (args->len?args->len:"6") + "/" 
+      + (string)len + "/" 
       + (args->size?args->size:"5") + "/"
       + (args->rotate?args->rotate:"0") + "/" 
       + (args->style?args->style:query("ppm"));
@@ -501,7 +510,7 @@ string tag_counter( string tagname, mapping args, object id )
   //
   // Common Part ( /<accessed> and IMG Attributes )
   //
-  url +=  "/" + accessed;
+  url +=  "/" + accessed +".gif";
 	
   post =  "\" "  
     + (args->border?"border="+args->border+" ":"")
