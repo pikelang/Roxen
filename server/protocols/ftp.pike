@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.52 1997/09/07 19:14:19 grubba Exp $
+ * $Id: ftp.pike,v 1.53 1997/09/14 21:07:42 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -593,6 +593,7 @@ class ls_program {
 	  ({ "C", Getopt.NO_ARG, "-C" }),
 	  ({ "d", Getopt.NO_ARG, ({ "-d", "--directory" })}),
 	  ({ "F", Getopt.NO_ARG, ({ "-F", "--classify" })}),
+	  ({ "g", Getopt.NO_ARG, "-g" }),
 	  ({ "l", Getopt.NO_ARG, "-l" }),
 	  ({ "r", Getopt.NO_ARG, ({ "-r", "--reverse" })}),
 	  ({ "R", Getopt.NO_ARG, ({ "-R", "--recursive" })}),
