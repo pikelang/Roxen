@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.33 1999/06/11 01:04:52 peter Exp $ */
+/* $Id: low_describers.pike,v 1.34 1999/08/06 01:21:17 jhs Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -495,12 +495,12 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
       {
 	if(misc[i]==var[VAR_VALUE])
 	  tmp+=("  <option value=\""+
-		replace(misc[i],"\"","&quote;")
+		replace((string)misc[i],"\"","&quote;")
 		+ "\" selected> "+
 		translate[misc[i]]+" ");
  	else
 	  tmp+=("  <option value=\""+
-		replace(misc[i],"\"","&quote;")+ "\"> "+
+		replace((string)misc[i],"\"","&quote;")+ "\"> "+
 		translate[misc[i]]+" ");
       }
       res=tmp+"</select><input type=submit value="+LOW_LOCALE->ok+">";
