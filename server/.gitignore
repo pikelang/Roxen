@@ -1,3 +1,6 @@
 /.HSResource
 /.purify
 /sqlnet.log
+/.allmodules
+/.module_stat_cache
+/.gtext_args*
