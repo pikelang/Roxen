@@ -22,7 +22,7 @@ array get_font_list()
     } else {
       res += ({ ({ "-"+fndry+"-"+fmly+"-"+wght+"-"+slant+"-normal"
 		     "-*-%d-*-*-*-"+spc+"-*-"+encoding,
-		     replace(fndry+"_"fmly+"-"+wght+"-"+slant," ","_"),
+		     replace(fndry+"_"+fmly+"-"+wght+"-"+slant," ","_"),
 		     }) });
     }
   }
