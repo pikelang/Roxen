@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.88 2003/05/19 08:49:52 grubba Exp $
+ * $Id: ftp.pike,v 2.89 2003/10/21 18:42:08 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -33,6 +33,7 @@
  * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
+ * RFC 2228	FTP Security Extensions
  * RFC 2428	FTP Extensions for IPv6 and NATs
  *
  * IETF draft 12 Extended Directory Listing, TVFS,
@@ -1359,6 +1360,16 @@ class FTPSession
     "EPRT":"<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)",
     "EPSV":"[<sp> net-prt|ALL] (Extended Address Passive Mode)",
 
+    // These are from RFC 2228 (FTP Security Extensions)
+    "AUTH":"security-mechanism (Authentication/Security Mechanism)",
+    "ADAT":"security-data (Authentication/Security Data)",
+    "PBSZ":"<sp> size (Protection Buffer SiZe)",
+    "PROT":"<sp> [ C | S | E | P ] (Data Channel Protection Level)",
+    "CCC":"(Clear Command Channel)",
+    "MIC":"command (Integrity Protected Command)",
+    "CONF":"command (Confidentiality Protected Command)",
+    "ENC":"command (Privacy Protected Command)",
+
     // These are in RFC 1639
     "LPRT":"<sp> <long-host-port> (Long Port)",
     "LPSV":"(Long Passive)",
@@ -1625,6 +1636,7 @@ class FTPSession
 
   void pasv_accept_callback(mixed id)
   {
+    DWRITE("FTP: pasv_accept_callback(%O)...\n", id);
     touch_me();
 
     if(pasv_port) {
@@ -1640,6 +1652,10 @@ class FTPSession
 	mark_fd(fd->query_fd(),
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
+	if (use_ssl) {
+	  fd = SSL.sslfile(fd, port_obj->ctx);
+	  DWRITE("FTP: Created an sslfile: %O\n", fd);
+	}
 	if(pasv_callback) {
 	  pasv_callback(fd, "", @pasv_args);
 	  pasv_callback = 0;
@@ -1712,6 +1728,12 @@ class FTPSession
     }
     privs = 0;
 
+    Stdio.File raw_connection = f;
+
+    if (use_ssl) {
+      f = (object)SSL.sslfile(f, port_obj->ctx, 1, 0);
+    }
+
     f->set_nonblocking(lambda(mixed ignored, string data) {
 			 DWRITE("FTP: async_connect ok. Got data.\n");
 			 f->set_nonblocking(0,0,0);
@@ -1729,12 +1751,13 @@ class FTPSession
 		       });
 
 #ifdef FD_DEBUG
-    mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
-				   local_addr, local_port - 1,
-				   dataport_addr, dataport_port));
+    mark_fd(raw_connection->query_fd(),
+	    sprintf("ftp communication: %s:%d -> %s:%d",
+		    local_addr, local_port - 1,
+		    dataport_addr, dataport_port));
 #endif
 
-    if(catch(f->connect(dataport_addr, dataport_port))) {
+    if(catch(raw_connection->connect(dataport_addr, dataport_port))) {
       DWRITE("FTP: Illegal internet address in connect in async comm.\n");
       destruct(f);
       fun(0, 0, @args);
@@ -1754,10 +1777,13 @@ class FTPSession
 
     if(fd)
     {
+      //DWRITE("FTP: fd: %O: %O\n", fd, mkmapping(indices(fd), values(fd)));
       if (fd->set_blocking) {
 	fd->set_blocking();       // Force close() to flush any buffers.
       }
-      BACKEND_CLOSE(fd);
+      call_out(fd->close, 0);
+      fd = 0;
+      //BACKEND_CLOSE(fd);
     }
     curr_pipe = 0;
 
@@ -2596,6 +2622,8 @@ class FTPSession
 
   // Set to 1 by EPSV ALL.
   int epsv_only;
+  // Set to 1 by PROT S,E and P, cleared by PROT C.
+  int use_ssl;
 
   void ftp_REIN(string|int args)
   {
@@ -2885,6 +2913,38 @@ class FTPSession
     ftp_QUIT(args);
   }
 
+  void ftp_PBSZ(string args)
+  {
+    if (!expect_argument("PROT", args)) return;
+
+    send(200, ({ "PBSZ=0" }));
+  }
+
+  void ftp_PROT(string args)
+  {
+    if (!expect_argument("PROT", args)) return;
+
+    args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
+    switch(args) {
+    case "C": // Clear.
+      use_ssl = 0;
+      break;
+    case "S": // Safe.
+    case "E": // Confidential.
+    case "P": // Private.
+      if (!port_obj->ctx) {
+	send(536, ({ sprintf("Only supported over FTPS") }));
+	return;
+      }
+      use_ssl = 1;
+      break;
+    default:
+      send(504, ({ sprintf("Unknown protection level: %s", args) }));
+      return;
+    }
+    send(200, ({ "OK" }));
+  }
+
   void ftp_PORT(string args)
   {
     if (epsv_only) {
@@ -3015,6 +3075,7 @@ class FTPSession
     }
     if (pasv_port)
       destruct(pasv_port);
+
     pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
     /* FIXME: Hmm, getting the address from an anonymous port seems not
      * to work on NT...
