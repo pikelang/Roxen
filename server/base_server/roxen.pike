@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.430 2000/02/16 07:10:15 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.431 2000/02/16 08:22:33 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2512,6 +2512,7 @@ void create()
 {
   SET_LOCALE(default_locale);
   // Dump some programs (for speed)
+  dump( "etc/roxen_master.pike" );
   foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
     dump( "etc/modules/RoxenLocale.pmod/"+ q );
   dump( "base_server/roxen.pike" );
@@ -2558,12 +2559,12 @@ void create()
   add_constant( "roxen.ImageCache", ImageCache );
 
   // compatibility
-  int s = gethrtime();
+//   int s = gethrtime();
   add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
-  report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
+//   report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
 
   /* Delayed loading. */
-  int s = gethrtime();
+//   int s = gethrtime();
   master()->resolv ("RXML.refs");
   foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
   {
@@ -2588,15 +2589,15 @@ void create()
   add_constant( "RXML.t_html", master()->resolv("RXML.t_html") );
   add_constant( "RXML.t_xml", master()->resolv("RXML.t_xml") );
 
-  report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
+//   report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
 
-  int s = gethrtime();
+//   int s = gethrtime();
   Configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
   dump( "base_server/rxmlhelp.pike" );
   add_constant( "Configuration", Configuration );
 
-  report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
+//   report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
 
