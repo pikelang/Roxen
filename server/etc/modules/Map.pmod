@@ -400,7 +400,7 @@ class Earth {
       x = (x-0.00)*1.5;
       y = (y-0.40)*1.5;
       break;
-    case "south east asia":
+    case "asia":
       x = (x-0.57)*2.0;
       y = (y-0.17)*2.0;
       break;
