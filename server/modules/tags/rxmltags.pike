@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.351 2002/06/11 14:37:09 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.352 2002/06/17 11:44:53 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3839,10 +3839,7 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
-    if(!var)
-      // Compatibility kludge to work with the string-only approach
-      // below.
-      return do_check ("", arr, id) || do_check ("0", arr, id);
+    if(!var) var = "";
 
     string is;
 
@@ -4329,8 +4326,8 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var=RXML.user_get_var(s);
-    if(!var) return 0;
+    mixed var;
+    if (zero_type (var = RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
