@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.247 1999/12/28 01:23:44 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.248 1999/12/28 03:41:23 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2247,11 +2247,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     {
 #ifdef MODULE_DEBUG
       report_debug("\b ERROR\n");
+      if (err != "")
 #endif
-      report_error(LOCALE->
-                   error_initializing_module_copy(moduleinfo->get_name(),
-						  err != "" &&
-                                                  describe_backtrace(err)));
+	report_error(LOCALE->
+		     error_initializing_module_copy(moduleinfo->get_name(),
+						    err != "" &&
+						    describe_backtrace(err)));
       return module[id];
     }
   }
