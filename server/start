@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.60 1998/11/28 21:13:53 grubba Exp $
+# $Id: start,v 1.61 1998/11/28 21:27:37 grubba Exp $
 
 cd `dirname $0`
 
@@ -12,6 +12,9 @@ LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
+
+# Default verbosity level.
+verbose=1
 
 # Default to using a relative path.
 roxendir="."
@@ -63,6 +66,13 @@ parse_args() {
   ;;
   '--keep-alive'|'--with-keep-alive'|'--enable-keep-alive')
     DEFINES="-DKEEP_ALIVE $DEFINES"
+  ;;
+  '--quiet'|'-q')
+    verbose=0
+  ;;
+  '--verbose'|'-v')
+    verbose=2
+    debug=1
   ;;
   '--once')
     once=1
@@ -201,7 +211,9 @@ EOF
 parse_args $@
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
-  echo $$: Using $ROXEN_ARGS from ROXEN_ARGS.
+  if [ $verbose -gt 0 ]; then
+    echo $$: Using $ROXEN_ARGS from ROXEN_ARGS.
+  else :; fi
   parse_args $ROXEN_ARGS
 fi
 
@@ -217,7 +229,7 @@ if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    if [ x"$1" != "x--help" ] ; then
+    if [ $verbose -gt 0 ] ; then
       echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
     fi
     DEFINES="$DEFINES -DENABLE_THREADS"
@@ -289,7 +301,9 @@ fi
 # Extra kludge for HPUX
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
-  echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
+  if [ $verbose -gt 0 ]; then
+    echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
+  else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
 
@@ -324,8 +338,10 @@ start_roxen() {
     cd $cd_to
   fi
   if [ "x$gdb" = "xno" ]; then
-    echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
-    echo Executing $pike $args $@
+    if [ $verbose -gt 0 ]; then
+      echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
+      echo Executing $pike $args $@
+    else :; fi
     $pike $args $@
   else
     echo Executing gdb $pike $args $@
@@ -343,23 +359,27 @@ start_roxen() {
 #
 
 if [ -z "$once" ] ; then
-echo $$: Starting the Roxen Challenger World Wide Web server.
-./mkdir -p $LOGDIR/debug/
+  if [ $verbose -gt 0 ]; then
+    echo $$: Starting the Roxen Challenger World Wide Web server.
+  else :; fi
+  ./mkdir -p $LOGDIR/debug/
 
-if [ -z "$debug" ] ; then
-  DEBUG="-DMODULE_DEBUG";
-else
-  DEBUG="-DDEBUG -DMODULE_DEBUG"
-fi
+  if [ -z "$debug" ] ; then
+    DEBUG="-DMODULE_DEBUG";
+  else
+    DEBUG="-DDEBUG -DMODULE_DEBUG"
+  fi
 
-if [ "x$debug" = "x-1" ] ; then
-  DEBUG="";
-else :; fi
+  if [ "x$debug" = "x-1" ] ; then
+    DEBUG="";
+  else :; fi
 
-  cat << oo
+  if [ $verbose -gt 0 ]; then
+    cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
 oo
+  else :; fi
 
   # Try to get rid of some fd's.
   # Some /bin/sh's have problems detaching otherwise.
@@ -390,7 +410,9 @@ oo
     fi
   done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 else
-  echo $$: "Start at `date`"
+  if [ $verbose -gt 0 ]; then
+    echo $$: "Start at `date`"
+  else :; fi
   start_roxen $extra_args
 fi
     
