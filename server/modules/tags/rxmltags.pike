@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.184 2000/10/17 17:54:07 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.185 2000/10/17 20:19:51 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -466,7 +466,10 @@ class TagSet {
       }
       if (args->expr) {
 	// Set an entity variable to an evaluated expression.
-	RXML.user_set_var(args->variable, sexpr_eval(args->expr), args->scope);
+	mixed val;
+	if(catch(val=sexpr_eval(args->expr)))
+	  parse_error("Error in expr attribute.\n");
+	RXML.user_set_var(args->variable, val, args->scope);
 	return 0;
       }
       if (args->from) {
