@@ -1,12 +1,18 @@
-/*
- * $Id: directories2.pike,v 1.7 1997/12/19 02:11:21 peter Exp $
+/* This is a Roxen module. (c) Informationsvävarna AB 1996, (c) Idonex AB 1998
+ * $Id: directories2.pike,v 1.8 1998/01/15 10:29:37 peter Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
+ *
+ * TODO:
+ * Filter out body statements and replace them with tables to simulate
+ * the correct background and fontcolors.
+ *
+ * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.7 1997/12/19 02:11:21 peter Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.8 1998/01/15 10:29:37 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -47,7 +53,7 @@ void create()
   
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by prepending '.' or '/' to the directory name, like "
+	 "in a directory by appending '.' or '/' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");

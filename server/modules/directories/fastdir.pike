@@ -1,10 +1,10 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1996.
+/* This is a roxen module. (c) Informationsvävarna AB 1996, (c) Idonex AB 1998
  *
  * A fast directory module, without support for the fold/unfold stuff
  * in the normal one.
  */
 
-constant cvs_version = "$Id: fastdir.pike,v 1.10 1997/08/31 03:47:17 peter Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.11 1998/01/15 10:38:56 peter Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -36,7 +36,7 @@ void create()
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by prepending '.' or '/' to the directory name, like "
+	 "in a directory by appending '.' or '/' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
