@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.1 2002/03/06 16:21:23 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.2 2002/03/07 09:19:30 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -16,7 +16,7 @@ string doc = LOCALE(0, "Show information about the installed licenses and "
 mixed parse( RequestID id )
 {
   string txt = #"
-  <h1>Installed Licenses</h1>
+  <font size='+1'>Installed Licenses</font>
   <input type='hidden' name='action' value='&form.action;'/>
   <input type='hidden' name='class' value='&form.class;'/>
   <table>
@@ -37,7 +37,7 @@ mixed parse( RequestID id )
 
   <if variable='form.license'>
     <hr />
-    <h1>License &form.license;</h1>
+    <font size='+1'>License &form.license;</font>
       <license name='&form.license;'>
       <table>
         <tr><td><e>Company Name:</e></td><td>&_.company_name;</td></tr>
@@ -47,12 +47,11 @@ mixed parse( RequestID id )
         <tr><td><e>Number:</e></td><td>&_.number;</td></tr>
         <tr><td><e>Created:</e></td><td>&_.created;</td></tr>
         <tr><td><e>Created by:</e></td><td>&_.creator;@roxen.com</td></tr>
-      </table>
-      <h2>Modules</h2>
+      </table><br />
       <table>
         <tr>
           <th align='left'>Module</th>
-          <th align='left'>Status</th>
+          <th align='left'>Enabled</th>
           <th align='left'>Features</th>
         </tr>
         <emit source='license-modules'>
@@ -61,8 +60,7 @@ mixed parse( RequestID id )
             <td align='center'>&_.enabled;</td>
             <td>
               <emit source='license-module-features'>
-                &_.name;: &_.value;
-                <delimiter>,</delimiter>
+                &_.name;:&nbsp;&_.value;<delimiter>, </delimiter>
               </emit><else>&nbsp;</else>
             </td>
           </tr>
@@ -71,8 +69,5 @@ mixed parse( RequestID id )
     </license>
   </if>
 ";
-  RXML.Parser parser = Roxen.get_rxml_parser (id);
-  parser->write_end(txt);
- 
-  return parser->eval();
+  return txt;
 }
