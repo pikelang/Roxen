@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.4 1999/03/23 14:30:41 peter Exp $
+ * $Id: lyskomrcpt.pike,v 1.5 1999/03/23 16:05:07 peter Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.4 1999/03/23 14:30:41 peter Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.5 1999/03/23 16:05:07 peter Exp $";
 
 /*
  * Roxen glue
@@ -232,7 +232,7 @@ string desc(string addr, object o)
   roxen_perror("AutoMail RCPT: desc(%O)\n", addr);
   addr=remove_trailing_dot(addr);
   int conf_no;
-  if(!sscanf(addr,"c%d@",conf_no))
+  if(!sscanf(addr,"m%d@",conf_no))
     return 0;
 
   if(sscanf(addr,sprintf("%%*s@%s",query("handledomain")))<1)
@@ -312,7 +312,7 @@ int put(string sender, string user, string domain,
   }
     
   int conf_no;
-  sscanf(user,"c%d",conf_no);
+  sscanf(user,"m%d",conf_no);
   if(!conf_no) return 1;
   object conference=LysKOM.Abstract.Conferences(session)[conf_no];
 
