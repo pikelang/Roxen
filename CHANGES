@@ -1,12 +1,12 @@
 Changes since Roxen 2.0.43
 -----------------------------------------------
 
-o Reduced the length of the paths in the distribuition to lessen the
+o Reduced the length of the paths in the distribution to lessen the
   effect of old buggy tars.
 
 o Fixed bug in ldaptag.
 
-o Fixed create_configinterface to ser up all the extensions used by
+o Fixed create_configinterface to set up all the extensions used by
   the manual.
 
 
