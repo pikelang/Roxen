@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.67 1998/07/14 21:58:06 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.68 1998/07/15 09:59:43 neotron Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -124,7 +124,7 @@ static mapping build_env_vars(string f, object id, string path_info)
       new["HTTP_COOKIE"] = id->misc->cookies;
   
     if(sizeof(id->pragma))
-      new["HTTP_PRAGMA"]=sprintf("%O", indices(id->pragma)*", ");
+      new["HTTP_PRAGMA"]=sprintf("%s", indices(id->pragma)*", ");
 
     if(stringp(id->misc->connection))
       new["HTTP_CONNECTION"]=id->misc->connection;
@@ -762,17 +762,17 @@ static string number2string(int n,mapping m,mixed names)
   string s;
   switch (m->type)
   {
-    case "string":
-       if (functionp(names)) 
-          { s=names(n); break; }
-       if (!arrayp(names)||n<0||n>=sizeof(names)) s="";
-       else s=names[n];
-       break;
-    case "roman":
-       s=int2roman(n);
-       break;
-    default:
-       return (string)n;
+   case "string":
+    if (functionp(names)) 
+    { s=names(n); break; }
+    if (!arrayp(names)||n<0||n>=sizeof(names)) s="";
+    else s=names[n];
+    break;
+   case "roman":
+    s=int2roman(n);
+    break;
+   default:
+    return (string)n;
   }
   if (m->lower) s=lower_case(s);
   if (m->upper) s=upper_case(s);
