@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.14 2000/09/10 18:28:02 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.15 2000/09/10 22:55:11 js Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -76,36 +76,6 @@ string query_name()
 {
   return sprintf("<i>%s</i> mounted on <i>%s</i>", query("classname"),
 		 query("location"));
-}
-
-class ClassPathList
-{
-  inherit Variable.FileList;
-
-  array verify_set( string|array(string) value )
-  {
-    if(stringp(value))
-      value = ({ value });
-    string warn = "";
-    foreach( value-({""}), string value ) {
-      Stat s = r_file_stat( value );
-      Stdio.File f = Stdio.File();
-      if( !s )
-        warn += value+" does not exist\n";
-      else if( s[ ST_SIZE ] == -2 )
-	;
-      else if( !(f->open( value, "r" )) )
-        warn += "Can't read "+value+"\n";
-      else {
-	if( f->read(2) != "PK" )
-	  warn += value+" is not a JAR file\n";
-	f->close();
-      }
-    }
-    if( strlen( warn ) )
-      return ({ warn, value });
-    return ::verify_set( value );
-  }
 }
 
 class RXMLParseWrapper
@@ -204,11 +174,40 @@ int|mapping handle_file_extension(object o, string e, object id)
 
 #endif
 
+class ClassPathList
+{
+  inherit Variable.FileList;
+
+  array verify_set( string|array(string) value )
+  {
+    if(stringp(value))
+      value = ({ value });
+    string warn = "";
+    foreach( value-({""}), string value ) {
+      Stat s = r_file_stat( value );
+      Stdio.File f = Stdio.File();
+      if( !s )
+        warn += value+" does not exist\n";
+      else if( s[ ST_SIZE ] == -2 )
+	;
+      else if( !(f->open( value, "r" )) )
+        warn += "Can't read "+value+"\n";
+      else {
+	if( f->read(2) != "PK" )
+	  warn += value+" is not a JAR file\n";
+	f->close();
+      }
+    }
+    if( strlen( warn ) )
+      return ({ warn, value });
+    return ::verify_set( value );
+  }
+}
+
 array(string) query_file_extensions()
 {
   return (query("ex")? query("ext") : ({}));
 }
-
 
 void create()
 {
