@@ -3,14 +3,14 @@
  * This is a Roxen module. Copyright © 2000, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byaddress.pike,v 1.1 2000/05/15 19:59:23 kinkie Exp $";
+constant cvs_version="$Id: throttling_byaddress.pike,v 1.2 2000/05/20 16:40:20 kinkie Exp $";
 
 #include <module.h>
 inherit "throttlelib";
 string filter_type="(by address)";
 string rules_doc=
-#"Throttling rules. One rule per line, whose format is:<br>
-<tt>ip_with_mask modifier [fix]</tt><br>
+#"Throttling rules. One rule per line, whose format is:<br />
+<tt>ip_with_mask modifier [fix]</tt><br />
 where ip_with_mask can be an ip address, or 
 ip_address/bits, or ip_address:netmask<p>
 The search will be stopped at the first match.";
@@ -47,9 +47,9 @@ object(IP_with_mask) add_to_cache(string rule) {
   throw( ({ "Can't parse rule: "+rule , backtrace() }) );
 }
 
-string update_rules() {
+string|void update_rules(string new_rules) {
    rules_cache=([]);
-   ::update_rules();
+   return ::update_rules(new_rules);
 }
 
 //FIXME: non e` la regola giusta!
