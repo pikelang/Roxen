@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.306 2003/08/26 15:43:48 mast Exp $
+// $Id: module.pmod,v 1.307 2004/01/27 18:42:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1647,7 +1647,7 @@ class Context
 	      // it - upgrade to 3.4!
 	      var_chg[encode_value_canonic (({scope_name}) + var)] = val;
 
-	    array(string|int) path = var[..sizeof (var) - 1];
+	    array(string|int) path = var[..sizeof (var) - 2];
 	    vars = rxml_index (vars, path, scope_name, this_object());
 	    scope_name += "." + (array(string)) path * ".";
 	    index = var[-1];
@@ -1735,7 +1735,7 @@ class Context
 	      // it - upgrade to 3.4!
 	      var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
 
-	    array(string|int) path = var[..sizeof (var) - 1];
+	    array(string|int) path = var[..sizeof (var) - 2];
 	    vars = rxml_index (vars, path, scope_name, this_object());
 	    scope_name += "." + (array(string)) path * ".";
 	    var = var[-1];
