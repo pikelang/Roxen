@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.258 1999/03/01 17:03:14 marcus Exp $
+ * $Id: roxen.pike,v 1.259 1999/03/02 20:15:26 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.258 1999/03/01 17:03:14 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.259 1999/03/02 20:15:26 grubba Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -174,7 +174,7 @@ private static void really_low_shutdown(int exit_code)
 #endif /* THREADS */
 
   // Don't use fork() with threaded servers.
-#if constant(fork) && !defined(THREADS)
+#if constant(fork) && !constant(create_thread)
 
   // Fork, and then do a 'slow-quit' in the forked copy. Exit the
   // original copy, after all listen ports are closed.
@@ -199,7 +199,7 @@ private static void really_low_shutdown(int exit_code)
   array f=indices(portno);
   for(int i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
-#else /* !constant(fork) || defined(THREADS) */
+#else /* !constant(fork) || constant(create_thread) */
 
   // FIXME:
   // Should probably attempt something similar to the above,
@@ -208,7 +208,7 @@ private static void really_low_shutdown(int exit_code)
 
   exit(exit_code);		// Now we die...
 
-#endif /* constant(fork) && !defined(THREADS) */
+#endif /* constant(fork) && !constant(create_thread) */
 }
 
 // Shutdown Roxen
