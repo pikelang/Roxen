@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.325 1999/09/05 15:49:11 grubba Exp $
+ * $Id: roxen.pike,v 1.326 1999/09/10 22:08:17 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.325 1999/09/05 15:49:11 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.326 1999/09/10 22:08:17 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -1056,24 +1056,35 @@ class Codec
   }
 }
 
+int remove_dumped_mark = lambda ()
+{
+  array stat = file_stat (combine_path (
+    getcwd(), __FILE__ + "/../../.remove_dumped_mark"));
+  return stat && stat[ST_MTIME];
+}();
+
 program my_compile_file(string file)
 {
   m_delete( master()->programs, file);
+  string ofile = file + ".o";
+  if (file_stat (ofile) &&
+      file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
+    rm (ofile);
   program p  = (program)( file );
-  if( !file_stat( file+".o" ) ||
-      file_stat(file+".o")[ST_MTIME] <
+  if( !file_stat( ofile ) ||
+      file_stat(ofile)[ST_MTIME] <
       file_stat(file)[ST_MTIME] )
     if( catch 
     {
       string data = encode_value( p, Codec(p) );
       if( strlen( data ) )
-        Stdio.File( file+".o", "wct" )->write( data );
+        Stdio.File( ofile, "wct" )->write( data );
     } )
     {
 #ifdef MODULE_DEBUG
       werror(" [nodump] ");
 #endif
-      Stdio.File( file+".o", "wct" );
+      Stdio.File( ofile, "wct" );
     } else {
 #ifdef MODULE_DEBUG
       werror(" [dump] ");

@@ -1,8 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.77 1999/09/10 19:58:05 mast Exp $
+# $Id: start,v 1.78 1999/09/10 22:08:15 mast Exp $
 
-pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` : "
+pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
 cd `dirname $0`
 
@@ -63,6 +63,7 @@ gdb=no
 
 remove_old_dot_o_files () {
   echo "$pre Removing old .o files ($1)"
+  > "$roxendir/.remove_dumped_mark"
   find . -name '*.o' | xargs rm -f
 }
 
@@ -413,11 +414,11 @@ start_roxen() {
   fi
   if [ "x$gdb" = "xno" ]; then
     if [ $verbose -gt 0 ]; then
-      echo "$pre Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
+      echo "$pre" "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
     else :; fi
     $pike $args $@
   else
-    echo $pre Executing gdb $pike $args $@
+    echo "$pre" Executing gdb $pike $args $@
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
@@ -452,7 +453,7 @@ echo "$PIKEVERSION $DEFINES" > .old_roxen_defines
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
-    echo $pre Starting the Roxen Challenger World Wide Web server.
+    echo "$pre" Starting the Roxen Challenger World Wide Web server.
   else :; fi
   ./mkdir -p $LOGDIR/debug/
 
@@ -471,8 +472,8 @@ oo
   exec </dev/null
 
   (while : ; do
-    echo $pre "Server restart at `date`"
-    echo $pre "Debug log in $LOGDIR/debug/$FILES.1"
+    echo "$pre" "Server restart at `date`"
+    echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
     rotate $LOGDIR/debug/$FILES
 
     start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
@@ -481,14 +482,14 @@ oo
 
     if [ "$exitcode" -eq "0" ] ; then
       # Clean shutdown.
-      echo $pre "Roxen shutdown."
+      echo "$pre" "Roxen shutdown."
       exit 0
     fi
     if [ "$exitcode" -lt "0" ] ; then
       # Signal death.
-      echo $pre "Roxen died of signal $exitcode. Restarting..."
+      echo "$pre" "Roxen died of signal $exitcode. Restarting..."
     else
-      echo $pre Roxen down. Restarting.
+      echo "$pre" Roxen down. Restarting.
     fi
   done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 else
@@ -497,4 +498,3 @@ else
   else :; fi
   start_roxen $extra_args
 fi
-    
