@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.166 2004/04/28 17:52:43 mast Exp $
+// $Id: module.pike,v 1.167 2004/04/28 17:54:55 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -291,6 +291,16 @@ class DefaultPropertySet
 {
   inherit PropertySet;
 
+  static Stat stat;
+
+  static void create (string path, RequestID id, Stat stat)
+  {
+    ::create (path, id);
+    this_program::stat = stat;
+  }
+
+  Stat get_stat() {return stat;}
+
   static mapping(string:string) response_headers;
 
   mapping(string:string) get_response_headers()
@@ -348,7 +358,7 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
     return 0;
   }
 
-  PropertySet res = DefaultPropertySet(path, st, id);
+  PropertySet res = DefaultPropertySet(path, id, st);
   SIMPLE_TRACE_LEAVE ("");
   return res;
 }
@@ -410,7 +420,7 @@ void recurse_find_properties(string path, string mode,
     }
   }
 
-  if (properties->st->isdir) {
+  if (properties->get_stat()->isdir) {
     if (depth <= 0) {
       SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
       return;

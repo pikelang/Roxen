@@ -17,19 +17,15 @@
 //! Path for which these properties apply.
 string path;
 
-//! Status information about @[path] as returned by @[stat_file()].
-Stat st;
-
 //! The current request.
 RequestID id;
 
 //! Create a new property set.
 //!
 //! Usually called via @[query_properties()].
-static void create(string path, Stat st, RequestID id)
+static void create(string path, RequestID id)
 {
   global::path = path;
-  global::st = st;
   global::id = id;
 }
 
@@ -40,6 +36,10 @@ static void create(string path, Stat st, RequestID id)
 static void destroy()
 {
 }
+
+//! Return an @[Stdio.Stat] object for the resource. Its main use is
+//! to tell collections (i.e. directories) from non-collections.
+Stat get_stat();
 
 //! Called by the default @[query_property] implementation to get the
 //! response headers a GET or HEAD request on @[path] would yield.
@@ -231,7 +231,7 @@ private constant all_properties_dir = all_properties_common;
 multiset(string) query_all_properties()
 {
   multiset(string) props =
-    (st->isreg ? all_properties_file : all_properties_dir) + (<>);
+    (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
 
   // This isn't necessary for the Content-Length and Content-Type
   // headers since RequestID.make_response_headers always sets those.
@@ -260,9 +260,10 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     // We don't really have any idea of the creation time in a unix
     // style file system.
   case "DAV:creationdate":	// RFC2518 13.1
-    int t = st->ctime;
-    if (t > st->atime) t = st->atime;
-    if (t > st->mtime) t = st->mtime;
+    Stdio.Stat stat = get_stat();
+    int t = stat->ctime;
+    if (t > stat->atime) t = stat->atime;
+    if (t > stat->mtime) t = stat->mtime;
     return Roxen.iso8601_date_time(t);	// MS kludge.
 #endif
 
@@ -287,7 +288,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     return get_response_headers()["Last-Modified"];
 
   case "DAV:resourcetype":	// RFC2518 13.9
-    if (st->isdir) {
+    if (get_stat()->isdir) {
       return ({
 	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
       });
@@ -310,8 +311,9 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     //		in most filesystems.
     //
     //		This property is not defined on collections.
-    if (st->isreg) {
-      if (st->mode & 0111) return "T";
+    Stdio.Stat stat = get_stat();
+    if (stat->isreg) {
+      if (stat->mode & 0111) return "T";
       return "F";
     }
     break;
@@ -333,7 +335,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
-    if (st->isdir) {
+    if (get_stat()->isdir) {
       return "1";
     }
     return "0";
@@ -342,7 +344,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     // The following are properties in the DAV namespace
     // that Microsoft has stolen.
   case "DAV:isreadonly":	// MS
-    if (!(st->mode & 0222)) {
+    if (!(get_stat()->mode & 0222)) {
       return "1";
     }
     return "0";
@@ -350,7 +352,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     if (path == "") return "1";
     return "0";
   case "DAV:lastaccessed":	// MS
-    return Roxen.iso8601_date_time(st->atime);
+    return Roxen.iso8601_date_time(get_stat()->atime);
   case "DAV:href":		// MS
     return sprintf("%s://%s%s%s%s",
 		   id->port_obj->prot_name,
