@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.10 2000/09/10 16:51:58 nilsson Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.11 2001/03/07 13:40:47 kuntri Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -23,39 +23,40 @@ constant module_unique = 1;
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["throttle":#"<desc tag><short>This tag determines a request's allocated bandwidth.</short></desc>
+constant tagdoc=(["throttle":#"<desc tag='tag'><p><short>
+ This tag determines a request's allocated bandwidth.</short></p>
+</desc>
 
-<attr name='not'>
+<attr name='not'><p>
 Disables all and any throttling for the current request. Implies the
-'final' arg.
+'final' arg.</p>
 </attr>
 
-<attr name='add' value='rate'>
-Adds 'rate' bytes/sec to the current rate for the current request.
+<attr name='add' value='rate'><p>
+Adds 'rate' bytes/sec to the current rate for the current request.</p>
 </attr>
 
-<attr name='subtract' value='rate'>
+<attr name='subtract' value='rate'><p>
 Subtracts 'rate' bytes/sec from the current rate for the current
-request.
+request.</p>
 </attr>
 
-<attr name='multiply' value='float'>
-Multiplies this requests' bandwidth by 'float'.
+<attr name='multiply' value='float'><p>
+Multiplies this requests' bandwidth by 'float'.</p>
 </attr>
 
-<attr name='divide' value='float'>
-Divides this requests' bandwidth by 'float'.
+<attr name='divide' value='float'><p>
+Divides this requests' bandwidth by 'float'.</p>
 </attr>
 
-<attr name='rate' value='value'>
-Sets this request's bandwidth to 'value'.
+<attr name='rate' value='value'><p>
+Sets this request's bandwidth to 'value'.</p>
 </attr>
 
-<attr name='final' required>
+<attr name='final' required><p>
 No subsequent modifications will be done to this request's bandwidth
-after the current one.
+after the current one.</p>
 </attr>",
-
 		]);
 #endif
 

@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.8 2000/09/24 13:35:52 nilsson Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.9 2001/03/07 13:42:14 kuntri Exp $";
 
 
 
@@ -72,3 +72,43 @@ class TagTranslate {
     }
   }
 }
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+
+"trans-reg":#"<desc tag='tag'><p><short>
+ Registers a locale project in the locale system.</short> Used
+ internally by Roxen. You don't know how to use this tag. </p>
+</desc>
+
+<attr name='project' value='string'><p>
+ The name of the project.</p></attr>
+
+<attr name='path' value='string'><p>
+ The path to the projects language files.</p></attr>
+",
+
+"translate":#"<desc tag='tag'><p><short>
+ Translates the string to an apropriate string in the current
+ locale.</short> Used internally by Roxen. You don't know how to use
+ this tag.
+</p></desc>
+
+<attr name='id' value='string|number'><p>
+ The ID of the string.</p></attr>
+
+<attr name='project' value='string'><p>
+ The name of the project in which to look up the string. If only one
+ project is registered on the page the translation tag will default to
+ that project.</p></attr>
+
+<attr name='variable' value=''><p>
+ If set, the string will be put in this variable instead of inserted
+ into the current page.</p></attr>
+
+<attr name='scope' value=''><p>
+ The scope for the variable.</p></attr>
+",
+
+  ]);
+#endif

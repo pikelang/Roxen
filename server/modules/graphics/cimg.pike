@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.36 2001/01/26 02:41:08 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.37 2001/03/07 13:40:43 kuntri Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -26,78 +26,82 @@ mapping tagdocumentation() {
 }
 
 #ifdef manual
-constant tagdoc=(["cimg":#"
-<desc tag><short>Manipulates and converts images between different image
-formats.</short> Provides the tag <tag>cimg</tag> that makes it is possible to convert,
-resize, crop and in other ways transform images.</desc>
+constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
+ Manipulates and converts images between different image
+ formats.</short> Provides the tag <tag>cimg</tag> that makes it is
+ possible to convert, resize, crop and in other ways transform
+ images.</p>
+</desc>
 
-<attr name='src' value='uri' required>
- The path to the indata file.
+<attr name='src' value='uri' required='required'><p>
+ The path to the indata file.</p>
 
 <ex><cimg src='internal-roxen-testimage'/></ex>
 </attr>
 
-<attr name='data' value='imagedata'>
+<attr name='data' value='imagedata'><p>
  Insert images from other sources, e.g. databases through entities or
- variables.
+ variables.</p>
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='<ent>sql.imagedata</ent>'/>
+<cimg data='&sql.imagedata;'/>
 </emit>
 </ex>
 </attr>",
 
-"cimg-url":#"<desc tag><short>This tag generates an URI to the manipulated
-picture.</short> <tag>cimg-url</tag> takes the same attributes as
-<tag>cimg</tag> including the image cache attributes. The use for the
-tag is to insert image-URI's into various places, e.g. a submit-box.
+"cimg-url":#"<desc tag='tag'><p><short>
+ This tag generates an URI to the manipulated picture.</short>
+ <tag>cimg-url</tag> takes the same attributes as <xref
+ href='cimg.tag' />, including the image cache attributes. The use for
+ the tag is to insert image-URI's into various places, e.g. a
+ submit-box.</p>
 </desc>
 
-<attr name='src' value='uri' required>
- The path to the indata file.
+<attr name='src' value='uri' required='required'><p>
+ The path to the indata file.</p>
 
 <ex><cimg-url src='internal-roxen-testimage'/></ex>
 </attr>
 
-<attr name='data' value='imagedata'>
+<attr name='data' value='imagedata'><p>
  Insert images from other sources, e.g. databases through entities or
- variables.
+ variables.</p>
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='<ent>sql.imagedata</ent>'/>
+<cimg data='&sql.imagedata;'/>
 </emit>
 </ex>
 </attr>",
 
-"emit#cimg":({ #"<desc plugin><short hide>
- Entitybased version of &lt;cimg&gt;</short>Entitybased version of
- <tag>cimg</tag>. Takes the same attributes as <tag>cimg</tag>.
+"emit#cimg":({ #"<desc plugin='plugin'><p><short>
+ Entitybased version of <xref href='../graphics/cimg.tag' />.</short>
+ Takes the same attributes as <tag>cimg</tag>.</p>
 </desc>",
 
 ([
-"&_type;":#"<desc ent>
- Returns the image's content-type.
+"&_.type;":#"<desc ent='ent'><p>
+ Returns the image's content-type.</p>
 </desc>",
 
-"&_src;":#"<desc ent>
- Returns the path to the indata file.
+"&_.src;":#"<desc ent='ent'><p>
+ Returns the path to the indata file.</p>
 </desc>",
 
-"&_file-size;":#"<desc ent>
- Returns the image's file size.
+"&_.file-size;":#"<desc ent='ent'><p>
+ Returns the image's file size.</p>
 </desc>",
 
-"&_xsize;":#"<desc ent>
- Returns the width of the image.
+"&_.xsize;":#"<desc ent='ent'><p>
+ Returns the width of the image.</p>
 </desc>",
 
-"&_ysize;":#"<desc ent>
- Returns the height of the image.
+"&_.ysize;":#"<desc ent='ent'><p>
+ Returns the height of the image.</p>
 </desc>",
 
-"&_data;":#"<desc ent>
+"&_.data;":#"<desc ent='ent'><p>
  Returns the imagedata given through other sources, like databases
- through entities.
+ through entities.</p>
 </desc>"
 ])
 

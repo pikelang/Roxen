@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.61 2001/02/28 01:48:43 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.62 2001/03/07 13:42:14 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -14,66 +14,67 @@ generate nice tables.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablify":({#"<desc cont><short>
+constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
  Transforms texts into tables.</short> No attributes required.
-</desc>
+</p></desc>
 
-<attr name=rowseparator value=string default='newline'>
- Defines the rowseparator.
+<attr name='rowseparator' value='string' default='newline'><p>
+ Defines the rowseparator.</p>
 </attr>
 
-<attr name=cellseparator value=string default='tab'>
- Defines the cellseparator.
+<attr name='cellseparator' value='string' default='tab'><p>
+ Defines the cellseparator.</p>
 </attr>
 
-<attr name=border value=number>
+<attr name='border' value='number'><p>
  Defines the width of the border. Default is 2 in nice and nicer
- modes. Otherwise undefined.
+ modes. Otherwise undefined.</p>
 </attr>
 
-<attr name=cellspacing value=number>
+<attr name='cellspacing' value='number'><p>
  Defines the cellspacing attribute. Default is 0 in nice and nicer
- modes. Otherwise undefined.
+ modes. Otherwise undefined.</p>
 </attr>
 
-<attr name=cellpadding value=number>
+<attr name=cellpadding value='number'><p>
  Defines the cellpadding attribute. Default is 4 in nice and nicer
- modes. Otherwise undefined.
+ modes. Otherwise undefined.</p>
 </attr>
 
-<attr name=interactive-sort>
+<attr name='interactive-sort'><p>
  Makes it possible for the user to sort the table with respect to any
- column.
+ column.</p>
 </attr>
 
-<attr name=sortcol value=number>
+<attr name='sortcol' value='number'><p>
  Defines which column to sort the table with respect to. The leftmost
- column is number 1. Negative value indicate reverse sort order.
+ column is number 1. Negative value indicate reverse sort order.</p>
 </attr>
 
-<attr name=min value=number>
- Indicates which of the inputed rows should be the first to be
- displayed. The first row is number 1.
+<attr name=min value='number'><p>
+ Indicates which of the input rows should be the first to be
+ displayed. The first row is number 1.</p>
 </attr>
 
-<attr name=max value=number>
- Indicates which of the inputed rows should be the last to be
- displayed.
+<attr name=max value='number'><p>
+ Indicates which of the input rows should be the last to be
+ displayed.</p>
 </attr>
 
-<attr name=negativecolor value=color default='#ff0000'>
- The color of negative values in economic fields.
+<attr name='negativecolor' value='color' default='#ff0000'><p>
+ The color of negative values in economic fields.</p>
 </attr>
 
-<attr name=cellalign value=left|center|right>
- Defines how the cell contents should be align by default.
+<attr name='cellalign' value='left|center|right'><p>
+ Defines how the cell contents should be align by default.</p>
 </attr>
 
-<attr name=cellvalign value=top|middle|bottom>
- Defines how the cell contents should be verically aligned.</attr>
+<attr name='cellvalign' value='top|middle|bottom'><p>
+ Defines how the cell contents should be verically aligned.</p>
+</attr>
 
-<attr name=width value=number>
- Defines the width of the table.
+<attr name='width' value='number'><p>
+ Defines the width of the table.</p>
 
 <ex>
 <tablify cellseparator=','>
@@ -87,43 +88,43 @@ Finland, 5 158 372
 </ex>
 </attr>
 
-<hr>
+<h1>The 'nice' attribute</h1>
 
-<attr name=nice>
+<attr name='nice'><p>
  Add some extra layout to the table. All attributes below only applies
- in nice or nicer mode.
+ in nice or nicer mode.</p>
 </attr>
 
-<attr name=grid value=number>
- Draws a grid with the thickness given.
+<attr name='grid' value='number'><p>
+ Draws a grid with the thickness given.</p>
 </attr>
 
-<attr name=notitle>
- Don't add a title to each column.
+<attr name='notitle'><p>
+ Don't add a title to each column.</p>
 </attr>
 
-<attr name=bordercolor value=color default='#000000'>
- The color of the border.
+<attr name='bordercolor' value='color' default='#000000'><p>
+ The color of the border.</p>
 </attr>
 
-<attr name=titlebgcolor value=color default='#112266'>
- The background color of the title.
+<attr name='titlebgcolor' value='color' default='#112266'><p>
+ The background color of the title.</p>
 </attr>
 
-<attr name=titlecolor value=color default='#ffffff'>
- The color of the title.
+<attr name='titlecolor' value='color' default='#ffffff'><p>
+ The color of the title.</p>
 </attr>
 
-<attr name=modulo value=number>
- Defines how many rows in a row should have the same color.
+<attr name='modulo' value='number'><p>
+ Defines how many rows in a row should have the same color.</p>
 </attr>
 
-<attr name=oddbgcolor value=color default='#ffffff'>
- The first background color.
+<attr name='oddbgcolor' value='color' default='#ffffff'><p>
+ The first background color.</p>
 </attr>
 
-<attr name=evenbgcolor value=color default='#ddeeff'>
- The second background color.
+<attr name='evenbgcolor' value='color' default='#ddeeff'><p>
+ The second background color.</p>
 
 <ex>
 <tablify nice='' cellseparator=',' modulo='2'>
@@ -136,36 +137,37 @@ Finland, 5 158 372
 </tablify>
 </ex>
 </attr>
-<hr>
 
-<attr name=nicer>
+<h1>The 'nicer' attribute</h1>
+
+<attr name='nicer'><p>
  Add some extra extra layout to the table. All attributes below only
- applies in nicer mode. Nicer requires the gtext module.
+ applies in nicer mode. Nicer requires the gtext module.</p>
 </attr>
 
-<attr name=noxml>
- Don't terminate the gifs with slashes.
+<attr name='noxml'><p>
+ Don't terminate the gifs with slashes.</p>
 </attr>
 
-<attr name=font value=text default='lucida'>
- Gtext font to write the column titles with.
+<attr name='font' value='text' default='lucida'><p>
+ Gtext font to write the column titles with.</p>
 </attr>
 
-<attr name=scale value=float default='0.36'>
- Size of the gtext font to write the column titles with.
+<attr name='scale' value='float' default='0.36'><p>
+ Size of the gtext font to write the column titles with.</p>
 </attr>
 
-<attr name=textcolor value=color default='#000000'>
+<attr name='textcolor' value='color' default='#000000'><p>
  The color of the text. This will also work with economic fields in
- any mode.
+ any mode.</p>
 </attr>
 
-<attr name=size value=number default='2'>
- The size of the table text.
+<attr name='size' value='number' default='2'><p>
+ The size of the table text.</p>
 </attr>
 
-<attr name=font value=string default='helvetica,arial'>
- The font of the table text.
+<attr name='font' value='string' default='helvetica,arial'><p>
+ The font of the table text.</p>
 
 <ex>
 <tablify nicer='' cellseparator=',' font='andover' scale='1.0'>
@@ -179,36 +181,45 @@ Finland, 5 158 372
 </ex>
 
 </attr>",
-  (["fields":#"<desc cont>
+
+(["fields":#"<desc cont='cont'><p>
  The container 'fields' may be used inside the tablify container to
  describe the type of contents the fields in a column has. Available
- fields are<br>
+ fields are:</p>
 
    <list type='ul'>
-   <item>text (default)</item>
-   <item>left</item>
-   <item>center</item>
-   <item>right</item>
-   <item>num</item>
-   <item>int</item>
-   <item>economic-int</item>
-   <item>float</item>
-   <item>economic-float</item>
+   <item><p>text (default)</p></item>
+   <item><p>left</p></item>
+   <item><p>center</p></item>
+   <item><p>right</p></item>
+   <item><p>num</p></item>
+   <item><p>int</p></item>
+   <item><p>economic-int</p></item>
+   <item><p>float</p></item>
+   <item><p>economic-float</p></item>
    </list>
 
-   All fields except text overrides the cellvalign attribute.</desc>
+   <p>All fields except text overrides the cellvalign attribute.</p>
+</desc>
 
 
-  <attr name=separator value=string>Defines the field type separator.
+<attr name='separator' value='string'><p>
+ Defines the field type separator.</p>
 
-  The fields types are separated by
+ <p>The fields types are separated by</p>
   <list type='ol'>
-  <item>The value given in the separator attribute to fields.</item>
-  <item>The value given in the cellseparator attribute to tablify.</item>
-  <item>Tab.</item>
-  </list></attr>"])
-})]);
+  <item><p>The value given in the separator attribute to fields.</p></item>
+  <item><p>The value given in the cellseparator attribute to tablify.</p></item>
+  <item><p>Tab.</p></item>
+  </list>
+</attr>"
+])
+			    })
+		]);
 #endif
+
+
+
 
 string encode_url(int col, int state, object stateobj, RequestID id){
   if(col==abs(state))

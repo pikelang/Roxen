@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.36 2001/01/11 01:00:11 mast Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.37 2001/03/07 13:42:13 kuntri Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -77,28 +77,28 @@ void set_entities(RXML.Context c) {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"!--#config":#"<desc tag><short>
+"!--#config":#"<desc tag='tag'><p><short>
  The config command is used to configure how things should be printed.</short>
-</desc>
+</p></desc>
 
-<attr name=errmsg value=string>
+<attr name='errmsg' value='string'><p>
  Where msg is a message that is sent back to the client if an error
- occurs while parsing the SSI-tag.
+ occurs while parsing the SSI-tag.</p>
 </attr>
 
-<attr name=sizefmt value=bytes|abbrev>
+<attr name='sizefmt' value='bytes|abbrev'><p>
  The value sets the format to be used when displaying the size of a
  file. Bytes gives a count in bytes while abbrev gives a count in KB
- or MB, as appropriate.
+ or MB, as appropriate.</p>
 </attr>
 
-<attr name=timefmt value=value>
- The value is a string to be used when displaying SSI date output.
+<attr name='timefmt' value='value'><p>
+ The value is a string to be used when displaying SSI date output.</p>
 </attr>",
 
 "!--#echo":#"
-<desc tag><short>
- Prints a variable from the server or request.</short>
+<desc tag='tag'><p><short>
+ Prints a variable from the server or request.</short></p>
 
  <p>Some of the most useful ones are \"http referrer\" (the page
  which contained the link to the current page), \"last modified\"
@@ -110,190 +110,195 @@ constant tagdoc=([
  as RXML variables, nor use this tag to print RXML variables.</p>
 </desc>
 
-<attr name=var value=sizefmt>
- Print format for file sizes.
+<attr name='var' value='sizefmt'><p>
+ Print format for file sizes.</p>
 </attr>
 
-<attr name=var value='document name'>
- Name of the current document (= page). RXML counterpart: <ent>page.self</ent>.
+<attr name='var' value='document name'><p>
+ Name of the current document (= page). RXML counterpart:
+ <ent>page.self</ent>.</p>
  <ex type=vert><!--#echo var=\"document name\" --></ex>
 </attr>
 
-<attr name=var value='document uri'>
- URI (URL) to the current page. RXML counterpart: <ent>page.url</ent>.
+<attr name='var' value='document uri'><p>
+ URI (URL) to the current page. RXML counterpart:
+ <ent>page.url</ent>.</p>
  <ex type=vert><!--#echo var=\"document uri\" --></ex>
 </attr>
 
-<attr name=var value='date local'>
+<attr name='var' value='date local'><p>
  Time and date, in current time zone.
- RXML counterpart: &lt;date strftime=\"%c\"/&gt;
+ RXML counterpart: <tag>date strftime=\"%c\"/</tag></p>
 </attr>
 
-<attr name=var value='date gmt'>
+<attr name='var' value='date gmt'><p>
  Time and date, GMT time zone.
- RXML counterpart: &lt;date timezone=\"GMT\" strftime=\"%c\"/&gt;
+ RXML counterpart: <tag>date timezone=\"GMT\" strftime=\"%c\"/</tag></p>
 </attr>
 
-<attr name=var value='last modified'>
- Last time this document was modified. RXML counterpart: <tag>modified/</tag>.
+<attr name='var' value='last modified'><p>
+ Last time this document was modified. RXML counterpart:
+ <tag>modified/</tag>.</p>
 </attr>
 
-<attr name=var value='server software'>
- The web server software. RXML counterpart: <ent>roxen.version</ent>.
+<attr name='var' value='server software'><p>
+ The web server software. RXML counterpart:
+ <ent>roxen.version</ent>.</p>
 </attr>
 
-<attr name=var value='server name'>
- The web server name. RXML counterpart: <ent>roxen.domain</ent>.
+<attr name='var' value='server name'><p>
+ The web server name. RXML counterpart: <ent>roxen.domain</ent>.</p>
 </attr>
 
-<attr name=var value='remote host'>
- Name of client machine. RXML counterpart: <ent>client.host</ent>.
+<attr name='var' value='remote host'><p>
+ Name of client machine. RXML counterpart: <ent>client.host</ent>.</p>
 </attr>
 
-<attr name=var value='remote addr'>
- Numeric IP address of client machine. RXML counterpart: <ent>client.ip</ent>.
+<attr name='var' value='remote addr'><p>
+ Numeric IP address of client machine. RXML counterpart:
+ <ent>client.ip</ent>.</p>
 </attr>
 
-<attr name=var value='auth type'>
- Authentication type (typically Basic)
+<attr name='var' value='auth type'><p>
+ Authentication type (typically Basic).</p>
 </attr>
 
-<attr name=var value='remote user'>
- Client user name
+<attr name='var' value='remote user'><p>
+ Client user name.</p>
 </attr>
 
-<attr name=var value='http referrer'>
- URL of the referring page. RXML counterpart: <ent>client.referrer</ent>.
+<attr name='var' value='http referrer'><p>
+ URL of the referring page. RXML counterpart:
+ <ent>client.referrer</ent>.</p>
 </attr>
 
-<attr name=var value='gateway interface'>
- Answears \"CGI/1.1\".
+<attr name='var' value='gateway interface'><p>
+ Answers \"CGI/1.1\".</p>
 </attr>
 
-<attr name=var value='http cookie'>
- A list of the set cookies.
- <ex type=vert><!--#echo var=\"http cookie\" --></ex>
+<attr name='var' value='http cookie'><p>
+ A list of the set cookies.</p>
+ <ex type='box'><!--#echo var=\"http cookie\" --></ex>
 </attr>
 
-<attr name=var value=cookie>
- A list of the set cookies. Same as http cookie.
+<attr name='var' value='cookie'><p>
+ A list of the set cookies. Same as http cookie.</p>
 </attr>
 
-<attr name=var value='http accept'>
- A list of the http accept formats.
- <ex type=vert><!--#echo var=\"http accept\" --></ex>
+<attr name='var' value='http accept'><p>
+ A list of the http accept formats.</p>
+ <ex type='vert'><!--#echo var=\"http accept\" --></ex>
 </attr>
 
-<attr name=var value='http user agent'>
- The user agent string. RXML counterpart: <ent>client.Fullname</ent>.
+<attr name='var' value='http user agent'><p>
+ The user agent string. RXML counterpart:
+ <ent>client.Fullname</ent>.</p>
 </attr>
 
-<attr name=var value='path translated'>
- Translated path.
+<attr name='var' value='path translated'><p>
+ Translated path.</p>
 </attr>
 
-<attr name=var value='query string unescaped'>
- The query string.
+<attr name='var' value='query string unescaped'><p>
+ The query string.</p>
 </attr>
 
-<attr name=var value='request method'>
- Request method (typically GET)
+<attr name='var' value='request method'><p>
+ Request method (typically GET).</p>
 </attr>
 
-<attr name=var value='server protocol'>
- Protocol used for request.
+<attr name='var' value='server protocol'><p>
+ Protocol used for request.</p>
 </attr>
 
-<attr name=var value='server port'>
- Server's port number
+<attr name='var' value='server port'><p>
+ Server's port number.</p>
 </attr>",
 
 "!--#exec":#"
-<desc tag><short>
- Executes a CGI script or shell command.</short> This command has security
- implications and therefore, might not be available on all web sites.
+<desc tag='tag'><p><short>
+ Executes a CGI script or shell command.</short> This command has
+ security implications and therefore, might not be available on all
+ web sites.
+</p></desc>
 
-</desc>
-
-<attr name=cgi value=URL> Path to the CGI script URL encoded. That is,
- a character can be quoted by % followed by its hex value. The CGI
- script is given the PATH_INFO and QUERY_STRING of the original
- request from the client. The variables available in
- <tag>!--#echo</tag> will be available to the script in addition to
- the standard CGI environment. If the script returns a Location
- header, then this will be translated into an HTML anchor.
+<attr name='cgi' value='URL'><p>
+ Path to the CGI script URL encoded. That is, a character can be
+ quoted by % followed by its hex value. The CGI script is given the
+ PATH_INFO and QUERY_STRING of the original request from the client.
+ The variables available in <tag>!--#echo</tag> will be available to
+ the script in addition to the standard CGI environment. If the script
+ returns a Location header, then this will be translated into an HTML
+ anchor.</p>
 </attr>
 
-<attr name=cmd value=path>
+<attr name='cmd' value='path'><p>
  The server will execute the command using /bin/sh. The variables
- available in <tag>!--#echo</tag> will be available to the script.
+ available in <tag>!--#echo</tag> will be available to the script.</p>
 </attr>",
 
 "!--#flastmod":#"
-<desc tag><short hide>
- This tag prints the last modification date of the specified file,
- subject to timefmt format specification used in the <tag>!--#config</tag>
- SSI tag.</short> This tag prints the last modification date of the
+<desc tag='tag'><p><short hide='hide'>
+ This tag prints the last modification date of the specified
+ file.</short> This tag prints the last modification date of the
  specified file, subject to timefmt format specification used in the
- <ref type=tag>!--#config</ref> SSI tag. </desc>
+ <xref href='config.tag' /> SSI tag. </p></desc>
 
-<attr name=file value=path>
- Path to the file.
+<attr name='file' value='path'><p>
+ Path to the file.</p>
 </attr>
 
-<attr name=virtual value=URL>
+<attr name='virtual' value='URL'><p>
  Path to the file URL encoded. That is, a character can be quoted by %
- followed by its hex value.
+ followed by its hex value.</p>
 </attr>",
 
 "!--#fsize":#"
-<desc tag><short hide>
-
+<desc tag='tag'><p><short>
  Prints the size of the specified file, subject to the sizefmt format
- specification used in the <tag>!--#config</tag> SSI tag. </short>Prints the
- size of the specified file, subject to the sizefmt format
- specification used in the <ref type=tag>!--#config</ref> SSI tag.
- </desc>
+ specification used in the <tag>!--#config</tag> SSI tag. </short>
+ </p></desc>
 
-<attr name=file value=path>
- Path to the file.
+<attr name='file' value='path'><p>
+ Path to the file.</p>
 </attr>
 
-<attr name=virtual value=URL>
+<attr name='virtual' value='URL'><p>
  Path to the file URL encoded. That is, a character can be quoted by %
- followed by its hex value.
+ followed by its hex value.</p>
 </attr>",
 
 "!--#include":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Insert a text from another file into the page.</short>
-</desc>
+</p></desc>
 
-<attr name=file value=path>
+<attr name='file' value='path'><p>
  The file as a path relative to the directory containing the current
- page. It cannot contain ../, nor can it be an absolute path.
+ page. It cannot contain ../, nor can it be an absolute path.</p>
 </attr>
 
-<attr name=virtual value=URL>
+<attr name='virtual' value='URL'><p>
  The path to the file, URL encoded. That is, a character can be quoted
  by % followed by its hex value. The path may contain ../ and may be
- absolute, i e starting with a /
+ absolute, i e starting with a /.</p>
 </attr>",
 
 "!--#printenv":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
- values.</short> Attributes won't be printed.
- <ex type=vert><pre><!--#printenv --></pre></ex>
+ values.</short> Attributes won't be printed.</p>
+ <ex type='box'><pre><!--#printenv --></pre></ex>
 </desc>",
 
-"!--#set":#"<desc tag><short>
- Sets a value of a variable.</short>
-</desc>
+"!--#set":#"<desc tag='tag'><p><short>
+ Sets the value of a variable.</short>
+</p></desc>
 
-<attr name=var value=value>
- The name of the variable to set. Value sets the variables value.
+<attr name='var' value='value'><p>
+ The name of the variable to set. Value sets the variables value.</p>
 </attr>",
+
 ]);
 #endif
 

@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.33 2001/01/29 05:40:32 per Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.34 2001/03/07 13:42:12 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -186,83 +186,75 @@ string simpletag_obox(string name, mapping args, string contents)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["obox":([
-  "standard":#"<desc cont><short>This tag creates an outlined box.</short></desc>
+constant tagdoc=([
+"obox": ([
+  "standard":#"<desc cont='cont'><p><short>
+ This tag creates an outlined box.</short>
+</p></desc>
 
-<attr name=align value=left|right>
- Vertical alignment of the box.
+<attr name='align' value='left|right'><p>
+ Vertical alignment of the box.</p>
 </attr>
 
-<attr name=bgcolor value=color>
- Color of the background and title label.
+<attr name='bgcolor' value='color'><p>
+ Color of the background and title label.</p>
 </attr>
 
-<attr name=fixedleft value=number>
+<attr name='fixedleft' value='number'><p>
  Fixed length of line on the left side of the title. The unit is the
- approximate width of a character.
+ approximate width of a character.</p>
 </attr>
 
-<attr name=fixedright value=number>
+<attr name='fixedright' value='number'><p>
  Fixed length of line on the right side of the title. The unit is the
- approximate width of a character.
+ approximate width of a character.</p>
 </attr>
 
-<attr name=left value=number>
- Length of the line on the left of the title.
+<attr name='left' value='number'><p>
+ Length of the line on the left of the title.</p>
 </attr>
 
-<attr name=outlinecolor value=color>
- Color of the outline.
+<attr name='outlinecolor' value='color'><p>
+ Color of the outline.</p>
 </attr>
 
-<attr name=outlinewidth value=number>
- Width, in pixels, of the outline.
+<attr name='outlinewidth' value='number'><p>
+ Width, in pixels, of the outline.</p>
 </attr>
 
-<attr name=right value=number>
- Length of the line on the right of the title.
+<attr name='right' value='number'><p>
+ Length of the line on the right of the title.</p>
 </attr>
 
-<attr name=spacing value=number>
- Width, in pixels, of the space in the box.
+<attr name='spacing' value='number'><p>
+ Width, in pixels, of the space in the box.</p>
 </attr>
 
-<attr name=style value=caption|groupbox>
- Style of the box. Groupbox is default
+<attr name='style' value='caption|groupbox'><p>
+ Style of the box. Groupbox is default.</p>
 </attr>
 
-<attr name=textcolor value=color>
- Color of the text inside the box.
+<attr name='textcolor' value='color'><p>
+ Color of the text inside the box.</p>
 </attr>
 
-<attr name=title value=string>
- Sets the title of the obox.
+<attr name='title' value='string'><p>
+ Sets the title of the obox.</p>
 </attr>
 
-<attr name=titlecolor value=color>
- Color of the title text.
+<attr name='titlecolor' value='color'><p>
+ Color of the title text.</p>
 </attr>
 
-<attr name=width value=number>
- Width, in pixels, of the box.
+<attr name='width' value='number'><p>
+ Width, in pixels, of the box.</p>
 
 
- Note that the left and right attributes are constrained by the width
+ <p>Note that the left and right attributes are constrained by the width
  argument. If the title is not specified in the argument list, you can
- put it in a <tag>title</tag> container in the obox contents.
+ put it in a <tag>title</tag> container in the obox contents.</p>
 
 <ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
 <title>Sample box</title>
@@ -275,69 +267,71 @@ This is just a sample box.
 </attr>",
 
 
-  "svenska":#"<desc cont><short>Denna tagg skapar en ramlåda runt dess innehåll.</short></desc>
+  "svenska":#"<desc cont='cont'><p><short>
+ Denna tagg skapar en ramlåda runt dess innehåll.</short>
+</p></desc>
 
-<attr name=align value=left|right>
- Ramlådans vertikala position.
+<attr name='align' value='left|right'><p>
+ Ramlådans vertikala position.</p>
 </attr>
 
-<attr name=bgcolor value=färg>
- Färgen på bakgrunden samt titeln.
+<attr name='bgcolor' value='färg'><p>
+ Färgen på bakgrunden samt titeln.</p>
 </attr>
 
-<attr name=fixedleft value=nummer>
+<attr name='fixedleft' value='nummer'><p>
  Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
- ungefärliga bredden av ett tecken.
+ ungefärliga bredden av ett tecken.</p>
 </attr>
 
-<attr name=fixedright value=nummer>
+<attr name='fixedright' value='nummer'><p>
  Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
- ungefärliga bredden av ett tecken.
+ ungefärliga bredden av ett tecken.</p>
 </attr>
 
-<attr name=left value=nummer>
- Längden på linjen till vänster om titeln.
+<attr name='left' value='nummer'><p>
+ Längden på linjen till vänster om titeln.</p>
 </attr>
 
-<attr name=outlinecolor value=färg>
- Färgen på ramen.
+<attr name='outlinecolor' value='färg'><p>
+ Färgen på ramen.</p>
 </attr>
 
-<attr name=outlinewidth value=nummer>
- Ramens bredd, i antal pixlar.
+<attr name='outlinewidth' value='nummer'><p>
+ Ramens bredd, i antal pixlar.</p>
 </attr>
 
-<attr name=right value=nummer>
- Längden på linjen till höger om titeln.
+<attr name='right' value='nummer'><p>
+ Längden på linjen till höger om titeln.</p>
 </attr>
 
-<attr name=spacing value=nummer>
- Vidden på utrymmet i ramlådan, i antal pixlar.
+<attr name='spacing' value='nummer'><p>
+ Vidden på utrymmet i ramlådan, i antal pixlar.</p>
 </attr>
 
-<attr name=style value=caption|groupbox>
- Ramlådans stil. Groupbox är standardvärde.
+<attr name='style' value='caption|groupbox'><p>
+ Ramlådans stil. Groupbox är standardvärde.</p>
 </attr>
 
-<attr name=textcolor value=färg>
- Färgen på texten inuti lådan.
+<attr name='textcolor' value='färg'><p>
+ Färgen på texten inuti lådan.</p>
 </attr>
 
-<attr name=title value=textsträng>
- Ramlådans titel.
+<attr name='title' value='textsträng'><p>
+ Ramlådans titel.</p>
 </attr>
 
-<attr name=titlecolor value=färg>
- Färgen på titeltexten.
+<attr name='titlecolor' value='färg'><p>
+ Färgen på titeltexten.</p>
  </attr>
 
-<attr name=width value=nummer>
- Bredden på lådan, i antal pixlar.
+<attr name='width' value='nummer'><p>
+ Bredden på lådan, i antal pixlar.</p>
 
- Tänk på att <att>left</att> och <att>right</att> attributen begränsas
+ <p>Tänk på att <att>left</att> och <att>right</att> attributen begränsas
  av värdet på <att>width</att> attributet. Om titeln inte är satt i
  taggen, finns möjligheten att sätta den inuti en <tag>title</tag>
- tagg och placera denna i ramlådans innehåll.
+ tagg och placera denna i ramlådans innehåll.</p>
 
 <ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
 <title>Ramlåda</title>
@@ -347,6 +341,7 @@ Detta är innehållet.
 </obox>
 </ex>
 
-</attr>"]) ]);
+</attr>"
+]) ]);
 #endif
 

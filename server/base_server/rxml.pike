@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.281 2001/03/01 03:15:28 mast Exp $
+// $Id: rxml.pike,v 1.282 2001/03/07 13:39:04 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2372,120 +2372,162 @@ static int format_support(string t, mapping m, string c, mapping doc) {
 
 #ifdef manual
 constant tagdoc=([
-"&roxen;":#"<desc scope><short>This scope contains information specific to this Roxen WebServer.</short></desc>",
-"&roxen.domain;":#"<desc ent>The domain name of this site.</desc>",
-"&roxen.hits;":#"<desc ent>The number of hits, i.e. requests the
- webserver has accumulated since it was last started.</desc>",
-"&roxen.hits-per-minute;":"<desc ent>The number of hits per minute, in average.</desc>",
-"&roxen.pike-version;":"<desc ent>The version of Pike the webserver is using.</desc>",
-"&roxen.sent;":"<desc ent>The total amount of data the webserver has sent. </desc>",
-"&roxen.sent-kbit-per-second;":"<desc ent>The average amount of data the webserver has sent, in Kibibits.</desc>",
-"&roxen.sent-mb;":"<desc ent>The total amount of data the webserver has sent, in Mebibits.</desc>",
-"&roxen.sent-per-minute;":"<desc ent></desc>",
-"&roxen.server;":"<desc ent>The URL of the webserver.</desc>",
-"&roxen.ssl-strength;":"<desc ent>How many bits encryption strength are the SSL capable of</desc>",
-"&roxen.time;":"<desc ent>The current posix time.</desc>",
-"&roxen.uptime;":"<desc ent>The total uptime of the webserver, in seconds.</desc>",
-"&roxen.uptime-days;":"<desc ent>The total uptime of the webserver, in days.</desc>",
-"&roxen.uptime-hours;":"<desc ent>The total uptime of the webserver, in hours.</desc>",
-"&roxen.uptime-minutes;":"<desc ent>The total uptime of the webserver, in minutes.</desc>",
-"&roxen.version;":"<desc ent>Which version of Roxen WebServer that is running.</desc>",
+"&roxen;":#"<desc scope='scope'><p><short>
+ This scope contains information specific to this Roxen
+ WebServer.</short> It is not possible to write any information to
+ this scope
+</p></desc>",
 
-"&client;":#"<desc scope><short>
+"&roxen.domain;":#"<desc ent='ent'><p>
+ The domain name of this site.
+</p></desc>",
+
+"&roxen.hits;":#"<desc ent='ent'><p>
+ The number of hits, i.e. requests the webserver has accumulated since
+ it was last started.
+</p></desc>",
+"&roxen.hits-per-minute;":#"<desc ent='ent'><p>
+ The number of hits per minute, in average.
+</p></desc>",
+
+"&roxen.pike-version;":#"<desc ent='ent'><p>
+ The version of Pike the webserver is using.
+</p></desc>",
+
+"&roxen.sent;":#"<desc ent='ent'><p>
+The total amount of data the webserver has sent.
+</p></desc>",
+
+"&roxen.sent-kbit-per-second;":#"<desc ent='ent'><p>
+The average amount of data the webserver has sent, in
+Kibibits.
+</p></desc>",
+
+"&roxen.sent-mb;":#"<desc ent='ent'><p>
+ The total amount of data the webserver has sent, in
+ Mebibits.
+</p></desc>",
+
+"&roxen.sent-per-minute;":#"<desc ent='ent'><p>
+
+
+
+</p></desc>",
+
+"&roxen.server;":#"<desc ent='ent'><p>
+ The URL of the webserver.
+</p></desc>",
+
+"&roxen.ssl-strength;":#"<desc ent='ent'><p>
+ How many bits encryption strength are the SSL capable of
+</p></desc>",
+
+"&roxen.time;":#"<desc ent='ent'><p>
+ The current posix time.
+</p></desc>",
+
+"&roxen.uptime;":#"<desc ent='ent'><p>
+ The total uptime of the webserver, in seconds.
+</p></desc>",
+
+"&roxen.uptime-days;":#"<desc ent='ent'><p>
+ The total uptime of the webserver, in days.
+</p></desc>",
+
+"&roxen.uptime-hours;":#"<desc ent='ent'><p>
+ The total uptime of the webserver, in hours.
+</p></desc>",
+
+"&roxen.uptime-minutes;":#"<desc ent='ent'><p>
+ The total uptime of the webserver, in minutes.
+</p></desc>",
+
+"&client;":#"<desc scope='scope'><p><short>
  This scope contains information specific to the client/browser that
  is accessing the page.</short>
+</p></desc>",
+
+"&page;":#"<desc scope='scope'><p><short>
+ This scope contains information specific to this page.</short></p>
 </desc>",
 
-"&page;":"<desc scope><short>This scope contains information specific to this page.</short></desc>",
-
-"&form;":#"<desc scope><short hide>
+"&form;":#"<desc scope='scope'><p><short hide='hide'>
  This scope contains form variables.</short>This scope contains the
  form variables, i.e. the answers to HTML forms sent by the client.
  There are no predefined entities for this scope.
-</desc>",
+</p></desc>",
 
-
-"&cookie;":#"<desc scope><short>
+"&cookie;":#"<desc scope='scope'><p><short>
  This scope contains the cookies sent by the client.</short> Adding,
  deleting or changing in this scope updates the clients cookies. There
- are no predefined entities for this scope.</short>
-</desc>",
+ are no predefined entities for this scope. When adding cookies to
+ this scope they are automatically set to expire after two years.
+</p></desc>",
 
-"&var;":#"<desc scope><short>
+"&var;":#"<desc scope='scope'><p><short>
  This scope is empty when the page parsing begins.</short> There are
- no predefined entities for this scope.
-</desc>",
+ no predefined entities for this
+</p></desc>",
 
-
-"case":#"<desc cont><short>
+"case":#"<desc cont='cont'><p><short>
  Alters the case of the contents.</short>
-</desc>
+</p></desc>
 
-<attr name='case' value='upper|lower|capitalize' required>
+<attr name='case' value='upper|lower|capitalize' required='required'><p>
  Changes all characters to upper or lower case letters, or
- capitalizes the first letter in the content.
+ capitalizes the first letter in the content.</p>
 
 <ex><case upper=''>upper</case></ex>
 <ex><case lower=''>lower</case></ex>
 <ex><case capitalize=''>captalize</case></ex>
 </attr>",
 
-"cond":({ #"<desc cont><short hide>This tag makes a boolean test on a specified list of cases.</short>
- This tag is almost eqvivalent to the <tag>if</tag>/<tag>else</tag>
- tag combination. The main diffirence is that the <tag>default</tag>
- tag may be put whereever you want it within the <tag>cond</tag> tag.
- This will of course affect the order the content is parsed. The
- <tag>case</tag> tag is required.</desc>",
+"cond":({ #"<desc cont='cont'><p><short>
+ This tag makes a boolean test on a specified list of cases.</short>
+ This tag is almost eqvivalent to the <xref href='../if/if.tag'
+ />/<xref href='../if/else.tag' /> combination. The main difference is
+ that the <tag>default</tag> tag may be put whereever you want it
+ within the <tag>cond</tag> tag. This will of course affect the order
+ the content is parsed. The <tag>case</tag> tag is required.</p>
 
-	  (["case":#"<desc cont>
+</desc>",
+
+	  (["case":#"<desc cont='cont'><p>
  This tag takes the argument that is to be tested and if it's true,
  it's content is executed before exiting the <tag>cond</tag>. If the
  argument is false the content is skipped and the next <tag>case</tag>
- tag is parsed.</desc>
+ tag is parsed.</p></desc>
 
-<ex type='vert'>
-<set variable='var.foo' value='17'/>
+<ex type='box'>
 <cond>
-  <case true=''><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+1'/></case>
-  <default><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+2'/></default>
+ <case variable='form.action = edit'>
+   some database edit code
+ </case>
+ <case variable='form.action = delete'>
+   some database delete code
+ </case>
+ <default>
+   view something from the database
+ </default>
 </cond>
-<ent>var.foo</ent>
 </ex>",
 
-	    "default":#"<desc cont>
+	    "default":#"<desc cont='cont'><p>
  The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
  in an <tag>if</tag> statement. The difference between the two is that
  the <tag>default</tag> may be put anywhere in the <tag>cond</tag>
  statement. This affects the parseorder of the statement. If the
  <tag>default</tag> tag is put first in the statement it will allways
  be executed, then the next <tag>case</tag> tag will be executed and
- perhaps add to the result the <tag>default</tag> performed.</desc>
-
-<ex type='vert'>
-<set variable=\"var.foo\" value=\"17\"/>
-<cond>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
-  <case true=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-</cond>
-<ent>var.foo</ent>
-</ex>
-<br/>
-<ex type='vert'>
-<set variable=\"var.foo\" value=\"17\"/>
-<cond>
-  <case false=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
-</cond>
-<ent>var.foo</ent>
-</ex>"
+ perhaps add to the result the <tag>default</tag> performed.</p></desc>"
 	    ])
 	  }),
 
-"comment":#"<desc cont><short>
+"comment":#"<desc cont='cont'><p><short>
  The enclosed text will be removed from the document.</short> The
  difference from a normal SGML (HTML/XML) comment is that the text is
  removed from the document, and can not be seen even with <i>view
- source</i> in the browser.
+ source</i> in the browser.</p>
 
  <p>Note that since this is a normal tag, it requires that the content
  is properly formatted. Therefore it's ofter better to use the
@@ -2503,7 +2545,7 @@ constant tagdoc=([
  matches the ender after 'c' and not the one before it.</p>
 </desc>
 
-<attr name=preparse>
+<attr name='preparse'>
  Parse and execute any RXML inside the comment tag. This can be used
  to do stuff without producing any output in the response. This is a
  compatibility argument; the recommended way is to use <ref
@@ -2511,98 +2553,116 @@ constant tagdoc=([
 </attr>",
 
 
-"<?comment":#"<desc pi><short>
+"?comment":#"<desc pi='pi'><p><short>
  Processing instruction tag for comments.</short> This tag is similar
  to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.
 </desc>",
 
+// <cset> is deprecated. This information is to be put in a special
+// 'deprecated' chapter in the manual, due to many persons asking
+// about its whereabouts.
+"cset":#"<desc tag='tag'><p><short>
+ Deprecated in favor of <tag>define variable</tag></short> Deprecated
+ in Roxen 2.0.
+</p></desc>",
 
-"define":({ #"<desc cont><short>
- Defines variables, tags, containers and if-callers.</short> One, and only one,
- attribute must be set.
-</desc>
+"define":({ #"<desc cont='cont'><p><short>
 
-<attr name=variable value=name>
- Sets the value of the variable to the contents of the container.
+ Defines variables, tags, containers and if-callers.</short> This tag
+ can also be used to redefine existing HTML-tags. Note that everything
+ defined by this tag are locally for the document they exist in, not
+ globally like variables or tags defined in Roxen-modules are.
+</p></desc>
+
+<attr name='variable' value='name'><p>
+ Sets the value of the variable to the contents of the container.</p>
 </attr>
 
-<attr name=tag value=name>
- Defines a tag that outputs the contents of the container.
+<attr name='tag' value='name'><p>
+ Defines a tag that outputs the contents of the container.</p>
 </attr>
 
-<attr name=container value=name>
- Defines a container that outputs the contents of the container.
+<attr name='container' value='name'><p>
+ Defines a container that outputs the contents of the container.</p>
 </attr>
 
-<attr name=if value=name>
+<attr name='if' value='name'><p>
  Defines an if-caller that compares something with the contents of the
- container.
+ container.</p>
 </attr>
 
-<attr name=trimwhites>
- Trim all white space characters from the begining and the end of the contents.
+<attr name='trimwhites'><p>
+ Trim all white space characters from the beginning and the end of the
+ contents.</p>
 </attr>
 
-The values of the attributes given to the defined tag are available in the
-scope created within the define tag.
+ <p>The values of the attributes given to the defined tag are
+ available in the scope created within the define tag.</p>
 
 <ex><define tag=\"hi\">Hello <ent>_.name</ent>!</define>
 <hi name=\"Martin\"/></ex>",
 
-	    (["attrib":#"<desc cont>
+
+	    ([
+"attrib":#"<desc cont='cont'><p>
  When defining a tag or a container the container <tag>attrib</tag>
  can be used to define default values of the attributes that the
- tag/container can have.</desc>
+ tag/container can have.</p>
+</desc>
 
- <attr name=name value=name>
-  The name of the attribute which default value is to be set.
+ <attr name='name' value='name'><p>
+  The name of the attribute which default value is to be set.</p>
  </attr>",
 
-"&_.args;":#"<desc ent>
+"&_.args;":#"<desc ent='ent'><p>
  The full list of the attributes, and their arguments, given to the
  tag.
-</desc>",
+</p></desc>",
 
-"&_.rest-args;":#"<desc ent>
+"&_.rest-args;":#"<desc ent='ent'><p>
  A list of the attributes, and their arguments, given to the tag,
  excluding attributes with default values defined.
-</desc>",
+</p></desc>",
 
-"&_.contents;":#"<desc ent>
+"&_.contents;":#"<desc ent='ent'><p>
  The containers contents.
-</desc>",
+</p></desc>",
 
-"contents":#"<desc tag>
+"contents":#"<desc tag='tag'><p>
  As the contents entity, but unquoted.
-</desc>"
+</p></desc>"
 	    ])
 
 }),
 
-"else":#"<desc cont><short hide>
- Show the contents if the previous <if> tag didn't, or if there was a
- <false> tag above.</short>Show the contents if the previous <tag><ref
- type='tag'>if</ref></tag> tag didn't, or if there was a <tag><ref
- type='tag'>false</ref></tag> tag above. The result is undefined if there
- has been no <tag><ref type='tag'>if</ref></tag>, <true> or <tag><ref
- type='tag'>false</ref></tag> tag above. </desc>",
+"else":#"<desc cont='cont'><p><short>
 
-"elseif":#"<desc cont><short hide>
- Same as the <if> tag, but it will only evaluate if the previous <if>
- tag returned false.</short>Same as the <tag><ref
- type='tag'>if</ref></tag>, but it will only evaluate if the previous
- <tag><ref type='tag'>if</ref></tag> tag returned false. </desc>",
+ Show the contents if the previous <xref href='if.tag' /> tag didn't,
+ or if there was a <xref href='false.tag' /> tag above.</short> This
+ tag also detects if the page's truthvalue has been set to false.
+ <xref href='../output/emit.tag' /> is an example of a tag that may
+ change a page's truthvalue.</p>
 
-"false":#"<desc tag><short hide>
- Internal tag used to set the return value of <if> tags.
- </short>Internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags. It will ensure that the next
- <tag><ref type='tag'>else</ref></tag> tag will show its contents. It
- can be useful if you are writing your own <tag><ref
- type='tag'>if</ref></tag> lookalike tag. </desc>",
+ <p>The result is undefined if there has been no <xref href='if.tag'
+ />, <xref href='true.tag' /> or <xref href='false.tag' /> tag
+ above.</p>
 
-"help":#"<desc tag><short>
+</desc>",
+
+"elseif":#"<desc cont='cont'><p><short>
+ Same as the <xref href='if.tag' />, but it will only evaluate if the
+ previous <tag>if</tag> returned false.</short></p>
+</desc>",
+
+"false":#"<desc tag='tag'><p><short>
+ Internal tag used to set the return value of <xref href='../if/'
+ />.</short> It will ensure that the next <xref href='else.tag' /> tag
+ will show its contents. It can be useful if you are writing your own
+ <xref href='if.tag' /> lookalike tag. </p>
+</desc>",
+
+"help":#"<desc tag='tag'><p><short>
  Gives help texts for tags.</short> If given no arguments, it will
  list all available tags. By inserting <tag>help/</tag> in a page, a
  full index of the tags available in that particular Roxen WebServer
@@ -2610,20 +2670,19 @@ scope created within the define tag.
  is not available at that moment. All tags are available through
  modules, hence that particular tags' module hasn't been added to the
  Roxen WebServer. Ask an administrator to add the module.
+</p>
 </desc>
 
-<attr name=for value=tag>
- Gives the help text for that tag.
+<attr name='for' value='tag'><p>
+ Gives the help text for that tag.</p>
 <ex type='vert'><help for='roxen'/></ex>
 </attr>",
 
-"if":#"<desc cont><short hide>
- <if> is used to conditionally show its contents.</short><tag><ref
- type='tag'>If</ref></tag> is used to conditionally show its contents.
- <tag><ref type='tag'>else</ref></tag>, <tag><ref
- type='tag'>elif</ref></tag> or <tag><ref
- type='tag'>elseif</ref></tag> can be used to suggest alternative
- content.
+"if":#"<desc cont='cont'><p><short>
+ <tag>if</tag> is used to conditionally show its contents.</short>The
+ <tag>if</tag> tag is used to conditionally show its contents. <xref
+ href='else.tag'/> or <xref href='elseif.tag' /> can be used to
+ suggest alternative content.</p>
 
  <p>It is possible to use glob patterns in almost all attributes,
  where * means match zero or more characters while ? matches one
@@ -2631,7 +2690,7 @@ scope created within the define tag.
  trainfork or tfo. It is not possible to use regexp's together
  with any of the if-plugins.</p>
 
- <p>The <ref type='tag'>if</ref> tag itself is useless without its
+ <p>The tag itself is useless without its
  plugins. Its main functionality is to provide a framework for the
  plugins.</p>
 
@@ -2704,7 +2763,7 @@ scope created within the define tag.
   </elseif>
   <else>
    Somewhere between 9 to 5.
-  </else
+  </else>
  </ex>
 
  <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
@@ -2712,90 +2771,98 @@ scope created within the define tag.
  contained in a SiteBuilder administrated site.</p>
 </desc>
 
-<attr name=not>
- Inverts the result (true-&gt;false, false-&gt;true).
+<attr name='not'><p>
+ Inverts the result (true-&gt;false, false-&gt;true).</p>
 </attr>
 
-<attr name=or>
- If any criterion is met the result is true.
+<attr name='or'><p>
+ If any criterion is met the result is true.</p>
 </attr>
 
-<attr name=and>
- If all criterions are met the result is true. And is default.
+<attr name='and'><p>
+ If all criterions are met the result is true. And is default.</p>
 </attr>",
 
-"if#true":#"<desc plugin><short>
+"if#true":#"<desc plugin='plugin'><p><short>
  This will always be true if the truth value is set to be
- true.</short> Equivalent with <tag><ref type=cont>then</ref></tag>.
+ true.</short> Equivalent with <xref href='then.tag' />.
  True is a <i>State</i> plugin.
-</desc>
-<attr name='true' required>
- Show contents if truth value is false.
+</p></desc>
+
+<attr name='true' required='required'><p>
+ Show contents if truth value is false.</p>
 </attr>",
 
-"if#false":#"<desc plugin><short>
+"if#false":#"<desc plugin='plugin'><p><short>
  This will always be true if the truth value is set to be
- false.</short> Equivalent with <tag><ref type='tag'>else</ref></tag>.
- False is a <i>State</i> plugin.
+ false.</short> Equivalent with <xref href='else.tag' />.
+ False is a <i>State</i> plugin.</p>
 </desc>
-<attr name='false' required>
- Show contents if truth value is true.
+
+<attr name='false' required='required'><p>
+ Show contents if truth value is true.</p>
 </attr>",
 
-"if#module":#"<desc plugin><short>Enables true if the selected module is enabled
- in the current server.</short></desc>
- <attr name='module' value='name'>
- The \"real\" name of the module to look for, i.e. its filename without extension.
- </attr>",
+"if#module":#"<desc plugin='plugin'><p><short>
+ Enables true if the selected module is enabled in the current
+ server.</short></p>
+</desc>
 
-"if#accept":#"<desc plugin><short>
+<attr name='module' value='name'><p>
+ The \"real\" name of the module to look for, i.e. its filename
+ without extension.</p>
+</attr>",
+
+"if#accept":#"<desc plugin='plugin'><p><short>
  Returns true if the browser accepts certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
  this is always untrue. Accept is a <i>Match</i> plugin.
-</desc>
-<attr name='accept' value='type1[,type2,...]' required>
+</p></desc>
+
+<attr name='accept' value='type1[,type2,...]' required='required'>
 </attr>",
 
-"if#config":#"<desc plugin><short>
- Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag?</short> Config is a <i>State</i> plugin.
+"if#config":#"<desc plugin='plugin'><p><short>
+ Has the config been set by use of the <xref href='../http/aconf.tag'
+ /> tag?</short> Config is a <i>State</i> plugin.</p>
 </desc>
-<attr name='config' value='name' required>
+
+<attr name='config' value='name' required='required'>
 </attr>",
 
-"if#cookie":#"<desc plugin><short>
+"if#cookie":#"<desc plugin='plugin'><p><short>
  Does the cookie exist and if a value is given, does it contain that
  value?</short> Cookie is an <i>Eval</i> plugin.
-</desc>
-<attr name='cookie' value='name[ is value]' required>
+</p></desc>
+<attr name='cookie' value='name[ is value]' required='required'>
 </attr>",
 
-"if#client":#"<desc plugin><short>
- Compares the user agent string with a pattern.</short> Client and name is an
+"if#client":#"<desc plugin='plugin'><p><short>
+ Compares the user agent string with a pattern.</short> Client is an
  <i>Match</i> plugin.
-</desc>
-<attr name='client' value='' required>
+</p></desc>
+<attr name='client' value='' required='required'>
 </attr>",
 
-"if#date":#"<desc plugin><short>
- Is the date yyyymmdd?</short> The attributes before, after and inclusive
- modifies the behavior. Date is a <i>Utils</i> plugin.
-</desc>
-<attr name='date' value='yyyymmdd' required>
- Choose what date to test.
+"if#date":#"<desc plugin='plugin'><p><short>
+ Is the date yyyymmdd?</short> The attributes before, after and
+ inclusive modifies the behavior. Date is a <i>Utils</i> plugin.
+</p></desc>
+<attr name='date' value='yyyymmdd' required='required'><p>
+ Choose what date to test.</p>
 </attr>
 
-<attr name=after>
- The date after todays date.
+<attr name='after'><p>
+ The date after todays date.</p>
 </attr>
 
-<attr name=before>
- The date before todays date.
+<attr name='before'><p>
+ The date before todays date.</p>
 </attr>
 
-<attr name=inclusive>
- Adds todays date to after and before.
+<attr name='inclusive'><p>
+ Adds todays date to after and before.</p>
 
  <ex>
   <if date='19991231' before='' inclusive=''>
@@ -2807,25 +2874,50 @@ scope created within the define tag.
  </ex>
 </attr>",
 
-"if#defined":#"<desc plugin><short hide>
- Tests if a certain RXML define is defined by use of the <define> tag.
+
+"if#defined":#"<desc plugin='plugin'><p><short>
  </short> Tests if a certain RXML define is defined by use of the
- <tag>define</tag> tag.Defined is a <i>State</i> plugin.
+ <xref href='../variable/define.tag' /> tag. Defined is a <i>State</i>
+ plugin. </p>
 </desc>
-<attr name='defined' value='define' required>
- Choose what define to test.
+
+<attr name='defined' value='define' required='required'><p>
+ Choose what define to test.</p>
 </attr>",
 
-"if#domain":#"<desc plugin><short>
- Does the user's computer's DNS name match any of the patterns?</short> Note
- that domain names are resolved asynchronously, and that the first time
- someone accesses a page, the domain name will probably not have been
- resolved. Domain is a <i>Match</i> plugin.
-</desc>
-<attr name='domain' value='pattern1[,pattern2,...]' required>
- Choose what pattern to test.
+"if#domain":#"<desc plugin='plugin'><p><short>
+ Does the user's computer's DNS name match any of the
+ patterns?</short> Note that domain names are resolved asynchronously,
+ and that the first time someone accesses a page, the domain name will
+ probably not have been resolved. Domain is a <i>Match</i> plugin.
+</p></desc>
+
+<attr name='domain' value='pattern1[,pattern2,...]' required='required'><p>
+ Choose what pattern to test.</p>
 </attr>
 ",
+
+// If eval is deprecated. This information is to be put in a special
+// 'deprecated' chapter in the manual, due to many persons asking
+// about its whereabouts.
+
+"if#eval":#"<desc plugin='plugin'><p><short>
+ Deprecated due to non-XML compliancy.</short> The XML standard says
+ that attribute-values are not allowed to contain any markup. The
+ <tag>if eval</tag> tag was deprecated in Roxen 2.0.</p>
+
+ <ex typ='box'>
+
+ <!-- If eval statement -->
+ <if eval=\"<foo>\">x</if>
+
+ <!-- Compatible statement -->
+ <define variable=\"var.foo\" preparse=\"preparse\"><foo/></define>
+ <if sizeof=\"var.foo\">x</if>
+ </ex>
+ <p>A similar but more XML compliant construct is a combination of
+ <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
+</p></desc>",
 
 "if#exists":#"<desc plugin><short>
  Returns true if the file path exists.</short> If path does not begin
@@ -2838,54 +2930,92 @@ scope created within the define tag.
  Choose what path to test.
 </attr>",
 
-"if#group":#"<desc plugin><short>
+"if#group":#"<desc plugin='plugin'><p><short>
  Checks if the current user is a member of the group according
  the groupfile.</short> Group is a <i>Utils</i> plugin.
-</desc>
-<attr name='group' value='name' required>
- Choose what group to test.
+</p></desc>
+<attr name='group' value='name' required='required'><p>
+ Choose what group to test.</p>
 </attr>
 
-<attr name='groupfile' value='path' required>
- Specify where the groupfile is located.
+<attr name='groupfile' value='path' required='required'><p>
+ Specify where the groupfile is located.</p>
 </attr>",
 
-"if#ip":#"<desc plugin><short>
+"if#ip":#"<desc plugin='plugin'><p><short>
 
  Does the users computers IP address match any of the
  patterns?</short> This plugin replaces the Host plugin of earlier
  RXML versions. Ip is a <i>Match</i> plugin.
-</desc>
-<attr name='ip' value='pattern1[,pattern2,...]' required>
- Choose what IP-adress pattern to test.
+</p></desc>
+<attr name='ip' value='pattern1[,pattern2,...]' required='required'><p>
+ Choose what IP-adress pattern to test.</p>
 </attr>
 ",
 
-"if#language":#"<desc plugin><short>
+"if#language":#"<desc plugin='plugin'><p><short>
  Does the client prefer one of the languages listed, as specified by the
  Accept-Language header?</short> Language is a <i>Match</i> plugin.
-</desc>
-<attr name='language' value='language1[,language2,...]' required>
- Choose what language to test.
+</p></desc>
+
+<attr name='language' value='language1[,language2,...]' required='required'><p>
+ Choose what language to test.</p>
 </attr>
 ",
 
-"if#match":#"<desc plugin><short>
- Evaluates patterns.</short> Match is an <i>Eval</i> plugin.
-</desc>
-<attr name='match' value='pattern' required>
- Choose what pattern to test.
+"if#match":#"<desc plugin='plugin'><p><short>
+ Evaluates patterns.</short> More information can be found in the
+ <xref href='../../tutorial/if_tags/plugins.xml'>If tags
+ tutorial</xref>. Match is an <i>Eval</i> plugin. </p></desc>
+
+<attr name='match' value='pattern' required='required'><p>
+ Choose what pattern to test. The pattern could be any expression.
+ Note!: The pattern content is treated as strings:</p>
+
+<ex type='vert'>
+ <set variable='var.hepp' value='10' />
+
+ <if match='var.hepp is 10'>
+  true
+ </if>
+ <else>
+  false
+ </else>
+</ex>
+
+ <p>This example shows how the plugin treats \"var.hepp\" and \"10\"
+ as strings. Hence when evaluating a variable as part of the pattern,
+ the entity associated with the variable should be used, i.e.
+ <ent>var.hepp</ent> instead of var.hepp. A correct example would be:</p>
+
+<ex type='vert'>
+<set variable='var.hepp' value='10' />
+
+ <if match='&var.hepp; is 10'>
+  true
+ </if>
+ <else>
+  false
+ </else>
+</ex>
+
+ <p>Here, <ent>var.hepp</ent> is treated as an entity and parsed
+ correctly, letting the plugin test the contents of the entity.</p>
 </attr>
 ",
 
-"if#Match":#"<desc plugin><short>Case sensitive version of the match plugin</short></desc>",
+"if#Match":#"<desc plugin='plugin'><p><short>
+ Case sensitive version of the match plugin</short></p>
+</desc>",
 
-"if#pragma":#"<desc plugin><short>
+
+"if#pragma":#"<desc plugin='plugin'><p><short>
  Compares the HTTP header pragma with a string.</short> Pragma is a
  <i>State</i> plugin.
-</desc>
-<attr name='pragma' value='string' required>
- Choose what pragma to test.
+</p></desc>
+
+<attr name='pragma' value='string' required='required'><p>
+ Choose what pragma to test.</p>
 
 <ex>
  <if pragma='no-cache'>The page has been reloaded!</if>
@@ -2894,55 +3024,55 @@ scope created within the define tag.
 </attr>
 ",
 
-"if#prestate":#"<desc plugin><short>
+"if#prestate":#"<desc plugin='plugin'><p><short>
  Are all of the specified prestate options present in the URL?</short>
  Prestate is a <i>State</i> plugin.
-</desc>
-<attr name='prestate' value='option1[,option2,...]' required>
- Choose what prestate to test.
+</p></desc>
+<attr name='prestate' value='option1[,option2,...]' required='required'><p>
+ Choose what prestate to test.</p>
 </attr>
 ",
 
-"if#referrer":#"<desc plugin><short>
+"if#referrer":#"<desc plugin='plugin'><p><short>
  Does the referrer header match any of the patterns?</short> Referrer
  is a <i>Match</i> plugin.
-</desc>
-<attr name='referrer' value='pattern1[,pattern2,...]' required>
- Choose what pattern to test.
+</p></desc>
+<attr name='referrer' value='pattern1[,pattern2,...]' required='required'><p>
+ Choose what pattern to test.</p>
 </attr>
 ",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#supports":#"<desc plugin><short>
+"if#supports":#"<desc plugin='plugin'><p><short>
  Does the browser support this feature?</short> Supports is a
  <i>State</i> plugin.
-</desc>
+</p></desc>
 
-<attr name=supports'' value='feature' required required>
- Choose what supports feature to test.
+<attr name=supports'' value='feature' required required='required'>
+ <p>Choose what supports feature to test.</p>
 </attr>
 
-The following features are supported:",
+<p>The following features are supported:</p> <supports-flags-list/>",
 
-"if#time":#"<desc plugin><short>
+"if#time":#"<desc plugin='plugin'><p><short>
  Is the time hhmm?</short> The attributes before, after and inclusive modifies
  the behavior. Time is a <i>Utils</i> plugin.
-</desc>
-<attr name='time' value='hhmm' required>
- Choose what time to test.
+</p></desc>
+<attr name='time' value='hhmm' required='required'><p>
+ Choose what time to test.</p>
 </attr>
 
-<attr name=after>
- The time after present time.
+<attr name='after'><p>
+ The time after present time.</p>
 </attr>
 
-<attr name=before>
- The time before present time.
+<attr name='before'><p>
+ The time before present time.</p>
 </attr>
 
-<attr name=inclusive>
- Adds present time to after and before.
+<attr name='inclusive'><p>
+ Adds present time to after and before.</p>
 
  <ex>
   <if time='1200' before='' inclusive=''>
@@ -2954,42 +3084,48 @@ The following features are supported:",
  </ex>
 </attr>",
 
-"if#user":#"<desc plugin><short>
+"if#user":#"<desc plugin='plugin'><p><short>
  Has the user been authenticated as one of these users?</short> If any
  is given as argument, any authenticated user will do. User is a
  <i>Utils</i> plugin.
-</desc>
-<attr name='user' value='name1[,name2,...]|any' required>
- Specify which users to test.
+</p></desc>
+
+<attr name='user' value='name1[,name2,...]|any' required='required'><p>
+ Specify which users to test.</p>
 </attr>
 ",
 
-"if#variable":#"<desc plugin><short>
+"if#variable":#"<desc plugin='plugn'><p><short>
  Does the variable exist and, optionally, does it's content match the
  pattern?</short> Variable is an <i>Eval</i> plugin.
-</desc>
-<attr name='variable' value='name[ is pattern]' required>
- Choose variable to test. Valid operators are '=', '==', 'is', '!=',
- '&lt;' and '&gt;'.
-</attr>
-",
+</p></desc>
 
-"if#Variable":#"<desc plugin><short>Case sensitive version of the variable plugin</short></desc>",
+<attr name='variable' value='name[ is pattern]' required='required'><p>
+ Choose variable to test. Valid operators are '=', '==', 'is', '!=',
+ '&lt;' and '&gt;'.</p>
+</attr>",
+
+"if#Variable":#"<desc plugin='plugin'><p><short>
+ Case sensitive version of the variable plugin</short></p>
+</desc>",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#clientvar":#"<desc plugin><short>
-Evaluates expressions with client specific values.</short> Clientvar
-is an <i>Eval</i> plugin.
-</desc>
-<attr name='clientvar' value='variable [is value]' required>
+"if#clientvar":#"<desc plugin='plugin'><p><short>
+ Evaluates expressions with client specific values.</short> Clientvar
+ is an <i>Eval</i> plugin.
+</p></desc>
+
+<attr name='clientvar' value='variable [is value]' required='required'><p>
  Choose which variable to evaluate against. Valid operators are '=',
- '==', 'is', '!=', '&lt;' and '&gt;'.
+ '==', 'is', '!=', '&lt;' and '&gt;'.</p>
 </attr>
 
-Available variables are:",
+<p>Available variables are:</p>",
 
-"if#sizeof":#"<desc plugin><short>Compares the size of a variable with a number.</short>
+"if#sizeof":#"<desc plugin='plugin'><p><short>
+ Compares the size of a variable with a number.</short></p>
+
 <ex>
 <set variable=\"var.x\" value=\"hello\"/>
 <set variable=\"var.y\" value=\"\"/>
@@ -2998,87 +3134,86 @@ Available variables are:",
 </ex>
 </desc>",
 
-"nooutput":#"<desc cont><short>
- The contents will not be sent through to the page.</short> Side effects, for
- example sending queries to databases, will take effect.
-</desc>",
+"nooutput":#"<desc cont='cont'><p><short>
+ The contents will not be sent through to the page.</short> Side
+ effects, for example sending queries to databases, will take effect.
+</p></desc>",
 
-"noparse":#"<desc cont><short>
+"noparse":#"<desc cont='cont'><p><short>
  The contents of this container tag won't be RXML parsed.</short>
-</desc>",
+</p></desc>",
 
-"<?noparse": #"<desc pi><short>
+"<?noparse": #"<desc pi='pi'><p><short>
  The content is inserted as-is, without any parsing or
  quoting.</short> The first whitespace character (i.e. the one
- directly after the \"noparse\" name) is discarded.
+ directly after the \"noparse\" name) is discarded.</p>
 </desc>",
 
-"<?cdata": #"<desc pi><short>
+"<?cdata": #"<desc pi='pi'><p><short>
  The content is inserted as a literal.</short> I.e. any XML markup
  characters are encoded with character references. The first
  whitespace character (i.e. the one directly after the \"cdata\" name)
- is discarded.
+ is discarded.</p>
 
  <p>This processing instruction is just like the &lt;![CDATA[ ]]&gt;
  directive but parsed by the RXML parser, which can be useful to
- satisfy browsers that does not handle &lt;![CDATA[ ]]&gt; correctly.
+ satisfy browsers that does not handle &lt;![CDATA[ ]]&gt; correctly.</p>
 </desc>",
 
-"number":#"<desc tag><short>
+"number":#"<desc tag='tag'><p><short>
  Prints a number as a word.</short>
-</desc>
+</p></desc>
 
-<attr name=num value=number required>
- Print this number.
+<attr name='num' value='number' required='required'><p>
+ Print this number.</p>
 <ex type='vert'><number num='4711'/></ex>
 </attr>
 
-<attr name=language value=langcodes>
- The language to use.
+<attr name='language' value='langcodes'><p>
+ The language to use.</p>
  <lang/>
  <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
  <ex type='vert'>Il mio numero preferito <ent>egrave</ent><number num='15' language='it'/>.</ex>
 </attr>
 
-<attr name=type value=number|ordered|roman|memory default=number>
- Sets output format.
+<attr name='type' value='number|ordered|roman|memory' default='number'><p>
+ Sets output format.</p>
+
  <ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
  <ex type='vert'>Only <number num='274589226' type='memory'/> left on the Internet.</ex>
  <ex type='vert'>Spock Garfield <number num='17' type='roman'/> rests here.</ex>
 </attr>",
 
-"strlen":#"<desc cont><short>
- Returns the length of the contents.</short>
+"strlen":#"<desc cont='cont'><p><short>
+ Returns the length of the contents.</short></p>
+
+ <ex type='vert'>There is <strlen>foo bar gazonk</strlen> characters
+ inside the tag.</ex>
 </desc>",
 
-"then":#"<desc cont><short>
- Shows its content if the truth value is true.</short>
-
- <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
- tag.</ex>
+"then":#"<desc cont='cont'><p><short>
+ Shows its content if the truth value is true.</short></p>
 </desc>",
 
-"trace":#"<desc cont><short>
+"trace":#"<desc cont='cont'><p><short>
  Executes the contained RXML code and makes a trace report about how
  the contents are parsed by the RXML parser.</short>
+</p></desc>",
+
+"true":#"<desc tag='tag'><p><short>
+ An internal tag used to set the return value of <xref href='../if/'
+ />.</short> It will ensure that the next <xref href='else.tag'
+ /> tag will not show its contents. It can be useful if you are
+ writing your own <xref href='if.tag' /> lookalike tag.</p>
 </desc>",
 
-"true":#"<desc tag><short hide>
- An internal tag used to set the return value of <if> tags. </short>An
- internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags. It will ensure that the next
- <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
- It can be useful if you are writing your own
- <tag><ref type='tag'>if</ref></tag> lookalike tag.
-</desc>",
-
-"undefine":#"<desc tag><short>
+"undefine":#"<desc tag='tag'><p><short>
  Removes a definition made by the define container.</short> One
  attribute is required.
-</desc>
+</p></desc>
 
-<attr name=variable value=name>
- Undefines this variable.
+<attr name='variable' value='name'><p>
+ Undefines this variable.</p>
 
  <ex>
   <define variable='var.hepp'>hopp</define>
@@ -3088,162 +3223,200 @@ Available variables are:",
  </ex>
 </attr>
 
-<attr name=tag value=name>
- Undefines this tag.
+<attr name='tag' value='name'><p>
+ Undefines this tag.</p>
 </attr>
 
-<attr name=container value=name>
- Undefines this container.
+<attr name='container' value='name'><p>
+ Undefines this container.</p>
 </attr>
 
-<attr name=if value=name>
- Undefines this if-plugin.
+<attr name='if' value='name'><p>
+ Undefines this if-plugin.</p>
 </attr>",
 
-"use":#"<desc cont><short>
- Reads tag definitions, user defined if plugins and variables from a file or package and
- includes into the current page. Note that the file itself is not inserted into the page.
- This only affects the environment in which the page is parsed. The benefit is that the
- package file needs only be parsed once, and the compiled versions of the user defined tags
- can then be used, thus saving time. It is also a fairly good way of creating templates
- for your website. Just define your own tags for constructions that appears frequently and
- save both space and time. Since the tag definitions are cached in memory, make sure that
- the file is not dependent on anything dynamic, such as form variables or client settings,
- at the compile time. Also note that the use tag only lets you define variables in the form
- and var scope in advance. Variables with the same name will be overwritten when the use tag
- is parsed.
-</short></desc>
+"use":#"<desc cont='cont'><p><short>
+ Reads tag definitions, user defined if plugins and variables from a
+ file or package and includes into the current page.</short> Note that the
+ file itself is not inserted into the page. This only affects the
+ environment in which the page is parsed. The benefit is that the
+ package file needs only be parsed once, and the compiled versions of
+ the user defined tags can then be used, thus saving time. It is also
+ a fairly good way of creating templates for your website. Just define
+ your own tags for constructions that appears frequently and save both
+ space and time. Since the tag definitions are cached in memory, make
+ sure that the file is not dependent on anything dynamic, such as form
+ variables or client settings, at the compile time. Also note that the
+ use tag only lets you define variables in the form and var scope in
+ advance. Variables with the same name will be overwritten when the
+ use tag is parsed.</p>
+</desc>
 
-<attr name=packageinfo>
- Show a list of all available packages.
+<attr name='packageinfo'><p>
+ Show a list of all available packages.</p>
 </attr>
 
-<attr name=package value=name>
+<attr name='package' value='name'><p>
  Reads all tags, container tags and defines from the given package.
- Packages are files located in rxml_packages/ and local/rxml_packages/.
+ Packages are files located by default in <i>../rxml_packages/</i>.</p>
 </attr>
 
-<attr name=file value=path>
+<attr name='file' value='path'><p>
  Reads all tags and container tags and defines from the file.
 
  <p>This file will be fetched just as if someone had tried to fetch it
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag><ref type='tag'>insert file='...'
- nocache='1'</ref></tag> instead.</p>
+ not want this cache, use <tag>insert file='...'
+ nocache='1'</tag> instead.</p>
 </attr>
 
-<attr name=info>
- Show a list of all defined tags/containers and if arguments in the file
+<attr name='info'><p>
+ Show a list of all defined tags/containers and if arguments in the
+ file.</p>
 </attr>",
 
-"eval":#"<desc cont><short>
+"eval":#"<desc cont='cont'><p><short>
  Postparses its content.</short> Useful when an entity contains
  RXML-code. <tag>eval</tag> is then placed around the entity to get
- its content parsed.
+ its content parsed.</p>
 </desc>",
 
-"emit#path":({ #"<desc plugin><short>
+"emit#path":({ #"<desc plugin='plugin'><p><short>
  Prints paths.</short> This plugin traverses over all directories in
- the path from the root up to the current one.
+ the path from the root up to the current one.</p>
 </desc>
 
-<attr name='path' value='string'>
-   Use this path instead of the document path
+<attr name='path' value='string'><p>
+   Use this path instead of the document path</p>
 </attr>
 
-<attr name='trim' value='string'>
+<attr name='trim' value='string'><p>
  Removes all of the remaining path after and including the specified
- string.
+ string.</p>
 </attr>
 
-<attr name='skip' value='number'>
+<attr name='skip' value='number'><p>
  Skips the 'number' of slashes ('/') specified, with beginning from
- the root.
+ the root.</p>
 </attr>
 
-<attr name='skip-end' value='number'>
+<attr name='skip-end' value='number'><p>
  Skips the 'number' of slashes ('/') specified, with beginning from
- the end.
+ the end.</p>
 </attr>",
 	       ([
-"&_.name;":#"<desc ent>
- Returns the name of the most recently traversed directory.
+"&_.name;":#"<desc ent='ent'><p>
+ Returns the name of the most recently traversed directory.</p>
 </desc>",
 
-"&_.path;":#"<desc ent>
- Returns the path to the most recently traversed directory.
+"&_.path;":#"<desc ent='ent'><p>
+ Returns the path to the most recently traversed directory.</p>
 </desc>"
 	       ])
 }),
 
-"emit#sources":({ #"<desc plugin>
+"emit#sources":({ #"<desc plugin='plugin'><p>
  Provides a list of all available emit sources.
-</desc>",
-  ([ "&_.source;":"<desc ent>The name of the source.</desc>" ]) }),
+</p></desc>",
+  ([ "&_.source;":#"<desc ent='ent'><p>
+  The name of the source.</p></desc>" ]) }),
 
-"emit#values":({ #"<desc plugin>
- Splits the string provided in the values attribute and outputs the parts in a loop. The
- value in the values attribute may also be an array or mapping.
-</desc>
-<attr name=values value='string, mapping or array' required>
-An array or the string to be splitted into an array.
+
+"emit#values":({ #"<desc plugin='plugin'><p>
+ Splits the string provided in the values attribute and outputs the
+ parts in a loop. The value in the values attribute may also be an
+ array or mapping.
+</p></desc>
+
+<attr name='values' value='string, mapping or array' required='required'><p>
+ An array, mapping or a string to be splitted into an array.</p>
 </attr>
-<attr name=split value=string default=NULL>
-The string the values string is splitted with.
+
+<attr name='split' value='string' default='NULL'><p>
+ The string the values string is splitted with.</p>
 </attr>
-<attr name=advanced value=lines|words|chars>
-If the input is a string it can be splitted into separate lines, words or characters by
-using this attribute.
+
+<attr name='advanced' value='lines|words|chars'><p>
+ If the input is a string it can be splitted into separate lines, words
+ or characters by using this attribute.</p>
 </attr>
-<attr name=case value=upper|lower>
-Changes the case of the value.
+
+<attr name='case' value='upper|lower'><p>
+ Changes the case of the value.</p>
 </attr>
-<attr name=trimwhites>
-Trims away all leading and trailing white space charachters from the values.
+
+<attr name='trimwhites'><p>
+ Trims away all leading and trailing white space charachters from the
+ values.</p>
 </attr>
-<attr name=from-scope value=name>
-Create a mapping out of a scope and give it as indata to the emit.
+
+<attr name='from-scope' value='name'>
+ Create a mapping out of a scope and give it as indata to the emit.
 </attr>
 ",
-  ([ "&_.value;":"<desc ent>The value of one part of the splitted string</desc>",
-     "&_.index;":"<desc ent>The index of this mapping entry, if input was a mapping</desc>" ]) }),
 
-"emit":({ #"<desc cont><short>Provides data, fetched from different sources, as
- entities</short></desc>
+([
+"&_.value;":#"<desc ent='ent'><p>
+ The value of one part of the splitted string</p>
+</desc>",
 
-<attr name=source value=plugin required>
- The source from which the data should be fetched.
+"&_.index;":#"<desc ent='ent'><p>
+ The index of this mapping entry, if input was a mapping</p>
+</desc>"
+])
+	      }),
+
+
+"emit":({ #"<desc cont='cont'><p><short hide='hide'>
+
+ Provides data, fetched from different sources, as entities. </short>
+
+ <tag>emit</tag> is a generic tag used to fetch data from a
+ provided source, loop over it and assign it to RXML variables
+ accessible through entities.</p>
+
+ <p>Occasionally an <tag>emit</tag> operation fails to produce output.
+ This might happen when <tag>emit</tag> can't find any matches or if
+ the developer has made an error. When this happens the truthvalue of
+ that page is set to <i>false</i>. By using <xref
+ href='../if/else.tag' /> afterwards it's possible to detect when an
+ <tag>emit</tag> operation fails.</p>
+</desc>
+
+<attr name='source' value='plugin' required='required'><p>
+ The source from which the data should be fetched.</p>
 </attr>
 
-<attr name=scope value=name default='The emit source'>
- The name of the scope within the emit tag.
+<attr name='scope' value='name' default='The emit source'><p>
+ The name of the scope within the emit tag.</p>
 </attr>
 
-<attr name=maxrows value=number>
- Limits the number of rows to this maximum.
+<attr name='maxrows' value='number'><p>
+ Limits the number of rows to this maximum.</p>
 </attr>
 
-<attr name=skiprows value=number>
- Makes it possible to skip the first rows of the result. Negative numbers means
- to skip everything execept the last n rows.
+<attr name='skiprows' value='number'><p>
+ Makes it possible to skip the first rows of the result. Negative
+ numbers means to skip everything execept the last n rows.</p>
 </attr>
 
-<attr name=rowinfo value=variable>
- The number of rows in the result, after it has been limited by maxrows
- and skiprows, will be put in this variable, if given.
+<attr name='rowinfo' value='variable'><p>
+ The number of rows in the result, after it has been limited by
+ maxrows and skiprows, will be put in this variable, if given.</p>
 </attr>
 
-<attr name=do-once>
+<attr name='do-once'><p>
  Indicate that at least one loop should be made. All variables in the
- emit scope will be empty.
+ emit scope will be empty.</p>
 </attr>",
 
 	  ([
 
-"&_.counter;":#"<desc ent>
+"&_.counter;":#"<desc ent='ent'><p>
  Gives the current number of loops inside the <tag>emit</tag> tag.
+</p>
 </desc>"
 
 	  ])

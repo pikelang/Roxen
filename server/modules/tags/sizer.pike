@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.13 2001/03/06 14:15:57 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.14 2001/03/07 13:42:13 kuntri Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -498,3 +498,44 @@ mapping filter(mapping result, RequestID id)
 
   return result;
 }
+
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+
+"page-size":#"<desc tag='tag'><p><short hide='hide'>
+ Calculates the size of a page and estimates the
+ downloadtime.</short><tag>page-size</tag> calculates the size of a
+ page, including inline images, and gives estimates of the time it
+ will take to download the page. All information is shown in a box.
+</p>
+
+</desc>
+
+<attr name=page value=path><p>
+ Calculate size and downloadtime for another page than the current. </p>
+</attr>
+
+<attr name=include value=summary,details,dltime,suggestions><p>
+ What information to present.
+</attr>
+
+<attr name=speeds value=28.8,56.0,64.0,256.0,384.0,1024.0>
+ The time it will take to download a page using the specified speed(s)
+ in kb/s.</p>
+</attr>
+
+<ex type='vert'>
+ <page-size
+  page='../'
+  include='summary,details,dltime,suggestions'
+  speeds='28.8,56.0,64.0,256.0,384.0,1024.0'
+ />
+</ex>",
+
+
+    ]);
+
+#endif
+

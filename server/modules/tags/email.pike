@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.4 2001/02/19 17:38:02 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.5 2001/03/07 13:42:11 kuntri Exp $";
 
 constant thread_safe=1;
 
@@ -439,5 +439,135 @@ constant module_doc  = "Adds an extra container tag &lt;email&gt; "
   " &lt;/email&gt;  and subtags &lt;attachment/&gt, &lt; header /&gt; "
   " and &lt;signature /&gt; that are supposed to send MIME compliant"
   " mail to mail server by (E)SMTP protocol.";
+
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["email":({ #"
+<desc cont='cont'><p><short></short>
+
+The <tag>email</tag> sends MIME compliant mail to a mail server
+using the (E)SMTP protocol. The content is sent as raw text
+
+Attribute default values can be changed within the <i>E-mail
+module's</> administration interface.</p>
+
+</desc>
+
+<attr name='server' value='URL' default='localhost'><p> The hostname
+of the machine that operates the mail server.  </p>
+</attr>
+
+<attr name='subject default=''[ * No Subject * ]''
+value=''><p>
+ The subject line.
+</p>
+</attr>
+
+<attr name='from' value='' default='(empty)'><p>
+ The email address of sender.
+</p>
+</attr>
+
+<attr name='to' value='' default='(empty)'><p>
+ The list of recipient email address(es). Separator character can be
+ defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='separator' value='' default=','><p>
+ The separator character for the recipient list.
+</p>
+</attr>
+
+<attr name='debug' value=''><p>
+ Debug flag for testing. Returns the raw mail.
+</p>
+</attr>
+
+<attr name='charset' value='' default='iso-8859-1'><p>
+ The charset of the body.
+</p>
+</attr>
+
+
+<ex type='box'>
+<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
+ This is the contents.
+</email>
+</ex>",
+
+([
+
+"header":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
+ Adds additional headers to the mail.
+
+ </short>This subtag/container is designed for adding additional
+ headers to the mail.</p>
+</desc>
+
+<attr name='name' value='string' required='required'><p>
+ The name of the header. Standard headers are 'From:', 'To:', 'Cc:',
+ 'Bcc:' and 'Subject:'. However, there are no restrictions on how many
+ headers are sent.</p>
+</attr>
+
+<attr name='value' value=''><p>
+ The value of the header. This attribute is only used when using the
+ singletag version of the tag. In case of the tag being used as a
+ containertag the content will be the value.</p>
+</attr>
+
+
+<ex type='box>
+<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+
+<header name=\"X-foo-header\" value=\"one two three\" />
+<header name=\"Importance\">Normal</header>
+<header name=\"X-MSMail-Priority\" value=\"Normal\" />
+ This is the contents.
+</email>
+</ex>",
+
+"signature":#"<desc tag='tag'><p><short hide='hide'>Adds a signature to the mail.
+ </short>This container is designed for adding a signature to the
+ mail.</p></desc>
+
+<ex type='box>
+<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+
+<header name=\"X-foo-header\" value=\"one two three\" />
+<header name=\"Importance\">Normal</header>
+<header name=\"X-MSMail-Priority\" value=\"Normal\" />
+ This is the contents.
+
+<signature>
+-------------------
+John Doe
+Roxen Administrator
+</signature>
+</email>
+</ex>",
+
+"attachment":#"<desc tag='tag' cont='cont''><p><short hide='hide'>
+ Adds attachments to the mail.</short>This tag/subcontainer is
+ designed for adding attachments to the mail. </p>
+</desc>
+
+
+"])
+
+
+			  })
+		]);
+
+
+
+
+
+
 
 

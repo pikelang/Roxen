@@ -209,20 +209,21 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-"emit#dir":({ #"<desc plugin><short>
+"emit#dir":({ #"<desc plugin='plugin'><p><short>
  This plugin is used to generate directory listings.</short> The
  directory module must be added to use these entities. This plugin
- is only available in the directory template.</desc>
+ is only available in the directory template.
+</p></desc>
 
-<attr name='directory' value='path'>
- Apply the listing to this directory.
+<attr name='directory' value='path'><p>
+ Apply the listing to this directory.</p>
 </attr>
 
-<attr name='options' value='(real-file,thumbnail,imagesize)'>
+<attr name='options' value='(real-file,thumbnail,imagesize)'><p>
  Use these options to customize the directory listings. These argument
  have been made options due to them demanding a lot of raw computing
  power, since they involve image manipulation and other demanding
- tasks. These options can be combined.
+ tasks. These options can be combined.</p>
 
 <xtable>
 <row><c>real-file</c><c>Makes it possible to show the absolute
@@ -239,138 +240,138 @@ resolve the image's height and width.</c></row>
 </xtable>
 </attr>
 
-<attr name='thumbnail-size' value='number'>
+<attr name='thumbnail-size' value='number'><p>
  Sets the size of the thumbnail. Defaultsize is 60 pixels. The size is
  set in proportion to the image's longest side, e.g. if the height of
  the image is longer than it's width, then the thumbnail will be 60
  pixels high. The shortest side will be shown in proportion to the
  longest side. This attribute can only be used together with the
- <att>option=\"thumbnail\"</att> attribute.
+ <att>option=\"thumbnail\"</att> attribute.</p>
 </attr>
 
-<attr name='thumbnail-format' value='imageformat'>
+<attr name='thumbnail-format' value='imageformat'><p>
  Set the output format for the thumbnail. Default is <ext>png</ext>.
- All imageformats that the <ref type='tag'><tag>cimg</tag></ref> tag
- handles can be used to produce thumbnails.This attribute can only be
- used together with the <att>option=\"thumbnail\"</att> attribute.
+ All imageformats that <xref href='../graphics/cimg.tag' /> handles can
+ be used to produce thumbnails. This attribute can only be used
+ together with the <att>option=\"thumbnail\"</att> attribute.</p>
 </attr>
 
-<attr name='strftime' value='strftime string' default='%Y-%m-%d'>
+<attr name='strftime' value='strftime string' default='%Y-%m-%d'><p>
  Format the date according to this string. Default is the isotime
  format (%Y-%m-%d), which will return (Year(four characters)-month(two
  characters)-day(two characters)), e.g. 2000-11-22. See the attribute
- <att>strftime</att> in the <tag>date</tag> tag for a full listing of
- available formats.
+ <att>strftime</att> in <xref href='../information/date.tag' /> for a
+ full listing of available formats.</p>
 </attr>
 
-<attr name='glob' value='glob-pattern1[,glob-pattern2,...]'>
- Only show files matching the glob-pattern.
+<attr name='glob' value='glob-pattern1[,glob-pattern2,...]'><p>
+ Only show files matching the glob-pattern.</p>
 </attr>
 
-<attr name='type' value='glob-pattern1[,glob-pattern2,...]'>
- Only show files which content-type matches the glob-pattern.
+<attr name='type' value='glob-pattern1[,glob-pattern2,...]'><p>
+ Only show files which content-type matches the glob-pattern.</p>
 </attr>
 
-<attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'>
- Sort the files and directories by this method.
-<table>
-<tr><td>alpha</td><td>Sort files and directories alphabetically.</td></tr>
-<tr><td>dwim</td><td>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</td></tr>
-<tr><td>modified</td><td>Sort files by modification date.</td></tr>
-<tr><td>size</td><td>Sort files by size.</td></tr>
-<tr><td>type</td><td>Sort files by content-type.</td></tr>
-</table>
+<attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'><p>
+ Sort the files and directories by this method.</p>
+<xtable>
+<row><c>alpha</c><c>Sort files and directories alphabetically.</c></row>
+<row><c>dwim</c><c>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</c></row>
+<row><c>modified</c><c>Sort files by modification date.</c></row>
+<row><c>size</c><c>Sort files by size.</c></row>
+<row><c>type</c><c>Sort files by content-type.</c></row>
+</xtable>
 </attr>
 
-<attr name='sort-reversed'>
- Reverse the sort order.
+<attr name='sort-reversed'><p>
+ Reverse the sort order.</p>
 </attr>",
 
 ([
-"&_.atime;":#"<desc ent>
+"&_.atime;":#"<desc ent='ent'><p>
   Returns the date when the file was last accessed.
-</desc>",
+</p></desc>",
 
-"&_.atime-iso;":#"<desc ent>
+"&_.atime-iso;":#"<desc ent='ent'><p>
  Returns the date when the file was last accessed. Uses isotime
  (%Y-%m-%d).
-</desc>",
+</p></desc>",
 
-"&_.atime-unix;":#"<desc ent>
+"&_.atime-unix;":#"<desc ent='ent'><p>
  Returns the date when the file was last accessed. Uses unixtime.
-</desc>",
+</p></desc>",
 
-"&_.dirname;":#"<desc ent>
+"&_.dirname;":#"<desc ent='ent'><p>
  Returns the directoryname.
-</desc>",
+</p></desc>",
 
-"&_.filename;":#"<desc ent>
+"&_.filename;":#"<desc ent='ent'><p>
  Returns the filename.
-</desc>",
+</p></desc>",
 
-"&_.type-img;":#"<desc ent>
+"&_.type-img;":#"<desc ent='ent'><p>
  Returns the internal Roxen name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
-</desc>",
+</p></desc>",
 
-"&_.mode;":#"<desc ent>
+"&_.mode;":#"<desc ent='ent'><p>
  Returns file permission rights represented binary, e.g. \"r-xr-xr-x\".
-</desc>",
+</p></desc>",
 
-"&_.mode-int;":#"<desc ent>
+"&_.mode-int;":#"<desc ent='ent'><p>
  Returns file permission rights represented by integers. When encoded to
  binary this represents what is shown when using the Unix command \"ls
  -l\" or as shown using <ent>_.mode</ent>, e.g. \"16749\".
-</desc>",
+</p></desc>",
 
-"&_.mtime;":#"<desc ent>
+"&_.mtime;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified.
-</desc>",
+</p></desc>",
 
-"&_.mtime-iso;":#"<desc ent>
+"&_.mtime-iso;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified. Uses isotime (%Y-%m-%d).
-</desc>",
+</p></desc>",
 
-"&_.mtime-unix;":#"<desc ent>
+"&_.mtime-unix;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified. Uses unixtime.
-</desc>",
+</p></desc>",
 
-"&_.name;":#"<desc ent>
+"&_.name;":#"<desc ent='ent'><p>
  Returns the name of the file or directory.
-</desc>",
+</p></desc>",
 
-"&_.path;":#"<desc ent>
+"&_.path;":#"<desc ent='ent'><p>
  Returns the path to the file or directory.
-</desc>",
+</p></desc>",
 
-"&_.size;":#"<desc ent>
+"&_.size;":#"<desc ent='ent'><p>
  Returns a file's size in kb(kilobytes).
-</desc>",
+</p></desc>",
 
-"&_.filesize;":#"<desc ent>
+"&_.filesize;":#"<desc ent='ent'><p>
  Returns a file's size in bytes. Directories get the size \"-2\".
-</desc>",
+</p></desc>",
 
-"&_.type;":#"<desc ent>
+"&_.type;":#"<desc ent='ent'><p>
  Returns the file's content-type.
-</desc>",
+</p></desc>",
 
-"&_.thumbnail;":#"<desc ent>
+"&_.thumbnail;":#"<desc ent='ent'><p>
  Returns the image associated with the file's content-type or
  directory. Only available when <att>option=\"thumbnail\"</att> is
  used.
-</desc>",
+</p></desc>",
 
-"&_.x-size;":#"<desc ent>
+"&_.x-size;":#"<desc ent='ent'><p>
  Returns the width of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
-</desc>",
+</p></desc>",
 
-"&_.y-size;":#"<desc ent>
+"&_.y-size;":#"<desc ent='ent'><p>
  Returns the height of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
-</desc>",
+</p></desc>",
 ])
 		 })
 ]);

@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.2 2000/12/05 00:39:39 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.3 2001/03/07 13:40:43 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Atlas";
@@ -200,29 +200,87 @@ Image generate_image(mapping state, RequestID id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "emit#atlas" : ({ "<desc plugin>Lists altas stuff.</desc>"
-		    "<attr name='list' value='regions|countries'>Select what to list</attr>",
-		    ([ "&_.name;":"The name of the region/country" ])
+"emit#atlas": ({ #"<desc plugin='plugin'><p><short>
+ Lists altas stuff.</short></p>
+</desc>
+
+<attr name='list' value='regions|countries'><p>
+ Select what to list</p>
+</attr>",
+
+([
+  "&_.name;":#"<desc ent='ent'><p>
+   The name of the region/country</p>
+  </desc>"
+])
+
   }),
-  "atlas" : ({ #"<desc cont>Draws a map</desc>
-<attr name='region' value='name'>Which map to show. The value may be any of the 
-listed region values that <emit source='list' value='regions'>&_.name;</emit> returns.</attr>
-<attr name='width' value='number'>The width of the image</attr>
-<attr name='height' value='number'>The height of the image</attr>
-<attr name='fgcolor' value='color'>The color of the unselected land areas</attr>
-<attr name='bgcolor' value='color'>The color of the sea.</attr>",
-	       ([ "country" : #"<desc tag>A region that should be highlighted.</desc>
-<attr name='domain' value='name'>The top domain of the country that should be highlighted.</attr>
-<attr name='name' value='name'>The name of the country that should be highlighted.</attr>
-<attr name='color' value='color'>The color that should be used for highlighting.</attr>",
-		  "marker" : #"<desc tag>Draws a marker at the specified position</desc>
-<attr name='x' value='pixels or percentage' required='1'>
-  The distance from the left of the map.</attr>
-<attr name='y' value='pixels or percentage' required='1'>
-  The distance from the top of the map.</attr>
-<attr name='color' value='color' default='red'>The color of the marker</attr>
-<attr name='style' value='box|diamond' default='diamond'>The type of marker</attr>
-<attr name='size' value='number' default='4'>The size of the marker</attr>"
+"atlas":({ #"<desc cont='cont'><p><short>
+ Draws a map</short></p>
+</desc>
+
+<attr name='region' value='name'><p>
+ Which map to show. The value may be any of the listed region values
+ that <xref href='../output/emit.tag'><tag>emit source='atlas'
+ list='regions'</tag><ent>_.name</ent><tag>/emit</tag></xref>
+ returns.</p>
+</attr>
+
+<attr name='width' value='number'><p>
+ The width of the image.</p>
+</attr>
+
+<attr name='height' value='number'><p>
+ The height of the image.</p>
+</attr>
+
+<attr name='fgcolor' value='color'><p>
+ The color of the unselected land areas.</p>
+</attr>
+
+<attr name='bgcolor' value='color'><p>
+ The color of the sea.</p>
+</attr>",
+
+([
+"country" : #"<desc tag='tag'><p><short>
+ A region that should be highlighted.</short></p>
+</desc>
+
+<attr name='domain' value='name'><p>
+ The top domain of the country that should be highlighted.</p>
+</attr>
+
+<attr name='name' value='name'><p>
+ The name of the country that should be highlighted.</p></attr>
+
+<attr name='color' value='color'><p>
+ The color that should be used for highlighting.</p>
+</attr>",
+
+"marker" : #"<desc tag='tag'><p><short>
+ Draws a marker at the specified position</short></p>
+</desc>
+
+<attr name='x' value='pixels or percentage' required='required'><p>
+  The distance from the left of the map.</p>
+</attr>
+
+<attr name='y' value='pixels or percentage' required='required'><p>
+  The distance from the top of the map.</p>
+</attr>
+
+<attr name='color' value='color' default='red'><p>
+  The color of the marker</p>
+</attr>
+
+<attr name='style' value='box|diamond' default='diamond'>
+  The type of marker.</p>
+</attr>
+
+<attr name='size' value='number' default='4'>
+  The size of the marker.</p>
+</attr>"
 	       ])
   }),
 ]);

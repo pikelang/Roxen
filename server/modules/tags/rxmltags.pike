@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.206 2001/03/05 23:36:33 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.207 2001/03/07 13:42:12 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1786,59 +1786,174 @@ string api_query_modified(RequestID id, string f, int|void by)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&client.ip;":#"<desc ent>The client is located on this IP-address.</desc>",
-"&client.host;":#"<desc ent>The host name of the client, if possible to resolve.</desc>",
-"&client.name;":#"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
-"&client.Fullname;":#"<desc ent>The full user agent string, i.e. name of the client
- and additional info like; operating system, type of computer, etc.
- E.g. \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\". </desc>",
-"&client.fullname;":#"<desc ent>The full user agent string, i.e. name of the client
- and additional info like; operating system, type of computer, etc.
- E.g. \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\". </desc>",
-"&client.referrer;":#"<desc ent>Prints the URL of the page on which the user followed
- a link that brought her to this page. The information comes from the referrer header
- sent by the browser.</desc>",
-"&client.accept-language;":#"<desc ent>The client prefers to have the page contents
- presented in this language.</desc>",
-"&client.accept-languages;":#"<desc ent>The client prefers to have the page contents
- presented in this language but these additional languages are accepted as well.</desc>",
-"&client.language;":#"<desc ent>The clients most preferred language.</desc>",
-"&client.languages;":#"<desc ent>An ordered list of the clients most preferred</desc>",
-"&client.authenticated;":#"<desc ent></desc>",
-"&client.user;":#"<desc ent></desc>",
-"&client.password;":#"<desc ent></desc>",
-"&client.tm;":#"<desc ent>Generates a trademark sign in a way that the client can render.
- Possible outcomes are \"&amp;trade;\", \"&lt;sup&gt;TM&lt;/sup&gt;\", and
- \"&amp;gt;TM&amp;lt;\".</desc>",
+"&client.ip;":#"<desc ent='ent'><p>
+ The client is located on this IP-address.
+</p></desc>",
 
+"&client.host;":#"<desc ent='ent'><p>
+ The host name of the client, if possible to resolve.
+</p></desc>",
 
-"&page.realfile;":#"<desc ent>Path to this file in the file system.</desc>",
-"&page.virtroot;":#"<desc ent>The root of the present virtual filesystem.</desc>",
-//  &page.virtfile; is same as &page.path; but deprecated since we want to
-//  harmonize with SiteBuilder entities.
-"&page.path;":#"<desc ent>Absolute path to this file in the virtual filesystem.</desc>",
-"&page.pathinfo;":#"\
-<desc ent>The \"path info\" part of the URL, if any. Can only get set
-if the \"Path info support\" module is installed. For details see the
-documentation for that module.</desc>",
-"&page.query;":#"<desc ent>The query part of the page URI.</desc>",
-"&page.url;":#"<desc ent>The absolute path for this file from the web server's root or point of view including query variables</desc>",
-"&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
- (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
-"&page.language;":#"<desc ent>What language the contens of this file is written in.
- The language must be given as metadata to be found.</desc>",
-"&page.scope;":#"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
-"&page.filesize;":#"<desc ent>This file's size, in bytes.</desc>",
-"&page.ssl-strength;":#"<desc ent>The strength in bits of the current SSL connection.</desc>",
-"&page.self;":#"<desc ent>The name of this file.</desc>",
+"&client.name;":#"<desc ent='ent'><p>
+ The name of the client, i.e. \"Mozilla/4.7\".
+</p></desc>",
 
-"roxen_automatic_charset_variable":#"<desc tag>
- If put inside a form, the right character encoding of the submitted form can be guessed
- by Roxen Webserver.
+"&client.Fullname;":#"<desc ent='ent'><p>
+ The full user agent string, i.e. name of the client and additional
+ info like; operating system, type of computer, etc. E.g.
+ \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\".
+</p></desc>",
+
+"&client.fullname;":#"<desc ent='ent'><p>
+ The full user agent string, i.e. name of the client and additional
+ info like; operating system, type of computer, etc. E.g.
+ \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\".
+</p></desc>",
+
+"&client.referrer;":#"<desc ent='ent'><p>
+ Prints the URL of the page on which the user followed a link that
+ brought her to this page. The information comes from the referrer
+ header sent by the browser.
+</p></desc>",
+
+"&client.accept-language;":#"<desc ent='ent'><p>
+ The client prefers to have the page contents presented in this
+ language.
+</p></desc>",
+
+"&client.accept-languages;":#"<desc ent='ent'><p>
+ The client prefers to have the page contents presented in this
+ language but these additional languages are accepted as well.
+</p></desc>",
+
+"&client.language;":#"<desc ent='ent'><p>
+ The clients most preferred language.
+</p></desc>",
+
+"&client.languages;":#"<desc ent='ent'><p>
+ An ordered list of the clients most preferred languages.
+</p></desc>",
+
+"&client.authenticated;":#"<desc ent='ent'><p>
+ Returns the name of the user logged on to the site, i.e. the login
+ name, if any exists.
+</p></desc>",
+
+"&client.user;":#"<desc ent='ent'><p>
+ Returns the name the user used when he/she tried to log on the site,
+ i.e. the login name, if any exists.
+</p></desc>",
+
+"&client.password;":#"<desc ent='ent'><p>
+
+</p></desc>",
+
+"&client.height;":#"<desc ent='ent'><p>
+ The presentation area height in pixels. For WAP-phones.
+</p></desc>",
+
+"&client.width;":#"<desc ent='ent'><p>
+ The presentation area width in pixels. For WAP-phones.
+</p></desc>",
+
+"&client.robot;":#"<desc ent='ent'><p>
+
+ Returns the name of the webrobot. Useful if the robot requesting
+ pages is to be served other contents than most visitors. Use
+ <ent>client.robot</ent> together with <xref href='../if/if.tag'
+ />.</p>
+
+ <p>Possible webrobots are: ms-url-control, architex, backrub,
+ checkbot, fast, freecrawl, passagen, gcreep, getright, googlebot,
+ harvest, alexa, infoseek, intraseek, lycos, webinfo, roxen,
+ altavista, scout, slurp, url-minder, webcrawler, wget, xenu and
+ yahoo.</p>
 </desc>",
 
-"colorscope":#"<desc cont>Makes it possible to change the autodetected
-colors within the tag. Useful when out-of-order parsing occurs, e.g.
+"&client.javascript;":#"<desc ent='ent'><p>
+ Returns the highest version of javascript supported.
+</p></desc>",
+
+"&client.tm;":#"<desc ent='ent'><p><short>
+ Generates a trademark sign in a way that the client can
+ render.</short> Possible outcomes are \"&amp;trade;\",
+ \"&lt;sup&gt;TM&lt;/sup&gt;\", and \"&amp;gt;TM&amp;lt;\".</p>
+</desc>",
+
+
+//----------------------------------------------------------------------
+
+"&page.realfile;":#"<desc ent='ent'><p>
+ Path to this file in the file system.
+</p></desc>",
+
+"&page.virtroot;":#"<desc ent='ent'><p>
+ The root of the present virtual filesystem.
+</p></desc>",
+
+//  &page.virtfile; is same as &page.path; but deprecated since we want to
+//  harmonize with SiteBuilder entities.
+"&page.path;":#"<desc ent='ent'><p>
+ Absolute path to this file in the virtual filesystem.
+</p></desc>",
+
+"&page.pathinfo;":#"<desc ent='ent'><p>
+ The \"path info\" part of the URL, if any. Can only get set if the
+ \"Path info support\" module is installed. For details see the
+ documentation for that module.
+</p></desc>",
+
+"&page.query;":#"<desc ent='ent'><p>
+ The query part of the page URI.
+</p></desc>",
+
+"&page.url;":#"<desc ent='ent'><p>
+ The absolute path for this file from the web server's root or point
+ of view including query variables.
+</p></desc>",
+
+"&page.last-true;":#"<desc ent='ent'><p>
+ Is \"1\" if the last <tag>if</tag>-statement succeeded, otherwise 0.
+ (<xref href='../if/true.tag' /> and <xref href='../if/false.tag' />
+ is considered as <tag>if</tag>-statements here) See also: <xref
+ href='../if/' />.</p>
+</desc>",
+
+"&page.language;":#"<desc ent='ent'><p>
+ What language the contents of this file is written in. The language
+ must be given as metadata to be found.
+</p></desc>",
+
+"&page.scope;":#"<desc ent='ent'><p>
+ The name of the current scope, i.e. the scope accessible through the
+ name \"_\".
+</p></desc>",
+
+"&page.filesize;":#"<desc ent='ent'><p>
+ This file's size, in bytes.
+</p></desc>",
+
+"&page.ssl-strength;":#"<desc ent='ent'><p>
+ The strength in bits of the current SSL connection.
+</p></desc>",
+
+"&page.self;":#"<desc ent='ent'><p>
+ The name of this file.
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"roxen_automatic_charset_variable":#"<desc tag='tag'><p>
+ If put inside a form, the right character encoding of the submitted
+ form can be guessed by Roxen WebServer.
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"colorscope":#"<desc cont='cont'><p><short>
+ Makes it possible to change the autodetected colors within the tag.
+ Useful when out-of-order parsing occurs, e.g.</p>
+
 <ex type=box>
 <define tag=\"hello\">
   <colorscope bgcolor=\"red\">
@@ -1854,62 +1969,75 @@ colors within the tag. Useful when out-of-order parsing occurs, e.g.
 </ex>
 </desc>
 
-<attr name=text value=color>
- Set the text color within the scope.
+<attr name='text' value='color'><p>
+ Set the text color within the scope.</p>
 </attr>
 
-<attr name=bgcolor value=color>
- Set the background color within the scope.
+<attr name='bgcolor' value='color'<p>
+ Set the background color within the scope.</p>
 </attr>
 
-<attr name=link value=color>
- Set the link color within the scope.
+<attr name='link' value='color'<p>
+ Set the link color within the scope.</p>
 </attr>
 
-<attr name=alink value=color>
- Set the active link color within the scope.
+<attr name='alink' value='color'<p>
+ Set the active link color within the scope.</p>
 </attr>
 
-<attr name=vlink value=color>
- Set the visited link color within the scope.
+<attr name='vlink' value='color'<p>
+ Set the visited link color within the scope.</p>
 </attr>",
 
-"aconf":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"aconf":#"<desc cont='cont'><p><short>
  Creates a link that can modify the persistent states in the cookie
- RoxenConfig.</short>
+ RoxenConfig.</short> In practice it will add &lt;keyword&gt;/ right
+ after the server, i.e. if you want to remove bacon and add egg the
+ first \"directory\" in the path will be &lt;-bacon,egg&gt;. If the
+ user follows this link the WebServer will understand how the
+ RoxenConfig cookie should be modified and will send a new cookie
+ along with a redirect to the given url, but with the first
+ \"directory\" removed. The presence of a certain keyword in can be
+ controlled with <xref href='../if/if_config.tag' />.</p>
 </desc>
 
 <attr name=href value=uri>
- Indicates which page should be linked to, if any other than the
- present one.
+ <p>Indicates which page should be linked to, if any other than the
+ present one.</p>
 </attr>
 
 <attr name=add value=string>
- The \"cookie\" or \"cookies\" that should be added, in a comma
- seperated list.
+ <p>The \"cookie\" or \"cookies\" that should be added, in a comma
+ separated list.</p>
 </attr>
 
 <attr name=drop value=string>
- The \"cookie\" or \"cookies\" that should be droped, in a comma
- seperated list.
+ <p>The \"cookie\" or \"cookies\" that should be dropped, in a comma
+ separated list.</p>
 </attr>
 
 <attr name=class value=string>
-This cascading style sheet (CSS) class definition will apply to the a-element.
-</attr>
- All other attributes will be inherited by the generated a tag.",
+ <p>This cascading style sheet (CSS) class definition will apply to
+ the a-element.</p>
 
-"append":#"<desc tag><short>
+ <p>All other attributes will be inherited by the generated a tag.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"append":#"<desc tag='tag'><p><short>
  Appends a value to a variable. The variable attribute and one more is
  required.</short>
-</desc>
+</p></desc>
 
-<attr name=variable value=string required>
- The name of the variable.
+<attr name=variable value=string required='required'>
+ <p>The name of the variable.</p>
 </attr>
 
 <attr name=value value=string>
- The value the variable should have appended.
+ <p>The value the variable should have appended.</p>
 
  <ex>
  <set variable='var.ris' value='Roxen'/>
@@ -1919,63 +2047,77 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>
 
 <attr name=from value=string>
- The name of another variable that the value should be copied from.
+ <p>The name of another variable that the value should be copied
+ from.</p>
 </attr>",
 
-"apre":#"<desc cont><short>
- Creates a link that can modify prestates.</short> Prestate options
- are simple toggles, and are added to the URL of the page. Use <tag>if
- prestate='...'</tag> ... <tag>/if</tag>to test for the presence of a
- prestate. <tag>apre</tag> works just like the <tag>a href=...</tag>
+//----------------------------------------------------------------------
+
+"apre":#"<desc cont='cont'><p><short>
+
+ Creates a link that can modify prestates.</short> Prestates can be
+ seen as valueless cookies or toggles that are easily modified by the
+ user. The prestates are added to the URL. If you set the prestate
+ \"no-images\" on \"http://www.demolabs.com/index.html\" the URL would
+ be \"http://www.demolabs.com/(no-images)/\". Use <xref
+ href='../if/if_prestate.tag' /> to test for the presence of a
+ prestate. <tag>apre</tag> works just like the <tag>a href='...'</tag>
  container, but if no \"href\" attribute is specified, the current
- page is used.
+ page is used. </p>
+
 </desc>
 
 <attr name=href value=uri>
- Indicates which page should be linked to, if any other than the
- present one.
+ <p>Indicates which page should be linked to, if any other than the
+ present one.</p>
 </attr>
 
 <attr name=add value=string>
- The prestate or prestates that should be added, in a comma seperated list.
+ <p>The prestate or prestates that should be added, in a comma
+ separated list.</p>
 </attr>
 
 <attr name=drop value=string>
- The prestate or prestates that should be droped, in a comma seperated
- list.
+ <p>The prestate or prestates that should be dropped, in a comma separated
+ list.</p>
 </attr>
 
 <attr name=class value=string>
- This cascading style sheet (CSS) class definition will apply to the a-element.
+ <p>This cascading style sheet (CSS) class definition will apply to
+ the a-element.</p>
 </attr>",
 
-"auth-required":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"auth-required":#"<desc tag='tag'><p><short>
  Adds an HTTP auth required header and return code (401), that will
  force the user to supply a login name and password.</short> This tag
  is needed when using access control in RXML in order for the user to
  be prompted to login.
-</desc>
+</p></desc>
 
 <attr name=realm value=string>
- The realm you are logging on to, i.e \"Intranet foo\".
+ <p>The realm you are logging on to, i.e \"Demolabs Intranet\".</p>
 </attr>
 
 <attr name=message value=string>
- Returns a message if a login failed or cancelled.
+ <p>Returns a message if a login failed or cancelled.</p>
 </attr>",
 
-"autoformat":#"<desc cont><short hide>
- Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
+//----------------------------------------------------------------------
+
+"autoformat":#"<desc cont='cont'><p><short hide='hide'>
+ Replaces newlines with <tag>br/</tag>:s'.</short>Replaces newlines with
+ <tag>br /</tag>:s'.</p>
 
 <ex><autoformat>
 It is almost like
 using the pre tag.
 </autoformat></ex>
-
 </desc>
 
 <attr name=p>
- Replace empty lines with <tag>p</tag>:s.
+ <p>Replace empty lines with <tag>p</tag>:s.</p>
 <ex><autoformat p=''>
 It is almost like
 
@@ -1984,21 +2126,26 @@ using the pre tag.
 </attr>
 
 <attr name=nobr>
- Do not replace newlines with <tag>br /</tag>:s.
+ <p>Do not replace newlines with <tag>br /</tag>:s.</p>
 </attr>
 
-<attr name=nonbsp>
- Do not turn consecutive spaces into interleaved breakable/nonbreakable spaces.
- When this attribute is not given, the tag will behave more or less like HTML:s
- <tag>pre</tag> tag, making whitespace indention work, without the usually
- unwanted effect of really long lines extending the browser window width.
+<attr name=nonbsp><p>
+ Do not turn consecutive spaces into interleaved
+ breakable/nonbreakable spaces. When this attribute is not given, the
+ tag will behave more or less like HTML:s <tag>pre</tag> tag, making
+ whitespace indention work, without the usually unwanted effect of
+ really long lines extending the browser window width.</p>
 </attr>
+
 
 <attr name=class value=string>
- This cascading style sheet (CSS) definition will be applied on the p elements.
+ <p>This cascading style sheet (CSS) definition will be applied on the
+ p elements.</p>
 </attr>",
 
-"cache":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"cache":#"<desc cont='cont'><p><short>
  This simple tag RXML parse its contents and cache them using the
  normal Roxen memory cache.</short> They key used to store the cached
  contents is the MD5 hash sum of the contents, the accessed file name,
@@ -2007,185 +2154,250 @@ using the pre tag.
  entry should be considered valid can set with one or several time attributes.
  If not provided the entry will be removed from the cache when it has
  been untouched for too long.
-</desc>
+</p></desc>
 
 <attr name=key value=string>
- Append this value to the hash used to identify the contents for less
- risk of incorrect caching. This shouldn't really be needed.
+ <p>Append this value to the hash used to identify the contents for less
+ risk of incorrect caching. This shouldn't really be needed.</p>
 </attr>
 
 <attr name=nohash>
- The cached entry will use only the provided key as cache key.
+ <p>The cached entry will use only the provided key as cache key.</p>
 </attr>
 
 <attr name=years value=number>
- Add this number of years to the time this entry is valid.
+ <p>Add this number of years to the time this entry is valid.</p>
 </attr>
 <attr name=months value=number>
- Add this number of months to the time this entry is valid.
+ <p>Add this number of months to the time this entry is valid.</p>
 </attr>
 <attr name=weeks value=number>
- Add this number of weeks to the time this entry is valid.
+ <p>Add this number of weeks to the time this entry is valid.</p>
 </attr>
 <attr name=days value=number>
- Add this number of days to the time this entry is valid.
+ <p>Add this number of days to the time this entry is valid.</p>
 </attr>
 <attr name=hours value=number>
- Add this number of hours to the time this entry is valid.
+ <p>Add this number of hours to the time this entry is valid.</p>
 </attr>
 <attr name=beats value=number>
- Add this number of beats to the time this entry is valid.
+ <p>Add this number of beats to the time this entry is valid.</p>
 </attr>
 <attr name=minutes value=number>
- Add this number of minutes to the time this entry is valid.
+ <p>Add this number of minutes to the time this entry is valid.</p>
 </attr>
 <attr name=seconds value=number>
- Add this number of seconds to the time this entry is valid.
+ <p>Add this number of seconds to the time this entry is valid.</p>
 </attr>",
 
-"catch":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"catch":#"<desc cont='cont'><p><short>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents.</short> If something does go wrong, the error
- message is returned instead. See also <tag><ref
- type='tag'>throw</ref></tag>.
+ message is returned instead. See also <xref
+ href='throw.tag' />.
+</p>
 </desc>",
 
-"configimage":#"<desc tag><short>
+//----------------------------------------------------------------------
+"charset":#"<desc cont='cont'><p><short>
+ </short>
+
+ </p>
+</desc>",
+
+
+//----------------------------------------------------------------------
+
+"configimage":#"<desc tag='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
  src attribute is required.
-</desc>
+</p></desc>
 
 <attr name=src value=string>
- The name of the picture to show.
+ <p>The name of the picture to show.</p>
 </attr>
 
 <attr name=border value=number default=0>
- The image border when used as a link.
+ <p>The image border when used as a link.</p>
 </attr>
 
 <attr name=alt value=string default='The src string'>
- The picture description.
+ <p>The picture description.</p>
 </attr>
 
 <attr name=class value=string>
- This cascading style sheet (CSS) class definition will be applied to
- the image.
-</attr>
- All other attributes will be inherited by the generated img tag.",
+ <p>This cascading style sheet (CSS) class definition will be applied to
+ the image.</p>
 
-"configurl":#"<desc tag><short>
+ <p>All other attributes will be inherited by the generated img tag.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"configurl":#"<desc tag='tag'><p><short>
  Returns a URL to the administration interface.</short>
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"charset":#"<desc cont='cont'><p><short>
+ </short>
+
+ </p>
 </desc>",
 
-"cset":#"<desc cont>Sets a variable with its content.</desc>
+//----------------------------------------------------------------------
+
+"configimage":#"<desc tag='tag'><p><short>
+ Returns one of the internal Roxen configuration images.</short> The
+ src attribute is required.
+</p></desc>
+
+<attr name=src value=string>
+ <p>The name of the picture to show.</p>
+</attr>
+
+<attr name=border value=number default=0>
+ <p>The image border when used as a link.</p>
+</attr>
+
+<attr name=alt value=string default='The src string'>
+ <p>The picture description.</p>
+</attr>
+
+<attr name=class value=string>
+ <p>This cascading style sheet (CSS) class definition will be applied to
+ the image.</p>
+
+ <p>All other attributes will be inherited by the generated img tag.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"configurl":#"<desc tag='tag'><p><short>
+ Returns a URL to the administration interface.</short>
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"cset":#"<desc cont='cont'><p>
+ Sets a variable with its content.</p>
+</desc>
 
 <attr name=variable value=name>
- The variable to be set.
+ <p>The variable to be set.</p>
 </attr>
 
 <attr name=quote value=html|none>
- How the content should be quoted before assigned to the variable. Default is html.
-</attr>
-",
+ <p>How the content should be quoted before assigned to the variable.
+ Default is html.</p>
+</attr>",
 
-"crypt":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"crypt":#"<desc cont='cont'><p><short>
  Encrypts the contents as a Unix style password.</short> Useful when
- combined with services that use such passwords. <p>Unix style
- passwords are one-way encrypted, to prevent the actual clear-text
- password from being stored anywhere. When a login attempt is made,
- the password supplied is also encrypted and then compared to the
- stored encrypted password.</p>
+ combined with services that use such passwords.</p>
+
+ <p>Unix style passwords are one-way encrypted, to prevent the actual
+ clear-text password from being stored anywhere. When a login attempt
+ is made, the password supplied is also encrypted and then compared to
+ the stored encrypted password.</p>
 </desc>
 
 <attr name=compare value=string>
- Compares the encrypted string with the contents of the tag. The tag
- will behaive very much  like an <tag>if</tag> tag.
+ <p>Compares the encrypted string with the contents of the tag. The tag
+ will behave very much like an <xref href='../if/if.tag' /> tag.</p>
 <ex><crypt compare=\"LAF2kkMr6BjXw\">Roxen</crypt>
 <then>Yepp!</then>
 <else>Nope!</else>
 </ex>
 </attr>",
 
-"date":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"date":#"<desc tag='tag'><p><short>
  Inserts the time and date.</short> Does not require attributes.
-</desc>
+</p></desc>
 
 <attr name=unix-time value=number of seconds>
-
-Display this time instead of the current. This attribute uses the
-specified Unix 'time_t' time as the starting time, (which is <i>01:00,
-January the 1st, 1970</i>) instead of the current time. This is mostly
-useful when the <tag>date</tag> tag is used from a Pike-script or
-Roxen module.
+ <p>Display this time instead of the current. This attribute uses the
+ specified Unix 'time_t' time as the starting time, (which is
+ <i>01:00, January the 1st, 1970</i>) instead of the current time.
+ This is mostly useful when the <tag>date</tag> tag is used from a
+ Pike-script or Roxen module.</p>
 
 <ex ><date unix-time='120'/></ex>
 </attr>
 
 <attr name=timezone value=local|GMT default=local>
-Display the time from another timezone.
+ <p>Display the time from another timezone.</p>
 </attr>
 
 <attr name=years value=number>
- Add this number of years to the result.
+ <p>Add this number of years to the result.</p>
  <ex ><date date='' years='2'/></ex>
 </attr>
 
 <attr name=months value=number>
- Add this number of months to the result.
+ <p>Add this number of months to the result.</p>
  <ex ><date date='' months='2'/></ex>
 </attr>
 
 <attr name=weeks value=number>
- Add this number of weeks to the result.
+ <p>Add this number of weeks to the result.</p>
  <ex ><date date='' weeks='2'/></ex>
 </attr>
 
 <attr name=days value=number>
- Add this number of days to the result.
+ <p>Add this number of days to the result.</p>
 </attr>
 
 <attr name=hours value=number>
- Add this number of hours to the result.
+ <p>Add this number of hours to the result.</p>
  <ex ><date time='' hours='2' type='iso'/></ex>
 </attr>
 
 <attr name=beats value=number>
- Add this number of beats to the result.
+ <p>Add this number of beats to the result.</p>
  <ex ><date time='' beats='10' type='iso'/></ex>
 </attr>
 
 <attr name=minutes value=number>
- Add this number of minutes to the result.
+ <p>Add this number of minutes to the result.</p>
 </attr>
 
 <attr name=seconds value=number>
- Add this number of seconds to the result.
+ <p>Add this number of seconds to the result.</p>
 </attr>
 
 <attr name=adjust value=number>
- Add this number of seconds to the result.
+ <p>Add this number of seconds to the result.</p>
 </attr>
 
 <attr name=brief>
- Show in brief format.
+ <p>Show in brief format.</p>
 <ex ><date brief=''/></ex>
 </attr>
 
 <attr name=time>
- Show only time.
+ <p>Show only time.</p>
 <ex ><date time=''/></ex>
 </attr>
 
 <attr name=date>
- Show only date.
+ <p>Show only date.</p>
 <ex ><date date=''/></ex>
 </attr>
 
 <attr name=type value=string|ordered|iso|discordian|stardate|number>
- Defines in which format the date should be displayed in. Discordian
+ <p>Defines in which format the date should be displayed in. Discordian
  and stardate only make a difference when not using part. Note that
  type=stardate has a separate companion attribute, prec, which sets
- the precision.
+ the precision.</p>
+
 <xtable>
 <row><c><i>type=discordian</i></c><c><ex ><date date='' type='discordian'/> </ex></c></row>
 <row><c><i>type=iso</i></c><c><ex ><date date='' type='iso'/></ex></c></row>
@@ -2197,10 +2409,11 @@ Display the time from another timezone.
 </attr>
 
 <attr name=part value=year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds>
- Defines which part of the date should be displayed. Day and wday is
+ <p>Defines which part of the date should be displayed. Day and wday is
  the same. Date and mday is the same. Yday is the day number of the
  year. Seconds is unix time type. Only the types string, number and
- ordered applies when the part attribute is used.
+ ordered applies when the part attribute is used.</p>
+
 <xtable>
 <row><c><i>part=year</i></c><c>Display the year.<ex ><date part='year' type='number'/></ex></c></row>
 <row><c><i>part=month</i></c><c>Display the month. <ex ><date part='month' type='ordered'/></ex></c></row>
@@ -2219,7 +2432,9 @@ Display the time from another timezone.
 </attr>
 
 <attr name=strftime value=string>
- If this attribute is given to date, it will format the result according to the argument string.
+ <p>If this attribute is given to date, it will format the result
+ according to the argument string.</p>
+
  <xtable>
  <row><c>%%</c><c>Percent character</c></row>
  <row><c>%a</c><c>Abbreviated weekday name, e.g. \"Mon\"</c></row>
@@ -2263,80 +2478,101 @@ Display the time from another timezone.
 </attr>
 
 <attr name=lang value=langcode>
- Defines in what language a string will be presented in. Used together
+ <p>Defines in what language a string will be presented in. Used together
  with <att>type=string</att> and the <att>part</att> attribute to get
- written dates in the specified language.
+ written dates in the specified language.</p>
 
 <ex><date part='day' type='string' lang='de'></ex>
 </attr>
 
 <attr name=case value=upper|lower|capitalize>
- Changes the case of the output to upper, lower or capitalize.
-<ex><date date='' lang='<ent>client.language</ent>' case='upper'/></ex>
+ <p>Changes the case of the output to upper, lower or capitalize.</p>
+<ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
- The number of decimals in the stardate.
+ <p>The number of decimals in the stardate.</p>
 </attr>",
 
-"debug":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"debug":#"<desc tag='tag'><p><short>
  Helps debugging RXML-pages as well as modules.</short> When debugging mode is
  turned on, all error messages will be displayed in the HTML code.
-</desc>
+</p></desc>
 
 <attr name=on>
- Turns debug mode on.
+ <p>Turns debug mode on.</p>
 </attr>
 
 <attr name=off>
- Turns debug mode off.
+ <p>Turns debug mode off.</p>
 </attr>
 
 <attr name=toggle>
- Toggles debug mode.
+ <p>Toggles debug mode.</p>
 </attr>
 
 <attr name=showid value=string>
- Shows a part of the id object. E.g. showid=\"id->request_headers\".
+ <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
+</attr>
+
+<attr name=werror value=string>
+  <p>When you have access to the server debug log and want your RXML
+     page to write some kind of diagnostics message or similar, the
+     werror attribute is helpful.</p>
+
+  <p>This can be used on the error page, for instance, if you'd want
+     such errors to end up in the debug log:</p>
+
+  <ex type=box>
+<debug werror='File &page.url; not found!
+(linked from &client.referrer;)'/></ex>
 </attr>",
 
-"dec":#"<desc tag><short>
- Subtracts 1 from a variable.</short>
-</desc>
+//----------------------------------------------------------------------
 
-<attr name=variable value=string required>
- The variable to be decremented.
+"dec":#"<desc tag='tag'><p><short>
+ Subtracts 1 from a variable.</short>
+</p></desc>
+
+<attr name=variable value=string required='required'>
+ <p>The variable to be decremented.</p>
 </attr>
 
 <attr name=value value=number default=1>
- The value to be subtracted.
+ <p>The value to be subtracted.</p>
 </attr>",
 
-"default":#"<desc cont><short hide>
+//----------------------------------------------------------------------
+
+"default":#"<desc cont='cont'><p><short hide='hide'>
  Used to set default values for form elements.</short> Makes it easier
  to give default values to \"<tag>select</tag>\" or
- \"<tag>checkbox</tag>\" form elements.
+ \"<tag>checkbox</tag>\" form elements.</p>
 
- <p>The <tag>default</tag> container tag is placed around the form element it
- should give a default value.</p>
+ <p>The <tag>default</tag> container tag is placed around the form
+ element it should give a default value.</p>
 
- <p>This tag is particularly useful in combination with database tags.</p>
+ <p>This tag is particularly useful in combination with database
+tags.</p>
 </desc>
 
 <attr name=value value=string>
- The value to set.
+ <p>The value to set.</p>
 </attr>
 
 <attr name=separator value=string default=','>
- If several values are to be selected, this is the string that seperates them.
+ <p>If several values are to be selected, this is the string that
+ separates them.</p>
 </attr>
 
 <attr name=name value=string>
- Only affect form element with this name.
+ <p>Only affect form element with this name.</p>
 </attr>
 
 <ex type='box'>
- <default name='my-select' value='<ent>form.preset</ent>'>
+ <default name='my-select' value='&form.preset;'>
     <select name='my-select'>
       <option value='1'>First</option>
       <option value='2'>Second</option>
@@ -2345,17 +2581,20 @@ Display the time from another timezone.
  </default>
 </ex>",
 
-"doc":#"<desc cont><short hide>
- Eases code documentation by reformatting it.</short>
- Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
- \"&amp;amp;\". No attributes required.
-</desc>
+//----------------------------------------------------------------------
 
-<attr name=quote>
- Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
- and \"&amp;gt;\".
+"doc":#"<desc cont='cont'><p><short hide='hide'>
+ Eases code documentation by reformatting it.</short>Eases
+ documentation by replacing \"{\", \"}\" and \"&amp;\" with
+ \"&amp;lt;\", \"&amp;gt;\" and \"&amp;amp;\". No attributes required.
+</p></desc>
 
-<ex><doc quote=''>
+<attr name='quote'>
+ <p>Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\"
+ is replaced with \"&amp;lt;\" and \"&amp;gt;\".</p>
+
+<ex type='vert'>
+<doc quote=''>
 <table>
  <tr>
     <td> First cell </td>
@@ -2364,12 +2603,12 @@ Display the time from another timezone.
 </table>
 </doc>
 </ex>
-
 </attr>
 
-<attr name=pre>
- The result is encapsulated within a <tag>pre</tag> container.
-<ex><doc pre=''>
+<attr name='pre'><p>
+ The result is encapsulated within a <tag>pre</tag> container.</p>
+
+<ex type='vert'><doc pre=''>
 {table}
  {tr}
     {td} First cell {/td}
@@ -2380,182 +2619,212 @@ Display the time from another timezone.
 </ex>
 </attr>
 
-<attr name=class value=string>
-  This cascading style sheet (CSS) definition will be applied on the pre element.
-  </attr>",
+<attr name='class' value='string'>
+ <p>This cascading style sheet (CSS) definition will be applied on the pre element.</p>
+</attr>",
 
-"expire-time":#"<desc tag><short>
- Sets cache expire time for the document.</short>
-</desc>
+//----------------------------------------------------------------------
+
+"expire-time":#"<desc tag='tag'><p><short hide='hide'>
+ Sets client cache expire time for the document.</short>Sets client cache expire time for the document by sending the HTTP header \"Expires\".
+</p></desc>
 
 <attr name=now>
- The document expires now.
+  <p>Notify the client that the document expires now. The headers \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
+  will be sent, besides the \"Expires\" header.</p>
+
 </attr>
 
 <attr name=years value=number>
- Add this number of years to the result.
+ <p>Add this number of years to the result.</p>
 </attr>
 
 <attr name=months value=number>
- Add this number of months to the result.
+  <p>Add this number of months to the result.</p>
 </attr>
 
 <attr name=weeks value=number>
- Add this number of weeks to the result.
+  <p>Add this number of weeks to the result.</p>
 </attr>
 
 <attr name=days value=number>
- Add this number of days to the result.
+  <p>Add this number of days to the result.</p>
 </attr>
 
 <attr name=hours value=number>
- Add this number of hours to the result.
+  <p>Add this number of hours to the result.</p>
 </attr>
 
 <attr name=beats value=number>
- Add this number of beats to the result.
+  <p>Add this number of beats to the result.</p>
 </attr>
 
 <attr name=minutes value=number>
- Add this number of minutes to the result.
+  <p>Add this number of minutes to the result.</p>
 </attr>
 
 <attr name=seconds value=number>
- Add this number of seconds to the result.
-</attr>
- It is not possible at the time to set the date beyond year 2038,
- since a unix time_t is used.",
+   <p>Add this number of seconds to the result.</p>
 
-"for":#"<desc cont><short>
+ <p>It is not possible at the time to set the date beyond year 2038,
+ since Unix variable <i>time_t</i> data type is used. The <i>time_t</i> data type stores the number of seconds elapsed since 00:00:00 January 1, 1970 UTC. </p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"for":#"<desc cont='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
-</desc>
+</p></desc>
 
 <attr name=from value=number>
- Initial value of the loop variable.
+ <p>Initial value of the loop variable.</p>
 </attr>
 
 <attr name=step value=number>
- How much to increment the variable per loop iteration. By default one.
+ <p>How much to increment the variable per loop iteration. By default one.</p>
 </attr>
 
 <attr name=to value=number>
- How much the loop variable should be incremented to.
+ <p>How much the loop variable should be incremented to.</p>
 </attr>
 
 <attr name=variable value=name>
- Name of the loop variable.
+ <p>Name of the loop variable.</p>
 </attr>",
 
-"fsize":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"fsize":#"<desc tag='tag'><p><short>
  Prints the size of the specified file.</short>
-</desc>
+</p></desc>
 
 <attr name=file value=string>
- Show size for this file.
+ <p>Show size for this file.</p>
 </attr>",
 
-"gauge":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"gauge":#"<desc cont='cont'><p><short>
  Measures how much CPU time it takes to run its contents through the
  RXML parser.</short> Returns the number of seconds it took to parse
  the contents.
-</desc>
+</p></desc>
 
 <attr name=define value=string>
- The result will be put into a variable. E.g. define=var.gauge vill
- put the result in a variable that can be reached with <ent>var.gauge</ent>.
+ <p>The result will be put into a variable. E.g. define=\"var.gauge\" will
+ put the result in a variable that can be reached with <ent>var.gauge</ent>.</p>
 </attr>
 
 <attr name=silent>
- Don't print anything.
+ <p>Don't print anything.</p>
 </attr>
 
 <attr name=timeonly>
- Only print the time.
+ <p>Only print the time.</p>
 </attr>
 
 <attr name=resultonly>
- Only the result of the parsing. Useful if you want to put the time in
- a database or such.
+ <p>Only print the result of the parsing. Useful if you want to put the time in
+ a database or such.</p>
 </attr>",
 
-"header":#"<desc tag><short>
- Adds a header to the document.</short>
-</desc>
+//----------------------------------------------------------------------
+
+"header":#"<desc tag='tag'><p><short>
+ Adds a HTTP header to the page sent back to the client.</short> For
+ more information about HTTP headers please steer your browser to
+ chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
+</p></desc>
 
 <attr name=name value=string>
- The name of the header.
+ <p>The name of the header.</p>
 </attr>
 
 <attr name=value value=string>
- The value of the header.
-</attr>
+ <p>The value of the header.</p>
+</attr>",
 
- For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
+//----------------------------------------------------------------------
 
-
-"imgs":#"<desc tag><short>
+"imgs":#"<desc tag='tag'><p><short>
  Generates a image tag with proper dimensions.</short>
-</desc>
+</p></desc>
 
-<attr name=src value=string required>
- The name of the file that should be shown.
+<attr name=src value=string required='required'>
+ <p>The name of the file that should be shown.</p>
 </attr>
 
 <attr name=alt value=string>
- Description of the image.
-</attr>
- All other attributes will be inherited by the generated img tag.",
+ <p>Description of the image.</p>
+ </attr>
 
-"inc":#"<desc tag><short>
+ <p>All other attributes will be inherited by the generated img tag.</p>",
+
+//----------------------------------------------------------------------
+
+"inc":#"<desc tag='tag'><p><short>
  Adds 1 to a variable.</short>
-</desc>
+</p></desc>
 
-<attr name=variable value=string required>
- The variable to be incremented.
+<attr name=variable value=string required='required'>
+ <p>The variable to be incremented.</p>
 </attr>
 
 <attr name=value value=number default=1>
- The value to be added.
+ <p>The value to be added.</p>
 </attr>",
 
-"insert":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"insert":#"<desc tag='tag'><p><short>
  Inserts a file, variable or other object into a webpage.</short>
-</desc>
+</p></desc>
 
 <attr name=quote value=html|none>
- How the inserted data should be quoted. Default is \"html\", except for
- href and file where it's \"none\".
+ <p>How the inserted data should be quoted. Default is \"html\", except for
+ href and file where it's \"none\".</p>
 </attr>",
 
-"insert#variable":#"<desc plugin>Inserts the value of a variable.</desc>
+//----------------------------------------------------------------------
+
+"insert#variable":#"<desc plugin='plugin'><p><short>
+ Inserts the value of a variable.</short>
+</p></desc>
 
 <attr name=variable value=string>
- The name of the variable.
+ <p>The name of the variable.</p>
 </attr>
 
 <attr name=scope value=string>
- The name of the scope, unless given in the variable attribute.
+ <p>The name of the scope, unless given in the variable attribute.</p>
 </attr>
 
 <attr name=index value=number>
- If the value of the variable is an array, the element with this index number
- will be inserted. 1 is the first element. -1 is the last element.
+ <p>If the value of the variable is an array, the element with this
+ index number will be inserted. 1 is the first element. -1 is the last
+ element.</p>
 </attr>
 
 <attr name=split value=string>
- A string with which the variable value should be splitted into an array, so
- that the index attribute may be used.
+ <p>A string with which the variable value should be splitted into an
+ array, so that the index attribute may be used.</p>
 </attr>",
 
-"insert#variables":#"<desc plugin><short>Inserts listing of all variables in a scope.</short>
-Note that it is possible to create a scope with an infinite number of variables set. In
-this case the programme of that scope decides which variables that should be listable, i.e.
-this will not cause any problem except that all variables will not be listed. It is also
-possible to hide variables so that they are not listed with this tag.
-</desc>
+//----------------------------------------------------------------------
+
+"insert#variables":#"<desc plugin='plugin'><p><short>
+ Inserts a listing of all variables in a scope.</short> Note that it is
+ possible to create a scope with an infinite number of variables set.
+ In this case the programme of that scope decides which variables that
+ should be listable, i.e. this will not cause any problem except that
+ all variables will not be listed. It is also possible to hide
+ variables so that they are not listed with this tag.
+</p></desc>
+
 <attr name=variables value=full|plain>
-  Sets how the output should be formatted. 
- <ex>
+ <p>Sets how the output should be formatted.</p>
+
+ <ex type='vert'>
 <pre>
 <insert variables='full' scope='roxen'/>
 </pre>
@@ -2563,69 +2832,85 @@ possible to hide variables so that they are not listed with this tag.
 </attr>
 
 <attr name=scope>
- The name of the scope that should be listed, if not the present scope.
+ <p>The name of the scope that should be listed, if not the present scope.</p>
 </attr>",
 
-"insert#scopes":#"<desc plugin><short>Inserts a listing of all present scopes.</short></desc>
+//----------------------------------------------------------------------
+
+"insert#scopes":#"<desc plugin='plugin'><p><short>
+ Inserts a listing of all present scopes.</short>
+</p></desc>
 
 <attr name=scopes value=full|plain>
- Sets how the output should be formatted.
-</attr>
+ <p>Sets how the output should be formatted.</p>
 
- <ex>
+ <ex type='vert'>
    <insert scopes='plain'/>
  </ex>
 </attr>",
 
-"insert#file":#"<desc plugin><short>Inserts the contents of a file.</short>
- It reads files in a way similar to if you fetched the file with a browser, so
- the file may be parsed before it is inserted, depending on settings in
- the RXML parser. Most notably which kinds of files (extensions) that should be
- parsed. Since it reads files like a normal request, e.g. generated pages from
- location modules can be inserted.
- Put the tag <tag>eval</tag> around the <tag>insert</tag> if the file
- should be parsed after it is inserted in the page. This enables RXML defines and
- scope variables to be set in the including file (as opposed to the included file).
- You can also configure the file system module so that files with a certain extension
- can not be downloaded, but still inserted into other documents.</desc>
+//----------------------------------------------------------------------
+
+"insert#file":#"<desc plugin='plugin'><p><short>
+ Inserts the contents of a file.</short> It reads files in a way
+ similar to if you fetched the file with a browser, so the file may be
+ parsed before it is inserted, depending on settings in the RXML
+ parser. Most notably which kinds of files (extensions) that should be
+ parsed. Since it reads files like a normal request, e.g. generated
+ pages from location modules can be inserted. Put the tag
+ <xref href='../programming/eval.tag' /> around <tag>insert</tag> if the file should be
+ parsed after it is inserted in the page. This enables RXML defines
+ and scope variables to be set in the including file (as opposed to
+ the included file). You can also configure the file system module so
+ that files with a certain extension can not be downloaded, but still
+ inserted into other documents.
+</p></desc>
 
 <attr name=file value=string>
- The virtual path to the file to be inserted.
+ <p>The virtual path to the file to be inserted.</p>
 
  <ex type='box'>
   <eval><insert file='html_header.inc'/></eval>
  </ex>
 </attr>",
 
-"insert#realfile":#"<desc plugin>Inserts a raw, unparsed file. The disadvantage
-with the realfile plugin compared to the file plugin is that the realfile plugin
-needs the inserted file to exist, and can't fetch files from e.g. an arbitrary
-location module.</desc>
+//----------------------------------------------------------------------
+
+"insert#realfile":#"<desc plugin='plugin'><p><short>
+ Inserts a raw, unparsed file.</short> The disadvantage with the
+ realfile plugin compared to the file plugin is that the realfile
+ plugin needs the inserted file to exist, and can't fetch files from e.g. an arbitrary location module.
+</p></desc>
 
 <attr name=realfile value=string>
- The virtual path to the file to be inserted.
+ <p>The virtual path to the file to be inserted.</p>
 </attr>",
 
-"maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
- This tag creates tags. The contents of the container will be put into
- the contents of the produced container.
-</desc>
+//----------------------------------------------------------------------
 
-<attr name=name value=string required>
- The name of the tag.
+"maketag":({ #"<desc cont='cont'><p><short hide='hide'>
+ Makes it possible to create tags.</short>This tag creates tags. The contents of the container will be put into the contents of the produced container.
+</p></desc>
+
+<attr name=name value=string required='required'>
+ <p>The name of the tag.</p>
 </attr>
 
 <attr name=noxml>
- Tags should not be terminated with a trailing slash.
+ <p>Tags should not be terminated with a trailing slash.</p>
 </attr>
 
-<attr name=type value=tag|container default=tag>
- What kind of tag should be produced.
-</attr>
- Inside the maketag container the container attrib is defined. It is
- used to add attributes to the produced tag. It has the required
- attribute attrib, which is the name of the attribute. The contents of
- the attribute container will be the attribute value. E.g.
+<attr name=type value=tag|container|pi default=tag>
+ <p>What kind of tag should be produced. The argument 'Pi' will produce a processinstruction tag. </p>
+</attr>",
+
+ ([
+   "attrib":#"<desc cont='cont'><p>
+   Inside the maketag container the container
+   <tag>attrib</tag> is defined. It is used to add attributes to the produced
+   tag. The contents of the attribute container will be the
+   attribute value. E.g.</p>
+   </desc>
 
 <ex><eval>
 <maketag name=\"replace\" type=\"container\">
@@ -2634,89 +2919,96 @@ location module.</desc>
  MAD
 </maketag>
 </eval>
-</ex>",
+</ex>
+   <attr name=name value=string required=required><p>
+   The name of the attribute.</p>
+   </attr>"
+ ])
+   }),
 
-"modified":#"<desc tag><short hide>
+//----------------------------------------------------------------------
+
+"modified":#"<desc tag='tag'><p><short hide='hide'>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
-</desc>
+</p></desc>
 
 <attr name=by>
- Print by whom the page was modified. Takes the same attributes as the
- <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
- userdatabase.
+ <p>Print by whom the page was modified. Takes the same attributes as
+ <xref href='user.tag' />. This attribute requires a userdatabase.
+ </p>
 
  <ex type='box'>This page was last modified by <modified by=''
  realname=''/>.</ex>
 </attr>
 
 <attr name=date>
- Print the modification date. Takes all the date attributes in the
- <tag><ref type='tag'>date</ref></tag> tag.
+    <p>Print the modification date. Takes all the date attributes in <xref href='date.tag' />.</p>
 
  <ex type='box'>This page was last modified <modified date=''
  case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
- Get information from this file rather than the current page.
+ <p>Get information from this file rather than the current page.</p>
 </attr>
 
 <attr name=realfile value=path>
- Get information from this file in the computers filesystem rather
- than Roxen Webserver's virtual filesystem.
+ <p>Get information from this file in the computers filesystem rather
+ than Roxen Webserver's virtual filesystem.</p>
 </attr>",
 
-"random":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"random":#"<desc cont='cont'><p><short>
  Randomly chooses a message from its contents.</short>
-</desc>
+</p></desc>
 
-<attr name=separator value=string>
- The separator used to separate the messages, by default newline.
+<attr name='separator' value='string'>
+ <p>The separator used to separate the messages, by default newline.</p>
 
-<ex><random separator=','>
-Roxen,Pike,Foo,Bar,roxen.com,community.roxen.com,Roxen Internet Software
+<ex><random separator='#'>
+Roxen#Pike#Foo#Bar#roxen.com
 </random>
 </ex>
+</attr>",
 
-</attr>
+//----------------------------------------------------------------------
 
-<attr name='seed' value='string'>
-Enables you to use a seed that determines which message to choose.
-</attr>
-",
+"redirect":#"<desc tag='tag'><p><short hide='hide'>
+ Redirects the user to another page.</short> Redirects the user to
+ another page by sending a HTTP redirect header to the client.
+</p></desc>
 
-"redirect":#"<desc tag><short>
- Redirects the user to another page.</short> Requires the to attribute.
-</desc>
-
-<attr name=to value=string>
- Where the user should be sent to.
+<attr name=to value=string required='required'>
+ <p>Where the user should be sent to.</p>
 </attr>
 
 <attr name=add value=string>
- The prestate or prestates that should be added, in a comma seperated
- list.
+ <p>The prestate or prestates that should be added, in a comma separated
+ list.</p>
 </attr>
 
 <attr name=drop value=string>
- The prestate or prestates that should be dropped, in a comma seperated
- list.
+ <p>The prestate or prestates that should be dropped, in a comma separated
+ list.</p>
 </attr>
 
 <attr name=text value=string>
- Sends a text string to the browser, that hints from where and why the
+ <p>Sends a text string to the browser, that hints from where and why the
  page was redirected. Not all browsers will show this string. Only
- special clients like Telnet uses it.
-</attr>
- Arguments prefixed with \"add\" or \"drop\" are treated as prestate
- toggles, which are added or removed, respectively, from the current
- set of prestates in the URL in the redirect header (see also <tag
- <ref type='tag'>apre</ref></tag>). Note that this only works when the
- to=... URL is absolute, i.e. begins with a \"/\", otherwise these
- state toggles have no effect.",
+ special clients like Telnet uses it.</p>
 
-"remove-cookie":#"<desc tag><short>
+<p>Arguments prefixed with \"add\" or \"drop\" are treated as prestate
+ toggles, which are added or removed, respectively, from the current
+ set of prestates in the URL in the redirect header (see also <xref href='apre.tag' />). Note that this only works when the
+ to=... URL is absolute, i.e. begins with a \"/\", otherwise these
+ state toggles have no effect.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"remove-cookie":#"<desc tag='tag'><p><short>
  Sets the expire-time of a cookie to a date that has already occured.
  This forces the browser to remove it.</short>
  This tag won't remove the cookie, only set it to the empty string, or
@@ -2725,274 +3017,288 @@ Enables you to use a seed that determines which message to choose.
  unfortunutaly the only way as there is no command in HTTP for
  removing cookies. We have to give a hint to the browser and let it
  remove the cookie.
-</desc>
+</p></desc>
 
 <attr name=name>
- Name of the cookie the browser should remove.
+ <p>Name of the cookie the browser should remove.</p>
 </attr>
 
 <attr name=value value=text>
- Even though the cookie has been marked as expired some browsers
+ <p>Even though the cookie has been marked as expired some browsers
  will not remove the cookie until it is shut down. The text provided
- with this attribute will be the cookies intermediate value.
-</attr>
+ with this attribute will be the cookies intermediate value.</p>
 
-Note that removing a cookie won't take effect until the next page
-load.",
+ <p>Note that removing a cookie won't take effect until the next page
+load.</p>
 
-"replace":#"<desc cont><short>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"replace":#"<desc cont='cont'><p><short>
  Replaces strings in the contents with other strings.</short>
-</desc>
+</p></desc>
 
-<attr name=from value=string required>
- String or list of strings that should be replaced.
+<attr name=from value=string required='required'>
+ <p>String or list of strings that should be replaced.</p>
 </attr>
 
 <attr name=to value=string>
- String or list of strings with the replacement strings. Default is the
- empty string.
+ <p>String or list of strings with the replacement strings. Default is the
+ empty string.</p>
 </attr>
 
 <attr name=separator value=string default=','>
- Defines what string should seperate the strings in the from and to
- attributes.
+ <p>Defines what string should separate the strings in the from and to
+ attributes.</p>
 </attr>
 
 <attr name=type value=word|words default=word>
- Word means that a single string should be replaced. Words that from
- and to are lists.
+ <p>Word means that a single string should be replaced. Words that from
+ and to are lists.</p>
 </attr>",
 
-"return":#"<desc tag><short>
- Changes the HTTP return code for this page.</short>
+//----------------------------------------------------------------------
 
- See the Appendix for a list of HTTP return codes.
-</desc>
+"return":#"<desc tag='tag'><p><short>
+ Changes the HTTP return code for this page. </short>
+ <!-- See the Appendix for a list of HTTP return codes. (We have no appendix) -->
+</p></desc>
 
-<attr name=code>
- The HTTP status code to return (an integer).
+<attr name=code value=integer>
+ <p>The HTTP status code to return.</p>
 </attr>
 
 <attr name=text>
- The HTTP status message to set. If you don't provide one, a default
+ <p>The HTTP status message to set. If you don't provide one, a default
  message is provided for known HTTP status codes, e g \"No such file
- or directory.\" for code 404.
+ or directory.\" for code 404.</p>
 </attr>",
 
-"roxen":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"roxen":#"<desc tag='tag'><p><short>
  Returns a nice Roxen logo.</short>
-</desc>
+</p></desc>
 
 <attr name=size value=small|medium|large default=medium>
- Defines the size of the image.
+ <p>Defines the size of the image.</p>
 <ex type='vert'><roxen size='small'/> <roxen/> <roxen size='large'/></ex>
 </attr>
 
 <attr name=color value=black|white default=white>
- Defines the color of the image.
+ <p>Defines the color of the image.</p>
 <ex type='vert'><roxen color='black'/></ex>
 </attr>
 
 <attr name=alt value=string default='\"Powered by Roxen\"'>
- The image description.
+ <p>The image description.</p>
 </attr>
 
 <attr name=border value=number default=0>
- The image border.
+ <p>The image border.</p>
 </attr>
 
 <attr name=class value=string>
- This cascading style sheet (CSS) definition will be applied on the img element.
+ <p>This cascading style sheet (CSS) definition will be applied on the img element.</p>
 </attr>
 
 <attr name=target value=string>
- Names a target frame for the link around the image.
-</attr>
- All other attributes will be inherited by the generated img tag.",
+ <p>Names a target frame for the link around the image.</p>
 
-"scope":#"<desc cont><short>
+ <p>All other attributes will be inherited by the generated img tag.</p>
+</attr> ",
+
+//----------------------------------------------------------------------
+
+"scope":#"<desc cont='cont'><p><short>
  Creates a new variable scope.</short> Variable changes inside the scope
  container will not affect variables in the rest of the page.
-</desc>
+</p></desc>
 
 <attr name=extend value=name default=form>
- If set, all variables in the selected scope will be copied into the new scope.
- NOTE: if the source scope is \"magic\", as e.g. the roxen scope, the scope will
- not be copied, but rather linked and will behave as the original scope. It can
- be useful to create an alias or just for the convinience of refering to the
- scope as \"_\".
+ <p>If set, all variables in the selected scope will be copied into
+ the new scope. NOTE: if the source scope is \"magic\", as e.g. the
+ roxen scope, the scope will not be copied, but rather linked and will
+ behave as the original scope. It can be useful to create an alias or
+ just for the convinience of refering to the scope as \"_\".</p>
 </attr>
 
 <attr name=scope value=name default=form>
- The name of the new scope, besides \"_\".
+ <p>The name of the new scope, besides \"_\".</p>
 </attr>",
 
-"set":#"<desc tag><short>
-Sets a variable.</short>
-</desc>
+//----------------------------------------------------------------------
 
-<attr name=variable value=string required>
- The name of the variable.
+"set":#"<desc tag='tag'><p><short>
+ Sets a variable.</short>
+</p></desc>
+
+<attr name=variable value=string required='required'>
+ <p>The name of the variable.</p>
 <ex type='box'>
 <set variable='var.foo' value='bar'/>
 </ex>
 </attr>
 
 <attr name=value value=string>
- The value the variable should have.
+ <p>The value the variable should have.</p>
 </attr>
 
 <attr name=expr value=string>
- An expression whose evaluated value the variable should have.
+ <p>An expression whose evaluated value the variable should have.</p>
 </attr>
 
 <attr name=from value=string>
- The name of another variable that the value should be copied from.
+ <p>The name of another variable that the value should be copied from.</p>
 </attr>
 
 <attr name=split value=string>
- The value will be splitted by this string into an array.
-</attr>
+ <p>The value will be splitted by this string into an array.</p>
 
- If none of the above attributes are specified, the variable is unset.
+ <p>If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <ref type='tag'>append</ref>
- and <ref type='tag'>debug</ref>",
+ if the operation failed. See also: <xref href='append.tag' /> and <xref href='../programming/debug.tag' />.</p>
+</attr> ",
 
-"set-cookie":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"set-cookie":#"<desc tag='tag'><p><short>
  Sets a cookie that will be stored by the user's browser.</short> This
  is a simple and effective way of storing data that is local to the
  user. If no arguments specifying the time the cookie should survive
  is given to the tag, it will live until the end of the current browser
  session. Otherwise, the cookie will be persistent, and the next time
  the user visits  the site, she will bring the cookie with her.
-</desc>
+</p></desc>
 
 <attr name=name value=string>
- The name of the cookie.
+ <p>The name of the cookie.</p>
 </attr>
 
 <attr name=seconds value=number>
- Add this number of seconds to the time the cookie is kept.
+ <p>Add this number of seconds to the time the cookie is kept.</p>
 </attr>
 
 <attr name=minutes value=number>
- Add this number of minutes to the time the cookie is kept.
+ <p>Add this number of minutes to the time the cookie is kept.</p>
 </attr>
 
 <attr name=hours value=number>
- Add this number of hours to the time the cookie is kept.
+ <p>Add this number of hours to the time the cookie is kept.</p>
 </attr>
 
 <attr name=days value=number>
- Add this number of days to the time the cookie is kept.
+ <p>Add this number of days to the time the cookie is kept.</p>
 </attr>
 
 <attr name=weeks value=number>
- Add this number of weeks to the time the cookie is kept.
+ <p>Add this number of weeks to the time the cookie is kept.</p>
 </attr>
 
 <attr name=months value=number>
- Add this number of months to the time the cookie is kept.
+ <p>Add this number of months to the time the cookie is kept.</p>
 </attr>
 
 <attr name=years value=number>
- Add this number of years to the time the cookie is kept.
+ <p>Add this number of years to the time the cookie is kept.</p>
 </attr>
 
 <attr name=persistent>
- Keep the cookie for two years.
+ <p>Keep the cookie for two years.</p>
 </attr>
 
 <attr name=domain>
- The domain for which the cookie is valid.
+ <p>The domain for which the cookie is valid.</p>
 </attr>
 
 <attr name=value value=string>
- The value the cookie will be set to.
+ <p>The value the cookie will be set to.</p>
 </attr>
 
-<attr name=path value=string default=\"/\">
+<attr name=path value=string default=\"/\"><p>
  The path in which the cookie should be available. Use path=\"\" to remove
  the path argument from the sent cookie, thus making the cookie valid only
- for the present directory and below.
+ for the present directory and below.</p>
 </attr>
 
- If persistent is specified, the cookie will be persistent until year
- 2038, otherwise, the specified delays are used, just as for
- <tag><ref type='tag'>expire-time</ref></tag>.
 
- Note that the change of a cookie will not take effect until the
- next page load.",
+ <p>Note that the change of a cookie will not take effect until the
+ next page load.</p>
+</attr>",
 
-"set-max-cache":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"set-max-cache":#"<desc tag='tag'><p><short>
  Sets the maximum time this document can be cached in any ram
- caches.</short>
+ caches.</short></p>
 
  <p>Default is to get this time from the other tags in the document
- (as an example, <tag>if supports=...</tag> sets the time to 0 seconds since
- the result of the test depends on the client used.</p>
+ (as an example, <xref href='../if/if_supports.tag' /> sets the time to
+ 0 seconds since the result of the test depends on the client used.</p>
 
  <p>You must do this at the end of the document, since many of the
  normal tags will override this value.</p>
 </desc>
 
 <attr name=years value=number>
- Add this number of years to the time this page was last loaded.
+ <p>Add this number of years to the time this page was last loaded.</p>
 </attr>
 <attr name=months value=number>
- Add this number of months to the time this page was last loaded.
+ <p>Add this number of months to the time this page was last loaded.</p>
 </attr>
 <attr name=weeks value=number>
- Add this number of weeks to the time this page was last loaded.
+ <p>Add this number of weeks to the time this page was last loaded.</p>
 </attr>
 <attr name=days value=number>
- Add this number of days to the time this page was last loaded.
+ <p>Add this number of days to the time this page was last loaded.</p>
 </attr>
 <attr name=hours value=number>
- Add this number of hours to the time this page was last loaded.
+ <p>Add this number of hours to the time this page was last loaded.</p>
 </attr>
 <attr name=beats value=number>
- Add this number of beats to the time this page was last loaded.
+ <p>Add this number of beats to the time this page was last loaded.</p>
 </attr>
 <attr name=minutes value=number>
- Add this number of minutes to the time this page was last loaded.
+ <p>Add this number of minutes to the time this page was last loaded.</p>
 </attr>
 <attr name=seconds value=number>
- Add this number of seconds to the time this page was last loaded.
+ <p>Add this number of seconds to the time this page was last loaded.</p>
 </attr>",
 
-"smallcaps":#"<desc cont><short>
+//----------------------------------------------------------------------
+
+"smallcaps":#"<desc cont='cont'><p><short>
  Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
  used.
-</desc>
+</p></desc>
 
 <attr name=space>
- Put a space between every character.
-<ex>
+ <p>Put a space between every character.</p>
+<ex type='vert'>
 <smallcaps space=''>Roxen WebServer</smallcaps>
 </ex>
 </attr>
 
 <attr name=class value=string>
- Apply this cascading style sheet (CSS) style on all elements.
+ <p>Apply this cascading style sheet (CSS) style on all elements.</p>
 </attr>
 
 <attr name=smallclass value=string>
- Apply this cascading style sheet (CSS) style on all small elements.
+ <p>Apply this cascading style sheet (CSS) style on all small elements.</p>
 </attr>
 
 <attr name=bigclass value=string>
- Apply this cascading style sheet (CSS) style on all big elements.
+ <p>Apply this cascading style sheet (CSS) style on all big elements.</p>
 </attr>
 
 <attr name=size value=number>
- Use font tags, and this number as big size.
+ <p>Use font tags, and this number as big size.</p>
 </attr>
 
 <attr name=small value=number default=size-1>
- Size of the small tags. Only applies when size is specified.
+ <p>Size of the small tags. Only applies when size is specified.</p>
 
  <ex>
   <smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
@@ -3002,8 +3308,10 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"sort":#"<desc cont><short>
- Sorts the contents.</short>
+//----------------------------------------------------------------------
+
+"sort":#"<desc cont='cont'><p><short>
+ Sorts the contents.</short></p>
 
  <ex>
   <sort>
@@ -3021,10 +3329,10 @@ Sets a variable.</short>
 </desc>
 
 <attr name=separator value=string>
- Defines what the strings to be sorted are separated with. The sorted
- string will be separated by the string.
+ <p>Defines what the strings to be sorted are separated with. The sorted
+ string will be separated by the string.</p>
 
- <ex>
+ <ex type='vert'>
   <sort separator='#'>
    1#Hello#3#World#Are#2#We#4#Communicating?
   </sort>
@@ -3032,7 +3340,7 @@ Sets a variable.</short>
 </attr>
 
 <attr name=reverse>
- Reversed order sort.
+ <p>Reversed order sort.</p>
 
  <ex>
   <sort reverse=''>
@@ -3049,15 +3357,16 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"throw":#"<desc cont><short hide>
- Throws a text to be catched by <catch>.</short> Throws a text to be
- catched by <tag>catch</tag>. Throws an exception, with the enclosed
- text as the error message. This tag has a close relation to
- <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag>
- tag. </desc>",
+//----------------------------------------------------------------------
 
-"trimlines":#"<desc cont><short>
- Removes all empty lines from the contents.</short>
+"throw":#"<desc cont='cont'><p><short>
+ Throws a text to be caught by <xref href='catch.tag' />.</short> Throws an exception, with the enclosed text as the error message. This tag has a close relation to <xref href='catch.tag' />. The RXML parsing will stop at the <tag>throw</tag> tag.
+ </p></desc>",
+
+//----------------------------------------------------------------------
+
+"trimlines":#"<desc cont='cont'><p><short>
+ Removes all empty lines from the contents.</short></p>
 
   <ex>
   <trimlines>
@@ -3075,13 +3384,14 @@ Sets a variable.</short>
  </ex>
 </desc>",
 
-"unset":#"
-<desc tag><short>
- Unsets a variable, i.e. removes it.</short>
-</desc>
+//----------------------------------------------------------------------
 
-<attr name=variable value=string required>
- The name of the variable.
+"unset":#"<desc tag='tag'><p><short>
+ Unsets a variable, i.e. removes it.</short>
+</p></desc>
+
+<attr name=variable value=string required='required'>
+ <p>The name of the variable.</p>
 
  <ex>
   <set variable='var.jump' value='do it'/>
@@ -3091,109 +3401,113 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"user":#"<desc tag><short>
+//----------------------------------------------------------------------
+
+"user":#"<desc tag='tag'><p><short>
  Prints information about the specified user.</short> By default, the
  full name of the user and her e-mail address will be printed, with a
- mailto link and link to the home page of that user.
+ mailto link and link to the home page of that user.</p>
 
  <p>The <tag>user</tag> tag requires an authentication module to work.</p>
 </desc>
 
 <attr name=email>
- Only print the e-mail address of the user, with no link.
+ <p>Only print the e-mail address of the user, with no link.</p>
  <ex type='box'>Email: <user name='foo' email=''/></ex>
 </attr>
 
 <attr name=link>
- Include links. Only meaningful together with the realname or email attribute.
+ <p>Include links. Only meaningful together with the realname or email attribute.</p>
 </attr>
 
 <attr name=name>
- The login name of the user. If no other attributes are specified, the
- user's realname and email including links will be inserted.
+ <p>The login name of the user. If no other attributes are specified, the
+ user's realname and email including links will be inserted.</p>
 <ex type='box'><user name='foo'/></ex>
 </attr>
 
 <attr name=nolink>
- Don't include the links.
+ <p>Don't include the links.</p>
 </attr>
 
 <attr name=nohomepage>
- Don't include homepage links.
+ <p>Don't include homepage links.</p>
 </attr>
 
 <attr name=realname>
- Only print the full name of the user, with no link.
+ <p>Only print the full name of the user, with no link.</p>
 <ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
-"if#expr":#"<desc plugin><short>
+//----------------------------------------------------------------------
 
+"if#expr":#"<desc plugin='plugin'><p><short>
  This plugin evaluates expressions.</short> The arithmetic operators
  are \"+, - and /\". The last main operator is \"%\"(per cent). The
  allowed relationship operators are \"&lt;. &gt;, ==, &lt;= and
- &gt;=\".
+ &gt;=\".</p>
 
  <p>All integers(characters 0 to 9) may be used together with
  \".\" to create floating point expressions.</p>
 
- <p>
  <ex type='box'>
    Hexadecimal expression: (0xff / 5) + 3
  </ex>
- To be able to evaluate hexadecimal expressions the characters \"a
+ <p>To be able to evaluate hexadecimal expressions the characters \"a
  to f and A to F\" may be used.</p>
 
- <p>
  <ex type='box'>
    Integer conversion: ((int) 3.14)
    Floating point conversion: ((float) 100 / 7)
  </ex>
 
- Conversion between int and float may be done through the operators
- \"(int)\" and \"(float)\". The operators \"&\" (bitwise and),
- \"|\" (bitwise or), \"^\" (bitwise xor), \"&&\" (logical and) and \"||\"
- (logical or) may also be used in expressions. To set
- prioritizations within expressions the characters \"(\" and \")\" are
- included. General prioritization rules are:
+ <p>Conversion between int and float may be done through the operators
+ \"(int)\" and \"(float)\". The operators \"&amp;\"(bitwise and),
+ \"|\"((pipe)bitwise or), \"&amp;&amp;\"(logical and) and \"||\"((double
+ pipe)logical or) may also be used in expressions. To set
+ prioritizations within expressions the characters \"( and )\" are
+ included. General prioritization rules are:</p>
 
  <list type='ol'>
- <item>(int), (float)</item>
- <item>*, /, %</item>
- <item>+, -</item>
- <item>&lt;, &gt;, &lt;=, &gt;=\</item>
- <item>==</item>
- <item>&, |, ^</item>
- <item>&&, ||</item>
- </list></p>
+ <item><p>(int), (float)</p></item>
+ <item><p>*, /, %</p></item>
+ <item><p>+, -</p></item>
+ <item><p>&lt;, &gt;, &lt;=, &gt;=\</p></item>
+ <item><p>==</p></item>
+ <item><p>&amp;, |</p></item>
+ <item><p>&amp;&amp;, ||</p></item>
+ </list>
 
- <p>
  <ex type='box'>
    Octal expression: 045
  </ex>
  <ex type='box'>
    Calculator expression: 3.14e10 / 3
  </ex>
- Expressions containing octal numbers may be used. It is also
+ <p>Expressions containing octal numbers may be used. It is also
  possible to evaluate calculator expressions.</p>
+
+ <p>Expr is an <i>Eval</i> plugin.</p>
 </desc>
 
 <attr name='expr' value='expression'>
- Choose what expression to test.
+ <p>Choose what expression to test.</p>
 </attr>",
 
-"emit#fonts":({ #"<desc plugin><short>
+//----------------------------------------------------------------------
+
+"emit#fonts":({ #"<desc plugin='plugin'><p><short>
  Prints available fonts.</short> This plugin makes it easy to list all
  available fonts in Roxen WebServer.
+</p></desc>
 
 <attr name='type' value='ttf|all'>
-Which font types to list. ttf means all true type fonts, whereas all means all
-available fonts.
-</attr>
-</desc>",
+ <p>Which font types to list. ttf means all true type fonts, whereas all
+ means all available fonts.</p>
+</attr>",
 		([
-"&_.name;":#"<desc ent>
- Returns a font identification name.
+"&_.name;":#"<desc ent='ent'><p>
+ Returns a font identification name.</p>
 
 <p>This example will print all available ttf fonts in gtext-style.</p>
 <ex type='box'>
@@ -3202,16 +3516,39 @@ available fonts.
  </emit>
 </ex>
 </desc>",
-"&_.copyright;":"<desc ent>Font copyright notice. Only available for true type fonts.</desc>",
-"&_.expose;":"<desc ent>The preferred list name. Only available for true type fonts.</desc>",
-"&_.family;":"<desc ent>The font family name. Only available for true type fonts.</desc>",
-"&_.full;":"<desc ent>The full name of the font. Only available for true type fonts.</desc>",
-"&_.path;":"<desc ent>The location of the font file.</desc>",
-"&_.postscript;":"<desc ent>The fonts postscript identification. Only available for true type fonts.</desc>",
-"&_.style;":"<desc ent>Font style type. Only available for true type fonts.</desc>",
-"&_.format;":"<desc ent>The format of the font file, e.g. ttf.</desc>",
-"&_.version;":"<desc ent>The version of the font. Only available for true type fonts.</desc>",
-"&_.trademark;":"<desc ent>Font trademark notice. Only available for true type fonts.</desc>",
+"&_.copyright;":#"<desc ent='ent'><p>
+ Font copyright notice. Only available for true type fonts.
+</p></desc>",
+"&_.expose;":#"<desc ent='ent'><p>
+ The preferred list name. Only available for true type fonts.
+</p></desc>",
+"&_.family;":#"<desc ent='ent'><p>
+ The font family name. Only available for true type fonts.
+</p></desc>",
+"&_.full;":#"<desc ent='ent'><p>
+ The full name of the font. Only available for true type fonts.
+</p></desc>",
+"&_.path;":#"<desc ent='ent'><p>
+ The location of the font file.
+</p></desc>",
+"&_.postscript;":#"<desc ent='ent'><p>
+ The fonts postscript identification. Only available for true type fonts.
+</p></desc>",
+"&_.style;":#"<desc ent='ent'><p>
+ Font style type. Only available for true type fonts.
+</p></desc>",
+"&_.format;":#"<desc ent='ent'><p>
+ The format of the font file, e.g. ttf.
+</p></desc>",
+"&_.version;":#"<desc ent='ent'><p>
+ The version of the font. Only available for true type fonts.
+</p></desc>",
+"&_.trademark;":#"<desc ent='ent'><p>
+ Font trademark notice. Only available for true type fonts.
+</p></desc>",
+
+//----------------------------------------------------------------------
+
 		])
 	     }),
     ]);

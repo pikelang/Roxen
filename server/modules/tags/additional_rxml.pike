@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.9 2000/12/18 11:17:56 jhs Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.10 2001/03/07 13:42:10 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -228,67 +228,77 @@ class TagEmitKnownLangs
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
+  "dice":#"<desc cont='cont'><p><short>
+ Simulates a D&amp;D style dice algorithm.</short></p></desc>
 
-  "dice":#"<desc cont>Simulates a D&amp;D style dice algorithm.</desc>
-
-<attr name=type value=string default=D6>
+<attr name='type' value='string default=D6'><p>
  Describes the dices. A six sided dice is called 'D6' or '1D6', while
  two eight sided dices is called '2D8' or 'D8+D8'. Constants may also
  be used, so that a random number between 10 and 20 could be written
  as 'D9+10' (excluding 10 and 20, including 10 and 20 would be 'D11+9').
- The character 'T' may be used instead of 'D'.
+ The character 'T' may be used instead of 'D'.</p>
 </attr>",
 
-  "insert#href":#"<desc plugin>Inserts the contents at that URL. This function has to be enabled in
- the <module>Additional RXML tags</module> module in the Roxen WebServer
- configuration interface.</desc>
+  "insert#href":#"<desc plugin='plugin'><p><short>
+ Inserts the contents at that URL.</short> This function has to be
+ enabled in the <module>Additional RXML tags</module> module in the
+ Roxen WebServer configuration interface.</p></desc>
 
-<attr name=href value=string>
- The URL to the page that should be inserted.
+<attr name='href' value='string'><p>
+ The URL to the page that should be inserted.</p>
 </attr>",
 
-  "sscanf":#"<desc cont>Extract parts of a string and put them in other variables.
-Refer to the sscanf function in the Pike reference manual for a complete description.</desc>
+"sscanf":#"<desc cont='cont'><p><short>
+ Extract parts of a string and put them in other variables.</short> Refer to
+ the sscanf function in the Pike reference manual for a complete
+ description.</p>
+</desc>
 
-<attr name=variables value=list required>
- A comma seperated list with the name of the variables that should be set.
-<ex type=vert>
-<sscanf variables='form.year,var.month,var.day' format='%4d%2d%2d'>19771003</sscanf>
+<attr name='variables' value='list' required='required'><p>
+ A comma separated list with the name of the variables that should be set.</p>
+<ex type='vert'>
+<sscanf variables='form.year,var.month,var.day'
+format='%4d%2d%2d'>19771003</sscanf>
 &form.year;-&var.month;-&var.day;
 </ex>
 </attr>
 
-<attr name=scope value=name required>
- The name of the fallback scope to be used when no scope is given.
-<ex type=vert>
-<sscanf variables='form.year,month,day' scope='var' format='%4d%2d%2d'>19801228</sscanf>
+<attr name='scope' value='name' required='required'><p>
+ The name of the fallback scope to be used when no scope is given.</p>
+<ex type='vert'>
+<sscanf variables='form.year,month,day' scope='var'
+ format='%4d%2d%2d'>19801228</sscanf>
 &form.year;-&var.month;-&var.day;
 </ex>
 </attr>
 
-<attr name=return value=name>
- If used, the number of successfull variable 'extractions' will be available in the
- given variable.
+<attr name='return' value='name'><p>
+ If used, the number of successfull variable 'extractions' will be
+ available in the given variable.</p>
 </attr>",
 
-  "sprintf":#"<desc cont>Prints out variables with the formating functions availble in
-the Pike function sprintf. Refer to the Pike reference manual for a complete
-description.</desc>
+  "sprintf":#"<desc cont='cont'><p><short>
+ Prints out variables with the formating functions availble in the
+ Pike function sprintf.</short> Refer to the Pike reference manual for
+ a complete description.</p></desc>
 
-<attr name=format value=string>
-  The formatting string.
+<attr name='format' value='string'><p>
+  The formatting string.</p>
 </attr>
 
-<attr name=split value=character>
-  If used, the tag content will be splitted with the given string.
+<attr name='split' value='charater'><p>
+  If used, the tag content will be splitted with the given string.</p>
 <ex>
 <sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
-</ex></attr>",
+</ex>
+</attr>",
 
-  "emit#known-langs":({ #"<desc plugin='plugin'><p><short>
+
+"emit#known-langs":({ #"<desc plugin='plugin'><p><short>
  Outputs all languages partially supported by roxen for writing
  numbers, weekdays et c (for example for the number and date tags).
-</short></p></desc>
+</short></p>
+</desc>
 
  <ex type='vert'><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
@@ -302,7 +312,7 @@ description.</desc>
  <p>The name of the language in the language itself, for example
  \"français\" for french.</p>
 </desc>",
-			  "&_.englishname;":#"<desc ent='ent'><p>
+			  "&_.englishname;":#"<desc ent='ent'>
  <p>The name of the language in English.</p>
 </desc>",
 			]) }),
