@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.168 2000/04/13 19:03:43 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.169 2000/04/16 22:09:46 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -245,6 +245,7 @@ class _roxen {
   object LOW_LOCALE;
   object locale;
   int start_time;
+  array configurations;
 
   mixed  query(string);
   void   store(string, mapping, int, object);
