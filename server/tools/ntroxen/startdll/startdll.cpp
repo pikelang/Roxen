@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.18 2004/06/08 09:47:36 grubba Exp $
+// $Id: startdll.cpp,v 1.19 2004/06/08 12:13:09 grubba Exp $
 //
 
 
@@ -187,9 +187,35 @@ inline BOOL CServiceModule::Install()
           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
           szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL,
           m_szServiceName)) {
+	long err = GetLastError();
 	::CloseServiceHandle(hService);
 	::CloseServiceHandle(hSCM);
-        MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+	switch(err) {
+	case ERROR_ACCESS_DENIED:
+	  MessageBox(NULL, _T("Couldn't change service (Access Denied)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_CIRCULAR_DEPENDENCY:
+	  MessageBox(NULL, _T("Couldn't change service (Circular Dependency)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_DUPLICATE_SERVICE_NAME:
+	  MessageBox(NULL, _T("Couldn't change service (Duplicate Service Name)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_HANDLE:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Handle)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_PARAMETER:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Parameter)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_SERVICE_ACCOUNT:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Service Account)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_SERVICE_MARKED_FOR_DELETE:
+	  MessageBox(NULL, _T("Couldn't change service (Service Marked For Delete)"), m_szServiceName, MB_OK);
+	  break;
+	default:
+	  MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+	  break;
+	}
         return FALSE;
       }
     } else {
