@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.6 1998/06/08 14:12:05 grubba Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.7 1998/06/08 17:24:17 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -92,7 +92,7 @@ class Date
 // Special events.
 object event = class
 {
-#define S_EVENT(E,D,M) mapping E = ([ "mday":D, "mon":M ])
+#define S_EVENT(E,D,M) mapping E = ([ "mday":(D), "mon":((M)-1) ])
   private static inherit Date;
 
   S_EVENT(christmas_eve, 24, 12);
