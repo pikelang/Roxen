@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.543 2002/10/26 14:30:29 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.544 2002/10/27 20:19:37 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -168,7 +168,7 @@ inherit Configuration;
 inherit "basic_defvar";
 
 static mapping(RequestID:mapping) current_connections =
-  set_weak_flag( ([ ]), 1 );
+  set_weak_flag( ([ ]), Pike.WEAK );
 
 void connection_add( RequestID id, mapping data )
 //! Add a connection. The data mapping can contain things such as
