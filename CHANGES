@@ -1,8 +1,7 @@
-
 Changes since Roxen Challenger 1.2.35 Yellow
 -----------------------------------------------
 
-o Diabled some modules that won't compile.
+o Disabled some modules that won't compile.
 
 o Pike is now by default compiled without debug. To enable debug
   configure --with-debug.
