@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.318 2001/11/14 15:53:19 mast Exp $
+// $Id: rxml.pike,v 1.319 2001/11/15 16:52:15 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -265,6 +265,7 @@ class CompatTag
     {
       id->misc->line = "0";	// No working system for this yet.
 
+      if (!content) content = "";
       if (stringp (fn)) return ({fn});
       if (!fn) {
 	result_type = result_type (RXML.PNone);
@@ -292,7 +293,7 @@ class CompatTag
 		     propagate_tag (pargs || args, pcontent || content)});
 	  else
 	    return ({RXML.make_unparsed_tag (
-		       pname, pargs || args, pcontent || content || "")});
+		       pname, pargs || args, pcontent || content)});
 	}
 	else return result;
       }
