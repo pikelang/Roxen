@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.13 2000/02/24 03:54:21 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.14 2000/04/05 06:31:29 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -65,7 +65,7 @@ string encode_url(array states, object state, RequestID id){
     state->uri_encode(value);
 }
 
-//It seams like the fold/unfold images are mixed up.
+//It seems like the fold/unfold images are mixed up.
 private string tag_ft(string tag, mapping m, string cont, RequestID id, object state, mapping fl) {
     int index=fl->cnt++;
     array states=copy_value(fl->states);
