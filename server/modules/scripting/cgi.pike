@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.50 2000/11/23 05:04:35 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.51 2000/12/11 04:01:12 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -727,10 +727,10 @@ class CGIScript
 	// Remap them to the old 16bit gids.
 	options->gid = 0xffff & gid;
 
-	if (options->gid <= 10) {
-	  // Paranoia
-	  options->gid = 65534;
-	}
+// 	if (options->gid <= 10) {
+// 	  // Paranoia
+// 	  options->gid = 65534;
+// 	}
       }
 
       // this is not really 100% correct, since it will keep the group list
@@ -739,7 +739,9 @@ class CGIScript
       // for some reason. So, when the extra group list is empty, ignore it
       if( sizeof( extra_gids ) ) 
         options->setgroups = extra_gids;
-
+      else
+        options->setgroups = ({ gid });
+        
       if( !uid && query("warn_root_cgi") )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
     }
