@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.57 1997/08/12 19:45:38 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.58 1997/08/12 22:28:10 peter Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -23,7 +23,7 @@ string display_tabular_header(object node);
 #define bdB "90"
 
 
-#define BODY "<body "+(roxen->QUERY(BG)?"--background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=black link=0x000044 vlink=0x000044 alink=red>"
+#define BODY "<body bgcolor=white text=black link=black vlink=black alink=red>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -54,16 +54,14 @@ class Node {
   {
     string name=path(1);
     if(folded)
-      return ("<a name=\""+name+"\">\n"
-	      "<a href=\"/(unfold)" + name + "?"+(bar++)+
-	      "\">\n<img border=0 align=baseline src=/auto/unfold"
-	      +(changed?"2":"")+" alt=\""+(changed?"*-":"--")+"\">"
+      return ("<a name=\""+name+"\" href=\"/(unfold)" + name + "?"+(bar++)+
+	      "\">\n<img border=0 align=bottom src=\"/auto/unfold"
+	      +(changed?"2":"")+"\" alt=\""+(changed?"*-":"--")+"\">"
 	      "</a>\n "+s+"\n");
     else
-      return ("<a name=\""+name+"\">\n"
-	      "<a href=\"/(fold)" + name + "?"+(bar++)+
-	      "\">\n<img border=0 src=/auto/fold"+(changed?"2":"")
-	      +"  alt="+(changed?"**":"\"\\/\"")+">"
+      return ("<a name=\""+name+"\"  href=\"/(fold)" + name + "?"+(bar++)+
+	      "\">\n<img border=0 src=\"/auto/fold"+(changed?"2":"")
+	      +"\"  alt="+(changed?"**":"\"\\/\"")+">"
 	      "</a>\n "+s+"\n");
   }
 
@@ -158,7 +156,7 @@ void create()
   call_out(init_ip_list, 0);
 }
 
-#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
+#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
 
 inline string shutdown_restart(string save, int compact,void|object o)
 {
@@ -167,7 +165,8 @@ inline string shutdown_restart(string save, int compact,void|object o)
 
 string default_head(string h, string|void save)
 {
-  return ("<head><title>"+h+"</title></head>\n"+ BODY+"\n");
+  return ("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Draft//EN\">\n"
+	  "<head><title>"+h+"</title></head>\n"+ BODY+"\n");
 }
 
 object find_node(string l)
@@ -631,18 +630,18 @@ string new_module_form(object id, object node)
       if(b->sname != q)
 	res += ({("<p>"+
 		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" +a[q][2]+"/"+
-		   q+" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
+		  "<img alt=\""+a[q][0]+"\" src=\"/auto/module/" +a[q][2]+"/"+
+		   q+"\" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
 		  "<p><i>A module of the same type is already enabled (" +
 		  b->name + "). <a href=\"/(delete)" +
 		  node->descend(b->name, 1)->path(1) + "?" + (bar++) +
 		  "\">Disable that module</a> if you want this one instead</i>"
 		  "\n<p><br><p></blockquote>")});
     } else {
-      res += ({"<p><a href=/(addmodule)"+node->path(1)+"?"+q+"=1>"+
+      res += ({"<p><a href=\"/(addmodule)"+node->path(1)+"?"+q+"=1\">"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"
-                  +a[q][2]+"/"+q+" height=24 width=500>")+
+		  "<img border=0 alt=\""+a[q][0]+"\" src=\"/auto/module/"
+                  +a[q][2]+"/"+q+"\" height=24 width=500>")+
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
@@ -918,7 +917,7 @@ mapping initial_configuration(object id)
     res += "<blockquote>\n<p><b>"+error+"</b>";
   
   res += ("<pre>"
-	  "<font size=+1>"
+	  "<font size=\"+1\">"
 	  "<form action=/(initial)/Globals/>"
 	  " User name <input name=user type=string>\n"
 	  "  Password <input name=pass type=password>\n"
@@ -962,12 +961,12 @@ string tablist(array(string) nodes, array(string) links, int selected)
   for(int i=0; i<sizeof(nodes); i++)
     if(i!=selected)
       PUSH("<a href=\""+links[i]+"\"><img alt=\"_/"+
-	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=/auto/unselected/"+
-	   replace(nodes[i]," ","%20")+" border=0></a>");
+	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/unselected/"+
+	   replace(nodes[i]," ","%20")+"\" border=0></a>");
     else
       PUSH("<a href=\""+links[i]+"\"><b><img alt=\"_/"+
-	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=/auto/selected/"+
-	   replace(nodes[i]," ","%20")+" border=0></b></a>");
+	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/selected/"+
+	   replace(nodes[i]," ","%20")+"\" border=0></b></a>");
 //PUSH("<br>");
   return res*"";
 }
@@ -1159,7 +1158,7 @@ string describe_node_path(object node)
     if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += "<b><font size=+1><a href="+q+">"+
+      res += "<b><font size=\"+1\"><a href=\""+q+"\">"+
 	dn(find_node(http_decode_string(q[..strlen(q)-2])))+"</a></font></b> -&gt; ";
     }
     else
@@ -1170,10 +1169,10 @@ string describe_node_path(object node)
 
 string status_row(object node)
 {
-  return ("<table width=100% bgcolor=#dddddd border=0 cellpadding=0"
-	  " cellspacing=0><tr><td valign=center align=left><a href=$docurl>"
-	  "<img border=0 src=/image/roxen-small.gif alt=\"Roxen\"></a></td>"
-	  "<td align=right valign=top>"+
+  return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
+	  " cellspacing=0><tr><td valign=middle align=left><a "
+	  "href=\"$docurl\"><img border=0 src=\"/image/roxen-small.gif\" "
+	  "alt=\"Roxen\"></a></td><td align=right valign=top>"+
 	  describe_node_path(node)+"</td><td>&nbsp;</td></tr></table><br>");
 }
 
@@ -1377,32 +1376,32 @@ mapping configuration_parse(object id)
       switch(o->type)
       {
        case NODE_CONFIGURATION:
-	PUSH("<font size=+2>Do you really want to delete the configuration "+
-	     o->data->name + ", all its modules and their copies?"
-	     "\n\n<p></font>");
+	PUSH("<font size=\"+2\">Do you really want to delete the"
+	     " configuration "+ o->data->name+
+	     ", all its modules and their copies?\n\n<p></font>");
 	break;
 	
        case NODE_MODULE_MASTER_COPY:
        case NODE_MODULE:
-	PUSH("<font size=+2>Do you really want to delete the module "+
+	PUSH("<font size=\"+2\">Do you really want to delete the module "+
 	     o->data->name + ", and its copies?\n\n<p></font>");
 	break;
 	
        case NODE_MODULE_COPY_VARIABLES:
 	
        case NODE_MODULE_COPY:
-	PUSH("<font size=+2>Do you really want to delete this copy "
+	PUSH("<font size=\"+2\">Do you really want to delete this copy "
 	     " of the module "+ o->up->data->name + "?\n\n<p></font>");
 	break;
 	
        case NODE_CONFIGURATIONS:
 	return stores("You don't want to do that...\n");
       }
-      PUSH("<blockquote><font size=+2><i>This action cannot be undone.\n\n<p></font>"+
-	   TABLEP("<table>", "") +"<tr><td><form action="+
-	   o->path(1)+">"
+      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be"
+	   " undone.\n\n<p></font>"+ TABLEP("<table>", "")+
+	   "<tr><td><form action="+ o->path(1)+">"
 	   "<input type=submit value=\"No, I do not want to delete it\"> "
-	   "</form></td><td><form action=/(really_delete)"+o->path(1)+
+	   "</form></td><td><form action=/(really_delete)"+ o->path(1)+
 	   "><input type=submit value=\"Go ahead\"></form></td></tr> "
 	   "</table></blockquote>");
       
@@ -1617,12 +1616,13 @@ mapping configuration_parse(object id)
   
   PUSH(default_head("Roxen server configuration"));
 //  PUSH("<table><tr><td>&nbsp;<td>"
-  PUSH("<dl>\n");
+//  PUSH("<dl>\n");
   PUSH("\n"+status_row(o)+"\n"+display_tabular_header( o )+"\n");
   PUSH("<p>");
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a>\n");
+	 "<img src=\"/auto/back\" alt=\"[Up]\" align=left hspace=0"
+	 " border=0></a>\n");
 
   if(i=o->folded) o->folded=0;
   mixed tmp = o->describe(1,id);
@@ -1673,7 +1673,8 @@ mapping configuration_parse(object id)
 
   if(!lm)
   {
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0"
+	 " src=\"/auto/button/rm/%20\">");
     PUSH("</nobr><br clear=all>");
     lm=1;
   }
@@ -1686,14 +1687,14 @@ mapping configuration_parse(object id)
   if((o->changed||root->changed))
   {
     BUTTON(save, "Save", left);
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/%20%20%20%20%20%20>");
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/%20%20%20%20%20%20\">");
   }
 //  BUTTON(restart, "Restart", left);
 //  BUTTON(shutdown,"Shutdown", left);
 
-  PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
+  PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
   PUSH("</nobr><br clear=all>");
-//  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");
+//  PUSH("<p align=right><font size=-1 color=blue><a href=\"$docurl\"><font color=blue>"+roxen->real_version +"</font></a></font></p>");
 //  PUSH("</table>");
   PUSH("</body>\n");
   return stores(res*"");

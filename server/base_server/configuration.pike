@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.49 1997/08/12 19:45:36 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.50 1997/08/12 22:28:09 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2342,9 +2342,10 @@ string desc()
       prt += (gethostname()/".")[0] + "." + QUERY(Domain);
  prt += ":"+port[0]+"/";
     if(port_open( port ))
-      res += "<a target=server_view href='"+prt+"'>"+prt+"</a>\n<br>";
+      res += "<a target=server_view href=\""+prt+"\">"+prt+"</a>\n<br>";
     else
-      res += "<font color=red><b>Not open:</b> <a target=server_view href='"+prt+"'>"+prt+"</a></font><br>\n";
+      res += "<font color=red><b>Not open:</b> <a target=server_view href=\""+
+	prt+"\">"+prt+"</a></font><br>\n";
   }
   return res+"<p>";
 }
@@ -2381,14 +2382,15 @@ void create(string config)
 	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
 	 "<p><hr noshade>"
 	 "\n<i>Sorry</i></h2>\n"
-	 "<br clear>\n<font size=+2>The resource requested "
+	 "<br clear>\n<font size=\"+2\">The resource requested "
 	 "<i>$File</i>\ncannot be found.<p>\n\nIf you feel that this is a "
 	 "configuration error, please contact "
 	 "the administrators or the author of the <if referer>"
-	 "<a href=<referer>>referring</a> </if> <else>referring</else> page."
+	 "<a href=\"<referer>\">referring</a> </if> <else>referring</else>"
+	 " page."
 	 "<p>\n</font>\n"
 	 "<hr noshade>"
-	 "<version>, at <a href=$Me>$Me</a>.\n", 
+	 "<version>, at <a href=\"$Me\">$Me</a>.\n", 
 
 	 "Messages: No such file", TYPE_TEXT_FIELD,
 	 "What to return when there is no resource or file available "
@@ -2468,7 +2470,7 @@ void create(string config)
 	 "Domain", TYPE_STRING, 
 	 "Your domainname, should be set automatically, if not, "
 	 "enter the real domain name here, and send a bug report to "
-	 "<a href=mailto:roxen-bugs@infovav.se>roxen-bugs@infovav.se"
+	 "<a href=\"mailto:roxen-bugs@infovav.se\">roxen-bugs@infovav.se"
 	 "</a>");
   
 

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.33 1997/08/12 19:45:40 per Exp $ */
+/* $Id: describers.pike,v 1.34 1997/08/12 22:28:33 peter Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -12,7 +12,7 @@ import String;
 #define ABS(X) ((X)<0?-(X):(X))
 string describe_configuration_global_variables(object node)
 {
-  return link("<font size=+1><b>Server variables</b></font>");
+  return link("<font size=\"+1\"><b>Server variables</b></font>");
 }
 
 string describe_holder(object node)
@@ -126,7 +126,7 @@ mixed describe_actions(object node, object id)
       catch {
 	if(act[0]!='#' && act[-1]=='e')
 	  if(!get_action(act)->more || this_object()->more_mode)
-	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=+2>"
+	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=\"+2\">"
 		      "<a href=\"/Actions/?action="+act+"\">"+
 		      get_action(act)->name+"</a></font><dd>"+
 		      (get_action(act)->doc||"") });
@@ -177,7 +177,7 @@ array|string describe_module_variable(object node)
 	+ ": <i>" + describe_variable_as_text(node->data) + "</i>";
 
   if(node->error)
-    err = "<font size=+1><b>"+node->error+"</b></font><br>";
+    err = "<font size=\"+1\"><b>"+node->error+"</b></font><br>";
 
   res = describe_variable_low(node->data, node->path(1));
 
@@ -190,7 +190,7 @@ array|string describe_module_variable(object node)
 string describe_open_files(object node)
 {
   if(!this_object()->more_mode) return 0;
-  string res = link("<font size=+1>Open files</font><dd>");
+  string res = link("<font size=\"+1\">Open files</font><dd>");
   if(node->folded)
     return res;
 #if 0
@@ -267,12 +267,12 @@ string describe_module_copy(object node)
     name=node->_path[sizeof(node->_path)-2..sizeof(node->_path)-1]*" copy ";
 
   if(node->folded)
-    return  ("<font size=+1>" + link( name ) + "</font>");
+    return  ("<font size=\"+1\">" + link( name ) + "</font>");
 
   com = (node->data->file_name_and_stuff()+
 	 (node->data->query("_comment")||""));
 
-  return ("<font size=+1>" + link( name ) + "</font><dd>" 
+  return ("<font size=\"+1\">" + link( name ) + "</font><dd>" 
 	  + shorten((roxen->QUERY(DOC)?node->data->info():""), node)
 	  + (strlen(com)?"<p><i>"+com+"</i></p>":"")
 	  +"<dd>");
@@ -291,14 +291,14 @@ string describe_module(object node)
 	   (node->data->master->query("_comment")||""));
 
   if(node->data->copies)
-    return ("<font size=+1>" + link(name) + "</font>");
+    return ("<font size=\"+1\">" + link(name) + "</font>");
   if(node->folded)
-    return ("<font size=+1>" + link(name) + "</font>");
+    return ("<font size=\"+1\">" + link(name) + "</font>");
 
   if (!node->data->master) {
     return("Module without copies:"+name);
   }
-  return ("<font size=+1>" + link(name) +  "</font><dd>" +
+  return ("<font size=\"+1\">" + link(name) +  "</font><dd>" +
           shorten(node->data->master->info(),node) 
 	  + (strlen(com)?"<p><i>"+com+"</i></p>":""));
 
@@ -326,7 +326,7 @@ string describe_configuration(object node)
     node->dest();
     return 0;
   }
-  return ("<font size=+2>" + link(node->data->query_name()) + "</font>"+
+  return ("<font size=\"+2\">" + link(node->data->query_name()) + "</font>"+
          (node->folded?"":"<dd>"+node->data->desc()+node->data->comment()));
 }
 
@@ -345,9 +345,9 @@ string describe_global_debug(object node)
   mixed foo;
   if(!this_object()->more_mode) return 0;
   if(node->folded)
-    return link("<font size=+1>Debug information for developers</font>");
+    return link("<font size=\"+1\">Debug information for developers</font>");
   else
-    res = link("<font size=+1>Debug information for developers</font><ul>");
+    res = link("<font size=\"+1\">Debug information for developers</font><ul>");
 #if efun(_memory_usage)
   mixed foo = _memory_usage();
   foo->total_usage = 0;
@@ -501,8 +501,8 @@ string describe_string_status(object node)
 #endif
 #if efun(_string_debug)
   if(node->folded)
-    return link("<font size=+1>Shared string status</font>");
-  return (link("<font size=+1>Shared string status</font><dd>")
+    return link("<font size=\"+1\">Shared string status</font>");
+  return (link("<font size=\"+1\">Shared string status</font><dd>")
 	  + "<pre>"
 	  + _string_debug(1)
 	  + "</pre>\n");
@@ -512,8 +512,8 @@ string describe_string_status(object node)
 string describe_request_status(object node)
 {
   if(node->folded)
-    return link("<font size=+1>Access / request status</font>");
-  return link("<font size=+1>Access / request status</font>") + "<dd>"+
+    return link("<font size=\"+1\">Access / request status</font>");
+  return link("<font size=\"+1\">Access / request status</font>") + "<dd>"+
     roxen->full_status();
 }
 
@@ -524,11 +524,11 @@ string describe_pipe_status(object node)
 #if efun(_pipe_debug)
   ru=_pipe_debug();
  if(node->folded)
-    return link("<font size=+1>Pipe system status</font>");
+    return link("<font size=\"+1\">Pipe system status</font>");
  if(!ru[0])
-   return (link("<font size=+1>Pipe system status</font>")+"<dd>Idle");
+   return (link("<font size=\"+1\">Pipe system status</font>")+"<dd>Idle");
  
- return (link("<font size=+1>Pipe system status</font>")+"<dd>"
+ return (link("<font size=\"+1\">Pipe system status</font>")+"<dd>"
 	 "<table border=0 cellspacing=0 cellpadding=-1>"
 	 "<tr align=right><td colspan=2>Number of open outputs:</td><td>"
           +ru[0] + "</td></tr>"
@@ -555,9 +555,9 @@ string describe_process_status(object node)
     tmp=ru[0]/(time(1) - roxen->start_time+1);
 
   if(node->folded)
-    return link("<font size=+1>Process status</font>");
+    return link("<font size=\"+1\">Process status</font>");
 
-  return (link("<font size=+1>Process status</font>")+"<dd><pre>"
+  return (link("<font size=\"+1\">Process status</font>")+"<dd><pre>"
 	  "CPU-Time used             : "+roxen->msectos(ru[0]+ru[1])+
 	  " ("+tmp/10+"."+tmp%10+"%)\n"
 	  +(ru[-2]?(sprintf("Resident set size (RSS)   : %.3f Mb\n",
@@ -580,10 +580,10 @@ string describe_hostnames_status(object node)
   if(!this_object()->more_mode) return 0;
 
   if(node->folded)
-    return link("<font size=+1>Host names</font>");
+    return link("<font size=\"+1\">Host names</font>");
   if(!sizeof(roxen->out))
-    return link("<font size=+1>Host names</font><dd>No processes running");
-  return (link("<font size=+1>Host names</font><dd>") +
+    return link("<font size=\"+1\">Host names</font><dd>No processes running");
+  return (link("<font size=\"+1\">Host names</font><dd>") +
 	  "Number of host name lookup processes : "+sizeof(roxen->out)+"<br>"
 	  "Host name lookup queue size          : "  
 	  + (sizeof(roxen->do_when_found)?sizeof(roxen->do_when_found)
@@ -597,8 +597,8 @@ string describe_hostnames_status(object node)
 string describe_cache_system_status(object node)
 {
   if(node->folded)
-    return link("<font size=+1>Memory cache system</font>");
-  return (link("<font size=+1>Memory cache system</font><dd>") 
+    return link("<font size=\"+1\">Memory cache system</font>");
+  return (link("<font size=\"+1\">Memory cache system</font><dd>") 
 	  + cache->status());
 }
 
@@ -609,8 +609,8 @@ string describe_disk_cache_system_status(object node)
     return 0;
 
   if(node->folded)
-    return link("<font size=+1>Persistent disk cache system</font>");
-  return (link("<font size=+1>Persistent disk cache system</font><dd>") 
+    return link("<font size=\"+1\">Persistent disk cache system</font>");
+  return (link("<font size=\"+1\">Persistent disk cache system</font><dd>") 
 	  + roxen->get_garb_info());
 }
 
