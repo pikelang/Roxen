@@ -1,5 +1,5 @@
 /*
- * $Id: openports.pike,v 1.7 1998/01/25 00:29:45 grubba Exp $
+ * $Id: openports.pike,v 1.8 1998/01/26 16:35:59 grubba Exp $
  */
 
 inherit "wizard";
@@ -20,7 +20,7 @@ mixed page_1(object id)
 		 });
   if (!sizeof(lsofs)) {
     return("You will need to install <a href=\""
-	   "ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/lsof.tar.gz\""
+	   "ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/lsof.tar.gz\">"
 	   "'lsof'</a> for full info.\n");
   }
   return(sprintf("Use this lsof binary:\n"
