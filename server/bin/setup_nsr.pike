@@ -1,4 +1,4 @@
-// $Id: setup_nsr.pike,v 1.2 2003/09/24 10:05:28 grubba Exp $
+// $Id: setup_nsr.pike,v 1.3 2003/09/24 10:55:47 grubba Exp $
 //
 // Setup .nsr (Networker) files for logfile directories if appropriate.
 // NOTE: We must be paranoid; we must not alter files that the user
@@ -22,7 +22,7 @@ void update_nsr_file(string directory)
   }
 
   int this_rev = -1;
-  if (sscanf("$Revision: 1.2 $", "$""Revision: 1.%d $", this_rev) != 1) {
+  if (sscanf("$Revision: 1.3 $", "$""Revision: 1.%d $", this_rev) != 1) {
     vwerror("Failed to parse own revision $Rev$\n");
     return;
   }
@@ -50,13 +50,13 @@ void update_nsr_file(string directory)
       return;
     }
     int rev = -1;
-    if (sscanf(old_content, "# Roxen revision: 1.%d\n%s",
+    if (sscanf(old_content, "# Roxen nsr-revision: 1.%d\n%s",
 	       rev, old_content) != 2) {
       vwerror("Bad revision.\n");
       return;
     }
     if (this_rev <= rev) {
-      vwerror("Newer revision.\n");
+      vwerror("Already up to date.\n");
       return;
     }
     // The file seems to be an old version that we've generated.
@@ -65,7 +65,7 @@ void update_nsr_file(string directory)
   vwerror("Generating new file %O\n", nsr_file);
 
   string new_content = sprintf(
-#"# Roxen revision: 1.%d\n
+#"# Roxen nsr-revision: 1.%d
 
 # The output from the restart loop is named start_default.output.
 +logasm: start_*.output
@@ -107,7 +107,7 @@ int main(int argc, array(string) argv)
       verbose++;
       break;
     case "version":
-      write("$Id: setup_nsr.pike,v 1.2 2003/09/24 10:05:28 grubba Exp $\n");
+      write("$Id: setup_nsr.pike,v 1.3 2003/09/24 10:55:47 grubba Exp $\n");
       break;
     }
   }
