@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.10 2001/01/31 04:27:13 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.11 2001/01/31 08:01:06 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -218,8 +218,14 @@ void find_tests(string path) {
 	{
 	  if(glob("*.xml",file))
 	    run_xml_tests(Stdio.read_file(path+file));
-	  else if(glob("*.pike",file))
-	    run_pike_tests( compile_file(path+file)(), path+file );
+	  else if(glob("*.pike",file)) {
+	    object test;
+	    mixed error;
+	    if( error=catch( test=compile_file(path+file)() ) )
+	      report_error("Failed to compile %s\n%O\n", path+file, error);
+	    else
+	      run_pike_tests( compile_file(path+file)(), path+file );
+	  }
 	  done++;
 	  break;
 	}
