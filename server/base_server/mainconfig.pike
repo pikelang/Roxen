@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.59 1997/08/12 23:09:15 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.60 1997/08/12 23:26:32 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -59,7 +59,7 @@ class Node {
 	      +(changed?"2":"")+" alt=\""+(changed?"*-":"--")+"\">"
 	      "</a>\n "+s+"\n");
     else
-      return ("<a  name=\""+name+"\href=\"/(fold)" + name + "?"+(bar++)+
+      return ("<a name=\""+name+"\" href=\"/(fold)" + name + "?"+(bar++)+
 	      "\">\n<img border=0 src=/auto/fold"+(changed?"2":"")
 	      +"  alt="+(changed?"**":"\"\\/\"")+">"
 	      "</a>\n "+s+"\n");
