@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2003, Roxen IS.
 //
 
 #define _stat RXML_CONTEXT->misc[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.433 2003/06/05 11:21:13 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.434 2003/06/17 17:09:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1633,12 +1633,15 @@ class TagCache {
 	}
 	else
 	  if (timeout) {
-	    if (!alternatives) add_timeout_cache (alternatives = ([]));
-	    alternatives[key] = ({time() + timeout, evaled_content});
 	    if (args["persistent-cache"] == "yes") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
+	    if (!alternatives) {
+	      alternatives = ([]);
+	      if (!persistent_cache) add_timeout_cache (alternatives);
+	    }
+	    alternatives[key] = ({time() + timeout, evaled_content});
 	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
 			     RXML.utils.format_short (keymap, 200));
@@ -1669,6 +1672,12 @@ class TagCache {
 
     array save()
     {
+      if (persistent_cache && timeout && alternatives) {
+	int now = time (1);
+	foreach (alternatives; string key; array(int|RXML.PCode) entry)
+	  if (entry[0] < now) m_delete (alternatives, key);
+      }
+      werror ("Saving alternatives: %O\n", alternatives);
       return ({content_hash, subvariables,
 	       persistent_cache && alternatives});
     }
