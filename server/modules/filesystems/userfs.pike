@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.21 1998/03/05 19:43:50 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.22 1998/03/06 14:26:17 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -139,7 +139,7 @@ mixed find_file(string f, object got)
       if(!us
 	 || (QUERY(only_password) && (<"","*">)[us[ 1 ]]) || bl[u])
       {
-	werror(sprintf("user %s banished (%O)...\n", u, us));
+	roxen_perror(sprintf("user %s banished (%O)...\n", u, us));
 	return 0;
       }
 
