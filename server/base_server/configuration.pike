@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.429 2001/05/07 02:48:33 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.430 2001/05/14 04:30:46 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -130,9 +130,10 @@ void debug_write_prof( )
 
 void add_prof_entry( RequestID id, string k, int hr, int hrv )
 {
-  if( !profiling_info[id->not_query] )
-    profiling_info[id->not_query] = ProfInfo(id->not_query);
-  profiling_info[id->not_query]->add( k, hr, hrv );
+  string l = id->not_query;
+  if( has_prefix( k, "find_internal" ) ) l = dirname(l);
+  if( !profiling_info[l] ) profiling_info[l] = ProfInfo(l);
+  profiling_info[l]->add( k, hr, hrv );
 }
 
 void avg_prof_enter( string name, string type, RequestID id )

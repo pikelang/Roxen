@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.152 2001/05/08 00:57:30 mast Exp $
+// $Id: module.pmod,v 1.153 2001/05/14 04:30:30 per Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -62,9 +62,11 @@ class RequestID { };
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 #include <config.h>
+
 #include <request_trace.h>
 
 // #define PROFILE_PARSER
+
 
 #ifdef RXML_OBJ_DEBUG
 #  define MARK_OBJECT \
@@ -2618,6 +2620,7 @@ class Frame
 	    break process_tag;
 	  }
 #endif
+	  PROF_ENTER(tag->name,"tag");
 	}
 
 	if (raw_args) {
@@ -3165,9 +3168,11 @@ class Frame
 #endif
 			 });
 	  TRACE_LEAVE (action);
+	  COND_PROF_LEAVE(tag,tag->name,"tag");
 	}
 	else {
 	  THIS_TAG_TOP_DEBUG ("Exception\n");
+	  COND_PROF_LEAVE(tag,tag->name,"tag");
 	  TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err2, parser); // Will rethrow unknown errors.
 	  result = nil;
@@ -3193,6 +3198,7 @@ class Frame
 
       else {
 	THIS_TAG_TOP_DEBUG ("Done\n");
+	COND_PROF_LEAVE(tag,tag->name,"tag");
 	TRACE_LEAVE ("");
       }
     }
