@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.62 1998/05/28 10:43:26 per Exp $
+/* $Id: wizard.pike,v 1.63 1998/05/29 16:31:22 wing Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -11,9 +11,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
   {
     id = b;
     if(m->type == "select" || m->type == "select_multiple")
-      m->options = replace(a, "\n", ",");
+      m->options = (parse_rxml( a, id ) / "\n" - ({ "" })) * ",";
     else
-      m["default"] = a;
+      m["default"] = parse_rxml( a, id );
   } else // tag. No contents, id in 'b'.
     id = a;
 
