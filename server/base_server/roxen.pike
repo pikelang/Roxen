@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.553 2000/09/18 17:21:34 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.554 2000/09/18 18:18:03 grubba Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1489,6 +1489,8 @@ class FTPS
   int sessions;
   int ftp_users;
   int ftp_users_now;
+
+  mapping(string:int) ftp_sessions = ([]);
 
   void create( mixed ... args )
   {
