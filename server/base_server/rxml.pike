@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.88 2000/01/28 16:49:31 mast Exp $
+ * $Id: rxml.pike,v 1.89 2000/01/30 18:23:03 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -311,7 +311,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
+  id->misc->line = parser->at_line();
 
   if(args->help)
   {
@@ -360,7 +360,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
+  id->misc->line = parser->at_line();
 
   if(args->help)
   {
@@ -533,7 +533,7 @@ string call_user_tag(RXML.PHtml parser, mapping args)
 {
   RequestID id = parser->context->id;
   string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
+  id->misc->line = parser->at_line();
   args = id->misc->defaults[tag]|args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = Array.map(indices(args),
@@ -551,7 +551,7 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
   string tag = parser->tag_name();
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
-  id->misc->line = (string)parser->at_line();
+  id->misc->line = parser->at_line();
   args = id->misc->defaults[tag]|args;
   if( args->preparse )
   {
@@ -570,12 +570,11 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
 
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   id->misc->do_not_recurse_for_ever_please++;
-  array replace_from = ({"#args#", "<contents>"})+
-    Array.map(indices(args),
-	      lambda(string q){return "&"+q+";";});
-  array replace_to = (({make_tag_attributes( args  ),
-			contents })+
-		      values(args));
+  array replace_from = Array.map(indices(args),
+				 lambda(string q){return "&"+q+";";}) +
+    ({"#args#", "<contents>"});
+  array replace_to = values(args) + ({make_tag_attributes( args  ),
+				      contents });
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   if( args->noparse ) return ({ r });
@@ -669,21 +668,6 @@ string tag_help(string t, mapping args, RequestID id)
   }
 
   return ret+find_tag_doc(help_for, id);
-}
-
-class TagLine
-{
-  inherit RXML.Tag;
-  constant name = "line";
-  constant flags = 0;
-  class Frame
-  {
-    inherit RXML.Frame;
-    array do_return (RequestID id)
-    {
-      return ({(string)id->misc->line}); // FIXME: This is entirely bogus.
-    }
-  }
 }
 
 string tag_number(string t, mapping args, RequestID id)
@@ -874,6 +858,13 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       }
     ]));
 
+    if(m->trimwhites) {
+      sscanf(str, "%*[ \t\n\r]%s", str);
+      str = reverse(str);
+      sscanf(str, "%*[ \t\n\r]%s", str);
+      str = reverse(str);
+    }
+
 #ifdef OLD_RXML_COMPAT
     id->misc->tags[n] = replace( str, indices(m), values(m) );
 #else
@@ -908,6 +899,13 @@ string tag_define(string tag, mapping m, string str, RequestID id,
         return "";
       }
     ]));
+
+    if(m->trimwhites) {
+      sscanf(str, "%*[ \t\n\r]%s", str);
+      str = reverse(str);
+      sscanf(str, "%*[ \t\n\r]%s", str);
+      str = reverse(str);
+    }
 
 #ifdef OLD_RXML_COMPAT
     id->misc->containers[n] = replace( str, indices(m), values(m) );
@@ -1561,6 +1559,12 @@ constant tagdoc=([
  Defines an if-caller that compares something with the contents of the
  container.
 </attr>
+
+<attr name=trimwhites>
+ Trim all white space characters fromt the begining and the end of the contents.
+</attr>
+
+
  When defining a container the tag <tag>contents</tag> can be used to
  insert the contents of the defined container.
 
@@ -1569,7 +1573,7 @@ constant tagdoc=([
  tag/container can have. The attrib container has the attribute
  attrib=name, and sets the default value of the attribute indicated
  with attrib=name to the contents of the attrib container. The
- attribute values can be accessed with enteties such as &name;</p>",
+ attribute values can be accessed with enteties such as &amp;name;</p>",
 
 "elif":#"<desc cont>
  Shows its content if the truth-value is false and the criterions in
@@ -1971,10 +1975,6 @@ constant tagdoc=([
 "variable":#"<desc if-caller>
  Does the variable exist and, optionally, does it's content match the pattern?
  Variable is an IfIs if-caller.
-</desc>",
-
-"line":#"<desc cont>
- Prints the current line number of the current page.
 </desc>",
 
 "nooutput":#"<desc cont>
