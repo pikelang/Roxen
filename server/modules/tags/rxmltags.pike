@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.58 2000/02/06 11:55:18 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.59 2000/02/07 00:15:42 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -198,7 +198,7 @@ class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
   constant flags = 0;
-  constant req_arg_types = ([ "variable" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -344,7 +344,7 @@ class TagSet {
   inherit RXML.Tag;
   constant name = "set";
   constant flags = 0;
-  constant req_arg_types = ([ "variable": RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -377,7 +377,7 @@ class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
   constant flags = 0;
-  constant req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -394,7 +394,7 @@ class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
   constant flags = 0;
-  constant req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -804,7 +804,7 @@ class TagScope {
 
   constant name = "scope";
   constant flags = RXML.FLAG_CONTAINER;
-  constant opt_arg_types = ([ "extend" : RXML.t_text ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text ]);
 
   class Frame
   {
