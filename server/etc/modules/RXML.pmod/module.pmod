@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.194 2001/07/11 03:10:34 mast Exp $
+// $Id: module.pmod,v 1.195 2001/07/11 04:25:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1589,32 +1589,57 @@ class Context
   //! evaluation. evaluator is the object that catched the error.
   {
     error_count++;
-    if (objectp (err) && err->is_RXML_Backtrace) {
-      if (evaluator->report_error && evaluator->recover_errors &&
-	  evaluator->type->free_text) {
-	string msg;
-	if (tag_set && id && id->conf) {
-	  msg = err->type == "help" ? err->msg :
-	    (err->type == "run" ?
-	     ([function(Backtrace,Type:string)]
-	      tag_set->handle_run_error) :
-	     ([function(Backtrace,Type:string)]
-	      tag_set->handle_parse_error)
-	    ) ([object(Backtrace)] err, evaluator->type);
-	  if(!msg)
-	    msg = describe_error(err);
+
+    if (objectp (err)) {
+      if (err->is_RXML_break_eval) {
+	if (err->action == "continue") return;
+	Context ctx = RXML_CONTEXT;
+	if (ctx->frame) {
+	  if (stringp (err->target) ? err->target == ctx->frame->scope_name :
+	      err->target == ctx->frame)
+	    err->action = "continue";
 	}
 	else
-	  msg = err->msg;
-	if (evaluator->report_error (msg)) {
-	  if (compile_error && evaluator->p_code)
-	    evaluator->p_code->add (CompiledError (err));
-	  return;
-	}
+	  if (err->target) {
+	    ctx->frame = err->cur_frame;
+	    err = catch (parse_error ("There is no surround frame %s.\n",
+				      stringp (err->target) ?
+				      sprintf ("with scope %O", err->target) :
+				      sprintf ("%O", err->target)));
+	    ctx->frame = 0;
+	    handle_exception (err, evaluator, compile_error);
+	  }
+	throw (err);
       }
-      throw (err);
+
+      else if (err->is_RXML_Backtrace) {
+	if (evaluator->report_error && evaluator->recover_errors &&
+	    evaluator->type->free_text) {
+	  string msg;
+	  if (tag_set && id && id->conf) {
+	    msg = err->type == "help" ? err->msg :
+	      (err->type == "run" ?
+	       ([function(Backtrace,Type:string)]
+		tag_set->handle_run_error) :
+	       ([function(Backtrace,Type:string)]
+		tag_set->handle_parse_error)
+	      ) ([object(Backtrace)] err, evaluator->type);
+	    if(!msg)
+	      msg = describe_error(err);
+	  }
+	  else
+	    msg = err->msg;
+	  if (evaluator->report_error (msg)) {
+	    if (compile_error && evaluator->p_code)
+	      evaluator->p_code->add (CompiledError (err));
+	    return;
+	  }
+	}
+	throw (err);
+      }
     }
-    else throw_fatal (err);
+
+    throw_fatal (err);
   }
 
   final array(mixed|PCode) eval_and_compile (Type type, string to_parse)
@@ -1820,6 +1845,14 @@ static class NewRuntimeTags
     if (remove_tags) tags -= remove_tags;
     return tags;
   }
+}
+
+static class BreakEval (Frame|string target)
+// Used in frame break exceptions.
+{
+  constant is_RXML_BreakEval = 1;
+  string action = "break";
+  Frame cur_frame = RXML_CONTEXT->frame;
 }
 
 class Backtrace
@@ -2254,10 +2287,6 @@ class Frame
   //!	  A p-code object to evaluate. It's not necessary that the
   //!	  type it evaluates to is the same as @[result_type]; it will
   //!	  be converted if it isn't.
-  //!    @item mapping(string:mixed)
-  //!	  A response mapping which will be returned instead of the
-  //!	  evaluated page. The evaluation is stopped immediately after
-  //!	  this. FIXME: Not yet implemented.
   //!	 @item function(RequestID:mixed)
   //!	  Run the function and add its return value to the result.
   //!	  It's assumed to be a valid value of @[result_type].
@@ -2410,11 +2439,26 @@ class Frame
     if (flags & FLAG_DEBUG) report_debug (msg, @args);
   }
 
-  void terminate()
-  //! Makes the parser abort. The data parsed so far will be returned.
-  //! Does not return; throws a special exception instead.
+  void break_frame (void|Frame|string frame_or_scope)
+  //! Makes the parser break the evaluation up to the specified frame,
+  //! or to the top level if no frame is given. If @[frame_or_scope]
+  //! is a frame object higher up in the stack then the evaluation up
+  //! to and including that frame will be broken, and then continue.
+  //! If @[frame_or_scope] is a string then the closest frame higher
+  //! up in the stack with a scope of that name will be broken. It's
+  //! an error if @[frame_or_scope] is nonzero and doesn't match a
+  //! frame in the stack. Does not return; throws a special exception
+  //! instead.
+  //!
+  //! @note
+  //! It's not well defined how much of the earlier evaluated data
+  //! will be in the final result. Since none of the broken tags are
+  //! executed on the partial data after the break, it won't be
+  //! returned. This means that typically none of the earlier data is
+  //! returned. However if streaming is in use then data in earlier
+  //! returned pieces is not affected, of course.
   {
-    fatal_error ("FIXME\n");
+    throw (BreakEval (frame_or_scope));
   }
 
   void suspend()
@@ -4291,8 +4335,10 @@ class TagSetParser
   {
     mixed res = read();
     if (!eval_piece)
-      while (context->incomplete_eval())
+      while (context->incomplete_eval()) {
+	write_end();
 	res = add_to_value (type, res, read());
+      }
     return res;
   }
 
