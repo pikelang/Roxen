@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.73 2001/05/03 00:43:30 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.74 2001/05/07 12:35:05 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -153,8 +153,8 @@ function(RequestID:mapping|int) allow_deny( function allow,
 					    int order )
 {
   return lambda( RequestID id ) {
-	   mixed not_allowed = allow( id );
-	   mixed denied  = deny( id );
+	   mixed not_allowed = allow && allow( id );
+	   mixed denied  = deny && deny( id );
 // 	   werror("not_allowed: %O\n", not_allowed );
 // 	   werror("denied: %O\n", denied );
 	   int ok;
@@ -570,7 +570,7 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
 
 User find_user( string s )
 {
-  mapping uu = ui->get();
+  mapping uu = ui->get()||([]);
   mapping groups, u2g, users;
 
   [groups,u2g] = parse_groupfile(uu->groupfile);
