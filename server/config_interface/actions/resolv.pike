@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.26 2003/06/16 12:54:09 mast Exp $
+ * $Id: resolv.pike,v 1.27 2003/10/22 13:49:33 grubba Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -235,14 +235,14 @@ string parse( RequestID id )
   if( id->variables->path )
   {
     nid->set_url (id->variables->path);
-    id->variables->path = nid->url_base() + nid->raw_url[1..];
-
     if(!nid->conf) {
       res += "<p><font color='red'>"+
 	LOCALE(31, "There is no configuration available that matches "
 	       "this URL.") + "</font></p>"; 
       return res;
     }
+
+    string canonic_url = nid->url_base() + nid->raw_url[1..];
 
     if(!(int)id->variables->cache)
       nid->pragma = (<"no-cache">);
@@ -251,8 +251,10 @@ string parse( RequestID id )
 
     resolv =
       "<hr noshade size='1' width='100%'/>\n" +
+      LOCALE(0, "Canonic URL: ") +
+      Roxen.html_encode_string(canonic_url) + "<br />\n" +
       LOCALE(32, "Resolving")+" " +
-      link(id->variables->path, Roxen.html_encode_string (nid->not_query)) +
+      link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
       " "+LOCALE(33, "in")+" " +
       link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
       "<ol>";
@@ -280,7 +282,5 @@ string parse( RequestID id )
       nid->misc->trace_leave("");
     res += resolv + "</ol>\n" + format_time (hrstart, hrvstart);
   }
-  else
-    id->variables->path || "";
   return res;
 }
