@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.9 2000/02/15 07:54:12 mast Exp $
+//! $Id: PEnt.pike,v 1.10 2000/02/15 14:57:35 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -59,7 +59,7 @@ void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
 
 #ifdef OLD_RXML_COMPAT
   if (!ctx) ctx = RXML.get_context();
-  int new_not_compat = !(ctx->id && ctx->id->conf->parse_html_compat);
+  int new_not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
   if (new_not_compat == not_compat) return;
   not_compat = new_not_compat;
   init_entities();
@@ -84,7 +84,7 @@ static void create (
 {
 #ifdef OLD_RXML_COMPAT
   if (!ctx) ctx = RXML.get_context();
-  not_compat = !(ctx->id && ctx->id->conf->parse_html_compat);
+  not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
 #endif
 
   _tag_set_parser_create (ctx, type, tag_set);
