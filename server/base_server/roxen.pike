@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.197 1998/05/06 22:16:27 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.198 1998/05/08 19:54:45 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -96,8 +96,10 @@ private static void fork_or_quit()
 
 #if constant(fork) && !defined(THREADS)
 
-  if(fork()) 
+  if(fork()) {
+    add_constant("roxen", 0);	// Remove some extra refs...
     exit(-1);	// Restart.
+  }
   // Now we're running in the forked copy.
 
   // FIXME: This probably doesn't work correctly on threaded servers,
@@ -117,6 +119,7 @@ private static void fork_or_quit()
   // FIXME:
   // Should probably attempt something similar to the above,
   // but this should be sufficient for the time being.
+  add_constant("roxen", 0);	// Paranoia...
   exit(-1);	// Restart
 
 #endif /* constant(fork) */
