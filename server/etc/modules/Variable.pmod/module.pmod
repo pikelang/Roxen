@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.37 2000/11/24 16:50:35 per Exp $
+// $Id: module.pmod,v 1.38 2000/11/27 10:31:01 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -502,9 +502,12 @@ class Int
     _min = minimum;
   }
 
-  array(string|int) verify_set( int new_value )
+  array(string|int) verify_set( mixed new_value )
   {
     string warn;
+    if(!intp( new_value ) )
+      return ({ sprintf(LOCALE(0,"%O is not an integer"),new_value),
+		query() });
     if( new_value > _max && _max > _min )
     {
       warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
@@ -520,9 +523,10 @@ class Int
     return ({ warn, new_value });
   }
 
-  int transform_from_form( string what )
+  int transform_from_form( mixed what )
   {
-    return (int)what;
+    sscanf( what, "%d", what );
+    return what;
   }
 
   string render_form( RequestID id, void|mapping additional_args )
