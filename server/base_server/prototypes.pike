@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.49 2002/04/09 11:28:25 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.50 2002/04/17 14:38:13 wellhard Exp $";
 
 class Variable
 {
@@ -112,7 +112,9 @@ class ModuleInfo
 
   int last_checked;
   int type, multiple_copies;
-
+  int|string locked;
+  mapping(Configuration:int) config_locked;
+  
   string get_name();
   string get_description();
   RoxenModule instance( object conf, void|int silent );
