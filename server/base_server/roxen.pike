@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.800 2002/06/12 23:47:39 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.801 2002/06/13 01:06:07 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -39,8 +39,7 @@ Thread.Thread backend_thread;
 
 // --- Locale defines ---
 
-//<locale-token project="roxen_message"> LOC_M </locale-token>
-#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
+//<locale-token project="roxen_message"> CALL_M </locale-token>
 #define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
 
 // --- Debug defines ---
@@ -221,7 +220,7 @@ static class Privs
     }
 
     if(LOGP)
-      report_notice(LOC_M(1, "Change to %s(%d):%d privs wanted (%s), from %s"),
+      report_notice("Change to %s(%d):%d privs wanted (%s), from %s",
 		    (string)u[0], (int)uid, (int)gid,
 		    (string)reason,
 		    (string)dbt(backtrace()[-2]));
@@ -237,11 +236,11 @@ static class Privs
     gid = gid || getgid();
     int err = (int)setegid(new_gid = gid);
     if (err < 0) {
-      report_warning(LOC_M(2, "Privs: WARNING: Failed to set the "
-			   "effective group id to %d!\n"
-			   "Check that your password database is correct "
-			   "for user %s(%d),\n and that your group "
-			   "database is correct.\n"),
+      report_warning("Privs: WARNING: Failed to set the "
+		     "effective group id to %d!\n"
+		     "Check that your password database is correct "
+		     "for user %s(%d),\n and that your group "
+		     "database is correct.\n",
 		     gid, (string)u[0], (int)uid);
       int gid2 = gid;
 #ifdef HPUX_KLUDGE
@@ -316,11 +315,11 @@ static class Privs
       catch {
 	array bt = backtrace();
 	if (sizeof(bt) >= 2) {
-	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
+	  report_notice("Change back to uid#%d gid#%d, from %s\n",
 			saved_uid, saved_gid, dbt(bt[-2]));
 	} else {
-	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
-			      "from backend")+"\n", saved_uid, saved_gid);
+	  report_notice("Change back to uid#%d gid#%d, from backend\n",
+			saved_uid, saved_gid);
 	}
       };
     }
@@ -614,8 +613,8 @@ local static void handler_thread(int id)
 		       "Client will not get any response from Roxen.\n"),*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in handler thread: %sClient "
-			     "will not get any response from Roxen.")+"\n",
+	  report_error("Uncaught error in handler thread: %sClient "
+		       "will not get any response from Roxen.\n",
 		       describe_backtrace(q));
 	  catch (q = 0);
 	}
@@ -1420,7 +1419,7 @@ class Protocol
     port_obj = Stdio.Port();
     if(!port_obj->bind( port, got_connection, ip ))
     {
-      report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
+      report_error("Failed to bind %s://%s:%d/ (%s)\n",
 		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
       bound = 0;
     } else
@@ -1504,14 +1503,14 @@ class SSLProtocol
     {
       if( catch{ f = lopen(cert_file, "r")->read(); } )
       {
-	report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
+	report_error("SSL3: Reading cert-file failed!\n");
 	return;
       }
 
       if( strlen(query_option("ssl_key_file")) &&
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
-	report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
+	report_error("SSL3: Reading key-file failed!\n");
 	return;
       }
 
@@ -1521,7 +1520,7 @@ class SSLProtocol
 
       if (!part || !(cert = part->decoded_body())) 
       {
-	report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
+	report_error("SSL3: No certificate found.\n");
 	return;
       }
 
@@ -1538,14 +1537,14 @@ class SSLProtocol
 
 	if (!(key = part->decoded_body())) 
 	{
-	  report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
+	  report_error("SSL3: Private rsa key not valid (PEM).\n");
 	  return;
 	}
 
 	object rsa = Standards.PKCS.RSA.parse_private_key(key);
 	if (!rsa) 
 	{
-	  report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
+	  report_error("SSL3: Private rsa key not valid (DER).\n");
 	  return;
 	}
 
@@ -1566,7 +1565,7 @@ class SSLProtocol
 	object tbs = Tools.X509.decode_certificate (cert);
 	if (!tbs) 
 	{
-	  report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
+	  report_error("SSL3: Certificate not valid (DER).\n");
 	  return;
 	}
 	if (tbs->public_key->rsa->public_key_equal (rsa)) {
@@ -1584,18 +1583,18 @@ class SSLProtocol
 
 	if (!(key = part->decoded_body())) 
 	{
-	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
+	  report_error("SSL3: Private dsa key not valid (PEM).\n");
 	  return;
 	}
 
 	object dsa = Standards.PKCS.DSA.parse_private_key(key);
 	if (!dsa) 
 	{
-	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
+	  report_error("SSL3: Private dsa key not valid (DER).\n");
 	  return;
 	}
 
-	SSL3_WERR(sprintf("Using DSA key."));
+	SSL3_WERR("Using DSA key.");
 
 	dsa->use_random(r);
 	ctx->dsa = dsa;
@@ -1610,7 +1609,7 @@ class SSLProtocol
       }
       else 
       {
-	report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
+	report_error("SSL3: No private key found.\n");
 	return;
       }
 
@@ -1618,8 +1617,7 @@ class SSLProtocol
     }
     if( !key_matches )
     {
-      report_error(LOC_M(14, "SSL3: Certificate and private key do not "
-			 "match.")+"\n");
+      report_error("SSL3: Certificate and private key do not match.\n");
       return;
     }
 #if EXPORT
@@ -1729,8 +1727,8 @@ array(string) find_ips_for( string what )
 
   array res = gethostbyname( what );
   if( !res || !sizeof( res[1] ) )
-    report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
-		       "unknown. Substituting with ANY")+"\n", what);
+    report_error("Cannot possibly bind to %O, that host is "
+		 "unknown. Substituting with ANY\n", what);
   else
     return Array.uniq(res[1]);
 }
@@ -1822,9 +1820,7 @@ int register_url( string url, Configuration conf )
 
   if( (int)opts->nobind )
   {
-    report_warning(
-      LOC_M(61,"Not binding the port %O, disabled in configuration")+"\n",
-      url );
+    report_warning("Not binding the port %O, disabled in configuration\n", url );
     return 0;
   }
   url = replace( url, "/ANY", "/*" );
@@ -1833,14 +1829,13 @@ int register_url( string url, Configuration conf )
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
   if (!host || !stringp(host))
   {
-    report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
-		 url, conf->query_name());
+    report_error("Bad URL '%s' for server `%s'\n", url, conf->query_name());
     return 0;
   }
 
   if( !protocols[ protocol ] )
   {
-    report_error(LOC_M(7,"The protocol '%s' is not available")+"\n", protocol);
+    report_error("The protocol '%s' is not available\n", protocol);
     return 0;
   }
 
@@ -1865,9 +1860,8 @@ int register_url( string url, Configuration conf )
     {
       if( urls[ url ]->conf != conf )
       {
-	report_error(LOC_M(20,
-			   "Cannot register URL %s, "
-			   "already registered by %s!")+"\n",
+	report_error("Cannot register URL %s, "
+		     "already registered by %s!\n",
 		     url, urls[ url ]->conf->name);
 	return 0;
       }
@@ -1882,8 +1876,8 @@ int register_url( string url, Configuration conf )
 
   if( !( prot = protocols[ protocol ] ) )
   {
-    report_error(LOC_M(21, "Cannot register URL %s, "
-			  "cannot find the protocol %s!")+"\n",
+    report_error("Cannot register URL %s, "
+		 "cannot find the protocol %s!\n",
 		 url, protocol);
     return 0;
   }
@@ -1958,8 +1952,7 @@ int register_url( string url, Configuration conf )
       m_delete( m[ required_host ], port );
       failures++;
       if (required_host) {
-	report_warning(LOC_M(22, "Binding the port on IP %s failed\n"
-			         "   for URL %s!\n"),
+	report_warning("Binding the port on IP %s failed\n   for URL %s!\n",
 		       required_host, url);
       }
       continue;
@@ -1975,7 +1968,7 @@ int register_url( string url, Configuration conf )
   }
   if (failures == sizeof(required_hosts)) 
   {
-    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
+    report_error("Cannot register URL %s!\n", url);
     return 0;
   }
   sort_urls();
@@ -3648,8 +3641,8 @@ int set_u_and_gid (void|int from_handler_thread)
     if(getuid())
     {
       if (!from_handler_thread)
-	report_error(LOC_M(24, "It is possible to change uid and gid only "
-			   "if the server is running as root.")+"\n");
+	report_error("It is possible to change uid and gid only "
+		     "if the server is running as root.\n");
     } else {
 #ifdef TEST_EUID_CHANGE
       if (Stdio.write_file ("rootonly",
@@ -3712,19 +3705,18 @@ int set_u_and_gid (void|int from_handler_thread)
 #  if constant(setgid)
 	  setgid(gid);
 	  if (getgid() != gid) {
-	    report_error(LOC_M(25, "Failed to set gid.")+"\n");
+	    report_error("Failed to set gid.\n");
 	    g = 0;
 	  }
 #  else
 	  if (!from_handler_thread)
-	    report_warning(LOC_M(26, "Setting gid not supported on this system.")
-			   +"\n");
+	    report_warning("Setting gid not supported on this system.\n");
 	  g = 0;
 #  endif
 	}
 	setuid(uid);
 	if (getuid() != uid) { 
-	  report_error(LOC_M(27, "Failed to set uid.")+"\n"); 
+	  report_error("Failed to set uid.\n");
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
@@ -3732,8 +3724,7 @@ int set_u_and_gid (void|int from_handler_thread)
 			(uid, gid, u, g));
 #else
 	if (!from_handler_thread)
-	  report_warning(LOC_M(28, "Setting uid not supported on this system.")
-			 +"\n");
+	  report_warning("Setting uid not supported on this system.\n");
 	u = g = 0;
 #endif
       }
@@ -3743,27 +3734,25 @@ int set_u_and_gid (void|int from_handler_thread)
 #  if constant(setegid)
 	  setegid(gid);
 	  if (getegid() != gid) {
-	    report_error(LOC_M(29, "Failed to set effective gid.")+"\n");
+	    report_error("Failed to set effective gid.\n");
 	    g = 0;
 	  }
 #  else
 	  if (!from_handler_thread)
-	    report_warning(LOC_M(30, "Setting effective gid not supported on "
-				 "this system.")+"\n");
+	    report_warning("Setting effective gid not supported on this system.\n");
 	  g = 0;
 #  endif
 	}
 	seteuid(uid);
 	if (geteuid() != uid) {
-	  report_error(LOC_M(31, "Failed to set effective uid.")+"\n");
+	  report_error("Failed to set effective uid.\n");
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
 	  report_notice(CALL_M("setting_uid_gid", "eng")(uid, gid, u, g));
 #else
 	if (!from_handler_thread)
-	  report_warning(LOC_M(32, "Setting effective uid not supported on "
-			       "this system.")+"\n");
+	  report_warning("Setting effective uid not supported on this system.\n");
 	u = g = 0;
 #endif
       }
@@ -3815,7 +3804,7 @@ void reload_all_configurations()
 	conf = enable_configuration(config);
       }) {
 	string bt=describe_backtrace(err);
-	report_error(LOC_M(33, "Error while enabling configuration %s%s"),
+	report_error("Error while enabling configuration %s%s",
 		     config, (bt ? ":\n"+bt : "\n"));
 	continue;
       }
@@ -3829,7 +3818,7 @@ void reload_all_configurations()
       conf->enable_all_modules();
     }) {
       string bt=describe_backtrace(err);
-      report_error(LOC_M(33, "Error while enabling configuration %s%s"),
+      report_error("Error while enabling configuration %s%s",
 		   config, (bt ? ":\n"+bt : "\n" ));
       continue;
     }
@@ -3839,7 +3828,7 @@ void reload_all_configurations()
   foreach(configurations - new_confs, conf)
   {
     modified = 1;
-    report_notice(LOC_M(34,"Disabling old configuration %s")+"\n", conf->name);
+    report_notice("Disabling old configuration %s.\n", conf->name);
     conf->stop();
     destruct(conf);
   }
@@ -3917,7 +3906,7 @@ void enable_configurations()
     int t = gethrtime();
     report_debug("\nEnabling the configuration %s ...\n", config);
     if(err=catch( enable_configuration(config)->start(0) ))
-      report_error("\n"+LOC_M(35, "Error while loading configuration %s%s"),
+      report_error("\nError while loading configuration %s%s",
                    config+":\n", describe_backtrace(err)+"\n");
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
@@ -3936,8 +3925,7 @@ void enable_configurations_modules()
   if( all_modules_loaded++ ) return;
   foreach(configurations, Configuration config)
     if(mixed err=catch( config->enable_all_modules() ))
-      report_error(LOC_M(36, "Error while loading modules in "
-			 "configuration %s%s"),
+      report_error("Error while loading modules in configuration %s%s",
                    config->name+":\n", describe_backtrace(err)+"\n");
 }
 
@@ -4873,9 +4861,9 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       else if( line == "all" )
 	code += "  userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
-	m->report_notice( LOC_M( 58,"Syntax error in security patterns: "
-				 "Cannot find the user database '%s'")+"'\n",
-			line);
+	m->report_notice( "Syntax error in security patterns: "
+			  "Cannot find the user database '%s'\n",
+			  line);
       else
 	code +=
 	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
@@ -4888,8 +4876,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       if( line == "all" )
 	code += "  authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
-	m->report_notice( LOC_M( 59,"Syntax error in security patterns: "
-				 "Cannot find the auth method '%s'")+"\n",
+	m->report_notice( "Syntax error in security patterns: "
+			  "Cannot find the auth method '%s'\n",
 			  line);
       else
 	code +=
@@ -4903,8 +4891,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       code += sprintf( "  realm = %O;\n", line );
     }
     else
-      m->report_notice( LOC_M( 60,"Syntax error in security patterns: "
-			       "Expected 'allow' or 'deny'\n" ));
+      m->report_notice( "Syntax error in security patterns: "
+			"Expected 'allow' or 'deny'\n" );
     shorted = sscanf( line, "%s return", line );
 
 
@@ -5038,7 +5026,7 @@ class LogFile(string fname)
     {
       remove_call_out( do_open );
       call_out( do_open, 120 ); 
-      report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
+      report_error("Failed to open logfile "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
 #endif

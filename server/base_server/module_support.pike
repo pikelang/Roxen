@@ -1,14 +1,10 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.110 2002/04/17 14:24:44 wellhard Exp $
+// $Id: module_support.pike,v 1.111 2002/06/13 01:01:08 nilsson Exp $
 
 #define IN_ROXEN
-#include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
-
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 int dump( string file, program|void p );
 
@@ -264,14 +260,13 @@ class ModuleInfo( string sname, string filename )
     array register_module()
     {
       string locked_desc =
-	LOCALE(0," The module is locked and not part of the license. "
-	       "To enable this module please select a valid license "
-	       "and restart the server.");
+	(" The module is locked and not part of the license. "
+	 "To enable this module please select a valid license "
+	 "and restart the server.");
       return ({
 	0, // type
-	sprintf(LOCALE(350,"Load of %s (%s) failed"),
-		sname,filename),
-	sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
+	sprintf("Load of %s (%s) failed"), sname, filename),
+	sprintf("The module %s (%s) could not be loaded.",
 		sname, get_name()||"unknown")+
 	(sizeof(config_locked)?locked_desc:"")+
 	get_compile_errors(),0,0
