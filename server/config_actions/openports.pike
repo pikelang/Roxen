@@ -1,5 +1,5 @@
 /*
- * $Id: openports.pike,v 1.6 1997/08/21 10:50:34 per Exp $
+ * $Id: openports.pike,v 1.7 1998/01/25 00:29:45 grubba Exp $
  */
 
 inherit "wizard";
@@ -9,11 +9,37 @@ constant doc = ("Show all open ports on "+gethostname()+".");
 
 mixed page_1(object id)
 {
+  array(string) path = (getenv("PATH")||"/sbin:/bin:/usr/sbin:/usr/bin")/":";
+
+  array(string) lsofs =
+    Array.filter(Array.uniq(Array.map(path, combine_path, "lsof")),
+		 lambda(string f) {
+		   array st;
+		   return ((st = file_stat(f)) &&
+			   (st[0] & 0111));
+		 });
+  if (!sizeof(lsofs)) {
+    return("You will need to install <a href=\""
+	   "ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/lsof.tar.gz\""
+	   "'lsof'</a> for full info.\n");
+  }
+  return(sprintf("Use this lsof binary:\n"
+		 "<var type=select name=lsof default='%s'\n"
+		 "choices='%s'><p>\n", id->variables->lsof || lsofs[0],
+		 lsofs * ","));
+}
+
+mixed page_2(object id)
+{
   string res = "<h1>All open ports on this computer</h1><br>\n";
   mapping ports_by_ip = ([ ]);
   string s;
 
-  if(!(s=popen("lsof -i -P -n -b -F cLpPnf")) || !strlen(s))
+  if (id->variables->lsof) {
+    s = sprintf("%s -i -P -n -b -F cLpPnf", id->variables->lsof);
+  }
+
+  if(!s || !(s=popen(s)) || !strlen(s))
   {
     s = popen("netstat -n -a");
     if(!s || !strlen(s)) {
