@@ -1,4 +1,4 @@
-## $Id: supports,v 1.58 1999/07/22 17:25:31 grubba Exp $
+## $Id: supports,v 1.59 1999/08/06 03:15:35 per Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -35,8 +35,8 @@
 #  clientname from the patterns, the 'name' _must_ be first in the
 #  clientname for the patterns in the 'section' to be checked).
 
-#define basic images, forms, gifinline, mailto
-#define some_html3 divisions, div, supsub, bigsmall, align
+#define basic	        images, forms, gifinline, mailto
+#define some_html3	divisions, div, supsub, bigsmall, align
 
 
 ## Netscape is named "mozilla/major.minor system ..."
