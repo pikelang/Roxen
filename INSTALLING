@@ -1,36 +1,38 @@
-          Installing Roxen Challenger - the Source distribution
+          Installing Roxen Challenger 1.1 alpha 3 - the Source distribution
+          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   1. Get the source server package.
 
   2. Issue the command to unpack the archive:
 
           .tar.gz:
-               If you have GNU tar; "tar xzf roxen-archive-name"
+               If you have GNU tar; "tar xzf Roxen-archive-name"
                If you don't have GNU tar: 
-               "gunzip < roxen-archive-name| tar xf -" 
+               "gunzip < Roxen-archive-name| tar xf -" 
           .tar.Z
-               If you have GNU tar; "tar xzf roxen-archive-name"
+               If you have GNU tar; "tar xzf Roxen-archive-name"
                If you don't have GNU tar: 
-               "uncompress < roxen-archive-name| tar xf -"
+               "uncompress < Roxen-archive-name| tar xf -"
           .tar
-               "tar xf roxen-archive-name"
+               "tar xf Roxen-archive-name"
 
-     (where "roxen-archive-name" is the name of the roxen archive
+     (where "Roxen-archive-name" is the name of the Roxen archive
      file.).
 
-  3. Type cd roxen to change to the new directory. This directory
+  3. Type "cd Roxen_1.1.alpha_3" to change to the new directory. This directory
      should contain at the very least four directories: 
-     server (roxen server source), pike (the Pike intepreter), 
-     extern (misc. programs used by roxen) and tools (misc tools).
+     server (Roxen server source), pike (the Pike intepreter), 
+     extern (misc. programs used by Roxen) and tools (misc tools). See
+     README for more information about the directory structure.
 
-  4. Type ./configure --prefix=<wanted_base_path_for_roxen>
-     (defaults to /usr/local, thus placing roxen in /usr/local/roxen/)
+  4. Type ./configure --prefix=<wanted_base_path_for_Roxen>
+     (defaults to /usr/local, thus placing Roxen in /usr/local/roxen/)
      followed by make and make install to build the binaries and copy them 
      to the correct place.
 
      You can later on move the 'roxen' directory that will be
-     generated when you type 'make install' to anywhere in your
-     filesystem, roxen does not keep any absolute paths.
+     created when you type 'make install' to anywhere in your
+     filesystem. Roxen does not keep any absolute paths.
      
   5. If everything worked fine and the compilation is done, type 
      cd <dir>/server.
@@ -40,7 +42,7 @@
   7. Answer the simple questions and wait for your client.
 
   9. If everything worked, configure the server, otherwise move on to the
-     troubleshooting section on the Roxen WWW-pages. 
+     troubleshooting section on the roxen WWW-pages. 
 
  Once you have installed the server, consider joining the Roxen
  mailinglist (by sending a mail to roxen-request@infovav.se, with
@@ -52,8 +54,8 @@
 ----------------------------------------------------------------------------
 Example installation session:
 
-bash$ tar xzf Roxen.tar.gz
-bash$ cd roxen
+bash$ tar xzf Roxen_1.1.alpha_3.tar.gz
+bash$ cd Roxen_1.1.alpha_3
 bash$ mkdir solaris
 bash$ cd solaris
 bash$ ../configure --prefix=/usr/www

@@ -14,7 +14,7 @@ clean:
 
 install: all
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
-        -@mv -f $(prefix)/server $(prefix)/server.old
+	-@mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS

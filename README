@@ -4,19 +4,21 @@ Roxen 1.1 prerelease -- source version
 Copyright 
 ---------
 
-Roxen 1.1 is Copyright © to Informationsvävarna AB, 1993 - 1996
-
-uLPC is Copyright © to Fredrik Hübinette, 1994 - 1996
+Roxen is Copyright © Informationsvävarna AB, 1994 - 1996
+Pike is Copyright © to Fredrik Hübinette, 1994 - 1996
 
 This software is distributed under GPL, see the file COPYING for
 more details.
 
 
+Installing
+----------
+
+Read INSTALLING for installation instructions.
+
 
 The directories
 ---------------
-
-doc/		The documentaion.
 
 extern/   	A few programs used by Roxen or it's scripts.
 		 o fast_cgi -- The CGI/Fast CGI gateway, rewritten
@@ -73,7 +75,11 @@ tools/ 		A tool that will dump the Accessed database in a
                 (read the file for more information about what it is).
 		and a configuration file decoder and encoder.
 
-server/ 	The Pike objects and other misc source that is the
+		o xdumpfont    -- A tool to dump X-fonts in the format 
+				  used by the Pike image module.
+
+
+server/ 	The Pike objects and other misc. source that is the
 		core of the Roxen software.
 
 pike/	  	The source to the language used (Pike, object
@@ -85,3 +91,5 @@ pike/	  	The source to the language used (Pike, object
 		o doc/		     -- Documentation
 		o src/modules/*/doc/ -- Module specific documentation
 		
+
+

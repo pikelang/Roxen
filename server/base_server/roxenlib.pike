@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.5 1996/12/02 04:32:36 per Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.6 1996/12/07 11:37:44 neotron Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -253,7 +253,8 @@ int is_modified(string a, int t, void|int len)
   mapping t1;
   int day, year, month, hour, minute, second, length;
   string m, extra;
-
+  if(!a)
+    return 1;
   t1=localtime(t);
   sscanf(lower_case(a), "%*s, %s; %s", a, extra);
   if(extra && sscanf(extra, "length=%d", length) && len && length != len)

@@ -1,5 +1,5 @@
 #!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.6 1996/12/02 14:05:38 per Exp $";
+string cvs_version = "$Id: install.pike,v 1.7 1996/12/07 11:37:47 neotron Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -244,6 +244,7 @@ void main(int argc, string *argv)
   string host, client, log_dir;
   mixed tmp;
   int port, configuration_dir_changed, logdir_changed;
+  add_constant("roxen", this_object());
 
   if(find_arg(argv, "?", "help"))
   {
@@ -373,5 +374,6 @@ void main(int argc, string *argv)
   } else
     write("\nTune your favourite browser to http://"+host+":"+port+"/\n");
 }
+
 
 

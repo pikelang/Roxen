@@ -120,7 +120,7 @@ string describe_module_copy_variables(object node)
 }  
 
 
-#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/...More></a>")
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation></a>")
 #define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation></a>")
 
 string shorten(string in, object node)
@@ -134,7 +134,7 @@ string shorten(string in, object node)
 //    if(in[i]=='>' || in[i]=='\n')
 //      break;
   return "<table><tr><td>"+replace((in/"\n")[0],({"<br>","<p>"}),({" "," "}))+
-    DOTDOT(node)+"</td></tr></table>";
+    "<p>"+DOTDOT(node)+"</td></tr></table>";
 }
 
 string describe_module_copy(object node)

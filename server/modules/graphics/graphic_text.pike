@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.5 1996/12/06 15:57:27 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.6 1996/12/07 11:37:53 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -174,11 +174,26 @@ object (Image) bevel(object (Image) in, int width)
   in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
 
   object corner = Image(width+1,width+1);
-  for(int i=-1; i<=width; i++) corner->line(i,width-i,i,-1, 200,200,200);
-  in->paste_alpha(corner, 128, in->xsize()-width,0);
-  in->paste_alpha(corner, 128, -1, in->ysize()-width);
-  corner=0;
-  
+  object corner2 = Image(width+1,width+1);
+  object pix = Image(1,1);
+  for(int i=-1; i<=width; i++) {
+    corner->line(i,width-i,i,-1, @white);
+    corner2->setpixel(width-i, width-i, @white);
+    in->paste_alpha(pix, 185, w - width + i+1, h - width + i+1);
+  }
+  in->paste_mask(corner, corner->color(95,95,95),
+		 in->xsize()-width,-1);
+  in->paste_mask(corner, corner->invert()->color(128,128,128), 
+		 in->xsize()-width,-1);
+  in->paste_mask(corner, corner->color(95,95,95),
+		 -1, in->ysize()-width);
+  in->paste_mask(corner, corner->invert()->color(128,128,128),
+		 -1, in->ysize()-width);
+  in->paste_mask(corner2, corner2->color(70,70,70), 
+		 -1, -1);
+
+  corner = corner2 = pix = 0;
+
   return in;
 }
 

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.9 1996/12/02 04:32:45 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.10 1996/12/07 11:37:54 neotron Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -174,6 +174,11 @@ void create()
   defvar("NoCacheFor", "", "No cache for", TYPE_TEXT_FIELD,
 	 "This is a list of regular expressions. URLs that match "
 	 "any entry in this list will not be cached at all.");
+
+  defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG,
+	 "If this option is set, documents with cookies will be cached. "
+	 "As such pages might be dynamically made depending on the values of "
+	 "the cookies, you might want to leave this option off.");
   
   defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD,
 	 "Here you can add redirects to remote proxy servers. If a file is "
@@ -262,9 +267,11 @@ program Connection = class {
   int cache_wanted(object id)
   {
     if(id && (((id->method == "POST") || (id->query && strlen(id->query)))
-	|| id->auth)
-       || sizeof(id->cookies) && !proxy->no_cache_for(id->not_query))
-      return 0;
+	      || id->auth || (!proxy->query("cache_cookies") 
+			      && sizeof(id->cookies))) && 
+       !proxy->no_cache_for(id->not_query)) {
+      return 0; 
+    }
     return 1;
   }
   
@@ -279,27 +286,31 @@ program Connection = class {
   {
     object id;
     array b;
-    int received;
-
+    int received, i;
+    
     if(cache)
     {
       if(catch {
 	b = cache->file->stat();
 	received = 1;
-      })
+      }) {
 	cache->file = 0;
-      if(cache->done_callback)
+      }
+      if(cache->done_callback) {
 	cache->done_callback(cache);
+      }
     } else if(from) {
       catch(b=from->stat());
       destruct(from);
     }
     
-    if(b) log(b[1]+" "+ (new?"New ":"Cache ") + 
-	      map_array(my_clients,hostname)*",");
-    else  log("- " + (new?"New ":"Cache ") + 
-	      map_array(my_clients, hostname)*",");
-  
+    if(b) 
+      log(b[1]+" "+ (new?"New ":"Cache ") + 
+	  map_array(my_clients,hostname)*",");
+    else  
+      log("- " + (new?"New ":"Cache ") + 
+	  map_array(my_clients, hostname)*",");
+    
     if(ids) 
       foreach(ids, id) 
 	if(id)
@@ -314,7 +325,7 @@ program Connection = class {
     destruct();
   }
 
-  void assign(object s, string f, object i, int no_cache)
+  void assign(object s, string f, object i, int no_cache, object prox)
   {
     new = !no_cache;
 
@@ -325,7 +336,9 @@ program Connection = class {
     }
 
     from = s;
-    proxy = previous_object();
+    //    proxy = previous_object(); 
+    // Sometimes this was roxen, which caused.. problems. =)
+    proxy = prox;
     pipe =  Pipe();
     if(!no_cache && (!i || cache_wanted(i)))
     {
@@ -433,7 +446,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
       destruct(q);
       o=f;
     }
-    new_request->assign(o, file, id, 0);
+    new_request->assign(o, file, id, 0, this_object());
 
 // What is the last test for???? /Per
   } else if(!objectp(o) || !o->stat() || (o->stat()[1] == -4)) { 
@@ -449,7 +462,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
 	return;
       }
     }
-    new_request->assign(o, file, id, 1);
+    new_request->assign(o, file, id, 1, this_object());
   }
   if(objectp(new_request)) 
     requests[new_request] = file;

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.19 1996/12/06 23:01:17 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.20 1996/12/07 11:37:43 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -786,7 +786,7 @@ int increase_id()
 // These are here for statistics and debug reasons only.
 public string status()
 {
-  int tmp;
+  float tmp;
   string res="";
 
   if(!current_configuration)
@@ -797,19 +797,18 @@ public string status()
      ||!current_configuration->hsent)
     return "Fatal error in status(): Bignum object gone.\n";
 
-  tmp = (int)(current_configuration->sent->mb()/(float)(time(1)-start_time+1)*
-	      QUERY(copies));
-
+  tmp = (current_configuration->sent->mb()/(float)(time(1)-start_time+1)*
+	 QUERY(copies));
   res = sprintf("<table><tr align=right><td><b>Sent data:</b></td><td>%.2fMB"
 		"</td><td>%.2f Kbit/sec</td>",
-		current_configuration->sent->mb()*(float)QUERY(copies),
+		current_configuration->sent->mb()*(float)(QUERY(copies)),
 		tmp * 8192.0);
   
   res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td>",
 		 current_configuration->hsent->mb()*(float)QUERY(copies));
   
-  tmp=(int)(((float)current_configuration->requests*(float)600)/
-	    (float)((time(1)-start_time)+1)*QUERY(copies));
+  tmp=(((float)current_configuration->requests*(float)600)/
+       (float)((time(1)-start_time)+1)*QUERY(copies));
 
   res += ("<tr align=right><td><b>Number of requests:</b></td><td>" 
 	  + sprintf("%8d", current_configuration->requests*QUERY(copies))
@@ -824,21 +823,25 @@ public string status()
 public string full_status()
 {
   int tmp;
-  object conf;
   string res="";
   array foo = ({0.0, 0.0, 0.0, 0.0, 0});
   if(!sizeof(configurations))
     return "<B>No virtual servers enabled</B>\n";
   
-  foreach(configurations, conf)
+#define conf configurations[tmp]
+  for(tmp = 0; tmp < sizeof(configurations); tmp++)
   {
+    if(!conf->sent
+       ||!conf->received
+       ||!conf->hsent)
+      continue;
     foo[0]+=conf->sent->mb()/(float)(time(1)-start_time+1)*(float)QUERY(copies);
     foo[1]+=conf->sent->mb()*(float)QUERY(copies);
     foo[2]+=conf->hsent->mb()*(float)QUERY(copies);
     foo[3]+=conf->received->mb()*(float)QUERY(copies);
     foo[4]+=conf->requests * QUERY(copies);
   }
-
+#undef conf
   for(tmp = 1; tmp < 4; tmp ++)
   {
     if(foo[tmp] < 1024.0)     
@@ -2512,7 +2515,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  " be removed first.",
 	  0, cache_disabled_p);
 
-  globvar("cachedir", "/tmp/",    "Proxy disk cache: Base Cache Dir",
+  globvar("cachedir", "/tmp/roxen_cache/",
+	  "Proxy disk cache: Base Cache Dir",
 	  TYPE_DIR,
 	  "This is the base directory where cached files will reside. "
 	  "To avoid mishaps, 'roxen_cache/' is always prepended to this "
@@ -2525,7 +2529,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is the number of directories to hash the contents of the disk "
 	  "cache into.  Changing this value currently invalidates the whole "
 	  "cache, since the cache cannot find the old files.  In the future, "
-	  " the cache will be recalculated when this value is changed."); 
+	  " the cache will be recalculated when this value is changed.",
+	  0, cache_disabled_p); 
   
   /// End of cache variables..
   

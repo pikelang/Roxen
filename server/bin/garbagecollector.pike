@@ -1,7 +1,8 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.4 1996/12/06 23:01:19 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.5 1996/12/07 11:37:46 neotron Exp $";
+
 //#define DEBUG
 
 string version = cvs_version;
@@ -92,7 +93,7 @@ void write_log()
   mkdir(lp);
   file = lp+"cachelog"+_order(last_log);
   rm(file);
-  write_bytes(file, encode_value(log));
+  write_file(file, encode_value(log));
   log = ([]);
 }
 
@@ -385,7 +386,7 @@ string statistics()
 		      (float)removed/(1048576.0/BLOCK_SIZE),
 		      (time()-lastgc)/60);
   rm("statistics");
-  write_bytes("statistics",
+  write_file("statistics",
 	     sprintf("%2.2f Mb data in the cache\n%s",
 		     ((float)BLOCK_TO_KB(cache_size))/(1024.0),
 		     last_garb));
@@ -430,7 +431,8 @@ void create(string cdir, string logfiles, int cng, int mcs)
 
 int main() 
 {
-  stdin->set_nonblocking( got_command, 0, cache_stream_closed );
-  stdin->set_id(stdin);
+  object st = File("stdin");
+  st->set_nonblocking( got_command, 0, cache_stream_closed );
+  st->set_id(stdin);
   return -1;
 }

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.25 1996/12/06 23:01:16 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.26 1996/12/07 11:37:42 neotron Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -15,7 +15,7 @@ inherit "config/draw_things";
 #define bdB "90"
 
 
-#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
+#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0><blockquote>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -419,7 +419,7 @@ string configuration_list()
 
 string new_configuration_form()
 {
-  return replace(default_head("")+"<blockquote>"+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
+  return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
     "\n\n</blockquote></body>";
 }
@@ -517,7 +517,7 @@ string new_module_form(object id, object node)
   }, a);
   
   res = ({default_head("Add a module")+"\n\n"+
-	  "<blockquote><table width=500><tr><td width=500>"
+	  "<table width=500><tr><td width=500>"
   "<h2>Select a module to add from the list below</h2>" });
   
   foreach(mods, q)
@@ -689,14 +689,14 @@ mapping new_configuration(object id)
 
   if(!id->variables->name)
     return stores(default_head("Bad luck")+
-		  "<blockquote><h1>No configuration name?</h1>"
+		  "<h1>No configuration name?</h1>"
 		  "Either you entered no name, or your WWW-browser "
 		  "failed to include it in the request</blockquote>");
   
   id->variables->name=(replace(id->variables->name,"\000"," ")/" "-({""}))*" ";
   if(!low_enable_configuration(id->variables->name, id->variables->type))
     return stores(default_head("Bad luck") +
-		  "<blockquote><h1>Illegal configuration name</h1>"
+		  "<h1>Illegal configuration name</h1>"
 		  "The name of the configuration must contain characters"
 		  " other than space and tab, it should not end with "
 		  "~, and it must not be 'CVS', 'Global Variables' or "
@@ -761,7 +761,7 @@ mapping initial_configuration(object id)
     }
   }
   
-  res = default_head("Welcome to Roxen Challenger") + "<blockquote>";
+  res = default_head("Welcome to Roxen Challenger");
 
   res += read_bytes("etc/welcome.html");
   if(error && strlen(error))
@@ -1009,7 +1009,8 @@ mapping configuration_parse(object id)
     // The URL is http://config-url/, not one of the top nodes, but
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
-    return http_string_answer(default_head("")+display_tabular_header(root)+read_bytes("etc/config.html"),"text/html");
+    return http_string_answer(default_head("Roxen Challenger")+
+			      display_tabular_header(root)+read_bytes("etc/config.html"),"text/html");
   }
   
   if(sizeof(id->prestate))

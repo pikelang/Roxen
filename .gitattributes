@@ -6,6 +6,7 @@
 *.ppm binary
 button_font binary
 font binary
+urw_itc_avant_garde-demi-r binary
 
 # Handling of foreign (ie CVS) identifiers.
 #

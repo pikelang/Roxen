@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.9 1996/12/06 23:01:15 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.10 1996/12/07 11:37:41 neotron Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -392,7 +392,7 @@ void http_check_cache_file(object cachef)
   if(!cachef->file) RETURN();
   string rfile = QUERY(cachedir)+cachef->fname;
   array (int) stat = cachef->file->stat();
-
+  int i;
   /*  soo..  Lets check if this is a file we want to keep. */
   /*  Initial screening is done in the proxy module. */
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();
@@ -418,7 +418,7 @@ void http_check_cache_file(object cachef)
   if(cachef->headers["set-cookie"])
     DELETE_AND_RETURN();
 
-  if(!((int)cachef["content-length"] > stat[ST_SIZE]))
+  if((int)cachef->headers["content-length"] > stat[ST_SIZE]) 
     DELETE_AND_RETURN();
 
   cachef->save_headers();

@@ -1,6 +1,8 @@
 Changes since Roxen 1.1 alpha 2
 -----------------------------------------------
 
+o "make install" now moves the old server directory to server.old.
+
 o Italian language module added.
 
 o Portuguese language module added.
@@ -8,14 +10,28 @@ o Portuguese language module added.
 o Renamed the kanji module to japanese.
 
 o The configuration interface has been optimized about a factor of
-  1000.  It should fast enough now.
+  1000.  It should fast enough now. It has also changed appearance.
 
-o Disk cache fixed again. Thanks to Wilhelm Koehler <wk@cs.tu-berlin.de>
+o Disk cache fixed again. Thanks to Wilhelm Koehler <wk@cs.tu-berlin.de>.
+
+o Home logger fixed. Thanks to Wilhelm Koehler.
+
+o bug in real_file in the user filesystem fixed. If the file was 0
+  bytes long, Roxen decided that the file didn't exist.
 
 o Fix in hostname lookup code, again, Thanks to Wilhelm Koehler
 
+o Option in the http proxy module to enable/disable caching of pages
+  which get cookies sent to them.
+  
+o The default font for the graphics text module is now in the distribution. 
+  Hopefully that module is now useful!
 
-
+o Some more debug information added. Check "Debug information for
+  developers". It lists the number of objects, mappings, etc. and
+  their memory usage, as well as all objects that has more than five
+  clones. Maybe not all that usefull for the everyday user, but good
+  for debugging.
  
 Changes since Roxen 1.1 alpha
 -----------------------------------------------

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.8 1996/12/05 14:20:12 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.9 1996/12/07 11:37:41 neotron Exp $";
 #include <module.h>
 /* A configuration.. */
 
@@ -63,22 +63,22 @@ array (object) allocate_pris()
 void create(string n) { name=n; }
 
 class Bignum {
-//  object this = this_object();
-#if efun(Mpz)
+  object this = this_object();
+#if efun(Mpz) && 0
   inherit Mpz;
   float mb()
   {
-    return (float)this_object()/(1024.0*1024.0);
+    return (float)this/(1024.0*1024.0);
   }
 #else
-  program This = object_program(this_object());
+  program This = object_program(this);
   int msb;
   int lsb=-0x7ffffffe;
 
   object `-(int i);
   object `+(int i)
   {
-    if(!i) return this_object();
+    if(!i) return this;
     if(i<0) return `-(-i);
     object res = This(lsb+i,msb,2);
     if(res->lsb < lsb) res->msb++;
@@ -87,7 +87,7 @@ class Bignum {
 
   object `-(int i)
   {
-    if(!i) return this_object();
+    if(!i) return this;
     if(i<0) return `+(-i);
     object res = This(lsb-i,msb,2);
     if(res->lsb > lsb) res->msb--;

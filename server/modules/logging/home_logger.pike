@@ -1,10 +1,10 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-// This module log the accesses of each user in their home dirs, iff
+// This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-string cvs_version = "$Id: home_logger.pike,v 1.5 1996/12/02 04:32:42 per Exp $";
+string cvs_version = "$Id: home_logger.pike,v 1.6 1996/12/07 11:37:54 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -15,7 +15,7 @@ mixed register_module()
   return ({ MODULE_LOGGER,
 	    "User logger",
 	    ("This module log the accesses of each user in their home dirs, "
-	     "iff they create a file named 'AccessLog' (or whatever is configurated in the configuration interface) in that directory, and "
+	     "if they create a file named 'AccessLog' (or whatever is configurated in the configuration interface) in that directory, and "
 	     "allow write access for roxen."), ({}), 1 });
 }
 
@@ -190,9 +190,10 @@ string home(string of, object id)
   foreach(QUERY(Logs), l)
   {
     if(!search(of, l))
-      return roxen->real_file(l, id);
-    else if(sscanf(of, l, f)) 
-      return roxen->real_file(sprintf(l, f), id);
+      return roxen->real_file(l+QUERY(AccessLog), id);
+    else if(sscanf(of, l, f)) {
+      return roxen->real_file(sprintf(l, f)+QUERY(AccessLog), id);
+    }
   }
 }
 
@@ -200,7 +201,7 @@ inline string format_log(object id, mapping file)
 {
   return sprintf("%s %s %s [%s] \"%s %s %s\" %s %s\n",
 		 roxen->quick_ip_to_host(id->remoteaddr),
-		 (string)(id->referer?id->referer*", ":"-"),
+		 (string)(sizeof(id->referer)?id->referer*", ":"-"),
 		 replace((string)(id->client?id->client*" ":"-")," ","%20"),
 		 cern_http_date(id->time),
 		 (string)id->method, (string)id->raw_url,
@@ -212,7 +213,9 @@ mixed log(object id, mapping file)
 {
   string s;
   object fnord;
-  if((s = home(id->not_query, id)) && (fnord=find_cache_file(s+QUERY(AccessLog))))
+
+  if((s = home(id->not_query, id)) && 
+     (fnord=find_cache_file(s)))
     fnord->write(format_log(id, file));
   if(QUERY(block) && fnord)
     return 1;
