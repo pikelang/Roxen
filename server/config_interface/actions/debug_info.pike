@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.35 2004/09/20 16:28:43 mast Exp $
+ * $Id: debug_info.pike,v 1.36 2004/09/20 17:51:13 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -18,39 +18,6 @@ int creation_date = time();
 int no_reload()
 {
   return creation_date > file_stat( __FILE__ )[ST_MTIME];
-}
-
-mapping class_cache = ([]);
-
-string fix_cname( string what )
-{
-  if( what == "`()()" )
-    what = "()";
-  return what;
-}
-
-string find_class( string f, int l )
-{
-  if( l < 2 )
-    return 0;
-  if( class_cache[ f+":"+l ] )
-      return class_cache[ f+":"+l ];
-  string data = Stdio.read_bytes( f );
-  if( !data )
-    return 0;
-  array lines = data/"\n";
-  if( sizeof( lines ) < l )
-    return 0;
-  string cname;
-  if( sscanf( lines[l], "%*sclass %[^ \t]", cname ) == 2)
-    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
-  if( sscanf( lines[l-1], "%*sclass %[^ \t]", cname ) == 2)
-    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
-  if( sizeof( lines ) <= l+1 )
-    return 0;
-  if( sscanf( lines[l+1], "%*sclass %[^ \t]", cname ) == 2)
-    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
-  return 0;
 }
 
 mixed page_0( object id )
