@@ -1,7 +1,27 @@
 #!/bin/sh
 
+# Find the default master
+if [ -f ../pike/src/lib/master.pike ]; then
+  DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
+fi
+
+# Extra module-path
+if [ -d etc/modules ]; then
+  DEFINES="$DEFINES -M etc/modules"
+fi
+ 
+# Extra include-path
+if [ -d etc/include ]; then
+  DEFINES="$DEFINES -I etc/include"
+fi
+ 
+# Extra include-path (2)
+if [ -d base_server ]; then
+  DEFINES="$DEFINES -I base_server"
+fi
+ 
 if [ -f base_server/roxen.pike ]; then
-  exec bin/pike -m etc/master.pike ./bin/install.pike $@
+  exec bin/pike $DEFINES ./bin/install.pike $@
 else
   echo You have to cd to the 'roxen/server' directory to run this program.
 fi
