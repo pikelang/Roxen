@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.1 2000/03/30 19:56:10 leif Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.2 2000/03/30 23:46:11 nilsson Exp $";
 
 class Environment
 {
@@ -152,7 +152,7 @@ void config_env(object(Environment) env)
   string dir = "etc/env.d"; program p; object eo;
 
   foreach(glob("*.pike", get_dir(dir)||({})), string e)
-  { write("\n Considering " + (e/".")[0] + ".\n");
+  { write(" " + (e/".")[0] + ": ");
     if (!catch (p = compile_file(dir+"/"+e)))
     { if (eo = p())
         eo->run(env);
@@ -161,11 +161,7 @@ void config_env(object(Environment) env)
     }
     else
         write("  Test script failed to compile.\n");
-
-    sleep(1); /* give people a chance to read whatever was printed... */
   }
-  sleep(1); /* give people a chance to read whatever was printed... */
-  write("\n");
 }
 
 void main(int argc, array argv)
@@ -184,7 +180,6 @@ void main(int argc, array argv)
       exit(1);
     }
     write("  Done.\n");
-    sleep(1);
   }
 
   object envobj = Environment("../local/environment");
@@ -192,11 +187,11 @@ void main(int argc, array argv)
   config_env(envobj);
   if (envobj->finalize())
   {
-    write("Environment updated.\n");
+    write("Environment updated.\n\n");
   }
   else
   {
-    write("Environment didn't need updating.\n");
+    write("Environment didn't need updating.\n\n");
   }
 }
 
