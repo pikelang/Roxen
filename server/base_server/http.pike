@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.43 2000/08/15 15:56:31 jhs Exp $
+// $Id: http.pike,v 1.44 2000/08/16 02:58:29 per Exp $
 
 //#pragma strict_types
 
@@ -77,7 +77,7 @@ string http_res_to_string( mapping file, RequestID id )
       id->conf->sent+=(file->len>0 ? file->len : 1000);
   }
   if(id->method != "HEAD")
-    head_string+=(file->data||"")+(file->file?file->file->read(0x7ffffff):"");
+    head_string+=(file->data||"")+(file->file?file->file->read():"");
   return head_string;
 }
 
