@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.124 1999/11/19 06:51:14 per Exp $
+// $Id: roxenlib.pike,v 1.125 1999/11/22 12:58:10 per Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1623,23 +1623,18 @@ function get_client_charset_decoder( string едц, object|void id )
      return 0;
 
    case "едц":
-     werror(" No encoding\n");
      return 0;
 
    case "\33-Aедц":
-     werror(" ISO-2022-*\n");
-     return _charset_decoder( Locale.Charset.decoder( "iso-2022-jp" ) )->decode;
+     return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
 
    case "ГҐГ¤Г¶": 
-     werror("UTF-8\n");
      return utf8_to_string;
 
    case "\214\212\232":
-     werror("mac\n");
      return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
 
    case "\0е\0д\0ц":
-     werror("unicode\n");
      return unicode_to_string;
   }
   report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
