@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.165 2000/04/03 03:48:37 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.166 2000/04/05 21:46:01 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -322,7 +322,7 @@ void report_debug(string message, mixed ... foo)
 array(object) find_module_and_conf_for_log( array(array) q )
 {
   object conf, mod;
-  for( int i = 0; i<sizeof( q ); i++ )
+  for( int i = sizeof (q); i-- > 0; )
   {
     if(!functionp([function]q[i][2]))
       continue;
@@ -337,7 +337,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
     if( o->is_configuration ) {
       if( !conf ) conf = o;
     }
-    if( mod && conf )
+    if( conf )
       break;
   }
   return ({ mod,conf });
