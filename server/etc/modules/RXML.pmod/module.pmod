@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.272 2002/03/12 13:27:51 mast Exp $
+// $Id: module.pmod,v 1.273 2002/03/13 17:56:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3404,7 +3404,6 @@ class Frame
   // in args. Might be destructive on raw_args. No evaluation of
   // raw_args is done if tag isn't set.
   {
-    mixed err = catch {
       if (ctx->frame_depth >= Context.max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
 		    Context.max_frame_depth);
@@ -3621,8 +3620,6 @@ class Frame
       else THIS_TAG_DEBUG ("Keeping content_type %s\n", content_type->name);
 
       return func;
-    };
-    throw (err);
   }
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
