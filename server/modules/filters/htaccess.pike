@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.41 1998/06/27 09:39:41 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.42 1998/08/05 07:12:47 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -518,14 +518,6 @@ mapping|string|int htaccess(mapping access, object id)
     }
   }
 
-  if(id->remoteaddr)
-  {
-    if(!((hname=roxen->quick_ip_to_host(id->remoteaddr)) && 
-	 hname != id->remoteaddr))
-      hname = roxen->blocking_ip_to_host(id->remoteaddr);
-  }
-  if(!hname)
-    hname = id->remoteaddr;
   aname      = access->authname || "authorization";
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
@@ -583,19 +575,32 @@ mapping|string|int htaccess(mapping access, object id)
   
   if(!access[method]->allow && !access[method]->deny)
     hok = 1;
-  else if(access[method]->order == 1) {
-    if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
-      hok = 1;
-    if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
-      hok = 0;
-  } else if(access[method]->order == 0) {
-    if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
-      hok = 0;
-    if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
-      hok = 1;
-  } else 
-    hok = (allowed(access[method]->allow, hname, id->remoteaddr, 0) && 
-	  allowed(access[method]->deny, hname, id->remoteaddr, 1));
+  else {
+    if(!id->misc->hname && id->remoteaddr)
+    {
+      if(!((hname=roxen->quick_ip_to_host(id->remoteaddr)) && 
+	   hname != id->remoteaddr))
+	hname = roxen->blocking_ip_to_host(id->remoteaddr);
+    }
+    if(!hname) {
+      hname = id->misc->hname || id->remoteaddr;
+    } else {
+      id->misc->hname = hname;
+    }
+    if(access[method]->order == 1) {
+      if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
+	hok = 1;
+      if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
+	hok = 0;
+    } else if(access[method]->order == 0) {
+      if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
+	hok = 0;
+      if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
+	hok = 1;
+    } else 
+      hok = (allowed(access[method]->allow, hname, id->remoteaddr, 0) && 
+	     allowed(access[method]->deny, hname, id->remoteaddr, 1));
+  }
   if(!hok && access[method]->all == 1)
   {
     if(hname == id->remoteaddr) {
