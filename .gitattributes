@@ -235,6 +235,7 @@ rbf binary
 /server/modules/tags/awizard.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
+/server/modules/tags/email.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
