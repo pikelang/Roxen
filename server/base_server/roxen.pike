@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.193 1998/04/29 03:20:21 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.194 1998/04/29 03:55:46 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -988,6 +988,12 @@ mapping restart()
 // Seems like it. Changed to a mapping.
 private mapping(string:object) configuration_ports = ([]);
 int startpid, roxenpid;
+
+// Used by openports.pike
+array(object) get_configuration_ports()
+{
+  return(values(configuration_ports));
+}
 
 
 
