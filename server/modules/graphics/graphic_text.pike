@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.177 1999/05/25 09:51:27 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.178 1999/05/25 10:45:55 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -408,7 +408,8 @@ object make_text_image(mapping args, object font, string text,object id)
   {
     int alpha,border;
     string bg;
-    sscanf(args->textbox, "%d,%s", alpha, bg);
+    alpha = (int)args->textbox;
+    sscanf(args->textbox, "%*[^,],%s", bg);
     sscanf(bg,"%s,%d", bg,border);
     background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
 				  @parse_color(bg)),
