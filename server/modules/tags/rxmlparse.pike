@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.8 1999/08/01 17:28:07 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.9 1999/08/01 22:12:30 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -102,26 +102,17 @@ array register_module()
 
 array(string) query_file_extensions() 
 {
-  if(api_functions()->accessed_extensions)
-    return query("toparse") + api_functions()->accessed_extensions[0]();
   return query("toparse");
 }
 
-mapping handle_file_extension( object file, string e, object id)
+
+mapping handle_file_extension(object file, string e, object id)
 {
   string to_parse;
   mapping defines = id->misc->defines || ([]);
   array stat = defines[" _stat"] || id->misc->stat || file->stat();
   id->misc->defines = defines;
   
-  if(id->conf->modules->accessed && search(id->conf->api_functions()->accessed_extensions[0](),e)!=-1)
-  {
-    id->conf->api_functions()->accessed[0](id, id->not_query, 1);
-    defines->counted = "1";
-    if(search(QUERY(toparse),e)==-1)  // Parse anyway
-      return 0;
-  }
-
   if(QUERY(parse_exec) &&   !(stat[0] & 07111)) return 0;
   if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
 

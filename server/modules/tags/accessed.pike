@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.2 1999/08/01 18:11:52 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.3 1999/08/01 22:12:30 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -34,7 +34,7 @@ void create(object c)
 	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.");
 
-  defvar("noparse", ({  }), "Extensions to access count",
+  defvar("extcount", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
          "Always access count all files ending with these extensions. "
 	 "Note: This module must be reloaded for a change here to take "
@@ -205,10 +205,27 @@ int query_num(string file, int count)
 
 array register_module()
 {
-  return ({ MODULE_PARSER, 
+  return ({ MODULE_PARSER|MODULE_LOGGER, 
 	    "Accessed counter", 
-	    ("This module provides an accessed counter, both through the &lt;accessed&gt; tag and"
+	    ("This module provides an accessed counter, both through the &lt;accessed&gt; tag and "
              "filewise."), 0, 1 });
+}
+
+int log(object id, mapping file)
+{
+  if(id->misc->accessed || query("extcount")==({})) {
+    return 0;
+  }
+
+  // Although we are not 100% sure we should make a count, nothing bad happens if we shouldn't and still do.
+  foreach(query("extcount"), string tmp)
+    if(search(id->realfile,tmp)!=-1)
+    {
+      query_num(id->not_query, 1);
+      id->misc->accessed = "1";
+    }
+
+  return 0;
 }
 
 string tag_accessed(string tag,mapping m,object id,object file,
@@ -229,10 +246,10 @@ string tag_accessed(string tag,mapping m,object id,object file,
   } else {
     if(_match(id->remoteaddr, id->conf->query("NoLog")))
       counts = query_num(id->not_query, 0);
-    else if(defines->counted != "1") 
+    else if(id->misc->accessed != "1") 
     {
       counts = query_num(id->not_query, (int)m->add||1);
-      defines->counted = "1";
+      id->misc->accessed = "1";
     } else {
       counts = query_num(id->not_query, (int)m->add||0);
     }
@@ -350,10 +367,6 @@ mapping query_tag_callers()
   return (["accessed":tag_accessed]);
 }
 
-array api_accessed_extensions() {
-  return query("noparse"); 
-}
-
 int api_query_num(object id, string f, int|void i)
 {
   NOCACHE();
@@ -363,5 +376,4 @@ int api_query_num(object id, string f, int|void i)
 void define_API_functions()
 {
   add_api_function("accessed", api_query_num, ({ "string", 0,"int" }));
-  add_api_function("accessed_extensions", api_accessed_extensions, ({}));
 }
