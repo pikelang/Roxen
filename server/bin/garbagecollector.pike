@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.16 1999/06/08 15:15:31 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.17 2000/05/19 14:19:21 grubba Exp $";
 
 //#define DEBUG
 
@@ -641,7 +641,7 @@ void init_disk_check(string dir, int minfree)
   
   disk_time = time();
 
-  float i = (((float)st->blocksize) / 1024.0)||512.0;
+  float i = ((float)(st->blocksize || 524288.0)) / 1024.0;
   disk_max = (int)(st->blocks * i);
   disk_used = (int)((st->blocks - st->bfree) * i);
   disk_avail = (int)(st->bavail * i);
