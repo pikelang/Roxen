@@ -1,5 +1,5 @@
 /*
- * $Id: clearlog.pike,v 1.5 1997/08/21 10:50:33 per Exp $
+ * $Id: clearlog.pike,v 1.6 1997/08/30 22:57:56 peter Exp $
  */
 
 inherit "wizard";
@@ -10,7 +10,7 @@ constant doc = ("Clear all or specified (on type) events from the Event Log.");
 
 mixed page_0(object id)
 {
-  return ("<font size=+2>Select which type of messages to delete:</font><p>"
+  return ("<font size=+2>Select type(s) of messages to delete:</font><p>"
 	  "<table><tr><td>"
 	  "<var name=types type=select_multiple default='' choices='"
 	  "Informational messages,Warning messages,Error messages'></td><td>"+

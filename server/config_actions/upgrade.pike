@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.17 1997/08/28 21:56:15 neotron Exp $
+ * $Id: upgrade.pike,v 1.18 1997/08/30 22:57:57 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -40,15 +40,15 @@ void recurse_one_dir(string d)
   {
     if(search(f, "#")!=-1) continue;
     if(search(f, "~")!=-1) continue;
-    if(sscanf(f, "%s.pike", f))
+    if(Stdio.file_size(d+f) > 0)
     {
-      string mod = Stdio.read_bytes(d+f+".pike");
+      string mod = Stdio.read_bytes(d+f+"");
       if(!mod) {
-	werror("Failed to read "+d+f+".pike.\n");
+	werror("Failed to read "+d+f+".\n");
       } else {
 	string version;
 	string doc, name;
-	if(sscanf(mod, "%*s$Id: %*s.pike,v %s ", version)==3)
+	if(sscanf(mod, "%*s$Id: %*s,v %s ", version)==3)
 	{
 	  if(sscanf(mod, "%*sname%*[ \t]=%s;", name)==3)
 	    name = parse_expression(name);
@@ -57,6 +57,7 @@ void recurse_one_dir(string d)
 	  else if(sscanf(mod, "%*sdesc%*[ \t]=%s;", doc)==3)
 	    doc = parse_expression(doc);
 	}
+	sscanf(f, "%s.pike", f);
 	comps[f]=
         ([
 	  "fname":d+f,
@@ -68,7 +69,8 @@ void recurse_one_dir(string d)
     }
     else if(Stdio.file_size(d+f)==-2)
     {
-      recurse_one_dir(d+f+"/");
+      if(f != "CVS")
+	recurse_one_dir(d+f+"/");
     }
   }
 }
@@ -79,6 +81,7 @@ void update_comps()
   recurse_one_dir("config_actions/");
   recurse_one_dir("server_templates/");
   recurse_one_dir("bin/");
+  recurse_one_dir("etc/");
   recurse_one_dir("languages/");
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.4 1997/08/26 18:35:26 grubba Exp $
+ * $Id: problems.pike,v 1.5 1997/08/30 22:57:57 peter Exp $
  */
 
 inherit "wizard";
@@ -13,7 +13,7 @@ string page_0(object id)
 {
   return ("<b>Welcome to the problem finder wizard.</b>"
 	  "<p>This action tries to find most "
-	  "common errors in your Roxen Challenger configuration.");
+	  "common errors in your Roxen configuration.");
 }
 
 mapping mod_recursed = ([]), mod_problems = ([]), mod_identifiers = ([]);
