@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.12 1998/01/19 20:20:21 mirar Exp $";
+string cvs_version = "$Id: http.pike,v 1.13 1998/02/04 05:17:37 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -163,9 +163,10 @@ string cern_http_date(int t)
 string http_date(int t)
 {
   string s;
-  s=ctime(t + localtime(t)->timezone - 3600*localtime(t)->isdst);
+  mapping l = localtime(t);
+  s=ctime(t + l->timezone - 3600*l->isdst);
   return (s[0..2] + sprintf(", %02d ", (int)s[8..9])
-	  + s[4..6]+" "+(1900+(int)s[22..23])
+	  + s[4..6]+" "+(1900+l->year)
 	  + s[10..18]+" GMT"); 
 }
 
