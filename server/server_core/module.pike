@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.140 2004/05/22 15:27:58 _cvs_stephen Exp $
+// $Id: module.pike,v 1.141 2004/05/24 17:24:48 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1814,28 +1814,6 @@ mapping api_functions()
 {
   return _api_functions;
 }
-
-#if ROXEN_COMPAT <= 1.4
-mapping(string:function) query_tag_callers()
-//! Compat
-{
-  mapping(string:function) m = ([]);
-  foreach(glob("tag_*", indices( this )), string q)
-    if(functionp( this[q] ))
-      m[replace(q[4..], "_", "-")] = this[q];
-  return m;
-}
-
-mapping(string:function) query_container_callers()
-//! Compat
-{
-  mapping(string:function) m = ([]);
-  foreach(glob("container_*", indices( this )), string q)
-    if(functionp( this[q] ))
-      m[replace(q[10..], "_", "-")] = this[q];
-  return m;
-}
-#endif
 
 mapping(string:array(int|function)) query_simpletag_callers()
 {
