@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.5 1996/12/02 04:32:47 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.6 1996/12/10 03:04:42 neotron Exp $";
 #include <module.h>
 inherit "modules/scripting/cgi";
 
@@ -103,7 +103,7 @@ mixed find_file(string f, object id)
     else if(runuser)
       uid = runuser;
     if(!uid)
-      uid = ({ 65535, 65535 });
+      uid = ({ 65534, 65534 });
   }
 
 #ifdef CGI_DEBUG

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.22 1996/12/10 00:15:41 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.23 1996/12/10 03:04:40 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -980,7 +980,7 @@ int|mapping check_security(function a, object id, void|int slevel)
       function_object(a)->query("_seclvl")
     });
 
-  if(slevel && (seclevels[1] < slevel)) // "Trustlevel" to low.
+  if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
   
 

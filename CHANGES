@@ -1,6 +1,11 @@
 Changes since Roxen 1.1 alpha 3
 -----------------------------------------------
 
+o Trust levels should really work as they are supposed to now.
+
+o The spacy background image (and the <blockquote> that was needed for
+  it) removed and replaced with a more slim version.
+  
 o Some changes to the graphics_text module. It should be somewhat
   faster now, and also has some new features.
 

@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.7 1996/12/08 10:33:27 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.8 1996/12/10 03:04:42 neotron Exp $";
 #include <module.h>
 
 inherit "module";
@@ -313,7 +313,7 @@ mixed find_file(string f, object id)
       uid = runuser;
   }
   if(!uid)
-    uid = ({ 65535, 65535 });
+    uid = ({ 65534, 65534 });
     
   if(QUERY(use_wrapper))
   {
