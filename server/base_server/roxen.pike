@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.459 2000/03/20 07:03:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.460 2000/03/20 07:04:01 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2556,7 +2556,6 @@ void create()
   dump( "etc/modules/Dims.pmod" );
   dump( "etc/modules/RXML.pmod/module.pmod" );
   foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
-    if( q != "PXml.pike" )
     dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/Roxen.pmod" );
 
