@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.321 2001/10/04 14:36:52 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.322 2001/10/05 08:41:13 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7384,20 +7384,21 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "use":#"<desc type='cont'><p><short>
- Reads tag definitions, user defined if plugins and variables from a
- file or package and includes into the current page.</short> Note that the
- file itself is not inserted into the page. This only affects the
- environment in which the page is parsed. The benefit is that the
- package file needs only be parsed once, and the compiled versions of
- the user defined tags can then be used, thus saving time. It is also
- a fairly good way of creating templates for your website. Just define
- your own tags for constructions that appears frequently and save both
- space and time. Since the tag definitions are cached in memory, make
- sure that the file is not dependent on anything dynamic, such as form
- variables or client settings, at the compile time. Also note that the
- use tag only lets you define variables in the form and var scope in
- advance. Variables with the same name will be overwritten when the
- use tag is parsed.</p>
+ Reads <i>tag definitions</i>, user defined <i>if plugins</i> and 
+ <i>variables</i> from a file or package and includes into the 
+ current page.</short>
+ <note><p>The file itself is not inserted into the page. This only 
+ affects the environment in which the page is parsed. The benefit is 
+ that the package file needs only be parsed once, and the compiled 
+ versions of the user defined tags can then be used, thus saving time. 
+ It is also a fairly good way of creating templates for your website. 
+ Just define your own tags for constructions that appears frequently 
+ and save both space and time. Since the tag definitions are cached 
+ in memory, make sure that the file is not dependent on anything dynamic, 
+ such as form variables or client settings, at the compile time. Also 
+ note that the use tag only lets you define variables in the form 
+ and var scope in advance. Variables with the same name will be 
+ overwritten when the use tag is parsed.</p></note></p>
 </desc>
 
 <attr name='packageinfo'><p>
