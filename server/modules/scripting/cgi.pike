@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.59 2003/04/22 15:28:53 anders Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.60 2003/05/05 13:25:05 anders Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -206,6 +206,8 @@ class Wrapper
   RequestID mid;
   mixed done_cb;
   int close_when_done;
+  int callback_disabled;
+
   void write_callback()
   {
     DWERR("Wrapper::write_callback()");
@@ -231,8 +233,11 @@ class Wrapper
 
       // If the buffer just went below the low watermark, let it refill.
       if (buffer_high && strlen(buffer) < buffer_low &&
-	  strlen(buffer)+nelems >= buffer_low )
-        fromfd->set_read_callback(read_callback);
+	  strlen(buffer)+nelems >= buffer_low && callback_disabled)
+      {
+	fromfd->set_nonblocking( read_callback, 0, close_callback );
+	callback_disabled = 0;
+      }
     }
   }
 
@@ -262,8 +267,11 @@ class Wrapper
       buffer += what;
 
     // If we have filled our buffer, stop asking for more data.
-    if (buffer_high && strlen(buffer) > buffer_high)
-      fromfd->set_read_callback(0);
+    if (buffer_high && strlen(buffer) > buffer_high && !callback_disabled)
+    {
+      fromfd->set_nonblocking( 0, 0, 0 );
+      callback_disabled = 1;
+    }
   }
 
   void destroy()
