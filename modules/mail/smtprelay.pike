@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.31 1998/10/02 19:34:09 grubba Exp $
+ * $Id: smtprelay.pike,v 1.32 1998/10/03 10:17:25 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.31 1998/10/02 19:34:09 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.32 1998/10/03 10:17:25 grubba Exp $";
 
 /*
  * Some globals
@@ -571,7 +571,7 @@ class MailSender
       int t = ((int)message->times);
       // Try send a notify bounce after 4, 8, and 16 hours and 
       // after 1, 2, 4 and 7 days.
-      if (!(< 4, 8, 16, 24, 48, 96, 168 >)[t]) {
+      if ((< 4, 8, 16, 24, 48, 96, 168 >)[t]) {
 	if (t != 168) {
 	  parent->bounce(message, "554", ({
 	    sprintf("Message not delivered after %d attempts.", t),
@@ -805,7 +805,8 @@ int send_message(string from, multiset(string) rcpt, string message)
  * Used to bounce error messages
  */
 
-void bounce(mapping msg, string code, array(string) text, string last_command)
+void bounce(mapping msg, string code, array(string) text, string last_command,
+	    string|void body)
 {
   // FIXME: Generate a bounce.
 
@@ -874,17 +875,18 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 			      mktimestamp((int)msg->last_attempt_at));
     }
 
-    string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
-			  "Mailid:%s\r\n"
-			  "%s"
-			  "Description:\r\n"
-			  "%s\r\n",
-			  msg->user, msg->domain, msg->sender, code,
-			  msg->mailid,
-			  sizeof(last_command)?
-			  ("Last command: "+last_command+"\r\n"):"",
-			  text*"\r\n");
-
+    if (!body) {
+      body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
+		     "Mailid:%s\r\n"
+		     "%s"
+		     "Description:\r\n"
+		     "%s\r\n",
+		     msg->user, msg->domain, msg->sender, code,
+		     msg->mailid,
+		     sizeof(last_command)?
+		     ("Last command: "+last_command+"\r\n"):"",
+		     text*"\r\n");
+    }
     // Send a bounce
     string message = (string)
       MIME.Message(body, ([
