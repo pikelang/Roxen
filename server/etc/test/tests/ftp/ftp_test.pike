@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.1 2001/08/24 12:04:06 grubba Exp $
+// $Id: ftp_test.pike,v 1.2 2001/10/09 12:43:17 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -10,6 +10,7 @@ constant TIMEOUT = 4;
 constant CONCLOSED = 5;
 constant WRITEFAIL = 6;
 constant BADCODE = 7;
+constant BADDATA = 8;
 
 // Connection setup.
 
@@ -110,6 +111,8 @@ string last_sent = "";
 
 void send(string command)
 {
+  //werror("FTP: send(%O)\n", command);
+
   if (!sizeof(sendq)) {
     con->set_write_callback(do_send);
   }
@@ -145,6 +148,8 @@ void bad_code(string code, string lines)
   werror("Raw:\n%s\n", lines);
   exit(BADCODE);
 }
+
+// State machine.
 
 void send_user(string code, string lines)
 {
@@ -186,7 +191,161 @@ void send_stat_root(string code, string lines)
 void send_mlst_root(string code, string lines)
 {
   send("MLST /");
-  got_code = ({ ({ "250", send_quit }) });
+  got_code = ({ ({ "250", send_active_list }) });
+}
+
+void send_active_list(string code, string lines)
+{
+  do_active_read("LIST", got_active_list);
+}
+
+string active_list;
+
+void got_active_list(string list)
+{
+  // werror("got_active_list(%O)\n", list);
+  active_list = list;
+  send_passive_list();
+}
+
+void send_passive_list()
+{
+  do_passive_read("LIST", got_passive_list);
+}
+
+void got_passive_list(string list)
+{
+  if (list != active_list) {
+    werror("Active and passive LIST differ:\n"
+	   "Active LIST:\n"
+	   "%s\n"
+	   "Passive LIST:\n"
+	   "%s\n",
+	   active_list,
+	   list);
+    exit(BADDATA);
+  }
+  send_quit("200", "");
+}
+
+class do_active_read
+{
+  object port;
+  string command;
+  function(string:void) done_cb;
+  string buf;
+  object fd;
+
+  static void create(string cmd, function(string:void) cb)
+  {
+    command = cmd;
+    done_cb = cb;
+    buf = "";
+    send_port();
+  }
+
+  void send_port()
+  {
+    port = Stdio.Port(0, got_connect, "127.0.0.1");
+    int pno = (int)(port->query_address()/" ")[1];
+    send(sprintf("PORT 127,0,0,1,%d,%d", pno>>8, pno & 0xff));
+    got_code = ({ ({ "200", send_cmd }) });
+  }
+
+  void send_cmd(string code, string lines)
+  {
+    send(command);
+    got_code = ({ ({ "150", got_connection_open }) });
+  }
+
+  int con_open;
+
+  void got_connect(mixed ignored)
+  {
+    fd = port->accept();
+    destruct(port);
+    port = 0;
+
+    if (con_open) {
+      fd->set_nonblocking(got_data, 0, data_closed);
+    }
+  }
+
+  void got_connection_open(string code, string lines)
+  {
+    if (fd) {
+      fd->set_nonblocking(got_data, 0, data_closed);
+    }
+    con_open = 1;
+    got_code = ({ ({ "226", got_transfer_done }) });
+  }
+
+  void got_data(mixed ignored, string str)
+  {
+    buf += str;
+  }
+
+  void data_closed()
+  {
+    fd->close();
+    fd = 0;
+    
+    if (!con_open) {
+      call_out(done_cb, 0, buf);
+      buf = "";
+      done_cb = 0;
+    }
+  }
+
+  void got_transfer_done(string code, string lines)
+  {
+    if (!fd) {
+      call_out(done_cb, 0, buf);
+      buf = "";
+      done_cb = 0;
+    }
+    con_open = 0;
+  }
+}
+
+class do_passive_read
+{
+  inherit do_active_read;
+
+  array(int) port_info;
+
+  static void create(string cmd, function(string:void) cb)
+  {
+    command = cmd;
+    done_cb = cb;
+    buf = "";
+    send_pasv();
+  }
+
+  void send_pasv()
+  {
+    send("PASV");
+    got_code = ({ ({ "227", send_cmd }) });
+  }
+
+  void send_cmd(string code, string lines)
+  {
+    port_info = array_sscanf(lines, "227%*s%d,%d,%d,%d,%d,%d");
+    if (sizeof(port_info) != 6) {
+      werror("Failed to parse PASV code: %O\n"
+	     "Parsed result: { %{%O, %}}\n",
+	     lines, port_info);
+      exit(BADARG);
+    }
+    fd = Stdio.File();
+    if (!fd->connect(((array(string))port_info[..3])*".",
+		     port_info[4]*256+port_info[5])) {
+      werror("Failed to connect to passive port: %s\n",
+	     ((array(string))port_info)*",");
+      exit(NOCONN);
+    }
+    ::send_cmd(code, lines);
+  }
 }
 
 void send_quit(string code, string lines)
