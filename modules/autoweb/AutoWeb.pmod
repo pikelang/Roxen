@@ -1,5 +1,60 @@
-class md {
-  mapping get(object id, string f)
+class AutoFile {
+
+  object id;
+  
+  string real_path(string filename)
+  {
+    filename = replace(filename, "../", "");
+    return id->misc->wa->query("sites_location")+id->misc->customer_id+
+      (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
+  }
+  
+  string read(string f)
+  {
+    return Stdio.read_bytes(real_path(f));
+  }
+  
+  int save(string f, string s)
+  {
+    werror("Saving file '%s' in %s\n", f, real_path(f));
+    object file = Stdio.File(real_path(f), "cwt");
+    if(!objectp(file)) {
+      werror("Can not save file %s", f);
+      return 0;
+    }
+    file->write(s);
+    file->close;
+    return 1;
+  }
+
+  int|array stat(string f)
+  {
+    file_stat(real_path(f));
+  }
+
+  string mv(string src, string dest)
+  {
+    mv(real_path(src), real_path(dest));
+  }
+
+  void create(object _id)
+  {
+    id = _id;
+  }
+}
+
+
+class MetaData {
+
+  object id;
+
+  string container_md(string tag, mapping args, string contents, mapping md)
+  {
+    if(args->variable)
+      md[args->variable] = contents;
+  }
+  
+  mapping get(string f)
   {
     mapping md_default =  ([ "content_type":"autosite/unknown",
 			     "title":"Unknown",
@@ -7,35 +62,35 @@ class md {
 			     "keywords":"",
 			     "description":""]);
     
-    string file_name = real_path(id, f+".md");
-    string s = Stdio.read_bytes(file_name);
-    if(!s) {
-      werror("File %s does not exist.\n", file_name);
+    string s = "";
+    string s = AutoFile(id)->read(f+".md");
+    if(!s)
       return md_default;
-    }
     mapping md = ([]);
     parse_html(s, ([ ]), ([ "md":container_md ]), md);
     return ([ "content_type": md_default->content_type ]) + md;
   }
   
-  int set(object id, string f, mapping md)
+  int set(string f, mapping md)
   {
-    object file = Stdio.File(real_path(id, f+".md"), "cwt");
-    if(!file)
-      return 0;
-    
     string s = "";
     foreach(sort(indices(md)), string variable)
       s += "<md variable=\""+variable+"\">"+md[variable]+"</md>\n";
-    file->write(s);
+    if(!AutoFile(id)->save(f+".md", s))
+      return 0;
     return 1;
+  }
+  
+  void create(object _id)
+  {
+    id = _id;
   }
 }
 
 
 class menufile {
   static private string parse_item(string tag, mapping args,
-		    string contents, mapping items)
+				   string contents, mapping items)
   {
     function parseit=lambda(string tag, mapping args,
 			    string contents, mapping meta)
