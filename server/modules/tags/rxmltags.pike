@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.291 2001/08/30 22:17:51 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.292 2001/08/31 08:33:16 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5216,17 +5216,17 @@ using the pre tag.
 
 <attr name=years value=number>
  <p>Add this number of years to the result.</p>
- <ex ><date date='' years='2'/></ex>
+ <ex><date date='' years='2'/></ex>
 </attr>
 
 <attr name=months value=number>
  <p>Add this number of months to the result.</p>
- <ex ><date date='' months='2'/></ex>
+ <ex><date date='' months='2'/></ex>
 </attr>
 
 <attr name=weeks value=number>
  <p>Add this number of weeks to the result.</p>
- <ex ><date date='' weeks='2'/></ex>
+ <ex><date date='' weeks='2'/></ex>
 </attr>
 
 <attr name=days value=number>
@@ -5235,12 +5235,12 @@ using the pre tag.
 
 <attr name=hours value=number>
  <p>Add this number of hours to the result.</p>
- <ex ><date time='' hours='2' type='iso'/></ex>
+ <ex><date time='' hours='2' type='iso'/></ex>
 </attr>
 
 <attr name=beats value=number>
  <p>Add this number of beats to the result.</p>
- <ex ><date time='' beats='10' type='iso'/></ex>
+ <ex><date time='' beats='10' type='iso'/></ex>
 </attr>
 
 <attr name=minutes value=number>
@@ -5257,17 +5257,17 @@ using the pre tag.
 
 <attr name=brief>
  <p>Show in brief format.</p>
-<ex ><date brief=''/></ex>
+<ex><date brief=''/></ex>
 </attr>
 
 <attr name=time>
  <p>Show only time.</p>
-<ex ><date time=''/></ex>
+<ex><date time=''/></ex>
 </attr>
 
 <attr name=date>
  <p>Show only date.</p>
-<ex ><date date=''/></ex>
+<ex><date date=''/></ex>
 </attr>
 
 <attr name=type value=string|ordered|iso|discordian|stardate|number|unix>
@@ -5277,13 +5277,13 @@ using the pre tag.
  the precision.</p>
 
 <xtable>
-<row><c><p><i>type=discordian</i></p></c><c><p><ex ><date date='' type='discordian'/> </ex></p></c></row>
-<row><c><p><i>type=iso</i></p></c><c><p><ex ><date date='' type='iso'/></ex></p></c></row>
-<row><c><p><i>type=number</i></p></c><c><p><ex ><date date='' type='number'/></ex></p></c></row>
-<row><c><p><i>type=ordered</i></p></c><c><p><ex ><date date='' type='ordered'/></ex></p></c></row>
-<row><c><p><i>type=stardate</i></p></c><c><p><ex ><date date='' type='stardate'/></ex></p></c></row>
-<row><c><p><i>type=string</i></p></c><c><p><ex ><date date='' type='string'/></ex></p></c></row>
-<row><c><p><i>type=unix</i></p></c><c><p><ex ><date date='' type='unix'/></ex></p></c></row>
+<row><c><p><i>type=discordian</i></p></c><c><p><ex><date date='' type='discordian'/> </ex></p></c></row>
+<row><c><p><i>type=iso</i></p></c><c><p><ex><date date='' type='iso'/></ex></p></c></row>
+<row><c><p><i>type=number</i></p></c><c><p><ex><date date='' type='number'/></ex></p></c></row>
+<row><c><p><i>type=ordered</i></p></c><c><p><ex><date date='' type='ordered'/></ex></p></c></row>
+<row><c><p><i>type=stardate</i></p></c><c><p><ex><date date='' type='stardate'/></ex></p></c></row>
+<row><c><p><i>type=string</i></p></c><c><p><ex><date date='' type='string'/></ex></p></c></row>
+<row><c><p><i>type=unix</i></p></c><c><p><ex><date date='' type='unix'/></ex></p></c></row>
 </xtable>
 </attr>
 
@@ -5294,19 +5294,19 @@ using the pre tag.
  ordered applies when the part attribute is used.</p>
 
 <xtable>
-<row><c><p><i>part=year</i></p></c><c><p>Display the year.<ex ><date part='year' type='number'/></ex></p></c></row>
-<row><c><p><i>part=month</i></p></c><c><p>Display the month. <ex ><date part='month' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=day</i></p></c><c><p>Display the weekday, starting with Sunday. <ex ><date part='day' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=wday</i></p></c><c><p>Display the weekday. Same as 'day'. <ex ><date part='wday' type='string'/></ex></p></c></row>
-<row><c><p><i>part=date</i></p></c><c><p>Display the day of this month. <ex ><date part='date' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=mday</i></p></c><c><p>Display the number of days since the last full month. <ex ><date part='mday' type='number'/></ex></p></c></row>
-<row><c><p><i>part=hour</i></p></c><c><p>Display the numbers of hours since midnight. <ex ><date part='hour' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=minute</i></p></c><c><p>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></p></c></row>
-<row><c><p><i>part=second</i></p></c><c><p>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></p></c></row>
-<row><c><p><i>part=yday</i></p></c><c><p>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=beat</i></p></c><c><p>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></p></c></row>
-<row><c><p><i>part=week</i></p></c><c><p>Display the number of the current week.<ex ><date part='week' type='number'/></ex></p></c></row>
-<row><c><p><i>part=seconds</i></p></c><c><p>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></p></c></row>
+<row><c><p><i>part=year</i></p></c><c><p>Display the year.<ex><date part='year' type='number'/></ex></p></c></row>
+<row><c><p><i>part=month</i></p></c><c><p>Display the month. <ex><date part='month' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=day</i></p></c><c><p>Display the weekday, starting with Sunday. <ex><date part='day' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=wday</i></p></c><c><p>Display the weekday. Same as 'day'. <ex><date part='wday' type='string'/></ex></p></c></row>
+<row><c><p><i>part=date</i></p></c><c><p>Display the day of this month. <ex><date part='date' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=mday</i></p></c><c><p>Display the number of days since the last full month. <ex><date part='mday' type='number'/></ex></p></c></row>
+<row><c><p><i>part=hour</i></p></c><c><p>Display the numbers of hours since midnight. <ex><date part='hour' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=minute</i></p></c><c><p>Display the numbers of minutes since the last full hour. <ex><date part='minute' type='number'/></ex></p></c></row>
+<row><c><p><i>part=second</i></p></c><c><p>Display the numbers of seconds since the last full minute. <ex><date part='second' type='string'/></ex></p></c></row>
+<row><c><p><i>part=yday</i></p></c><c><p>Display the number of days since the first of January. <ex><date part='yday' type='ordered'/></ex></p></c></row>
+<row><c><p><i>part=beat</i></p></c><c><p>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex><date part='beat' type='number'/></ex></p></c></row>
+<row><c><p><i>part=week</i></p></c><c><p>Display the number of the current week.<ex><date part='week' type='number'/></ex></p></c></row>
+<row><c><p><i>part=seconds</i></p></c><c><p>Display the total number of seconds this year. <ex><date part='seconds' type='number'/></ex></p></c></row>
 </xtable>
 </attr>
 
@@ -7174,14 +7174,14 @@ just got zapped?
 
 <attr name='num' value='number' required='required'><p>
  Print this number.</p>
-<ex type='vert'><number num='4711'/></ex>
+<ex><number num='4711'/></ex>
 </attr>
 
 <attr name='language' value='langcodes'><p>
  The language to use.</p>
  <lang/>
- <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
- <ex type='vert'>Il mio numero preferito è <number num='15' language='it'/>.</ex>
+ <ex>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
+ <ex>Il mio numero preferito è <number num='15' language='it'/>.</ex>
 </attr>
 
 <attr name='type' value='number|ordered|roman|memory' default='number'><p>
