@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.195 2001/07/11 04:25:07 mast Exp $
+// $Id: module.pmod,v 1.196 2001/07/11 06:00:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -73,8 +73,8 @@ class RequestID { };
 #  define MARK_OBJECT_ONLY \
      Debug.ObjectMarker __object_marker = Debug.ObjectMarker (0)
 #else
-#  define MARK_OBJECT
-#  define MARK_OBJECT_ONLY
+#  define MARK_OBJECT ;
+#  define MARK_OBJECT_ONLY ;
 #endif
 
 #ifdef OBJ_COUNT_DEBUG
@@ -103,7 +103,7 @@ class RequestID { };
 
 #ifdef DEBUG
 #  define TAG_DEBUG(frame, msg, args...)				\
-  (TAG_DEBUG_TEST (frame->flags & FLAG_DEBUG) &&			\
+  (TAG_DEBUG_TEST (frame && frame->flags & FLAG_DEBUG) &&		\
    report_debug ("%O: " + (msg), (frame), args), 0)
 #  define DO_IF_DEBUG(code...) code
 #else
@@ -116,6 +116,9 @@ class RequestID { };
 #else
 #  define DO_IF_MODULE_DEBUG(code...)
 #endif
+
+#define _LITERAL(X) #X
+#define LITERAL(X) _LITERAL (X)
 
 #define HASH_INT2(m, n) (n < 65536 ? (m << 16) + n : sprintf ("%x,%x", m, n))
 
@@ -322,7 +325,8 @@ class Tag
   //! out, otherwise zero is returned when any such error occurs. @[ctx]
   //! specifies the context to use; it defaults to the current context.
   {
-    // Note: Code duplication in Frame._eval_args and Frame._prepare.
+    // Note: Approximate code duplication in _eval_splice_args and
+    // Frame._prepare.
     mapping(string:Type) atypes = args & req_arg_types;
     if (sizeof (atypes) < sizeof (req_arg_types))
       if (dont_throw) return 0;
@@ -458,6 +462,55 @@ class Tag
     EVAL_FRAME (frame, ctx, parser, type, result);
     if (result != nil) parser->add_value (result);
     return ({});
+  }
+
+  mapping(string:mixed) _eval_splice_args (Context ctx,
+					   mapping(string:string) raw_args,
+					   mapping(string:Type) my_req_args)
+  // Used from Frame._prepare for evaluating the dynamic arguments in
+  // the splice argument. Destructive on raw_args.
+  {
+    // Note: Approximate code duplication in eval_args and Frame._prepare.
+    mapping(string:Type) atypes =
+      raw_args & (req_arg_types | opt_arg_types);
+    if (my_req_args) {
+      mapping(string:Type) missing = my_req_args - atypes;
+      if (sizeof (missing))
+	parse_error ("Required " +
+		     (sizeof (missing) > 1 ?
+		      "arguments " + String.implode_nicely (
+			sort (indices (missing))) + " are" :
+		      "argument " + indices (missing)[0] + " is") + " missing.\n");
+    }
+
+#ifdef MODULE_DEBUG
+    if (mixed err = catch {
+#endif
+      foreach (indices (raw_args), string arg) {
+	Type t = atypes[arg] || def_arg_type;
+	if (t->parser_prog != PNone) {
+	  Parser parser = t->get_parser (ctx, ctx->tag_set, 0);
+	  TAG_DEBUG (RXML_CONTEXT->frame,
+		     "Evaluating argument value %s with %O\n",
+		     utils->format_short (raw_args[arg]), parser);
+	  parser->finish (raw_args[arg]); // Should not unwind.
+	  raw_args[arg] = parser->eval(); // Should not unwind.
+	  TAG_DEBUG (RXML_CONTEXT->frame,
+		     "Setting dynamic argument %s to %s\n",
+		     utils->format_short (arg),
+		     utils->format_short (raw_args[arg]));
+	  t->give_back (parser, ctx->tag_set);
+	}
+      }
+#ifdef MODULE_DEBUG
+    }) {
+      if (objectp (err) && ([object] err)->thrown_at_unwind)
+	fatal_error ("Can't save parser state when evaluating dynamic arguments.\n");
+      throw_fatal (err);
+    }
+#endif
+
+    return raw_args;
   }
 
   MARK_OBJECT;
@@ -2890,53 +2943,6 @@ class Frame
     }									\
   } while (0)
 
-  /*private*/ mapping(string:mixed) _eval_args (Context ctx,
-						mapping(string:string) raw_args,
-						mapping(string:Type) my_req_args)
-  // Used for evaluating the dynamic arguments in the splice argument.
-  // Destructive on raw_args.
-  {
-    // Note: Approximate code duplication in _prepare and Tag.eval_args().
-    mapping(string:Type) atypes =
-      raw_args & (tag->req_arg_types | tag->opt_arg_types);
-    if (my_req_args) {
-      mapping(string:Type) missing = my_req_args - atypes;
-      if (sizeof (missing))
-	parse_error ("Required " +
-		     (sizeof (missing) > 1 ?
-		      "arguments " + String.implode_nicely (
-			sort (indices (missing))) + " are" :
-		      "argument " + indices (missing)[0] + " is") + " missing.\n");
-    }
-
-#ifdef MODULE_DEBUG
-    if (mixed err = catch {
-#endif
-      foreach (indices (raw_args), string arg) {
-	Type t = atypes[arg] || tag->def_arg_type;
-	if (t->parser_prog != PNone) {
-	  Parser parser = t->get_parser (ctx, ctx->tag_set, 0);
-	  THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
-			  utils->format_short (raw_args[arg]), parser);
-	  parser->finish (raw_args[arg]); // Should not unwind.
-	  raw_args[arg] = parser->eval(); // Should not unwind.
-	  THIS_TAG_DEBUG ("Setting dynamic argument %s to %s\n",
-			  utils->format_short (arg),
-			  utils->format_short (raw_args[arg]));
-	  t->give_back (parser, ctx->tag_set);
-	}
-      }
-#ifdef MODULE_DEBUG
-    }) {
-      if (objectp (err) && ([object] err)->thrown_at_unwind)
-	fatal_error ("Can't save parser state when evaluating dynamic arguments.\n");
-      throw_fatal (err);
-    }
-#endif
-
-    return raw_args;
-  }
-
   EVAL_ARGS_FUNC|string _prepare (Context ctx, Type type,
 				  mapping(string:string) raw_args,
 				  PCode p_code)
@@ -2965,7 +2971,8 @@ class Frame
 	else
 #endif
 	  if (sizeof (raw_args)) {
-	    // Note: Approximate code duplication in _eval_args and Tag.eval_args().
+	    // Note: Approximate code duplication in Tag.eval_args and
+	    // Tag._eval_splice_args.
 
 	    string splice_arg = raw_args["::"];
 	    if (splice_arg) m_delete (raw_args, "::");
@@ -3012,13 +3019,13 @@ class Frame
 #endif
 	      if (p_code)
 		fn_text_add (
-		  "return ", p_code->bind (_eval_args), "(ctx,",
+		  "return ", p_code->bind (tag->_eval_splice_args), "(ctx,",
 		  p_code->bind (xml_tag_parser->parse_tag_args), "((",
 		  parser->p_code->_compile_text(), ")||\"\"),",
 		  p_code->bind (splice_req_types), ")+([\n");
 	      splice_arg_type->give_back (parser, ctx->tag_set);
-	      args = _eval_args (ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
-				 splice_req_types);
+	      args = tag->_eval_splice_args (
+		ctx, xml_tag_parser->parse_tag_args (splice_arg || ""), splice_req_types);
 	    }
 	    else {
 	      args = raw_args;
@@ -5846,7 +5853,14 @@ static class PikeCompile
     COMP_MSG ("%O compile\n", this_object());
     code->add("mixed _encode() { } void _decode(mixed v) { }\n"
 	      "constant is_RXML_pike_code = 1;\n"
-	      "constant is_RXML_encodable = 1;\n");
+	      "constant is_RXML_encodable = 1;\n"
+	      LITERAL (MARK_OBJECT) ";\n"
+#ifdef DEBUG
+	      "string _sprintf() {return \"object(compiled RXML code)\" + "
+	      LITERAL (OBJ_COUNT)
+	      ";}\n"
+#endif
+	     );
 
     program res;
     string txt = code->get();
@@ -6249,15 +6263,15 @@ static class PCodec
     if (arrayp (what) && sizeof (what)) {
       ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
       switch (what[0]) {
-	case "frame": {
-	  [string ignored, Tag tag,
-	   mapping(string:mixed)|EVAL_ARGS_FUNC args, mixed saved] = what;
-	  Frame frame = tag->Frame();
-	  frame->tag = tag;
-	  frame->args = args;
-	  frame->_restore (saved);
-	  return frame;
-	}
+//  	case "frame": {
+//  	  [string ignored, Tag tag,
+//  	   mapping(string:mixed)|EVAL_ARGS_FUNC args, mixed saved] = what;
+//  	  Frame frame = tag->Frame();
+//  	  frame->tag = tag;
+//  	  frame->args = args;
+//  	  frame->_restore (saved);
+//  	  return frame;
+//  	}
 	case "tag": {
 	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
 	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
@@ -6346,8 +6360,8 @@ static class PCodec
     if(objectp(what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
       if(what->is_RXML_Frame) {
-	if (Tag tag = what->tag)
-	  return ({"frame", tag, what->args, what->_save()});
+//  	if (Tag tag = what->tag)
+//  	  return ({"frame", tag, what->args, what->_save()});
 	ENCODE_MSG ("encoding frame %O recursively\n", what);
 	return ([])[0];
       }
