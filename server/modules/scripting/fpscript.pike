@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.11 2001/01/13 18:21:05 nilsson Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.12 2001/04/17 07:49:48 per Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
@@ -48,11 +48,8 @@ void start() {
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Frontpage Script support";
-constant module_doc  = "This module is an extension to the normal CGI module. The main "
-  "differences are that this module is mainly a MODULE_FIRST. The reason "
-  "for this is that otherwise you most likely would have to fight with "
-  "priority levels to make it work correctly. It's there to make the setup "
-  "procedure easier. Also this module's default mountpoint is <tt>/</tt>. "
+constant module_doc  = "This module is an extension to the normal CGI module. "
+  "This module's default mountpoint is <tt>/</tt>. "
   "The "
   "reason for this is that we need to be able to handle Frontpage sub-webs. "
   "<p>Another feature is that you easily can modify the value of the "
@@ -66,7 +63,7 @@ int|object(Stdio.File)|mapping find_file(string f, RequestID id)
 #ifdef FPSCRIPT_DEBUG
   werror("FPScript: find_file(%O)\n", f);
 #endif
-  if(!has_prefix(f, "_vti_bin/"))
+  if(search(f, "_vti_bin/") == -1)
     return 0;
   return ::find_file(f, id);
 }
@@ -76,7 +73,7 @@ array(string) find_dir(string f, RequestID id)
 #ifdef FPSCRIPT_DEBUG
   werror("FPScript: find_dir(%O)\n", f);
 #endif
-  if(!has_prefix(f, "_vti_bin/"))
+  if(search(f, "_vti_bin/") == -1)
     return 0;
   return ::find_dir(f, id);
 }
