@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.42 2000/08/22 19:25:36 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.43 2000/08/23 14:13:18 jhs Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -968,7 +968,7 @@ string query_location()
 int run_as_user_enabled() { return (getuid() || !query("user")); }
 void create(Configuration conf)
 {
-  defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
+  defvar("env", Variable.Flag(0, VAR_MORE, "Pass environment variables",
 	 "If this is set, all environment variables roxen has will be "
          "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
          "This includes PATH. (For a quick test, try this script with "
@@ -978,59 +978,56 @@ void create(Configuration conf)
          "echo Content-type: text/plain\n"
 	 "echo ''\n"
 	 "env\n"
-	 "</pre>)");
+	 "</pre>)"));
 
-  defvar("rxml", 0, "Parse RXML in CGI-scripts", TYPE_FLAG|VAR_MORE,
+  defvar("rxml", Variable.Flag(0, VAR_MORE, "Parse RXML in CGI-scripts",
 	 "If this is set, the output from CGI-scripts handled by this "
          "module will be RXMl parsed. NOTE: No data will be returned to the "
-         "client until the CGI-script is fully parsed.");
+         "client until the CGI-script is fully parsed."));
 
-  defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD|VAR_MORE,
+  defvar("extra_env", Variable.Text("", VAR_MORE, "Extra environment variables",
 	 "Extra variables to be sent to the script, format:<pre>"
 	 "NAME=value\n"
 	 "NAME=value\n"
-	 "</pre>Please note that normal CGI variables will override these.");
+	 "</pre>Please note that normal CGI variables will override these."));
 
-  defvar("location", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION,
+  defvar("location", Variable.Location("/cgi-bin/", 0, "CGI-bin path",
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. The module will, per default, also"
 	 " service one or more extensions, from anywhere in the "
-	 "namespace.");
+	 "namespace."));
 
-  defvar("searchpath", "NONE/", "Search path", TYPE_DIR,
+  defvar("searchpath", Variable.Directory("NONE/", VAR_INITIAL, "Search path",
 	 "This is where the module will find the CGI scripts in the <b>real</b> "
-	 "file system.");
+	 "file system."));
 
-  defvar("ls", 0, "Allow listing of cgi-bin directory", TYPE_FLAG,
+  defvar("ls", Variable.Flag(0, 0, "Allow listing of cgi-bin directory",
 	 "If set, the users can get a listing of all files in the CGI-bin "
-	 "directory.");
+	 "directory."));
 
-  defvar("ex", 1, "Handle *.cgi", TYPE_FLAG,
+  defvar("ex", Variable.Flag(1, 0, "Handle *.cgi",
 	 "Also handle all '.cgi' files as CGI-scripts, as well "
 	 " as files in the cgi-bin directory. This emulates the behaviour "
 	 "of the Apache server (the extensions to handle can be set in the "
-	 "CGI-script extensions variable).");
+	 "CGI-script extensions variable)."));
 
-  defvar("ext",
-	 ({"cgi",
+  defvar("ext", Variable.StringList(({ "cgi",
 #ifdef __NT__
 	   "exe",
 #endif
-	 }), "CGI-script extensions", TYPE_STRING_LIST,
+	 }), 0, "CGI-script extensions",
          "All files ending with these extensions, will be parsed as "+
-	 "CGI-scripts.");
+	 "CGI-scripts."));
 
-  defvar("stderr","main log file",
-	 "Log CGI errors to...", TYPE_STRING_LIST,
+  defvar("stderr", Variable.StringChoice("main log file",
+	 ({ "main log file", "custom log file", "browser" }), 0,
+	 "Log CGI errors to...",
 	 "By changing this variable you can select where error messages "
 	 "(which means all text written to stderr) from "
 	 "CGI scripts should be sent. By default they will be written to the "
 	 "main log file - logs/debug/[name-of-configdir].1. You can also "
 	 "choose to send the error messages to a special log file or to the "
-	 "browser.\n",
-	 ({ "main log file",
-	    "custom log file",
-	    "browser" }));
+	 "browser.\n"));
 
   defvar("cgilog", GLOBVAR(logdirprefix)+
 	 Roxen.short_name(conf? conf->name:".")+"/cgi.log",
@@ -1046,19 +1043,18 @@ void create(Configuration conf)
 	 "%h    Hour  (i.e. '00')\n</pre>", 0,
 	 lambda() { return (query("stderr") != "custom log file"); });
 
-  defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
+  defvar("rawauth", Variable.Flag(0, VAR_MORE, "Raw user info",
 	 "If set, the raw, unparsed, user info will be sent to the script, "
 	 " in the HTTP_AUTHORIZATION environment variable. This is not "
 	 "recommended, but some scripts need it. Please note that this "
-	 "will give the scripts access to the password used.");
+	 "will give the scripts access to the password used."));
 
-  defvar("clearpass", 0, "Send decoded password", TYPE_FLAG|VAR_MORE,
+  defvar("clearpass", Variable.Flag(0, VAR_MORE, "Send decoded password",
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
-	 "password value.");
+	 "password value."));
 
-  defvar("cgi_tag", 1, "Provide the &lt;cgi&gt; and &lt;runcgi&gt; tags",
-	 TYPE_FLAG,
-	 "If set, the &lt;cgi&gt; and &lt;runcgi&gt; tags will be available.");
+  defvar("cgi_tag", Variable.Flag(1, 0, "Provide the <cgi> and <runcgi> tags",
+	 "If set, the &lt;cgi&gt; and &lt;runcgi&gt; tags will be available."));
 
   defvar("priority", "normal", "Limits: Priority", TYPE_STRING_LIST,
          "The priority, in somewhat general terms (for portability, this works on "
@@ -1077,19 +1073,19 @@ void create(Configuration conf)
 #if UNIX
          ,lambda(){return query("nice");}
 #endif
-         );
+           );
 #if UNIX
-  defvar("noexec", 1, "Treat non-executable files as ordinary files",
-	 TYPE_FLAG,
+  defvar("noexec", Variable.Flag(1, 0, "Treat non-executable"
+				 " files as ordinary files",
 	 "If this flag is set, non-executable files will be returned "
 	 "as normal files to the client. Otherwise an error message "
-	 "will be returned.");
+	 "will be returned."));
 
   defvar("warn_root_cgi", 1, "Warn for CGIs executing as root", TYPE_FLAG,
-	 "If this flag is set, a warning will be issued to the event and "
-         " debug log when a script is run as the root user. This will "
-         "only happend if the 'Run scripts as' variable is set to root (or 0)",
-         0, getuid);
+  	 "If this flag is set, a warning will be issued to the event and "
+	 " debug log when a script is run as the root user. This will "
+	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
+	 0, getuid);
 
   defvar("runuser", "", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
@@ -1102,11 +1098,12 @@ void create(Configuration conf)
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, getuid);
 
-  defvar("setgroups", 1, "Set the supplementary group access list", TYPE_FLAG,
+  defvar("setgroups", Variable.Flag(1, 0, "Set the supplementary"
+				    " group access list",
 	 "If set, the supplementary group access list will be set for "
 	 "the CGI scripts. This can slow down CGI-scripts significantly "
 	 "if you are using eg NIS+. If not set, the supplementary group "
-	 "access list will be cleared.");
+	 "access list will be cleared."));
 
   defvar("allow_symlinks", 1, "Allow symlinks", TYPE_FLAG,
 	 "If set, allows symbolic links to binaries owned by the directory "
@@ -1114,43 +1111,45 @@ void create(Configuration conf)
 	 "NOTE: This option only has effect if scripts are run as owner.",
 	 0, run_as_user_enabled);
 
-  defvar("nice", 0, "Limits: Nice value", TYPE_INT|VAR_MORE,
+  defvar("nice", Variable.Int(0, VAR_MORE, "Limits: Nice value",
 	 "The nice level to use when running scripts. "
 	 "20 is nicest, and 0 is the most aggressive available to "
 	 "normal users. Defining the Nice value to anyting but 0 will override"
-         " the 'Priority' setting.");
+         " the 'Priority' setting."));
 
-  defvar("coresize", 0, "Limits: Core dump size", TYPE_INT|VAR_MORE,
-	 "The maximum size of a core-dump, in 512 byte blocks."
-	 " -2 is unlimited.");
+  defvar("coresize", Variable.Int(0, VAR_MORE, "Limits: Core dump size",
+	 "The maximum size of a core-dump, in 512 byte blocks. "
+	 "-2 is unlimited."));
 
-  defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST|VAR_MORE,
-	 "The maximum CPU time the script might use in seconds. -2 is unlimited.",
-	 ({ -2, 10, 30, 60, 120, 240 }));
+  defvar("maxtime", Variable.IntChoice(60, ({ -2, 10, 30, 60, 120, 240 }),
+				       VAR_MORE, "Limits: Maximum CPU time",
+				       "The maximum CPU time the script might "
+				       "use in seconds. -2 is unlimited."));
 
-  defvar("datasize", -2, "Limits: Memory size", TYPE_INT|VAR_EXPERT,
-	 "The maximum size of the memory used, in Kb. -2 is unlimited.");
+  defvar("datasize", Variable.Int(-2, VAR_EXPERT, "Limits: Memory size",
+	 "The maximum size of the memory used, in Kb. -2 is unlimited."));
 
-  defvar("filesize", -2, "Limits: Maximum file size", TYPE_INT|VAR_EXPERT,
+  defvar("filesize", Variable.Int(-2, VAR_EXPERT, "Limits: Maximum file size",
 	 "The maximum size of any file created, in 512 byte blocks. -2 "
-	 "is unlimited.");
+	 "is unlimited."));
 
-  defvar("open_files", 64, "Limits: Maximum number of open files",
-	 TYPE_INT_LIST|VAR_MORE,
+  defvar("open_files", Variable.IntChoice(64, ({ 64,128,256,512,1024,2048 }),
+					  VAR_MORE, "Limits: Maximum "
+					  "number of open files",
 	 "The maximum number of files the script can keep open at any time. "
          "It is not possible to set this value over the system maximum. "
          "On most systems, there is no limit, but some unix systems still "
-         "have a static filetable (Linux and *BSD, basically).",
-	 ({64,128,256,512,1024,2048}));
+         "have a static filetable (Linux and *BSD, basically)."));
 
-  defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
-	 "The maximum size of the stack used, in kilobytes. -2 is unlimited.");
+  defvar("stack", Variable.Int(-2, VAR_EXPERT, "Limits: Stack size",
+	 "The maximum size of the stack used, in kilobytes. -2 is unlimited."));
 #endif
 
-  defvar("kill_call_out", 0, "Limits: Time before killing scripts",
-	 TYPE_INT_LIST|VAR_MORE,
+  defvar("kill_call_out", Variable.IntChoice(0, ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }),
+					     VAR_MORE, "Limits: Time "
+					     "before killing scripts",
 	 "The maximum real time the script might run in minutes before it's "
-	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
+	 "killed. 0 means unlimited."));
 }
 
 int|string container_runcgi( string tag, mapping args, string cont, RequestID id )
