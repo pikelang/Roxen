@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.175 2001/06/26 20:13:10 mast Exp $
+// $Id: module.pmod,v 1.176 2001/06/26 22:23:34 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5909,13 +5909,13 @@ class PCode
 	  if (!stringp (argfunc))
 	    argfunc = comp->bind (argfunc);
 	  parts[pos] = sprintf (
-	    "(%s->args == 1 ? %[0]s->args = 0, %[0]s : %[0]s->clone())"
+	    "(%s.args == 1 ? %[0]s.args = 0, %[0]s : %[0]s.clone())"
 	    "->_eval (context, 0, %s, %s, %s)",
 	    comp->bind (p_code[pos]), typevar, argfunc, comp->bind (p_code[++pos]));
 	  continue;
 	}
 	else if (item->is_RXML_VarRef) {
-	  parts[pos] = sprintf ("%s->get (context, %s)",
+	  parts[pos] = sprintf ("%s.get (context, %s)",
 				comp->bind (p_code[pos]), typevar);
 	  continue;
 	}
