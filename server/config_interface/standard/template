@@ -102,9 +102,9 @@
 </define>
 
 <define container="cv-obox">
-  <table cellpadding="1" cellspacing="0" border="0" width="202" align="center" bgcolor="&usr.obox-border;">
+  <table cellpadding="1" cellspacing="0" border="0" width="&_.width;" align="center" bgcolor="&usr.obox-border;">
   <tr><td>
-  <table cellpadding="2" cellspacing="0" border="0" width="200" align="center">
+  <table cellpadding="2" cellspacing="0" border="0" width="&_.iwidth;" align="center">
   <tr bgcolor="&usr.obox-titlebg;">
     <td valign="top">
       <font color="&usr.obox-titlefg;" face="&usr.obox-titlefont;"
@@ -120,7 +120,12 @@
 </define>
 
 <define container='box'>
-   <cv-obox title='&_.title;'><contents/></cv-obox>
+ <if variable="_.type is small">
+   <cv-obox width=300 iwidth=298 title='&_.title;'><contents/></cv-obox>
+ </if>
+ <else>
+   <cv-obox width=400 iwidth=398 title='&_.title;'><contents/></cv-obox>
+ </else>
 </define>
 
 <define container="subtablist">
