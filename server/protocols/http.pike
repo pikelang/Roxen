@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.244 2000/08/14 19:54:19 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.245 2000/08/14 22:50:50 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1101,7 +1101,7 @@ void end(string|void s, int|void keepit)
   if(elapsed > p[2]) p[2]=elapsed;
 #endif
 
-  if(keepit 
+  if(keepit
      && !file->raw  
      && (misc->connection == "keep-alive" ||
          (prot == "HTTP/1.1" && misc->connection != "close"))
@@ -1116,10 +1116,11 @@ void end(string|void s, int|void keepit)
     o->conf = conf;
     o->pipe = pipe;
     MARK_FD("HTTP kept alive");
-    o->chain( my_fd, port_obj, leftovers );
-    my_fd = 0;
+    object fd = my_fd;
+    my_fd=0;
+    o->chain(fd,port_obj,leftovers);
     pipe = 0;
-    destruct();
+    disconnect();
     return;
   }
 
@@ -1134,7 +1135,7 @@ void end(string|void s, int|void keepit)
     };
     my_fd = 0;
   }
-  destruct();
+  disconnect();
 }
 
 static void do_timeout()
@@ -2008,7 +2009,7 @@ void got_data(mixed fooid, string s)
 
   TIMER("charset");
 
-  if( !conf )
+  if( !conf || !conf->path[port_obj] )
   {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
@@ -2032,6 +2033,16 @@ void got_data(mixed fooid, string s)
     //       }
     //     }
   }
+  else
+  {
+    string path;
+    if(strlen(path = conf->path[ port_obj ]))
+    {
+      not_query = not_query[strlen(path)..];
+      misc->site_prefix_path = path;
+    }
+  }
+
 
   TIMER("conf");
 
@@ -2198,10 +2209,11 @@ void chain(object f, object c, string le)
   my_fd = f;
   port_obj = c;
   processed = 0;
+  do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("Kept alive");
   time = _time(1);
 
-  if( strlen( le ) ) 
+  if ( strlen( le ) )
     got_data( 0,le );
   else
   {
@@ -2210,10 +2222,22 @@ void chain(object f, object c, string le)
     call_out(do_timeout, 150);
   }
 
-  if( !processed )
+  if(!my_fd)
   {
-    f->set_close_callback( end );
-    f->set_read_callback( got_data );
+    if(do_not_disconnect == -1)
+    {
+      do_not_disconnect=0;
+      disconnect();
+    }
+  }
+  else
+  {
+    if(do_not_disconnect == -1)
+      do_not_disconnect = 0;
+    if(!processed)
+    {
+      f->set_nonblocking(got_data, 0, end);
+    }
   }
 }
 

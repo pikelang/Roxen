@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.519 2000/08/12 21:26:36 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.520 2000/08/14 22:50:52 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -644,7 +644,10 @@ class Protocol
       urls[name] = data;
       return; // only ref once per URL
     }
-
+    if( !zero_type( data->conf->path[ this_object() ] ) )
+      data->conf->path[ this_object() ] = 0;
+    else
+      data->conf->path[ this_object() ] = data->path || "";
     refs++;
     urls[name] = data;
     sorted_urls = Array.sort_array(indices(urls), lambda(string a, string b) {
@@ -657,6 +660,7 @@ class Protocol
   {
     if(!urls[name]) // only unref once
       return;
+    m_delete( urls[name]->conf->path, this_object() );
     m_delete(urls, name);
     sorted_urls -= ({name});
     if( !--refs )
@@ -817,7 +821,6 @@ class Protocol
     restore();
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
-
     ::create();
     if(!bind( port, got_connection, ip ))
     {
@@ -1565,6 +1568,7 @@ void unregister_url( string url )
 {
   url = lower_case( url );
   report_debug("Unregister "+url+"\n");
+
   if( urls[ url ] && urls[ url ]->port )
   {
     urls[ url ]->port->unref(url);
