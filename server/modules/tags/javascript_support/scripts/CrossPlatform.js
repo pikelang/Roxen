@@ -3,7 +3,7 @@
 
 // Global variables
 var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,
-    isMacIE50 = false;
+  isMacIE50 = false, isSafari = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
@@ -32,6 +32,7 @@ if (navigator.appVersion.charAt(0) == "4") {
 
 //  MSIE 5.0 for Mac breaks FileLoader object after first use...
 isMacIE50 = isMac && navigator.appVersion.match("MSIE 5.0");
+isSafari = navigator.appVersion.match("AppleWebKit");
 
 
 // Convert object name string or object reference
