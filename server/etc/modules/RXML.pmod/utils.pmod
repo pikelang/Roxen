@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.14 2000/09/05 21:01:00 mast Exp $
+//! $Id: utils.pmod,v 1.15 2001/03/01 03:12:57 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -75,16 +75,16 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
 			    // in things like "nice><evil stuff='...'"?
 			    RXML.t_text :
 			    p->type);
-    if (p->type->encoding_type != "xml") {
-      // Don't decode any normal entities if we're outputting xml-like stuff.
-      if (!p->type->free_text) return ({});
-      string out;
-      if ((<"#x", "#X">)[entity[..1]]) {
-	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = sprintf ("%c", c);
-      }
-      else
-	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = sprintf ("%c", c);
-      return out && ({out});
+    if (!p->type->entity_syntax) {
+      // Don't decode normal entities if we're outputting xml-like stuff.
+      if (!p->type->free_text)
+	RXML.parse_error ("Unknown entity &%s; not allowed in this context.\n", entity);
+      if (sscanf (entity,
+		  (<"#x", "#X">)[entity[..1]] ? "%*2s%x%*c" : "%*c%d%*c",
+		  int char) == 2)
+	catch {return ({(string) ({char})});};
+      // Lax error handling: Just let it through if it can't be
+      // converted. Not really good, though.
     }
   }
   if (!p->type->free_text)
