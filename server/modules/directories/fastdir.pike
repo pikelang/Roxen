@@ -2,7 +2,7 @@
 
 // A fast directory module, without support for the fold/unfold stuff
 // in the normal one.
-string cvs_version = "$Id: fastdir.pike,v 1.7 1997/03/26 05:54:10 per Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.8 1997/08/13 17:54:58 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -29,6 +29,13 @@ void create()
 
   defvar("readme", 1, "Include readme files", TYPE_FLAG,
 	 "If set, include readme files in directory listings");
+
+  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
+	 "If this variable is set, you can get a listing of all files "
+	 "in a directory by prepending '.' or '/' to the directory name, like "
+	 "this: <a href=http://roxen.com//>http://roxen.com//</a>"
+	 ". It is _very_ useful for debugging, but some people regard it as a "
+	 "security hole.");
 }
 
 /*  Module specific stuff */
@@ -115,7 +122,7 @@ string describe_dir_entry(string path, string filename, array stat)
 		 sizetostring(len), type);
 }
 
-string key;
+static private string key;
 
 void start()
 {
@@ -150,26 +157,42 @@ mapping parse_directory(object id)
 
   if(strlen(f) > 1)
   {
-    if(!((f[-1] == '/') || ((f[-1] == '.') && (f[-2] == '/'))))
+    if(!((f[-1] == '/') ||
+	 (QUERY(override) && (f[-1] == '.') && (f[-2] == '/'))))
       return http_redirect(id->not_query+"/", id);
   } else {
     if(f != "/" )
       return http_redirect(id->not_query+"/", id);
   }
 
-  if(f[-1] != '.') /* Handle indexfiles */
+  // At this point the last character is either
+  // a '.' in which case we should give a directory listing,
+  // or a '/' in which case we should search for an index-file.
+  if(f[-1] == '/') /* Handle indexfiles */
   {
     string file;
-    foreach(query("indexfiles"), file)
+    foreach(query("indexfiles") - ({""}), file) {
       if(roxen->stat_file(f+file, id))
       {
-	id->not_query += file;
-	return roxen->get_file(id);
+	id->not_query = f + file;
+	mapping got = roxen->get_file(id);
+	if (got) {
+	  return(got);
+	}
       }
+    }
+    // Restore the old query.
+    id->not_query = f;
   }
 
-  if(id->pragma["no-cache"] || !(dir = cache_lookup(key, f)))
+  if (f[-1] == '.') {
+    // Remove the override '.'.
+    f = f[..sizeof(f)-2];
+  }
+  
+  if(id->pragma["no-cache"] || !(dir = cache_lookup(key, f))) {
     cache_set(key, f, dir=new_dir(f, id));
+  }
   return http_string_answer(head(f, id) + dir);
 }
 
