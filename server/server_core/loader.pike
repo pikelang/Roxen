@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.368 2003/01/14 20:54:47 marcus Exp $
+// $Id: loader.pike,v 1.369 2003/01/14 21:18:02 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.368 2003/01/14 20:54:47 marcus Exp $";
+constant cvs_version="$Id: loader.pike,v 1.369 2003/01/14 21:18:02 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -158,7 +158,7 @@ string describe_backtrace (mixed err, void|int linewidth)
 }
 
 static int(0..5) last_was_change;
-int(2..2147483647) roxen_started = [int(2..2147483647)]time();
+int(2..2147483647) roxen_started = time();
 float roxen_started_flt = time(time());
 string short_time()
 {
@@ -2001,7 +2001,7 @@ void do_main( int argc, array(string) argv )
     "SECURITY defined (the internal security system in ChiliMoon), but the Pike "
     "binary has not been compiled --with-security. This makes it impossible "
     "for ChiliMoon to have any internal security at all." }) );
-  exit(-1);
+  exit(0);
 #endif // !constant(__builtin.security.Creds)
 #endif // SECURITY
 
@@ -2023,7 +2023,7 @@ void do_main( int argc, array(string) argv )
   feature_warn("FATAL", ({
     "ChiliMoon requires pike 7.4. "
     "Please install a newer version of Pike." }) );
-  _exit(0); // 0 means stop start script looping
+  exit(0); // 0 means stop start script looping
 #endif // __VERSION__ < 7.4
 
 #if !constant (Mysql.mysql)
@@ -2032,7 +2032,7 @@ void do_main( int argc, array(string) argv )
     "Your Pike has been compiled without support for MySQL. "
     "Please install MySQL client libraries and reconfigure "
     "and rebuild Pike from scratch." }) );
-  _exit(0); // 0 means stop start script looping
+  exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
 
 #if !constant( Gz.inflate )
@@ -2128,7 +2128,7 @@ void do_main( int argc, array(string) argv )
   }) {
     werror("Initialization of ChiliMoon's master failed:\n"
 	   "%s\n", describe_backtrace(err));
-    exit(1);
+    exit(0);
   }
 
   add_constant("spawne",spawne);
@@ -2157,7 +2157,7 @@ void do_main( int argc, array(string) argv )
   if(file_stat(data/fonts/rbf))
     add_constant("__rbf", "data/fonts/rbf" );
 #else
-  feature_warn("WARNING", ({
+  feature_warn("FATAL", ({
     "The Image.TTF (freeetype) module is not available. "
     "True Type fonts and the default font  will not be available. "
     "To get TTF support, download a Freetype 1 package from",
@@ -2167,6 +2167,7 @@ void do_main( int argc, array(string) argv )
     "to recompile the pike binary, since the one included should "
     "already have the FreeType interface module, installing the  "
     "library should be enough." }) );
+  exit(0);
 #endif
 #endif
 
