@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.212 2001/07/25 18:48:07 mast Exp $
+// $Id: module.pmod,v 1.213 2001/07/25 19:28:19 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4067,7 +4067,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       else if (mixed err = scope_got_type && want_type && val != nil &&
 	       !(objectp (val) && ([object] val)->rxml_var_eval) &&
 	       catch (want_type->type_check (val)))
-	if (([object] err)->is_RXML_Backtrace)
+	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
 	  fatal_error ("%O->`[] didn't return a value of the correct type:\n%s",
 		       scope, err->msg);
 	else throw (err);
@@ -4139,7 +4139,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       return ([])[0];
 #ifdef MODULE_DEBUG
     else if (mixed err = want_type && catch (want_type->type_check (val)))
-      if (([object] err)->is_RXML_Backtrace)
+      if (objectp (err) && ([object] err)->is_RXML_Backtrace)
 	fatal_error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
 		     val_obj, err->msg);
       else throw (err);
@@ -5335,6 +5335,8 @@ static class TAny
   constant conversion_type = 0;
   constant handle_literals = 1;
 
+  void type_check (mixed val, void|string msg, mixed... args) {}
+
   mixed encode (mixed val, void|Type from)
   {
     return val;
@@ -6482,7 +6484,8 @@ class PCode
       if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
       exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
-      if (!stringp (frame->args) && !functionp (frame->args) && !mappingp (frame->args))
+      if (!stringp (frame->args) && !functionp (frame->args) &&
+	  (frame->flags & FLAG_PROC_INSTR ? frame->args != 0 : !mappingp (frame->args)))
 	error ("Invalid args %s in frame about to be added to p-code.\n",
 	       format_short (frame->args));
 #endif
