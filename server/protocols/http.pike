@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.422 2004/03/03 15:37:46 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.423 2004/03/03 16:28:55 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1543,7 +1543,7 @@ void send_result(mapping|void result)
   {
     misc->no_proto_cache = 1;
     if(misc->error_code)
-      file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
+      file = Roxen.http_status(misc->error_code, errors[misc->error]);
     else if(err = catch {
       file = conf->error_file( this_object() );
     })
@@ -1632,8 +1632,7 @@ void send_result(mapping|void result)
 	     )
 	{
 	  file->error = 304;
-	  file->file = 0;
-	  file->data="";
+	  file->file = file->data = file->type = 0;
 	}
       }
 
@@ -1720,15 +1719,24 @@ void send_result(mapping|void result)
               file->error = 416;
               heads["Content-Range"] = "*/"+file->len;
               if(method == "GET") {
-                file->data = "The requested byte range is out-of-bounds. Sorry.";
-                file->len = strlen(file->data);
-                file->file = 0;
+		file->rettext = "The requested byte range is out-of-bounds. Sorry.";
+		file->file = file->data = file->type = 0;
               }
             }
           }
 	}
 
 	if ((head_string = file->rettext)) {
+	  if (!file->file && !file->data &&
+	      (!file->type || file->type == "text/html")) {
+	    // If we got no body then put the message there to make it
+	    // more visible.
+	    file->data = "<html><body>" +
+	      replace (Roxen.html_encode_string (head_string), "\n", "<br />\n") +
+	      "</body></html>";
+	    file->len = sizeof (file->data);
+	    file->type = "text/html";
+	  }
 	  if (has_value (head_string, "\n"))
 	    // Fold lines nicely.
 	    head_string = map (head_string / "\n", String.trim_all_whites) * " ";
