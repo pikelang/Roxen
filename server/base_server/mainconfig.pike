@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.66 1997/08/13 22:06:05 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.67 1997/08/13 22:07:20 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -9,7 +9,7 @@ string status_row(object node);
 string display_tabular_header(object node);
 object get_template(string t);
 
-/* Work-around for Simulate.perror */#
+/* Work-around for Simulate.perror */
 #define perror roxen_perror
 
 #include <confignode.h>
