@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.565 2004/05/03 20:24:26 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.566 2004/05/04 13:01:31 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1382,11 +1382,11 @@ int(-2..1)|DAVLock check_locks(string path, int(0..1) recursive, RequestID id)
   return 0;
 }
 
-//! Unlock the lock identifier by @[locktoken] on @[path].
+//! Unlock the lock represented by @[lock] on @[path].
 //!
 //! @returns
 //!   Returns a result-mapping on error, and @expr{0@} (zero) on success.
-mapping(string:mixed) unlock_file(string path, string locktoken, RequestID id)
+mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
 {
   // Canonicalize path.
   if (!has_suffix(path, "/")) path+="/";
@@ -1397,13 +1397,20 @@ mapping(string:mixed) unlock_file(string path, string locktoken, RequestID id)
     if (has_prefix(path, loc)) {
       // path == loc + subpath.
       mapping(string:mixed) ret =
-	function_object(func)->unlock_file(path[sizeof(loc)..], locktoken, id);
+	function_object(func)->unlock_file(path[sizeof(loc)..], lock, id);
+
+      // FIXME: Semantics for partial unlocking?
+      if (ret) return ret;
+    } else if (lock->recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      mapping(string:mixed) ret =
+	function_object(func)->unlock_file("/", lock, id);
 
       // FIXME: Semantics for partial unlocking?
       if (ret) return ret;
     }
   }
-
+  // destruct(lock);
   return 0;
 }
 
@@ -1467,12 +1474,25 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
     mapping(string:mixed)|DAVLock new_lock =
       function_object(func)->lock_file(subpath, lock, id);
-    if (new_lock) {
-      if (mappingp(new_lock)) {
-	// Failure. Unlock the new lock.
-	unlock_file(path, locktoken, id);
-	return new_lock;
+    if (mappingp(new_lock)) {
+      // Failure. Unlock the new lock.
+      foreach(location_module_cache||location_modules(),
+	      [string loc2, function func2])
+      {
+	if (has_prefix(path, loc2)) {
+	  // path == loc2 + subpath.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file(path[sizeof(loc2)..],
+						lock, id);
+	} else if (recursive && has_prefix(loc2, path)) {
+	  // loc2 == path + ignored.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file("/", lock, id);
+	}
+	if (func == func2) break;
       }
+      // destruct(lock);
+      return new_lock;
     }
   }
 
