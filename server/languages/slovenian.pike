@@ -6,7 +6,7 @@
    Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.7 1997/09/08 11:31:16 grubba Exp $";
+string cvs_version = "$Id: slovenian.pike,v 1.8 1997/09/29 21:07:39 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",
@@ -106,7 +106,7 @@ string date(int timestamp, mapping|void m)
   
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
-    return (t1["mon"]+1 + ". " + month(t1["mday"]+1));
+    return (t1["mday"]+1 + ". " + month(t1["mon"]+1));
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
