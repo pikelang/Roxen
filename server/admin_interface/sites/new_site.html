@@ -44,7 +44,7 @@ name="new">&var.create_txt;</submit-gbutton2>
      </if>
      <if variable='form.new..x'>
         <insert file='create_site.pike'/>
-        <redirect to='site.html/&form.name:http;/' />
+        <redirect to='site.html/&form.name;/' />
      </if>
      <else>
        <eval>&var.common:none;</eval>
