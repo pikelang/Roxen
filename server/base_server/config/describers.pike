@@ -51,8 +51,8 @@ string describe_errors(object node)
 		   + err + "<hr noshade size=1>" });
 
   if(node->folded)
-    return (link("<font size=+2>Error and debug log</font>"));
-  return (link("<font size=+2>Error and debug log")
+    return (link("<font size=+2>&nbsp;Error and debug log</font>"));
+  return (link("<font size=+2>&nbsp;Error and debug log")
 	  + "</font><dd><pre>"+
 	  (sizeof(report)?(report*""):"Empty")+"</pre>");
 }
@@ -458,7 +458,7 @@ array describe_global_status(object node)
   if(node->folded)
     return ({"", ""});
   
-  res =  "<h2>Server uptime: " 
+  res =  "<h2>&nbsp;Server uptime: " 
     + roxen->msectos((time(1) - roxen->start_time)*1000)
     + "</h2>";
 
