@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.97 2002/10/26 00:35:22 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.98 2002/10/30 18:20:57 nilsson Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -19,11 +19,11 @@ constant default_template= #"
 
 <html>
   <head><title>Listing of &page.virtfile;</title></head>
-  <body bgcolor='white' text='black' link='#bf2727' vlink='#bf2727'>
-     <chili align='right' size='small' />
+  <body bgcolor='black' text='black' link='#bf2727' vlink='#bf2727'>
+     <chili align='right' size='small' color='black' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&roxen.path;&_.path:http;'> &_.name; <font color='black'>/</font></a>
+     <a href='&roxen.path;&_.path:http;'> &_.name; <font color='#808080'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -72,7 +72,7 @@ constant default_template= #"
             directory='&page.virtfile;'
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
-        <tr bgcolor='#eeeeee'>
+        <tr bgcolor='#909090'>
           <td align='left'><a href='&_.name:url;'><img src='/&_.type-img;' border='0' /></a></td>
           <td align='left'><a href='&_.name:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
@@ -81,7 +81,7 @@ constant default_template= #"
         </tr>
       </emit>
       <tr>
-        <td width='100%' height='4' colspan='5' bgcolor='#ce5c00'><img
+        <td width='100%' height='4' colspan='5' bgcolor='#bf2727'><img
           src='/%01/unit' width='100%' height='1' /></td>
       </tr>
     </table>
