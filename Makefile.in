@@ -112,49 +112,11 @@ install_only:
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
-	cp pike/$(PIKEVERSION)/src/pike $(prefix)/roxen/server/bin
+	(cd pike/$(PIKEVERSION)/src; $(MAKE) "prefix=$(prefix)/roxen/server" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install)
+	-@rm -f $(prefix)/roxen/server/bin/pike
+	ln $(prefix)/roxen/server/pike/$(PIKEVERSION).*/pike $(prefix)/roxen/server/bin/pike
 	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
-#	cp $(SRCDIR)/pike/$(PIKEVERSION)/bin/feature_list $(prefix)/roxen/server/bin
-	for d in local local/modules local/nfonts server/lib server/lib/pike \
-		 local/etc local/etc/modules local/etc/include; do \
-	  test -d $(prefix)/roxen/$$d/. || mkdir $(prefix)/roxen/$$d; \
-	done
-	@for d in `cd pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
-	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
-	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
-	  fi; \
-	done
-	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
-	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
-	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
-	  fi; \
-	done
-	@for f in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type f -print`; do \
-	  if cmp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
-	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
-	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
-	    else :; fi; \
-	    if cp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
-	      echo "Failed to copy $$f"; \
-	      exit 1; \
-	    fi; \
-	  fi; \
-	done
-	@for f in `cd pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
-	  if cmp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
-	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
-	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
-	    else :; fi; \
-	    if cp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
-	      echo "Failed to copy $$f"; \
-	      exit 1; \
-	    fi; \
-	  fi; \
-	done
-	test -d $(prefix)/roxen/server/include/. || mkdir $(prefix)/roxen/server/include
-	test -d $(prefix)/roxen/server/include/pike/. || mkdir $(prefix)/roxen/server/include/pike
-	for a in $(SRCDIR)/pike/$(PIKEVERSION)/src/*.h ./pike/$(PIKEVERSION)/src/*.h; do $(INSTALL) $$a $(prefix)/roxen/server/include/pike; done
 	-@(cd extern;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
