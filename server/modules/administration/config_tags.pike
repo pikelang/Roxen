@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.187 2002/11/07 15:11:06 mani Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.188 2002/11/10 01:49:35 mani Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -170,23 +170,23 @@ class Scope_usr
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
      case "content-toptableargs": return ENCODE_RXML_TEXT("", type);
-     case "left-image":           return ENCODE_RXML_TEXT("/internal-roxen-unit", type);
-     case "selected-indicator":   return ENCODE_RXML_TEXT("/internal-roxen-next", type);
-     case "database-small":       return ENCODE_RXML_TEXT("/internal-roxen-database_small", type);
-     case "table-small":          return ENCODE_RXML_TEXT("/internal-roxen-table_small", type);
-     case "next":                 return ENCODE_RXML_TEXT("/internal-roxen-next", type);
-     case "item-indicator":       return ENCODE_RXML_TEXT("/internal-roxen-dot", type);
-     case "logo":                 return ENCODE_RXML_TEXT("/internal-roxen-roxen", type);
-     case "err-1":                return ENCODE_RXML_TEXT("/internal-roxen-err_1", type);
-     case "err-2":                return ENCODE_RXML_TEXT("/internal-roxen-err_2", type);
-     case "err-3":                return ENCODE_RXML_TEXT("/internal-roxen-err_3", type);
+     case "left-image":           return ENCODE_RXML_TEXT("/%01/unit", type);
+     case "selected-indicator":   return ENCODE_RXML_TEXT("/%01/next", type);
+     case "database-small":       return ENCODE_RXML_TEXT("/%01/database_small", type);
+     case "table-small":          return ENCODE_RXML_TEXT("/%01/table_small", type);
+     case "next":                 return ENCODE_RXML_TEXT("/%01/next", type);
+     case "item-indicator":       return ENCODE_RXML_TEXT("/%01/dot", type);
+     case "logo":                 return ENCODE_RXML_TEXT("/%01/roxen", type);
+     case "err-1":                return ENCODE_RXML_TEXT("/%01/err_1", type);
+     case "err-2":                return ENCODE_RXML_TEXT("/%01/err_2", type);
+     case "err-3":                return ENCODE_RXML_TEXT("/%01/err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
 
 
       /* 1-st level */
-     case "tab-frame-image":      return ENCODE_RXML_TEXT("/internal-roxen-tabframe", type);
-     case "gbutton-frame-image":  return ENCODE_RXML_TEXT("/internal-roxen-gbutton", type);
+     case "tab-frame-image":      return ENCODE_RXML_TEXT("/%01/tabframe", type);
+     case "gbutton-frame-image":  return ENCODE_RXML_TEXT("/%01/gbutton", type);
 
     /* also: font, bgcolor, fgcolor */
 
