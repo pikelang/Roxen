@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.112 1999/11/23 06:40:18 per Exp $
+ * $Id: roxenloader.pike,v 1.113 1999/11/23 09:43:58 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.112 1999/11/23 06:40:18 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.113 1999/11/23 09:43:58 per Exp $";
 
 #define perror roxen_perror
 
@@ -703,7 +703,7 @@ int num;
 function make_caller( mixed fun, program p )
 {
   if( !caller_cache[ p ] )
-    caller_cache[ p ]  = set_weak_flag( ([]), 1 );
+    caller_cache[ p ]  = ([]); /* set_weak_flag( ([]), 1 ); */
   if( !caller_cache[ p ][ fun ] )
     caller_cache[ p ][ fun ] = p( fun );
   return caller_cache[ p ][ fun ]->call;
