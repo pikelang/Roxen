@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.19 2002/07/03 12:46:07 nilsson Exp $
+ * $Id: Server.pike,v 1.20 2004/04/04 14:52:56 mani Exp $
  */
 
 class Connection
@@ -27,7 +27,7 @@ class Connection
   object object_for(program p, string cl)
   {
     if(classes[cl]) return classes[cl];
-    return classes[cl]=p(client, this_object());
+    return classes[cl]=p(client, this);
   }
 
   mapping my_identifiers = ([]);
@@ -67,7 +67,7 @@ class Connection
       master->remove_identifier( v, my_identifiers[v] );
     buffer=sending=0;
     expected_len=mode=0;
-    master->connections -= ({ this_object() });
+    master->connections -= ({ this });
     client->set_blocking();
     client=master=0;
   }
@@ -97,7 +97,7 @@ class Connection
 	if(err = catch {
 	  mixed val = decode_value(d);
 	  if(arrayp(val))
-	    res = ({ 1, master->do_call(this_object(),@val) });
+	    res = ({ 1, master->do_call(this, @val) });
 	  else
 	  {
 	    handle_cmd( val ); // Do not return anything....
@@ -147,7 +147,7 @@ class Connection
       if(err = catch {
 	mixed val = decode_value(data);
 	if(arrayp(val))
-	  res = ({ 1, master->do_call(this_object(),@val) });
+	  res = ({ 1, master->do_call(this, @val) });
 	else
 	{
 	  handle_cmd( val );
@@ -278,7 +278,7 @@ int low_got_connection(object c)
   if(c
      && (!ip_security || ip_security(c->query_address()))
      && (!security || security(c)))
-    connections += ({ con = Connection( c, this_object() ) });
+    connections += ({ con = Connection( c, this ) });
   else {
 #ifdef RPC_DEBUG
     werror("RoxenRPC->low_got_connection(): Connection Refused:\n");

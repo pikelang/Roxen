@@ -195,7 +195,7 @@ class servlet {
     }
 
     if(!name) {
-      destruct(this_object());
+      destruct(this);
       return;
     }
     s = new_instance(name);
@@ -225,7 +225,7 @@ class loader {
 
   object load(string name)
   {
-    return servlet(name, this_object());
+    return servlet(name, this);
   }
 
   void create(string|array(string) codedirs)
@@ -316,11 +316,11 @@ class context {
     sctx = session_context_class->alloc();
     check_exception();
     session_context_init(sctx);
-    contexts[id] = this_object();
+    contexts[id] = this;
     if(conf && !parent_module) {
       if(context_for_conf[conf])
 	destruct(context_for_conf[conf]);
-      context_for_conf[conf] = this_object();
+      context_for_conf[conf] = this;
     }
     if(c)
     {

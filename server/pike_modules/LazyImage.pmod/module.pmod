@@ -375,7 +375,7 @@ class LazyImage( LazyImage parent )
   //! Add a reference to this image. Not normally called directly
   {
     refs++;
-    return this_object();
+    return this;
   }
 
   this_program unref()
@@ -385,7 +385,7 @@ class LazyImage( LazyImage parent )
 #ifdef DEBUG
     if( refs < 0 )  error("Illegal number of references, <= 0\n");
 #endif
-    return this_object();
+    return this;
   }
   
   static Layers result;
@@ -689,7 +689,7 @@ class LazyImage( LazyImage parent )
     if( _hash )
       return _hash;
     return _hash = (parent?parent->hash():"") +
-      low_hash( this_object(), args );
+      low_hash( this, args );
   }
   
   int xsize()
@@ -1005,7 +1005,7 @@ class Join
   
   string hash()
   {
-    return low_hash( this_object(), (["":args->contents->hash()*""]) );
+    return low_hash( this, (["":args->contents->hash()*""]) );
   }
 
   void set_args( mapping _args )

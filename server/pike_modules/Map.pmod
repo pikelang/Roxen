@@ -211,10 +211,10 @@ class Legend {
 					       3:({ 0xd0,0x40,0xd0 }),
 					       4:({ 0x80,0x00,0x80 }) ]) ]);
 
-  object scheme(string color_scheme)
+  this_program scheme(string color_scheme)
   {
     state_color_scheme = color_scheme;
-    return this_object();
+    return this;
   }
   
   array(string) schemes()
@@ -332,9 +332,9 @@ class Earth {
      "Laos":"Lao People's Democratic Republic",
      "South Korea":"Republic of Korea" ]);
   
-  object region(string new_region)
+  this_program region(string new_region)
   {
-    return object_program(this_object())(new_region, state_country);
+    return this_program(new_region, state_country);
   }
   
   array(string) regions()
@@ -343,9 +343,9 @@ class Earth {
 		   "North America", "South America", "Oceania" }));
   }
 
-  object country(string new_country)
+  this_program country(string new_country)
   {
-    return object_program(this_object())(state_region, new_country);
+    return this_program(state_region, new_country);
   }
 
   static private string capitalize_country(string s)

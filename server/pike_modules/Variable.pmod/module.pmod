@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.82 2003/01/26 02:21:45 mani Exp $
+// $Id: module.pmod,v 1.83 2004/04/04 14:52:57 mani Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -291,7 +291,7 @@ class Variable
     if( (flags & VAR_DEVELOPER) && !devel_mode )     return 0;
     if( (flags & VAR_NOT_CFIF) && variable_in_cfif ) return 0;
     if( (cb = get_invisibility_check_callback() ) && 
-        cb( id, this_object() ) )
+        cb( id, this ) )
       return 0;
     return 1;
   }
@@ -432,14 +432,14 @@ class Variable
     {
       changed_values[ _id ] = to;
       if( get_changed_callback() )
-	get_changed_callback()( this_object() );
+	get_changed_callback()( this );
       return 1;
     }
     else
     {
       m_delete( changed_values, _id );
       if( get_changed_callback() )
-	get_changed_callback()( this_object() );
+	get_changed_callback()( this );
       return -1;
     }
   }
@@ -561,7 +561,7 @@ class Variable
   {
     m_delete( all_variables, _path );
     _path = to;
-    all_variables[ to ] = this_object();
+    all_variables[ to ] = this;
   }
 
   string render_form( RequestID id, void|mapping additional_args );
@@ -600,7 +600,7 @@ class Variable
     _initial = default_value;
     __name = std_name;
     __doc = std_doc;
-    all_variables[ path() ] = this_object();
+    all_variables[ path() ] = this;
   }
 }
 
@@ -1229,14 +1229,14 @@ class DatabaseChoice
 
   function(void:void|object) config = lambda() { return 0; };
 
-  DatabaseChoice set_configuration_pointer( function(void:object) configuration )
+  this_program set_configuration_pointer( function(void:object) configuration )
   //! Provide a function that returns a configuration object,
   //! that will be used for authentication against the database
   //! manager. Typically called as
   //! @code{set_configuration_pointer(my_configuration)@}.
   {
     config = configuration;
-    return this_object();
+    return this;
   }
 
   array get_choice_list( )

@@ -609,7 +609,7 @@ class ModuleWrapper
     if(!modobj->is_instance_of(module_class))
       error("class does not implement com.roxen.roxen.Module\n");
     else
-      jotomod[modobj] = this_object();
+      jotomod[modobj] = this;
   }
 
   static array(array) getdefvars()
