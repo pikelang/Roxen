@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.2 2000/09/09 03:19:46 lange Exp $
+ * $Id: ssl_common.pike,v 1.3 2001/01/31 01:11:21 per Exp $
  */
 
 #if constant(_Crypto) 
@@ -14,9 +14,9 @@
 #define WERROR(x)
 #endif
 
-string doc_string_start = LOCALE(87,
+string doc_string_start = LOCALE(0,
 			     "In order to use the SSL on your server, you "
-			     "first have to create a random RSA key pair. "
+			     "first have to create a random key pair. "
 			     "One part of the key is kept secret. ");
 string doc_string_end_a = LOCALE(88,
 			      "The other part should be submitted to a "
@@ -62,7 +62,7 @@ mixed verify_0(object id, object mc)
   }
 
   object file = Stdio.File();
-  object privs = Privs("Storing private RSA key.");
+  object privs = Privs("Storing private key.");
   if (!file->open(id->variables->key_file, "wxc", 0600))
   {
     id->variables->_error =
@@ -126,7 +126,7 @@ string rsa_key_form =
        "<var name='key_size' type='int' default='1024'/><br />\n<blockquote>" 
        "<p>"+generic_key_size_string+"</p><help>" +
 // http://www.rsasecurity.com/rsalabs/challenges/factoring/status.html
-       LOCALE(95,"The largest RSA key that is publicly known to have been broken "
+       LOCALE(95,"The largest key that is publicly known to have been broken "
 	      "was 155 decimal digits, or 512 bits large. This "
 	      "effort required approximately 8000 MIPS-years.<p>"
 	      "A key 1024 bits large should be secure enough for most "
