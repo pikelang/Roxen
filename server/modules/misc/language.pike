@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.12 1997/08/31 03:47:23 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.13 1997/10/03 17:16:52 grubba Exp $";
 /* Is threadsafe. Probably. */
 
 
@@ -164,7 +164,7 @@ multiset (string) find_files( string url, object id )
   array tmp;
 
   filename = reverse( (reverse( url ) / "/")[0] );
-  basename = reverse( (reverse( url ) / "/")[1..17000] * "/" ) + "/";
+  basename = reverse( (reverse( url ) / "/")[1..] * "/" ) + "/";
   tmp = roxen->find_dir( basename, id );
   if (tmp)
     files = aggregate_multiset( @tmp );
@@ -193,13 +193,13 @@ mixed remap_url( object id, string url )
   {
     string redirect_url;
 
-    redirect_url = reverse( (reverse( url ) / ".")[1..17000] * "." );
+    redirect_url = reverse( (reverse( url ) / ".")[1..] * "." );
     if (id->query)
       redirect_url += "?" + id->query;
     redirect_url = add_pre_state( redirect_url, (id->prestate - language_list)+
 				  (< extension >) );
     redirect_url = id->conf->query( "MyWorldLocation" ) +
-      redirect_url[1..17000000];
+      redirect_url[1..];
     
     id->misc->in_language=0;
     return http_redirect( redirect_url );

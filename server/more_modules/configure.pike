@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: configure.pike,v 1.2 1996/12/01 19:18:49 per Exp $";
+string cvs_version = "$Id: configure.pike,v 1.3 1997/10/03 17:16:56 grubba Exp $";
 // Mounts the configuration interface on a location in the virtual
 // filesystem.
 
@@ -48,7 +48,7 @@ inline string fix_it(string from)
   if(strlen(from) && from[0]=='/')
   {
     sscanf(from, "/(%s)/%s", pre, from);
-    while(strlen(from) && from[0]=='/') from = from[1..10000];
+    while(strlen(from) && from[0]=='/') from = from[1..];
     if(pre)
       return "/("+pre+")" + QUERY(mountpoint) + from;
     return QUERY(mountpoint) + from;

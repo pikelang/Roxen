@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.12 1997/08/31 04:12:46 peter Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.13 1997/10/03 17:16:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -103,7 +103,7 @@ void done_dir_data(array in)
     for(i=0; i < sizeof(dirl); i++)
     {
       array a;
-      a=dirl[i][1..100000]/"\t";
+      a=dirl[i][1..]/"\t";
 #define URL (a[2]+((int)a[3]==70?"":":"+a[3])+"/"+dirl[i][0..0]+a[1])
       switch(dirl[i][0])
       {

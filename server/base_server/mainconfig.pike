@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.78 1997/09/07 16:40:13 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.79 1997/10/03 17:16:47 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -193,7 +193,7 @@ object find_node(string l)
   array tmp = l/"/"-({""});
   object o;
   if(!sizeof(tmp)) return root;
-  for(o=root; sizeof(tmp) && (o=o->descend(tmp[0],1)); tmp=tmp[1..1000]);
+  for(o=root; sizeof(tmp) && (o=o->descend(tmp[0],1)); tmp=tmp[1..]);
   if(!o) return 0;
   return o;
 }
@@ -519,7 +519,7 @@ mapping std_redirect(object o, object id)
     loc=((((((id->referer*" ")/"#")[0])/"?")[0])+"?"+(bar++)
 	 +"#"+o->path(1));
   else
-    loc = CONFIG_URL+o->path(1)[1..10000]+"?"+bar++;
+    loc = CONFIG_URL+o->path(1)[1..]+"?"+bar++;
   
   if(sscanf(loc, "%s/(%*s)%s",l2, loc) == 3)
     loc = l2 + loc;		// Remove the prestate.

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.24 1997/08/14 22:18:56 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.25 1997/10/03 17:16:54 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -134,7 +134,7 @@ void init_proxies()
     bar = replace(foo, "\t", " ")/" " -({ "" });
     if(sizeof(bar) < 2) continue;
     if(err=catch(filters += ({ ({ Regexp(bar[0])->match, 
-				   bar[1..10000]*" " })})))
+				   bar[1..]*" " })})))
       report_error("Syntax error in regular expression in proxy: "+bar[0]+"\n"+
 		   err[0]);
   }
@@ -248,12 +248,12 @@ string process_request(object id, int is_remote)
   if(!id) return 0;
   if(is_remote) return replace(id->raw, "\n", "\r\n");
   
-  url=id->raw_url[strlen(QUERY(mountpoint))..100000];
-  while(url[0]=='/')              url=url[1..100000];
+  url=id->raw_url[strlen(QUERY(mountpoint))..];
+  while(url[0]=='/')              url=url[1..];
   if(!sscanf(url, "%*s/%s", url)) url="";
 
   return sprintf("%s /%s HTTP/1.0\r\n%s", id->method || "GET", 
-		 url, replace(id->raw[search(id->raw, "\n")+1..100000],
+		 url, replace(id->raw[search(id->raw, "\n")+1..],
 			      "\n", "\r\n"));
 }
 
@@ -457,7 +457,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
       f=File();
       q=f->pipe();
       o->set_blocking();
-      spawne((filter/" ")[0], (filter/" ")[1..100000], ([ ]), o, q, stderr);
+      spawne((filter/" ")[0], (filter/" ")[1..], ([ ]), o, q, stderr);
       destruct(o);
       destruct(q);
       o=f;

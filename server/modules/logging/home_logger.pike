@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.12 1997/09/16 01:35:08 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.13 1997/10/03 17:16:51 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -28,8 +28,11 @@ private inline string fix_logging(string s)
   string pre, post, c;
   sscanf(s, "%*[\t ]", s);
   s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
-  while(s[0] == ' ') s = s[1..10000];
-  while(s[0] == '\t') s = s[1..10000];
+  // FIXME: This looks like a bug.
+  // Is it supposed to strip all initial whitespace, or do what it does?
+  //    /grubba 1997-10-03
+  while(s[0] == ' ') s = s[1..];
+  while(s[0] == '\t') s = s[1..];
   while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
     s=sprintf("%s%c%s", pre, c, post);
   while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
@@ -89,7 +92,7 @@ private void parse_log_formats()
   log_format = ([]);
   foreach(foo, b)
     if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(b/":")[0]] = fix_logging((b/":")[1..100000]*":");
+      log_format[(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
 

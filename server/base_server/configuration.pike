@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.80 1997/09/22 21:06:56 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.81 1997/10/03 17:16:45 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -505,8 +505,12 @@ private inline string fix_logging(string s)
   string pre, post, c;
   sscanf(s, "%*[\t ]", s);
   s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
-  while(s[0] == ' ') s = s[1..10000];
-  while(s[0] == '\t') s = s[1..10000];
+
+  // FIXME: This looks like a bug.
+  // Is it supposed to strip all initial whitespace, or do what it does?
+  //	/grubba 1997-10-03
+  while(s[0] == ' ') s = s[1..];
+  while(s[0] == '\t') s = s[1..];
   while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
     s=sprintf("%s%c%s", pre, c, post);
   while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
@@ -526,7 +530,7 @@ private void parse_log_formats()
   array foo=query("LogFormat")/"\n";
   foreach(foo, b)
     if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(b/":")[0]] = fix_logging((b/":")[1..100000]*":");
+      log_format[(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
 
@@ -1372,6 +1376,8 @@ public string real_file(string file, object id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
+      // FIXME: NOTE: Limits filename length to 1000000 bytes.
+      //	/grubba 1997-10-03
       if(s=function_object(tmp[1])->real_file(file[strlen(loc)..1000000], id))
 	return s;
     }

@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.17 1997/08/31 02:45:42 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.18 1997/10/03 17:16:52 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -198,7 +198,7 @@ class Request {
     {
       desc = (desc/" " - ({""})) * " ";
       if(strlen(desc) && desc[0] == ' ')
-	desc = desc[1..100000];
+	desc = desc[1..];
     }
     if (!type)
     {
@@ -350,10 +350,10 @@ class Request {
 	    (f[date_position-1]>='0'&&f[date_position-1]<='9')))
 	return 0; /* not this type of format */
     
-      filename=f[date_position+14..100000];
+      filename=f[date_position+14..];
       date=f[date_position+1..date_position+12];
       for (i=1; i<20&&(f[date_position-i]>='0'&&f[date_position-i]<='9'); i++);
-      size=(int)f[date_position-i..10000];
+      size=(int)f[date_position-i..];
       if (f[0]=='d')
       {
 	type="directory";
@@ -436,11 +436,11 @@ class Request {
 
       date_position=i;
      
-      filename=f[date_position+14..100000];
+      filename=f[date_position+14..];
       date=f[date_position+1..date_position+12];
       for (i = 1; i < 20 && (f[date_position - i] >= '0' && 
 			     f[date_position-i] <= '9'); i++);
-      size=(int)f[date_position-i..10000];
+      size=(int)f[date_position-i..];
       if (f[0]=='d')
       {
 	type="directory";
@@ -551,7 +551,7 @@ class Request {
       while (res[0..2]=="../"||res=="..")
       {
 	string s;
-	res=res[3..100000];
+	res=res[3..];
 	if (file!="/") file=((file/"/")[0..sizeof(file/"/")-3])*"/"+"/";
       }
       id->end("HTTP/1.0 302 try this instead... following links\r\nLocation: ftp://"+host+(port==21?"":":"+port)+(effect?"/("+effect+")":"")+file+res+"\r\n\r\n");
@@ -998,7 +998,7 @@ class Request {
       else 
       {
 	if (s[0..2]=="230"||s[0..2]=="220") server_info+=s+"\n";
-	(read_state)(s[0..2],s[4..1000000]);
+	(read_state)(s[0..2],s[4..]);
       }
       if (!objectp(id)) 
       { 
@@ -1106,7 +1106,7 @@ class Request {
     string url;
     url="ftp://"+(user?user+"@":"")+host+(port!=21?":"+port:"")+"/";
     return "<a href="+url+">"+(user?user+"@":"")+host+"</a>; <a href="+url+
-      (file[0]=='/'?file[1..10000]:file)+">"+file+"</a> - "+what_now;
+      (file[0]=='/'?file[1..]:file)+">"+file+"</a> - "+what_now;
   }
 }; /* End of class Request */
 
@@ -1371,7 +1371,7 @@ mixed|mapping find_file( string f, object id )
   array more;
   int port;
   
-  f=id->raw_url[strlen(QUERY(mountpoint)) .. 100000];
+  f=id->raw_url[strlen(QUERY(mountpoint)) .. ];
   while(f[0]=='/') f=f[1..];
 
   if(search(f, "/") == -1)

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.137 1997/09/22 21:06:09 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.138 1997/10/03 17:16:48 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2019,13 +2019,13 @@ private string find_arg(array argv, array|string shortform,
 	    tmp = argv[i];
 	    nf=1;
 	  }
-	  if(arrayp(longform) && search(longform, tmp[2..1000]) != -1)
+	  if(arrayp(longform) && search(longform, tmp[2..]) != -1)
 	  {
 	    argv[i] = 0;
 	    if(i < sizeof(argv)-1)
 	      argv[i+nf] = 0;
 	    return value;
-	  } else if(longform && longform == tmp[2..10000]) {
+	  } else if(longform && longform == tmp[2..]) {
 	    argv[i] = 0;
 	    if(i < sizeof(argv)-1)
 	      argv[i+nf] = 0;
@@ -2042,7 +2042,7 @@ private string find_arg(array argv, array|string shortform,
 	      argv[i] = argv[i+1] = 0;
 	      return value;
 	    } else {
-	      value=argv[i][2..100000];
+	      value=argv[i][2..];
 	      argv[i]=0;
 	      return value;
 	    }

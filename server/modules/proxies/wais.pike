@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.9 1997/08/14 22:18:58 grubba Exp $";
+string cvs_version = "$Id: wais.pike,v 1.10 1997/10/03 17:16:55 grubba Exp $";
 
 #include <config.h>
 
@@ -301,14 +301,14 @@ string trim_junk(string headline)
 #endif
 
   while((i=search(headline,"\033"))!=-1)
-    headline=headline[0..i]+headline[i+4..1000000];
+    headline=headline[0..i]+headline[i+4..];
 
 #ifdef WAIS_DEBUG_2
   perror("trim_junk3("+debug_print_string(headline)+"\n");
 #endif
 
   while(strlen(headline)>0 && headline[0]==' ')
-    headline=headline[1..1000000];
+    headline=headline[1..];
 
 #ifdef WAIS_DEBUG_2
   perror("trim_junk4("+debug_print_string(headline)+"\n");
@@ -615,7 +615,7 @@ string WAIS_from_WWW (string docname)
 #endif
 	return 0;
       }
-      if(strlen(docname[search(docname,"=")+1..10000])>0) {
+      if(strlen(docname[search(docname,"=")+1..])>0) {
 #ifdef WAIS_DEBUG
 	perror("cannot parse record"+docname+" (second choice)\n");
 #endif
@@ -625,7 +625,7 @@ string WAIS_from_WWW (string docname)
       docname="";
     }
 
-    docname=docname[search(docname,";")+1..10000];
+    docname=docname[search(docname,";")+1..];
     len=strlen(t2);
 
     z+=sprintf("%c",type);
@@ -976,7 +976,7 @@ string skipCompressedInteger(string buf)
   i=0;
   while(1) {
     if(!(buf[i] &  continueBit))
-      return buf[i+1..1000000];
+      return buf[i+1..];
     i+=1;
   }
 } 
@@ -1021,7 +1021,7 @@ mapping readSearchResponseInfo(string buf)
       val = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       seedWordsUsed = buf[0..val];
-      buf=buf[val..1000000];
+      buf=buf[val..];
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_SeedWordsUsed: "+seedWordsUsed+"\n");
 #endif
@@ -1033,7 +1033,7 @@ mapping readSearchResponseInfo(string buf)
 
       buf = skipCompressedInteger(buf);
       len = readBinaryInteger(2,buf);
-      buf = buf[2..1000000];
+      buf = buf[2..];
 
       diag="";
       diag+=buf[0];
@@ -1041,10 +1041,10 @@ mapping readSearchResponseInfo(string buf)
       if(len>3) {
 	addinfo = buf[2..len-1];
 	surrogate = buf[len-1];
-	buf = buf[len+1..1000000];
+	buf = buf[len+1..];
       } else {
 	surrogate = buf[len-1];
-	buf = buf[2..1000000];
+	buf = buf[2..];
       }
       diags += ({ ([ "DIAG" : diag, "ADDINFO" : addinfo, "SURROGATE" : surrogate ]) });
 #ifdef WAIS_DEBUG
@@ -1075,7 +1075,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
 
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1084,7 +1084,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG_2
 	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
 #endif
@@ -1094,7 +1094,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1104,7 +1104,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
@@ -1114,7 +1114,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
@@ -1124,7 +1124,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
@@ -1134,7 +1134,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
@@ -1161,7 +1161,7 @@ mapping readSearchResponseInfo(string buf)
 #ifdef WAIS_DEBUG
 	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val)+"\n");
 #endif
-	    buf1=buf1[val..1000000];
+	    buf1=buf1[val..];
 	    size -= val;
 	  }
 	  break;
@@ -1170,7 +1170,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
 #endif
@@ -1180,7 +1180,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
 #endif
@@ -1190,7 +1190,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
@@ -1200,7 +1200,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
@@ -1248,7 +1248,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
       
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1257,7 +1257,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
@@ -1267,7 +1267,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1277,7 +1277,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
@@ -1287,7 +1287,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
@@ -1297,7 +1297,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
@@ -1307,7 +1307,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
@@ -1353,7 +1353,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
 
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1362,7 +1362,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
@@ -1372,7 +1372,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1382,7 +1382,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
@@ -1392,7 +1392,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
@@ -1402,7 +1402,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
@@ -1412,7 +1412,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
-	  buf1 = buf1[val..1000000];
+	  buf1 = buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
@@ -1437,7 +1437,7 @@ mapping readSearchResponseInfo(string buf)
 #ifdef WAIS_DEBUG
 	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val]+"\n");
 #endif
-	    buf1=buf1[val..1000000];
+	    buf1=buf1[val..];
 	    size -= val;
 	  }
 	  break;
@@ -1446,7 +1446,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
 #endif
@@ -1456,7 +1456,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
 #endif
@@ -1466,7 +1466,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
@@ -1476,7 +1476,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
@@ -1486,7 +1486,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
 #endif
@@ -1496,7 +1496,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
 #endif
@@ -1506,7 +1506,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
 #endif
@@ -1547,7 +1547,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
 
 #ifdef WAIS_DEBUG_2
       perror("WAIS: got DT_DocumentTextGroup ("+debug_print_string(buf1)+")\n");
@@ -1560,7 +1560,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG_2
 	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
 #endif
@@ -1570,7 +1570,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1580,7 +1580,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  documentText = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentText: "+documentText+"\n");
 #endif
@@ -1615,7 +1615,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
 
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1624,7 +1624,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
@@ -1634,7 +1634,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1644,7 +1644,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
 #endif
@@ -1654,7 +1654,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
 #endif
@@ -1664,7 +1664,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
@@ -1674,7 +1674,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
@@ -1714,7 +1714,7 @@ mapping readSearchResponseInfo(string buf)
       size = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       buf1=buf[0..size-1];
-      buf=buf[size..1000000];
+      buf=buf[size..];
 
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1723,7 +1723,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
@@ -1733,7 +1733,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
@@ -1743,7 +1743,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
 #endif
@@ -1753,7 +1753,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
 #endif
@@ -1763,7 +1763,7 @@ mapping readSearchResponseInfo(string buf)
 	  val = readCompressedInteger(buf1);
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
-	  buf1=buf1[val..1000000];
+	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
 #endif
@@ -1816,25 +1816,25 @@ mapping readSearchResponseAPDU(string buf)
   /* read required part */
 
   size = readBinaryInteger(HEADER_LEN,buf); 
-  buf=buf[HEADER_LEN..1000000];
+  buf=buf[HEADER_LEN..];
 
-  resto=buf[size..1000000];
+  resto=buf[size..];
   buf=buf[0..size-1];
 
   pduType = readBinaryInteger(1,buf);
-  buf=buf[1..1000000];
+  buf=buf[1..];
 
   result = readBinaryInteger(1,buf);
-  buf=buf[1..1000000];
+  buf=buf[1..];
 
   count = readBinaryInteger(3,buf);
-  buf=buf[3..1000000];
+  buf=buf[3..];
 
   recordsReturned = readBinaryInteger(3,buf);
-  buf=buf[3..1000000];
+  buf=buf[3..];
 
   nextPos = readBinaryInteger(3,buf);
-  buf=buf[3..1000000];
+  buf=buf[3..];
 
 #ifdef WAIS_DEBUG
   perror(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
@@ -1853,7 +1853,7 @@ mapping readSearchResponseAPDU(string buf)
       val = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       resultStatus = readBinaryInteger(val,buf);
-      buf=buf[val..1000000];
+      buf=buf[val..];
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_ResultSetStatus: "+sprintf("%d",resultStatus)+"\n");
 #endif
@@ -1863,7 +1863,7 @@ mapping readSearchResponseAPDU(string buf)
       val = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       presentStatus = readBinaryInteger(val,buf);
-      buf=buf[val..1000000];
+      buf=buf[val..];
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_PresentStatus: "+sprintf("%d",presentStatus)+"\n");
 #endif
@@ -1873,7 +1873,7 @@ mapping readSearchResponseAPDU(string buf)
       val = readCompressedInteger(buf);
       buf = skipCompressedInteger(buf);
       refID = buf[0..val];
-      buf=buf[val..1000000];
+      buf=buf[val..];
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_ReferenceID: "+refID+"\n");
 #endif
@@ -1939,11 +1939,11 @@ void done_fetch_data(array in)
 
 #ifdef WAIS_DEBUG_2
   perror("WAIS: Got all fetch data ("+
-	 debug_print_string(in[0][HEADER_LENGTH..1000000])+").\n");
+	 debug_print_string(in[0][HEADER_LENGTH..])+").\n");
 #endif
 
   /* Parse the result which came back into memory. */
-  query_resp=readSearchResponseAPDU(in[0][HEADER_LENGTH..1000000]);
+  query_resp=readSearchResponseAPDU(in[0][HEADER_LENGTH..]);
   searchres = query_resp->DatabaseDiagnosticRecords;
 
   if (sizeof(searchres->Text)==0) {
@@ -2003,7 +2003,7 @@ void got_fetch_data(array i, string s)
 #endif
     
     if(q>0)
-      i[0]=i[0][q..1000000];
+      i[0]=i[0][q..];
     i[1]=1;
   case 1:
     /* waiting to receive a complete header */
@@ -2076,11 +2076,11 @@ void done_search_data(array in)
 
 #ifdef WAIS_DEBUG_2
   perror("WAIS: Got all search data ("+
-	 debug_print_string(in[0][HEADER_LENGTH..1000000])+").\n");
+	 debug_print_string(in[0][HEADER_LENGTH..])+").\n");
 #endif
 
   /* Parse the result which came back into memory. */
-  query_resp=readSearchResponseAPDU(in[0][HEADER_LENGTH..1000000]);
+  query_resp=readSearchResponseAPDU(in[0][HEADER_LENGTH..]);
 
   write_to_client_and_cache(to, display_search_response(query_resp,database,
 							key)+"</BODY></HTML>",
@@ -2110,7 +2110,7 @@ void got_search_data(array i, string s)
 #endif
     
     if(q>0)
-      i[0]=i[0][q..1000000];
+      i[0]=i[0][q..];
     i[1]=1;
   case 1:
     /* waiting to receive a complete header */
@@ -2185,15 +2185,15 @@ void connected(object ok, string file, object send_to, string key)
   if(!key) {
     if((i=search(file,"/"))!=-1) {
       database=file[0..i-1];
-      file=file[i+1..10000];
+      file=file[i+1..];
     }
 
     if((i=search(file,"/"))!=-1) {
       doctype=file[0..i-1];
-      file=file[i+1..10000];
+      file=file[i+1..];
 
       if(sscanf(file, "%d/", doclen)==1) {
-	file=file[search(file,"/")+1..10000];
+	file=file[search(file,"/")+1..];
 	docname=file;
       }
     } else if(!key)
@@ -2201,11 +2201,11 @@ void connected(object ok, string file, object send_to, string key)
   } else {
     if((i=search(file,"?"))!=-1) {
       database=file[0..i-1];
-      file=file[i+1..10000];
+      file=file[i+1..];
     }
     else if((i=search(file,"/"))!=-1) {
       database=file[0..i-1];
-      file=file[i+1..10000];
+      file=file[i+1..];
     }
     else
       database=file;
