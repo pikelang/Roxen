@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.177 2004/05/12 21:07:36 mast Exp $
+// $Id: Roxen.pmod,v 1.178 2004/05/17 17:46:10 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3783,7 +3783,7 @@ Configuration get_owning_config (object|function thing)
 }
 
 #ifdef REQUEST_TRACE
-static string trace_msg (RequestID id, string msg, string name)
+static string trace_msg (mapping id_misc, string msg, string name)
 {
   msg = html_decode_string (
     Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
@@ -3796,69 +3796,75 @@ static string trace_msg (RequestID id, string msg, string name)
     report_debug ("%s%s%-40s  %s\n",
 		  map (lines[..sizeof (lines) - 2],
 		       lambda (string s) {
-			 return sprintf ("%s%*s%s\n", id->misc->trace_id_prefix,
-					 id->misc->trace_level + 1, "", s);
+			 return sprintf ("%s%*s%s\n", id_misc->trace_id_prefix,
+					 id_misc->trace_level + 1, "", s);
 		       }) * "",
-		  id->misc->trace_id_prefix,
-		  sprintf ("%*s%s", id->misc->trace_level + 1, "", lines[-1]),
+		  id_misc->trace_id_prefix,
+		  sprintf ("%*s%s", id_misc->trace_level + 1, "", lines[-1]),
 		  name);
 }
 
 void trace_enter (RequestID id, string msg, object|function thing)
 {
-  // Necessary since requests can finish and be destructed
-  // asynchronously.
-  if (!id) return;
+  if (id) {
+    // Replying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
 
-  if (!id->misc->trace_level) {
-    id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
-      all_constants()->id_trace_level_rotate_counter++ % 7];
+    if (!id_misc->trace_level) {
+      id_misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
+	all_constants()->id_trace_level_rotate_counter++ % 7];
 #ifdef ID_OBJ_DEBUG
-    report_debug ("%s%s %O: Request handled by: %O\n",
-		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
-		  id, id->conf);
+      report_debug ("%s%s %O: Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id, id && id->conf);
 #else
-    report_debug ("%s%s Request handled by: %O\n",
-		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
-		  id->conf);
+      report_debug ("%s%s Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id->conf);
 #endif
+    }
+
+    string name;
+    if (thing) {
+      name = get_modfullname (get_owning_module (thing));
+      if (name)
+	name = "mod: " + html_decode_string (
+	  Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
+	  finish (name)->read());
+      else if (Configuration conf = get_owning_config (thing))
+	name = "conf: " + conf->query_name();
+      else
+	name = sprintf ("obj: %O", thing);
+    }
+    else name = "";
+
+    trace_msg (id_misc, msg, name);
+    id_misc->trace_level++;
+
+    if(function(string,mixed ...:void) _trace_enter =
+       [function(string,mixed ...:void)]id_misc->trace_enter)
+      _trace_enter (msg, thing);
   }
-
-  string name;
-  if (thing) {
-    name = get_modfullname (get_owning_module (thing));
-    if (name)
-      name = "mod: " + html_decode_string (
-	Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-	finish (name)->read());
-    else if (Configuration conf = get_owning_config (thing))
-      name = "conf: " + conf->query_name();
-    else
-      name = sprintf ("obj: %O", thing);
-  }
-  else name = "";
-
-  trace_msg (id, msg, name);
-  id->misc->trace_level++;
-
-  if(function(string,mixed ...:void) _trace_enter =
-     [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter)
-    _trace_enter (msg, thing);
 }
 
 void trace_leave (RequestID id, string desc)
 {
-  // Necessary since requests can finish and be destructed
-  // asynchronously.
-  if (!id) return;
+  if (id) {
+    // Replying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
 
-  if (id->misc->trace_level) id->misc->trace_level--;
+    if (id_misc->trace_level) id_misc->trace_level--;
 
-  if (sizeof (desc)) trace_msg (id, desc, "");
+    if (sizeof (desc)) trace_msg (id_misc, desc, "");
 
-  if(function(string:void) _trace_leave =
-     [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave)
-    _trace_leave (desc);
+    if(function(string:void) _trace_leave =
+       [function(string:void)]id_misc->trace_leave)
+      _trace_leave (desc);
+  }
 }
 #endif
 
