@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.7 2002/10/27 20:22:13 nilsson Exp $
+ * $Id: ssl_common.pike,v 1.8 2002/11/06 01:19:38 mani Exp $
  */
 
 #if constant(_Crypto) 
@@ -172,20 +172,20 @@ constant certificate_parameters =
  "attributes are present. Do not abbreviate.</blockquote>"
 
  "<b>Organization/Company</b><br />\n"
- "<var name='organizationName' type='string' default='Roxen IS'/><br />"
+ "<var name='organizationName' type='string' default='Big and Better Inc.'/><br />"
  "<blockquote>"
  "The organization name under which you are registered with some "
  "national or regional authority.</blockquote>"
 
  "<b>Organizational unit</b><br />\n"
  "<var name='organizationUnitName' type='string' "
- "default='Roxen Development'/><br />"
+ "default='Research and Development'/><br />"
  "<blockquote>"
  "This attribute is optional, and there are no "
  "specific requirements on the value of this attribute.</blockquote>"
 
  "<b>Common Name</b><br />\n"
- "<var name='commonName' type='string' default='www.roxen.com'/><br />"
+ "<var name='commonName' type='string' default='www.bigandbetterinc.com'/><br />"
  "<blockquote>"
  "This is the DNS name of your server (i.e. the host part of "
  "the URL).<p>"
@@ -194,7 +194,7 @@ constant certificate_parameters =
  "if they don't match.<p>"
  "Some Certificate Authorities allow wild cards in the Common "
  "Name. This means that you can have a certificate for "
- "<tt>*.roxen.com</tt> which will match all servers at Roxen."
+ "<tt>*.chilimoon.com</tt> which will match all servers at ChiliMoon."
  "Thawte allows wild card certificates, while VeriSign does not."
  "</blockquote>");
 
