@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.135 2004/05/10 18:39:55 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.136 2004/05/10 21:38:45 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -827,15 +827,13 @@ mixed find_file( string f, RequestID id )
     break;
 
   case "MKCOL":
-    if (id->request_headers["content-type"]) {
+    if (id->request_headers["content-type"] || sizeof (id->data)) {
       // RFC 2518 8.3.1:
       // If a server receives a MKCOL request entity type it does not support
       // or understand it MUST respond with a 415 (Unsupported Media Type)
       // status code.
-      TRACE_LEAVE(sprintf("MKCOL failed, since the content-type is %O.",
-			  id->request_headers["content-type"]));
-      return http_low_answer(415,
-			     "<h2>Unsupported media type.</h2>");
+      SIMPLE_TRACE_LEAVE ("MKCOL failed since the request has content.");
+      return Roxen.http_status(415, "Unsupported media type.");
     }
     /* FALL_THROUGH */
   case "MKDIR":
@@ -1063,7 +1061,7 @@ mixed find_file( string f, RequestID id )
     }
 
     if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
-      TRACE_LEAVE("PUT: Locked");
+      TRACE_LEAVE("CHMOD: Locked");
       return ret;
     }
 
@@ -1278,9 +1276,7 @@ mixed find_file( string f, RequestID id )
       
       if ((overwrite == DO_OVERWRITE) || (size > -1)) {
 	mapping(string:mixed) res =
-	  recurse_delete_files(new_uri,
-			       id->get_multi_status()->
-			       prefix(id->url_base() + mountpoint[1..]), id);
+	  recurse_delete_files(new_uri, id);
 	if (res && res->error >= 300) {
 	  privs = 0;
 	  TRACE_LEAVE("MOVE: Recursive delete failed.");
