@@ -1,5 +1,5 @@
 /*
- * $Id: pathinfo.pike,v 1.1 1998/10/01 23:39:35 grubba Exp $
+ * $Id: pathinfo.pike,v 1.2 1998/10/27 00:16:21 grubba Exp $
  *
  * PATH_INFO support for Roxen.
  *
@@ -10,7 +10,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.1 1998/10/01 23:39:35 grubba Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.2 1998/10/27 00:16:21 grubba Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
@@ -42,11 +42,12 @@ mapping|int last_resort(object id)
     sum = (offsets[i] += sum) + 1;
   }
 
-  int low, delta = sizeof(offsets);
+  int lo = (offsets[0] != 0);	// Skip testing the empty string.
+  int hi = sizeof(offsets) - 1;
 
-  while(delta) {
-    delta /= 2;
-    string file = id->not_query[..offsets[low + delta]-1];
+  while(lo <= hi) {		// Don't let the beams cross.
+    int probe = (lo + hi)/2;
+    string file = id->not_query[..offsets[probe]-1];
 
 #ifdef PATHINFO_DEBUG
     roxen_perror(sprintf("PATHINFO: Trying %O...\n", file));
@@ -54,11 +55,9 @@ mapping|int last_resort(object id)
 
     array st = id->conf->stat_file(file, id);
     if (st) {
-      low += delta;
-
       if (st[1] >= 0) {
 	// Found a file!
-	id->misc->path_info = id->not_query[offsets[low]..];
+	id->misc->path_info = id->not_query[offsets[probe]..];
 	id->not_query = file;
 #ifdef PATHINFO_DEBUG
 	roxen_perror(sprintf("PATHINFO: Found: %O:%O\n",
@@ -69,6 +68,10 @@ mapping|int last_resort(object id)
 #ifdef PATHINFO_DEBUG
       roxen_perror(sprintf("PATHINFO: Directory: %O\n", file));
 #endif /* PATHINFO_DEBUG */
+
+      lo = probe + 1;
+    } else {
+      hi = probe - 1;
     }
   }
   return 0;
