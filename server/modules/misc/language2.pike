@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.15 2001/09/21 15:58:12 jhs Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.16 2001/09/26 15:10:22 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -24,16 +24,12 @@ void create() {
 
   defvar( "languages", ({"en","de","sv"}), "Languages", TYPE_STRING_LIST,
 	  "The languages supported by this site." );
-
-  defvar( "rxml", ({"html","rxml"}), "RXML extensions", TYPE_STRING_LIST,
-	  "RXML parse files with the following extensions, "
-	  "e.g. html make it so index.html.en gets parsed." );
 }
 
 string default_language;
 array(string) languages;
-array(string) rxml;
 string cache_id;
+array(string) roxen_languages;
 
 void start(int n, Configuration c) {
   if(c->enabled_modules["content_editor#0"]) {
@@ -44,8 +40,13 @@ void start(int n, Configuration c) {
 
   default_language = lower_case([string]query("default_language"));
   languages = map([array(string)]query("languages"), lower_case);
-  rxml = map([array(string)]query("rxml"), lower_case);
-  cache_id="lang_mod"+c->get_config_id();
+  cache_id = "lang_mod"+c->get_config_id();
+
+  mapping conv = Standards.ISO639_2.list_639_1();
+  conv = mkmapping( values(conv), indices(conv) );
+  roxen_languages = roxen->list_languages() +
+    map(roxen->list_languages(), lambda(string in) { return conv[in]; });
+  roxen_languages -= ({ 0 });
 }
 
 
@@ -125,12 +126,13 @@ object remap_url(RequestID id, string url) {
 // ---------------- Tag definitions --------------
 
 function(string:string) translator(array(string) client, RequestID id) {
-  client=({ id->misc->defines->language })+client+({ default_language });
-  array(string) _lang=roxen->list_languages();
+  client= ({ id->misc->defines->language }) + client + ({ default_language });
+
   foreach(client, string lang)
-    if(has_value(_lang,lang)) {
+    if(has_value(roxen_languages,lang)) {
       return roxen->language_low(lang)->language;
     }
+  return roxen->language_low("en")->language;
 }
 
 class TagLanguage {
