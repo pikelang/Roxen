@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.6 1997/02/08 00:54:50 nisse Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.7 1997/02/12 20:45:13 grubba Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -15,7 +15,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_module_path = 0; /* Path in CVS repository */
-string cvs_program, rlog_program;
+string cvs_program, rlog_program, rcsdiff_program;
 
 int accesses, dirlists, errors;
 
@@ -164,7 +164,7 @@ string|void check_variable(string name, string value)
     case "path":
       {
 	string name;
-	array required = ({"cvs", "rlog", "rcs", "co"});
+	array required = ({"cvs", "rlog", "rcs", "co", "rcsdiff"});
 	foreach(value /":", name)
 	  {
 	    required = filter(required, lambda(string prog, string name)
@@ -204,6 +204,8 @@ void start()
   werror(sprintf("cvs program located as: %s\n", cvs_program));
   rlog_program = locate_binary(path, "rlog");
   werror(sprintf("rlog program located as: %s\n", rlog_program));
+  rcsdiff_program = locate_binary(path, "rcsdiff");
+  werror(sprintf("rcsdiff program located as: %s\n", rcsdiff_program));
   
   path = query("cvsmodule") / "/";
   cvs_module_path =
@@ -265,14 +267,25 @@ object|mapping|int find_file(string name, object id)
 	{
 	  object f;
 
+	  is_text = prestates->raw;
+
+	  if (stringp(prestates->revision)) {
+	    extra_args += ({ "-r"+prestates->revision });
+	  }
+
 	  if (prestates->log) {
-	    f = run_cvs(rlog_program, 0, 0, fname + ",v" );
+	    f = run_cvs(rlog_program, 0, 0,
+			@extra_args, fname + ",v" );
+	    is_text = 1;
+	  } else if (stringp(prestates->diff) &&
+		     stringp(prestates->revision)) {
+	    
+	    extra_args += ({ "-r"+prestates->diff });
+
+	    f = run_cvs(rcsdiff_program, 0, 0,
+			@extra_args, fname + ",v" );
 	    is_text = 1;
 	  } else {
-	    if (stringp(prestates->revision)) {
-	      extra_args += ({ "-r", prestates->revision });
-	    }
-
 	    f = run_cvs(cvs_program, 0, 0,
 			"-d", query("cvsroot"), "checkout", "-p",
 			@extra_args,
