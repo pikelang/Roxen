@@ -19,9 +19,40 @@ string parse( RequestID id )
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
 
-  docs += "<a href='"+path("whatsnew.html")+"'>"+
-    _(390,"Release notes")+"</a><br />";
+//    docs += "<a href='"+path("whatsnew.html")+"'>"+
+//      _(390,"Release notes")+"</a><br />";
   
+  foreach( ({ "docs/roxen/3.2/" }), string rpath )
+  {
+    if( exists(  rpath + "content_editor_manual_(instant)/index.html" ) )
+      docs += "<a href='"+path(rpath+"content_editor_manual_(instant)/")+"'>"+
+	_(391,"Content Editor (Instant Edition)")+"</a><br />";
+
+      if( exists(  rpath + "content_editor_manual_(advanced)/index.html" ) )
+      docs += "<a href='"+path(rpath+"content_editor_manual_(advanced)/")+"'>"+
+	_(391,"Content Editor (Advanced Edition)")+"</a><br />";
+
+      if( exists(  rpath + "web_developer_manual/index.html" ) )
+      docs += "<a href='"+path(rpath+"web_developer_manual/")+"'>"+
+	_(391,"Web Developer")+"</a><br />";
+
+      if( exists(  rpath + "system_developer_manual/index.html" ) )
+      docs += "<a href='"+path(rpath+"system_developer_manual/")+"'>"+
+	_(391,"System Developer")+"</a><br />";
+
+      if( exists(  rpath + "administrator_manual/index.html" ) )
+      docs += "<a href='"+path(rpath+"administrator_manual/")+"'>"+
+	_(391,"Administrator")+"</a><br />";
+
+      if( exists(  rpath + "forms_and_response_module/index.html" ) )
+      docs += "<a href='"+path(rpath+"forms_and_response_module/")+"'>"+
+	_(391,"Forms And Response Module")+"</a><br />";
+
+      if( exists(  rpath + "categorization_module/index.html" ) )
+      docs += "<a href='"+path(rpath+"categorization_module/")+"'>"+
+	_(391,"Categorization Module")+"</a><br />";
+  }
+
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
     if( exists(  rpath + "creator/index.html" ) )
