@@ -2,6 +2,8 @@
 #include <module.h>
 #include <module_constants.h>
 
+//$Id: add_module.pike,v 1.81 2004/05/27 18:41:33 _cvs_stephen Exp $
+
 int no_reload()
 {
   if( sizeof( already_added ) )

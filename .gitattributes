@@ -45,6 +45,7 @@ worldmap binary
 # Remove the corresponding line before committing
 # changes to these files.
 /server/admin_interface/boxes/userfriendly.pike foreign_ident
+/server/admin_interface/sites/add_module.pike foreign_ident
 /server/admin_interface/sites/site_content.pike foreign_ident
 /server/admin_interface/tasks/debug_info.pike foreign_ident
 /server/admin_interface/tasks/debug_summary.pike foreign_ident
