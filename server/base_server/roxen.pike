@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.561 2000/09/28 02:22:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.562 2000/10/17 14:35:13 marcus Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -603,6 +603,7 @@ class InternalRequestID
     pragma = (<>);
     rest_query = "";
     extra_extension = "";
+    remoteaddr = "127.0.0.1";
   }
 }
 
