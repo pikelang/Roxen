@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.151 2000/08/10 15:40:56 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.152 2000/08/12 18:22:12 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -423,6 +423,7 @@ class TagSet {
     array do_return(RequestID id) {
       if (args->value) {
 	// Set an entity variable to a value.
+	if(args->split) RXML.user_set_var(args->variable, args->value/args->split, args->scope);
 	RXML.user_set_var(args->variable, args->value, args->scope);
 	return 0;
       }
@@ -757,7 +758,7 @@ class TagInsert {
 	}
       }
 
-      RXML.parse_error("No correct insert attribute given.\n");
+      parse_error("No correct insert attribute given.\n");
     }
   }
 }
@@ -770,6 +771,27 @@ class TagInsertVariable {
   string get_data(string var, mapping args, RequestID id) {
     if(zero_type(RXML.user_get_var(var, args->scope)))
       RXML.run_error("No such variable ("+var+").\n", id);
+    if(args->index) {
+      mixed data = RXML.user_get_var(var, args->scope);
+      if(intp(data) || floatp(data))
+	RXML.run_error("Can not index numbers.\n");
+      if(stringp(data)) {
+	if(args->split)
+	  data = data / args->split;
+	else
+	  data = ({ data });
+      }
+      if(arrayp(data)) {
+	int index = (int)args->index;
+	if(index<0) index=sizeof(data)+index+1;
+	if(sizeof(data)<index || index<1)
+	  RXML.run_error("Index out of range.\n");
+	else
+	  return data[index-1];
+      }
+      if(data[args->index]) return data[args->index];
+      RXML.run_error("Could not index variable data\n");
+    }
     return (string)RXML.user_get_var(var, args->scope);
   }
 }
@@ -2374,15 +2396,36 @@ Display the time from another timezone.
 <attr name=quote value=html|none>
  How the inserted data should be quoted. Default is \"html\", except for
  href and file where it's \"none\".
-</attr>
+</attr>",
+
+"insert#variable":#"<desc plugin>Inserts the value of a variable.</desc>
 
 <attr name=variable value=string>
- Inserts the value of that variable.
+ The name of the variable.
 </attr>
 
-<attr name=variables>
- Inserts a variable listing. Presently, only the argument 'full' is available.
+<attr name=scope value=string>
+ The name of the scope, unless given in the variable attribute.
+</attr>
 
+<attr name=index value=number>
+ If the value of the variable is an array, the element with this index number
+ will be inserted. 1 is the first element. -1 is the last element.
+</attr>
+
+<attr name=split value=string>
+ A string with which the variable value should be splitted into an array, so
+ that the index attribute may be used.
+</attr>",
+
+"insert#variables":#"<desc plugin><short>Inserts listing of all variables in a scope.</short>
+Note that it is possible to create a scope with an infinite number of variables set. In
+this case the programme of that scope decides which variables that should be listable, i.e.
+this will not cause any problem except that all variables will not be listed. It is also
+possible to hide variables so that they are not listed with this tag.
+</desc>
+<attr name=variables value=full|plain>
+  Sets how the output should be formatted. 
  <ex>
   <pre>
    <insert variables='full' scope='roxen'/>
@@ -2390,31 +2433,50 @@ Display the time from another timezone.
  </ex>
 </attr>
 
-<attr name=scopes>
- Inserts a listing of all present scopes.
+<attr name=scope>
+ The name of the scope that should be listed, if not the present scope.
+</attr>",
+
+"insert#scopes":#"<desc plugin><short>Inserts a listing of all present scopes.</short></desc>
+
+<attr name=scopes value=full|plain>
+ Sets how the output should be formatted.
+</attr>
 
  <ex>
   <pre>
    <insert scopes=''/>
   </pre>
  </ex>
-</attr>
+</attr>",
+
+"insert#file":#"<desc plugin><short>Inserts the contents of a file.</short>
+ It reads files in a way similar to if you fetched the file with a browser, so
+ the file may be parsed before it is inserted, depending on settings in
+ the RXML parser. Most notably which kinds of files (extensions) that should be
+ parsed. Since it reads files like a normal request, e.g. generated pages from
+ location modules can be inserted.
+ Put the tag <tag>eval</tag> around the <tag>insert</tag> if the file
+ should be parsed after it is inserted in the page. This enables RXML defines and
+ scope variables to be set in the including file (as opposed to the included file).
+ You can also configure the file system module so that files with a certain extension
+ can not be downloaded, but still inserted into other documents.</desc>
 
 <attr name=file value=string>
- Inserts the contents of that file. Note that the file is parsed
- before it is inserted. Put the tag <tag>eval</tag> around the
- <tag>insert</tag> if the file isn't to be parsed before it is
- inserted.
+ The virtual path to the file to be inserted.
 
  <ex type='box'>
-  <insert file='foo.xml'/>
+  <eval><insert file='html_header.inc'/></eval>
  </ex>
-</attr>
+</attr>",
 
-<attr name=href value=string>
- Inserts the contents at that URL. This function has to be enabled in
- the <module>RXML 2.0 tags</module> module in the Roxen WebServer
- configuration interface.
+"insert#realfile":#"<desc plugin>Inserts a raw, unparsed file. The disadvantage
+with the realfile plugin compared to the file plugin is that the realfile plugin
+needs the inserted file to exist, and can't fetch files from e.g. an arbitrary
+location module.</desc>
+
+<attr name=realfile value=string>
+ The virtual path to the file to be inserted.
 </attr>",
 
 "maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
@@ -2664,8 +2726,8 @@ Sets a variable.</short>
  The name of another variable that the value should be copied from.
 </attr>
 
-<attr name=other value=string>
- The name of a id->misc->variables that the value should be copied from.
+<attr name=split value=string>
+ The value will be splitted by this string into an array.
 </attr>
 
  If none of the above attributes are specified, the variable is unset.
