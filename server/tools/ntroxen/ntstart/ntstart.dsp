@@ -89,6 +89,10 @@ SOURCE=.\ntstart.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ntstart.rc
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # End Source File
 # End Group
@@ -107,6 +111,10 @@ SOURCE=..\version.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\roxen.ico
+# End Source File
 # End Group
 # End Target
 # End Project

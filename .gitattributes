@@ -8,6 +8,7 @@
 *.dsw eol=crlf
 *.gif binary
 /server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
+/server/tools/ntroxen/ntstart/resource.h eol=crlf
 /server/tools/ntroxen/startdll/StdAfx.h eol=crlf
 /server/tools/ntroxen/startdll/cmdline.h eol=crlf
 /server/tools/ntroxen/startdll/resource.h eol=crlf
