@@ -2,19 +2,15 @@
 inherit "roxenlib";
 inherit "module";
 
-#define DEBUG
-
-
 /*  ------------------------------------------- MODULE GLUE */
-
 void create(object c)
 {
   if(c)
   {
-    defvar("cache-dir", "../gimage/"+c->short_name( c->name )+"/",
-	   "Cache directory", TYPE_STRING, "Image and argument cache");
-    
     defvar("location", "/ri/", "The mountpoint", TYPE_LOCATION, "");
+    defvar("cache-dir", "../gimage/"+c->short_name( c->name )+"/",
+	   "Cache directory", TYPE_STRING, 
+	   "Image and argument cache directory.");
   }
 }
 
@@ -89,8 +85,8 @@ mixed internal_tag_image(string t, mapping m, int line,
   if(stringp(r)) return r;
 }
 
-void internal_parse_layer(string t, mapping m, string c, int line,
-			  object id, mapping res)
+string internal_parse_layer(string t, mapping m, string c, int line,
+			    object id, mapping res)
 {
   mapping this = ([]);
 
@@ -136,7 +132,6 @@ mapping low_render_image(string how, object id)
 
   parse_html_lines( how, ([]), ([ "layer":internal_parse_layer]), id, res );
 
-#if 1
   object i = Image.image( (int)res->xsize, (int)res->ysize );
   foreach(res->layers, mapping l)
     switch(l->method)
@@ -166,27 +161,7 @@ mapping low_render_image(string how, object id)
 	   "ysize":(string)res->ysize, 
 	   "image":res->image,
 	   "type":"image/jpeg" ]);
-#endif
 
-#if 0
-  array arguments = ({});
-  foreach(res->layers, mapping l)
-    arguments += ({({
-      crop_image(l->image, res->xsize, res->ysize ), 
-      crop_image(l->mask, res->xsize, res->ysize ), 
-      l->opaque_value, 
-      l->method 
-    })});
-
-  res = ([ "xsize":(string)res->xsize,
-	   "ysize":(string)res->ysize, 
-	   "type":"image/jpeg" ]);
-
-  object i = Image.image( (int)res->xsize, (int)res->ysize );
-  if(sizeof(arguments))
-    i->add_layers( @arguments );
-  arguments = 0;
-#endif
   res->image = i;
   return res;
 }
@@ -234,12 +209,7 @@ mapping find_file(string f, object id)
   mapping res;
   id->misc->cacheable = 4711;
   if((string)img_id != f)
-  {
-#ifdef DEBUG
-    error("non-int id.\n");
-#endif
     return 0;
-  }
 
   if(res = cached_image( img_id, id ))
     return res;
@@ -248,12 +218,8 @@ mapping find_file(string f, object id)
     restore_image_ids();
 
   if(!image_ids[ img_id ])
-  {
-#ifdef DEBUG
-    error(sprintf("non registered id <%O>.\n", image_ids));
-#endif
     return 0;
-  }
+
   array e;
   e = catch {
     mapping r = render_image( image_ids[ img_id ], id );
@@ -291,7 +257,6 @@ void restore_image_ids()
     };
 
   foreach(indices(image_ids), string i)
-  {
     if(stringp(i))
     {
       if(image_ids[i][0] >= next_image_id)
@@ -299,7 +264,6 @@ void restore_image_ids()
       if(now-image_ids[i][1] > 3600*24*2)
 	uncache_img( image_ids[i][0] );
     }
-  }
 }
 
 void save_ids()
@@ -321,7 +285,6 @@ array new_image_id(string f)
 
 /*  --------------------------------------- RXML GLUE FUNCTIONS */
 
-
 string tag_rimage_id( string t, mapping m, string contents, object id )
 {
   array i;
@@ -338,7 +301,6 @@ string tag_rimage_id( string t, mapping m, string contents, object id )
       m->height = (string)t->ysize;
     }
   }
-  
   return query_location() + i[0];
 }
 
