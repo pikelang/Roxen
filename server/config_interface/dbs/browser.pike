@@ -177,7 +177,7 @@ mapping|string parse( RequestID id )
 	  sprintf((string)_(380,"While running %s: %s"), q,describe_error(e) )+
 	  "</td></tr>\n";
       qres += "</table>"+
-	sprintf( _(0,"Query took %[0].3fs, %[1]d rows in the reply")+
+	sprintf( _(385,"Query took %[0].3fs, %[1]d rows in the reply")+
 		 "\n<br />", qtime, qrows);
     }
   }

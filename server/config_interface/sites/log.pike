@@ -20,7 +20,7 @@ string parse(RequestID id)
 
   if( sizeof( report ) >= 1000 )
     report[1000] =
-      sprintf(LOCALE(0,"%d entries skipped. Present in log on disk"),
+      sprintf(LOCALE(386,"%d entries skipped. Present in log on disk"),
 	      sizeof( report )-999 );
 
   return (sizeof(report)?(report[..1000]*""):LOCALE(250, "Empty"));

@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.118 2001/07/31 12:02:32 per Exp $
+// $Id: site_content.pike,v 1.119 2001/08/05 20:09:43 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -252,7 +252,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 
   if( sizeof( report ) >= 1000 )
     report[1000] =
-      sprintf(LOCALE(0,"%d entries skipped. Present in log on disk."),
+      sprintf(LOCALE(387,"%d entries skipped. Present in log on disk."),
 	      sizeof( report )-999 );
 
   return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report[..1000]*"");

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.80 2001/08/01 17:10:25 per Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.81 2001/08/05 20:13:58 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -141,7 +141,7 @@ array|object do_sql_query(mapping args, RequestID id,
   {
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
-      RXML.run_error( (string)LOCALE(0,"Cannot find the module %s"),
+      RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
 		      args->module );
 
     if( catch( con = module->get_my_sql( ro ) ) )
