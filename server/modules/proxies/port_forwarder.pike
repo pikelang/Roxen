@@ -26,16 +26,16 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.1 1999/11/12 09:17:41 kinkie Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.2 1999/12/18 14:49:38 nilsson Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG
 #endif
 
 #ifdef TCPFORWARDER_DEBUG
-#define debug_perror perror
+#define debug_werror werror
 #else
-#define debug_perror
+#define debug_werror
 #endif
 
 #define THROW(X) throw( ({X,backtrace()}) )
@@ -61,7 +61,7 @@ class Connection
 
 	void send(object to_fd, string data) {
 		int sent=0;
-		debug_perror("Connection::send("+data+")\n");
+		debug_werror("Connection::send("+data+")\n");
 		if(!strlen(buffer[to_fd]))
 			buffer[to_fd] = data[(sent=to_fd->write(data))..];
 		else
@@ -70,29 +70,29 @@ class Connection
 	}
 
 	void got_data(object f, string data) {
-    debug_perror ("Got data from "+(f?f->query_address():"unknown")+": "+data+"\n");
+    debug_werror ("Got data from "+(f?f->query_address():"unknown")+": "+data+"\n");
 		send(otherfd(f),data);
 	}
 
 	void client_closed() {
-		debug_perror("Connection: Client closed connection.\n");
+		debug_werror("Connection: Client closed connection.\n");
 		destruct(this_object());
 	}
 
 	void write_more(object f)
 	{
-    debug_perror("Write_more..\n");
+    debug_werror("Write_more..\n");
 		if(strlen(buffer[f]))
 		{
 			int written = otherfd(f)->write(buffer[f]);
 			traffic += written;
-			debug_perror((string)written);
+			debug_werror((string)written);
 			if(written == 0)
 				client_closed();
 			else
 				buffer[f] = (buffer[f])[written..];
 		}
-    debug_perror("\n");
+    debug_werror("\n");
 	}
 
   //s=source filedes, d=dest filedes, m=the instantiating object
@@ -105,13 +105,13 @@ class Connection
 		d->set_nonblocking(got_data,write_more,client_closed);
 		d->set_id(d);
 		mastermodule=m;
-		debug_perror("Got connection from "+s->query_address()+
+		debug_werror("Got connection from "+s->query_address()+
 				" to " + d->query_address()+"\n");
 	}
 
 	void destroy() {
 		mapping result;
-		debug_perror("Destroying connection\n");
+		debug_werror("Destroying connection\n");
 		fdescs[0]->close();
 		fdescs[1]->close();
 		mastermodule->connections-=(<this_object()>);
@@ -162,7 +162,7 @@ void create() {
 void start() {
   if (accept_port) //I wonder why (at least on my setup) stop isn't called..
     stop();
-  debug_perror("Opening port "+QUERY(port)+"\n");
+  debug_werror("Opening port "+QUERY(port)+"\n");
   accept_port=Stdio.Port();
   if (!accept_port)
     THROW("Can't create a port to listen on");
@@ -172,7 +172,7 @@ void start() {
 }
 
 void stop() {
-  debug_perror("Stopping module\n");
+  debug_werror("Stopping module\n");
   accept_port->set_id(0);
   destruct(accept_port);
   accept_port=0; //double-check there's no more references

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.40 1999/09/25 14:56:37 nilsson Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.41 1999/12/18 14:50:05 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -83,7 +83,7 @@ void start()
     return;
 
 #ifdef PROXY_DEBUG
-  perror("Proxy online.\n");
+  werror("Proxy online.\n");
 #endif
 
   if(QUERY(logfile) == "stdout")
@@ -531,7 +531,7 @@ mapping find_file( string f, object id )
   mixed tmp;
 
 #ifdef PROXY_DEBUG
-  perror("PROXY: Request for "+f+"\n");
+  werror("PROXY: Request for "+f+"\n");
 #endif
   f=id->raw_url[strlen(QUERY(mountpoint))+1 .. ];
 

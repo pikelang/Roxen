@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.30 1999/11/26 17:03:42 leif Exp $";
+string cvs_version = "$Id: directories.pike,v 1.31 1999/12/18 14:36:13 nilsson Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -113,7 +113,7 @@ class Dirnode
       tmp = describer(this_object(), id);
 #ifdef NODE_DEBUG
     else
-      perror("No describer in node "+path(1)+"\n");
+      werror("No describer in node "+path(1)+"\n");
 #endif
     if(!tmp) return "";
 
@@ -231,7 +231,7 @@ object root(object id, int nocache)
 	       "%*s//%*s/%s/", r) == 3)
     {
       r = "/"+r;
-      // perror("This is an abnormal MyWorldLocation: %s\n"
+      // werror("This is an abnormal MyWorldLocation: %s\n"
       // 	"Prefix: %s\n",
       // 	my_configuration()->QUERY(MyWorldLocation), r);
     }

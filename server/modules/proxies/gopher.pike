@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.15 1998/11/18 04:54:24 per Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.16 1999/12/18 14:48:55 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -97,7 +97,7 @@ void done_dir_data(array in)
   if(dirl[0] && dirl[0][0] != '<')
   {
 #ifdef GOPHER_DEBUG
-    perror("GOPHER: Done with dir data.\n");
+    werror("GOPHER: Done with dir data.\n");
 #endif
     dirl -= ({ ".", "" });
     for(i=0; i < sizeof(dirl); i++)
@@ -160,13 +160,13 @@ void done_dir_data(array in)
 #undef URL
     }
 #ifdef GOPHER_DEBUG
-    perror("GOPHER: Sending dir data to client.\n");
+    werror("GOPHER: Sending dir data to client.\n");
 #endif
     write_to_client_and_cache(to, map(dirl, make_html_line)*"" +"<hr>",
 			      in[-1]);
   } else {
 #ifdef GOPHER_DEBUG
-    perror("GOPHER: Sending cached dir data to client.\n");
+    werror("GOPHER: Sending cached dir data to client.\n");
 #endif
     write_to_client_and_cache(to, dirl*"\n", 0);
   }
@@ -176,7 +176,7 @@ void done_dir_data(array in)
 void got_dir_data(array i, string s)
 {
 #ifdef GOPHER_DEBUG
-    perror("GOPHER: Got some dir data.\n");
+    werror("GOPHER: Got some dir data.\n");
 #endif
   i[0] += s;
   if(i[0][-1] == '.' && i[0][-2]=='\n')
@@ -194,7 +194,7 @@ void connected(object ok, string file, object send_to, string query,
   string type;
 
 #ifdef GOPHER_DEBUG
-  perror("GOPHER: Connected\n");
+  werror("GOPHER: Connected\n");
 #endif
 
   if(!send_to)
@@ -219,14 +219,14 @@ void connected(object ok, string file, object send_to, string query,
   }
 
 #ifdef GOPHER_DEBUG
-  perror("GOPHER: Requesting file\n");
+  werror("GOPHER: Requesting file\n");
 #endif
 
   switch(type)
   {
    case "1": /* Directory, must be parsed. */
 #ifdef GOPHER_DEBUG
-    perror("GOPHER: Is a menu\n");
+    werror("GOPHER: Is a menu\n");
 #endif
     ok->write(file + "\n");
     ok->set_id(({ "", send_to, ok, key}));
@@ -317,7 +317,7 @@ mapping find_file(string fi, object id)
   string h, f, q;
   int p;
 #ifdef GOPHER_DEBUG
-  perror("GOPHER: find_file()\n");
+  werror("GOPHER: find_file()\n");
 #endif
 
   if(tmp = proxy_auth_needed(id))
@@ -328,7 +328,7 @@ mapping find_file(string fi, object id)
   sscanf(h, "%s:%d", h, p);
   if(!p)  p=70;
 #ifdef GOPHER_DEBUG
-  perror("GOPHER: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
+  werror("GOPHER: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
 #endif
   sscanf(id->raw_url, "%*s?%s", q);
   if(id->pragma["no-cache"] || id->method != "GET")

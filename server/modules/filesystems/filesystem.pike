@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.58 1999/12/07 22:36:09 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.59 1999/12/18 14:38:57 nilsson Exp $";
 constant thread_safe=1;
 
 
@@ -142,7 +142,7 @@ void start()
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
 #ifdef FILESYSTEM_DEBUG
-  perror("FILESYSTEM: Online at "+QUERY(mountpoint)+" (path="+path+")\n");
+  werror("FILESYSTEM: Online at "+QUERY(mountpoint)+" (path="+path+")\n");
 #endif
 }
 
@@ -243,7 +243,7 @@ mapping putting = ([]);
 
 void done_with_put( array(object|string) id_arr )
 {
-//  perror("Done with put.\n");
+//  werror("Done with put.\n");
   object to;
   object from;
   object id;
@@ -273,7 +273,7 @@ void done_with_put( array(object|string) id_arr )
 
 void got_put_data( array (object|string) id_arr, string data )
 {
-// perror(strlen(data)+" .. ");
+// werror(strlen(data)+" .. ");
 
   object to;
   object from;
@@ -369,7 +369,7 @@ mixed find_file( string f, object id )
   string oldf = f;
 
 #ifdef FILESYSTEM_DEBUG
-  roxen_perror("FILESYSTEM: Request for \""+f+"\"\n");
+  werror("FILESYSTEM: Request for \""+f+"\"\n");
 #endif /* FILESYSTEM_DEBUG */
 
   string mountpoint = QUERY(mountpoint);

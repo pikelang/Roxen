@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.9 1999/08/24 09:49:33 kinkie Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.10 1999/12/18 14:44:31 nilsson Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -22,7 +22,7 @@ inherit "roxenlib";
 inherit "module";
 
 #ifdef SQLAUTHDEBUG
-#define DEBUGLOG(X) perror("SQLuserdb: "+X+"\n");
+#define DEBUGLOG(X) werror("SQLuserdb: "+X+"\n");
 #else
 #define DEBUGLOG(X)
 #endif
@@ -149,12 +149,12 @@ void open_db() {
     db=Sql.sql(QUERY(sqlserver));
   };
   if (err) {
-    perror ("SQLauth: Couldn't open authentication database!\n");
+    werror ("SQLauth: Couldn't open authentication database!\n");
     if (db)
-      perror("SQLauth: database interface replies: "+db->error()+"\n");
+      werror("SQLauth: database interface replies: "+db->error()+"\n");
     else
-      perror("SQLauth: unknown reason\n");
-    perror ("SQLauth: check the values in the configuration interface, and "
+      werror("SQLauth: unknown reason\n");
+    werror ("SQLauth: check the values in the configuration interface, and "
 	    "that the user\n\trunning the server has adequate permissions "
 	    "to the server\n");
     db=0;
@@ -182,7 +182,7 @@ string *userinfo (string u) {
 	open_db();
 
 	if (!db) {
-		perror ("SQLauth: Returning 'user unknown'.\n");
+		werror ("SQLauth: Returning 'user unknown'.\n");
 		return 0;
 	}
 	sql_results=db->query("select username,passwd,uid,gid,homedir,shell "
@@ -218,7 +218,7 @@ string *userlist() {
 	DEBUGLOG ("userlist()");
 	open_db();
 	if (!db) {
-		perror ("SQLauth: returning empty user index!\n");
+		werror ("SQLauth: returning empty user index!\n");
 		return ({});
 	}
 	data=db->query("select username from "+QUERY(table));
@@ -234,7 +234,7 @@ string user_from_uid (int u)
 		return 0;
 	open_db(); //it's not easy to cache in this case.
 	if (!db) {
-		perror("SQLauth: returning no_such_user\n");
+		werror("SQLauth: returning no_such_user\n");
 		return 0;
 	}
 	data=db->query("select username from " + QUERY(table) +

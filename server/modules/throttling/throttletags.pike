@@ -3,11 +3,11 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.2 1999/12/18 14:30:26 nilsson Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.3 1999/12/18 14:35:02 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("throttletags: "+X+"\n")
+#define THROTTLING_DEBUG(X) werror("throttletags: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif

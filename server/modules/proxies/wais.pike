@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.13 1998/11/29 23:55:55 grubba Exp $";
+string cvs_version = "$Id: wais.pike,v 1.14 1999/12/18 14:51:25 nilsson Exp $";
 
 #include <config.h>
 
@@ -291,33 +291,33 @@ string trim_junk(string headline)
   int i,j;
 
 #ifdef WAIS_DEBUG_2
-  perror("trim_junk1("+debug_print_string(headline)+"\n");
+  werror("trim_junk1("+debug_print_string(headline)+"\n");
 #endif
 
   headline = replace(headline, ({ "\033(", "\033)"}) , ({"",""}));
 
 #ifdef WAIS_DEBUG_2
-  perror("trim_junk2("+debug_print_string(headline)+"\n");
+  werror("trim_junk2("+debug_print_string(headline)+"\n");
 #endif
 
   while((i=search(headline,"\033"))!=-1)
     headline=headline[0..i]+headline[i+4..];
 
 #ifdef WAIS_DEBUG_2
-  perror("trim_junk3("+debug_print_string(headline)+"\n");
+  werror("trim_junk3("+debug_print_string(headline)+"\n");
 #endif
 
   while(strlen(headline)>0 && headline[0]==' ')
     headline=headline[1..];
 
 #ifdef WAIS_DEBUG_2
-  perror("trim_junk4("+debug_print_string(headline)+"\n");
+  werror("trim_junk4("+debug_print_string(headline)+"\n");
 #endif
 
 /*  headline=headline/"\n";
 
 #ifdef WAIS_DEBUG
-  perror("trim_junk5("+debug_print_string(headline)+"\n");
+  werror("trim_junk5("+debug_print_string(headline)+"\n");
 #endif
 */
 
@@ -423,7 +423,7 @@ string writeBinaryInteger(int num,int size)
 		(num>>(bitsPerByte*2))&255,(num>>(bitsPerByte))&255,num&255);
     break;
   default:
-    perror(sprintf("Invalid writeBinaryInteger call: num %d, size &d\n",
+    werror(sprintf("Invalid writeBinaryInteger call: num %d, size &d\n",
 		   num,size));
     buf="";
   }
@@ -545,7 +545,7 @@ string generate_retrieval_apdu(string docid, string doctype, string database)
   nbuf+=writeString(query,DT_Query);
 
 #ifdef WAIS_DEBUG_2
-  perror("generate_retrieval_apdu got:\n"+nbuf+"\n");
+  werror("generate_retrieval_apdu got:\n"+nbuf+"\n");
 #endif
   return nbuf;
 }
@@ -567,7 +567,7 @@ string WWW_from_archie(string file)
   string res;
 
 #ifdef WAIS_DEBUG
-  perror("archie id (to become WWW id): "+file+"\n");
+  werror("archie id (to become WWW id): "+file+"\n");
 #endif
 
   for(i=0; i<strlen(file) && file[i]>' '; i++)
@@ -580,7 +580,7 @@ string WWW_from_archie(string file)
     res="file://"+file[0..i];
 
 #ifdef WAIS_DEBUG
-  perror("archie id (to become WWW id) result: "+res+"\n");
+  werror("archie id (to become WWW id) result: "+res+"\n");
 #endif
 
   return res;
@@ -603,7 +603,7 @@ string WAIS_from_WWW (string docname)
   int len,type,tmp,i,j;
 
 #ifdef WAIS_DEBUG_2
-  perror("WWW id (to become WAIS id): "+debug_print_string(docname)+"\n");
+  werror("WWW id (to become WAIS id): "+debug_print_string(docname)+"\n");
 #endif
 
   z="";
@@ -611,13 +611,13 @@ string WAIS_from_WWW (string docname)
     if(sscanf(docname,"%d=%s;",type,t2)!=2) {
       if(sscanf(docname,"%d=",type)!=1) {
 #ifdef WAIS_DEBUG
-	perror("cannot parse record"+docname+"\n");
+	werror("cannot parse record"+docname+"\n");
 #endif
 	return 0;
       }
       if(strlen(docname[search(docname,"=")+1..])>0) {
 #ifdef WAIS_DEBUG
-	perror("cannot parse record"+docname+" (second choice)\n");
+	werror("cannot parse record"+docname+" (second choice)\n");
 #endif
 	return 0;
       }
@@ -642,7 +642,7 @@ string WAIS_from_WWW (string docname)
 
 #ifdef WAIS_DEBUG
     len=strlen(t2);
-    perror(sprintf("found record %d, len %d, content %s\n",type,len,t2));
+    werror(sprintf("found record %d, len %d, content %s\n",type,len,t2));
 #endif
   }
 
@@ -665,7 +665,7 @@ string WWW_from_WAIS(string docid)
     return 0;
 
 #ifdef WAIS_DEBUG_2
-  perror("WAIS id (to become WWW id): "+debug_print_string(docid)+"\n");
+  werror("WAIS id (to become WWW id): "+debug_print_string(docid)+"\n");
 #endif
 
   out="";
@@ -673,7 +673,7 @@ string WWW_from_WAIS(string docid)
     out+=sprintf("%d",(int)docid[in]);  /* record put type */
 
 #ifdef WAIS_DEBUG
-  perror(sprintf("found record type %d\n",(int)docid[in]));
+  werror(sprintf("found record type %d\n",(int)docid[in]));
 #endif
 
     out+="=";
@@ -686,7 +686,7 @@ string WWW_from_WAIS(string docid)
       in+=1;
     }
 #ifdef WAIS_DEBUG
-    perror(sprintf("found record len %d\n",l));
+    werror(sprintf("found record len %d\n",l));
 #endif
 
     out += replace(docid[in..in+l-1], ({ "\000", " ", "%" }), 
@@ -695,7 +695,7 @@ string WWW_from_WAIS(string docid)
   }
 
 #ifdef WAIS_DEBUG
-  perror("translated in "+out+"\n");
+  werror("translated in "+out+"\n");
 #endif
   return out;
 }
@@ -768,7 +768,7 @@ string display_search_response(mapping response,string database,
   mapping info;
 
 #ifdef WAIS_DEBUG
-  perror("WAIS........ Displaying search response\n");
+  werror("WAIS........ Displaying search response\n");
 #endif
 
   out=sprintf("Index %s contains the following %d item%s relevant to '%s'.\n",
@@ -788,7 +788,7 @@ string display_search_response(mapping response,string database,
 
   if (sizeof(info->Diagnostics)>0) {
 #ifdef WAIS_DEBUG
-    perror("WAIS........ showing diags\n");
+    werror("WAIS........ showing diags\n");
 #endif
 
     out+=showDiags(info->Diagnostics);
@@ -800,7 +800,7 @@ string display_search_response(mapping response,string database,
       string headline,docid,docname;
 
 #ifdef WAIS_DEBUG
-      perror("WAIS........ showing header "+sprintf("%d (%d)",k,sizeof(info->DocHeaders))+"\n");
+      werror("WAIS........ showing header "+sprintf("%d (%d)",k,sizeof(info->DocHeaders))+"\n");
 #endif
 
       head=info->DocHeaders[k];
@@ -841,7 +841,7 @@ string display_search_response(mapping response,string database,
 	      }
 	    }
 #ifdef WAIS_DEBUG
-	    perror("WAIS........ Types_array `"+types_array+"'\n");
+	    werror("WAIS........ Types_array `"+types_array+"'\n");
 #endif
 	  } else
 	    types_array+="TEXT";
@@ -1023,7 +1023,7 @@ mapping readSearchResponseInfo(string buf)
       seedWordsUsed = buf[0..val];
       buf=buf[val..];
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_SeedWordsUsed: "+seedWordsUsed+"\n");
+      werror("WAIS: got DT_SeedWordsUsed: "+seedWordsUsed+"\n");
 #endif
       break;
     case DT_DatabaseDiagnosticRecords:
@@ -1048,7 +1048,7 @@ mapping readSearchResponseInfo(string buf)
       }
       diags += ({ ([ "DIAG" : diag, "ADDINFO" : addinfo, "SURROGATE" : surrogate ]) });
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DatabaseDiagnosticRecords: "+diag+" "+surrogate+"\n");
+      werror("WAIS: got DT_DatabaseDiagnosticRecords: "+diag+" "+surrogate+"\n");
 #endif
       break;
     case DT_DocumentHeaderGroup:
@@ -1061,7 +1061,7 @@ mapping readSearchResponseInfo(string buf)
       /* readWAISDocumentHeader */
 
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DocumentHeaderGroup\n");
+      werror("WAIS: got DT_DocumentHeaderGroup\n");
 #endif
       versionNumber = UNUSED;
       score = UNUSED;
@@ -1086,7 +1086,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG_2
-	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
+	  werror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1096,7 +1096,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_Score:
@@ -1106,7 +1106,7 @@ mapping readSearchResponseInfo(string buf)
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+	  werror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1116,7 +1116,7 @@ mapping readSearchResponseInfo(string buf)
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+	  werror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1126,7 +1126,7 @@ mapping readSearchResponseInfo(string buf)
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+	  werror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
 	  break;
 	case DT_Lines:
@@ -1136,7 +1136,7 @@ mapping readSearchResponseInfo(string buf)
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+	  werror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
 	  break;
 
@@ -1144,7 +1144,7 @@ mapping readSearchResponseInfo(string buf)
 	  int size;
 
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_TYPE_BLOCK: \n");
+	  werror("WAIS: got DT_TYPE_BLOCK: \n");
 #endif
 
 	  buf1 = skipCompressedInteger(buf1);
@@ -1159,7 +1159,7 @@ mapping readSearchResponseInfo(string buf)
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += ({ buf1[0..val-1] });
 #ifdef WAIS_DEBUG
-	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val)+"\n");
+	    werror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val)+"\n");
 #endif
 	    buf1=buf1[val..];
 	    size -= val;
@@ -1172,7 +1172,7 @@ mapping readSearchResponseInfo(string buf)
 	  source = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Source: "+source+"\n");
+	  werror("WAIS: got DT_Source: "+source+"\n");
 #endif
 	  break;
 	case DT_Date:
@@ -1182,7 +1182,7 @@ mapping readSearchResponseInfo(string buf)
 	  date = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Date: "+date+"\n");
+	  werror("WAIS: got DT_Date: "+date+"\n");
 #endif
 	  break;
 	case DT_Headline:
@@ -1192,7 +1192,7 @@ mapping readSearchResponseInfo(string buf)
 	  headline = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Headline: "+headline+"\n");
+	  werror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
 	  break;
 	case DT_OriginCity:
@@ -1202,19 +1202,19 @@ mapping readSearchResponseInfo(string buf)
 	  originCity = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+	  werror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default (ARRRGGGH)\n");
+	  werror("WAIS: got default (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
 	}
       }
 #ifdef WAIS_DEBUG
-      perror("WAIS: end DT_DocumentHeaderGroup\n");
+      werror("WAIS: end DT_DocumentHeaderGroup\n");
 #endif
       docHeaders += ({ (["versionNumber" : versionNumber,
 			 "score" : score,
@@ -1233,7 +1233,7 @@ mapping readSearchResponseInfo(string buf)
       int versionNumber,score,bestMatch,docLength,lines;
   
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DocumentShortHeaderGroup\n");
+      werror("WAIS: got DT_DocumentShortHeaderGroup\n");
 #endif
 
       versionNumber = UNUSED;
@@ -1259,7 +1259,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+	  werror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1269,7 +1269,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_Score:
@@ -1279,7 +1279,7 @@ mapping readSearchResponseInfo(string buf)
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+	  werror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1289,7 +1289,7 @@ mapping readSearchResponseInfo(string buf)
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+	  werror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1299,7 +1299,7 @@ mapping readSearchResponseInfo(string buf)
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+	  werror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
 	  break;
 	case DT_Lines:
@@ -1309,19 +1309,19 @@ mapping readSearchResponseInfo(string buf)
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+	  werror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default 2 (ARRRGGGH)\n");
+	  werror("WAIS: got default 2 (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
 	}
       }
 #ifdef WAIS_DEBUG
-      perror("WAIS: end DT_DocumentShortHeaderGroup\n");
+      werror("WAIS: end DT_DocumentShortHeaderGroup\n");
 #endif
       shortHeaders += ({ (["versionNumber" : versionNumber,
 			   "score" : score,
@@ -1339,7 +1339,7 @@ mapping readSearchResponseInfo(string buf)
       /* readWAISDocumentHeader */
 
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DocumentLongHeaderGroup\n");
+      werror("WAIS: got DT_DocumentLongHeaderGroup\n");
 #endif
       versionNumber = UNUSED;
       score = UNUSED;
@@ -1364,7 +1364,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+	  werror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1374,7 +1374,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_Score:
@@ -1384,7 +1384,7 @@ mapping readSearchResponseInfo(string buf)
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+	  werror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1394,7 +1394,7 @@ mapping readSearchResponseInfo(string buf)
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+	  werror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1404,7 +1404,7 @@ mapping readSearchResponseInfo(string buf)
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+	  werror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
 #endif
 	  break;
 	case DT_Lines:
@@ -1414,7 +1414,7 @@ mapping readSearchResponseInfo(string buf)
 	  lines = readBinaryInteger(val,buf1);
 	  buf1 = buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+	  werror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
 #endif
 	  break;
 
@@ -1422,7 +1422,7 @@ mapping readSearchResponseInfo(string buf)
 	  int size;
 
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_TYPE_BLOCK: \n");
+	  werror("WAIS: got DT_TYPE_BLOCK: \n");
 #endif
 
 	  buf1 = skipCompressedInteger(buf1);
@@ -1435,7 +1435,7 @@ mapping readSearchResponseInfo(string buf)
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += buf1[0..val];
 #ifdef WAIS_DEBUG
-	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val]+"\n");
+	    werror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val]+"\n");
 #endif
 	    buf1=buf1[val..];
 	    size -= val;
@@ -1448,7 +1448,7 @@ mapping readSearchResponseInfo(string buf)
 	  source = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Source: "+source+"\n");
+	  werror("WAIS: got DT_Source: "+source+"\n");
 #endif
 	  break;
 	case DT_Date:
@@ -1458,7 +1458,7 @@ mapping readSearchResponseInfo(string buf)
 	  date = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Date: "+date+"\n");
+	  werror("WAIS: got DT_Date: "+date+"\n");
 #endif
 	  break;
 	case DT_Headline:
@@ -1468,7 +1468,7 @@ mapping readSearchResponseInfo(string buf)
 	  headline = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Headline: "+headline+"\n");
+	  werror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
 	  break;
         case DT_OriginCity:
@@ -1478,7 +1478,7 @@ mapping readSearchResponseInfo(string buf)
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+	  werror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
 	  break;
 	case DT_StockCodes:
@@ -1488,7 +1488,7 @@ mapping readSearchResponseInfo(string buf)
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
+	  werror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
 #endif
 	  break;
 	case DT_CompanyCodes:
@@ -1498,7 +1498,7 @@ mapping readSearchResponseInfo(string buf)
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
+	  werror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
 #endif
 	  break;
 	case DT_IndustryCodes:
@@ -1508,19 +1508,19 @@ mapping readSearchResponseInfo(string buf)
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
+	  werror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+	  werror("WAIS: got default 3 (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
 	}
       }
 #ifdef WAIS_DEBUG
-      perror("WAIS: end DT_DocumentLongHeaderGroup\n");
+      werror("WAIS: end DT_DocumentLongHeaderGroup\n");
 #endif
       longHeaders += ({ (["versionNumber" : versionNumber,
 			  "score" : score,
@@ -1550,7 +1550,7 @@ mapping readSearchResponseInfo(string buf)
       buf=buf[size..];
 
 #ifdef WAIS_DEBUG_2
-      perror("WAIS: got DT_DocumentTextGroup ("+debug_print_string(buf1)+")\n");
+      werror("WAIS: got DT_DocumentTextGroup ("+debug_print_string(buf1)+")\n");
 #endif
 
       while (strlen(buf1)>0) {
@@ -1562,7 +1562,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG_2
-	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
+	  werror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1572,7 +1572,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_DocumentText:
@@ -1582,12 +1582,12 @@ mapping readSearchResponseInfo(string buf)
 	  documentText = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentText: "+documentText+"\n");
+	  werror("WAIS: got DT_DocumentText: "+documentText+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default 4 (ARRRGGGH)\n");
+	  werror("WAIS: got default 4 (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
@@ -1605,7 +1605,7 @@ mapping readSearchResponseInfo(string buf)
       /* readWAISDocumentHeader */
 
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DocumentHeadlineGroup\n");
+      werror("WAIS: got DT_DocumentHeadlineGroup\n");
 #endif
       versionNumber = UNUSED;
 
@@ -1626,7 +1626,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+	  werror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1636,7 +1636,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_Source:
@@ -1646,7 +1646,7 @@ mapping readSearchResponseInfo(string buf)
 	  source = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Source: "+source+"\n");
+	  werror("WAIS: got DT_Source: "+source+"\n");
 #endif
 	  break;
 	case DT_Date:
@@ -1656,7 +1656,7 @@ mapping readSearchResponseInfo(string buf)
 	  date = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Date: "+date+"\n");
+	  werror("WAIS: got DT_Date: "+date+"\n");
 #endif
 	  break;
 	case DT_Headline:
@@ -1666,7 +1666,7 @@ mapping readSearchResponseInfo(string buf)
 	  headline = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_Headline: "+headline+"\n");
+	  werror("WAIS: got DT_Headline: "+headline+"\n");
 #endif
 	  break;
         case DT_OriginCity:
@@ -1676,19 +1676,19 @@ mapping readSearchResponseInfo(string buf)
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+	  werror("WAIS: got DT_OriginCity: "+originCity+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+	  werror("WAIS: got default 3 (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
 	}
       }
 #ifdef WAIS_DEBUG
-      perror("WAIS: end DT_DocumentHeadlineGroup\n");
+      werror("WAIS: end DT_DocumentHeadlineGroup\n");
 #endif
       headlines += ({ (["versionNumber" : versionNumber,
 			"docID" : docID,
@@ -1704,7 +1704,7 @@ mapping readSearchResponseInfo(string buf)
       /* readWAISDocumentHeader */
 
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_DocumentCodeGroup\n");
+      werror("WAIS: got DT_DocumentCodeGroup\n");
 #endif
       versionNumber = UNUSED;
 
@@ -1725,7 +1725,7 @@ mapping readSearchResponseInfo(string buf)
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+	  werror("WAIS: got DT_DocumentID: "+docID+"\n");
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1735,7 +1735,7 @@ mapping readSearchResponseInfo(string buf)
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+	  werror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
 #endif
 	  break;
 	case DT_StockCodes:
@@ -1745,7 +1745,7 @@ mapping readSearchResponseInfo(string buf)
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
+	  werror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
 #endif
 	  break;
 	case DT_CompanyCodes:
@@ -1755,7 +1755,7 @@ mapping readSearchResponseInfo(string buf)
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
+	  werror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
 #endif
 	  break;
 	case DT_IndustryCodes:
@@ -1765,19 +1765,19 @@ mapping readSearchResponseInfo(string buf)
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..];
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
+	  werror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
 #endif
 	  break;
 	default:
 #ifdef WAIS_DEBUG
-	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+	  werror("WAIS: got default 3 (ARRRGGGH)\n");
 #endif
 	  return 0;
 	  break;
 	}
       }
 #ifdef WAIS_DEBUG
-      perror("WAIS: end DT_DocumentCodesGroup\n");
+      werror("WAIS: end DT_DocumentCodesGroup\n");
 #endif
       codes += ({ (["versionNumber" : versionNumber,
 		    "docID" : docID,
@@ -1787,7 +1787,7 @@ mapping readSearchResponseInfo(string buf)
       break;
     default:
 #ifdef WAIS_DEBUG
-      perror("WAIS: got default 4 (ARRRGGGH)\n");
+      werror("WAIS: got default 4 (ARRRGGGH)\n");
 #endif
       break;
     }
@@ -1837,7 +1837,7 @@ mapping readSearchResponseAPDU(string buf)
   buf=buf[3..];
 
 #ifdef WAIS_DEBUG
-  perror(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
+  werror(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
 		 result,count,recordsReturned,nextPos));
 #endif
 
@@ -1855,7 +1855,7 @@ mapping readSearchResponseAPDU(string buf)
       resultStatus = readBinaryInteger(val,buf);
       buf=buf[val..];
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_ResultSetStatus: "+sprintf("%d",resultStatus)+"\n");
+      werror("WAIS: got DT_ResultSetStatus: "+sprintf("%d",resultStatus)+"\n");
 #endif
       break;
     case DT_PresentStatus:
@@ -1865,7 +1865,7 @@ mapping readSearchResponseAPDU(string buf)
       presentStatus = readBinaryInteger(val,buf);
       buf=buf[val..];
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_PresentStatus: "+sprintf("%d",presentStatus)+"\n");
+      werror("WAIS: got DT_PresentStatus: "+sprintf("%d",presentStatus)+"\n");
 #endif
       break;
     case DT_ReferenceID:
@@ -1875,7 +1875,7 @@ mapping readSearchResponseAPDU(string buf)
       refID = buf[0..val];
       buf=buf[val..];
 #ifdef WAIS_DEBUG
-      perror("WAIS: got DT_ReferenceID: "+refID+"\n");
+      werror("WAIS: got DT_ReferenceID: "+refID+"\n");
 #endif
       break;
     default:
@@ -1938,7 +1938,7 @@ void done_fetch_data(array in)
   }
 
 #ifdef WAIS_DEBUG_2
-  perror("WAIS: Got all fetch data ("+
+  werror("WAIS: Got all fetch data ("+
 	 debug_print_string(in[0][HEADER_LENGTH..])+").\n");
 #endif
 
@@ -1987,7 +1987,7 @@ void got_fetch_data(array i, string s)
   int q,t;
 
 #ifdef WAIS_DEBUG
-  perror("WAIS: Got some fetch data.\n");
+  werror("WAIS: Got some fetch data.\n");
 #endif
   i[0] += s;
 
@@ -1998,7 +1998,7 @@ void got_fetch_data(array i, string s)
       return;
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Got first 0.\n");
+    werror("WAIS: Got first 0.\n");
 #endif
     
     if(q>0)
@@ -2011,7 +2011,7 @@ void got_fetch_data(array i, string s)
       return;
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
+    werror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
 #endif
 
     for(t=0;i[0][t]=='0';t++)
@@ -2019,7 +2019,7 @@ void got_fetch_data(array i, string s)
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
 #ifdef WAIS_DEBUG
-      perror("WAIS: message header error.\n");
+      werror("WAIS: message header error.\n");
 #endif
       destruct(i[3]);
       destruct(i[4]);
@@ -2035,7 +2035,7 @@ void got_fetch_data(array i, string s)
     if(sizeof(i[0])>=i[2]+HEADER_LENGTH) {
 
 #ifdef WAIS_DEBUG
-      perror(sprintf("WAIS: got all fetch datas (%d on %d).\n",sizeof(i[0]),
+      werror(sprintf("WAIS: got all fetch datas (%d on %d).\n",sizeof(i[0]),
 	i[2]));
 #endif
       i[1]=3;
@@ -2074,7 +2074,7 @@ void done_search_data(array in)
   }
 
 #ifdef WAIS_DEBUG_2
-  perror("WAIS: Got all search data ("+
+  werror("WAIS: Got all search data ("+
 	 debug_print_string(in[0][HEADER_LENGTH..])+").\n");
 #endif
 
@@ -2093,7 +2093,7 @@ void got_search_data(array i, string s)
   int q,t;
 
 #ifdef WAIS_DEBUG
-  perror("WAIS: Got some search data.\n");
+  werror("WAIS: Got some search data.\n");
 #endif
   i[0] += s;
 
@@ -2104,7 +2104,7 @@ void got_search_data(array i, string s)
       return;
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Got first 0.\n");
+    werror("WAIS: Got first 0.\n");
 #endif
     
     if(q>0)
@@ -2117,7 +2117,7 @@ void got_search_data(array i, string s)
       return;
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
+    werror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
 #endif
 
     for(t=0;i[0][t]=='0';t++)
@@ -2125,7 +2125,7 @@ void got_search_data(array i, string s)
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
 #ifdef WAIS_DEBUG
-      perror("WAIS: message header error.\n");
+      werror("WAIS: message header error.\n");
 #endif
       destruct(i[3]);
       destruct(i[4]);
@@ -2141,7 +2141,7 @@ void got_search_data(array i, string s)
     if(strlen(i[0])>=i[2]+HEADER_LENGTH) {
 
 #ifdef WAIS_DEBUG
-      perror("WAIS: got all search datas.\n");
+      werror("WAIS: got all search datas.\n");
 #endif
       i[1]=3;
       done_search_data(i);
@@ -2159,7 +2159,7 @@ void connected(object ok, string file, object send_to, string key)
   string reqmsg,header;
 
 #ifdef WAIS_DEBUG
-  perror("WAIS: Connected\n");
+  werror("WAIS: Connected\n");
 #endif
 
   if(!send_to)
@@ -2210,7 +2210,7 @@ void connected(object ok, string file, object send_to, string key)
   }
 
 #ifdef WAIS_DEBUG
-  perror("WAIS: request is:\nkey "+key+"\ndatabase "+database+"\ndoctype "+
+  werror("WAIS: request is:\nkey "+key+"\ndatabase "+database+"\ndoctype "+
 	 doctype+"\ndoclength "+sprintf("%d",doclen)+"\ndocname "+docname+
 	 "\n");
 #endif
@@ -2225,7 +2225,7 @@ void connected(object ok, string file, object send_to, string key)
 
   if(key && strlen(key)==0) {		/* I N D E X */
 #ifdef WAIS_DEBUG
-    perror("WAIS: Index\n");
+    werror("WAIS: Index\n");
 #endif
 
     send_to->my_fd->write("HTTP/1.0 200 Yo! Wais data comming soon to a "
@@ -2238,7 +2238,7 @@ void connected(object ok, string file, object send_to, string key)
   } else if (key) {					/* S E A R C H */
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Search\n");
+    werror("WAIS: Search\n");
 #endif
 
     replace(key,({"+"}),({" "}));
@@ -2260,7 +2260,7 @@ void connected(object ok, string file, object send_to, string key)
     header += reqmsg;
     
 #ifdef WAIS_DEBUG_2
-    perror("about to send message ("+debug_print_string(header)+")\n");
+    werror("about to send message ("+debug_print_string(header)+")\n");
 #endif
     
     /* Write out message. Read back header. */
@@ -2281,7 +2281,7 @@ void connected(object ok, string file, object send_to, string key)
     string docid;
 
 #ifdef WAIS_DEBUG
-    perror("WAIS: Fetch... Retrieve document `"+docname+
+    werror("WAIS: Fetch... Retrieve document `"+docname+
 	   "'\n............ type `"+doctype+
 	   sprintf("' length %d\n", doclen)+"\n");
 #endif
@@ -2329,11 +2329,11 @@ void connected(object ok, string file, object send_to, string key)
     header += reqmsg;
     
 #ifdef WAIS_DEBUG_2
-    perror("about to send message ("+debug_print_string(header)+")\n");
+    werror("about to send message ("+debug_print_string(header)+")\n");
 #endif
     
 #ifdef WAIS_DEBUG
-    perror(sprintf("requesting document type %s, binary %d)\n",format,bin));
+    werror(sprintf("requesting document type %s, binary %d)\n",format,bin));
 #endif
 
     /* Write out message. Read back header. */
@@ -2355,7 +2355,7 @@ mapping find_file(string fi, object id)
   string h, f;
   int p;
 #ifdef WAIS_DEBUG
-  perror("WAIS: find_file("+fi+")\n");
+  werror("WAIS: find_file("+fi+")\n");
 #endif
 
   sscanf(fi, "%[^/]/%s", h, f);
@@ -2367,7 +2367,7 @@ mapping find_file(string fi, object id)
     p=210;
 
 #ifdef WAIS_DEBUG
-  perror("WAIS: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
+  werror("WAIS: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
 #endif
   
   if(tmp = proxy_auth_needed(id))

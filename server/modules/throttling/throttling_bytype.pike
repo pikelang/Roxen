@@ -6,7 +6,7 @@
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.3 1999/09/29 20:29:38 kinkie Exp $";
+constant cvs_version="$Id: throttling_bytype.pike,v 1.4 1999/12/18 14:35:02 nilsson Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -15,7 +15,7 @@ string filter_type="(by type)";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) werror("Throttling: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif

@@ -1,11 +1,11 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.2 1999/09/29 20:28:42 kinkie Exp $";
+constant cvs_version="$Id: baseline_throttling.pike,v 1.3 1999/12/18 14:35:02 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) werror("Throttling: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif

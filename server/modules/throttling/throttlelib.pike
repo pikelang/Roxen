@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.1 1999/09/29 20:30:16 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.2 1999/12/18 14:35:02 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -17,7 +17,7 @@ string filter_type=""; //override this to allow for more verbose debugging
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttlelib" \
+#define THROTTLING_DEBUG(X) werror("Throttlelib" \
                                    +filter_type+": "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
