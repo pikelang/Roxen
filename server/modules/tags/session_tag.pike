@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.6 2001/07/20 12:13:17 jhs Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.7 2001/07/20 13:22:13 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -187,11 +187,12 @@ the session tag.</p></attr>
 
   // ------------------------------------------------------------
 
-  "&client.session;":#"<desc ent='ent'><p>Contains a session key for the user or nothing.
+  "&client.session;":#"<desc ent='ent'>
+<p><short>Contains a session key for the user or nothing.</short>
 The session key is primary taken from the RoxenUserID cookie. If there is no such cookie it
 will return the value in the prestate that begins with \"RoxenUserID=\". However, if both
 the cookie and such a prestate exists the client.session variable will be empty. This allows
-the client.session variable to be used together with <tag>force-session-id</tag>.",
+the client.session variable to be used together with <tag>force-session-id</tag>.</p></desc>",
 
   // ------------------------------------------------------------
 
