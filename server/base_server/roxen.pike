@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.566 2000/09/30 19:20:20 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.567 2000/10/17 21:00:34 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -378,6 +378,7 @@ private static void low_shutdown(int exit_code)
 void restart(float|void i)
 //! Restart roxen, if the start script is running
 {
+  werror(describe_backtrace(backtrace()));
   call_out(low_shutdown, i, -1);
 }
 
@@ -2222,15 +2223,16 @@ class ImageCache
 	}
         ct = Image.Colortable( reply, ncols );
         if( dither )
+        {
+          if( dither == "random" ) 
+            dither = "random_grey";
           if( ct[ dither ] )
             ct[ dither ]();
           else
             ct->ordered();
+        
+        }
       }
-
-      if(!Image[upper_case( format )]
-         || !Image[upper_case( format )]->encode )
-        error("Image format "+format+" unknown\n");
 
       mapping enc_args = ([]);
       if( ct )
@@ -2262,10 +2264,13 @@ class ImageCache
              data = Image.GIF.encode( reply, ct );
          })
            data = Image.GIF.encode( reply );
-#else
-	 data = 0;
-#endif
          break;
+
+#else
+         // Fall-through when there is no GIF encoder available --
+         // use PNG with a colortable instead.
+         format = "png";
+#endif
 
        case "png":
          if( ct ) enc_args->palette = ct;
@@ -2281,6 +2286,9 @@ class ImageCache
 	   m_delete( enc_args, "alpha" );
 
        default:
+         if(!Image[upper_case( format )]
+            || !Image[upper_case( format )]->encode )
+           error("Image format "+format+" unknown\n");
 	 data = Image[upper_case( format )]->encode( reply, enc_args );
       }
 
@@ -3531,7 +3539,7 @@ int main(int argc, array tmp)
 
 
   if (QUERY(suicide_engage))
-    call_out (restart,60*60*24*QUERY(suicide_timeout));
+    call_out (restart,60*60*24*max(1,QUERY(suicide_timeout)));
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -3554,7 +3562,7 @@ string check_variable(string name, mixed value)
 
    case "suicide_engage":
     if (value)
-      call_out(restart,60*60*24*QUERY(suicide_timeout));
+      call_out(restart,60*60*24*max(1,QUERY(suicide_timeout)));
     else
       remove_call_out(restart);
     break;
