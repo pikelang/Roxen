@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.181 1999/06/10 14:39:54 jonasw Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.182 1999/06/25 17:56:05 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -560,14 +560,22 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
 
-mixed draw_callback(mapping args, object id)
+mixed draw_callback(mapping args, string text, object id)
 {
   array err;
   mixed data;
   int elapsed;
-  string text = args->text;
   string orig_text = text;
   object img;
+
+  if( objectp( text ) )
+  {
+    if( !args->text )
+      error("Failed miserably to find a text to draw. That's not"
+            " good.\nArgs=%O\n",args);
+    id = (object)text;
+    text = args->text;
+  }
 
   if(!args->verbatim) // typographically correct...
   {
@@ -787,13 +795,11 @@ string tag_gtext_id(string t, mapping arg, string ctn,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
-  arg->text = ctn;
-
   if(!short)
-    return query_internal_location()+image_cache->store( arg, id )+
+    return query_internal_location()+image_cache->store( ({arg,ctn}), id )+
       (query("gif")?".foo":"");
   else
-    return image_cache->store( arg, id )+(query("gif")?".foo":"");
+    return image_cache->store( ({arg,ctn}), id )+(query("gif")?".foo":"");
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -826,12 +832,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   string gif="";
   if(query("gif")) gif="."+(arg->format?arg->format[..2]:"gif");
-  
-#if efun(_static_modules)
-  contents = parse_rxml(contents, id, foo, defines);
-#else
-  contents = parse_rxml(contents, id, foo);
-#endif
+
+  if( !arg->noparse && !arg->preparse )
+    contents = parse_rxml(contents, id);
+  else
+  {
+    m_delete( arg, "noparse" );
+    m_delete( arg, "preparse" );
+  }
 
   string lp, url, ea;
   string pre, post, defalign, gt, rest, magic;
@@ -927,8 +935,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     
     foreach(gt/split-({""}), word)
     {
-      arg->text = word;
-      string fn = image_cache->store( arg );
+      string fn = image_cache->store( ({arg,word}),id );
       mapping size = image_cache->metadata( fn, id, 1 );
       mapping tag = 
       ([ 
@@ -946,9 +953,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
     return res*"";
   }
   
-  arg->text = gt;
-  string num = image_cache->store( arg );
-  mapping size = image_cache->metadata( arg, id, 1 );
+  string num = image_cache->store( ({arg,gt}),id );
+  mapping size = image_cache->metadata( num, id, 1 );
 
   if(magic)
   {
@@ -970,8 +976,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
       m_delete(arg, q);
     }
     
-    string num2 = image_cache->store( arg );
-    size = image_cache->metadata( arg, id );
+    string num2 = image_cache->store( ({ arg, gt }),id );
+    size = image_cache->metadata( num2, id );
 
     if(!defines->magic_java) 
       res = magic_javascript_header(id);
