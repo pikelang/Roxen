@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.120 2003/02/25 13:05:29 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.121 2003/06/11 15:50:03 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -375,6 +375,64 @@ array find_dir( string f, RequestID id )
   return dir;
 }
 
+static MultiStatus recursive_rm(string real_dir, string relative_dir,
+				RequestID id, MultiStatus|void result)
+{
+  TRACE_ENTER(sprintf("Deleting all files in directory %O...", real_dir),
+	      this_object());
+  foreach(get_dir(real_dir) || ({}), string fname) {
+    string real_fname = combine_path(real_dir, fname);
+    string relative_fname = combine_path(relative_dir, fname);
+    Stat stat = file_stat(real_fname);
+    TRACE_ENTER(sprintf("Deleting file %O.", real_fname),
+		this_object());
+    if (!stat) {
+      if (!result) {
+	result = MultiStatus()->prefix(query_location());
+      }
+      result->add_response(relative_fname, XMLStatusNode(404));
+      TRACE_LEAVE("File not found.");
+      continue;
+    }
+    if (stat->isdir()) {
+      result = recursive_rm(real_fname, relative_fname, id, result);
+    }
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache", real_fname, 0);
+    }
+
+    if (!rm(real_fname)) {
+#if constant(System.EEXIST)
+      if (errno() != System.EEXIST)
+#endif
+      {
+	if (!result) {
+	  result = MultiStatus()->prefix(query_location());
+	}
+	result->add_response(relative_fname, XMLStatusNode(403));
+	TRACE_LEAVE("Deletion failed.");
+      }
+#if constant(System.EEXIST)
+      else {
+	TRACE_LEAVE("Directory not empty.");
+      }
+#endif
+    } else {
+      deletes++;
+
+      if (id->misc->quota_obj && stat->isreg()) {
+	id->misc->quota_obj->deallocate(combine_path(query_location(),
+						     relative_fname),
+					stat->size());
+      }
+      TRACE_LEAVE("Ok.");
+    }
+  }
+  TRACE_LEAVE("Done.");
+  return result;
+}
 
 mapping putting = ([]);
 
@@ -645,56 +703,83 @@ mixed find_file( string f, RequestID id )
     }
     break;
 
+  case "MKCOL":
+    if (id->request_headers["content-type"]) {
+      // RFC 2518 8.3.1:
+      // If a server receives a MKCOL request entity type it does not support
+      // or understand it MUST respond with a 415 (Unsupported Media Type)
+      // status code.
+      TRACE_LEAVE(sprintf("MKCOL failed, since the content-type is %O.",
+			  id->request_headers["content-type"]));
+      return http_low_answer(415,
+			     "<h2>Unsupported media type.</h2>");
+    }
+    /* FALL_THROUGH */
   case "MKDIR":
     if(!query("put"))
     {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MKDIR disallowed (since PUT is disallowed)");
+      TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
+			  id->method));
       return 0;
     }
 
     if (FILTER_INTERNAL_FILE (f, id)) {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MKDIR disallowed (since the dir name matches internal file glob)");
+      TRACE_LEAVE(sprintf("%s disallowed (since the dir name matches internal file glob)",
+			  id->method));
       return 0;
     }
 
     if (size != -1) {
-      TRACE_LEAVE("MKDIR failed. Directory name already exists. ");
+      TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
+			  id->method));
+      if (id->method == "MKCOL") {
+	return http_low_answer(405,
+			       "<h2>Collection already exists.</h2>");
+      }
       return 0;
     }
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
-      TRACE_LEAVE("MKDIR: Permission denied");
+      TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
       return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'MKDIR' denied</h1>");
+				sprintf("<h1>Permission to '%s' denied</h1>",
+					id->method));
     }
     mkdirs++;
     object privs;
-    SETUID_TRACE("Creating file", 0);
+    SETUID_TRACE("Creating directory/collection", 0);
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
       report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
 		   oldf);
-      TRACE_LEAVE("MKDIR: Contains symlinks. Permission denied");
+      TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
+			  id->method));
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
     int code = mkdir(f);
     privs = 0;
 
-    TRACE_ENTER("MKDIR: Accepted", 0);
+    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
     if (code) {
       chmod(f, 0777 & ~(id->misc->umask || 022));
-      TRACE_LEAVE("MKDIR: Success");
+      TRACE_LEAVE(sprintf("%s: Success", id->method));
       TRACE_LEAVE("Success");
+      if (id->method == "MKCOL") {
+	return http_low_answer(201, "Created");
+      }
       return Roxen.http_string_answer("Ok");
     } else {
-      TRACE_LEAVE("MKDIR: Failed");
+      TRACE_LEAVE(sprintf("%s: Failed", id->method));
       TRACE_LEAVE("Failure");
+      if (id->method == "MKCOL") {
+	return http_low_answer(507, "Failed.");
+      }
       return 0;
     }
 
@@ -1071,32 +1156,72 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
-    accesses++;
-
-    SETUID_TRACE("Deleting file", 0);
-
-    /* Clear the stat-cache for this file */
-    if (stat_cache) {
-      cache_set("stat_cache", f, 0);
+    if ((size < 0) &&
+	!([ "infinity":0x7fffffff, 0:0x7fffffff ])
+	[String.trim_whites(id->request_headers->depth)]) {
+      // RFC 2518 8.6.2:
+      //   The DELETE method on a collection MUST act as if a "Depth: infinity"
+      //   header was used on it.
+      TRACE_LEAVE(sprintf("DELETE: Bad depth header: %O.",
+			  id->request_headers->depth));
+      return http_low_answer(400, "<h2>Unsupported depth.</h2>");
     }
 
-    if(!rm(f))
-    {
+    if (size < 0) {
+      report_notice(LOCALE(0,"DELETING the directory %s.\n"), f);
+
+      accesses++;
+
+      SETUID_TRACE("Deleting directory", 0);
+
+      MultiStatus result = recursive_rm(f, oldf, id);
+
+      if (!rm(f)) {
+	if (result) {
+#if constant(system.EEXIST)
+	  if (errno() != system.EEXIST)
+#endif
+	  {
+	    result->add_response(oldf, XMLStatusNode(403));
+	  }
+	} else {
+	  TRACE_LEAVE("DELETE: Failed to delete directory.");
+	  return http_low_answer(403, "<h2>Failed to delete directory.</h2>");
+	}
+      }
+
+      if (result) {
+	TRACE_LEAVE("DELETE: Partial failure.");
+	return result->http_answer();
+      }
+    } else {
+      report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
+
+      accesses++;
+
+      SETUID_TRACE("Deleting file", 0);
+
+      /* Clear the stat-cache for this file */
+      if (stat_cache) {
+	cache_set("stat_cache", f, 0);
+      }
+
+      if(!rm(f))
+      {
+	privs = 0;
+	id->misc->error_code = 405;
+	TRACE_LEAVE("DELETE: Failed");
+	return 0;
+      }
       privs = 0;
-      id->misc->error_code = 405;
-      TRACE_LEAVE("DELETE: Failed");
-      return 0;
-    }
-    privs = 0;
-    deletes++;
+      deletes++;
 
-    if (id->misc->quota_obj && (size > 0)) {
-      id->misc->quota_obj->deallocate(oldf, size);
+      if (id->misc->quota_obj && (size > 0)) {
+	id->misc->quota_obj->deallocate(oldf, size);
+      }
     }
-
     TRACE_LEAVE("DELETE: Success");
-    return http_low_answer(200,(f+" DELETED from the server"));
+    return http_low_answer(204,(f+" DELETED from the server"));
 
   default:
     TRACE_LEAVE("Not supported");
