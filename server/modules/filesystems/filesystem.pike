@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.45 1998/08/25 20:03:36 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.46 1998/08/26 11:31:03 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -312,6 +312,11 @@ mixed find_file( string f, object id )
 #endif
   size = FILE_SIZE( f );
 
+  /*
+   * FIXME: Should probably move path-info extraction here.
+   * 	/grubba 1998-08-26
+   */
+
   switch(id->method)
   {
   case "GET":
@@ -333,11 +338,17 @@ mixed find_file( string f, object id )
     default:
       if(f[ -1 ] == '/') /* Trying to access file with '/' appended */
       {
-	/* Neotron was here. I change this to always return 0 as CGI scripts
-	   with path info = / won't work otherwise. If someone accesses a file
-	   with "/" appended, a 404 no such file isn't that weird. Both
-	   Apache and Netscape returns the accessed page, resulting in
-	   incorrect links from that page. */
+	/* Neotron was here. I changed this to always return 0 since
+	 * CGI-scripts with path info = / won't work otherwise. If
+	 * someone accesses a file with "/" appended, a 404 no such
+	 * file isn't that weird. Both Apache and Netscape return the
+	 * accessed page, resulting in incorrect links from that page.
+	 *
+	 * FIXME: The proper way to do this would probably be to set path info
+	 *   here, and have the redirect be done by the extension modules,
+	 *   or by the protocol module if there isn't any extension module.
+	 *	/grubba 1998-08-26
+	 */
 	return 0; 
 	/* Do not try redirect on top level directory */
 	if(sizeof(id->not_query) < 2)
