@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.50 1997/10/14 00:20:55 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.51 1997/10/14 14:54:22 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -509,7 +509,8 @@ class sender
   void create(object fd_, string to_send_)
   {
     fd = fd_;
-    to_send_ = to_send_;
+    //fd->close("r");	// We aren't interrested in reading from the fd.
+    to_send = to_send_;
     fd->set_nonblocking(0, write_cb, close_cb);
   }
 };
@@ -577,8 +578,10 @@ mixed find_file(string f, object id)
 			 wd, uid, pipe1, pipe2, QUERY(err),
 			 QUERY(kill_call_out));
   
-  if(id->my_fd && id->data /* && sizeof(id->data) */) {
+  if(id->my_fd && id->data) {
+    // A real dup() would be nice here.
     sender(pipe2->dup(), id->data);
+    //pipe2->close("w");		// Don't let anybody else write to the pipe.
     id->my_fd->set_id( pipe2 );                       // for put.. post?
     id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
     id->my_fd->set_nonblocking();
