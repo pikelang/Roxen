@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.111 1999/04/24 23:27:04 marcus Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.112 1999/04/27 19:39:30 neotron Exp $";
 
 class Shuffle
 {
@@ -578,7 +578,7 @@ class CGIScript
       options->rlimit = limits;
 #endif
 
-    if(!(pid = Process.create_process( ({ command }) + arguments, options )))
+    if(!(pid = Process.create_process( ({ command }) + arguments, options ))) 
       error("Failed to create CGI process.\n");
     if(QUERY(kill_call_out))
       call_out( kill_script, QUERY(kill_call_out)*60 );
@@ -685,10 +685,19 @@ string real_file( string f, object id )
 
 mapping handle_file_extension(object o, string e, object id)
 {
+  array st = o->stat();
   if(!QUERY(ex))
     return 0;
-  if(QUERY(noexec) && o && !(o->stat()[0]&0111))
+  if(!stat) return 0;
+  if(stat[1] < 0 || !strlen(id->not_query) || id->not_query[-1] == '/')
+    // Can't run directories or nonexisting files, and if the script exists
+    // but the name ends with '/' we want to let it fall through for path
+    // info parsing.
+    return -1;
+#if UNIX
+  if(QUERY(noexec) && o && !(stat[0]&0111))
     return 0;
+#endif
   return http_stream( CGIScript( id )->run()->get_fd() );
 }
 
