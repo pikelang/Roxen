@@ -1,15 +1,6 @@
 <topmenu base="../" selected='globals' />
 
-
-Set all variables....
-
-   <emit source='global-variables' section="&form.section;"></emit>
-
-Then the page...
-
-<content>
-<cv-split>
-<subtablist width='100%'>
+<content><cv-split><subtablist width='100%'>
  <st-tabs>
   <emit source='global-variables-sections'>
     <tab ::='&_.selected;'
@@ -17,10 +8,6 @@ Then the page...
   </emit>
  </st-tabs>
  <st-page>
-  <input type='hidden' name='section' value="&form.section;">
-  <cfg-variables source='global-variables' 
-                 extra="noset='' section='&form.section;'"/>
+  <cfg-variables source='global-variables' section='&form.section;'/>
  </st-page>
-</subtablist>
-</cv-split>
-</content>
+</subtablist></cv-split></content>

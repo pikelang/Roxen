@@ -1,13 +1,17 @@
 <!-- -*- html -*- -->
 <define tag='cfg-variables'>
-  <cf-save/>
+  <if not variable='_.nosave'><cf-save/></if>
+  <if variable='form.section'>
+    <input type='hidden' name='section' value='&form.section;'/>
+  </if>
   <br clear="all" />
+  <emit ::='&_.args;'/>
   <set variable='var.oldchanged' value='notreally'/>
   <table cellspacing=0 cellpadding=4>
-    <emit source="&_.source;" ::='&_.extra:none;'>
+    <emit ::='&_.args;' noset=''>
       <cond>
         <case variable='usr.changemark is not'>
-          <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+          <tr><td width="20%"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
           <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
     
@@ -20,7 +24,7 @@
           </else>
           <tr>
             <td width="20%"><b>&_.name;</b></td>
-            <td ::='&var.extraargs;'>&_.form:none;</td>
+            <td ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
           </tr>
           <tr>
             <td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td>
@@ -45,13 +49,13 @@
             </tr>
           </else>
          </if>
-         <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+         <tr><td width="20%"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
          <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
       </cond>
     </emit>
   </table>
-  <cf-save/>
+  <if not variable='_.nosave'><cf-save/></if>
 
 </define>
 <define container="st-tabs">

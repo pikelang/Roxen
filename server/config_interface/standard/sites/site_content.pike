@@ -379,15 +379,8 @@ string module_page( RequestID id, string conf, string module )
      ||id->variables->info_section_is_it)
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
-  return #"
- <input type=\"hidden\" name=\"section\" value=\"&form.section;\" />
-<nooutput>
-  This is necessary to update all the variables before showing them.
-  <emit source='module-variables' configuration=\""+conf+#"\" 
-        section=\"&form.section;\" module=\""+module+#"\"/>
-</nooutput>
-   <cfg-variables source='module-variables' extra='configuration=\""+conf+#"\" 
-        section=\"&form.section;\" module=\""+module+#"\"'/>";
+  return "<cfg-variables source='module-variables' configuration='"+conf+"' "
+          "section='&form.section;' module='"+module+"'/>";
 }
 
 string port_for( string url )
@@ -431,14 +424,8 @@ string parse( RequestID id )
     {
      default: /* Not status info */
        do  id->misc->do_not_goto = 1; while( id = id->misc->orig );
-       return
-	 "<emit source='config-variables' "
-	 "configuration=\""+path[ 0 ]+"\" section=\"&form.section;\">"
-	 "</emit>\n"
-         ""
-	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
-	 "<cfg-variables source='config-variables' "
-	 "extra='configuration=\""+path[0]+"\" section=\"&form.section;\"'/>";
+       return "<cfg-variables source='config-variables' "
+	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
      case 0:
      case "":
