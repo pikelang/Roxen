@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.6 1999/06/07 01:47:29 mast Exp $
+ * $Id: ftp.pike,v 2.7 1999/06/07 22:36:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2979,7 +2979,9 @@ class FTPSession
     }
     int size = st[1];
     if (size < 0) {
-      size = 512;
+      send_error("SIZE", args, ([ "error":405, ]), session);
+      return;
+      // size = 512;
     }
     send(213, ({ (string)size }));
   }
