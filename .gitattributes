@@ -4,8 +4,12 @@
 *.gz binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
+bi binary
+bn binary
 button_font binary
 font binary
+ni binary
+nn binary
 urw_itc_avant_garde-demi-r binary
 
 # Handling of foreign (ie CVS) identifiers.
