@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.13 1999/10/10 20:47:52 kinkie Exp $
+ * $Id: ftp.pike,v 2.14 1999/10/28 21:26:59 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1568,13 +1568,20 @@ class FTPSession
     if(!f->open_socket(local_port-1, local_addr))
     {
       privs = 0;
-      DWRITE(sprintf("FTP: socket(%d) failed. Trying with any port.\n",
-			   local_port-1));
-      if (!f->open_socket()) {
-	DWRITE("FTP: socket() failed. Out of sockets?\n");
-	fun(0, @args);
-	destruct(f);
-	return;
+      DWRITE(sprintf("FTP: socket(%d, %O) failed. Trying with any port.\n",
+			   local_port-1, local_addr));
+      
+      if(!f->open_socket(0, local_addr))
+      {
+	DWRITE(sprintf("FTP: socket(0, %O) failed. "
+		       "Trying with any port, any ip.\n",
+		       local_addr));
+	if (!f->open_socket()) {
+	  DWRITE("FTP: socket() failed. Out of sockets?\n");
+	  fun(0, @args);
+	  destruct(f);
+	  return;
+	}
       }
     }
     privs = 0;
