@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.274 2001/08/22 13:03:37 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.275 2001/08/22 13:35:35 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1267,7 +1267,7 @@ class TagCache {
       }
 
       RXML.Context ctx = RXML_CONTEXT;
-      int default_key = 1;
+      int default_key = compat_level < 2.2;
 
       if (args->propagate) {
 	if (!(keymap = ctx->misc->cache_key)) m_delete (args, "propagate");
@@ -4811,15 +4811,15 @@ using the pre tag.
  <p>When the content is evaluated, the produced result is associated
  with a key that is built by taking the values of certain variables
  and other pieces of data, which thus are what the cache depends on.
- By default, it depends on the contents of the form scope and the path
- of the current page (i.e. <ent>page.path</ent>).</p>
+ The arguments \"variable\", \"key\" and \"profile\" lets you specify
+ the cache dependencies.</p>
 
  <p>Note that it's easy to create huge amounts of cached values if the
- cache parameters are chosen badly. E.g. the default cache parameters,
- which are like that mostly for compatibility, are typically only
- acceptable when combined with a fairly short cache time, since they
- otherwise make it easy to fill up the memory on the server simply by
- making many requests with random variables.</p>
+ cache parameters are chosen badly. E.g. to depend on the contents of
+ the form scope is typically only acceptable when combined with a
+ fairly short cache time, since it's otherwise easy to fill up the
+ memory on the server simply by making many requests with random
+ variables.</p>
 
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
@@ -4833,14 +4833,20 @@ using the pre tag.
  entries are also saved, and the cache is thus persistent. In this
  case it's thus especially important to limit the number of
  alternative cache entries.</p>
+
+ <p>Compatibility note: If the compatibility level of the site is
+ lower than 2.2 and there are no \"variable\" or \"profile\"
+ arguments, the cache depends on the contents of the form scope and
+ the path of the current page (i.e. <ent>page.path</ent>). This is
+ often a bad policy since it's easy for a client to generate many
+ cache entries.</p>
 </desc>
 
 <attr name=variable value=string>
  <p>This is a comma-separated list of variables and scopes that the
- cache should depend on. If it doesn't exist, the default is to depend
- on the form scope and <ent>page.path</ent>, i.e. it's the same as
- specifying variable=\"form, page.path\". The value can be an empty
- string to only disable the default dependencies.</p>
+ cache should depend on. The value can be an empty string, which is
+ useful to only disable the default dependencies in compatibility
+ mode.</p>
 
  <p>Since it's important to keep down the size of the cache, this
  should typically be kept to only a few variables with a limited set
@@ -4856,9 +4862,7 @@ using the pre tag.
  <p>A comma-separated list to choose one or more profiles from a set
  of preconfigured cache profiles. Which cache profiles are available
  depends on the RXML parser module in use; the standard RXML parser
- currently has none. Like the variable argument, this one also
- disables the default dependency on the form scope and
- <ent>page.path</ent>.</p>
+ currently has none.</p>
 </attr>
 
 <attr name=shared value=string>
