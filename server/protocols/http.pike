@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.252 2000/08/20 03:12:08 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.253 2000/08/22 02:34:14 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1156,8 +1156,8 @@ string link_to(string file, int line, string fun, int eid, int qq)
   if (!file || !line) return "<a>";
   if(file[0]!='/') file = combine_path(getcwd(), file);
   return ("<a href=\"/(old_error,find_file)/error/?"+
-	  "file="+Roxen.http_encode_string(file)+
-	  (fun ? "&fun="+Roxen.http_encode_string(fun) : "") +
+	  "file="+Roxen.http_encode_url(file)+
+	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
 	  "&off="+qq+
 	  "&error="+eid+
 	  (line ? "&line="+line+"#here" : "") +
@@ -1204,7 +1204,7 @@ string format_backtrace(int eid)
 	(line ? ":" + line : "") +
 	"</a>" + (file ? Roxen.html_encode_string (get_id (file)) : "") + ":<br />\n" +
 	replace (Roxen.html_encode_string (descr),
-		 ({"(", ")"}), ({"<b>(</b>", "<b>)</b>"})) +
+		 ({"(", ")", " "}), ({"<b>(</b>", "<b>)</b>", "&nbsp;"})) +
 	"</li>\n";
     res += "</ul>\n\n";
   }
@@ -1278,7 +1278,13 @@ int store_error(mixed err)
 	if (sizeof (ent) >= 2) line = ent[1];
 	if (sizeof (ent) >= 3)
 	  if(functionp(ent[2])) {
-	    func = function_name(ent[2]);
+	    func = "";
+	    if (object o = function_object (ent[2])) {
+	      string s;
+	      if (!catch (s = sprintf ("%O",o)) && s != "object")
+		func = s + "->";
+	    }
+	    func += function_name(ent[2]);
 	    if (!file)
 	      catch {
 		file = master()->describe_program (
