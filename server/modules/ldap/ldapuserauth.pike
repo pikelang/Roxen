@@ -53,7 +53,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.15 2000/02/17 12:45:19 nilsson Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.16 2000/02/22 05:14:03 nilsson Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -470,7 +470,8 @@ int chk_name(string x, string y) {
 
 array|int auth (array(string) auth, object id)
 {
-    string u,p,*dirinfo, pw;
+    string u,p,pw;
+    array(string) dirinfo;
     mixed attr,value;
     mixed err;
 

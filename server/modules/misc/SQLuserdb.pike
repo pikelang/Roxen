@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.13 2000/02/17 12:45:42 nilsson Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.14 2000/02/22 05:14:24 nilsson Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -246,7 +246,8 @@ string user_from_uid (int u)
 
 array|int auth (array(string) auth, object id)
 {
-	string u,p,*dbinfo;
+	string u,p;
+	array(string) dbinfo;
 	mixed err;
 
 	att++;

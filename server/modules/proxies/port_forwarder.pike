@@ -26,7 +26,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.5 2000/02/08 22:10:00 nilsson Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.6 2000/02/22 05:14:45 nilsson Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG
@@ -47,7 +47,7 @@ object accept_port;
  */
 class Connection
 {
-	object *fdescs;
+	array(object) fdescs;
 	mapping buffer;
 	object mastermodule, master_id;
 	int traffic=0;

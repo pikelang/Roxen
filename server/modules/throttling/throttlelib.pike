@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.2 1999/12/18 14:35:02 nilsson Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.3 2000/02/22 05:16:39 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -43,7 +43,8 @@ string update_rules() {
   array(string) errors=({}); //contains the lines where parse errors occurred
   int error=0;
 #endif
-  string line, *lines, *words, cmd;
+  string line, cmd;
+  array(string) lines, words;
   lines=replace(QUERY(rules),"\t"," ")/"\n";
   for (int lineno=0; lineno<sizeof(lines);lineno++) {
     line=lines[lineno];
