@@ -46,9 +46,17 @@ mixed find_file( string f, object id )
   if (id->variables->_submit == "Clear")
     mdb[ id->not_query ] = data = "";
   else if (id->variables->_data)
-    mdb[ id->not_query ] = data = id->variables->_data;
+  {
+    data = id->variables->_data;
+
+    data = data / "\r\n" * "\n";
+    data = data / "\r" * "\n";
+    mdb[ id->not_query ] = data;
+  }
+  if (!stringp( data ))
+    data = "";
   return http_string_answer( parse_rxml( sprintf( FOO, data,
 		 	     replace( data, ({ "<", ">", "&" }),
-					    ({ "&lt;", "&gt;", "&amp;" }) ),
+				      ({ "&lt;", "&gt;", "&amp;" }) ),
 			     ), id ) );
 }
