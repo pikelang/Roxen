@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.479 2005/02/01 15:11:28 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.480 2005/02/10 16:29:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7438,7 +7438,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  the new scope. NOTE: if the source scope is \"magic\", as e.g. the
  roxen scope, the scope will not be copied, but rather linked and will
  behave as the original scope. It can be useful to create an alias or
- just for the convinience of refering to the scope as \"_\".</p>
+ just for the convenience of referring to the scope as \"_\".</p>
 </attr>
 
 <attr name='scope' value='name' default='form'>
