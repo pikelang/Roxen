@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.37 1999/02/08 18:15:15 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.38 1999/02/08 18:49:02 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -740,12 +740,24 @@ class imap_mailbox
   {
     /* FIXME: Some of this stuff should probably be in types.imap_set. */
 
+#ifdef IMAP_DEBUG
+    werror("uid_to_local(%O)\n", uid_set->items);
+#endif /* IMAP_DEBUG */
+
     array all_uids = indices(uid_lookup);
 
     // Not terribly efficient, but...
     // Doesn't handle overlapping ranges.
     object local_set = imap_set(({}));
+
+#ifdef IMAP_DEBUG
+    werror("uid_to_local(): all_uids:%O\n", all_uids);
+#endif /* IMAP_DEBUG */
+
     foreach(uid_set->items, string|array(int|string)|int item) {
+#ifdef IMAP_DEBUG
+      werror("uid_to_local(): item:%O\n", item);
+#endif /* IMAP_DEBUG */
       if (intp(item)) {
 	// Specific UID
 	if (uid_lookup[item]) {
@@ -755,6 +767,10 @@ class imap_mailbox
 	// Matches all UID's
 	local_set->items = values(uid_lookup);
 	sort(indices(uid_lookup), local_set->items);
+
+#ifdef IMAP_DEBUG
+	werror("uid_to_local() => %O\n", local_set->items);
+#endif /* IMAP_DEBUG */
 	return(local_set);
       } else if (arrayp(item)) {
 	if (item[1] == "*") {
@@ -773,6 +789,10 @@ class imap_mailbox
 	}
       }
     }
+
+#ifdef IMAP_DEBUG
+    werror("uid_to_local() => %O\n", local_set->items);
+#endif /* IMAP_DEBUG */
     return(local_set);
   }
 }
