@@ -60,7 +60,12 @@ void define_global_variables( int argc, array (string) argv )
 	  "    ]),\n"
 	  "  ]),\n"
 	  "])\n"
-	  "</pre></dl>\n");
+	  "</pre></dl>\n",
+	  ({
+	    lambda(mixed value, int action) {
+	      return "Edit the cofig-file by hand for now.";
+	    }
+	  }));
 
   globvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
 	  #"If set to Yes, all users of your server whose clients support 
