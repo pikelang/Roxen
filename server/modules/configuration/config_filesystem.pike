@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.46 2000/08/21 12:31:35 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.47 2000/08/21 12:31:48 per Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
@@ -133,9 +133,6 @@ mixed find_file( string f, object id )
   id->since = 0;
   if( !id->misc->request_charset_decoded )
   {
-    // We only need to decode f (and id->not_query)  here,
-    // since there is no variables (if there were, the
-    // request would have been automatically decoded).
     id->misc->request_charset_decoded = 1;
 
     if( charset_decoder )
