@@ -1,10 +1,7 @@
-<dt><kbd><b>type=discordian|stardate</b></kbd>
-<dd>These attributes only make a
-    difference when <em>not</em> using <kbd>part</kbd>. Note that
-<kbd>stardate</kbd> has a separate companion
-    attribute, <kbd>prec</kbd>, which sets the precision. 
-<p>
-<dt><kbd><b>type=number|string|roman</b></kbd>
+<dt><kbd><b>type=number|string|roman|iso|discordian|stardate</b></kbd>
+<dd>discordian and stardate only make a difference when <em>not</em>
+    using <kbd>part</kbd>. Note that <kbd>stardate</kbd> has a separate
+    companion attribute, <kbd>prec</kbd>, which sets the precision. 
 <p>
 <dt><kbd><b>lang=language</b></kbd>
 <dd>When using <kbd>type=string</kbd>,

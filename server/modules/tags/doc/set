@@ -19,9 +19,11 @@ id->misc->variables, not id->variables. Mostly useful for pike-script
 and pike-module programmers
 <dt><kbd>define=...</kbd>
 <dd>Use the value of this define.
+<dt><kdb>eval=...</kbd>
+<dd>Use the result of some evaluated HTML
 </dl>
 If none of the above attributes are specified, the variable is unset.
-If debug is currenty on, more specific debug information is provided
+If debug is currently on, more specific debug information is provided
 if the operation failed.
 <p> 
 <b>See also:</b> {append help} {debug help}
