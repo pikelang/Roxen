@@ -203,7 +203,13 @@ static string format_doc(string|mapping doc, string name, void|object id)
 	   "ent":lambda(Parser.HTML p, mapping m, string c) {
 		   return ({ "&amp;" + c + ";" });
 		 },
-           "ref":lambda(Parser.HTML p, mapping m, string c) { return c; },
+           "xref":lambda(Parser.HTML p, mapping m, string c) {
+		    if( (!c || !sizeof(c)) && m->href ) {
+		      c = m->href;
+		      sscanf(c, "%s.tag", c);
+		      return replace((c/"/")[-1], "_", " ");
+		    }
+		    return c; },
            "short":lambda(Parser.HTML p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
