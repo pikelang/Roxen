@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.10 1997/02/22 22:28:56 per Exp $ */
+/* $Id: db.pike,v 1.11 1997/02/22 22:30:09 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -70,6 +70,7 @@ public void db_destroy()
 
 public void db_delete(string varname)
 {
+  if(!db) db = ([]);
 #ifdef DEBUG_DB
   perror("db_delete "+varname+" ("+last+")\n");
 #endif
@@ -79,6 +80,7 @@ public void db_delete(string varname)
 
 public void db_set(string varname, mixed value)
 {
+  if(!db) db = ([]);
 #ifdef DEBUG_DB
   perror("db_set "+varname+" ("+last+")\n");
 #endif
