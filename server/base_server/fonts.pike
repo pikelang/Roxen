@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.52 2000/08/19 09:20:48 per Exp $
+// $Id: fonts.pike,v 1.53 2000/08/20 16:38:08 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -238,7 +238,7 @@ class TTFWrapper
     object i = 
            real_write(@Array.map( (array(string))what,replace," ",""))
            ->scale(0.5);
- werror("ttffont["+size+"]->write -> image %dx%d\n", i->xsize(), i->ysize());
+    // werror("ttffont["+size+"]->write -> image %dx%d\n", i->xsize(), i->ysize());
  return i;
   }
 }
