@@ -1,4 +1,50 @@
 mapping cache =  ([]);
+/*
+ * Locale stuff.
+ * <locale-token project="roxen_config">_</locale-token>
+ */
+#include <roxen.h>
+#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
+
+class RDF
+{
+  constant host = "";
+  constant port = 80;
+  constant file = "";
+
+  string parse( RequestID id )
+  {
+    string data;
+    string contents;
+    if( !(data = get_http_data( host, port,"GET "+file+" HTTP/1.0" ) ) )
+      contents = sprintf((string)_(0,"Fetching data from %s..."), host);
+    else
+    {
+      contents = "";
+      string title,link;
+      Parser.HTML itemparser = Parser.HTML() ->
+	add_containers( ([ "title": lambda(Parser.HTML p, mapping m, string c)
+				      { title = c; },
+			   "link": lambda(Parser.HTML p, mapping m, string c)
+				     { link = c; } ]) );
+      Parser.HTML() -> add_container("item",
+				     lambda(Parser.HTML p, mapping m, string c)
+				     {
+				       title = link = 0;
+				       itemparser->finish(c);
+				       if(title && link)
+					 contents +=
+					   sprintf("<font size=-1>"
+						   "<a href=\"%s\">%s</a>"
+						   "</font><br />\n",
+						   link, title);
+				     } )->
+	finish(data);
+    }
+    return ("<box type='"+this_object()->box+"' title='"+
+	    this_object()->box_name+"'>"+contents+"</box>");
+  }
+}
 
 class Fetcher
 {
