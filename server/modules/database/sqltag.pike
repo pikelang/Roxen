@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.71 2001/01/10 08:57:28 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.72 2001/01/13 23:24:29 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -352,7 +352,7 @@ void create()
   defvar( "db",
           DatabaseVar( " none",({}),0,
                        LOCALE(4,"Default database"),
-                       LOCALE(0,"If this is defined, it's the "
+                       LOCALE(8,"If this is defined, it's the "
                               "database this server will use as the "
                               "default database") ) );
 }

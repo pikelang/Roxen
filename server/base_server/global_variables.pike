@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.58 2001/01/13 17:43:28 nilsson Exp $
+// $Id: global_variables.pike,v 1.59 2001/01/13 23:24:41 per Exp $
 
 /*
 #pragma strict_types
@@ -542,9 +542,9 @@ void define_global_variables(  )
 
   string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
   secret = MIME.encode_base64(secret,1);
-  defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(0, "Server secret"),
+  defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "The server secret is a string used in some "
+	 LOCALE(9, "The server secret is a string used in some "
 		"cryptographic functions, such as calculating "
 		"unique, non-guessable session id's. Change this "
 		"value into something that is hard to guess, unless "
