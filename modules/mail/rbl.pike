@@ -1,15 +1,18 @@
 /*
- * $Id: rbl.pike,v 1.1 1998/09/17 19:38:43 grubba Exp $
+ * $Id: rbl.pike,v 1.2 1998/09/17 19:59:56 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
  * Henrik Grubbström 1998-09-17
  */
 
-constant cvs_version="$Id: rbl.pike,v 1.1 1998/09/17 19:38:43 grubba Exp $";
+#include <module.h>
+inherit "module";
+
+constant cvs_version="$Id: rbl.pike,v 1.2 1998/09/17 19:59:56 grubba Exp $";
 constant thread_safe=1;
 
-#define RBL_DEBUG
+// #define RBL_DEBUG
 
 array register_module()
 {
@@ -51,11 +54,14 @@ static void check_dns_result(string nodename, mapping dns_result,
 #ifdef RBL_DEBUG
     report_debug(sprintf("RBL: Access refused for %s\n"
 			 "%O\n",
-			 node_name, dns_result->an));
+			 nodename, dns_result->an));
 #endif /* RBL_DEBUG */
-    cb(({ sprintf("RBL: Access refused for %s; see http://maps.vix.com/rbl/\n",
-		  nodename) }), @args);
+    cb(({ sprintf("RBL: Access refused for %s", nodename),
+	  "RBL: see http://maps.vix.com/rbl/", }), @args);
   }
+#ifdef RBL_DEBUG
+  report_debug(sprintf("RBL: Access ok for %s\n", nodename));
+#endif /* RBL_DEBUG */
   cb(0, @args);
 }
 
@@ -70,7 +76,14 @@ void async_classify_connection(object con, mapping con_info,
     dns = Protocols.DNS.async_client();
   }
 
-  string nodename = reverse(con_info->remoteip/".")*"."+QUERY(server);
+  // con_info->remoteip = "127.0.0.2";
+
+  string nodename = reverse(con_info->remoteip/".")*"."+"."+QUERY(server);
+
+#ifdef RBL_DEBUG
+  report_debug(sprintf("RBL: Checking IP:%s => %s ...\n",
+		       con_info->remoteip, nodename));
+#endif /* RBL_DEBUG */
 
   dns->do_query(nodename, Protocols.DNS.C_IN, Protocols.DNS.T_A,
 		check_dns_result, cb, @args);
