@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.52 2001/03/01 03:13:32 mast Exp $
+//! $Id: PXml.pike,v 1.53 2001/03/23 22:49:42 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -63,9 +63,6 @@ constant unwind_safe = 1;
   {return [object(this_program)] low_parser::add_quote_tag (beg, tdef, end);}
 static this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
-static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
-				    RXML.TagSet tag_set, mixed... args)
-  {TagSetParser::create (ctx, type, tag_set, @args);}
 
 string html_context() {return low_parser::context();}
 string current_input() {return low_parser::current();}
@@ -104,7 +101,7 @@ static void create (
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
 #endif
 
-  TagSetParser::create (ctx, type, tag_set);
+  initialize (ctx, type, tag_set);
 
   if (orig_rt_replacements) {	// We're cloned.
     if (mappingp (orig_rt_replacements))

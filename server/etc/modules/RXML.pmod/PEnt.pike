@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.18 2001/03/01 03:13:32 mast Exp $
+//! $Id: PEnt.pike,v 1.19 2001/03/23 22:49:42 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -44,11 +44,11 @@ static void init_entities()
 
 void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
 {
-  context = ctx;
 #ifdef DEBUG
   if (type != _type) error ("Internal error: Type change in reset().\n");
   if (tag_set != _tag_set) error ("Internal error: Tag set change in reset().\n");
 #endif
+  initialize (ctx, _type, _tag_set);
 
 #ifdef OLD_RXML_COMPAT
   int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
@@ -74,7 +74,7 @@ static void create (
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
 #endif
 
-  _tag_set_parser_create (ctx, type, tag_set);
+  initialize (ctx, type, tag_set);
 
   if (cloned) return;
 

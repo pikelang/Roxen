@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.143 2001/03/15 23:31:24 per Exp $
+//! $Id: module.pmod,v 1.144 2001/03/23 22:49:43 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -270,17 +270,17 @@ class Tag
     }
 
     object/*(Frame)HMM*/ frame;
-    do {
+  make_new_frame: {
       if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
 	if (ustate[parser]) {
 	  frame = [object/*(Frame)HMM*/] ustate[parser][0];
 	  m_delete (ustate, parser);
 	  if (!sizeof (ustate)) ctx->unwind_state = 0;
-	  break;
+	  break make_new_frame;
 	}
       frame = `() (args, nil);
       TAG_DEBUG (frame, "New frame\n");
-    } while (0);		// The break goes here.
+    }
 
     if (!zero_type (frame->raw_tag_text)) {
       if (splice_args)
@@ -2358,7 +2358,7 @@ class Frame
 #undef PRE_INIT_ERROR
     ctx->frame = this;
 
-    do {			// Target for breaks (goto wouldn't be all bad, really).
+  process_tag: {
       if (tag) {
 	if ((raw_args || args || ([]))->help) {
 	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
@@ -2367,7 +2367,7 @@ class Frame
 	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
 	  ctx->handle_exception ( // Will throw if necessary.
 	    Backtrace ("help", help, ctx), parser);
-	  break;
+	  break process_tag;
 	}
 
 	TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
@@ -2376,7 +2376,7 @@ class Frame
 	if (id->conf->check_security (tag, id, id->misc->seclevel)) {
 	  THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	  TRACE_LEAVE("access denied");
-	  break;
+	  break process_tag;
 	}
 #endif
       }
@@ -2636,6 +2636,7 @@ class Frame
 		      finished = 1;
 		    }
 
+		  process_subparser:
 		    do {
 		      if (flags & FLAG_STREAM_CONTENT && subparser->read) {
 			// Handle a stream piece.
@@ -2700,13 +2701,13 @@ class Frame
 					 "ignoring remaining content\n", debug_iter));
 			      ctx->unwind_state = 0;
 			      piece = nil;
-			      break;
+			      break process_subparser;
 			    }
 			  }
 			  piece = nil;
 			}
 
-			if (finished) break;
+			if (finished) break process_subparser;
 		      }
 		      else {	// The frame doesn't handle streamed content.
 			piece = nil;
@@ -2722,13 +2723,14 @@ class Frame
 						     debug_iter, res));
 			    content = res;
 			  }
-			  break;
+			  break process_subparser;
 			}
 		      }
 
 		      subparser->finish(); // Might unwind.
 		      finished = 1;
-		    } while (1); // Only loops when an unwound subparser has been recovered.
+		    } while (1); // Only loops when an unwound
+				 // subparser has been recovered.
 		    subparser = 0;
 		  }
 
@@ -2934,7 +2936,7 @@ class Frame
 	    _eval (parser);
 	    return;
 	  case "return":		// A normal return.
-	    break;
+	    break process_tag;
 	  default:
 	    fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
 	}
@@ -2943,7 +2945,7 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Done\n");
 	TRACE_LEAVE ("");
       }
-    } while (0);		// Breaks go here.
+    } 
 
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
     ctx->frame = up;
@@ -3098,7 +3100,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 	      i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
 	val = nil;
 #ifdef MODULE_DEBUG
-      else if (mixed err = scope_got_type && want_type &&
+      else if (mixed err = scope_got_type && want_type && val != nil &&
 	       !(objectp (val) && ([object] val)->rxml_var_eval) &&
 	       catch (want_type->type_check (val)))
 	if (([object] err)->is_RXML_Backtrace)
@@ -3441,8 +3443,10 @@ class Parser
   //! Define to support reuse of a parser object. It'll be called
   //! instead of making a new object for a new stream. It keeps the
   //! static configuration, i.e. the type (and tag set when used in
-  //! TagSetParser). Note that this function needs to deal with
-  //! leftovers from add_runtime_tag() for TagSetParser objects.
+  //! @[TagSetParser]). Note that this function needs to deal with
+  //! leftovers from @[TagSetParser.add_runtime_tag] for
+  //! @[TagSetParser] objects. It should call @[initialize] with the
+  //! given context and type to reset this base class properly.
 
   optional Parser clone (Context ctx, Type type, mixed... args);
   //! Define to create new parser objects by cloning instead of
@@ -3450,18 +3454,29 @@ class Parser
   //! with the same static configuration, i.e. the type (and tag set
   //! when used in TagSetParser).
 
-  static void create (Context ctx, Type _type, mixed... args)
+  static void create (Context ctx, Type type, mixed... args)
+  //! Should (at least) call @[initialize] with the given context and
+  //! type.
   {
-    context = ctx;
-    type = _type;
+    initialize (ctx, type);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
   }
 
+  static void initialize (Context ctx, Type _type)
+  //! Does the required initialization for this base class. Use from
+  //! @[create] and @[reset] (when it's defined) to initialize or
+  //! reset the parser object properly.
+  {
+    context = ctx;
+    type = _type;
+  }
+
   string current_input() {return 0;}
   //! Should return the representation in the input stream for the
-  //! current tag or entity being parsed, or 0 if it isn't known.
+  //! current tag, entity or text being parsed, or 0 if it isn't
+  //! known.
 
   // Internals.
 
@@ -3507,20 +3522,23 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
-  optional void reset (Context ctx, Type _type, TagSet tag_set, mixed... args);
-  optional Parser clone (Context ctx, Type _type, TagSet tag_set, mixed... args);
-  static void create (Context ctx, Type _type, TagSet _tag_set, mixed... args)
+  //! In addition to the type, the tag set is part of the static
+  //! configuration.
+  optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
+  optional Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
+  static void create (Context ctx, Type type, TagSet tag_set, mixed... args)
   {
-    //::create (ctx, _type);
-    context = ctx;
-    type = _type;
-    tag_set = _tag_set;
+    initialize (ctx, type, tag_set);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
   }
-  //! In addition to the type, the tag set is part of the static
-  //! configuration.
+
+  static void initialize (Context ctx, Type type, TagSet _tag_set)
+  {
+    ::initialize (ctx, type);
+    tag_set = _tag_set;
+  }
 
   mixed read();
   //! No longer optional in this class. Since the evaluation is done
@@ -4330,6 +4348,7 @@ static class TFloat
 
 TString t_string = TString();
 //! Any type of string; acts as a supertype for all text types.
+//! Sequential and allows free text.
 //!
 //! Conversion to and from this type and other text types is similar
 //! to @[RXML.t_any] in that the value doesn't change, which means
@@ -4388,7 +4407,8 @@ static class TString
 
 TText t_text = TText();
 //! The type for plain text. Note that this is not any (unspecified)
-//! type of text; @[RXML.t_string] represents that.
+//! type of text; @[RXML.t_string] represents that. Is sequential and
+//! allows free text.
 
 static class TText
 {
@@ -4416,7 +4436,7 @@ THtml t_xml = TXml();
 
 static class TXml
 {
-  inherit TString;
+  inherit TText;
   constant name = "text/xml";
   Type conversion_type = t_text;
   constant entity_syntax = 1;
@@ -4532,6 +4552,7 @@ static class THtml
 
   string _sprintf() {return "RXML.t_html" + OBJ_COUNT;}
 }
+
 
 // P-code compilation and evaluation.
 

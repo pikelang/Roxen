@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.18 2001/03/15 00:30:56 mast Exp $
+//! $Id: utils.pmod,v 1.19 2001/03/23 22:49:43 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -19,7 +19,7 @@ int(1..1)|string|array free_text_error (Parser.HTML p, string str)
   if (str != ws) {
     sscanf (reverse (str), "%*[ \t\n\r]%s", str);
     sscanf (reverse (str), "%*[ \t\n\r]%s", str);
-    RXML.parse_error ("Free text %O is not allowed in this context.\n", str);
+    RXML.parse_error ("Free text %O is not allowed in %s context.\n", str, p->type->name);
   }
   return ({});
 }
@@ -27,7 +27,7 @@ int(1..1)|string|array free_text_error (Parser.HTML p, string str)
 int(1..1)|string|array unknown_tag_error (Parser.HTML p, string str)
 {
   RXML.parse_error ("Unknown tag %O. Unknown tags are not "
-		    "allowed in this context.\n", p->tag_name());
+		    "allowed in %s context.\n", p->tag_name(), p->type->name);
   return ({});
 }
 
