@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.453 2001/07/21 10:55:00 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.454 2001/07/21 11:19:57 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3083,19 +3083,9 @@ static string my_url;
 void fix_my_url()
 {
   my_url = query ("MyWorldLocation");
-  if (sizeof (my_url)) {
-    if (sscanf (my_url, "%s://%s/%*c", string port, string host) == 2) {
-      // No subpath in MyWorldLocation; try to get one from URLs.
-      foreach (query ("URLs"), string url)
-	if (sscanf (url, "%*s://%*[^/]%s", url) == 3) {
-	  my_url = port + "://" + host + url;
-	  break;
-	}
-    }
-  }
-  else
-    if (!(my_url = Roxen.get_world (query ("URLs"))))
-      my_url = "http://localhost/"; // Probably no port configured.
+  if (!sizeof (my_url) &&
+      !(my_url = Roxen.get_world (query ("URLs"))))
+    my_url = "http://localhost/"; // Probably no port configured.
   if (!has_suffix (my_url, "/")) my_url += "/";
 }
 
@@ -3332,16 +3322,17 @@ static void create()
 	 DLOCALE(35, "The domain name of the server. The domain name is used "
 	 "to generate default URLs, and to generate email addresses."));
 
-  defvar("MyWorldLocation", "http://"+gethostname()+"/", 
+  defvar("MyWorldLocation", "",
          DLOCALE(36, "Primary Server URL"), TYPE_URL|VAR_PUBLIC,
-	 DLOCALE(37, "This is the main server URL, where your start page is "
-		 "located. Please note that you also have to configure the "
-		 "'URLs' variable. This is for instance used as fallback to "
-		 "generate absolute URLs to the server, but in most "
-		 "circumstances the URL sent by the clients is used, or "
-		 "the setting in 'URLs' for the port in question if that "
-		 "doesn't exist. This setting should not contain any subpath "
-		 "setting that is part of the port(s) in 'URLs'."));
+	 DLOCALE(37, #"\
+This is the main server URL, where your start page is located. This
+setting is for instance used as fallback to generate absolute URLs to
+the server, but in most circumstances the URLs sent by the clients are
+used. A URL is deduced from the first entry in 'URLs' if this is left
+blank.
+
+<p>Note that setting this doesn't make the server accessible; you must
+also set 'URLs'."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL,
