@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.360 2004/10/19 14:38:57 mast Exp $
+// $Id: roxenloader.pike,v 1.361 2005/03/10 15:13:03 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.360 2004/10/19 14:38:57 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.361 2005/03/10 15:13:03 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1174,8 +1174,15 @@ int main(int argc, array(string) argv)
 Roxen 4.0 should be run with Pike 7.4 or newer.
 ---------------------------------------------------------------
 ");
-	exit(1);
+    exit(1);
 #endif
+
+  // Check if IPv6 support is available.
+  catch {
+    Stdio.Port p = Stdio.Port(0, 0, "::1");
+    destruct(p);
+    add_constant("__ROXEN_SUPPORTS_IPV6__", 1);
+  };
 
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
