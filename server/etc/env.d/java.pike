@@ -61,4 +61,7 @@ void run(object env)
     if(s && s[1]==-2)
       env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
   }
+  /* AIX */
+  if(file_stat(jrehome+"/bin/libjava.a"))
+    env->append("LIBPATH", jrehome+"/bin/:"+jrehome+"/bin/classic/" );
 }
