@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.139 2003/09/09 15:02:22 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.140 2004/06/17 15:59:21 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -716,7 +716,13 @@ program low_findprog(string pname, string ext,
   fname = unrelocate_module(fname);
 #endif
 
+#if 0
+  // No idea what this is supposed to accomplish, but the effect is
+  // that the ErrorContainer can be stored as handler in dirnodes and
+  // receive error messages long after the function that installed it
+  // have checked for error messages and forgotten about it. /mast
   if( !handler ) handler = get_inhibit_compile_errors();
+#endif
 
   if( (s=master_file_stat( relocate_module(fname) )) && s[1]>=0 )
   {
