@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.28 1997/05/25 10:09:41 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.29 1997/05/26 01:25:24 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -149,8 +149,8 @@ array (object) allocate_pris()
 class Bignum {
 //object this = this_object();
 // constant This = object_program(this_object());
-#if efun(Mpz) && 0
-  inherit Mpz;
+#if efun(Mpz) && 0	// FIXME: Need #if module(Gmp.mpz)
+  inherit Gmp.mpz;
   float mb()
   {
     return (float)this_object()/(1024.0*1024.0);
@@ -1041,13 +1041,13 @@ public array find_dir(string file, object id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
-      if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..1000000], id))
+      if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..], id))
 	dir |= d;
     } else {
       if(search(loc, file)==0 && loc[strlen(file)-1]=='/' 
 	 && (loc[0]==loc[-1]) && loc[-1]=='/')
       {
-	loc=loc[strlen(file)..100000];
+	loc=loc[strlen(file)..];
 	sscanf(loc, "%s/", loc);
 	dir += ({ loc });
       }
