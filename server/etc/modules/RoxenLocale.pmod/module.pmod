@@ -79,6 +79,10 @@ class LocaleObject {
     return bindings[key];
   }
 
+  int is_function(string f) {
+    return functionp(functions[f]);
+  }
+
   mixed `() (string f, array ... args) {
     if(functionp(functions[f]))
       return functions[f](@args);
@@ -223,6 +227,17 @@ string translate(LocaleObject locale_object, string id,
     if(t_str) return t_str;
   }
   return str;
+}
+
+mixed call(LocaleObject locale_object, string f,
+	   function fb, array ... args)
+{
+  if(locale_object) {
+    locale_object->timestamp=time(1);
+    if(locale_object->is_function(f))
+      return locale_object(f, @args);
+  }
+  return fb(@args);
 }
 
 static void clean_cache() {
