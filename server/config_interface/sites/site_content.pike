@@ -436,8 +436,9 @@ string port_for( string url, int settings )
     </tr>
     <tr>
       <td>":"")+#"
-        <if not='1' variable='_.warning is '>
+        <if variable='_.warning != '>
            <font color='&usr.warncolor;'><b>&_.warning;</b></font>
+           <br clear='all' />
         </if>
         <emit source='port-urls' port='&_.port;'>
           <if not variable='_.url is &var.url;'>
