@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.384 2000/11/15 09:55:22 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.385 2000/11/24 15:52:04 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1368,7 +1368,7 @@ public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   array dir;
   TRACE_ENTER(sprintf("List directory %O.", file), 0);
 
-  if(file[0] != '/')
+  if(!sizeof (file) || file[0] != '/')
     file = "/" + file;
 
 #ifdef URL_MODULES
@@ -1713,7 +1713,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
   file=replace(file, "//", "/");
 
-  if(file[0] != '/')
+  if(!sizeof (file) || file[0] != '/')
     file = "/" + file;
 
   // FIXME: Should I append a "/" to file if missing?
