@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.29 1998/05/14 21:19:50 grubba Exp $
+ * $Id: ftp2.pike,v 1.30 1998/05/14 23:30:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1984,6 +1984,8 @@ class FTPSession
     if (st[1] >= 0) {
       facts->size = (string)st[1];
       facts->type = "File";
+      facts["media-type"] = session->conf->type_from_filename(f) ||
+	"application/octet-stream";
     } else {
       facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
@@ -2637,7 +2639,7 @@ class FTPSession
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
-			      "MLST":"MLST UNIX.mode;size;type;modify;charset",
+			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
 			      "MLSD":"",
 		    ])[s] || s);
 		  }) - ({ "" });
