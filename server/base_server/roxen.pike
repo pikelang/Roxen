@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.268 1999/04/24 19:11:50 grubba Exp $
+ * $Id: roxen.pike,v 1.269 1999/05/01 18:19:34 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.268 1999/04/24 19:11:50 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.269 1999/05/01 18:19:34 grubba Exp $";
 
 object backend_thread;
 
@@ -385,7 +385,7 @@ class container
 }
 
 // Locale support
-object(Locale.Roxen.standard) default_locale=Locale.Roxen.nihongo;
+object(Locale.Roxen.standard) default_locale=Locale.Roxen.standard /* nihongo */;
 object fonts;
 #ifdef THREADS
 object locale = thread_local();
@@ -2532,6 +2532,10 @@ void initiate_configuration_port( int|void first )
       // Obsolete versions of the SSL protocol.
       report_warning(LOCALE->obsolete_ssl(port[1]));
       port[1] = "https";
+    } else if ((< "ftp2" >)[port[1]]) {
+      // ftp2 has been replaced ftp entirely.
+      report_warning(LOCALE->obsolete_ftp(prot[1]));
+      port[1] = "ftp";
     }
     string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {

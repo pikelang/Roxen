@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.183 1999/04/22 09:20:19 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.184 1999/05/01 18:19:56 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2325,6 +2325,10 @@ void start(int num)
       // Note: Change in-place.
       port[1] = "https";
       // FIXME: Should probably mark node as changed.
+    } else if ((< "ftp2" >)[port[1]]) {
+      // ftp2 has been replaced ftp entirely.
+      report_warning(LOCALE->obsolete_ftp(prot[1]));
+      port[1] = "ftp";
     }
     string key = MKPORTKEY(port);
     if (!server_ports[key]) {
