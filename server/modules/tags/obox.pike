@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.9 1999/05/08 06:23:01 neotron Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.10 1999/05/24 23:48:31 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -142,8 +142,8 @@ string container_obox(string name, mapping args,
       (args->width ? " width=" + args->width : "") + ">\n" +
       s +
       "<tr" +
-      (args->bgcolor?" bgcolor=\""+args->bgcolor:"") +
-      "\"><td bgcolor=\"" + args->outlinecolor + "\">" +
+      (args->bgcolor?" bgcolor=\""+args->bgcolor+"\"":"") +
+      "><td bgcolor=\"" + args->outlinecolor + "\">" +
       img_placeholder(args) + "</td>\n"
       "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=1" : "") +
       (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=3" + ">\n"
@@ -173,8 +173,7 @@ array register_module()
   return ({
     MODULE_PARSER, "Outlined box",
     "This is a container tag making outlined boxes.<p>"
-    "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n "
-    "<obox title=example>contents</obox>",
+    "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n "+doc(),
     0, 1 });
 }
 
