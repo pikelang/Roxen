@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.110 2004/05/07 18:26:20 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.111 2004/05/07 19:46:51 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -18,14 +18,13 @@ constant cvs_version="$Id: prototypes.pike,v 1.110 2004/05/07 18:26:20 mast Exp 
 // roxenloader.pike.
 object Roxen;
 
-// Externally visible identifiers in this module that shouldn't be
-// added as constants by roxenloader.pike.
+// Externally visible identifiers in this file that shouldn't be added
+// as global constants by roxenloader.pike.
 constant ignore_identifiers = (<
-  "cvs_version", "Roxen", "ignore_identifiers", "Variable"
+  "cvs_version", "Roxen", "ignore_identifiers"
 >);
 
-// What does this do here when it can't be added as a constant? /mast
-class Variable
+static class Variable
 {
   constant is_variable = 1;
   constant type = "Basic";
@@ -1805,6 +1804,15 @@ static class PropertySet
 					multiset(string)|void filt);
 }
 
+enum LockFlag {
+  LOCK_NONE		= 0,
+  LOCK_SHARED_BELOW	= 2,
+  LOCK_SHARED_AT	= 3,
+  LOCK_OWN_BELOW	= 4,
+  LOCK_EXCL_BELOW	= 6,
+  LOCK_EXCL_AT		= 7
+};
+
 class RoxenModule
 {
   inherit BasicDefvar;
@@ -1826,6 +1834,8 @@ class RoxenModule
   string query_location();
   string query_provides();
   function(RequestID:int|mapping) query_seclevels();
+  void set_status_for_path (string path, RequestID id, int status_code,
+			    string|void message, mixed... args);
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
@@ -1859,9 +1869,9 @@ class RoxenModule
 			       int(0..1) recursive,
 			       int(0..1) exclude_shared,
 			       RequestID id);
-  DAVLock|int(0..3) check_locks(string path,
-				int(0..1) recursive,
-				RequestID id);
+  DAVLock|LockFlag check_locks(string path,
+			       int(0..1) recursive,
+			       RequestID id);
   mapping(string:mixed) lock_file(string path,
 				  DAVLock lock,
 				  RequestID id);
