@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.233 2000/08/28 13:28:22 mast Exp $
+// $Id: rxml.pike,v 1.234 2000/08/28 17:34:30 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -30,6 +30,9 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
 // RXML.run_error().
 {
   RequestID id=RXML.get_context()->id;
+#ifdef MODULE_DEBUG
+  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+#endif
   if(id->conf->get_provider("RXMLRunError")) {
     if(!_run_error)
       _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
@@ -38,14 +41,12 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
   }
   else
     _run_error=0;
+  NOCACHE();
   id->misc->defines[" _ok"]=0;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-#endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  else return describe_error (err);
+  return describe_error (err);
 }
 
 function _parse_error;
@@ -54,6 +55,9 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 // RXML.parse_error().
 {
   RequestID id=RXML.get_context()->id;
+#ifdef MODULE_DEBUG
+  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+#endif
   if(id->conf->get_provider("RXMLParseError")) {
     if(!_parse_error)
       _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
@@ -62,14 +66,12 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
   }
   else
     _parse_error=0;
+  NOCACHE();
   id->misc->defines[" _ok"]=0;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-#endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  else return describe_error (err);
+  return describe_error (err);
 }
 
 #ifdef OLD_RXML_COMPAT
@@ -183,27 +185,20 @@ string parse_rxml(string what, RequestID id,
   int time = gethrtime();
 #endif
   if(!defines)
-  {
     defines = id->misc->defines||([]);
-    if(!_error)
-      _error=200;
-    if(!_extra_heads)
-      _extra_heads=([ ]);
+  if(!_error)
+    _error=200;
+  if(!_extra_heads)
+    _extra_heads=([ ]);
+  if(!_stat) {
+    if(id->misc->stat)
+      _stat=id->misc->stat;
+    else if(file)
+      _stat=file->stat();
   }
-  if(!defines->sizefmt)
-  {
-    set_start_quote(set_end_quote(0));
-    defines->sizefmt = "abbrev";
-    if(!_error) _error=200;
-    if(!_extra_heads) _extra_heads=([ ]);
-    if(!_stat)
-      if(id->misc->stat)
-        _stat=id->misc->stat;
-      else if(file)
-        _stat=file->stat();
-  }
-
   id->misc->defines = defines;
+
+  set_start_quote(set_end_quote(0));
 
   RXML.PXml parent_parser = id->misc->_parser; // Don't count on that this exists.
   RXML.PXml parser;
