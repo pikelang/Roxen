@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.549 2004/03/08 09:18:05 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.550 2004/03/13 16:13:14 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1152,13 +1152,15 @@ static array(string) draw_saturation_bar(int hue,int brightness, int where,
       bar->line(0, j + 1,29, j + 1, @color);
     }
   }
-  
-  where = 255 - where;
-  int hilite = (brightness > 128) ? 0 : 255;
-  if (small_version)
-    bar->line(0, where / 2, 15, where / 2, hilite, hilite, hilite);
-  else
-    bar->line(0, where, 29, where, hilite, hilite, hilite);
+
+  if (where >= 0 && where <= 255) {
+    where = 255 - where;
+    int hilite = (brightness > 128) ? 0 : 255;
+    if (small_version)
+      bar->line(0, where / 2, 15, where / 2, hilite, hilite, hilite);
+    else
+      bar->line(0, where, 29, where, hilite, hilite, hilite);
+  }
   
 #if constant(Image.JPEG) && constant(Image.JPEG.encode)
   return ({ Image.JPEG.encode(bar), "image/jpeg" });
