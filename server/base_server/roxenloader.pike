@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.306 2001/12/19 10:01:56 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.307 2002/01/28 12:23:31 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1982,6 +1982,7 @@ and rebuild Pike from scratch.
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
   add_constant("werror",        roxen_perror);
+  add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
   add_constant("roxenp",        lambda() { return roxen; });
   add_constant("ST_MTIME",      ST_MTIME );
