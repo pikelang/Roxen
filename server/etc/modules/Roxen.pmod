@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.171 2004/03/10 12:44:33 grubba Exp $
+// $Id: Roxen.pmod,v 1.172 2004/04/02 13:11:37 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -484,7 +484,7 @@ string cern_http_date(int t)
 
   string c;
   mapping(string:int) lt = localtime(t);
-  int tzh = lt->timezone/3600 - lt->isdst;
+  int tzh = lt->timezone/3600;
   if(tzh > 0)
     c="-";
   else {
