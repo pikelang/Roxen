@@ -7,7 +7,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.10 2000/01/30 21:18:55 per Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.11 2000/02/02 18:41:57 jonasw Exp $";
 constant tagdesc="Provides the tag 'cimg' that can be used to convert images "
   "between different image formats.";
 
@@ -23,7 +23,7 @@ array register_module()
 }
 
 TAGDOCUMENTATION
-#ifdef manul
+#ifdef manual
 constant tagdoc=(["cimg":"<desc tag>"+tagdesc+"</desc>"]);
 /*
       "Provides a tag 'cimg'. Usage: "
