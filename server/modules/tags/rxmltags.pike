@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.362 2002/04/15 12:31:33 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.363 2002/04/15 14:21:49 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -37,8 +37,8 @@ void start()
   compat_level = (float) my_configuration()->query("compat_level");
 }
 
-string query_provides() {
-  return "modified";
+multiset query_provides() {
+  return (< "modified", "rxmltags" >);
 }
 
 private object compile_handler = class {
