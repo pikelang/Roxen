@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.50 2001/06/13 14:11:19 mast Exp $
+// $Id: module.pmod,v 1.51 2001/06/13 19:36:51 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -310,12 +310,13 @@ class Variable
     return what;
   }
   
-  void set_from_form( RequestID id, void|int(0..1) force )
+  int(0..1) set_from_form( RequestID id, void|int(0..1) force )
     //! Set this variable from the form variable in id->Variables,
     //! if any are available. The default implementation simply sets
     //! the variable to the string in the form variables. @[force]
     //! forces the variable to be set even if the variable already
     //! has the new value, forcing possible warnings to be added.
+    //! Returns 1 if the variable was changed, otherwise 0.
     //!
     //! Other side effects: Might create warnings to be shown to the 
     //! user (see get_warnings)
@@ -327,7 +328,7 @@ class Variable
     {
       val = transform_from_form( val[""] );
       if( !force && val == query() )
-	return;
+	return 0;
       array b;
       mixed q = catch( b = verify_set_from_form( val ) );
       if( q || sizeof( b ) != 2 )
@@ -337,12 +338,13 @@ class Variable
         else
           add_warning( "Internal error: Illegal sized array "
 		       "from verify_set_from_form\n" );
-        return;
+        return 0;
       }
       if( b ) 
       {
         set_warning( b[0] );
 	set( b[1] );
+	return 1;
       }
     }
   }
@@ -555,9 +557,9 @@ class String
   constant width = 40;
   //! The width of the input field. Used by overriding classes.
 
-  array(string) verify_set_from_form( string new )
+  array(string) verify_set_from_form( mixed new )
   {
-    return ({ 0, new-"\r" });
+    return ({ 0, [string]new-"\r" });
   }
 
   string render_form( RequestID id, void|mapping additional_args )
