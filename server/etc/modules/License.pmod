@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.3 2002/02/26 17:19:44 wellhard Exp $
+// $Id: License.pmod,v 1.4 2002/02/26 17:56:53 jonasw Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -115,7 +115,7 @@ class Key
   {
     if(mode)
       m += "::"+mode;
-    return mappingp(content->modules[m]) && content->modules[m]->feature;
+    return mappingp(content->modules[m]) && content->modules[m][feature];
   }
 
 #ifdef INSIDE_ROXEN
