@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.6 1999/11/24 19:12:33 per Exp $
+ * $Id: debug_info.pike,v 1.7 1999/11/27 07:53:46 per Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -52,31 +52,43 @@ array get_prof_info(string|void foo)
   foreach(indices(tmp), string c)
   {
     mapping g = tmp[c][1];
-    foreach(indices(g), string f) 
+    foreach(indices(g), string f)
     {
-      if(!foo || !sizeof(foo) || glob(foo,c+"."+f))
+      if(g[f][2])
       {
+        c = replace( c, "base_server/", "roxen." );
+        c = (c/"/")[-1];
         string fn = c+"."+f;
-        switch( f )
+        if(  (!foo || !sizeof(foo) || glob(foo,c+"."+f)) )
         {
-         case "cast":
-           fn = "(cast)"+c;
-           break;
-         case "__INIT":
-            fn = c;
-           break;
-         case "create":
-         case "`()":
-           fn = c+"()";
-           break;
-         case "`->":
-           fn = c+"->";
-           break;
-         case "`[]":
-           fn = c+"[]";
-           break;
+          switch( f )
+          {
+           case "cast":
+             fn = "(cast)"+c;
+             break;
+           case "__INIT":
+             fn = c;
+             break;
+           case "create":
+           case "`()":
+             fn = c+"()";
+             break;
+           case "`->":
+             fn = c+"->";
+             break;
+           case "`[]":
+             fn = c+"[]";
+             break;
+          }
+          if( !as_functions[fn] )
+            as_functions[fn] = ({ g[f][2],g[f][0],g[f][1] });
+          else
+          {
+            as_functions[fn][0] += g[f][2];
+            as_functions[fn][1] += g[f][0];
+            as_functions[fn][2] += g[f][1];
+          }
         }
-        as_functions[fn] = ({ g[f][2],g[f][0],g[f][1] });
       }
     }
   }
@@ -100,7 +112,6 @@ array get_prof_info(string|void foo)
 
 mixed page_1(object id)
 {
-  return "";
   string res = ("<font size=+1>Profiling information</font><br>"
 		"All times are in seconds, and real-time. Times incude"
 		" time of child functions. No callgraph is available yet.<br>"
@@ -116,7 +127,7 @@ mixed page_1(object id)
                                  "+chld",
                                  "t/call(ms)",
 				 "+chld(ms)"}));
-  return res + "\n\n<pre><font size=-20>"+ADT.Table.ASCII.encode( t )+"</font></pre>";
+  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 }
 #endif
 
@@ -327,9 +338,9 @@ mixed page_0( object id )
 
 mixed parse(object id) 
 { 
-  return page_0( id, id->conf ) 
+  return page_0( id ) 
 #if constant( get_profiling_info )
-         + page_1( id, id->conf )
+         + page_1( id )
 #endif
          ;
 }
