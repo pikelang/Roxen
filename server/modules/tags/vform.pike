@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.17 2000/11/29 14:37:59 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.18 2001/02/20 09:48:13 kuntri Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -389,13 +389,13 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
   "vform":({ #"<desc cont='cont'><p><short>
- Creates a self verifying form.</short> You can use all stadard
+ Creates a self verifying form.</short> You can use all standard
  HTML-input widgets in this container as well.</p>
 
 <ex type='box'>
 <vform>
   <vinput name='mail' type='email'>&_.warning;</vinput>
-  <input type='hidden' name='user' value='&form.userid:' />
+  <input type='hidden' name='user' value='&form.userid;' />
   <input type='submit' />
 </vform>
 <then><redirect to='other_page.html' /></then>

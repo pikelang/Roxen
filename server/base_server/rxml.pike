@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.267 2001/02/18 21:44:41 nilsson Exp $
+// $Id: rxml.pike,v 1.268 2001/02/20 09:48:07 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2267,13 +2267,18 @@ Kibibits.
  argument is false the content is skipped and the next <tag>case</tag>
  tag is parsed.</p></desc>
 
-<ex type='vert'>
-<set variable='var.foo' value='17'/>
+<ex type='box'>
 <cond>
-  <case true=''><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+1'/></case>
-  <default><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+2'/></default>
+ <case variable='form.action = edit'>
+   some database edit code
+ </case>
+ <case variable='form.action = delete'>
+   some database delete code
+ </case>
+ <default>
+   view something from the database
+ </default>
 </cond>
-<ent>var.foo</ent>
 </ex>",
 
 	    "default":#"<desc cont='cont'><p>
@@ -2283,27 +2288,10 @@ Kibibits.
  statement. This affects the parseorder of the statement. If the
  <tag>default</tag> tag is put first in the statement it will allways
  be executed, then the next <tag>case</tag> tag will be executed and
- perhaps add to the result the <tag>default</tag> performed.</p></desc>
-
-<ex type='vert'>
-<set variable=\"var.foo\" value=\"17\"/>
-<cond>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
-  <case true=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-</cond>
-<ent>var.foo</ent>
-</ex>
-<br/>
-<ex type='vert'>
-<set variable=\"var.foo\" value=\"17\"/>
-<cond>
-  <case false=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
-</cond>
-<ent>var.foo</ent>
-</ex>"
+ perhaps add to the result the <tag>default</tag> performed.</p></desc>"
 	    ])
 	  }),
+
 
 "comment":#"<desc cont='cont'><p><short>
  The enclosed text will be removed from the document.</short> The
@@ -2349,8 +2337,11 @@ Kibibits.
 </p></desc>",
 
 "define":({ #"<desc cont='cont'><p><short>
- Defines variables, tags, containers and if-callers.</short> One, and only one,
- attribute must be set.
+
+ Defines variables, tags, containers and if-callers.</short> This tag
+ can also be used to redefine existing HTML-tags. Note that everything
+ defined by this tag are locally for the document they exist in, not
+ globally like variables or tags defined in Roxen-modules are.
 </p></desc>
 
 <attr name='variable' value='name'><p>
@@ -2939,8 +2930,8 @@ Kibibits.
 "strlen":#"<desc cont='cont'><p><short>
  Returns the length of the contents.</short></p>
 
- <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
- tag.</ex>
+ <ex type='vert'>There is <strlen>foo bar gazonk</strlen> characters
+ inside the tag.</ex>
 </desc>",
 
 "then":#"<desc cont='cont'><p><short>
@@ -2988,8 +2979,10 @@ Kibibits.
 </attr>",
 
 "use":#"<desc cont='cont'><p><short>
- Reads tags, container tags and defines from a file or package.
-</short></p></desc>
+ Reads tags, container tags and defines from a package.</short>
+ Everything defined in the package is local for the page the package
+ is used in.
+</p></desc>
 
 <attr name='packageinfo'><p>
  Show a all available packages.</p>
@@ -2997,7 +2990,8 @@ Kibibits.
 
 <attr name='package' value='name'><p>
  Reads all tags, container tags and defines from the given package.
- Packages are files located in rxml_packages/ and local/rxml_packages/.</p>
+ Packages are files located by default in
+ <i>../rxml_packages/</i>.</p>
 </attr>
 
 <attr name=file' value='path'><p>
@@ -3061,16 +3055,20 @@ Kibibits.
 	      }),
 
 
-"emit":({ #"<desc cont='cont'><p><short>
+"emit":({ #"<desc cont='cont'><p><short hide='hide'>
 
  Provides data, fetched from different sources, as entities. </short>
- Occasionally an <tag>emit</tag> operation fails to produce output.
+
+ <tag>emit</tag> is a generic tag used to fetch data from a
+ provided source, loop over it and assign it to RXML variables
+ accessible through entities.</p>
+
+ <p>Occasionally an <tag>emit</tag> operation fails to produce output.
  This might happen when <tag>emit</tag> can't find any matches or if
  the developer has made an error. When this happens the truthvalue of
  that page is set to <i>false</i>. By using <xref
  href='../if/else.tag' /> afterwards it's possible to detect when an
- <tag>emit</tag> operation fails. </p>
-
+ <tag>emit</tag> operation fails.</p>
 </desc>
 
 <attr name='source' value='plugin' required='required'><p>

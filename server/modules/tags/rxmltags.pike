@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.196 2001/01/31 14:16:35 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.197 2001/02/20 09:48:11 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1784,19 +1784,47 @@ constant tagdoc=([
 </p></desc>",
 
 "&client.languages;":#"<desc ent='ent'><p>
- An ordered list of the clients most preferred
+ An ordered list of the clients most preferred.
 </p></desc>",
 
 "&client.authenticated;":#"<desc ent='ent'><p>
-
+ Returns the name of the user logged on to the site, i.e. the login
+ name, if any exists.
 </p></desc>",
 
 "&client.user;":#"<desc ent='ent'><p>
-
+ Returns the name the user used when he/she tried to log on the site,
+ i.e. the login name, if any exists.
 </p></desc>",
 
 "&client.password;":#"<desc ent='ent'><p>
 
+</p></desc>",
+
+"&client.height;":#"<desc ent='ent'><p>
+ The presentation area height in pixels. For WAP-phones.
+</p></desc>",
+
+"&client.width;":#"<desc ent='ent'><p>
+ The presentation area width in pixels. For WAP-phones.
+</p></desc>",
+
+"&client.robot;":#"<desc ent='ent'><p>
+
+ Returns the name of the webrobot. Useful if the robot requesting
+ pages is to be served other contents than most visitors. Use
+ <ent>client.robot</ent> together with <xref href='../if/if.tag'
+ />.</p>
+
+ <p>Possible webrobots are: ms-url-control, architex, backrub,
+ checkbot, fast, freecrawl, passagen, gcreep, getright, googlebot,
+ harvest, alexa, infoseek, intraseek, lycos, webinfo, roxen,
+ altavista, scout, slurp, url-minder, webcrawler, wget, xenu and
+ yahoo.</p>
+</desc>",
+
+"&client.javascript;":#"<desc ent='ent'><p>
+ Returns the highest version of javascript supported.
 </p></desc>",
 
 //----------------------------------------------------------------------
@@ -2067,6 +2095,15 @@ using the pre tag.
  href='throw.tag' />.
 </p>
 </desc>",
+
+//----------------------------------------------------------------------
+
+"charset":#"<desc cont='cont'><p><short>
+ </short>
+
+ </p>
+</desc>",
+
 
 //----------------------------------------------------------------------
 
@@ -2413,7 +2450,8 @@ tags.</p>
  <p>Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\"
  is replaced with \"&amp;lt;\" and \"&amp;gt;\".</p>
 
-<ex><doc quote=''>
+<ex type='vert'>
+<doc quote=''>
 <table>
  <tr>
     <td> First cell </td>
@@ -2427,7 +2465,7 @@ tags.</p>
 <attr name='pre'><p>
  The result is encapsulated within a <tag>pre</tag> container.</p>
 
-<ex><doc pre=''>
+<ex type='vert'><doc pre=''>
 {table}
  {tr}
     {td} First cell {/td}
@@ -2606,8 +2644,8 @@ tags.</p>
 
 //----------------------------------------------------------------------
 
-"insert#variable":#"<desc plugin='plugin'><p>
- Inserts the value of a variable.
+"insert#variable":#"<desc plugin='plugin'><p><short>
+ Inserts the value of a variable.</short>
 </p></desc>
 
 <attr name=variable value=string>
@@ -2643,7 +2681,7 @@ tags.</p>
 <attr name=variables value=full|plain>
  <p>Sets how the output should be formatted.</p>
 
- <ex>
+ <ex type='vert'>
 <pre>
 <insert variables='full' scope='roxen'/>
 </pre>
@@ -2663,7 +2701,7 @@ tags.</p>
 <attr name=scopes value=full|plain>
  <p>Sets how the output should be formatted.</p>
 
- <ex>
+ <ex type='vert'>
    <insert scopes='plain'/>
  </ex>
 </attr>",
@@ -2695,10 +2733,10 @@ tags.</p>
 
 //----------------------------------------------------------------------
 
-"insert#realfile":#"<desc plugin='plugin'><p>
- Inserts a raw, unparsed file. The disadvantage with the realfile
- plugin compared to the file plugin is that the realfile plugin needs
- the inserted file to exist, and can't fetch files from e.g. an arbitrary location module.
+"insert#realfile":#"<desc plugin='plugin'><p><short>
+ Inserts a raw, unparsed file.</short> The disadvantage with the
+ realfile plugin compared to the file plugin is that the realfile
+ plugin needs the inserted file to exist, and can't fetch files from e.g. an arbitrary location module.
 </p></desc>
 
 <attr name=realfile value=string>
@@ -2775,11 +2813,11 @@ tags.</p>
  Randomly chooses a message from its contents.</short>
 </p></desc>
 
-<attr name=separator value=string>
+<attr name='separator' value='string'>
  <p>The separator used to separate the messages, by default newline.</p>
 
-<ex><random separator=#>
-Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
+<ex><random separator='#'>
+Roxen#Pike#Foo#Bar#roxen.com
 </random>
 </ex>
 </attr>",
@@ -3108,7 +3146,7 @@ load.</p>
 
 <attr name=space>
  <p>Put a space between every character.</p>
-<ex>
+<ex type='vert'>
 <smallcaps space=''>Roxen WebServer</smallcaps>
 </ex>
 </attr>
@@ -3164,7 +3202,7 @@ load.</p>
  <p>Defines what the strings to be sorted are separated with. The sorted
  string will be separated by the string.</p>
 
- <ex>
+ <ex type='vert'>
   <sort separator='#'>
    1#Hello#3#World#Are#2#We#4#Communicating?
   </sort>

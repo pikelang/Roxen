@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.17 2000/11/09 18:19:13 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.18 2001/02/20 09:48:11 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -240,7 +240,7 @@ constant tagdoc=([
 
 <ex type='vert'>
 <wash-html linkify='' keep-containers='a' keep-tags='br'>
-  <a href=\"http://docs.roxen.com\">Documentation for Roxen products</a><br />
+  <a href=\"http://docs.roxen.com\">Roxen docs</a><br />
   http://pike.roxen.com<br />
   www.roxen.com
 </wash-html>

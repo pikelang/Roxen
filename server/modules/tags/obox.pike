@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.33 2000/11/09 18:19:13 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.34 2001/02/20 09:48:13 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -23,7 +23,7 @@ constant tagdoc=([
  Vertical alignment of the box.</p>
 </attr>
 
-<attr name='bgcolor' value='color><p>
+<attr name='bgcolor' value='color'><p>
  Color of the background and title label.</p>
 </attr>
 
@@ -92,7 +92,7 @@ This is just a sample box.
 </attr>",
 
 
-  "svenska":#"<desc cont='cont><p><short>
+  "svenska":#"<desc cont='cont'><p><short>
  Denna tagg skapar en ramlåda runt dess innehåll.</short>
 </p></desc>
 

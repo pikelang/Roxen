@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.137 2000/12/05 00:45:59 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.138 2001/02/20 09:48:11 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -1070,7 +1070,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex>
+ <ex type='vert'>
  <diagram type='bar' width='200' height='250' name='Population'
  horgrid='' tonedbox='lightblue,lightblue,white,white'>
    <data xnamesvert='' xnames='' separator=','>
@@ -1080,7 +1080,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex>
+ <ex type='vert'>
  <diagram type='bar' width='200' height='250'
  name='Age structure' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1097,7 +1097,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex>
+ <ex type='vert'>
  <diagram type='sumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1116,7 +1116,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex>
+ <ex type='vert'>
  <diagram type='normsumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1134,7 +1134,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex>
+ <ex type='vert'>
  <diagram type='line' width='200' height='250'
  name='Exchange Rates' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>

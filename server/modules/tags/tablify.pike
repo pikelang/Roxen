@@ -1,6 +1,6 @@
 // This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.61 2000/11/19 21:32:59 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.62 2001/02/20 09:48:13 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -73,7 +73,7 @@ constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
  Defines how the cell contents should be verically aligned.</p>
 </attr>
 
-<attr name='width' value=number'><p>
+<attr name='width' value='number'><p>
  Defines the width of the table.</p>
 
 <ex>
@@ -103,7 +103,7 @@ Finland, 5 158 372
  Don't add a title to each column.</p>
 </attr>
 
-<attr name=bordercolor' value='color' default='#000000'><p>
+<attr name='bordercolor' value='color' default='#000000'><p>
  The color of the border.</p>
 </attr>
 
@@ -119,7 +119,7 @@ Finland, 5 158 372
  Defines how many rows in a row should have the same color.</p>
 </attr>
 
-<attr name='oddbgcolor' value='color default='#ffffff'><p>
+<attr name='oddbgcolor' value='color' default='#ffffff'><p>
  The first background color.</p>
 </attr>
 

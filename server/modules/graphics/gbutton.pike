@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.68 2001/01/12 16:16:10 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.69 2001/02/20 09:48:09 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -92,8 +92,8 @@ constant gbuttonattr=#"
 
  <p>More information on how to create frame images can be found in the
  Roxen documentation; Web Site Creator/Graphical tags section.</p>
-<ex>
-<gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
+<ex type='vert'>
+<gbutton frame-image='/internal-roxen-tab_frame'>foo</gbutton>
 </ex>
 </attr>
 
@@ -143,12 +143,13 @@ constant gbuttonattr=#"
 
 <p></p>
 
-<ex>
-<gbutton width='150' align-icon='center-before' icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+<ex type='vert'>
+<gbutton width='150' align-icon='center-before'
+icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
 </ex>
-<ex>
+<ex type='vert'>
 <gbutton width='150' align='center' align-icon='center-after'
-  icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
 </ex>
 </attr>
 
@@ -162,56 +163,7 @@ constant gbuttonattr=#"
 
 <attr name='font' value='fontname'><p></p>
 
-</attr>
-
-<attr name='extra-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-</attr>
-
-<attr name='extra-left-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-</attr>
-
-<attr name='extra-right-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-</attr>
-
-<attr name='extra-background-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-</attr>
-
-<attr name='extra-mask-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-</attr>
-
-<attr name='extra-frame-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
-<ex>
-<gbutton frame-image='gbutton.xcf' alt='foo'>bu</gbutton>
-</ex>
-
-
-<ex>
-<gbutton  alt='Edit' bgcolor='#aeaeae'
-  extra-background-layers='unselected background,last unselected background,last background' 
-  extra-frame-layers='unselected frame,last unselected frame,last frame' 
-  extra-layers='unselected,last unselected,last' 
-  extra-left-layers='unselected left,last unselected left,last left'
-  extra-mask-layers='unselected mask,last unselected mask,last mask'
-  extra-right-layers='unselected right,last unselected right,last right' >Buttontext
-</gbutton>
-</ex>
-</attr>
-
-<!-- <table>
-<tr><td>A</td><td>B</td><td>C</td></tr>
-<tr><td>''</td><td>''</td><td>''</td></tr>
-<tr><td>'first'</td><td>'selected'</td><td>'background'</td></tr>
-<tr><td>'last'</td><td>'unselected'</td><td>'mask'</td></tr>
-<tr><td></td><td></td><td>'frame'</td></tr>
-<tr><td></td><td></td><td>'left'</td></tr>
-<tr><td></td><td></td><td>'right'</td></tr>
-</table> -->";
+</attr>";
 #endif
 
 function TIMER( function f )
