@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.18 2000/02/16 16:21:40 mast Exp $
+ * $Id: config.h,v 1.19 2000/03/09 03:30:00 mast Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -51,6 +51,10 @@
 #define SET_EFFECTIVE 
 
 #define URL_MODULES
+
+/* The namespace prefix for RXML.
+ */
+#define RXML_NAMESPACE "rxml"
 
 /* Define this to keep support for old (pre-2.0) RXML.
  */
