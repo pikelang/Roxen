@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.6 1999/09/14 20:30:03 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.7 1999/09/17 21:55:29 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -67,7 +67,7 @@ string tag_append( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
       else
-        return rxml_error(tag, "from variable doesn't exist.", id);
+        return rxml_error(tag, "From variable doesn't exist.", id);
 
     else if (m->other)
       // Set variable to the value of a misc variable
@@ -77,7 +77,7 @@ string tag_append( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else
-        return rxml_error(tag, "other variable doesn't exist.", id);
+        return rxml_error(tag, "Other variable doesn't exist.", id);
 
 #if old_rxml_compat
     // Not part of RXML 1.4
@@ -162,7 +162,7 @@ string tag_header(string tag, mapping m, object id)
 
 string tag_realfile(string tag, mapping m, object id)
 {
-  return id->realfile || "unknown";
+  return id->realfile || rxml_error(tag, "Real file unknown", id);
 }
 
 string tag_redirect(string tag, mapping m, object id)
@@ -252,14 +252,14 @@ string tag_set( string tag, mapping m, object id )
       if (id->variables[ m->from ])
 	id->variables[ m->variable ] = id->variables[ m->from ];
       else
-	return rxml_error(tag, "from variable doesn't exist.", id);
+	return rxml_error(tag, "From variable doesn't exist.", id);
 
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables && id->misc->variables[ m->other ])
-	id->variables[ m->variable ] = id->misc->variables[ m->other ];
+	id->variables[ m->variable ] = (string)id->misc->variables[ m->other ];
       else
-	return rxml_error(tag, "other variable doesn't exist.", id);
+	return rxml_error(tag, "Other variable doesn't exist.", id);
 
 #if old_rxml_compat
     // Not part of RXML 1.4
@@ -278,12 +278,12 @@ string tag_set( string tag, mapping m, object id )
     return "";
   }
 
-  return rxml_error(tag, "variable not specified.", id);
+  return rxml_error(tag, "Variable not specified.", id);
 }
 
 string tag_vfs(string tag, mapping m, object id)
 {
-  return id->virtfile || "unknown";
+  return id->virtfile || rxml_error(tag, "Virtual file unknown.", id);
 }
 
 string tag_language(string tag, mapping m, object id)
@@ -528,6 +528,9 @@ string tag_insert(string tag,mapping m,object id)
   if (n=m->variables)
     return String.implode_nicely(indices(id->variables));
 
+  if (n=m->other)
+    return (stringp(id->misc[n])||intp(id->misc[n])?(string)id->misc[n]:rxml_error(tag, "No such variable ("+n+").",id));
+
   if (n=m->cookies) 
   {
     NOCACHE();
@@ -626,14 +629,8 @@ string tag_set_cookie(string tag, mapping m, object id)
 
 string tag_remove_cookie(string tag, mapping m, object id)
 {
-  string cookies;
-  if(m->name)
-    cookies = m->name+"="+http_encode_cookie(m->value||"")+
-      "; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
-  else
-    return rxml_error(tag, "Requires a name attribute.", id);
-
-  id->conf->api_functions()->add_header[0](id, "Set-Cookie", cookies);
+  if(!m->name || !id->cookies[m->name]) return rxml_error(tag, "That cookie does not exists.", id);
+  id->conf->api_functions()->remove_cookie[0](id, m->name, m->value);
   return "";
 }
 
@@ -660,7 +657,7 @@ string tag_aprestate(string tag, mapping m, string q, object id)
   {
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
       return make_container("a",m,q);
-    href=fix_relative(href, id);
+    href=strip_prestate(fix_relative(href, id));
     m_delete(m, "href");
   }
   
@@ -773,15 +770,20 @@ string tag_maketag(string tag, mapping m, string cont, object id) {
 string tag_doc(string tag, mapping m, string s)
 {
   if(!m["quote"])
-    if(m["pre"])
-      return "\n<pre>"+
-	replace(s, ({"{","}","& "}),({"&lt;","&gt;","&amp; "}))+"</pre>\n";
+    if(m["pre"]) {
+      m_delete(m,"pre");
+      return "\n"+make_container("pre",m,
+	replace(s, ({"{","}","& "}),({"&lt;","&gt;","&amp; "})))+"\n";
+    }
     else
       return replace(s, ({ "{", "}", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
   else 
-    if(m["pre"])
-      return "\n<pre>"+
-	replace(s, ({"<",">","& "}),({"&lt;","&gt;","&amp; "}))+"</pre>\n";
+    if(m["pre"]) {
+      m_delete(m,"pre");
+      m_delete(m,"quote");
+      return "\n"+make_container("pre",m,
+	replace(s, ({"<",">","& "}),({"&lt;","&gt;","&amp; "})))+"\n";
+    }
     else
       return replace(s, ({ "<", ">", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
 }
@@ -798,14 +800,16 @@ string tag_autoformat(string tag, mapping m, string s, object id)
     }
 #endif
 
+    string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
+
   if(!m->nobr) {
     s = replace(s, "\n", "<br>\n");
     if(m->p) {
-      if(search(s, "<br>\n<br>\n")!=-1) s="<p>"+s;
-      s = replace(s, "<br>\n<br>\n", "\n</p><p>\n");
+      if(search(s, "<br>\n<br>\n")!=-1) s=p+s;
+      s = replace(s, "<br>\n<br>\n", "\n</p>"+p+"\n");
       if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s="<p>"+s;
-      if(s[..sizeof(s)-4]=="<p>")
+        s=p+s;
+      if(s[..sizeof(s)-4]==p)
         return s[..sizeof(s)-4];
       else
         return s+"</p>";
@@ -814,11 +818,11 @@ string tag_autoformat(string tag, mapping m, string s, object id)
   }
 
   if(m->p) {
-    if(search(s, "\n\n")!=-1) s="<p>"+s;
-      s = replace(s, "\n\n", "\n</p><p>\n");
+    if(search(s, "\n\n")!=-1) s=p+s;
+      s = replace(s, "\n\n", "\n</p>"+p+"\n");
       if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s="<p>"+s;
-      if(s[..sizeof(s)-4]=="<p>")
+        s=p+s;
+      if(s[..sizeof(s)-4]==p)
         return s[..sizeof(s)-4];
       else
         return s+"</p>";
@@ -827,63 +831,108 @@ string tag_autoformat(string tag, mapping m, string s, object id)
   return s;
 }
 
+class smallcapsstr {
+  constant UNDEF=0, BIG=1, SMALL=2;
+  static string text="",part="",bigtag,smalltag;
+  static mapping bigarg,smallarg;
+  static int last=UNDEF;
+
+  void create(string bs, string ss, mapping bm, mapping sm) {
+    bigtag=bs;
+    smalltag=ss;
+    bigarg=bm;
+    smallarg=sm;
+  }
+
+  void add(string char) {
+    part+=char;
+  }
+
+  void add_big(string char) {
+    if(last!=BIG) flush_part();
+    part+=char;
+    last=BIG;
+  }
+
+  void add_small(string char) {
+    if(last!=SMALL) flush_part();
+    part+=char;
+    last=SMALL;
+  }
+
+  void write(string txt) {
+    if(last!=UNDEF) flush_part();
+    part+=txt;
+  }
+
+  void flush_part() {
+    switch(last){
+    case UNDEF:
+    default:
+      text+=part;
+      break;
+    case BIG:
+      text+=make_container(bigtag,bigarg,part);
+      break;
+    case SMALL:
+      text+=make_container(smalltag,smallarg,part);
+      break;
+    }
+    part="";
+    last=UNDEF;
+  }
+
+  string value() {
+    if(last!=UNDEF) flush_part();
+    return text;  
+  }
+}
+
 string tag_smallcaps(string t, mapping m, string s)
 {
-  string build="";
-  int i,lc=1,j;
-  string small=m->small;
-  if (m->size)
-  {
-    build="<font size=\""+m->size+"\">";
-    if (!small)
-    {
-      if (m->size[0]=='+') small="+"+(((int)m->size[1..10])-1);
-      else if (m->size[0]=='-') small="-"+(((int)m->size[1..10])+1);
-      else small=""+(((int)m->size)-1);
+  object ret;
+  string spc=m->space?"&nbsp;":"";
+  m_delete(m, "space");
+  mapping bm=([]), sm=([]);
+  if(m["class"] || m->bigclass) {
+    bm=(["class":(m->bigclass||m["class"])]);
+    m_delete(m, "bigclass");
+  }
+  if(m["class"] || m->smallclass) {
+    sm=(["class":(m->smallclass||m["class"])]);
+    m_delete(m, "smallclass");
+  }
+
+  if(m->size) {
+    bm+=(["size":m->size]);
+    if(m->size[0]=='+' && (int)m->size>1)
+      sm+=(["size":m->small||"+"+((int)m->size-1)]);
+    else
+      sm+=(["size":m->small||(string)((int)m->size-1)]);
+    m_delete(m, "small");
+    ret=smallcapsstr("font","font", m+bm, m+sm);
+  }
+  else {
+    ret=smallcapsstr("big","small", m+bm, m+sm);
+  }
+
+  for(int i=0; i<strlen(s); i++)
+    if(s[i]=='<') {
+      int j;
+      for(j=i; j<strlen(s) && s[j]!='>'; j++);
+      ret->write(s[i..j]);
+      i+=j-1;
     }
-  } else if (!small) small="-1";
-  
-  for (i=0; i<strlen(s); i++)
-    if (s[i]=='<') 
-    { 
-      if (!lc) 
-      { 
-	build+="</font>";
-	lc=1; 
-      }
-      for (j = i;j < strlen(s) && s[j] != '>'; j++);
-      build += s[i..j];
-      i = j;
-    }
-    else if (s[i]<=32) 
-    { 
-      if (!lc) build+="</font>"+s[i..i]; 
-      else 
-	build+=s[i..i]; 
-      lc=1; 
-    }
-    else if (s[i]&64)
-      if (s[i]&32) 
-      { 
-	if (lc) 
-	  build+="<font size=\""+small+"\">"+sprintf("%c",s[i]-32)
-	    +(m->space?"&nbsp;":""); 
-	else 
-	  build+=sprintf("%c",s[i]-32)+(m->space?"&nbsp;":""); lc=0; }
-      else { 
-	if (!lc) 
-	  build+="</font>"+s[i..i]+(m->space?"&nbsp;":""); 
-	else 
-	  build+=s[i..i]+(m->space?"&nbsp;":""); 
-	lc=1; 
-      }
-    else 
-      build+=s[i..i]+(m->space?"&nbsp;":"");
-  if (!lc) 
-    build+="</font>"; 
-  if (m->size) 
-    build+="</font>";
-  return build;
+    else if(s[i]<=32)
+      ret->add_small(s[i..i]);
+    else if(lower_case(s[i..i])==s[i..i])
+      ret->add_small(upper_case(s[i..i])+spc);
+    else if(upper_case(s[i..i])==s[i..i])
+      ret->add_big(s[i..i]+spc);
+    else
+      ret->add(s[i..i]+spc);
+
+  return ret->value();
 }
 
 string tag_random(string tag, mapping m, string s)
