@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.102 2003/11/03 14:13:25 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.103 2003/12/15 09:54:13 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -708,7 +708,7 @@ User find_user( string s, RequestID id )
     return HtUser(this_object(),users[s]);
 }
 
-User find_user_from_uid( int uid, RequestID id )
+User find_user_from_uid( int uid, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -721,14 +721,14 @@ User find_user_from_uid( int uid, RequestID id )
     return HtUser( this_object(), users[uid] );
 }
 
-array(string) list_users( RequestID id )
+array(string) list_users( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
   return filter(indices(parse_userfile( uu->userfile, 0, 0 )),stringp);
 }
 
-Group find_group( string group, RequestID id )
+Group find_group( string group, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -738,7 +738,7 @@ Group find_group( string group, RequestID id )
     return HtGroup( this_object(), groups[group] );
 }
 
-Group find_group_from_gid( int gid, RequestID id  )
+Group find_group_from_gid( int gid, RequestID|void id  )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -748,7 +748,7 @@ Group find_group_from_gid( int gid, RequestID id  )
     return HtGroup( this_object(), groups[gid] );
 }
 
-array(string) list_groups( RequestID id )
+array(string) list_groups( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
