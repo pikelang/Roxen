@@ -5,7 +5,7 @@ inherit "/master": master;
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.104 2000/10/30 18:59:03 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.105 2000/11/02 08:01:17 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -103,7 +103,7 @@ class UID
     werror("Security: valid_open( %O, %O, %o ) from %O\n", file, mode, access, current_object );
 #endif
     if( (io_bits & BIT_IO_CHROOT) &&
-	((chroot_dir=always_chroot) || (chroot_dir=low_get_chroot_dir))
+	((chroot_dir=always_chroot) || (chroot_dir=low_get_chroot_dir()))
 	&& search( file, chroot_dir ) )
     {
 #ifdef SECURITY_DEBUG
