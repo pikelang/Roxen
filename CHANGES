@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.2 alpha 11
 -----------------------------------------------
 
+o Threads now work better.
+
 o The start-script now sets the umask to 022, to be certain it can read
   the files Roxen creates.
 
