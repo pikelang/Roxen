@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.10 1998/03/11 19:42:35 neotron Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.11 1999/11/24 15:02:39 per Exp $";
 constant thread_safe=1;
 
 import RoxenRPC;
@@ -98,15 +98,8 @@ void update_one(string fs_path, string rpath)
 
 void update();
 
-#ifdef THREADS
-object lock = Thread.Mutex();
-#endif /* THREADS */
 void handle_update_queue()
 {
-#ifdef THREADS;
-  mixed key;
-  catch { key = lock->lock(); };
-#endif /* THREADS */
   remove_call_out(handle_update_queue);
   if(sizeof(update_queue))
   {
@@ -120,20 +113,12 @@ void handle_update_queue()
 
 void update()
 {
-#ifdef THREADS;
-  mixed key;
-  catch { key = lock->lock(); };
-#endif /* THREADS */
   update_queue = ({ ({path,""}) });
   handle_update_queue();
 }
 
 void start(int arg, object conf)
 {
-#ifdef THREADS;
-  mixed key;
-  catch { key = lock->lock(); };
-#endif /* THREADS */
   ::start();
   call_out(update, query("mrefresh")*3600);
   if(conf) catch{rpc(1);};
