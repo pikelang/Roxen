@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.108 1999/03/24 16:43:14 js Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.109 1999/03/30 22:51:14 marcus Exp $";
 int thread_safe=1;
 
 #include <config.h>
@@ -451,6 +451,427 @@ array get_cached_groups_for_user( int uid )
 #endif
 }
 
+static class nat_wrapper // Wrapper emulator when not using the binary wrapper.
+{
+  static string buffer;
+  static int nonblocking;
+  static function rcb, wcb, ccb;
+  static object realfd;
+  static string headers = "";
+  static int inread;
+  static object proc;
+  
+  static void handle_headers()
+  {
+    string retcode = "200 Ok";
+    int pointer;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: handle_headers()\n");
+#endif
+    if(((pointer = strstr(headers, "Location:"))!=-1||
+	((pointer = strstr(headers, "location:")))!=-1))
+    {
+      retcode = "302 Redirection";
+    }
+    
+    if(((pointer = strstr(headers, "status:"))!=-1||
+	((pointer = strstr(headers, "Status:")))!=-1))
+    {
+      int end;
+      sscanf(headers[pointer+7..], "%s%n\n", retcode, end);
+      sscanf(retcode, "%*[ \t]%s", retcode);
+      sscanf(retcode, "%s\r", retcode);
+      headers = headers[..pointer-1]+headers[pointer+7+end+1..];
+    }
+    buffer = "HTTP/1.1 "+retcode+"\r\n" + headers +"\r\n\r\n"+ buffer;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: handle_headers() --->\n"+buffer);
+#endif
+  }
+
+  void close()
+  {
+    int killed;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: Closing down...\n");
+    werror("Killing "+proc->pid()+"\n");
+#endif
+    if(!kill(proc, signum("SIGKILL")) && !closed)
+    {
+      object privs;
+      catch(privs = Privs("Killing CGI script."));
+      kill(proc, signum("SIGKILL"));
+    }
+    set_blocking();
+    destruct(realfd);
+  }
+  
+#ifdef CGI_WRAPPER_DEBUG
+  void destroy()
+  {
+    werror("CGI wrapper done!\n");
+    close();
+  }
+#endif  
+  
+  void set_read_callback( function to )
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: set_read_callback(%O)\n", to);
+#endif
+    rcb = to;
+    if(buffer && sizeof(buffer) && to)
+    {
+      to(realfd->query_id(), buffer);
+      buffer=0;
+    }
+  }
+  
+  void set_write_callback( function to )
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: set_write_callback(%O)\n", to);
+#endif
+    wcb = to;
+  }
+  
+  void set_close_callback( function to )
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: set_close_callback(%O)\n", to);
+#endif
+    ccb = to;
+    if(closed && to)
+      to(realfd->query_id());
+  }
+  
+  void set_nonblocking( function r, function w, function c )
+  {
+    nonblocking = 1;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: set_nonblocking(%O,%O,%O)\n", r,w,c);
+#endif
+    set_read_callback( r );
+    set_write_callback( w );
+    set_close_callback( c );
+  }
+  
+  void set_blocking()
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: set_blocking()\n");
+#endif
+    nonblocking = 0;
+    set_read_callback( 0 );
+    set_write_callback( 0 );
+    set_close_callback( 0 );
+  }
+  
+  
+#if constant(thread_create)
+  static void data_fetcher(  )
+  {
+    string data;
+    while(1)
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: reading... ->");
+#endif
+      
+      if(!realfd)
+      {
+	if(headers)
+	{
+	  if(!buffer)
+	    buffer = "";
+	  handle_headers( );
+	  headers=0;
+	  if(rcb && !inread)
+	  {
+	    rcb(realfd->query_id(), buffer);
+	    buffer = "";
+	  }
+	}
+	closed = 1;
+	if(ccb) 
+	  ccb(realfd->query_id());
+	// destruct(this_object());
+	return;
+      }
+      data = realfd->read(1024,1);
+#ifdef CGI_WRAPPER_DEBUG
+      werror("%O(%d)<--\n", data, data&&strlen(data));
+#endif
+      if(!data || !strlen(data))
+      {
+#ifdef CGI_WRAPPER_DEBUG
+	werror("Closed!\n");
+#endif
+	if(headers)
+	{
+	  if(!buffer)
+	    buffer = "";
+	  handle_headers( );
+	  headers=0;
+	  if(rcb && !inread)
+	  {
+	    rcb(realfd->query_id(), buffer);
+	    buffer = "";
+	  }
+	}
+	closed = 1;
+	if(ccb) 
+	  ccb(realfd->query_id());
+	// destruct(this_object());
+	return;
+      }
+//#ifdef CGI_WRAPPER_DEBUG
+//   werror("CGI wrapper: get_some_data(%s)\n", data);
+//#endif
+
+      if(headers)
+      {
+	headers += data;
+	if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
+	   (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
+	   strlen(headers)>16536)
+	{
+	  if(!buffer)
+	    buffer = "";
+	  handle_headers( );
+	  headers=0;
+	  if(rcb && !inread)
+	  {
+	    rcb(realfd->query_id(), buffer);
+	    buffer = "";
+	  }
+	}
+	continue;
+      }
+      buffer += data;
+      if(rcb && !inread)
+      {
+	call_out(rcb,0,realfd->query_id(),buffer);
+	buffer = "";
+      }
+    }
+  }
+  
+  int closed;
+  string read(int nbytes, int less_is_enough)
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
+#endif
+    if(closed) {
+      if(buffer)
+      {
+	string s = buffer;
+	buffer = 0;
+	return s;
+      }
+      return 0;
+    }
+    if(!nbytes)
+      nbytes = 0x7fffffff;
+    string ret;
+    if(buffer && strlen(buffer))
+    {
+      if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
+      {
+	ret = buffer[..nbytes-1];
+	buffer = buffer[nbytes..];
+#ifdef CGI_WRAPPER_DEBUG
+	werror("returning "+ret+"\n");
+#endif
+	return ret;
+      }
+    }
+    if(nonblocking)
+      return "";
+    
+    inread = 1;
+    while(!closed && (!buffer || strlen(buffer)<nbytes))
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
+	     nbytes, less_is_enough, buffer&&strlen(buffer));
+#endif
+      sleep(0.01);
+      if(less_is_enough && buffer && strlen(buffer))
+	break;
+    }
+    inread = 0;
+    if(buffer)
+    {
+      ret = buffer[..nbytes-1];
+      buffer = buffer[nbytes..];
+    }
+    else
+      ret=0;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("returning "+ret+"\n");
+#endif
+    return ret;
+  }
+  
+  int query_fd()
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: query_fd()\n");
+#endif
+    return -1;
+  }
+  
+  void create( object _realfd, object _proc )
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("Creating new CGI wrapper\n");
+#endif
+    proc = _proc;
+    realfd = _realfd;
+    thread_create( data_fetcher );
+  }
+#else
+  static void get_some_data( mixed f, string data )
+  {
+    if(!data)
+    {
+      data = realfd->read(1024,1);
+      if(!data || !strlen(data))
+      {
+	closed = 1;
+	return;
+      }
+    }
+    
+//#ifdef CGI_WRAPPER_DEBUG
+//  werror("CGI wrapper: get_some_data(%s)\n", data);
+//#endif
+
+    if(headers)
+    {
+      headers += data;
+      if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
+	 (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
+	 strlen(headers)>16536)
+      {
+	if(!buffer)
+	  buffer = "";
+	handle_headers( );
+	headers=0;
+	if(rcb && !inread)
+	{
+	  rcb(realfd->query_id(), buffer);
+	  buffer = "";
+	}
+      }
+      return;
+    }
+    buffer += data;
+    if(rcb && !inread)
+    {
+      rcb(realfd->query_id(), buffer);
+      buffer = "";
+    }
+  }
+  
+  int closed;
+  string read(int nbytes, int less_is_enough)
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
+#endif
+    if(closed) {
+      if(buffer)
+      {
+	string s = buffer;
+	buffer = 0;
+	return s;
+      }
+      return 0;
+    }
+    if(!nbytes)
+      nbytes = 0x7fffffff;
+    string ret;
+    if(buffer && strlen(buffer))
+    {
+      if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
+      {
+	ret = buffer[..nbytes-1];
+	buffer = buffer[nbytes..];
+#ifdef CGI_WRAPPER_DEBUG
+	werror("returning "+ret+"\n");
+#endif
+	return ret;
+      }
+    }
+    if(nonblocking)
+      return "";
+    
+    realfd->set_blocking();
+    inread = 1;
+    while(!closed && (!buffer || strlen(buffer)<nbytes))
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
+	     nbytes, less_is_enough, buffer&&strlen(buffer));
+#endif
+      get_some_data(0,0);
+      if(less_is_enough && buffer && strlen(buffer))
+	break;
+    }
+    inread = 0;
+    realfd->set_nonblocking(get_some_data, write_more, done_closed);
+    if(buffer)
+    {
+      ret = buffer[..nbytes-1];
+      buffer = buffer[nbytes..];
+    }
+    else
+      ret=0;
+#ifdef CGI_WRAPPER_DEBUG
+    werror("returning "+ret+"\n");
+#endif
+    return ret;
+  }
+  
+  void done_closed()
+  {
+    closed = 1;
+    if(ccb) 
+      ccb(realfd->query_id());
+    // destruct(this_object());
+  }
+  
+  int query_fd()
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: query_fd()\n");
+#endif
+    return -1;
+  }
+  
+  void write_more(mixed foo)
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI wrapper: write_more(%O)\n", wcb);
+#endif
+    if(wcb) wcb(foo);
+  }
+  
+  void create( object _realfd, object _proc )
+  {
+#ifdef CGI_WRAPPER_DEBUG
+    werror("Creating new CGI wrapper\n");
+#endif
+    proc = _proc;
+    realfd = _realfd;
+    realfd->set_nonblocking(get_some_data, write_more, done_closed);
+  }
+#endif
+}
+
 class spawn_cgi
 {
   string wrapper;
@@ -468,424 +889,6 @@ class spawn_cgi
   object cgi_pipe;
 
 
-  class nat_wrapper // Wrapper emulator when not using the binary wrapper.
-  {
-    static string buffer;
-    static int nonblocking;
-    static function rcb, wcb, ccb;
-    static object realfd;
-    static string headers = "";
-    static int inread;
-    static object proc;
-
-    static void handle_headers()
-    {
-      string retcode = "200 Ok";
-      int pointer;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: handle_headers()\n");
-#endif
-      if(((pointer = strstr(headers, "Location:"))!=-1||
-          ((pointer = strstr(headers, "location:")))!=-1))
-      {
-        retcode = "302 Redirection";
-      }
-
-      if(((pointer = strstr(headers, "status:"))!=-1||
-          ((pointer = strstr(headers, "Status:")))!=-1))
-      {
-        int end;
-        sscanf(headers[pointer+7..], "%s%n\n", retcode, end);
-        sscanf(retcode, "%*[ \t]%s", retcode);
-        sscanf(retcode, "%s\r", retcode);
-        headers = headers[..pointer-1]+headers[pointer+7+end+1..];
-      }
-      buffer = "HTTP/1.1 "+retcode+"\r\n" + headers +"\r\n\r\n"+ buffer;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: handle_headers() --->\n"+buffer);
-#endif
-    }
-
-    void close()
-    {
-      int killed;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: Closing down...\n");
-      werror("Killing "+proc->pid()+"\n");
-#endif
-      if(!kill(proc, signum("SIGKILL")) && !closed)
-      {
-        object privs;
-        catch(privs = Privs("Killing CGI script."));
-        kill(proc, signum("SIGKILL"));
-      }
-      set_blocking();
-      destruct(realfd);
-    }
-
-#ifdef CGI_WRAPPER_DEBUG
-    void destroy()
-    {
-      werror("CGI wrapper done!\n");
-      close();
-    }
-#endif
-
-    
-    void set_read_callback( function to )
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: set_read_callback(%O)\n", to);
-#endif
-      rcb = to;
-      if(buffer && sizeof(buffer) && to)
-      {
-        to(realfd->query_id(), buffer);
-        buffer=0;
-      }
-    }
-
-    void set_write_callback( function to )
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: set_write_callback(%O)\n", to);
-#endif
-      wcb = to;
-    }
-
-    void set_close_callback( function to )
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: set_close_callback(%O)\n", to);
-#endif
-      ccb = to;
-      if(closed && to)
-        to(realfd->query_id());
-    }
-
-    void set_nonblocking( function r, function w, function c )
-    {
-      nonblocking = 1;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: set_nonblocking(%O,%O,%O)\n", r,w,c);
-#endif
-      set_read_callback( r );
-      set_read_callback( w );
-      set_read_callback( c );
-    }
-
-    void set_blocking()
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: set_blocking()\n");
-#endif
-      nonblocking = 0;
-      set_read_callback( 0 );
-      set_read_callback( 0 );
-      set_read_callback( 0 );
-    }
-
-
-#if constant(thread_create)
-    static void data_fetcher(  )
-    {
-      string data;
-      while(1)
-      {
-#ifdef CGI_WRAPPER_DEBUG
-        werror("CGI wrapper: reading... ->");
-#endif
-        
-        if(!realfd)
-        {
-          if(headers)
-          {
-            if(!buffer)
-              buffer = "";
-            handle_headers( );
-            headers=0;
-            if(rcb && !inread)
-            {
-              rcb(realfd->query_id(), buffer);
-              buffer = "";
-            }
-          }
-          closed = 1;
-          if(ccb) 
-            ccb(realfd->query_id());
-          return;
-        }
-        data = realfd->read(1024,1);
-#ifdef CGI_WRAPPER_DEBUG
-        werror("%O(%d)<--\n", data, data&&strlen(data));
-#endif
-        if(!data || !strlen(data))
-        {
-#ifdef CGI_WRAPPER_DEBUG
-          werror("Closed!\n");
-#endif
-          if(headers)
-          {
-            if(!buffer)
-              buffer = "";
-            handle_headers( );
-            headers=0;
-            if(rcb && !inread)
-            {
-              rcb(realfd->query_id(), buffer);
-              buffer = "";
-            }
-          }
-          closed = 1;
-          if(ccb) 
-            ccb(realfd->query_id());
-          return;
-        }
-//#ifdef CGI_WRAPPER_DEBUG
-//   werror("CGI wrapper: get_some_data(%s)\n", data);
-//#endif
-
-        if(headers)
-        {
-          headers += data;
-          if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
-             (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
-             strlen(headers)>16536)
-          {
-            if(!buffer)
-              buffer = "";
-            handle_headers( );
-            headers=0;
-            if(rcb && !inread)
-            {
-              rcb(realfd->query_id(), buffer);
-              buffer = "";
-            }
-          }
-          continue;
-        }
-        buffer += data;
-        if(rcb && !inread)
-        {
-          call_out(rcb,0,realfd->query_id(),buffer);
-          buffer = "";
-        }
-      }
-    }
-
-    int closed;
-    string read(int nbytes, int less_is_enough)
-    {
-      if(closed) {
-        if(buffer)
-        {
-          string s = buffer;
-          buffer = 0;
-          return s;
-        }
-        return 0;
-      }
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
-#endif
-      if(!nbytes)
-        nbytes = 0x7fffffff;
-      string ret;
-      if(buffer && strlen(buffer))
-      {
-        if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
-        {
-          ret = buffer[..nbytes-1];
-          buffer = buffer[nbytes..];
-#ifdef CGI_WRAPPER_DEBUG
-          werror("returning "+ret+"\n");
-#endif
-          return ret;
-        }
-      }
-      if(nonblocking)
-        return "";
-
-      inread = 1;
-      while(!closed && (!buffer || strlen(buffer)<nbytes))
-      {
-#ifdef CGI_WRAPPER_DEBUG
-        werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
-               nbytes, less_is_enough, buffer&&strlen(buffer));
-#endif
-        sleep(0.01);
-        if(less_is_enough && buffer && strlen(buffer))
-          break;
-      }
-      inread = 0;
-      if(buffer)
-      {
-        ret = buffer[..nbytes-1];
-        buffer = buffer[nbytes..];
-      }
-      else
-        ret=0;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("returning "+ret+"\n");
-#endif
-      return ret;
-    }
-
-    int query_fd()
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: query_fd()\n");
-#endif
-      return -1;
-    }
-
-    void create( object _realfd, object _proc )
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("Creating new CGI wrapper\n");
-#endif
-      proc = _proc;
-      realfd = _realfd;
-      thread_create( data_fetcher );
-    }
-#else
-    static void get_some_data( mixed f, string data )
-    {
-      if(!data)
-      {
-        data = realfd->read(1024,1);
-        if(!data || !strlen(data))
-        {
-          closed = 1;
-          return;
-        }
-      }
-
-//#ifdef CGI_WRAPPER_DEBUG
-//   werror("CGI wrapper: get_some_data(%s)\n", data);
-//#endif
-
-      if(headers)
-      {
-        headers += data;
-        if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
-           (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
-           strlen(headers)>16536)
-        {
-          if(!buffer)
-            buffer = "";
-          handle_headers( );
-          headers=0;
-          if(rcb && !inread)
-          {
-            rcb(realfd->query_id(), buffer);
-            buffer = "";
-          }
-        }
-        return;
-      }
-      buffer += data;
-      if(rcb && !inread)
-      {
-        rcb(realfd->query_id(), buffer);
-        buffer = "";
-      }
-    }
-
-    int closed;
-    string read(int nbytes, int less_is_enough)
-    {
-      if(closed) {
-        if(buffer)
-        {
-          string s = buffer;
-          buffer = 0;
-          return s;
-        }
-        return 0;
-      }
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
-#endif
-      if(!nbytes)
-        nbytes = 0x7fffffff;
-      string ret;
-      if(buffer && strlen(buffer))
-      {
-        if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
-        {
-          ret = buffer[..nbytes-1];
-          buffer = buffer[nbytes..];
-#ifdef CGI_WRAPPER_DEBUG
-          werror("returning "+ret+"\n");
-#endif
-          return ret;
-        }
-      }
-      if(nonblocking)
-        return "";
-
-      realfd->set_blocking();
-      inread = 1;
-      while(!closed && (!buffer || strlen(buffer)<nbytes))
-      {
-#ifdef CGI_WRAPPER_DEBUG
-        werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
-               nbytes, less_is_enough, buffer&&strlen(buffer));
-#endif
-        get_some_data(0,0);
-        if(less_is_enough && buffer && strlen(buffer))
-          break;
-      }
-      inread = 0;
-      realfd->set_nonblocking(get_some_data, write_more, done_closed);
-      if(buffer)
-      {
-        ret = buffer[..nbytes-1];
-        buffer = buffer[nbytes..];
-      }
-      else
-        ret=0;
-#ifdef CGI_WRAPPER_DEBUG
-      werror("returning "+ret+"\n");
-#endif
-      return ret;
-    }
-
-    void done_closed()
-    {
-      closed = 1;
-      if(ccb) 
-        ccb(realfd->query_id());
-    }
-
-    int query_fd()
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: query_fd()\n");
-#endif
-      return -1;
-    }
-    
-    void write_more(mixed foo)
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: write_more(%O)\n", wcb);
-#endif
-      if(wcb) wcb(foo);
-    }
-
-    void create( object _realfd, object _proc )
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("Creating new CGI wrapper\n");
-#endif
-      proc = _proc;
-      realfd = _realfd;
-      realfd->set_nonblocking(get_some_data, write_more, done_closed);
-    }
-#endif
-  }
 
 
   void got_some_data(object to, string d)
@@ -1071,11 +1074,11 @@ class spawn_cgi
     dup_err = dup_err_;
     kill_call_out = kill_call_out_;
     setgroups = setgroups_;
-#ifdef THREADS
-    call_out(do_cgi, 0);
-#else /* THREADS */
+    // #ifdef THREADS
+    //    call_out(do_cgi, 0);
+    // #else /* THREADS */
     do_cgi();
-#endif /* THREADS */
+    // #endif /* THREADS */
   }
 };
 
