@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.871 2004/06/06 11:04:03 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.872 2004/06/15 19:54:56 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4395,7 +4395,7 @@ int main(array(string) tmp)
   GCTimestamp();
 #endif
 
-  dbm_cached_get = master()->resolv( "DBManager.cached_get" );
+  dbm_cached_get = master()->resolv( "DBManager.get" );
 
   dbm_cached_get( "local" )->
     query( "CREATE TABLE IF NOT EXISTS "

@@ -36,7 +36,7 @@ class AdminIFCache
     else
     {
       dir = name;
-      db = master()->resolv("DBManager.cached_get");
+      db = master()->resolv("DBManager.get");
       query( "create table if not exists "+name+" ("
 	     "  id varchar(80) not null primary key,"
 	     "  data blob not null default ''"

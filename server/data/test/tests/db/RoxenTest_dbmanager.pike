@@ -26,7 +26,6 @@ void run_tests( Configuration c )
   }
 
   test_false( pass, DBManager.NONE );
-  test_true(  pass, DBManager.READ );
   test_true(  pass, DBManager.WRITE );
 
 
@@ -80,7 +79,6 @@ void run_tests( Configuration c )
 
   test( DBManager.create_db, "testdb", 0, 1 );
   test_true( DBManager.set_permission, "testdb", c1, DBManager.NONE );
-  test_true( DBManager.set_permission, "testdb", c2, DBManager.READ );
 
   test_false( DBManager.get, "testdb", c1 );
   sql_ro = test_true( DBManager.get, "testdb", c2 );

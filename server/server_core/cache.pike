@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.91 2004/06/03 22:53:14 mani Exp $
+// $Id: cache.pike,v 1.92 2004/06/15 19:54:56 _cvs_stephen Exp $
 
 // #pragma strict_types
 
@@ -325,7 +325,7 @@ void init()
 {
   // Initializes the session handler.
   db = (([function(string:function(string:object(Sql.Sql)))]master()->resolv)
-	("DBManager.cached_get"));
+	("DBManager.get"));
   setup_tables();
 
   // Init call outs

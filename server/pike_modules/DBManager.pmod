@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.68 2004/06/15 19:05:31 _cvs_stephen Exp $
+// $Id: DBManager.pmod,v 1.69 2004/06/15 19:54:55 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -14,9 +14,6 @@
 
 constant NONE  = 0;
 //! No permissions. Used in @[set_permission] and @[get_permission_map]
-
-constant READ  = 1;
-//! Read permission. Used in @[set_permission] and @[get_permission_map]
 
 constant WRITE = 2;
 //! Write permission. Used in @[set_permission] and @[get_permission_map]
@@ -73,31 +70,17 @@ private
 			 short(c->name)+"_rw", host );
     
     if( sizeof( q ) )
-    {
       db->query("DELETE FROM user WHERE User=%s AND Host=%s",
 		short(c->name)+"_rw", host );
-      db->query("DELETE FROM user WHERE User=%s AND Host=%s",
-		short(c->name)+"_ro", host );
-    }
     
     if( password )
-    {
       db->query( "INSERT INTO user (Host,User,Password) "
 		 "VALUES (%s, %s, PASSWORD(%s))",
 		 host, short(c->name)+"_rw", password ); 
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, PASSWORD(%s))",
-		 host, short(c->name)+"_ro", password );
-    }
     else
-    {
       db->query( "INSERT INTO user (Host,User,Password) "
 		 "VALUES (%s, %s, '')",
 		 host, short(c->name)+"_rw" ); 
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, '')",
-		 host, short(c->name)+"_ro" );
-    }
   }
   
   void ensure_has_users( Sql.Sql db, Configuration c )
@@ -126,9 +109,6 @@ private
 
     if( level > 0 )
     {
-      db->query("INSERT INTO db (Host,Db,User,Select_priv) "
-                "VALUES (%s, %s, %s, 'Y')",
-                host, name, short(c->name)+"_ro");
       if( level > 1 )
         db->query("INSERT INTO db VALUES (%s, %s, %s,"
                   "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
@@ -152,60 +132,6 @@ private
     low_set_user_permissions( c, name, level, "127.0.0.1", password );
   }
 
-  class ROWrapper( static Sql.Sql sql )
-  {
-    static int pe;
-    static array(mapping(string:mixed)) query( string query, mixed ... args )
-    {
-      if( has_prefix( lower_case(query), "select" ) ||
-          has_prefix( lower_case(query), "show" ) ||
-          has_prefix( lower_case(query), "describe" ))
-        return sql->query( query, @args );
-      pe = 1;
-      predef::error( "Permission denied\n" );
-    }
-    static object big_query( string query, mixed ... args )
-    {
-      if( has_prefix( lower_case(query), "select" ) ||
-          has_prefix( lower_case(query), "show" ) ||
-          has_prefix( lower_case(query), "describe" ))
-        return sql->big_query( query, @args );
-      pe = 1;
-      predef::error( "Permission denied\n" );
-    }
-    static string error()
-    {
-      if( pe )
-      {
-        pe = 0;
-        return "Permission denied";
-      }
-      return sql->error();
-    }
-
-    static string host_info()
-    {
-      return sql->host_info()+" (read only)";
-    }
-
-    static mixed `[]( string i )
-    {
-      switch( i )
-      {
-       case "query": return query;
-       case "big_query": return big_query;
-       case "host_info": return host_info;
-       case "error": return error;
-       default:
-         return sql[i];
-      }
-    }
-    static mixed `->( string i )
-    {
-      return `[](i);
-    }
-  }
-
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
   Sql.Sql low_get( string user, string db )
   {
@@ -225,11 +151,6 @@ private
       return connect_to_my_mysql( user, db );
 
     // Otherwise it's a tad more complex...  
-    if( user[sizeof(user)-2..] == "ro" )
-      // The ROWrapper object really has all member functions Sql.Sql
-      // has, but they are hidden behind an overloaded index operator.
-      // Thus, we have to fool the typechecker.
-      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d->path ) );
     return sql_cache_get( d->path );
   }
 };
@@ -315,7 +236,6 @@ mapping(string:mapping(string:int)) get_permission_map( )
         switch( m->permission )
         {
          case "none":    res[m->db][NC(m->config)] = NONE; break;
-         case "read":    res[m->db][NC(m->config)] = READ; break;
          case "write":   res[m->db][NC(m->config)] = WRITE; break;
         }
       }
@@ -546,9 +466,9 @@ string db_url( string name,
 
 static mapping connection_user_cache  = ([]);
 
-string get_db_user( string name, Configuration c, int ro )
+string get_db_user(string name, Configuration c)
 {
-  string key = name+"|"+(c&&c->name)+"|"+ro;
+  string key = name+"|"+(c&&c->name);
   if( !zero_type( connection_user_cache[ key ] ) )
     return connection_user_cache[ key ];
 
@@ -558,19 +478,17 @@ string get_db_user( string name, Configuration c, int ro )
     res = query( "SELECT permission FROM db_permissions "
                  "WHERE db=%s AND config=%s",  name, CN(c->name));
     if( sizeof( res ) && res[0]->permission != "none" )
-      return connection_user_cache[ key ]=short(c->name) +
-	((ro || res[0]->permission!="write")?"_ro":"_rw");
+      return connection_user_cache[ key ]=short(c->name) + "_rw";
     return connection_user_cache[ key ] = 0;
   }
-  return connection_user_cache[ key ] = ro?"ro":"rw";
+  return "rw";
 }
 
-Sql.Sql get( string name, void|Configuration c, int|void ro )
+Sql.Sql get( string name, void|Configuration c)
 //! Get the database @[name]. If the configuration @[c] is specified,
-//! only return the database if the configuration has at least read
-//! access.
+//! only return the database if the configuration has access.
 {
-  return low_get( get_db_user( name,c,ro ), name );
+  return low_get(get_db_user(name, c), name);
 }
 
 void drop_db( string name )
@@ -886,8 +804,6 @@ int set_external_permission( string name, Configuration c, int level,
 //!  @int
 //!    @value DBManager.NONE
 //!      No access
-//!    @value DBManager.READ
-//!      Read access
 //!    @value DBManager.WRITE
 //!      Write access
 //!  @endint
@@ -922,22 +838,9 @@ int set_permission( string name, Configuration c, int level )
 //!  @int
 //!    @value DBManager.NONE
 //!      No access
-//!    @value DBManager.READ
-//!      Read access
 //!    @value DBManager.WRITE
 //!      Write access
 //!  @endint
-//!
-//!  Please note that for non-local databases, it's not really
-//!  possible to differentiate between read and write permissions,
-//!  roxen does try to do that anyway by checking the requests and
-//!  disallowing anything but 'select' and 'show' from read only
-//!  databases. Please note that this is not really all that secure.
-//!
-//!  From local (in the mysql used by Roxen) databases, the
-//!  permissions are enforced by using different users, and should be
-//!  secure as long as the permission system in mysql is not modified
-//!  directly by the administrator.
 //!
 //! @returns
 //!  This function returns 0 if it fails. The only reason for it to
@@ -953,7 +856,7 @@ int set_permission( string name, Configuration c, int level )
          name,CN(c->name) );
 
   query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,CN(c->name),
-	 (level?level==2?"write":"read":"none") );
+	 (level?"write":"none") );
   
   if( (int)d[0]["local"] )
     set_user_permissions( c, name, level );
@@ -1072,7 +975,7 @@ CREATE TABLE dbs (
 CREATE TABLE db_permissions (
  db VARCHAR(64) NOT NULL, 
  config VARCHAR(80) NOT NULL, 
- permission ENUM ('none','read','write') NOT NULL,
+ permission ENUM ('none','write') NOT NULL,
  INDEX db_conf (db,config))
 " );
     // Must be done from a call_out -- the configurations does not

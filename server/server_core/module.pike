@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.144 2004/06/15 19:05:33 _cvs_stephen Exp $
+// $Id: module.pike,v 1.145 2004/06/15 19:54:56 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1904,14 +1904,14 @@ array(mapping(string:mixed)) sql_query_ro( string query, mixed ... args )
 //!        FROM &data;, &meta; WHERE &my.meta;.xsize=200
 //!
 {
-  return get_my_sql(1)->query( replace( query, __my_tables ), @args );
+  return get_my_sql()->query( replace( query, __my_tables ), @args );
 }
 
 object sql_big_query_ro( string query, mixed ... args )
 //! Identical to @[sql_query_ro], but the @[Sql.sql()->big_query] method
 //! will be used instead of the @[Sql.sql()->query] method.
 {
-  return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
+  return get_my_sql()->big_query( replace( query, __my_tables ), @args );
 }
 
 static int create_sql_tables( mapping(string:array(string)) definitions,
@@ -2075,12 +2075,11 @@ static void set_my_db( string to )
   my_db = to;
 }
 
-Sql.Sql get_my_sql( int|void read_only )
+Sql.Sql get_my_sql()
 //! Return a SQL-object for the database set with @[set_my_db],
-//! defaulting to the 'shared' database. If read_only is specified,
-//! the database will be opened in read_only mode.
+//! defaulting to the 'shared' database.
 //! 
 //! See also @[DBManager.get]
 {
-  return DBManager.get( my_db, _my_configuration, read_only );
+  return DBManager.get(my_db, _my_configuration);
 }

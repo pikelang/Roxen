@@ -58,7 +58,7 @@ string|mapping parse( RequestID id )
   {
     object c = core.find_configuration( id->variables->name );
     if( !c ) c = core.enable_configuration( id->variables->name );
-    catch(DBManager.set_permission( "docs", c,   DBManager.READ ));
+    catch(DBManager.set_permission( "docs", c,   DBManager.WRITE ));
     catch(DBManager.set_permission( "replicate", c, DBManager.WRITE ));
     DBManager.set_permission( "local", c,  DBManager.WRITE );
     c->error_log[0] = 1;
