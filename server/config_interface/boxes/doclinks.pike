@@ -6,7 +6,7 @@
 
 
 constant box      = "small";
-constant box_initial = 0;
+constant box_initial = 1;
 constant box_position = -1;
 
 String box_name = _(363,"Documentation links");
