@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.151 1998/09/14 21:15:29 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.152 1998/09/20 08:33:23 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1196,7 +1196,7 @@ string magic_image(string url, int xs, int ys, string sn,
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
-      "onMouseout='top.window.status=\"\";document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
+      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>"));
 }
