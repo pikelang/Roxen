@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.111 1999/05/22 23:39:12 mast Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.112 1999/05/24 05:29:04 peter Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1329,18 +1329,15 @@ mapping configuration_parse(object id)
 
     int full_version=0;
     int half_version=0;
+#if constant(_Crypto) && constant(SSL)
+    full_version = 1;
     catch {
-      if (sizeof(indices(master()->resolv("_Crypto")))) {
-	full_version = 1;
+      if(!SSL.constants()->CIPHER_des) {
+	half_version = 1;
+	full_version = 0;
       }
     };
-    if(full_version)
-      catch {
-	if(!SSL.constants()->CIPHER_des) {
-	  half_version = 1;
-	  full_version = 0;
-	}
-      };
+#endif
 
     return http_string_answer(default_head("Roxen Challenger " +
 					   roxen->__roxen_version__ + "." +
