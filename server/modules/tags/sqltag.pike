@@ -5,9 +5,10 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.52 2000/03/30 00:50:44 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.53 2000/03/30 18:22:26 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
+#include <config.h>
 
 inherit "module";
 inherit "roxenlib";
@@ -96,7 +97,7 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
     args->query = parse_rxml(args->query, id);
 
   Sql.sql con;
-  array(mapping(string:mixed)) result;
+  array(mapping(string:mixed))|object result;
   function sql_connect = id->conf->sql_connect;
   mixed error;
 
@@ -115,12 +116,20 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
   }
 
   if(tag=="sqlquery") args["dbobj"]=con;
+  if(result && args->rowinfo) {
+    int rows;
+    if(arrayp(result)) rows=sizeof(result);
+    if(objectp(result)) rows=result->num_rows();
+    RXML.user_set_var(args->rowinfo, rows);
+  }
+
   return result;
 }
 
 
 // -------------------------------- Tag handlers ------------------------------------
 
+#ifdef OLD_RXML_COMPAT
 string simpletag_sqloutput(string tag, mapping args, string contents,
 			   RequestID id)
 {
@@ -132,9 +141,6 @@ string simpletag_sqloutput(string tag, mapping args, string contents,
     string ret = do_output_tag(args, res, contents, id);
     id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
-    if( args["rowinfo"] )
-           id->variables[args->rowinfo]=sizeof(res);
-
     return ret;
   }
 
@@ -143,6 +149,7 @@ string simpletag_sqloutput(string tag, mapping args, string contents,
 
   id->misc->defines[" _ok"] = 0;
 }
+#endif
 
 class TagSqlplugin {
   inherit RXML.Tag;
@@ -151,7 +158,6 @@ class TagSqlplugin {
 
   array get_dataset(mapping m, RequestID id) {
     array|string res=do_sql_query("sqloutput", m, id);
-    if(m->rowinfo) id->variables[m->rowinfo] = sizeof(res);
     return res;
   }
 }
@@ -193,9 +199,6 @@ string tag_sqltable(string tag, mapping args, RequestID id)
         ret += "<th>"+name+"</th>";
       ret += "</tr>\n";
     }
-
-    if( args["rowinfo"] )
-        id->variables[args->rowinfo]=res->num_rows();
 
     while(arrayp(row=res->fetch_row())) {
       if (ascii)
