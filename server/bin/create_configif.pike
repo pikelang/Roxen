@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.37 2001/12/17 12:45:37 anders Exp $
+ * $Id: create_configif.pike,v 1.38 2002/03/20 12:54:38 grubba Exp $
  *
  * Create an initial administration interface server.
  */
@@ -83,7 +83,7 @@ int main(int argc, array argv)
   string passwd2;
   mapping(string:string) batch = ([]);
 
-#if constant( SSL3 )
+#if constant( SSL )
   string def_port = "https://*:"+(random(20000)+10000)+"/";
 #else
   string def_port = "http://*:"+(random(20000)+10000)+"/";
