@@ -1,16 +1,24 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.5 1999/11/22 13:59:03 jhs Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.6 1999/11/24 11:11:24 per Exp $";
 #include <module.h>
 inherit "module";
+inherit "roxenlib";
 
 int unsuccessful = 0;
-array(string) encodings = ({ "utf-8", "macintosh" });
-mapping(string:int) redirs = mkmapping( encodings, allocate(sizeof(encodings)) );
-mapping(string:object) decoders = mkmapping( encodings,
-					     Array.map(encodings,
-						       Locale.Charset.decoder) );
+array(string) encodings = ({ "utf-8", "macintosh", "iso-2022" });
+mapping(string:int) redirs = ([]);
+mapping(string:function) decoders = ([]);
+
+void start()
+{
+  foreach( encodings, string enc )
+    if( enc == "utf-8" )
+      decoders[ enc ] = utf8_to_string;
+    else
+      decoders[ enc ]= _charset_decoder(Locale.Charset.decoder(enc))->decode;
+}
 
 array (mixed) register_module()
 {
@@ -32,37 +40,27 @@ string status()
 		  sort((array)redirs) );
 }
 
-#define DECODE(what, encoding) decoders[encoding]->clear()->feed( what )->drain()
+#define DECODE(what, encoding) decoders[ encoding ](what)
 
 mapping last_resort(object id)
 {
   function decode;
   string iq;
   foreach(encodings, string encoding)
-    if( !catch( iq = DECODE( id->not_query, encoding ) ) &&
+  {
+    decode = decoders[ encoding ];
+    if( !catch( iq = decode( id->not_query ) ) &&
 	(iq != id->not_query) )
     {
-      decode = lambda(string s, string encoding) { return DECODE(s, encoding); };
       object id2 = id->clone_me();
-      id2->not_query = iq;
-      id2->config = mkmultiset(Array.map( (array)id2->config, decode, encoding ));
-      //id2->raw_url = DECODE(id2->raw_url, encoding);
-      // Perhaps we should fix this too (%NN-quoted characters as
-      // well), but it really isn't right IMHO.              /jhs
-      if(sizeof(id2->prestate))
-	id2->prestate = mkmultiset(Array.map( (array)id2->prestate, decode, encoding ));
-      if(sizeof(id2->variables))
-	id2->variables = (mapping)(Array.map( (array)id2->variables,
-					      lambda(array p, function decode, string encoding)
-					      { return Array.map(p, decode, encoding); },
-					      decode, encoding ));
+      id2->decode_charset_encoding( decode );
       mapping q = id->conf->get_file( id2 );
-
       if( q )
       {
 	redirs[encoding]++;
 	return q;
       }
     }
+  }
   unsuccessful++;
 }
