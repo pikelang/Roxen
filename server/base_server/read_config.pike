@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.51 2000/09/19 15:04:31 per Exp $
+// $Id: read_config.pike,v 1.52 2000/09/27 00:00:04 per Exp $
 
 #include <module.h>
 
@@ -56,7 +56,7 @@ void really_save_it( string cl, mapping data )
 {
   Stdio.File fd;
   string f;
-
+  m_delete( call_outs, cl );
 #ifdef DEBUG_CONFIG
   werror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
@@ -228,7 +228,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
   mapping old_reg = data[ reg ];
 
   if(q)
-    data[ reg ] = vars;
+    m = data[ reg ] = vars;
   else
   {
     mixed var;
@@ -240,12 +240,9 @@ void store( string reg, mapping vars, int q, object current_configuration )
     else 
       data[ reg ] = m;
   }
-  if( equal( old_reg, data[reg] ) )
+  if( equal( old_reg, m ) )
     return;
-
-  last_read = cl;
-  last_data = COPY( data );
-
+  last_read = 0; last_data = 0;
   save_it(cl, data);
 }
 
