@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.179 1999/02/15 23:19:03 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.180 1999/03/28 21:23:01 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1633,14 +1633,26 @@ mixed handle_request( object id  )
   function funp;
   mixed file;
 
-  if(roxen->find_site_for( id ) != this_object())
+#ifdef REQUEST_DEBUG
+  werror("CONFIG: handle_request()\n");
+#endif /* REQUEST_DEBUG */
+
+  if(roxen->find_site_for( id ) != this_object()) {
+#ifdef REQUEST_DEBUG
+    werror("CONFIG: handle_request(): Redirected (1)\n");
+#endif /* REQUEST_DEBUG */
     return id->conf->handle_request(id);
+  }
   foreach(first_modules(id), funp)
   {
     if(file = funp( id )) 
       break;
-    if(id->conf != this_object) 
+    if(id->conf != this_object()) {
+#ifdef REQUEST_DEBUG
+      werror("CONFIG: handle_request(): Redirected (2)\n");
+#endif /* REQUEST_DEBUG */
       return id->conf->handle_request(id);
+    }
   }
 
   file = get_file(id);
@@ -1649,10 +1661,17 @@ mixed handle_request( object id  )
   {
     mixed ret;
     foreach(last_modules(id), funp) if(ret = funp(id)) break;
-    if (ret == 1) 
+    if (ret == 1) {
+#ifdef REQUEST_DEBUG
+      werror("CONFIG: handle_request(): Recurse\n");
+#endif /* REQUEST_DEBUG */
       return handle_request(id);
+    }
     file = ret;
   }
+#ifdef REQUEST_DEBUG
+  werror("CONFIG: handle_request(): Done\n");
+#endif /* REQUEST_DEBUG */
   return file;
 }
 
@@ -1781,7 +1800,7 @@ public array find_dir(string file, object id)
   }
   if(sizeof(dir))
   {
-    TRACE_LEAVE(LOCALE->returning_list_files(sizeof(dir)));
+    TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
     return dir;
   } 
   TRACE_LEAVE(LOCALE->returning_no_dir());
