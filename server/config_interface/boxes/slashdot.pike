@@ -5,7 +5,7 @@
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
-constant box      = "large";
+constant box      = "small";
 constant box_initial = 0;
 
 String box_name = _(361,"Slashdot headlines");
@@ -29,7 +29,7 @@ string parse( RequestID id )
 				     title = link = 0;
 				     itemparser -> finish(c);
 				     if(title && link)
-				       contents += sprintf("<a href=\"%s\">%s</a><br />\n",
+				       contents += sprintf("<font size=-1><a href=\"%s\">%s</a></font><br />\n",
 							   link, title);
 					 } ) ->
       finish(data);
