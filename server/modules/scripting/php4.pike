@@ -1,3 +1,6 @@
+#include <module.h>
+inherit "module";
+
 #if constant(PHP4.Interpreter)
 /* Roxen PHP module.
  *   (c) David Hedbor  1999
@@ -11,12 +14,10 @@
 
 
 #include <roxen.h>
-#include <module.h>
-inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version = "$Id: php4.pike,v 2.2 2000/03/07 20:21:08 neotron Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.3 2000/03/10 17:56:57 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_FILE_EXTENSION;
@@ -284,4 +285,10 @@ void create(object conf)
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 }
+#else
+
+void create() {
+  report_error("No PHP support found in pike.\n");
+}
+
 #endif
