@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.16 2000/09/17 22:29:25 per Exp $
+// $Id: module.pmod,v 1.17 2000/09/19 10:34:38 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -23,8 +23,8 @@ static int unique_vid;
 
 // The theory is that most variables (or at least a sizable percentage
 // of all variables) does not have these members. Thus this saves
-// quite a respectable amount of memory, the cost is speed. But not
-// all that great a percentage of speed.
+// quite a respectable amount of memory, the cost is speed. But
+// hopefully not all that great a percentage of speed.
 static mapping(int:mixed)  changed_values = ([]);
 static mapping(int:function(object:void)) changed_callbacks = ([]);
 static mapping(int:int)    all_flags      = ([]);
@@ -877,7 +877,6 @@ class List
     array l = query();
     mapping vl = get_form_vars(id);
     // first do the assign...
-
     if( (int)vl[".count"] != _current_count )
       return;
     _current_count++;
@@ -925,7 +924,11 @@ class List
       if( !id->misc->do_not_goto )
       {
         id->misc->moreheads = ([
-          "Location":id->raw_url+"?random="+random(4949494)+"#"+path(),
+          "Location":Roxen.http_encode_string(id->raw_url+"?random="+
+                                              random(4949494)+
+                                              "&section="+
+                                              id->variables->section+
+                                              "#"+path()),
         ]);
         if( id->misc->defines )
           id->misc->defines[ " _error" ] = 302;
@@ -938,8 +941,6 @@ class List
   {
     string prefix = path()+".";
     int i;
-
-    _current_count++;
 
     string res = "<a name='"+path()+"'>\n</a><table>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
@@ -1149,7 +1150,6 @@ class Flag
 // =================================================================
 // Utility functions used in multiple variable classes above
 // =================================================================
-
 static array(string) verify_port( string port, int nofhttp )
 {
   if(!strlen(port))
@@ -1175,14 +1175,13 @@ static array(string) verify_port( string port, int nofhttp )
   }
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)
-  {
     if( roxenp()->protocols[ lower_case( protocol ) ] 
         && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
         warning += "Removed the "
                 "default port number ("+pno+") from "+port+"\n";
     else
       host = host+":"+pno;
-  }
+
   if( nofhttp && protocol == "fhttp" )
   {
     warning += "Changed " + protocol + " to http\n";
@@ -1191,12 +1190,28 @@ static array(string) verify_port( string port, int nofhttp )
   if( protocol != lower_case( protocol ) )
   {
     warning += "Changed "+protocol+" to "+ lower_case( protocol )+"\n";  
+    protocol = lower_case( protocol );
+  }
+  if(!nofhttp) // it's a port, not a URL
+  {
+#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
+    /* All is A-OK */
+#else
+    if( (protocol == "https" || protocol == "ftps") )
+    {
+      warning += 
+              "SSL support not available in this pike version."
+              "Transformed "+protocol+" to";
+      protocol = protocol[ ..strlen(protocol)-2 ];
+      warning += protocol+"\n";
+    }
+#endif
   }
 
-  port = lower_case( protocol )+"://"+host+path;
+  port = protocol+"://"+host+path;
 
-  if( !roxenp()->protocols[ lower_case( protocol ) ] )
-    warning += "Warning: The protocol "+lower_case(protocol)+" is unknown\n";
+  if( !roxenp()->protocols[ protocol ] )
+    warning += "Warning: The protocol "+protocol+" is unknown\n";
   return ({ (strlen(warning)?warning:0), port });
 }
 

@@ -430,7 +430,8 @@ string parse( RequestID id )
     /* Global information for the configuration */
     switch( id->variables->section )
     {
-     default: /* Status info */
+     default: /* Not status info */
+       do  id->misc->do_not_goto = 1; while( id = id->misc->orig );
        return
 	 "<emit source='config-variables' configuration=\""+path[ 0 ]+"\""
          " section=\"&form.section;\"></emit>\n"
