@@ -11,36 +11,44 @@ constant box_initial = 1;
 String box_name = _(263,"News from www.roxen.com");
 String box_doc  = _(281,"The news headlines from www.roxen.com");
 
+string isodate( string date )
+{
+  return (Calendar.dwim_day( date )->format_iso_ymd()/" ")[0];
+}
+
 string extract_nonfluff( string from )
 {
   string res = "";
-  string last_a, last_alt;
-  void parse_a( Parser.HTML p, mapping m )  {  last_a = m->href;   };
-  void parse_img( Parser.HTML p, mapping m ){  last_alt = m->alt;  };
-  void parse_font( Parser.HTML p, mapping m )
+  string last_a, last_date;
+  string parse_div( Parser.HTML p, mapping m, string c )
   {
-    if( last_alt == "roxen.com" )
-      return;
+    if( m->class == "smalltext" )
+      last_date = String.trim_all_whites( c );
+    return c;
+  };
+
+  void parse_a( Parser.HTML p, mapping m, string c )
+  {
+    last_a = m->href;
     if( !strlen( last_a ) || last_a == "/" )
       return;
-    if(search( last_a, "roxen.com" ) == -1 )
-    {
-      if( last_a[0] == '/' ) last_a = last_a[1..];
-      last_a = "http://www.roxen.com/"+last_a;
-    }
-    if( last_a && last_alt )
-      res += "<a href='"+last_a+"'>"+last_alt+"</a><br />";
+    if(search( last_a, "archive.xml" ) == -1 )
+      return;
+    last_a = "http://www.roxen.com/press-ir/news/"+last_a;
+    res += "<tr><td valign=top><a href='"+last_a+"'><font size=-1>"+c+"</font></a></td>"
+      "<td valign=top><font size=-1>"+isodate(lower_case(last_date))+"</font></td></tr>\n";
   };
-  Parser.HTML( )->add_tags((["a":parse_a,"img":parse_img,"font":parse_font]))
+  Parser.HTML( )->add_containers((["a":parse_a,"div":parse_div]))
     ->finish( from )->read();
-  return res;
+
+  return "<table>"+res+"</table>";
 }
 
 string parse( RequestID id )
 {
   string contents;
   if( !(contents = .Box.get_http_data( "www.roxen.com", 80,
-			      "GET /index.xml?__xsl=print.xsl HTTP/1.0") ) )
+			      "GET /press-ir/news/index.xml?__xsl=printerfriendly.xsl HTTP/1.0") ) )
     contents = "Fetching data from www.roxen.com...";
   else
     contents = extract_nonfluff( contents );

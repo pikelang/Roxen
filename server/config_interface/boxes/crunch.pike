@@ -60,16 +60,47 @@ class Data( string data )
 
       if( (product == "Pike") && (abs((float)version - __VERSION__) > 0.09) )
 	return "";
-      
-      if( status == "RESOLVED" )
-	status = "<i>fixed</i>";
+
+      switch( status )
+      {
+	case "RESOLVED":
+	  status = "fixed";
+	  break;
+	case "ASSIGNED":
+	  status = "open";
+	  break;
+	case "NEW":
+	  status = "<font color='&usr.warncolor;'>New</font>";
+	  break;
+	default:
+      }
       resolution = "";
-      return "<tr valign=top><td align=right><font size=-2>"
+      switch( component )
+      {
+	case "Admin Interface":
+	  component = "GUI";
+	  break;
+	case "Image Module":
+	  component = "Image";
+      }
+      return "<tr valign=top><td align=right><font size=-1>"
 	"<a href='http://community.roxen.com/"+	id+"'>"+id+"</a></font></td>"
-	"<td><font size=-2>"+(product - "Roxen WebServer")+
-	" <nobr>"+component+"</nobr></font></td>"
+	"<td><font size=-1>"+(product - "Roxen WebServer")+
+	" <nobr>"+(component-"Other ")+"</nobr></font></td>"
 	"<td><font size=-1>"+short+"</font></td>"
-	"<td><font size=-2>"+lower_case(status)+"</font></td></tr>";
+	"<td><font size=-1>"+lower_case(status)+"</font></td></tr>";
+    }
+
+    int `<(Bug what )
+    {
+      if( what->status != status )
+	return (what->status > status);
+      return what->product+what->component+what->short > product+component+short;
+    }
+    
+    int `>(Bug what )
+    {
+      return !`<(what);
     }
   }
 
@@ -92,9 +123,11 @@ class Data( string data )
   string get_page()
   {
     if(!parsed)
+    {
       parse();
-    return "<table cellspacing=0 cellpadding=2>"+
-      (parsed->format()*"\n")+"</table>";
+      sort(parsed);
+    }
+    return "<table cellspacing=0 cellpadding=2>"+(parsed->format()*"\n")+"</table>";
   }
 }
 
