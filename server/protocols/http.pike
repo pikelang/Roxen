@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.298 2001/08/20 11:42:24 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.299 2002/03/27 09:54:27 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -974,9 +974,11 @@ private int parse_got( string new_data )
 
        case "host": 
        case "connection":
-       case "content-type":
          misc[linename] = lower_case(contents);
          break;
+       case "content-type":
+	 misc[linename] = contents;
+	 break;
 
 //        case "accept-encoding":
 //          foreach((contents-" ")/",", string e) {
