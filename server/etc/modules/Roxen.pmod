@@ -1,10 +1,13 @@
 /*
- * $Id: Roxen.pmod,v 1.9 1999/06/20 15:54:09 grubba Exp $
+ * $Id: Roxen.pmod,v 1.10 2000/03/09 03:09:01 mast Exp $
  *
  * Various helper functions.
  *
  * Henrik Grubbström 1999-05-03
  */
+
+#include <config.h>
+inherit "roxenlib";
 
 /*
  * TODO:
@@ -614,3 +617,146 @@ class QuotaDB
     }
   }
 }
+
+
+// RXML complementary stuff shared between configurations.
+
+class ScopeRoxen {
+  inherit RXML.Scope;
+
+  string pike_version=predef::version();
+  int ssl_strength=0;
+
+#if constant(SSL)
+  void create() {
+    ssl_strength=40;
+    if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_des])
+      ssl_strength=128;
+    if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_3des])
+      ssl_strength=168;
+  }
+#endif
+
+  string|int `[] (string var, void|RXML.Context c, void|string scope) {
+    switch(var)
+    {
+     case "uptime":
+       return (time(1)-roxen->start_time);
+     case "uptime-days":
+       return (time(1)-roxen->start_time)/3600/24;
+     case "uptime-hours":
+       return (time(1)-roxen->start_time)/3600;
+     case "uptime-minutes":
+       return (time(1)-roxen->start_time)/60;
+     case "hits-per-minute":
+       return c->id->conf->requests / ((time(1)-roxen->start_time)/60 + 1);
+     case "hits":
+       return c->id->conf->requests;
+     case "sent-mb":
+       return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
+     case "sent":
+       return c->id->conf->sent;
+     case "sent-per-minute":
+       return c->id->conf->sent / ((time(1)-roxen->start_time)/60 || 1);
+     case "sent-kbit-per-second":
+       return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
+                               (time(1)-roxen->start_time || 1)));
+     case "ssl-strength":
+       return ssl_strength;
+     case "pike-version":
+       return pike_version;
+     case "version":
+       return roxen.version();
+     case "time":
+       return time(1);
+     case "server":
+       //FIXME: This does not always work!
+       return c->id->conf->query("MyWorldLocation");
+    }
+    :: `[] (var, c, scope);
+  }
+
+  array(string) _indices() {
+    return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
+	     "hits-per-minute", "hits", "sent-mb", "sent",
+             "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
+              "pike-version", "version", "time", "server"});
+  }
+
+  string _sprintf() { return "RXML.Scope(roxen)"; }
+}
+
+class ScopePage {
+  inherit RXML.Scope;
+  constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
+		       "theme-bgcolor":"theme_bgcolor", "theme-fgcolor":"theme_fgcolor",
+		       "theme-language":"theme_language"]);
+  constant in_defines=aggregate_multiset(@indices(converter));
+
+  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+    if(in_defines[var])
+      return c->id->misc->defines[converter[var]];
+    if(objectp(c->id->misc->scope_page[var])) return c->id->misc->scope_page[var]->rxml_var_eval(c, var, "page");
+    return c->id->misc->scope_page[var];
+  }
+
+  mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    if(in_defines[var])
+      return c->id->misc->defines[converter[var]]=val;
+    return c->id->misc->scope_page[var]=val;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    if(!c) return ({});
+    array ind=indices(c->id->misc->scope_page);
+    foreach(indices(in_defines), string def)
+      if(c->id->misc->defines[converter[def]]) ind+=({def});
+    return ind;
+  }
+
+  void m_delete (string var, void|RXML.Context c, void|string scope_name) {
+    if(!c) return;
+    if(in_defines[var]) {
+      if(var[0..4]=="theme")
+	predef::m_delete(c->id->misc->defines, converter[var]);
+      else
+	::m_delete(var, c, scope_name);
+    }
+    predef::m_delete(c->id->misc->scope_page, var);
+  }
+
+  string _sprintf() { return "RXML.Scope(page)"; }
+}
+
+RXML.Scope scope_roxen=ScopeRoxen();
+RXML.Scope scope_page=ScopePage();
+
+RXML.TagSet entities_tag_set = class
+// This tag set always has the lowest priority.
+{
+  inherit RXML.TagSet;
+
+  void prepare_context (RXML.Context c) {
+    c->add_scope("roxen",scope_roxen);
+    c->id->misc->scope_page=([]);
+    c->add_scope("page",scope_page);
+    c->add_scope("cookie" ,c->id->cookies);
+    c->add_scope("form", c->id->variables);
+    c->add_scope("client", c->id->client_var);
+    c->add_scope("var", ([]) );
+  }
+
+  // No low_entities are replaced when the result type for the
+  // parser is t_xml or t_html.
+  mapping(string:string) low_entities = ([]);
+
+  void create (string name)
+  {
+    ::create (name);
+
+    for (int i = 0; i < sizeof (replace_entities); i++) {
+      string chref = replace_entities[i];
+      low_entities[chref[1..sizeof (chref) - 2]] = replace_values[i];
+    }
+  }
+} ("entities_tag_set");
