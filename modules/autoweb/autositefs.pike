@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.19 1998/08/19 16:04:32 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.20 1998/08/27 20:30:30 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -72,7 +72,7 @@ mixed find_file(string f, object id)
   if(!host_to_id)
     update_host_cache(id);
   string file=file_from_host(id,f);
-  werror("customer_id: %O\n",id->misc->customer_id);
+  //werror("customer_id: %O\n",id->misc->customer_id);
   id->misc->wa = this_object();
   if(!file&& (f=="" ||
 	      host_to_id[(array_sscanf(f,"%s/")+({""}))[0]]))
