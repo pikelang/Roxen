@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.45 1999/08/07 16:24:35 nilsson Exp $ */
+/* $Id: module.pike,v 1.46 1999/09/05 02:20:05 per Exp $ */
 
 #include <module.h>
 
@@ -104,21 +104,22 @@ static class ConfigurableWrapper
   }
 };
 
+constant reg_s_loc = Locale.Roxen.standard.register_module_doc;
+
 // Define a variable, with more than a little error checking...
 void defvar(string|void var, mixed|void value, string|void name,
 	    int|void type, string|void doc_str, mixed|void misc,
 	    int|function|void not_in_config)
 {
+#if defined(MODULE_DEBUG)
   if(!strlen(var))
     error("No name for variable!\n");
-
 //  if(var[0]=='_' && previous_object() != roxen)
 //    error("Variable names beginning with '_' are reserved for"
 //	    " internal usage.\n");
-
   if (!stringp(name))
-    name = var;
-
+    error("The variable "+var+"has no name.\n");
+   
   if((search(name, "\"") != -1))
     error("Please do not use \" in variable names");
   
@@ -253,17 +254,11 @@ void defvar(string|void var, mixed|void value, string|void name,
 			 roxen->filename(this), type));
     break;
   }
-
-
-  // Locale stuff!
-  // Här blir vi farliga...
-  Locale.Roxen.standard
-    ->register_module_doc( this_object(), var, name, doc_str );
-
+#endif
+  // Locale stuff.
+  reg_s_loc( this_object(), var, name, doc_str );
 
   variables[var]=allocate( VAR_SIZE );
-  if(!variables[var])
-    error("Out of memory in defvar.\n");
   variables[var][ VAR_VALUE ]=value;
   variables[var][ VAR_TYPE ]=type&VAR_TYPE_MASK;
   variables[var][ VAR_DOC_STR ]=doc_str;
@@ -287,14 +282,16 @@ void defvar(string|void var, mixed|void value, string|void name,
   variables[var][ VAR_SHORTNAME ]= var;
 }
 
+static mapping locs = ([]);
 void deflocaledoc( string locale, string variable, 
 		   string name, string doc, mapping|void translate )
 {
-  if(!Locale.Roxen[locale])
+  if(!locs[locale] )
+    locs[locale] = Locale.Roxen[locale]->register_module_doc;
+  if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
-    Locale.Roxen[locale]
-      ->register_module_doc( this_object(), variable, name, doc, translate );
+    locs[locale]( this_object(), variable, name, doc, translate );
 }
 
 // Convenience function, define an invisible variable, this variable
