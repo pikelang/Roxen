@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.13 2001/04/11 14:40:14 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.14 2001/08/17 00:12:09 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -11,7 +11,7 @@ inherit "module";
 
 Configuration conf;
 
-#define LDAP_DEBUG 0
+//#define LDAP_DEBUG 1
 #ifdef LDAP_DEBUG
 # define LDAP_WERR(X) werror("LDAPtags: "+X+"\n")
 #else
@@ -72,7 +72,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='parser'><p>
- If specified, the query will be parsed by the RXML parser. This is
+ If specified, the content of <att>attr</att> will be parsed by the RXML parser. This is
  useful if the operation is to be built dynamically.</p>
 </attr>",
 
@@ -187,7 +187,7 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   } //switch
 
   if (args->parse)
-    args->query = Roxen.parse_rxml(args->query, id);
+    args->attr = Roxen.parse_rxml(args->attr, id);
 
   Protocols.LDAP.client con;
   array(mapping(string:mixed))|object|int result;
