@@ -1,4 +1,4 @@
-// $Id: setup_nsr.pike,v 1.1 2003/09/24 10:04:20 grubba Exp $
+// $Id: setup_nsr.pike,v 1.2 2003/09/24 10:05:28 grubba Exp $
 //
 // Setup .nsr (Networker) files for logfile directories if appropriate.
 // NOTE: We must be paranoid; we must not alter files that the user
@@ -22,7 +22,7 @@ void update_nsr_file(string directory)
   }
 
   int this_rev = -1;
-  if (sscanf("$Rev$", "$""Rev: 1.%d $", this_rev) != 1) {
+  if (sscanf("$Revision: 1.2 $", "$""Revision: 1.%d $", this_rev) != 1) {
     vwerror("Failed to parse own revision $Rev$\n");
     return;
   }
@@ -107,7 +107,7 @@ int main(int argc, array(string) argv)
       verbose++;
       break;
     case "version":
-      write("$Id: setup_nsr.pike,v 1.1 2003/09/24 10:04:20 grubba Exp $\n");
+      write("$Id: setup_nsr.pike,v 1.2 2003/09/24 10:05:28 grubba Exp $\n");
       break;
     }
   }
