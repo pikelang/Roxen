@@ -162,7 +162,8 @@ string devel_buttons( object c, string mn, object id )
   return (current_compile_errors[ mn ] ?
           "<font color=red><pre>"+current_compile_errors[ mn ]+
           "</pre></font>" : "" )
-         +"<input type=hidden name=section value='"+id->variables->section+"'>"
+         + "<input type=hidden name=section value='" +
+	 (id->variables->section||"Information") + "'>"
          "<submit-gbutton preparse><cf-locale get=reload></submit-gbutton>"+
          (sizeof( mod->error_log ) ?
          "<submit-gbutton preparse><cf-locale get=clear_log></submit-gbutton>":
