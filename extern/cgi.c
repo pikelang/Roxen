@@ -45,6 +45,13 @@
 # define MAXPATHLEN  2048
 #endif
 
+#ifndef MAXHEADERLEN
+/* maximum size of the header before sending and error message and
+ * killing the script.
+ */
+# define MAXHEADERLEN 20000
+#endif
+
 #undef DEBUG
 
 #include <errno.h>
@@ -71,6 +78,16 @@ struct pollfd pollfds[1];
 #else
 fd_set writefd[1];
 #endif
+
+#define LONGHEADER "HTTP/1.0 500 Buggy CGI Script\r\n\
+Content-Type: text/html\r\n\r\n\
+<title>CGI-script error</title> \n\
+<h1>CGI-script error</h1> \n\
+The CGI script you tried to access is not working correctly. It tries \n\
+to return too many headers (probably due to correct separation between \n\
+the headers and the body of the reply.\n"
+
+
 
 
 /* This is stdout from the CGI script */
@@ -238,25 +255,6 @@ char *my_realloc(char *from, int nsize, int osize)
 }
 #endif
 
-int is_end_of_headers(char *s, int len)
-{
-  if(!headers) 
-  {
-    hsize = (len/1024+1)*1024;
-    headers = malloc(hsize);
-    hpointer = 0;
-  } else if(hsize <= hpointer+len) {
-    headers = my_realloc(headers, hsize*2, hsize);
-    hsize *= 2;
-  }
-
-  movemem(headers+hpointer, s, len);
-  hpointer += len;
-  headers[hpointer] = 0;
-
-  return (strstr(headers, "\n\n")||strstr(headers, "\r\n\r\n")||strstr(headers, "\n\r\n\r"));
-}
-
 void reaper(int i)
 {
   int status;
@@ -285,13 +283,13 @@ void kill_kill_kill(void)
   close(script);
   signal(SIGCHLD, reaper);
   kill(pid, 1);		/* HUP */
-  sleep(10);
+  sleep(3);
   kill(pid, 13);	/* PIPE */
-  sleep(10);
+  sleep(3);
   kill(pid, 2);		/* INT */
-  sleep(10);
+  sleep(3);
   kill(pid, 15);	/* TERM */
-  sleep(10);
+  sleep(3);
   kill(pid, 9);		/* KILL */
   exit(0);
 }
@@ -322,6 +320,32 @@ void send_data(char *bar, int re)
     }
   } while(re);
 }
+
+
+int is_end_of_headers(char *s, int len)
+{
+  if(!headers) 
+  {
+    hsize = (len/1024+1)*1024;
+    headers = malloc(hsize);
+    hpointer = 0;
+  } else if(hsize <= hpointer+len) {
+    headers = my_realloc(headers, hsize*2, hsize);
+    hsize *= 2;
+  }
+  if(hsize > MAXHEADERLEN) {
+    send_data(LONGHEADER, strlen(LONGHEADER));
+    kill_kill_kill();
+  }
+    
+  
+  movemem(headers+hpointer, s, len);
+  hpointer += len;
+  headers[hpointer] = 0;
+
+  return (strstr(headers, "\n\n")||strstr(headers, "\r\n\r\n")||strstr(headers, "\n\r\n\r"));
+}
+
 
 int parse_and_send_headers(void)
 {
