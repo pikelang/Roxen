@@ -1,5 +1,5 @@
 /*
- * $Id: SimpleTagCaller.java,v 1.5 2000/08/18 14:59:20 marcus Exp $
+ * $Id: SimpleTagCaller.java,v 1.6 2000/10/25 14:25:56 marcus Exp $
  *
  */
 
@@ -25,7 +25,7 @@ public interface SimpleTagCaller {
   public static final int FLAG_EMPTY_ELEMENT = 0x00000001;
 
   /** Never apply any prefix to this tag. */
-  public static final int FLAG_NO_PREFIX = 0x00000002;
+  public static final int FLAG_NO_PREFIX = 0x00000004;
 
   /** A processing instruction tag (<?name ?> syntax).  Arguments not used. */
   public static final int FLAG_PROC_INSTR = 0x00000010;
@@ -52,6 +52,13 @@ public interface SimpleTagCaller {
 
   /** The same as specifying both FLAG_STREAM_RESULT and FLAG_STREAM_CONTENT */
   public static final int FLAG_STREAM = FLAG_STREAM_RESULT|FLAG_STREAM_CONTENT;
+
+  /** Write a lot of debug during the execution of the tag, showing what
+   *  type conversions are done, what callbacks are being called etc.
+   *  Note that DEBUG must be defined for the debug printouts to be
+   *  compiled in (normally enabled with the --debug flag to Roxen).
+   */
+  public static final int FLAG_DEBUG = 0x40000000;
 
 
   /**
