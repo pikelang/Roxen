@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.499 2002/05/29 15:12:51 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.500 2002/05/29 15:18:43 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3344,7 +3344,7 @@ $bin-length     -- Same, but as an 32 bit integer in network byteorder
 $request-time   -- The time the request took (seconds)
 $referer        -- The header 'referer' from the request, or '-'.
 $user_agent     -- The header 'User-Agent' from the request, or '-'.
-$user_agent_raw -- Same, but spaces in the name are encoded to %20.
+$user_agent_raw -- Same, but spaces in the name are not encoded to %20.
 $user           -- the name of the auth user used, if any
 $user_id        -- A unique user ID, if cookies are supported,
                    by the client, otherwise '0'
