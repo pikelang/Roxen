@@ -1,5 +1,5 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.24 1999/09/06 12:41:13 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.25 1999/09/06 12:58:52 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
@@ -211,5 +211,6 @@ void create()
   perror("CACHE: Now online.\n");
 #endif
   cache=([  ]);
+  add_constant("cache", this_object() );
   call_out(cache_clean, CACHE_TIME_OUT);
 }
