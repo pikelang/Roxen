@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.67 2000/01/18 14:07:35 noring Exp $ */
+/* $Id: module.pike,v 1.68 2000/01/18 14:56:20 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -657,14 +657,24 @@ mapping query_if_callers()
 
 RXML.TagSet query_tag_set()
 {
+  array(function|program|object) tags =
+    filter (rows (this_object(),
+		  glob ("Tag*",
+			indices (this_object()))),
+	    functionp);
+  for (int i = 0; i < sizeof (tags); i++)
+    if (programp (tags[i]))
+      if (!tags[i]->is_RXML_Tag) tags[i] = 0;
+      else tags[i] = tags[i]();
+    else {
+      tags[i] = tags[i]();
+      // Bogosity: The check is really a little too late here..
+      if (!tags[i]->is_RXML_Tag) tags[i] = 0;
+    }
+  tags -= ({0});
   return
     my_configuration()->module_tag_sets[this_object()] ||
-    (this_object()->ModuleTagSet || RXML.TagSet) (
-      module_identifier(),
-      filter (rows (this_object(),
-		    glob ("Tag*",
-			  indices (this_object()))),
-	      functionp)());
+    (this_object()->ModuleTagSet || RXML.TagSet) (module_identifier(), tags);
 }
 
 mixed get_value_from_file(string path, string index, void|string pre)
