@@ -289,7 +289,7 @@ array tag_pr(string tag, mapping m, RequestID id)
 
 array(string) tag_date(string q, mapping m, RequestID id)
 {
-  // unix_time is not part of RXML 1.4
+  // unix_time is not part of RXML 2.0
   int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
   if(m->unix_time) old_rxml_warning(id, "unix_time attribute in date tag","unix-time");
   if(m->day)    t += (int)m->day * 86400;
@@ -330,7 +330,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n = m->variable)
   {
-    string var=RXML.get_context()->user_get_var(n, m->scope);
+    string var=(string)RXML.get_context()->user_get_var(n, m->scope);
     m_delete(m, "variable");
     return m->quote=="none"?do_replace(var, m-(["quote":""]), id):
       ({ html_encode_string(do_replace(var, m-(["quote":""]), id)) });
@@ -409,7 +409,7 @@ string|array container_apre(string tag, mapping m, string q, RequestID id)
 
   multiset prestate = (< @indices(id->prestate) >);
 
-  // Not part of RXML 1.4
+  // Not part of RXML 2.0
   foreach(indices(m), s) {
     if(m[s]==s) {
       m_delete(m,s);
@@ -444,7 +444,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
     m_delete(m, "href");
   }
 
-  // Not part of RXML 1.4
+  // Not part of RXML 2.0
   foreach(indices(m), string opt) {
     if(m[opt]==opt) {
       if(strlen(opt)) {
@@ -750,6 +750,16 @@ class TagQuote {
   }
 }
 
+array(string) container_cset(string tag, mapping m, string c, RequestID id) {
+  if(!c) c="";
+  if( m->quote != "none" )
+    c = html_decode_string( c );
+  if( !m->variable ) RXML.parse_error("Variable not specified.");
+
+  RXML.get_context()->user_set_var(m->variable, c, m->scope);
+  return ({ "" });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -803,6 +813,7 @@ mapping query_container_callers() {
     "autoformat":container_autoformat,
     "aconf":container_aconf,
     "apre":container_apre,
+    "cset":container_cset,
     "preparse":container_preparse
   ]);
   return active;
