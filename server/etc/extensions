@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.43 2000/05/21 20:09:20 nilsson Exp $
+# $Id: extensions,v 1.44 2000/05/21 20:25:13 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -522,7 +522,6 @@ axs	application/olescript
 bcpio	application/x-bcpio
 bld	application/bld
 bld2	application/bld2
-bz2	application/x-bzip2
 cairn	application/x-cairn
 ca_cert application/x-x509-ca-cert
 cert	application/x-x509-ca-cert
@@ -759,6 +758,7 @@ ice     x-conference/x-cooltalk
 Z	STRIP			x-compress
 gz	STRIP			x-gzip
 bz	STRIP			x-bzip
+bz2	STRIP			x-bzip2
 
 uu	STRIP			uuencode
 b64	STRIP			base64
