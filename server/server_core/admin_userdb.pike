@@ -65,8 +65,8 @@ class AdminIFCache
   {
     if( db )
     {
-      query("DELETE FROM "+dir+" where id=%s", name);
-      query("INSERT INTO "+dir+" VALUES (%s,%s)", name, encode_value(to));
+      query("REPLACE INTO "+dir+" (id,data) VALUES (%s,%s)",
+	    name, encode_value(to));
       return to;
     }
 
@@ -92,7 +92,7 @@ class AdminIFCache
   {
     if( db )
       if( catch {
-        return decode_value( query( "SELECT data  FROM "+dir+
+        return decode_value( query( "SELECT data FROM "+dir+
                                         " where id=%s",name)[0]->data );
       })
         return 0;
@@ -108,7 +108,7 @@ class AdminIFCache
   array list()
   {
     if( db )
-      return query( "SELECT id from "+dir )->id;
+      return query( "SELECT id FROM "+dir )->id;
     return r_get_dir( dir );
   }
 
