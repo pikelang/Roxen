@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.5 1998/02/23 01:55:19 per Exp $
+ * $Id: resolv.pike,v 1.6 1998/02/24 22:26:50 per Exp $
  */
 
 inherit "wizard";
@@ -135,9 +135,17 @@ string page_0(object id)
 	}
       }
     } while(again);
-// trace(1);
-    c->get_file(nid);
-// trace(0);    
+    if(!c->get_file(nid))
+    {
+      foreach(c->last_modules(), funp) {
+	nid->misc->trace_enter("Last try module", funp);
+	if(file = funp(nid)) {
+	  nid->misc->trace_leave("Returns data");
+	  break;
+	} else
+	  nid->misc->trace_leave("");
+      }
+    }
     while(level) nid->misc->trace_leave("");
     if((int)id->variables->table)
       resolv += "</table>";
