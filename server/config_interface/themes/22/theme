@@ -40,7 +40,7 @@ really, really want to cache this image. -->
 
 <theme-set what=content-contentbackground to=contentbg.gif themefile />
 
-<theme-set what=content-extrtableaargs 
+<theme-set what=content-extratableargs 
            to="background='&usr.content-contentbackground;'" />
 
 <theme-set what=linkcolor to="#425a84"/>
