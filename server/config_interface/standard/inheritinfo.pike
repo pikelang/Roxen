@@ -34,11 +34,18 @@ object find_module( string foo )
 string program_name_version( program what )
 {
   string file = roxen.filename( what );
-  string ofile = master()->make_ofilename( master()->program_name( what ) );
+  string ofile;
   string name = file, warning="";
   string color = "black";
   array(int) ofs, fs;
 
+  catch 
+  {
+    if( file )
+      ofile = master()->make_ofilename( master()->program_name( what ) );
+  };
+  if(!ofile)
+    ofile = "No .o file!";
   if( !(fs = file_stat( file )) )
   {
     color = "red";
