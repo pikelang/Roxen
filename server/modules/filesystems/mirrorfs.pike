@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.13 1999/12/28 02:58:43 nilsson Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.14 1999/12/29 23:52:58 nilsson Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>
@@ -167,7 +167,7 @@ class RemoteFile {
   mixed id;
 
   void set_id(mixed t){ id=t; };
-  
+
   void set_nonblocking(function rc, function wc, function cc)
   {
     read_cb = rc;
@@ -191,7 +191,7 @@ class RemoteFile {
     }
     return "";
   }
-  
+
   void close()
   {
     /* NOOP */
@@ -220,7 +220,7 @@ class RemoteFile {
       outbuffer=remote_file=0;
     }
   }
-  
+
   void create(object in, object out)
   {
     trace(1);
@@ -228,7 +228,7 @@ class RemoteFile {
     outbuffer = out;
     call_out(get_data, 0);
   }
-  
+
 };
 
 
@@ -291,8 +291,6 @@ mixed find_file(string s, object id)
 
 string status()
 {
-  if (rpc()) {
-    return ("Connected OK<br>\n");
-  }
-  return("<font color=red>Failed to connect to server</font><br>\n");
+  if (rpc()) return "Connected OK<br>\n";
+  return "<font color=\"red\">Failed to connect to server</font><br>\n";
 }
