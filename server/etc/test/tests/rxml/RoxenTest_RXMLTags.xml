@@ -590,6 +590,23 @@ e</result>
   <result>a:b:c|a:b:c|a&#0;b&#0;c</result>
 </test>
 
+<test>
+  <rxml><replace from="a,å,ä" to="å,ä,a" type="words">
+    <foo arg="abcåäö">
+      abcåäö
+      <bar arg="abc&aring;&auml;&ouml;"/>
+      abc&aring;&auml;&ouml;
+    </foo>
+  </replace></rxml>
+  <result>
+    <foo årg="åbcäaö">
+      åbcäaö
+      <bår årg="åbcäaö"/>
+      åbcäaö
+    </foo>
+  </result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Trimlines</comment>
