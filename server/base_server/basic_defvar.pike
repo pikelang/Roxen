@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.5 2000/02/20 17:41:32 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.6 2000/03/02 12:01:58 jonasw Exp $
 
 #include <module_constants.h>
 mapping variables = ([ ]);
@@ -57,8 +57,8 @@ void defvar( string v, mixed val,
     variables[v][ VAR_SHORTNAME ]    = v;
   }
   variables[v][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
-  variables[v][ VAR_DOC_STR ]      = d->english;
-  variables[v][ VAR_NAME ]         = q->english;
+  variables[v][ VAR_DOC_STR ]      = d->standard;
+  variables[v][ VAR_NAME ]         = q->standard;
   variables[v][ VAR_MISC ]         = misc;
   type &= (VAR_EXPERT | VAR_MORE | VAR_INITIAL | VAR_DEVELOPER);
   variables[v][ VAR_CONFIGURABLE ] = type?type:1;
