@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.12 1999/10/04 10:00:08 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.13 1999/10/04 12:41:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -790,7 +790,7 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
 string tag_maketag(string tag, mapping m, string cont, object id) {
   NOCACHE();
   mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
-  cont=parse_html(cont, ([]), (["attrib":
+  cont=parse_html(parse_rxml(cont,id), ([]), (["attrib":
     lambda(string tag, mapping m, string cont, mapping c, object id, mapping args) {
       args[m->name]=parse_rxml(cont, id);
       return "";
