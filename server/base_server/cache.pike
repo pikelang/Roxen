@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.8 1997/01/26 23:46:23 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.9 1997/02/05 22:38:26 kg Exp $";
 #include <config.h>
 
 inherit "roxenlib";
@@ -118,6 +118,15 @@ void cache_set(string in, string what, mixed to)
   cache[in][what][TIMESTAMP] = time(1);
 }
 
+void cache_clear(string in)
+{
+#ifdef CACHE_DEBUG
+  perror("CACHE: cache_clear(\"%s\")\n", in);
+#endif
+  if(cache[in])
+    m_delete(cache,in);
+}
+
 void cache_clean()
 {
   string a, b;
@@ -183,8 +192,6 @@ void create()
   add_efun("cache_lookup", cache_lookup);
   add_efun("cache_set", cache_set);
   add_efun("cache_remove", cache_remove);
+  add_efun("cache_clear", cache_clear);
   call_out(cache_clean, 10);
 }
-
- 
-
