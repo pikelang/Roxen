@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.11 2000/07/04 03:45:03 per Exp $
+// $Id: basic_defvar.pike,v 1.12 2000/07/09 17:14:30 grubba Exp $
 #include <module.h>
 
 mapping (string:Variable.Variable) variables=([]);
@@ -88,7 +88,7 @@ Variable.Variable defvar(string var, mixed value,
 
   if( mappingp( doc_str ) )
   {
-    ld = name;
+    ld = doc_str;
     doc_str = doc_str->standard;
   }
 
