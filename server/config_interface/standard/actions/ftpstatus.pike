@@ -1,11 +1,16 @@
-/* $Id: ftpstatus.pike,v 1.1 2000/02/04 06:07:19 per Exp $ */
+/* $Id: ftpstatus.pike,v 1.2 2000/09/08 20:24:18 lange Exp $ */
 
 inherit "wizard";
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "status";
-constant name= "Current FTP sessions";
-constant doc = "List all active FTP sessions and what files they are "
-  "currently transferring.";
+
+string name= LOCALE(49, "Current FTP sessions");
+string doc = LOCALE(50, 
+		    "List all active FTP sessions and what files they are "
+		    "currently transferring.");
 
 static string describe_ftp(object ftp)
 {
@@ -18,7 +23,7 @@ static string describe_ftp(object ftp)
   if(ftp->session_auth)
     res += "<td>"+ftp->session_auth[1]+"</td>";
   else
-    res += "<td><i>anonymous</i></td>";
+    res += "<td><i>" + LOCALE(51, "anonymous") + "</i></td>";
 
   res += "<td>"+ftp->cwd+"</td>";
 
@@ -40,12 +45,12 @@ static string describe_ftp(object ftp)
       res += "</td>";
     }
   } else
-    res += "<td><i>idle</i></td>";
+    res += "<td><i>" + LOCALE(52, "idle") + "</i></td>";
 
   return res + "</tr>\n";
 }
 
-string parse(object id)
+string parse( RequestID id )
 {
   program p = ((program)"protocols/ftp");
   multiset(object) ftps = (< >);
@@ -58,9 +63,15 @@ string parse(object id)
   }
 
   if(sizeof(ftps))
-    return "<table border=0><tr align=left><th>From</th><th>User</th>"
-      "<th>CWD</th><th>Action</th><th>File</th><th>Transferred</th></tr>\n"+
-      Array.map(indices(ftps), describe_ftp)*""+"</table>\n<cf-ok>";
+    return "<table border='0'><tr align=left><th>" +
+      LOCALE(53, "From")+ "</th><th>" + 
+      LOCALE(206, "User")+ "</th><th>" +
+      LOCALE(54, "CWD")+ "</th><th>" +
+      LOCALE(55, "Action")+ "</th><th>" + 
+      LOCALE(18, "File")+ "</th><th>" +
+      LOCALE(56, "Transferred") + "</th></tr>\n"+
+      Array.map(indices(ftps), describe_ftp)*""+"</table>\n<cf-ok/>";
   else
-    return "There are currently no active FTP sessions.<p><cf-ok>";
+    return LOCALE(57, "There are currently no active FTP sessions.")+
+      "<p><cf-ok/></p>";
 }
