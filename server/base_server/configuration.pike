@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.448 2001/07/11 02:31:35 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.449 2001/07/12 21:22:35 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2404,30 +2404,40 @@ RoxenModule reload_module( string modname )
     master()->refresh( object_program( old_module ), 1 );
   }
 
-  catch( disable_module( modname, 1 ) );
+  if (mixed err = catch( disable_module( modname, 1 ) ))
+    // Actually, I believe the catch here is unnecessary. /mast
+    report_error ("Error doing reload of %O:\n%s",
+		  modname, describe_backtrace (err));
+
+  array old_error_log = (array) old_module->error_log;
+
+  // It's possible e.g. in the admin interface that the module
+  // being reloaded is in use for the current request, so delay it a
+  // little.
+  //call_out (destruct, 2, old_module);
+  // Nope, can't do that since there are things like lookup caches
+  // that count on that the old module object is gone before the new
+  // is started.
+  if (mixed err = catch (destruct (old_module)))
+    report_error ("Error destructing module instance of %O:\n%s",
+		  modname, describe_backtrace (err));
 
   RoxenModule nm;
   
-  if( catch( nm = enable_module( modname, 0, 0, 1 ) ) || (nm == 0) )
-    enable_module( modname, (nm=old_module), mi, 1 );
-  else 
-  {
-    foreach ((array) old_module->error_log, [string msg, array(int) times])
-      nm->error_log[msg] += times;
+  if( mixed err = catch( nm = enable_module( modname, 0, 0, 1 ) ) )
+    // Actually, I believe the catch here is unnecessary. /mast
+    report_error ("Error doing reload of %O:\n%s",
+		  modname, describe_backtrace (err));
 
-    ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
-    catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
+  if (!nm) return 0;
 
-    nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
-    // It's possible e.g. in the admin interface that the module
-    // being reloaded is in use for the current request, so delay it a
-    // little.
-    //call_out (destruct, 2, old_module);
-    // Nope, can't do that since there are things like lookup caches
-    // that count on that the old module object is gone before the new
-    // is started.
-    destruct (old_module);
-  }
+  foreach (old_error_log, [string msg, array(int) times])
+    nm->error_log[msg] += times;
+
+  mi = roxen.find_module( (modname/"#")[0] );
+  catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...
+
+  nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
 
   call_start_callbacks( nm, mi, modules[ (modname/"#")[0] ] );
 
