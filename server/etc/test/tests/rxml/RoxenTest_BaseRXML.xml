@@ -2297,7 +2297,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.server;</rxml>
-<glob>http://*:17369</glob>
+<glob>http://*:17369/</glob>
 </test>
 
 <test>
