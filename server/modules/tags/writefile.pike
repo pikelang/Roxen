@@ -13,7 +13,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.18 2005/02/09 19:47:21 mast Exp $";
+ "$Id: writefile.pike,v 1.19 2005/02/25 17:38:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -223,6 +223,9 @@ class TagWritefile {
 	  object file=Stdio.File();
 	  if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
 	    _ok = 1;
+#ifdef WRITEFILE_UTF8_ENCODE
+	    towrite = string_to_utf8(towrite);
+#endif
 	    file->write(towrite);
 	    object dims;
 	    if (IS(args["min-height"])|| IS(args["max-height"])||
