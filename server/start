@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.198 2002/06/14 16:05:02 jhs Exp $
+# $Id: start,v 1.199 2002/10/01 23:18:16 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -64,7 +64,7 @@ esac
 DIR=../configurations
 LOGDIR=../logs
 FILES="default"
-program=base_server/roxenloader.pike
+program=server_core/roxenloader.pike
 VARDIR=../var
 LOCALDIR=../local
 SELF_TEST_DIR=data/test
@@ -297,11 +297,11 @@ parse_args() {
    if [ "x$passhelp" = "x1" ] ; then
      pass="$pass --version"
    else
-    if [ -f base_server/roxen.pike ]; then
+    if [ -f server_core/roxen.pike ]; then
       echo "Internet Server `roxen_version`"
       exit 0
     else
-      echo 'base_server/roxen.pike not found!'
+      echo 'server_core/roxen.pike not found!'
       exit 1
     fi
    fi
@@ -566,7 +566,7 @@ DEFINES="$DEFINES \"-M$roxendir/pike_modules\""
 DEFINES="$DEFINES \"-I$roxendir/data/include\""
 
 # Extra program-path
-DEFINES="$DEFINES \"-Pbase_server\" \"-P`pwd`\""
+DEFINES="$DEFINES \"-Pserver_core\" \"-P`pwd`\""
 
 # Support for adding local pike-modules
 
@@ -585,7 +585,7 @@ fi
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   if [ $verbose -gt 0 ]; then
-    dp "WARNING: Applying kludge for HPUX. (see base_server/roxen.pike)"
+    dp "WARNING: Applying kludge for HPUX. (see server_core/roxen.pike)"
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
@@ -768,11 +768,11 @@ fi
 PIKEVERSION="`\"$pike\" --version 2>&1|head -1`"
 LS="`ls -lL \"$pike\" 2>/dev/null`"
 LS="$LS `find pike_modules -ls 2>/dev/null`"
-LS="$LS `find base_server -ls 2>/dev/null`"
+LS="$LS `find server_core -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
-if [ "$program" = "base_server/roxenloader.pike" ] ; then
+if [ "$program" = "server_core/roxenloader.pike" ] ; then
   if [ "`cat \"$old_roxen_defines\" 2>/dev/null`" != "$VERSION_DATA" ] ; then
     remove_old_dot_o_files "defines or pike version changed"
   fi
