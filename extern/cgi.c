@@ -4,6 +4,10 @@
 #include <sys/signal.h>
 #include <sys/time.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
@@ -243,6 +247,13 @@ int is_end_of_headers(char *s, int len)
 
 void reaper(int i)
 {
+  int status;
+
+  /* Reap our child */
+  if (pid && (wait(&status) != pid)) {
+    /* Not dead yet */
+    return;
+  }
 #ifdef DEBUG
   fprintf(stderr, "Child died\n");
   fprintf(stdout, "Child died\n");
@@ -261,9 +272,15 @@ void kill_kill_kill()
   close(1);
   close(script);
   signal(SIGCHLD, reaper);
-  kill(pid, 1);
+  kill(pid, 1);		/* HUP */
   sleep(10);
-  kill(pid, 9);
+  kill(pid, 13);	/* PIPE */
+  sleep(10);
+  kill(pid, 2);		/* INT */
+  sleep(10);
+  kill(pid, 15);	/* TERM */
+  sleep(10);
+  kill(pid, 9);		/* KILL */
   exit(0);
 }
 
@@ -277,7 +294,7 @@ void send_data(char *bar, int re)
     fprintf(stderr, "wrote %d bytes to client\n", written);
 #endif
 
-    if(written < 0)
+    if(written <= 0)
       kill_kill_kill();
 
     if(!written)
