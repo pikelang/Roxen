@@ -2,27 +2,29 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.7 2001/10/10 09:01:40 jhs Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.1 2002/02/06 09:42:46 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
-constant module_name = "Whitespace Sucker";
-constant module_doc  = "Sucks the useless guts away from of your pages.";
+constant module_name = "Whitespace Remover";
+constant module_doc  = "Removes all whitespace from pages.";
 
 void create() {
 
-  defvar("comment", Variable.Flag(0, 0, "Strip HTML comments",
-				  "Removes all &lt;!-- --&gt; type of comments") );
-  defvar("verbatim", Variable.StringList( ({ "pre", "textarea", "script", "style" }),
-					  0, "Verbatim tags",
-					  "Whitespace stripping is not performed on the contents "
-					  "of these tags." ) );
+  defvar("comment",
+	 Variable.Flag(0, 0, "Strip HTML comments",
+		       "Removes all &lt;!-- --&gt; type of comments") );
+  defvar("verbatim",
+	 Variable.StringList( ({ "pre", "textarea", "script", "style" }),
+			      0, "Verbatim tags",
+			      "Whitespace stripping is not performed on the "
+			      "contents of these tags." ) );
 }
 
 int gain;
 
 string status()
 {
-  return sprintf("<b>%d bytes</b> of useless whitespace have been dropped.", gain);
+  return sprintf("<b>%d bytes</b> have been dropped.", gain);
 }
 
 static string most_significant_whitespace(string ws)
