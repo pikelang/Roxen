@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.610 2001/01/19 12:41:35 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.611 2001/01/20 13:59:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1639,7 +1639,6 @@ class ImageCache
   string name;
   string dir;
   function draw_function;
-  mapping data_cache = ([]); // not normally used.
   mapping meta_cache = ([]);
 
   string documentation(void|string tag_n_args) {
@@ -1653,11 +1652,6 @@ class ImageCache
   static mapping meta_cache_insert( string i, mapping what )
   {
     return meta_cache[i] = what;
-  }
-
-  static string data_cache_insert( string i, string what )
-  {
-    return data_cache[i] = what;
   }
 
   static mixed frommapp( mapping what )
@@ -1983,10 +1977,11 @@ class ImageCache
     array(mapping(string:string)) q = db->query("SELECT meta FROM "+
                                                 name+"_data WHERE id='"+
                                                 id+"'");
-    db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
-
     if(!sizeof(q))
       return 0;
+
+    db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
+
     string s = q[0]->meta;
     mapping m;
     if (catch (m = decode_value (s)))
@@ -2004,7 +1999,6 @@ class ImageCache
   //! <pi>time()</pi>) is provided, only images with their latest access before
   //! that time are flushed.
   {
-
     report_debug("Flushing "+name+" image cache.\n");
     if( !age )
     {
@@ -2033,7 +2027,6 @@ class ImageCache
       db->query( "OPTIMIZE TABLE "+name );
     };
 
-    data_cache = ([]);
     meta_cache = ([]);
   }
 
@@ -2061,41 +2054,29 @@ class ImageCache
     return ({ imgs, size, aged });
   }
 
+  static mapping rst_cache = ([ ]);
   static mapping restore( string id )
   {
-    mixed f;
-    mapping m;
+    if( rst_cache[ id ] )
+      return rst_cache[ id ] + ([]);
 
-    if( data_cache[ id ] ) {
-      f = data_cache[ id ];
-      m = restore_meta( id );
-
-      if(!m)
-	return 0;
-    }
-    else
+    array q = db->query( "SELECT data FROM "+name+"_data WHERE id=%s",id);
+    if( sizeof(q) )
     {
-      array(mapping(string:string)) q =
-	db->query( "SELECT data,meta FROM "+name+"_data WHERE id=%s",id);
-      if( sizeof(q) ) {
-        f = q[0]->data;
-	if( catch( m = decode_value(q[0]->meta) ) ) {
-	  report_error( "Corrupt data in cache-entry "+id+".\n" );
-	  db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
-	  db->query( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
-	  return 0;
-	}
-      }
-      else
-        return 0;
+      string f = q[0]->data;
+      // Caches. Thus, it's faster than doing decode_value each time here.
+      mapping m = restore_meta( id );
+      if( !m ) return 0;
 
-      if(m)
-	db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
-      else
-	return 0;
+      m = Roxen.http_string_answer( f, m->type||("image/gif") );
+      
+      if( strlen( f ) > 6000 )
+	return m;
+      rst_cache[ id ] = m;
+      if( sizeof( rst_cache ) > 100 )
+	rst_cache = ([ "id":m ]);
+      return rst_cache[ id ] + ([]);
     }
-
-    return Roxen.http_string_answer( f, m->type||("image/gif") );
   }
 
 
@@ -2283,10 +2264,10 @@ class ArgCache
     if(catch(db->query("SELECT id FROM "+name+" WHERE id=-1")))
       db->query("CREATE TABLE "+name+" ("
                 "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
-                "lkey CHAR(10) NOT NULL DEFAULT '', "
+                "hash INT NOT NULL DEFAULT 0, "
                 "atime INT UNSIGNED NOT NULL DEFAULT 0, "
-                "contents BLOB NOT NULL DEFAULT '' "
-                ")");
+                "contents BLOB NOT NULL DEFAULT '', "
+                "INDEX hind (hash))");
   }
 
   void create( string _name )
@@ -2310,15 +2291,15 @@ class ArgCache
 
   static string create_key( string long_key )
   {
-    array data = db->query("SELECT id,contents FROM "+name+" WHERE lkey=%s",
-			   long_key[5..14]);
+    array data = db->query("SELECT id,contents FROM "+name+" WHERE hash=%d",
+			   hash(long_key));
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
-    db->query( "INSERT INTO "+name+" (contents,lkey,atime) VALUES "
-	       "(%s,%s,UNIX_TIMESTAMP())",
-	       name, long_key, long_key[5..14] );
+    db->query( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
+	       "(%s,%d,UNIX_TIMESTAMP())",
+	       long_key, hash(long_key) );
     return (string)db->master_sql->insert_id();
   }
 
