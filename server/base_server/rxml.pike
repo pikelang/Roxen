@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.232 2000/08/28 13:23:15 mast Exp $
+// $Id: rxml.pike,v 1.233 2000/08/28 13:28:22 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -91,6 +91,11 @@ RXML.TagSet rxml_tag_set = class
 
   string prefix = RXML_NAMESPACE;
 
+#ifdef THREADS
+  Thread.Mutex lists_mutex = Thread.Mutex();
+  // Locks destructive changes to the arrays modules and imported.
+#endif
+
   array(RoxenModule) modules;
   // Each element in the imported array is the registered tag set of a
   // parser module. This array contains the corresponding module
@@ -98,6 +103,9 @@ RXML.TagSet rxml_tag_set = class
 
   void sort_on_priority()
   {
+#ifdef THREADS
+    Thread.MutexKey lock = lists_mutex->lock();
+#endif
     int i = search (imported, Roxen.entities_tag_set);
     array(RXML.TagSet) new_imported = imported[..i-1] + imported[i+1..];
     array(RoxenModule) new_modules = modules[..i-1] + modules[i+1..];
@@ -425,9 +433,13 @@ void add_parse_module (RoxenModule mod)
 			    }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
-    remove_call_out (rxml_tag_set->sort_on_priority);
+#ifdef THREADS
+    Thread.MutexKey lock = rxml_tag_set->lists_mutex->lock();
+#endif
     rxml_tag_set->modules += ({mod});
     rxml_tag_set->imported += ({tag_set});
+    lock = 0;
+    remove_call_out (rxml_tag_set->sort_on_priority);
     call_out (rxml_tag_set->sort_on_priority, 0);
   }
 }
