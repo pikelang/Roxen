@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.366 2002/12/01 23:39:54 mani Exp $
+// $Id: loader.pike,v 1.367 2002/12/07 13:02:24 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.366 2002/12/01 23:39:54 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.367 2002/12/07 13:02:24 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1170,7 +1170,7 @@ void paranoia_throw(mixed err)
 // ChiliMoon bootstrap code.
 int main(int argc, array(string) argv)
 {
-  // For Pike 7.3
+  // For Pike 7.4
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
 
   // FIXME: Bug in master.pike. Resolve this before we change master.
@@ -2019,12 +2019,12 @@ void do_main( int argc, array(string) argv )
     "some environment variables are ignored." }) );
 #endif // NOT_INSTALLED
 
-#if __VERSION__ < 7.3
+#if __VERSION__ < 7.4
   feature_warn("FATAL", ({
-    "ChiliMoon requires pike 7.3. "
+    "ChiliMoon requires pike 7.4. "
     "Please install a newer version of Pike." }) );
   _exit(0); // 0 means stop start script looping
-#endif // __VERSION__ < 7.3
+#endif // __VERSION__ < 7.4
 
 #if !constant (Mysql.mysql)
   feature_warn("FATAL", ({
