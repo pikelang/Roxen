@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.18 2000/03/09 14:13:09 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.19 2000/03/09 14:28:24 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -148,7 +148,6 @@ mixed first_try(object id)
     if(!ok)
       for (int i = 0; i < sizeof (redirect_from); i++) {
 	string f = redirect_from[i];
-	werror ("%O\n%O\n", m, f);
 	if(!search(m, f))
 	{
 	  to = redirect_to[i] + m[strlen(f)..];
