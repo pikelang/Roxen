@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.391 2002/10/25 20:53:40 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.392 2002/10/26 00:35:58 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -653,10 +653,11 @@ class TagChili {
       mapping aargs = (["href": "http://www.chilimoon.org/"]);
 
       args->src = "/%01/chili-"+size+"-"+color;
-      args->width =  (["small":"57","large":"151"])[size];
-      args->height = (["small":"64","large":"169"])[size];
+      args->width =  (["small":"36", "medium":"57", "large":"151"])[size];
+      args->height = (["small":"40", "medium":"64", "large":"169"])[size];
 
-      if(!args->alt) args->alt="Powered by ChiliMoon";
+      if(!args->alt) args->alt="ChiliMoon";
+      if(!args->title) args->title="Powered by ChiliMoon";
       if(!args->border) args->border="0";
       int xml=!m_delete(args, "noxml");
       if(args->target) aargs->target = m_delete (args, "target");
