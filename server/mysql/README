@@ -7,8 +7,8 @@ and the mysqld server binary is located in the 'libexec' directory.
 
 To set up roxen to use this mysql, run these commands:
 
-ln -s /i/usr/local/libexec .
-ln -s /i/usr/local/share .
+ln -s /usr/local/libexec .
+ln -s /usr/local/share .
 
 Sometimes the mysqld binary recides in sbin or bin instead, if so,
 modify the first ln command to link that directory instead.
