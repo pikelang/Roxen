@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.101 2003/10/16 11:46:13 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.102 2003/10/30 12:58:50 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -121,6 +121,10 @@ constant gbuttonattr=#"
  Set text alignment. There are some alignment restrictions: when text
  alignment is either <i>left</i> or <i>right</i>, icons must
  also be aligned <i>left</i> or <i>right</i>.</p>
+</attr>
+
+<attr name='img-align' value=''><p>
+ Alignment passed on to the resulting <tag>img</tag>.</p>
 </attr>
 
 <attr name='state' value='enabled|disabled'><p>
