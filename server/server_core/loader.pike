@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.363 2002/11/14 23:39:53 mani Exp $
+// $Id: loader.pike,v 1.364 2002/11/17 18:39:00 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.363 2002/11/14 23:39:53 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.364 2002/11/17 18:39:00 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -991,8 +991,8 @@ static string dist_version;
 string roxen_version()
 //! @appears roxen_version
 {
-  // Note: roxen_release is usually "-cvs" at the time this is compiled.
-  return __roxen_version__+"."+__roxen_build__+(release||roxen_release);
+  // Note: chilimoon_release is usually "-cvs" at the time this is compiled.
+  return __chilimoon_version__+"."+__chilimoon_build__+(release||chilimoon_release);
 }
 
 //! @appears roxen_path
@@ -2087,7 +2087,7 @@ void do_main( int argc, array(string) argv )
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
   add_constant("roxen_dist_version", dist_version);
-  add_constant("roxen_release", release || roxen_release);
+  add_constant("roxen_release", release || chilimoon_release);
   add_constant("roxen_product_name", "ChiliMoon");
   add_constant("lopen",         lopen);
   add_constant("report_notice", report_notice);
