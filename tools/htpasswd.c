@@ -1,7 +1,13 @@
 /*
  * htpasswd.c: simple program for manipulating password file for NCSA httpd
  * Rob McCool
+ *
+ * Some modifications by Henrik Grubbström <grubba@idonex.se>.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -9,6 +15,10 @@
 #include <sys/signal.h>
 #include <stdlib.h>
 #include <time.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #define LF 10
 #define CR 13
