@@ -26,6 +26,9 @@ string do_describe_error( mixed err )
 
 string common_wait( mapping m )
 {
+  if (!test) {
+    return "Test not started";
+  }
   int err = test->wait();
   if( err == 100 )  return "Illegal arguments";
   if( err == 99 )   return "Timeout";
