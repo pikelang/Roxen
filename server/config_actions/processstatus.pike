@@ -1,5 +1,5 @@
 /*
- * $Id: processstatus.pike,v 1.3 1997/08/26 19:42:40 grubba Exp $
+ * $Id: processstatus.pike,v 1.4 1998/03/09 19:46:36 neotron Exp $
  */
 
 inherit "wizard";
@@ -21,8 +21,10 @@ mixed page_0(object id, object mc)
 {
   string res;
   int *ru, tmp, use_ru;
-
-  if(catch(ru=rusage())) return 0;
+  array err;
+  if(err = catch(ru=rusage()))
+    return sprintf("<h1>Failed to get rusage information: </h1><pre>%s</pre>",
+		   describe_backtrace(err));
 
   if(ru[0])
     tmp=ru[0]/(time(1) - roxen->start_time+1);
