@@ -21,6 +21,8 @@ constant TYPE_FLOAT           = 15;
 constant TYPE_MODULE          = 17;
 constant TYPE_FONT            = 19;
 constant TYPE_CUSTOM          = 20;
+constant TYPE_URL             = 21;
+constant TYPE_URL_LIST        = 22;
 
 // Variable array indices.
 constant VAR_VALUE           = 0;
