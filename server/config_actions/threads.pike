@@ -1,8 +1,9 @@
 /*
- * $Id: threads.pike,v 1.1 1998/10/10 03:41:09 per Exp $
+ * $Id: threads.pike,v 1.2 1998/10/11 06:45:03 peter Exp $
  */
 #include <config.h>
 inherit "highlight_pike";
+inherit "roxenlib";
 
 static string last_id, last_from;
 string get_id(string from)
