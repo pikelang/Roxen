@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.11 2002/07/01 15:29:19 anders Exp $
+ * $Id: licensestatus.pike,v 1.12 2002/11/12 10:50:22 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -12,6 +12,10 @@ string name= LOCALE(165, "License status");
 string doc = LOCALE(166, "Show information about the installed licenses and "
 		    "there usage.");
 
+int enabled()
+{
+  return License.is_active("../license");
+}
 
 mixed parse( RequestID id )
 {

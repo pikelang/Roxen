@@ -14,7 +14,8 @@ string parse( RequestID id )
     {
       if( (q = ((program)f)()) && q->action &&
 	  (!config_setting2("group_tasks")
-	   || (q->action == (id->variables->class||"status") )) )
+	   || (q->action == (id->variables->class||"status") )) &&
+	  (!q->enabled || (q->enabled && q->enabled())))
       {
         res += ({("<action name='" + 
 		  replace((string)q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
