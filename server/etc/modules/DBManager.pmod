@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.47 2001/10/05 14:16:48 per Exp $
+// $Id: DBManager.pmod,v 1.48 2001/10/08 09:13:57 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -352,7 +352,7 @@ array(string) db_tables( string name )
     case "odbc":
       // Oracle.
       catch {
-	res = db->query( "select tname from tab")->tname;
+	res = db->query( "select TNAME from tab")->TNAME;
 	return res;
       };
       // fallthrough.
