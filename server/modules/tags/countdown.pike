@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.8 1998/07/05 12:39:49 grubba Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.9 1998/07/18 07:01:40 hubbe Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -200,6 +200,9 @@ constant examples =
 
   E("On which day will the next christmas eve be?",
     "It will be a <countdown christmas_eve lang=en when date part=day type=string>"),
+
+  E("How old Fredrik & Monica Hübinette's dog Sadie?",
+    "She is <countdown iso=1998-03-29 prec=day since months combined> old or <countdown iso=1998-03-29 prec=day since dogyears> dog years."),
 });
 
 string describe_examples()
@@ -210,22 +213,22 @@ string describe_examples()
 string usage()
 {
   return ("<h1>The &lt;countdown&gt; tag.</h1>\n"
-	  "This tags can count days, minute, months etc. It can also "
-	  "give the time for a few special events. See below for a full list."
+	  "This tag can count days, minutes, months, etc. from a specified date or time. It can also "
+	  "give the time to or from a few special events. See below for a full list."
 	  "<p>\n\n"
 	  "<b>Time:</b>\n"
 	  "<table border=0 cellpadding=0 cellspacing=0>\n"
 	  "<tr valign=top><td>year=int</td><td><i>sets the year</i></td></tr>\n"
 	  "<tr valign=top><td>month=int|month_name&nbsp;</td><td><i>sets the month</i></td></tr>\n"
 	  "<tr valign=top><td>day=int|day_name</td><td><i>sets the weekday</i></td></tr>\n"
-	  "<tr valign=top><td>mday=int</td><td><i>sets the month day (date)</i></td></tr>\n"
+	  "<tr valign=top><td>mday=int</td><td><i>sets the day of the month</i></td></tr>\n"
 	  "<tr valign=top><td>hour=int</td><td><i>sets the hour. Might be useful, perhaps..</i></td></tr>\n"
 	  "<tr valign=top><td>min=int</td><td><i>sets the minute.</i></td></tr>\n"
 	  "<tr valign=top><td>sec=int</td><td><i>sets the second.</i></td></tr>\n"
-	  "<tr valign=top><td>iso=year-month-day</td><td><i>Set the year, month and day at once</i></td></tr>\n"
+	  "<tr valign=top><td>iso=year-month-day</td><td><i>Sets the year, month and day all at once</i></td></tr>\n"
 	  +describe_events()+
 	  "<tr valign=top><td><br><b>Presentation:</b></tr></tr>"
-	  "<tr valign=top><td>when</td><td><i>Show when the time will occur. All arguments that are valid in a &lt;date&gt; tag can be used to modify the display</i></td></tr>\n"
+	  "<tr valign=top><td>when</td><td><i>Shows when the time will occur. All arguments that are valid in a &lt;date&gt; tag can be used to modify the display</i></td></tr>\n"
 	  "<tr valign=top><td>years</td><td><i>How many years until the time</i></td></tr>\n"
 	  "<tr valign=top><td>months</td><td><i>How many months until the time</i></td></tr>\n"
 	  "<tr valign=top><td>weeks</td><td><i>How many weeks until the time</i></td></tr>\n"
@@ -233,14 +236,58 @@ string usage()
 	  "<tr valign=top><td>hours</td><td><i>How many hours until the time</i></td></tr>\n"
 	  "<tr valign=top><td>minutes</td><td><i>How many minutes until the time</i></td></tr>\n"
 	  "<tr valign=top><td>seconds</td><td><i>How many seconds until the time</i></td></tr>\n"
-	  "<tr valign=top><td>type=type, lang=language</td><td><i>As for 'date'. Useful values for type include string, number and ordered.</i></td></tr>\n"
+	  "<tr valign=top><td>combined</td><td><i>Shows an english text describing the time period. Example: 2 days, 1 hour and 5 seconds. You may use the 'prec' tag to limit how precise the description is. Also, you can use the 'month' tag if you want to see years/months/days instead of years/weeks/days.</i></td></tr>\n"
+	  "<tr valign=top><td>dogyears</td><td><i>How many dog-years until the time. (With one decimal)</i></td></tr>\n"
+	  "<tr valign=top><td>type=type, lang=language </td><td><i>As for 'date'. Useful values for type include string, number and ordered.</i></td></tr>\n"
 	  "<tr valign=top><td>since</td><td><i>Negate the period of time (replace 'until' with 'since' in the above sentences to see why it is named 'since') </i></td></tr>\n"
 	  "<tr valign=top><td>nowp</td><td><i>Return 1 or 0, depending on if the time is _now_ or not. The fuzziness of 'now' is decided by the 'prec' option. By default, this is set to 'day'</td></tr>"
-	  "<tr valign=top><td>prec</td><td><i>modifier for 'nowp'. Can be one of "
+	  "<tr valign=top><td>prec</td><td><i>modifier for 'nowp' and 'combined'. Can be one of "
 	  "year, month, week, day, hour minute of second.</td></tr></table>"+
 	  "<p><b>Examples</b>"+
 	  describe_examples());
   
+}
+
+
+// This function should be fixed to support different languages.
+// Possibly even implemented in the language module itself.
+// Hubbe
+string time_period(int t,
+		   int|void noseconds,
+		   mapping m)
+{
+  int i;
+  string *tmp=({});
+  if(!t)
+    return "zero seconds";
+  if(!noseconds)
+    if(i=t%60) tmp=({i+ " second"+(i==1?"":"s") });
+
+  t/=60;
+  if(i=t%60) tmp=({i+ " minute"+(i==1?"":"s") })+tmp;
+  t/=60;
+  if(i=t%24) tmp=({i+ " hour"+(i==1?"":"s") })+tmp;
+  t/=24;
+
+  if(!m->months)
+  {
+    if(i<365)
+    {
+      if(i=t%7) tmp=({i+ " day"+(i==1?"":"s") })+tmp;
+      if(i=t/7) tmp=({i+ " week"+(i==1?"":"s") })+tmp;
+    } else {
+      if(i=t%365) tmp=({i+ " day"+(i==1?"":"s") })+tmp;
+      if(i=t/365) tmp=({i+ " year"+(i==1?"":"s") })+tmp;
+    }
+  }else{
+#define MONTHS_DAY (365.25/12)
+    if(i=(int)floor(t%MONTHS_DAY))  tmp=({i+ " day"+(i==1?"":"s") })+tmp;
+    t=(int)floor(t/MONTHS_DAY);
+    if(i=t%12) tmp=({i+ " month"+(i==1?"":"s") })+tmp;
+    t/=12;
+    if(i=t) tmp=({i+ " year"+(i==1?"":"s") })+tmp;
+  }
+  return String.implode_nicely(tmp);
 }
 
 string tag_countdown(string t, mapping m)
@@ -349,6 +396,16 @@ string tag_countdown(string t, mapping m)
   if(m->since || m->age) delay = -delay;
 
   // Real countdown stuff.
+  if(m->combined)
+  {
+    delay+=prec/2;
+    delay-=delay%prec;
+    return time_period( delay, 0, m); // Hubbe
+  }
+  if(m->dogyears)
+  {
+    return sprintf("%1.1f",(delay/(3600*24*365.25/7)));
+  }
   if(m->years) return  show_number((int)(delay/(3600*24*365.25)),m);
   if(m->months) return show_number((int)(delay/((3600*24*365.25)/12)),m);
   if(m->weeks) return  show_number(delay/(3600*24*7),m);
@@ -356,6 +413,7 @@ string tag_countdown(string t, mapping m)
   if(m->hours) return  show_number(delay/3600, m);
   if(m->minutes) return show_number(delay/60,m);
   if(m->seconds) return show_number(delay,m);
+
 
   // 1 or 0, for use with <if eval=...></if>
   if(m->nowp) return (string)((when/prec) == (mktime(tmp)/prec));
