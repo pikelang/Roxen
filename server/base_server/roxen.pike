@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.38 1997/02/18 02:43:55 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.39 1997/02/19 02:19:03 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -376,7 +376,7 @@ void nwrite(string s, int|void perr)
   {
     mapping e = root->descend("Errors")->data;
     if(!e[s]) e[s]=({ time(1) });
-    else e[s]+=({ time(1) });
+    else e[s] += ({ time(1) });
   }
   perror(s);
 }
@@ -1029,7 +1029,6 @@ mixed query_var(string var)
 {
   return __vars[var];
 }
-
 
 
 // The update_*_vars functions are here to automatically change the

@@ -40,17 +40,31 @@ string describe_builtin_variables(object node)
   return link("<b>Builtin variables (security, comments etc.)</b>");
 }
 
+string describe_time(int t)
+{
+  return roxen->language("en","date")(t);
+}
+
 string describe_errors(object node)
 {
-  string err;
-  array report = ({ });
-
-  foreach(indices(node->data), err)
-    report += ({ (node->data[err]>1?(node->data[err] + " times:<br>"):"") 
-		   + err + "<hr noshade size=1>" });
-
   if(node->folded)
     return (link("<font size=+2>&nbsp;Error and debug log</font>"));
+
+
+
+  string err;
+  array report = ({ }), r1=indices(node->data), r2;
+  r2 = Array.map(values(node->data), lambda(array a){ return a[0]; });
+
+  sort(r2,r1);
+  
+  foreach(r1, err)
+    report += ({ (sizeof(node->data[err])>1?
+		  (sizeof(node->data[err]) + " times:<br>"):"")
+		   + "<font size=-1>"+
+		   Array.map(node->data[err], describe_time)*"<br>"+"</font>"
+		   + err + "<hr noshade size=1>" });
+
   return (link("<font size=+2>&nbsp;Error and debug log")
 	  + "</font><dd><pre>"+
 	  (sizeof(report)?(report*""):"Empty")+"</pre>");
