@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.86 2001/04/21 18:32:21 nilsson Exp $
+// $Id: Roxen.pmod,v 1.87 2001/04/21 20:20:16 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2625,6 +2625,8 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
      case "path":
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
+     case "unique-id":
+       return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
      default:
        return RXML.nil;
     }
@@ -2633,7 +2635,7 @@ class ScopeRoxen {
 
   array(string) _indices() {
     return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
-	     "hits-per-minute", "hits", "sent-mb", "sent",
+	     "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
              "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
 	     "pike-version", "version", "time", "server", "domain",
 	     "locale", "path"});
