@@ -689,10 +689,12 @@ c</result>
 <result>May</result>
 </test>
 
+<!-- Discordian date support disabled in Pike.
 <test>
 <rxml><date unix-time='1022834847' type='discordian'/></rxml>
 <result>Sweetmorn, the 4th day of Confusion</result>
 </test>
+-->
 
 <test>
 <rxml><date unix-time='1022834847' type='iso' time/></rxml>
@@ -764,10 +766,12 @@ c</result>
 <result>1022834847</result>
 </test>
 
+<!-- Stardate support disabled in Pike.
 <test>
 <rxml><date unix-time='1022834847' type='stardate'/></rxml>
 <result>37405.1</result>
 </test>
+-->
 
 <test>
 <rxml><date unix-time='1022834847' part='mday'/></rxml>
@@ -779,10 +783,12 @@ c</result>
 <result>THIRTYONE</result>
 </test>
 
+<!-- Stardate support disabled in Pike.
 <test>
 <rxml><date unix-time='1022834847' type='stardate' prec='2'/></rxml>
 <result>37405.06</result>
 </test>
+-->
 
 <test>
 <rxml><date unix-time='1022834847' part='week'/></rxml>
