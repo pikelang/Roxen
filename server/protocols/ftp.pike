@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.27 2000/02/03 20:33:03 per Exp $
+ * $Id: ftp.pike,v 2.28 2000/02/04 06:29:43 per Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -161,7 +161,8 @@ class RequestID2
     if (m_rid) {
       object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (!(< "create", "__INIT", "clone_me", "end", "ready_to_receive",
+	if (!(< "create", "connection", "configuration",
+                "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", >)[var]) {
 	  o[var] = m_rid[var];
 	}
@@ -1920,10 +1921,10 @@ class FTPSession
          ((throttle->doit && conf->query("req_throttle")) ||
           conf->throttler
           ) ) {
-      report_debug("ftp: using slowpipe\n");
+//       report_debug("ftp: using slowpipe\n");
       pipe=((program)"slowpipe")();
     } else {
-      report_debug("ftp: using fastpipe\n");
+//       report_debug("ftp: using fastpipe\n");
       pipe=((program)"fastpipe")(); //will use Stdio.sendfile if possible
       throttle->doit=0;
     }
@@ -3482,15 +3483,6 @@ class FTPSession
 
     string s = c->query_option("FTPWelcome");
 
-    if (!s) {
-      s =
-	"              +------------------------------------------------\n"
-	"              +--      Welcome to the Roxen FTP server      ---\n"
-	"              +------------------------------------------------\n";
-      werror("FTP: Setting the default welcome message for ftp to:\n" + s);
-      port_obj->set_option_default("FTPWelcome", s);
-    }
-
     s = replace(s,
 		({ "$roxen_version", "$roxen_build", "$full_version",
 		   "$pike_version", "$ident", }),
@@ -3503,7 +3495,8 @@ class FTPSession
 
 void create(object f, object c)
 {
-  if (f) {
+  if (f)
+  {
     c->sessions++;
     c->ftp_users++;
     c->ftp_users_now++;
