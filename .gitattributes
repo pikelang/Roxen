@@ -200,6 +200,7 @@ worldmap binary
 /server/modules/scripting/php4.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/scripting/piketag.pike foreign_ident
+/server/modules/scripting/plis.pike foreign_ident
 /server/modules/scripting/servlet.pike foreign_ident
 /server/modules/scripting/webapp.pike foreign_ident
 /server/modules/security/auth_httpbasic.pike foreign_ident
