@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.72 2001/06/17 20:07:09 nilsson Exp $
+// $Id: fonts.pike,v 1.73 2001/07/08 16:58:58 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -151,7 +151,7 @@ string describe_font_type(string n)
 }
 
 Font get_font(string f, int size, int bold, int italic,
-                string justification, float|int xspace, float|int yspace)
+	      string justification, float|int xspace, float|int yspace)
 {
   Font fnt;
 
@@ -161,26 +161,30 @@ Font get_font(string f, int size, int bold, int italic,
     {
       if(justification=="right") fnt->right();
       if(justification=="center") fnt->center();
+
       if(floatp(xspace))
 	fnt->set_x_spacing((100.0+xspace)/100.0);
       else
 	fnt->set_x_spacing(xspace);
+
       if(floatp(yspace))
 	fnt->set_y_spacing((100.0+yspace)/100.0);
       else
 	fnt->set_y_spacing(yspace);
+
       return fnt;
     }
 
-  if( search( f, "_" ) != -1 )
+  if( has_value( f, "_" ) )
     return get_font(f-"_", size, bold, italic, justification, xspace, yspace);
-  if( search( f, " " ) != -1 )
+  if( has_value( f, " " ) )
     return get_font(replace(f," ", "_"), 
                     size, bold, italic, justification, xspace, yspace );
 
   if( roxen->query("default_font") == f )
   {
-    report_error("Failed to load the default font\n");
+    report_error("Failed to load the default font (%O)\n",
+		 roxen->query("default_font"));
     return 0;
   }
   return get_font(roxen->query("default_font"),
@@ -249,6 +253,7 @@ Font resolve_font(string f, string|void justification)
     justification="left";
     f = a+" "+b;
   }
+
   int size=32;
   array q = f / " ";
   if( sizeof(q)>1 && (int)q[-1] )
@@ -256,16 +261,46 @@ Font resolve_font(string f, string|void justification)
     size = (int)q[-1];
     f = q[..sizeof(q)-2]*" ";
   }
-  Font fn;
-  fn = get_font(f, size, bold, italic,
-	      justification||"left",xspace, 0.0);
-  if(!fn)
-    fn = get_font(roxen->query("default_font"),size,bold,italic,
-		  justification||"left",xspace, 0.0);
-  if(!fn)
-    report_error("failed miserably to open the default font ("+
-                 roxen->query("default_font")+")\n");
+
+  Font fn = get_font(f, size, bold, italic,
+		     justification||"left",xspace, 0.0);
   return fn;
+}
+
+//! Returns the real name of the resolved font.
+string verify_font(string font, int size) {
+
+  if(!font)
+    return verify_font(roxen->query("default_font"), size||32);
+
+  if(size) {
+    foreach( font_handlers, FontHandler fh )
+      if( fh->has_font( font,size ) )
+	return font;
+
+    if(has_value(font,"_"))
+      return verify_font(font-"_", size);
+    if(has_value(font," "))
+      return verify_font(replace(font, " ", "_"), size);
+    if(font == roxen->query("default_font"))
+      return 0;
+    return verify_font(roxen->query("default_font"), size);
+  }
+
+  string a,b;
+  foreach( ({ "bold", "normal", "black", "light", "italic", "slant",
+	      "compressed", "spaced", "center", "right", "left" }), string mod)
+    if(sscanf(font, "%s "+mod+"%s", a,b)==2)
+      font = a+" "+b;
+
+  size = 32;
+  array q = font / " ";
+  if( sizeof(q)>1 && (int)q[-1] ) {
+    size = (int)q[-1];
+    font = q[..sizeof(q)-2]*" ";
+  }
+
+  return verify_font(font, size);
 }
 
 array(string) available_fonts( )
