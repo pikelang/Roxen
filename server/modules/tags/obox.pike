@@ -1,7 +1,10 @@
 // The Diagrams tag module
 
+constant cvs_version = "$Id";
+constant thread_safe=1;
+
 #include <module.h>
-inherit "module.pike";
+inherit "module";
 inherit "roxenlib";
 
 #define INFO(s)  // perror("### %O"+(s))

@@ -14,8 +14,8 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.39 1997/08/19 23:10:03 grubba Exp $";
-#pragma all_inline 
+constant cvs_version = "$Id: htmlparse.pike,v 1.40 1997/08/31 02:49:24 peter Exp $";
+constant constant thread_safe=1;
 
 #include <config.h>
 #include <module.h>
@@ -27,9 +27,7 @@ import String;
 import Array;
 import Stdio;
 
-int ok;
-
-function language = roxen->language;
+constant language = roxen->language;
 
 int cnum=0;
 mapping fton=([]);
@@ -522,9 +520,6 @@ void remove_parse_module(object o)
 }
 
 /* standard roxen tags */
-
-function _f = localtime;
-mapping localtime(int i) { return (mapping)_f(i); }
 
 string tagtime(int t,mapping m)
 {

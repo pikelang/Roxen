@@ -7,8 +7,10 @@
 //  return "Hello world!\n";
 // </pike>
  
+constant cvs_version = "$Id: lpctag.pike,v 1.8 1997/08/31 02:49:26 peter Exp $";
+constant thread_safe=1;
+
 inherit "module";
-string cvs_version = "$Id: lpctag.pike,v 1.7 1997/02/18 02:43:57 per Exp $";
 #include <module.h>;
 
 array register_module()
@@ -143,11 +145,7 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   return res;
 }
 
-
-
-mapping query_tag_callers() { return ([]); }
-
 mapping query_container_callers()
 {
-  return ([ "lpc":tag_pike,  "pike":tag_pike, "ulpc":tag_pike, ]);
+  return ([ "pike":tag_pike ]);
 }

@@ -1,10 +1,13 @@
 /*
- * $Id: configtablist.pike,v 1.2 1997/08/26 19:37:01 grubba Exp $
+ * $Id: configtablist.pike,v 1.3 1997/08/31 02:49:23 peter Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: grubba $
+ * $Author: peter $
  */
+
+constant cvs_version="$Id: configtablist.pike,v 1.3 1997/08/31 02:49:23 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";

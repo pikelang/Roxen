@@ -1,9 +1,12 @@
-// Tablify module
-// Converts tab and newline separated lists to tables.
+/* This is a roxen module. (c) Informationsvävarna AB 1997.
+ *
+ * Converts tab and newline separated lists to tables.
+ * 
+ * made by Per Hedbor
+ */
 
-
-
-string cvs_version = "$Id: tablify.pike,v 1.4 1996/12/02 04:32:49 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.5 1997/08/31 02:49:28 peter Exp $";
+constant thread_safe=1;
 #include <module.h>
 inherit "module";
 
@@ -22,16 +25,8 @@ mixed *register_module()
       ({}), 1, });
 }
 
-string tag_tablify( string tag, mapping m, string q, mapping request_id );
-
-mapping query_container_callers()
-{
-  return ([ "tablify" : tag_tablify ]);
-}
-
-
-// The meat of the module. Convert the contents of the tag (in 'q') to
-// a table.
+/* The meat of the module. Convert the contents of the tag (in 'q') to
+ * a table. */
 
 string tag_tablify( string tag, mapping m, string q, mapping request_id )
 {
@@ -77,3 +72,7 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   return table + td + rows*("</tr>\n"+td) + "</tr>\n</table>";
 }
 
+mapping query_container_callers()
+{
+  return ([ "tablify" : tag_tablify ]);
+}

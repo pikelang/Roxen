@@ -5,7 +5,8 @@
 // Written by Mattias Wingstedt, <wing@infovav.se>, please refer
 // to him for further info.
 
-string cvs_version = "$Id: indirect_href.pike,v 1.5 1996/12/07 11:37:54 neotron Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.6 1997/08/31 02:49:25 peter Exp $";
+constant thread_safe=1;
 #include <module.h>
 
 inherit "module";
@@ -28,8 +29,17 @@ void create()
 
 array (mixed) register_module()
 {
-  return ({ MODULE_PARSER, "Indirect href", "Indirect href. Adds a new tag (with a configurable name, if the name is changed, the module has to be reloaded for the namechange to take effect), with a single argument, name=string. It then uses the name to index a database of URLs, and inserts a &lt;a href=...&gt; tag instead. This can be very useful, since you can move all links to a document at once. It also allows the special case 'name=random'. If this is used, a random link will be selected from the database. "
-	      "Example: <pre>   roxen=http://www.roxen.com/\n"
+  return ({ MODULE_PARSER, "Indirect href",
+	      "Indirect href. Adds a new tag (with a configurable name, if "
+	      "the name is changed, the module has to be reloaded for the "
+	      "namechange to take effect), with a single argument, "
+	      "name=string. It then uses the name to index a database of "
+	      "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
+	      "be very useful, since you can move all links to a document at "
+	      "once. It also allows the special case 'name=random'. If this "
+	      "is used, a random link will be selected from the database. "
+	      "Example:<pre>"
+	      "   roxen=http://www.roxen.com/\n"
  	      "   infovav=http://www.infovav.se/</pre>", });
 }
 
