@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.185 1999/07/19 22:03:59 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.186 1999/08/09 15:09:44 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -988,6 +988,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
         "alt":(arg->alt||word),
         "src":query_internal_location()+fn+gif,
       ]);
+      if(!arg->noxml) tag+=(["/":"/"]);
       if( size )
       {
         tag->width  = (string)size->xsize;
@@ -1052,7 +1053,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	  + "\" src=\""
 	  + query_internal_location()+num+gif+"\" "+ea
 	  + " align="+(al || defalign)
-	  + (size?(" width="+size->xsize+" height="+size->ysize):"")+">"+
+	  + (size?(" width="+size->xsize+" height="+size->ysize):"")+(arg->nomxl?"":" /")+">"+
           rest+(lp?"</a>":"")+post);
 }
 
