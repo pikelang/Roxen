@@ -374,31 +374,25 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
   if (diagram_data["orient"]=="vert")
     for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
-      {
       diagram_data["xnamesimg"][i]=diagram_data["xnamesimg"][i]->rotate_ccw();
-      }
+
   int xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
   
   foreach(diagram_data["xnamesimg"], object img)
-    {
-      if (img->ysize()>ymaxxnames) 
-	ymaxxnames=img->ysize();
-    }
+    if (img->ysize()>ymaxxnames) 
+      ymaxxnames=img->ysize();
+
   foreach(diagram_data["xnamesimg"], object img)
-    {
-      if (img->xsize()>xmaxxnames) 
-	xmaxxnames=img->xsize();
-    }
+    if (img->xsize()>xmaxxnames) 
+      xmaxxnames=img->xsize();
+
   foreach(diagram_data["ynamesimg"], object img)
-    {
-      if (img->ysize()>ymaxynames) 
-	ymaxynames=img->ysize();
-    }
+    if (img->ysize()>ymaxynames) 
+      ymaxynames=img->ysize();
+
   foreach(diagram_data["ynamesimg"], object img)
-    {
-      if (img->xsize()>xmaxynames) 
-	xmaxynames=img->xsize();
-    }
+    if (img->xsize()>xmaxynames) 
+      xmaxynames=img->xsize();
   
   diagram_data["ymaxxnames"]=ymaxxnames;
   diagram_data["xmaxxnames"]=xmaxxnames;
