@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.781 2002/04/23 16:20:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.782 2002/04/25 14:42:08 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4375,16 +4375,20 @@ int main(int argc, array tmp)
 void check_commit_suicide()
 {
 #ifdef SUICIDE_DEBUG
-  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n",
+  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                        Schedule: %s",
 	 query("suicide_engage"),
 	 getvar("suicide_schedule")->get_next( query("last_suicide")),
-	 time());
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
 #endif /* SUICIDE_DEBUG */
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
     if (next >= 0 && next <= time(1)) {
       report_notice("Auto Restart triggered.\n");
+      set( "last_suicide", time(1) );
+      save( );
       restart();
     } else {
       call_out(check_commit_suicide, next - time(1));
@@ -4395,18 +4399,23 @@ void check_commit_suicide()
 void check_suicide( )
 {
 #ifdef SUICIDE_DEBUG
-  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n",
+  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                 Schedule: %s",
 	 query("suicide_engage"),
 	 getvar("suicide_schedule")->get_next( query("last_suicide")),
-	 time());
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
 #endif /* SUICIDE_DEBUG */
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
-    if( next >= 0 && next < time() )
+    if( !query("last_suicide") || (next >= 0 && next <= time()) )
     {
+#ifdef SUICIDE_DEBUG
+      werror("Next suicide is in the past or last time not set. Reseting.\n");
+#endif
       set( "last_suicide", time() );
-      return 0;
+      save( );
     }
   }
 }
