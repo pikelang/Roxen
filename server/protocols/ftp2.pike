@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.8 1998/04/28 16:18:30 grubba Exp $
+ * $Id: ftp2.pike,v 1.9 1998/04/28 17:06:33 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2303,6 +2303,49 @@ class FTPSession
       return;
     }
     send_error("DELE", args, session->file, session);
+  }
+
+  void ftp_RMD(string args)
+  {
+    if (!expect_argument("RMD", args)) {
+      return;
+    }
+
+    args = fix_path(args);
+
+    object session = RequestID(master_session);
+
+    session->data = 0;
+    session->misc->len = 0;
+    session->method = "DELETE";
+
+    array st = stat_file(args, session);
+
+    if (!st) {
+      send_error("RMD", args, session->file, session);
+      return;
+    } else if (st[1] != -2) {
+      if (st[1] == -3) {
+	send(504, ({ sprintf("%s is a module mountpoint.", args) }));
+	session->conf->log(([ "error":405 ]), session);
+      } else {
+	send(504, ({ sprintf("%s is not a directory.", args) }));
+	session->conf->log(([ "error":405 ]), session);
+      }
+      return;
+    }
+
+    if (open_file(args, session, "RMD")) {
+      send(250, ({ sprintf("%s deleted.", args) }));
+      session->conf->log(([ "error":200 ]), session);
+      return;
+    }
+    send_error("RMD", args, session->file, session);
+  }
+
+  void ftp_XRMD(string args)
+  {
+    ftp_RMD(args);
   }
 
   void ftp_MKD(string args)
