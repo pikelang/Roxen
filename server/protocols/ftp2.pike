@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.72 1998/11/22 18:51:01 grubba Exp $
+ * $Id: ftp2.pike,v 1.73 1999/01/03 16:51:58 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -512,17 +512,29 @@ class LS_L
       // FIXME: Convert st[6] to symbolic group name.
     }
 
+    string ts;
+    int now = time(1);
+    // Half a year:
+    //   365.25*24*60*60/2 = 15778800
+    if ((st[3] <= now - 15778800) || (st[3] > now)) {
+      // Month Day  Year
+      ts = sprintf("%s %02d  %04d",
+		   months[lt->mon], lt->mday, 1900+lt->year);
+    } else {
+      // Month Day Hour:minute
+      ts = sprintf("%s %02d %02d:%02d",
+		   months[lt->mon], lt->mday, lt->hour, lt->min);
+    }
+
     if (flags & LS_FLAG_G) {
       // No group.
-      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
+      return sprintf("%s   1 %-10s %12d %s %s\n", perm*"",
 		     user, (st[1]<0? 512:st[1]),
-		     months[lt->mon], lt->mday,
-		     lt->hour, lt->min, file);
+		     ts, file);
     } else {
-      return sprintf("%s   1 %-10s %-6s %12d %s %02d %02d:%02d %s\n", perm*"",
+      return sprintf("%s   1 %-10s %-6s %12d %s %s\n", perm*"",
 		     user, group, (st[1]<0? 512:st[1]),
-		     months[lt->mon], lt->mday,
-		     lt->hour, lt->min, file);
+		     ts, file);
     }
   }
 
