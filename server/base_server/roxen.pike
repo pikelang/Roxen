@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.285 1999/02/03 22:58:43 peter Exp $
+ * $Id: roxen.pike,v 1.286 1999/02/04 00:56:21 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.285 1999/02/03 22:58:43 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.286 1999/02/04 00:56:21 peter Exp $";
 
 
 // Some headerfiles
@@ -56,7 +56,7 @@ constant __roxen_version__ = "1.2";
 #else /* PIKE_VERSION >= 0.6 */
 constant __roxen_version__ = "1.3";
 #endif /* PIKE_VERSION */
-constant __roxen_build__ = "73";
+constant __roxen_build__ = "74";
 
 #ifdef __NT__
 constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
