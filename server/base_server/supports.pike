@@ -1,23 +1,25 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.13 2000/02/20 17:41:34 nilsson Exp $
+// $Id: supports.pike,v 1.14 2000/03/06 23:45:25 nilsson Exp $
+
+#pragma strict_types
 
 #include <module_constants.h>
 #include <module.h>
 inherit "socket";
 
-#define LOCALE	roxenp()->LOW_LOCALE->base_server
+#define LOCALE	([object(RoxenLocale.standard)]roxenp()->LOW_LOCALE)->base_server
 // The db for the nice '<if supports=..>' tag.
 private mapping (string:array (array (object|multiset))) supports;
-private multiset default_supports;
-private mapping default_client_var;
+private multiset(string) default_supports;
+private mapping (string:string) default_client_var;
 
 
 //------------------ Code to decode the supports file ----------------------
 
-private array split_supports(array from) {
-  mapping m=([]);
-  multiset pos=(<>),neg=(<>);
+private array(multiset(string)|mapping(string:string)) split_supports(array(string) from) {
+  mapping(string:string) m=([]);
+  multiset(string) pos=(<>),neg=(<>);
   string i,v;
   foreach(from, string s) {
     if(s[0]=='*') {
@@ -35,7 +37,8 @@ private array split_supports(array from) {
   return ({pos, neg, m});
 }
 
-private void parse_supports_string(string what, string current_section, mapping defines)
+private void parse_supports_string(string what, string current_section,
+				   mapping(string:array(string)) defines)
 {
   foreach(replace(what, "\\\n", " ")/"\n"-({""}), string line)
   {
@@ -76,7 +79,7 @@ private void parse_supports_string(string what, string current_section, mapping 
     }
     else {
 //    werror("Parsing supports line '"+line+"'\n");
-      array sups = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
+      array(string) sups = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
 
       array add=({});
       foreach(sups, string sup)
@@ -90,9 +93,9 @@ private void parse_supports_string(string what, string current_section, mapping 
 	continue;
 
       if(sups[0] == "default") {
-	array tmp=split_supports(sups[1..]);
-	default_supports = tmp[0]-tmp[1];
-        default_client_var = tmp[2];
+	array(multiset(string)|mapping(string:string)) tmp=split_supports(sups[1..]);
+	default_supports = [multiset(string)]tmp[0] - [multiset(string)]tmp[1];
+        default_client_var = [mapping(string:string)]tmp[2];
       }
       else {
 	mixed err;
@@ -111,12 +114,13 @@ public void initiate_supports()
   supports = ([ 0:({ }) ]);
   default_supports = (< >);
   default_client_var = ([ ]);
-  parse_supports_string(roxenp()->QUERY(Supports), 0, ([]) );
+  parse_supports_string(([function(string:string)]roxenp()->query)("Supports"), 0, ([]) );
 }
 
-private array(multiset|mapping) lookup_supports(string from)
+private array(multiset(string)|mapping(string:string)) lookup_supports(string from)
 {
-  if(array q = cache_lookup("supports", from))
+  if(array(multiset(string)|mapping(string:string)) q = 
+     [array(multiset(string)|mapping(string:string))] cache_lookup("supports", from))
     return q;
 
   multiset (string) sup = (<>);
@@ -129,7 +133,7 @@ private array(multiset|mapping) lookup_supports(string from)
     {
       //  werror("Section "+v+" match "+from+"\n");
       foreach(supports[v], array(function|multiset) s)
-        if(s[0](from))
+        if(([function(string:void|mixed)]s[0])(from))
         {
           sup |= s[1];
           nsup |= s[2];
@@ -153,33 +157,36 @@ private array(multiset|mapping) lookup_supports(string from)
 //---------------------- Returns the supports flags ------------------------
 
 // Return a list of 'supports' flags for the current connection.
-multiset(string) find_supports(string from, void|multiset existing_sup)
+multiset(string) find_supports(string from, void|multiset(string) existing_sup)
 {
   if(!multisetp(existing_sup)) existing_sup=(<>);
   if(!strlen(from) || from == "unknown")
     return default_supports|existing_sup;
 
-  return lookup_supports(from)[0]|existing_sup;
+  return ([multiset(string)]lookup_supports(from)[0])|existing_sup;
 }
 
 // Return a list of 'supports' variables for the current connection.
-mapping(string:string) find_client_var(string from, void|mapping existing_cv)
+mapping(string:string) find_client_var(string from, void|mapping(string:string) existing_cv)
 {
   if(!mappingp(existing_cv)) existing_cv=([]);
   if(!strlen(from) || from == "unknown")
     return default_client_var|existing_cv;
 
-  return lookup_supports(from)[1]|existing_cv;
+  return ([mapping(string:string)]lookup_supports(from)[1])|existing_cv;
 }
 
-array(mapping) find_supports_and_vars(string from, void|multiset existing_sup, void|mapping existing_cv)
+array(multiset(string)|
+      mapping(string:string)) find_supports_and_vars(string from,
+						     void|multiset(string) existing_sup,
+						     void|mapping(string:string) existing_cv)
 {
   if(!multisetp(existing_sup)) existing_sup=(<>);
   if(!mappingp(existing_cv)) existing_cv=([]);
   if(!strlen(from) || from == "unknown")
     return ({ default_supports|existing_sup, default_client_var|existing_cv });
 
-  array ret = lookup_supports(from);
+  array(multiset(string)|mapping(string:string)) ret = lookup_supports(from);
   ret[0]|=existing_sup;
   ret[1]|=existing_cv;
   return ret;
@@ -228,7 +235,7 @@ void got_data_from_roxen_com(object this, string foo)
   _new_supports += ({ foo });
 }
 
-void connected_to_roxen_com(object port)
+void connected_to_roxen_com(object(Stdio.File) port)
 {
   if(!port)
   {
@@ -242,9 +249,9 @@ void connected_to_roxen_com(object port)
 #endif
   _new_supports = ({});
   port->set_id(port);
-  string v = roxenp()->version();
+  string v = ([function(void:string)]roxenp()->version)();
   if (v != roxenp()->real_version) {
-    v = v + " (" + roxenp()->real_version + ")";
+    v = v + " (" + [string]roxenp()->real_version + ")";
   }
   port->write("GET /supports HTTP/1.0\r\n"
 	      "User-Agent: " + v + "\r\n"
@@ -260,9 +267,9 @@ public void update_supports_from_roxen_com()
 {
   // FIXME:
   // This code has a race-condition, but it only occurs once a week...
-  if(roxenp()->QUERY(next_supports_update) <= time())
+  if(([function(string:int)]roxenp()->query)("next_supports_update") <= time())
   {
-    if(roxenp()->QUERY(AutoUpdate))
+    if(([function(string:int(0..1))]roxenp()->query)("AutoUpdate"))
     {
       async_connect("www.roxen.com.", 80, connected_to_roxen_com);
 #ifdef DEBUG
@@ -272,8 +279,9 @@ public void update_supports_from_roxen_com()
     remove_call_out( update_supports_from_roxen_com );
 
   // Check again in one week.
-    roxenp()->QUERY(next_supports_update)=3600*24*7 + time();
-    roxenp()->store("Variables", roxenp()->variables, 0, 0);
+    ([mapping(string:array(int|string))]roxenp()->variables)["next_supports_update"][VAR_VALUE]=3600*24*7 + time(1);
+    ([function(string, mapping, int, int:void)]roxenp()->store)("Variables", [mapping]roxenp()->variables, 0, 0);
   }
-  call_out(update_supports_from_roxen_com, roxenp()->QUERY(next_supports_update)-time());
+  call_out(update_supports_from_roxen_com,
+	   ([function(string:int)]roxenp()->query)("next_supports_update")-time(1));
 }

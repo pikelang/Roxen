@@ -1,8 +1,9 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.42 2000/02/20 17:41:32 nilsson Exp $
+// $Id: cache.pike,v 1.43 2000/03/06 23:45:22 nilsson Exp $
 
-#define LOCALE	roxenp()->locale->get()->config_interface
+#pragma strict_types
+
 #include <roxen.h>
 #include <config.h>
 
@@ -10,18 +11,18 @@ constant svalsize = 4*4; // if pointers are 4 bytes..
 int get_size(mixed x)
 {
   if(mappingp(x))
-    return svalsize + 64 + get_size(indices(x)) + get_size(values(x));
+    return svalsize + 64 + get_size(indices([mapping]x)) + get_size(values([mapping]x));
   else if(stringp(x))
-    return strlen(x)+svalsize;
+    return strlen([string]x)+svalsize;
   else if(arrayp(x))
   {
     int i;
-    foreach(x, mixed f)
+    foreach([array]x, mixed f)
       i += get_size(f);
     return svalsize + 4 + i;    // (base) + arraysize
   } else if(multisetp(x)) {
     int i;
-    foreach(indices(x), mixed f)
+    foreach(indices([multiset]x), mixed f)
       i += get_size(f);
     return svalsize + i;    // (base) + arraysize
   } else if(objectp(x) || functionp(x)) {
@@ -58,8 +59,8 @@ int get_size(mixed x)
 # define CACHE40_WERR(X)
 #endif
 
-mapping cache;
-mapping hits=([]), all=([]);
+mapping(string:mapping(string:array)) cache;
+mapping(string:int) hits=([]), all=([]);
 
 #ifdef THREADS
 Thread.Mutex cleaning_lock = Thread.Mutex();
@@ -101,11 +102,10 @@ string status()
 <td align=\"right\">&locale.misses;</td>
 <td align=\"right\">&locale.hitpct;</td>
 ";
-  array c, b;
-  mapping ca = ([]), cb=([]), ch=([]), ct=([]);
-  b=indices(cache);
-  c=Array.map(values(cache), get_size);
 
+  mapping(string:int) ca=([]), cb=([]), ch=([]), ct=([]);
+  array(string) b=indices(cache);
+  array(int) c=Array.map(values(cache), get_size);
   int i;
 
   for(i=0; i<sizeof(b); i++)
@@ -114,7 +114,9 @@ string status()
     int h = hits[b[i]];
     int t = all[b[i]];
     sscanf(b[i], "%s:", b[i]);
-    b[i] = LOCALE->translate_cache_class( b[i] );
+    b[i] = ([function(void:object(RoxenLocale.standard))]([object]roxenp()->locale)->get)()
+      ->config_interface
+      ->translate_cache_class( b[i] );
     ca[b[i]]+=c[i]; cb[b[i]]+=s; ch[b[i]]+=h; ct[b[i]]+=t;
   }
   b=indices(ca);
@@ -192,10 +194,10 @@ void cache_clear(string in)
 void cache_clean()
 {
   remove_call_out(cache_clean);
-  int gc_time=roxenp()->query("mem_cache_gc");
+  int gc_time=([function(string:int)]roxenp()->query)("mem_cache_gc");
   string a, b;
   array c;
-  int t=time(1);
+  int t=[int]time(1);
   CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {

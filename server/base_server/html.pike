@@ -1,6 +1,8 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: html.pike,v 1.9 2000/02/20 17:41:33 nilsson Exp $
+// $Id: html.pike,v 1.10 2000/03/06 23:45:24 nilsson Exp $
+
+#pragma strict_types
 
 string input(string name, string|void val, int|void t)
 {
