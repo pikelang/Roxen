@@ -1,18 +1,24 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.49 2000/04/19 15:14:42 nilsson Exp $
+// $Id: cache.pike,v 1.50 2000/04/30 18:58:43 nilsson Exp $
 
 #pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
 
-#define TIMESTAMP 0
-#define DATA 1
-#define TIMEOUT 2
-#define SIZE 3
-
+// A cache entry is an array with four elements
 #define ENTRY_SIZE 4
+
+// The elements are as follows:
+// A timestamp when the entry was last used
+#define TIMESTAMP 0
+// The actual data
+#define DATA 1
+// A timeout telling when the data is no longer valid.
+#define TIMEOUT 2
+// The size of the entry, in byts.
+#define SIZE 3
 
 #if DEBUG_LEVEL > 8
 # ifndef CACHE_DEBUG
@@ -34,13 +40,15 @@
 # define CACHE40_WERR(X)
 #endif
 
+// The actual cache along with some statistics mappings.
 mapping(string:mapping(string:array)) cache;
 mapping(string:int) hits=([]), all=([]);
 
+// Calculates the size of an entry, though it isn't very good at it.
 constant svalsize = 4*4; // if pointers are 4 bytes..
 int get_size(mixed x, void|int iter)
 {
-  if(iter++>50) {
+  if(iter++>20) {
     CACHE_WERR("Too deep recursion when examining entry size.\n");
     return 0;
   }
@@ -67,22 +75,27 @@ int get_size(mixed x, void|int iter)
   return svalsize; // base
 }
 
+// Expire a whole cache
 void cache_expire(string in)
 {
   m_delete(cache, in);
 }
 
+// Lookup an entry in a cache
 mixed cache_lookup(string in, string what)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
   int t=time(1);
+  // Does the entry exist at all?
   if(array entry = (cache[in] && cache[in][what]) )
+    // Is it time outed?
     if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
       m_delete (cache[in], what);
       CACHE_WERR("Timed out");
     }
     else {
+      // Update the timestamp and hits counter and return the value.
       cache[in][what][TIMESTAMP]=t;
       CACHE_WERR("Hit");
       hits[in]++;
@@ -92,6 +105,7 @@ mixed cache_lookup(string in, string what)
   return ([])[0];
 }
 
+// Return some fancy cache statistics.
 string status()
 {
   string res, a;
@@ -158,6 +172,8 @@ string status()
   return res + "</table>";
 }
 
+// Remove an entry from the cache. Removes the entire cache if no
+// entry key is given.
 void cache_remove(string in, string what)
 {
   CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", in, what));
@@ -168,6 +184,7 @@ void cache_remove(string in, string what)
       m_delete(cache[in], what);
 }
 
+// Add an entry to a cache
 mixed cache_set(string in, string what, mixed to, int|void tm)
 {
 #if DEBUG_LEVEL > 40
@@ -187,6 +204,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
   return to;
 }
 
+// Remove an entire cache.
 void cache_clear(string in)
 {
   CACHE_WERR(sprintf("cache_clear(\"%s\")", in));
@@ -194,6 +212,7 @@ void cache_clear(string in)
     m_delete(cache,in);
 }
 
+// Clean the cache.
 void cache_clean()
 {
   remove_call_out(cache_clean);
