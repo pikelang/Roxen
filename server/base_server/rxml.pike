@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.24 1999/08/19 23:45:53 per Exp $
+ * $Id: rxml.pike,v 1.25 1999/08/20 16:47:44 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -8,6 +8,7 @@
 
 inherit "roxenlib";
 
+#define old_rxml_compat 1
 
 array (mapping) tag_callers, container_callers;
 mapping (string:mapping(int:function)) real_tag_callers,real_container_callers;
@@ -17,6 +18,10 @@ string date_doc=#string "../modules/tags/doc/date_doc";
 
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+
+string rxml_error(string tag, string error, object id) {
+  return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
+}
 
 string parse_doc(string doc, string tag)
 {
@@ -534,10 +539,7 @@ array tag_use(string tag, mapping m, string c, RequestID id)
       foo=read_package( m->package );
       
     if(!foo)
-      if(id->misc->debug)
-	return ({"Failed to fetch "+(m->file||m->package)});
-      else
-	return ({""});
+      return ({ rxml_error(tag, "Failed to fetch "+(m->file||m->package)+".", id)-"<false>" });
 
     if( m->info )
       return ({"<dl>"+use_file_doc( m->file || m->package, foo, nid,id )+"</dl>"});
@@ -586,13 +588,17 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     if(!id->misc->defaults[n])
       id->misc->defaults[n] = ([]);
 
+#if old_rxml_compat
     // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
+        if(id->conf->api_functions()->old_rxml_warning)
+          id->conf->api_functions()->old_rxml_warning[0](id, "define attribute "+arg,"attrib container");
         m_delete( m, arg );
       }
+#endif
 
     str=parse_html(str,([]),(["attrib":
       lambda(string tag, mapping m, string cont, mapping c, object id) {
@@ -615,13 +621,17 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     if(!id->misc->defaults[n])
       id->misc->defaults[n] = ([]);
 
+#if old_rxml_compat
     // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[0..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
+        if(id->conf->api_functions()->old_rxml_warning)
+          id->conf->api_functions()->old_rxml_warning[0](id, "define attribute "+arg,"attrib container");
         m_delete( m, arg );
       }
+#endif
 
     str=parse_html(str,([]),(["attrib":
       lambda(string tag, mapping m, string cont, mapping c, object id) {
@@ -634,17 +644,9 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->_containers[n] = call_user_container;
   }
   else if (m["if"])
-  {
     id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
-  }
   else 
-  {
-    if(!id->misc->debug)
-      return "<!-- No name, tag, variable, if or container specified for the define! "
-        "&lt;define help&gt; for instructions. -->";
-      return "No name, tag, variable, if or container specified for the define! "
-        "&lt;define help&gt; for instructions.";
-  }
+    return rxml_error(tag, "No tag, variable, if or container specified.", id);
   
   return ""; 
 }
@@ -662,16 +664,15 @@ string tag_undefine(string tag, mapping m, RequestID id, object file,
     m_delete(id->misc->_tags,m->tag);
   }
   else if (m["if"]) 
-  {
     m_delete(id->misc->_ifs,m["if"]);
-  }
   else if (m->container) 
   {
     m_delete(id->misc->containers,m->container);
     m_delete(id->misc->_containers,m->container);
   }
-  else return "<!-- No name, variable, if, tag or container specified for undefine! "
-	 "&lt;undefine help&gt; for instructions. -->";
+  else
+    return rxml_error(tag, "No tag, variable, if or container specified.", id);
+
   return ""; 
 }
 
@@ -825,7 +826,7 @@ string tag_foreach(string t, mapping args, string c, RequestID id)
   string v = args->variable;
   array what;
   if(!args->in)
-    return "";  // FIXME: Some kind of usage message would be nice.
+    return rxml_error(t, "No in attribute given.", id);
   if(args->variables)
     what = Array.map(args->in/"," - ({""}),
 		     lambda(string name, mapping v) {
@@ -874,12 +875,23 @@ string tag_case(string t, mapping m, string c, RequestID id)
     case "capitalize": return capitalize(c);
     }
 
-  if(m->lower)
+#if old_rxml_compat
+  if(m->lower) {
     c = lower_case(c);
-  if(m->upper)
+    if(id->conf->api_functions()->old_rxml_warning)
+      id->conf->api_functions()->old_rxml_warning[0](id, "attribute lower","case=lower");
+  }
+  if(m->upper) {
     c = upper_case(c);
-  if(m->capitalize)
+    if(id->conf->api_functions()->old_rxml_warning)
+      id->conf->api_functions()->old_rxml_warning[0](id, "attribute upper","case=upper");
+  }
+  if(m->capitalize){
     c = capitalize(c);
+    if(id->conf->api_functions()->old_rxml_warning)
+      id->conf->api_functions()->old_rxml_warning[0](id, "attribute capitalize","case=capitalize");
+  }
+#endif
   return c;
 }
 
