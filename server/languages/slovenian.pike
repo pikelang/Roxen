@@ -1,11 +1,12 @@
 /* Slovenian language support for Roxen 
-   Author: Iztok Umek 2. 7. 1997
+   Author: Iztok Umek 7. 8. 1997
+   Help by: Henrik Grubbstr-m <grubba@infovav.se> tnx! 
    E-mail: iztok.umek@snet.fri.uni-lj.si
    You can do anything you want with this code.
    Please consult me before upgrading slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.1 1997/07/09 15:43:32 grubba Exp $";
+string cvs_version = "$Id: slovenian.pike,v 1.2 1997/08/07 16:26:15 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",
@@ -39,43 +40,49 @@ string number(int num)
      return number(num%10)+"in"+number((num/10)*10);
    case 100: return "sto";
    case 101..199: return "sto "+number(num%100);
-   case 200: return "dvesto";
-   case 201..299: return "dvesto "+number(num%100);
-   case 300..999: return number(num/100)+"sto"+(num%100?(" "+number(num%100)):"");
-   case 1000..1999: return "tisoc"+(num%1000?(" "+number(num%1000)):"");
-   case 2000..999999: return number(num/1000)+"tisoc"+(num%1000?(" "+number(num%1000)):"");
-   case 1000000: return("milion");
-   case 1000001..1999999:
-     return "milion"+(num%1000000?(" "+number(num%1000000)):"");
+   case 200..299: return "dvesto "+number(num%100);
+   case 300..999: return number(num/100)+"sto "+number(num%100);
+   case 1000: return "tisoc";
+   case 1001..1999: return "tisoc "+number(num%1000);
+   case 2000..999999: return number(num/1000)+" tisoc "+number(num%1000);
+   case 1000000..1999999:
+     return "milijon "+number(num%1000000);
    case 2000000..2999999: 
-     return number(num/1000000)+" miliona"+(num%1000000?(" "+number(num%1000000)):"");
+     return number(num/1000000)+" milijona"+number(num%1000000);
    case 3000000..4999999:
-     return number(num/1000000)+" milione"+(num%1000000?(" "+number(num%1000000)):"");
+     return number(num/1000000)+" milijone"+number(num%1000000);
    case 5000000..999999999:
-     return number(num/1000000)+" milionov"+(num%1000000?(" "+number(num%1000000)):"");
-   default:
-     if ( ((num%10000000)/1000000)==1 ) return number(num/1000000)+" milion "+number(num%1000000);
+     return number(num/1000000)+" milijonov"+number(num%1000000);
+     if ( ((num%10000000)/1000000)==1 ) return number(num/1000000)+" milijon "+number(num%1000000);
    return "veliko";
   }
 }
 
 mapping(int:string) small_orders = ([ 1: "prvi", 2: "drugi", 3: "tretji",
-				      4: "cetrti", 7: "sedmi", 8: "osmi" ]);
+                                     4: "cetrti", 7: "sedmi", 8: "osmi" ]);
 
 string ordered(int i)
 {
+  int rest2 = i%1000000;
+  int rest1 = i%1000;
   int rest = i%100;
   int base = i-rest;
   if (!i) {
     return("napacen");
   }
-  if ((!rest) && (base%1000)) {
-    return number(i)+"ti";
+  if (!rest2) {
+    return replace(number(i)+"ti"," ","");
   }
-  if (small_orders[rest]) {
-    return (base ? (number(base)+" ") : "")+small_orders[rest];
-  } else
-    return number(i)+"i";
+  if (!rest1) {
+    return replace(number(i)+"i"," ","");
+  }
+  if (!rest) {
+    return replace(number(i)+"ti"," ","");
+  }
+  if (small_orders[rest])
+    return replace((base ? (number(base)+" ") : "")+small_orders[rest]," ","");
+  else
+    return replace(number(i)+"i"," ","");
 }
 
 
@@ -123,4 +130,16 @@ string day(int num)
 array aliases()
 {
   return ({ "si", "svn", "slovenian" });
+}
+
+int main(int argc, array(string) argv)
+{
+  int i;
+
+  write("Testing ordered...\n");
+  for (i=0; i<1200000; i++) {
+    write(sprintf("\t%d:%s\n", i, ordered(i)));
+  }
+  write("done.\n");
+  exit(0);
 }
