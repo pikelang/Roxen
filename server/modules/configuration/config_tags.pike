@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.120 2000/09/24 13:35:51 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.121 2000/09/29 16:46:36 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -680,7 +680,7 @@ class TagPortURLsplugin
   array get_dataset(mapping m, RequestID id)
   {
     mapping u = roxen->find_port( m->port )->urls;
-    return map(sort(indices(u)),get_url_map,u)-({});
+    return map(sort(indices(u)),get_url_map,u)-({0});
   }
 }
 
