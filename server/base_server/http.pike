@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.11 1997/08/13 10:24:35 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.12 1998/01/19 20:20:21 mirar Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -141,7 +141,7 @@ mapping http_file_answer(object text, string|void type, void|int len)
 string cern_http_date(int t)
 {
   string s, c, tz;
-  int tzh = timezone()/3600 - localtime(t)->isdst;
+  int tzh = localtime(t)->timezone/3600 - localtime(t)->isdst;
 
   if(tzh > 0)
     c="-";
@@ -163,7 +163,7 @@ string cern_http_date(int t)
 string http_date(int t)
 {
   string s;
-  s=ctime(t + timezone() - 3600*localtime(t)->isdst);
+  s=ctime(t + localtime(t)->timezone - 3600*localtime(t)->isdst);
   return (s[0..2] + sprintf(", %02d ", (int)s[8..9])
 	  + s[4..6]+" "+(1900+(int)s[22..23])
 	  + s[10..18]+" GMT"); 
