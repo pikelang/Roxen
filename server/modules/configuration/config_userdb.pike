@@ -35,35 +35,35 @@ class ConfigurationSettings
   {
     name = _name;
     variables = settings->get( name ) || ([]);
-    defvar( "theme", "default", TYPE_THEME,
-            "Theme", "The theme to use" );
+    defvar( "theme", "default",
+            "Theme",  TYPE_THEME, "The theme to use" );
 
-    defvar( "docs", 1, TYPE_FLAG,
+    defvar( "docs", 1,
             ([
               "english":"Show documentation",
               "svenska":"Visa dokumentation",
-            ]),
+            ]), TYPE_FLAG,
             ([
               "english":"Show the variable documentation.",
               "svenska":"Visa variabeldokumentationen.",
             ]), 0, 0 );
 
-    defvar( "more_mode", 0, TYPE_FLAG,
+    defvar( "more_mode", 1,
             ([
               "english":"Show advanced configuration options",
               "svenska":"Visa avancerade val",
-            ]),
+            ]), TYPE_FLAG,
             ([ "english":"Show all possible configuration options, not only "
                "the ones that are most often changed.",
                "svenska":"Visa alla konfigureringsval, inte bara de som "
                "oftast ändras."
 	    ]), 0, 0 );
 
-    defvar( "devel_mode", 0, TYPE_FLAG,
+    defvar( "devel_mode", 1,
             ([
               "english":"Show developer options and actions",
               "svenska":"Visa utvecklingsval och funktioner",
-            ]),
+            ]), TYPE_FLAG,
             ([
               "english":"Show settings and actions that are not normaly "
               "useful for non-developer users. If you develop your own "
@@ -73,51 +73,51 @@ class ConfigurationSettings
               "egna moduler så är det här valet för dig."
             ]), 0, 0 );
 
-    defvar( "bgcolor", "white", TYPE_STRING,
+    defvar( "bgcolor", "white",
 	    ([
 	      "english":"Background color",
 	      "svenska":"Bakgrundsfärg",
-	    ]),
+	    ]),TYPE_STRING,
 	    ([
 	      "english":"Configuration interface background color.",
 	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
-    defvar( "fgcolor", "black", TYPE_STRING,
+    defvar( "fgcolor", "black",
 	    ([
 	      "english":"Text color",
 	      "svenska":"Textfärg",
-	    ]),
+	    ]),TYPE_STRING,
 	    ([
 	      "english":"Configuration interface text color.",
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
-    defvar( "linkcolor", "darkblue", TYPE_STRING,
+    defvar( "linkcolor", "darkblue",
 	    ([
 	      "english":"Link color",
 	      "svenska":"Länkfärg",
-	    ]),
+	    ]),TYPE_STRING,
 	    ([
 	      "english":"Configuration interface text color.",
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
-    defvar( "font", "bastard", TYPE_FONT,
+    defvar( "font", "bastard",
 	    ([
 	      "english":"Font",
 	      "svenska":"Typsnitt",
-	    ]),
+	    ]),TYPE_FONT,
 	    ([
 	      "english":"Configuration interface font.",
 	      "svenska":"Typsnitt som konfigurationsgränssnittetet ska använda."
 	    ]), 0, 0 );
 
-    defvar( "addmodulemethod", "normal", TYPE_STRING_LIST,
+    defvar( "addmodulemethod", "normal",
             ([
               "english":"Add/Delete module page type",
               "svenska":"Typ som addera/ta bort modulsidorna har",
-            ]),
+            ]),TYPE_STRING_LIST,
             ([
               "english":
 #"<pre>
