@@ -157,7 +157,7 @@ moduler på samma gång.</dd>
 </dl>
 " ]),
 ({ "normal","fast","faster","compact","really compact"}),
-(["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt","really compact":"kompaktare"]),
+(["svenska":([ "normal":"normal","fast":"snabb","faster":"snabbare","compact":"kompakt","really compact":"kompaktare"]),
  ])
             );
 
