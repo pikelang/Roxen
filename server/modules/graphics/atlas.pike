@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.13 2002/11/15 10:17:47 jonasw Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.14 2002/11/19 09:57:21 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -48,7 +48,9 @@ void flush_cache() {
 }
 
 mapping find_internal( string f, RequestID id ) {
-  return the_cache->http_file_answer( f, id );
+  //  Strip file extensions from filename. Since "." isn't a valid character
+  //  in the ID we can split at the first occurrence.
+  return the_cache->http_file_answer((f / ".")[0], id);
 }
 
 
