@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.21 1998/09/17 00:58:23 grubba Exp $
+ * $Id: smtprelay.pike,v 1.22 1998/09/17 18:06:52 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.21 1998/09/17 00:58:23 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.22 1998/09/17 18:06:52 grubba Exp $";
 
 /*
  * Some globals
@@ -173,7 +173,7 @@ class SocketNotSelf
       return;
     }
 
-    object p = Stdio.Port;
+    object p = Stdio.Port();
 
     if (p->bind(0,0,host)) {
       // We were just about to connect to ourselves!
@@ -500,7 +500,7 @@ class MailSender
 	// Connected to ourselves.
 	if (servercount == 1) {
 	  // We're the primary MX!
-	  result = -3;
+	  result = -2;
 	  
 	  parent->bounce(message, "554", ({
 	    sprintf("MX list for %s points back to %s(%s)",
@@ -512,7 +512,13 @@ class MailSender
 	break;
       case -2:
 	// DNS failure
-	parent->bounce(message, "554", ({
+	if (sizeof(servers) == 1) {
+	  // Permanently bad address.
+	  result = -3;
+	  // Status 5.1.2
+	  message->status = "5.1.2";
+	}
+	parent->bounce(message, "550", ({
 	  sprintf("DNS lookup failed for SMTP server %s",
 		  message->remote_mta),
 	}), "");
@@ -558,7 +564,7 @@ class MailSender
     message->remote_mta = servers[server];
     message->last_attempt_at = time();
 
-    roxen->async_connect(servers[server], 25, got_connection);
+    async_connect(servers[server], 25, got_connection);
   }
 
   static void got_mx(array(string) mx)
@@ -614,6 +620,10 @@ static void mail_sent(int res, mapping message)
     case -2:
       report_error(sprintf("SMTP: Permanently bad address %s@%s\n",
 			   message->user, message->domain));
+      break;
+    case -3:
+      report_error(sprintf("SMTP: Unknown SMTP server %s for domain %s\n",
+			   message->remote_mta, message->domain));
       break;
     }
 
@@ -672,7 +682,7 @@ static void send_mail()
   if (m && sizeof(m) && (m[0]->send_at)) {
     t = ((int)m[0]->send_at) - time();
 #ifdef RELAY_DEBUG
-    roxen_perror(sprintf("t:%d\n", t));
+    // roxen_perror(sprintf("t:%d\n", t));
 #endif /* RELAY_DEBUG */
     if (t < 10) {
       t = 10;
@@ -688,7 +698,7 @@ static mixed send_mail_id;
 static void check_mail(int t)
 {
 #ifdef RELAY_DEBUG
-  roxen_perror(sprintf("SMTP: check_mail(%d)\n", t));
+  // roxen_perror(sprintf("SMTP: check_mail(%d)\n", t));
 #endif /* RELAY_DEBUG */
   if (check_interval > t) {
     check_interval = t;
@@ -768,7 +778,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 				   "\r\n"
 				   "Final-Recipient: RFC822; %s@%s\r\n"
 				   "Action: failed\r\n"
-				   "Status: 5.1.1\r\n"
+				   "Status: %s\r\n"
 				   "Remote-MTA: DNS; %s\r\n"
 				   "Diagnostic-Code: SMTP; %s %s\r\n"
 				   "Last-Attempt-Date: %s\r\n",
@@ -776,6 +786,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 				   "Somewhere",
 				   mktimestamp((int)msg->received_at),
 				   msg->user, msg->domain,
+				   msg->status || "5.1.1",
 				   msg->remote_mta,
 				   code, sizeof(text)?text[-1]:"",
 				   mktimestamp((int)msg->last_attempt_at));
@@ -788,14 +799,14 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 			  msg->user, msg->domain, msg->sender, code,
 			  msg->mailid,
 			  sizeof(last_command)?
-			  ("Last command:"+last_command+"\r\n"):"",
+			  ("Last command: "+last_command+"\r\n"):"",
 			  text*"\r\n");
 
     // Send a bounce
     string message = (string)
       MIME.Message(body, ([
 	"Subject":"Delivery failure",
-	"Message-Id":sprintf("<%08x%sfull@%s>",
+	"Message-Id":sprintf("<\"%08x%sfull\"@%s>",
 			     time(), msg->mailid, gethostname()),
 	"X-Mailer":roxen->version(),
 	"MIME-Version":"1.0",
@@ -827,7 +838,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
     message = (string)
       MIME.Message(body, ([
 	"Subject":"Delivery failure",
-	"Message-Id":sprintf("<%08x%shead@%s>",
+	"Message-Id":sprintf("<\"%08x%shead\"@%s>",
 			     time(1), msg->mailid, gethostname()),
 	"X-Mailer":roxen->version(),
 	"MIME-Version":"1.0",
@@ -855,7 +866,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
       }));
     send_message("<>", (< QUERY(postmaster) >), message);
   } else {
-    roxen_perror("A bounce which bounced!\n");
+    roxen_perror("SMTP: A bounce which bounced!\n");
   }
 }
 
