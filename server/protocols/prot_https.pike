@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.5 2003/11/03 22:59:59 mast Exp $
+// $Id: prot_https.pike,v 2.6 2004/03/23 17:48:38 mast Exp $
 
 // --- Debug defines ---
 
@@ -50,7 +50,7 @@ class fallback_redirect_request
 
   void read_callback(mixed ignored, string s)
   {
-    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, %O)\n", s));
     in += s;
     string name;
     string prefix;
@@ -109,7 +109,7 @@ class fallback_redirect_request
 
   void create(Stdio.File socket, string s, string l, int p)
   {
-    SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
+    SSL3_WERR(sprintf("fallback_redirect_request(X, %O, %O, %d)", s, l||"CONFIG PORT", p));
     f = socket;
     default_prefix = l;
     port = p;
@@ -129,7 +129,7 @@ class http_fallback
 
   void ssl_alert_callback(object alert, object|int n, string data)
   {
-    SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
+    SSL3_WERR(sprintf("http_fallback(X, %O, %O)", n, data));
     //  trace(1);
     if (
 #if constant (SSL.sslfile.PACKET_MAX_SIZE)
