@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.292 2001/04/19 15:41:12 mast Exp $
+// $Id: rxml.pike,v 1.293 2001/04/21 19:57:09 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -2290,7 +2290,7 @@ class TagIfAccept {
   inherit IfMatch;
   constant plugin_name = "accept";
   array source(RequestID id) {
-    return id->misc->accept;
+    return (id->request_headers->accept - " ")/"," - ({ "*/*" });
   }
 }
 
