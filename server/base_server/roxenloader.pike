@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.334 2003/02/19 09:45:12 grubba Exp $
+// $Id: roxenloader.pike,v 1.335 2003/02/19 10:28:48 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.334 2003/02/19 09:45:12 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.335 2003/02/19 10:28:48 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1798,7 +1798,7 @@ void start_mysql()
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
   rm( mysqldir+"/error_log" );
-#ifdef(THREADS)
+#ifdef THREADS
   // Linux pthreads hangs in mutex handling if
   // uid is changed permanently and there are threads
   // already running.
@@ -1813,7 +1813,7 @@ void start_mysql()
       do_tailf( 0, mysqldir+"/error_log"  );
     };
     call_out( do_do_tailf, 0 );
-#ifdef(THREADS)
+#ifdef THREADS
   }
 #endif
 
