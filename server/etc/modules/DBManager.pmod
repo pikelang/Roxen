@@ -1,12 +1,15 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.36 2001/09/03 17:35:12 per Exp $
+// $Id: DBManager.pmod,v 1.37 2001/09/03 18:05:14 per Exp $
 
 //! Manages database aliases and permissions
 
 #include <roxen.h>
 #include <config.h>
 
+
+#define CN(X) string_to_utf8( X )
+#define NC(X) utf8_to_string( X )
 
 
 // Not private since we use these variables for debugging purposes.
@@ -37,7 +40,7 @@ private
 
   string short( string n )
   {
-    return lower_case(sprintf("%s%4x", n[..6],(hash( n )&65535) ));
+    return lower_case(sprintf("%s%4x", CN(n)[..6],(hash( n )&65535) ));
   }
 
   void clear_sql_caches()
@@ -290,7 +293,7 @@ array(string) list( void|Configuration c )
                    " dbs.name=db_permissions.db"
                    " AND db_permissions.config=%s"
                    " AND db_permissions.permission!='none'",
-                   c->name)->name
+                   CN(c->name))->name
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
       -({"roxen","mysql"})
 #endif
@@ -323,9 +326,9 @@ mapping(string:mapping(string:int)) get_permission_map( )
         if( !res[m->db] )res[m->db] = ([]);
         switch( m->permission )
         {
-         case "none":    res[m->db][m->config] = NONE; break;
-         case "read":    res[m->db][m->config] = READ; break;
-         case "write":   res[m->db][m->config] = WRITE; break;
+         case "none":    res[m->db][NC(m->config)] = NONE; break;
+         case "read":    res[m->db][NC(m->config)] = READ; break;
+         case "write":   res[m->db][NC(m->config)] = WRITE; break;
         }
       }
     else
@@ -403,7 +406,7 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
   {
     res = query( "SELECT permission FROM db_permissions "
                  "WHERE db=%s AND config=%s",
-                 name,c->name);
+                 name,CN(c->name));
     if( sizeof( res ) )
     {
       if( res[0]->permission == "none" )
@@ -767,9 +770,9 @@ int set_permission( string name, Configuration c, int level )
       return 0;
 
   query( "DELETE FROM db_permissions WHERE db=%s AND config=%s",
-         name,c->name );
+         name,CN(c->name) );
 
-  query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,c->name,
+  query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,CN(c->name),
 	 (level?level==2?"write":"read":"none") );
   
   if( (int)d[0]["local"] )
