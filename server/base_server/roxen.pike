@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.234 1998/09/06 20:56:33 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.235 1998/09/06 20:57:17 grubba Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -137,7 +137,7 @@ private static void really_low_shutdown(int exit_code)
 #endif /* efun(_pipe_debug) */
   call_out(lambda(){ exit(0); }, 600); // Slow buggers..
   array f=indices(portno);
-  for(i=0; i<sizeof(f); i++)
+  for(int i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
 #else /* !constant(fork) || defined(THREADS) */
 
