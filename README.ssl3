@@ -1,0 +1,27 @@
+			SSL3 with Roxen Challenger
+		     ++++++++++++++++++++++++++++++++
+
+This is a short, step by step guide for setting up a SSL-server:
+ 
+o Get the GMP-library (eg ftp://ftp.roxen.com/pub/gnu/gmp-2.0.2.tar.gz),
+  compile and install it where it can be found by configure (eg in
+  /usr/local/ (this is the default)).
+
+o If you have built roxen before, delete the config.cache file.
+
+o Build and install roxen as usual.
+
+o If you run
+	pike/src/pike -m pike/src/lib/master.pike pike/bin/feature_list
+  you should now see Gmp among the listed features.
+
+o Get (or make) a certificate. A test-certificate is distributed with
+  roxen in server/testca.pem.
+ 
+o Configure a new port on the server you want to enable SSL on:
+ 
+  1. Add a new port, and set the protocol to 'ssl3'
+  2. Enter a line in the 'arguments' textfield for this port:
+     cert-file /full/path/to/the/certificate.pem
+  3. Press [Use these values] and then save.
+  4. Access your SSL-server.
