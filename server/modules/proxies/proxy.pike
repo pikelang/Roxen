@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.35 1999/04/02 16:53:39 grubba Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.36 1999/04/07 18:55:59 peter Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -808,7 +808,7 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=+2><i>"+X+"</i></font>\
 <hr>\
-<font size=-2><a href=http://www.roxen.com/>Roxen Challenger</a>\
+<font size=-2>Roxen Challenger\
  at <a href="+conf->query("MyWorldLocation")+">"+\
 conf->query("MyWorldLocation")+"</a></font>"
 
