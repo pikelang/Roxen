@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.151 2004/05/23 02:50:18 mani Exp $
+// $Id: wizard.pike,v 1.152 2004/05/23 03:17:32 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -757,7 +757,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if (functionp (redirect)) {
 	dispatcher = redirect;
 	DEBUGMSG("Wizard: Running dispatch function %O for page %s\n",
-		 redirect, v->_page));
+		 redirect, v->_page);
 	redirect = redirect (id, v->_page, @args);
       }
       if (stringp (redirect) && redirect != v->_page) {
