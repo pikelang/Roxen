@@ -9,10 +9,16 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.7 1999/12/18 14:47:00 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.8 1999/12/28 03:46:41 nilsson Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
+
+#ifdef PATHINFO_DEBUG
+# define PATHINFO_WERR(X) werror("PATHINFO: "+X+"\n");
+#else
+# define PATHINFO_WERR(X)
+#endif
 
 array register_module()
 {
@@ -23,14 +29,10 @@ array register_module()
 
 mapping|int last_resort(object id)
 {
-#ifdef PATHINFO_DEBUG
-  werror(sprintf("PATHINFO: Checking %O...\n", id->not_query));
-#endif /* PATHINFO_DEBUG */
+  PATHINFO_WERR(sprintf("Checking %O...", id->not_query));
   if (id->misc->path_info) {
     // Already been here...
-#ifdef PATHINFO_DEBUG
-    werror(sprintf("PATHINFO: Been here, done that.\n"));
-#endif /* PATHINFO_DEBUG */
+    PATHINFO_WERR(sprintf("Been here, done that."));
     return 0;
   }
 
@@ -47,17 +49,13 @@ mapping|int last_resort(object id)
     else
       pi = "/"+add_path_info;
     id->misc->path_info = pi;
-#ifdef PATHINFO_DEBUG
-    werror("PATHINFO: Trying: %O (%O)\n", query, pi);
-#endif 
+    PATHINFO_WERR(sprintf("Trying: %O (%O)", query, pi));
     array st = id->conf->stat_file( query, id );
     if( st && (st[ ST_SIZE ] > 0))
     {
       id->not_query = query;
-#ifdef PATHINFO_DEBUG
-      werror("PATHINFO: Found: %O:%O\n",
-	     id->not_query, id->misc->path_info);
-#endif 
+      PATHINFO_WERR(sprintf("Found: %O:%O",
+			    id->not_query, id->misc->path_info));
       return 1;
     }
   }

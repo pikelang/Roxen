@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.21 1999/12/18 15:07:50 nilsson Exp $";
+string cvs_version = "$Id: language.pike,v 1.22 1999/12/28 03:59:46 nilsson Exp $";
 int thread_safe=1;
 
 #if DEBUG_LEVEL > 20
@@ -10,9 +10,15 @@ int thread_safe=1;
 # endif
 #endif
 
+#ifdef LANGUAGE_DEBUG
+# define LANGUAGE_WERR(X) werror("Language: "+X+"\n")
+#else
+# define LANGUAGE_WERR(X)
+#endif
+
 array register_module()
 {
-  return ({ MODULE_DIRECTORIES | MODULE_URL | MODULE_PARSER, 
+  return ({ MODULE_DIRECTORIES | MODULE_URL | MODULE_PARSER,
 	      "Language module",
 	      "Handles documents in different languages. "
 	      "<p>Is also a directory module that generates no directory "
@@ -95,11 +101,11 @@ void create()
 	  "If set, the directory lists will include cute flags to indicate "
 	  "which language the entries exists in. Otherwise it will be shown "
 	  "with not-so-cure text. " );
-  defvar( "directories", 1, "Directory parsing", TYPE_FLAG, 
+  defvar( "directories", 1, "Directory parsing", TYPE_FLAG,
 	  "If you set this flag to on, a directories will be "+
 	  "parsed to a file-list, if no index file is present. "+
 	  "If not, a 'No such file or directory' response will be generated.");
-*/  
+*/
   defvar( "configp", 1, "Use config (uses prestate otherwise).",
           TYPE_FLAG,
           "If set the users chooen language will be stored using Roxens "
@@ -112,7 +118,7 @@ void create()
 
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
-  
+
   ::create();
 }
 
@@ -183,7 +189,7 @@ mixed remap_url( RequestID id, string url )
     return 0;
 
   id->misc->in_language=1;
-  
+
   extension = reverse( (reverse( url ) / ".")[0] );
   if (language_list[ extension ])
   {
@@ -196,10 +202,10 @@ mixed remap_url( RequestID id, string url )
 				  (< extension >) );
     redirect_url = id->conf->query( "MyWorldLocation" ) +
       redirect_url[1..];
-    
+
     id->misc->in_language=0;
     return http_redirect( redirect_url );
-  }		    
+  }		
   found_languages_orig = find_files( url, id );
   found_languages = copy_value( found_languages_orig );
   if (sizeof( found_languages_orig ) == 0)
@@ -221,15 +227,11 @@ mixed remap_url( RequestID id, string url )
     else
       accept_language = ({ });
 
-#ifdef LANGUAGE_DEBUG  
-  werror("Wish:%O", accept_language);
-#endif
+  LANGUAGE_WERR(sprintf("Wish:%O", accept_language));
   // This looks funny, but it's nessesary to keep the order of the languages.
   accept_language = accept_language -
     ( accept_language - indices(language_list) );
-#ifdef LANGUAGE_DEBUG  
-  werror("Negotiated:%O\n", accept_language);
-#endif
+  LANGUAGE_WERR(sprintf("Negotiated:%O\n", accept_language));
 
   if (query( "configp" ))
     lang_tmp = language_list & id->config;
@@ -238,9 +240,9 @@ mixed remap_url( RequestID id, string url )
 
 #ifdef LANGUAGE_DEBUG
   if( sizeof(accept_language) )
-    werror("Header-choosen language: %O\n", accept_language[0]);
+    LANGUAGE_WERR(sprintf("Header-choosen language: %O\n", accept_language[0]));
 #endif
-  
+
   if (sizeof( lang_tmp ))
     chosen_language = prestate_language = indices( lang_tmp )[0];
   else if (sizeof( accept_language ))
@@ -248,16 +250,14 @@ mixed remap_url( RequestID id, string url )
   else
     chosen_language = default_language;
 
-#ifdef LANGUAGE_DEBUG
-  werror("Presented language: %O\n", chosen_language);
-#endif
-  
+  LANGUAGE_WERR(sprintf("Presented language: %O\n", chosen_language));
+
   if (found_languages[ chosen_language ])
     found_language = chosen_language;
   else if (sizeof( accept_language & indices( found_languages ) ))
     found_language = chosen_language
       = (accept_language & indices( found_languages ))[0];
-  else if (prestate_language 
+  else if (prestate_language
 	   && sizeof( language_data[ prestate_language ]
 		     [ LANGUAGE_DATA_NEXT_LANGUAGE ]
 		      & indices( found_languages ) ))
@@ -266,7 +266,7 @@ mixed remap_url( RequestID id, string url )
 	 & indices( found_languages ))[0];
   else if (found_languages[ default_language ])
     found_language = default_language;
-  else if (!prestate_language 
+  else if (!prestate_language
     	   && sizeof( language_data[ default_language ]
 		     [ LANGUAGE_DATA_NEXT_LANGUAGE ]
 		     & indices( found_languages ) ))
