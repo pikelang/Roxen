@@ -6,7 +6,9 @@
 constant action = "maintenance";
 
 LocaleString name = _(41,"Change roxen version...");
-LocaleString doc =  _(42,"Indeed");
+LocaleString doc =  _(42,"If you have more than one roxen version installed\n"
+		     "in the same location, you can use this action to\n"
+		     "change the currently running version.");
 
 class Server(string dir,
 	     string version,
@@ -139,10 +141,10 @@ string parse( RequestID id )
       "<img src='&usr.err-2;' alt='#' /></td>\n"
       "<td>"+
       sprintf((string)
-	      _(137,"If you change to one these roxen versions, you will not be "
-		"able to change back from the administration interface, you will "
-		"instead have to edit the file %O manually, shutdown the server, "
-		"and execute %O again"),
+      _(137,"If you change to one these roxen versions, you will not be "
+	"able to change back from the administration interface, you will "
+	"instead have to edit the file %O manually, shutdown the server, "
+	"and execute %O again"),
 	      combine_path(getcwd(),
 			   roxen.configuration_dir,
 			   "server_version"),
