@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.9 2000/05/22 17:29:50 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.10 2000/05/22 19:07:19 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -68,9 +68,7 @@ string|void update_rules(string new_rules) {
 
     if (sizeof(words)<2) {
       THROTTLING_DEBUG("can't parse");
-#ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(can't parse) "+line;
-#endif
       errors+=({(string)(lineno+1)});
       continue;
     }
@@ -81,17 +79,13 @@ string|void update_rules(string new_rules) {
       val=0;
     } else if (sscanf(words[1],"%[-+*/=]%f",cmd,val) != 2) {
       THROTTLING_DEBUG("command not understood");
-#ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(command not understood) "+line;
-#endif
       errors+=({(string)(lineno+1)});
       continue;
     }
     if (!((<"+","-","*","/","=","!">)[cmd])) {
       THROTTLING_DEBUG("unknown command");
-#ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(unknown command) "+line;
-#endif
       errors+=({(string)(lineno+1)});
       continue;
     }
@@ -101,9 +95,7 @@ string|void update_rules(string new_rules) {
         fix=1;
       else {
         THROTTLING_DEBUG("unknown keyword \""+words[2]+"\"");
-#ifdef IF_ONLY_COULD_CHANGE_RULES
         lines[lineno]="#(unknown keyword \""+words[2]+"\") "+line;
-#endif
         errors+=({(string)(lineno+1)});
         continue;
       }
@@ -119,8 +111,9 @@ string|void update_rules(string new_rules) {
     return "Error"+(sizeof(errors)>1?"s":"") +
       "while parsing line"+(sizeof(errors)>1?"s ":" ")+
       String.implode_nicely(errors)
-#ifdef IF_ONLY_COULD_CHANGE_RULES
-      +". Please click on the 'settings' tab this page to  lines."
+#ifndef IF_ONLY_COULD_CHANGE_RULES
+      +"The errors found are:<br>"
+      +lines*"<BR>\n"
 #endif
       ;
   }
