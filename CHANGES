@@ -1,6 +1,9 @@
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
+o The convert_accessed.pike script fixed. Someone forgot committing
+  the bugfixed version before the release.
+
 o Fix in the host->ip functions. Before Roxen assumed that there were
   no hostnames that started with en in (for example
   50foo.bar.com). This little misfeature is fixed now. Before the

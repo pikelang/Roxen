@@ -33,8 +33,8 @@ void main(int argc, array (string) argv)
     werror("Copying "+file+".main to "+file+".names.\n");
     popen("cp "+file+".main "+file+".names");
     werror("Converting "+file+" and "+file+".times\nto "+file+".db.\n");
-    werror("You may remove "+file+"{,.times}\nafter this process ");
-    werror("is finished.\n");
+    werror("You may remove "+file+", "+file+".times and "+file+".main\n");
+    werror("after this process is finished.\n");
     while(more)
     {
       if(!((j++)%(tl/200+1)))werror((j*100)/(tl/4)+"%\r");
