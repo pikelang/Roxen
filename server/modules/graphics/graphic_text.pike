@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.135 1998/08/02 00:59:35 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.136 1998/08/02 01:08:05 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1147,15 +1147,15 @@ string magic_image(string url, int xs, int ys, string sn,
 
   return
     ("<script>\n"
-     "  "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
-     "  "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
-     "</script>"+
+     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
+     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
+     "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout='top.window.status=\"\";document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
-      " border=0 alt=\""+alt+"\" ></a>"));
+      " border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
 
@@ -1543,7 +1543,7 @@ mapping query_tag_callers()
   return ([ "gtext-id":tag_gtext_id, ])
     | (query("nobody")?([]):
        (["body":tag_body,
-	 "/body":pop_color])),
+	 "/body":pop_color]))
     | (query("speedy")?([]):
        (["font":tag_fix_color,
 	 "table":tag_fix_color,
