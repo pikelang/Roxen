@@ -35,10 +35,32 @@ string parse( RequestID id )
 	    "<!-- comments area ends here for PIRO-->",
 	    rant );
 
+    array st = status/"<br>";
+    string tmp;
+    status = "<font size=-1>";
+    if( sizeof( st ) > 4 )
+    {
+      sscanf( st[0], "%*s>\n%s", tmp );
+      status += tmp +"<br />due "+ st[1]+ " (";
+      sscanf( st[2], "%*s%[0-9]%% done", tmp );
+      status += tmp+"% done)<br />\n";
+      status += "<i>"+st[3]+"</i><br />";
+      for( int i = 4; i<sizeof(st); i++ )
+	status += (st[i]/"</font")[0]+"<br />";
+
+      status = "<cimg format=png src='/internal-roxen-pixel-orange' "
+	"     scale='"+(int)(2.8*(int)tmp)+",12'/>"
+	"<cimg format=png src='/internal-roxen-pixel-black' "
+	"     scale='"+(int)(280-(2.5*(int)tmp))+",12' />"
+	"<br />"+status;
+    }
+    status += "</font>";
+
     contents  =
       "<a href='http://www.megatokyo.com/'>"
-      "<img border=0 width=400 src='http://www.megatokyo.com/strips/"+
-      img+".gif' /></a><br /><b>Next strip:</b><table>"+status+"</table>";
+      "<center><cimg format=png border=0 max-width=390 "
+      "src='http://www.megatokyo.com/strips/"+img+".gif' /></center>"
+      "</a><br /><b>Next strip:</b>"+status;
 //     werror( data );
   }
 
