@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.5 1997/09/06 17:10:26 noring Exp $
+ * $Id: proc.pike,v 1.6 1997/09/10 12:36:17 grubba Exp $
  */
 
 inherit "wizard";
@@ -89,11 +89,17 @@ string cred(object id)
 	    "e/r/sgid=%d\n\tgroups:%s\n", uid, gid, s) != 4)
     return "-<br>";
   array groups = ((s||"")/" ") - ({ "" });
+#if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = getgrgid((int)groups[i])[0];
   return sprintf("e/r/suid: %s<br>e/r/sgid: %s<br>groups: %O\n",
 		 getpwuid(uid)[0], getgrgid(gid)[0],
 		 String.implode_nicely(groups));
+#else
+  return sprintf("e/r/suid: %s<br>e/r/sgid: %d<br>groups: %O\n",
+		 getpwuid(uid)[0], gid,
+		 String.implode_nicely(groups));
+#endif /* constant(getgrgid) */
 }
 
 mixed page_0(object id, object mc)
