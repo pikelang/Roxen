@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.20 1998/11/22 17:04:47 per Exp $
+// $Id: module.h,v 1.21 1999/03/27 20:31:03 grubba Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -53,18 +53,14 @@
 #define VAR_MORE          512
 
 // Fast but unreliable.
-#if constant(cpp)
 #define QUERY(var)	variables[ #var ][VAR_VALUE]
-#else /* !constant(cpp) */
-#define QUERY(var)      variables["var"][VAR_VALUE]
-#endif /* constant(cpp) */
 
 // Like query, but for global variables.
-#if constant(cpp)
-#define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
-#else /* !constant(cpp) */
-#define GLOBVAR(x) roxen->variables["x"][VAR_VALUE]
-#endif /* constant(cpp) */
+#ifdef IN_ROXEN
+#define GLOBVAR(x) QUERY(x)
+#else /* !IN_ROXEN */
+#define GLOBVAR(x) roxen->QUERY(x)
+#endif /* IN_ROXEN */
 
 #define MODULE_EXTENSION         (1<<0)
 #define MODULE_LOCATION          (1<<1)
