@@ -1,14 +1,14 @@
 // This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.10 2004/04/04 14:24:53 mani Exp $
+// $Id: prot_https.pike,v 2.11 2004/05/17 12:58:16 mani Exp $
 
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) werror("SSL3: "+X+"\n")
+# define SSL3_WERR(X ...) werror("SSL3: " X)
 #else
-# define SSL3_WERR(X)
+# define SSL3_WERR(X ...)
 #endif
 
 inherit SSLProtocol;
@@ -30,14 +30,14 @@ class fallback_redirect_request
 
   void die()
   {
-    SSL3_WERR(sprintf("fallback_redirect_request::die()"));
+    SSL3_WERR("fallback_redirect_request::die()\n");
     f->set_blocking();
     f->close();
   }
 
   void write_callback()
   {
-    SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
+    SSL3_WERR("fallback_redirect_request::write_callback()\n");
     int written = f->write(out);
     if (written <= 0)
       die();
@@ -50,7 +50,7 @@ class fallback_redirect_request
 
   void read_callback(mixed ignored, string s)
   {
-    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, %O)\n", s));
+    SSL3_WERR("fallback_redirect_request::read_callback(X, %O)\n", s);
     in += s;
     string name;
     string prefix;
@@ -109,7 +109,7 @@ class fallback_redirect_request
 
   void create(Stdio.File socket, string s, string l, int p)
   {
-    SSL3_WERR(sprintf("fallback_redirect_request(X, %O, %O, %O)", s, l||"CONFIG PORT", p));
+    SSL3_WERR("fallback_redirect_request(X, %O, %O, %O)\n", s, l||"CONFIG PORT", p);
     f = socket;
     default_prefix = l;
     port = p;
@@ -128,7 +128,7 @@ class http_fallback
 
   void ssl_alert_callback(object alert, object|int n, string data)
   {
-    SSL3_WERR(sprintf("http_fallback(X, %O, %O)", n, data));
+    SSL3_WERR("http_fallback(X, %O, %O)\n", n, data);
     //  trace(1);
     if ( (my_fd->query_connection()->current_write_state->seq_num == 0)
 	 && has_value(lower_case(data), "http"))
@@ -145,7 +145,7 @@ class http_fallback
 
   void ssl_accept_callback(mixed ignored)
   {
-    SSL3_WERR(sprintf("ssl_accept_callback(X)"));
+    SSL3_WERR("ssl_accept_callback(X)\n");
     my_fd->set_alert_callback(0); /* Forget about http_fallback */
     my_fd->set_accept_callback(0);
     my_fd = 0;          /* Not needed any more */
