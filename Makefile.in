@@ -416,9 +416,6 @@ tar_dist:
 	    type="no_pike"; \
 	  fi ; \
 	fi; \
-	if test -d $$version/platform/. ; then \
-	  type="platform-$$type"; \
-	else :; fi; \
 	echo Type $$type.; \
 	echo Building full NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-$$type-nda-full.tar.gz; \
