@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.51 1997/04/12 15:25:21 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.52 1997/05/07 05:19:59 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1903,6 +1903,8 @@ void _shuffle(object from, object to)
 {
   if(shuffle_fd)
   {
+    from->set_blocking();
+    to->set_blocking();
     if(send_fd(shuffle_fd,from->query_fd())&&
        send_fd(shuffle_fd,to->query_fd()))
       return;
