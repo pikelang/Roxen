@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.32 2003/11/17 16:01:25 anders Exp $
+ * $Id: debug_info.pike,v 1.33 2004/05/19 13:08:21 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -19,128 +19,6 @@ int no_reload()
 {
   return creation_date > file_stat( __FILE__ )[ST_MTIME];
 }
-
-#if efun(get_profiling_info)
-string remove_cwd(string from)
-{
-  string s = from-(getcwd()+"/");
-  sscanf( s, "%*s/modules/%s", s );
-  s = replace( s, ".pmod/", "." );
-  s = replace( s, ".pmod", "" );
-  s = replace( s, ".pike", "" );
-  s = replace( s, ".so", "" );
-  s = replace( s, "Luke/", "Luke." );
-  return s;
-}
-
-array (program) all_modules()
-{
-  return values(master()->programs);
-}
-
-string program_name(program|object what)
-{
-  string p;
-  if(p = master()->program_name(what)) return remove_cwd(p);
-  return "?";
-}
-
-mapping get_prof()
-{
-  mapping res = ([]);
-  foreach(all_modules(), program prog) {
-    res[program_name(prog)] = prog && get_profiling_info( prog );
-  }
-  return res;
-}
-
-array get_prof_info(string|void foo)
-{
-  array res = ({});
-  mapping as_functions = ([]);
-  mapping tmp = get_prof();
-  foreach(indices(tmp), string c)
-  {
-    mapping g = tmp[c][1];
-    foreach(indices(g), string f)
-    {
-      if(g[f][2])
-      {
-        c = replace( c, "base_server/", "roxen." );
-        c = (c/"/")[-1];
-        string fn = c+"."+f;
-        if(  (!foo || !sizeof(foo) || glob(foo,c+"."+f)) )
-        {
-          switch( f )
-          {
-           case "cast":
-             fn = "(cast)"+c;
-             break;
-           case "__INIT":
-             fn = c;
-             break;
-           case "create":
-           case "`()":
-             fn = c+"()";
-             break;
-           case "`->":
-             fn = c+"->";
-             break;
-           case "`[]":
-             fn = c+"[]";
-             break;
-          }
-          if( !as_functions[fn] )
-            as_functions[fn] = ({ g[f][2],g[f][0],g[f][1] });
-          else
-          {
-            as_functions[fn][0] += g[f][2];
-            as_functions[fn][1] += g[f][0];
-            as_functions[fn][2] += g[f][1];
-          }
-        }
-      }
-    }
-  }
-  array q = indices(as_functions);
-//   sort(values(as_functions), q);
-  foreach(q, string i) if(as_functions[i][0])
-    res += ({({i,
-	       sprintf("%d",as_functions[i][1]),
-               sprintf("%5.2f",
-                       as_functions[i][0]/1000000.0),
-               sprintf("%5.2f",
-                       as_functions[i][2]/1000000.0),
-	       sprintf("%7.3f",
-		       (as_functions[i][0]/1000.0)/as_functions[i][1]),
-	       sprintf("%7.3f",
-                       (as_functions[i][2]/1000.0)/as_functions[i][1])})});
-  sort((array(float))column(res,3),res);
-  return reverse(res);
-}
-
-
-mixed page_1(object id)
-{
-  string res = ("<font size=+1>Profiling information</font><br />"
-		"All times are in seconds, and real-time. Times incude"
-		" time of child functions. No callgraph is available yet.<br />"
-		"Function glob: <input type=text name=subnode value='"+
-                Roxen.html_encode_string(id->variables->subnode||"")
-                +"'><br />");
-
-  object t = ADT.Table->table(get_prof_info("*"+
-                                            (id->variables->subnode||"")+"*"),
-			      ({ "Function",
-                                 "Calls",
-                                 "Time",
-                                 "+chld",
-                                 "t/call(ms)",
-				 "+chld(ms)"}));
-  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
-}
-#endif
-
 
 mapping class_cache = ([]);
 
@@ -462,11 +340,5 @@ mixed parse( RequestID id )
     "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
     "</submit-gbutton>\n"
     "<cf-cancel href='?class=&form.class;'/>\n" +
-    page_0( id )
-#if 0
-#if constant( get_profiling_info )
-         + page_1( id )
-#endif
-#endif
-    ;
+    page_0( id );
 }

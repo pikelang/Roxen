@@ -102,6 +102,7 @@ worldmap binary
 /server/config_interface/actions/make_selfsigned_rsa.pike foreign_ident
 /server/config_interface/actions/make_site_template.pike foreign_ident
 /server/config_interface/actions/openfiles.pike foreign_ident
+/server/config_interface/actions/pike_profiling.pike foreign_ident
 /server/config_interface/actions/proc.pike foreign_ident
 /server/config_interface/actions/reloadconfigurations.pike foreign_ident
 /server/config_interface/actions/request_profiling.pike foreign_ident
