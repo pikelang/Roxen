@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.12 1998/01/21 18:53:51 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.13 1998/01/24 17:56:47 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -72,7 +72,7 @@ string make_pipe_name(string from)
   return stof[from] = s;
 }
 
-mixed find_file(string f, object id)
+mixed low_find_file(string f, object id, string path)
 {
   object pipe1, pipe2;
   string path_info;
@@ -80,7 +80,7 @@ mixed find_file(string f, object id)
   if(!id->misc->path_info)
   {
     array tmp2;
-    tmp2 = ::extract_path_info(f);
+    tmp2 = ::extract_path_info(f, path);
     if(!tmp2) {
       array st2;
       if((st2=file_stat( path + f )) && (st2[1]==-2))
@@ -129,4 +129,9 @@ mixed find_file(string f, object id)
     pipe2->write(id->data);
   
   return http_stream(pipe2);
+}
+
+mixed find_file(string f, object id)
+{
+  low_find_file(f, id, ::search_path);
 }
