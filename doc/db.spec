@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.7 1998/07/21 19:38:09 wellhard Exp $
+# $Id: db.spec,v 1.8 1998/07/22 16:49:55 wellhard Exp $
 
 drop table customers;
 drop table dns;
@@ -7,8 +7,7 @@ drop table mailboxes;
 drop table users;
 drop table templates;
 drop table template_vars;
-drop table nav_templates;
-drop table nav_template_vars;
+drop table customers_preferences;
 drop table color_schemes;
 
 
@@ -56,32 +55,28 @@ create table users (
              customer_id	     int
      );
 
+create table customers_preferences (
+	     id                      int auto_increment primary key,
+             customer_id             int,
+             variable_id             int,
+             value                   blob
+     );
+
 create table templates (
              id		             int auto_increment primary key,
              name		     varchar(255),
-             filename		     varchar(255)
+             filename		     varchar(255),
+	     category		     varchar(8)  # tmpl/nav
      );
 
 create table template_vars (
+	     id                      int auto_increment primary key,
              name                    varchar(64),
              title		     varchar(255),
-	     group                   varchar(255),
+	     group_name              varchar(255),
              help		     blob,
-	     type		     varchar(8) # font/color/image/int
-     );
-
-create table nav_templates (
-             id		             int auto_increment primary key,
-             name		     varchar(255),
-             filename		     varchar(255)
-     );
-
-create table nav_template_vars (
-             name                    varchar(64),
-             title		     varchar(255),
-             group		     varchar(255),
-	     help		     blob,
-	     type		     varchar(8) # font/color/image/int
+	     type		     varchar(8), # font/color/image/int
+             category                varchar(8)  # tmpl/nav
      );
 
 create table color_schemes (
