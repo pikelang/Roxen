@@ -1,12 +1,12 @@
 //#include <stdio.h>
-#include <simulate.h>
+//#include <simulate.h>
 
 /*
  * name = "Proxy Garbage Collector";
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.12 1998/04/21 19:08:35 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.13 1999/06/08 14:49:47 grubba Exp $";
 
 //#define DEBUG
 
@@ -44,10 +44,10 @@ mapping parse_log(int num)
   mapping log;
   
   file = lp+"cachelog"+_order(num);
-  if(!(s=read_bytes(file)))
+  if(!(s=Stdio.read_bytes(file)))
   {
     mkdir(lp);
-    s=read_bytes(file);
+    s=Stdio.read_bytes(file);
   }
   if(!s) {
     if(first_log == num)
@@ -59,7 +59,7 @@ mapping parse_log(int num)
 
   if(catch(log = decode_value( s ))) {
 #ifdef DEBUG
-    perror("Could not decode cachelog file ("+file+") - removed\n");
+    werror("Could not decode cachelog file ("+file+") - removed\n");
 #endif
     rm_log(num);
     return 0;
@@ -79,8 +79,8 @@ void unparse_log(mapping log, int num)
   rm(file);
   if(sizeof(log)<=0)
     return;
-  if(!write_file(file, encode_value(log)))
-    perror("Could not write cachelog file ("+file+")\n");
+  if(!Stdio.write_file(file, encode_value(log)))
+    werror("Could not write cachelog file ("+file+")\n");
 }
 
 #define BLOCK_SIZE 2048
@@ -99,7 +99,7 @@ int disk_max, disk_used, disk_avail, disk_capacity,
   disk_i_max, disk_i_used, disk_i_avail, disk_i_capacity, disk_time;
 string disk_name, disk_type;
 
-#define LOGGER(x) if(gc_log)gc_log->write(x);else perror(x)
+#define LOGGER(x) if(gc_log)gc_log->write(x);else werror(x)
 object gc_log;
 
 string disk_info()
@@ -158,17 +158,17 @@ int read_cache_status()
   string file, s;
   file = lp+"cache_status";
   mkdir(lp);
-  if(file_size(file)<=0) {
-    perror("read_cache_status: "+file+" is missing\n");
+  if(Stdio.file_size(file)<=0) {
+    werror("read_cache_status: "+file+" is missing\n");
     return 0;
   }
-  if(!(s=read_bytes(file))) {
-    perror("read_cache_status: "+file+" could not be read\n");
+  if(!(s=Stdio.read_bytes(file))) {
+    werror("read_cache_status: "+file+" could not be read\n");
     rm(file);
     return 0;
   }
   if(catch(status = decode_value(s))) {
-    perror("read_cache_status: "+file+" could not be decoded\n");
+    werror("read_cache_status: "+file+" could not be decoded\n");
     rm(file);
     return 0;
   }
@@ -185,7 +185,7 @@ int read_cache_status()
      (cache_size <= 0)||
      (num_files <= 0)||
      (first_log <= 0)) {
-    perror("read_cache_status: "+file+" contains rubbish\n");
+    werror("read_cache_status: "+file+" contains rubbish\n");
     rm(file);
     return 0;
   }
@@ -203,7 +203,7 @@ void create_cache(string logprefix)
 
   mkdir(lp);
 
-  allfiles = map_array(get_dir(lp), lambda(string s) {
+  allfiles = Array.map(get_dir(lp), lambda(string s) {
     if(search(s, "cachelog") != -1) return s;
     return 0;
   }) - ({ 0 });
@@ -235,7 +235,7 @@ void create_cache(string logprefix)
     log = ([]);
 
   if(last_log < 0)
-    perror("CACHE: Failed to read existing logfile.\n");
+    werror("CACHE: Failed to read existing logfile.\n");
 #endif
 }
 
@@ -254,10 +254,10 @@ void write_cache_status()
   status->removed_files = removed_files;
   status->lastgc = lastgc;
 
-  if(!write_file(file+"+", encode_value(status)))
-    perror("write_cache_status: "+file+"+"+" could not be written\n");
+  if(!Stdio.write_file(file+"+", encode_value(status)))
+    werror("write_cache_status: "+file+"+"+" could not be written\n");
   if(!mv(file+"+", file))
-    perror("write_cache_status: "+file+" could not be written\n");
+    werror("write_cache_status: "+file+" could not be written\n");
 }
 
 void write_log()
@@ -268,15 +268,15 @@ void write_log()
   mkdir(lp);
   file = lp+"cachelog"+_order(last_log);
   rm(file);
-  if (!write_file(file, encode_value(log)))
-    perror("Could not write cachelog file ("+file+")\n");
+  if (!Stdio.write_file(file, encode_value(log)))
+    werror("Could not write cachelog file ("+file+")\n");
   log = ([]);
   write_cache_status();
 }
 
 void update(string file, int tim, int|void score)
 {
-//perror(file+" "+(time(1)-tim)+" seconds old, "+score+" \"bonus\" seconds.\n");
+//werror(file+" "+(time(1)-tim)+" seconds old, "+score+" \"bonus\" seconds.\n");
   if((search(file, ".done")!=-1)&&log[file-".done"]) {
     m_delete(log, file-".done");
     num_files--;
@@ -367,13 +367,13 @@ void find_all_files_and_log_it()
   first_log = last_log = 0;   // Well, lets start again then.
 
   foreach(dirs, dir)
-    if(file_size(dir)<-1 && dir!="logs")
+    if(Stdio.file_size(dir)<-1 && dir!="logs")
       find_all_files_in(dir+"/");
 
   last_log++;
-  if((file_size(lp+"cachelog"+_order(1))>0) &&
+  if((Stdio.file_size(lp+"cachelog"+_order(1))>0) &&
      !mv(lp+"cachelog"+_order(1), lp+"cachelog"+_order(last_log)))
-    perror("find_all_files_and_log_it - mv failed\n");
+    werror("find_all_files_and_log_it - mv failed\n");
   
   write_cache_status();
   current_cache_message();
@@ -390,13 +390,13 @@ void collect(int amnt, function callback)
 
   write_log();
 
-//  perror("Collect. first_log="+first_log+"; last_log="+last_log+"\n");
+//  werror("Collect. first_log="+first_log+"; last_log="+last_log+"\n");
   r = catch {
     while((amnt>0)&&(first_log <= last_log))
     {
       mapping rl;
-//      perror("Collecting log "+i+"\n");
-//      perror("Collect. first_log="+first_log+"; last_log="+last_log+"\n");
+//      werror("Collecting log "+i+"\n");
+//      werror("Collect. first_log="+first_log+"; last_log="+last_log+"\n");
       if(rl = parse_log(first_log))
       {
 	logsize = sizeof(rl);
@@ -408,7 +408,7 @@ void collect(int amnt, function callback)
   }; 
   if(r)
   {
-    perror("Error while garbagecollecting: "+r[0]+"\n"
+    werror("Error while garbagecollecting: "+r[0]+"\n"
 	   +describe_backtrace(r[1]));
     return;
   }
@@ -445,7 +445,7 @@ int check(int howmuch)
 
 void cache_stream_closed()
 {
-  perror("garbagecollector: cache command stream closed. Exiting\n");
+  werror("garbagecollector: cache command stream closed. Exiting\n");
 #ifdef LPC_GARB
   write_log();
 #endif
@@ -457,12 +457,12 @@ static mixed do_command(array what)
   mixed res;
   if(!arrayp(what))
   {
-    perror(sprintf("Got strange command (%O)\n", what));
+    werror(sprintf("Got strange command (%O)\n", what));
     return 0;
   }
 
 #ifdef DEBUG
-//  perror(sprintf("Got command %O\n", what));
+//  werror(sprintf("Got command %O\n", what));
 #endif
   
   return this_object()[what[0]](@what[1..]);
@@ -473,7 +473,7 @@ static void got_command(object o, string cmd)
 {
   cmd = _cache+cmd;
 
-//  perror("Got some data: '"+cmd+"'\n");
+//  werror("Got some data: '"+cmd+"'\n");
   
   while(strlen(cmd))
   {
@@ -489,11 +489,11 @@ static void got_command(object o, string cmd)
 
     array err;
     if(err=catch(do_command( decode_value( cmd[..l-1] ) )))
-      stderr->write(describe_backtrace( err ));
+      Stdio.stderr->write(describe_backtrace( err ));
     
     cmd=cmd[l..]; // Remove the 'command' field of this command
   }
-//  perror("data parsed ("+strlen(cmd)+" bytes in cache).\n");
+//  werror("data parsed ("+strlen(cmd)+" bytes in cache).\n");
   
   _cache=cmd;
 }
@@ -504,7 +504,7 @@ int remove_one_file(string fname, int last_access)
 {
   array s;
 #ifdef DEBUG
-//  perror("remove one file? "+fname+" --- ");
+//  werror("remove one file? "+fname+" --- ");
 #endif
   s=stat_cache[fname];
   if(!s)
@@ -548,13 +548,13 @@ void gc(int cs)
 
   catch {
 #ifdef DEBUG
-    // perror("really_gc ("+(int)BLOCK_TO_KB(amnt)+" Kb)\n");
+    // werror("really_gc ("+(int)BLOCK_TO_KB(amnt)+" Kb)\n");
 #endif
     collect(amnt, remove_one_file);
     write_cache_status();
     current_cache_message();
 #ifdef DEBUG
-    // perror("--------- ("+(int)BLOCK_TO_KB(removed)+" Kb really removed)\n");
+    // werror("--------- ("+(int)BLOCK_TO_KB(removed)+" Kb really removed)\n");
 #endif
   };
   stat_cache = ([]);
@@ -578,20 +578,20 @@ string statistics()
 		    ctime(garbage_time)-"\n");
 
   rm("statistics");
-  write_file("statistics",
-	     sprintf("Cache(%s):\n"
-		     "\t%1d files%s\n"
-		     "\t%1.3f MB (%1.2f%%)\n"
-		     "\n"
-		     "%s\n"
-		     "%s",
-                    ctime(time())-"\n", num_files,
-                    max_num_files>0?
-		     sprintf(" (%1.2f%%)",
-			     (float)cache_size*100/max_cache_size):"",
-                     ((float)BLOCK_TO_KB(cache_size))/(1024.0),
-                    (float)cache_size*100/max_cache_size,
-                    gc_info, disk_info()));
+  Stdio.write_file("statistics",
+		   sprintf("Cache(%s):\n"
+			   "\t%1d files%s\n"
+			   "\t%1.3f MB (%1.2f%%)\n"
+			   "\n"
+			   "%s\n"
+			   "%s",
+			   ctime(time())-"\n", num_files,
+			   max_num_files>0?
+			   sprintf(" (%1.2f%%)",
+				   (float)cache_size*100/max_cache_size):"",
+			   ((float)BLOCK_TO_KB(cache_size))/(1024.0),
+			   (float)cache_size*100/max_cache_size,
+			   gc_info, disk_info()));
 }
 
 private string lf;
@@ -614,7 +614,7 @@ void init_log_file(string lf)
 
   gc_log = Stdio.File();
   if(!gc_log->open(lf, "rwac")) {
-    perror("init_log_file("+lf+"): open failed\n");
+    werror("init_log_file("+lf+"): open failed\n");
     destruct(gc_log);
     return;
   }
@@ -675,7 +675,7 @@ void create(string cdir, string logfiles, int cng, int mcs,
     init_log_file(gc_lf);
 
 #ifdef DEBUG
-    perror("Initalizing cache, cache-dir is "+cdir+"\n");
+    werror("Initalizing cache, cache-dir is "+cdir+"\n");
 #endif
     cd(cdir);
     cache_normal_garb = cng*(1048576/BLOCK_SIZE); 
@@ -690,7 +690,7 @@ void create(string cdir, string logfiles, int cng, int mcs,
       if(last_log < 10)
 	find_all_files_and_log_it();
       
-      if(file_size(lp+"cachelog"+_order(1))>=0) {
+      if(Stdio.file_size(lp+"cachelog"+_order(1))>=0) {
 	LOGGER("Found rechecking unfinished ...\n");
 	find_all_files_and_log_it();
       }
@@ -708,8 +708,8 @@ void create(string cdir, string logfiles, int cng, int mcs,
 
 int main() 
 {
-  object st = File("stdin");
-  st->set_id(stdin);
+  object st = Stdio.File("stdin");
+  st->set_id(Stdio.stdin);
   st->set_nonblocking( got_command, 0, cache_stream_closed );
   return -1;
 }
