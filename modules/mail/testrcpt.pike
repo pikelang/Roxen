@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.8 1998/09/13 14:49:49 grubba Exp $
+ * $Id: testrcpt.pike,v 1.9 1998/09/14 13:56:18 grubba Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: testrcpt.pike,v 1.8 1998/09/13 14:49:49 grubba Exp $";
+constant cvs_version = "$Id: testrcpt.pike,v 1.9 1998/09/14 13:56:18 grubba Exp $";
 
 /*
  * Roxen glue
@@ -99,12 +99,20 @@ string|multiset(string) expn(string addr, object o)
 
   string a = get_addr(addr);
 
+  if (a[-1] == '.') {
+    a = a[..sizeof(a)-2];
+  }
+
   return(expn_tab[a]);
 }
 
 string desc(string addr, object o)
 {
   roxen_perror("RCPT: desc(%O)\n", addr);
+
+  if (addr[-1] == '.') {
+    addr = addr[..sizeof(addr)-2];
+  }
 
   return(desc_tab[addr]);
 }
