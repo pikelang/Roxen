@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.82 1998/03/05 18:48:32 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.83 1998/03/06 21:58:02 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -90,7 +90,8 @@ mixed *register_module()
        "  <b>voidsep</b>        If this separator is given it will be used\n"
        "                 instead of VOID (This option can also\n"
        "                 be given i <b>xnames</b> and so on)\n"
-       "  <b>bgcolor</b>        Sets the color for the background\n"
+       "  <b>bgcolor</b>        Use this background color for antialias.\n"
+       "  <b>colorbg</b>        Sets the color for the background\n"
        "  <b>textcolor</b>      Sets the color for all text\n"
        "                 (Can be overrided)\n"
        "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
@@ -430,7 +431,7 @@ string quote(mapping in)
 
 constant _diagram_args =
 ({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
-   "templatefontsize", "fontsize", "tone", "background", "subtype",
+   "templatefontsize", "fontsize", "tone", "background","colorbg", "subtype",
    "dimensions", "dimensionsdepth", "xsize", "ysize", "fg", "bg",
    "orientation", "xstart", "xstop", "ystart", "ystop", "data", "colors",
    "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
@@ -493,6 +494,8 @@ string tag_diagram(string tag, mapping m, string contents,
       return syntax("tonedbox must have a comma separated list of 4 colors.");
     res->tonedbox = map(a, parse_color);
   }
+  else if (m->colorbg)
+    res->colorbg=parse_color(m->colorbg);
   
   res->drawtype="linear";
 
@@ -767,6 +770,11 @@ mapping find_file(string f, object id)
     res->image = image(res->xsize, res->ysize)->
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
+  else if (res->colorbg)
+    {
+      m_delete( res, "bgcolor" );
+      res->image = image(res->xsize, res->ysize, @res->colorbg);
+    }
 
   diagram_data = res;
 
