@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: resolv.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
  */
 
 inherit "wizard";
@@ -226,7 +226,7 @@ string parse(object id)
     nid->method = "GET";
     if (id->variables->user && id->variables->user!="")
     {
-      string *y;
+      array(string) y;
       nid->rawauth
         =
         "Basic "+MIME.encode_base64(id->variables->user+":"+

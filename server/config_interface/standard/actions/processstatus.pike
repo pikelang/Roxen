@@ -1,5 +1,5 @@
 /*
- * $Id: processstatus.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: processstatus.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
  */
 
 constant action="status";
@@ -17,7 +17,8 @@ string describe_global_status()
 mixed parse(object id)
 {
   string res;
-  int *ru, tmp, use_ru;
+  array(int) ru;
+  int tmp, use_ru;
   array err;
   if(err = catch(ru=rusage()))
     return sprintf("<h1>Failed to get rusage information: </h1><pre>%s</pre>",

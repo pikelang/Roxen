@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.1 2000/02/04 05:39:13 per Exp $
+ * $Id: openfiles.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
  */
 
 inherit "wizard";
@@ -14,7 +14,7 @@ constant doc = "Show a list of all open files and network connections.";
 // Debug functions.  List _all_ open filedescriptors
 array checkfd_fix_line(string l)
 {
-  string *s;
+  array(string) s;
   s=l/",";
   if (sizeof(s) > 1) {
     s[0]=decode_mode((int)("0"+s[0]));
