@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.47 1999/12/18 13:23:28 nilsson Exp $
+ * $Id: rxml.pike,v 1.48 1999/12/27 23:52:41 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -630,11 +630,11 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
 
     str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c, RequestID id) {
-        id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
+      lambda(string tag, mapping m, string cont, mapping c) {
+        id->misc->defaults[n][m->name]=parse_rxml(cont,id);
         return "";
       }
-    ]),0,id,file,defines);
+    ]));
 
 #if old_rxml_compat
     id->misc->tags[n] = replace( str, indices(m), values(m) );
@@ -665,11 +665,11 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
 
     str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c, RequestID id) {
-        id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
+      lambda(string tag, mapping m, string cont, mapping c) {
+        id->misc->defaults[n][m->name]=parse_rxml(cont,id);
         return "";
       }
-    ]),0,id,file,defines);
+    ]));
 
 #if old_rxml_compat
     id->misc->containers[n] = replace( str, indices(m), values(m) );
