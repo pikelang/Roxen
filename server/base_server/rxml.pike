@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.64 2000/01/13 00:33:52 nilsson Exp $
+ * $Id: rxml.pike,v 1.65 2000/01/13 15:34:36 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -45,10 +45,10 @@ class Entity_roxen_time {
 }
 
 class Entity_roxen_server {
-  string rxml_var_eval(object c) { return c->id->conf->query("MyWorldLocation"); }
+  string rxml_var_eval(RXML.Context c) { return c->id->conf->query("MyWorldLocation"); }
 }
 
-void global_entities(object c) {
+void global_entities(RXML.Context c) {
   c->add_scope("roxen",(["version":roxen.version(),
 			 "time":Entity_roxen_time(),
 			 "server":Entity_roxen_server() ])  );
@@ -204,7 +204,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   return result;
 }
 
-class Entity_var_truth {
+class Entity_page_truth {
   string rxml_var_eval(RXML.Context c) { return (string)c->id->misc->defines[" _ok"]; }
 }
 
@@ -228,7 +228,7 @@ string do_parse(string to_parse, RequestID id,
   parser->context->add_scope("page",(["realfile":id->realfile,
 				      "vfs":id->virtfile,
 				      "uri":id->raw_url,
-				      "truth":Entity_var_truth ]) );
+				      "truth":Entity_page_truth() ]) );
 
 #ifdef TAGMAP_COMPAT
   if (id->misc->_tags) {
@@ -461,7 +461,8 @@ string tag_help(string t, mapping args, RequestID id)
   {
     string char, ret = "<h2>Roxen Interactive RXML Help</h2>"
       "<b>Here is a list of all defined tags. Click on the name to "
-      "receive more detailed information.</b><p>\n";
+      "receive more detailed information. All these tags are also availabe "
+      "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
     array tag_links;
 
     foreach(tags, string tag) {
@@ -477,79 +478,6 @@ string tag_help(string t, mapping args, RequestID id)
   }
 
   return find_tag_doc(help_for, id);
-}
-
-
-string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
-{
-  int verbose;
-  string res="";
-  if(args->verbose) verbose = 1;
-
-  mapping(int:mapping(string:mixed)) tag_callers = ([]);
-  mapping(int:mapping(string:mixed)) container_callers = ([]);
-
-  foreach (indices (module_tag_sets), RoxenModule mod) {
-    int priority = mod->query ("_priority", 1) || 4;
-    if (!tag_callers[priority]) tag_callers[priority] = ([]);
-    if (!container_callers[priority]) container_callers[priority] = ([]);
-    RXML.TagSet tag_set = module_tag_sets[mod];
-    foreach (indices (tag_set->get_tag_names()), string name) {
-      mixed tagdef = tag_set->get_tag (name);
-      if (arrayp (tagdef))
-	if (tagdef[0])
-	  tag_callers[priority][name] = tagdef[0];
-	else
-	  container_callers[priority][name] = tagdef[1];
-      else
-	if (tagdef->flags & RXML.FLAG_CONTAINER)
-	  container_callers[priority][name] = tagdef;
-	else
-	  tag_callers[priority][name] = tagdef;
-    }
-  }
-
-  foreach(indices(tag_callers), int i)
-    if (sizeof (tag_callers[i])) {
-      res += ("<b><font size=+1>Tags at prioity level "+i+": </b></font><p>");
-      foreach(sort(indices(tag_callers[i])), string tag)
-      {
-	res += "  <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#","%23")+"#"+replace(tag+i, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
-	if(verbose || id->variables->verbose == tag+i)
-	{
-	  res += "<blockquote><table><tr><td>";
-	  string tr;
-// 	  FIXME
-// 	  catch(tr=call_tag(tag, (["help":"help"]), 
-// 			    id->misc->line,i,
-// 			    id, f, id->misc->defines, 0 ));
-	  if(tr) res += tr; else res += "no help";
-	  res += "</td></tr></table></blockquote>";
-	}
-      }
-    }
-
-  foreach(indices(container_callers), int i)
-    if (sizeof (container_callers[i])) {
-      res += ("<p><b><font size=+1>Containers at prioity level "+i+": </b></font><p>");
-      foreach(sort(indices(container_callers[i])), string tag)
-      {
-	res += " <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#", "%23")+"#"+replace(tag+i,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
-	if(verbose || id->variables->verbose == tag+i)
-	{
-	  res += "<blockquote><table><tr><td>";
-	  string tr;
-// 	  FIXME
-// 	  catch(tr=call_container(tag, (["help":"help"]), "",
-// 				  id->misc->line,
-// 				  i, id,f, id->misc->defines, 0 ));
-	  if(tr) res += tr; else res += "no help";
-	  res += "</td></tr></table></blockquote>";
-	}
-      }
-    }
-
-  return res;
 }
 
 class TagLine
@@ -1092,7 +1020,6 @@ mapping query_tag_callers()
   return ([
     "true":tag_true,
     "false":tag_false,
-    "list-tags":tag_list_tags,
     "number":tag_number,
     "undefine":tag_undefine,
     "help": tag_help,
