@@ -3,14 +3,14 @@
 <theme-set what=toptabs-bgcolor      to="none" />
 
 <theme-set what=subtabs-dimtextcolor to="#555555" />
-<theme-set what=subtabs-seltextcolor to="#ff0000" />
+<theme-set what=subtabs-seltextcolor to="#bf2727" />
 
 <theme-set what=subtabs-bgcolor      to="black" />
-<theme-set what=subtabs-selcolor     to="#333333" />
+<theme-set what=subtabs-selcolor     to="#363636" />
 <theme-set what=subtabs-dimcolor     to="black" />
 
 <theme-set what=toptabs-dimtextcolor to="#555555" />
-<theme-set what=toptabs-seltextcolor to="#ff0000" />
+<theme-set what=toptabs-seltextcolor to="#bf2727" />
 
 <theme-set what=toptabs-dimcolor     to="black" />
 <theme-set what=toptabs-selcolor     to="black" />
@@ -18,17 +18,19 @@
 <theme-set what=leftside-padwidth    to="160" />
 <theme-set what=toptabs-padwidth     to="190" />
 
-<theme-set what=fade1   to="#333333"/>
-<theme-set what=fade2   to="#333333"/>
-<theme-set what=fade3   to="#ff9c51"/>
+<theme-set what=fade1   to="#363636"/>
+<theme-set what=fade2   to="#363636"/>
+<theme-set what=fade3   to="#ffffff"/>
 <theme-set what=fade4   to="#c0c0c0"/>
 
 
 <theme-set what=next     to=next.png themefile />
 <theme-set what=selected-indicator    to=sel2.gif themefile />
 
-<theme-set what=left-buttonbg     to='black'/>
-<theme-set what=left-selbuttonbg  to='black'/>
+<theme-set what=left-buttonbg     to='#363636'/>
+<theme-set what=left-buttonfg     to='#bf2727'/>
+<theme-set what=left-selbuttonbg  to='#444444'/>
+<theme-set what=left-selbuttonfg  to='#bf2727'/>
 
 <theme-set what=left-image to="chili.gif" themefile />
 <theme-set what=lefthtml to='<br /><br /><br /><br /><br /><br />' />
@@ -45,7 +47,7 @@
            to="background='&usr.content-contentbackground;'" />
 -->
 
-<theme-set what=linkcolor to="#ff3030"/>
+<theme-set what=linkcolor to="#bf2727"/>
 
 <theme-set what=obox-titlefg to="white"/>
 <theme-set what=obox-border to="808080"/>
