@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.63 2000/10/18 23:23:47 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.64 2000/11/14 16:52:55 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -294,7 +294,7 @@ class TagSQLTable {
 
 Sql.sql sql_object(void|string host)
 {
-  string host = stringp(host)?host:query("hostname");
+  if(!host) host = query("hostname");
   Sql.sql con;
   function sql_connect = conf->sql_connect;
   mixed error;
