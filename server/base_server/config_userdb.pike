@@ -254,6 +254,7 @@ class ConfigurationSettings
 	       "faster":LOCALE(284, "faster"), "compact":LOCALE(286, "compact"),
 	       "really compact":LOCALE(288, "really compact")  ]));
 
+    restore( );
   }
 }
 
