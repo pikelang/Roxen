@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.209 2003/01/23 16:40:13 mani Exp $
+# $Id: start,v 1.210 2004/05/16 02:51:46 mani Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -170,7 +170,11 @@ parse_args() {
  while [ ! c"$1" = "c" ] ; do
   case "$1" in
   -D*)
-   DEFINES="$DEFINES $1"
+   if [ "x$1" = "x-DEVELOPER" ] ; then
+     DEFINES="$DEFINES -DDEVELOPER"
+   else
+     DEFINES="$DEFINES $1"
+   fi
   ;;
   -l*)
    ARGS="$ARGS $1"
