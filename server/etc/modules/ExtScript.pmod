@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.12 2001/01/19 12:41:38 per Exp $
+// $Id: ExtScript.pmod,v 1.13 2001/02/17 17:13:24 nilsson Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -275,7 +275,7 @@ class Handler
            putvar("H", v, hd[v]);
 
       // Transfer FORMs variables.
-      mapping(string:string) va;
+      FakedVariables va;
       foreach(indices(va = id->variables), mixed v)
         if (stringp(v) && stringp(va[v]) && strlen(va[v]) < 1000000)
            putvar("F", v, va[v]);
