@@ -1,22 +1,23 @@
 #!/bin/sh
 #
-# $Id: install,v 1.6 1998/05/11 16:19:06 mast Exp $
+# $Id: install,v 1.7 1998/05/11 19:18:02 grubba Exp $
 #
 
 # Find the default master
 if [ -f lib/pike/master.pike ]; then
-  DEFINES="$DEFINES -mlib/pike/master.pike"
+  DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
   PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
 else
   if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike"
+    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
     PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
   else
     # This is used with localinstall
     if [ -f ../pike/src/lib/master.pike ]; then
-      DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+      DEFINES="$DEFINES -m../pike/src/lib/master.pike -I../pike/src/lib/include"
       PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/lib/modules"
       if [ -d ../pike/src/share/modules/. ]; then
+        DEFINES="$DEFINES -I../pike/src/share/include"
 	PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/share/modules"
       fi
     fi
