@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.25 1998/03/04 12:45:48 mast Exp $
+# $Id: Makefile,v 1.26 1998/03/04 14:32:01 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -35,18 +35,9 @@ blurb :
 	@echo
 	@sleep 10
 
-all : configure
+all : configure_all
 	@builddir="$(BUILDDIR)"; \
-	srcdir=`pwd`; \
-	echo "Attempting to build Roxen 1.2 in $$builddir ..."; \
-	echo; \
-	if test -d pike/0.6/src ; then pikeversion=0.6; \
-	else pikeversion=0.5; \
-	fi; \
-	./mkdir -p "$$builddir"; \
-	cd "$$builddir" && \
-	(test -f stamp-h && test "`cat stamp-h`" = $$pikeversion || \
-	 CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion) && \
+	cd "$$builddir"; \
 	$(MAKE) "prefix=$(prefix)"
 	@echo
 	@echo Roxen successfully compiled.
@@ -57,15 +48,30 @@ configure : configure.in
 	@echo
 	@pike/*/src/run_autoconfig 2>&1 | grep -v warning
 	@echo
+	@test -f "$(BUILDDIR)"/stamp-h && rm -f "$(BUILDDIR)"/stamp-h
 
-install : all
+configure_all : configure
+	@builddir="$(BUILDDIR)"; \
+	srcdir=`pwd`; \
+	if test -d pike/0.6/src ; then pikeversion=0.6; \
+	else pikeversion=0.5; \
+	fi; \
+	./mkdir -p "$$builddir"; \
+	cd "$$builddir" && \
+	test -f stamp-h && (test "`cat stamp-h`" = $$pikeversion) || ( \
+	  echo "Configuring Roxen 1.2 in $$builddir ..."; \
+	  echo; \
+	  CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion \
+	)
+
+install :
 	@make "MAKE=$(MAKE)" "prefix=$(prefix)" "OS=$(OS)" "BUILDDIR=$(BUILDDIR)" install_low
 	@echo
 	@echo Starting the install program...
 	@echo
 	@cd $(prefix)/roxen/server; ./install
 
-install_low :
+install_low : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	echo "Installing Roxen 1.2 from $$builddir ..."; \
@@ -76,23 +82,23 @@ install_low :
 	@echo Roxen successfully installed.
 	@echo
 
-localinstall : all
+localinstall : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
-	echo "Installing Roxen 1.2 and Pike $$pikeversion from $$builddir locally ..."; \
+	echo "Installing Roxen 1.2 locally from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) localinstall; \
+	test -f stamp-h && pikeversion=`cat stamp-h`; \
 	builddir=`pwd`; \
 	$$srcdir/mkdir -p $$srcdir/server/lib; \
 	rm -f $$srcdir/server/lib/pike; \
 	ln -s "$$builddir"/pike/$$pikeversion/src/lib $$srcdir/server/lib/pike;
 	@echo
-	@echo Roxen and Pike successfully installed locally.
+	@echo Roxen successfully installed locally.
 	@echo
 
-install_all :
+install_all : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
@@ -107,7 +113,7 @@ install_all :
 	@echo
 	@cd $(prefix)/roxen/server; ./install
 
-install_pike :
+install_pike : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
@@ -119,7 +125,7 @@ install_pike :
 	@echo Pike successfully installed.
 	@echo
 
-verify:
+verify: configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	echo "Verifying Roxen 1.2 in $$builddir ..."; \
@@ -130,7 +136,7 @@ verify:
 	@echo Verify OK.
 	@echo
 
-verbose_verify:
+verbose_verify: configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	echo "Verifying Roxen 1.2 in $$builddir ..."; \
