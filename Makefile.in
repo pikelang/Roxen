@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.97 1999/06/11 06:37:19 mast Exp $
+# $Id: Makefile.in,v 1.98 1999/07/02 13:47:43 grubba Exp $
 #
 
 # @configure_input@
@@ -254,27 +254,6 @@ bump_version: bump_version.stamp
 	  echo Updating sources...; \
 	  if cvs -q update -dA|egrep '^[CM?]'; then exit 1; else : ; fi; \
 	)
-	@for d in $(SRCDIR)/pike/0.5 $(SRCDIR)/pike/0.6; do \
-	  if test -f $$d/src/version.c; then \
-	    (cd $$d/; \
-	      echo Bumping Pike version in directory $$d...; \
-	      build=`sed <src/version.c -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
-	      newbuild=`echo $$build 1+p|dc`; \
-	      sed <src/version.c -e"/push_text/s/ $$build/ $$newbuild/" >src/version.c.new; \
-	      checkbuild=`sed <src/version.c.new -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
-	      if test "x$$newbuild" = "x$$checkbuild"; then \
-		mv -f src/version.c.new src/version.c || exit 1; \
-		echo "Successfull bump to build $$newbuild."; \
-	      else \
-		echo "Version bump failed: $$newbuild != $$checkbuild."; \
-		exit 1; \
-	      fi; \
-	      cvs ci -m "Pike release bumped to $$newbuild by bump_version." src/version.c || exit 1; \
-	      echo "Tagging Pike in $$d..."; \
-	      cvs tag `sed <src/version.c -e '/push_text/s/.*"\(.*\)".*/\1/p' -ed|tr 'A-Z. ' 'a-z__'|head -1`||exit 1; \
-	      echo Done with $$d.); \
-	  else :; fi; \
-	done
 	@for d in $(SRCDIR)/pike/0.7; do \
 	  if test -f $$d/src/version.h; then \
 	    (cd $$d/; \
@@ -358,44 +337,30 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  `find $$version/. -type f -name '#*' -print`; do \
 	  echo $$f; rm $$f || exit 1; \
 	done; \
-	for d in $$version/pike/0.5/tutorial $$version/pike/0.5/about_pike \
-	  $$version/pike/0.6/about_pike $$version/pike/0.6/doc; do \
-	  if test -d $$d/. ; then \
-	    echo Removing $$d...; rm -rf $$d || exit 1; \
-	  else :; fi; \
-	done; \
 	echo "Zapping absolute paths in language.c..."; \
 	for f in $$version/pike/*/src/language.c; do \
 	  if test -f "$$f"; then \
-	    echo "Fixing $$f.."; \
+	    echo "Fixing $$f..."; \
 	    sed <"$$f" >"$$f.fix" -e '/^#line/s!/.*/\(language\.yacc\)!\1!' && \
 	      mv "$$f.fix" "$$f"; \
 	  else :; fi; \
 	done; \
-	echo "Altering some CVS files to point to developer.roxen.com..."; \
+	echo "Altering some CVS files to point to cvs.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
 	  if egrep '^//*cvs//*roxen_src' "$$f/Repository" 2>&1 >/dev/null; \
 	  then \
 	    echo "Altering $$f..."; \
-	    sed -e 's/^\/\/*cvs\/\/*roxen_src/\/cvs\/roxen/' <"$$f/Repository" \
+	    sed -e 's/^\/\/*cvs\/\/*roxen_src/\/cvs\/Roxen\/1.4/' <"$$f/Repository" \
 	      >"$$f/Repository.new" && \
 	      mv "$$f/Repository.new" "$$f/Repository"; \
-	    echo "anonymous@developer.roxen.com:/cvs" >"$$f/Root"; \
+	    echo "anonymous@cvs.roxen.com:/cvs" >"$$f/Root"; \
 	  else :; fi; \
 	done; \
-	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
-	if test -d $$version/pike/0.5/. ; then \
-	  if test -d $$version/pike/0.6/. ; then \
-	    type="dual"; \
-	  else \
-	    type="0.5"; \
-	  fi ; \
+	echo Determining if this is a 0.7 or no_pike distribution...; \
+	if test -d $$version/pike/0.7/. ; then \
+	  type="0.7"; \
 	else \
-	  if test -d $$version/pike/0.6/. ; then \
-	    type="0.6"; \
-	  else \
-	    type="no_pike"; \
-	  fi ; \
+	  type="no_pike"; \
 	fi; \
 	echo Type $$type.; \
 	echo Building full NDA distribution...; \
