@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.50 2000/01/05 18:09:19 per Exp $
+ * $Id: rxml.pike,v 1.51 2000/01/05 19:38:12 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -145,6 +145,7 @@ string do_parse(string to_parse, RequestID id,
 {
   RXML.PHtml parser = rxml_tagset (RXML.t_text (RXML.PHtml), id);
   parser->set_extra (id, file, defines, my_fd);
+  parser->parse_entities (0);	// Disabled for now.. FIXME
 
 #ifdef TAGMAP_COMPAT
   if (id->misc->_tags) {
