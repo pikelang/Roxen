@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.111 2004/05/07 19:46:51 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.112 2004/05/08 14:45:36 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -855,38 +855,68 @@ class RequestID
 
     mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
 
+    string tmp_resource;
     string resource;
     foreach(decoded_if, array(string|int|array(array(string))) symbol) {
       switch (symbol[0]) {
       case "special":
-	// Ignore.
-	// '<', '>', ',', etc.
+	switch(symbol[1]) {
+	case '<': tmp_resource = ""; break;
+	case '>': 
+	  resource = tmp_resource;
+	  tmp_resource = 0;
+	  // Normalize.
+	  // FIXME: Check that the protocol and server parts refer
+	  //        to this server.
+	  // FIXME: Support for servers mounted on subpaths.
+	  catch { resource = Standards.URI(resource)->path; };
+	  if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
+	  if (!res[resource])
+	    res[resource] = ({});
+	  break;
+	default:
+	  if (tmp_resource) tmp_resource += sprintf("%c", symbol[1]);
+	  break;
+	}
 	break;
       case "word":
+      case "domain-literal":
 	// Resource
-	resource = symbol[1];
-	// Normalize.
-	// FIXME: Check that the protocol and server parts refer
-	//        to this server.
-	// FIXME: Support for servers mounted on subpaths.
-	catch { resource = Standards.URI(resource)->path; };
-	if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
-	if (!res[resource])
-	  res[resource] = ({});
+	if (!tmp_resource) return 0;
+	tmp_resource += symbol[1];
 	break;
       case "comment":
 	// Parenthesis expression.
+	if (tmp_resource) {
+	  // Inside a resource.
+	  tmp_resource += "(" + symbol[1][0][0] + ")";
+	  break;
+	}
 	array(array(string|int|array(array(string)))) sub_expr =
 	  MIME.decode_words_tokenized_labled(symbol[1][0][0]);
 	int i;
 	array(array(string)) expr = ({});
+	string tmp_key;
 	for (i = 0; i < sizeof(sub_expr); i++) {
 	  switch(sub_expr[i][0]) {
 	  case "special":
-	    // Ignore.
-	    // '<', '>', ',', etc.
+	    switch(sub_expr[i][1]) {
+	    case '<': tmp_key = ""; break;
+	    case '>':
+	      if (!tmp_key) return 0;
+	      expr += ({ ({ "key", tmp_key }) });
+	      tmp_key = 0;
+	      break;
+	    default:
+	      if (tmp_key) tmp_key += sprintf("%c", sub_expr[i][1]);
+	      break;
+	    }
 	    break;
 	  case "domain-literal":
+	    if (tmp_key) {
+	      tmp_key += sub_expr[i][1];
+	      break;
+	    }
 	    // entity-tag.
 	    string etag = sub_expr[i][1];
 	    // etag is usually something like "[\"some etag\"]" here.
@@ -895,17 +925,19 @@ class RequestID
 	    break;
 	  case "word":
 	    // State-token or Not.
-	    if (lower_case(sub_expr[i][1]) == "not" &&
-		(!i ||
-		 (sub_expr[i-1][0] != "special") ||
-		 (sub_expr[i-1][1] != '<'))) {
+	    if (tmp_key) {
+	      tmp_key += sub_expr[i][1];
+	      break;
+	    }
+	    if (lower_case(sub_expr[i][1]) == "not") {
 	      // Not
 	      expr += ({ ({ "not", 0 }) });
-	    } else {
-	      expr += ({ ({ "key", sub_expr[i][1] }) });
+	      break;
 	    }
+	    return 0;
 	  }
 	}
+	if (tmp_key) return 0;
 	res[resource] += ({ expr });
 	break;
       default:
@@ -913,7 +945,8 @@ class RequestID
 	return 0;
       }
     }
-#ifdef REQUEST_DEBUG
+    if (tmp_resource) return 0;
+#if defined(REQUEST_DEBUG) || defined(CONNECTION_TRACE)
     werror("get_if_data(): Parsed if header: %s:\n"
 	   "%O\n", raw_header, res);
 #endif
@@ -1276,7 +1309,7 @@ class RequestID
 
     if( Stat fstat = file->stat )
     {
-      if( !file->len && fstat[1] >= 0 )
+      if( !file->len && (fstat[1] >= 0) && file->file )
 	file->len = fstat[1];
       if ( fstat[ST_MTIME] > misc->last_modified )
 	misc->last_modified = fstat[ST_MTIME];
@@ -1330,7 +1363,12 @@ class RequestID
 
     heads["Accept-Ranges"] = "bytes";
     heads["Server"] = replace(roxenp()->version(), " ", "·");
-    if( misc->connection )
+    if (file->error == 500) {
+      // Internal server error.
+      // Make sure the connection is closed to resync.
+      heads["Connection"] = "close";
+      misc->connection = "close";
+    } else if( misc->connection )
       heads["Connection"] = misc->connection;
 
     if(file->encoding) heads["Content-Encoding"] = file->encoding;
