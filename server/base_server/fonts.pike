@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.79 2001/11/14 13:15:39 grubba Exp $
+// $Id: fonts.pike,v 1.80 2001/11/14 13:18:20 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -313,9 +313,9 @@ string verify_font(string font, int size)
   return verify_font(font, size);
 }
 
-array(string) available_fonts( )
+array(string) available_fonts(int(0..1)|void force_reload )
 {
-  return sort(`+( ({}),  @font_handlers->available_fonts() ));
+  return sort(`+( ({}),  @font_handlers->available_fonts(force_reload) ));
 }
 
 array get_font_information(void|int scalable_only) 
