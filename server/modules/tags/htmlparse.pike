@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.173 1999/05/09 07:06:59 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.174 1999/05/09 07:10:47 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2793,7 +2793,7 @@ string tag_help(string t, mapping args, object id)
 
 string tag_cache(string tag, mapping args, string contents, object id)
 {
-#define HASH(x) (x+id->not_query+id->query +id->conf->query("MyWorldLocation"))
+#define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
 #if constant(Crypto.md5)
   object md5 = Crypto.md5();
   md5->update(HASH(contents));
