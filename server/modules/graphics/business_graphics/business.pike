@@ -10,7 +10,179 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.70 1998/02/17 17:12:28 hedda Exp $";
+
+/*
+84228 idag 11:02 /25 rader/ Mirar
+Kommentar till text 84186 av Per Hedbor (det är lagom varmt ute)
+Mottagare: Pike (-) erfarenhetsutbyte <498>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Hm, jag pratade med zino om en sån igår, eller nåt.
+
+array my_indices=({});
+mapping cached_args=([]);
+mapping cached_args_lookup=([]);
+
+int find_or_insert(mapping find)
+{
+   my_indices+=(array)(indices(find)-my_indices);
+
+   string vs=encode_value(rows(find,my_indices)); // statisk ordning
+   int i;
+
+   if (!zero_type(i=cached_args_lookup[vs]))
+      return cached_args[i];
+
+   cached_args_lookup[vs]=number;
+   cached_args[number]=find;
+
+   remove_call_out(save_cached_args);
+   call_out(save_cached_args, 10);
+   return number++;
+}
+
+...givet att find inte innehåller mappings.
+(84228) /Mirar/-------------------------------------
+Kommentar i text 84229 av Mirar
+Läsa nästa kommentar.
+84229 idag 11:05 /12 rader/ Mirar
+Kommentar till text 84228 av Mirar
+Mottagare: Pike (-) erfarenhetsutbyte <499>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Om encode_value hade statisk ordning på sina mappings, skulle man
+slippa komma ihåg vilken indexordning man hade...
+
+Den där innehåller förresten en bug, ju...
+
+ >   string vs=encode_value(rows(find,my_indices)); // statisk ordning
+
+int i;
+
+array a=reverse(rows(find,my_indices));
+for (i=0; i<sizeof(a)&&!a[i]; i++);
+string vs=encode_value(reverse(a[i..]));
+(84229) /Mirar/-------------------------------------
+Kommentar i text 84239 av Mirar
+Läsa nästa kommentar.
+84239 idag 12:20 /11 rader/ Mirar
+Kommentar till text 84229 av Mirar
+Mottagare: Pike (-) erfarenhetsutbyte <502>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Lite mätningar i en mapping med storlek 42:
+
+ int i;
+ array a;
+
+ my_indices+=(array)(indices(find)-my_indices); // 180µs
+ 
+ a=rows(find,my_indices);                       // 180µs
+ a=reverse(a);                                  // 30µs
+ for (i=0; i<sizeof(a)&&!a[i]; i++);            // ~0
+ string vs=encode_value(reverse(a[i..]));       // 180µs
+(84239) /Mirar/-------------------------------------
+Kommentar i text 84241 av Mirar
+Läsa nästa kommentar.
+84241 idag 12:25 /12 rader/ Mirar
+Kommentar till text 84239 av Mirar
+Mottagare: Pike (-) erfarenhetsutbyte <504>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+ursprungliga varianten:
+
+mapping f2 = copy_value(find);              // 140µs
+
+[...]
+equal(...,find)                             // 10µs, om de är olika
+                                            // 180µs, om de är lika
+
+... så, på under 40 element i mappingen, så är den snabbare. 
+
+Jag antar att det snabbaste alternativet skulle vara att bygga en egen
+hashklass...
+(84241) /Mirar/-------------------------------------
+Kommentar i text 84243 av Mirar
+Läsa nästa kommentar - Återse det kommenterade
+Återse text nummer 84239
+84239 idag 12:20 /11 rader/ Mirar
+Kommentar till text 84229 av Mirar
+Mottagare: Pike (-) erfarenhetsutbyte <502>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Lite mätningar i en mapping med storlek 42:
+
+ int i;
+ array a;
+
+ my_indices+=(array)(indices(find)-my_indices); // 180µs
+ 
+ a=rows(find,my_indices);                       // 180µs
+ a=reverse(a);                                  // 30µs
+ for (i=0; i<sizeof(a)&&!a[i]; i++);            // ~0
+ string vs=encode_value(reverse(a[i..]));       // 180µs
+(84239) /Mirar/-------------------------------------
+Kommentar i text 84241 av Mirar
+Läsa nästa kommentar - Återse det kommenterade
+Återse text nummer 84229
+84229 idag 11:05 /12 rader/ Mirar
+Kommentar till text 84228 av Mirar
+Mottagare: Pike (-) erfarenhetsutbyte <499>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Om encode_value hade statisk ordning på sina mappings, skulle man
+slippa komma ihåg vilken indexordning man hade...
+
+Den där innehåller förresten en bug, ju...
+
+ >   string vs=encode_value(rows(find,my_indices)); // statisk ordning
+
+int i;
+
+array a=reverse(rows(find,my_indices));
+for (i=0; i<sizeof(a)&&!a[i]; i++);
+string vs=encode_value(reverse(a[i..]));
+(84229) /Mirar/-------------------------------------
+Kommentar i text 84239 av Mirar
+
+84240 idag 12:23 /28 rader/ Niels Möller
+Kommentar till text 84232 av Per Hedbor (det är lagom varmt ute)
+Mottagare: Pike (-) erfarenhetsutbyte <503>
+Ärende: Finns det något enkelt sätt att göra det här snabbare?
+------------------------------------------------------------
+Har du provat med mappingar som går att peta in i en hashtabell?
+
+class my_mapping
+{
+  mapping m;
+
+  mixed `[](key) { return m[key]; }
+
+  int `==(mixed o)
+  {
+    return equal(m, objectp(o) ? o->m : o);
+  }
+
+  int _hash()
+  {
+    int h = 4711*sizeof(m);
+
+    foreach(m, mixed i)
+      h += hash(i)*(17+hash(m[i]));
+    return h;
+  }
+}
+
+Förutsätter förstås att man inte ändrar destruktivt i mappingar som
+används som index (eller ser till att kopiera dem vid behov).
+
+Förutsätter såklart att pike ger dig en funktion hash() som fungerar
+på alla saker du använder i mappingarna.
+(84240) /Niels Möller/------------------------------(Ombruten)
+
+*/
+
+constant cvs_version = "$Id: business.pike,v 1.71 1998/02/23 17:11:03 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -163,7 +335,6 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
 }
-
 
 void create()
 {
@@ -409,34 +580,33 @@ string syntax( string error )
     + "<hr noshade>";
 }
 
-string quote(string in)
+mapping(int:mapping) cache = ([]);
+int datacounter = 0; 
+
+string quote(mapping in)
 {
-  string pack;
-//   object g;
-  /*
-  if( sizeof(indices(g=Gz)) ) {
-    pack = MIME.encode_base64(g->deflate()->deflate(in), 1);
-  } else {
-  */
-    pack = MIME.encode_base64(in, 1);
-//  }
-//  if(search(in,"/")!=-1) return pack;
-//  string res="$";	// Illegal in BASE64
-//   for(int i=0; i<strlen(in); i++)
-//     switch(in[i])
-//     {
-//      case 'a'..'z':
-//      case 'A'..'Z':
-//      case '0'..'9':
-//      case '.': case ',': case '!':
-//       res += in[i..i];
-//       break;
-//      default:
-//       res += sprintf("%%%02x", in[i]);
-//     }
-//   if( strlen(res) < strlen(pack) ) return res;
-  return pack;
+  //  string pack;
+  //  pack = MIME.encode_base64(in, 1);
+  cache[ ++datacounter ] = in;
+  return (string)datacounter;
 }
+
+constant _diagram_args =
+({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
+   "templatefontsize", "fontsize", "tone", "background", "subtype",
+   "dimensions", "dimensionsdepth", "xsize", "ysize", "fg", "bg",
+   "orientation", "xstart", "xstop", "ystart", "ystop", "data", "colors",
+   "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
+   "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
+   "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
+   "rotate", "image", "bw", "eng", "xmin", "ymin" });
+constant diagram_args = mkmapping(_diagram_args,_diagram_args);
+
+constant _shuffle_args = 
+({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
+   "xstart", "xstop", "ystart", "ystop", "colors", "xvalues", "yvalues",
+   "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
+constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
 string tag_diagram(string tag, mapping m, string contents,
 		   object id, object f, mapping defines)
@@ -444,8 +614,9 @@ string tag_diagram(string tag, mapping m, string contents,
   contents=replace(contents, "\r\n", "\n");
   contents=replace(contents, "\r", "\n");
 
-  mapping res=([]);
-  res->datacounter=0;
+  mapping(string:mixed) res=([]);
+
+  res->datacounter=0;  // Lets see.. What was this for?!
   if(m->help) return register_module()[2];
 
   if(m->type) res->type = m->type;
@@ -475,61 +646,50 @@ string tag_diagram(string tag, mapping m, string contents,
       return syntax("tonedbox must have a comma separated list of 4 colors.");
     res->tonedbox = map(a, parse_color);
   }
+  
+  res->drawtype="linear";
 
-  /* Piechart */
-  if(res->type[0..2] == "pie")
-    res->type = "pie";
-
-  /* Barchart */
-  else if(res->type[0..2] == "bar")
-  {
-    res->type = "bars";
-    res->subtype = "box";
-  }   
-
-  /* Linechart */
-  else if(res->type[0..3] == "line")
-  {
-    res->type = "bars";
-    res->subtype = "line";
-  }   
-
-  /* Normaliced sumbar */
-  else if(res->type[0..3] == "norm")
-  {
-    res->type = "sumbars";
-    res->subtype = "norm";
-  }   
-
-  switch(res->type) {
-   case "sumbars":
-   case "bars":
+  switch(res->type[0..3]) {
    case "pie":
-   case "graph":
+   case "piec":
+     res->type = "pie";
+     res->subtype="pie";
+     res->drawtype = "2D";
+     break;
+   case "bar":
+   case "barc":
+     res->type = "bars";
+     res->subtype = "box";
+     m_delete( res, "drawtype" );
+     break;
+   case "line":
+     res->type = "bars";
+     res->subtype = "line";
+     break;
+   case "norm":
+     res->type = "sumbars";
+     res->subtype = "norm";
+     break;
+   case "grap":
+     res->type = "graph";
+     res->subtype = "line";
+     break;
+   case "sumb":
+     res->type = "sumbars";
+     //res->subtype = "";
      break;
    default:
-     return syntax("\""+res->type+"\" is an unknown type of diagram\n");
+     return syntax("\""+res->type+"\" is an FIX unknown type of diagram\n");
   }
 
-  /*
-  if(m->subtype)
-    res->subtype = (string)m->subtype;
-  */
-
-  if(res->type == "pie")
-    res->subtype="pie";
-  else
-    res->drawtype="linear";
-
-  if(res->type == "bars")
-    if(res->subtype!="line")
-      res->subtype="box";
-
-  if(res->type == "graph")
-    res->subtype="line";
-  
-//   if(res->type == "sumbars")
-//     if(res->subtype!="norm"); //FIXME Va faan är detta???
+  if(m["3d"])
+  {
+    res->drawtype = "3D";
+    if( lower_case(m["3d"])!="3d" )
+      res->dimensionsdepth = (int)m["3d"];    
+    else
+      res->dimensionsdepth = 20;
+  }
 
   parse_html(contents, (["xaxis":itag_xaxis,"yaxis":itag_yaxis]),
 	     ([ "data":itag_data,
@@ -542,52 +702,25 @@ string tag_diagram(string tag, mapping m, string contents,
 	     res, id );
 
   if( sizeof(res->data) == 0 )
-    return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
+    return syntax("No data for the diagram");
 
   res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
   res->fg = parse_color(m->textcolor || defines->fg || "black");
 
-  //This code is obsolete. It's now placed in xnames
-  //But this can not be taken away... (Logview)
-  if (!res->orientation)
-    if (m->orient && m->orient[0..3] == "vert")
-      res->orientation = "vert";
-    else res->orientation="hor";
-  
-
   if(m->center) res->center = (int)m->center;
+  if(m->eng) res->eng=1;
 
-  if (m->eng) res->eng=1;
+  res->fontsize       = (int)m->fontsize || 16;
+  res->legendfontsize = (int)m->legendfontsize || res->fontsize;
+  res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m["3d"])
-  {
-    res->drawtype = "3D";
-    if( lower_case(m["3d"])!="3d" )
-      res->dimensionsdepth = (int)m["3d"];    
-    else
-      res->dimensionsdepth = 20;    
-  }
-  else 
-    if(res->type=="pie") res->drawtype = "2D";
-    else res->drawtype = "linear";
-      
-  if(m->fontsize) res->fontsize = (int)m->fontsize;
-  else res->fontsize=16;
-
-  if(m->legendfontsize) res->legendfontsize = (int)m->legendfontsize;
-  else res->legendfontsize = res->fontsize;
-
-  if(m->labelsize) res->labelsize = (int)m->labelsize;
-  else res->labelsize = res->fontsize;
-
-  res->labelcolor=m->labelcolor?parse_color(m->labelcolor):0;
-  res->axcolor=m->axcolor?parse_color(m->axcolor):({0,0,0});
-  res->gridcolor=m->gridcolor?parse_color(m->gridcolor):({0,0,0});
-  res->linewidth=m->linewidth || "2.2";
-  res->axwidth=m->axwidth || "2.2";
+  if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
+  res->axcolor   = m->axcolor?parse_color(m->axcolor):({0,0,0});
+  res->gridcolor = m->gridcolor?parse_color(m->gridcolor):({0,0,0});
+  res->linewidth = m->linewidth || "2.2";
+  res->axwidth   = m->axwidth || "2.2";
 
   if(m->rotate) res->rotate = m->rotate;
-
   if(m->grey) res->bw = 1;
 
   if(m->width) {
@@ -633,18 +766,41 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->xgridspace) res->xgridspace = (int)m->xgridspace;
   if(m->ygridspace) res->ygridspace = (int)m->ygridspace;
 
-  m_delete( m, "xgridspace" );
-  m_delete( m, "ygridspace" );
+  m -= diagram_args;
 
-  m_delete( m, "size" );
-  m_delete( m, "type" );
-  m_delete( m, "3d" );
-  m_delete( m, "templatefontsize" );
-  m_delete( m, "fontsize" );
-  m_delete( m, "tone" );
-  m_delete( m, "background" );
+  // Start of res-cleaning
+  res->textcolor = res->fg;
+  res->bgcolor = res->bg;
 
-  m->src = query("location") + quote(encode_value(res)) + ".gif";
+  m_delete( res, "voidsep" );
+
+  if (res->xstop)
+    if(res->xstart > res->xstop) m_delete( res, "xstart" );
+
+  if (res->ystop)
+    if(res->ystart > res->ystop) m_delete( res, "ystart" );
+
+  res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
+
+  if(res->dimensions) res->drawtype = res->dimensions;
+  if(res->dimensionsdepth) res["3Ddepth"] = res->dimensionsdepth;
+  if(res->ygridspace)  res->yspace = res->ygridspace;
+  if(res->xgridspace)  res->xspace = res->xgridspace;
+  if(res->orientation) res->orient = res->orientation;
+  if((int)res->xstart)  res->xminvalue  = (float)res->xstart;
+  if((int)res->xstop)   res->xmaxvalue  = (float)res->xstop;
+  if(res->ystart)  res->yminvalue  = (float)res->ystart;
+  if(res->ystop)   res->ymaxvalue  = (float)res->ystop;
+  if(res->colors)  res->datacolors = res->colors;
+  if(res->xvalues) res->values_for_xnames = res->xvalues;
+  if(res->yvalues) res->values_for_ynames = res->yvalues;
+  if((int)res->linewidth) res->graphlinewidth = (float)res->linewidth;
+  else m_delete( res, "linewidth" );
+  if((int)res->axwidth) res->linewidth  = (float)res->axwidth;
+
+  res -= shuffle_args;
+
+  m->src = query("location") + quote(res) + ".gif";
 
   return make_tag("img", m);
 }
@@ -654,14 +810,10 @@ mapping query_container_callers()
   return ([ "diagram" : tag_diagram ]);
 }
 
-/* Needs some more work */
 int|object PPM(string fname, object id)
 {
   string q;
-  q = roxen->try_get_file( fname, id);
-  // q = Stdio.read_file((string)fname);
-  //  q = Stdio.read_bytes(fname);
-  //  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
+  q = roxen->try_get_file( fname, id );
 
   if(!q) perror("Diagram: Unknown image '"+fname+"'\n");
   mixed g = Gz;
@@ -706,36 +858,29 @@ int|object PPM(string fname, object id)
     return 1;
 }
 
+mapping unquote( string f )
+{
+  return cache[ (int)f ];
+}
+
 mapping find_file(string f, object id)
 {
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
-  mapping res;
+  mapping res = unquote( f );
 
-  if (sizeof(f)) {
-    object g;
-    if (f[0] == '$') {	// Illegal in BASE64
-      f = f[1..];
-//    } else if( sizeof(indices(g=Gz)) ) {
-      /* Catch here later */
-//      f = g->inflate()->inflate(MIME.decode_base64(f));
-    } else if( sizeof(f) ) {
-      /* Catch here later */
-      f = MIME.decode_base64(f);
-    }
-    res = decode_value(f);  //FIXME Fix error in f
-  } else
-    perror( "Diagram: Fatal Error, f: %s\n", f );
-
-  res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
-
+  if(id->prestate->debug2)
+    return http_string_answer( sprintf("<pre>%O\n", res) );
+  
   mapping(string:mixed) diagram_data;
-  array back = res->bg;
+  
+  if(res->bgcolor)
+    array back = res->bgcolor;
 
   if(res->image)
   {
-    m_delete( res, "bg" );
+    m_delete( res, "bgcolor" );
     res->image = PPM(res->image, id);
 
     /* Image was not found or broken */
@@ -754,87 +899,21 @@ mapping find_file(string f, object id)
 #endif
     }
   } else if(res->tonedbox) {
-    m_delete( res, "bg" );
+    m_delete( res, "bgcolor" );
     res->image = image(res->xsize, res->ysize)->
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
 
-  if (res->xstop)
-    if(res->xstart > res->xstop) m_delete( res, "xstart" );
-
-  if (res->ystop)
-    if(res->ystart > res->ystop) m_delete( res, "ystart" );
-
-  diagram_data=(["type":      res->type,
-		 "subtype":   res->subtype,
-		 "drawtype":  res->dimensions,
-		 "3Ddepth":   res->dimensionsdepth,
-		 "yspace":     res->ygridspace,
-		 "xspace":     res->xgridspace,
-		 "xsize":     res->xsize,
-		 "ysize":     res->ysize,
-		 "textcolor": res->fg,
-		 "bgcolor":   res->bg,
-		 "orient":    res->orientation,
-		 
-		 "xminvalue": (float)res->xstart,
-		 "xmaxvalue": (float)res->xstop,
-		 "yminvalue": (float)res->ystart,
-		 "ymaxvalue": (float)res->ystop,
-
-		 "data":      res->data,
-		 "datacolors":res->colors,
-		 "fontsize":  res->fontsize,
-
-		 "xnames":              res->xnames,
-		 "values_for_xnames":   res->xvalues,
-		 "ynames":              res->ynames,
-		 "values_for_ynames":   res->yvalues,
-
-		 "axcolor":   res->axcolor,
-		 "gridcolor":   res->gridcolor,
-
-		 "gridwidth": res->gridwidth,
-		 "vertgrid":  res->vertgrid,
-		 "horgrid":   res->horgrid,
-
-		 "labels":         res->labels,
-		 "labelsize":      res->labelsize,
-		 "legendfontsize": res->legendfontsize,
-		 "legend_texts":   res->legend_texts,
-		 "labelcolor":     res->labelcolor,
-
-		 "linewidth": (float)res->axwidth,
-		 "graphlinewidth": (float)res->linewidth,
-		 "tone":      res->tone,
-		 "center":    res->center,
-		 "rotate":    res->rotate,
-		 "image":     res->image,
-
-		 "bw":       res->bw,
-		 "eng":      res->eng,
-		 "xmin":     res->xmin,
-		 "ymin":     res->ymin
-  ]);
-
-  if(!res->ygridspace)  m_delete( diagram_data, "yspace" );
-  if(!res->xgridspace)  m_delete( diagram_data, "xspace" );
-  if(!res->xstart)  m_delete( diagram_data, "xminvalue" );
-  if(!res->xstop)   m_delete( diagram_data, "xmaxvalue" );
-  if(!res->ystart)  m_delete( diagram_data, "yminvalue" );
-  if(!res->ystop)   m_delete( diagram_data, "ymaxvalue" );
-  if(!res->bg)      m_delete( diagram_data, "bgcolor" );
-  if(!res->rotate)  m_delete( diagram_data, "rotate" );
-  if(!res->xmin)    m_delete( diagram_data, "xmin" );
-  if(!res->ymin)    m_delete( diagram_data, "ymin" );
+  if( id->prestate->debug2 )
+    return http_string_answer( sprintf("<pre>%O\n", res) );
+  diagram_data = res;
 
   object(Image.image) img;
 
   if(res->image)
     diagram_data["image"] = res->image;
 
-  switch(res->type)
-  {
+  switch(res->type) {
    case "pie":
      img = create_pie(diagram_data)["image"];
      break;
