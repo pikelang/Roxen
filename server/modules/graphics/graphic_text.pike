@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.279 2001/09/21 15:58:11 jhs Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.280 2001/10/01 09:21:37 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -951,7 +951,7 @@ private string fix_text(string c, mapping m, RequestID id) {
 class TagGTextURL {
   inherit RXML.Tag;
   constant name = "gtext-url";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -972,7 +972,7 @@ class TagGTextURL {
 class TagGTextID {
   inherit RXML.Tag;
   constant name = "gtext-id";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -991,7 +991,7 @@ class TagGTextID {
 class TagGText {
   inherit RXML.Tag;
   constant name = "gtext";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -1152,7 +1152,7 @@ private array(string) simpletag_gh(string t, mapping m, string c, RequestID id) 
 class TagAnfang {
   inherit RXML.Tag;
   constant name = "anfang";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.31 2001/09/21 15:58:11 jhs Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.32 2001/10/01 09:21:37 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -121,9 +121,9 @@ class TagBody
   inherit RXML.Tag;
 
   string name;
-  constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+  int flags = (RXML.FLAG_EMPTY_ELEMENT |
+	       RXML.FLAG_COMPAT_PARSE |
+	       RXML.FLAG_NO_PREFIX);
   
   void create(string _name)
   {
@@ -167,9 +167,9 @@ class TagEndBody
   inherit RXML.Tag;
 
   string name, tagname;
-  constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+  int flags = (RXML.FLAG_EMPTY_ELEMENT |
+	       RXML.FLAG_COMPAT_PARSE |
+	       RXML.FLAG_NO_PREFIX);
   
   void create(string _name)
   {
@@ -201,9 +201,9 @@ class TagPushColor
   inherit RXML.Tag;
   
   string name;
-  constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+  int flags = (RXML.FLAG_EMPTY_ELEMENT |
+	       RXML.FLAG_COMPAT_PARSE |
+	       RXML.FLAG_NO_PREFIX);
   
   void create(string _name)
   {
@@ -231,9 +231,9 @@ class TagPopColor
   inherit RXML.Tag;
   
   string name, tagname;
-  constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+  int flags = (RXML.FLAG_EMPTY_ELEMENT |
+	       RXML.FLAG_COMPAT_PARSE |
+	       RXML.FLAG_NO_PREFIX);
   
   void create(string _name)
   {

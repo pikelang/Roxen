@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.314 2001/09/27 20:38:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.315 2001/10/01 09:21:34 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -241,7 +241,7 @@ void set_entities(RXML.Context c) {
 class TagRoxenACV {
   inherit RXML.Tag;
   constant name = "roxen-automatic-charset-variable";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -308,7 +308,7 @@ class TagAppend {
 class TagAuthRequired {
   inherit RXML.Tag;
   constant name = "auth-required";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -330,7 +330,7 @@ class TagAuthRequired {
 class TagExpireTime {
   inherit RXML.Tag;
   constant name = "expire-time";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -357,7 +357,7 @@ class TagExpireTime {
 class TagHeader {
   inherit RXML.Tag;
   constant name = "header";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
 					       "value": RXML.t_text(RXML.PEnt) ]);
 
@@ -385,7 +385,7 @@ class TagHeader {
 class TagRedirect {
   inherit RXML.Tag;
   constant name = "redirect";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "to": RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "add": RXML.t_text(RXML.PEnt),
 					       "drop": RXML.t_text(RXML.PEnt),
@@ -438,7 +438,7 @@ class TagRedirect {
 class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
@@ -511,7 +511,7 @@ class TagSet {
 class TagCopyScope {
   inherit RXML.Tag;
   constant name = "copy-scope";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text,
 					       "to":RXML.t_text ]);
 
@@ -529,7 +529,7 @@ class TagCopyScope {
 class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
@@ -548,7 +548,7 @@ class TagInc {
 class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
@@ -575,7 +575,7 @@ static void inc(mapping m, int val, RequestID id)
 class TagImgs {
   inherit RXML.Tag;
   constant name = "imgs";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -635,7 +635,7 @@ class TagImgs {
 class TagRoxen {
   inherit RXML.Tag;
   constant name = "roxen";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -663,7 +663,7 @@ class TagRoxen {
 class TagDebug {
   inherit RXML.Tag;
   constant name = "debug";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -701,7 +701,7 @@ class TagDebug {
 class TagFSize {
   inherit RXML.Tag;
   constant name = "fsize";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "file" : RXML.t_text(RXML.PEnt) ]);
 
@@ -728,7 +728,7 @@ class TagFSize {
 class TagCoding {
   inherit RXML.Tag;
   constant name="\x266a";
-  constant flags=RXML.FLAG_EMPTY_ELEMENT;
+  int flags=RXML.FLAG_EMPTY_ELEMENT;
   class Frame {
     inherit RXML.Frame;
     constant space=({147, 188, 196, 185, 188, 187, 119, 202, 201, 186, 148, 121, 191, 203,
@@ -749,7 +749,7 @@ class TagCoding {
 class TagConfigImage {
   inherit RXML.Tag;
   constant name = "configimage";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
@@ -774,7 +774,7 @@ class TagConfigImage {
 class TagDate {
   inherit RXML.Tag;
   constant name = "date";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -801,7 +801,7 @@ class TagDate {
 class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
+  int flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
   // FIXME: result_types needs to be updated with all possible outputs
   // from the plugins.
 
@@ -988,7 +988,7 @@ class TagInsertRealfile {
 class TagReturn {
   inherit RXML.Tag;
   constant name = "return";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -1007,7 +1007,7 @@ class TagReturn {
 class TagSetCookie {
   inherit RXML.Tag;
   constant name = "set-cookie";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
 
@@ -1027,7 +1027,7 @@ class TagSetCookie {
 class TagRemoveCookie {
   inherit RXML.Tag;
   constant name = "remove-cookie";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text(RXML.PEnt) ]);
@@ -1149,7 +1149,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id )
 class TagSetMaxCache {
   inherit RXML.Tag;
   constant name = "set-max-cache";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -1238,7 +1238,7 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
-  constant flags = (RXML.FLAG_GET_RAW_CONTENT |
+  int flags = (RXML.FLAG_GET_RAW_CONTENT |
 		    RXML.FLAG_GET_EVALED_CONTENT |
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
@@ -1541,7 +1541,7 @@ class TagNocache
 {
   inherit RXML.Tag;
   constant name = "nocache";
-  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
+  int flags = RXML.FLAG_DONT_CACHE_RESULT;
   class Frame
   {
     inherit RXML.Frame;
@@ -2129,7 +2129,7 @@ class TagColorScope {
 class TagHelp {
   inherit RXML.Tag;
   constant name = "help";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit "rxmlhelp";
@@ -2207,7 +2207,7 @@ class TagHelp {
 class TagNumber {
   inherit RXML.Tag;
   constant name = "number";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -2225,7 +2225,7 @@ class TagNumber {
 class TagUse {
   inherit RXML.Tag;
   constant name = "use";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
 
   private array(string) list_packages() { 
     return filter(((get_dir("../local/rxml_packages")||({}))
@@ -2366,7 +2366,7 @@ class UserTagContents
 {
   inherit RXML.Tag;
   constant name = "contents";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_any (RXML.PXml)});
 
   class Frame
@@ -2564,7 +2564,7 @@ class UserTag {
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
-  constant flags = RXML.FLAG_DONT_RECOVER;
+  int flags = RXML.FLAG_DONT_RECOVER;
   RXML.Type content_type = RXML.t_xml (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
@@ -2880,7 +2880,7 @@ class TagNoParse {
 
 class TagPINoParse {
   inherit TagNoParse;
-  constant flags = RXML.FLAG_PROC_INSTR;
+  int flags = RXML.FLAG_PROC_INSTR;
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -2894,7 +2894,7 @@ class TagPICData
 {
   inherit RXML.Tag;
   constant name = "cdata";
-  constant flags = RXML.FLAG_PROC_INSTR;
+  int flags = RXML.FLAG_PROC_INSTR;
   RXML.Type content_type = RXML.t_text;
   class Frame
   {
@@ -2924,7 +2924,7 @@ class TagEval {
 class TagNoOutput {
   inherit RXML.Tag;
   constant name = "nooutput";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -2937,7 +2937,7 @@ class TagNoOutput {
 class TagStrLen {
   inherit RXML.Tag;
   constant name = "strlen";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -3068,7 +3068,7 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  int flags = RXML.FLAG_SOCKET_TAG;
   array(RXML.Type) result_types = ({RXML.t_any});
   program Frame = FrameIf;
 }
@@ -3076,7 +3076,7 @@ class TagIf {
 class TagElse {
   inherit RXML.Tag;
   constant name = "else";
-  constant flags = 0;
+  int flags = 0;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3091,7 +3091,7 @@ class TagElse {
 class TagThen {
   inherit RXML.Tag;
   constant name = "then";
-  constant flags = 0;
+  int flags = 0;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3133,7 +3133,7 @@ class TagElseif {
 class TagTrue {
   inherit RXML.Tag;
   constant name = "true";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
@@ -3147,7 +3147,7 @@ class TagTrue {
 class TagFalse {
   inherit RXML.Tag;
   constant name = "false";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   class Frame {
     inherit RXML.Frame;
@@ -3259,7 +3259,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
@@ -3684,7 +3684,7 @@ class TagEmit {
 class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   class Frame {
@@ -3700,7 +3700,7 @@ class TagComment {
 
 class TagPIComment {
   inherit TagComment;
-  constant flags = RXML.FLAG_PROC_INSTR;
+  int flags = RXML.FLAG_PROC_INSTR;
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 }

@@ -2,7 +2,7 @@
 
 inherit Variable.VerifiedString;
 
-constant width = 20;
+int width = 20;
 constant type = "VerifiedPassword";
 
 string render_view( RequestID id ) {

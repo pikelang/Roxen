@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.248 2001/09/27 20:35:33 mast Exp $
+// $Id: module.pmod,v 1.249 2001/10/01 09:21:33 anders Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5597,8 +5597,8 @@ class TAny
 {
   inherit Type;
   constant name = "any";
-  constant supertype = 0;
-  constant conversion_type = 0;
+  Type supertype = 0;
+  Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args) {}
@@ -5624,7 +5624,7 @@ static class TNil
   constant sequential = 1;
   Nil empty_value = nil;
   Type supertype = t_any;
-  constant conversion_type = 0;
+  Type conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -5655,7 +5655,7 @@ static class TSame
   inherit Type;
   constant name = "same";
   Type supertype = t_any;
-  constant conversion_type = 0;
+  Type conversion_type = 0;
   string _sprintf() {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
@@ -5672,7 +5672,7 @@ static class TType
   constant sequential = 0;
   Nil empty_value = nil;
   Type supertype = t_any;
-  constant conversion_type = 0;
+  Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
@@ -5716,7 +5716,7 @@ static class TParser
   constant sequential = 0;
   Nil empty_value = nil;
   Type supertype = t_any;
-  constant conversion_type = 0;
+  Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
