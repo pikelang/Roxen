@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.289 2002/08/12 21:55:51 mast Exp $
+// $Id: module.pmod,v 1.290 2002/08/14 18:22:55 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3368,6 +3368,8 @@ class Frame
     mixed res = nil;
     Parser subparser = 0;
     int orig_make_p_code = ctx->make_p_code;
+    PCode orig_evaled_p_code = ctx->evaled_p_code;
+    ctx->evaled_p_code = 0;
 
     mixed err = catch {
       for (; i < sizeof (exec); i++) {
@@ -3492,12 +3494,14 @@ class Frame
       else res = result;
 
       ctx->make_p_code = orig_make_p_code;
+      ctx->evaled_p_code = orig_evaled_p_code;
       return res;
     };
 
     if (result_type->sequential) result = result + (result = 0, res);
 
     ctx->make_p_code = orig_make_p_code;
+    ctx->evaled_p_code = orig_evaled_p_code;
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       THIS_TAG_DEBUG ("Exec: Interrupted at position %d\n", i);
       UNWIND_STATE ustate;
