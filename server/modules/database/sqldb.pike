@@ -4,7 +4,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.7 2000/06/11 14:53:21 mast Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.8 2000/10/18 19:11:22 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "SQL databases";
 constant module_doc  = 
@@ -20,7 +20,7 @@ void create()
 	 "The table with database URLs in the format:"
 	 "<pre>name\tURL</pre>"
 	 "The database URL is specified as "
-	 "<tt>driver://user name:password@host:port/database</tt>.\n");
+	 "<tt>driver://username:password@host:port/database</tt>.\n");
 }
 
 mapping(string:string) parse_table(string tab)
