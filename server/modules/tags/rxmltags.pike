@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.21 1999/10/09 17:23:19 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.22 1999/10/10 00:58:51 noring Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -901,9 +901,9 @@ mixed tag_gauge(string t, mapping args, string contents, object id)
   contents = parse_rxml( contents, id );
   t = gethrtime()-t;
 #else
-  int t = gauge {
+  int t = (int) (gauge {
     contents = parse_rxml( contents, id );
-  } * 1000;
+  } * 1000000);
 #endif
   string define = args->define?args->define:"gauge";
 
