@@ -5,11 +5,13 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.24 1999/07/23 04:43:16 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.25 1999/07/26 13:30:02 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
+
+#define old_rxml_compat 1
 
 static private int loaded;
 
@@ -23,7 +25,8 @@ static private constant old_doc =
    "cellseparator=str: Use str as the column-separator<br>\n"
    "rowseparator=str: Use str as the row-separator<br>\n"
    "cellalign=left|right|center: Align the contents of the cells<br>\n"
-   "rowalign=left|right|center: Align the contents of the rows<br>\n");
+   "rowalign=left|right|center: Align the contents of the rows<br>\n"
+   "noxml: Do not terminate tags such as img and br wit a slash<br>\n");
 
 static private string doc()
 {
@@ -71,7 +74,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
       r+=
 	"<td align=\"left\"><gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
 	(opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
-	(opt->titlebgcolor||"#27215b")+"\">"+s+"</gtext></td>";
+	(opt->titlebgcolor||"#27215b")+"\""+(opt->noxml?"":" xml")+">"+s+"</gtext></td>";
     r += "</tr>";
   }
   
@@ -125,8 +128,7 @@ string container_fields(string name, mapping arg, string q,
   return "";
 }
 
-string tag_tablify( string tag, mapping m, string q, object request_id,
-		    object file, mapping defines)
+string tag_tablify( string tag, mapping m, string q, object id)
 {
   array rows, res;
   string sep, td, color, table;
@@ -138,19 +140,23 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
   q = reverse(q);
 #endif
 
-#if 1
+#if old_rxml_compat
   // RXML <1.4 compatibility stuff
   if(m->fgcolor0) {
     m->oddbgcolor=m->fgcolor0;
     m_delete(m, "fgcolor0");
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor0","oddbgcolor");
   }
   if(m->fgcolor1) {
     m->evenbgcolor=m->fgcolor1;
     m_delete(m, "fgcolor1");
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor1","evenbgcolor");
   }
+  // When people have forgotten what bgcolor meant we can reuse it as evenbgcolor=oddbgcolor=m->bgcolor
   if(m->bgcolor) {
     m->bordercolor=m->bgcolor;
     m_delete(m, "bgcolor");
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute bgcolor","bordercolor");
   }
 #endif
 
