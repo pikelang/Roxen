@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.16 1998/04/30 16:00:21 grubba Exp $
+ * $Id: ftp2.pike,v 1.17 1998/05/01 01:08:06 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1456,7 +1456,7 @@ class FTPSession
     if (arrayp(file)) {
       array st = file;
       file = 0;
-      if (st && (st[1] < 0)) {
+      if (st && (st[1] < 0) && (cmd != "RMD")) {
 	send(550, ({ sprintf("%s: not a plain file.", fname) }));
 	return 0;
       }
@@ -1467,7 +1467,7 @@ class FTPSession
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
-    } else if (session->method == "PUT") {
+    } else if ((< "STOR", "MKD" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
