@@ -15,7 +15,8 @@ roxenhome=/usr/local/roxen
 
 umask 022
 
-# If you want to start with another configuration directory:
+# If you want to start with another configuration directory. The path
+# is relative to the server-X.Y.Z directory.
 #
 # configdir=../configurations
 
@@ -47,13 +48,28 @@ umask 022
 # description:  Roxen WebServer
 
 if test x$configdir = x; then
-  configdir=configurations
+  configdir=../configurations
 else
   flags="$flags --config-dir=$configdir"
 fi
 
 test x$pidfile = x && pidfile=$configdir/_roxen_pid
 flags="$flags --pid-file=$pidfile"
+
+find_server_dir()
+{
+  (
+    cd "$roxenhome" >/dev/null 2>&1 &&
+    for dir in server*; do
+      ( cd "$dir" >/dev/null 2>&1 &&
+	test -f "$configdir/server_version" &&
+	echo "$roxenhome/`cat \"$configdir/server_version\"`"
+      ) && return
+    done
+    echo "$roxenhome/server"
+  )
+}
+roxenhome=`find_server_dir`
 
 # Some systems have stupid rc scripts that are written in shells with job
 # support (read Linux/bash), and send SIGHUP when they finish.
