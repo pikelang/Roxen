@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.328 2002/10/22 00:06:12 nilsson Exp $
+// $Id: rxml.pike,v 1.329 2002/10/23 21:27:56 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -81,7 +81,14 @@ RXML.TagSet rxml_tag_set = class
     // that uses id->misc->defines after the rxml evaluation.
     if (mapping defines = id->misc->defines) {
       if (defines != misc) {
-	if (defines->rxml_misc) ctx->id_defines = defines;
+	if (defines->rxml_misc) {
+	  SIMPLE_TRACE_ENTER (owner, "Preparing for nested RXML parse - "
+			      "moving away existing id->misc->defines");
+	  ctx->id_defines = defines;
+	}
+	else
+	  SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
+			      "replacing id->misc->defines");
 
 	// These settings ought to be in id->misc but are in this
 	// mapping for historical reasons.
@@ -90,9 +97,17 @@ RXML.TagSet rxml_tag_set = class
 
 	id->misc->defines = misc;
       }
+      else
+	SIMPLE_TRACE_ENTER (owner, "Preparing for %s RXML parse - "
+			    "id->misc->defines is already the same as "
+			    "RXML_CONTEXT->misc",
+			    defines->rxml_misc ? "nested" : "top level");
     }
-    else
+    else {
+      SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
+			  "initializing id->misc->defines");
       id->misc->defines = misc;
+    }
     misc->rxml_misc = 1;
 
 #if ROXEN_COMPAT <= 1.3
@@ -131,10 +146,18 @@ RXML.TagSet rxml_tag_set = class
 	id->misc->moreheads = extra_heads;
 
     if (mapping orig_defines = ctx->id_defines) {
+      SIMPLE_TRACE_LEAVE ("Finishing nested RXML parse - "
+			  "restoring old id->misc->defines");
+
       // Somehow it seems like these values are stored in the wrong place.. :P
       if (int v = misc[" _error"]) orig_defines[" _error"] = v;
       if (string v = misc[" _rettext"]) orig_defines[" _rettext"] = v;
       id->misc->defines = orig_defines;
+    }
+    else {
+      SIMPLE_TRACE_LEAVE ("Finishing top level RXML parse - "
+			  "leaving id->misc->defines");
+      m_delete (misc, "rxml_misc");
     }
 
     PROF_LEAVE( "rxml", "overhead" );
@@ -212,6 +235,8 @@ string parse_rxml(string what, RequestID id,
     defines["_source file"] = file;
   }
 
+  int orig_make_p_code = ctx->make_p_code;
+  ctx->make_p_code = 0;
   mixed err = catch {
     if (ctx == RXML_CONTEXT)
       parser->finish (what);	// Skip the unnecessary work in write_end. DDTAH.
@@ -219,6 +244,7 @@ string parse_rxml(string what, RequestID id,
       parser->write_end (what);
     what = parser->eval();
   };
+  ctx->make_p_code = orig_make_p_code;
 
   if (file) m_delete (defines, "_source file");
   if (orig_state_updated >= 0) {
