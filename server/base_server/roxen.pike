@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.398 2000/01/30 22:29:51 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.399 2000/01/31 03:46:42 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1893,6 +1893,32 @@ class ImageCache
         {
           alpha = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
         }
+      }
+
+      int x0, y0, x1, y1;
+      if( args["x-offset"] || args["xoffset"] )
+        x0 = (int)(args["x-offset"]||args["xoffset"]);
+      if( args["y-offset"] || args["yoffset"] )
+        y0 = (int)(args["y-offset"]||args["yoffset"]);
+      if( args["width"] || args["x-size"] );
+        x1 = (int)(args["x-size"]||args["width"]);
+      if( args["height"] || args["y-size"] );
+        y1 = (int)(args["y-size"]||args["height"]);
+
+      if( args->crop )
+      {
+        sscanf( args->crop, "%d,%d-%d,%d", x0, y0, x1, y1 );
+        x1 -= x0;
+        y1 -= y0;
+      }
+
+      if( x0 || x1 || y0 || y1 )
+      {
+        if( !x1 ) x1 = reply->xsize()-x0;
+        if( !y1 ) y1 = reply->ysize()-y0;
+        reply = reply->copy( x0,y0,x1-1,y1-1 );
+        if( alpha )
+          alpha = alpha->copy( x0,y0,x1-1,y1-1 );
       }
 
       if( args->scale )
