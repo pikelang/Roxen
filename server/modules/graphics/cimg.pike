@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.23 2000/07/17 12:23:10 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.24 2000/08/17 00:38:07 per Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -138,17 +138,53 @@ mapping get_my_args( mapping args, RequestID id )
   return a;
 }
 
-class TagCImg {
+mapping check_args( mapping args )
+{
+  if( !args->format )
+    args->format = "png";
+  if( !(args->src || args->data) )
+    RXML.parse_error("Required attribute 'src' or 'data' missing\n");
+  if( args->src && args->data )
+    RXML.parse_error("Only one of 'src' and 'data' may be specified\n");
+
+  return args;
+}
+
+class TagCimgplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "cimg";
+
+  array get_dataset( mapping args, RequestID id )
+  {
+    mapping res = ([ ]);
+    mapping a = get_my_args( check_args( args ), id );
+    string data;
+
+    res->src = (query_internal_location()+the_cache->store( a,id ));
+    data = the_cache->data( a, id , 0 );
+    res["file-size"] = strlen(data);
+    res["file-size-kb"] = strlen(data)/1024;
+    res["data"] = data;
+    res |= the_cache->metadata( a, id, 0 ); // enforce generation
+    return ({ res });
+  }
+}
+
+class TagCImg 
+{
   inherit RXML.Tag;
   constant name = "cimg";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
-  class Frame {
+  class Frame 
+  {
     inherit RXML.Frame;
 
-    array do_return(RequestID id) {
-      mapping a = get_my_args( args, id );
+    array do_return(RequestID id) 
+    {
+      mapping a = get_my_args( check_args( args ), id );
       args -= a;
       args->src = query_internal_location()+the_cache->store( a,id );
       if( mapping size = the_cache->metadata( a, id, 1 ) )
@@ -167,13 +203,15 @@ class TagCImgURL {
   inherit RXML.Tag;
   constant name = "cimg-url";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
-  class Frame {
+  class Frame 
+  {
     inherit RXML.Frame;
 
-    array do_return(RequestID id) {
-      result = query_internal_location()+the_cache->store(get_my_args(args,id),id);
+    array do_return(RequestID id) 
+    {
+      result = query_internal_location()+
+             the_cache->store(get_my_args(check_args( args ), id ),id);
       return 0;
     }
   }
