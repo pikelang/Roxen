@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.46 1997/08/07 17:18:31 mirar Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.47 1997/08/11 18:21:21 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -198,6 +198,8 @@ class Bignum {
 
 /* For debug and statistics info only */
 int requests;
+// Protocol specific statistics.
+mapping(string:mixed) extra_statistics = ([]);
 
 object sent=Bignum();     // Sent data
 object hsent=Bignum();    // Sent headers
@@ -626,19 +628,32 @@ public string status()
 		"</td><td>%.2f Kbit/sec</td>",
 		sent->mb(),tmp * 8192.0);
   
-  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td>",
+  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td></tr>",
 		 hsent->mb());
   
   tmp=(((float)requests*(float)600)/
        (float)((time(1)-roxen->start_time)+1));
 
-  res += ("<tr align=right><td><b>Number of requests:</b></td><td>" 
-	  + sprintf("%8d", requests)
-	  + sprintf("</td><td>%.2f/min</td><td><b>Received data:</b></"
-		    "td><td>%.2f</td>", (float)tmp/(float)10,
-		    (received->mb())));
+  res += sprintf("<tr align=right><td><b>Number of requests:</b></td>"
+		 "<td>%8d</td><td>%.2f/min</td>"
+		 "<td><b>Received data:</b></td><td>%.2fMB</td></tr>",
+		 requests, (float)tmp/(float)10, received->mb());
+  res += "</table>";
+
+  if ((extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
+    // FTP statistics.
+    res += "<b>FTP statistics:</b><br>\n"
+      "<ul><table>\n";
+    foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
+      res += sprintf("<tr align=right><td><b>%s</b></td>"
+		     "<td>%d time%s</td></tr>\n",
+		     upper_case(cmd), extra_statistics->ftp->commands[cmd],
+		     (extra_statistics->ftp->commands[cmd] == 1)?"":"s");
+    }
+    res += "</table></ul>\n";
+  }
   
-  return res +"</table>";
+  return res;
 }
 
 public string *userinfo(string u, object|void id)
@@ -681,9 +696,15 @@ private mapping misc_cache=([]);
 int|mapping check_security(function a, object id, void|int slevel)
 {
   array level;
-  int need_auth;
   array seclevels;
   int ip_ok = 0;	// Unknown
+  int auth_ok = 0;	// Unknown
+  // NOTE:
+  //   ip_ok and auth_ok are three-state variables.
+  //   Valid contents for them are:
+  //     0  Unknown state -- No such restriction encountered yet.
+  //     1  May be bad -- Restriction encountered, and test failed.
+  //    ~0  OK -- Test passed.
 
   if(!(seclevels = misc_cache[ a ]))
     misc_cache[ a ] = seclevels = ({
@@ -707,35 +728,48 @@ int|mapping check_security(function a, object id, void|int slevel)
 	} else {
 	  ip_ok |= 1;	// IP may be bad.
 	}
-	continue;
+	break;
 	
       case MOD_DENY: // deny ip=...
 	if(level[1](id->remoteaddr))
 	  return http_low_answer(403, "<h2>Access forbidden</h2>");
-	continue;
+	break;
 
       case MOD_USER: // allow user=...
-	if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
-	need_auth = 1;
-	continue;
+	if(id->auth && id->auth[0] && level[1](id->auth[1])) {
+	  auth_ok = ~0;	// Match. It's ok.
+	} else {
+	  auth_ok |= 1;	// Auth may be bad.
+	}
+	break;
 	
       case MOD_PROXY_USER: // allow user=...
-	if(id->misc->proxyauth && id->misc->proxyauth[0] && 
-	   level[1](id->misc->proxyauth[1])) return 0;
-	return http_proxy_auth_required(seclevels[2]);
+	if (ip_ok != 1) {
+	  // IP is OK as of yet.
+	  if(id->misc->proxyauth && id->misc->proxyauth[0] && 
+	     level[1](id->misc->proxyauth[1])) return 0;
+	  return http_proxy_auth_required(seclevels[2]);
+	} else {
+	  // Bad IP.
+	  return(1);
+	}
       }
     }
   };
-  if (ip_ok != ~0) {
-    // IP not in any of the allow patterns
-
-    // If auth is needed (access might be allowed if you are the right user),
-    // request authentification from the user. Otherwise this is a lost case,
-    // the user will never be allowed access unless the patterns change.
-    return need_auth ? http_auth_failed(seclevels[2]) : 1;
+  if (ip_ok == 1) {
+    // Bad IP.
+    return(1);
+  } else {
+    // IP OK, or no IP restrictions.
+    if (auth_ok == 1) {
+      // Bad authentification.
+      // Query for authentification.
+      return(http_auth_failed(seclevels[2]));
+    } else {
+      // No auth required, or authentification OK.
+      return(0);
+    }
   }
-  // IP is OK, but there might be other authentication required.
-  return need_auth ? http_auth_failed(seclevels[2]) : 0;
 }
 #endif
 // Empty all the caches above.
