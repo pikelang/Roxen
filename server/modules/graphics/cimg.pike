@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.57 2003/07/04 12:07:36 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.58 2003/09/08 14:07:49 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -43,7 +43,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
  Insert images from other sources, e.g. databases through entities or
  variables.</p>
 <ex-box><emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
+<cimg data='&sql.imagedata:none;'/>
 </emit></ex-box>
 </attr>",
 
