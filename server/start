@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.44 1998/07/27 07:12:56 mast Exp $
+# $Id: start,v 1.45 1998/08/10 21:35:17 per Exp $
 
 VERSION=202; BETA=.b;
 
@@ -113,6 +113,9 @@ parse_args() {
    DEFINES="$DEFINES $1"
   ;;
 # Used by the 'install' script
+  --truss)
+     pike="truss $pike"
+   ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
   ;;
