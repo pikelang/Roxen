@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.10 1996/12/10 03:06:30 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.11 1996/12/10 03:07:30 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -64,6 +64,10 @@ array register_module()
 	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
 	      "                 Apply a turbulence filter, and use this as the"
 	      "                 background.\n"
+	      ""
+	      "Arguments passed on the the <a> tag (if href is specified):\n "
+	      " target=...\n"
+	      " onClick=...\n"
 	      "</pre>\n",
 	      0,
 	      1,
