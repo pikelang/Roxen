@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.261 2001/03/09 16:18:52 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.262 2001/03/13 10:14:20 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -521,8 +521,9 @@ constant tagdoc=([
 </attr>"+gtextargs,
 
 "gtext-url":#"<desc cont='cont'><p><short>
-
- </short></p>
+ This tag generates an URI to the graphical text element.</short>
+ <tag>gtext-url</tag> takes the same attributes as <xref
+ href='gtext.tag' />.</p>
 
 </desc>
 

@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.268 2001/02/20 09:48:07 kuntri Exp $
+// $Id: rxml.pike,v 1.269 2001/03/13 10:14:19 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -3020,15 +3020,15 @@ Kibibits.
 </p>
 </desc>",
 
-"emit#sources":({ #"<desc plugin='plugin'><p>
- Provides a list of all available emit sources.
+"emit#sources":({ #"<desc plugin='plugin'><p><short>
+ Provides a list of all available emit sources.</short>
 </p></desc>",
   ([ "&_.source;":#"<desc ent='ent'><p>The name of the source.</p></desc>" ]) }),
 
-"emit#values":({ #"<desc plugin='plugin'><p>
+"emit#values":({ #"<desc plugin='plugin'><p><short>
  Splits the string provided in the values attribute and outputs the
- parts in a loop. The value in the values attribute may also be an
- array or mapping.
+ parts in a loop. </short>The value in the values attribute may also
+ be an array or mapping.
 </p></desc>
 
 <attr name='values' value='string, mapping or array' required='required'><p>
