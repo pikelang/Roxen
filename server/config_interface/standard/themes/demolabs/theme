@@ -2,19 +2,23 @@
 
 <theme-set what='logo-html' to='<img border="0" src="&usr.logo;" />'/>
 
-<theme-set what=top-bgcolor to=black />
-<theme-set what=toptabs-bgcolor to=black />
+<theme-set what=top-bgcolor      to=#ffee88 />
+<theme-set what=toptabs-bgcolor  to=#000000 />
 
 <theme-set what=subtabs-dimtextcolor to=black />
+<theme-set what=subtabs-selcolor     to=#ffffc9 />
+
+<theme-set what=left-buttonbg    to=#ffffff />
+<theme-set what=left-selbuttonbg to=#ffffc9 />
 
 <theme-set what=bgcolor   to=#ffffc9/>
 <theme-set what=fgcolor   to=#000000/>
 <theme-set what=linkcolor to=#ff8c00/>
 
 <theme-set what=fade1     to=#ffee88/>
-<theme-set what=fade2     to=#999999/>
+<theme-set what=fade2     to=#ffffff/>
 <theme-set what=fade3     to=#ffffff/>
-<theme-set what=fade4     to=#ffffff/>
+<theme-set what=fade4     to=#000000/>
 
 <theme-set what=tab-frame-image     to=tabframe.xcf themefile />
 <theme-set what=gbutton-frame-image to=gbutton.xcf  themefile />
