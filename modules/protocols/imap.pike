@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.59 1999/02/13 17:57:19 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.60 1999/02/14 23:20:03 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -928,6 +928,25 @@ class backend
     }
 
     return(session->user->get_or_create_mailbox(mailbox_name) != 0);
+  }
+
+  int delete(object|mapping(string:mixed) session,
+	     string mailbox_name)
+  {
+    // Clientlayer Mailbox object
+    object mailbox;
+
+    if ((lower_case(mailbox_name) == "inbox") ||
+	(lower_case(mailbox_name) == "incoming") ||
+	(!(mailbox = session->user->get_mailbox(mailbox_name))))
+    {
+      // RFC 2060, Section 6.3.4:
+      //   It is an error to attempt to delete INBOX, or a mailbox name
+      //   that does not exist.
+      return(0);
+    }
+    mailbox->delete();
+    return(1);
   }
 
   array(array(object|string)) list(object|mapping(string:mixed) session,
