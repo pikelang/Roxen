@@ -9,7 +9,7 @@ static object servlet_ifc = FINDCLASS("javax/servlet/Servlet");
 static object singlethread_ifc = FINDCLASS("javax/servlet/SingleThreadModel");
 static object class_class = FINDCLASS("java/lang/Class");
 static object classloader_class = FINDCLASS("java/lang/ClassLoader");
-static object classloader2_class = FINDCLASS("se/idonex/servlet/ClassLoader");
+static object classloader2_class = FINDCLASS("java/net/URLClassLoader");
 static object config_class = FINDCLASS("se/idonex/servlet/ServletConfig");
 static object context_class = FINDCLASS("se/idonex/servlet/RoxenServletContext");
 static object request_class = FINDCLASS("se/idonex/servlet/ServletRequest");
@@ -21,10 +21,14 @@ static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object vector_class = FINDCLASS("java/util/Vector");
+static object file_class = FINDCLASS("java/io/File");
+static object url_class = FINDCLASS("java/net/URL");
 static object new_instance = class_class->get_method("newInstance",
 						     "()Ljava/lang/Object;");
+static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
+static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
 static object load_class = classloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = classloader2_class->get_method("<init>", "(Ljava/lang/String;)V");
+static object cl_init = classloader2_class->get_method("<init>", "([Ljava/net/URL;)V");
 static object servlet_init = servlet_ifc->get_method("init", "(Ljavax/servlet/ServletConfig;)V");
 static object servlet_destroy = servlet_ifc->get_method("destroy", "()V");
 static object servlet_getservletinfo = servlet_ifc->get_method("getServletInfo", "()Ljava/lang/String;");
@@ -170,9 +174,19 @@ class loader {
 
   void create(string codedir)
   {
+    object f = file_class->alloc();
+    check_exception();
+    file_init->call_nonvirtual(f, codedir);
+    check_exception();
+    object url = file_tourl(f);
+    check_exception();
+    object urls = url_class->new_array(1);
+    check_exception();
+    urls[0] = url;
+    check_exception();
     cl = classloader2_class->alloc();
     check_exception();
-    cl_init->call_nonvirtual(cl, codedir);
+    cl_init->call_nonvirtual(cl, urls);
     check_exception();
   }
 
