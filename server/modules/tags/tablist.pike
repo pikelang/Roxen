@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.28 1999/12/08 19:29:22 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.29 1999/12/21 23:50:21 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -14,9 +14,21 @@ roxen.ImageCache the_cache;
  * Functions
  */
 
+Image.Image mask_image;
+Image.Image frame_image;
+int         height;
+int         width;
+object      button_font;
+
 void start()
 {
+  mask_image = Image.load("roxen-images/tab_mask.png");
+  frame_image = Image.load("roxen-images/tab_frame.png");
+  height = frame_image->ysize();                       
+  width = frame_image->xsize();                        
+  button_font = resolve_font("haru 32");               
   the_cache = roxen.ImageCache( "tablist", draw_tab );
+  find_internal = the_cache->http_file_answer;
 }
 
 array register_module()
@@ -128,20 +140,15 @@ string container_tablist(string t, mapping a, string contents, RequestID id)
 }
 
 
-Image.Image mask_image; 
-Image.Image frame_image;
-object button_font = resolve_font("haru 32");
 
 Image.Image draw_tab(mapping args, string txt)
 {
-  Image.Image text = button_font
-              ->write( txt )
-              ->scale(0, frame_image->ysize());
+  Image.Image text = button_font->write( txt );
+  text = text->scale(0, height);
 
   //  Create image with proper background
-  Image.Image i = Image.Image(frame_image->xsize() * 2 + text->xsize(),
-                              frame_image->ysize(),
-                              args->sel ? args->fg : args->dim);
+  Image.Image i = Image.Image(width * 2 + text->xsize(),
+                              height, args->sel ? args->fg : args->dim);
   //  Add outside corners
   i->paste_alpha_color(mask_image, args->bg);
 
@@ -151,19 +158,17 @@ Image.Image draw_tab(mapping args, string txt)
 
   //  Add tab frame. We compose the corners in a separate buffer where we
   //  draw the sides using a mult() operation to preserve antialiasing.
-  object corner = i->copy(0, 0,
-			  frame_image->xsize() - 1, 
-                          frame_image->ysize() - 1);
+  object corner = i->copy(0, 0, width - 1, height - 1);
   corner *= frame_image;
   i->paste(corner);
   i->paste(corner->mirrorx(), i->xsize() - corner->xsize(), 0);
   
   //  Add text which is drawn it twice if the color is bleak
   for (int loop = (`+(@args->txt) / 3 > 200 ? 2 : 1); loop; loop--)
-    i->paste_alpha_color(text, args->txt, frame_image->xsize(), 0);
+    i->paste_alpha_color(text, args->txt, width, 0);
   
   //  Create line on top of tab, and also at bottom if not selected
-  i->line(frame_image->xsize() - 1, 0, i->xsize() - frame_image->xsize(), 0,
+  i->line(width - 1, 0, i->xsize() - width, 0,
 	  0, 0, 0);
 
   if (!args->sel)
@@ -173,8 +178,7 @@ Image.Image draw_tab(mapping args, string txt)
   {
     i = i->copy( -10,0, i->xsize()-1, i->ysize()-1, args->bg );
     for( int x=0; x<10; x++)
-      i->setpixel( 10-x,
-                   i->ysize()-1,
+      i->setpixel( 10-x, i->ysize()-1,
                    (args->bg[0]*x)/10, (args->bg[1]*x)/10, (args->bg[2]*x)/10);
   }
 
@@ -184,24 +188,15 @@ Image.Image draw_tab(mapping args, string txt)
     if( (int)args->last )
       size = (int)args->last;
     else
-      size = 100;
+      size = 30;
     i = i->copy( 0,0, i->xsize()+(size-1), i->ysize()-1, args->bg );
     for( int x=0; x<size; x++)
       i->setpixel( i->xsize()-(size+1)+x,
                    i->ysize()-1,
                    (args->bg[0]*x)/size, (args->bg[1]*x)/size, 
                    (args->bg[2]*x)/size);
-  }
-  
+  }  
   return i;
 }
 
-mapping find_internal(string f, object id)
-{
-  if( !mask_image )
-  {
-    mask_image = roxen.load_image("roxen-images/tab_mask.png",id);
-    frame_image = roxen.load_image("roxen-images/tab_frame.png",id);
-  }
-  return the_cache->http_file_answer( f, id );
-}
+function find_internal;
