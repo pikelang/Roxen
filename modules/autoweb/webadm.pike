@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.35 1998/09/30 23:00:35 js Exp $
+ * $Id: webadm.pike,v 1.36 1998/10/04 17:00:23 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.35 1998/09/30 23:00:35 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.36 1998/10/04 17:00:23 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -164,7 +164,7 @@ string update_template(string tag_name, mapping args, object id)
     vars += ([ variable->variable_name:variable->value ]);
   vars = default_vars + vars;
 
-  // Template
+  // Get template file
   string template_filename = vars->template_name;
   if(!template_filename)
     return "";
@@ -173,6 +173,12 @@ string update_template(string tag_name, mapping args, object id)
   if(!stringp(template)) {
     werror("Can not open file '%s'\n", templatesdir+template_filename);
     return "";
+  }
+  
+  // Fix special variables
+  array dingbats = ({ "h1_dingbat", "h2_dingbat" });
+  foreach(dingbats, string dingbat) {
+    vars[dingbat] = (vars[dingbat]!=""?sprintf("%c", (int)vars[dingbat]):"");
   }
   
   if(vars["bg_image"]&&sizeof(vars["bg_image"])) {
@@ -186,7 +192,8 @@ string update_template(string tag_name, mapping args, object id)
     vars["text_bg_color"] = mean_color(vars->text_bg_color,
 				       vars->text_bg_image_color);
   }
-  
+
+  // Generate template
   mapping flags = ([ "include":1 ]);
   while(flags->include) {
     // Replace placeholders with customer spesific preferences  
