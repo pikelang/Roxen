@@ -152,6 +152,7 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
+/server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/directories2.pike foreign_ident
 /server/modules/directories/fastdir.pike foreign_ident

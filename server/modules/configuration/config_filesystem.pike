@@ -3,14 +3,18 @@
 #include <stat.h>
 #include <roxen.h>
 
-inherit "modules/filesystems/filesystem.pike";
+inherit "module";
+inherit "roxenlib";
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
+constant cvs_version = "$Id: config_filesystem.pike,v 1.11 1999/11/19 06:53:53 per Exp $";
 
-static object charset_encoder, charset_decoder;
+constant path = "config_interface/";
+
+object charset_encoder, charset_decoder;
 
 string template_for( string f, object id )
 {
@@ -22,70 +26,52 @@ string template_for( string f, object id )
       return cd[..i]*"/"+"/template";
 }
 
-static string revert_browser_encoding( string s )
-{
-  return charset_decoder?
-    charset_decoder->clear( )->feed( s )->drain( ) :
-    utf8_to_string( s );
-}
-
 mixed stat_file( string f, object id )
 {
   mixed ret;
-  f = decode_id_from_browser_encoding( f, id );
-  ret = ::stat_file( f, id );
+  ret = file_stat( path+f );
   if( !ret )
   {
     sscanf( f, "%*[^/]/%s", f );
     f = "standard/"+f;
-    ret = ::stat_file( f, id );
+    ret = file_stat( path+f );
   }
   return ret;
 }
 
 constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
 
-int count = time();
-string idi_netscape( string what )
-{
-  return "/("+(count++)+")"+what;
-}
-
 mixed find_dir( string f, object id )
 {
-  f = decode_id_from_browser_encoding( f, id );
-  return ::find_dir( f, id );
+  return get_dir( path+f );
 }
-
-string decode_id_from_browser_encoding( string f, object id )
-{
-  if( !id->misc->path_decoded )
-  {
-    id->misc->path_decoded = 1;
-    f = revert_browser_encoding( f );
-    id->not_query = revert_browser_encoding( id->not_query );
-    mapping new_variables = ([]);
-    foreach( indices(id->variables), string q )
-      new_variables[ revert_browser_encoding( q ) ] = 
-               revert_browser_encoding( id->variables[q] );
-    id->variables = new_variables;
-    multiset new_prestate = (<>);
-    foreach( indices( id->prestate ), string q )
-      new_prestate[revert_browser_encoding( q ) ]=1;
-    id->prestate = new_prestate;
-  }
-  return f;
-}
-
 
 mixed find_file( string f, object id )
 {
   string locale;
 
+
+  if( !id->misc->request_charset_decoded )
+  {
+    // We only need to decode f (and id->not_query)  here, 
+    // since there is no variables (if there were, the
+    // request would have been automatically decoded).
+    id->misc->request_charset_decoded = 1;
+
+    if( charset_decoder )
+    {
+      f = charset_decoder->clear()->feed( f )->drain();
+      id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
+    }
+    else
+    {
+      f = utf8_to_string( f );
+      id->not_query = utf8_to_string( id->not_query );
+    }
+  }
+
   if( !id->misc->config_user )
     return http_auth_required( "Roxen configuration" );
-
-  f = decode_id_from_browser_encoding( f, id );
 
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
@@ -93,18 +79,24 @@ mixed find_file( string f, object id )
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
   
-  if( sscanf( f, "%[^/]/%s", locale, f ) != 2 )
-    locale = f;
+  sscanf( f, "%[^/]/%*s", locale );
 
   id->misc->cf_locale = locale;
 
-  mixed retval = ::find_file( locale+"/"+f, id );
-
-  if( retval == 0 )
-    retval = ::find_file( "standard/"+f, id );
+  array stat = stat_file( f, id );
+  if( !stat ) // No such luck...
+    return 0;
+  switch( stat[ ST_SIZE ] )
+  {
+   case -1:
+   case -3:
+   case -4:
+     return 0; /* Not suitable (device or no file) */
+   case -2: /* directory */
+     return -1;
+  }
   
-  if( intp( retval ) || mappingp( retval ) )
-    return retval;
+  mixed retval = Stdio.File( path+replace(f,locale,"standard"), "r" );
 
   if( id->variables["content-type"] )
     return http_file_answer( retval, id->variables["content-type"] );
@@ -115,7 +107,6 @@ mixed find_file( string f, object id )
   switch( type )
   {
    case "text/html":
-   case "text/rxml":
      string data =  retval->read(), title="", pre;
      string title = "";
      if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
@@ -161,9 +152,6 @@ mixed find_file( string f, object id )
 
 void start(int n, object cfg)
 {
-  if( query( "searchpath" ) == "NONE" )
-    set( "searchpath", "config_interface/" );
-  ::start( );
   if( cfg )
   {
     charset_encoder = charset_decoder = 0;
@@ -182,8 +170,8 @@ void start(int n, object cfg)
 
 void create()
 {
-  ::create();
-
   defvar("encoding", "UTF-8", "Character encoding", TYPE_STRING,
 	 "Send pages to client in this character encoding.");
+  defvar( "location", "/", "Mountpoint", TYPE_LOCATION,
+          "Usually / is a good idea" );
 }
