@@ -2,7 +2,7 @@
 
   <delete all>
 
-  <!--  Layout groups  -->
+  <!--  Layout wizards  -->
   <insert name="General" title="Edit general layout preferences"
           help="help" category="tmpl">
 	  
@@ -15,14 +15,26 @@
   <insert name="Heading 2" title="Edit heading 2 preferences"
           help="help" category="tmpl">
 
-  <!--  Navigation groups  -->
+  <insert name="Page head text" title="Edit page head text preferences"
+          help="help" category="tmpl">
+
+  <insert name="Page head layout" title="Edit page head layout preferences"
+          help="help" category="tmpl">
+
+  <!--  Navigation wizards  -->
   <insert name="General" title="Edit general navigation preferences"
           help="help" category="nav">
 	  
-  <insert name="Color" title="Edit navigation colors"
+  <insert name="Text" title="Edit navigation text preferences"
+          help="help" category="nav">
+	  
+  <insert name="Text colors" title="Edit navigation text colors"
           help="help" category="nav">
 
-  <insert name="Image" title="Edit navigation images"
+  <insert name="Background colors" title="Edit navigation background colors"
+          help="help" category="nav">
+
+  <insert name="Images" title="Edit navigation images"
           help="help" category="nav">
 
 </sql-insert>
@@ -38,64 +50,109 @@
   <!--  Layout variables  -->
   <!--  General  -->
   <insert name="template_name" title="Layout style"
-          type="select" help="Layout style"
+          type="select" help=""
 	  _wizard_name="General" _wizard_category="tmpl">
 	  
   <insert name="bg_color" title="Background color"
-          type="color" help="Background color"
+          type="color" help=""
 	   _wizard_name="General" _wizard_category="tmpl">
 
   <insert name="text_color" title="Text color"
-          type="color" help="Text color"
+          type="color" help=""
 	   _wizard_name="General" _wizard_category="tmpl">
 
   <!--  Link colors  -->
   <insert name="link_color" title="Link color"
-          type="color" help="Link color"
+          type="color" help=""
 	   _wizard_name="Link colors"  _wizard_category="tmpl">
 
   <insert name="vlink_color" title="Visited link color"
-          type="color" help="Visited link color"
+          type="color" help=""
 	  _wizard_name="Link colors" _wizard_category="tmpl">
 
   <insert name="alink_color" title="Active link color"
-          type="color" help="Active link color"
+          type="color" help=""
 	  _wizard_name="Link colors" _wizard_category="tmpl">
 
   <!--  Heading 1  -->	  
   <insert name="h1_color" title="Heding 1 color"
-          type="color" help="Heding 1 color"
+          type="color" help=""
 	  _wizard_name="Heading 1" _wizard_category="tmpl">
 
   <insert name="h1_font" title="Heading 1 font"
-          type="font" help="Heading 1 font"
+          type="font" help=""
 	  _wizard_name="Heading 1" _wizard_category="tmpl">
 
   <insert name="h1_size" title="Heading 1 size"
-          type="int" help="Heading 1 size"
+          type="int" help=""
+	  _wizard_name="Heading 1"  _wizard_category="tmpl">
+	  
+  <insert name="h1_align" title="Heading 1 justification"
+          type="select" help=""
 	  _wizard_name="Heading 1"  _wizard_category="tmpl">
 	  
   <insert name="h1_shadow" title="Heading 1 shadow"
-          type="toggle" help="Heading 1 shadow"
+          type="toggle" help=""
 	  _wizard_name="Heading 1"  _wizard_category="tmpl">
 	  
   <!--  Heading 2  -->	  
   <insert name="h2_color" title="Heading 2 color"
-          type="color" help="Heading 2 color"
+          type="color" help=""
 	  _wizard_name="Heading 2" _wizard_category="tmpl">
 
   <insert name="h2_font" title="Heading 2 font"
-          type="font" help="Heading 2 font"
+          type="font" help=""
 	  _wizard_name="Heading 2" _wizard_category="tmpl">
 
   <insert name="h2_size" title="Heading 2 size"
-          type="int" help="Heading 2 size"
+          type="int" help=""
 	  _wizard_name="Heading 2" _wizard_category="tmpl">
 	  
+  <insert name="h2_align" title="Heading 2 justification"
+          type="select" help=""
+	  _wizard_name="Heading 2"  _wizard_category="tmpl">
+
   <insert name="h2_shadow" title="Heading 2 shadow"
-          type="toggle" help="Heading 2 shadow"
+          type="toggle" help=""
 	  _wizard_name="Heading 2"  _wizard_category="tmpl">
 	  
+  <!--  Page head text  -->
+  <insert name="page_head_text" title="Page head text"
+          type="string" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+	  
+  <insert name="page_head_text_color" title="Page head text color"
+          type="color" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+	  
+  <insert name="page_head_text_font" title="Page head text font"
+          type="font" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+  
+  <insert name="page_head_text_size" title="Page head text size"
+          type="float" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+
+  <insert name="page_head_text_align" title="Page head text justification"
+          type="select" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+
+  <insert name="page_head_text_shadow" title="Page head text shadow"
+          type="toggle" help=""
+	  _wizard_name="Page head text" _wizard_category="tmpl">
+	  
+  <!--  Page head layout  -->	  
+  <insert name="page_head_image" title="Page head image"
+          type="select" help=""
+	  _wizard_name="Page head layout" _wizard_category="tmpl">
+	  
+  <insert name="page_head_image_align" title="Page head image justification"
+          type="select" help=""
+	  _wizard_name="Page head layout" _wizard_category="tmpl">
+	  
+  <insert name="page_head_bar_color" title="Page head bar color"
+          type="color" help=""
+	  _wizard_name="Page head layout" _wizard_category="tmpl">
 	  
   <!--  Navigation Variables  -->
   <!--  General  -->
@@ -103,34 +160,57 @@
           type="select" help="Navigation template name"
 	  _wizard_name="General" _wizard_category="nav">
 	  
-  <insert name="nav_size" title="Navigation size"
-          type="float" help="Navigation size"
-	  _wizard_name="General" _wizard_category="nav">
-	  
+  <!--  Navigation text  -->	  
   <insert name="nav_font" title="Navigation font"
-          type="font" help="Navigation font"
-	  _wizard_name="General" _wizard_category="nav">
+          type="font" help=""
+	  _wizard_name="Text" _wizard_category="nav">
 
+  <insert name="nav_size" title="Navigation size"
+          type="float" help=""
+	  _wizard_name="Text" _wizard_category="nav">
 	  
-  <!--  Color  -->
-  <insert name="nav_color1" title="Navigation color1"
-          type="color" help="Navigation color1"
-	  _wizard_name="Color" _wizard_category="nav">
+  <insert name="nav_align" title="Navigation text justification"
+          type="select" help=""
+	  _wizard_name="Text" _wizard_category="nav">
+
+  <insert name="nav_shadow" title="Navigation text shadow"
+          type="toggle" help=""
+	  _wizard_name="Text"  _wizard_category="nav">
 	  
-  <insert name="nav_color2" title="Navigation color2"
-          type="color" help="Navigation color2"
-	  _wizard_name="Color" _wizard_category="nav">
+  <!--  Navigation Text color  -->
+  <insert name="nav_text_color" title="Text color"
+          type="color" help=""
+	  _wizard_name="Text colors" _wizard_category="nav">
+	  
+  <insert name="nav_text_color_sel" title="Selected text color"
+          type="color" help=""
+	  _wizard_name="Text colors" _wizard_category="nav">
 
-  <insert name="nav_color3" title="Navigation color3"
-          type="color" help="Navigation color3"
-	  _wizard_name="Color" _wizard_category="nav">
+  <insert name="nav_text_color_mouse" title="Mouseover text color"
+          type="color" help=""
+	  _wizard_name="Text colors" _wizard_category="nav">
 
+  <!--  Navigation Background color  -->
+  <insert name="nav_bg_color" title="Background color"
+          type="color" help=""
+	  _wizard_name="Background colors" _wizard_category="nav">
+	  
+  <insert name="nav_bg_color_sel" title="Selected background color"
+          type="color" help=""
+	  _wizard_name="Background colors" _wizard_category="nav">
 
-  <!--  Image  -->
+  <insert name="nav_bg_color_mouse" title="Mouseover background color"
+          type="color" help=""
+	  _wizard_name="Background colors" _wizard_category="nav">
+
+  <!--  Navigation Images  -->
   <insert name="nav_bg_img" title="Navigation background image"
           type="select" help="Navigation background image"
-	  _wizard_name="Image" _wizard_category="nav">
-	  
+	  _wizard_name="Images" _wizard_category="nav">
+
+  <insert name="nav_sel_img" title="Navigation selected-image"
+          type="select" help=""
+	  _wizard_name="Images" _wizard_category="nav">	  
 	  
 </sql-insert>
 
@@ -142,27 +222,64 @@
   <delete all>
 
   <!--  Template files  -->
-  <insert name="Layout 1" value="tmpl1.tmpl" _variable_name="template_name">
-  <insert name="Layout 2" value="tmpl2.tmpl" _variable_name="template_name">
-  <insert name="Layout 3" value="tmpl3.tmpl" _variable_name="template_name">
+  <insert name="Basic" value="basic.tmpl" _variable_name="template_name">
+  <insert name="Night" value="night.tmpl" _variable_name="template_name">
   <insert name="Klee" value="Klee.tmpl" _variable_name="template_name">
+  <insert name="Dawn" value="dawn.tmpl" _variable_name="template_name">
+  <insert name="Sand" value="sand.tmpl" _variable_name="template_name">
 
   <!--  Navigation files  -->
-  <insert name="Nav 1" value="nav1.ntmpl" _variable_name="nav_name">
-  <insert name="Nav 2" value="nav2.ntmpl" _variable_name="nav_name">
-  <insert name="Nav 3" value="nav3.ntmpl" _variable_name="nav_name">
-  <insert name="Klee" value="Klee.ntmpl" _variable_name="nav_name">
   <insert name="Basic" value="basic.ntmpl" _variable_name="nav_name">
+  <insert name="Night" value="night.ntmpl" _variable_name="nav_name">
+  <insert name="Klee" value="Klee.ntmpl" _variable_name="nav_name">
+  <insert name="Dawn" value="dawn.ntmpl" _variable_name="nav_name">
+  <insert name="Sand" value="sand.ntmpl" _variable_name="nav_name">
 
+  <!--  Headig 1 justification  -->
+  <insert name="Left" value="left" _variable_name="h1_align">
+  <insert name="Center" value="center" _variable_name="h1_align">
+  <insert name="Right" value="right" _variable_name="h1_align">
+
+  <!--  Headig 2 justification  -->
+  <insert name="Left" value="left" _variable_name="h2_align">
+  <insert name="Center" value="center" _variable_name="h2_align">
+  <insert name="Right" value="right" _variable_name="h2_align">
+
+  <!--  Page head text justification  -->
+  <insert name="Left" value="left" _variable_name="page_head_text_align">
+  <insert name="Center" value="center" _variable_name="page_head_text_align">
+  <insert name="Right" value="right" _variable_name="page_head_text_align">
+
+  <!--  Page head image justification  -->
+  <insert name="Left" value="left" _variable_name="page_head_image_align">
+  <insert name="Center" value="center" _variable_name="page_head_image_align">
+  <insert name="Right" value="right" _variable_name="page_head_image_align">
+
+  <!--  Navigation text justification  -->
+  <insert name="Left" value="left" _variable_name="nav_align">
+  <insert name="Center" value="center" _variable_name="nav_align">
+  <insert name="Right" value="right" _variable_name="nav_align">
+   
   <!--  Navigation images  -->
-  <insert name="bg 1" value="nav1/bg1.pnm" _variable_name="nav_bg_img">
-  <insert name="bg 2" value="nav1/bg2.pnm" _variable_name="nav_bg_img">
-  <insert name="bg 3" value="nav1/bg3.pnm" _variable_name="nav_bg_img">
-  <insert name="bg 4" value="nav1/bg4.pnm" _variable_name="nav_bg_img">
-  <insert name="bg 5" value="nav1/bg5.pnm" _variable_name="nav_bg_img">
-  <insert name="bg 6" value="nav1/bg6.pnm" _variable_name="nav_bg_img">
-  <insert name="cashew" value="nav2/cashew.pnm" _variable_name="nav_bg_img">
+  <insert name="none" value="none" _variable_name="nav_bg_img">
+  <insert name="bg 1" value="/img/nav1/bg1.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 2" value="/img/nav1/bg2.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 3" value="/img/nav1/bg3.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 4" value="/img/nav1/bg4.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 5" value="/img/nav1/bg5.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 6" value="/img/nav1/bg6.pnm" _variable_name="nav_bg_img">
+  <insert name="cashew" value="/img/nav2/cashew.pnm" _variable_name="nav_bg_img">
 
+  <!--  Navigation selected images  -->
+  <insert name="none" value="none" _variable_name="nav_sel_img">
+  <insert name="plupp" value="nav1/plupp.pnm" _variable_name="nav_sel_img">
+
+  <!--  Page head images-->
+  <insert name="none" value="none" _variable_name="page_head_image">
+  <insert name="Sand" value="/img/sand/sand.jpg" _variable_name="page_head_image">
+  <insert name="Blue clouds" value="/img/dawn/blue_clouds.jpg" _variable_name="page_head_image">
+  <insert name="Squares" value="/img/Klee/rutor.gif" _variable_name="page_head_image">
+  
 </sql-insert>
 
 
@@ -170,11 +287,11 @@
 
   <delete all>
 
-  <insert name="Clasic">
-  <insert name="Modern">
-  <insert name="Strict">
-  <insert name="Sunshine">
-  <insert name="Depresive">
+  <insert name="Basic">
+  <insert name="Night">
+  <insert name="Klee">
+  <insert name="Dawn">
+  <insert name="Sand">
   
 </sql-insert>
 
@@ -184,9 +301,10 @@
 	    query="select id from template_vars where
 	           name='#_variable_name#'">
 
-  <-delete all>
-
-  <insert scheme_id=1 _variable_name="template_name" value="tmpl1.tmpl">
+  <delete all>
+  
+  <!--  Basic  -->
+  <insert scheme_id=1 _variable_name="template_name" value="basic.tmpl">
   <insert scheme_id=1 _variable_name="bg_color" value="white">
   <insert scheme_id=1 _variable_name="text_color" value="black">
 
@@ -198,37 +316,241 @@
   <insert scheme_id=1 _variable_name="h1_font" value="helvetica">
   <insert scheme_id=1 _variable_name="h1_size" value="1">
   <insert scheme_id=1 _variable_name="h1_shadow" value="0">
+  <insert scheme_id=1 _variable_name="h1_align" value="left">
 
   <insert scheme_id=1 _variable_name="h2_color" value="black">
   <insert scheme_id=1 _variable_name="h2_font" value="helvetica">
   <insert scheme_id=1 _variable_name="h2_size" value="2">
   <insert scheme_id=1 _variable_name="h2_shadow" value="0">
+  <insert scheme_id=1 _variable_name="h2_align" value="left">
 
-  <insert scheme_id=1 _variable_name="h3_color" value="black">
-  <insert scheme_id=1 _variable_name="h3_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="h3_size" value="3">
-  <insert scheme_id=1 _variable_name="h3_shadow" value="0">
+  <insert scheme_id=1 _variable_name="page_head_text" value="Slogan">
+  <insert scheme_id=1 _variable_name="page_head_text_color" value="black">
+  <insert scheme_id=1 _variable_name="page_head_text_font" value="officina sans bold">
+  <insert scheme_id=1 _variable_name="page_head_text_size" value="0.6">
+  <insert scheme_id=1 _variable_name="page_head_text_align" value="left">
+  <insert scheme_id=1 _variable_name="page_head_text_shadow" value="0">
 
-  <insert scheme_id=1 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=1 _variable_name="nav_size" value="0.8">
-  <insert scheme_id=1 _variable_name="nav_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=1 _variable_name="page_head_image" value="none">
+  <insert scheme_id=1 _variable_name="page_head_image_align" value="left">
+  <insert scheme_id=1 _variable_name="page_head_bar_color" value="none">
+     
+  <insert scheme_id=1 _variable_name="nav_text_color" value="white">
+  <insert scheme_id=1 _variable_name="nav_text_color_sel" value="white">
+  <insert scheme_id=1 _variable_name="nav_text_color_mouse" value="white">
+
+  <insert scheme_id=1 _variable_name="nav_bg_color" value="black">
+  <insert scheme_id=1 _variable_name="nav_bg_color_sel" value="black">
+  <insert scheme_id=1 _variable_name="nav_bg_color_mouse" value="black">
   
-  <insert scheme_id=2 _variable_name="template_name" value="tmpl2.tmpl">
-  <insert scheme_id=2 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=2 _variable_name="bg_color" value="pink">
-  <insert scheme_id=2 _variable_name="text_color" value="white">
-  <insert scheme_id=3 _variable_name="template_name" value="tmpl3.tmpl">
-  <insert scheme_id=3 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=3 _variable_name="bg_color" value="grey">
-  <insert scheme_id=3 _variable_name="text_color" value="white">
-  <insert scheme_id=4 _variable_name="template_name" value="tmpl1.tmpl">
-  <insert scheme_id=4 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=4 _variable_name="bg_color" value="green">
-  <insert scheme_id=4 _variable_name="text_color" value="white">
-  <insert scheme_id=5 _variable_name="template_name" value="tmpl1.tmpl">
-  <insert scheme_id=5 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=5 _variable_name="bg_color" value="blue">
-  <insert scheme_id=5 _variable_name="text_color" value="white">
+  <insert scheme_id=1 _variable_name="nav_name" value="basic.ntmpl">
 
+  <insert scheme_id=1 _variable_name="nav_font" value="helvetica">
+  <insert scheme_id=1 _variable_name="nav_size" value="0.5">
+  <insert scheme_id=1 _variable_name="nav_align" value="left">
+  <insert scheme_id=1 _variable_name="nav_shadow" value="0">
+  
+  <insert scheme_id=1 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=1 _variable_name="nav_sel_img" value="none">
+
+  <!--  Night  -->
+  <insert scheme_id=2 _variable_name="template_name" value="night.tmpl">
+  <insert scheme_id=2 _variable_name="bg_color" value="black">
+  <insert scheme_id=2 _variable_name="text_color" value="white">
+
+  <insert scheme_id=2 _variable_name="link_color" value="#a0a0a0">
+  <insert scheme_id=2 _variable_name="vlink_color" value="#808080">
+  <insert scheme_id=2 _variable_name="alink_color" value="#000080">
+
+  <insert scheme_id=2 _variable_name="h1_color" value="white">
+  <insert scheme_id=2 _variable_name="h1_font" value="officina sans bold">
+  <insert scheme_id=2 _variable_name="h1_size" value="3">
+  <insert scheme_id=2 _variable_name="h1_shadow" value="0">
+  <insert scheme_id=2 _variable_name="h1_align" value="left">
+
+  <insert scheme_id=2 _variable_name="h2_color" value="white">
+  <insert scheme_id=2 _variable_name="h2_font" value="officina sans bold">
+  <insert scheme_id=2 _variable_name="h2_size" value="4">
+  <insert scheme_id=2 _variable_name="h2_shadow" value="0">
+  <insert scheme_id=2 _variable_name="h2_align" value="left">
+
+  <insert scheme_id=2 _variable_name="page_head_text" value="Slogan">
+  <insert scheme_id=2 _variable_name="page_head_text_color" value="white">
+  <insert scheme_id=2 _variable_name="page_head_text_font" value="officina sans bold">
+  <insert scheme_id=2 _variable_name="page_head_text_size" value="1">
+  <insert scheme_id=2 _variable_name="page_head_text_align" value="right">
+  <insert scheme_id=2 _variable_name="page_head_text_shadow" value="0">
+
+  <insert scheme_id=2 _variable_name="page_head_image" value="none">
+  <insert scheme_id=2 _variable_name="page_head_image_align" value="left">
+  <insert scheme_id=2 _variable_name="page_head_bar_color" value="#220070">
+  
+  <insert scheme_id=2 _variable_name="nav_text_color" value="white">
+  <insert scheme_id=2 _variable_name="nav_text_color_sel" value="#4a537a">
+  <insert scheme_id=2 _variable_name="nav_text_color_mouse" value="#4a537a">
+
+  <insert scheme_id=2 _variable_name="nav_bg_color" value="#220070">
+  <insert scheme_id=2 _variable_name="nav_bg_color_sel" value="#220070">
+  <insert scheme_id=2 _variable_name="nav_bg_color_mouse" value="#220070">
+  
+  <insert scheme_id=2 _variable_name="nav_name" value="night.ntmpl">
+
+  <insert scheme_id=2 _variable_name="nav_font" value="officina sans bold">
+  <insert scheme_id=2 _variable_name="nav_size" value="0.4">
+  <insert scheme_id=2 _variable_name="nav_align" value="center">
+  <insert scheme_id=2 _variable_name="nav_shadow" value="0">
+    
+  <insert scheme_id=2 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=2 _variable_name="nav_sel_img" value="none">
+
+  <!--  Klee  -->
+  <insert scheme_id=3 _variable_name="template_name" value="Klee.tmpl">
+  <insert scheme_id=3 _variable_name="bg_color" value="white">
+  <insert scheme_id=3 _variable_name="text_color" value="black">
+
+  <insert scheme_id=3 _variable_name="link_color" value="#000070">
+  <insert scheme_id=3 _variable_name="vlink_color" value="#000070">
+  <insert scheme_id=3 _variable_name="alink_color" value="#ff0000">
+
+  <insert scheme_id=3 _variable_name="h1_color" value="black">
+  <insert scheme_id=3 _variable_name="h1_font" value="officina sans bold">
+  <insert scheme_id=3 _variable_name="h1_size" value="3">
+  <insert scheme_id=3 _variable_name="h1_shadow" value="0">
+  <insert scheme_id=3 _variable_name="h1_align" value="left">
+
+  <insert scheme_id=3 _variable_name="h2_color" value="black">
+  <insert scheme_id=3 _variable_name="h2_font" value="officina sans bold">
+  <insert scheme_id=3 _variable_name="h2_size" value="4">
+  <insert scheme_id=3 _variable_name="h2_shadow" value="0">
+  <insert scheme_id=3 _variable_name="h2_align" value="left">
+
+  <insert scheme_id=3 _variable_name="page_head_text" value="Slogan">
+  <insert scheme_id=3 _variable_name="page_head_text_color" value="navy">
+  <insert scheme_id=3 _variable_name="page_head_text_font" value="officina sans bold italic">
+  <insert scheme_id=3 _variable_name="page_head_text_size" value="0.5">
+  <insert scheme_id=3 _variable_name="page_head_text_align" value="right">
+  <insert scheme_id=3 _variable_name="page_head_text_shadow" value="0">
+
+  <insert scheme_id=3 _variable_name="page_head_image" value="/img/Klee/rutor.gif">
+  <insert scheme_id=3 _variable_name="page_head_image_align" value="right">
+  <insert scheme_id=3 _variable_name="page_head_bar_color" value="none">
+
+  <insert scheme_id=3 _variable_name="nav_text_color" value="blue">
+  <insert scheme_id=3 _variable_name="nav_text_color_sel" value="blue">
+  <insert scheme_id=3 _variable_name="nav_text_color_mouse" value="blue">
+
+  <insert scheme_id=3 _variable_name="nav_bg_color" value="black">
+  <insert scheme_id=3 _variable_name="nav_bg_color_sel" value="black">
+  <insert scheme_id=3 _variable_name="nav_bg_color_mouse" value="black">
+  
+  <insert scheme_id=3 _variable_name="nav_name" value="Klee.ntmpl">
+
+  <insert scheme_id=3 _variable_name="nav_font" value="officina sans">
+  <insert scheme_id=3 _variable_name="nav_size" value="0.4">
+  <insert scheme_id=3 _variable_name="nav_align" value="right">
+  <insert scheme_id=3 _variable_name="nav_shadow" value="0">
+  
+  <insert scheme_id=3 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=3 _variable_name="nav_sel_img" value="none">
+
+  <!--  Dawn  -->
+  <insert scheme_id=4 _variable_name="template_name" value="dawn.tmpl">
+  <insert scheme_id=4 _variable_name="bg_color" value="white">
+  <insert scheme_id=4 _variable_name="text_color" value="black">
+
+  <insert scheme_id=4 _variable_name="link_color" value="#000070">
+  <insert scheme_id=4 _variable_name="vlink_color" value="#000070">
+  <insert scheme_id=4 _variable_name="alink_color" value="#ff0000">
+
+  <insert scheme_id=4 _variable_name="h1_color" value="black">
+  <insert scheme_id=4 _variable_name="h1_font" value="officina sans bold">
+  <insert scheme_id=4 _variable_name="h1_size" value="3">
+  <insert scheme_id=4 _variable_name="h1_shadow" value="0">
+  <insert scheme_id=4 _variable_name="h1_align" value="center">
+
+  <insert scheme_id=4 _variable_name="h2_color" value="black">
+  <insert scheme_id=4 _variable_name="h2_font" value="officina sans">
+  <insert scheme_id=4 _variable_name="h2_size" value="4">
+  <insert scheme_id=4 _variable_name="h2_shadow" value="0">
+  <insert scheme_id=4 _variable_name="h2_align" value="center">
+
+  <insert scheme_id=4 _variable_name="page_head_text" value="Slogan">
+  <insert scheme_id=4 _variable_name="page_head_text_color" value="blue">
+  <insert scheme_id=4 _variable_name="page_head_text_font" value="officina sans bold">
+  <insert scheme_id=4 _variable_name="page_head_text_size" value="0.6">
+  <insert scheme_id=4 _variable_name="page_head_text_align" value="center">
+  <insert scheme_id=4 _variable_name="page_head_text_shadow" value="0">
+
+  <insert scheme_id=4 _variable_name="page_head_image" value="/img/dawn/blue_clouds.jpg">
+  <insert scheme_id=4 _variable_name="page_head_image_align" value="center">
+  <insert scheme_id=4 _variable_name="page_head_bar_color" value="black">
+  
+  <insert scheme_id=4 _variable_name="nav_text_color" value="grey">
+  <insert scheme_id=4 _variable_name="nav_text_color_sel" value="grey">
+  <insert scheme_id=4 _variable_name="nav_text_color_mouse" value="grey">
+
+  <insert scheme_id=4 _variable_name="nav_bg_color" value="black">
+  <insert scheme_id=4 _variable_name="nav_bg_color_sel" value="darkblue">
+  <insert scheme_id=4 _variable_name="nav_bg_color_mouse" value="darkblue">
+  
+  <insert scheme_id=4 _variable_name="nav_name" value="dawn.ntmpl">
+
+  <insert scheme_id=4 _variable_name="nav_font" value="officina sans bold">
+  <insert scheme_id=4 _variable_name="nav_size" value="0.4">
+  <insert scheme_id=4 _variable_name="nav_align" value="left">
+  <insert scheme_id=4 _variable_name="nav_shadow" value="0">
+  
+  <insert scheme_id=4 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=4 _variable_name="nav_sel_img" value="none">
+
+  <!--  Sand  -->
+  <insert scheme_id=5 _variable_name="template_name" value="sand.tmpl">
+  <insert scheme_id=5 _variable_name="bg_color" value="white">
+  <insert scheme_id=5 _variable_name="text_color" value="black">
+
+  <insert scheme_id=5 _variable_name="link_color" value="#000070">
+  <insert scheme_id=5 _variable_name="vlink_color" value="#000070">
+  <insert scheme_id=5 _variable_name="alink_color" value="#ff0000">
+
+  <insert scheme_id=5 _variable_name="h1_color" value="#180c60">
+  <insert scheme_id=5 _variable_name="h1_font" value="officina sans bold">
+  <insert scheme_id=5 _variable_name="h1_size" value="3">
+  <insert scheme_id=5 _variable_name="h1_shadow" value="0">
+  <insert scheme_id=5 _variable_name="h1_align" value="left">
+
+  <insert scheme_id=5 _variable_name="h2_color" value="#180c60">
+  <insert scheme_id=5 _variable_name="h2_font" value="officina sans">
+  <insert scheme_id=5 _variable_name="h2_size" value="4">
+  <insert scheme_id=5 _variable_name="h2_shadow" value="0">
+  <insert scheme_id=5 _variable_name="h2_align" value="left">
+
+  <insert scheme_id=5 _variable_name="page_head_text" value="Slogan">
+  <insert scheme_id=5 _variable_name="page_head_text_color" value="#180c60">
+  <insert scheme_id=5 _variable_name="page_head_text_font" value="officina sans bold">
+  <insert scheme_id=5 _variable_name="page_head_text_size" value="0.5">
+  <insert scheme_id=5 _variable_name="page_head_text_align" value="left">
+  <insert scheme_id=5 _variable_name="page_head_text_shadow" value="0">
+
+  <insert scheme_id=5 _variable_name="page_head_image" value="/img/sand/sand.jpg">
+  <insert scheme_id=5 _variable_name="page_head_image_align" value="right">
+  <insert scheme_id=5 _variable_name="page_head_bar_color" value="#a31805">
+
+  <insert scheme_id=5 _variable_name="nav_text_color" value="#180c60">
+  <insert scheme_id=5 _variable_name="nav_text_color_sel" value="#180c60">
+  <insert scheme_id=5 _variable_name="nav_text_color_mouse" value="#180c60">
+
+  <insert scheme_id=5 _variable_name="nav_bg_color" value="black">
+  <insert scheme_id=5 _variable_name="nav_bg_color_sel" value="darkblue">
+  <insert scheme_id=5 _variable_name="nav_bg_color_mouse" value="darkblue">
+  
+  <insert scheme_id=5 _variable_name="nav_name" value="sand.ntmpl">
+
+  <insert scheme_id=5 _variable_name="nav_font" value="officina sans bold">
+  <insert scheme_id=5 _variable_name="nav_size" value="0.4">
+  <insert scheme_id=5 _variable_name="nav_align" value="left">
+  <insert scheme_id=5 _variable_name="nav_shadow" value="0">
+  
+  <insert scheme_id=5 _variable_name="nav_bg_img" value="none">
+  <insert scheme_id=5 _variable_name="nav_sel_img" value="none">
+  
 </sql-insert>
