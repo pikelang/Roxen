@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.21 2004/08/05 14:07:35 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.22 2004/08/06 12:58:14 noring Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
@@ -210,7 +210,9 @@ string run_spellcheck(string|array(string) words, void|string dict)
   object file4=file3->pipe();
   string spell_res;
 
-  Process.create_process(({ query("spellchecker"), "-a" }) +
+  if(stringp(words))
+    words = replace(words, "\n", " ");
+  Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
                          (stringp(words) ? ({ "-H" })       : ({})) +
                          (dict           ? ({ "-d", dict }) : ({})),
                          ([ "stdin":file2,"stdout":file4 ]));
@@ -278,7 +280,7 @@ class TagEmitSpellcheck {
     string dict = args["dict"];
     string text = args["text"];
     if(text)
-      foreach(run_spellcheck(replace(text, "\n", " "), dict)/"\n", string line)
+      foreach(run_spellcheck(text, dict)/"\n", string line)
       {
 	if(!sizeof(line))
 	  continue;
