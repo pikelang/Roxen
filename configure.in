@@ -1,11 +1,15 @@
 #
-# $Id: configure.in,v 1.56 1998/09/17 22:22:50 grubba Exp $
+# $Id: configure.in,v 1.57 1998/09/29 23:00:58 grubba Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
 
 AC_ARG_WITH(fullwarn, [  --with-fullwarn	enable as many warnings as possible],[],[with_fullwarn=no])
+AC_ARG_WITH(rtldebug, [  --with-rtldebug	enable run-time level debug],[],[with_rtldebug=no])
+
+# Make sure with_rtldebug is propagated to the other configure-scripts.
+export with_rtldebug
 
 AC_SET_MAKE
 
