@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.46 1998/09/11 22:16:35 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.47 1999/01/24 03:14:08 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -623,7 +623,7 @@ mapping|string|int htaccess(mapping access, object id)
   }
   if(!hok && access[method]->all == 1)
   {
-    if((id->misc->hname || id->remoteaddr) == id->remoteaddr) {
+    if((hname || id->remoteaddr) == id->remoteaddr) {
       TRACE_LEAVE("2");
       return 2;
     }
@@ -879,12 +879,14 @@ mapping try_htaccess(object id)
 
 	return http_low_answer(403, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>"
-			       "<h3>The server hadn't resolved your "
-			       "hostname. If you try again, "
+			       "<h3>This page is protected based on host name "
+			       "or domain name. The server couldn't resolve "
+			       "your hostname. If you try again, "
 			       "it might work better.</h3>"
-			       "<b>You might lack a valid DNS entry. In that "
-			       "case, you will have to talk to your system "
-			       "administrator.</b>");
+			       "<b>Your computer might also lack a correct "
+			       "PTR DNS entry. In that "
+			       "case, ask your system administrator to add "
+			       "one.</b>");
       }
 
       else if(mappingp(ret))
