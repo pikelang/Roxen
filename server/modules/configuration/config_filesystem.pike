@@ -3,6 +3,7 @@
 // A filesystem for the roxen administration interface.
 #include <module.h>
 #include <stat.h>
+#include <config_interface.h>
 #include <roxen.h>
 
 inherit "module";
@@ -16,10 +17,9 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.54 2000/09/16 20:23:46 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.55 2000/09/16 20:44:46 per Exp $";
 
 constant path = "config_interface/";
-string encoding = "iso-8859-1";         // charset for pages
 object charset_decoder;
 
 object tar;
@@ -144,41 +144,50 @@ mixed find_dir( string f, object id )
 
 mixed find_file( string f, object id )
 {
-  id->set_output_charset( encoding );
-
-  id->since = 0;
-  if( !id->misc->request_charset_decoded )
-  {
-    id->misc->request_charset_decoded = 1;
-
-    if( charset_decoder )
-    {
-      void decode_variable( string v )
-      {
-        id->variables[v] = charset_decoder->clear()->
-                         feed(id->variables[v])->drain();
-      };
-      f = charset_decoder->clear()->feed( f )->drain();
-      id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
-      map( indices(id->variables), decode_variable );
-    }
-    else
-    {
-      void decode_variable( string v )
-      {
-        id->variables[v] = utf8_to_string( id->variables[v] );
-      };
-      f = utf8_to_string( f );
-      id->not_query = utf8_to_string( id->not_query );
-      map( indices(id->variables), decode_variable );
-    }
-  }
-
   if( !id->misc->config_user )
     return http_auth_required( "Roxen configuration" );
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
 
+
+  string encoding = config_setting( "charset" );
+  if( encoding != "utf-8" )
+    catch { charset_decoder=Locale.Charset.decoder( encoding ); };
+  else
+    charset_decoder = 0;
+  id->set_output_charset( encoding );
+
+
+  id->since = 0;
+  catch 
+  {
+    if( !id->misc->request_charset_decoded )
+    {
+      id->misc->request_charset_decoded = 1;
+
+      if( charset_decoder )
+      {
+        void decode_variable( string v )
+        {
+          id->variables[v] = charset_decoder->clear()->
+                           feed(id->variables[v])->drain();
+        };
+        f = charset_decoder->clear()->feed( f )->drain();
+        id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
+        map( indices(id->variables), decode_variable );
+      }
+      else
+      {
+        void decode_variable( string v )
+        {
+          id->variables[v] = utf8_to_string( id->variables[v] );
+        };
+        f = utf8_to_string( f );
+        id->not_query = utf8_to_string( id->not_query );
+        map( indices(id->variables), decode_variable );
+      }
+    }
+  };
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
 
@@ -274,24 +283,18 @@ mixed find_file( string f, object id )
 
 void start(int n, Configuration cfg)
 {
-  encoding = query( "encoding" );
   catch(tar = Filesystem.Tar( "config_interface/docs.tar" ));
   if(!tar)
     report_notice( "Failed to open documentation tar-file. "
                    "Documentation will not be available.\n" );
   if( cfg )
   {
-    charset_decoder = 0;
     cfg->add_modules(({
       "config_tags", "config_userdb",   "contenttypes",    "indexfiles",
       "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
       "pikescript",  "translation_mod", "rxmlparse",        "rxmltags",
       "tablist",     "update"
     }));
-    catch 
-    {
-      charset_decoder = Locale.Charset.decoder( encoding );
-    };
   }
   call_out( zap_old_modules, 0 );
 }
@@ -304,8 +307,6 @@ void zap_old_modules()
 
 void create()
 {
-  defvar("encoding", "UTF-8", LOCALE(262,"Character encoding"), TYPE_STRING,
-	 LOCALE(263,"Send pages to client in this character encoding."));
   defvar( "location", "/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
           LOCALE(265,"Usually / is a good idea") );
 }

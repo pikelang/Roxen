@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.273 2000/09/12 20:55:27 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.274 2000/09/16 20:44:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -177,8 +177,11 @@ function charset_function( function|string what )
    case string_to_utf8:
      return string_to_utf8;
    default:
-     return Roxen._charset_decoder( Locale.Charset.encoder( (string)what ) )->decode;
+     catch {
+     return Roxen._charset_decoder( Locale.Charset.encoder( (string)what,"" ) )->decode;
+     };
   }
+  return lambda(string what){return what;};
 }
 
 static array(string) join_charset( string old,

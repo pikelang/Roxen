@@ -164,6 +164,26 @@ class ConfigurationSettings
             LOCALE(279, "If true, the list list will be presented in a "
                     "compact format suitable for servers with many sites." ));
 
+    defvar( "charset", "utf-8", 
+            LOCALE(0,"Page charset"),
+            TYPE_STRING_LIST,
+            LOCALE(0,"The charset to use when rendering configuration "
+                   "interface pages."),
+            ({
+              "utf-8",
+              "iso-2022-jp",
+              "iso-2022",
+              "iso-8859-1",
+              "iso-8859-2",
+//            "iso-8859-3",
+//            "iso-8859-4",
+//            "iso-8859-5",
+//            "iso-8859-6",
+//            "iso-8859-7",
+//            "iso-8859-8",
+//            "iso646-se",
+            }));
+
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
             TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
 
