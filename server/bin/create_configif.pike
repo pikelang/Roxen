@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.26 2000/08/30 14:21:57 noring Exp $
+ * $Id: create_configif.pike,v 1.27 2000/08/31 12:32:56 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -118,8 +118,8 @@ int main(int argc, array argv)
   if(admin)
     write( "   Creating an administrator user.\n\n" );
   else
-    write( "   Creating an administration interface server in "+
-	   configdir+"\n");
+    write( "   Creating an administration interface server in\n"+
+	   "   "+combine_path(getcwd(), configdir)+".\n");
 
   do
   {
@@ -191,6 +191,10 @@ int main(int argc, array argv)
 
     do
     {
+      if(passwd2 && password)
+	write("\n   Please select a password with one or more characters. "
+	      "You will\n   be asked to type the password twice for "
+	      "verification.\n\n");
       rl->get_input_controller()->dumb=1;
       password = read_string(rl, "Administrator password:", 0, batch->password);
       passwd2 = read_string(rl, "Administrator password (again):", 0, batch->password);
@@ -228,18 +232,18 @@ int main(int argc, array argv)
       {
         do
         {
+	  if(community_password)
+	    write("\n   Please select a password with one or more characters.\n\n");
           rl->get_input_controller()->dumb=1;
           community_password = read_string(rl, "Roxen Community password:", 0,
 					   batch->community_password);
-          passwd2 = read_string(rl, "Roxen Community password (again):", 0,
-				batch->community_password);
           rl->get_input_controller()->dumb=0;
 	  if(batch->community_password)
 	    m_delete(batch, "community_password");
 	  else
 	    write("\n");
           community_userpassword=community_user+":"+community_password;
-        } while(!strlen(community_password) || (community_password != passwd2));
+        } while(!strlen(community_password));
       }
       
       if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
