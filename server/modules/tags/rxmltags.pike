@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.111 2000/04/10 21:43:22 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.112 2000/04/12 14:16:35 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -604,7 +604,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   if(n = m->variable)
   {
     if(zero_type(RXML.user_get_var(n, m->scope)))
-      RXML.run_error(tag, "No such variable ("+n+").\n", id);
+      RXML.run_error("No such variable ("+n+").\n", id);
     string var=(string)RXML.user_get_var(n, m->scope);
     return m->quote=="none"?var:({ Roxen.html_encode_string(var) });
   }
@@ -664,7 +664,7 @@ string tag_return(string tag, mapping m, RequestID id)
   int c=(int)m->code;
   if(c) _error=c;
   string p=m->text;
-  if(p) _rettext=p;
+  if(p) _rettext=Roxen.http_encode_string(p);
   return "";
 }
 
@@ -673,7 +673,7 @@ string tag_set_cookie(string tag, mapping m, RequestID id)
   if(!m->name)
     RXML.parse_error("Requires a name attribute.\n");
 
-  string cookies = m->name+"="+Roxen.http_encode_cookie(m->value||"");
+  string cookies = Roxen.http_encode_cookie(m->name)+"="+Roxen.http_encode_cookie(m->value||"");
   int t;     //time
 
   if(m->persistent)
@@ -684,12 +684,11 @@ string tag_set_cookie(string tag, mapping m, RequestID id)
   if(t)
     cookies += "; expires="+Roxen.http_date(t+time(1));
 
-  // FIXME: Shouldn't the domain be encoded?
   if (m->domain)
-    cookies += "; domain=" + m->domain;
+    cookies += "; domain=" + Roxen.http_encode_cookie(m->domain);
 
   //FIXME: Check the parameter's usability
-  cookies += "; path=" +(m->path||"/");
+  cookies += "; path=" + Roxen.http_encode_cookie(m->path||"/");
 
   Roxen.add_http_header(_extra_heads, "Set-Cookie", cookies);
 
@@ -701,7 +700,8 @@ string tag_remove_cookie(string tag, mapping m, RequestID id)
   if(!m->name || !id->cookies[m->name]) RXML.run_error("That cookie does not exists.\n");
 
   Roxen.add_http_header(_extra_heads, "Set-Cookie",
-    m->name+"="+Roxen.http_encode_cookie(m->value||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
+    Roxen.http_encode_cookie(m->name)+"="+Roxen.http_encode_cookie(m->value||"")+
+			"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
   );
 
   return "";
