@@ -1,4 +1,5 @@
 inherit "module";
+inherit "roxenlib";
 #include <module.h>
 #include <roxen.h>
 #include <stat.h>
@@ -178,12 +179,12 @@ class User
          break;
 
        default:
-         if( sscanf( v, "add_%s", v ) )
+         if( sscanf( v, "add_%s.x", v ) )
          {
            werror("add permission "+v+"\n");
            permissions[v] = 1;
          }
-         else if( sscanf( v, "remove_%s", v ) )
+         else if( sscanf( v, "remove_%s.x", v ) )
          {
            werror("remove permission "+v+"\n");
            permissions[v] = 0;
@@ -193,6 +194,7 @@ class User
       }
       m_delete( id->variables, rp );
     }
+    string set_src =  parse_rxml( "<gbutton-url> Set </gbutton-url>", id );
     string form = error+
 #"
 <table>
@@ -201,16 +203,28 @@ class User
    Real name:   <input name=PPPreal_name value='"+real_name+#"'>
     Password:   <input type=password name=PPPpassword value=''>
        Again:   <input type=password name=PPPpassword2 value=''>
-     Crypted:   <input name=PPPc_password value='"+password+"'> <input type=submit value=' Set '></pre></td><td>\n\n";
+     Crypted:   <input name=PPPc_password value='"+password+"'> "
+           "<input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"'></pre></td><td>\n\n";
 
     foreach( possible_permissions, string perm )
     {
       if( permissions[ perm ] )
-        form += sprintf( "<input type=submit name='PPPremove_%s'"
-                         "value=' Can %s '>\n", perm, perm );
+      {
+        string s = parse_rxml( "<gbutton-url "
+                               "    icon_src=/standard/img/selected.gif "
+                               "    width=180>"+perm+"</gbutton-url>", id );
+
+        form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
+                         " src='%s'>\n", perm, s );
+      }
       else
-        form += sprintf( "<input type=submit name='PPPadd_%s'"
-                         "value=' Can Not %s '>\n", perm, perm );
+      {
+        string s = parse_rxml( "<gbutton-url "
+                               "    icon_src=/standard/img/unselected.gif "
+                               "    width=180>"+perm+"</gbutton-url>", id );
+        form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
+                         " src='%s'>\n", perm, s );
+      }
     }
     return replace(form,"PPP",varpath)+"</tr></tr></table>";
   }
@@ -302,6 +316,8 @@ array auth( array auth, RequestID id )
       report_notice( "Failed login attempt %s from %s\n", u, host);
       return ({ 0, u, p });
     }
+    id->variables->config_user_uid = u;
+    id->variables->config_user_name = admin_users[u]->real_name;
     id->misc->create_new_config_user = create_admin_user;
     id->misc->list_config_users = list_admin_users;
     id->misc->get_config_user = find_admin_user;
