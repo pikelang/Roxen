@@ -63,7 +63,7 @@ string|mapping navigate(object id, string f, string base_url)
 {
 
   object contenttypes = ContentTypes();
-  string res="";
+  string res="<comment><htmleditorp>t</htmleditorp></comment>";
 
   if(AutoFile(id, f)->type()=="")
     if(f!="/")
@@ -83,13 +83,12 @@ string|mapping navigate(object id, string f, string base_url)
 		  " target='_autosite_show_real'" }) });
     //werror("%O\n", md);
     if(md->content_type=="text/html")
-      br += ({ ({ "Edit File", (["filename":f ]) }) });
-    br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
-	     ({ "Add To Menu", ([ "path":f ]) }),
-	     ({ }),
+      br += ({ ({ "Edit File", (["path":http_encode_string(f) ]) }) });
+    br += ({ ({ "Edit Metadata", ([ "path":http_encode_string(f) ]) }),
+	     ({ "Add To Menu", ([ "path":http_encode_string(f) ]) }),
 	     ({ "Download File", "'"+encode_url(base_url, "dl", f)+"'" }),
-	     ({ "Move File", ([ "path":f ]) }),
-	     ({ "Remove File", ([ "path":f ]) })
+	     ({ "Move File", ([ "path":http_encode_string(f) ]) }),
+	     ({ "Remove File", ([ "path":http_encode_string(f) ]) })
     });
     wanted_buttons=br;
 
@@ -124,7 +123,7 @@ string|mapping navigate(object id, string f, string base_url)
 	else 
 	  files += ({ file });
     
-    res += "<filelistning><table cellpadding=2>";
+    res += "<table cellpadding=2>";
     // Display directories.
     foreach(sort(dirs), string item) {
       string href = "<a href='"+encode_url(base_url, "go", f+item+"/")+"'>";
@@ -149,7 +148,7 @@ string|mapping navigate(object id, string f, string base_url)
     if(!sizeof(dirs+files))
       res += "Directory is Empty!";
       
-    res += "</table></filelistning>";
+    res += "</table>";
   }
   if(sizeof(f)>1) {
     string href = "<a href='"+encode_url(base_url,
@@ -158,7 +157,7 @@ string|mapping navigate(object id, string f, string base_url)
 	   "&nbsp;&nbsp;"+href+
 	   "Up to parent directory</a><br>\n<br>\n"+res);
   }
-  return "<browser>"+res+"</browser>";
+  return res;
 }
 
 string|mapping handle(string sub, object id)

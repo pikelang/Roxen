@@ -3,7 +3,7 @@ import AutoWeb;
 
 object wa;
 
-array wanted_buttons = ({ ({ "New...", (["path":"foo"]) }) });
+array wanted_buttons = ({ ({ "New...", (["path":""]) }) });
 
 array get_buttons(object id)
 {
@@ -50,7 +50,7 @@ string|mapping handle(string sub, object id)
   if(id->variables->delete||id->variables->up||id->variables->down||id->variables->delete)
     AutoFile(id,"/top.menu")->save(MenuFile()->encode(items));
 
-  string s=
+  string s="<comment><menueditorp>t</menueditorp></comment>"
     "<form action=get action=.>"
     "<tablify nice modulo=1 cellseparator='\0' rowseparator='\1'>"
     "Select\0Title\0URL\1";

@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.17 1998/08/09 18:55:36 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.18 1998/08/10 20:25:57 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -98,7 +98,7 @@ mixed find_file(string f, object id)
    // werror("File: %O, md: %O", f, md);
     if(md->content_type=="text/html") {
       string d = res->read( );
-      if((md->template)&&(md->template!="No template"))
+      if((md->template)&&(md->template!="No"))
 	d = "<template><content>"+d+"</content></template>";
       res = http_string_answer(parse_rxml(d, id), "text/html");
     }

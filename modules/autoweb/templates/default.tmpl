@@ -1,3 +1,6 @@
+<cset variable=htmleditorp><tmplinsert tag=htmleditorp></cset>
+<cset variable=menueditorp><tmplinsert tag=menueditorp></cset>
+
 <tmplblock tag=error>
   <table border=0><tr>
     <td valign=top><img src="/internal-roxen-err_3"></td>
@@ -5,20 +8,44 @@
   </tr></table>
 </tmplblock>
 
-<tmplblock tag=browser>
-  <comment><font size=+1><b>File Browser</b></font><br></comment>
-  $browser$
+<tmplblock tag=toolbarlayout>
+<if variable="htmleditorp is t">
+  <table cellspacing=0 border=0>
+  $toolbarlayout$
+  </table>
+</if>
+<else>
+  <table>
+    <tr>$toolbarlayout$</tr>
+  </table>
+</else>
 </tmplblock>
 
-<tmplblock tag=filelistning>
-  $filelistning$
-</tmplblock>
-
-<tmplblock tag=toolbargtext params=magic,href,target>
-  <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+<tmplblock tag=toolbarbuttonlayout params=name,href,target singletag>
+<if variable="htmleditorp is t">
+  <tr><td><gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
        xsize=400 bevel=5 talign=center
        fg=#ffffff bg=#113377 magic_fg=#000000 magic_bg=#88ccaa
-       magic='$magic$' href='$href$' target=$target$>$toolbargtext$</gtext></tmplblock>
+       magic='$name$' href='$href$' target=$target$>$name$</gtext></td></tr>
+</if>
+<else>
+  <td>
+  <form method=get action='$href$'>
+    <pike>
+      string r="";
+      if(sscanf("$href$", "%*s?%s", string s))
+        foreach(s/"&", string var) {
+	  string variable, value;
+          if(sscanf(var, "%s=%s", variable, value)>=2)
+	    r += "<input type=hidden name="+variable+" value="+value+">\n";
+	}
+      return r;
+    </pike>
+    <input type=submit name="$name$" value="$name$">
+  </form>
+  </td>
+</else>
+</tmplblock>
 
 <tmplblock tag=webadmtablify>
   <tablify nice cellseparator="|||" rowseparator="///">
@@ -69,6 +96,41 @@
 <br>
 <tmplinsert tag=tablist>
 <br><br>
-<tmplinsert tag=content>
+
+<cset variable=else>t</cset>
+
+<if variable="htmleditorp is t">
+  <table cellspacing=1><tr><td bgcolor=#000000>
+    <table border=0 cellspacing=1 cellpadding=10>
+      <tr>
+	<td bgcolor=#eeeeee>
+	  <font size=+1><b>Toolbar</b></font>
+	</td>
+	<td bgcolor=#eeeeee>
+	  <font size=+1><b>File Browser</b></font>
+	</td>
+      </tr>
+      <tr>
+	<td valign=top bgcolor=#eeeeee>
+	  <tmplinsert tag=toolbar>
+	</td>
+	<td valign=top bgcolor=#eeeeee>
+	  <tmplinsert tag=content>
+	</td>
+      </tr>
+    </table>
+  </td></tr></table>
+  <cset variable=else>nil</cset>
+</if>
+
+<if variable="menueditorp is t">
+  <tmplinsert tag=content>
+  <tmplinsert tag=toolbar>
+  <cset variable=else></cset>
+</if>
+
+<if variable="else is t">
+  <tmplinsert tag=content>
+</if>
 
 </body></html>

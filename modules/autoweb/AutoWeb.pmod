@@ -191,22 +191,6 @@ class ContentTypes {
 	  "handler" : "default",
 	  "downloadp" : 1,
 	  "extensions" : (< >),
-	  "img" : image_base+"unknown"+image_ext ]),
-       
-       "autosite/menu" :
-       ([ "name" : "Menu",
-	  "handler" : "menu",
-	  "downloadp" : 0,
-	  "extensions" : (< "menu" >),
-	  "internalp" : 1,
-	  "img" : image_base+"unknown"+image_ext ]),
-       
-       "autosite/template" :
-       ([ "name" : "Template",
-	  "handler" : "template",
-	  "downloadp" : 1,
-	  "extensions" : (< "tmpl" >),
-	  "internalp" : 1,
 	  "img" : image_base+"unknown"+image_ext ])
        
     ]);
@@ -267,7 +251,7 @@ class MetaData {
   {
     mapping md_default =  ([ "content_type":"autosite/unknown",
 			     "title":"Unknown",
-			     "template":"default.tmpl",
+			     "template":"Yes",
 			     "keywords":"",
 			     "description":""]);
     
@@ -318,20 +302,15 @@ class MetaData {
 
   string display()
   {
-    mapping md = ([ "template":"No template" ])+get();
-    array md_order = ({ "title", "content_type", "template",
-			"keywords", "description" });
-    mapping md_variables = ([ "title":"Title", "content_type":"Type",
-			      "template":"Template", "keywords":"Keywords",
-			      "description":"Description" ]);
+    mapping md = get();
     array rows = ({ "Metadata|||Value" });
-    foreach(md_order, string variable) {
-      if(md_variables[variable]&&md[variable])
-	rows += ({ "<b>"+md_variables[variable]+"</b>"+"|||"+
-		   (variable=="content_type"?
-		    ContentTypes()->name_from_type(md[variable]):
-		    html_encode_string(md[variable])) });
-    }
+    rows += ({ "<b>Title</b>|||"+(md->title||"") });
+    rows += ({ "<b>Type</b>|||"+
+	       ContentTypes()->name_from_type(md->content_type)});
+    rows += ({ "<b>Use template</b>|||"+(md->template||"Yes") });
+    rows += ({ "<b>Keywords</b>|||"+(md->keywords||"") });
+    rows += ({ "<b>Description</b>|||"+(md->description||"") });
+
     if(md->content_type=="image/gif"||md->content_type=="image/jpeg") {
       array dims=Dims.dims()->get(AutoFile(id, f)->real_path(f));
       if(dims) {
@@ -367,7 +346,7 @@ class EditMetaData {
 	      ((in[3]==0)?"string":"")+
 	      (in[3]==1?"text":"")+
 	      (in[3]==3?"select":"")+
-	      "'>",
+	      "'"+(in[3]==0?" size=40 ":"")+">",
 	      ({ "<font size=-1><i>"+in[4]+"</i></font>" }) });
   }
 
@@ -376,7 +355,7 @@ class EditMetaData {
     if(!m && f)
       m = MetaData(id, f)->get();
   
-    array (string) templates = ({ "No template", "default.tmpl" });
+    array (string) templates = ({ "Yes", "No" });
   
     array rows = ({
       ({ "Type", "meta_content_type", 
@@ -386,9 +365,11 @@ class EditMetaData {
 	    " most images are image/gif or image/jpeg."*/,
 	 contenttypes->names() * ","
       }),
-      ({ "Template", "meta_template", m->template||"No template", 3,
-	 " This is the template used on this page. You can see all templates "
-	 "available under the 'templates' tab.", templates * ","
+      ({ "Use Template", "meta_template", m->template||"No template", 3,
+	 " This is the template usage. "
+	 "If you choose yes, the template you have applyed under "
+	 "the 'Template Editor' tab will be used for this page. ",
+	 templates * ","
       }),
       ({ "Title", "meta_title", m->title||"No title", 0,
 	 " This is the title of the page. Make sure that it accurately "

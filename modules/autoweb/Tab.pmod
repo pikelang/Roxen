@@ -15,12 +15,12 @@ class tab
   
   string buttonrow_gtext(array brow, object id)
   {
-    string s="<table cellspacing=0 cellpadding=0 border=0>";
+    string s="<toolbarlayout>";
     foreach(brow, array a)
     {
       if(sizeof(a))
 	if(stringp(a[1])) {
-	  s += ("<tr><td><toolbargtext magic='"+a[0]+
+	  s += ("<toolbarbuttonlayout name='"+a[0]+
 		"' href="+(sizeof(a)>2?"'"+a[1]:a[1]));
 	
 	if(sizeof(a)>2) {
@@ -30,13 +30,13 @@ class tab
 	    s+=input_hidden+"="+a[2][input_hidden]+"&";
 	  s=s[..sizeof(s)-2]+"'";
 	}
-      s+=">"+a[0]+"</toolbargtext></td></tr>";
+      s+=">";
       }	else
-	  s+="<td>internal server error<br>"+
+	  s+="internal server error<br>"+
 	    "<tt>"+sprintf("%O",a)+"</tt><br>"
-	    __FILE__":"+__LINE__+"</td>";
+	    __FILE__":"+__LINE__+"";
     }
-    s += "</table>";
+    s += "</toolbarlayout>";
     return s;
   }
   
@@ -197,17 +197,11 @@ class tab
 			   dir+"/wizards/",
 			   parent->query_location()+tab+"/wizard/");
 	//werror("%O",tmp);
-	string bg="#eeeeee";
 	if(arrayp(tmp))
-	  return "<content><table cellspacing=1><tr><td bgcolor=black>"
-	    "<table border=0 cellspacing=1 cellpadding=10>"
-	    "<tr><td bgcolor="+bg+"><font size=+1><b>Toolbar</b></font></td>"
-	    "<td bgcolor="+bg+">"
-	    "<font size=+1><b>File Browser</b></font></td></tr>"
-	    "<tr><td valign=top bgcolor="+bg+">"+
-	    buttonrow(fixbuttons(tmp[0],wanted_buttons),id)+"</td>"
-	    "<td valign=top bgcolor="+bg+">"+res+page+"</td>"+
-	    "</tr></table></td></tr></table></content>";
+	  return "<toolbar>"+
+	    buttonrow(fixbuttons(tmp[0],wanted_buttons),id)+"</toolbar>"
+	    "<content>"+res+page+"</content>";
+
       };
       if(err)
       {

@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.18 1998/08/09 18:55:37 wellhard Exp $
+ * $Id: webadm.pike,v 1.19 1998/08/10 20:25:58 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.18 1998/08/09 18:55:37 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.19 1998/08/10 20:25:58 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -66,13 +66,6 @@ string customer_name(string tag_name, mapping args, object id)
 	      customer_name);
 }
 
-
-string insert_navigation(string tag, mapping args, string navigation)
-{
-  return navigation;
-}
-
-
 string|int get_variable_value(object db, string scheme_id, string variable)
 {
   array query_result = 
@@ -87,6 +80,17 @@ string|int get_variable_value(object db, string scheme_id, string variable)
     return 0;
   }
   return query_result[0]->value;
+}
+
+string tag_include(string tag, mapping args, string base)
+{
+  if(args->file) {
+    args->file-= "../";
+    string s = Stdio.read_bytes(base+args->file);
+    if(s) return s;
+    else werror("Can not open file "+base+args->file);
+  }
+  return "";
 }
 
 string update_template(string tag_name, mapping args, object id)
@@ -113,43 +117,36 @@ string update_template(string tag_name, mapping args, object id)
   
   string template = Stdio.read_bytes(templatesdir+template_filename);
   if(!stringp(template)) {
-    werror("Can not open file '%s', or it is empty\n",
+    werror("Can not open file '%s'\n",
 	   templatesdir+template_filename);
     return "";
   }
   
-  // Navigation
-  string navigation_filename =
-    get_variable_value(db, scheme_id, "nav_name");
-  if(!navigation_filename)
-    return "";
-  
-  string navigation = Stdio.read_bytes(templatesdir+navigation_filename);
-  if(!stringp(navigation)) {
-    werror("Can not open file '%s', or it is empty\n",
-	   templatesdir+navigation_filename);
-    return "";
-  }
-  // Insert navigation template
-  template =
-    parse_html(template, ([ "insertnavigation": insert_navigation ]), ([ ]),
-	       navigation);
-
   // Fetch variables from database
-
   array variables =
     db->query("select * from template_schemes_vars,template_vars where "
 	      "template_schemes_vars.scheme_id='"+scheme_id+"' and "
 	      "template_schemes_vars.variable_id=template_vars.id");
-  //werror("scheme: %O, scheme_id: %O, variables:%O\n",
-  //	 scheme, scheme_id, variables);
+
   // Replace placeholders with customer spesific preferences  
   foreach(variables, mapping variable) {
     string from = "$$"+variable->name+"$$";
     string to = variable->value;
     if(variable->type == "font")
       to = replace(to, " ", "_");
-    
+    template = replace(template, from, to);
+  }
+
+  // Insert files (eg navigation template)
+  template=
+    parse_html(template, ([ "include": tag_include ]), ([ ]), templatesdir);
+
+  // Replace placeholders with customer spesific preferences  
+  foreach(variables, mapping variable) {
+    string from = "$$"+variable->name+"$$";
+    string to = variable->value;
+    if(variable->type == "font")
+      to = replace(to, " ", "_");
     template = replace(template, from, to);
   }
   
