@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.44 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.45 2004/05/24 19:34:02 _cvs_stephen Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -494,7 +494,7 @@ array(string) simpletag_fsize(string tag, mapping m, string c, RequestID id)
   if(tag == "!--#fsize") {
     if(id->misc->ssi_sizefmt=="bytes")
       return ({ (string)s[1] });
-    return ({ Roxen.sizetostring(s[1]) });
+    return ({ String.int2size(s[1]) });
   }
 
   return ({ Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]) });
