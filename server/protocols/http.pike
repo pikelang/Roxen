@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.73 1998/03/26 08:35:42 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.74 1998/03/26 11:36:19 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -676,7 +676,7 @@ string format_backtrace(array bt)
   // second is the actual function, 
   // rest is backtrace.
 
-  string reason = roxen->ai_diagnose_error( bt );
+  string reason = roxen->diagnose_error( bt );
 
   string res = ("<title>Internal Server Error</title>"
 		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
