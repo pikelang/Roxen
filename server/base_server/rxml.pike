@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.182 2000/03/31 04:15:34 nilsson Exp $
+// $Id: rxml.pike,v 1.183 2000/03/31 04:44:58 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1369,6 +1369,7 @@ class TagEmit {
       if(arrayp(res)) {
 	if(!plugin->skiprows && args->skiprows) res=res[(int)args->skiprows..];
 	if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
+	if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
 	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
 	do_iterate=array_iterate;
@@ -1916,7 +1917,7 @@ constant tagdoc=([
  Alters the case of the contents.
 </desc>
 
-<attr name=case value=upper|lower|capitalize>
+<attr name=case value=upper|lower|capitalize required>
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.
 </attr>",
@@ -2204,7 +2205,7 @@ The following features are supported:
  Prints a number as a word.
 </desc>
 
-<attr name=num value=number>
+<attr name=num value=number required>
  Print this number.
 </attr>
 
@@ -2213,8 +2214,8 @@ The following features are supported:
  <lang/>
 </attr>
 
-<attr name=type value=number,ordered>
- Default is number.
+<attr name=type value=number|ordered default=number>
+ Sets output format.
 </attr>",
 
 "strlen":#"<desc cont>
@@ -2300,8 +2301,30 @@ The following features are supported:
 "emit":#"<desc cont>Provides data, fetched from different sources, as
  entities</desc>
 
-<attr name=source type=plugin>
+<attr name=source value=plugin required>
  The source from which the data should be fetched.
+</attr>
+
+<attr name=scope value=name default='The emit source'>
+ The name of the scope within the emit tag.
+</attr>
+
+<attr name=maxrows value=number>
+ Limits the number of rows to this maximum.
+</attr>
+
+<attr name=skiprows value=number>
+ Makes it possible to skip the first rows of the result.
+</attr>
+
+<attr name=rowinfo value=variable>
+ The number of rows in the result, after it has been limited by maxrows
+ and skiprows, will be put in this variable, if given.
+</attr>
+
+<attr name=do-once>
+ Indicate that at least one loop should be made. All variables in the
+ emit scope will be empty.
 </attr>",
 
 ]);
