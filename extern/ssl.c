@@ -139,7 +139,7 @@ void got_connection(int s, int server_fd)
     if(SSL_use_certificate_file(con, cert_file, X509_FILETYPE_PEM)<=0)
     {
       fprintf(stderr, "SSL: Failed using certificate file!\n");
-      ERR_print_errors(stderr);
+      ERR_print_errors_fp(stderr);
       return;
     }
     if(!key_file)
@@ -147,7 +147,7 @@ void got_connection(int s, int server_fd)
     if (SSL_use_RSAPrivateKey_file(con, key_file, SSL_FILETYPE_PEM) <= 0)
     {
       fprintf(stderr,"SSL: UNABLE to set private key file\n");
-      ERR_print_errors(stderr);
+      ERR_print_errors_fp(stderr);
     }
   }
   SSL_clear(con);
@@ -156,7 +156,7 @@ void got_connection(int s, int server_fd)
   if(SSL_accept(con) <= 0)
   {
     /* perror("SSL_accept");*/
-    ERR_print_errors(stderr);
+    ERR_print_errors_fp(stderr);
     SSL_free(con);
     return;
   }
