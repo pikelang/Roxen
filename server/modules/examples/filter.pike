@@ -1,7 +1,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: filter.pike,v 1.1 2000/07/20 15:03:52 jhs Exp $";
+constant cvs_version = "$Id: filter.pike,v 1.2 2001/08/31 11:19:02 grubba Exp $";
 constant module_type = MODULE_FILTER;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "
@@ -13,7 +13,7 @@ int handled;
 int seen;
 
 mapping|void filter(mapping|void result, RequestID id)
-//! The <pi>filter()</pi> method is called for all files just before the
+//! The @[filter()] method is called for all files just before the
 //! final resulting page is sent back to the browser. In effect, filter
 //! modules are essentially MODULE_LAST modules that get called for all
 //! requests, not only failed requests. The result parameter is either a
