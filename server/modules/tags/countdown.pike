@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.31 2000/04/14 22:10:25 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.32 2000/04/29 23:57:05 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -27,7 +27,9 @@ give the time to or from a few special events. See below for a full list.</desc>
 <attr name=minute value=number>Sets the minute.</attr>
 <attr name=second value=number>Sets the second.</attr>
 <attr name=iso value=year-month-day>Sets the year, month and day all at once
-(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
+(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+<ex><countdown iso=\"2020-FEB-12\"/></ex>
+</attr>
 <attr name=event value=easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve>
 Sets the time of an evet to count down to.</attr>
 <br>
@@ -40,7 +42,9 @@ Sets the time of an evet to count down to.</attr>
 <attr name=minutes value=number>Add this number of minutes to the result.</attr>
 <attr name=seconds value=number>Add this number of seconds to the result.</attr>
 <attr name=now value=year-month-day>Sets the 'present' time, if other than really present time.
-(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
+(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+<ex><countdown now=\"1999-12-24\" year=\"2000\" display=\"days\"/></ex>
+</attr>
 
 <p>Presentation:</p>
 
@@ -66,6 +70,8 @@ Sets the time of an evet to count down to.</attr>
 <tr><td><i>display=boolean</i></td><td>Return true or false, depending on if the time is now or not. The
                          fuzziness of 'now' is decided by the 'prec' option.</td><tr>
 </table>
+<ex><countdown years=\"2\" display=\"dogyears\"/></ex>
+<ex><countdown day=\"friday\" display=\"hours\"/></ex>
 </attr>
 <attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
 <attr name=lang value=langcodes>The language in which the result should be written if the type is string.
