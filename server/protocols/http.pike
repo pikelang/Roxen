@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.40 1997/09/03 12:11:15 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.41 1997/09/05 22:34:14 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -321,7 +321,7 @@ private int parse_got(string s)
   if (sscanf(f, "/(%s)%s", a, f) && strlen(a))
     prestate = aggregate_multiset(@(a/","-({""})));
   
-  not_query = http_decode_string(simplify_path(f));
+  not_query = simplify_path(http_decode_string(f));
 
   if(strlen(s))
   {
