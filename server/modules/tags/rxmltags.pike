@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.481 2005/02/18 13:04:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.482 2005/02/25 17:05:55 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -877,6 +877,7 @@ class TagDate {
 
     array do_return(RequestID id) {
       int t = args["unix-time"] ? (int)args["unix-time"] : time(1);
+      mixed err;
 
       if(args["iso-time"])
       {
@@ -884,17 +885,27 @@ class TagDate {
 	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%d:%d", year, month, day, hour, minute, second) < 3)
 	  // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
 	  RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
-	t = mktime(([
-	  "sec":second,
-	  "min":minute,
-	  "hour":hour,
-	  "mday":day,
-	  "mon":month-1,
-	  "year":year-1900
-	]));
+	if (err = catch {
+	    t = mktime(([
+	    "sec":second,
+	    "min":minute,
+	    "hour":hour,
+	    "mday":day,
+	    "mon":month-1,
+	    "year":year-1900
+	    ]));
+	  }) {
+	  RXML.run_error("Unsupported date.\n");
+	}
       }
       
-      if(args->timezone=="GMT") t += localtime(t)->timezone;
+      if(args->timezone=="GMT") {
+	if (catch {
+	    t += localtime(t)->timezone;
+	  }) {
+	  RXML.run_error("Unsupported date.\n");
+	}
+      }
       t = Roxen.time_dequantifier(args, t);
 
       if(!(args->brief || args->time || args->date))
@@ -911,8 +922,14 @@ class TagDate {
         cache_time = 0;
       }
       CACHE(cache_time);
-      
-      result = Roxen.tagtime(t, args, id, language);
+
+      if (err = catch {
+	  result = Roxen.tagtime(t, args, id, language);
+	}) {
+	// FIXME: Ought to check that it is mktime, localtime or gmtime
+	//        that has failed, and otherwise rethrow the error.
+	RXML.run_error("Unsupported date.\n");
+      }
       return 0;
     }
   }
@@ -1228,9 +1245,14 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 
   if(s) {
     CACHE(10);
-    if(m->ssi)
-      return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
-    return Roxen.tagtime(s[3], m, id, language);
+    mixed err = catch {
+	if(m->ssi)
+	  return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
+	return Roxen.tagtime(s[3], m, id, language);
+      };
+    // FIXME: Ought to check that it is mktime, localtime or gmtime
+    //        that has failed, and otherwise rethrow the error.
+    RXML.run_error("Unsupported date.\n");
   }
 
   if(m->ssi) return id->misc->ssi_errmsg||"";
@@ -4835,11 +4857,20 @@ class TagIfDate {
 
     if(t->year>70) {
       t->mon--;
-      a = mktime(t);
+      if (catch {
+	  a = mktime(t);
+	}) {
+	RXML.run_error("Unsupported date.\n");
+      }
     }
 
-    t = localtime(time(1));
-    b = mktime(t - (["hour": 1, "min": 1, "sec": 1, "isdst": 1, "timezone": 1]));
+    if (catch {
+	t = localtime(time(1));
+	b = mktime(t - (["hour": 1, "min": 1, "sec": 1,
+			 "isdst": 1, "timezone": 1]));
+      }) {
+      RXML.run_error("Unsupported date.\n");
+    }
 
     // Catch funny guys
     if(m->before && m->after) {
