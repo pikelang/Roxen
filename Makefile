@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.38 1998/04/15 16:17:09 grubba Exp $
+# $Id: Makefile,v 1.39 1998/07/06 22:17:17 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -44,7 +44,7 @@ blurb :
 	@sleep 10
 
 all : configure_all
-	@builddir="$(BUILDDIR)"; \
+	builddir="$(BUILDDIR)"; \
 	cd "$$builddir"; \
 	$(MAKE) "prefix=$(prefix)"
 	@echo
@@ -54,9 +54,9 @@ all : configure_all
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
 	@echo
-	@pike/*/src/run_autoconfig . 2>&1 | grep -v warning
+	pike/*/src/run_autoconfig . 2>&1 | grep -v warning
 	@echo
-	@test -f "$(BUILDDIR)"/stamp-h && rm -f "$(BUILDDIR)"/stamp-h
+	@test -f "$(BUILDDIR)"/stamp-h && rm -f "$(BUILDDIR)"/stamp-h || :
 
 configure_all : configure
 	@builddir="$(BUILDDIR)"; \
@@ -90,7 +90,10 @@ install_low : configure_all
 	@echo Roxen successfully installed.
 	@echo
 
-localinstall : configure_all
+localinstall :
+	@make "MAKE=$(MAKE)" "prefix=`pwd`/server" "OS=$(OS)" "BUILDDIR=$(BUILDDIR)" localinstall_low
+
+localinstall_low : configure_all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	echo "Installing Roxen 1.2 locally from $$builddir ..."; \
