@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.34 2005/02/10 15:37:47 wellhard Exp $";
+constant cvs_version = "$Id: email.pike,v 1.35 2005/02/10 16:35:14 wellhard Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.34 $"/" ")[1];
+string revision = ("$Revision: 1.35 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -443,18 +443,26 @@ class TagEmail {
      // UTF8 -> dest. charset
      if(sizeof(chs))
      {
+       object /* Locate.Charset.encoder */ enc;
+       if (mixed err = catch (enc = Locale.Charset.encoder (chs)))
+	 if (has_prefix (describe_error (err), "Unknown character encoding"))
+	   parse_error ("Unknown charset %O.\n", chs);
+	 else
+	   throw (err);
+       
        // Subject
        // Only encode the subject if it contains non us-ascii (7-bit) characters.
        if (String.width(subject) != 8 || string_to_utf8(subject) != subject)
        {
+	 string s_chs = chs;
 	 if (catch {
-	     subject = Locale.Charset.encoder(chs)->feed(subject)->drain();
+	     subject = enc->feed(subject)->drain();
 	   }) {
-	   chs = "utf-8";
+	   s_chs = "utf-8";
 	   subject = string_to_utf8(subject);
 	 }
-	 string subject_b = MIME.encode_word(({subject, chs}), "base64");
-	 string subject_qp = MIME.encode_word(({subject, chs}), "quoted-printable");
+	 string subject_b = MIME.encode_word(({subject, s_chs}), "base64");
+	 string subject_qp = MIME.encode_word(({subject, s_chs}), "quoted-printable");
 
 	 // Use quoted printable if it is shorter because it is
 	 // significantly easier to reed in clients not supporting
@@ -466,15 +474,13 @@ class TagEmail {
        }
 
        // Body
-       chs = args->charset || id->misc->input_charset || query("CI_charset");
        if (catch {
-	   body = Locale.Charset.encoder(chs)->feed(body)->drain();
+	   body = enc->clear()->feed(body)->drain();
 	 }) {
-	 chs = ";charset=\"utf-8\"";
+	 chs = "utf-8";
 	 body = string_to_utf8(body);
-       } else {
-	chs = ";charset=\""+chs+"\"";
        }
+       chs = ";charset=\""+chs+"\"";
      }
 
      string fenc =
