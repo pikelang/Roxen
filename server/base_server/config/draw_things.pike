@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.31 1998/03/13 15:29:26 js Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.32 1998/08/20 07:37:55 per Exp $";
 
 object (Image.image) load_image(string f)
 {
@@ -22,7 +22,6 @@ object (Image.image) load_image(string f)
   if(img=Image.PNM.decode(data))
     return img->scale(0,48);
 //  werror("Failed to parse image file.\n");
-  
   return 0;
 }
 
@@ -37,6 +36,7 @@ object (Image.image) load_image(string f)
 
 #define first_filter  load_image("1stfilt.ppm")
 #define last_filter   load_image("lastfilt.ppm")
+#define experimental  load_image("experimental.ppm")
 #define last          load_image("last.ppm")
 #define first         load_image("first.ppm")
 #define dir           load_image("dir.ppm")
@@ -57,6 +57,11 @@ object (Image.image) draw_module_header(string name, int type, object font)
   int cxp = 0, first_icon;
   text = font->write(name);
   first_icon=1;PASTE(fade,"");first_icon=1;
+  werror("dmh: 0x%08x\n",type);
+  if(type&MODULE_EXPERIMENTAL) {
+    PASTE(experimental,"Experimental");
+    werror("exp!\n");
+  }
   if((type&MODULE_AUTH)||(type&MODULE_SECURITY)) PASTE(security,"");
   if(type&MODULE_FIRST) PASTE(first,"First");
   if(type&MODULE_URL) PASTE(first_filter,"Filter");
