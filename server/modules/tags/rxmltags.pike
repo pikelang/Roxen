@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.265 2001/07/21 14:24:41 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.266 2001/07/25 22:54:40 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1210,76 +1210,223 @@ class TagCache {
 		    RXML.FLAG_GET_EVALED_CONTENT |
 		    RXML.FLAG_DONT_CACHE_RESULT);
 
+  static class TimeOutEntry (TimeOutEntry next,
+			     mapping(string:RXML.PCode) alternatives,
+			     mapping(string:int) timeouts)
+    {}
+
+  static TimeOutEntry timeout_list;
+
+  static void do_timeouts()
+  {
+    int now = time (1);
+    for (TimeOutEntry t = timeout_list; t; t = t->next)
+      foreach (indices (t->timeouts), string key)
+	if (t->timeouts[key] < now) {
+	  m_delete (t->alternatives, key);
+	  m_delete (t->timeouts, key);
+	}
+    roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
+  }
+
+  static void add_timeouts (mapping(string:RXML.PCode) alternatives,
+			    mapping(string:int) timeouts)
+  {
+    if (!timeout_list)
+      roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
+    else
+      for (TimeOutEntry t = timeout_list; t; t = t->next)
+	if (t->timeouts == timeouts) return;
+    timeout_list = TimeOutEntry (timeout_list, alternatives, timeouts);
+  }
+
   class Frame {
     inherit RXML.Frame;
 
     int do_iterate;
+    mapping(string|int:mixed) keymap;
+    string key;
     RXML.PCode evaled_content;
-    string content_hash, key;
+    int timeout;
+
+    // The following are retained for frame reuse.
+    string content_hash;
+    array(string|int) subvariables;
+    mapping(string:RXML.PCode) alternatives;
+    mapping(string:int) timeouts;
 
     array do_enter (RequestID id)
     {
-      if( args["not-post-method"] && id->method == "POST" ) {
+      if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
 	return 0;
       }
 
-      if(!args->nohash) {
-	Crypto.md5 md5 = Crypto.md5();
-	if (!content_hash)
-	  // Include the content type in the hash since we cache the
-	  // p-code which has static type inference.
-	  content_hash = md5->update (content)
-			    ->update (content_type->name)
-			    ->digest();
+      RXML.Context ctx = RXML_CONTEXT;
 
-	string form_vars;
-	if(id->method == "POST")
-	  form_vars = encode_value_canonic(id->real_variables);
+      if (args->propagate) {
+	if (!(keymap = ctx->misc->cache_key)) m_delete (args, "propagate");
+      }
+      else keymap = ctx->misc->cache_key = ([]);
+
+      if(args->key) keymap[0] += ({args->key});
+
+      if (args->variable)
+	foreach (args->variable / ",", string var) {
+	  var = String.trim_all_whites (var);
+	  array splitted = ctx->parse_user_var (var, 1);
+	  if (intp (splitted[0])) { // Depend on the whole scope.
+	    mapping|RXML.Scope scope = ctx->get_scope (var);
+	    if (mappingp (scope))
+	      keymap[var] = scope + ([]);
+	    else if (var == "form")
+	      // Special case to optimize this scope.
+	      keymap->form = id->real_variables + ([]);
+	    else {
+	      array indices = scope->_indices (ctx, var);
+	      keymap[var] = mkmapping (indices, rows (scope, indices));
+	    }
+	  }
+	  else
+	    keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
+	}
+      else if (!args->propagate) {
+	// Include the form variables and the page path by default.
+	keymap->form = id->real_variables + ([]);
+	keymap["page.path"] = id->not_query;
+      }
+
+      if (args->propagate) {
+	// Updated the key, so we're done. The surrounding cache tag
+	// should do the caching.
+	do_iterate = 1;
+	key = keymap = 0;
+	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
+	return 0;
+      }
+
+      if (subvariables)
+	foreach (subvariables, string var) {
+	  array splitted = ctx->parse_user_var (var, 1);
+	  if (intp (splitted[0])) { // Depend on the whole scope.
+	    mapping|RXML.Scope scope = ctx->get_scope (var);
+	    if (mappingp (scope))
+	      keymap[var] = scope + ([]);
+	    else if (var == "form")
+	      // Special case to optimize this scope.
+	      keymap->form = id->real_variables + ([]);
+	    else {
+	      array indices = scope->_indices (ctx, var);
+	      keymap[var] = mkmapping (indices, rows (scope, indices));
+	    }
+	  }
+	  else
+	    keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
+	}
+
+      timeout = Roxen.time_dequantifier (args);
+
+      if (args->shared) {
+	if(args->nohash)
+	  // Always use the configuration in the key; noone really
+	  // wants cache tainting between servers.
+	  keymap[1] = id->conf->name;
+	else {
+	  if (!content_hash)
+	    // Include the content type in the hash since we cache the
+	    // p-code which has static type inference.
+	    content_hash = Crypto.md5()->update (content)
+				       ->update (content_type->name)
+				       ->digest();
+	  keymap[1] = ({id->conf->name, content_hash});
+	}
+
+	key = encode_value_canonic (keymap);
+	if (!args["disable-key-hash"])
+	  key = Crypto.md5()->update (key)->digest();
+
+	if (id->pragma["no-cache"] && args["flush-on-no-cache"])
+	  cache_remove ("tag_cache", key);
 	else
-	  form_vars = id->query;
-
-	key = content_hash + md5->update (id->not_query)
-				->update (form_vars)
-				->update (id->conf->name)
-				->digest();
-      }
-      else
-	// Always use the configuration in the key; noone really wants
-	// cache tainting between servers.
-	key = id->conf->name;
-
-      if(args->key)
-	key += args->key;
-
-      if( !(args["flush-on-no-cache"] && id->pragma["no-cache"]) ) {
-	if ((evaled_content = cache_lookup("tag_cache", key)))
-	  if (evaled_content->is_stale()) {
-	    cache_remove ("tag_cache", key);
-	    evaled_content = 0;
-	  }
-	  else {
-	    do_iterate = -1;
-	    key = 0;
-	    return ({evaled_content});
-	  }
+	  if ((evaled_content = cache_lookup("tag_cache", key)))
+	    if (evaled_content->is_stale()) {
+	      cache_remove ("tag_cache", key);
+	      evaled_content = 0;
+	    }
+	    else {
+	      do_iterate = -1;
+	      key = keymap = 0;
+	      return ({evaled_content});
+	    }
       }
 
+      else {
+	key = encode_value_canonic (keymap);
+	if (!args["disable-key-hash"])
+	  key = Crypto.md5()->update (key)->digest();
+
+	if (alternatives) {
+	  if ((evaled_content = alternatives[key]))
+	    if (evaled_content->is_stale()) {
+	      m_delete (alternatives, key);
+	      evaled_content = 0;
+	    }
+	    else {
+	      if (timeout) timeouts[key] = time() + timeout;
+	      do_iterate = -1;
+	      key = keymap = 0;
+	      return ({evaled_content});
+	    }
+	}
+	else alternatives = ([]);
+      }
+
+      keymap += ([]);
       do_iterate = 1;
       return 0;
     }
 
     array do_return()
     {
-      if (key)
-	cache_set("tag_cache", key, evaled_content, Roxen.time_dequantifier(args));
+      if (key) {
+	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
+	if (sizeof (subkeymap) > sizeof (keymap)) {
+	  // The test above assumes that no subtag remove entries in
+	  // RXML_CONTEXT->misc->cache_key.
+	  subvariables = indices (subkeymap - keymap);
+	  RXML_CONTEXT->state_update();
+	}
+	if (args->shared)
+	  cache_set("tag_cache", key, evaled_content, timeout);
+	else {
+	  alternatives[key] = evaled_content;
+	  if (timeout) {
+	    if (!timeouts) {
+	      timeouts = ([]);
+	      add_timeouts (alternatives, timeouts);
+	    }
+	    timeouts[key] = time() + timeout;
+	  }
+	  else
+	    // Only caches without timeouts is worth saving.
+	    RXML_CONTEXT->state_update();
+	}
+      }
       result += content;
       return 0;
     }
 
-    array save() {return ({content_hash});}
-    void restore (array saved) {[content_hash] = saved;}
+    array save()
+    {
+      return ({content_hash, subvariables, alternatives, timeouts});
+    }
+
+    void restore (array saved)
+    {
+      [content_hash, subvariables, alternatives, timeouts] = saved;
+      if (timeouts) add_timeouts (alternatives, timeouts);
+    }
   }
 }
 
@@ -4555,23 +4702,79 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "cache":#"<desc cont='cont'><p><short>
- This simple tag RXML parse its contents and cache them using the
- normal Roxen memory cache.</short> They key used to store the cached
- contents is the MD5 hash sum of the contents, the accessed file name,
- the query variables, the server URL and the authentication information,
- if available. This should create an unique key. The time during which the
- entry should be considered valid can set with one or several time attributes.
- If not provided the entry will be removed from the cache when it has
- been untouched for too long.
-</p></desc>
+ This tag caches the evaluated result of its contents.</short> If
+ there are nested <tag>cache</tag> tags, they are normally cached
+ separately, and they are also recognized so that this tag doesn't
+ cache their contents too. Thus it's possible to e.g. disable caching
+ of a certain part of the content inside a <tag>cache</tag> tag.</p>
+
+ <p>When the content is evaluated, the produced result is associated
+ with a key that is built by taking the values of certain variables
+ and other pieces of data, which thus are what the cache depends on.
+ By default, it depends on the contents of the form scope and the path
+ of the current page (i.e. <ent>page.path</ent>).</p>
+
+ <p>Note that it's easy to create huge amounts of cached values if the
+ cache parameters are chosen badly. E.g. the default cache parameters,
+ which are like that mostly for compatibility, are typically only
+ acceptable when combined with a short cache time, since they
+ otherwise make it easy to fill up the memory on the server simply by
+ making many requests with random variables.</p>
+
+ <p>The cache can be shared between all <tag>cache</tag> tags with
+ identical content, which is typically useful in <tag>cache</tag> tags
+ used in templates included into many pages. The drawback is that
+ cache entries stick around when the <tag>cache</tag> tags change and
+ that the cache won't be persistent (see below). Shared caches are the
+ only type of caches which have any effect if the RXML pages aren't
+ compiled.</p>
+
+ <p>If the the page is compiled to p-code which is saved, and the
+ cache is not shared, and there is no timeout on it, then the produced
+ cache entries are also saved, and the cache is thus persistent. In
+ this case it's thus especially important to limit the number of
+ alternative cache entries.</p>
+</desc>
+
+<attr name=variable value=string>
+ <p>This is a comma-separated list of variables and scopes that the
+ cache should depend on. If this doesn't exist, the default depends on
+ the form scope and <ent>page.path</ent> are used, i.e. it's the same
+ as specifying variable=\"form, page.path\".</p>
+
+ <p>Since it's important to keep down the size of the cache, this
+ should typically be kept to only a few variables with a limited set
+ of possible values, or else the cache should have a timeout.</p>
+</attr>
 
 <attr name=key value=string>
- <p>Append this value to the hash used to identify the contents for less
- risk of incorrect caching. This shouldn't really be needed.</p>
+ <p>Use the value of this attribute directly in the key. The variable
+ attribute is the preferred way to add depends to the cache.</p>
+</attr>
+
+<attr name=shared value=string>
+ <p>Share the cache between different instances of the
+ <tag>cache</tag> with identical content, wherever they may appear on
+ this page or some other in the same server. See the tag description
+ for details about shared caches.</p>
+</attr>
+
+<attr name=nocache>
+ <p>Do not cache the content in any way. Typically useful to disable
+ caching of a section inside another cache tag.</p>
+</attr>
+
+<attr name=propagate>
+ <p>Propagate the cache settings to the surrounding <tag>cache</tag>
+ tag, if there is any. Useful to locally add depends to a cache
+ without introducing a new one. If there is no surrounding
+ <tag>cache</tag> tag, this argument is ignored.
 </attr>
 
 <attr name=nohash>
- <p>The cached entry will use only the provided key as cache key.</p>
+ <p>If the cache is shared, then the content won't be made part of the
+ cache key. Thus the cache entries can be mixed up with other
+ <tag>cache</tag> tags.</p>
 </attr>
 
 <attr name='not-post-method'>
@@ -4611,6 +4814,15 @@ using the pre tag.
 <attr name=seconds value=number>
  <p>Add this number of seconds to the time this entry is valid.</p>
 </attr>",
+
+// Intentionally left undocumented:
+//
+// <attr name=disable-key-hash>
+//  Do not hash the key used in the cache entry. Normally the
+//  produced key is hashed to reduce memory usage and improve speed,
+//  but since that makes it theoretically possible that two cache
+//  entries clash, this attribute may be used to avoid it.
+// </attr>
 
 //----------------------------------------------------------------------
 
