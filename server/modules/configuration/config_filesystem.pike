@@ -1,6 +1,7 @@
 // A filesystem for the roxen configuration interface.
 #include <module.h>
 #include <stat.h>
+#include <roxen.h>
 
 inherit "modules/filesystems/filesystem.pike";
 
@@ -48,13 +49,142 @@ mixed find_dir( string f, object id )
   return ::find_dir( f, id );
 }
 
+object settings = roxen.ConfigIFCache( "settings" );
+
+class ConfigurationSettings
+{
+  mapping variables = ([ ]);
+  string name, host;
+
+  mapping locs = ([]);
+  void deflocaledoc( string locale, string variable, 
+                     string name, string doc, mapping|void translate)
+  {
+    if(!locs[locale] )
+      locs[locale] = master()->resolv("Locale")["Roxen"][locale]
+                   ->register_module_doc;
+    if(!locs[locale])
+      report_debug("Invalid locale: "+locale+". Ignoring.\n");
+    else
+      locs[locale]( this_object(), variable, name, doc, translate );
+  }
+
+  void set( string what, mixed to  )
+  {
+    variables[ what ][ VAR_VALUE ] = to;
+    remove_call_out( save );
+    call_out( save, 0.1 );
+  }
+
+  void defvar( string v, mixed val, int type, mapping q, mapping d,
+               array misc, mapping translate )
+  {
+    if( !variables[v] )
+    {
+      variables[v]                     = allocate( VAR_SIZE );
+      variables[v][ VAR_VALUE ]        = val;
+    }
+    variables[v][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
+    variables[v][ VAR_DOC_STR ]      = d->english;
+    variables[v][ VAR_NAME ]         = q->english;
+    variables[v][ VAR_MISC ]         = misc;
+    type &= (VAR_EXPERT | VAR_MORE);
+    variables[v][ VAR_CONFIGURABLE ] = type?type:1;
+    foreach( indices( q ), string l )
+      deflocaledoc( l, v, q[l], d[l], (translate?translate[l]:0));
+  }
+
+  void query( string what )
+  {
+    if( variables[ what ] )
+      return variables[what][VAR_VALUE];
+  }
+  
+  void save()
+  {
+    werror("Saving settings for "+name+"\n");
+    settings->set( name, variables );
+  }
+
+  void create( string _name )
+  {
+    name = _name;
+    variables = settings->get( name ) || ([]);
+    defvar( "docs", 1, TYPE_FLAG,
+            ([
+              "english":"Show documentation",
+              "svenska":"Visa dokumentation",
+            ]),
+            ([
+              "english":"Show the variable documentation.",
+              "svenska":"Visa variabeldokumentationen.",
+            ]),
+            0,0 );
+
+    defvar( "more_mode", 0, TYPE_FLAG,
+            ([
+              "english":"Show advanced configuration options",
+              "svenska":"Visa avancerade val",
+            ]), 
+            ([ "english":"Show all possible configuration options, not only "
+               "the ones that are most often changed.",
+               "svenska":"Visa alla konfigureringsval, inte bara de som "
+               "oftast ändras" ]),
+            0, 0 );
+
+    defvar( "devel_mode", 0, TYPE_FLAG,
+            ([
+              "english":"Show developer options and actions",
+              "svenska":"Visa utvecklingsval och funktioner",
+            ]),
+            ([ 
+              "english":"Show settings and actions that are not normaly "
+              "useful for non-developer users. If you develop your own "
+              "roxen modules, this option is for you",
+              "svenska":"Visa inställningar och funktioner som normaly "
+              "sätt inte är intressanta för icke-utvecklare. Om du utvecklar "
+              "egna moduler så är det här valet för dig"
+            ]), 0,0 );
+  }
+}
+
+mapping settings_cache = ([ ]);
+
+void get_context( string ident, string host, object id )
+{
+  if( settings_cache[ ident ] )
+    id->misc->config_settings = settings_cache[ ident ];
+  else
+    id->misc->config_settings = settings_cache[ ident ] 
+                              = ConfigurationSettings( ident );
+  id->misc->config_settings->host = host;
+}
+
+mapping logged_in = ([]);
 mixed find_file( string f, object id )
 {
   string locale;
+  string identifier = (id->auth && id->auth[1] ) ? id->auth[1] : "anonymous";
+  string host;
 
+
+  if( array h = gethostbyaddr( id->remoteaddr ) )
+    host = h[0];
+  else
+    host = id->remoteaddr;
+
+  
+  if( (time() - logged_in[ identifier ]) > 3600 )
+    report_notice(LOW_LOCALE->config_interface->
+                  admin_logged_on( identifier,host+" ("+id->remoteaddr+")" ));
+
+  logged_in[ identifier ] = time();
+  get_context( identifier, host, id );
+  
   id->misc->more_mode = 1;
 
-  f = utf8_to_string( f );
+  if( !id->misc->path_decoded )
+    id->not_query = f = utf8_to_string( f );
 
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
