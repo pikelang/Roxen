@@ -1129,6 +1129,82 @@ hej</result>
   <result>foobar</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated statically -->
+	<set variable="var.x" value="1"/>
+      </if>
+      <else>
+	<set variable="var.x" value="2"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared nohash key="yo4">
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+    <cache shared nohash key="yo4"/>
+  </rxml>
+  <result>[1][1]</result>
+</test>
+
+<test>
+  <rxml>
+    <cache>
+      <define tag="foo"><nocache>bar</nocache></define>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<foo/>
+      </if>
+      <else>
+	<foo/>
+      </else>
+    </cache>
+  </rxml>
+  <has-value>bar</has-value>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
