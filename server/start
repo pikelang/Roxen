@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.147 2001/01/31 07:32:36 per Exp $
+# $Id: start,v 1.148 2001/01/31 08:04:01 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -549,6 +549,10 @@ signal_exit() {
   exit 0
 }
 
+exit_fail() {
+  exitcode=1
+}
+
 start_roxen() {
   check_owner
   raise_limit
@@ -586,7 +590,9 @@ start_roxen() {
       if [ "x$do_pipe" = "x" ] ; then
         $pike $args "$@" 2>&1
       else
-        eval "$pike $args "$@" 2>&1  $do_pipe"
+        trap exit_fail 1
+        eval "($pike $args \"$@\" || kill -1 $$) 2>&1  $do_pipe"
+        exit $exitcode
       fi
     fi
   else
