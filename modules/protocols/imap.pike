@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.133 1999/03/29 00:23:21 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.134 1999/03/29 00:30:21 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -222,8 +222,10 @@ class imap_mail
 	+ ({ imap_string(msg->subtype) });
       if (extension_data)
 	a += ({ mapping_to_list(msg->params),
+#if 0
 		"NIL", // FIXME: Disposition header described in rfc 1806,
 		"NIL", // FIXME: Language tag (rfc 1766).
+#endif /* 0 */
 	});
     } else {
       string data = msg->getdata() || "";
@@ -241,7 +243,7 @@ class imap_mail
       if (lower_case(msg->type) == "text") {
 	a += ({ imap_number(sizeof(data/"\n") - 1) });
       } else if ((lower_case(msg->type) == "message") &&
-		 (lower_case(msg->type) == "rfc822")) {
+		 (lower_case(msg->subtype) == "rfc822")) {
 	object submsg = MIME.Message(data);
 
 	a += ({ make_envelope(submsg->headers),
@@ -254,8 +256,10 @@ class imap_mail
       if (extension_data)
 	a += ({ imap_string(MIME.encode_base64(Crypto.md5()->
 					       update(data)->digest())),
+#if 0
 		"NIL", // Disposition,
 		"NIL", // Language
+#endif /* 0 */
 	});
     }
     return imap_list(a);
