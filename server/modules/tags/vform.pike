@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.15 2000/11/29 14:37:00 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.16 2000/12/19 14:39:49 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -84,16 +84,17 @@ class VInputFrame {
     case "date":
       var=Variable.Date(args->value||"");
       break;
-     case "image":
-       var=Variable.Image( args->value||"", 0, 0, 0 );
-       break;
+    case "image":
+      var=Variable.Image( args->value||"", 0, 0, 0 );
+      break;
 //   case "upload":
 //     var=Variable.Upload( args->value||"", 0, 0, 0 );
 //     break;
+    case "password":
+      var=Variable.VerifiedPassword(args->value||"");
     case "text":
-      var=Variable.VerifiedText(args->value||"");
+      if(!var) var=Variable.VerifiedText(args->value||"");
     case "string":
-    default:
       if(!var) var=Variable.VerifiedString(args->value||"");
       if(args->regexp) var->add_regexp(args->regexp);
       if(args->glob) var->add_glob(args->glob);
@@ -110,6 +111,8 @@ class VInputFrame {
 	var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
       if(args->is=="empty") var->add_glob("");
       break;
+    default:
+      RXML.parse_error("There is no type %s.\n", args->type);
     }
 
     var->set_path( args->name );
@@ -449,37 +452,37 @@ true if the complete form so far is verified, otherwise only if the named field 
 <attr name=trim>
   Trim the variable before verification.
 </attr>
-<attr name=type value=int|float|email|date|text|string required>
+<attr name=type value=int|float|email|date|text|string|password required>
   Set the type of the data that should be inputed, and hence what widget should be used
   and how the input should be verified.
 </attr>
 <attr name=minlength value=number>
   Verify that the variable has at least this many characters.
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=maxlength value=number>
   Verify that the variable has at most this many characters.
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=is value=empty>
   Verify that the variable is empty. Pretty useless...
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=glob value=pattern>
   Verify that the variable match a certain glob pattern.
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=regexp value=pattern>
   Verify that the variable match a certain regexp pattern.
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=case value=upper|lower>
   Verify that the variable is all uppercased (or all lowercased).
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=equal value=string>
   Verify that the variable is equal to a given string. Pretty useless...
-  Only available when using the type string or text.
+  Only available when using the type password, string or text.
 </attr>
 <attr name=disable-domain-check>
   Only available when using the email type. When set the email domain will not
