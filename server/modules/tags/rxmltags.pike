@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.75 2000/02/21 18:55:14 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.76 2000/02/22 05:32:23 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -300,7 +300,7 @@ string tag_header(string tag, mapping m, RequestID id)
     m->value = "<" + m->value + ">";
 
   if(!(m->value && m->name))
-    return rxml_error(tag, "Requires both a name and a value.", id);
+    RXML.parse_error("Requires both a name and a value.");
 
   add_http_header(_extra_heads, m->name, m->value);
   return "";
@@ -309,7 +309,7 @@ string tag_header(string tag, mapping m, RequestID id)
 string tag_redirect(string tag, mapping m, RequestID id)
 {
   if (!(m->to && sizeof (m->to)))
-    return rxml_error(tag, "Requires attribute \"to\".", id);
+    RXML.parse_error("Requires attribute \"to\".");
 
   multiset(string) orig_prestate = id->prestate;
   multiset(string) prestate = (< @indices(orig_prestate) >);
@@ -385,7 +385,7 @@ class TagSet {
       if (args->from) {
 	// Copy a value from another entity variable.
 	mixed from=context->user_get_var(args->from, args->scope);
-	if(!from) parse_error("From variable doesn't exist.");
+	if(!from) run_error("From variable doesn't exist.");
 	context->user_set_var(args->variable, from, args->scope);
 	return 0;
       }
@@ -471,7 +471,7 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
     }
     return ({ make_tag("img", m)+(tmp?rxml_error(tag, tmp, id):"") });
   }
-  return rxml_error(tag, "No src given.", id);
+  RXML.parse_error("No src given.");
 }
 
 array(string) tag_roxen(string tagname, mapping m, RequestID id)
@@ -523,7 +523,7 @@ string tag_fsize(string tag, mapping args, RequestID id)
     if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
       return (string)strlen(s);
   }
-  return rxml_error(tag, "Failed to find file", id);
+  RXML.run_error("Failed to find file");
 }
 
 class TagCoding {
@@ -549,7 +549,7 @@ class TagCoding {
 
 array(string)|string tag_configimage(string t, mapping m, RequestID id)
 {
-  if (!m->src) return rxml_error(t, "No src given", id);
+  if (!m->src) RXML.parse_error(t, "No src given", id);
 
   if (m->src[sizeof(m->src)-4..][0] == '.')
     m->src = m->src[..sizeof(m->src)-5];
@@ -584,7 +584,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   if(n = m->variable)
   {
     string var=RXML.get_context()->user_get_var(n, m->scope);
-    if(!var) return rxml_error(tag, "No such variable ("+n+").", id);
+    if(zero_type(var)) RXML.run_error(tag, "No such variable ("+n+").", id);
     return m->quote=="none"?(string)var:({ html_encode_string((string)var) });
   }
 
@@ -604,11 +604,14 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      n=API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
+      n=API_read_file(id,m->file);
+      if(!n) RXML.run_error("No such file ("+m->file+").");
       id->pragma["no-cache"] = nocache;
       return n;
     }
-    return API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
+    n=API_read_file(id,m->file);
+    if(!n) RXML.run_error("No such file ("+m->file+").");
+    return n;
   }
 
   if(m->href && query("insert_href")) {
@@ -619,12 +622,12 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
     if(q && q->status>0 && q->status<400)
       return ({ q->data() });
-    return rxml_error(tag, (q ? q->status_desc: "No server response"), id);
+    RXML.run_error(q ? q->status_desc: "No server response");
   }
 
   if(m->var) {
     object|array tagfunc=RXML.get_context()->tag_set->get_tag("!--#echo");
-    if(!tagfunc) return rxml_error(tag, "No SSI module added.", id);
+    if(!tagfunc) RXML.run_error("No SSI module added.");
     return ({ 1, "!--#echo", m});
   }
 
@@ -632,7 +635,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   foreach(indices(m), string tmp)
     ret+="<br />\n"+tmp+" : "+m[tmp];
 
-  return rxml_error(tag, ret, id);
+  RXML.parse_error(ret);
 }
 
 //FIXME: Broken.
@@ -653,7 +656,7 @@ string tag_return(string tag, mapping m, RequestID id)
 string tag_set_cookie(string tag, mapping m, RequestID id)
 {
   if(!m->name)
-    return rxml_error(tag, "Requires a name attribute.", id);
+    RXML.parse_error("Requires a name attribute.");
 
   string cookies = m->name+"="+http_encode_cookie(m->value||"");
   int t;     //time
@@ -675,7 +678,7 @@ string tag_set_cookie(string tag, mapping m, RequestID id)
 
 string tag_remove_cookie(string tag, mapping m, RequestID id)
 {
-  if(!m->name || !id->cookies[m->name]) return rxml_error(tag, "That cookie does not exists.", id);
+  if(!m->name || !id->cookies[m->name]) RXML.run_error("That cookie does not exists.");
 
   add_http_header(_extra_heads, "Set-Cookie",
     m->name+"="+http_encode_cookie(m->value||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
@@ -693,7 +696,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   {
     // FIXME: The auth module should probably not be used in this case.
     if(!id->conf->auth_module)
-      return rxml_error(tag, "Modified by requires a user database.", id);
+      RXML.run_error("Modified by requires a user database.");
     // FIXME: The next row is defunct. last_modified_by does not exists.
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
@@ -709,7 +712,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   if(m->by && m->realfile)
   {
     if(!id->conf->auth_module)
-      return rxml_error(tag, "Modified by requires a user database.", id);
+      RXML.run_error("Modified by requires a user database.");
 
     if(f = open(m->realfile, "r"))
     {
@@ -739,7 +742,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   }
 
   if(m->ssi) return id->misc->ssi_errmsg||"";
-  return rxml_error(tag, "Couldn't stat file.", id);
+  RXML.run_error("Couldn't stat file.");
 }
 
 string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File file)
@@ -748,7 +751,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
   string b, dom;
 
   if(!id->conf->auth_module)
-    return rxml_error(tag, "Requires a user database.", id);
+    RXML.run_error("Requires a user database.");
 
   if (!(b=m->name))
     return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
@@ -856,20 +859,23 @@ array(string) container_cache(string tag, mapping args,
                               string contents, RequestID id)
 {
 #define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
+  string key="";
+  if(!args->nohash) {
 #if constant(Crypto.md5)
-  object md5 = Crypto.md5();
-  md5->update(HASH(contents));
-  string key=md5->digest();
+    contents=parse_html(contents, ([]), (["cache":container_cache]) );
+    object md5 = Crypto.md5();
+    md5->update(HASH(contents));
+    key=md5->digest();
 #else
-  string key = (string)hash(HASH(contents));
+    key = (string)hash(HASH(contents));
 #endif
-  int tm = (int)args->timeout;
+  }
   if(args->key)
     key += args->key;
   string parsed = cache_lookup("tag_cache", key);
   if(!parsed) {
     parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, parsed, tm);
+    cache_set("tag_cache", key, parsed, (int)args->timeout);
   }
   return ({parsed});
 #undef HASH
@@ -921,7 +927,7 @@ string container_foreach(string t, mapping args, string c, RequestID id)
   string v = args->variable;
   array what;
   if(!args->in)
-    return rxml_error(t, "No in attribute given.", id);
+    RXML.parse_error("No in attribute given.");
   if(args->variables)
     what = Array.map(args->in/"," - ({""}),
 		     lambda(string name, mapping v) {
@@ -987,7 +993,7 @@ string|array(string) container_aconf(string tag, mapping m,
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      return rxml_error(tag, "It is not possible to add configs to absolute URLs.", id);
+      RXML.parse_error("It is not possible to add configs to absolute URLs.");
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
@@ -1328,8 +1334,8 @@ array(string)|string container_recursive_output (string tagname, mapping args,
     inside = args->inside ? args->inside / (args->separator || ",") : ({});
     outside = args->outside ? args->outside / (args->separator || ",") : ({});
     if (sizeof (inside) != sizeof (outside))
-      return rxml_error(tagname, "'inside' and 'outside' replacement sequences "
-	"aren't of same length", id);
+      RXML.parse_error("'inside' and 'outside' replacement sequences "
+		       "aren't of same length");
   }
 
   if (limit <= 0) return contents;
@@ -1369,7 +1375,7 @@ string tag_leave(string tag, mapping m, RequestID id)
     id->misc->leave_repeat--;
     throw(MAGIC_EXIT);
   }
-  return rxml_error(tag, "Must be contained by &lt;repeat&gt;.", id);
+  RXML.parse_error("Must be contained by &lt;repeat&gt;.");
 }
 
 string container_repeat(string tag, mapping m, string c, RequestID id)
