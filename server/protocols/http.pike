@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.245 2000/08/14 22:50:50 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.246 2000/08/15 11:48:46 jhs Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1009,9 +1009,9 @@ private int parse_got( string new_data )
 #endif
   REQUEST_WERR("HTTP: parse_got(): after header scan");
 #ifndef DISABLE_SUPPORTS
-  if( !sizeof( supports ) )
+  if( !sizeof(supports - (<"autogunzip">)) )
   {
-    if( !client ) 
+    if( !client )
     {
       client = ({ "unknown" });
       array s_and_v = find_supports_and_vars("", supports);
