@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.369 1999/12/15 01:45:50 marcus Exp $
+ * $Id: roxen.pike,v 1.370 1999/12/15 07:59:52 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.369 1999/12/15 01:45:50 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.370 1999/12/15 07:59:52 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1205,18 +1205,19 @@ class FHTTP
     string res;
     low_adjust_stats( m );
 #define PCT(X) ((int)(((X)/(float)(m->total+0.1))*100))
-    res = ("\nCache statistics\n<pre>");
+    res = ("\nCache statistics\n<pre>\n");
     m->total = m->hits + m->misses + m->stale;
-    res += (" %d elements in cache, size is %1.1fMb max is %1.1fMb\n"
+    res += sprintf(" %d elements in cache, size is %1.1fMb max is %1.1fMb\n"
             " %d cache lookups, %d%% hits, %d%% misses and %d%% stale.\n",
             m->entries, m->size/(1024.0*1024.0), m->max_size/(1024*1024.0),
             m->total, PCT(m->hits), PCT(m->misses), PCT(m->stale));
-    return res+"</pre>";
+    return res+"\n</pre>\n";
   }
 
   void low_adjust_stats(mapping m)
   {
     array q = values( urls )->conf;
+  //  werror( status() );
     if( sizeof( q ) ) /* This is not exactly correct if sizeof(q)>1 */
     {
       q[0]->requests += m->num_request;
