@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.97 1997/08/13 03:36:08 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.98 1997/08/13 15:11:48 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -360,7 +360,7 @@ int start_time;
 
 string version()
 {
-  return QUERY(ident);
+  return QUERY(default_ident)?real_version:QUERY(ident);
 }
 
 // The db for the nice '<if supports=..>' tag.
@@ -1147,33 +1147,34 @@ private void update_global_vars(int from)
   case 1:
   case 2:
   case 3:
-   perr("The configuration port variable is now a standard port.\n"
-	"Adding the port '"+QUERY(ConfigurationPort)+" http "+
-	QUERY(ConfigurationIP)+"\n");
-   
-   QUERY(ConfigPorts) = ({ ({ QUERY(ConfigurationPort), "http",
-			      QUERY(ConfigurationIP), "" }) });
+    perr("The configuration port variable is now a standard port.\n"
+	 "Adding the port '"+QUERY(ConfigurationPort)+" http "+
+	 QUERY(ConfigurationIP)+"\n");
+    
+    QUERY(ConfigPorts) = ({ ({ QUERY(ConfigurationPort), "http",
+			       QUERY(ConfigurationIP), "" }) });
   case 4:
   case 5:
 
-   if(search(QUERY(ident), "Spinner")!=-1)
-   {
-     QUERY(ident) = real_version;
-     perr("Updating version field to "+real_version+"\n");
-   }
+    if(search(QUERY(ident), "Spinner")!=-1) {
+      QUERY(ident) = real_version;
+      perr("Updating version field to "+real_version+"\n");
+    }
 
-   if(search(QUERY(ident), "Challenger")!=-1)
-     QUERY(ident) = real_version;
-   if(!search(QUERY(ident), "Roxen Challenger/1.0")
-       && (replace(QUERY(ident),"·"," ") != real_version))
-    {
+    if(search(QUERY(ident), "Enterprice")!=-1)
+      QUERY(ident) = real_version;
+    else if(search(QUERY(ident), "Challenger")!=-1)
+      QUERY(ident) = real_version;
+    if(((!search(QUERY(ident), "Roxen Challenger/1.0")) ||
+	(!search(QUERY(ident), "Roxen Challenger/1.1"))) &&
+       (replace(QUERY(ident),"·"," ") != real_version)) {
       QUERY(ident)=real_version;
       perr("Updating version field to "+real_version+"\n");
     } else {
       perr("Not updating version field ("+QUERY(ident)+") since it is "
 	   "either already updated, or modified by the administrator.\n");
     }
-   case 6:
+  case 6:
     // Current level
   }
   perr("----------------------------------------------------\n");
@@ -1263,7 +1264,7 @@ public string config_url()
   
 int cache_disabled_p() { return !QUERY(cache);         }
 int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
-
+private int ident_disabled_p() { return QUERY(default_ident); }
 
 private void define_global_variables( int argc, array (string) argv )
 {
@@ -1402,17 +1403,22 @@ private void define_global_variables( int argc, array (string) argv )
 	  "of the start script. $pid will be replaced with the pid, and "
 	  "$uid with the uid of the user running the process.");
 
-  globvar("ident", replace(real_version," ","·"), "Identify as",
-	  TYPE_STRING|VAR_MORE,
-	  "What Roxen will call itself when talking to clients "
-	  "It might be useful to set this so that it does not include "
-	  "the actual version of Roxen, as recommended by "
-	  "the HTTP/1.0 draft 03:<p><blockquote><i>"
+  globvar("default_ident", 1, "Identify: Use default identification string",
+	  TYPE_FLAG|VAR_MORE,
+	  "Should Roxen call itself \"" + real_version + "\" when talking "
+	  "to clients?<br>\n"
+	  "It might be useful to disable this so that you can enter an "
+	  "identification-string that does not include the actual version of "
+	  "Roxen, as recommended by the HTTP/1.0 draft 03:<p><blockquote><i>"
 	  "Note: Revealing the specific software version of the server "
 	  "may allow the server machine to become more vulnerable to "
 	  "attacks against software that is known to contain security "
 	  "holes. Server implementors are encouraged to make this field "
 	  "a configurable option.</i></blockquote>");
+  globvar("ident", replace(real_version," ","·"), "Identify: Identify as",
+	  TYPE_STRING /* |VAR_MORE */,
+	  "What Roxen will call itself when talking to clients. ",
+	  0, ident_disabled_p);
 
 // Does not work right now..
   globvar("BS", 0, "Configuration interface: Compact layout",
