@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.545 2004/02/17 20:47:18 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.546 2004/02/20 17:34:32 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2801,7 +2801,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 			 " HH:mm format.</dd>\n"
 			 "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
 			 "<dd>Only allow access during certain days. Day is either a numerical "
-			 "    value (monday=1, sunday=7) or a string (monday, thuesday etc)</dd>"
+			 "    value (Monday=1, Sunday=7) or a string (monday, tuesday etc)</dd>"
 			 "</dl><p>\n"
 			 "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
 			 "</p><p>\n"
