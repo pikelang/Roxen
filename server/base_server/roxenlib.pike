@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.203 2000/10/02 19:43:20 nilsson Exp $
+// $Id: roxenlib.pike,v 1.204 2000/11/21 17:02:19 per Exp $
 
 //#pragma strict_types
 
@@ -889,24 +889,24 @@ string program_directory()
   return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
 }
 
-string html_encode_string(string str)
+string html_encode_string(string|object str)
 //! Encodes `str' for use as a literal in html text.
 {
-  return replace(str, ({"&", "<", ">", "\"", "\'", "\000" }),
+  return replace((string)str, ({"&", "<", ">", "\"", "\'", "\000" }),
 		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
 }
 
 string html_decode_string(string str)
 //! Decodes `str', opposite to <ref>html_encode_string()</ref>
 {
-  return replace(str, replace_entities, replace_values);
+  return replace((string)str, replace_entities, replace_values);
 }
 
 string html_encode_tag_value(string str)
 //! Encodes `str' for use as a value in an html tag.
 {
   // '<' is not allowed in attribute values in XML 1.0.
-  return "\"" + replace(str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
+  return "\"" + replace((string)str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
 string strftime(string fmt, int t)
