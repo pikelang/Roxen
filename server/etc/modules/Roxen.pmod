@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.120 2001/08/29 17:05:56 nilsson Exp $
+// $Id: Roxen.pmod,v 1.121 2001/09/06 11:41:31 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -515,11 +515,11 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
     url = "";
 
   // If the URL is a local relative URL we make it absolute.
-  if(!has_value(url, "://") && (!strlen(url)||url[0]!='/'))
+  if(!has_value(url, "://") && (!strlen(url) || url[0] != '/') )
     url = fix_relative(url, id);
-
+  
   // Add protocol and host to local absolute URLs.
-  if(url[0]=='/') {
+  if(strlen(url) && url[0]=='/') {
     if(id) {
       url = id->url_base() + url[1..];
       if (!prestates) prestates = id->prestate;
