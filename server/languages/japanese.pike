@@ -9,7 +9,7 @@
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.10 1999/03/14 02:18:15 grubba Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.11 1999/05/15 21:58:31 grubba Exp $";
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 
@@ -75,13 +75,13 @@ string date(int timestamp, mapping|void m)
   if(!(m["full"] || m["date"] || m["time"]))
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
-      return "今日";
+      return "今日" + ctime(timestamp)[11..15];
   
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
-      return "昨日";
+      return "昨日" + ctime(timestamp)[11..15];
   
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
-      return "明日";
+      return "明日" + ctime(timestamp)[11..15];
 
     if(t1["year"] == t2["year"])
       return mknumber(t1["mon"]+1)+"月" + mknumber(t1["mday"])+"日";      
