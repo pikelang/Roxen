@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.98 2004/05/04 17:53:21 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.99 2004/05/05 13:11:40 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -801,7 +801,6 @@ class RequestID
   static void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
 
-#if constant(Parser.XML.Tree.XMLNSParser)
   static Parser.XML.Tree.Node xml_data;	// XML data for the request.
 
   Parser.XML.Tree.Node get_xml_data()
@@ -813,7 +812,98 @@ class RequestID
     DAV_WERROR("Parsing XML data: %O\n", data);
     return xml_data = Parser.XML.Tree.parse_input(data, 0, 0, 0, 1);
   }
-#endif /* Parser.XML.Tree.XMLNSParser */
+
+  // Parsed if-header for the request.
+  static mapping(string:array(array(array(string)))) if_data = ([]);
+
+  //! Parse an RFC 2518 9.4 "If Header".
+  //!
+  //! @note
+  //!   For speed reasons the parsing is rather forgiving.
+  //!
+  //! @returns
+  //!   Returns a mapping from resource name to condition.
+  //!   The resource @expr{0@} (zero) represents the default resource.
+  //!
+  //!   A condition is represented as an array of sub-conditions
+  //!   (@tt{List@} in RFC 2518), where each sub-condition is an array
+  //!   of tokens, and each token is an array of two elements, where
+  //!   the first is one of the strings @expr{"not"@}, @expr{"etag"@},
+  //!   or @expr{"key"@}, and the second is the value.
+  mapping(string:array(array(array(string)))) get_if_data()
+  {
+    if (!if_data || sizeof(if_data)) return if_data;
+
+    if_data = 0;	// Negative caching.
+
+    string raw_header;
+    if (!(raw_header = request_headers->if) || !sizeof(data)) return 0;
+
+    array(array(string|int|array(array(string)))) decoded_if =
+      MIME.decode_words_tokenized_labled(raw_header);
+
+    if (!sizeof(decoded_if)) return 0;
+
+    mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
+
+    string resource;
+    foreach(decoded_if, array(string|int|array(array(string))) symbol) {
+      switch (symbol[0]) {
+      case "special":
+	// Ignore.
+	// '<', '>', ',', etc.
+	break;
+      case "word":
+	// Resource
+	resource = symbol[1];
+	if (!res[resource])
+	  res[resource] = ({});
+	break;
+      case "comment":
+	// Parenthesis expression.
+	array(array(string|int|array(array(string)))) sub_expr =
+	  MIME.decode_words_tokenized_labled(symbol[1][0][0]);
+	int i;
+	array(array(string)) expr = ({});
+	for (i = 0; i < sizeof(sub_expr); i++) {
+	  switch(sub_expr[i][0]) {
+	  case "special":
+	    // Ignore.
+	    // '<', '>', ',', etc.
+	    break;
+	  case "domain-literal":
+	    // entity-tag.
+	    string etag = sub_expr[i][1];
+	    // etag is usually something like "[\"some etag\"]" here.
+	    sscanf(etag, "[%*[ \t,]\"%s\"", etag);	// Remove quotes.
+	    expr += ({ ({ "etag", etag }) });
+	    break;
+	  case "word":
+	    // State-token or Not.
+	    if (lower_case(sub_expr[i][1]) == "not" &&
+		(!i ||
+		 (sub_expr[i-1][0] != "special") ||
+		 (sub_expr[i-1][1] != '<'))) {
+	      // Not
+	      expr += ({ ({ "not", 0 }) });
+	    } else {
+	      expr += ({ ({ "key", sub_expr[i][1] }) });
+	    }
+	  }
+	}
+	res[resource] += ({ expr });
+	break;
+      default:
+	report_debug("Syntax error in if-header: %O\n", raw_header);
+	return 0;
+      }
+    }
+#ifdef REQUEST_DEBUG
+    werror("get_if_data(): Parsed if header: %s:\n"
+	   "%O\n", raw_header, res);
+#endif
+    return if_data = res;
+  }
 
   static string cached_url_base;
 
