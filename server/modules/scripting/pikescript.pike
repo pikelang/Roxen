@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.23 1998/03/11 19:42:41 neotron Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.24 1998/03/20 03:37:36 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -65,16 +65,14 @@ void create()
 	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
 
   defvar("exec-mask", "0777", 
-	 "Exec mask: Always run scripts matching this permission mask", 
+	 "Exec mask: Needed", 
 	 TYPE_STRING|VAR_MORE,
-	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
+	 "Only run scripts matching this permission mask");
 
   defvar("noexec-mask", "0000", 
-	 "Exec mask: Never run scripts matching this permission mask", 
+	 "Exec mask: Forbidden", 
 	 TYPE_STRING|VAR_MORE,
-	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
+	 "Never run scripts matching this permission mask");
 
 #if efun(set_max_eval_time)
   defvar("evaltime", 4, "Maximum evaluation time", TYPE_INT,
@@ -86,7 +84,7 @@ void create()
 
 string comment()
 {
-  return query("exts")*" "+": " + sizeof(scripts)+" compiled programs";
+  return query("exts")*" ";
 }
 
 array (string) query_file_extensions()
@@ -96,7 +94,9 @@ array (string) query_file_extensions()
 
 private string|array(int) runuser;
 
+#ifdef THREADS
 mapping locks = ([]);
+#endif
 
 void my_error(array err, string|void a, string|void b)
 {
@@ -153,10 +153,10 @@ array|mapping call_script(function fun, object got, object file)
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
 #elif defined(DEBUG)
-    if(!getuid())
-      report_debug("Not executing pike-script as owner, "
-		   "since we are using threads. UID is not thread "
-		   "local, sadly enough.\n");
+    if((got->misc->is_user && (us = file_stat(got->misc->is_user)))&&!getuid())
+
+      report_debug("Not executing pike-script as owner, since we are using"
+		   " threads. UID is not thread local, sadly enough.\n");
 #endif
   }
 
@@ -186,7 +186,7 @@ array|mapping call_script(function fun, object got, object file)
   if(privs) destruct(privs);
 
   if (QUERY(fork_exec)) {
-    if (err = catch{
+    if (err = catch {
       if (err) {
 	err = catch{my_error(err, got->not_query);};
 	result = describe_backtrace(err);
@@ -236,12 +236,17 @@ array|mapping call_script(function fun, object got, object file)
 
 mapping handle_file_extension(object f, string e, object got)
 {
+  int mode = f->stat()[0];
+  if(!(mode & (int)query("exec-mask")) ||
+     (mode & (int)query("noexec-mask")))
+    return 0;  // permissions does not match.
+
+
   string file="";
   string s;
   mixed err;
   program p;
   object o;
-
   if(scripts[got->not_query])
   {
     if(got->pragma["no-cache"])
@@ -260,7 +265,9 @@ mapping handle_file_extension(object f, string e, object got)
 
   if (!functionp(fun = scripts[got->not_query])) {
     file=f->read(655565);   // fix this?
-
+#if constant(cpp)
+    file = cpp(file);
+#endif
     array (function) ban = allocate(6, "function");
     ban[0] = setegid;
     ban[1] = setgid;
@@ -302,7 +309,7 @@ mapping handle_file_extension(object f, string e, object got)
     if (!functionp(fun = scripts[got->not_query]=o->parse)) {
       /* Should not happen */
       destruct(f);
-      return http_string_answer("<h1>No parse()-function in pike-script</h1>\n");
+      return http_string_answer("<h1>No string parse(object id) function in pike-script</h1>\n");
     }
   }
 
@@ -331,6 +338,7 @@ string status()
   res += "<hr>";
 
   return ("<pre><font size=+1>" + res + "</font></pre>");
+
 }
 
 void start()
@@ -342,4 +350,5 @@ void start()
     else
       runuser = ({ (int)QUERY(runuser), 60001 });
   }
+
 }
