@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.7 2001/03/09 10:15:01 kuntri Exp $";
+constant cvs_version = "$Id: email.pike,v 1.8 2001/03/12 05:59:41 hop Exp $";
 
 constant thread_safe=1;
 
@@ -479,11 +479,6 @@ value=''><p>
 </p>
 </attr>
 
-<attr name='debug' value=''><p>
- Debug flag for testing. Returns the raw mail.
-</p>
-</attr>
-
 <attr name='charset' value='' default='iso-8859-1'><p>
  The charset of the body.
 </p>
@@ -492,7 +487,7 @@ value=''><p>
 
 <ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
  This is the contents.
 </email>
 </ex>",
@@ -521,7 +516,7 @@ split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 
 <ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
@@ -536,7 +531,7 @@ split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
@@ -562,7 +557,7 @@ Roxen Administrator
 
 <ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
@@ -621,11 +616,4 @@ split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 			  })
 		]);
-
-
-
-
-
-
-
-
+#endif
