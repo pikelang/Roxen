@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.188 1999/05/12 08:04:55 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.189 1999/05/12 10:00:36 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2239,12 +2239,10 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   
   if(status) return 1;
 
-#ifdef COMPAT
-  if(m["string"])  res = m["string"];	// Compability..
-  else
-#endif
-  if(m->data) res = m->data;
-  else res="";
+  if(m->data) 
+    res = m->data;
+  else 
+    res="";
   m->data = 0;
   
   if(m->file)
@@ -3516,7 +3514,6 @@ object sql_connect(string db)
 
 // END SQL
 
-// #if 0
 // Start Argument Cache (for tag modules, mainly, id<->argument mapping)
 class ArgCache
 {

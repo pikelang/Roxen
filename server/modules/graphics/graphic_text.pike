@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.168 1999/05/12 08:00:35 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.169 1999/05/12 09:59:51 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -10,10 +10,6 @@ inherit "roxenlib";
 #ifndef VAR_MORE
 #define VAR_MORE	0
 #endif /* VAR_MORE */
-
-
-roxen.Configuration.ArgCache argcache;
-
 
 static private int loaded;
 
@@ -106,34 +102,12 @@ void create()
   defvar("gif", 0, "Append .gif to all images", TYPE_FLAG|VAR_MORE,
 	 "Append .gif to all images made by gtext. Normally this will "
 	 "only waste bandwidth");
-
-
-  defvar("cacheindb", 0, 
-         "Store the arguments and text cache in a mysql database",
-         TYPE_FLAG|VAR_MORE,
-         "If set, store the argument cache (and text cache) in a mysql "
-         "database. This is very useful for load balancing using multiple "
-         "roxen servers, since the mysql database handles synchronization"); 
-
-  defvar( "dbpath", "mysql://localhost/gtextcache", 
-          "Database URL to use",
-          TYPE_STRING|VAR_MORE,
-          "The database to use to store the argument cache",
-          0,
-          lambda(){ return !query("cacheindb"); });
 }
-
-string query_location() { return query("location"); }
-
-static private mapping cached_args = ([ ]);
 
 #define MAX(a,b) ((a)<(b)?(b):(a))
 
-#if !efun(make_matrix)
-static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
-  if(matrixes[size]) return matrixes[size];
   array res;
   int i;
   int j;
@@ -143,43 +117,14 @@ array (array(int)) make_matrix(int size)
   for(i=0; i<size; i++)
     for(j=0; j<size; j++)
       res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
-  return matrixes[size] = res;
+  return res;
 }
-#endif
 
 string fix_relative(string file, object id)
 {
   if(file != "" && file[0] == '/') return file;
   file = combine_path(dirname(id->not_query) + "/",  file);
   return file;
-}
-
-object last_image;      // Cache the last image for a while.
-string last_image_name;
-object load_image(string f,object id)
-{
-  if(last_image_name == f && last_image) return last_image->copy();
-  string data;
-  object file;
-  object img;
-  
-  if(!(data=id->conf->try_get_file(f, id)))
-    if(!(file=open(f,"r")) || (!(data=file->read())))
-      return 0;
-  if(file) destruct(file);
-#if constant(Image.GIF.decode)
-  catch { if(!img) img = Image.GIF.decode( data ); };
-#endif
-#if constant(Image.JPEG.decode)
-  catch { if(!img) img = Image.JPEG.decode( data ); };
-#endif
-#if constant(Image.PNG.decode)
-  catch { if(!img) img = Image.PNG.decode( data ); };
-#endif
-  catch { if(!img) img = Image.PNM.decode( data ); };
-  if(!img) return 0;
-  last_image = img; last_image_name = f;
-  return img->copy();
 }
 
 object blur(object img, int amnt)
@@ -358,7 +303,7 @@ object make_text_image(mapping args, object font, string text,object id)
 
 
   if(args->texture) {
-    foreground = load_image(args->texture,id);
+    foreground = roxen.load_image(args->texture,id);
     if(args->tile)
     {
       object b2 = Image.image(xsize,ysize);
@@ -389,13 +334,13 @@ object make_text_image(mapping args, object font, string text,object id)
   }
   int background_is_color;
   if(args->background &&
-     ((background = load_image(args->background, id)) ||
+     ((background = roxen.load_image(args->background, id)) ||
       ((background=Image.image(xsize,ysize,
 			       @(parse_color(args->background))))
        && (background_is_color=1))))
   {
     object alpha;
-    if(args->alpha && (alpha = load_image(args->alpha,id)) && background_is_color)
+    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
     {
       xsize=MAX(xsize,alpha->xsize());
       ysize=MAX(ysize,alpha->ysize());
@@ -683,36 +628,11 @@ void start(int|void val, object|void conf)
     int id;
     string cp = query( "cache_dir" ), na = "args";
     mkdirhier( query( "cache_dir" )+"/.foo" );
-    if( query("cacheindb") )
-    {
-      id = 1;
-      cp = query("dbpath");
-      na = "gtext_arguments";
-    }
-    mixed e;
-    e = catch {
-      argcache = conf->ArgCache( na, cp, id );
-    };
-    if( e )
-    {
-      error_status = "Failed to initialize the GTEXT argument cache:\n"
-        + (describe_backtrace( e )/"\n")[0]+"\n";
-      report_error( error_status );
-      werror( describe_backtrace( e ) );
-      error_status = "<font color=red size=+2>"+
-        html_encode_string(error_status)+"</font>";
-    } else
-      error_status = 0;
     remove_call_out(clean_cache_dir);
     call_out(clean_cache_dir, 10);
     mc = conf;
     base_key = "gtext:";
   }
-}
-
-mixed status()
-{
-  return error_status;
 }
 
 #ifdef QUANT_DEBUG
@@ -782,7 +702,7 @@ array(int)|string write_text(string _args, string text, int size, object id)
   string orig_text = text;
   mixed data;
   int elapsed;
-  mapping args = argcache->lookup( _args ) || ([]);
+  mapping args = roxen.argcache.lookup( _args ) || ([]);
 
   if(data=cache_lookup(key, text))
   {
@@ -982,7 +902,7 @@ mapping find_file(string f, object rid)
 
   if(f[0] != '^')
   {
-    mapping t = argcache->lookup( f );
+    mapping t = roxen.argcache.lookup( f );
     if(!t)
       error("Invalid text identifier. Aborting\n");
     f = t->t;
@@ -996,7 +916,11 @@ mapping find_file(string f, object rid)
 
 string quote(string in)
 {
-  return argcache->store( ([ "t":in ]) );
+  string id;
+  werror("quote "+in+" -> ");
+  id = roxen.argcache.store( ([ "t":in ]) );
+  werror("'"+id+"'\n");
+  return id;
 }
 
 string magic_javascript_header(object id)
@@ -1090,7 +1014,7 @@ string tag_gtext_id(string t, mapping arg,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
-  string id = argcache->store( arg );
+  string id = roxen.argcache.store( arg );
 
   if(!short)
     return query_location()+id+"/^";
@@ -1210,7 +1134,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   m_delete(arg, "name"); m_delete(arg, "align");
 
   // Now the 'arg' mapping is modified enough..
-  string num = argcache->store( arg );
+  string num = roxen.argcache.store( arg );
 
   gt=contents;
   rest="";
@@ -1302,7 +1226,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
       m_delete(arg, q);
     }
     
-    string num2 = argcache->store( arg );
+    string num2 = roxen.argcache.store( arg );
     array size = write_text(num2,gt,1,id);
 
     if(!defines->magic_java) res = magic_javascript_header(id);
