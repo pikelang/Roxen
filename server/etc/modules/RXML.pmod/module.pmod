@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.136 2001/03/12 16:39:36 mast Exp $
+//! $Id: module.pmod,v 1.137 2001/03/13 17:08:29 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3700,9 +3700,11 @@ class Type
   //! encodings, like the @[t_xml] type). Any conversion error,
   //! including in the cast, should be thrown as an RXML parse error.
   //!
-  //! If the @[from] type is given, it's the type of the value. If the
-  //! encode function doesn't have routines to explicitly handle a
-  //! conversion from that type, then indirect conversion using
+  //! If the @[from] type is given, it's the type of the value. If
+  //! it's @[t_any], the function should (superficially) check the
+  //! value and return it without conversion. Otherwise, if the encode
+  //! function doesn't have routines to explicitly handle a conversion
+  //! from that type, then indirect conversion using
   //! @[conversion_type] should be done. The @[indirect_convert]
   //! function implements that. The encode function should at least be
   //! able to convert values of @[conversion_type] to this type, or
@@ -3997,36 +3999,45 @@ class Type
   //! it won't do a direct conversion from @[conversion_type] to this
   //! type. Throws RXML parse error on any conversion error.
   {
-#ifdef MODULE_DEBUG
-    if (conversion_type->name == from->name)
-      error ("Won't convert the conversion type %s to %s; "
-	     "encode() should handle that.\n");
-#endif
-    if (conversion_type->name == from->conversion_type->name)
-      return encode (from->decode ? from->decode (val) : val, conversion_type);
-    if (this_object()->name == from->conversion_type->name)
-      return from->decode ? from->decode (val) : val;
-    string name = this_object()->name;
-    if (name == from->name)
-      return val;
-    // The following is not terribly efficient, but most situations
-    // should be handled by the special cases above.
-    int levels = 1;
-    for (Type conv = from->conversion_type; conv; conv = conv->conversion_type, levels++)
-      if (conv->name == name) {
-	while (levels) {
-	  val = from->decode ? from->decode (val) : val;
-	  from = from->conversion_type;
-	}
-	return val;
+    if (conversion_type) {
+      if (from->conversion_type) {
+	string fromconvname = from->conversion_type->name;
+	if (conversion_type->name == fromconvname)
+	  return encode (from->decode ? from->decode (val) : val, conversion_type);
+	if (this_object()->name == fromconvname)
+	  return from->decode ? from->decode (val) : val;
       }
-    if (conversion_type)
-      if (conversion_type->conversion_type->name == from->name)
+      string name = this_object()->name;
+      if (name == from->name)
+	return val;
+      // The following is not terribly efficient, but most situations
+      // should be handled by the special cases above.
+      int levels = 1;
+      for (Type conv = from->conversion_type;
+	   conv;
+	   conv = conv->conversion_type, levels++)
+	if (conv->name == name) {
+	  while (levels--) {
+	    val = from->decode ? from->decode (val) : val;
+	    from = from->conversion_type;
+	  }
+	  return val;
+	}
+      if (conversion_type->conversion_type &&
+	  conversion_type->conversion_type->name == from->name)
+	// indirect_convert should never do the job of encode.
 	return encode (conversion_type->encode (val, from), conversion_type);
-      else
+      else {
+#ifdef MODULE_DEBUG
+	if (conversion_type->name == from->name)
+	  error ("This function shouldn't be used to convert "
+		 "from the conversion type %s to %s; use encode() for that.\n",
+		 conversion_type->name, this_object()->name);
+#endif
 	return encode (conversion_type->indirect_convert (val, from), conversion_type);
-    else
-      parse_error ("Cannot convert type %s to %s.\n", from, this_object());
+      }
+    }
+    parse_error ("Cannot convert type %s to %s.\n", from->name, this_object()->name);
   }
 
   // Internals.
@@ -4132,6 +4143,45 @@ static class TSame
 // treated that way. It would imply that a sequence of e.g. integers
 // are implicitly added together, which would be nonintuitive.
 
+TScalar t_scalar = TScalar();
+//! Any type of scalar, i.e. text or number. It's not sequential, as
+//! opposed to the subtype t_text.
+//!
+//! FIXME: This is currently not labeled as a supertype for t_text and
+//! t_num, so it's only marginally useful. It's name will probably
+//! change.
+
+static class TScalar
+{
+  inherit Type;
+  constant name = "scalar";
+  constant sequential = 0;
+  Nil empty_value = nil;
+  Type conversion_type = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!stringp (val) && !intp (val) && !floatp (val))
+      type_check_error (msg, args, "Expected scalar value, got %t.\n", val);
+  }
+
+  string|int|float encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string|int|float] val;
+	default: return [string|int|float] indirect_convert (val, from);
+      }
+    if (!stringp (val) && !intp (val) && !floatp (val))
+      // Cannot unambigiously use a cast for this type.
+      parse_error ("Cannot convert value of type %t to scalar.\n", val);
+    return [string|int|float] val;
+  }
+
+  string _sprintf() {return "RXML.t_scalar" + OBJ_COUNT;}
+}
+
 TNum t_num = TNum();
 //! Type for any number, currently integer or float.
 //!
@@ -4145,7 +4195,7 @@ static class TNum
   constant name = "number";
   constant sequential = 0;
   constant empty_value = 0;
-  Type conversion_type = 0;
+  Type conversion_type = t_scalar;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4156,16 +4206,20 @@ static class TNum
   int|float encode (mixed val, void|Type from)
   {
     if (from)
-      if (from->name == local::name) return [int|float] val;
-      else if (from->name == TAny.name) {type_check (val); return [int|float] val;}
-      else return [int|float] indirect_convert (val, from);
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [int|float] val;
+	default: return [int|float] indirect_convert (val, from);
+	case TScalar.name:
+      }
     if (stringp (val))
       if (sscanf (val, "%d%*c", int i) == 1) return i;
       else if (sscanf (val, "%f%*c", float f) == 1) return f;
       else parse_error ("String contains neither integer nor float.\n");
-    // Somewhat awkward case.
-    mixed err = catch {return (float) val;} && catch {return (int) val;};
-    parse_error ("Cannot convert value to number: " + describe_error (err));
+    if (!intp (val) && !floatp (val))
+      // Cannot unambigiously use a cast for this type.
+      parse_error ("Cannot convert value of type %t to number.\n", val);
+    return [int|float] val;
   }
 
   string _sprintf() {return "RXML.t_num" + OBJ_COUNT;}
@@ -4180,7 +4234,7 @@ static class TInt
   constant name = "int";
   constant sequential = 0;
   constant empty_value = 0;
-  Type conversion_type = t_num;
+  Type conversion_type = t_scalar;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4191,9 +4245,12 @@ static class TInt
   int encode (mixed val, void|Type from)
   {
     if (from)
-      if (from->name == local::name) return [int] val;
-      else if (from->name == TNum.name) {type_check (val); return [int] val;}
-      else return [int] indirect_convert (val, from);
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [int] val;
+	default: return [int] indirect_convert (val, from);
+	case TScalar.name:
+      }
     if (stringp (val))
       if (sscanf (val, "%d%*c", int i) == 1) return i;
       else parse_error ("String does not contain an integer.\n");
@@ -4213,7 +4270,7 @@ static class TFloat
   constant name = "float";
   constant sequential = 0;
   constant empty_value = 0;
-  Type conversion_type = t_num;
+  Type conversion_type = t_scalar;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4224,9 +4281,12 @@ static class TFloat
   float encode (mixed val, void|Type from)
   {
     if (from)
-      if (from->name == local::name) return [float] val;
-      else if (from->name == TNum.name) {type_check (val); return [float] val;}
-      else return [float] indirect_convert (val, from);
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [float] val;
+	default: return [float] indirect_convert (val, from);
+	case TScalar.name:
+      }
     if (stringp (val))
       if (sscanf (val, "%f%*c", float f) == 1) return f;
       else parse_error ("String does not contain a float.\n");
@@ -4249,7 +4309,7 @@ static class TText
   constant name = "text/*";
   constant sequential = 1;
   constant empty_value = "";
-  Type conversion_type = 0;
+  Type conversion_type = t_scalar;
   constant free_text = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
@@ -4261,9 +4321,12 @@ static class TText
   string encode (mixed val, void|Type from)
   {
     if (from)
-      if (from->name == local::name) return [string] val;
-      else if (from->name == TAny.name) {type_check (val); return [string] val;}
-      else return [string] indirect_convert (val, from);
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string] val;
+	default: return [string] indirect_convert (val, from);
+	case TScalar.name:
+      }
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
   }
@@ -4291,35 +4354,34 @@ static class TXml
   constant entity_syntax = 1;
   constant encoding_type = "xml"; // For compatibility.
 
-  // FIXME: Perhaps stricter type_check?
+  // FIXME: type_check is not really strict.
 
   string encode (mixed val, void|Type from)
   {
-    if (!from) {
-      if (mixed err = catch {val = (string) val;})
-	parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
-      from = t_text;
-    }
-    if (from->name == local::name)
-      return [string] val;
-    else if (from->name == TText.name)
-      return replace (
-	[string] val,
-	// FIXME: This ignores the invalid Unicode character blocks.
-	({"&", "<", ">", "\"", "\'",
-	  "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
-	  "\010",                 "\013", "\014",         "\016", "\017",
-	  "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
-	  "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-	}),
-	({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
-	  "&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
-	  "&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
-	  "&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
-	  "&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
-	}));
-    else
-      return [string] indirect_convert (val, from);
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string] val;
+	default: return [string] indirect_convert (val, from);
+	case TText.name:
+      }
+    else if (mixed err = catch {val = (string) val;})
+      parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
+    return replace (
+      [string] val,
+      // FIXME: This ignores the invalid Unicode character blocks.
+      ({"&", "<", ">", "\"", "\'",
+	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+	"\010",                 "\013", "\014",         "\016", "\017",
+	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      }),
+      ({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
+	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
+	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
+	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
+	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
+      }));
   }
 
   string decode (mixed val)
