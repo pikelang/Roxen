@@ -454,7 +454,7 @@ tar_dist:
 	echo Restoring DBAPI...; \
 	(cd $$version; tar xf ../dbapi.tar || exit 1); \
 	echo Building lobotomized NDA distribution...; \
-	tar cf - $$version | gzip -9 >$$version-$$type-nda-int.tar.gz \
+	tar cf - $$version | gzip -9 >$$version-$$type-nda-int.tar.gz; \
 	(mkdir 40bit-nda; cd 40bit-nda; gzip -cd < ../$$version-$$type-nda-full.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1); \
 	echo Building 40bit NDA distribution...; \
 	(cd 40bit-nda; tar cf - $$version | gzip -9 >../$$version-$$type-nda-40bit.tar.gz || exit 1); \

@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.48 1999/03/30 20:56:35 marcus Exp $
+# $Id: Makefile,v 1.49 1999/03/30 23:42:12 marcus Exp $
 #
 # Bootstrap Makefile
 #
@@ -217,7 +217,7 @@ censor_strong_crypto :
 	@echo "Censoring strong crypto..."
 	@cd server/protocols/; \
 	 cp ssl3.pike ssl3.strong; \
-	 sed -e '/WEAK_CRYPTO_40BIT/d' < ssl3.strong > ssl3.pike \
+	 sed -e '/WEAK_CRYPTO_40BIT/d' < ssl3.strong > ssl3.pike; \
 	 rm -f ssl3.strong
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
