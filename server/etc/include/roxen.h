@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.16 2000/07/17 14:13:42 lange Exp $
+// $Id: roxen.h,v 1.17 2000/07/19 20:11:32 lange Exp $
 // -*- Pike -*-
 
 #ifndef _ROXEN_H_
@@ -29,13 +29,13 @@
 #endif /* !__LOCALEOBJECT */
 
 #ifndef _STR_LOCALE
-#define _STR_LOCALE(Z, X, Y)	\
-    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get(), X, Y))
+#define _STR_LOCALE(X, Y, Z)	\
+    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get(), Y, Z))
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
-#define _DEF_LOCALE(Z, X, Y)	\
-    ([string](mixed)__LOCALEMODULE.DeferredLocale(Z, GETLOCLANG, X, Y))
+#define _DEF_LOCALE(X, Y, Z)	\
+    ([string](mixed)__LOCALEMODULE.DeferredLocale(X, GETLOCLANG, Y, Z))
 #endif /* !_DEF_LOCALE */
 
 #ifndef USE_DEFERRED_LOCALE
