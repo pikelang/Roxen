@@ -523,9 +523,9 @@ string container_configif_output(string t, mapping m, string c, object id)
 
    case "locales":
 #if constant(Locale.list_languages)
-     array(string) langs=Locale.list_languages("config_interface");
+     array(string) langs=Locale.list_languages("roxen_config");
 #else
-     array(string) langs=RoxenLocale.list_languages("config_interface");
+     array(string) langs=RoxenLocale.list_languages("roxen_config");
 #endif
      variables = map( sort(langs),
                       lambda( string l )

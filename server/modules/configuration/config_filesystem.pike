@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.40 2000/07/21 04:52:47 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.41 2000/07/21 17:37:36 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -199,8 +199,8 @@ mixed find_file( string f, object id )
 
 //   werror( f + " is " + type + "\n");
 
-  if( locale != "standard" )
-    roxen.set_locale(locale);
+  if( locale != "standard" ) 
+    roxen.set_locale( locale );
 
   switch( type )
   {
@@ -237,7 +237,7 @@ mixed find_file( string f, object id )
      retval->stat = 0;
      retval->len = strlen( retval->data );
      retval->expires = time();
-     if( locale != "standard" )
+     if( locale != "standard" ) 
        roxen.set_locale( "standard" );
   }
 

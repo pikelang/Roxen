@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.37 2000/07/21 04:55:02 lange Exp $
+// $Id: global_variables.pike,v 1.38 2000/07/21 17:37:34 lange Exp $
 
 /*
 #pragma strict_types
@@ -505,9 +505,9 @@ void define_global_variables(  )
 		"Standard means using the default locale, which varies "
 		"according to the value of the 'LANG' environment variable."),
 #if constant(Locale.list_languages)
-	 sort(Locale.list_languages("config_interface")+({"standard"}))
+	 sort(Locale.list_languages("roxen_config")+({"standard"}))
 #else
-	 sort(RoxenLocale.list_languages("config_interface")+({"standard"}))
+	 sort(RoxenLocale.list_languages("roxen_config")+({"standard"}))
 #endif
 	 );
 

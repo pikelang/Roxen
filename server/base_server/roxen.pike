@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.510 2000/07/21 04:55:02 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.511 2000/07/21 17:37:35 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -383,14 +383,14 @@ private string verify_locale(string lang) {
     set=lang;
   else if(
 #if constant(Standards.ISO639_2)
-	  set=Standards.ISO639_2.map_639_1(lang)
+	  set = Standards.ISO639_2.map_639_1(lang)
 #else
-	  set=RoxenLocale.ISO639_2.map_639_1(lang)
+	  set = RoxenLocale.ISO639_2.map_639_1(lang)
 #endif
 	  )
     ;
   else
-    set=languages[lang];
+    set = languages[lang];
 
   return set;
 }
@@ -402,14 +402,13 @@ int set_locale(void|string lang)
   //! codes and the old symbolic names.
 {
   string set;
-  if(!(set=verify_locale(lang))) {
-    if(lang!=default_locale)
+  if( !(set = verify_locale(lang)) ) {
+    if( lang!=default_locale )
       // lang not ok, try default_locale
-      set_locale(default_locale);
+      set_locale( default_locale );
     return 0;
   }
-  
-  locale->set(set);
+  locale->set( set );
   return 1;
 }
 
@@ -2749,8 +2748,8 @@ void create()
 #else  /* !Locale.register_project */
 #define __REG_PROJ RoxenLocale.register_project
 #endif /* Locale.register_project */
-  __REG_PROJ("roxen_start", "translations/%L/roxen_start.xml");
-  __REG_PROJ("roxen_config", "translations/%L/roxen_config.xml");
+  __REG_PROJ("roxen_start",   "translations/%L/roxen_start.xml");
+  __REG_PROJ("roxen_config",  "translations/%L/roxen_config.xml");
   __REG_PROJ("roxen_message", "translations/%L/roxen_message.xml");
 #undef __REG_PROJ
 
@@ -3390,19 +3389,20 @@ int main(int argc, array tmp)
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
 
-  if(getenv("LANG")) {
+  if(QUERY(locale) != "standard") {
+    // Default locale from Globals
+    default_locale = QUERY(locale);
+    set_locale();
+  }
+  else if(getenv("LANG")) {
+    // Default locale from environment
     default_locale = getenv("LANG");
     sscanf(default_locale, "%s_%*s", default_locale);
     set_locale();
   }
 
-  if(QUERY(locale) != "standard")
-  {
-    default_locale = QUERY(locale);
-    set_locale();
-  }
-
   if(!locale->get()) {
+    // Failed to set locale, fallback to English
     default_locale = "eng";
     set_locale();
   }
@@ -3479,9 +3479,11 @@ string check_variable(string name, mixed value)
       remove_call_out(restart);
     break;
    case "locale":
-     if(value=verify_locale(value)) {
+     if(value = verify_locale(value)) {
+       if(value==default_locale)
+	 break; // No change
        default_locale = value;
-       set_locale();
+       set_locale();  // Show Globals in the new locale
      } else {
        return sprintf("No such locale: %O\n", value);
      }
