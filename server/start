@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.85 1999/12/13 05:10:44 per Exp $
+# $Id: start,v 1.86 1999/12/19 00:34:12 marcus Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -25,7 +25,7 @@ if test -f etc/environment; then
 fi
 
 # Make sure $CLASSPATH contains the servlet stuff
-CLASSPATH=java/classes/roxen_servlet.jar:java/classes/servlet.jar:java/classes${CLASSPATH:+:}$CLASSPATH
+CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/classes/servlet.jar:java/classes${CLASSPATH:+:}$CLASSPATH
 export CLASSPATH
 
 
