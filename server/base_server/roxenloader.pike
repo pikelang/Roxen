@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.309 2002/01/18 01:09:56 nilsson Exp $
+// $Id: roxenloader.pike,v 1.310 2002/01/28 12:23:34 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.309 2002/01/18 01:09:56 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.310 2002/01/28 12:23:34 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -709,7 +709,7 @@ class restricted_cd
   int `()(string path)
   {
     if (locked_pid == getpid()) {
-      throw(({ "Use of cd() is restricted.\n", backtrace() }));
+      error ("Use of cd() is restricted.\n");
     }
     return cd(path);
   }
@@ -2002,6 +2002,7 @@ and rebuild Pike from scratch.
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
   add_constant("werror",        roxen_perror);
+  add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
   add_constant("roxenp",        lambda() { return roxen; });
   add_constant("ST_MTIME",      ST_MTIME );
