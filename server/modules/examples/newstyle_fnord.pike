@@ -1,0 +1,85 @@
+// This is a small sample module intended to show how a newstyle tag
+// is written. Note that this is only a very brief overview and that
+// the new parser is still under development and incompatible changes
+// might be done in the future.
+
+// See fnord.pike for more information of what this tag does.
+
+// This variable is shown in the configinterface as the version of the module.
+string cvs_version = "$Id: newstyle_fnord.pike,v 1.1 2000/01/26 15:11:24 nilsson Exp $";
+
+// Tell Roxen that this module is threadsafe.
+int thread_safe=1;
+
+// Include and inherit code that is needed in every module.
+#include <module.h>
+inherit "module";
+
+
+// Define the fnord tag class. It must begin with "Tag".
+class TagFnord {
+
+  inherit RXML.Tag;
+
+  // This constant tells the parser that the tag should be called "fnord".
+  constant name  = "fnord";
+
+  // This tag is only meaningful when used as a container.
+  constant flags = RXML.FLAG_CONTAINER;
+
+  // Declare the type of the attribute, which happens to be optional.
+  // Since we declare it to be text, we really don't need this line to
+  // get things to work.
+  constant opt_arg_types = ([ "alt" : RXML.t_text ]);
+
+  // This class is where all the action are.
+  class Frame {
+    inherit RXML.Frame;
+
+    // When the parser starts to parse the tag it calls
+    // do_enter. We get a normal request object as argument.
+    // We also have an args mapping at our disposal, containing
+    // the attributes given to the tag.
+
+    // When do_enter has been called the function do_iterate
+    // will be called. If do_iterate is a number, as in this case,
+    // the contents will be iterated that number of times.
+
+    // Finally we want to set the return value if the attribute
+    // alt is set. We do this by modifying the result string.
+
+    array do_enter(RequestID id) {
+      if(id->prestate->fnord)
+	do_iterate=1;
+      else {
+	if(args->alt)
+	  result=args->alt;
+	do_iterate=0;
+      }
+      return 0;
+    }
+
+    int do_iterate;
+  }
+}
+
+
+// Some constants to register the module in the RXML parser.
+
+constant module_type = MODULE_PARSER;
+constant module_name = "Newstyle Fnord!";
+constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
+  "things invisible unless the \"fnord\" prestate is present."
+  "<p>This module is here as an example of how to write a "
+  "very simple newstyle RXML-parsing module.</p>";
+
+// Last, but not least, we want a documentation that can be integrated in the
+// online manual. The mapping tagdoc maps from container names to it's description.
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=(["fnord":#"<desc cont>The fnord container tag hides its "
+  "contents for the user, unless the fnord prestate is used.</desc>"
+  "<attr name=alt value=string>An alternate text that should be written "
+  "in place of the hidden text.</attr>"]);
+#endif

@@ -129,6 +129,7 @@ nn binary
 /server/modules/directories/fastdir.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
+/server/modules/examples/newstyle_fnord.pike foreign_ident
 /server/modules/filesystems/cvsfs.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/incoming.pike foreign_ident
