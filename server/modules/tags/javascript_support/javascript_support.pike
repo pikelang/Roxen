@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.12 2000/02/12 18:41:23 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.13 2000/02/12 18:45:53 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -180,7 +180,7 @@ static private string container_js_popup(string name, mapping args,
   if(zero_type(id->misc->_popuplevel) && args["z-index"])
     id->misc->_popuplevel = (int)args["z-index"];
   string showpopup = "return showPopup('"+popupname+
-		     "', '"+popupparent+"', "+args->ox+", "+args->oy;
+		     "', '"+popupparent+"', "+args->ox+", "+args->oy+", "+args->od;
   
   string event = "onMouseOver";
   if(lower_case(args->event||"") == "onclick")

@@ -50,13 +50,16 @@ function clearToPopup(popup)
   }
 }
 
-function showPopup(name, parent, ox, oy, e)
+function showPopup(name, parent, ox, oy, od, e)
 {
   //if(getButton(e) != 3)
   //  return true;
 
   if(oy == 0)
     oy = 15;
+  
+  if(od == 0)
+    od = 10;
   
   if(popups.length != 0) {
     if(popups[popups.length - 1].name == name)
@@ -87,10 +90,10 @@ function showPopup(name, parent, ox, oy, e)
       p_y += getObjectTop(parent);
     }
   }
-  
+
   // Offset the popup to a better place.
   if(parent != "none") {
-    p_x += popups[popups.length - 1].w - 10;
+    p_x += popups[popups.length - 1].w - od;
   } else {
     p_x += ox;
     p_y += oy;
