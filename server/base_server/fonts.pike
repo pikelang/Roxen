@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.84 2002/06/14 16:05:03 jhs Exp $
+// $Id: fonts.pike,v 1.85 2002/06/28 23:16:14 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -277,7 +277,7 @@ Font resolve_font(string f, string|void justification)
 }
 
 //! Returns the real name of the resolved font.
-string verify_font(string font, int size)
+string verify_font(string font, void|int size)
 {
   if(!font)
     return verify_font(roxen->query("default_font"), size||32);
