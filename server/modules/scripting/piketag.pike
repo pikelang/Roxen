@@ -7,14 +7,14 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.16 2000/08/11 02:04:55 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.17 2000/08/14 18:53:49 mast Exp $";
 constant thread_safe=1;
 
 
 #if constant(Parser.C)
 #define PARSER_C Parser.C
 #else
-#define PARSER_C Roxen.Parser.C
+#define PARSER_C Roxen._Parser.C
 #endif
 
 
