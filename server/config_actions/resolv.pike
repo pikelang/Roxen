@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.2 1998/02/20 11:16:38 per Exp $
+ * $Id: resolv.pike,v 1.3 1998/02/20 12:54:20 mirar Exp $
  */
 
 inherit "wizard";
@@ -44,6 +44,10 @@ string page_0(object id)
   string res = ("Virtual server <var type=select name=config options='"+
 		roxen->configurations->query_name()*","+"'>")+"\n";
   res += "<br>Path: <var name=path type=string>\n";
+  res += "<table cellpadding=0 cellspacing=0 border=0>"
+         "<tr><td align=left>User: <var name=user type=string size=12></td>\n"
+         "<td align=left>&nbsp;&nbsp;&nbsp;Password: <var name=password type=password size=12>"
+	 "</td></tr></table>\n";
 
   if(id->variables->config)
   {
@@ -61,6 +65,20 @@ string page_0(object id)
     nid->misc->trace_enter = trace_enter;
     nid->misc->trace_leave = trace_leave;
 
+    if (id->variables->user && id->variables->user!="")
+    {
+       string *y;
+       nid->rawauth 
+	  = 
+	  "Basic "+MIME.encode_base64(id->variables->user+":"+
+				      id->variables->password);
+
+       nid->realauth=id->variables->user+":"+id->variables->password;
+
+       nid->auth=({0,id->realauth});
+       if(c && c->auth_module)
+	  nid->auth = c->auth_module->auth( id->auth, nid );
+    }
 
     int again;
     mixed file;
