@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.115 1998/03/30 17:08:25 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.116 1998/04/03 17:13:30 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -714,6 +714,7 @@ public void log(mapping file, object request_id)
 		 "$bin-date", "$method", "$resource", "$protocol",
 		 "$response", "$bin-response", "$length", "$bin-length",
 		 "$referer", "$user_agent", "$user", "$user_id",
+		 "$request-time"
 	       }), ({
 		 (string)request_id->remoteaddr,
 		 host_ip_to_int(request_id->remoteaddr),
@@ -731,6 +732,7 @@ public void log(mapping file, object request_id)
 		 http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
 		 extract_user(request_id->realauth),
 		 (string)request_id->cookies->RoxenUserID,
+		 (string)(time(1)-request_id->time)
 	       }));
   
   if(search(form, "host") != -1)
@@ -1260,9 +1262,11 @@ mapping|int low_get_file(object id, int|void no_magic)
 	  return tmp2;
 	}
 #endif
+      TRACE_ENTER("Calling find_file()...", 0);
       LOCK(tmp[1]);
       fid=tmp[1]( file[ strlen(loc) ..] + id->extra_extension, id);
       UNLOCK();
+      TRACE_LEAVE(sprintf("find_file has returned %O", fid));
       if(fid)
       {
 	id->virtfile = loc;
@@ -1906,8 +1910,9 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
 
 #ifdef COMPAT
   if(m["string"])  res = m["string"];	// Compability..
+  else
 #endif
-  else if(m->data) res = m->data;
+  if(m->data) res = m->data;
   else res="";
   m->data = 0;
   
