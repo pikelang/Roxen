@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.20 1998/05/07 20:06:52 js Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.21 1998/06/24 02:09:40 js Exp $";
 
 #include <config.h>
 
@@ -17,6 +17,7 @@ inherit "roxenlib";
 #define CACHE_DEBUG
 #endif
 #endif
+
 
 mapping cache;
 mapping hits=([]), all=([]);
@@ -135,7 +136,7 @@ void cache_remove(string in, string what)
       m_delete(cache[in], what);
 }
 
-void cache_set(string in, string what, mixed to, int|void tm)
+mixed cache_set(string in, string what, mixed to, int|void tm)
 {
 // #ifdef THREADS
 //   mixed key;
@@ -151,6 +152,7 @@ void cache_set(string in, string what, mixed to, int|void tm)
   cache[in][what][DATA] = to;
   cache[in][what][TIMEOUT] = tm;
   cache[in][what][TIMESTAMP] = time(1);
+  return to;
 }
 
 void cache_clear(string in)
