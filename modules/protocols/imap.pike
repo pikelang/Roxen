@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.139 1999/03/29 01:55:09 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.140 1999/03/29 01:57:44 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -338,7 +338,7 @@ class imap_mail
 			 addr->domain && string_to_imap(addr->domain),
 		       }) );
 		   }) - ({ 0 }))->format()*"";
-    return s == ""?"(NIL)": imap_list(({ s }));
+    return s == ""?"NIL": imap_list(({ s }));
   }
 
   string first_header(array|string v)
