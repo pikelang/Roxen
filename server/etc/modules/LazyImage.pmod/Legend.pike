@@ -23,7 +23,7 @@ static
       
     int height;
     string font = (args->font||"default")+" "+
-      (height=(translate_coordinate(args->fontsize,0)||16));
+      (height=(translate_coordinate(args->fontsize,0,layers)||16));
     Image.Font f = resolve_font( font );
 
     foreach( labels, mapping l )
@@ -139,8 +139,8 @@ static
 	case "0%":
       }
     }
-    xp = translate_coordinate( args->xoffset, background||border||lab );
-    yp = translate_coordinate( args->xoffset, background||border||lab );
+    xp = translate_coordinate( args->xoffset, background||border||lab,layers );
+    yp = translate_coordinate( args->xoffset, background||border||lab,layers );
     foreach( ({ background, lab, border }), Image.Layer l )
     {
       if(!l) continue;
