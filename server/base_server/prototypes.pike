@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.85 2004/04/20 21:03:27 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.86 2004/04/25 15:46:28 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1050,7 +1050,7 @@ class RequestID
     }
 
     heads["Accept-Ranges"] = "bytes";
-    heads["Server"] = replace(version(), " ", "·");
+    heads["Server"] = replace(roxenp()->version(), " ", "·");
     if( misc->connection )
       heads["Connection"] = misc->connection;
 
@@ -1484,7 +1484,7 @@ class PatchPropertyCommand
 class _roxen
 {
   mapping(string:object) variables;
-  string real_version;
+  constant real_version = "";
   object locale;
   int start_time;
   array(Configuration) configurations;
