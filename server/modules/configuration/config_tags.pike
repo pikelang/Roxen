@@ -313,14 +313,17 @@ string get_var_doc( string s, object mod, int n, object id )
 string theme_name( string theme )
 {
   catch {
-    return String.trim_all_whites(Stdio.read_bytes("config_interface/standard/themes/"+
-					       theme+"/name")); };
+    return String.trim_all_whites(lopen("config_interface/standard/themes/"+
+                                        theme+"/name","r")->read());
+  };
   return "Unknown theme";
 }
 
 array(string) all_themes( )
 {
-  return (get_dir( "config_interface/standard/themes/" )-({"CVS","README"}));
+  return (get_dir( "config_interface/standard/themes/" ) + 
+          (get_dir( "../local/config_interface/standard/themes/" )||({}))-
+           ({"CVS","README"}));
 }
 
 string get_var_value( string s, object mod, object id )
