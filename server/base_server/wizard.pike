@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.77 1998/11/18 04:53:54 per Exp $
+/* $Id: wizard.pike,v 1.78 1998/11/22 00:19:34 marcus Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -79,10 +79,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
    case "checkbox":
     string res;
     m_delete(m,"default");
-    m_delete(m, m->name);
-    m_delete(id->variables, m->name);
-    if(current && current!="0") m->checked="checked";
-    res=make_tag("input", m);
+    if (!m->value) m->value="on";
+    if (current && current != "0" && mkmultiset(current/"\0")[m->value])
+      m->checked="checked";
+    res=make_tag("input",m);
     m->type="hidden";
     m->value="0";
     return res+make_tag("input", m);
