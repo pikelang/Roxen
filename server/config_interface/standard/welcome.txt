@@ -25,6 +25,9 @@
 <if exists="docs/roxen/2.1/rxml_tutorial/index.html">
  <li> <a href="docs/roxen/2.1/rxml_tutorial/">RXML Tutorial</a> </li>
 </if>
+<if exists="docs/roxen/2.1/programmer/index.html">
+ <li> <a href="docs/roxen/2.1/programer/">Programmer Manual</a> </li>
+</if>
 <if exists="docs/pike/7.0/tutorial/index.html">
  <li> <a href="docs/pike/7.0/tutorial/">Pike Tutorial</a> </li>
 </if>
