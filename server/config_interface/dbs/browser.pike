@@ -4,8 +4,37 @@
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
-string parse( RequestID id )
+mapping images = ([]);
+int image_id;
+
+string store_image( string x )
 {
+  string image_type()
+  {
+    if( !search( x, "GIF" ) )
+      return "gif";
+    if( has_value( x, "JFIF" ) )
+      return "jpeg";
+    return "png"; // not nessesarily true.
+  };
+
+  string id = (string)image_id++;
+
+  images[ id ] = ([
+    "type":"image/"+image_type(),
+    "data":x,
+    "len":strlen(x),
+  ]);
+  
+  return id;
+}
+
+mapping|string parse( RequestID id )
+{
+  if( id->variables->image )
+  {
+    return m_delete( images, id->variables->image );
+  }
   Sql.Sql db = DBManager.get( id->variables->db );
   string url = DBManager.db_url( id->variables->db );
   string res =
@@ -13,8 +42,10 @@ string parse( RequestID id )
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
-    "<input type=hidden name='db' value='&form.db:none;' />\n";
+    "<input type=hidden name='db' value='&form.db:http;' />\n";
 
+  if( id->variables->table )
+    res += "<input type=hidden name='table' value='&form.table:http;' />\n";
 
   res +=
     "<br />"
@@ -157,17 +188,53 @@ string parse( RequestID id )
   if( id->variables["run_q.x"] )
   {
     mixed e = catch {
-      object big_q = db->big_query( id->variables->query );
+      string q = id->variables->query;
+
+      string a, b, c;
+      multiset image_columns = (<>), right_columns = (<>);
+      while( sscanf( q, "%sIMAGE(%s)%s", a, b, c ) == 3 )
+      {
+	q = a+b+c;
+	image_columns[String.trim_all_whites(b)]=1;
+      }
+
+      object big_q = db->big_query( q );
 
       res += "<table celpadding=2><tr>";
 
+      int column;
       foreach( big_q->fetch_fields(), mapping field )
-	res += "<td><b><font size=-1>"+field->name+"</font size=-1></b></td>";
-
+      {
+	switch( field->type  )
+	{
+	  case "long":
+	  case "int":
+	  case "short":
+	    right_columns[column]=1;
+	    res += "<td align=right>";
+	    break;
+	  default:
+	    res += "<td>";
+	}
+	res += "<b><font size=-1>"+field->name+"</font size=-1></b></td>\n";
+	if( image_columns[field->name] )
+	  image_columns[column] = 1;
+	column++;
+      }
       res += "</tr>";
       
       while( array q = big_q->fetch_row() )
-	res += "<tr><td>"+(array(string))q*"</td><td>"+"</td></tr>\n";
+      {
+	res += "<tr>";
+	for( int i = 0; i<sizeof(q); i++ )
+	  if( image_columns[i] )
+	    res +=
+           "<td><img src='browser.pike?image="+store_image( q[i] )+"' /></td>";
+	  else if( right_columns[i] )
+	    res += "<td align=right>"+ Roxen.html_encode_string(q[i]) +"</td>";
+	  else
+	    res += "<td>"+ Roxen.html_encode_string(q[i]) +"</td>";
+      }
       res += "</table>";
     };
     if( e )
@@ -179,5 +246,5 @@ string parse( RequestID id )
   //    rename ( !(local || shared) )
   //    delete ( !(local || shared) )
   //    clear
-  return res+"</st-page></subtablist></cv-split></content></tmpl>";
+      return res+"</st-page></subtablist></cv-split></content></tmpl>";
 }
