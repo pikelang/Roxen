@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.131 1999/08/04 19:01:03 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.132 1999/08/15 21:29:56 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1256,10 +1256,11 @@ void send_result(mapping|void result)
 	    }
 	  }
 	}
-	if(stringp(file->data)) 
-	  file->len += strlen(file->data);
       }
+      if(stringp(file->data)) 
+	file->len += strlen(file->data);
     }
+
     if(prot != "HTTP/0.9") {
       string h;
       heads +=
