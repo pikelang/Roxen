@@ -188,3 +188,9 @@ int xsize, ysize;
 
 "datasize": int
 //how many datas there are in the biggest dataset
+
+"bw": int
+//If this is != 0 the graphs are drawn in black and white.
+//The black and white colors are set to be as different as possible
+//If colors are given, bw is ignored
+//the bgpicture or bg is not affected.

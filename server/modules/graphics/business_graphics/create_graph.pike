@@ -115,6 +115,16 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 	      carr[i]=Colors.hsv_to_rgb((i*steg)%256,190,155);
 	    }
 	}
+
+      if (diagram_data["bw"])
+	for(int i=0; i<numbers; i++)
+	  {
+	    carr[i]=({ (i*steg)%256,
+		       (i*steg)%256, 
+		       (i*steg)%256});
+	  }
+
+
       
       //write("carr: "+sprintf("%O", carr)+"\n");
       diagram_data["datacolors"]=carr;
