@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.2 2000/05/21 18:36:05 kinkie Exp $";
+constant cvs_version="$Id: throttling_bytime.pike,v 1.3 2000/05/22 17:31:22 kinkie Exp $";
 
 
 #include <module.h>
@@ -44,6 +44,11 @@ private mixed update_call_out;
 void update_current_rule() {
   THROTTLING_DEBUG("updating current rule");
   update_call_out=call_out(update_current_rule,60);
+
+  if (!rules) {
+    THROTTLING_DEBUG("empty rules. Bailing out..");
+    return;
+  }
   mapping(string:int) tm=localtime(time(1));
   string now=(string)(tm->hour)+(string)(tm->min);
   THROTTLING_DEBUG("now is "+now+", rules are "+(indices(rules)*", "));
