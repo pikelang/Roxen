@@ -1,27 +1,9 @@
-<!-- -*- pike -*-  -->
-<pike>
-string parse( RequestID id )
-{
-  if(! id->misc->config_user->auth( "Edit Users" ) )
-    return "No such luck (permission denied)";
-  foreach( sort( id->misc->list_config_users() ), string u )
-  {
-    object u  = id->misc->get_config_user( u );
-    u->form( id );
-  }
-  return "";
-}
-</pike>
-<!-- /* -->
 
 <topmenu selected="home"/>
-
 <content>
 <cv-startpage>
 <awizard>
-
 <page name="top"><cf-perm perm="Edit Users">
-
   <table border="0" cellpadding="5" cellspacing="0"><tr><td>
   <button gbutton_title=" &locale.create_user; "
           gbutton-icon_src="/internal-roxen-next"  gbutton-preparse="1"
@@ -37,63 +19,19 @@ string parse( RequestID id )
   </td></tr></table>
 </cf-perm>
 
-<!-- */ -->
-<pike>
-#include <config_interface.h>
-string parse( RequestID id )
-{
-  string res="";
-  if(! id->misc->config_user->auth( "Edit Users" ) )
-    return "No such luck (permission denied)";
-
-  foreach( sort( id->misc->list_config_users() ), string uid )
-  {
-    object u  = id->misc->get_config_user( uid );
-    res += "<table width='100%'><tr><td bgcolor='"+config_setting2("bgcolor")+
-           "'><font size='+2'>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
-    res += u->form( id );
-  }
-  return res;
-}
-</pike>
-<!-- /* -->
+<insert file=user_form.pike nocache=""/>
 </page>
 
 <page name="create_user"><cf-perm perm="Edit Users">
 <table><tr><td>User ID:</td><td><input name="user_name" /></td>
 <td><dbutton page="top" gbutton-font="&usr.gbutton-font;" gbutton_title=" Create User "/></td></tr></table>
-<!-- */ -->
-<pike>
-  if( !strlen(id->variables->user_name) )
-    return "<error>Too short user name</error>";
-  id->misc->create_new_config_user(   id->variables->user_name );
-</pike>
-<!-- /* -->
+<insert file=user_create.pike nocache=""/>
 </dbutton>
 </table>
 </cf-perm></page>
 
 <page name="delete_user"><cf-perm perm="Edit Users">
-<!-- */ -->
-<pike>
-  string res="";
-  while( id->misc->orig ) id = id->misc->orig;
-  foreach( sort( id->misc->list_config_users() ), string uid )
-  {
-    object u = id->misc->get_config_user( uid );
-    if( u == id->misc->config_user )
-       res += ("<gbutton font='&usr.gbutton-font;' dim='1' width='300' preparse='1'>&locale.delete; "
-               +u->real_name+" ("+uid+")</gbutton><br />");
-    else
-       res += ("<dbutton gbutton-width='300' gbutton-font='&usr.gbutton-font;' gbutton-preparse='1' "
-               "gbutton_title='&locale.delete; "
-               +u->real_name+" ("+uid+")'/>"
-               " <pike> id->misc->delete_old_config_user( \""+uid+"\");"
-               "</pike></dbutton><br />");
-  }
-  return res;
-</pike>
-<!-- /* -->
+<insert file=user_delete.pike nocache=""/>
 <p>
  <button gbutton-font="&usr.gbutton-font;" gbutton_title=" &locale.cancel; " page="top" gbutton-preparse="1"/>
 </p>
@@ -102,4 +40,3 @@ string parse( RequestID id )
 </awizard>
 </cv-startpage>
 </content>
-<!-- */ -->
