@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.67 1997/10/24 23:47:42 grubba Exp $
+ * $Id: ftp.pike,v 1.68 1997/10/28 13:54:51 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -59,7 +59,7 @@ function(object,mixed:void) pasv_callback;
 mixed pasv_arg;
 array(object) pasv_accepted;
 array(string|int) session_auth = 0;
-string username="", mode="I";
+string username="", mode="A";
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
