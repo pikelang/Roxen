@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.412 2004/06/23 00:32:11 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.413 2004/07/01 17:34:39 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -747,6 +747,7 @@ void end(int|void keepit)
 {
   CHECK_FD_SAFE_USE;
 
+  remove_call_out(do_timeout);
   cleanup_request_object();
 
   if(keepit
@@ -2148,6 +2149,8 @@ static void create(object f, object c, object cc)
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = predef::time(1);
+    if(f->sslfile)
+      f->sslfile->set_close_callback(end);
     call_out(do_timeout, HTTPTIMEOUT);
   }
   root_id = this;
