@@ -1,10 +1,10 @@
 /*
  * name = "Italian language plugin ";
- * doc = "Handles the conversion of numbers and dates to Italian. You have to restart the server for updates to take effect. Translation by Francesco Chemolli (kinkie@comedia.it)";
+ * doc = "Handles the conversion of numbers and dates to Italian. You have to restart the server for updates to take effect. Translation by Francesco Chemolli (kinkie@kame.usr.dsi.unimi.it)";
  */
 
 /*
- *	This code is copyrighted by Francesco Chemolli (kinkie@comedia.it)
+ *	This code is copyright Francesco Chemolli (kinkie@kame.usr.dsi.unimi.it)
  *	It is free for use in the Roxen WWW server, under the terms of the
  *	GNU General Public License.
  *	Feel free to change it in any way, except removing my name from it.
@@ -14,7 +14,7 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.7 1998/07/11 18:54:08 grubba Exp $";
+string cvs_version = "$Id: italian.pike,v 1.8 1998/07/15 18:39:57 grubba Exp $";
 
 string month(int num)
 {
