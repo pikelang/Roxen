@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.77 1998/02/04 16:10:52 per Exp $
+ * $Id: ftp.pike,v 1.78 1998/02/15 11:23:01 wing Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1185,6 +1185,10 @@ void handle_data(string s, mixed key)
   while (sscanf(s,"%s\r\n%s",cmdlin,s)==2)
   {
     string cmd,arg;
+
+    // Lets hope the ftp-module doesn't store things in misc between
+    // requests    
+    misc = ([ ]);
     if (sscanf(cmdlin,"%s %s",cmd,arg)<2) 
       arg="",cmd=cmdlin;
     cmd=lower_case(cmd);
@@ -1676,6 +1680,15 @@ void handle_data(string s, mixed key)
     case "":
       /* The empty command, some stupid ftp-proxies send this. */
       break;
+
+    case "mkd":
+      method = "MKDIR";
+      data = 0;
+      misc->len = 0;
+      if (open_file(arg, 1))
+	reply("254 Mkdir successful\n");
+      break;
+      
     default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
