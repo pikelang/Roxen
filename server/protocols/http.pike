@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.102 1998/05/21 23:25:38 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.103 1998/05/22 01:51:31 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -634,9 +634,7 @@ void end(string|void s, int|void keepit)
 
 static void do_timeout()
 {
-#ifdef DEBUG
-  werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
-#endif /* DEBUG */
+//  werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
   int elapsed = _time()-time;
   if(time && elapsed >= 30)
   {
@@ -1172,7 +1170,8 @@ void got_data(mixed fooid, string s)
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
-  time = _time(1);
+  time = _time(1); // Check is made towards this to make sure the object
+  		  // is not killed prematurely.
   if(wanted_data)
   {
     if(strlen(s)+have_data < wanted_data)
@@ -1290,6 +1289,7 @@ void create(object f, object c)
     my_fd->set_read_callback(got_data);
     // No need to wait more than 30 seconds to get more data.
     call_out(do_timeout, 30);
+    time = _time(1);
   }
 }
 
