@@ -1,13 +1,12 @@
-// This is a roxen module. Copyright © 1999 - 2002, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2002, Roxen IS.
 
-//inherit "module";
-inherit "roxen-module://filesystem";
+inherit "chili-module:filesystem";
 
 #include <module.h>
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.21 2002/09/26 23:10:03 nilsson Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.22 2002/11/14 05:15:39 mani Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -69,7 +68,7 @@ mapping(string:mapping(string:string)) servletmaps = ([
 // map from url-patterns to servlet name read from web.xml
 mapping(string:string) url_to_servlet = ([ ]);
 
-// hold the pike wrapper for RoxenServletContext
+// hold the Pike wrapper for Servlet.context
 object conf_ctx;
 
 // hold the pike wrapper for URLClassLoader
@@ -1649,11 +1648,11 @@ constant dont_dump_program = 1;
 string status()
 {
   return 
-#"<font color='&usr.warncolor;'>Java 2 is not available in this roxen.<p>
+#"<font color='&usr.warncolor;'>Java 2 is not available in this server.<p>
   To get Java 2:
   <ol>
-    <li> Download and install Java
-    <li> Restart roxen
+    <li> Download and install Java. </li>
+    <li> Restart ChiliMoon. </li>
   </ol></font>";
 }
 
