@@ -1,7 +1,8 @@
+// $Id: roxenlib.pike,v 1.136 2000/01/02 01:23:21 nilsson Exp $
+
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.135 1999/12/27 18:55:53 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -34,18 +35,18 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
   mixed tmp;
   mapping new = ([]);
   object tmpid;
-  
+
   if(id->query && strlen(id->query))
     new->INDEX=id->query;
-    
+
   if(path_info && strlen(path_info))
   {
     string t, t2;
     if(path_info[0] != '/')
       path_info = "/" + path_info;
-    
+
     t = t2 = "";
-    
+
     // Kludge
     if (id->misc->path_info == path_info) {
       // Already extracted
@@ -82,9 +83,9 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
   // Begin "SSI" vars.
   if(sizeof(tmp = tmpid->not_query/"/" - ({""})))
     new["DOCUMENT_NAME"]=tmp[-1];
-  
+
   new["DOCUMENT_URI"]= tmpid->not_query;
-  
+
   if((tmp = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid)))
      && sizeof(tmp))
     new["LAST_MODIFIED"]=http_date(tmp[3]);
@@ -94,14 +95,14 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
 
   if(tmp = id->conf->real_file(new["SCRIPT_NAME"], id))
     new["SCRIPT_FILENAME"] = tmp;
-    
+
   if(tmp = id->conf->real_file("/", id))
     new["DOCUMENT_ROOT"] = tmp;
 
   if(!new["PATH_TRANSLATED"])
     m_delete(new, "PATH_TRANSLATED");
   else if(new["PATH_INFO"][-1] != '/' && new["PATH_TRANSLATED"][-1] == '/')
-    new["PATH_TRANSLATED"] = 
+    new["PATH_TRANSLATED"] =
       new["PATH_TRANSLATED"][0..strlen(new["PATH_TRANSLATED"])-2];
 
   // HTTP_ style variables:
@@ -138,21 +139,21 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
 
     if(id->misc->cookies)
       new["HTTP_COOKIE"] = id->misc->cookies;
-  
+
     if(sizeof(id->pragma))
       new["HTTP_PRAGMA"]=indices(id->pragma)*", ";
 
     if(stringp(id->misc->connection))
       new["HTTP_CONNECTION"]=id->misc->connection;
-    
-    new["HTTP_USER_AGENT"] = id->client*" "; 
-    
+
+    new["HTTP_USER_AGENT"] = id->client*" ";
+
     if(id->referer && sizeof(id->referer))
-      new["HTTP_REFERER"] = id->referer*""; 
+      new["HTTP_REFERER"] = id->referer*"";
   }
 
   new["REMOTE_ADDR"]=addr;
-    
+
   if(roxen->quick_ip_to_host(addr) != addr)
     new["REMOTE_HOST"]=roxen->quick_ip_to_host(addr);
 
@@ -161,7 +162,7 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
       new["REMOTE_PORT"] = ipaddr(id->my_fd->query_address(), 1);
     }
   };
-    
+
   if (id->query && sizeof(id->query)) {
     new["QUERY_STRING"] = id->query;
   }
@@ -178,14 +179,14 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
       new["CONTENT_TYPE"]="application/x-www-form-urlencoded";
     new["CONTENT_LENGTH"]=(string)strlen(id->data);
   }
-    
+
   if(id->query && strlen(id->query))
     new["INDEX"]=id->query;
-    
+
   new["REQUEST_METHOD"]=id->method||"GET";
   new["SERVER_PORT"] = id->my_fd?
     ((id->my_fd->query_address(1)||"foo unknown")/" ")[1]: "Internal";
-    
+
   return new;
 }
 
@@ -226,7 +227,7 @@ static mapping build_roxen_env_vars(RequestID id)
     else
       new["VARIABLES"]= name;
   }
-      
+
   foreach(indices(id->prestate), tmp)
   {
     new["PRESTATE_"+replace(tmp, " ", "_")]="true";
@@ -247,12 +248,11 @@ static mapping build_roxen_env_vars(RequestID id)
   return new;
 }
 
-
 static string decode_mode(int m)
 {
   string s;
   s="";
-  
+
   if(S_ISLNK(m))  s += "Symbolic link";
   else if(S_ISREG(m))  s += "File";
   else if(S_ISDIR(m))  s += "Dir";
@@ -262,20 +262,20 @@ static string decode_mode(int m)
   else if(S_ISSOCK(m)) s += "Socket";
   else if((m&0xf000)==0xd000) s+="Door";
   else s+= "Unknown";
-  
+
   s+=", ";
-  
+
   if(S_ISREG(m) || S_ISDIR(m))
   {
     s+="<tt>";
     if(m&S_IRUSR) s+="r"; else s+="-";
     if(m&S_IWUSR) s+="w"; else s+="-";
     if(m&S_IXUSR) s+="x"; else s+="-";
-    
+
     if(m&S_IRGRP) s+="r"; else s+="-";
     if(m&S_IWGRP) s+="w"; else s+="-";
     if(m&S_IXGRP) s+="x"; else s+="-";
-    
+
     if(m&S_IROTH) s+="r"; else s+="-";
     if(m&S_IWOTH) s+="w"; else s+="-";
     if(m&S_IXOTH) s+="x"; else s+="-";
@@ -296,9 +296,9 @@ static int _match(string w, array (string) a)
   string q;
   if(!stringp(w)) // Internal request..
     return -1;
-  foreach(a, q) 
-    if(stringp(q) && strlen(q) && glob(q, w)) 
-      return 1; 
+  foreach(a, q)
+    if(stringp(q) && strlen(q) && glob(q, w))
+      return 1;
 }
 
 static array(int) parse_since(string date)
@@ -370,22 +370,22 @@ static int is_modified(string a, int t, void|int len)
     if(year < 1900) year += 1900;
   }
 
-  if(year < (t1["year"]+1900))                                
+  if(year < (t1["year"]+1900))
     return 0;
-  else if(year == (t1["year"]+1900)) 
-    if(month < (t1["mon"]))  
+  else if(year == (t1["year"]+1900))
+    if(month < (t1["mon"]))
       return 0;
-    else if(month == (t1["mon"]))      
-      if(day < (t1["mday"]))   
+    else if(month == (t1["mon"]))
+      if(day < (t1["mday"]))
 	return 0;
-      else if(day == (t1["mday"]))	     
-	if(hour < (t1["hour"]))  
+      else if(day == (t1["mday"]))	
+	if(hour < (t1["hour"]))
 	  return 0;
-	else if(hour == (t1["hour"]))      
-	  if(minute < (t1["min"])) 
+	else if(hour == (t1["hour"]))
+	  if(minute < (t1["min"]))
 	    return 0;
-	  else if(minute == (t1["min"]))     
-	    if(second < (t1["sec"])) 
+	  else if(minute == (t1["min"]))
+	    if(second < (t1["sec"]))
 	      return 0;
   return 1;
 }
@@ -413,7 +413,7 @@ string strip_prestate(string from)
 #define _rettext defines[" _rettext"]
 
 static string parse_rxml(string what, RequestID id,
-			 void|Stdio.File file, 
+			 void|Stdio.File file,
 			 void|mapping defines)
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
@@ -569,7 +569,7 @@ static string make_container(string s,mapping in, string contents)
 
 static string dirname( string file )
 {
-  if(!file) 
+  if(!file)
     return "/";
   mixed tmp;
   if(file[-1] == '/')
@@ -585,43 +585,12 @@ static string dirname( string file )
 
 static string conv_hex( int color )
 {
-  int c;
-  string result;
-
-  result = "";
-  for (c=0; c < 6; c++, color>>=4)
-    switch (color & 15)
-    {
-     case 0: case 1: case 2: case 3: case 4:
-     case 5: case 6: case 7: case 8: case 9:
-      result = (color & 15) + result;
-      break;
-     case 10: 
-      result = "A" + result;
-      break;
-     case 11: 
-      result = "B" + result;
-      break;
-     case 12: 
-      result = "C" + result;
-      break;
-     case 13: 
-      result = "D" + result;
-      break;
-     case 14: 
-      result = "E" + result;
-      break;
-     case 15: 
-      result = "F" + result;
-      break;
-    }
-  return "#" + result;
-  
+  return sprintf("#%06X", color);
 }
 
 static string add_config( string url, array config, multiset prestate )
 {
-  if(!sizeof(config)) 
+  if(!sizeof(config))
     return url;
   if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
@@ -637,24 +606,25 @@ string msectos(int t)
     return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
   } else if(t<3600000) { /* One hour */
     return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
-  } 
+  }
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
-static Regexp extension_regexp = Regexp(".*\\.([^#~]*)");             
-int|string extension( string f, RequestID|void id) 
+
+static Regexp extension_regexp = Regexp(".*\\.([^#~]*)");
+int|string extension( string f, RequestID|void id)
 {
   string ext, key;
   if(!f || !strlen(f)) return "";
   if(!id || !(ext = id->misc[key="_ext_"+f])) {
-    array split = extension_regexp->split(f);                           
-    if(!split||!sizeof(split)) 
+    array split = extension_regexp->split(f);
+    if(!split||!sizeof(split))
       ext="";
     else {
       ext = lower_case(split[0]);
       if(ext == "bak" || ext == "old")
 	if(f[-1] == '~' || f[-1] == '#')
 	  ext = extension(f[..strlen(f)-5]);
-	else 
+	else
 	  ext = extension(f[..strlen(f)-4]);
     }
     if(id)
@@ -665,10 +635,10 @@ int|string extension( string f, RequestID|void id)
 
 static int backup_extension( string f )
 {
-  if(!strlen(f)) 
+  if(!strlen(f))
     return 1;
-  return (f[-1] == '#' || f[-1] == '~' 
-	  || (f[-1] == 'd' && sscanf(f, "%*s.old")) 
+  return (f[-1] == '#' || f[-1] == '~'
+	  || (f[-1] == 'd' && sscanf(f, "%*s.old"))
 	  || (f[-1] == 'k' && sscanf(f, "%*s.bak")));
 }
 
@@ -707,11 +677,11 @@ static string simplify_path(string file)
 
   if(t1) tmp += "/.";
   if(t2) return tmp[1..];
-    
+
   return tmp;
 }
 
-/* Returns a short date string from a time-int 
+/* Returns a short date string from a time-int
    ===========================================
    Arguments: int (time)
    Returns:   string ("short_date")
@@ -720,16 +690,15 @@ static string simplify_path(string file)
 static string short_date(int timestamp)
 {
   int date = time(1);
-  
+
   if(ctime(date)[20..23] != ctime(timestamp)[20..23])
     return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[20..23];
-  
+
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
-
 int httpdate_to_time(string date)
-{     
+{
    if (intp(date)) return -1;
    // Tue, 28 Apr 1998 13:31:29 GMT
    // 0    1  2    3    4  5  6
@@ -743,9 +712,8 @@ int httpdate_to_time(string date)
 		     "min":min,
 		     "sec":sec,
 		     "timezone":0]));
-   
-   
-   return -1; 
+
+   return -1;
 }
 
 static string int2roman(int m)
@@ -774,7 +742,7 @@ static string number2string(int n,mapping m,mixed names)
   switch (m->type)
   {
    case "string":
-    if (functionp(names)) 
+    if (functionp(names))
     { s=names(n); break; }
     if (!arrayp(names)||n<0||n>=sizeof(names)) s="";
     else s=names[n];
@@ -801,7 +769,6 @@ static string number2string(int n,mapping m,mixed names)
   return s;
 }
 
-
 static string image_from_type( string t )
 {
   if(t)
@@ -827,7 +794,7 @@ static string image_from_type( string t )
 static string sizetostring( int size )
 {
   float s = (float)size;
-  if(size<0) 
+  if(size<0)
     return "--------";
   size=0;
 
@@ -1115,7 +1082,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				lambda (mapping m1, mapping m2, array order)
 				{
 				  int tmp;
-				     
+				
 				  foreach (order, string field)
 				  if (field[0] == '-')
 				    if (!catch (tmp = (m1[field[1..]]
@@ -1144,7 +1111,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   {
     int begin, end;
     string b, e;
-    
+
 
     sscanf( args->range, "%s..%s", b, e );
     if (!b || b == "")
@@ -1394,9 +1361,9 @@ string fix_relative( string file, RequestID id )
 {
   string path = id->not_query;
   // +(id->misc->path_info?id->misc->path_info:"");
-  if(file != "" && file[0] == '/') 
+  if(file != "" && file[0] == '/')
     ;
-  else if(file != "" && file[0] == '#') 
+  else if(file != "" && file[0] == '#')
     file = path + file;
   else
     file = dirname(path) + "/" +  file;
@@ -1417,7 +1384,7 @@ Stdio.File open_log_file( string logfile )
   if(strlen(logfile))
   {
     Stdio.File lf=Stdio.File( logfile, "wac");
-    if(!lf) 
+    if(!lf)
     {
       mkdirhier(logfile);
       if(!(lf=Stdio.File( logfile, "wac")))
@@ -1585,7 +1552,7 @@ string|int API_read_file(RequestID id, string file)
 {
   string s, f = fix_relative(file, id);
   id = id->clone_me();
- 
+
   if(id->scan_for_query)
     f = id->scan_for_query( f );
   s = id->conf->try_get_file(f, id);
@@ -1648,7 +1615,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 {
   switch( едц )
   {
-   case "edv": 
+   case "edv":
      report_notice( "Warning: Non 8-bit safe client detected (%s)",
                     (id?id->client*"":"unknown client"));
      return 0;
@@ -1659,7 +1626,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
    case "\33-Aедц":
      return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
 
-   case "ГҐГ¤Г¶": 
+   case "ГҐГ¤Г¶":
      return utf8_to_string;
 
    case "\214\212\232":
@@ -1670,4 +1637,4 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   }
   report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
 }
- 
+
