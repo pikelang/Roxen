@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.305 2001/06/28 20:10:14 mast Exp $
+// $Id: rxml.pike,v 1.306 2001/06/30 15:44:05 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -57,18 +57,7 @@ RXML.TagSet rxml_tag_set = class
 
   void create (object rxml_object)
   {
-    ::create (0);
-
-    // Fix the unique name later when we know the name of the
-    // configuration.
-    call_out (lambda () {
-		string cname = sprintf ("%O", rxml_object);
-		if (sscanf (cname, "Configuration(%s", cname) == 1 &&
-		    sizeof (cname) && cname[-1] == ')')
-		  cname = cname[..sizeof (cname) - 2];
-		`->= ("name", sprintf ("rxml_tag_set,%s", cname));
-	      }, 0);
-
+    ::create (rxml_object->name + "/rxml_tag_set");
     imported = ({Roxen.entities_tag_set});
     modules = ({rxml_object});
   }

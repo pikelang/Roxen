@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.681 2001/06/30 13:43:05 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.682 2001/06/30 15:44:05 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3407,9 +3407,10 @@ void reload_all_configurations()
 private mapping(string:Configuration) config_lookup = ([]);
 // Maps config name to config object.
 
-Thread.Local module_init_info = Thread.Local();
-// Used temporarily at module initialization to hold some info so that
-// it's available even before create() in the module is called.
+Thread.Local bootstrap_info = Thread.Local();
+// Used temporarily at configuration and module initialization to hold
+// some info so that it's available even before create() in the
+// configuration/module is called.
 
 void fix_config_lookup()
 {
@@ -3437,7 +3438,8 @@ Configuration enable_configuration(string name)
   if (get_configuration (name))
     error ("A configuration called %O already exists.\n", name);
 #endif
-  Configuration cf = _configuration( name );
+  bootstrap_info->set (name);
+  Configuration cf = _configuration();
   configurations += ({ cf });
   fix_config_lookup();
   return cf;

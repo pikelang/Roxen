@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.443 2001/06/28 20:09:18 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.444 2001/06/30 15:44:04 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -169,6 +169,9 @@ void avg_prof_leave( string name, string type, RequestID id )
 /* A configuration.. */
 inherit Configuration;
 inherit "basic_defvar";
+
+// It's nice to have the name when the rest of __INIT executes.
+string name = roxen->bootstrap_info->get();
 
 // Trivial cache (actually, it's more or less identical to the 200+
 // lines of C in HTTPLoop. But it does not have to bother with the
@@ -2453,7 +2456,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mixed err;
   int module_type;
 
-  roxen->module_init_info->set (({this_object(), modname}));
+  roxen->bootstrap_info->set (({this_object(), modname}));
 
   if( datacache ) datacache->flush();
 
@@ -2472,7 +2475,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
       got_no_delayed_load = -1;
-      roxen->module_init_info->set (0);
+      roxen->bootstrap_info->set (0);
       return 0;
     }
   }
@@ -2508,7 +2511,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
 #endif
       got_no_delayed_load = -1;
-      roxen->module_init_info->set (0);
+      roxen->bootstrap_info->set (0);
       return module[id];
     }
   }
@@ -2539,7 +2542,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
-	roxen->module_init_info->set (0);
+	roxen->bootstrap_info->set (0);
 	throw(err);
       }
     }
@@ -2674,7 +2677,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
 
-  roxen->module_init_info->set (0);
+  roxen->bootstrap_info->set (0);
   return me;
 }
 
@@ -3155,11 +3158,11 @@ void low_init(void|int modules_already_enabled)
 
 DataCache datacache;
 
-static void create(string config)
+static void create()
 {
-  name=config;
+  if (!name) error ("Configuration name not set through bootstrap_info.\n");
 //   int st = gethrtime();
-  roxen.add_permission( "Site:"+config, LOC_C(306,"Site")+": "+config );
+  roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
 
   // for now only these two. In the future there might be more variables.
   defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),
