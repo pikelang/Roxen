@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.7 2001/09/03 18:40:49 nilsson Exp $";
+  "$Id: userdb_system.pike,v 1.8 2001/10/04 13:47:38 wellhard Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -130,10 +130,10 @@ array(string) list_users( )
   array res = ({});
   array a;
   mixed key = mt->lock();
-  endpwent();
+  setpwent();
   while( a = getpwent() )
     res += ({ a[0] });
-  endpwent();
+//   endpwent();
   return res;
 }
 
