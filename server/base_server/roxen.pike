@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.705 2001/08/21 13:20:12 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.706 2001/08/21 14:32:15 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -426,8 +426,7 @@ private void low_shutdown(int exit_code)
 #endif /* THREADS */
     exit(exit_code);
   }
-  if (_recurse) return;
-  _recurse++;
+  if (_recurse++) return;
 
 #ifdef SNMP_AGENT
   if(objectp(snmpagent))
