@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.78 2000/03/20 04:15:08 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.79 2000/03/20 07:01:34 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -25,59 +25,71 @@ class MyCodec
       if(mixed tmp=search(all_constants(),x))
 	return "efun:"+tmp;
 
-    switch(sprintf("%t",x))
-    {
-      case "program":
-	if(p!=x)
-	{
-          mixed tmp;
-	  if(tmp=search(master()->programs,x))
-	    return tmp;
+    if (programp (x)) {
+      if(p!=x)
+      {
+	mixed tmp;
+	if(tmp=search(master()->programs,x))
+	  return tmp;
 
-	  if((tmp=search(values(_static_modules), x))!=-1)
-	    return "_static_modules."+(indices(_static_modules)[tmp]);
-	}
-	break;
-
-      case "object":
+	if((tmp=search(values(_static_modules), x))!=-1)
+	  return "_static_modules."+(indices(_static_modules)[tmp]);
+      }
+    }
+    else if (objectp (x)) {
+      array(string) ids = ({});
+      while (1) {
 	if(mixed tmp=search(master()->objects,x))
 	{
 	  if(tmp=search(master()->programs,tmp))
 	  {
-	    return tmp;
+	    if (sizeof (ids)) return tmp + "//" + ids * ".";
+	    else return tmp;
 	  }
 	}
-        if( x == mm )
-          return "/master";
+	object parent;
+	if (!catch (parent = function_object (object_program (x))) && parent) {
+	  array ind = indices (parent), val = values (parent);
+	  int i = search (val, x);
+	  if (i > -1) {
+	    x = parent;
+	    ids = ({ind[i]}) + ids;
+	    continue;
+	  }
+	}
 	break;
+      }
+      if( x == mm )
+	return "/master";
     }
     return ([])[0];
   }
 
   function functionof(string x)
   {
-    if(sscanf(x,"efun:%s",x))
+    if(sscanf(x,"efun:%s",x) && functionp(all_constants()[x]))
       return all_constants()[x];
-
-    werror("Failed to decode function %s\n",x);
-    return 0;
+    error("Failed to decode function %s\n",x);
   }
 
 
   object objectof(string x)
   {
-    if(!stringp(x))
-      return class{}();
-
     if(sscanf(x,"efun:%s",x))
     {
       if( !objectp( all_constants()[x] ) )
         error("Failed to decode object efun:%s\n", x );
       return all_constants()[x];
     }
+    sscanf (x, "%s//%s", x, string ids);
     object tmp;
-    if(objectp(tmp=(object)x))
+    if(objectp(tmp=(object)x)) {
+      if (ids)
+	foreach (ids / ".", string id)
+	  if (!objectp (tmp = tmp[id]))
+	    error("Failed to decode object %s\n", x );
       return tmp;
+    }
     return 0;
   }
 
@@ -89,10 +101,10 @@ class MyCodec
     if(sscanf(x,"_static_modules.%s",x))
       return (program)_static_modules[x];
 
-    if(program tmp=(program)x)
+    if(program tmp=(program)x) {
       return tmp;
-    werror("Failed to decode program %s\n", x );
-    return 0;
+    }
+    error("Failed to decode program %s\n", x );
   }
 
   mixed encode_object(object x)
