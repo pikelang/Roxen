@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.152 2001/02/26 18:42:28 mast Exp $
+# $Id: start,v 1.153 2001/03/06 11:43:34 peter Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -77,7 +77,7 @@ fi
 
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m | tr ' ' '_' `.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
-./mkdir -p $pcdir
+./mkdir -p $pcdir || exit 1
 chmod 1777 $pcdir
 
 # Default verbosity level.
