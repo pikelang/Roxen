@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.11 1997/08/21 13:16:38 per Exp $
+ * $Id: upgrade.pike,v 1.12 1997/08/24 03:51:11 per Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -12,12 +12,17 @@ int is_older(string v1, string v2)
   int def;
   array a1,a2;
   if(sizeof(a1=v1/".") == sizeof(a2=v2/"."))
+    if(strlen(v1)<strlen(v2))
+      return 1;
+    else if(strlen(v1)>strlen(v2))
+      return 0;
+  else
     return v1<v2;
-  if(sizeof(a1)<sizeof(a2))
-    def=1;
+
+  if(sizeof(a1)<sizeof(a2)) def=1;
   for(int i=0; i<(def?sizeof(a1):sizeof(a2)); i++)
     if((int)a1[i]!=(int)a2[i])
-      return a1[i]<a2[i];
+      return (int)a1[i]<(int)a2[i];
   return def;
 }
 
@@ -55,19 +60,19 @@ void recurse_one_dir(string d)
 	  else if(sscanf(mod, "%*sdesc%*[ \t]=%s;", doc)==3)
 	    doc = parse_expression(doc);
 	}
-	comps[f]=([
+	comps[f]=
+        ([
 	  "fname":d+f,
-	   "doc":doc,
-	   "name":name,
-	   "version":version,
+	  "doc":doc,
+	  "name":name,
+	  "version":version,
 	]);
       }
     }
-#if 0
-    else if(Stdio.file_size(d+f)==-2) {
+    else if(Stdio.file_size(d+f)==-2)
+    {
       recurse_one_dir(d+f+"/");
     }
-#endif
   }
 }
 
@@ -220,22 +225,23 @@ string upgrade_module(string m, object rpc)
   return res+"<p>\n\n\n";
 }
 
-string page_2(object id)
+string page_3(object id)
 {
-  object rpc;
+  if(id->variables["how3"]=="0")
+    return 0;
+
+ object rpc;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
+
   if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
   update_comps();
   string res=
     ("<font size=+1>Components that have a newer version available.</font> <br>"
      "Select the box to add the component to the list of components to "
-     "be updated\n<p");
+     "be updated\n<p>");
 
-
-    "<td>Component name</td><td>Filename</td>"
-    "<td>Version</td><td>Currently installed version</td></tr>\n";
 
   mapping rm = rpc->all_components(roxen->real_version);
   array tbl = ({});
@@ -244,33 +250,53 @@ string page_2(object id)
   {
     if(!comps[s] || (is_older(comps[s]->version, rm[s]->version)))
     {
-      tbl += ({
+      tbl += ({ ({
 	"<input type=checkbox name=C_"+s+"> ",
 	  rm[s]->name,
 	  rm[s]->fname,
 	  rm[s]->version,
 	  (comps[s]?comps[s]->version:"New"),
 	  ({"<font size=-1>"+doc+"</font>"}),
-      });
+	  })});
     }
   }
   if(sizeof(tbl))
     return res + html_table(({"","Name","File","Available Version",
-				"Your Version", ({"Doc"})}),tbl);
+				"Your Version", ({"Doc"})}),
+			    tbl);
 
   return "There are no new components available.";
 }
 
-string page_3(object id)
+string page_2(object id)
 {
   object rpc;
+  if(id->variables["how3"]=="0") return 0;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
   if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
 
-//  if((int)id->variables["how:2"])
-//    return new_form(id,rpc);
+  string res=""
+    "New modules that are available<br> "
+    "Select the box to add the module to the list of modules to "
+    "be updated</b><p>";
+
+  find_modules(1);
+
+  mapping rm = rpc->all_modules(roxen->real_version);
+  int num;
+  array tbl = ({});
+  foreach(sort(indices(rm)), string s)
+    if(!modules[s])
+      tbl += ({({ "<font size=+1><var type=checkbox name=M_"+s+"> "+
+	      rm[s]->name+"</font>",
+		 "<font size=+1>"+rm[s]->filename+"</font>",
+		    "<font size=+1>"+rm[s]->version+"</font>",
+		    ({"<font size=-1>"+rm[s]->doc+"</font>"})})});
+  if(sizeof(tbl))
+    return res + html_table( ({"Name", "File", "Version", ({ "Doc" })}), tbl );
+  return "There are no new modules available";
 }
 
 string page_1(object id)
@@ -280,7 +306,7 @@ string page_1(object id)
   string res=
     ("<font size=+2>Modules that have a newer version available.</font><p>"
      "Select the box to add the module to the list of modules to "
-     "be updated</b></td></tr>\n");
+     "be updated<p></b>\n");
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
@@ -305,67 +331,6 @@ string page_1(object id)
 				   "Installed Version"}), tbl );
   else
     return "There are no new versions of any of your modules available";
-
-}
-
-string handle_upgrade(object id, object rpc)
-{
-  string res = "<h1>Retrieving new modules...</h1><br>";
-  int num;
-  int st = time();
-  foreach(indices(id->variables), string m)
-    if(sscanf(m,"M_%s",m))
-    {
-      res += upgrade_module(m,rpc);
-      num++;
-    }
-
-  if(num) roxen->rescan_modules();
-  return (res+"<p><br><b><a href=/Actions/>Done in "+
-	  (time()-st)+" seconds.</a></b><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>");
-}
-
-
-string new_form(object id, object rpc)
-{
-  string res=""
-    "<form>\n"
-    "<input type=hidden name=action value="+id->variables->action+">\n"
-    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=3><b>"
-    "New modules that are available<br> "
-    "Select the box to add the module to the list of modules to "
-    "be updated</b></td></tr>\n"
-    "<tr bgcolor=lightblue>"
-    "<td>Module name</td><td>Filename</td>"
-    "<td>Version</td></tr>\n";
-
-  find_modules(1);
-
-  mapping rm = rpc->all_modules(roxen->real_version);
-  int num;
-  foreach(sort(indices(rm)), string s)
-    if(!modules[s])
-    {
-/*      if(Stdio.file_size(rm[s]->filename) > 0)
-	werror("Module "+s+" present, but won't load.\n");
-      else { */
-	num++;
-	res += ("<tr bgcolor=#f0f0ff><td><b><font size=+1><input type=checkbox name=M_"+s+"> "+
-		rm[s]->name+"</font></b></td><td><b><font size=+1>"+rm[s]->filename+"</font></b></td><td><b><font size=+1>"+
-		rm[s]->version+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
-		rm[s]->doc+"</font><br><p><br></td></tr>\n");
-    }
-  if(num)
-    res += "</table>";
-  else
-    return "<a href=/Actions/?action=upgrade.pike>There are no new modules available.</a><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>";
-
-  res += "<table width=100%><tr><td><input type=submit name=go value=\" Install \">"
-    "</form>\n</td><td align=right>"
-    "<form><input type=hidden name=action value="+
-    id->variables->action+">"
-    "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
-  return res;
 }
 
 string upgrade_component(string m, object rpc)
@@ -394,127 +359,42 @@ string upgrade_component(string m, object rpc)
   return res+"<p>\n\n\n";
 }
 
-string upgrade_components(object id, object rpc)
+
+array todo = ({});
+string page_4(object id)
 {
-  string res = "<h1>Retrieving new components...</h1><br>";
-  int num;
-  int st = time();
-  foreach(indices(id->variables), string m)
-    if(sscanf(m,"M_%s",m))
-    {
-      res += upgrade_component(m,rpc);
-      num++;
-    }
-  roxen->configuration_interface()->actions=([]);
-  
-  return (res+"<p><br><b><a href=/Actions/>Done in "+
-	  (time()-st)+" seconds.</a></b><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>");
+  filter_checkbox_variables(id->variables);
+  todo = ({});
+  foreach(sort(indices(id->variables)), string s)
+  {
+    string module;
+    if(sscanf(s, "M_%s", module))
+      todo+=({({"Upgrade the module "+module,upgrade_module, module,"RPC" })});
+    else if(sscanf(s, "C_%s", module))
+      todo+=({({"Upgrade "+module,upgrade_component,module,"RPC"})});
+  }
+  string res = "<font size=+1>Summary: These actions will be taken:</font><p>"
+    "<ul>";
+  foreach(todo, array a)
+    res += "<li> "+a[0]+"\n";
+  return res + "</ul>";
 }
 
-string handle_components(object id, object rpc)
+
+string wizard_done(object id)
 {
-  update_comps();
-  string res=""
-    "<form>\n"
-    "<input type=hidden name=how value=3>"
-    "<input type=hidden name=action value="+id->variables->action+">\n"
-    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=4><b>"
-    "Components that have a newer version available. <br>"
-    "Select the box to add the component to the list of components to "
-    "be updated</b></td></tr>\n"
-    "<tr bgcolor=lightblue>"
-    "<td>Component name</td><td>Filename</td>"
-    "<td>Version</td><td>Currently installed version</td></tr>\n";
-
-  mapping rm = rpc->all_components(roxen->real_version);
-  int num;
-  foreach(sort(indices(rm)), string s)
-  {
-    if(!comps[s] || (is_older(comps[s]->version, rm[s]->version)))
-    {
-      num++;
-      res += ("<tr bgcolor=#f0f0ff><td><b><font size=+1><input type=checkbox name=M_"+s+"> "+
-	      rm[s]->name+"</font></b></td><td><b><font size=+1>"+
-	      rm[s]->fname+"</font></b></td><td><b><font size=+1>"+
-	      rm[s]->version+"</font></b></td><td><b><font size=+1>"+
-	      (comps[s]?comps[s]->version:"New")+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
-	      rm[s]->doc+"</font><br><p><br></td></tr>\n");
-      }
-    }
-  if(num)
-    res += "</table>";
-  else
-    return "<a href=/Actions/?action=upgrade.pike>There are no new components available.</a><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>";
-
-  res += "<table width=100%><tr><td><input type=submit name=go value=\" Install \">"
-    "</form>\n</td><td align=right>"
-    "<form><input type=hidden name=action value="+
-    id->variables->action+">"
-    "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
-  return res;
+  object rpc;
+  int t = time();
+  string res = "<font size=+2>Upgrade report</font><p>";
+  catch(rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade"));
+  if(rpc) foreach(todo, array a) res+=a[1](@replace(a[2..], "RPC", rpc));
+  res += "<p>Done in "+(time()-t)+" seconds.";
+  return (html_border(res,0,5)+"<form action=/Actions/><input "
+	  "type=submit value=' OK '></form>");
 }
 
 
 string handle(object id)
 {
   return wizard_for(id,0);
-  string res=""
-    "<form>\n"
-    "<input type=hidden name=action value="+id->variables->action+">\n"
-    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=4><b>"
-    "Modules that have a newer version available. <br>"
-    "Select the box to add the module to the list of modules to "
-    "be updated</b></td></tr>\n"
-    "<tr bgcolor=lightblue>"
-    "<td>Module name</td><td>Filename</td><td>Your version</td>"
-    "<td>Available version</td></tr>\n";
-  int num;
-
-  if(id->variables->how || id->variables->go)
-  {
-    object rpc;
-    catch {
-      rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
-    };
-    if(!rpc)
-      return "Failed to connect to update server at skuld.infovav.se:23.\n";
-
-    if((int)id->variables->how==3)
-      return handle_components(id,rpc);
-
-    if(id->variables->go) return handle_upgrade(id,rpc);
-
-    if((int)id->variables->how==2)
-    {
-      return new_form(id,rpc);
-    }
-
-    find_modules((int)id->variables->how);
-    mapping mv = rpc->module_versions( modules, roxen->real_version );
-
-    foreach(sort(indices(modules)), string m)
-    {
-      if(mv[m] && (is_older(modules[m]->version, mv[m])))
-      {
-	num++;
-	res += ("<tr><td><input type=checkbox name=M_"+m+"> "+
-		modules[m]->name+"</td><td>"+
-		modules[m]->fname+"</td><td>"+
-		modules[m]->version+"</td><td>"+
-		(mv[m]?mv[m]:"?")+"</tr>"
-		"\n");
-      }
-    }
-    if(num)
-      res += "</table>";
-    else
-      return "<a href=/Actions/?action=upgrade.pike>There are no upgrades available.</a><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>";
-
-    res += "<table width=100%><tr><td><input type=submit name=go value=\" Upgrade \">"
-      "</form>\n</td><td align=right>"
-      "<form><input type=hidden name=action value="+
-      id->variables->action+">"
-      "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
-    return res;
-  }
 }
