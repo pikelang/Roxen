@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.173 2001/06/25 19:20:45 mast Exp $
+// $Id: module.pmod,v 1.174 2001/06/26 01:34:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -333,20 +333,24 @@ class Tag
     mixed err = catch {							\
       if (!_frame->args)						\
 	argfunc = _frame->_prepare (_ctx, _type, _args);		\
-      _res = _frame->_eval (_ctx, _parser, _type, _content || "");	\
-      if (_parser->p_code) {						\
-	_frame->args = argfunc;						\
-	_parser->p_code->add (_frame);					\
+      _res = _frame->_eval (_ctx, _parser, _type, 0, _content || "");	\
+      if (PCode p_code = _parser->p_code) {				\
+	p_code->add (_frame);						\
+	p_code->add (argfunc);						\
+	p_code->add (_frame->content);					\
       }									\
       break eval_frame;							\
     };									\
 									\
-    if (_parser->p_code) {						\
+    if (PCode p_code = _parser->p_code) {				\
       /* Make an unparsed frame in the p-code if the evaluation		\
        * fails. */							\
       _frame->flags |= FLAG_UNPARSED;					\
       _frame->args = _args, _frame->content = _content || "";		\
-      _parser->p_code->add (_frame);					\
+      werror ("err %O %O %O\n", _frame, _frame->args, _frame->content);	\
+      p_code->add (_frame);						\
+      p_code->add (0);							\
+      p_code->add (0);							\
     }									\
 									\
     if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
@@ -1901,7 +1905,7 @@ constant FLAG_DEBUG		= 0x40000000;
 //! be compiled in (normally enabled with the @tt{--debug@} flag to
 //! Roxen).
 
-// Static flags (i.e. tested in the Tag object):
+// Flags tested in the Tag object:
 
 constant FLAG_PROC_INSTR	= 0x00000010;
 //! Flags this as a processing instruction tag (i.e. one parsed with
@@ -1932,7 +1936,7 @@ constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the @[RXML.PXml] parser. This is only
 //! used in the simple tag wrapper. Defined here as placeholder.
 
-// The rest of the flags are dynamic (i.e. tested in the Frame object):
+// Flags tested in the Frame object:
 
 constant FLAG_EMPTY_ELEMENT	= 0x00000001;
 //! If set, the tag does not use any content. E.g. with an HTML parser
@@ -2054,30 +2058,31 @@ class Frame
   //! Various bit flags that affect parsing. See the @tt{FLAG_*@}
   //! constants. It's copied from @[Tag.flag] when the frame is
   //! created.
+  //!
+  //! @note
+  //! This variable may be set in the @tt{do_*@} callbacks, but it's
+  //! assumed to be static, i.e. its value should not depend on any
+  //! information that's known only at runtime. Practically that means
+  //! that the value is assumed to never change if the frame is reused
+  //! by p-code.
 
-  mapping(string:mixed)|EVAL_ARGS_FUNC args;
+  mapping(string:mixed)|int(1..1) args;
   //! The (parsed and evaluated) arguments passed to the tag. Set
   //! every time the frame is executed, before any frame callbacks are
   //! called. Not set for processing instruction (@[FLAG_PROC_INSTR])
   //! tags.
   //!
-  //! This variable is also used to hold a function that generates the
-  //! argument mapping between evaluations of the frame. It never does
-  //! when any of the callbacks except @[cached_return] are called,
-  //! though.
+  //! This variable is also used to hold the value 1 which is used
+  //! internally to signal that this frame is not currently evaluated.
+  //! It's never 1 when any of the callbacks are executed.
 
   Type content_type;
   //! The type of the content.
 
-  mixed|PCode content = nil;
+  mixed content;
   //! The content, if any. Set before @[do_process] and @[do_return]
   //! are called. Initialized to @[RXML.nil] every time the frame
   //! executed.
-  //!
-  //! This variable is also used to hold an unevaluated representation
-  //! of the content between evaluations of the frame. It never does
-  //! when any of the callbacks except @[cached_return] are called,
-  //! though.
 
   Type result_type;
   //! The required result type. If it has a parser, it will affect how
@@ -2091,7 +2096,7 @@ class Frame
   //! necessary. An exception (which this frame can't catch) is thrown
   //! if conversion is impossible.
 
-  mixed result = nil;
+  mixed result;
   //! The result, which is assumed to be either @[RXML.nil] or a valid
   //! value according to result_type. The exec arrays returned by e.g.
   //! @[do_return] changes this. It may also be set directly.
@@ -2118,12 +2123,26 @@ class Frame
   //! If set, the tags in this tag set will be used in addition to the
   //! tags inherited from the surrounding parser. The additional tags
   //! will in turn be inherited by subparsers.
+  //!
+  //! @note
+  //! This variable may be set in the @[do_enter] callback, but it's
+  //! assumed to be static, i.e. its value should not depend on any
+  //! information that's known only at runtime. Practically that means
+  //! that the value is assumed to never change if the frame is reused
+  //! by p-code.
 
   //! @decl optional TagSet local_tags;
   //!
   //! If set, the tags in this tag set will be used in the parser for
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
+  //!
+  //! @note
+  //! This variable may be set in the @[do_enter] callback, but it's
+  //! assumed to be static, i.e. its value should not depend on any
+  //! information that's known only at runtime. Practically that means
+  //! that the value is assumed to never change if the frame is reused
+  //! by p-code.
 
   //! @decl optional Frame parent_frame;
   //!
@@ -2137,6 +2156,10 @@ class Frame
   //! If this variable exists, it gets the raw text representation of
   //! the tag, if there is any. Note that it's after parsing of any
   //! splice argument.
+  //!
+  //! @note
+  //! This variable is assumed to be static, i.e. its value doesn't
+  //! depend on any information that's known only at runtime.
 
   //! @decl optional array do_enter (RequestID id);
   //! @decl optional array do_process (RequestID id, void|mixed piece);
@@ -2261,11 +2284,41 @@ class Frame
   //! implemented.
 
   optional array cached_return (Context ctx, void|mixed piece);
-  //! If defined, this will be called to get the value from a cached
-  //! frame (that's still valid) instead of using the cached result.
-  //! It's otherwise handled like @[do_return]. Note that the cached
-  //! frame may be used from several threads. FIXME: Not yet
-  //! implemented.
+  //! If defined, this will be called to get the value from the frame,
+  //! instead of the normal @tt{do_*@} functions that evaluates the
+  //! result from scratch. If it returns zero, the normal callbacks
+  //! will be called as usual.
+
+  this_program clone()
+  //! Called to create a copy of this frame, usually to perform
+  //! evaluation in a thread safe way. Thus this function copies data
+  //! that isn't the result of evaluation, like @[flags],
+  //! @[content_type] and @[result_type] but not @[result] or @[vars].
+  //!
+  //! A frame corresponds to a specific tag instance in a page, and
+  //! clones of it also corresponds to the same tag instance. Since
+  //! the frame is used to store data during the evaluation (i.e.
+  //! between the @tt{do_*@} callbacks) of the frame it can be
+  //! necessary to clone it to allow the same tag instance to be
+  //! evaluated simultaneously in different threads.
+  //!
+  //! Tags should normally not override the default definition, but it
+  //! can be useful together with @[cached_return] to share caches
+  //! between frame clones.
+  {
+    this_program this = this_object(), clone = object_program (this)();
+    clone->tag = tag;
+    clone->flags = flags;
+    clone->args = args;
+    clone->content_type = content_type;
+    clone->content = content;
+    clone->result_type = result_type;
+    if (string v = this->scope_name) clone->scope_name = v;
+    if (TagSet v = this->additional_tags) clone->additional_tags = v;
+    if (TagSet v = this->local_tags) clone->local_tags = v;
+    if (string v = this->raw_tag_text) clone->raw_tag_text = v;
+    return clone;
+  }
 
   // Services:
 
@@ -2780,9 +2833,9 @@ class Frame
 
     mixed err = catch {
 #ifdef DEBUG
-      if (!up)
+      if (up) fatal_error ("up frame already set.\n");
 #endif
-	up = ctx->frame;
+      up = ctx->frame;
       ctx->frame = this;	// Push the frame to get proper backtraces.
       if (ctx->frame_depth++ >= ctx->max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
@@ -2970,18 +3023,18 @@ class Frame
       }
       else THIS_TAG_DEBUG ("Keeping content_type %O\n", content_type);
 
-      ctx->frame = up;
+      ctx->frame = up, up = 0;
       ctx->frame_depth--;
       return func;
     };
 
-    ctx->frame = up;
+    ctx->frame = up, up = 0;
     ctx->frame_depth--;
     throw (err);
   }
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type,
-	       void|string|PCode in_content)
+	       void|EVAL_ARGS_FUNC in_args, void|string|PCode in_content)
   // Note: It might be somewhat tricky to override this function,
   // since it handles unwinding through exceptions.
   {
@@ -2994,7 +3047,7 @@ class Frame
 #define EVSTAT_LAST_ITER 2
 #define EVSTAT_ITER_DONE 3
     int eval_state = EVSTAT_BEGIN;
-    EVAL_ARGS_FUNC in_args;
+    //in_args;
     //in_content;
     int iter;
 #ifdef DEBUG
@@ -3013,6 +3066,8 @@ class Frame
       PRE_INIT_ERROR ("Context not current.\n");
     if (!evaler->tag_set_eval)
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
+    if (up)
+      PRE_INIT_ERROR ("up frame already set.\n");
     Frame prev_ctx_frame = ctx->frame;
 #endif
 #ifdef MODULE_DEBUG
@@ -3035,9 +3090,10 @@ class Frame
       if ((err1 = catch {	// Catch errors but don't allow unwinds.
 	if (array state = ctx->unwind_state && ctx->unwind_state[this]) {
 #ifdef DEBUG
-	  if (in_content)
-	    fatal_error ("Can't feed new content when resuming parse.\n");
+	  if (in_args || in_content)
+	    fatal_error ("in_args or in_content set when resuming parse.\n");
 #endif
+	  up = ctx->frame;
 	  ctx->frame = this;
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
@@ -3080,10 +3136,10 @@ class Frame
 	  }
 	  else if (in_content) {
 	    THIS_TAG_TOP_DEBUG ("Evaluating\n");
+	    up = ctx->frame;
 	    ctx->frame = this;
-	    if (functionp (args)) {
+	    if (in_args) {
 	      THIS_TAG_DEBUG ("Evaluating compiled arguments\n");
-	      in_args = args;
 	      args = in_args (ctx);
 	    }
 	    content = nil;
@@ -3096,12 +3152,6 @@ class Frame
 
 	  piece = result = nil;
 	}
-
-#ifdef DEBUG
-	if (up && up != prev_ctx_frame)
-	  fatal_error ("Frame probably mixed between different simultaneous contexts "
-		       "(up: %O, previous ctx->frame: %O).\n", up, prev_ctx_frame);
-#endif
 
 	if (TagSet add_tags = [object(TagSet)] this->additional_tags) {
 	  TagSet tset = ctx->tag_set;
@@ -3455,10 +3505,10 @@ class Frame
 
     // Normal clean up on tag return or exception.
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
-    ctx->frame = up;
+    ctx->frame = up, up = 0;
     ctx->frame_depth--;
     if (err1) throw (err1);
-    args = in_args, content = in_content;
+    args = 1, content = in_content;
     return conv_result;
   }
 
@@ -5701,8 +5751,14 @@ class PCode
 	  mixed item = p_code[pos];
 	  if (objectp (item))
 	    if (item->is_RXML_Frame) {
-	      item = item->_eval (
-		context, this_object(), type, item->content); // Might unwind.
+	      object frame = item;
+	      if (frame->args == 1)
+		// Relying on the interpreter lock here.
+		frame->args = 0;
+	      else
+		frame = frame->clone();
+	      item = frame->_eval ( // Might unwind.
+		context, this_object(), type, p_code[++pos], p_code[++pos]);
 	    }
 	    else if (item->is_RXML_p_code_entry) {
 	      item = item->get (context, type); // Might unwind.
@@ -5763,9 +5819,13 @@ class PCode
       mixed item = p_code[pos];
       if (objectp (item))
 	if (item->is_RXML_Frame) {
-	  string itemvar = comp->bind (p_code[pos]);
-	  parts[pos] = sprintf ("%s->_eval (context, 0, %s, %s->content)",
-				itemvar, typevar, itemvar);
+	  parts[pos] = sprintf (
+	    "(%s->args == 1 ? %[0]s->args = 0, %[0]s : %[0]s->clone())"
+	    "->_eval (context, 0, %s, %s, %s)",
+	    comp->bind (p_code[pos]),
+	    typevar,
+	    comp->bind (p_code[++pos]),
+	    comp->bind (p_code[++pos]));
 	  continue;
 	}
 	else if (item->is_RXML_VarRef) {
