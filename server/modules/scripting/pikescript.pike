@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.49 1999/12/07 00:17:52 grubba Exp $";
+"$Id: pikescript.pike,v 1.50 1999/12/09 00:57:43 grubba Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -101,8 +101,10 @@ array|mapping call_script(function fun, object got, object file)
   mixed result, err;
   string s;
   object privs;
-  if(!functionp(fun))
+  if(!functionp(fun)) {
+    roxen_perror("call_script() failed: %O is not a function!\n", fun);
     return 0;
+  }
   string|array (int) uid, olduid, us;
 
   if(got->rawauth && (!QUERY(rawauth) || !QUERY(clearpass)))
@@ -128,6 +130,8 @@ array|mapping call_script(function fun, object got, object file)
     err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
 
+  // roxen_perror("call_script() err: %O result:%O\n", err, result);
+
   if(privs) 
     destruct(privs);
 
@@ -150,8 +154,10 @@ array|mapping call_script(function fun, object got, object file)
   if(objectp(result))
     return result;
 
-  if(!result) 
+  if(!result) {
+    // roxen_perror("call_script() failed: No result.\n");
     return 0;
+  }
 
   return http_string_answer(sprintf("%O", result));
 }
@@ -233,7 +239,7 @@ mapping handle_file_extension(object f, string e, object got)
     m_delete( scripts, got->not_query );
     throw( err[1] );
   }
-  return err;
+  return err || "";
 }
 
 string status()
