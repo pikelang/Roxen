@@ -85,8 +85,7 @@ class ConfigurationSettings
             ([
               "english":"Show the variable documentation.",
               "svenska":"Visa variabeldokumentationen.",
-            ]),
-            0,0 );
+            ]), 0, 0 );
 
     defvar( "more_mode", 0, TYPE_FLAG,
             ([
@@ -96,8 +95,8 @@ class ConfigurationSettings
             ([ "english":"Show all possible configuration options, not only "
                "the ones that are most often changed.",
                "svenska":"Visa alla konfigureringsval, inte bara de som "
-               "oftast ändras" ]),
-            0, 0 );
+               "oftast ändras."
+	    ]), 0, 0 );
 
     defvar( "devel_mode", 0, TYPE_FLAG,
             ([
@@ -107,11 +106,21 @@ class ConfigurationSettings
             ([
               "english":"Show settings and actions that are not normaly "
               "useful for non-developer users. If you develop your own "
-              "roxen modules, this option is for you",
-              "svenska":"Visa inställningar och funktioner som normaly "
-              "sätt inte är intressanta för icke-utvecklare. Om du utvecklar "
-              "egna moduler så är det här valet för dig"
-            ]), 0,0 );
+              "roxen modules, this option is for you.",
+              "svenska":"Visa inställningar och funktioner som normalt "
+              "sett inte är intressanta för icke-utvecklare. Om du utvecklar "
+              "egna moduler så är det här valet för dig."
+            ]), 0, 0 );
+
+    defvar( "bgcolor", "white", TYPE_STRING,
+	    ([
+	      "english":"Background color",
+	      "svenska":"Bakgrundsfärg",
+	    ]),
+	    ([
+	      "english":"Configuration interface background color.",
+	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
+	    ]), 0, 0 );
   }
 }
 
