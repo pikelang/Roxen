@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.328 1999/10/04 18:53:21 marcus Exp $
+ * $Id: roxen.pike,v 1.329 1999/10/06 23:07:36 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.328 1999/10/04 18:53:21 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.329 1999/10/06 23:07:36 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -684,8 +684,48 @@ class HTTP
   constant default_port = 80;
 }
 
+class HTTPS
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "https";
+  constant requesthandlerfile = "protocols/https.pike";
+  constant default_port = 443;
+}
+
+class FTP
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "ftp";
+  constant requesthandlerfile = "protocols/ftp.pike";
+  constant default_port = 21;
+}
+
+class GOPHER
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "gopher";
+  constant requesthandlerfile = "protocols/gopher.pike";
+  constant default_port = 70;
+}
+
+class TETRIS
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "tetris";
+  constant requesthandlerfile = "protocols/tetris.pike";
+  constant default_port = 2050;
+}
+
 mapping protocols = ([
   "http":HTTP,
+  "https":HTTPS,
+  "ftp":FTP,
+  "gopher":GOPHER,
+  "tetris":TETRIS,
 ]);
 
 mapping(string:mapping) open_ports = ([ ]);
@@ -737,8 +777,8 @@ int register_url( string url, object conf )
 
   string required_host;
 
-  url = replace( url, "/ANY", "*" );
-  url = replace( url, "/any", "*" );
+  url = replace( url, "/ANY", "/*" );
+  url = replace( url, "/any", "/*" );
 
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
   sscanf( host, "%[^:]:%d", host, port );
