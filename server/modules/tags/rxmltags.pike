@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.323 2001/10/05 09:09:48 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.324 2001/10/05 12:40:59 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7537,7 +7537,7 @@ just got zapped?
 
  <p>Occasionally an <tag>emit</tag> operation fails to produce output.
  This might happen when <tag>emit</tag> can't find any matches or if
- the developer has made an error. When this happens the truthvalue of
+ the developer has made an error. When this happens the truth value of
  that page is set to <i>false</i>. By using <xref
  href='../if/else.tag' /> afterwards it's possible to detect when an
  <tag>emit</tag> operation fails.</p>
