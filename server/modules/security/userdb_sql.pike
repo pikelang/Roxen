@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.5 2001/11/05 14:43:07 grubba Exp $";
+  "$Id: userdb_sql.pike,v 1.6 2001/11/06 10:53:15 anders Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -189,7 +189,7 @@ void start()
     DBManager.create_db( query("db"), 0, 1 );
     DBManager.is_module_db( this_module(), query("db"),
 			    "This datbase contains the user database" );
-    DBManager.set_permission( query("db"), this_object(), DBManager.WRITE );
+    DBManager.set_permission( query("db"), my_configuration(), DBManager.WRITE );
   }
   set_my_db( query("db") );
   create_sql_tables( db_defs, "User database table", 1 );
