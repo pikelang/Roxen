@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.55 1997/08/22 22:40:50 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.56 1997/08/25 13:51:35 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -576,10 +576,15 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
 }
 
 string base_key;
+object mc;
 
 void start(int|void val, object|void conf)
 {
-  base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
+  if(conf)
+  {
+    mc = conf;
+    base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
+  }
 }
 
 #ifdef QUANT_DEBUG
@@ -729,7 +734,7 @@ int args_restored = 0;
 void restore_cached_args()
 {
   args_restored = 1;
-  object o = open(".gtext_args", "r");
+  object o = open(".gtext_args_"+hash(mc->name), "r");
   if(o)
   {
     string data = o->read();
@@ -746,7 +751,7 @@ void restore_cached_args()
 void save_cached_args()
 {
   restore_cached_args();
-  object o = open(".gtext_args", "wct");
+  object o = open(".gtext_args_"+hash(mc->name), "wct");
   string data=encode_value(cached_args);
   catch {
     if(sizeof(indices(Gz)))
@@ -1141,24 +1146,21 @@ string pop_color(string tagname,mapping args,object id,object file,
 
 mapping query_tag_callers()
 {
-  return ([
-    "gtext-id":tag_gtext_id,
-  ]) | (query("speedy")?
-	(["font":tag_fix_color,
-    "body":tag_body,
+  return ([ "gtext-id":tag_gtext_id, ]) | (query("speedy")?([]):
+   	    (["font":tag_fix_color,
+	      "body":tag_body,
     "table":tag_fix_color,
     "tr":tag_fix_color,
     "td":tag_fix_color,
     "layer":tag_fix_color,
     "ilayer":tag_fix_color,
-
     "/td":pop_color,
     "/tr":pop_color,
     "/font":pop_color,
     "/body":pop_color,
     "/table":pop_color,
     "/layer":pop_color,
-    "/ilayer":pop_color, ]):([]));
+    "/ilayer":pop_color, ]));
 }
 
 
