@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.140 2000/02/13 16:28:32 per Exp $
+ * $Id: roxenloader.pike,v 1.141 2000/02/14 09:21:10 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.140 2000/02/13 16:28:32 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.141 2000/02/14 09:21:10 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -481,18 +481,11 @@ static private void initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
-
-  add_constant("Stdio.File", Stdio.File );
-  add_constant("Stdio.stderr", Stdio.stderr );
-  add_constant("Stdio.stdout", Stdio.stdout );
-  add_constant("Stdio.stdin", Stdio.stdin );
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_clear", cache->cache_clear);
   add_constant("cache_expire", cache->cache_expire);
-  add_constant("capitalize",
-               lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
 array compile_error_handlers = ({});
@@ -614,8 +607,8 @@ object really_load_roxen()
     report_debug("ERROR\n" + (q||""));
     throw(err);
   }
-  report_debug("done after %3.3fs\n",
-	       (gethrtime()-start_time)/1000000.0);
+  report_debug("\nRoxen loaded in %.1fms\n",
+	       (gethrtime()-start_time)/1000.0);
 
   if (q && sizeof(q)) {
     report_debug("Warnings compiling Roxen:\n" + q);
@@ -1119,7 +1112,7 @@ Please install a newer pike version
     add_include_path(p);
     add_program_path(p);
   }
-
+  add_module_path( "etc/modules" );
 #if 0&&constant(fork)
   if (catch { getpw_kluge(); }) {
     /* We're in the kluge process, and it's time to die... */
@@ -1152,6 +1145,8 @@ Please install a newer pike version
   add_constant("init_logger", init_logger);
   add_constant("open", open);
   add_constant("mkdirhier", mkdirhier);
+  add_constant("capitalize",
+               lambda(string s){return upper_case(s[0..0])+s[1..];});
 
   add_constant( "ST_MTIME", ST_MTIME );
   add_constant( "ST_CTIME", ST_CTIME );
@@ -1171,6 +1166,75 @@ Please install a newer pike version
     new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
+
+  // These are here to allow dumping of roxen.pike to a .o file.
+  add_constant( "Regexp", Regexp );
+  add_constant( "Stdio.File", Stdio.File );
+  add_constant( "Stdio.UDP", Stdio.UDP );
+  add_constant( "Stdio.Port", Stdio.Port );
+  add_constant( "Stdio.read_bytes", Stdio.read_bytes );
+  add_constant( "Stdio.read_file", Stdio.read_file );
+  add_constant( "Stdio.sendfile", Stdio.sendfile );
+  add_constant( "Stdio.stderr", Stdio.stderr );
+  add_constant( "Stdio.stderr", Stdio.stderr );
+  add_constant( "Stdio.stdin", Stdio.stdin );
+  add_constant( "Stdio.stdin", Stdio.stdin );
+  add_constant( "Stdio.stdout", Stdio.stdout );
+  add_constant( "Stdio.stdout", Stdio.stdout );
+  add_constant( "Stdio.write_file", Stdio.write_file );
+#if constant(thread_create)
+  add_constant( "Thread.Mutex", Thread.Mutex );
+  add_constant( "Thread.Condition", Thread.Condition );
+  add_constant( "Thread.Queue", Thread.Queue );
+#endif
+
+#if constant(SSL) && constant(SSL.sslfile)
+  add_constant("SSL.sslfile", SSL.sslfile );
+  add_constant("SSL.context", SSL.context );
+  add_constant("Tools.PEM.pem_msg", Tools.PEM.pem_msg );
+  add_constant("Crypto.randomness.reasonably_random",
+               Crypto.randomness.reasonably_random );
+  add_constant("Standards.PKCS.RSA.parse_private_key",
+               Standards.PKCS.RSA.parse_private_key);
+  add_constant("Crypto.rsa", Crypto.rsa );
+  add_constant( "Tools.X509.decode_certificate",
+                Tools.X509.decode_certificate );
+  add_constant( "Standards.PKCS.DSA.parse_private_key",
+                Standards.PKCS.DSA.parse_private_key );
+  add_constant( "SSL.cipher.dh_parameters", SSL.cipher.dh_parameters );
+#endif
+
+#if constant(HTTPLoop.prog)
+  add_constant( "HTTPLoop.prog", HTTPLoop.prog );
+  add_constant( "HTTPLoop.Loop", HTTPLoop.Loop );
+#endif
+
+  add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
+  add_constant( "rgb_to_hsv",  Colors.rgb_to_hsv  );
+  add_constant( "parse_color", Colors.parse_color );
+  add_constant( "color_name",  Colors.color_name  );
+  add_constant( "colors",      Colors             );
+  add_constant( "Process.create_process", Process.create_process );
+  add_constant( "MIME.Message", MIME.Message );
+  add_constant( "MIME.encode_base64", MIME.encode_base64 );
+  add_constant( "MIME.decode_base64", MIME.decode_base64 );
+  add_constant( "Image.Image", Image.Image );
+  add_constant( "Image.Font", Image.Font );
+  add_constant( "Image.Colortable", Image.Colortable );
+  add_constant( "Image.Layer", Image.Layer );
+  add_constant( "Image.lay", Image.lay );
+  add_constant( "Image.Color", Image.Color );
+  add_constant( "Image.GIF.encode", Image.GIF.encode );
+  add_constant( "Image.GIF.encode_trans", Image.GIF.encode_trans );
+  add_constant( "Image.Color.Color", Image.Color.Color );
+  add_constant( "Image", Image );
+  add_constant( "Locale", Locale );
+  add_constant( "Locale.Charset", Locale.Charset );
+  add_constant( "RoxenLocale", RoxenLocale );
+  add_constant( "RoxenLocale.Modules", RoxenLocale.Modules );
+//    add_constant( "Image._decode", Image._decode );
+//    add_constant( "Image.decode_layers", Image.decode_layers );
+
 
   initiate_cache();
   load_roxen();
