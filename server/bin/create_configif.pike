@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.22 2000/06/14 00:01:40 nilsson Exp $
+ * $Id: create_configif.pike,v 1.23 2000/08/28 21:48:18 marcus Exp $
  *
  * Create an initial administration interface server.
  */
@@ -19,12 +19,21 @@ int mkdirhier(string from)
   }
 }
 
+string read_string(Stdio.Readline rl, string prompt, string|void def,
+		   string|void batch)
+{
+  string res = batch || rl->read( prompt+(def? " ["+def+"]":"")+": " );
+  if( def && !strlen(res-" ") )
+    res = def;
+  return res;
+}
 
 int main(int argc, array argv)
 {
   Stdio.Readline rl = Stdio.Readline();
   string name, user, password, configdir, port;
   string passwd2;
+  mapping(string:string) batch = ([]);
 
   rl->redisplay( 1 );
 
@@ -42,7 +51,10 @@ int main(int argc, array argv)
                       "../configurations");
   int admin = has_value(argv, "-a");
 
-  
+  int batch_args = search(argv, "--batch");
+  if(batch_args>=0)
+    batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
+
   foreach( get_dir( configdir )||({}), string cf )
     catch 
     {
@@ -69,24 +81,24 @@ int main(int argc, array argv)
   {
     if(!admin) 
     {
-      name = rl->read( "Server name [Administration Interface]: " );
-      if( !strlen(name-" ") )
-	name = "Administration Interface";
+      name = read_string(rl, "Server name", "Administration Interface",
+			 batch->server_name);
 
       int port_ok;
       while( !port_ok )
       {
         string protocol, host, path;
 
-        port = rl->read( "Port URL ["+def_port+"]: ");
-        if( !strlen(port-" ") )
-          port = def_port;
+        port = read_string(rl, "Port URL", def_port, batch->server_url);
+	m_delete(batch, "server_url");
+        if( port == def_port )
+          ;
         else if( (int)port )
         {
           int ok;
           while( !ok )
           {
-            switch( protocol = lower_case(rl->read( "Protocol [http]: ")) )
+            switch( protocol = lower_case(read_string(rl, "Protocol", "http")))
             {
              case "":
                protocol = "http";
@@ -126,21 +138,24 @@ int main(int argc, array argv)
 
     do 
     {
-      user = rl->read( "Administrator user name [administrator]: ");
+      user = read_string(rl, "Administrator user name", "administrator",
+			 batch->user);
+      m_delete(batch, "user");
     } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
             write("User name may not contain slashes.\n"));
-    if( !strlen(user-" ") )
-      user = "administrator";
 
     do
     {
       rl->get_input_controller()->dumb=1;
-      password = rl->read( "Administrator Password: ");
-      passwd2 = rl->read( "Administrator Password (again): ");
+      password = read_string(rl, "Administrator Password", 0, batch->password);
+      passwd2 = read_string(rl, "Administrator Password (again)", 0, batch->password);
       rl->get_input_controller()->dumb=0;
-      write("\n");
+      if(batch->password)
+	m_delete(batch, "password");
+      else
+	write("\n");
     } while(!strlen(password) || (password != passwd2));
-  } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
+  } while( strlen( passwd2 = read_string(rl, "Ok?", "y", batch->ok ) ) && passwd2[0]=='n' );
 
 
   if( !admin )
@@ -149,40 +164,50 @@ int main(int argc, array argv)
     string community_userpassword="";
     int use_update_system=0;
   
-    write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
-    write("contact update servers at Roxen Internet Software over the Internet.\n");
-    write("Do you want to enable this?\n");
-
-    if(!(strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' ))
+    if(!batch->update) {
+      write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
+      write("contact update servers at Roxen Internet Software over the Internet.\n");
+      write("Do you want to enable this?\n");
+    }
+    if(!(strlen( passwd2 = read_string(rl, "Ok?", "y", batch->update ) ) && passwd2[0]=='n' ))
     {
       use_update_system=1;
-      write("If you have a registered user identity at Roxen Community\n");
-      write("(http://community.roxen.com), you may be able to access\n");
-      write("additional material through the update system.\n");
-      write("Press enter to skip this.\n");
-      community_user=rl->read("Roxen Community Identity (your e-mail): ");
+      if(!batch->community_user) {
+	write("If you have a registered user identity at Roxen Community\n");
+	write("(http://community.roxen.com), you may be able to access\n");
+	write("additional material through the update system.\n");
+	write("Press enter to skip this.\n");
+      }
+      community_user=read_string(rl, "Roxen Community Identity (your e-mail)",
+				 0, batch->community_user);
       if(sizeof(community_user))
       {
         do
         {
           rl->get_input_controller()->dumb=1;
-          community_password = rl->read( "Roxen Community Password: ");
-          passwd2 = rl->read( "Roxen Community Password (again): ");
+          community_password = read_string(rl, "Roxen Community Password", 0,
+					   batch->community_password);
+          passwd2 = read_string(rl, "Roxen Community Password (again)", 0,
+				batch->community_password);
           rl->get_input_controller()->dumb=0;
-          write("\n");
+	  if(batch->community_password)
+	    m_delete(batch, "community_password");
+	  else
+	    write("\n");
           community_userpassword=community_user+":"+community_password;
         } while(!strlen(community_password) || (community_password != passwd2));
+      }
       
-        if((strlen( passwd2 = rl->read("Do you want to access the update "
-                                       "server through an HTTP proxy? [n]: "))
-            && passwd2[0]!='n' ))
-	{
-	  proxy_host=rl->read("Proxy host: ");
-	  if(sizeof(proxy_host))
-	    proxy_port=rl->read("Proxy port: [80]");
-	  if(!sizeof(proxy_port))
-	    proxy_port="80";
-	}
+      if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
+					"server through an HTTP proxy?",
+					"n", batch->community_proxy))
+	  && passwd2[0]!='n' ))
+      {
+	proxy_host=read_string(rl, "Proxy host", 0, batch->proxy_host);
+	if(sizeof(proxy_host))
+	  proxy_port=read_string(rl, "Proxy port", "80", batch->proxy_port);
+	if(!sizeof(proxy_port))
+	  proxy_port="80";
       }
     }
     mkdirhier( configdir );
