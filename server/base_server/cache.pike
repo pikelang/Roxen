@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.17 1998/01/17 02:57:16 grubba Exp $";
+string cvs_version = "$Id: cache.pike,v 1.18 1998/02/04 05:17:17 per Exp $";
 
 #include <config.h>
 
@@ -26,19 +26,19 @@ object cleaning_lock = Thread.Mutex();
 
 void cache_expire(string in)
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
   m_delete(cache, in);
 }
 
 mixed cache_lookup(string in, string what)
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
 #endif
@@ -60,10 +60,10 @@ mixed cache_lookup(string in, string what)
 
 string status()
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
   string res, a;
   res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=lightblue>"
     "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
@@ -120,10 +120,10 @@ string status()
 
 void cache_remove(string in, string what)
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_remove(\"%s\",\"%O\")\n", in, what));
 #endif
@@ -136,10 +136,10 @@ void cache_remove(string in, string what)
 
 void cache_set(string in, string what, mixed to)
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_set(\"%s\", \"%s\", %O)\n",
 		 in, what, to));
@@ -153,10 +153,10 @@ void cache_set(string in, string what, mixed to)
 
 void cache_clear(string in)
 {
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror("CACHE: cache_clear(\"%s\")\n", in);
 #endif
@@ -171,10 +171,10 @@ void cache_clean()
   call_out(cache_clean, CACHE_TIME_OUT);
   call_out(cache_clean, CACHE_TIME_OUT);
   gc();
-#ifdef THREADS
-  mixed key;
-  catch { key = cleaning_lock->lock(); };
-#endif /* THREADS */
+// #ifdef THREADS
+//   mixed key;
+//   catch { key = cleaning_lock->lock(); };
+// #endif /* THREADS */
   string a, b;
   int cache_time_out=CACHE_TIME_OUT;
 #ifdef CACHE_DEBUG
