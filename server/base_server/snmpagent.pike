@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.18 2001/09/13 13:15:19 hop Exp $
+ * $Id: snmpagent.pike,v 1.19 2001/09/13 13:54:01 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -30,6 +30,7 @@ Developer notes:
 	- default value for snmpagent host/port variable in the config. int.
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
+	- vsStopTrap is generated even if the virtual server wasn't started
 
  Todos:
 
@@ -166,15 +167,18 @@ class SNMPagent {
   private mapping vsdb;		// table of registered virtual servers
   private array dtraps;		// delayed traps
 
-  array get_snmpinpkts() { return OBJ_COUNT(snmpinpkts); };
-  array get_snmpoutpkts() { return OBJ_COUNT(snmpoutpkts); };
-  array get_snmpbadver() { return OBJ_COUNT(snmpbadver); };
-  array get_snmpbadcommnames() { return OBJ_COUNT(snmpbadcommnames); };
-  array get_snmpbadcommuses() { return OBJ_COUNT(snmpbadcommuses); };
-  array get_snmpenaauth() { return OBJ_INT(snmpenaauth); };
+  array get_snmpinpkts() { return OBJ_COUNT(snmpinpkts); }
+  array get_snmpoutpkts() { return OBJ_COUNT(snmpoutpkts); }
+  array get_snmpbadver() { return OBJ_COUNT(snmpbadver); }
+  array get_snmpbadcommnames() { return OBJ_COUNT(snmpbadcommnames); }
+  array get_snmpbadcommuses() { return OBJ_COUNT(snmpbadcommuses); }
+  array get_snmpenaauth() { return OBJ_INT(snmpenaauth); }
 
-  array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); };
+  array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); }
 
+  int get_uptime() { return (time(1) - roxen->start_time)*100; }
+
+//! External function for MIB object 'system.sysContact'
 
   void create() {
     vsdb = ([]);
@@ -263,6 +267,7 @@ class SNMPagent {
       errnum = 5 /*SNMP_ERR_GENERR*/;
       attrname = indices(pdata[msgid]->attribute[0])[0];
       LOG_EVENT("Bad community name", pdata[msgid]);
+      authfailure_trap(pdata[msgid]);
     } else
     foreach(pdata[msgid]->attribute, mapping attrs) {
       mixed attrval = values(attrs)[0];
@@ -292,7 +297,7 @@ class SNMPagent {
 		if(arrayp(val) && sizeof(val))
 		  setflg = val[0];
 		//rdata[attrname] += ({ "int", attrval });
-		rdata["1.3.6.1.2.1.1.3.0"] += get_uptime();
+		rdata["1.3.6.1.2.1.1.3.0"] += OBJ_TICK(get_uptime());
 		if (arrayp(val) && stringp(val[1]))
 		  report_warning(val[1]);
 		break;
@@ -406,8 +411,14 @@ class SNMPagent {
 
     switch (oid) {
 
-	case RISMIB_BASE_WEBSERVER: // a little hack, but only cold start is alowed to use such oid
+	case "0"+RISMIB_BASE_WEBSERVER:		// flagged
+		oid = RISMIB_BASE_WEBSERVER;
 		rtype = 0;
+		break;
+
+	case "4"+RISMIB_BASE_WEBSERVER:		// flagged
+		oid = RISMIB_BASE_WEBSERVER;
+		rtype = 4;
 		break;
 
 	case RISMIB_BASE_WEBSERVER_TRAPG_DOWN:
@@ -425,13 +436,13 @@ class SNMPagent {
 	SNMPAGENT_MSG(sprintf("Trap sent: %s", url));
 	fd->trap( aval,
 			oid, rtype, 0,
-			1, //FIXME: uptime
+			get_uptime(),
 			0, uri->host, uri->port );
       } else {
 	SNMPAGENT_MSG(sprintf("Trap delayed: %s", url));
 	dtraps += ({ ({ aval,
 			oid, rtype, 0,
-			1, //FIXME: uptime
+			get_uptime(),
 			0, uri->host, uri->port }) });
       }
     }
@@ -439,13 +450,11 @@ class SNMPagent {
 
   //! Start notificator.
   void start_trap() {
-
-    x_trap(RISMIB_BASE_WEBSERVER);
+    x_trap("0"+RISMIB_BASE_WEBSERVER);
   }
 
   //! Stop notificator.
   void stop_trap() {
-
     x_trap(RISMIB_BASE_WEBSERVER_TRAPG_DOWN);
   }
 
@@ -465,8 +474,8 @@ class SNMPagent {
   }
 
   //! Authentication failure notificator
-  void authfailure_trap() {
-
+  void authfailure_trap(mapping data) {
+    x_trap("4"+RISMIB_BASE_WEBSERVER);
   }
 
   //! Enterprise specific trap notificator
@@ -488,7 +497,7 @@ class SNMPagent {
 		  fd->trap(
 		    attrvals || ([RISMIB_BASE_WEBSERVER_TRAP_VSEXT+".0": OBJ_STR(vsdb[vsid]->name)]),
 		    RISMIB_BASE_WEBSERVER_TRAP_VSEXT, 6, 0,
-		    1, //FIXME: uptime
+		    get_uptime(),
 		    0,
 		    uri->host, uri->port);
 		}
@@ -771,7 +780,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.18 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.19 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -780,7 +789,7 @@ array get_sysoid() {
 }
 
 //! External function for MIB object 'system.sysUpTime'
-array get_uptime() {
+array get_sysuptime() {
   return OBJ_TICK((time(1) - roxen->start_time)*100);
 }
 
@@ -824,7 +833,7 @@ class SubMIBSystem {
 	  // system.sysObjectID
 	  "2.1.1.2.0": get_sysoid,
 	  // system.sysUpTime
-	  "2.1.1.3.0": get_uptime,
+	  "2.1.1.3.0": get_sysuptime,
 	  // system.sysContact
 	  "2.1.1.4.0": get_syscontact,
 	  // system.sysName
