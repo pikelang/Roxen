@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.14 2000/09/12 21:27:50 per Exp $
+// $Id: module.pmod,v 1.15 2000/09/16 20:23:46 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -94,18 +94,23 @@ class Variable
                         int more_mode,
                         int expert_mode,
                         int devel_mode,
-                        int initial )
+                        int initial,
+                        int|void variable_in_cfif )
     //! Return 1 if this variable should be visible in the
     //! configuration interface. The default implementation check the
     //! 'flags' field, and the invisibility callback, if any. See
     //! get_flags, set_flags and set_invisibibility_check_callback
+    //!
+    //! If variable_in_cfif is true, the variable is in a module
+    //! that is added to the configuration interface itself.
   {
     int flags = get_flags();
     function cb;
-    if( initial && !(flags & VAR_INITIAL) )      return 0;
-    if( (flags & VAR_EXPERT) && !expert_mode )   return 0;
-    if( (flags & VAR_MORE) && !more_mode )       return 0;
-    if( (flags & VAR_DEVELOPER) && !devel_mode ) return 0;
+    if( initial && !(flags & VAR_INITIAL) )          return 0;
+    if( (flags & VAR_EXPERT) && !expert_mode )       return 0;
+    if( (flags & VAR_MORE) && !more_mode )           return 0;
+    if( (flags & VAR_DEVELOPER) && !devel_mode )     return 0;
+    if( (flags & VAR_NOT_CFIF) && variable_in_cfif ) return 0;
     if( (cb = get_invisibility_check_callback() ) && 
         cb( id, this_object() ) )
       return 0;

@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.15 2000/07/04 03:42:42 per Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.16 2000/09/16 20:23:47 per Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -23,7 +23,7 @@ constant module_doc  = "Index files only module, a directory module that will no
 void create()
 {
   defvar("indexfiles", ({ "index.xml", "index.html" }),
-	 "Index files", TYPE_STRING_LIST,
+	 "Index files", TYPE_STRING_LIST|VAR_NOT_CFIF,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of 'no such file'.");
 }

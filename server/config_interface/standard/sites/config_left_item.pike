@@ -115,7 +115,12 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
 
 	 pre += "</table>\n";
 
-         if( config_perm( "Add Module" ) )
+
+         // Do not allow easy addition and removal of modules to and
+         // from the configuration interface server. Most of the time
+         // it's a really bad idea.  Basically, protect the user. :-)
+
+         if( (c != id->conf) && config_perm( "Add Module" ) )
          {
            pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
                         "width='150' bgcolor='&usr.left-buttonbg;' preparse='' "
@@ -131,7 +136,6 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
                                      " </gbutton><br />\n",
                                      Roxen.http_encode_string( c->name ));
          }
-
          break;
       }
       pre += "\n";

@@ -5,8 +5,9 @@
 // set the contenttype to 'text/html'
 
 inherit "module";
+#include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.21 2000/08/15 13:35:15 jhs Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.22 2000/09/16 20:23:48 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";
@@ -22,7 +23,7 @@ void create()
 # Feel free to add to this, but do it after the #include
 # line if you want to override any defaults
 
-#include <etc/extensions>", 0, "Extensions",
+#include <etc/extensions>", VAR_NOT_CFIF, "Extensions",
 #"This is file extension to content type mapping. The format is as
 follows: <table><tr><th>extension</th><th>type</th><th>encoding</th></tr>
 <tr><td>gif</td><td>image/gif</td></tr>
@@ -31,11 +32,12 @@ For a list of types, see <a
 href='ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types'
 >ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types</a>"));
 
-  defvar("default", Variable.String("application/octet-stream", 0,
-				    "Default content type",
-				    "This is the default content type which is "
-				    "used if a file lacks extension or if the "
-				    "extension is unknown.\n"));
+  defvar("default", 
+         Variable.String("application/octet-stream", VAR_NOT_CFIF,
+                         "Default content type",
+                         "This is the default content type which is "
+                         "used if a file lacks extension or if the "
+                         "extension is unknown.\n"));
 }
 
 string status()

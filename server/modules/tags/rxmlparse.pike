@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.50 2000/09/02 00:31:30 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.51 2000/09/16 20:23:49 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -49,18 +49,19 @@ string status()
 void create()
 {
   defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
-	 TYPE_STRING_LIST, "Files with these extensions will be parsed. "
+	 TYPE_STRING_LIST|VAR_NOT_CFIF, 
+         "Files with these extensions will be parsed. "
 	 "Note: This module must be reloaded before a change to this "
 	 "setting take effect.");
 
   defvar("require_exec", 0, "Require exec bit to parse",
-	 TYPE_FLAG|VAR_MORE,
+	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, files has to have a execute bit (any of them) set "
 	 "to be parsed. The exec bit is the one set by "
 	 "<tt>chmod +x filename</tt>");
 
   defvar("parse_exec", 1, "Parse files with exec bit",
-	 TYPE_FLAG|VAR_MORE,
+	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, files with the exec bit set will be parsed. If not set "
 	 "and the <i>Require exec bit to parse</i> option is set, no "
 	 "parsing will occur.");

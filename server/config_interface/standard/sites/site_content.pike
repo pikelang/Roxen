@@ -201,23 +201,34 @@ string buttons( Configuration c, string mn, RequestID id )
 
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
-  string buttons = (current_compile_errors[ mn ] ?
-		    "<font color='&usr.warncolor;'><pre>"+
-                    current_compile_errors[ mn ]+
-		    "</pre></font>" : "" )
-    + "<input type=hidden name=section value='" +
-    (id->variables->section||LOCALE(299,"Information")) + "'>" +
-    "<submit-gbutton preparse>"+LOCALE(253, "Reload")+"</submit-gbutton>"+
-    (sizeof( mod->error_log ) ?
-     "<submit-gbutton preparse>"+LOCALE(247, "Clear Log")+"</submit-gbutton>":"");
+  string buttons = 
+         "<input type=hidden name=section value='" +
+         (id->variables->section||LOCALE(299,"Information")) + "'>";
+  if( current_compile_errors[ mn ] )
+    buttons += 
+            "<font color='&usr.warncolor;'><pre>"+
+            current_compile_errors[ mn ]+
+            "</pre></font>";
+
+  // Do not allow reloading of modules _in_ the configuration interface.
+  // It's not really all that good an idea, I promise.
+  if( c != id->conf )
+    buttons += "<submit-gbutton>"+LOCALE(253, "Reload")+"</submit-gbutton>";
+
+  if( sizeof( mod->error_log ) )
+    buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
 
   if(mod->query_action_buttons)
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
-  return buttons + "<a href='../../../drop_module.pike?config="+
-         path[0]+"&drop="+mn+"'><gbutton preparse>"+
-         LOCALE(252, "Drop Module")+"</gbutton></a>";
+  // Nor is it a good idea to drop configuration interface modules.
+  // It tends to make things rather unstable.
+  if( c != id->conf )
+    buttons += "<a href='../../../drop_module.pike?config="+
+            path[0]+"&drop="+mn+"'><gbutton>"+
+            LOCALE(252, "Drop Module")+"</gbutton></a>";
+  return buttons;
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
@@ -305,7 +316,8 @@ string find_module_doc( string cn, string mn, RequestID id )
     creators = sprintf("<br /><b>Module creator%s:</b> %s",
 		       (sizeof(creators)==1 ? "" : "s"),
 		       String.implode_nicely(creators));
-  } else creators = "";
+  } else 
+    creators = "";
 
 #ifdef THREADS
   mapping accesses = c[m->thread_safe ? "thread_safe" : "locked"];

@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.113 2000/09/12 21:15:29 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.114 2000/09/16 20:23:46 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -341,11 +341,20 @@ string get_var_form( string s, object var, object mod, object id,
   else
     pre = "";
   
+
+  // This test is here insted of in the get_variable_map function for a
+  // good reason: The value might have been changed by a submit that also
+  // changed the value of another variable in such a way that this variable
+  // is no longer visible.
+  //
+  // Thus, we have to do the work above even if the variable will not
+  // be visible
   if( !var->check_visibility( id,
-                              !!config_setting2("more_mode"),
-                              !!config_setting2("expert_mode"),
-                              !config_setting2("devel_mode"),
-                              !!(int)id->variables->initial ) )
+                              config_setting2("more_mode"),
+                              config_setting2("expert_mode"),
+                              config_setting2("devel_mode"),
+                              (int)id->variables->initial,
+                              get_conf( mod ) == id->conf) )
     return 0;
 
   string tmp;
@@ -379,21 +388,16 @@ mapping get_variable_map( string s, object mod, object id, int noset )
   ]);
 }
 
-int var_configurable( Variable.Variable var, object id )
+object get_conf( object mod )
 {
-  return var->check_visibility( id,
-                                config_setting2("more_mode"),
-                                config_setting2("expert_mode"),
-                                config_setting2("devel_mode"),
-                                (int)id->variables->initial);
+  if( mod->my_configuration )
+    return mod->my_configuration();
+  return mod;
 }
 
 mapping get_variable_section( string s, object mod, object id )
 {
   Variable.Variable var = mod->getvar( s );
-
-  if( !var_configurable( var,id ) )
-    return 0;
 
   s = (string)var->name();
   if( !s ) return 0;
@@ -432,6 +436,17 @@ array get_variable_maps( object mod,
                       lambda( mapping q ) {
                         return q->form && strlen(q->sname);
                       } );
+
+
+  // This is true when we are looking at configuration interface
+  // modules.  All variables starting with '_' are related to security
+  // and priority.  Letting the user mess around with these settings
+  // in the configuration interface is highly risky, since it's
+  // trivial to lock oneself out from the interface.
+  if( id->conf == get_conf(mod) )
+    variables = filter( variables,
+                        lambda( mapping q ) { return q->sname[0] != '_'; } );
+
   map( variables, lambda( mapping q ) {
                     if( search( q->form, "<" ) != -1 )
                       q->form=("<font size='-1'>"+q->form+"</font>");
@@ -472,7 +487,21 @@ array get_variable_maps( object mod,
 array get_variable_sections( object mod, mapping m, object id )
 {
   mapping w = ([]);
-  array variables = map(indices(mod->query()),get_variable_section,mod,id);
+  array vm = indices(mod->query());
+  // Also filter the sections when looking at the settings for a module 
+  // in the configuration interface.
+  if( get_conf(mod) == id->conf )
+    vm = filter( vm, lambda( mixed q ) { 
+                       return stringp(q)&&strlen(q)&&(q[0]!='_');
+                     } );
+
+  array variables = map( vm, get_variable_map, mod, id, 1 );
+  variables = filter( variables,
+                      lambda( mapping q ) {
+                        return q->form && strlen(q->sname);
+                      } );
+
+  variables = map(variables->sname,get_variable_section,mod,id);
   variables = Array.filter( variables-({0}),
                        lambda( mapping q ) {
                          return !w[ q->section ]++;

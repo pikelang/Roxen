@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.240 2000/09/15 22:29:11 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.241 2000/09/16 20:23:47 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -18,21 +18,23 @@ constant thread_safe   = 1;
 
 void create()
 {
-  defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
+  defvar("colorparse", 1, "Parse tags for document colors", 
+         TYPE_FLAG|VAR_NOT_CFIF,
 	 "If set, it will use the <i>HTML color wiretrap</i> module to parse "
 	 "figure out the document colors by parsing tags that set colors. "
 	 "If you try to disable the <i>HTML color wiretap</i> module while "
 	 "this option is on, it will be readded every time the "
 	 "<i>Graphis text</i> module is reloaded.");
 
-  defvar("deflen", 300, "Default maximum length of text", TYPE_INT|VAR_MORE,
+  defvar("deflen", 300, "Default maximum length of text", 
+         TYPE_INT|VAR_MORE|VAR_NOT_CFIF,
 	 "Per default, it will not be possible to render texts longer than "
 	 "this. This is a safeguard so that a simple RXML error doesn't "
 	 "cause a huge image to be generated. It can be turned of at a per "
 	 "tag bases, with the <i>maxlen</i> attribute.");
 
   defvar("ext", 0, "Append format to generated images",
-	 TYPE_FLAG|VAR_MORE,
+	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	  "Append the image format (.gif, .png, .gif, etc) to the generated "
 	  "images. This is not necessary, but might seem nicer.");
 }

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.20 2000/09/14 19:10:18 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.21 2000/09/16 20:23:48 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -21,7 +21,7 @@ void create()
 {
   defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
 	 "Tags to parse for color",
-	 TYPE_STRING_LIST,
+	 TYPE_STRING_LIST|VAR_NOT_CFIF,
 	 "Which tags should be parsed for document colors? "
 	 "This will affect documents without gtext as well as documents "
 	 "with it, the parsing time is relative to the number of parsed "
@@ -29,7 +29,7 @@ void create()
 	 "roxen for changes of this variable to take effect.");
 
   defvar("colormode", 0, "Normalize colors in parsed tags",
-         TYPE_FLAG, #"\
+         TYPE_FLAG|VAR_NOT_CFIF, #"\
 If set, replace 'roxen' colors (@c,m,y,k etc) with 'netscape'
 colors (#rrggbb). This means that if this is enabled, Roxen will
 rewrite the parsed tags, which can potentially cause problems with

@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.68 2000/09/15 12:21:13 jhs Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.69 2000/09/16 20:23:48 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -34,24 +34,26 @@ object luser_creds = security.Creds(luser, 0, 0);
 void create()
 {
   defvar("exts", ({ "pike" }), "Extensions",
-         TYPE_STRING_LIST,
+         TYPE_STRING_LIST|VAR_NOT_CFIF,
 	 "The extensions to parse");
 
-  defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
+  defvar("rawauth", 0, "Raw user info", 
+         TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
 	 "Please note that this will give the scripts access to the password "
 	 "used. This is not recommended !");
 
-  defvar("clearpass", 0, "Send decoded password", TYPE_FLAG|VAR_MORE,
+  defvar("clearpass", 0, "Send decoded password", 
+         TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the decoded password value will be sent to the script. "
 	 "This is not recommended !");
 
   defvar("exec-mask", "0777", "Exec mask: Needed",
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
 	 "Only run scripts matching this permission mask");
 
   defvar("noexec-mask", "0000", "Exec mask: Forbidden",
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
 	 "Never run scripts matching this permission mask");
 
   defvar( "autoreload", 1, "Reload scripts automatically",
@@ -71,9 +73,9 @@ void create()
           " Please note that pike modules are currently not automatically "
           "reloaded from disk" );
 #if constant(__builtin.security)
-  defvar( "trusted", 0,
+  defvar( "trusted", 1,
 	  "Pike scripts are trusted",
-	  TYPE_FLAG,
+	  TYPE_FLAG|VAR_NOT_CFIF,
 	  "If this option is true, scripts will be able to do everything "
 	  "the Roxen server can do.");
 #endif /* constant(__builtin.security) */

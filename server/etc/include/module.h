@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.40 2000/08/28 05:31:12 per Exp $
+// $Id: module.h,v 1.41 2000/09/16 20:23:46 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 #include "config.h"
@@ -46,11 +46,11 @@
 #define VAR_TYPE_MASK        255
 
 
-/* Not normally needed. */
 #define VAR_EXPERT         256
 #define VAR_MORE           512
 #define VAR_DEVELOPER     1024
 #define VAR_INITIAL       2048
+#define VAR_NOT_CFIF      4096
 
 #define MOD_ALLOW	         1
 #define MOD_USER	         2
