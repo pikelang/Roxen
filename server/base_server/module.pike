@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.106 2001/01/29 09:04:22 per Exp $
+// $Id: module.pike,v 1.107 2001/01/30 04:51:05 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -162,8 +162,7 @@ string info(Configuration conf)
 
 string sname( )
 {
-  return (my_configuration()->name+"_"+
-	  my_configuration()->otomod[ this_object() ]);
+  return my_configuration()->otomod[ this_object() ];
 }
 
 ModuleInfo my_moduleinfo( )
@@ -545,7 +544,7 @@ void set_my_db( string to )
 
 string get_my_table( string defenition )
 {
-  string res = replace(sname(),"#","_");
+  string res = _my_configuration->name+"_"+replace(sname(),"#","_");
   Sql.Sql sql = get_my_sql();
   if( !sql )
   {
