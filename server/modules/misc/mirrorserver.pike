@@ -71,7 +71,10 @@ void start(int arg, object conf)
     catch
     {
       array a = lower_case(query("port"))/":";
+      object privs = ((program)"privs")("Opening Mirror Server Port: \"" +
+					query("port") + "\"\n");
       server = Server(a[0]!="any"?a[0]:0,(int)a[1]);
+      privs = 0;
       server->provide("mirror", MirrorServer(FakeID(conf),query("base")));
     };
 }
