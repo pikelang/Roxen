@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.201 2000/01/12 13:39:16 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.202 2000/01/30 21:18:46 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -128,23 +128,29 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    font = resolve_font(args->afont+" "+(args->font_size||32));
+    font = resolve_font((args->afont||args->font)+" "+(args->font_size||32));
   else
   {
-    if(!args->nfont) args->nfont = args->font;
     int bold=0, italic=0;
+    if(args->nfont) args->font = args->nfont;
     if(args->bold) bold=1;
     if(args->light) bold=-1;
     if(args->black) bold=2;
     if(args->italic) italic=1;
-    font = get_font(args->nfont||"default",
-                    (int)args->font_size||32,bold,italic,
+    font = get_font(args->font||"default",
+                    (int)(args->font_size||args["font-size"])||32,
+                    bold,
+                    italic,
                     lower_case(args->talign||"left"),
-                    (float)(int)args->xpad, (float)(int)args->ypad);
+                    (float)args->xpad,
+                    (float)args->ypad);
   }
+  if(!font)
+    font = resolve_font(0);
 
   if (!font)
-    error("gtext: No font!\n");
+    error("gtext: No font (tried "+
+          (args->afont||args->font||args->nfont)+ ")!\n");
 
   // Fonts and such are now initialized.
   img = GText.make_text_image(args, font, text, id);
