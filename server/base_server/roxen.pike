@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.316 1999/08/30 09:34:44 per Exp $
+ * $Id: roxen.pike,v 1.317 1999/08/30 09:39:45 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.316 1999/08/30 09:34:44 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.317 1999/08/30 09:39:45 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1369,16 +1369,11 @@ class Codec
 
 program my_compile_file(string file)
 {
-//   if( file_stat( file + ".o" ) )
-//   {
-//     if( catch {
-//       return decode_value( Stdio.read_bytes( file + ".o" ) );
-//     })
-//       rm( file + ".o" );
-//   }
   m_delete( master()->programs, file);
   program p  = (program)( file );
-  if( !file_stat( file+".o" ) )
+  if( !file_stat( file+".o" ) ||
+      file_stat(file+".o")[ST_MTIME] <
+      file_stat(file)[ST_MTIME] )
     if( catch 
     {
       string data = encode_value( p, Codec(p) );
@@ -1390,6 +1385,10 @@ program my_compile_file(string file)
       werror(" [nodump] ");
 #endif
       Stdio.File( file+".o", "wct" );
+    } else {
+#ifdef MODULE_DEBUG
+      werror(" [dump] ");
+#endif
     }
   return p;
 }
