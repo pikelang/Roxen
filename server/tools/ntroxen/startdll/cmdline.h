@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.1 2001/05/29 14:35:40 tomas Exp $
+// $Id: cmdline.h,v 1.2 2001/06/18 16:35:15 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -75,6 +75,7 @@ public:
   void PrintHelp();
 
   BOOL IsInstall()  { return m_bInstall; }
+  BOOL IsRegister() { return m_bRegister; }
   BOOL IsRemove()   { return m_bRemove; }
   BOOL IsOnce()     { return m_bOnce; }
   BOOL IsHelp()     { return m_bHelp; }
@@ -108,6 +109,7 @@ private:
   BOOL m_bPreloaded;
 
   BOOL m_bInstall;
+  BOOL m_bRegister;
   BOOL m_bRemove;
   BOOL m_bOnce;
   BOOL m_bHelp;

@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.1 2001/05/29 14:35:39 tomas Exp $
+// $Id: cmdline.cpp,v 1.2 2001/06/18 16:35:15 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -738,6 +738,16 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--install", NULL, NULL) )
   {
     m_bInstall = TRUE;
+    type = eArgStart;
+    return 1;
+  }
+
+  //'-install'|'--install')
+  //
+  if (Match(*argv, "-register", NULL, NULL) ||
+      Match(*argv, "--register", NULL, NULL) )
+  {
+    m_bRegister = TRUE;
     type = eArgStart;
     return 1;
   }

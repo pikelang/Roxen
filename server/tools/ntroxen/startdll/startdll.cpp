@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.2 2001/06/12 09:26:08 tomas Exp $
+// $Id: startdll.cpp,v 1.3 2001/06/18 16:35:16 tomas Exp $
 //
 
 
@@ -89,7 +89,7 @@ inline HRESULT CServiceModule::RegisterServer(BOOL bRegTypeLib, BOOL bService)
     
     if (bService)
     {
-        key.SetValue(_T("startdll"), _T("LocalService"));
+        key.SetValue(_T("ntstart"), _T("LocalService"));
         key.SetValue(_T("-Service"), _T("ServiceParameters"));
         // Create service
         Install();
@@ -120,9 +120,10 @@ inline HRESULT CServiceModule::UnregisterServer()
 
 inline void CServiceModule::Init(_ATL_OBJMAP_ENTRY* p, HINSTANCE h, UINT nServiceNameID, UINT nServiceDescID, const GUID* plibid)
 {
-    HINSTANCE hInstApp = GetModuleHandle(NULL);
+    //HINSTANCE hInstApp = GetModuleHandle(NULL);
 
-    CComModule::Init(p, hInstApp, plibid);
+    //CComModule::Init(p, hInstApp, plibid);
+    CComModule::Init(p, hInstance, plibid);
 
     m_bService = TRUE;
 
@@ -198,7 +199,15 @@ inline BOOL CServiceModule::Install()
 
     SERVICE_DESCRIPTION desc;
     desc.lpDescription = m_szServiceDesc;
-    ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &desc);
+    HMODULE hAdvapi32 = GetModuleHandle("Advapi32");
+    if (hAdvapi32 != NULL)
+    {
+      typedef BOOL (__stdcall *tChangeServiceConfig2)(SC_HANDLE hService, DWORD dwInfoLevel, LPVOID lpInfo);
+
+      tChangeServiceConfig2 ChangeServiceConfig2 = (tChangeServiceConfig2)GetProcAddress(hAdvapi32, "ChangeServiceConfig2A");
+      if (ChangeServiceConfig2 != NULL)
+        ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &desc);
+    }
 
     ::CloseServiceHandle(hService);
     ::CloseServiceHandle(hSCM);
@@ -758,6 +767,8 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     if (cmdline.IsInstall())
       return _Module.RegisterServer(TRUE, TRUE);
+	else if (cmdline.IsRegister())
+      return _Module.RegisterServer(TRUE, FALSE);
 
     if (cmdline.IsRemove())
       return _Module.UnregisterServer();
