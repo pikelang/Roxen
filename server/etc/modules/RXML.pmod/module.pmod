@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.227 2001/08/21 18:03:55 mast Exp $
+// $Id: module.pmod,v 1.228 2001/08/21 21:50:26 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3363,6 +3363,16 @@ class Frame
 	      else
 		foreach (indices (raw_args), string arg) {
 		  Type t = atypes[arg] || tag->def_arg_type;
+
+		  // Temporary debug check.
+		  if (!stringp (raw_args[arg]))
+		    error ("%O: raw_args[%O] not a string:\n"
+			   "raw_args: %O\n"
+			   "atypes: %O\n"
+			   "raw_args == atypes: %O\n",
+			   this_object(), arg, raw_args, atypes,
+			   [mapping] raw_args == [mapping] atypes);
+
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
@@ -5431,7 +5441,10 @@ class Type
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf() {return "RXML.Type(" + this_object()->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.Type(" + this_object()->name + ", " +
+      parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 static class PCacheObj
@@ -5474,7 +5487,7 @@ static class TAny
     return val;
   }
 
-  string _sprintf() {return "RXML.t_any" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TNil t_nil = TNil();
@@ -5510,7 +5523,7 @@ static class TNil
 
   int subtype_of (Type other) {return 1;}
 
-  string _sprintf() {return "RXML.t_nil" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TSame t_same = TSame();
@@ -5522,7 +5535,7 @@ static class TSame
   constant name = "same";
   Type supertype = t_any;
   constant conversion_type = 0;
-  string _sprintf() {return "RXML.t_same" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TType t_type = TType();
@@ -5567,7 +5580,7 @@ static class TType
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TParser t_parser = TParser();
@@ -5609,7 +5622,7 @@ static class TParser
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_parser" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -5653,7 +5666,7 @@ static class TScalar
     return [string|int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_scalar" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TNum t_num = TNum();
@@ -5697,7 +5710,7 @@ static class TNum
     return [int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_num" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TInt t_int = TInt();
@@ -5738,7 +5751,7 @@ static class TInt
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_int" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TFloat t_float = TFloat();
@@ -5779,7 +5792,7 @@ static class TFloat
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_float" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TString t_string = TString();
@@ -5842,7 +5855,7 @@ static class TString
   string capitalize (string val) {return String.capitalize (val);}
   //! Converts the first literal character in @[val] to uppercase.
 
-  string _sprintf() {return "RXML.t_string" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 // Text types:
@@ -5873,7 +5886,7 @@ static class TAnyText
   constant free_text = 1;
   constant handle_literals = 0;
 
-  string _sprintf() {return "RXML.t_any_text" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TText t_text = TText();
@@ -5901,7 +5914,7 @@ static class TText
 		 format_short (val), name, describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TXml t_xml = TXml();
@@ -6052,7 +6065,7 @@ static class TXml
     return "&" + entity + ";";
   }
 
-  string _sprintf() {return "RXML.t_xml" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 THtml t_html = THtml();
@@ -6074,7 +6087,7 @@ static class THtml
 
   constant decode = 0;		// Cover it; not needed here.
 
-  string _sprintf() {return "RXML.t_html" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 
