@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.125 2001/08/28 14:55:08 per Exp $
+// $Id: site_content.pike,v 1.126 2001/08/28 16:32:58 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -493,7 +493,10 @@ string parse( RequestID id )
 
      case "Ports":
        string res = "<br />\n<blockquote>"
-	 "<input type=hidden name='section' value='Ports' />";
+	 "<input type=hidden name='section' value='Ports' />"
+	 "<cfg-variables source='config-variables' "
+	 " configuration='"+path[0]+"' section='Ports'/>";
+       
        foreach( conf->query( "URLs" ), string url )
        {
 	 res += port_for( url, 1 );
