@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.229 2001/05/17 22:40:38 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.230 2001/05/22 18:16:47 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -357,7 +357,18 @@ class TagRedirect {
 
     array do_return(RequestID id) {
       multiset(string) prestate = (<>);
-      if(!has_value(args->to, "://") && !args["drop-all"])
+
+      if(has_value(args->to, "://")) {
+	if(args->add || args->drop || args["drop-all"]) {
+	  string prot, domain, pre, rest;
+	  if(sscanf(args->to, "%s://%s/(%s)/%s", prot, domain, pre, rest) == 4) {
+	    if(!args["drop-all"])
+	      prestate = (multiset)(pre/",");
+	    args->to = prot + "://" + domain + "/" + rest;
+	  }
+	}
+      }
+      else if(!args["drop-all"])
 	prestate += id->prestate;
 
       if(args->add)
@@ -2068,13 +2079,13 @@ class UserTag {
     string user_tag_contents;
 
     array do_return(RequestID id) {
-      mapping nargs=defaults+args;
+      mapping nargs = defaults+args;
       id->misc->last_tag_args = nargs;
-      scope_name=scope||name;
+      scope_name = scope||name;
       vars = nargs;
 
-      if(!(RXML.FLAG_EMPTY_ELEMENT&flags) && args->trimwhites)
-	content=String.trim_all_whites(content);
+      if(content && args->trimwhites)
+	content = String.trim_all_whites(content);
 
 #if ROXEN_COMPAT <= 1.3
       if(id->conf->old_rxml_compat) {
@@ -2126,7 +2137,7 @@ class TagDefine {
       string n;
 
       if(n=args->variable) {
-	if(args->trimwhites) content=String.trim_all_whites(content);
+	if(args->trimwhites) content=String.trim_all_whites((string)content);
 	RXML.user_set_var(n, content, args->scope);
 	return 0;
       }
@@ -2154,13 +2165,27 @@ class TagDefine {
 		m_delete( args, arg );
 	      }
 #endif
-	content=parse_html(content||"",([]),
-			   (["attrib":
-			     lambda(string tag, mapping m, string cont) {
-			       if(m->name) defaults[m->name]=Roxen.parse_rxml(cont,id);
-			       return "";
-			     }
-			   ]));
+
+
+	if(!content) content = "";
+
+	string add_default(Parser.HTML p, mapping m, string c) {
+	  if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
+	  return "";
+	};
+
+	if( id->conf->query("compat_level") > "2.1" ) {
+	  string want, rest, attrib="";
+	  while( sscanf(content, "%*[ \t\n\r]<attrib%s</attrib%*[ \t\n\r]>%s",
+			want, rest)==4 ) {
+	    attrib += "<attrib" + want + "</attrib>";
+	    content = rest;
+	  }
+	  Parser.HTML()->add_container("attrib", add_default)->finish(attrib);
+	}
+	else
+	  content = Parser.HTML()->add_container("attrib", add_default)->
+	    finish(content)->read();
 
 	if(args->trimwhites) {
 	  content=String.trim_all_whites(content);
@@ -2217,12 +2242,10 @@ class TagUndefine {
 	return 0;
       }
 
-#if ROXEN_COMPAT <= 1.3
       if (n=args->name) {
 	m_delete(id->misc->defines, args->name);
 	return 0;
       }
-#endif
 
       parse_error("No tag, variable, if or container specified.\n");
     }
@@ -5097,9 +5120,16 @@ using the pre tag.
 Roxen#Pike#Foo#Bar#roxen.com
 </random>
 </ex>
+</attr>
 
 <attr name='seed' value='string'>
-Enables you to use a seed that determines which message to choose.
+ <p>Enables you to use a seed that determines which message to choose.</p>
+
+<ex type='box'>
+Tip of the day:
+<set variable='var.day'><date type='iso' date=''/></set>
+<random seed='var.day'><insert file='tips.txt'/></random>
+</ex>
 </attr>
 ",
 
@@ -5107,7 +5137,10 @@ Enables you to use a seed that determines which message to choose.
 
 "redirect":#"<desc tag='tag'><p><short hide='hide'>
  Redirects the user to another page.</short> Redirects the user to
- another page by sending a HTTP redirect header to the client.
+ another page by sending a HTTP redirect header to the client. If the
+ redirect is local, i.e. within the server, all prestates are preserved.
+ E.g. \"/index.html\" and \"index.html\" preserves the prestates, while
+ \"http://server.com/index.html\" does not.
 </p></desc>
 
 <attr name=to value=URL required='required'>
@@ -5122,6 +5155,10 @@ Enables you to use a seed that determines which message to choose.
 <attr name=drop value=string>
  <p>The prestate or prestates that should be dropped, in a comma separated
  list.</p>
+</attr>
+
+<attr name='drop-all'>
+ <p>Removes all prestates from the redirect target.</p>
 </attr>
 
 <attr name=text value=string>
@@ -5853,9 +5890,10 @@ load.</p>
 
 	    ([
 "attrib":#"<desc cont='cont'><p>
- When defining a tag or a container the container <tag>attrib</tag>
+ When defining a tag or a container the tag <tag>attrib</tag>
  can be used to define default values of the attributes that the
- tag/container can have.</p>
+ tag/container can have. The attrib tag must be the first tag(s)
+ in the define tag.</p>
 </desc>
 
  <attr name='name' value='name'><p>
