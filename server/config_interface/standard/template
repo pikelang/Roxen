@@ -7,7 +7,6 @@
   <cset quote="none" variable="var.__contents">&_.contents:none;</cset>
 </define>
 
-
 <define container="cv-leftside">
   <cset quote="none" variable="var.leftside">&_.contents:none;</cset>
 </define>
@@ -71,30 +70,27 @@
 </define>
 
 <define tag="topmenu">
- <attrib name="base"></attrib><attrib name="selected">home</attrib>
- <cset quote="none" variable="var._top_content" preparse="1"><insert file="/standard/topmenu.pike" nocache="1" /></cset>
+ <attrib name="base"></attrib>
+ <attrib name="selected">home</attrib>
+ <cset variable="var._top_content"><insert file="/standard/topmenu.pike" nocache="1" /></define>
 </define>
 
 <define container="submit-gbutton" default_align=baseline>
 <attrib name="align">baseline</attrib>
-  <cset variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="1">&_.contents:none;</gbutton-url></cset>
+  <cset variable="var.url"><gbutton-url font="&usr.gbutton-font;" preparse="1">&_.contents:none;</gbutton-url></cset>
    <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
-<define tag="cf-ok">
-   <submit-gbutton> &locale.ok; </submit-gbutton>
-</define>
-
-<define tag="cf-cancel">
-   <gbutton preparse="1" href="&_.href;"> &locale.cancel; </gbutton>
-</define>
+<define tag="cf-save"> <submit-gbutton align="right"> &locale.save; </submit-gbutton> </define>
+<define tag="cf-ok"> <submit-gbutton> &locale.ok; </submit-gbutton> </define>
+<define tag="cf-cancel"> <gbutton preparse="1" href="&_.href;"> &locale.cancel; </gbutton> </define>
 
 <define tag="cf-next">
    <comment> FIXME: gbutton should handle HTML entities </comment>
    <submit-gbutton preparse="1" href="&_.href;"> &locale.next; > </submit-gbutton>
 </define>
 
-<define container="content"><cset quote="none" preparse="1" variable="var.content">&_.contents:none;</cset></define>
+<define container="content"><cset quote="none" variable="var.content">&_.contents:none;</cset></define>
 
 <define container="tmpl">
 <title>&roxen.version; &locale.administration_interface; &_.title;</title>
@@ -106,7 +102,7 @@
   <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1">
-  &_.contents:none;
+   &_.contents:none;
 </nooutput>
   <body ::="&usr.body-args:none;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -160,8 +156,4 @@
     <b><font size="-1">&roxen.version; / &roxen.pike-version;</font></b>
     </p>
  </body>
-</define>
-
-<define tag="cf-save">
-  <submit-gbutton align="right"> &locale.save; </submit-gbutton>
 </define>
