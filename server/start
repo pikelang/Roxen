@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.81 1999/11/19 01:24:52 marcus Exp $
+# $Id: start,v 1.82 1999/11/24 17:33:16 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -64,7 +64,7 @@ gdb=no
 remove_old_dot_o_files () {
   echo "$pre Removing old .o files ($1)"
   > "$roxendir/.remove_dumped_mark"
-  find . -name '*.o' | xargs rm -f
+  find precompiled -name '*.o' | xargs rm -f
 }
 
 
