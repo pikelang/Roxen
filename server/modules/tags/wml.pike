@@ -8,7 +8,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.13 2000/11/09 18:19:15 kuntri Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.14 2000/12/22 21:58:23 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "WAP WML helper";
@@ -48,7 +48,7 @@ class wap_1_1 {
   constant mime=(["wml":"text/vnd.wap.wml",
 	       "wbmp":"image/vnd.wap.wbmp"]);
   constant header="<?xml version=\"1.0\"?>"
-  "<!DOCTYPE WML PUBLIC \"-//WAPFORUM//DTD WML 1.1//EN\" \"http://www.wapforum.org/DTD/wml_1.1.xml\">";
+  "<!DOCTYPE wml PUBLIC \"-//WAPFORUM//DTD WML 1.1//EN\" \"http://www.wapforum.org/DTD/wml_1.1.xml\">";
 
   string convert_up(string wml, void|RequestID id) {
     object xp = spider.XML();
