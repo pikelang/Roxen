@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.55 2000/01/20 19:21:55 grubba Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.56 2000/02/04 15:39:40 grubba Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -122,11 +122,17 @@ array|mapping call_script(function fun, object got, object file)
 #if constant(__builtin.security)
   if (!QUERY(trusted)) {
     // EXPERIMENTAL: Call with low credentials.
-    err = catch(result = call_with_creds(luser_creds, fun, got)); 
+    // werror(sprintf("call_script(): Calling %O with creds.\n", fun));
+    err = catch {
+      result = call_with_creds(luser_creds, fun, got);
+      // werror(sprintf("call_with_creds() succeeded; result = %O\n", result));
+    };
   } else
-#else /* !constant(__builtin.security) */
-    err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
+    err = catch {
+      result = fun(got);
+      // werror(sprintf("calling of script succeeded; result = %O\n", result));
+    }; 
 
   // werror("call_script() err: %O result:%O\n", err, result);
 
@@ -221,7 +227,10 @@ mapping handle_file_extension(object f, string e, object got)
     }
 
 #if constant(__builtin.security)
-    luser_creds->apply(p);
+    if (!QUERY(trusted)) {
+      // EXPERIMENTAL: Lower the credentials.
+      luser_creds->apply(p);
+    }
 #endif /* constant(__builtin_security) */
 
     o=p();
