@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.14 1999/10/05 10:39:37 peter Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.15 1999/10/05 14:07:23 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -210,6 +210,7 @@ string tag_redirect(string tag, mapping m, object id)
 }
 
 /* It is spelled referer according to the http spec... */
+// It is however spelt referrer in the dictionary.
 string|array(string) tag_referrer(string tag, mapping m, object id)
 {
   NOCACHE();
@@ -221,7 +222,7 @@ string|array(string) tag_referrer(string tag, mapping m, object id)
   if(m->help) 
     return ("Shows from which page the client linked to this one.");
 
-  return ({ sizeof(id->referer) ? ({id->referer*""}) : m->alt || "" });
+  return ({ sizeof(id->referer) ? id->referer*"" : m->alt || "" });
 }
 
 array(string) tag_scope(string tag, mapping m, string contents, object id)
