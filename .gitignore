@@ -30,6 +30,7 @@ _$*
 *.elc
 *.ln
 core
+/argument_cache
 /build
 /config.cache
 /config.log
