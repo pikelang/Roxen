@@ -1,3 +1,17 @@
+Changes since last version
+-----------------------------------------------
+
+o Fixed NULL-file security problem.
+
+
+Changes since Roxen 2.0.52
+-----------------------------------------------
+
+o New NT build.
+
+o Fixes of the update client.
+
+
 Changes since Roxen 2.0.50
 -----------------------------------------------
 
