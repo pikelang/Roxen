@@ -88,7 +88,7 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-            <gtext bgcolor="&usr.fade3;" font='&usr.font;' fgcolor=black scale=0.45 hspace=3>Language:</gtext>
+            <gtext bgcolor="&usr.fade3;" font='&usr.font;' fgcolor='&usr.fgcolor;' scale=0.45 hspace=3>Language:</gtext>
           </td><td><font color=black>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
@@ -98,9 +98,9 @@
           </configif-output></font>
           </tr>
          </cf-userwants>
-         <tr><td align=right><font color=black>
+         <tr><td align=right><font color=&usr.fgcolor;>
          <gbutton font="&usr.font;" href='/standard/change_user.html?uid=&form.config_user_uid;'
-                  align=right textcolor=black bgcolor='&usr.fade3;' width=70>User:</gbutton>
+                  align=right textcolor=&usr.fgcolor; bgcolor='&usr.fade3;' width=70>User:</gbutton>
           </td><td>
             <font color=&usr.fade4;>
                &form.config_user_name; (&form.config_user_uid;)
