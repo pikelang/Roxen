@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.153 1998/09/21 16:29:40 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.154 1998/12/30 00:12:43 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -765,8 +765,10 @@ array get_cache_file(string a, string b)
 {
   object fd = open(FNAME(a,b), "r");
   if(!fd) return 0;
-  array r = decode_value(fd->read());
-  if(r[0]==a && r[1]==b) return r[2];
+  catch {
+    array r = decode_value(fd->read());
+    if(r[0]==a && r[1]==b) return r[2];
+  };
 }
 
 void store_cache_file(string a, string b, array data)
