@@ -1,4 +1,4 @@
-dnl     $Id: configure.in,v 1.2 1997/04/09 02:06:00 grubba Exp $
+dnl     $Id: configure.in,v 1.3 1997/05/26 00:52:51 grubba Exp $
 dnl
 dnl     This file is an input file used by the GNU "autoconf" program to
 dnl     generate the file "configure", which is run during the build
@@ -22,6 +22,7 @@ AC_EGREP_HEADER(sun_len, sys/un.h, AC_DEFINE(HAVE_SOCKADDR_UN_SUN_LEN))
 #--------------------------------------------------------------------
 #  What extra libraries do we need for this platform?
 #--------------------------------------------------------------------
+AC_CHECK_LIB(bind, __inet_ntoa, [LIBS="$LIBS -lbind"])
 AC_CHECK_LIB(socket, main, [LIBS="$LIBS -lsocket"])
 AC_CHECK_LIB(nsl, main, [LIBS="$LIBS -lnsl"])
 AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
