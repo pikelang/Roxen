@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.84 1997/12/13 16:40:05 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.85 1997/12/15 01:25:53 grubba Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -1273,10 +1273,22 @@ mapping configuration_parse(object id)
     // The URL is http://config-url/, not one of the top nodes, but
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
+
+    // We also need to determine wether this is the full or the
+    // lobotomized international version.
+
+    int full_version=0;
+    catch {
+      if (sizeof(indices(master()->resolv("_Crypto")))) {
+	full_version = 1;
+      }
+    };
+
     return http_string_answer(default_head("Roxen Challenger")+
 			      status_row(root)+
 			      display_tabular_header(root)+
-			      read_bytes("etc/config.html"),"text/html");
+			      read_bytes(full_version?"etc/config.html":
+					 "etc/config.int.html"), "text/html");
   }
   
   if(sizeof(id->prestate))
