@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.86 1997/12/15 02:04:49 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.87 1997/12/15 20:06:19 peter Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -575,6 +575,12 @@ string describe_config_modules(array mods)
   foreach(mods, string mod)
   {
     sscanf(mod, "%s#", mod);
+    if(!roxen->allmodules)
+    {
+      werror("CONFIG: Rescanning modules (doc string).\n");
+      roxen->rescan_modules();
+      werror("CONFIG: Done.\n");
+    }
     if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'\n";
     else res += "<li>"+roxen->allmodules[mod][0]+"\n";
   }
@@ -586,12 +592,10 @@ string configuration_docs()
   string res="";
   foreach(get_dir("server_templates"), string c)
   {
-    catch {
-      if(c[-1]=='e' || c[0]!='#')
+      if( c-".pike" != c )
 	res += ("<dt><b>"+get_template(c)->name+"</b>\n"+
 		"<dd>"+get_template(c)->desc+"<br>\n"+
 		describe_config_modules(get_template(c)->modules) + "\n");
-    };
   }
   return res;
 }
@@ -766,9 +770,8 @@ string ot;
 object oT;
 object get_template(string t)
 {
-  t-=".pike";
   if(ot==t) return oT; ot=t;
-  return (oT=compile_file("server_templates/"+t+".pike")());
+  return (oT = compile_file("server_templates/"+t)());
 }
 
 int check_config_name(string name)
