@@ -2,7 +2,7 @@
 
 array pages =
 ({
-  ({ "dbs",         "./", "Edit Global Variables", 0, "Databases" }),
+  ({ "dbs",         "./", "View Settings", 0, "Databases" }),
   ({ "backups",      "backups.html",   "Edit Global Variables",   0,
      "Database Backups" }),
   ({ "status",      "status.html",   "View Settings",   0,  "MySQL status" }),
