@@ -1,12 +1,7 @@
-/*
- * $Id: tablist.pike,v 1.27 1999/11/27 07:51:05 per Exp $
- *
- * Makes a tab list like the one in the config interface.
- *
- * $Author: per $
- */
+// This is a roxen module. Copyright © 1997-1999, Idonex AB.
+// Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.27 1999/11/27 07:51:05 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.28 1999/12/08 19:29:22 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,10 +21,13 @@ void start()
 
 array register_module()
 {
-  return ( ({ MODULE_PARSER, "Tab list",
-	      "Adds some tags for making a config interface "
-	      "look-alike tab list.<br>\n"
-	      "Usage:<br>\n"
+  return ({ MODULE_PARSER, "Tab list", "Adds some tags for making tab lists.", 0, 1 });
+}
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["tablist":({ "<desc cont>Tab list</desc>", (["tab":"<desc cont>Tab</desc>"]) }) ]);
+/*
 	      "<ul><pre>&lt;tablist&gt;\n"
 	      "&lt;tab href=\"/tab1/\"&gt;Some text&lt;/tab&gt;\n"
 	      "&lt;tab href=\"/tab2/\"&gt;Some more text&lt;/tab&gt;\n"
@@ -58,8 +56,9 @@ array register_module()
               "<br>The bgcolor, selcolor, dimcolor, textcolor and noxml "
 	      "attribute can also be given in the tablist tag as global "
 	      "attributes. Using color arguments in a tab tag will overide "
-	      "the global setting.", 0, 1 }));
-}
+	      "the global setting."
+ */
+#endif
 
 string internal_tag_tab(string t, mapping a, string contents, mapping d,
                         RequestID id)

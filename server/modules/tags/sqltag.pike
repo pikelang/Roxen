@@ -1,16 +1,13 @@
-/* 
- * $Id: sqltag.pike,v 1.40 1999/11/23 14:19:35 grubba Exp $
- *
- * A module for Roxen Challenger, which gives the tags
- * <sqltable>, <sqlquery> and <sqloutput>.
- *
- * Henrik Grubbström 1997-01-12
- */
+// This is a roxen module. Copyright © 1997-1999, Idonex AB.
+//
+// A module for Roxen Challenger, which gives the tags
+// <sqltable>, <sqlquery> and <sqloutput>.
+//
+// Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.40 1999/11/23 14:19:35 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.41 1999/12/08 19:28:20 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
-#define old_rxml_compat 1
 
 // Compatibility with old versions of the sqltag module.
 // #define SQL_TAG_COMPAT
@@ -20,17 +17,25 @@ inherit "roxenlib";
 
 import Sql;
 
-object conf;
+Configuration conf;
 
 
 // Module interface functions
 
 array register_module()
 {
-  return( ({ MODULE_PARSER|MODULE_PROVIDER,
-	     "SQL module",
-	     "This module gives the three tags &lt;SQLQUERY&gt;, "
-	     "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
+  return ({ MODULE_PARSER|MODULE_PROVIDER,
+	    "SQL module",
+	    "This module gives the three tags &lt;SQLQUERY&gt;, "
+	    "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n",
+	    0, 1 });
+}
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["sqltable":"<desc tag>SQL table</desc>",
+  "sqlquery":"<desc tag>SQL query</desc>","sqloutput":"<desc cont>SQL output</desc>"]);
+/*
 	     "Usage:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
@@ -80,10 +85,9 @@ array register_module()
 	     "to be a security hole if the module is not loaded for some "
 	     "reason.<br>\n"
 	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
-	     "useful to generate the queries.<br>\n",
-	     0,
-	     1 }) );
-}
+	     "useful to generate the queries.<br>\n"
+ */
+#endif
 
 array|string|object do_sql_query(string tag, mapping args, RequestID id)
 {
