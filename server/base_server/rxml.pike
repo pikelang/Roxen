@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.43 1999/12/08 02:31:53 mast Exp $
+ * $Id: rxml.pike,v 1.44 1999/12/08 12:24:11 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -338,7 +338,7 @@ string parse_rxml(string what, RequestID id,
   }
   id->misc->defines = defines;
 
-  what = do_parse(what, id, file||id->my_fd, defines, id->my_fd);
+  what = do_parse(what, id, file, defines, 0);
 
   if(sizeof(_extra_heads) && !id->misc->moreheads)
   {
@@ -409,7 +409,7 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
 	string tr;
 	catch(tr=call_tag(tag, (["help":"help"]), 
 				    id->misc->line,i,
-				    id, f, id->misc->defines, id->my_fd ));
+				    id, f, id->misc->defines, 0 ));
 	if(tr) res += tr; else res += "no help";
 	res += "</td></tr></table></blockquote>";
       }
@@ -428,7 +428,7 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
 	string tr;
 	catch(tr=call_container(tag, (["help":"help"]), "",
 				id->misc->line,
-				i, id,f, id->misc->defines, id->my_fd ));
+				i, id,f, id->misc->defines, 0 ));
 	if(tr) res += tr; else res += "no help";
 	res += "</td></tr></table></blockquote>";
       }

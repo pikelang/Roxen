@@ -35,7 +35,7 @@ mixed `->(string a)
    case "clone_me": return clone_me;
    case "send_result": return send_result;
    case "my_fd":
-     //       return 0;
+     werror(describe_backtrace( backtrace()) );
      object o = Stdio.File();
      o->_fd = orig::`->("my_fd");
      return o;
