@@ -4,8 +4,9 @@
 #include <stat.h>
 #include <config.h>
 #include <module.h>
+#include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.59 2003/04/22 13:48:24 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.60 2003/06/02 12:05:31 grubba Exp $";
 
 class Variable
 {
@@ -210,7 +211,8 @@ class Configuration
   string comment();
   void unregister_urls();
   void stop(void|int asynch);
-  string type_from_filename( string file, int|void to, string|void myext );
+  string|array(string) type_from_filename( string file, int|void to,
+					   string|void myext );
 
   string get_url();
 
@@ -1026,6 +1028,219 @@ class RequestID
   }
 }
 
+#if constant(Parser.XML.Tree.XMLNSParser)
+
+class XMLStatusNode
+{
+  inherit Parser.XML.Tree.Node;
+  static void create(int|string code)
+  {
+    if (intp(code)) {
+      code = sprintf("HTTP/1.1 %d %s", code,
+		     errors[code]||"Unknown status");
+    }
+    ::create(Parser.XML.Tree.XML_ELEMENT,
+	     "DAV:status", ([]), "", "DAV:status");
+    add_child(Parser.XML.Tree.Node(Parser.XML.Tree.XML_TEXT,
+				   "", 0, code));
+  }
+}
+
+class XMLPropStatNode
+{
+  inherit Parser.XML.Tree.Node;
+
+  static constant Node = Parser.XML.Tree.Node;
+
+  static mapping(string:string|Node) properties = ([]);
+  static multiset(string) descriptions = (<>);
+
+  array(Node) get_children()
+  {
+    Node prop_node;
+    foreach(::get_children(), Node n) {
+      if ((n->get_node_type() == Parser.XML.Tree.XML_ELEMENT) &&
+	  (n->get_full_name() == "DAV:prop")) {
+	prop_node = n;
+      }
+    }
+    prop_node->
+      replace_children(map(indices(properties),
+			   lambda(string prop_name) {
+			     string|Node value = properties[prop_name];
+			     if (stringp(value)) {
+			       value = Node(Parser.XML.Tree.XML_TEXT,
+					    "", 0, value);
+			     }
+			     Node n = Node(Parser.XML.Tree.XML_ELEMENT,
+					   prop_name, ([]), "", prop_name);
+			     if (value) {
+			       n->replace_children(({ value }));
+			     }
+			     return n;
+			   }));
+    if (sizeof(descriptions)) {
+      Node n = Node(Parser.XML.Tree.XML_ELEMENT,
+		    "DAV:responsedescription", ([]), "",
+		    "DAV:responsedescription");
+      n->add_child(Node(Parser.XML.Tree.XML_TEXT, "", 0,
+			indices(descriptions)*"\n"));
+      add_child(n);
+    }
+    return ::get_children();
+  }
+
+  void add_property(string prop_name, string|Node value)
+  {
+    properties[prop_name] = value;
+  }
+
+  void add_description(string description)
+  {
+    descriptions[description] = 1;
+  }
+
+  int http_code;
+
+  static void create(int|void code)
+  {
+    http_code = code || 200;
+
+    ::create(Parser.XML.Tree.XML_ELEMENT,
+	     "DAV:propstat", ([]), "",
+	     "DAV:propstat");
+    add_child(Node(Parser.XML.Tree.XML_ELEMENT,
+		   "DAV:prop", ([]), "",
+		   "DAV:prop"));
+    add_child(XMLStatusNode(http_code));
+  }
+}
+
+class MultiStatus
+{
+  static constant Node = Parser.XML.Tree.Node;
+  static mapping(string:array(Node)) status_set = ([]);
+
+  void add_response(string href, Node response_node)
+  {
+    if (!status_set[href]) {
+      status_set[href] = ({ response_node });
+    } else {
+      status_set[href] += ({ response_node });
+    }
+  }
+
+  //! Add DAV:propstat information about the property @[prop_name] for
+  //! the resource @[href].
+  //!
+  //! @param prop_value
+  //!   Optional property value. It can be one of the following:
+  //!   @mixed prop_value
+  //!     @type void|int(0..0)
+  //!       Operation performed ok, no value.
+  //!     @type string|Node
+  //!       Property has value @[prop_value].
+  //!     @type mapping(string:mixed)
+  //!       Operation failed as described by the mapping.
+  //!   @endmixed
+  void add_property(string href, string prop_name,
+		    void|int(0..0)|string|Node|mapping(string:mixed)
+		    prop_value)
+  {
+    array(XMLStatusNode) stat_nodes;
+    XMLStatusNode stat_node;
+    int code = mappingp(prop_value)?prop_value->error:200;
+
+    werror("Adding property %O code:%O val:%O\n", prop_name, code, prop_value);
+    if (!(stat_nodes = status_set[href])) {
+      status_set[href] = ({ stat_node = XMLPropStatNode(code) });
+    } else {
+      foreach(stat_nodes, Node n) {
+	if (n->http_code == code) {
+	  stat_node = n;
+	  break;
+	}
+      }
+      if (!stat_node) {
+	status_set[href] += ({ stat_node = XMLPropStatNode(code) });
+      }
+    }
+    if (mappingp(prop_value)) {
+      // FIXME: Add a global error description?
+      stat_node->add_description(prop_value->data);
+      prop_value = 0;
+    }
+    stat_node->add_property(prop_name, prop_value);
+  }
+
+  Node get_xml_node()
+  {
+    Node root =
+      Parser.XML.Tree.parse_input("<?xml version='1.0' encoding='utf-8'?>\n"
+				  "<DAV:multistatus xmlns:DAV='DAV:'>\n"
+				  "</DAV:multistatus>");
+    array(Node) response_xml = allocate(sizeof(status_set));
+    int i;
+
+    werror("Generating XML Nodes for status_set:%O\n",
+	   status_set);
+
+    foreach(status_set; string href; array(Node) responses) {
+      Node href_node = Node(Parser.XML.Tree.XML_ELEMENT,
+			    "DAV:href", ([]), "", "DAV:href");
+      href_node->add_child(Node(Parser.XML.Tree.XML_TEXT, "", 0, href));
+      (response_xml[i++] =
+	Node(Parser.XML.Tree.XML_ELEMENT,
+	     "DAV:response", ([]), "", "DAV:response"))->
+	  replace_children(({href_node})+responses);
+    }
+    root->get_first_element("DAV:multistatus", 1)->
+      replace_children(response_xml);
+    return root;
+  }
+
+  mapping(string:mixed) http_answer()
+  {
+    string xml = get_xml_node()->render_xml();
+    return ([
+      "error": 207,
+      "data": xml,
+      "len": sizeof(xml),
+      "type": "text/xml; charset=\"utf-8\"",
+    ]);
+  }
+
+  class prefix(static string href_prefix) {
+    void add_response(string href, Node response_node) {
+      MultiStatus::add_response(href_prefix + href, response_node);
+    }
+    void add_property(string path, string prop_name,
+		      void|int(0..0)|string|Node|mapping(string:mixed)
+		      prop_value)
+    {
+      MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
+    }
+    this_program prefix(string href_prefix) {
+      return MultiStatus::prefix(this_program::href_prefix + href_prefix);
+    }
+    Node get_xml_node()
+    {
+      return MultiStatus::get_xml_node();
+    }
+    mapping(string:mixed) http_answer()
+    {
+      return MultiStatus::http_answer();
+    }
+  }
+}
+
+class PatchPropertyCommand
+{
+  string property_name;
+  mapping(string:mixed) execute(string path, RoxenModule module, RequestID id);
+}
+
+#endif /* Parser.XML.Tree.XMLNSParser */
 
 class RoxenModule
 {
@@ -1059,6 +1274,32 @@ class RoxenModule
 
   string info(object conf);
   string comment();
+
+  // Property handling stuff.
+  multiset(string) query_all_properties(string path, RequestID id);
+  string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+    query_property(string path, string prop_name, RequestID id);
+  mapping(string:mixed) set_property(string path, string prop_name,
+				     string|array(Parser.XML.Tree.Node) value,
+				     RequestID id);
+  mapping(string:mixed) set_dead_property(string path, string prop_name,
+					  array(Parser.XML.Tree.Node) value,
+					  RequestID id);
+  mapping(string:mixed) remove_property(string path, string prop_name,
+					RequestID id);
+  void find_properties(string path, string mode, MultiStatus result,
+		       RequestID id, multiset(string)|void filt);
+  void recurse_find_properties(string path, string mode, int depth,
+			       MultiStatus result,
+			       RequestID id, multiset(string)|void filt);
+  void patch_property_start(string path, RequestID id);
+  void patch_property_unroll(string path, RequestID id);
+  void patch_property_commit(string path, RequestID id);
+  void patch_properties(string path, array(PatchPropertyCommand) instructions,
+			MultiStatus result, RequestID id);
+  void recurse_patch_properties(string path, int depth,
+				array(PatchPropertyCommand) instructions,
+				MultiStatus result, RequestID id);
 }
 
 class _roxen
