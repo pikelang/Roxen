@@ -1,4 +1,4 @@
-/* $Id: persistent.pike,v 1.31 1997/09/15 21:47:03 peter Exp $ */
+/* $Id: persistent.pike,v 1.32 1999/01/21 19:10:00 marcus Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -42,7 +42,7 @@ public void begone()
   if(__id) open_db(__id[0])->delete(__id[1]);
   __id=0;
 // A nicer destruct. Won't error() if no object.
-  call_out(do_destruct,8,this_object());
+  call_out(destruct,8,this_object());
 }
 
 void destroy()
