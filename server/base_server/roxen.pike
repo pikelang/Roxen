@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.438 2000/02/20 17:41:34 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.439 2000/02/21 20:45:26 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1857,10 +1857,22 @@ class ImageCache
     mixed args = Array.map( Array.map( name/"$", argcache->lookup, id->client ), frommapp);
     mapping meta;
     string data;
+
     mixed reply = draw_function( @copy_value(args), id );
 
     if( arrayp( args ) )
       args = args[0];
+
+    if( arrayp( reply ) ) // layers.
+      reply = Image.lay( reply );
+
+    if( objectp( reply ) && reply->image ) // layer.
+    {
+      reply = ([
+        "img":reply->image(),
+        "alpha":reply->alpha(),
+      ]);
+    }
 
 
     if( objectp( reply ) || (mappingp(reply) && reply->img) )
@@ -2168,15 +2180,17 @@ class ImageCache
 
   static mapping restore( string id )
   {
-    string|object(Stdio.File) f;
+    mixed f;
     mapping m;
+
     if( data_cache[ id ] )
       f = data_cache[ id ];
     else
+    {
       f = Stdio.File( );
-
-    if(!f->open(dir+id+".d", "r" ))
-      return 0;
+      if(!f->open(dir+id+".d", "r" ))
+        return 0;
+    }
 
     m = restore_meta( id );
 
