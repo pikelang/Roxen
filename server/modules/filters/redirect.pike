@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.19 2000/03/09 14:28:24 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.20 2000/03/09 14:49:46 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -80,12 +80,12 @@ void parse_redirect_string(string what)
     else if (s[..0] != "#") {
       array(string) a = s/" " - ({""});
       if(sizeof(a)>=3 && a[0]=="exact") {
-	if (exact_patterns[a[1]] || search (redirect_from, a[1]) >= 0)
+	if (exact_patterns[a[1]])
 	  report_warning ("Duplicate redirect pattern %O.\n", a[1]);
 	exact_patterns[a[1]] = a[2];
       }
       else if (sizeof(a)==2) {
-	if (exact_patterns[a[0]] || search (redirect_from, a[0]) >= 0)
+	if (search (redirect_from, a[0]) >= 0)
 	  report_warning ("Duplicate redirect pattern %O.\n", a[0]);
 	redirect_from += ({a[0]});
 	redirect_to += ({a[1]});
