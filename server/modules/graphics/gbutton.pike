@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.31 2000/02/21 20:47:02 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.32 2000/02/22 00:10:38 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -353,10 +353,19 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   }
 
 
-  // This part can probably be optimized rather drastically...
-  Image.Image button = Image.Image(req_width, frame->ysize(), args->bg);
-  button = button->rgb_to_hsv();
-  if( args->dim ) {
+  array(Image.Layer) button_layers = ({
+     Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
+                  mask->alpha()),
+//     Image.Layer( ([ "fill":args->bg,
+//                     "alpha":mask->alpha()->threshold(200),
+//     ]) ),
+    frame,
+  });
+
+  frame->set_mode( "value" );
+
+  if( args->dim )
+  {
     //  Adjust dimmed border intensity to the background
     int bg_value = Image.Color(@args->bg)->hsv()[2];
     int dim_high, dim_low;
@@ -367,31 +376,12 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
       dim_high = min(bg_value + 64, 255);
       dim_low = dim_high - 128;
     }
-    frame->set_image( frame->image()->
-		      modify_by_intensity( 1, 1, 1,
-					   ({ dim_low, dim_low, dim_low }),
-					   ({ dim_high, dim_high, dim_high })),
-                      frame->alpha());
+    frame->set_image(frame->image()->
+                     modify_by_intensity( 1, 1, 1,
+                                          ({ dim_low, dim_low, dim_low }),
+                                          ({ dim_high, dim_high, dim_high })),
+                     frame->alpha());
   }
-  object h = button*({255,0,0});
-  object s = button*({0,255,0});
-  object v = button*({0,0,255});
-  v->paste_mask( frame->image(), frame->alpha() );
-  button = Image.lay( ({
-    Image.Layer( h )->set_mode( "red" ),
-    Image.Layer( s )->set_mode( "green" ),
-    Image.Layer( v )->set_mode( "blue" ),
-  }) )->image();
-  button = button->hsv_to_rgb();
-
-
-  array(Image.Layer) button_layers = ({
-    Image.Layer( ([
-      "image":button,
-      "alpha":mask->alpha()->threshold( 40 ),
-    ]) )
-  });
-
 
   // if there is a background, draw it.
   if( background )
@@ -401,22 +391,22 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   if (icon)
     button_layers += ({
       Image.Layer( ([
-        //        "alpha_value":(args->dim ? 0.3 : 1.0),
+        "alpha_value":(args->dim ? 0.3 : 1.0),
         "image":icon->img,
-        "alpha":(args->dim ? icon->alpha*0.3 : icon->alpha),
+        "alpha":icon->alpha,
         "xoffset":icn_x,
-        "yoffset":(button->ysize()-icon->img->ysize())/2,
+        "yoffset":(frame->ysize()-icon->img->ysize())/2,
       ]) )});
 
   //  Draw text
   if(text_img)
     button_layers += ({
     Image.Layer(([
-//       "alpha_value":(args->dim ? 0.5 : 1.0),
+      "alpha_value":(args->dim ? 0.5 : 1.0),
       "image":text_img->color(0,0,0)->invert()->color(args->txt),
       "xoffset":txt_x,
       "yoffset":top,
-      "alpha":(args->dim ? text_img*0.5 : text_img ),
+      "alpha":text_img,
     ]))
   });
 
