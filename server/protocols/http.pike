@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.144 1999/07/16 06:22:54 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.145 1999/07/16 13:24:27 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -320,44 +320,32 @@ private int parse_got()
       return 1;
     }
 
-    string trailer;
-    switch(sscanf(line+" ", "%s %s %s %s", method, f, clientprot, trailer))
+    string trailer, trailer_trailer;
+    switch(sscanf(line+" ", "%s %s %s %s %s",
+		  method, f, clientprot, trailer, trailer_trailer))
     {
-    case 1:
-      // PING...
-      if(method == "PING") 
-	break;
-      // only PING is valid here.
-      return 1;
-      
-    case 2:
-      // HTTP/0.9
-      clientprot = prot = "HTTP/0.9";
-      if(method != "PING")
-	method = "GET"; // 0.9 only supports get.
-      s = data = ""; // no headers or extra data...
-      break;
-
-    case 4:
-      // Stupid sscanf! If trailer == "" it's a valid request. Really! Grrr.
-      if(strlen(trailer)) {
-	// Got extra spaces in the URI.
-	// All the extra stuff is now in the trailer.
-	
-	int end;
-	
+    case 5:
+      // Stupid sscanf!
+      if (trailer_trailer != "") {
 	// Get rid of the extra space from the sscanf above.
-	trailer = trailer[..sizeof(trailer) - 2];
-	f += " " + clientprot;
+	trailer += " " + trailer_trailer[..sizeof(trailer_trailer)-2];
+      }
+      /* FALL_THROUGH */
+    case 4:
+      // Got extra spaces in the URI.
+      // All the extra stuff is now in the trailer.
 	
-	// Find the last space delimiter.
-	if (!(end = (search(reverse(trailer), " ") + 1))) {
-	  // Just one space in the URI.
-	  clientprot = trailer;
-	} else {
-	  f += " " + trailer[..sizeof(trailer) - (end + 1)];
-	  clientprot = trailer[sizeof(trailer) - end ..];
-	}
+      int end;
+	
+      f += " " + clientprot;
+	
+      // Find the last space delimiter.
+      if (!(end = (search(reverse(trailer), " ") + 1))) {
+	// Just one space in the URI.
+	clientprot = trailer;
+      } else {
+	f += " " + trailer[..sizeof(trailer) - (end + 1)];
+	clientprot = trailer[sizeof(trailer) - end ..];
       }
       /* FALL_THROUGH */
     case 3:
@@ -378,6 +366,22 @@ private int parse_got()
 	return 0;
       }
       break;
+
+    case 2:
+      // HTTP/0.9
+      clientprot = prot = "HTTP/0.9";
+      if(method != "PING")
+	method = "GET"; // 0.9 only supports get.
+      s = data = ""; // no headers or extra data...
+      break;
+
+    case 1:
+      // PING...
+      if(method == "PING") 
+	break;
+      // only PING is valid here.
+      return 1;
+      
     default:
       // Too many or too few entries ->  Hum.
       return 1;
