@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.194 2002/05/18 18:15:49 jonasw Exp $
+# $Id: start,v 1.195 2003/03/03 16:58:48 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -35,7 +35,7 @@ check_owner() {
 	    chmod -R g+r  .
 	  fi
 	fi
-        change_owner $1 $2 $DIR $VARDIR $LOGDIR
+	change_owner "$1" "$2" "$DIR" "$VARDIR" "$LOGDIR"
      fi
    fi
 }
