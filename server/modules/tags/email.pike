@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.30 2004/07/21 13:48:18 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.31 2005/01/18 08:41:28 noring Exp $";
 
 constant thread_safe=1;
 
@@ -15,7 +15,7 @@ inherit "module";
 
 // ------------------------ Setting the defaults -------------------------
 
-void create()
+void create(Configuration conf)
 {
   set_module_creator("Honza Petrous <hop@roxen.com>");
 
@@ -58,6 +58,18 @@ void create()
 	 "will be added. "
          "");
 
+  defvar("mbox_file",
+	 conf && combine_path(conf->query("LogFile"), "../email.mbox"),
+	 "Mbox file", TYPE_STRING,
+         "Log e-mail messages to this mbox format file. This is "
+	 "useful to find messages that may have been lost. Undelivered "
+	 "messages may have the header X-Roxen-Email-Error included.");
+  defvar ("mbox_file_errors_only", 0, "Log undelivered messages only",
+         TYPE_FLAG,
+         "Log only e-mail messages which the system knows will not be "
+	  "delivered. Beware! All undelivered messages may not always be "
+	  "logged.");
+  
   // etc
   defvar ("CI_qmail_spec",1, "Qmail specials",
          TYPE_FLAG|VAR_MORE,
@@ -86,7 +98,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.30 $"/" ")[1];
+string revision = ("$Revision: 1.31 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -313,7 +325,39 @@ class TagEmail {
 
       return(rv);
     }
+    
+    void log_message(string from, string message, void|mixed error)
+    {
+      string mbox_file = query("mbox_file");
+      if(mbox_file && sizeof(mbox_file) &&
+	 (!query("mbox_file_errors_only") || error))
+      {
+	string date = Calendar.ISO.Second()->format_smtp();
+	string body = replace(message, "\r\nFrom ", "\r\n>From ");
+	string error_msg;
+	if(error)
+	  if(catch { error_msg = (string)error; })
+	    error_msg = sprintf("%O", error);
+	if(error_msg)
+	  body = "X-Roxen-Email-Error: " +
+		 replace(sprintf("%O", error_msg),
+			 ({ "\r", "\n" }), ({ " ", " " })) + "\r\n" +
+		 body;
+	Stdio.append_file(roxen_path(mbox_file),
+			  sprintf("From %s %s\r\nDate: %s\r\n%s\r\n\r\n",
+				  from, date, date, body));
+      }
+    }
 
+    void log_rxml_run_error(string from, mixed message, mixed error)
+    {
+      string m;
+      if(message)
+	catch { m = (string)message; };
+      log_message(from, (m || "\r\n\r\n*** Unknown message ***"), error);
+      RXML.run_error(error);
+    }
+    
     array do_return(RequestID id) {
 
       object m, o;
@@ -380,6 +424,7 @@ class TagEmail {
 
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
+      string from = only_from_addr(fromx);
 
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
@@ -452,8 +497,9 @@ class TagEmail {
        };
 
      if (error)
-       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+
-		      Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, m,
+			  EMAIL_LABEL+"MIME message processing error: "+
+			  Roxen.html_encode_string(error[0]));
 
      error = catch {
        o = Protocols.SMTP.client(query("CI_server_restrict") ?
@@ -461,28 +507,32 @@ class TagEmail {
 				 (args->server || query("CI_server")));
      };
      if (error)
-       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+
-		      Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, m,
+			  EMAIL_LABEL+"Couldn't connect to mail server. "+
+			  Roxen.html_encode_string(error[0]));
 
      catch(msglast = (string)m);
 
      array(string) to = tox / split;
      if (ccx)  to |= ccx / split;
      if (bccx) to |= bccx / split;
-     string from = only_from_addr(fromx);
      string message = (string)m;
      to -= ({""});
 
      if (!sizeof(to))
-       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
-
+       log_rxml_run_error(from, message,
+			  EMAIL_LABEL+"Recipient address is missing!");
+     
      error = catch(o->send_message(from, to, message));
      if (error)
-       RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, message,
+			  EMAIL_LABEL+Roxen.html_encode_string(error[0]));
 
      o->close();
      o = 0;
 
+     log_message(from, message);
+     
      //itterate log
      mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)) ]) });
 
