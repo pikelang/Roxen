@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.473 2001/08/24 19:02:08 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.474 2001/08/28 15:37:40 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -428,24 +428,25 @@ string type_from_filename( string file, int|void to, string|void myext )
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
-  string ext=myext || Roxen.extension(file);
+  string ext = lower_case(myext || Roxen.extension(file));
 
   if(tmp = types_fun(ext))
   {
     mixed tmp2,nx;
-    if(tmp[0] == "strip")
+    // FIXME: Ought to support several levels of "strip".
+    if (tmp[0] == "strip")
     {
       tmp2=file/".";
-      if(sizeof(tmp2) > 2)
+      if (sizeof(tmp2) > 2)
 	nx=tmp2[-2];
-      if(nx && (tmp2=types_fun(nx)))
+      if (nx && (tmp2 = types_fun(nx)))
 	tmp[0] = tmp2[0];
-      else if(tmp2=types_fun("default"))
+      else if (tmp2 = types_fun("default"))
 	tmp[0] = tmp2[0];
       else
-	tmp[0]="application/octet-stream";
+	tmp[0] = "application/octet-stream";
     }
-  } else if(!(tmp = types_fun("default"))) {
+  } else if (!(tmp = types_fun("default"))) {
     tmp = ({ "application/octet-stream", 0 });
   }
   return to?tmp:tmp[0];
@@ -526,7 +527,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
 
 array (function) file_extension_modules(string ext)
 {
-  if(!file_extension_module_cache[ext])
+  if(!file_extension_module_cache[ext = lower_case(ext)])
   {
     int i;
     file_extension_module_cache[ext]  = ({ });
@@ -2764,10 +2765,10 @@ void call_low_start_callbacks( RoxenModule me,
       {
 	string foo;
 	foreach( me->query_file_extensions(), foo )
-	  if(pri[pr]->file_extension_modules[foo] )
-	    pri[pr]->file_extension_modules[foo]+=({me});
+	  if(pri[pr]->file_extension_modules[foo = lower_case(foo)] )
+	    pri[pr]->file_extension_modules[foo] += ({me});
 	  else
-	    pri[pr]->file_extension_modules[foo]=({me});
+	    pri[pr]->file_extension_modules[foo] = ({me});
       }
     }) {
 #ifdef MODULE_DEBUG
