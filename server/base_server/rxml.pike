@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.221 2000/08/12 06:15:14 per Exp $
+// $Id: rxml.pike,v 1.222 2000/08/12 19:39:28 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1296,7 +1296,7 @@ class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
   constant flags = RXML.FLAG_SOCKET_TAG;
-  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text]);
+  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
   
   private int compare( string a, string b )
     //! This method needs lot of work... but so do the rest of the system too
