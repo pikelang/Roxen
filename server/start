@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.122 2000/08/29 23:28:32 mast Exp $
+# $Id: start,v 1.123 2000/08/31 01:50:41 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -550,6 +550,18 @@ rotate () {
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
 }
 
+signal_exit() {
+  dp "Start script terminated."
+  if [ "x$ROXEN_PID" != "x" ]; then
+    kill $ROXEN_PID 2>/dev/null
+    while kill -0 $ROXEN_PID 2>/dev/null; do
+      sleep 1
+    done
+  fi
+  dp "Roxen shutdown."
+  exit 0
+}
+
 start_roxen() {
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
@@ -570,7 +582,19 @@ start_roxen() {
         dp "Using '$pike'"|sed -e "s!`pwd`!.!g"
       fi
     fi
-    $pike $args "$@"
+
+    trap signal_exit 2 15
+    trap "" 1
+    if [ "x$once" = "x" ]; then
+      $pike $args "$@" 2>>$LOGDIR/debug/$FILES.1 1>&2 &
+      ROXEN_PID=$!
+      dp "Roxen server pid $ROXEN_PID."
+      wait $! 2>/dev/null 1>&2
+      exitcode="$?"
+      ROXEN_PID=""
+    else
+      $pike $args "$@" 2>&1
+    fi
   else
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
@@ -578,9 +602,9 @@ start_roxen() {
     echo >>.gdbinit handle SIGLWP nostop noprint pass
     firstline=`head -1 "$pike" 2>/dev/null`
     if expr "x$firstline" : 'x#! */.*' >/dev/null; then
-      # Looks like a script. gdb won't grok it, so we try passing
+      # Looks like a script. gdb will not grok it, so we try passing
       # --gdb to it instead (which works in the special case of the
-      # bin/pike script that's built by the top level Makefile in the
+      # bin/pike script that is built by the top level Makefile in the
       # Pike source tree).
       dp "Executing $pike --gdb $args $@"
       $pike --gdb $args "$@"
@@ -592,6 +616,7 @@ start_roxen() {
     rm .gdbinit
   fi
 }
+
 
 #
 # Now do the stuff
@@ -613,52 +638,61 @@ if [ -z "$once" ] ; then
   ./mkdir -p $LOGDIR/debug/
 
   if [ $verbose -gt 0 ]; then
-    cat << oo
-Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
-You can use the administration interface in the server to get debug info.
-oo
+    dp "Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1."
+    dp "You can use the administration interface in the server to get debug info."
   else :; fi
+
+  if (
+    (
+      # Do not use the prefix since it contains the pid of the script
+      # we were forked from and not the one of this fork, which is
+      # confusing. Can't rebuild $pre from $$ here, since some sh's
+      # seems to cache it, causing it to be wrong here.
+      pre=""
+
+      exec 3>&-
+
+      while : ; do
+	if test -d "$LOGDIR/debug/."; then :; else
+	  # Avoid infinite loop if the debug directory is deleted.
+	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
+	  if ./mkdir -p "$LOGDIR/debug/"; then :; else
+	    dp "Failed to create log directory $LOGDIR/debug/."
+	    exit 1
+	  fi
+	fi
+
+	dp "Server start at `date`"
+	dp "Debug log in $LOGDIR/debug/$FILES.1"
+	rotate $LOGDIR/debug/$FILES
+	start_roxen $extra_args
+
+	if [ "$exitcode" -eq "0" ] ; then
+	  # Clean shutdown.
+	  dp "Roxen shutdown."
+	  exit 0
+	fi
+	if [ "$exitcode" -lt "0" ] ; then
+	  # Signal death.
+	  dp "Roxen died of signal $exitcode. Restarting..."
+	else
+	  dp "Roxen down. Restarting."
+	fi
+      done
+    ) &
+    dp "Forked start script, pid $!." >&3
+  ) 3>&1 </dev/null >$LOGDIR/debug/start_$FILES.output 2>&1; then
+    :
+  else
+    dp 'Failed to spawn subshell. -- Permission problem?'
+    exit 1
+  fi
 
   # Try to get rid of some fd's.
   # Some /bin/sh's have problems detaching otherwise.
 
   exec >/dev/null
   exec </dev/null
-
-  if ((while : ; do
-      if test -d "$LOGDIR/debug/."; then :; else
-        # Avoid infinite loop if the debug directory is deleted.
-        # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
-        if ./mkdir -p "$LOGDIR/debug/"; then :; else
-	  dp "Failed to create log directory $LOGDIR/debug/."
-	  exit 1
-	fi
-      fi
-
-      dp "Server restart at `date`"
-      dp "Debug log in $LOGDIR/debug/$FILES.1"
-      rotate $LOGDIR/debug/$FILES
-      start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
-
-      exitcode="$?"
-
-      if [ "$exitcode" -eq "0" ] ; then
-        # Clean shutdown.
-        dp "Roxen shutdown."
-        exit 0
-      fi
-      if [ "$exitcode" -lt "0" ] ; then
-        # Signal death.
-        dp "Roxen died of signal $exitcode. Restarting..."
-      else
-        dp "Roxen down. Restarting."
-      fi
-      done) & ) </dev/null >$LOGDIR/debug/start_$FILES.output 2>&1; then
-    :;
-  else
-    dp 'Failed to spawn subshell. -- Permission problem?'
-    exit 1
-  fi
 else
-  start_roxen $extra_args 2>&1
+  start_roxen $extra_args
 fi
