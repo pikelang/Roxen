@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.95 2002/06/15 21:17:31 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.96 2002/10/25 20:32:05 nilsson Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -19,16 +19,16 @@ constant default_template= #"
 
 <html>
   <head><title>Listing of &page.virtfile;</title></head>
-  <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
-     <roxen align='right' size='small' />
+  <body bgcolor='white' text='black' link='#cc0000' vlink='#cc0000'>
+     <chili align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
      <a href='&roxen.path;&_.path:http;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
+        <td width='100%' height='1' colspan='5' bgcolor='#cc0000'><img
+          src='/%01/unit' width='100%' height='1' /></td>
       </tr>
 
     <define tag='mitem'>
@@ -36,7 +36,7 @@ constant default_template= #"
          <if variable='form.reverse'>
           <cset variable='var.doreverse'>sort-reverse</cset>
           <if match='&form.sort; is &_.order;'>
-            <img src='/internal-roxen-up' />
+            <img src='/%01/up' />
           </if>
           <else>
             <font size='-1'>&nbsp;</font>
@@ -45,7 +45,7 @@ constant default_template= #"
          </if>
          <else>
          <if match='&form.sort; is &_.order;'>
-          <img src='/internal-roxen-down' />
+          <img src='/%01/down' />
           <a href='?sort=&_.order;&reverse=1'><font color='black'>&_.title;</font></a> &nbsp;
         </if>
         <else>
@@ -64,8 +64,8 @@ constant default_template= #"
         <mitem order='modified' title='Last modified' align='right'/>
       </tr>
       <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
+        <td width='100%' height='1' colspan='5' bgcolor='#cc0000'><img
+          src='/%01/unit' width='100%' height='1' /></td>
       </tr>
 
       <emit source='dir'
@@ -82,7 +82,7 @@ constant default_template= #"
       </emit>
       <tr>
         <td width='100%' height='4' colspan='5' bgcolor='#ce5c00'><img
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
+          src='/%01/unit' width='100%' height='1' /></td>
       </tr>
     </table>
 
