@@ -9,6 +9,7 @@ class ServletConfig implements javax.servlet.ServletConfig
 {
   ServletContext context;
   Dictionary dic = new Hashtable();
+  String name;
 
   public ServletContext getServletContext()
   {
@@ -25,17 +26,17 @@ class ServletConfig implements javax.servlet.ServletConfig
     return dic.keys();
   }
 
-  ServletConfig(ServletContext ctx)
+  ServletConfig(ServletContext ctx, String n)
   {
     context = ctx;
+    name = n;
   }
 
   // 2.2 stuff follows
 
   public String getServletName()
   {
-    // FIXME
-    return null;
+    return name;
   }
 
 }

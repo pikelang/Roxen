@@ -11,6 +11,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.List;
+import java.util.Iterator;
+import java.util.Vector;
 
 
 class ServletResponse implements javax.servlet.http.HttpServletResponse
@@ -64,7 +67,29 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     if(contentType == null) {
       contentType = type;
-      // FIXME: get encoding
+      HeaderTokenizer ct = new HeaderTokenizer(type);
+      try {
+	ct.getValue();
+	ct.discard('/');
+	ct.getValue();
+	if(ct.more())
+	  for(;;) {
+	    while(!ct.lookingAt(';'))
+	      if(ct.more())
+		ct.getValue();
+	      else
+		break;
+	    ct.discard(';');
+	    if(!ct.more())
+	      break;
+	    if("charset".equalsIgnoreCase(ct.getValue())) {
+	      ct.discard('=');
+	      encoding = ct.getValue();
+	      break;
+	    }
+	  }
+      } catch(IllegalArgumentException e) {
+      }
     }
   }
 
@@ -89,8 +114,13 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     if(contentLength != -1 && !containsHeader("Content-Length"))
       out.println("Content-Length: "+contentLength);
     if(headers != null)
-      for(Enumeration e = headers.elements(); e.hasMoreElements() ;)
-	out.println((String)e.nextElement());
+      for(Enumeration e = headers.elements(); e.hasMoreElements() ;) {
+	Object v = e.nextElement();
+	if(v instanceof String)
+	  out.println((String)v);
+	else for(Iterator i = ((List)v).iterator(); i.hasNext(); )
+	  out.println((String)i.next());
+      }
     out.println();
     if(statusmsg != null)
       out.print(statusmsg);
@@ -114,22 +144,27 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 	contentType = "text/plain";
       // FIXME  Use Locale?
       encoding = "iso-8859-1";
-      contentType += "; charset="+encoding;
+      contentType += "; charset="+encodeValue(encoding);
     }
     return encoding;
   }
 
   public void addCookie(Cookie cookie)
   {
-    String val, cookiehead = getHeader("Set-Cookie");
+    String val, cookiehead;
     int nval;
+    Object v = null;
 
-    if(cookiehead == null)
-      cookiehead = "";
-    else
-      cookiehead += ",\r\n\t";
+    if(headers != null)
+      v = headers.get("set-cookie");
+    if(v != null && v instanceof String) {
+      cookiehead = ((String)v) + ",\r\n\t";
+      v = null;
+    } else
+      cookiehead = "Set-Cookie: ";      
 
-    cookiehead += cookie.getName()+"="+encodeValue(cookie.getValue());
+    cookiehead += encodeValue(cookie.getName())+"="+
+      encodeValue(cookie.getValue());
     if((val = cookie.getComment()) != null)
       cookiehead += "; Comment="+encodeValue(val);
     if((val = cookie.getDomain()) != null)
@@ -143,7 +178,11 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     if((nval = cookie.getVersion()) != 0)
       cookiehead += "; Version="+nval;
 
-    setHeader("Set-Cookie", cookiehead);
+    if(v == null)
+      v = cookiehead;
+    else
+      ((List)v).add(cookiehead);
+    setHeader("set-cookie", v);
   }
 
   void setSessionId(HttpSession session)
@@ -177,14 +216,6 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     return val;
   }
 
-  protected String getHeader(String name)
-  {
-    String h;
-    if(headers == null || (h=(String)headers.get(name.toLowerCase()))==null)
-      return null;
-    return h.substring(name.length()+2);
-  }
-
   public boolean containsHeader(String name)
   {
     return headers != null && headers.get(name.toLowerCase()) != null;
@@ -210,11 +241,16 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     status = sc;
   }
 
-  public void setHeader(String name, String value)
+  private void setHeader(String name, Object value)
   {
     if(headers == null)
       headers = new Hashtable();
-    headers.put(name.toLowerCase(), name+": "+value);
+    headers.put(name, value);
+  }
+
+  public void setHeader(String name, String value)
+  {
+    setHeader(name.toLowerCase(), name+": "+value);
   }
 
   public void setIntHeader(String name, int value)
@@ -325,7 +361,17 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 
   public void addHeader(String name, String value)
   {
-    // FIXME
+    Object v = (headers != null? headers.get(name.toLowerCase()) : null);
+    if(v == null)
+      v = name+": "+value;
+    else if(v instanceof String) {
+      Vector vv = new Vector(2);
+      vv.add(v);
+      vv.add(name+": "+value);
+      v = vv;
+    } else
+      ((List)v).add(name+": "+value);
+    headers.put(name.toLowerCase(), v);
   }
 
   public void addDateHeader(String name, long date)

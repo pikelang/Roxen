@@ -153,73 +153,6 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     return reader;
   }
 
-  protected static class HeaderTokenizer
-  {
-    String header;
-    int pos, len;
-
-    protected final void skipWS()
-    {
-      while(pos<len && header.charAt(pos)<=' ')
-	pos++;
-    }
-
-    public boolean lookingAt(char c)
-    {
-      skipWS();
-      return pos<len && header.charAt(pos)==c;
-    }
-    
-    public void discard(char c)
-    {
-      if(!lookingAt(c))
-	throw new IllegalArgumentException ("header: "+header);
-      pos++;
-    }
-
-    public String getToken()
-    {
-      skipWS();
-      int p0=pos;
-      while(pos<len && Character.isJavaIdentifierPart(header.charAt(pos)))
-	pos++;
-      if(pos==p0)
-	throw new IllegalArgumentException ("header: "+header);
-      return header.substring(p0, pos).toLowerCase();
-    }
-
-    public String getValue()
-    {
-      if(!lookingAt('"'))
-	return getToken();
-      int p0=++pos;
-      while(pos<len && header.charAt(pos)!='"')
-	if(header.charAt(pos)=='\\')
-	  pos+=2;
-	else
-	  pos++;
-      if(pos>=len)
-	throw new IllegalArgumentException ("header: "+header);
-      String v = header.substring(p0, pos++);
-      for(p0=0; (p0=v.indexOf('\\', p0))>=0; p0++)
-	v = v.substring(0, p0)+v.substring(p0+1);
-      return v;
-    }
-
-    public boolean more()
-    {
-      skipWS();
-      return pos<len;
-    }
-
-    public HeaderTokenizer(String h)
-    {
-      header = h;
-      pos = 0;
-      len = h.length();
-    }
-  }
-
   public Cookie[] getCookies()
   {
     String cookieh = getHeader("Cookie");
@@ -230,9 +163,12 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     Cookie lastcookie = null;
     int version=0;
     while(cookiet.more()) {
-      String name = cookiet.getToken();
-      cookiet.discard('=');
-      String val = cookiet.getValue();
+      String name = cookiet.getValue();
+      String val = "";
+      if(cookiet.lookingAt('=')) {
+	cookiet.discard('=');
+	val = cookiet.getValue();
+      }
       if(cookiet.more())
 	cookiet.discard(cookiet.lookingAt(',')? ',':';');
       if(name.startsWith("$")) {
