@@ -1,5 +1,5 @@
 /*
- * $Id: LocationModule.java,v 1.2 1999/12/19 21:00:26 marcus Exp $
+ * $Id: LocationModule.java,v 1.3 2000/01/09 23:27:55 marcus Exp $
  *
  */
 
@@ -9,5 +9,8 @@ public interface LocationModule {
 
   String queryLocation();
   RoxenResponse findFile(String f, RoxenRequest id);
+  String[] findDir(String f, RoxenRequest id);
+  String realFile(String f, RoxenRequest id);
+  int[] statFile(String f, RoxenRequest id);
 
 }

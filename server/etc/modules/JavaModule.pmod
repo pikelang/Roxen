@@ -78,6 +78,9 @@ static object _getdefvars = module_class->get_method("getDefvars", "()[Lse/idone
 static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
 static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
+static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[Ljava/lang/String;");
+static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
+static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[I");
 static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
 static object _query_container_callers = parser_ifc->get_method("queryContainerCallers", "()[Lse/idonex/roxen/ContainerCaller;");
 static object tagcaller_query_name = tagcaller_ifc->get_method("queryName", "()Ljava/lang/String;");
@@ -423,6 +426,27 @@ class ModuleWrapper
     object r = _find_file(modobj, f, make_reqid(id));
     check_exception();
     return make_response(r, id);
+  }
+
+  array(string) find_dir(string f, RequestID id)
+  {
+    object r = _find_dir(modobj, f, make_reqid(id));
+    check_exception();
+    return valify(r);
+  }
+
+  string real_file(string f, RequestID id)
+  {
+    object r = _real_file(modobj, f, make_reqid(id));
+    check_exception();
+    return r && (string)r;
+  }
+
+  string stat_file(string f, RequestID id)
+  {
+    object r = _stat_file(modobj, f, make_reqid(id));
+    check_exception();
+    return valify(r);
   }
 
   mixed find_internal(string f, RequestID id)
