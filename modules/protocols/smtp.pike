@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.88 1999/09/25 16:05:38 grubba Exp $
+ * $Id: smtp.pike,v 1.89 1999/09/27 00:41:19 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.88 1999/09/25 16:05:38 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.89 1999/09/27 00:41:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -652,6 +652,39 @@ static class Smtp_Connection {
     }
   }
 
+  void do_async_update_domains(int force,
+			       function(mixed ...:void) cb, mixed ... args)
+  {
+    if (parent->update_domains(force)) {
+      // Update the domain cache asynchronously.
+      do_multi_async_args(async_domain_to_ip,
+			  indices(parent->handled_domains), ({}),
+			  lambda(array(array(string)) res) {
+	// Array of tuples of IP, domain.
+	mapping(string:multiset(string)) new_domain_cache = ([]);
+	// Update the domain_cache
+	foreach(res, [string ip, string d]) {
+	  if (!new_domain_cache[ip]) {
+	    new_domain_cache[ip] = (< d >);
+	  } else {
+	    new_domain_cache[ip][d] = 1;
+	  }
+	}
+
+#ifdef SMTP_DEBUG
+	roxen_perror(sprintf("SMTP: Domain cache: %O\n", new_domain_cache));
+#endif /* SMTP_DEBUG */
+
+	parent->domain_cache = (mapping(string:array(string)))new_domain_cache;
+
+	// Done. Continue with processing as usual.
+	cb(@args);
+      });
+    } else {
+      cb(@args);
+    }
+  }
+
   void smtp_RSET(string rset, string args)
   {
     do_RSET();
@@ -869,39 +902,10 @@ static class Smtp_Connection {
       }
     }
 
-    array extras = ({});
-
-    parent->update_domains();
-
-    if (!parent->domain_cache_ok) {
-      // Update the domain cache asynchronously.
-      do_multi_async_args(async_domain_to_ip,
-			  indices(parent->handled_domains), ({}),
-			  lambda(array(array(string)) res) {
-	// Array of tuples of IP, domain.
-	mapping(string:multiset(string)) new_domain_cache = ([]);
-	// Update the domain_cache
-	foreach(res, [string ip, string d]) {
-	  if (!new_domain_cache[ip]) {
-	    new_domain_cache[ip] = (< d >);
-	  } else {
-	    new_domain_cache[ip][d] = 1;
-	  }
-	}
-
-#ifdef SMTP_DEBUG
-	roxen_perror(sprintf("SMTP: Domain cache: %O\n", new_domain_cache));
-#endif /* SMTP_DEBUG */
-
-	parent->domain_cache = new_domain_cache;
-	parent->domain_cache_ok = 1;
-
-	// Done. Continue with processing as usual.
-	do_async_verify_sender(id);
-      });
-    } else {
-      do_async_verify_sender(id);
-    }
+    // Update the domain cache,
+    // and then verify the sender address.
+    // FIXME: Ought to perform domainlookup for the sender too.
+    do_async_update_domains(0, do_async_verify_sender, id);
   }
 
   // Find the MX record for a domain.
@@ -963,6 +967,145 @@ static class Smtp_Connection {
 		   }, id);
   }
 
+  void do_async_verify_recipient(string recipient, mapping id,
+				 function(string, mapping, mixed ...:void) cb,
+				 mixed ... args)
+  {
+    // NOTE: cb is only called on success!
+
+    array(object) filter_modules = conf->get_providers("smtp_filter")||({});
+
+    // First do the synchronous part.
+
+    foreach(filter_modules, object o) {
+      // roxen_perror("Got SMTP filter\n");
+      if (functionp(o->verify_recipient) &&
+	  o->verify_recipient(current_mail->from, recipient,
+			      this_object())) {
+	// Refuse recipient.
+#ifdef SMTP_DEBUG
+	report_notice(sprintf("Recipient %O refused.\n", recipient));
+#endif /* SMTP_DEBUG */
+	conf->log(([ "error":403 ]), id);
+	send(550, sprintf("%s... Recipient refused", recipient));
+	return;
+      }
+    }
+
+    do_multi_async(filter_modules->async_verify_recipient - ({ 0 }),
+		   ({ current_mail->from, recipient, this_object() }),
+		   lambda(array res) {
+#ifdef SMTP_DEBUG
+		     roxen_perror("SMTP: async_verify_recipient_cb()\n");
+#endif /* SMTP_DEBUG */
+		     if (sizeof(res - ({ 0 }))) {
+		       // Refuse recipient.
+#ifdef SMTP_DEBUG
+		       report_notice(sprintf("Recipient %O refused.\n",
+					     recipient));
+#endif /* SMTP_DEBUG */
+		       conf->log(([ "error":403 ]), id);
+		       send(550, sprintf("%s... Recipient refused",
+					 recipient));
+		     } else {
+		       // Success.
+		       cb(recipient, id, @args);
+		     }
+		   });
+  }
+
+  int check_recipient(string recipient)
+  {
+    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+      if (functionp(o->expn) &&
+	  o->expn(recipient, this_object())) {
+	return 1;
+      }
+      if (functionp(o->desc) &&
+	  o->desc(recipient, this_object())) {
+	return 1;
+      }
+    }
+    return 0;
+  }
+
+  void do_async_check_recipient(string recipient, mapping id,
+				function(mixed ...:void) cb,
+				mixed ... args)
+  {
+    // NOTE: cb() is only called on success.
+
+    if (check_recipient(recipient)) {
+      cb(recipient, id, @args);
+    } else {
+#ifdef SMTP_DEBUG
+      report_notice(sprintf("SMTP: Unhandled recipient %O.\n",
+			    recipient));
+#endif /* SMTP_DEBUG */
+      conf->log(([ "error":404 ]), id);
+      send(550, sprintf("%s... Unhandled recipient.", recipient));
+    }
+  }
+
+  void do_async_find_domain(string user, array(string) domains,
+			    function(string, mixed ...:void) cb,
+			    mixed ... args)
+  {
+    foreach(domains, string d) {
+      if (check_recipient(user + "@" + d)) {
+	cb(d, @args);
+	return;
+      }
+    }
+    cb(0, @args);
+  }
+
+  void do_async_domain_from_ip(string user, string localip,
+			       function(string, mixed ...:void) cb,
+			       mixed ... args)
+  {
+    // Try to find a domain from the localip.
+    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+      string domain;
+      if (functionp(o->domain_from_ip) &&
+	  (domain = o->domain_from_ip(user, localip, this_object()))) {
+	// Done!
+	cb(domain, @args);
+	return;
+      } 
+    }
+
+    multiset(string) domains;
+    if (!(domains = parent->domain_cache[localip])) {
+      // Update handled_domains.
+      do_async_update_domains(1, lambda() {
+        multiset(string) domains;
+	if (!(domains = parent->domain_cache[localip])) {
+#ifdef SMTP_DEBUG
+	  roxen_perror(sprintf("SMTP: Default domain for IP %s not found!\n",
+			       localip));
+#endif /* SMTP_DEBUG */
+	  cb(0, @args);
+	} else {
+	  // Loop over domains until you get one where
+	  // check_recipient() returns 1.
+	  do_async_find_domain(user, indices(domains), cb, @args);
+	}
+      });
+    } else {
+      // Loop over domains until you get one where
+      // check_recipient() returns 1.
+      do_async_find_domain(user, indices(domains), cb, @args);
+    }
+  }
+
+  void add_recipient(string recipient, mapping id)
+  {
+    conf->log(([ "error":200 ]), id);
+    current_mail->add_recipients((< recipient >));
+    send(250, sprintf("%s... Recipient ok.", recipient));
+  }
+
   void smtp_RCPT(string rcpt, string args)
   {
     // Fake request id for logging purposes.
@@ -996,69 +1139,52 @@ static class Smtp_Connection {
 
 	  id->not_query = recipient;
 
-	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
-	    // roxen_perror("Got SMTP filter\n");
-	    if (functionp(o->verify_recipient) &&
-		o->verify_recipient(current_mail->from, recipient,
-				    this_object())) {
-	      // Refuse recipient.
-#ifdef SMTP_DEBUG
-	      report_notice(sprintf("Recipient %O refused.\n", recipient));
-#endif /* SMTP_DEBUG */
-	      conf->log(([ "error":403 ]), id);
-	      send(550, sprintf("%s... Recipient refused", recipient));
-	      return;
-	    }
-	  }
+	  // Handle %-quoted source-routing.
+	  // eg:
+	  //	<orbs-relaytest%manawatu.co.nz@tifa.idonex.se>
+	  recipient = replace(recipient, "%", "@");
 
 	  array a = recipient/"@";
 	  string domain;
 	  string user;
 
 	  if (sizeof(a) > 1) {
-	    domain = a[-1];
-	    user = a[..sizeof(a)-2]*"@";
+	    domain = a[1];
+	    user = a[0];
 	  } else {
 	    user = recipient;
-	  }
-
-	  int recipient_ok;
-
-	  if (!domain) {
-	    // Try to find a domain from the localip.
-	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	      if (functionp(o->domain_from_ip) &&
-		  (domain = o->domain_from_ip(user, localip, this_object()))) {
-		recipient = user + "@" + domain;
-		break;
-	      } 
-	    }
 	  }
 
 	  if ((!domain) || (parent->handled_domains[domain])) {
 	    // Local address.
 
-	    if (domain) {
-	      // Full address check.
-	      recipient_ok = check_recipient(recipient);
-	    } else {
-	      multiset(string) domains = parent->domain_cache[localip];
-	      if (domains) {
-		foreach(indices(domains), string d) {
-		  if (recipient_ok = check_recipient(user + "@" + d)) {
-		    recipient = user + "@" + d;
-		    domain = d;
-		    break;
-		  }
+	    if (!domain) {
+	      // Try to get a domain from the local IP.
+
+	      do_async_domain_from_ip(user, localip,
+				      lambda(string domain) {
+		if (domain) {
+		  recipient = user + "@" + domain;
 		}
-	      }
+
+		// Perform recipient filtering,
+		// check validity for local delivery,
+		// and add to the recipient list.
+		do_async_verify_recipient(recipient,
+					  id,
+					  do_async_check_recipient,
+					  add_recipient);
+	      });
+	    } else {
+	      // Perform recipient filtering,
+	      // check validity for local delivery,
+	      // and add to the recipient list.
+	      do_async_verify_recipient(recipient,
+					id,
+					do_async_check_recipient,
+					add_recipient);
 	    }
-	    if (!recipient_ok) {
-	      // Check if we have a default handler for this user.
-	      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-		recipient_ok = check_recipient(user);
-	      }
-	    }
+
 	  } else {
 	    // Remote address.
 
@@ -1096,46 +1222,22 @@ static class Smtp_Connection {
 	      send(550, ({ "Relaying denied." }));
 	      return;
 	    }
-      
-	    recipient_ok = 1;
-	  }
 
-	  if (!recipient_ok) {
-#ifdef SMTP_DEBUG
-	    report_notice(sprintf("SMTP: Unhandled recipient %O.\n",
-				  recipient));
-#endif /* SMTP_DEBUG */
-	    conf->log(([ "error":404 ]), id);
-	    send(550, sprintf("%s... Unhandled recipient.", recipient));
-	    return;
-	  }
+	    // Perform recipient filtering,
+	    // and add the recipient.
+	    do_async_verify_recipient(recipient, id, add_recipient);
+     	  }
 
-	  // Relaying is allowed, so add the recipient.
-
-	  conf->log(([ "error":200 ]), id);
-	  current_mail->add_recipients((< recipient >));
-	  send(250, sprintf("%s... Recipient ok.", recipient));
+	  // Continue asynchronously.
 	  return;
 	}
       }
     }
+
+    // Syntax error.
+
     conf->log(([ "error":400 ]), id);
     send(501);
-  }
-
-  int check_recipient(string recipient)
-  {
-    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-      if (functionp(o->expn) &&
-	  o->expn(recipient, this_object())) {
-	return 1;
-      }
-      if (functionp(o->desc) &&
-	  o->desc(recipient, this_object())) {
-	return 1;
-      }
-    }
-    return 0;
   }
 
   // DATA handling
@@ -1499,13 +1601,12 @@ multiset do_expn(multiset in, object|void smtp)
   return(expanded);
 }
 
-// ([ IP : (< "domain", "domain" >) ]);
-mapping(string:multiset(string)) domain_cache = ([]);
-int domain_cache_ok;
+// ([ IP : ({ "domain", "domain" }) ]);
+mapping(string:array(string)) domain_cache = ([]);
 
 multiset(string) handled_domains = (<>);
 
-void update_domains(int|void force)
+int update_domains(int|void force)
 {
   if (force || !handled_domains || (!sizeof(handled_domains))) {
     // Update the table of locally handled domains.
@@ -1533,8 +1634,10 @@ void update_domains(int|void force)
     }
 
     handled_domains = domains;
-    domain_cache_ok = 0;
+
+    return 1;	// Domain cache needs updating.
   }
+  return 0;
 }
 
 static int counter;
