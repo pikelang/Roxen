@@ -7,10 +7,11 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.149 2000/08/07 10:14:53 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.150 2000/08/07 20:51:05 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
+#include <config.h>
 #include <module.h>
 
 inherit "module";
@@ -681,7 +682,8 @@ class TagInsert {
 	if(args->quote=="html") result=Roxen.html_encode_string(result);
 
 #ifdef OLD_RXML_COMPAT
-	result=Roxen.parse_rxml(result, id);
+	if (id->conf->old_rxml_compat)
+	  result=Roxen.parse_rxml(result, id);
 #endif
 
 	return 0;
