@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.171 2001/06/22 01:06:19 marcus Exp $
+// $Id: module.pmod,v 1.172 2001/06/25 15:20:22 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3485,8 +3485,7 @@ class Frame
   mixed _encode()
   {
     return (["_content_type":content_type, "_content":content,
-	     "_result_type":result_type, "_result":result, "_args":args,
-	     "_vars":this_object()->vars,
+	     "_result_type":result_type, "_args":args,
 	     "_raw_tag_text":this_object()->raw_tag_text]);
   }
 
@@ -3495,10 +3494,7 @@ class Frame
     content_type = cookie->_content_type;
     content = cookie->_content;
     result_type = cookie->_result_type;
-    result = cookie->_result;
     args = cookie->_args;
-    if(cookie->_vars)
-      this_object()->vars = cookie->_vars;
     if(cookie->_raw_tag_text)
       this_object()->raw_tag_text = cookie->_raw_tag_text;
   }
@@ -3787,7 +3783,7 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
 final class parse_frame
 {
   inherit Frame;
-  constant flags = FLAG_UNPARSED;
+  int flags = FLAG_UNPARSED;
   mapping(string:mixed) args = ([]);
 
   void create (Type type, string to_parse)
@@ -5504,6 +5500,19 @@ class CompiledError
     bt->current_var = current_var;
     throw (bt);
   }
+
+  mixed _encode()
+  {
+    return ({type, msg, current_var});
+  }
+
+  void _decode (mixed v)
+  {
+    [type, msg, current_var] = v;
+  }
+
+  MARK_OBJECT;
+  string _sprintf() {return "RXML.CompiledError" + OBJ_COUNT;}
 }
 
 class PikeCompile
@@ -5848,6 +5857,8 @@ class PCodec
       return PCode;
     else if(what == "VarRef")
       return VarRef;
+    else if (what == "CompiledError")
+      return CompiledError;
     else if(what[..1]=="f:" && 2 == sscanf(what[3..], "%s\n%s", t, ts) &&
 	    (tagset = all_tagsets[ts]) &&
 	    (tag = tagset->get_local_tag(t, what[2]=='p')))
@@ -5886,6 +5897,8 @@ class PCodec
 	return "PCode";
       else if(what == VarRef)
 	return "VarRef";
+      else if (what == CompiledError)
+	return "CompiledError";
       else if(what->is_RXML_Frame && saved_id[what])
 	return "f:"+saved_id[what];
     }
