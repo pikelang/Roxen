@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.167 2004/05/16 21:14:20 mani Exp $
+// $Id: Roxen.pmod,v 1.168 2004/05/16 21:16:32 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -939,14 +939,15 @@ mapping build_roxen_env_vars(RequestID id)
   foreach(indices(id->variables), tmp)
   {
     string name = mk_env_var_name(tmp);
-    while(
     if (mixed value = id->variables[tmp])
       if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
 	// Some shells/OS's don't like LARGE environment variables
 	new["QUERY_"+name] = replace(value,"\000"," ");
 	new["VAR_"+name] = replace(value,"\000","#");
       }
-    // Is it correct to record the names for variables with no values here? /mast
+
+    // Is it correct to record the names for variables with no values
+    // here? /mast
     if(new["VARIABLES"])
       new["VARIABLES"]+= " " + name;
     else
