@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.538 2003/08/26 16:15:36 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.539 2003/08/27 09:28:28 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1841,7 +1841,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  multiset(string) props =
 	    (multiset(string))(prop->get_children()->get_full_name() -
 			       ({ "" }));
-	  if (extras) {
+	  if (sizeof(extras)) {
 	    extras[0] |= props;
 	  } else {
 	    extras = ({ props });
