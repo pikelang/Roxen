@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.274 2000/03/10 02:56:41 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.275 2000/03/13 06:10:22 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -505,49 +505,65 @@ array filter_modules(RequestID id)
 
 static string cached_hostname = gethostname();
 
-void init_log_file()
+class LogFile
 {
-  remove_call_out(init_log_file);
+  Stdio.File fd;
+  int opened;
+  string fname;
+  void do_open()
+  {
+    fd = open( fname, "wac" );
+    opened = 1;
+  }
+  
+  void do_close()
+  {
+    destruct( fd );
+    opened = 0;
+  }
 
-  if(log_function)
-    destruct(function_object(log_function));
-    // Free the old one.
+  void write( string what )
+  {
+    if( !opened )
+      do_open();
+    remove_call_out( do_close );
+    call_out( do_close, 10.0 );
+    fd->write( what );
+  }
 
-  if(query("Log")) // Only try to open the log file if logging is enabled!!
+  static void create( string f ) 
   {
     mapping m = localtime(time());
-    string logfile = query("LogFile");
     m->year += 1900;	/* Adjust for years being counted since 1900 */
     m->mon++;		/* Adjust for months being counted 0-11 */
     if(m->mon < 10) m->mon = "0"+m->mon;
     if(m->mday < 10) m->mday = "0"+m->mday;
     if(m->hour < 10) m->hour = "0"+m->hour;
-    logfile = replace(logfile,({"%d","%m","%y","%h", "%H" }),
+    fname = replace(f,({"%d","%m","%y","%h", "%H" }),
 		      ({ (string)m->mday, (string)(m->mon),
 			 (string)(m->year),(string)m->hour,
 			 cached_hostname,
 		      }));
+    mkdirhier( fname );
+    opened = 0;
+  }
+}
+
+void init_log_file()
+{
+  if(log_function)
+  {
+    // Free the old one.
+    destruct(function_object(log_function));
+    log_function = 0;
+  }
+  // Only try to open the log file if logging is enabled!!
+  if(query("Log"))
+  {
+    string logfile = query("LogFile");
     if(strlen(logfile))
-    {
-      do {
-	Stdio.File lf=open( logfile, "wac");
-	if(!lf) {
-	  mkdirhier(logfile);
-	  if(!(lf=open( logfile, "wac"))) {
-	    report_error(LOCALE->failed_to_open_logfile(logfile));
-	    log_function=0;
-	    break;
-	  }
-	}
-	log_function=lf->write;
-	// Function pointer, speeds everything up (a little..).
-	lf=0;
-      } while(0);
-    } else
-      log_function=0;
-    call_out(init_log_file, 60);
-  } else
-    log_function=0;
+      log_function = LogFile( logfile )->write;
+  }
 }
 
 // Parse the logging format strings.
@@ -557,11 +573,7 @@ private inline string fix_logging(string s)
   sscanf(s, "%*[\t ]", s);
   s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
 
-  // FIXME: This looks like a bug.
-  // Is it supposed to strip all initial whitespace, or do what it does?
-  //	/grubba 1997-10-03
-  while(s[0] == ' ') s = s[1..];
-  while(s[0] == '\t') s = s[1..];
+  s = String.trim_whites( s );
   while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
     s=sprintf("%s%c%s", pre, c, post);
   while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
@@ -774,8 +786,9 @@ private mapping internal_gopher_image(string from)
   // Disallow "internal-gopher-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
   // file was sent to the browser)
-  Stdio.File f = open("roxen-images/dir/"+from+".gif","r");
-  if (f) {
+  Stdio.File f = lopen("roxen-images/dir/"+from+".gif","r");
+  if (f) 
+  {
     return (["file":f, "type":"image/gif"]);
   } else {
     // File not found.
@@ -963,27 +976,20 @@ private mapping internal_roxen_image(string from)
   sscanf(from, "%s.xcf", from);
   sscanf(from, "%s.png", from);
 
-  // Disallow "internal-roxen-..", it won't really do much harm, but a list of
-  // all files in '..' might be retrieved (that is, the actual directory
-  // file was sent to the browser)
-  // /internal-roxen-../.. was never possible, since that would be remapped to
-  // /..
-  from -= ".";
-
-  // New idea: Automatically generated colorbar. Used by wizard code...
+  // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
   if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
     return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
 
   Stdio.File f;
 
-  if(f = open("roxen-images/"+from+".gif", "r"))
+  if(f = lopen("roxen-images/"+from+".gif", "r"))
     return (["file":f, "type":"image/gif"]);
-  if(f = open("roxen-images/"+from+".jpg", "r"))
+  if(f = lopen("roxen-images/"+from+".jpg", "r"))
     return (["file":f, "type":"image/jpeg"]);
-  if(f = open("roxen-images/"+from+".png", "r"))
+  if(f = lopen("roxen-images/"+from+".png", "r"))
     return (["file":f, "type":"image/png"]);
-  if(f = open("roxen-images/"+from+".xcf", "r"))
+  if(f = lopen("roxen-images/"+from+".xcf", "r"))
     return (["file":f, "type":"image/x-gimp-image"]);
   // File not found.
   return 0;
@@ -3216,8 +3222,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
   deflocaledoc("svenska", "Log", "Loggning: På",
 	       "Ska roxen logga alla förfrågningar till en logfil?");
 
-  defvar("LogFile", roxen->query("logdirprefix")+
-	 short_name(name)+"/Log",
+  defvar("LogFile", "$LOGDIR/"+short_name(name)+"/Log",
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
 	 ""
