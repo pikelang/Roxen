@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.50 2001/09/25 16:28:31 wellhard Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.51 2001/11/07 12:13:56 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -204,6 +204,10 @@ void xml_add_module(string t, mapping m, string c) {
 
 void xml_drop_module(string t, mapping m, string c) {
   conf->disable_module(c);
+  return;
+}
+
+void xml_dummy(string t, mapping m, string c) {
   return;
 }
 
@@ -592,7 +596,7 @@ void run_xml_tests(string data) {
   lfails=0;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_add_module,
-    "drop-module" : xml_drop_module,
+    "drop-module" : xml_dummy /* xml_drop_module */,
     "use-module": xml_use_module,
     "test" : xml_test,
     "tag-test" : xml_tag_test,
@@ -609,7 +613,7 @@ void run_xml_tests(string data) {
   // Go through them again, evaluation from the p-code this time.
   ltests=0;
   Roxen.get_xml_parser()->add_containers( ([
-    "add-module" : xml_add_module,
+    "add-module" : xml_dummy /* xml_add_module */,
     "drop-module" : xml_drop_module,
     "test" : xml_test,
     "tag-test" : xml_tag_test,
