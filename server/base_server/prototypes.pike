@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.103 2004/05/05 16:59:13 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.104 2004/05/05 21:17:03 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1024,6 +1024,83 @@ class RequestID
     }
   }
 
+  static MultiStatus multi_status;
+
+  MultiStatus get_multi_status()
+  //! Returns a @[MultiStatus] object to be used to produce a 207
+  //! Multi-Status response (RFC 2518 10.2). It's only used if the
+  //! result returned from @[RoxenModule.find_file] et al is an empty
+  //! mapping.
+  //!
+  //! @note
+  //! It's not necessarily safe to assume that there aren't any
+  //! multi-status responses stored here already on entry to
+  //! @[find_file] et al. C.f. @[multi_status_updates].
+  //!
+  //! @seealso
+  //! @[set_status_for_path]
+  {
+    if (!multi_status) multi_status = MultiStatus();
+    return multi_status;
+  }
+
+  int multi_status_size()
+  //! Returns the number responses that have been added to the
+  //! @[MultiStatus] object returned by @[get_multi_status]. Useful to
+  //! see whether a (part of a) recursive operation added any errors
+  //! or other results.
+  {
+    return multi_status && multi_status->num_responses();
+  }
+
+  void set_status_for_path (string path, int status_code,
+			    string|void message, mixed... args)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The status is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param status_code
+  //!   The HTTP status code.
+  //!
+  //! @param message
+  //!   If given, it's a message to include in the response. The
+  //!   message may contain line feeds ('\n') and ISO-8859-1
+  //!   characters in the ranges 32..126 and 128..255.
+  //!
+  //! @param args
+  //!   If there are more arguments after @[message] then @[message]
+  //!   is taken as an @[sprintf] style format string which is used to
+  //!   format @[args].
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    if (sizeof (args)) message = sprintf (message, @args);
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..],
+				    status_code, message);
+  }
+
+  void set_status_for_url (string url, int status_code,
+			   string|void message, mixed... args)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    if (sizeof (args)) message = sprintf (message, @args);
+    get_multi_status()->add_status (url, status_code, message);
+  }
+
 
   //  Charset handling
   
@@ -1466,9 +1543,13 @@ class MultiStatus
     "xmlns:MS": "urn:schemas-microsoft-com:datatypes",
   ]);
 
-  int(0..1) is_empty()
+  static int response_count;
+
+  int num_responses()
+  //! Returns the number of responses that have been added to this
+  //! object.
   {
-    return !sizeof(status_set);
+    return response_count;
   }
 
   void add_response(string href, Node response_node)
@@ -1478,6 +1559,7 @@ class MultiStatus
     } else {
       status_set[href] += ({ response_node });
     }
+    response_count++;
   }
 
   //! Add DAV:propstat information about the property @[prop_name] for
@@ -1511,6 +1593,7 @@ class MultiStatus
 	       prop_name, code, prop_value);
     if (!(stat_nodes = status_set[href])) {
       status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
+      response_count++;
     } else {
       int index;
       for (; index < sizeof (stat_nodes); index++) {
@@ -1526,6 +1609,7 @@ class MultiStatus
 	  status_set[href][..index-1] +
 	  ({ stat_node = XMLPropStatNode(code, message) }) +
 	  status_set[href][index..];
+	response_count++;
       }
     }
     if (message) {
@@ -1534,6 +1618,21 @@ class MultiStatus
       prop_value = 0;
     }
     stat_node->add_property(prop_name, prop_value);
+  }
+
+  void add_status (string href, int status_code,
+		   void|string message, mixed... args)
+  //! Add a status for the specified url. The remaining arguments are
+  //! the same as for @[Roxen.http_status].
+  {
+    add_response (href, XMLStatusNode (status_code));
+    if (message) {
+      if (sizeof (args)) message = sprintf (message, @args);
+      Parser.XML.Tree.ElementNode descr =
+	Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
+      descr->add_child (Parser.XML.Tree.TextNode (message));
+      add_response (href, descr);
+    }
   }
 
   void add_namespace (string namespace)
@@ -1586,11 +1685,9 @@ class MultiStatus
     ]);
   }
 
-  class prefix(static string href_prefix) {
-    int(0..1) is_empty()
-    {
-      return MultiStatus::is_empty();
-    }
+  class Prefixed (static string href_prefix)
+  {
+    MultiStatus get_multi_status() {return MultiStatus::this;}
     void add_response(string href, Node response_node) {
       MultiStatus::add_response(href_prefix + href, response_node);
     }
@@ -1600,30 +1697,36 @@ class MultiStatus
     {
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
     }
+    void add_status (string path, int status_code,
+		     void|string message, mixed... args)
+    {
+      MultiStatus::add_status (href_prefix + path, status_code, message, @args);
+    }
     void add_namespace (string namespace)
     {
       MultiStatus::add_namespace (namespace);
     }
-    this_program prefix(string href_prefix) {
-      return MultiStatus::prefix(this_program::href_prefix + href_prefix);
+    MultiStatus.Prefixed prefix(string href_prefix) {
+      return this_program (this_program::href_prefix + href_prefix);
     }
-    Node get_xml_node()
-    {
-      return MultiStatus::get_xml_node();
-    }
-    mapping(string:mixed) http_answer()
-    {
-      return MultiStatus::http_answer();
-    }
+  }
+
+  MultiStatus.Prefixed prefix (string href_prefix)
+  //! Returns an object with the same @expr{add_*@} methods as this
+  //! one except that @[href_prefix] is implicitly prepended to every
+  //! path.
+  {
+    return Prefixed (href_prefix);
   }
 }
 
 // Only for protyping and breaking of circularities.
 static class PropertySet
 {
-  RequestID id;
   string path;
-  Stat st;
+  RequestID id;
+  Stat get_stat();
+  mapping(string:string) get_response_headers();
   multiset(string) query_all_properties();
   string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     query_property(string prop_name);
@@ -1636,7 +1739,7 @@ static class PropertySet
 					  array(Parser.XML.Tree.Node) value);
   mapping(string:mixed) remove_property(string prop_name);
   mapping(string:mixed) find_properties(string mode,
-					MultiStatus result,
+					MultiStatus.Prefixed result,
 					multiset(string)|void filt);
 }
 
@@ -1677,11 +1780,11 @@ class RoxenModule
   string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   void recurse_find_properties(string path, string mode, int depth,
-			       MultiStatus result, RequestID id,
+			       MultiStatus.Prefixed result, RequestID id,
 			       multiset(string)|void filt);
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
-					 MultiStatus result, RequestID id);
+					 MultiStatus.Prefixed result, RequestID id);
   mapping(string:mixed) set_property (string path, string prop_name,
 				      string|array(Parser.XML.Tree.Node) value,
 				      RequestID id);
@@ -1706,7 +1809,8 @@ class RoxenModule
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
-  int(0..1) recurse_delete_files(string path, MultiStatus result, RequestID id);
+  int(0..1) recurse_delete_files(string path, MultiStatus.Prefixed result,
+				 RequestID id);
 }
 
 class PatchPropertyCommand
