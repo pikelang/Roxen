@@ -1,9 +1,9 @@
 popups = new Array(0);
 
 // Removes all hide timers.
-function clearHideTimers()
+function clearHideTimers(from)
 {
-  for(var i = popups.length - 1; i >= 0; i--)
+  for(var i = from; i >= 0; i--)
     if(popups[i].hide_timer) {
       clearTimeout(popups[i].hide_timer);
       popups[i].hide_timer = null;
@@ -22,11 +22,11 @@ function checkPopupCoord(x, y, popup_index)
   //alert("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+".");
   if((x > p.x && x < p.x + p.w) && (y > p.y && y < p.y + p.h)) {
     p.inside = true;
-    clearHideTimers();
+    clearHideTimers(popup_index);
   } else {
     if(p.inside) {
       if(!p.hide_timer) {
-	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", 500);
+	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", p.properties.hide_delay);
       }
       if(popups.length == 0)
 	releaseMouseEvent();
@@ -63,7 +63,7 @@ function addPopup(name, properties)
 function clearToPopup(popup)
 {
   // Remove all hide timers
-  clearHideTimers();
+  clearHideTimers(popups.length - 1);
   while(popups.length > 0 && popup != popups[popups.length - 1].name)
   {
     hide(popups[popups.length - 1].name);
@@ -114,6 +114,8 @@ function PopupCoord(name)
 
 function showPopup(e, name, parent, properties)
 {
+  if(!properties)
+    alert("No properties object for popup '"+name+"'.");
   if(popups.length != 0) {
     if(popups[popups.length - 1].name == name) {
       // The correct popup is allredy there.
@@ -163,15 +165,20 @@ function LayerPosition(trigger_pos, parent_popup_pos, properties)
     this.y += properties.oy;
 }
 
-function PopupProperties(hide_delay, ox, oy, pox, poy)
+function PopupProperties(ox, oy)
 {
-  this.hide_delay = hide_delay;
+  this.hide_delay = 300;
   this.ox = ox;
   this.oy = oy;
-  this.pox = pox;
-  this.poy = poy;
-  this.hide_2nd_click = 0;
+  this.pox = false;
+  this.poy = false;
+  this.hide_2nd_click = false;
   this.LayerPosition = LayerPosition;
+  
+  this.setHide2ndClick = function() { this.hide_2nd_click = true; };
+  this.setHideDelay = function(hide_delay) { this.hide_delay = hide_delay; };
+  this.setParentRightOffset = function(pox) { this.pox = pox; };
+  this.setParentBottomOffset = function(poy) { this.poy = poy; };
 
   // Modify the offsets
   if(isNav5) {
@@ -185,5 +192,5 @@ function PopupProperties(hide_delay, ox, oy, pox, poy)
 }
 
 // Default popup properties
-default_props = new PopupProperties(200, 15, 0, 0, 0);
+default_props = new PopupProperties(15, 0);
 
