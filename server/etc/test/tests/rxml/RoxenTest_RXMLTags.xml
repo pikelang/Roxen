@@ -984,6 +984,26 @@ e</random></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.x" expr="1==0"/>&var.x;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="1==1"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="1!=0"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="1!=1"/>&var.x;</rxml>
+</result>0</result>
+</test>
+
+<test>
 <rxml><set variable="var.x" expr="INT()*2+INT(5)"/>&var.x;</rxml>
 <result>5</result>
 </test>
