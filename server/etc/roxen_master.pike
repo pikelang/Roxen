@@ -10,7 +10,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.14 1997/01/18 23:43:04 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.15 1997/01/20 13:58:24 kg Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -154,6 +154,29 @@ varargs mixed getenv(string s)
 void putenv(string var, string val)
 {
   environment[var]=val;
+}
+
+mixed resolv(string identifier, string current_file)
+{
+  mixed ret;
+  string *tmp,path;
+
+  tmp=current_file/"/";
+  tmp[-1]=identifier;
+  path=combine_path(getcwd(), tmp*"/");
+  if(ret=findmodule(path)) return tmp;
+
+  if(path=getenv("PIKE_MODULE_PATH"))
+  {
+    foreach(path/":", path)
+      {
+	path=combine_path(path,identifier);
+	if(ret=findmodule(path)) return ret;
+      }
+  }
+
+  path=combine_path(pike_library_path+"/modules",identifier);
+  return findmodule(path);
 }
 
 /* This function is called when all the driver is done with all setup
