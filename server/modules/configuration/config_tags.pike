@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.174 2002/04/15 14:50:57 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.175 2002/04/22 16:46:12 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1232,15 +1232,18 @@ class TagIfLicense {
 
 mapping get_license_vars(License.Key key)
 {
-  return ([ "company_name": key->company_name(),
-	    "expires":      key->expires(),
-	    "hostname":     key->hostname(),
-	    "type":         key->type(),
-	    "number":       key->number(),
-	    "modules":      key->get_modules(),
-	    "name":         key->name(),
+  return ([ "company_name":    key->company_name(),
+	    "expires":         key->expires(),
+	    "hostname":        key->hostname(),
+	    "type":            key->type(),
+	    "number":          key->number(),
+	    "license-version": key->license_version(),
+	    "comment":         key->comment()||"",
+	    "modules":         key->get_modules(),
+	    "name":            key->name(),
 	    "configurations":
-	      String.implode_nicely(License.get_configurations_for_license(key)->name),
+	    String.implode_nicely(License.
+				  get_configurations_for_license(key)->name),
 	    
 	    "filename":     key->filename(),
 	    "creator":      key->creator(),
