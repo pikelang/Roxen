@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.44 2001/09/04 19:21:39 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.45 2001/09/04 22:13:16 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -105,7 +105,7 @@ RequestID get_id()
   object id = roxen.InternalRequestID();
   id->supports = (< "images" >);
   id->client = ({ "RoxenTest" });
-  id->set_url("http://localhost/index.html");
+  id->set_url("http://localhost:17369/index.html");
 
   id->realfile=self_test_dir+"/filesystem/index.html";
   id->misc->stat = conf->stat_file("/index.html", id);
