@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.10 1999/10/03 01:10:36 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.11 1999/10/04 00:05:55 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -162,7 +162,9 @@ string tag_header(string tag, mapping m, object id)
 
 array(string) tag_realfile(string tag, mapping m, object id)
 {
-  return ({ id->realfile || rxml_error(tag, "Real file unknown", id) });
+  if(id->realfile)
+    return ({ id->realfile });
+  return rxml_error(tag, "Real file unknown", id);
 }
 
 string tag_redirect(string tag, mapping m, object id)
@@ -283,7 +285,9 @@ string tag_set( string tag, mapping m, object id )
 
 array(string) tag_vfs(string tag, mapping m, object id)
 {
-  return ({ id->virtfile || rxml_error(tag, "Virtual file unknown.", id) });
+  if(id->virtfile)
+    return ({ id->virtfile });
+  return rxml_error(tag, "Virtual file unknown.", id);
 }
 
 string tag_language(string tag, mapping m, object id)
@@ -489,7 +493,7 @@ inline string do_replace(string s, mapping m, object id)
 }
 #endif
 
-string tag_insert(string tag,mapping m,object id)
+string|array(string) tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
     return "Inserts a file, variable or other object into a webpage";
@@ -502,56 +506,80 @@ string tag_insert(string tag,mapping m,object id)
     old_rxml_warning(id, "define or name attribute in insert tag","only variables");
     m_delete(m, "define");
     m_delete(m, "name");
-    return do_replace(id->misc->defines[n]||rxml_error(tag, "No such define ("+n+").",id), m, id);
+    if(id->misc->defines[n])
+      return ({ do_replace(id->misc->defines[n], m, id) });
+    return rxml_error(tag, "No such define ("+n+").", id);
   }
 #endif
 
-  if (n=m->variable)
+  if(n = m->variable)
+  {
+    if(!id->variables[n])
+      return rxml_error(tag, "No such variable ("+n+").", id);
 #if old_rxml_compat
+    m_delete(m, "variable");
+    if(m->parse)
     {
-      m_delete(m, "variable");
-      return do_replace(id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id), m, id);
+      m_delete(m, "parse");
+      return do_replace(id->variables[n]);
     }
+    return ({ do_replace(id->variables[n], m, id) });
 #else
-    return id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id);
+    if(m->parse)
+      return id->variables[n];
+    return ({ id->variables[n] });
 #endif
+  }
 
 #if old_rxml_compat
-  if(m->variables && m->variables!="variables") {
-    old_rxml_warning(id, "insert attribute variables set to an value","&lt;debug showid=\"id->variables\"&gt;");
-      return Array.map(indices(id->variables), lambda(string s, mapping m) {
-	return s+"="+sprintf("%O", m[s])+"\n";
-      }, id->variables)*"\n";
+  if(m->variables && m->variables!="variables")
+  {
+    old_rxml_warning(id, "insert attribute variables set to an value",
+		     "&lt;debug showid=\"id->variables\"&gt;" );
+    return ({ Array.map(indices(id->variables),
+			lambda(string s, mapping m)
+			{ return sprintf("%s=%O\n", s, m[s]); },
+			id->variables) * "\n"
+	    });
   }
 #endif
 
-  if (n=m->variables)
-    return String.implode_nicely(indices(id->variables));
+  if(n = m->variables)
+    return ({ String.implode_nicely(indices(id->variables)) });
 
-  if (n=m->other)
-    return (stringp(id->misc[n])||intp(id->misc[n])?(string)id->misc[n]:rxml_error(tag, "No such variable ("+n+").",id));
+  if(n = m->other)
+    if(stringp(id->misc[n]) || intp(id->misc[n]))
+      return ({ (string)id->misc[n] });
+    else
+      return rxml_error(tag, "No such other variable ("+n+").", id);
 
-  if (n=m->cookies) 
+  if(n = m->cookies)
   {
     NOCACHE();
     if(n!="cookies")
-      return Array.map(indices(id->cookies), lambda(string s, mapping m) {
-	return s+"="+sprintf("%O", m[s])+"\n";
-      }, id->cookies)*"\n";
-    return String.implode_nicely(indices(id->cookies));
+      return ({ Array.map(indices(id->cookies),
+			  lambda(string s, mapping m)
+			  { return sprintf("%s=%O\n", s, m[s]); },
+			  id->cookies) * "\n";
+	      });
+    return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
-  if (n=m->cookie) {
+  if(n=m->cookie)
+  {
     NOCACHE();
 #if old_rxml_compat
     m_delete(m, "cookie");
-    return do_replace(id->cookies[n]||rxml_error(tag, "No such cookie ("+n+").", id), m, id);
+    if(id->cookies[n])
+      return ({ do_replace(id->cookies[n], m, id) });
 #else
-    return id->cookies[n]||rxml_error(tag, "No such cookie ("+n+").", id);
+    if(id->cookies[n])
+      return ({ id->cookies[n] });
 #endif
+    return rxml_error(tag, "No such cookie ("+n+").", id);
   }
 
-  if (m->file)
+  if(m->file)
   {
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
@@ -582,19 +610,20 @@ string tag_insert(string tag,mapping m,object id)
       CACHE(60);
     object q=Protocols.HTTP.get_url(m->href);
     if(q && q->status>0 && q->status<400)
-      return q->data();
-    return rxml_error(tag,(q?q->status_desc:0)||"No server respons",id);
+      return ({ q->data() });
+    return rxml_error(tag, (q ? q->status_desc: "No server response"), id);
   }
 
   string ret="Could not fullfill your request.<br>\nArguments:";
   foreach(indices(m), string tmp)
     ret+="<br />\n"+tmp+" : "+m[tmp];
- 
+
   return rxml_error(tag, ret, id);
 }
 
-string tag_configurl(string tag, mapping m, object id) {
-  return id->conf->api_functions()->config_url[0]();
+string|array(string) tag_configurl(string tag, mapping m, object id)
+{
+  return ({ id->conf->api_functions()->config_url[0]() });
 }
 
 string tag_return(string tag, mapping m, object id)
@@ -635,29 +664,29 @@ string tag_remove_cookie(string tag, mapping m, object id)
   return "";
 }
 
-string tag_user(string tag, mapping m, object id, object file)
+array(string) tag_user(string tag, mapping m, object id, object file)
 {
-  return id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file);
+  return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
 }
 
-string tag_modified(string tag, mapping m, object id, object file)
+array(string) tag_modified(string tag, mapping m, object id, object file)
 {
-  return id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file);
+  return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
 }
 
 
 // ------------------- Containers ----------------
 
-string tag_aprestate(string tag, mapping m, string q, object id)
+array(string) tag_aprestate(string tag, mapping m, string q, object id)
 {
   string href, s, *foo;
 
   if(!(href = m->href))
     href=strip_prestate(strip_config(id->raw_url));
-  else 
+  else
   {
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
-      return make_container("a",m,q);
+      return ({ make_container("a", m, q) });
     href=strip_prestate(fix_relative(href, id));
     m_delete(m, "href");
   }
@@ -681,7 +710,8 @@ string tag_aprestate(string tag, mapping m, string q, object id)
         prestate[s]=1;
      }
   }
-  if(oldflag) old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
+  if(oldflag)
+    old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
 #endif
 
   if(m->add) {
@@ -695,10 +725,10 @@ string tag_aprestate(string tag, mapping m, string q, object id)
     m_delete(m,"drop");
   }
   m->href = add_pre_state(href, prestate);
-  return make_container("a",m,q);
+  return ({ make_container("a", m, q) });
 }
 
-string tag_aconf(string tag, mapping m, string q, object id)
+string|array(string) tag_aconf(string tag, mapping m, string q, object id)
 {
   string href,s;
   mapping cookies = ([]);
@@ -751,7 +781,7 @@ string tag_aconf(string tag, mapping m, string q, object id)
   }
 
   m->href = add_config(href, indices(cookies), id->prestate);
-  return make_container("a", m, q);
+  return ({ make_container("a", m, q) });
 }
 
 string tag_maketag(string tag, mapping m, string cont, object id) {
@@ -1299,7 +1329,7 @@ mapping query_container_callers()
 		     if(m->compare)
 		       return crypt(c,m->compare)?"<true>":"<false>";
 		     else
-		       return crypt(c);
+		       return ({ crypt(c) });
 		   },
 	   "doc":tag_doc,
 	   "default":tag_default,
