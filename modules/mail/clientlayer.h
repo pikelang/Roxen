@@ -84,3 +84,18 @@ class ClientLayer
   multiset get_mail_flags(string mail_id);
 }
 
+class ClientInit
+{
+  Clientlayer clientlayer;
+
+  int init_clientlayer( roxen.Configuration c )
+  {
+    array err;
+    if( err = catch {
+      module_dependencies( c, ({ "clientlayer" }) );
+      clientlayer = conf->get_providers( "automail_clientlayer" )[ 0 ];
+    })
+      return 0;
+    return !!clientlayer;
+  }
+}
