@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.29 2004/08/12 11:55:42 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.30 2004/08/12 12:05:07 noring Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -308,9 +308,9 @@ class TagEmitSpellcheck {
       }
       foreach(s/"\n", string line)
       {
-	line -= "\r";   // Needed for Windows versions of aspell.
 	if(!sizeof(line))
 	  continue;
+	line = replace(line, "\r", " ");   // Needed for aspell on Windows.
 
 	switch(line[0])
 	{
