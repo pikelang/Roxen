@@ -91,7 +91,7 @@ install: all
 	cp pike/src/pike $(prefix)/roxen/server/bin
 	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
-	# cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
+#	cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
 	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
 	test -d $(prefix)/roxen/local/modules/. || mkdir $(prefix)/roxen/local/modules
 	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
@@ -118,6 +118,13 @@ install: all
 		README README.ssl3 TODO; do \
 	  if test -f $(SRCDIR)/$f ; then \
 	    echo Copying $f...; cp $(SRCDIR)/$f $(prefix)/roxen/$f; \
+	  else :; fi; \
+	done
+	-@for f in cgi fcgi install.pike pdbi.pike pike roxen roxen_hostname; \
+	do \
+	  if test -f $(prefix)/roxen/server/bin/$$f ; then \
+	    echo Modifying permissions for file $(prefix)/roxen/server/bin/$$f... ; \
+	    chmod a+rx $(prefix)/roxen/server/bin/$$f; \
 	  else :; fi; \
 	done
 	@echo Roxen installed.
