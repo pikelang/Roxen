@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.86 1998/03/23 17:58:33 grubba Exp $
+ * $Id: ftp.pike,v 1.87 1998/03/23 19:30:19 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -578,7 +578,7 @@ class ls_program {
 	  }
 	} else if (!st || (st[1] == -1)) {
 	  // Not found
-	  output->write(short + " not found");
+	  output->write(short + " not found\n");
 	  m_delete(args, short);
 	}
       }
@@ -1115,14 +1115,17 @@ int open_file(string arg, int|void noport)
     file=0;
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
+    mixed err;
     if (!file) {
       st = my_stat_file(not_query);
       if(st && st[1] < 0) {
 	reply("550 "+arg+": not a plain file.\n");
 	file = 0;
 	return 0;
-      } else if(catch(file = roxen->get_file(this_object()))) {
-	file = 0;
+      } else if(err = catch(file = roxen->get_file(this_object()))) {
+	roxen_perror(sprintf("FTP: Error opening file\n%s\n",
+			     describe_backtrace(err)));
+	catch { file = 0; };
 	reply("550 "+arg+": Error, can't open file.\n");
 	return 0;
       }
@@ -1261,6 +1264,8 @@ string partial = "";
 
 void handle_data(string s, mixed key)
 {
+  roxen_perror(sprintf("FTP: handle_data():%O\n", ({ s })));
+
   string cmdlin;
   time = _time(1);
   if (!objectp(cmd_fd)) {
@@ -1276,12 +1281,6 @@ void handle_data(string s, mixed key)
   supports = (< "ftp", "images", "tables", >);
   prot = "FTP";
   method = "GET";
-
-  // A single read() can contain multiple or partial commands
-  // RFC 1123 4.1.2.10
-  if (sizeof(partial)) {
-    s = partial + s;
-  }
 
   // However, a server-FTP MUST be capable of
   // accepting and refusing Telnet negotiations (i.e., sending
@@ -1366,6 +1365,9 @@ void handle_data(string s, mixed key)
 
   // A single read() can contain multiple or partial commands
   // RFC 1123 4.1.2.10
+  if (sizeof(partial)) {
+    s = partial + s;
+  }
   while (sscanf(s,"%s\r\n%s",cmdlin,s)==2)
   {
     string cmd,arg;
