@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.140 2002/05/15 17:53:31 wellhard Exp $
+// $Id: wizard.pike,v 1.141 2002/06/10 15:21:42 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -605,6 +605,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   FakedVariables v=id->variables;
 
+  int current_page = (int) v->_page;
+
   mapping(string:array) automaton = this_object()->wizard_automaton;
   function dispatcher;
   string oldpage, page_name;
@@ -791,7 +793,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       }
     }
   }
-  else
+  else {
     for(; !data; v->_page=PAGE(offset))
     {
       function pg=this_object()[wiz_name+((int)v->_page)];
@@ -809,7 +811,19 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if(data = pg(id,@args)) break;
       DEBUGMSG ("Wizard: No data from page function; going to " +
 		(offset > 0 ? "next" : "previous") + " page\n");
+
+      //  If going backwards and we end up on a negative page (e.g. due to
+      //  intermediate pages returning 0) we remain on current page. This is
+      //  done so that wizards which skip pages in the beginning won't result
+      //  in wizard_done() when trying to step into hidden pages.
+      if ((offset < 0) && ((int) v->_page <= 0)) {
+	v->_page = current_page;
+	pg = this_object()[wiz_name + ((int) v->_page)];
+	if (pg && (data = pg(id, @args)))
+	  break;
+      }
     }
+  }
 
   // If it's a mapping we can presume it is an http response, and return
   // it directly.
