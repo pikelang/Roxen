@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.111 1999/11/29 21:34:41 neotron Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.112 2000/12/10 18:53:31 nilsson Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -601,7 +601,7 @@ static string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config)) 
     return url;
-  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
+  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
 }

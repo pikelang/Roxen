@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.27 1999/05/26 06:48:37 mast Exp $";
+string cvs_version = "$Id: http.pike,v 1.28 2000/12/10 18:53:16 nilsson Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -231,7 +231,7 @@ static string add_pre_state( string url, multiset state )
     error("URL needed for add_pre_state()\n");
   if(!state || !sizeof(state))
     return url;
-  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
+  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/(" + sort(indices(state)) * "," + ")" + url ;
 }
