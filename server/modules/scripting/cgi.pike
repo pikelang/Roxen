@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.47 2000/09/12 11:26:32 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.48 2000/09/23 02:04:07 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -849,7 +849,6 @@ class CGIScript
 
 mapping(string:string) global_env = ([]);
 string searchpath, location;
-array(string) extensions;
 int handle_ext, noexec;
 
 void start(int n, Configuration conf)
@@ -861,7 +860,6 @@ void start(int n, Configuration conf)
   noexec = query("noexec");
   module_dependencies(conf, ({ "pathinfo" }));
   location = query("location");
-  extensions = query("ext");
   
   if(conf)
   {
@@ -966,7 +964,7 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 */
 array (string) query_file_extensions()
 {
-  return extensions;
+  return query("ext");
 }
 
 string query_location()
