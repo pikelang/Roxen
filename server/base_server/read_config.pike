@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.45 2000/08/22 21:14:41 per Exp $
+// $Id: read_config.pike,v 1.46 2000/08/23 16:09:34 per Exp $
 
 #include <module.h>
 
@@ -101,7 +101,7 @@ void really_save_it( string cl, mapping data )
     destruct( fd );
 
     if( file_stat(f+"~") && !mv(f+"~", f+"~2~") )
-      error("Failed to move backup config file to backup2 file\n");
+      rm( f+"~" ); // no error needed here, really...
 
     if( file_stat(f) && !mv(f, f+"~") )
       error("Failed to move current config file to backup file\n");
