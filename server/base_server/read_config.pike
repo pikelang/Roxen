@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.59 2001/08/21 17:00:52 per Exp $
+// $Id: read_config.pike,v 1.60 2001/09/03 18:04:26 per Exp $
 
 #include <module.h>
 
@@ -41,7 +41,7 @@ array(string) list_all_configurations()
        || s[0] == '_')
       return 0;
     return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
-  }), lambda(string s) { return replace(s, "_", " "); });
+  }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
 }
 
 
@@ -64,7 +64,7 @@ void really_save_it( string cl, mapping data )
   report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
-  f = configuration_dir + replace(cl, " ", "_");
+  f = configuration_dir + replace(string_to_utf8(cl), " ", "_");
   new = f + ".new~";
   fd = open(new, "wct");
 
