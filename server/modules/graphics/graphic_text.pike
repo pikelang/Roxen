@@ -1,4 +1,7 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.197 1999/12/14 07:26:06 nilsson Exp $";
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+//
+
+constant cvs_version="$Id: graphic_text.pike,v 1.198 2000/01/02 01:29:21 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -75,6 +78,12 @@ constant tagdoc=(["gtext":"<desc cont></desc>"+gtextargs,
 
 roxen.ImageCache image_cache;
 
+string status() {
+  array s=image_cache->status();
+  return sprintf("<b>Images in cache:</b> %d images<br>\n<b>Cache size:</b> %s",
+		 s[0]/2, sizetostring(s[1]));
+}
+
 void start()
 {
   image_cache = roxen.ImageCache( "gtext", draw_callback );
@@ -91,7 +100,6 @@ mixed draw_callback(mapping args, string text, RequestID id)
   array data;
   Image.Font font;
   Image.Image img;
-  int elapsed;
 
   if( objectp( text ) )
   {
@@ -163,7 +171,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   // Fonts and such are now initialized.
   img = GText.make_text_image(args, font, text, id);
 
-  // Now we have the image in 'img', or nothing.
+  // Now we have the image in 'img'.
 
   if( !args->scroll && !args->fadein )
   {
@@ -301,7 +309,6 @@ constant textarg=({"afont",
 
 mapping mk_gtext_arg(mapping arg, RequestID id) {
 
-  mapping defines=id->misc->defines;
   mapping p=([]); //Picture rendering arguments.
 
   foreach(filearg, string tmp)
@@ -321,15 +328,15 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
       m_delete(arg,tmp);
     }
 
-  if(defines->fgcolor && !p->fgcolor) p->fgcolor=defines->fgcolor;
-  if(defines->bgcolor && !p->bgcolor) p->bgcolor=defines->bgcolor;
-  if(defines->nfont && !p->nfont) p->nfont=defines->nfont;
-  if(defines->afont && !p->afont) p->afont=defines->afont;
-  if(defines->font &&  !p->font) p->font=defines->font;
-  if(defines->bold && !p->bold) p->bold=defines->bold;
-  if(defines->italic && !p->italic) p->italic=defines->italic;
-  if(defines->black && !p->black) p->black=defines->black;
-  if(defines->narrow && !p->narrow) p->narrow=defines->narrow;
+  if(id->misc->gtext_fgcolor && !p->fgcolor) p->fgcolor=id->misc->gtext_fgcolor;
+  if(id->misc->gtext_bgcolor && !p->bgcolor) p->bgcolor=id->misc->gtext_bgcolor;
+  if(id->misc->gtext_nfont && !p->nfont) p->nfont=id->misc->gtext_nfont;
+  if(id->misc->gtext_afont && !p->afont) p->afont=id->misc->gtext_afont;
+  if(id->misc->gtext_font &&  !p->font) p->font=id->misc->gtext_font;
+  if(id->misc->gtext_bold && !p->bold) p->bold=id->misc->gtext_bold;
+  if(id->misc->gtext_italic && !p->italic) p->italic=id->misc->gtext_italic;
+  if(id->misc->gtext_black && !p->black) p->black=id->misc->gtext_black;
+  if(id->misc->gtext_narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
 
   return p;
 }
@@ -363,7 +370,7 @@ string fix_text(string c, mapping m, RequestID id) {
 string container_gtext_url(string t, mapping arg, string c, RequestID id) {
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
+  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
   string ext="";
   if(query("ext")) ext="."+(p->format || "gif");
   if(!arg->short)
@@ -373,7 +380,7 @@ string container_gtext_url(string t, mapping arg, string c, RequestID id) {
 
 string tag_gtext_id(string t, mapping arg, RequestID id) {
   mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
+  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
   if(!arg->short)
     return query_internal_location()+"$"+image_cache->store(p, id)+"/";
   return "+"+image_cache->store(p, id )+"/foo";
@@ -381,9 +388,7 @@ string tag_gtext_id(string t, mapping arg, RequestID id) {
 
 string container_gtext(string t, mapping arg, string c, RequestID id)
 {
-  mapping defines=id->misc->defines;
-  if((c-" ")=="") 
-    return "";
+  if((c-" ")=="") return "";
 
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
@@ -393,7 +398,7 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
 
   string lp="%s", url="", ea="";
 
-  int input;
+  int input=0;
   if(arg->submit)
   {
     input=1;
@@ -407,7 +412,7 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
   {
     url = arg->href;
     lp = replace(make_tag("a",arg),"%","%%")+"%s</a>";
-    if(!p->fgcolor) p->fgcolor=defines->link||"#0000ff";
+    if(!p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
     m_delete(arg, "href");
   }
 
@@ -449,7 +454,7 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     string magic=replace(arg->magic,"'","`");
     m_delete(arg,"magic");
 
-    if(!arg->fgcolor) p->fgcolor=defines->alink||"#ff0000";
+    if(!arg->fgcolor) p->fgcolor=id->misc->gtext_alink||"#ff0000";
     if(p->bevel) p->pressed=1;
 
     foreach(glob("magic-*", indices(arg)), string q)
@@ -467,7 +472,7 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn="i"+defines->mi++;
+    string sn="i"+id->misc->gtext_mi++;
     if(!id->supports->netscape_javascript) {
       return (!input)?
         ("<a "+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
@@ -475,23 +480,24 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     }
 
     arg->name=sn;
-    string res="<script>\n";
-    if(!defines->magic_java)
+    string res="\n<script>\n";
+    if(!id->misc->gtext_magic_java) {
       res += "function i(ri,hi,txt)\n"
         "{\n"
         "  document.images[ri].src = hi.src;\n"
         "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
 	"}\n";
-    defines->magic_java="yes";
+    }
+    id->misc->gtext_magic_java="yes";
 
     return
       res+
       " "+sn+"l = new Image("+arg->width+", "+arg->height+");"+sn+"l.src = \""+arg->src+"\";\n"
       " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \""+query_internal_location()+num2+ext+"\";\n"
-      "</script>"+
+      "</script>\n"+
       "<a "+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(magic=="magic"?url:magic)+"'); return true;\"\n"
+      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(magic=="magic"?url:magic)+"'); return true;\" "
       "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\">"
       +make_tag("img",arg)+"</a>";
   }
@@ -525,48 +531,69 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-int|array (string) tag_body(string t, mapping args, RequestID id, Stdio.File file,
-			       mapping defines)
+int|array (string) tag_body(string t, mapping args, RequestID id)
 {
   int changed=0;
   int cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
 
-#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){defines->X=Z;if(cols){args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+#define FIX(Y,Z,X) do{ \
+  if(!args->Y || args->Y==""){ \
+    id->misc["gtext_"+X]=Z; \
+    if(cols){ \
+      args->Y=Z; \
+      changed=1; \
+    } \
+  } \
+  else{ \
+    id->misc["gtext_"+X]=args->Y; \
+    if(QUERY(colormode)&&args->Y[0]!='#'){ \
+      args->Y=ns_color(parse_color(args->Y)); \
+      changed=1; \
+    } \
+  } \
+}while(0)
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
-    FIX(bgcolor,"#bfbfbf",bgcolor);
-    FIX(text,   "#000000",fgcolor);
-    FIX(link,   "#0000b0",link);
-    FIX(alink,  "#3f0f7b",alink);
-    FIX(vlink,  "#ff0000",vlink);
+    FIX(bgcolor,"#bfbfbf","bgcolor");
+    FIX(text,   "#000000","fgcolor");
+    FIX(link,   "#0000b0","link");
+    FIX(alink,  "#3f0f7b","alink");
+    FIX(vlink,  "#ff0000","vlink");
   } else {
-    FIX(bgcolor,"#c0c0c0",bgcolor);
-    FIX(text,   "#000000",fgcolor);
-    FIX(link,   "#0000ee",link);
-    FIX(alink,  "#ff0000",alink);
-    FIX(vlink,  "#551a8b",vlink);
+    FIX(bgcolor,"#c0c0c0","bgcolor");
+    FIX(text,   "#000000","fgcolor");
+    FIX(link,   "#0000ee","link");
+    FIX(alink,  "#ff0000","alink");
+    FIX(vlink,  "#551a8b","vlink");
   }
+
   if(changed && QUERY(colormode))
     return ({make_tag("body", args) });
   return 0;
 }
 
-string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
-				   Stdio.File file, mapping defines)
+string|array(string) tag_fix_color(string tagname, mapping args, RequestID id)
 {
   int changed;
 
-  if(!id->misc->colors)
-    id->misc->colors = ({ ({ defines->fgcolor, defines->bgcolor, tagname }) });
+  if(!id->misc->gtext_colors)
+    id->misc->gtext_colors = ({ ({ id->misc->gtext_fgcolor, id->misc->gtext_bgcolor, tagname }) });
   else
-    id->misc->colors += ({ ({ defines->fgcolor, defines->bgcolor, tagname }) });
-#undef FIX
-#define FIX(X,Y) if(args->X && args->X!=""){defines->Y=args->X;if(QUERY(colormode) && args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
+    id->misc->gtext_colors += ({ ({ id->misc->gtext_fgcolor, id->misc->gtext_bgcolor, tagname }) });
 
-  FIX(bgcolor,bgcolor);
-  FIX(color,fgcolor);
-  FIX(text,fgcolor);
+#undef FIX
+#define FIX(X,Y) if(args->X && args->X!=""){ \
+  id->misc["gtext_"+Y]=args->X; \
+  if(QUERY(colormode) && args->X[0]!='#'){ \
+    args->X=ns_color(parse_color(args->X)); \
+    changed = 1; \
+  } \
+}
+
+  FIX(bgcolor,"bgcolor");
+  FIX(color,"fgcolor");
+  FIX(text,"fgcolor");
 #undef FIX
 
   if(changed && QUERY(colormode))
@@ -574,25 +601,24 @@ string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
   return 0;
 }
 
-string|void tag_pop_color(string tagname, mapping args, RequestID id, Stdio.File file,
-		 mapping defines)
+string|void tag_pop_color(string tagname, mapping args, RequestID id)
 {
-  array c = id->misc->colors;
+  array c = id->misc->gtext_colors;
   if(!c ||!sizeof(c))
     return;
 
   int i;
   tagname = tagname[1..];
 
-  for(i=0;i<sizeof(c);i++)
+  for(i=0; i<sizeof(c); i++)
     if(c[-i-1][2]==tagname)
     {
-      defines->fgcolor = c[-i-1][0];
-      defines->bgcolor = c[-i-1][1];
+      id->misc->gtext_fgcolor = c[-i-1][0];
+      id->misc->gtext_bgcolor = c[-i-1][1];
       break;
     }
-  c = c[..sizeof(c)-i-2];
-  id->misc->colors = c;
+
+  id->misc->gtext_colors = c[..sizeof(c)-i-2];
 }
 
 
