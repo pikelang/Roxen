@@ -16,7 +16,7 @@
 
 
 <define container=tmpl>
-  <title>&title;</title>
+  <title><version> <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 
   <define name=font>haru</define>

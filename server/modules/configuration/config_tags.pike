@@ -712,7 +712,11 @@ string container_configif_output(string t, mapping m, string c, object id)
                         return ([
                           "name":rl[l]->name,
                           "latin1-name":rl[l]->latin1_name,
-                          "path":fix_relative( "/"+l+"/"+ q + "?" +id->query,
+                          "path":fix_relative( "/"+l+"/"+ q + 
+                                               (id->misc->path_info?
+                                                id->misc->path_info:"")+
+                                               (id->query&&sizeof(id->query)? 
+                                                "?" +id->query:""),
                                                id),
                           "selected":( cl == l ? "selected": "" ),
                           "-selected":( cl == l ? "-selected": "" ),

@@ -1,21 +1,11 @@
 <left-menu title="Sites">
   <configif-output source=configurations>
-    <item title=#name# href='site.html/#sname:quote=stag#/'
-     <pike>
-       werror(id->misc->pathinfo + "\n");
-       if("/#sname#/" == id->misc->pathinfo ) 
-         return "selected";
-      return "";
-      </pike>>
-     </item>
+    <insert file=config_left_item.pike nocache>
   </configif-output>
 </left-menu>
 
+<topmenu base="<cf-num-dotdots>" selected=sites>
 
 <content>
 foo!
-<pike>
-werror("FOO!\n");
-return "";
-</pike>
 </content>
