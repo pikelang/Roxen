@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.14 2000/06/02 21:18:50 js Exp $
+ * $Id: update.pike,v 1.15 2000/06/02 21:30:55 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -799,6 +799,9 @@ class UpdateInfoFiles
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
 		  "roxen_version="+version_as_float()+"&"+
+		  "sysname="+uname()->sysname+"&"+
+		  "machine="+uname()->machine+"&"+
+		  "release="+uname()->release+"&"+
 		  "have_packages="+
 		  encode_ranges((array(int))indices(pkginfo)));
     call_out(do_request, 12*3600);
