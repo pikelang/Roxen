@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.97 1998/11/18 04:54:33 per Exp $
+ * $Id: ftp.pike,v 1.98 1999/04/20 22:30:25 marcus Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -963,7 +963,7 @@ class put_file_wrapper {
   static string gotdata;
   static int done, recvd;
   static function other_read_callback;
-  static string mode;
+  static string tmode;
   int bytes_received()
   {
     return recvd;
@@ -983,7 +983,7 @@ class put_file_wrapper {
   string read(mixed ... args)
   {
     string r = ::read(@args);
-    if(stringp(r) && (mode=="A")) r = replace(r, "\r\n", "\n");
+    if(stringp(r) && (tmode=="A")) r = replace(r, "\r\n", "\n");
     if(stringp(r))
       recvd += sizeof(r);
     return r;
@@ -991,7 +991,7 @@ class put_file_wrapper {
 
   static mixed my_read_callback(mixed id, string data)
   {
-    if(stringp(data) && (mode=="A")) data = replace(data, "\r\n", "\n");
+    if(stringp(data) && (tmode=="A")) data = replace(data, "\r\n", "\n");
     if(stringp(data))
       recvd += sizeof(data);
     return other_read_callback(id, data);
@@ -1031,14 +1031,14 @@ class put_file_wrapper {
       }
       gotdata = gotdata[n+1..];
     }
-    if(mode=="A") gotdata = replace(gotdata, "\n", "\r\n");
+    if(tmode=="A") gotdata = replace(gotdata, "\n", "\r\n");
     return strlen(data);
   }
 
   void create(object i, object f, string m)
   {
     id = i;
-    mode=m;
+    tmode=m;
     assign(f);
     response = "200 Stored.\n";
     gotdata = "";
