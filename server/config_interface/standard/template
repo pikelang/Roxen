@@ -93,7 +93,7 @@
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
 <define container="tmpl">
-<title>&roxen.version; &locale.administration_interface; &_.title;</title>
+<title>&roxen.version; &locale.administration_interface;<eval>&_.title:none;</eval></title>
 <nooutput>
   <insert file="/standard/themes/&usr.theme;/theme" nocache="1" />
   <define preparse="" variable="var.leftimage"><img src="&usr.left-image;" /></define>
