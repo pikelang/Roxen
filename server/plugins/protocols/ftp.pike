@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.107 2004/07/09 00:59:01 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.108 2004/07/17 23:00:22 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -358,6 +358,11 @@ class FileWrapper
       f->set_blocking();
       BACKEND_CLOSE(f);
     }
+  }
+
+  string query_address(int|void loc)
+  {
+    return f->query_address(loc);
   }
 }
 
