@@ -824,6 +824,65 @@ a&auml; &amp; b  &gt;
   <result>yzz</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents value-of="item" result-set=""/></set>
+      <emit source="values" variable="_.data" sort="value">
+	&_.value;<delimiter>|</delimiter>
+      </emit>
+    </define>
+    <x>
+      <item>måndag</item>
+      <item>tisdag</item>
+      <item>onsdag</item>
+      <item>torsdag</item>
+      <item>fredag</item>
+      <item>lördag</item>
+      <item>söndag</item>
+    </x>
+  </rxml>
+  <result>fredag|lördag|måndag|onsdag|söndag|tisdag|torsdag</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents copy-of="item[@ok]" result-set=""/></set>
+      <emit source="values" variable="_.data" sort="value">&_.value:none;</emit>
+    </define>
+    <x>
+      slask
+      <item ok="ja"><veckostart>måndag</veckostart></item>
+      <item>tisdag</item>
+      <item ok="">onsdag</item>
+      <?item mupp ?>
+      <item>torsdag</item>
+      <item ok="">fredag</item>
+      <item ok="">lördag</item>
+      <item>söndag</item>
+    </x>
+  </rxml>
+  <result><item ok="">fredag</item><item ok="">lördag</item><item ok="">onsdag</item><item ok="ja"><veckostart>måndag</veckostart></item></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents copy-of="item" result-set=""/></set>
+      &_.data.-1:none;
+      &_.data.1:none;
+    </define>
+    <x>
+      en
+      <item>två</item>
+      <?item tre ?>
+      <item>fyra</item>
+    </x>
+  </rxml>
+  <result><item>fyra</item><item>två</item></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
