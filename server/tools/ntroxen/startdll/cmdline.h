@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.8 2001/09/28 12:02:49 tomas Exp $
+// $Id: cmdline.h,v 1.9 2001/11/13 10:45:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -92,6 +92,8 @@ public:
   int GetVerbose()    { return m_iVerbose; }
   int GetDebug()      { return m_iDebug; }
 
+  std::string GetLogDir() { return m_LogDir; }
+
   CArgList & GetNtstartArgs() { return m_saNtstartArgs; }
   CArgList & GetPikeArgs()    { return m_saPikeArgs; }
   CArgList & GetPikeDefines() { return m_saPikeDefines; }
@@ -131,6 +133,7 @@ private:
   int  m_iDebug;
 
   std::string m_SelfTestDir;
+  std::string m_LogDir;
 };
 
 #endif // !defined(AFX_CMDLINE_H__F6894D74_C532_40F7_8873_2A23BACE2581__INCLUDED_)

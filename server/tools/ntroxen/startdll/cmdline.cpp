@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.14 2001/10/19 10:07:54 tomas Exp $
+// $Id: cmdline.cpp,v 1.15 2001/11/13 10:45:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -209,7 +209,7 @@ BOOL CArgList::Remove(const char *item)
 //////////////////////////////////////////////////////////////////////
 
 CCmdLine::CCmdLine()
-: m_SelfTestDir("etc\\test")
+: m_SelfTestDir("etc\\test"), m_LogDir("..\\logs")
 {
   m_bPreloaded  = FALSE;
 

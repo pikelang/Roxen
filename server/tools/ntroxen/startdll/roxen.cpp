@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.8 2001/10/19 10:07:55 tomas Exp $
+// $Id: roxen.cpp,v 1.9 2001/11/13 10:45:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -135,10 +135,11 @@ void CRoxen::PrintVersion()
 }
 
 
-std::string CRoxen::FindPike()
+std::string CRoxen::FindPike(BOOL setEnv)
 {
-  char pikeloc[_MAX_PATH];
-  int len;
+  char pikeloc[2*_MAX_PATH];
+  int len,pathlen;
+  char *p;
   int i;
   FILE *fd;
   TCHAR cwd[_MAX_PATH];
@@ -150,7 +151,7 @@ std::string CRoxen::FindPike()
     if (!m_initDone) {
       if (_chdir ("..")) {
         ErrorMsg (1, TEXT("Could not change to the directory %s\\.."), cwd);
-        return 0;
+        return "notfound";
       }
       if (!(fd = fopen ("pikelocation.txt", "r"))) {
         if (_chdir (server_location + sizeof (LOCATION_COOKIE) - sizeof (""))) {
@@ -164,7 +165,7 @@ std::string CRoxen::FindPike()
             "%s\\..\\pikelocation.txt, and "
             "&hs\\pikelocation.txt"),
             cwd, cwd, server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
-          return 0;
+          return "notfound";
         }
       }
       cwd[0] = 0;
@@ -172,28 +173,56 @@ std::string CRoxen::FindPike()
     }
     else {
       ErrorMsg (1, TEXT("Failed to open %s\\pikelocation.txt"), cwd);
-      return 0;
+      return "notfound";
     }
   }
-  if (!(len = fread (pikeloc, 1, _MAX_PATH, fd))) {
+  if (!(len = fread (pikeloc, 1, sizeof(pikeloc)-1, fd))) {
     ErrorMsg (1, TEXT("Could not read %s\\pikelocation.txt"), cwd);
-    return 0;
+    return "notfound";
   }
   fclose (fd);
-  if (len >= _MAX_PATH) {
-    ErrorMsg (0, TEXT("Exceedingly long path to Pike executable "
-      "in %s\\pikelocation.txt"), cwd);
-    return 0;
-  }
+  pikeloc[len] = '\0';
+
   if (memchr (pikeloc, 0, len)) {
     ErrorMsg (0, TEXT("%s\\pikelocation.txt contains a null character"), cwd);
-    return 0;
+    return "notfound";
   }
 
-  for (i = len - 1; i && isspace (pikeloc[i]); i--) {}
-  len = i + 1;
-  pikeloc[len] = 0;
+  if (p=strtok(pikeloc, "\n"))
+  {
+    //*p=0;
+    //pathlen = p - pikeloc;
+    //p++;
+    pathlen=strlen(p);
+  }
+  else
+    pathlen = len;
+
+  if (pathlen >= _MAX_PATH) {
+    ErrorMsg (0, TEXT("Exceedingly long path to Pike executable "
+      "in %s\\pikelocation.txt"), cwd);
+    return "notfound";
+  }
+
+  for (i = pathlen - 1; i && isspace (pikeloc[i]); i--) {}
+  pathlen = i + 1;
+  pikeloc[pathlen] = 0;
   
+  if (setEnv)
+  {
+    if (p=strtok(NULL, "\n"))
+    {
+      while (isspace(*p)) p++;
+      for (i = strlen(p) - 1; i && isspace (p[i]); i--) {}
+      p[i+1] = 0;
+      SetEnvironmentVariable("PIKE_MASTER", p);
+    }
+    else
+    {
+      SetEnvironmentVariable("PIKE_MASTER", NULL);
+    }
+  }
+
   return pikeloc;
 }
 
@@ -246,13 +275,28 @@ BOOL CRoxen::CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, ch
   p += sprintf(p, " ntroxenloader.pike +../logs/%hs.run", key);
 
   // Insert silent flag if required (must be first argument after +/../xxxxx.run)
+/*
   if (_Module.m_bService || (cmdline.GetVerbose() == 0 && !cmdline.IsPassHelp()))
     p += sprintf(p, " -silent");
+*/
 
   // Insert roxen args
   p += stracat(p, cmdline.GetRoxenArgs().GetList());
 
   return TRUE;
+}
+
+
+std::string CRoxen::RotateLogs(std::string logdir)
+{
+  char buf[40];
+  std::string debugFile = logdir + "\\debug\\default.";
+  DeleteFile((debugFile + itoa(10, buf, 10) ).c_str());
+  for (int i=9; i>0; i--)
+  {
+    MoveFile((debugFile + itoa(i, buf, 10)).c_str(), (debugFile + itoa(i+1, buf, 10)).c_str());
+  }
+  return debugFile + itoa(1, buf, 10);
 }
 
 
@@ -270,7 +314,7 @@ int CRoxen::Start(int first_time)
   
   
   //pike loc
-  std::string pikeloc = FindPike();
+  std::string pikeloc = FindPike(TRUE);
 
   // Insert the pike location in the environment
   if (!SetEnvironmentVariable (TEXT("PIKE"), pikeloc.c_str())) {
@@ -358,7 +402,7 @@ int CRoxen::Start(int first_time)
 
   if (cmdline.GetVerbose() > 1)
     ErrorMsg(0, TEXT("Executing '%s'"), cmd);
-  
+
   TCHAR cwd[_MAX_PATH];
   cwd[0] = 0;
   _tgetcwd (cwd, _MAX_PATH);
@@ -366,6 +410,39 @@ int CRoxen::Start(int first_time)
   GetStartupInfo(&info);
   /*   info.wShowWindow=SW_HIDE; */
   info.dwFlags|=STARTF_USESHOWWINDOW;
+  info.dwFlags|=STARTF_USESTDHANDLES;
+  info.hStdInput=GetStdHandle(STD_INPUT_HANDLE);
+  info.hStdOutput=GetStdHandle(STD_OUTPUT_HANDLE);
+  info.hStdError=GetStdHandle(STD_ERROR_HANDLE);
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+  sa.bInheritHandle = TRUE;
+  sa.lpSecurityDescriptor = NULL;
+
+  HANDLE hFile = INVALID_HANDLE_VALUE;
+  if (_Module.m_bService || (cmdline.GetVerbose() == 0 && !cmdline.IsPassHelp()))
+  {
+    std::string newLogFile = RotateLogs(cmdline.GetLogDir());
+    hFile = CreateFile(newLogFile.c_str(),
+      GENERIC_WRITE,          // desired access
+      FILE_SHARE_READ,        // share mode
+      &sa,                    // security
+      OPEN_ALWAYS,            // creation disposition
+      FILE_ATTRIBUTE_NORMAL,  // flags and attributes
+      NULL);                  // template file
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+      SetFilePointer(
+        hFile,    // handle to file
+        0,        // bytes to move pointer
+        NULL,     // bytes to move pointer
+        FILE_END  // starting point
+        );
+      info.hStdOutput = hFile;
+      info.hStdError = hFile;
+    }
+  }
+  
   if (hProcess != 0)
     CloseHandle(hProcess);
   hProcess = 0;
@@ -382,9 +459,11 @@ int CRoxen::Start(int first_time)
   if(!ret)
   {
     ErrorMsg (1, TEXT("Error starting the main Roxen process"));
+    CloseHandle(hFile);
     return FALSE;
   }
   
+  CloseHandle(hFile);
   CloseHandle(proc.hThread);
   hProcess=proc.hProcess;
   return TRUE;

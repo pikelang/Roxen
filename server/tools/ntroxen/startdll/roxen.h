@@ -1,6 +1,6 @@
 // roxen.h: interface for the CRoxen class.
 //
-// $Id: roxen.h,v 1.3 2001/09/28 12:02:50 tomas Exp $
+// $Id: roxen.h,v 1.4 2001/11/13 10:45:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -34,8 +34,9 @@ public:
   //impl
 private:
   static void ErrorMsg (int show_last_err, const TCHAR *fmt, ...);
-  static std::string FindPike();
+  static std::string FindPike(BOOL setEnv = FALSE);
   BOOL CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, char *key);
+  std::string RotateLogs(std::string logdir);
 
   //data
 private:
