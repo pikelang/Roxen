@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.8 1997/01/14 15:08:01 per Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.9 1997/01/26 23:53:11 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -357,16 +357,33 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
 
 }
 
-string make_tag_atrributes(mapping in)
+constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
+constant empty_strings = map(safe_characters,lambda(){return "";});
+
+int is_safe_string(string in)
+{
+  return !strlen(replace(in, safe_characters, empty_strings));
+}
+
+string make_tag_attributes(mapping in)
 {
   array a=indices(in), b=values(in);
   for(int i=0; i<sizeof(a); i++)
     if(lower_case(b[i])!=a[i])
-      if(search(b,"\"")==-1)
-	a[i]+="=\""+b[i]+"\"";
+      if(is_safe_string(b[i]))
+	a[i]+="="+b[i];
       else
-	a[i]+="='"+b[i]+"'";
+	if(search(b,"\"")==-1)
+	  a[i]+="=\""+b[i]+"\"";
+	else
+	  a[i]+="='"+b[i]+"'";
   return a*" ";
+}
+
+string make_tag(string s,mapping in)
+{
+  string q = make_tag_attributes(in);
+  return "<"+s+(strlen(q)?" "+q:"")+">";
 }
 
 string dirname( string file )
