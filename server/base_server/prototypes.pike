@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.28 2001/07/31 12:01:25 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.29 2001/08/13 18:21:11 per Exp $";
 
 class Variable
 {
@@ -807,7 +807,9 @@ static void init_user_sql(string table)
 {
   if( !user_mysql )
     user_mysql = master()->resolv("DBManager.get")( "shared" );
-  if(catch(user_mysql->query( "SELECT module FROM "+table+" WHERE module=''")))
+  if(catch(user_mysql->query( "SELECT module FROM "+
+			      table+" WHERE module=''")))
+  {
     user_mysql->query( "CREATE TABLE "+table+" "
 		       " (module varchar(30) NOT NULL,  "
 		       "  name   varchar(30) NOT NULL, "
@@ -815,6 +817,12 @@ static void init_user_sql(string table)
 		       "  value  blob, "
 		       "  raw    int not null, "
 		       " INDEX foo (module,name,user))" );
+    master()->resolv("DBManager.is_module_table")( 0, "shared", table,
+			       "Contains metadata about users. "
+			       "Userdatabases can store information here "
+			       "at the request of other modules, or they "
+			       "can keep their own state in this table" );
+  }
   user_sql_inited[ table ] = 1;
 }
 
