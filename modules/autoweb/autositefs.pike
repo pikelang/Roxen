@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
 #define DB_ALIAS "autosite"
-constant cvs_version="$Id: autositefs.pike,v 1.27 1998/09/30 23:00:34 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.28 1998/10/01 04:09:14 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -215,14 +215,9 @@ string tag_init_home_dir(string tag_name, mapping args, object id)
   mkdir(dir+"/templates/");
   Stdio.write_file(dir+"/index.html",
 		   replace(query("defaulttext"),"$$COMPANY$$",args->company));
-  Stdio.write_file(dir+"/index.html.md",
-		   "<md variable=\"content_type\">text/html</md>\n"
-		   "<md variable=\"description\"></md>\n"
-		   "<md variable=\"keywords\"></md>\n"
-		   "<md variable=\"template\">Yes</md>"
-		   "<md variable=\"title\">Welcome</md>");
-  
   Stdio.write_file(dir+"/templates/default.tmpl","<tmplinsertall>");
+  werror("cp "+combine_path(__FILE__,"../../../default_site")+"/* "+dir+"/");
+  return "foo";
 }
 
 mapping query_tag_callers()

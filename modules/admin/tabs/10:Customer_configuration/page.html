@@ -7,7 +7,8 @@
     <sqlquery query="delete from dns where customer_id='¤id:quote=mysql¤'">
     <b>Customer deleted. Please click 'Choose customer'.<br>
     <autosite-dns-update><br>
-    <autosite-fs-update></b>
+    <autosite-fs-update><br>
+    <autosite-webadm-update></b>
   </if>
   <else><if variable=delete>
     <form method=get action=delete.html>
@@ -17,7 +18,9 @@
     </form>
   </if>
   <else><if variable=save>
-    <b>Information saved.</b><p>
+    <b>Information saved.</b><br>
+    <autosite-fs-update><br>
+    <autosite-webadm-update></b>
     <sqlquery query="update customers set
   	             user_id='¤user_id:quote=mysql¤',
   		     password='¤password:quote=mysql¤',

@@ -1,5 +1,5 @@
 /*
- * $Id: mailadmin.pike,v 1.7 1998/09/16 12:49:21 js Exp $
+ * $Id: mailadmin.pike,v 1.8 1998/10/01 04:09:15 js Exp $
  *
  * A general administration module for Roxen AutoMail
  * Johan Schön, September 1998
@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: mailadmin.pike,v 1.7 1998/09/16 12:49:21 js Exp $";
+constant cvs_version="$Id: mailadmin.pike,v 1.8 1998/10/01 04:09:15 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -190,6 +190,7 @@ string tag_matrix(string tag_name, mapping args, object id)
 	".gif width=16 height=11 border=0></td>";
   }
   s+="</table><br><input type=submit name=adduser value='Add a user'></form>";
+  s+="<br>b<br>Press the users name to edit it's parameters.";
   return s;
 }
 
