@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.62 2001/02/04 19:06:40 nilsson Exp $
+// $Id: cache.pike,v 1.63 2001/02/08 19:38:07 nilsson Exp $
 
 #pragma strict_types
 
@@ -275,10 +275,13 @@ string set_session_data(mixed data, void|string id, void|int persistence) {
 
 void create()
 {
-  cache = ([ ]);
-  session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   add_constant( "cache", this_object() );
+  cache = ([ ]);
   call_out(cache_clean, 60);
+
+  session_buckets = ({ ([]) }) * SESSION_BUCKETS;
+  session_persistence = ([]);
   call_out(session_cache_handler, SESSION_SHIFT_TIME);
+
   CACHE_WERR("Now online.");
 }
