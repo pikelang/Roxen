@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.10 1997/05/30 12:30:02 grubba Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.11 1997/06/04 20:23:53 grubba Exp $";
 
 #else
 import spider;
@@ -65,6 +65,7 @@ void save_it(string cl)
   f = configuration_dir + replace(cl, " ", "_");
   mv(f, f+"~");
   fd = open(f, "wc");
+  privs=0;
   if(!fd)
   {
     error("Creation of configuration file failed ("+f+") "
