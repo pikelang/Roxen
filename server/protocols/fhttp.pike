@@ -201,8 +201,9 @@ void send_result(mapping|void result)
   {
     string data=head_string + (file->data||"");
     if(file->file)
-      data += file->file->read(0x7fffffff);
+      data += file->file->read();
     reply_with_cache( data, misc->cacheable );
+    destruct();
   } else {
     //       werror("reply: '%s' %s<%d>\n",
     // 	     head_string, (file->file?"file":"nofile"), file->len);
@@ -210,6 +211,7 @@ void send_result(mapping|void result)
       reply( head_string, file->file, file->len );
     else
       reply( head_string+file->data );
+    destruct();
   }
 }
 
