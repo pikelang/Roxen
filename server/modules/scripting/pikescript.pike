@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.67 2000/09/04 08:39:09 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.68 2000/09/15 12:21:13 jhs Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -88,7 +88,7 @@ array (string) query_file_extensions()
 mapping locks = ([]);
 #endif
 
-array|mapping call_script(function fun, object got, object file)
+array|mapping call_script(function fun, RequestID id, Stdio.File file)
 {
   mixed result, err;
   string s;
@@ -99,10 +99,10 @@ array|mapping call_script(function fun, object got, object file)
   }
   string|array (int) uid, olduid, us;
 
-  if(got->rawauth && (!query("rawauth") || !query("clearpass")))
-    got->rawauth=0;
-  if(got->realauth && !query("clearpass"))
-    got->realauth=0;
+  if(id->rawauth && (!query("rawauth") || !query("clearpass")))
+    id->rawauth=0;
+  if(id->realauth && !query("clearpass"))
+    id->realauth=0;
 
 #ifdef THREADS
   object key;
@@ -118,13 +118,13 @@ array|mapping call_script(function fun, object got, object file)
     // EXPERIMENTAL: Call with low credentials.
     // werror(sprintf("call_script(): Calling %O with creds.\n", fun));
     err = catch {
-      result = call_with_creds(luser_creds, fun, got);
+      result = call_with_creds(luser_creds, fun, id);
       // werror(sprintf("call_with_creds() succeeded; result = %O\n", result));
     };
   } else
 #endif /* constant(__builtin.security) */
     err = catch {
-      result = fun(got);
+      result = fun(id);
       // werror(sprintf("calling of script succeeded; result = %O\n", result));
     };
 
@@ -137,7 +137,7 @@ array|mapping call_script(function fun, object got, object file)
     return ({ -1, err });
 
   if(stringp(result))
-    return Roxen.http_rxml_answer( result, got );
+    return Roxen.http_rxml_answer( result, id );
 
   if(result == -1)
     return Roxen.http_pipe_in_progress();
@@ -160,14 +160,14 @@ array|mapping call_script(function fun, object got, object file)
   return Roxen.http_string_answer(sprintf("%O", result));
 }
 
-mapping handle_file_extension(object f, string e, object got)
+mapping handle_file_extension(Stdio.File f, string e, RequestID id)
 {
   int mode = f->stat()[0];
   if(!(mode & (int)query("exec-mask")) || (mode & (int)query("noexec-mask")))
     return 0;  // permissions does not match.
 
   // do it before the script is processes, so the script can change the value.
-  got->misc->cacheable=0; 
+  id->misc->cacheable=0;
 
   string file="";
   string s;
@@ -175,31 +175,31 @@ mapping handle_file_extension(object f, string e, object got)
   program p;
   object o;
 
-  if(scripts[ got->not_query ])
+  if(scripts[ id->not_query ])
   {
     int reload;
-    p = object_program(o=function_object(scripts[got->not_query]));
+    p = object_program(o=function_object(scripts[id->not_query]));
     if( query( "autoreload" ) )
       reload = (master()->refresh_inherit( p )>0);
     if( query( "explicitreload" ) )
-      reload += got->pragma["no-cache"];
+      reload += id->pragma["no-cache"];
 
     if( reload )
     {
       // Reload the script from disk, if the script allows it.
-      if(!(o->no_reload && o->no_reload(got)))
+      if(!(o->no_reload && o->no_reload(id)))
       {
         master()->refresh( p, 1 );
         destruct(o);
         p = 0;
-        m_delete( scripts, got->not_query);
+        m_delete( scripts, id->not_query);
       }
     }
   }
 
   function fun;
 
-  if (!(fun = scripts[ got->not_query ]))
+  if (!(fun = scripts[ id->not_query ]))
   {
     file=f->read();
 
@@ -208,8 +208,8 @@ mapping handle_file_extension(object f, string e, object got)
     mixed re = catch
     {
       object key = Roxen.add_scope_constants( "rxml_scope_" );
-      if(got->realfile)
-        p=(program)got->realfile;
+      if(id->realfile)
+        p=(program)id->realfile;
       else
         p=compile_string(cpp(file));
       destruct( key );
@@ -238,24 +238,24 @@ mapping handle_file_extension(object f, string e, object got)
 #endif /* constant(__builtin_security) */
 
     o=p();
-    if (!(fun = scripts[got->not_query]=o->parse))
+    if (!(fun = scripts[id->not_query]=o->parse))
       /* Should not happen */
       return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
   }
 
-  err=call_script(fun, got, f);
-  if (mappingp(err)) return err;
+  err = call_script(fun, id, f);
+  if(mappingp(err)) return err;
   if(arrayp(err))
   {
-    m_delete( scripts, got->not_query );
+    m_delete( scripts, id->not_query );
     throw( err[1] );
   }
   if (stringp(err || "")) {
     return Roxen.http_string_answer(err || "");
   }
   report_error("PIKESCRIPT: Unexpected return value %O from script %O\n",
-	       err, got->not_query);
+	       err, id->not_query);
   return Roxen.http_string_answer("");
 }
 
