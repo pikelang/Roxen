@@ -5,11 +5,22 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.3 2000/02/12 21:27:55 mast Exp $
+//! $Id: utils.pmod,v 1.4 2000/02/13 11:07:52 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
 array return_empty_array (mixed... ignored) {return ({});}
+
+int(1..1)|string|array free_text_error (Parser.HTML p, string str)
+{
+  sscanf (str, "%[ \t\n\r]", string ws);
+  if (str != ws) {
+    sscanf (reverse (str), "%*[ \t\n\r]%s", str);
+    sscanf (reverse (str), "%*[ \t\n\r]%s", str);
+    RXML.rxml_fatal ("Free text %O is not allowed in this context.\n", str);
+  }
+  return ({});
+}
 
 int(1..1)|string|array unknown_tag_error (Parser.HTML p, string str)
 {
