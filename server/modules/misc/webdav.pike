@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.3 2004/03/01 19:09:29 grubba Exp $
+// $Id: webdav.pike,v 1.4 2004/03/01 19:28:40 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.3 2004/03/01 19:09:29 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.4 2004/03/01 19:28:40 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -71,9 +71,10 @@ class PatchPropertySetCmd
     }
   }
 
-  mapping(string:mixed) execute(string path, RoxenModule module, RequestID id)
+  mapping(string:mixed) execute(string path, RoxenModule module,
+				RequestID id, mixed context)
   {
-    return module->set_property(path, property_name, value, id);
+    return module->set_property(path, property_name, value, id, context);
   }
 }
 
@@ -86,9 +87,10 @@ class PatchPropertyRemoveCmd
     property_name = prop_name;
   }
 
-  mapping(string:mixed) execute(string path, RoxenModule module, RequestID id)
+  mapping(string:mixed) execute(string path, RoxenModule module,
+				RequestID id, mixed context)
   {
-    return module->remove_property(path, property_name, id);
+    return module->remove_property(path, property_name, id, context);
   }
 }
 

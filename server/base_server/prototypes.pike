@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.66 2003/12/22 17:12:18 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.67 2004/03/01 19:25:56 grubba Exp $";
 
 class Variable
 {
@@ -704,6 +704,9 @@ class RequestID
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
+#ifdef DAV_DEBUG
+    werror("Parsing XML data: %O\n", data);
+#endif
     return xml_data = Parser.XML.Tree.parse_input(data, 0, 0, 0, 1);
   }
 #endif /* Parser.XML.Tree.XMLNSParser */
@@ -1249,7 +1252,8 @@ class MultiStatus
 class PatchPropertyCommand
 {
   string property_name;
-  mapping(string:mixed) execute(string path, RoxenModule module, RequestID id);
+  mapping(string:mixed) execute(string path, RoxenModule module,
+				RequestID id, mixed context);
 }
 
 #endif /* Parser.XML.Tree.XMLNSParser */

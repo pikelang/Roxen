@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.151 2004/03/01 19:10:19 grubba Exp $
+// $Id: module.pike,v 1.152 2004/03/01 19:26:42 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -780,37 +780,42 @@ void recurse_find_properties(string path, string mode, int depth,
 //   returned.
 
 //! Signal start of patching of properties for @[path].
-void patch_property_start(string path, RequestID id)
+//!
+//! @returns
+//!   Returns a context that will be passed to @[set_property()],
+//!   @[remove_property()], @[patch_property_commit()]
+//!   and @[patch_property_unroll()].
+mixed patch_property_start(string path, RequestID id)
 {
 }
 
 //! Patching of the properties for @[path] failed.
 //! Restore the state to what it was when @[patch_property_start()]
 //! was called.
-void patch_property_unroll(string path, RequestID id)
+void patch_property_unroll(string path, RequestID id, mixed context)
 {
 }
 
 //! Patching of the properties for @[path] succeeded.
-void patch_property_commit(string path, RequestID id)
+void patch_property_commit(string path, RequestID id, mixed context)
 {
 }
 
 void patch_properties(string path, array(PatchPropertyCommand) instructions,
 		      MultiStatus result, RequestID id)
 {
-  patch_property_start(path, id);
+  mixed context = patch_property_start(path, id);
 
   array(mapping(string:mixed)) results;
 
   mixed err = catch {
-    results = instructions->execute(path, this_object(), id);
-  };
+      results = instructions->execute(path, this_object(), id, context);
+    };
   if (err) {
     foreach(instructions, PatchPropertyCommand instr) {
       result->add_property(path, instr->property_name, answer);
     }
-    patch_property_unroll(path, id);
+    patch_property_unroll(path, id, context);
     throw (err);
   } else {
     int any_failed;
@@ -833,14 +838,14 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
 			       results[i]);
 	}
       }
-      patch_property_unroll(path, id);
+      patch_property_unroll(path, id, context);
     } else {
       int i;
       for(i = 0; i < sizeof(results); i++) {
 	result->add_property(path, instructions[i]->property_name,
 			     results[i]);
       }
-      patch_property_commit(path, id);
+      patch_property_commit(path, id, context);
     }
   }
 }
