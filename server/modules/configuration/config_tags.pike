@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.118 2000/09/21 14:32:23 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.119 2000/09/23 02:41:25 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -298,6 +298,8 @@ void set_entities(RXML.Context c)
   c->extend_scope("cf", cf_scope);
 }
 
+int upath;
+
 string get_var_form( string s, object var, object mod, object id,
                      int noset )
 {
@@ -321,16 +323,19 @@ string get_var_form( string s, object var, object mod, object id,
 
   if( !var->path() )
   {
-    string path = "";
-    if( mod->my_configuration )
-      path = (mod->my_configuration()->name + "/"+
-            replace(mod->my_configuration()->otomod[ mod ], "#", "!")+
-            "/"+s);
-    else if( mod->name )
-      path = (mod->name+"/"+s);
-    else
-      path = s;
-    var->set_path( sprintf("%x", Gmp.mpz(path, 256 ) ) );
+    var->set_path( sprintf( "v%x", upath++ ) );
+    // This is not really nessesary, right? 
+    // So, lets make the form pages shorter....
+    //     string path = "";
+    //     if( mod->my_configuration )
+    //       path = (mod->my_configuration()->name + "/"+
+    //             replace(mod->my_configuration()->otomod[ mod ], "#", "!")+
+    //             "/"+s);
+    //     else if( mod->name )
+    //       path = (mod->name+"/"+s);
+    //     else
+    //       path = s;
+    //     var->set_path( sprintf("%x", Gmp.mpz(path, 256 ) ) );
   }
   if( !view_mode && !noset )
     var->set_from_form( id );
