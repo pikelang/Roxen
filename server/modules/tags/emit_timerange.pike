@@ -3,13 +3,8 @@
 #include <module.h>
 inherit "module";
 
-//<locale-token project="mod_emit_timerange_sql">LOCALE</locale-token>
-//<locale-token project="mod_emit_timerange_sql">SLOCALE</locale-token>
-#define SLOCALE(X,Y)  _STR_LOCALE("mod_emit_timerange",X,Y)
-#define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
-// end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.10 2004/05/22 23:35:25 _cvs_dirix Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.11 2004/05/22 23:39:59 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -473,7 +468,7 @@ Calendar get_calendar(string name)
   string wanted = calendars[search(map(calendars, upper_case),
 				   upper_case(name))];
   if(wanted == "unknown")
-    RXML.parse_error("Unknown calendar %O.\n", name));
+    RXML.parse_error("Unknown calendar %O.\n", name);
   return Calendar[wanted];
 }
 
@@ -561,7 +556,7 @@ class TagEmitTimeRange
     {
       output_unit = output_units[search(output_units, what)];
       if(output_unit == "unknown")
-	RXML.parse_error("Unknown unit %O.\n", what));
+	RXML.parse_error("Unknown unit %O.\n", what);
 
       unit_no = search(output_units, what);
       compare_num = ouput_unit_no[unit_no];
@@ -575,7 +570,7 @@ class TagEmitTimeRange
       {
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error("Unknown day: %O\n",what));
+          RXML.parse_error("Unknown day: %O\n",what);
         int weekday = from->week_day();
 
         if(from->calendar() != Calendar.ISO){
@@ -596,7 +591,7 @@ class TagEmitTimeRange
       if(what = m_delete(args, "to-week-day")){
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error("Unknown day: %O\n",what));
+	  RXML.parse_error("Unknown day: %O\n",what);
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
@@ -622,7 +617,7 @@ class TagEmitTimeRange
 			{
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error("Unknown day: %O\n",what));
+          RXML.parse_error("Unknown day: %O\n",what);
         int weekday_needed, change_to;
         int weekday = from->week_day();
 
@@ -642,7 +637,7 @@ class TagEmitTimeRange
       {
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error("Unknown day: %O\n",what));
+	  RXML.parse_error("Unknown day: %O\n",what);
 	int change_to = 0, weekday_needed = 0;
 	int weekday = to->week_day();
 	if(calendar != "ISO")
@@ -735,7 +730,7 @@ class TagEmitTimeRange
     if(sizeof( args ))
       RXML.parse_error("Unknown attribute%s %s.\n",
 			       (sizeof(args)==1 ? "" : "s"),
-			       String.implode_nicely(indices(args))));
+			       String.implode_nicely(indices(args)));
 #endif
 
   array(mapping) res;
@@ -821,7 +816,7 @@ array(mapping) db_query(string q,string db_name)
   array(mapping(string:mixed))|object result;
   error = catch(con = DBManager.get(db_name,my_configuration(),0));
   if(!con)
-  RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
+  RXML.run_error("Couldn't connect to SQL server"+
                  (error?": "+error[0]:"")+"\n");
   else
   {
