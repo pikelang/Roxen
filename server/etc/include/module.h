@@ -1,7 +1,6 @@
-// $Id: module.h,v 1.31 2000/02/04 01:37:26 per Exp $
+// $Id: module.h,v 1.32 2000/02/14 23:48:48 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
-#define SERIOUS
 
 /* Variable types. */
 #define TYPE_STRING           1

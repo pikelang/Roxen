@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.92 2000/02/14 16:19:32 mast Exp $
+# $Id: start,v 1.93 2000/02/14 23:49:30 nilsson Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -466,9 +466,11 @@ start_roxen() {
     if [ $verbose -gt 0 ]; then
       echo "$pre" "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
     else :; fi
+    args="-DSERIOUS $args"
     $pike $args $@
   else
     echo "$pre" Executing gdb $pike $args $@
+    args="-DSERIOUS $args"
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
