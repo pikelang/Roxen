@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.227 1999/11/23 09:43:43 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.228 1999/11/23 11:00:43 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -128,7 +128,7 @@ void deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate )
 {
   if( !Locale.Roxen[locale] )
-    report_debug("Invalid locale: "+locale+". Ignoring.\n");
+    report_warning("Invalid locale: "+locale+". Ignoring.\n");
   else
     Locale.Roxen[locale]
       ->register_module_doc( this_object(), variable, name, doc, translate );
@@ -2200,7 +2200,7 @@ object enable_module( string modname )
   if (!moduleinfo)
   {
 #ifdef MODULE_DEBUG
-    report_debug(" %-30s ...  FAILED\n", modname);
+    report_warning(" Failed to load %s\n", modname);
 #endif
     return 0;
   }
@@ -2224,7 +2224,9 @@ object enable_module( string modname )
   if(err = catch(me = moduleinfo->instance(this_object())))
   {
     report_debug("ERROR\n");
-    werror( describe_backtrace(err) );
+    report_error(LOCALE->
+		 error_initializing_module_copy(moduleinfo->get_name(),
+						describe_backtrace(err)));
     return module->copies[id];
   }
 
@@ -2260,9 +2262,6 @@ object enable_module( string modname )
 			 " lägst. Moduler med samma prioritet anropas i "
 			 "mer eller mindre slumpmässig ordning.");
       }) {
-	report_debug(sprintf("me->defvar:%O\n"
-			     "me->deflocaledoc:%O\n",
-			     me->defvar, me->deflocaledoc));
 	throw(err);
       }
     }
@@ -2854,15 +2853,14 @@ void enable_all_modules()
                                                   describe_backtrace(err)));
   }
 
-  report_debug("All modules for %s enabled in %3.1f seconds\n\n", query_name(),
-               (gethrtime()-start_time)/1000000.0);
+  report_notice("All modules for %s enabled in %3.1f seconds\n\n", 
+                query_name(),(gethrtime()-start_time)/1000000.0);
 }
 
 void create(string config)
 {
   add_parse_module( this_object() );
   name=config;
-  report_debug("Creating virtual server '"+config+"'\n");
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
 	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
@@ -3261,7 +3259,9 @@ multiplicera detta värde med den här faktorn.");
 
   setvars(retrieve("spider#0", this_object()));
 
-  if (query("throttle")) 
+  report_notice("Creating virtual server '"+query_name()+"'\n");
+
+  if (query("throttle"))
   {
     throttler=.throttler();
     throttler->throttle(query("throttle_fill_rate"),

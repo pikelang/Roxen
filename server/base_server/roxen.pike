@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.355 1999/11/23 06:38:49 per Exp $
+ * $Id: roxen.pike,v 1.356 1999/11/23 11:01:26 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.355 1999/11/23 06:38:49 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.356 1999/11/23 11:01:26 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -236,7 +236,7 @@ static class Privs
     gid = gid || getgid();
     int err = (int)setegid(new_gid = gid);
     if (err < 0) {
-      report_debug(sprintf("Privs: WARNING: Failed to set the effective group id to %d!\n"
+      report_warning(sprintf("Privs: WARNING: Failed to set the effective group id to %d!\n"
 			   "Check that your password database is correct for user %s(%d),\n"
 			   "and that your group database is correct.\n",
 			   gid, (string)u[0], (int)uid));
@@ -522,9 +522,9 @@ void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
     QUERY(numthreads) = 1;
-    report_debug("Starting one thread to handle requests.\n");
+    report_notice("Starting one thread to handle requests.\n");
   } else {
-    report_debug("Starting "+
+    report_notice("Starting "+
                  languages["en"]->number(  QUERY(numthreads) )
                  +" threads to handle requests.\n");
   }
@@ -1189,7 +1189,7 @@ void sort_urls()
 
 int register_url( string url, object conf )
 {
-  report_debug("Register "+url+" for "+conf->name+"\n");
+  report_notice("Register "+url+" for "+conf->query_name()+"\n");
   string protocol;
   string host;
   int port;
@@ -1317,14 +1317,12 @@ void nwrite(string s, int|void perr, int|void type,
 
   if( mod )
   {
-    werror("logging in module\n");
     if( !mod->error_log )
       mod->error_log = ([]);
     mod->error_log[type+","+s] += ({time()});
   }
   if( conf )
   {
-    werror("logging in configuration\n");
     if( !conf->error_log )
       conf->error_log = ([]);
     conf->error_log[type+","+s] += ({time()});
