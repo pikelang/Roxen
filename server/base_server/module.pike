@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.33 1998/07/07 17:05:15 grubba Exp $ */
+/* $Id: module.pike,v 1.34 1998/07/24 05:44:43 mast Exp $ */
 
 #include <module.h>
 
@@ -218,7 +218,7 @@ void defvar(string|void var, mixed|void value, string|void name,
 			     "to multiple choice variable.\n",
 			     roxen->filename(this), misc, misc));
       }
-      if(misc && search(misc, value)==-1) {
+      if(misc && value && search(misc, value)==-1) {
 	roxen_perror(sprintf("%s:\nPassing value (%t:%O) not present "
 			     "in the misc array.\n",
 			     roxen->filename(this), value, value));
