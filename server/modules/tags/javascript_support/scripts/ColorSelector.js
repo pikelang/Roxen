@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.3 2004/03/13 16:18:23 jonasw Exp $
+//  $Id: ColorSelector.js,v 1.4 2004/06/01 10:00:10 jonasw Exp $
 
 
 //  Known HTML color names
@@ -186,6 +186,13 @@ function colsel_click(event, prefix, h, s, v, in_bar, in_cross)
   var x = (event.clientX - getTargetX(event)) * 2;
   var y = (event.clientY - getTargetY(event)) * 2;
 
+  //  Kludge to get correct coordinates. Only needed in MSIE browsers for
+  //  unknown reasons.
+  if (isIE4) {
+    x -= 4;
+    y -= 4;
+  }
+  
   if (x < 0) x = 0;
   if (x > 255) x = 255;
   if (y < 0) y = 0;
