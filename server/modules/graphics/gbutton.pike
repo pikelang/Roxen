@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.9 2000/01/10 11:49:12 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.10 2000/01/19 19:04:44 noring Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -153,11 +153,13 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   i_width = icon && (icon->img->xsize() + IMAGE_SPC);
   
   //  Generate text
-  text_img = button_font->write(text)->scale(0, b_height - IMAGE_SPC);
-  if (args->cnd)
-    text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
-			       text_img->ysize());
-  t_width = text_img->xsize();
+  if (sizeof(text)) {
+    text_img = button_font->write(text)->scale(0, b_height - IMAGE_SPC);
+    if (args->cnd)
+      text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
+				 text_img->ysize());
+    t_width = text_img->xsize();
+  }
   
   //  Compute text and icon placement
   req_width = t_width + b_width + i_width;
@@ -252,7 +254,8 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if (args->dim)
     for (int i = 0; i < 3; i++)
       args->txt[i] = (args->txt[i] + args->bg[i]) / 2;
-  button->paste_alpha_color(text_img, args->txt, txt_x, 2);
+  if(text_img)
+    button->paste_alpha_color(text_img, args->txt, txt_x, 2);
   
   return button;
 }
