@@ -1,8 +1,6 @@
 /* Program to start Roxen as a service or in console mode on NT.
  *
  * Based on the service example code from Microsoft.
- *
- * $Id: roxen.c,v 1.2 2000/06/28 01:39:42 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -21,7 +19,8 @@
 #include "roxen_service.h"
 
 
-
+//external nuzzle
+extern HANDLE hTread;
 // internal variables
 SERVICE_STATUS          ssStatus;       // current status of the service
 SERVICE_STATUS_HANDLE   sshStatusHandle;
@@ -185,9 +184,9 @@ VOID WINAPI service_ctrl(DWORD dwCtrlCode)
       // error.
       case SERVICE_CONTROL_STOP:
       case SERVICE_CONTROL_SHUTDOWN:
-	ReportStatusToSCMgr(SERVICE_STOP_PENDING, NO_ERROR, 0, 0);
-	ServiceStop(1);
-	return;
+			ReportStatusToSCMgr(SERVICE_STOP_PENDING, NO_ERROR, 0, 0);
+			ServiceStop(1);
+	  return;
 
 	// Update the service status.
 	//

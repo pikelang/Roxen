@@ -1,8 +1,6 @@
 /* Program to start Roxen as a service or in console mode on NT.
  *
  * Based on the service example code from Microsoft.
- *
- * $Id: roxen_service.c,v 1.2 2000/06/28 01:39:42 mast Exp $
  */
 
 #include <windows.h>
@@ -27,6 +25,8 @@ char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 HANDLE hServerStopEvent = NULL;
 HANDLE hProcess;
 DWORD ExitCode = 0;
+DWORD dwThreadId, dwThrdParam = 1; 
+HANDLE hThread;
 
 char key[9];
 int stopping = 0;
@@ -160,14 +160,8 @@ VOID ServiceStart()
 	0);			/* wait hint */
 }
 
-/* If a ServiceStop procedure is going to
-   take longer than 3 seconds to execute,
-   it should spawn a thread to execute the
-   stop code, and return.  Otherwise, the
-   ServiceControlManager will believe that
-   the service has stopped responding. */
-
-VOID ServiceStop (int write_stop_file)
+/* The REAL Service Stop is here */
+DWORD WINAPI ThreadServiceStop (LPVOID write_stop_file)
 {
   if (write_stop_file) {
     FILE *f;
@@ -180,7 +174,7 @@ VOID ServiceStop (int write_stop_file)
     if (!(f=fopen(tmp,"wb"))) {
       error_msg (1, TEXT("Roxen will not get the stop signal - "
 			 "failed to open stop file %s\\..\\logs\\%hs.run"), cwd, key);
-      return;
+      return(0);
     }
     fprintf(f,"Kilroy was here.");
     fclose(f);
@@ -189,7 +183,28 @@ VOID ServiceStop (int write_stop_file)
   stopping=1;
   if ( hServerStopEvent )
     SetEvent(hServerStopEvent);
+  ExitThread(0);
+  return(0);
 }
+
+/* If a ServiceStop procedure is going to
+   take longer than 3 seconds to execute,
+   it should spawn a thread to execute the
+   stop code, and return.  Otherwise, the
+   ServiceControlManager will believe that
+   the service has stopped responding. */
+
+VOID ServiceStop (int write_stop_file)
+{
+	/* Since ServiceStop takes more than 3sec to execute,
+	   spawn a thread and get done with it. */
+	hThread = CreateThread(NULL,
+		0,
+		ThreadServiceStop,
+		&dwThrdParam,
+		0,
+		&dwThreadId);
+  }
 
 int start_roxen()
 {
