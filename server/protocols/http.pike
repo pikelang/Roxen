@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.425 2004/04/13 09:54:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.426 2004/04/13 16:02:37 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -60,6 +60,8 @@ constant _query          = roxen.query;
 private static array(string) cache;
 private static int wanted_data, have_data;
 private static object(String.Buffer) data_buffer;
+
+private static multiset(string) none_match;
 
 int kept_alive;
 
@@ -693,6 +695,10 @@ private final int parse_got_2( )
      case "authorization":  rawauth = contents;              break;
      case "referer": referer = ({contents}); break;
      case "if-modified-since": since=contents; break;
+     case "if-match": break; // Not supported yet.
+     case "if-none-match":
+       none_match = (multiset)((contents-" ")/",");
+       break;
 
      case "proxy-authorization":
        array y;
@@ -1566,9 +1572,11 @@ void send_result(mapping|void result)
       else if(!file->type)     file->type="text/plain";
     }
 
-    if(!file->raw)
-    {
-      heads = ([]);
+  if(!file->raw && (prot != "HTTP/0.9"))
+  {
+    // Generate the headers.
+    heads = ([]);
+
       if (!file->stat) file->stat = misc->stat;
       if(objectp(file->file)) {
 	if(!file->stat)
@@ -1612,33 +1620,71 @@ void send_result(mapping|void result)
 //		   misc->last_modified,
 //		   misc->cacheable);
 
-      if(since && (!file->error || file->error == 200) && misc->last_modified)
-      {
-	/* ({ time, len }) */
-	array(int) since_info = Roxen.parse_since( since );
+#ifdef RAM_CACHE
+      if (!(misc->etag = heads->ETag) && file->len &&
+	  (file->data || file->file) &&
+	  (file->len < conf->datacache->max_file_size)) {
+	string data = "";
+	if (file->file) {
+	  data = file->file->read(file->len);
+	  if (file->data && (sizeof(data) < file->len)) {
+	    data += file->data[..file->len - (sizeof(data)+1)];
+	  }
+	  m_delete(file, file);
+	} else if (file->data) {
+	  data = file->data[..file->len - 1];
+	}
+	file->data = data;
+	heads->ETag = misc->etag =
+	  Crypto.string_to_hex(Crypto.md5()->update(data)->digest());
+	heads->Vary = "ETag";
+      }
+#endif /* RAM_CACHE */
+
+      if (!file->error || file->error == 200) {
+	if (none_match && misc->etag &&
+	    (none_match[misc->etag] || none_match["*"])) {
+	  // We have a if-none-match header that matches our etag.
+	  if ((<"HEAD", "GET">)[method]) {
+	    // RFC 2616 14.26:
+	    //   Instead, if the request method was GET or HEAD, the server
+	    //   SHOULD respond with a 304 (Not Modified) response, including
+	    //   the cache- related header fields (particularly ETag) of one
+	    //   of the entities that matched. For all other request methods,
+	    //   the server MUST respond with a status of 412 (Precondition
+	    //   Failed). 
+	    file->error = 304;
+	  } else {
+	    file->error = 412;
+	  }
+	  file->file = file->data = 0;	  
+	} else if(since && misc->last_modified)
+	{
+	  /* ({ time, len }) */
+	  array(int) since_info = Roxen.parse_since( since );
 //	  werror("since: %{%O, %}\n"
 //		 "lm:    %O\n"
 //		 "cacheable: %O\n",
 //		 since_info,
 //		 misc->last_modified,
 //		 misc->cacheable);
-	if ( ((since_info[0] >= misc->last_modified) && 
-	      ((since_info[1] == -1) || (since_info[1] == file->len)))
-	     // never say 'not modified' if cacheable has been lowered.
-	     && (zero_type(misc->cacheable) ||
-		 (misc->cacheable >= INITIAL_CACHEABLE))
-	     // actually ok, or...
+	  if ( ((since_info[0] >= misc->last_modified) && 
+		((since_info[1] == -1) || (since_info[1] == file->len)))
+	       // never say 'not modified' if cacheable has been lowered.
+	       && (zero_type(misc->cacheable) ||
+		   (misc->cacheable >= INITIAL_CACHEABLE))
+	       // actually ok, or...
 //	       || ((misc->cacheable>0) 
 //		   && (since_info[0] + misc->cacheable<= predef::time(1))
 //		   // cacheable, and not enough time has passed.
-	     )
-	{
-	  file->error = 304;
-	  file->file = file->data = file->type = 0;
+	       )
+	  {
+	    file->error = 304;
+	    file->file = file->data = 0;
+	  }
 	}
       }
 
-      if(prot != "HTTP/0.9") 
       {
         string h, charset="";
 
@@ -1764,25 +1810,6 @@ void send_result(mapping|void result)
 	  heads->Connection = "close";
           misc->connection = "close";
         }
-#ifdef RAM_CACHE
-	if (!(misc->etag = heads->eTag) && file->len &&
-	    (file->data || file->file) &&
-	    (file->len < conf->datacache->max_file_size)) {
-	  string data = "";
-	  if (file->file) {
-	    data = file->file->read(file->len);
-	    if (file->data && (sizeof(data) < file->len)) {
-	      data += file->data[..file->len - (sizeof(data)+1)];
-	    }
-	    m_delete(file, file);
-	  } else if (file->data) {
-	    data = file->data[..file->len - 1];
-	  }
-	  file->data = data;
-	  heads->eTag = misc->etag =
-	    Crypto.string_to_hex(Crypto.md5()->update(data)->digest());
-	}
-#endif /* RAM_CACHE */
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
 #ifdef DEBUG
@@ -1837,6 +1864,7 @@ void send_result(mapping|void result)
                                   // We have to handle the date header.
                                   "hs":head_string,
                                   "key":misc->cachekey,
+				  "etag":misc->etag,
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
                                   // fix non-keep-alive when sending from cache
