@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.80 1999/02/22 15:55:10 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.81 1999/02/22 16:05:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -134,7 +134,7 @@ class imap_mail
     if (serial < current)
     {
       serial = current;
-      return ({ "FETCH", imap_number(index),
+      return ({  imap_number(index), "FETCH",
 		imap_list( ({ "FLAGS",
 			      imap_list(indices(get_flags())),
 			      "UID", imap_number(uid),
@@ -179,14 +179,14 @@ class imap_mail
     if (!silent) {
       if (uid_mode) {
 	return({
-	  "FETCH", imap_number(index), imap_list(({
+	  imap_number(index), "FETCH", imap_list(({
 	    "FLAGS", imap_list(indices(flags)),
 	    "UID", imap_number(uid),
 	  }))
 	});
       } else {
 	return({
-	  "FETCH", imap_number(index), imap_list(({
+	  imap_number(index), "FETCH", imap_list(({
 	    "FLAGS", imap_list(indices(flags)),
 	  }))
 	});
@@ -337,7 +337,7 @@ class imap_mail
     werror("imap_mail->fetch(%O) => %O\n", attrs, data);
 #endif /* IMAP_DEBUG */
 
-    return ({ "FETCH", 
+    return ({ imap_number(index), "FETCH", 
 	      imap_list(data)
     });
   }
@@ -879,7 +879,7 @@ class imap_mailbox
 		  lambda(int i, array attrs)
 		  {
 		    return ({
-		      "FETCH", imap_number(i),
+		      imap_number(i), "FETCH",
 		      imap_list( Array.map(attrs,
 					   lambda(mixed attr, int i)
 					   {
@@ -1204,7 +1204,7 @@ class backend
 				    array(mapping(string:mixed)) fetch_attrs)
   {
     return session->mailbox->fetch(message_set, fetch_attrs)
-      /* + (session->mailbox->update() || ({})) */;
+      + (session->mailbox->update() || ({}));
   }
 
   int copy(object|mapping(string:mixed) session,
