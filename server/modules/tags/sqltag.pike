@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.29 1998/08/10 21:39:57 per Exp $
+ * $Id: sqltag.pike,v 1.30 1998/09/29 16:18:50 js Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.29 1998/08/10 21:39:57 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.30 1998/09/29 16:18:50 js Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -19,6 +19,9 @@ inherit "roxenlib";
 
 import Array;
 import Sql;
+
+object conf;
+
 
 /*
  * Module interface functions
@@ -460,11 +463,11 @@ mapping query_container_callers()
  */
 
 
-object(sql) sql_object(object request_id)
+object(sql) sql_object(void|string host)
 {
-  string host = query("hostname");
+  string host = stringp(host)?host:query("hostname");
   object(sql) con;
-  function sql_connect = request_id->conf->sql_connect;
+  function sql_connect = conf->sql_connect;
   mixed error;
   error = catch(con = sql_connect(host));
   if(error)
@@ -514,7 +517,6 @@ void create()
  * More interface functions
  */
 
-object conf;
 
 void start(int level, object _conf)
 {
