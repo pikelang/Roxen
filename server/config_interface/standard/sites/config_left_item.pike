@@ -20,22 +20,31 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
   while ( id->misc->orig )
     id = id->misc->orig;
 
-  string subsel;
+  string subsel = "";
   string cfg = q;
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
-  string pre = (("<a href='"+DOTDOT(1)+(q-"'")+"/")+"'><b><font size=+2>"+c->name+"</font></b></a><br>");
+  string pre = ("<gbutton href='"+id->not_query+"/"+
+                replace(c->name, " ", "%20" )+"/' "
+                +"width=150 "
+                +(subsel == "" ?
+                  "icon_src=/internal-roxen-next align_icon=right":
+                  "")+
+                ">"+c->query_name()+"</gbutton><br>");
 
   array sub = ({ "modules", "settings", });
-  if( subsel == "modules" )
-    sub = reverse(sub);
+//   if( subsel == "modules" )
+//     sub = reverse(sub);
 
   foreach( sub, string q )
   {
     if( subsel == q )
     {
-      pre += ("&nbsp;<cf-locale get="+q+"><br>\n");
+      pre += ("<gbutton icon_src=/internal-roxen-next align_icon=right "
+              "width=150 preparse href='"+DOTDOT(3)+q+"/'>"
+              "<cf-locale get="+q+"></gbutton><br>");
+
       string url = id->not_query + id->misc->path_info;
       id->variables->_config = cfg;
       id->variables->_url = url;
@@ -81,7 +90,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
       }
       pre += "\n";
     } else
-      pre += ("&nbsp;<a href='"+DOTDOT(3)+q+"/'><cf-locale get="+q+"></a><br>");
+      pre += ("<gbutton preparse width=150 href='"+DOTDOT(3)+q+"/'>"
+              "<cf-locale get="+q+"></gbutton><br>");
   }
   pre += "</item>";
   return pre;

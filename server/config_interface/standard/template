@@ -1,4 +1,39 @@
 <!-- -*- html -*- -->
+<define container=st-tabs>
+  <cset quote=none variable=__tabs><contents></cset>
+</define>
+
+<define container=st-page>
+  <cset quote=none variable=__contents><contents></cset>
+</define>
+
+<define container=cv-startpage>
+<subtablist>
+  <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
+  <st-page><contents></st-page>
+</subtablist>
+</define>
+
+<define container=subtablist default_width=90%>
+<contents>
+<formoutput quote=½>
+<p><br><p>
+<table align=right  width=&width; border=0 cellpadding=0 cellspacing=0>
+<tr><td valign=bottom
+><tablist preparse
+         dimcolor="#999999"
+         txtcolor="white"
+         selcolor="#eeeeee"
+         #selected#
+         fgcolor="#999999"
+         bgcolor=white>
+   ½__tabs:quote=none½
+</tablist
+></td></tr>
+<tr><td bgcolor="#eeeeee">½__contents:quote=none½</td>
+</tr></table>
+</formoutput>
+</define>
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
@@ -68,4 +103,9 @@
 </define>
 
 
+<define tag=cf-save what=Global>
+  <cf-perm perm="Edit &what; Variables">
+    <submit-gbutton align=right preparse> <cf-locale get=save> </submit-gbutton>
+  </cf-perm>
+</define>
 

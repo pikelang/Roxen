@@ -16,8 +16,8 @@ int check_config_name(string name)
 mixed parse( object id )
 {
   id->variables->name=
-    (replace(id->variables->name,"\000"," ")/" "-({""}))*" ";
+    (replace(id->variables->name||"","\000"," ")/" "-({""}))*" ";
   if( check_config_name( id->variables->name ) )
-    return http_string_answer("<error>foo</error>");
+    return http_string_answer("<error></error>");
   return "";
 }

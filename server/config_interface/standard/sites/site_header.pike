@@ -29,10 +29,37 @@ string parse( RequestID id )
   
   object conf = roxen->find_configuration( path[0] );
   id->misc->current_configuration = conf;
-
   if( sizeof( path ) == 1 )
   {
-    /* Global information for the configuration */
+    string res="";
+    string q = id->variables->config_page;
+    foreach ( ({
+      ({ "event_log", "eventlog", 0, 0 }),
+      ({ 0, "status", 0, 0 }),
+    }), array page )
+    {
+      string tpost = "";
+      if( page[2] )
+      {
+        res += "<cf-perm perm='"+page[2]+"'>";
+        tpost = "</cf-perm>"+tpost;
+      }
+      if( page[3] )
+      {
+        res += "<cf-userwants option='"+page[3]+"'>";
+        tpost = "</cf-userwants>"+tpost;
+      }
+    
+      if( page[0] )
+        res += "<tab href='?config_page="+page[0]+"'"+
+            ((page[0] == q)?" selected":"")+">";
+      else
+        res += "<tab href=''"+((page[0] == q)?" selected":"")+">";
+      res += "<cf-locale get="+page[1]+">";
+      res += "</tab>";
+      res += tpost;
+    }
+    return res;
   } else {
     switch( path[ 1 ] )
     {

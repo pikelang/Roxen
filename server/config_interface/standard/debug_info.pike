@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.2 1999/11/17 09:52:47 per Exp $
+ * $Id: debug_info.pike,v 1.3 1999/11/17 15:13:32 per Exp $
  */
 
 // inherit "wizard";
@@ -135,21 +135,24 @@ mixed page_0( object id )
   foo->num_total = 0;
   array ind = sort(indices(foo));
   string f;
-  res+=("<table cellpadding=0 cellspacing=0 border=0>"
+  res+=("<table width=100% cellpadding=0 cellspacing=0 border=0>"
 	"<tr valign=top><td valign=top>");
-  res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=lightblue><td>&nbsp;</td>"
+  res+=("<table border=0 width=100% cellspacing=0 cellpadding=2>"
+	"<tr bgcolor=#d9dee7><td>&nbsp;</td>"
 	"<th colspan=2><b>number of</b></th></tr>"
-	"<tr bgcolor=lightblue><th align=left>Entry</th><th align"
+	"<tr bgcolor=#d9dee7><th align=left>Entry</th><th align"
 	"=right>Current</th><th align=right>Change</th></tr>");
+  int row=0;
   foreach(ind, f)
     if(!search(f, "num_"))
     {
       string bg="white";
+      if( row++ % 2 )
+        bg = "#eeeeee";
       if(f!="num_total")
 	foo->num_total += foo[f];
       else
-	bg="lightblue";
+	bg="#d9dee7";
       string col="darkred";
       if((foo[f]-last_usage[f]) < foo[f]/60)
 	col="brown";
@@ -164,19 +167,22 @@ mixed page_0( object id )
     }
   res+="</table></td><td>";
 
-  res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=lightblue><th colspan=2><b>memory usage</b></th></tr>"
-	"<tr bgcolor=lightblue><th align=right>Current (KB)</th><th align=right>"
+  res+=("<table width=100% border=0 cellspacing=0 cellpadding=2>"
+	"<tr bgcolor=#d9dee7><th colspan=2><b>memory usage</b></th></tr>"
+	"<tr bgcolor=#d9dee7><th align=right>Current (KB)</th><th align=right>"
 	"Change (KB)</th></tr>");
 
+  row = 0;
   foreach(ind, f)
     if(search(f, "num_"))
     {
       string bg="white";
+      if( row++ % 2 )
+        bg = "#eeeeee";
       if((f!="total_usage"))
 	foo->total_usage += foo[f];
       else
-	bg="lightblue";
+	bg="#d9dee7";
       string col="darkred";
       if((foo[f]-last_usage[f]) < foo[f]/60)
 	col="brown";
@@ -195,47 +201,6 @@ mixed page_0( object id )
   first = res;
   res = "";
 
-#if 0
-#if efun(_dump_obj_table)
-  first += "<p><br><p>";
-  res += ("<table  border=0 cellspacing=0 ceellpadding=2 width=50%>"
-	  "<tr align=left bgcolor=lightblue><th  colspan=2>List of all "
-	  "programs with more than two clones:</th></tr>"
-	  "<tr align=left bgcolor=lightblue>"
-	  "<th>Program name</th><th align=right>Clones</th></tr>");
-  foo = _dump_obj_table();
-  mapping allobj = ([]);
-  string a = getcwd(), s;
-  if(a[-1] != '/')
-    a += "/";
-  int i;
-  for(i = 0; i < sizeof(foo); i++) {
-    string s = foo[i][0];
-    if(!stringp(s))
-      continue;
-    if(search(s,"base_server/mainconfig.pike")!=-1) s="ConfigNode";
-    if(search(s,"base_server/configuration.pike")!=-1) s="Bignum";
-    if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
-    allobj[s]++;
-  }
-  foreach(Array.sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
-    return allobj[a] < allobj[b];
-  }, allobj), s) {
-    if((search(s, "Destructed?") == -1) && allobj[s]>2)
-    {
-      res += sprintf("<tr bgcolor=#f0f0ff><td><b>%s</b></td>"
-		     "<td align=right><b>%d</b></td></tr>\n",
-		     s - a, allobj[s]);
-    }
-  }
-  res += "</table>";
-  first += html_border( res, 0, 5 );
-  res = "";
-#endif
-#if efun(_num_objects)
-  first += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
-#endif  
-#endif  
   return first +"</ul>";
 }
 

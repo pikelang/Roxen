@@ -1,5 +1,19 @@
 <topmenu base="../" selected=event_log>
 
 <content>
-  <insert file=log.pike nocache>
+
+<subtablist>
+  <st-tabs preparse>
+    <tab href="?"
+    <if not variable=reversed> selected </if>
+  ><cf-locale get=normal></tab>
+    <tab href="?reversed=1"
+    <if  variable=reversed> selected </if>
+  ><cf-locale get=reverse></tab>
+  </st-tabs>
+  <st-page>
+    <insert file=log.pike nocache>
+  </st-page>
+</subtablist>
+
 </content>

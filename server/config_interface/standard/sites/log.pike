@@ -3,10 +3,9 @@ inherit "../logutil.pike";
 #include <roxen.h>
 #define LOCALE	LOW_LOCALE->config_interface
 
-
 string parse(object id)
 {
-  mapping log = roxen->error_log;
+  mapping log = id->misc->current_configuration->error_log;
   array report = indices(log), r2;
 
   last_time=0;

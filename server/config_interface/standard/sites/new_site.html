@@ -1,46 +1,42 @@
-<left-menu title="Sites">
-  <configif-output source=configurations>
-     <item title='#name:quote=dtag#' href=site.html/#sname#/>
-     </item>
-  </configif-output>
-</left-menu>
-
 <topmenu base="../" selected=sites>
 
 <content>
 <h1><cf-locale get=create_new_site></h1>
 
-<cf-locale get=site_pre_text>
-
-<p>
-
-
-
-
 <awizard>
    <page name=select_name>
-     <obox title="Select site name">
-       <b>Site name:</b> <var name=name default=""><p>
+     <blockquote>
+     <obox>
+       <b><cf-locale get=site_name>:</b> <var name=name default=""><p>
 
+<blockquote> 
+       <cf-locale get=site_name_doc></blockquote>
 
-<blockquote>
-The name of the configuration must contain characters 
-other than space and tab, it should not end with 
-~, and it must not be 'CVS', 'Global Variables' or 
-'global variables', nor the name of an existing 
-configuration, and the character '/' cannot be 
-used</blockquote>
-
-
-       <dbutton title="Create new site with template ->" 
+<table width=100%>
+<tr>
+<td>
+       <dbutton gbutton-preparse  gbutton-width=150
+                gbutton-align_icon=right
+                gbutton-icon_src=/internal-roxen-next
+                gbutton_title="<cf-locale get=create_new_site> <cf-locale get=with_template>" 
                 page=new_with_template>
          <insert file=verify_site_name.pike nocache>
-       </dbutton>
-       <dbutton title="Create new site ->" page=final_create>
+       </dbutton><br>
+       <dbutton 
+          gbutton-preparse gbutton-width=150
+          gbutton-icon_src=/internal-roxen-next
+          gbutton-align_icon=right
+          gbutton_title="<cf-locale get=create_new_site>" 
+          page=final_create>
          <insert file=verify_site_name.pike nocache>
        </dbutton>
-       <button title=" Cancel " href="../sites/">
-     </obox>
+</td><td align=right valign=top>
+       <button gbutton-preparse
+               gbutton_title=" <cf-locale get=cancel> " 
+               href="../sites/">
+</td></tr></table>
+     </obox> 
+     </blockquote>
    </page>
 
 
