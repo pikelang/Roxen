@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.21 1999/03/27 20:31:03 grubba Exp $
+// $Id: module.h,v 1.22 1999/03/27 22:06:27 grubba Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -57,9 +57,9 @@
 
 // Like query, but for global variables.
 #ifdef IN_ROXEN
-#define GLOBVAR(x) QUERY(x)
+#define GLOBVAR(x) variables[ #x ][VAR_VALUE]
 #else /* !IN_ROXEN */
-#define GLOBVAR(x) roxen->QUERY(x)
+#define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
 #endif /* IN_ROXEN */
 
 #define MODULE_EXTENSION         (1<<0)
