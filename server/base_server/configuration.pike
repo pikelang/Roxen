@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.452 2001/07/21 09:44:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.453 2001/07/21 10:55:00 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2296,6 +2296,8 @@ array registered_urls = ({}), failed_urls = ({ });
 array do_not_log_patterns = 0;
 void start(int num)
 {
+  fix_my_url();
+
   // Note: This is run as root if roxen is started as root
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
@@ -2849,6 +2851,10 @@ string check_variable(string name, mixed value)
 //        !(sscanf(value,"%*s://%*s/")==2))
 //       return LOCALE->url_format();
 //     return 0;
+  case "MyWorldLocation":
+  case "URLs":
+    fix_my_url();
+    return 0;
   case "throttle":
     if (value) {
       THROTTLING_DEBUG("configuration: Starting throttler up");
@@ -3072,18 +3078,28 @@ Sql.Sql sql_connect(string db)
 // END SQL
 #endif
 
-// This is the most likely URL for a site.
-private string get_my_url()
+static string my_url;
+
+void fix_my_url()
 {
-  string s;
-#if efun(gethostname)
-  s = (gethostname()/".")[0] + "." + query("Domain");
-  s -= "\n";
-#else
-  s = "localhost";
-#endif
-  return "http://" + s + "/";
+  my_url = query ("MyWorldLocation");
+  if (sizeof (my_url)) {
+    if (sscanf (my_url, "%s://%s/%*c", string port, string host) == 2) {
+      // No subpath in MyWorldLocation; try to get one from URLs.
+      foreach (query ("URLs"), string url)
+	if (sscanf (url, "%*s://%*[^/]%s", url) == 3) {
+	  my_url = port + "://" + host + url;
+	  break;
+	}
+    }
+  }
+  else
+    if (!(my_url = Roxen.get_world (query ("URLs"))))
+      my_url = "http://localhost/"; // Probably no port configured.
+  if (!has_suffix (my_url, "/")) my_url += "/";
 }
+
+string get_url() {return my_url;}
 
 array after_init_hooks = ({});
 mixed add_init_hook( mixed what )
@@ -3322,7 +3338,7 @@ static void create()
 		 "located. Please note that you also have to configure the "
 		 "'URLs' variable. This is for instance used as fallback to "
 		 "generate absolute URLs to the server, but in most "
-		 "circumstances the URL sent by the clients are used, or "
+		 "circumstances the URL sent by the clients is used, or "
 		 "the setting in 'URLs' for the port in question if that "
 		 "doesn't exist. This setting should not contain any subpath "
 		 "setting that is part of the port(s) in 'URLs'."));

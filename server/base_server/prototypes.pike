@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.24 2001/07/21 10:13:28 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.25 2001/07/21 10:55:00 mast Exp $";
 
 class Variable
 {
@@ -208,6 +208,10 @@ class Configuration
   void unregister_urls();
   void stop(void|int asynch);
   string type_from_filename( string file, int|void to, string|void myext );
+
+  string get_url();
+  //! Returns some URL for accessing the configuration. (Should be
+  //! used instead of querying MyWorldLocation directly.)
 
   array (RoxenModule) get_providers(string provides);
   RoxenModule get_provider(string provides);
