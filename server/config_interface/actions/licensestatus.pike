@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.9 2002/04/22 16:47:46 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.10 2002/04/22 17:10:30 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -79,13 +79,13 @@ mixed parse( RequestID id )
     <license name='&form.license;'>
       <table>
         <tr><td><b>Company Name:</b></td><td>&_.company_name;</td></tr>
-        <tr><td><b>Comment:</b></td><td>&_.comment;</td></tr>
         <tr><td><b>Expires:</b></td><td>&_.expires;</td></tr>
         <tr><td><b>Hostname:</b></td><td>&_.hostname;</td></tr>
         <tr><td><b>Type:</b></td><td>&_.type;</td></tr>
         <tr><td><b>Number:</b></td><td>&_.number;</td></tr>
         <tr><td><b>Created:</b></td><td>&_.created;</td></tr>
         <tr><td><b>Created by:</b></td><td>&_.creator;@roxen.com</td></tr>
+        <tr><td><b>Comment:</b></td><td>&_.comment;</td></tr>
       </table><br />
       <table cellspacing='0' border='0' cellpadding='3'>
         <tr>
