@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.148 1998/09/30 00:43:30 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.149 1998/10/06 08:35:09 hubbe Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1205,6 +1205,28 @@ string tag_define(string tag, mapping m, string str, object id, object file,
   }
   else return "<!-- No name, tag or container specified for the define! "
 	 "&lt;define help&gt; for instructions. -->";
+  return ""; 
+}
+
+string tag_undefine(string tag, mapping m, object id, object file,
+		    mapping defines)
+{ 
+  if (m->name) 
+    m_delete(defines,m->name);
+  else if(m->variable)
+    m_delete(id->variables,m->variable);
+  else if (m->tag) 
+  {
+    m_delete(id->misc->tags,m->tag);
+    m_delete(id->misc->_tags,m->tag);
+  }
+  else if (m->container) 
+  {
+    m_delete(id->misc->containers,m->container);
+    m_delete(id->misc->_containers,m->container);
+  }
+  else return "<!-- No name, tag or container specified for undefine! "
+	 "&lt;undefine help&gt; for instructions. -->";
   return ""; 
 }
 
@@ -2736,6 +2758,7 @@ mapping query_tag_callers()
 	    "set":tag_set,
 	    "append":tag_append,
 	    "unset":tag_set,
+	    "undefine":tag_undefine,
  	    "set_cookie":tag_add_cookie,
  	    "remove_cookie":tag_remove_cookie,
 	    "clientname":tag_clientname,
