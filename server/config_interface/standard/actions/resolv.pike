@@ -1,16 +1,24 @@
 /*
- * $Id: resolv.pike,v 1.4 2000/03/16 03:52:20 mast Exp $
+ * $Id: resolv.pike,v 1.5 2000/03/24 12:37:40 jhs Exp $
  */
 
 inherit "wizard";
+inherit "../logutil";
 
 constant action="maintenance";
 constant name= "Resolve path...";
 constant doc = ("Check which modules handles the path you enter in the form");
 
-string module_name(function|object m)
+string link(string to, string name)
+{ return sprintf("<a href=\"%s\">%s</a>", to, name); }
+
+string link_configuration(Configuration c)
+{ return link(@get_conf_url_to_virtual_server(c)); }
+
+string module_name(function|RoxenModule m)
 {
-  if(!m)return "";
+  if(!m)
+    return "";
   if(functionp(m)) m = function_object(m);
 
   string name;
@@ -18,16 +26,40 @@ string module_name(function|object m)
     name=(string)m->query("_name");
   };
 
-  if(!error && strlen(name))
-    return "<font color=darkgreen>"+m->query("_name")+"</font>";
+  if(error || !strlen(name))
+  {
+    if(m->query_name&&m->query_name()&&strlen(m->query_name()))
+      name = m->query_name();
+    else if(m->register_module && sizeof(m->register_module()))
+      name = m->register_module()[1];
+    else
+      return "<font color=red>Unavailable</font>";
+  }
 
-  if(m->query_name&&m->query_name()&&strlen(m->query_name()))
-    return "<font color=darkgreen>"+m->query_name()+"</font>";
+  Configuration c;
+  if(functionp(m->my_configuration) && (c = m->my_configuration()))
+  {
+    foreach(indices(c->modules), string mn)
+    {
+      int w;
+      mapping mod = c->modules[mn];
+      if(mod->enabled == m)
+      {
+	name = sprintf("<a href=\"%s\">%s</a> (%s)",
+		       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
+	break;
+      }
+      else if(mod->copies && !zero_type(search(mod->copies, m)))
+      {
+	name = sprintf("<a href=\"%s\">%s</a> (%s)",
+		       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
+		       roxen->filename(m));
+	break;
+      }
+    }
+  }
 
-  if(m->register_module && sizeof(m->register_module()))
-    return "<font color=darkgreen>"+m->register_module()[1]+"</font>";
-
-  return "<font color=red>Unavailable</font>";
+  return "<font color=darkgreen>"+name+"</font>";
 }
 
 string resolv;
@@ -188,7 +220,7 @@ string parse(object id)
     else
       nid->pragma = (<>);
 
-    resolv = "Resolving " + id->variables->path + " in " + c->query_name() +
+    resolv = "Resolving " + link(op, id->variables->path) + " in " + link_configuration(c) +
            "<br><hr noshade size=1 width=100%>";
 
     nid->misc->trace_enter = trace_enter_ol;
@@ -245,6 +277,6 @@ string parse(object id)
     resolv += "</ol>";
     res += "<p><blockquote>"+resolv+"</blockquote>";
   }
-    id->variables->path = op || "";
+  id->variables->path = op || "";
   return res;
 }
