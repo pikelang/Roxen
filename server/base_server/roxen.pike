@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.838 2003/10/22 13:27:43 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.839 2003/10/22 15:45:15 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1119,9 +1119,32 @@ void set_port_options( string key, mapping value )
 #define URL2CONF_MSG(X...)
 #endif
 
-Configuration find_configuration_for_url(object url, void|string url_base)
+static mapping(string:int(0..1)) host_is_local_cache = ([]);
+
+//! Check if @[hostname] is local to this machine.
+int(0..1) host_is_local(string hostname)
+{
+  int(0..1) res;
+  if (!zero_type(res = host_is_local_cache[hostname])) return res;
+  
+  // Look up the IP.
+  string ip = blocking_host_to_ip(hostname);
+
+  // Can we bind to it?
+  Stdio.Port port = Stdio.Port();
+  res = port->bind(0, 0, ip);
+
+  destruct(port);
+  return host_is_local_cache[hostname] = res;
+}
+
+Configuration find_configuration_for_url(Standards.URI url,
+					 void|Configuration only_this_conf)
 //! Tries to to determine if a request for the given url would end up
 //! in this server, and if so returns the corresponding configuration.
+//!
+//! If @[only_this_conf] has been specified only matches against it
+//! will be returned.
 {
   Configuration c;
   string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
@@ -1141,45 +1164,19 @@ Configuration find_configuration_for_url(object url, void|string url_base)
 	  (c = q->port->find_configuration_for_url(url_with_port, 0, 1 )) )
       {
 	URL2CONF_MSG("Found config: %O\n", c);
-#if 0
-	// FIXME: The following code looks suspect; what's its intention?
-	// /grubba 2003-10-22
-	if (search(u, "*") != -1 ||
-	    search(u, "?") != -1)
-	{
-	  // Something like "http://*:80/"
 
-	  // Base url
-	  if (url_base)
-	  {
-	    Standards.URI base = Standards.URI(url_base);
-	    if (url->host == base->host &&
-		url->port == base->port &&
-		url->scheme == base->scheme)
-	      break;
-	  }
-
-	  // Configuration location
-	  Standards.URI config = Standards.URI(c->get_url());
-	  if (url->host == config->host &&
-	      url->port == config->port &&
-	      url->scheme == config->scheme)
-  	    break;
-
-	  URL2CONF_MSG("No match:\n"
-		       "  host:   %O : %O\n"
-		       "  port:   %O : %O\n"
-		       "  scheme: %O : %O\n",
-		       url->host, config->host,
-		       url->port, config->port,
-		       url->scheme, config->scheme);
-
-	  // Do not match
+	if ((only_this_conf && (c != only_this_conf)) ||
+	    ((search(u, "*") != -1 || search(u, "?") != -1) &&
+	     // u is something like "http://*:80/"
+	     (!host_is_local(url->host)))) {
+	  // Bad match.
+	  URL2CONF_MSG("Bad match: only_this_conf:%O, host_is_local:%O\n",
+		       (only_this_conf && (c == only_this_conf)),
+		       (!host_is_local(url->host)));
 	  c = 0;
+	  continue;
 	}
-	else
-#endif /* 0 */
-	  break;
+	break;
       }
     }
   }
