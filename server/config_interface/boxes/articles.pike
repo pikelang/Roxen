@@ -5,7 +5,7 @@
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "small";
-constant box_initial = 1;
+constant box_initial = 0;
 
 String box_name = _(195,"Community articles");
 String box_doc  = _(231,"Most recently published community articles");
