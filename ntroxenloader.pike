@@ -56,7 +56,7 @@ void read_from_stdin()
 
 int main(int argc, array (string) argv)
 {
-  int redirect = 1; // Default is to redirect stdout with friends.
+  int redirect = 0; // Default is not to redirect stdout with friends.
   /* Syntax: ntroxenloader.pike <roxen-directory> <roxen loader options> */
   if(argc > 1 && argv[1][0]=='+')
   {
@@ -65,9 +65,9 @@ int main(int argc, array (string) argv)
     argc--;
   }
 
-  if(argc > 1 && argv[1] == "-verbose")
+  if(argc > 1 && argv[1] == "-silent")
   {
-    redirect = 0;
+    redirect = 1;
     argv = argv[1..];
     argc--;
   }
@@ -131,11 +131,11 @@ int main(int argc, array (string) argv)
   function rget=
     lambda(string ent) {
       string res ;
-      catch(res=RegGetValue(HKEY_CURRENT_USER,"SOFTWARE\\Idonex\\Pike\\0.6",ent));
+      catch(res=RegGetValue(HKEY_CURRENT_USER,"SOFTWARE\\Idonex\\Pike\\7.0",ent));
       if(res) return res;
-      catch(res=RegGetValue(HKEY_LOCAL_MACHINE,"SOFTWARE\\Idonex\\Pike\\0.6",ent));
+      catch(res=RegGetValue(HKEY_LOCAL_MACHINE,"SOFTWARE\\Idonex\\Pike\\7.0",ent));
       if(res) return res;
-      return "<undefined>";
+      return "defaulted from binary";
     };
   werror("Primary bootstrap complete.\n"
  "   Pike master file     : "+rget("PIKE_MASTER")+"\n"
@@ -147,7 +147,7 @@ int main(int argc, array (string) argv)
  "   Roxen shutdown file  : "+(key?log_dir+"\\"+key:"None")+"\n"
  "   Roxen log directory  : "+log_dir+"\n"
  "   Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
-#if constant(_Crypto) && constant(Crypto)
+#if constant(_Crypto) && constant(Crypto.rsa)
  "   This version of roxen has crypto algorithms available\n"
 #endif
  "\n");
@@ -155,7 +155,8 @@ int main(int argc, array (string) argv)
   werror("Compiling second level bootstrap ["
 	 +dir+"base_server\\roxenloader.pike]\n");
   call_out(write_status_file, 1);
-  if(key) thread_create(read_from_stdin);
+  if(key) 
+    thread_create(read_from_stdin);
   return ((program)(dir+"base_server\\roxenloader.pike"))()
     ->main(argc, argv);
 }

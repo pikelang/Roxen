@@ -15,10 +15,23 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.166 2000/04/05 21:46:01 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.167 2000/04/12 19:43:06 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
+
+#ifdef __NT__
+mapping uname()
+{
+  return ([ 
+	   "machine":"NT",
+	   "release":"unknown",
+	   "sysname":"NT",
+	   "nodename":gethostname(),
+	   "version":"unknown",
+	   ]);
+}
+#endif
 
 mapping(int:string) pwn=([]);
 string pw_name(int uid)
@@ -591,7 +604,7 @@ object(_roxen) really_load_roxen()
   object(_roxen) res;
 //   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
-    res =[object(_roxen)]((program)"roxen")();
+    res =[object(_roxen)]((program)"base_server/roxen")();
   };
 //   new_master->set_inhibit_compile_errors(0);
 //   string q = e->get();
@@ -1042,6 +1055,14 @@ Please install a newer pike version
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
   add_constant("mkdirhier", mkdirhier);
+
+#ifdef __NT__
+  add_constant( "uname", uname );
+  add_constant( "getuid", lambda(){ return 0; } );
+  add_constant( "getgid", lambda(){ return 0; } );
+  add_constant( "geteuid", lambda(){ return 0; } );
+  add_constant( "getegid", lambda(){ return 0; } );
+#endif
 
   if (err = catch {
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
