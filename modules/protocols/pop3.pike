@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.22 1998/12/06 23:30:43 grubba Exp $
+ * $Id: pop3.pike,v 1.23 1999/01/25 21:15:45 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.22 1998/12/06 23:30:43 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.23 1999/01/25 21:15:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -151,6 +151,8 @@ static class Pop_Session
     send_ok(sprintf("%s POP3 server signing off.", gethostname()));
     disconnect();
     if (user) {
+      // Get rid of the destructed object marker.
+      deleted[0] = 0;
       indices(deleted)->delete();
     }
     log("QUIT", "", 200);
