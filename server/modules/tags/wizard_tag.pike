@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.10 1998/07/19 16:26:37 grubba Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.11 1998/07/19 17:16:38 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -36,24 +36,48 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		  object file, mapping defines)
 {
   if(!defines->line)
-    defines->line=1;
+    defines->line=-1;
   mapping f = ([ "pages":({}) ]);
-  string pike = ("inherit \"wizard\";\n"
+  string pike = ("inherit \"wizard\";\n" +
+#if (__VERSION__ >= 0.6)
+		 sprintf("# "+defines->line+" %O\n"
+			 "string name = %O;\n",
+			 id->not_query, (args->name||"unnamed"))
+#else
 		 "# "+defines->line+" \""+id->not_query+"\"\n"
-		 "string name=\""+(args->name||"unnamed")+"\";\n");
+		 "string name=\""+(args->name||"unnamed") + "\";\n"
+#endif /* __VERSION__ >= 0.6 */
+		 );
   int p;
   foreach(glob("*-label", indices(args)), string a)
   {
+#if __VERSION__ >= 0.6
+    pike += sprintf("# "+defines->line+" %O\n",
+		    id->not_query);
+    pike += sprintf("  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
+					({"","","",""}))+ 
+		    " = %O;\n", args[a]);
+#else
     pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
     pike += "  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
 				({"","","",""}))+ 
       " = \""+replace(args[a], ({"\"","\n","\r", "\\"}), 
 		      ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";\n";
+#endif /* __VERSION__ >= 0.6 */
   }
 
 
   if(args->ok)
   {
+#if __VERSION__ >= 0.6
+    pike += sprintf("# "+defines->line+" %O\n", id->not_query);
+    pike += sprintf("mixed wizard_done(object id)\n"
+		    "{\n"
+		    "  id->not_query = %O;\n\""+
+		    "  return roxen->get_file( id );\n"
+		    "}\n\n",
+		    fix_relative(args->ok, id));
+#else
     pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
     pike += ("mixed wizard_done(object id)\n"
 	     "{\n"
@@ -62,15 +86,23 @@ string tag_wizard(string t, mapping args, string contents, object id,
 				  ({"\\\"", "\\n", "\\r", "\\\\"})),id)+"\";\n"
 	     "  return roxen->get_file( id );\n"
 	     "}\n\n");
+#endif /* __VERSION__ >= 0.6 */
   }
   parse_html_lines(contents, ([]), (["page":internal_page]), 
 		   (int)defines->line,f);
   foreach(f->pages, array q)
   {
+#if __VERSION__ >= 0.6
+    pike += sprintf("# "+q[1]+" %O\n", id->not_query);
+    pike += sprintf("string page_"+p+"(object id) {" +
+		    "  return %O;\n"
+		    "}\n", q[0]);
+#else
     pike += ("# "+q[1]+" \""+id->not_query+"\"\n");
     pike += ("string page_"+p+"(object id) {" +
 	     "return \""+replace(q[0], ({"\"","\n","\r", "\\"}), 
 				 ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";}\n");
+#endif /* __VERSION__ >= 0.6 */
     p++;
   }
   object w;
