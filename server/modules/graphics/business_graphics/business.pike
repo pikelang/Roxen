@@ -166,6 +166,9 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->fontsize)
     res->fontsize = m->fontsize;
 
+  if(m->legendfontsize)
+    res->legendfontsize = m->legendfontsize;
+
   if(m->xsize)
     res->xsize = (int)m->xsize;
   if(m->xsize)
@@ -208,7 +211,8 @@ mapping find_file(string f, object id)
   //strap
   if(!res->fontsize)
     res->fontsize=32;
-  res->legendfontsize=12;
+  if(!res->legendfontsize)
+    res->legendfontsize=12;
   res->labelcolor=({0,0,0});
   res->axiscolor=({0,0,0});
   res->linewidth=2.2;
