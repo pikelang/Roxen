@@ -55,8 +55,10 @@ o From: Bernhard Reiter <breiter@mathematik.Uni-Osnabrueck.DE>
  
   A few summary lists could make the use of priority levels a lot
   easier.
-
-o Allow multiple 'tags' with the same name
   
 o Fix a better page for "Illegal configuration name". It should at least offer
   a "back"-button
+
+Fixed:
+
+o Allow multiple 'tags' with the same name

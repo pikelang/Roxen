@@ -2,10 +2,10 @@ This version, 1.4, of Roxen(TM) Challenger is distributed under GNU's
 General Public License version 2. You should have received a copy of
 the GPL License in the file "GPL" with your copy of Roxen(TM)
 Challenger. We have chosen to make a restriction, in accordance to
-section 8 of the license, that Roxen(TM) Challenger 1.2 may not be
-distributed to or used in the United States of America since it
-contains an implementation of the RSA patent (U.S. Patent No,
-4,405,829).
+section 8 of the license, that Roxen(TM) Challenger 1.4 may not be
+used in the United States of America, without getting a license from
+RSA, since it contains an implementation of the RSA patent
+(U.S. Patent No, 4,405,829).
 
 Neither this file, nor the file "GPL" may be removed from the Roxen(TM)
 Challenger distribution. See GPL for further restrictions.

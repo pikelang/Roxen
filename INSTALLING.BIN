@@ -9,17 +9,16 @@
                If you have GNU tar; "tar xzf Roxen-archive-name"
                If you don't have GNU tar: 
                "gunzip < Roxen-archive-name| tar xf -" 
-          .tar.Z
-               If you have GNU tar; "tar xzf Roxen-archive-name"
-               If you don't have GNU tar: 
-               "uncompress < Roxen-archive-name| tar xf -"
           .tar
                "tar xf Roxen-archive-name"
 
      (where "Roxen-archive-name" is the name of the Roxen archive
-     file.).
+      file.).
 
-  3. Type "cd Roxen_1.4/server" to change to the server directory.
+  3. Type "cd <roxen_version>/server" to change to the server directory in
+     the new directory.
+
+     (Where roxen_version is the name of the unarchived Roxen directory.)
 
   4. Start the install script by typing ./install.
 
@@ -28,12 +27,18 @@
   6. If everything worked, configure the server, otherwise move on to the
      troubleshooting section on the roxen WWW-pages. 
 
+
+  note:
+      You can later on move the <roxen_version> directory to anywhere
+     in your filesystem. Roxen does not keep any absolute paths.
+
+
  Once you have installed the server, consider joining the Roxen
- mailinglist (by sending a mail to roxen-request@infovav.se, with
+ mailinglist (by sending a mail to roxen-request@idonex.se, with
  the Subject: subscribe).
 
  For more information about Roxen, read the online documentation at
- http://roxen.com/
+ http://www.roxen.com/
 
 ----------------------------------------------------------------------------
 Example installation session:
