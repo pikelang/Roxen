@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.547 2000/09/13 05:12:47 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.548 2000/09/13 18:18:38 jonasw Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2234,6 +2234,7 @@ class ImageCache
       switch(format)
       {
        case "gif":
+#if constant(Image.GIF) && constant(Image.GIF.encode)
          if( alpha && true_alpha )
          {
            Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
@@ -2248,15 +2249,22 @@ class ImageCache
              data = Image.GIF.encode( reply, ct );
          })
            data = Image.GIF.encode( reply );
+#else
+	 data = 0;
+#endif
          break;
 
        case "png":
          if( ct ) enc_args->palette = ct;
          m_delete( enc_args, "colortable" );
-         if( !enc_args->alpha )  m_delete( enc_args, "alpha" );
+         if( !enc_args->alpha )
+	   m_delete( enc_args, "alpha" );
+	 else
+	   //  PNG encoder doesn't handle alpha and palette simultaneously
+	   m_delete(enc_args, "palette");
 
        default:
-        data = Image[upper_case( format )]->encode( reply, enc_args );
+	 data = Image[upper_case( format )]->encode( reply, enc_args );
       }
 
       meta =
@@ -2456,11 +2464,27 @@ class ImageCache
   //! will be called like <pi>callback( @data, id )</pi>.
   {
     string ci;
-    if( mappingp( data ) )
+    if( mappingp( data ) ) {
+      if (!data->format) {
+	//  Make implicit format choice explicit
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+	data->format = "gif";
+#else
+	data->format = "png";
+#endif
+      }
       ci = argcache->store( data );
-    else if( arrayp( data ) )
+    } else if( arrayp( data ) ) {
+      if (!data[0]->format) {
+	//  Make implicit format choice explicit
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+	data[0]->format = "gif";
+#else
+        data[0]->format = "png";
+#endif
+      }
       ci = map( map( data, tomapp ), argcache->store )*"$";
-    else
+    } else
       ci = data;
     return ci;
   }
