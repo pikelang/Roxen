@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.311 2000/06/19 12:44:51 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.312 2000/06/23 16:11:20 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1783,7 +1783,7 @@ class StringFile
 
 
 // this is not as trivial as it sounds. Consider gtext. :-)
-public array open_file(string fname, string mode, RequestID id)
+public array open_file(string fname, string mode, RequestID id, void|int internal_get)
 {
   object oc = id->conf;
   string oq = id->not_query;
@@ -1797,7 +1797,7 @@ public array open_file(string fname, string mode, RequestID id)
       break;
     else if(id->conf != oc)
     {
-      return open_file(fname, mode,id);
+      return open_file(fname, mode,id, internal_get);
     }
   fname = id->not_query;
 
@@ -1817,13 +1817,13 @@ public array open_file(string fname, string mode, RequestID id)
   {
     if(!file)
     {
-      file = oc->get_file( id );
+      file = oc->get_file( id, 0, internal_get );
       if(!file) {
 	foreach(oc->last_modules(), funp) if(file = funp( id ))
 	  break;
 	if (file == 1) {
 	  // Recurse.
-	  return open_file(id->not_query, mode, id);
+	  return open_file(id->not_query, mode, id, internal_get);
 	}
       }
     }
@@ -2079,6 +2079,7 @@ int|string try_get_file(string s, RequestID id,
   fake_id = id->clone_me();
 
   fake_id->misc->common = id->misc->common;
+  fake_id->misc->internal_get = !not_internal;
 
   s = Roxen.fix_relative (s, id);
 
@@ -2103,7 +2104,7 @@ int|string try_get_file(string s, RequestID id,
   if(!(m = get_file(fake_id,0,!not_internal))) {
     // Might be a PATH_INFO type URL.
     m_delete (fake_id->misc, "path_info");
-    array a = open_file( s, "r", fake_id );
+    array a = open_file( s, "r", fake_id, !not_internal );
     if(a && a[0]) {
       m = a[1];
       m->file = a[0];
