@@ -1,10 +1,11 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.13 1998/03/26 07:31:03 neotron Exp $
+ * $Id: config.h,v 1.14 1998/04/26 17:18:54 per Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
  */
 
+#include <extra_config.h>
 #ifndef _ROXEN_CONFIG_H_
 #define _ROXEN_CONFIG_H_
 
