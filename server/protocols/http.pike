@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.281 2000/10/20 17:04:42 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.282 2000/11/02 17:06:33 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1856,7 +1856,8 @@ void send_result(mapping|void result)
 #ifdef RAM_CACHE
       if( (misc->cacheable > 0) && (file->data || file->file) )
       {
-        if( ((file->len + strlen( head_string )) < 
+        if( file->len>0 && // known length.
+	    ((file->len + strlen( head_string )) < 
              conf->datacache->max_file_size) 
             && misc->cachekey )
         {
