@@ -831,6 +831,8 @@ These only tests that the tags does not produce a backtrace, for now.
 <result><a href="/(a,b,x)/index.html">x</a></result>
 </test>
 
+
+<comment>Cache tests</comment>
 <test>
 <rxml><cache><append variable="var.foo" value="x"/></cache>
 <cache><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
@@ -857,6 +859,8 @@ yy</result>
 <result>hejhej</result>
 </test>
 
+
+<comment>Random tests</comment>
 <test>
 <rxml><random seed="foo">a
 b
@@ -876,4 +880,91 @@ e</random></rxml>
 <test>
 <rxml><random seed="foo" separator=",">a,b,c,d,e</random></rxml>
 <result>e</result>
+</test>
+
+
+<comment>Expr tests</comment>
+<test>
+<rxml><set variable="var.x" expr="((1+2)*3+1)/4"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="0xff+1"/>&var.x;</rxml>
+<result>256</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="010*2"/>&var.x;</rxml>
+<result>16</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="0b100-1"/>&var.x;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(int)(3.0/2+0.5)"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(0&&3)+(1&&2)"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(1||2)+(0||3)"/>&var.x;</rxml>
+<result>4</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(1&3&5)+(2&8)"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="1|3|0|2"/>&var.x;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="5^6"/>&var.x;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="10%5+10%4+10%3"/>&var.x;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(1==2) + (7==7)*2"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(2<1) + (1<2)*2 + (2<2)*4"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(1>2) + (2>1)*2 + (2>2)*4"/>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(1>=2) + (2>=1)*2 + (2>=2)*4"/>&var.x;</rxml>
+<result>6</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="(2<=1) + (1<=2)*2 + (2<=2)*4"/>&var.x;</rxml>
+<result>6</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="INT()*2+INT(5)"/>&var.x;</rxml>
+<result>5</result>
 </test>
