@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.176 1999/05/25 09:48:17 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.177 1999/05/25 09:51:27 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -671,7 +671,7 @@ mixed draw_callback(mapping args, object id)
   return 
   ([ 
     "data":data[0], 
-    "metadata":
+    "meta":
     ([
       "xsize":data[1][0],
       "ysize":data[1][1],
