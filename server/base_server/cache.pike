@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.77 2001/09/20 20:02:28 nilsson Exp $
+// $Id: cache.pike,v 1.78 2002/02/12 17:24:12 jonasw Exp $
 
 // #pragma strict_types
 
@@ -60,7 +60,7 @@ void cache_expire(string in)
 }
 
 // Lookup an entry in a cache
-mixed cache_lookup(string in, string what)
+mixed cache_lookup(string in, mixed what)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
@@ -115,7 +115,7 @@ mapping(string:array(int)) status()
 
 // Remove an entry from the cache. Removes the entire cache if no
 // entry key is given.
-void cache_remove(string in, string what)
+void cache_remove(string in, mixed what)
 {
   CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", in, what));
   if(!what)
@@ -126,7 +126,7 @@ void cache_remove(string in, string what)
 }
 
 // Add an entry to a cache
-mixed cache_set(string in, string what, mixed to, int|void tm)
+mixed cache_set(string in, mixed what, mixed to, int|void tm)
 {
 #if MORE_CACHE_DEBUG
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)\n",
