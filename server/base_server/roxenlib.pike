@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.114 1999/10/02 22:48:39 nilsson Exp $
+// $Id: roxenlib.pike,v 1.115 1999/10/08 12:41:23 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1440,3 +1440,36 @@ string trim( string what )
   }
   return what;
 }
+
+
+string|int API_read_file(object id, string file)
+{
+  string s, f = fix_relative(file, id);
+  id = id->clone_me();
+ 
+  if(id->scan_for_query)
+    f = id->scan_for_query( f );
+  s = id->conf->try_get_file(f, id);
+
+  if (!s) {
+
+    // Might be a PATH_INFO type URL.
+    array a = id->conf->open_file( f, "r", id );
+    if(a && a[0])
+    {
+      s = a[0]->read();
+      if(a[1]->raw)
+      {
+        s -= "\r";
+        if(!sscanf(s, "%*s\n\n%s", s))
+          sscanf(s, "%*s\n%s", s);
+      }
+    }
+    if(!s)
+      return 0;
+  }
+
+  return s;
+}
+
+
