@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: socket.pike,v 1.23 2001/06/17 20:07:11 nilsson Exp $
+// $Id: socket.pike,v 1.24 2002/12/14 14:43:32 anders Exp $
 
 #define roxen roxenp()
 
@@ -92,7 +92,7 @@ void async_connect(string host, int port, function|void callback,
 }
 
 
-private void my_pipe_done(Pipe.pipe which)
+void my_pipe_done(Pipe.pipe which)
 {
   if(objectp(which))
   {
