@@ -1,12 +1,17 @@
 <mail-verify-login>
 
 <if variable=send>
-  <redirect to="send.html">
+  <formoutput>
+   <redirect to="send.html?mail_id=#mail_id#">
+  </formoutput>
 </if>
 
 <if variable=cancel>
   <unset variable=cancel>
-  <redirect to="./">
+  <set variable=mailbox_id eval='<mail-mailboxid mailbox=drafts>'>
+  <formoutput>
+   <redirect to="./?mailbox_id=#mailbox_id#&listall=1">
+  </formoutput>
 </if>
 
 <if variable=abort>
