@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.104 1998/05/25 16:43:12 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.105 1998/06/02 13:08:32 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -634,17 +634,16 @@ void end(string|void s, int|void keepit)
 
 static void do_timeout()
 {
-//  werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
+  // werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
   int elapsed = _time()-time;
   if(time && elapsed >= 30)
   {
     MARK_FD("HTTP timeout");
-    end("HTTP/1.0 408 Timeout\r\n"
-	"Content-type: text/plain\r\n"
-	"Server: Roxen Challenger\r\n"
-	"\r\n"
-	"Your connection timed out.\n"
-	"Please try again.\n");
+    // Do not under any circumstances send any data as a reply here.
+    // This is an easy reason why: It breaks keep-alive totaly.
+    // It is not a very good idea to do that, since it might be enabled
+    // per deafult any century now..
+    end("");
   } else {
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
