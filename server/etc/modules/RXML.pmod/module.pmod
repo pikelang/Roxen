@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.245 2001/09/13 14:03:48 mast Exp $
+// $Id: module.pmod,v 1.246 2001/09/18 18:57:45 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -64,6 +64,7 @@ static object roxen;
 // #define FRAME_DEPTH_DEBUG
 // #define RXML_PCODE_DEBUG
 // #define RXML_PCODE_UPDATE_DEBUG
+// #define TAGSET_GENERATION_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -983,6 +984,10 @@ class TagSet
   //! Should be called whenever something is changed. Done
   //! automatically most of the time, however.
   {
+#ifdef TAGSET_GENERATION_DEBUG
+    werror ("%O update, generation %d -> %d\n", this_object(),
+	    generation, generation + 1);
+#endif
     generation++;
     prepare_funs = 0;
     overridden_tag_lookup = 0;
@@ -991,6 +996,10 @@ class TagSet
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
     got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
+#ifdef TAGSET_GENERATION_DEBUG
+    werror ("%O update done, generation %d -> %d\n", this_object(),
+	    generation - 1, generation);
+#endif
   }
 
   function(Backtrace,Type:string) handle_run_error =
@@ -1368,12 +1377,14 @@ class Scope
   //! indexed.
     {parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
-  void _m_delete (string var, void|Context ctx, void|string scope_name)
+  void _m_delete (string var, void|Context ctx,
+		  void|string scope_name, void|int from_m_delete)
   //! Called to delete a variable in the scope. @[var] is the name of
   //! it, @[ctx] and @[scope_name] are set to where this @[Scope]
-  //! object was found.
+  //! object was found. @[from_m_delete] is an internal kludge for 2.1
+  //! compatibility; it should never be given a value.
   {
-    if (m_delete != local::m_delete)
+    if (!from_m_delete)
       m_delete (var, ctx, scope_name); // For compatibility with 2.1.
     else
       parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");
@@ -1381,7 +1392,7 @@ class Scope
 
   void m_delete (string var, void|Context ctx, void|string scope_name)
   // For compatibility with 2.1.
-    {_m_delete (var, ctx, scope_name);}
+    {_m_delete (var, ctx, scope_name, 1);}
 
   private string _in_the_scope (string scope_name)
   {
@@ -3986,9 +3997,9 @@ class Frame
 			   __LINE__);					\
 	  ctx->frame_depth--;						\
 	} while (0)
-
+	
 	CLEANUP;
-
+	
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" : "");
@@ -6611,6 +6622,10 @@ class PCode
   //! Returns whether the p-code is stale or not. Should be called
   //! before @[eval] to ensure it won't fail for that reason.
   {
+#ifdef TAGSET_GENERATION_DEBUG
+    werror ("%O is_stale test: generation=%d, %O->generation=%d\n",
+	    this_object(), generation, tag_set, tag_set && tag_set->generation);
+#endif
     return tag_set && tag_set->generation != generation;
   }
 
