@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.696 2001/08/14 01:47:17 hop Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.697 2001/08/15 15:37:20 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1004,6 +1004,89 @@ class InternalRequestID
 //! ID for internal requests that are not linked to any real request.
 {
   inherit RequestID;
+
+  this_program set_path( string f )
+  {
+    raw_url = Roxen.http_encode_string( f );
+    if( strlen( f ) > 5 )
+    {
+      string a;
+      switch( f[1] )
+      {
+	case '<':
+	  if (sscanf(f, "/<%s>/%s", a, f)==2)
+	  {
+	    config = (multiset)(a/",");
+	    f = "/"+f;
+	  }
+	  // intentional fall-through
+	case '(':
+	  if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
+	  {
+	    prestate = (multiset)( a/","-({""}) );
+	    f = "/"+f;
+	  }
+      }
+    }
+    not_query = Roxen.simplify_path( scan_for_query( f ) );
+    return this_object();
+  }
+
+  this_program set_url( string url )
+  {
+    Configuration c;
+    foreach( indices(urls), string u )
+    {
+      mixed q = urls[u];
+      if( glob( u+"*", url ) )
+	if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
+	{
+	  conf = c;
+	  port_obj = q->port;
+	  break;
+	}
+    }
+
+    if(!c)
+    {
+      // pass 2: Find a configuration with the 'default' flag set.
+      foreach( configurations, c )
+	if( c->query( "default_server" ) )
+	{
+	  conf = c;
+	  break;
+	}
+	else
+	  c = 0;
+    }
+
+    if(!c)
+    {
+      // pass 3: No such luck. Let's allow default fallbacks.
+      foreach( indices(urls), string u )
+      {
+	mixed q = urls[u];
+	if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
+	{
+	  conf = c;
+	  port_obj = q->port;
+	  break;
+	}
+      }
+    }
+
+    string host;
+    sscanf( url, "%s://%s/%s", prot, host, url );
+    prot = upper_case( prot );
+    method = "GET";
+    misc->host = host;
+    return set_path( "/"+url );
+  }
+
+  static string _sprintf()
+  {
+    return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+  }
 
   static void create()
   {
