@@ -23,7 +23,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.220 2000/12/30 11:34:07 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.221 2001/01/01 09:40:44 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1635,14 +1635,14 @@ Sql.sql connect_to_my_mysql( int ro, string db )
   else
     tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/mysql"));
 
-  if( catch( tl->get()->query( "use "+db ) ) )
+  if( catch( tl->get()->query( "USE "+db ) ) )
   {
     if( ro )
       connect_to_my_mysql( 0, db );
     else
     {
-      tl->get()->query( "create database "+db );
-      tl->get()->query( "use "+db );
+      tl->get()->query( "CREATE DATABASE "+db );
+      tl->get()->query( "USE "+db );
     }
   }
   return tl->get();
@@ -1656,7 +1656,7 @@ void start_mysql()
   report_debug( "Starting mysql ... ");
   void connected_ok(int was)
   {
-    string version = db->query( "SELECT VERSION() as v" )[0]->v;
+    string version = db->query( "SELECT VERSION() AS v" )[0]->v;
     report_debug("%s %s [%.1fms]\n",
                   (was?"Was running":"Done"),
                   version, (gethrtime()-st)/1000.0);
@@ -1665,19 +1665,19 @@ void start_mysql()
                      "Please use 3.23.*\n");
 
     // 1: Create the 'ofiles' database.
-    if( !catch(db->query( "create database ofiles" )) )
+    if( !catch(db->query( "CREATE DATABASE ofiles" )) )
     {
-      db->query( "use ofiles" );
-      db->query( "create table files ("
-                 "id char(30) not null primary key, "
-                 "data mediumblob not null, "
-                 "mtime int not null)" );
+      db->query( "USE ofiles" );
+      db->query( "CREATE TABLE files ("
+                 "id CHAR(30) NOT NULL PRIMARY KEY, "
+                 "data MEDIUMBLOB NOT NULL, "
+                 "mtime INT UNSIGNED NOT NULL)" );
     }
     if( remove_dumped )
     {
-      werror("removing precompiled files\n");
-      db->query( "use ofiles" );
-      db->query( "delete from files" );
+      report_notice("Removing precompiled files\n");
+      db->query( "USE ofiles" );
+      db->query( "DELETE FROM files" );
     }
   };
 
@@ -1714,7 +1714,6 @@ void start_mysql()
     sleep( 0.2 );
     if( repeat++ > 100 )
     {
-//       werror("%O", p->status() );
       report_fatal("\nFailed to start mysql. Aborting\n");
       exit(1);
     }
