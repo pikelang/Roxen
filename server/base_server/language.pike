@@ -3,7 +3,7 @@ import String;
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.8 1997/04/05 01:25:32 per Exp $
+ * $Id: language.pike,v 1.9 1997/07/10 09:20:02 grubba Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -11,6 +11,8 @@ import String;
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default 
  * language.
  */
+
+#include <roxen.h>
 
 private mapping languages = ([ ]);
 
@@ -35,22 +37,26 @@ void initiate_languages()
       array tmp;
       string alias;
       object l;
+      mixed err;
       p += capitalize(lang[0..search(lang, ".")-1])+" ";
-      l = compile_file("languages/"+lang)();
-      if(tmp=l->aliases())
-      {
-	foreach(tmp, alias)
-	{
-	  languages[alias] = ([ "month":l->month,
-			       "ordered":l->ordered,
-			       "date":l->date,
-			       "day":l->day,
-			       "number":l->number,
-			      "\000":l, /* Bug in Pike force this, as of
-					 * 96-04-15. Probably fixed. */
-			     ]);
-	}
-      } 
+      if (err = catch {
+	l = compile_file("languages/"+lang)();
+	if(tmp=l->aliases()) {
+	  foreach(tmp, alias) {
+	    languages[alias] = ([ "month":l->month,
+				  "ordered":l->ordered,
+				   "date":l->date,
+			           "day":l->day,
+			           "number":l->number,
+			           "\000":l, /* Bug in Pike force this, as of
+					      * 96-04-15. Probably fixed. */
+			       ]);
+	  }
+	} 
+      }) {
+	perror("Initialization of language %s failed:%s\n",
+	       lang, describe_backtrace(err));
+      }
     }
   }
   perror(p+"\n");
