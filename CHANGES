@@ -3,6 +3,8 @@ Changes since Roxen Challenger 1.2 alpha 5
 
 o Fixed permission bug in the ftp-module.
 
+o Userdatabase module using YP (NIS) added.
+
 
 Changes since Roxen Challenger 1.2 alpha 4
 -----------------------------------------------
