@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.73 2004/03/03 17:36:07 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.74 2004/03/03 18:12:49 grubba Exp $";
 
 class Variable
 {
@@ -1125,6 +1125,11 @@ class MultiStatus
 {
   static mapping(string:array(Node)) status_set = ([]);
 
+  int(0..1) is_empty()
+  {
+    return !sizeof(status_set);
+  }
+
   void add_response(string href, Node response_node)
   {
     if (!status_set[href]) {
@@ -1316,6 +1321,10 @@ class RoxenModule
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
 					 MultiStatus result, RequestID id);
+  mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
+							RequestID id);
+  mapping(string:mixed) delete_file(string path, RequestID id);
+  int(0..1) recurse_delete_files(string path, MultiStatus result, RequestID id);
 }
 
 class _roxen
