@@ -16,9 +16,7 @@
 <file>../config_interface/standard/actions/make_selfsigned_rsa.pike</file>
 <file>../config_interface/standard/actions/openfiles.pike</file>
 <file>../config_interface/standard/actions/proc.pike</file>
-<file>../config_interface/standard/actions/processstatus.pike</file>
 <file>../config_interface/standard/actions/reloadconfigurations.pike</file>
-<file>../config_interface/standard/actions/requeststatus.pike</file>
 <file>../config_interface/standard/actions/resolv.pike</file>
 <file>../config_interface/standard/actions/restart.pike</file>
 <file>../config_interface/standard/actions/ssl_common.pike</file>
@@ -415,60 +413,6 @@
 <t></t>
 </str>
 
-<str id="40">
-<new/>
-<o>Version:</o>
-<t></t>
-</str>
-
-<str id="41">
-<new/>
-<o>Booted:</o>
-<t></t>
-</str>
-
-<str id="42">
-<new/>
-<o>Uptime:</o>
-<t></t>
-</str>
-
-<str id="43">
-<new/>
-<o>These are all active virtual servers. They are sorted by the number of requests they have received - the most active being first. Servers which haven't recieved any requests are not listed.</o>
-<t></t>
-</str>
-
-<str id="44">
-<new/>
-<o>Server Overview</o>
-<t></t>
-</str>
-
-<str id="45">
-<new/>
-<o>Access / request status</o>
-<t></t>
-</str>
-
-<str id="46">
-<new/>
-<o>Shows the amount of data handled since last restart.</o>
-<t></t>
-</str>
-
-<str id="47">
-<new/>
-<o>day</o>
-<t></t>
-</str>
-
-<str id="48">
-<new/>
-<o>days</o>
-<t></t>
-</str>
-
 <str id="49">
 <new/>
 <o>Current FTP sessions</o>
@@ -700,18 +644,6 @@
 <str id="84">
 <new/>
 <o>Current working directory:</o>
-<t></t>
-</str>
-
-<str id="85">
-<new/>
-<o>Process status</o>
-<t></t>
-</str>
-
-<str id="86">
-<new/>
-<o>Shows various information about the Roxen process.</o>
 <t></t>
 </str>
 

@@ -16,9 +16,7 @@
 <file>../config_interface/standard/actions/make_selfsigned_rsa.pike</file>
 <file>../config_interface/standard/actions/openfiles.pike</file>
 <file>../config_interface/standard/actions/proc.pike</file>
-<file>../config_interface/standard/actions/processstatus.pike</file>
 <file>../config_interface/standard/actions/reloadconfigurations.pike</file>
-<file>../config_interface/standard/actions/requeststatus.pike</file>
 <file>../config_interface/standard/actions/resolv.pike</file>
 <file>../config_interface/standard/actions/restart.pike</file>
 <file>../config_interface/standard/actions/ssl_common.pike</file>
@@ -357,51 +355,6 @@ processen försvinner efter senast 15 minuter.</t>
 <t>Debuginformation</t>
 </str>
 
-<str id="40">
-<o>Version:</o>
-<t>Version:</t>
-</str>
-
-<str id="41">
-<o>Booted:</o>
-<t>Startade:</t>
-</str>
-
-<str id="42">
-<o>Uptime:</o>
-<t>Driftstid:</t>
-</str>
-
-<str id="43">
-<o>These are all active virtual servers. They are sorted by the number of requests they have received - the most active being first. Servers which haven't recieved any requests are not listed.</o>
-<t>Detta är alla aktiva virtuella servrar som har fått något anrop. De är sorterade enligt flest anrop högst upp.</t>
-</str>
-
-<str id="44">
-<o>Server Overview</o>
-<t>Totalöversikt</t>
-</str>
-
-<str id="45">
-<o>Access / request status</o>
-<t>Anropsstatistik</t>
-</str>
-
-<str id="46">
-<o>Shows the amount of data handled since last restart.</o>
-<t>Visar mängd hanterad data sedan servern startade senast.</t>
-</str>
-
-<str id="47">
-<o>day</o>
-<t>dag</t>
-</str>
-
-<str id="48">
-<o>days</o>
-<t>dagar</t>
-</str>
-
 <str id="49">
 <o>Current FTP sessions</o>
 <t>Nuvarande FTP-sessioner</t>
@@ -596,16 +549,6 @@ processen försvinner efter senast 15 minuter.</t>
 <str id="84">
 <o>Current working directory:</o>
 <t>Nuvarande sökväg:</t>
-</str>
-
-<str id="85">
-<o>Process status</o>
-<t>Processtatus</t>
-</str>
-
-<str id="86">
-<o>Shows various information about the Roxen process.</o>
-<t>Visar diverse information om Roxenprocessen.</t>
 </str>
 
 <str id="87">
