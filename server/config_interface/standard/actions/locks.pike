@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.3 2000/02/03 17:29:47 jhs Exp $
+ * $Id: locks.pike,v 1.4 2000/03/24 11:53:46 jhs Exp $
  */
 #include <config.h>
 
@@ -45,15 +45,16 @@ string parse( object id )
     }
   }
   mapping res=([]);
-  string data=("<font size=+2>Module lock status</font><p>Accesses to all modules, "
-	       "Locked means that the access was done using a serializing lock since "
-	       "the module was not thread-safe, unlocked means that there was no need "
-	       "for a lock.<p>Locked accesses to a single module can be a "
-	       "quite severe performance degradation of the whole server, since the "
-	       "module will act as a bottleneck, blocking access for all other "
-	       "threads that want to access that module.<p>This is only a problem if "
-	       "a significant percentage of the accesses are passed throgh that the "
-	       "non-threadsafe module<p>");
+  string data=("<font size=+2>Module lock status : Accesses to all modules"
+	       "</font><p>Locked means that the access was done using a "
+	       "serializing lock since the module was not thread-safe, "
+	       "unlocked means that there was no need for a lock.</p>"
+	       "<p>Locked accesses to a single module can inflict quite a "
+	       "severe performance degradation of the whole server, since a "
+	       "locked module will act as a bottleneck, blocking access for "
+	       "all other threads that want to access that module.</p>"
+	       "<p>This is only a problem if a significant percentage of the "
+	       "accesses are passed throgh non-threadsafe modules.</p>");
   array mods = (indices(L)+indices(l));
   mods &= mods;
   foreach(mods, object q)
