@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.9 1996/11/27 14:12:35 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.10 1996/11/30 00:46:32 nisse Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
@@ -27,7 +27,7 @@ int shuffle_fd;
 
 // This is the real Roxen version. It should be changed before each
 // release
-string real_version = "Roxen Challenger/1.0"; 
+string real_version = "Roxen Challenger/1.1 beta"; 
 
 // A mapping from ports (objects, that is) to an array of information
 // about that port.
