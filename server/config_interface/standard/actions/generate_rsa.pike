@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.3 2000/04/06 05:20:24 per Exp $
+ * $Id: generate_rsa.pike,v 1.4 2000/08/15 13:52:04 lange Exp $
  */
 
 inherit "wizard";
@@ -123,9 +123,9 @@ mixed verify_0(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return 0;
+  return "Key generated.\n<p><cf-ok>";
 }
 
-mixed handle(object id) { return wizard_for(id,0); }
+mixed parse(object id) { return wizard_for(id,0); }
 
 #endif /* constant(_Crypto) && constant(Crypto.rsa) */
