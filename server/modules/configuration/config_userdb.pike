@@ -251,7 +251,8 @@ class User
       sscanf( v, varpath+"%s", v );
       switch( v )
       {
-       case "name": break;
+       case "name":
+         break;
        case "real_name":
          real_name = id->variables[rp];
          save();
@@ -259,15 +260,18 @@ class User
        case "c_password":
          if( id->variables[rp] != password )
            password = id->variables[rp];
+         save();
          break;
 
        case "password":
          if( strlen( id->variables[rp] ) &&
              (id->variables[rp+"2"] == id->variables[rp]) )
+         {
            password = crypt( id->variables[rp] );
-         else
+           save();
+         }
+         else if( strlen( id->variables[rp]  ) )
            error = "Passwords does not match";
-         save();
          break;
 
        default:
@@ -279,6 +283,7 @@ class User
                           " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
            permissions[v] = 1;
+           save();
          }
          else if( sscanf( v, "remove_%s.x", v ) )
          {
@@ -288,8 +293,8 @@ class User
                           " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
            permissions[v] = 0;
+           save();
          }
-         save();
          break;
       }
       m_delete( id->variables, rp );
