@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.28 2001/07/11 06:19:50 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.29 2001/08/10 23:10:12 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -12,9 +12,13 @@ inherit "module";
 constant module_type   = MODULE_TAG;
 constant module_name   = "Tags: HTML color wiretap";
 constant module_doc    = 
-#"Parses HTML tags and tries to determine the text and background colors 
-all over the page. This information can be used to let graphical modules
-generate images that automatically blend into the page.";
+#"<p>Parses HTML tags for the text and background colors all over the
+page. This information can be used to let graphical modules like
+\"Graphic text\" and \"GButton\" generate images that automatically
+blend into the page.</p>
+
+<p>Note that this module can degrade performance, since it causes many
+common HTML tags to be parsed by the RXML parser.</p>";
 constant thread_safe   = 1;
 
 void create()
@@ -25,8 +29,7 @@ void create()
 	 "Which tags should be parsed for document colors? "
 	 "This will affect documents without gtext as well as documents "
 	 "with it, the parsing time is relative to the number of parsed "
-	 "tags in a document. You have to reload this module or restart "
-	 "roxen for changes of this variable to take effect.");
+	 "tags in a document.");
 
   defvar("colormode", 0, "Normalize colors in parsed tags",
          TYPE_FLAG|VAR_NOT_CFIF, #"\
@@ -44,11 +47,11 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc = ([ "body" :
 #"<desc cont='cont'><p>
-<short>Initializes the wiretap color settings.</short></p>
+<short>The color wiretap functionality is active in the content.</short></p>
 </desc>
 
 <attr name='wiretap' value='yes|no'>
-<p>HTML Color Wiretap can be disabled for an individual web page by
+<p>The color wiretap can be disabled for an individual web page by
 adding <tt>wiretap='no'</tt> to the document's <tag>body</tag> tag.</p>
 </attr>" ]);
 #endif
@@ -58,11 +61,15 @@ adding <tt>wiretap='no'</tt> to the document's <tag>body</tag> tag.</p>
 // -------------------- The actual wiretap code  --------------------------
 
 
-//  Flag whether compatibility with 1.x, 2.0 or 2.1 is needed. When
-//  compatibility is requested we tap all tags all the time unlike the
-//  newer design where we require a <body> tag to enable the wiretap.
-int compat_mode;
+//  When < 2.2 compatibility is requested we tap all tags all the time
+//  unlike the newer design where we require a <body> tag to enable
+//  the wiretap. In that case this is the tag set for the runtime
+//  tags.
+RXML.TagSet runtime_wiretap_tags = RXML.TagSet (module_identifier() + "/runtime");
 
+// The currently implemented settings.
+int compat_mode, colormode;
+array(string) colorparsing;
 
 array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
 {
@@ -73,27 +80,39 @@ array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
 	     tag);
 }
 
-
-array(RXML.Tag) get_temporary_tags(array(string) colorparsing)
+void init_tag_set (int new_compat_mode,
+		   array(string) new_colorparsing,
+		   int new_colormode)
 {
-  array(RXML.Tag) temp_tags = ({ });
-  
-  //  Register various combinations of spelling for each tag, but avoid
-  //  <body> which many users will have left in their configuration files.
-  //
-  //  We choose not to cache the instantiated tag objects since the
-  //  overhead for creating them is low. Also, the tag objects themselves
-  //  precompute some query() lookups which would be made permanent if we
-  //  cached here.
-  foreach(colorparsing, string tag_name)
-    if (lower_case(tag_name) != "body") {
-      foreach(get_tag_variants(tag_name, TagPushColor), RXML.Tag tag)
-	temp_tags += ({ tag });
-      foreach(get_tag_variants(tag_name, TagPopColor), RXML.Tag tag)
-	temp_tags += ({ tag });
+  //  Register start and end tags individually so we can handle the
+  //  <body> container properly. If compatibility with 2.1 or earlier
+  //  is needed we register all tags at once.
+
+  array(RXML.Tag) body_tags =
+    get_tag_variants ("body", TagBody) +
+    get_tag_variants ("body", TagEndBody);
+  array(RXML.Tag) non_body_tags = ({});
+
+  foreach(new_colorparsing, string tag)
+    if (lower_case(tag) != "body") {
+      non_body_tags +=
+	get_tag_variants(tag, TagPushColor) +
+	get_tag_variants(tag, TagPopColor);
     }
-  
-  return temp_tags;
+
+  module_tag_set->clear();
+  runtime_wiretap_tags->clear();
+
+  if (new_compat_mode)
+    module_tag_set->add_tags (body_tags + non_body_tags);
+  else {
+    module_tag_set->add_tags (body_tags);
+    runtime_wiretap_tags->add_tags (non_body_tags);
+  }
+
+  compat_mode = new_compat_mode;
+  colorparsing = new_colorparsing;
+  colormode = new_colormode;
 }
 
 
@@ -102,8 +121,6 @@ class TagBody
   inherit RXML.Tag;
 
   string name;
-  int colormode;
-  array(string) colorparsing;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
@@ -111,8 +128,6 @@ class TagBody
   void create(string _name)
   {
     name = _name;
-    colormode = (int) query("colormode");
-    colorparsing = query("colorparsing");
   }
 
   class Frame
@@ -127,8 +142,8 @@ class TagBody
 	//  Register temporary tags unless we're running in compatibility
 	//  mode.
 	if (!compat_mode) {
-	  RXML.Context ctx = RXML.get_context();
-	  foreach(get_temporary_tags(colorparsing), RXML.Tag tag)
+	  RXML.Context ctx = RXML_CONTEXT;
+	  foreach(runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
 	    ctx->add_runtime_tag(tag);
 	}
 	
@@ -152,7 +167,6 @@ class TagEndBody
   inherit RXML.Tag;
 
   string name, tagname;
-  array(string) colorparsing;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
@@ -161,7 +175,6 @@ class TagEndBody
   {
     tagname = _name;
     name = "/" + _name;
-    colorparsing = query("colorparsing");
   }
   
   class Frame
@@ -173,8 +186,8 @@ class TagEndBody
     {
       //  Unregister our temporary tags unless we're in compatibility mode
       if (!compat_mode) {
-	RXML.Context ctx = RXML.get_context();
-	foreach(get_temporary_tags(colorparsing), RXML.Tag tag)
+	RXML.Context ctx = RXML_CONTEXT;
+	foreach(runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
 	  ctx->remove_runtime_tag(tag);
       }
       return ({ propagate_tag() });
@@ -188,7 +201,6 @@ class TagPushColor
   inherit RXML.Tag;
   
   string name;
-  int colormode;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
@@ -196,7 +208,6 @@ class TagPushColor
   void create(string _name)
   {
     name = _name;
-    colormode = (int) query("colormode");
   }
 
   class Frame
@@ -246,34 +257,27 @@ class TagPopColor
 
 // --------------- Tag and container registration ----------------------
 
+void start()
+{
+  if (module_tag_set) {
+    int new_compat_mode = my_configuration()->query("compat_level") < "2.2";
+    array(string) new_colorparsing = query ("colorparsing");
+    int new_colormode = query ("colormode");
+    if (compat_mode != new_compat_mode ||
+	!equal (colorparsing, new_colorparsing) ||
+	colormode != new_colormode)
+      init_tag_set (new_compat_mode, new_colorparsing, new_colormode);
+  }
+}
+
 RXML.TagSet query_tag_set()
 {
-  //  Update compat_mode flag. This is used since query() can be a rather
-  //  costly call.
-  compat_mode = my_configuration()->query("compat_level") < "2.2";
-
   if (!module_tag_set) {
-    //  Register start and end tags individually so we can handle the
-    //  <body> container properly. If compatibility with 2.1 or earlier
-    //  is needed we register all tags at once.
-    //
-    //  Note that if user changes the parser compatibility level a
-    //  server restart is currently needed since modules aren't
-    //  re-queried for their tag sets.
-    array(RXML.Tag) compat_tags = ({ });
-    if (compat_mode) {
-      foreach(query("colorparsing"), string tag)
-	if (lower_case(tag) != "body") {
-	  compat_tags +=
-	    get_tag_variants(tag, TagPushColor) +
-	    get_tag_variants(tag, TagPopColor);
-	}
-    }
-
-    module_tag_set = RXML.TagSet(module_identifier(),
-				 compat_tags +
-				 get_tag_variants("body", TagBody) +
-				 get_tag_variants("body", TagEndBody));
+    module_tag_set = RXML.TagSet (module_identifier());
+    module_tag_set->add_tag_set_dependency (runtime_wiretap_tags);
   }
+  init_tag_set (my_configuration()->query("compat_level") < "2.2",
+		query ("colorparsing"),
+		query ("colormode"));
   return module_tag_set;
 }
