@@ -768,14 +768,14 @@ int main(int argc, string *argv)
 		 }),
 		 "fontsize":22,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":25, 
-		 "legend_texts": ({"Roxen", "Netscape", "Apache", "Microsoft" }),
+		 "legendfontsize":65, 
+		 "legend_texts": ({"Roxen", "Netscape", "Apache", "Microsoft", "j" }),
 		 "labelsize":42,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "horgrind": 0,
 		 "grindwidth": 0.5,
-		 "backlinecolor":1.0,
+		 "backlinecolor":0,//1.0,
 		 "bw":3,
   ]);
   

@@ -558,42 +558,48 @@ mapping set_legend_size(mapping diagram_data)
 
 
   if (diagram_data["legend_texts"])
-    while(tobig)
-      {
-	if (tobig>3)
-	  throw( ({"Very bad error while trying to resize the legendfonts!\n",
-		   backtrace()}));
+    {
+      if (sizeof(diagram_data["legend_texts"])>
+	  sizeof(diagram_data["datacolors"]))
+	diagram_data["legend_texts"]=diagram_data["legend_texts"]
+	  [..sizeof(diagram_data["datacolors"])-1];
+      
+      while(tobig)
 	{
-	  texts=allocate(sizeof(diagram_data["legend_texts"]));
-	  plupps=allocate(sizeof(diagram_data["legend_texts"]));
+	  if (tobig>3)
+	    throw( ({"Very bad error while trying to resize the legendfonts!\n",
+		     backtrace()}));
+	  {
+	    texts=allocate(sizeof(diagram_data["legend_texts"]));
+	    plupps=allocate(sizeof(diagram_data["legend_texts"]));
+	    
+	    notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
+			    "left",0,0);
+	    if (!(notext))
+	      throw(({"Missing font or similar error!\n", backtrace() }));
+	    
+	    
+	    
+	    j=sizeof(texts);
+	    if (!diagram_data["legendcolor"])
+	      diagram_data["legendcolor"]=diagram_data["bgcolor"];
+	    for(int i=0; i<j; i++)
+	      {
+		if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
+		  texts[i]=notext->write(diagram_data["legend_texts"][i])
+		    ->scale(0,diagram_data["legendfontsize"])
+		    ;
+		else
+		  texts[i]=
+		    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+		
+		if (texts[i]->xsize()<1)
+		  texts[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+	      }
+	    
+	    xmax=0, ymax=0;
 	  
-	  notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
-			  "left",0,0);
-	  if (!(notext))
-	    throw(({"Missing font or similar error!\n", backtrace() }));
-
-
-
-	  j=sizeof(texts);
-	  if (!diagram_data["legendcolor"])
-	    diagram_data["legendcolor"]=diagram_data["bgcolor"];
-	  for(int i=0; i<j; i++)
-	    {
-	      if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
-		texts[i]=notext->write(diagram_data["legend_texts"][i])
-		  ->scale(0,diagram_data["legendfontsize"])
-		  ;
-	      else
-		texts[i]=
-		  image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-	      
-	      if (texts[i]->xsize()<1)
-		texts[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-	    }
-	  
-	  xmax=0, ymax=0;
-	  
-	  foreach(texts, object img)
+	    foreach(texts, object img)
 	    {
 	      if (img->ysize()>ymax) 
 		ymax=img->ysize();
@@ -677,7 +683,7 @@ mapping set_legend_size(mapping diagram_data)
 	}
       
     }
-
+    }
       //placera ut bilder och text.
 
   if (diagram_data["legend_texts"])
