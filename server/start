@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.133 2000/11/16 10:56:19 per Exp $
+# $Id: start,v 1.134 2000/11/16 10:58:36 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -264,17 +264,11 @@ parse_args() {
   '--no-threads'|'--without-threads'|'--disable-threads')
     DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//g'`"
   ;;
-  '--no-keep-alive'|'--without-keep-alive'|'--disable-keep-alive')
-    DEFINES="`echo $DEFINES | sed -e 's/-DKEEP_ALIVE//g'`"
-  ;;
   '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"
   ;;
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
-  ;;
-  '--keep-alive'|'--with-keep-alive'|'--enable-keep-alive')
-    DEFINES="-DKEEP_ALIVE $DEFINES"
   ;;
   '--quiet'|'-q')
     verbose=0
@@ -389,15 +383,6 @@ the default arguments.
                                   for each and every file.
 
       .B--self-testB.:                 Runs a testsuite.
-
-      .B--with-keep-aliveB.:          Enable keep alive in the HTTP
-			          protocol module. This is the default.
-                                  Some clients might have problems
-                                  with keep-alive.
-
-      .B--without-keep-aliveB.:       Disable keep alive in the HTTP
-			          protocol module. Some clients might have
-				  problems with keep-alive.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
