@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.845 2003/11/05 13:16:37 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.846 2003/11/05 15:23:33 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1519,6 +1519,36 @@ class Protocol
       set( kv[0], kv[1] );
   }
 
+  static int retries;
+  static void bind()
+  {
+    if (bound) return;
+    if (!port_obj) port_obj = Stdio.Port();
+    if (port_obj->bind(port, got_connection, ip))
+    {
+      bound = 1;
+      return;
+    }
+    report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
+		 (string)name, (ip||"*"), (int)port,
+		 strerror(port_obj->errno()));
+#if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
+    if (
+#if constant(System.EADDRINUSE)
+	(port_obj->errno == system.EADDRINUSE) && 
+#else /* !constant(System.EADDRINUSE) */
+	(port_obj->errno == system.EADDRINUSE) && 
+#endif /* constant(System.EADDRINUSE) */
+	(retries++ < 10)) {
+      // We may get spurious failures on rebinding ports on some OS'es
+      // (eg Linux, WIN32). See [bug 3031].
+      report_notice(LOC_M(0, "Attempt %d. Retrying in 1 minute.")+"\n",
+		    retries);
+      call_out(bind, 60);
+    }
+#endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+  }
+
   static void create( int pn, string i )
   //! Constructor. Bind to the port 'pn' ip 'i'
   {
@@ -1535,14 +1565,10 @@ class Protocol
     if( !requesthandler )
       requesthandler = (program)(rrhf);
 #endif
-    port_obj = Stdio.Port();
-    if(!port_obj->bind( port, got_connection, ip ))
-    {
-      report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
-		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
-      bound = 0;
-    } else
-      bound = 1;
+    bound = 0;
+    port_obj = 0;
+    retries = 0;
+    bind();
   }
 
   static string _sprintf( )
