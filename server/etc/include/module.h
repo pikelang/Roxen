@@ -1,12 +1,16 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.57 2003/08/29 14:03:58 stewa Exp $
+// $Id: module.h,v 1.58 2003/09/01 15:53:13 grubba Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
 #include <roxen.h>
 // compat
+//
+// NOTE: This used to be a valid lvalue.
+//       In the few places where it was used as an lvalue,
+//       use set("var", value).
 #define QUERY(var)	query( #var )
 
 // Like query, but for global variables.
