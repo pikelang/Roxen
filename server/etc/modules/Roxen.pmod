@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.28 2000/08/14 23:52:45 mast Exp $
+ * $Id: Roxen.pmod,v 1.29 2000/08/22 19:18:46 per Exp $
  *
  * Various helper functions.
  *
@@ -859,13 +859,36 @@ RXML.TagSet entities_tag_set = class
 {
   inherit RXML.TagSet;
 
+  mapping(string:string) make_other_client_vars(RXML.Context c)
+  {
+    array tmp;
+    return 
+    ([
+      "authenticated-user": (c->id->auth&&c->id->auth[0]&&c->id->auth[1]),
+      "remote-user":(c->id->rawauth&&(c->id->rawauth/":")[0]),
+      /* 
+         FIXME: It should probably be configurable if this is to be included or
+         not. It could be rather useful, though. Especially for SQL based user
+         systems. 
+
+         This code includes the password if the user database did _not_ 
+         authenticate the user, not otherwise.
+      */
+      "remote-password":(c->id->auth 
+                         && !c->id->auth[0] 
+                         && c->id->rawauth
+                         && (sizeof(tmp = c->id->rawauth/":") > 1) 
+                         && tmp[1]),
+    ]);
+  }
+
   void prepare_context (RXML.Context c) {
     c->add_scope("roxen",scope_roxen);
     c->id->misc->scope_page=([]);
     c->add_scope("page",scope_page);
     c->add_scope("cookie" ,c->id->cookies);
     c->add_scope("form", c->id->variables);
-    c->add_scope("client", c->id->client_var);
+    c->add_scope("client", c->id->client_var | make_other_client_vars(c));
     c->add_scope("var", ([]) );
   }
 
