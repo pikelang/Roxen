@@ -57,9 +57,9 @@ void low_initiate_servers()
 
 void initiate_servers()
 {
-  // Locate new servers every minute.
-  call_out( initiate_servers, 60 );
   low_initiate_servers();
+  // Locate new servers every minute.
+  roxen.background_run( 60, initiate_servers );
 }
 
 mapping(string:Server) servers;
