@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.236 2001/06/09 02:41:55 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.237 2001/06/09 15:08:56 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2773,7 +2773,9 @@ class TagEmit {
 					       "do-once":RXML.t_text(RXML.PEnt), // t_bool
 					       "filter":RXML.t_text(RXML.PEnt),  // t_list
 					       "sort":RXML.t_text(RXML.PEnt),    // t_list
+					       "remainderinfo":RXML.t_text(RXML.PEnt), // t_var
   ]);
+  array(string) emit_args = indices( req_arg_types+opt_arg_types );
   RXML.Type def_arg_type = RXML.t_text(RXML.PNone);
 
   int(0..1) should_filter(mapping vs, mapping filter) {
@@ -2901,12 +2903,12 @@ class TagEmit {
 
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       PROF_ENTER( args->source, "emit" );
-      plugin->eval_args( args, 0, 0, indices(opt_arg_types+req_arg_types) );
+      plugin->eval_args( args, 0, 0, emit_args );
       res = plugin->get_dataset(args, id);
       PROF_LEAVE( args->source, "emit" );
       TRACE_LEAVE("");
 
-      if(plugin->skiprows && args->skiprows)
+      if(args->skiprows && plugin->skiprows)
 	m_delete(args, "skiprows");
 
       if(args->maxrows && plugin->maxrows)
@@ -6784,12 +6786,18 @@ load.</p>
 </attr>
 
 <attr name='maxrows' value='number'><p>
- Limits the number of rows to this maximum.</p>
+ Limits the number of rows to this maximum. Note that it is
+ often better to restrict the number of rows emitted by
+ modifying the arguments to the emit plugin, if possible.
+ E.g. when quering a MySQL database the data can be restricted
+ to the first 100 entries by adding \"LIMIT 100\".</p>
 </attr>
 
 <attr name='skiprows' value='number'><p>
  Makes it possible to skip the first rows of the result. Negative
- numbers means to skip everything execept the last n rows.</p>
+ numbers means to skip everything execept the last n rows. Note
+ that it is often better to make the plugin skip initial rows,
+ if possible.</p>
 </attr>
 
 <attr name='rowinfo' value='variable'><p>
@@ -6800,17 +6808,32 @@ load.</p>
  always make one iteration when the attribute do-once is set.</p>
 </attr>
 
+<attr name='remainderinfo' value='variable'><p>
+ The number of rows left to output, when the emit is restricted
+ by the maxrows attribute. Rows excluded by other means such as
+ skiprows or filter are not included in hte remainderinfo value.
+ The rows counted in the remainderinfo are also filtered if the
+ filter attribute is used, so the value represents the actual
+ number of rows that should have been outputed, had emit not
+ been restriced.</p>
+</attr>
+
 <attr name='do-once'><p>
  Indicate that at least one loop should be made. All variables in the
  emit scope will be empty, except for the counter variable.</p>
 </attr>
 
 <attr name='filter' value='list'><p>
-  The filter attribute is used to block certain 'rows' from the
-  source from being emitted. The filter attribute should be set
-  to a list with variable names in the emitted scope and glob patterns
-  the the variable value must match in order to not get filtered.
-  A list might look like <tt>name=a*,name=b*,id=??3?45</tt>.
+ The filter attribute is used to block certain 'rows' from the
+ source from being emitted. The filter attribute should be set
+ to a list with variable names in the emitted scope and glob patterns
+ the the variable value must match in order to not get filtered.
+ A list might look like <tt>name=a*,id=??3?45</tt>. Note that
+ it is often better to perform the filtering in the plugin, by
+ modifying its arguments, if possible. E.g. when querying an SQL
+ database the use of where statements is recommended, e.g.
+ \"WHERE name LIKE 'a%' AND id LIKE '__3_45'\" will perform the
+ same filtering as above.
 <ex>
 <emit source='values' values='foo,bar,baz' split=',' filter='value=b*'>
 &_.value;
