@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.5 2004/05/25 13:32:40 anders Exp $
+ * $Id: pike_profiling.pike,v 1.6 2004/05/25 16:33:12 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -8,8 +8,8 @@
 
 constant action = "debug_info";
 
-LocaleString name= LOCALE(0,"Pike profiling information");
-LocaleString doc = LOCALE(0,"Show some information about how much time "
+LocaleString name= LOCALE(162,"Pike profiling information");
+LocaleString doc = LOCALE(167,"Show some information about how much time "
 			  "has been spent in various functions. "
 			  "Mostly useful for developers.");
 
@@ -127,7 +127,7 @@ mixed parse( RequestID id )
 {
   return
     "<font size='+1'><b>"+
-    LOCALE(0, "Pike profiling information")+
+    LOCALE(162, "Pike profiling information")+
     "</b></font>"
     "<p />"
 #if constant( get_profiling_info )
@@ -139,7 +139,7 @@ mixed parse( RequestID id )
     page_0( id )
 #else
     "<font color='&usr.warncolor;'>" +
-    LOCALE(0,"This information is only available if the "
+    LOCALE(185,"This information is only available if the "
 	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
     "</font>"
     "<p />\n"

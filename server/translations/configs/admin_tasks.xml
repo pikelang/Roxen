@@ -22,8 +22,10 @@
   <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
   <file>../config_interface/actions/make_site_template.pike</file>
   <file>../config_interface/actions/openfiles.pike</file>
+  <file>../config_interface/actions/pike_profiling.pike</file>
   <file>../config_interface/actions/proc.pike</file>
   <file>../config_interface/actions/reloadconfigurations.pike</file>
+  <file>../config_interface/actions/request_profiling.pike</file>
   <file>../config_interface/actions/resolv.pike</file>
   <file>../config_interface/actions/restart.pike</file>
   <file>../config_interface/actions/ssl_common.pike</file>

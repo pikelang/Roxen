@@ -19,8 +19,10 @@
 <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
 <file>../config_interface/actions/make_site_template.pike</file>
 <file>../config_interface/actions/openfiles.pike</file>
+<file>../config_interface/actions/pike_profiling.pike</file>
 <file>../config_interface/actions/proc.pike</file>
 <file>../config_interface/actions/reloadconfigurations.pike</file>
+<file>../config_interface/actions/request_profiling.pike</file>
 <file>../config_interface/actions/resolv.pike</file>
 <file>../config_interface/actions/restart.pike</file>
 <file>../config_interface/actions/ssl_common.pike</file>
@@ -314,7 +316,7 @@
 </str>
 
 <str id="231">
-<o>Debug information</o>
+<o>Debug Information</o>
 <t></t>
 </str>
 
@@ -937,7 +939,7 @@ change the currently running version.</o>
 </str>
 
 <str id="163">
-<o>Debug Summary</o>
+<o>Debug summary</o>
 <t></t>
 </str>
 
@@ -1018,5 +1020,60 @@ change the currently running version.</o>
 
 <str id="180">
 <o>Upload license...</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Download</o>
+<t></t>
+</str>
+
+<str id="153">
+<o>Download Debug Log</o>
+<t></t>
+</str>
+
+<str id="162">
+<o>Pike profiling information</o>
+<t></t>
+</str>
+
+<str id="167">
+<o>Show some information about how much time has been spent in various functions. Mostly useful for developers.</o>
+<t></t>
+</str>
+
+<str id="181">
+<o>Request profiling information</o>
+<t></t>
+</str>
+
+<str id="182">
+<o>Show some information about how how much time has been spent in requests. Mostly useful for developers.</o>
+<t></t>
+</str>
+
+<str id="183">
+<o>All times are in microseconds.</o>
+<t></t>
+</str>
+
+<str id="184">
+<o>NOTE: This information is only available if the server has been stared with &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</o>
+<t></t>
+</str>
+
+<str id="185">
+<o>This information is only available if the pike binary has been compiled with &lt;tt&gt;--with-profiling&lt;/tt&gt;.</o>
+<t></t>
+</str>
+
+<str id="186">
+<o>Refresh</o>
+<t></t>
+</str>
+
+<str id="187">
+<o>Reset</o>
 <t></t>
 </str>

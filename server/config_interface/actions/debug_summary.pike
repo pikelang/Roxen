@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.10 2004/05/25 11:12:24 anders Exp $
+ * $Id: debug_summary.pike,v 1.11 2004/05/25 16:33:12 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -167,7 +167,7 @@ mixed parse( RequestID id )
 
   if (id->variables->download &&
       id->variables->download == "summary") {
-    res = make_headline(LOCALE(0,"Debug summary"))+"\n";
+    res = make_headline(LOCALE(163,"Debug summary"))+"\n";
     res += make_summary();
     mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
     ret["extra_heads"] = ([]);
@@ -188,12 +188,12 @@ mixed parse( RequestID id )
     return ret;
   }
   
-  res = "<font size='+1'><b>"+LOCALE(0,"Debug summary")+"</b></font>\n<p />";
-  res += "<link-gbutton href='debug_summary.pike?download=summary'>"+LOCALE(0,"Download")+
+  res = "<font size='+1'><b>"+LOCALE(163,"Debug summary")+"</b></font>\n<p />";
+  res += "<link-gbutton href='debug_summary.pike?download=summary'>"+LOCALE(41,"Download")+
     "</link-gbutton>";
   if (file_stat(debuglog))
     res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"+
-      LOCALE(0,"Download Debug Log")+
+      LOCALE(153,"Download Debug Log")+
     "</link-gbutton>";
 
   res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>"
