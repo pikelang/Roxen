@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.66 1998/06/29 15:01:26 marcus Exp $
+/* $Id: wizard.pike,v 1.67 1998/07/08 16:55:44 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -343,7 +343,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 +"</td>\n"
 	 " </tr><tr><td colspan=3><table cellpadding=0 cellspacing=0 border=0 width=100%><tr  bgcolor=#000000><td><img src="+
 	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
-	 " width=1 height=1></td></tr></table></td></tr>\n"
+	 " width=1 height=1 alt=\"\"></td></tr></table></td></tr>\n"
 	 "  </table><table cellpadding=6><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
 	 +form+
