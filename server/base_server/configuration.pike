@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.20 1997/04/07 23:23:38 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.21 1997/04/08 23:42:44 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2374,6 +2374,12 @@ void create(string config)
 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
 	 "<i>/welcome.msg</i> doesn't exist.\n");
   
+  defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG,
+	 "Allow ftp to normal user-accounts (requires auth-module).\n");
+
+  defvar("shells", "/etc/shells", "Shell database", TYPE_FILE,
+	 "File which contains a list of all valid shells.\n"
+	 "Usually /etc/shells\n");
 
   defvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   setvars(retrieve("spider#0", this));
