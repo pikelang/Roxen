@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.134 2003/02/04 15:10:33 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.135 2003/02/04 15:31:12 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -509,7 +509,7 @@ class MyCodec
     DUMP_DEBUG_RETURN (([])[0]);
   }
 
-  static mixed low_lookup(string x)
+  static mixed low_lookup(string x, void|int is_prog)
   {
     array(string) segments = x/"\0";
     string s;
@@ -525,7 +525,11 @@ class MyCodec
       part = resolv(s);
     }
     else {
-      part = (object)x;
+      if (is_prog && sizeof(segments) == 1) {
+	part = (program)x;
+      } else {
+	part = (object)x;
+      }
     }
     foreach(segments[1..], string id) {
       if (zero_type(part = part[id]))
@@ -553,7 +557,7 @@ class MyCodec
   program programof(string x)
   {
     DUMP_DEBUG_ENTER ("programof (%O)\n", x);
-    mixed res = low_lookup(x);
+    mixed res = low_lookup(x, 1);
     if (programp(res) || objectp(res)) DUMP_DEBUG_RETURN(res);
     error("Failed to decode program %s:%O\n", x, res );
   }
