@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.30 1998/03/11 19:42:35 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.31 1998/04/15 21:28:49 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -23,6 +23,10 @@ constant thread_safe=1;
 #endif
 
 // import Array;
+
+#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
+#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+
 
 int redirects, accesses, errors, dirlists;
 int puts, deletes;
@@ -288,6 +292,8 @@ int contains_symlinks(string root, string path)
 
 mixed find_file( string f, object id )
 {
+  TRACE_ENTER("find_file(\""+f+"\")", 0);
+
   object o;
   int size;
   string tmp;
@@ -306,9 +312,13 @@ mixed find_file( string f, object id )
     switch(-size)
     {
     case 1:
+    case 3:
+    case 4:
+      TRACE_LEAVE("No file");
       return 0; /* Is no-file */
 
     case 2:
+      TRACE_LEAVE("Is directory");
       return -1; /* Is dir */
 
     default:
@@ -318,14 +328,18 @@ mixed find_file( string f, object id )
 	if(sizeof(id->not_query) < 2)
 	  return 0;
 	redirects++;
+	TRACE_LEAVE("Redirecting to \"" +
+		    id->not_query[..sizeof(id->not_query)-2] +
+		    "\"");
 	return http_redirect(id->not_query[..sizeof(id->not_query)-2], id);
       }
 
       if(!id->misc->internal_get && QUERY(.files)
 	 && (tmp = (id->not_query/"/")[-1])
-	 && tmp[0] == '.')
+	 && tmp[0] == '.') {
+	TRACE_LEAVE("Is .-file");
 	return 0;
-
+      }
 #ifndef THREADS
       object privs;
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
@@ -335,6 +349,7 @@ mixed find_file( string f, object id )
       }
 #endif
 
+      TRACE_ENTER("Opening file \"" + f + "\"", 0);
       o = open( f, "r" );
 
 #ifndef THREADS
@@ -345,16 +360,23 @@ mixed find_file( string f, object id )
       {
 	errors++;
 	report_error("Open of " + f + " failed. Permission denied.\n");
+	
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Permission denied.");
 	return http_low_answer(403, "<h2>File exists, but access forbidden "
 			       "by user</h2>");
       }
 
       id->realfile = f;
+      TRACE_LEAVE("");
       accesses++;
 #ifdef COMPAT
-      if(QUERY(html)) /* Not very likely, really.. */
+      if(QUERY(html)) {/* Not very likely, really.. */
+	TRACE_LEAVE("Compat return");
 	return ([ "type":"text/html", "file":o, ]);
+      }
 #endif
+      TRACE_LEAVE("Normal return");
       return o;
     }
     break;
@@ -363,12 +385,15 @@ mixed find_file( string f, object id )
     if(!QUERY(put))
     {
       id->misc->error_code = 405;
+      TRACE_LEAVE("PUT disallowed");
       return 0;
     }    
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0]))
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("PUT: Permission denied");
       return http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
+    }
     puts++;
     
     object privs;
@@ -384,11 +409,20 @@ mixed find_file( string f, object id )
       privs = 0;
       errors++;
       report_error("Creation of " + f + " failed. Permission denied.\n");
+      TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
+    TRACE_ENTER("PUT: Accepted", 0);
+
     rm( f );
     mkdirhier( f );
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache", f, 0);
+    }
+
     object to = open(f, "wc");
 
     privs = 0;
@@ -396,6 +430,8 @@ mixed find_file( string f, object id )
     if(!to)
     {
       id->misc->error_code = 403;
+      TRACE_LEAVE("PUT: Open failed");
+      TRACE_LEAVE("Failure");
       return 0;
     }
 
@@ -405,14 +441,19 @@ mixed find_file( string f, object id )
       putting[id->my_fd] -= strlen(id->data);
       to->write( id->data );
     }
-    if(!putting[id->my_fd])
+    if(!putting[id->my_fd]) {
+      TRACE_LEAVE("PUT: Just a string");
+      TRACE_LEAVE("Put: Success");
       return http_string_answer("Ok");
+    }
 
     if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
     }
     id->my_fd->set_id( ({ to, id->my_fd }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
+    TRACE_LEAVE("PUT: Pipe in progress");
+    TRACE_LEAVE("PUT: Success so far");
     return http_pipe_in_progress();
     break;
 
@@ -420,14 +461,18 @@ mixed find_file( string f, object id )
     if(!QUERY(delete) || size==-1)
     {
       id->misc->error_code = 405;
+      TRACE_LEAVE("DELETE: Disabled");
       return 0;
     }
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0]))
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("DELETE: Permission denied");
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
+    }
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       errors++;
       report_error("Deletion of " + f + " failed. Permission denied.\n");
+      TRACE_LEAVE("DELETE: Contains symlinks");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
@@ -439,20 +484,29 @@ mixed find_file( string f, object id )
       privs=Privs("Deleting file", id->misc->uid, id->misc->gid );
     }
 
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache", f, 0);
+    }
+
     if(!rm(f))
     {
       privs = 0;
       id->misc->error_code = 405;
+      TRACE_LEAVE("DELETE: Failed");
       return 0;
     }
     privs = 0;
     deletes++;
+    TRACE_LEAVE("DELETE: Success");
     return http_low_answer(200,(f+" DELETED from the server"));
 
   default:
+    TRACE_LEAVE("Not supported");
     return 0;
   }
   report_error("Not reached..\n");
+  TRACE_LEAVE("Not reached");
   return 0;
 }
 
