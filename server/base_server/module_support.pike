@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.73 2000/07/15 01:05:42 lange Exp $
+// $Id: module_support.pike,v 1.74 2000/08/15 01:16:46 mast Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -244,7 +244,7 @@ class ModuleInfo
         return 1;
   }
 
-  int check()
+  int check (void|int force)
   {
     if( mapping data = module_cache->get( sname ) )
     {
@@ -351,6 +351,7 @@ array(ModuleInfo) all_modules_cache;
 void clear_all_modules_cache()
 {
   all_modules_cache = 0;
+  master()->clear_compilation_failures();
   foreach( values( modules ), object o )
     if( !o || !o->check() )
       m_delete( modules, search( modules, o ) );
