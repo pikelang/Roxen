@@ -1,4 +1,4 @@
-## $Id: supports,v 1.68 1999/11/16 14:56:36 grubba Exp $
+## $Id: supports,v 1.69 1999/11/17 20:29:42 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -77,6 +77,7 @@
 #! pull - The browser handles Client Pull.
 #! push - The browser handles Server Push.
 #! python - The browser supports Python applets.
+#! requests_are_utf8_encoded - Well.. The requests are UTF8 encoded.
 #! robot - The request really comes from a search robot, not an actual browser.
 #! ssl - The browser handles secure sockets layer.
 #! stylesheets - The browser supports stylesheets.
