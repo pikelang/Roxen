@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.253 1998/11/19 10:22:23 per Exp $
+ * $Id: roxen.pike,v 1.254 1998/11/22 17:07:43 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.253 1998/11/19 10:22:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.254 1998/11/22 17:07:43 per Exp $";
 
 
 // Some headerfiles
@@ -124,7 +124,7 @@ object fonts;
 #ifdef THREADS
 object locale = thread_local();
 #else
-object(Locale.Roxen.standard) locale = container(); 
+object locale = container(); 
 #endif /* THREADS */
 #define LOCALE	LOW_LOCALE->base_server
 
@@ -234,6 +234,7 @@ private static void low_shutdown(int exit_code)
       roxen_perror("Restarting Roxen.\n");
     } else {
       roxen_perror("Shutting down Roxen.\n");
+      _exit(0);
 
       // This has to be refined in some way. It is not all that nice to do
       // it like this (write a file in /tmp, and then exit.)  The major part
