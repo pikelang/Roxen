@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.87 2000/03/18 02:59:18 mast Exp $
+// $Id: module.pike,v 1.88 2000/03/21 04:35:41 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -315,7 +315,11 @@ void deflocaledoc( string locale, string variable,
   if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
-    locs[locale]( this_object(), variable, name, doc, translate );
+    locs[locale]( this_object(),
+		  variable,
+		  name || variables[variable][VAR_NAME],
+		  doc || variables[variable][VAR_DOC_STR],
+		  translate );
 }
 
 void save_me()
