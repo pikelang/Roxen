@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.18 1999/10/08 12:43:23 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.19 1999/10/08 13:04:19 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -532,7 +532,7 @@ string|array(string) tag_insert(string tag,mapping m,object id)
 #endif
   }
 
-  if(n = m->variables)
+  if(n = m->variables) {
 #if old_rxml_compat
     if(m->variables!="variables")
     {
@@ -546,12 +546,14 @@ string|array(string) tag_insert(string tag,mapping m,object id)
     }
 #endif
     return ({ String.implode_nicely(indices(id->variables)) });
+  }
 
-  if(n = m->other)
+  if(n = m->other) {
     if(stringp(id->misc[n]) || intp(id->misc[n])) {
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
     }
     return rxml_error(tag, "No such other variable ("+n+").", id);
+  }
 
   if(n = m->cookies)
   {
