@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.84 1999/02/22 16:38:36 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.85 1999/02/23 17:21:49 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -581,7 +581,7 @@ class imap_mail
       return response("internaldate_unimplemented");
 
     case "rfc822":
-      switch(sizeof(attr->section))
+      switch(attr->section && sizeof(attr->section))
       {
       default:
 	throw("Invalid fetch");
