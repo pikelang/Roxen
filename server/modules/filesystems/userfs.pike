@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.41 1998/10/08 13:50:01 peter Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.42 1998/10/13 12:30:32 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -193,7 +193,7 @@ mixed find_file(string f, object got)
       us = got->conf->userinfo( u, got );
       // No user, or access denied.
       if(!us ||
-	 (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
+	 (QUERY(only_password) && ((us[1] == "") || (us[1][0] == '*'))) ||
 	 banish_list[u])
       {
 	if (!banish_reported[u]) {
