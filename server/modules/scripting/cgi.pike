@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.28 1997/07/07 10:38:21 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.29 1997/07/31 19:54:09 grubba Exp $";
 
 #include <module.h>
 
@@ -415,11 +415,17 @@ mixed find_file(string f, object id)
 	uid = uid[0];
       }
       object privs;
-      catch(privs = ((program)"privs")("CGI script", uid));
-      setgid(getegid());
-      setuid(getegid());
+      if (!getuid()) {
+	// We are running as root -- change!
+	privs = ((program)"privs")("CGI script", uid);
+      } else {
+	// Try to change user anyway, but don't throw an error if we fail.
+	catch(privs = ((program)"privs")("CGI script", uid));
+      }
+      setgid(getegid()||65534);
+      setuid(getegid()||65534);
 
-      /* Now that the correct privileges are set the current working
+      /* Now that the correct privileges are set, the current working
        * directory can be changed. This implies a check for user permissions
        * Also some technical requirements for execution can be checked
        * before control is given to the wrapper or the script.
