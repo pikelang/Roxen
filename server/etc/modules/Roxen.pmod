@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.44 2000/11/02 08:30:15 per Exp $
+ * $Id: Roxen.pmod,v 1.45 2000/11/15 09:40:27 per Exp $
  *
  * Various helper functions.
  *
@@ -1277,7 +1277,7 @@ void trace_leave (RequestID id, string desc)
 
 #endif
 
-#if !constant(Parser.C)
+#if !constant(Parser.Pike)
   static private class __Parser
   {
     static private class __C
@@ -1286,305 +1286,304 @@ void trace_leave (RequestID id, string desc)
 
       array(string) split(string data)
       {
-        int start;
-        int line=1;
-        array(string) ret=({});
-        int pos;
-        data += "\n\0";	/* End sentinel. */
+	int start;
+	int line=1;
+	array(string) ret=({});
+	int pos;
+	data += "\n\0";	/* End sentinel. */
 
-        while(1)
-        {
-          int start=pos;
+	while(1)
+	{
+	  int start=pos;
 
-          //    werror("::::%c\n",data[pos]);
+	  //    werror("::::%c\n",data[pos]);
 
-          switch(data[pos])
-          {
-           case '\0':
-             return ret;
+	  switch(data[pos])
+	  {
+	    case '\0':
+	      return ret;
 
-           case '#':
-             {
-             pos=search(data,"\n",pos);
-             if(pos==-1)
-               error("Failed to find end of preprocessor statement.\n");
+	    case '#':
+	      {
+	      pos=search(data,"\n",pos);
+	      if(pos==-1)
+		error("Failed to find end of preprocessor statement.\n");
 
-             while(data[pos-1]=='\\') pos=search(data,"\n",pos+1);
-             break;
+	      while(data[pos-1]=='\\') pos=search(data,"\n",pos+1);
+	      break;
 
-              case 'a'..'z':
-              case 'A'..'Z':
-              case 128..65536: // Lets simplify things for now...
-              case '_':
-                while(1)
-                {
-                  switch(data[pos])
-                  {
-                   case '$': // allowed in some C (notably digital)
-                   case 'a'..'z':
-                   case 'A'..'Z':
-                   case '0'..'9':
-                   case 128..65536: // Lets simplify things for now...
-                   case '_':
-                     pos++;
-                     continue;
-                  }
-                  break;
-                }
-                break;
+		case 'a'..'z':
+		case 'A'..'Z':
+		case 128..65536: // Lets simplify things for now...
+		case '_':
+		  while(1)
+		  {
+		    switch(data[pos])
+		    {
+		      case '$': // allowed in some C (notably digital)
+		      case 'a'..'z':
+		      case 'A'..'Z':
+		      case '0'..'9':
+		      case 128..65536: // Lets simplify things for now...
+		      case '_':
+			pos++;
+			continue;
+		    }
+		    break;
+		  }
+		  break;
 
-              case '.':
-                if(data[start..start+2]=="...")
-                {
-                  pos+=3;
-                  break;
-                }
-                if(data[start..start+1]=="..")
-                {
-                  pos+=3;
-                  break;
-                }
+		case '.':
+		  if(data[start..start+2]=="...")
+		  {
+		    pos+=3;
+		    break;
+		  }
+		  if(data[start..start+1]=="..")
+		  {
+		    pos+=3;
+		    break;
+		  }
 
-              case '0'..'9':
-                if(data[pos]=='0' && (data[pos+1]=='x' || data[pos+1]=='X'))
-                {
-                  pos+=2;
-                  while(1)
-                  {
-                    switch(data[pos])
-                    {
-                     case '0'..'9':
-                     case 'a'..'f':
-                     case 'A'..'F':
-                       pos++;
-                       continue;
-                    }
-                    break;
-                  }
-                  break;
-                }
-                while(data[pos]>='0' && data[pos]<='9') pos++;
-                if(data[pos]=='.')
-                {
-                  pos++;
-                  while(data[pos]>='0' && data[pos]<='9') pos++;
-                  if(data[pos]=='e' || data[pos]=='E')
-                  {
-                    pos++;
-                    while(data[pos]>='0' && data[pos]<='9') pos++;
-                  }
-                }
-                break;
+		case '0'..'9':
+		  if(data[pos]=='0' && (data[pos+1]=='x' || data[pos+1]=='X'))
+		  {
+		    pos+=2;
+		    while(1)
+		    {
+		      switch(data[pos])
+		      {
+			case '0'..'9':
+			case 'a'..'f':
+			case 'A'..'F':
+			  pos++;
+			  continue;
+		      }
+		      break;
+		    }
+		    break;
+		  }
+		  while(data[pos]>='0' && data[pos]<='9') pos++;
+		  if(data[pos]=='.')
+		  {
+		    pos++;
+		    while(data[pos]>='0' && data[pos]<='9') pos++;
+		    if(data[pos]=='e' || data[pos]=='E')
+		    {
+		      pos++;
+		      while(data[pos]>='0' && data[pos]<='9') pos++;
+		    }
+		  }
+		  break;
 
-              default:
-                werror("%O\n",ret);
-                werror("Unknown token %O\n",data[pos..pos+20]);
-                exit(1);
+		default:
+		  throw( ({sprintf("Unknown token %O\n",data[pos..pos+20]) }) );
 
-              case  '`':
-                while(data[pos]=='`') data[pos]++;
+		case  '`':
+		  while(data[pos]=='`') data[pos]++;
 
-              case '\\': pos++; continue; /* IGNORED */
+		case '\\': pos++; continue; /* IGNORED */
 
-              case '/':
-              case '{': case '}':
-              case '[': case ']':
-              case '(': case ')':
-              case ';':
-              case ',':
-              case '*': case '%':
-              case '?': case ':':
-              case '&': case '|': case '^':
-              case '!': case '~':
-              case '=':
-              case '@':
-              case '+':
-              case '-':
-              case '<': case '>':
-                switch(data[pos..pos+1])
-                {
-                 case "//":
-                   pos=search(data,"\n",pos);
-                   break;
+		case '/':
+		case '{': case '}':
+		case '[': case ']':
+		case '(': case ')':
+		case ';':
+		case ',':
+		case '*': case '%':
+		case '?': case ':':
+		case '&': case '|': case '^':
+		case '!': case '~':
+		case '=':
+		case '@':
+		case '+':
+		case '-':
+		case '<': case '>':
+		  switch(data[pos..pos+1])
+		  {
+		    case "//":
+		      pos=search(data,"\n",pos);
+		      break;
 
-                 case "/*":
-                   pos=search(data,"*/",pos);
-                   pos+=2;
-                   break;
+		    case "/*":
+		      pos=search(data,"*/",pos);
+		      pos+=2;
+		      break;
 
-                 case "<<": case ">>":
-                   if(data[pos+2]=='=') pos++;
-                 case "==": case "<=": case ">=":
-                 case "*=": case "/=": case "%=":
-                 case "&=": case "|=": case "^=":
-                 case "+=": case "-=":
-                 case "++": case "--":
-                 case "&&": case "||":
-                 case "->":
-                   pos++;
-                 default:
-                   pos++;
-                }
-                break;
+		    case "<<": case ">>":
+		      if(data[pos+2]=='=') pos++;
+		    case "==": case "<=": case ">=":
+		    case "*=": case "/=": case "%=":
+		    case "&=": case "|=": case "^=":
+		    case "+=": case "-=":
+		    case "++": case "--":
+		    case "&&": case "||":
+		    case "->":
+		      pos++;
+		    default:
+		      pos++;
+		  }
+		  break;
 
 
-              case ' ':
-              case '\n':
-              case '\r':
-              case '\t':
-              case '\14':
-                while(1)
-                {
-                  switch(data[pos])
-                  {
-                   case ' ':
-                   case '\n':
-                   case '\r':
-                   case '\t':
-                   case '\14':
-                     pos++;
-                     continue;
-                  }
-                  break;
-                }
-                break;
+		case ' ':
+		case '\n':
+		case '\r':
+		case '\t':
+		case '\14':
+		  while(1)
+		  {
+		    switch(data[pos])
+		    {
+		      case ' ':
+		      case '\n':
+		      case '\r':
+		      case '\t':
+		      case '\14':
+			pos++;
+			continue;
+		    }
+		    break;
+		  }
+		  break;
 
-              case '\'':
-                pos++;
-                if(data[pos]=='\\') pos++;
-                pos=search(data, "'", pos+1)+1;
-                break;
+		case '\'':
+		  pos++;
+		  if(data[pos]=='\\') pos++;
+		  pos=search(data, "'", pos+1)+1;
+		  break;
 
-              case '"':
-                {
-                int q,s;
-                while(1)
-                {
-                  q=search(data,"\"",pos+1);
-                  s=search(data,"\\",pos+1);
-                  if(q==-1) q=strlen(data)-1;
-                  if(s==-1) s=strlen(data)-1;
+		case '"':
+		  {
+		  int q,s;
+		  while(1)
+		  {
+		    q=search(data,"\"",pos+1);
+		    s=search(data,"\\",pos+1);
+		    if(q==-1) q=strlen(data)-1;
+		    if(s==-1) s=strlen(data)-1;
 
-                  if(q<s)
-                  {
-                    pos=q+1;
-                    break;
-                  }else{
-                    pos=s+1;
-                  }
-                }
-                break;
-                }
-             }
-          }
+		    if(q<s)
+		    {
+		      pos=q+1;
+		      break;
+		    }else{
+		      pos=s+1;
+		    }
+		  }
+		  break;
+		  }
+	      }
+	  }
 
-          ret+=({ data[start..pos-1] });
-        }
+	  ret+=({ data[start..pos-1] });
+	}
       }
 
 
       class Token
       {
-        int line;
-        string text;
-        string file;
-        string trailing_whitespaces="";
+	int line;
+	string text;
+	string file;
+	string trailing_whitespaces="";
 
-        void create(string t, int l, void|string f, void|string space)
-        {
-          text=t;
-          line=l;
-          file=f;
-          if(space) trailing_whitespaces=space;
-        }
+	void create(string t, int l, void|string f, void|string space)
+	{
+	  text=t;
+	  line=l;
+	  file=f;
+	  if(space) trailing_whitespaces=space;
+	}
 
-        string _sprintf(int how)
-        {
-          switch(how)
-          {
-           case 's':
-             return text;
-           case 'O':
-             return sprintf("Token(%O,%O,%d)",text,file,line);
-          }
-        }
+	string _sprintf(int how)
+	{
+	  switch(how)
+	  {
+	    case 's':
+	      return text;
+	    case 'O':
+	      return sprintf("Token(%O,%O,%d)",text,file,line);
+	  }
+	}
 
-        int `==(mixed foo)
-        {
-          return (objectp(foo) ? foo->text : foo) == text;
-        }
+	int `==(mixed foo)
+	{
+	  return (objectp(foo) ? foo->text : foo) == text;
+	}
 
-        string `+(string ... s)
-        {
-          return predef::`+(text,@s);
-        }
+	string `+(string ... s)
+	{
+	  return predef::`+(text,@s);
+	}
 
-        string ``+(string ... s)
-        {
-          return predef::`+(@s,text);
-        }
+	string ``+(string ... s)
+	{
+	  return predef::`+(@s,text);
+	}
 
-        mixed cast(string to)
-        {
-          if(to=="string") return text;
-        }
+	mixed cast(string to)
+	{
+	  if(to=="string") return text;
+	}
       }
 
+      /* FIXME:
+       */
       array(Token) tokenize(array(string) s, void|string file)
       {
-        array(Token) ret=allocate(sizeof(s));
-        int line=1;
-        for(int e=0;e<sizeof(s);e++)
-        {
-          ret[e]=Token(s[e],line,file);
-          if(s[e][0]=='#')
-          {
-            sscanf(s[e],"#%*[ \t\14]%d%*[ \t\14]\"%s\"", line,file);
-            sscanf(s[e],"#%*[ \t\14]line%*[ \t\14]%d%*[ \t\14]\"%s\"", 
-                   line,file);
-            line--;
-          }
-          line+=sizeof(s[e]/"\n")-1;
-        }
-        return ret;
+	array(Token) ret=allocate(sizeof(s));
+	int line=1;
+	for(int e=0;e<sizeof(s);e++)
+	{
+	  ret[e]=Token(s[e],line,file);
+	  if(s[e][0]=='#')
+	  {
+	    sscanf(s[e],"#%*[ \t\14]%d%*[ \t\14]\"%s\"", line,file);
+	    sscanf(s[e],"#%*[ \t\14]line%*[ \t\14]%d%*[ \t\14]\"%s\"", line,file);
+	    line--;
+	  }
+	  line+=sizeof(s[e]/"\n")-1;
+	}
+	return ret;
       }
 
       array group(array(string|Token) tokens, void|mapping groupings)
       {
-        Stack.stack stack=Stack.stack();
-        array(Token) ret=({});
-        mapping actions=([]);
+	Stack.stack stack=Stack.stack();
+	array(Token) ret=({});
+	mapping actions=([]);
 
-        if(!groupings) groupings=global_groupings;
+	if(!groupings) groupings=global_groupings;
 
-        foreach((array)groupings,[string x, string y])
-        {
-          actions[x]=1;
-          actions[y]=2;
-        }
+	foreach((array)groupings,[string x, string y])
+	{
+	  actions[x]=1;
+	  actions[y]=2;
+	}
 
-        foreach(tokens, Token token)
-        {
-          switch(actions[(string)token])
-          {
-           case 0: ret+=({token}); break;
-           case 1: stack->push(ret); ret=({token}); break;
-           case 2:
-             if (!sizeof(ret) || !stack->ptr ||
-                 (groupings[(string)ret[0]] != (string)token)) {
-               // Mismatch
-               werror(sprintf("**** Grouping mismatch token=%O\n"
-                              "**** tokens: ({ %{%O, %}})\n"
-                              "**** ret: ({ %{%O, %}})\n"
-                              "**** stackdepth: %d\n",
-                              token->text, tokens->text,
-                              ret->text, stack->ptr));
-               return ret;
-             }
-             ret=stack->pop()+({ ret + ({token}) });
-          }
-        }
-        return ret;
+	foreach(tokens, Token token)
+	{
+	  switch(actions[(string)token])
+	  {
+	    case 0: ret+=({token}); break;
+	    case 1: stack->push(ret); ret=({token}); break;
+	    case 2:
+	      if (!sizeof(ret) || !stack->ptr ||
+		  (groupings[(string)ret[0]] != (string)token)) {
+		// Mismatch
+		werror(sprintf("**** Grouping mismatch token=%O\n"
+			       "**** tokens: ({ %{%O, %}})\n"
+			       "**** ret: ({ %{%O, %}})\n"
+			       "**** stackdepth: %d\n",
+			       token->text, tokens->text,
+			       ret->text, stack->ptr));
+		return ret;
+	      }
+	      ret=stack->pop()+({ ret + ({token}) });
+	  }
+	}
+	return ret;
       }
 
       /* FIXME:
@@ -1592,97 +1591,309 @@ void trace_leave (RequestID id, string desc)
        */
       array strip_line_statements(array tokens)
       {
-        array(Token) ret=({});
-        foreach(tokens, array|object(Token) t)
-        {
-          if(arrayp(t))
-          {
-            ret+=({ strip_line_statements(t) });
-          }else{
-            if( ((string)t) [0] != '#')
-              ret+=({t});
-          }
-        }
-        return ret;
+	array(Token) ret=({});
+	foreach(tokens, array|object(Token) t)
+	{
+	  if(arrayp(t))
+	  {
+	    ret+=({ strip_line_statements(t) });
+	  }else{
+	    if( ((string)t) [0] != '#')
+	      ret+=({t});
+	  }
+	}
+	return ret;
   
       }
 
       array hide_whitespaces(array tokens)
       {
-        array(Token) ret=({tokens[0]});
-        foreach(tokens[1..], array|object(Token) t)
-        {
-          if(arrayp(t))
-          {
-            ret+=({ hide_whitespaces(t) });
-          }else{
-            switch( ((string)t) [0])
-            {
-             case ' ':
-             case '\t':
-             case '\14':
-             case '\n':
-               mixed tmp=ret[-1];
-               while(arrayp(tmp)) tmp=tmp[-1];
-               tmp->trailing_whitespaces+=(string)t;
-               break;
+	array(Token) ret=({tokens[0]});
+	foreach(tokens[1..], array|object(Token) t)
+	{
+	  if(arrayp(t))
+	  {
+	    ret+=({ hide_whitespaces(t) });
+	  }else{
+	    switch( ((string)t) [0])
+	    {
+	      case ' ':
+	      case '\t':
+	      case '\14':
+	      case '\n':
+		mixed tmp=ret[-1];
+		while(arrayp(tmp)) tmp=tmp[-1];
+		tmp->trailing_whitespaces+=(string)t;
+		break;
 
-             default:
-               ret+=({t});
-            }
-          }
-        }
-        return ret;
+	      default:
+		ret+=({t});
+	    }
+	  }
+	}
+	return ret;
       }
 
+      /* This code must work with Pike 7.0 */
+#if constant(Array.flatten)
+#define FLATTEN Array.flatten
+#else
+#define FLATTEN flatten
       array flatten(array a)
       {
-        array ret=({});
-        foreach(a, a) ret+=arrayp(a)?flatten(a):({a});
-        return ret;
+	array ret=({});
+	foreach(a, a) ret+=arrayp(a)?flatten(a):({a});
+	return ret;
       }
-
+#endif
       string simple_reconstitute(array(string|object(Token)|array) tokens)
       {
-        string ret="";
-        foreach(flatten(tokens), mixed tok)
-        {
-          if(objectp(tok))
-            tok=tok->text + tok->trailing_whitespaces;
-          ret+=tok;
-        }
+	string ret="";
+	foreach(FLATTEN(tokens), mixed tok)
+	{
+	  if(objectp(tok))
+	    tok=tok->text + tok->trailing_whitespaces;
+	  ret+=tok;
+	}
 
-        return ret;
+	return ret;
       }
 
-      string reconstitute_with_line_numbers(array(string|object(Token)|array)
-                                            tokens)
+      string reconstitute_with_line_numbers(array(string|object(Token)|array) tokens)
       {
-        int line=1;
-        string file;
-        string ret="";
-        foreach(flatten(tokens), mixed tok)
-        {
-          if(objectp(tok))
-          {
-            if((tok->line && tok->line != line) ||
-               (tok->file && tok->file != file))
-            {
-              if(strlen(ret) && ret[-1]!='\n') ret+="\n";
-              line=tok->line;
-              if(tok->file) file=tok->file;
-              ret+=sprintf("#line %d %O\n",line,file);
-            }
-            tok=tok->text + tok->trailing_whitespaces;
-          }
-          ret+=tok;
-          line+=sizeof(tok/"\n")-1;
-        }
+	int line=1;
+	string file;
+	string ret="";
+	foreach(FLATTEN(tokens), mixed tok)
+	{
+	  if(objectp(tok))
+	  {
+	    if((tok->line && tok->line != line) ||
+	       (tok->file && tok->file != file))
+	    {
+	      if(strlen(ret) && ret[-1]!='\n') ret+="\n";
+	      line=tok->line;
+	      if(tok->file) file=tok->file;
+	      ret+=sprintf("#line %d %O\n",line,file);
+	    }
+	    tok=tok->text + tok->trailing_whitespaces;
+	  }
+	  ret+=tok;
+	  line+=sizeof(tok/"\n")-1;
+	}
+	return ret;
+      }
+    }
 
-        return ret;
+    static private class __Pike
+    {
+      inherit __C;
+
+      array(string) split(string data)
+      {
+	int start;
+	int line=1;
+	array(string) ret=({});
+	int pos;
+	data += "\n\0";	/* End sentinel. */
+
+	while(1)
+	{
+	  int start=pos;
+
+	  //    werror("::::%c\n",data[pos]);
+
+	  switch(data[pos])
+	  {
+	    case '\0':
+	      return ret;
+
+	    case '#':
+	      {
+	      pos+=1;
+	      if(data[pos]=='\"')
+		break;
+	      pos=search(data,"\n",pos);
+	      if(pos==-1)
+		error("Failed to find end of preprocessor statement.\n");
+	
+	      while(data[pos-1]=='\\') pos=search(data,"\n",pos+1);
+	      sscanf(data[start..pos], 
+		     "#%*[ \t]charset%*[ \t\\]%s%*[ \n]", string charset);
+	      if(charset)
+		data = (data[0..pos]+
+			master()->decode_charset(data[pos+1..sizeof(data)-3], 
+						 charset)
+			+"\n\0");  // New end sentinel.
+	      break;
+
+		case 'a'..'z':
+		case 'A'..'Z':
+		case 128..:     // Lets simplify things for now...
+		case '_':
+		  while(1)
+		  {
+		    switch(data[pos])
+		    {
+		      case 'a'..'z':
+		      case 'A'..'Z':
+		      case '0'..'9':
+		      case 128..:      // Lets simplify things for now...
+		      case '_':
+			pos++;
+			continue;
+		    }
+		    break;
+		  }
+		  break;
+
+		case '.':
+		  if(data[start..start+2]=="...")
+		  {
+		    pos+=3;
+		    break;
+		  }
+		  if(data[start..start+1]=="..")
+		  {
+		    pos+=2;
+		    break;
+		  }
+		  pos++;
+		  break;
+
+		case '0'..'9':
+		  if(data[pos]=='0' && (data[pos+1]=='x' || data[pos+1]=='X'))
+		  {
+		    pos+=2;
+		    while(1)
+		    {
+		      switch(data[pos])
+		      {
+			case '0'..'9':
+			case 'a'..'f':
+			case 'A'..'F':
+			  pos++;
+			  continue;
+		      }
+		      break;
+		    }
+		    break;
+		  }
+		  while(data[pos]>='0' && data[pos]<='9') pos++;
+		  if(data[pos]=='.' && data[pos+1]>='0' && data[pos+1]<='9')
+		  {
+		    pos++;
+		    while(data[pos]>='0' && data[pos]<='9') pos++;
+		    if(data[pos]=='e' || data[pos]=='E')
+		    {
+		      pos++;
+		      while(data[pos]>='0' && data[pos]<='9') pos++;
+		    }
+		  }
+		  break;
+
+		default:
+		  throw( ({sprintf("Unknown token %O\n",data[pos..pos+20]) }) );
+
+		case  '`':
+		  while(data[pos]=='`') data[pos]++;
+
+		case '/':
+		case '{': case '}':
+		case '[': case ']':
+		case '(': case ')':
+		case ';':
+		case ',':
+		case '*': case '%':
+		case '?': case ':':
+		case '&': case '|': case '^':
+		case '!': case '~':
+		case '=':
+		case '+':
+		case '-':
+		case '@':
+		case '<': case '>':
+		  switch(data[pos..pos+1])
+		  {
+		    case "//":
+		      pos=search(data,"\n",pos);
+		      break;
+
+		    case "/*":
+		      pos=search(data,"*/",pos);
+		      pos+=2;
+		      break;
+
+		    case "<<": case ">>":
+		      if(data[pos+2]=='=') pos++;
+		    case "==": case "<=": case ">=":
+		    case "*=": case "/=": case "%=":
+		    case "&=": case "|=": case "^=":
+		    case "+=": case "-=":
+		    case "++": case "--":
+		    case "&&": case "||":
+		    case "->":
+		      pos++;
+		    default:
+		      pos++;
+		  }
+		  break;
+
+
+		case ' ':
+		case '\n':
+		case '\r':
+		case '\t':
+		  while(1)
+		  {
+		    switch(data[pos])
+		    {
+		      case ' ':
+		      case '\n':
+		      case '\r':
+		      case '\t':
+			pos++;
+			continue;
+		    }
+		    break;
+		  }
+		  break;
+
+		case '\'':
+		  pos++;
+		  if(data[pos]=='\\') pos++;
+		  pos=search(data, "'", pos)+1;
+		  break;
+
+		case '"':
+		  {
+		  int q,s;
+		  while(1)
+		  {
+		    q=search(data,"\"",pos+1);
+		    s=search(data,"\\",pos+1);
+		    if(q==-1) q=strlen(data)-1;
+		    if(s==-1) s=strlen(data)-1;
+
+		    if(q<s)
+		    {
+		      pos=q+1;
+		      break;
+		    }else{
+		      pos=s+1;
+		    }
+		  }
+		  break;
+		  }
+	      }
+	  }
+
+	  ret+=({ data[start..pos-1] });
+	}
       }
     }
     object C = __C();
+    object Pike = __Pike();
   }
 object _Parser = __Parser();
 #endif
