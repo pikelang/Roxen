@@ -5,12 +5,23 @@ Changes since Roxen Challenger 1.1.1 alpha 6
 o etc/master.pike has been renamed to etc/roxen_master to avoid
   name conflicts/confusion.
 
-o Applied a LARGE patch for the disk cache by Wilhelm Köhler (Thanks!)
+o Support for SSLv3 added.
+  NOTE: People in the US may not use this module since it violates patents
+	held by RSA Inc.
+	People in France may not download nor use this module due to
+	legislation. A version of Roxen without the crypto-module will
+	be made available on demand.
 
 o Fixed the install-script.
 
+o The install-script now uses ssl3 for the configuration port.
+
 o Should now start the garbage-collector correctly when started from a
   standard installation.
+
+o Applied a LARGE patch for the disk cache by Wilhelm Köhler (Thanks!)
+
+o Applied another patch by Wilhelm Köhler (Thanks again!)
 
 o Fixed most of the bugs in the ticket-database.
 
@@ -23,12 +34,7 @@ o Ftp-module now restores auth-information for every transaction. This is
   fine for single-transaction protocols like HTTP, but won't do for
   multiple-transaction protocols like FTP.
 
-o Support for SSLv3 added.
-  NOTE: People in the US may not use this module since it violates patents
-	held by RSA Inc.
-	People in France may not download nor use this module due to
-	legislation. A version of Roxen without the crypto-module will
-	be made available on demand.
+o Ftp-module now supports setting prestates via SITE PRESTATE.
 
 
 Changes since Roxen Challenger 1.1.1 alpha 5
