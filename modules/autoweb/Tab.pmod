@@ -182,11 +182,16 @@ class tab
 
   int visible(object id)
   {
-    if (!o) compile();
-    if (!o) return 0;
+    if(!o) compile();
+    if(!o) return 0;
+    if(stringp(o))
+    {
+      werror(o);
+      return 0;
+    }
     return !o->visible || o->visible(id);
   }
-
+  
   void create(string _dir,string _tab,object _par)
   {
     dir=_dir;

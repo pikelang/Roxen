@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.21 1998/09/16 12:46:26 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.22 1998/09/18 00:54:46 js Exp $";
 
 mapping host_to_id;
 
@@ -15,6 +15,26 @@ array register_module()
 	    "AutoSite IP-less hosting Filesystem",
 	    "" });
 }
+
+string create(object configuration)
+{
+  filesystem::create();
+  defvar("defaulttext",
+	 "<HTML>\n"
+	 "\n"
+	 "<!-- There are no secret messages in the"
+	 " source code to this web page. -->\n"
+	 "<!-- There are no tyops in this web page. -->\n"
+	 "<TITLE>Not yet the $$COMPANY$$ home page</TITLE>\n"
+	 "<BODY>\n"
+	 "This web page is not here yet.\n"
+	 "</BODY>\n"
+	 "</HTML>",
+	 "Default text for /index.html",
+	 TYPE_TEXT_FIELD,
+	 "");
+}
+
 
 string get_host(object id)
 {
@@ -162,8 +182,14 @@ string tag_init_home_dir(string tag_name, mapping args, object id)
   mkdir(dir);
   mkdir(dir+"/templates/");
   Stdio.write_file(dir+"/index.html",
-		   "<h1>Foobolaget</h1>"
-		   "Enjoy...");
+		   replace(query("defaulttext"),"$$COMPANY$$",args->company));
+  Stdio.write_file(dir+"/index.html.md",
+		   "<md variable=\"content_type\">text/html</md>\n"
+		   "<md variable=\"description\"></md>\n"
+		   "<md variable=\"keywords\"></md>\n"
+		   "<md variable=\"template\">No</md>"
+		   "<md variable=\"title\">Welcome</md>");
+  
   Stdio.write_file(dir+"/templates/default.tmpl",
 		   Stdio.read_bytes(combine_path(
 		     query("searchpath"),"default.tmpl")));

@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.25 1998/09/08 21:32:09 js Exp $
+ * $Id: webadm.pike,v 1.26 1998/09/18 00:54:47 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.25 1998/09/08 21:32:09 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.26 1998/09/18 00:54:47 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -197,7 +197,7 @@ string make_tablist(array(object) tabs, object current, object id)
       args->selected = "selected";
       args->href += "?_reset=";
     }
-    if(tab->visible())
+    if(tab->visible(id))
       res_tabs += make_container( "tab", args, replace(tab->title, "_"," "));
   }
   return "\n\n<!-- Tab list -->\n"+

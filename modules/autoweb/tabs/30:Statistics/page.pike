@@ -2,9 +2,16 @@ inherit "roxenlib";
 
 object wa;
 
+int vis;
+
 int visible(object id)
 {
-  return 0;
+  if(sizeof(id->conf->get_provider("sql")->sql_object(id)->
+    query("select feature from features where feature='LogView' and"
+	  " customer_id='"+id->misc->customer_id+"'")))
+    return vis=1;
+  else
+    return vis=0;
 }
 
 
@@ -15,6 +22,8 @@ void create (object webadm)
 
 mapping|string handle (string sub, object id)
 {
+  if(!visible(id))
+    return "";
   string res=Stdio.read_bytes(combine_path(__FILE__,"../","page.html"));
   return res;
 }
