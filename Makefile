@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.46 1998/10/19 02:37:15 peter Exp $
+# $Id: Makefile,v 1.47 1999/02/05 20:30:11 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -10,9 +10,14 @@ prefix=/usr/local
 OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 BUILDDIR=build/$(OS)
 
+# Used to avoid make compatibility problems.
+BIN_TRUE=":"
+
 easy : blurb all
+	-@$(BIN_TRUE)
 
 .noway:
+	-@$(BIN_TRUE)
 
 ChangeLog.gz: .noway
 	pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
@@ -155,6 +160,7 @@ verbose_verify: configure_all
 	@echo
 
 check : verify
+	-@$(BIN_TRUE)
 
 dist_clean :
 	@echo "Clearing the build-tree..."
@@ -208,3 +214,4 @@ censor_dbapi :
 	done
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
+	-@$(BIN_TRUE)
