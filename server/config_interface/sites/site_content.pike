@@ -416,15 +416,34 @@ string module_page( RequestID id, string conf, string module )
           "section='&form.section;' module='"+module+"'/>";
 }
 
-string port_for( string url )
+string port_for( string url, int settings )
 {
   if(!roxen->urls[url] ) return "";
   Protocol p = roxen->urls[url]->port;
-  if(!p)
-    return "";
-  return "<font size='-1'>(" + LOCALE(291,"handled by") +
-    " <a href='../../../ports/?port="+p->get_key()+"'>"+
-    p->name+"://"+(p->ip||"*")+":"+p->port+"/" + "</a>)</font>";
+  if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
+  string res =(settings?"<table cellspacing=0 cellpadding=2>":"")+
+#"
+  <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
+"'/><set variable='var.url' value='"+Roxen.http_encode_string(url)+#"'/>
+  <emit source='ports' scope='port'>
+    <if variable='var.port is &_.port;'>"+
+    (settings?"<tr  bgcolor='&usr.content-titlebg;'><td><font color='&usr.content-titlefg;' size=+1><b>&_.name;</b></font></td><td align=right><cf-save/></td></tr><tr><td colspan='2'>":"")+#"
+      <if not='1' variable='_.warning is '>
+           <font color='&usr.warncolor;'><b>&_.warning;</b></font>
+      </if>
+      <emit source='port-urls' port='&_.port;'>
+        <if not variable='_.url is &var.url;'>
+          "+LOCALE(0,"Shared with ")+
+#"<a href='../&_.conf;/'>&_.confname;</a>
+        </if>
+      </emit>
+      "+(settings?
+#"<cfg-variables nosave='' source='port-variables' port='&port.port;'/>
+  <br clear='all' /></td></tr>
+  ":"")+#"
+    </if>
+  </emit>";
+  return res+(settings?"</table>":"");
 }
 
 
@@ -467,10 +486,19 @@ string parse( RequestID id )
        return "<cfg-variables source='config-variables' "
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
+     case "Ports":
+       string res = "<br />\n<blockquote>";
+       foreach( conf->query( "URLs" ), string url )
+       {
+	 res += port_for( url, 1 );
+       }
+       return res+"</blockquote><br />\n";
+       break;
+
      case 0:
      case "":
      case "Status":
-       string res = "<br />\n<blockquote><h1>" +
+       res = "<br />\n<blockquote><h1>" +
  	 LOCALE(38,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
@@ -478,18 +506,16 @@ string parse( RequestID id )
                      && roxen->urls[ url ]->port 
                      && roxen->urls[ url ]->port->bound);
          if( !open )
-           res += url + " "+port_for(url)+(" <font color='&usr.warncolor;'>"+
-                                           LOCALE(301, "Not open")+
-                                           "</font>")+"<br />\n";
+           res += url + " "+port_for(url,0);
          else if(search(url, "*")==-1)
            res += ("<a target='server_view' href='"+url+"'>"+
-                   url+"</a> "+port_for(url)+"<br />\n");
+                   url+"</a> "+port_for(url,0)+"<br />\n");
 	 else if( sizeof( url/"*" ) == 2 )
 	   res += ("<a target='server_view' href='"+
                    replace(url, "*", gethostname() )+"'>"+
-                   url+"</a> "+port_for(url)+"<br />\n");
+                   url+"</a> "+port_for(url,0)+"<br />\n");
          else
-	   res += url + " "+port_for(url)+"<br />\n";
+	   res += url + " "+port_for(url,0)+"<br />\n";
        }
 
        res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
