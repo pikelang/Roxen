@@ -1,7 +1,5 @@
-/* $Id: listfonts.pike,v 1.2 2000/02/04 05:49:18 per Exp $ */
+/* $Id: listfonts.pike,v 1.3 2000/02/04 06:07:19 per Exp $ */
 #if constant(available_font_versions)
-inherit "wizard";
-
 constant action = "maintenance";
 constant name= "List Available Fonts";
 constant doc = "List all available fonts";
@@ -19,17 +17,20 @@ string versions(string font)
 
 string list_font(string font)
 {
-  return ("<input type=hidden value=on name='font:"+font+"'>"+
-          map(replace(font,"_"," ")/" ",capitalize)*" "+" <font size=-1>"
-          + versions(font)+"</font><br>");
+  return (map(replace(font,"_"," ")/" ",capitalize)*" "+
+          " <font size=-1>"+ versions(font)+"</font><br>");
 }
 
 string page_0(object id)
 {
-  string res="<font size=+1>All available fonts</font><p>";
-  foreach(roxen->fonts->available_fonts(1), string font) res+=list_font(font);
-  res += "<p>Example text: <font size=-1><var type=string name=text default='"
-    "The quick brown fox jumps over the lazy dog'>";
+  string res=("<input type=hidden name=action value=listfonts.pike>"
+              "<input type=hidden name=doit value=indeed>"
+              "<font size=+1>All available fonts</font><p>");
+  foreach(roxen->fonts->available_fonts(1), string font)
+  res+=list_font(font);
+  res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
+          "The quick brown fox jumps over the lazy dog'><p>"
+          "<table width='70%'><tr><td align=left><cf-cancel href='?class=maintenance'></td><td align=right><cf-next></td></tr></table>");
   return res;
 }
 
@@ -37,18 +38,16 @@ string page_1(object id)
 {
   string res="";
   mapping v = id->variables;
-  foreach(sort(glob("font:*",indices(v))), string f)
-  {
-    sscanf(f, "%*s:%s", f);
-    string fn = map(replace(f,"_"," ")/" ",capitalize)*" ";
+  foreach(roxen->fonts->available_fonts(), string fn)
     res += fn+": <gtext align=top font='"+fn+"'>"+v->text+"</gtext><p>";
-  }
-  return res;
+  return res+"<br><p>\n<cf-ok>";
 }
 
 mixed parse(object id)
 {
-  return wizard_for(id,0);
+  if( id->variables->doit )
+    return page_1( id );
+  return page_0( id );
 }
 #else
 #error Only available under roxen 1.2a11 or newer
