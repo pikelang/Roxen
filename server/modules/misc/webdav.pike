@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.12 2004/04/29 14:54:32 grubba Exp $
+// $Id: webdav.pike,v 1.13 2004/04/30 11:06:25 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.12 2004/04/29 14:54:32 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.13 2004/04/30 11:06:25 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -45,8 +45,8 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 		"DAV":"1",
 	      ]),
     ]);
-#if 0
   case "LOCK":
+#if 0
   case "UNLOCK":
 #endif /* 0 */
   case "COPY":
@@ -165,19 +165,30 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 
   switch(id->method) {
   case "LOCK":
+    DAVLock lock;
     if (!xml_data) {
       // Refresh.
+      int(-2..1)|DAVLock state =
+	id->conf->check_locks(id->not_query, depth != 0, id);
+      if (intp(state)) {
+	if (state) {
+	  return Roxen.http_status(423, "Locked by other user");
+	} else {
+	  return Roxen.http_status(424, "Couldn't refresh missing lock.");
+	}
+      }
+      id->conf->refresh_lock(lock = state, id);
     } else {
       // New lock.
       Parser.XML.Tree.Node lock_info_node =
 	xml_data->get_first_element("DAV:lockinfo", 1);
       if (!lock_info_node) {
-	return Roxen.http_status(400, "Missing DAV:lockinfo.");
+	return Roxen.http_status(422, "Missing DAV:lockinfo.");
       }
       Parser.XML.Tree.Node lock_scope_node =
 	lock_info_node->get_first_element("DAV:lockscope", 1);
       if (!lock_scope_node) {
-	return Roxen.http_status(400, "Missing DAV:lockscope.");
+	return Roxen.http_status(422, "Missing DAV:lockscope.");
       }
       string lockscope;
       if (lock_scope_node->get_first_element("DAV:exclusive", 1)) {
@@ -185,26 +196,65 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
       if (lock_scope_node->get_first_element("DAV:shared", 1)) {
 	if (lockscope) {
-	  return Roxen.http_status(400, "Both DAV:exclusive and DAV:shared.");
+	  return Roxen.http_status(422, "Both DAV:exclusive and DAV:shared.");
 	}
 	lockscope = "DAV:shared";
       }
       if (!lockscope) {
-	return Roxen.http_status(400, "Unsupported DAV:lockscope.");
+	return Roxen.http_status(422, "Unsupported DAV:lockscope.");
       }
       Parser.XML.Tree.Node lock_type_node =
 	  lock_info_node->get_first_element("DAV:locktype", 1);
       if (!lock_type_node) {
-	return Roxen.http_status(400, "Missing DAV:locktype.");
+	return Roxen.http_status(422, "Missing DAV:locktype.");
       }
       if (!lock_type_node->get_first_element("DAV:write", 1)) {
 	// We only support DAV:write locks.
-	return Roxen.http_status(400, "Missing DAV:write.");
+	return Roxen.http_status(422, "Missing DAV:write.");
       }
       string locktype = "DAV:write";
       Parser.XML.Tree.Node owner_node =
-	lock_info_node->get_first_element("DAV:owner");
+	lock_info_node->get_first_element("DAV:owner", 1);
+
+      // Parameters OK, try to create a lock.
+
+      mapping(string:mixed)|DAVLock new_lock =
+	id->conf->lock_file(id->not_query,
+			    "DAV:write",
+			    lockscope,
+			    depth != 0,
+			    owner_node,
+			    id);
+      if (mappingp(new_lock)) {
+	// Error
+	// FIXME: Should probably generate a MultiStatus response.
+	//        cf RFC 2518 8.10.10.
+	return new_lock;
+      }
+      lock = new_lock;
     }
+    Parser.XML.Tree.Node root =
+      Parser.XML.Tree.parse_input(
+	"<?xml version='1.0' encoding='utf-8'?>"
+	"<DAV:prop xmlns:DAV='DAV:' "
+	// MS namespace for data types; see comment in
+	// XMLPropStatNode.add_property. Note: The XML parser in the
+	// MS DAV client is broken and requires the break of the last
+	// word "datatypesdt" to be exactly at this point.
+	"xmlns:MS='urn:schemas-microsoft-com:datatypes'>"
+	"<DAV:lockdiscovery/>"
+	"</DAV:prop>");
+    Parser.XML.Tree.Node lock_discovery_node =
+      root->get_first_element("DAV:prop", 1)->
+      root->get_first_element("DAV:lockdiscovery", 1);
+    lock_discovery_node->add_child(lock->get_xml());
+    string xml = root->render_xml();
+    return ([
+      "error":200,
+      "data":xml,
+      "len":sizeof(xml),
+      "type":"text/xml; charset=\"utf-8\"",
+    ]);
   case "UNLOCK":
     break;
   case "COPY":
