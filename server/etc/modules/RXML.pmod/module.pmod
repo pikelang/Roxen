@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.8 2000/01/07 02:32:43 mast Exp $
+//! $Id: module.pmod,v 1.9 2000/01/07 04:52:43 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1085,7 +1085,7 @@ class Frame
 
       do {
 	if (!iter) {
-	  iter = fn;
+	  iter = fn, fn = 0;
 	  while (functionp (iter)) { // Got a function from do_enter.
 	    int|function(RequestID:int|function) newiter =
 	      [int|function(RequestID:int|function)] iter (ctx->id); // Might unwind.
