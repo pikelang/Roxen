@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.53 1999/05/05 20:20:31 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.54 1999/05/06 20:51:55 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -30,6 +30,17 @@ constant thread_safe=1;
 
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
+
+static mapping http_low_answer(int errno, string data, string|void desc)
+{
+  mapping res = ::http_low_answer(errno, data);
+
+  if (desc) {
+    res->rettext = desc;
+  }
+
+  return res;
+}
 
 static int do_stat = 1;
 
@@ -246,6 +257,12 @@ void done_with_put( array(object|string) id_arr )
 
   [to, from, id, oldf] = id_arr;
 
+#ifdef FILESYSTEM_DEBUG
+  werror(sprintf("done_with_put(%O)\n"
+		 "from: %O\n",
+		 id_arr, mkmapping(indices(from), values(from))));
+#endif /* FILESYSTEM_DEBUG */
+
   to->close();
   from->set_blocking();
   m_delete(putting, from);
@@ -279,7 +296,8 @@ void got_put_data( array (object|string) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>"));
+    id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
+				    "413 Out of disk quota"));
     return;
   }
 
@@ -297,7 +315,8 @@ void got_put_data( array (object|string) id_arr, string data )
       to->close();
       from->set_blocking();
       m_delete(putting, from);
-      id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>"));
+      id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
+				      "413 Out of disk quota"));
       return;
     }
     if (putting[from] != 0x7fffffff) {
@@ -359,6 +378,10 @@ mixed find_file( string f, object id )
 #ifdef FILESYSTEM_DEBUG
   roxen_perror("FILESYSTEM: Request for \""+f+"\"\n");
 #endif /* FILESYSTEM_DEBUG */
+
+  string mountpoint = QUERY(mountpoint);
+
+  string uri = combine_path(mountpoint + "/" + f, ".");
 
   f = path + f;
 #ifdef __NT__
@@ -536,12 +559,13 @@ mixed find_file( string f, object id )
 #ifdef QUOTA_DEBUG
     report_debug("Checking quota.\n");
 #endif /* QUOTA_DEBUG */
-    if (id->misc->quota_obj &&
-	!id->misc->quota_obj->check_quota(oldf, id->misc->len)) {
+    if (id->misc->quota_obj && (id->misc->len > 0) &&
+	!id->misc->quota_obj->check_quota(uri, id->misc->len)) {
       errors++;
       report_warning("Creation of " + f + " failed. Out of quota.\n");
       TRACE_LEAVE("PUT: Out of quota.");
-      return http_low_answer(413, "<h2>Out of quota.</h2>");
+      return http_low_answer(413, "<h2>Out of disk quota.</h2>",
+			     "413 Out of disk quota");
     }
     
     object privs;
@@ -574,7 +598,7 @@ mixed find_file( string f, object id )
 #ifdef QUOTA_DEBUG
 	report_debug("Deallocating " + size + "bytes.\n");
 #endif /* QUOTA_DEBUG */
-	id->misc->quota_obj->deallocate(oldf, size);
+	id->misc->quota_obj->deallocate(uri, size);
       }
       if (size) {
 #ifdef QUOTA_DEBUG
@@ -619,7 +643,8 @@ mixed find_file( string f, object id )
 	if (!id->misc->quota_obj->allocate(f, bytes)) {
 	  TRACE_LEAVE("PUT: A string");
 	  TRACE_LEAVE("PUT: Out of quota");
-	  return http_low_answer(413, "<h2>Out of quota.</h2>");
+	  return http_low_answer(413, "<h2>Out of disk quota.</h2>",
+				 "413 Out of disk quota");
 	}
       }
     }
@@ -632,7 +657,7 @@ mixed find_file( string f, object id )
     if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
     }
-    id->my_fd->set_id( ({ to, id->my_fd, id, oldf }) );
+    id->my_fd->set_id( ({ to, id->my_fd, id, uri }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
@@ -641,6 +666,7 @@ mixed find_file( string f, object id )
 
    case "CHMOD":
     // Change permission of a file. 
+    // FIXME: !!
     
     if(!QUERY(put))
     {
@@ -812,16 +838,15 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("MOVE: No dest file");
       return 0;
     }
-    string mountpoint = QUERY(mountpoint);
-    string moveto = combine_path(mountpoint + "/" + oldf + "/..",
-				 id->misc["new-uri"]);
+    string new_uri = combine_path(uri + "/../",
+				  id->misc["new-uri"]);
 
-    if (moveto[..sizeof(mountpoint)-1] != mountpoint) {
+    if (new_uri[..sizeof(mountpoint)-1] != mountpoint) {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE: Dest file on other filesystem.");
       return(0);
     }
-    moveto = path + moveto[sizeof(mountpoint)..];
+    string moveto = path + "/" + new_uri[sizeof(mountpoint)..];
 
     size = FILE_SIZE(moveto);
 
