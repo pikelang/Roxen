@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.43 2002/06/15 21:07:03 nilsson Exp $
+ * $Id: create_configif.pike,v 1.44 2002/06/27 14:53:34 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -311,7 +311,7 @@ ent text/html
     write("\n   Administration interface created.\n");
   }
 
-  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
+  string ufile=(configdir+"_admininterface/settings/" + user + "_uid");
   mkdirhier( ufile );
   Stdio.File( ufile, "wct", 0770 )
     ->write(
