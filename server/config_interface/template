@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.115 2003/04/28 14:43:04 anders Exp $ -->
+<!-- $Id: template,v 1.116 2003/04/30 09:03:46 anders Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -28,7 +28,7 @@
 <define container="st-page" scope="st-page">
   <colorscope bgcolor="&usr.content-bg;">
     <define preparse="1" variable="var.__contents">
-      <box-frame width="100%" iwidth="100%" ::="&usr.content-frame;">
+      <box-frame width="100%" iwidth="100%" bodybg='&usr.content-bg;' ::="&usr.content-frame;">
         <contents scope="st-page"/>
       </box-frame>
     </define>
