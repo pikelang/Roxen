@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.52 1999/11/23 11:03:11 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.53 1999/11/23 15:12:48 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -10,144 +10,92 @@ string cvs_version = "$Id: roxen_master.pike,v 1.52 1999/11/23 11:03:11 per Exp 
 
 
 object mm=(object)"/master";
-inherit "/master": old_master;
+inherit "/master";
+
 
 mapping handled = ([]);
 
+program low_findprog(string pname, string ext, object|void handler)
+{
+  program ret;
+  array s;
+  string fname=pname+ext;
+
+  if( (s=master_file_stat( fname )) && s[1]>=0 )
+  {
+    if( load_time[ fname ] > s[ 3 ] )
+      if( programs[fname] ) 
+        return programs[fname];
+
+    switch(ext)
+    {
+    case "":
+    case ".pike":
+      if(array s2=master_file_stat(fname+".o"))
+      {	
+	if(s2[1]>=0 && s2[3]>=s[3])
+	{
+	  mixed err=catch 
+          {
+            load_time[ fname ] = time();
+	    return programs[fname]=
+                   decode_value(_static_modules.files()->
+                                Fd(fname+".o","r")->read(),Codec());
+	  };
+	  if (handler) {
+	    handler->compile_warning(fname + ".o", 0,
+				     sprintf("Decode failed:\n"
+					     "\t%s", err[0]));
+	  } else {
+	    compile_warning(fname + ".o", 0,
+			    sprintf("Decode failed:\n"
+				    "\t%s", err[0]));
+	  }
+	}
+      }
+      
+      if ( mixed e=catch { ret=compile_file(fname); } )
+      {
+	if(arrayp(e) && sizeof(e)==2 &&
+	   arrayp(e[1]) && sizeof(e[1]) == sizeof(backtrace()))
+	  e[1]=({});
+	throw(e);
+      }
+      break;
+#if constant(load_module)
+    case ".so":
+      ret=load_module(fname);
+#endif
+    }
+    load_time[fname] = time();
+    return programs[fname] = ret;
+  }
+  if( programs[ fname ] ) 
+    return programs[ fname ];
+  return UNDEFINED;
+}
+
+int refresh( program p )
+{
+  string fname = program_name( p );
+  /*
+   * No need to do anything right now, low_findprog handles 
+   * refresh automatically. 
+   *
+   * simply return 1 if a refresh will take place.
+   *
+   */
+  array s;
+  if( (s=master_file_stat( fname )) && s[1]>=0 )
+    if( load_time[ fname ] > s[ 3 ] )
+      return 0;
+  return 1;
+}
+
 string program_name(program p)
 {
-//werror(sprintf("Program name %O = %O\n", p, search(programs,p)));
   return search(programs, p);
 }
-
-mapping saved_names = ([]);
- 
-void name_program(program foo, string name)
-{
-  programs[name] = foo;
-  saved_names[foo] = name;
-  saved_names[(program)foo] = name;
-}
-
-mapping module_names = ([]);
-
-mixed resolv(string identifier, string|void current_file)
-{
-  mixed ret = ::resolv(identifier, current_file);
-
-  if (ret) {
-    module_names[ret] = identifier;
-  }
-  return(ret);
-}
-
-private static int mid = 0;
-
-mapping _vars = ([]);
-array persistent_variables(program p, object o)
-{
-  if(_vars[p]) return _vars[p];
-
-  mixed b;
-  array res = ({});
-  foreach(indices(o), string a)
-  {
-    b=o[a];
-    if(!catch { o[a]=b; } ) // It can be assigned. Its a variable!
-      res += ({ a });
-  }
-  return _vars[p]=res;
-}
-
-array|string low_nameof(object|program|function fo)
-{
-  if(objectp(fo))
-    if(mixed x=search(objects,fo)) return x;
-
-  if(programp(fo))
-    if(mixed x=search(programs,fo)) return x;
-
-  string p,post="";
-  object foo ;
-
-  if(functionp(fo))
-  {
-    array a;
-    post=sprintf("%O", function_object( fo ));
-    if(a=search(objects, function_object( fo )))
-      return ({ a[0], a[1], post });
-  } else
-    foo = fo;
-  
-  if(p=search(programs, object_program(foo)))
-    return ({ p, (functionp(foo->name)?foo->name():
-		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)),post})-({"",0});
-#ifdef DEBUG		  
-  throw(({"nameof: unknown thingie.\n",backtrace()}));
-#else
-  return 0;
-#endif
-}
-
-array|string nameof(mixed foo) {
-  return saved_names[foo] ||  (saved_names[foo] = low_nameof( foo ));
-}
-
-program programof(string foo) {
-  return saved_names[foo] || programs[foo] || (program) foo ;
-}
-
-object objectof(array foo)
-{
-  object o;
-  program p;
-
-  array err;
-  
-  if(!arrayp(foo)) return 0;
-  
-  if(saved_names[foo[0..1]*"\0"]) return saved_names[foo[0..1]*"\0"];
-
-  if(!(p = programof(foo[0]))) {
-    werror("objectof(): Failed to restore object (programof("+foo[0]+
-	   ") failed).\n");
-    return 0;
-  }
-  err = catch {
-    o = p();
-    
-    saved_names[ foo[0..1]*"\0" ] = o;
-
-    saved_names[ o ] = foo;
-    o->persist && o->persist( foo );
-    return o;
-  };
-  werror("objectof(): Failed to restore object"
-	 " from existing program "+foo*"/"+"\n"+
-	 describe_backtrace( err ));
-  return 0;
-}
-
-function functionof(array f)
-{
-  object o;
-  if(!arrayp(f) || sizeof(f) != 3)
-  return 0;
-  o = objectof( f[..1] );
-  if(!o)
-  {
-    werror("functionof(): objectof() failed.\n");
-    return 0;
-  }
-  if(!functionp(o[f[-1]]))
-  {
-    werror("functionof(): "+f*"."+" is not a function.\n");
-    destruct(o);
-    return 0;
-  }
-  return o[f[-1]];
-}
-
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
@@ -250,19 +198,14 @@ void create()
     catch(o[varname] = mm[varname]);
     /* Ignore errors when copying functions */
   }
+
+  foreach( indices(programs), string f )
+    load_time[ f ] = time();
+
   programs["/master"] = object_program(o);
-  objects[object_program(o)] = o;
+  objects[ object_program(o) ] = o;
   /* Move the old efuns to the new object. */
-  if (master_efuns) {
-    foreach(master_efuns, string e)
-      add_constant(e, o[e]);
-  } else {
-    ::create();
-  }
-  add_constant("describe_backtrace", describe_backtrace );
-  add_constant("persistent_variables", persistent_variables);
-  add_constant("name_program", name_program);
-  add_constant("objectof", objectof);
-  add_constant("nameof", nameof);
-//   autoreload_on=1;
+
+  foreach(master_efuns, string e)
+    add_constant(e, o[e]);
 }
