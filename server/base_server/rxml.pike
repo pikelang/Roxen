@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.99 2000/02/06 20:02:11 nilsson Exp $
+ * $Id: rxml.pike,v 1.100 2000/02/06 20:08:22 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -423,7 +423,17 @@ string do_parse(string to_parse, RequestID id,
   RXML.PHtml parser;
   RXML.Context ctx;
 
-  if ((ctx = parent_parser && parent_parser->context) && ctx->id == id) {
+  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
+#ifdef DEBUG
+    if (ctx != RXML.get_context())
+      error ("Odd context switch."
+#ifdef OBJ_COUNT_DEBUG
+	     " Expected %O, got %O.\n", RXML.get_context(), ctx
+#else
+	     "\n"
+#endif
+	    );
+#endif
     parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
     parser->_parent = parent_parser;
   }
@@ -432,6 +442,7 @@ string do_parse(string to_parse, RequestID id,
 #ifdef OLD_RXML_COMPAT
     parser->context->add_scope("_", id->variables);
 #endif
+    parent_parser = 0;
   }
   parser->parse_html_compat (parse_html_compat);
   id->misc->_parser = parser;
