@@ -35,58 +35,18 @@ string parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;
-  if(id->variables->initial)
-    return "<tab first last selected>"+LOCALE(400, "Initial Variables")+"</tab>";
-  if( sizeof( path ) == 1 )
+  switch( sizeof(path)==1?"settings":path[ 1 ] )
   {
-    string res="";
-    string q = id->variables->config_page;
-
-    array pages =
-    ({
-      ({ 0, LOCALE(228,"Status"), 0, 0 }),
-    });
-
-    foreach ( pages, array page )
-    {
-      string tpost = "";
-      if( page[2] )
-      {
-        res += "<cf-perm perm='"+page[2]+"'>";
-        tpost = "</cf-perm>"+tpost;
-      }
-      if( page[3] )
-      {
-        res += "<cf-userwants option='"+page[3]+"'>";
-        tpost = "</cf-userwants>"+tpost;
-      }
-
-      if( page[0] )
-        res += "<tab href='?config_page="+page[0]+"'"+
-            (page == pages[0]?" first ":
-             (page == pages[-1]?" last ":""))+
-            ((page[0] == q)?" selected":"")+">";
-      else
-        res += "<tab href=''"+((page[0] == q)?" selected":"")+">";
-      res += page[1];
-      res += "</tab>";
-      res += tpost;
-    }
-    return res;
-  } else {
-    switch( path[ 1 ] )
-    {
-     case "settings":
-       return 
-#"<emit source='config-variables-sections'
+   case "settings":
+     return 
+#"<emit source='config-variables-sections' add-status=1
   configuration='"+path[0]+#"'>
    <tab ::='&_.first; &_.last; &_.selected;'
         href='?section=&_.section;'>&_.sectionname;</tab>
 </emit>";
-       break;
+     break;
 
-     default:
-       return module_page( id, path[0], path[1] );
-    }
+   default:
+     return module_page( id, path[0], path[1] );
   }
 }

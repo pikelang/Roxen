@@ -41,9 +41,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
           " icon_src='&usr.selected-indicator;' align_icon='left'>"+
           c->query_name()+"</gbutton><br /><br />");
 
-  array sub = ({ ({ "settings", LOCALE(256, "Settings") }),
- 		 ({ "",  LOCALE(257, "Modules") }),
-              });
+  array sub = ({({"",  LOCALE(257, "Modules") }),});
 //   if( subsel == "modules" )
 //     sub = reverse(sub);
 
@@ -58,11 +56,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
   {
     if( subsel == q[0]  || (q[0] == "" && (search(subsel,"!")!=-1)))
     {
-      pre += ("<gbutton frame-image='&usr.left-buttonframe;' "
-              "icon_src='&usr.selected-indicator;' align_icon='left' "
-              "width='150' preparse='' bgcolor='&usr.left-selbuttonbg;'"
-              " href='"+(noendslash(DOTDOT(3)+q[0]))+"/'>"
-              +q[1]+"</gbutton><br />\n");
+//       pre += ("<gbutton frame-image='&usr.left-buttonframe;' "
+//               "icon_src='&usr.selected-indicator;' align_icon='left' "
+//               "width='150' preparse='' bgcolor='&usr.left-selbuttonbg;'"
+//               " href='"+(noendslash(DOTDOT(3)+q[0]))+"/'>"
+//               +q[1]+"</gbutton><br />\n");
 
       string url = id->not_query + id->misc->path_info;
       id->variables->_config = cfg;

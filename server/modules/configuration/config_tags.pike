@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.115 2000/09/16 21:48:38 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.116 2000/09/19 09:43:28 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -694,6 +694,18 @@ class TagConfigVariablesSectionsplugin
   {
     array v = get_variable_sections( find_config_or_error( m->configuration ),
                                      m, id );
+    if( m["add-status"] )
+      v = ({ 
+        ([
+          "section":"Status",
+          "sectionname":LOCALE(228,"Status"),
+          "selected":(!id->variables->section||(id->variables->section=="Status")?"selected":""),
+        ]),
+      }) + v;
+    foreach( v, mapping q )
+      if( (q->section == "Settings") && (id->variables->section!="Settings"))
+        m_delete( q, "selected" );
+
     v[0]->last = "last";
     v[-1]->first = "first";
     return v;

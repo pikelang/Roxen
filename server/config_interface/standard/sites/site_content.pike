@@ -428,9 +428,27 @@ string parse( RequestID id )
   if( sizeof( path ) == 1 )
   {
     /* Global information for the configuration */
-    switch( id->variables->config_page )
+    switch( id->variables->section )
     {
      default: /* Status info */
+       return
+	 "<emit source='config-variables' configuration=\""+path[ 0 ]+"\""
+         " section=\"&form.section;\"></emit>\n"
+         ""
+	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
+	 "<table>\n"
+	 "  <emit source='config-variables' configuration=\""+path[ 0 ]+"\"\n"
+         "        section=\"&form.section;\">\n"
+         ""
+	 "    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>\n"
+	 "    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</p></td></tr>\n"
+	 "   </emit>\n"
+	 "  </table>\n"
+	 "   <cf-save what='Site'/>";
+
+     case 0:
+     case "":
+     case "Status":
        string res = "<br />\n<blockquote><h1>" +
  	 LOCALE(38,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
@@ -486,38 +504,9 @@ string parse( RequestID id )
 
 
        res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
-
-
-//     if( id->misc->config_settings->query( "devel_mode" ) )
-//     {
-//       res += "<h1>"+LOCALE(261, "Inherit tree")+"</h1>";
-//       res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
-//     }
        return res+"<br />\n";
     }
-  } else {
-    switch( path[ 1 ] )
-    {
-     case "settings":
-       return
-	 "<emit source='config-variables' configuration=\""+path[ 0 ]+"\""
-         " section=\"&form.section;\"></emit>\n"
-         ""
-	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
-	 "<table>\n"
-	 "  <emit source='config-variables' configuration=\""+path[ 0 ]+"\"\n"
-         "        section=\"&form.section;\">\n"
-         ""
-	 "    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>\n"
-	 "    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</p></td></tr>\n"
-	 "   </emit>\n"
-	 "  </table>\n"
-	 "   <cf-save what='Site'/>";
-       break;
-
-     default:
-       return module_page( id, path[0], path[1] );
-    }
-  }
+  } else
+    return module_page( id, path[0], path[1] );
   return "";
 }
