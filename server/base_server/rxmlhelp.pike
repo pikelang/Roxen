@@ -212,6 +212,14 @@ static string parse_mapping(mapping doc, void|object id) {
   return ret;
 }
 
+string parse_all_doc(RoxenModule o, void|RequestID id) {
+  mapping doc = call_tagdocumentation(o);
+  if(!doc) return 0;
+  string ret = "";
+  foreach(sort(indices(doc)), string tagname)
+    ret += parse_doc(doc[tagname], tagname, id);
+  return ret;
+}
 
 // --------------------- Find documentation --------------
 
