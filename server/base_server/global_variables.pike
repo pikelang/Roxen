@@ -263,8 +263,7 @@ void define_global_variables( int argc, array (string) argv )
 	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
 
-  globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
-  globvar("default_font", "bastard", "Default font", TYPE_FONT,
+  globvar("default_font", "bitstreamcybersans", "Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
   deflocaledoc( "svenska", "default_font", "Normaltypsnitt",

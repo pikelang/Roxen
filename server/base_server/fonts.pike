@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.42 2000/02/02 18:12:29 mast Exp $ */
+/* $Id: fonts.pike,v 1.43 2000/02/10 10:10:03 per Exp $ */
 
 #include <module.h>
 
@@ -105,10 +105,10 @@ array available_font_versions(string name, int size)
     base_dir = dir+size+"/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+fix_name(name);
+    base_dir=dir+"/32/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+roxen->query("default_font");
+    base_dir=dir+"/32/"+roxen->query("default_font");
     if((available = get_dir(base_dir)))
       break;
   }
