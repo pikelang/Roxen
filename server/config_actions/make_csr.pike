@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.4 1997/12/20 00:20:38 grubba Exp $
+ * $Id: make_csr.pike,v 1.5 1998/04/20 04:36:10 nisse Exp $
  */
 
 inherit "wizard";
@@ -174,11 +174,13 @@ mixed page_4(object id, object mc)
     return "<font color=red>Could not read private key: "
       + strerror(file->errno()) + "\n</font>";
 
-  mapping m = SSL.pem.parse_pem(s);
-  if (!m || !m["RSA PRIVATE KEY"])
+  object msg = Tools.PEM.pem_msg()->init(s);
+  object part = msg->parts["RSA PRIVATE KEY"];
+  
+  if (!part)
     return "<font color=red>Key file not formatted properly.\n</font>";
 
-  object rsa = RSA.parse_private_key(m["RSA PRIVATE KEY"]);
+  object rsa = RSA.parse_private_key(part->decoded_body());
   if (!rsa)
     return "<font color=red>Invalid key.\n</font>";
   
@@ -229,7 +231,8 @@ mixed page_4(object id, object mc)
 			     Certificate.build_distinguished_name(@name),
 			     csr_attrs);
 
-  return "<pre>" + SSL.pem.build_pem("CERTIFICATE REQUEST", csr->der())
+  return "<pre>"
+    + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->der())
     +"</pre>";
 }
 
