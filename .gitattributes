@@ -100,6 +100,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/listfonts.pike foreign_ident
 /server/config_actions/locks.pike foreign_ident
 /server/config_actions/make_csr.pike foreign_ident
+/server/config_actions/make_selfsigned_rsa.pike foreign_ident
 /server/config_actions/network_neighborhood.pike foreign_ident
 /server/config_actions/openfiles.pike foreign_ident
 /server/config_actions/openports.pike foreign_ident
