@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.138 2003/06/24 12:55:28 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.139 2003/09/09 15:02:22 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -312,17 +312,36 @@ mixed add_dump_constant( string f, mixed what )
   return what;
 }
 
+#if defined (DUMP_DEBUG_LOG) && !defined (DUMP_DEBUG)
+#define DUMP_DEBUG
+#endif
+
 #ifdef DUMP_DEBUG
-#define DUMP_DEBUG_ENTER(X...) do {werror(X);log->add (sprintf (X));} while (0)
+int dump_debug_indent = 0;
+
+#ifdef DUMP_DEBUG_LOG
+#define DD_MSG(X...) werror (({X}) * "")
+#else
+#define DD_MSG(X...) log->add (X)
+#endif
+
+#define DUMP_DEBUG_ENTER(X...) do {					\
+    DD_MSG ("  " * dump_debug_indent++, sprintf (X));			\
+  } while (0)
+#define DUMP_DEBUG_MSG(X...) do {					\
+    DD_MSG ("  " * dump_debug_indent, sprintf (X));			\
+  } while (0)
 #define DUMP_DEBUG_RETURN(val) do {					\
     mixed _v__ = (val);							\
-    log->add ("  returned ",						\
-	      zero_type (_v__) ? "UNDEFINED" : sprintf ("%O", _v__),	\
-	      "\n");							\
+    DD_MSG ("  " * --dump_debug_indent,					\
+	    "returned ",						\
+	    zero_type (_v__) ? "UNDEFINED" : sprintf ("%O", _v__),	\
+	    "\n");							\
     return _v__;							\
   } while (0)
 #else
 #define DUMP_DEBUG_ENTER(X...) do {} while (0)
+#define DUMP_DEBUG_MSG(X...) do {} while (0)
 #define DUMP_DEBUG_RETURN(val) do return (val); while (0)
 #endif
 
@@ -345,17 +364,17 @@ class MyCodec
     if (prog == resolv(res)) {
       DUMP_DEBUG_RETURN("resolv:" + res);
     }
-    if (res == "master().dirnode") error("Encoding dirnode program");
+    if (res == "master().dirnode") error("Encoding dirnode program.\n");
 #if constant(function_program)
     program parent = function_program(prog);
 #else /* !constant(function_program) */
     object parent_obj = functionp(prog) && function_object(prog);
     program parent = parent_obj && object_program(parent_obj);
 #endif /* constant(function_program) */
-    DUMP_DEBUG_ENTER("  parent:%O\n", parent);
+    DUMP_DEBUG_MSG("parent:%O\n", parent);
     if (parent && (parent != p)) {
       string name = function_name(prog);
-      DUMP_DEBUG_ENTER("  name:%O\n", name);
+      DUMP_DEBUG_MSG("name:%O\n", name);
       if (name) {
 	if (res = all_constants_object_program_rev[parent]) {
 	  res = "efun:" + res + "\0" + name;
@@ -572,13 +591,13 @@ class MyCodec
     error("Cannot encode objects without _encode.\n");
   }
 
-  mixed decode_object(object x, mixed data)
+  void decode_object(object x, mixed data)
   {
-    DUMP_DEBUG_ENTER ("decode_object (%s, %O)\n",
-		      objectp (x) ?
-		      "object " + Program.defined (object_program (x)) :
-		      sprintf ("%O", x),
-		      data);
+    DUMP_DEBUG_MSG ("decode_object (%s, %O)\n",
+		    objectp (x) ?
+		    "object " + Program.defined (object_program (x)) :
+		    sprintf ("%O", x),
+		    data);
     if( x->_decode )
       x->_decode(data);
     else
@@ -616,6 +635,8 @@ void dump_program( string pname, program what )
 #ifdef DUMP_DEBUG
   MyCodec cd;
   int test_decode = 0;
+  int save_dump_debug_indent = dump_debug_indent;
+  dump_debug_indent = 0;
   mixed err;
   if (!(err = catch (data = encode_value( what, (cd = MyCodec( what )) ) )) &&
       !(cd->log->add ("****** Encode ok, testing decode:\n"),
@@ -649,6 +670,7 @@ void dump_program( string pname, program what )
     werror("Error: %s", describe_backtrace(err));
     werror("\n");
   }
+  dump_debug_indent = save_dump_debug_indent;
 #endif
 }
 
