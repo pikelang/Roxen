@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.24 1999/11/29 17:04:46 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.25 1999/12/08 14:13:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,28 +26,27 @@ void create()
 	  "the end of the URL, leaving only a slash." );
 }
 
+constant module_desc="This module defines a the tag &lt;killframe&gt; that "
+  "adds some java script that will prevent others "
+  "from putting your page in a frame. It can "
+  "also strip any occurrences of 'indexfiles' "
+  "from the end of the URL.";
+
+
 mixed register_module()
 {
-  return ({
-    MODULE_PARSER,
-    "Killframe tag",
-    ("Makes pages frameproof."
-     "<br>This module defines a tag,"
-     "<pre>"
-     "&lt;killframe&gt;: Adds some java script that will prevent others\n"
-     "             from putting your page in a frame.\n\n"
-     "             Will also strip any occurrences of 'indexfiles'\n"
-     "             from the end of the URL."
-     "</pre>"
-     ), ({}), 1,
-  });
+  return ({ MODULE_PARSER, "Killframe tag", module_desc, 0, 1 });
 }
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["killframe":"<desc tag>"+module_desc+"</desc>"
+  "<attr name=killindex>Removes trailing index.html from the URL</attr>"]);
+#endif
 
 string tag_killframe( string tag, mapping m, object id )
 {
   NOCACHE();
-
-  if(m->help) return register_module()[2];
 
   if( !id->supports->javascript ) return "";
 
