@@ -5,7 +5,7 @@
  * doc = "Main part of the install script that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.39 1999/05/23 00:04:04 mast Exp $";
+string cvs_version = "$Id: install.pike,v 1.40 1999/05/31 03:14:34 js Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -144,9 +144,9 @@ int getport()
 
 string gets(void|int sp)
 {
-#if efun(readline)
-  return readline("");
-#else
+// #if efun(readline)
+//   return readline("");
+// #else
   string s="", tmp;
   
   while((tmp = stdin -> read(1)))
@@ -174,7 +174,7 @@ string gets(void|int sp)
     default:
       s += tmp;
     }
-#endif
+// #endif
 }
 
 private string get_domain(int|void l)
