@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.54 1998/07/17 11:37:49 grubba Exp $
+# $Id: configure.in,v 1.55 1998/08/12 15:37:18 grubba Exp $
 #
 
 prefix=$PWD
@@ -328,6 +328,7 @@ if test $cflags_is_set = no; then
 
   # HP-UX
   AC_SYS_OS_COMPILER_FLAG(HP-UX,-D__STDC_EXT__,stdc_ext,CFLAGS)
+  AC_SYS_OS_COMPILER_FLAG(HP-UX,+z,plus_z,CFLAGS)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Odataprefetch,plus_Odataprefetch,OPTIMIZE)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Ofailsafe,plus_Ofailsafe,OPTIMIZE)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+O3,plus_O3,OPTIMIZE)
