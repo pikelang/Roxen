@@ -1,4 +1,4 @@
-## $Id: supports,v 1.58 1999/01/07 12:43:30 peter Exp $
+## $Id: supports,v 1.59 1999/01/17 13:49:30 peter Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -47,14 +47,11 @@
 .*               basic, tables, jpeginline, font, imagealign,\
 			cookies, push, pull, backgrounds, ssl,\
 			java, frames, backgrounds, autogunzip,\
-			netscape_javascript, center
+			netscape_javascript
 
-mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java,\
-			-javascript, -netscape_javascript, -center
-mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java,\
-			-javascript, -netscape_javascript, -center
-mozilla/1\..*		-ssl, -frames, -java, -javascript,\
-			-netscape_javascript, -center
+mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript -netscape_javascript
+mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript, -netscape_javascript
+mozilla/1\..*	-ssl, -frames, -java, -javascript, -netscape_javascript
 
 mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline
 mozilla.2.0b[2-9].*	-java
