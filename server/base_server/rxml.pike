@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.193 2000/05/02 16:42:45 kuntri Exp $
+// $Id: rxml.pike,v 1.194 2000/05/10 17:13:14 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1220,13 +1220,15 @@ class TagElseif {
 
   class Frame {
     inherit FrameIf;
+    int last;
     array do_enter(RequestID id) {
-      if(LAST_IF_TRUE) return 0;
+      last=LAST_IF_TRUE;
+      if(last) return 0;
       return ::do_enter(id);
     }
 
     array do_return(RequestID id) {
-      if(LAST_IF_TRUE) return 0;
+      if(last) return 0;
       return ::do_return(id);
     }
 
