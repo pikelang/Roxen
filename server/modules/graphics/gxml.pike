@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.5 2001/04/03 07:29:51 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.6 2001/04/03 09:08:57 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -74,37 +74,80 @@ array(RXML.Tag) gxml_find_builtin_tags(  )
 class GXML##X								\
 {									\
   inherit RXML.Tag;							\
-  constant name = LazyImage.X.operation_name;	  		        \
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;                        \
+  constant name = LazyImage.X.operation_name;				\
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;			\
 									\
   class Frame								\
   {									\
     inherit RXML.Frame;							\
+    array do_enter( RequestID id )					\
+    {									\
+      TMP_PUSH( STACK_POP() );						\
+      STACK_PUSH(0);							\
+    }									\
+									\
     array do_return( RequestID id )					\
     {									\
-      STACK_PUSH(LazyImage.new(LazyImage.X,STACK_POP(), args ) );       \
+      LazyImage.LazyImage i = TMP_POP();				\
+      LazyImage.LazyImage ii = STACK_POP();				\
+      if( ii )								\
+	STACK_PUSH(LazyImage.join_images(i, LazyImage.new(LazyImage.X,	\
+							  ii,args)));	\
+      else								\
+	STACK_PUSH( LazyImage.new(LazyImage.X,i,args) );		\
     }									\
-  }									\
+  }                                                                     \
 }
 
-#define CONTENT_LI( X,Y )   						\
+#define CONTENT_LI( X,Y )						\
 class GXML##X								\
 {									\
   inherit RXML.Tag;							\
-  constant name = LazyImage.X.operation_name;	  		        \
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;                        \
+  constant name = LazyImage.X.operation_name;				\
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;			\
 									\
   class Frame								\
   {									\
     inherit RXML.Frame;							\
+									\
     array do_return( RequestID id )					\
     {									\
-      args->Y = content;                                                \
-      STACK_PUSH( LazyImage.new(LazyImage.X,STACK_POP(), args ) );      \
+      args->Y = content;						\
+      STACK_PUSH(LazyImage.new(LazyImage.X, STACK_POP(),args));		\
     }									\
-  }									\
+  }                                                                     \
 }
 
+
+#define CONTENT_LI_WITH_CI( X,Y,Z )  \
+class GXML##X								\
+{									\
+  inherit RXML.Tag;							\
+  constant name = LazyImage.X.operation_name;				\
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;			\
+									\
+  class Frame								\
+  {									\
+    inherit RXML.Frame;							\
+    array do_enter( RequestID id )					\
+    {									\
+      TMP_PUSH( STACK_POP() );						\
+      STACK_PUSH(0);							\
+    }									\
+									\
+    array do_return( RequestID id )					\
+    {									\
+      LazyImage.LazyImage i = TMP_POP();				\
+      LazyImage.LazyImage ii = STACK_POP();				\
+      args->Y = Z(content);						\
+      if( ii )								\
+	STACK_PUSH(LazyImage.join_images(i, LazyImage.new(LazyImage.X,	\
+							  ii,args)));	\
+      else								\
+	STACK_PUSH( LazyImage.new(LazyImage.X,i,args) );		\
+    }									\
+  }                                                                     \
+}
 
 class GXMLPush
 {
@@ -280,6 +323,22 @@ class GXMLPopReplace
     }
   }
 }
+
+string parse_coordinates( string from )
+{
+  Parser.HTML p = Parser.HTML();
+  string res = "";
+  p->xml_tag_syntax( 2 );
+  p->add_container( "c", lambda(Parser.HTML p, mapping a, string c) {
+			   res += (String.trim_all_whites(a->x)+","+
+				   String.trim_all_whites(a->y)+",");
+			   return c;
+	           } );
+  p->feed( from )->finish();
+  return res[..strlen(res)-2];
+}
+
+CONTENT_LI_WITH_CI(Polygone,coordinates,parse_coordinates);
 
 CONTENT_LI(Text,text);
 
