@@ -1,12 +1,14 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.3 2000/09/04 06:49:34 per Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.4 2000/09/04 07:40:50 per Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
                 "named after the character they will represent. Characters "
                 "with codes larger than 127 or less than 48 are encoded like "
-                "0xHEX where HEX is the code in hexadecimal");
+                "0xHEX where HEX is the code in hexadecimal. There must be a "
+                "file named 'fontname' in the directory, the first line of "
+                "that file is used as the name of the font");
 
 inherit FontHandler;
 

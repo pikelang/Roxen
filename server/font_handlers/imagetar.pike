@@ -1,13 +1,9 @@
 inherit "imagedir" : id;
 
 constant name = "Image TAR-file fonts";
-constant doc = ("Handles a tarfile with images (in almost any format), each "
-                "named after the character they will represent. Characters "
-                "with codes larger than 127 or less than 48 are encoded like "
-                "0xHEX where HEX is the code in hexadecimal. gzipcompressed "
-                "tarfiles are not handled. The images must not be in a "
-                "subdirectory in the tarfile.");
-
+constant doc = ("Just like image directory fonts, but the files should be "
+                "in a tar file. gzipcompressed tarfiles are not handled. "
+                "The files must not be in a subdirectory in the tarfile.");
 
 mapping(string:Filesystem.Tar) tarcache = ([]);
 

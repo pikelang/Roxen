@@ -3,10 +3,10 @@
 
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.4 2000/09/04 06:49:35 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.5 2000/09/04 07:40:51 per Exp $";
 
 constant name = "TTF fonts";
-constant doc = "True Type font loader.";
+constant doc = "True Type font loader. Uses freetype to render text.";
 constant scalable = 1;
 
 inherit FontHandler;
