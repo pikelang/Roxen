@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.13 1999/12/14 01:40:49 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.14 1999/12/14 04:58:19 nilsson Exp $";
 
 array register_module()
 {
@@ -44,6 +44,10 @@ void create() {
 	 "commands with.");
 }
 
+void start(int num, Configuration conf) {
+  module_dependencies (conf, ({ "rxmltags" }));
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["!--#echo":"<desc tag></desc>",
@@ -60,6 +64,13 @@ string trimvar(string var) {
   int s;
   if(s=sizeof(var)>2 && var[s-2..]=="--") var=var[..s-3];
   return var;
+}
+
+function _modified;
+string modified(mapping m, RequestID id) {
+  if(_modified) return _modified("modified", m, id);
+  _modified=id->conf->get_provider("modified")->tag_modified;
+  return _modified("modified", m, id);
 }
 
 string|array(string) tag_echo(string tag, mapping m, RequestID id)
@@ -99,7 +110,8 @@ string|array(string) tag_echo(string tag, mapping m, RequestID id)
     return id->query || "";
 
    case "last_modified":
-     return make_tag("modified", m+(["ssi":1])); //FIXME: Performance
+     m->ssi=1;
+     return modified(m, id);
       
    case "server_software":
     return ({ roxen->version() });
