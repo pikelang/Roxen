@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.325 2002/02/06 20:33:39 mast Exp $
+// $Id: rxml.pike,v 1.326 2002/10/02 23:00:07 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -212,6 +212,8 @@ string parse_rxml(string what, RequestID id,
     defines["_source file"] = file;
   }
 
+  int orig_make_p_code = ctx->make_p_code;
+  ctx->make_p_code = 0;
   mixed err = catch {
     if (ctx == RXML_CONTEXT)
       parser->finish (what);	// Skip the unnecessary work in write_end. DDTAH.
@@ -219,6 +221,7 @@ string parse_rxml(string what, RequestID id,
       parser->write_end (what);
     what = parser->eval();
   };
+  ctx->make_p_code = orig_make_p_code;
 
   if (file) m_delete (defines, "_source file");
   if (orig_state_updated >= 0) {
