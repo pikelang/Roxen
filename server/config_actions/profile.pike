@@ -1,8 +1,10 @@
-// $Id: profile.pike,v 1.2 1998/03/02 18:44:16 grubba Exp $
-#ifdef PROFILE
+// $Id: profile.pike,v 1.3 1998/06/01 13:34:41 grubba Exp $
+#ifndef PROFILE
+constant action_disabled = 1;
+#else /* PROFILE */
 inherit "wizard";
 
-constant name= "Maintenance//Profiling information...";
+constant name = "Maintenance//Profiling information...";
 constant doc = "Show average access time for all pages accessed on your server.";
 constant wizard_name = "Profiling information";
 
@@ -65,4 +67,4 @@ string handle(object id)
 {
   return wizard_for(id,0);
 }
-#endif
+#endif /* PROFILE */
