@@ -30,6 +30,15 @@ tab separated fields in newline separated records (this is the default).<p>
 <dt><b>{fields}</b><tt>[num|text, ...]</tt><b>{/fields}</b><dd>
          This container tag sets the field type for each
          column. Numerical fields will be right aligned and formated.
+<dt><b>nicer</b><dd>
+         Generate ``even nicer'' tables. The first row is the title row.
+	 All arguments from <tt>nice</tt> are available.
+         There are several additional arguments available with <tt>nicer</tt>
+         (see below).
+<dt><b>font</b><dd>What gtext font to use.
+<dt><b>scale</b><dd>What gtext scale to use.
+<dt><b>face</b><dd>What face to use for HTML text.
+<dt><b>size</b><dd>What size to use for HTML text.
 </dl></blockquote>
 
 <h3>Tablify examples</h3>

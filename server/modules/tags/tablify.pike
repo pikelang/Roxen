@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.18 1998/07/01 17:44:58 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.19 1998/07/18 23:01:12 js Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -19,6 +19,7 @@ static private constant old_doc =
    "<p>This module defines a tag, {tablify}<p>Arguments:<br>"
    "help: This help<br>\n"
    "nice: Generate \"nice\" tables. The first row is the title row<br>\n"
+   "nicer: Generate \"even nicer\" tables. The first row is the title row<br>\n"
    "cellseparator=str: Use str as the column-separator<br>\n"
    "rowseparator=str: Use str as the row-separator<br>\n"
    "cellalign=left|right|center: Align the contents of the cells<br>\n"
@@ -45,6 +46,72 @@ void start(int num, object configuration)
 {
   loaded = 1;
 }
+
+string html_nicer_table(array(string) subtitles, array(array(string)) table,
+			mapping|void opt)
+{
+  /* Options:
+   *   bgcolor, titlebgcolor, titlecolor, fgcolor0, fgcolor1, modulo,
+   *   font, scale, face, size
+   * Containers:
+   *   <fields>[num|text, ...]</fields>
+   */
+
+  string r = "";
+
+  if(!opt) opt = ([]);
+  int m = (int)(opt->modulo?opt->modulo:1);
+  r += ("<table bgcolor="+(opt->bgcolor||"#27215b")+" border=0 "
+	"cellspacing=0 cellpadding=1>\n"
+	"<tr><td>\n");
+  r += "<table border=0 cellspacing=0 cellpadding=2>\n";
+  r += "<tr bgcolor="+(opt->titlebgcolor||"#27215b")+">\n";
+  int cols;
+  foreach(subtitles, mixed s)
+    r+=
+      "<td align=left><gtext nfont="+(opt->font||"lucida")+" scale="+
+      (opt->scale||"0.36")+" fg="+(opt->titlecolor||"white")+" bg="+
+      (opt->titlebgcolor||"#27215b")+">"+s+"</gtext></td>";
+  r += "</tr>";
+  
+  for(int i = 0; i < sizeof(table); i++) {
+    string tr;
+    r += tr = "<tr bgcolor="+((i/m)%2?opt->fgcolor1||"#ddeeff":
+			      opt->fgcolor0||"#ffffff")+">";
+    for(int j = 0; j < sizeof(table[i]); j++) {
+      mixed s = table[i][j];
+      if(arrayp(s))
+	r += "</tr>"+tr+"<td colspan="+cols+">"+s[0]+" &nbsp;</td>";
+      else {
+	string type = "text";
+	if(arrayp(opt->fields) && j < sizeof(opt->fields))
+	  type = opt->fields[j];
+	switch(type) {
+	case "num":
+	  array a = s/".";
+	  r += "<td align=right><font size="+(opt->size||"2")+" face=\""+
+	    (opt->face||"helvetica,arial")+"\">";
+	  if(sizeof(a) > 1) {
+	    r += (format_numeric(a[0])+"."+
+		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
+	  } else
+	    r += format_numeric(s, "&nbsp;");
+	  break;
+	case "text":
+	default:
+	  r += "<td><font size="+(opt->size||"2")+" face=\""+
+	    (opt->face||"helvetica,arial")+"\">"+s;
+	}
+	r += "&nbsp;&nbsp;</font></td>";
+      }
+    }
+    r += "</tr>\n";
+  }
+  r += "</table></td></tr>\n";
+  r += "</table><br>\n";
+  return r;
+}
+
 
 /* The meat of the module. Convert the contents of the tag (in 'q') to
  * a table. */
@@ -100,7 +167,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
     td="<td>";
 
   array title;
-  if(m->nice) {
+  if(m->nice||m->nicer) {
     title = rows[0]/sep;
     rows = rows[1..];
   }
@@ -116,6 +183,12 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
     return html_table(title, rows, m + arg_list);
   }
 
+  if(m->nicer)
+  {
+    rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
+    return html_nicer_table(title, rows, m + arg_list);
+  }
+  
   for(i=0; i<sizeof(rows); i++)
     rows[i] = td + (rows[i]/sep) * ("</td>"+td) + "</td>";
 
