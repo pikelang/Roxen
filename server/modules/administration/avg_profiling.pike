@@ -1,5 +1,5 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
-// $Id: avg_profiling.pike,v 1.12 2004/05/22 17:52:28 _cvs_stephen Exp $
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
+// $Id: avg_profiling.pike,v 1.13 2004/05/22 18:11:53 _cvs_stephen Exp $
 
 inherit "module.pike";
 
