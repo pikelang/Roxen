@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.267 2000/09/01 14:10:27 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.268 2000/09/02 21:46:49 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1285,10 +1285,12 @@ int store_error(mixed err)
 	      };
 	  }
 	  else if (stringp(ent[2])) func = ent[2];
-	  else func ="unknown function";
+	  else func ="<unknown function>";
 	if (sizeof (ent) >= 4)
-	  descr = func + "(" + master()->stupid_describe_comma_list (
-	    ent[3..], master()->bt_max_string_len) + ")";
+	  descr = func + "(" + 
+                master()->describe_comma_list( ent[3..], 
+                                               master()->bt_max_string_len) 
+                + ")";
 	else
 	  descr = func + "()";
       }
