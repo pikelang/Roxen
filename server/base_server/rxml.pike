@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.264 2000/12/11 16:07:43 kuntri Exp $
+// $Id: rxml.pike,v 1.265 2000/12/12 03:14:15 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -3037,14 +3037,14 @@ Kibibits.
 </p></desc>
 
 <attr name='values' value='string, mapping or array' required='required'><p>
- An array or the string to be splitted into an array.</p>
+ An array, mapping or a string to be splitted into an array.</p>
 </attr>
 
 <attr name='split' value='string' default='NULL'><p>
  The string the values string is splitted with.</p>
 </attr>
 
-<attr name='form-scope' value='name'><p>
+<attr name='from-scope' value='name'><p>
  Create a mapping out of a scope and give it as indata to the emit.</p>
 </attr>",
 
