@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.53 1997/11/30 06:02:10 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.54 1997/11/30 21:14:19 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -125,10 +125,15 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       {
 	diagram_data["ynames"]=
 	  allocate(sizeof(diagram_data["values_for_ynames"]));
-	
-	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
-	  diagram_data["ynames"][i]=
-	    diagram_eng((float)(diagram_data["values_for_ynames"][i]));
+	array(mixed) v=diagram_data["values_for_ynames"];
+	mixed m=diagram_data["ymaxvalue"];
+	mixed mi=diagram_data["yminvalue"];
+	for(int i=0; i<sizeof(v); i++)
+	  if (abs(v[i]*1000)<max(m, abs(mi)))
+	    diagram_data["ynames"][i]="0";
+	  else	
+	    diagram_data["ynames"][i]=
+	      diagram_eng((float)(v[i]));
       }
     else
       {
@@ -552,17 +557,37 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
       (diagram_data["ymaxvalue"]>=-LITET))
-      barsdiagram->
-	polygone(make_polygon_from_line(diagram_data["linewidth"], 
-					({
-					  xpos_for_yaxis,
-					  diagram_data["ysize"]-diagram_data["linewidth"],
-					  
-					  xpos_for_yaxis,
-					  si+
-					  diagram_data["labelsize"]
-					}), 
-					1, 1)[0]);
+    {
+      if  ((diagram_data["yminvalue"]<=LITET)&&
+	   (diagram_data["yminvalue"]>=-LITET)) 
+	barsdiagram->
+	  polygone(make_polygon_from_line(diagram_data["linewidth"], 
+					  ({
+					    xpos_for_yaxis,
+					    diagram_data["ysize"]-
+					    ypos_for_xaxis,
+					    //					  diagram_data["ysize"]-diagram_data["linewidth"],
+					    
+					    xpos_for_yaxis,
+					    si+
+					    diagram_data["labelsize"]
+					  }), 
+					  1, 1)[0]);
+      else
+	barsdiagram->
+	  polygone(make_polygon_from_line(diagram_data["linewidth"], 
+					  ({
+					    xpos_for_yaxis,
+					    diagram_data["ysize"]-
+					    diagram_data["linewidth"],
+					    
+					    xpos_for_yaxis,
+					    si+
+					    diagram_data["labelsize"]
+					  }), 
+					  1, 1)[0]);
+	
+    }
   else
     if (diagram_data["ymaxvalue"]<-LITET)
       {
