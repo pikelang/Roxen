@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.24 1999/02/03 22:36:17 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.25 1999/02/04 18:59:59 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -106,39 +106,39 @@ class imap_mail
     }
 
   object make_bodystructure(MIME.Message msg, int extension_data)
-    {
-      array a;
+  {
+    array a;
       
-      if (msg->body_parts)
-      {
-	a = Array.map(msg->body_parts, make_bodystructure, extension_data)
-	  + ({ msg->subtype });
-	if (extension_data)
-	  a += ({ mapping_to_list(msg->params),
-		  // FIXME: Disposition header described in rfc 1806,
-		  // FIXME: Language tag (rfc 1766).
-	  });
-      } else {
-	string data = msg->getdata();
-	
-	a = ({ msg->type, msg->subtype,
-		     mapping_to_list(msg->params),
-		     // FIXME: Content id (rfc 2045)
-		     // FIXME: Body description
+    if (msg->body_parts)
+    {
+      a = Array.map(msg->body_parts, make_bodystructure, extension_data)
+	+ ({ msg->subtype });
+      if (extension_data)
+	a += ({ mapping_to_list(msg->params),
+		// FIXME: Disposition header described in rfc 1806,
+		// FIXME: Language tag (rfc 1766).
+	});
+    } else {
+      string data = msg->getdata() || "";
 
-		     // NOTE: The MIME module decodes any transfer encoding
-		     "binary",  // msg->transfer_encoding, 
-		     imap_number(strlen(data)) });
+      a = ({ msg->type, msg->subtype,
+	     mapping_to_list(msg->params),
+	     // FIXME: Content id (rfc 2045)
+	     // FIXME: Body description
+	       
+	     // NOTE: The MIME module decodes any transfer encoding
+	     "binary",  // msg->transfer_encoding, 
+	     imap_number(strlen(data)) });
 	
-	// FIXME: Type specific fields, for text/* and message/rfc822 messages
-	if (extension_data)
-	  a += ({ Crypto.md5()->update(data)->digest(),
-		  // Disposition,
-		  // Language
-		  });
-      }
-      return imap_list(a);
+      // FIXME: Type specific fields, for text/* and message/rfc822 messages
+      if (extension_data)
+	a += ({ Crypto.md5()->update(data)->digest(),
+		// Disposition,
+		// Language
+	});
     }
+    return imap_list(a);
+  }
 				 
   object|string string_to_imap(string s)
     {
@@ -440,7 +440,7 @@ class imap_mail
     }
     case "bodystructure": 
       return response(make_bodystructure
-		      (MIME.Message(mail->getdata(), 0, 0, 1),
+		      (mail /* MIME.Message(mail->getdata(), 0, 0, 1) */,
 		       !attr->no_extention_data));
 
     case "envelope": 
