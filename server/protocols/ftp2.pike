@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.4 1998/04/03 21:40:54 grubba Exp $
+ * $Id: ftp2.pike,v 1.5 1998/04/04 19:37:46 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -16,49 +16,62 @@
 /*
  * Relevant RFC's:
  *
- * RFC 764      TELNET PROTOCOL SPECIFICATION
- * RFC 949	FTP unique-named store command
- * RFC 959      FILE TRANSFER PROTOCOL (FTP)
- * RFC 1123     Requirements for Internet Hosts -- Application and Support
- * RFC 1415	FTP-FTAM Gateway Specification
+ * RFC 764	TELNET PROTOCOL SPECIFICATION
+ * RFC 765	FILE TRANSFER PROTOCOL
+ * RFC 959	FILE TRANSFER PROTOCOL (FTP)
+ * RFC 1123	Requirements for Internet Hosts -- Application and Support
  * RFC 1579	Firewall-Friendly FTP
  * RFC 1635	How to Use Anonymous FTP
+ *
+ * RFC's describing extra commands:
+ *
+ * RFC 683	FTPSRV - Tenex extension for paged files
+ * RFC 737	FTP Extension: XSEN
+ * RFC 743	FTP extension: XRSQ/XRCP
+ * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
+ * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
+ *
+ * RFC's with recomendations and discussions:
+ *
+ * RFC 607	Comments on the File Transfer Protocol
+ * RFC 614	Response to RFC 607, "Comments on the File Transfer Protocol"
+ * RFC 624	Comments on the File Transfer Protocol
+ * RFC 640	Revised FTP Reply Codes
+ * RFC 691	One More Try on the FTP
+ * RFC 724	Proposed Official Standard for the
+ * 		Format of ARPA Network Messages
+ *
+ * RFC's describing gateways and proxies:
+ *
+ * RFC 1415	FTP-FTAM Gateway Specification
  *
  * More or less obsolete RFC's:
  *
- * RFC 412	User FTP documentation
- * RFC 438	FTP server-server interaction
- * RFC 448	Print files in FTP
- * RFC 458	Mail retrieval via FTP
- * RFC 463	FTP comments and response to RFC 430
- * RFC 468	FTP data compression
- * RFC 475	FTP and network mail system
- * RFC 478	FTP server-server interaction - II
- * RFC 479	Use of FTP by the NIC Journal
- * RFC 480	Host-dependent FTP parameters
- * RFC 506	FTP command naming problem
- * RFC 520	Memo to FTP group: Proposal for File Access Protocol
- * RFC 532	UCSD-CC Server-FTP facility
- * RFC 542      File Transfer Protocol for the ARPA Network
- * RFC 561      Standardizing Network Mail Headers
- * RFC 571	Tenex FTP problem
- * RFC 607      Comments on the File Transfer Protocol
- * RFC 614      Response to RFC 607, "Comments on the File Transfer Protocol"
- * RFC 624	Comments on the File Transfer Protocol
- * RFC 630	FTP error code usage for more reliable mail service
- * RFC 640      Revised FTP Reply Codes
- * RFC 683	FTPSRV - Tenex extension for paged files
- * RFC 691      One More Try on the FTP
- * RFC 697	CWD Command of FTP
- * RFC 724      Proposed Official Standard for the
- *              Format of ARPA Network Messages
- * RFC 737      FTP Extension: XSEN
- * RFC 743      FTP extension: XRSQ/XRCP
- * RFC 751      SURVEY OF FTP MAIL AND MLFL
- * RFC 754      Out-of-Net Host Addresses for Mail
- * RFC 765      FILE TRANSFER PROTOCOL
- * RFC 775      DIRECTORY ORIENTED FTP COMMANDS
+ * *RFC 412	User FTP documentation
+ * *RFC 438	FTP server-server interaction
+ * *RFC 448	Print files in FTP
+ * *RFC 458	Mail retrieval via FTP
+ * *RFC 463	FTP comments and response to RFC 430
+ * *RFC 468	FTP data compression
+ * *RFC 475	FTP and network mail system
+ * *RFC 478	FTP server-server interaction - II
+ * *RFC 479	Use of FTP by the NIC Journal
+ * *RFC 480	Host-dependent FTP parameters
+ * *RFC 505	Two solutions to a file transfer access problem
+ * *RFC 506	FTP command naming problem
+ * *RFC 520	Memo to FTP group: Proposal for File Access Protocol
+ * *RFC 532	UCSD-CC Server-FTP facility
+ * RFC 542	File Transfer Protocol for the ARPA Network
+ * RFC 561	Standardizing Network Mail Headers
+ * *RFC 571	Tenex FTP problem
+ * *RFC 630	FTP error code usage for more reliable mail service
+ * *RFC 686	Leaving well enough alone
+ * *RFC 697	CWD Command of FTP
+ * RFC 751	SURVEY OF FTP MAIL AND MLFL
+ * RFC 754	Out-of-Net Host Addresses for Mail
+ *
+ * (RFC's marked with * are not available from http://www.roxen.com/rfc/)
  */
 
 
@@ -1072,6 +1085,11 @@ class FTPSession
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
     "NOOP":"(No operation)",
 
+    // These are in RFC 542
+    "BYE":"(Logout)",
+    "BYTE":"<sp> <bits> (Byte size)",
+    "SOCK":"<sp> host-socket (Data socket)",
+
     // Old "Experimental commands"
     // These are in RFC 775
     // Required by RFC 1123 4.1.3.1
@@ -1104,6 +1122,10 @@ class FTPSession
     // These are in RFC 743
     "XRSQ":"[<sp> <scheme>] (Scheme selection)",
     "XRCP":"<sp> <recipient name> (Recipient specification)",
+
+    // These are in RFC 1639
+    "LPRT":"<SP> <long-host-port> (Long port)",
+    "LPSV":"(Long passive)",
   ]);
 
   static private constant site_help = ([
@@ -2090,6 +2112,11 @@ class FTPSession
     logged_in = 0;
   }
 
+  void ftp_BYE(string args)
+  {
+    ftp_QUIT(args);
+  }
+
   void ftp_PORT(string args)
   {
     int a, b, c, d, e, f;
@@ -2539,10 +2566,19 @@ class FTPSession
   }
 };
 
+void destroy()
+{
+  conf->extra_statistics->ftp->sessions--;
+}
 
 void create(object f, object c)
 {
   if (f) {
+    if (!conf->extra_statistics->ftp) {
+      conf->extra_statistics->ftp = ([ "sessions":1 ]);
+    } else {
+      conf->extra_statistics->ftp->sessions++;
+    }
     FTPSession(f, c);
   }
 }
