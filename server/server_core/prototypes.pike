@@ -1,11 +1,17 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.68 2004/04/04 15:12:54 mani Exp $
+// $Id: prototypes.pike,v 1.69 2004/05/17 00:30:46 mani Exp $
 
 #include <stat.h>
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
+
+multiset(string) globals = (<
+  "Protocol", "Configuration", "StringFile", "RequestID",
+  "RoxenModule", "ModuleInfo", "ModuleCopies", "FakedVariables",
+  "AuthModule", "UserDB", "User", "Group",
+  >);
 
 class Variable
 {
@@ -65,6 +71,7 @@ class BasicDefvar
   void definvisvar(string name, mixed value, int type, array|void misc);
 }
 
+// FIXME: Replace with Stdio.FakeFile
 class StringFile( string data, mixed|void _st )
 {
   int offset;
