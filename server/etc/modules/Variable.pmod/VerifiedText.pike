@@ -1,4 +1,8 @@
 //! A text class with multiple customized verifications.
+//!
+//! $Id: VerifiedText.pike,v 1.3 2002/10/28 15:57:16 mast Exp $
+
+#include <module.h>
 
 inherit Variable.VerifiedString;
 
@@ -21,5 +25,9 @@ string render_form( RequestID id, void|mapping args ) {
     else render+="'"+replace(args[attr], "'", "&#39;")+"'";
   }
 
-  return render+">"+ Roxen.html_encode_string ((string)query()) +"</textarea>";
+  return render+">"+
+    (!RXML_CONTEXT || RXML_CONTEXT->id->conf->compat_level() > 2.4 ?
+     Roxen.html_encode_string ((string) query()) :
+     (string) query()) +
+    "</textarea>";
 }
