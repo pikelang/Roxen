@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.2 1999/10/18 16:50:08 grubba Exp $
+ * $Id: smtprelay.pike,v 2.3 1999/10/21 14:19:10 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.2 1999/10/18 16:50:08 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.3 1999/10/21 14:19:10 grubba Exp $";
 
 /*
  * Some globals
@@ -237,6 +237,7 @@ class SMTP_Reader
   /* ({ ({ "code", ({ "line 1", "line 2" }) }) }) */
   static array(array(string|array(string))) codes = ({});
 
+  /* ({ "line1", "line2" }) */
   static array(string) partial = ({});
 
   static void reset()
@@ -277,13 +278,13 @@ class SMTP_Reader
       int i;
       for(i=0; i < sizeof(arr)-1; i++) {
 	if ((sizeof(arr[i]) < 3) ||
-	    ((sizeof(arr) > 3) && (arr[i][3] == '-'))) {
+	    ((sizeof(arr[i]) > 3) && (arr[i][3] == '-'))) {
 	  // Broken code, or continuation line.
-	  if (sizeof(arr) > 4) {
-	    partial += ({ arr[4..] });
+	  if (sizeof(arr[i]) > 4) {
+	    partial += ({ arr[i][4..] });
 	  }
 	} else {
-	  codes += ({ ({ arr[i][..2], partial + ({ arr[4..] }) }) });
+	  codes += ({ ({ arr[i][..2], partial + ({ arr[i][4..] }) }) });
 	  partial = ({});
 	}
       }
