@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.61 2002/12/01 23:38:05 mani Exp $
+// $Id: DBManager.pmod,v 1.62 2003/01/23 17:36:35 mani Exp $
 
 //! Manages database aliases and permissions
 
@@ -292,13 +292,16 @@ array(string) list( void|Configuration c )
 
 mapping(string:mapping(string:int)) get_permission_map( )
 //! Get a list of all permissions for all databases.
-//! Return format:
-//! ([
-//!  "dbname":([ "configname":level, ... ])
-//!   ...
-//!  ])
 //!
-//! Level is as for @[set_permission()].
+//! @returns
+//!   Return format:
+//!   	@mapping
+//!   	  @member mapping(string:int) dbname
+//!   	    @mapping
+//!   	      @member int configname
+//!   		Access level same as for @[set_permission()] et al.
+//!   	    @endmapping
+//!   	@endmapping
 {
   mapping(string:mapping(string:int)) res = ([]);
 
@@ -377,6 +380,7 @@ array(string) db_tables( string name )
 //! the list.
 {
   object db = get(name);
+  if (!db) return ({});
   array(string) res;
   if( db->list_tables )
   {
@@ -672,15 +676,34 @@ void delete_backup( string dbname, string directory )
 array(string|array(mapping)) backup( string dbname, string directory )
 //! Make a backup of all data in the specified database.
 //! If a directory is not specified, one will be created in $VARDIR.
-//! The return value is ({ "name of the directory", result }).
 //!
-//! The format of result is:
-//!  ({([ "Table":tablename,
-//!      "Msg_type":one of "status" "error" "info" or "warnign",
-//!      "Msg_text":"The message"
-//!  ])})
+//! @returns
+//!   Returns an array with the following structure:
+//!   @array
+//!   	@elem string directory
+//!   	  Name of the directory.
+//!   	@elem array(mapping(string:string)) db_info
+//!   	@array
+//!   	  @elem mapping(string:string) table_info
+//!   	    @mapping
+//!   	      @member string "Table"
+//!   		Table name.
+//!   	      @member string "Msg_type"
+//!   		one of:
+//!   		@string
+//!   		  @value "status"
+//!   		  @value "error"
+//!   		  @value "info"
+//!   		  @value "warning"
+//!   		@endstring
+//!   	      @member string "Msg_text"
+//!   		The message.
+//!   	    @endmapping
+//!   	@endarray
+//!   @endarray
 //!
-//! Currently this function only works for internal databases.
+//! @note
+//!   Currently this function only works for internal databases.
 {
   Sql.Sql db = cached_get( dbname );
 
