@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.591 2000/12/20 16:31:05 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.592 2000/12/30 05:19:32 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -55,6 +55,70 @@ inherit "config_userdb";
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
 static function sol = master()->set_on_load;
 
+string query_mysql_dir()
+{
+  // FIXME: Should be configurable.
+  return combine_path( __FILE__, "../../mysql/" );
+}
+
+Sql.sql connect_to_my_mysql( int ro, string db )
+{
+  string mysql_socket = combine_path( getcwd(),
+                                      query_configuration_dir()+
+                                      "_mysql/socket");
+  if( ro )
+    return Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db );
+  return Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db );
+}
+
+void start_mysql()
+{
+  int st = gethrtime();
+  report_notice( "Starting mysql ... ");
+  if( !catch( connect_to_my_mysql( 0, "mysql" ) ) )
+  {
+    report_notice("Done [%.1fms]\n", (gethrtime()-st)/1000.0);
+    return;
+  }
+
+  string mysqldir = combine_path( getcwd(),
+                                  query_configuration_dir()+"_mysql");
+  if( !file_stat( mysqldir+"/mysql/user.MYD" ) )
+  {
+    report_debug("Mysql data directory does not exist -- copying template\n");
+    mkdir( mysqldir+"/mysql" );
+    object tar = Filesystem.Tar( "etc/mysql-template.tar" );
+    foreach( tar->get_dir( "mysql" ), string f )
+    {
+      report_debug("copying "+f+" ... ");
+      Stdio.File to = Stdio.File( mysqldir+f, "wct" );
+      Stdio.File from = tar->open( f, "r" );
+      to->write( from->read() );
+      report_debug("\n");
+    }
+  }
+  object p = 
+  Process.create_process( ({"bin/start_mysql",
+                            mysqldir,
+                            query_mysql_dir() }) );
+  string mysql_socket = mysqldir+"/socket";
+  int repeat;
+  while( 1 )
+  {
+    sleep( 0.2 );
+    if( repeat++ > 100 )
+    {
+//       werror("%O", p->status() );
+      report_fatal("\nFailed to start mysql. Aborting\n");
+      exit(1);
+    }
+    if( !catch( connect_to_my_mysql( 0, "mysql" ) ) )
+    {
+      report_notice("Done [%.1fms]\n", (gethrtime()-st)/1000.0);
+      return;
+    }
+  }
+}
 
 string query_configuration_dir()
 {
@@ -3125,13 +3189,18 @@ int main(int argc, array tmp)
 
   set_locale();
 
+  start_mysql();
+
 #if efun(syslog)
   init_logger();
 #endif
   init_garber();
+
   initiate_supports();
   initiate_argcache();
   init_configuserdb();
+
+
 
   protocols = build_protocols_mapping();  
   enable_configurations();

@@ -1,0 +1,61 @@
+#!/bin/sh
+
+datadir="$1" # Supplied from roxen.
+basedir="$2"
+bindir="$basedir/libexec/"
+shift;shift
+. bin/functions
+
+if [ ! -f $bindir/mysqld ] ; then
+  dp "No Mysql in '$bindir'"
+  dp "Aborting."
+  exit 1
+fi
+
+pid_file=$datadir/mysql_pid
+log=$datadir/log
+err_log=$datadir/error_log
+
+if test -f $pid_file; then
+  PID=`cat $pid_file`
+  if /usr/bin/kill -0 $PID ; then
+    dp "A mysqld process already exists as pid $PID"
+    exit 0
+  fi
+  rm -f $pid_file
+  if test -f $pid_file;  then
+    dp "Error: Cannot remove $pid_file"
+    dp "Please remove it manually and restart roxen"
+    exit 1
+  fi
+fi
+
+
+# dp "Starting mysql with databases from $datadir"
+MYSQL_UNIX_PORT="$datadir/socket"
+export MYSQL_UNIX_PORT    
+
+raise_limit -silent
+
+echo "Restart at `date`" >> $err_log
+
+# Max packet set to 225Mb or so. 
+# Should hopefully be enough...
+args="--set-variable max_allowed_packet=229496729 --set-variable net_buffer_length=65536 --basedir=$basedir/ --datadir=$datadir $@ --pid-file=$pid_file"
+
+my_cp() {
+  ln "$1" "$2" 2>/dev/null \
+  || (cp "$1" "$2" && chmod a+x $2) 2>/dev/null
+}
+
+rm -f "bin/roxen_mysql"
+
+my_cp $bindir/mysqld bin/roxen_mysql
+
+if [ -f  bin/roxen_mysql ] ; then 
+  bin/roxen_mysql $args >$err_log 2>&1 &
+else
+ $bindir/mysqld $args >$err_log 2>&1 &
+fi
+
+exit 0
