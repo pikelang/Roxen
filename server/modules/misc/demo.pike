@@ -1,9 +1,9 @@
-// This is a Roxen module. Copyright © 1998 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1998 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: demo.pike,v 1.21 2004/06/05 15:19:47 _cvs_dirix Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.22 2004/06/05 17:59:48 _cvs_stephen Exp $";
 
 void create()
 {
