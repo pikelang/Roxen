@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.12 1997/09/14 17:32:34 grubba Exp $
+ * $Id: Server.pike,v 1.13 1997/11/02 12:44:11 noring Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -281,6 +281,7 @@ int low_got_connection(object c)
     connections += ({ con = Connection( c, this_object() ) });
   else {
     catch(destruct(c));
+    return 0;
   }
   if(pass_key)
   {
@@ -324,7 +325,7 @@ void got_connection(object on)
     c->write("=");
   else
   {
-    werror("Got refused connection from "+addr+"\n");
+    // werror("Got refused connection from "+addr+"\n");
   }
 }
 
