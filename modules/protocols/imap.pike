@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.45 1999/02/09 21:04:12 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.46 1999/02/09 21:10:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -732,7 +732,10 @@ class imap_mailbox
 					     return contents[i-1]->
 					       fetch_attr(attr);
 					   },
-					   i) * ({}))
+					   i) * ({}) + ({
+					     "UID",
+					     imap_number(contents[i-1]->uid)
+					   }) )
 		    });
 		  },
 		  attrs);
