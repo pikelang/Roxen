@@ -28,6 +28,8 @@
 #define TYPE_MODULE_LIST     18 /* NYI */
 #define TYPE_MULTIPLE_MODULE 18 /* NYI */
 
+#define TYPE_FONT            19
+
 
 /* Variable indexes */
 #define VAR_VALUE           0

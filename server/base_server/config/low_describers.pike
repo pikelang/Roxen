@@ -15,6 +15,9 @@ string describe_type(int type, mixed flag)
    case TYPE_TEXT_FIELD:
     return "";
 
+   case TYPE_FONT:
+    return "(Existing font)";
+
    case TYPE_STRING:
     return "";
 
@@ -125,6 +128,9 @@ string describe_variable_as_text(array var, int|void verbose)
     object m;
     string name;
     array tmp;
+   case TYPE_FONT:
+    return var[VAR_VALUE];
+    
    case TYPE_MODULE_LIST:
     tmp=({});
     foreach(var[VAR_VALUE], m)
@@ -388,6 +394,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
     res = encode_ports(var[VAR_VALUE]);
     break;
 
+    
    case TYPE_TEXT_FIELD:
     res="<textarea name="+path+" cols=50 rows=10>"
       + html_encode(var[VAR_VALUE])
@@ -398,6 +405,29 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
     res="<input name=\""+path+"\" type=password size=30,1><input type=submit value=Ok>";
     break;
     
+
+   case TYPE_FONT:
+    array select_from;
+    catch {
+      select_from=get_dir(roxen->QUERY(font_dir)+"32");
+    };
+    if(!select_from) 
+      break;
+    sort(select_from);
+    
+    res="<select name="+path+">  ";
+    array a;
+    foreach(select_from, string f)
+    {
+      if((a=file_stat(roxen->QUERY(font_dir)+"32/"+f)) && (a[1]==-2))
+      {
+	f = replace(f, "_", " ");
+	res += "<option"+(f == var[VAR_VALUE]?" selected>":">")+f+"\n";
+      }
+    }
+    res += "</select><input type=submit value=Ok>";
+    break;
+
    case TYPE_STRING:
     res=input(path, var[VAR_VALUE], 30)+"<input type=submit value=Ok>";
     break;

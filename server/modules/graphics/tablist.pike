@@ -1,18 +1,24 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.2 1996/12/10 05:39:33 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.3 1997/03/11 01:19:35 per Exp $";
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
+
+import Array;
+import Image;
+
+constant Image = image;
+constant Font = image;
 
 #define DEFAULT_FONT "16/utopia_medium_r"
 #define DEFAULT_PATH "fonts/"
 
 #define DEBUG_TABLIST 0
 
-string *from=map_array(indices(allocate(256)),lambda(int l) { return sprintf("%c",l); });
-string *to=map_array(indices(allocate(256)),lambda(int l) {
+string *from=map(indices(allocate(256)),lambda(int l) { return sprintf("%c",l); });
+string *to=map(indices(allocate(256)),lambda(int l) {
   switch(l)
   {
     case 0: return "-";
@@ -51,15 +57,15 @@ void draw_bg(object img, array (int) bg, array (int) tc)
   img->tuned_box(0, 0, img->xsize()-1, 7, ({
 		 ({ @bg }),
 		 ({ @bg }),
-		 ({ @map_array(tc, `/, 7) }),
-		 ({ @map_array(tc, `/, 7) }) }) );
+		 ({ @map(tc, `/, 7) }),
+		 ({ @map(tc, `/, 7) }) }) );
   img->line(0, 8, img->xsize()-1, 8, 0,0,0);
   img->box(0, 9, img->xsize()-1, img->ysize()-12, @tc);
   img->tuned_box(0, img->ysize()-11, img->xsize()-1, img->ysize()-1, ({
                  ({ @tc }),
 		 ({ @tc }),
-		 ({ @map_array(bg, `/, 3) }),
-		 ({ @map_array(bg, `/, 3) }) }) );
+		 ({ @map(bg, `/, 3) }),
+		 ({ @map(bg, `/, 3) }) }) );
   img->line(0, img->ysize()-1, img->xsize()-1, img->ysize()-1, 0,0,0);
 }
 

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.37 1997/03/01 13:03:14 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.38 1997/03/11 01:19:34 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -118,16 +118,11 @@ void create()
 	 "The default number of colors to use. 16 seems to be enough. "
 	 "The size of the image depends on the number of colors",
 	 ({ 1,2,3,4,5,6,7,8,10,16,32,64,128,256 }));
-  
-  defvar("default_size", 32, "Default font size", TYPE_INT_LIST,
-	 "The default size for the font. This is used for the 'base' size, "
-	 "and can be scaled up or down in the tags.",
-	 ({ 16, 32, 64 }));
 
-  defvar("default_font", "urw_itc_avant_garde-demi-r", "Default font",
-	 TYPE_STRING_LIST,
-	 "The default font. The 'font dir' will be prepended to the path",
-	 list_fonts());
+
+  // compatibility variables...
+  defvar("default_size", 32, 0, TYPE_INT,0,0,1);
+  defvar("default_font", "urw_itc_avant_garde-demi-r",0,TYPE_STRING,0,0,1);
 }
 
 string query_location() { return query("location"); }
@@ -556,13 +551,25 @@ array(int)|string write_text(int _args, string text, int size,
   //  Nothing found in the cache. Generate a new image.
 
 
-
-  string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-  data = cache_lookup("fonts", fkey);
-  if(!data)
-  { 
-    data = load_font(args->font, lower_case(args->talign||"left"),(int)args->xpad,(int)args->ypad);
-    cache_set("fonts", fkey, data);
+  if(args->nfont)
+  {
+    int bold, italic;
+    if(args->bold) bold=1;
+    if(args->light) bold=-1;
+    if(args->italic) italic=1;
+    if(args->black) bold=2;
+    data = get_font(args->nfont,(int)args->font_size,bold,italic,
+		    lower_case(args->talign||"left"),
+		    (float)(int)args->xpad, (float)(int)args->ypad);
+  } else {
+    string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
+    data = cache_lookup("fonts", fkey);
+    if(!data)
+    { 
+      data = load_font(args->font, lower_case(args->talign||"left"),
+		       (int)args->xpad,(int)args->ypad);
+      cache_set("fonts", fkey, data);
+    }
   }
 
   // Fonts and such are now initialized.

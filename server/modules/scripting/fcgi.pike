@@ -3,9 +3,11 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.6 1996/12/10 03:04:42 neotron Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.7 1997/03/11 01:19:44 per Exp $";
 #include <module.h>
 inherit "modules/scripting/cgi";
+
+import Stdio;
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
@@ -36,7 +38,7 @@ void create()
 
 mixed *register_module()
 {
-  if(file_size("bin/fcgi") > 0)
+  if(file_stat("bin/fcgi"))
     return ({ 
       MODULE_FIRST | MODULE_LOCATION | MODULE_FILE_EXTENSION,
 	"Fast-CGI executable support", 
@@ -77,7 +79,8 @@ mixed find_file(string f, object id)
     array tmp2;
     tmp2 = ::extract_path_info(f);
     if(!tmp2) {
-      if(file_size( path + f ) == -2)
+      array st2;
+      if((st2=file_stat( path + f )) && (st2[1]==-2))
 	return -1; // It's a directory...
       return 0;
     }
@@ -90,7 +93,7 @@ mixed find_file(string f, object id)
   perror("FCGI: Starting '"+f+"'...\n");
 #endif
     
-  pipe1=File();
+  pipe1=files.file();
   pipe2=pipe1->pipe();
     
   array (int) uid;

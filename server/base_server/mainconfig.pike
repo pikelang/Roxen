@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.34 1997/02/22 22:28:57 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.35 1997/03/11 01:19:22 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -292,8 +292,10 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
    case TYPE_DIR_LIST:
     array foo;
+    array st;
     foo=map((var-" ")/",", lambda(string var, object node) {
-      if (!strlen( var ) || file_stat( var )[1] != -2)
+      array st;
+      if (!strlen( var ) || !(st = file_stat( var )) || (st[1] != -2))
       {
 	if(node->error)	
 	  node->error += ", " +var + " is not a directory";
@@ -311,7 +313,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return foo;
     
    case TYPE_DIR:
-    if (!strlen( var ) || file_stat( var )[1] != -2)
+    if (!strlen( var ) || !(st = file_stat( var )) || (st[1] != -2))
     {
       node->error = var + " is not a directory";
       return 0;
@@ -322,6 +324,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     
    case TYPE_TEXT_FIELD:
     var -= "\r";
+   case TYPE_FONT:
    case TYPE_STRING:
    case TYPE_FILE:
    case TYPE_LOCATION:
@@ -504,11 +507,11 @@ string new_module_form(object id, object node)
   
   if(!roxen->allmodules || sizeof(id->pragma))
   {
-   perror("CONFIG: Rescanning modules.\n");
-   roxen->current_configuration = node->config();
-   roxen->rescan_modules();
-   roxen->current_configuration = 0;
-   perror("CONFIG: Done.\n");
+    werror("CONFIG: Rescanning modules.\n");
+    roxen->current_configuration = node->config();
+    roxen->rescan_modules();
+    roxen->current_configuration = 0;
+    werror("CONFIG: Done.\n");
   }
   
   a=roxen->allmodules;

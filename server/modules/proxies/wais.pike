@@ -4,7 +4,9 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.5 1996/12/02 04:32:45 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.6 1997/03/11 01:19:41 per Exp $";
+import spider;
+
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://roxen.com/>Roxen</a></font>"
@@ -262,7 +264,7 @@ inherit "socket";
 inherit "roxenlib";
 
 #include <module.h>
-#include "base_server/proxyauth.pike"
+#include "../../base_server/proxyauth.pike"
 
 
 
@@ -902,21 +904,21 @@ void my_pipe_done(array (object) a)
 void write_to_client_and_cache(object client, string data, string key)
 {
   object cache;
-  object pipe;
+  object pip;
   if(query("cache"))
     if(key)
       cache = roxen->create_cache_file("wais", key);
 
-  pipe=Pipe( );
+  pip=Pipe.pipe( );
   if(cache)
   {
-    pipe->set_done_callback(my_pipe_done, ({ cache, client }));
-    pipe->output(cache->file);
+    pip->set_done_callback(my_pipe_done, ({ cache, client }));
+    pip->output(cache->file);
   }
   if(client->my_fd)
   {
-    pipe->output(client->my_fd);
-    pipe->write(data);
+    pip->output(client->my_fd);
+    pip->write(data);
   }
 }
 

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.22 1997/02/13 13:01:13 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.23 1997/03/11 01:19:46 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -27,7 +27,8 @@ inherit "roxenlib";
 function language = roxen->language;
 
 int cnum=0;
-mapping fton=([]), tag_callers, container_callers;
+mapping fton=([]);
+array (mapping) tag_callers, container_callers;
 int bytes;
 array (object) parse_modules = ({ });
 
@@ -314,13 +315,24 @@ mapping handle_file_extension( object file, string e, object id)
   {
     return 0; // To large for me..
   }
-  
-  if(err=catch(to_parse=parse_html(file->read(QUERY(max_parse)*1024), 
-				   tag_callers, container_callers, id, 
-				   file, defines, id->my_fd)))
+
+  to_parse = file->read(0x7fffffff);
+
+  for(int i = 0; i<sizeof(tag_callers); i++)
   {
-    destruct(file);
-    throw(err);
+#ifdef PARSE_DEBUG
+    werror("Parse pass "+i+"\n");
+    werror(sprintf("Tags: %s\nContainers:%s\n",
+		   indices(tag_callers[i])*", ",
+		   indices(container_callers[i])*", "));
+#endif
+    if(err=catch(to_parse=parse_html(to_parse, tag_callers[i],
+				     container_callers[i],
+				     id, file, defines, id->my_fd)))
+    {
+      destruct(file);
+      throw(err);
+    }
   }
 
 //  if(id->misc->is_redirected)
@@ -342,25 +354,50 @@ mapping handle_file_extension( object file, string e, object id)
 }
 
 /* parsing modules */
+void insert_in_map_list(mapping to_insert, string map_in_object)
+{
+  array (mapping) in = this_object()[map_in_object];
+
+  foreach(indices(to_insert), string s)
+  {
+    for(int i=0; i<sizeof(in); i++)
+      if(!in[i][s])
+      {
+	in[i][s] = to_insert[s];
+	break;
+      }
+    if(i==sizeof(in))
+    {
+      in += ({ ([]) });
+      if(map_in_object == "tag_callers")
+	container_callers += ({ ([]) });
+      else
+	tag_callers += ({ ([]) });
+      in[i][s] = to_insert[s];
+    }
+  }
+  this_object()[map_in_object]=in;
+}
+
 void build_callers()
 {
    object o;
-   tag_callers=([]);
-   container_callers=([]);
+   tag_callers=({ ([]) });
+   container_callers=({ ([]) });
    parse_modules-=({0});
-   foreach (parse_modules,o) 
+
+   foreach (parse_modules,o)
    {
      mapping foo;
      if(o->query_tag_callers)
        foo=o->query_tag_callers();
-     if(mappingp(foo))
-      tag_callers = foo | tag_callers;
+
+     if(mappingp(foo)) insert_in_map_list(foo, "tag_callers");
+     
      if(o->query_container_callers)
        foo=o->query_container_callers();
-     else
-       foo=([ ]);
-     if(mappingp(foo))
-       container_callers = foo | container_callers;
+
+     if(mappingp(foo)) insert_in_map_list(foo, "container_callers");
    }
 }
 

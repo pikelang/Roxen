@@ -3,7 +3,9 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-string cvs_version = "$Id: htaccess.pike,v 1.7 1996/12/07 11:37:52 neotron Exp $";
+import Stdio;
+
+string cvs_version = "$Id: htaccess.pike,v 1.8 1997/03/11 01:19:32 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -181,11 +183,11 @@ mapping|int parse_htaccess(object f, object id, string rht)
 
      default:
 #ifdef HTACCESS_DEBUG
-      perror(".htaccess: Unsupported command: "+ cmd +"\n");
+      werror(".htaccess: Unsupported command: "+ cmd +"\n");
 #endif
     }
 #ifdef HTACCESS_DEBUG
-    perror(sprintf("HTACCESS: Result of .htaccess file parsing -> %O\n", 
+    werror(sprintf("HTACCESS: Result of .htaccess file parsing -> %O\n", 
 		   access));
 #endif
   }
@@ -207,7 +209,7 @@ int allowed(multiset allow, string hname, string ip, int def)
     {
       ok = 1;
 #ifdef HTACCESS_DEBUG
-      perror(sprintf("HTACCESS: IP/hostname access deny/allow exact match:\n"
+      werror(sprintf("HTACCESS: IP/hostname access deny/allow exact match:\n"
 		     "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
 #endif
     }
@@ -215,7 +217,7 @@ int allowed(multiset allow, string hname, string ip, int def)
     {
       ok = 1;
 #ifdef HTACCESS_DEBUG
-      perror(sprintf("HTACCESS: IP/hostname access deny/allow ip match:\n"
+      werror(sprintf("HTACCESS: IP/hostname access deny/allow ip match:\n"
 		     "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
 #endif
     }
@@ -239,7 +241,7 @@ int allowed(multiset allow, string hname, string ip, int def)
       }
 #ifdef HTACCESS_DEBUG
       if(ok)
-	perror(sprintf("HTACCESS: IP/hostname access deny/allow hostname/"
+	werror(sprintf("HTACCESS: IP/hostname access deny/allow hostname/"
 		       "domain match:\n"
 		       "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
 #endif
@@ -263,7 +265,7 @@ int allowed(multiset allow, string hname, string ip, int def)
       }
 #ifdef HTACCESS_DEBUG
       if(ok)
-	perror(sprintf("HTACCESS: IP/hostname access deny/allow ip-number "
+	werror(sprintf("HTACCESS: IP/hostname access deny/allow ip-number "
 		       "match:\nHTACCESS: (%s -> %s || %s)\n", s, ip, hname));
 #endif
       
@@ -301,21 +303,21 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
 {
   string passwd, line;
 #ifdef HTACCESS_DEBUG
-  perror(sprintf("HTACCESS: Validating user %s.\n", auth[0]));
+  werror(sprintf("HTACCESS: Validating user %s.\n", auth[0]));
 #endif
 
   if(!users) {
 #ifdef HTACCESS_DEBUG
-    perror("HTACCESS: Warning. No users are allowed to see this page.\n");
+    werror("HTACCESS: Warning. No users are allowed to see this page.\n");
 #endif
     return 0;
   } else {
     if(multisetp(users) && !users[auth[0]])
     {
 #ifdef HTACCESS_DEBUG
-      perror(sprintf("HTACCESS: Failed auth. User %s not among the "
+      werror(sprintf("HTACCESS: Failed auth. User %s not among the "
 		     "valid users.\n", auth[0]));
-      perror(sprintf("HTACCESS: Valid users -> %O\n", users));
+      werror(sprintf("HTACCESS: Valid users -> %O\n", users));
 #endif
       return 0;
     }
@@ -330,7 +332,7 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
   if(!(passwd = read_bytes(userfile)))
   {
 #ifdef HTACCESS_DEBUG
-    perror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
+    werror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
 		   userfile));
 #endif    
     return 0;
@@ -345,7 +347,7 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
 	 match_passwd(pass, auth[1]))
       {
 #ifdef HTACCESS_DEBUG
-	perror("HTACCESS: Successful auth.\n");
+	werror("HTACCESS: Successful auth.\n");
 #endif      
 	return 1;
       }
@@ -354,11 +356,11 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
     else {
       if(user && pass)
       {
-	perror("HTACCESS: Failed auth\n");
+	werror("HTACCESS: Failed auth\n");
 	if(user == auth[0])
 	{
-	  perror(sprintf("HTACCESS: %s:%s != ", user, pass));
-	  perror(sprintf("%s:%s\n", auth[0], crypt(auth[1])));
+	  werror(sprintf("HTACCESS: %s:%s != ", user, pass));
+	  werror(sprintf("%s:%s\n", auth[0], crypt(auth[1])));
 	}
       }
     }
@@ -383,7 +385,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   if(!(f->open(groupfile, "r")))
   {
 #ifdef HTACCESS_DEBUG
-    perror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
+    werror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
 #endif
     return 0;
   }
@@ -419,7 +421,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   foreach(indices(grps), grp)
   {
 #ifdef HTACCESS_DEBUG
-    perror("HTACCESS: Checking for group "+grp+" ... "
+    werror("HTACCESS: Checking for group "+grp+" ... "
 	   +(g[grp]?"Existant":"Nope")+"\n");
 #endif
     if(g[grp])
@@ -459,7 +461,7 @@ mapping|string|int htaccess(mapping access, object id)
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
 #ifdef HTACCESS_DEBUG
-  perror("HTACCESS: Verifying access.\n");
+  werror("HTACCESS: Verifying access.\n");
 #endif
 
   if(!access[method = lower_case(id->method)])
@@ -500,19 +502,19 @@ mapping|string|int htaccess(mapping access, object id)
     return 0;
   }
 #ifdef HTACCESS_DEBUG
-  perror("HTACCESS: Host based access verified and granted.\n");
+  werror("HTACCESS: Host based access verified and granted.\n");
 #endif
 
   if(access[method]->user || access[method]["valid-user"] 
      || (groupfile && access[method]->group))
   {
 #ifdef HTACCESS_DEBUG
-    perror("HTACCESS: Verifying user access.\n");
+    werror("HTACCESS: Verifying user access.\n");
 #endif
     if(!id->realauth)
     {
 #ifdef HTACCESS_DEBUG
-      perror("HTACCESS: No authification string from client.\n");
+      werror("HTACCESS: No authification string from client.\n");
 #endif
       return validate(aname);
     } else {
@@ -529,13 +531,13 @@ mapping|string|int htaccess(mapping access, object id)
 			 groupfile, userfile, id)))
       {
 #ifdef HTACCESS_DEBUG
-	perror("HTACCESS: User access ok!\n");
+	werror("HTACCESS: User access ok!\n");
 #endif
 	id->auth = ({ 1, auth[0] });
 	return 0;
       } else {
 #ifdef HTACCESS_DEBUG
-	perror("HTACCESS: User access denied, invalid user.\n");
+	werror("HTACCESS: User access denied, invalid user.\n");
 #endif
 	id->auth = ({ 0, auth[0]+":"+auth[1] });
 	return validate(aname);
@@ -556,11 +558,11 @@ string|int cache_path_of_htaccess(string path, object id)
   f = cache_lookup("htaccess_files:"+id->conf->name, path);
 #ifdef HTACCESS_DEBUG
   if(f==0)
-    perror("HTACCESS: Location of .htaccess file for "+path+" not cached.\n");
+    werror("HTACCESS: Location of .htaccess file for "+path+" not cached.\n");
   else if(f==-1)
-    perror("HTACCESS: Non-existant .htaccess file cached: "+path+"\n");
+    werror("HTACCESS: Non-existant .htaccess file cached: "+path+"\n");
   else if(f)
-    perror("HTACCESS: Existant .htaccess file cached: "+path+"\n");
+    werror("HTACCESS: Existant .htaccess file cached: "+path+"\n");
 #endif
   return f;
 }
@@ -568,7 +570,7 @@ string|int cache_path_of_htaccess(string path, object id)
 void cache_set_path_of_htaccess(string path, string|int htaccess_file, object id)
 {
 #ifdef HTACCESS_DEBUG
-  perror("HTACCESS: Setting cached location for "
+  werror("HTACCESS: Setting cached location for "
 	 +path+" to "+htaccess_file+"\n");
 #endif  
   cache_set("htaccess_files:"+id->conf->name, path, htaccess_file);
@@ -669,7 +671,7 @@ mapping try_htaccess(object id)
   if(!(tmp = find_htaccess_file(id)))
   {
 #ifdef HTACCESS_DEBUG
-    perror("HTACCESS: No htaccess file for "+id->not_query+"\n");
+    werror("HTACCESS: No htaccess file for "+id->not_query+"\n");
 #endif
     return 0;
   }

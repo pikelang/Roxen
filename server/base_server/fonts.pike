@@ -24,7 +24,8 @@ string make_font_name(string name, int size, int bold, int italic)
 	return 0;
     }
   }
-  string bc=(bold>0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
+
+  string bc=(bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
   
   available = mkmultiset(available);
   if(available[bc+ic]) return base_dir+"/"+bc+ic;

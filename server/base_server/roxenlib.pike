@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.16 1997/02/27 19:46:02 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.17 1997/03/11 01:19:25 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -382,7 +382,7 @@ static string make_tag_attributes(mapping in)
 {
   array a=indices(in), b=values(in);
   for(int i=0; i<sizeof(a); i++)
-    if(lower_case(b[i])!=a[i])
+    if(lower_case(b[i]) != a[i])
       if(is_safe_string(b[i]))
 	a[i]+="="+b[i];
       else

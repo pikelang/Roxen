@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.43 1997/03/09 18:46:04 marcus Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.44 1997/03/11 01:19:23 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -971,7 +971,7 @@ void create()
 {
   add_constant("roxen", this_object());
   (object)"color.pike";
-  (object)"fonts,pike";
+  (object)"fonts.pike";
   Configuration = (program)"configuration";
 }
 
@@ -1212,6 +1212,13 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
     
 
+  globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
+
+  globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
+	  "The default font to use when modules request a font.");
+
+  globvar("font_dir", "nfonts/", "Fonts: Font directory", TYPE_DIR,
+	  "This is where the fonts are located.");
 
   globvar("logdirprefix", "../logs/", "Log directory prefix", TYPE_DIR,
 	  "This is the default file path that will be prepended to the log "
@@ -1568,7 +1575,6 @@ void scan_module_dir(string d)
 	if (!(err=catch( module_info = lambda ( string file ) {
 	  array foo;
 	  object o;
-	  _master->set_inhibit_compile_errors( "" );
 	  o =  (compile_file(file))();
 #ifdef MODULE_DEBUG
 	  perror(" load ok - ");
@@ -1582,11 +1588,13 @@ void scan_module_dir(string d)
 		      +"</i>", foo[0] });
 	}(path + file))))
 	{
-	  _master->set_inhibit_compile_errors( 0 );
 	  allmodules[ file-("."+extension(file)) ] = module_info;
 	} else {
+	  _master->errors += "\n";
+#if 0
 	  perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
 		 _master->set_inhibit_compile_errors( 0 ));
+#endif
 	}
 #ifdef MODULE_DEBUG
 	perror("\n");

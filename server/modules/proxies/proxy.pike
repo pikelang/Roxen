@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.13 1997/03/02 09:52:43 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.14 1997/03/11 01:19:40 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -257,6 +257,7 @@ string process_request(object id, int is_remote)
 }
 
 program Connection = class {
+  import Array;
   object cache, pipe, proxy, from;
   array ids;
   string name;
@@ -342,7 +343,7 @@ program Connection = class {
     //    proxy = previous_object(); 
     // Sometimes this was roxen, which caused.. problems. =)
     proxy = prox;
-    pipe =  files.pipe();
+    pipe = Pipe.pipe();
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
@@ -506,7 +507,7 @@ mapping find_file( string f, object id )
   {
     if(sscanf(f, "%[^/]/%s", host, file) < 2)
     {
-      if(strstr(f, "/") == -1)
+      if(search(f, "/") == -1)
       {
 	host=f;
 	file="";
