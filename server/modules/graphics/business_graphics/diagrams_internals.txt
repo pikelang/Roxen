@@ -179,3 +179,5 @@ int xsize, ysize;
 "image":object(image)
 //bilden som grafen ritas i.
 
+"rotate": int|float 
+//How much the pie should be rotated in degres (0-360).
