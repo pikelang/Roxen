@@ -1364,6 +1364,19 @@ hej</result>
   <result>1</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <trimlines>
+	<if not variable="var.foo">
+	  <nocache>&test.pass;</nocache>
+	</if>
+      </trimlines>
+    </cache>
+  </rxml>
+  <result parser="xml">&test.pass;</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
