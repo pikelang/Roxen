@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.4 2000/02/15 14:21:34 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.5 2000/02/15 16:17:01 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -18,6 +18,7 @@ void create() {
 	  "A list of all languages present on the server." );
 }
 
+constant language_low=roxen->language_low;
 array languages;
 array defaults;
 void start() {
@@ -59,12 +60,17 @@ class TagEmitLanguages {
     else
       langs=defaults;
 
+    string drop=(indices(id->config)&languages)*",";
+    function localized=language_low(id->misc->pref_languages->get_language())->language;
+
     array res=({});
     foreach(langs, string lang) {
       array id=roxen->language_low(lang)->id();
       res+=({ (["code":id[0],
-	     "en":id[1],
-	     "local":id[2]]) });
+		"en":id[1],
+		"local":id[2],
+		"drop":drop,
+		"localized":localized(lang) ]) });
     }
     return res;
   }
