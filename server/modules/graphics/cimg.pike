@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.60 2003/09/19 12:25:29 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.61 2003/10/16 11:46:13 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -366,9 +366,10 @@ class TagCImg
 	ext = "." + (a->format || "gif");
       args->src = query_absolute_internal_location( id )
 		+ the_cache->store( a, id ) + ext;
-      if( mapping size = the_cache->metadata( a, id, 1 ) )
+      int no_draw = !id->misc->persistent_cache_crawler;
+      if( mapping size = the_cache->metadata( a, id, no_draw ) )
       {
-	// image in cache (1 above prevents generation on-the-fly)
+	// image in cache (no_draw above prevents generation on-the-fly)
 	args->width = size->xsize;
 	args->height = size->ysize;
       }

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.293 2003/10/03 11:40:41 wellhard Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.294 2003/10/16 11:46:13 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1064,6 +1064,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 
   if(!arg->border) arg->border="0";
 
+  int no_draw = !id->misc->generate_images;
   if(arg->split)
   {
     string res="",split=arg->split;
@@ -1074,7 +1075,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     foreach(c/split-({""}), string word)
     {
       string fn = image_cache->store( ({ p, word }),id );
-      mapping size = image_cache->metadata( fn, id, 1 );
+      mapping size = image_cache->metadata( fn, id, no_draw);
       if(setalt) arg->alt=word;
       arg->src=query_absolute_internal_location(id)+fn+ext;
       if( size )
@@ -1092,7 +1093,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
   }
 
   string num = image_cache->store( ({ p, c }), id );
-  mapping size = image_cache->metadata( num, id, 1 );
+  mapping size = image_cache->metadata( num, id, no_draw );
   if(!arg->alt) arg->alt=replace(c,"\"","'");
 
   arg->src=query_absolute_internal_location(id)+num+ext;
