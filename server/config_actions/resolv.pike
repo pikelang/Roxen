@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.18 1999/08/06 07:21:07 nilsson Exp $
+ * $Id: resolv.pike,v 1.19 1999/08/13 15:59:07 nilsson Exp $
  */
 
 inherit "wizard";
@@ -10,10 +10,22 @@ string module_name(function|object m)
 {
   if(!m)return "";
   if(functionp(m)) m = function_object(m);
-  return "<font color=darkgreen>"+
-    (strlen((string)m->query("_name")) ? m->query("_name") :
-     (m->query_name&&m->query_name()&&strlen(m->query_name()))?
-     m->query_name():m->register_module()[1])+"</font>";
+
+  string name;
+  mixed error=catch{
+    name=(string)m->query("_name");
+  };
+
+  if(!error && strlen(name))
+    return "<font color=darkgreen>"+m->query("_name")+"</font>";
+
+  if(m->query_name&&m->query_name()&&strlen(m->query_name()))
+    return "<font color=darkgreen>"+m->query_name()+"</font>";
+
+  if(m->register_module && sizeof(m->register_module()))
+    return "<font color=darkgreen>"+m->register_module()[1]+"</font>";
+
+  return "<font color=red>Unavailable</font>";
 }
 
 string resolv;
