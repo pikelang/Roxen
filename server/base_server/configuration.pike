@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.273 2000/03/08 01:13:51 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.274 2000/03/10 02:56:41 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -55,6 +55,13 @@ string name;
 mapping variables = ([]);
 
 int inited;
+
+int config_id;
+int get_config_id() {
+  if(config_id) return config_id;
+  for(int i=sizeof(roxen->configurations); i;)
+    if(roxen->configurations[--i]->name==name) return config_id=i;
+}
 
 string get_doc_for( string region, string variable )
 {
