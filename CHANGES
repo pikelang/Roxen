@@ -1,3 +1,42 @@
+Changes since Roxen 3.4
+-----------------------------------------------
+
+o The start script now lets the mysql deamon have some time to shutdown.
+
+o The logfile directory now automatically gets a corresponding .nsr
+  (Networker) configuration file that informs that it contains logfiles.
+
+o Improved diagnostics in lots of places.
+
+o Several places now use REPLACE INTO in preference to INSERT/UPDATE.
+
+o Now supports RFC 2518 (webdav).
+
+o Improved support for .htaccess.
+
+o New administration interface look.
+
+o Now uses Pike 7.4.
+
+o FTP protocol module extended with some support for RFC 2228.
+
+
+Changes since Roxen 3.3.81
+-----------------------------------------------
+
+Changes since Roxen 2.4.145
+-----------------------------------------------
+
+
+Changes since Roxen 2.2.298
+-----------------------------------------------
+
+Changes since Roxen 2.1.271
+-----------------------------------------------
+
+Changes since Roxen 2.1.128
+-----------------------------------------------
+
 Changes since Roxen 2.1.115
 -----------------------------------------------
 
