@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.130 2000/10/02 16:34:00 jonasw Exp $
+# $Id: start,v 1.131 2000/11/16 10:58:06 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -19,6 +19,62 @@ dp() {
     echo "$pre" "$@" 2>&1
   fi
 }
+
+
+change_owner( ) {
+ uid="$1";  shift
+ gid="$1";  shift
+
+ for a in "$@" ; do 
+    ok=`ls -lgd $a 2>/dev/null | grep $uid | grep $gid | wc -l`
+    ok=`echo $ok`
+    if [ x$ok = x1 ] ; then 
+      dp "$a already has the correct ownership"
+    else
+      dp "Changing ownership of $a to $uid:$gid"
+      if chown -R "$uid" "$a" 2>/dev/null ; then
+        if  chgrp -R "$gid" "$a" 2>/dev/null ; then
+	  :
+        else
+          dp "Group change failed"
+        fi
+       else
+        dp "Ownership change failed"
+       fi
+     fi
+ done
+}
+
+
+check_owner() {
+   uid=`$pike -e 'write("%d",getuid())'`
+   gargs=''
+
+   if [ x"$uid" = x0 ] ; then
+     # Shall we change uid/gid?
+     num=`grep --help 2>&1|grep gnu|wc -l`
+     num=`echo $num`
+     if [ x"$num" = x1 ] ; then
+       gargs='-a'
+     fi
+     ugid=`grep $gargs "='User'>" $DIR/Global_Variables 2>/dev/null\
+           | sed -e 's/.*<str>//' -e 's,</str>.*,,'`
+     if [ ! x$ugid = x ] ; then
+        dp "Doing uid change to $ugid"
+        oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
+        change_owner $1 $2 $DIR $VARDIR $LOGDIR
+        ok=`ls -lgd $a 2>/dev/null | grep $2 |wc -l`
+        ok=`echo $ok`
+        if [ "x$ok" = x1 ] ; then
+          dp ". is already readable by $2"
+        else
+  	  chgrp -R "$2" .
+          chmod -R g+w  .
+        fi
+     fi
+   fi
+}
+
 
 # Breaks on linux when using symlinks.
 dn="`dirname $0`"
@@ -180,6 +236,10 @@ parse_args() {
   --pid-file=*)
    extra_args="$extra_args $1"
   ;;
+  '--with-security'|'--enable-security')
+    DEFINES="$DEFINES -DSECURITY"
+  ;;
+
   '--debug'|'--with-debug'|'--enable-debug')
     debug=1
   ;;
@@ -319,15 +379,6 @@ the default arguments.
 
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
-
-      .B--with-keep-aliveB.:          Enable keep alive in the HTTP
-			          protocol module. This is the default.
-                                  Some clients might have problems
-                                  with keep-alive.
-
-      .B--without-keep-aliveB.:       Disable keep alive in the HTTP
-			          protocol module. Some clients might have
-				  problems with keep-alive.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
@@ -578,6 +629,7 @@ signal_exit() {
 }
 
 start_roxen() {
+  check_owner
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
   fi
@@ -636,14 +688,16 @@ start_roxen() {
 #
 # Now do the stuff
 #
-PIKEVERSION="`$pike --version 2>&1`"
+PIKEVERSION="`$pike --version 2>&1|head -1`"
 LS="`ls -lL $pike 2>/dev/null`"
 
+VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
+
 if [ "$program" = "base_server/roxenloader.pike" ] ; then
-  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES $LS" ] ; then
+  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$VERSION_DATA" ] ; then
     remove_old_dot_o_files "defines or pike version changed"
   fi
-  echo "$PIKEVERSION $DEFINES $LS" > $old_roxen_defines
+  echo "$VERSION_DATA" > $old_roxen_defines
 fi
 
 if [ -z "$once" ] ; then
