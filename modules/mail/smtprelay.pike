@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.24 1998/09/20 01:24:28 grubba Exp $
+ * $Id: smtprelay.pike,v 1.25 1998/09/20 18:19:24 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.24 1998/09/20 01:24:28 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.25 1998/09/20 18:19:24 grubba Exp $";
 
 /*
  * Some globals
@@ -725,7 +725,9 @@ static void check_mail(int t)
  */
 int send_message(string from, multiset(string) rcpt, string message)
 {
+#ifdef RELAY_DEBUG
   roxen_perror(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
+#endif /* RELAY_DEBUG */
 
   array a = indices(rcpt);
   rcpt = (<>);
