@@ -1,6 +1,6 @@
 <h2>Image cache attributes</h2>
 
-<attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|xbm|xpm' default='gif'><p>
+<attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|wbmpxbm|xpm' default='gif'><p>
  The format to encode the image to. The formats available are:</p>
 <xtable>
 <row><c>gif</c><c>Graphics Interchange Format (might be missing in your roxen)</c></row>
@@ -17,7 +17,8 @@
 <row><c>pvr</c><c>Pover VR (dreamcast image)</c></row>
 <row><c>tga</c><c>TrueVision Targa (PC / DOS)</c></row>
 <row><c>tiff</c><c>Tag Image File Format</c></row>
-<row><c>wbf</c><c>WAP Bitmap File</c></row>
+<row><c>wbf</c><c>WAP Bitmap File (WAP 1.0)</c></row>
+<row><c>wbmp</c><c>Wireless Bitmap Format (WAP 1.1-)</c></row>
 <row><c>xbm</c><c>XWindows Bitmap File</c></row>
 <row><c>xpm</c><c>XWindows Pixmap File</c></row>
 </xtable>
