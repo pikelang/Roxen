@@ -62,7 +62,9 @@ mixed backup_db( string db, RequestID id )
   }
   return
     "<b>Directory:</b> <input name='dir' size='60' value='auto' /><br />"
-    "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
+    "<i>The directory the backup will be saved in. If you chose auto, "
+    "ChiliMoon will generate a directory name that includes the database "
+    "name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
     "<td valign=top align=right><cf-cancel href='"+

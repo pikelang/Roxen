@@ -55,8 +55,8 @@ ERROR
    <td valign='top' colspan='2' width='100%'>
 
         <i>The database type. Internal means that it will be created
-	   in the roxen mysql database, and the permissions of the
-	   database will be automatically manged by roxen. External
+	   in the ChiliMoon MySQL database, and the permissions of the
+	   database will be automatically manged by ChiliMoon. External
 	   means that the database resides in another database.</i>
    </td>
  </tr>
@@ -90,11 +90,13 @@ ERROR
       if( !strlen(id->variables->url) )
         error= "<font color='&usr.warncolor;'>"
 	  "Please specify an URL to define an external database</font>";
-      else if( catch( Sql.Sql( id->variables->url ) ) )
+      else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"
                         "It is not possible to connect to %s"
+                        "<br /> (%s)"
                         "</font>",
-                        id->variables->url );
+                        id->variables->url,
+                        describe_error(err));
     }
     if( !strlen( error ) )
       switch( id->variables->name )
@@ -114,7 +116,7 @@ ERROR
        default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   error = sprintf("<font color='&usr.warncolor;'>"
-			   "%s is a mysql keyword, used by mysql."
+			   "%s is a MySQL keyword, used by MySQL."
 			   "Please select another name"
 			   "</font>", id->variables->name );
 	 else
