@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.252 2001/04/23 08:59:24 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.253 2001/05/07 01:51:50 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1633,6 +1633,10 @@ and recompile pike, after removing the file 'config.cache'
     add_constant("__rbf", "font_handlers/rbf" );
   }
 #else
+#if constant(Image.FreeType.Face)
+  // We can load the builtin font.
+  add_constant("__rbf", "font_handlers/rbf" );
+#else
   report_debug(
 #"
 ------- WARNING ----------------------------------------------
@@ -1650,6 +1654,7 @@ library should be enough.
 --------------------------------------------------------------
 
 " );
+#endif
 #endif
 
   if( search( hider, "--long-error-file-names" ) != -1 )
