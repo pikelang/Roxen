@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.30 1997/08/23 01:32:00 marcus Exp $
+/* $Id: wizard.pike,v 1.31 1997/08/23 18:15:28 grubba Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -399,11 +399,11 @@ string html_table(array(string) subtitles, array(array(string)) table)
   for(int i = 0; i < sizeof(table); i++) {
     r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
     foreach(table[i], mixed s)
-      if(stringp(s))
-	r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
-      else
+      if(arrayp(s))
 	r += "</tr><tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+
 	  "><td colspan="+cols+">"+s[0]+" &nbsp;</td>";
+      else
+	r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
