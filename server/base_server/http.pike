@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.17 1998/07/23 22:01:28 js Exp $";
+string cvs_version = "$Id: http.pike,v 1.18 1998/08/02 22:08:47 mast Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -203,12 +203,13 @@ string http_encode_url (string f)
 string http_roxen_config_cookie(string from)
 {
   return "RoxenConfig="+http_encode_cookie(from)
-    +"; expires=Sun, 29-Dec-99 23:59:59 GMT; path=/";
+    +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
 string http_roxen_id_cookie()
 {
-  return sprintf("RoxenUserID=0x%x; expires=Sun, 29-Dec-99 23:59:59 GMT; path=/",
+  return sprintf("RoxenUserID=0x%x; expires=" +
+		 http_date (3600*24*365*2 + time (1)) + "; path=/",
 		 roxen->increase_id());
 }
 
