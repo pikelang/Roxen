@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.2 1999/07/22 19:27:57 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.3 1999/07/22 22:32:44 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -410,11 +410,12 @@ string tagtime(int t,mapping m)
   if (m->cap||m->capitalize) s=capitalize(s);
 #endif
 
-  switch(lower_case(m["case"])) {
-  case "upper": s=upper_case(s); break;
-  case "lower": s=lower_case(s); break;
-  case "capitalize": s=capitalize(s);
-  }
+  if(m["case"])
+    switch(lower_case(m["case"])) {
+    case "upper": s=upper_case(s); break;
+    case "lower": s=lower_case(s); break;
+    case "capitalize": s=capitalize(s);
+    }
 
   return s;
 }
@@ -501,9 +502,12 @@ string tag_set( string tag, mapping m, object id )
 	return "Set: other variable doesn't exist";
       else 
 	return "";
+#if 1
+    // Not part of RXML 1.4
     else if(m->define)
       // Set variable to the value of a define
       id->variables[ m->variable ] = id->misc->defines[ m->define ];
+#endif
     else if (m->eval)
       // Set variable to the result of some evaluated RXML
       id->variables[ m->variable ] = parse_rxml(m->eval, id);
@@ -550,9 +554,12 @@ string tag_append( string tag, mapping m, object id )
 	return "<b>Append: other variable doesn't exist</b>";
       else
 	return "";
+#if 1
+    // Not part of RXML 1.4
     else if(m->define)
       // Set variable to the value of a define
       id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
+#endif
     else if (m->debug || id->misc->debug)
       return "<b>Append: nothing to append from</b>";
     else
@@ -650,10 +657,18 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     return s;
   }
 
+  if(m->href) {
+    mixed error=catch {
+      n=(string)Protocols.HTTP.get_url_data(m->href);
+    };
+    if(arrayp(error)) return "\n<!-- "+error[0]+ "-->\n";
+    return n;
+  }
+
   if(id->misc->debug) {
     string ret="Could not fullfill your request.<br>\nArguments:<br>\n";
     foreach(indices(m), string tmp)
-      ret+=tmp+" : "+m[tmp]+"<br>\n";
+      ret+=tmp+" : "+m[tmp]+"<br />\n";
     return ret;
   }
 
@@ -803,6 +818,7 @@ string tag_modified(string tag, mapping m, object id, object file,
   array (int) s;
   object f;
   
+
   if(m->by && !m->file && !m->realfile)
   {
     if(!id->conf->auth_module)
