@@ -1,15 +1,25 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.3 1997/01/29 04:59:32 per Exp $";
+string cvs_version = "$Id: color.pike,v 1.4 1997/02/07 21:08:01 per Exp $";
 
 mapping (string:array(int)) colors = ([]);
+mapping (string:array(int)) html_32_colors =
+([
+  "black":"#000000", "green":"#008000", "silver":"#C0C0C0", "lime":"#00FF00",
+  "gray":"#808080", "olive":"#808000", "white":"#FFFFFF","yellow":"#FFFF00",
+  "maroon":"#800000", "navy":"#000080", "red":"#FF0000", "blue":"#0000FF",
+  "purple":"#800080", "teal":"#008080", "fuchsia":"#FF00FF", "aqua":"#00FFFF",
+]);
 
 array(int) parse_color(string from)
 {
   int c;
   if(!from || !strlen(from)) return ({ 0,0,0 });
 
-  if(colors[from]) return colors[from];
+  from = lower_case(from);
+  
+  if(html_32_colors[from])  from = html_32_colors[from];
+  else if(colors[from]) return colors[from];
 
   if(from[0]=='#')
   {
@@ -37,7 +47,7 @@ array(int) parse_color(string from)
     return ({ (c>>8)<<4, ((c>>4)&15)<<4, (c&15)<<4 });
   }
 
-  from = replace(lower_case(from)-" ", "gray", "grey");
+  from = replace(from-" ", "gray", "grey");
   if(sscanf(from, "grey%d", c))
     return ({ (c*255)/100, (c*255)/100, (c*255)/100, });
 
