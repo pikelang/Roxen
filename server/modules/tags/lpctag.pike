@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.23 1999/10/12 15:35:40 marcus Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.24 1999/11/17 23:25:34 per Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -64,11 +64,12 @@ string reporterr (string header, string dump)
 {
   if (QUERY (debugmode) == "Off") return "";
 
-  report_error (header + dump + "\n");
+  report_error( header + dump + "\n" );
 
-  switch (QUERY (debugmode)) {
+  switch (QUERY (debugmode)) 
+  {
     case "HTML comment":
-      return "\n<!-- " + header + dump + "\n-->\n";
+      return "\n<!-- " + html_encode_string(header + dump) + "\n-->\n";
     case "HTML text":
       return "\n<br><font color=red><b><pre>" + html_encode_string (header) +
 	"</b></pre></font><pre>\n"+html_encode_string (dump) + "</pre><br>\n";
@@ -149,33 +150,32 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   request_id->misc->cacheable=0;
 
   object e = ErrorContainer();
-  master()->set_inhibit_compile_errors(e->got_error);
+  master()->set_inhibit_compile_errors(e);
   if(err=catch {
     s = pre(s)+s+post(s);
     p = program_cache[s];
 
-    if (!p) {
+    if (!p) 
+    {
       // Not in the program cache.
-
-      p = compile_string(s, "Pike-tag");
-
-      if (sizeof(program_cache) > QUERY(program_cache_limit)) {
+      p = compile_string(s, "Pike-tag("+request_id->not_query+")");
+      if (sizeof(program_cache) > QUERY(program_cache_limit)) 
+      {
 	array a = indices(program_cache);
 	int i;
 
 	// Zap somewhere between 25 & 50% of the cache.
-	for(i = QUERY(program_cache_limit)/2; i > 0; i--) {
+	for(i = QUERY(program_cache_limit)/2; i > 0; i--)
 	  m_delete(program_cache, a[random(sizeof(a))]);
-	}
       }
-
       program_cache[s] = p;
     }
   })
   {
     master()->set_inhibit_compile_errors(0);
     return reporterr(sprintf("Error compiling <pike> tag in %s:\n"
-			     "%s\n\n", request_id->not_query, s),e->get());
+			     "%s\n\n", request_id->not_query, s),
+                     e->get());
   }
   master()->set_inhibit_compile_errors(0);
   

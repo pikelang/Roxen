@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.40 1999/11/15 16:42:59 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.41 1999/11/17 23:25:25 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -293,12 +293,8 @@ mapping handle_file_extension(object f, string e, object got)
 
   if (!functionp(fun = scripts[got->not_query])) {
     file=f->read(655565);   // fix this?
-#if constant(cpp)
-    if(got->realfile)
-      file = cpp(file, got->realfile);
-    else
-      file = cpp(file);
-#endif
+
+
     array (function) ban = allocate(6);
 #ifndef __NT__
 #if efun(setegid)
@@ -318,11 +314,14 @@ mapping handle_file_extension(object f, string e, object got)
     ban[5] = cd;
     add_constant("cd", 0);
     object e = ErrorContainer();
-    master()->set_inhibit_compile_errors(e->got_error);
-    if(got->realfile)
-      err=catch(p=compile_string(file, got->realfile));
-    else
-      err=catch(p=compile_string(file));
+    master()->set_inhibit_compile_errors(e);
+    catch
+    {
+      if(got->realfile)
+        p=compile_string(cpp(file, got->realfile), got->realfile);
+      else
+        p=compile_string(cpp(file));
+    };
     master()->set_inhibit_compile_errors(0);
 #ifndef __NT__
 #if efun(setegid)
@@ -335,12 +334,12 @@ mapping handle_file_extension(object f, string e, object got)
 #endif
     add_constant("cd", ban[5]);
 
-    if(strlen(e->get()))
-    {
-      werror(e->get());
-      return http_string_answer("<h1>Error compiling pike script</h1><p>"+
-				html_encode_string(e->get()));
-    } 
+     if(strlen(e->get()))
+     {
+       werror(e->get());
+       return http_string_answer("<h1>Error compiling pike script</h1><p>"+
+ 				html_encode_string(e->get()));
+     } 
     if(!p) 
       return 
         http_string_answer("<h1>Error while compiling pike script</h1>\n");
