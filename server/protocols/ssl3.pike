@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.52 1999/05/14 04:19:05 mast Exp $
+/* $Id: ssl3.pike,v 1.53 1999/05/22 23:16:46 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -142,9 +142,6 @@ array|void real_port(array port, object cfg)
   ctx->certificates = ({ cert });
   ctx->rsa = rsa;
   ctx->random = r;
-#ifdef WEAK_CRYPTO_40BIT
-  ctx->export_mode();
-#endif /* WEAK_CRYPTO_40BIT */
 }
 
 #define CHUNK 16384

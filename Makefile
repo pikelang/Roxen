@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.51 1999/05/07 17:57:53 peter Exp $
+# $Id: Makefile,v 1.52 1999/05/22 23:16:46 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -229,10 +229,22 @@ censor_pro :
 
 censor_strong_crypto :
 	@echo "Censoring strong crypto..."
-	@cd server/protocols/; \
-	 cp ssl3.pike ssl3.strong; \
-	 sed -e '/WEAK_CRYPTO_40BIT/d' < ssl3.strong > ssl3.pike; \
-	 rm -f ssl3.strong
+	@for d in pike/*/lib/modules/SSL.pmod/.; do \
+	  for f in $$d/*; do \
+	    if test -f $$f; then \
+	      mv $$f $$f.orig; \
+	      sed -e '/^ *# *ifndef  *WEAK_CRYPTO_40BIT/,/^ *# *endif .*! *WEAK_CRYPTO_40BIT/d' \
+		  -e '/^ *# *ifdef  *WEAK_CRYPTO_40BIT/d' \
+		  -e '/^ *# *endif .*WEAK_CRYPTO_40BIT/d' \
+		  < $$f.orig > $$f; \
+	      if grep WEAK_CRYPTO_40BIT $$f >/dev/null; then \
+		echo "Failed to censor strong crypto; there are still references to WEAK_CRYPTO_40BIT in $$f."; \
+		exit 1; \
+	      else : ; fi; \
+	      rm -f $$f.orig; \
+	    else : ; fi; \
+	  done; \
+	done
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
 	-@$(BIN_TRUE)
