@@ -3305,3 +3305,9 @@ server must be a MySQL server, nothing else will work.
 <o>Content Editor</o>
 <t></t>
 </str>
+
+<str id="458">
+<new/>
+<o>FAQ</o>
+<t></t>
+</str>

@@ -66,12 +66,14 @@ string parse( RequestID id )
     add_doc_link(rpath + "categorization_module/index.xml",
 		 _(518, "Categorization Module"));
 
-    add_doc_link(rpath + "forum_module/index.xml",
+    add_doc_link(rpath + "forum_manual/index.xml",
 		 _(523, "Forum Module"));
     
     add_doc_link(rpath + "tutorial/index.xml",
 		 _(519, "Tutorials"));
-  }
+
+    add_doc_link(rpath + "faq/main/index.xml",
+		 _(458, "FAQ"));  }
 
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
