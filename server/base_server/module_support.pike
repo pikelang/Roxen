@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.101 2001/08/23 22:21:35 per Exp $
+// $Id: module_support.pike,v 1.102 2001/08/31 00:10:13 per Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -53,20 +53,22 @@ program my_compile_file(string file, void|int silent)
   }
 #ifdef MODULE_DEBUG
   else
-    switch (e->last_dump_status) {
-     case 1: // dumped
-       if (!silent) report_debug("\b[dump] \b");
-       break;
-     case -1:
-       if (!silent) report_debug("\b[nodump] \b");
-     case 0:
-    }
+    dump( file, p );
+//     switch (e->last_dump_status) {
+//      case 1: // dumped
+//        if (!silent) report_debug("\b[dump] \b");
+//        break;
+//      case -1:
+//        if (!silent) report_debug("\b[nodump] \b");
+//      case 0:
+//     }
 #endif
   return p;
 }
 
 function|program load( string what, void|int silent )
 {
+  werror("Load "+what+"\n");
   return my_compile_file( what, silent );
 }
 
