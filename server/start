@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.192 2002/04/02 14:35:05 grubba Exp $
+# $Id: start,v 1.193 2002/04/16 10:48:52 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -363,11 +363,11 @@ the default arguments.
 
       .B--strip-backslashB.:          Replace all \\ characters in URIs with /
 
-      .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
+      .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
 
-      .B--without-ram-cache-statB.:   Disable the stat that is usualy done
-                                  for files in the ram cache to ensure that
+      .B--without-ram-cache-statB.:   Disable the stat that is usually done
+				  for files in the protocol cache to ensure that
 				  they are not changed before they are sent.
                                   Improves performance at the cost of constant
                                   aggravation if the site is edited. Useful for
