@@ -1,11 +1,12 @@
-// This is a roxen module. (c) Informationsvvarna AB 1996.
+/* This is a Roxen module. Copyright © 1996, 1997, 1998, Idonex AB.
+ *
+ * This module makes it possible to write symbolic names instead of
+ * absoulte hrefs.
+ *
+ * made by Mattias Wingstedt <peter@idonex.se> -96
+ */
 
-// This module makes it possible to write symbolic names instead of
-// absoulte hrefs.
-// Written by Mattias Wingstedt, <wing@idonex.se>, please refer
-// to him for further info.
-
-constant cvs_version = "$Id: indirect_href.pike,v 1.7 1998/03/11 19:42:42 neotron Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.8 1998/11/02 06:28:47 peter Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -18,29 +19,33 @@ string tagname;
 void create()
 {
   defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD, 
-	 "Syntax:<br>\n"
+	  "Syntax:<br>\n"
 	  "[name] = [URL]\n" );
 
-  defvar( "tagname", "newa", "Tagname", TYPE_STRING, 
-	 "Name of the tag\n"
+
+  //This pollutes namespace and makes the life hard on the manual writers.
+  //Thus it's turned of for normal users.
+  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,  
+	  "Name of the tag\n"
 	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
-	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;" );
+	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;"
+	  "if the name is changed, the module has to be reloaded for the "
+	  "namechange to take effect)" );
 }
 
 array (mixed) register_module()
 {
   return ({ MODULE_PARSER, "Indirect href",
-	      "Indirect href. Adds a new tag (with a configurable name, if "
-	      "the name is changed, the module has to be reloaded for the "
-	      "namechange to take effect), with a single argument, "
-	      "name=string. It then uses the name to index a database of "
-	      "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
-	      "be very useful, since you can move all links to a document at "
-	      "once. It also allows the special case 'name=random'. If this "
-	      "is used, a random link will be selected from the database. "
-	      "Example:<pre>"
-	      "   roxen=http://www.roxen.com/\n"
- 	      "   idonex=http://www.idonex.se/</pre>", });
+	    "Indirect href. Adds a new container <tt>&lt;ai&gt;</tt>"
+	    ", with a single argument, "
+	    "name=string. It then uses the name to index a database of "
+	    "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
+	    "be very useful, since you can move all links to a document at "
+	    "once. It also allows the special case 'name=random'. If this "
+	    "is used, a random link will be selected from the database. "
+	    "Example:<pre>"
+	    "   roxen=http://www.roxen.com/\n"
+	    "   idonex=http://www.idonex.se/</pre>", });
 }
 
 void start()
