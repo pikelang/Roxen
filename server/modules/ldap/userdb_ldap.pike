@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.1 2001/05/24 09:13:23 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.2 2001/05/24 11:06:15 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -98,10 +98,57 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
       }
     }
 
-    if(pass == password) {
+    // Digests {CRYPT}, {SH1}, {SSHA}, {MD5} and {SMD5}
+    string sv, salt;
+    if (sizeof(pass) > 6)
+      switch (upper_case(pass[..4])) {
+	case "{SHA}" :
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.sha()->update(password)->digest()));
+	  DEBUGLOG ("Trying SHA digest ...");
+	  break;
+
+	case "{SSHA" :
+	  if (sizeof(pass) > 7 && pass[5] == '}') {
+	    if(sscanf(MIME.decode_base64(pass[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
+	      break;
+ 	    flg = (pass[6..] == MIME.encode_base64(Crypto.sha()->update(password+salt)->digest()+salt));
+	    DEBUGLOG ("Trying SSHA digest ...");
+	  }
+	  break;
+
+	case "{MD5}" :
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.md5()->update(password)->digest()));
+	  DEBUGLOG ("Trying MD5 digest ...");
+	  break;
+
+	case "{SMD5" :
+	  if (sizeof(pass) > 7 && pass[5] == '}') {
+	    if(sscanf(MIME.decode_base64(pass[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
+	      break;
+ 	    flg = (pass[6..] == MIME.encode_base64(Crypto.md5()->update(password+salt)->digest()+salt));
+	    DEBUGLOG ("Trying SMD5 digest ...");
+	  }
+	  break;
+
+	case "{CRYP" :
+	  if (sizeof(pass) > 7 && pass[5..6] == "T}") {
+	    flg = !crypt(password,pass[7..]);
+	    DEBUGLOG ("Trying CRYPT digest ...");
+	  }
+	  break;
+
+	default:
+	  flg = pass == password;
+	  break;
+      } // switch
+    else
+      flg = pass == password;
+
+    if(flg) {
       DEBUGLOG("pass_auth("+name()+") successed.");
       return 1;
     }
+
     //return(crypt(password, pass));
     DEBUGLOG("pass_auth("+name()+") failed.");
     return 0;
