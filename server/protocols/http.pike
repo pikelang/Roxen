@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.372 2002/07/03 15:28:48 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.373 2002/07/10 13:57:36 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1062,6 +1062,7 @@ static void do_timeout()
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
   {
+    REQUEST_WERR("HTTP: Connection timed out. Closing.");
     MARK_FD("HTTP timeout");
     end();
   } else {
@@ -2036,6 +2037,9 @@ void got_data(mixed fooid, string s)
     if(strlen(s) + have_data < wanted_data)
     {
       have_data += strlen(s);
+      // Reset timeout.
+      remove_call_out(do_timeout);
+      call_out(do_timeout, 90);
       REQUEST_WERR("HTTP: We want more data.");
       return;
     }
