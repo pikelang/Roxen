@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.19 2000/02/07 17:26:48 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.20 2000/02/07 17:43:04 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -14,7 +14,7 @@ inherit "roxenlib";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["obox":#([
+constant tagdoc=(["obox":([
   "standard":#"<desc cont>Outlined box</desc>
 
 <attr name=align value=left,right>
