@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.161 1999/02/01 00:46:22 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.162 1999/02/01 03:35:41 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1245,9 +1245,10 @@ string tag_echo(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
-    return ("This tag outputs the value of different configuration and request local "
-	    "variables. They are not really used by Roxen. This tag is included only "
-	    "to provide compatibility with \"normal\" WWW-servers");
+    return ("This tag outputs the value of different configuration and"
+	    " request local variables. They are not really used by Roxen."
+	    " This tag is included only to provide compatibility with"
+	    " \"normal\" WWW-servers");
   if(!m->var)
   {
     if(sizeof(m) == 1)
