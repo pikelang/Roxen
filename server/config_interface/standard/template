@@ -18,8 +18,11 @@
 <contents>
 <formoutput quote=½>
 <p><br><p>
-<table align=right  width=&width; border=0 cellpadding=0 cellspacing=0>
-<tr><td valign=bottom
+<div align=right>
+<table width=&width; border=0 cellpadding=0 cellspacing=0>
+<tr>
+
+<td valign=bottom
 ><tablist preparse
          dimcolor="#999999"
          txtcolor="white"
@@ -30,8 +33,10 @@
    ½__tabs:quote=none½
 </tablist
 ></td></tr>
-<tr><td bgcolor="#eeeeee">½__contents:quote=none½</td>
+<tr>
+<td bgcolor="#eeeeee">½__contents:quote=none½</td>
 </tr></table>
+</div>
 </formoutput>
 </define>
 
