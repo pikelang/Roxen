@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.147 2001/05/16 01:09:43 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.148 2001/05/16 01:50:28 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -820,7 +820,7 @@ class TagModuleVariablesSectionsplugin
     variables = get_variable_sections( mod, m, id ) +  ({ ([
        "section":"Information",
        "sectionname":LOCALE(299,"Information"),
-       "selected":((section=="Information" || !section)?"selected":""),
+       "selected":((section=="Information" )?"selected":""),
      ]) });
 
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
@@ -846,17 +846,16 @@ class TagModuleVariablesSectionsplugin
        else
          hassel = strlen(q->selected);
      }
-     hassel=0;
-     foreach( variables, mapping q )
-     {
-       if( q->selected == "selected")
-       {
-         hassel = 1;
-         break;
-       }
-     }
-     if(!hassel)
-       variables[0]->selected="selected";
+//      hassel=0;
+//      foreach( variables, mapping q )
+//      {
+//        if( q->selected == "selected")
+//        {
+//          hassel = 1;
+//          break;
+//        }
+//      }
+//      variables[0]->selected="selected";
      variables = reverse(variables);
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";

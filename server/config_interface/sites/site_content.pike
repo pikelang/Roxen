@@ -30,7 +30,7 @@ string describe_location( RoxenModule m, RequestID id )
 {
   Configuration conf = m->my_configuration();
   string url = conf->query("MyWorldLocation"),
-	  mp = m->query_location();
+    mp = m && m->query_location();
   if(!stringp(url) || !sizeof(url))
   { // belt *and* suspenders :-)
     array(string) urls = conf->query("URLs");
@@ -47,7 +47,7 @@ string describe_location( RoxenModule m, RequestID id )
 string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(<>), conts=(<>);
-  RXML.TagSet new=m->query_tag_set();
+  RXML.TagSet new=m && m->query_tag_set();
   if(!new) return "";
 
   foreach(indices(new->get_tag_names()), string name) {
@@ -79,7 +79,7 @@ string describe_tags( RoxenModule m, int q )
 
 string describe_provides( RoxenModule m, int q )
 {
-  array(string)|multiset(string)|string provides = m->query_provides();
+  array(string)|multiset(string)|string provides = m && m->query_provides();
   if (multisetp(provides))
     provides = sort((array(string))provides);
   if( arrayp(provides) )
@@ -195,7 +195,7 @@ string buttons( Configuration c, string mn, RequestID id )
     else if(mod->query_action_buttons) {
       mapping buttons=mod->query_action_buttons("standard");
       foreach(indices(buttons), string title)
-	if( a==title ) {
+	if( a==title && buttons[a] ) {
 	  buttons[a](id);
 	  break;
 	}
@@ -402,7 +402,7 @@ string module_page( RequestID id, string conf, string module )
 
   string section = RXML.get_var( "section", "form" );
 
-  if( section == "Information" || !section
+  if( section == "Information"
       || RXML.get_var( "info_section_is_it", "form" ) )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
