@@ -42,18 +42,18 @@ class Scope_usr
 
     switch( var )
     {
-     case "left-image":
-       return "/internal-roxen-unit";
-     case "selected-indicator":
-       return "/internal-roxen-next";
-     case "logo":
-       return "/internal-roxen-roxen";
-     case "err-1":
-       return "/internal-roxen-err_1";
-     case "err-2":
-       return "/internal-roxen-err_2";
-     case "err-3":
-       return "/internal-roxen-err_3";
+     case "left-image":         return "/internal-roxen-unit";
+     case "selected-indicator": return "/internal-roxen-next";
+     case "logo":               return "/internal-roxen-roxen";
+     case "err-1":              return "/internal-roxen-err_1";
+     case "err-2":              return "/internal-roxen-err_2";
+     case "err-3":              return "/internal-roxen-err_3";
+     case "tab-frame-image":    return "/internal-roxen-tab_frame";
+     case "backgroundimage-top":
+     case "backgroundimage-leftside":
+     case "backgroundimage-content":
+     case "backgroundimage":
+       return ""; /* Not by default, no.. */
     }
 
 
@@ -263,7 +263,8 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
 
 //   c->title =
   string page =  #"
-  <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='"+config_setting2("fade3")+#"'>
+  <table width=100% cellpadding=0 cellspacing=0 border=0 "
+         "bgcolor='"+config_setting2("fade3")+#"'>
     <tr bgcolor='"+config_setting2("fade3")+#"'>
        <td rowspan=2><a href=http://www.roxen.com/><img border=0 src=&usr.logo;></a></td>
        <td align=center>
@@ -1031,6 +1032,7 @@ string tag_theme_set( string t, mapping m, object id )
   if( m->themefile )
     m->to = "/standard/themes/"+config_setting2( "theme" )+"/"+m->to;
   id->misc->cf_theme[ m->what ] = m->to;
+  return "";
 }
 
 
