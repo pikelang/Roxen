@@ -6,9 +6,9 @@ inherit "module";
 #include <roxen.h>
 #include <module.h>
 
-LOCALE_PROJECT(config_interface);
-#define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
-#define SLOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+USE_DEFERRED_LOCALE;
+#define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
+#define SLOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";

@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
-<project name="base_server">
-<nocopy/>
-<out>../translations/base_server.xml</out>
+<project name="config_interface">
+<!--<nocopy/>-->
+<out>../translations/config_interface.xml</out>
+
 <includepath>../etc/include</includepath>
-<file>roxen.pike</file>
-<file>configuration.pike</file>
+<includepath>../etc/base_server</includepath>
+
+<file>../base_server/roxen.pike</file>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/global_variables.pike</file>
+<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/logutil.pike</file>
+<file>../config_interface/standard/topmenu.pike</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/sites/index.html</file>
+<file>../config_interface/standard/sites/site_content.html</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+
+
 <add id="1">
 <pike>
 

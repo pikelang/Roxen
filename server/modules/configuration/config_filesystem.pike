@@ -8,17 +8,13 @@
 inherit "module";
 inherit "roxenlib";
 
-#if constant(Locale.translate)
-# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
-#else
-# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
-#endif
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.37 2000/07/13 13:58:50 nilsson Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.38 2000/07/15 00:59:53 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -52,7 +48,7 @@ array(string|array) low_stat_file(string locale, string f, object id)
       locale = "standard";
     }
     if (locale == "standard")
-      locale = roxen.locale->get()->locale;
+      locale = roxen.locale->get();
     string p;
     if( strlen( f ) )
       f = "/"+f;
@@ -202,7 +198,7 @@ mixed find_file( string f, object id )
 //   werror( f + " is " + type + "\n");
 
   if( locale != "standard" )
-    roxen.set_locale( locale );
+    roxen.set_locale(locale);
 
   switch( type )
   {

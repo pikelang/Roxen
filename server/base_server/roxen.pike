@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.507 2000/07/14 20:02:48 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.508 2000/07/15 01:05:42 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -313,7 +313,7 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 }
 
 #ifndef THREADS
-// Emultades a thread_local() object.
+// Emulates a thread_local() object.
 class container
 {
   mixed value;
@@ -339,8 +339,7 @@ object fonts;
 // ----------- Locale support ------------
 //<locale-token project="config_interface">LOCALE</locale-token>
 
-LOCALE_PROJECT(config_interface);
-#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 string default_locale;
 
@@ -400,15 +399,7 @@ int set_locale(void|string lang)
     return 0;
   }
   
-  mapping objects;
-#if constant(Locale.get_objects)
-  objects=Locale.get_objects( set );
-#else
-  objects=RoxenLocale.get_objects( set );
-#endif
-
-  objects->locale=set;
-  locale->set(objects);
+  locale->set(set);
   return 1;
 }
 
@@ -2743,9 +2734,11 @@ string decode_charset( string charset, string data )
 void create()
 {
 #if constant(Locale.register_project)
-  Locale.register_project("config_interface","translations/%L/base_server.xml");
+  Locale.register_project("config_interface",
+			  "translations/%L/config_interface.xml");
 #else
-  RoxenLocale.register_project("config_interface","translations/%L/base_server.xml");
+  RoxenLocale.register_project("config_interface",
+			       "translations/%L/config_interface.xml");
 #endif
   define_global_variables();
 

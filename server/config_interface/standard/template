@@ -97,20 +97,20 @@
    <input align="&_.align;" type="image" name="&_.name;" value="&var.contents;" src="&var.url;" border="0" />
 </define>
 
-<define tag="cf-save"> <submit-gbutton2 name='save' align="right"> <translate id="">Save</translate> </submit-gbutton2> </define>
-<define tag="cf-ok"> <submit-gbutton> <translate id="">Ok</translate> </submit-gbutton> </define>
-<define tag="cf-cancel"> <gbutton preparse="1" href="&_.href;"> <translate id="">Cancel</translate> </gbutton> </define>
+<define tag="cf-save"> <submit-gbutton2 name='save' align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
+<define tag="cf-ok"> <submit-gbutton> <translate id="bB">Ok</translate> </submit-gbutton> </define>
+<define tag="cf-cancel"> <gbutton preparse="1" href="&_.href;"> <translate id="bC">Cancel</translate> </gbutton> </define>
 
 <define tag="cf-next">
    <comment> FIXME: gbutton should handle HTML entities </comment>
-   <submit-gbutton preparse="1" href="&_.href;"> <translate id="">Next</translate> > </submit-gbutton>
+   <submit-gbutton preparse="1" href="&_.href;"> <translate id="bD">Next</translate> > </submit-gbutton>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
 <define container="tmpl">
 <html><head>
-<title>&roxen.version; <translate id="">Administration Interface</translate><eval>&_.title:none;</eval></title>
+<title>&roxen.version; <translate id="bE">Administration Interface</translate><eval>&_.title:none;</eval></title>
 </head>
 <nooutput>
   <eval><insert file="/standard/themes/&usr.theme;/theme" nocache="1" /></eval>
@@ -133,7 +133,7 @@
           <tr><td align="right">
            <gtext preparse="1"  font="&usr.font;"
                   fgcolor="&usr.top-fgcolor;" scale="0.45"
-                  hspace="3"><translate id="">Language</translate>:</gtext>
+                  hspace="3"><translate id="bF">Language</translate>:</gtext>
            </td>
            <td>
              <font color="&usr.fgcolor;">
@@ -153,7 +153,7 @@
               <gbutton preparse="1"
                  href="/standard/change_user.pike?uid=&form.config_user_uid;"
                   align="right" textcolor="&usr.top-fgcolor;"
-                  width="70"> <translate id="">User</translate>: </gbutton>
+                  width="70"> <translate id="bG">User</translate>: </gbutton>
             </td>
             <td>
                <font color="&usr.top-fgcolor;">

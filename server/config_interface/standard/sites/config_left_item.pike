@@ -1,6 +1,6 @@
 #include <config_interface.h>
 #include <roxen.h>
-#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 string dotdot( RequestID id, int n )
 {

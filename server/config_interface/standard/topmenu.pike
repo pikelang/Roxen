@@ -1,7 +1,7 @@
 #include <config_interface.h>
 #include <roxen.h>
-LOCALE_PROJECT(config_interface);
-#define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
+USE_DEFERRED_LOCALE;
+#define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
 
 constant tablist = "<tablist preparse ::=&usr.toptabs-args;>";
 

@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.321 2000/07/14 20:02:55 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.322 2000/07/15 01:05:42 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -23,9 +23,9 @@ mapping profile_map = ([]);
 
 // Locale support...
 //<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE(config_interface,X,Y)
-LOCALE_PROJECT(config_interface);
-#define DLOCALE(X,Y) _DEF_LOCALE(X,Y)
+#define LOCALE(X,Y)  _STR_LOCALE("config_interface",X,Y)
+USE_DEFERRED_LOCALE;
+#define DLOCALE(X,Y) _DEF_LOCALE("config_interface",X,Y)
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

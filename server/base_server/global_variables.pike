@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.35 2000/07/14 20:03:02 lange Exp $
+// $Id: global_variables.pike,v 1.36 2000/07/15 01:05:42 lange Exp $
 
 /*
 #pragma strict_types
@@ -16,10 +16,10 @@ inherit "basic_defvar";
 #include <version.h>
 
 //<locale-token project="config_interface">LOCALE</locale-token>
-static inline object GETLOCOBJ() {
-  return roxenp()->locale->get()->config_interface;
- }
-#define LOCALE(X,Y)  _DEF_LOCALE(X,Y)
+static inline string GETLOCLANG() {
+  return roxenp()->locale->get();
+}
+#define LOCALE(X,Y)  _DEF_LOCALE("config_interface",X,Y)
 
 mixed save()
 {
@@ -251,12 +251,13 @@ void define_global_variables(  )
 	 TYPE_FLAG,
 	 LOCALE("ak", "If set to Yes, caching will be enabled."));
 
-  defvar("garb_min_garb", 1, LOCALE("am", "Cache: Proxy Disk Cache Clean size"),
+  defvar("garb_min_garb", 1, 
+	 LOCALE("am", "Cache: Proxy Disk Cache Clean size"),
 	 TYPE_INT,
 	 LOCALE("an", "Minimum number of Megabytes removed when a garbage collect is done."),
 	  0, cache_disabled_p);
 
-  defvar("cache_minimum_left", 5, 
+  defvar("cache_minimum_left", 5,
 	 LOCALE("ao", "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"), 
 	 TYPE_INT,
 	 LOCALE("ap", "If less than this amount of disk space or inodes (in %) "
@@ -277,7 +278,7 @@ void define_global_variables(  )
 		"collect is done?"),
 	 0, cache_disabled_p);
 
-  defvar("cache_max_num_files", 0, 
+  defvar("cache_max_num_files", 0,
 	 LOCALE("as", "Cache: Proxy Disk Cache Maximum number of files"), 
 	 TYPE_INT, 
 	 LOCALE("at", "How many cache files (inodes) may be on disk before "
@@ -285,7 +286,7 @@ void define_global_variables(  )
 		"this check."),
 	 0, cache_disabled_p);
 
-  defvar("bytes_per_second", 50, 
+  defvar("bytes_per_second", 50,
 	 LOCALE("au", "Cache: Proxy Disk Cache bytes per second"),
 	 TYPE_INT,
 	 LOCALE("av", "How file size should be treated during garbage collect. "
@@ -311,14 +312,14 @@ void define_global_variables(  )
 		"recalculated when this value is changed."),
 	 0, cache_disabled_p);
 
-  defvar("cache_keep_without_content_length", 1, 
+  defvar("cache_keep_without_content_length", 1,
 	 LOCALE("aA", "Cache: Proxy Disk Cache Keep without Content-Length"),
 	 TYPE_FLAG, 
 	 LOCALE("aB", "Keep files without Content-Length header information "
 		"in the cache?"),
 	 0, cache_disabled_p);
 
-  defvar("cache_check_last_modified", 0, 
+  defvar("cache_check_last_modified", 0,
 	 LOCALE("aC", "Cache: Proxy Disk Cache Refreshes on Last-Modified"), 
 	 TYPE_FLAG,
 	 LOCALE("aD", "If set, refreshes files without Expire header "
@@ -327,7 +328,7 @@ void define_global_variables(  )
 		"updated docs as online newspapers."),
 	 0, cache_disabled_p);
 
-  defvar("cache_last_resort", 0, 
+  defvar("cache_last_resort", 0,
 	 LOCALE("aE", "Cache: Proxy Disk Cache Last resort (in days)"), 
 	 TYPE_INT,
 	 LOCALE("aF", "How many days shall files without Expires and without "

@@ -8,12 +8,7 @@ inherit "roxenlib";
 #include <config_interface.h>
 #include <config.h>
 
-
-#if constant(Locale.translate)
-# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
-#else
-# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
-#endif
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth
 
@@ -536,9 +531,8 @@ string container_configif_output(string t, mapping m, string c, object id)
                       {
                         string q = id->not_query;
                         string tmp;
-                        multiset cl = (<>);
                         sscanf( q, "/%[^/]/%s", tmp, q );
-                        cl[ roxen.locale->get()->locale ] = 1;
+                        string active = roxen.locale->get();
 
                         return ([
                           "name":l,
@@ -554,9 +548,9 @@ string container_configif_output(string t, mapping m, string c, object id)
 					       (id->query&&sizeof(id->query)?
 						"?" +id->query:""),
 					       id),
-			  "selected":( cl[l] ? "selected": "" ),
-			  "-selected":( cl[l] ? "-selected": "" ),
-			  "selected-int":( cl[l] ? "1": "0" ),
+			  "selected":( l==active ? "selected": "" ),
+			  "-selected":( l==active ? "-selected": "" ),
+			  "selected-int":( l==active ? "1": "0" ),
                         ]);
                       } ) - ({ 0 });
      break;

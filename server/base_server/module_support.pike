@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.72 2000/07/09 14:12:24 per Exp $
+// $Id: module_support.pike,v 1.73 2000/07/15 01:05:42 lange Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -108,7 +108,7 @@ class ModuleInfo
     if( mappingp( name ) )
     {
       string q;
-      if( q = name[ roxenp()->locale->get()->name ] )
+      if( q = name[ roxenp()->locale->get() ] )
         return q;
       return name[ "standard" ];
     }
@@ -121,7 +121,7 @@ class ModuleInfo
     if( mappingp( description ) )
     {
       string q;
-      if( q = description[ roxenp()->locale->get()->name ] )
+      if( q = description[ roxenp()->locale->get() ] )
         return q;
       return description[ "standard" ];
     }

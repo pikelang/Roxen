@@ -1,8 +1,7 @@
 inherit "../logutil.pike";
 #include <config.h>
 #include <roxen.h>
-LOCALE_PROJECT(config_interface);
-#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 string parse(RequestID id)
 {

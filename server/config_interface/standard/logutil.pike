@@ -6,7 +6,7 @@
 #else
 #define CALL(X,P,Q,Y)	RoxenLocale.call(roxen.locale->get()->config_interface,X,Y,P,Q)
 #endif
-#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 int __lt;
 string describe_time(int t)
@@ -19,7 +19,7 @@ string describe_time(int t)
   }
 
   if(full)
-    return capitalize(roxen->language(roxen.locale->get()->locale,"date")(t));
+    return capitalize(roxen->language(roxen.locale->get(),"date")(t));
   else
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }

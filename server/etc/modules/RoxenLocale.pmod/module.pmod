@@ -24,13 +24,17 @@ void register_project(string name, string path, void|string path_base)
     path_base=tmp[..sizeof(tmp)-2]*"/"+"/";
     path=combine_path(path_base, path);
   }
+  if(projects[name] && projects[name]!=path) {
+    // Same name, but new path. Remove all depreciated objects
+    foreach(indices(locales), string lang)
+      m_delete(locales[lang], name);
 #ifdef LOCALE_DEBUG
-  if(projects[name] && projects[name]!=path)
     werror("\nChanging project %s from %s to %s\n",
 	   name, projects[name], path);
-  else
+  } else {
     werror("\nRegistering project %O (%s)\n",name,path);
 #endif
+  }
   projects[name]=path;
 }
 
@@ -127,14 +131,14 @@ object get_object(string project, string lang) {
   Stdio.File file=Stdio.FILE();
   if(!(file->open(filename, "r")))
     return 0;
-  string line=file->gets();
+  string line=file->gets();  // First line should be <?xml ?>
   string data=file->read();
   file->close();
-  if(!line)
+  if(!line || !data)
     return 0;
 
   // Check encoding
-  sscanf(line, "%*sencoding=\"%s\"",string encoding);
+  sscanf(line, "%*sencoding=\"%s\"", string encoding);
   if(encoding && encoding!="") {
     function(string:string) decode=0;
     switch(lower_case(encoding)) 
@@ -231,12 +235,11 @@ mapping(string:object) get_objects(string lang) {
   return locales[lang];
 }
 
-string translate(LocaleObject locale_object, string id,
-		 string str)
-  //! Does a translation with the given locale object.
+string translate(string project, string lang, string id, string fallback)
+  //! Returns a translation for the given id, or the fallback string
 {
+  LocaleObject locale_object = get_object(project, lang);
   if(locale_object) {
-    locale_object->timestamp=time(1);
     string t_str = locale_object->translate(id);
 #ifdef LOCALE_DEBUG
     if(t_str) t_str="("+id+":)"+t_str;
@@ -245,10 +248,11 @@ string translate(LocaleObject locale_object, string id,
   }
 #ifdef LOCALE_DEBUG
   else
-    werror("\nlocale.translate: no object, only %O (%O)\n", id, str);
-  str="("+id+")"+str;
+    werror("\nLocale.translate(): no object for id %O in %s/%s",
+	   id, project||"(no project)", lang||"(no language)");
+  fallback = "("+id+")"+fallback;
 #endif
-  return str;
+  return fallback;
 }
 
 mixed call(LocaleObject locale_object, string f,
@@ -284,16 +288,18 @@ class DeferredLocale
   static string project;
   static string key;
   static string fallback;
-  function(void:LocaleObject) get_locale;
-  void create(function(void:LocaleObject) get_locale_, string key_, string fallback_)
+  function(void:string) get_lang;
+  void create(string project_, function(void:string) get_lang_,
+	      string key_, string fallback_)
   {
-    get_locale = get_locale_;
+    project = project_;
+    get_lang = get_lang_;
     key = key_;
     fallback = fallback_;
   }
   static inline string lookup()
   {
-    return translate(get_locale(), key, fallback);
+    return translate(project, get_lang(), key, fallback);
   }
   string _sprintf(int c)
   {

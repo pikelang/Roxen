@@ -2,14 +2,14 @@
 static inherit "html";
 
 // Locale macros
-static object getlocobj() {
-  return roxenp()->locale->get()->config_interface;
+static inline string getloclang() {
+  return roxenp()->locale->get();
 }
 
 #if constant(Locale.translate)
-# define LOCALE(X,Y)	([string](mixed)Locale.DeferredLocale(getlocobj,X,Y))
+# define LOCALE(X,Y)	([string](mixed)Locale.DeferredLocale("config_interface",getloclang,X,Y))
 #else
-# define LOCALE(X,Y)	([string](mixed)RoxenLocale.DeferredLocale(getlocobj,X,Y))
+# define LOCALE(X,Y)	([string](mixed)RoxenLocale.DeferredLocale("config_interface",getloclang,X,Y))
 #endif
 
 // Increased for each variable, used to index the mappings below.

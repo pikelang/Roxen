@@ -26,11 +26,13 @@ class TagTranslationRegistration {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      if(args->path && args->path!="") {
 #if constant(Locale.register_project)
-      Locale.register_project(args->project, args->path);
+	Locale.register_project(args->project, args->path);
 #else
-      RoxenLocale.register_project(args->project, args->path);
+	RoxenLocale.register_project(args->project, args->path);
 #endif
+      }
       id->misc->translation_proj=args->project;
       result = "";
       return 0;
@@ -53,11 +55,11 @@ class TagTranslate {
     array do_return(RequestID id) {
       string proj = args->project || id->misc->translation_proj;
 #if constant(Locale.transtale)
-      string trans = Locale.translate(roxen.locale->get()[proj],
+      string trans = Locale.translate(proj, roxen.locale->get(),
 				      args->id,
 				      content);
 #else
-      string trans = RoxenLocale.translate(roxen.locale->get()[proj],
+      string trans = RoxenLocale.translate(proj, roxen.locale->get(),
 					   args->id,
 					   content);
 #endif
