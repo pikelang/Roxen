@@ -1,12 +1,12 @@
 /*
- * $Id: directories2.pike,v 1.5 1997/08/31 03:47:16 peter Exp $
+ * $Id: directories2.pike,v 1.6 1997/10/10 17:21:08 grubba Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.5 1997/08/31 03:47:16 peter Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.6 1997/10/10 17:21:08 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -304,8 +304,10 @@ string|mapping parse_directory(object id)
     id->not_query = old_not_query;
   }
   if (f[-1] != '.') {
+#if 0
     return(http_redirect(f+".",id));
+#endif /* 0 */
+    f += ".";
   }
-  
   return http_string_answer(parse_rxml(describe_directory(f, id), id));
 }
