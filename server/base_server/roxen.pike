@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.549 2000/09/14 19:42:57 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.550 2000/09/15 14:12:02 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2257,11 +2257,15 @@ class ImageCache
        case "png":
          if( ct ) enc_args->palette = ct;
          m_delete( enc_args, "colortable" );
-         if( !enc_args->alpha )
+         if( !(args["png-use-alpha"] || args["true-alpha"]) )
+           m_delete( enc_args, "alpha" );
+         else if( enc_args->alpha )
+           // PNG encoder doesn't handle alpha and palette simultaneously
+           // which is rather sad, since that's the only thing 100% supported
+           // by all common browsers.
+	   m_delete( enc_args, "palette");
+         else
 	   m_delete( enc_args, "alpha" );
-	 else
-	   //  PNG encoder doesn't handle alpha and palette simultaneously
-	   m_delete(enc_args, "palette");
 
        default:
 	 data = Image[upper_case( format )]->encode( reply, enc_args );
