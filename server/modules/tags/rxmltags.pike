@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.76 2000/02/22 05:32:23 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.77 2000/02/23 01:12:16 marcus Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -884,7 +884,7 @@ array(string) container_cache(string tag, mapping args,
 string|array(string) container_crypt( string s, mapping m,
                                       string c, RequestID id )
 {
-  if(m->compare) return crypt(c,m->compare)?"<true>":"<false>";
+  if(m->compare) return crypt(c,m->compare)?"<true />":"<false />";
   return ({ crypt(c) });
 }
 
@@ -902,7 +902,7 @@ string container_for(string t, mapping args, string c, RequestID id)
   {
     if(v)
       for(int i=from; i>=to; i+=step)
-        res += "<set variable="+v+" value="+i+">"+c;
+        res += "<set variable="+v+" value="+i+" />"+c;
     else
       for(int i=from; i>=to; i+=step)
         res+=c;
@@ -912,14 +912,14 @@ string container_for(string t, mapping args, string c, RequestID id)
   {
     if(v)
       for(int i=from; i<=to; i+=step)
-        res += "<set variable="+v+" value="+i+">"+c;
+        res += "<set variable="+v+" value="+i+" />"+c;
     else
       for(int i=from; i<=to; i+=step)
         res+=c;
     return res;
   }
 
-  return "<set variable="+v+" value="+to+">"+c;
+  return "<set variable="+v+" value="+to+" />"+c;
 }
 
 string container_foreach(string t, mapping args, string c, RequestID id)
