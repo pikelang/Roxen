@@ -254,11 +254,11 @@
 
   <delete all>
 
-  <insert name="Clasic" title="">
-  <insert name="Modern" title="">
-  <insert name="Strict" title="">
-  <insert name="Sunshine" title="">
-  <insert name="Depresive" title="">
+  <insert name="Clasic" title="" customer_id=1>
+  <insert name="Modern" title="" customer_id=1>
+  <insert name="Strict" title="" customer_id=1>
+  <insert name="Sunshine" title="" customer_id=1>
+  <insert name="Depresive" title="" customer_id=1>
   
 </sql-insert>
 
@@ -273,24 +273,3 @@
   <insert scheme_id=1 _variable_name="template_name" value="Template 1">
 
 </sql-insert>
-
-
-<!--  Remove remining rows, test only  -->
-<-sql-insert table="customers_files">
-  <delete all>
-  
-  <insert customer_id=1, filename="/index.html">
-  <insert customer_id=1, filename="/test1.html">
-  <insert customer_id=1, filename="/test2.html">
-  
-</-sql-insert>
-
-
-<-sql-insert table="customers_menu">
-  <delete all>
-
-  <insert customer_id=1 file_id=1 item_order=1 title="Huvudsida">
-  <insert customer_id=1 file_id=2 item_order=2 title="Sida 1">
-  <insert customer_id=1 file_id=3 item_order=3 title="Sida 2">
-
-</-sql-insert>

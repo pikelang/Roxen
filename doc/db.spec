@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.12 1998/07/27 17:13:26 wellhard Exp $
+# $Id: db.spec,v 1.13 1998/08/06 19:05:48 wellhard Exp $
 
 drop table customers;
 drop table dns;
@@ -93,6 +93,7 @@ create table template_vars_opts (
     
 create table template_schemes (
              id                      int auto_increment primary key,
+	     customer_id             int,
 	     name                    varchar(64),
 	     title		     varchar(255)     
      );
@@ -102,18 +103,4 @@ create table template_schemes_vars (
              scheme_id               int,
 	     variable_id	     int,
 	     value		     blob
-     );
-
-create table customers_files (
-	     id			     int auto_increment primary key,
-             customer_id             int,
-             filename                varchar(255)
-     );
-
-create table customers_menu (
-	     id			     int auto_increment primary key,
-	     customer_id             int,
-             file_id                 int,
-	     item_order              int,
- 	     title                   varchar(255)
      );
