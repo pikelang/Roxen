@@ -7,11 +7,18 @@
   <cset quote=none variable=__contents><contents></cset>
 </define>
 
+<define container=cv-leftside>
+  <cset variable=leftside><contents></cset>
+</define>
+
 <define container=cv-startpage>
-<subtablist>
+
+<table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
+&form.leftside:none;</td><td width='100%' valign=top>
+<subtablist width='100%'>
   <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
   <st-page><contents></st-page>
-</subtablist>
+</subtablist></td></tr></table>
 </define>
 
 <define container=cv-obox>
