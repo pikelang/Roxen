@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.40 2001/03/12 08:47:46 kuntri Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.41 2001/06/28 21:33:57 nilsson Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -421,7 +421,7 @@ string fix_var(string s, RequestID id) {
   s=replace(s||"",({"\000","\\$"}),({"","\000"}));
   int size=sizeof(s);
   if(size>2 && s[size-2..]=="--") s=s[..size-3];
-  if(s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
+  if(sizeof(s) && s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
   return s; //FIXME: No in-string-substitution yet.
 }
 
