@@ -259,7 +259,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2+labelx);
+	    (int)ceil((float)diagram_data["linewidth"]+si*2+labelx);
 	  if (maxpos<xpos_for_yaxis)
 	    {
 	      xpos_for_yaxis=maxpos;
