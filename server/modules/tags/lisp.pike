@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.2 1998/01/29 14:57:38 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.3 1998/01/29 15:02:16 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -95,8 +95,8 @@ class lisp_types
 {
   /* Data shared between all Lisp objects */
   mapping symbol_table = ([ ]);
-  object Nil = NilSymbol(symbol_table);
-  object True = ConstantSymbol("t", symbol_table);
+  object Nil = this_object()->NilSymbol(symbol_table);
+  object True = this_object()->ConstantSymbol("t", symbol_table);
 
 
   class LObject 
