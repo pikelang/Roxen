@@ -3,8 +3,9 @@
 // the url is UTF-8 or Macintosh encoded.
 
 inherit "module";
+#include <request_trace.h>
 
-constant cvs_version = "$Id: url_rectifier.pike,v 1.13 2000/11/18 07:20:28 nilsson Exp $";
+constant cvs_version = "$Id: url_rectifier.pike,v 1.14 2001/03/30 14:49:24 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_LAST;
 constant module_name = "URL Rectifier";
@@ -44,20 +45,27 @@ mapping last_resort(RequestID id)
 {
   function decode;
   string iq;
+  int tries;
   foreach(encodings, string encoding)
   {
     decode = decoders[ encoding ];
     if( !catch( iq = decode( id->not_query ) ) &&
 	(iq != id->not_query) )
     {
+      TRACE_ENTER("Decoding request as " + encoding + " turns " +
+		  id->not_query + " into " + iq + ".\n", 0);
       object id2 = id->clone_me();
       id2->decode_charset_encoding( decode );
       mapping q = id->conf->get_file( id2 );
       if( q )
       {
+	TRACE_LEAVE("Wee! Document found!\n");
 	redirs[encoding]++;
 	return q;
       }
+      TRACE_LEAVE((tries ? "Rats" : "Nope") +
+		  ", that didn't quite cut it" +
+		  (tries++ ? " either" : "") + ".\n");
     }
   }
   unsuccessful++;
