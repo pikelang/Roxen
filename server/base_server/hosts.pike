@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.4 1996/12/06 23:01:15 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.5 1996/12/19 10:16:59 neotron Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -172,7 +172,20 @@ string quick_ip_to_host(string ipnumber)
 
 string quick_host_to_ip(string h)
 {
-  if((int)h)  return h;
+  mixed entry = h / "." - ({""});
+  int isip;
+  string s;
+  if(sizeof(entry) == 4) 
+  { // Could be an ip number
+    foreach(entry, s)
+      if((string)((int)s) != s) {
+	isip = 0;
+	break;
+      } else
+	isip = 1;
+  }
+  if(isip) 
+    return h;
   if(h[-1] == '.')
     h=h[0..strlen(h)-2];
   return cache_lookup("hosts", h) || h;
@@ -209,13 +222,24 @@ varargs void ip_to_host(string ipnumber, function callback, mixed ... args)
 varargs void host_to_ip(string host, function callback, mixed ... args)
 {
   mixed *entry;
-
+  string s;
+  int isip;
   if(!stringp(host) || !strlen(host))
     return callback(0, @args);
   if(host[-1] == '.')
     host=host[0..strlen(host)-2];
-
-  if((int)host) return callback(host,  @args);
+  entry = host / "." - ({""});
+  if(sizeof(entry) == 4) 
+  { // Could be an ip number
+    foreach(entry, s)
+      if((string)((int)s) != s) {
+	isip = 0;
+	break;
+      } else
+	isip = 1;
+  }
+  if(isip) 
+    return callback(host,  @args);
 
   if(entry=cache_lookup("hosts", host))
     if((entry[1] > time(1)) && entry[0])

@@ -1,5 +1,21 @@
+Changes since Roxen Challenger 1.1 final (pl 1)
+-----------------------------------------------
+
+o Fix in the host->ip functions. Before Roxen assumed that there were
+  no hostnames that started with en in (for example
+  50foo.bar.com). This little misfeature is fixed now. Before the
+  proxy never worked with one of these hosts. The bug was found by
+  Iztok Umek <Iztok.Umek@snet.fri.uni-lj.si>. Thanks!
+  
+o Bugfix in module security. You now get the "403 Forbidden" return
+  code if your IP isn't allowed to view a page, instead of "404 Not
+  Found". Thanks to Kai Garlipp <garlipp@informatik.uni-rostock.de>
+  for the patch.
+
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
+o There is a new tool to convert the access files from the old to the
+  new format. It's located in tools/convert_accessed.pike.
 
 o Before allow user=foo,bar granted access to use foobar and bargaz as
   well. Fixed with patch from Jordi Murgo (jordi@lleida.net).

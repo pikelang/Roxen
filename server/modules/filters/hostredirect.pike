@@ -5,7 +5,7 @@
 // cheap way (IP number wise) to do virtual hosting. Note that this
 // won't work with all clients.
 
-string cvs_version = "$Id: hostredirect.pike,v 1.3 1996/11/27 13:48:02 per Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.4 1996/12/19 10:17:02 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -73,11 +73,11 @@ mixed first_try(object id)
     return 0;
   
   id->misc->host_redirected = 1;
-  if(!((host = lower_case(id->misc->host)) ||
-       (host = replace(id->my_fd->query_address(1)," ",":"))))
+  if(!(host = id->misc->host) ||
+     (host = replace(id->my_fd->query_address(1)," ",":")))
     return 0;
   
-  host = (host / ":")[0]; // Remove port number
+  host = lower_case((host / ":")[0]); // Remove port number
   
   if(!patterns[host]) {
     if(patterns["default"]) 

@@ -228,6 +228,10 @@ cern.*linemode.*           nothing
 .*		robot	passagen
 # }
 
+#section intraseek {
+.*		robot	intraseek
+# }
+
 #section webcrawler {
 .*		robot	webcrawler
 # }

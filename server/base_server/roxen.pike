@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.28 1996/12/16 22:59:47 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.29 1996/12/19 10:17:00 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -994,10 +994,12 @@ int|mapping check_security(function a, object id, void|int slevel)
       {
        case MOD_ALLOW: // allow ip=...
 	if(level[1](id->remoteaddr)) return 0; // Match. It's ok.
+	return http_low_answer(403, "<h2>Access forbidden</h2>");
 	continue;
 	
        case MOD_DENY: // deny ip=...
 	if(level[1](id->remoteaddr)) throw("");
+	return http_low_answer(403, "<h2>Access forbidden</h2>");
 	continue;
 
        case MOD_USER: // allow user=...
