@@ -87,7 +87,7 @@ class UDPNeigh
 #ifdef NEIGH_DEBUG
       werror("Neighbourhood: Listening to UDP\n");
 #endif
-      if(!master->udp_sock->bind( 0, p ))
+      if(!master->udp_sock->bind( p ))
 	werror("Bind failed.\n");
       master->udp_sock->set_read_callback(read);
     } else
@@ -124,8 +124,20 @@ object master;
 
 void send_to_all(string f, object from)
 {
+  mapping sent_to = ([]);
+  if(from)
+  {
+    string ip = from->me?(((from->me->query_address()||"")/" ")[0]):from->net;
+    sent_to[ip]++;
+  }
   foreach(indices(low_neighbours), object o)
-    if(objectp(o)) if(o!=from) o->send(f);
+    if(objectp(o) && (o!=from)) {
+      string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
+      if(ip=="")
+	this_object()->remove_neighbour(o);
+      else
+	if(!sent_to[ip]++) o->send(f);
+    }
 }
 
 array config_info(object c)
@@ -179,8 +191,9 @@ void low_got_info(string data, object from)
   m = decode_value(data);
   if(m->sequence) m->seq = m->sequence;
   ns = neighborhood[m->configurl]||([]);
-  if(!ns->seq || (m->seq != ns->seq))
+  if(!ns->ok || (m->seq != ns->seq))
   {
+    ns->ok=1;
 #ifdef NEIGH_DEBUG
     werror("Neighbourhood: Got info for "+m->configurl+"\n");
 #endif
@@ -194,6 +207,9 @@ void low_got_info(string data, object from)
     neighborhood[m->configurl] = ns | m;
     send_to_all(data, from);
   }
+#ifdef NEIGH_DEBUG
+  else werror("Neighbourhood: Rejecting already received info for "+m->configurl+"\n");
+#endif
 }
 
 void got_connection(object port)
@@ -220,6 +236,7 @@ void create()
 {
   foreach(indices(low_neighbours), object o)
   {
+    m_delete(low_neighbours, o);
     if(o->me) destruct(o->me);
     destruct(o);
   }
