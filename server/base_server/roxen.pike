@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.869 2004/05/03 16:29:26 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.870 2004/05/03 16:32:27 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2176,11 +2176,12 @@ Configuration find_configuration( string name )
 
 static int last_hrtime = gethrtime(1)/100;
 static int clock_sequence = random(0x4000);
+static string hex_mac_address =
+  Crypto.string_to_hex(Crypto.randomness.reasonably_random()->read(6)|
+		       "\0\0\0\0\0\1");	// Multicast bit.
 // Generate an uuid string.
 string new_uuid_string()
 {
-  object rnd = Crypto.randomness.reasonably_random();
-  string mac_address = rnd->read(6)|"\0\0\0\0\0\1";	// Multicast bit.
   int now = gethrtime(1)/100;
   if (now != last_hrtime) {
     clock_sequence = random(0x4000);
@@ -2206,7 +2207,7 @@ string new_uuid_string()
 		 (now >> 32) & 0xffff,
 		 (now >> 48) & 0xffff,
 		 clock_sequence,
-		 Crypto.string_to_hex(mac_address));
+		 hex_mac_address);
 }
 
 mapping(string:array(int)) error_log=([]);
