@@ -1,7 +1,10 @@
-inherit "roxenlib";
 #include <config_interface.h>
 #include <module.h>
 #include <module_constants.h>
+#include <roxen.h>
+
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 // Class is the name of the directory.
 array(string) class_description( string d, RequestID id )
@@ -163,7 +166,7 @@ return sprintf(
        <form method='post' action='add_module.pike'>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
-         <submit-gbutton preparse=''>&locale.add_module;</submit-gbutton>
+         <submit-gbutton preparse=''>"+LOCALE("", "Add Module")+#"</submit-gbutton>
        </form>
      </td>
      <td valign=top>
@@ -197,13 +200,13 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
                    "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
                    "<br>"+d+"</td></tr></table></td></tr>\n");
   if( id->variables->unfolded == c )
-    return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
+    return ({ 1, replace(header,"UNFOLD","<a name="+Roxen.http_encode_string(c)+
                        "></a><gbutton preparse='' dim=''> View </gbutton>") });
 
   return ({ 0, replace(header,"UNFOLD","<gbutton preparse='' "
                        "href='add_module.pike?config=&form.config;"
-                       "&unfolded="+http_encode_string(c)+
-                       "#"+http_encode_string(c)+"' > "
+                       "&unfolded="+Roxen.http_encode_string(c)+
+                       "#"+Roxen.http_encode_string(c)+"' > "
                        "View </gbutton>") }) ;
 }
 
@@ -216,7 +219,7 @@ string page_normal( RequestID id, int|void noimage )
                                 class_visible_normal, id );
   content += desc;
   content += ("</table>"+
-              "<pre>"+html_encode_string(err)+"</pre>");
+              "<pre>"+Roxen.html_encode_string(err)+"</pre>");
   return page_base( id, content );
 }
 
@@ -260,16 +263,16 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
                    "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
                    "<br />"+d+"</td></tr></table></td></tr>\n");
   if( id->variables->unfolded == c )
-    return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
+    return ({ 1, replace(header,"UNFOLD","<a name="+Roxen.http_encode_string(c)+
                        "></a><gbutton preparse='' dim=''> View </gbutton>")+
-                       "<tr><td><submit-gbutton> &locale.add_module; "
-                       "</submit-gbutton></td></tr>" });
+                       "<tr><td><submit-gbutton> "+LOCALE("", "Add Module")+
+                       " </submit-gbutton></td></tr>" });
 
   return ({ 0, replace(header,"UNFOLD","<gbutton preparse='' "
                        "href='add_module.pike?config=&form.config;"
-                       "&unfolded="+http_encode_string(c)+
-                       "#"+http_encode_string(c)+"' > "
-                       "View </gbutton>") }) ;
+                       "&unfolded="+Roxen.http_encode_string(c)+
+                       "#"+Roxen.http_encode_string(c)+"' > "+
+                       LOCALE("", "View")+" </gbutton>") }) ;
 }
 
 string page_faster( RequestID id )
@@ -283,7 +286,7 @@ string page_faster( RequestID id )
                                 class_visible_faster, id );
   content += desc;
   content += ("</table></form>"+
-              "<pre>"+html_encode_string(err)+"</pre>");
+              "<pre>"+Roxen.html_encode_string(err)+"</pre>");
   return page_base( id, content );
 }
 
@@ -293,7 +296,7 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 {
   string res="";
   if(first++)
-    res = "</select><br /><submit-gbutton> &locale.add_module; </submit-gbutton> ";
+    res = "</select><br /><submit-gbutton> "+LOCALE("", "Add Module")+" </submit-gbutton> ";
   res += "<p><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
   return ({ 1, res });
 }
@@ -315,8 +318,8 @@ string page_compact( RequestID id )
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton> "
-                   "&locale.add_module; </submit-gbutton><p><pre>"
-                   +html_encode_string(err)+"</pre></form>",
+                   +LOCALE("", "Add Module")+" </submit-gbutton><p><pre>"
+                   +Roxen.html_encode_string(err)+"</pre></form>",
                    );
 }
 
@@ -358,8 +361,8 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    desc+"</select><br /><submit-gbutton> "
-                   "&locale.add_module; </submit-gbutton><br /><pre>"
-                   +html_encode_string(err)+"</pre></form>",
+                   +LOCALE("", "Add Module")+" </submit-gbutton><br /><pre>"
+                   +Roxen.html_encode_string(err)+"</pre></form>",
                    );
 }
 
@@ -417,12 +420,12 @@ mixed do_it( RequestID id )
 
   if( strlen( last_module ) )
     if (got_initial)
-      return http_redirect( site_url( id, id->variables->config )+
+      return Roxen.http_redirect( site_url( id, id->variables->config )+
 			    "modules/?initial=1&mod="+Array.uniq(initial_modules)*",", id );
     else
-      return http_redirect( site_url( id, id->variables->config )+
+      return Roxen.http_redirect( site_url( id, id->variables->config )+
 			    "modules/"+last_module+"/", id );
-  return http_redirect( site_url( id, id->variables->config )+"modules/",id);
+  return Roxen.http_redirect( site_url( id, id->variables->config )+"modules/",id);
 }
 
 mixed parse( RequestID id )

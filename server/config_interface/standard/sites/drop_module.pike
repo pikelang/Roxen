@@ -1,6 +1,9 @@
-inherit "roxenlib";
 #include <config_interface.h>
 #include <module.h>
+#include <roxen.h>
+
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string site_url( RequestID id, string site )
 {
@@ -24,13 +27,13 @@ string page_base( RequestID id, string content )
 mapping|string parse( RequestID id )
 {
   if( !config_perm( "Add Module" ) )
-    return "Permission denied";
+    return LOCALE("", "Permission denied");
 
   object c = roxen.find_configuration( id->variables->config );
   if( id->variables->drop )
   {
     c->disable_module( replace(id->variables->drop,"!","#") );
-    return http_redirect( site_url( id, id->variables->config )+"modules/",
+    return Roxen.http_redirect( site_url( id, id->variables->config )+"modules/",
                           id );
   }
   string res ="";
@@ -41,8 +44,8 @@ mapping|string parse( RequestID id )
     object m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
     res += ("<gbutton preparse href='drop_module.pike?config=&form.config;&"
-            "drop="+replace(q,"#","!")+"'> &locale.drop_module; "
-            "</gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"<p>" );
+            "drop="+replace(q,"#","!")+"'> "+LOCALE("", "Drop Module")+
+            " </gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"<p>" );
   }
   return page_base( id, res );
 }
