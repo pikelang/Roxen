@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.14 2001/08/30 13:23:23 hop Exp $
+ * $Id: snmpagent.pike,v 1.15 2001/08/31 13:07:54 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -700,7 +700,7 @@ SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.14 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.15 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -1003,70 +1003,80 @@ class SubMIBRoxenVSTable {
     int idx, vdata;
     array rval, arr;
 
-    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
+    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O)", name, oid));
     soid = oid_strip(oid);
 
-    if(oid == (MIBTREE_BASE+"."+tree)) {
-      soid = "1.1.-1"; 			// special case
-      oid += ".1.1.-1";			// trash only
-    }
+    if(soid == tree) soid +=".";
+    arr = allocate(5);
+    switch(idx = sscanf(soid-(tree+"."), "%d.%d.%d.%s", arr[0], arr[1], arr[2], arr[3])) {
 
-    arr = ((soid = soid - (tree + "."))/".");
-    if(sizeof(arr) == 1) {
-      soid = arr[0]+".-1"; 		// special case
-      oid += "."+soid;			// trash only
-    }
+	case 3:
+	  break;
 
-    idx = (int)((soid/".")[2]);
-    if(!stringp(agent->get_virtservname(idx+1))) {  // check on correct index
-      vdata = ((int)(soid/".")[1])+1;
-      if(vdata > 7)
+	case 0:
+	  arr[0] = 1;
+	case 1:
+	  arr[1] = 1;
+	case 2:
+	  arr[2] = 0;
+	  break;
+
+	default:
+	  return ({});
+    }
+    if(!stringp(agent->get_virtservname(arr[2]+1))) {  // check on correct index
+      SNMPAGENT_MSG(sprintf("DEB: idx:%O soid: %O arr: %O", idx, soid, arr));
+      arr[1]++;
+      if(arr[1] > 7)
 	    return ({}); // outside of current manager scope
-      soid = "1."+(string)vdata+".1";
-      noid = MIBTREE_BASE+"."+tree+"."+soid;
-    } else 
-      noid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)++idx;
-SNMPAGENT_MSG(sprintf("DEB: idx:%O, soid: %O, noid: %O", idx, soid, noid));
+      arr[2] = 0;
+    }
+    arr[2]++;
+    idx = arr[2];  
+    noid = MIBTREE_BASE+"."+tree + "."+(string)arr[0]+"."+(string)arr[1]+"."+(string)arr[2];
 
-    switch ((soid/".")[1]) {
+    //SNMPAGENT_MSG(sprintf("DEB: arr:%O, soid: %O, noid: %O", arr, soid, noid));
 
-	case "1": // VS_INDEX
+    //switch ((soid/".")[1]) {
+    switch (arr[1]) {
+
+	case 1: // VS_INDEX
 	  vname = agent->get_virtservname(idx);  // only checking
 	  if(!stringp(vname))
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_INT(idx)}));
 
-	case "2": // VS_NAME
+	case 2: // VS_NAME
 	  vname = agent->get_virtservname(idx);
 	  if(!stringp(vname))
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_STR(vname)}));
 
-	case "3": // VS_DESCR
+	case 3: // VS_DESCR
 	  vname = agent->get_virtservname(idx);  // FIXME:  change to descr!
 	  if(!stringp(vname))
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_STR(vname)}));
 
-	case "4": // VS_SDATA
+	case 4: // VS_SDATA
 	  vdata = agent->get_virtservsdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "5": // VS_RDATA
+	case 5: // VS_RDATA
 	  vdata = agent->get_virtservrdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "6": // VS_SHDRS
+	case 6: // VS_SHDRS
 	  vdata = agent->get_virtservshdrs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "7": // VS_REQS
+	case 7: // VS_REQS
 	  vdata = agent->get_virtservreqs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
