@@ -16,6 +16,8 @@ o Fixed problem sending plain files with SSL3.
 
 o Pike 0.5 SQL API has been updated to Pike 0.6 level.
 
+o Now installs a script to run the Roxen Pike as "$(prefix)/bin/pike-roxen".
+
 o Fixed OLD select() bug in the backend (both Pike 0.5 and 0.6).
 
 o Improved procfs test for Pike 0.5.
