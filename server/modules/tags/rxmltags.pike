@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.64 2000/02/11 06:32:36 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.65 2000/02/13 18:09:51 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -203,7 +203,7 @@ void set_entities(RXML.Context c) {
 class TagRoxenACV {
   inherit RXML.Tag;
   constant name = "roxen-automatic-charset-variable";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
 
   class Frame {
     inherit RXML.Frame;
@@ -219,7 +219,7 @@ class TagRoxenACV {
 class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text ]);
 
   class Frame {
@@ -240,7 +240,7 @@ class TagAppend {
       if (args->from) {
 	// Append the value of another entity variable.
 	mixed from=context->user_get_var(args->from, args->scope);
-	if(!from) rxml_error("From variable doesn't exist.");
+	if(!from) rxml_parse_error("From variable doesn't exist.");
 	if (value)
 	  value+=from;
 	else
@@ -248,7 +248,7 @@ class TagAppend {
 	context->user_set_var(args->variable, value, args->scope);
 	return 0;
       }
-      rxml_fatal("No value specified.");
+      rxml_parse_error("No value specified.");
     }
   }
 }
@@ -345,13 +345,13 @@ string tag_redirect(string tag, mapping m, RequestID id)
 class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
 
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
       if(!args->variable && !args->scope)
-	rxml_error("Variable nor scope not specified.");
+	rxml_parse_error("Variable nor scope not specified.");
       if(!args->variable && args->scope!="roxen") {
 	RXML.get_context()->add_scope(args->scope, ([]) );
 	return 0;
@@ -365,7 +365,7 @@ class TagUnset {
 class TagSet {
   inherit RXML.Tag;
   constant name = "set";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
   mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text ]);
 
   class Frame {
@@ -385,12 +385,12 @@ class TagSet {
       if (args->from) {
 	// Copy a value from another entity variable.
 	mixed from=context->user_get_var(args->from, args->scope);
-	if(!from) rxml_error("From variable doesn't exist.");
+	if(!from) rxml_parse_error("From variable doesn't exist.");
 	context->user_set_var(args->variable, from, args->scope);
 	return 0;
       }
 
-      rxml_error("No value specified.");
+      rxml_parse_error("No value specified.");
     }
   }
 }
@@ -398,7 +398,7 @@ class TagSet {
 class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
@@ -406,7 +406,7 @@ class TagInc {
 
     array do_return(RequestID id) {
       string res=inc(args, id);
-      if(res) rxml_error(res);
+      if(res) rxml_parse_error(res);
       return 0;
     }
   }
@@ -415,7 +415,7 @@ class TagInc {
 class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
-  constant flags = 0;
+  constant flags = RXML.FLAG_NONCONTAINER;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
@@ -423,7 +423,7 @@ class TagDec {
 
     array do_return(RequestID id) {
       string res=dec(args, id);
-      if(res) rxml_error(res);
+      if(res) rxml_parse_error(res);
       return 0;
     }
   }
@@ -529,7 +529,7 @@ string tag_fsize(string tag, mapping args, RequestID id)
 class TagCoding {
   inherit RXML.Tag;
   constant name="\x266a";
-  constant flags=0;
+  constant flags=RXML.FLAG_NONCONTAINER;
   class Frame {
     inherit RXML.Frame;
     constant space=({147, 188, 196, 185, 188, 187, 119, 202, 201, 186, 148, 121, 191, 203,
@@ -800,7 +800,6 @@ class TagScope {
   inherit RXML.Tag;
 
   constant name = "scope";
-  constant flags = RXML.FLAG_CONTAINER;
   mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text ]);
 
   class Frame

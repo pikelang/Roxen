@@ -1,7 +1,7 @@
 /*
- * $Id: rxml.pike,v 1.122 2000/02/13 10:32:22 mast Exp $
+ * $Id: rxml.pike,v 1.123 2000/02/13 18:09:46 mast Exp $
  *
- * The Roxen RXML Parser.
+ * The Roxen RXML Parser. See also the RXML Pike module.
  *
  * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
  */
@@ -21,9 +21,9 @@ string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
 }
 
-string handle_rxml_error (mixed err, RXML.Type type)
-// This is used for RXML errors thrown in the new parser. See
-// RXML.Context.rxml_error().
+string handle_rxml_run_error (RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML run errors. See
+// RXML.rxml_run_error().
 {
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
@@ -34,9 +34,9 @@ string handle_rxml_error (mixed err, RXML.Type type)
   else return describe_error (err);
 }
 
-string handle_rxml_fatal (mixed err, RXML.Type type)
-// This is used for RXML fatal errors thrown in the new parser. See
-// RXML.Context.rxml_fatal().
+string handle_rxml_parse_error (RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML parse errors. See
+// RXML.rxml_parse_error().
 {
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
@@ -271,7 +271,7 @@ class BacktraceFrame
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
-array|string call_overridden (array call_to, RXML.PHtml parser,
+array|string call_overridden (array call_to, RXML.PXml parser,
 			      string name, mapping(string:string) args,
 			      string content, RequestID id)
 {
@@ -319,7 +319,7 @@ array|string call_overridden (array call_to, RXML.PHtml parser,
   return result;
 }
 
-array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
+array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
 {
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
@@ -373,7 +373,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   return result || ({make_tag (tag, args)});
 }
 
-array(string)|string call_container(RXML.PHtml parser, mapping args,
+array(string)|string call_container(RXML.PXml parser, mapping args,
 				    string contents, string|function rf)
 {
   RXML.Context ctx = parser->context;
@@ -441,8 +441,8 @@ int do_parse_depth;
 string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines)
 {
-  RXML.PHtml parent_parser = id->misc->_parser;	// Don't count on that this exists.
-  RXML.PHtml parser;
+  RXML.PXml parent_parser = id->misc->_parser;	// Don't count on that this exists.
+  RXML.PXml parser;
   RXML.Context ctx;
 
   if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
@@ -513,7 +513,7 @@ class GenericTag {
 
     array do_return(RequestID id, void|mixed piece) {
       if (flags & RXML.FLAG_POSTPARSE)
-	result_type = result_type (RXML.PHtml);
+	result_type = result_type (RXML.PXml);
       if (!(flags & RXML.FLAG_STREAM_CONTENT))
 	piece = content || "";
       array|string res = _do_return(name, args, piece, id, this_object());
@@ -572,7 +572,7 @@ void remove_parse_module (RoxenModule mod)
 }
 
 
-string call_user_tag(RXML.PHtml parser, mapping args)
+string call_user_tag(RXML.PXml parser, mapping args)
 {
   RequestID id = parser->context->id;
   string tag = parser->tag_name();
@@ -587,7 +587,7 @@ string call_user_tag(RXML.PHtml parser, mapping args)
   return r;
 }
 
-array|string call_user_container(RXML.PHtml parser, mapping args, string contents)
+array|string call_user_container(RXML.PXml parser, mapping args, string contents)
 {
   RequestID id = parser->context->id;
   string tag = parser->tag_name();
@@ -679,7 +679,7 @@ string parse_rxml(string what, RequestID id,
 
 string tag_help(string t, mapping args, RequestID id)
 {
-  RXML.PHtml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
+  RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
   array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
   string help_for = args->for || id->variables->_r_t_h;
   string ret="<h2>Roxen Interactive RXML Help</h2>";
@@ -1086,8 +1086,7 @@ array(string) tag_noparse(string t, mapping m, string c)
 class TagEval {
   inherit RXML.Tag;
   constant name = "eval";
-  constant flags = RXML.FLAG_CONTAINER;
-  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PHtml), RXML.t_html(RXML.PHtml) });
+  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PXml), RXML.t_html(RXML.PXml) });
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -1188,8 +1187,8 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
-  constant Frame = FrameIf;
+  constant flags = RXML.FLAG_SOCKET_TAG;
+  program Frame = FrameIf;
 }
 
 string tag_else( string t, mapping m, string c, RequestID id )
@@ -1226,15 +1225,13 @@ class TagCond
 {
   inherit RXML.Tag;
   constant name = "cond";
-  constant flags = RXML.FLAG_CONTAINER;
-  RXML.Type content_type = RXML.t_none (RXML.PHtml);
+  RXML.Type content_type = RXML.t_none (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class TagCase
   {
     inherit RXML.Tag;
     constant name = "case";
-    constant flags = RXML.FLAG_CONTAINER;
     array(RXML.Type) result_types = ({RXML.t_none});
 
     class Frame
@@ -1244,7 +1241,7 @@ class TagCond
       array do_enter (RequestID id)
       {
 	if (up->result != RXML.Void) return 0;
-	content_type = up->result_type (RXML.PHtml);
+	content_type = up->result_type (RXML.PXml);
 	return ::do_enter (id);
       }
 
@@ -1266,7 +1263,6 @@ class TagCond
   {
     inherit RXML.Tag;
     constant name = "default";
-    constant flags = RXML.FLAG_CONTAINER;
     array(RXML.Type) result_types = ({RXML.t_none});
 
     class Frame
@@ -1305,7 +1301,7 @@ class TagCond
     {
       if (result == RXML.Void && default_data) {
 	LAST_IF_TRUE = 0;
-	return ({RXML.parse_frame (result_type (RXML.PHtml), default_data)});
+	return ({RXML.parse_frame (result_type (RXML.PXml), default_data)});
       }
       return 0;
     }
@@ -1315,7 +1311,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
+  constant flags = RXML.FLAG_SOCKET_TAG;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text]);
 
   class Frame {
@@ -1327,7 +1323,8 @@ class TagEmit {
     array(mapping(string:mixed))|function res;
 
     array do_enter(RequestID id) {
-      if(!(plugin=get_plugins()[args->source])) rxml_error("Source not present.");
+      if(!(plugin=get_plugins()[args->source]))
+	rxml_parse_error("Source not present.");
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
@@ -1342,7 +1339,7 @@ class TagEmit {
 	LAST_IF_TRUE = 1;
 	return 0;
       }
-      rxml_fatal("Wrong return type from emit source plugin.");
+      rxml_parse_error("Wrong return type from emit source plugin.");
     }
 
     function do_iterate;

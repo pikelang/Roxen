@@ -745,7 +745,7 @@ class TagQuote {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      rxml_fatal("<quote> does not work with the new parser.");
+      rxml_parse_error("<quote> does not work with the new parser.");
     }
   }
 }

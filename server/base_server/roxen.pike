@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.424 2000/02/13 16:28:32 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.425 2000/02/13 18:09:46 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2584,7 +2584,7 @@ void create()
   master()->resolv ("RXML.refs");
   foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
   {
-    if( q != "PHtml.pike" )
+    if( q != "PXml.pike" )
       dump( "etc/modules/RXML.pmod/"+ q );
   }
   foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
