@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.7 2000/12/31 23:54:53 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.8 2001/01/02 18:30:00 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -136,10 +136,20 @@ class myFont
     return ({ o->xsize(), o->ysize() });
   }
 
-  void create( string _path, int _size )
+  void set_x_spacing( int|float value ) {
+    if(value!=1.0) ::set_x_spacing(value);
+  }
+
+  void set_y_spacing( int|float value ) {
+    if(value!=1.0) ::set_y_spacing(value);
+  }
+
+  void create( string _path, int _size, int xpad, int ypad )
   {
     path = _path;
     size = _size;
+    x_spacing = xpad;
+    y_spacing = ypad;
   }
 }
 
@@ -154,6 +164,10 @@ static string font_name( string what )
 				what=c; return ""; },
 		       "meta":lambda(string t, mapping m, string c) {
 				_meta_data[m->name]=c; },
+		       "xpad":lambda(string t, mapping m, string c) {
+				_meta_data->xpad = (int)c; },
+		       "ypad":lambda(string t, mapping m, string c) {
+				_meta_data->ypad = (int)c; },
     ]) )->finish(what);
 
   what=(lower_case( replace(what," ","_") )/"\n")[0]-"\r";
@@ -215,7 +229,8 @@ Font open( string name, int size, int bold, int italic )
 #endif
   if( !font_list ) update_font_list();
   if( font_list[ name ] )
-    return myFont( font_list[name], size );
+    return myFont( font_list[name], size,
+		   meta_data[name]->xpad, meta_data[name]->ypad );
 }
 
 
