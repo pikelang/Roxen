@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.39 2000/09/18 19:32:37 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.40 2000/11/02 22:47:19 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
@@ -375,7 +375,7 @@ string countdown(mapping m, RequestID id)
   else if(time_args->sec < now->sec && unset_from(m,"sec")) time_args->min++;
 
   if(m->event) {
-    switch(m->event) {
+    switch(m_delete(m, "event")) {
 
     case "christmas-eve":
       time_args->mday=24;
@@ -412,7 +412,6 @@ string countdown(mapping m, RequestID id)
       tprec="day";
     break;
     }
-    m_delete(m,"event");
   }
 
   int prec;
@@ -426,13 +425,11 @@ string countdown(mapping m, RequestID id)
    case "day": prec=3600*24; break;
    case "hour": prec=3600; break;
    case "minute": prec=60; break;
-   default: prec=(int)m->prec?(int)m->prec:1;
+   default: prec=(int)m->prec || 1;
   }
 
   int when;
-  if(catch {
-    when = mktime(time_args);
-  })
+  if(catch( when = mktime(time_args) ))
     RXML.run_error("Resulted in an invalid time.");
 
   if(!zero_type(time_args->wday)) {
@@ -441,20 +438,19 @@ string countdown(mapping m, RequestID id)
   }
 
   //FIXME: Clear less significant
-  if((m->next) && when==unix_now) {
+  if(m->next && when==unix_now) {
     if(m->month && unset_from(m,"mon")) time_args->year++;
     if(m->mday && unset_from(m,"day")) time_args->mon++;
     if(m->day && unset_from(m,"wday")) time_args->mday+=6;
     if(m->hour && unset_from(m,"hour")) time_args->mday++;
     if(m->minute && unset_from(m,"min")) time_args->hour++;
     if(m->second && unset_from(m,"sec")) time_args->sec++;
-    if(catch {
-      when = mktime(time_args);
-    })
+    if(catch( when = mktime(time_args) ))
       RXML.run_error("Resulted in an invalid time.");
     //if(!zero_type(time_args->wday)) {
     //  when=weekday_handler(when, time_args);
     //}
+    m_delete(m, "next");
   }
 
   foreach(({"second","minute","hour","mday","day","month","year","iso","prec"}), string tmp) {
@@ -470,9 +466,8 @@ string countdown(mapping m, RequestID id)
     when=((when/prec)+(delay?1:0))*prec;
   }
 
-  switch(m->display) {
+  switch(m_delete(m, "display")) {
     case "when":
-    m_delete(m, "display");
     return Roxen.tagtime(when, m, id, language);
 
     case "combined":
@@ -480,6 +475,7 @@ string countdown(mapping m, RequestID id)
     return time_period(delay, prec);
 
     case "dogyears":
+    // FIXME: 7 per year the first two years, then 5 per year. Perhaps.
     return sprintf("%1.1f",(delay/(3600*24*days_per_year/7)));
 
     case "years":
@@ -525,7 +521,6 @@ string countdown(mapping m, RequestID id)
   //FIXME: L10N
   if(tprec) return delay/prec+" "+tprec+(delay/prec>1?"s":"");
 
-  m_delete(m, "display");
   return "I don't think I understood that, but I think you want to count to "+
     Roxen.tagtime(when, m, id, language)+" to which it is "+when+" seconds. Write &lt;countdown"
     " help&gt; to get an idea of what you ougt to write.";
