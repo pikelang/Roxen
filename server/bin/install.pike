@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.36 1999/03/30 19:54:48 marcus Exp $";
+string cvs_version = "$Id: install.pike,v 1.37 1999/04/09 13:17:27 marcus Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -309,7 +309,7 @@ class Environment
     if(!f)
       return;
     foreach(f->read()/"\n", string line)
-      if(sscanf(line, "%[A-Za-z0-9_]=%s", var, def)==2)
+      if(sscanf(line-"\r", "%[A-Za-z0-9_]=%s", var, def)==2)
       {
 	string pre, post;
 	if(2==sscanf(def, "%s${"+var+"}%s", pre, post) ||
@@ -333,7 +333,7 @@ class Environment
 	  env[var] = ({ 0, def, 0 });
       }
       else if(sscanf(line, "export %s", var))
-	foreach((replace(var, "\t", " ")/" ")-({""}), string v)
+	foreach((replace(var, ({"\t","\r"}),({" "," "}))/" ")-({""}), string v)
 	  exports[v] = 1;
     foreach(indices(env), string e)
       if(!exports[e])
