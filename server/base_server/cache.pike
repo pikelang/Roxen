@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.59 2001/01/10 16:12:40 per Exp $
+// $Id: cache.pike,v 1.60 2001/01/21 21:43:04 nilsson Exp $
 
 #pragma strict_types
 
@@ -219,10 +219,47 @@ void cache_clean()
   call_out(cache_clean, gc_time);
 }
 
+
+// --- Session cache -----------------
+
+#ifndef SESSION_BUCKETS
+# define SESSION_BUCKETS 4
+#endif
+#ifndef SESSION_SHIFT_TIME
+# define SESSION_SHIFT_TIME 15*60
+#endif
+
+private array(mapping(string:mixed)) session_buckets;
+
+private void session_cache_handler() {
+  remove_call_out(session_cache_handler);
+  werror("Shift buckets\n");
+  session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-1];
+  call_out(session_cache_handler, SESSION_SHIFT_TIME);
+}
+
+mixed get_session_data(string id) {
+  mixed data;
+  foreach(session_buckets, mapping bucket)
+    if(data=bucket[id]) {
+      session_buckets[0][id] = data;
+      return data;
+    }
+  return ([])[0];
+}
+
+string set_session_data(mixed data, void|string id) {
+  if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
+  session_buckets[0][id] = data;
+  return id;
+}
+
 void create()
 {
-  cache=([ ]);
+  cache = ([ ]);
+  session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   add_constant( "cache", this_object() );
   call_out(cache_clean, 60);
+  call_out(session_cache_handler, SESSION_SHIFT_TIME);
   CACHE_WERR("Now online.");
 }
