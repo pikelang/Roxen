@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.20 1997/09/08 03:06:55 grubba Exp $
+# $Id: configure.in,v 1.21 1997/09/11 19:23:24 grubba Exp $
 #
 
 prefix=$PWD
@@ -240,7 +240,7 @@ if test $cflags_is_set = no; then
   # OSF/1
   AC_SYS_OS_COMPILER_FLAG(OSF1,-fast,fast)
   AC_SYS_OS_COMPILER_FLAG(OSF1,-g3,g3)
-  AC_SYS_OS_COMPILER_FLAG(OSF1,-std,std)
+  AC_SYS_OS_COMPILER_FLAG(OSF1,-std1,std1)
   AC_SYS_OS_COMPILER_FLAG(OSF1,-host,host)
   AC_SYS_OS_COMPILER_FLAG(OSF1,-warnprotos,warnprotos)
 
