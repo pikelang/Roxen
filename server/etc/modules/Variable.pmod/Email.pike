@@ -4,6 +4,7 @@ inherit Variable.String;
 
 constant type="Email";
 static int check_domain=1;
+static int _may_be_empty=0;
 
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>
@@ -13,6 +14,8 @@ static int check_domain=1;
 
 
 array(string) verify_set( string new_value ) {
+  if(!sizeof(new_value) && _may_be_empty)
+    return ({ 0, new_value });
   if(!has_value(new_value, "@"))
     return ({ LOCALE(313,"An email address must contain \"@\"."), new_value });
 
@@ -110,4 +113,10 @@ void disable_domain_check()
 //! Don't use DNS to check if the domain is valid.
 {
   check_domain=0;
+}
+
+void may_be_empty(int(0..1) state)
+//! Decides if an empty variable also is valid.
+{
+  _may_be_empty = state;
 }
