@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.13 2000/01/10 21:56:00 mast Exp $
+//! $Id: PXml.pike,v 1.14 2000/01/11 01:57:28 mast Exp $
 
 #pragma strict_types
 
@@ -50,7 +50,7 @@ static array entity_cb (Parser.HTML this, string str)
       }
       else
 	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
-      return out ? ({out}) : ({str});
+      return out && ({out});
     }
     array(string) split = entity / ".";
     if (sizeof (split) == 2) {
@@ -58,7 +58,7 @@ static array entity_cb (Parser.HTML this, string str)
       return val == RXML.Void ? ({}) : ({val});
     }
   }
-  return type->free_text ? ({str}) : ({});
+  return type->free_text ? 0 : ({});
 }
 
 // Kludge to get to the functions in Parser.HTML from inheriting
@@ -70,21 +70,22 @@ static this_program _low_add_container (string name, CONTAINER_TYPE tdef)
 static this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
 
+static void set_comment_tag_cb()
+{
+  add_quote_tag (
+    "!--",
+    type->free_text ?
+    lambda (Parser.HTML this, string str) {return 0;} :
+    lambda (Parser.HTML this, string str) {return ({});},
+    "--");
+}
+
 /*static*/ void set_cbs()
 {
   _set_entity_callback (entity_cb);
-  if (!type->free_text) {
+  if (!type->free_text)
     _set_data_callback (lambda (Parser.HTML this, string str) {return ({});});
-    add_quote_tag (
-      "!--",
-      lambda (Parser.HTML this, string str) {return ({});},
-      "--");
-  }
-  else
-    add_quote_tag (
-      "!--",
-      lambda (Parser.HTML this, string str) {return ({this->current()});},
-      "--");
+  set_comment_tag_cb();
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -106,12 +107,6 @@ static void create (
     return;
   }
   overridden = ([]);
-
-  mixed_mode (!type->free_text);
-  lazy_entity_end (1);
-  match_tag (0);
-
-  set_cbs();
 
   array(RXML.TagSet) list = ({tag_set});
   array(string) plist = ({tag_set->prefix});
@@ -138,15 +133,16 @@ static void create (
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
 	foreach (indices (m), string n) new_tagdefs[prefix + n] = ({0, m[n]});
       foreach (tlist, RXML.Tag tag)
-	new_tagdefs[prefix + [string] tag->name] =
-	  tag->flags & RXML.FLAG_CONTAINER ?
-	  ({0,
-	    [function(Parser.HTML,mapping(string:string),string:array)]
-	    tag->_handle_tag}) :
-	  ({({[function(Parser.HTML,mapping(string:string):array)]
-	      tag->_handle_tag,
-	      0}),		// Necessary as long as we use set_extra().
-	    0});
+	if (!(tag->flag & RXML.FLAG_NO_PREFIX))
+	  new_tagdefs[prefix + [string] tag->name] =
+	    tag->flags & RXML.FLAG_CONTAINER ?
+	    ({0,
+	      [function(Parser.HTML,mapping(string:string),string:array)]
+	      tag->_handle_tag}) :
+	    ({({[function(Parser.HTML,mapping(string:string):array)]
+		tag->_handle_tag,
+		0}),		// Necessary as long as we use set_extra().
+	      0});
     }
 
     if (!tset->prefix_required) {
@@ -154,7 +150,9 @@ static void create (
 	foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
 	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
-      foreach (tlist, RXML.Tag tag)
+    }
+    foreach (tlist, RXML.Tag tag)
+      if (!tset->prefix_required || tag->flag & RXML.FLAG_NO_PREFIX)
 	new_tagdefs[[string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
 	  ({0,
@@ -164,7 +162,6 @@ static void create (
 	      tag->_handle_tag,
 	      0}),		// Necessary as long as we use set_extra().
 	    0});
-    }
 
     foreach (indices (new_tagdefs), string name) {
       if (array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name])
@@ -177,6 +174,11 @@ static void create (
 
     if (tset->low_entities) add_entities (tset->low_entities);
   }
+
+  mixed_mode (!type->free_text);
+  lazy_entity_end (1);
+  match_tag (0);
+  set_cbs();
 }
 
 mixed read()
