@@ -3,14 +3,14 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.81 2001/08/30 18:40:49 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.82 2001/08/30 18:41:17 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
 inherit "module";
 
-#define HTACCESS_DEBUG
+//#define HTACCESS_DEBUG
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
