@@ -1,3 +1,5 @@
+// $Id: Schedule.pike,v 1.10 2003/07/31 12:06:14 anders Exp $
+
 inherit Variable.Variable;
 
 //! This class implements a scheduler widget with three main states,
