@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.433 2001/06/06 21:04:49 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.434 2001/06/11 02:45:19 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -600,7 +600,7 @@ array (function) last_modules()
 static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
-  id->not_query = a[0];
+  id->not_query = a[0]-":";
   id->misc->fork_information = a[1..];
   return 0;
 }
