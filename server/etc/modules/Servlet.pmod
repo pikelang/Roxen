@@ -24,6 +24,7 @@ static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object vector_class = FINDCLASS("java/util/Vector");
 static object file_class = FINDCLASS("java/io/File");
 static object url_class = FINDCLASS("java/net/URL");
+static object string_class = FINDCLASS("java/lang/String");
 static object new_instance = class_class->get_method("newInstance",
 						     "()Ljava/lang/Object;");
 static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
@@ -185,7 +186,7 @@ class loader {
     foreach(codedirs, string codedir) {
       object f = file_class->alloc();
       check_exception();
-      file_init->call_nonvirtual(f, codedir);
+      file_init->call_nonvirtual(f, combine_path(getcwd(), codedir));
       check_exception();
       object url = file_tourl(f);
       check_exception();
@@ -330,7 +331,7 @@ object conf_context(object conf)
   return context_for_conf[conf]||context(conf);
 }
 
-object request(object context, mapping(string:string)|object id,
+object request(object context, mapping(string:array(string))|object id,
 	       mapping(string:string|object)|void attrs,
 	       mapping(string:array(string)|string)|void headers, mixed ... rest)
 {
@@ -377,7 +378,7 @@ object request(object context, mapping(string:string)|object id,
       }
     }
 
-    return request(context||conf_context(id->conf), id->variables, attrs,
+    return request(context||conf_context(id->conf), id->real_variables, attrs,
 		   id->raw && MIME.parse_headers(id->raw)[0],
 		   (zero_type(id->misc->len)? -1:id->misc->len),
 		   id->misc["content-type"], id->prot,
@@ -393,8 +394,13 @@ object request(object context, mapping(string:string)|object id,
   request_init(r, context->ctx, context->sctx, @rest);
   check_exception();
   object pa = params_field->get(r);
-  foreach(indices(id), string v)
-    dic_put(pa, v, id[v]);
+  foreach(indices(id), string v) {
+    array(string) vals = id[v];
+    object sa = string_class->new_array(sizeof(vals));
+    foreach(indices(vals), int vi)
+      sa[vi] = vals[vi];
+    dic_put(pa, v, sa);
+  }
   if(attrs) {
     object at = attrs_field->get(r);
     foreach(indices(attrs), string a)

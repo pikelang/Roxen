@@ -106,22 +106,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public String[] getParameterValues(String name)
   {
-    String s = (String)parameters.get(name);
-    if(s == null)
-      return null;
-    int a=0, p=0, i = s.length(), cnt = 1;
-    while(--i>=0)
-      if(s.charAt(i)=='\0')
-	cnt++;
-    String[] res = new String[cnt];
-    --cnt;
-    for(i=0; p<cnt; i++)
-      if(s.charAt(i)=='\0') {
-	res[p++] = s.substring(a, i);
-	a = i+1;
-      }
-    res[cnt] = s.substring(i);
-    return res;
+    return (String[])parameters.get(name);
   }
 
   public Enumeration getParameterNames()
