@@ -12,15 +12,15 @@
 
 <h2>Manuals:</h2>
 <blockquote>
-<font size=+1><b>
+<font size="+1"><b>
 <if exists="docs/creator/index.html">
-  <li> <a href="docs/creator/">Web Site Creator Manual</a>
+  <li> <a href="docs/creator/">Web Site Creator Manual</a> </li>
 </if>
 <if exists="docs/administrator/index.html">
-  <li> <a href="docs/administrator/">Administrator Manual</a>
+  <li> <a href="docs/administrator/">Administrator Manual</a> </li>
 </if>
 <if exists="docs/user/index.html">
- <li> <a href="docs/user/">User Manual</a>
+ <li> <a href="docs/user/">User Manual</a> </li>
 </if>
 </b></font>
 </blockquote>
