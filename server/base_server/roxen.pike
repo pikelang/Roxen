@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.804 2002/06/13 19:26:28 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.805 2002/06/14 00:38:17 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1660,7 +1660,7 @@ mapping(string:Protocol) build_protocols_mapping()
     }
   };
 #endif
-  foreach( glob( "prot_*.pike", get_dir("protocols") ), string s )
+  foreach( glob( "prot_*.pike", get_dir("plugins/protocols") ), string s )
   {
     sscanf( s, "prot_%s.pike", s );
 #if !constant(SSL.sslfile)
@@ -1676,13 +1676,14 @@ mapping(string:Protocol) build_protocols_mapping()
     catch
     {
 #ifdef DEBUG
-      protocols[ s ] = (program)("protocols/prot_"+s+".pike");
+      protocols[ s ] = (program)("plugins/protocols/prot_"+s+".pike");
 #else
-      protocols[ s ] = lazy_load( ("protocols/prot_"+s+".pike"),s );
+      protocols[ s ] = lazy_load( ("plugins/protocols/prot_"+s+".pike"),s );
 #endif
     };
   }
-  foreach( glob("prot_*.pike",get_dir("../local/protocols")||({})), string s )
+
+  foreach( glob("prot_*.pike",get_dir("../local/plugins/protocols")||({})), string s )
   {
     sscanf( s, "prot_%s.pike", s );
 #if !constant(SSL.sslfile)
@@ -1696,9 +1697,9 @@ mapping(string:Protocol) build_protocols_mapping()
     report_debug( "\b%s \b", s );
     catch {
 #ifdef DEBUG
-      protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
+      protocols[ s ] = (program)("../local/plugins/protocols/prot_"+s+".pike");
 #else
-      protocols[ s ] = lazy_load( ("../local/protocols/prot_"+s+".pike"),s );
+      protocols[ s ] = lazy_load( ("../local/plugins/protocols/prot_"+s+".pike"),s );
 #endif
     };
   }
@@ -3282,7 +3283,7 @@ class ArgCache
   {
     ensure_secret();
     plugins = ({});
-    foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
+    foreach( ({ "../local/plugins/arg_cache", "plugins/arg_cache" }), string d)
       if( file_stat( d  ) )
 	foreach( glob("*.pike", get_dir( d )), string f )
 	{
@@ -4221,7 +4222,6 @@ int main(int argc, array tmp)
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
   DDUMP(  "base_server/wizard.pike" );
-  DDUMP(  "base_server/proxyauth.pike" );
   DDUMP(  "base_server/module.pike" );
   DDUMP(  "base_server/throttler.pike" );
 
@@ -4245,7 +4245,7 @@ int main(int argc, array tmp)
     // Dumping of arg_cache_plugins generates problem when trying to
     // enable/disable argcache replication.
     // call_out( lambda() {
-    // 		   dump("arg_cache_plugins/replicate.pike");
+    // 		   dump("plugins/arg_cache/replicate.pike");
     // 		 }, 2 );
   }
 
