@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.12 1999/11/22 18:46:44 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.13 1999/11/23 07:44:23 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -51,7 +51,7 @@ mapping tagdocumentation() {
   if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
   int start=__LINE__;
   /*
- ([ "accessed":#"<desc type=tag>Generates an access counter that shows how many
+ ([ "accessed":#"<desc tag>Generates an access counter that shows how many
  times the page has been accessed. A file, AccessedDB, in the logs directory is used to
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,

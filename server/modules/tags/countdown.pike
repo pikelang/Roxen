@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.19 1999/11/22 18:51:18 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.20 1999/11/23 07:46:02 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -10,7 +10,7 @@ mapping tagdocumentation() {
   if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
   int start=__LINE__;
   /*
-    (["countdown":#"<desc type=tag>
+    (["countdown":#"<desc tag>
 This tag can count days, minutes, months, etc. from a specified date or time. It can also
 give the time to or from a few special events. See below for a full list.</desc>
 
@@ -235,9 +235,6 @@ int weekday_handler(int when, mapping time_args) {
 
 string tag_countdown(string t, mapping m, object id)
 {
-
-  if(m->help) return "Shows how long time it is until a certain event.";
-
   if(m->sec || m->prec=="second")
     CACHE(1);
   else
