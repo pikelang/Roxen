@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.352 2002/10/25 20:08:11 nilsson Exp $
+// $Id: loader.pike,v 1.353 2002/10/26 00:08:50 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.352 2002/10/25 20:08:11 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.353 2002/10/26 00:08:50 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2106,13 +2106,13 @@ void do_main( int argc, array(string) argv )
     add_constant( "Image.TTF", Image.TTF );
     // We can load the builtin font.
     if(file_stat("data/fonts/rbf"))
-      add_constant("__rbf", "plugins/font_handlers/rbf" );
+      add_constant("__rbf", "data/fonts/rbf" );
   }
 #else
 #if constant(Image.FreeType.Face)
   // We can load the builtin font.
   if(file_stat(data/fonts/rbf))
-    add_constant("__rbf", "plugins/font_handlers/rbf" );
+    add_constant("__rbf", "data/fonts/rbf" );
 #else
   feature_warn("WARNING", ({
     "The Image.TTF (freeetype) module is not available. "
