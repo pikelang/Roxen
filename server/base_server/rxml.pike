@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.213 2000/07/31 18:03:11 jhs Exp $
+// $Id: rxml.pike,v 1.214 2000/08/05 21:59:45 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -143,22 +143,6 @@ RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
 int old_rxml_compat;
 
-class BacktraceFrame
-// Only used to get old style tags in the RXML backtraces.
-{
-  RXML.Frame up;
-  string tag_name;
-  mapping(string:string) args;
-  void create (RXML.Frame _up, string name, mapping(string:string) _args)
-  {
-    up = _up;
-    tag_name = name;
-    args = _args;
-  }
-
-  string _sprintf() {return "BacktraceFrame(" + tag_name + ")";}
-}
-
 // A note on tag overriding: It's possible for old style tags to
 // propagate their results to the tags they have overridden (new style
 // tags can use RXML.Frame.propagate_tag()). This is done by an
@@ -178,238 +162,12 @@ class BacktraceFrame
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
-array|string call_overridden (array call_to, RXML.PXml parser,
-			      string name, mapping(string:string) args,
-			      string content, RequestID id)
-{
-  mixed tdef, cdef;
-#ifdef OLD_RXML_COMPAT
-  if (old_rxml_compat) name = lower_case (name);
-#endif
-
-  if (sizeof (call_to) > 1 && call_to[1] && call_to[1] != name) // Another tag.
-    if (sizeof (call_to) == 3) tdef = parser->tags()[call_to[1]];
-    else cdef = parser->containers()[call_to[1]];
-  else {			// Same tag.
-    mixed curdef = id->misc->__tag_overrider_def || // Yep, ugly..
-      (content ? parser->containers()[name] : parser->tags()[name]);
-#ifdef DEBUG
-    if (!curdef) error ("Can't find tag definition for %s.\n", name);
-#endif
-    if (array tagdef = parser->get_overridden_low_tag (name, curdef)) {
-      [tdef, cdef] = tagdef;
-      id->misc->__tag_overrider_def = tdef || cdef;
-      if (sizeof (call_to) == 1) call_to = ({1, 0, args, content});
-    }
-  }
-
-  array|string result;
-  if (tdef)			// Call an overridden tag.
-    if (stringp (tdef))
-      result = ({tdef});
-    else if (arrayp (tdef))
-      result = tdef[0] (parser, call_to[2] || args, @tdef[1..]);
-    else
-      result = tdef (parser, call_to[2] || args);
-  else if (cdef)		// Call an overridden container.
-    if (stringp (cdef))
-      result = ({cdef});
-    else if (arrayp (cdef))
-      result = cdef[0] (parser, call_to[2] || args, call_to[3] || content, @cdef[1..]);
-    else
-      result = cdef (parser, call_to[2] || args, call_to[3] || content);
-  else				// Nothing is overridden.
-    if (sizeof (call_to) == 3)
-      result = ({Roxen.make_tag (call_to[1] || name, call_to[2] || args)});
-    else if (sizeof (call_to) == 4)
-      result = ({Roxen.make_container (call_to[1] || name, call_to[2] || args,
-				 call_to[3] || content)});
-
-  m_delete (id->misc, "__tag_overrider_def");
-  return result;
-}
-
-array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
-{
-  RXML.Context ctx = parser->context;
-  RequestID id = ctx->id;
-  string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
-
-  if(args->help)
-  {
-    TRACE_ENTER("tag &lt;"+tag+" help&gt;", rf);
-    string h = find_tag_doc(tag, id);
-    TRACE_LEAVE("");
-    return h;
-  }
-
-  if(stringp(rf)) return rf;
-  if (!rf) return 0;
-
-  TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
-
-#ifdef MODULE_LEVEL_SECURITY
-  if(check_security(rf, id, id->misc->seclevel))
-  {
-    TRACE_LEAVE("Access denied");
-    return 0;
-  }
-#endif
-
-  mixed result;
-  RXML.Frame orig_frame = ctx->frame;
-  ctx->frame = BacktraceFrame (orig_frame, tag, args);
-  mixed err = catch {
-    if (++ctx->frame_depth >= ctx->max_frame_depth) {
-      ctx->frame_depth--;
-      RXML.run_error ("Too deep recursion -- exceeding %d nested tags.\n",
-		      ctx->max_frame_depth);
-    }
-    if (string splice_args = args["::"]) {
-      // Somewhat kludgy solution for the time being.
-      splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
-      m_delete (args, "::");
-      args += parser->parse_tag_args (splice_args);
-    }
-    foreach (indices (args), string arg)
-      // Parse variable entities in arguments.
-      args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
-    result=rf(tag,args,id,parser->_source_file,parser->_defines);
-  };
-  ctx->frame = orig_frame;
-  ctx->frame_depth--;
-  if (err) {
-    ctx->handle_exception (err, parser); // Will rethrow unknown errors.
-    result = ({});
-  }
-
-  TRACE_LEAVE("");
-
-  if(args->noparse && stringp(result)) return ({ result });
-  if (arrayp (result) && sizeof (result) && result[0] == 1)
-    return call_overridden (result, parser, tag, args, 0, id);
-
-  return result || ({Roxen.make_tag (tag, args)});
-}
-
-array(string)|string call_container(RXML.PXml parser, mapping args,
-				    string contents, string|function rf)
-{
-  RXML.Context ctx = parser->context;
-  RequestID id = ctx->id;
-  string tag = parser->tag_name();
-  id->misc->line = (string)parser->at_line();
-
-  if(args->help)
-  {
-    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
-    string h = find_tag_doc(tag, id);
-    TRACE_LEAVE("");
-    return h;
-  }
-
-  if(stringp(rf)) return rf;
-  if (!rf) return 0;
-
-  TRACE_ENTER("container &lt;"+tag+"&gt", rf);
-
-  if(args->preparse) contents = parse_rxml(contents, id);
-  if(args->trimwhites) contents = String.trim_all_whites(contents);
-
-#ifdef MODULE_LEVEL_SECURITY
-  if(check_security(rf, id, id->misc->seclevel))
-  {
-    TRACE_LEAVE("Access denied");
-    return 0;
-  }
-#endif
-
-  mixed result;
-  RXML.Frame orig_frame = ctx->frame;
-  ctx->frame = BacktraceFrame (orig_frame, tag, args);
-  mixed err = catch {
-    if (++ctx->frame_depth >= ctx->max_frame_depth) {
-      ctx->frame_depth--;
-      RXML.run_error ("Too deep recursion -- exceeding %d nested tags.\n",
-		      ctx->max_frame_depth);
-    }
-    if (string splice_args = args["::"]) {
-      // Somewhat kludgy solution for the time being.
-      splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
-      m_delete (args, "::");
-      args += parser->parse_tag_args (splice_args);
-    }
-    foreach (indices (args), string arg)
-      // Parse variable entities in arguments.
-      args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
-    result=rf(tag,args,contents,id,parser->_source_file,parser->_defines);
-  };
-  ctx->frame = orig_frame;
-  ctx->frame_depth--;
-  if (err) {
-    ctx->handle_exception (err, parser); // Will rethrow unknown errors.
-    result = ({});
-  }
-
-  TRACE_LEAVE("");
-
-  if(args->noparse && stringp(result)) return ({ result });
-  if (arrayp (result) && sizeof (result) && result[0] == 1)
-    return call_overridden (result, parser, tag, args, contents, id);
-
-  return result || ({Roxen.make_container (tag, args, contents)});
-}
-
-string do_parse(string to_parse, RequestID id,
-                Stdio.File file, mapping defines)
-{
-  RXML.PXml parent_parser = id->misc->_parser;	// Don't count on that this exists.
-  RXML.PXml parser;
-  RXML.Context ctx;
-
-  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
-    parser = default_content_type->get_parser (ctx, 0, parent_parser);
-  else {
-    parser = rxml_tag_set (default_content_type, id);
-    parent_parser = 0;
-#ifdef OLD_RXML_COMPAT
-    if (old_rxml_compat) parser->context->compatible_scope = 1;
-#endif
-  }
-  id->misc->_parser = parser;
-  parser->_source_file = file;
-  parser->_defines = defines;
-
-  if (mixed err = catch {
-    if (parent_parser && ctx == RXML.get_context())
-      parser->finish (to_parse);
-    else
-      parser->write_end (to_parse);
-    string result = parser->eval();
-    parser->_defines = 0;
-    id->misc->_parser = parent_parser;
-    return result;
-  }) {
-    if (!parser) {
-      werror("RXML: Parser destructed!\n");
-#if constant(_describe)
-      _describe(parser);
-#endif /* constant(_describe) */
-      error("Parser destructed!\n");
-    }
-    parser->_defines = 0;
-    id->misc->_parser = parent_parser;
-    if (objectp (err) && err->thrown_at_unwind)
-      error ("Can't handle RXML parser unwinding in "
-	     "compatibility mode (error=%O).\n", err);
-    else throw (err);
-  }
-}
-
 string parse_rxml(string what, RequestID id,
 		  void|Stdio.File file,
 		  void|mapping defines )
+// Note: Don't use this function to do recursive parsing inside an
+// rxml parse session. The RXML module provides several different ways
+// to accomplish that.
 {
   id->misc->_rxml_recurse++;
 #ifdef RXML_DEBUG
@@ -435,9 +193,55 @@ string parse_rxml(string what, RequestID id,
     else if(file)
       _stat=file->stat();
   }
+
   id->misc->defines = defines;
 
-  what = do_parse(what, id, file, defines);
+  RXML.PXml parent_parser = id->misc->_parser; // Don't count on that this exists.
+  RXML.PXml parser;
+  RXML.Context ctx;
+
+  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
+    parser = default_content_type->get_parser (ctx, 0, parent_parser);
+  else {
+    parser = rxml_tag_set (default_content_type, id);
+    parent_parser = 0;
+#ifdef OLD_RXML_COMPAT
+    if (old_rxml_compat) parser->context->compatible_scope = 1;
+#endif
+  }
+  id->misc->_parser = parser;
+
+  // Hmm, how does this propagation differ from id->misc? Does it
+  // matter? This is only used by the compatibility code for old style
+  // tags.
+  parser->_defines = defines;
+  parser->_source_file = file;
+
+  if (mixed err = catch {
+    if (parent_parser && ctx == RXML.get_context())
+      parser->finish (what);
+    else
+      parser->write_end (what);
+    what = parser->eval();
+    parser->_defines = 0;
+    id->misc->_parser = parent_parser;
+  }) {
+#ifdef DEBUG
+    if (!parser) {
+      werror("RXML: Parser destructed!\n");
+#if constant(_describe)
+      _describe(parser);
+#endif /* constant(_describe) */
+      error("Parser destructed!\n");
+    }
+#endif
+    parser->_defines = 0;
+    id->misc->_parser = parent_parser;
+    if (objectp (err) && err->thrown_at_unwind)
+      error ("Can't handle RXML parser unwinding in "
+	     "compatibility mode (error=%O).\n", err);
+    else throw (err);
+  }
 
   if(sizeof(_extra_heads) && !id->misc->moreheads)
   {
@@ -556,6 +360,8 @@ class GenericTag {
     inherit RXML.Frame;
 
     array do_return(RequestID id, void|mixed piece) {
+      // Note: args may be zero here since this function is inherited
+      // by GenericPITag.
       if (flags & RXML.FLAG_POSTPARSE)
 	result_type = result_type (RXML.PXml);
       if (!(flags & RXML.FLAG_STREAM_CONTENT))
@@ -563,6 +369,21 @@ class GenericTag {
       array|string res = _do_return(name, args, piece, id, this_object());
       return stringp (res) ? ({res}) : res;
     }
+  }
+}
+
+class GenericPITag
+{
+  inherit GenericTag;
+
+  void create (string _name, int _flags,
+	       function(string,mapping(string:string),string,RequestID,RXML.Frame:
+			array|string) __do_return)
+  {
+    ::create (_name, _flags | RXML.FLAG_PROC_INSTR, __do_return);
+    content_type = RXML.t_text;
+    // The content is always treated literally;
+    // RXML.FLAG_DONT_PREPARSE has no effect.
   }
 }
 
@@ -593,6 +414,14 @@ void add_parse_module (RoxenModule mod)
       sizeof (defs))
     tag_set->add_tags(Array.map(indices(defs),
 				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
+
+  if (mod->query_simple_pi_tag_callers &&
+      mappingp (defs = mod->query_simple_pi_tag_callers()) &&
+      sizeof (defs))
+    tag_set->add_tags (map (indices (defs),
+			    lambda (string name) {
+			      return GenericPITag (name, @defs[name]);
+			    }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
     rxml_tag_set->modules += ({mod});
@@ -1594,7 +1423,7 @@ class TagComment {
     inherit RXML.Frame;
     int do_iterate=-1;
     array do_enter() {
-      if(args->preparse) {
+      if(args && args->preparse) {
 	do_iterate=1;
 	return 0;
       }
@@ -1605,6 +1434,12 @@ class TagComment {
       return ({ "" });
     }
   }
+}
+
+class TagPIComment
+{
+  inherit TagComment;
+  constant flags = RXML.FLAG_PROC_INSTR;
 }
 
 RXML.TagSet query_tag_set()
@@ -2163,12 +1998,31 @@ constant tagdoc=([
 	  }),
 
 "comment":#"<desc cont><short>
- The enclosed text will be removed from the document.</short> The difference
- from a normal SGML (HTML/XML) comment is that the text is removed
- from the document, and can not be seen even with <i>view source</i> in the browser. Another
- difference is that any RXML tags inside this container will not be
- parsed.
-</desc>",
+ The enclosed text will be removed from the document.</short> The
+ difference from a normal SGML (HTML/XML) comment is that the text is
+ removed from the document, and can not be seen even with <i>view
+ source</i> in the browser.
+
+ <p>Note that since this is a normal tag, it requires that the content
+ is properly formatted. Therefore it's ofter better to use the
+ &lt;?comment&nbsp;...&nbsp;?&gt; processing instruction tag to
+ comment out arbitrary text (which doesn't contain '?&gt;').</p>
+
+ <p>Just like any normal tag, the <tag>comment</tag> tag nests inside
+ other <tag>comment</tag> tags. E.g:</p>
+
+ <ex>
+   <comment> a <comment> b </comment> c </comment>
+ </ex>
+
+ <p>Here 'c' is not output since the comment starter before 'a'
+ matches the ender after 'c' and not the one before it.</p>
+</desc>
+
+<attr name=preparse>
+ Parse and execute any RXML inside the comment tag. This is useful to
+ do stuff without producing any output in the response.
+</attr>",
 
 "define":({ #"<desc cont><short>
  Defines variables, tags, containers and if-callers.</short> One, and only one,
