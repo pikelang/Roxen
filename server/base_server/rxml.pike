@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.184 2000/04/01 22:14:13 nilsson Exp $
+// $Id: rxml.pike,v 1.185 2000/04/05 13:11:30 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1988,24 +1988,24 @@ scope created within the define tag.
 }),
 
 "else":#"<desc cont>
- Show the contents if the previous <tag><ref type=tag>if</ref></tag>
- tag didn't, or if there was a <tag><ref type=tag>false</ref></tag>
+ Show the contents if the previous <tag><ref type='tag'>if</ref></tag>
+ tag didn't, or if there was a <tag><ref type='tag'>false</ref></tag>
  above. The result is undefined if there has been no <tag><ref
- type=tag>if</ref></tag>, <true> or <tag><ref
- type=tag>false</ref></tag> tag above.
+ type='tag'>if</ref></tag>, <true> or <tag><ref
+ type='tag'>false</ref></tag> tag above.
 </desc>",
 
 "elseif":#"<desc cont>
- Same as the <tag><ref type=tag>if</ref></tag>, but it will only
- evaluate if the previous <tag><ref type=tag>if</ref></tag> tag
+ Same as the <tag><ref type='tag'>if</ref></tag>, but it will only
+ evaluate if the previous <tag><ref type='tag'>if</ref></tag> tag
  returned false.
 </desc>",
 
 "false":#"<desc tag>
  Internal tag used to set the return value of <tag><ref
- type=tag>if</ref></tag> tags. It will ensure that the next <tag><ref
- type=tag>else</ref></tag> tag will show its contents. It can be
- useful if you are writing your own <tag><ref type=tag>if</ref></tag>
+ type='tag'>if</ref></tag> tags. It will ensure that the next <tag><ref
+ type='tag'>else</ref></tag> tag will show its contents. It can be
+ useful if you are writing your own <tag><ref type='tag'>if</ref></tag>
  lookalike tag.
 </desc>",
 
@@ -2019,9 +2019,9 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont>
- <tag><ref type=tag>if</ref></tag> is used to conditionally show its
- contents. <tag><ref type=tag>else</ref></tag>, <tag><ref
- type=tag>elif</ref></tag> or <tag><ref type=tag>elseif</ref></tag>
+ <tag><ref type='tag'>if</ref></tag> is used to conditionally show its
+ contents. <tag><ref type='tag'>else</ref></tag>, <tag><ref
+ type='tag'>elif</ref></tag> or <tag><ref type='tag'>elseif</ref></tag>
  can be used to suggest alternative content. It is possible to use
  glob patterns in almost all attributes, where * means match zero or
  more characters while ? matches one character. * Thus t*f?? will
@@ -2063,7 +2063,7 @@ scope created within the define tag.
 
 "if#false":#"<desc plugin>
  This will always be true if the truth value is set to be false.
- Equivalent with <tag><ref type=tag>else</ref></tag>.
+ Equivalent with <tag><ref type='tag'>else</ref></tag>.
 </desc>",
 
 "if#accept":#"<desc plugin>
@@ -2075,7 +2075,7 @@ scope created within the define tag.
 
 "if#config":#"<desc plugin>
  Has the config been set by use of the <tag><ref
- type=tag>aconf</ref></tag> tag? (Config is an IfIs if caller,
+ type='tag'>aconf</ref></tag> tag? (Config is an IfIs if caller,
  although that functionality does not apply here.).
 </desc>",
 
@@ -2117,7 +2117,7 @@ scope created within the define tag.
 "if#exists":#"<desc plugin>
  Returns true if the file path exists. If path does not begin with /,
  it is assumed to be a URL relative to the directory containing the page
- with the <tag><ref type=tag>if</ref></tag>-statement.
+ with the <tag><ref type='tag'>if</ref></tag>-statement.
 </desc>",
 
 "if#group":#"<desc plugin>
@@ -2235,10 +2235,10 @@ The following features are supported:
 
 "true":#"<desc tag>
  An internal tag used to set the return value of
- <tag><ref type=tag>if</ref></tag> tags. It will ensure that the next
- <tag><ref type=tag>else</ref></tag> tag will not show its contents.
+ <tag><ref type='tag'>if</ref></tag> tags. It will ensure that the next
+ <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
  It can be useful if you are writing your own
- <tag><ref type=tag>if</ref></tag> lookalike tag.
+ <tag><ref type='tag'>if</ref></tag> lookalike tag.
 </desc>",
 
 "undefine":#"<desc tag>
@@ -2270,7 +2270,7 @@ The following features are supported:
 
 <attr name=packageinfo>
  Show a all available packages.
- <ex><use packageinfo></ex>
+ <ex><use packageinfo=\"\"></ex>
 </attr>
 
 <attr name=package value=name>
@@ -2285,15 +2285,15 @@ The following features are supported:
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag><ref type=tag>insert file=...
+ not want this cache, use <tag><ref type='tag'>insert file=...
  nocache</ref></tag> instead.</p>
 </attr>
 
 <attr name=info>
  Show a list of all defined tags/containers and if arguments in the file
 </attr>
- The <tag><ref type=tag>use</ref></tag> tag is much faster than the
- <tag><ref type=tag>insert</ref></tag>, since the parsed definitions
+ The <tag><ref type='tag'>use</ref></tag> tag is much faster than the
+ <tag><ref type='tag'>insert</ref></tag>, since the parsed definitions
  is cached.",
 
 "eval":#"<desc cont>Postparses its content. Useful when an entity contains

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.108 2000/03/30 17:25:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.109 2000/04/05 13:10:15 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1629,7 +1629,7 @@ documentation for that module.</desc>",
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents.</short> If something does go wrong, the error
  message is returned instead. See also <tag><ref
- type=tag>throw</ref></tag>.
+ type='tag'>throw</ref></tag>.
 </desc>",
 
 "configimage":#"<desc tag><short>
@@ -1830,12 +1830,12 @@ documentation for that module.</desc>",
 
 "doc":#"<desc cont><short hide>
  Eases code documentation by reformatting it.</short>
- Eases documentation by replacing \"{\", \"}\" and \"&\" with \"<\", \">\" and
- \"&\". No attributes required.
+ Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
+ \"&amp;amp;\". No attributes required.
 </desc>
 
 <attr name=quote>
- Instead of replacing \"{\" and \"}\", \"<\" and \">\" is replaced with \"&amp;lt;\"
+ Instead of replacing \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
  and \"&amp;gt;\".
 </attr>
 
@@ -2045,13 +2045,13 @@ documentation for that module.</desc>",
 
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
- <tag><ref type=tag>user</ref></tag> tag. This attribute requires a
+ <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
  userdatabase.
 </attr>
 
 <attr name=date>
  Print the modification date. Takes all the date attributes in the
- <tag><ref type=tag>date</ref></tag> tag.
+ <tag><ref type='tag'>date</ref></tag> tag.
 </attr>
 
 <attr name=file value=path>
@@ -2117,7 +2117,7 @@ documentation for that module.</desc>",
  Arguments prefixed with \"add\" or \"drop\" are treated as prestate
  toggles, which are added or removed, respectively, from the current
  set of prestates in the URL in the redirect header (see also <tag
- <ref type=tag>apre</ref></tag>). Note that this only works when the
+ <ref type='tag'>apre</ref></tag>). Note that this only works when the
  to=... URL is absolute, i.e. begins with a \"/\", otherwise these
  state toggles have no effect.",
 
@@ -2125,7 +2125,7 @@ documentation for that module.</desc>",
  Sets the expire-time of a cookie to a date that has already occured.
  This forces the browser to remove it.</short>
  This tag won't remove the cookie, only set it to the empty string, or
- what is specified in the </attr>value</attr> attribute and change
+ what is specified in the value attribute and change
  it's expire-time to a date that already has occured. This is
  unfortunutaly the only way as there is no command in HTTP for
  removing cookies. We have to give a hint to the browser and let it
@@ -2248,8 +2248,8 @@ Sets a variable.</short>
 
  If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <tag><ref type=tag>append</ref></tag>
- and <tag><ref type=tag>debug</ref></tag>",
+ if the operation failed. See also: <tag><ref type='tag'>append</ref></tag>
+ and <tag><ref type='tag'>debug</ref></tag>",
 
 "set-cookie":#"<desc tag><short>
  Sets a cookie that will be stored by the user's browser.</short> This
@@ -2306,7 +2306,7 @@ Sets a variable.</short>
 
  If persistent is specified; the cookie will be persistent until year
  2038, otherwise, the specified delays are used, just as for
- <tag><ref type=tag>expire-time</ref></tag>.
+ <tag><ref type='tag'>expire-time</ref></tag>.
 
  Note that the change of a cookie will not take effect until the
  next page load.",
