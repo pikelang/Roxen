@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.102 2004/05/22 18:11:34 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.103 2004/05/24 17:31:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -200,11 +200,11 @@ array|object do_sql_query(mapping args, RequestID id,
   {
 #if ROXEN_COMPAT <= 1.3
     if( !args->db && (host || query("db")==" none") )
-      error = catch(con = id->conf->sql_connect(host || compat_default_host));
+      error = catch(con = id->conf->sql_connect(host));
     if(!con)
 #endif
       error = catch(con = DBManager.get( host||args->db||
-					 default_db||compat_default_host,
+					 default_db,
 					 my_configuration(), ro));
     if( !con )
       RXML.run_error( "Couldn't connect to SQL server"+
