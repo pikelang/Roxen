@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.484 2000/05/16 18:42:37 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.485 2000/05/17 17:41:00 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -572,6 +572,9 @@ void handler_thread(int id)
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped\n");
 	  thread_reap_cnt--;
+#ifdef NSERIOUS
+	  if(!thread_reap_cnt) report_debug("+++ATH\n");
+#endif
 	  return;
 	}
       } while(1);
@@ -1728,7 +1731,7 @@ int start_time =time();
 
 string version()
 {
-#ifdef SERIOUS
+#ifndef NSERIOUS
   return QUERY(default_ident)?real_version:QUERY(ident);
 #else
   multiset choices=(<>);
