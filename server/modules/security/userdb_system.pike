@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.3 2001/01/29 05:40:32 per Exp $";
+  "$Id: userdb_system.pike,v 1.4 2001/01/29 22:39:56 per Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -28,7 +28,10 @@ static array get_cached_groups_for_user( int uid )
   mixed key = mt->lock();
   if(cached_groups[ uid ] && cached_groups[ uid ][1]+200>time(1))
     return cached_groups[ uid ][0];
-  return (cached_groups[uid] = ({ get_groups_for_user( uid ), time(1) }))[0];
+  array grps = get_groups_for_user( uid );
+  key = 0;
+  return (cached_groups[uid] = ({ (map(grps,find_group_from_gid)-({0}))
+				  ->name(), time(1) }))[0];
 }
 
 class SysUser
@@ -46,10 +49,10 @@ class SysUser
   string shell()            { return pwent[6]; }
   array compat_userinfo()   { return pwent;    }
 
-  array(Group) groups()
+  array(string) groups()
   {
-    return ({ find_group_from_gid( gid() ) }) +
-      map( get_cached_groups_for_user( uid() ), find_group_from_gid );
+//  find_group_from_gid(gid())->name()
+    return /*({  })|*/ get_cached_groups_for_user( uid() );
   }
   
   static void create( UserDB p, array _pwent )
@@ -63,8 +66,8 @@ class SysGroup
 {
   inherit Group;
   array grent;
-  string name()          { return grent[0]; }
-  array(User) members()  { return map( grent[3], find_user ); }
+  string name()            { return grent[0]; }
+  array(string) members()  { return grent[3]; }
 
   static void create( UserDB p, array _grent )
   {
