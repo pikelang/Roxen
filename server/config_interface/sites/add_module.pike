@@ -673,7 +673,6 @@ mixed do_it_pass_2( array modules, Configuration conf,
 			 (already_added[mod]=(mod/"!")[0]+"!"+
 			  (conf->otomod[mm]/"#")[-1]) );
     }
-    remove_call_out( roxen.really_save_it );
   }
 
   [string cf_form, int num] = initial_form( id, conf, modules );
