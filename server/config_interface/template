@@ -81,6 +81,13 @@
  <define variable="var._top_content" preparse="1"><insert file="/topmenu.pike"/></define>
 </define>
 
+<define container="link-gbutton">
+<attrib name="align">baseline</attrib>
+  <define variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="">&_.contents;</gbutton-url></define>
+   <a href='&_.href;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+</define>
+
+
 <define container="submit-gbutton">
 <attrib name="align">baseline</attrib>
   <define variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="">&_.contents;</gbutton-url></define>
