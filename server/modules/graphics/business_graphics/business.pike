@@ -7,19 +7,13 @@
  * in October 1997
  *
  * BUGS:
- * The ise of images is broken in this version.
+ * The use of background images is not reliable in this version.
+ * Providing a center-value higher than available pices will render a
+ *  broken image.
+ * 
  */
 
-/* TODO:
- *
- * Idag:
- * Skriv dok och skriv ut åt PetNo.
- *
- * Senare:
- * Prevent less that 100x100 in size.
- */
-
-constant cvs_version = "$Id: business.pike,v 1.23 1997/10/15 15:58:26 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.24 1997/10/15 20:45:57 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -40,12 +34,14 @@ mixed *register_module()
        "<br>This module defines some tags,"
        "<pre>"
        "\n&lt;diagram&gt; (container): \n"
-       "Draws differet kinds of diagrams. \n"
+       "Draws different kinds of diagrams. \n"
        "Defines the following attributes: \n"
-       " type=        { sumbars | normsumbars |linechart | barchart | piechart | graph }\n"
-       " background=  Takes the filename of a ppm image is input.\n"
-       " xsize=       width of diagram-image in pixels.\n"
-       " ysize=       height of diagram-image in pixels.\n"
+       " help         Displays this text.\n"
+       " type=        { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
+       "              Mandatory!"
+       /*FIXME " background=  Takes the filename of a ppm image is input.\n" */
+       " xsize=       width of diagram-image in pixels. (Will not have any effect below 100.)\n"
+       " ysize=       height of diagram-image in pixels. (Will not have any effect below 100.)\n"
        " fontsize=    height if text in pixels.\n"
        " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
        " 3D=          Render piecharts on top of a cylinder, \n"
@@ -61,24 +57,23 @@ mixed *register_module()
        " quantity=    Name things represented in the diagram.\n"
        " units=       Name the unit.\n"
        "\n&lt;colors&gt; (container)\n"
-       "Tabseparated list of colors for the diagram.\n"
-       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "Tab separated list of colors for the diagram.\n"
+       " separator=   Use the specified string as separator instead of tab.\n"
        "\n&lt;legend&gt; (container)\n"
-       "Tabseparated list of strings for the legend.\n"
-       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "Tab separated list of strings for the legend.\n"
+       " separator=   Use the specified string as separator instead of tab.\n"
        "\n&lt;xdatanames&gt; (container)\n"
-       "Tabseparated list of datanames for the diagram.\n"
-       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "Tab separated list of datanames for the diagram.\n"
+       " separator=   Use the specified string as separator instead of tab.\n"
        "\n&lt;ydatanames&gt; (container)\n"
-       "Tabseparated list of dataname for the diagram.\n"
-       " separator=   Use the specifyed string as separator intead of tab.\n"
-       "\n&lt;data&gt; (container)\n"
+       "Tab separated list of dataname for the diagram.\n"
+       " separator=   Use the specified string as separator instead of tab.\n"
+       "\n&lt;data&gt; (container)  Mandatory!\n"
        "Tab- and newline- separated list of data-value for the diagram.\n"
-       " separator=     Use the specifyed string as separator intead of tab.\n"
-       " lineseparator= Use the specifyed string as lineseparator intead of tab.\n"
+       " separator=     Use the specified string as separator instead of tab.\n"
+       " lineseparator= Use the specified string as lineseparator instead of tab.\n"
+       " parse          Run the content of the tag through the RXML-parser before data extraction is done.\n"
        "</pre>"
-       "BUGS:<br><li>background does not work well.<br>"
-       "<br><li>"
        ), ({}), 1,
     });
 }
@@ -87,6 +82,10 @@ void create()
 {
   defvar("location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	 "The URL-prefix for the diagrams.");
+  defvar( "x-max", 800, "Maxwidth", TYPE_INT,
+	  "Maximal width of the generated image.");
+  defvar( "y-max", 600, "Maxheight", TYPE_INT,
+	  "Maximal height of the generated image.");
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
@@ -135,16 +134,19 @@ string itag_datanames(string tag, mapping m, string contents,
   if(m->separator)
     sep=m->separator;
   
-  if(tag=="xdatanames")
-    res->xnames = contents / sep;
-  else
-    res->ynames = contents / sep;
+  if( contents-" " != "" )
+  {
+    if(tag=="xdatanames")
+      res->xnames = contents/sep;
+    else
+      res->ynames = contents/sep;
+  }
 
   return "";
 }
 
 string itag_data(mapping tag, mapping m, string contents,
-		 mapping res)
+		 mapping res, object id)
 {
   string sep=SEP;
   if(m->separator)
@@ -153,6 +155,9 @@ string itag_data(mapping tag, mapping m, string contents,
   string linesep="\n";
   if(m->lineseparator)
     linesep=m->lineseparator;
+
+  if(m->parse)
+    contents = parse_rxml( contents, id );
 
   if( !m->form || m->form == "db" || m->form == "straight" )
   {
@@ -231,7 +236,7 @@ string quote(string in)
   string res;
 
   g=Gz;
-  res=MIME.encode_base64(g->deflate()->deflate(in));
+  res=MIME.encode_base64(g->deflate()->deflate(in), 1);
 
   return res;
 }
@@ -247,7 +252,7 @@ string tag_diagram(string tag, mapping m, string contents,
   else return syntax( "You must specify a type for your table" );
 
   if(m->background)
-    res->image = (string)m->background;
+    res->image = combine_path( dirname(id->not_query), (string)m->background);
 
   /* Piechart */
   if(res->type[0..2] == "pie")
@@ -309,9 +314,13 @@ string tag_diagram(string tag, mapping m, string contents,
 		"yaxis":itag_yaxis ]),
 	     ([ "xdatanames":itag_datanames,
 		"ydatanames":itag_datanames,
-		"data":itag_data,
 		"colors":itag_colors,
-		"legend":itag_legendtext ]), res);
+		"legend":itag_legendtext ]), res );
+
+  parse_html(contents, ([]), ([ "data":itag_data ]), res, id );
+
+  if( res->data == ({ }) )
+    return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
   if(!res->colors)
     res->colors = 0;
@@ -389,6 +398,7 @@ string tag_diagram(string tag, mapping m, string contents,
   m_delete( m, "templatefontsize" );
   m_delete( m, "fontsize" );
   m_delete( m, "tone" );
+  m_delete( m, "background" );
 
   m->src = query("location") + quote(encode_value(res)) + ".gif";
 
@@ -403,11 +413,11 @@ mapping query_container_callers()
 object PPM(string fname, object id)
 {
   string q;
-  //    roxen->try_get_file( dirname(id->not_query)+fname, id);
-  q = Stdio.read_file((string)fname);
+  q = roxen->try_get_file( fname, id);
+  // q = Stdio.read_file((string)fname);
   //  q = Stdio.read_bytes(fname);
   //  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
-  if(!q) perror("Unknown PPM image '"+fname+"'\n");
+  if(!q) perror("Diagram: Unknown PPM image '"+fname+"'\n");
   mixed g = Gz;
   if (g->inflate) {
     catch {
@@ -429,17 +439,18 @@ mapping find_file(string f, object id)
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
+  mapping res;
+
   if (sizeof(f))
   {
-    object g;
-    g = Gz;
+    object g=Gz;
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+    res = decode_value(f);    
   }
-  
-  mapping res = decode_value(f);    
+  else
+    return 0;
 
-  // perror("f-#data: %O\n", sizeof(res->data[0]));
-  // perror("f-data: %O\n", res->data);
+  //  perror("f-data: %O\n", res->data);
 
   res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
 
@@ -450,7 +461,6 @@ mapping find_file(string f, object id)
   if(res->image)
   {
     res->bg = 0;
-    perror( res->image +"\n" );
     res->image = PPM(res->image, id);
   }
 
@@ -494,20 +504,15 @@ mapping find_file(string f, object id)
 		 "center":    res->center,
 		 "image":     res->image,
 
-		 "sw":       res->sw
+		 "sw":       res->sw,
+		 "sv":       res->sw
   ]);
 
   object(Image.image) img;
 
-  /*
-  perror( res->orientation +"  " );
-  perror( res->type +"  " );
-  perror( res->subtype +"\n" );
-  */
-
   /* Check this */
   if(res->image)
-    diagram_data["image"] = PPM(res->image, id);
+    diagram_data["image"] = res->image;
 
   if(res->type == "pie")
     img = pie->create_pie(diagram_data)["image"];

@@ -110,7 +110,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  if (text[i]->xsize()<1)
 	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
 
-	  write("sizeof text"+text[i]->xsize()+", "+text[i]->ysize()+"\n");
+	  // write("sizeof text"+text[i]->xsize()+", "+text[i]->ysize()+"\n");
 
 	  if (text[i]->xsize()>diagram_data["xsize"]/5+diagram_data["3Ddepth"])
 	    text[i]=text[i]->scale((int)diagram_data["xsize"]/5, 0);
