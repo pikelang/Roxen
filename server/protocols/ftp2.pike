@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.17 1998/05/01 01:08:06 grubba Exp $
+ * $Id: ftp2.pike,v 1.18 1998/05/01 01:12:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2358,7 +2358,6 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
       return;
     }
-    send_error("DELE", args, session->file, session);
   }
 
   void ftp_RMD(string args)
@@ -2396,7 +2395,6 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
       return;
     }
-    send_error("RMD", args, session->file, session);
   }
 
   void ftp_XRMD(string args)
@@ -2423,7 +2421,6 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
       return;
     }
-    send_error("MKD", args, session->file, session);
   }
 
   void ftp_XMKD(string args)
