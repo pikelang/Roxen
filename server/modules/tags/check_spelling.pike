@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.26 2004/08/12 08:10:57 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.27 2004/08/12 08:33:37 noring Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -220,6 +220,11 @@ string run_spellcheck(string|array(string) words, void|string dict)
 
   if(stringp(words))
     words = replace(words, "\n", " ");
+  if(!Stdio.exist(query("spellchecker")))
+  {
+    werror("check_spelling: Missing binary in %s\n", query("spellchecker"));
+    return 0;
+  }
   Process p =
     Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
                            (stringp(words) ? ({ "-H" })       : ({})) +
