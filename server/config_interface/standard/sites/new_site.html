@@ -8,11 +8,11 @@
 <blockquote>
 
 <if variable="form.name">
-  <cset variable=form.name><insert file='encode_form_name.pike'></cset>
   <define variable=var.error preparse><insert file='verify_site_name.pike' nocache='' /></define>
    <if not variable='var.error is error'>
  ... create the site ..
      <if variable='form.new_with_template..x'>
+        <cset variable=form.name><insert file='encode_form_name.pike'></cset>
         <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
      </if>
      <if variable='form.new..x'>
