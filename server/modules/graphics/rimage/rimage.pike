@@ -28,7 +28,7 @@ array register_module()
   return ({ 
     MODULE_LOCATION|MODULE_PARSER,
     "Roxen image manipulation tag",
-    "Layer base image manipulation tag with plugins",
+    "Layer based image manipulation tag with plugins",
     0,1 
   });
 } 
