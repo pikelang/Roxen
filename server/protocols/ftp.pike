@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.43 1997/08/28 20:13:30 grubba Exp $
+ * $Id: ftp.pike,v 1.44 1997/08/29 07:19:41 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -29,6 +29,8 @@ inherit "roxenlib";
 #include <stat.h>
 
 import Array;
+
+// #define BROKEN_MDTM
 
 #define perror	roxen_perror
 
@@ -847,8 +849,12 @@ mapping(string:string) cmd_help = ([
   "cwd":"[ <sp> directory-name ]",
   "type":"<sp> [ A | E | I | L ]",
   "port":"<sp> b0, b1, b2, b3, b4",
+#ifdef BROKEN_MDTM
+  "mdtm":"<sp> file-name",
+#endif /* BROKEN_MDTM */
   "nlst":"[ <sp> path-name ]",
   "list":"[ <sp> path-name ]",
+  "rein":"(reinitialize)",
   "retr":"<sp> file-name",
   "stat":"<sp> path-name",
   "size":"<sp> path-name",
@@ -1200,7 +1206,7 @@ void got_data(mixed fooid, string s)
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(f) dirlist = -1;
-      else dirlist = list_file(arg, 0, 0, 0, 0);
+      else dirlist = list_file(arg, LS_FLAG_l);
       
       if(!dirlist)
       {
@@ -1211,7 +1217,36 @@ void got_data(mixed fooid, string s)
 	reply(dirlist);
       reply("211 End of Status\n");
       break;
-      
+#ifdef BROKEN_MDTM
+    case "mdtm":
+      // Count this as a request
+      conf->requests++;
+
+      string fname;
+      if(!arg || !strlen(arg))
+      {
+	reply("501 'MDTM': Missing argument\n");
+	break;
+      }
+      method="HEAD";
+
+      // Restore auth-info
+      auth = session_auth;
+
+      not_query = fname = combine_path(cwd, arg);
+      foreach(conf->first_modules(), function funp)
+	if(f = funp( this_object())) break;
+      array st = roxen->stat_file(fname, this_object());
+      if (st) {
+	int t = st[3];
+	//213 yyyymmddhhmmss
+	// FIXME: Need conversion to the above format!
+	reply("213 "+t+"\n");
+      } else {
+	reply("550 "+fname+": No such file or directory.\n");
+      }
+      break;
+#endif /* BROKEN_MDTM */
     case "size":
       // Count this a request
       conf->requests++;
