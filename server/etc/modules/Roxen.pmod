@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.51 2000/11/21 13:17:29 per Exp $
+ * $Id: Roxen.pmod,v 1.52 2000/12/02 20:13:24 per Exp $
  *
  * Various helper functions.
  *
@@ -1149,9 +1149,8 @@ class FormScope( mapping variables )
   mixed `[]( string what )
   {
     mixed q = variables[ what ];
-    if( !stringp(q) )
+    if( !arrayp(q) )
       return q;
-    q /= "\0";
     if( sizeof( q ) == 1 )
       return q[0];
     return AVal( q, what );
@@ -1181,7 +1180,7 @@ RXML.TagSet entities_tag_set = class
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);
     c->add_scope("modvar", scope_modvar);
-    c->add_scope("form", FormScope( c->id->variables) );
+    c->add_scope("form", FormScope( c->id->real_variables) );
     c->add_scope("client", c->id->client_var);
     c->add_scope("var", ([]) );
   }
