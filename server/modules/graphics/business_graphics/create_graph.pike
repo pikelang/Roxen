@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.87 1997/12/21 21:26:34 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.88 1997/12/21 22:00:18 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -428,10 +428,13 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   
   //Om ynames finns så sätt yspace.
   if (diagram_data["ynames"])
-    diagram_data["yspace"]=(diagram_data["ymaxvalue"]-
-			    diagram_data["yminvalue"])
-      /(float)sizeof(diagram_data["ynames"]);
-  
+    {
+      diagram_data["ynames"]=({" "})+diagram_data["ynames"];
+      diagram_data["yspace"]=(diagram_data["ymaxvalue"]-
+			      diagram_data["yminvalue"])
+	/(float)sizeof(diagram_data["ynames"]);
+      
+    }
   //Check if labelsize is to big:
   if (diagram_data["labelsize"]>diagram_data["ysize"]/5)
     diagram_data["labelsize"]=diagram_data["ysize"]/5;
