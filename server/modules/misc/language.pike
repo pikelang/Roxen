@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.15 1997/10/05 01:23:52 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.16 1998/10/19 04:37:43 peter Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -386,5 +386,6 @@ mapping query_tag_callers()
 {
   return ([ "unavailable_language" : tag_unavailable_language,
             "language" : tag_language,
+            "available_language" : tag_available_languages,  // compat lio
             "available_languages" : tag_available_languages ]);
 }
