@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.15 1997/06/10 19:08:01 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.16 1997/06/11 22:30:40 marcus Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -347,10 +347,10 @@ mixed find_file( string f, object id )
       id->misc->error_code = 405;
       return 0;
     }
-    if(QUERY(check_auth) && !id->misc->auth_ok)
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0]))
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
 
-    report_error("DELETING the file "+f+"\n");
+    report_notice("DELETING the file "+f+"\n");
     accesses++;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
