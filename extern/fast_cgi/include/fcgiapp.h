@@ -9,7 +9,7 @@
  * See the file "LICENSE.TERMS" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: fcgiapp.h,v 1.2 1997/05/26 22:23:22 grubba Exp $
+ * $Id: fcgiapp.h,v 1.3 1998/04/08 22:33:52 grubba Exp $
  */
 
 #ifndef _FCGIAPP_H
@@ -21,7 +21,7 @@
 #include <stdarg.h>
 #else
 #include <varargs.h>
-#endif /* TCL_LIBARARY */
+#endif /* TCL_LIBRARY */
 #include "fcgi_config.h"
 
 #if defined (c_plusplus) || defined (__cplusplus)
