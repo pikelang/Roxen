@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.78 2001/08/20 15:15:19 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.79 2001/08/28 15:47:35 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -452,7 +452,7 @@ mapping remap_url(RequestID id)
       return access_violation;
     } else {
       string s = (id->not_query/"/")[-1];
-      if( denylist[ s ] )
+      if (denylist[lower_case(s)])
       {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
@@ -469,7 +469,7 @@ multiset denylist;
 string   htfile;
 void start()
 {
-  denylist = mkmultiset( query( "denyhtlist" ) );
+  denylist = mkmultiset(map(query("denyhtlist"), lower_case));
   htfile = query("file");
 }
 
