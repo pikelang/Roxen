@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.74 1998/07/18 03:14:55 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.75 1998/07/19 06:50:38 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -965,7 +965,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   // multi_separator must default to \000 since one sometimes need to
   // pass multivalues through several output tags, and it's a bit
   // tricky to set it to \000 in a tag..
-  string multi_separator = args->multi_separator || "\000";
+  string multi_separator = args->multi_separator || args->multisep || "\000";
 
   if (args->preprocess)
     contents = parse_rxml( contents, id );
