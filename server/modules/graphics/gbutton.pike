@@ -18,13 +18,14 @@
 //     icon-data       -- inline icon data
 //     align           -- left|center|right text alignment
 //     align-icon      -- left|center-before|center-after|right icon alignment
+//     valign-icon     -- above|middle|below icon vertical alignment
 //   >Button text</gbutton>
 //
 //  Alignment restriction: when text alignment is either left or right, icons
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.53 2000/07/24 00:58:37 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.54 2000/08/07 19:09:31 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -268,7 +269,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   Image.Layer frame;
   Image.Layer mask;
 
-  int left, right, top, bottom; /* offsets */
+  int left, right, top, middle, bottom; /* offsets */
   int req_width;
 
   mapping ll = ([]);
@@ -331,10 +332,23 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   if(sizeof( y ) < 2)
     y = ({ 2, frame->ysize()-2 });
 
-  left = x[0]; right = x[-1];    top = y[0]; bottom = y[-1];
+  left = x[0]; right = x[-1];    top = y[0]; middle = y[1]; bottom = y[-1];
   right = frame->xsize()-right;
 
-  int text_height = bottom - top;
+  //  Text height depends on which guides we should align to
+  int text_height;
+  switch (args->icva) {
+  case "above":
+    text_height = bottom - middle;
+    break;
+  case "below":
+    text_height = middle - top;
+    break;
+  default:
+  case "middle":
+    text_height = bottom - top;
+    break;
+  }
 
   //  Get icon
   if (args->icn)
@@ -343,6 +357,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     icon = roxen.low_decode_image(args->icd);
 
   int i_width = icon && icon->img->xsize();
+  int i_height = icon && icon->img->ysize();
   int i_spc = i_width && sizeof(text) && 5;
 
   //  Generate text
@@ -356,75 +371,103 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   int t_width = text_img && text_img->xsize();
 
-  //  Compute text and icon placement
-  req_width = (text_img && text_img->xsize()) + left + right + i_width + i_spc;
-
+  //  Compute text and icon placement. Only incorporate icon width/spacing if
+  //  it's placed inline with the text.
+  req_width = t_width + left + right;
+  if ((args->icva || "middle") == "middle")
+    req_width += i_width + i_spc;
   if (args->wi && (req_width < args->wi))
     req_width = args->wi;
 
-  int icn_x, txt_x;
+  int icn_x, icn_y, txt_x, txt_y;
 
-  switch (lower_case(args->al))
-  {
-  case "left":
-    //  Allow icon alignment: left, right
-    switch (lower_case(args->ica))
-    {
-     case "left":
-       icn_x = left;
-       txt_x = icn_x + i_width + i_spc;
-       break;
-     default:
-     case "right":
-       txt_x = left;
-       icn_x = req_width - right - i_width;
-       break;
+  //  Are text and icon lined up or on separate lines?
+  switch (args->icva) {
+  case "above":
+  case "below":
+    //  Note: This requires _three_ guidelines! Icon and text can only be
+    //  horizontally centered
+    icn_x = left + (req_width - right - left - i_width) / 2;
+    txt_x = left + (req_width - right - left - t_width) / 2;
+    if (args->icva == "above") {
+      txt_y = middle;
+      icn_y = top + (middle - top - i_height) / 2;
+    } else {
+      txt_y = top;
+      icn_y = middle + (bottom - middle - i_height) / 2;
     }
     break;
 
   default:
-  case "center":
   case "middle":
-    //  Allow icon alignment: left, center, center_before, center_after, right
-    switch (lower_case(args->ica))
+    //  Center icon vertically on same line as text
+    icn_y = icon && (frame->ysize() - icon->img->ysize()) / 2;
+    txt_y = top;
+    
+    switch (args->al)
     {
-     case "left":
-       icn_x = left;
-       txt_x = (req_width - right - left - i_width - i_spc - t_width) / 2;
-       txt_x += icn_x + i_width + i_spc;
-       break;
-     default:
-     case "center":
-     case "center_before":
-     case "center-before":
-       icn_x = (req_width - i_width - i_spc - t_width) / 2;
-       txt_x = icn_x + i_width + i_spc;
-       break;
-     case "center_after":
-     case "center-after":
-       txt_x = (req_width - i_width - i_spc - t_width) / 2;
-       icn_x = txt_x + t_width + i_spc;
-       break;
-     case "right":
-       icn_x = req_width - right - i_width;
-       txt_x = left + (icn_x - i_spc - t_width) / 2;
-       break;
-    }
+    case "left":
+      //  Allow icon alignment: left, right
+      switch (args->ica)
+      {
+      case "left":
+	icn_x = left;
+	txt_x = icn_x + i_width + i_spc;
+	break;
+      default:
+      case "right":
+	txt_x = left;
+	icn_x = req_width - right - i_width;
+	break;
+      }
     break;
 
-  case "right":
-    //  Allow icon alignment: left, right
-    switch (lower_case(args->ica))
-    {
-     default:
-     case "left":
-       icn_x = left;
-       txt_x = req_width - right - t_width;
-       break;
-     case "right":
-       icn_x = req_width - right - i_width;
-       txt_x = icn_x - i_spc - t_width;
-       break;
+    default:
+    case "center":
+    case "middle":
+      //  Allow icon alignment:
+      //  left, center, center-before, center-after, right
+      switch (args->ica)
+      {
+      case "left":
+	icn_x = left;
+	txt_x = (req_width - right - left - i_width - i_spc - t_width) / 2;
+	txt_x += icn_x + i_width + i_spc;
+	break;
+      default:
+      case "center":
+      case "center_before":
+      case "center-before":
+	icn_x = (req_width - i_width - i_spc - t_width) / 2;
+	txt_x = icn_x + i_width + i_spc;
+	break;
+      case "center_after":
+      case "center-after":
+	txt_x = (req_width - i_width - i_spc - t_width) / 2;
+	icn_x = txt_x + t_width + i_spc;
+	break;
+      case "right":
+	icn_x = req_width - right - i_width;
+	txt_x = left + (icn_x - i_spc - t_width) / 2;
+	break;
+      }
+      break;
+      
+    case "right":
+      //  Allow icon alignment: left, right
+      switch (args->ica)
+      {
+      default:
+      case "left":
+	icn_x = left;
+	txt_x = req_width - right - t_width;
+	break;
+      case "right":
+	icn_x = req_width - right - i_width;
+	txt_x = icn_x - i_spc - t_width;
+	break;
+      }
+      break;
     }
     break;
   }
@@ -509,7 +552,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
         "image":icon->img,
         "alpha":icon->alpha,
         "xoffset":icn_x,
-        "yoffset":(frame->ysize()-icon->img->ysize())/2,
+        "yoffset":icn_y
       ]) )});
 
   //  Draw text
@@ -520,7 +563,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
       "image":text_img->color(0,0,0)->invert()->color(@args->txt),
       "alpha":text_img,
       "xoffset":txt_x,
-      "yoffset":top,
+      "yoffset":txt_y,
     ]))
   });
 
@@ -605,7 +648,8 @@ class ButtonFrame {
 
   array mk_url(RequestID id) 
   {
-    string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
+    string fi = (args["frame-image"] ||
+		 id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
     
@@ -613,6 +657,7 @@ class ButtonFrame {
     args->icon_src = args["icon-src"] || args->icon_src;
     args->icon_data = args["icon-data"] || args->icon_data;
     args->align_icon = args["align-icon"] || args->align_icon;
+    args->valign_icon = args["valign-icon"] || args->valign_icon;
     m_delete(args, "icon-src");
     m_delete(args, "icon-data");
     m_delete(args, "align-icon");
@@ -622,22 +667,26 @@ class ButtonFrame {
 			    id->misc->defines->theme_bgcolor ||
 			    id->misc->defines->bgcolor ||
 			    args->bgcolor ||
-			    "#eeeeee"), // _page_ background color
+			    "#eeeeee"),                 // _page_ bg color
       "bg"  : parse_color(args->bgcolor ||
 			  id->misc->defines->theme_bgcolor ||
 			  id->misc->defines->bgcolor ||
-			  "#eeeeee"),     //  Background color
-      "txt" : parse_color(args->textcolor || id->misc->defines->theme_bgcolor ||
-			  id->misc->defines->fgcolor || "#000000"),   //  Text color
-      "cnd" : (args->condensed ||                           //  Condensed text
+			  "#eeeeee"),                   //  Background color
+      "txt" : parse_color(args->textcolor ||
+			  id->misc->defines->theme_bgcolor ||
+			  id->misc->defines->fgcolor ||
+			  "#000000"),                   //  Text color
+      "cnd" : (args->condensed ||                       //  Condensed text
 	       (lower_case(args->textstyle || "") == "condensed")),
-      "wi"  : (int) args->width,                           //  Min button width
-      "al"  : args->align || "left",                       //  Text alignment
-      "dim" : (args->dim ||                                 //  Button dimming
+      "wi"  : (int) args->width,                        //  Min button width
+      "al"  : args->align || "left",                    //  Text alignment
+      "dim" : (args->dim ||                             //  Button dimming
 	       (< "dim", "disabled" >)[lower_case(args->state || "")]),
-      "icn" : args->icon_src && Roxen.fix_relative(args->icon_src, id),  // Icon URL
-      "icd" : args->icon_data,                             //  Inline icon data
-      "ica" : args->align_icon || "left",                  //  Icon alignment
+      "icn" : args->icon_src &&
+               Roxen.fix_relative(args->icon_src, id),  // Icon URL
+      "icd" : args->icon_data,                          //  Inline icon data
+      "ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
+      "icva": lower_case(args->valign_icon || "middle"),//  Vertical align
       "font": (args->font||id->misc->defines->font||
 	       roxen->query("default_font")),
       "border_image":fi,
@@ -713,8 +762,9 @@ class TagGButtom {
 	mapping a_attrs = ([ "href" : args->href ]);
 
 	foreach(indices(args), string arg)
-	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/onmouseout/"
-		       "onmouseover/onkeypress/onkeyup/onkeydown"/"/", lower_case(arg)))
+	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/"
+		       "onmouseout/onmouseover/onkeypress/onkeyup/"
+		       "onkeydown" / "/", lower_case(arg)))
 	    a_attrs[arg] = args[arg];
 
 	result = Roxen.make_container("a", a_attrs, result);
