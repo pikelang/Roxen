@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.63 1998/09/29 12:47:47 grubba Exp $
+ * $Id: smtp.pike,v 1.64 1998/09/29 18:34:25 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.63 1998/09/29 12:47:47 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.64 1998/09/29 18:34:25 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1072,9 +1072,9 @@ static class Smtp_Connection {
     touch_time();	// We want to send the timeout message...
     _timeout_cb();	// Restart the timeout timer.
 
-    // Force disconnection in timeout time
+    // Force disconnection in timeout/2 time
     // if the other end doesn't read any data.
-    call_out(::do_timeout, timeout);
+    call_out(::do_timeout, timeout/2);
   }
 
   static void con_class_done(array(string) reason, object con)

@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.18 1998/09/29 13:12:03 grubba Exp $
+ * $Id: pop3.pike,v 1.19 1998/09/29 18:33:57 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.18 1998/09/29 13:12:03 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.19 1998/09/29 18:33:57 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -118,9 +118,9 @@ static class Pop_Session
     touch_time();	// We want to send the timeout message...
     _timeout_cb();	// Restart the timeout timer.
 
-    // Force disconnection in timeout time
+    // Force disconnection in timeout/2 time
     // if the other end doesn't read any data.
-    call_out(::do_timeout, timeout);
+    call_out(::do_timeout, timeout/2);
   }
 
   // Commands:
