@@ -13,7 +13,7 @@ class Variable
   //. The 'short' name of this variable. This string is not
   //. translated.
 
-  static string _initial;
+  static mixed _initial;
   static int _id = unique_vid++;
 
   string doc( RequestID id )
@@ -94,7 +94,7 @@ class Variable
   {
     array names = glob( path()+"*", indices(id->variables) );
     mapping res = ([ ]);
-    foreach( names, string n )
+    foreach( sort(names), string n )
       res[ n[strlen(path()..) ] ] = id->variables[ n ];
     return res;
   }
@@ -114,7 +114,7 @@ class Variable
     mapping val;
     if( sizeof( val = get_form_vars()) && val[""] && 
         transform_from_form( val[""] ) != query() )
-      set( transform_from_form( val[""] ));
+      return set( transform_from_form( val[""] ));
   }
   
   string path()
@@ -300,9 +300,11 @@ class String
 {
   inherit Variable;
   constant type = "String";
+  constant width = 20;
+  //. The width of the input field. Used by overriding classes.
   string render_form( RequestID id )
   {
-    return input(path(), (string)query(), 60);
+    return input(path(), (string)query(), width);
   }
 }
 
@@ -331,6 +333,7 @@ class Password
 //. Password variable (uses crypt)
 {
   inherit String;
+  constant width = 20;
   constant type = "Password";
 
   mixed set_from_form( RequestID id )
@@ -338,7 +341,7 @@ class Password
     mapping val;
     if( sizeof( val = get_form_vars()) && 
         val[""] && strlen(val[""]) )
-      set( crypt( val[""] ) );
+      return set( crypt( val[""] ) );
   }
 
   string render_view( RequestID id )
@@ -352,7 +355,37 @@ class Password
   }
 }
 
+class File
+//. A filename
+{
+  inherit String;
+  constant type = "File";
+  constant width = 50;
+}
 
+class Location
+//. A location in the virtual filesystem
+{
+  inherit String;
+  constant type = "Location";
+  constant width = 50;
+}
+
+class URL
+//. A URL.
+{
+  inherit String;
+  constant type = "URL";
+  constant width = 50;
+}
+
+class Directory
+//. A Directory.
+{
+  inherit String;
+  constant type = "Directory";
+  constant width = 50;
+}
 // =====================================================================
 // MultipleChoice (one of many) baseclass
 // =====================================================================
@@ -413,6 +446,7 @@ class StringChoice
 //. Select one of many strings.
 {
   inherit MultipleChoice;
+  constant type = "StringChoice";
 }
 
 
@@ -420,17 +454,18 @@ class IntChoice
 //. Select one of many integers.
 {
   inherit MultipleChoice;
+  constant type = "IntChoice";
   int transform_from_form( string what )
   {
     return (int)what;
   }
 }
 
-
 class FloatChoice
 //. Select one of many floating point (real) numbers.
 {
   inherit MultipleChoice;
+  constant type = "FloatChoice";
   static int _prec = 3;
 
   void set_precision( int prec )
@@ -448,6 +483,8 @@ class FloatChoice
     return sprintf( "%1."+_prec+"f", m );
   }
 
+  void set_from_
+
   int transform_from_form( string what )
   {
     array q = get_choice_list();
@@ -456,3 +493,180 @@ class FloatChoice
   }
 }
 
+class FontChoice
+//. Select a font from the list of available fonts
+{
+  inherit StringChoice;
+  constant type = "FontChoice";
+  void set_choice_list()
+  {
+    error("Not supported for this class\n");
+  }
+  array get_choice_list()
+  {
+    return available_fonts();
+  }
+}
+
+
+// =====================================================================
+// List baseclass
+// =====================================================================
+class List
+//. Many of one type types
+{
+  inherit String;
+  constant type="List";
+  constant width = 40;
+
+  string transform_to_form( mixed what )
+    //. Override this function to do the value->form mapping for
+    //. indivindial elements in the array.
+  {
+    return (string)what;
+  }
+
+  mixed transform_from_form( string what )
+  {
+    return what;
+  }
+
+  mixed set_from_form()
+  {
+    int rn;
+    array l = query();
+    mapping vl = get_form_vals();
+    // first do the assign...
+    foreach( indices( vl ), string vv )
+      if( sscanf( vv, ".%d.set", rn ) )
+        l[rn] = transform_from_form( vl[vv] );
+
+    // then the move...
+    foreach( indices(vl), string vv )
+      if( sscanf( vv, ".%d.up", rn ) )
+        l = l[..rn-2] + l[rn..rn] + l[rn-1..rn-1] + l[rn+1..];
+      else  if( sscanf( vv, ".%d.down", rn ) )
+        l = l[..rn-1] + l[rn+1..rn+1] + l[rn..rn] + l[rn+2..];
+    // then the possible add.
+    if( vl[".new"] )
+      l += ({ transform_from_form( "" ) });
+
+    // .. and delete ..
+    foreach( indices(vl), string vv )
+      if( sscanf( vv, ".%d.delete", rn ) )
+        l = l[..rn-1] + l[rn+1..];
+
+    return set( l ); // We are done. :-)
+  }
+
+  string render_form( RequestID id )
+  {
+    string res = "<table>\n";
+    string prefix = path()+".";
+    int i;
+    foreach( map(query(), transform_to_form), string val )
+    {
+      string pp = prefix+i+".";
+      res += 
+          "<tr><td>"+ input( pp+"set", val, width) + "</td>"
+          "\n<td><input type=submit "
+          "name='"+pp+"up"+"' value='^' /></td>"
+          "\n<td><input type=submit "
+          "name='"+pp+"down"+"' value='v' /></td>"
+          "\n<td><input type=submit "
+          "name='"+pp+"delete"+"' value='&locale.delete;' /></td>"
+          "</tr>";
+      i++;
+    }
+    res += 
+        "<tr><td colspan=2><input type=submit name='"+prefix+"new' value='&locale.new;' /></td></tr></table>\n";
+    return res;
+  }
+}
+
+
+// =====================================================================
+// List subclasses
+// =====================================================================
+class DirectoryList
+//. A list of directories
+{
+  inherit List;
+  constant type="DirectorYList";
+}
+
+class StringList
+//. A list of strings
+{
+  inherit List;
+  constant type="DirectorYList";
+}
+
+class IntList
+//. A list of integers
+{
+  inherit List;
+  constant type="DirectorYList";
+  constant width=20;
+
+  string transform_to_form(int what) { return (string)what; }
+  float transform_from_form(string what) { return (int)what; }
+}
+
+class FloatList
+//. A list of floating point numbers
+{
+  inherit List;
+  constant type="DirectorYList";
+  constant width=20;
+
+  static int _prec = 3;
+
+  void set_precision( int prec )
+    //. Set the number of _decimals_ shown to the user.
+    //. If prec is 3, and the float is 1, 1.000 will be shown.
+    //. Default is 2.
+  {
+    _prec = ndigits;
+  }
+
+  string transform_to_form(int what) 
+  {
+    return sprintf("%1."+_prec+"f",  what); 
+  }
+  float transform_from_form(string what) { return (float)what; }
+}
+
+case UrlList
+//. A list of URLs
+{
+  inherit List;
+}
+
+
+// =====================================================================
+// Flag
+// =====================================================================
+
+class Flag
+//. A on/off toggle.
+{
+  inherit Variable;
+  
+  int transform_from_form( string what )
+  {
+    return (int)what;
+  }
+
+  string render_form( RequestID id )
+  {
+    string res = "<select name="+path()+"> ";
+    if(query())
+      res +=  ("<option value=1 selected>"+LOW_LOCALE->yes+"</option>\n"
+                "<option value=0>"+LOW_LOCALE->no)+"</option>\n";
+     else
+       res +=  ("<option value=1>"+LOW_LOCALE->yes+"</option>\n"
+                "<option value=0 selected>"+LOW_LOCALE->no)+"</option>\n";
+    return res+"</select>";
+  }
+}
