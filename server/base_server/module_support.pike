@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.33 1999/11/11 07:28:50 mast Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.34 1999/11/11 09:26:06 mast Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -393,6 +393,9 @@ class Module
       destruct( mod );
       return 1;
     };
+#ifdef MODULE_DEBUG
+    if (q) werror (describe_backtrace (q));
+#endif
     return 0;
   }
 
