@@ -33,6 +33,7 @@ mapping|string parse( RequestID id )
   if( id->variables->drop )
   {
     c->disable_module( replace(id->variables->drop,"!","#") );
+    c->save_me();
     return Roxen.http_redirect( site_url( id, id->variables->config ),id );
   }
   string res ="";
