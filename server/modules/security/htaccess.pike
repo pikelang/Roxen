@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.88 2001/10/04 14:41:01 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.89 2001/10/19 13:01:39 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -284,7 +284,7 @@ mapping parse_and_find_htaccess( RequestID id )
       else if(sscanf(line, "deny %s %s", ent, data) == 2)
 	roxen_deny += "deny "+ent+"="+data+"\n";
       else if(sscanf(line, "satisfy %s", data))
-	if(data == "all")
+	if(data == "any")
 	  any_ok = 1;
 	else
 	  any_ok = 0;
