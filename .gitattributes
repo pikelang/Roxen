@@ -11,4 +11,6 @@
 /modules/admin/actions/20:Add_customer/wizards/edit.pike foreign_ident
 /modules/admin/admin.pike foreign_ident
 /modules/autoweb/autositefs.pike foreign_ident
+/modules/dns/AutoDNS.pike foreign_ident
+/modules/mail/AutoMailAPI.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident

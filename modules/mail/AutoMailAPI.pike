@@ -1,3 +1,7 @@
+// AutoSite Mail API
+// $Id: AutoMailAPI.pike,v 1.5 1998/07/22 13:53:40 leif Exp $
+// Leif Stensson, July 1998.
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -6,6 +10,7 @@ inherit "roxenlib";
 
 object database;
 string db_status = "not connected yet";
+int    last_insert_id = 0;
 
 void create()
 { defvar(DBURL, "mysql://auto:site@kopparorm.idonex.se/autosite",
@@ -18,7 +23,11 @@ void create()
 }
 
 string status()
-{ return "<B>Database</B>: " + db_status;
+{ string s = "<B>Database</B>: " + db_status;
+  if (last_insert_id)
+  { s += "<BR>\n<B>ID of most recent insert</B>: " + last_insert_id;
+  }
+  return s;
 }        
 
 array register_module()
@@ -30,16 +39,18 @@ int new_mail(string from, string header, string contents)
 
   // Note: this is not nice if maildata contains bad characters,
   // or is very large. A better way of doing this is desirable.
-  database->big_query("INSERT sender,header,contents INTO messages "
+
+  database->big_query("INSERT INTO messages (sender,header,contents) "
                     + "VALUES (:from,:header,:contents)",
                       ([ "from": from,
                          "header": header,
                          "contents": contents
                        ])
                  );
-  // Extract the mail ID number.
 
-  return database->master_sql->insert_id();
+  // Extract the mail ID number.
+  
+  return last_insert_id = database->master_sql->insert_id();
 }
 
 int find_user(string user_address)
@@ -74,7 +85,7 @@ int find_user(string user_address)
 mixed add_receiver(int mail_id, int user_id, string folder)
 { if (!database) return "unable to access AutoMail database";
 
-  database->big_query("INSERT user_id,message_id,folder INTO mailboxes "
+  database->big_query("INSERT INTO mailboxes (user_id,message_id,folder) "
             "VALUES (:user_id,:mail_id,:folder)",
                       ([ "user_id": user_id,
                          "mail_id": mail_id,

@@ -5,6 +5,10 @@ inherit "module";
 inherit "roxenlib";
 import Thread;
 
+// AutoSite DNS Update 
+// $Id: AutoDNS.pike,v 1.12 1998/07/22 13:51:00 leif Exp $
+// Leif Stensson & Johan Schön, July 1998.
+
 string host_ip_no;
 
 #define ZTTL     "Zone TTL Value"
