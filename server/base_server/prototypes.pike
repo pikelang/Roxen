@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.72 2004/03/03 16:25:24 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.73 2004/03/03 17:36:07 mast Exp $";
 
 class Variable
 {
@@ -1158,7 +1158,7 @@ class MultiStatus
 
     if (mappingp(prop_value)) {
       code = prop_value->error;
-      message = prop_value->data;
+      message = prop_value->rettext;
     }
 
     DAV_WERROR("Adding property %O code:%O val:%O\n",

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.154 2004/03/03 16:25:24 grubba Exp $
+// $Id: module.pike,v 1.155 2004/03/03 17:36:06 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -475,6 +475,9 @@ multiset(string) query_all_properties(string path, RequestID id, void|Stat st)
 //! Returns the value of the specified property, or an error code
 //! mapping.
 //!
+//! The default implementation takes care of the most important RFC
+//! 2518 properties.
+//!
 //! @param st
 //!   If set, this should be the stat that corresponds to @[path]. Its
 //!   only purpose is to save a call to @[stat_file] when the stat
@@ -489,7 +492,8 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   if (!st) {
     st = stat_file(path, id);
     if (!st)
-      return Roxen.http_low_answer(404, "No such file or directory.");
+      return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND,
+				"No such file or directory.");
   }
   switch(prop_name) {
   case "DAV:creationdate":	// RFC2518 13.1
@@ -597,7 +601,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   //   exist is an error and MUST be noted, if the response uses a
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
-  return Roxen.http_low_answer(404, "No such property.");
+  return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND, "No such property.");
 }
 
 //! Attempt to set property @[prop_name] for @[path] to @[value].
@@ -644,8 +648,8 @@ mapping(string:mixed) set_property(string path, string prop_name,
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
   case "DAV:getlastmodified":	// 13.7
-    return Roxen.http_low_answer(409,
-				 "Attempt to set read-only property.");    
+    return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
+			      "Attempt to set read-only property.");
   }
   return set_dead_property(path, prop_name, value, id, context);
 }
@@ -681,8 +685,8 @@ mapping(string:mixed) set_dead_property(string path, string prop_name,
 					array(Parser.XML.Tree.Node) value,
 					RequestID id, mixed context)
 {
-  return Roxen.http_low_answer(405,
-			       "Setting of dead properties is not supported.");
+  return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
+			    "Setting of dead properties is not supported.");
 }
 
 //! Attempt to remove the property @[prop_name] for @[path].
@@ -709,8 +713,8 @@ mapping(string:mixed) remove_property(string path, string prop_name,
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
   case "DAV:getlastmodified":	// 13.7
-    return Roxen.http_low_answer(409,
-				 "Attempt to remove a read-only property.");
+    return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
+			      "Attempt to remove a read-only property.");
   }
   // RFC 2518 12.13.1:
   //   Specifying the removal of a property that does not exist
@@ -718,20 +722,20 @@ mapping(string:mixed) remove_property(string path, string prop_name,
   return 0;
 }
 
-//! Default implementation of some RFC 2518 properties.
+//! RFC 2518 PROPFIND implementation for a single resource (i.e. not
+//! recursive).
 //!
 //! @param path
 //!   @[query_location()]-relative path.
 //! @param mode
-//!   Query-mode. Currently one of
+//!   Query mode. Currently one of
 //!   @string mode
 //!     @value "DAV:propname"
-//!       Query after names of supported properties.
+//!       Query names of supported properties.
 //!     @value "DAV:allprop"
-//!       Query after all properties and their values.
+//!       Query all properties and their values.
 //!     @value "DAV:prop"
-//!       Query after properties specified by @[filt] and
-//!       their values.
+//!       Query properties specified by @[filt] and their values.
 //!   @endstring
 //! @param result
 //!   Result object.
@@ -782,6 +786,8 @@ mapping(string:mixed) find_properties(string path, string mode,
   return 0;
 }
 
+//! RFC 2518 PROPFIND implementation with recursion according to
+//! @[depth]. See @[find_properties] for details.
 void recurse_find_properties(string path, string mode,
 			     int depth, MultiStatus result,
 			     RequestID id,
@@ -799,6 +805,12 @@ void recurse_find_properties(string path, string mode,
     find_properties(path, mode, result, id, filt, st);
   if (ret) {
     result->add_response(path, XMLStatusNode(ret->error));
+    if (ret->rettext) {
+      Parser.XML.Tree.ElementNode descr =
+	Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
+      descr->add_child (Parser.XML.Tree.TextNode (ret->rettext));
+      result->add_response (path, descr);
+    }
     return;
   }
   if ((depth <= 0) || !st->isdir) return;
@@ -876,7 +888,7 @@ mapping(string:mixed) patch_properties(string path,
       // Unroll and fail any succeeded items.
       int i;
       mapping(string:mixed) answer =
-	Roxen.http_low_answer(424, "Failed dependency.");
+	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP, "Failed dependency.");
       for(i = 0; i < sizeof(results); i++) {
 	if (!results[i] || results[i]->error < 300) {
 	  result->add_property(path, instructions[i]->property_name,
@@ -937,7 +949,7 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
 {
   werror("copy_file(%O, %O, %O, %O)\n",
 	 path, dest, behavior, id);
-  return Roxen.http_low_answer(501, "Not implemented.");
+  return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
 void recurse_copy_files(string path, int depth, string dest_prefix,
