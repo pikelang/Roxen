@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.97 1998/02/20 23:54:55 noring Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.98 1998/03/08 12:31:56 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -947,7 +947,8 @@ mapping initial_configuration(object id)
     }
   }
   
-  res = default_head("Welcome to Roxen Challenger");
+  res = default_head("Welcome to Roxen Challenger " +
+		     roxen->__roxen_version__ + "." + roxen->__roxen_build__);
 
   res += Stdio.read_bytes("etc/welcome.html");
   if(error && strlen(error))
@@ -1298,7 +1299,9 @@ mapping configuration_parse(object id)
       }
     };
 
-    return http_string_answer(default_head("Roxen Challenger")+
+    return http_string_answer(default_head("Roxen Challenger " +
+					   roxen->__roxen_version__ + "." +
+					   roxen->__roxen_build__)+
 			      status_row(root)+
 			      display_tabular_header(root)+
 			      Stdio.read_bytes(full_version?"etc/config.html":
