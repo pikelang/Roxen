@@ -8,13 +8,13 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
- 
+// #define USERFS_DEBUG 
 
 #include <module.h>
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.38 1998/07/22 16:58:52 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.39 1998/08/21 22:57:49 neotron Exp $";
 
 // import Array;
 // import Stdio;
@@ -179,7 +179,7 @@ mixed find_file(string f, object got)
   }
   u = a[0];
   f = a[1];
-
+  
   if(u)
   {
     string *us;
@@ -198,7 +198,7 @@ mixed find_file(string f, object got)
 	}
 	return 0;
       }
-      if((f == "") && (of == "" || of[-1] != '/'))
+      if((f == "") && (strlen(of) && of[-1] != '/'))
       {
 	redirects++;
 	return http_redirect(got->not_query+"/",got);
@@ -274,9 +274,11 @@ string real_file( mixed f, mixed id )
 	f = us[ 5 ] + QUERY(pdir) + f;
     } else
       f = QUERY(searchpath) + u + "/" + f;
-
+    
     // Use the inherited stat_file
     fs = filesystem::stat_file( f,id );
+
+    //    werror(sprintf("%O: %O\n", f, fs));
     // FIXME: Should probably have a look at this code.
     if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
       return f;
@@ -284,7 +286,7 @@ string real_file( mixed f, mixed id )
   return 0;
 }
 
-array find_dir(string f, object got)
+mapping|array find_dir(string f, object got)
 {
 #ifdef USERFS_DEBUG
   roxen_perror(sprintf("USERFS: find_dir(%O, X)\n", f));
@@ -292,6 +294,7 @@ array find_dir(string f, object got)
 
   array a = find_user(f, got);
   
+
   if (!a) {
     array l;
     l = got->conf->userlist(got);
@@ -319,7 +322,10 @@ array find_dir(string f, object got)
     }
     else
       f = QUERY(searchpath) + u + "/" + f;
-    return filesystem::find_dir(f, got);
+    array dir = filesystem::find_dir(f, got);
+    if(QUERY(virtual_hosting) && arrayp(dir))
+      return ([ "files": dir ]);
+    return dir;
   }
   return (got->conf->userlist(got) - QUERY(banish_list));
 }
