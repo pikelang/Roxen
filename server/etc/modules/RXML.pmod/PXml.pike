@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.56 2001/06/09 00:33:24 mast Exp $
+//! $Id: PXml.pike,v 1.57 2001/06/18 15:20:13 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -73,7 +73,7 @@ static void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb, QuoteTagDef cdata_
 {
   add_quote_tag ("!--", .utils.p_xml_comment_cb, "--");
   add_quote_tag ("?", unknown_pi_tag_cb, "?");
-  add_quote_tag ("![CDATA[", .utils.p_xml_cdata_cb, "]]");
+  add_quote_tag ("![CDATA[", cdata_cb, "]]");
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -318,6 +318,7 @@ void finish (void|string in)
     if (errmsgs) low_parser::write_out (errmsgs), errmsgs = 0;
     if (p_code) p_code_literal();
   }
+  context->eval_finish();
 }
 
 
