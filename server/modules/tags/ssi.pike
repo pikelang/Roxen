@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.28 2000/04/15 00:02:03 kuntri Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.29 2000/04/29 20:13:41 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -231,7 +231,7 @@ constant tagdoc=([
 "!--#flastmod":#"
 <desc tag><short hide>
  This tag prints the last modification date of the specified file,
- subject to timefmt format specification used in the <!--#config> SSI
+ subject to timefmt format specification used in the &lt;!--#config&gt; SSI
  tag.</short> This tag prints the last modification date of the
  specified file, subject to timefmt format specification used in the
  <ref type=tag>!--#config</ref> SSI tag. </desc>
@@ -249,7 +249,7 @@ constant tagdoc=([
 <desc tag><short hide>
 
  Prints the size of the specified file, subject to the sizefmt format
- specification used in the <!--#config> SSI tag. </short>Prints the
+ specification used in the &lt;!--#config&gt; SSI tag. </short>Prints the
  size of the specified file, subject to the sizefmt format
  specification used in the <ref type=tag>!--#config</ref> SSI tag.
  </desc>
