@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.16 2000/08/15 01:20:05 mast Exp $
+//! $Id: PEnt.pike,v 1.17 2000/09/08 03:24:49 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -96,13 +96,12 @@ constant remove_runtime_tag = 0;
 #ifdef OBJ_COUNT_DEBUG
 string _sprintf()
 {
-  return sprintf ("RXML.PEnt(%O,%O,%O)%s",
-		  context, type, tag_set,
+  return sprintf ("RXML.PEnt(%O,%O)%s", type, tag_set,
 		  __object_marker ? "[" + __object_marker->count + "]" : "");
 }
 #else
 string _sprintf()
 {
-  return sprintf ("RXML.PEnt(%O,%O,%O)", context, type, tag_set);
+  return sprintf ("RXML.PEnt(%O,%O)", type, tag_set);
 }
 #endif
