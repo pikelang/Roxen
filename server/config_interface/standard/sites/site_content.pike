@@ -154,8 +154,9 @@ do                                                                      \
 }
 
 mapping current_compile_errors = ([]);
-string devel_buttons( Configuration c, string mn, RequestID id )
+string buttons( Configuration c, string mn, RequestID id )
 {
+  werror ("foo\n");
   RoxenModule mod = c->find_module( replace( mn,"!","#" ) );
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
@@ -264,7 +265,6 @@ string niceerror( function tocall, string y )
     for( int i = 0; i<sizeof( bt[1] ); i++ )
       if( bt[1][i][2] == niceerror )
       {
-        werror("%O\n", bt[1][i][0] );
         bt[1] = bt[1][i+2..];
         break;
       }
@@ -283,8 +283,8 @@ string find_module_doc( string cn, string mn, RequestID id )
     return "";
 
   string dbuttons;
-  if( config_setting( "devel_mode" ) && config_perm( "Add Module" ) )
-    dbuttons = "<h2>&locale.actions;</h2>"+devel_buttons( c, mn, id );
+  if( config_perm( "Add Module" ) )
+    dbuttons = "<h2>&locale.actions;</h2>"+buttons( c, mn, id );
   else
     dbuttons = "";
   RoxenModule m = c->find_module( replace(mn,"!","#") );
@@ -330,9 +330,9 @@ string find_module_doc( string cn, string mn, RequestID id )
                   "</font></b><br />"
                   + EC(translate(m->info())) + "</p><p>"
                   + EC(translate(m->status()||"")) + "</p><p>"
-                  + eventlog +
+                  + eventlog + dbuttons +
                   ( config_setting( "devel_mode" ) ?
-		    dbuttons + "<br clear='all' />\n"
+		    "<br clear='all' />\n"
 		    "<h2>Developer information</h2>" +
                     "<b>Identifier:</b> " + mi->sname + "<br />\n"
 		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
