@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.40 2002/12/17 21:47:00 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.41 2003/01/07 16:26:29 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -16,7 +16,7 @@ constant module_doc  = "Creates a self verifying form.";
 // it themselves.
 constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
 		 "regexp", "glob", "minlength", "case",
-		 "mode", "fail-if-failed", "ignore-if-false",
+		 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
 		 "ignore-if-failed", "ignore-if-verified", "optional", "value" >);
 
 constant forbidden = ({"\\", ".", "[", "]", "^",
@@ -160,7 +160,8 @@ class VInputFrame {
   array do_return(RequestID id) {
     int ok=!var->get_warnings();
     int show_err=1;
-    if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
+    if((args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]]) ||
+       (args["ignore-if-gone"] && !id->real_variables[args->name]))
       ok=1;
 
     if((!id->real_variables[args->name] && !args["ignore-if-gone"]) ||
