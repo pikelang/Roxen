@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.18 2000/02/24 17:15:14 per Exp $
+ * $Id: upgrade.pike,v 1.19 2000/02/24 23:53:04 js Exp $
  *
  * The Roxen Upgrade Client
  * Copyright © 2000, Roxen IS.
@@ -22,7 +22,7 @@ constant module_name = "Upgrade client";
 object db;
 
 object updater;
-Yabu.Table pkginfo, misc;
+Yabu.Table pkginfo, misc, installed;
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
@@ -31,7 +31,8 @@ void post_start()
 {
   catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
   pkginfo=db["pkginfo"];
-  misc=misc;
+  misc=db["misc"];
+  installed=db["installed"];
   updater=UpdateInfoFiles();
 }
 
@@ -65,6 +66,7 @@ void create()
 	 TYPE_STRING, "");
   defvar("port", 80, "Server port",
 	 TYPE_INT, "");
+  defvar("userpassword", "foo:bar", "Username and password", TYPE_STRING, "username:password");
 }
 
 static string describe_time_period( int amnt )
@@ -229,8 +231,6 @@ string container_upgrade_downloaded_packages_output(string t, mapping m,
 
 string|void unpack_file(Stdio.File from, string to)
 {
-  werror("Unpacking file: %O\n",to);
-
   string prefix=combine_path(getcwd(),"..");
   if(file_stat(prefix+to))
   {
@@ -322,6 +322,10 @@ string tag_upgrade_install_package(string t, mapping m, RequestID id)
   string res;
   if(err=catch(res=unpack_tarfile(QUERY(pkgdir)+(int)m->package+".tar")))
     return err+"<br><br><b>Could not install package. Fix the problems above and try again.</b>";
+
+  id->variables[m->variable]="1";
+  installed[m->package]=1;
+  installed->sync();
   return res+"<br><br><b>Package installed completely.</b>";
 }
 
@@ -405,8 +409,8 @@ array(int) decode_ranges(string s)
 mapping get_headers()
 {
   return ([ "host":QUERY(server)+":"+QUERY(port),
-	    "user-agent": "Roxen·WebServer/1.4.143", // FIXME
-	    "authorization": "Basic "+MIME.encode_base64("js:klorgas"), // FIXME
+	    "user-agent": roxen->real_version, 
+	    "authorization": "Basic "+MIME.encode_base64(QUERY(userpassword)),
   ]);
 }
 
