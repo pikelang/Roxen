@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.63 1998/03/23 19:48:04 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.64 1998/03/26 07:20:39 per Exp $";
 
 #define perror roxen_perror
 
@@ -607,10 +607,45 @@ void load_roxen()
   nwrite = roxen->nwrite;
 }
 
+#ifdef DEBUG
+class mf
+{
+  inherit Stdio.File;
+
+  mixed open(string what, string mode)
+  {
+    int res;
+    res = ::open(what,mode);
+    if(res)
+    {
+      string file;
+      int line;
+      sscanf(((describe_backtrace(backtrace())/"\n")[2]-(getcwd()+"/")),
+	     "%*s line %d in %s", line, file);
+      mark_fd(query_fd(), file+":"+line+" open(\""+ what+"\", "+mode+")");
+    }
+    return res;
+  }
+
+  void destroy()
+  {
+    catch { mark_fd(query_fd(),"CLOSED"); };
+  }  
+
+  int close(string|void what)
+  {
+    destroy();
+    return ::close(what);
+  }
+}
+#else
+constant mf = Stdio.File;
+#endif
+
 object|void open(string filename, string mode, int|void perm)
 {
   object o;
-  o=Stdio.File();
+  o=mf();
   if(!(o->open(filename, mode, perm||0666))) {
     // EAGAIN, ENOMEM, ENFILE, EMFILE, EAGAIN(FreeBSD)
     if ((< 11, 12, 23, 24, 35 >)[o->errno()]) {
@@ -629,8 +664,6 @@ object|void open(string filename, string mode, int|void perm)
 
   // FIXME: Might want to stat() here to check that we don't open
   // devices...
-
-  mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
   return o;
 }
 
