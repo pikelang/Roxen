@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.462 2004/08/17 15:16:16 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.463 2004/08/18 17:04:25 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -965,7 +965,7 @@ void end(int|void keepit)
     o->kept_alive = kept_alive+1;
     object fd = my_fd;
     my_fd=0;
-    o->chain(fd,port_obj,leftovers);
+    call_out (o->chain, 0, fd,port_obj,leftovers);
     pipe = 0;
     disconnect();
     return;
