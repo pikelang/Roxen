@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.383 2002/10/22 00:35:56 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.384 2002/10/23 18:09:47 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -811,6 +811,11 @@ class TagDate {
 
       if(!(args->brief || args->time || args->date))
 	args->full=1;
+      else if( args->time && args->date ) {
+	args->full=1;
+	m_delete(args, "time");
+	m_delete(args, "date");
+      }
 
       if(args->part=="second" || args->part=="beat" || args->strftime)
 	NOCACHE();
