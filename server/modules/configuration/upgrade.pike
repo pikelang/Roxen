@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.11 2000/02/14 21:23:23 js Exp $
+ * $Id: upgrade.pike,v 1.12 2000/02/15 15:43:22 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -27,7 +27,7 @@ void start(int num, Configuration conf)
   conf->parse_html_compat=1;
   if(!num)
   {
-    catch(db=Yabu.db(QUERY(yabudir),"wcS"));
+    catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
     updater=UpdateInfoFiles();
   }
 }
@@ -51,14 +51,34 @@ void create()
 	 TYPE_INT, "");
 }
 
+static string describe_time_period( int amnt )
+{
+  if(amnt < 0) return "some time";
+  amnt/=60;
+  if(amnt < 120) return amnt+" minutes";
+  amnt/=60;
+  if(amnt < 48) return amnt+" hours";
+  amnt/=24;
+  if(amnt < 60) return amnt+" days";
+  amnt/=(365/12);
+  if(amnt < 30) return amnt+" months";
+  amnt/=12;
+  return amnt+" years";
+}
+
 class Scope_upgrade
 {
   inherit RXML.Scope;
 
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
-    object id = c->id;
-    return "foo";
+    if(var=="last_updated")
+    {
+      int t;
+      if(catch(t=db["misc"]["last_updated"]) || t==0)
+	return "infinitely long";
+      return describe_time_period(time()-t);
+    }
   }
 
   string _sprintf() { return "RXML.Scope(upgrade)"; }
@@ -101,11 +121,26 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
   return ret;
 }
 
-string container_packet_list(string t, mapping m, string c, RequestID id)
+string container_package_list(string t, mapping m, string c, RequestID id)
 {
-  // limit
-//   for
-  return "";
+  array res=({ });
+  int i=0;
+
+  array(string) packages=indices(db["pkginfo"]);
+  packages=sort(packages);
+  if(m->reverse)
+    packages=reverse(packages);
+  
+  foreach(packages, string pkg)
+  {
+    mapping p=db["pkginfo"][pkg];
+    if( (m->type && p["package-type"]==m->type) || !m->type)
+      res+=({ p });
+    i++;
+    if(m->limit && i>=(int)m->limit)
+      break;
+  }
+  return do_output_tag(m, res, c, id);
 }
 
 string encode_ranges(array(int) a)
@@ -168,7 +203,6 @@ class GetPackage
 {
   inherit Protocols.HTTP.Query;
 
-  
   int|float percent_done()
   {
     int b=total_bytes();
@@ -210,16 +244,17 @@ class GetPackage
 		  get_headers());
   }
 }
+
+
 class GetInfoFile
 {
   inherit Protocols.HTTP.Query;
 
-  string get_containers(string t, mapping m, string c, mapping res)
+  string get_containers(string t, mapping m, string c, int line, mapping res)
   {
     if(sizeof(t) && t[0]!='/')
       res[t]=c;
   }
-  
   
   void request_ok(object httpquery, int num)
   {
@@ -228,7 +263,7 @@ class GetInfoFile
     
     if(httpquery->status!=200)
     {
-      report_error("Upgrade: Wrong answer from server.\n");
+      report_error("Upgrade: Wrong answer from server for package %d.\n",num);
       return;
     }
 
@@ -239,8 +274,8 @@ class GetInfoFile
 		       "description": get_containers, 
 		       "organization": get_containers, 
 		       "license": get_containers, 
-		       "author_email": get_containers, 
-		       "author_name": get_containers, 
+		       "author-email": get_containers, 
+		       "author-name": get_containers, 
 		       "package-type": get_containers, 
 		       "issued-date": get_containers, 
 		       "roxen-low": get_containers, 
@@ -248,8 +283,8 @@ class GetInfoFile
 		       "crypto": get_containers ]),		     
 		     res);
     res->size=httpquery->headers->size;
-    werror("%O\n",httpquery->data());
-//     db["pkginfo"][(string)num]=res;
+//     werror("%O\n",res);
+    db["pkginfo"][(string)num]=res;
     db["pkginfo"]->sync();
     report_notice("Upgrade: Added information about package number "
 		  +num+".\n");
@@ -307,7 +342,8 @@ class UpdateInfoFiles
 
     foreach(delete_packages, int i)
       catch(db["pkginfo"]->delete((string)i));
-      
+
+    catch(db["misc"]["last_updated"]=time());
   }
 
   void request_fail(object httpquery)
@@ -318,7 +354,7 @@ class UpdateInfoFiles
 
   void do_request()
   {
-    werror("foo: %O\n",encode_ranges((array(int))indices(db["pkginfo"])));
+//     werror("foo: %O\n",encode_ranges((array(int))indices(db["pkginfo"])));
     async_request(QUERY(server),QUERY(port),
 		  "POST /upgradeserver/get_packages HTTP/1.0",
 		  get_headers() |

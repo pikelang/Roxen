@@ -10,75 +10,85 @@
 <cv-startpage><br>
 
 
+<define tag=package-box>
+  <cv-obox title="&title;">
+  <rul>
+  <package-list type="&name;">
+    <rli>#title# <a href="upgrade.html?details=#id#">[Details...]</a></rli>
+    <cset variable="_&name;">foo</cset>
+  </package-list>
+  </rul>
+  <if not variable="_&name;">
+     Currently no packages in this category<p>
+  </if>	  
+  <div align=right>
+    <a href="upgrade.html?category=&name;">[More..]</a>
+  </div>
+  </cv-obox>
+</define>
+
 
 <if not variable=category>
   <cset variable=category></cset>
 </if>
 
-
-<comment><if variable="category is "></comment>
+<catch preparse>
+<if variable="category is ">
 
 <h1>Roxen Upgrade System</h1>
-Welcome to the upgrade system.
-This information was last synchronized with the main server at FIXME.
 
+
+Welcome to the upgrade system.
+This information was last synchronized with the main server &upgrade.last_updated; ago.
 
 <table cellpadding=10 cellspacing=20>
   <tr valign=top>
-    <td>
-      <cv-obox title="Security fixes">
-        <rul>
-          <rli>Serious remote vulnerability fixed. <a href=".">[Details...]</a></rli>
-          <rli>Graphical Text DoS vulnerability fixed <a href=".">[Details...]</a></rli>
-        </rul>
-        <div align=right>
-          <a href="upgrade.html?category=security">[More..]</a>
-        </div>
-      </cv-obox>
-    </td>
-    <td>
-      <cv-obox title="Bug fixes">
-        Currently no packages in this category<p>
-        <div align=right>
-          <a href="upgrade.html?category=bugfixes">[More..]</a>
-        </div>
-      </cv-obox>
-    </td>
+    <td><package-box name="security" title="Security fixes"></td>
+    <td><package-box name="bugfixes" title="Bug fixes"></td>
   </tr>
-  <tr  valign=top>
-    <td>
-      <cv-obox title="Idonex modules">
-        Currently no packages in this category<p>
-        <div align=right>
-          <a href="upgrade.html?category=idonex">[More..]</a>
-        </div>
-      </cv-obox>
-    </td>
-    <td>
-      <cv-obox title="3rd party modules">
-        Currently no packages in this category<p>
-        <div align=right>
-          <a href="upgrade.html?category=3dpart">[More..]</a>
-        </div>
-      </cv-obox>
-    </td>
-  
+  <tr valign=top>
+    <td><package-box name="idonex" title="Idonex modules"></td>
+    <td><package-box name="3dpart" title="3rd part modules"></td>
   </tr>
 </table>
+
+
+<hr size=1 width=95%>
+
+  <cv-obox title="Downloaded (uninstalled)  packages">
+    <table cellpadding=4>
+      <tr>
+	<td nowrap><b>Description</b></td>
+	<td nowrap><b>Size</b></td>
+	<td nowrap><b>Percentage downloaded</b></td>
+	<td> </td>
+     </tr>
+     <tr>
+       <td nowrap>Gtext DoS fix <a href=".">[Details...]</a></td>
+       <td nowrap>56 kB</td>
+       <td nowrap>100%</td>
+       <td nowrap><a href="">[Install]</a></td>
+     </tr>
+     <tr>
+       <td nowrap>IMHO v0.98 <a href=".">[Details...]</a></td>
+       <td nowrap>126 kB</td>
+       <td nowrap>64%</td>
+       <td nowrap></td>
+     </tr>
+    </table>
+  </cv-obox>
+
 
 </if>
 <else>
 
-
+<formoutput>
+  <package-box name="#category#" title="Foo">
+</formoutput>  
 </else>
+</catch>
 
 
-
-
-
-<package-list type=&category;>
-
-</package-list>
 
 
 
