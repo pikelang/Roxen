@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.574 2001/03/08 21:57:17 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.575 2001/03/27 23:56:08 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2738,6 +2738,8 @@ class ArgCache
           short_key += "."; // Not very likely...
       }
       f = open( path+short_key, "wct" );
+      if (!f) report_error ("Failed to open %O for writing: %s\n",
+			    path + short_key, strerror (errno()));
       f->write( long_key );
       return short_key;
     }
