@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.246 2001/02/05 21:27:24 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.247 2001/02/23 02:26:34 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1431,6 +1431,7 @@ int dump( string file, program|void p )
 
   if( new_master->has_set_on_load[ file ] == 1 )
   {
+    m_delete( new_master->has_set_on_load, file );
     if( q = catch( new_master->dump_program( file, p ) ) )
     {
 #ifdef DUMP_DEBUG
