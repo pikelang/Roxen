@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.106 1998/02/28 17:46:30 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.107 1998/03/01 02:42:39 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1410,9 +1410,9 @@ public array find_dir(string file, object id)
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    TRACE_ENTER("Location module", tmp[1]);
     if(!search(file, loc)) {
       /* file == loc + subpath */
+      TRACE_ENTER("Location module", tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
 	TRACE_LEAVE("Permission denied");
@@ -1431,10 +1431,11 @@ public array find_dir(string file, object id)
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
-      TRACE_LEAVE("Added module mountpoint");
+      TRACE_ENTER("Location module", tmp[1]);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       dir += ({ loc });
+      TRACE_LEAVE("Added module mountpoint");
     }
   }
   if(sizeof(dir))
@@ -1493,9 +1494,11 @@ public array stat_file(string file, object id)
       nest = 0;
       if(err)
 	throw(err);
+      TRACE_LEAVE("");
       TRACE_LEAVE("Returning data");
       return tmp;
     }
+    TRACE_LEAVE("");
     id->not_query = of;
   }
 #endif
@@ -1516,6 +1519,7 @@ public array stat_file(string file, object id)
       TRACE_ENTER("Location module", tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied");
 	continue;
       }
