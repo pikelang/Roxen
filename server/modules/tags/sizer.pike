@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.16 2001/07/17 12:33:35 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.17 2001/09/03 17:33:36 nilsson Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -528,12 +528,12 @@ constant tagdoc=([
  speed(s) in kbit/s.</p>
 </attr>
 
-<ex type='vert'>
+<ex-box>
  <page-size
   page='../'
   include='summary,details,dltime,suggestions'
   speeds='28.8,56.0,64.0,256.0,384.0,1024.0'
  />
-</ex>",
+</ex-box>",
     ]);
 #endif
