@@ -1,10 +1,11 @@
 #!/bin/sh
 #
-# $Id: start,v 1.63 1998/11/28 21:43:50 grubba Exp $
+# $Id: start,v 1.64 1999/04/22 09:18:00 per Exp $
 
 cd `dirname $0`
 
-VERSION=202; BETA=.b;
+VERSION=4;
+BUILD=0
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -19,7 +20,32 @@ verbose=1
 # Default to using a relative path.
 roxendir="."
 
+pike=pike
+if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
+if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
+if [ "x$PIKE" = "x" ]; then :; else
+  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+fi
+
 ####### BEGIN ARGUMENT PARSING
+
+# Enable threads (if available) on Solaris.
+# Most other OS's have thread bugs that cause them or Roxen to crash.
+if uname | grep 'SunOS' >/dev/null 2>&1; then
+  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+    if [ $verbose -gt 0 ] ; then
+      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+    fi
+    DEFINES="$DEFINES -DENABLE_THREADS"
+    if $pike --version 2>&1|head -1|grep 0.5 ; then
+       if [ $verbose -gt 0 ] ; then
+         echo Pike 0.5 detected. Threads disabled
+       fi
+       DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
+    fi
+  fi
+fi
+
 
 ## Parse all arguments.
 ## GNU-style, long options only, except for -D, simply passed on.
@@ -103,7 +129,7 @@ parse_args() {
     DEFINES="$DEFINES $1"
   ;;
   '--version')
-    echo Roxen Challenger 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
+    echo Roxen Challenger 1.$VERSION.$BUILD
     exit 0
   ;;
   '--help'|'-?')
@@ -235,17 +261,6 @@ if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
 ####### BEGIN PIKE OPTIONS
 
-# Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    if [ $verbose -gt 0 ] ; then
-      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
-    fi
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
-fi
-
 # Roxen will create files as the initial user,
 # which it expects to be able to read as the run-time user.
 umask 022
@@ -315,13 +330,6 @@ if uname | grep 'HP-UX' >/dev/null 2>&1; then
     echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
-fi
-
-pike=pike
-if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
-if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
-if [ "x$PIKE" = "x" ]; then :; else
-  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 fi
 
 gdb=no
