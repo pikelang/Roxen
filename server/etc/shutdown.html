@@ -1,4 +1,4 @@
-<!-- $Id: shutdown.html,v 1.10 1997/08/31 21:54:26 peter Exp $
+<!-- $Id: shutdown.html,v 1.11 1997/10/18 20:46:55 grubba Exp $
      name="Roxen Shutdown Page";
      doc="The page displayed when Roxen is shut down";
   -->
@@ -6,16 +6,21 @@
 <head>
 <title>Roxen going down</title>
 </head>
-<!-- make it clear that this did indeed shutdown the server, it will not
+<!-- Make it clear that this did indeed shutdown the server, it will not
      restart automatically (unless a very odd script is used to start the
-     thing) -->
+     server) -->
 
-<body bgcolor=white text=black link=0x000044 vlink=0x000044 alink=red>
-<table width="100%" bgcolor="#dddddd" border=0 cellpadding=0
-cellspacing=0><tr><td valign=middle align=left><a
-href="$docurl"><img border=0 src="/image/roxen-small.gif"
-alt="Roxen"></a></td><td align=right valign=middle>
-<b>Server is shut down.</b></td><td>&nbsp;</td></tr></table><br>
+<body bgcolor=white text=black link=darkblue vlink=black alink=red>
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td valign=bottom align=left><a
+href="$docurl"><img border=0 src="/image/roxen-icon-gray.gif"
+alt="Roxen"></a></td><td>&nbsp;</td>
+<td width=100% height=39><table cellpadding=0 cellspacing=0 width=100% border=0>
+<tr width="100%"><td width="100%" align=right valigh=center height=28>
+<b>Server is shut down.</b></td></tr>
+<tr width=100%><td bgcolor="#003366" align=right height=12 width="100%"
+><font color=white size=-2>Administration Interface</font></td></tr>
+</table></td></tr></table><br>
 
 <blockquote>
 <h1><font color=red size=7>Shutdown</font></h1>
