@@ -2,7 +2,12 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.40 1997/09/16 01:35:07 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.41 1997/09/17 02:14:01 grubba Exp $";
+
+/*
+ * name = "Roxen Master";
+ * doc = "Roxen's customized master.";
+ */
 
 object stdout, stdin;
 mapping names=([]);
