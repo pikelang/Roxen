@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.270 2000/03/07 17:52:16 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.271 2000/03/07 21:36:32 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1473,8 +1473,11 @@ mixed handle_request( RequestID id  )
   return file;
 }
 
-mixed get_file(RequestID id, int|void no_magic)
+mixed get_file(RequestID id, int|void no_magic, int|void internal_get)
 {
+  int orig_internal_get = id->misc->internal_get;
+  id->misc->internal_get = internal_get;
+
   mixed res, res2;
   function tmp;
   res = low_get_file(id, no_magic);
@@ -1493,6 +1496,8 @@ mixed get_file(RequestID id, int|void no_magic)
     } else
       TRACE_LEAVE("");
   }
+
+  id->misc->internal_get = orig_internal_get;
   return res;
 }
 
@@ -1784,8 +1789,15 @@ public array open_file(string fname, string mode, RequestID id)
 	file = http_low_answer(id->misc->error_code, "Failed" );
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = http_low_answer(501, "Not implemented.");
-      else
+      else {
+#ifdef OLD_RXML_COMPAT
+	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
+					 ({"$File", "$Me"}),
+					 ({fname,query("MyWorldLocation")})));
+#else
 	file=http_low_answer(404,parse_rxml(query("ZNoSuchFile"),id));
+#endif
+      }
 
       id->not_query = oq;
 
@@ -2039,10 +2051,8 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->raw_url=s;
   fake_id->not_query=s;
-  if (!not_internal)
-    fake_id->misc->internal_get=1;
 
-  if(!(m = get_file(fake_id)))
+  if(!(m = get_file(fake_id,0,!not_internal)))
     return 0;
 
   if (!mappingp(m) && !objectp(m)) {
