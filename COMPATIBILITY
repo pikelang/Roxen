@@ -9,3 +9,10 @@ Between InternetServer 2.4 and Roxen WebServer <= 2.4
  - The example file folder example_pages has moved from
    server/example_pages to server/etc/example_pages. All example
    servers must have their filesystem module search path updated.
+
+ - The start script no longer adds local/etc/modules to module path,
+   local/etc/include to include path and local/etc to program path.
+   Use local/pike_modules and local/include instead. Program directory
+   is entierly deprecated. A subset of the active include paths are no
+   longer added to the internal environment variable representation
+   mapping, where it was previously available as PIKE_INCLUDE_PATH.
