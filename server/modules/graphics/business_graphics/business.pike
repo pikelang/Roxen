@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.106 1998/09/28 06:12:11 js Exp $";
+constant cvs_version = "$Id: business.pike,v 1.107 1998/10/10 19:23:44 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -168,6 +168,9 @@ void start(int num, object configuration)
     create_pie   = ((program)"create_pie")()->create_pie;
     create_bars  = ((program)"create_bars")()->create_bars;
     create_graph = ((program)"create_graph")()->create_graph;
+    if (get_dir(query("cachedir")))
+      foreach(get_dir(query("cachedir")), string file)
+	rm(query("cachedir")+file);
   }
 }
 
@@ -179,6 +182,9 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
   loaded = 0;
+  if (get_dir(query("cachedir")))
+    foreach(get_dir(query("cachedir")), string file)
+      rm(query("cachedir")+file);
 }
 
 void create()
@@ -191,6 +197,8 @@ void create()
 	  "Maximal height of the generated image." );
   defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
 	  "Maximal length of the strings used in the diagram." );
+  defvar( "cachedir", "./bgcache/", "Cache directory", TYPE_DIR|VAR_MORE,
+	  "The directory that will be used to store diagrams." );
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
@@ -516,16 +524,33 @@ string syntax( string error )
     + "<hr noshade>";
 }
 
-mapping(string:mapping) cache = ([]);
+//mapping(string:mapping) cache = ([]);
 mapping(string:object) palette_cache = ([]);
 int datacounter = 0; 
 
 string quote(mapping in)
 {
   // Don't try to be clever here. It will break threads.
+  /*
   string out;
   cache[ out =
        sprintf("%d%08x%x", ++datacounter, random(99999999), time(1)) ] = in;
+  */
+  //NU: Create key
+  object o=Crypto.sha();
+  string data=encode_value(in);
+  o->update(data);
+  string out=replace(http_encode_string(MIME.encode_base64(o->digest(),1)),
+		     "/", "$");
+  if (file_stat(query("cachedir")+out)) return out;
+  
+  //NU: Create the file <Key>
+  
+  if (!get_dir(query("cachedir")))
+    if (!mkdir(query("cachedir")))
+      throw(({query("cachedir")+"can not be created error!\n", backtrace()}));
+    
+  Stdio.write_file(query("cachedir")+out, data);
   
   return out;
 }
@@ -866,7 +891,10 @@ mapping http_img_answer( string msg )
 
 mapping unquote( string f )
 {
-  return cache[ f ];
+  //NU: Load the file f
+  return decode_value(Stdio.read_file(query("cachedir")+f));
+  
+  //  return cache[ f ];
 }
 
 mapping find_file(string f, object id)
@@ -875,6 +903,12 @@ mapping find_file(string f, object id)
   //return 0;
 #endif
 
+  //NU: If the file <f>.gif exists return it
+  string temp;
+  if (temp=Stdio.read_file(query("cachedir")+f+".gif"))
+    return http_string_answer(temp, "image/gif");
+
+
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
@@ -882,6 +916,8 @@ mapping find_file(string f, object id)
     return http_img_answer( "This is BG's mountpoint." );
 
   mapping res = copy_value( unquote( f ) );
+
+  //FIXME Ta bort f?
 
   if(!res)
     return http_img_answer( "Please reload this page." );
@@ -1001,8 +1037,21 @@ mapping find_file(string f, object id)
     werror("Timers: %O\n", bg_timers);
 #endif
   if(!ct) ct = Image.colortable(img)->nodither();
+
+
+  //NU: Save the created gif as <f>.gif!
+
   if(back)
-    return http_string_answer(Image.GIF.encode(img, ct, @back), "image/gif");
+    {
+      string foo=Image.GIF.encode(img, ct, @back);
+      Stdio.write_file(query("cachedir")+f+".gif", foo);
+      return http_string_answer(foo, "image/gif");
+    }
   else
-    return http_string_answer(Image.GIF.encode(img, ct), "image/gif");
+    {
+      string foo=Image.GIF.encode(img, ct);
+      Stdio.write_file(query("cachedir")+f+".gif", foo);
+      return http_string_answer(foo, "image/gif");
+    }
+
 }
