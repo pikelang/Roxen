@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.50 2000/11/16 11:52:15 per Exp $
+ * $Id: Roxen.pmod,v 1.51 2000/11/21 13:17:29 per Exp $
  *
  * Various helper functions.
  *
@@ -1308,6 +1308,22 @@ void remove_cookie( RequestID id,
 //! The domain and path arguments are optional.
 {
   set_cookie( id, name, value, -time(1), domain, path );
+}
+
+void add_cache_stat_callback( RequestID id, string file, int mtime )
+{
+  while( id->misc->orig )
+    id = id->misc->orig;
+  if( !id->misc->_cachecallbacks )  return;
+  id->misc->_cachecallbacks += ({ lambda( RequestID id, object key ) {
+				    Stat st = file_stat( file );
+				    if( !st || (st[ST_MTIME] != mtime) )
+				    {
+				      destruct( key );
+				      return 0;
+				    }
+				    return 1;
+				  } });
 }
 
 void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
