@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.434 2000/02/16 15:37:29 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.435 2000/02/16 16:05:15 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3132,6 +3132,10 @@ int main(int argc, array tmp)
 
   if( Getopt.find_option( argv, 0, "no-delayed-load" ) )
     enable_configurations_modules();
+  else
+    foreach( configurations, object c )
+      if( c->query( "no_delayed_load" ) )
+        c->enable_all_modules();
 
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
