@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.46 1998/04/29 10:06:47 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.47 1998/07/23 01:20:39 neotron Exp $";
 
 /*
  * name = "Roxen Master";
@@ -96,12 +96,11 @@ array persistent_variables(program p, object o)
 
 array|string low_nameof(object|program|function fo)
 {
-  if(objectp(fo) && search(objects, fo))
-    return search(objects, fo);
+  if(objectp(fo))
+    if(mixed x=search(objects,fo)) return x; else return 0;  
 
   if(programp(fo))
-    return search(programs, fo);
-
+    if(mixed x=search(programs,fo)) return x; else return 0;  
   string p,post="";
   object foo ;
 
@@ -180,8 +179,9 @@ object objectof(array foo)
 function functionof(array f)
 {
   object o;
-  werror(sprintf("Functionof %O\n", f));
-  if(sizeof(f) != 3) return 0;
+//  werror(sprintf("Functionof %O\n", f));
+  if(!arrayp(f) || sizeof(f) != 3)
+  return 0;
   o = objectof( f[..1] );
   if(!o)
   {
