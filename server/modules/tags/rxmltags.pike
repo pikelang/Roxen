@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.272 2001/08/17 16:14:51 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.273 2001/08/17 19:44:51 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1167,7 +1167,7 @@ class TagScope {
     mapping oldvar;
 
     array do_enter(RequestID id) {
-      scope_name=args->extend || "form";
+      scope_name = args->scope || args->extend || "form";
       // FIXME: Should probably work like this, but it's anything but
       // simple to do that now, since variables is a class that simply
       // fakes the old variable structure using real_variables
@@ -6298,9 +6298,9 @@ load.</p>
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.</p>
 
-<ex><case upper=''>upper</case></ex>
-<ex><case lower=''>lower</case></ex>
-<ex><case capitalize=''>capitalize</case></ex>
+<ex><case case='upper'>upper</case></ex>
+<ex><case case='lower'>lower</case></ex>
+<ex><case case='capitalize'>capitalize</case></ex>
 </attr>",
 
 //----------------------------------------------------------------------
