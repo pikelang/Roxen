@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenLib.java,v 1.4 2000/02/06 02:10:12 marcus Exp $
+ * $Id: RoxenLib.java,v 1.5 2000/02/06 16:50:42 marcus Exp $
  *
  */
 
@@ -178,6 +178,15 @@ public class RoxenLib extends HTTP {
 
   }
 
+  /**
+   * Quotes characters that are unallowed in HTML text or attributes.
+   * <p>
+   * The following characters are replaced with HTML entities:
+   * <tt>&amp;, &lt;, &gt;, ", ', NUL</tt>.
+   *
+   * @param  str  the string to quote
+   * @return      the quoted result
+   */
   public static String htmlEncodeString(String str)
   {
     // Encodes str for use as a literal in html text.
@@ -202,6 +211,14 @@ public class RoxenLib extends HTTP {
     return sb.toString();
   }
 
+  /**
+   * Decoded HTML entities.
+   * <p>
+   * All HTML 4.0 entities are replaced with their literal equivalent.
+   *
+   * @param  str  the string to unquote
+   * @return      the unquoted result
+   */
   public static String htmlDecodeString(String str)
   {
     StringTokenizer tok = new StringTokenizer(str, "&;", true);
@@ -272,11 +289,30 @@ public class RoxenLib extends HTTP {
     return sb.toString();
   }
 
+  /**
+   * Bla
+   *
+   */
   public native static String doOutputTag(Map args, Map[] varArr,
 					  String contents, RoxenRequest id);
 
+  /**
+   * Perform RXML parsing on a string
+   *
+   * @param what  the RXML code to parse
+   * @param id    a request object associated with the parse
+   * @return      the result of the parse
+   */
   public native static String parseRXML(String what, RoxenRequest id);
   
+  /**
+   * Formats key and value paris for use as HTML tag attributes.
+   * If the set of pairs is non-empty, the result will contain an
+   * extra space at the end.
+   *
+   * @param in  map from attribute name to attribute value
+   * @return    a string suitable for inclusion in an HTML tag
+   */
   public static String makeTagAttributes(Map in)
   {
     TreeMap tm = new TreeMap(in);
@@ -307,12 +343,26 @@ public class RoxenLib extends HTTP {
     }
   }
 
+  /**
+   * Creates an HTML tag given the tag name and attributes
+   *
+   * @param s   name of tag element
+   * @param in  map from attribute name to attribute value
+   * @return    a string representation of the tag
+   */
   public static String makeTag(String s, Map in)
   {
     String q = makeTagAttributes(in);
     return "<"+s+(q.length()!=0? " "+q:"")+">";
   }
 
+  /**
+   * Creates an XML empty element tag given the tag name and attributes
+   *
+   * @param s   name of tag element
+   * @param in  map from attribute name to attribute value
+   * @return    a string representation of the tag
+   */
   public static String makeEmptyElemTag(String s, Map in)
   {
     // Creates an XML empty-element tag
@@ -322,6 +372,14 @@ public class RoxenLib extends HTTP {
     return "<"+s+" "+q+">";
   }
 
+  /**
+   * Creates an HTML/XML tag with content given the tag name and attributes
+   *
+   * @param s   name of tag element
+   * @param in  map from attribute name to attribute value
+   * @param contents  the text contents of the tag
+   * @return    a string representation of the tag, contents, and end tag
+   */
   public static String makeContainer(String s, Map in, String contents)
   {
     return makeTag(s,in)+contents+"</"+s+">";
