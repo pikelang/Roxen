@@ -462,13 +462,18 @@ string parse( RequestID id )
  	 LOCALE(38,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
-	 if(search(url, "*")==-1)
-           res += "<a target='server_view' href='"+url+"'>"+
-	     url+"</a> "+port_for(url)+"<br />\n";
+         int open = roxen->urls[ url ] && roxen->urls[ url ]->port->bound;
+         if( !open )
+           res += url + " "+port_for(url)+(" <font color='&usr.warncolor;'>"+
+                                           LOCALE("", "Not open")+
+                                           "</font>")+"<br />\n";
+         else if(search(url, "*")==-1)
+           res += ("<a target='server_view' href='"+url+"'>"+
+                   url+"</a> "+port_for(url)+"<br />\n");
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += "<a target='server_view' href='"+
-	     replace(url, "*", gethostname() )+"'>"+
-	     url+"</a> "+port_for(url)+"<br />\n";
+	   res += ("<a target='server_view' href='"+
+                   replace(url, "*", gethostname() )+"'>"+
+                   url+"</a> "+port_for(url)+"<br />\n");
          else
 	   res += url + " "+port_for(url)+"<br />\n";
        }

@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.105 2000/08/22 10:29:31 lange Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.106 2000/08/22 23:39:00 per Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -482,10 +482,15 @@ object(Configuration) find_config_or_error(string config)
   return conf;
 }
 
+string not_bound_warning()
+{
+  return LOCALE("","This port was requested, but binding it failed."); 
+}
 mapping get_port_map( object p )
 {
   return ([
     "port":p->get_key(),
+    "warning":(p->bound?"":not_bound_warning()),
     "name":p->name+"://"+(p->ip||"*")+":"+p->port+"/",
   ]);
 }

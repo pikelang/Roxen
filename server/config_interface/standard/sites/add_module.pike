@@ -148,7 +148,7 @@ string pafeaw( string errors, string warnings )
       string he( string what )
       {
         if( what == "Error" )
-          return "<font color='&usr.warn-color;'>"+what+"</font>";
+          return "<font color='&usr.warncolor;'>"+what+"</font>";
         return what;
       };
 
@@ -174,7 +174,7 @@ string pafeaw( string errors, string warnings )
       if( !header_added++ )
         da_string += 
                   "<p><a name='errors_and_warnings'><br />"
-                  "<font size=+2><b><font color='&usr.warn-color;'>"
+                  "<font size=+2><b><font color='&usr.warncolor;'>"
                   "Compile errors and warnings</font></b><br />"
                   "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
 
