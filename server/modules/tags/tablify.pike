@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.50 2000/06/20 13:56:34 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.51 2000/06/30 16:00:18 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -102,19 +102,19 @@ Finland, 5 158 372
 </attr>
 
 <attr name=bordercolor value=color default='#000000'>
- The colour of the border.
+ The color of the border.
 </attr>
 
 <attr name=titlebgcolor value=color default='#112266'>
- The background colour of the title.
+ The background color of the title.
 </attr>
 
 <attr name=titlecolor value=color default='#ffffff'>
- The colour of the title.
+ The color of the title.
 </attr>
 
 <attr name=modulo value=number>
- Defines how many rows in a row should have the same colour.
+ Defines how many rows in a row should have the same color.
 </attr>
 
 <attr name=oddbgcolor value=color default='#ffffff'>
@@ -201,11 +201,11 @@ Finland, 5 158 372
   <attr name=separator value=string>Defines the field type separator.</attr>
 
   The fields types are separated by
-  <ol>
+  <ul>
   <li>The value given in the separator attribute to fields.</li>
   <li>The value given in the cellseparator attribute to tablify.</li>
   <li>Tab.</li>
-  </ol>"])
+  </ul>"])
 })]);
 #endif
 
