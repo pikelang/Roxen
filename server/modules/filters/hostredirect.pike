@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.15 1998/03/11 19:42:36 neotron Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.16 1998/03/30 20:56:25 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -110,7 +110,8 @@ mixed first_try(object id)
 
   id->misc->host_redirected = 1;
   if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
-       (id->my_fd && (host = replace(id->my_fd->query_address(1)," ",":")))))
+       (id->my_fd && id->my_fd->query_address &&
+	(host = replace(id->my_fd->query_address(1)," ",":")))))
     return 0;
   
   host = (host / ":")[0]; // Remove port number
