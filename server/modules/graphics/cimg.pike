@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.33 2000/12/05 00:39:53 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.34 2000/12/10 04:30:23 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -138,6 +138,10 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
   else
     layers = roxen.load_layers( args->src, id, opts );
 
+  layers->set_misc_value( "visible",1 );
+  foreach( layers, Image.Layer lay )
+    if( !lay->get_misc_value( "name" ) )
+      lay->set_misc_value( "name", "Background" );
 
   if( args["exclude-layers"] )
   {
@@ -254,7 +258,7 @@ class TagCImg
     {
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
-      args->src = query_absolute_internal_location(id)+the_cache->store( a,id );
+      args->src=query_absolute_internal_location(id)+the_cache->store( a,id );
       if( mapping size = the_cache->metadata( a, id, 1 ) )
       {
 	// image in cache (1 above prevents generation on-the-fly)
