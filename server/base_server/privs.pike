@@ -1,12 +1,13 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.16 1997/08/12 06:32:03 per Exp $";
+string cvs_version = "$Id: privs.pike,v 1.17 1997/08/12 06:43:59 per Exp $";
 
 int saved_uid;
 int saved_gid;
 
 #if !constant(report_notice)
 #define report_notice werror
+#define report_debug werror
 #endif
 
 #define LOGP (roxen && roxen->variables && roxen->variables->audit && GLOBVAR(audit))
