@@ -11,7 +11,7 @@ inherit "roxenlib";
 #define _extra_heads id->misc->defines[" _extra_heads"]
 
 constant thread_safe=1;
-constant cvs_version = "$Id: wml.pike,v 1.3 2000/01/16 17:21:07 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.4 2000/02/08 11:06:06 kuntri Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "WAP WML module.";
@@ -19,13 +19,27 @@ constant module_doc  = "Tweaks WML to better suit different WAP clients.";
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["wml":#"<desc cont>Processes the wml tag and adapts the contents to
-better suit the client. The contents is always preparsed. No attributes are required.</desc>
+constant tagdoc=([
+"wml":#"<desc cont>
+ Processes the wml tag and adapts the contents tobetter suit the
+ client. The contents is always preparsed. No attributes are required.
+</desc>
 
-<attr name=from value=1.0|1.1>Tells what version of wml is used. Default is 1.1</attr>
-<attr name=to value=1.0|1.1>Force conversion to this version of wml</attr>
-<attr name=noheader>If used, no xml and doctype tags will be added to the document</attr>
-<attr name=mime value=string>Sets the mime-type of the document.</attr>"]);
+<attr name=from value=1.0|1.1>
+ Tells what version of wml is used. Default is 1.1
+</attr>
+
+<attr name=to value=1.0|1.1>
+ Force conversion to this version of wml
+</attr>
+
+<attr name=noheader>
+ If used, no xml and doctype tags will be added to the document
+</attr>
+
+<attr name=mime value=string>
+ Sets the mime-type of the document.
+</attr>"]);
 #endif
 
 //--------------- Define converter classes ------------------
