@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.2 2002/05/02 11:00:50 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.3 2002/05/02 11:09:08 jhs Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -147,7 +147,9 @@ void create(Configuration conf)
   // where does UTC fit in that scheme? Nah, let's keep it simple instead:
   defvar("timezone", TZVariable("UTC", 0, "Default time zone",
 	 "When no other time zone is given, this time zone will be used. "
-	 "This also defines the time zone for the calendar scope.\n"));
+	 "This also defines the time zone for the calendar scope. Some "
+	 "examples of valid time zones include \"Europe/Stockholm\", \"UTC\", "
+	 "\"UTC+3\" and \"UTC+10:30\"."));
 
   array known_languages = filter(indices(Calendar.Language), is_supported);
   known_languages = sort(map(known_languages, wash_language_name));
