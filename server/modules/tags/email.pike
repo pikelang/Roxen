@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.28 2004/06/30 16:59:24 mast Exp $";
+constant cvs_version = "$Id: email.pike,v 1.29 2004/07/21 09:54:44 anders Exp $";
 
 constant thread_safe=1;
 
@@ -86,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.28 $"/" ")[1];
+string revision = ("$Revision: 1.29 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -712,6 +712,12 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 <attr name='disposition' value='Content-disposition'><p>
  The MIME content-disposition to use for the attachment.
  The default disposition is \"attachment\".
+</p>
+</attr>
+
+<attr name='cid' value='Content-ID'><p>
+ The content-id to use for the attachment.
+ The default id is \"nocid\".
 </p>
 </attr>
 
