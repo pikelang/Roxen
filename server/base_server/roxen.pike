@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.40 1997/02/20 00:46:24 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.41 1997/02/27 19:46:01 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1738,11 +1738,12 @@ void _shuffle(object from, object to)
       return;
     init_shuffler();
   }
-#if efun(Pipe)
-  object p = Pipe();
+//#if efun(Pipe)
+  object p = Pipe.pipe();
   p->input(from);
   p->output(to);
-#else
+//#else
+#if 0
   perror("Shuffle: using fallback(Ouch!)\n");
   // Fallback. Very unlikely.
   from->set_id(to->write);

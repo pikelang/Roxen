@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.15 1997/02/13 13:01:01 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.16 1997/02/27 19:46:02 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -443,18 +443,6 @@ static string conv_hex( int color )
   return "#" + result;
   
 }
-
-static string add_pre_state( string url, multiset state )
-{
-  if(!url)
-    error("URL needed for add_pre_state()\n");
-  if(!state || !sizeof(state))
-    return url;
-  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
-    return url;
-  return "/(" + sort(indices(state)) * "," + ")" + url ;
-}
-
 
 static string add_config( string url, array config, multiset prestate )
 {

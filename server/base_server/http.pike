@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.6 1997/01/29 04:59:34 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.7 1997/02/27 19:45:59 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -114,14 +114,25 @@ string http_roxen_id_cookie()
 		 roxen->increase_id());
 }
 
+static string add_pre_state( string url, multiset state )
+{
+  if(!url)
+    error("URL needed for add_pre_state()\n");
+  if(!state || !sizeof(state))
+    return url;
+  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
+    return url;
+  return "/(" + sort(indices(state)) * "," + ")" + url ;
+}
+
 /* Simply returns a http-redirect message to the specified URL.  */
 mapping http_redirect( string url, object|void id )
 {
   if(url[0] == '/')
   {
-    if(id && !id->supports->cookies)
+    if(id)
     {
-      url = roxen->add_pre_state(url, id->prestate);
+      url = add_pre_state(url, id->prestate);
       url = id->conf->query("MyWorldLocation") + url[1..1000000];
     }
   }
