@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.141 2000/01/12 05:05:20 marcus Exp $
+// $Id: roxenlib.pike,v 1.142 2000/01/16 03:17:10 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -760,7 +760,6 @@ static string short_date(int timestamp)
 
 int httpdate_to_time(string date)
 {
-   if (intp(date)) return -1;
    // Tue, 28 Apr 1998 13:31:29 GMT
    // 0    1  2    3    4  5  6
    int mday,hour,min,sec,year;
@@ -797,21 +796,25 @@ static string int2roman(int m)
   return res;
 }
 
-static string number2string(int n, mapping m, mixed names)
+static string number2string(int n, mapping m, array|function names)
 {
   string s;
   switch (m->type)
   {
-   case "string":
-    if (functionp(names))
-    { s=names(n); break; }
-    if (!arrayp(names)||n<0||n>=sizeof(names)) s="";
-    else s=names[n];
-    break;
-   case "roman":
+  case "string":
+     if (functionp(names)) {
+       s=names(n);
+       break;
+     }
+     if (n<0 || n>=sizeof(names))
+       s="";
+     else
+       s=names[n];
+     break;
+  case "roman":
     s=int2roman(n);
     break;
-   default:
+  default:
     return (string)n;
   }
 
@@ -1483,21 +1486,20 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
      case "week":
       return number2string(Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),m,
                            language(m->lang, sp||"number"));
+#endif
      case "beat":
        //FIXME This should be done inside Calendar.
-       mapping lt=Calendar.ISO.datetime(t,1);
+       mapping lt=gmtime(t);
        int secs=3600;
-       secs+=lt->timezone;
-       secs-=lt->DST*3600;
        secs+=lt->hour*3600;
-       secs+=lt->minute*60;
-       secs+=lt->second;
+       secs+=lt->min*60;
+       secs+=lt->sec;
        secs%=24*3600;
        float beats=secs/86.4;
        if(!sp) return sprintf("@%03d",(int)beats);
        return number2string((int)beats,m,
                             language(m->lang, sp||"number"));
-#endif
+
      case "day":
      case "wday":
       return number2string(localtime(t)->wday+1,m,
@@ -1597,17 +1599,17 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
 
 string|int API_read_file(RequestID id, string file)
 {
-  string s, f = fix_relative(file, id);
+  file = fix_relative(file, id);
   id = id->clone_me();
 
   if(id->scan_for_query)
-    f = id->scan_for_query( f );
-  s = id->conf->try_get_file(f, id);
+    file = id->scan_for_query( file );
+  string s = id->conf->try_get_file(file, id);
 
   if (!s) {
 
     // Might be a PATH_INFO type URL.
-    array a = id->conf->open_file( f, "r", id );
+    array a = id->conf->open_file( file, "r", id );
     if(a && a[0])
     {
       s = a[0]->read();
