@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.51 1997/08/12 19:45:43 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.52 1997/08/12 20:29:06 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -394,6 +394,8 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
   if(args->texture)    foreground = load_image(args->texture,id);
 
   if((args->background) && (background = load_image(args->background, id))) {
+    // Don't thrash the image-cache.
+    background = background->copy();
     xsize = background->xsize();
     ysize = background->ysize();
     switch(lower_case(args->talign||"left")) {
