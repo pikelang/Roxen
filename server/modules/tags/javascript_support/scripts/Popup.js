@@ -25,6 +25,7 @@ function checkPopupCoord(x, y, popup_index)
   //alert("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+".");
   if((x > p.x && x < p.x + p.w) && (y > p.y && y < p.y + p.h)) {
     p.inside = true;
+    p.never_inside = false;
     clearHideTimers(popup_index);
   } else {
     if(p.inside) {
@@ -33,6 +34,10 @@ function checkPopupCoord(x, y, popup_index)
       }
       if(popups.length == 0)
 	releaseMouseEvent();
+    } else if (p.never_inside && p.properties.init_hide_delay > 0) {
+	clearHideTimers(popup_index);
+	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", 
+				  p.properties.init_hide_delay);
     }
     checkPopupCoord(x, y, popup_index - 1);
   }
@@ -52,6 +57,7 @@ function PopupInfo(name, x, y, w, h, properties)
   this.h = h;
   this.properties = properties;
   this.inside = false;
+  this.never_inside = true;
   this.hide_timer = null;
 }
 
@@ -148,6 +154,10 @@ function showPopup(e, name, parent, properties)
   boundPopup(popup);
   addPopup(name, properties);
   show(popup);
+  if(properties.init_hide_delay > 0) {
+      popups[popups.length-1].hide_timer = setTimeout("clearToPopup('"+parent+"')", 
+						    properties.init_hide_delay);
+  }
   captureMouseEvent(popupMove);
   return retFromEvent(false);
 }
@@ -181,6 +191,7 @@ function LayerPosition(trigger_pos, parent_popup_pos, properties)
 function PopupProperties(ox, oy, absx, absy)
 {
   this.hide_delay = 300;
+  this.init_hide_delay = 0;
   this.ox = ox;
   this.oy = oy;
   this.pox = false;
@@ -195,6 +206,8 @@ function PopupProperties(ox, oy, absx, absy)
     function() { this.hide_2nd_click = true; return this;};
   this.setHideDelay =
     function(hide_delay) { this.hide_delay = hide_delay; return this;};
+  this.setInitialHideDelay =
+    function(init_hide_delay) { this.init_hide_delay = init_hide_delay; return this;};
   this.setParentRightOffset =
     function(pox) { this.pox = pox; return this;};
   this.setParentBottomOffset =
