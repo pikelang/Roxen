@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.297 1999/06/19 23:41:14 grubba Exp $
+ * $Id: roxen.pike,v 1.298 1999/06/21 19:12:41 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.297 1999/06/19 23:41:14 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.298 1999/06/21 19:12:41 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -1599,15 +1599,15 @@ int set_u_and_gid()
       object threads_disabled = _disable_threads();
 #endif
 
+#if constant(seteuid)
+      if (geteuid() != getuid()) seteuid (getuid());
+#endif
+
 #if constant(initgroups)
       catch {
 	initgroups(pw[0], gid);
 	// Doesn't always work - David.
       };
-#endif
-
-#if constant(seteuid)
-      if (geteuid() != getuid()) seteuid (getuid());
 #endif
 
       if (QUERY(permanent_uid)) {
