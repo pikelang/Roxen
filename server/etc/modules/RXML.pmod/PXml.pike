@@ -5,12 +5,12 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.25 2000/02/08 07:51:58 mast Exp $
+//! $Id: PXml.pike,v 1.26 2000/02/11 01:06:13 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-inherit RXML.TagSetParser : TagSetParser;
 inherit Parser.HTML : low_parser;
+inherit RXML.TagSetParser : TagSetParser;
 
 constant unwind_safe = 1;
 
@@ -131,13 +131,16 @@ static void create (
     if (tset->low_entities) add_entities (tset->low_entities);
   }
 
-  xml_tag_syntax (2);
+  xml_tag_syntax (3);
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
   match_tag (0);
-  ignore_unknown (1);		// Temporary kludge.
+  splice_arg ("::");
   _set_entity_callback (.utils.p_html_entity_cb);
-  if (!type->free_text) _set_data_callback (.utils.return_empty_array);
+  if (!type->free_text) {
+    _set_data_callback (.utils.return_empty_array);
+    _set_tag_callback (.utils.unknown_tag_error);
+  }
   set_quote_tag_cbs();
 }
 
