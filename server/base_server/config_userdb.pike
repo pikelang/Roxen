@@ -111,7 +111,7 @@ class ConfigurationSettings
     string theme_name( string theme )
     {
       catch {
-        return String.trim_all_whites(lopen("config_interface/standard/themes/"+
+        return String.trim_all_whites(lopen("config_interface/themes/"+
                                             theme+"/name","r")->read());
       };
       return "Unknown theme ("+theme+")";
@@ -119,8 +119,8 @@ class ConfigurationSettings
 
     static array(string) all_themes( )
     {
-      return (get_dir( "config_interface/standard/themes/" ) + 
-              (get_dir( "../local/config_interface/standard/themes/" )||({}))-
+      return (get_dir( "config_interface/themes/" ) + 
+              (get_dir( "../local/config_interface/themes/" )||({}))-
               ({"CVS","README"}));
     }
 
@@ -178,7 +178,7 @@ class ConfigurationSettings
     constant type = "ContentBoxes";
     static string box_type;
 
-#define BDIR "config_interface/standard/boxes/"
+#define BDIR "config_interface/boxes/"
     static mapping bdata = ([]);
     array possible( )
     {
@@ -349,10 +349,10 @@ class ConfigurationSettings
 	    LOCALE(177, "Show all possible configuration options, not only "
 		   "the ones that are most often changed."));
 
-    defvar( "translations", 0, LOCALE(178, "Show all translations"),
-            TYPE_FLAG, 
-	    LOCALE(179, "Show the language selection flags. All translations "
-		   "will be listed, more or less completed."));
+//     defvar( "translations", 0, LOCALE(178, "Show all translations"),
+//             TYPE_FLAG, 
+// 	    LOCALE(179, "Show the language selection flags. All translations "
+// 		   "will be listed, more or less completed."));
 
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
@@ -517,7 +517,7 @@ class AdminUser
       if( permissions[ perm ] )
       {
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/standard/img/selected.gif "
+				     "    icon_src=/img/selected.gif "
 				     "    font=&usr.font; "
 				     "    width=180>"+permission_translations[ perm ]+
 				     "</gbutton-url>", id );
@@ -528,7 +528,7 @@ class AdminUser
       else
       {
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/standard/img/unselected.gif "
+				     "    icon_src=/img/unselected.gif "
 				     "    font=&usr.font; "
 				     "    width=180>"+
                                      permission_translations[ perm ]+
