@@ -262,6 +262,14 @@ mapping find_file (string f, RequestID id)
 
 <body bgcolor='white'>
 
+<if not='not' variable='form.order-by'>
+  <set variable='form.order-by' value='real-us'/>
+</if>
+
+<if not='not' variable='form.sort-dir'>
+  <set variable='form.sort-dir' value='DESC'/>
+</if>
+
 <box title='Selection'>
   <form>
     <table cellspacing='0' cellpadding='0' border='0'>
@@ -432,14 +440,20 @@ mapping find_file (string f, RequestID id)
 </if>
 
 <if variable='form.group-by == file'>
+  <unset variable='var.show-session'/>
+  <unset variable='var.show-config'/>
   <unset variable='var.show-event-class'/>
   <unset variable='var.show-event-name'/>
 </if>
 <if variable='form.group-by == event-class'>
+  <unset variable='var.show-session'/>
+  <unset variable='var.show-config'/>
   <unset variable='var.show-file'/>
   <unset variable='var.show-event-name'/>
 </if>
 <if variable='form.group-by == event-name'>
+  <unset variable='var.show-session'/>
+  <unset variable='var.show-config'/>
   <unset variable='var.show-file'/>
   <unset variable='var.show-event-class'/>
 </if>
