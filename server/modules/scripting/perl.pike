@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.4 2000/08/17 15:18:52 leif Exp $";
+       "$Id: perl.pike,v 2.5 2000/08/22 17:53:03 leif Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_PARSER;
@@ -73,10 +73,13 @@ void create()
     "The default for this setting is 2.",
          ({ 1, 2, 3, 4, 5 }) );
 
+#if constant(system.getpwnam)
   defvar("identity", "nobody:*", "Run Perl as...", TYPE_STRING,
     "User and group to run Perl scripts and tags as. The default for "
     "this option is `nobody:*'. Note that Roxen can't change user ID "
-    "unless it has sufficient permissions to do so.");
+    "unless it has sufficient permissions to do so. `*' means `use "
+    "same as Roxen'.");
+#endif
 }
 
 string status()
@@ -84,11 +87,13 @@ string status()
              "<b>Script errors</b>: " + script_errors + " <br />\n" +
              "<b>Parsed tags</b>: "  + parsed_tags + " <br />\n";
 
+#if constant(system.getpwnam)
   if (handler_settings->set_uid)
         s += sprintf("<b>Subprocess UID</b>: set uid=%O <br />\n",
                      handler_settings->set_uid);
   else
         s += "<b>Subprocess UID</b>: same as Roxen<br />\n";
+#endif
 
   s += "<b>Helper script</b>: ";
   if (Stdio.File(QUERY(bindir)+"/perlrun", "r"))
@@ -112,6 +117,7 @@ static void fix_settings()
   string u, g;
   mapping s = ([ ]);
 
+#if constant(system.getpwnam)
   if (sscanf(QUERY(identity), "%s:%s", u, g) == 2)
   {
     array ua = getpwnam(u), ga = getgrnam(g);
@@ -122,6 +128,7 @@ static void fix_settings()
     if (ua) s->set_uid = ua[2];
     if (ga) s->set_gid = ga[2];
   }
+#endif
 
   handler_settings = s;
 }
