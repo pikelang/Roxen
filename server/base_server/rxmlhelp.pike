@@ -109,7 +109,9 @@ static string noex_cont(TagdocParser parser, mapping m, string c) {
 }
 
 static string ex_quote(string in) {
-  return "<pre>"+replace(in, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  string s = replace(in, "&lt;", "__LT__");
+  s = "<pre>"+replace(s, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  return replace(s, "__LT__", "&lt;");
 }
 
 static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
