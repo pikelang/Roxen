@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.15 2001/08/28 17:00:29 mast Exp $
+ * $Id: debug_info.pike,v 1.16 2001/08/29 15:45:17 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -257,11 +257,11 @@ mixed page_0( object id )
   object start = this_object();
   for (object o = start; o; o = _prev (o))
     if (program p = object_program (o))
-      allobj[Program.defined (p)] += ({sprintf ("%O", o)});
+      allobj[Program.defined (p) || p] += ({sprintf ("%O", o)});
   start = _next (start);
   for (object o = start; o; o = _next (o))
     if (program p = object_program (o))
-      allobj[Program.defined (p)] += ({sprintf ("%O", o)});
+      allobj[Program.defined (p) || p] += ({sprintf ("%O", o)});
 
   table = (array) allobj;
 
@@ -271,11 +271,17 @@ mixed page_0( object id )
   constant same_color = "&usr.fgcolor;";
 
   for (int i = 0; i < sizeof (table); i++) {
-    [string progstr, array(string) objs] = table[i];
+    [string|program prog, array(string) objs] = table[i];
 
     if (sizeof (objs) > 2) {
-      if (has_prefix (progstr, cwd))
-	progstr = progstr[sizeof (cwd)..];
+      string progstr;
+      if (stringp (prog)) {
+	if (has_prefix (prog, cwd))
+	  progstr = prog[sizeof (cwd)..];
+	else
+	  progstr = prog;
+      }
+      else progstr = "";
 
       string objstr = String.common_prefix (objs)[..30];
       if (!(<"", "object">)[objstr]) {
@@ -288,12 +294,19 @@ mixed page_0( object id )
       }
       else objstr = "";
 
-      int|string change = sizeof (objs) - bar[progstr];
-      bar[progstr] = sizeof (objs);
+      int|string change;
       string color;
-      if (change > 0) color = inc_color, change = "+" + change;
-      else if (change < 0) color = dec_color;
-      else color = same_color;
+      if (zero_type (bar[prog])) {
+	change = "N/A";
+	color = same_color;
+      }
+      else {
+	change = sizeof (objs) - bar[prog];
+	if (change > 0) color = inc_color, change = "+" + change;
+	else if (change < 0) color = dec_color;
+	else color = same_color;
+      }
+      bar[prog] = sizeof (objs);
 
       table[i] = ({color, progstr, objstr, sizeof (objs), change});
     }
