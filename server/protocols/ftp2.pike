@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.6 1998/04/06 18:58:59 grubba Exp $
+ * $Id: ftp2.pike,v 1.7 1998/04/28 16:08:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -48,7 +48,7 @@
  *
  * More or less obsolete RFC's:
  *
- * *RFC 412	User FTP documentation
+ * RFC 412	User FTP documentation
  * *RFC 438	FTP server-server interaction
  * *RFC 448	Print files in FTP
  * *RFC 458	Mail retrieval via FTP
@@ -862,8 +862,10 @@ class TelnetSession {
     }
     if (!to_send) {
       // Support for delayed close.
-      fd->close();
-      fd = 0;
+      if (fd) {
+	fd->close();
+	fd = 0;
+      }
     } else if (sizeof(to_send)) {
       int n = fd->write(to_send);
 
@@ -1009,8 +1011,10 @@ class TelnetSession {
 
   void set_write_callback(function(mixed|void:string) w_cb)
   {
-    write_cb = w_cb;
-    fd->set_nonblocking(got_data, w_cb && send_data, close_cb, got_oob);
+    if (fd) {
+      write_cb = w_cb;
+      fd->set_nonblocking(got_data, w_cb && send_data, close_cb, got_oob);
+    }
   }
 
   void create(object f,
@@ -1560,8 +1564,10 @@ class FTPSession
 
     if (open_file(args, session, "STOR")) {
       if (!(session->file->pipe)) {
-	fd->close();
-	fd = 0;
+	if (fd) {
+	  fd->close();
+	  fd = 0;
+	}
 	switch(session->file->error) {
 	case 401:
 	  send(532, ({ sprintf("%s: Need account for storing files.", args)}));
@@ -1578,8 +1584,10 @@ class FTPSession
       }
     } else {
       // Error message has already been sent.
-      fd->close();
-      fd = 0;
+      if (fd) {
+	fd->close();
+	fd = 0;
+      }
     }
   }
 
