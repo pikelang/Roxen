@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.121 2001/09/06 11:41:31 per Exp $
+// $Id: Roxen.pmod,v 1.122 2001/09/10 15:26:38 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1978,22 +1978,34 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   return res;
 }
 
-int time_dequantifier(mapping m)
+int time_dequantifier(mapping m, void|int t )
   //! Calculates an integer with how many seconds a mapping
   //! that maps from time units to an integer can be collapsed to.
-  //! E.g. (["minutes":2]) results in 120.
+  //! E.g. (["minutes":"2"]) results in 120.
   //! Valid units are seconds, minutes, beats, hours, days, weeks,
   //! months and years.
 {
-  float t = 0.0;
-  if (m->seconds) t+=((float)(m->seconds));
-  if (m->minutes) t+=((float)(m->minutes))*60;
-  if (m->beats)   t+=((float)(m->beats))*86.4;
-  if (m->hours)   t+=((float)(m->hours))*3600;
-  if (m->days)    t+=((float)(m->days))*86400;
-  if (m->weeks)   t+=((float)(m->weeks))*604800;
-  if (m->months)  t+=((float)(m->months))*(24*3600*30.436849);
-  if (m->years)   t+=((float)(m->years))*(3600*24*365.242190);
+  int initial = t;
+  if (m->seconds) t+=(int)(m->seconds);
+  if (m->minutes) t+=(int)(m->minutes)*60;
+  if (m->beats)   t+=(int)((float)(m->beats)*86.4);
+  if (m->hours)   t+=(int)(m->hours)*3600;
+  if (m->days)    t+=(int)(m->days)*86400;
+  if (m->weeks)   t+=(int)(m->weeks)*604800;
+  if (m->months) {
+    if(initial)
+      t = (Calendar.ISO.Second("unix", t) +
+	   Calendar.ISO.Month()*(int)m->months)->unix_time();
+    else
+      t+=(int)((float)(m->months)*24*3600*30.436849);
+  }
+  if (m->years) {
+    if(initial)
+      t = (Calendar.ISO.Second("unix", t) +
+	   Calendar.ISO.Year()*(int)m->years)->unix_time();
+    else
+      t+=(int)((float)(m->years)*3600*24*365.242190);
+  }
   return (int)t;
 }
 
