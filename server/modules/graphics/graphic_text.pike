@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.238 2000/09/13 00:14:01 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.239 2000/09/13 18:17:17 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -737,6 +737,21 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   m_delete(arg,"src");
   m_delete(arg,"width");
   m_delete(arg,"height");
+
+#if !constant(Image.GIF) || !constant(Image.GIF.encode)
+  //  fadein or scroll not supported without GIF
+  m_delete(arg, "fadein");
+  m_delete(arg, "scroll");
+#endif
+
+  //  Make format selection explicit since fallback may vary depending on
+  //  encoders present in this installation.
+  if (!arg->format)
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+    arg->format = "gif";
+#else
+    arg->format = "jpg";
+#endif
 
    foreach(filearg, string tmp)
      if(arg[tmp]) 
