@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.314 2000/07/04 03:45:20 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.315 2000/07/04 09:51:04 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -3407,12 +3407,14 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 #"Det här är huvudURLen till din startsida. Den används av många
   moduler för att bygga upp absoluta URLer från en relativ URL.");
 
-  defvar("URLs", ({"http://*/"}), "URLs", TYPE_URL_LIST|VAR_INITIAL,
+  defvar("URLs", 
+         Variable.PortList( ({"http://*/"}), VAR_INITIAL,
+                            "URLs", 
          "Bind to these URLs. You can use '*' and '?' to perform globbing "
          "(using any of these will default to binding to all IP-numbers on "
          "your machine).  The possible protocols are http, fhttp (a faster "
          "version of the normal HTTP protocol, but not 100% compatible with "
-         "all modules) https, ftp, ftps, gopher and tetris.");
+         "all modules) https, ftp, ftps, gopher and tetris."));
 
   defvar("InternalLoc", "/_internal/",
 	 "Internal module resource mountpoint",
