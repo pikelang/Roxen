@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.480 2005/02/10 16:29:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.481 2005/02/18 13:04:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1943,6 +1943,7 @@ class TagMaketag {
     }
 
     array do_return(RequestID id) {
+      if (!content) content = "";
       switch(args->type) {
       case "pi":
 	if(!args->name) parse_error("Type 'pi' requires a name attribute.\n");
@@ -1959,7 +1960,7 @@ class TagMaketag {
 					RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
 	break;
       case "comment":
-	result = "<!--" + content + "-->";
+	result = "<!--" + replace (replace (content, "--", "- -"), "--", "- -") + "-->";
 	break;
       case "cdata":
 	result = "<![CDATA[" + content/"]]>"*"]]]]><![CDATA[>" + "]]>";
