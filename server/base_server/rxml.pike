@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.91 2000/01/31 03:43:45 nilsson Exp $
+ * $Id: rxml.pike,v 1.92 2000/01/31 16:39:22 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -669,7 +669,7 @@ string parse_rxml(string what, RequestID id,
 string tag_help(string t, mapping args, RequestID id)
 {
   RXML.PHtml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
-  array tags = sort(indices(parser->tags()+parser->containers()));
+  array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
   string help_for = args->for || id->variables->_r_t_h;
   string ret="<h2>Roxen Interactive RXML Help</h2>";
 
