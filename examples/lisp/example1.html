@@ -1,0 +1,30 @@
+<gauge>
+<lisp once context=foo>
+  ; this code is only run _once_.
+  ; Define our sub-optimal little fac function..
+  (defun fac (x) 
+    (if (< x 3)
+       x
+      (* x (fac (- x 1)))))
+
+  ; .. and a few variables ..
+  (define foo 10)
+  (define a nil)
+</lisp>
+</gauge>
+
+<gauge>
+  <lisp context=foo>
+    (set! foo 9)
+    (output "foo is " foo "<br>")
+    (output "foo is " (setq foo (* foo foo)) "<br>")
+    (output "foo is " (setq foo (* foo foo)) "<br>")
+    (set! a  (variable-number "a"))
+    (if (< a 200)
+        (output a "! is " (fac a) "<br>")
+      (output "Try a smaller number<br>"))
+    (output "<form>Calculate <input name=a value=" a ">!</form>")
+    (output "Your client supports: " )
+    (print (id "supports")) ; we must use print to output this list.
+  </lisp>
+</gauge>
