@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.29 2001/06/11 12:37:11 js Exp $
+ * $Id: update.pike,v 1.30 2001/06/11 13:22:45 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -425,6 +425,9 @@ class TagUpdateDownloadedPackages {
 string|void unpack_file(Stdio.File from, string to)
 {
   string prefix="../";
+  if(sscanf(to,"/server/%s", to))
+    prefix="";
+  
   if(r_file_stat(prefix+to))
   {
     if(!r_mv(prefix+to,prefix+to+"~"))
