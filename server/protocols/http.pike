@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.471 2005/04/02 14:46:30 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.472 2005/04/06 15:03:01 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1373,7 +1373,8 @@ static object(this_program) chained_to;
 static void destroy()
 {
   if (chained_to) {
-    werror("HTTP: Still chained in destroy!\n");
+    // This happens when do_log() is called before the request
+    // has been chained (eg for short data over fast connections).
     call_out(chained_to->my_fd_released, 0);
     chained_to = 0;
   }
