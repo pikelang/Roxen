@@ -42,11 +42,11 @@ trap "" 1
 
 case $1 in
         'start_msg')
-	  echo 'Start Roxen 1.4'
+	  echo 'Start Roxen 2.1'
 	  exit 0
 	;;
 	'stop_msg')
-	  echo 'Stop Roxen 1.4'
+	  echo 'Stop Roxen 2.1'
 	  exit 0
 	;;
 
