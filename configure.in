@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.25 1997/09/17 21:09:14 grubba Exp $
+# $Id: configure.in,v 1.26 1997/09/22 18:07:19 grubba Exp $
 #
 
 prefix=$PWD
@@ -324,12 +324,14 @@ MAKE_GMP=""
 AC_SUBST(MAKE_GMP)
 if test -d $srcdir/gmp/.; then
   unset ac_cv_header_gmp_h
+  unset ac_cv_lib_gmp_mpz_set_d
   if test x$with_gmp = xyes; then
     AC_CHECK_HEADERS(gmp.h)
-    if test "$ac_cv_header_gmp_h" = "yes"; then
+    AC_CHECK_LIB(gmp, mpz_set_d)
+    if test "$ac_cv_header_gmp_h$ac_cv_lib_gmp_mpz_set_d" = "yesyes"; then
       echo Gmp already installed.
     else
-      echo Enabling gmp...
+      echo Enabling supplied gmp...
       MAKE_GMP=gmp
       # Fool Pike into believing Gmp is installed.
       # It will be when Pike is being built.
@@ -393,12 +395,14 @@ MAKE_GDBM=""
 AC_SUBST(MAKE_GDBM)
 if test -d gdbm/.; then
   unset ac_cv_header_gdbm_h
+  unset ac_cv_lib_gdbm_gdbm_open
   if test x$with_gdbm = xyes; then
     AC_CHECK_HEADERS(gdbm.h)
-    if test "$ac_cv_header_gdbm_h" = "yes"; then
+    AC_CHECK_LIB(gdbm, gdbm_open)
+    if test "$ac_cv_header_gdbm_h$ac_cv_lib_gdbm_gdbm_open" = "yesyes"; then
       echo Gdbm already installed.
     else
-      echo Enabling gdbm...
+      echo Enabling supplied gdbm...
       MAKE_GDBM=gdbm
       # Fool Pike into believing Gdbm is installed.
       # It will be when Pike is being built.
