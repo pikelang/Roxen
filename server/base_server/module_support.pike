@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.44 1999/12/09 06:12:49 mast Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.45 1999/12/19 00:33:09 marcus Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -249,6 +249,10 @@ class Module
   object instance( object conf )
   {
 //     werror("Instantiate %O for %O.\n", this_object(), conf );
+#if constant(Java.jvm)
+    if( filename[sizeof(filename)-6..]==".class" )
+      return ((program)"javamodule.pike")(conf, filename);
+#endif
     return load( filename )( conf );
   }
 
@@ -321,7 +325,8 @@ class Module
         if( !search( file, what ) )
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
-              (search( file, ".so" ) == strlen(file)-3 ) )
+              (search( file, ".so" ) == strlen(file)-3 ) ||
+              (search( file, ".class" ) == strlen(file)-6 ) )
           {
             Stdio.File f = Stdio.File( dir+file, "r" );
             if( (f->read( 4 ) != "#!NO" ) )
@@ -422,7 +427,7 @@ array rec_find_all_modules( string dir )
       {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
-        if( (< "so", "pike" >)[ extension( file ) ] )
+        if( (< "so", "pike", "class" >)[ extension( file ) ] )
         {
           Stdio.File f = Stdio.File( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
