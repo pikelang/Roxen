@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.112 1998/10/18 18:32:43 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.113 1998/10/19 00:22:50 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1226,8 +1226,6 @@ string dn(object node)
   if(((string)((int)s))==s)
     return "Instance "+s;	// FIXME: LOCALIZE!
 
-  werror(sprintf("tab_names: %O\n", LOCALE->tab_names));
-
   switch(s)
   {
    case "Configurations":
@@ -1538,34 +1536,35 @@ mapping configuration_parse(object id)
        
       switch(o->type)
       {
-       case NODE_CONFIGURATION:
-	PUSH("<font size=\"+2\">Do you really want to delete the configuration "+
-	     o->data->name + ", all its modules and their copies?"
+      case NODE_CONFIGURATION:
+	PUSH("<font size=\"+2\">" + LOCALE->warn_delete_config(o->data->name) +
 	     "\n\n<p></font>");
 	break;
 	
-       case NODE_MODULE_MASTER_COPY:
-       case NODE_MODULE:
-	PUSH("<font size=\"+2\">Do you really want to delete the module "+
-	     o->data->name + ", and its copies?\n\n<p></font>");
+      case NODE_MODULE_MASTER_COPY:
+      case NODE_MODULE:
+	PUSH("<font size=\"+2\">" + LOCALE->warn_delete_module(o->data->name) +
+	     "\n\n<p></font>");
 	break;
 	
-       case NODE_MODULE_COPY_VARIABLES:
+      case NODE_MODULE_COPY_VARIABLES:
 	
-       case NODE_MODULE_COPY:
-	PUSH("<font size=\"+2\">Do you really want to delete this copy "
-	     " of the module "+ o->up->data->name + "?\n\n<p></font>");
+      case NODE_MODULE_COPY:
+	PUSH("<font size=\"+2\">" +
+	     LOCALE->warn_delete_copy(o->up_data->name) + "\n\n<p></font>");
 	break;
 	
        case NODE_CONFIGURATIONS:
-	return stores("You don't want to do that...\n");
+	return stores(LOCALE->do_not_do_that());
       }
-      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be"
-	   " undone.\n\n<p></font>"+ TABLEP("<table>", "")+
-	   "<tr><td><form action=\""+ o->path(1)+"\">"
-	   "<input type=submit value=\"No, I do not want to delete it\"> "
+      PUSH("<blockquote><font size=\"+2\"><i>" +
+	   LOCALE->warn_no_return() + 
+	   "\n\n<p></font>" + TABLEP("<table>", "") +
+	   "<tr><td><form action=\""+ o->path(1) + "\">"
+	   "<input type=submit value=\"" + LOCALE->do_not_delete() + "\"> "
 	   "</form></td><td><form action=\"/(really_delete)"+ o->path(1)+
-	   "\"><input type=submit value=\"Go ahead\"></form></td></tr> "
+	   "\"><input type=submit value=\"" + LOCALE->do_delete() +
+	   "\"></form></td></tr> "
 	   "</table></blockquote>");
       
       return stores(res*"");
@@ -1706,8 +1705,8 @@ mapping configuration_parse(object id)
 	     thenode->change(1);
 	     thenode->up->save();
 	   } else {
-	     report_debug(sprintf("Attempt to set the Server URL for "
-				  "a non-existent server \"%s\".\n", srv));
+	     // No such server srv.
+	     report_debug(LOCALE->bad_server_server_url(srv));
 	   }
 	 }
        }
@@ -1780,7 +1779,7 @@ mapping configuration_parse(object id)
 
   check_login(id);
   
-  PUSH(default_head("Roxen server configuration"));
+  PUSH(default_head(LOCALE->roxen_server_config()));
 //  PUSH("<table><tr><td>&nbsp;<td>"
   PUSH("<dl>\n");
   PUSH("\n"+status_row(o)+"\n"+display_tabular_header( o )+"\n");
@@ -1805,55 +1804,55 @@ mapping configuration_parse(object id)
   array(mixed) buttons = ({});
   
   if(o->type == NODE_CONFIGURATIONS)
-    BUTTON(newconfig, "New virtual server", left);
+    BUTTON(newconfig, LOCALE->button_newconfig(), left);
   
   if(o->type == NODE_CONFIGURATION)
-    BUTTON(addmodule, "Add module", left);
+    BUTTON(addmodule, LOCALE->button_addmodule(), left);
   
   if(o->type == NODE_MODULE)
   {
-    BUTTON(delete, "Delete module", left);
+    BUTTON(delete, LOCALE->button_delete(), left);
     if(o->data->copies)
-      BUTTON(newmodulecopy, "Copy module", left);
+      BUTTON(newmodulecopy, LOCALE->button_newmodulecopy(), left);
   }
 
   i=0;
   if(o->type == NODE_MODULE_MASTER_COPY || o->type == NODE_MODULE_COPY 
      || o->type == NODE_MODULE_COPY_VARIABLES)
   {
-    BUTTON(delete, "Delete module", left);
+    BUTTON(delete, LOCALE->button_delete(), left);
     if(more_mode)
-      BUTTON(refresh, "Reload module", left);
+      BUTTON(refresh, LOCALE->button_refresh(), left);
   }
   
   if(o->type == NODE_CONFIGURATION)
-    BUTTON(delete,"Delete this server", left);
+    BUTTON(delete, LOCALE->button_delete_server(), left);
 
   if(nunfolded(o))
-    BUTTON(foldall, "Fold all",left);
+    BUTTON(foldall, LOCALE->button_foldall(),left);
   if(o->changed)
-    BUTTON(unfoldmodified, "Unfold modified", left);
+    BUTTON(unfoldmodified, LOCALE->button_unfoldmodified(), left);
 
   if(nfolded(o))
-    BUTTON(unfoldlevel, "Unfold level", left);
+    BUTTON(unfoldlevel, LOCALE->button_unfoldlevel(), left);
 //  else if(nfoldedr(o))
-//    BUTTON(unfoldall, "Unfold all", left);
+//    BUTTON(unfoldall, LOCALE->button_unfoldall(), left);
 
   PUSH_BUTTONS(1);
 
   if (more_mode) {
-    BUTTON(zapcache, "Clear module caches", left);
+    BUTTON(zapcache, LOCALE->button_zapcache(), left);
   }
 
   if(!more_mode)
-    BUTTON(morevars, "More options", left);
+    BUTTON(morevars, LOCALE->button_morevars(), left);
   else
-    BUTTON(nomorevars, "Fewer options", left);
+    BUTTON(nomorevars, LOCALE->button_nomorevars(), left);
     
   if((o->changed||root->changed))
-    BUTTON(save, "Save", left);
-//  BUTTON(restart, "Restart", left);
-//  BUTTON(shutdown,"Shutdown", left);
+    BUTTON(save, LOCALE->button_save(), left);
+//  BUTTON(restart, LOCALE->button_restart(), left);
+//  BUTTON(shutdown, LOCALE->button_shutdown(), left);
 
   PUSH_BUTTONS(0);
 
