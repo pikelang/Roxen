@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.5 1998/02/22 18:19:06 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.6 1998/02/22 19:52:25 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -94,7 +94,6 @@ string tag_wizard(string t, mapping args, string contents, object id)
     w = old_wizard;
   else
   {
-    werror("compiling:\n"+pike+"\n");
     old_wizard = w = compile_string(pike)();
     old_pike = pike;
   }
