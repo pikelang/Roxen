@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.122 2004/05/21 02:24:30 _cvs_stephen Exp $ -->
+<!-- $Id: template,v 1.123 2004/05/22 12:52:41 _cvs_stephen Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -119,10 +119,10 @@
 <gauge variable='var.time-spent' resultonly='yes'><nooutput>
   <eval><insert file="/themes/&usr.theme;/theme"/></eval>
   <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
-  <define container="tab-frame-image">&_.contents:;</define>
-  <define container="tab-font-size">&_.contents:;</define>
-  <define container="gbutton-frame-image">&_.contents:;</define>
-  <define container="font"><contents /></define>
+  <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
+  <define preparse="1" name="tab-font-size">&usr.tab-font-size;</define>
+  <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
+  <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
 </nooutput><html><head>
 <title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
