@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen.c,v 1.4 2000/06/28 17:16:53 mast Exp $
+ * $Id: roxen.c,v 1.5 2000/06/28 20:47:49 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -512,7 +512,7 @@ BOOL WINAPI ControlHandler ( DWORD dwCtrlType )
     {
 	case CTRL_BREAK_EVENT:  // use Ctrl+C or Ctrl+Break to simulate
 	case CTRL_C_EVENT:      // SERVICE_CONTROL_STOP in debug mode
-	    ServiceStop(0);
+	    ThreadServiceStop(0);
 	    return TRUE;
 	    break;
 
