@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.37 1997/08/31 18:38:24 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.38 1997/09/01 00:00:39 peter Exp $";
 
 #define perror roxen_perror
 
@@ -53,8 +53,6 @@ void report_status()
   }
 }
 
-mapping dbs = ([ ]);
-array adbs = ({});
 
 void mkdirhier(string from)
 {
@@ -71,92 +69,14 @@ void mkdirhier(string from)
   }
 }
 
-class db {
-  object mydb;
+object db;
+mapping dbs = ([ ]);
 
-  void mkdirhier(string from)
-  {
-    string a, b;
-    array f;
-    
-    f=(from/"/");
-    b="";
-    
-    foreach(f[0..sizeof(f)-2], a)
-    {
-      mkdir(b+a);
-      b+=a+"/";
-    }
-  }
-
-  void delete(string index)
-  {
-    mydb->delete(index);
-  }
-
-  void get(string index)
-  {
-//    werror("Get: "+index+"\n");
-    return mydb->fetch(index);
-  }
-
-  array indices()
-  {
-    array res = ({});
-    for(string k=mydb->firstkey(); k; k=mydb->nextkey(k))
-      res += ({ k });
-    return res;
-  }
-
-  int s;
-  void set(string index, string to)
-  {
-//    werror("Store: "+index+"\n");
-    mydb->store(index, to);
-  }
-  
-  void create(object|string mdb, program gdbm)
-  {
-    if(objectp(mdb)) mydb=mdb;
-    else
-    {
-      if(catch(mydb=gdbm(mdb,"cwr")) ||!mydb)
-      {
-	mkdirhier(mdb);
-	if(!(mydb=gdbm(mdb,"cwr")))
-	  error("Failed to open database.\n");
-	mydb->reorganize();
-      }
-    }
-  }
-};
-
-program gdbm;
 object open_db(string id)
 {
-  if(!gdbm && !(gdbm = new_master->resolv("Gdbm","base_server/foo")->gdbm))
-  {
-    werror("No gdbm module installed.\n");
-    exit(0);
-  }
-  string fname = "dbs/"+id+".gdbm";
-  if(dbs[fname])
-  {
-    catch(remove_call_out(dbs[fname]->reorganize));
-    call_out(dbs[fname]->reorganize,1000);
-    return db(dbs[fname],gdbm);
-  }
-  object d = db(fname,gdbm);
-  dbs[fname]=d->mydb;
-  adbs+=({fname});
-
-  if(sizeof(adbs)>100)
-  {
-    catch(remove_call_out(dbs[adbs[0]]->reorganize));
-    m_delete(dbs,adbs[0]);
-    adbs=adbs[1..];
-  }
-  return d;
+  if(!db) db = PDB->db("pdb_dir", "wcCr");
+  if(dbs[id]) return dbs[id];
+  return dbs[id]=db[id];
 }
 
 string popen(string s, void|mapping env, int|void uid, int|void gid)
