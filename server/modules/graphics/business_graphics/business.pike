@@ -13,11 +13,12 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.37 1997/10/28 09:16:13 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.38 1997/10/28 12:30:34 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
+
 inherit "module";
 inherit "roxenlib";
 import Array;
