@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.38 1997/09/14 11:13:02 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.39 1997/09/15 04:50:11 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -164,8 +164,12 @@ void create()
 	 " -2 is unlimited.");
 
   defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST|VAR_MORE,
-	 "The maximum time the script might run in seconds. -2 is unlimited.",
+	 "The maximum CPU time the script might use in seconds. -2 is unlimited.",
 	 ({ -2, 10, 30, 60, 120, 240 }));
+  defvar("kill_call_out", 0, "Limits: Time before killing scripts",
+	 TYPE_INT_LIST|VAR_EXPERT,
+	 "The maximum real time the script might run in minutes before it's "
+	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
 
   defvar("datasize", -2, "Limits: Memory size", TYPE_INT|VAR_EXPERT,
 	 "The maximum size of the memory used, in Kb. -2 is unlimited.");
@@ -363,7 +367,7 @@ mixed find_file(string f, object id)
   array tmp2;
   object pipe1, pipe2;
   string path_info, wd;
-  
+  int pid;
   if(id->misc->path_info && strlen(id->misc->path_info))
     // From last_try code below..
     path_info = id->misc->path_info;
@@ -410,7 +414,7 @@ mixed find_file(string f, object id)
   if(!uid)
     uid = "nobody";
 
-  if(!fork())
+  if(!(pid = fork()))
   {
     mixed err = catch {
       /* The COREDUMPSIZE should be set to zero here !!
@@ -470,7 +474,19 @@ mixed find_file(string f, object id)
     exit(0);
   }
   destruct(pipe1);
-    
+  if(QUERY(kill_call_out))
+    call_out(lambda (int pid) {
+      object privs;
+      catch(privs = Privs("Killing CGI script."));
+      int killed;
+      killed = kill(pid, signum("SIGINTR"));
+      if(!killed)
+	killed = kill(pid, signum("SIGHUP"));
+      if(!killed)
+	killed = kill(pid, signum("SIGKILL"));
+      if(killed)
+	perror("Killed CGI pid "+pid+"\n");
+    }, QUERY(kill_call_out) * 60 , pid);
   if(id->my_fd)
     if(id->data || id->misc->len)
     {
