@@ -16,6 +16,42 @@ o The start-script now uses the pike named "roxen" if it exists, so that
 
 o The LIST and NLST commands in the ftp-module now support glob-patterns.
 
+o Libraries needed for the Gdbm, Gmp and Gz modules added to the distribution.
+
+o WideValues and CommonLog Pike-modules added.
+
+o Added "Easy Build" Makefile to top directory. It should now be possible to
+  just type "make; make install" to get a Roxen buildt and installed on most
+  Operating Systems. The default prefix (/usr/local) will be used for the
+  installation.
+
+o Configurationfiles older than Spinnerb11p11 no longer supported.
+
+o Roxen can now register itself with other Roxen servers on the same local
+  network. See "Actions:Neighborhood:Roxen Neighbourhood...". This is very
+  useful if you have several Roxen servers.
+
+o The actions are now grouped.
+
+o Added wizard-interface for easy construction of wizards.
+
+o Added some more actions.
+
+o Documentation-strings added to many modules for use by the upgrade action.
+
+o Bugfixes to the host-redirect module.
+
+o Added module for easy IP-less virtual host configuration.
+
+o Language-module updated.
+
+o The flik-module now has support for being in frames.
+
+o The http-protocol module now handles multipart/form-data correctly.
+  This might affect some old form-handling code.
+
+o tools/init.d_roxen now supports HP-UX's init.d-system.
+
 
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
