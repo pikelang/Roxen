@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.76 2001/08/13 18:15:04 per Exp $
+// $Id: cache.pike,v 1.77 2001/09/20 20:02:28 nilsson Exp $
 
 // #pragma strict_types
 
@@ -314,7 +314,11 @@ private void session_cache_destruct() {
   report_notice("Session cache synchronized\n");
 }
 
-//! Removes a session from the session cache and session database.
+//! Removes the session data assiciate with @[id] from the
+//! session cache and session database.
+//!
+//! @seealso
+//!   set_session_data
 void clear_session(string id) {
   m_delete(session_persistence, id);
   foreach(session_buckets, mapping bucket)
@@ -324,6 +328,9 @@ void clear_session(string id) {
 
 //! Returns the data associated with the session @[id].
 //! Returns a zero type upon failure.
+//!
+//! @seealso
+//!   set_session_data
 mixed get_session_data(string id) {
   mixed data;
   foreach(session_buckets, mapping bucket)
@@ -341,11 +348,18 @@ mixed get_session_data(string id) {
 //! Assiciates the session @[id] to the @[data]. If no @[id] is provided
 //! a unique id will be generated. The session id is returned from the
 //! function. The minimum guaranteed storage time may be set with the
-//! @[persistence] argument. Note that this is not a time out.
+//! @[persistence] argument. Note that this is a time stamp, not a time out.
 //! If @[store] is set, the @[data] will be stored in a database directly,
 //! and not when the garbage collect tries to delete the data. This
-//! will ensure that the data is kept safe in case the server crashes
+//! will ensure that the data is kept safe in case the server restarts
 //! before the next GC.
+//!
+//! @note
+//!   The @[data] must not contain any object, programs or functions, or the
+//!   storage in database will throw an error.
+//!
+//! @seealso
+//!   get_session_data, clear_session
 string set_session_data(mixed data, void|string id, void|int persistence,
 			void|int(0..1) store) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
