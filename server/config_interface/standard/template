@@ -1,14 +1,14 @@
 <!-- -*- html -*- -->
 <define container="st-tabs">
-  <cset preparse="" quote="none" variable="var.__tabs"><contents></cset>
+  <cset preparse="" quote="none" variable="var.__tabs"><contents/></cset>
 </define>
 
 <define container="st-page">
-  <cset preparse="" quote="none" variable="var.__contents"><contents></cset>
+  <cset preparse="" quote="none" variable="var.__contents"><contents/></cset>
 </define>
 
 <define container="cv-leftside">
-  <cset preparse="" quote="none" variable="var.leftside"><contents></cset>
+  <cset preparse="" quote="none" variable="var.leftside"><contents/></cset>
 </define>
 
 <define container="cv-split">
@@ -20,7 +20,7 @@
        &var.leftside:none;&var.leftimage:none;
      </td>
      <td ::="&usr.content-tableargs:none;">
-       <contents>
+       <contents/>
      </td>
    </tr>
   </table>
@@ -30,7 +30,7 @@
   <cv-split>
     <subtablist>
       <st-tabs><insert file="/standard/cv_startpage_tabs.pike" nocache="1"></st-tabs>
-      <st-page><contents></st-page>
+      <st-page><contents/></st-page>
     </subtablist>
    </cv-split>
 </define>
@@ -47,7 +47,7 @@
   </tr>
 
   <tr><td bgcolor="&usr.obox-bodybg;"><font color="&usr.obox-bodyfg;" size="2">
-    <contents>
+    <contents/>
   </font></td></tr>
   </table>
   </td></tr></table>
@@ -55,7 +55,7 @@
 
 <define container="subtablist">
 <nooutput>
-  <contents>
+  <contents/>
 </nooutput><p><br /></p>
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
@@ -75,9 +75,9 @@
  <cset variable="var._top_content"><insert file="/standard/topmenu.pike" nocache="1" /></define>
 </define>
 
-<define container="submit-gbutton" default_align=baseline>
+<define container="submit-gbutton">
 <attrib name="align">baseline</attrib>
-  <cset variable="var.url"><gbutton-url font="&usr.gbutton-font;" preparse="1"><contents></gbutton-url></cset>
+  <cset variable="var.url"><gbutton-url font="&usr.gbutton-font;" preparse=""><contents/></gbutton-url></cset>
    <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
@@ -90,7 +90,7 @@
    <submit-gbutton preparse="1" href="&_.href;"> &locale.next; > </submit-gbutton>
 </define>
 
-<define container="content"><cset quote="none" variable="var.content"><contents></cset></define>
+<define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
 <define container="tmpl">
 <title>&roxen.version; &locale.administration_interface; &_.title;</title>
@@ -102,7 +102,7 @@
   <define preparse="" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1">
-  <contents>
+  <contents/>
 </nooutput>
   <body ::="&usr.body-args:none;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
