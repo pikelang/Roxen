@@ -1,22 +1,31 @@
+<tmplblock tag=h1>
+  <cset variable=h1_shadow>$$h1_shadow$$</cset>
+  <cset variable=shadow></cset>
+  <if variable='h1_shadow is 1'><cset variable=shadow>shadow=60,1</cset></if>
+  <formoutput quote='%'><p><gtext fg=$$h1_color$$ nfont=$$h1_font$$
+    %shadow% $$h1_size$$>$h1$</gtext><p></formoutput>
+</tmplblock>
+
+<tmplblock tag=h2>
+  <cset variable=h2_shadow>$$h2_shadow$$</cset>
+  <cset variable=shadow></cset>
+  <if variable='h2_shadow is 1'><cset variable=shadow>shadow=60,1</cset></if>
+  <formoutput quote='%'><p><gtext fg=$$h2_color$$ nfont=$$h2_font$$
+    %shadow% $$h2_size$$>$h2$</gtext><p></formoutput>
+</tmplblock>
+
+<tmplblock tag=h3>
+  <cset variable=h3_shadow>$$h3_shadow$$</cset>
+  <cset variable=shadow></cset>
+  <if variable='h3_shadow is 1'><cset variable=shadow>shadow=60,1</cset></if>
+  <formoutput quote='%'><p><gtext fg=$$h3_color$$ nfont=$$h3_font$$
+    %shadow% $$h3_size$$>$h3$</gtext><p></formoutput>
+</tmplblock>
+
 <html>
-<head><title>AutoSite Administration Interface</title></head>
-<body bgcolor="#ffffff" link="#00008b" vlink="#00008b" alink="#90ee90" text="#000000">
-
-<table cellpadding=0 cellspacing=0 border=0 width='100%'><tr>
-
-<td valign=bottom align=left><a href=http://www.roxen.com/><img border=0 alt="Roxen" src=/internal-roxen-roxen-icon-gray></a>
-</td>
-<td>&nbsp;</td>
-
-<td width='100%' height=39><table cellpadding=0 cellspacing=0 width='100%' border=0><tr width='100%'><td width=100% align=right valigh=center height=28><b><font size=+1>AutoSite Administration Interface</font></b></td></tr><tr width='100%'><td bgcolor='#003366' align=right height=12 width='100%'><font color="#ffffff" size="-2">Roxen AutoSite&nbsp;&nbsp;
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-<br>
-Gurka
-
+<head><title><as-meta var=title></title></head>
+<body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
+      vlink='$$vlink_color$$' alink='$$alink_color$$'>
+<tmplinsert tag=content>
 </body>
 </html>
