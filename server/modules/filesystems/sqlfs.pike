@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.6 2004/02/16 19:38:27 mast Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.7 2004/05/05 15:19:53 anders Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -73,13 +73,9 @@ void start( )
     report_error ("Database %O does not exist - module disabled.\n", query ("db"));
     disabled = 1;
   }
-  else if (!sql_table_exists (table)) {
-    report_error ("Table %O does not exist in database %O - module disabled.\n",
-		  table, query ("db"));
-    disabled = 1;
-  }
   else if (catch (sql_query ("SELECT name FROM " + table + " LIMIT 1"))) {
-    report_error ("The table %O in database %O got no \"name\" column "
+    report_error ("The table %O in database %O does not exist "
+		  "or got no \"name\" column "
 		  "- module disabled.\n", table, query ("db"));
     disabled = 1;
   }
