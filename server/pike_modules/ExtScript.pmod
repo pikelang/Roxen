@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.16 2002/07/03 12:46:07 nilsson Exp $
+// $Id: ExtScript.pmod,v 1.17 2004/05/16 21:54:36 mani Exp $
 
 // 
 
@@ -43,7 +43,6 @@ class Handler
       pipe->write("X");
     proc = 0;
     pipe = 0;
-    pipe_other = 0;
   }
 
   int busy()
@@ -104,9 +103,7 @@ class Handler
     if (run_lock)
     { Thread.MutexKey tmplock = run_lock;
       RequestID id = id1 ? id1 : nb_id; // nb_id can get reset before we're done.
-#ifdef EXTSCRIPT_DEBUG
-      werror("ExtScript/finalize: %O %O\n", id, run_lock);
-#endif
+      DEBUGMSG("ExtScript/finalize: %O %O\n", id, run_lock);
       if (nb_when_done)
         nb_when_done(id, get_results());
       run_lock = 0;
@@ -120,7 +117,7 @@ class Handler
     if (nb_data != 0)
       { data = nb_data + data; nb_data = 0;}
     string ptype = data[0..0];
-//    diag(sprintf("ExtScript/rcb0: %O %O\n", nb_id, run_lock));
+//    DEBUGMSG(sprintf("ExtScript/rcb0: %O %O\n", nb_id, run_lock));
     if ( (< "+", "*", "?", "=" >) [ ptype ] )
     { if (strlen(data) < 4)
         { nb_data = data; return;}
@@ -132,7 +129,7 @@ class Handler
           data    = data[..3+len];
         }
     }
-    diag(sprintf("<%s:%d>", ptype, strlen(data)));
+    DEBUGMSG(sprintf("<%s:%d>", ptype, strlen(data)));
     switch (ptype)
     { case "X":
         finalize();
@@ -151,10 +148,8 @@ class Handler
         nb_output = (nb_output || "") + data[4..];
         break;
       case "*":
-#ifdef EXTSCRIPT_DEBUG
-        werror("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
-#endif
-        nb_output = (nb_output || "") + data[4..];
+	DEBUGMSG("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+	nb_output = (nb_output || "") + data[4..];
         nb_status = 1;
         finalize(nb_id);
         break;
@@ -183,11 +178,11 @@ class Handler
     if (!proc || proc->status() != 0)
     {
       pipe = Stdio.File();
-      pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
+      Stdio.File pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
 
-      diag("(L1)");
+      DEBUGMSG("(L1)");
 
-      mapping opts = ([ "fds":({pipe_other}) ]);
+      mapping opts = ([ "stdin": pipe_other, "stdout": pipe_other ]);
 #if constant(system.getuid)
       if (system.getuid() == 0)
       { if (settings->set_uid > 0)
@@ -205,26 +200,25 @@ class Handler
 #endif
 
       mixed bt;
-      if (bt = catch (
-        proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
-                                       opts
-                                     )
-               ))
-	{ werror("ExtScript, create_process failed: " +
+      if (bt = catch {
+        proc = Process.create_process(command, opts);
+	  })
+	{
+	  werror("ExtScript, create_process failed: " +
                  describe_backtrace(bt) + "\n");
           return ({ -1, "unable to start helper process" });
         }
 
-      diag("(L2)");
+      DEBUGMSG("(L2)");
       runcount = 0;
       pipe_other = 0;
       pipe->write("QP"); // send 'ping'
-      diag("(L2p)");
+      DEBUGMSG("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
 	return ({ -1, "external process didn't respond" +
                         sprintf(" (Got: %O)", res) });
-      diag("(NewSubprocess)");
+      DEBUGMSG("(NewSubprocess)");
       if (mode == "run")
         putvar("L", "cd", dirname(arg));
       if (mappingp(settings))
@@ -237,7 +231,7 @@ class Handler
     {
       int len, returncode = 200; string headers;
 
-      diag("{");
+      DEBUGMSG("{");
       // Reset script variables.
       pipe->set_blocking();
       pipe->write("R");
@@ -322,14 +316,14 @@ class Handler
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
       {
-	pipe = 0; proc = 0; diag("@");
+	pipe = 0; proc = 0; DEBUGMSG("@");
         lock = 0;
-        diag("ExtScript/restart\n");
+        DEBUGMSG("ExtScript/restart\n");
         return launch(mode, arg, id, nonblock);
       }
 
       // start operation
-      diag("$");
+      DEBUGMSG("$");
       pipe->write("%c%3c%s", (mode == "eval" ? 'C' : 'S'), strlen(arg), arg);
       string output = "";
 
@@ -338,10 +332,8 @@ class Handler
       if (nonblock)
       { if (functionp(nonblock))
             nb_when_done = nonblock;
-#ifdef EXTSCRIPT_DEBUG
-        werror("ExtScript/launch/nonblock: %O\n", nb_id);
-#endif
-        if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
+	DEBUGMSG("ExtScript/launch/nonblock: %O\n", nb_id);
+	if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
         { run_lock = lock;
           return ({ });
         }
@@ -349,7 +341,7 @@ class Handler
 
       while (sizeof(res = pipe->read(1)) > 0)
       {
-	diag("."+res);
+	DEBUGMSG("."+res);
         if (res == "a")
 	  continue;
         else if (res == "X")
@@ -358,9 +350,11 @@ class Handler
         {
 	  string tmp = pipe->read(3);
           len = tmp[1]*256 + tmp[2];
-          diag("<");
-          tmp = pipe->read(len);
-          diag(">");
+	  DEBUGMSG(len + "<");
+	  // The len check is paranoia since read() might hang in
+	  // older pikes on NT when it's zero.
+          tmp = len ? pipe->read(len) : "";
+          DEBUGMSG(">");
           if (stringp(tmp))
           {
 	    if (res == "=")
@@ -368,7 +362,7 @@ class Handler
 	      array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
               {
-		diag(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
+		DEBUGMSG(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
                 if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
               }
@@ -379,7 +373,7 @@ class Handler
               else if (arr[0] == "ADDHEADER")
               {
 		headers = (headers || "") + arr[1..]*"=" + "\n";
-                diag(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
+                DEBUGMSG(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
               }
             }
             else if (res == "?")
@@ -393,14 +387,14 @@ class Handler
         }
         /* else ... support queries from script ... */
       }
-      diag("<Done.>");
+      DEBUGMSG("<Done.>");
       if (res == "" || res == 0)
 	return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000)
 	proc = 0, pipe = 0, runcount = 0;
 
-      diag("}");
+      DEBUGMSG("}");
 
       return headers ? ({ returncode, output, headers })
                      : ({ returncode, output });
@@ -418,10 +412,58 @@ class Handler
 
   void create(string helper_program_path, void|mapping settings0)
   {
-    binpath = helper_program_path;
     settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
     timeout = time(0) + 300;
+    command = ({ helper_program_path, "--cmdsocket=3" });
+#ifdef __NT__
+    string binpath = helper_program_path;
+    string ft, cmd;
+
+    mixed bt = catch {
+      string ext = "." + reverse(array_sscanf(reverse(binpath), "%[^.].")[0]);
+      DEBUGMSG("Looking up extension %O\n", ext);
+      ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
+      DEBUGMSG("ft:%O\n", ft);
+      cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
+      DEBUGMSG("cmd:%O\n", cmd);
+    };
+    if (bt) {
+      werror("Failed to lookup in registry:\n%s\n",
+	     describe_backtrace(bt));
+    }
+    if (cmd) {
+      // Perform %-substitution.
+      command = ({});
+      foreach(Process.split_quoted_string(cmd, 1), string arg) {
+	if (sizeof(arg) && arg[0] == '%') {
+	  int argno;
+	  if (arg == "%*") {
+	    command += ({ "--cmdsocket=3" });
+	  } else if (sscanf(arg, "%%%d", argno)) {
+	    if (argno == 1) {
+	      command += ({ binpath });
+	    } else if (argno == 2) {
+	      command += ({ "--cmdsocket=3" });
+	    }
+	  } else {
+	    command += ({ arg });
+	  }
+	} else {
+	  command += ({ arg });
+	}
+      }
+    } else {
+      string s = Stdio.read_file(binpath, 0, 1);
+      if (s && has_prefix(s, "#!")) {
+	command = Process.split_quoted_string(s[2..], 1) + command;
+      } else {
+	// Hope we can execute it anyway...
+	// Not likely, but we can hope.
+      }
+    }
+#endif /* __NT__ */
+    DEBUGMSG("Resulting command: %O\n", command);
   }
 }
 
@@ -434,7 +476,7 @@ static void objdiag()
   if (lastobjdiag < time(0)-25)
   {
     lastobjdiag = time(0);
-    diag("Subprocess status:\n");
+    DEBUGMSG("Subprocess status:\n");
     foreach(indices(scripthandlers), string binpath)
     {
       mapping m = scripthandlers[binpath];
@@ -443,7 +485,7 @@ static void objdiag()
       foreach(m->handlers, Handler h)
   	if (h)
   	  line += "  H" + (++n) + "=" + h->procstat();
-      diag(line + "\n");
+      DEBUGMSG(line + "\n");
       if (!n)
         remove_call_out(periodic_cleanup);
     }
@@ -464,10 +506,10 @@ void periodic_cleanup()
       if (m->expire < now)
       {
         Thread.MutexKey lock = m->mutex->lock();
-  	diag("(Z)");
+  	DEBUGMSG("(Z)");
   	if (m->handlers[0])
   	{ if (m->handlers[0]->probe())
-  	  { diag("(*T*)");
+  	  { DEBUGMSG("(*T*)");
   	    m->handlers[0]->terminate();
   	  }
   	}
