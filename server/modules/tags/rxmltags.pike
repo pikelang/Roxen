@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.163 2000/08/28 05:31:56 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.164 2000/08/29 18:55:23 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1744,9 +1744,9 @@ string api_query_modified(RequestID id, string f, int|void by)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&client.ip;":"<desc ent>The client is located on this IP-address.</desc>",
-"&client.host;":"<desc ent>The host name of the client, if possible to resolve.</desc>",
-"&client.name;":"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
+"&client.ip;":#"<desc ent>The client is located on this IP-address.</desc>",
+"&client.host;":#"<desc ent>The host name of the client, if possible to resolve.</desc>",
+"&client.name;":#"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
 "&client.Fullname;":#"<desc ent>The full user agent string, i.e. name of the client
  and additional info like; operating system, type of computer, etc.
  E.g. \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\". </desc>",
@@ -1760,26 +1760,30 @@ constant tagdoc=([
  presented in this language.</desc>",
 "&client.accept-languages;":#"<desc ent>The client prefers to have the page contents
  presented in this language but these additional languages are accepted as well.</desc>",
-"&client.language;":"<desc ent>The clients most preferred language.</desc>",
-"&client.languages;":"<desc ent>An ordered list of the clients most preferred</desc>",
+"&client.language;":#"<desc ent>The clients most preferred language.</desc>",
+"&client.languages;":#"<desc ent>An ordered list of the clients most preferred</desc>",
+"&client.authenticated;":#"<desc ent></desc>",
+"&client.user;":#"<desc ent></desc>",
+"&client.password;":#"<desc ent></desc>",
 
-"&page.realfile;":"<desc ent>Path to this file in the file system.</desc>",
-"&page.virtroot;":"<desc ent>The root of the present virtual filesystem.</desc>",
-"&page.virtfile;":"<desc ent>Path to this file in the virtual filesystem.</desc>",
+
+"&page.realfile;":#"<desc ent>Path to this file in the file system.</desc>",
+"&page.virtroot;":#"<desc ent>The root of the present virtual filesystem.</desc>",
+"&page.virtfile;":#"<desc ent>Path to this file in the virtual filesystem.</desc>",
 "&page.pathinfo;":#"\
 <desc ent>The \"path info\" part of the URL, if any. Can only get set
 if the \"Path info support\" module is installed. For details see the
 documentation for that module.</desc>",
-"&page.query;":"<desc ent>The query part of the page URI.</desc>",
-"&page.url;":"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
+"&page.query;":#"<desc ent>The query part of the page URI.</desc>",
+"&page.url;":#"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
 "&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
  (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
 "&page.language;":#"<desc ent>What language the contens of this file is written in.
  The language must be given as metadata to be found.</desc>",
-"&page.scope;":"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
-"&page.filesize;":"<desc ent>This file's size, in bytes.</desc>",
-"&page.ssl-strength;":"<desc ent>The strength in bits of the current SSL connection.</desc>",
-"&page.self;":"<desc ent>The name of this file.</desc>",
+"&page.scope;":#"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
+"&page.filesize;":#"<desc ent>This file's size, in bytes.</desc>",
+"&page.ssl-strength;":#"<desc ent>The strength in bits of the current SSL connection.</desc>",
+"&page.self;":#"<desc ent>The name of this file.</desc>",
 
 "roxen_automatic_charset_variable":#"<desc tag>
  If put inside a form, the right character encoding of the submitted form can be guessed
