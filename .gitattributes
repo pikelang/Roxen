@@ -127,6 +127,7 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/include/variables.h foreign_ident
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/PDB.pmod foreign_ident
+/server/etc/modules/Roxen.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
