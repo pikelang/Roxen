@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.773 2002/01/15 09:46:55 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.774 2002/01/29 21:19:03 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -271,7 +271,7 @@ static class Privs
 #endif /* HPUX_KLUDGE */
       if (err < 0) {
 	report_debug("Privs: Failed\n");
-	throw(({ sprintf("Failed to set EGID to %d\n", gid), backtrace() }));
+	error ("Failed to set EGID to %d\n", gid);
       }
       report_debug("Privs: WARNING: Set egid to %d instead of %d.\n",
 	     gid2, gid);
