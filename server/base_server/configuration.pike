@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.181 1999/06/10 03:34:20 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.182 1999/06/28 01:42:48 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3096,6 +3096,15 @@ int unload_module(string module_file)
   m_delete(modules, module_file);
 
   return 1;
+}
+
+int add_modules (array(string) mods)
+{
+  foreach (mods, string mod)
+    if(!modules[mod] || !modules[mod]->copies && !modules[mod]->master)
+      enable_module(mod+"#0");
+  if(roxen->root)
+    roxen->configuration_interface()->build_root(roxen->root);
 }
 
 int port_open(array prt)

@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.36 1999/06/09 01:46:54 mast Exp $ */
+/* $Id: module.pike,v 1.37 1999/06/28 01:42:49 mast Exp $ */
 
 #include <module.h>
 
@@ -18,18 +18,7 @@ string fix_cvs(string from)
 
 int module_dependencies(object configuration, array (string) modules)
 {
-  if(configuration)
-  {
-    foreach (modules, string module)
-    {
-      if(!configuration->modules[module] ||
-	 (!configuration->modules[module]->copies &&
-	  !configuration->modules[module]->master))
-	configuration->enable_module(module+"#0");
-    }
-    if(roxen->root)
-      roxen->configuration_interface()->build_root(roxen->root);
-  }
+  if(configuration) configuration->add_modules (modules);
   mixed err;
   if (err = catch (_do_call_outs()))
     report_error ("Error doing call outs:\n" + describe_backtrace (err));
