@@ -16,7 +16,9 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.5 1999/07/23 04:04:13 nilsson Exp $";
+#define old_rxml_compat 1
+
+constant cvs_version="$Id: rxmlparse.pike,v 1.6 1999/07/23 04:12:33 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -73,7 +75,7 @@ void create(object c)
   defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
 
-#if 1
+#if old_rxml_compat
   defvar("logold", 0, "Log all old RXML calls in the event log.",
          TYPE_FLAG|VAR_MORE,
          "If set, all calls though the backward compatibility code will be"
@@ -130,7 +132,7 @@ mapping handle_file_extension( object file, string e, object id)
 
 /* standard roxen tags */
 
-string tagtime(int t,mapping m)
+string tagtime(int t,mapping m,object id)
 {
   string s;
   mixed eris;
@@ -212,19 +214,19 @@ string tagtime(int t,mapping m)
   }
   s=language(m->lang, "date")(t,m);
 
-#if 1
+#if old_rxml_compat
   // Not part of RXML 1.4
   if (m->upper) {
     s=upper_case(s);
-    api_old_rxml_warning("upper attribute in a tag","case=\"upper\"");
+    api_old_rxml_warning(id,"upper attribute in a tag","case=\"upper\"");
   }
   if (m->lower) {
     s=lower_case(s);
-    api_old_rxml_warning("lower attribute in a tag","case=\"lower\"");
+    api_old_rxml_warning(id,"lower attribute in a tag","case=\"lower\"");
   }
   if (m->cap||m->capitalize) {
     s=capitalize(s);
-    api_old_rxml_warning("captialize or cap attribute in a tag.","case=\"capitalize\"");
+    api_old_rxml_warning(id,"captialize or cap attribute in a tag.","case=\"capitalize\"");
   }
 #endif
 
@@ -240,7 +242,7 @@ string tagtime(int t,mapping m)
 
 string tag_date(string q, mapping m, object id)
 {
-#if 1
+#if old_rxml_compat
   // unix_time is not part of RXML 1.4
   int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
   if(m->unix_time) api_old_rxml_warning(id, "unix_time attribute in date tag","unix-time");
@@ -264,7 +266,7 @@ string tag_date(string q, mapping m, object id)
   } else
     CACHE(60); // One minute is good enough.
 
-  return tagtime(t,m);
+  return tagtime(t,m,id);
 }
 
 
@@ -321,7 +323,7 @@ string tag_set( string tag, mapping m, object id )
 	return "Set: other variable doesn't exist";
       else 
 	return "";
-#if 1
+#if old_rxml_compat
     // Not part of RXML 1.4
     else if(m->define) {
       // Set variable to the value of a define
@@ -375,7 +377,7 @@ string tag_append( string tag, mapping m, object id )
 	return "<b>Append: other variable doesn't exist</b>";
       else
 	return "";
-#if 1
+#if old_rxml_compat
     // Not part of RXML 1.4
     else if(m->define) {
       // Set variable to the value of a define
@@ -407,7 +409,7 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   string n;
   mapping fake_id=([]);
 
-#if 1
+#if old_rxml_compat
   // Not part of RXML 1.4
   if(n=m->define || m->name) {
     api_old_rxml_warning(id, "define or name attribute in insert tag","only variables");
@@ -552,7 +554,7 @@ string tag_modified(string tag, mapping m, object id, object file,
     if(m->ssi)
       return strftime(defines->timefmt || "%c", s[3]);
     else
-      return tagtime(s[3], m);
+      return tagtime(s[3], m, id);
   else
     return "Error: Cannot stat file";
 }
@@ -648,7 +650,7 @@ string tag_aprestate(string tag, mapping m, string q, object id)
 
   multiset prestate = (< @indices(id->prestate) >);
 
-#if 1
+#if old_rxml_compat
   // Not part of RXML 1.4
   int oldflag=0;
   foreach(indices(m), s) {
@@ -699,7 +701,7 @@ string tag_aconf(string tag, mapping m, string q, object id)
     m_delete(m, "href");
   }
 
-#if 1
+#if old_rxml_compat
   // Not part of RXML 1.4
   int oldflag=0;
   foreach(indices(m), string opt) {
@@ -809,7 +811,7 @@ string tag_referrer(string tag, mapping m, object id, object file,
 {
   NOCACHE();
 
-#if 1
+#if old_rxml_compat
   if(tag=="refferrer") api_old_rxml_warning(id, "refferrer tag","referrer tag");
 #endif
 
@@ -974,8 +976,8 @@ string tag_imgs(string tagname, mapping m, object id)
 
 string tag_roxen(string tagname, mapping m, object id)
 {
-#if 1
-  if(tagname=="pr") api_old_rxml_warning(id,"pr tag","roxen tag);
+#if old_rxml_compat
+  if(tagname=="pr") api_old_rxml_warning(id,"pr tag","roxen tag");
 #endif
   string size = m->size || "small";
   string color = m->color || "blue";
@@ -1033,7 +1035,7 @@ string tag_fsize(string tag, mapping args, object id)
     return (string)strlen(s);
 }
 
-#if 1
+#if old_rxml_compat
 // Not part of RXML 1.4
 
 string tag_source(string tag, mapping m, string s, object id,object file)
@@ -1085,7 +1087,7 @@ mapping query_tag_callers()
 	    "version":tag_version,
 	    "vfs":tag_vfs,
 
-#if 1
+#if old_rxml_compat
             // Not part of RXML 1.4
             "echo":
             lambda(string t, mapping m, object id) {   // Well, this isn't exactly 100% compatible...
@@ -1120,7 +1122,7 @@ string tag_autoformat(string tag, mapping m, string s, object id,object file)
   s-="\r";
   if(!m->nobr) {
     s = replace(s, "\n", "<br>\n");
-#if 1
+#if old_rxml_compat
     // m->pre is not part of RXML 1.4
     if(m->pre) api_old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
     if(m->p || m->pre) {
@@ -1134,7 +1136,7 @@ string tag_autoformat(string tag, mapping m, string s, object id,object file)
       else
         s+="</p>";
     }
-#if 1
+#if old_rxml_compat
   // m->pre is not part of RXML 1.4
   } else if(m->p || m->pre) {
 #else
@@ -1495,7 +1497,7 @@ mapping query_container_callers()
 		     throw( ({ c, backtrace() }) );
 		   },
 	   "trimlines" : tag_trimlines,
-#if 1
+#if old_rxml_compat
            // Not part of RXML 1.4
 	   "cset":lambda(string t, mapping m, string c, object id) {
 		    api_old_rxml_warning(id, "cset tag","&lt;define variable&gt;");
@@ -1523,7 +1525,7 @@ string api_tagtime(object id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
   NOCACHE();
-  return tagtime( ti, m );
+  return tagtime( ti, m, id );
 }
 
 string api_relative(object id, string path)
@@ -1645,7 +1647,7 @@ string api_html_quote_attr(object id, string value)
 void api_old_rxml_warning(object id, string problem, string solution)
 {
   if(query("logold"))
-    report_warning("Old RXML in "+(id->query||id->not_query)+" ! Contains "+problem+". Use "+solution+" instead.");
+    report_warning("Old RXML in "+(id->query||id->not_query)+" contains "+problem+". Use "+solution+" instead.");
 }
 
 void add_api_function( string name, function f, void|array(string) types)
