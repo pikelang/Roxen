@@ -283,7 +283,7 @@ dist: ChangeLog.gz ChangeLog.rxml.gz
 	  echo 'You need to make pre_dist first!'; \
 	  exit 1; \
 	fi
-	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z.' 'a-z_'`; \
+	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z. ' 'a-z__'`; \
 	if ls -d $$version*; then \
 	  echo Deleting old distributions...; \
 	  rm -rf $$version* || exit 1; \
