@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.406 2004/06/03 02:52:07 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.407 2004/06/04 08:29:30 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -246,7 +246,7 @@ void send(string|object what, int|void len, int|void start)
   if(!pipe) setup_pipe();
   if( len>0 && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
-  pipe->add_source(what,start,len||strlen(what));
+  pipe->add_source(what,start,len||sizeof(what));
 }
 
 void start_sender( )
@@ -277,7 +277,7 @@ string scan_for_query( string f )
 	b = http_decode_string(replace(b, "+", " "));
 	real_variables[ a ] += ({ b });
       } else
-	if(strlen( rest_query ))
+	if(sizeof( rest_query ))
 	  rest_query += "&" + http_decode_string( v );
 	else
 	  rest_query = http_decode_string( v );
@@ -366,7 +366,7 @@ mapping(string:string) parse_cookies( string contents )
       name=http_decode_string(name);
       cookies[ name ]=value;
 #ifdef OLD_RXML_CONFIG
-      if( (name == "RoxenConfig") && strlen(value) )
+      if( (name == "RoxenConfig") && sizeof(value) )
 	config =  mkmultiset( value/"," );
 #endif
     }
@@ -418,7 +418,7 @@ int things_to_do_when_not_sending_from_cache( )
   if( has_value(f, "\0") )
      sscanf(f, "%s\0", f);
   
-  if( strlen( f ) > 5 )
+  if( sizeof( f ) > 5 )
   {
     string a;
     switch( f[1] )
@@ -434,7 +434,7 @@ int things_to_do_when_not_sending_from_cache( )
 #endif
         // intentional fall-through
      case '(':
-       if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
+       if(sizeof(f) && sscanf(f, "/(%s)/%s", a, f)==2)
        {
          prestate = (multiset)( a/","-({""}) );
          f = "/"+f;
@@ -497,7 +497,7 @@ int things_to_do_when_not_sending_from_cache( )
     config = prestate;
   else
     if( port_obj->set_cookie
-       && !cookies->ChiliMoonUserID && strlen(not_query)
+       && !cookies->ChiliMoonUserID && sizeof(not_query)
        && not_query[0]=='/' && method!="PUT")
     {
       if (!(port_obj->set_cookie_only_once &&
@@ -601,7 +601,7 @@ private final int parse_got_2( )
   TIMER_END(parse_got_2_parse_line);
   REQUEST_WERR(sprintf("HTTP: request line %O", line));
   REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
-  REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
+  REQUEST_WERR(sprintf("HTTP: data (length %d) %O", sizeof(data),data));
   raw_url    = f;
   time       = predef::time(1);
   // if(!data) data = "";
@@ -708,9 +708,9 @@ private final int parse_got_2( )
     if(!data) data="";
     int l = misc->len;
     wanted_data=l;
-    have_data=strlen(data);
+    have_data=sizeof(data);
 	
-    if(strlen(data) < l)
+    if(sizeof(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
       ready_to_receive();
@@ -734,7 +734,7 @@ private final int parse_got_2( )
 	//
 	// Oh, the joy of supporting all webbrowsers is endless.
 	data = String.trim_all_whites( data );
-	l = misc->len = strlen(data);
+	l = misc->len = sizeof(data);
 
 	if(l < 200000)
 	  foreach(replace(data,"+"," ")/"&", v)
@@ -1182,7 +1182,7 @@ void timer(int start)
     MARK_FD(sprintf("HTTP piping %d %d %d %d (%s)",
 		    pipe->sent,
 		    stringp(pipe->current_input) ?
-		    strlen(pipe->current_input) : -1,
+		    sizeof(pipe->current_input) : -1,
 		    pipe->last_called,
 		    predef::time(1) - start,
 		    not_query));
@@ -1273,10 +1273,10 @@ class MultiRangeWrapper
 			    "Content-Range: bytes %d-%d/%d\r\n\r\n",
 			    type||"application/octet-stream",
 			    @range, len);
-      clen += rlen + strlen(sep);
+      clen += rlen + sizeof(sep);
       range_info += ({ ({ rlen, sep }) });
     }
-    clen += strlen(BOUND) + 8; // End boundary length.
+    clen += sizeof(BOUND) + 8; // End boundary length.
     _file->len = clen;
   }
 
@@ -1284,7 +1284,7 @@ class MultiRangeWrapper
   {
     string out = stored_data;
     int rlen, total = num_bytes;
-    num_bytes -= strlen(out);
+    num_bytes -= sizeof(out);
     stored_data = "";
     foreach(ranges, array range)
     {
@@ -1293,7 +1293,7 @@ class MultiRangeWrapper
 	// New range, write new separator.
 	//	write("Initiating new range %d -> %d.\n", @range);
 	out += range_info[0][1];
-	num_bytes -= strlen(range_info[0][1]);
+	num_bytes -= sizeof(range_info[0][1]);
 	file->seek(range[0]);
 	separator = 1;
       }
@@ -1321,7 +1321,7 @@ class MultiRangeWrapper
       separator = 2;
       out += "\r\n--" BOUND "--\r\n";
     }
-    if(strlen(out) > total)
+    if(sizeof(out) > total)
     {
       // Oops. too much data again. Write and store. Write and store.
       stored_data = out[total..];
@@ -1643,7 +1643,7 @@ void send_result(mapping|void result)
 	if (sscanf (heads["Content-Type"], "; charset=%s", string charset) ||
 	    String.width( head_string ) > 8 )
           head_string = output_encode( head_string, 0, charset )[1];
-        conf->hsent += strlen(head_string);
+        conf->hsent += sizeof(head_string);
     }
   else
     if(!file->type) file->type="text/plain";
@@ -1661,7 +1661,7 @@ void send_result(mapping|void result)
 	  (prot != "HTTP/0.9") && !misc->no_proto_cache)
       {
         if( file->len>0 && // known length.
-	    ((file->len + strlen( head_string )) < 
+	    ((file->len + sizeof( head_string )) < 
              conf->datacache->max_file_size) 
             && misc->cachekey )
         {
@@ -1685,7 +1685,7 @@ void send_result(mapping|void result)
                                   "rf":realfile,
                                 ]), 
                                 misc->cacheable );
-          file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
+          file = ([ "data":data, "raw":file->raw, "len":sizeof(data) ]);
         }
       }
 #endif
@@ -1718,13 +1718,13 @@ void send_result(mapping|void result)
         end(1);
         return;
       }
-      if(strlen(head_string))                 send(head_string);
-      if(file->data && strlen(file->data))    send(file->data, file->len);
+      if(sizeof(head_string))                 send(head_string);
+      if(file->data && sizeof(file->data))    send(file->data, file->len);
       if(file->file)                          send(file->file, file->len);
     }
     else 
     {
-      if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
+      if( sizeof( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
       {
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Response =================================================\n"
@@ -1876,7 +1876,7 @@ void got_data(mixed fooid, string s)
   if(wanted_data)
   {
     // NOTE: No need to make a data buffer if it's a small request.
-    if(strlen(s) + have_data < wanted_data)
+    if(sizeof(s) + have_data < wanted_data)
     {
       if(!data_buffer) {
 	// The 16384 is some reasonable extra padding to
@@ -1886,7 +1886,7 @@ void got_data(mixed fooid, string s)
 	data = "";
       }
       data_buffer->add(s);
-      have_data += strlen(s);
+      have_data += sizeof(s);
 
       // Reset timeout.
       remove_call_out(do_timeout);
@@ -1991,7 +1991,7 @@ void got_data(mixed fooid, string s)
 	}
       }
     }
-    else if( strlen(path) )
+    else if( sizeof(path) )
       adjust_for_config_path( path );
 
     TIMER_END(find_conf);
@@ -2026,7 +2026,7 @@ void got_data(mixed fooid, string s)
     if( conf )
     {
       conf->connection_add( this, ([]) );
-      conf->received += strlen(raw);
+      conf->received += sizeof(raw);
       conf->requests++;
     }
     CHECK_FD_SAFE_USE;
@@ -2106,9 +2106,9 @@ void got_data(mixed fooid, string s)
 	    };
 	    
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
-	    conf->hsent += strlen(file->hs);
+	    conf->hsent += sizeof(file->hs);
 	    cache_status["protcache"] = 1;
-	    if( strlen( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
+	    if( sizeof( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
 	    {
 	      TIMER_END(cache_lookup);
 	    } 
@@ -2242,7 +2242,7 @@ void chain( object f, object c, string le )
   MARK_FD("HTTP kept alive");
   time = predef::time();
 
-  if ( le && strlen( le ) )
+  if ( le && sizeof( le ) )
     got_data( 0,le );
   else
   {

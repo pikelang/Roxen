@@ -7,7 +7,7 @@ inherit "chili-module:filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.27 2004/05/31 23:01:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.28 2004/06/04 08:29:25 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -792,7 +792,7 @@ class BaseWrapper
       return _file->write(data);
     }
     
-    return strlen(data);
+    return sizeof(data);
   }
 
   void flush()
@@ -915,7 +915,7 @@ class RXMLParseWrapper
     else
     {
       string ct = content_type;
-      if (!ct || strlen(ct) == 0)
+      if (!ct || sizeof(ct) == 0)
         ct = "text/plain";
       res = ([ "data":get_data(1),
                "type":ct,
@@ -1815,7 +1815,7 @@ class ClassPathList
       else
         warn += value + " does not exist.\n";
     }
-    if( strlen( warn ) )
+    if( sizeof( warn ) )
       return ({ warn, value });
     return ::verify_set( value );
   }
@@ -1851,7 +1851,7 @@ class WARPath
         warn += value + " is not a JAR file.\n";
       f->close();
     }
-    if( strlen( warn ) )
+    if( sizeof( warn ) )
       return ({ warn, value });
     return ::verify_set( value );
   }

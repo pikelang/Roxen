@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.32 2004/05/31 23:01:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.33 2004/06/04 08:29:26 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -273,10 +273,10 @@ string simpletag_smallcaps(string t, mapping m, string s)
   else
     ret=Smallcapsstr("big","small", m+bm, m+sm);
 
-  for(int i=0; i<strlen(s); i++)
+  for(int i=0; i<sizeof(s); i++)
     if(s[i]=='<') {
       int j;
-      for(j=i; j<strlen(s) && s[j]!='>'; j++);
+      for(j=i; j<sizeof(s) && s[j]!='>'; j++);
       ret->write(s[i..j]);
       i+=j-1;
     }
@@ -462,7 +462,7 @@ class TagIfUser {
   }
 
   private int match_passwd(string try, string org) {
-    if(!strlen(org)) return 1;
+    if(!sizeof(org)) return 1;
     if(crypt(try, org)) return 1;
   }
 
@@ -581,7 +581,7 @@ string simpletag_apre(string tag, mapping m, string q, RequestID id)
   else
     href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
 
-  if(!strlen(href))
+  if(!sizeof(href))
     href="";
 
   multiset prestate = (< @indices(id->prestate) >);
@@ -715,7 +715,7 @@ class TagPICData
 
 class TagStrLen {
   inherit RXML.Tag;
-  constant name = "strlen";
+  constant name = "sizeof";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
@@ -725,7 +725,7 @@ class TagStrLen {
 	result="0";
 	return 0;
       }
-      result = (string)strlen(content);
+      result = (string)sizeof(content);
     }
   }
 }
@@ -1185,10 +1185,10 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"strlen":#"<desc type='cont'><p><short>
+"sizeof":#"<desc type='cont'><p><short>
  Returns the length of the contents.</short></p>
 
- <ex>There are <strlen>foo bar gazonk</strlen> characters
+ <ex>There are <sizeof>foo bar gazonk</sizeof> characters
  inside the tag.</ex>
 </desc>",
 

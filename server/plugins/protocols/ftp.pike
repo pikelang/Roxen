@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.100 2004/05/31 23:48:20 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.101 2004/06/04 08:29:30 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -562,7 +562,7 @@ class PutFileWrapper
       }
       gotdata = gotdata[n+1..];
     }
-    return strlen(data);
+    return sizeof(data);
   }
 
   void done(mapping result)
@@ -1958,7 +1958,7 @@ class FTPSession
     touch_me();
 
     if(!file->len)
-      file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
+      file->len = file->data?(stringp(file->data)?sizeof(file->data):0):0;
 
     if (!file->mode) {
       file->mode = mode;
@@ -2034,7 +2034,7 @@ class FTPSession
       } );
     master_session->file = session->file = file;
     if(stringp(file->data)) {
-      pipe->add_source(file->data,0,strlen(file->data));
+      pipe->add_source(file->data,0,sizeof(file->data));
     }
     if(file->file) {
       int off;

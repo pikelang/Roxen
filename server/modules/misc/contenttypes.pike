@@ -7,7 +7,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.25 2003/01/19 01:59:21 zino Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.26 2004/06/04 08:29:23 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";
@@ -56,7 +56,7 @@ void parse_ext_string(string exts)
 
   foreach((exts-"\r")/"\n", line)
   {
-    if(!strlen(line))  continue;
+    if(!sizeof(line))  continue;
     if(line[0]=='#')
     {
       string file;

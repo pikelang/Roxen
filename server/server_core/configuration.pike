@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.569 2004/05/31 23:48:21 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.570 2004/06/04 08:29:31 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -246,16 +246,16 @@ class DataCache
   {
     if( cache[ url ] )
     {
-      current_size -= strlen(cache[url][0]);
+      current_size -= sizeof(cache[url][0]);
       m_delete( cache, url );
     }
   }
 
   void set( string url, string data, mapping meta, int expire )
   {
-    if( strlen( data ) > max_file_size ) return;
+    if( sizeof( data ) > max_file_size ) return;
     call_out( expire_entry, expire, url );
-    current_size += strlen( data );
+    current_size += sizeof( data );
     cache[url] = ({ data, meta });
     int n;
     while( (current_size > max_size) && (n++<10))
@@ -327,7 +327,7 @@ string query_internal_location(RoxenModule|void mod)
 
 string query_name()
 {
-  if(strlen(query("name")))
+  if(sizeof(query("name")))
     return query("name");
   return name;
 }
@@ -792,7 +792,7 @@ void init_log_file()
   if(query("Log"))
   {
     string logfile = query("LogFile");
-    if(strlen(logfile))
+    if(sizeof(logfile))
       log_function = core.LogFile( logfile )->write;
   }
 }
@@ -807,7 +807,7 @@ private inline string fix_logging(string s)
 private void parse_log_formats()
 {
   foreach(query("LogFormat")/"\n", string b)
-    if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
+    if(sizeof(b) && b[0] != '#' && sizeof(b/":")>1)
       log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
@@ -1268,7 +1268,7 @@ string examine_return_mapping(mapping m)
       else
 	 res += sprintf("%O bytes ", m->len);
    else if (stringp(m->data))
-     res += sprintf("%d bytes ", strlen(m->data));
+     res += sprintf("%d bytes ", sizeof(m->data));
    else if (objectp(m->file))
       if (catch {
 	 Stat a=m->file->stat();
@@ -1627,7 +1627,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       RoxenModule module;
       string name, rest;
       function find_internal;
-      if(2==sscanf(file[strlen(internal_location)..], "%s/%s", name, rest) &&
+      if(2==sscanf(file[sizeof(internal_location)..], "%s/%s", name, rest) &&
 	 (module = find_module(replace(name, "!", "#"))) &&
 	 (find_internal = module->find_internal))
       {
@@ -1772,7 +1772,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location");
 	TRACE_ENTER("Calling find_file()...", 0);
 	LOCK(tmp[1]);
-	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
+	fid=tmp[1]( file[ sizeof(loc) .. ] + id->extra_extension, id);
 	UNLOCK();
 	TRACE_LEAVE("");
 	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
@@ -1817,7 +1817,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  }
 	} else
 	  TRACE_LEAVE("");
-      } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
+      } else if(sizeof(loc)-1==sizeof(file) && file+"/" == loc) {
 	// This one is here to allow accesses to /local, even if
 	// the mountpoint is /local/. It will slow things down, but...
 
@@ -2128,7 +2128,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       }
 #endif
       mod=function_object(tmp[1]);
-      if(d=mod->find_dir(file[strlen(loc)..], id))
+      if(d=mod->find_dir(file[sizeof(loc)..], id))
       {
 	if(mappingp(d))
 	{
@@ -2149,14 +2149,14 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 	  locks |= mod->list_lock_files();
 	TRACE_LEAVE("");
       }
-    } else if(has_prefix(loc, file) && (loc[strlen(file)-1]=='/') &&
+    } else if(has_prefix(loc, file) && (loc[sizeof(file)-1]=='/') &&
 	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
 	      (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
       TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
-      loc=loc[strlen(file)..];
+      loc=loc[sizeof(file)..];
       sscanf(loc, "%s/", loc);
       if (dir) {
 	dir |= ({ loc });
@@ -2252,7 +2252,7 @@ array(int)|Stat stat_file(string file, RequestID id)
 	continue;
       }
 #endif
-      if(s=function_object(fun)->stat_file(file[strlen(loc)..], id))
+      if(s=function_object(fun)->stat_file(file[sizeof(loc)..], id))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Stat ok.");
@@ -2434,7 +2434,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       }
 #endif
       RoxenModule c = function_object(tmp[1]);
-      string f = file[strlen(loc)..];
+      string f = file[sizeof(loc)..];
       if (c->find_dir_stat) {
 	TRACE_ENTER("Has find_dir_stat().", 0);
 	if (d = c->find_dir_stat(f, id)) {
@@ -2451,7 +2451,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
                                         })) | dir;
 	TRACE_LEAVE("");
       }
-    } else if(has_prefix(loc, file) && loc[strlen(file)-1]=='/' &&
+    } else if(has_prefix(loc, file) && loc[sizeof(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
 	      (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
@@ -2459,7 +2459,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
        */
       TRACE_ENTER(sprintf("The file %O is on the path to the mountpoint %O.",
 			  file, loc), 0);
-      loc=loc[strlen(file)..];
+      loc=loc[sizeof(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
 	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0 });
@@ -2496,7 +2496,7 @@ array access(string file, RequestID id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
-      if(s=function_object(tmp[1])->access(file[strlen(loc)..], id))
+      if(s=function_object(tmp[1])->access(file[sizeof(loc)..], id))
 	return s;
     }
   }
@@ -2522,7 +2522,7 @@ string real_file(string file, RequestID id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
-      if(s=function_object(tmp[1])->real_file(file[strlen(loc)..], id))
+      if(s=function_object(tmp[1])->real_file(file[sizeof(loc)..], id))
 	return s;
     }
   }
@@ -3375,7 +3375,7 @@ string check_variable(string name, mixed value)
   switch(name)
   {
 //    case "MyWorldLocation":
-//     if(strlen(value)<7 || value[-1] != '/' ||
+//     if(sizeof(value)<7 || value[-1] != '/' ||
 //        !(sscanf(value,"%*s://%*s/")==2))
 //       return LOCALE->url_format();
 //     return 0;

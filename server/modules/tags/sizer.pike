@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.29 2004/05/27 23:14:20 mani Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.30 2004/06/04 08:29:26 _cvs_stephen Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -71,7 +71,7 @@ class Combo( string file, RequestID id )
 
     if(!res) return 0;
     if( res->data )
-      return strlen( res->data );
+      return sizeof( res->data );
     if( res->file )
       return res->file->stat()->size;
   }    
@@ -83,7 +83,7 @@ class Combo( string file, RequestID id )
     mapping heads = ([]);
     heads["Last-Modified"] = Roxen.http_date(id2->misc->last_modified);
     if( res->data )
-      res->len = strlen(res->data);
+      res->len = sizeof(res->data);
     heads["Content-Type"] = res->type;
     heads["Accept-Ranges"] = "bytes";
     heads["Server"] = replace(version()," ","·");
@@ -123,7 +123,7 @@ array size_file( string page, RequestID id )
   if( !has_prefix( lower_case(page), "http:" ) )
     page = Roxen.fix_relative( page, id );
   files = ({ page });
-  if( strlen( page ) && page[0] == '/' )
+  if( sizeof( page ) && page[0] == '/' )
   {
     Combo res;
     catch(  res = do_read_file( page, id ) );
@@ -162,7 +162,7 @@ array size_file( string page, RequestID id )
 	]) )->feed( res->data() )->finish()->read();
 
     types[ page ] = res->type();
-    sizes[ page ] = ({ res->size(), strlen(res->headers()) });
+    sizes[ page ] = ({ res->size(), sizeof(res->headers()) });
   } else {
     messages += ERR( sprintf( _(3, "Failed to read %O."),
 			      Roxen.html_encode_string(page)) + "\n" );
@@ -231,7 +231,7 @@ string simpletag_page_size( string name,
   string fname( string f )
   {
     string d = dirname( page );
-    if( strlen(f) > 4 && (f[1] == '_') )
+    if( sizeof(f) > 4 && (f[1] == '_') )
     {
       string internal = replace(id->conf->query("InternalLoc"), "%", "%%");
 
@@ -242,7 +242,7 @@ string simpletag_page_size( string name,
 	  string sz = "";
 	  if( ar["max-width"] )  sz = " (xs:"+((string)ar["max-width"]);
 	  if( ar["max-height"] ) sz +=" (ys:"+((string)ar["max-height"]);
-	  if(strlen(sz))
+	  if(sizeof(sz))
 	    sz+=")";
 
 	  if( ar->src )
@@ -259,7 +259,7 @@ string simpletag_page_size( string name,
     }
     if( d != "" )
       if( f[..strlen(d)-1] == d )
-	f = f[strlen(d)+1..];
+	f = f[sizeof(d)+1..];
     return f;
   };
   int mpct;
@@ -297,11 +297,11 @@ string simpletag_page_size( string name,
 
   if( !what->details )
   {
-    res = strlen(messages)?"<tt><b>"+messages+"</b></tt><br />":"";
+    res = sizeof(messages)?"<tt><b>"+messages+"</b></tt><br />":"";
     res += "<table>";
   }
   else
-    res = (strlen(messages)?"<tt><b>"+messages+"</b></tt><br />":"") + res;
+    res = (sizeof(messages)?"<tt><b>"+messages+"</b></tt><br />":"") + res;
 
   if( what->summary )
   {
@@ -371,9 +371,9 @@ string simpletag_page_size( string name,
 	      else
 	      {
 		mapping  sz = ([
-		  75:strlen(Image.JPEG.encode( i, ([ "quality":75 ]) )),
-		  50:strlen(Image.JPEG.encode( i, ([ "quality":50 ]) )),
-		  25:strlen(Image.JPEG.encode( i, ([ "quality":25 ]) )),
+		  75:sizeof(Image.JPEG.encode( i, ([ "quality":75 ]) )),
+		  50:sizeof(Image.JPEG.encode( i, ([ "quality":50 ]) )),
+		  25:sizeof(Image.JPEG.encode( i, ([ "quality":25 ]) )),
 		]);
 		int ds;
 		string mm = "";
@@ -443,18 +443,18 @@ string simpletag_page_size( string name,
 	      mapping  sz;
 	      if( a )
 		sz = ([
-		  8:strlen(Image.GIF.encode_trans(Image.Colortable( i, 7 )
+		  8:sizeof(Image.GIF.encode_trans(Image.Colortable( i, 7 )
 						  ->map(i),a)),
-		  32:strlen(Image.GIF.encode_trans(Image.Colortable( i, 31 )
+		  32:sizeof(Image.GIF.encode_trans(Image.Colortable( i, 31 )
 						   ->map(i),a)),
-		  128:strlen(Image.GIF.encode_trans(Image.Colortable( i, 127 )
+		  128:sizeof(Image.GIF.encode_trans(Image.Colortable( i, 127 )
 						    ->map(i),a)),
 		]);
 	      else
 		sz = ([
-		  8:strlen(Image.GIF.encode(Image.Colortable( i, 8 )->map(i))),
-		  32:strlen(Image.GIF.encode(Image.Colortable(i,32)->map(i))),
-		  128:strlen(Image.GIF.encode(Image.Colortable(i,128)->map(i))),
+		  8:sizeof(Image.GIF.encode(Image.Colortable( i, 8 )->map(i))),
+		  32:sizeof(Image.GIF.encode(Image.Colortable(i,32)->map(i))),
+		  128:sizeof(Image.GIF.encode(Image.Colortable(i,128)->map(i))),
 		]);
 	      int ds;
 	      string mm = "";

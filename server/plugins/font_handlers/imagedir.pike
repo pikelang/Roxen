@@ -3,7 +3,7 @@
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.16 2004/05/15 23:46:44 mani Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.17 2004/06/04 08:29:29 _cvs_stephen Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -54,7 +54,7 @@ class myFont
 
     array possible = ({ encode_char(c) })+
           glob(encode_char( c )+".*", files);
-    sort( map(possible,strlen), possible );
+    sort( map(possible,sizeof), possible );
     catch {
       foreach( possible, string pf )
         if( mapping r = Image._load( path+pf ) )

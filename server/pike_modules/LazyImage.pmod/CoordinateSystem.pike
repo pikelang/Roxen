@@ -34,7 +34,7 @@ static
 
     p->add_container( "labels", lambda( Parser.HTML p,mapping a, string c )
 				{
-				  if( (!c||!strlen(c)) && !a->format )
+				  if( (!c||!sizeof(c)) && !a->format )
 				    RXML.parse_error( "labels requires "
 						      "either content or a "
 						      "format argument\n");
@@ -79,7 +79,7 @@ static
 
     string do_sprintf( string format, mixed data )
     {
-      switch( strlen(format)?format[-1]:'f' )
+      switch( sizeof(format)?format[-1]:'f' )
       {
 	case 's': return sprintf( format, (string) data );
 	case 'd': return sprintf( format, (int) data );

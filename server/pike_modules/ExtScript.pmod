@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.19 2004/05/30 01:00:46 _cvs_stephen Exp $
+// $Id: ExtScript.pmod,v 1.20 2004/06/04 08:29:27 _cvs_stephen Exp $
 
 // 
 
@@ -72,9 +72,9 @@ class Handler
   // is the current directory that should be used for running
   // scripts.
   {
-    if (!vtype || strlen(vtype) != 1)
+    if (!vtype || sizeof(vtype) != 1)
       error("Bad variable type in external script .\n");
-    pipe->write("%s%c%s%3c", vtype, strlen(vname), vname, strlen(vval));
+    pipe->write("%s%c%s%3c", vtype, sizeof(vname), vname, sizeof(vval));
     pipe->write(vval);
   }
 
@@ -110,24 +110,24 @@ class Handler
   }
 
   static void read_callback(mixed fid, string data)
-  { if (!run_lock || !stringp(data) || strlen(data) < 1)
+  { if (!run_lock || !stringp(data) || sizeof(data) < 1)
       { return;}
     if (nb_data != 0)
       { data = nb_data + data; nb_data = 0;}
     string ptype = data[0..0];
 //    DEBUGMSG(sprintf("ExtScript/rcb0: %O %O\n", nb_id, run_lock));
     if ( (< "+", "*", "?", "=" >) [ ptype ] )
-    { if (strlen(data) < 4)
+    { if (sizeof(data) < 4)
         { nb_data = data; return;}
       int len = data[2]*256 + data[3];
-      if (strlen(data) < 4+len)
+      if (sizeof(data) < 4+len)
         { nb_data = data; return;}
-      if (strlen(data) > 4+len)
+      if (sizeof(data) > 4+len)
         { nb_data = data[4+len..];
           data    = data[..3+len];
         }
     }
-    DEBUGMSG(sprintf("<%s:%d>", ptype, strlen(data)));
+    DEBUGMSG(sprintf("<%s:%d>", ptype, sizeof(data)));
     switch (ptype)
     { case "X":
         finalize();
@@ -262,7 +262,7 @@ class Handler
                   "virtfile", "prot", "method", "rawauth", "realauth",
                   "raw_url" }),
                mixed v)
-        if (stringp(v) && stringp(id[v]) && strlen(id[v]) < 1000000)
+        if (stringp(v) && stringp(id[v]) && sizeof(id[v]) < 1000000)
            putvar("I", v, id[v]);
       if (arrayp(id->auth) && sizeof(id->auth) > 1)
       {
@@ -294,19 +294,19 @@ class Handler
       mapping ee = id->misc->explicit_script_env;
       if (mappingp(ee))
         foreach(indices(ee), mixed v)
-          if (stringp(v) && stringp(ee[v]) && strlen(ee[v]) < 25000)
+          if (stringp(v) && stringp(ee[v]) && sizeof(ee[v]) < 25000)
             putvar("E", v, ee[v]);
 
       // Transfer request headers
       mapping(string:string|array(string)) hd;
       foreach( indices(hd = id->request_headers), mixed v)
-        if (stringp(v) && stringp(hd[v]) && strlen(hd[v]) < 1000000)
+        if (stringp(v) && stringp(hd[v]) && sizeof(hd[v]) < 1000000)
            putvar("H", v, hd[v]);
 
       // Transfer FORMs variables.
       FakedVariables va;
       foreach(indices(va = id->variables), mixed v)
-        if (stringp(v) && stringp(va[v]) && strlen(va[v]) < 1000000)
+        if (stringp(v) && stringp(va[v]) && sizeof(va[v]) < 1000000)
            putvar("F", v, va[v]);
 
       // ping - check if subprocess is still alive
@@ -322,7 +322,7 @@ class Handler
 
       // start operation
       DEBUGMSG("$");
-      pipe->write("%c%3c%s", (mode == "eval" ? 'C' : 'S'), strlen(arg), arg);
+      pipe->write("%c%3c%s", (mode == "eval" ? 'C' : 'S'), sizeof(arg), arg);
       string output = "";
 
       nb_output = nb_errmsg = nb_returncode = nb_headers = 0;

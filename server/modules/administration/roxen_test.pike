@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.63 2004/05/27 21:26:54 mani Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.64 2004/06/04 08:29:18 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -181,9 +181,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
       message = sprintf( message, @args );
     message = (p_code ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
     if( verbose )
-      if( strlen( rxml ) )
+      if( sizeof( rxml ) )
 	report_debug("FAIL\n" );
-    if( strlen( rxml ) )
+    if( sizeof( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
     report_debug( indent(2, message ) );
@@ -198,7 +198,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 
   string test_test( string test )
   {
-    if( verbose && strlen( rxml ) )
+    if( verbose && sizeof( rxml ) )
       test_ok();
     rxml = test;
     if( verbose )
@@ -393,7 +393,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     lfails++;
   }
 
-  if( verbose && strlen( rxml ) ) test_ok();
+  if( verbose && sizeof( rxml ) ) test_ok();
   return;
 }
 

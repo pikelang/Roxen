@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.48 2004/05/16 00:46:18 mani Exp $
+ * $Id: create_configif.pike,v 1.49 2004/06/04 08:29:16 _cvs_stephen Exp $
  *
  * Create an initial administration interface server.
  */
@@ -71,7 +71,7 @@ string read_string(Readline rl, string prompt, string|void def,
 		   string|void batch)
 {
   string res = batch || rl->edit(def || "", prompt+" ", ({ "bold" }));
-  if( def && !strlen(res-" ") )
+  if( def && !sizeof(res-" ") )
     res = def;
   return res;
 }
@@ -238,7 +238,7 @@ Example of a batch installation:
     do
     {
       if(passwd2 && password)
-	if(!strlen(password))
+	if(!sizeof(password))
 	  write("\n   Please select a password with one or more characters. "
 		"You will\n   be asked to type the password twice for "
 		"verification.\n\n");
@@ -253,9 +253,9 @@ Example of a batch installation:
 	m_delete(batch, "password");
       else
 	write("\n");
-    } while(!strlen(password) || (password != passwd2));
+    } while(!sizeof(password) || (password != passwd2));
     write("\n");
-  } while( strlen( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
+  } while( sizeof( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
 
   if( !admin )
   {

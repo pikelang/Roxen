@@ -20,6 +20,8 @@ Some practical programming guidelines.
 - Use has_value(), has_prefix() or has_suffix() instead of search
   whenever possible.
 
+- Use sizeof() instead of strlen().
+
 - Use core.symbol instead of roxen.symbol.
 
 - Use foreach iterators over normal foreach statements whenever

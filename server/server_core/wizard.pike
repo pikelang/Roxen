@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.159 2004/05/31 23:02:03 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.160 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -205,7 +205,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      } else if(id->variables[m->name+".bar.y"])
        s=255-(int)id->variables[m->name+".bar.y"];
      else if(id->variables[m->name+".entered"] &&
-	     strlen(current=id->variables[m->name+".entered"]))
+	     sizeof(current=id->variables[m->name+".entered"]))
      {
        a = Colors.parse_color(current||"black");
        [h,s,v] = Colors.rgb_to_hsv(@a);
@@ -275,7 +275,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      } else if(id->variables[m->name+".bar.y"])
        s = 255-((int)id->variables[m->name+".bar.y"])*2;
      else if(id->variables[m->name+".entered"] &&
-	     strlen(current=id->variables[m->name+".entered"]))
+	     sizeof(current=id->variables[m->name+".entered"]))
      {
        a = Colors.parse_color(current||"black");
        [h,s,v] = Colors.rgb_to_hsv(@a);
@@ -444,7 +444,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type='submit' value='" + LOCALE(47, "Example") +
 	      "'><br />"+
-	      ((current&&strlen(current))?
+	      ((current&&sizeof(current))?
 	       "<gtext font='"+current+"'>" + LOCALE(48, "Example Text") +
 	       "</gtext><br />"
 	       :""));
@@ -832,7 +832,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     string q,on=n;
     if(sscanf(n, "_new_%s", n))
     {
-      if((v->_Add) && strlen(v[on]-"\r"))
+      if((v->_Add) && sizeof(v[on]-"\r"))
       {
 	if(v[n]) v[n]+="\0"+v[on];
 	else v[n]=v[on];
@@ -1025,9 +1025,9 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
-    if( strlen( e->get_warnings() ) )
+    if( sizeof( e->get_warnings() ) )
       report_warning( e->get_warnings() );
-    if(strlen(e->get()))
+    if(sizeof(e->get()))
       error("While compiling wizards:\n"+e->get());
     if(err) report_error(describe_backtrace(err));
   }
@@ -1078,13 +1078,13 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
 	    "</dl></td></tr></table>"+
-	    (err && strlen(err)?"<pre>"+err+"</pre>":""));
+	    (err && sizeof(err)?"<pre>"+err+"</pre>":""));
       err="";
       return res;
     };
     if(wizbug)
       err = describe_backtrace(wizbug);
-    if(err && strlen(err)) {
+    if(err && sizeof(err)) {
       string res="<pre>"+err+"</pre>";
       err="";
       return res;
@@ -1202,7 +1202,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	//  Simple heuristics to detect cells containing a table, image etc
 	//  where trailing spaces will give really ugly results
 	if (!(stringp(s)
-	      && (strlen(s) > 2)
+	      && (sizeof(s) > 2)
 	      && (< "<img ", "<imgs ", "<tabl", "<gtex", "<var ",
 		    "<pre>", "<sb-i" >)[s[0..4]]
 	      && (s[-1] == '>' || s[-2] == '>'))) {

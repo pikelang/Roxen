@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.66 2004/05/16 02:56:08 mani Exp $
+// $Id: DBManager.pmod,v 1.67 2004/06/04 08:29:27 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -225,7 +225,7 @@ private
       return connect_to_my_mysql( user, db );
 
     // Otherwise it's a tad more complex...  
-    if( user[strlen(user)-2..] == "ro" )
+    if( user[sizeof(user)-2..] == "ro" )
       // The ROWrapper object really has all member functions Sql.Sql
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
@@ -820,7 +820,7 @@ string get_group_path( string db, string group )
   mapping m = get_group( group );
   if( !m )
     error("The group %O does not exist.", group );
-  if( strlen( m->pattern ) )
+  if( sizeof( m->pattern ) )
   {
     catch
     {

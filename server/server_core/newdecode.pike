@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.38 2004/04/06 21:07:05 mani Exp $
+// $Id: newdecode.pike,v 1.39 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 // The magic below is for the 'install' program
 # if !efun(get_core)
@@ -86,7 +86,7 @@ string trim_comments( string from )
   string res = "";
   foreach( from/"\n", string l )
   {
-    if( strlen(l) && l[0] == '#' )
+    if( sizeof(l) && l[0] == '#' )
       // Just defeat any tags on the line. This won't clobber any
       // variable values, since '<' is always encoded in them.
       res += replace (l, "<", "") + "\n";
@@ -162,7 +162,7 @@ string trim_tags( string what )
   string res = "";
   what = replace( what, ({ "<pre>", "</pre>" }),
                   ({"\n", "\n" }) );
-  for( i=0; i<strlen(what); i++ )
+  for( i=0; i<sizeof(what); i++ )
   {
     switch( what[i] )
     {

@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.17 2004/04/04 14:52:56 mani Exp $
+ * $Id: Client.pike,v 1.18 2004/06/04 08:29:28 _cvs_stephen Exp $
  */
 
 class RemoteFunctionCall
@@ -13,15 +13,15 @@ class RemoteFunctionCall
   {
     int len; object key = lock(); mixed data;
     data= encode_value(({ cl, me, args }));
-    server->write("%4c%s", strlen(data), data);
+    server->write("%4c%s", sizeof(data), data);
     data="";
-    while(strlen(data) < 8) {
+    while(sizeof(data) < 8) {
       data += server->read(4000,1);
-      if(!strlen(data))
+      if(!sizeof(data))
 	error("Remote RPC server closed connection.\n");
     }
     sscanf(data, "%4c%s", len,data);
-    if(strlen(data) < len) data += server->read(len-strlen(data));
+    if(sizeof(data) < len) data += server->read(len-sizeof(data));
     data = decode_value(data);
 
     /* The server returned a pointer to an object. */
@@ -42,7 +42,7 @@ class RemoteFunctionCall
     if (server) 
     {
       string v = encode_value(([ "subtract_refs":cl ]));
-      server->write("%4c%s", strlen(v), v);
+      server->write("%4c%s", sizeof(v), v);
       if(server->read(1) != "!")
 	error("server->subtract_refs("+cl+") failed\n");
     }
@@ -53,7 +53,7 @@ class RemoteFunctionCall
     me = m; cl = c; server = s; lock = l;
     master = mast;
     string v = encode_value(([ "add_refs":cl ]));
-    server->write("%4c%s", strlen(v), v);
+    server->write("%4c%s", sizeof(v), v);
     if(server->read(1) != "!")
       error("server->subtract_refs("+cl+") failed\n");
   }
@@ -108,7 +108,7 @@ void create(string|object ip, int port, string cl,
       not_again=1;
       break;
      case "?":
-      server->write("%4c%s", strlen(key||""), key||"");
+      server->write("%4c%s", sizeof(key||""), key||"");
       continue;
      default:
       error("Server there, but refused connection.\n");
@@ -121,7 +121,7 @@ void create(string|object ip, int port, string cl,
 
   string v = encode_value(([ "add_refs":myclass ]));
 
-  server->write("%4c%s", strlen(v), v);
+  server->write("%4c%s", sizeof(v), v);
 
   if(server->read(1) != "!")
     error("server->add_refs("+myclass+") failed\n");
@@ -132,7 +132,7 @@ void destroy()
   catch
   {
     string v = encode_value(([ "subtract_refs":myclass ]));
-    server->write("%4c%s", strlen(v), v);
+    server->write("%4c%s", sizeof(v), v);
     if(server->read(1) != "!")
       error("server->subtract_refs("+myclass+") failed\n");
   };

@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
+string cvs_version = "$Id: wais.pike,v 1.33 2004/06/04 08:29:24 _cvs_stephen Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -304,7 +304,7 @@ string trim_junk(string headline)
 
   WAIS_WERR_2("trim_junk3("+debug_print_string(headline));
 
-  while(strlen(headline)>0 && headline[0]==' ')
+  while(sizeof(headline)>0 && headline[0]==' ')
     headline=headline[1..];
 
   WAIS_WERR_2("trim_junk4("+debug_print_string(headline));
@@ -384,7 +384,7 @@ string writeString(string s,int tag)
   string buf;
 
   buf = writeCompressedInteger(tag);
-  buf += writeCompressedInteger(strlen(s));
+  buf += writeCompressedInteger(sizeof(s));
   buf += s;
 
   return buf;
@@ -554,7 +554,7 @@ string WWW_from_archie(string file)
 
  WAIS_WERR("archie id (to become WWW id): "+file);
 
-  for(i=0; i<strlen(file) && file[i]>' '; i++)
+  for(i=0; i<sizeof(file) && file[i]>' '; i++)
     ;
 
   q=search(file[0..i],":");
@@ -587,13 +587,13 @@ string WAIS_from_WWW (string docname)
   WAIS_WERR_2("WWW id (to become WAIS id): "+debug_print_string(docname));
 
   z="";
-  while(strlen(docname)>0) {
+  while(sizeof(docname)>0) {
     if(sscanf(docname,"%d=%s;",type,t2)!=2) {
       if(sscanf(docname,"%d=",type)!=1) {
 	WAIS_WERR("cannot parse record"+docname);
 	return 0;
       }
-      if(strlen(docname[search(docname,"=")+1..])>0) {
+      if(sizeof(docname[search(docname,"=")+1..])>0) {
 	WAIS_WERR("cannot parse record"+docname+" (second choice)");
 	return 0;
       }
@@ -602,7 +602,7 @@ string WAIS_from_WWW (string docname)
     }
 
     docname=docname[search(docname,";")+1..];
-    len=strlen(t2);
+    len=sizeof(t2);
 
     z+=sprintf("%c",type);
 
@@ -616,7 +616,7 @@ string WAIS_from_WWW (string docname)
     }
     z+=t2;
 
-    WAIS_WERR(sprintf("found record %d, len %d, content %s\n",type,strlen(t2),t2));
+    WAIS_WERR(sprintf("found record %d, len %d, content %s\n",type,sizeof(t2),t2));
   }
 
   return z;
@@ -714,7 +714,7 @@ string showDiags(array (mapping) d)
   out="";
 
   for (i=0; i<sizeof(d); i++)
-    if (strlen(d[i]->ADDINFO)>0)
+    if (sizeof(d[i]->ADDINFO)>0)
       out+="Diagnostic code is "+d[i]->DIAG+" "+d[i]->ADDINFO+"\n";
 }
 
@@ -971,7 +971,7 @@ mapping readSearchResponseInfo(string buf)
   buf = skipCompressedInteger(buf);
   buf=buf[0..size-1];
 
-  while (strlen(buf)>0) {
+  while (sizeof(buf)>0) {
     switch (readCompressedInteger(buf)) {
     case DT_SeedWordsUsed:
       buf = skipCompressedInteger(buf);
@@ -1028,7 +1028,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1168,7 +1168,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1253,7 +1253,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1414,7 +1414,7 @@ mapping readSearchResponseInfo(string buf)
 
       WAIS_WERR_2("got DT_DocumentTextGroup ("+debug_print_string(buf1)+")");
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1465,7 +1465,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1543,7 +1543,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      while (strlen(buf1)>0) {
+      while (sizeof(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
 	case DT_DocumentID:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1655,7 +1655,7 @@ mapping readSearchResponseAPDU(string buf)
 
   /* read optional part */
 
-  while (strlen(buf)>0) {
+  while (sizeof(buf)>0) {
     switch (readCompressedInteger(buf)) {
     case DT_ResultSetStatus:
       buf = skipCompressedInteger(buf);
@@ -1749,7 +1749,7 @@ void done_fetch_data(array in)
 
   if (sizeof(searchres->Text)==0) {
     if (sizeof(searchres->Diagnostics)>0 &&
-	strlen(searchres->Diagnostics[0]->ADDINFO)>0) {
+	sizeof(searchres->Diagnostics[0]->ADDINFO)>0) {
       write_to_client_and_cache(to, "HTTP/1.0 200 Yo! Wais data comming"
 				" soon to a screen near you\n"
 				"Content-Type: text/html\n\n"+
@@ -1766,7 +1766,7 @@ void done_fetch_data(array in)
 		searchres->Text[0]->documentText[0..5]=="<HTML>"))
       in[7]="text/html";
 
-    if(docname && strlen(docname)>0)
+    if(docname && sizeof(docname)>0)
       write_to_client_and_cache(to, "HTTP/1.0 200 Yo! Wais data comming"
 				" soon to a screen near you\n"
 				"Content-Type: "+in[7]+"\n\n"+
@@ -1919,7 +1919,7 @@ void got_search_data(array i, string s)
   case 2:
     /* waiting to receive all the datas */
 
-    if(strlen(i[0])>=i[2]+HEADER_LENGTH) {
+    if(sizeof(i[0])>=i[2]+HEADER_LENGTH) {
 
       WAIS_WERR("got all search datas.");
       i[1]=3;
@@ -1953,7 +1953,7 @@ void connected(object ok, string file, object send_to, string key)
 
   key=send_to->query;
 
-  if(key && strlen(key)==0)
+  if(key && sizeof(key)==0)
     key=0;
 
 
@@ -1996,7 +1996,7 @@ void connected(object ok, string file, object send_to, string key)
  *	appropriate at this point to send him the .SRC file - how?
  */
 
-  if(key && strlen(key)==0) {		/* I N D E X */
+  if(key && sizeof(key)==0) {		/* I N D E X */
     WAIS_WERR("Index");
 
     send_to->my_fd->write("HTTP/1.0 200 Yo! Wais data comming soon to a "
@@ -2019,7 +2019,7 @@ void connected(object ok, string file, object send_to, string key)
       return;
     }
 
-    header  = sprintf("%010d",strlen(reqmsg));
+    header  = sprintf("%010d",sizeof(reqmsg));
     header += "z";
     header += HEADER_VERSION;
     header += "wais      ";
@@ -2084,7 +2084,7 @@ void connected(object ok, string file, object send_to, string key)
       return;
     }
 
-    header  = sprintf("%010d",strlen(reqmsg));
+    header  = sprintf("%010d",sizeof(reqmsg));
     header += "z";
     header += HEADER_VERSION;
     header += "wais      ";

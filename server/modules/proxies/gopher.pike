@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.33 2004/06/04 08:29:24 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -142,7 +142,7 @@ void done_dir_data(array in)
 	break;
 
        default:  /* Who knows.. */
-	if(stringp(a[0] && strlen((string)a[0])))
+	if(stringp(a[0] && sizeof((string)a[0])))
 	   dirl[i] = ({ "internal-gopher-unknown", "gopher://"+URL, a[0] });
 	else
 	  dirl[i] = 0;
@@ -191,7 +191,7 @@ void connected(object ok, string file, object send_to, string query,
     return;
   }
 
-  if(strlen(file) < 2)
+  if(sizeof(file) < 2)
   {
     type="1";
     file="";

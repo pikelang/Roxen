@@ -447,14 +447,14 @@ object request(object context, mapping(string:array(string))|object id,
 	sscanf(uri, "%[^\r\n]", uri);
       }
       uri = (uri/" "+({"",""}))[1];
-      if(!strlen(query))
+      if(!sizeof(query))
 	query = 0;
     } else {
       uri = id->not_query;
       query = id->query;
     }
 
-    if(id->misc->path_info && strlen(id->misc->path_info) && context) {
+    if(id->misc->path_info && sizeof(id->misc->path_info) && context) {
       pathtrans = context->get_real_path(id->misc->path_info);
     }
 

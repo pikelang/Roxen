@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.196 2004/05/31 23:01:49 _cvs_stephen Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.197 2004/06/04 08:29:18 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -152,7 +152,7 @@ class Scope_usr
        res = "link="+QALIAS("linkcolor")+" vlink="+QALIAS("linkcolor")+
              " alink="+QALIAS("fade2")+" bgcolor="+QALIAS("bgcolor")+
              " text="+QALIAS("fgcolor");
-       if( stringp(q = QALIAS( "background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "background" )) && sizeof( q ) )
          res += " background="+q;
        return ENCODE_RXML_XML(res, type);
 
@@ -161,7 +161,7 @@ class Scope_usr
          res = "bgcolor="+QALIAS("top-bgcolor");
        else
          res="";
-       if( stringp(q = QALIAS( "top-background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "top-background" )) && sizeof( q ) )
          res += " background="+q;
        return ENCODE_RXML_XML(res, type);
 
@@ -169,9 +169,9 @@ class Scope_usr
        res = "";
        if( ALIAS("toptabs-bgcolor") != "none" )
          res = "bgcolor="+QALIAS("toptabs-bgcolor");
-       if( stringp(q = QALIAS( "toptabs-background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "toptabs-background" )) && sizeof( q ) )
          res += " background="+q;
-       if( stringp(q = QALIAS( "toptabs-align" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "toptabs-align" )) && sizeof( q ) )
          res += " align="+q;
        else
          res += " align=\"left\"";
@@ -179,9 +179,9 @@ class Scope_usr
 
      case "subtabs-tableargs":
        res = "valign=\"bottom\" bgcolor="+QALIAS("subtabs-bgcolor");
-       if( stringp(q = QALIAS( "subtabs-background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "subtabs-background" )) && sizeof( q ) )
          res += " background="+q;
-       if( stringp(q = QALIAS( "subtabs-align" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "subtabs-align" )) && sizeof( q ) )
          res += " align="+q;
        else
          res += " align=\"left\"";
@@ -189,13 +189,13 @@ class Scope_usr
 
      case "left-tableargs":
        res = "valign=\"top\" width=\"150\"";
-       if( stringp(q = QALIAS( "left-background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "left-background" )) && sizeof( q ) )
          res += " background="+q;
        return ENCODE_RXML_XML(res, type);
 
      case "content-tableargs":
        res = " width=\"100%\" valign=\"top\"";
-       if( stringp(q = QALIAS( "content-background" )) && strlen( q ) )
+       if( stringp(q = QALIAS( "content-background" )) && sizeof( q ) )
          res += " background="+q;
        return ENCODE_RXML_XML(res, type);
 
@@ -515,7 +515,7 @@ array get_variable_maps( object mod,
 
   variables = filter( variables,
                       lambda( mapping q ) {
-                        return q->form && strlen(q->sname);
+                        return q->form && sizeof(q->sname);
                       } );
 
 
@@ -539,7 +539,7 @@ array get_variable_maps( object mod,
 
   if( m->section && (m->section != "_all"))
   {
-    if( !strlen( m->section ) || has_value( m->section, "Settings" ) )
+    if( !sizeof( m->section ) || has_value( m->section, "Settings" ) )
       variables = filter( variables,
                           lambda( mapping q )
                           {
@@ -584,13 +584,13 @@ array get_variable_sections( object mod, mapping m, RequestID id )
   // in the administration interface.
   if( get_conf(mod) == id->conf )
     vm = filter( vm, lambda( mixed q ) { 
-                       return stringp(q)&&strlen(q)&&(q[0]!='_');
+                       return stringp(q)&&sizeof(q)&&(q[0]!='_');
                      } );
 
   array variables = map( vm, get_variable_map, mod, id, 1 );
   variables = filter( variables,
                       lambda( mapping q ) {
-                        return q->form && strlen(q->sname);
+                        return q->form && sizeof(q->sname);
                       } );
 
   variables = map(variables->sname,get_variable_section,mod,id);
@@ -902,7 +902,7 @@ class TagModuleVariablesSectionsplugin
        if( hassel )
          q->selected = "";
        else
-         hassel = strlen(q->selected);
+         hassel = sizeof(q->selected);
      }
      variables = reverse(variables);
      variables[0]->first = " first ";
@@ -997,7 +997,7 @@ class TagThemePath
 
 string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
 {
-  if( strlen( s ) )
+  if( sizeof( s ) )
     RXML.parse_error("&lt;theme-set/&gt; does not support contents\n" );
   if( !id->misc->cf_theme )
     id->misc->cf_theme = ([]);

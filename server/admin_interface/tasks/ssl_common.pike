@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.10 2004/05/28 23:40:37 _cvs_stephen Exp $
+ * $Id: ssl_common.pike,v 1.11 2004/06/04 08:29:16 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) 
@@ -82,7 +82,7 @@ mixed verify_0(object id, object mc)
 
   WERROR(key);
   
-  if (strlen(key) != file->write(key))
+  if (sizeof(key) != file->write(key))
   {
     id->variables->_error =
       "Write failed: "

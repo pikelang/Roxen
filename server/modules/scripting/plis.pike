@@ -2,7 +2,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: plis.pike,v 1.3 2002/11/11 01:05:51 mani Exp $";
+constant cvs_version = "$Id: plis.pike,v 1.4 2004/06/04 08:29:25 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: PLIS script module";
@@ -314,7 +314,7 @@ object f_write(object arglist, object env, object globals)
   while(arglist != Lempty)
   {
     string s = arglist->car->print(0);
-    len += strlen(s);
+    len += sizeof(s);
     globals->lisp_result += s;
     arglist = arglist->cdr;
   }
@@ -345,7 +345,7 @@ object f_line_break(object arglist, object env, object globals)
   string f = arglist->car->print();
   int n = (arglist->cdr && (int)arglist->cdr->car->value) || 75;
   string res = "";
-  while(strlen(f))
+  while(sizeof(f))
   {
     res += f[..n-1]+"\n";
     f = f[n..];

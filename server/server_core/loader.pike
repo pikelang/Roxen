@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.385 2004/06/01 01:14:36 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.386 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.385 2004/06/01 01:14:36 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.386 2004/06/04 08:29:32 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1024,7 +1024,7 @@ string roxen_path( string filename )
       roxen_werror("Warning: mkdirhier with $LOGDIR before variable is available\n");
 
 #ifdef __NT__
-  while( strlen(filename) && filename[-1] == '/' )
+  while( sizeof(filename) && filename[-1] == '/' )
     filename = filename[..strlen(filename)-2];
 #endif
 
@@ -1593,7 +1593,7 @@ static void do_tailf( int loop, string file )
       res += "\n";
       res += "mysql: "+line[..49];
       line = line[50..];
-      while( strlen( line )  )
+      while( sizeof( line )  )
       {
 	res += "\n";
 	res += "mysql:     "+line[..47];

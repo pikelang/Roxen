@@ -4,13 +4,13 @@ string input, output;
 void add_to_cif( int char, string data, string prefix )
 {
   if( char < 0xffffff )
-    data = data[strlen(prefix)..];
-  outf->write( "%4c%4c%s", char, strlen(data), data );
+    data = data[sizeof(prefix)..];
+  outf->write( "%4c%4c%s", char, sizeof(data), data );
 }
 
 void name_cif( string n )
 {
-  while( strlen( n ) < 64 ) n += "\0\0\0\0\0\0\0\0\0";
+  while( sizeof( n ) < 64 ) n += "\0\0\0\0\0\0\0\0\0";
   outf->write( n[..63] );
 }
 
@@ -56,7 +56,7 @@ string find_prefix( string dir )
       }
     }
   }
-  werror( "Done, "+strlen(prefix)+" bytes\n" );
+  werror( "Done, "+sizeof(prefix)+" bytes\n" );
   return prefix;
 }
 
@@ -84,14 +84,14 @@ void use_image_dir( )
     sscanf( fn, "%s.", fn );
     if( fn == "prefix" )
       wc = 0xfffffffe;
-    else if( strlen(fn) > 2 )
+    else if( sizeof(fn) > 2 )
       sscanf( fn, "0x%x", wc );
-    else if( strlen(fn) == 1 )
+    else if( sizeof(fn) == 1 )
       wc=fn[ 0 ];
     werror(" %x\n", wc );
     add_to_cif( wc, Stdio.read_bytes( input+of ), prefix );
   }
-  if( strlen( prefix ) )
+  if( sizeof( prefix ) )
     add_to_cif( 0xfffffffe, prefix, "" );
   if( info )
     add_to_cif( 0xffffffff, info, "");
@@ -123,9 +123,9 @@ void use_image_tar( )
     string of = fn;
     fn -= "/";
     sscanf( fn, "%s.", fn );
-    if( strlen(fn) > 2 ) 
+    if( sizeof(fn) > 2 ) 
       sscanf( fn, "0x%x", wc ); 
-    else if( strlen(fn) == 1 )
+    else if( sizeof(fn) == 1 )
       wc=fn[ 0 ];
     werror(" %x\n", wc );
     add_to_cif( wc, it->open( of, "r" )->read(), "" );

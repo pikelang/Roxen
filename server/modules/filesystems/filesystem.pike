@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.126 2004/05/31 23:01:51 _cvs_stephen Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.127 2004/06/04 08:29:20 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -359,7 +359,7 @@ string decode_path( string p )
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
 #else
-  while( strlen(p) && p[-1] == '/' )
+  while( sizeof(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
 #endif
   return p;
@@ -590,7 +590,7 @@ void done_with_put( array(object|string|int) id_arr )
 
 void got_put_data( array(object|string|int) id_arr, string data )
 {
-// werror(strlen(data)+" .. ");
+// werror(sizeof(data)+" .. ");
 
   object to;
   object from;
@@ -1050,11 +1050,11 @@ mixed find_file( string f, RequestID id )
     chmod(f, 0666 & ~(id->misc->umask || 022));
 
     putting[id->my_fd] = id->misc->len;
-    if(id->data && strlen(id->data))
+    if(id->data && sizeof(id->data))
     {
       // FIXME: What if sizeof(id->data) > id->misc->len ?
       if (id->misc->len > 0) {
-	putting[id->my_fd] -= strlen(id->data);
+	putting[id->my_fd] -= sizeof(id->data);
       }
       int bytes = to->write( id->data );
       if (id->misc->quota_obj) {

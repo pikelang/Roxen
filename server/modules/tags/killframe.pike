@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.36 2004/05/24 23:14:51 mani Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.37 2004/06/04 08:29:26 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -80,11 +80,11 @@ string tag_killframe( string tag, mapping m, object id )
     if( id->conf->dir_module )
       indexfiles = id->conf->dir_module->query("indexfiles");
 
-    int l=strlen(my_url)-1;
+    int l=sizeof(my_url)-1;
 
     foreach( indexfiles, string index )
-      if( my_url[l-strlen(index)..] == "/" +index )
-	my_url = my_url[..l-strlen(index)];
+      if( my_url[l-sizeof(index)..] == "/" +index )
+	my_url = my_url[..l-sizeof(index)];
   }
 
   // Put back the variables if there were any.

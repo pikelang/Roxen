@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 #include <stat.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.26 2004/05/31 23:01:55 _cvs_stephen Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.27 2004/06/04 08:29:25 _cvs_stephen Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -92,7 +92,7 @@ class RXMLParseWrapper
   int write(string data)
   {
     _data += data;
-    return strlen(data);
+    return sizeof(data);
   }
 
   int close(void|string how)
@@ -212,7 +212,7 @@ class ClassPathList
 	f->close();
       }
     }
-    if( strlen( warn ) )
+    if( sizeof( warn ) )
       return ({ warn, value });
     return ::verify_set( value );
   }

@@ -11,7 +11,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: html2x.pike,v 1.1 2004/05/22 17:45:31 _cvs_stephen Exp $";
+ "$Id: html2x.pike,v 1.2 2004/06/04 08:29:26 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -69,12 +69,12 @@ string status() {
 static void getfout(object mfifo,object fout,void|int trunc)
 { string res,tmp;
   res="";
-  while(tmp=fout->read(trunc),trunc&&strlen(tmp)==trunc)
+  while(tmp=fout->read(trunc),trunc&&sizeof(tmp)==trunc)
      res=tmp;
   res+=tmp+fout->read();
   destruct(fout);
   ;{ int i;
-     i=strlen(res);
+     i=sizeof(res);
      mfifo->write(trunc&&trunc<i?res[i-trunc..]:res);
    }
 }

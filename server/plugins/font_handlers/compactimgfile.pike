@@ -25,18 +25,18 @@ class StringFile
   int offset;
 
   string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%d,%d)", this_program, strlen(data), offset);
+    return t=='O' && sprintf("%O(%d,%d)", this_program, sizeof(data), offset);
   }
 
   string read(int nbytes)
   {
     if(!nbytes)
     {
-      offset = strlen(data);
+      offset = sizeof(data);
       return data;
     }
     string d = data[offset..offset+nbytes-1];
-    offset += strlen(d);
+    offset += sizeof(d);
     return d;
   }
 
@@ -112,7 +112,7 @@ class CIF
 //     werror("open "+fname+"\n");
     int wc;
     sscanf( fname, "%s.", fname );
-    if( strlen(fname) > 2 ) sscanf( fname, "0x%x", wc ); else wc=fname[0];
+    if( sizeof(fname) > 2 ) sscanf( fname, "0x%x", wc ); else wc=fname[0];
     int c;
 
     if( fname == "fontinfo" )

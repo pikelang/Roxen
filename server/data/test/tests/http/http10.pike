@@ -56,7 +56,7 @@ void main(int argc, array argv)
 
   Stdio.File f = connect(  argv[1] );
   string extra_headers="";
-  while( strlen( extra_headers )+100 < hlen )
+  while( sizeof( extra_headers )+100 < hlen )
     extra_headers += "Extra-Headers: Filler"+sep;
   
   write_fragmented( f,
@@ -78,9 +78,9 @@ void main(int argc, array argv)
   if( sizeof( q ) < 2 )
     exit( BADHEADERS );
 
-  verify_headers( q[0], strlen(q[1]), "HTTP/1.0",
+  verify_headers( q[0], sizeof(q[1]), "HTTP/1.0",
 		  (fail?500:(argv[2] != "/nofile" ? 200 : 404)),
-		  !fail && (argv[2][strlen(argv[2])-3..]=="raw"));
+		  !fail && (argv[2][sizeof(argv[2])-3..]=="raw"));
 
   if( (int)argv[3] )
     if( q[1] != ("\0" * (int)argv[3]) )

@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.77 2004/05/27 21:24:37 _cvs_stephen Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.78 2004/06/04 08:29:25 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -227,7 +227,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       // force reload on next access. Really.
       master()->clear_compilation_failures();
 
-      if(strlen(e->get()))
+      if(sizeof(e->get()))
       {
         report_debug(e->get());
         return Roxen.http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+

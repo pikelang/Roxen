@@ -7,7 +7,7 @@ void really_do_create( RequestID id  )
                        id->variables->url,
                        id->variables->type == "internal",
 		       id->variables->group );
-  if( strlen( id->variables->comment ) )
+  if( sizeof( id->variables->comment ) )
     DBManager.is_module_db( 0, id->variables->name,
 			    id->variables->comment-"\r" );
   foreach( core->configurations, Configuration c )
@@ -87,7 +87,7 @@ ERROR
   {
     if( id->variables->type=="external" )
     {
-      if( !strlen(id->variables->url) )
+      if( !sizeof(id->variables->url) )
         error= "<font color='&usr.warncolor;'>"
 	  "Please specify an URL to define an external database</font>";
       else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
@@ -98,7 +98,7 @@ ERROR
                         id->variables->url,
                         describe_error(err));
     }
-    if( !strlen( error ) )
+    if( !sizeof( error ) )
       switch( id->variables->name )
       {
        case "":

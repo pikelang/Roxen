@@ -182,7 +182,7 @@ BOOL WINAPI EnumProcs( PROCENUMPROC lpProc, LPARAM lParam )
            break ;
 
         // Did we just bump into an NTVDM?
-        if( _stricmp( szFileName+(strlen(szFileName)-9),
+        if( _stricmp( szFileName+(sizeof(szFileName)-9),
            "NTVDM.EXE")==0)
         {
            // Fill in some info for the 16-bit enum proc.

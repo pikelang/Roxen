@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.145 2004/05/31 23:01:44 _cvs_stephen Exp $
+// $Id: site_content.pike,v 1.146 2004/06/04 08:29:15 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -135,7 +135,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
       loader.pop_compile_error_handler();
 
-      if( strlen( ec->get() ) )
+      if( sizeof( ec->get() ) )
       {
 	.State->current_compile_errors[ c->name+"!"+mn ] = ec->get();
 	report_debug( ec->get() ); // Do not add to module log.

@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.29 2003/01/26 02:10:47 mani Exp $
+// $Id: supports.pike,v 1.30 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -163,7 +163,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
 multiset(string) find_supports(string from, void|multiset(string) existing_sup)
 {
   if(!multisetp(existing_sup)) existing_sup=(<>);
-  if(!strlen(from) || from == "unknown")
+  if(!sizeof(from) || from == "unknown")
     return default_supports|existing_sup;
 
   return ([multiset(string)]lookup_supports(from)[0])|existing_sup;
@@ -173,7 +173,7 @@ multiset(string) find_supports(string from, void|multiset(string) existing_sup)
 mapping(string:string) find_client_var(string from, void|mapping(string:string) existing_cv)
 {
   if(!mappingp(existing_cv)) existing_cv=([]);
-  if(!strlen(from) || from == "unknown")
+  if(!sizeof(from) || from == "unknown")
     return default_client_var|existing_cv;
 
   return ([mapping(string:string)]lookup_supports(from)[1])|existing_cv;
@@ -186,7 +186,7 @@ array(multiset(string)|
 {
   if(!multisetp(existing_sup)) existing_sup=(<>);
   if(!mappingp(existing_cv)) existing_cv=([]);
-  if(!strlen(from) || from == "unknown")
+  if(!sizeof(from) || from == "unknown")
     return ({ default_supports|existing_sup, default_client_var|existing_cv });
 
   array(multiset(string)|mapping(string:string)) ret = lookup_supports(from);

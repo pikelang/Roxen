@@ -21,9 +21,9 @@ void main(int argc, array argv)
   if( sizeof( q ) < 2 )
     exit( BADHEADERS );
 
-  verify_headers( q[0], strlen(q[1]), "HTTP/1.0",
+  verify_headers( q[0], sizeof(q[1]), "HTTP/1.0",
 		  (argv[2] != "/nofile" ? 200 : 404),
-		  (argv[2][strlen(argv[2])-3..]=="raw"));
+		  (argv[2][sizeof(argv[2])-3..]=="raw"));
 
   if( (int)argv[3] )
     if( q[1] != ("\0" * (int)argv[3]) )

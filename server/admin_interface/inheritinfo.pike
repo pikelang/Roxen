@@ -18,7 +18,7 @@ RoxenModule|Configuration find_module( string foo )
   string mod;
   Configuration cfg;
 
-  if( !foo || !strlen(foo))
+  if( !foo || !sizeof(foo))
     return 0;
   if( foo[0] == '/' ) foo = foo[1..];
   sscanf( foo, "%[^/]/%s", foo, mod );

@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.100 2004/05/31 23:01:56 _cvs_stephen Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.101 2004/06/04 08:29:26 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -263,7 +263,7 @@ mapping parse_and_find_htaccess( RequestID id )
     {
       line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
-      if(!strlen(line) || has_prefix(line, "#"))
+      if(!sizeof(line) || has_prefix(line, "#"))
 	continue;
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
@@ -395,7 +395,7 @@ mapping parse_and_find_htaccess( RequestID id )
 		 "%{    %s\n%}\n", file, htaccess/"\n");
   }
 
-  if( !strlen(htaccess) )
+  if( !sizeof(htaccess) )
     return 0;
 
   htaccess = replace(htaccess, ([ "\\\r\n":" ", "\\\n":" ", "\r":"" ]));
@@ -403,12 +403,12 @@ mapping parse_and_find_htaccess( RequestID id )
   {
     string cmd, rest;
 
-    if(!strlen(line) || line[0] == '#')
+    if(!sizeof(line) || line[0] == '#')
       continue;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
-    if(!strlen(line))
+    if(!sizeof(line))
       continue;
 
     if(line[0]==' ')
@@ -507,7 +507,7 @@ mapping last_resort(RequestID id)
     return 0;
 
   TRACE_ENTER("htaccess->last_resort()", last_resort);
-  if(strlen(id->not_query)&&id->not_query[0]=='/')
+  if(sizeof(id->not_query)&&id->not_query[0]=='/')
   {
     mapping access = parse_and_find_htaccess( id );
     if(access && (access->nofile || (access->nofile = access->errorfile)))
@@ -535,7 +535,7 @@ mapping remap_url(RequestID id)
 
   // HT_WERR(sprintf("id->misc: %O", id->misc));
 
-  if(strlen(id->not_query)&&id->not_query[0]=='/')
+  if(sizeof(id->not_query)&&id->not_query[0]=='/')
   {
     access_violation = try_htaccess( id );
     if(access_violation) {

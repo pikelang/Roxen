@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.59 2004/06/01 22:16:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.60 2004/06/04 08:29:21 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -317,8 +317,8 @@ class TagCimgplugin
       if(do_ext)
 	res->src += "." + (a->format || "gif");
       data = the_cache->data( a, id , 0 );
-      res["file-size"] = strlen(data);
-      res["file-size-kb"] = strlen(data)/1024;
+      res["file-size"] = sizeof(data);
+      res["file-size-kb"] = sizeof(data)/1024;
       res["data"] = data;
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
       return ({ res });

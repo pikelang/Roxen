@@ -4,25 +4,25 @@ class StringFile( string data, mixed|void _st )
 
   string _sprintf(int t)
   {
-    return "StringFile("+strlen(data)+","+offset+")";
+    return "StringFile("+sizeof(data)+","+offset+")";
   }
 
   string read(int nbytes)
   {
     if(!nbytes)
     {
-      offset = strlen(data);
+      offset = sizeof(data);
       return data;
     }
     string d = data[offset..offset+nbytes-1];
-    offset += strlen(d);
+    offset += sizeof(d);
     return d;
   }
 
   array stat()
   {
     if( _st ) return (array)_st;
-    return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
+    return ({ 0, sizeof(data), time(), time(), time(), 0, 0, 0 });
   }
 
   void write(mixed ... args)
@@ -88,7 +88,7 @@ class CIF
 
     int wc;
     sscanf( fname, "%s.", fname );
-    if( strlen(fname) > 2 )
+    if( sizeof(fname) > 2 )
       sscanf( fname, "0x%x", wc );
     else
       wc=fname[0];

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.15 2004/05/31 23:01:52 _cvs_stephen Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.16 2004/06/04 08:29:22 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -231,7 +231,7 @@ class MPEGStream
       }
       // Actually, this is supposed to be quite constant, but not all
       // frames are the same size.
-      stream_position += strlen(frame->data)*8000000 / frame->bitrate;
+      stream_position += sizeof(frame->data)*8000000 / frame->bitrate;
       call_callbacks( frame->data );
     }
     if(!sizeof(callbacks))
@@ -458,10 +458,10 @@ class Connection
 		   get_streamtitle(),
 		   location->url || current_md->url );
     }
-    while( strlen(s) & 15 )
+    while( sizeof(s) & 15 )
       s+= "\0";
     s = " " + s;
-    s[ 0 ]=(strlen(s)-1)/16;
+    s[ 0 ]=(sizeof(s)-1)/16;
     //if(s[0])
     //  werror("MD: %O\n", s );
     return s;
@@ -536,7 +536,7 @@ If your web host does not allow you to access your mime types, you can request t
   
   static void send_more()
   {
-    if( !strlen(current_block) )
+    if( !sizeof(current_block) )
     {
       headers_done = 1;
       if( !sizeof(buffer) )
@@ -545,13 +545,13 @@ If your web host does not allow you to access your mime types, you can request t
 
       if( do_meta )
       {
-	meta_cnt += strlen( current_block );
+	meta_cnt += sizeof( current_block );
 	if( meta_cnt >= METAINTERVAL )
 	{
 	  string meta = gen_metadata();
 	  meta_cnt -= METAINTERVAL;
-	  int rest = strlen(current_block)-meta_cnt-1;
-	  sent_meta += strlen(meta);
+	  int rest = sizeof(current_block)-meta_cnt-1;
+	  sent_meta += sizeof(meta);
 	  current_block = current_block[..rest]+meta+current_block[rest+1..];
 	}
       }
@@ -675,7 +675,7 @@ class VarStreams
   string transform_from_form( string v, mapping va )
   {
     if( v == "" ) return "\0\0\0\0";
-    v = v[strlen(path())..];
+    v = v[sizeof(path())..];
     return va[v+"loc"]+"\0"+va[v+"playlist"]+"\0"+va[v+"jingle"]
            +"\0"+va[v+"conn"]+"\0"+va[v+"url"]+"\0"+va[v+"name"];
   }
@@ -690,9 +690,9 @@ class VarStreams
     if( sizeof( a ) > 3 ) m->maxconn =  (int)a[3];
     if( sizeof( a ) > 4 ) m->url = a[4];
     if( sizeof( a ) > 5 ) m->name = a[5];
-    if( !m->jingle || !strlen( m->jingle ) ) m_delete( m, "jingle" );
-    if( !m->url || !strlen( m->url ) )    m_delete( m, "url" );
-    if( !m->name || !strlen( m->name ) )   m_delete( m, "name" );
+    if( !m->jingle || !sizeof( m->jingle ) ) m_delete( m, "jingle" );
+    if( !m->url || !sizeof( m->url ) )    m_delete( m, "url" );
+    if( !m->name || !sizeof( m->name ) )   m_delete( m, "name" );
     return m;
   }  
   array(mapping) get_streams()

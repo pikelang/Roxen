@@ -80,7 +80,7 @@ mixed move_db( string db, RequestID id )
   {
     if( id->variables->type=="external" )
     {
-      if( !strlen(id->variables->url) )
+      if( !sizeof(id->variables->url) )
         warning= "<font color='&usr.warncolor;'>"
 	  "Please specify an URL to define an external database"
 	  "</font>";
@@ -92,7 +92,7 @@ mixed move_db( string db, RequestID id )
 			  id->variables->url,
 			  describe_error(err));
     }
-    if( !strlen( warning ) )
+    if( !sizeof( warning ) )
       switch( id->variables->name )
       {
        case "":
@@ -115,7 +115,7 @@ mixed move_db( string db, RequestID id )
 			     "</font>", id->variables->name );
 	 break;
       }
-    if( !strlen( warning ) )
+    if( !sizeof( warning ) )
     {
       int ni, move_later;
       // In all cases, create the new db.
@@ -233,7 +233,7 @@ mixed move_db( string db, RequestID id )
 	  if( db != id->variables->name )
 	  {
 	    DBManager.copy_db_md( db, id->variables->name );
-	    if( !strlen(warning) )
+	    if( !sizeof(warning) )
 	      DBManager.drop_db( db );
 	  }
 	  break;
@@ -361,7 +361,7 @@ int is_encode_value( string what )
 {
   if( !stringp(what) )
     return 0;
-  return strlen(what) >= 5 && !search( what, "¶ke" );
+  return sizeof(what) >= 5 && !search( what, "¶ke" );
 }
 
 string format_decode_value( string what )
@@ -377,7 +377,7 @@ string format_decode_value( string what )
   // Type is program or object?
   if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
     return Roxen.html_encode_string(
-      sprintf("<bytecode data (%d bytes)>", strlen(what)));
+      sprintf("<bytecode data (%d bytes)>", sizeof(what)));
   
   catch
   {
@@ -396,7 +396,7 @@ string store_image( string x )
   .State->images[ id ] = ([
     "type":"image/"+(is_image( x )||"unknown"),
     "data":x,
-    "len":strlen(x),
+    "len":sizeof(x),
   ]);
   return id;
 }
@@ -509,8 +509,8 @@ mapping|string parse( RequestID id )
     foreach( replace((id->variables->query-"\r"),"\t"," ")/"\n", string q )
     {
       q = (q/" "-({""}))*" ";
-      if( strlen(q) && (q[0] == ' ') )  q = q[1..];
-      if( strlen(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
+      if( sizeof(q) && (q[0] == ' ') )  q = q[1..];
+      if( sizeof(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
       query +=  q + "\n";
     }
     foreach( (query/";\n")-({""}), string q )
@@ -591,7 +591,7 @@ mapping|string parse( RequestID id )
     if(!mi->comment)
       return "";
     
-    if( strlen(mi->conf) && strlen(mi->module) )
+    if( sizeof(mi->conf) && sizeof(mi->module) )
     {
       Configuration c = core.find_configuration( mi->conf );
       RoxenModule   m = c && c->find_module( mi->module );

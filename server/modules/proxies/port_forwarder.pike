@@ -27,7 +27,7 @@ inherit "roxenlib";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.16 2004/05/31 23:48:19 _cvs_stephen Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.17 2004/06/04 08:29:24 _cvs_stephen Exp $";
 
 
 
@@ -79,7 +79,7 @@ class Connection
   {
     int sent=0;
     WERR("Connection::send("+data+")\n");
-    if(!strlen(buffer[to_fd]))
+    if(!sizeof(buffer[to_fd]))
       buffer[to_fd] = data[(sent=to_fd->write(data))..];
     else
       buffer[to_fd] += data;
@@ -101,7 +101,7 @@ class Connection
   void write_more(object f)
   {
     WERR("Write_more..\n");
-    if(strlen(buffer[f]))
+    if(sizeof(buffer[f]))
     {
       int written = otherfd(f)->write(buffer[f]);
       traffic += written;

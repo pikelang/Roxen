@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.7 2004/05/22 18:16:45 _cvs_stephen Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.8 2004/06/04 08:29:20 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -125,7 +125,7 @@ static array low_stat_file( string f, RequestID id )
       ({
 	({
 	  0777,
-	  strlen(last_file->contents||""),
+	  sizeof(last_file->contents||""),
 	  time(),
 	  ((int)last_file->mtime)+1,
 	  ((int)last_file->mtime)+1,
@@ -158,7 +158,7 @@ int|object find_file(  string f, RequestID id )
   if (disabled)
     return 0;
 
-  if( !strlen( f ) )
+  if( !sizeof( f ) )
     return -1;
   f = decode_path( "/"+f );
   [array st,mapping d] = low_stat_file( f, id );
@@ -182,7 +182,7 @@ array(string) find_dir( string f, RequestID id )
 
   foreach( sql_query( "SELECT name FROM "+table+" WHERE name LIKE %s",f+"%")
 	   ->name, string p )
-    dir[ (p[ strlen(f) .. ] / "/")[0] ] = 1;
+    dir[ (p[ sizeof(f) .. ] / "/")[0] ] = 1;
 
   return (array)dir;
 }

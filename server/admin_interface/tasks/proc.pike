@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.12 2002/06/13 00:28:52 nilsson Exp $
+ * $Id: proc.pike,v 1.13 2004/06/04 08:29:16 _cvs_stephen Exp $
  */
 
 inherit "wizard";
@@ -81,7 +81,7 @@ string format_proc_line(string in, int ipid)
   sscanf(in, "%*s%d%*s", pid);
   sscanf(in,"%[ ]%s",pre,in);
   pre=replace(pre,"  "," |");
-  if(strlen(pre))pre=" "+pre[1..];
+  if(sizeof(pre))pre=" "+pre[1..];
   if(search(in,"/proc/")==-1)
     return (pre+
 	    "<a href='?class=&form.class;&task=proc.pike&pid="+pid+"&unique="+time()+"'>"+

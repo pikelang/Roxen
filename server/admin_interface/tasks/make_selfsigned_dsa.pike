@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.10 2004/05/28 23:40:37 _cvs_stephen Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.11 2004/06/04 08:29:15 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) && constant(Crypto.DSA)
@@ -61,7 +61,7 @@ mixed verify_0(object id, object mc)
      Standards.PKCS.DSA.private_key(dsa));
   WERROR(key);
 
-  if (strlen(key) != file->write(key))
+  if (sizeof(key) != file->write(key))
   {
     id->variables->_error =
       "Write failed: "
@@ -195,7 +195,7 @@ mixed verify_3(object id, object mc)
       return 1;
     }
     if (file->write(id->variables->certificate)
-	!= strlen(id->variables->certificate))
+	!= sizeof(id->variables->certificate))
     {
       id->variables->_error =
 	"Write failed: "
@@ -210,7 +210,7 @@ mixed verify_3(object id, object mc)
 mixed wizard_done(object id, object mc)
 {
   return http_string_answer( sprintf("<p>Wrote %d bytes to %s.</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->certificate),
+				     sizeof(id->variables->certificate),
 				     combine_path(getcwd(),
 						  id->variables->cert_file)) );
 }

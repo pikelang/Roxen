@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.61 2004/05/31 23:48:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.62 2004/06/04 08:29:24 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -57,10 +57,10 @@ void start(int level, Configuration conf)
   check_variable("cache_memory_filesize", query("cache_memory_filesize"));
   check_variable("http_codes_to_cache", query("http_codes_to_cache"));
 
-  if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
+  if(sizeof(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
-  if(strlen(query("NoCacheFor")))
+  if(sizeof(query("NoCacheFor")))
     if(catch(no_cache_for = Regexp("("+(query("NoCacheFor")-"\r"-"\n\n")/"\n"*")|("
 				   +")")->match))
       report_error("Parse error in 'No cache' regular expression.\n");
@@ -76,7 +76,7 @@ void start(int level, Configuration conf)
     destruct(function_object(log_function));
     log_function = 0;
   }
-  if (!strlen(query("logfile")))
+  if (!sizeof(query("logfile")))
     return;
   log_function = roxen.LogFile( query("logfile") )->write;
 }
@@ -135,7 +135,7 @@ string|void init_proxies()
   foreach(query("Cachers")/"\n", foo)
   {
     array bar;
-    if(!strlen(foo) || foo[0] == '#')
+    if(!sizeof(foo) || foo[0] == '#')
       continue;
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
@@ -155,7 +155,7 @@ string|void init_proxies()
   foreach(query("Proxies")/"\n", foo)
   {
     array bar;
-    if(!strlen(foo) || foo[0] == '#')
+    if(!sizeof(foo) || foo[0] == '#')
       continue;
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
@@ -175,7 +175,7 @@ string|void init_proxies()
   foreach(query("Filters")/"\n", foo)
   {
     array bar;
-    if(!strlen(foo) || foo[0] == '#')
+    if(!sizeof(foo) || foo[0] == '#')
       continue;
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
@@ -192,7 +192,7 @@ string|void init_proxies()
 	     err[0];
   }
 
-  if(!strlen(res))
+  if(!sizeof(res))
     return 0;
 
   report_notice("PROXY: " + res);
@@ -271,7 +271,7 @@ void create()
 	 "Note, that all resolving of hostnames is done asynchroneously and "
 	 "request speed is not affected by the resolve method.",
 	 ({ "Resolved", "IfCached", "IPAddress"}),
-	 lambda(){return !query("logfile") || !strlen(query("logfile"));});
+	 lambda(){return !query("logfile") || !sizeof(query("logfile"));});
 
   defvar("online_stats", 0, "Online stats",
          TYPE_FLAG|VAR_MORE,
@@ -370,7 +370,7 @@ void create()
 	 "proxy server the server host will be contacted directly (by this "
 	 "proxy). Set to zero if an error should be returned to the "
 	 "browser instead.",
-	 0, lambda(){return !query("Cachers") || !strlen(query("Cachers"));});
+	 0, lambda(){return !query("Cachers") || !sizeof(query("Cachers"));});
 
   defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
 	 "Here you can add redirects to remote proxy servers. If a file is "
@@ -397,7 +397,7 @@ void create()
 	 "specified time (seconds) the server host will be contacted "
 	 "directly (by this proxy). Set to zero if an error should be "
 	 "returned to the browser instead.",
-	 0, lambda(){return !query("Proxies") || !strlen(query("Proxies"));});
+	 0, lambda(){return !query("Proxies") || !sizeof(query("Proxies"));});
 
   defvar("Filters", "", "External filter regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
 	 "External filters to run if the regular expression match. "
@@ -524,7 +524,7 @@ mapping find_file( string f, object id )
 #ifdef PROXY_DEBUG
   werror("PROXY: Request for "+f+"\n");
 #endif
-  f=id->raw_url[strlen(query("mountpoint"))+1 .. ];
+  f=id->raw_url[sizeof(query("mountpoint"))+1 .. ];
 
   if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
   {
@@ -676,7 +676,7 @@ class Server
     
   private static void write(string|object data)
   {
-    //SERVER_DEBUG("write(" + (stringp(data)?strlen(data):"-") + ")")
+    //SERVER_DEBUG("write(" + (stringp(data)?sizeof(data):"-") + ")")
 
     if(!client || catch(client->send_now(data)))
     {
@@ -688,11 +688,11 @@ class Server
 
   static private void server_got(mixed foo, string d)
   {
-    //SERVER_DEBUG("server_got(" + strlen(d) + ")");
+    //SERVER_DEBUG("server_got(" + sizeof(d) + ")");
 
     _last_got = time();
 
-    int len = strlen(d);
+    int len = sizeof(d);
 
     if(_data)
       _data += d;
@@ -799,19 +799,19 @@ class Server
     // write got data to disk if over memory filesize max and caching
     //FIXME: Disk cache is broken. Don't do this.
     /*
-    if(!to_disk && (strlen(_data) > cache_memory_filesize))
+    if(!to_disk && (sizeof(_data) > cache_memory_filesize))
     {
       if(to_disk = core->create_cache_file("http", name))
       {
-        //SERVER_DEBUG("server_got(" + strlen(_data) + ") setup to_disk")
+        //SERVER_DEBUG("server_got(" + sizeof(_data) + ") setup to_disk")
 
         mode("ToDisk");
 	d = _data;
-	len = strlen(_data);
+	len = sizeof(_data);
       }
       else
       {
-	SERVER_DEBUG("server_got(" + strlen(_data) + ") - to_disk failed")
+	SERVER_DEBUG("server_got(" + sizeof(_data) + ") - to_disk failed")
 
 	cache_is_wanted = 0;
         mode("Proxy");
@@ -1013,7 +1013,7 @@ class Server
     if((delimiter = search(new_raw, "\n")) >= 0)
       new_raw = new_raw[delimiter+1..];
 
-    url=id->raw_url[strlen(query("mountpoint"))..];
+    url=id->raw_url[sizeof(query("mountpoint"))..];
     sscanf(url, "%*[/]%s", url);	// Strip initial '/''s.
     if(!sscanf(url, "%*s/%s", url))
       url="";
@@ -1221,7 +1221,7 @@ class Server
       finish(500, error_msg("Request cannot be processed"));
       return;
     }
-    if(from_server->write(to_send)<strlen(to_send))
+    if(from_server->write(to_send)<sizeof(to_send))
     {
       SERVER_DEBUG("connected_to_server - write request failed")
       finish(500, error_msg("Server write request failed"));
@@ -1368,10 +1368,10 @@ class Request
 
   void send_now(string s)
   {
-    //REQUEST_DEBUG("send_now(" + strlen(s) + ")")
+    //REQUEST_DEBUG("send_now(" + sizeof(s) + ")")
     if(!id || catch(id->send(s)))
     {
-      REQUEST_DEBUG("send_now(" + strlen(s) + ") - id vanished")
+      REQUEST_DEBUG("send_now(" + sizeof(s) + ") - id vanished")
       destruct();
       return;
     }
@@ -1422,7 +1422,7 @@ class Request
   static private int cache_wanted()
   {
     if(id->method != "GET" ||
-       (id->query && strlen(id->query)) ||
+       (id->query && sizeof(id->query)) ||
        id->auth ||
        (!query("cache_cookies") && sizeof(id->cookies)) ||
        no_cache_for(id->not_query))
@@ -1611,7 +1611,7 @@ class Request
     // immediate finish with http_code
     if(s && intp(http_or_last_message))
     {
-      sent = strlen(s);
+      sent = sizeof(s);
       _http_code = http_or_last_message;
       catch(id->send_result(http_low_answer(http_or_last_message, s)));
       return;

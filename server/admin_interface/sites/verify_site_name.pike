@@ -10,7 +10,7 @@ multiset illegal_chars =
 
 int check_config_name(string name)
 {
-  if( strlen( name ) < 2 )
+  if( sizeof( name ) < 2 )
     return 1;
 
   if( name[0] == ' ' || name[-1] == ' ' )

@@ -17,7 +17,7 @@
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.7 2004/06/01 07:37:36 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.8 2004/06/04 08:29:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -137,7 +137,7 @@ class TagFSize {
 	}
       };
       if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
-	result = String.int2size(strlen(s));
+	result = String.int2size(sizeof(s));
 	return 0;
       }
       RXML.run_error("Failed to find file.\n");

@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.26 2004/05/29 15:28:02 _cvs_dirix Exp $
+// $Id: cmdline.cpp,v 1.27 2004/06/04 08:29:33 _cvs_stephen Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -152,7 +152,7 @@ BOOL CArgList::Add(const char *item)
 {
   ReSize(1);
 
-  int len = strlen(item);
+  int len = sizeof(item);
   char *p = new char[len+1];
 
   strcpy(p, item);
@@ -1265,8 +1265,8 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
   //  SELF_TEST_DIR=`echo $1 | sed -e's/--self-test-dir=//'`
   if (Match(*argv, "--self-test-dir=*", "=", &value))
   {
-    m_SelfTestDir.resize(strlen(value));
-    for (int i=0; i<strlen(value); i++)
+    m_SelfTestDir.resize(sizeof(value));
+    for (int i=0; i<sizeof(value); i++)
     {
       if (value[i] == '/')
         m_SelfTestDir[i] = '\\';

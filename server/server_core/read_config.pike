@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.74 2004/05/31 23:48:21 _cvs_stephen Exp $
+// $Id: read_config.pike,v 1.75 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -90,7 +90,7 @@ void really_save_it( string cl, mapping data, int counter )
     string data = encode_regions( data, config );
     int num = fd->write( data );
     
-    if(num != strlen(data))
+    if(num != sizeof(data))
       error("Failed to write all data to new config file ("+new+")"
             " ("+strerror(fd->errno())+")"
             "\n");
@@ -192,7 +192,7 @@ mapping read_it(string cl)
       if( fd )
       {
         string data =  fd->read();
-        if( strlen( data ) )
+        if( sizeof( data ) )
         {
           config_stat_cache[cl] = fd->stat();
 	  fd->close();

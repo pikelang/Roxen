@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.132 2004/05/31 23:02:03 _cvs_stephen Exp $
+// $Id: module_support.pike,v 1.133 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -50,15 +50,15 @@ program my_compile_file(string file, void|int silent)
   string q = e->get();
   if( !p )
   {
-    if( strlen( q ) )
+    if( sizeof( q ) )
     {
       report_error("Failed to compile module %s:\n%s", file, q);
-      if( strlen( e->get_warnings() ) )
+      if( sizeof( e->get_warnings() ) )
         report_warning( e->get_warnings() );
     }
     throw( "" );
   }
-  if ( strlen(q = e->get_warnings() ) )
+  if ( sizeof(q = e->get_warnings() ) )
   {
     report_warning(sprintf("Warnings during compilation of %s:\n"
                            "%s", file, q));
@@ -402,7 +402,7 @@ class ModuleInfo( string sname, string filename )
 	  else
 	    continue;
 
-        if( strlen( file ) < 3 )
+        if( sizeof( file ) < 3 )
 	  continue;
         if( (< '~','#' >)[file[-1]] )
           continue;

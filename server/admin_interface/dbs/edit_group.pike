@@ -5,7 +5,7 @@
 
 string trim_sl( string x )
 {
-  while( strlen(x) && x[-1] == '/' )
+  while( sizeof(x) && x[-1] == '/' )
     x = x[..strlen(x)-2];
   return x;
 }
@@ -36,7 +36,7 @@ string parse( RequestID id )
 
   if( id->variables->lname && !view_mode)
   {
-    if( strlen(id->variables->pattern) )
+    if( sizeof(id->variables->pattern) )
       id->variables->pattern = "mysql://"+trim_sl(id->variables->pattern)+"/";
     DBManager.create_group( id->variables->group,
 			    id->variables->lname,

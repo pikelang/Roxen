@@ -2,7 +2,7 @@
 #include <module.h>
 #include <module_constants.h>
 
-//$Id: add_module.pike,v 1.84 2004/05/31 23:01:44 _cvs_stephen Exp $
+//$Id: add_module.pike,v 1.85 2004/06/04 08:29:15 _cvs_stephen Exp $
 
 int no_reload()
 {
@@ -207,7 +207,7 @@ string pafeaw( string errors, string warnings)
 
     }
   }
-  if( strlen( da_string ) )
+  if( sizeof( da_string ) )
     da_string += "</table>";
 // "<pre>"+Roxen.html_encode_string( sprintf( "%O", by_module ) )+"</pre>";
   

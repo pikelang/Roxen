@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.33 2004/06/04 08:29:24 _cvs_stephen Exp $";
 
 inherit "module";
 inherit "roxenlib";
@@ -92,14 +92,14 @@ class Relay
     string rewrite( string what )
     {
       // in what: URL.
-      if(!strlen(what))
+      if(!sizeof(what))
 	return what; // local, is OK.
 
       if( what[0] == '/' ) // absolute, is not OK.
       {
 	string base = id->not_query;
 	string f2 = (file/"?")[0];
-	if( strlen(f2) && has_value(id->not_query, f2 ))
+	if( sizeof(f2) && has_value(id->not_query, f2 ))
 	  base = base[..search(id->not_query, f2 )-2];
 	return combine_path( base, what[1..] );
       }
@@ -225,7 +225,7 @@ class Relay
   string obuffer;
   void write_more( )
   {
-    if( strlen( obuffer ) )
+    if( sizeof( obuffer ) )
       obuffer = obuffer[ fd->write( obuffer ) .. ];
 #ifdef RELAY_DEBUG
     else
@@ -443,7 +443,7 @@ void start( int i, Configuration c )
     relays = ({});
     foreach( (query( "patterns" )-"\r") / "\n" - ({ "" }), string line )
     {
-      if( strlen(line) && line[0] == '#' )
+      if( sizeof(line) && line[0] == '#' )
         continue;
       sscanf( line, "%s#", line );
       array tokens = replace( String.trim_whites( line ), "\t", " ")/" " - ({ "" });

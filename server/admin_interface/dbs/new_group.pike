@@ -10,12 +10,12 @@ string c_name( string c, RequestID id )
 
 void really_do_create( RequestID id  )
 {
-  while( strlen(id->variables->url) && id->variables->url[-1] == '/' )
+  while( sizeof(id->variables->url) && id->variables->url[-1] == '/' )
     id->variables->url = id->variables->url[..strlen(id->variables->url)-2];
   DBManager.create_group( c_name(id->variables->name,id),
 			     id->variables->lname,
 			     id->variables->comment,
-			     (strlen(id->variables->url)?
+			     (sizeof(id->variables->url)?
 			     "mysql://"+id->variables->url+"/" : 
 			     ""));
 }
@@ -77,7 +77,7 @@ server must be a MySQL server, nothing else will work.
 
   if( id->variables["ok.x"]  )
   {
-    if( strlen(id->variables->url) )
+    if( sizeof(id->variables->url) )
     {
       if(catch(Sql.Sql( "mysql://"+id->variables->url+"/mysql" ) ))
 	error = sprintf( "<font color='&usr.warncolor;'>"
@@ -86,16 +86,16 @@ server must be a MySQL server, nothing else will work.
       else
 	find_dbs = 1;
     }
-    if(!strlen(error))
+    if(!sizeof(error))
       if (!sizeof(id->variables->lname))
 	error="<font color='&usr.warncolor;'>"
 	  "Please give a name for the group.</font>";
-    if(!strlen(error))
+    if(!sizeof(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
 	error=sprintf("<font color='&usr.warncolor;'>"
 		      "A database group named %s already exists"
  		      "</font>", id->variables->name );
-    if( !strlen( error ) )
+    if( !sizeof( error ) )
       if( Roxen.is_mysql_keyword( id->variables->name ) )
 	error = sprintf("<font color='&usr.warncolor;'>"
 			"%s is a MySQL keyword, used by MySQL."

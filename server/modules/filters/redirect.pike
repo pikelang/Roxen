@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.39 2004/05/20 22:09:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.40 2004/06/04 08:29:21 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -154,7 +154,7 @@ mixed first_try(object id)
       string f = redirect_from[i];
       if(has_prefix(m, f))
       {
-	to = redirect_to[i] + m[strlen(f)..];
+	to = redirect_to[i] + m[sizeof(f)..];
 	break;
       } else if( has_value(f, "*") || has_value( f, "(") ) {
 	array foo;
@@ -192,7 +192,7 @@ mixed first_try(object id)
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
 
   redirs++;
-  if((strlen(to) > 6 &&
+  if((sizeof(to) > 6 &&
       (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {

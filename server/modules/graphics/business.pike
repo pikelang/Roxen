@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.150 2004/05/31 23:01:51 _cvs_stephen Exp $";
+constant cvs_version = "$Id: business.pike,v 1.151 2004/06/04 08:29:21 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -723,7 +723,7 @@ int|object PPM(string fname, object id)
 
 mapping find_internal(string f, object id)
 {
-  if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+  if( sizeof(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
   return image_cache->http_file_answer( f, id );
 }

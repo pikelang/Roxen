@@ -25,9 +25,9 @@ string parse( RequestID id )
   loader.pop_compile_error_handler( );
   master()->set_inhibit_compile_errors( 0 );
 
-  if( config_setting( "devel_mode" ) && strlen( ce->get() ) )
+  if( config_setting( "devel_mode" ) && sizeof( ce->get() ) )
     res += ({"Warning: <pre>"+Roxen.html_encode_string(ce->get())+"</pre>"});
-  if( strlen( ce->get() ) )
+  if( sizeof( ce->get() ) )
     report_debug( "While compiling tasks: \n"+ce->get() );
   return sort(res)*"\n";
 }

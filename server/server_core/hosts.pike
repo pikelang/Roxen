@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: hosts.pike,v 1.33 2002/10/22 00:06:12 nilsson Exp $
+// $Id: hosts.pike,v 1.34 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <roxen.h>
 
@@ -53,7 +53,7 @@ string blocking_ip_to_host(string ip)
 
 string blocking_host_to_ip(string host)
 {
-  if(!stringp(host) || !strlen(host)) return host;
+  if(!stringp(host) || !sizeof(host)) return host;
   if(mixed foo = cache_lookup("hosts", host)) return foo;
   ISIP(host,return host);
   array addr = gethostbyname( host );
@@ -67,7 +67,7 @@ string quick_ip_to_host(string ipnumber)
 #ifdef NO_REVERSE_LOOKUP
   return ipnumber;
 #endif
-  if(!(int)ipnumber || !strlen(ipnumber)) return ipnumber;
+  if(!(int)ipnumber || !sizeof(ipnumber)) return ipnumber;
   ipnumber=(ipnumber/" ")[0]; // ?
   if(mixed foo = cache_lookup("hosts", ipnumber)) return foo;
   LOOKUP(IP_TO_HOST,ipnumber,0,0);
@@ -100,7 +100,7 @@ void ip_to_host(string ipnumber, function callback, mixed ... args)
 
 void host_to_ip(string host, function callback, mixed ... args)
 {
-  if(!stringp(host) || !strlen(host)) return callback(0, @args);
+  if(!stringp(host) || !sizeof(host)) return callback(0, @args);
   if(host[-1] == '.') host=host[..strlen(host)-2];
   ISIP(host,callback(host,@args);return);
   if(string entry=cache_lookup("hosts", host))

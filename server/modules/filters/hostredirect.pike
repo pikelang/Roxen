@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.26 2002/10/22 00:29:30 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.27 2004/06/04 08:29:21 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -60,7 +60,7 @@ void start()
     if(sizeof(a)>=2) {
       //if(a[1][0] != '/')  //this can now only be done if we
       //  a[1] = "/"+ a[1]; // don't have a HTTP redirect
-      //if(a[0] != "default" && strlen(a[1]) > 1 && a[1][-1] == '/')
+      //if(a[0] != "default" && sizeof(a[1]) > 1 && a[1][-1] == '/')
       //  a[1] = a[1][0..strlen(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
     }
@@ -153,7 +153,7 @@ int|mapping first_try(RequestID id)
     return 0;
   }
 
-  if((strlen(to) > 6 &&
+  if((sizeof(to) > 6 &&
       (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {
@@ -169,7 +169,7 @@ int|mapping first_try(RequestID id)
     //  and if it matches patterns["default"] add the id->not_query after all.
     if(to[0] != '/')
       to = "/"+ to;
-    if(host != "default" && strlen(to) > 1 && to[-1] == '/')
+    if(host != "default" && sizeof(to) > 1 && to[-1] == '/')
       to = to[0..strlen(to)-2];
     if((host != "default") && !path )
       to +=id->not_query;

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.868 2004/05/31 23:48:21 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.869 2004/06/04 08:29:31 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1225,7 +1225,7 @@ class InternalRequestID
   {
     raw_url = Roxen.http_encode_string( f );
 
-    if( strlen( f ) > 5 )
+    if( sizeof( f ) > 5 )
     {
       string a;
       switch( f[1] )
@@ -1238,7 +1238,7 @@ class InternalRequestID
 	  }
 	  // intentional fall-through
 	case '(':
-	  if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
+	  if(sizeof(f) && sscanf(f, "/(%s)/%s", a, f)==2)
 	  {
 	    prestate = (multiset)( a/","-({""}) );
 	    f = "/"+f;
@@ -1698,7 +1698,7 @@ class SSLProtocol
 	return;
       }
 
-      if( strlen(query_option("ssl_key_file")) &&
+      if( sizeof(query_option("ssl_key_file")) &&
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
 	report_error("SSL3: Reading key-file %O failed!\n",
@@ -1994,7 +1994,7 @@ Protocol find_port( string name )
 void sort_urls()
 {
   sorted_urls = indices( urls );
-  sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
+  sort( map( map( sorted_urls, sizeof ), `-), sorted_urls );
 }
 
 int register_url( string url, Configuration conf )
@@ -2047,9 +2047,9 @@ int register_url( string url, Configuration conf )
     url = protocol+"://"+host+":"+port+path;
   }
 
-  if( strlen( path ) && ( path[-1] == '/' ) )
+  if( sizeof( path ) && ( path[-1] == '/' ) )
     path = path[..strlen(path)-2];
-  if( !strlen( path ) )
+  if( !sizeof( path ) )
     path = 0;
 
   if( urls[ url ]  )
@@ -2921,7 +2921,7 @@ class ImageCache
   {
     if(!stringp(data)) return;
 #ifdef ARG_CACHE_DEBUG
-    werror("store %O (%d bytes)\n", id, strlen(data) );
+    werror("store %O (%d bytes)\n", id, sizeof(data) );
 #endif
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
@@ -2930,7 +2930,7 @@ class ImageCache
 #endif
     QUERY("REPLACE INTO "+name+
 	  " (id,size,atime,meta,data) VALUES (%s,%d,UNIX_TIMESTAMP(),%s,%s)",
-	  id, strlen(data)+strlen(meta_data), meta_data, data );
+	  id, sizeof(data)+sizeof(meta_data), meta_data, data );
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -2948,7 +2948,7 @@ class ImageCache
       QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
 
     string s;
-    if(!sizeof(q) || !strlen(s = q[0]->meta))
+    if(!sizeof(q) || !sizeof(s = q[0]->meta))
       return 0;
 
     mapping m;
@@ -3066,7 +3066,7 @@ class ImageCache
       uid_cache[id] = uid;
     }
 
-    if( uid && strlen(uid) )
+    if( uid && sizeof(uid) )
     {
       User u;
       if( !(u=rid->conf->authenticate(rid)) || (u->name() != uid ) )
@@ -3092,7 +3092,7 @@ class ImageCache
 
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
 
-	if( strlen( f ) > 6000 )
+	if( sizeof( f ) > 6000 )
 	  return m;
 	rst_cache[ id ] = m;
 	if( sizeof( rst_cache ) > 100 )
@@ -3875,7 +3875,7 @@ int set_u_and_gid (void|int from_handler_thread)
 
   u=query("User");
   sscanf(u, "%s:%s", u, g);
-  if(strlen(u))
+  if(sizeof(u))
   {
     if(getuid())
     {
@@ -4785,7 +4785,7 @@ function compile_log_format( string fmt )
     foreach( formats, array q )
       if( part[..strlen(q[0])-1] == q[0])
       {
-        format += q[1] + DO_ES(part[ strlen(q[0]) .. ]);
+        format += q[1] + DO_ES(part[ sizeof(q[0]) .. ]);
         if( q[2] ) args += ({ q[2] });
         if( q[3] ) do_it_async = 1;
         processed=1;
@@ -5071,7 +5071,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   foreach( pattern/"\n", string line )
   {
     line = String.trim_all_whites( line );
-    if( !strlen(line) || line[0] == '#' )
+    if( !sizeof(line) || line[0] == '#' )
       continue;
     sscanf( line, "%[^#]#", line );
 
@@ -5429,7 +5429,7 @@ class LogFile(string fname)
     if( !sizeof( write_buf ) )
       call_out( do_the_write, 1 );
     write_buf += ({what});
-    return strlen(what); 
+    return sizeof(what); 
   }
 
   string _sprintf(int t) {

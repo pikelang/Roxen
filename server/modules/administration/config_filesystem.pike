@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.123 2004/05/31 23:48:18 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.124 2004/06/04 08:29:18 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -44,7 +44,7 @@ array(string|Stat) low_stat_file(string f, object id)
     return stat_cache[ f ];
 #ifdef __NT__
   string of = f;
-  while(strlen(f) && f[-1]=='/') 
+  while(sizeof(f) && f[-1]=='/') 
     f = f[..strlen(f)-2];
 #else
 #define of f
@@ -65,7 +65,7 @@ array(string|Stat) low_stat_file(string f, object id)
 
 string real_file( mixed f, mixed id )
 {
-//   while( strlen( f ) && (f[0] == '/' ))
+//   while( sizeof( f ) && (f[0] == '/' ))
 //     f = f[1..];
 
   if (f == "")
@@ -96,7 +96,7 @@ array(int)|Stat stat_file( string f, object id )
 
   if( docs && sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
-      return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
+      return ({ 0555, sizeof(rf->contents), time(), 0, 0, 0, 0 });
 
   array(string|Stat) ret = low_stat_file(f, id);
   return ret && ret[1];
@@ -332,7 +332,7 @@ mixed find_file( string f, RequestID id )
       retval->expires = time(1);
     }
     retval->stat = 0;
-    retval->len = strlen( retval->data );
+    retval->len = sizeof( retval->data );
 
     if( id->method != "GET" && id->real_variables->__redirect )
     {

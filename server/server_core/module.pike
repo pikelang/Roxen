@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.141 2004/05/24 17:24:48 mani Exp $
+// $Id: module.pike,v 1.142 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1939,7 +1939,7 @@ static int create_sql_tables( mapping(string:array(string)) definitions,
 static string sql_table_exists( string name )
 //! Return the real name of the table 'name' if it exists.
 {
-  if(strlen(name))
+  if(sizeof(name))
     name = "_"+name;
   
   string res = hash(_my_configuration->name)->digits(36)
@@ -2000,7 +2000,7 @@ static string|int get_my_table( string|array(string) name,
     definition = name;
     oname = name = "";
   }
-  else if(strlen(name))
+  else if(sizeof(name))
     name = "_"+(oname = name);
 
   Sql.Sql sql = get_my_sql();
@@ -2028,7 +2028,7 @@ static string|int get_my_table( string|array(string) name,
       };
     if( error )
     {
-      if( strlen( name ) )
+      if( sizeof( name ) )
 	name = " "+name;
       report_error( "Failed to create table"+name+": "+
 		    describe_error( error ) );
@@ -2049,7 +2049,7 @@ static string|int get_my_table( string|array(string) name,
 //     };
 //   if( error )
 //   {
-//     if( strlen( name ) )
+//     if( sizeof( name ) )
 //       name = " for "+name;
 //     report_notice( "Failed to update table definition"+name+": "+
 // 		   describe_error( error ) );

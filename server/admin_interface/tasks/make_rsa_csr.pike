@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.11 2004/05/28 23:40:37 _cvs_stephen Exp $
+ * $Id: make_rsa_csr.pike,v 1.12 2004/06/04 08:29:15 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) && constant(Crypto.RSA)
@@ -176,7 +176,7 @@ mapping wizard_done( object id )
 				      fname));
   }
   return http_string_answer( sprintf("<p>Wrote %d bytes to %s.</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->csr),
+				     sizeof(id->variables->csr),
 				     fname));
 }
 

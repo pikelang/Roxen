@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.65 2004/05/31 23:01:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.66 2004/06/04 08:29:25 _cvs_stephen Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -212,7 +212,7 @@ class Wrapper
   {
     DWERR("Wrapper::write_callback()");
 
-    if(!strlen(buffer))
+    if(!sizeof(buffer))
       return;
     int nelems = tofd->write( buffer );
 
@@ -226,14 +226,14 @@ class Wrapper
       destroy();
     } else if( nelems > 0 ) {
       buffer = buffer[nelems..];
-      if(close_when_done && !strlen(buffer)) {
+      if(close_when_done && !sizeof(buffer)) {
         destroy();
 	return;
       }
 
       // If the buffer just went below the low watermark, let it refill.
-      if (buffer_high && strlen(buffer) < buffer_low &&
-	  strlen(buffer)+nelems >= buffer_low && callback_disabled)
+      if (buffer_high && sizeof(buffer) < buffer_low &&
+	  sizeof(buffer)+nelems >= buffer_low && callback_disabled)
       {
 	fromfd->set_nonblocking( read_callback, 0, close_callback );
 	callback_disabled = 0;
@@ -267,7 +267,7 @@ class Wrapper
       buffer += what;
 
     // If we have filled our buffer, stop asking for more data.
-    if (buffer_high && strlen(buffer) > buffer_high && !callback_disabled)
+    if (buffer_high && sizeof(buffer) > buffer_high && !callback_disabled)
     {
       fromfd->set_nonblocking( 0, 0, 0 );
       callback_disabled = 1;
@@ -344,9 +344,9 @@ class Wrapper
   // override these to get somewhat more non-trivial behaviour
   void done()
   {
-    DWERR(sprintf("Wrapper::done(%d)", strlen(buffer)));
+    DWERR(sprintf("Wrapper::done(%d)", sizeof(buffer)));
 
-    if(strlen(buffer))
+    if(sizeof(buffer))
       close_when_done = 1;
     else
       destroy();
@@ -379,7 +379,7 @@ class RXMLWrapper
   {
     DWERR("RXMLWrapper::done()");
 
-    if(strlen(data))
+    if(sizeof(data))
     {
       output( Roxen.parse_rxml( data, mid ) );
       data="";
@@ -482,7 +482,7 @@ class CGIWrapper
     DWERR("CGIWrapper::parse_headers()");
 
     int pos, skip = 4, force_exit;
-    if(strlen(headers) > MAXHEADERLEN)
+    if(sizeof(headers) > MAXHEADERLEN)
     {
       DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
       output( LONGHEADER );
@@ -999,7 +999,7 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 			     "is disabled.</h1>");
     else
       return -1;
-  if(!strlen(f) || f[-1] == '/')
+  if(!sizeof(f) || f[-1] == '/')
     // Make foo.cgi/ be handled using PATH_INFO
     return 0;
   id->realfile = real_file( f,id );

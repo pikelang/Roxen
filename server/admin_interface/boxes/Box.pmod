@@ -112,7 +112,7 @@ class Fetcher
     if( px = id->conf->find_module("update#0") )
     {
       mixed err = catch {
-	  if( strlen( px->query( "proxyserver" ) ) )
+	  if( sizeof( px->query( "proxyserver" ) ) )
 	  {
 	    sscanf( q, "GET %s", q );
 	    q = "GET http://"+h+":"+p+q;

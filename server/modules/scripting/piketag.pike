@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.38 2004/05/27 18:28:44 _cvs_stephen Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.39 2004/06/04 08:29:25 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -230,7 +230,7 @@ string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
   })
   {
     master()->set_inhibit_compile_errors(0);
-    if (e->get() && strlen(e->get()))
+    if (e->get() && sizeof(e->get()))
       RXML.parse_error ("Error while compiling Pike code:\n%s", e->get());
     else throw (err);
   }
@@ -340,7 +340,7 @@ array parse_magic( string data, RequestID id, int add_md, string filename,
   array inherits = ({});
   for( int i = 0; i<sizeof( flat ); i++ )
   {
-    switch( strlen(flat[i]->text) && flat[i]->text[0] )
+    switch( sizeof(flat[i]->text) && flat[i]->text[0] )
     {
      case '.':
        OCIP(); OCIPUP();
@@ -352,7 +352,7 @@ array parse_magic( string data, RequestID id, int add_md, string filename,
        break;
 
      case '/':
-       if( strlen(flat[i]->text)>2 &&
+       if( sizeof(flat[i]->text)>2 &&
 	   (flat[i]->text[1]=='/' || flat[i]->text[1]=='*') )
        {
 	 if( flat[i]->text[2] == 'X' )
@@ -471,7 +471,7 @@ string post(string what)
 {
   if(has_value(what, "parse("))
     return "";
-  if (!strlen(what) || what[-1] != ';')
+  if (!sizeof(what) || what[-1] != ';')
     return ";}";
   else
     return "}";
@@ -518,7 +518,7 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   })
   {
     master()->set_inhibit_compile_errors(0);
-    if (e->get() && strlen(e->get()))
+    if (e->get() && sizeof(e->get()))
     {
       RXML.parse_error ("Error while compiling Pike code:\n%s",
 			Roxen.html_encode_string( e->get()) );

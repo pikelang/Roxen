@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.20 2004/05/24 23:13:23 mani Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.21 2004/06/04 08:29:23 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -248,7 +248,7 @@ mixed parse_map_file( object o )
   {
     string cmd;
     line = (replace(line, "\t", " ")/" " - ({""}))*" ";
-    if (!strlen(line) || (line[0] == '#'))
+    if (!sizeof(line) || (line[0] == '#'))
       continue;
     
     if(line[0]==' ')
@@ -259,7 +259,7 @@ mixed parse_map_file( object o )
     if(lower_case((line/":")[0] || "") == "default" && 
        sscanf(line, cmd+":%s", Url))
       coordinate_list[0] = replace(Url, ({" ", "\t"}), ({"",""}));
-    else if(strlen(cmd) > 2)
+    else if(sizeof(cmd) > 2)
       switch(cmd[0..2])
       {
        case "def":
@@ -327,13 +327,13 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
   while(s[0] == '#')
   {
     sscanf(s, "%s\n%s", tmp, s);
-    eol += strlen(tmp)+1;
+    eol += sizeof(tmp)+1;
     tmp="";
   }
   
   sscanf(s, "%d%*[ \t\r\n]%d%*[ \t\r\n]%s", xs, ys, tmp);
   sscanf(tmp, "%*s\n%s", tmp);
-  eol += strlen(s) - strlen(tmp);
+  eol += sizeof(s) - sizeof(tmp);
   
   f->seek(eol);
   if(x > xs || y > ys)
@@ -557,7 +557,7 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
 
   map_file_name=map_get_filename(x, y, id->not_query, file, id->conf);
   destruct(file);
-  if(stringp(map_file_name) && strlen(map_file_name))
+  if(stringp(map_file_name) && sizeof(map_file_name))
   {
     string varname, rest, pre;
     if(sscanf(" "+map_file_name+" ", "%s$%[a-zA-Z_]%s",pre, varname, rest)==3)
@@ -567,7 +567,7 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
 					  ||id->state[varname]||"")
 		       + rest) - " ";
     }
-    if((strlen(map_file_name)>6 && 
+    if((sizeof(map_file_name)>6 && 
 	(map_file_name[3]==':' || map_file_name[4]==':' || 
 	 map_file_name[5]==':' || map_file_name[6]==':') ||
 	map_file_name[0]=='/'))

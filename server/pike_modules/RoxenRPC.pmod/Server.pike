@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.20 2004/04/04 14:52:56 mani Exp $
+ * $Id: Server.pike,v 1.21 2004/06/04 08:29:28 _cvs_stephen Exp $
  */
 
 class Connection
@@ -19,7 +19,7 @@ class Connection
   
   void write_data()
   {
-    if(strlen(sending))
+    if(sizeof(sending))
       sending = sending[client->write(sending)..];
   }
 
@@ -79,16 +79,16 @@ class Connection
     else if(programp(res[1]) || functionp(res[1]))
       res = ({ 3, identifier_for(res[1]) });
     string data = encode_value(res);
-    sending += sprintf("%4c%s", strlen(data), data);
+    sending += sprintf("%4c%s", sizeof(data), data);
     write_data();
   }
   
   void got_data(object c, string d)
   {
-//    werror("got "+strlen(d)+" bytes data.\n");
+//    werror("got "+sizeof(d)+" bytes data.\n");
     buffer += d;
     if(mode) {
-      if(strlen(buffer) >= expected_len)
+      if(sizeof(buffer) >= expected_len)
       {
 //	werror("got enough data.\n");
 	d = buffer[..expected_len-1];
@@ -116,7 +116,7 @@ class Connection
 	return;
       }
       return;
-    } else if((strlen(buffer)>=4) &&
+    } else if((sizeof(buffer)>=4) &&
 	      (sscanf(buffer, "%4c%s", expected_len, buffer) == 2)) {
 //      werror("waiting for "+expected_len+" bytes.\n");
       mode=MORE_TO_COME;
@@ -132,18 +132,18 @@ class Connection
     array res;
     while(1)
     {
-      while(strlen(data) < 8)
+      while(sizeof(data) < 8)
       {
 	data += client->read(4000,1);
-	if(!strlen(data))
+	if(!sizeof(data))
 	{
 	  destruct();
 	  return;
 	}
       }
       sscanf(data, "%4c%s", len,data);
-      if(strlen(data) < len)
-	data += client->read(len-strlen(data));
+      if(sizeof(data) < len)
+	data += client->read(len-sizeof(data));
       if(err = catch {
 	mixed val = decode_value(data);
 	if(arrayp(val))

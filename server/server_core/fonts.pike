@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.92 2004/05/29 20:28:28 _cvs_stephen Exp $
+// $Id: fonts.pike,v 1.93 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -150,7 +150,7 @@ string describe_font_type(string n)
 
   switch(n[0])
   {
-   case 'n': if(!strlen(res)) res="normal"; break;
+   case 'n': if(!sizeof(res)) res="normal"; break;
    case 'B': res+=" black";  break;
    case 'b': res+=" bold";  break;
    case 'l': res+=" light";  break;

@@ -18,7 +18,7 @@ string indent( int l, string what )
 string do_describe_error( mixed err )
 {
   if( stringp( err ) )
-    return indent(2,err + (strlen(err)?(err[-1] == '\n' ? "": "\n" ):""));
+    return indent(2,err + (sizeof(err)?(err[-1] == '\n' ? "": "\n" ):""));
   err = (array)err;
   err[1] = err[1][sizeof(err[1])-3..];
   return indent(2, describe_backtrace( err ) );

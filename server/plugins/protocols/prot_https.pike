@@ -1,7 +1,7 @@
 // This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.11 2004/05/17 12:58:16 mani Exp $
+// $Id: prot_https.pike,v 2.12 2004/06/04 08:29:30 _cvs_stephen Exp $
 
 // --- Debug defines ---
 
@@ -43,7 +43,7 @@ class fallback_redirect_request
       die();
     else {
       out = out[written..];
-      if (!strlen(out))
+      if (!sizeof(out))
 	die();
     }
   }

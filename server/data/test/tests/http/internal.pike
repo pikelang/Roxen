@@ -25,7 +25,7 @@ void main(int argc, array argv)
   if( sizeof( q ) < 2 )
     exit( BADHEADERS );
 
-  verify_headers( q[0], strlen(q[1]), "HTTP/1.1", 200, 0);
+  verify_headers( q[0], sizeof(q[1]), "HTTP/1.1", 200, 0);
 
   if(argc == 4 && md5(q[1]) != argv[3]) {
     write("Expected MD5 %O, got %O.\n", argv[3], md5(q[1]));

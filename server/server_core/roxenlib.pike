@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.222 2004/05/30 00:22:13 _cvs_stephen Exp $
+// $Id: roxenlib.pike,v 1.223 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 //#pragma strict_types
 
@@ -91,7 +91,7 @@ static string http_res_to_string( mapping file, RequestID id )
       heads["Last-Modified"] = http_date([int]fstat[3]);
     }
     if(stringp(file->data))
-      file->len += strlen([string]file->data);
+      file->len += sizeof([string]file->data);
   }
 
   if(mappingp(file->extra_heads))
@@ -115,7 +115,7 @@ static string http_res_to_string( mapping file, RequestID id )
   string head_string = (myheads+({"",""}))*"\r\n";
 
   if(id->conf) {
-    id->conf->hsent+=strlen(head_string||"");
+    id->conf->hsent+=sizeof(head_string||"");
     if(id->method != "HEAD")
       id->conf->sent+=(file->len>0 ? file->len : 1000);
   }

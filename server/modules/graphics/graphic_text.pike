@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.304 2004/06/03 23:15:05 mani Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.305 2004/06/04 08:29:21 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -620,12 +620,12 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
       foreach(line/" ", string word)
       {
         string nonum;
-        if(strlen(word) &&
+        if(sizeof(word) &&
            (nonum = replace(word,
                             ({"1","2","3","4","5","6","7","8","9","0","."}),
                             ({"","","","","","","","","","",""}))) == "") {
           cspace=nbsp+nbsp;
-          if((strlen(word)-strlen(nonum)<strlen(word)/2) &&
+          if((sizeof(word)-sizeof(nonum)<sizeof(word)/2) &&
              (upper_case(word) == word))
             word=((word/"")*nbsp);
         }
@@ -750,9 +750,9 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
 
 mapping find_internal(string f, RequestID id)
 {
-    if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+    if( sizeof(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
       f = f[..strlen(f)-5];
-    if( strlen(f) && f[0]=='$' )
+    if( sizeof(f) && f[0]=='$' )
     {
       array id_text = f/"/";
       if( sizeof(id_text)==2 )
@@ -1124,7 +1124,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
       "</script>\n"+
       "<a"+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"gtext_mo('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
+      +"onMouseover=\"gtext_mo('"+sn+"',"+sn+"h,"+((sizeof(magic) && magic != "magic")?
 						   "'"+replace(magic,"'","`")+"'":
 						   "0")+"); return true;\" "
       "onMouseout=\"document.images['"+sn+"'].src = "+sn+"l.src;\">"

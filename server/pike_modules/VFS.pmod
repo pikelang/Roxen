@@ -19,7 +19,7 @@ string normalize_path( string path )
 //! running on NT or if the start-script is started with
 //! --strip-backslash, \ characters are changed to /.
 {
-  if( strlen( path ) )
+  if( sizeof( path ) )
   {
     int ss = (<'/','\\'>)[ path[0] ];
     path = combine_path_unix( "/",
@@ -102,7 +102,7 @@ array(string) find_above_read( string above,
   werror("find_above_read(%O, %O, %O, %O, %O)...\n",
          above, name, id, cache, do_mtime);
 #endif /* HTACCESS_DEBUG */
-  while( strlen( above ) )
+  while( sizeof( above ) )
   {
     int last_mtime;
     string ck;

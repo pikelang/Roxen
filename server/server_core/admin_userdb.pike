@@ -551,13 +551,13 @@ class AdminUser
          break;
 
        case "password":
-         if( strlen( id->variables[rp] ) &&
+         if( sizeof( id->variables[rp] ) &&
              (id->variables[rp+"2"] == id->variables[rp]) )
          {
            password = crypt( id->variables[rp] );
            save();
          }
-         else if( strlen( id->variables[rp]  ) )
+         else if( sizeof( id->variables[rp]  ) )
            error = "Passwords do not match";
          break;
 

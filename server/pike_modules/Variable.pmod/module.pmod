@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.90 2004/06/01 23:05:33 mani Exp $
+// $Id: module.pmod,v 1.91 2004/06/04 08:29:28 _cvs_stephen Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -382,7 +382,7 @@ class Variable
   void set_warning( string to )
     //! Set the warning shown in the administration interface
   { 
-    if( to && strlen(to) )
+    if( to && sizeof(to) )
       all_warnings[ _id ] = to; 
     else
       m_delete( all_warnings, _id );
@@ -490,7 +490,7 @@ class Variable
     array names = glob( p+"*", indices(id->variables) );
     mapping res = ([ ]);
     foreach( sort(names), string n )
-      res[ n[strlen(p).. ] ] = id->variables[ n ];
+      res[ n[sizeof(p).. ] ] = id->variables[ n ];
     return res;
   }
 
@@ -695,7 +695,7 @@ class Float
   {
     int size = 15;
     if( _max != _min ) 
-      size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
+      size = max( sizeof(_format(_max)), sizeof(_format(_min)) )+2;
     return input(path(), (query()==""?"":_format((float)query())),
 		 size, additional_args);
   }
@@ -771,7 +771,7 @@ class Int
   {
     int size = 10;
     if( _min != _max ) 
-      size = max( strlen((string)_max), strlen((string)_min) )+2;
+      size = max( sizeof((string)_max), sizeof((string)_min) )+2;
     return input(path(), (string)query(), size, additional_args);
   }
 }
@@ -864,7 +864,7 @@ class Text
     //! The std_name and std_doc is the name and documentation string
     //! for the default locale (always english)
   {
-    if( strlen( default_value ) && default_value[0] == '\n' )
+    if( sizeof( default_value ) && default_value[0] == '\n' )
       // This is enforced by both netscape and IE... So let's just conform.
       default_value = default_value[1..];
     ::create( default_value, flags, std_name, std_doc );
@@ -888,7 +888,7 @@ class Password
   {
     mapping val;
     if( sizeof( val = get_form_vars(id)) && 
-        val[""] && strlen(val[""]) ) {
+        val[""] && sizeof(val[""]) ) {
       set( crypt( val[""] ) );
       return 1;
     }
@@ -945,7 +945,7 @@ class Location
 
   array verify_set( string value )
   {
-    if( !strlen( value ) || !((<'~','/'>)[value[-1]]) )
+    if( !sizeof( value ) || !((<'~','/'>)[value[-1]]) )
       return ({
 	LOCALE(330,"You most likely want an ending '/' on this variable"),
 	value
@@ -979,9 +979,9 @@ class Directory
 #ifdef __NT__
     value = replace( value, "\\", "/" );
 #endif
-    if( strlen(value) && value[-1] != '/' )
+    if( sizeof(value) && value[-1] != '/' )
       value += "/";
-    if( !strlen( value ) )
+    if( !sizeof( value ) )
       return ::verify_set( value );
     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
        return ({sprintf(LOCALE(331,"%s is not a directory"),value)+"\n",value});
@@ -1498,17 +1498,17 @@ class DirectoryList
     string warn = "";
     foreach( value, string vi )
     {
-      if(!strlen(vi)) // empty
+      if(!sizeof(vi)) // empty
         continue;
       if( !(r_file_stat( vi ) && (r_file_stat( vi )[ ST_SIZE ] == -2 )))
         warn += sprintf(LOCALE(331,"%s is not a directory"),vi)+"\n";
-      if( strlen(vi) && vi[-1] != '/' )
+      if( sizeof(vi) && vi[-1] != '/' )
         value = replace( value, vi, vi+"/" );
     }
 #ifdef __NT__
       value = map( value, replace, "\\", "/" );
 #endif
-    if( strlen( warn ) )
+    if( sizeof( warn ) )
       return ({ warn, value });
     
     return ::verify_set( value );
@@ -1575,7 +1575,7 @@ class URLList
         warn += tmp1;
       res += ({ tmp2 });
     }
-    if( !strlen( warn ) )
+    if( !sizeof( warn ) )
       warn = 0;
     return ({ warn, res });
   }
@@ -1640,8 +1640,8 @@ class PortList
   string transform_from_form( string v, mapping va )
   {
     if( v == "" ) return "http://*/";
-    v = v[strlen(path())..];
-    if( strlen( va[v+"path"] ) && va[v+"path"][-1] != '/' )
+    v = v[sizeof(path())..];
+    if( sizeof( va[v+"path"] ) && va[v+"path"][-1] != '/' )
       va[v+"path"]+="/";
     
     return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+":"+
@@ -1664,7 +1664,7 @@ class PortList
         warn += tmp1;
       res += ({ tmp2 });
     }
-    if( !strlen( warn ) )
+    if( !sizeof( warn ) )
       warn = "";
     return ({ warn, res });
   } 
@@ -1723,7 +1723,7 @@ class Flag
 // =================================================================
 static array(string) verify_port( string port )
 {
-  if(!strlen(port))
+  if(!sizeof(port))
     return ({ 0, port });
 
   string warning="";
@@ -1735,7 +1735,7 @@ static array(string) verify_port( string port )
   }
   string protocol, host, path;
 
-  if(!strlen( port ) )
+  if(!sizeof( port ) )
     return ({ LOCALE(334,"Empty URL field")+"\n", port });
 
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
@@ -1777,7 +1777,7 @@ static array(string) verify_port( string port )
   if( !get_core()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
 			      "by ChiliMoon"),protocol)+"\n";
-  return ({ (strlen(warning)?warning:0), port });
+  return ({ (sizeof(warning)?warning:0), port });
 }
 
 string input(string name, string value, int size,

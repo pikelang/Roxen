@@ -52,7 +52,7 @@ class Realfile(mapping m, RequestID id) {
 	    continue;
 #endif
 	  string s;
-	  if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..],id)) {
+	  if(s=function_object(tmp[1])->real_file(file[sizeof(tmp[0])..],id)) {
 	    n["real-filename"] = s;
 	    n["real-dirname"]  = dirname( s );
 	    n["vfs"] = function_object(tmp[1])->module_identifier();

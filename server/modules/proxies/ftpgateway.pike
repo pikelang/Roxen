@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.45 2004/05/31 23:48:19 _cvs_stephen Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.46 2004/06/04 08:29:24 _cvs_stephen Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.45 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.46 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -161,7 +161,7 @@ class Request {
     if(desc)
     {
       desc = (desc/" " - ({""})) * " ";
-      if(strlen(desc) && desc[0] == ' ')
+      if(sizeof(desc) && desc[0] == ' ')
 	desc = desc[1..];
     }
     if (!type)
@@ -246,7 +246,7 @@ class Request {
     }
     maxlen=1;
     foreach (dirl,q)
-      if (maxlen<strlen(q[0])) maxlen=strlen(q[0]);
+      if (maxlen<sizeof(q[0])) maxlen=sizeof(q[0]);
     foreach (dirl,q)
       res+=directory_line(q[0], q[1], q[2], q[3],""/*date*/,
 			  maxlen, q[4], q[5], q[6]);
@@ -286,7 +286,7 @@ class Request {
 
     /* search for date */
     a=dir[0];
-    for (i=strlen(a)-14; i>2; i--)
+    for (i=sizeof(a)-14; i>2; i--)
       if (a[i+0]==' '&&a[i+4]==' '&&a[i+7]==' '&&a[i+13]==' '&&
 	  (a[i+6]>='0'&&a[i+6]<='9')&&
 	  (a[i-1]>='0'&&a[i-1]<='9')&&
@@ -298,7 +298,7 @@ class Request {
     foreach (dir-({""}),f)
     {
       if (sscanf(f+date_position,"%s -> %*s",a)) f=a;
-      if (maxlen<strlen(f)) maxlen=strlen(f);
+      if (maxlen<sizeof(f)) maxlen=sizeof(f);
     }
     maxlen-=date_position+13;
 
@@ -307,7 +307,7 @@ class Request {
       string filename,date,link,type;
       int size, offset;
       for (offset=0; (f[date_position+offset]!=' ')&&
-	     (strlen(f) > date_position+offset+14); offset++) ;
+	     (sizeof(f) > date_position+offset+14); offset++) ;
       date_position+=offset ; // If size has > 7 digits
 
       if (!(f[date_position+0]==' '&&f[date_position+4]==' '&&
@@ -367,7 +367,7 @@ class Request {
 	  f=dir[i];
 	  break;
 	}
-    for (i = strlen(f) - 14; i > 2; i--)
+    for (i = sizeof(f) - 14; i > 2; i--)
     {
       if ((f[i+0]&127) == ' ' && (f[i+4]&127)  == ' ' &&
 	  (f[i+7]&127) == ' ' && (f[i+13]&127) == ' ' &&
@@ -383,7 +383,7 @@ class Request {
     foreach (dir-({""}),f)
     {
       if (sscanf(f+date_position,"%s -> %*s",a)) f=a;
-      if (maxlen<strlen(f)) maxlen=strlen(f);
+      if (maxlen<sizeof(f)) maxlen=sizeof(f);
     }
     maxlen-=date_position+13;
 
@@ -392,7 +392,7 @@ class Request {
       string filename,date,link,type;
       int size;
 
-      for (i=strlen(f)-12; i>2; i--)
+      for (i=sizeof(f)-12; i>2; i--)
 	if (f[i+0]==' '&&f[i+4]==' '&&f[i+7]==' '&&f[i+13]==' '&&
 	    (f[i+6]>='0'&&f[i+6]<='9')&&
 	    (f[i-1]>='0'&&f[i-1]<='9')&&
@@ -453,7 +453,7 @@ class Request {
     {
       res="\n<pre>"+buffer+"</pre>";
     }
-    else if (strlen(buffer)>MAX_PARSE_DIR)
+    else if (sizeof(buffer)>MAX_PARSE_DIR)
     {
       res="\nDirectory too large for parsing, sorry:\n<pre>"+buffer+"</pre>";
     }
@@ -482,7 +482,7 @@ class Request {
 	t+=s+"/";
 	r+="</a><wbr><a href="+t+">"+s+"/";
       }
-      if (file[strlen(file)-1]!='/')
+      if (file[sizeof(file)-1]!='/')
 	r+="</a><wbr><a href="+t+path[-1]+">"+path[-1];
       else
 	r+="</a><wbr><a href="+t+path[-1]+"/>"+path[-1]+"/";
@@ -528,7 +528,7 @@ class Request {
     pipe=Pipe.pipe();
     pipe->write("HTTP/1.0 200 Yeah, it's a FTP directory\r\n"
 		"Content-type: text/html\r\n"
-		"Content-length: "+strlen(res)+"\r\n");
+		"Content-length: "+sizeof(res)+"\r\n");
     pipe->write("\r\n");
     pipe->write(res);
     pipe->output(id->my_fd);
@@ -618,11 +618,11 @@ class Request {
     {
       if (!trystat &&
 	  (sscanf(lower_case(arg),"%*sno such file or directory%*s")>1||
-	   file[strlen(file)-1]=='/'))
+	   file[sizeof(file)-1]=='/'))
 	id->end(ERROR_MESSAGE("Error:\n<pre>"+r+" "+arg+"\n</pre>\n"));
       else if (!trystat &&
 	       (sscanf(lower_case(arg),"%*sdenied%*s")>1||
-		file[strlen(file)-1]=='/'))
+		file[sizeof(file)-1]=='/'))
 	id->end(ERROR_MESSAGE("Error:\n<pre>"+r+" "+arg+"\n</pre>\n"));
       else
       {
@@ -641,7 +641,7 @@ class Request {
 
   void transfer_now()
   {
-    if (file[strlen(file)-1]=='/')
+    if (file[sizeof(file)-1]=='/')
     {
       write_server("list "+(file=="/"?"/.":file));
       buffer="" ;
@@ -678,11 +678,11 @@ class Request {
 
       if (!trystat &&
 	  (sscanf(lower_case(arg),"%*sno such file or directory%*s")>1||
-	   file[strlen(file)-1]=='/'))
+	   file[sizeof(file)-1]=='/'))
 	id->end(ERROR_MESSAGE("Error:\n<pre>"+r+" "+arg+"\n</pre>\n"));
       else if (!trystat &&
 	       (sscanf(lower_case(arg),"%*sdenied%*s")>1||
-		file[strlen(file)-1]=='/'))
+		file[sizeof(file)-1]=='/'))
 	id->end(ERROR_MESSAGE("Error:\n<pre>"+r+" "+arg+"\n</pre>\n"));
       else
       {
@@ -814,7 +814,7 @@ class Request {
     write("open_connection...\n");
 #endif
     dontsaveserver=0;
-    if (trystat||file[strlen(file)-1]=='/') /* dir, try stat */
+    if (trystat||file[sizeof(file)-1]=='/') /* dir, try stat */
     {
       set_what_now("doing 'stat' for directory "+file );
       buffer="";
@@ -913,7 +913,7 @@ class Request {
 #ifdef DEBUG
       werror("parse "+s+"\n");
 #endif
-      if (strlen(s)<4||s[3]!=' '||
+      if (sizeof(s)<4||s[3]!=' '||
 	  s[0]<'0'||s[0]>'9'||
  	  s[1]<'0'||s[1]>'9'||
  	  s[2]<'0'||s[2]>'9')
@@ -1083,13 +1083,13 @@ void start()
   string pos;
   pos=query("mountpoint");
   init_proxies();
-  if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
+  if(sizeof(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
   if(logfile)
     destruct(logfile);
 
-  if(!strlen(query("logfile")))
+  if(!sizeof(query("logfile")))
     return;
 
   PROXY_WERR("FTP gateway online.");
@@ -1132,7 +1132,7 @@ void init_proxies()
   {
     array bar;
 
-    if(!strlen(foo) || foo[0] == '#')
+    if(!sizeof(foo) || foo[0] == '#')
       continue;
 
     bar = replace(foo, "\t", " ")/" " -({ "" });
@@ -1311,7 +1311,7 @@ mixed|mapping find_file( string f, object id )
   array more;
   int port;
 
-  f=id->raw_url[strlen(query("mountpoint")) .. ];
+  f=id->raw_url[sizeof(query("mountpoint")) .. ];
   while(sizeof(f) && f[0]=='/')
     f=f[1..];
 

@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: tarfs.pike,v 1.11 2002/06/14 00:08:07 nilsson Exp $";
+constant cvs_version = "$Id: tarfs.pike,v 1.12 2004/06/04 08:29:20 _cvs_stephen Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe = 0;
@@ -48,7 +48,7 @@ void start()
     report_error( "Failed to open tar-file "+tf+"!\n" );
     tar = 0;
   }
-  else if( strlen( path ) )
+  else if( sizeof( path ) )
     tar->cd( path );
 }
 

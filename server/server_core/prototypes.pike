@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.75 2004/06/01 00:54:04 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.76 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -90,25 +90,25 @@ class StringFile( string data, mixed|void _st )
   int offset;
 
   string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%d,%d)", this_program, strlen(data), offset);
+    return t=='O' && sprintf("%O(%d,%d)", this_program, sizeof(data), offset);
   }
 
   string read(int nbytes)
   {
     if(!nbytes)
     {
-      offset = strlen(data);
+      offset = sizeof(data);
       return data;
     }
     string d = data[offset..offset+nbytes-1];
-    offset += strlen(d);
+    offset += sizeof(d);
     return d;
   }
 
   array stat()
   {
     if( _st ) return (array)_st;
-    return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
+    return ({ 0, sizeof(data), time(), time(), time(), 0, 0, 0 });
   }
 
   void write(mixed ... args)
@@ -1478,7 +1478,7 @@ class RequestID
 	  b = _Roxen.http_decode_string(replace(b, "+", " "));
 	  real_variables[ a ] += ({ b });
 	} else
-	  if(strlen( rest_query ))
+	  if(sizeof( rest_query ))
 	    rest_query += "&" + _Roxen.http_decode_string( v );
 	  else
 	    rest_query = _Roxen.http_decode_string( v );
@@ -1556,7 +1556,7 @@ class RequestID
 	  else
 	    charset = "";
 	}
-	file->len = strlen(file->data);
+	file->len = sizeof(file->data);
       }
       heads["Content-Type"] = file->type + charset;
     }
@@ -1619,8 +1619,8 @@ class RequestID
 
   void adjust_for_config_path( string p )
   {
-    if( not_query )  not_query = not_query[ strlen(p).. ];
-    raw_url = raw_url[ strlen(p).. ];
+    if( not_query )  not_query = not_query[ sizeof(p).. ];
+    raw_url = raw_url[ sizeof(p).. ];
     misc->site_prefix_path = p;
   }
 

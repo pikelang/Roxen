@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.68 2004/05/31 16:34:58 _cvs_stephen Exp $
+// $Id: disk_cache.pike,v 1.69 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -90,7 +90,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
     if(!(headers[" returncode"] = get_code(line)))
       return 0;
 
-    while(strlen(line = replace((gets()||""), ({"\r", "\n"}), ({"", ""}))))
+    while(sizeof(line = replace((gets()||""), ({"\r", "\n"}), ({"", ""}))))
     {
       if(sscanf(line, "%s:%s", name, value) == 2)
       {
@@ -115,7 +115,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
     {
       headers = decode_value(head);
 //      report_debug(sprintf("Extracted %d bytes of headers from %s (%O)\n",
-//		     strlen(head), fname, headers));
+//		     sizeof(head), fname, headers));
       return 1;
     }
     return 0;
@@ -216,7 +216,7 @@ class Cache
 #ifdef THREADS
     mixed key = lock->lock();
 #endif
-    if(strlen(to_send))
+    if(sizeof(to_send))
       to_send=to_send[ command_stream->write(to_send) .. ];
 #ifdef THREADS
     destruct(key);
@@ -227,7 +227,7 @@ class Cache
   void command(mixed ... cmd)
   {
     string d = encode_value(cmd);
-    d = sprintf("%8x%s", strlen(d), d);
+    d = sprintf("%8x%s", sizeof(d), d);
     to_send += d;
     if(to_send==d) really_send();
   }
@@ -667,12 +667,12 @@ void http_check_cache_file(CacheStream cachef)
     DELETE_AND_RETURN();
 
   // Check for files remaining from the last crash
-  if(cachef->rfile[strlen(cachef->rfile)-1]=='+') {
+  if(cachef->rfile[sizeof(cachef->rfile)-1]=='+') {
     string tocheck = cachef->rfile;
     Stdio.File tc;
     Stat tc_stat;
-    while(tocheck[strlen(tocheck)-1]=='+') {
-      tocheck=tocheck[.. strlen(tocheck)-2];
+    while(tocheck[sizeof(tocheck)-1]=='+') {
+      tocheck=tocheck[.. sizeof(tocheck)-2];
       if((tc = open(tocheck,"rx")) &&
         (tc_stat = tc->stat()) &&
         (tc_stat[ST_SIZE]>=0) &&

@@ -20,7 +20,7 @@
 
 inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.72 2004/05/22 19:06:58 _cvs_stephen Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.73 2004/06/04 08:29:20 _cvs_stephen Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -207,7 +207,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
       }
       return 0;
     }
-    if((f == "") && (strlen(of) && of[-1] != '/'))
+    if((f == "") && (sizeof(of) && of[-1] != '/'))
     {
       redirects++;
       return Roxen.http_redirect(id->not_query+"/",id);

@@ -47,7 +47,7 @@ class myFont
       files = mytar->get_dir( "/" ) - ({ "fontname", "fontinfo" });
     array possible = ({ "/"+encode_char(c) })+
           glob("/"+encode_char( c )+".*", files);
-    sort( map(possible,strlen), possible );
+    sort( map(possible,sizeof), possible );
     foreach( possible, string pf )
     {
       catch {

@@ -1147,23 +1147,23 @@ a&auml; &amp; b  &gt;
 <!-- ............................................................ -->
 <comment>Strlen</comment>
 <test>
-<rxml><strlen>a
-b</strlen></rxml>
+<rxml><sizeof>a
+b</sizeof></rxml>
 <result>3</result>
 </test>
 
 <test>
-<rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
+<rxml><sizeof>Roxen<b>&ouml;</b></sizeof></rxml>
 <result>18</result>
 </test>
 
 <test>
-<rxml>a<strlen>b</strlen>c</rxml>
+<rxml>a<sizeof>b</sizeof>c</rxml>
 <result>a1c</result>
 </test>
 
 <test>
-<rxml><strlen></strlen></rxml>
+<rxml><sizeof></sizeof></rxml>
 <result>0</result>
 </test>
 
@@ -2450,17 +2450,17 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 <!-- ............................................................ -->
 <comment>Strlen tests</comment>
 <test>
-<rxml><strlen/></rxml>
+<rxml><sizeof/></rxml>
 <result>0</result>
 </test>
 
 <test>
-<rxml><strlen></strlen></rxml>
+<rxml><sizeof></sizeof></rxml>
 <result>0</result>
 </test>
 
 <test>
-<rxml><strlen>ab
+<rxml><sizeof>ab
 cd</rxml>
 <result>5</result>
 </test>

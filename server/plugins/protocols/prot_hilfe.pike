@@ -66,7 +66,7 @@ class Connection
       if(msg[-1] != '\n' )
 	msg += "\n";
       string m = sprintf("%O:", last_module );
-      m = (m[..40]+"                                    "[..39-strlen(m)]);
+      m = (m[..40]+"                                    "[..39-sizeof(m)]);
       return sprintf("%s%s", m, Roxen.html_decode_string(msg) );
     }
   
@@ -94,7 +94,7 @@ class Connection
     void debug_trace_leave_2( string msg, object module )
     {
       old_backtrace = backtrace();
-      if( strlen( String.trim_all_whites(msg) ) )
+      if( sizeof( String.trim_all_whites(msg) ) )
 	rl->readline->write( fix_msg(indent+msg,0), 1 );
       indent = indent[..strlen(indent)-3];
     }
@@ -123,7 +123,7 @@ class Connection
     this_program set_path( string f )
     {
       raw_url = Roxen.http_encode_string( f );
-      if( strlen( f ) > 5 )
+      if( sizeof( f ) > 5 )
       {
 	string a;
 	switch( f[1] )
@@ -136,7 +136,7 @@ class Connection
 	    }
 	    // intentional fall-through
 	  case '(':
-	    if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
+	    if(sizeof(f) && sscanf(f, "/(%s)/%s", a, f)==2)
 	    {
 	      prestate = (multiset)( a/","-({""}) );
 	      f = "/"+f;

@@ -170,7 +170,7 @@ string|mapping parse( RequestID id )
   res += "<cf-cancel href='./'/>\n";
 
 
-  if( strlen( e->get() ) ) {
+  if( sizeof( e->get() ) ) {
     res += ("Compile errors:<pre>"+
             Roxen.html_encode_string(e->get())+
             "</pre>");

@@ -2,7 +2,7 @@
 
 inherit "chili-module:cgi": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.14 2004/05/23 14:14:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.15 2004/06/04 08:29:25 _cvs_stephen Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -90,7 +90,7 @@ class FCGIChannel
     void read_thread()
     {
       string s;
-      while( (s = fd->read( 1024, 1 ) ) && strlen(s) )
+      while( (s = fd->read( 1024, 1 ) ) && sizeof(s) )
         got_data( s );
       catch(fd->close());
       end_cb();
@@ -107,7 +107,7 @@ class FCGIChannel
         while( 1 )
         {
           int written;
-          while( strlen(wbuffer) )
+          while( sizeof(wbuffer) )
             if( fd )
             {
               written = fd->write( wbuffer );
@@ -157,7 +157,7 @@ class FCGIChannel
 
     void write_cb( )
     {
-      if( strlen(wbuffer) )
+      if( sizeof(wbuffer) )
       {
         written = fd->write( wbuffer );
         if( written < 0 )
@@ -309,16 +309,16 @@ class Packet
 
   string encode()
   {
-//    int paddinglen = strlen(data)&8;
+//    int paddinglen = sizeof(data)&8;
 
-    int dLen = strlen(data);
+    int dLen = sizeof(data);
     int eLen = (dLen + 7) & (0xFFFF - 7); // align to an 8-byte boundary
     int paddinglen = eLen - dLen;
 #ifdef FCGI_DEBUG
     werror("\nPADDING: %d\n", paddinglen);
 #endif
 
-    return sprintf( "%c%c%2c%2c%c\0%s%s",1,type,requestid,strlen(data),paddinglen
+    return sprintf( "%c%c%2c%2c%c\0%s%s",1,type,requestid,sizeof(data),paddinglen
                     ,data, "X"*paddinglen);
   }
 
@@ -327,12 +327,12 @@ class Packet
     if( stringp( s ) )
     {
       int paddinglen;
-      if( strlen( s ) < 8 )
+      if( sizeof( s ) < 8 )
         return;
       sscanf( s, "%c%c%2c%2c%c%*c" "%s",
               version, type, requestid, contentlength, paddinglen,
               /* reserved, */leftovers );
-      if( strlen( leftovers ) < contentlength + paddinglen )
+      if( sizeof( leftovers ) < contentlength + paddinglen )
         return;
 
       data = leftovers[..contentlength-1];
@@ -343,7 +343,7 @@ class Packet
       version= 1;
       type = s;
       requestid = r;
-      contentlength = strlen( d );
+      contentlength = sizeof( d );
       data = d;
     }
   }
@@ -407,7 +407,7 @@ class Stream
       if( noblock )
       {
 #if constant( thread_create )
-        while( !closed && !strlen( buffer ) ) sleep(0.1);
+        while( !closed && !sizeof( buffer ) ) sleep(0.1);
 #endif
         string b = buffer;
         buffer="";
@@ -423,15 +423,15 @@ class Stream
     if( !closed && !noblock )
     {
 #if constant( thread_create )
-      while( !closed && (strlen( buffer ) < nbytes) ) /* assume MT */
+      while( !closed && (sizeof( buffer ) < nbytes) ) /* assume MT */
         sleep( 0.1 );
 #else
-      if( !closed && (strlen(buffer) < nbytes) )
+      if( !closed && (sizeof(buffer) < nbytes) )
         error("Not enough data available, and waiting would block!\n" );
 #endif
     }
 #if constant( thread_create )
-    while( !closed && !strlen( buffer ) ) sleep(0.1);
+    while( !closed && !sizeof( buffer ) ) sleep(0.1);
 #endif
     string b = buffer[..nbytes-1];
     buffer = buffer[nbytes..];
@@ -442,14 +442,14 @@ class Stream
   {
     if( closed )
       error("Stream closed\n");
-    if( !strlen( data ) )
+    if( !sizeof( data ) )
       return 0;
-    if( strlen( data ) < 65535 )
+    if( sizeof( data ) < 65535 )
       fd->send_packet( Packet( id, reqid, data ) );
     else
       foreach( data / 8192, string d )
         fd->send_packet( Packet( id, reqid, d ) );
-    return strlen(data);
+    return sizeof(data);
   }
 
   void got_data( string d )
@@ -466,7 +466,7 @@ class Stream
     if( read_callback )
     {
       do_read_callback();
-      if( !strlen( d ) )
+      if( !sizeof( d ) )
       {
         /* EOS record. */
         closed = 1;
@@ -474,7 +474,7 @@ class Stream
         return;
       }
     }
-    if( !strlen( d ) )
+    if( !sizeof( d ) )
       if( close_callback_2 )
       {
         closed = 1;
@@ -492,7 +492,7 @@ class Stream
   void set_read_callback( function f )
   {
     read_callback = f;
-    if( f && strlen( buffer ) )
+    if( f && sizeof( buffer ) )
       do_read_callback();
   }
 
@@ -523,7 +523,7 @@ class Stream
 
   void do_read_callback()
   {
-    if( strlen( buffer ) )
+    if( sizeof( buffer ) )
     {
       read_callback( fid, buffer );
       buffer="";
@@ -541,19 +541,19 @@ class Stream
 
 string encode_param( string p )
 {
-  if( strlen( p ) < 127 )
-    return sprintf("%c%s", strlen(p), p );
-  p = sprintf( "%4c%s", strlen(p), p );
+  if( sizeof( p ) < 127 )
+    return sprintf("%c%s", sizeof(p), p );
+  p = sprintf( "%4c%s", sizeof(p), p );
   p[0] |= 128;
 }
 
 string encode_param_length(string p)
 {
-  if( strlen( p ) < 128 )	
-    return sprintf("%c", strlen(p));
+  if( sizeof( p ) < 128 )	
+    return sprintf("%c", sizeof(p));
   else
   {
-    p = sprintf( "%4c", strlen( p ) );
+    p = sprintf( "%4c", sizeof( p ) );
     p[0] |= 128;
     return p;
   }
@@ -787,7 +787,7 @@ class FCGI
     string values_cache = "";
     void parse_values( )
     {
-      while( strlen( values_cache ) )
+      while( sizeof( values_cache ) )
       {
         string index, value;
         int len;
@@ -811,7 +811,7 @@ class FCGI
       switch( p->type )
       {
        case FCGI_GET_VALUES_RESULT:
-         if( strlen( p->data ) )
+         if( sizeof( p->data ) )
            values_cache += p->data;
          else
          {

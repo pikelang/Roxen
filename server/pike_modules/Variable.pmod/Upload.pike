@@ -28,7 +28,7 @@ void set_from_form( RequestID id )
   mixed val;
   if( (val = get_form_vars( id )) && val[""] 
       && val[".filename"] && set_filename( val[".filename"] )
-      && strlen(val[""])
+      && sizeof(val[""])
       && (val = transform_from_form( val[""] ) ) 
       && val != query() )
   {

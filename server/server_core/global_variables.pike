@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.110 2004/05/31 23:02:03 _cvs_stephen Exp $
+// $Id: global_variables.pike,v 1.111 2004/06/04 08:29:32 _cvs_stephen Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -182,7 +182,7 @@ string get_domain(int|void l)
   }
   s = "host."+s;
   sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
+  if(s && sizeof(s))
   {
     if(s[-1] == '.') s=s[..strlen(s)-2];
     if(s[0] == '.') s=s[1..];

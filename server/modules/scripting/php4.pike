@@ -11,7 +11,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.19 2004/05/31 23:01:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.20 2004/06/04 08:29:25 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -35,7 +35,7 @@ class PHPScript
   {
 
     if(intp(sent)) written += sent;
-    if(strlen(buffer))
+    if(sizeof(buffer))
     {
       close_when_done = 1;
       if(query("rxml"))
@@ -62,7 +62,7 @@ class PHPScript
   void write_callback()
   {
     DWERROR("PHP:Wrapper::write_callback()\n");
-    if(!strlen(buffer))
+    if(!sizeof(buffer))
       return;
     int nelems;
     array err = catch { nelems = mid->my_fd->write(buffer); };
@@ -79,8 +79,8 @@ class PHPScript
     {
       written += nelems;
       buffer = buffer[nelems..];
-      DWERROR(sprintf("Done: %d %d...\n", strlen(buffer), close_when_done));
-      if(close_when_done && !strlen(buffer)) {
+      DWERROR(sprintf("Done: %d %d...\n", sizeof(buffer), close_when_done));
+      if(close_when_done && !sizeof(buffer)) {
 	destruct();
       }
     }
@@ -98,7 +98,7 @@ class PHPScript
     }
     else
       buffer += what;
-    return strlen(what);
+    return sizeof(what);
   }
 
   void send_headers(int code, mapping headers)
@@ -177,7 +177,7 @@ class PHPScript
   {
     if(!mid->data) return 0;
     string data = mid->data[post_sent..post_sent+length-1];
-    post_sent += strlen(data);
+    post_sent += sizeof(data);
     //    werror("%s\n", data);
     return data;
   }

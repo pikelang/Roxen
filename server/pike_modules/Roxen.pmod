@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.194 2004/05/31 23:48:20 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.195 2004/06/04 08:29:27 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -271,16 +271,16 @@ string short_name(string|Configuration long_name)
 
   id = Unicode.split_words_and_normalize( lower_case(long_name) )*"_";
   
-  if( strlen( id ) > 20 )
+  if( sizeof( id ) > 20 )
     id = (id[..16]+"_"+hash(id)->digits(36))[..19];
 
-  if( !strlen( id ) )
+  if( !sizeof( id ) )
     id = hash(long_name)->digits(36);
 
   if( is_mysql_keyword( id ) )
     return "x"+id[..19];
 
-  while( strlen(string_to_utf8( id )) > 20 )
+  while( sizeof(string_to_utf8( id )) > 20 )
     id = id[..strlen(id)-1];
 
   return string_to_utf8( id );
@@ -291,7 +291,7 @@ int _match(string w, array (string) a)
   if(!stringp(w)) // Internal request..
     return -1;
   foreach(a, string q)
-    if(stringp(q) && strlen(q) && glob(q, w))
+    if(stringp(q) && sizeof(q) && glob(q, w))
       return 1;
 }
 
@@ -312,7 +312,7 @@ mapping(string:mixed) http_low_answer( int status_code, string data )
     ([
       "error" : status_code,
       "data"  : data,
-      "len"   : strlen( data ),
+      "len"   : sizeof( data ),
       "type"  : "text/html",
       ]);
 }
@@ -582,7 +582,7 @@ string add_pre_state( string url, multiset state )
     base += "://" + host;
   else
     base = "";
-  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
+  if(sizeof(url)>5 && (url[1] == '(' || url[1] == '<'))
     return base + url;
   return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
@@ -608,11 +608,11 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     url = "";
 
   // If the URL is a local relative URL we make it absolute.
-  if(!has_value(url, "://") && (!strlen(url) || url[0] != '/') )
+  if(!has_value(url, "://") && (!sizeof(url) || url[0] != '/') )
     url = fix_relative(url, id);
   
   // Add protocol and host to local absolute URLs.
-  if(strlen(url) && url[0]=='/') {
+  if(sizeof(url) && url[0]=='/') {
     if(id) {
       url = id->url_base() + url[1..];
       if (!prestates) prestates = id->prestate;
@@ -770,10 +770,10 @@ mapping build_env_vars(string f, RequestID id, string path_info)
   mapping(string:string) new = ([]);
   RequestID tmpid;
 
-  if(id->query && strlen(id->query))
+  if(id->query && sizeof(id->query))
     new->INDEX=id->query;
 
-  if(path_info && strlen(path_info))
+  if(path_info && sizeof(path_info))
   {
     string t, t2;
     if(path_info[0] != '/')
@@ -787,7 +787,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
       new["SCRIPT_NAME"]=id->not_query;
     } else {
       new["SCRIPT_NAME"]=
-	id->not_query[0..strlen([string]id->not_query)-strlen(path_info)-1];
+	id->not_query[0..strlen([string]id->not_query)-sizeof(path_info)-1];
     }
     new["PATH_INFO"]=path_info;
 
@@ -918,16 +918,16 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     new["ROXEN_AUTHENTICATED"] = u->name();
   // User is valid with the Roxen userdb.
 
-  if(id->data && strlen(id->data))
+  if(id->data && sizeof(id->data))
   {
     if(id->misc["content-type"])
       new["CONTENT_TYPE"]=id->misc["content-type"];
     else
       new["CONTENT_TYPE"]="application/x-www-form-urlencoded";
-    new["CONTENT_LENGTH"]=(string)strlen(id->data);
+    new["CONTENT_LENGTH"]=(string)sizeof(id->data);
   }
 
-  if(id->query && strlen(id->query))
+  if(id->query && sizeof(id->query))
     new["INDEX"]=id->query;
 
   new["REQUEST_METHOD"]=id->method||"GET";
@@ -1393,7 +1393,7 @@ constant empty_strings = ({""})*sizeof(safe_characters);
 //! characters (a-z, A-Z and 0-9). Otherwise returns 0.
 int(0..1) is_safe_string(string in)
 {
-  return strlen(in) && !strlen(replace(in, safe_characters, empty_strings));
+  return sizeof(in) && !sizeof(replace(in, safe_characters, empty_strings));
 }
 
 string make_entity( string q )
@@ -1435,7 +1435,7 @@ string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config))
     return url;
-  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
+  if(sizeof(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
 }
@@ -1443,7 +1443,7 @@ string add_config( string url, array config, multiset prestate )
 string extension( string f, RequestID|void id)
 {
   string ext, key;
-  if(!f || !strlen(f)) return "";
+  if(!f || !sizeof(f)) return "";
   if(!id || !(ext = [string]id->misc[key="_ext_"+f])) {
     sscanf(reverse(f), "%s.%*s", ext);
     if(!ext) ext = "";
@@ -1461,7 +1461,7 @@ int(0..1) backup_extension( string f )
   //! Determines if the provided filename indicates
   //! that the file is a backup file.
 {
-  if(!strlen(f))
+  if(!sizeof(f))
     return 1;
   return (f[-1] == '#' || f[-1] == '~' || f[0..1]==".#"
 	  || (f[-1] == 'd' && sscanf(f, "%*s.old"))
@@ -1488,7 +1488,7 @@ string simplify_path(string file)
 //! will be a canonic representation of the given path.
 {
   // Faster for most cases since "//", "./" or "../" rarely exists.
-  if(!strlen(file) || (!has_value(file, "./") && (file[-1] != '.') &&
+  if(!sizeof(file) || (!has_value(file, "./") && (file[-1] != '.') &&
 		       !has_value (file, "//")))
     return file;
 
@@ -1499,7 +1499,7 @@ string simplify_path(string file)
   if(file[0] != '/')
     t2 = 1;
 
-  if(strlen(file) > 1
+  if(sizeof(file) > 1
      && file[-2]=='/'
      && ((file[-1] == '/') || (file[-1]=='.'))
 	)
@@ -1915,7 +1915,7 @@ Stdio.File open_log_file( string logfile )
   logfile = replace(logfile,({"%d","%m","%y","%h" }),
                     ({ (string)m->mday, (string)(m->mon),
                        (string)(m->year),(string)m->hour,}));
-  if(strlen(logfile))
+  if(sizeof(logfile))
   {
     Stdio.File lf=Stdio.File( logfile, "wac");
     if(!lf)

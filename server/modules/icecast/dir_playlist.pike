@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.8 2002/11/19 13:50:15 _cvs_hop Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.9 2004/06/04 08:29:22 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -73,7 +73,7 @@ void start()
 
 string peek_next()
 {
-  return sizeof(list) && list[0][strlen(query("dir"))..];
+  return sizeof(list) && list[0][sizeof(query("dir"))..];
 }
 
 string status()
@@ -90,7 +90,7 @@ string status()
 
 string current_filename()
 {
-  return current_file && current_file[strlen(query("dir"))..];
+  return current_file && current_file[sizeof(query("dir"))..];
 }
 
 string real_dir()

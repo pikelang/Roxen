@@ -2,7 +2,7 @@
 
 string noendslash( string what )
 {
-  while( strlen( what ) && what[ -1 ] == '/' )
+  while( sizeof( what ) && what[ -1 ] == '/' )
     what = what[..strlen(what)-2];
   return what;
 }
@@ -213,7 +213,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	    "    onMouseOut='p_off(this);' "
             "    onClick=\"window.location='" +
             (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
-             ((module&&strlen(module)) ? module + "/" : "")) + "';\">";
+             ((module&&sizeof(module)) ? module + "/" : "")) + "';\">";
       }
       else
         pre +=
@@ -228,13 +228,13 @@ string selected_item( string q, Configuration c, RequestID id,
           +(do_js ? "::='&form.popup-args;'" :
             "onClick=\"window.location='" +
             (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
-             ((module&&strlen(module)) ? module + "/" : "")) + "';\"") +
+             ((module&&sizeof(module)) ? module + "/" : "")) + "';\"") +
 	  ">";
       if( !do_js )
         pre +=
           "<a href='" +
           (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
-           ((module&&strlen(module)) ? module + "/" : "")) + "'>" +
+           ((module&&sizeof(module)) ? module + "/" : "")) + "'>" +
           Roxen.html_encode_string(group_name) + "&nbsp;"
           "("+sizeof(gd[1])+")</a>";
       if (list) {

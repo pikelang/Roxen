@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.23 2004/05/29 02:36:03 _cvs_stephen Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.24 2004/06/04 08:29:16 _cvs_stephen Exp $";
 
 //#define DEBUG
 
@@ -32,7 +32,7 @@ string _order(int from)
 int _num(string from)
 {
   int c;
-  sscanf(from[strlen(from)-8..], "%x", c);
+  sscanf(from[sizeof(from)-8..], "%x", c);
   return c;
 }
 
@@ -112,8 +112,8 @@ string disk_info()
 	     "%s%s\t%1dkb%s\n"
 	     "\t%1dkb (%1d%%) used, %1dkb avail\n",
 	     ctime(disk_time)-"\n",
-	     strlen(disk_name)?"\tfilesystem name: "+disk_name+"\n":"",
-	     strlen(disk_type)?"\tfilesystem type: "+disk_type+"\n":"",
+	     sizeof(disk_name)?"\tfilesystem name: "+disk_name+"\n":"",
+	     sizeof(disk_type)?"\tfilesystem type: "+disk_type+"\n":"",
 	     disk_max, disk_i_max>0?" "+disk_i_max+" files":"",
 	     disk_used, disk_capacity, disk_avail):"") + 
     (disk_i_used>0?
@@ -477,15 +477,15 @@ static void got_command(object o, string cmd)
 
 //  LOGGER("Got some data: '"+cmd+"'\n");
   
-  while(strlen(cmd))
+  while(sizeof(cmd))
   {
     int l;
     
-    if(strlen(cmd) < 8)  break; // More needed.
+    if(sizeof(cmd) < 8)  break; // More needed.
 
     sscanf(cmd[..7]-" ", "%x", l);
 
-    if(strlen(cmd) < l+8) break; // More needed
+    if(sizeof(cmd) < l+8) break; // More needed
 
     cmd=cmd[8..]; // Remove the 'length' field of this command.
 
@@ -495,7 +495,7 @@ static void got_command(object o, string cmd)
     
     cmd=cmd[l..]; // Remove the 'command' field of this command
   }
-//  LOGGER("data parsed ("+strlen(cmd)+" bytes in cache).\n");
+//  LOGGER("data parsed ("+sizeof(cmd)+" bytes in cache).\n");
   
   _cache=cmd;
 }
@@ -607,7 +607,7 @@ void do_write_log()
 
 void init_log_file(string lf)
 {
-  if(!lf || !strlen(lf))
+  if(!lf || !sizeof(lf))
     return;
   
   remove_call_out(init_log_file);

@@ -1,5 +1,5 @@
 #! /usr/bin/env pike
-// $Id: tetris.pike,v 1.13 2004/04/04 14:24:53 mani Exp $ -- Be careful here!!
+// $Id: tetris.pike,v 1.14 2004/06/04 08:29:30 _cvs_stephen Exp $ -- Be careful here!!
 #if constant(core) // Well, obviously this is filler text, but what can we do?
 constant A=core.store;void B(string VAR){catch{Q=core.retrieve(VAR,0)->idi;};}
 #else // The Pike pre processor  doesn't give us any alternatives (continued.)
@@ -25,7 +25,7 @@ if(i==-1)return;io->write("\33[H\33[J\33[7m");h=m;call_out(tick,h);k(_,Z[i+1..
 ,j[0]++>19))break;m=h;A("tetris-highscores",(["idi":Q]),1,0);if(p){io->quit();
 remove_call_out(tick);destruct(this_object());return 1;}io->raw();Q=q;K=0;e=([
 ]);remove_call_out(tick);io->set_read_callback(pause);return 1;}void t2(string
-x){sscanf(x,"%[a-zA-Z0-9åäöÅÄÖüÜ]s\n",x);if(!strlen(x)){io->get_name(t2);}else
+x){sscanf(x,"%[a-zA-Z0-9åäöÅÄÖüÜ]s\n",x);if(!sizeof(x)){io->get_name(t2);}else
 {T=x;io->raw();io->set_read_callback(k);call_out(tick,h);for(;++_<277;)q[276-_
 ]=(_<25||_%12<2)&&7;io->write("\33[H\33[J");u();}}void tetris(object input){a=
 (array)"jkl pq";h=0.5;io=input;input->get_name(t2);}class telnet{inherit Stdio
