@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.59 1999/11/24 19:10:16 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.60 1999/11/25 22:40:45 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -117,7 +117,12 @@ void dump_program( string pname, program what )
 {
   string outfile = make_ofilename( pname );
   string data = encode_value( what, MyCodec( what ) );
-  _static_modules.files()->Fd(outfile,"wct")->write(data);
+  if (catch {
+    _static_modules.files()->Fd(outfile,"wct")->write(data);
+  }) {
+    mkdir("precompiled");
+    _static_modules.files()->Fd(outfile,"wct")->write(data);
+  }
 } 
 
 int loaded_at( program p )
