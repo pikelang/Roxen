@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.5 2000/03/17 14:13:27 nilsson Exp $";
+constant cvs_version="$Id: baseline_throttling.pike,v 1.6 2000/05/15 19:51:46 kinkie Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -17,6 +17,7 @@ constant module_name = "Throttling: baseline setting";
 constant module_doc  = "This module will assign all requests"
   "a \"base\" bandwidth. That bandwidth"
   "will usually then be altered by other throttling modules";
+constant module_unique = 1;
 
 void create() {
   defvar("rate",10240,"Assigned bandwidth",TYPE_INT,
