@@ -47,7 +47,7 @@ class Realfile(mapping m, RequestID id) {
       n = ([]);
       string file = m->path;
       foreach( id->conf->location_modules(), mixed tmp ) {
-	if(!search(file, tmp[0])) {
+	if(has_prefix(file, tmp[0])) {
 #ifdef MODULE_LEVEL_SECURITY
 	  if(id->conf->check_security(tmp[1], id))
 	    continue;

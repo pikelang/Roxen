@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.31 2001/09/03 18:18:32 nilsson Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.32 2002/10/22 00:24:49 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -302,7 +302,7 @@ string home(string of, object id)
   string|int l, f;
   foreach(query("Logs"), l)
   {
-    if(!search(of, l))
+    if(has_prefix(of, l))
     {
       if(cached_homes[l] && !(cached_homes[l]==-1 && id->pragma["no-cache"]))
 	return (l=cached_homes[l])==-1?0:l;

@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.50 2002/04/05 11:55:08 grubba Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.51 2002/10/22 00:19:48 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -524,7 +524,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   NOCACHE();
 
   if(m->reset) {
-    if( !query("restrict") || !search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
+    if( !query("restrict") || has_prefix( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
 		 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
     {
       counter->reset(m->file);
