@@ -52,7 +52,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   array(int)fg=diagram_data["textcolor"];
   int tone=diagram_data["tone"];
 
-
+  for(int i; i<sizeof(numbers); i++)
+    if ((float)numbers[i]<0.0)
+      numbers[i]*=-1.0;
+  
 
 
 
