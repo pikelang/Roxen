@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.2 1998/07/23 18:56:49 wellhard Exp $
+ * $Id: webadm.pike,v 1.3 1998/07/24 07:33:46 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.2 1998/07/23 18:56:49 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.3 1998/07/24 07:33:46 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -70,12 +70,10 @@ string customer_name(string tag_name, mapping args, object id)
 
 string update_template(string tag_name, mapping args, object id)
 {
-  object db = Sql.sql(query("database"));
+  object db = id->conf->call_provider("sql","sql_object",id);
   string templatesdir = combine_path(roxen->filename(this)+
 				     "/", "../../../")+"templates/";
-  string sitesdir = combine_path(roxen->filename(this)+
-  				 "/", "../../../")+"sites/";
-  string destfile = sitesdir+
+  string destfile = query("sites_location")+
 		    (string)id->variables->customer_id+
 		    "/templates/default.tmpl";
   array a =
@@ -104,7 +102,7 @@ string update_template(string tag_name, mapping args, object id)
     template_file->close();
   }
   
-  return "";
+  return "<b>Template updated.</b>";
 }
 
 
@@ -178,7 +176,7 @@ mixed find_file(string f, object id)
   }
   
   sscanf(f, "%s/%s", tab, sub);
-  string res = "<template base=/webadm>\n"+
+  string res = "<template base=/"+(query("location")-"/")+">\n"+
 	       "<tmpl_body>";
   res += make_tablist(tablist, tabs[tab], id);
   if (!tabs[tab])
@@ -222,7 +220,7 @@ void start(int q, object conf)
 void create()
 {
   defvar("location", "/webadm/", "Mountpoint", TYPE_LOCATION);
-  defvar("database",
-	 "mysql://auto:site@kopparorm.idonex.se/autosite",
-	 "Database URL", TYPE_STRING);
+  defvar("sites_location", "/webadm/", "Sites directory", TYPE_DIR,
+	 "This is the physical location of the root directory for all"
+         " the IP-less sites.");
 }

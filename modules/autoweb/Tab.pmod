@@ -4,7 +4,7 @@ class tab
    
   string dir;   // setup by create()
   string tab;   // | 
-  object o;     // |
+  object|string o;     // |
   object parent;// |
   string title; // |
   int space;
@@ -89,10 +89,10 @@ class tab
     return a;
   }
 
-  object compile()
+  object|string compile()
   {
     mixed err;
-    if (o) destruct(o);
+    if (o && objectp(o)) destruct(o);
 
     master()->set_inhibit_compile_errors("");
     err = catch 
@@ -102,9 +102,8 @@ class tab
     err = master()->errors;
     master()->set_inhibit_compile_errors(0);
     if (err && err != "")
-      parent->sbdebug( "Errors while compiling " + dir + "/page.pike\n" + err
-		       + "\n" );
-    return o;
+      o = "Errors while compiling " + dir + "/page.pike\n" + err
+		       + "\n";
   }
 
   string|mapping show(string sub, object id, string f)
@@ -120,9 +119,9 @@ class tab
       if(id->pragma["no-cache"])
 	compile();
 
-    if(!o) 
+    if(stringp(o))
       tmp = "Compilation of \""+dir+"/page.pike"+"\" failed:\n <pre>"
-	+ err + "</pre>\n";
+	+ o + "</pre>\n";
     else
     {
       _master->set_inhibit_compile_errors("");
