@@ -524,6 +524,13 @@ array tag_echo(string t, mapping m, RequestID id) {
 }
 
 array container_gtext(string t, mapping|int m, string c, RequestID id) {
+  if(t[0..1]=="gh") {
+    int size;
+    sscanf(t, "gh%d", size);
+    t="gtext";
+    if(size > 1) m->scale = (string)(1.0 / ((float)size*0.6));
+    m-=([ "1":1, "2":1, "3":1, "4":1, "5":1, "6":1, "7":1, "8":1, "9":1 ]);
+  }
   return ({1, t, gtext_compat(m,id), c});
 }
 
@@ -537,7 +544,7 @@ mapping gtext_compat(mapping m, RequestID id) {
     m_delete(m, q);
     old_rxml_warning(id, "gtext attribute "+q,"magic-"+q[6..]);
   }
-  for(int i=2; i<7; i++)
+  for(int i=2; i<10; i++)
     if(m[(string)i])
     {
       m->scale = (string)(1.0 / ((float)i*0.6));
