@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.16 1998/08/19 11:55:22 grubba Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.17 1998/11/02 07:03:33 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -104,14 +104,14 @@ string tag_wizard(string t, mapping args, string contents, object id,
 #if __VERSION__ >= 0.6
     pike += sprintf("mixed wizard_done(object id)\n"
 		    "{\n"
-		    "  return parse_rxml(%O, id);\n"
+		    "  return parse_rxml(%O,id);\n"
 		    "}\n", f->done);
 #else
     pike += ("mixed wizard_done(object id)\n"
 	     "{\n"
 	     "  return parse_rxml(\""+replace(f->done,
-					      ({"\"","\n","\r", "\\"}), 
-					      ({"\\\"", "\\n", "\\r", "\\\\"}))+
+				   ({"\"","\n","\r", "\\"}), 
+				   ({"\\\"", "\\n", "\\r", "\\\\"}))+
 	     "\",id);\n"
 	     "}\n");
 #endif /* __VERSION__ >= 0.6 */
@@ -121,13 +121,13 @@ string tag_wizard(string t, mapping args, string contents, object id,
 #if __VERSION__ >= 0.6
     pike += sprintf("# "+q[1]+" %O\n", id->not_query);
     pike += sprintf("string page_"+p+"(object id) {" +
-		    "  return %O;\n"
+		    "  return parse_rxml(%O,id);\n"
 		    "}\n", q[0]);
 #else
     pike += ("# "+q[1]+" \""+id->not_query+"\"\n");
     pike += ("string page_"+p+"(object id) {" +
-	     "return \""+replace(q[0], ({"\"","\n","\r", "\\"}), 
-				 ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";}\n");
+	     "return parse_rxml(\""+replace(q[0], ({"\"","\n","\r", "\\"}), 
+			 ({"\\\"", "\\n", "\\r", "\\\\"}))+"\",id);}\n");
 #endif /* __VERSION__ >= 0.6 */
     p++;
   }
