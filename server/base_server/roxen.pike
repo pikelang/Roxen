@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.886 2005/01/17 14:54:20 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.887 2005/02/01 12:37:47 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3803,6 +3803,8 @@ class ArgCache
     }
   }
 
+#define SECRET_TAG "££"
+  
   int write_dump(Stdio.File file, int|void from_time)
   // Write a mapping from id to encoded arg string for all local arg
   // entries created after from_time to a file. Returns 0 if faled, 1
@@ -3810,7 +3812,8 @@ class ArgCache
   {
     constant FETCH_ROWS = 10000;
     
-    if(sizeof(secret+"\n") != file->write(secret+"\n"))
+    string encoded_secret = SECRET_TAG+MIME.encode_base64(secret, 1)+"\n";
+    if(sizeof(encoded_secret) != file->write(encoded_secret))
       return 0;
 
     // The server does only need to use file based argcache
@@ -3867,6 +3870,10 @@ class ArgCache
   // Returns an error message if there was a parse error, 0 otherwise.
   {
     string secret = file->gets();
+    // Note, old replication dumps can contain unencoded server secrets.
+    if(secret && has_prefix(secret, SECRET_TAG))
+      secret = MIME.decode_base64(secret[sizeof(SECRET_TAG)..]);
+
     if(!secret || !sizeof(secret))
       return "Server secret is missing\n";
 
