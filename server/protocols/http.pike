@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.312 2001/05/08 07:34:25 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.313 2001/05/09 11:54:32 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1625,8 +1625,8 @@ void send_result(mapping|void result)
           if (file["type"][0..4] == "text/") 
           {
             [charset,file->data] = output_encode( file->data );
-            if( charset )
-              charset = "; charset="+charset;
+            if( charset && (search(file["type"], "; charset=") == -1))
+	      charset = "; charset="+charset;
             else
               charset = "";
           }
