@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.87 2003/01/26 02:10:46 mani Exp $
+// $Id: cache.pike,v 1.88 2004/05/16 23:38:18 mani Exp $
 
 // #pragma strict_types
 
@@ -19,16 +19,16 @@
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
-# define CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
+# define CACHE_WERR(X ...) report_debug("CACHE: " X);
 #else
-# define CACHE_WERR(X)
+# define CACHE_WERR(X ...)
 #endif
 
 #undef MORE_CACHE_WERR
 #ifdef MORE_CACHE_DEBUG
-# define MORE_CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
+# define MORE_CACHE_WERR(X ...) report_debug("CACHE: " X);
 #else
-# define MORE_CACHE_WERR(X)
+# define MORE_CACHE_WERR(X ...)
 #endif
 
 // The actual cache along with some statistics mappings.
@@ -54,14 +54,14 @@ void flush_memory_cache (void|string cache) {
 // Expire a whole cache
 void cache_expire(string cache)
 {
-  CACHE_WERR(sprintf("cache_expire(\"%s\")", cache));
+  CACHE_WERR("cache_expire(%O)\n", cache);
   m_delete(caches, cache);
 }
 
 //! Lookup an entry in a cache.
 mixed cache_lookup(string cache, mixed key)
 {
-  CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", cache, key));
+  CACHE_WERR("cache_lookup(%O,%O)  ->  \n", cache, key);
   all[cache]++;
   int t=time(1);
   // Does the entry exist at all?
@@ -69,16 +69,16 @@ mixed cache_lookup(string cache, mixed key)
     // Is it time outed?
     if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
       m_delete (caches[cache], key);
-      CACHE_WERR("Timed out");
+      CACHE_WERR("Timed out\n");
     }
     else {
       // Update the timestamp and hits counter and return the value.
       caches[cache][key][TIMESTAMP]=t;
-      CACHE_WERR("Hit");
+      CACHE_WERR("Hit\n");
       hits[cache]++;
       return entry[DATA];
     }
-  else CACHE_WERR("Miss");
+  else CACHE_WERR("Miss\n");
   return UNDEFINED;
 }
 
@@ -118,7 +118,7 @@ mapping(string:array(int)) status()
 //! entry key is given.
 void cache_remove(string cache, void|mixed key)
 {
-  CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", cache, key));
+  CACHE_WERR("cache_remove(%O,%O)\n", cache, key);
   if(!cache) {
     m_delete(caches, cache);
     m_delete(hits, cache);
@@ -133,11 +133,9 @@ void cache_remove(string cache, void|mixed key)
 mixed cache_set(string cache, mixed key, mixed val, int|void tm)
 {
 #if MORE_CACHE_DEBUG
-  CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)\n",
-		     cache, key, val));
+  CACHE_WERR("cache_set(%O, %O, %O)\n", cache, key, val);
 #else
-  CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %t)\n",
-		     cache, key, val));
+  CACHE_WERR("cache_set(%O, %O, %t)\n", cache, key, val);
 #endif
   int t=time(1);
   if(!caches[cache])
@@ -159,35 +157,35 @@ void cache_clean()
   array c;
   mapping(string:array) cache;
   int t=time(1);
-  CACHE_WERR("cache_clean()");
+  CACHE_WERR("cache_clean()\n");
   foreach(caches; a; cache)
   {
-    MORE_CACHE_WERR("  Class  " + a);
+    MORE_CACHE_WERR("  Class  %O\n", a);
     foreach(cache; b; c)
     {
-      MORE_CACHE_WERR("     " + b + " ");
+      MORE_CACHE_WERR("     %O\n", b);
 #ifdef DEBUG
       if(!intp(c[TIMESTAMP]))
 	error("     Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
       if(c[TIMEOUT] && c[TIMEOUT] < t) {
-	MORE_CACHE_WERR("     DELETED (explicit timeout)");
+	MORE_CACHE_WERR("     DELETED (explicit timeout)\n");
 	m_delete(cache, b);
       }
       else {
 	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time)
 	  {
-	    MORE_CACHE_WERR("     DELETED");
+	    MORE_CACHE_WERR("     DELETED\n");
 	    m_delete(cache, b);
 	  }
 #ifdef MORE_CACHE_DEBUG
 	else
-	  CACHE_WERR("Ok");
+	  CACHE_WERR("Ok\n");
 #endif
       }
       if(!sizeof(cache))
       {
-	MORE_CACHE_WERR("  Class DELETED.");
+	MORE_CACHE_WERR("  Class DELETED.\n");
 	m_delete(caches, a);
       }
     }
@@ -263,10 +261,8 @@ private int max_persistence;
 // The low level call for storing a session in the database
 private void store_session(string id, mixed data, int t) {
   data = encode_value(data);
-  if(catch(db("local")->query("INSERT INTO session_cache VALUES (%s," +
-		     t + ",%s)", id, data)))
-    db("local")->query("UPDATE session_cache SET data=%s, persistence=" +
-	      t + " WHERE id=%s", data, id);
+  db("local")->query("REPLACE INTO session_cache VALUES (%s," +
+		     t + ",%s)", id, data);
 }
 
 // GC that, depending on the sessions session_persistence either
@@ -409,7 +405,7 @@ void create()
   session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   session_persistence = ([]);
 
-  CACHE_WERR("Now online.");
+  CACHE_WERR("Now online.\n");
 }
 
 void destroy() {
