@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.70 1999/06/03 21:27:21 grubba Exp $
+# $Id: configure.in,v 1.71 1999/06/11 04:52:07 mast Exp $
 #
 
 prefix=$PWD
@@ -465,7 +465,7 @@ esac
      *-fast*) ;;
      *)
       AC_SYS_COMPILER_FLAG(-O2,O2,OPTIMIZE)
-      if test "x$pike_cv_option_O2" != "xyes"; then
+      if test "x$roxen_cv_option_O2" != "xyes"; then
         AC_SYS_COMPILER_FLAG(-O,O,OPTIMIZE)
       fi
      ;;
@@ -508,12 +508,12 @@ fi
 AC_MSG_CHECKING(CCSHARED)
 if test -z "$CCSHARED" ; then
   if test "$GCC" = yes ; then
-    case $pike_cv_sys_os in
+    case $roxen_cv_sys_os in
       BSD/OS*) CCSHARED="";;
       *) CCSHARED="-fpic";;
     esac
   else
-    case $pike_cv_sys_os in
+    case $roxen_cv_sys_os in
 	hp*|HP*) CCSHARED="+z"; ;;
 	FreeBSD*) CCSHARED="-fpic";;
 	SCO_SV*) CCSHARED="-KPIC -dy -Bdynamic";;
