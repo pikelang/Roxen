@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.114 2000/06/05 17:55:01 grubba Exp $
+# $Id: start,v 1.115 2000/06/26 17:49:49 sigge Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -185,6 +185,9 @@ parse_args() {
     gdb=gdb
     once=1
   ;;
+  '--autoreload')
+     ARGS="$ARGS --autoreload"
+   ;;
   '--program')
     program="$2"
     once=1
@@ -342,6 +345,9 @@ the default arguments.
 				  works if Pike is compiled with debug.
 
        .B-wB.:                        Turn on Pike warnings.
+
+       .B--autoreloadB.:              Automatically reload pike-scripts when
+                                      they have changed on disk.
 
   .BEnvironment variables:B.
 
