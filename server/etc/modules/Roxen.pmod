@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.52 2000/12/02 20:13:24 per Exp $
+ * $Id: Roxen.pmod,v 1.53 2000/12/04 18:44:13 stewa Exp $
  *
  * Various helper functions.
  *
@@ -1284,7 +1284,7 @@ void set_cookie( RequestID id,
 //! information is sent to the client. This usualy results in the cookie
 //! being kept until the browser is exited. 
 {
-  if( expire_time_delta = -1 )
+  if( expire_time_delta == -1 )
     expire_time_delta = (3600*(24*365*5));
   string cookie = (http_encode_cookie( name )+"="+
                    http_encode_cookie( value ));
