@@ -1,4 +1,6 @@
+#include <module.h>
 inherit "module";
+inherit "roxenlib";
 constant module_type = MODULE_FIRST;
 
 constant module_name =
@@ -8,7 +10,7 @@ constant module_doc =
 "Smart HTTP relay module. Can relay according to "
 "regular expressions.";
 
-array(Relayer) relays;
+array(Relayer) relays = ({});
 
 
 class Relay
@@ -25,7 +27,7 @@ class Relay
 
   mapping make_headers( object from, int trim )
   {
-    mapping res = ([ "proxy-software":version(), ]);
+    mapping res = ([ "Proxy-Software":roxen->version(), ]);
     if( trim ) return res;
     foreach( indices(from->request_headers), string i )
     {
@@ -34,10 +36,10 @@ class Relay
        case "connection": /* We do not support keep-alive yet. */
          break;
        case "host":
-         res[i] = host+":"+port;
+         res[String.capitalize( i )] = host+":"+port;
          break;
        default:
-         res[i] = from->request_headers[i];
+         res[String.capitalize( i )] = from->request_headers[i];
          break;
       }
     }
@@ -61,9 +63,16 @@ class Relay
   void done_with_data( )
   {
     destruct(fd);
-    id->send_result( http_rxml_reply( buffer, id ) );
+    id->send_result( http_rxml_answer( buffer, id ) );
     destruct();
     return;
+  }
+
+  void done_with_send( int ok )
+  {
+    id->end();
+    destruct( fd );
+    destruct( );
   }
 
   void connected( int how )
@@ -78,15 +87,11 @@ class Relay
       return;
     }
 
-    sendfile( ({ request_data }), 0, 0, 0, 0, fd, 0, 0 );
+    Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd );
 
     if( !options->rxml )
     {
-      id->send_result( ([
-        "raw":1,
-        "file":fd
-      ]) );
-      destruct();
+      Stdio.sendfile( ({}), fd, 0, -1, ({}), id->my_fd, done_with_send );
       return;
     }
 
@@ -108,6 +113,7 @@ class Relay
     else
     {
       mapping headers = ([]);
+      string file;
 
       if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
       {
@@ -117,16 +123,15 @@ class Relay
 
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" "+file+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+http_encode_string(file)+" HTTP/1.0\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
+
     }
 
     if( options->utf8 )
-      request_data = string_to_utf8( request );
-
+      request_data = string_to_utf8( request_data );
     fd = Stdio.File( );
-
     fd->async_connect( host, port, connected );
   }
 }
@@ -134,18 +139,20 @@ class Relay
 
 class Relayer
 {
-  inherit Regexp;
+  object r;
   string pattern;
   string url;
   multiset options;
 
-  void do_replace( string f )
+  string do_replace( string f )
   {
-    array to = split( f );
+    array to = (array(string))r->split( f );
     array from = map( indices( to ), lambda(int q ){
                                        return "\\"+(q+1);
                                      } );
-    return replace( url, from, to );
+    if( sizeof( to ) )
+      return predef::replace( url, from, to );
+    return url;
   }
 
   Relay relay( object id )
@@ -155,15 +162,16 @@ class Relayer
     if( id->query )
       file = file+"?"+id->query;
 
-    if( match( file ) )
+    if( r->match( file ) )
       return Relay( id, do_replace( file ), options );
   }
 
-  void create( string pattern, string u, multiset o )
+  void create( string p, string u, multiset o )
   {
+    pattern = p;
     options = o;
     url = u;
-    ::create( pattern );
+    r = Regexp( pattern );
   }
 }
 
@@ -180,7 +188,7 @@ void create( Configuration c )
             "EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
             "LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
             "MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8]\n"
-            "<pre> \1 to \9 will be replaced with submatches from the regexp."
+            "</pre> \1 to \9 will be replaced with submatches from the regexp.<p>"
             "rxml, trimheaders etc. are flags. If rxml is specified, the "
             "result of the relay will be RXML-parsed, Trimheaders and raw are "
             " mutually exclusive, if"
@@ -189,11 +197,13 @@ void create( Configuration c )
             "if raw is specified, the request is sent to the remote server"
             " exactly as it arrived to roxen, not even the Host: header "
             "is changed.  If utf8 is specified the request is utf-8 encoded "
-            "before it is sent to the remote server." );
+            "before it is sent to the remote server.<p>"
+            " For EXTENSION and LOCATION, the matching local filename is "
+            "appended to the url-prefix specified, no replacing is done." );
   }
 }
 
-void start( Configuration c )
+void start( int i, Configuration c )
 {
   if( c )
   {
@@ -212,32 +222,40 @@ void start( Configuration c )
          case "match":
            tokens = tokens[1..];
            break;
+
          case "location":
            tokens = tokens[1..];
            tokens[0] = replace(tokens[0],
                                ({"*", ".", "?" }),
                                ({ "\\*", "\\.", "\\?" }) )+"(.*)";
-           tokens[1] += "\1";
+           tokens[1] += "\\1";
            break;
+
          case "extension":
            tokens = tokens[1..];
-           tokens[1] += "\1."+tokens[0]+"\2";
+           tokens[1] += "\\1."+tokens[0]+"\\2";
            tokens[0] = "(.*)\\."+
                      replace(tokens[0],
                              ({"*", ".", "?" }),
                              ({ "\\*", "\\.", "\\?" }) )
                      +"(.*)";
+           break;
+
          default:
            report_warning( "Unknown rule: "+tokens[0]+"\n");
            break;
         }
-        if(catch ( relays += ({ Relayer( tokens[0], tokens[1],
-                                         (multiset)map(tokens[2..],lower_case))
+
+        if(mixed e  = catch ( relays += ({ Relayer( tokens[0], tokens[1],
+                                                    (multiset)map(tokens[2..],
+                                                                  lower_case))
         }) ) )
           report_warning( "Syntax error in regular expression: "+
-                          token[0]+"\n" );
+                          tokens[0]+": %s\n", ((array)e)[0] );
+      }
     }
   }
+
 }
 
 mapping first_try( RequestID id )
