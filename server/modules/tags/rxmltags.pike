@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.335 2002/01/07 18:27:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.336 2002/01/08 17:42:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3800,7 +3800,10 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
-    if(!var) var="";
+    if(!var)
+      // Compatibility kludge to work with the string-only approach
+      // below.
+      return do_check ("", arr, id) || do_check ("0", arr, id);
 
     string is;
 
