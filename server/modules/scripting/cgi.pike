@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.90 1998/07/07 16:08:44 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.91 1998/07/12 22:49:01 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -916,7 +916,12 @@ mapping handle_file_extension(object o, string e, object id)
   rm(q);
   write_file(q, f);
 
+#if constant(chmod)
+  chmod(q, 0555);
+#else /* !constant(chmod) */
   popen("chmod u+x "+q);
+#endif /* constant(chmod) */
+
   err=catch(toret = low_find_file(w, id, "/tmp/"));
 
   if(err) throw(err);
