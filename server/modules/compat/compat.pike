@@ -23,7 +23,7 @@ constant thread_safe=1;
 constant language = roxen->language;
 
 constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
-LocaleString module_name   = LOCALE(3,"Old RXML Compatibility Module");
+LocaleString module_name   = LOCALE(3,"Tags: Old RXML Compatibility Module");
 
 #if ROXEN_COMPAT > 1.3
 LocaleString module_doc    =
