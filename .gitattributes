@@ -30,6 +30,7 @@ urw_itc_avant_garde-demi-r binary
 # Remove the corresponding line before committing
 # changes to these files.
 /Makefile foreign_ident
+/Makefile.in foreign_ident
 /configure.in foreign_ident
 /extern/acconfig.h foreign_ident
 /extern/cgi.c foreign_ident

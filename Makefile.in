@@ -1,3 +1,7 @@
+#
+# $Id: Makefile.in,v 1.94 1999/04/14 14:22:50 grubba Exp $
+#
+
 # @configure_input@
 SRCDIR=@srcdir@
 VPATH=@srcdir@
@@ -7,6 +11,7 @@ prefix=@prefix@
 
 INSTALL=@INSTALL@
 
+AR=@AR@
 CC=@CC@
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@REALCFLAGS@
@@ -28,7 +33,7 @@ extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 gmp: force
-	-@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
+	-@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" "AR=$(AR)" all)
 
 gdbm: force
 	-@(cd gdbm;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -72,7 +77,7 @@ verify_zlib:
 	@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" test)
 
 verify_gmp:
-	@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" check)
+	@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" "AR=$(AR)" check)
 
 new_peep_engine:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)
