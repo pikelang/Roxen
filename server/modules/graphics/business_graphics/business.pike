@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.116 1999/07/26 13:27:28 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.117 1999/09/02 18:34:07 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,13 +17,11 @@ constant thread_safe=1;
 
 inherit "module";
 inherit "roxenlib";
-import Array;
-// import Image;
 
 function create_pie, create_bars, create_graph;
 
 #ifdef BG_DEBUG
-  mapping bg_timers = ([]);
+mapping bg_timers = ([]);
 #endif
 
 //FIXME (Inte alltid VOID!
@@ -52,12 +50,8 @@ array register_module()
        "                 <b>sumbars</b>, <b>normsumbars</b>, <b>linechart</b>,"
        " <b>barchart</b>,\n"
        "                 <b>piechart</b> and <b>graph</b>\n"
-#if constant(Image.JPEG.decode)
        "  <b>background</b>     Takes the filename of a pnm-, gif- or\n"
        "                 jpeg-image as input.\n"
-#else
-       "  <b>background</b>     Takes the filename of a pnm image as input.\n"
-#endif
        "  <b>width</b>          Width of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>height</b>         Height of diagram image in pixels.\n"
@@ -78,8 +72,6 @@ array register_module()
 
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
        " the\n                 height in pixels of the cylinder as argument.\n"
-       /* " tone         Do nasty stuff to the background.\n"
-	  " Requires dark background to be visible.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "  <b>neng</b>           As above but 0.1-1.0 is written 0.xxx .\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
@@ -95,8 +87,6 @@ array register_module()
        "                 be given i <b>xnames</b> and so on)\n"
        "  <b>bgcolor</b>        Use this background color for antialias.\n"
        "  <b>notrans</b>        If given, the bgcolor will be opaque.\n"
-       
-       // Not supported any more!     "  <b>colorbg</b>        Sets the color for the background\n"
        "  <b>textcolor</b>      Sets the color for all text\n"
        "                 (Can be overrided)\n"
        "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
@@ -146,8 +136,6 @@ array register_module()
        " of tab.\n"
        "\n&lt;<b>xaxis</b>&gt; and &lt;<b>yaxis</b>&gt; (tags)\n"
        "Options:\n"
-       /* " name=        Dunno what this does.\n" */
-       //I know!!! /Hedda
        "  <b>start</b>          Limit the start of the diagram at this"
        " quantity.\n"
        "                 If set to <b>min</b> the axis starts at the lowest"
@@ -168,17 +156,14 @@ void start(int num, object configuration)
   if (!loaded) {
     loaded = 1;
     create_pie   = ((program)"create_pie")()->create_pie;
+    roxen->dump( (combine_path( __FILE__, "../" ) + "create_pie.pike")
+                 -(getcwd()+"/") );
     create_bars  = ((program)"create_bars")()->create_bars;
+    roxen->dump( (combine_path( __FILE__, "../" ) + "create_bars.pike")
+                 -(getcwd()+"/"));
     create_graph = ((program)"create_graph")()->create_graph;
-    /* Use the global cache
-    if (get_dir(query("cachedir")))
-      foreach(get_dir(query("cachedir")), string file)
-	rm(query("cachedir")+file);
-    else
-      if (!mkdir(query("cachedir")))
-	report_warning ("BG: Cache directory "+
-			query("cachedir")+" can not be created.\n");
-    */
+    roxen->dump( (combine_path( __FILE__, "../" ) + "create_graph.pike")
+                 -(getcwd()+"/"));
   }
   image_cache = roxen.ImageCache( "diagram", draw_callback );  
 }
@@ -191,11 +176,6 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
   loaded = 0;
-  /* use the global cache
-  if (get_dir(query("cachedir")))
-    foreach(get_dir(query("cachedir")), string file)
-      rm(query("cachedir")+file);
-  */
 }
 
 void create()
@@ -209,12 +189,6 @@ void create()
   defvar( "ext", 1, "Append .fmt (gif, jpeg etc) to all images",
 	  TYPE_FLAG|VAR_MORE, "Append .gif, .png, .gif etc to all images"
 	  " made. Normally this will only waste bandwidth");
-  /* use the global mountpoint and cache
-  defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	  "The URL-prefix for the diagrams." );
-  defvar( "cachedir", "../bgcache/", "Cache directory", TYPE_DIR|VAR_MORE,
-	  "The directory that will be used to store diagrams." );
-  */
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
@@ -848,76 +822,9 @@ string container_diagram(string tag, mapping m, string contents,
   return make_tag("img", m);
 }
 
-// mapping query_container_callers()
-// {
-//   return ([ "diagram" : tag_diagram ]);
-// }
-
 int|object PPM(string fname, object id)
 {
-  if( objectp(fname) )
-    perror("fname: %O\n",indices(fname));
-  string q;
-  q = id->conf->try_get_file( fname, id );
-
-  if(!q) perror("Diagram: Unknown image '"+fname+"'\n");
-
-  object g;
-  if (sizeof(indices( g=Gz )))
-    if (g->inflate)
-      catch { q = g->inflate()->inflate(q); };
-
-  if(q)
-  { 
-    object img_decode;
-#if constant(Image.JPEG.decode)
-    if (q[0..2]=="GIF")
-      if (catch{img_decode=Image.GIF.decode(q);})
-	return 1;
-      else
-	return img_decode;
-    else if (search(q[0..13],"JFIF")!=-1)
-      if (catch{img_decode=Image.JPEG.decode(q);})
-	return 1;
-      else
-	return img_decode;
-    else 
-#endif
-      if (q[0..0]=="P")
-	catch{img_decode=Image.PNM.decode(q);};
-    if(!img_decode)
-      catch{img_decode = Image.PNG.decode(q);};
-    if(img_decode) 
-      return img_decode;
-#if constant(Image.JPEG.decode)
-    perror("Diagram: Unknown image type for '"+fname+"', "
-	   "only GIF, jpeg, png and pnm is supported.\n");
-    return 1;
-#else
-    perror("Diagram: Unknown image type for '"+fname+"', "
-	   "only pnm, png and gif is supported.\n");
-    return 1;
-#endif
-  }
-  else
-    return 1;
-}
-
-mapping http_img_answer( string msg )
-{
-  return http_string_answer( msg );
-}
-
-mapping unquote( string f )
-{
-  //NU: Load the file f
-
-  if (catch {
-    return decode_value(Stdio.read_file(query("cachedir")+f));
-  })
-    return 0;
-  
-  //  return cache[ f ];
+  return roxen->load_image( fname, id );
 }
 
 mapping find_internal(string f, object id)
@@ -948,33 +855,22 @@ mixed draw_callback(mapping args, object id)
       if (!(args->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       args->image=args->image->
-#if constant(Image.JPEG.decode)
 	write("The file was", "not found ",
 	      "or was not a","jpeg-, gif- or","pnm-picture.");
-#else
-	write("The file was","not found ",
-	      "or was not a","pnm-picture.");
-#endif
     }
   } else if(args->tonedbox) {
     m_delete( args, "bgcolor" );
-    args->image = Image.image(args->xsize, args->ysize)->
+    args->image = Image.Image(args->xsize, args->ysize)->
       tuned_box(0, 0, args->xsize, args->ysize, args->tonedbox);
   }
   else if (args->colorbg)
   {
     back=0; //args->bgcolor;
     m_delete( args, "bgcolor" );
-    args->image = Image.image(args->xsize, args->ysize, @args->colorbg);
+    args->image = Image.Image(args->xsize, args->ysize, @args->colorbg);
   } 
-  /*else if (args->notrans)
-    {
-      args->image = Image.image(args->xsize, args->ysize, @args->bgcolor);
-      m_delete( args, "bgcolor" );
-    }
-  */
   
-  object(Image.image) img;
+  Image.Image img;
 
 #ifdef BG_DEBUG
   bg_timers->drawing = gauge {
@@ -997,62 +893,13 @@ mixed draw_callback(mapping args, object id)
   if (args->bg_timers)
     bg_timers+=args->bg_timers;
 #endif
-  object ct;
-  if(args->colortable_cache)
-  {
-    ct = palette_cache[args->colortable_cache];
-    if(!ct)
-      ct = palette_cache[args->colortable_cache] =
-	   Image.colortable(img)->nodither();
-  }
-
-//   if (args->image)
-//   {
-//     werror("blablasdfbsdfgbdfgb");
   if (args->turn)
     img=img->rotate_ccw();
 	
-//   if (back)
-//     return http_string_answer(
-//       Image.GIF.encode( img,
-// 			Image.colortable( 6,6,6,
-// 					  ({0,0,0}),
-// 					  ({255,255,255}),
-// 					  39)->floyd_steinberg(), 
-// 			@back ),
-//       "image/gif");  
-//     else
-//       return http_string_answer(
-// 	Image.GIF.encode( img,
-// 			  Image.colortable( 6,6,6,
-// 					    ({0,0,0}),
-// 					    ({255,255,255}),
-// 					    39)->floyd_steinberg() ),
-// 	"image/gif");
-//   }
-//   else
-//   {
 #ifdef BG_DEBUG
   if(id->prestate->debug)
     werror("Timers: %O\n", bg_timers);
 #endif
 
-  string pic;
-  if(args->format == "gif")
-  {
-    if(!ct) ct = Image.colortable(img);
-    pic = Image.GIF.encode(img, ct, @(back||({})));
-  } else
-    pic = Image[upper_case(args->format)]->encode( img );
-
-  return
-  ([
-    "data":pic,
-    "meta":
-    ([
-      "xsize":img->xsize(),
-      "ysize":img->ysize(),
-      "type":"image/"+lower_case(args->format)
-    ])
-  ]);
+  return img;
 }
