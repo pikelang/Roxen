@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.45 1998/08/10 21:35:17 per Exp $
+# $Id: start,v 1.46 1998/08/20 07:33:49 per Exp $
 
 VERSION=202; BETA=.b;
 
@@ -14,7 +14,9 @@ program=base_server/roxenloader.pike
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+    if [ x"$1" != "x--help" ] ; then
+      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+    fi
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
@@ -126,6 +128,9 @@ parse_args() {
   '--debug'|'--with-debug'|'--enable-debug')
     debug=1
   ;;
+  '--without-debug')
+    debug=-1
+  ;;
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
   ;;
@@ -135,8 +140,11 @@ parse_args() {
   '--no-threads'|'--without-threads'|'--disable-threads')
     DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
   ;;
-  '--profile')
+  '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"
+  ;;
+  '--with-file-profile'|'--file-profile')
+    DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
   ;;
   '--keep-alive'|'--with-keep-alive'|'--enable-keep-alive')
     DEFINES="-DKEEP_ALIVE $DEFINES"
@@ -157,15 +165,95 @@ parse_args() {
     exit 0
   ;;
   '--help'|'-?')
-  tput 'bold' 2>/dev/null
-  cat << EOF
-Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE] [--threads] [--no-threads] [--profile] [--keep-alive] [--once] [--gdb] [--program=PROGRAM] [--help]
-This command will start the Roxen server. 
-If the configuration dir is set, a different set of debuglogfiles
-will be used.
+  sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'rmso' 2>/dev/null`/g" << EOF
+.BThis command will start the Roxen serverB..
 
-The environment variable ROXEN_ARGS can be used to specify
+The environment variable .BROXEN_ARGSB. can be used to specify
 the default arguments.
+
+   .BArguments:B.
+
+      .B--version:B.                   Output version information.
+
+      .B--help -?:B.                   This information
+
+      .B--log-dir=DIR:B.              Set the log directory. Defaults to .B../logsB..
+
+      .B--config-dir=DIR:B.           Use an alternate configuration directory
+				   Defaults to .B../configurationB..
+
+      .B--with-threads:B.             If threads are available, use them.
+
+      .B--without-threads:B.          Even if threads are enabled per default, 
+                                   disable them.
+
+      .B--with-profile:B.             Store runtime profiling information on
+				   a directory basis. This information is
+ 				   not saved on permanent storage, it is only
+				   available until the next server restart
+				   This will enable a new 'action' in the
+				   configuration interface
+
+      .B--with-file-profile:B.         Like .B--with-profileB., but save information 
+                                   for each and every file.
+
+      .B--with-keep-alive:B.           Enable keep alive in the HTTP 
+			           protocol module. This will soon be 
+                                   the default. Some clients might have 
+				   problems with keepalive.
+
+      .B--once:B.                      Run the server only once, in the foreground.
+				   This is very useful when debugging.
+
+      .B--gdb:B.                       Run the server in gdb. Implies .B--onceB..
+
+      .B--program:B.                   Start a different program with the roxen
+				   pike. As an example, 
+                                   ./start --program bin/install.pike will 
+				   start the installation program normally 
+                                   started with ./install
+
+      .B--with-debug:B.                Enable debug
+
+      .B--without-debug:B.             Disable all debug
+	
+      .B--with-fd-debug:B.             Enable FD debug.
+
+      .B--truss:B.                     Run the server under truss, shows .BallB. 
+				   system calls (Solaris only). This is 
+				   extremely noisy, and is not intented for 
+				   anything but debug.
+
+      .B--pid-file=<file>:B.           Store the roxen and startscript pids in this
+				   file. Defaults to .B/tmp/roxen_$UIDB.
+         
+  .BArguments passed to pike:B.
+
+       .B-DDEFINE:B.                   Define the symbol DEFINE
+
+       .B-d<level>:B.                  Set the runtime pike debug to level.
+				   This only works if pike is compiled 
+				   with debug.
+
+       .B-s<size>:B.                   Set the stack size.
+
+       .B-M <path>:B.                  Add the path to the pike module path
+
+       .B-I <path>:B.                  Add the path to the pike include path
+
+       .B-t:B.                         Turn on pike level tracing
+
+       .B-t<level>:B.                  Turn on more pike tracing. This only 
+				   works if pike is compiled with debug.
+
+
+  .BEnvironment variables:B.
+
+     ROXEN_CONFIGDIR:B.              Same as .B--config-dir=...
+     ROXEN_PID_FILE:B.               Same as .B--pid-file=...
+     ROXEN_LANG:B.                   The default language for all language
+				   related tags. Defaults to 'en' for english.
+
 EOF
     tput 'rmso' 2>/dev/null
     exit 0
@@ -198,6 +286,10 @@ if [ -z "$debug" ] ; then
   DEBUG="-DMODULE_DEBUG";
 else
   DEBUG="-DDEBUG -DMODULE_DEBUG"
+fi
+
+if [ x"$debug" -eq x-1 ] ; then
+  DEBUG="";
 fi
 
 if [ -z "$once" ] ; then
