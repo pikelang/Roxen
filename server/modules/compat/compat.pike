@@ -29,8 +29,8 @@ void create(object c)
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
-string query_providers() {
-  return "old_rxml_warning";
+string query_provides() {
+  return "oldRXMLwarning";
 }
 
 void old_rxml_warning(object id, string problem, string solution)

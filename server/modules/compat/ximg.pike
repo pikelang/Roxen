@@ -1,4 +1,4 @@
-constant cvs_version="$Id: ximg.pike,v 1.2 1999/11/27 13:39:43 nilsson Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.3 1999/12/03 14:00:35 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -11,7 +11,13 @@ array register_module()
 	    "This module is obsolete. It does the same thing as the imgs tag.",0,1 });
 }
 
+RoxenModule rxml_warning_cache;
+void old_rxml_warning(RequestID id, string no, string yes) {
+  if(!rxml_warning_cache) rxml_warning_cache=my_configuration()->get_provider("oldRXMLwarning");
+  rxml_warning_cache->old_rxml_warning(id, no, yes);
+}
+
 string tag_ximg(string t, mapping m, RequestID id) {
-  call_provider("oldRXMLwarning", old_rxml_warning, id, "ximg tag","imgs");
+  old_rxml_warning(id, "ximg tag","imgs");
   return make_tag("imgs",m);
 }
