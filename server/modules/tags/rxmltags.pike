@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.91 2000/03/09 02:23:42 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.92 2000/03/10 00:40:29 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -227,26 +227,25 @@ class TagAppend {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      RXML.Context context=RXML.get_context();
-      mixed value=context->user_get_var(args->variable, args->scope);
+      mixed value=RXML.user_get_var(args->variable, args->scope);
       if (args->value) {
 	// Append a value to an entity variable.
 	if (value)
 	  value+=args->value;
 	else
 	  value=args->value;
-	context->user_set_var(args->variable, value, args->scope);
+	RXML.user_set_var(args->variable, value, args->scope);
 	return 0;
       }
       if (args->from) {
 	// Append the value of another entity variable.
-	mixed from=context->user_get_var(args->from, args->scope);
+	mixed from=RXML.user_get_var(args->from, args->scope);
 	if(!from) parse_error("From variable doesn't exist.\n");
 	if (value)
 	  value+=from;
 	else
 	  value=from;
-	context->user_set_var(args->variable, value, args->scope);
+	RXML.user_set_var(args->variable, value, args->scope);
 	return 0;
       }
       parse_error("No value specified.\n");
@@ -372,22 +371,21 @@ class TagSet {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      RXML.Context context=RXML.get_context();
       if (args->value) {
 	// Set an entity variable to a value.
-	context->user_set_var(args->variable, args->value, args->scope);
+	RXML.user_set_var(args->variable, args->value, args->scope);
 	return 0;
       }
       if (args->expr) {
 	// Set an entity variable to an evaluated expression.
-	context->user_set_var(args->variable, sexpr_eval(args->expr), args->scope);
+	RXML.user_set_var(args->variable, sexpr_eval(args->expr), args->scope);
 	return 0;
       }
       if (args->from) {
 	// Copy a value from another entity variable.
-	mixed from=context->user_get_var(args->from, args->scope);
+	mixed from=RXML.user_get_var(args->from, args->scope);
 	if(!from) run_error("From variable doesn't exist.\n");
-	context->user_set_var(args->variable, from, args->scope);
+	RXML.user_set_var(args->variable, from, args->scope);
 	return 0;
       }
 
@@ -588,9 +586,9 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variable)
   {
-    if(zero_type(RXML.get_context()->user_get_var(n, m->scope)))
+    if(zero_type(RXML.user_get_var(n, m->scope)))
       RXML.run_error(tag, "No such variable ("+n+").\n", id);
-    string var=(string)RXML.get_context()->user_get_var(n, m->scope);
+    string var=(string)RXML.user_get_var(n, m->scope);
     return m->quote=="none"?var:({ html_encode_string(var) });
   }
 
@@ -895,38 +893,45 @@ string|array(string) container_crypt( string s, mapping m,
   return ({ crypt(c) });
 }
 
-string container_for(string t, mapping args, string c, RequestID id)
-{
-  string v = args->variable;
-  int from = (int)args->from;
-  int to = (int)args->to;
-  int step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
+class TagFor {
+  inherit RXML.Tag;
+  constant name = "for";
 
-  if((to<from && step>0)||(to>from && step<0)) to=from+step;
+  class Frame {
+    inherit RXML.Frame;
 
-  string res="";
-  if(to<from)
-  {
-    if(v)
-      for(int i=from; i>=to; i+=step)
-        res += "<set variable="+v+" value="+i+" />"+c;
-    else
-      for(int i=from; i>=to; i+=step)
-        res+=c;
-    return res;
+    private int from,to,step,count;
+
+    array do_enter(RequestID id) {
+      from = (int)args->from;
+      to = (int)args->to;
+      step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
+      if((to<from && step>0)||(to>from && step<0)) to=from+step;
+      from-=step;
+      count=from;
+      return 0;
+    }
+
+    int do_iterate() {
+      if(!args->variable) {
+	int diff=abs(to-from);
+	to=from;
+	return diff;
+      }
+      werror("%d\n",count);
+      count+=step;
+      RXML.user_set_var(args->variable, count, args->scope);
+      if(to<from) return count>=to;
+      return count<=to;
+    }
+
+    /* FIXME
+    array do_return(RequestID id) {
+      RXML.user_set_var(args->variable, count-step, args->scope);
+      return 0;
+    }
+    */
   }
-  else if(to>from)
-  {
-    if(v)
-      for(int i=from; i<=to; i+=step)
-        res += "<set variable="+v+" value="+i+" />"+c;
-    else
-      for(int i=from; i<=to; i+=step)
-        res+=c;
-    return res;
-  }
-
-  return "<set variable="+v+" value="+to+" />"+c;
 }
 
 string container_foreach(string t, mapping args, string c, RequestID id)
@@ -1219,7 +1224,7 @@ array(string) container_gauge(string t, mapping args, string contents, RequestID
   contents = parse_rxml( contents, id );
   t = gethrtime()-t;
 
-  if(args->variable) RXML.get_context()->user_set_var(args->variable, t/1000000.0, args->scope);
+  if(args->variable) RXML.user_set_var(args->variable, t/1000000.0, args->scope);
   if(args->silent) return ({ "" });
   if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
   if(args->resultonly) return ({contents});
@@ -1441,7 +1446,7 @@ class TagCSet {
 	content = html_decode_string( content );
       if( !args->variable ) parse_error("Variable not specified.\n");
 
-      RXML.get_context()->user_set_var(args->variable, content, args->scope);
+      RXML.user_set_var(args->variable, content, args->scope);
       return ({ "" });
     }
   }
