@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.30 2000/11/19 22:06:45 stewa Exp $
+// $Id: module.pmod,v 1.31 2000/11/19 23:34:03 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1275,7 +1275,8 @@ static string input(string name, string value, int size,
 
   args->name=name;
   args->value=value;
-  args->size=(string)size; 
+  if(!args->size)
+    args->size=(string)size; 
 
   string render="<input";
 
