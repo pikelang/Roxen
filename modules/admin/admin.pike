@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.5 1998/07/16 16:30:03 js Exp $
+ * $Id: admin.pike,v 1.6 1998/08/10 06:32:19 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.5 1998/07/16 16:30:03 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.6 1998/08/10 06:32:19 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -137,7 +137,7 @@ mixed find_file(string f, object id)
 array register_module()
 {
    return ({ MODULE_LOCATION, "AutoSite Administration Interface",
-	     "",0,0 });
+	     "",0,1 });
 }
 
 void start(int q, object conf)
