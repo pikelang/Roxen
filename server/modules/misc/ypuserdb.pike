@@ -3,12 +3,14 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.7 1998/02/10 18:36:20 per Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.8 1998/02/24 12:06:55 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+#if constant(Yp.Domain)
 
 // import Stdio;
 // import Array;
@@ -17,7 +19,7 @@ inherit "roxenlib";
 /*
  * Globals
  */
-object(Domain) domain;
+object(Yp.Domain) domain;
 
 /*
  * Statistics
@@ -30,7 +32,7 @@ string status()
 {
   return("<h1>Security info</h1>\n"
 	 "<b>YP-server:</b> " + domain->server("passwd.byname") + "<br>\n"
-	 "<b>YP-domain:</b> " + Yp.default_yp_domain() + "<br>\n"
+	 "<b>YP-domain:</b> " + default_yp_domain() + "<br>\n"
 	 "<p>\n"
 	 "<b>Successful auths:</b> " + (string)succ +
 	 ", " + (string)emptypasswd + " had empty password fields.<br>\n"
@@ -130,3 +132,4 @@ void start(int i)
     domain = Yp.Domain();
 }
 
+#endif /* constant(Yp.Domain) */
