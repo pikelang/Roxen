@@ -773,17 +773,23 @@ class TagConfigurationsplugin
   }
 }
 
-string simpletag_configif_output(string t, mapping m, string c, object id)
+class TagThemePath
 {
-  RXML.run_error("configif-output removed.\n");
-}
-
-string simpletag_theme_path( string tag, mapping m, string s, RequestID id  )
-{
-  while( id->misc->orig ) id = id->misc->orig;
-  if( glob( "*"+m->match, id->not_query ) )
-    return s;
-  return "";
+  inherit RXML.Tag;
+  constant name = "theme-path";
+  constant flags = 0;
+  class Frame {
+    inherit RXML.Frame;
+    int do_iterate=-1;
+    void do_enter( RequestID id )
+    {
+      while( id->misc->orig ) 
+        id = id->misc->orig;
+      if( glob( "*"+args->match, id->not_query ) )
+        do_iterate = 1;
+      return 0;
+    }
+  }
 }
 
 string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
