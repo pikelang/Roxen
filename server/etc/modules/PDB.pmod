@@ -533,9 +533,11 @@ class db
     dir = replace(d+"/","//","/");
     logfile = 0;
     restore_logs();
-    logfile = files.file();
-    logfile->open(dir+"log.1", "cwa");
-    logfile->write("\n");
-    sync();
+    if (write) {
+      logfile = files.file();
+      logfile->open(dir+"log.1", "cwa");
+      logfile->write("\n");
+      sync();
+    }
   }
 };
