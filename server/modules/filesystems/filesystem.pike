@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.124 2003/12/29 12:14:33 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.125 2004/04/20 15:26:16 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -306,12 +306,43 @@ mixed stat_file( string f, RequestID id )
   return fs;
 }
 
+string decode_path( string p )
+{
+  if( path_encoding != "iso-8859-1" )
+    p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
+#ifndef __NT__
+  if( String.width( p ) != 8 )
+    p = string_to_utf8( p );
+#else
+  while( strlen(p) && p[-1] == '/' )
+    p = p[..strlen(p)-2];
+#endif
+  return p;
+}
+
+string real_path(string f, RequestID id)
+{
+  f = path + f;
+  if (FILTER_INTERNAL_FILE(f, id)) return 0;
+  catch {
+    f = NORMALIZE_PATH(decode_path(f));
+    if (has_prefix(f, normalized_path) ||
+#ifdef __NT__
+	(f+"\\" == normalized_path)
+#else /* !__NT__ */
+	(f+"/" == normalized_path)
+#endif /* __NT__ */
+	) {
+      return f;
+    }
+  };
+  return 0;
+}
+
 string real_file( string f, RequestID id )
 {
   if(stat_file( f, id )) {
-    catch {
-      return NORMALIZE_PATH(decode_path(path + f));
-    };
+    return real_path(f, id);
   }
 }
 
@@ -519,21 +550,6 @@ void got_put_data( array(object|string|int) id_arr, string data )
   }
 }
 
-string decode_path( string p )
-{
-  if( path_encoding != "iso-8859-1" )
-    p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
-#ifndef __NT__
-  if( String.width( p ) != 8 )
-    p = string_to_utf8( p );
-#else
-  while( strlen(p) && p[-1] == '/' )
-    p = p[..strlen(p)-2];
-#endif
-  return p;
-}
-
-
 int _file_size(string X, RequestID id)
 {
   Stat fs;
@@ -573,6 +589,94 @@ int contains_symlinks(string root, string path)
     }
   }
   return(0);
+}
+
+mapping make_collection(string coll, RequestID id)
+{
+  TRACE_ENTER(sprintf("make_collection(%O)", coll), this_object());
+
+  string norm_f = real_path(coll, id);
+
+  if (!norm_f) {
+    TRACE_LEAVE(sprintf("%s: Bad path", id->method));
+    return Roxen.http_low_answer(405, "Bad path.");
+  }
+
+  if(!query("put"))
+  {
+    TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
+			id->method));
+    return http_low_answer(405, "Disallowed.");
+  }
+
+  // FIXME: Is this the correct filename?
+  int size = _file_size(norm_f, id);
+
+  if (size != -1) {
+    TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
+			id->method));
+    if (id->method == "MKCOL") {
+      return http_low_answer(405,
+			     "<h2>Collection already exists.</h2>");
+    }
+    return 0;
+  }
+
+  if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
+    TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
+    return Roxen.http_auth_required("foo",
+				    sprintf("<h1>Permission to '%s' denied</h1>",
+					    id->method));
+  }
+  mkdirs++;
+  object privs;
+  SETUID_TRACE("Creating directory/collection", 0);
+
+  if (query("no_symlinks") && (contains_symlinks(path, coll))) {
+    privs = 0;
+    errors++;
+    report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
+		 coll);
+    TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
+			id->method));
+    return http_low_answer(403, "<h2>Permission denied.</h2>");
+  }
+
+  werror("mkdir(%O)\n", norm_f);
+
+  int code = mkdir(norm_f);
+  int err_code = errno();
+  privs = 0;
+
+  TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
+
+  if (code) {
+    chmod(norm_f, 0777 & ~(id->misc->umask || 022));
+    TRACE_LEAVE(sprintf("%s: Success", id->method));
+    TRACE_LEAVE(sprintf("%s: Success", id->method));
+    if (id->method == "MKCOL") {
+      return http_low_answer(201, "Created");
+    }
+    return Roxen.http_string_answer("Ok");
+  }
+
+  TRACE_LEAVE(sprintf("%s: Failed", id->method));
+  id->misc->error_code = 507;
+  if (err_code ==
+#if constant(system.ENOENT)
+      system.ENOENT
+#elif constant(System.ENOENT)
+      System.ENOENT
+#else
+      2
+#endif
+      ) {
+    TRACE_LEAVE(sprintf("%s: Missing intermediate.", id->method));
+    id->misc->error_code = 409;
+  } else {
+    TRACE_LEAVE(sprintf("%s: Failed.", id->method));
+  }
+  return 0;
 }
 
 mixed find_file( string f, RequestID id )
@@ -719,6 +823,9 @@ mixed find_file( string f, RequestID id )
     }
     /* FALL_THROUGH */
   case "MKDIR":
+#if 1
+    return make_collection(oldf, id);
+#else /* !1 */
     if(!query("put"))
     {
       id->misc->error_code = 405;
@@ -798,7 +905,7 @@ mixed find_file( string f, RequestID id )
       }
       return 0;
     }
-
+#endif /* 1 */
     break;
 
   case "PUT":
@@ -914,7 +1021,7 @@ mixed find_file( string f, RequestID id )
     return Roxen.http_pipe_in_progress();
     break;
 
-   case "CHMOD":
+  case "CHMOD":
     // Change permission of a file.
     // FIXME: !!
 
@@ -1074,14 +1181,32 @@ mixed find_file( string f, RequestID id )
                                 "<h1>Permission to 'MOVE' files denied</h1>");
     }
 
-    if(!sizeof(id->misc["new-uri"] || "")) {
+    // FIXME: Ought to be done in the protocol module.
+    string new_uri = id->request_headers->destination ||
+      id->misc["new-uri"] || "";
+
+    if (new_uri == "") {
       id->misc->error_code = 405;
       errors++;
       TRACE_LEAVE("MOVE: No dest file");
       return 0;
     }
-    string new_uri = combine_path(URI + "/../",
-				  id->misc["new-uri"]);
+    int div = search(new_uri, "/");
+    if ((div > 0) && (new_uri[div-1] == ':')) {
+      // Protocol specification present.
+      new_uri = new_uri[div..];
+    }
+    if (has_prefix(new_uri, "//")) {
+      // Address specification present.
+      div = search(new_uri, "/", 2);
+      if (div > 0) {
+	new_uri = new_uri[div..];
+      } else {
+	new_uri = "/";
+      }
+    } else {
+      new_uri = combine_path(URI + "/../", new_uri);
+    }
 
     // FIXME: The code below doesn't allow for this module being overloaded.
     if (new_uri[..sizeof(mountpoint)-1] != mountpoint) {
@@ -1255,6 +1380,90 @@ mixed find_file( string f, RequestID id )
   }
   TRACE_LEAVE("Not reached");
   return 0;
+}
+
+mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
+{
+  TRACE_ENTER("COPY: Copy %O to %O.", this_object());
+  Stat source_st = stat_file(path, id);
+  if (!source_st) {
+    TRACE_LEAVE("COPY: Source doesn't exist.");
+    return Roxen.http_low_answer(404, "File not found.");
+  }
+  Stat dest_st = stat_file(path, id);
+  if (dest_st) {
+    if ((source_st->isreg != dest_st->isreg) ||
+	(source_st->isdir != dest_st->isdir)) {
+      TRACE_LEAVE("COPY: Resource types for source and destination differ.");
+      return Roxen.http_low_answer(412, "Destination and source are different resource types.");
+    }
+    if (source_st->isdir) {
+      TRACE_LEAVE("Already done (both are directories).");
+      return Roxen.http_low_answer(204, "Destination already existed.");
+    }
+    if (lower_case(id->request_headers->overwrite||"F") == "t") {
+      TRACE_LEAVE("COPY: Destination already exists.");
+      return Roxen.http_low_answer(412, "Destination already exists.");
+    }
+    if (!query("delete")) {
+      TRACE_LEAVE("COPY: Deletion not allowed.");
+      return Roxen.http_low_answer(405, "Not allowed.");
+    }
+  }
+  if (!query("put")) {
+    TRACE_LEAVE("COPY: Put not allowed.");
+    return Roxen.http_low_answer(405, "Not allowed.");
+  }
+  if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
+    TRACE_LEAVE("COPY: Authentication required.");
+    return Roxen.http_auth_required("foo",
+				    sprintf("<h1>Permission to 'COPY' denied</h1>",
+					    id->method));
+  }
+  string dest_path = path + dest;
+  catch { dest_path = decode_path(dest_path); };
+  if (source_st->isdir) {
+    mkdirs++;
+    object privs;
+    SETUID_TRACE("Creating directory/collection", 0);
+
+    if (query("no_symlinks") && (contains_symlinks(path, dest))) {
+      privs = 0;
+      errors++;
+      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
+		   dest);
+      TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    int code = mkdir(dest_path);
+    int err_code = errno();
+    privs = 0;
+    TRACE_ENTER("COPY: Accepted", this_object());
+
+    if (code) {
+      chmod(dest_path, 0777 & ~(id->misc->umask || 022));
+      TRACE_LEAVE("COPY: Success");
+      TRACE_LEAVE("Success");
+      return http_low_answer(201, "Created");
+    } else {
+      TRACE_LEAVE("COPY: Failed");
+      TRACE_LEAVE("Failure");
+      if (err_code ==
+#if constant(system.ENOENT)
+	  system.ENOENT
+#elif constant(System.ENOENT)
+	  System.ENOENT
+#else
+	  2
+#endif
+	  ) {
+	return http_low_answer(409, "Missing intermediate.");
+      } else {
+	return http_low_answer(507, "Failed.");
+      }
+    }
+  }
 }
 
 string query_name()
