@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.107 1999/07/06 19:32:40 wellhard Exp $
+// $Id: roxenlib.pike,v 1.108 1999/07/15 16:59:28 neotron Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -604,25 +604,27 @@ string msectos(int t)
   } 
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
-
-static string extension( string f )
+static object extension_regexp = Regexp(".*\\.([^#~]*)");             
+int|string extension( string f, object|void id) 
 {
-  string q;
-  sscanf(f, "%s?%*s", f); // Forms.
-
-  f=lower_case( f );
-  if(strlen(f)) switch(f[-1])
-  {
-   case '#': sscanf(f, "%s#", f);    break;
-   case '~': sscanf(f, "%s~%*s", f); break;
-   case 'd': sscanf(f, "%s.old", f); break;
-   case 'k': sscanf(f, "%s.bak", f); break;
+  string ext, key;
+  if(!f || !strlen(f)) return "";
+  if(!id || !(ext = id->misc[key="_ext_"+f])) {
+    array split = extension_regexp->split(f);                           
+    if(!split||!sizeof(split)) 
+      ext="";
+    else {
+      ext = lower_case(split[0]);
+      if(ext == "bak" || ext == "old")
+	if(f[-1] == "~" || f[-1] == "#")
+	  ext = extension(f[..strlen(f)-5]);
+	else 
+	  ext = extension(f[..strlen(f)-4]);
+    }
+    if(id)
+      id->misc[key]=ext;
   }
-  q=f;
-  sscanf(reverse(f), "%s.%*s", f);
-  f = reverse(f);
-  if(q==f) return "";
-  return f;
+  return ext;
 }
 
 static int backup_extension( string f )
@@ -678,23 +680,23 @@ static string simplify_path(string file)
 {
   string tmp;
   int t2,t1;
-  if(!strlen(file))
-    return "";
+
+  // Faster for most cases since "./" and "../" rarely exists.
+  if(!strlen(file) || search(file, "./") == -1)
+    return file;
 
   if(file[0] != '/')
-      t2 = 1;
-
-  if(strlen(file) > 1 
-     && ((file[-1] == '/') || (file[-1]=='.')) 
-     && file[-2]=='/')
+    t2 = 1;
+	
+  if(strlen(file) > 1
+     && file[-2]=='/'
+     && ((file[-1] == '/') || (file[-1]=='.'))
+	)
     t1=1;
 
   tmp=combine_path("/", file);
 
   if(t1) tmp += "/.";
-
-// perror(file+"->"+tmp+"\n");
-
   if(t2) return tmp[1..];
     
   return tmp;

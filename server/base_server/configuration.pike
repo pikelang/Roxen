@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.203 1999/07/02 20:50:03 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.204 1999/07/15 16:59:27 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -357,13 +357,14 @@ void stop()
           pri[i] && pri[i]->stop && pri[i]->stop());
 }
 
-public string type_from_filename( string file, int|void to )
+public string type_from_filename( string file, int|void to, string|void myext )
 {
   mixed tmp;
-  string ext=extension(file);
-    
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
+
+  string ext=myext || extension(file);
+    
 
 //   while(file[-1] == '/') 
 //     file = file[0..strlen(file)-2]; // Security patch? 
@@ -1250,29 +1251,28 @@ mapping|int low_get_file(object id, int|void no_magic)
   mixed tmp, tmp2;
   mapping|object fid;
 
-
   if(!no_magic)
   {
-#ifndef NO_INTERNAL_HACK 
+#ifndef NO_INTERNAL_HACK
+    string type;
     // No, this is not beautiful... :) 
-
-    if(sizeof(file) && (file[0] == '/') &&
-       sscanf(file, "%*s/internal-%s", loc))
+    // min length == 17 (/internal-roxen-?..)
+    // This will save some time indeed.
+    if(sizeof(file) > 17 && (file[0] == '/') &&
+       sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3)
     {
-      if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
-      {
+      switch(type) {
+       case "gopher":
 	TRACE_LEAVE(LOCALE->magic_internal_gopher());
 	return internal_gopher_image(loc);
-      }
-      if(sscanf(loc, "spinner-%[^/]", loc)  // Configuration interface images.
-	 ||sscanf(loc, "roxen-%[^/]", loc)) // Try /internal-roxen-power
-      {
+
+       case "spinner": case "roxen":
 	TRACE_LEAVE(LOCALE->magic_internal_roxen());
 	return internal_roxen_image(loc);
       }
     }
 #endif
-
+  
     if(id->prestate->diract && dir_module)
     {
       LOCK(dir_module);
@@ -1309,8 +1309,8 @@ mapping|int low_get_file(object id, int|void no_magic)
 	    TRACE_LEAVE(LOCALE->request_denied());
 	    return tmp2;
 	  }
-	if(find_internal)
 #endif
+	if(find_internal)
 	{
 	  TRACE_ENTER(LOCALE->calling_find_internal(), find_internal);
 	  LOCK(find_internal);
@@ -1401,8 +1401,8 @@ mapping|int low_get_file(object id, int|void no_magic)
       TRACE_LEAVE("");
     }
 #endif
-#ifdef EXTENSION_MODULES  
-    if(tmp=extension_modules(loc=extension(file), id))
+#ifdef EXTENSION_MODULES
+    if(tmp=extension_modules(loc = extension(file, id), id))
     {
       foreach(tmp, funp)
       {
@@ -1436,11 +1436,10 @@ mapping|int low_get_file(object id, int|void no_magic)
       }
     }
 #endif 
- 
     foreach(location_modules(id), tmp)
     {
       loc = tmp[0];
-      if(!search(file, loc)) 
+      if(!search(file, loc))
       {
 	TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1498,27 +1497,24 @@ mapping|int low_get_file(object id, int|void no_magic)
 	  }
 	} else
 	  TRACE_LEAVE("");
-      } else if(strlen(loc)-1==strlen(file)) {
+      } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
 	// This one is here to allow accesses to /local, even if 
 	// the mountpoint is /local/. It will slow things down, but...
-	if(file+"/" == loc) 
-	{
-	  TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
-	  TRACE_LEAVE(LOCALE->returning_data());
+	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
+	TRACE_LEAVE(LOCALE->returning_data());
 	  
-	  // Keep query (if any).
-	  /* FIXME: Should probably keep prestate etc.
-	   *	/grubba 1999-01-14
-	   */
-	  string new_query = http_encode_string(id->not_query) + "/" +
-	    (id->query?("?"+id->query):"");
-	  
-	  return http_redirect(new_query, id);
-	}
+	// Keep query (if any).
+	/* FIXME: Should probably keep prestate etc.
+	 *	/grubba 1999-01-14
+	 */
+	string new_query = http_encode_string(id->not_query) + "/" +
+	  (id->query?("?"+id->query):"");
+	
+	return http_redirect(new_query, id);
       }
     }
   }
-
+  
   if(fid == -1)
   {
     if(no_magic)
@@ -1546,8 +1542,8 @@ mapping|int low_get_file(object id, int|void no_magic)
   }
   
   // Map the file extensions, but only if there is a file...
-  if(objectp(fid)&&
-     (tmp=file_extension_modules(loc=extension(id->not_query), id)))
+  if(objectp(fid) &&
+     (tmp = file_extension_modules(loc = extension(id->not_query, id), id))) {
     foreach(tmp, funp)
     {
       TRACE_ENTER(LOCALE->extension_module(loc), funp);
@@ -1577,22 +1573,22 @@ mapping|int low_get_file(object id, int|void no_magic)
 	  return tmp;
 	}
 	if(fid)
-          destruct(fid);
+	  destruct(fid);
 	TRACE_LEAVE(LOCALE->returned_new_open_file());
 	fid = tmp;
 	break;
       } else
 	TRACE_LEAVE("");
     }
-  
+  }
   if(objectp(fid))
   {
-    if(stringp(id->extension))
+    if(stringp(id->extension)) {
       id->not_query += id->extension;
-
-
+      loc = extension(id->not_query, id);
+    }
     TRACE_ENTER(LOCALE->content_type_module(), types_module);
-    tmp=type_from_filename(id->not_query, 1);
+    tmp=type_from_filename(id->not_query, 1, loc);
     TRACE_LEAVE(tmp?LOCALE->returned_mime_type(tmp[0],tmp[1]):
 		LOCALE->missing_type());
     if(tmp)
@@ -1621,16 +1617,6 @@ mixed handle_request( object id  )
 #ifdef REQUEST_DEBUG
   werror("CONFIG: handle_request()\n");
 #endif /* REQUEST_DEBUG */
-
-  //#if 0
-  if(roxen->find_site_for( id ) != this_object()) {
-#ifdef REQUEST_DEBUG
-    werror("CONFIG: handle_request(): Redirected (1)\n");
-#endif /* REQUEST_DEBUG */
-    return id->conf->handle_request(id);
-  }
-  //#endif /* 0 */
-
   foreach(first_modules(id), funp)
   {
     if(file = funp( id )) 
@@ -1642,7 +1628,6 @@ mixed handle_request( object id  )
       return id->conf->handle_request(id);
     }
   }
- 
   if(!mappingp(file) && !mappingp(file = get_file(id)))
   {
     mixed ret;

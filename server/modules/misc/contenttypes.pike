@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.12 1998/03/11 19:42:38 neotron Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.13 1999/07/15 16:59:28 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -94,7 +94,7 @@ array type_from_extension(string ext)
   if(ext == "default") {
 //    roxen_perror("%O\n", ({ QUERY(default), 0 }));
     accessed[ ext ] ++;
-    return ({ query("default"), 0 });
+    return ({ QUERY(default), 0 });
   } else if(extensions[ ext ]) {
     accessed[ ext ]++;
     return ({ extensions[ ext ], encodings[ ext ] });

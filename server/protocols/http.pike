@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.141 1999/07/05 17:58:00 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.142 1999/07/15 16:59:28 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -24,9 +24,9 @@ private inherit "roxenlib";
 #ifdef PROFILE
 int req_time = HRTIME();
 #endif
-
 #ifdef REQUEST_DEBUG
-#define DPERROR(X)	roxen_perror((X)+"\n")
+int footime, bartime;
+#define DPERROR(X)	bartime = gethrtime()-footime; werror((X)+" (%d)\n", bartime);footime=gethrtime()
 #else
 #define DPERROR(X)
 #endif
@@ -280,148 +280,133 @@ private int really_set_config(array mod_config)
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
   }
-  return -2;
+  return 2;
 }
 
 private static mixed f, line;
 private static int hstart;
 
-private int parse_got(string s)
+private int parse_got(string raw)
 {
   multiset (string) sup;
   array mod_config;
-  string a, b, linename, contents;
+  string a, b, s, linename, contents;
   int config_in_url;
 
   DPERROR(sprintf("HTTP: parse_got(%O)", s));
-
-  raw = s;
-
-  if (!line) {
-    // Used to search for \r\n, but Netscape 4.5 sends just a \n
-    // when doing a proxy-request.
+  if (!line) {    
+    // We check for \n only if \r\n fails, since Netscape 4.5 sends "
+    // just a \n when doing a proxy-request. 
     // example line:
     //   "CONNECT mikabran:443 HTTP/1.0\n"
     //   "User-Agent: Mozilla/4.5 [en] (X11; U; Linux 2.0.35 i586)"
-    hstart = search(s, "\n");
-
-    if ((< -1, 0 >)[hstart]) {
-      // Not enough data, or malformed request.
-      DPERROR(sprintf("HTTP: parse_got(%O): "
-		      "Not enough data, or malformed request.",
+    // Die Netscape, die! *grumble*
+    // Luckily the solution below shouldn't ever cause any slowdowns
+    
+    if (sscanf(raw, "%s\r\n%s", line, s) != 2 &&
+	sscanf(raw, "%s\n%s", line, s) != 2) {
+      // Not enough data. Unless the client writes one byte at a time,
+      // this should never happen, really.
+      
+      DPERROR(sprintf("HTTP: parse_got(%O): Not enough data.",
 		      s));
-      return ([ -1:0, 0:2 ])[hstart];
+      return 0;
+    }
+    if(strlen(line) < 4)
+    {
+      // Incorrect request actually - min possible (HTTP/0.9) is "GET /"
+      // but need to support PING of course!
+      
+      DPERROR(sprintf("HTTP: parse_got(%O): Malformed request.",
+		      s));
+      return 1;
     }
 
-    if (s[hstart-1] == '\r') {
-      line = s[..hstart-2];
-    } else {
-      // Kludge for Netscape 4.5 sending bad requests.
-      line = s[..hstart-1];
-    }
-
-    // Parse the command
-    int start = search(line, " ");
-    if (start != -1) {
-      method = upper_case(line[..start-1]);
-
-      string l = reverse(line[start+1..]);
-
+    // David H new request parse.
+    // Less forgiving, more to the spec and hopefully somewhat (although
+    // it's marginal) faster. Still forgives incorrect protocols however,
+    // since that is how Apache handles "GET /incorrect uri HTTP/1.0".
+    string p1,p2,p3;
+    switch(sscanf(line+" ", "%s %s %s", p1, p2, p3))
+    {
+     case 1:
+      // PING...
+      if(p1 == "PING") {
+	my_fd->write("PONG\r\n"); 
+	return 2;
+      }
+      // only PING is valid here.
+      return 1;
+      
+     case 2:
+     case 3:
+      if(!p3 || !strlen(p3)) {
+	// HTTP/0.9
+	clientprot = prot = "HTTP/0.9";
+	f = p2;
+	method = "GET"; // 0.9 only supports get.
+	s = ""; // no headers...
+	break;
+      }
+      // >= HTTP/1.0
+      clientprot = prot = p3;
+      f = p2;
+      method = upper_case(p1);
+      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
+	// Where nice here and assumes HTTP even if the protocol
+	// is something very weird (like if a browser sends file names
+	// with unencoded spaces. 
+	prot = "HTTP/1.1";
       int end;
-
-      if (!(end = search(l, " "))) {
-	// Seems the line has extra spaces at the end.
-	// Get rid of them.
-	sscanf(l, "%*[ ]%s", l);
-	line = line[..sizeof(l)+start];
-	end = search(l, " ");
+      if (!sscanf(s, "%s\r\n\r\n%s", s, data)) {
+	// No, we need more data.
+	DPERROR("HTTP: parse_got(): Request is not complete.");
+	return 0;
       }
-      if (end != -1) {
-	f = line[start+1..sizeof(line)-(end+2)];
-	prot = clientprot = line[sizeof(line)-end..];
-
-	if (!(< "HTTP/0.9", "HTTP/1.0", "HTTP/1.1" >)[upper_case(prot)]) {
-	  if (upper_case(prot)[..3] == "HTTP") {
-	    // Latest implemented version of HTTP implemented by this
-	    // module is HTTP/1.1.
-	    prot = "HTTP/1.1";
-	  } else {
-	    // Unknown protocol
-	    werror(sprintf("HTTP: Bad request: %O\n", line));
-	    my_fd->write(sprintf("400 Unknown Protocol HTTP/1.1\r\n\r\n"
-				 "Protocol %O is not HTTP.\r\n", prot));
-	    return -2;
-	  }
-	}
-
-	// Check that the request is complete
-	int end;
-	if ((end = search(s, "\r\n\r\n")) == -1) {
-	  // No, we need more data.
-	  DPERROR("HTTP: parse_got(): Request is not complete.");
-	  return 0;
-	}
-	data = s[end+4..];
-	s = s[hstart+1..end-1];
-      } else {
-	f = line[start+1..];
-	prot = clientprot = "HTTP/0.9";
-	data = s[sizeof(line)+2..];
-	s = "";		// No headers.
-      }
-    } else {
-      method = upper_case(line);
-      f = "/";
-      prot = clientprot = "HTTP/0.9";
+      break;
+     default:
+      // Too many or too few entries ->  Hum.
+      return 1;
     }
   } else {
     // HTTP/1.0 or later
     // Check that the request is complete
     int end;
-    if ((end = search(s, "\r\n\r\n")) == -1) {
-      // No, we still need more data.
+    if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
+      // No, we need more data.
       DPERROR("HTTP: parse_got(): Request is not complete.");
       return 0;
     }
-    data = s[end+4..];
-    s = s[hstart+1..end-1];
   }
-
-
-  if(method == "PING")
-  { 
-    my_fd->write("PONG\r\n"); 
-    return -2; 
-  }
- 
-  if(!(<"CONNECT", "GET", "HEAD", "POST", "PUT", "MOVE", "DELETE">)[method] ) {
-    send_result(http_low_answer(501, "<title>Method Not Implemented</title>"
-				"\n<h1>Method not implemented.</h1>\n"));
-    return -2;
-  }
-
+  
   raw_url    = f;
   time       = _time(1);
-  
+  if(!data) data = "";
   DPERROR(sprintf("RAW_URL:%O", raw_url));
 
   if(!remoteaddr)
   {
-    if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
+    if(my_fd) {
+      remoteaddr = my_fd->query_address();
+      if(remoteaddr) 
+      	sscanf(remoteaddr, "%s %*s", remoteaddr);
+    }
     if(!remoteaddr) {
       DPERROR("HTTP: parse_request(): No remote address.");
       end();
-      return -2;
+      return 2;
     }
   }
 
+  DPERROR(sprintf("After Remote Addr:%O", f));
+  
   f = scan_for_query( f );
 
   DPERROR(sprintf("After query scan:%O", f));
 
   f = http_decode_string( f );
-
-  if (sscanf(f, "/<%s>/%s", a, f)==2)
+  string prf = f[1..1];
+  if (prf == "<" && sscanf(f, "/<%s>/%s", a, f)==2)
   {
     config_in_url = 1;
     mod_config = (a/",");
@@ -430,7 +415,7 @@ private int parse_got(string s)
 
   DPERROR(sprintf("After cookie scan:%O", f));
   
-  if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
+  if (prf == "(" && (sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
   {
     prestate = aggregate_multiset(@(a/","-({""})));
     f = "/"+f;
@@ -445,25 +430,26 @@ private int parse_got(string s)
   request_headers = ([]);	// FIXME: KEEP-ALIVE?
 
   if(sizeof(s)) {
-//    sscanf(s, "%s\r\n\r\n%s", s, data);
-//     s = replace(s, "\n\t", ", ") - "\r"; 
-//     Handle rfc822 continuation lines and strip \r
-    foreach(s/"\r\n" - ({ "" }), line)
+    //    sscanf(s, "%s\r\n\r\n%s", s, data);
+    //     s = replace(s, "\n\t", ", ") - "\r"; 
+    //     Handle rfc822 continuation lines and strip \r
+    foreach(s/"\r\n" - ({""}), line)
     {
-      linename=contents=0;
-      sscanf(line, "%s:%s", linename, contents);
-      if(linename && contents)
+      //      DPERROR(sprintf("Header :%s", line));
+      //      linename=contents=0;
+      
+      if(sscanf(line, "%s:%*[ \t]%s", linename, contents) == 3)
       {
-	linename=lower_case(linename);
-	sscanf(contents, "%*[\t ]%s", contents);
-
-	request_headers[linename] = contents;
+      	DPERROR(sprintf("Header-sscanf :%s", linename));
+      	linename=lower_case(linename);
+      	DPERROR(sprintf("lower-case :%s", linename));
 	
+      	request_headers[linename] = contents;
 	if(strlen(contents))
 	{
 	  switch (linename) {
 	  case "content-length":
-	    misc->len = (int)(contents-" ");
+	    misc->len = (int)contents;
 	    if(!misc->len) continue;
 	    if(method == "POST")
 	    {
@@ -502,7 +488,7 @@ private int parse_got(string s)
 		break;
 
 	      case "multipart/form-data":
-//		perror("Multipart/form-data post detected\n");
+		//		perror("Multipart/form-data post detected\n");
 		object messg = MIME.Message(data, misc);
 		foreach(messg->body_parts, object part) {
 		  if(part->disp_params->filename) {
@@ -562,32 +548,30 @@ private int parse_got(string s)
 	    break;
 
 	    /* Some of M$'s non-standard user-agent info */
-	   case "ua-pixels":	/* Screen resolution */
-	   case "ua-color":	/* Color scheme */
-	   case "ua-os":	/* OS-name */
-	   case "ua-cpu":	/* CPU-type */
+	  case "ua-pixels":	/* Screen resolution */
+	  case "ua-color":	/* Color scheme */
+	  case "ua-os":	/* OS-name */
+	  case "ua-cpu":	/* CPU-type */
 	    misc[linename - "ua-"] = contents ;
-	   break;
+	    break;
 
 	  case "referer":
 	    referer = contents/" ";
 	    break;
 	    
-	   case "extension":
+	  case "extension":
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
-	   case "range":
+	  case "range":
 	    contents = lower_case(contents-" ");
 	    if(!search(contents, "bytes"))
 	      // Only care about "byte" ranges.
 	      misc->range = contents[6..];
 	    break;
 	      
-	   case "connection":
-	    contents = lower_case(contents);
-	    
-	   case "content-type":
+	  case "connection":
+	  case "content-type":
 	    misc[linename] = lower_case(contents);
 	    break;
 
@@ -668,10 +652,20 @@ private int parse_got(string s)
 	  }
 	}
       }
-    } 
+    }
   }
-  if(!client) client = ({ "unknown" });
-  supports = find_supports(lower_case(client*" "), supports);
+
+  DPERROR("HTTP: parse_got(): after header scan");
+#ifndef DISABLE_SUPPORTS    
+  if(!client) {
+    client = ({ "unknown" });
+    supports = find_supports("", supports); // This makes it somewhat faster.
+  } else 
+    supports = find_supports(lower_case(client*" "), supports);
+#else
+  supports = (< "images", "gifinline", "forms", "mailto">);
+#endif
+  DPERROR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
@@ -683,7 +677,6 @@ private int parse_got(string s)
     }
     raw = tmp2 * "\n"; 
   }
-
   if(config_in_url) {
     DPERROR("HTTP: parse_got(): config_in_url");
     return really_set_config( mod_config );
@@ -703,7 +696,7 @@ private int parse_got(string s)
       if (QUERY(set_cookie_only_once))
 	cache_set("hosts_for_cookie",remoteaddr,1);
     }
-  return 1;	// Done.
+  return 3;	// Done.
 }
 
 void disconnect()
@@ -740,7 +733,8 @@ void end(string|void s, int|void keepit)
 #ifdef KEEP_ALIVE
   if(keepit &&
      (!(file->raw || file->len <= 0))
-     && (misc->connection || (prot == "HTTP/1.1"))
+     && (misc->connection == "keep-alive" ||
+	 (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
@@ -1249,7 +1243,7 @@ void send_result(mapping|void result)
   }
 
   DPERROR(sprintf("HTTP: send_result(%O)", file));
-
+  
   if(!mappingp(file))
   {
     if(misc->error_code)
@@ -1281,25 +1275,9 @@ void send_result(mapping|void result)
     else if(!file->type)     file->type="text/plain";
   }
   
-  if(!file->raw && prot != "HTTP/0.9")
+  if(!file->raw)
   {
-    string h;
-    heads=
-      (["MIME-Version":(file["mime-version"] || "1.0"),
-	"Content-type":file["type"],
-	"Accept-Ranges": "bytes",
-	"Server":replace(version(), " ", "·"),
-	"Date":http_date(time) ]);    
-
-    if(file->encoding)
-      heads["Content-Encoding"] = file->encoding;
-    
-    if(!file->error) 
-      file->error=200;
-    
-    if(file->expires)
-      heads->Expires = http_date(file->expires);
-
+    heads = ([]);
     if(!file->len)
     {
       if(objectp(file->file))
@@ -1311,111 +1289,128 @@ void send_result(mapping|void result)
 	if(file->file && !file->len)
 	  file->len = fstat[1];
     
-    
-	heads["Last-Modified"] = http_date(fstat[3]);
-	
-	if(since)
-	{
-	  if(is_modified(since, fstat[3], fstat[1]))
+	if(prot != "HTTP/0.9") {
+	  heads["Last-Modified"] = http_date(fstat[3]);
+	  
+	  if(since)
 	  {
-	    file->error = 304;
-	    file->file = 0;
-	    file->data="";
-// 	    method="";
+	    if(is_modified(since, fstat[3], fstat[1]))
+	    {
+	      file->error = 304;
+	      file->file = 0;
+	      file->data="";
+	      // 	    method="";
+	    }
 	  }
 	}
       }
       if(stringp(file->data)) 
 	file->len += strlen(file->data);
     }
+    if(prot != "HTTP/0.9") {
+      string h;
+      heads += ([
+	"MIME-Version" 	: (file["mime-version"] || "1.0"),
+	"Content-Type" 	: file["type"],
+	"Accept-Ranges" 	: "bytes",
+	"Server" 		: replace(version(), " ", "·"),
+#ifdef KEEP_ALIVE
+	"Connection": (misc->connection == "close" ? "close": "Keep-Alive"),
+#else
+	"Connection"	: "close",
+#endif
+	"Date"		: http_date(time)
+      ]);
 
-    if(mappingp(file->extra_heads)) {
-      heads |= file->extra_heads;
-    }
 
-    if(mappingp(misc->moreheads)) {
-      heads |= misc->moreheads;
-    }
+      if(file->encoding)
+	heads["Content-Encoding"] = file->encoding;
     
-    if(misc->range && file->len && objectp(file->file) && !file->data &&
-       file->error == 200 && (method == "GET" || method == "HEAD"))
-      // Plain and simple file and a Range header. Let's play.
-      // Also we only bother with 200-requests. Anything else should be
-      // nicely and completely ignored. Also this is only used for GET and
-      // HEAD requests.
-    {
-      // split the range header. If no valid ranges are found, ignore it.
-      // If one is found, send that range. If many are found we need to
-      // use a wrapper and send a multi-part message. 
-      array ranges = parse_range_header(file->len);
-      if(ranges) // No incorrect syntax...
-      { 
-	if(sizeof(ranges)) // And we have valid ranges as well.
-	{
-	  file->error = 206; // 206 Partial Content
-	  if(sizeof(ranges) == 1)
+      if(!file->error) 
+	file->error=200;
+    
+      if(file->expires)
+	heads->Expires = http_date(file->expires);
+
+      if(mappingp(file->extra_heads)) {
+	heads |= file->extra_heads;
+      }
+
+      if(mappingp(misc->moreheads)) {
+	heads |= misc->moreheads;
+      }
+
+      if(misc->range && file->len && objectp(file->file) && !file->data &&
+	 file->error == 200 && (method == "GET" || method == "HEAD"))
+	// Plain and simple file and a Range header. Let's play.
+	// Also we only bother with 200-requests. Anything else should be
+	// nicely and completely ignored. Also this is only used for GET and
+	// HEAD requests.
+      {
+	// split the range header. If no valid ranges are found, ignore it.
+	// If one is found, send that range. If many are found we need to
+	// use a wrapper and send a multi-part message. 
+	array ranges = parse_range_header(file->len);
+	if(ranges) // No incorrect syntax...
+	{ 
+	  if(sizeof(ranges)) // And we have valid ranges as well.
 	  {
-	    heads["Content-Range"] = sprintf("bytes %d-%d/%d",
-					     @ranges[0], file->len);
-	    file->file->seek(ranges[0][0]);
-	    if(ranges[0][1] == (file->len - 1) &&
-	       GLOBVAR(RestoreConnLogFull))
-	      // Log continuations (ie REST in FTP), 'range XXX-'
-	      // using the entire length of the file, not just the
-	      // "sent" part. Ie add the "start" byte location when logging
-	      misc->_log_cheat_addition = ranges[0][0];
-	    file->len = ranges[0][1] - ranges[0][0]+1;
+	    file->error = 206; // 206 Partial Content
+	    if(sizeof(ranges) == 1)
+	    {
+	      heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+					       @ranges[0], file->len);
+	      file->file->seek(ranges[0][0]);
+	      if(ranges[0][1] == (file->len - 1) &&
+		 GLOBVAR(RestoreConnLogFull))
+		// Log continuations (ie REST in FTP), 'range XXX-'
+		// using the entire length of the file, not just the
+		// "sent" part. Ie add the "start" byte location when logging
+		misc->_log_cheat_addition = ranges[0][0];
+	      file->len = ranges[0][1] - ranges[0][0]+1;
+	    } else {
+	      // Multiple ranges. Multipart reply and stuff needed.
+	      // We do this by replacing the file object with a wrapper.
+	      // Nice and handy.
+	      file->file = MultiRangeWrapper(file, heads, ranges);
+	    }
 	  } else {
-	    // Multiple ranges. Multipart reply and stuff needed.
-	    // We do this by replacing the file object with a wrapper.
-	    // Nice and handy.
-	    file->file = MultiRangeWrapper(file, heads, ranges);
-	  }
-	} else {
-	  // Got the header, but the specified ranges was out of bounds.
-	  // Reply with a 416 Requested Range not satisfiable.
-	  file->error = 416;
-	  heads["Content-Range"] = "*/"+file->len;
-	  if(method == "GET") {
-	    file->data = "The requested byte range is out-of-bounds. Sorry.";
-	    file->len = strlen(file->data);
-	    file->file = 0;
+	    // Got the header, but the specified ranges was out of bounds.
+	    // Reply with a 416 Requested Range not satisfiable.
+	    file->error = 416;
+	    heads["Content-Range"] = "*/"+file->len;
+	    if(method == "GET") {
+	      file->data = "The requested byte range is out-of-bounds. Sorry.";
+	      file->len = strlen(file->data);
+	      file->file = 0;
+	    }
 	  }
 	}
       }
+    
+      head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
+      array tmp_head = ({});
+      foreach(indices(heads), h)
+	if(arrayp(heads[h]))
+	  foreach(heads[h], tmp)
+	    tmp_head += ({ `+(h, ": ", tmp) });
+	else
+	  tmp_head += ({ `+(h, ": ", heads[h]) });
+      head_string += tmp_head * "\r\n";
+    
+      if(file->len > -1) 
+	head_string += "\r\nContent-Length: "+ file->len +"\r\n";
+      head_string += "\r\n";
+    
+      if(conf) conf->hsent += strlen(head_string);
     }
-    
-    array myheads = ({prot+" "+(file->rettext||errors[file->error])});
-    foreach(indices(heads), h)
-      if(arrayp(heads[h]))
-	foreach(heads[h], tmp)
-	  myheads += ({ `+(h,": ", tmp)});
-      else
-	myheads +=  ({ `+(h, ": ", heads[h])});
-    
-    
-    if(file->len > -1) 
-      myheads += ({"Content-Length: " + file->len });
-#ifdef KEEP_ALIVE
-    myheads += ({ "Connection: Keep-Alive" });
-#endif
-    head_string = (myheads+({"",""}))*"\r\n";
-    
-    if(conf) conf->hsent+=strlen(head_string||"");
   }
-
 #ifdef REQUEST_DEBUG
   roxen_perror(sprintf("Sending result for prot:%O, method:%O file:%O\n",
 		       prot, method, file));
 #endif /* REQUEST_DEBUG */
 
-  if(method == "HEAD")
-  {
-    file->file = 0;
-    file->data="";
-  }
   MARK_FD("HTTP handled");
-
 
 #ifdef KEEP_ALIVE
   if(!leftovers) leftovers = data||"";
@@ -1498,7 +1493,7 @@ void handle_request( )
   if(conf)
   {
     if(e= catch(file = conf->handle_request( this_object() )))
-      internal_error( e );
+	internal_error( e );
   } 
   else if(!file&&(e=catch(file=roxen.configuration_parse(this_object())))) 
   {
@@ -1515,6 +1510,7 @@ int processed;
 void got_data(mixed fooid, string s)
 {
   int tmp;
+  
   MARK_FD("HTTP got data");
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
@@ -1533,15 +1529,17 @@ void got_data(mixed fooid, string s)
     }
   }
   
+  
   if(cache) 
   {
     s = cache*""+s; 
     cache = 0;
   }
-  sscanf(s, "%*[\n\r]%s", s);
-  if(strlen(s)) tmp = parse_got(s);
 
-  switch(-tmp)
+  // If the request starts with newlines, it's a broken request. Really!
+  //  sscanf(s, "%*[\n\r]%s", s);
+  if(strlen(s)) tmp = parse_got(s);
+  switch(tmp)
   { 
    case 0:
     if(this_object()) 
@@ -1551,7 +1549,7 @@ void got_data(mixed fooid, string s)
     
    case 1:
     DPERROR("HTTP: Stupid Client Error");
-    end(prot+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
+    end((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
     return;			// Stupid request.
     
    case 2:
@@ -1562,9 +1560,10 @@ void got_data(mixed fooid, string s)
 
   if(conf)
   {
+#ifndef DISABLE_VIRTUAL_HOSTING
     // IP-Less support.
-    conf = roxen->find_site_for(this_object());
-
+    roxen->find_site_for(this_object());
+#endif
     conf->received += strlen(s);
     conf->requests++;
   }
@@ -1637,12 +1636,12 @@ void create(object f, object c)
 {
   if(f)
   {
-    f->set_nonblocking();
+    MARK_FD("HTTP connection");
+    f->set_nonblocking(got_data, 0, end);
     my_fd = f;
     conf = c;
-    MARK_FD("HTTP connection");
-    my_fd->set_close_callback(end);
-    my_fd->set_read_callback(got_data);
+    //    my_fd->set_close_callback(end);
+    //    my_fd->set_read_callback(got_data);
     // No need to wait more than 30 seconds to get more data.
     call_out(do_timeout, 30);
     time = _time(1);

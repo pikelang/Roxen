@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.55 1999/06/07 01:47:26 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.56 1999/07/15 16:59:28 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -369,7 +369,6 @@ int contains_symlinks(string root, string path)
 mixed find_file( string f, object id )
 {
   TRACE_ENTER("find_file(\""+f+"\")", 0);
-
   object o;
   int size;
   string tmp;
@@ -393,7 +392,7 @@ mixed find_file( string f, object id )
    * FIXME: Should probably move path-info extraction here.
    * 	/grubba 1998-08-26
    */
-
+  
   switch(id->method)
   {
   case "GET":

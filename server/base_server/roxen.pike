@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.305 1999/07/12 18:34:31 grubba Exp $
+ * $Id: roxen.pike,v 1.306 1999/07/15 16:59:28 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.305 1999/07/12 18:34:31 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.306 1999/07/15 16:59:28 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -1047,15 +1047,17 @@ public void update_supports_from_roxen_com()
 
 public multiset find_supports(string from, void|multiset existing_sup)
 {
-  multiset (string) sup = existing_sup || (< >);
+  multiset (string) sup =  (< >);
   multiset (string) nsup = (< >);
 
   array (function|multiset) s;
   string v;
   array f;
   
-  if(!(< "unknown", "" >)[from])
-  {
+  if(!strlen(from) || from == "unknown")
+    return default_supports|existing_sup;
+  if(!(sup = cache_lookup("supports", from))) {
+    sup = (<>);
     foreach(indices(supports), v)
     {
       if(!v || !search(from, v))
@@ -1070,7 +1072,6 @@ public multiset find_supports(string from, void|multiset existing_sup)
 	  }
       }
     }
-
     if(!sizeof(sup))
     {
       sup = default_supports;
@@ -1078,10 +1079,10 @@ public multiset find_supports(string from, void|multiset existing_sup)
       perror("Unknown client: \""+from+"\"\n");
 #endif
     }
-  } else {
-    sup = default_supports;
+    sup -= nsup;
+    cache_set("supports", from, sup);
   }
-  return sup - nsup;
+  return sup|existing_sup;
 }
 
 public void log(mapping file, object request_id)
@@ -3917,9 +3918,8 @@ object find_server_for(object id, string host, string|void port)
   return id->conf;
 }
 
-object find_site_for( object id )
+void find_site_for( object id )
 {
   if(id->misc->host) 
-    return find_server_for(id,@lower_case(id->misc->host)/":");
-  return id->conf;
+    id->conf = find_server_for(id,@lower_case(id->misc->host)/":");
 }
