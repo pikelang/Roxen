@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: install,v 1.5 1998/05/11 00:07:20 grubba Exp $
+# $Id: install,v 1.6 1998/05/11 16:19:06 mast Exp $
 #
 
 # Find the default master
@@ -22,6 +22,7 @@ else
     fi
   fi
 fi
+export PIKE_MODULE_PATH
 
 # Extra module-path
 if [ -d etc/modules ]; then
