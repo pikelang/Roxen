@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.12 2002/03/27 17:49:01 per-bash Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.13 2002/03/27 20:07:18 per-bash Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -36,6 +36,7 @@ private int bucket=0x7fffffff;
 private int fill_rate=0; //if != 0, we're throttling
 private int max_depth=0;
 private int initial_bucket=0;
+private string host;
 
 
 //API functions
@@ -48,6 +49,7 @@ int bytes_sent() {
 //set the fileobject to write to. Also start the writing process up
 void output (Stdio.File fd) {
   THROTTLING_DEBUG("output to "+fd->query_address());
+  catch(host = (fd->query_address()/" ")[0]);
   outfd=fd;
   last_write=writing_starttime=time(1);
   bucket=initial_bucket; //need to initialize it here, or ftp
@@ -177,7 +179,7 @@ private void write_some () {
   if (!throttler)
     finally_write(towrite);
   else
-    throttler->request(towrite,finally_write);
+    throttler->request(towrite,finally_write,host);
 }
 
 void finally_write(int howmuch) {

@@ -11,7 +11,7 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.8 2001/06/17 20:07:11 nilsson Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.9 2002/03/27 20:07:18 per-bash Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
@@ -80,8 +80,22 @@ private void fill_bucket() {
 private void wake_up_some () {
   THROTTLING_DEBUG("wake_up_some");
   array request;
+  multiset seen = (<>);
+  multiset have = (<>);
   while ((!requests_queue->is_empty()) && (bucket >= min_grant)) {
     request=requests_queue->get();
+    if( seen[request] )
+    {
+      have = (<>);
+      seen = (<>);
+    }
+    seen[request] = 1;
+    if( have[request[2]] )
+    {
+      requests_queue->put( request );
+      continue;
+    }
+    have[request[2]]=1;
     grant(@request);
   }
   THROTTLING_DEBUG("Done waking up requests");
@@ -89,7 +103,8 @@ private void wake_up_some () {
 
 //handles a single request. It assumes it has been granted, otherwise
 //it will allow going over quota.
-private void grant (int howmuch, function callback, array(mixed) cb_args ) {
+private void grant (int howmuch, function callback, string host,
+		    array(mixed) cb_args ) {
   THROTTLING_DEBUG("grant("+howmuch+"). bucket="+bucket);
   if (!callback) {
     THROTTLING_DEBUG("no callback. Exiting");
@@ -108,7 +123,7 @@ private void grant (int howmuch, function callback, array(mixed) cb_args ) {
 //when granted, callback will be called. First arg is the number
 //of allowed bytes. Then the hereby supplied args.
 void request (int howmuch, function(int,mixed ...:void) callback,
-             mixed ... cb_args) {
+	      string host, mixed ... cb_args) {
   if (!fill_rate) { //no throttling is actually done
     THROTTLING_DEBUG("auto-grant (not throttling)");
     callback(howmuch,@cb_args);
@@ -120,16 +135,16 @@ void request (int howmuch, function(int,mixed ...:void) callback,
     howmuch=max_grant;
   }
 
-  fill_bucket(); //maybe we can squeeze some more bandwidth.
+//    fill_bucket(); //maybe we can squeeze some more bandwidth.
 
   if (bucket <= min_grant ) { //bad luck. Nothing to allow. Enqueue
     THROTTLING_DEBUG("no tokens, enqueueing");
-    requests_queue->put( ({howmuch,callback,cb_args}) );
+    requests_queue->put( ({howmuch,callback,host,cb_args}) );
     return;
   }
 
   THROTTLING_DEBUG("granting");
-  grant (howmuch, callback, cb_args);
+  grant (howmuch, callback, host, cb_args);
 }
 
 
