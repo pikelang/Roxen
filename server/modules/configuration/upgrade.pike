@@ -14,7 +14,7 @@ object db;
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
-  db=Yabu.lookup(QUERY("yabuname","wS");
+  db=Yabu.db(QUERY("yabuname","wS");
 }
 
 void create()
@@ -144,12 +144,33 @@ class UpdateInfoFiles
 
   void request_ok(object httpquery)
   {
-    
+    string s=httpquery->data();
+
+    array lines=s/"\n";
+    array(int) new_packages=decode_ranges(lines[1]);
+    array(int) delete_packages=decode_ranges(lines[2]);
+
+    if(sizeof(new_packages))
+      report_notice("Found new packages: "+ ((array(string))new_packages)*", ");
+    else
+      report_notice("No new packages found");
+
+    if(sizeof(delete_packages))
+      report_notice("Deleting packages: "+ ((array(string))delete_packages)*", ");
+    else
+      report_notice("No packages to delete found");
+
+    foreach(new_packages, int i)
+      GetInfoFile(i);
+
+    foreach(delete_packages, int i)
+      db->pkginfo->delete((string)i);
+      
   }
 
   void request_fail(object httpquery)
   {
-
+    report_error("Failed to connect to upgrade server to fetch information about new packages.");
   }
 
   string format_have_packages()
