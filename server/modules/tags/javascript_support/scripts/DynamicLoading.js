@@ -79,9 +79,11 @@ function layerLoadHandler(file_loader)
   var layer = (isNav4? this.name: file_loader.layer_name);
   var properties = (isNav4? this.properties: file_loader.properties);
 
-  if(!isNav4)
-    getObject(layer).innerHTML = file_loader.document.body.innerHTML;
-  
+  if(!isNav4) {
+    var o = getObject(layer);
+    o.innerHTML = "";
+    o.innerHTML = file_loader.document.body.innerHTML;
+  }
   boundPopup(layer);
   addPopup(layer, properties);
   captureMouseEvent(popupMove);
