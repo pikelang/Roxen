@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.14 2000/06/19 16:32:30 grubba Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.15 2000/06/19 16:33:06 grubba Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -62,9 +62,6 @@ mapping|int last_resort(object id)
         return 1;       // Go through id->handle_request() one more time...
       }
       PATHINFO_WERR(sprintf("Directory: %O", file));
-      /* Hm. Lets try this: */
-      id->misc->path_info = query[offsets[probe]+1..];
-      id->not_query = file+"/";
       lo = probe + 1;
     } else {
       hi = probe - 1;
