@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.32 2000/09/08 22:50:20 nilsson Exp $
+// $Id: language.pike,v 1.33 2000/09/19 12:45:11 lange Exp $
 
 // #pragma strict_types
 
@@ -13,7 +13,9 @@ string default_locale;
 string default_page_locale;
 //! Contains the default locale for web pages.
 
-#ifndef THREADS
+#ifdef THREADS
+object locale = thread_local();
+#else
 // Emulates a thread_local() object.
 class container
 {
@@ -27,11 +29,7 @@ class container
     return value;
   }
 }
-#endif
 
-#if constant( thread_local )
-object locale = thread_local();
-#else
 object locale = container();
 #endif /* THREADS */
 
@@ -90,13 +88,12 @@ string verify_locale(string lang) {
     if(set = compat_languages[lang])
       return set;
 
-  return "eng";
+  return 0;  // Enables fallback to default_locale
 }
 
-void initiate_languages(string def_loc)
+void set_default_locale(string def_loc)
 {
-  report_debug( "Adding languages ... ");
-  int start = gethrtime();
+  def_loc = lower_case(def_loc);
 
   string tmp;
   if(def_loc != "standard") {
@@ -104,9 +101,9 @@ void initiate_languages(string def_loc)
     tmp = def_loc;
   }
   else if(getenv("LANG")) {
-    // Default locale from environment
+    // Try default locale from environment
     tmp = [string]getenv("LANG");
-    sscanf(tmp, "%s_%*s", tmp);
+    sscanf(tmp, "%s_%*s", tmp);   //Handle e.g. en_US
   }
 
   default_locale=verify_locale(tmp);
@@ -123,8 +120,16 @@ void initiate_languages(string def_loc)
     default_page_locale = default_locale;
 
 #ifdef LANGUAGE_DEBUG
-  werror("Default locale is set to %O.\n",default_locale);
+  werror("Default locale set to %O. ", default_locale);
 #endif
+}
+
+void initiate_languages(string def_loc)
+{
+  report_debug( "Adding languages ... ");
+  int start = gethrtime();
+
+  set_default_locale(def_loc);
 
   __LOCALEMODULE.register_project(PROJECT, "languages/_xml_glue/%L.xml");
 
@@ -154,7 +159,7 @@ static string nil()
 public function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
-  werror("Function: " + func + " in "+ verify_locale(lang) +"\n");
+  werror("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
 #endif
   return __LOCALEMODULE.call(PROJECT, verify_locale(lang), 
 			     func, default_page_locale) || nil;  
