@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.83 2000/11/24 16:50:33 per Exp $
+// $Id: module_support.pike,v 1.84 2000/12/30 21:47:24 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -8,6 +8,8 @@
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
+int dump( string file, program|void p );
 
 program my_compile_file(string file, void|int silent)
 {
@@ -41,26 +43,31 @@ program my_compile_file(string file, void|int silent)
                            "%s", file, q));
   }
 
-  string ofile = master()->make_ofilename( file );
-
-  if (p->dont_dump_program) {
+  if (p->dont_dump_program)
+  {
 #ifdef MODULE_DEBUG
-    if (!silent) report_debug("\b[dontdump] \b");
+    if (!silent)
+      report_debug("\b[dontdump] \b");
 #endif
   }
-  else if( !file_stat( ofile ) ||
-	   file_stat(ofile)[ST_MTIME] < file_stat(file)[ST_MTIME] )
-    if( catch ( master()->dump_program( file, p ) ) )
+  else
+#ifdef MODULE_DEBUG
+    switch(
+#endif
+      dump( file, p )
+#ifndef MODULE_DEBUG
+      ;
+#else
+    )
     {
-#ifdef MODULE_DEBUG
-      if (!silent) report_debug("\b[nodump] \b");
-#endif
-      catch( Stdio.File( ofile, "wct" ) );
-    } else {
-#ifdef MODULE_DEBUG
-      if (!silent) report_debug("\b[dump] \b");
-#endif
+     case 1: // dumped
+       if (!silent) report_debug("\b[dump] \b");
+       break;
+     case -1:
+       if (!silent) report_debug("\b[nodump] \b");
+     case 0:
     }
+#endif
   return p;
 }
 

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.596 2000/12/30 10:30:02 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.597 2000/12/30 21:47:24 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3022,7 +3022,7 @@ void describe_all_threads()
   }
 }
 
-void dump( string file, program|void p )
+int dump( string file, program|void p )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
@@ -3051,7 +3051,7 @@ void dump( string file, program|void p )
 #ifdef DUMP_DEBUG
     werror(file+" not loaded, and thus cannot be dumped.\n");
 #endif
-    return;
+    return 0;
   }
 
   if( master()->has_set_on_load[ file ] == 1 )
@@ -3065,16 +3065,17 @@ void dump( string file, program|void p )
       if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
       report_debug("Notice: Dumping failed for " + parts*"/"+" (not a bug)\n");
 #endif
+      return -1;
     }
 #ifdef DUMP_DEBUG
-    else
-      werror( file+" dumped successfully\n" );
+    werror( file+" dumped successfully\n" );
 #endif
+    return 1;
   }
 #ifdef MUCHO_DUMP_DEBUG
-  else
-    werror(file+" already dumped (and up to date)\n");
+  werror(file+" already dumped (and up to date)\n");
 #endif
+  return 0;
 }
 
 program slowpipe, fastpipe;
