@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.131 2000/06/13 18:52:17 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.132 2000/06/18 16:49:05 grubba Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -958,9 +958,9 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
 
   b=m->name;
 
-  dom=id->conf->query("Domain");
-  if(dom[-1]=='.')
-    dom=dom[0..strlen(dom)-2];
+  dom = id->conf->query("Domain");
+  if(sizeof(dom) && (dom[-1]=='.'))
+    dom = dom[0..strlen(dom)-2];
   if(!b) return "";
   u=id->conf->userinfo(b, id);
   if(!u) return "";
