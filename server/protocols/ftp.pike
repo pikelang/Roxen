@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.53 1997/09/14 21:07:42 grubba Exp $
+ * $Id: ftp.pike,v 1.54 1997/09/22 21:10:44 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -276,14 +276,13 @@ class ls_program {
     }
   }
 
-  string list_files(array(string) files, string dir, int flags)
+  string list_files(array(array(mixed)) files, string dir, int flags)
   {
     int i;
     if (flags & LS_FLAG_t) {
       array(int) times = allocate(sizeof(files));
       for (i=0; i < sizeof(files); i++) {
-	string long = combine_path(dir, files[i]);
-	array st = id->my_stat_file(long);
+	array st = files[i][1];
 	if (st) {
 	  times[i] = st[-4];
 	} else {
@@ -305,9 +304,9 @@ class ls_program {
       return(0);
     }
     string res = "";
-    foreach(files, string short) {
-      string long = combine_path(dir, short);
-      array st = id->my_stat_file(long);
+    foreach(files, array(mixed) file_spec) {
+      string short = file_spec[0];
+      array st = file_spec[1];
       if (st) {
 	if (flags & LS_FLAG_F) {
 	  if (st[1] < 0) {
@@ -395,34 +394,34 @@ class ls_program {
       if (dir_stack->ptr) {
 	string short = dir_stack->pop();
 	string long = combine_path(id->cwd, short);
-	array(string) dir = roxen->find_dir(long+"/", id);
+	array(array(mixed)) dir = id->conf->find_dir_stat(long+"/", id);
 	if ((flags & LS_FLAG_a) &&
 	    (long != "/")) {
 	  if (dir) {
-	    dir = ({ ".." }) + dir;
+	    dir = ({ ({ "..", roxen->stat_file(combine_path(long,"../"), id) }) }) + dir;
 	  } else {
-	    dir = ({ ".." });
+	    dir = ({ ({ "..", roxen->stat_file(combine_path(long,"../"), id) }) });
 	  }
 	}
 	string s = "";
 	if (dir && sizeof(dir)) {
 	  if (!(flags & LS_FLAG_A)) {
-	    dir = Array.filter(dir, lambda(string f){return(f[0] != '.');});
+	    dir = Array.filter(dir, lambda(array(string) f){return(f[0][0] != '.');});
 	  } else if (!(flags & LS_FLAG_a)) {
-	    dir = Array.filter(dir, lambda(string f){return((f-".") != "");});
+	    dir = Array.filter(dir, lambda(array(string) f){return((f[0]-".") != "");});
 	  }
 	  if (flags & LS_FLAG_R) {
-	    foreach(dir, string d) {
-	      if (!((<".","..">)[d])) {
-		array st = id->my_stat_file(d, combine_path(id->cwd, short)+"/");
+	    foreach(dir, array(mixed) d) {
+	      if (!((<".","..">)[d[0]])) {
+		array(mixed) st = d[1];
 		if (st && (st[1] < 0)) {
 		  if (short[-1] != '/') {
-		    d = short + "/" + d;
+		    d[0] = short + "/" + d[0];
 		  } else {
-		    d = short + d;
+		    d[0] = short + d[0];
 		  }
 		  name_directories=1;
-		  dir_stack->push(d);
+		  dir_stack->push(d[0]);
 		}
 	      }
 	    }
