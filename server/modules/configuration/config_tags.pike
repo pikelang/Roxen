@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.150 2001/05/16 07:32:12 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.151 2001/06/11 17:00:09 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -919,13 +919,15 @@ class TagThemePath
   class Frame 
   {
     inherit RXML.Frame;
-    int do_iterate=-1;
+    int do_iterate;
     void do_enter( RequestID id )
     {
       while( id->misc->orig ) 
         id = id->misc->orig;
       if( glob( "*"+args->match, id->not_query ) )
         do_iterate = 1;
+      else
+	do_iterate = -1;
       return 0;
     }
   }
@@ -966,11 +968,13 @@ class TagCfPerm
   class Frame
   {
     inherit RXML.Frame;
-    int do_iterate = -1;
+    int do_iterate;
     void do_enter( RequestID id )
     {
       if( id->misc->config_user && ( CU_AUTH( args->perm )==!args->not ) )
         do_iterate = 1;
+      else
+	do_iterate = -1;
       return 0;
     }
   }
@@ -1095,11 +1099,13 @@ class TagCfUserWants
   class Frame
   {
     inherit RXML.Frame;
-    int do_iterate = -1;
+    int do_iterate;
     void do_enter( RequestID id )
     {
       if( config_setting2( args->option )==!args->not )
         do_iterate = 1;
+      else
+	do_iterate = -1;
       return 0;
     }
   }
