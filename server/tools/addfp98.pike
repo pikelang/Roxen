@@ -7,7 +7,7 @@
  * Script originally provided by Mike Knott <mknott@cybermedia-inc.com>
  * Minor modifications by Leif Stensson <leif@roxen.com>
  *
- * $Id: addfp98.pike,v 1.2 2000/03/16 18:08:33 nilsson Exp $
+ * $Id: addfp98.pike,v 1.3 2003/03/11 22:42:50 mani Exp $
  */
 
 #!/usr/local/bin/pike
@@ -20,7 +20,7 @@ import Process;
 void create_dir(string dir)
 {
   if(!file_stat(dir) && !mkdir(dir)) {
-    perror("Can not create directory "+dir);
+    werror("Can not create directory "+dir);
     exit(1);
   }
 }
