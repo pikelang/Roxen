@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.106 2001/07/21 10:55:50 mast Exp $
+// $Id: Roxen.pmod,v 1.107 2001/07/25 18:47:21 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2627,6 +2627,7 @@ class ScopeRoxen {
 #endif
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    if (!c) c = RXML_CONTEXT;
     switch(var)
     {
      case "uptime":
@@ -2715,6 +2716,7 @@ class ScopePage {
 		       "theme-language":"theme_language"]);
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    if (!c) c = RXML_CONTEXT;
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
@@ -2750,6 +2752,7 @@ class ScopePage {
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    if (!c) c = RXML_CONTEXT;
     switch (var) {
       case "pathinfo": return c->id->misc->path_info = val;
     }
@@ -2759,7 +2762,7 @@ class ScopePage {
   }
 
   array(string) _indices(void|RXML.Context c) {
-    if(!c) return ({});
+    if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
       ({ "pathinfo", "realfile", "virtroot", "virtfile", "path", "query",
 	 "url", "last-true", "language", "scope", "filesize", "self",
@@ -2770,7 +2773,7 @@ class ScopePage {
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
-    if(!c) return;
+    if (!c) c = RXML_CONTEXT;
     switch (var) {
       case "pathinfo":
 	predef::m_delete (c->id->misc, "pathinfo");
@@ -2793,7 +2796,7 @@ class ScopeCookie {
   inherit RXML.Scope;
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
-    if(!c) return RXML.nil;
+    if (!c) c = RXML_CONTEXT;
     NOCACHE(c->id);
     return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
@@ -2801,7 +2804,8 @@ class ScopeCookie {
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
     if (mixed err = catch (val = (string) val || ""))
       RXML.parse_error ("Cannot set cookies of type %t.\n", val);
-    if(c && c->id->cookies[var]!=val) {
+    if (!c) c = RXML_CONTEXT;
+    if(c->id->cookies[var]!=val) {
       c->id->cookies[var]=val;
       add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
 		      "="+http_encode_cookie( val )+
@@ -2811,13 +2815,14 @@ class ScopeCookie {
   }
 
   array(string) _indices(void|RXML.Context c) {
-    if(!c) return ({});
+    if (!c) c = RXML_CONTEXT;
     NOCACHE(c->id);
     return indices(c->id->cookies);
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
-    if(!c || !c->id->cookies[var]) return;
+    if (!c) c = RXML_CONTEXT;
+    if(!c->id->cookies[var]) return;
     predef::m_delete(c->id->cookies, var);
     add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
 		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
@@ -2924,21 +2929,22 @@ class ScopeModVar
     }
   }
   
-  mixed `[]( string what )
+  mixed `[]( string what, void|RXML.Context ctx )
   {
-    if( what == "site" )
-      return Modules( ([ 0:RXML.get_context()->id->conf ]), "site" );
     if( what == "global" )
       return Modules( ([ 0:roxenp() ]), "roxen" );
-    if( !RXML.get_context()->id->conf->modules[ what ] )
+    if (!ctx) ctx = RXML_CONTEXT;
+    if( what == "site" )
+      return Modules( ([ 0: ctx->id->conf ]), "site" );
+    if( !ctx->id->conf->modules[ what ] )
       RXML.parse_error("The module "+what+" does not exist\n");
-    return Modules( RXML.get_context()->id->conf->modules[ what ], what );
+    return Modules( ctx->id->conf->modules[ what ], what );
   }
 
-  array _indices()
+  array _indices (void|RXML.Context ctx)
   {
-    return ({ "site" }) +
-      sort(indices(RXML.get_context()->id->conf->modules));
+    return ({ "global", "site" }) +
+      sort(indices((ctx || RXML_CONTEXT)->id->conf->modules));
   }
 }
 
@@ -2950,7 +2956,7 @@ class FormScope
 
   mixed `[]=( string index, mixed newval, void|RXML.Context ctx )
   {
-    if(!ctx) RXML.run_error("No current scope to set variable in.\n");
+    if(!ctx) ctx = RXML_CONTEXT;
     if( arrayp( newval ) )
       ctx->id->real_variables[ index ] = newval;
     else
@@ -2961,6 +2967,7 @@ class FormScope
   mixed `[] (string what, void|RXML.Context ctx,
 	     void|string scope_name, void|RXML.Type type)
   {
+    if (!ctx) ctx = RXML_CONTEXT;
     mapping variables = ctx->id->real_variables;
     if( zero_type(variables[what]) ) return RXML.nil;
     mixed q = variables[ what ];
@@ -2976,7 +2983,7 @@ class FormScope
 
   array _indices( void|RXML.Context ctx )
   {
-    if(!ctx) return ({ });
+    if(!ctx) ctx = RXML_CONTEXT;
     return indices( ctx->id->real_variables );
   }
 }
@@ -3151,7 +3158,9 @@ void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
 }
 
 string get_server_url(Configuration c)
-//! Returns a URL that the given configuration answers on.
+//! Returns a URL that the given configuration answers on. This is
+//! just a wrapper around @[Configuration.get_url]; that one can just
+//! as well be used directly instead.
 //!
 //! @note
 //! If there is a @[RequestID] object available, you probably want to
