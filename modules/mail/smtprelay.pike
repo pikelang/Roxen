@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.13 1998/09/15 20:38:48 grubba Exp $
+ * $Id: smtprelay.pike,v 1.14 1998/09/15 21:00:20 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.13 1998/09/15 20:38:48 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.14 1998/09/15 21:00:20 grubba Exp $";
 
 /*
  * Some globals
@@ -602,8 +602,7 @@ static void send_mail()
   mixed key = queue_mutex->lock();
 #endif /* THREADS */
   // Select some mail to send.
-  array m = sql->query(sprintf("SELECT id, sender, mailid, user, domain, times "
-			       "FROM send_q WHERE send_at < %d "
+  array m = sql->query(sprintf("SELECT * FROM send_q WHERE send_at < %d "
 			       "ORDER BY mailid, domain",
 			       time()));
 
@@ -723,11 +722,11 @@ void bounce(mapping msg, string code, array(string) text)
 				   "Last-Attempt-Date: %s\r\n",
 				   gethostname(),
 				   "Somewhere",
-				   mktimestamp(msg->received_at),
+				   mktimestamp((int)msg->received_at),
 				   msg->user, msg->domain,
 				   msg->remote_mta,
 				   code, sizeof(text)?text[-1]:"",
-				   mktimestamp(msg->last_attempt_at));
+				   mktimestamp((int)msg->last_attempt_at));
 
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
 			  "Mailid:%s\r\n"
@@ -743,6 +742,7 @@ void bounce(mapping msg, string code, array(string) text)
 		      "MIME-Version":"1.0",
 		      "From":QUERY(postmaster),
 		      "To":msg->sender,
+		      "CC":QUERY(postmaster),
 		      "Date":mktimestamp(time()),
 		      "Content-Type":"multipart/report; "
 		      "Report-Type=delivery-status",
@@ -860,8 +860,8 @@ int relay(string from, string user, string domain,
 #endif /* THREADS */
 
   // Send mailid asynchronously.
-  // Start in two minutes.
-  check_mail(2 * 60);
+  // Start in half a minute.
+  check_mail(30);
 
   return(1);
 }
