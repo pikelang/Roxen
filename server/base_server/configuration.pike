@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.129 1998/05/09 15:48:50 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.130 1998/05/09 17:06:51 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2138,77 +2138,79 @@ object enable_module( string modname )
 #if constant(gethrtime)
   int start_time = gethrtime();
 #endif
-  if( module )
-  {
-    object me;
-    mapping tmp;
-    int pr;
-    array err;
+  if (!module) {
+    return 0;
+  }
+
+  object me;
+  mapping tmp;
+  int pr;
+  array err;
 
 #ifdef MODULE_DEBUG
-    perror("Enabling "+module->name+" # "+id+" ... ");
+  perror("Enabling "+module->name+" # "+id+" ... ");
 #endif
 
-    if(module->copies)
-    {
+  if(module->copies)
+  {
+    if (err = catch(me = module["program"]())) {
+      report_error("Couldn't clone module \"" + module->name + "\"\n" +
+		   describe_backtrace(err));
+      if (module->copies[id]) {
+#ifdef MODULE_DEBUG
+	perror("Keeping old copy\n");
+#endif
+      }
+      return(module->copies[id]);
+    }
+    if(module->copies[id]) {
+#ifdef MODULE_DEBUG
+      perror("Disabling old copy ... ");
+#endif
+      if (err = catch{
+	module->copies[id]->stop();
+      }) {
+	report_error("Error during disabling of module \"" + module->name +
+		     "\"\n" + describe_backtrace(err));
+      }
+      destruct(module->copies[id]);
+    }
+  } else {
+    if(objectp(module->master)) {
+      me = module->master;
+    } else {
       if (err = catch(me = module["program"]())) {
 	report_error("Couldn't clone module \"" + module->name + "\"\n" +
 		     describe_backtrace(err));
-	if (module->copies[id]) {
-#ifdef MODULE_DEBUG
-	  perror("Keeping old copy\n");
-#endif
-	}
-	return(module->copies[id]);
-      }
-      if(module->copies[id]) {
-#ifdef MODULE_DEBUG
-	perror("Disabling old copy ... ");
-#endif
-	if (err = catch{
-	  module->copies[id]->stop();
-	}) {
-	  report_error("Error during disabling of module \"" + module->name +
-		       "\"\n" + describe_backtrace(err));
-	}
-	destruct(module->copies[id]);
-      }
-    } else {
-      if(objectp(module->master)) {
-	me = module->master;
-      } else {
-	if (err = catch(me = module["program"]())) {
-	  report_error("Couldn't clone module \"" + module->name + "\"\n" +
-		       describe_backtrace(err));
-	  return(0);
-	}
+	return(0);
       }
     }
+  }
 
 #ifdef MODULE_DEBUG
-    //    perror("Initializing ");
+  //    perror("Initializing ");
 #endif
-    if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
-			MODULE_FILE_EXTENSION | MODULE_LOGGER |
-			MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
-			MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
-    {
-      me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
-		 "The priority of the module. 9 is highest and 0 is lowest."
-		 " Modules with the same priority can be assumed to be "
-		 "called in random order", 
-		 ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+  if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
+		      MODULE_FILE_EXTENSION | MODULE_LOGGER |
+		      MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
+		      MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
+  {
+    me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
+	       "The priority of the module. 9 is highest and 0 is lowest."
+	       " Modules with the same priority can be assumed to be "
+	       "called in random order", 
+	       ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       
-      if(module->type != MODULE_LOGGER &&
-	 module->type != MODULE_PROVIDER)
+    if(module->type != MODULE_LOGGER &&
+       module->type != MODULE_PROVIDER)
+    {
+      if(!(module->type & MODULE_PROXY))
       {
-        if(!(module->type & MODULE_PROXY))
-        {
-	  me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
-		     "The realm to use when requesting password from the "
-		     "client. Usually used as an informative message to the "
-		     "user.");
-	  me->defvar("_seclvl",  0, "Security: Trust level", TYPE_INT, 
+	me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
+		   "The realm to use when requesting password from the "
+		   "client. Usually used as an informative message to the "
+		   "user.");
+	me->defvar("_seclvl",  0, "Security: Trust level", TYPE_INT, 
 		   "When a location module find a file, that file will get "
 		   "a 'Trust level' that equals the level of the module."
 		   " This file will then only be sent to modules with a higher "
@@ -2218,215 +2220,229 @@ object enable_module( string modname )
 		   " the CGI module. A trust level of zero is the same thing as"
 		   " free access.\n");
 
-	  me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
-		     "This is the 'security level=value' list.<br>"
-		     "Each security level can be any or more from this list:"
-		     "<hr noshade>"
-		     "allow ip=<i>IP</i>/<i>bits</i><br>"
-		     "allow ip=<i>IP</i>:<i>mask</i><br>"
-		     "allow ip=<i>pattern</i><br>"
-		     "allow user=<i>username</i>,...<br>"
-		     "deny ip=<i>IP</i>/<i>bits</i><br>"
-		     "deny ip=<i>IP</i>:<i>mask</i><br>"
-		     "deny ip=<i>pattern</i><br>"
-		     "<hr noshade>"
-		     "In patterns: * matches one or more characters, "
-		     "and ? matches one character.<p>"
-		     "In username: 'any' stands for any valid account "
-		     "(from .htaccess"
-		     " or auth-module. The default (used when _no_ "
-		     "entries are present) is 'allow ip=*', allowing"
-		     " everyone to access the module");
+	me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
+		   "This is the 'security level=value' list.<br>"
+		   "Each security level can be any or more from this list:"
+		   "<hr noshade>"
+		   "allow ip=<i>IP</i>/<i>bits</i><br>"
+		   "allow ip=<i>IP</i>:<i>mask</i><br>"
+		   "allow ip=<i>pattern</i><br>"
+		   "allow user=<i>username</i>,...<br>"
+		   "deny ip=<i>IP</i>/<i>bits</i><br>"
+		   "deny ip=<i>IP</i>:<i>mask</i><br>"
+		   "deny ip=<i>pattern</i><br>"
+		   "<hr noshade>"
+		   "In patterns: * matches one or more characters, "
+		   "and ? matches one character.<p>"
+		   "In username: 'any' stands for any valid account "
+		   "(from .htaccess"
+		   " or auth-module. The default (used when _no_ "
+		   "entries are present) is 'allow ip=*', allowing"
+		   " everyone to access the module");
 	  
-	} else {
-	  me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
+      } else {
+	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 	  
-	  me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
-		     "The realm to use when requesting password from the "
-		     "client. Usually used as an informative message to the "
-		     "user.");
-	  me->defvar("_seclevels", "", "Proxy security: Patterns",
-		     TYPE_TEXT_FIELD,
-		     "This is the 'security level=value' list.<br>"
-		     "Each security level can be any or more from "
-		     "this list:<br>"
-		     "<hr noshade>"
-		     "allow ip=pattern<br>"
-		     "allow user=username,...<br>"
-		     "deny ip=pattern<br>"
-		     "<hr noshade>"
-		     "In patterns: * is on or more characters, ? is one "
-		     " character.<p>"
-		     "In username: 'any' stands for any valid account"
-		     " (from .htaccess"
-		     " or auth-module. The default is 'deny ip=*'");
-	}
+	me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
+		   "The realm to use when requesting password from the "
+		   "client. Usually used as an informative message to the "
+		   "user.");
+	me->defvar("_seclevels", "", "Proxy security: Patterns",
+		   TYPE_TEXT_FIELD,
+		   "This is the 'security level=value' list.<br>"
+		   "Each security level can be any or more from "
+		   "this list:<br>"
+		   "<hr noshade>"
+		   "allow ip=pattern<br>"
+		   "allow user=username,...<br>"
+		   "deny ip=pattern<br>"
+		   "<hr noshade>"
+		   "In patterns: * is on or more characters, ? is one "
+		   " character.<p>"
+		   "In username: 'any' stands for any valid account"
+		   " (from .htaccess"
+		   " or auth-module. The default is 'deny ip=*'");
       }
-    } else {
-      me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
     }
+  } else {
+    me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
+  }
 
-    me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
-	       "An optional comment. This has no effect on the module, it "
-	       "is only a text field for comments that the administrator "
-	       "might have (why the module are here, etc.)");
+  me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
+	     "An optional comment. This has no effect on the module, it "
+	     "is only a text field for comments that the administrator "
+	     "might have (why the module are here, etc.)");
 
-    me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
-	       "An optional name. Set to something to remaind you what "
-	       "the module really does.");
+  me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
+	     "An optional name. Set to something to remaind you what "
+	     "the module really does.");
 
-    me->setvars(retrieve(modname + "#" + id, this));
+  me->setvars(retrieve(modname + "#" + id, this));
+
+  if(module->copies)
+    module->copies[(int)id] = me;
+  else
+    module->enabled = me;
+
+  otomod[ me ] = modname;
+      
+  mixed err;
+  if((me->start) && (err = catch{
+    me->start(0, this);
+  })) {
+    report_error("Error while initiating module copy of " +
+		 module->name + "\n" + describe_backtrace(err));
+
+    /* Clean up some broken references to this module. */
+    m_delete(otomod, me);
 
     if(module->copies)
-      module->copies[(int)id] = me;
+      m_delete(module->copies, (int)id);
     else
-      module->enabled = me;
+      m_delete(module, "enabled");
+    
+    destruct(me);
+    
+    return 0;
+  }
+    
+  if (err = catch(pr = me->query("_priority"))) {
+    report_error("Error while initiating module copy of " +
+		 module->name + "\n" + describe_backtrace(err));
+    pr = 3;
+  }
 
-    otomod[ me ] = modname;
-      
-    mixed err;
-    if((me->start) && (err = catch{
-      me->start(0, this);
-    })) {
+  api_module_cache |= me->api_functions();
+
+  if(module->type & MODULE_EXTENSION) {
+    if (err = catch {
+      array arr = me->query_extensions();
+      if (arrayp(arr)) {
+	string foo;
+	foreach( arr, foo )
+	  if(pri[pr]->extension_modules[ foo ])
+	    pri[pr]->extension_modules[foo] += ({ me });
+	  else
+	    pri[pr]->extension_modules[foo] = ({ me });
+      }
+    }) {
       report_error("Error while initiating module copy of " +
 		   module->name + "\n" + describe_backtrace(err));
-      destruct(me);
-      return 0;
     }
-    
-    if (err = catch(pr = me->query("_priority"))) {
+  }	  
+
+  if(module->type & MODULE_FILE_EXTENSION) {
+    if (err = catch {
+      array arr = me->query_file_extensions();
+      if (arrayp(arr)) {
+	string foo;
+	foreach( me->query_file_extensions(), foo )
+	  if(pri[pr]->file_extension_modules[foo] ) 
+	    pri[pr]->file_extension_modules[foo]+=({me});
+	  else
+	    pri[pr]->file_extension_modules[foo]=({me});
+      }
+    }) {
       report_error("Error while initiating module copy of " +
 		   module->name + "\n" + describe_backtrace(err));
-      pr = 3;
     }
+  }
 
-    api_module_cache |= me->api_functions();
-
-    if(module->type & MODULE_EXTENSION) {
-      if (err = catch {
-	array arr = me->query_extensions();
-	if (arrayp(arr)) {
-	  string foo;
-	  foreach( arr, foo )
-	    if(pri[pr]->extension_modules[ foo ])
-	      pri[pr]->extension_modules[foo] += ({ me });
-	    else
-	      pri[pr]->extension_modules[foo] = ({ me });
-	}
-      }) {
-	report_error("Error while initiating module copy of " +
-		     module->name + "\n" + describe_backtrace(err));
+  if(module->type & MODULE_PROVIDER) {
+    if (err = catch {
+      mixed provs = me->query_provides();
+      if(stringp(provs))
+	provs = (< provs >);
+      if(arrayp(provs))
+	provs = mkmultiset(provs);
+      if (multisetp(provs)) {
+	pri[pr]->provider_modules [ me ] = provs;
       }
-    }	  
-
-    if(module->type & MODULE_FILE_EXTENSION) {
-      if (err = catch {
-	array arr = me->query_file_extensions();
-	if (arrayp(arr)) {
-	  string foo;
-	  foreach( me->query_file_extensions(), foo )
-	    if(pri[pr]->file_extension_modules[foo] ) 
-	      pri[pr]->file_extension_modules[foo]+=({me});
-	    else
-	      pri[pr]->file_extension_modules[foo]=({me});
-	}
-      }) {
-	report_error("Error while initiating module copy of " +
-		     module->name + "\n" + describe_backtrace(err));
-      }
+    }) {
+      report_error("Error while initiating module copy of " +
+		   module->name + "\n" + describe_backtrace(err));
     }
-
-    if(module->type & MODULE_PROVIDER) {
-      if (err = catch {
-	mixed provs = me->query_provides();
-	if(stringp(provs))
-	  provs = (< provs >);
-	if(arrayp(provs))
-	  provs = mkmultiset(provs);
-	if (multisetp(provs)) {
-	  pri[pr]->provider_modules [ me ] = provs;
-	}
-      }) {
-	report_error("Error while initiating module copy of " +
-		     module->name + "\n" + describe_backtrace(err));
-      }
-    }
+  }
     
-    if(module->type & MODULE_TYPES)
-    {
-      types_module = me;
-      types_fun = me->type_from_extension;
+  if(module->type & MODULE_TYPES)
+  {
+    types_module = me;
+    types_fun = me->type_from_extension;
+  }
+  
+  if((module->type & MODULE_MAIN_PARSER))
+  {
+    parse_module = me;
+    if (_toparse_modules) {
+      Array.map(_toparse_modules,
+		lambda(object o, object me, mapping module)
+		{
+		  array err;
+		  if (err = catch {
+		    me->add_parse_module(o);
+		  }) {
+		    report_error("Error while initiating module copy of " +
+				 module->name + "\n" +
+				 describe_backtrace(err));
+		  }
+		}, me, module);
     }
+  }
 
-    if((module->type & MODULE_MAIN_PARSER))
-    {
-      parse_module = me;
-      if (_toparse_modules) {
-	Array.map(_toparse_modules, lambda(object o, object me, mapping module)
-				    {
-	  array err;
-	  if (err = catch{me->add_parse_module(o);}) {
-	    report_error("Error while initiating module copy of " +
-			 module->name + "\n" + describe_backtrace(err));
-	  }
-	}, me, module);
+  if(module->type & MODULE_PARSER)
+  {
+    if(parse_module) {
+      if (err = catch {
+	parse_module->add_parse_module( me );
+      }) {
+	report_error("Error while initiating module copy of " +
+		     module->name + "\n" + describe_backtrace(err));
       }
     }
+    _toparse_modules += ({ me });
+  }
 
-    if(module->type & MODULE_PARSER)
-    {
-      if(parse_module) {
-	if (err = catch {
-	  parse_module->add_parse_module( me );
-	}) {
-	  report_error("Error while initiating module copy of " +
-		       module->name + "\n" + describe_backtrace(err));
-	}
-      }
-      _toparse_modules += ({ me });
-    }
+  if(module->type & MODULE_AUTH)
+  {
+    auth_module = me;
+    auth_fun = me->auth;
+  }
 
-    if(module->type & MODULE_AUTH)
-    {
-      auth_module = me;
-      auth_fun = me->auth;
-    }
+  if(module->type & MODULE_DIRECTORIES)
+    dir_module = me;
 
-    if(module->type & MODULE_DIRECTORIES)
-      dir_module = me;
+  if(module->type & MODULE_LOCATION)
+    pri[pr]->location_modules += ({ me });
 
-    if(module->type & MODULE_LOCATION)
-      pri[pr]->location_modules += ({ me });
+  if(module->type & MODULE_LOGGER)
+    pri[pr]->logger_modules += ({ me });
 
-    if(module->type & MODULE_LOGGER)
-      pri[pr]->logger_modules += ({ me });
+  if(module->type & MODULE_URL)
+    pri[pr]->url_modules += ({ me });
 
-    if(module->type & MODULE_URL)
-      pri[pr]->url_modules += ({ me });
+  if(module->type & MODULE_LAST)
+    pri[pr]->last_modules += ({ me });
 
-    if(module->type & MODULE_LAST)
-      pri[pr]->last_modules += ({ me });
+  if(module->type & MODULE_FILTER)
+    pri[pr]->filter_modules += ({ me });
 
-    if(module->type & MODULE_FILTER)
-      pri[pr]->filter_modules += ({ me });
+  if(module->type & MODULE_FIRST) {
+    pri[pr]->first_modules += ({ me });
+  }
 
-    if(module->type & MODULE_FIRST) {
-      pri[pr]->first_modules += ({ me });
-    }
-
-    hooks_for(module->sname+"#"+id, me);
+  hooks_for(module->sname+"#"+id, me);
       
-    enabled_modules=retrieve("EnabledModules", this);
+  enabled_modules=retrieve("EnabledModules", this);
 
-    if(!enabled_modules[modname+"#"+id])
-    {
+  if(!enabled_modules[modname+"#"+id])
+  {
 #ifdef MODULE_DEBUG
-      perror("New module...");
+    perror("New module...");
 #endif
-      enabled_modules[modname+"#"+id] = 1;
-      store( "EnabledModules", enabled_modules, 1, this);
-    }
-    invalidate_cache();
+    enabled_modules[modname+"#"+id] = 1;
+    store( "EnabledModules", enabled_modules, 1, this);
+  }
+  invalidate_cache();
 #ifdef MODULE_DEBUG
 #if constant(gethrtime)
   perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
@@ -2434,9 +2450,7 @@ object enable_module( string modname )
   perror(" Done.\n");
 #endif
 #endif
-    return me;
-  }
-  return 0;
+  return me;
 }
 
 // Called from the configuration interface.
