@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.272 2000/09/10 15:18:25 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.273 2000/09/12 20:55:27 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1940,7 +1940,6 @@ void handle_request( )
   }
 #endif /* MAGIC_ERROR */
 
-  remove_call_out(do_timeout);
   MARK_FD("HTTP handling request");
 
   array e;
@@ -2095,6 +2094,7 @@ void got_data(mixed fooid, string s)
   my_fd->set_read_callback(0);
   processed=1;
 
+  remove_call_out(do_timeout);
 #ifdef RAM_CACHE
   array cv;
   if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
