@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.74 2000/08/15 01:16:46 mast Exp $
+// $Id: module_support.pike,v 1.75 2000/08/15 12:51:45 jhs Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -306,10 +306,9 @@ string strip_extention( string from )
 
 string extension( string from )
 {
-  from = reverse(from);
-  sscanf(from, "%[^.].", from );
-  from = reverse(from);
-  return from||"";
+  string ext;
+  sscanf(reverse(from), "%[^.].", ext);
+  return ext ? reverse(ext) : "";
 }
 
 mapping(string:ModuleInfo) modules;
