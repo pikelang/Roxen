@@ -22,7 +22,7 @@
 <set variable="var.obox-titlebg" value="#dcdbd3"/>
 <set variable="var.tab-text" value="#000000"/>
 <set variable="var.tab-dim-text" value="#000000"/>
-<set variable="var.linkcolor" value="#215dc6"/>
+<set variable="var.linkcolor" value="#2331d1"/>
 <set variable="var.edge" value="#979796"/>
 <set variable="var.edge-light" value="#b0b0af"/>
 
@@ -39,7 +39,7 @@
 <theme-set what=top-fgcolor		to="&var.fg;" />
 <theme-set what=toptabs-dimtextcolor	to="&var.tab-dim-text;" />
 <theme-set what=toptabs-seltextcolor	to="&var.tab-text;" />
-<theme-set what=toptabs-bgcolor		to="&var.dark-bg;" />
+<theme-set what=toptabs-bgcolor		to="none" />
 <theme-set what=toptabs-selcolor	to="&var.page-bg;" />
 <theme-set what=toptabs-frame		to="tabframe.xcf" themefile />
 <theme-set what=top-tableargs
