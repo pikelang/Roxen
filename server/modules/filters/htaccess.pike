@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.49 1999/05/14 18:28:21 marcus Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.50 1999/11/09 15:50:14 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -369,6 +369,7 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
 #endif    
     return 0;
   }
+  passwd = replace(passwd, "\r", "");
   foreach(passwd/"\n", line)
   {
     array(string) arr = line/":";
@@ -469,6 +470,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     g = in_cache[1];
   else if(groups = f->read(0x7fffffff)) {
     g = ([]);
+    groups = replace(groups, "\r", "");
     groups = replace(groups, "\\\n", " ");
     foreach(groups/"\n", s2)
     {
