@@ -343,3 +343,127 @@ o Install script now doesn't install SSL3 if you don't have GMP.
 o Minor fix to graphic_text.pike.
 
 
+Changes since Roxen Challenger 1.1.1 alpha 6
+-----------------------------------------------
+
+o etc/master.pike has been renamed to etc/roxen_master to avoid
+  name conflicts/confusion.
+
+o Support for SSLv3 added.
+  NOTE: This module uses strong encryption, which may violate local law.
+	In the US this module violates patents held by RSA Inc.
+  A version of Roxen without the crypto-module will be made available
+  on demand.
+
+o The install-script now uses ssl3 for the configuration port.
+
+o Added support for setting the cpu-limit and nice-level for CGI-scripts.
+
+o Some patches to shuffle.
+
+o Some patches to ssl.
+
+o Some patches to fcgi.
+
+o Several functions have moved from roxen->X to id->conf->X to allow for
+  threads.
+
+o Fixed the install-script.
+
+o Should now start the garbage-collector correctly when started from a
+  standard installation.
+
+o Applied a LARGE patch for the disk cache by Wilhelm Köhler (Thanks!)
+
+o Applied another patch by Wilhelm Köhler (Thanks again!)
+
+o Fixed most of the bugs in the ticket-database.
+
+o Fixed several small bugs here and there.
+
+o Ftp-module now supports STOR.
+
+o Ftp-module now restores auth-information for every transaction. This is
+  necessary since eg the htaccess-module modifies the auth-field, which is
+  fine for single-transaction protocols like HTTP, but won't do for
+  multiple-transaction protocols like FTP.
+
+o Ftp-module now supports setting prestates via SITE PRESTATE.
+
+o Added some new top-level Makefile targets:
+  install_all		Install both Roxen and Pike.
+  install_pike		Install only Pike.
+  verify		Run Pikes testsuite.
+  verbose_verify	Run Pikes testsuite in verbose mode.
+
+
+Changes since Roxen Challenger 1.1.1 alpha 5
+-----------------------------------------------
+
+o Now uses Pike 0.5b4
+
+o Shrunk the roxen-master.
+
+o The FTP-protocol module now supports named FTP. This is implemented by
+  mounting / on / and having "allow user=any" in "Security: Patterns".
+  One interesting feature is that users using named FTP can still see
+  the anonymous tree.
+
+o Added support for MODULE_FIRST modules to the FTP-protocol module. This
+  allows for using .htaccess-files to restrict access to certain directories.
+
+o Install-script updated.
+
+o Now sets --prefix to . for the Pike-tree.
+
+Changes since Roxen Challenger 1.1.1 alpha 2
+-----------------------------------------------
+
+o Now uses replace_master().
+
+o proxy_auth_needed() has moved to roxenlib.
+
+o Many files updated to Pike 0.5b2.
+
+o Startscript now inserts the value of the environment variable DEFINES
+  into commandline.
+
+o /precompiled/* no longer supported; use the new module-system instead.
+
+
+Changes since Roxen Challenger 1.1 
+-----------------------------------------------
+
+o The host redirect module has been improved by Martin Baehr.
+
+o Support for shadow passwords added to userdb (method shadow). The
+  default method is always set to file. If getpwent is used on a system
+  with thousands of users, it takes a VERY long time to read all the
+  users. 
+
+o allow/deny user using 'any' was broken in the last fix. This is, of
+  course, fixed now.
+
+o <apre href=#foo> and others now works as expected.
+
+o Install script now doesn't append the domain name if it's already in
+  the hostname (which is the case in BSD UNIXes).
+
+o etc/extensions is now more complete.
+
+o The convert_accessed.pike script fixed. Someone forgot committing
+  the bugfixed version before the release.
+
+o Fix in the host->ip functions. Before Roxen assumed that there were
+  no hostnames that started with en in (for example
+  50foo.bar.com). This little misfeature is fixed now. Before the
+  proxy never worked with one of these hosts. The bug was found by
+  Iztok Umek <Iztok.Umek@snet.fri.uni-lj.si>. Thanks!
+  
+o Bugfix in module security. You now get the "403 Forbidden" return
+  code if your IP isn't allowed to view a page, instead of "404 Not
+  Found". Thanks to Kai Garlipp <garlipp@informatik.uni-rostock.de>
+  for the patch.
+
+o Added container <formoutput> to simplify using forms.
+	
