@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.75 2000/02/16 07:12:12 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.76 2000/03/13 06:19:33 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -122,7 +122,7 @@ mapping(program:string) program_names = set_weak_flag (([]), 1);
 
 string make_ofilename( string from )
 {
-  return "precompiled/"+
+  return "../var/"+roxen_version()+"/precompiled/"+
          uname()->machine+"."+uname()->release + "/"
          +sprintf( "%s-%08x.o",((from/"/")[-1]/".")[0], hash(from));
 }
@@ -131,12 +131,7 @@ void dump_program( string pname, program what )
 {
   string outfile = make_ofilename( pname );
   string data = encode_value( what, MyCodec( what ) );
-  if (catch {
-    _static_modules.files()->Fd(outfile,"wct")->write(data);
-  }) {
-    mkdir("precompiled");
-    _static_modules.files()->Fd(outfile,"wct")->write(data);
-  }
+  _static_modules.files()->Fd(outfile,"wct")->write(data);
 }
 
 int loaded_at( program p )
@@ -184,16 +179,16 @@ program low_findprog(string pname, string ext, object|void handler)
 	    if (handler) {
 	      handler->compile_warning(ofile, 0,
 				       sprintf("Decode failed:\n"
-					       "\t%s", err[0]));
+					       "\t%s",
+                                               describe_backtrace(err)));
 	    } else {
 	      compile_warning(ofile, 0,
 			      sprintf("Decode failed:\n"
-				      "\t%s", err[0]));
+				      "\t%s", describe_backtrace(err)));
 	    }
 	  }
         }
       }
-
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	load_time[fname] = time();
@@ -202,6 +197,7 @@ program low_findprog(string pname, string ext, object|void handler)
           e[1]=({});
 	throw(e);
       }
+//       dump_program( fname, ret );
       break;
 #if constant(load_module)
     case ".so":

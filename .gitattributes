@@ -257,4 +257,4 @@ nn binary
 /server/protocols/tetris.pike foreign_ident
 /server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
-/tools/roxenstarter/roxenstarter.cpp foreign_ident
+/server/tools/roxenstarter/roxenstarter.cpp foreign_ident
