@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.65 1998/03/25 01:26:35 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.66 1998/03/25 05:34:40 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -639,20 +639,71 @@ static void do_timeout(mapping foo)
   }
 }
 
+string format_backtrace(array bt)
+{
+  // first entry is always the error, 
+  // second is the actual function, 
+  // rest is backtrace.
 
+  string res = ("<title>Internal Server Error</title>"
+		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
+		"<table width=\"100%\" border=0 cellpadding=0 cellspacing=0>"
+		"<tr><td valign=bottom align=left><img border=0 "
+		"src=\"/internal-roxen-roxen-icon-gray\" alt=\"\"></td>"
+		"<td>&nbsp;</td><td width=100% height=39>"
+		"<table cellpadding=0 cellspacing=0 width=100% border=0>"
+		"<td width=\"100%\" align=right valigh=center height=28>"
+		"<b><font size=+1>Failed to complete your request</font>"
+		"</b></td></tr><tr width=\"100%\"><td bgcolor=\"#003366\" "
+		"align=right height=12 width=\"100%\"><font color=white "
+		"size=-2>Internal Server Error&nbsp;&nbsp;</font></td>"
+		"</tr></table></td></tr></table>");
 
-mapping internal_error(array err)
+  res += ("<p>\n\n"
+	  "<font size=+2 color=darkred>"
+	  "<img alt=\"\" hspace=10 align=left src=/internal-roxen-manual-warning>"
+	  +bt[0]+"</font><br>\n"
+	  "The error occured while calling <b>"+bt[1]+"</b><p>\n"
+	  "<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
+  int q = sizeof(bt)-1;
+  foreach(bt[1..], string line)
+  {
+    string fun, args, where;
+    if(sscanf(html_encode_string(line), "%s(%s) in %s", fun, args, where) == 3)
+    {
+      res += ("<li value="+(q--)+"> "+(line-(getcwd()+"/"))+"<p>\n");
+    } else
+      res += "<li value="+(q--)+"> <b><font color=darkgreen>"+line+"</font></b><p>\n";
+  }
+  res += ("</ul><p><b><a href=\"/(plain)"+http_encode_string(not_query)+
+	  (query?"?"+http_encode_string(query):"")+"\">"+
+	  "Generate text-only version of this error message, for bug reports"+
+	  "</a></b>");
+  return res+"</body>";
+}
+
+string generate_bugreport(array from)
+{
+  return ("Roxen version: "+version()+" ("+roxen->real_version+")\n"
+	  "Error: "+
+	  describe_backtrace(from)-(getcwd()+"/"));
+}
+
+void internal_error(array err)
 {
   if(QUERY(show_internals)) {
+    if(prestate->plain) 
+    {
+      mapping q = http_low_answer(500,generate_bugreport(err));
+      q->extra_heads = ([ "Content-Type":"text/plain" ]);
+      file=q;
+      return;
+    }
     array(string) bt = (describe_backtrace(err)/"\n") - ({""});
-    file = http_low_answer(500,
-			   sprintf("<h1>Error: Internal server error.</h1>"
-				   "<pre><font size=+1>%s</font></pre>"
-				   "&lt;backtrace&gt;<ol><li>%s</ol>\n",
-				   bt[..1]*"\n", bt[2..]*"<li>"));
+    file = http_low_answer(500, format_backtrace(bt));
   } else {
     file = http_low_answer(500, "<h1>Error: The server failed to "
-			   "fulfill your query.</h1>");
+			   "fulfill your query, due to an internal error.</h1>");
   }
   
   report_error("Internal server error: " +
