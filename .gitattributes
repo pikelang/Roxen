@@ -28,11 +28,11 @@
 *.rgs eol=crlf
 *.tar binary
 *.ttf binary
-*.txt eol=crlf
-/server/admin_interface/sites/drop_site_warning.txt !eol
-/server/admin_interface/welcome.txt !eol
-/server/data/fonts/bastard.txt !eol
-/server/data/fonts/puppyface.txt !eol
+/server/data/fonts/Andover.txt eol=crlf
+/server/data/fonts/Font.txt eol=crlf
+/server/data/fonts/Hultog.txt eol=crlf
+/server/data/fonts/Quadrang.txt eol=crlf
+/server/data/fonts/Resegrg.txt eol=crlf
 *.xcf binary
 /server/data/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
