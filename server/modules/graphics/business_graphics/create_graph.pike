@@ -512,6 +512,8 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
   if ((diagram_data["vertgrid"])&&
       (gw>LITET))
     for(int i=0; i<s; i++)
+    if ((diagram_data["values_for_xnames"][i]>diagram_data["xminvalue"])&&
+	(diagram_data["values_for_xnames"][i]<diagram_data["xmaxvalue"]))
       {
 	graph->
 	  polygone(make_polygon_from_line(gw,
@@ -536,6 +538,8 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
   if ((diagram_data["horgrid"])&&
       (gw>LITET))
   for(int i=0; i<s; i++)
+    if ((diagram_data["values_for_ynames"][i]>diagram_data["yminvalue"])&&
+	(diagram_data["values_for_ynames"][i]<diagram_data["ymaxvalue"]))
     {
       graph->
 	polygone(make_polygon_from_line(gw,

@@ -65,6 +65,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  else
 	    space=space*2.0;
 	}
+      else
+	if (range/space<2.5)
+	  space*=0.5;
       diagram_data["xspace"]=space;      
     }
   if (!(diagram_data["yspace"]))
@@ -83,6 +86,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  else
 	    space=space*2.0;
 	}
+      else
+	if (range/space<2.5)
+	  space*=0.5;
       diagram_data["yspace"]=space;      
     }
  
