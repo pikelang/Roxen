@@ -1,5 +1,5 @@
 /*
- * $Id: roxen_hilfe.pike,v 1.2 1998/03/02 18:33:07 grubba Exp $
+ * $Id: roxen_hilfe.pike,v 1.3 1998/12/15 22:45:07 mast Exp $
  *
  * Incremental Pike evaluator, modified to work within Roxen
  */
@@ -21,7 +21,7 @@ import Array;
 
 #pragma all_inline
 
-/* #define DEBUG */
+/* #define HILFE_DEBUG */
 
 object p;
 
@@ -52,13 +52,13 @@ object eval(string f)
 	    "\n  ]);\n}\n"+
         functions*"\n"+"\n"+ f+"\n");
 
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
   write("program:"+prog);
 #endif
   program p;
   if(err=catch(p=compile_string(prog)))
   {
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
     write(describe_backtrace(err));
     write("Couldn't compile expression.\n");
 #endif
@@ -211,7 +211,7 @@ void cut_buffer(int where)
   if(where>1) first_word=0;
   pos-=old-new; if(pos<0) pos=0;
   eq_pos-=old-new; if(eq_pos<0) eq_pos=-1;
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
   write("CUT input = "+my_write(input)+"  pos="+pos+"\n");
 #endif
 }
@@ -249,7 +249,7 @@ int do_parse()
       if((d<'a' || d>'z') && (d<'A' || d>'Z') && (d<'0' || d>'9') && d!='_')
       {
 	first_word=input[0..pos-1];
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
 	write("First = "+my_write(first_word)+"  pos="+pos+"\n");
 	write("input = "+my_write(input)+"\n");
 #endif
@@ -376,7 +376,7 @@ mixed parse_function(string fun)
   string name,a,b;
   object foo;
   mixed c;
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
   write("Parsing block ("+first_word+")\n");
 #endif
 
@@ -434,7 +434,7 @@ mixed parse_statement(string ex)
   mixed c;
   object foo;
   int e;
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
   write("Parsing statement ("+first_word+")\n");
 #endif
   switch(first_word)
@@ -466,7 +466,7 @@ mixed parse_statement(string ex)
     name=c[0];
     c=c[1];
 
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
     write("Variable def.\n");
 #endif
     if(name=="") 
@@ -478,7 +478,7 @@ mixed parse_statement(string ex)
 
       if(sscanf(c,"=%s",c))
       {
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
 	write("Variable def. with assign. ("+name+")\n");
 #endif
 	if(e=find_next_comma(c))
@@ -488,7 +488,7 @@ mixed parse_statement(string ex)
 	}else{
 	  return name+"="+c;
 	}
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
 	write("Input buffer = '"+input+"'\n");
 #endif
 
@@ -514,7 +514,7 @@ int stdin(string s)
   int e,d;
   object foo;
 
-#ifdef DEBUG
+#ifdef HILFE_DEBUG
   write("input: '"+my_write(s)+"'\n");
 #endif
   s=skipwhite(s);
