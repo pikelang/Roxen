@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.290 1999/05/26 14:20:00 grubba Exp $
+ * $Id: roxen.pike,v 1.291 1999/05/30 22:43:30 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.290 1999/05/26 14:20:00 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.291 1999/05/30 22:43:30 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2223,7 +2223,7 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping res = db->query("select id from "+name+" where id='"+id+"'");
+      mapping res = db->query("select contents from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
         db->query("update "+name+" set atime='"+
@@ -2283,14 +2283,15 @@ class ArgCache
   string store( mapping args )
   {
     LOCK();
-    int e = gethrtime();
     array b = values(args), a = sort(indices(args),b);
     string data = MIME.encode_base64(encode_value(({a,b})),1);
+
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
 
+//     werror(" store -> ");
     string id = create_key( data );
-
+//     werror(id+"\n");
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
@@ -2308,6 +2309,7 @@ class ArgCache
   mapping lookup( string id )
   {
     LOCK();
+//     werror(" lookup -> "+id+"\n");
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
