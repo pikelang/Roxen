@@ -1,2 +1,3 @@
 <name>Compatibility modules</name>
-<doc>Compatibility with Roxen Challenger 1.3 and older.</doc>
+<doc>Compatibility with other and/or older webservers which should preferably
+ be replaced by equivalent or better native RXML2 constructs.</doc>
