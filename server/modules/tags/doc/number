@@ -1,0 +1,3 @@
+{number [language=] [type=]}:
+
+Renders a number. Type is either number (the default), ordered, date month or day, language is one of the supported languages (<roxen-languages>).

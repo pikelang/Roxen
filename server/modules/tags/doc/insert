@@ -1,0 +1,107 @@
+<b>Syntax:</b>
+<kbd>
+{insert [file=file-to-insert] [define=define-to-insert] [variable=variable-to-insert] [cookie=cookie-to-insert] [variables[=full]] [cookies[=full]] [from=to]}
+</kbd>
+<p>
+<b>Attributes</b>
+<dl>
+<dt><kbd><b>cookie=foo</b></kbd>
+<dd>Inserts the value of the cookie named <kbd>name</kbd>.
+    
+<p>
+<dt><kbd><b>cookies[=full]</b></kbd>
+<dd>Inserts the values of all cookies, more or less verbose. 
+    
+<p>
+<dt><kbd><b>file=path</b></kbd>
+<dd>Inserts the file <kbd>path</kbd>. This file will then be fetched
+    just as if someone had tried to fetch it with an HTTP
+    request. This makes it possible to include things like Pike script
+    results and such. 
+    
+<p>
+If <kbd><b>path</b></kbd> does not begin with "/", it is assumed to be a 
+    URL relative to the directory containing the file that has the 
+    <kbd>{insert}</kbd> tag in it, i.e. the file where the 
+    inserted text is finally parsed. 
+    
+
+</td></tr>
+ <tr><td valign=top>
+ <center>
+ <img src=/documentation/challenger1.2/img/note.gif width=23 height=37 border=0 alt="">
+ </center>
+ <br>
+ <font size=-1></font></td>
+ <td valign=top>
+
+Note that included files will be parsed if they are named with the 
+    extension<kbd> .html</kbd> (or whatever extension the RXML 
+    parser should parse according to configurations in the main RXML 
+    parser module). It's not a good idea to name include files like 
+    this, because it might render define tags unusable. 
+    
+
+<p>
+If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file 
+    <kbd>ccc.html</kbd> and <kbd>aaa/bbb</kbd> contains 
+    <kbd>{insert file=ddd}</kbd>, Roxen will look for 
+    <kbd>ddd</kbd> in the directory where <kbd>ccc.html</kbd> 
+    is. If we change the first <kbd>{insert}</kbd> to 
+    <kbd>{insert file="aaa/bbb.html"}</kbd> and rename 
+    <kbd>aaa/bbb</kbd> to <kbd>aaa/bbb.html</kbd>, Roxen 
+    will instead look for <kbd>ddd</kbd> in  the directory
+    <kbd>aaa/</kbd>. <p>
+  
+
+<dl>
+<dt><kbd><b>fromword=toword</b></kbd>
+<dd>Replaces <kbd>fromword</kbd> with 
+    <kbd>toword</kbd> in the macro or file. Note that only lowercase
+    character sequences can be replaced.<p>
+    
+
+    <p>
+<dt><kbd><b><a name=macroname>define=macroname</a></b></kbd>
+<dd>Inserts this macro, which should have 
+    been defined by <kbd>{define}</kbd> before it is used. If it
+    resides in another file, you have to <kbd>{insert
+    file=filename}</kbd> before you can insert the macro, see
+    example below.  
+</dl>
+<dt><kbd>name=..</kbd>
+</dl>
+<p> 
+<b>Example</b>
+Lets</a> define a macro called "foo", saving it in the file "mymacro"<br> 
+
+<kbd>{define name=foo&gt;This is a foo{/define&gt;</kbd> <p>
+
+Then we insert this macro somewhere: <br>
+<kbd>{insert file=mymacro} </kbd><br>
+<kbd>{insert name=foo} </kbd><p>
+
+The text sent to the client is:<br> 
+<kbd>This is a foo </kbd><p>
+
+If we insert the above macro but tell Roxen to replace the word
+<kbd>foo</kbd> <br> with the word <kbd>cat</kbd>:<br>
+<kbd>{insert name=foo foo=cat} </kbd>
+
+<p>
+we will get:<br> 
+<kbd>This is a cat </kbd>
+
+<p>
+Let's try another example:<br>
+<kbd>{insert name=foo a=some foo=cats is=are}</kbd>
+<br>
+Result:<kbd>There are some cats</kbd><p>
+
+Note that even parts of words are exchanged; "This" becomes "There".<br>
+Notice also that only lowercase characters can be replaced:<p>
+<kbd>{insert name=foo This=foo a=fun foo=""}</kbd><br>
+    will result in:<br> <kbd>This is fun</kbd>. Note that the 'This'
+word was _not_ replaced.
+<p>
+<b>See also:</b> {set help} {insert help} {debug help}

@@ -1,0 +1,6 @@
+{configimage src=... align=... hspace=... vspace=...}: 
+<br>
+
+Builds a {img} tag, pointing to a image in the configuration
+interface. <br>Example: {configimage src=fold} gives <configimage
+src=fold>

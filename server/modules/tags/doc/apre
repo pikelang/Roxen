@@ -1,0 +1,5 @@
+{apre href=... [+state -state ...]}: Adds or removes a prestate
+option. Prestate options are simple toggles, and are added to the URL
+of the page. Use {if prestate=...} to test for the presence of a
+prestate. {apre} works just like the {a href=...} container, but if no
+'href' attribute is specified, the current page is used.

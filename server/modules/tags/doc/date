@@ -1,0 +1,14 @@
+<font size=+1><code>{date [unix_time=..] [day=..] [hour=..] [minute=..] [second=..] [brief] [normal date attributes (see below)]}</code></font>
+
+<p>
+All attributes except the 'brief' and 'unix_time=' attribute adds the
+specified time to the current time. (example: {date brief day=1} gives <date brief day=1>)
+
+<p> unix_time uses the specified unix time_t time as the starting time
+(instead of the current time). This is mostly useful when the
+{date} tag is used from a pike-script or roxen module.
+
+<p> When brief is specified, roxen tries to genereate as brief a date
+as possible.
+<p>
+<date-attributes>

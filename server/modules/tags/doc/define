@@ -1,0 +1,13 @@
+<b>Syntax:</b>
+<kbd>
+{define name=define-to-set}value{/define}
+</kbd>
+<p>
+<b>Attributes</b>
+<p>
+<dl compact>
+<dt><kbd>name=..</kbd>
+</dl>
+Set the specified define to the value inside the container
+<p> 
+<b>See also:</b> {set help} {insert help}

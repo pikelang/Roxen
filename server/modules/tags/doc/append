@@ -1,0 +1,27 @@
+<b>Syntax:</b>
+<kbd>
+{append variable=variable-to-set [value=value] [from=another-variable-name] 
+     [other=...] [define=...]}
+</kbd>
+<p>
+<b>Attributes</b>
+<p>
+<dl compact>
+<dt><kbd>variable=...</kbd> 
+<dd>Append to this variable
+<dt><kbd>value=...</kbd>
+<dd>The exact value to append to the variable
+<dt><kbd>from=...</kbd>
+<dd>Append the value of this variable to the specified variable
+<dt><kbd>other=...</kbd>
+<dd>As from, but uses the value of a 'misc' variable. That is,
+id->misc->variables, not id->variables. Mostly useful for pike-script
+and pike-module programmers
+<dt><kbd>define=...</kbd>
+<dd>Use the value of this define.
+</dl>
+If none of the above attributes are specified, nothing is done.
+If debug is currenty on, more specific debug information is provided
+if the operation failed.
+<p> 
+<b>See also:</b> {set help} {debug help}

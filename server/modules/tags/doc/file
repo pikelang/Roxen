@@ -1,0 +1,5 @@
+{file [raw]}:
+Returns the requested resourcename. If raw is specified, no preparsing is done.
+<p>
+Example: {file} gives <file>, {file raw} gives <file raw>.
+

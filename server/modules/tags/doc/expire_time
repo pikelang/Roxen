@@ -1,0 +1,10 @@
+{expire_time [hours=...] [minutes=...] [seconds=...] [days=...]}:<p>
+
+	    Sets the expire-time for this document.<br>
+	    hours=int: Add int * 3600 to the expire time<br>
+	    minutes=int: Add int * 60 to the expire time<br>
+	    seconds=int: Add int to the expire time<br>
+	    days=int, months=int, years=int: Guess..<p>
+
+Bugs: It is not possible at the time to set the date
+beyond year 2038, since a unix time_t is used.

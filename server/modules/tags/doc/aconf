@@ -1,0 +1,10 @@
+{aconf href=... [+config -config ...]}:
+
+
+ Adds or removes a config option. Config options are simple toggles,
+and are always server-global but client-local. If the server supports
+cookies, they are placed in the 'roxen-config' cookie, otherwise they
+are added as prestate variables. Use {if config=...} to test for
+the presence of a prestate.. {aconf} works just like the {a
+href=...} container, but if no 'href' attribute is specified, the
+current page is used.

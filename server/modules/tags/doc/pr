@@ -1,0 +1,4 @@
+Syntax:
+{pr [size=large|small|medium] [color=blue|brown|green|purple] [other-img-options]}
+<br>All colors are not available in all sizes, available choices:
+<pr list><br>The default size is small, the default color is blue.

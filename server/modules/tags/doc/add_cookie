@@ -1,0 +1,3 @@
+{add_cookie name=... value=... [persistent|hours=... minutes=... seconds=... days=... weeks=... months=... years=...] [path=...]}: Adds a cookie named 'name' with the value 'value'<br>
+
+If persistent is specified; the cookie will be persistent until year 2038, otherwise, the specified delays are used, just as for &lt;expire_time&gt; (<expire_time help>).

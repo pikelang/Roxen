@@ -1,0 +1,19 @@
+{quote start=character end=character}:
+Sets the 'end' and 'start' quote characters.<p>
+
+Warning: This function is not thread-safe, and might behave
+unexpectedly when used in a threaded roxen on several different pages,
+using several different quote characters. The only safe use is to use
+a standard begin and endquote, start='[' end=']', as an example,
+please note that you have to quote the quote characters, since utter
+caos would be the result the second time you use this tag
+otherwise. Consider:<p>
+
+{quote start=[ end=]}
+{quote start=[ end=]}
+<p>
+The second time this code is run, the starting quote character would
+be set to ' '. Not a very good idea, really. :-)
+
+
+	    

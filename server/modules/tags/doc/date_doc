@@ -1,0 +1,46 @@
+<dt><kbd><b>type=discordian|stardate</b></kbd>
+<dd>These attributes only make a
+    difference when <em>not</em> using <kbd>part</kbd> (<a href=#sb>see
+    below</a>). Note that <kbd>stardate</kbd> has a separate companion
+    attribute, <kbd>prec</kbd>, which sets the precision. 
+<p>
+<dt><kbd><b>type=number|string|roman</b></kbd>
+<p>
+<dt><kbd><b>lang=language</b></kbd>
+<dd>When using <kbd>type=string</kbd>,
+    return the equivalent in the given language. This also affects the
+    <kbd>part</kbd> attribute, <a href=#sb>see below</a>.
+    Available languages are
+    Swedish (se), Finnish (fi), German (de), Catala (ca or es_CA),
+    Dutch (du), Spanish (es), French (fr), English (en, default) and
+    Norwegian (no). 
+<p>
+<dt><kbd><b><a name=sb>part=year|month|day|date|hour|minute|second|yday</a></b></kbd> 
+
+    <ul> 
+
+<li><kbd>year</kbd>; The year 
+<li><kbd>month</kbd>; The month
+<li><kbd>day</kbd>; The weekday, starting with Sunday.
+<li><kbd>date</kbd>; The number of days since the first this month.
+<li><kbd>hour</kbd>; The number of hours since midnight.
+<li><kbd>minute</kbd>; The number of minutes since the last full hour.
+
+<li><kbd>second</kbd>; The number of seconds since the last full minute.
+<li><kbd>yday</kbd>; The day since the first of january.
+</ul><p>
+The return value of these parts are modified by both
+    <kbd>type</kbd> and <kbd>lang</kbd>. 
+
+<p>
+<dt><kbd><b>time</b></kbd>
+<dd>Only show the time.<p>
+<dt><kbd><b>date</b></kbd>
+<dd>Only show the date.<p>
+<dt><kbd><b>capitalize</b></kbd>
+<dd>Capitalizes the first letter of the string.<p>
+<dt><kbd><b>lower</b></kbd>
+<dd>Lowercases the string.<p>
+<dt><kbd><b>upper</b></kbd>
+<dd>Uppercases the string. <p>
+</dl>

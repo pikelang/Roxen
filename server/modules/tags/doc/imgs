@@ -1,0 +1,4 @@
+{<tag> src=... [other img-options]}:
+<p>
+Returns an &lt;img&gt; tag with the width and height set.  The source
+image currently has to be a gif image. 

@@ -1,0 +1,254 @@
+{if lots-o-arguments}<p>
+{IF}, {ELSE}
+
+{if} can be used to show the enclosed section when certain
+conditions are met. You can also use {else} or {otherwise}
+in order to suggest alternative actions if the conditions do not
+evaluate to a true value.
+<p>
+ These are perhaps the most useful tags in RXML. Among other things,
+they allow you to write HTML-code that is only showed to people with a
+certain client. You can for example make a table, that if viewed on a
+non-table compliant client uses pre-formatted text, or maybe even a
+completely different text instead.  Note that the part(s) that should
+not be seen according to the conditions, are not even sent which means
+that the person looking at your page won't even know that he/she isn't
+seeing everything. This also makes it possible to entertain the
+illusion of dynamic pages, without using scripts, through clever use
+of RXML tags.
+<p>
+The syntax is as follows:
+<p>
+{if some condition}
+some condition occurred
+{/if}
+{else}
+something else happened
+{/else}
+<p>
+is equivalent to 
+<p>
+{if some condition}
+some condition occurred
+{otherwise}
+something else happened
+{/if} 
+<p>
+ If you don't use {if} before {else}, the result is unpredictable. 
+Below are the possible attributes to this tag. There are a lot of them and they have been divided into Conditionals (the de facto checks) and Modifiers (slight change in behavior of the checks).
+<p>
+Conditionals
+accept=type1[,type2,...] <br>
+The type refers to content-type, e.g. image/jpeg or text/html. The values can contain * (for several arbitrary characters) and ? (for any simple character). Every client tells the server what it thinks it can deal with so this is one way of ensuring that nothing is sent that the browser can't handle. 
+<p>
+cookie='name[ is value]'<br>
+Returns true if the cookie named name exists. If you also include the part about value the expression is of course only true if the cookie holds that value. The value can contain * (for several arbitrary characters) and ? (for any simple character). 
+<p>
+date=yymmdd <br>
+Shows the enclosed section if the date is yymmdd. Modifiers: before, after and inclusive.  
+<p>
+{if after date=971221} {if before date=971229}
+{b}Merry Christmas{/b}
+{/if}
+{/if}
+will display Merry Christmas if the date is between 971221 and 971229.
+<p>
+Adding the inclusive attribute will display 
+<p> 
+defined=macro<br>
+Shows the enclosed section if the macro <i>macro</i> is defined. Wild cards work as for cookies.
+<p>
+domain=pattern[,pattern...]<br>
+Shows the enclosed section only to hosts whose DNS name match these pattern(s). Note that domain names are resolved asynchronously. This means that the first time someone accesses this page, the host name will be the same as the IP number. 
+<p>
+host=pattern[,pattern...]<br>
+Shows the enclosed section only to hosts whose IP numbers match one of these pattern(s). 
+<p>
+language=language1[,lang2, ...]<br>
+True if the client prefers the language(s) listed. * and ? may be used and work as for cookie. 
+<p>
+Roxen determines which language to present by looking at the request-header Accept-Languages. 
+<p>
+name=pattern[,pattern,...]<br>
+If the full name of the client matches the given pattern, show the enclosed text. 
+<p>
+prestate=state1[,state2, ...]<br>
+Shows the enclosed text, only if all the specified pre-states are present. The pre-states are prepended to the URL with this syntax: http://www.whatever.domain/(prestate)/my/nice/page.html. See {APRE help}for more information. 
+<p>
+referrer<br>
+Shows the enclosed text, only if the referrer header is supplied by the client. 
+If you add a pattern (referrer=pattern[,pattern,...]) then send the enclosed text only if the referrer header matches the pattern(s). See {REFERRER} for more information. 
+<p>
+supports=feature
+<p>
+If the client supports the given feature, include the enclosed section. This is configurable (under Global Variables/ Client supports regexps). These are the available features: 
+<p>
+backgrounds <br>
+The client supports backgrounds according to the HTML3 specifications. <p>
+
+bigsmall  <br>
+The client understands the {big} and {small} tags. 
+<p>
+center  <br>
+The {center} tag for centering HTML objects is supported. 
+<p>
+cookies  <br>
+The client can receive cookies. 
+<p>
+divisions  <br>
+The client can at least handle {div align=...} 
+<p>
+font  <br>
+The client supports at least {font size=foo}. 
+<p>
+fontcolor  <br>
+You can change the color of individual characters. 
+<p>
+fonttype  <br>
+The browser can set the font, cf. Microsoft Internet Explorer. 
+<p>
+forms  <br>
+Forms according to the HTML 2.0 and 3.0 specification are supported. 
+<p>
+frames  <br>
+The client supports frames. 
+<p>
+gifinline  <br>
+The client can show GIF images inline. 
+<p>
+imagealign  <br>
+The client supports align=left and align=right in images, à la Netscape. 
+<p>
+images  <br>
+The client can display images. 
+<p>
+java  <br>
+The client supports Java applets. 
+<p>
+javascript  <br>
+The client supports Java scripts. 
+<p>
+jpeginline  <br>
+The client can show JPEG images in line. 
+<p>
+mailto  <br>
+The mailto function can be used. 
+<p>
+math  <br>
+The {math} tag is correctly displayed by the browser. 
+<p>
+perl  <br>
+The client supports Perl applets. 
+<p>
+pjpeginline  <br>
+The client can handle progressive JPEG images (.pjpeg) inline. 
+<p>
+pnginline  <br>
+The client can handle .png images in line. 
+<p>
+pull  <br>
+The client handles Client Pull. 
+<p>
+push  <br>
+The client can handle Server Push. 
+<p>
+python  <br>
+The client supports Python applets. 
+<p>
+robot  <br>
+The request really comes from a search robot, not an actual browser. 
+<p>
+stylesheets  <br>
+The client handles stylesheets (à la Arena). 
+<p>
+supsub  <br>
+Handles {sup} and {sub} (superscript and subscript, respectively). 
+<p>
+tables  <br>
+Tables according to the HTML 3.0 specification are supported. 
+<p>
+tcl  <br>
+Supports TCL applets. 
+<p>
+vrml  <br>
+The client supports VRML. 
+This list is refreshed automatically every week directly from our site (idonex.se) unless you explicitly tell Roxen not to do this by setting Update the supports database automatically under Global Variables to No. The list is a list of browsers and what features they can handle, not something the browser sends. 
+<p>
+<br>
+<p>
+user=name[,name,...]|any <br>
+Shows the enclosed section only to the user name, or, if any is specified, to any valid user on the system. Unless the modifier file=X is specified, the default user data base is used. 
+<p>
+Modifiers: file=X, wwwfile.
+<p>
+A useful application of the user option might be:
+<p>
+{if not user=any}
+{header name=WWW-Authenticate value='Basic; Realm=Pers'}
+{return code=401} 
+{h1}Access denied{/h1} You may not see this document 
+without a valid user name and password. 
+{/if} 
+{else} 
+.. The secret document .. 
+{/else} 
+<p> 
+ This will force a user entry.
+<p>
+ But please note that if the user presses the Cancel button, or refuses to enter an authentication, the parts of the document that is outside {else}...{/else} will be shown to him or her. 
+<p>
+variable <br>
+Works exactly like cookie. This conditional can for example be used when making a form. As in the following markup:  
+<p>
+{form}
+{select name=foo}
+{if variable='foo is yes'}
+{option selected}yes 
+{option}no
+{otherwise}
+{option}yes
+{option selected}no
+{/if}
+{/select}
+{input type=submit name=test}
+{/form}
+{if variable='foo is yes'} 
+Foo is on 
+{otherwise}
+Foo is off 
+{/else} 
+<p> 
+Choosing Yes in the form will turn on the variable 'foo' while no will turn it off.
+<p>
+config=configuration <br>
+If you have set a user's configuration through the use of one or several {aconf +/-configuration} you can use this conditional to check it. It works like pre-states but is instead saved on the client side through the use of cookies. 
+Modifiers
+Used in conjunction with some of the conditionals.
+<p>
+after <br>
+Used together with {if after date=yymmdd}. Show the enclosed section if the current date is after yymmdd. 
+<p>
+and <br>
+Shows the enclosed text only if all tests are true (default). 
+<p>
+before <br>
+Used together with {if before date=yymmdd}. Shows the enclosed section if the current date is before yymmdd. 
+<p>
+file=X <br>
+Modifies the user=userid value. If this is specified, the user:password pairs will be taken from an external file of this format: 
+user name:encrypted-password 
+user name:encrypted-password 
+<p>
+Unless wwwfile is present, it is assumed that the file 'X' is an absolute pathname in the real file system, like /usr/www/security/localpasswd. 
+<p>
+inclusive <br>
+Used together with {if date=yymmdd} and before or after. Shows the enclosed section if the current date is the same as or before/after yymmdd. 
+<p>
+wwwfile <br>
+Indicates that the file 'X' is a file in the virtual file system of the server. This might be a security problem, since everyone can read it via WWW. 
+<p>
+not <br>
+Inverts the results of all test that is: not(condition1 and condition2). 
+<p>
+or <br>
+Shows the enclosed text if at least one of the tests are true

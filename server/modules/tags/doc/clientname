@@ -1,0 +1,3 @@
+{clientname [full]}: 
+Returns the name of the user-agent the user is using (example:
+<clientname full>.)"

@@ -1,0 +1,3 @@
+{true}: Internal tag, sets the return value of the last if to
+true. Disables the next {else}.  Use it if you are writing your own
+'if' lookalike tag.

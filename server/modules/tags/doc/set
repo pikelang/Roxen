@@ -1,0 +1,27 @@
+<b>Syntax:</b>
+<kbd>
+{set variable=variable-to-set [value=value] [from=another-variable-name] 
+     [other=...] [define=...]}
+</kbd>
+<p>
+<b>Attributes</b>
+<p>
+<dl compact>
+<dt><kbd>variable=...</kbd> 
+<dd>Set this variable
+<dt><kbd>value=...</kbd>
+<dd>The exact value to set the variable to
+<dt><kbd>from=...</kbd>
+<dd>Set the variable to the value of this variable
+<dt><kbd>other=...</kbd>
+<dd>As from, but uses the value of a 'misc' variable. That is,
+id->misc->variables, not id->variables. Mostly useful for pike-script
+and pike-module programmers
+<dt><kbd>define=...</kbd>
+<dd>Use the value of this define.
+</dl>
+If none of the above attributes are specified, the variable is unset.
+If debug is currenty on, more specific debug information is provided
+if the operation failed.
+<p> 
+<b>See also:</b> {append help} {debug help}

@@ -1,0 +1,5 @@
+{refereer  [alt=...]}
+
+Returns the value of the referrer header. If none is found, return the
+value of the 'alt' attribute instead<p>
+Your current referrer: <referrer alt="none">

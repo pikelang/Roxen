@@ -1,0 +1,5 @@
+{tag name= value=}:
+
+Adds a header to this document, example: 
+{header name=WWW-Authenticate value='Realm=foo'}
+<p>
