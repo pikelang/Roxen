@@ -1,11 +1,10 @@
-import files;
 import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.52 1998/01/20 16:36:21 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.53 1998/01/28 01:49:18 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -21,7 +20,7 @@ private static object new_master;
 private static int perror_status_reported=0;
 
 int pid = getpid();
-object stderr = files.file("stderr");
+object stderr = Stdio.File("stderr");
 
 mapping pwn=([]);
 string pw_name(int uid)
@@ -251,7 +250,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p,p2;
 
-  p2 = file();
+  p2 = Stdio.File();
   p=p2->pipe();
   if(!p) error("Popen failed. (couldn't create pipe)\n");
 
@@ -297,7 +296,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	perror("File to dup2 to closed!\n");
 	exit(99);
       }
-      p->dup2(file("stdout"));
+      p->dup2(Stdio.File("stdout"));
       // p->close();
       // p2->close();
       trace(255);
@@ -340,9 +339,9 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
     env=([]);
   
   
-  stdin->dup2(file("stdin"));
-  stdout->dup2(file("stdout"));
-  stderr->dup2(file("stderr"));
+  stdin->dup2(Stdio.File("stdin"));
+  stdout->dup2(Stdio.File("stdout"));
+  stderr->dup2(Stdio.File("stderr"));
   if(stringp(wd) && sizeof(wd))
     cd(wd);
   exece(s, args, env);
@@ -452,9 +451,9 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 
 #else /* !constant(Process.create_process) */
   if ((pid = fork()) == 0) {
-    stdin && stdin->dup2(file("stdin"));
-    stdout && stdout->dup2(file("stdout"));
-    stderr && stderr->dup2(file("stderr"));
+    stdin && stdin->dup2(Stdio.File("stdin"));
+    stdout && stdout->dup2(Stdio.File("stdout"));
+    stderr && stderr->dup2(Stdio.File("stderr"));
     if(wd)
       cd(wd);
     exece(pikebin, preargs+args, getenv());
@@ -534,7 +533,7 @@ void load_roxen()
 object|void open(string filename, string mode, int|void perm)
 {
   object o;
-  o=file();
+  o=Stdio.File();
   if(!(o->open(filename, mode, perm||0666))) {
     // EAGAIN, ENOMEM, ENFILE, EMFILE, EAGAIN(FreeBSD)
     if ((< 11, 12, 23, 24, 35 >)[o->errno()]) {
@@ -550,6 +549,10 @@ object|void open(string filename, string mode, int|void perm)
       return;
     }
   }
+
+  // FIXME: Might want to stat() here to check that we don't open
+  // devices...
+
   mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
   return o;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.16 1997/12/14 21:40:44 grubba Exp $
+ * $Id: PDB.pmod,v 1.17 1998/01/28 01:49:39 grubba Exp $
  */
 
 #if constant(thread_create)
@@ -20,7 +20,7 @@ class FileIO {
 
   static private object open(string f, string m)
   {
-    object o = files.file();
+    object o = Stdio.File();
     if(!o->open(f,m)) return 0;
     return o;
   }
@@ -63,7 +63,7 @@ class FileIO {
 class Bucket
 {
   inherit FileIO;
-  static object file=files.file();
+  static object file=Stdio.File();
   static array free_blocks = ({});
   static string rf;
   static int last_block, dirty;
@@ -387,7 +387,7 @@ class db
   static string dir;
   static mapping (int:object(Bucket)) buckets = ([]);
   static mapping (string:object(Table)) tables = ([]);
-  static object(files.file) logfile;
+  static object(Stdio.File) logfile;
 
   static void log(int major, int minor, mixed ... args)
   {
@@ -566,7 +566,7 @@ class db
     logfile = 0;
     restore_logs();
     if (write) {
-      logfile = files.file();
+      logfile = Stdio.File();
       logfile->open(dir+"log.1", "cwa");
       logfile->write("\n");
       sync();

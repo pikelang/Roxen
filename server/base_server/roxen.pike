@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.159 1998/01/21 21:34:22 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.160 1998/01/28 01:49:18 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -296,7 +296,7 @@ object create_listen_socket(mixed port_no, object conf,
 
   if(!port_no)
   {
-    port = files.port ( "stdin", accept_callback );
+    port = Stdio.Port( "stdin", accept_callback );
 
     if(port->errno())
     {
@@ -304,7 +304,7 @@ object create_listen_socket(mixed port_no, object conf,
 		   "Errno is "+port->errno()+"\n");
     }
   } else {
-    port = files.port ();
+    port = Stdio.Port();
     if(!stringp(ether) || (lower_case(ether) == "any"))
       ether=0;
     if(ether)
@@ -2204,7 +2204,7 @@ void init_shuffler()
   {
     if(shuffler)
       destruct(shuffler);
-    out=files.file();
+    out=Stdio.File();
     out2=out->pipe();
     mark_fd(out->query_fd(), "Data shuffler local end of pipe.\n");
     spawne("bin/shuffle", ({}), ({}), out2, Stdio.stderr, Stdio.stderr, 0, 0);

@@ -1,10 +1,10 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.29 1998/01/20 16:35:30 grubba Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.30 1998/01/28 01:55:54 grubba Exp $";
 
 object (Image.image) load_image(string f)
 {
-  object file = files.file();
+  object file = Stdio.File();
   string data;
   object img = Image.image();
 

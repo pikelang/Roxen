@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.31 1998/01/20 21:47:31 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.32 1998/01/28 01:49:17 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -229,7 +229,7 @@ class Cache {
   object lock = ((program) "lock" )();
   object this = this_object();
   string cd;
-  object command_stream = files.file();
+  object command_stream = Stdio.File();
   int last_resort;
 
   string to_send="";
@@ -304,7 +304,7 @@ class Cache {
     {
       /* Child */
       catch {
-	lcs->dup2( files.file ("stdin") );
+	lcs->dup2( Stdio.File("stdin") );
 	object privs = Privs("Starting the garbage collector");
 	// start garbagecollector niced as possible to reduce I/O-Load
 
