@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.112 2000/02/13 14:36:33 grubba Exp $
+/* $Id: wizard.pike,v 1.113 2000/02/13 14:37:20 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -133,7 +133,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       res+=make_tag("input",m-(["quote":""]))+"</td></tr>";
     }
     m->name = "_new_"+n;
-    m->type = "string";
+    m->type = "text";
     m->value = "";
     res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size=\"-2\">";
     m->name="_Add";
