@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.15 2000/09/16 20:23:46 per Exp $
+// $Id: module.pmod,v 1.16 2000/09/17 22:29:25 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -447,7 +447,7 @@ class Float
   string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 15;
-    if( _max == _min ) 
+    if( _max != _min ) 
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
     return input(path(), _format(query()), size, additional_args);
   }
@@ -499,7 +499,7 @@ class Int
   string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 10;
-    if( _min == _max ) 
+    if( _min != _max ) 
       size = max( strlen((string)_max), strlen((string)_min) )+2;
     return input(path(), (string)query(), size, additional_args);
   }
