@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.873 2004/05/07 14:41:21 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.874 2004/05/25 15:52:17 mast Exp $";
 
 //! @appears roxen
 //!
@@ -994,6 +994,8 @@ static void bg_process_queue()
 				    {return sprintf ("%O", arg);}) * ", ");
 #endif
       if (task[0])		// Ignore things that have become destructed.
+	// Note: BackgroundProcess.repeat assumes that there are
+	// exactly two refs to task[0] during the call below.
 	task[0] (@task[1]);
 
       if (busy_threads > 1) bg_last_busy = time();
@@ -1064,13 +1066,26 @@ class BackgroundProcess
 //! A class to do a task repeatedly in the background, in a way that
 //! makes as little impact as possible on the incoming requests (using
 //! @[background_run]).
+//!
+//! The user need to keep a reference to this object, otherwise it
+//! will remove itself and the callback won't be called anymore.
 {
   int|float period;
   int stopping = 0;
 
   static void repeat (function func, mixed args)
   {
-    if (stopping) return;
+    // Got a minimum of four refs to this:
+    // o  One in the task array in bg_process_queue.
+    // o  One on the stack in the call in bg_process_queue.
+    // o  One as current_object in the stack frame.
+    // o  One on the stack as argument to _refs.
+    int self_refs = _refs (this);
+#ifdef DEBUG
+    if (self_refs < 4)
+      error ("Minimum ref calculation wrong.\n");
+#endif
+    if (stopping || self_refs <= 4) return;
     func (@args);
     background_run (period, repeat, func, args);
   }
