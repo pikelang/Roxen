@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997-1999, Idonex AB.
+// This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.39 2000/02/21 17:49:46 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.40 2000/02/24 05:15:45 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -52,6 +52,11 @@ constant tagdoc=(["tablist":({ "<desc cont>Tab list</desc>", (["tab":"<desc cont
 	      "the global setting."
  */
 #endif
+
+void start(int num, Configuration conf)
+{
+  module_dependencies(conf, ({ "gbutton" }) );
+}
 
 void add_layers( mapping m, string lay )
 {
