@@ -173,7 +173,7 @@ object get_object(string project, string lang) {
   // Check encoding
   sscanf(line, "%*sencoding=\"%s\"", string encoding);
   if(encoding && encoding!="") {
-    function(string:string) decode=0;
+    function(string:string) decode = 0;
     switch(lower_case(encoding)) 
       {
       case "iso-8859-1":
@@ -216,14 +216,33 @@ object get_object(string project, string lang) {
   else
     data = line+data;
 
+  string|int id;
+  function str_tag = lambda(string t, mapping m, string c) {
+		       id = 0;
+		       if(m->id && m->id!="" && c!="") {
+			 if((int)m->id) m->id = (int)m->id;
+			 id = m->id;
+			 return c;
+		       }
+		       return 0;
+		     };
   function t_tag = lambda(string t, mapping m, string c) {
-		     if(m->id && m->id!="" && c!="") {
-		       if((int)m->id) m->id = (int)m->id;
-		       // Replace encoded entities
-		       c = replace(c, ({"&lt;","&gt;","&amp;"}),
-		                      ({ "<",   ">",    "&"  }));
-		       bindings[m->id]=c;
+		     if(!id) {
+		       if(!m->id)
+			 return 0;
+		       else {
+			 if((int)m->id) 
+			   id = (int)m->id;
+			 else
+			   id = m->id;
+		       }
 		     }
+		     if(String.trim_whites(c)=="")
+		       return 0;
+		     // Replace encoded entities
+		     c = replace(c, ({"&lt;","&gt;","&amp;"}),
+				 ({ "<",   ">",    "&"  }));
+		     bindings[id]=c;
 		     return 0;
 		   };
   function pike_tag = lambda(string t, mapping m, string c) {
@@ -245,7 +264,8 @@ object get_object(string project, string lang) {
   Parser.HTML xml_parser = Parser.HTML();
   xml_parser->case_insensitive_tag(1);
   xml_parser->
-    add_containers( ([ "t"         : t_tag,
+    add_containers( ([ "str"       : str_tag,
+		       "t"         : t_tag,
 		       "translate" : t_tag,
 		       "pike"      : pike_tag, ]) );
   xml_parser->feed(data)->finish();

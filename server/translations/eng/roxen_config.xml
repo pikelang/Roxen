@@ -2,127 +2,147 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>English</language>
-<dumped>964529600</dumped>
-<file>../base_server/roxen.pike</file>
-<file>../base_server/configuration.pike</file>
-<file>../base_server/global_variables.pike</file>
-<file>../modules/configuration/config_tags.pike</file>
-<file>../modules/configuration/config_userdb.pike</file>
-<file>../modules/configuration/config_filesystem.pike</file>
-<file>../config_interface/standard/template</file>
-<file>../config_interface/standard/settings.html</file>
-<file>../config_interface/standard/logutil.pike</file>
-<file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/cv_startpage_tabs.pike</file>
-<file>../config_interface/standard/users.html</file>
-<file>../config_interface/standard/user_form.pike</file>
-<file>../config_interface/standard/user_delete.pike</file>
-<file>../config_interface/standard/actions/index.html</file>
-<file>../config_interface/standard/actions/tablist.pike</file>
-<file>../config_interface/standard/actions/flush.pike</file>
-<file>../config_interface/standard/actions/restart.pike</file>
-<file>../config_interface/standard/actions/listfonts.pike</file>
-<file>../config_interface/standard/actions/feature_list.pike</file>
-<file>../config_interface/standard/event_log/index.html</file>
-<file>../config_interface/standard/event_log/log.pike</file>
-<file>../config_interface/standard/sites/index.html</file>
-<file>../config_interface/standard/sites/log.pike</file>
-<file>../config_interface/standard/sites/site_content.pike</file>
-<file>../config_interface/standard/sites/site_header.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
-<file>../config_interface/standard/sites/create_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
-<file>../config_interface/standard/sites/add_module.pike</file>
-<file>../config_interface/standard/sites/config_left_item.pike</file>
-<file>../config_interface/standard/sites/site_templates/common.pike</file>
+<dumped>965274079</dumped>
 <added id="1"/>
 
-<!-- [1] "No virtual servers enabled" -->
-<t id="1"></t>
+<str id="1">
+<o>No virtual servers enabled</o>
+<t></t>
+</str>
 
-<!-- [2] "Sent data" -->
-<t id="2"></t>
+<str id="2">
+<o>Sent data</o>
+<t></t>
+</str>
 
-<!-- [3] "sec" -->
-<t id="3"></t>
+<str id="3">
+<o>sec</o>
+<t></t>
+</str>
 
-<!-- [4] "Sent headers" -->
-<t id="4"></t>
+<str id="4">
+<o>Sent headers</o>
+<t></t>
+</str>
 
-<!-- [5] "Number of requests" -->
-<t id="5"></t>
+<str id="5">
+<o>Number of requests</o>
+<t></t>
+</str>
 
-<!-- [6] "min" -->
-<t id="6"></t>
+<str id="6">
+<o>min</o>
+<t></t>
+</str>
 
-<!-- [7] "Received data" -->
-<t id="7"></t>
+<str id="7">
+<o>Received data</o>
+<t></t>
+</str>
 
-<!-- [8] "FTP users (total)" -->
-<t id="8"></t>
+<str id="8">
+<o>FTP users (total)</o>
+<t></t>
+</str>
 
-<!-- [9] "FTP users (now)" -->
-<t id="9"></t>
+<str id="9">
+<o>FTP users (now)</o>
+<t></t>
+</str>
 
-<!-- [10] "FTP statistics" -->
-<t id="10"></t>
+<str id="10">
+<o>FTP statistics</o>
+<t></t>
+</str>
 
-<!-- [11] "Reloaded %s.
-" -->
-<t id="11"></t>
+<str id="11">
+<o>Reloaded %s.
+</o>
+<t></t>
+</str>
 
-<!-- [12] "Priority" -->
-<t id="12"></t>
+<str id="12">
+<o>Priority</o>
+<t></t>
+</str>
 
-<!-- [13] "The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order" -->
-<t id="13"></t>
+<str id="13">
+<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
+<t></t>
+</str>
 
-<!-- [14] "Security: Realm" -->
-<t id="14"></t>
+<str id="14">
+<o>Security: Realm</o>
+<t></t>
+</str>
 
-<!-- [15] "The realm to use when requesting password from the client. Usually used as an informative message to the user." -->
-<t id="15"></t>
+<str id="15">
+<o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
+<t></t>
+</str>
 
-<!-- [16] "Security: Patterns" -->
-<t id="16"></t>
+<str id="16">
+<o>Security: Patterns</o>
+<t></t>
+</str>
 
-<!-- [17] "This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;" -->
-<t id="17"></t>
+<str id="17">
+<o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
+<t></t>
+</str>
 
-<!-- [18] "Security: Security level" -->
-<t id="18"></t>
+<str id="18">
+<o>Security: Security level</o>
+<t></t>
+</str>
 
-<!-- [19] "The modules security level is used to determine if a  request should be handled by the module.
+<str id="19">
+<o>The modules security level is used to determine if a  request should be handled by the module.
 &lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
 &lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;" -->
-<t id="19"></t>
+&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
+<t></t>
+</str>
 
-<!-- [20] "Default site" -->
-<t id="20"></t>
+<str id="20">
+<o>Default site</o>
+<t></t>
+</str>
 
-<!-- [21] "If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers." -->
-<t id="21"></t>
+<str id="21">
+<o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
+<t></t>
+</str>
 
-<!-- [22] "Virtual server comment" -->
-<t id="22"></t>
+<str id="22">
+<o>Virtual server comment</o>
+<t></t>
+</str>
 
-<!-- [23] "This text will be visible in the administration interface, it can be quite useful to use as a memory helper." -->
-<t id="23"></t>
+<str id="23">
+<o>This text will be visible in the administration interface, it can be quite useful to use as a memory helper.</o>
+<t></t>
+</str>
 
-<!-- [24] "Virtual server name" -->
-<t id="24"></t>
+<str id="24">
+<o>Virtual server name</o>
+<t></t>
+</str>
 
-<!-- [25] "This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used." -->
-<t id="25"></t>
+<str id="25">
+<o>This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used.</o>
+<t></t>
+</str>
 
-<!-- [26] "Logging: Format" -->
-<t id="26"></t>
+<str id="26">
+<o>Logging: Format</o>
+<t></t>
+</str>
 
-<!-- [27] "What format to use for logging. The syntax is:
+<str id="27">
+<o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
 Log format is normal characters, or one or more of the variables below:
@@ -154,730 +174,1199 @@ $user_agent    -- the header 'User-Agent' from the request, or '-'.
 $user          -- the name of the auth user used, if any
 $user_id       -- A unique user ID, if cookies are supported,
                   by the client, otherwise '0'
-&lt;/pre&gt;" -->
-<t id="27"></t>
+&lt;/pre&gt;</o>
+<t></t>
+</str>
 
-<!-- [28] "Logging: Enabled" -->
-<t id="28"></t>
+<str id="28">
+<o>Logging: Enabled</o>
+<t></t>
+</str>
 
-<!-- [29] "Log requests" -->
-<t id="29"></t>
+<str id="29">
+<o>Log requests</o>
+<t></t>
+</str>
 
-<!-- [30] "Logging: Log file" -->
-<t id="30"></t>
+<str id="30">
+<o>Logging: Log file</o>
+<t></t>
+</str>
 
-<!-- [31] "The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+<str id="31">
+<o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
 %h    Hour  (e.g. '00')
 %H    Hostname
-&lt;/pre&gt;" -->
-<t id="31"></t>
-
-<!-- [32] "Logging: No Logging for" -->
-<t id="32"></t>
-
-<!-- [33] "Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log." -->
-<t id="33"></t>
-
-<!-- [34] "Domain" -->
-<t id="34"></t>
-
-<!-- [35] "The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses." -->
-<t id="35"></t>
-
-<!-- [36] "Primary Server URL" -->
-<t id="36"></t>
-
-<!-- [37] "This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable." -->
-<t id="37"></t>
-
-<!-- [38] "URLs" -->
-<t id="38"></t>
-
-<!-- [39] "Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris." -->
-<t id="39"></t>
-
-<!-- [40] "Internal module resource mountpoint" -->
-<t id="40"></t>
-
-<!-- [41] "Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources." -->
-<t id="41"></t>
-
-<!-- [42] "Bandwidth Throttling: Server: Enabled" -->
-<t id="42"></t>
-
-<!-- [43] "If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost." -->
-<t id="43"></t>
-
-<!-- [44] "Bandwidth Throttling: Server: Average available bandwidth" -->
-<t id="44"></t>
-
-<!-- [45] "This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate")." -->
-<t id="45"></t>
-
-<!-- [46] "Bandwidth Throttling: Server: Bucket Depth" -->
-<t id="46"></t>
-
-<!-- [47] "This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged." -->
-<t id="47"></t>
-
-<!-- [48] "Bandwidth Throttling: Server: Minimum Grant" -->
-<t id="48"></t>
-
-<!-- [49] "When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead)." -->
-<t id="49"></t>
-
-<!-- [50] "Bandwidth Throttling: Server: Maximum Grant" -->
-<t id="50"></t>
-
-<!-- [51] "This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet)." -->
-<t id="51"></t>
-
-<!-- [52] "Bandwidth Throttling: Request: Enabled" -->
-<t id="52"></t>
-
-<!-- [53] "If set, per-request bandwidth throttling will be enabled." -->
-<t id="53"></t>
-
-<!-- [54] "Bandwidth Throttling: Request: Minimum guarranteed bandwidth" -->
-<t id="54"></t>
-
-<!-- [55] "The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request." -->
-<t id="55"></t>
-
-<!-- [56] "Bandwidth Throttling: Request: Bucket Depth Multiplier" -->
-<t id="56"></t>
-
-<!-- [57] "The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor." -->
-<t id="57"></t>
-
-<!-- [58] "Messages: No such file" -->
-<t id="58"></t>
-
-<!-- [59] "What to return when there is no resource or file available at a certain location." -->
-<t id="59"></t>
-
-<!-- [60] "Welcome text" -->
-<t id="60"></t>
-
-<!-- [61] "The text shown to the user on connect" -->
-<t id="61"></t>
-
-<!-- [62] "User session limit" -->
-<t id="62"></t>
-
-<!-- [63] "The maximum number of times a user can connect at once. 0 means unlimited." -->
-<t id="63"></t>
-
-<!-- [64] "Allow named ftp" -->
-<t id="64"></t>
-
-<!-- [65] "If yes, non-anonymous users can connect" -->
-<t id="65"></t>
-
-<!-- [66] "Allow login with incorrect password/user" -->
-<t id="66"></t>
-
-<!-- [67] "If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user." -->
-<t id="67"></t>
-
-<!-- [68] "Allow anonymous ftp" -->
-<t id="68"></t>
-
-<!-- [69] "If yes, anonymous users is allowed to connect." -->
-<t id="69"></t>
-
-<!-- [70] "Shell database" -->
-<t id="70"></t>
-
-<!-- [71] "If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in." -->
-<t id="71"></t>
-
-<!-- [72] "Show internal errors" -->
-<t id="72"></t>
-
-<!-- [73] "Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts." -->
-<t id="73"></t>
-
-<!-- [74] "Logging: Set unique user id cookies" -->
-<t id="74"></t>
-
-<!-- [75] "If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users." -->
-<t id="75"></t>
-
-<!-- [76] "Logging: Set ID cookies only once" -->
-<t id="76"></t>
-
-<!-- [77] "If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests." -->
-<t id="77"></t>
-
-<!-- [78] "Logging method" -->
-<t id="78"></t>
-
-<!-- [79] "None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through Roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits Roxen to less than 1k requests/second.&lt;/p&gt;" -->
-<t id="79"></t>
-
-<!-- [80] "Log file" -->
-<t id="80"></t>
-
-<!-- [81] "This file is used if logging is done using the CommonLog method." -->
-<t id="81"></t>
-
-<!-- [82] "Ram cache" -->
-<t id="82"></t>
-
-<!-- [83] "The size of the ram cache, in MegaBytes" -->
-<t id="83"></t>
-
-<!-- [84] "Client timeout" -->
-<t id="84"></t>
-
-<!-- [85] "The maximum time Roxen will wait for a client before giving up, and close the connection, in seconds" -->
-<t id="85"></t>
-
-<!-- [86] "SSL certificate file" -->
-<t id="86"></t>
-
-<!-- [87] "The SSL certificate file to use. The path is relative to %s" -->
-<t id="87"></t>
-
-<!-- [88] "SSL key file" -->
-<t id="88"></t>
-
-<!-- [89] "The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only" -->
-<t id="89"></t>
-
-<!-- [90] "Logging: Log entire file length in restored connections" -->
-<t id="90"></t>
-
-<!-- [91] "If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct." -->
-<t id="91"></t>
-
-<!-- [92] "Default font" -->
-<t id="92"></t>
-
-<!-- [93] "The default font to use when modules request a font." -->
-<t id="93"></t>
-
-<!-- [94] "Font directories" -->
-<t id="94"></t>
-
-<!-- [95] "This is where the fonts are located." -->
-<t id="95"></t>
-
-<!-- [96] "Logging: Log directory prefix" -->
-<t id="96"></t>
-
-<!-- [97] "This is the default file path that will be prepended to the log file path in all the default modules and the virtual server." -->
-<t id="97"></t>
-
-<!-- [98] "Cache: Proxy Disk Cache Enabled" -->
-<t id="98"></t>
-
-<!-- [99] "If set to Yes, caching will be enabled." -->
-<t id="99"></t>
-
-<!-- [100] "Cache: Proxy Disk Cache Clean size" -->
-<t id="100"></t>
-
-<!-- [101] "Minimum number of Megabytes removed when a garbage collect is done." -->
-<t id="101"></t>
-
-<!-- [102] "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)" -->
-<t id="102"></t>
-
-<!-- [103] "If less than this amount of disk space or inodes (in %) is left, the cache will remove a few files. This check may work half-hearted if the diskcache is spread over several filesystems." -->
-<t id="103"></t>
-
-<!-- [104] "Cache: Proxy Disk Cache Size" -->
-<t id="104"></t>
-
-<!-- [105] "How many MB may the cache grow to before a garbage collect is done?" -->
-<t id="105"></t>
-
-<!-- [106] "Cache: Proxy Disk Cache Maximum number of files" -->
-<t id="106"></t>
-
-<!-- [107] "How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check." -->
-<t id="107"></t>
-
-<!-- [108] "Cache: Proxy Disk Cache bytes per second" -->
-<t id="108"></t>
-
-<!-- [109] "How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first." -->
-<t id="109"></t>
-
-<!-- [110] "Cache: Proxy Disk Cache Base Cache Dir" -->
-<t id="110"></t>
-
-<!-- [111] "This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable." -->
-<t id="111"></t>
-
-<!-- [112] "Cache: Proxy Disk Cache Number of hash directories" -->
-<t id="112"></t>
-
-<!-- [113] "This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed." -->
-<t id="113"></t>
-
-<!-- [114] "Cache: Proxy Disk Cache Keep without Content-Length" -->
-<t id="114"></t>
-
-<!-- [115] "Keep files without Content-Length header information in the cache?" -->
-<t id="115"></t>
-
-<!-- [116] "Cache: Proxy Disk Cache Refreshes on Last-Modified" -->
-<t id="116"></t>
-
-<!-- [117] "If set, refreshes files without Expire header information when they have reached double the age they had when they got cached. This may be useful for some regularly updated docs as online newspapers." -->
-<t id="117"></t>
-
-<!-- [118] "Cache: Proxy Disk Cache Last resort (in days)" -->
-<t id="118"></t>
-
-<!-- [119] "How many days shall files without Expires and without Last-Modified header information be kept?" -->
-<t id="119"></t>
-
-<!-- [120] "Cache: Proxy Disk Cache Garbage collector logfile" -->
-<t id="120"></t>
-
-<!-- [121] "Information about garbage collector runs, removed and refreshed files, cache and disk status goes here." -->
-<t id="121"></t>
-
-<!-- [122] "PID file" -->
-<t id="122"></t>
-
-<!-- [123] "In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
-&lt;br /&gt;Note: It can be overridden by the command line option." -->
-<t id="123"></t>
-
-<!-- [124] "Identify, Use default identification string" -->
-<t id="124"></t>
-
-<!-- [125] "Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;" -->
-<t id="125"></t>
-
-<!-- [126] "Identify, Identify as" -->
-<t id="126"></t>
-
-<!-- [127] "Enter the name that Roxen should use when talking to clients. " -->
-<t id="127"></t>
-
-<!-- [128] "Change uid and gid to" -->
-<t id="128"></t>
-
-<!-- [129] "When roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group]." -->
-<t id="129"></t>
-
-<!-- [130] "Change uid and gid permanently" -->
-<t id="130"></t>
-
-<!-- [131] "If this variable is set, roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security." -->
-<t id="131"></t>
-
-<!-- [132] "Module directories" -->
-<t id="132"></t>
-
-<!-- [133] "This is a list of directories where Roxen should look for modules. Can be relative paths, from the directory you started Roxen. The directories are searched in order for modules." -->
-<t id="133"></t>
-
-<!-- [134] "Client supports regexps" -->
-<t id="134"></t>
-
-<!-- [135] "What do the different clients support?
-&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory." -->
-<t id="135"></t>
-
-<!-- [136] "Logging: Audit trail" -->
-<t id="136"></t>
-
-<!-- [137] "If Audit trail is set to Yes, all changes of uid will be logged in the Event log." -->
-<t id="137"></t>
-
-<!-- [138] "Logging: Logging method" -->
-<t id="138"></t>
-
-<!-- [139] "What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script." -->
-<t id="139"></t>
-
-<!-- [140] "Logging: Log PID" -->
-<t id="140"></t>
-
-<!-- [141] "If set, the PID will be included in the syslog." -->
-<t id="141"></t>
-
-<!-- [142] "Logging: Log to system console" -->
-<t id="142"></t>
-
-<!-- [143] "If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log." -->
-<t id="143"></t>
-
-<!-- [144] "Logging: Syslog type" -->
-<t id="144"></t>
-
-<!-- [145] "When using SYSLOG, which log type should be used." -->
-<t id="145"></t>
-
-<!-- [146] "Logging: Log what to syslog" -->
-<t id="146"></t>
-
-<!-- [147] "When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;" -->
-<t id="147"></t>
-
-<!-- [148] "Logging: Log as" -->
-<t id="148"></t>
-
-<!-- [149] "When syslog is used, this will be the identification of the Roxen daemon. The entered value will be appended to all logs." -->
-<t id="149"></t>
-
-<!-- [150] "Number of threads to run" -->
-<t id="150"></t>
-
-<!-- [151] "The number of simultaneous threads Roxen will use.
+&lt;/pre&gt;</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>Logging: No Logging for</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>Domain</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses.</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>Primary Server URL</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable.</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>URLs</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>Internal module resource mountpoint</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>Bandwidth Throttling: Server: Enabled</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>Bandwidth Throttling: Server: Average available bandwidth</o>
+<t></t>
+</str>
+
+<str id="45">
+<o>This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate").</o>
+<t></t>
+</str>
+
+<str id="46">
+<o>Bandwidth Throttling: Server: Bucket Depth</o>
+<t></t>
+</str>
+
+<str id="47">
+<o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
+<t></t>
+</str>
+
+<str id="48">
+<o>Bandwidth Throttling: Server: Minimum Grant</o>
+<t></t>
+</str>
+
+<str id="49">
+<o>When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead).</o>
+<t></t>
+</str>
+
+<str id="50">
+<o>Bandwidth Throttling: Server: Maximum Grant</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
+<t></t>
+</str>
+
+<str id="52">
+<o>Bandwidth Throttling: Request: Enabled</o>
+<t></t>
+</str>
+
+<str id="53">
+<o>If set, per-request bandwidth throttling will be enabled.</o>
+<t></t>
+</str>
+
+<str id="54">
+<o>Bandwidth Throttling: Request: Minimum guarranteed bandwidth</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>Bandwidth Throttling: Request: Bucket Depth Multiplier</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor.</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>Messages: No such file</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>What to return when there is no resource or file available at a certain location.</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>Welcome text</o>
+<t></t>
+</str>
+
+<str id="61">
+<o>The text shown to the user on connect</o>
+<t></t>
+</str>
+
+<str id="62">
+<o>User session limit</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>The maximum number of times a user can connect at once. 0 means unlimited.</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>Allow named ftp</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>If yes, non-anonymous users can connect</o>
+<t></t>
+</str>
+
+<str id="66">
+<o>Allow login with incorrect password/user</o>
+<t></t>
+</str>
+
+<str id="67">
+<o>If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user.</o>
+<t></t>
+</str>
+
+<str id="68">
+<o>Allow anonymous ftp</o>
+<t></t>
+</str>
+
+<str id="69">
+<o>If yes, anonymous users is allowed to connect.</o>
+<t></t>
+</str>
+
+<str id="70">
+<o>Shell database</o>
+<t></t>
+</str>
+
+<str id="71">
+<o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
+<t></t>
+</str>
+
+<str id="72">
+<o>Show internal errors</o>
+<t></t>
+</str>
+
+<str id="73">
+<o>Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts.</o>
+<t></t>
+</str>
+
+<str id="74">
+<o>Logging: Set unique user id cookies</o>
+<t></t>
+</str>
+
+<str id="75">
+<o>If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users.</o>
+<t></t>
+</str>
+
+<str id="76">
+<o>Logging: Set ID cookies only once</o>
+<t></t>
+</str>
+
+<str id="77">
+<o>If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
+<t></t>
+</str>
+
+<str id="78">
+<o>Logging method</o>
+<t></t>
+</str>
+
+<str id="79">
+<o>None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through Roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits Roxen to less than 1k requests/second.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="80">
+<o>Log file</o>
+<t></t>
+</str>
+
+<str id="81">
+<o>This file is used if logging is done using the CommonLog method.</o>
+<t></t>
+</str>
+
+<str id="82">
+<o>Ram cache</o>
+<t></t>
+</str>
+
+<str id="83">
+<o>The size of the ram cache, in MegaBytes</o>
+<t></t>
+</str>
+
+<str id="84">
+<o>Client timeout</o>
+<t></t>
+</str>
+
+<str id="85">
+<o>The maximum time Roxen will wait for a client before giving up, and close the connection, in seconds</o>
+<t></t>
+</str>
+
+<str id="86">
+<o>SSL certificate file</o>
+<t></t>
+</str>
+
+<str id="87">
+<o>The SSL certificate file to use. The path is relative to %s</o>
+<t></t>
+</str>
+
+<str id="88">
+<o>SSL key file</o>
+<t></t>
+</str>
+
+<str id="89">
+<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
+<t></t>
+</str>
+
+<str id="90">
+<o>Logging: Log entire file length in restored connections</o>
+<t></t>
+</str>
+
+<str id="91">
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct.</o>
+<t></t>
+</str>
+
+<str id="92">
+<o>Default font</o>
+<t></t>
+</str>
+
+<str id="93">
+<o>The default font to use when modules request a font.</o>
+<t></t>
+</str>
+
+<str id="94">
+<o>Font directories</o>
+<t></t>
+</str>
+
+<str id="95">
+<o>This is where the fonts are located.</o>
+<t></t>
+</str>
+
+<str id="96">
+<o>Logging: Log directory prefix</o>
+<t></t>
+</str>
+
+<str id="97">
+<o>This is the default file path that will be prepended to the log file path in all the default modules and the virtual server.</o>
+<t></t>
+</str>
+
+<str id="98">
+<o>Cache: Proxy Disk Cache Enabled</o>
+<t></t>
+</str>
+
+<str id="99">
+<o>If set to Yes, caching will be enabled.</o>
+<t></t>
+</str>
+
+<str id="100">
+<o>Cache: Proxy Disk Cache Clean size</o>
+<t></t>
+</str>
+
+<str id="101">
+<o>Minimum number of Megabytes removed when a garbage collect is done.</o>
+<t></t>
+</str>
+
+<str id="102">
+<o>Cache: Proxy Disk Cache Minimum available free space and inodes (in %)</o>
+<t></t>
+</str>
+
+<str id="103">
+<o>If less than this amount of disk space or inodes (in %) is left, the cache will remove a few files. This check may work half-hearted if the diskcache is spread over several filesystems.</o>
+<t></t>
+</str>
+
+<str id="104">
+<o>Cache: Proxy Disk Cache Size</o>
+<t></t>
+</str>
+
+<str id="105">
+<o>How many MB may the cache grow to before a garbage collect is done?</o>
+<t></t>
+</str>
+
+<str id="106">
+<o>Cache: Proxy Disk Cache Maximum number of files</o>
+<t></t>
+</str>
+
+<str id="107">
+<o>How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check.</o>
+<t></t>
+</str>
+
+<str id="108">
+<o>Cache: Proxy Disk Cache bytes per second</o>
+<t></t>
+</str>
+
+<str id="109">
+<o>How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first.</o>
+<t></t>
+</str>
+
+<str id="110">
+<o>Cache: Proxy Disk Cache Base Cache Dir</o>
+<t></t>
+</str>
+
+<str id="111">
+<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable.</o>
+<t></t>
+</str>
+
+<str id="112">
+<o>Cache: Proxy Disk Cache Number of hash directories</o>
+<t></t>
+</str>
+
+<str id="113">
+<o>This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed.</o>
+<t></t>
+</str>
+
+<str id="114">
+<o>Cache: Proxy Disk Cache Keep without Content-Length</o>
+<t></t>
+</str>
+
+<str id="115">
+<o>Keep files without Content-Length header information in the cache?</o>
+<t></t>
+</str>
+
+<str id="116">
+<o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
+<t></t>
+</str>
+
+<str id="117">
+<o>If set, refreshes files without Expire header information when they have reached double the age they had when they got cached. This may be useful for some regularly updated docs as online newspapers.</o>
+<t></t>
+</str>
+
+<str id="118">
+<o>Cache: Proxy Disk Cache Last resort (in days)</o>
+<t></t>
+</str>
+
+<str id="119">
+<o>How many days shall files without Expires and without Last-Modified header information be kept?</o>
+<t></t>
+</str>
+
+<str id="120">
+<o>Cache: Proxy Disk Cache Garbage collector logfile</o>
+<t></t>
+</str>
+
+<str id="121">
+<o>Information about garbage collector runs, removed and refreshed files, cache and disk status goes here.</o>
+<t></t>
+</str>
+
+<str id="122">
+<o>PID file</o>
+<t></t>
+</str>
+
+<str id="123">
+<o>In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
+&lt;br /&gt;Note: It can be overridden by the command line option.</o>
+<t></t>
+</str>
+
+<str id="124">
+<o>Identify, Use default identification string</o>
+<t></t>
+</str>
+
+<str id="125">
+<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="126">
+<o>Identify, Identify as</o>
+<t></t>
+</str>
+
+<str id="127">
+<o>Enter the name that Roxen should use when talking to clients. </o>
+<t></t>
+</str>
+
+<str id="128">
+<o>Change uid and gid to</o>
+<t></t>
+</str>
+
+<str id="129">
+<o>When roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<t></t>
+</str>
+
+<str id="130">
+<o>Change uid and gid permanently</o>
+<t></t>
+</str>
+
+<str id="131">
+<o>If this variable is set, roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security.</o>
+<t></t>
+</str>
+
+<str id="132">
+<o>Module directories</o>
+<t></t>
+</str>
+
+<str id="133">
+<o>This is a list of directories where Roxen should look for modules. Can be relative paths, from the directory you started Roxen. The directories are searched in order for modules.</o>
+<t></t>
+</str>
+
+<str id="134">
+<o>Client supports regexps</o>
+<t></t>
+</str>
+
+<str id="135">
+<o>What do the different clients support?
+&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
+<t></t>
+</str>
+
+<str id="136">
+<o>Logging: Audit trail</o>
+<t></t>
+</str>
+
+<str id="137">
+<o>If Audit trail is set to Yes, all changes of uid will be logged in the Event log.</o>
+<t></t>
+</str>
+
+<str id="138">
+<o>Logging: Logging method</o>
+<t></t>
+</str>
+
+<str id="139">
+<o>What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
+<t></t>
+</str>
+
+<str id="140">
+<o>Logging: Log PID</o>
+<t></t>
+</str>
+
+<str id="141">
+<o>If set, the PID will be included in the syslog.</o>
+<t></t>
+</str>
+
+<str id="142">
+<o>Logging: Log to system console</o>
+<t></t>
+</str>
+
+<str id="143">
+<o>If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log.</o>
+<t></t>
+</str>
+
+<str id="144">
+<o>Logging: Syslog type</o>
+<t></t>
+</str>
+
+<str id="145">
+<o>When using SYSLOG, which log type should be used.</o>
+<t></t>
+</str>
+
+<str id="146">
+<o>Logging: Log what to syslog</o>
+<t></t>
+</str>
+
+<str id="147">
+<o>When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;</o>
+<t></t>
+</str>
+
+<str id="148">
+<o>Logging: Log as</o>
+<t></t>
+</str>
+
+<str id="149">
+<o>When syslog is used, this will be the identification of the Roxen daemon. The entered value will be appended to all logs.</o>
+<t></t>
+</str>
+
+<str id="150">
+<o>Number of threads to run</o>
+<t></t>
+</str>
+
+<str id="151">
+<o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;" -->
-<t id="151"></t>
+&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;</o>
+<t></t>
+</str>
 
-<!-- [152] "Update the supports database automatically" -->
-<t id="152"></t>
+<str id="152">
+<o>Update the supports database automatically</o>
+<t></t>
+</str>
 
-<!-- [153] "If set to Yes, the etc/supports file will be updated automatically from www.roxen.com now and then. This is recomended, since you will then automatically get supports information for new clients, and new versions of old ones." -->
-<t id="153"></t>
+<str id="153">
+<o>If set to Yes, the etc/supports file will be updated automatically from www.roxen.com now and then. This is recomended, since you will then automatically get supports information for new clients, and new versions of old ones.</o>
+<t></t>
+</str>
 
-<!-- [154] "ABS: Enable Anti-Block-System" -->
-<t id="154"></t>
+<str id="154">
+<o>ABS: Enable Anti-Block-System</o>
+<t></t>
+</str>
 
-<!-- [155] "If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. " -->
-<t id="155"></t>
+<str id="155">
+<o>If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. </o>
+<t></t>
+</str>
 
-<!-- [156] "ABS: Timeout" -->
-<t id="156"></t>
+<str id="156">
+<o>ABS: Timeout</o>
+<t></t>
+</str>
 
-<!-- [157] "If the server is unable to accept connection for this many minutes, it will be restarted. You need to find a balance: if set too low, the server will be restarted even if it's doing legal things (like generating many images), if set too high you might get a long downtime if the server for some reason locks up." -->
-<t id="157"></t>
+<str id="157">
+<o>If the server is unable to accept connection for this many minutes, it will be restarted. You need to find a balance: if set too low, the server will be restarted even if it's doing legal things (like generating many images), if set too high you might get a long downtime if the server for some reason locks up.</o>
+<t></t>
+</str>
 
-<!-- [158] "Default language" -->
-<t id="158"></t>
+<str id="158">
+<o>Default language</o>
+<t></t>
+</str>
 
-<!-- [159] "Locale, used to localize all messages in Roxen.
-Standard means using the default locale, which varies according to the value of the 'LANG' environment variable." -->
-<t id="159"></t>
+<str id="159">
+<o>Locale, used to localize all messages in Roxen.
+Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<t></t>
+</str>
 
-<!-- [160] "Auto Restart: Enable Automatic Restart" -->
-<t id="160"></t>
+<str id="160">
+<o>Auto Restart: Enable Automatic Restart</o>
+<t></t>
+</str>
 
-<!-- [161] "If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks." -->
-<t id="161"></t>
+<str id="161">
+<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
+<t></t>
+</str>
 
-<!-- [162] "Auto Restart: Timeout" -->
-<t id="162"></t>
+<str id="162">
+<o>Auto Restart: Timeout</o>
+<t></t>
+</str>
 
-<!-- [163] "Automatically restart the server after this many days." -->
-<t id="163"></t>
+<str id="163">
+<o>Automatically restart the server after this many days.</o>
+<t></t>
+</str>
 
-<!-- [164] "Cache: Store the argument cache in a mysql database" -->
-<t id="164"></t>
+<str id="164">
+<o>Cache: Store the argument cache in a mysql database</o>
+<t></t>
+</str>
 
-<!-- [165] "If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle synchronization." -->
-<t id="165"></t>
+<str id="165">
+<o>If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle synchronization.</o>
+<t></t>
+</str>
 
-<!-- [166] "Cache: Argument Cache Database URL to use" -->
-<t id="166"></t>
+<str id="166">
+<o>Cache: Argument Cache Database URL to use</o>
+<t></t>
+</str>
 
-<!-- [167] "The database to use to store the argument cache." -->
-<t id="167"></t>
+<str id="167">
+<o>The database to use to store the argument cache.</o>
+<t></t>
+</str>
 
-<!-- [168] "Cache: Argument Cache Directory" -->
-<t id="168"></t>
+<str id="168">
+<o>Cache: Argument Cache Directory</o>
+<t></t>
+</str>
 
-<!-- [169] "The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data." -->
-<t id="169"></t>
+<str id="169">
+<o>The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data.</o>
+<t></t>
+</str>
 
-<!-- [170] "Cache: Memory Cache Garbage Collect Interval" -->
-<t id="170"></t>
+<str id="170">
+<o>Cache: Memory Cache Garbage Collect Interval</o>
+<t></t>
+</str>
 
-<!-- [171] "The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client." -->
-<t id="171"></t>
+<str id="171">
+<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client.</o>
+<t></t>
+</str>
 
-<!-- [172] "Commented config files" -->
-<t id="172"></t>
+<str id="172">
+<o>Commented config files</o>
+<t></t>
+</str>
 
-<!-- [173] "Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly." -->
-<t id="173"></t>
+<str id="173">
+<o>Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly.</o>
+<t></t>
+</str>
 
-<!-- [174] "Show documentation" -->
-<t id="174"></t>
+<str id="174">
+<o>Show documentation</o>
+<t></t>
+</str>
 
-<!-- [175] "Show the variable documentation." -->
-<t id="175"></t>
+<str id="175">
+<o>Show the variable documentation.</o>
+<t></t>
+</str>
 
-<!-- [176] "Show advanced configuration options" -->
-<t id="176"></t>
+<str id="176">
+<o>Show advanced configuration options</o>
+<t></t>
+</str>
 
-<!-- [177] "Show all possible configuration options, not only the ones that are most often changed." -->
-<t id="177"></t>
+<str id="177">
+<o>Show all possible configuration options, not only the ones that are most often changed.</o>
+<t></t>
+</str>
 
-<!-- [178] "Show the incomplete translations" -->
-<t id="178"></t>
+<str id="178">
+<o>Show the incomplete translations</o>
+<t></t>
+</str>
 
-<!-- [179] "Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator." -->
-<t id="179"></t>
+<str id="179">
+<o>Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator.</o>
+<t></t>
+</str>
 
-<!-- [180] "Show developer options and actions" -->
-<t id="180"></t>
+<str id="180">
+<o>Show developer options and actions</o>
+<t></t>
+</str>
 
-<!-- [181] "Show settings and actions that are not normaly useful for non-developer users. If you develop your own roxen modules, this option is for you." -->
-<t id="181"></t>
+<str id="181">
+<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own roxen modules, this option is for you.</o>
+<t></t>
+</str>
 
-<!-- [182] "Background color" -->
-<t id="182"></t>
+<str id="182">
+<o>Background color</o>
+<t></t>
+</str>
 
-<!-- [183] "Administration interface background color." -->
-<t id="183"></t>
+<str id="183">
+<o>Administration interface background color.</o>
+<t></t>
+</str>
 
-<!-- [184] "Text color" -->
-<t id="184"></t>
+<str id="184">
+<o>Text color</o>
+<t></t>
+</str>
 
-<!-- [185] "Administration interface text color." -->
-<t id="185"></t>
+<str id="185">
+<o>Administration interface text color.</o>
+<t></t>
+</str>
 
-<!-- [186] "Link color" -->
-<t id="186"></t>
+<str id="186">
+<o>Link color</o>
+<t></t>
+</str>
 
-<!-- [187] "Font" -->
-<t id="187"></t>
+<str id="187">
+<o>Font</o>
+<t></t>
+</str>
 
-<!-- [188] "Administration interface font." -->
-<t id="188"></t>
+<str id="188">
+<o>Administration interface font.</o>
+<t></t>
+</str>
 
-<!-- [189] "Add/Delete module page type" -->
-<t id="189"></t>
+<str id="189">
+<o>Add/Delete module page type</o>
+<t></t>
+</str>
 
-<!-- [190] "&lt;dl&gt;
+<str id="190">
+<o>&lt;dl&gt;
 &lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
 &lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
 &lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows to select multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;" -->
-<t id="190"></t>
+&lt;/dl&gt;</o>
+<t></t>
+</str>
 
-<!-- [191] "All Permissions" -->
-<t id="191"></t>
+<str id="191">
+<o>All Permissions</o>
+<t></t>
+</str>
 
-<!-- [192] "View Settings" -->
-<t id="192"></t>
+<str id="192">
+<o>View Settings</o>
+<t></t>
+</str>
 
-<!-- [193] "Edit Users" -->
-<t id="193"></t>
+<str id="193">
+<o>Edit Users</o>
+<t></t>
+</str>
 
-<!-- [194] "Edit Global Variables" -->
-<t id="194"></t>
+<str id="194">
+<o>Edit Global Variables</o>
+<t></t>
+</str>
 
-<!-- [195] "Edit Module Variables" -->
-<t id="195"></t>
+<str id="195">
+<o>Edit Module Variables</o>
+<t></t>
+</str>
 
-<!-- [196] "Tasks" -->
-<t id="196"></t>
+<str id="196">
+<o>Tasks</o>
+<t></t>
+</str>
 
-<!-- [197] "Restart" -->
-<t id="197"></t>
+<str id="197">
+<o>Restart</o>
+<t></t>
+</str>
 
-<!-- [198] "Shutdown" -->
-<t id="198"></t>
+<str id="198">
+<o>Shutdown</o>
+<t></t>
+</str>
 
-<!-- [199] "Create Sites" -->
-<t id="199"></t>
+<str id="199">
+<o>Create Sites</o>
+<t></t>
+</str>
 
-<!-- [200] "Add Modules" -->
-<t id="200"></t>
+<str id="200">
+<o>Add Modules</o>
+<t></t>
+</str>
 
-<!-- [bA] "Save" -->
-<t id="bA"></t>
+<str id="bA">
+<o>Save</o>
+<t></t>
+</str>
 
-<!-- [201] "Ok" -->
-<t id="201"></t>
+<str id="201">
+<o>Ok</o>
+<t></t>
+</str>
 
-<!-- [202] "Cancel" -->
-<t id="202"></t>
+<str id="202">
+<o>Cancel</o>
+<t></t>
+</str>
 
-<!-- [203] "Next" -->
-<t id="203"></t>
+<str id="203">
+<o>Next</o>
+<t></t>
+</str>
 
-<!-- [204] "Administration Interface" -->
-<t id="204"></t>
+<str id="204">
+<o>Administration Interface</o>
+<t></t>
+</str>
 
-<!-- [205] "Language" -->
-<t id="205"></t>
+<str id="205">
+<o>Language</o>
+<t></t>
+</str>
 
-<!-- [206] "User" -->
-<t id="206"></t>
+<str id="206">
+<o>User</o>
+<t></t>
+</str>
 
-<!-- [cw] "and" -->
-<t id="cw"></t>
+<str id="cw">
+<o>and</o>
+<t></t>
+</str>
 
-<!-- [207] "every" -->
-<t id="207"></t>
+<str id="207">
+<o>every</o>
+<t></t>
+</str>
 
-<!-- [208] "since" -->
-<t id="208"></t>
+<str id="208">
+<o>since</o>
+<t></t>
+</str>
 
-<!-- [209] "Notice" -->
-<t id="209"></t>
+<str id="209">
+<o>Notice</o>
+<t></t>
+</str>
 
-<!-- [210] "Warning" -->
-<t id="210"></t>
+<str id="210">
+<o>Warning</o>
+<t></t>
+</str>
 
-<!-- [211] "Error" -->
-<t id="211"></t>
+<str id="211">
+<o>Error</o>
+<t></t>
+</str>
 
-<!-- [212] "Admin" -->
-<t id="212"></t>
+<str id="212">
+<o>Admin</o>
+<t></t>
+</str>
 
-<!-- [213] "Sites" -->
-<t id="213"></t>
+<str id="213">
+<o>Sites</o>
+<t></t>
+</str>
 
-<!-- [214] "Globals" -->
-<t id="214"></t>
+<str id="214">
+<o>Globals</o>
+<t></t>
+</str>
 
-<!-- [215] "Ports" -->
-<t id="215"></t>
+<str id="215">
+<o>Ports</o>
+<t></t>
+</str>
 
-<!-- [216] "Events" -->
-<t id="216"></t>
+<str id="216">
+<o>Events</o>
+<t></t>
+</str>
 
-<!-- [217] "Docs" -->
-<t id="217"></t>
+<str id="217">
+<o>Docs</o>
+<t></t>
+</str>
 
-<!-- [218] "Startpage" -->
-<t id="218"></t>
+<str id="218">
+<o>Startpage</o>
+<t></t>
+</str>
 
-<!-- [219] "Update" -->
-<t id="219"></t>
+<str id="219">
+<o>Update</o>
+<t></t>
+</str>
 
-<!-- [220] "Your Settings" -->
-<t id="220"></t>
+<str id="220">
+<o>Your Settings</o>
+<t></t>
+</str>
 
-<!-- [221] "Users" -->
-<t id="221"></t>
+<str id="221">
+<o>Users</o>
+<t></t>
+</str>
 
-<!-- [222] "Create new user" -->
-<t id="222"></t>
+<str id="222">
+<o>Create new user</o>
+<t></t>
+</str>
 
-<!-- [223] "Delete old user" -->
-<t id="223"></t>
+<str id="223">
+<o>Delete old user</o>
+<t></t>
+</str>
 
-<!-- [224] "Create User" -->
-<t id="224"></t>
+<str id="224">
+<o>Create User</o>
+<t></t>
+</str>
 
-<!-- [225] "User ID" -->
-<t id="225"></t>
+<str id="225">
+<o>User ID</o>
+<t></t>
+</str>
 
-<!-- [226] "Permission denied" -->
-<t id="226"></t>
+<str id="226">
+<o>Permission denied</o>
+<t></t>
+</str>
 
-<!-- [227] "Delete" -->
-<t id="227"></t>
+<str id="227">
+<o>Delete</o>
+<t></t>
+</str>
 
-<!-- [228] "Status" -->
-<t id="228"></t>
+<str id="228">
+<o>Status</o>
+<t></t>
+</str>
 
-<!-- [229] "Maintenance" -->
-<t id="229"></t>
+<str id="229">
+<o>Maintenance</o>
+<t></t>
+</str>
 
-<!-- [230] "SSL" -->
-<t id="230"></t>
+<str id="230">
+<o>SSL</o>
+<t></t>
+</str>
 
-<!-- [231] "Debug information" -->
-<t id="231"></t>
+<str id="231">
+<o>Debug information</o>
+<t></t>
+</str>
 
-<!-- [232] "All memory caches have been flushed." -->
-<t id="232"></t>
+<str id="232">
+<o>All memory caches have been flushed.</o>
+<t></t>
+</str>
 
-<!-- [233] "Roxen will restart automatically." -->
-<t id="233"></t>
+<str id="233">
+<o>Roxen will restart automatically.</o>
+<t></t>
+</str>
 
-<!-- [234] "You might see the old process for a while in the process table
+<str id="234">
+<o>You might see the old process for a while in the process table
 when doing 'ps' or running 'top'. This is normal. Roxen waits for a
 while for all connections to finish, the process will go away after at
-most 15 minutes." -->
-<t id="234"></t>
+most 15 minutes.</o>
+<t></t>
+</str>
 
-<!-- [235] "Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically." -->
-<t id="235"></t>
+<str id="235">
+<o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
+<t></t>
+</str>
 
-<!-- [dH] "Not available." -->
-<t id="dH"></t>
+<str id="dH">
+<o>Not available.</o>
+<t></t>
+</str>
 
-<!-- [dI] "All available fonts" -->
-<t id="dI"></t>
+<str id="dI">
+<o>All available fonts</o>
+<t></t>
+</str>
 
-<!-- [236] "Example text" -->
-<t id="236"></t>
+<str id="236">
+<o>Example text</o>
+<t></t>
+</str>
 
-<!-- [237] "Jackdaws love my big sphinx of quartz." -->
-<t id="237"></t>
+<str id="237">
+<o>Jackdaws love my big sphinx of quartz.</o>
+<t></t>
+</str>
 
-<!-- [238] "Features" -->
-<t id="238"></t>
+<str id="238">
+<o>Features</o>
+<t></t>
+</str>
 
-<!-- [dM] "Disabled modules" -->
-<t id="dM"></t>
+<str id="dM">
+<o>Disabled modules</o>
+<t></t>
+</str>
 
-<!-- [239] "All modules" -->
-<t id="239"></t>
+<str id="239">
+<o>All modules</o>
+<t></t>
+</str>
 
-<!-- [240] "Name" -->
-<t id="240"></t>
+<str id="240">
+<o>Name</o>
+<t></t>
+</str>
 
-<!-- [241] "State" -->
-<t id="241"></t>
+<str id="241">
+<o>State</o>
+<t></t>
+</str>
 
-<!-- [242] "Disabled" -->
-<t id="242"></t>
+<str id="242">
+<o>Disabled</o>
+<t></t>
+</str>
 
-<!-- [243] "N/A" -->
-<t id="243"></t>
+<str id="243">
+<o>N/A</o>
+<t></t>
+</str>
 
-<!-- [244] "Enabled" -->
-<t id="244"></t>
+<str id="244">
+<o>Enabled</o>
+<t></t>
+</str>
 
-<!-- [245] "Normal" -->
-<t id="245"></t>
+<str id="245">
+<o>Normal</o>
+<t></t>
+</str>
 
-<!-- [246] "Reversed" -->
-<t id="246"></t>
+<str id="246">
+<o>Reversed</o>
+<t></t>
+</str>
 
-<!-- [247] "Clear Log" -->
-<t id="247"></t>
+<str id="247">
+<o>Clear Log</o>
+<t></t>
+</str>
 
-<!-- [248] "Create new site" -->
-<t id="248"></t>
+<str id="248">
+<o>Create new site</o>
+<t></t>
+</str>
 
-<!-- [249] "Drop old site" -->
-<t id="249"></t>
+<str id="249">
+<o>Drop old site</o>
+<t></t>
+</str>
 
-<!-- [250] "Empty" -->
-<t id="250"></t>
+<str id="250">
+<o>Empty</o>
+<t></t>
+</str>
 
-<!-- [400] "Initial Variables" -->
-<t id="400"></t>
+<str id="400">
+<o>Initial Variables</o>
+<t></t>
+</str>
 
-<!-- [255] "Disabling old configuration %s
-" -->
-<t id="255"></t>
+<str id="255">
+<o>Disabling old configuration %s
+</o>
+<t></t>
+</str>
 
-<!-- [256] "Settings" -->
-<t id="256"></t>
+<str id="256">
+<o>Settings</o>
+<t></t>
+</str>
 
-<!-- [257] "Modules" -->
-<t id="257"></t>
+<str id="257">
+<o>Modules</o>
+<t></t>
+</str>
 
-<!-- [258] "Add module" -->
-<t id="258"></t>
+<str id="258">
+<o>Add module</o>
+<t></t>
+</str>
 
-<!-- [259] "Drop module" -->
-<t id="259"></t>
+<str id="259">
+<o>Drop module</o>
+<t></t>
+</str>
 
 
 <pike>
@@ -915,53 +1404,84 @@ string ftp_stat_line(string cmd, int times) {
 
 </pike>
 
-<!-- [251] "Add Module" -->
-<t id="251"></t>
+<str id="251">
+<o>Add Module</o>
+<t></t>
+</str>
 
-<!-- [252] "Drop Module" -->
-<t id="252"></t>
+<str id="252">
+<o>Drop Module</o>
+<t></t>
+</str>
 
-<!-- [253] "Reload" -->
-<t id="253"></t>
+<str id="253">
+<o>Reload</o>
+<t></t>
+</str>
 
-<!-- [254] "Module homepage" -->
-<t id="254"></t>
+<str id="254">
+<o>Module homepage</o>
+<t></t>
+</str>
 
-<!-- [260] "Request status" -->
-<t id="260"></t>
+<str id="260">
+<o>Request status</o>
+<t></t>
+</str>
 
-<!-- [261] "Inherit tree" -->
-<t id="261"></t>
+<str id="261">
+<o>Inherit tree</o>
+<t></t>
+</str>
 
-<!-- [dt] "Administrator logged on as %s from %s.
-" -->
-<t id="dt"></t>
+<str id="dt">
+<o>Administrator logged on as %s from %s.
+</o>
+<t></t>
+</str>
 
-<!-- [262] "Character encoding" -->
-<t id="262"></t>
+<str id="262">
+<o>Character encoding</o>
+<t></t>
+</str>
 
-<!-- [263] "Send pages to client in this character encoding." -->
-<t id="263"></t>
+<str id="263">
+<o>Send pages to client in this character encoding.</o>
+<t></t>
+</str>
 
-<!-- [264] "Mountpoint" -->
-<t id="264"></t>
+<str id="264">
+<o>Mountpoint</o>
+<t></t>
+</str>
 
-<!-- [265] "Usually / is a good idea" -->
-<t id="265"></t>
+<str id="265">
+<o>Usually / is a good idea</o>
+<t></t>
+</str>
 
-<!-- [266] "Will be loaded from: " -->
-<t id="266"></t>
+<str id="266">
+<o>Will be loaded from: </o>
+<t></t>
+</str>
 
-<!-- [267] "View" -->
-<t id="267"></t>
+<str id="267">
+<o>View</o>
+<t></t>
+</str>
 
-<!-- [268] "Configuration gone!" -->
-<t id="268"></t>
+<str id="268">
+<o>Configuration gone!</o>
+<t></t>
+</str>
 
-<!-- [269] "Site name:" -->
-<t id="269"></t>
+<str id="269">
+<o>Site name:</o>
+<t></t>
+</str>
 
-<!-- [270] "
+<str id="270">
+<o>
 The name of the configuration must contain characters
 other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
@@ -971,14 +1491,21 @@ used. This name will show up in the sites menu, a
 lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well
 as the name of its log file directory.
-" -->
-<t id="270"></t>
+</o>
+<t></t>
+</str>
 
-<!-- [271] "with template" -->
-<t id="271"></t>
+<str id="271">
+<o>with template</o>
+<t></t>
+</str>
 
-<!-- [272] "Reload module list" -->
-<t id="272"></t>
+<str id="272">
+<o>Reload module list</o>
+<t></t>
+</str>
 
-<!-- [273] "Select one or several modules to add." -->
-<t id="273"></t>
+<str id="273">
+<o>Select one or several modules to add.</o>
+<t></t>
+</str>

@@ -1,39 +1,44 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_start</project>
-<language>Swedish</language>
-<file>../base_server/roxen.pike</file>
-<file>../base_server/configuration.pike</file>
-<file>../modules/configuration/update.pike</file>
+<language>English</language>
+<dumped>965273108</dumped>
 <added id="1"/>
 
-<!-- [1] "Starting one thread to handle requests.
-" -->
-<t id="1">Startar en tråd för att hantera anrop.
+<str id="1">
+<o>Starting one thread to handle requests.
+</o>
+<t>Startar en tråd för att hantera anrop.
 </t>
+</str>
 
-<!-- [2] "Starting %d threads to handle requests.
-" -->
-<t id="2">Startar %d trådar för att hantera anrop.
+<str id="2">
+<o>Starting %d threads to handle requests.
+</o>
+<t>Startar %d trådar för att hantera anrop.
 </t>
+</str>
 
-<!-- [3] "Registered %s for %s
-" -->
-<t id="3">Registrerade %s åt %s
+<str id="3">
+<o>Registered %s for %s
+</o>
+<t>Registrerade %s åt %s
 </t>
+</str>
 
-<!-- [4] "All modules for %s enabled in %3.1f seconds" -->
-<t id="4">Alla moduler till %s aktiverade på %3.1f sekunder</t>
-
-<!-- [5] "Update: Found new packages: %s
-" -->
-<t id="5">Uppdatering: Nya paket: %s
+<str id="5">
+<o>Update: Found new packages: %s
+</o>
+<t>Uppdatering: Nya paket: %s
 </t>
+</str>
 
-<!-- [6] "Update: No new packages found.
-" -->
-<t id="6">Uppdatering: Inga nya paket.
+<str id="6">
+<o>Update: No new packages found.
+</o>
+<t>Uppdatering: Inga nya paket.
 </t>
+</str>
 
 
 <!--
@@ -49,3 +54,7 @@
 *
 -->
 
+<str id="4">
+<o>All modules for %s enabled in %3.1f seconds</o>
+<t>Alla moduler till %s aktiverade på %3.1f sekunder</t>
+</str>
