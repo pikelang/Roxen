@@ -32,7 +32,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/color.pike foreign_ident
 /server/base_server/config/draw_things.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
-/server/base_server/db.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/dummy_hosts.pike foreign_ident
 /server/base_server/hosts.pike foreign_ident

@@ -297,8 +297,10 @@ string describe_global_debug(object node)
 	col="white";
       if((foo[f]-last_usage[f]) < 0)
 	col="#44ff55";
-      res += "<tr bgcolor="+bg+"><td align=right><b><font color="+col+">"
-	+(foo[f]/1024)+"</font></b></td><td align=right><b><font color="+col+">"+((foo[f]-last_usage[f])/1024)+"</font></b><br></td>";
+      res += sprintf("<tr bgcolor="+bg+"><td align=right><b><font "
+		     "color="+col+">%.1f</font></b></td><td align=right>"
+		     "<b><font color="+col+">%.1f</font></b><br></td>",
+		     (foo[f]/1024.0),((foo[f]-last_usage[f])/1024.0));
     }
   last_usage=foo;
   res+="</table></td></tr></table>";
