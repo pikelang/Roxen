@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.20 2004/10/01 14:11:10 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.21 2004/10/01 14:30:28 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -582,7 +582,7 @@ class TagEmitTimeRange
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
-        if(from->calendar() != Calendar.ISO){
+        if(cal_type != "ISO" && query("calendar") != "ISO"){
           weekday_needed = search(gregorian_weekdays,what)+1;
 	}
         else
@@ -604,9 +604,9 @@ class TagEmitTimeRange
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
-	if(to->calendar() != Calendar.ISO)
+	if(cal_type != "ISO" && query("calendar") != "ISO") {
 	  weekday_needed = search(gregorian_weekdays,what)+1;
-	else
+	} else
 	  weekday_needed = search(iso_weekdays,what)+1;
 
 	if (weekday < weekday_needed)
