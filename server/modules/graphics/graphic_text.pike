@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.224 2000/03/21 21:13:20 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.225 2000/03/25 02:30:19 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -365,21 +365,32 @@ opaque=70</gtext>
  Sets the vertical spacing.
 </attr>";
 constant tagdoc=([
-"anfang":#"<desc cont></desc>"+gtextargs,
+"anfang":#"<desc cont></desc> 
+<ex type=vert><anfang crop=\"\">This is a beginning<br />
+of a very short text,<br />
+and here it ends.</ex>
+<noex>"+gtextargs+"</noex>",
 
-"gh":#"<desc cont></desc>"+gtextargs,
+"gh":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh1":#"<desc cont></desc>"+gtextargs,
+"gh1":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh2":#"<desc cont></desc>"+gtextargs,
+"gh2":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh3":#"<desc cont></desc>"+gtextargs,
+"gh3":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh4":#"<desc cont></desc>"+gtextargs,
+"gh4":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh5":#"<desc cont></desc>"+gtextargs,
+"gh5":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
-"gh6":#"<desc cont></desc>"+gtextargs,
+"gh6":#"<desc cont></desc>
+<noex>"+gtextargs+"</noex>",
 
 "gtext":#"<desc cont>
  Renders a GIF image of the contents.
@@ -467,7 +478,8 @@ constant tagdoc=([
 
 <attr name=short>
 
-</attr>"+gtextargs,]);
+</attr>
+<noex>"+gtextargs+"</noex>",]);
 #endif
 
 
