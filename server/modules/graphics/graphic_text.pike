@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.64 1997/09/03 12:11:12 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.65 1997/09/03 18:49:27 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -808,8 +808,12 @@ void restore_cached_args()
       cached_args |= decode_value(data);
     };
   }
-  if(cached_args && sizeof(cached_args))
+  if (cached_args && sizeof(cached_args)) {
     number = sort(indices(cached_args))[-1]+1;
+  } else {
+    cached_args = ([]);
+    number = 0;
+  }
 }
 
 void save_cached_args()
