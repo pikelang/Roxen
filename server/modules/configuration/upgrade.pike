@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.20 2000/02/25 00:00:14 js Exp $
+ * $Id: upgrade.pike,v 1.21 2000/03/13 06:22:38 per Exp $
  *
  * The Roxen Upgrade Client
  * Copyright © 2000, Roxen IS.
@@ -24,14 +24,14 @@ object db;
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
-constant pkgdir = "../packages";  /* FIXME: Make user configurable */
+constant pkgdir = "../local/packages";  /* FIXME: Make user configurable */
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
 int inited;
 void post_start()
 {
-  catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
+  catch(db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"));
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
@@ -61,9 +61,11 @@ void stop()
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
-  defvar("yabudir", "../upgrade_data/", "Database directory",
-	 TYPE_DIR, ""); /* Keep this in server and regenerate on upgrade */
-  /*  defvar("pkgdir", "../packages/", "Database directory",
+  defvar("yabudir", "$VVARDIR/upgrade_data/", "Database directory",
+	 TYPE_DIR, ""); 
+  /* Keep this in server and regenerate on upgrade */
+
+  /*  defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
       TYPE_DIR, "");*/
   defvar("server", "community.roxen.com", "Server host",
 	 TYPE_STRING, "");
@@ -216,7 +218,7 @@ string container_upgrade_download_progress_output(string t, mapping m,
 string container_upgrade_downloaded_packages_output(string t, mapping m,
 					    string c, RequestID id)
 {
-  array(int) packages=sort((array(int))glob("*.tar",get_dir(pkgdir)));
+  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(pkgdir)));
   array res=({ });
 
   foreach(packages, int package)
@@ -234,10 +236,10 @@ string container_upgrade_downloaded_packages_output(string t, mapping m,
 
 string|void unpack_file(Stdio.File from, string to)
 {
-  string prefix=combine_path(getcwd(),"..");
-  if(file_stat(prefix+to))
+  string prefix="../";
+  if(r_file_stat(prefix+to))
   {
-    if(!mv(prefix+to,prefix+to+"~"))
+    if(!r_mv(prefix+to,prefix+to+"~"))
       throw(sprintf("Could not move %s to %s.\n",prefix+to,prefix+to+"~"));
   }
   else
@@ -250,7 +252,7 @@ string|void unpack_file(Stdio.File from, string to)
 
   mixed err=catch
   {
-    if(catch(f=Stdio.File(prefix+to,"wc")))
+    if(!(f=open(prefix+to,"wc")))
       throw(sprintf("Could not open %s for writing.",
 		    prefix+to));
 
@@ -266,12 +268,12 @@ string|void unpack_file(Stdio.File from, string to)
   if(err)
   {
     catch(f->close());
-    rm(prefix+to);
-    mv(prefix+to+"~", prefix+to);
+    r_rm(prefix+to);
+    r_mv(prefix+to+"~", prefix+to);
     throw(err);
   }
 
-  rm(prefix+to+"~");
+  r_rm(prefix+to+"~");
   return "Wrote "+prefix+to+".";
 }
 
@@ -420,7 +422,7 @@ mapping get_headers()
 
 int completely_downloaded(int num)
 {
-  array stat=file_stat(pkgdir+num+".tar");
+  array stat=r_file_stat(pkgdir+num+".tar");
 
   return (stat && stat[1]==pkginfo[(string)num]->size);
 }
@@ -471,7 +473,7 @@ class GetPackage
     {
       report_error("Upgrade: Failed to write package to file: "+
 		   pkgdir+num+".tar\n");
-      catch(rm(pkgdir+num+".tar"));
+      catch(r_rm(pkgdir+num+".tar"));
       catch(m_delete(package_downloads, num));
       return;
     }
