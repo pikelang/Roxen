@@ -79,4 +79,8 @@ void run(object env)
   /* AIX */
   if(file_stat(jrehome+"/bin/libjava.a"))
     env->append("LIBPATH", jrehome+"/bin/:"+jrehome+"/bin/classic/" );
+
+  //  Only add _JAVA_OPTIONS if user hasn't got it already
+  if (!env->get("_JAVA_OPTIONS"))
+    env->set("_JAVA_OPTIONS", "\"-Xmx256m\"");
 }
