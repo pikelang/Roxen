@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.78 2000/02/23 01:35:38 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.79 2000/02/24 04:41:27 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -447,7 +447,7 @@ private string dec(mapping m, RequestID id)
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 {
-  string tmp="";
+  string err="";
   if(m->src)
   {
     string file;
@@ -460,16 +460,17 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 	m->height=(string)xysize[1];
       }
       else
-	tmp+=" Dimensions quering failed.";
+	err+=" Dimensions quering failed.";
     }
     else
-      tmp+=" Virtual path failed";
+      err+=" Virtual path failed";
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    return ({ make_tag("img", m)+(tmp?rxml_error(tag, tmp, id):"") });
+    if(err && !m->quiet) RXML.run_error(err);
+    return ({ make_tag("img", m) });
   }
   RXML.parse_error("No src given.\n");
 }
@@ -638,12 +639,6 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   RXML.parse_error(ret);
 }
 
-//FIXME: Broken.
-string|array(string) tag_configurl(string tag, mapping m, RequestID id)
-{
-  return ({ roxen->config_url() });
-}
-
 string tag_return(string tag, mapping m, RequestID id)
 {
   int c=(int)m->code;
@@ -789,10 +784,16 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
 	  });
 }
 
-array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
-{
-  id->misc->cacheable = (int)m->time;
-  return ({ "" });
+class TagSetMaxCache {
+  inherit RXML.Tag;
+  constant name = "set-max-cache";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      id->misc->cacheable = time_dequantifier(args);
+    }
+  }
 }
 
 
@@ -858,7 +859,7 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 array(string) container_cache(string tag, mapping args,
                               string contents, RequestID id)
 {
-#define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
+#define HASH(x) (x+id->not_query+id->query+id->realauth+id->conf->query("MyWorldLocation"))
   string key="";
   if(!args->nohash) {
 #if constant(Crypto.md5)
@@ -875,7 +876,7 @@ array(string) container_cache(string tag, mapping args,
   string parsed = cache_lookup("tag_cache", key);
   if(!parsed) {
     parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, parsed, (int)args->timeout);
+    cache_set("tag_cache", key, parsed, time_dequantifier(args));
   }
   return ({parsed});
 #undef HASH
@@ -1394,8 +1395,10 @@ string container_repeat(string tag, mapping m, string c, RequestID id)
     if(id->misc->leave_repeat!=exit)
       ret+=iter;
   }
+
   if(loop==maxloop)
-    return ret+rxml_error(tag, "Too many iterations ("+maxloop+").", id);
+    RXML.run_error("Too many iterations ("+maxloop+").");
+
   return ret;
 }
 
@@ -1573,7 +1576,10 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  normal Roxen memory cache.</short> They key used to store the cached
  contents is the MD5 hash sum of the contents, the accessed file name,
  the query string, the server URL and the authentication information,
- if available. This should create an unique key.
+ if available. This should create an unique key. The time during which the
+ entry should be considered valid can set with one or several time attributes.
+ If not provided the entry will be removed from the cache when it has
+ been untouched for too long.
 </desc>
 
 <attr name=key value=string>
@@ -1581,10 +1587,33 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  risk of incorrect caching. This shouldn't really be needed.
 </attr>
 
-<attr name=timeout value=int>
- Set the number of seconds a cache entry should be valid. If not provided
- the entry will be removed from the cache when it has beem untouched for
- too long.
+<attr name=nohash>
+ The cached entry will use only the provided key as cache key.
+</attr>
+
+<attr name=years value=number>
+ Add this number of years to the time this page was last loaded.
+</attr>
+<attr name=months value=number>
+ Add this number of months to the time this page was last loaded.
+</attr>
+<attr name=weeks value=number>
+ Add this number of weeks to the time this page was last loaded.
+</attr>
+<attr name=days value=number>
+ Add this number of days to the time this page was last loaded.
+</attr>
+<attr name=hours value=number>
+ Add this number of hours to the time this page was last loaded.
+</attr>
+<attr name=beats value=number>
+ Add this number of beats to the time this page was last loaded.
+</attr>
+<attr name=minutes value=number>
+ Add this number of minutes to the time this page was last loaded.
+</attr>
+<attr name=seconds value=number>
+ Add this number of seconds to the time this page was last loaded.
 </attr>",
 
 "catch":#"<desc cont><short>
@@ -2270,7 +2299,28 @@ Adds a cookie named \"name\" with the value \"value\".
  normal tags will override this value.</p>
 </desc>
 
-<attr name=time value=number of seconds>
+<attr name=years value=number>
+ Add this number of years to the time this page was last loaded.
+</attr>
+<attr name=months value=number>
+ Add this number of months to the time this page was last loaded.
+</attr>
+<attr name=weeks value=number>
+ Add this number of weeks to the time this page was last loaded.
+</attr>
+<attr name=days value=number>
+ Add this number of days to the time this page was last loaded.
+</attr>
+<attr name=hours value=number>
+ Add this number of hours to the time this page was last loaded.
+</attr>
+<attr name=beats value=number>
+ Add this number of beats to the time this page was last loaded.
+</attr>
+<attr name=minutes value=number>
+ Add this number of minutes to the time this page was last loaded.
+</attr>
+<attr name=seconds value=number>
  Add this number of seconds to the time this page was last loaded.
 </attr>",
 
