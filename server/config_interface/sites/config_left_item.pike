@@ -203,7 +203,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
 	pre += "\n</js-popup>\n";
       }
-      pre += "</font></td></tr>";
+      pre += "</td></tr>";
     }
     if( fin )
       pre += "</table></td></tr>";
