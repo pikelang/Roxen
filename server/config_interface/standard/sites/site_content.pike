@@ -316,7 +316,8 @@ string parse( RequestID id )
 
   Configuration conf = roxen->find_configuration( path[0] );
 
-  if( !conf->inited ) conf->enable_all_modules();
+  if( !conf->inited )
+    conf->enable_all_modules();
 
   id->misc->current_configuration = conf;
 
