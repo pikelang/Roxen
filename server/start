@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.179 2001/08/14 09:45:00 stewa Exp $
+# $Id: start,v 1.180 2001/09/04 12:37:27 hop Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -176,6 +176,9 @@ parse_args() {
   ;;
   '--with-security'|'--enable-security')
     DEFINES="$DEFINES -DSECURITY"
+  ;;
+  '--with-snmp-agent'|'--enable-snmp-agent')
+    DEFINES="$DEFINES -DSNMP_AGENT"
   ;;
 
   '--debug'|'--with-debug'|'--enable-debug')
@@ -400,6 +403,8 @@ the default arguments.
 				  truss -c, shows times for all system calls
                                   on exit. This is not intented for anything
                                   but debug. Slows the server down.
+
+      .B--with-snmp-agentB.:          Enable internal SNMP agent code.
 
   .BArguments passed to pike:B.
 
