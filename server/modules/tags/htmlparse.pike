@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.98 1998/05/12 23:09:54 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.99 1998/05/13 06:42:25 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -406,13 +406,11 @@ string call_container(string tag, mapping args, string contents, int line,
 string do_parse(string to_parse, object id, object file, mapping defines,
 		object my_fd)
 {
-  id->misc->_tags = copy_value(tag_callers[0]);
-  id->misc->_containers = copy_value(container_callers[0]);
-
-  /* Heavy magic in progress. */
-  to_parse=parse_html_lines(to_parse, id->misc->_tags, id->misc->_containers, 
-
-			    0, id, file, defines, my_fd);
+  to_parse =
+    parse_html_lines(to_parse, 
+		     (id->misc->_tags=copy_value(tag_callers[0])), 
+		     (id->misc->_containers=copy_value(container_callers[0])),
+		     0, id, file, defines, my_fd);
   for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse, tag_callers[i], container_callers[i],
 			      i, id, file, defines, my_fd);
@@ -823,21 +821,54 @@ string tag_append( string tag, mapping m, object id )
 string tag_use(string tag, mapping m, object id)
 {
   mapping res = ([]);
-  if(!m->file) return "Please specify a file to use";
-  if(id->pragma["no-cache"] || 
-     !(res = cache_lookup("macrofiles", m->file)))
+  object nid = id->clone_me();
+  nid->misc->tags = 0;
+  nid->misc->containers = 0;
+  nid->misc->defines = ([]);
+  nid->misc->_tags = 0;
+  nid->misc->_containers = 0;
+
+
+  if(m->packageinfo)
   {
-    object nid = id->clone_me();
-     nid->misc->tags = 0;
-     nid->misc->containers = 0;
-     nid->misc->defines = ([]);
-     nid->misc->_tags = 0;
-     nid->misc->_containers = 0;
-    // And now we do da magic trick.
-    string foo = nid->conf->try_get_file( m->file, nid );
+    string res ="<dl>";
+    foreach(get_dir("../rxml_packages"), string f)
+    {
+      string doc = "";
+      string data = Stdio.read_bytes("../rxml_packages/"+f);
+      sscanf(data, "%*sdoc=\"%s\"", doc);
+      parse_rxml(data, nid);
+      res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
+      array tags = indices(nid->misc->tags||({}));
+      array containers = indices(nid->misc->containers||({}));
+      if(sizeof(tags))
+	res += "defines the following tag"+
+	  (sizeof(tags)!=1?"s":"") +": "+
+	  String.implode_nicely( sort(tags) )+"<br>";
+      if(sizeof(containers))
+	res += "defines the following container"+
+	  (sizeof(tags)!=1?"s":"") +": "+
+	  String.implode_nicely( sort(containers) )+"<br>";
+    }
+    return res+"</dl>";
+  }
+
+
+  if(!m->file && !m->package) 
+    return "<use help>";
+  
+  if(id->pragma["no-cache"] || 
+     !(res = cache_lookup("macrofiles", (m->file || m->package))))
+  {
+    string foo;
+    if(m->file)
+      foo = nid->conf->try_get_file( m->file, nid );
+    else 
+      foo=Stdio.read_bytes("../rxml_packages/"+combine_path("/",m->package));
+      
     if(!foo)
       if(id->misc->debug)
-	return "Failed to fetch "+m->file;
+	return "Failed to fetch "+(m->file||m->package);
       else
 	return "";
     parse_rxml( foo, nid );
@@ -851,7 +882,7 @@ string tag_use(string tag, mapping m, object id)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
     m_delete(res->defines, "line");
-    cache_set("macrofiles", m->file, res);
+    cache_set("macrofiles", (m->file || m->package), res);
   }
 
   if(!id->misc->tags)
