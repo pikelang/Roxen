@@ -1,11 +1,11 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.1 1999/03/02 13:41:41 nisse Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.2 1999/03/02 17:57:53 nisse Exp $
  */
 
 inherit "wizard";
 
 import Standards.PKCS;
-import Standards.ASN1.Encode;
+import Standards.ASN1.Types;
 
 #if 0
 #define WERROR werror
@@ -33,10 +33,9 @@ constant action_disabled = 1;
 
 #else /* constant(_Crypto) && constant(Crypto.rsa) */
 
-// Change this page to generate the key...
 mixed page_0(object id, object mc)
 {
-  string msg;
+  string msg = "";
   
   if (id->variables->_error)
   {
@@ -45,7 +44,7 @@ mixed page_0(object id, object mc)
     id->variables->_error = 0;
   }
   
-  return (msg || "" )
+  return msg
     + ("<font size=+1>How large key do you want to generate?</font><p>"
        "<b>Key size</b><br>"
        "<var name=key_size type=int default=1031><br>\n"
@@ -66,7 +65,7 @@ mixed page_0(object id, object mc)
        "<blockquote>"
        "A filename in the real filesystem, where the secret key should "
        "be stored."
-       "</blockquote>"
+       "</blockquote>");
 }
 
 mixed verify_0(object id, object mc)
@@ -211,12 +210,14 @@ mixed page_2(object id, object mc)
 	  "A certificate includes a validity period. How many days, "
 	  "from now, do you want the certificate to be valid?"
 	  "</blockquote>"
-
+#if 0
 	  "<b>Certificate file</b><br>"
 	  "<var name=cert_file type=string default=my_cert.pem><br>\n"
 	  "<blockquote>"
 	  "A filename in the real filesystem, where the new "
-	  "certificate should be stored.");
+	  "certificate should be stored."
+#endif
+    );
 }
 
 mixed verify_2(object id, object mc)
@@ -229,6 +230,8 @@ mixed verify_2(object id, object mc)
 
   return 0;
 }
+
+object trim = Regexp("^[ \t]*([^ \t](.*[^ \t]|))[ \t]*$");
 
 mixed page_3(object id, object mc)
 {
@@ -282,7 +285,10 @@ mixed page_3(object id, object mc)
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
-      name += ({ ([ attr : asn1_utf8_string(attrs[attr]) ]) });
+      /* UTF8String is the recommended type. But it seems that
+       * netscape can't handle that. So we use the older TeletexString
+       * type instead. */
+      name += ({ ([ attr : asn1_teletex_string(attrs[attr]) ]) });
   }
 
   /* Create a plain X.509 v1 certificate, without any extensions */
@@ -292,28 +298,67 @@ mixed page_3(object id, object mc)
   string res=("<font size=+2>This is your Certificate.</font>"
 	      "<textarea name=certificate cols=80 rows=12>");
 
-  res += (re=Tools.PEM.simple_build_pem("CERTIFICATE", cert));
+  res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
   
   res += "</textarea>";
   
   res += "<p>";
-  
-  res += ("<p><font size=+1><var type=checkbox name=save default=foo></font>"
+
+  /* FIXME: How to make the checkbox checked by default? */
+  res += ("<p><font size=+1>"
+	  "<var type=checkbox name=save checked></font>"
           "<b>Save the request in a file:</b><br>"
-          "<blockquote><b>Filename</b><br><var type=string name=cert_file>"
+          "<blockquote><b>Filename</b><br>"
+	  "<var type=string name=cert_file default=my_certificate.pem>"
 	  "</blockquote>");
 
   return res;
 }
 
-mapping wizard_done( object id )
+#if 0
+mixed page_4(object id, object mc)
 {
-  werror("save = %O\n", id->variables->save);
-  if(id->variables->send[0]=='o')
+  string msg = "";
+  
+  if (id->variables->_error)
+  {
+    msg = "<font color=red>" + id->variables->_error
+      + "</font><p>";
+    id->variables->_error = 0;
+  }
+  
+  return msg
+    + ("Do you want to store the certificate in a file? ");
+}
+#endif
+
+mixed verify_3(object id, object mc)
+{
+  // werror("save = %O\n", id->variables->save);
+  if (sizeof(id->variables->save && id->variables->cert_file))
   {
     object file = Stdio.File();
-    file->open(id->vari
+    if (!file->open(id->variables->cert_file, "wct"))
+    {
+      /* FIXME: Should we use a verify function, to get
+       * better error handling? */
+      id->variables->_error =
+	"Could not open certificate file: "
+	+ (strerror(file->errno()) || (string) file->errno())
+	+ ".";
+      return 1;
+    }
+    if (file->write(id->variables->certificate)
+	!= strlen(id->variables->certificate))
+    {
+      id->variables->_error =
+	"Write failed: "
+	+ (strerror(file->errno()) || (string) file->errno())
+	+ ".";
+      return 1;
+    }
   }
+  return 0;
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
