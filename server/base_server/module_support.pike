@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.99 2001/08/23 19:13:57 mast Exp $
+// $Id: module_support.pike,v 1.100 2001/08/23 19:30:27 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -98,12 +98,13 @@ class BasicModule
   constant is_module = 1;
   constant faked = 1;
   static Configuration _my_configuration;
+  static string _module_local_identifier;
   static string _module_identifier =
     lambda() {
       mixed init_info = roxenp()->bootstrap_info->get();
       if (arrayp (init_info)) {
-	[_my_configuration, string modname] = init_info;
-	return _my_configuration->name + "/" + modname;
+	[_my_configuration, _module_local_identifier] = init_info;
+	return _my_configuration->name + "/" + _module_local_identifier;
       }
     }();
 
@@ -114,6 +115,7 @@ class BasicModule
 
   string file_name_and_stuff() { return ""; }
   string module_identifier() {return _module_identifier;}
+  string module_local_id() {return _module_local_identifier;}
   Configuration my_configuration() { return _my_configuration; }
   nomask void set_configuration(Configuration c)
   {
@@ -135,9 +137,6 @@ class BasicModule
   string comment() { return ""; }
   array query_seclevels() { return ({}); }
   mapping api_functions() { return ([]); }
-
-  object/*(RXML.TagSet)*/ query_tag_set()
-    {return master()->resolv("RXML.empty_tag_set");}
 }
 
 class FakeModuleInfo( string sname )
