@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.62 2001/08/05 15:49:31 grubba Exp $
+ * $Id: ftp.pike,v 2.63 2001/08/15 10:44:32 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -84,7 +84,7 @@
 
 //#define FTP2_DEBUG
 
-#define FTP2_XTRA_HELP ({ "Report any bugs to roxen-bugs@roxen.com." })
+#define FTP2_XTRA_HELP ({ "Report any bugs to bugs@roxen.com." })
 
 #define FTP2_TIMEOUT	(5*60)
 
