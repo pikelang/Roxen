@@ -138,7 +138,7 @@ e</result>
 
 <test>
 <rxml><set>hej</set></rxml>
-<result>[Error (parse): No variable specified.]</result>
+<result>[Error (parse): Required argument variable is missing.]</result>
 </test>
 
 <test>
