@@ -138,9 +138,6 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
-// #ifndef THREADS
-//     object privs=Privs(LOCALE->replacing_supports());
-// #endif
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new, 0660);
     old = Stdio.read_bytes( "etc/supports" );
@@ -149,13 +146,7 @@ void done_with_roxen_com()
     {
       perror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
-// #ifndef THREADS
-//       privs = 0;
-// #endif
     } else {
-// #ifndef THREADS
-//       privs = 0;
-// #endif
       initiate_supports();
     }
   }
