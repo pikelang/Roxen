@@ -1,4 +1,4 @@
-/* $Id: persistent.pike,v 1.28 1997/05/28 01:45:06 per Exp $ */
+/* $Id: persistent.pike,v 1.29 1997/08/02 15:21:17 marcus Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -63,7 +63,7 @@ static void compat_persist()
   catch
   {
     object file;
-    if(!file=open(COMPAT_DIR+_id, "r")) return 0;
+    if(!(file=open(COMPAT_DIR+_id, "r"))) return 0;
     perror("compat restore ("+ _id +")\n");
     var=decode_value(tmp=file->read(0x7ffffff));
   };
