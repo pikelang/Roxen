@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.336 2002/01/08 17:42:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.337 2002/01/30 00:38:24 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -354,6 +354,7 @@ class TagExpireTime {
       }
 
       Roxen.add_http_header(_extra_heads, "Expires", Roxen.http_date(t));
+      RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + ([]));
       return 0;
     }
   }
@@ -382,6 +383,7 @@ class TagHeader {
 	args->value = "<" + args->value + ">";
 
       Roxen.add_http_header(_extra_heads, args->name, args->value);
+      RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + ([]));
       return 0;
     }
   }
