@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.17 1997/03/12 19:38:29 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.18 1997/03/13 01:13:22 kg Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1155,7 +1155,7 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   {
     string v, name, value;
     foreach(q/"&", v)
-      if(sscanf(q, "%s=%s", name, value))
+      if(sscanf(v, "%s=%s", name, value))
 	fake_id->variables[http_decode_string(name)]=value;
     fake_id->query=q;
   }
