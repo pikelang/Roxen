@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: read_config.pike,v 1.65 2004/06/30 16:58:39 mast Exp $
+// $Id: read_config.pike,v 1.66 2004/08/18 17:33:51 mast Exp $
 
 #include <module.h>
 
@@ -185,31 +185,24 @@ mapping read_it(string cl)
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
 #endif
-  mixed err;
-  string try_read( string f )
-  {
-    Stdio.File fd;
-    err = catch
-    {
-      fd = open(f, "r");
-      if( fd )
-      {
-        string data =  fd->read();
-        if( strlen( data ) )
-        {
-          config_stat_cache[cl] = fd->stat();
-	  fd->close();
-          return data;
-        }
-	fd->close();
-      }
-    };
-  };
 
   string base = configuration_dir + replace(cl, " ", "_");
-  foreach( ({ base }), string attempt )
-    if( string data = try_read( attempt ) )
-      return decode_config_file( data );
+  Stdio.File fd;
+  mixed err = catch {
+    fd = open(base, "r");
+    if( fd )
+    {
+      string data = fd->read();
+      if( strlen( data ) )
+      {
+	config_stat_cache[cl] = fd->stat();
+	fd->close();
+	return decode_config_file( data );
+      }
+    }
+  };
+
+  catch (fd->close());
 
   if (err) {
     string backup_file;
@@ -222,8 +215,7 @@ mapping read_it(string cl)
 		 "You can try it instead by moving it to the original name. " : "",
 		 describe_backtrace(err));
   }
-//else
-//  report_error( "Failed to read configuration file for %O\n", cl );
+
   return ([]);
 }
 
@@ -256,13 +248,21 @@ void remove_configuration( string name )
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+f+"\n");
 #endif
-  catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
-  catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
-  catch(rm( f ));
-  last_read = 0; last_data = 0;
 
-  if( file_stat( f ) )
-    error("Failed to remove configuration file ("+f+")!\n");
+  rm (f + "~2~");
+  if( file_stat(f+"~") && !mv(f+"~", f+"~2~") )
+    rm( f+"~" ); // no error needed here, really...
+
+  if( file_stat(f) && !mv(f, f+"~") ) {
+    report_warning("Failed to move current config file (" + f + ") "
+		   "to backup file (" + f + "~)"
+		   " (" + strerror (errno()) + ")\n");
+    if (file_stat (f) && !rm (f))
+      error ("Failed to remove config file (" + f + ") "
+	     "(" + strerror (errno()) + ")\n");
+  }
+
+  last_read = 0; last_data = 0;
 }
 
 void store( string reg, mapping vars, int q,
