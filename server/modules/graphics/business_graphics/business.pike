@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.51 1997/12/03 05:55:20 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.52 1997/12/03 11:00:28 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -551,7 +551,13 @@ int|object PPM(string fname, object id)
     };
   }
   if(q)
-    return image()->fromppm(q);
+    {
+      object foo;
+      if (catch{foo=image()->fromppm(q);})
+	return 1;
+      else
+	return foo;
+    }
   else
     return 1;
 }
@@ -587,14 +593,24 @@ mapping find_file(string f, object id)
   {
     m_delete( res, "bg" );
     res->image = PPM(res->image, id);
+
+    /* Image was not found or broken */
+    if(res->image == 1) 
+      {
+	res->image=get_font("avant_garde", 24, 0, 0,"left", 0, 0);
+	if (!(res->image))
+	  throw(({"Missing font or similar error!\n", backtrace() }));
+	res->image=res->image->
+	  write("The file was","not found ",
+		"or was not a","ppm-picture.  ");
+      }
   } else if(res->tunedbox) {
     m_delete( res, "bg" );
     res->image = image(res->xsize, res->ysize)->
       tuned_box(0, 0, res->xsize, res->ysize, res->tunedbox);
   }
 
-  /* Image was not found or broken */
-  if(res->image == 1) m_delete( res, "image" );
+
   if(res->xstart > res->xstop) m_delete( res, "xstart" );
   if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
@@ -661,14 +677,21 @@ mapping find_file(string f, object id)
 
   if(res->type == "pie")
     img = create_pie(diagram_data)["image"];
+  else
+    if(res->type == "bars" || res->type == "sumbars")
+      img = create_bars(diagram_data)["image"];
+    else
+      if(res->type == "graph")
+	img = create_graph(diagram_data)["image"];
+  
+  //img = img->map_closest(img->select_colors(254)+({ back }));
 
-  if(res->type == "bars" || res->type == "sumbars")
-    img = create_bars(diagram_data)["image"];
-
-  if(res->type == "graph")
-    img = create_graph(diagram_data)["image"];
-
-  img = img->map_closest(img->select_colors(254)+({ back }));
-
-  return http_string_answer(img->togif(@back), "image/gif");  
+  if (res->image)
+    return http_string_answer(Image.GIF.encode(img,
+					       Image.colortable(6,7,6)->
+					       floyd_steinberg(), 
+					       @back), "image/gif");  
+  else
+    return http_string_answer(Image.GIF.encode(img,
+					       @back), "image/gif");      
 }
