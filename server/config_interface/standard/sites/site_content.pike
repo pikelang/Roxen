@@ -4,22 +4,24 @@ inherit "../logutil.pike";
 #include <module_constants.h>
 #include <config_interface.h>
 #include <config.h>
+#include <roxen.h>
+#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
 
 string module_global_page( RequestID id, string conf )
 {
   if( config_perm("Add Module") )
     return sprintf("<gbutton preparse='' "
-                   "href='../../../add_module.pike?config=%s'> "
-                   "&locale.add_module; </gbutton>",
+                   "href='../../../add_module.pike?config=%s'> "+
+                   LOCALE("", "Add Module")+"</gbutton>",
                    http_encode_string( conf ) )+
            sprintf("<gbutton preparse='' "
-                   "href='../../../drop_module.pike?config=%s'> "
-                   "&locale.drop_module; </gbutton>",
+                   "href='../../../drop_module.pike?config=%s'> "+
+                   LOCALE("", "Drop Module")+"</gbutton>",
                    http_encode_string( conf ) );
   return "";
 }
 
-#define translate( X ) _translate( (X), id )
+#define TRANSLATE( X ) _translate( (X), id )
 
 string _translate( mixed what, RequestID id )
 {
@@ -153,7 +155,7 @@ string buttons( Configuration c, string mn, RequestID id )
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
-    if( a == parse_rxml( "&locale.reload;",id ) )
+    if( a == LOCALE("", "Reload") )
     {
       object ec = roxenloader.LowErrorContainer(), nm;
 
@@ -174,7 +176,7 @@ string buttons( Configuration c, string mn, RequestID id )
         m_delete(current_compile_errors, mn );
       }
     }
-    else if( a == parse_rxml( "&locale.clear_log;",id ) )
+    else if( a == LOCALE("", "Clear Log") )
     {
       array(int) times, left;
       Configuration conf = mod->my_configuration();
@@ -226,16 +228,16 @@ string buttons( Configuration c, string mn, RequestID id )
 		    "</pre></font>" : "" )
     + "<input type=hidden name=section value='" +
     (id->variables->section||"Information") + "'>" +
-    "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
+    "<submit-gbutton preparse>"+LOCALE("", "Reload")+"</submit-gbutton>"+
     (sizeof( mod->error_log ) ?
-     "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":"");
+     "<submit-gbutton preparse>"+LOCALE("", "Clear Log")+"</submit-gbutton>":"");
 
   if(mod->query_action_buttons)
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
   return buttons + "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
-    "'><gbutton preparse>&locale.drop_module;</gbutton></a>";
+    "'><gbutton preparse>"+LOCALE("", "Drop Module")+"</gbutton></a>";
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
@@ -253,7 +255,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   for(int i=0;i<sizeof(report);i++)
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, no_links);
-  return "<h2>&locale.eventlog;</h2>" + (report*"");
+  return "<h2>"+LOCALE("", "Events")+"</h2>" + (report*"");
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -288,7 +290,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons;
   if( config_perm( "Add Module" ) )
-    dbuttons = "<h2>&locale.actions;</h2>"+buttons( c, mn, id );
+    dbuttons = "<h2>"+LOCALE("", "Actions")+"</h2>"+buttons( c, mn, id );
   else
     dbuttons = "";
   RoxenModule m = c->find_module( replace(mn,"!","#") );
@@ -330,10 +332,10 @@ string find_module_doc( string cn, string mn, RequestID id )
 #endif
 
   return replace( "<br /><b><font size='+2'>"
-                  + EC(translate(m->register_module()[1])) +
+                  + EC(TRANSLATE(m->register_module()[1])) +
                   "</font></b><br />"
-                  + EC(translate(m->info())) + "</p><p>"
-                  + EC(translate(m->status()||"")) + "</p><p>"
+                  + EC(TRANSLATE(m->info())) + "</p><p>"
+                  + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + eventlog + dbuttons +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
@@ -349,7 +351,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    "<tr><td valign='top'><b>Type:</b> </td><td "
                     "valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br />\n" +
-                    EC(translate(m->file_name_and_stuff())) +
+                    EC(TRANSLATE(m->file_name_and_stuff())) +
 		    homepage + creators + "<h1>Inherit tree</h1>"+
                     program_info( m ) +
                     "<dl>" + 
@@ -368,7 +370,7 @@ string initial_vars( RequestID id, string conf, array(string) modules )
   array(string) rets=({});
   foreach(modules, string module) {
     RoxenModule m = c->find_module( replace(module, "!", "#") );
-    rets+=({ "Initial variables for "+ EC(translate(m->register_module()[1])) + ":<br /><br />" +
+    rets+=({ "Initial variables for "+ EC(TRANSLATE(m->register_module()[1])) + ":<br /><br />" +
  #"<nooutput>
   This is necessary to update all the variables before showing them.
   <configif-output source=module-variables configuration=\""+
@@ -464,21 +466,21 @@ string parse( RequestID id )
        {
 	 if(search(url, "*")==-1)
            res += "<a target='server_view' href='"+url+"'>"+
-	     url+"</a> "+port_for(url)+"<br/>\n";
+	     url+"</a> "+port_for(url)+"<br />\n";
 	 else if( sizeof( url/"*" ) == 2 )
 	   res += "<a target='server_view' href='"+replace(url, "*", gethostname() )+"'>"+
                url+"</a> "+port_for(url)+"<br />\n";
          else
 	   res += url + " "+port_for(url)+"<br />\n";
        }
-       res+="<h1>&locale.eventlog;</h1><insert file='log.pike' nocache>";
+       res+="<h1>"+LOCALE("", "Events")+"</h1><insert file='log.pike' nocache='' />";
 
-       res +="<h1>Request status</h1>";
+       res +="<h1>"+LOCALE("", "Request status")+"</h1>";
        res += conf->status();
 
        if( id->misc->config_settings->query( "devel_mode" ) )
        {
-         res += "<h1>Inherit tree</h1>";
+         res += "<h1>"+LOCALE("", "Inherit tree")+"</h1>";
          res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
        }
        return res+"<br />\n";
@@ -488,17 +490,17 @@ string parse( RequestID id )
     {
      case "settings":
        return
-#"<configif-output source='config-variables' configuration=\""+
-path[ 0 ]+#"\" section=\"&form.section;\"></configif-output>"+#"
-<input type=hidden name=section value=\"&form.section;\">
-<table>
-  <configif-output source='config-variables' configuration=\""+
-path[ 0 ]+#"\" section=\"&form.section;\">
-    <tr><td width='20%'><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan='2'>#doc:quote=none#<p>#type_hint#</td></tr>
-   </configif-output>
-  </table>
-   <cf-save what='Site'/>";
+	 "<configif-output source='config-variables' configuration=\""+
+	 path[ 0 ]+"\" section=\"&form.section;\"></configif-output>\n"+
+	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
+	 "<table>\n"
+	 "  <configif-output source='config-variables' configuration=\""+
+	 path[ 0 ]+"\" section=\"&form.section;\">\n"
+	 "    <tr><td width='20%'><b>#name#</b></td><td>#form:quote=none#</td></tr>\n"
+	 "    <tr><td colspan='2'>#doc:quote=none#<p>#type_hint#</td></tr>\n"
+	 "   </configif-output>\n"
+	 "  </table>\n"
+	 "   <cf-save what='Site'/>";
        break;
 
      case "modules":

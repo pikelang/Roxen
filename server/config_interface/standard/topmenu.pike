@@ -1,20 +1,22 @@
 #include <config_interface.h>
-inherit "roxenlib";
+#include <roxen.h>
+LOCALE_PROJECT(config_interface);
+#define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
 
-constant tablist = #"<tablist preparse ::=&usr.toptabs-args;>";
+constant tablist = "<tablist preparse ::=&usr.toptabs-args;>";
 
-constant selections =
+array selections =
 ({
-  ({ "configiftab",    "home",  "",               0 }),
-  ({ "sites",       "sites",  "sites/",           0 }),
-  ({ "globals",   "globals",  "global_settings/", 0 }),
-  ({ "ports",       "ports",  "ports/",           0 }),
-  ({ "eventlog","event_log",  "event_log/",       0 }),
-  ({ "actions",   "actions",  "actions/",   "Tasks" }),
-  ({ "docs",   "docs",  "docs/",   0 }),
+  ({ LOCALE("", "Admin"),   "home",      "",                 0 }),
+  ({ LOCALE("", "Sites"),   "sites",     "sites/",           0 }),
+  ({ LOCALE("", "Globals"), "globals",   "global_settings/", 0 }),
+  ({ LOCALE("", "Ports"),   "ports",     "ports/",           0 }),
+  ({ LOCALE("", "Events"),  "event_log", "event_log/",       0 }),
+  ({ LOCALE("", "Tasks"),   "actions",   "actions/",   "Tasks" }),
+  ({ LOCALE("", "Docs"),    "docs",      "docs/",            0 }),
 });
 
-string parse( object id )
+string parse( RequestID id )
 {
   string res = tablist;
   foreach( selections, array t )
@@ -25,7 +27,7 @@ string parse( object id )
       a->href = id->misc->last_tag_args->base + t[2];
       if( id->misc->last_tag_args->selected == t[1] )
         a->selected = "selected";
-      res += make_container( "tab", a, " &locale."+t[0]+"; " );
+      res += Roxen.make_container( "tab", a, " "+t[0]+" " );
     }
   }
   return res+"</tablist>";
