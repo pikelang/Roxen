@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.22 2001/10/08 08:23:39 per Exp $
+ * $Id: resolv.pike,v 1.23 2001/10/29 10:37:05 grubba Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -229,10 +229,15 @@ string parse( RequestID id )
       mixed q = roxen->urls[u];
       if( glob( u+"*", id->variables->path ) )
       {
-        werror(id->variables->path +" matches "+u+"\n");
+        // werror(id->variables->path +" matches "+u+"\n");
         nid = id->clone_me();
         nid->raw_url = file;
         nid->not_query = (http_decode_string((file/"?")[0]));
+	string host;
+	sscanf(id->variables->path, "%*s://%[^/]", host);
+	if (host) {
+	  nid->misc->host = host;
+	}
         if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
         {
           nid->conf = c;
