@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.347 2002/10/23 14:59:30 nilsson Exp $
+// $Id: loader.pike,v 1.348 2002/10/23 16:28:15 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.347 2002/10/23 14:59:30 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.348 2002/10/23 16:28:15 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2123,7 +2123,7 @@ void do_main( int argc, array(string) argv )
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
 
-  // These are here to allow dumping of roxen.pike to a .o file.
+  // These are here to allow dumping of core.pike to a .o file.
   report_debug("Loading pike modules ... \b");
 
   add_dump_constant = new_master->add_dump_constant;

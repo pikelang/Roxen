@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.201 2002/10/23 14:59:02 nilsson Exp $
+# $Id: start,v 1.202 2002/10/23 16:22:51 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -297,11 +297,11 @@ parse_args() {
    if [ "x$passhelp" = "x1" ] ; then
      pass="$pass --version"
    else
-    if [ -f server_core/roxen.pike ]; then
+    if [ -f server_core/core.pike ]; then
       echo "ChiliMoon `roxen_version`"
       exit 0
     else
-      echo 'server_core/roxen.pike not found!'
+      echo 'server_core/core.pike not found!'
       exit 1
     fi
    fi
@@ -585,7 +585,7 @@ fi
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   if [ $verbose -gt 0 ]; then
-    dp "WARNING: Applying kludge for HPUX. (see server_core/roxen.pike)"
+    dp "WARNING: Applying kludge for HPUX. (see server_core/core.pike)"
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi

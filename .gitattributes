@@ -278,6 +278,7 @@ worldmap binary
 /server/server_core/basic_defvar.pike foreign_ident
 /server/server_core/cache.pike foreign_ident
 /server/server_core/configuration.pike foreign_ident
+/server/server_core/core.pike foreign_ident
 /server/server_core/disk_cache.pike foreign_ident
 /server/server_core/fonts.pike foreign_ident
 /server/server_core/global_variables.pike foreign_ident
@@ -291,7 +292,6 @@ worldmap binary
 /server/server_core/newdecode.pike foreign_ident
 /server/server_core/prototypes.pike foreign_ident
 /server/server_core/read_config.pike foreign_ident
-/server/server_core/roxen.pike foreign_ident
 /server/server_core/roxenlib.pike foreign_ident
 /server/server_core/rxml.pike foreign_ident
 /server/server_core/snmpagent.pike foreign_ident

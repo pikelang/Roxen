@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.96 2002/10/22 00:06:12 nilsson Exp $
+// $Id: global_variables.pike,v 1.97 2002/10/23 16:28:35 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -38,7 +38,7 @@ private string snmp_get_cif_domain() {
 // And why put these functions here, you might righfully ask.
 
 // The answer is that there is actually a reason for it, it's for
-// performance reasons. This file is dumped to a .o file, roxen.pike
+// performance reasons. This file is dumped to a .o file, core.pike
 // is not.
 void set_up_hilfe_variables( Protocol o )
 {
