@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.311 2003/04/23 12:56:29 mast Exp $
+// $Id: module.pmod,v 1.312 2003/05/06 12:09:07 anders Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2793,10 +2793,11 @@ constant FLAG_GET_EVALED_CONTENT = 0x00040000;
 constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! Keep this frame unevaluated in the p-code produced for a
 //! surrounding frame with @[FLAG_GET_EVALED_CONTENT]. That implies
-//! that all other surrounding frames also remain unevaluated, and
-//! this flag is therefore automatically propagated by the parser into
-//! surrounding frames. The flag is tested after the first evaluation
-//! of the frame has finished.
+//! that all other surrounding frames (that aren't cache static; see
+//! @[FLAG_IS_CACHE_STATIC]) also remain unevaluated, and this flag is
+//! therefore automatically propagated by the parser into surrounding
+//! frames. The flag is tested after the first evaluation of the frame
+//! has finished.
 
 constant FLAG_MAY_CACHE_RESULT	= 0x00100000;
 //! Mostly for internal use to flag that the result may be cached.
