@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.371 2000/09/18 23:47:12 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.372 2000/09/19 00:04:34 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -3085,11 +3085,14 @@ void create(string config)
 
 <body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
 
+<if nserious=''><set variable='var.404' value='-sorry' /></if>
+
 <table width=\"100%\"  border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
   <tr>
-    <td><img src=\"/internal-roxen-page-not-found\" border=\"0\" alt=\"Page not found\" hspace=\"2\" /></td>
+    <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
     <td>&nbsp;</td>
-    <td align=\"right\"><b>&roxen.version;</b></td>
+    <td align=\"right\"><font face=\"lucida,helvetica,arial\">
+      <b>Roxen WebServer &roxen.base-version;</b></font></td>
   </tr>
   <tr>
     <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
@@ -3102,9 +3105,9 @@ void create(string config)
 <blockquote>
 
 If you feel that this is a configuration error,
-please contact the administrators or the author
-of the
-<if referrer>
+please contact the administrators of this
+webserver or the author of the
+<if referrer=''>
 <a href=\"&client.referrer;\">referring</a>
 </if><else>
 referring
