@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.200 2000/09/23 02:40:42 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.201 2000/09/23 11:28:11 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1224,14 +1224,13 @@ void do_main( int argc, array(string) argv )
   {
     report_debug(
 #"
-------- WARNING -----------------------------------------
+------- WARNING -----------------------------------------------
 Roxen 2.0 requires bignum support in pike.
-Please recompile pike with gmp / bignum support
-to run Roxen.
+Please recompile pike with gmp / bignum support to run Roxen.
 
-It iMight still be possible to start roxen, but the 
-functionaly will be affected, and stange erros might occur.
-----------------------------------------------------------
+It might still be possible to start roxen, but the 
+functionality will be affected, and stange errors might occurr.
+---------------------------------------------------------------
 
 ");
   }
@@ -1257,8 +1256,8 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 2.0 requires pike 7.
-Please install a newer pike version
+Roxen 2.1 requires pike 7.
+Please install a newer version of Pike.
 ******************************************************
 
 
