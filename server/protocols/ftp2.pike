@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.63 1998/10/06 20:58:53 grubba Exp $
+ * $Id: ftp2.pike,v 1.64 1998/10/06 21:26:32 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -478,9 +478,9 @@ class LS_L
   
   static string name_from_uid(int uid)
   {
-    array(string) user = master_session->conf->auth_module &&
+    string user = master_session->conf->auth_module &&
       master_session->conf->auth_module->user_from_uid(uid);
-    return (user && user[0]) || (uid?((string)uid):"root");
+    return user || (uid?((string)uid):"root");
   }
 
   string ls_l(string file, array st)
@@ -500,22 +500,23 @@ class LS_L
       }
     }
   
-    mapping lt = localtime(st[-4]);
+    mapping lt = localtime(st[3]);
     if (!(flags & LS_FLAG_n)) {
-      if (!stringp(st[-2])) {
-	st[-2] = name_from_uid(st[-2]);
+      // Use symbolic names for uid and gid.
+      if (!stringp(st[5])) {
+	st[5] = name_from_uid(st[5]);
       }
     }
 
     if (flags & LS_FLAG_G) {
       // No group.
       return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[-2], (st[1]<0? 512:st[1]),
+		     (string)st[5], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     } else {
-      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[-2], st[-1], (st[1]<0? 512:st[1]),
+      return sprintf("%s   1 %-10s %-6s %12d %s %02d %02d:%02d %s\n", perm*"",
+		     (string)st[5], (string)st[6], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     }
