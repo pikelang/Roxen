@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.141 2004/05/13 18:11:06 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.142 2004/05/13 18:20:39 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1603,6 +1603,10 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     if (!source_file) {
       TRACE_LEAVE("Failed to open source file.");
       return Roxen.http_status(404);
+    }
+    // Workaround for Linux, Tru64 and FreeBSD not being POSIX.
+    if (has_suffix(dest_path, "/")) {
+      dest_path = dest_path[..sizeof(dest_path)-2];
     }
     object privs;
     SETUID_TRACE("COPY: Copying file.", 0);
