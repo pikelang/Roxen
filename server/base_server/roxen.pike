@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.6 1997/03/13 00:17:37 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.7 1997/03/13 01:19:37 kg Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -1402,7 +1402,7 @@ public mixed try_get_file(string s, object id, int|void status,
   {
     string v, name, value;
     foreach(q/"&", v)
-      if(sscanf(q, "%s=%s", name, value))
+      if(sscanf(v, "%s=%s", name, value))
 	fake_id->variables[http_decode_string(name)]=value;
     fake_id->query=q;
   }
@@ -1711,6 +1711,7 @@ void start(int num)
   init_log_file(current_configuration);
 
   map(indices(current_configuration->open_ports), do_dest);
+  current_configuration->open_ports = ([]);
 
   foreach(query("Ports"), port ) {
 #ifdef DEBUG
