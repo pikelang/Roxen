@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.134 2000/06/18 16:56:24 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.135 2000/06/20 13:56:34 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1548,6 +1548,15 @@ documentation for that module.</desc>",
 
 <attr name=value value=string>
  The value the variable should have appended.
+
+<ex>
+<define variable='var.ris'/>
+<append variable='var.ris' value='Roxen Internet Software'/>
+
+&var.ris;
+</ex>
+
+
 </attr>
 
 </attr name=from value=string>
@@ -2111,10 +2120,17 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 
 <attr name=variables>
  Inserts a variable listing.
+
 </attr>
 
 <attr name=scopes>
  Inserts a listing of all present scopes.
+
+<ex>
+<pre>
+<insert variables='full' scope='roxen'/>
+</pre>
+</ex>
 </attr>
 
 <attr name=file value=string>

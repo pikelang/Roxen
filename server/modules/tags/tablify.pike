@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.49 2000/06/09 13:35:02 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.50 2000/06/20 13:56:34 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -70,7 +70,10 @@ constant tagdoc=(["tablify":({#"<desc cont><short>Transforms texts into tables.<
 
 <attr name=cellvalign value=top|middle|bottom>
  Defines how the cell contents should be verically aligned.</attr>
- <attr name=width value=number>Defines the width of the table.
+
+<attr name=width value=number>
+ Defines the width of the table.
+
 <ex>
 <tablify cellseparator=','>
 Country, Population
@@ -130,8 +133,8 @@ Norway, 4 438 547
 Iceland, 272 512
 Finland, 5 158 372
 </tablify>
-</attr>
 </ex>
+</attr>
 <hr>
 
 <attr name=nicer>
