@@ -386,6 +386,18 @@ class ModuleWrapper
     check_exception();
   }
 
+  string get_inherit_tree()
+  {
+    object c;
+    array(string) tree = ({});
+    for(c=modobj->get_object_class(); c; c=c->super_class())
+      tree += ({ (string)c });
+    string res = "";
+    foreach(reverse(tree), string n)
+      res = "<dl><dt>"+replace(n, " ", "&nbsp;")+"</dt><dd>"+res+"</dd></dl>";
+    return res;
+  }
+
   string query_name()
   {
     object s = _query_name(modobj);
