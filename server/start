@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.132 2001/01/13 23:51:16 per Exp $
+# $Id: start,v 1.133 2001/03/27 18:20:34 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -63,7 +63,7 @@ check_owner() {
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
         change_owner $1 $2 $DIR $VARDIR $LOGDIR
-        ok=`ls -lgd $a 2>/dev/null | grep $2 |wc -l`
+        ok=`ls -lgd . 2>/dev/null | grep $2 |wc -l`
         ok=`echo $ok`
         if [ "x$ok" = x1 ] ; then
           dp ". is already readable by $2"
