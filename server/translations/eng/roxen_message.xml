@@ -178,10 +178,7 @@ Check that your password database is correct for user %s(%d),
 <t></t>
 </str>
 
-<str id="38">
-<o>No authorization module</o>
-<t></t>
-</str>
+
 
 <str id="39">
 <o>Error during module security check</o>

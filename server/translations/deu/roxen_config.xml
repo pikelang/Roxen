@@ -43,11 +43,9 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
-<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
-<file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
 <o>Sent data</o>
@@ -1085,17 +1083,9 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t></t>
 </str>
 
-<str id="178">
-<new/>
-<o>Show all translations</o>
-<t></t>
-</str>
 
-<str id="179">
-<new/>
-<o>Show the language selection flags. All translations will be listed, more or less completed.</o>
-<t></t>
-</str>
+
+
 
 <str id="180">
 <new/>
@@ -1169,11 +1159,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t></t>
 </str>
 
-<str id="193">
-<new/>
-<o>Edit Users</o>
-<t></t>
-</str>
+
 
 <str id="194">
 <new/>
@@ -1233,10 +1219,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Administrations-Interface</t>
 </str>
 
-<str id="205">
-<o>Language</o>
-<t>Sprache</t>
-</str>
+
 
 <str id="206">
 <new/>
@@ -1290,10 +1273,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Globale Einstellungen</t>
 </str>
 
-<str id="215">
-<o>Ports</o>
-<t>Ports</t>
-</str>
+
 
 <str id="216">
 <o>Events</o>
@@ -1625,11 +1605,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t></t>
 </str>
 
-<str id="233">
-<new/>
-<o>Failed login attempt %s from %s</o>
-<t></t>
-</str>
+
 
 <str id="234">
 <new/>
@@ -1817,41 +1793,17 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="320">
-<new/>
-<o>Value %s does not match the regexp %s.</o>
-<t></t>
-</str>
 
-<str id="321">
-<new/>
-<o>Value %s does not match the glob %s.</o>
-<t></t>
-</str>
 
-<str id="322">
-<new/>
-<o>Value %s must be at least %d characters long. (%d character short)</o>
-<t></t>
-</str>
 
-<str id="323">
-<new/>
-<o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t></t>
-</str>
 
-<str id="324">
-<new/>
-<o>Value %s is not uppercased.</o>
-<t></t>
-</str>
 
-<str id="325">
-<new/>
-<o>Value %s is not lowercased.</o>
-<t></t>
-</str>
+
+
+
+
+
+
 
 <str id="326">
 <new/>
@@ -2314,8 +2266,40 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="373">
+
+
+<str id="8">
 <new/>
-<o>Other DBs</o>
+<o>Server secret</o>
+<t></t>
+</str>
+
+<str id="9">
+<new/>
+<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
+<t></t>
+</str>
+
+<str id="164">
+<new/>
+<o>Databases</o>
+<t></t>
+</str>
+
+<str id="165">
+<new/>
+<o>Configuration Filesystem</o>
+<t></t>
+</str>
+
+<str id="166">
+<new/>
+<o>This filesystem serves the administration interface</o>
+<t></t>
+</str>
+
+<str id="167">
+<new/>
+<o>Failed login attempt from %s</o>
 <t></t>
 </str>

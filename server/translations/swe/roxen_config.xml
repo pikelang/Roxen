@@ -43,11 +43,9 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
-<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
-<file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
 <o>Sent data</o>
@@ -1107,15 +1105,9 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Visa alla tillgängliga inställningar, inte bara de som oftast brukar ställas in.</t>
 </str>
 
-<str id="178">
-<o>Show all translations</o>
-<t>Visa alla översättningar</t>
-</str>
 
-<str id="179">
-<o>Show the language selection flags. All translations will be listed, more or less completed.</o>
-<t>Visa språkvalsflaggorna, oavsett hur färdiga översättningarna är.</t>
-</str>
+
+
 
 <str id="180">
 <o>Show developer options and actions</o>
@@ -1177,10 +1169,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Visa inställningar</t>
 </str>
 
-<str id="193">
-<o>Edit Users</o>
-<t>Editera användare</t>
-</str>
+
 
 <str id="194">
 <o>Edit Global Variables</o>
@@ -1237,10 +1226,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Admingränssnittet</t>
 </str>
 
-<str id="205">
-<o>Language</o>
-<t>Språk</t>
-</str>
+
 
 <str id="206">
 <o>User</o>
@@ -1292,10 +1278,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Globala</t>
 </str>
 
-<str id="215">
-<o>Ports</o>
-<t>Portar</t>
-</str>
+
 
 <str id="216">
 <o>Events</o>
@@ -1582,10 +1565,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Den teckenuppsättning som används i admingränssnittet</t>
 </str>
 
-<str id="233">
-<o>Failed login attempt %s from %s</o>
-<t>Misslyckad inloggning av %s från %s</t>
-</str>
+
 
 <str id="234">
 <o>Requests</o>
@@ -1746,35 +1726,17 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t>Domänen %s kunde inte hittas.</t>
 </str>
 
-<str id="320">
-<o>Value %s does not match the regexp %s.</o>
-<t>Värdet %s matchar inte regexpen %s.</t>
-</str>
 
-<str id="321">
-<o>Value %s does not match the glob %s.</o>
-<t>Värdet %s matchar inte globben %s.</t>
-</str>
 
-<str id="322">
-<o>Value %s must be at least %d characters long. (%d character short)</o>
-<t>Värdet %s måste vara minst %d tecken långt. (%d tecken för lite)</t>
-</str>
 
-<str id="323">
-<o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t>Värdet %s får inte vara mer än %d tecken långt. (%d tecken är för långt)</t>
-</str>
 
-<str id="324">
-<o>Value %s is not uppercased.</o>
-<t>Värdet %s är inte versalt.</t>
-</str>
 
-<str id="325">
-<o>Value %s is not lowercased.</o>
-<t>Värdet %s är inte gement.</t>
-</str>
+
+
+
+
+
+
 
 <str id="326">
 <o>unnamed</o>
@@ -2170,7 +2132,40 @@ utifrån detta namn.</t>
 <t>MySQL-status</t>
 </str>
 
-<str id="373">
-<o>Other DBs</o>
-<t>Andra DB:er</t>
+
+
+<str id="8">
+<new/>
+<o>Server secret</o>
+<t></t>
+</str>
+
+<str id="9">
+<new/>
+<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
+<t></t>
+</str>
+
+<str id="164">
+<new/>
+<o>Databases</o>
+<t></t>
+</str>
+
+<str id="165">
+<new/>
+<o>Configuration Filesystem</o>
+<t></t>
+</str>
+
+<str id="166">
+<new/>
+<o>This filesystem serves the administration interface</o>
+<t></t>
+</str>
+
+<str id="167">
+<new/>
+<o>Failed login attempt from %s</o>
+<t></t>
 </str>

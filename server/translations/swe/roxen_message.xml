@@ -180,10 +180,7 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 <t>Misslyckades med att öppna loggfil</t>
 </str>
 
-<str id="38">
-<o>No authorization module</o>
-<t>Ingen auktoriseringsmodul</t>
-</str>
+
 
 <str id="39">
 <o>Error during module security check</o>
