@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.137 2000/01/03 01:29:03 nilsson Exp $
+// $Id: roxenlib.pike,v 1.138 2000/01/03 06:44:37 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -12,7 +12,6 @@ class RoxenModule {};
 
 #include <stat.h>
 
-#define ipaddr(x,y) (((x)/" ")[y])
 #define old_rxml_compat
 
 string gif_size(Stdio.File gif)
@@ -32,9 +31,9 @@ static string extract_query(string from)
 static mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
-  mixed tmp;
+  string|array|object(Stdio.File) tmp;
   mapping new = ([]);
-  object tmpid;
+  RequestID tmpid;
 
   if(id->query && strlen(id->query))
     new->INDEX=id->query;
@@ -158,9 +157,8 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
     new["REMOTE_HOST"]=roxen->quick_ip_to_host(addr);
 
   catch {
-    if(id->my_fd) {
-      new["REMOTE_PORT"] = ipaddr(id->my_fd->query_address(), 1);
-    }
+    if(id->my_fd)
+      new["REMOTE_PORT"] = (id->my_fd->query_address()/" ")[1];
   };
 
   if (id->query && sizeof(id->query)) {
@@ -193,7 +191,7 @@ static mapping build_env_vars(string f, RequestID id, string path_info)
 static mapping build_roxen_env_vars(RequestID id)
 {
   mapping new = ([]);
-  mixed tmp;
+  string tmp;
 
   if(id->cookies->RoxenUserID)
     new["ROXEN_USER_ID"]=id->cookies->RoxenUserID;
@@ -481,13 +479,12 @@ static string dirname( string file )
 {
   if(!file)
     return "/";
-  mixed tmp;
   if(file[-1] == '/')
     if(strlen(file) > 1)
       return file[0..strlen(file)-2];
     else
       return file;
-  tmp=file/"/";
+  array tmp=file/"/";
   if(sizeof(tmp)==2 && tmp[0]=="")
     return "/";
   return tmp[0..sizeof(tmp)-2]*"/";
@@ -646,7 +643,7 @@ static string int2roman(int m)
   return res;
 }
 
-static string number2string(int n,mapping m,mixed names)
+static string number2string(int n, mapping m, mixed names)
 {
   string s;
   switch (m->type)
@@ -762,16 +759,18 @@ string html_encode_tag_value(string str)
 
 string strftime(string fmt, int t)
 {
+  werror(fmt+"\n");
   mapping lt = localtime(t);
   array a = fmt/"%";
   string res = "";
 
   foreach(a, string key) {
+    werror(key+"\n");
     if (key=="") {
       key = "%";
       continue;
     }
-    switch(key) {
+    switch(key[0]) {
     case 'a':	// Abbreviated weekday name
       res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
@@ -882,6 +881,7 @@ string strftime(string fmt, int t)
 		 * no time zone information exists
 		 */
     }
+    res+=key[1..];
   }
   return res;
 }
@@ -1037,7 +1037,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   {
     if (args->set)
       foreach (indices (vars), string var) {
-	mixed val = vars[var];
+	array|string val = vars[var];
 	if (!val) val = args->zero || "";
 	else {
 	  if (arrayp( val ))
@@ -1305,8 +1305,6 @@ string trim( string what )
 
 string|int tagtime(int t, mapping m, RequestID id, object language)
 {
-  string s;
-  mixed eris;
   string res;
 
   if (m->adjust) t+=(int)m->adjust;
@@ -1380,7 +1378,7 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
     switch(m->type)
     {
      case "iso":
-      eris=localtime(t);
+      mapping eris=localtime(t);
       if(!(m->date && m->time))
       {
 	if(m->date)
@@ -1395,7 +1393,7 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
 
      case "discordian":
 #if efun(discdate)
-      eris=discdate(t);
+      array eris=discdate(t);
       res=eris[0];
       if(m->year)
 	res += " in the YOLD of "+eris[1];
@@ -1413,34 +1411,35 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
 #endif
     }
   }
-  s=language(m->lang, "date")(t,m);
+
+  res=language(m->lang, "date")(t,m);
 
   if(m["case"])
     switch(lower_case(m["case"])) {
-    case "upper": return upper_case(s);
-    case "lower": return lower_case(s);
-    case "capitalize": return capitalize(s);
+    case "upper": return upper_case(res);
+    case "lower": return lower_case(res);
+    case "capitalize": return capitalize(res);
     }
 
 #ifdef old_rxml_compat
   // Not part of RXML 1.4
   if (m->upper) {
-    s=upper_case(s);
+    res=upper_case(res);
     report_warning("Old RXML in "+(id->query||id->not_query)+
       ", contains upper attribute in a tag. Use case=\"upper\" instead.");
   }
   if (m->lower) {
-    s=lower_case(s);
+    res=lower_case(res);
     report_warning("Old RXML in "+(id->query||id->not_query)+
       ", contains lower attribute in a tag. Use case=\"lower\" instead.");
   }
   if (m->cap||m->capitalize) {
-    s=capitalize(s);
+    res=capitalize(res);
     report_warning("Old RXML in "+(id->query||id->not_query)+
       ", contains capitalize or cap attribute in a tag. Use case=\"capitalize\" instead.");
   }
-  return s;
 #endif
+  return res;
 }
 
 string|int API_read_file(RequestID id, string file)
