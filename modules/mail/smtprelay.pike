@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.30 1998/09/27 12:36:06 grubba Exp $
+ * $Id: smtprelay.pike,v 1.31 1998/10/02 19:34:09 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.30 1998/09/27 12:36:06 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.31 1998/10/02 19:34:09 grubba Exp $";
 
 /*
  * Some globals
@@ -569,14 +569,20 @@ class MailSender
 			   message->domain));
 
       int t = ((int)message->times);
-      if (!(t % 4)) {
-	if (t < 24*7) { 
+      // Try send a notify bounce after 4, 8, and 16 hours and 
+      // after 1, 2, 4 and 7 days.
+      if (!(< 4, 8, 16, 24, 48, 96, 168 >)[t]) {
+	if (t != 168) {
 	  parent->bounce(message, "554", ({
 	    sprintf("Message not delivered after %d attempts.", t),
 	    sprintf("Will continue to attempt to send %d more times.",
-		    24*7 - t),
+		    168 - t),
 	  }), "");
 	} else {
+	  parent->bounce(message, "554", ({
+	    sprintf("Message not delivered after %d attempts.", t),
+	    "Giving up.",
+	  }), "");
 	  // Give up.
 	  send_done(-2, message);
 	  return;
@@ -592,6 +598,9 @@ class MailSender
     report_debug(sprintf("SMTP: Trying with the SMTP server at %s\n",
 			 servers[server]));
 #endif /* RELAY_DEBUG */
+
+    // Reset the state.
+    state = 0;
 
     message->remote_mta = servers[server];
     message->last_attempt_at = time();
