@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.95 1999/09/06 12:41:26 per Exp $
+ * $Id: roxenloader.pike,v 1.96 1999/09/06 13:03:42 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.95 1999/09/06 12:41:26 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.96 1999/09/06 13:03:42 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -845,8 +845,9 @@ int main(int argc, array argv)
   });
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
-  add_constant("perror",perror);
-  add_constant("roxen_perror",perror);
+  add_constant("perror",roxen_perror);
+  add_constant("werror",roxen_perror);
+  add_constant("roxen_perror",roxen_perror);
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("roxenp", lambda() { return roxen; });
