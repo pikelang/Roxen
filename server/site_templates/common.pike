@@ -8,6 +8,33 @@ constant modules = ({});
 constant silent_modules = ({}); 
 //! Silent modules does not get their initial variables shown.
 
+object load_modules(Configuration conf)
+{
+#ifdef THREADS
+  Thread.MutexKey enable_modules_lock = conf->enable_modules_mutex->lock();
+#else
+  object enable_modules_lock;
+#endif
+  
+  // The stuff below ought to be in configuration.pike and not here;
+  // we have to meddle with locks and stuff that should be internal.
+
+  foreach( modules, string mod )
+  {
+    RoxenModule module;
+    
+    if( !conf->find_module( mod ) &&
+	(module = conf->enable_module( mod, 0, 0, 1 )))
+    {
+      conf->call_low_start_callbacks( module, 
+				      roxen.find_module( mod ), 
+				      conf->modules[ mod ] );
+    }
+    remove_call_out( roxen.really_save_it );
+  }
+  return enable_modules_lock;
+}
+
 void init_modules(Configuration conf, RequestID id)
 {
 }
@@ -88,25 +115,9 @@ mixed parse( RequestID id, mapping|void opt )
   Configuration conf = id->misc->new_configuration;
   id->misc->do_not_goto = 1;  
 
-#ifdef THREADS
-  Thread.MutexKey enable_modules_lock = conf->enable_modules_mutex->lock();
-#endif
-  // The stuff below ought to be in configuration.pike and not here;
-  // we have to meddle with locks and stuff that should be internal.
-
-  foreach( modules, string mod )
-  {
-    RoxenModule module;
-    
-    if( !conf->find_module( mod ) && (module = conf->enable_module( mod, 0, 0, 1 )))
-    {
-      conf->call_low_start_callbacks( module, 
-				      roxen.find_module( mod ), 
-				      conf->modules[ mod ] );
-    }
-    remove_call_out( roxen.really_save_it );
-  }
-
+  // Load initial modules
+  object enable_modules_lock = load_modules(conf);
+  
   string cf_form = 
     "<emit noset='1' source=config-variables configuration='"+conf->name+"'>"
     "  <tr><td colspan=2 valign=top width=20%><b>&_.name;</b></td>"
