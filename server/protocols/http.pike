@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.192 2000/01/23 06:17:56 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.193 2000/01/28 13:46:08 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -359,6 +359,76 @@ private int really_set_config(array mod_config)
 private static mixed f, line;
 private static int hstart;
 
+class PrefLanguages {
+
+  int decoded=0;
+  int sorted=0;
+  array(string) subtags=({});
+  array(string) languages=({});
+  array(float) qualities=({});
+
+  array(string) get_languages() {
+    sort_lang();
+    return languages;
+  }
+
+  string get_language() {
+    if(!languages) return 0;
+    sort_lang();
+    return languages[0];
+  }
+
+  array(float) get_qualities() {
+    sort_lang();
+    return qualities;
+  }
+
+  float get_quality() {
+    if(!qualities) return 0.0;
+    sort_lang();
+    return qualities[0];
+  }
+
+  void set_sorted(array(string) lang, void|array(float) q) {
+    languages=lang;
+    if(q && sizeof(q)==sizeof(lang))
+      qualities=q;
+    else
+      qualities=({1.0})*sizeof(lang);
+    sorted=1;
+  }
+
+  void sort_lang() {
+    if(sorted && decoded) return;
+    array(float) q;
+    array(string) s=reverse(languages), u=({});
+
+    if(!decoded) {
+      q=({});
+      s=Array.map(s, lambda(string x) {
+		       float n=1.0;
+		       string sub="";
+		       sscanf(lower_case(x), "%s;q=%f", x, n);
+		       if(n==0.0) return "";
+		       sscanf(x, "%s-%s", x, sub);
+		       q+=({n});
+		       u+=({sub});
+		       return x;
+		     });
+      s-=({""});
+      decoded=1;
+    }
+    else
+      q=reverse(qualities);
+
+    sort(q,s,u);
+    languages=reverse(s);
+    qualities=reverse(q);
+    subtags=reverse(u);
+    sorted=1;
+  }
+}
+
 private int parse_got()
 {
   multiset (string) sup;
@@ -699,12 +769,11 @@ private int parse_got()
 	    array alang=(contents-" ") / ",";
 	    if(misc["accept-language"])
 	      misc["accept-language"] += alang;
-	    else
+	    else {
 	      misc["accept-language"] = alang;
-	    if(misc->pref_languages)
-	      misc->pref_languages += alang;
-	    else
-	      misc->pref_languages = alang;
+	      if(!misc->pref_languages) misc->pref_languages=PrefLanguages();
+	    }
+	    misc->pref_languages->languages=misc["accept-language"];
 	    break;
 
 	  case "cookie": /* This header is quite heavily parsed */
