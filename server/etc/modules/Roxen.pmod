@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.34 2000/08/31 20:52:59 per Exp $
+ * $Id: Roxen.pmod,v 1.35 2000/09/02 22:46:56 per Exp $
  *
  * Various helper functions.
  *
@@ -1037,6 +1037,48 @@ int is_modified(string a, int t, void|int len)
 int httpdate_to_time(string date)
 {
   return parse_since(date)[0]||-1;
+}
+
+void set_cookie( RequestID id,
+                 string name, 
+                 string value, 
+                 int|void expire_time_delta, 
+                 string|void domain, 
+                 string|void path )
+//! Set the cookie specified by 'name' to 'value'.
+//! Sends a Set-Cookie header.
+//! 
+//! The expire_time_delta, domain and path arguments are optional.
+//!
+//! If the expire_time_delta variable is -1, the cookie is set to
+//!
+//! expire five years in the future. If it is 0 or ommited, no expire
+//! information is sent to the client. This usualy results in the cookie
+//! being kept until the browser is exited. 
+{
+  if( expire_time_delta = -1 )
+    expire_time_delta = (3600*(24*365*5));
+  string cookie = (http_encode_cookie( name )+"="+
+                   http_encode_cookie( value ));
+  if( expire_time_delta )
+    cookie += "; expires="+http_date( expire_time_delta+time(1) );
+  if( domain ) cookie += "; domain="+http_encode_cookie( domain );
+  if( path )   cookie += "; path="+http_encode_cookie( path );
+  if(!id->misc->moreheads)
+    id->misc->moreheads = ([]);
+  add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
+}
+
+void remove_cookie( RequestID id,
+                    string name,
+                    string value,
+                    string|void domain,
+                    string|void path )
+//! Remove the cookie specified by 'name'.
+//! Sends a Set-Cookie header with an expire time of 00:00 1/1 1970.
+//! The domain and path arguments are optional.
+{
+  set_cookie( id, name, value, -time(1), domain, path );
 }
 
 void add_cache_callback( RequestID id, function(RequestID:int) callback )
