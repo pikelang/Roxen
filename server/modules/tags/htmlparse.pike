@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.54 1997/11/05 14:24:35 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.55 1997/11/29 19:48:28 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1322,11 +1322,14 @@ string tag_allow(string a, mapping (string:string) m,
       TEST(glob("*"+m->accept+"*",got->misc->accept*" "));
     }
 
-  if(m->referer)
+  if((m->referrer) || (m->referer))
   {
+    if (!m->referrer) {
+      m->referrer = m->referer;		// Backward compat
+    }
     if(got && arrayp(got->referer) && sizeof(got->referer))
     {
-      if(m->referer == "referer")
+      if(m->referrer == "referer")
       {
 	if(m->or) {
 	  if (QUERY(compat_if)) 
@@ -1335,7 +1338,7 @@ string tag_allow(string a, mapping (string:string) m,
 	    return s + "<true>";
 	} else
 	  ok=1;
-      } else if (_match(got->referer*"", m->referer/",")) {
+      } else if (_match(got->referer*"", m->referrer/",")) {
 	if(m->or) {
 	  if (QUERY(compat_if))
 	    return "<true>" + s;
