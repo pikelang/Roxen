@@ -83,7 +83,7 @@ string|mapping navigate(object id, string f, string base_url)
 {
 
   object contenttypes = ContentTypes();
-  string res="<comment><htmleditorp>t</htmleditorp></comment>";
+  string res="<comment><browserp>t</browserp></comment>";
 
   if(AutoFile(id, f)->type()=="")
     if(f!="/")
@@ -132,17 +132,29 @@ string|mapping navigate(object id, string f, string base_url)
     });
     
     // Show the directory
+    array files_index = ({ });
+    array files_html = ({ });
+    array files_image = ({ });
+    array files_other = ({ });
     array files = ({ });
     array dirs = ({ });
-
     // Scan directory for files and directories.
     foreach(AutoFile(id, f)->get_dir() || ({}), string file)
       if(AutoFile(id, file)->visiblep())
 	if(AutoFile(id, f+file)->type()=="Directory")
 	  dirs += ({ file });
-	else 
-	  files += ({ file });
-    
+	else {
+	  if(file=="index.html"||file=="index.htm")
+	    files_index += ({ file });
+	  else if(MetaData(id, f+file)->get()->content_type=="text/html")
+	    files_html += ({ file });
+	  else if(sscanf(MetaData(id, f+file)->get()->content_type,
+			 "image/%*s"))
+	    files_image += ({ file });
+	  else files_other += ({ file });
+	}
+    files = sort(files_index) + sort(files_html) +
+	    sort(files_image) + sort(files_other);
     res += "<table cellpadding=2>";
     // Display directories.
     foreach(sort(dirs), string item) {
@@ -153,7 +165,7 @@ string|mapping navigate(object id, string f, string base_url)
     }
     
     // Display files.
-    foreach(sort(files), string item) {
+    foreach(files, string item) {
       mapping md = MetaData(id, f+item)->get();
       string img = contenttypes->img_from_type(md->content_type);
       string href = "<a href='"+encode_url(base_url, "go", f+item)+"'>";
