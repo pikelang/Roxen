@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.54 2002/06/14 16:05:03 jhs Exp $
+// $Id: prototypes.pike,v 1.55 2002/06/18 16:16:22 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -239,7 +239,7 @@ class Configuration
   string real_file(string file, RequestID id);
   int|string try_get_file(string s, RequestID id,
                           int|void status, int|void nocache,
-                          int|void not_internal);
+                          int|void not_internal, mapping|void result_mapping);
   int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal);
   void start(int num);
   void save_me();
