@@ -2273,9 +2273,9 @@ void enable_configuration(string config)
   array err;
   foreach( modules_to_process, tmp_string )
     if(err = catch( enable_module( tmp_string ) ))
-      perror("Failed to enable the module "+tmp_string+". Skipping\n"+
+      perror("Failed to enable the module "+tmp_string+". Skipping\n"
 #ifdef MODULE_DEBUG
-	     describe_backtrace(err)+"\n"
+	     +describe_backtrace(err)+"\n"
 #endif
 	);
 }
