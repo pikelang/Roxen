@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.118 1998/04/03 17:44:30 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.119 1998/04/09 16:04:25 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -589,7 +589,7 @@ void init_log_file()
 	object lf=open( logfile, "wac");
 #if efun(chmod)
 #if efun(geteuid)
-	if(geteuid() != getuid()) chmod(logfile,0666);
+	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
 #endif
 #endif
 	if(!lf) {
