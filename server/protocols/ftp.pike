@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.33 1997/08/14 22:45:03 marcus Exp $
+ * $Id: ftp.pike,v 1.34 1997/08/15 02:02:01 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -566,6 +566,7 @@ int open_file(string arg, int|void noport)
     if(file && file->file)
       destruct(file->file);
     file=0;
+    perror("first_modules: %O\n", conf->first_modules());
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
     if (!file) {
@@ -727,6 +728,9 @@ void got_data(mixed fooid, string s)
 	if(auth[0] == 1) {
 	  if (stringp(misc->home)) {
 	    // Check if it is possible to cd to the users home-directory.
+	    if ((misc->home == "") || (misc->home[-1] != '/')) {
+	      misc->home += "/";
+	    }
 	    array(int) st = roxen->stat_file(misc->home, this_object());
 	    if (st && (st[1] < 0)) {
 	      cwd = misc->home;
@@ -772,6 +776,9 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
+      if ((ncwd == "") || (ncwd[-1] != '/')) {
+	ncwd += "/";
+      }
 
       // Restore auth-info
       auth = session_auth;
@@ -779,7 +786,7 @@ void got_data(mixed fooid, string s)
       st = roxen->stat_file(ncwd, this_object());
 
       if(!st) {
-	reply("550 "+arg+": No such file or directory.\n");
+	reply("550 "+arg+": No such file or directory, or access denied.\n");
 	break;
       }
       if(st[1] > -1) {
@@ -787,9 +794,6 @@ void got_data(mixed fooid, string s)
 	break;
       }
       cwd = ncwd;
-      if((cwd == "") || (cwd[-1] != '/')) {
-	cwd += "/";
-      }
       not_query = cwd;
       if(dir = roxen->find_dir(cwd, this_object()))
       {
@@ -915,6 +919,7 @@ void got_data(mixed fooid, string s)
 
       not_query = arg;
 
+      perror("(1)first_modules: %O\n", conf->first_modules());
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(!f)
@@ -969,6 +974,7 @@ void got_data(mixed fooid, string s)
       auth = session_auth;
 
       not_query = arg = combine_path(cwd, arg);
+      perror("(2)first_modules: %O\n", conf->first_modules());
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(f) dirlist = -1;
