@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.346 2001/11/14 10:28:36 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.347 2001/11/21 10:40:17 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1014,7 +1014,10 @@ void end(int|void keepit)
     MARK_FD("HTTP closed");
     catch 
     {
-      my_fd->set_blocking();
+      // Don't set to blocking mod if SSL.
+      if (!my_fd->CipherSpec) {
+	my_fd->set_blocking();
+      }
       my_fd->close();
       destruct(my_fd);
     };
