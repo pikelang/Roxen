@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.1 2000/05/20 16:41:54 kinkie Exp $";
+constant cvs_version="$Id: throttling_bytime.pike,v 1.2 2000/05/21 18:36:05 kinkie Exp $";
 
 
 #include <module.h>
@@ -17,7 +17,8 @@ where <tt>time</tt> has the format <tt>HHMM</tt>
 The chosen rule will be the one whose time is the first greater than the
 current time. In an example:<br />
 <pre>0800 +10240  <-- this will be applied betwheen 00:00 and 08:00
-1730 -5916   <-- this will be used between 01:01 and 17:30
+1730 -5916   <-- this will be used between 01:01 and 19:00
+1900 +0      <-- no changes to the previous rules from 17:30 to 19:00
 2400 +5196   <-- this will be used between 17:31 and 23:59</pre>";
 
 constant module_type = MODULE_FILTER;
@@ -83,4 +84,5 @@ void start() {
 
 void stop() {
   remove_call_out(update_call_out);
+  //::stop(); What happens if the function is not defined in the parent class?
 }
