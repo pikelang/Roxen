@@ -1,3 +1,9 @@
+/*
+ * name = "BG: diagram.h";
+ * doc = "Business Graphics common things. You must upgrade this component to use newer versions of BG.";
+ */
+
+
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
