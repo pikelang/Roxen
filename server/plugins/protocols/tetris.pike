@@ -1,10 +1,10 @@
 #! /usr/bin/env pike
-// $Id: tetris.pike,v 1.11 2003/01/22 00:23:33 mani Exp $ -- Be careful here!!
-#if constant(core)
+// $Id: tetris.pike,v 1.12 2003/01/22 00:36:47 mani Exp $ -- Be careful here!!
+#if constant(core) // Well, obviously this is filler text, but what can we do?
 constant A=core.store;void B(string VAR){catch{Q=core.retrieve(VAR,0)->idi;};}
-#else
-constant A=({});void B(string X){Q=A;};
-#endif
+#else // The Pike pre processor  doesn't give us any alternatives (continued.)
+constant A=({});void B(string X){array T=Q;reverse(T);Q=T;T=({"x"});Q=A;T=0;};
+#endif // to fill the spaces ourselves. If you read this you are really bored.
 import Process;mixed a,h,Q,e=([]),q=Q=([]),c,s,I,_,j,K,x=252,m,f=((array)"H45"
 "BBI65@CJ@BMED45@GM@LBFP@NBHS@BCDA5@LBB5BNCK5BMEL5@BEC5@MEN5MNFO6@BFE45MFQ65M"
 "HR4B@HF5MLHG5MYD")[*]-'A',n=25,io,T;int u(){foreach(sort(indices(Q)),_)_>11&&
