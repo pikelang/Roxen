@@ -24,6 +24,10 @@ o Fixed bug that made SSL use the demo certificate even if you
 
 o Fixed resolve path.
 
+o Roxenlib is no longer inherited into roxen core. If you want
+  to call roxenlib functions either inherit roxenlib or call
+  Roxen.pmod.
+
 o Varoius other bugfixes.
 
 
