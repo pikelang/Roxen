@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.49 1998/05/08 17:59:05 grubba Exp $
+# $Id: configure.in,v 1.50 1998/06/09 17:18:57 grubba Exp $
 #
 
 prefix=$PWD
@@ -125,9 +125,11 @@ fi
 
 roxen_cv_prog_CC="$CC"
 
-if test -f stamp-h -a "x`cat stamp-h`" != "x${pike_version}" ; then
-  unset ac_cv_prog_CC
-fi
+if test -f stamp-h; then
+  if test "x`cat stamp-h`" != "x${pike_version}" ; then
+    unset ac_cv_prog_CC
+  else :; fi
+else :; fi
 
 AC_PROG_CC
 AC_AIX
