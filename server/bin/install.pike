@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.19 1997/09/20 15:06:26 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.20 1997/09/20 15:16:29 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -110,20 +110,21 @@ int getport()
 {
   object p;
   int port;
-  int tries = 8192;
+  int tries;
 
   p = files.port();
 
-  while(tries && !(p -> bind(port = 10000 + random(10000))))
-    tries--;
-  if (!p && !tries) {
-    write("Failed to find a free port (tried 8192 different)\n"
-          "Pike's socket-implementation might be broken on this architecture.\n"
-          "Please run \"make verify\" in the build-tree to check pike.\n");
-    port=0;
+  for (tries = 8192; tries--;) {
+    if (p->bind(port = 10000 + random(10000))) {
+      destruct(p);
+      return(port);
+    }
   }
+  write("Failed to find a free port (tried 8192 different)\n"
+	"Pike's socket-implementation might be broken on this architecture.\n"
+	"Please run \"make verify\" in the build-tree to check pike.\n");
   destruct(p);
-  return port;
+  return(0);
 }
 
 string gets(void|int sp)
