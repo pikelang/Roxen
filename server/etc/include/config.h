@@ -12,9 +12,11 @@
 // if threads are enabled.
 //
 // If it works, good for you. If it doesn't, too bad.
+#ifndef DISABLE_THREADS
 #ifdef ENABLE_THREADS
 # define THREADS
 #endif /* ENABLE_THREADS */
+#endif /* !DISABLE_THREADS */
 #endif /* efun(thread_create) */
 
 
