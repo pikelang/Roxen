@@ -147,10 +147,11 @@ class Table
   {
     if(!write) return 0;
     string ts = encode_value(to);
-    catch {
-      string q;
-      if(strlen(q=Gz->deflate()->deflate(ts)) < strlen(ts)) ts=q;
-    };
+    if(compress)
+      catch {
+	string q;
+	if(strlen(q=Gz->deflate()->deflate(ts)) < strlen(ts)) ts=q;
+      };
     object bucket = get_bucket(scheme(strlen(ts)));
     delete(in);
     int of = bucket->allocate_entry();
@@ -266,7 +267,7 @@ class db
   {
     foreach(values(buckets), object b)
       b->sync();
-    call_out(sync, 200);
+//    call_out(sync, 200);
     remove_call_out(sync);
   }
   
@@ -280,6 +281,6 @@ class db
       mkdirhier(d+"/Buckets/foo");
     }
     dir = replace(d+"/","//","/");
-    call_out(sync, 10);
+//    call_out(sync, 10);
   }
 };
