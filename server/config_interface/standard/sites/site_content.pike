@@ -216,21 +216,33 @@ string buttons( Configuration c, string mn, RequestID id )
       conf->error_log[log_msg]  = ({ flush_time });  // Kilroy was in the global log
       roxen->error_log[log_msg] = ({ flush_time }); // and in the virtual server log
     }
+    else if(mod->query_action_buttons) {
+      mapping buttons=mod->query_action_buttons("standard");
+      foreach(indices(buttons), string title)
+	if( a==title ) {
+	  buttons[a]();
+	  break;
+	}
+    }
   }
 
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
-  return (current_compile_errors[ mn ] ?
-          "<font color='&usr.warncolor;'><pre>"+current_compile_errors[ mn ]+
-          "</pre></font>" : "" )
-         + "<input type=hidden name=section value='" +
-          (id->variables->section||"Information") + "'>" +
-          "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
-          (sizeof( mod->error_log ) ?
-           "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":
-           "") +
-          "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
-         "'><gbutton preparse>&locale.drop_module;</gbutton></a>";
+  string buttons = (current_compile_errors[ mn ] ?
+		    "<font color='&usr.warncolor;'><pre>"+current_compile_errors[ mn ]+
+		    "</pre></font>" : "" )
+    + "<input type=hidden name=section value='" +
+    (id->variables->section||"Information") + "'>" +
+    "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
+    (sizeof( mod->error_log ) ?
+     "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":"");
+
+  if(mod->query_action_buttons)
+    foreach( indices(mod->query_action_buttons("standard")), string title )
+      buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
+
+  return buttons + "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
+    "'><gbutton preparse>&locale.drop_module;</gbutton></a>";
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
