@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.75 2000/02/06 11:48:54 nilsson Exp $ */
+/* $Id: module.pike,v 1.76 2000/02/08 00:37:46 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -637,7 +637,9 @@ mapping query_simple_tag_callers()
   mapping m = ([]);
   foreach(glob("simpletag_*", indices(this_object())), string q)
     if(functionp(this_object()[q]))
-      m[replace(q[10..],"_","-")] = ({ 0, this_object()[q] });
+      m[replace(q[10..],"_","-")] =
+	({ intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"],
+	   this_object()[q] });
   return m;
 }
 
