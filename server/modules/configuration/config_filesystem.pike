@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.16 1999/11/27 12:10:03 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.17 1999/12/09 00:27:03 grubba Exp $";
 
 constant path = "config_interface/";
 
@@ -99,6 +99,9 @@ mixed find_file( string f, object id )
      return 0; /* Not suitable (device or no file) */
    case -2: /* directory */
      return -1;
+   default:
+     if (f[-1] == '/')
+       return 0;	/* Let the PATH_INFO module handle it */
   }
   id->realfile = path+replace(f,locale,"standard");
   
