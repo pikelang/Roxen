@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.57 1997/12/20 23:48:34 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.58 1997/12/21 20:54:05 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -74,6 +74,10 @@ mixed *register_module()
        "  <b>tonedbox</b>       Creates a background shading between the\n"
        "                        colors assigned to each of the four corners.\n"
        "  <b>center</b>         (Only for pie) center=n centers the nth slice\n"
+       "  <b>bgcolor</b>        Sets the color for the background\n"
+       "  <b>textcolor</b>      Sets the color for all text\n"
+       "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
+       
        "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
        "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
 
@@ -105,7 +109,7 @@ mixed *register_module()
        "  <b>start</b>          Limit the start of the diagram at this quantity.\n"
        "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
        "  <b>quantity</b>       Name things represented in the diagram.\n"
-       "  <b>units</b>          Name the unit.\n"
+       "  <b>unit</b>           Name the unit.\n"
        "</pre>"
        ), ({}), 1,
     });
@@ -541,7 +545,7 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->labelsize) res->labelsize = (int)m->labelsize;
   else res->labelsize = res->fontsize;
 
-  res->labelcolor=m->labelcolor?parse_color(m->labelcolor):({0,0,0});
+  res->labelcolor=m->labelcolor?parse_color(m->labelcolor):0;
   res->axcolor=m->axcolor?parse_color(m->axcolor):({0,0,0});
   res->gridcolor=m->gridcolor?parse_color(m->gridcolor):({0,0,0});
   res->linewidth=m->linewidth || "2.2";
