@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.191 2004/05/10 17:19:13 grubba Exp $
+// $Id: module.pike,v 1.192 2004/05/10 18:38:17 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1059,7 +1059,8 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
     return got_sublocks;	// No condition and no lock -- Ok.
   }
 
-  mapping(string:mixed) res;
+  mapping(string:mixed) res =
+    lock && Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
     SIMPLE_TRACE_ENTER(this,
@@ -1079,6 +1080,10 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
 	TRACE_LEAVE("Conditional etag not supported.");
 	continue next_condition;	// Fail.
       case "key":
+	// The user has specified a key, so don't fail with DAV_LOCKED.
+	if (res && res->error == Protocols.HTTP.DAV_LOCKED) {
+	  res = 0;
+	}
 	if (negate) {
 	  if (lock && lock->locktoken == token[1]) {
 	    TRACE_LEAVE("Matched negated lock.");
@@ -1304,9 +1309,11 @@ mapping recurse_copy_files(string source, string destination, int depth,
 {
   SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
 		     source, destination, depth, behavior, result, id);
-  if ((source == destination) ||
-      has_prefix(source, destination) ||
-      has_prefix(destination, source)) {
+  string src_tmp = has_suffix(source, "/")?source:(source+"/");
+  string dst_tmp = has_suffix(destination, "/")?destination:(destination+"/");
+  if ((src_tmp == dst_tmp) ||
+      has_prefix(src_tmp, dst_tmp) ||
+      has_prefix(dst_tmp, src_tmp)) {
     TRACE_LEAVE("Source and destination overlap.");
     return Roxen.http_status(403, "Source and destination overlap.");
   }
