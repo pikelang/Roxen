@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.186 2000/04/06 14:59:30 kuntri Exp $
+// $Id: rxml.pike,v 1.187 2000/04/07 07:32:13 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -278,7 +278,10 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) throw (err);
+  if (err) {
+    ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+    result = ({});
+  }
 
   TRACE_LEAVE("");
 
@@ -343,7 +346,10 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) throw (err);
+  if (err) {
+    ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+    result = ({});
+  }
 
   TRACE_LEAVE("");
 
