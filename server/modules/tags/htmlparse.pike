@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.184 1999/08/14 06:19:07 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.185 1999/08/15 20:10:44 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1464,6 +1464,8 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
 
   if(m->cgi)
   {
+    if(!m->cache)
+      m->nocache = "yes";
     m->file = http_decode_string(m->cgi);
     m_delete(m, "cgi");
     return tag_insert(tag, m, id, file, defines);
