@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
 #define DB_ALIAS "autosite"
-constant cvs_version="$Id: autositefs.pike,v 1.30 1998/10/05 00:33:42 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.31 1998/10/25 20:57:41 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -215,7 +215,7 @@ string tag_init_home_dir(string tag_name, mapping args, object id)
   mkdir(dir);
   mkdir(dir+"/templates/");
   Stdio.write_file(dir+"/index.html",
-		   replace(query("defaulttext"),"$$COMPANY$$",args->company));
+		   replace(query("defaulttext"),"$$COMPANY$$",args->company||""));
   Stdio.write_file(dir+"/templates/default.tmpl","<tmplinsertall>");
   Process.popen("cp "+combine_path(__FILE__,"../../../default_site")+"/* "+dir+"/");
   return "Customer initialized";

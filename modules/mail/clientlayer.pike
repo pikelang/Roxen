@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.25 1998/10/01 04:11:00 per Exp $
+ * $Id: clientlayer.pike,v 1.26 1998/10/25 20:57:42 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.25 1998/10/01 04:11:00 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.26 1998/10/25 20:57:42 js Exp $";
 constant thread_safe=1;
 
 
@@ -626,6 +626,11 @@ class User
     return get_user_realname( id );
   }
 
+  string query_organization()
+  {
+    return get_organization(id);
+  }
+
   array(Mailbox) mailboxes(int|void force)
   {
     if(!force && _mboxes)
@@ -635,6 +640,14 @@ class User
     for(int i=0; i<sizeof(a); i++)
       a[i] = get_any_obj( a[i], Mailbox, this_object(), b[i] );
     return _mboxes = a;
+  }
+
+  void delete()
+  {
+    foreach(mailboxes(1),object(Mailbox) mb)
+      mb->delete();
+    delete_user(id);
+    destruct(this_object());
   }
 
   Mailbox get_incoming()
@@ -735,6 +748,17 @@ string get_user_realname(int user_id)
     return a[0]->realname;
 }
 
+string get_organization(int user_id)
+{
+  array a = squery("select customers.name from users,customers where users.id='%d'" 
+		   " and users.customer_id=customers.id", user_id);
+  if(!sizeof(a))
+    return 0;
+  else
+    return a[0]->name;
+}
+
+
 int find_user( string username_at_host )
 {
   catch {
@@ -755,6 +779,13 @@ int find_user( string username_at_host )
     return (int)a[0]->id;
   };
 }
+
+int delete_user(int user_id)
+{
+  squery("delete from users where id='%d'",user_id);
+  squery("delete from user_misc where id='%d'",user_id);
+}
+
 
 int authenticate_user(string username_at_host, string passwordcleartext)
 {
@@ -857,6 +888,7 @@ string get_mailbox_name(int mailbox_id)
 int delete_mailbox(int mailbox_id)
 {
   squery("delete from mailboxes where id='%d'", mailbox_id);
+  squery("delete from mailbox_misc where id='%d'", mailbox_id);
   foreach(indices(list_mail(mailbox_id)), string mail_id)
     delete_mail(mail_id);
   return 1;

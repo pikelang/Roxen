@@ -1,18 +1,60 @@
 <define tag=uservar><b>&title;</b> /// <input size=&size; type=&type; name=&name; value='#&name;#'>\\\</define>
-
 <formoutput quote='¤'>
+  <if variable=consistency_check>
+  Doing concistency check:
+  <sqloutput query="select customer_id from features">
+    <cset variable=ok>nil</cset>
+    <sqloutput query="select id from customers where id=#customer_id#">
+      <cset variable=ok>t</cset>
+    </sqloutput>
+    <if variable="ok is nil">
+      Deleting features for customer_id: #customer_id#
+      <sqloutput query="delete from features where customer_id='#customer_id#'">
+    </if>
+  </sqloutput>
+  
+  <sqloutput query="select customer_id from features">
+    <cset variable=ok>nil</cset>
+    <sqloutput query="select id from customers where id=#customer_id#">
+      <cset variable=ok>t</cset>
+    </sqloutput>
+    <if variable="ok is nil">
+      Deleting features for customer_id: #customer_id#
+      <sqloutput query="delete from features where customer_id='#customer_id#'">
+    </if>
+  </sqloutput>
+
+
+  </if>
+
   <if variable=really_delete>
-    <sqlquery query="delete from customers where id='¤id:quote=mysql¤'">
-    <sqlquery query="delete from users where customer_id='¤id:quote=mysql¤'">
-    <sqlquery query="delete from dns where customer_id='¤id:quote=mysql¤'">
+    <sqloutput query="select id from users where customer_id='¤customer:quote=mysql¤'">
+      <pike>
+        id->conf->get_provider("automail_clientlayer")->User(#id#)->delete();
+	return "Deleted user_id #id#. ";
+      </pike>
+      <sqlquery query="delete from admin_status where user_id=#id#">
+      <sqlquery query="delete from admin_variables where user_id=#id#">
+    </sqloutput> 
+    <br>
+    <sqloutput query="select id from customers_schemes where customer_id='¤customer:quote=mysql¤'">
+      Deleted template variable #id#. 
+      <sqlquery query="delete from customers_schemes_vars where scheme_id='#id#'">
+    </sqloutput>
+    <br>
+    <sqlquery query="delete from customers_schemes where customer_id='¤customer:quote=mysql¤'">
+    <sqlquery query="delete from customers where id='¤customer:quote=mysql¤'">
+    <sqlquery query="delete from features where customer_id='¤customer:quote=mysql¤'">
+    <sqlquery query="delete from dns where customer_id='¤customer:quote=mysql¤'">
     <b>Customer deleted. Please click 'Choose customer'.<br>
+    <autosite-intraseek-delete id=¤customer:quote=mysql¤>
     <autosite-dns-update><br>
     <autosite-fs-update><br>
     <autosite-webadm-update></b>
   </if>
   <else><if variable=delete>
     <form method=get action=delete.html>
-      <input type=hidden name=id value='¤id:quote=html¤'>
+      <input type=hidden name=id value='¤customer:quote=html¤'>
       <input type=submit name=really_delete value='Yes, I really want to delete this customer'>
       <input type=submit name=oops value='No, do not delete this customer.'>
     </form>
@@ -25,7 +67,7 @@
   	             user_id='¤user_id:quote=mysql¤',
   		     password='¤password:quote=mysql¤',
   		     name='¤name:quote=mysql¤'
-                     where id='¤id:quote=mysql¤'">
+                     where id='¤customer:quote=mysql¤'">
    
   </if>
   <preparse tag=sqloutput
@@ -34,7 +76,6 @@
     <preparse tag=tablify cellseparator=/// rowseparator=\\\
   		  cellpadding=0 cellspacing=0>
       <form method=post>
-        <input type=hidden name=id value=#id#>
         <uservar title='Customer name:' type=text size=40 name=name>
   	<uservar title='Login name:' type=text size=20 name=user_id>
   	<uservar title='Password:' type=password size=20 name=password>

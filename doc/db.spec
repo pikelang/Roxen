@@ -1,4 +1,4 @@
- $Id: db.spec,v 1.38 1998/09/30 23:00:30 js Exp $
+ $Id: db.spec,v 1.39 1998/10/25 20:57:35 js Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -123,19 +123,14 @@ create table admin_variables (
              
 # AutoAdmin         
 
-create table forms (
-             customer_id	     int,
-	     form		     blob
-      );	     
-
 create table customers (
              id                      int auto_increment primary key,
              user_id                 varchar(64) not null,
              password                varchar(64) not null,
              name                    varchar(255) not null,
              registration_date       timestamp,
-             template_scheme_id      int not null,
-             UNIQUE(template_scheme_id)
+             template_scheme_id      int not null
+#             UNIQUE(template_scheme_id)
      );
 
 create table dns (

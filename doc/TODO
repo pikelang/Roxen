@@ -1,3 +1,7 @@
+* ta bort kund -> zappa userauth-cache i mailläsare
+* 
+
+
 TODO lista för AutoSite
 
 * Fixa en modul som laddar in samtliga moduler i "roxen_setup"-filen

@@ -1,5 +1,5 @@
 /*
- * $Id: mailadmin.pike,v 1.9 1998/10/01 05:23:35 js Exp $
+ * $Id: mailadmin.pike,v 1.10 1998/10/25 20:57:43 js Exp $
  *
  * A general administration module for Roxen AutoMail
  * Johan Schön, September 1998
@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: mailadmin.pike,v 1.9 1998/10/01 05:23:35 js Exp $";
+constant cvs_version="$Id: mailadmin.pike,v 1.10 1998/10/25 20:57:43 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -318,7 +318,8 @@ string tag_delete_user(string tag_name, mapping args, object id)
   {
     squery("delete from admin_status where user_id='%d'",(int)id->variables->edit);
     squery("delete from admin_variables where user_id='%d'",(int)id->variables->edit);
-    squery("delete from users where id='%d'",(int)id->variables->edit);
+    id->conf->get_provider("automail_clientlayer")->
+      User((int)id->variables->edit)->delete();
     id->misc->do_redirect=1;
     return "";
   }

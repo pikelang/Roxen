@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.22 1998/10/01 18:17:36 grubba Exp $";
+"$Id: mailtags.pike,v 1.23 1998/10/25 20:57:44 js Exp $";
 
 constant thread_safe = 1;
 
@@ -597,8 +597,8 @@ static string send_mail_from_mid( string mid, multiset to, object id )
 constant actions = 
 ({
   ({ "delete", "Delete mail", 0 }),
-  ({ "next", "Move to next mail", 0 }),
-  ({ "reply", "Reply to the sender", 0 }),
+  ({ "next", "Reply to the sender", 0 }),
+  ({ "reply", "Move to next mail", 0 }),
   ({ "followup", "Reply to all", 0 }),
   ({ "previous", "Move to previous mail", 1 }),
   ({ "show_unread", "Go to mailbox page and show unread mail", 1 }),
@@ -686,7 +686,7 @@ static int filter_mail_list( Mail m, object id )
 static string trim_from( string from )
 {
   string q;
-  from = replace(from , "\\\"", "''");
+  from = replace(from||"No sender", "\\\"", "''");
   if(sscanf(from, "%*s\"%s\"%*s", q)==3) if(strlen(q)) return q;
   if(sscanf(from, "\"%s\"<%*s@%*s>", q)) if(strlen(q)) return q;
   if(sscanf(from, "%s<%*s@%*s>", q)) if(strlen(q)) return q;
@@ -702,7 +702,7 @@ static string trim_from( string from )
 static string trim_subject( string from )
 {
   string a,b;
-  string ofrom = from;
+  string ofrom = from||"No subject";
   if(from == "0") from = "No subject";
   if(sscanf(from, "%s[%*s]%s", a, b)==3)
   {
@@ -899,7 +899,7 @@ string tag_mail_show_attachments( string t, mapping args, object id )
 		"color=white><b>Filename</td><td align=right "
 		"bgcolor=black><b><font color=white align=right>Content type</td>"
 		"<td bgcolor=black align=right><b><font color=white>Size"
-		"</td></tr>");
+		"</td><td bgcolor=black>Delete</td></tr>");
     if(!M->body_parts)
       res="No attachments<br>";
     // We do not (currently) support multipart attachments (or, rather,
@@ -909,7 +909,7 @@ string tag_mail_show_attachments( string t, mapping args, object id )
       for(int i=1; i<sizeof(M->body_parts); i++)
       {
 	object m = M->body_parts[ i ];
-	res += ("<tr><td><a target=Display href=display.html?mail="+
+	res += ("<tr bgcolor=white><td><a target=Display href=display.html?mail="+
 		id->variables->mail_id+"&part="+i+"&name="+m->get_filename()
 		+">"+m->get_filename()+"</a></td><td align=right>"+
 		m->type+"/"+m->subtype+"</td><td align=right>"+
@@ -1078,7 +1078,7 @@ string tag_mail_index( string t, mapping args, object id )
       ind = search(mail->id, id->variables->mail_id);
   
   if(ind == -1) return "?";
-  return (string)(ind+1);
+  return (string)(sizeof(mail)-ind);
 }
 
 // <show-mail-user-buttons>
@@ -1130,7 +1130,7 @@ string tag_mail_userinfo( string tag, mapping args, object id )
 
   if(args->organization || args->org)
   {
-    return UID->get( "amhc_org" )||"Unkown";
+    return UID->get( "amhc_org" )||UID->query_organization();
   }
 
   if(args->address)
@@ -1238,6 +1238,7 @@ string tag_mail_body(string tag, mapping args, object id)
   Mail mail = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
   if(mail && mail->user == UID )
     return mail->body( );
+  error("No body for mail_id: "+args->mail+"\n");
 }
 
 
@@ -1376,13 +1377,13 @@ string tag_mail_next( string tag, mapping args, object id )
 	start = i;
 	break;
       }
-    if(start != i)
-      for(i = 0; i<start; i++)
-	if(filter_mail_list( mail[i],id ) )
-	{
-	  start = i;
-	  break;
-	}
+//     if(start != i)
+//       for(i = 0; i<start; i++)
+// 	if(filter_mail_list( mail[i],id ) )
+// 	{
+// 	  start = i;
+// 	  break;
+// 	}
   }
 
 //   werror("index after: %d\n", start);
@@ -1585,12 +1586,12 @@ string tag_user_buttons( string tag, mapping args, object id )
       ({
 	"Previous",
 	(< "mail" >),
-	(< "previous" >),
+	(< "next" >),
       }),
       ({
 	"Next",
 	(< "mail" >),
-	(< "next" >),
+	(< "previous" >),
       }),
       ({
 	" &nbsp; ",
@@ -1818,14 +1819,14 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
     string f = replace(link,({"<HIGHLIGHT>","#id#"}),({
       m->flags()->read?"":"<b>",m->id}));
     mapping h = m->decoded_headers();
-    if(h->subject && h->from)
+    //    if(h->subject && h->from)
     {
       if(first_line++)
 	extra="";
       else
 	extra = pre;
 
-      res += `+("<tr bgcolor=#ffeedd>",
+      res += `+("<tr bgcolor=#f2f2ff>",
 		"<td align=right>",
 		m->flags()->read?"":"<new-mail-flag>",
 		"<input type=checkbox name=mail_flag_"+m->id+" ",
