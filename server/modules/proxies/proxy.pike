@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.11.2.1 1997/02/15 23:23:53 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.11.2.2 1997/03/02 19:27:42 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -30,9 +30,10 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include "base_server/proxyauth.pike"
+import Stdio;
+import Array;
 
-program filep = (program)"/precompiled/file";
+program filep = files.file;
 
 mapping (object:string) requests = ([ ]);
 object logfile;
@@ -259,6 +260,8 @@ program Connection = class {
   array ids;
   string name;
   array my_clients = ({ });
+
+  import Array;
     
   void log(string what) 
   {
@@ -307,10 +310,10 @@ program Connection = class {
     
     if(b) 
       log(b[1]+" "+ (new?"New ":"Cache ") + 
-	  map_array(my_clients,hostname)*",");
+	  map(my_clients,hostname)*",");
     else  
       log("- " + (new?"New ":"Cache ") + 
-	  map_array(my_clients, hostname)*",");
+	  map(my_clients, hostname)*",");
     
     if(ids) 
       foreach(ids, id) 
@@ -340,7 +343,7 @@ program Connection = class {
     //    proxy = previous_object(); 
     // Sometimes this was roxen, which caused.. problems. =)
     proxy = prox;
-    pipe =  Pipe();
+    pipe =  Pipe.pipe();
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
@@ -384,7 +387,7 @@ program Connection = class {
     
   string status()
   {
-    return "Sending to "+map_array(my_clients, hostname)*",";
+    return "Sending to "+map(my_clients, hostname)*",";
   }
   
   void end()
@@ -504,7 +507,7 @@ mapping find_file( string f, object id )
   {
     if(sscanf(f, "%[^/]/%s", host, file) < 2)
     {
-      if(strstr(f, "/") == -1)
+      if(search(f, "/") == -1)
       {
 	host=f;
 	file="";
