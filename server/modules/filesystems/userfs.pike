@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.44 1999/01/13 15:29:13 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.45 1999/09/26 14:38:47 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -234,6 +234,8 @@ mixed find_file(string f, object got)
     {
       if (!us) {
 	us = got->conf->userinfo( u, got );
+
+	if (!us) return 0;
       }
 
       st = filesystem::stat_file(f, got);
@@ -371,7 +373,7 @@ mixed stat_file( mixed f, mixed id )
       f = QUERY(searchpath) + u + "/" + f;
     st = filesystem::stat_file( f,id );
     if(!st) return 0;
-    if(QUERY(own) && (int)us[2] != st[-2]) return 0;
+    if(QUERY(own) && (!us || ((int)us[2] != st[-2]))) return 0;
     return st;
   }
   return 0;
