@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.7 1996/12/02 14:14:42 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.8 1996/12/02 14:19:18 peter Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -802,7 +802,9 @@ mapping initial_configuration(object id)
 	  " User name <input name=user type=string>\n"
 	  "  Password <input name=pass type=password>\n"
 	  "     Again <input name=pass2 type=password>\n"
-	  "IP-pattern <input name=pattern type=string>\n"
+//   Avoid this trap for people that likes to shoot themselevs in the foot.
+//   /Peter
+//	  "IP-pattern <input name=pattern type=string>\n"
 	  "           <input type=submit value=\"Use these values\">\n"
 	  "</form></font></pre>");
   
