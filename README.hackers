@@ -1,14 +1,30 @@
 A few guidelines to people contributing to the code:
 
-- Since we're using Pike 7.7 CVS, all recent Pike constructs are allowed
-  and even preferred.
+We are using the CVS version of Pike so all recent Pike constructs are
+allowed and even preferred. The goal is to make and use general
+components from Pike instead of special purpose ones in ChiliMoon.
+Before implementing a new functions, see if it already exists in Pike
+or if Pike can be extended with this functionality.
 
-- This means that all references to "this_object()" are changed to "this".
+Some pratical programming guidelines.
 
-- search() is replaced with has_value(), has_prefix() or has_suffix()
-  if deemed appropriate.
+- Use "this" instead of "this_object()" (though the latter will be
+  converted into the former by the optimizer).
 
-- All references to roxen.symbol should be changed to core.symbol.
+- Use has_value(), has_prefix() or has_suffix() instead of search
+  whenever possible.
+
+- Use core.symbol instead of roxen.symbol.
+
+- Use foreach iterators over normal foreach statements whenever
+  possible.
+
+- Reporting and debugging functions/macros should avoid nested sprintf()
+  constructs, the functions themselves should be sprintf compatible in their
+  argumentlists or be made so.
+
+
+ChiliMoon specific guidelines.
 
 - Beware of changes in file locations in the ChiliMoon source tree.
 
@@ -20,10 +36,6 @@ A few guidelines to people contributing to the code:
 - There is no need to support the feature to generate non-XML-compliant
   HTML. All xml-attributes should be removed from RXML and the interfaces
   cleaned up throughout the server to not pass/accept this parameter.
-
-- Reporting and debugging functions/macros should avoid nested sprintf()
-  constructs, the functions themselves should be sprintf compatible in their
-  argumentlists or be made so.
 
 - Sometimes we improve the distribution of whitespace in expressions to
   make them more readable.  When in doubt, though, always copy whitespace
