@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.33 2000/02/03 17:18:30 wellhard Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.34 2000/02/03 20:07:22 wellhard Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -83,10 +83,13 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
    "gamma": a->gamma  || d->gamma   || 0,
   "format": a->format || d->format  || "gif",
     "sel" : a->selected,
-   "font" : a->font || d->font || roxen->query("default_font"),
+   "font" : a->font || d->font || id->misc->defines->font ||
+            roxen->query("default_font"),
   "first" : a->first,
   "last"  : a->last,
-    "bg"  : parse_color(a->bgcolor || d->bgcolor || id->misc->defines->theme_bgcolor || id->misc->defines->bgcolor || "white"),
+    "bg"  : parse_color(a->bgcolor || d->bgcolor ||
+			id->misc->defines->theme_bgcolor ||
+			id->misc->defines->bgcolor || "white"),
     "fg"  : parse_color(a->selcolor || d->selcolor || "white"),
     "dim" : parse_color(a->dimcolor || d->dimcolor || "#003366"),
     "txt" : parse_color((a->selected?(a->seltextcolor||d->seltextcolor):0)
