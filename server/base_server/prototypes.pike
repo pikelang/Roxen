@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.19 2001/03/12 14:07:29 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.20 2001/04/22 07:20:20 per Exp $";
 
 class Variable
 {
@@ -474,7 +474,7 @@ class RequestID
   //! by the client for the requested page. All data (names and values) are
   //! decoded from their possible transport encoding.
 
-  mapping (string:string) request_headers;
+  mapping (string:array(string)|string) request_headers;
   //! Indices and values map to the names and values of all HTTP headers sent
   //! with the request; all data has been transport decoded, and the header
   //! names are canonized (lowercased) on top of that. Here is where you look
