@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.30 1998/01/28 01:55:54 grubba Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.31 1998/03/13 15:29:26 js Exp $";
 
 object (Image.image) load_image(string f)
 {
@@ -153,7 +153,8 @@ object (Image.image) draw_config_button(string name, object font, int lm, int rm
   return ruta->scale(0,15);
 }
 
-object (Image.image) draw_unselected_button(string name, object font)
+object (Image.image) draw_unselected_button(string name, object font,
+					    void|array(int) pagecol)
 {
   if(!strlen(name)) return Image.image(1,15, R,G,B);
 
@@ -167,20 +168,38 @@ object (Image.image) draw_unselected_button(string name, object font)
   ruta=ruta->paste_alpha_color(txt, 255,255,255, 20, 0);
   ruta=ruta->paste_alpha_color(linje_mask, 0,0,0);
   s=ruta->select_from(0,0);
-  ruta->paste_alpha_color(s, dR,dG,dB);
-  ruta->setpixel(0,0, dR, dG, dB);
-  linje_mask = linje_mask->mirrory()->color(196,196,196);
-  ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-  s=ruta->select_from(txt->xsize()+34,0);
-  ruta->paste_alpha_color(s, dR,dG,dB);
-  ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
+  
+  if(pagecol)
+  {
+    ruta->paste_alpha_color(s, @pagecol);
+    ruta->setpixel(0,0,@pagecol);
+    linje_mask = linje_mask->mirrory()->color(196,196,196);
+    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
+    s=ruta->select_from(txt->xsize()+34,0);
+    ruta->paste_alpha_color(s, @pagecol);
+    ruta->setpixel(txt->xsize()+34,0, @pagecol);
+  }
+  else
+  {
+    ruta->paste_alpha_color(s, dR,dG,dB);
+    ruta->setpixel(0,0, dR, dG, dB);
+    linje_mask = linje_mask->mirrory()->color(196,196,196);
+    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
+    s=ruta->select_from(txt->xsize()+34,0);
+    ruta->paste_alpha_color(s, dR,dG,dB);
+    ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
+  };
+    
+
+  
   txt=linje=0;
   ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
   ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);
   return ruta->scale(0,TABSIZE);
 }
 
-object (Image.image) draw_selected_button(string name, object font)
+object (Image.image) draw_selected_button(string name, object font,
+					  void|array(int) pagecol)
 {
   if(!strlen(name)) return Image.image(1,15, R,G,B);
 
@@ -194,13 +213,29 @@ object (Image.image) draw_selected_button(string name, object font)
   ruta=ruta->paste_alpha_color(txt, 0,0,0, 20, 0);
   ruta=ruta->paste_alpha_color(linje_mask, 0,0,0);
   s=ruta->select_from(0,0);
-  ruta->paste_alpha_color(s, dR,dG,dB);
-  ruta->setpixel(0,0, dR, dG, dB);
-  linje_mask = linje_mask->mirrory()->color(196,196,196);
-  ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
-  s=ruta->select_from(txt->xsize()+34,0);
-  ruta->paste_alpha_color(s, dR,dG,dB);
-  ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
+
+  if(pagecol)
+  {
+    ruta->paste_alpha_color(s, @pagecol);
+    ruta->setpixel(0,0, @pagecol);
+    linje_mask = linje_mask->mirrory()->color(196,196,196);
+    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
+    s=ruta->select_from(txt->xsize()+34,0);
+    ruta->paste_alpha_color(s, @pagecol);
+    ruta->setpixel(txt->xsize()+34,0, @pagecol);
+  }
+  else
+  {
+    ruta->paste_alpha_color(s, dR,dG,dB);
+    ruta->setpixel(0,0, dR, dG, dB);
+    linje_mask = linje_mask->mirrory()->color(196,196,196);
+    ruta->paste_alpha_color(linje_mask, 0,0,0, txt->xsize()+27,0);
+    s=ruta->select_from(txt->xsize()+34,0);
+    ruta->paste_alpha_color(s, dR,dG,dB);
+    ruta->setpixel(txt->xsize()+34,0, dR, dG, dB);
+  };
+
+  
   txt=linje=0;
   ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
   ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,hR/2,hG/2,hB/2);

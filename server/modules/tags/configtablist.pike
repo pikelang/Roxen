@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.7 1998/03/08 13:48:51 per Exp $
+ * $Id: configtablist.pike,v 1.8 1998/03/13 15:29:05 js Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: per $
+ * $Author: js $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.7 1998/03/08 13:48:51 per Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.8 1998/03/13 15:29:05 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -32,6 +32,8 @@ array register_module()
 	      "<ul><table border=0>\n"
 	      "<tr><td><b>selected</b></td><td>Whether the tab is selected "
 	      "or not.</td></tr>\n"
+	      "<tr><td><b>bgcolor</b></td><td>What color to use as background. "
+	      "Defaults to white.</td></tr>\n"
 	      "<tr><td><b>alt</b></td><td>Alt-text for the image (default: "
 	      "\"_/\" + text + \"\\_\").</td></tr>\n"
 	      "<tr><td><b>border</b></td><td>Border for the image (default: "
@@ -53,6 +55,11 @@ string tag_config_tab(string t, mapping a, string contents)
   if (a->selected) {
     dir = "s/";
   }
+  if(a->bgcolor)
+    dir+=a->bgcolor;
+  else
+    dir+="white";
+  dir+="/";
   m_delete(a, "selected");
 
   img_attrs->src = QUERY(location) + dir +
@@ -102,6 +109,7 @@ object load_interface()
 
 mapping find_file(string f, object id)
 {
+  array pagecolor; //=({ 122, 122, 122 }); //parse_color("lightblue");
   array(string) arr = f/"/";
   if (sizeof(arr) > 1) {
     object interface = load_interface();
@@ -111,19 +119,24 @@ mapping find_file(string f, object id)
       arr[-1] = arr[-1][..sizeof(arr[-1])-5];
     }
 
+    pagecolor=parse_color(replace(arr[1],"|","#",));
+    
     switch (arr[0]) {
     case "s":	/* Selected */
-      button = interface->draw_selected_button(arr[1..]*"/",
-					       interface->button_font);
+      button = interface->draw_selected_button(arr[2..]*"/",
+					       interface->button_font,
+					       pagecolor);
       break;
     case "u":	/* Unselected */
-      button = interface->draw_unselected_button(arr[1..]*"/",
-						 interface->button_font);
+      button = interface->draw_unselected_button(arr[2..]*"/",
+						 interface->button_font,
+						 pagecolor);
       break;
     default:
       return 0;
     }
-    return http_string_answer(button->togif(), "image/gif");
+    return http_string_answer(Image.GIF.encode(button,@pagecolor),
+			      "image/gif");
   }
   return 0;
 }
