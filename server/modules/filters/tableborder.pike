@@ -1,9 +1,8 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 
 inherit "module";
-inherit "roxenlib";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.6 2000/03/01 16:57:01 nilsson Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.7 2000/07/03 05:14:21 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";
@@ -38,7 +37,7 @@ constant module_doc  =
 array(string) alter_table(string name, mapping arg, string contents)
 {
   arg->border = "1";
-  return ({ make_container(name, arg, recursive_parse(contents)) });
+  return ({ Roxen.make_container(name, arg, recursive_parse(contents)) });
 }
 
 string recursive_parse(string contents)

@@ -7,12 +7,10 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.20 2000/03/01 16:57:27 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.21 2000/07/03 05:14:20 nilsson Exp $";
 constant thread_safe=1;
 
-#include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 void create()
 {
@@ -55,7 +53,7 @@ void start()
   array a;
   string s;
   patterns = ([]);
-  foreach(replace(QUERY(hostredirect), "\t", " ")/"\n", s)
+  foreach(replace(query("hostredirect"), "\t", " ")/"\n", s)
   {
     a = s/" " - ({""});
     if(sizeof(a)>=2) {
@@ -159,7 +157,7 @@ int|mapping first_try(RequestID id)
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-     return http_low_answer( 302, "")
+     return Roxen.http_low_answer( 302, "")
         + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
     //  if the default file contains images, they will not be found,
@@ -174,7 +172,7 @@ int|mapping first_try(RequestID id)
       to +=id->not_query;
 
     id->not_query = id->scan_for_query( to );
-    id->raw_url = http_encode_string(to);
+    id->raw_url = Roxen.http_encode_string(to);
     //if we internally redirect to the proxy,
     //the proxy checks the raw_url for the place toget,
     //so we have to update the raw_url here too, or

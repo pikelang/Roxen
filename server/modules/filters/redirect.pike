@@ -4,12 +4,10 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.26 2000/05/03 08:55:12 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.27 2000/07/03 05:14:21 nilsson Exp $";
 constant thread_safe = 1;
 
-#include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 private int redirs = 0;
 
@@ -103,7 +101,7 @@ void start()
   redirect_from = ({});
   redirect_to = ({});
   exact_patterns = ([]);
-  parse_redirect_string(QUERY(fileredirect));
+  parse_redirect_string(query("fileredirect"));
 }
 
 constant module_type = MODULE_FIRST;
@@ -192,11 +190,11 @@ mixed first_try(object id)
   {
     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
 
-    return http_low_answer( 302, "")
+    return Roxen.http_low_answer( 302, "")
       + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
     id->variables = ([]);
-    id->raw_url = http_encode_string(to);
+    id->raw_url = Roxen.http_encode_string(to);
     id->not_query = id->scan_for_query( to );
   }
 }

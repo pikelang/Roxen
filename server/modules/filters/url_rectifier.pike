@@ -2,9 +2,8 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.11 2000/04/03 03:50:51 per Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.12 2000/07/03 05:14:21 nilsson Exp $";
 inherit "module";
-inherit "roxenlib";
 constant thread_safe=1;
 
 int unsuccessful = 0;
@@ -18,7 +17,7 @@ void start()
     if( enc == "utf-8" )
       decoders[ enc ] = utf8_to_string;
     else
-      decoders[ enc ]= _charset_decoder(Locale.Charset.decoder(enc))->decode;
+      decoders[ enc ]= Roxen._charset_decoder(Locale.Charset.decoder(enc))->decode;
 }
 
 constant module_type = MODULE_LAST;

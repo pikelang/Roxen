@@ -3,13 +3,12 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.62 2000/06/20 20:05:15 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.63 2000/07/03 05:14:21 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 #include <roxen.h>
 inherit "module";
-inherit "roxenlib";
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
@@ -473,12 +472,12 @@ mapping|string|int htaccess(mapping access, RequestID id)
 
     if(sscanf(access->redirect, "%s %s", from, to) < 2) {
       TRACE_LEAVE("redirect (access->redirect)");
-      return http_redirect(access->redirect,id);
+      return Roxen.http_redirect(access->redirect,id);
     }
 
     if(search(id->not_query, from) + 1) {
       TRACE_LEAVE("redirect");
-      return http_redirect(to,id);
+      return Roxen.http_redirect(to,id);
     }
   }
   aname      = access->authname || "authorization";
@@ -694,7 +693,7 @@ array rec_find_htaccess_file(RequestID id, string vpath)
 			       "vpath: \"%s\"\n"
 			       "query: \"%s\"\n", path, vpath, id->query + ""));
 	}
-	if(QUERY(cache_all))
+	if(query("cache_all"))
 	  return 0;
       }
     }
@@ -726,7 +725,7 @@ array rec_find_htaccess_file(RequestID id, string vpath)
     cache_set_path_of_htaccess(vpath, res[0], id);
     return res;
   }
-  if(QUERY(cache_all))
+  if(query("cache_all"))
     cache_set_path_of_htaccess(vpath, -1, id);
   return 0;
 }
@@ -760,7 +759,7 @@ array new_find_htaccess_file(RequestID id, string vpath)
 			       "query: \"%s\"\n", path, vpath, id->query + ""));
 	  return 0;
 	}
-	if(QUERY(cache_all))
+	if(query("cache_all"))
 	  return 0;
       }
     }
@@ -806,7 +805,7 @@ array new_find_htaccess_file(RequestID id, string vpath)
     }
     if (stringp(path)) {
       cache_set_path_of_htaccess(subvpath, path, id);
-    } else if (QUERY(cache_all)) {
+    } else if (query("cache_all")) {
       cache_set_path_of_htaccess(subvpath, -1, id);
     }
   }
@@ -863,8 +862,8 @@ mapping htaccess_no_file(RequestID id)
     if ((st = file_stat(access->nofile)) && (st[1] != -4) &&
 	(file = Stdio.read_bytes(access->nofile)))
     {
-      file = parse_rxml(file, id);
-      return http_string_answer( file );
+      file = Roxen.parse_rxml(file, id);
+      return Roxen.http_string_answer( file );
     }
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: Nofile \"%s\" is a device!\n"
@@ -905,7 +904,7 @@ mapping try_htaccess(RequestID id)
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
 	      (file = Stdio.read_bytes(access->errorfile))) {
-	    file = parse_rxml(file, id);
+	    file = Roxen.parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
 				 "query: \"%s\"\n", access->errorfile, id->query + ""));
@@ -915,7 +914,7 @@ mapping try_htaccess(RequestID id)
 
 	TRACE_LEAVE("Access Denied (1)");
 
-	return http_low_answer(403, file ||
+	return Roxen.http_low_answer(403, file ||
 			       ("<title>Access Denied</title>"
 				"<h2 align=center>Access Denied</h2>"));
       }
@@ -926,7 +925,7 @@ mapping try_htaccess(RequestID id)
 
 	TRACE_LEAVE("Access Denied (2)");
 
-	return http_low_answer(403, "<title>Access Denied</title>"
+	return Roxen.http_low_answer(403, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>"
 			       "<h3>This page is protected based on host name "
 			       "or domain name. The server couldn't resolve "
@@ -946,7 +945,7 @@ mapping try_htaccess(RequestID id)
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
 	      (file = Stdio.read_bytes(access->errorfile))) {
-	    file = parse_rxml(file, id);
+	    file = Roxen.parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
 				 "query: \"%s\"\n", access->errorfile, id->query + ""));
@@ -997,12 +996,12 @@ mapping remap_url(RequestID id)
     } else {
 
       string s = (id->not_query/"/")[-1];
-      if ((s != "") && (search(QUERY(denyhtlist), s) != -1)) {
+      if ((s != "") && (search(query("denyhtlist"), s) != -1)) {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
 	TRACE_LEAVE("Access Denied");
-	return http_low_answer(401, "<title>Access Denied</title>"
-			       "<h2 align=center>Access Denied</h2>");
+	return Roxen.http_low_answer(401, "<title>Access Denied</title>"
+				     "<h2 align=center>Access Denied</h2>");
       }
     }
   }
