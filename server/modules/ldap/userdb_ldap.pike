@@ -18,11 +18,12 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.8 2001/10/16 06:13:41 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.9 2001/10/29 06:40:08 hop Exp $";
 inherit UserDB;
 inherit "module";
 
 constant name = "ldapuserdb";
+constant module_unique  = 0;
 
 //<locale-token project="mod_userdb_ldap">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_userdb_ldap",X,Y)
@@ -171,7 +172,6 @@ User find_user( string u )
 {
   mixed key = mt->lock();
   array(string) pwent;
-  string flt;
 
   DEBUGLOG ("find_user ("+u+")");
   if (u == "A. Nonymous") {
@@ -199,8 +199,7 @@ User find_user( string u )
   }
 
   // finding entry
-  flt = replace(dir->parse_url(query("CI_dir_server"))->filter||"", "%u%", u);
-  pwent = get_entry_dir(u, flt);
+  pwent = get_entry_dir(u, dir->parse_url(query("CI_dir_server"))->filter||"");
 
   // ROAMING access mode
   if(!access_mode_is_roaming()) {
@@ -239,9 +238,16 @@ array(string)|int get_entry_dir(string u, string filter) {
   array(string) dirinfo;
   object results;
 
+  filter = replace(filter, "%u%", u);
   // the server connection is successfully opened and binded
-  //dir->set_scope(1);
-  //dir->set_basedn(u_dn);
+  if(!username_parsing_is_positional()) {
+    array elems = u / query("CI_username_delimiter");
+    string udn = dir->parse_url(query("CI_dir_server"))->basedn||"";
+    for (int i=0; i<sizeof(elems); i++)
+      udn = replace(udn, "%"+(string)(i+1)+"%", elems[i]);
+    DEBUGLOG(sprintf("pos.parsing: base DN: %O", udn));
+    dir->set_basedn(udn);
+  }
   DEBUGLOG(sprintf("LDAPsearch: user: %O filter: %O", u, filter));
   err = catch(results=dir->search(filter)); // FIXME: set only interesting attrs!
   if (err || !objectp(results) || !results->num_entries()) {
@@ -299,6 +305,11 @@ int access_mode_is_guest_or_roaming() {
   return access_mode_is_guest() & access_mode_is_roaming();
 }
 
+int username_parsing_is_positional() {
+
+  return !(query("CI_username_parse") == "positional");
+}
+
 
 int default_uid() {
 
@@ -334,6 +345,25 @@ void create()
 		   "<br/>But can be used for generic indirect user lookup as well."
 		   "</li></ol>",
 		({ "user", "guest", "roaming" }) );
+
+	defvar ("CI_username_parse", "none", "Username parsing",
+		   TYPE_STRING_LIST, "Method of parsing username:"
+		   "<ol>"
+		   "<li><b>none</b><br/>"
+		   "Parsing is disabled.</li>"
+		   "<li><b>positional</b><br/>"
+		   "The username is divided to arrray. The delimiter value is used "
+		   " for division. Elements can be used by using macro %n%, where "
+		   "'n' is the position in the array.</li>"
+		   "<li><b>regexp</b><br/>"
+		   "[unimplemented!].</li>",
+		({ "none", "positional", "regexp" }),
+		access_mode_is_user );
+
+
+	defvar ("CI_username_delimiter", ".", "Username delimiter",
+		   TYPE_STRING, "Delimiter used for splitting elements from username",
+		   0, access_mode_is_user );
 
 	// LDAP server:
         defvar ("CI_dir_server","ldap://localhost/??sub?(&(objectclass=person)(uid=%u%))","LDAP server URL",
