@@ -315,9 +315,9 @@ källservern om de har en last-modified header som anger när de senast
 	  "attacks against software that is known to contain security "
 	  "holes. Server implementors are encouraged to make this field "
 	  "a configurable option.</i></blockquote>");
-  deflocaledoc("svenska", "default_ident", "Identitet: Använd roxens normala"
-	       " identitetssträng",
-	       "Ska roxen använda sitt normala namn ("+real_version+")."
+  deflocaledoc("svenska", "default_ident", "Identifiera roxen med "
+	       "normala identitetssträngen",
+	       "Ska roxen använda sitt normala namn ("+real_version+")?"
 	       "Om du sätter den här variabeln till 'nej' så kommer du att "
 	       "få välja vad roxen ska kalla sig.");
 
@@ -325,8 +325,9 @@ källservern om de har en last-modified header som anger när de senast
 	  TYPE_STRING /* |VAR_MORE */,
 	  "Enter the name that Roxen should use when talking to clients. ",
 	  0, ident_disabled_p);
-  deflocaledoc("svenska", "ident", "Identitet: Roxens identitet",
-	       "Det här är det namn som roxen kommer att använda sig av.");
+  deflocaledoc("svenska", "ident", "Identifiera roxen som",
+	       "Det här är det namn som roxen kommer att använda sig av "
+	       "gentemot omvärlden.");
 
 
 //   globvar("NumAccept", 1, "Number of accepts to attempt",
@@ -526,7 +527,7 @@ anlending.");
 	  "you will then automatically get supports information for new "
 	  "clients, and new versions of old ones.");
   deflocaledoc("svenska", "AutoUpdate",
-	       "Uppdatera 'supports' databasen automatiskt",
+	       "Uppdatera bläddrarfunktionalitetsdatabasen automatiskt",
 #"Ska supportsdatabasen uppdateras automatiskt från www.roxen.com en gång per
  vecka? Om den här optionen är påslagen så kommer roxen att försöka ladda ner
   en ny version av filen etc/supports från http://www.roxen.com/supports en
@@ -591,7 +592,7 @@ to grow in size over time. This is mainly due to heap fragmentation but also
 because of memory leaks."
 	  );
   deflocaledoc("svenska", "suicide_engage",
-	       "Auto omstart: Starta om automatiskt",
+	       "Automatomstart: Starta om automatiskt",
 #"Roxen har stöd för att starta automatiskt då och då. Eftersom roxen är en
 monolitisk icke-forkande server (en enda långlivad process) så tenderar
 processen att växa med tiden.  Det beror mest på minnesfragmentation, men även
@@ -608,7 +609,7 @@ globvar("suicide_timeout",
 	  ({1,2,3,4,5,6,7,14,30}),
 	  lambda(){return !QUERY(suicide_engage);});
   deflocaledoc("svenska", "suicide_timeout",
-	       "Auto omstart: Tidsbegränsning (i dagar)",
+	       "Automatomstart: Tidsbegränsning (i dagar)",
 #"Om roxen är inställd till att starta om automatiskt, starta om
 så här ofta. Tiden är angiven i dagar");
 
@@ -627,7 +628,7 @@ så här ofta. Tiden är angiven i dagar");
                "multipla frontendor, dvs, flera separata roxenservrar som "
                "serverar samma site" );
 
-  globvar( "argument_cache_db_path", "mysql://localhost/roxen",
+  globvar("argument_cache_db_path", "mysql://localhost/roxen",
           "Cache: Argument Cache Database URL to use",
           TYPE_STRING|VAR_MORE,
           "The database to use to store the argument cache",
@@ -637,7 +638,7 @@ så här ofta. Tiden är angiven i dagar");
                "Cache: ArgumentcachedatabasURL",
                "Databasen i vilken argumentcachen kommer att sparas" );
 
-  globvar( "argument_cache_dir", "../argument_cache/",
+  globvar("argument_cache_dir", "../argument_cache/",
           "Cache: Argument Cache Directory",
           TYPE_DIR|VAR_MORE,
           "The cache directory to use to store the argument cache."
