@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.271 2001/08/13 15:56:59 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.272 2001/08/17 16:14:51 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3677,6 +3677,34 @@ class IfMatch
     value = lower_case( value );
     is = lower_case( "*"+is+"*" );
     return glob(is,value) || sizeof(filter( is/",", glob, value ));
+  }
+}
+
+class TagIfDebug {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "debug";
+
+  int eval( string dbg, RequestID id, mapping m ) {
+#ifdef DEBUG
+    return 1;
+#else
+    return 0;
+#endif
+  }
+}
+
+class TagIfModuleDebug {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "module-debug";
+
+  int eval( string dbg, RequestID id, mapping m ) {
+#ifdef MODULE_DEBUG
+    return 1;
+#else
+    return 0;
+#endif
   }
 }
 

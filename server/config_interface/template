@@ -159,11 +159,12 @@
 </gauge>
     <div align="right">
      <font size="-1"><b>&roxen.version; / &roxen.pike-version;</b><br />
-<set variable=var.time-ms expr='&var.time-spent; * 1000'/>
-Total render time: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
-<set variable=var.time-ms expr='&var.time-parse-spent; * 1000'/>
-Content file: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
-
+<if debug=yes >
+ <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
+ Total render time: &var.time-ms;ms <br />
+ <set variable=var.time-ms expr='(int)(&var.time-parse-spent; * 1000)'/>
+ Content file: &var.time-ms;ms <br />
+</if>
 </font>
      </div>
   </body>
