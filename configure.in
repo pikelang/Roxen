@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.4 1997/08/18 03:24:08 grubba Exp $
+# $Id: configure.in,v 1.5 1997/08/18 14:12:53 grubba Exp $
 #
 
 prefix=$PWD
@@ -50,8 +50,8 @@ for ac_site_file in $CONFIG_SITE; do
   if test -r "$ac_site_file"; then
     AC_MSG_WARN([You are using a site file to initialize configure, please
 note that this can lead to problems if anything in
-$ac_site_file is not correct. If Pike does not compile, or
-does not run, please try this to compile Pike again:
+$ac_site_file is not correct. If Roxen does not compile, or
+does not run, please try this to compile Roxen again:
 rm ./config.cache ; CONFIG_SITE=x ./configure ; make])
   fi
 done
