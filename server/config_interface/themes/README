@@ -41,11 +41,12 @@ Stand alone settings (no other settings are based on these):
   selected-indicator   		/internal-roxen-next
   subtabs-align			left
   subtabs-background	        none
-  subtabs-extraargs		none
+  subtabs-extraargs		
   top-background		none
   toptabs-align			left
   toptabs-background	        none
-  toptabs-extraargs		none
+  toptabs-extraargs		
+  content-extratableargs        
   ---------------------------------------------------------
 
 Base settings:
