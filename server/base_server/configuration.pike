@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.536 2003/06/16 15:17:12 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.537 2003/08/13 15:25:55 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1767,7 +1767,8 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_low_answer(501, "Not implemented.");
   }
   int depth = ([ "0":0, "1":1, "infinity":0x7fffffff, 0:0x7fffffff ])
-    [String.trim_whites(id->request_headers->depth)];
+    [id->request_headers->depth &&
+     String.trim_whites(id->request_headers->depth)];
   if (zero_type(depth)) {
     TRACE_LEAVE(sprintf("Bad depth header: %O.",
 			id->request_headers->depth));
@@ -1879,6 +1880,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	if (cmd->get_full_name() == "DAV:set") {
 	  instructions += map(prop->get_children(), PatchPropertySetCmd);
 	} else {
+	  // FIXME: Should we verify that the properties are empty?
 	  instructions += map(prop->get_children()->get_full_name(),
 			      PatchPropertyRemoveCmd);
 	}
