@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# $Id: start,v 1.1 2001/02/02 12:08:40 noring Exp $
+
+# Can be set with '--config-dir=DIR'
+DIR=configurations
+
+parse_args()
+{
+    while [ ! c"$1" = "c" ]
+    do
+	case "$1" in
+	    --config-dir=*)
+		DIR=`echo "$1" | sed -e 's/--config-dir=//'`
+		FILES=`echo "$1" | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
+	    ;;
+	esac
+    
+	shift
+    done
+}
+
+if [ ! c"$ROXEN_ARGS" = "c" ]
+then
+  parse_args $ROXEN_ARGS
+fi
+
+parse_args "$@"
+
+SERVER_VER="$DIR/server_version"
+
+if [ -f "$SERVER_VER" ]
+then
+    SERVER_DIR=`cat "$SERVER_VER"`
+else
+    SERVER_DIR=server
+fi
+
+cd "$SERVER_DIR" && exec ./start "$@"
