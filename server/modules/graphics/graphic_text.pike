@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.74 1997/09/19 16:28:28 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.75 1997/09/19 16:37:20 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -54,7 +54,7 @@ array register_module()
 	      "                 The 'link' color of the document will be\n"
 	      "                 used as the default foreground of the text\n"
 	      " alt=message     Sets the 'alt' attribute.\n"
-	      "                 Use alt="" if no alternate message is wanted.\n"
+	      "                 Use alt=\"\" if no alternate message is wanted.\n"
 	      " quant=cols      Use this number of colors\n"
 	      " magic[=message] Modifier to href, more flashy links\n"
 	      "                 Does <b>not</b> work with 'split'\n"
