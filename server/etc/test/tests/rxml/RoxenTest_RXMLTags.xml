@@ -1073,6 +1073,28 @@ hej</result>
   <result>abc</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <test-misc set="foo">bar</test-misc>
+      <test-misc get="foo"/>
+    </cache>
+    <test-misc get="foo"/>
+  </rxml>
+  <result>barbar</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <test-misc set-prog>bar</test-misc>
+      <test-misc get-prog/>
+    </cache>
+    <test-misc get-prog/>
+  </rxml>
+  <result>barbar</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
