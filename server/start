@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.210 2004/05/16 02:51:46 mani Exp $
+# $Id: start,v 1.211 2004/05/20 12:44:56 _cvs_stephen Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -187,6 +187,9 @@ parse_args() {
    ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
+  ;;
+  --var-dir=*)
+   VARDIR=`echo $1 | sed -e 's/--var-dir=//'`
   ;;
   --debug-log=*)
    DEBUGLOG=`echo $1 | sed -e's/--debug-log=//'`

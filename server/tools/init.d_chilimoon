@@ -5,7 +5,7 @@
 
 # The server directory where the 'start' script is located.
 #
-chilihome=/usr/local/ChiliMoon
+chilihome=/usr/chilimoon
 
 # Set these to kill all processes owned by wwwuser on stop. Useful to
 # reap CGI scripts.
@@ -19,6 +19,19 @@ umask 022
 # is relative to the server-X.Y.Z directory.
 #
 # configdir=../configurations
+configdir=/etc/chilimoon
+
+# If you want to start with another logging directory. The path
+# is relative to the server-X.Y.Z directory.
+#
+# logdir=../logs
+logdir=/var/log/chilimoon
+
+# If you want to start with another cache directory. The path
+# is relative to the server-X.Y.Z directory.
+#
+# vardir=../var
+vardir=/var/cache/chilimoon
 
 # Here you can add extra flags to the start script, like enabling or
 # disabling threads.
@@ -27,11 +40,11 @@ umask 022
 # flags="--without-threads"
 
 # The file to store the process ids in, to allow this script to stop,
-# reload and restart the server. By default it's placed in the
+# reload and restart the server. If left undefined, it's placed in the
 # configuration directory, which ensures that it doesn't accidentally
 # overwrite the pid file for another server instance.
 #
-# pidfile=$configdir/_chilimoon_pid
+pidfile=/var/run/chilimoon.pid
 
 
 ### You should not _have_ to change anything below here...
@@ -44,6 +57,9 @@ if test x$configdir = x; then
 else
   flags="$flags --config-dir=$configdir"
 fi
+
+test -z "$logdir" || flags="$flags --log-dir=$logdir"
+test -z "$vardir" || flags="$flags --var-dir=$vardir"
 
 test x$pidfile = x && pidfile=$configdir/_chilimoon_pid
 flags="$flags --pid-file=$pidfile"
