@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.83 2002/10/24 00:11:28 nilsson Exp $
+ * $Id: ftp.pike,v 2.84 2002/10/27 20:32:52 nilsson Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -851,11 +851,7 @@ class LSFile
     return(res);
   }
 
-#if constant (ADT.Stack)
   static ADT.Stack dir_stack = ADT.Stack();
-#else
-  static object(Stack.stack) dir_stack = Stack.stack();
-#endif
   static int name_directories;
 
   static string fix_path(string s)
@@ -1452,7 +1448,7 @@ class FTPSession
 
   static private int time_touch = time();
 
-  static private object(ADT.Queue) to_send = ADT.Queue();
+  static private ADT.Queue to_send = ADT.Queue();
 
   static private int end_marker = 0;
 
