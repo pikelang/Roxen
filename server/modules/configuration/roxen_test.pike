@@ -3,44 +3,44 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.2 2000/11/11 06:23:10 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.3 2000/11/12 00:07:19 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 constant module_name = "Roxen self test module";
 constant module_doc  = "Tests Roxen WebServer.";
 
 Configuration conf;
-object id;
+Stdio.File index_file;
+Protocol port;
 
 void start(int n, Configuration c) {
   conf=c;
-  id=MockID(c);
+  index_file = Stdio.File();
+  port = Protocol();
   call_out( do_tests, 2 );
   report_debug("Call out requested\n");
 }
 
-class MockID(Configuration conf) {
-  mapping(string:mixed) misc=([ "defines":([ " _ok":1 ]) ]);
-  mapping(string:string) cookies=([]);
-  multiset(string) config=(<>);
-  mapping(string:string) variables=([]);
-  multiset(string) prestate=(<>);
-  multiset(string) supports=(< "images" >);
-  mapping(string:string) client_var=([]);
+RequestID get_id() {
+  object id = RequestID(index_file, port, conf);
+  id->conf = conf;
+  id->misc = ([ "defines":([ " _ok":1 ]) ]);
+  id->cookies=([]);
+  id->config=(<>);
+  id->variables=([]);
+  id->prestate=(<>);
+  id->supports=(< "images" >);
+  id->client_var=([]);
 
-  array(string) pragma=({});
-  array(string) client=({});
+  id->pragma=(<>);
+  id->client=({});
 
-  string realfile="etc/roxen_test/filesystem/index.html";
-  string not_query="/index.html";
-  string raw_url="/index.html";
-  string method="GET";
-  string remoteaddr="10.0.1.23";
-
-  object clone_me() {
-    return MockID(conf);
-  }
-
+  id->realfile="etc/roxen_test/filesystem/index.html";
+  id->not_query="/index.html";
+  id->raw_url="/index.html";
+  id->method="GET";
+  id->remoteaddr="127.0.0.1";
+  return id;
 }
 
 string canon_html(string in) {
@@ -93,21 +93,22 @@ void xml_test(string t, mapping m, string c) {
 				    "result" : lambda(string t, mapping m, string c) { w_res=c; }
   ]) )->finish(c);
 
-  mixed err = catch( a_res = Roxen.parse_rxml( rxml, id ));
+  mixed err = catch( a_res = Roxen.parse_rxml( rxml, get_id() ));
   if(err) {
     fails++;
     lfails++;
-    report_error("Test \"%s\"\nFailed (backtrace)\n",rxml);
+    report_error(" Test \"%s\"\nFailed (backtrace)\n",rxml);
     report_error("%s\n",describe_backtrace(err));
     return;
   }
 
-  a_res = canon_html(a_res);
+  if(!m["no-canon"])
+    a_res = canon_html(a_res);
 
   if(a_res != w_res) {
     fails++;
     lfails++;
-    report_error("Test \"%s\"\nFailed (%O != %O)\n", rxml, a_res, w_res);
+    report_error(" Test \"%s\"\n Failed (%O != %O)\n", rxml, a_res, w_res);
     return;
   }
 }
@@ -144,12 +145,16 @@ void find_tests(string path) {
     }
 }
 
+int die;
 void do_tests() {
 
   if(roxen->start_time - time() < 2)
     call_out( do_tests, 2 );
 
+  if(die) return;
+  die=1;
   find_tests("modules/");
+  report_debug("\n\nDid a grand total of %d tests, %d failed.\n", tests, fails);
 
   roxen->shutdown(1.0);
 }
