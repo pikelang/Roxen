@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.21 2001/11/05 10:10:19 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.22 2001/11/05 12:02:52 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -82,6 +82,21 @@ constant tagdoc=([
 <attr name='server' value='LDAP URL' default='Server URL'><p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
  will be used.</p>
+</attr>
+
+<attr name='filter' value='search filter'><p>
+ Filter of an LDAP search operation. If used that this value rewrites
+ the corresponding part of URL.</p>
+</attr>
+
+<attr name='basedn' value='base DN'><p>
+ Base DN of an LDAP search operation. If used that this value rewrites
+ the corresponding part of URL.</p>
+</attr>
+
+<attr name='scope' value='search scope'><p>
+ Scope of an LDAP search operation. If used that this value rewrites
+ the corresponding part of URL.</p>
 </attr>
 
 <attr name='password' value='user password'><p>
@@ -222,6 +237,10 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
+	if(args->basedn)
+	  con->set_basedn(args->basedn);
+	if(args->scope)
+	  con->set_scope(scope); // FIXME: add error checking
 	error = catch(result = (con->search(args->filter)));
 	break;
 
