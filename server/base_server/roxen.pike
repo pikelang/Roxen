@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.354 1999/11/19 22:44:08 per Exp $
+ * $Id: roxen.pike,v 1.355 1999/11/23 06:38:49 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.354 1999/11/19 22:44:08 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.355 1999/11/23 06:38:49 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1403,10 +1403,10 @@ public string full_status()
        ||!conf->received
        ||!conf->hsent)
       continue;
-    foo[0] += conf->sent->mb()/(float)(time(1)-start_time+1);
-    foo[1] += conf->sent->mb();
-    foo[2] += conf->hsent->mb();
-    foo[3] += conf->received->mb();
+    foo[0] += conf->sent/(1024.0*1024.0)/(float)(time(1)-start_time+1);
+    foo[1] += conf->sent/(1024.0*1024.0);
+    foo[2] += conf->hsent/(1024.0*1024.0);
+    foo[3] += conf->received/(1024.0*1024.0);
     foo[4] += conf->requests;
   }
 

@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.225 1999/11/22 00:24:42 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.226 1999/11/23 06:37:44 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -198,45 +198,15 @@ array (object) allocate_pris()
   return allocate(10, Priority)();
 }
 
-class Bignum 
-{
-#if constant(Gmp.mpz)
-  object gmp = Gmp.mpz();
-  float mb()
-  {
-    return (float)(gmp/1024)/1024.0;
-  }
-
-  object `+(int i)
-  {
-    gmp = gmp+i;
-    return this_object();
-  }
-
-  object `-(int i)
-  {
-    gmp = gmp-i;
-    return this_object();
-  }
-#else
-  int n;
-  object `+(int i) { n+=i; return this_object(); }
-  object `-(int i) { n-=i; return this_object(); }
-  float mb() {return (float)n/ 1024.0; }
-#endif
-}
-
-
-
 /* For debug and statistics info only */
 int requests;
 // Protocol specific statistics.
 mapping(string:mixed) extra_statistics = ([]);
 mapping(string:mixed) misc = ([]);	// Even more statistics.
 
-object sent=Bignum();     // Sent data
-object hsent=Bignum();    // Sent headers
-object received=Bignum(); // Received data
+int sent;     // Sent data
+int hsent;    // Sent headers
+int received; // Received data
 
 // Will write a line to the log-file. This will probably be replaced
 // entirely by log-modules in the future, since this would be much
@@ -739,9 +709,10 @@ public string status()
     return LOCALE->status_bignum_gone();
 
   res = "<table>";
-  res += LOCALE->config_status(sent->mb(), (sent->mb()/dt) * 8192.0,
-			       hsent->mb(), requests,
-			       (((float)requests * 60.0)/dt), received->mb());
+  res += LOCALE->config_status(sent/(1024.0*1024.0), 
+                               (sent/(1024.0*1024.0)/dt) * 8192.0,
+			       hsent/(1024.0*1024.0), requests,
+			       (((float)requests * 60.0)/dt), received/(1024.0*1024.0));
 
   if (!zero_type(misc->ftp_users)) {
     res += LOCALE->ftp_status(misc->ftp_users,
