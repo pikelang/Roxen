@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.33 1999/12/15 01:45:06 marcus Exp $ */
+/* $Id: fonts.pike,v 1.34 1999/12/27 22:46:05 mast Exp $ */
 
 #include <module.h>
 
@@ -188,10 +188,11 @@ string make_font_name(string name, int size, int bold, int italic)
   return 0;
 }
 
+#if constant(Image.TTF)
 class TTFWrapper
 {
   int size;
-  Image.TTF real;
+  object real;
   static object encoder;
   static function(string ... : Image.image) real_write;
   int height( )
@@ -219,7 +220,7 @@ class TTFWrapper
     return ({ o->xsize(), o->ysize() });
   }
 
-  void create(Image.TTF r, int s, string fn)
+  void create(object r, int s, string fn)
   {
     string encoding;
     real = r;
@@ -240,6 +241,7 @@ class TTFWrapper
     return real_write(@Array.map( (array(string))what,replace," ",""));
   }
 }
+#endif
 
 object get_font(string f, int size, int bold, int italic,
 		string justification, float xspace, float yspace)
