@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.30 1997/11/11 01:03:14 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.31 1997/12/17 00:52:54 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -161,12 +161,12 @@ void destroy()
     return(0);
   }
   if (p_level != roxen->privs_level-1) {
-    report_notice(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			  "Skips privs level. Saved level:%d Current level:%d\n"
-			  "Occurs in:\n%s\n",
-			  saved_uid, saved_gid, new_uid, new_gid,
-			  p_level, roxen->privs_level,
-			  describe_backtrace(backtrace())));
+    report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
+			 "Skips privs level. Saved level:%d Current level:%d\n"
+			 "Occurs in:\n%s\n",
+			 saved_uid, saved_gid, new_uid, new_gid,
+			 p_level, roxen->privs_level,
+			 describe_backtrace(backtrace())));
   }
   roxen->privs_level = p_level;
 
