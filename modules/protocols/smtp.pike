@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.8 1998/09/03 00:04:40 grubba Exp $
+ * $Id: smtp.pike,v 1.9 1998/09/03 00:18:29 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.8 1998/09/03 00:04:40 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.9 1998/09/03 00:18:29 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -71,7 +71,7 @@ class Server {
     string prot = "SMTP";
     function delayed_answer;
 
-    constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat" });
+    constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
     constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
