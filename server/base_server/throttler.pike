@@ -9,14 +9,14 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.6 2001/01/28 04:52:52 per Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.7 2001/03/12 14:06:31 nilsson Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
 
 #ifdef THROTTLING_DEBUG
 # undef THROTTLING_DEBUG
-# define THROTTLING_DEBUG(X) werror("throttler: "+X+"\n")
+# define THROTTLING_DEBUG(X) report_debug("throttler: "+X+"\n")
 #else
 # define THROTTLING_DEBUG(X)
 #endif

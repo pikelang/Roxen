@@ -4,7 +4,7 @@
 //
 
 #ifdef RXMLHELP_DEBUG
-# define RXMLHELP_WERR(X) werror("RXML help: %s\n", X);
+# define RXMLHELP_WERR(X) report_debug("RXML help: %s\n", X);
 #else
 # define RXMLHELP_WERR(X)
 #endif

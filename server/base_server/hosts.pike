@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: hosts.pike,v 1.29 2001/01/19 12:41:34 per Exp $
+// $Id: hosts.pike,v 1.30 2001/03/12 14:06:06 nilsson Exp $
 
 #include <roxen.h>
 
@@ -31,7 +31,7 @@ mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
 void got_one_result(string from, string to)
 {
 #ifdef HOST_NAME_DEBUG
-  werror("Hostname:  ---- <"+from+"> == <"+to+"> ----\n");
+  report_debug("Hostname:  ---- <"+from+"> == <"+to+"> ----\n");
 #endif
   if(to) cache_set("hosts", from, to);
   array cbs = do_when_found[ from ];

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.56 2001/02/22 17:51:02 mast Exp $
+// $Id: read_config.pike,v 1.57 2001/03/12 14:07:49 nilsson Exp $
 
 #include <module.h>
 
@@ -61,7 +61,7 @@ void really_save_it( string cl, mapping data )
   m_delete( call_outs, cl );
 
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Writing configuration file for cl "+cl+"\n");
+  report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
@@ -133,8 +133,8 @@ void really_save_it( string cl, mapping data )
   if( !file_stat( f ) ) // Oups. Gone.
   {
     if (!mv( f+"~", f ))
-      werror ("Failed to move back backup file (" + f + "~)"
-	      " (" + strerror (errno()) + ")!\n");
+      report_debug ("Failed to move back backup file (" + f + "~)"
+		    " (" + strerror (errno()) + ")!\n");
     Stdio.cp( f+"~2~", f+"~" );
   }
   catch (fd->close());		// Can't remove open files on NT.
@@ -160,7 +160,7 @@ mapping read_it(string cl)
     return call_outs[cl][1];
 
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Read configuration file for cl "+cl+"\n");
+  report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
 #endif
   mixed err;
   string try_read( string f )
@@ -207,7 +207,7 @@ void remove( string reg , Configuration current_configuration )
     cl=current_configuration->name;
 #endif
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Remove "+reg+" in "+cl+"\n");
+  report_debug("CONFIG: Remove "+reg+" in "+cl+"\n");
 #endif
   mapping data = read_it(cl);
   m_delete( data, reg );
@@ -221,7 +221,7 @@ void remove_configuration( string name )
   if(!file_stat( f ))   
     f = configuration_dir+name;
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Remove "+f+"\n");
+  report_debug("CONFIG: Remove "+f+"\n");
 #endif
   catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
   catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
@@ -247,7 +247,7 @@ void store( string reg, mapping vars, int q,
     cl=current_configuration->name;
 #endif
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Store "+reg+" in "+cl+"\n");
+  report_debug("CONFIG: Store "+reg+" in "+cl+"\n");
 #endif
   mapping data;
   if( cl == last_read )
@@ -292,7 +292,7 @@ mapping(string:mixed) retrieve(string reg,
 #endif
 
 #ifdef DEBUG_CONFIG
-  werror("CONFIG: Retrieve "+reg+" in "+cl+"\n");
+  report_debug("CONFIG: Retrieve "+reg+" in "+cl+"\n");
 #endif
   if( cl == last_read )
     return COPY( last_data[ reg ] );

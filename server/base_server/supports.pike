@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.22 2000/08/17 01:16:31 per Exp $
+// $Id: supports.pike,v 1.23 2001/03/12 14:08:26 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -62,22 +62,22 @@ private void parse_supports_string(string what, string current_section,
 	    add+=defines[sup];
 	  }
 	defines[name]+=add;
-//	werror("#defining '"+name+"' to "+to+"\n");
+//	report_debug("#defining '"+name+"' to "+to+"\n");
       }
       else if(sscanf(line, "#section %[^ ] {", name)) {
-//	werror("Entering section "+name+"\n");
+//	report_debug("Entering section "+name+"\n");
 	current_section = name;
 	if(!supports[name])
 	  supports[name] = ({});
       }
       else if((line-" ") == "#}") {
-//	werror("Leaving section "+current_section+"\n");
+//	report_debug("Leaving section "+current_section+"\n");
 	current_section = 0;
       }
 
     }
     else {
-//    werror("Parsing supports line '"+line+"'\n");
+//    report_debug("Parsing supports line '"+line+"'\n");
       array(string) sups = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
 
       array add=({});
@@ -131,7 +131,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
   {
     if(!v || (sizeof(v)<=sizeof(from) && from[..sizeof(v)-1]==v))
     {
-      //  werror("Section "+v+" match "+from+"\n");
+      //  report_debug("Section "+v+" match "+from+"\n");
       foreach(supports[v], array(function|multiset) s)
         if(([function(string:void|mixed)]s[0])(from))
         {
@@ -146,7 +146,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
   {
     sup = default_supports;
 #ifdef DEBUG
-    werror("Unknown client: \""+from+"\"\n");
+    report_debug("Unknown client: \""+from+"\"\n");
 #endif
   }
   sup -= nsup;

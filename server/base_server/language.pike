@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.36 2001/02/22 05:18:07 nilsson Exp $
+// $Id: language.pike,v 1.37 2001/03/12 14:06:21 nilsson Exp $
 
 // #pragma strict_types
 
@@ -113,7 +113,7 @@ void set_default_locale(string def_loc)
     default_page_locale = default_locale;
 
 #ifdef LANGUAGE_DEBUG
-  werror("Default locale set to %O. ", default_locale);
+  report_debug("Default locale set to %O. ", default_locale);
 #endif
 }
 
@@ -143,7 +143,7 @@ void initiate_languages(string def_loc)
 static string nil()
 {
 #ifdef LANGUAGE_DEBUG
-  werror("Cannot find that one in %O.\n", list_languages());
+  report_debug("Cannot find that one in %O.\n", list_languages());
 #endif
   return "No such function in that language, or no such language.";
 }
@@ -152,7 +152,7 @@ static string nil()
 public function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
-  werror("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
+  report_debug("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
 #endif
   return Locale.call(PROJECT, verify_locale(lang), 
 		     func, default_page_locale) || nil;  

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.59 2001/02/23 00:29:25 per Exp $
+// $Id: disk_cache.pike,v 1.60 2001/03/12 14:05:19 nilsson Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -12,7 +12,7 @@
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
-# define CACHE_WERR(X) werror("CACHE: "+X+"\n");
+# define CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
 #else
 # define CACHE_WERR(X)
 #endif
@@ -114,7 +114,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
     if(head = Stdio.read_bytes(QUERY(cachedir)+file+".head"))
     {
       headers = decode_value(head);
-//      werror(sprintf("Extracted %d bytes of headers from %s (%O)\n",
+//      report_debug(sprintf("Extracted %d bytes of headers from %s (%O)\n",
 //		     strlen(head), fname, headers));
       return 1;
     }

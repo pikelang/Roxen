@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.421 2001/03/08 15:34:57 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.422 2001/03/12 14:05:02 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -21,13 +21,13 @@ constant cvs_version = "$Id: configuration.pike,v 1.421 2001/03/08 15:34:57 per 
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) werror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) report_debug("Throttling: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif
 
 #ifdef REQUEST_DEBUG
-# define REQUEST_WERR(X) werror("CONFIG: "+X+"\n")
+# define REQUEST_WERR(X) report_debug("CONFIG: "+X+"\n")
 #else
 # define REQUEST_WERR(X)
 #endif
@@ -975,7 +975,7 @@ mixed _lock(object|function f)
     {
       // Allow recursive locks.
       catch{
-	//werror("lock %O\n", f);
+	// report_debug("lock %O\n", f);
 	locked[f]++;
 	key = l();
       };
@@ -993,7 +993,7 @@ mixed _lock(object|function f)
 	locks[f]=l;
       }
     }
-    //werror("lock %O\n", f);
+    // report_debug("lock %O\n", f);
     locked[f]++;
     key = l();
   }
@@ -1774,7 +1774,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
     mode -= "R";
     if(f = real_file(fname, id))
     {
-      //      werror("opening "+fname+" in raw mode.\n");
+      //      report_debug("opening "+fname+" in raw mode.\n");
       return ({ open(f, mode), ([]) });
     }
 //     return ({ 0, (["error":302]) });
@@ -1856,8 +1856,8 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       id->not_query=of;
 #ifdef MODULE_DEBUG
-      werror("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
-	     file, tmp);
+      report_debug("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
+		  file, tmp);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE("Returned mapping."+sprintf("%O", tmp));
       TRACE_LEAVE("");
@@ -1882,8 +1882,8 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       if(err)
 	throw(err);
 #ifdef MODULE_DEBUG
-      werror("conf->find_dir_stat(\"%s\"): url_module returned object:\n",
-	     file);
+      report_debug("conf->find_dir_stat(\"%s\"): url_module returned object:\n",
+		  file);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE("Returned object.");
       TRACE_LEAVE("Returning it.");
@@ -3273,11 +3273,11 @@ page.
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
-//   werror("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
+//   report_debug("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
 //   st = gethrtime();
   setvars( retrieve("spider#0", this_object()) );
 
-//   werror("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
+//   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
   if (query("throttle"))
   {
     throttler=.throttler();

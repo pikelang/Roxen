@@ -1,11 +1,11 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: socket.pike,v 1.21 2001/01/04 06:02:29 nilsson Exp $
+// $Id: socket.pike,v 1.22 2001/03/12 14:08:15 nilsson Exp $
 
 #define roxen roxenp()
 
 #ifdef SOCKET_DEBUG
-# define SOCKET_WERR(X) werror("SOCKETS: "+X+"\n");
+# define SOCKET_WERR(X) report_debug("SOCKETS: "+X+"\n");
 #else
 # define SOCKET_WERR(X)
 #endif
@@ -151,7 +151,7 @@ void async_cache_connect(string host, int port, string cl,
   {
     object f;
     f=cache->file;
-//    werror("Cache file is %O\n", f);
+//    report_debug("Cache file is %O\n", f);
     cache->file = 0; // do _not_ close the actual file when returning...
     destruct(cache);
     return callback(f, @args);

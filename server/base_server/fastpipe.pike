@@ -2,7 +2,7 @@
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 // Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.6 2000/08/13 13:54:21 per Exp $";
+constant cvs_version="$Id: fastpipe.pike,v 1.7 2001/03/12 14:05:33 nilsson Exp $";
 
 private array(string) headers=({});
 private Stdio.File file;
@@ -30,7 +30,7 @@ private void sendfile_done(int written, function callback, array(mixed) args)
 void output (Stdio.File fd)
 {
   // FIXME: timeout handling!
-//   werror( "%O\n", ({strlen(headers[0]),file,-1,flen,0,fd,sendfile_done}) );
+//   report_debug( "%O\n", ({strlen(headers[0]),file,-1,flen,0,fd,sendfile_done}) );
   Stdio.sendfile(headers,file,-1,flen,0,fd,sendfile_done);
 }
 
