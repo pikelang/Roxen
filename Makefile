@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.50 1999/05/05 22:04:09 marcus Exp $
+# $Id: Makefile,v 1.51 1999/05/07 17:57:53 peter Exp $
 #
 # Bootstrap Makefile
 #
@@ -177,6 +177,10 @@ keep_dbapi:
 	  tar cf dbapi.tar $$files $$dirs; \
 	fi
 
+keep_pro:
+	@echo "Keeping Challenger Pro parts..."
+	@tar cf pro.tar server/modules/pro
+
 censor : censor_crypto censor_dbapi dist_clean
 	@echo "Censoring complete."
 
@@ -218,6 +222,10 @@ censor_dbapi :
 	    rm -rf $$d/rsql*; \
 	  else : ; fi; \
 	done
+
+censor_pro :
+	@echo "Censoring the Challenger Pro parts..."
+	@rm -rf server/modules/pro
 
 censor_strong_crypto :
 	@echo "Censoring strong crypto..."
