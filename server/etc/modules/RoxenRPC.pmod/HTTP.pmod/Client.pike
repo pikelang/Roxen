@@ -1,5 +1,5 @@
 //
-// $Id: Client.pike,v 1.7 2000/03/17 14:28:27 nilsson Exp $
+// $Id: Client.pike,v 1.8 2001/11/12 16:11:52 noring Exp $
 //
 // Roxen HTTP RPC
 //
@@ -20,7 +20,7 @@ static private void establish()
 {
   int rpc_port;
   object o = Stdio.File();
-  signal(signum("SIGALRM"), lambda() { throw("timeout"); });
+  signal(signum("SIGALRM"), lambda() { error("timeout"); });
   alarm(5);
   o->connect(host, port);
   o->write(sprintf("GET %s\r\n", "/"+combine_path(path, "rpc/")));
