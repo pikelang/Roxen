@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.671 2001/06/13 13:17:44 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.672 2001/06/13 17:21:56 jonasw Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -934,6 +934,14 @@ class BackgroundProcess
     if (stopping) return;
     func (@args);
     background_run (period, repeat, func, args);
+  }
+
+  //! @decl void set_period (int|float period);
+  //!
+  //! Changes the period to @[period] seconds between calls.
+  void set_period (int|float period_)
+  {
+    period = period_;
   }
 
   //! @decl static void create (int|float period, function func, mixed... args);
