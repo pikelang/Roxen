@@ -1,3 +1,13 @@
+Changes since Roxen Challenger 1.2 alpha 13
+-----------------------------------------------
+
+o Location-modules now have a secondary sorting-order (longest path first),
+  which removes some cases where priorities were needed before.
+
+o SSL3 now reads data to be sent nonblocking, so cgi-scripts should work again
+  on https ports.
+
+
 Changes since Roxen Challenger 1.2 alpha 12
 -----------------------------------------------
 
