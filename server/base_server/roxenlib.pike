@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.157 2000/02/29 15:01:23 nilsson Exp $
+// $Id: roxenlib.pike,v 1.158 2000/03/06 18:56:45 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1464,7 +1464,7 @@ Stdio.File open_log_file( string logfile )
   return Stdio.stderr;
 }
 
-string|int tagtime(int t, mapping m, RequestID id, function language)
+string tagtime(int t, mapping m, RequestID id, function language)
 {
   string res;
 
@@ -1607,7 +1607,7 @@ string|int tagtime(int t, mapping m, RequestID id, function language)
   return res;
 }
 
-string|int API_read_file(RequestID id, string file)
+string API_read_file(RequestID id, string file)
 {
   file = fix_relative(file, id);
   id = id->clone_me();
