@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.27 1998/01/08 16:18:50 grubba Exp $
+# $Id: extensions,v 1.28 1998/01/30 15:09:53 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -50,6 +50,9 @@ tiff	image/tiff
 xbm	image/x-xbitmap
 xpm	image/x-xpixmap
 xwd	image/x-xwindowdump
+
+# AutoCad (AutoDesk)
+dwf	drawing/x-dwf
 
 anim3	video/x-anim
 anim5	video/x-anim
@@ -105,7 +108,7 @@ cpio	application/x-cpio
 csh	application/x-csh
 dll	application/octet-stream
 dnt     application/donut
-# Too general, but also to common to not be defined.
+# Too general, but also too common to not be defined.
 doc	application/msword
 donut   application/donut
 drv	application/octet-stream
