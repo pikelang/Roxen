@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.8 2000/11/02 13:09:53 kuntri Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.9 2000/11/06 11:19:12 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -235,7 +235,7 @@ constant tagdoc=([
  description.</p></desc>
 
 <attr name=variables value=list required>
- A comma seperated list with the name of the variables that should be set.
+ A comma separated list with the name of the variables that should be set.
 <ex type=vert>
 <sscanf variables='form.year,var.month,var.day' format='%4d%2d%2d'>19771003</sscanf>
 &form.year;-&var.month;-&var.day;
