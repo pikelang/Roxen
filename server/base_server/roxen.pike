@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.308 1999/07/20 20:42:55 grubba Exp $
+ * $Id: roxen.pike,v 1.309 1999/07/27 04:02:10 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.308 1999/07/20 20:42:55 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.309 1999/07/27 04:02:10 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1989,8 +1989,8 @@ class ImageCache
     meta_cache_insert( id, meta );
 
     string data = encode_value( meta );
-    Stdio.File f = Stdio.File(  dir+id+".i", "wct" );
-    if(!f) 
+    Stdio.File f = Stdio.File(  );
+    if(!f->open(dir+id+".i", "wct" ))
     {
       report_error( "Failed to open image cache persistant cache file "+
                     dir+id+".i: "+strerror( errno() )+ "\n" );
@@ -2001,8 +2001,8 @@ class ImageCache
 
   static void store_data( string id, string data )
   {
-    Stdio.File f = Stdio.File(  dir+id+".d", "wct" );
-    if(!f) 
+    Stdio.File f = Stdio.File(  );
+    if(!f->open(dir+id+".d", "wct" ))
     {
       data_cache_insert( id, data );
       report_error( "Failed to open image cache persistant cache file "+
