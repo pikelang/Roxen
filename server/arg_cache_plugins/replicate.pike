@@ -200,4 +200,6 @@ array(int) decode_id( string data )
   }
   return 0;
 }
+#else
+constant disabled = 1;
 #endif
