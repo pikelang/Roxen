@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.85 1998/03/07 00:10:13 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.86 1998/03/07 11:13:15 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -314,8 +314,9 @@ string itag_data(mapping tag, mapping m, string contents,
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
+  string space="";
   if ((sep!=" ")&&(linesep!=" "))
-    contents = contents - " ";
+    space = " ";
 
   if ((sep!="\t")&&(linesep!="\t"))
     contents = contents - "\t";
@@ -376,7 +377,7 @@ string itag_data(mapping tag, mapping m, string contents,
   for(int i=0; i<sizeof(bar); i++)
     for(int j=0; j<sizeof(bar[i]); j++)
       if (bar[i][j]!=VOIDSYMBOL)
-	bar[i][j]=(float)bar[i][j];
+	bar[i][j]=(float)(bar[i][j]-space);
   res->data=bar;
   return 0;
 }
