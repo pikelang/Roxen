@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.368 2000/09/13 11:36:04 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.369 2000/09/13 14:09:35 jonasw Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -767,7 +767,8 @@ void clear_memory_caches()
 		     otomod[m], describe_backtrace(err));
 }
 
-string draw_saturation_bar(int hue,int brightness, int where)
+//  Returns tuple < image, mime-type >
+array(string) draw_saturation_bar(int hue,int brightness, int where)
 {
   Image.Image bar=Image.Image(30,256);
 
@@ -781,7 +782,11 @@ string draw_saturation_bar(int hue,int brightness, int where)
   where = 255-where;
   bar->line(0,where,29,where, 255,255,255);
 
-  return Image.GIF.encode(bar);
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+  return ({ Image.GIF.encode(bar), "image/gif" });
+#else
+  return ({ Image.JPEG.encode(bar), "image/jpeg" });
+#endif
 }
 
 
@@ -796,8 +801,10 @@ private mapping internal_roxen_image(string from)
 
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
-  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
-    return Roxen.http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
+  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4) {
+    array bar = draw_saturation_bar(hue, bright, w);
+    return Roxen.http_string_answer(bar[0], bar[1]);
+  }
 
   Stdio.File f;
 
