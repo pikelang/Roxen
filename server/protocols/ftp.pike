@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.94 1998/05/08 00:36:56 grubba Exp $
+ * $Id: ftp.pike,v 1.95 1998/05/09 18:59:22 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1275,7 +1275,7 @@ string partial = "";
 
 void handle_data(string s, mixed key)
 {
-  roxen_perror(sprintf("FTP: handle_data():%O\n", ({ s })));
+  // roxen_perror(sprintf("FTP: handle_data():%O\n", ({ s })));
 
   string cmdlin;
   time = _time(1);
