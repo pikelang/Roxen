@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.184 2000/10/26 14:03:02 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.185 2000/11/02 12:47:02 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1733,58 +1733,110 @@ string api_query_modified(RequestID id, string f, int|void by)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&client.ip;":#"<desc ent>The client is located on this IP-address.</desc>",
-"&client.host;":#"<desc ent>The host name of the client, if possible to resolve.</desc>",
-"&client.name;":#"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
-"&client.Fullname;":#"<desc ent>The full user agent string, i.e. name of the client
- and additional info like; operating system, type of computer, etc.
- E.g. \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\". </desc>",
-"&client.fullname;":#"<desc ent>The full user agent string, i.e. name of the client
- and additional info like; operating system, type of computer, etc.
- E.g. \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\". </desc>",
-"&client.referrer;":#"<desc ent>Prints the URL of the page on which the user followed
- a link that brought her to this page. The information comes from the referrer header
- sent by the browser.</desc>",
-"&client.accept-language;":#"<desc ent>The client prefers to have the page contents
- presented in this language.</desc>",
-"&client.accept-languages;":#"<desc ent>The client prefers to have the page contents
- presented in this language but these additional languages are accepted as well.</desc>",
-"&client.language;":#"<desc ent>The clients most preferred language.</desc>",
-"&client.languages;":#"<desc ent>An ordered list of the clients most preferred</desc>",
-"&client.authenticated;":#"<desc ent></desc>",
-"&client.user;":#"<desc ent></desc>",
-"&client.password;":#"<desc ent></desc>",
+"&client.ip;":#"<desc ent='ent'><p>
+ The client is located on this IP-address.
+</p></desc>",
+"&client.host;":#"<desc ent='ent'><p>
+ The host name of the client, if possible to resolve.
+</p></desc>",
+"&client.name;":#"<desc ent='ent'><p>
+ The name of the client, i.e. \"Mozilla/4.7\".
+</p></desc>",
+"&client.Fullname;":#"<desc ent='ent'><p>
+ The full user agent string, i.e. name of the client and additional
+ info like; operating system, type of computer, etc. E.g.
+ \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\".
+</p></desc>",
+"&client.fullname;":#"<desc ent='ent'><p>
+ The full user agent string, i.e. name of the client and additional
+ info like; operating system, type of computer, etc. E.g.
+ \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\".
+</p></desc>",
+"&client.referrer;":#"<desc ent='ent'><p>
+ Prints the URL of the page on which the user followed a link that
+ brought her to this page. The information comes from the referrer
+ header sent by the browser.
+</p></desc>",
+"&client.accept-language;":#"<desc ent='ent'><p>
+ The client prefers to have the page contents presented in this
+ language.
+</p></desc>",
+"&client.accept-languages;":#"<desc ent='ent'><p>
+ The client prefers to have the page contents presented in this
+ language but these additional languages are accepted as well.
+</p></desc>",
+"&client.language;":#"<desc ent='ent'><p>
+ The clients most preferred language.
+</p></desc>",
+"&client.languages;":#"<desc ent='ent'><p>
+ An ordered list of the clients most preferred
+</p></desc>",
+"&client.authenticated;":#"<desc ent='ent'><p>
+
+</p></desc>",
+"&client.user;":#"<desc ent='ent'><p>
+
+</p></desc>",
+"&client.password;":#"<desc ent='ent'><p>
+
+</p></desc>",
 
 
-"&page.realfile;":#"<desc ent>Path to this file in the file system.</desc>",
-"&page.virtroot;":#"<desc ent>The root of the present virtual filesystem.</desc>",
+"&page.realfile;":#"<desc ent='ent'><p>
+ Path to this file in the file system.
+</p></desc>",
+"&page.virtroot;":#"<desc ent='ent'><p>
+ The root of the present virtual filesystem.
+</p></desc>",
 //  &page.virtfile; is same as &page.path; but deprecated since we want to
 //  harmonize with SiteBuilder entities.
-"&page.path;":#"<desc ent>Absolute path to this file in the virtual filesystem.</desc>",
-"&page.pathinfo;":#"\
-<desc ent>The \"path info\" part of the URL, if any. Can only get set
-if the \"Path info support\" module is installed. For details see the
-documentation for that module.</desc>",
-"&page.query;":#"<desc ent>The query part of the page URI.</desc>",
-"&page.url;":#"<desc ent>The absolute path for this file from the web server's root or point of view including query variables</desc>",
-"&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
- (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
-"&page.language;":#"<desc ent>What language the contens of this file is written in.
- The language must be given as metadata to be found.</desc>",
-"&page.scope;":#"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
-"&page.filesize;":#"<desc ent>This file's size, in bytes.</desc>",
-"&page.ssl-strength;":#"<desc ent>The strength in bits of the current SSL connection.</desc>",
-"&page.self;":#"<desc ent>The name of this file.</desc>",
+"&page.path;":#"<desc ent='ent'><p>
+ Absolute path to this file in the virtual filesystem.
+</p></desc>",
+"&page.pathinfo;":#"<desc ent='ent'><p>
+ The \"path info\" part of the URL, if any. Can only get set if the
+ \"Path info support\" module is installed. For details see the
+ documentation for that module.
+</p></desc>",
+"&page.query;":#"<desc ent='ent'><p>
+ The query part of the page URI.
+</p></desc>",
+"&page.url;":#"<desc ent='ent'><p>
+ The absolute path for this file from the web server's root or point
+ of view including query variables
+</p></desc>",
+"&page.last-true;":#"<desc ent='ent'><p>
+ Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
+ (<tag>true/</tag> and <tag>false/</tag> is considered as
+ <tag>if</tag>-statements here)
+</p></desc>",
+"&page.language;":#"<desc ent='ent'><p>
+ What language the contens of this file is written in. The language
+ must be given as metadata to be found.
+</p></desc>",
+"&page.scope;":#"<desc ent='ent'><p>
+ The name of the current scope, i.e. the scope accessible through the
+ name \"_\".
+</p></desc>",
+"&page.filesize;":#"<desc ent='ent'><p>
+ This file's size, in bytes.
+</p></desc>",
+"&page.ssl-strength;":#"<desc ent='ent'><p>
+ The strength in bits of the current SSL connection.
+</p></desc>",
+"&page.self;":#"<desc ent='ent'><p>
+ The name of this file.
+</p></desc>",
 
-"roxen_automatic_charset_variable":#"<desc tag>
+"roxen_automatic_charset_variable":#"<desc tag='tag'><p>
  If put inside a form, the right character encoding of the submitted form can be guessed
  by Roxen Webserver.
-</desc>",
+</p></desc>",
 
-"aconf":#"<desc cont><short>
+"aconf":#"<desc cont='cont'><p><short>
  Creates a link that can modify the persistent states in the cookie
  RoxenConfig.</short>
-</desc>
+</p></desc>
 
 <attr name=href value=uri>
  Indicates which page should be linked to, if any other than the
@@ -1806,10 +1858,10 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>
  All other attributes will be inherited by the generated a tag.",
 
-"append":#"<desc tag><short>
+"append":#"<desc tag='tag'><p><short>
  Appends a value to a variable. The variable attribute and one more is
  required.</short>
-</desc>
+</p></desc>
 
 <attr name=variable value=string required>
  The name of the variable.
@@ -1829,14 +1881,14 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  The name of another variable that the value should be copied from.
 </attr>",
 
-"apre":#"<desc cont><short>
+"apre":#"<desc cont='cont'><p><short>
  Creates a link that can modify prestates.</short> Prestate options
  are simple toggles, and are added to the URL of the page. Use <tag>if
  prestate='...'</tag> ... <tag>/if</tag>to test for the presence of a
  prestate. <tag>apre</tag> works just like the <tag>a href=...</tag>
  container, but if no \"href\" attribute is specified, the current
  page is used.
-</desc>
+</p></desc>
 
 <attr name=href value=uri>
  Indicates which page should be linked to, if any other than the
@@ -1856,12 +1908,12 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>",
 
-"auth-required":#"<desc tag><short>
+"auth-required":#"<desc tag='tag'><p><short>
  Adds an HTTP auth required header and return code (401), that will
  force the user to supply a login name and password.</short> This tag
  is needed when using access control in RXML in order for the user to
  be prompted to login.
-</desc>
+</p></desc>
 
 <attr name=realm value=string>
  The realm you are logging on to, i.e \"Intranet foo\".
@@ -1871,7 +1923,7 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  Returns a message if a login failed or cancelled.
 </attr>",
 
-"autoformat":#"<desc cont><short hide>
+"autoformat":#"<desc cont='cont'><p><short hide>
  Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
 
 <ex><autoformat>
@@ -1879,7 +1931,7 @@ It is almost like
 using the pre tag.
 </autoformat></ex>
 
-</desc>
+</p></desc>
 
 <attr name=p>
  Replace empty lines with <tag>p</tag>:s.
@@ -1898,7 +1950,7 @@ using the pre tag.
  This cascading style sheet (CSS) definition will be applied on the p elements.
 </attr>",
 
-"cache":#"<desc cont><short>
+"cache":#"<desc cont='cont'><p><short>
  This simple tag RXML parse its contents and cache them using the
  normal Roxen memory cache.</short> They key used to store the cached
  contents is the MD5 hash sum of the contents, the accessed file name,
@@ -1907,7 +1959,7 @@ using the pre tag.
  entry should be considered valid can set with one or several time attributes.
  If not provided the entry will be removed from the cache when it has
  been untouched for too long.
-</desc>
+</p></desc>
 
 <attr name=key value=string>
  Append this value to the hash used to identify the contents for less
@@ -1943,17 +1995,17 @@ using the pre tag.
  Add this number of seconds to the time this entry is valid.
 </attr>",
 
-"catch":#"<desc cont><short>
+"catch":#"<desc cont='cont'><p><short>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents.</short> If something does go wrong, the error
  message is returned instead. See also <tag><ref
  type='tag'>throw</ref></tag>.
-</desc>",
+</p></desc>",
 
-"configimage":#"<desc tag><short>
+"configimage":#"<desc tag='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
  src attribute is required.
-</desc>
+</p></desc>
 
 <attr name=src value=string>
  The name of the picture to show.
@@ -1973,11 +2025,11 @@ using the pre tag.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"configurl":#"<desc tag><short>
+"configurl":#"<desc tag='tag'><p><short>
  Returns a URL to the administration interface.</short>
-</desc>",
+</p></desc>",
 
-"cset":#"<desc cont>Sets a variable with its content.</desc>
+"cset":#"<desc cont='cont'><p>Sets a variable with its content.</p></desc>
 
 <attr name=variable value=name>
  The variable to be set.
@@ -1988,14 +2040,14 @@ using the pre tag.
 </attr>
 ",
 
-"crypt":#"<desc cont><short>
+"crypt":#"<desc cont='cont'><p><short>
  Encrypts the contents as a Unix style password.</short> Useful when
  combined with services that use such passwords. <p>Unix style
  passwords are one-way encrypted, to prevent the actual clear-text
  password from being stored anywhere. When a login attempt is made,
  the password supplied is also encrypted and then compared to the
  stored encrypted password.</p>
-</desc>
+</p></desc>
 
 <attr name=compare value=string>
  Compares the encrypted string with the contents of the tag. The tag
@@ -2006,9 +2058,9 @@ using the pre tag.
 </ex>
 </attr>",
 
-"date":#"<desc tag><short>
+"date":#"<desc tag='tag'><p><short>
  Inserts the time and date.</short> Does not require attributes.
-</desc>
+</p></desc>
 
 <attr name=unix-time value=number of seconds>
 
@@ -2179,10 +2231,10 @@ Display the time from another timezone.
  The number of decimals in the stardate.
 </attr>",
 
-"debug":#"<desc tag><short>
+"debug":#"<desc tag='tag'><p><short>
  Helps debugging RXML-pages as well as modules.</short> When debugging mode is
  turned on, all error messages will be displayed in the HTML code.
-</desc>
+</p></desc>
 
 <attr name=on>
  Turns debug mode on.
@@ -2200,9 +2252,9 @@ Display the time from another timezone.
  Shows a part of the id object. E.g. showid=\"id->request_headers\".
 </attr>",
 
-"dec":#"<desc tag><short>
+"dec":#"<desc tag='tag'><p><short>
  Subtracts 1 from a variable.</short>
-</desc>
+</p></desc>
 
 <attr name=variable value=string required>
  The variable to be decremented.
@@ -2212,7 +2264,7 @@ Display the time from another timezone.
  The value to be subtracted.
 </attr>",
 
-"default":#"<desc cont><short hide>
+"default":#"<desc cont='cont'><p><short hide>
  Used to set default values for form elements.</short> Makes it easier
  to give default values to \"<tag>select</tag>\" or
  \"<tag>checkbox</tag>\" form elements.
@@ -2221,7 +2273,7 @@ Display the time from another timezone.
  should give a default value.</p>
 
  <p>This tag is particularly useful in combination with database tags.</p>
-</desc>
+</p></desc>
 
 <attr name=value value=string>
  The value to set.
@@ -2245,11 +2297,11 @@ Display the time from another timezone.
  </default>
 </ex>",
 
-"doc":#"<desc cont><short hide>
+"doc":#"<desc cont='cont'><p><short hide>
  Eases code documentation by reformatting it.</short>
  Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\". No attributes required.
-</desc>
+</p></desc>
 
 <attr name=quote>
  Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
@@ -2284,9 +2336,9 @@ Display the time from another timezone.
   This cascading style sheet (CSS) definition will be applied on the pre element.
   </attr>",
 
-"expire-time":#"<desc tag><short>
+"expire-time":#"<desc tag='tag'><p><short>
  Sets cache expire time for the document.</short>
-</desc>
+</p></desc>
 
 <attr name=now>
  The document expires now.
@@ -2326,9 +2378,9 @@ Display the time from another timezone.
  It is not possible at the time to set the date beyond year 2038,
  since a unix time_t is used.",
 
-"for":#"<desc cont><short>
+"for":#"<desc cont='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
-</desc>
+</p></desc>
 
 <attr name=from value=number>
  Initial value of the loop variable.
@@ -2346,19 +2398,19 @@ Display the time from another timezone.
  Name of the loop variable.
 </attr>",
 
-"fsize":#"<desc tag><short>
+"fsize":#"<desc tag='tag'><p><short>
  Prints the size of the specified file.</short>
-</desc>
+</p></desc>
 
 <attr name=file value=string>
  Show size for this file.
 </attr>",
 
-"gauge":#"<desc cont><short>
+"gauge":#"<desc cont='cont'><p><short>
  Measures how much CPU time it takes to run its contents through the
  RXML parser.</short> Returns the number of seconds it took to parse
  the contents.
-</desc>
+</p></desc>
 
 <attr name=define value=string>
  The result will be put into a variable. E.g. define=var.gauge vill
@@ -2378,9 +2430,9 @@ Display the time from another timezone.
  a database or such.
 </attr>",
 
-"header":#"<desc tag><short>
+"header":#"<desc tag='tag'><p><short>
  Adds a header to the document.</short>
-</desc>
+</p></desc>
 
 <attr name=name value=string>
  The name of the header.
@@ -2392,9 +2444,9 @@ Display the time from another timezone.
  For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a> at Roxen Community.
 </attr>",
 
-"imgs":#"<desc tag><short>
+"imgs":#"<desc tag='tag'><p><short>
  Generates a image tag with proper dimensions.</short>
-</desc>
+</p></desc>
 
 <attr name=src value=string required>
  The name of the file that should be shown.
@@ -2405,9 +2457,9 @@ Display the time from another timezone.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"inc":#"<desc tag><short>
+"inc":#"<desc tag='tag'><p><short>
  Adds 1 to a variable.</short>
-</desc>
+</p></desc>
 
 <attr name=variable value=string required>
  The variable to be incremented.
@@ -2417,16 +2469,16 @@ Display the time from another timezone.
  The value to be added.
 </attr>",
 
-"insert":#"<desc tag><short>
+"insert":#"<desc tag='tag'><p><short>
  Inserts a file, variable or other object into a webpage.</short>
-</desc>
+</p></desc>
 
 <attr name=quote value=html|none>
  How the inserted data should be quoted. Default is \"html\", except for
  href and file where it's \"none\".
 </attr>",
 
-"insert#variable":#"<desc plugin>Inserts the value of a variable.</desc>
+"insert#variable":#"<desc plugin='plugin'><p>Inserts the value of a variable.</p></desc>
 
 <attr name=variable value=string>
  The name of the variable.
@@ -2446,12 +2498,12 @@ Display the time from another timezone.
  that the index attribute may be used.
 </attr>",
 
-"insert#variables":#"<desc plugin><short>Inserts listing of all variables in a scope.</short>
+"insert#variables":#"<desc plugin='plugin'><p><short>Inserts listing of all variables in a scope.</short>
 Note that it is possible to create a scope with an infinite number of variables set. In
 this case the programme of that scope decides which variables that should be listable, i.e.
 this will not cause any problem except that all variables will not be listed. It is also
 possible to hide variables so that they are not listed with this tag.
-</desc>
+</p></desc>
 <attr name=variables value=full|plain>
   Sets how the output should be formatted. 
  <ex>
@@ -2465,7 +2517,7 @@ possible to hide variables so that they are not listed with this tag.
  The name of the scope that should be listed, if not the present scope.
 </attr>",
 
-"insert#scopes":#"<desc plugin><short>Inserts a listing of all present scopes.</short></desc>
+"insert#scopes":#"<desc plugin='plugin'><p><short>Inserts a listing of all present scopes.</short></p></desc>
 
 <attr name=scopes value=full|plain>
  Sets how the output should be formatted.
@@ -2475,7 +2527,7 @@ possible to hide variables so that they are not listed with this tag.
  </ex>
 </attr>",
 
-"insert#file":#"<desc plugin><short>Inserts the contents of a file.</short>
+"insert#file":#"<desc plugin='plugin'><p><short>Inserts the contents of a file.</short>
  It reads files in a way similar to if you fetched the file with a browser, so
  the file may be parsed before it is inserted, depending on settings in
  the RXML parser. Most notably which kinds of files (extensions) that should be
@@ -2485,7 +2537,7 @@ possible to hide variables so that they are not listed with this tag.
  should be parsed after it is inserted in the page. This enables RXML defines and
  scope variables to be set in the including file (as opposed to the included file).
  You can also configure the file system module so that files with a certain extension
- can not be downloaded, but still inserted into other documents.</desc>
+ can not be downloaded, but still inserted into other documents.</p></desc>
 
 <attr name=file value=string>
  The virtual path to the file to be inserted.
@@ -2495,19 +2547,19 @@ possible to hide variables so that they are not listed with this tag.
  </ex>
 </attr>",
 
-"insert#realfile":#"<desc plugin>Inserts a raw, unparsed file. The disadvantage
+"insert#realfile":#"<desc plugin='plugin'><p>Inserts a raw, unparsed file. The disadvantage
 with the realfile plugin compared to the file plugin is that the realfile plugin
 needs the inserted file to exist, and can't fetch files from e.g. an arbitrary
-location module.</desc>
+location module.</p></desc>
 
 <attr name=realfile value=string>
  The virtual path to the file to be inserted.
 </attr>",
 
-"maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
+"maketag":#"<desc cont='cont'><p><short hide>Makes it possible to create tags.</short>
  This tag creates tags. The contents of the container will be put into
  the contents of the produced container.
-</desc>
+</p></desc>
 
 <attr name=name value=string required>
  The name of the tag.
@@ -2534,10 +2586,10 @@ location module.</desc>
 </eval>
 </ex>",
 
-"modified":#"<desc tag><short hide>
+"modified":#"<desc tag='tag'><p><short hide>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
-</desc>
+</p></desc>
 
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
@@ -2565,9 +2617,9 @@ location module.</desc>
  than Roxen Webserver's virtual filesystem.
 </attr>",
 
-"random":#"<desc cont><short>
+"random":#"<desc cont='cont'><p><short>
  Randomly chooses a message from its contents.</short>
-</desc>
+</p></desc>
 
 <attr name=separator value=string>
  The separator used to separate the messages, by default newline.
@@ -2579,9 +2631,9 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
 
 </attr>",
 
-"recursive-output":#"<desc cont>
+"recursive-output":#"<desc cont='cont'><p>
 
-</desc>
+</p></desc>
 
 <attr name=limit value=number>
 
@@ -2599,9 +2651,9 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
 
 </attr>",
 
-"redirect":#"<desc tag><short>
+"redirect":#"<desc tag='tag'><p><short>
  Redirects the user to another page.</short> Requires the to attribute.
-</desc>
+</p></desc>
 
 <attr name=to value=string>
  Where the user should be sent to.
@@ -2629,7 +2681,7 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
  to=... URL is absolute, i.e. begins with a \"/\", otherwise these
  state toggles have no effect.",
 
-"remove-cookie":#"<desc tag><short>
+"remove-cookie":#"<desc tag='tag'><p><short>
  Sets the expire-time of a cookie to a date that has already occured.
  This forces the browser to remove it.</short>
  This tag won't remove the cookie, only set it to the empty string, or
@@ -2638,7 +2690,7 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
  unfortunutaly the only way as there is no command in HTTP for
  removing cookies. We have to give a hint to the browser and let it
  remove the cookie.
-</desc>
+</p></desc>
 
 <attr name=name>
  Name of the cookie the browser should remove.
@@ -2653,9 +2705,9 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
 Note that removing a cookie won't take effect until the next page
 load.",
 
-"replace":#"<desc cont><short>
+"replace":#"<desc cont='cont'><p><short>
  Replaces strings in the contents with other strings.</short>
-</desc>
+</p></desc>
 
 <attr name=from value=string required>
  String or list of strings that should be replaced.
@@ -2676,11 +2728,11 @@ load.",
  and to are lists.
 </attr>",
 
-"return":#"<desc tag><short>
+"return":#"<desc tag='tag'><p><short>
  Changes the HTTP return code for this page.</short>
 
  See the Appendix for a list of HTTP return codes.
-</desc>
+</p></desc>
 
 <attr name=code>
  The HTTP status code to return (an integer).
@@ -2692,9 +2744,9 @@ load.",
  or directory.\" for code 404.
 </attr>",
 
-"roxen":#"<desc tag><short>
+"roxen":#"<desc tag='tag'><p><short>
  Returns a nice Roxen logo.</short>
-</desc>
+</p></desc>
 
 <attr name=size value=small|medium|large default=medium>
  Defines the size of the image.
@@ -2723,10 +2775,10 @@ load.",
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"scope":#"<desc cont><short>
+"scope":#"<desc cont='cont'><p><short>
  Creates a new variable scope.</short> Variable changes inside the scope
  container will not affect variables in the rest of the page.
-</desc>
+</p></desc>
 
 <attr name=extend value=name default=form>
  If set, all variables in the selected scope will be copied into the new scope.
@@ -2740,9 +2792,9 @@ load.",
  The name of the new scope, besides \"_\".
 </attr>",
 
-"set":#"<desc tag><short>
+"set":#"<desc tag='tag'><p><short>
 Sets a variable.</short>
-</desc>
+</p></desc>
 
 <attr name=variable value=string required>
  The name of the variable.
@@ -2772,14 +2824,14 @@ Sets a variable.</short>
  if the operation failed. See also: <ref type='tag'>append</ref>
  and <ref type='tag'>debug</ref>",
 
-"set-cookie":#"<desc tag><short>
+"set-cookie":#"<desc tag='tag'><p><short>
  Sets a cookie that will be stored by the user's browser.</short> This
  is a simple and effective way of storing data that is local to the
  user. If no arguments specifying the time the cookie should survive
  is given to the tag, it will live until the end of the current browser
  session. Otherwise, the cookie will be persistent, and the next time
  the user visits  the site, she will bring the cookie with her.
-</desc>
+</p></desc>
 
 <attr name=name value=string>
  The name of the cookie.
@@ -2836,7 +2888,7 @@ Sets a variable.</short>
  Note that the change of a cookie will not take effect until the
  next page load.",
 
-"set-max-cache":#"<desc tag><short>
+"set-max-cache":#"<desc tag='tag'><p><short>
  Sets the maximum time this document can be cached in any ram
  caches.</short>
 
@@ -2846,7 +2898,7 @@ Sets a variable.</short>
 
  <p>You must do this at the end of the document, since many of the
  normal tags will override this value.</p>
-</desc>
+</p></desc>
 
 <attr name=years value=number>
  Add this number of years to the time this page was last loaded.
@@ -2873,11 +2925,11 @@ Sets a variable.</short>
  Add this number of seconds to the time this page was last loaded.
 </attr>",
 
-"smallcaps":#"<desc cont><short>
+"smallcaps":#"<desc cont='cont'><p><short>
  Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
  used.
-</desc>
+</p></desc>
 
 <attr name=space>
  Put a space between every character.
@@ -2913,7 +2965,7 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"sort":#"<desc cont><short>
+"sort":#"<desc cont='cont'><p><short>
  Sorts the contents.</short>
 
  <ex>
@@ -2929,7 +2981,7 @@ Sets a variable.</short>
    Communicating?
   </sort>
  </ex>
-</desc>
+</p></desc>
 
 <attr name=separator value=string>
  Defines what the strings to be sorted are separated with. The sorted
@@ -2960,11 +3012,11 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"throw":#"<desc cont><short>
+"throw":#"<desc cont='cont'><p><short>
  Throws a text to be caught by the <tag>catch</tag>.</short> Throws an exception, with the enclosed text as the error message. This tag has a close relation to <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag> tag.
-</desc>",
+</p></desc>",
 
-"trimlines":#"<desc cont><short>
+"trimlines":#"<desc cont='cont'><p><short>
  Removes all empty lines from the contents.</short>
 
   <ex>
@@ -2981,12 +3033,12 @@ Sets a variable.</short>
 
   </trimlines>
  </ex>
-</desc>",
+</p></desc>",
 
 "unset":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Unsets a variable, i.e. removes it.</short>
-</desc>
+</p></desc>
 
 <attr name=variable value=string required>
  The name of the variable.
@@ -2999,13 +3051,13 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"user":#"<desc tag><short>
+"user":#"<desc tag='tag'><p><short>
  Prints information about the specified user.</short> By default, the
  full name of the user and her e-mail address will be printed, with a
  mailto link and link to the home page of that user.
 
  <p>The <tag>user</tag> tag requires an authentication module to work.</p>
-</desc>
+</p></desc>
 
 <attr name=email>
  Only print the e-mail address of the user, with no link.
@@ -3035,7 +3087,7 @@ Sets a variable.</short>
 <ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
-"if#expr":#"<desc plugin><short>
+"if#expr":#"<desc plugin='plugin'><p><short>
 
  This plugin evaluates expressions.</short> The arithmetic operators
  are \"+, - and /\". The last main operator is \"%\"(per cent). The
@@ -3086,22 +3138,22 @@ Sets a variable.</short>
  possible to evaluate calculator expressions.</p>
 
  <p>Expr is an <i>Eval</i> plugin.</p>
-</desc>
+</p></desc>
 <attr name='expr' value='expression'>
  Choose what expression to test.
 </attr>",
 
-"emit#fonts":({ #"<desc plugin><short>
+"emit#fonts":({ #"<desc plugin='plugin'><p><short>
  Prints available fonts.</short> This plugin makes it easy to list all
  available fonts in Roxen WebServer.
+</p></desc>
 
 <attr name='type' value='ttf|all'>
 Which font types to list. ttf means all true type fonts, whereas all means all
 available fonts.
-</attr>
-</desc>",
+</attr>",
 		([
-"&_.name;":#"<desc ent>
+"&_.name;":#"<desc ent='ent'><p>
  Returns a font identification name.
 
 <p>This example will print all available ttf fonts in gtext-style.</p>
@@ -3110,17 +3162,37 @@ available fonts.
    <gtext font='&_.name;'><ent>_.expose</ent></gtext><br />
  </emit>
 </ex>
-</desc>",
-"&_.copyright;":"<desc ent>Font copyright notice. Only available for true type fonts.</desc>",
-"&_.expose;":"<desc ent>The preferred list name. Only available for true type fonts.</desc>",
-"&_.family;":"<desc ent>The font family name. Only available for true type fonts.</desc>",
-"&_.full;":"<desc ent>The full name of the font. Only available for true type fonts.</desc>",
-"&_.path;":"<desc ent>The location of the font file.</desc>",
-"&_.postscript;":"<desc ent>The fonts postscript identification. Only available for true type fonts.</desc>",
-"&_.style;":"<desc ent>Font style type. Only available for true type fonts.</desc>",
-"&_.format;":"<desc ent>The format of the font file, e.g. ttf.</desc>",
-"&_.version;":"<desc ent>The version of the font. Only available for true type fonts.</desc>",
-"&_.trademark;":"<desc ent>Font trademark notice. Only available for true type fonts.</desc>",
+</p></desc>",
+"&_.copyright;":#"<desc ent='ent'><p>
+ Font copyright notice. Only available for true type fonts.
+</p></desc>",
+"&_.expose;":#"<desc ent='ent'><p>
+ The preferred list name. Only available for true type fonts.
+</p></desc>",
+"&_.family;":#"<desc ent='ent'><p>
+ The font family name. Only available for true type fonts.
+</p></desc>",
+"&_.full;":#"<desc ent='ent'><p>
+ The full name of the font. Only available for true type fonts.
+</p></desc>",
+"&_.path;":#"<desc ent='ent'><p>
+ The location of the font file.
+</p></desc>",
+"&_.postscript;":#"<desc ent='ent'><p>
+ The fonts postscript identification. Only available for true type fonts.
+</p></desc>",
+"&_.style;":#"<desc ent='ent'><p>
+ Font style type. Only available for true type fonts.
+</p></desc>",
+"&_.format;":#"<desc ent='ent'><p>
+ The format of the font file, e.g. ttf.
+</p></desc>",
+"&_.version;":#"<desc ent='ent'><p>
+ The version of the font. Only available for true type fonts.
+</p></desc>",
+"&_.trademark;":#"<desc ent='ent'><p>
+ Font trademark notice. Only available for true type fonts.
+</p></desc>",
 		])
 	     }),
     ]);

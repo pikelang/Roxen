@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.38 2000/10/13 13:31:23 kuntri Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.39 2000/11/02 12:46:00 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -65,16 +65,19 @@ void create(Configuration c) {
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-  "&page.accessed;":#"<desc ent>Generates an access counter that shows how many
- times the page has been accessed. Needs the accessed module.</desc>",
+  "&page.accessed;":#"<desc ent='ent'><p>
+ Generates an access counter that shows how many times the page has
+ been accessed. Needs the accessed module.
+</p></desc>",
 
-  "accessed":#"<desc tag><short>Generates an access counter that shows how many
- times the page has been accessed.</short> A file, AccessedDB, in the logs directory is used to
- store the number of accesses to each page. By default the access count is
- only kept for files that actually contain an accessed-tag,
- but can also be configured to count all files of a certain type.
- <ex><accessed/></ex>
- </desc>
+  "accessed":#"<desc tag='tag'><p><short>
+ Generates an access counter that shows how many times the page has
+ been accessed.</short> A file, AccessedDB, in the logs directory is
+ used to store the number of accesses to each page. By default the
+ access count is only kept for files that actually contain an
+ accessed-tag, but can also be configured to count all files of a
+ certain type. <ex><accessed/></ex>
+</p></desc>
 
 <attr name=add value=number>
  Increments the number of accesses with this number instead of one,
