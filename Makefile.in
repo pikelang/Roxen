@@ -401,7 +401,7 @@ same_pre_dist: same_version
 	-@$(MAKE) run_autoconfig
 
 faked_pre_dist:
-	echo "test_build" > $(SRCDIR)/VERSION
+	echo "Roxen 1.3.test_build" > $(SRCDIR)/VERSION
 	-@$(MAKE) depend
 	-@$(MAKE) new_peep_engine
 	-@$(MAKE) run_autoconfig
