@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.185 2004/05/07 21:58:29 grubba Exp $
+// $Id: module.pike,v 1.186 2004/05/08 14:40:20 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1157,59 +1157,117 @@ int(0..3) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID
   return (ret->error >= 300) && 2;
 }
 
+mapping make_collection(string path, RequestID id)
+{
+  // Fall back to find_file().
+  RequestID tmp_id = id->clone_me();
+  tmp_id->not_query = query_location() + path;
+  tmp_id->method = "MKCOL";
+  // FIXME: Logging?
+  return find_file(path, id);
+}
+
+mapping copy_collection(string source, string destination,
+			int(-1..1) behaviour,
+			MultiStatus.Prefixed result, RequestID id)
+{
+  SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O).",
+		     source, destination, behaviour, result, id);
+  Stat st = stat_file(destination, id);
+  if (st) {
+    // Destination exists. Check the overwrite header.
+    if (id->request_headers->overwrite) {
+      if (lower_case(id->request_headers->overwrite) == "t") {
+	// RFC 2518 8.8.4
+	//   If a resource exists at the destination, and the Overwrite
+	//   header is "T" then prior to performing the copy the server
+	//   MUST perform a DELETE with "Depth: infinity" on the
+	//   destination resource.
+	TRACE_ENTER("Destination exists and overwrite is on.", this);
+	if (recurse_delete_files(destination, result, id)) {
+	  // Failed to delete something.
+	  TRACE_LEAVE("Deletion failed.");
+	  TRACE_LEAVE("Copy collection failed.");
+	  return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+	}
+	TRACE_LEAVE("Deletion ok.");
+      } else {
+	TRACE_LEAVE("Destination already exists.");
+	return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+      }
+    } else {
+      // No overwrite header.
+      // Be nice, and fail only if we don't already have a collection.
+      if (st->isdir) {
+	TRACE_LEAVE("Destination exists and is a directory.");
+	return 0;
+      }
+      TRACE_LEAVE("Destination exists and is not a directory.");
+      return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+    }
+  }
+  // Create the new collection.
+  TRACE_LEAVE("Make a new collection.");
+  return make_collection(destination, id);
+}
+
 mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
 {
-  werror("copy_file(%O, %O, %O, %O)\n",
-	 path, dest, behavior, id);
+  SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O)\n",
+		     path, dest, behavior, id);
+  TRACE_LEAVE("Not implemented yet.");
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
-void recurse_copy_files(string path, int depth, string dest_prefix,
-			string dest_suffix,
+void recurse_copy_files(string source, string destination, int depth,
 			mapping(string:int(-1..1)) behavior,
 			MultiStatus.Prefixed result, RequestID id)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return;
-  if (!dest_prefix) {
-    Standards.URI dest_uri = Standards.URI(result->href_prefix);
-    Configuration c = roxen->find_configuration_for_url(dest_uri, id->conf);
-    // FIXME: Mounting server on subpath.
-    if (!c ||
-	!has_prefix(dest_uri->path||"/", query_location())) {
-      // Destination is not local to this module.
-      // FIXME: Not supported yet.
-      result->add_status(dest_suffix, 502);
-      return;
-    }
-    dest_prefix = (dest_uri->path||"/")[sizeof(query_location())..];
-    Stat dest_st;
-    if (!(dest_st = stat_file(combine_path(dest_prefix, ".."), id)) ||
-	!(dest_st->isdir)) {
-      result->add_status("", 409);
-      return;
-    }
-    if (combine_path(dest_prefix, dest_suffix, ".") ==
-	combine_path(path, ".")) {
-      result->add_status(dest_suffix, 403, "Source and destination are the same.");
-      return;
-    }
-  }
-  werror("recurse_copy_files(%O, %O, %O, %O, %O, %O, %O)\n",
-	 path, depth, dest_prefix, dest_suffix, behavior, result, id);
-  mapping res = copy_file(path, dest_prefix + dest_suffix,
-			  behavior[dest_prefix + dest_suffix]||behavior[0],
-			  id);
-  result->add_status(dest_suffix, res->error, res->rettext);
-  if (res->error >= 300) {
-    // RFC 2518 8.8.3 and 8.8.8 (error minimization).
+  SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
+		     source, destination, depth, behavior, result, id);
+  if (source == destination) {
+    result->add_status(source, 403,
+		       "Source and destination are the same.");
+    TRACE_LEAVE("Source and destination are the same.");
     return;
   }
-  if ((depth <= 0) || !st->isdir) return;
+  Stat st = stat_file(source, id);
+  if (!st) {
+    TRACE_LEAVE("Source not found.");
+    return;	/* FIXME: 404? */
+  }
+  // FIXME: Check destination?
+  if (st->isdir) {
+    mapping res = copy_collection(source, destination,
+				  behavior[query_location()+destination] ||
+				  behavior[0],
+				  result, id);
+    if (res && res->error != 204) {
+      result->add_status(destination, res->error, res->rettext);
+      if (res->error >= 300) {
+	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
+	return;
+      }
+    }
+    if (depth <= 0) return;
+  } else {
+    mapping res = copy_file(source, destination,
+			    behavior[query_location()+destination] ||
+			    behavior[0],
+			    id);
+    if (res) {
+      result->add_status(destination, res->error, res->rettext);
+      if (res->error >= 300) {
+	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
+	return;
+      }
+    }
+    return;
+  }
   depth--;
-  foreach(find_dir(path, id), string filename) {
-    recurse_copy_files(combine_path(path, filename), depth,
-		       dest_prefix, combine_path(dest_suffix, filename),
+  foreach(find_dir(source, id), string filename) {
+    recurse_copy_files(combine_path(source, filename),
+		       combine_path(destination, filename), depth,
 		       behavior, result, id);
   }
 }
