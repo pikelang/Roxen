@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.20 1998/01/17 01:13:39 grubba Exp $
+ * $Id: sqltag.pike,v 1.21 1998/02/02 01:00:21 wing Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.20 1998/01/17 01:13:39 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.21 1998/02/02 01:00:21 wing Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -141,36 +141,10 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
       contents = "<h1>Query \"" + args->query + "\" failed: " +
 	con->error() + "</h1>\n" +
 	((master()->describe_backtrace(error)/"\n")*"<br>\n");
-    } else if (result && sizeof(result)) {
-      string nullvalue="";
-      array(string) content_array = contents/"#";
-      array(string) res_array=allocate(sizeof(content_array)*sizeof(result));
-      int j = 0;
-
-      if (args->nullvalue) {
-	nullvalue = (string)args->nullvalue;
-      }
-
-      foreach(result, mapping(string:mixed) row) {
-	int i;
-
-	for (i=0; i < sizeof(content_array); i++, j++) {
-	  if (i & 1) {
-	    if (row[content_array[i]] || !zero_type(row[content_array[i]])) {
-	      string value = (string)row[content_array[i]];
-	      res_array[j] = ((value=="")?nullvalue:value);
-	    } else if (content_array[i] == "") {
-	      /* Dual #'s to get one */
-	      res_array[j] = "#";
-	    } else {
-	      res_array[j] = "<!-- Missing field " + content_array[i] + " -->";
-	    }
-	  } else {
-	    res_array[j] = content_array[i];
-	  }
-	}
-      }
-      contents = (res_array * "") + "<true>";
+    } else if (result && sizeof(result))
+    {
+      contents = do_output_tag( args, result, contents, request_id )
+	+ "<true>";
     } else {
       contents = "<false>";
     }
