@@ -35,25 +35,31 @@ string program_name_version( program what )
   string file = roxen.filename( what );
   string ofile;
   string name = file, warning="";
-  Stat ofs, fs;
+  Stat fs;
+  mapping ofs;
 
   catch
   {
     if( file )
       ofile = master()->make_ofilename( master()->program_name( what ) );
   };
-  if(!ofile)
-    ofile = "No .o file";
+  array q = connect_to_my_mysql( 1, "ofiles" )
+        ->query( "select mtime from files where id='%s'", ofile );
+  if( !sizeof( q ) )
+    ofs = 0;
+  else
+    ofs = ([ "mtime":(int)q[0]->mtime ]);
+
   if( !(fs = file_stat( file )) )
     warning="<i>Source file gone!</i>";
-  else if( (ofs = file_stat( ofile )) && ofs[ST_SIZE] )
+  else if( ofs  )
   {
-    if( ofs[ ST_MTIME ] < fs[ ST_MTIME ] )
+    if( ofs->mtime < fs->mtime  )
       warning = "(<i>Precompiled file out of date</i>)";
   } else
     warning = "(<i>No precompiled file available</i>)";
 
-  if( (fs && (fs[ ST_MTIME ] > master()->loaded_at( what ) )) )
+  if( (fs && (fs->mtime > master()->loaded_at( what ) )) )
     warning = "(<i>Needs reloading</i>)";
   return name+" "+get_id( file )+" "+warning;
 }
