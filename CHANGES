@@ -1,6 +1,10 @@
 Changes since Roxen Challenger 1.2.25 Yellow
 -----------------------------------------------
 
+o Bug in opening of server ports fixed.
+
+o Now only uses smartpipe if THREADS are enabled.
+
 o Added support for the following commands to ftp2.pike:
    CLNT		set CLieNT
    FEAT		list FEATures
@@ -9,7 +13,27 @@ o Added support for the following commands to ftp2.pike:
    MLSD		Machine processing LiSt Directory
    MLST		Machine processing LiST
    SITE CHMOD	SITE specific command "CHMOD"
+
+o ftp2.pike has also received some bug-compatibility with Netscape.
+
+o Pike 0.6 has gotten several portability fixes.
+
+o The testsuite for extern/ now tries to run as nobody if it ran as root.
+
+o The start and install scripts have received some updates needed for the
+  latest Pike 0.6.
+
+o The czech language module has been updated and now uses ISO 8859-2.
+  Thanks to Jan Petrous <hop@unibase.cz>.
+
+o The filesystem module has been updated to handle MV and CHMOD.
+  This was needed for the improved ftp support.
+
+o A new RXML tag: <use>. This tag can be used to define page-local tags
+  and containers.
   
+o Some minor bugs have been fixed.
+
 
 Changes since Roxen Challenger 1.2.24 Yellow
 -----------------------------------------------
