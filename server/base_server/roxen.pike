@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.78 1997/06/23 03:28:16 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.79 1997/07/03 02:15:17 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -267,7 +267,12 @@ void threaded_handle(function f, mixed ... args)
 int number_of_threads;
 void start_handler_threads()
 {
-  perror("Starting "+QUERY(numthreads)+" threads to handle requests.\n");
+  if (QUERY(numthreads) <= 1) {
+    QUERY(numthreads) = 1;
+    perror("Starting 1 thread to handle requests.\n");
+  } else {
+    perror("Starting "+QUERY(numthreads)+" threads to handle requests.\n");
+  }
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
     thread_create( handler_thread, number_of_threads );
   if(number_of_threads > 0)
@@ -545,7 +550,7 @@ void done_with_roxen_com()
     return;
   
   if(old != new) {
-    perror("Got new supports data from roxen.com\n");
+    perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
     object privs=((program)"privs")("Replacing etc/supports");
     mv("etc/supports", "etc/supports~");
@@ -579,12 +584,12 @@ void connected_to_roxen_com(object port)
   if(!port) 
   {
 #ifdef DEBUG
-    perror("Failed to connect to roxen.com:80.\n");
+    perror("Failed to connect to www.roxen.com:80.\n");
 #endif
     return 0;
   }
 #ifdef DEBUG
-  perror("Connected to roxen.com.:80\n");
+  perror("Connected to www.roxen.com.:80\n");
 #endif
   _new_supports = ({});
   port->set_id(port);
@@ -1433,7 +1438,7 @@ private void define_global_variables( int argc, array (string) argv )
 
   /// End of cache variables..
   
-  globvar("docurl", "http://roxen.com", "Documentation URL",
+  globvar("docurl", "http://www.roxen.com", "Documentation URL",
 	  TYPE_STRING,
 	 "The URL to prepend to all documentation urls throughout the "
 	 "server. This URL should _not_ end with a '/'.");
@@ -1623,7 +1628,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("AutoUpdate", 1, "Update the supports database automatically",
 	  TYPE_FLAG, 
 	  "If set, the etc/supports file will be updated automatically "
-	  "from roxen.com now and then. This is recomended, since "
+	  "from www.roxen.com now and then. This is recomended, since "
 	  "you will then automatically get supports info for new "
 	  "clients, and new versions of old ones.");
 
@@ -2004,7 +2009,7 @@ object shuffle_queue = Queue();
 void shuffle_thread(int id)
 {
 #ifdef THREAD_DEBUG
-  perror("Starting shuffle_thread "+id+" started.\n");
+  perror("shuffle_thread "+id+" started.\n");
 #endif
   while(mixed s=shuffle_queue->read())
     _shuffle(@s);
@@ -2021,7 +2026,12 @@ function shuffle = _shuffle;
 int number_of_shuffler_threads;
 void start_shuffler_threads()
 {
-  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
+  if (QUERY(numshufflethreads) <= 1) {
+    QUERY(numshufflethreads) = 1;
+    perror("Starting 1 thread to shuffle data.\n");
+  } else {
+    perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
+  }
   for(int i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
     thread_create( shuffle_thread, i );
   }
