@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.c,v 1.4 2000/06/28 17:16:53 mast Exp $
+ * $Id: roxen_service.c,v 1.5 2000/06/28 18:49:08 mast Exp $
  */
 
 #include <windows.h>
@@ -18,7 +18,7 @@
 #include <ctype.h>
 
 #define LOCATION_COOKIE "(#*&)@(*&$Server Location Cookie:"
-#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer2\\server"
+#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer\\server"
 
 char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 
