@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.313 1999/08/12 13:30:14 grubba Exp $
+ * $Id: roxen.pike,v 1.314 1999/08/24 08:25:12 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.313 1999/08/12 13:30:14 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.314 1999/08/24 08:25:12 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2857,7 +2857,8 @@ källservern om de har en last-modified header som anger när de senast
 	  TYPE_FILE|VAR_MORE,
 	  "In this file, the server will write out it's PID, and the PID "
 	  "of the start script. $pid will be replaced with the pid, and "
-	  "$uid with the uid of the user running the process.");
+	  "$uid with the uid of the user running the process.\n"
+	  "<p>Note: It will be overridden by the command line option.");
   deflocaledoc("svenska", "pidfile", "ProcessIDfil",
 	       "I den här filen sparas roxen processid och processidt "
 	       "for roxens start-skript. $uid byts ut mot användaridt för "
