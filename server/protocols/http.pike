@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.125 1999/05/27 20:36:30 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.126 1999/06/01 11:56:04 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -237,13 +237,19 @@ private int parse_got(string s)
   raw = s;
 
   if (!line) {
-    int start = search(s, "\r\n");
+    int start = search(s, "\n");
 
     if ((< -1, 0 >)[start]) {
       // Not enough data, or malformed request.
       return ([ -1:0, 0:2 ])[start];
     }
-    line = s[..start-1];
+
+    if (s[start-1] == '\r') {
+      line = s[..start-2];
+    } else {
+      // Kludge for Netscape 4.5 sending bad requests.
+      line = s[..start-1];
+    }
 
     // Parse the command
     start = search(line, " ");
@@ -1198,7 +1204,13 @@ void handle_request( )
     object oc = conf;
     foreach(conf->first_modules(), funp) 
     {
-      if(file = funp( thiso)) break;
+      mapping m;
+      if(m = funp( thiso)) {
+	if (mappingp(m)) {
+	  file = m;
+	}
+	break;
+      }
       if(conf != oc) {
 	handle_request();
 	return;
