@@ -14,7 +14,7 @@ mapping(string:string) aliases =
   ]);
 
 mapping(string:string) domain_to_country =
-  ([ /* 132 elements */
+  ([
     "af":"afghanistan",
     "al":"albania",
     "dz":"algeria",
@@ -141,6 +141,7 @@ mapping(string:string) domain_to_country =
     "ro":"romania",
     "rw":"rwanda",
     "sa":"saudi arabia",
+    "sg":"singapore",
     "sn":"senegal",
     "sk":"slovakia",
     "sl":"sierra leone",
