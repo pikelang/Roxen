@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.239 2000/09/01 22:34:09 mast Exp $
+// $Id: rxml.pike,v 1.240 2000/09/06 02:20:58 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -561,10 +561,10 @@ class TagNumber {
 private array(string) list_packages()
 {
   return filter(((get_dir("../local/rxml_packages")||({}))
-                 |(get_dir("../rxml_packages")||({}))),
+                 |(get_dir("rxml_packages")||({}))),
                 lambda( string s ) {
                   return (Stdio.file_size("../local/rxml_packages/"+s)+
-                          Stdio.file_size( "../rxml_packages/"+s )) > 0;
+                          Stdio.file_size( "rxml_packages/"+s )) > 0;
                 });
 
 }
@@ -575,8 +575,8 @@ private string read_package( string p )
   p = combine_path("/", p);
   if(file_stat( "../local/rxml_packages/"+p ))
     catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
-  if(!data && file_stat( "../rxml_packages/"+p ))
-    catch(data=Stdio.File( "../rxml_packages/"+p, "r" )->read());
+  if(!data && file_stat( "rxml_packages/"+p ))
+    catch(data=Stdio.File( "rxml_packages/"+p, "r" )->read());
   return data;
 }
 
@@ -1448,7 +1448,9 @@ class TagEmit {
       if(!(plugin=get_plugins()[args->source]))
 	parse_error("Source not present.\n");
       scope_name=args->scope||args->source;
+      TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       res=plugin->get_dataset(args, id);
+      TRACE_LEAVE("");
       if(arrayp(res)) {
 	if(args->sort && !plugin->sort)
 	{
@@ -2750,7 +2752,7 @@ Available variables are:",
 
 <attr name=package value=name>
  Reads all tags, container tags and defines from the given package.
- Packages are files located in local/rxml_packages/.
+ Packages are files located in rxml_packages/ and local/rxml_packages/.
 </attr>
 
 <attr name=file value=path>
