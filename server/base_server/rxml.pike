@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.144 2000/02/20 19:20:34 nilsson Exp $
+// $Id: rxml.pike,v 1.145 2000/02/20 19:46:11 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1957,16 +1957,9 @@ constant tagdoc=([
  Alters the case of the contents.
 </desc>
 
-<attr name=lower>
- Changes all upper case letters to lower case.
-</attr>
-
-<attr name=upper>
- Changes all lower case letters to upper case.
-</attr>
-
-<attr name=capitalize>
- Capitalizes the first letter in the content.
+<attr name=case value=upper,lower,capitalize>
+ Changes all characters to upper or lower case letters, or
+ capitalizes the first letter in the content.
 </attr>",
 
 "cond":#"<desc>
@@ -1981,7 +1974,7 @@ constant tagdoc=([
  parsed.
 </desc>",
 
-"define":#"<desc cont>
+"define":({ #"<desc cont>
  Defines variables, tags, containers, if-callers. One, and only one,
  attribute must be set.
 </desc>
@@ -2007,15 +2000,29 @@ constant tagdoc=([
  Trim all white space characters from the begining and the end of the contents.
 </attr>
 
- When defining a container the tag <tag>contents</tag> can be used to
- insert the contents of the defined container.
+The values of the attributes given to the defined tag are available in the
+scope created within the define tag.
 
- <p>When defining a tag or a container the container <tag>attrib</tag>
+<ex><define tag=\"hi\">Hello &_.name;!</define>
+<hi name=\"Martin\"/></ex>",
+
+	    (["attrib":#"<desc cont>
+ When defining a tag or a container the container <tag>attrib</tag>
  can be used to define default values of the attributes that the
- tag/container can have. The attrib container has the attribute
- attrib=name, and sets the default value of the attribute indicated
- with attrib=name to the contents of the attrib container. The
- attribute values can be accessed with enteties such as &amp;name;</p>",
+ tag/container can have.</desc>
+
+ <attr name=name value=name>
+  The name of the attribute which default value is to be set.
+ </attr>",
+
+	      "&_.args;":#"<desc ent>The full list of the attributes, and their
+ arguments, given to the tag.</desc>",
+	      "&_.rest-args;":#"<desc ent>A list of the attributes, and their
+ arguments, given to the tag, excluding attributes with default values defined.</desc>",
+	      "&_.contents;":"<desc ent>The containers contents.</desc>"
+	    ])
+
+}),
 
 "else":#"<desc cont>
  Show the contents if the previous <tag><ref type=tag>if</ref></tag>
