@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.59 2003/09/15 12:05:07 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.60 2003/09/19 12:25:29 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -45,6 +45,20 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <ex-box><emit source='sql' query='select imagedata from images where id=37'>
 <cimg data='&sql.imagedata:none;'/>
 </emit></ex-box>
+</attr>
+
+<attr name='process-all-layers'><p>Set this flag to make all image layers
+visible regardless of their original state.</p>
+</attr>
+
+<attr name='include-layers' value='layer-glob-list'><p>Comma-separated list
+of glob expressions which is matched against layer names. All matching
+layers are made visible regardless of their original state.</p>
+</attr>
+
+<attr name='exclude-layers' value='layer-glob-list'><p>Comma-separated list
+of glob expressions which is matched against layer names. All matching
+layers are hidden regardless of their original state.</p>
 </attr>",
 
 "cimg-url":#"<desc tag='tag'><p><short>
