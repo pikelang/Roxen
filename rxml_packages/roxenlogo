@@ -1,17 +1,34 @@
 -*- html -*-
 <info>
-version="$Id: roxenlogo,v 1.1 2000/02/06 14:49:14 nilsson Exp $";
+version="$Id: roxenlogo,v 1.2 2000/02/06 14:50:58 nilsson Exp $";
 name="roxenlogo";
-doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 4.";
+doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 40.";
 help=1;
 </info>
 
-<define tag=1><td bgcolor="#FF6600"><img src="internal-roxen-unit"></td></define>
-<define tag=0><td></td></define>
-<define container=ft><for to=1><tr><contents></tr></for></define>
-<define tag=roxenlogo preparse>
-<attrib name=size>4</attrib><table cellspacing=0 border=0 cellpadding=&size;>
-<ft><for to=7><1></for></ft><tr><1><1><0><0><0><0><1><1></tr>
-<ft><1><1><0><1><1><1><1><1></ft><ft><1><1><0><0><1><1><0><0></ft>
-<tr><1><1><0><0><1><1><0><1></tr></table></define>
-<undefine tag=1><undefine tag=2><undefine container=ft>
+<define tag=x><attrib name=r>1</attrib><attrib name=c>1</attrib>
+<td colspan=&c; rowspan=&r; #args#><img src="internal-roxen-unit"></td></define>
+
+<define tag=u><attrib name=w>1</attrib><attrib name=h>1</attrib>
+<td bgcolor=black><img src="internal-roxen-unit" width="&w;" height="&h;"></td></define>
+
+<define tag=o><x bgcolor="#FF6600" #args#></define>
+<define tag=s><x bgcolor="black" #args#></define>
+<define tag=t><define tag=img></define><x #args#><undefine tag=img></define>
+
+<define tag=roxenlogo>
+<attrib name=size>40</attrib>
+<define tag=w><u w=&size;></define>
+<define tag=h><u h=&size;></define>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><u><w><w><u><w><u><w><u><w><w><u><u><w><u><w><u></tr>
+<tr><h><o c="14" r="2"><s r="7"></tr><tr><h></tr>
+<tr><u><o r="10" c="2"><s r="11"><s c="7"><o c="4" r="3"></tr>
+<tr><h><t c="6"><s></tr><tr><u><t r="9"><s c="6"></tr>
+<tr><h><s r="3"><o c="9" r="2"></tr><tr><h></tr>
+<tr><u><s c="2"><o c="3" r="5"><s c="5"></tr>
+<tr><h><t c="2" r="5"><s r="5"><s r="5"><t c="4" r="2"></tr>
+<tr><h></tr><tr><u><t r="3"><s c="3"></tr><tr><h><s><o><s></tr>
+<tr><u><s c="2"><s c="3"><s c="3"></tr>
+</table>
+</define>
