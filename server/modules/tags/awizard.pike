@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.8 1999/11/23 06:43:07 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.9 1999/11/27 07:50:06 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -522,7 +522,7 @@ class Store
 
 void create()
 {
-  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_MORE, "");
+  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_DEVELOPER, "");
 }
 
 
