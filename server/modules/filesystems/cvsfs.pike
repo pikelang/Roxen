@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.2 1997/02/07 22:39:21 grubba Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.3 1997/02/07 22:54:46 nisse Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -179,21 +179,51 @@ string status()
 
 mixed stat_file(string name, object id)
 {
-  return(file_stat(query("cvsroot") + cvs_module_path + "/" + name + ",v"));
+  werror(sprintf("file_stat: Looking for '%s'\n", name));
+  name = query("cvsroot") + cvs_module_path + "/" + name;
+  return file_stat(name + ",v") || file_stat(name);
 }
 
-object|mapping find_file(string name, object id)
+object|mapping|int find_file(string name, object id)
 {
-  array(string) extra_args = ({});
-
   werror(sprintf("find_file: Looking for '%s'\n", name));
-
-  foreach(indices(id->prestate)) {
-    
-  }
-
-  if (cvs_module_path && this->stat_file(name, id))
-    return run_cvs(query("cvsprogram"), 0, 0,
-		   "-d", query("cvsroot"), "checkout", "-p",
-		   cvs_module_path + name);
+  string fname = query("cvsroot") + cvs_module_path + name;
+  if (cvs_module_path)
+    {
+      if (file_stat(fname + ",v"))
+	{
+	  object f = run_cvs(query("cvsprogram"), 0, 0,
+			     "-d", query("cvsroot"), "checkout", "-p",
+			     cvs_module_path + name);
+	  if (f)
+	    accesses++;
+	  return f;
+	}
+      else if (file_stat(fname))
+	return -1;
+    }
+  else
+    return 0;
 }
+
+array find_dir(string name, object id)
+{
+  array info;
+  werror(sprintf("find_dir: Looking for '%s'\n", name));
+
+  if (cvs_module_path
+      && (info = file_stat(query("cvsroot") + cvs_module_path + name))
+      && (info[1] == -2))
+    {
+      array dir = get_dir(query("cvsroot") + cvs_module_path + name);
+      if (dir)
+	dir = map(dir, lambda(string entry) {
+	  return (entry[strlen(entry)-2..] == ",v")
+	    ? entry[..strlen(entry)-3] : entry;
+	});
+      return dir - ({ "Attic" });
+    }
+  return 0;
+}
+	  
+  
