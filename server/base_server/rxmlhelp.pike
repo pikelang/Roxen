@@ -80,13 +80,17 @@ static string noex_cont(string t, mapping m, string c) {
     add_quote_tag("!--","","--")->feed(c)->read();
 }
 
+static string ex_quote(string in) {
+  return "<pre>"+replace(in, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+}
+
 static string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(string t, mapping m, string c) {
 					  return "&amp;"+c+";"; 
 					} )->
     add_quote_tag("!--","","--")->feed(c)->read();
-  string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  string quoted = ex_quote(c);
   if(m->type=="box")
     return "<br />"+mktable( ({ ({ quoted }) }) );
 
@@ -99,6 +103,10 @@ static string ex_cont(string t, mapping m, string c, string rt, void|object id)
   switch(m->type) {
   case "hr":
     return quoted+"<hr />"+parsed;
+  case "svert":
+    return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
+  case "shor":
+    return "<br />" + mktable( ({ ({ quoted, ex_quote(parsed) }) }) );
   case "vert":
     return "<br />"+mktable( ({ ({ quoted }), ({ parsed }) }) );
   case "hor":
