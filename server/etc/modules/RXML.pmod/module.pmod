@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.236 2001/08/23 23:20:13 mast Exp $
+// $Id: module.pmod,v 1.237 2001/08/24 00:25:10 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7208,11 +7208,7 @@ class PCodec (Configuration default_config)
 	}
 
 	case "tag": {
-	  [string ignored, object(RoxenModule)|object(Configuration) ts_owner,
-	   string ts_name, int proc_instr, string name] = what;
-	  TagSet tag_set;
-	  if (!(tag_set = LOOKUP_TAG_SET (ts_owner, ts_name)) || !objectp (tag_set))
-	    error ("Cannot find tag set %O in %O.\n", ts_name, ts_owner);
+	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
 	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
 	    ENCODE_DEBUG_RETURN (tag);
 	  error ("Cannot find %s %O in tag set %O.\n",
@@ -7278,7 +7274,7 @@ class PCodec (Configuration default_config)
 	case "nil": ENCODE_DEBUG_RETURN (nil);
 	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
 	case "utils": ENCODE_DEBUG_RETURN (utils);
-	case "xml_tag_parser": ENCODE_DEBUG_RETURN (xml_tag_parser);
+	case "xtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
       }
 
       if (sscanf (what, "c:%s", what)) {
@@ -7346,20 +7342,14 @@ class PCodec (Configuration default_config)
       }
 
       else if (what->is_RXML_Tag) {
-	TagSet tagset;
-	if ((tagset = what->tagset) && what->name && tagset->name)
+	if (what->name && what->tagset)
 	  ENCODE_DEBUG_RETURN (({
 	    "tag",
-	    tagset->owner,
-	    tagset->name,
+	    what->tagset,
 	    what->flags & FLAG_PROC_INSTR,
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
 	ENCODE_MSG ("  encoding tag recursively since " +
-		    (tagset ?
-		     (what->name ?
-		      sprintf ("its tag set %O is nameless\n", tagset) :
-		      "it's nameless\n") :
-		     "it got no tag set\n"));
+		    (what->name ? "it got no tag set\n" : "it's nameless\n"));
 	return ([])[0];
       }
 
@@ -7397,7 +7387,7 @@ class PCodec (Configuration default_config)
       else if(what == utils)
 	ENCODE_DEBUG_RETURN ("utils");
       else if (what == xml_tag_parser)
-	ENCODE_DEBUG_RETURN ("xml_tag_parser");
+	ENCODE_DEBUG_RETURN ("xtp");
 #ifdef RXML_OBJ_DEBUG
       else if (object_program (what) == Debug.ObjectMarker)
 	ENCODE_DEBUG_RETURN (({
