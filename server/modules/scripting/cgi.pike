@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.40 2000/08/16 03:00:12 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.41 2000/08/22 19:19:39 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -837,11 +837,21 @@ class CGIScript
 }
 
 mapping(string:string) global_env = ([]);
+string searchpath, location;
+array(string) extensions;
+int handle_ext, noexec;
+
 void start(int n, Configuration conf)
 {
   DWERR("start()");
 
+  searchpath = query("searchpath");
+  handle_ext = query("ex");
+  noexec = query("noexec");
   module_dependencies(conf, ({ "pathinfo" }));
+  location = query("location");
+  extensions = query("ext");
+  
   if(conf)
   {
     string tmp=conf->query("MyWorldLocation");
@@ -864,26 +874,23 @@ void start(int n, Configuration conf)
 array stat_file( string f, RequestID id )
 {
   DWERR("stat_file()");
-
   return file_stat( real_file( f, id ) );
 }
 
 string real_file( string f, RequestID id )
 {
   DWERR("real_file()");
-
-  return combine_path( query("searchpath"), f );
+  return combine_path( searchpath, f );
 }
 
 mapping handle_file_extension(object o, string e, RequestID id)
 {
   DWERR("handle_file_extension()");
-
-  if(!query("ex"))
+  if(!handle_ext) 
     return 0;
 #if UNIX
   if(o && !(o->stat()[0]&0111))
-    if(query("noexec"))
+    if(noexec)
       return 0;
     else
       return Roxen.http_low_answer(500, "<title>CGI - File Not Executable</title>"
@@ -891,7 +898,9 @@ mapping handle_file_extension(object o, string e, RequestID id)
 			     "The script you tried to run is not executable."
 			     "Please contact the server administrator about "
 			     "this problem.</b>");
+
 #endif
+  NOCACHE();
   return Roxen.http_stream( CGIScript( id )->run()->get_fd() );
 }
 
@@ -909,10 +918,13 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 
   array stat=stat_file(f,id);
   if(!stat) return 0;
+
+  NOCACHE();
+
 #if UNIX
   if(!(stat[0]&0111))
   {
-    if(query("noexec"))
+    if(noexec)
       return Stdio.File(real_file(f, id), "r");
     report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
     return Roxen.http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
@@ -943,7 +955,12 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 */
 array (string) query_file_extensions()
 {
-  return query("ext");
+  return extensions;
+}
+
+string query_location()
+{
+  return location;
 }
 
 int run_as_user_enabled() { return (getuid() || !query("user")); }
