@@ -1,4 +1,4 @@
-// This is a roxen module. (c) Honza Petrous 1998-2000
+// This is a roxen module. Copyright 2000, Roxen IS
 
 /* LDAP User authentification. Reads the directory and use it to
    authentificate users.
@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.20 2000/08/23 11:49:45 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.21 2000/12/19 23:59:02 hop Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -648,8 +648,6 @@ array|int auth (array(string) auth, object id)
 
 constant module_type = MODULE_AUTH || MODULE_EXPERIMENTAL;
 constant module_name = "LDAP directory authorization";
-constant module_doc  = "Experimental module for authorization using "
-  "Pike's internal Ldap directory interface."
-  "<p>&copy; 1998-2000 Honza Petrous (with enhancements by Wim Bonis)</p>"
-  "distributed freely under GPL license.";
+constant module_doc  = "Module for LDAP user authorization using "
+  "Pike's internal Ldap directory interface.";
 
