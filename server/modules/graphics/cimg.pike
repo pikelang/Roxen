@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 
 #include <module.h>
@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.53 2002/11/07 15:57:16 mani Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.54 2002/11/17 17:55:44 mani Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -21,7 +21,7 @@ mapping tagdocumentation()
   mapping doc = compile_string("#define manual\n"+file->read())->tagdoc;
   foreach(({ "cimg", "cimg-url" }), string tag)
     doc[tag] += the_cache->documentation(tag +
-					 " src='/internal-roxen-testimage'");
+					 " src='/%01/testimage'");
   return doc;
 }
 
@@ -36,7 +36,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='src' value='url' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg src='/internal-roxen-testimage'/></ex>
+<ex><cimg src='/%01/testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -58,7 +58,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='src' value='url' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg-url src='/internal-roxen-testimage'/></ex>
+<ex><cimg-url src='/%01/testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -137,7 +137,7 @@ string status() {
   array s=the_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
                  "<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+		 s[0], String.int2size(s[1]));
 }
 
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )

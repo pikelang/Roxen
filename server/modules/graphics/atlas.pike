@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.12 2001/10/08 12:32:52 anders Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.13 2002/11/17 17:55:44 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -23,7 +23,7 @@ void start() {
 string status() {
   array s=the_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+		 s[0]/2, String.int2size(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {

@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.147 2002/07/03 12:41:47 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.148 2002/11/17 17:55:44 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -72,7 +72,7 @@ void create()
 string status() {
   array s=image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+		 s[0], String.int2size(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {

@@ -5,7 +5,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.23 2002/07/03 14:54:26 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.24 2002/11/17 17:55:45 mani Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
@@ -30,7 +30,7 @@ string status() {
   array s=the_cache->status();
   return sprintf( "<b>Images in cache:</b> %d images<br />\n"
 		  "<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+		 s[0]/2, String.int2size(s[1]));
 }
 
 mapping(string:LazyImage.LazyImage) images = ([]);

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.296 2002/11/16 10:46:17 agehall Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.297 2002/11/17 17:55:44 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -567,7 +567,7 @@ string status() {
   array s=image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
                  "<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+		 s[0], String.int2size(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {

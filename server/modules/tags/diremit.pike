@@ -159,7 +159,7 @@ class TagDirectoryplugin
         m["type-img"] = "internal-gopher-menu";
       } else {
         m->type = id->conf->type_from_filename( file );
-        m->size = Roxen.sizetostring( st[ ST_SIZE ] );
+        m->size = String.int2size( st[ ST_SIZE ] );
         m["type-img"] = Roxen.image_from_type( m->type );
       }
 
