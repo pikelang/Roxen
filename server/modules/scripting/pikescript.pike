@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.54 1999/12/29 23:56:47 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.55 2000/01/20 19:21:55 grubba Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -232,12 +232,18 @@ mapping handle_file_extension(object f, string e, object got)
   }
   got->misc->cacheable=0;
   err=call_script(fun, got, f);
+  if (mappingp(err)) return err;
   if(arrayp(err)) 
   {
     m_delete( scripts, got->not_query );
     throw( err[1] );
   }
-  return err || "";
+  if (stringp(err || "")) {
+    return http_string_answer(err || "");
+  }
+  report_error("PIKESCRIPT: Unexpected return value %O from script %O\n",
+	       err, got->not_query);
+  return http_string_answer("");
 }
 
 string status()
