@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.28 1999/01/14 00:34:29 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.29 1999/01/14 00:45:04 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -415,7 +415,7 @@ mapping parse_directory(object id)
 // If this prestate is set, do some folding/unfolding.
   if(!id->prestate->diract) 
   { 
-    string new_query = id->not_query + "/" +
+    string new_query = http_encode_string(id->not_query) + "/" +
       (id->query?("?" + id->query):"");
     if(strlen(f) > 1) // I check the last two characters.
     {
