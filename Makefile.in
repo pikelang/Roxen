@@ -81,6 +81,11 @@ install: all install_only
 
 install_only: 
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
+	@for f in `cd $(SRCDIR); ls [A-Z]* | grep -v Makefile`; do \
+	  if test -f $(SRCDIR)/$f ; then \
+	    cp $(SRCDIR)/$f $(prefix)/roxen/; \
+	  else :; fi; \
+	done
 	@if test -d $(prefix)/roxen/server.old/.; then \
 	  if test -d $(prefix)/roxen/server.older/.; then \
 	    echo; \
