@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.6 2000/04/14 22:22:45 kuntri Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.7 2000/04/14 22:28:19 kuntri Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -29,7 +29,7 @@ constant tagdoc=(["throttle":#"<desc tag><short>This tag determines a request's 
 
 </attr>",
 
-"]);
+]);
 #endif
 
 string|int tag_throttle(string tag, mapping args, RequestID id) {
