@@ -34,21 +34,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   string where_is_ax;
 
   object(image) barsdiagram;
-  if (diagram_data["bgcolor"])
-    barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
-		      @(diagram_data["bgcolor"]));
-  else
-    if (diagram_data["image"])
-      {
-	barsdiagram=diagram_data["image"];
-	diagram_data["xsize"]=diagram_data["image"]->xsize();
-	diagram_data["ysize"]=diagram_data["image"]->ysize();
-      }
-    else
-      barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
-			255,255,255);
 
-  diagram_data["image"]=barsdiagram;
+  init_bg(diagram_data);
+  barsdiagram=diagram_data["image"];
   set_legend_size(diagram_data);
 
   //write("ysize:"+diagram_data["ysize"]+"\n");
@@ -773,9 +761,9 @@ int main(int argc, string *argv)
 		 "xnames":({"hej", "olle"})
   ]);
 
-  //  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
-  //diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
-  //diagram_data["image"]->ysize()-10);
+    diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
+  diagram_data["image"]->ysize()-10);
 
 
   object o=Stdio.File();

@@ -15,6 +15,12 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
+/*
+These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+Create_pie can draw pie charts in different forms.
+*/ 
+
+
 
 
 mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
@@ -26,25 +32,13 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   object(image) piediagram;
 
-
-  if (diagram_data["bgcolor"])
-    piediagram=image(diagram_data["xsize"],diagram_data["ysize"],
-		@(diagram_data["bgcolor"]));
-  else
-   {
-     piediagram=diagram_data["image"];
-     diagram_data["xsize"]=diagram_data["image"]->xsize();
-     diagram_data["ysize"]=diagram_data["image"]->ysize();
-   }
-  
-  diagram_data["image"]=piediagram;
+  init_bg(diagram_data);
+  piediagram=diagram_data["image"];
   setinitcolors(diagram_data);
 
   set_legend_size(diagram_data);
 
-  //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
-  //write("ysize:"+diagram_data["ysize"]+"\n");
   
   //Bestäm största och minsta datavärden.
   init(diagram_data);
@@ -368,11 +362,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       if (tbild->ysize()>512)
 	tbild=tbild->paste(tbild->copy(0,0,imxsize, 511),0, 512);
       
-      //write("tbild->xsize()"+tbild->xsize()+"\n");
-      //write("tbild->ysize()"+tbild->ysize()+"\n");
-      //write("below->xsize()"+below->xsize()+"\n");
-      //write("below->ysize()"+below->ysize()+"\n");
-
 
       //piediagram=
       piediagram->paste_mask(tbild, below, -(int)ceil(plusx), -(int)ceil(plusy) );

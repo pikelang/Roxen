@@ -13,12 +13,36 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-//inherit "../testserver/roxen/server/base_server/roxenlib.pike"; 
+/*
+These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+Create_graph draws a graph but there are also some other functions
+used by create_pie and create_bars.
+*/ 
+
+
+
 
 //Denna funktion ritar text-bilderna, initierar max, fixar till bk-bilder
 //och allt annat som är gemensamt för alla sorters diagram.
 //Denna funktion anropas i create_XXX.
 
+
+object tileimage(object img, int xs, int ys)
+{
+  //written by js@idonex.se
+
+  object dest=image(xs,ys);
+  int srcx=img->xsize();
+  int srcy=img->ysize();
+  if(srcx <= 0 || srcy <= 0)
+    return dest;
+  
+  for(int x=0; x<=xs; x+=srcx)
+    for(int y=0; y<=ys; y+=srcy)
+      dest->paste(img,x,y);
+
+  return dest;
+}
 
 void draw(object(image) img, float h, array(float) coords)
 {
@@ -126,7 +150,6 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 
 
       
-      //write("carr: "+sprintf("%O", carr)+"\n");
       diagram_data["datacolors"]=carr;
       
     }
@@ -268,10 +291,6 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
 
-  //write("ymaxvalue:"+ymaxvalue+"\n");
-  //write("yminvalue:"+yminvalue+"\n");
-  //write("xmaxvalue:"+xmaxvalue+"\n");
-  //write("xminvalue:"+xminvalue+"\n");
 
   if (!(diagram_data["xminvalue"]))
     diagram_data["xminvalue"]=xminvalue;
@@ -360,7 +379,6 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
       diagram_data["ynamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
   
-  write("fontsize:" +diagram_data["fontsize"]+"\n");
 
   if (diagram_data["orient"]=="vert")
     for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
@@ -554,7 +572,6 @@ mapping set_legend_size(mapping diagram_data)
 	}
       
       //Skapa strecket för graph/boxen för bars.
-      //write("J:"+j+"\n");
       if ((diagram_data["type"]=="graph") ||
 	  (diagram_data["type"]=="bars") ||
 	  (diagram_data["type"]=="sumbars") ||
@@ -677,6 +694,28 @@ mapping set_legend_size(mapping diagram_data)
 
 }
 
+mapping(string:mixed) init_bg(mapping diagram_data)
+{
+  if (diagram_data["bgcolor"])
+    diagram_data["image"]=image(diagram_data["xsize"],diagram_data["ysize"],
+		@(diagram_data["bgcolor"]));
+  else
+    if ((diagram_data["xsize"]==0)||(0==diagram_data["ysize"]))
+      {
+	diagram_data["xsize"]=diagram_data["image"]->xsize();
+	diagram_data["ysize"]=diagram_data["image"]->ysize();
+      }
+    else
+      if (diagram_data["image"])
+	diagram_data["image"]=tileimage(diagram_data["image"], 
+					diagram_data["xsize"], 
+					diagram_data["ysize"]);
+      else
+	diagram_data["image"]=image(diagram_data["xsize"],
+				    diagram_data["ysize"],
+				    255,255,255);
+}
+
 mapping(string:mixed) create_graph(mapping diagram_data)
 {
   //Supportar bara xsize>=100
@@ -688,16 +727,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   setinitcolors(diagram_data);
 
   object(image) graph;
-  if (diagram_data["bgcolor"])
-    graph=image(diagram_data["xsize"],diagram_data["ysize"],
-		@(diagram_data["bgcolor"]));
-  else
-    {
-      graph=diagram_data["image"];
-      diagram_data["xsize"]=diagram_data["image"]->xsize();
-      diagram_data["ysize"]=diagram_data["image"]->ysize();
-    }
-  diagram_data["image"]=graph;
+  init_bg(diagram_data);
+  graph=diagram_data["image"];
 
   set_legend_size(diagram_data);
 
@@ -1305,7 +1336,7 @@ int main(int argc, string *argv)
 		 "datacolors":0,//({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
 		 "xsize":400,
-		 "ysize":200,
+		 "ysize":800,
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
