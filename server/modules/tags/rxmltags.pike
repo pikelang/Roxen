@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.311 2001/09/26 20:24:33 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.312 2001/09/27 12:39:25 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2954,8 +2954,9 @@ class TagStrLen {
 class TagCase {
   inherit RXML.Tag;
   constant name = "case";
-  // FIXME: 2.1 compat: Not mandatory.
+#if ROXEN_COMPAT > 2.1
   mapping(string:RXML.Type) req_arg_types = (["case": RXML.t_xml (RXML.PEnt)]);
+#endif
 
   class Frame {
     inherit RXML.Frame;
@@ -2984,12 +2985,14 @@ class TagCase {
 	    op = "capitalized";
 	    break;
 	  default:
-	    // FIXME: 2.1 compat: Not an error.
+#if ROXEN_COMPAT > 2.1
 	    parse_error ("Invalid value %O to the case argument.\n", args->case);
+#endif
 	}
-	// FIXME: 2.1 compat: Not an error.
+#if ROXEN_COMPAT > 2.1
 	parse_error ("Content of type %s doesn't handle being %s.\n",
 		     content_type->name, op);
+#endif
       }
 
 #if ROXEN_COMPAT <= 1.3
