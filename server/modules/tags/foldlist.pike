@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.33 2001/12/06 23:00:38 mast Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.34 2002/01/24 01:12:04 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -92,15 +92,7 @@ string encode_url(array states, RequestID id){
   }
   value=(value<<1)+1;
 
-  //  if(id->query)
-  //    return id->not_query+"?"+id->query+"&__state="+
-  //      state->uri_encode(value);
-
-  string global_not_query=id->raw_url;
-  sscanf(global_not_query, "%s?", global_not_query);
-
-  return global_not_query+"?__state="+
-    state->uri_encode(value);
+  return state->encode_revisit_url (id, value);
 }
 
 class TagFoldlist {
