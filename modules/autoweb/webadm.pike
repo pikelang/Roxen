@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.13 1998/08/03 16:34:09 js Exp $
+ * $Id: webadm.pike,v 1.14 1998/08/04 19:11:07 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.13 1998/08/03 16:34:09 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.14 1998/08/04 19:11:07 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -87,7 +87,7 @@ string update_template(string tag_name, mapping args, object id)
   object db = id->conf->call_provider("sql","sql_object",id);
   string templatesdir = combine_path(roxen->filename(this)+
 				     "/", "../../../")+"templates/";
-  string destfile = query("sites_location")+
+  string destfile = query("searchpath")+
 		    (string)id->variables->customer_id+
 		    "/templates/default.tmpl";
   // Template
@@ -319,7 +319,7 @@ void start(int q, object conf)
 void create()
 {
   defvar("location", "/webadm/", "Mountpoint", TYPE_LOCATION);
-  defvar("sites_location", "/webadm/", "Sites directory", TYPE_DIR,
+  defvar("searchpath", "/home/autosite/", "Sites directory", TYPE_DIR,
 	 "This is the physical location of the root directory for all"
          " the IP-less sites.");
   defvar("admin_user", "www", "Administrator login" ,TYPE_STRING,
@@ -337,7 +337,7 @@ void create()
 string real_path(object id, string filename)
 {
   filename = replace(filename, "../", "");
-  return query("sites_location")+id->misc->customer_id+
+  return query("searchpath")+id->misc->customer_id+
     (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
 }
 
