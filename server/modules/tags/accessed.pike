@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.3 1999/08/01 22:12:30 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.4 1999/08/11 00:52:05 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -228,8 +228,7 @@ int log(object id, mapping file)
   return 0;
 }
 
-string tag_accessed(string tag,mapping m,object id,object file,
-		    mapping defines)
+string tag_accessed(string tag, mapping m, object id)
 {
   int counts, n, prec, q, timep;
   string real, res;
@@ -257,8 +256,6 @@ string tag_accessed(string tag,mapping m,object id,object file,
     m->file=id->not_query;
   }
   
-  int bar;
-
   if(m->reset)
   {
     // FIXME: There are a few cases where users can avoid this.
@@ -327,7 +324,7 @@ string tag_accessed(string tag,mapping m,object id,object file,
       break;
 
     default:
-      return (id->misc->debug?"Access count per what?":"");
+      return rxml_error(tag, "Access count per what?", id);
     }
   }
 
