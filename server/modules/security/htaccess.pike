@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.101 2003/05/07 21:26:18 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.102 2003/11/03 14:13:25 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -263,7 +263,7 @@ mapping parse_and_find_htaccess( RequestID id )
     {
       line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
-      if(!strlen(line))
+      if(!strlen(line) || has_prefix(line, "#"))
 	continue;
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
@@ -272,9 +272,9 @@ mapping parse_and_find_htaccess( RequestID id )
       line = lower_case(line);
 
       if( line == "deny all" )
-	roxen_deny = "deny ip=*\n";
+	roxen_deny += "deny ip=*\n";
       else if( line == "allow all" )
-	roxen_allow = "allow ip=*\n";
+	roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "realm %s", data)||
 	      sscanf(line, "authmethod %s", data)||
 	      sscanf(line, "userdb %s", data))
@@ -337,8 +337,16 @@ mapping parse_and_find_htaccess( RequestID id )
 
     roxen_deny += "allow ip=*\n";
 
-    if( any_ok )
-      roxen_allow = replace( roxen_allow, "\n", " return\n" );
+    if( any_ok ) {
+      array(string) rows = roxen_allow/"\n";
+      int i;
+      for (i=0; i < sizeof(rows); i++) {
+	if (has_prefix(rows[i], "allow ")) {
+	  rows[i] += " return";
+	}
+      }
+      roxen_allow = rows*"\n";
+    }
 
 #ifdef HTACCESS_DEBUG
     report_debug("limit:%{ %s%}\n", indices(m));
