@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.416 2003/11/25 16:03:51 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.417 2003/12/29 11:22:51 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -751,6 +751,7 @@ private final int parse_got_2( )
     if(strlen(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
+      ready_to_receive();
       TIMER_END(parse_got_2);
       return 0;
     }
@@ -1455,9 +1456,10 @@ array parse_range_header(int len)
 // Tell the client that it can start sending some more data
 void ready_to_receive()
 {
-  if (clientprot == "HTTP/1.1" && request_headers->Expect &&
-      (request_headers->Expect ==  "100-continue" ||
-       has_value(request_headers->Expect, "100-continue" )))
+  // FIXME: Only send once?
+  if (clientprot == "HTTP/1.1" && request_headers->expect &&
+      (request_headers->expect ==  "100-continue" ||
+       has_value(request_headers->expect, "100-continue" )))
     my_fd->write("HTTP/1.1 100 Continue\r\n");
 }
 
