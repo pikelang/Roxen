@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.158 2001/03/27 18:37:40 mast Exp $
+# $Id: start,v 1.159 2001/05/16 09:49:27 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -212,12 +212,13 @@ parse_args() {
   '--remove-dumped')
      remove_dumped=1;
   ;;
+
   '--once')
     once=1
   ;;
 # Misspelling --once might give undesirable results, so let's accept
 # some "creative" spellings...  :-)
-  '--onve'|'--onec'|'--onev')
+  '--onve'|'--onec'|'--onev'|'--ocne')
     once=1
   ;;
   '--gdb')
