@@ -36,8 +36,6 @@ int(0..1) set_from_form(RequestID id)
     return 0;
   _current_count++;
 
-  werror("vl: %O\n", vl);
-
   // Update all values
   foreach( indices(vl), string vv )
     if( sscanf( vv, ".set.%da", rn ) && vl[".set."+rn+"b"] ) {
