@@ -50,7 +50,7 @@ string parse( RequestID id )
 		       sprintf(" (%.2f/%s)",
 			       (((float)total->requests*60.0)/dt),
 			       _(6,"min")) );
-  contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->sent));
+  contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->received));
 
   return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
 	  contents+"</table></box>");
