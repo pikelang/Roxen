@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.9 1999/09/26 02:40:15 mast Exp $
+/* $Id: https.pike,v 1.10 1999/10/08 19:08:38 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -13,176 +13,6 @@ mapping to_send;
 #include <module.h>
 
 // #define SSL3_DEBUG
-
-mapping parse_args(string options)
-{
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:parse_args(\"%s\")\n", options));
-#endif /* SSL3_DEBUG */
-  mapping res = ([]);
-  string line;
-  
-  foreach(options / "\n", line)
-    {
-      string key, value;
-      if (sscanf(line, "%*[ \t]%s%*[ \t]%s%*[ \t]", key, value) == 5)
-	res[key] = value-"\r";
-    }
-  return res;
-}
-
-class roxen_ssl_context {
-  inherit SSL.context;
-  int port; /* port number */
-
-#if 0
-  void create()
-    {
-      ::create();
-      export_mode();
-    }
-#endif
-}
-
-private object new_context(object c, int port)
-{
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:new_context(X)\n"));
-#endif /* SSL3_DEBUG */
-  mapping contexts = roxen->query_var("ssl3_contexts");
-  object ctx = roxen_ssl_context();
-  
-  if (!contexts)
-  {
-    contexts = ([ c : ([ port : ctx ]) ]);
-    roxen->set_var("ssl3_contexts", contexts);
-  }
-  else
-    if (!contexts[c]) contexts[c] = ([ port : ctx ]);
-    else contexts[c][port] = ctx;
-  return ctx;
-}
-
-private object get_context(object c, int port)
-{
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:get_context()\n"));
-#endif /* SSL3_DEBUG */
-  mapping contexts = roxen->query_var("ssl3_contexts");
-
-  return contexts && contexts[c] && contexts[c][port];
-}
-
-array|void real_port(array port, object cfg)
-{
-#ifdef SSL3_DEBUG
-  werror("SSL3: real_port()\n");
-  werror(sprintf("port = %O\n", port));
-#endif
-
-  string cert, key;
-  object ctx = new_context(cfg, port[0]);
-  ctx->port = port[0];
-  mapping options = parse_args(port[3]);
-
-#ifdef SSL3_DEBUG
-  werror(sprintf("options = %O\n", options));
-#endif
-
-  if (!options["cert-file"])
-  {
-    throw ("ssl3: No 'cert-file' argument!\n");
-  }
-
-  object privs = Privs ("Reading cert file");
-  string f = read_file(options["cert-file"]);
-  string f2 = options["key-file"] && read_file(options["key-file"]);
-  destruct (privs);
-  if (!f)
-    throw ("ssl3: Reading cert-file failed!\n");
-  
-  object msg = Tools.PEM.pem_msg()->init(f);
-
-  object part = msg->parts["CERTIFICATE"]
-    ||msg->parts["X509 CERTIFICATE"];
-  
-  if (!part || !(cert = part->decoded_body()))
-    throw ("ssl3: No certificate found.\n");
-  
-  if (options["key-file"])
-  {
-    if (!f2)
-      throw ("ssl3: Reading key-file failed!\n");
-    msg = Tools.PEM.pem_msg()->init(f2);
-  }
-
-  function r = Crypto.randomness.reasonably_random()->read;
-
-#ifdef SSL3_DEBUG
-    werror(sprintf("https: key file contains: %O\n", indices(msg->parts)));
-#endif
-  
-  if (part = msg->parts["RSA PRIVATE KEY"])
-  {
-    if (!(key = part->decoded_body()))
-      throw ("https: Private rsa key not valid (PEM).\n");
-      
-    object rsa = Standards.PKCS.RSA.parse_private_key(key);
-    if (!rsa)
-      throw ("https: Private rsa key not valid (DER).\n");
-
-    ctx->rsa = rsa;
-    
-#ifdef SSL3_DEBUG
-    werror(sprintf("RSA key size: %d bits\n", rsa->rsa_size()));
-#endif
-    
-    if (rsa->rsa_size() > 512)
-    {
-      /* Too large for export */
-      ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
-      
-      // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
-    }
-    ctx->rsa_mode();
-
-    object tbs = Tools.X509.decode_certificate (cert);
-    if (!tbs) throw ("https: Certificate not valid (DER).\n");
-    if (!tbs->public_key->rsa->public_key_equal (rsa))
-      throw ("https: Certificate and private key do not match.\n");
-  }
-  else if (part = msg->parts["DSA PRIVATE KEY"])
-  {
-    if (!(key = part->decoded_body()))
-      throw ("https: Private dsa key not valid (PEM).\n");
-      
-    object dsa = Standards.PKCS.DSA.parse_private_key(key);
-    if (!dsa)
-      throw ("https: Private dsa key not valid (DER).\n");
-
-#ifdef SSL3_DEBUG
-    werror(sprintf("https: Using DSA key.\n"));
-#endif
-	
-    dsa->use_random(r);
-    ctx->dsa = dsa;
-    /* Use default DH parameters */
-    ctx->dh_params = SSL.cipher.dh_parameters();
-
-    ctx->dhe_dss_mode();
-
-    // FIXME: Add cert <-> private key check.
-  }
-  else
-    throw ("https: No private key found.\n");
-
-  ctx->certificates = ({ cert });
-  ctx->random = r;
-
-#if EXPORT
-  ctx->export_mode();
-#endif
-}
 
 #define CHUNK 16384
 
@@ -509,188 +339,6 @@ void send_result(mapping|void result)
   if (done++) destroy();
 }
 
-class fallback_redirect_request {
-  string in = "";
-  string out;
-  string default_prefix;
-  int port;
-  object f;
-
-  void die()
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::die()\n"));
-#endif /* SSL3_DEBUG */
-#if 0
-    /* Close the file, DAMMIT */
-    object dummy = Stdio.File();
-    if (dummy->open("/dev/null", "rw"))
-      dummy->dup2(f);
-#endif    
-    f->close();
-    destruct(f);
-    destruct(this_object());
-  }
-  
-  void write_callback(object id)
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::write_callback()\n"));
-#endif /* SSL3_DEBUG */
-    int written = id->write(out);
-    if (written <= 0)
-      die();
-    out = out[written..];
-    if (!strlen(out))
-      die();
-  }
-
-  void read_callback(object id, string s)
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::read_callback(X, \"%s\")\n", s));
-#endif /* SSL3_DEBUG */
-    in += s;
-    string name;
-    string prefix;
-
-    if (search(in, "\r\n\r\n") >= 0)
-    {
-//      werror(sprintf("request = '%s'\n", in));
-      array(string) lines = in / "\r\n";
-      array(string) req = replace(lines[0], "\t", " ") / " ";
-      if (sizeof(req) < 2)
-      {
-	out = "HTTP/1.0 400 Bad Request\r\n\r\n";
-      }
-      else
-      {
-	if (sizeof(req) == 2)
-	{
-	  name = req[1];
-	}
-	else
-	{
-	  name = req[1..sizeof(req)-2] * " ";
-	  foreach(Array.map(lines[1..], `/, ":"), array header)
-	  {
-	    if ( (sizeof(header) >= 2) &&
-		 (lower_case(header[0]) == "host") )
-	      prefix = "https://" + (header[1]/":")[0] - " ";
-	  }
-	}
-	if (prefix) {
-	  if (prefix[-1] == '/')
-	    prefix = prefix[..strlen(prefix)-2];
-	  prefix = prefix + ":" + port;
-	} else {
-	  /* default_prefix (aka MyWorldLocation) already contains the
-	   * portnumber.
-	   */
-	  if (!(prefix = default_prefix)) {
-	    /* This case is most unlikely to occur,
-	     * but better safe than sorry...
-	     */
-	    prefix = "https://localhost:" + port;
-	  } else if (prefix[..4] == "http:") {
-	    /* Broken MyWorldLocation -- fix. */
-	    prefix = "https:" + prefix[5..];
-	  }
-	}
-	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
-		      "Location: %s%s\r\n\r\n", prefix, name);
-      }
-      f->set_read_callback(0);
-      f->set_write_callback(write_callback);
-    }
-  }
-  
-  void create(object socket, string s, string l, int p)
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l||"CONFIG PORT", p));
-#endif /* SSL3_DEBUG */
-    f = socket;
-    default_prefix = l;
-    port = p;
-    f->set_nonblocking(read_callback, 0, die);
-    f->set_id(f);
-    read_callback(f, s);
-  }
-}
-
-void http_fallback(object alert, object|int n, string data)
-{
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:http_fallback(X, %O, \"%s\")\n", n, data));
-#endif /* SSL3_DEBUG */
-//  trace(1);
-#if 0
-  werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
-		 "seq_num = %s\n"
-		 "data = '%s'", alert->level, alert->description,
-		 (string) n, data));
-#endif
-  if ( (my_fd->current_write_state->seq_num == 0)
-       && search(lower_case(data), "http"))
-  {
-    /* Redirect to a https-url */
-//    my_fd->set_close_callback(0);
-//    my_fd->leave_me_alone = 1;
-    fallback_redirect_request(my_fd->raw_file, data,
-			      my_fd->config && 
-			      my_fd->config->query("MyWorldLocation"),
-			      my_fd->context->port);
-    destruct(my_fd);
-    destruct(this_object());
-//    my_fd = 0; /* Forget ssl-object */
-  }
-}
-
-void ssl_accept_callback(object id)
-{
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:ssl_accept_callback(X)\n"));
-#endif /* SSL3_DEBUG */
-  id->set_alert_callback(0); /* Forget about http_fallback */
-  id->raw_file = 0;          /* Not needed any more */
-}
-
-class roxen_sslfile {
-  inherit SSL.sslfile : ssl;
-
-  object raw_file;
-  object config;
-
-  int destructme; // 0: alive, 1: parent wants destruct, 2: self wants destruct.
-
-  void die(int status)
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:roxen_sslfile::die(%d)\n", status));
-#endif /* SSL3_DEBUG */
-    ssl::die(status);
-    if ((destructme |= 2) == 3) destruct();
-  }
-
-  void create(object f, object ctx, object id)
-  {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:roxen_sslfile(X, X, X)\n"));
-#endif /* SSL3_DEBUG */
-    raw_file = f;
-    config = id;
-    ssl::create(f, ctx);
-  }
-
-#ifdef SSL3_DEBUG
-  void destroy()
-  {
-    roxen_perror(sprintf("SSL3:roxen_sslfile::destroy()\n"));
-  }
-#endif /* SSL3_DEBUG */
-}
-
 private object my_fd_for_destruct; // Used to keep my_fd around for destroy().
 
 void destroy()
@@ -706,22 +354,22 @@ void destroy()
   };
 }
 
-void create(object f, object c, array port)
+void create(object f, object c)
 {
 #ifdef SSL3_DEBUG
   roxen_perror(sprintf("SSL3:create(X, X)\n"));
 #endif /* SSL3_DEBUG */
   if(f)
   {
-    object ctx = get_context(c, port[0]);
-    if (!ctx)
-      throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
-    my_fd_for_destruct = my_fd = roxen_sslfile(f, ctx, c);
-    if(my_fd->set_alert_callback)
-      my_fd->set_alert_callback(http_fallback);
-    my_fd->set_accept_callback(ssl_accept_callback);
-    conf = c;
-    my_fd->set_nonblocking(got_data,0,end);
+    port_obj = c;
+
+    my_fd = f;
+
+#if 0
+    conf = port_obj->find_configuration_for_url(/* ????? */, this_object());
+#endif /* 0 */
+
+    f->set_nonblocking(got_data,0,end);
   } else {
     // Main object. 
   }
