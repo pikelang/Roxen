@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.204 2002/10/30 04:01:52 nilsson Exp $
+# $Id: start,v 1.205 2002/10/30 19:10:49 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -764,6 +764,7 @@ LS="`ls -lL \"$pike\" 2>/dev/null`"
 LS="$LS `cd pike_modules && find . -ls 2>/dev/null`"
 LS="$LS `cd server_core && find . -ls 2>/dev/null`"
 LS="$LS `cd data/includes && find . -ls 2>/dev/null`"
+LS="$LS `cd plugins && find . -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS  `uname -m` `uname -r`"
 
@@ -771,7 +772,7 @@ if [ "$program" = "server_core/loader.pike" ] ; then
   if [ "`cat \"$VARDIR/server_dependencies\" 2>/dev/null`" != "$VERSION_DATA" ] ; then
     remove_old_dot_o_files "defines or pike version changed"
   fi
-  echo "$VERSION_DATA" > "$VARDIR/server_dependencies"
+  echo "$VERSION_DATA" > "$VARDIR/new_server_dependencies"
 fi
 
 if [ -z "$once" ] ; then

@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.357 2002/10/30 04:02:55 nilsson Exp $
+// $Id: loader.pike,v 1.358 2002/10/30 19:10:49 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.357 2002/10/30 04:02:55 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.358 2002/10/30 19:10:49 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1773,6 +1773,7 @@ void start_mysql()
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
+      rm("$VARDIR/server_dependencies");
       if (mixed err = catch
       {
 	db->query( "DELETE FROM local.precompiled_files" );
@@ -1780,6 +1781,7 @@ void start_mysql()
 	// Clear the modules cache too since it currently doesn't
 	// depend on the module path properly.
 	db->query( "DELETE FROM local.modules" );
+	mv("$VARDIR/new_server_dependencies", "$VARDIR/server_dependencies");
       }) {
 #ifdef MYSQL_CONNECT_DEBUG
 	werror ("Error removing dumped files: %s", describe_error (err));
