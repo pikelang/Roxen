@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.26 1997/12/11 22:11:58 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.27 1997/12/13 16:25:55 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -396,7 +396,7 @@ void main(int argc, string *argv)
   int have_crypto = 0;
   catch(have_crypto = sizeof(indices(master()->resolv("_Crypto"))));
   int have_ssl3 = 0;
-  have_ssl3 = stat("protocols/ssl3.pike") != 0;
+  have_ssl3 = file_stat("protocols/ssl3.pike") != 0;
 
   if (have_gmp && have_crypto && have_ssl3) {
     write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");
