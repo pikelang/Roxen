@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.4 1997/09/08 19:30:52 marcus Exp $ */
+/* $Id: ftpstatus.pike,v 1.5 1997/10/12 21:11:51 grubba Exp $ */
 
 inherit "wizard";
 
@@ -29,7 +29,7 @@ static string describe_ftp(object ftp)
     if(ftp->curr_pipe) {
       int b;
       res += "<td>"+(b=ftp->curr_pipe->bytes_sent())+" bytes";
-      if(ftp->file->len && ftp->file->len!=0x7fffffff)
+      if(ftp->file && ftp->file->len && ftp->file->len!=0x7fffffff)
 	res += sprintf(" (%1.1f%%)", (100.0*b)/ftp->file->len);
       res += "</td>";
     } else if(ftp->my_fd) {
