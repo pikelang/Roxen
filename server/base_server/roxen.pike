@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.810 2002/10/25 18:19:35 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.811 2002/10/27 17:35:27 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -523,11 +523,14 @@ class Queue
   
   mixed read()
   {
-    while(!(w_ptr - r_ptr))
+    while(!(w_ptr - r_ptr)) {
       // Make a MutexKey for wait() to please 7.3. This will of course
       // not fix the race, but we ignore that. See the discussion
-      // above.
-      r_cond::wait (Thread.Mutex()->lock());
+      // above. (Must have an extra ref to the mutex since the
+      // MutexKey doesn't keep one.)
+      Thread.Mutex m = Thread.Mutex();
+      r_cond::wait (m->lock());
+    }
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
@@ -624,11 +627,15 @@ local static void handler_thread(int id)
 	  num_hold_messages--;
 	  THREAD_WERR("Handle thread [" + id + "] put on hold");
 	  threads_on_hold++;
-	  if (Thread.Condition cond = hold_wakeup_cond)
+	  if (Thread.Condition cond = hold_wakeup_cond) {
 	    // Make a MutexKey for wait() to please 7.3. This will of
 	    // course not fix the race, but we ignore that. See the
-	    // comment at the declaration of hold_wakeup_cond.
-	    cond->wait (Thread.Mutex()->lock());
+	    // comment at the declaration of hold_wakeup_cond. (Must
+	    // have an extra ref to the mutex since the MutexKey
+	    // doesn't keep one.)
+	    Thread.Mutex m = Thread.Mutex();
+	    cond->wait (m->lock());
+	  }
 	  threads_on_hold--;
 	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
