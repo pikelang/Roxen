@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.36 1999/08/09 20:05:07 grubba Exp $
+ * $Id: clientlayer.pike,v 1.37 1999/08/17 15:40:22 marcus Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.36 1999/08/09 20:05:07 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.37 1999/08/17 15:40:22 marcus Exp $";
 constant thread_safe=1;
 
 
@@ -354,7 +354,7 @@ class Mail
     {
       mapping h = get_mail_headers( message_id );
       _incoming_date = h->incoming_date;
-      return _headers = parse_headers( h[ "headers" ] )[0] | h;
+      return _headers = MIME.parse_headers( h[ "headers" ] )[0] | h;
     }
     return _headers;
   }
@@ -580,7 +580,7 @@ class Mailbox
   Mail create_mail_from_fd( Stdio.File fd )
   {
     string foo = read_headers_from_fd( fd );
-    mapping headers = parse_headers( foo )[0];
+    mapping headers = MIME.parse_headers( foo )[0];
     string bodyid = get_unique_body_id();
     fd->seek( 0 );
     Stdio.File f = new_body( bodyid );
