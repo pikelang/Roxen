@@ -46,6 +46,7 @@ install: all
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/src/pike $(prefix)/roxen/server/bin
+	cp pike/bin/feature_list $(prefix)/roxen/server/bin
 	test -d $(prefix)/roxen/server/lib || mkdir $(prefix)/roxen/server/lib
 	test -d $(prefix)/roxen/server/lib/pike || mkdir $(prefix)/roxen/server/lib/pike
 	cp -r pike/src/lib/* $(prefix)/roxen/server/lib/pike/
