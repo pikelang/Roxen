@@ -1,4 +1,4 @@
-/* $Id: listfonts.pike,v 1.2 1997/09/06 03:53:50 per Exp $ */
+/* $Id: listfonts.pike,v 1.3 1998/11/02 07:01:18 per Exp $ */
 #if constant(available_font_versions)
 inherit "wizard";
 
@@ -24,6 +24,7 @@ string list_font(string font)
 
 mapping render_font(object font, string text)
 {
+  if(!font) return http_string_answer(Image.image(10,10)->togif(),"image/gif");
   return http_string_answer(font->write(text)->invert()->
 			    scale(0.5)->togif(255,255,255),
 			    "image/gif");
@@ -59,7 +60,8 @@ string page_1(object id)
 mixed handle(object id)
 {
   if(!id->variables->render) return wizard_for(id,0);
-  return render_font(get_font(id->variables->font, 32, 
+  return render_font(get_font(id->variables->font, 
+			      32, 
 			      (int)id->variables->bold,
 			      (int)id->variables->italic,
 			      "left", 0.0,0.0),
