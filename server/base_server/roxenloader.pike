@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.137 2000/02/02 18:12:29 mast Exp $
+ * $Id: roxenloader.pike,v 1.138 2000/02/09 01:07:44 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.137 2000/02/02 18:12:29 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.138 2000/02/09 01:07:44 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1062,8 +1062,13 @@ int global_count;
 // Roxen bootstrap code.
 int main(int argc, array argv)
 {
-  mixed err =
-  catch{
+  call_out( do_main, 0, argc, argv );
+  // Get rid of the _main and main() backtrace elements..
+  return -1;
+}
+
+void do_main( int argc, array argv )
+{
 #ifdef NOT_INSTALLED
 report_debug(
 #"
@@ -1088,7 +1093,7 @@ report_debug(
 
 
 ******************************************************
-Roxen 1.4 requires pike 0.7.
+Roxen 2.0 requires pike 7.
 Please install a newer pike version
 ******************************************************
 
@@ -1099,7 +1104,7 @@ Please install a newer pike version
 
 
 
-  int start_time = gethrtime();
+ int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
   report_debug("\n"+version()+"\n");
@@ -1169,8 +1174,7 @@ Please install a newer pike version
   report_debug("\n-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
-  return(retval);
-  };
-  array q = (array)err;
-  throw( ({ q[0], q[1][2..] }) );
+  if( retval > -1 )
+    exit( retval );
+  return;
 }
