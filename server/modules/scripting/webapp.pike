@@ -6,7 +6,7 @@ inherit "chili-module:filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.24 2004/05/22 23:43:50 _cvs_dirix Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.25 2004/05/23 01:10:37 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -36,7 +36,7 @@ constant module_name = "Java: Java Web Application bridge";
 constant  module_doc = "An interface to Java <a href=\"http://java.sun.com/"
   "products/servlet/index.html""\">Servlets</a>.";
 
-#if constant(servlet.servlet)
+#if constant(Servlet.servlet)
 //#if 1
 
 // map from servlet name to various info about the servlet
