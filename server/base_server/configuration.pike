@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.402 2000/12/11 00:03:27 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.403 2000/12/11 03:07:46 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1583,6 +1583,18 @@ array(int)|Stat stat_file(string file, RequestID id)
   TRACE_LEAVE("Returned 'no such file'.");
 }
 
+mapping error_file( RequestID id )
+{
+  string data = query("ZNoSuchFile");
+  NOCACHE();
+#ifdef OLD_RXML_COMPAT
+  data = replace(data,({"$File", "$Me"}),
+                 ({"&page.virtfile;",query("MyWorldLocation")}));
+#endif
+  id->misc->defines = ([ " _error":404 ]);
+  return Roxen.http_rxml_answer( data, id, 0, "text/html" );
+}
+
 // this is not as trivial as it sounds. Consider gtext. :-)
 array open_file(string fname, string mode, RequestID id, void|int internal_get)
 {
@@ -1638,20 +1650,8 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
 	file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = Roxen.http_low_answer(501, "Not implemented.");
-      else {
-	file = Roxen.http_low_answer(404,
-			       parse_rxml(
-#ifdef OLD_RXML_COMPAT
-					  replace(query("ZNoSuchFile"),
-						  ({ "$File", "$Me" }),
-						  ({ "&page.virtfile;",
-						     "&roxen.server;"
-						  })),
-#else
-					  query("ZNoSuchFile"),
-#endif
-					  id));
-      }
+      else
+        file = error_file( id );
 
       id->not_query = oq;
 

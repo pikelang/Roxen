@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.291 2000/12/10 02:41:57 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.292 2000/12/11 03:07:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1598,18 +1598,7 @@ void send_result(mapping|void result)
     if(misc->error_code)
       file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
-      file = Roxen.http_low_answer(404,
-                                   Roxen.parse_rxml(
-#ifdef OLD_RXML_COMPAT
-                                                    replace(conf->query("ZNoSuchFile"),
-                                                            ({"$File", "$Me"}),
-                                                            ({ "&page.virtfile;",
-                                                               conf->query("MyWorldLocation")
-                                                            })),
-#else
-                                                    conf->query("ZNoSuchFile"),
-#endif
-                                                    this_object()));
+      file = conf->error_file( this_object() );
     })
       INTERNAL_ERROR(err);
   } 
@@ -1692,7 +1681,8 @@ void send_result(mapping|void result)
         heads["Content-Type"] = file["type"]+charset;
         heads["Accept-Ranges"] = "bytes";
         heads["Server"] = replace(version(), " ", "·");
-        heads["Connection"] = (misc->connection=="close" ? "close": "keep-alive");
+        if( misc->connection )
+          heads["Connection"] = misc->connection;
 
         if(file->encoding) heads["Content-Encoding"] = file->encoding;
 
