@@ -1,7 +1,5 @@
-This file lists the known compatibility issues between various
-versions of Roxen WebServer.
-
-Between ChiliMoon 2.5 and Roxen WebServer <= 2.4
+This file lists the known compatibility issues between ChiliMoon 2002
+and Roxen WebServer <= 3.3.
 
  - The font folder has moved from server/nfonts to data/fonts. The font
    directory setting must be updated in all configurations. This can
@@ -74,3 +72,7 @@ Between ChiliMoon 2.5 and Roxen WebServer <= 2.4
    really free, ie. Roxen Internet Software pays money to Bitstream
    Inc. for every downloaded Roxen WebServer. If you need a good font,
    buy one.
+
+ - Special code for Roxen SiteBuilder/Platform/CMS has been removed.
+   If you want to run Roxen SiteBuilder/Platform/CMS you'll have to
+   stick to Roxen WebServer.
