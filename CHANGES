@@ -1,3 +1,17 @@
+Changes since Roxen Challenger 1.3.115 Yellow
+-----------------------------------------------
+
+o Added byte-range handling. (Thanks to David Hedbor at Real Audio.)
+  note: Experimental and must be enabled in global variables.
+
+o Fixed start --version to acctually output the correct version.
+
+o Fixed ABS to print out the backtraces of all threds if engaged.
+
+o Added workaround in the CGI-module for systems that dont like
+  negative UIDs/GIDs.
+
+
 Changes since Roxen Challenger 1.3.111 Yellow
 -----------------------------------------------
 
