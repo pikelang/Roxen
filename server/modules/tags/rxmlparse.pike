@@ -12,9 +12,8 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.25 1999/10/08 12:43:23 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.26 1999/10/08 16:17:50 nilsson Exp $";
 constant thread_safe=1;
-
 constant language = roxen->language;
 
 #include <config.h>
@@ -114,110 +113,6 @@ mapping handle_file_extension(object file, string e, object id)
 
 // ------- Stuff to connect to the API function -------
 
-string tagtime(int t,mapping m,object id)
-{
-  string s;
-  mixed eris;
-  string res;
-
-  if (m->adjust) t+=(int)m->adjust;
-
-  if (m->part)
-  {
-    string sp;
-    if(m->type == "ordered")
-    {
-      m->type="string";
-      sp = "ordered";
-    }
-
-    switch (m->part)
-    {
-     case "year":
-      return number2string((int)(localtime(t)->year+1900),m,
-			   language(m->lang, sp||"number"));
-     case "month":
-      return number2string((int)(localtime(t)->mon+1),m,
-			   language(m->lang, sp||"month"));
-     case "day":
-     case "wday":
-      return number2string((int)(localtime(t)->wday+1),m,
-			   language(m->lang, sp||"day"));
-     case "date":
-     case "mday":
-      return number2string((int)(localtime(t)->mday),m,
-			   language(m->lang, sp||"number"));
-     case "hour":
-      return number2string((int)(localtime(t)->hour),m,
-			   language(m->lang, sp||"number"));
-     case "min":  // Not part of RXML 1.4
-     case "minute":
-      return number2string((int)(localtime(t)->min),m,
-			   language(m->lang, sp||"number"));
-     case "sec": // Not part of RXML 1.4
-     case "second":
-      return number2string((int)(localtime(t)->sec),m,
-			   language(m->lang, sp||"number"));
-     case "yday":
-      return number2string((int)(localtime(t)->yday),m,
-			   language(m->lang, sp||"number"));
-     default: return "";
-    }
-  } else if(m->type) {
-    switch(m->type)
-    {
-     case "iso":
-      eris=localtime(t);
-      return sprintf("%d-%02d-%02d", (eris->year+1900),
-		     eris->mon+1, eris->mday);
-
-     case "discordian":
-#if efun(discdate)
-      eris=discdate(t);
-      res=eris[0];
-      if(m->year)
-	res += " in the YOLD of "+eris[1];
-      if(m->holiday && eris[2])
-	res += ". Celebrate "+eris[2];
-      return res;
-#else
-      return "Discordian date support disabled";
-#endif
-     case "stardate":
-#if efun(stardate)
-      return (string)stardate(t, (int)m->prec||1);
-#else
-      return "Stardate support disabled";
-#endif
-    }
-  }
-  s=language(m->lang, "date")(t,m);
-
-  if(m["case"])
-    switch(lower_case(m["case"])) {
-    case "upper": return upper_case(s);
-    case "lower": return lower_case(s);
-    case "capitalize": return capitalize(s);
-    }
-
-#if old_rxml_compat
-  // Not part of RXML 1.4
-  if (m->upper) {
-    s=upper_case(s);
-    api_old_rxml_warning(id,"upper attribute in a tag","case=\"upper\"");
-  }
-  if (m->lower) {
-    s=lower_case(s);
-    api_old_rxml_warning(id,"lower attribute in a tag","case=\"lower\"");
-  }
-  if (m->cap||m->capitalize) {
-    s=capitalize(s);
-    api_old_rxml_warning(id,"captialize or cap attribute in a tag.","case=\"capitalize\"");
-  }
-  return s;
-#endif
-}
-
 string tag_modified(string tag, mapping m, object id, object file)
 {
   array (int) s;
@@ -268,7 +163,7 @@ string tag_modified(string tag, mapping m, object id, object file)
     if(m->ssi)
       return strftime(id->misc->defines->timefmt || "%c", s[3]);
     else
-      return tagtime(s[3], m, id);
+      return tagtime(s[3], m, id, language);
 
   return rxml_error(tag, "Couldn't stat file.", id);
 }
@@ -320,16 +215,6 @@ string|array(string) tag_user(string tag, mapping m, object id, object file)
 	  });
 }
 
-string add_header(mapping to, string name, string value)
-{
-  if(to[name])
-    if(arrayp(to[name]))
-      to[name] += ({ value });
-    else
-      to[name] = ({ to[name], value });
-  else
-    to[name] = value;
-}
 
 // ------------- Define the API functions --------------
 
@@ -344,13 +229,7 @@ string api_tagtime(object id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
   NOCACHE();
-  return tagtime( ti, m, id );
-}
-
-string api_tagtime_map(object id, int ti, void|mapping m)
-{
-  NOCACHE();
-  return tagtime( ti, m||([]) , id );
+  return tagtime( ti, m, id, language );
 }
 
 string api_relative(object id, string path)
@@ -396,7 +275,7 @@ string api_query_modified(object id, string f, int|void by)
 
 void api_add_header(object id, string h, string v)
 {
-  add_header(_extra_heads, h, v);
+  add_http_header(_extra_heads, h, v);
 }
 
 int api_set_cookie(object id, string c, string v, void|string p)
@@ -404,7 +283,7 @@ int api_set_cookie(object id, string c, string v, void|string p)
   if(!c)
     return 0;
 
-  add_header(_extra_heads, "Set-Cookie",
+  add_http_header(_extra_heads, "Set-Cookie",
     c+"="+http_encode_cookie(v||"")+
     "; expires="+http_date(time(1)+(3600*24*365*2))+
     "; path=" +(p||"/")
@@ -418,7 +297,7 @@ int api_remove_cookie(object id, string c, string v)
   if(!c)
     return 0;
 
-  add_header(_extra_heads, "Set-Cookie",
+  add_http_header(_extra_heads, "Set-Cookie",
     c+"="+http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
   );
 
@@ -524,7 +403,6 @@ void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
   add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
-  add_api_function("tag_time_wrapper", api_tagtime_map, ({ "int", 0,"mapping"}));
   add_api_function("tag_modified_wrapper", tag_modified_wrapper, ({ "string", "mapping", "object", "object" }));
   add_api_function("tag_user_wrapper", tag_user_wrapper, ({ "string", "mapping", "object", "object" }));
   add_api_function("fix_relative", api_relative, ({ "string" }));

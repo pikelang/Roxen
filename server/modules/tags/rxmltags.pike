@@ -7,11 +7,12 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-#define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
+#define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmltags.pike,v 1.19 1999/10/08 13:04:19 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.20 1999/10/08 16:17:50 nilsson Exp $";
 constant thread_safe=1;
+constant language = roxen->language;
 
 #include <module.h>
 
@@ -123,11 +124,11 @@ string tag_expire_time(string tag, mapping m, object id)
     CACHE(max(t-time(),0));
   } else {
     NOCACHE();
-    id->conf->api_functions()->add_header[0](id, "Pragma", "no-cache");
-    id->conf->api_functions()->add_header[0](id, "Cache-Control", "no-cache");
+    add_http_header(_extra_heads, "Pragma", "no-cache");
+    add_http_header(_extra_heads, "Cache-Control", "no-cache");
   }
 
-  id->conf->api_functions()->add_header[0](id, "Expires", http_date(t));
+  add_http_header(_extra_heads, "Expires", http_date(t));
   return "";
 }
 
@@ -159,7 +160,7 @@ string tag_header(string tag, mapping m, object id)
   if(!(m->value && m->name))
     return rxml_error(tag, "Requires both a name and a value.", id);
 
-  id->conf->api_functions()->add_header[0](id, m->name, m->value);
+  add_http_header(_extra_heads, m->name, m->value);
   return "";
 }
 
@@ -489,7 +490,7 @@ string tag_date(string q, mapping m, object id)
   else
     CACHE(60); // One minute is good enough.
 
-  return id->conf->api_functions()->tag_time_wrapper[0](id, t, m);
+  return tagtime(t, m, id, language);
 }
 
 #if old_rxml_compat
@@ -628,12 +629,15 @@ string|array(string) tag_insert(string tag,mapping m,object id)
 
 string|array(string) tag_configurl(string tag, mapping m, object id)
 {
-  return ({ id->conf->api_functions()->config_url[0]() });
+  return ({ roxen->config_url() });
 }
 
 string tag_return(string tag, mapping m, object id)
 {
-  id->conf->api_functions()->set_return_code[0]( id, (int)m->code || 200, m->text );
+  int c=(int)m->code;
+  if(c) _error=c;
+  string p=m->text;
+  if(p) _rettext=p;
   return "";
 }
 
@@ -657,7 +661,7 @@ string tag_set_cookie(string tag, mapping m, object id)
   //obs! no check of the parameter's usability
   cookies += "; path=" +(m->path||"/");
 
-  id->conf->api_functions()->add_header[0](id, "Set-Cookie", cookies);
+  add_http_header(_extra_heads, "Set-Cookie", cookies);
 
   return "";
 }
@@ -665,7 +669,11 @@ string tag_set_cookie(string tag, mapping m, object id)
 string tag_remove_cookie(string tag, mapping m, object id)
 {
   if(!m->name || !id->cookies[m->name]) return rxml_error(tag, "That cookie does not exists.", id);
-  id->conf->api_functions()->remove_cookie[0](id, m->name, m->value);
+
+  add_http_header(_extra_heads, "Set-Cookie",
+    m->name+"="+http_encode_cookie(m->value||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
+  );
+
   return "";
 }
 
