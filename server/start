@@ -1,11 +1,23 @@
 #!/bin/sh
 #
-# $Id: start,v 1.123 2000/08/31 01:50:41 mast Exp $
+# $Id: start,v 1.124 2000/08/31 11:35:00 noring Exp $
+
+### If --silent-start is given as the first argument,
+### nothing will be printed to stdout by the script.
+
+if [ "x$1" = "x--silent-start" ]
+then
+    SILENT_START="y"
+    shift
+fi
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
 dp() {
-  echo "$pre" "$@" 2>&1
+  if [ "x$SILENT_START" = "xy" ]
+  then :; else
+    echo "$pre" "$@" 2>&1
+  fi
 }
 
 # Breaks on linux when using symlinks.
@@ -279,6 +291,9 @@ the default arguments.
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
 				  Defaults to .B../configurationB..
+
+      .B--silent-startB.:             Inhibits output to stdout. If used,
+                                  this argument must be the first one.
 
       .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
