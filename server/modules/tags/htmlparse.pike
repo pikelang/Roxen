@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.52 1997/10/24 21:45:09 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.53 1997/10/25 07:50:13 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1285,6 +1285,8 @@ string tag_allow(string a, mapping (string:string) m,
     m_delete(m, "not");
     return tag_deny("", m, s, got, file, defines, client);
   }
+
+  if(m->eval) TEST((int)parse_rxml(m->eval, got));
 
   if(m->module)
     TEST(got->conf && got->conf->modules[m->module]);
