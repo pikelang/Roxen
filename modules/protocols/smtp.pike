@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.46 1998/09/18 19:05:01 grubba Exp $
+ * $Id: smtp.pike,v 1.47 1998/09/18 20:19:10 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.46 1998/09/18 19:05:01 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.47 1998/09/18 20:19:10 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -15,6 +15,18 @@ constant thread_safe = 1;
 inherit "module";
 
 #define SMTP_DEBUG
+
+/*
+ * TODO:
+ *
+ * o Add possibility to disable relaying.
+ *
+ * o Better support for SIZE.
+ *
+ * o Add option to limit the size of accepted mail.
+ *
+ * o Code clean-up.
+ */
 
 /*
  * Provider module interface:
@@ -31,9 +43,12 @@ inherit "module";
  *
  * smtp_filter:
  *	int verify_sender(string sender);
+ *	void async_verify_sender(string sender, function cb, mixed ... args);
  * 	int verify_recipient(string sender, string recipient, object o);
  * 	int classify_connection(string remoteip, int remoteport,
  * 	                        string remotehost);
+ *	void async_classify_connection(object con, mapping con_info,
+ *				       function cb, mixed ... args);
  *
  * smtp_relay:
  * 	int relay(string sender, string user, string domain,
