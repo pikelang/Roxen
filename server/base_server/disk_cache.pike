@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.56 2000/09/12 11:29:30 per Exp $
+// $Id: disk_cache.pike,v 1.57 2000/09/24 16:24:15 nilsson Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -40,14 +40,12 @@ string file_name(string what)
   | of this class.                                           |
   +----------------------------------------------------------+*/
 
-class CacheStream
+class CacheStream ( Stdio.File file, string fname, int new )
 {
   inherit "socket";
 
-  string fname, rfile, rfiledone;
-  Stdio.File file;
+  string rfile, rfiledone;
   function done_callback;
-  int new;
   mapping headers = ([]);
 
   int get_code(string from)
@@ -191,14 +189,6 @@ class CacheStream
     return 1;
   }
 
-  void create(Stdio.File a, string s, int n)
-  {
-//    werror("Create cache-stream for "+s+"\n");
-    fname = s;
-    file = a;
-    new = n;
-  }
-
   void destroy()
   {
     if(objectp(file))
@@ -266,7 +256,6 @@ class Cache
   void nil(){}
 
   int t=10;
-  void create(string basename);
   void do_create(string b)
   {
     t*=2;
