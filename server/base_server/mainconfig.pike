@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.96 1998/02/20 11:16:34 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.97 1998/02/20 23:54:55 noring Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1222,8 +1222,8 @@ string status_row(object node)
 	   +describe_node_path(node)+"</td>"
 	   "</tr><tr width=\"100%\">"
 	   "<td bgcolor=\"#003366\" align=right height=12 width=\"100%\">"
-	   "<font color=white size=-2>Administration Interface</font>"
-	   "</td></tr></table></td>"
+	   "<font color=white size=-2>Administration Interface"
+	   "&nbsp;&nbsp;</font></td></tr></table></td>"
 	   "\n</tr>\n</table><br>");
 }
 
