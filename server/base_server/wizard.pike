@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.46 1997/11/13 23:28:50 neotron Exp $
+/* $Id: wizard.pike,v 1.47 1997/11/23 08:23:17 mirar Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -341,6 +341,10 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   mapping v=id->variables;
   string wiz_name = "page_";
 
+  mapping s = decompress_state(v->_state);
+  foreach(indices(s), string q)
+     v[q] = v[q]||s[q];
+
   if(v->next_page)
   {
     function c;
@@ -355,9 +359,6 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   else if(v->ok)
   {
     function c;
-    mapping s = decompress_state(v->_state);
-    foreach(indices(s), string q)
-      v[q] = v[q]||s[q];
 
     if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
       return (((c=this_object()->wizard_done)?c(id,@args):0)
@@ -371,9 +372,6 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   } else if(v->cancel) {
     return http_redirect(cancel||id->not_query, @(id->conf?({id}):({})));
   }
-  mapping s = decompress_state(v->_state);
-  foreach(indices(s), string q)
-    v[q] = v[q]||s[q];
 
   foreach(indices(id->variables), string n)
   {
