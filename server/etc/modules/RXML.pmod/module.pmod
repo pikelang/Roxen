@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.182 2001/06/28 20:24:59 mast Exp $
+// $Id: module.pmod,v 1.183 2001/06/29 00:21:06 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -136,6 +136,7 @@ class Tag
 //! Interface class for the static information about a tag.
 {
   constant is_RXML_Tag = 1;
+  constant is_RXML_encodable = 1;
 
   // Interface:
 
@@ -475,6 +476,8 @@ class TagSet
 //! An @[RXML.Tag] object may not be registered in more than one tag
 //! set at the same time.
 {
+  constant is_RXML_TagSet = 1;
+
   string name;
   //! Unique identification string. Must be stable across server
   //! restarts since it's used to identify tag sets in dumped p-code.
@@ -2059,6 +2062,7 @@ class Frame
 //! about using variable initializers.
 {
   constant is_RXML_Frame = 1;
+  constant is_RXML_encodable = 1;
   constant thrown_at_unwind = 1;
 
   // Interface:
@@ -3550,22 +3554,24 @@ class Frame
 
   mixed _encode()
   {
-    return (["_content_type":content_type, "_content":content,
-	     "_result_type":result_type, "_args":args,
-	     "_raw_tag_text":this_object()->raw_tag_text,
-	     "_tag" : !tag->tagset && tag ]);
+    return (["_t" : !tag->tagset && tag,
+	     "_f": flags,
+	     "_a":args,
+	     "_ct":content_type,
+	     "_c":content,
+	     "_rt":result_type,
+	     "_rtt":this_object()->raw_tag_text ]);
   }
 
   void _decode(mixed cookie)
   {
-    content_type = cookie->_content_type;
-    content = cookie->_content;
-    result_type = cookie->_result_type;
-    args = cookie->_args;
-    if (cookie->_tag)
-      tag = cookie->_tag;
-    if(cookie->_raw_tag_text)
-      this_object()->raw_tag_text = cookie->_raw_tag_text;
+    if (cookie->_t) tag = cookie->_t;
+    flags = cookie->_f;
+    args = cookie->_a;
+    content_type = cookie->_ct;
+    content = cookie->_c;
+    result_type = cookie->_rt;
+    if(cookie->_rtt) this_object()->raw_tag_text = cookie->_rtt;
   }
 }
 
@@ -5476,6 +5482,7 @@ class VarRef (string scope, string|array(string|int) var, void|string encoding)
 //! A helper for representing variable reference tokens.
 {
   constant is_RXML_VarRef = 1;
+  constant is_RXML_encodable = 1;
   constant is_RXML_p_code_entry = 1;
 
 #define VAR_STRING ((({scope}) + (arrayp (var) ? \
@@ -5554,6 +5561,7 @@ class CompiledError
 //! the same behavior in the p-code.
 {
   constant is_RXML_ParseError = 1;
+  constant is_RXML_encodable = 1;
   constant is_RXML_p_code_entry = 1;
 
   string type;
@@ -5591,7 +5599,7 @@ class CompiledError
 }
 
 #ifdef RXML_COMPILE_DEBUG
-#  define COMP_MSG(X...) do werror (X); while (0)
+#  define COMP_MSG(X...) do report_debug (X); while (0)
 #else
 #  define COMP_MSG(X...) do {} while (0)
 #endif
@@ -5657,7 +5665,8 @@ static class PikeCompile
   {
     COMP_MSG ("%O compile\n", this_object());
     code->add("mixed _encode() { } void _decode(mixed v) { }\n"
-	      "constant is_RXML_dynamic_program = 1;\n");
+	      "constant is_RXML_pike_code = 1;\n"
+	      "constant is_RXML_encodable = 1;\n");
 
     program res;
     string txt = code->get();
@@ -5680,7 +5689,7 @@ static class PikeCompile
 	} (master()));
 #ifdef DEBUG
     }) {
-      werror ("Failed program: %s\n", txt);
+      report_debug ("Failed program: %s\n", txt);
       throw (err);
     }
 #endif
@@ -5697,6 +5706,7 @@ class PCode
 //! after parsing and before evaluation.
 {
   constant is_RXML_PCode = 1;
+  constant is_RXML_encodable = 1;
   constant thrown_at_unwind = 1;
   constant tag_set_eval = 1;
 
@@ -5967,45 +5977,27 @@ class PCode
     }
     finish();
 
-    return (["tag_set":tag_set&&tag_set->name, "type":type,
-	     "recover_errors":recover_errors,
-	     "p_code":p_code]);
+    return ({tag_set, type, recover_errors, p_code});
   }
 
-  void _decode(mapping v)
+  void _decode(array v)
   {
-    if (v->tag_set) {
-      tag_set = all_tagsets[v->tag_set];
-      if (!tag_set) error ("Cannot find tag set %O.\n", v->tag_set);
-    }
-    type = v->type;
-    recover_errors = v->recover_errors;
-    p_code = v->p_code;
+    [tag_set, type, recover_errors, p_code] = v;
     length = sizeof (p_code);
   }
 }
 
-static class PCodec
-{
-  static private final nomask constant master_codec = master()->MyCodec;
-  inherit master_codec;
-
-  object objectof(string what)
-  {
 #ifdef RXML_ENCODE_DEBUG
-    report_debug("objectof(%O)\n", what);
+#  define ENCODE_MSG(X...) do report_debug (X); while (0)
+#else
+#  define ENCODE_MSG(X...) do {} while (0)
 #endif
 
-    if(sscanf (what, "t:%s", what)) {
-      if (Type t = reg_types[what])
-	return t;
-      error ("Cannot find type %O.\n", what);
-    }
-    else if(sscanf (what, "mod:%s", what)) {
-      if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
-	return mod;
-      error ("Cannot find module %O.\n", what);
-    }
+static class PCodec
+{
+  object objectof(string what)
+  {
+    ENCODE_MSG ("objectof (%O)\n", what);
 
     switch (what) {
       case "nil": return nil;
@@ -6013,17 +6005,44 @@ static class PCodec
       case "xml_tag_parser": return xml_tag_parser;
     }
 
-#ifdef RXML_ENCODE_DEBUG
-    report_debug("objectof(%O) failed.\n", what);
-#endif
-    return ::objectof(what);
+    if (sscanf (what, "ts:%s", what)) {
+      if (TagSet tag_set = all_tagsets[what])
+	return tag_set;
+      error ("Cannot find tag set %O.\n", what);
+    }
+    else if(sscanf (what, "ty:%s", what)) {
+      if (Type t = reg_types[what])
+	return t;
+      error ("Cannot find type %O.\n", what);
+    }
+    else if (sscanf (what, "t:%*c%s\n%s", what, string t, string ts)) {
+      TagSet tagset;
+      Tag tag;
+      if ((tagset = all_tagsets[ts]) &&
+	  (tag = tagset->get_local_tag(t, what[2]=='p')))
+	return tag;
+      error ("Cannot find %s %O in tag set %O.\n",
+	     what[2] == 'p' ? "processing instruction" : "tag",
+	     t, tagset || ts);
+    }
+    else if(sscanf (what, "mod:%s", what)) {
+      if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
+	return mod;
+      error ("Cannot find module %O.\n", what);
+    }
+    else if (sscanf (what, "efun:%s", what)) {
+      mixed efun;
+      if (objectp (efun = all_constants()[what]))
+	return efun;
+      error ("Cannot find global constant object %O.\n", what);
+    }
+
+    error ("Cannot decode object %O.\n", what);
   }
 
   function functionof(string what)
   {
-#ifdef RXML_ENCODE_DEBUG
-    report_debug("functionof(%O)\n", what);
-#endif
+    ENCODE_MSG ("functionof (%O)\n", what);
 
     switch (what) {
       case "PCode": return PCode;
@@ -6031,18 +6050,38 @@ static class PCodec
       case "CompiledError": return CompiledError;
     }
 
-    string t, ts;
-    TagSet tagset;
-    Tag tag;
-    if(what[..1]=="f:" && 2 == sscanf(what[3..], "%s\n%s", t, ts) &&
-       (tagset = all_tagsets[ts]) &&
-       (tag = tagset->get_local_tag(t, what[2]=='p')))
-      return tag->`();
+    if(sscanf(what, "f:%*c%s\n%s", string t, string ts)) {
+      TagSet tagset;
+      Tag tag;
+      if ((tagset = all_tagsets[ts]) &&
+	  (tag = tagset->get_local_tag(t, what[2]=='p')))
+	return tag->`();
+      error ("Cannot find %s %O in tag set %O.\n",
+	     what[2] == 'p' ? "processing instruction" : "tag",
+	     t, tagset || ts);
+    }
+    else if (sscanf (what, "efun:%s", what)) {
+      mixed efun;
+      if (functionp (efun = all_constants()[what]))
+	return efun;
+      error ("Cannot find global constant function %O.\n", what);
+    }
 
-#ifdef RXML_ENCODE_DEBUG
-    report_debug("functionof(%O) failed.\n", what);
-#endif
-    return ::functionof(what);
+    error ("Cannot decode function %O.\n", what);
+  }
+
+  program programof (string what)
+  {
+    ENCODE_MSG ("programof (%O)\n", what);
+
+    if (sscanf (what, "efun:%s", what)) {
+      mixed efun;
+      if (programp (efun = all_constants()[what]))
+	return efun;
+      error ("Cannot find global constant program %O.\n", what);
+    }
+
+    error ("Cannot decode program %O.\n", what);
   }
 
 
@@ -6050,22 +6089,38 @@ static class PCodec
 
   string nameof(mixed what)
   {
-#ifdef RXML_ENCODE_DEBUG
-    werror("nameof(%O)\n", what);
-#endif
-
     if(objectp(what)) {
-      TagSet tagset;
-      Tag tag;
-      if(what->is_RXML_Frame && (tag = what->tag) && (tagset = tag->tagset) &&
-	 tag->name && tagset->name) {
-	saved_id[object_program(what)] =
-	  ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
-	  (tag->plugin_name? "#"+tag->plugin_name : "") +
-	  "\n" + tagset->name;
+      ENCODE_MSG ("nameof (object %O)\n", what);
+      if(what->is_RXML_Frame) {
+	TagSet tagset;
+	Tag tag;
+	if ((tag = what->tag) && (tagset = tag->tagset) &&
+	    tag->name && tagset->name) {
+	  saved_id[object_program(what)] =
+	    ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
+	    (tag->plugin_name? "#"+tag->plugin_name : "") +
+	    "\n" + tagset->name;
+	}
+	ENCODE_MSG ("encoding frame %O recursively\n", what);
 	return ([])[0];
-      } else if(what->is_RXML_Type)
-	return "t:"+what->name;
+      }
+      else if (what->is_RXML_Tag) {
+	TagSet tagset;
+	if ((tagset = what->tagset) && what->name && tagset->name)
+	  return "t:" +
+	    ((what->flags & FLAG_PROC_INSTR)? "p":"t") + what->name +
+	    (what->plugin_name? "#"+what->plugin_name : "") +
+	    "\n" + tagset->name;
+	ENCODE_MSG ("encoding tag %O recursively\n", what);
+	return ([])[0];
+      }
+      else if (what->is_RXML_TagSet) {
+	if (what->name)
+	  return "ts:" + what->name;
+	error ("Cannot encode unnamed tag set %O.\n", what);
+      }
+      else if(what->is_RXML_Type)
+	return "ty:"+what->name;
       else if(string modname = what->is_module && what->module_identifier())
 	return "mod:"+modname;
       else if(what == nil)
@@ -6074,41 +6129,73 @@ static class PCodec
 	return "utils";
       else if (what == xml_tag_parser)
 	return "xml_tag_parser";
-    } else if(programp(what)) {
-      string id;
-      if(what == PCode)
-	return "PCode";
-      else if(what == VarRef)
-	return "VarRef";
-      else if (what == CompiledError)
-	return "CompiledError";
-      else if(what->is_RXML_Frame && saved_id[what])
-	return "f:"+saved_id[what];
-
-#ifdef DEBUG
-      if (!what->is_RXML_dynamic_program &&
-	  !what->is_RXML_Frame &&
-	  !what->is_RXML_Tag) {
-	error("PCodec::nameof(%O) for program; ::nameof() returns: %O!\n",
-	      master()->program_name(what), ::nameof(what));
+      else if (what->is_RXML_encodable) {
+	ENCODE_MSG ("encoding object %O recursively\n", what);
+	return ([])[0];
       }
-      else
-#endif
-	return ([ ])[0];
     }
 
-#ifdef RXML_ENCODE_DEBUG
-    werror("nameof(%O) failed.\n", what);
-#endif
-#ifdef DEBUG
-    string res = ::nameof(what);
-    if (res || zero_type(res))
-      return res;
-    else 
-      error("PCodec::nameof(%O) failed!\n", what);
-#else
-    return ::nameof (what);
-#endif
+    else {
+      ENCODE_MSG ("nameof (%O)\n", what);
+      if (functionp (what)) {
+	if(what == PCode)
+	  return "PCode";
+	else if(what == VarRef)
+	  return "VarRef";
+	else if (what == CompiledError)
+	  return "CompiledError";
+      }
+      if (programp (what)) {
+	if(string id = what->is_RXML_Frame && saved_id[what]) {
+	  ENCODE_MSG ("encoding reference to frame program %O\n", what);
+	  return "f:"+id;
+	}
+	else if (what->is_RXML_pike_code) {
+	  ENCODE_MSG ("encoding byte code for %s\n",
+		      __builtin.program_defined (what));
+	  return ([])[0];
+	}
+	else if (functionp (what) && what->is_RXML_encodable) {
+	  // If the program also is a function the encoder won't dump
+	  // the byte code, but instead the parent object and the
+	  // identifier within it.
+	  ENCODE_MSG ("encoding reference to program %O\n", what);
+	  return ([])[0];
+	}
+      }
+      if (object o = functionp (what) && function_object (what))
+	if (o->is_RXML_encodable) {
+	  ENCODE_MSG ("encoding reference to function %O\n", what);
+	  return ([])[0];
+	}
+    }
+
+    if (string efun = reverse_constants[what])
+      if (all_constants()[efun] == what)
+	return "efun:" + efun;
+    if (string efun = search (all_constants(), what)) {
+      reverse_constants[efun] = what;
+      return "efun:" + efun;
+    }
+
+    if (programp (what))
+      error("Cannot encode program %s.\n", __builtin.program_defined (what));
+    else
+      error ("Cannot encode %O.\n", what);
+  }
+
+  mixed encode_object (object x)
+  {
+    ENCODE_MSG ("encode_object (%O)\n", x);
+    if (x->_encode && x->_decode) return x->_encode();
+    error ("Cannot encode object %O without _encode() and _decode().\n", x);
+  }
+
+  void decode_object (object x, mixed data)
+  {
+    ENCODE_MSG ("decode_object (%O)\n", x);
+    if (x->_decode) x->_decode (data);
+    else error("Cannot decode object %O without _decode().\n", x);
   }
 }
 
@@ -6307,6 +6394,9 @@ mapping(int|string:TagSet) garb_local_tag_set_cache()
 mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
 static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
+
+static mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+
 
 // Various internal kludges:
 

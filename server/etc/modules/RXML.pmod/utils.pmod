@@ -7,7 +7,9 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.25 2001/06/20 23:27:24 mast Exp $
+//! $Id: utils.pmod,v 1.26 2001/06/29 00:21:06 mast Exp $
+
+constant is_RXML_encodable = 1;
 
 constant short_format_length = 40;
 
