@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.25 1999/03/03 01:40:31 peter Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.26 1999/03/03 10:56:19 peter Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -77,7 +77,7 @@ void save_it(string cl)
   if(!fd)
   {
     error("Creation of configuration file failed ("+f+") "
-#if efun(strerror)
+#if 0&&efun(strerror)
 	  " ("+strerror()+")"
 #endif
 	  "\n");
@@ -215,7 +215,7 @@ void remove_configuration( string name )
   if(!rm(f) && file_stat(f))
   {
     error("Failed to remove configuration file ("+f+")! "+
-#if efun(strerror)
+#if 0&&efun(strerror)
 	  strerror()
 #endif
 	  "\n");
