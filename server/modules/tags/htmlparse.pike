@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.167 1999/05/09 07:06:43 neotron Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.168 1999/05/09 07:10:21 neotron Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1588,7 +1588,7 @@ string tag_debug( string tag_name, mapping args, object id )
 
 string tag_cache(string tag, mapping args, string contents, object id)
 {
-#define HASH(x) (x+id->not_query+id->query +id->conf->query("MyWorldLocation"))
+#define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
 #if constant(Crypto.md5)
   object md5 = Crypto.md5();
   md5->update(HASH(contents));
