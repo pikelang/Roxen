@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.6 2001/08/24 16:09:13 grubba Exp $
+ * $Id: openfiles.pike,v 1.7 2001/08/24 16:26:05 jhs Exp $
  */
 inherit "wizard";
 
@@ -82,7 +82,7 @@ string parse( RequestID id )
 		  details = fix_port(local_port);
 		}
 	      } else {
-		details = sprintf("%s <=> %s",
+		details = sprintf("%s &lt;=&gt; %s",
 				  fix_port(local_port),
 				  fix_port(remote_port));
 	      }
