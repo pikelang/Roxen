@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.82 1999/01/09 09:24:17 mast Exp $
+/* $Id: wizard.pike,v 1.83 1999/01/10 06:21:56 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -535,6 +535,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
      v[q] = v[q]||s[q];
 
   mapping(string:array) automaton = this_object()->wizard_automaton;
+  function dispatcher;
   string oldpage, page_name;
   if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
     if (!v->_page && automaton->start) v->_page = "start";
@@ -545,6 +546,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 			 "No entry " + v->_page + " in automaton.";
       function|string redirect = page_state[0];
       if (functionp (redirect)) {
+	dispatcher = redirect;
 	DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
 			   redirect, v->_page));
 	redirect = redirect (id, v->_page, @args);
@@ -631,7 +633,6 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 
   if (automaton) {
     int i = 0;
-    function dispatcher;
     while (1) {
       if (++i == 4711) return "Internal error in wizard code: "
 			 "Probably infinite redirect loop in automaton.";
@@ -654,7 +655,8 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 	  if (dispatcher == redirect)
 	    // The previous page state had the same dispatcher as this
 	    // one; it's unnecessary to re-run it since it shouldn't
-	    // change its mind.
+	    // change its mind. This is also important since most of
+	    // the heavy work is often done there.
 	    dispatcher = redirect = 0;
 	  else {
 	    dispatcher = redirect;
