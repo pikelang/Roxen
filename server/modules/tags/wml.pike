@@ -9,17 +9,19 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.7 2000/03/14 06:55:11 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.8 2000/04/06 06:37:00 wing Exp $";
 
 constant module_type = MODULE_PARSER;
-constant module_name = "WAP WML module.";
-constant module_doc  = "Tweaks WML to better suit different WAP clients.";
+constant module_name = "WAP WML helper";
+constant module_doc  = 
+#"This module processes the <tag>&lt;wml&gt;</tag> tag in order to help
+produce WML that suits different WAP clients.";
 
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "wml":#"<desc cont>
- Processes the wml tag and adapts the contents tobetter suit the
+ Processes the wml tag and adapts the contents to better suit the
  client. The contents is always preparsed. No attributes are required.
 </desc>
 

@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.15 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.16 2000/04/06 06:37:00 wing Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -34,14 +34,14 @@ void create()
 constant module_type = MODULE_PARSER;
 constant module_name = "Indirect href";
 constant module_doc  =
-#"Indirect href. Adds a new tag <tt>&lt;ai name=&gt;</tt> that works like "
-<tt>&lt;a href=&gt;</tt> but uses a symbolic name instead of a URL. The "
-"symbolic name is translated to a proper URL and the tag rewritten to a "
-"proper &lt;a href=&gt; tag. The translation between symbolic names and "
-"URLs is stored in a module variable. The advantage of this module is that "
-"each URL will only be stored in one place and it becomes very easy to "
-"change it, no matter how many links use it. As an extra bonus the name "
-"<tt>random</tt> will be replaces by a random URL from the list.";
+#"Indirect href. Adds a new tag <tt>&lt;ai name=&gt;</tt> that works like 
+<tt>&lt;a href=&gt;</tt> but uses a symbolic name instead of a URL. The 
+symbolic name is translated to a proper URL and the tag rewritten to a 
+proper &lt;a href=&gt; tag. The translation between symbolic names and 
+URLs is stored in a module variable. The advantage of this module is that 
+each URL will only be stored in one place and it becomes very easy to 
+change it, no matter how many links use it. As an extra bonus the name 
+<tt>random</tt> will be replaces by a random URL from the list.";
 
 // Dynamic tagname, hence dynamic documentation.
 mapping tagdocumentation() {

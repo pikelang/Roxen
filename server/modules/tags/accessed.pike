@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.29 2000/04/06 06:16:05 wing Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.30 2000/04/06 06:37:00 wing Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -23,7 +23,7 @@ constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
 constant module_doc  =
 "This module provides accessed counters, through the "
-<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
+"<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
 string status()
 {

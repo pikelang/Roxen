@@ -6,15 +6,15 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.18 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.19 2000/04/06 06:37:00 wing Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Advanced wizards";
 constant module_doc  = 
-#"This module provides the <tt>&lt;awizard&gt;</tt> tag that is used to
+#"Provides the <tt>&lt;awizard&gt;</tt> tag that is used to
 create wizard like user interfaces. Each wizard can contain several pages 
 with forms. The module handles navigation among the pages, input 
-validation and keeps track of all the users choices, no matter which page
+validation and keeps track of all the user's choices, no matter which page
 they were made on.";
 mapping cache = ([]);
 int nid=1;

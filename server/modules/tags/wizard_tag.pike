@@ -2,7 +2,7 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.26 2000/03/20 17:31:04 mast Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.27 2000/04/06 06:37:00 wing Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -10,7 +10,11 @@ inherit "wizard";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Wizard generator";
-constant module_doc  = "Generates wizards<p>See &lt;wizard help&gt; for more information\n";
+constant module_doc  = 
+#"Provides the <tt>&lt;wizard&gt;</tt> tag that is used to create wizard
+like user interface. Each wizard can contain several pages with form. The
+user moves through each page in order and the module keeps track of all
+the user's choices.";
 
 string internal_verify(string t, mapping args, string contents, int l, int ol,
 		       mapping m)
