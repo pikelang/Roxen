@@ -1,12 +1,27 @@
 <formoutput quote=$ noparse>
   <get-mail mail=$mail_id$ noparse>
     <set variable=foo value=#flag_am_editable#>
+    <set variable=bar value=#flag_am_sent#>
     <if not variable="foo is "> 
        <formoutput quote=%>
-         <redirect to='edit.html?mail_id=%mail_id%'>
+       <font size=+2>
+        This is a 
+        <if not variable="bar is "> 
+           sent mail
+        <ul>
+          <li><a href='edit.html?mail_id=%mail_id%'>Edit it again</a> 
+          <li><a href=?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%>delete it.</a>
+        </ul>
+        </if>
+        <else>draft
+        <ul>
+          <li><a href='edit.html?mail_id=%mail_id%'>continue the editing</a> 
+          <li><a href=?delete.x=1&mail_id=%mail_id%&mailbox_id=%mailbox_id%>delete it.</a>
+        </ul>
+        </else>
+       </font>
        </formoutput><br>
     </if>
-    <else>
     <table cellspacing=0 border=0 cellpadding=1 bgcolor=black><tr><td>
     <table cellspacing=0 border=0 cellpadding=2 bgcolor=##ffeedd
       <tr>
@@ -30,6 +45,5 @@
       </tr>
     </table></td></tr></table>
     <mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts>
-    </else>
   </get-mail>
 </formoutput>
