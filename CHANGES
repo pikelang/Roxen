@@ -1,3 +1,53 @@
+Changes since Roxen 2.0.12
+-----------------------------------------------
+
+o Fixed memmory leak introduced in 2.0.12
+
+o Fixed disabling of sendfile(2) on FreeBSD.
+
+o Update-client now usefull. There is a package available for testing.
+
+o New powered-by images.
+
+
+Changes since Roxen 2.0.11
+-----------------------------------------------
+
+o Added German translation by Kai Voigt.  Thanks Kai!
+
+o Fixed installation of cvs in Platform.
+
+o Following the wishes expressed on the list Roxen is moving to clean
+  out the directory structure. Some notes on this:
+ 
+ + Almost everything is shadowed from ../local. e.g. config_interface,
+   supports, extensions, languages, roxen-images and so on checks
+   ../local first.
+
+ + ../var/ is added and is used to store caches and the like.
+
+ + The configdir now only stores settings. No caches.
+
+ + There are some new functions in Roxen to handle this, but that goes
+   outside the scope of this letter. Will post in separate letter.
+
+ + This is not complete yet.
+
+o Disabled sendfile(2) on FreeBSD 4.0.16 and earlier.
+
+o Added SANE (scanner interface) support to Pike.
+
+o Added Gnome support to Pike.
+
+o Added Gtk+Extra support to Pike.
+
+o Fixed problem with dumped sitebuilders. (kludge: don't dump.)
+
+o Improved language support in SiteBuilder.
+
+o Lots of bugs fixed.
+
+
 Changes since Roxen Challenger 1.3
 -----------------------------------------------
 
