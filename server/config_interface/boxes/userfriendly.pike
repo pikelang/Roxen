@@ -1,5 +1,5 @@
 // Userfriendly-fetcher
-// $Id: userfriendly.pike,v 1.1 2001/11/23 14:26:59 ian Exp $
+// $Id: userfriendly.pike,v 1.2 2001/11/23 16:03:47 grubba Exp $
 
 #include <roxen.h>
 
@@ -24,9 +24,14 @@ string parse( RequestID id )
 			   if(search(s, "Latest Strip") != -1) 
 			     return s; }) - ({ 0 }))[0], 
 	    "%*sSRC=\"%s\"", img );
-    contents = 
-      "<a href='http://www.userfriendly.org/static/'>"
-      "<center><img src='"+img+"' /></center></a>";
+    if (img) {
+      contents = 
+	"<a href='http://www.userfriendly.org/static/'>"
+	"<center><img src='"+img+"' /></center></a>";
+    } else {
+      // Probably offline.
+      contents = data;
+    }
   }
   return("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
   
