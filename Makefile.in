@@ -343,6 +343,14 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	    echo Removing $$d...; rm -rf $$d || exit 1; \
 	  else :; fi; \
 	done; \
+	echo "Zapping absolute paths in language.c..."; \
+	for f in $$version/pike/*/src/language.c; do \
+	  if test -f "$f"; then \
+	    echo "Fixing $f.."; \
+	    sed <"$f" >"$f.fix" -e '/^#line/s!/.*/\(language\.yacc\)!\1!' && \
+	      mv "$f.fix" "$f"; \
+	  else :; fi; \
+	done; \
 	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
 	if test -d $$version/pike/0.5/. ; then \
 	  if test -d $$version/pike/0.6/. ; then \
