@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.126 2000/09/01 14:11:17 per Exp $
+# $Id: start,v 1.127 2000/09/07 23:49:48 noring Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -112,6 +112,7 @@ if
   test ! -f $LOCALDIR/environment && test -f bin/buildenv.pike
 then
   $pike bin/buildenv.pike
+  touch $LOCALDIR/environment
 fi
 
 # Set up environment
