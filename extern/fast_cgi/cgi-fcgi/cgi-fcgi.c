@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.7 1998/03/02 15:38:02 grubba Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.8 1998/03/02 21:18:11 mast Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -917,7 +917,7 @@ static int ParseArgs(int argc, char *argv[],
 	    }
 	} else if(*appPathPtr == '\0') {
             strcpy(appPathPtr, argv[i]);
-        } else if(isdigit(((unsigned char*)argv)[i][0]) && *nServersPtr == 0) {
+        } else if(isdigit(((unsigned char**)argv)[i][0]) && *nServersPtr == 0) {
             *nServersPtr = atoi(argv[i]);
             if(*nServersPtr <= 0) {
                 fprintf(stderr, "Number of servers must be greater than 0\n");
