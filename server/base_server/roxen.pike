@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.321 1999/05/19 01:23:29 peter Exp $
+ * $Id: roxen.pike,v 1.322 1999/05/19 02:56:11 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.321 1999/05/19 01:23:29 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.322 1999/05/19 02:56:11 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1625,10 +1625,10 @@ class ImageCache
   }
 
 
-  static void draw( string name, RequestID id )
+  static void draw( string name, object id )
   {
     mapping args = argcache->lookup( name );
-    mixed reply = draw_function( args, id );
+    mixed reply = draw_function( copy_value(args), id );
 
     mapping meta;
     string data;
@@ -1653,7 +1653,8 @@ class ImageCache
       if( args->scale )
       {
         int x, y;
-        if( sscanf( args->scale, "%d,%d", x, y ) == 2)
+        if( stringp( args->scale ) && 
+	    sscanf( args->scale, "%d,%d", x, y ) == 2)
         {
           reply = reply->scale( x, y );
           if( alpha )
@@ -1661,9 +1662,9 @@ class ImageCache
         }
         else 
         {
-          reply->scale( ((float)args->scale)/100.0 );
+          reply = reply->scale( ((float)args->scale) );
           if( alpha )
-            alpha->scale( ((float)args->scale)/100.0 );
+            alpha = alpha->scale( ((float)args->scale) );
         }
       }
 
@@ -1710,7 +1711,12 @@ class ImageCache
       switch(format)
       {
        case "gif":
-        data = Image.GIF.encode_trans( reply, ct, alpha );
+	 if( sizeof((array)ct) < 256)
+	   data = Image.GIF.encode_trans( reply, ct, alpha );
+	 else
+	   data = Image.GIF.encode_trans( reply, 
+					  Image.colortable( reply, 255 ), 
+					  alpha );
         break;
        case "png":
          if( ct )
@@ -1744,8 +1750,8 @@ class ImageCache
     meta_cache_insert( id, meta );
 
     string data = encode_value( meta );
-    Stdio.File f = Stdio.File(  dir+id+".i", "wct" );
-    if(!f) 
+    Stdio.File f = Stdio.File( );
+    if(!f->open( dir+id+".i", "wct" ))
     {
       report_error( "Failed to open image cache persistant cache file "+
                     dir+id+".i: "+strerror( errno() )+ "\n" );
@@ -1798,11 +1804,11 @@ class ImageCache
 
     if( stringp( f ) )
       return http_string_answer( f, m->type||("image/gif") );
-    return roxenp()->http_file_answer( f, m->type||("image/gif") );
+    return ([ "file":f, "type":(m->type||("image/gif")) ]);
   }
 
 
-  string data( string|mapping args, RequestID id, int|void nodraw )
+  string data( string|mapping args, object id, int|void nodraw )
   {
     string na = store( args, id );
     mixed res;
@@ -1819,7 +1825,7 @@ class ImageCache
     return res->data;
   }
 
-  mapping http_file_answer( string|mapping data, RequestID id, int|void nodraw )
+  mapping http_file_answer( string|mapping data, object id, int|void nodraw )
   {
     string na = store( data,id );
     mixed res;
@@ -1834,7 +1840,7 @@ class ImageCache
     return res;
   }
 
-  mapping metadata( string|mapping data, RequestID id, int|void nodraw )
+  mapping metadata( string|mapping data, object id, int|void nodraw )
   {
     string na = store( data,id );
     if(!restore_meta( na ))
@@ -1847,13 +1853,15 @@ class ImageCache
     return restore_meta( na );
   }
 
-  string store( string|mapping data, RequestID id )
+  string store( string|mapping data, object id )
   {
     string ci;
     if( mappingp( data ) )
+    {
       ci = argcache->store( data );
+    }
     else
-      ci = data;
+      ci = replace( data, "/", "");
     return ci;
   }
 
