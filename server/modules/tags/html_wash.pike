@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.18 2001/02/20 09:48:11 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.19 2002/03/14 16:41:18 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -104,13 +104,13 @@ class TagWashHtml
 			       { return ({ p->current() }); });
     parser->_set_data_callback(
       lambda(Parser.HTML p, string data)
-      { return ({ link_regexp->
-		  replace(data, lambda(string link)
+      { return ({ utf8_to_string(link_regexp->
+		  replace(string_to_utf8(data), lambda(string link)
 				{
 				  link = fix_link(link);
 				  return "<a href='"+link+"'>"+
 				    link+"</a>";
-				}) }); });
+				}) ) }); });
 
     return parser->finish(s)->read();
   }
