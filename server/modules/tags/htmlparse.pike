@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.90 1998/03/23 08:20:56 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.91 1998/03/26 08:10:50 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -461,9 +461,10 @@ mapping handle_file_extension( object file, string e, object id)
 
   bytes += strlen(to_parse);
 
-  file->close();
-  destruct(file);
-
+  if(file) {
+    catch(file->close());
+    destruct(file);
+  }
   return (["data":to_parse,
 	   "type":"text/html",
 	   "stat":_stat,
