@@ -32,14 +32,14 @@ int main(int argc, array argv)
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
-  	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), 
+  	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
                       "../configurations");
 
   if(reverse(configdir)[0] != '/')
     configdir+="/";
   write( "Creating a configuration interface server in "+configdir+"\n");
 
-  do 
+  do
   {
     name = rl->read( "Server name [Configuration Interface]: " );
     if( !strlen(name-" ") )
@@ -53,7 +53,7 @@ int main(int argc, array argv)
     if( !strlen(user-" ") )
       user = "administrator";
 
-    do 
+    do
     {
       rl->get_input_controller()->dumb=1;
       password = rl->read( "Administrator Password: ");
@@ -63,7 +63,7 @@ int main(int argc, array argv)
     } while(!strlen(password) || (password != passwd2));
   } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
 
-  mapping user = 
+  mapping user =
   ([
     "permissions":({"Everything"}),
     "name":user,
@@ -71,7 +71,7 @@ int main(int argc, array argv)
     "real_name":"Configuration Interface Default User",
   ]);
 
-  string ufile=("config_caches/"+replace(configdir,({ ".", "/" }),({"","-"}))+
+  string ufile=(".config_settings/"+replace(configdir,({ ".", "/" }),({"","-"}))+
                 "/settings/"+user->name+"_uid");
   mkdirhier( ufile );
   Stdio.write_file( ufile, encode_value( user ) );
