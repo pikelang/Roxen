@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.128 2000/02/15 04:36:29 nilsson Exp $
+ * $Id: rxml.pike,v 1.129 2000/02/15 06:10:58 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -236,7 +236,7 @@ RXML.TagSet rxml_tag_set = class
   }
 } (this_object());
 
-RXML.Type default_arg_type = RXML.t_text (RXML.PEntCompat);
+RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
 int parse_html_compat;
 
@@ -446,15 +446,14 @@ string do_parse(string to_parse, RequestID id,
   RXML.Context ctx;
 
   if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
-    parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx, 0, parent_parser);
+    parser = RXML.t_html (RXML.PXml)->get_parser (ctx, 0, parent_parser);
   else {
-    parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
+    parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
 #ifdef OLD_RXML_COMPAT
     parser->context->add_scope("_", id->variables);
 #endif
     parent_parser = 0;
   }
-  parser->parse_html_compat (parse_html_compat);
   id->misc->_parser = parser;
   parser->_source_file = file;
   parser->_defines = defines;
@@ -632,7 +631,7 @@ class TagHelp {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
+      RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
       array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
       string help_for = args->for || id->variables->_r_t_h;
       string ret="<h2>Roxen Interactive RXML Help</h2>";
@@ -803,7 +802,7 @@ class UserTag {
   inherit RXML.Tag;
   string name;
   int flags = 0;
-  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PHtmlCompat) });
+  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   string c;
   mapping defaults;
