@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.85 2000/01/26 14:28:57 nilsson Exp $
+ * $Id: rxml.pike,v 1.86 2000/01/27 01:55:52 kuntri Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -1512,5 +1512,576 @@ mapping tagdocumentation() {
 }
 
 #ifdef manual
-constant tagdoc=(["true":"<desc tag>Sets the true flag</desc>"]);
+constant tagdoc=([
+"case":#"<desc cont>
+ Alters the case of the contents.
+</desc>
+
+<attr name=lower>
+ Changes all upper case letters to lower case.
+</attr>
+
+<attr name=upper>
+ Changes all lower case letters to upper case.
+</attr>
+
+<attr name=capitalize>
+ Capitalizes the first letter in the content.
+</attr>",
+"cond":#"<desc>
+
+</desc>",
+
+"comment":#"<desc cont>
+ The enclosed text will be removed from the document. The difference
+ from a normal SGML (HTML/XML) comment is that the text is removed
+ from the document, and can not be seen even with view source. Another
+ difference is that any RXML tags inside this container will not be
+ parsed.
+</desc>",
+
+"define":#"<desc cont>
+ Defines variables, tags, containers, if-callers. One, and only one,
+ attribute must be set.
+</desc>
+
+<attr name=variable value=name>
+ Sets the value of the variable to the contents of the container.
+</attr>
+
+<attr name=tag value=name>
+ Defines a tag that outputs the contents of the container.
+</attr>
+
+<attr name=container value=name>
+ Defines a container that outputs the contents of the container.
+</attr>
+
+<attr name=if value=name>
+ Defines an if-caller that compares something with the contents of the
+ container.
+</attr>
+ When defining a container the tag <tag>contents</tag> can be used to
+ insert the contents of the defined container.
+
+ <p>When defining a tag or a container the container <tag>attrib</tag>
+ can be used to define default values of the attributes that the
+ tag/container can have. The attrib container has the attribute
+ attrib=name, and sets the default value of the attribute indicated
+ with attrib=name to the contents of the attrib container. The
+ attribute values can be accessed with enteties such as &name;</p>",
+
+"elif":#"<desc cont>
+ Shows its content if the truth-value is false and the criterions in
+ its attributes are met. Uses the same syntax as <tag><ref
+ type=cont>if</ref><tag>. Sets the truth-value in the same way as if.
+</desc>",
+
+"else":#"<desc cont>
+ Show the contents if the previous <tag><ref type=cont>if</ref></tag>
+ tag didn't, or if there was a <tag><ref type=tag>false</ref></tag>
+ above. The result is undefined if there has been no <tag><ref
+ type=cont>if</ref></tag>, <true> or <tag><ref
+ type=tag>false</ref></tag> tag above.
+</desc>",
+
+"elseif":#"<desc cont>
+ Same as the <tag><ref type=cont>if</ref></tag>, but it will only
+ evaluate if the previous <tag><ref type=cont>if</ref></tag> tag
+ returned false.
+</desc>",
+
+"false":#"<desc tag>
+ Internal tag used to set the return value of <tag><ref
+ type=cont>if</ref></tag> tags. It will ensure that the next <tag><ref
+ type=cont>else</ref></tag> tag will show its contents. It can be
+ useful if you are writing your own <tag><ref type=cont>if</ref></tag>
+ lookalike tag.
+</desc>",
+
+"help":#"<desc tag>
+ Gives help texts for tags. If given no arguments, it will list all
+ available tags.
+</desc>
+
+<attr name=for value=tag>
+ Gives the help text for that tag.
+</attr>
+
+<ex>help for=modified</ex>",
+
+"if":#"<desc cont>
+ <tag><ref type=cont>if</ref></tag> is used to conditionally show its
+ contents. <tag><ref type=cont>else</ref></tag>, <tag><ref
+ type=cont>elif</ref></tag> or <tag><ref type=cont>elseif</ref></tag>
+ can be used to suggest alternative content. It is possible to use
+ glob patterns in almost all attributes, where * means match zero or
+ more characters while ? matches one character. * Thus t*f?? will
+ match trainfoo as well as * tfoo but not trainfork or tfo.
+</desc>
+
+<attr name=not>
+ Inverts the result (true->false, false->true).
+</attr>
+<attr name=or>
+ If any criterion is met the result is true.
+</attr>
+
+<attr name=and>
+ If all criterions are met the result is true. And is default.
+</attr>
+
+
+ if-caller
+ In the rxml.pike file the main if functionality is defined. There are
+ two main types of if callers defined in rxml.pike,\"IfIs\" and \"IfMatch\". If the if caller is of an IfMatch type the if statement will be
+ matched as a glob, i.e. * is considered a multicharacter wildcard.
+ E.g. <tag><ref type=cont>if ip=\"130.236.*\"</ref></tag>Your domain is liu.se<tag><ref type=cont>/if</ref></tag>.
+
+ If the if caller is of an IfIs type the if statement will be compared
+ with one of the following operators is, =, ==, !=, &lt; and &gt. The
+ operators is, = and == are the same. E.g. <tag><ref type=cont>if
+ variable=\"x &gt; 5\"</ref></tag>More than one hand<tag><ref type=cont/if</ref></tag>",
+
+"true":#"<desc if-caller>
+ This will always be true if the truth value is set to be true.
+ Equivalent with <tag><ref type=cont>then</ref></tag>.
+</desc>",
+
+"false":#"<desc if-caller>
+ This will always be true if the truth value is set to be false.
+ Equivalent with <tag><ref type=cont>else</ref></tag>.
+</desc>",
+
+"accept":#"<desc if-caller>
+ Returns true is the browser accept certain content types as specified
+ by it's Accept-header, for example image/jpeg or text/html. If
+ browser states that it accepts */* that is not taken in to account as
+ this is always untrue. Accept is an IfMatch if caller.
+</desc>",
+
+"config":#"<desc if-caller>
+ Has the config been set by use of the <tag><ref
+ type=cont>aconf</ref></tag> tag? (Config is an IfIs if caller,
+ although that functionality does not apply here.).
+</desc>",
+
+"cookie":#"<desc if-caller>
+ Does the cookie exist and if a value is given, does it contain that
+ value? Cookie is av IfIs if caller.
+</desc>",
+
+"client and name":#"<desc if-caller>
+ Compares the user agent string with a pattern. Client and name is an
+ IfMatch if caller.
+</desc>",
+
+"date":#"<desc if-caller>
+ Is the date yyyymmdd? The attributes before, after and inclusive
+ modifies the behavior.
+</desc>
+
+<attr name=after>
+
+</attr>
+
+<attr name=before>
+
+</attr>
+
+<attr name=inclusive>
+
+</attr>",
+
+"defined":#"<desc if-caller>
+ Tests if a certain define is defined? Defined is an IfIs if caller.
+</desc>",
+
+"domain":#"<desc if-caller>
+ Does the user'\s computer'\s DNS name match any of the patterns? Note
+ that domain names are resolved asynchronously, and the the first time
+ someone accesses a page, the domain name will probably not have been
+ resolved. Domain is an IfMatch if caller.
+</desc>",
+
+"exists":#"<desc if-caller>
+ Returns true if the file path exists. If path does not begin with /,
+ it is assumed to be a URL relative to the directory containing the page
+ with the <tag><ref type=cont>if</ref></tag>-statement.
+</desc>",
+
+"expr":#"<desc if-caller>
+ Evaluates expressions. The following characters may be used: \"1, 2,
+ 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, n, t, \, X. A, B, C, D, E,
+ F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, )\".
+</desc>",
+
+"group":#"<desc if-caller>
+ Checks if the current user is a member of the group according
+ the groupfile.
+</desc>",
+
+"host and ip":#"<desc if-caller>
+ Does the users computers IP address match any of the patterns? Host and
+ ip are IfMatch if callers.
+</desc>",
+
+"language":#"<desc if-caller>
+ Does the client prefer one of the languages listed, as specified by the
+ Accept-Language header? Language is an IfMatch if caller.
+</desc>",
+
+"match":#"<desc if-caller>
+ Does the string match one of the patterns? Match is an IfMatch if caller.
+</desc>",
+
+"pragma":#"<desc if-caller>
+ Compares the pragma with a string. Pragma is an IfIs if caller.
+</desc>",
+
+"prestate":#"<desc if-caller>
+ Are all of the specified prestate options present in the URL? Prestate is
+ an IfIs if caller.
+</desc>",
+
+"referrer":#"<desc if-caller>
+ Does the referrer header match any of the patterns? Referrer is an IfMatch
+ if caller.
+</desc>",
+
+"supports":#"<desc if-caller>
+ Does the browser support this feature? Supports is an IfIs if caller.
+</desc>
+
+<attr name=activex>
+  The browser handles active-X contents.
+</attr>
+
+<attr name=align>
+ The browser supports the align attribute in its tags.
+</attr>
+
+<attr name=autogunzip>
+ The browser can decode a gunzipped file on the fly.
+</attr>
+
+<attr name=backgrounds>
+ The browser supports backgrounds according to the HTML3 specifications.
+</attr>
+
+<attr name=bigsmall>
+ The browser supports the <tag>big</tag> and <tag>small</tag> tags.
+</attr>
+
+<attr name=center>
+ The browser supports the <tag>center</tag> tag.
+</attr>
+
+<attr name=cookies>
+ The browser can receive cookies.
+</attr>
+
+<attr name=divisions>
+ The browser supports <tag>div align=...</tag>.
+</attr>
+
+<attr name=div>
+ Same as divisions.
+</attr>
+
+<attr name=epsinline>
+ The browser can show encapsulated postscript files inline.
+</attr>
+
+<attr name=font>
+ The browser supports <tag>font size=num</tag>.
+</attr>
+
+<attr name=fontcolor>
+ The browser can change color of individual characters.
+</attr>
+
+<attr name=fonttype>
+ The browser can set the font.
+</attr>
+
+<attr name=forms>
+ The browser supports forms according to the HTML 2.0 and 3.0
+ specifications.
+</attr>
+
+<attr name=frames>
+ The browser supports frames.
+</attr>
+
+<attr name=gifinline>
+ The browser can show GIF images inlined.
+</attr>
+
+<attr name=html>
+ This is a HTML browser (as opposed to e.g. a WAP browser).
+</attr>
+
+<attr name=imagealign>
+ The browser supports align=left and align=right in images.
+</attr>
+
+<attr name=images>
+ The browser can display images.
+</attr>
+
+<attr name=java>
+ The browser supports Java applets.
+</attr>
+
+<attr name=javascript>
+ The browser supports Java Scripts.
+</attr>
+
+<attr name=javascript1.2>
+ The browser supports Java Scripts version 1.2.
+</attr>
+
+<attr name=jpeginline>
+ The browser can show JPEG images inlined.
+</attr>
+
+<attr name=mailto>
+ The browser supports mailto URLs.
+</attr>
+
+<attr name=math>
+ The <tag>math</tag> tag is correctly displayed by the browser.
+</attr>
+
+<attr name=msie>
+ This is a Microsoft Internet Explorer browser.
+</attr>
+
+<attr name=netscape_javascript>
+ The browser needs netscape styled javascript.
+</attr>
+
+<attr name=perl>
+ The browser supports Perl applets.
+</attr>
+
+<attr name=phone>
+ The client is a phone.
+</attr>
+
+<attr name=pjpeginline>
+ The browser can handle progressive JPEG images, .pjpeg, inline.
+</attr>
+
+<attr name=pnginline>
+ The browser can handle PNG images inlined.
+</attr>
+
+<attr name=pull>
+ The browser handles Client Pull.
+</attr>
+
+<attr name=push>
+ The browser handles Server Push.
+</attr>
+
+<attr name=python>
+ The browser supports Python applets.
+</attr>
+
+<attr name=requests_are_utf8_encoded>
+ The requests are UTF8 encoded.
+</attr>
+
+<attr name=robot value=name ot the searchengine>
+ The request really comes from a search robot, not an actual browser.
+
+ <p>Examples of robots are: architex, backrub, checkbot, fast, freecrawl,
+ passagen, gcreep, googlebot, harvest, alexa, infoseek, intraseek,
+ lycos, webinfo, roxen, altavista, scout, hotbot, url-minder,
+ webcrawler, wget, xenu, yahoo, unknown. For more information search
+ in the &lt;roxen-dir&gt;/server/etc/supports file.</p>
+</attr>
+
+<attr name=ssl>
+ The browser handles secure sockets layer.
+</attr>
+
+<attr name=stylesheets>
+ The browser supports stylesheets.
+</attr>
+
+<attr name=supsub>
+ The browser handles <sup> and <sub> tags correctly.
+</attr>
+
+<attr name=tables>
+ The browser handles tables according to the HTML3.0 specification.
+</attr>
+
+<attr name=tablecolor>
+ It is possible to set the background color in the browser.
+</attr>
+
+<attr name=tableimages>
+ It is possible to set a backgroud image in a table in the browser.
+</attr>
+
+<attr name=tcl>
+ The browser supports TCL applets.
+</attr>
+
+<attr name=unknown>
+  The browser is not known, hence the supports classes can not be trusted.
+</attr>
+
+<attr name=vrml>
+ The browser supports VRML
+</attr>
+
+<attr name=wbmp0>
+ The browser supports Wireless Bitmap Picture Format, type 0.
+</attr>
+
+<attr name=wml1.0>
+ The browser supports Wireless Markup Language 1.0.
+</attr>
+
+<attr name=wml1.1>
+ The browser supports Wireless Markup Language 1.1.
+</attr>
+
+ Other supports variables are:
+
+ <p>Width - The presentation area width in pixels.<br>
+ Height - The presentation area height in pixels.</p>",
+
+"time":#"<desc if-caller>
+ Is the date ttmm? The attributes before, after and inclusive modifies
+ the behavior. The attributes are used in the same fashion as with the
+ date if-caller.
+</desc>",
+
+"user":#"<desc if-caller>
+ Has the user been authenticated as one of these users? If any is given as
+ argument, any authenticated user will do.
+</desc>",
+
+"variable":#"<desc if-caller>
+ Does the variable exist and, optionally, does it's content match the pattern?
+ Variable is an IfIs if-caller.
+</desc>",
+
+"line":#"<desc cont>
+ Prints the current line number of the current page.
+</desc>",
+
+"nooutput":#"<desc cont>
+ The contents will not be sent through to the page. Side effects, for
+ example sending queries to databases, will take effect.
+</desc>",
+"noparse":#"<desc cont>
+ The contents of this container tag won't be RXML parsed.
+</desc>",
+"number":#"<desc tag>
+ Prints a number as a word.
+</desc>
+
+<attr name=num value=number>
+ Print this number.
+</attr>
+
+<attr name=language value=ca, es_CA, hr, cs, nl, en, fi, fr, de, hu,
+it, jp, mi, no, pt, ru, sr, si, es, sv>
+ The language to use. Available languages are ca, es_CA (Catala), hr
+ (Croatian), cs (Czech), nl (Dutch), en (English), fi (Finnish), fr
+ (French), de (German), hu (Hungarian), it (Italian), jp (Japanese),
+ mi (Maori), no (Norwegian), pt (Portuguese), ru (Russian), sr
+ (Serbian), si (Slovenian), es (Spanish) and sv (Swedish).
+</attr>
+
+<attr name=type value=foo>
+ Default is number. What more???????????????
+</attr>",
+
+"strlen":#"<desc cont>
+ Returns the length of the contents. Strlen can be used with <tag><ref
+ type=cont>if eval=...</ref></tag> to test the length of variables.
+</desc>",
+"then":#"<desc cont>
+ Shows its content if the truth-value is true.
+</desc>",
+"trace":#"<desc cont>
+ Executes the contained RXML code and makes a trace report about how
+ the contents are parsed by the RXML parser.
+</desc>",
+
+"true":#"<desc tag>
+ An internal tag used to set the return value of tag><ref
+ type=cont>if</ref></tag> tags. It will ensure that the next tag><ref
+ type=cont>else</ref></tag> tag will not show its contents. It can be
+ useful if you are writing your own tag><ref type=cont>if</ref></tag>
+ lookalike tag.
+</desc>",
+
+"undefine":#"<desc tag>
+
+ Removes a definition made by the define container. One attribute is
+ required.
+
+</desc>
+
+<attr name=variable value=name>
+ Undefines this variable.
+</attr>
+
+<attr name=tag value=name>
+ Undefines this tag.
+</attr>
+
+<attr name=container value=name>
+ Undefines this container.
+</attr>
+
+<attr name=if value=name>
+ Undefines this if-caller.
+</attr>",
+
+"use":#"<desc cont>
+ Reads tags, container tags and defines from a file or package.
+</desc>
+
+<attr name=packageinfo>
+ Show a all available packages.
+ <ex><use packageinfo></ex>
+</attr>
+
+<attr name=package value=name>
+ Reads all tags, container tags and defines from the given package.
+ Packages are files located in local/rxml_packages/.
+
+ <p>By default, the package gtext_headers is available, that replaces
+ normal headers with graphical headers. It redefines the h1, h2, h3,
+ h4, h5 and h6 container tags.</p>
+</attr>
+
+<attr name=file value=path>
+ Reads all tags and container tags and defines from the file.
+
+ <p>This file will be fetched just as if someone had tried to fetch it
+ with an HTTP request. This makes it possible to use Pike script
+ results and other dynamic documents. Note, however, that the results
+ of the parsing are heavily cached for performance reasons. If you do
+ not want this cache, use <tag><ref type=tag>insert file=...
+ nocache</ref></tag> instead.</p>
+</attr>
+
+<attr name=info>
+ Show a list of all defined tags/containers and if arguments in the file
+</attr>
+ The <tag><ref type=tag>use</ref></tag> tag is much faster than the
+ <tag><ref type=tag>insert</ref></tag>, since the parsed definitions
+ is cached.",
+]);
 #endif
