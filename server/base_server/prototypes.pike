@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.31 2001/08/22 20:04:26 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.32 2001/08/23 18:05:19 nilsson Exp $";
 
 class Variable
 {
@@ -145,6 +145,7 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
 }
 
+//!
 class Configuration 
 {
   inherit BasicDefvar;
@@ -294,6 +295,7 @@ class Configuration
   }
 }
 
+//!
 class Protocol 
 {
   inherit BasicDefvar;
@@ -830,10 +832,12 @@ static void init_user_sql(string table)
   user_sql_inited[ table ] = 1;
 }
 
+//!
 class Group( UserDB database )
 {
   string name();
   //! The group name
+
   array(string) members()
   //! All users that are members of this group. The default
   //! implementation loops over all users handled by the user database
@@ -852,12 +856,14 @@ class Group( UserDB database )
   //! A numerical GID, or -1 if not applicable
 }
 
+//!
 class User( UserDB database )
 {
   static string table;
 
   string name();
   //! The user (short) name
+
   string real_name();
   //! The real name of the user
 
@@ -870,8 +876,10 @@ class User( UserDB database )
 
   int uid();
   //! A numerical UID, or -1 if not applicable
+
   int gid();
   //! A numerical GID, or -1 if not applicable
+
   string shell();
   //! The shell, or 0 if not applicable
   
@@ -912,7 +920,6 @@ class User( UserDB database )
   //!  return ({ name(), crypted_password(),
   //!            uid(), gid(), gecos(), homedir(),
   //!	         shell() });
-
   {
     return ({name(),crypted_password(),uid(),gid(),gecos(),homedir(),shell()});
   }

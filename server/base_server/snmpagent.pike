@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.11 2001/08/22 14:41:18 hop Exp $
+ * $Id: snmpagent.pike,v 1.12 2001/08/23 18:06:07 nilsson Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -87,8 +87,8 @@ inherit Roxen;
 #define OBJ_TICK(x)		({"tick", x})
 #define OBJ_COUNT(x)		({"count", x})
 
-//! The starting part of OID of every object will have, so we stripp it out
-//! before making index from OID to the MIB DB
+// The starting part of OID of every object will have, so we stripp it out
+// before making index from OID to the MIB DB
 #define MIBTREE_BASE				"1.3.6.1"
 
 #define RISMIB_BASE_ADD				"4.1.8614"
@@ -120,6 +120,7 @@ inherit Roxen;
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
+//!
 class SNMPagent {
   private int enabled;
 
@@ -540,7 +541,6 @@ class SubMIBManager {
   //! Returns array. First element is type of second element.
   //! Is usable for very primitive managed objects, in which case the value
   //! is got by calling function from submibtab table.
-  //array `[](string oid) {
   array get(string oid, mapping|void pkt) {
 
     function rval;
@@ -668,7 +668,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.11 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.12 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

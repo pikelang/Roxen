@@ -1,10 +1,11 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.74 2001/07/09 14:09:39 nilsson Exp $
+// $Id: fonts.pike,v 1.75 2001/08/23 18:04:52 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
 
+//!
 class Font
 {
   static int j_right, j_center;

@@ -3,6 +3,8 @@
 //
 // Roxen bootstrap program.
 
+//! @ignore
+
 #define LocaleString Locale.DeferredLocale|string
 
 // #pragma strict_types
@@ -26,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.276 2001/08/14 18:34:24 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.277 2001/08/23 18:05:42 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1945,3 +1947,5 @@ library should be enough.
     exit( retval );
   return;
 }
+
+//! @endignore

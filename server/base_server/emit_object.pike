@@ -1,8 +1,8 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001, Roxen IS.
 //
-// Prototype for emit plugin response object.
 
+//! Prototype for emit plugin response object.
 class EmitObject {
 
   mapping(string:mixed) next_row;

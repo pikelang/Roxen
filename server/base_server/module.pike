@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.124 2001/08/14 15:11:26 per Exp $
+// $Id: module.pike,v 1.125 2001/08/23 18:05:05 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -177,7 +177,7 @@ string sname( )
 }
 
 ModuleInfo my_moduleinfo( )
-//! Returns the associated @ref{ModuleInfo} object
+//! Returns the associated @[ModuleInfo] object
 {
   string f = sname();
   if( f ) return roxen.find_module( (f/"#")[0] );
@@ -451,26 +451,27 @@ static string get_my_table( string|array(string) name,
 //! In the first form, @[name] is the (postfix of) the name of the
 //! table, and @[types] is an array of defenitions, as an example:
 //!
-//! @example{
+//! @code{
 //!   cache_table = get_my_table( "cache", ({
 //!               "id INT UNSIGNED AUTO_INCREMENT",
 //!               "data BLOB",
 //!               }) );
-//!  @}
-//!  
+//! @}
+//!
 //! In the second form, the whole table defenition is instead sent as
 //! a string. The cases where the name is not included (the third and
 //! fourth form) is equivalent to the first two cases with the name ""
 //!
 //! If the table does not exist in the datbase, it is created.
 //!
+//! @note
+//!   This function may not be called from create
+//
 // If it exists, but it's defenition is different, the table will be
 // altered with a ALTER TABLE call to conform to the defenition. This
 // might not work if the database the table resides in is not a MySQL
 // database (normally it is, but it's possible, using @[set_my_db],
 // to change this).
-//
-//! @note This function may not be called from create
 {
   string oname;
   if( !defenition )
@@ -529,11 +530,8 @@ static string get_my_table( string|array(string) name,
   return __my_tables[ "&"+oname+";" ] = res;
 }
 
-
-
-
-
 static string my_db = "shared";
+
 static void set_my_db( string to )
 //! Select the database in which tables will be created with
 //! get_my_table, and also the one that will be returned by

@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.467 2001/08/22 22:23:15 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.468 2001/08/23 18:04:31 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -765,15 +765,13 @@ private void parse_log_formats()
 
 void log(mapping file, RequestID request_id)
 {
-  function f;
-
-// Call all logging functions
-  foreach(logger_module_cache||logger_modules(), f) 
+  // Call all logging functions
+  foreach(logger_module_cache||logger_modules(), function f)
     if( f( request_id, file ) )
       return;
 
   if( !log_function ) 
-    return;// No file is open for logging.
+    return; // No file is open for logging.
 
   if(do_not_log_patterns && 
      Roxen._match(request_id->remoteaddr, do_not_log_patterns))
@@ -788,7 +786,8 @@ void log(mapping file, RequestID request_id)
 }
 
 array(string) userinfo(string u, RequestID|void id)
-//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! @note
+//!   DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Fetches user information from the authentication module by calling
 //! its userinfo() method. Returns zero if no auth module was present.
@@ -803,7 +802,8 @@ array(string) userinfo(string u, RequestID|void id)
 }
 
 array(string) userlist(RequestID|void id)
-//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! @note
+//!   DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Fetches the full list of valid usernames from the authentication
 //! module by calling its userlist() method. Returns zero if no auth
@@ -819,7 +819,8 @@ array(string) userlist(RequestID|void id)
 }
 
 array(string) user_from_uid(int u, RequestID|void id)
-//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! @note
+//!   DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Return the user data for id u from the authentication module. The
 //! id parameter might be left out if FTP. Returns zero if no auth

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.710 2001/08/22 22:21:03 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.711 2001/08/23 18:05:31 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2856,7 +2856,7 @@ class ImageCache
   string store( array|string|mapping data, RequestID id )
   //! Store the data your draw callback expects to receive as its
   //! first argument(s). If the data is an array, the draw callback
-  //! will be called like <pi>callback( @data, id )</pi>.
+  //! will be called like <pi>callback( @@data, id )</pi>.
   {
     string ci, user;
     void update_args( mapping a )
