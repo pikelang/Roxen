@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.51 1998/01/17 02:57:22 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.52 1998/01/20 16:36:21 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -255,9 +255,9 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   p=p2->pipe();
   if(!p) error("Popen failed. (couldn't create pipe)\n");
 
-  p2->set_close_on_exec(1);	// Paranoia.
-
 #if constant(Process.create_process)
+
+  p2->set_close_on_exec(1);	// Paranoia.
 
   object privs;
   if (uid || gid) {
@@ -298,7 +298,10 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	exit(99);
       }
       p->dup2(file("stdout"));
-      p->close();
+      // p->close();
+      // p2->close();
+      trace(255);
+      _verify_internals();
       if(uid || gid)
       {
 	object privs = Privs("Executing script as non-www user");
@@ -315,6 +318,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     exit(69);
   }else{
     string t;
+    // p->close();
     destruct(p);
     t=p2->read(0x7fffffff);
     destruct(p2);
