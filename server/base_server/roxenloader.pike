@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.307 2002/01/28 12:23:31 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.308 2002/02/06 12:51:24 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1456,7 +1456,14 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
 #ifdef DB_DEBUG
   gc();
 #endif
-  mixed key = sq_cache_lock();  
+  mixed key;
+  if (catch {
+    key = sq_cache_lock();
+  }) {
+    // Threads disabled.
+    // This can occurr if we are called from the compiler.
+    return low_connect_to_my_mysql(ro, db);
+  }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
 
   mixed res =
