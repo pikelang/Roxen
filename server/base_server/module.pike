@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.144 2003/08/13 15:24:09 grubba Exp $
+// $Id: module.pike,v 1.145 2003/08/26 16:17:00 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -287,21 +287,177 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
   return(res);
 }
 
-//! Returns a multiset with the names off all supported properties.
+//! Returns a multiset with the names of all supported properties.
+//!
+//! @note
+//!   Only properties that should be listed by @tt{<DAV:allprop/>@}
+//!   are returned.
+//!
+//! @note
+//!   The following properties are required to keep
+//!   @tt{Microsoft Data Access Internet Publishing Provider DAV 1.1@}
+//!   as supplied with @tt{Microsoft Windows 2000@} happy:
+//!   @string
+//!     @value "DAV:creationdate"
+//!	  RFC2518 13.1
+//!     @value "DAV:displayname"
+//!	  RFC2518 13.2
+//!     @value "DAV:getcontentlanguage"
+//!	  RFC2518 13.3
+//!     @value "DAV:getcontentlength"
+//!	  RFC2518 13.4
+//!     @value "DAV:getcontenttype"
+//!	  RFC2518 13.5
+//!     @value "DAV:getlastmodified"
+//!	  RFC2518 13.7
+//!     @value "DAV:resourcetype"
+//!	  RFC2518 13.9
+//!
+//!     @value "DAV:defaultdocument"
+//!	  @tt{draft-hopmann-collection-props-00@} 1.3
+//!
+//!	  Specifies the default document for a collection.
+//!
+//!	  This property contains an URL that identifies the default
+//!	  document for a collection. This is intended for collection
+//!	  owners to be able to set a default document, for example
+//!	  @tt{index.html@} or @tt{default.html@}. If this property
+//!	  is absent, other means must be found to determine the default
+//!	  document.
+//!
+//!	  If this property is present, but null, the collection does
+//!	  not have a default document and the collection member listing
+//!	  should be used (or nothing).
+//!
+//!	  Note: The server implementation does not need to store this
+//!	  property in the normal property store (the property could well
+//!	  be live).
+//!     @value "DAV:ishidden"
+//!	  @tt{draft-hopmann-collection-props-00@} 1.7
+//!
+//!	  Specifies whether or not a resource is hidden. 
+//!
+//!	  This property identifies whether or not a resource is hidden.
+//!	  It contains either the values @tt{"1"@} or @tt{"0"@}. This 
+//!	  can be considered a hint to the client UI: under normal 
+//!	  conditions, for non-expert users, hidden files should not be
+//!	  exposed to users. The server may omit the hidden resource from
+//!	  some presentational listings, otherwise the client is responsible
+//!	  for removing hidden resources when displaying to the user. If
+//!	  this property is absent, the collection is not hidden. Since this 
+//!	  property provides no actual form of protection to the resources,
+//!	  this MUST NOT be used as a form of access control and should
+//!	  only be used for presentation purposes. 
+//!     @value "DAV:isstructureddocument"
+//!	  @tt{draft-hopmann-collection-props-00@} 1.7
+//!
+//!	  Specifies whether the resource is a structured document.
+//!
+//!	  A structured document is a collection (@tt{DAV:iscollection@}
+//!	  should also be true), so @tt{COPY@}, @tt{MOVE@} and @tt{DELETE@}
+//!	  work as for a collection. The structured document may behave at 
+//!	  times like a document. For example, clients may wish to display
+//!	  the resource as a document rather than as a collection. This
+//!	  contains either @tt{"1"@} (true) or @tt{"0"@}. If this property
+//!	  is absent, the collection is not a structured document.
+//!
+//!	  This property can also be considered a hint for the client UI:
+//!	  if the value of @tt{"DAV:isstructureddocument"@} is @tt{"1"@},
+//!	  then the client UI may display this to the user as if it were
+//!	  single document. This can be very useful when the default
+//!	  document of a collection is an HTML page with a bunch of images
+//!	  which are the other resources in the collection: only the default
+//!	  document is intended to be viewed as a document, so the entire 
+//!	  structure can appear as one document.
+//!
+//!	  A Structured document may contain collections. A structured
+//!	  document must have a default document (if the
+//!	  @tt{"DAV:defaultdocument"@} property is absent, the default
+//!	  document is assumed by the client to be @tt{index.html@}). 
+//!
+//!     @value "DAV:iscollection"
+//!	  @tt{draft-ietf-dasl-protocol-00@} 5.18
+//!
+//!	  The @tt{DAV:iscollection@} XML element is a synthetic property
+//!	  whose value is defined only in the context of a query. The
+//!	  property is TRUE (the literal string @tt{"1"@}) of a resource
+//!	  if and only if a @tt{PROPFIND@} of the @tt{DAV:resourcetype@}
+//!	  property for that resource would contain the @tt{DAV:collection@}
+//!	  XML element. The property is FALSE (the literal string @tt{"0"@})
+//!	  otherwise. 
+//!	  
+//!	  Rationale: This property is provided in lieu of defining generic
+//!	  structure queries, which would suffice for this and for many more
+//!	  powerful queries, but seems inappropriate to standardize at this
+//!	  time.
+//!
+//!     @value "DAV:isreadonly"
+//!	  Microsoft specific.
+//!
+//!	  The @tt{isreadonly@} field specifies whether an item can be
+//!	  modified or deleted. If this field is TRUE, the item cannot
+//!	  be modified or deleted.
+//!     @value "DAV:isroot"
+//!	  Microsoft specific.
+//!
+//!	  The @tt{DAV:isroot@} field specifies whether an item is a
+//!	  root folder.
+//!     @value "DAV:lastaccessed"
+//!	  Microsoft specific.
+//!
+//!	  The @tt{DAV:lastaccessed@} field specifies the date and time
+//!	  when an item was last accessed. This field is read-only.
+//!     @value "DAV:href"
+//!	  Microsoft specific.
+//!
+//!	  Read-only. The @b{absolute URL@} of an item.
+//!     @value "DAV:contentclass"
+//!	  Microsoft specific.
+//!
+//!	  The item's content class.
+//!     @value "DAV:parentname"
+//!	  Microsoft specific.
+//!
+//!	  The @tt{DAV:parentname@} field specifies the name of the folder
+//!	  that contains an item.
+//!     @value "DAV:name"
+//!	  Microsoft specific.
+//!
+//!	  Unknown definition.
+//!   @endstring
 multiset(string) query_all_properties(string path, RequestID id)
 {
   Stat st = stat_file(path, id);
   if (!st) return (<>);
   multiset(string) res = (<
-    "DAV:displayname",		// 13.2
-    "DAV:getlastmodified",	// 13.7
-    "DAV:resourcetype",		// 13.9
+    "DAV:creationdate",		// RFC2518 13.1
+    "DAV:displayname",		// RFC2518 13.2
+    "DAV:getcontentlanguage",	// RFC2518 13.3
+    "DAV:getlastmodified",	// RFC2518 13.7
+    "DAV:resourcetype",		// RFC2518 13.9
+
+    "DAV:iscollection",		// draft-ietf-dasl-protocol-00 5.18
+
+    "DAV:ishidden",		// draft-hopmann-collection-props-00 1.6
+
+    "DAV:isreadonly",		// MS uses this.
+    "DAV:lastaccessed",		// MS uses this.
+    "DAV:href",			// MS uses this.
+    "DAV:contentclass",		// MS uses this.
+    "DAV:parentname",		// MS uses this.
+    "DAV:name",			// MS uses this.
   >);
   if (st->isreg) {
     res += (<
-      "DAV:getcontentlength",	// 13.4
-      "DAV:getcontenttype",	// 13.5
+      "DAV:getcontentlength",	// RFC2518 13.4
+      "DAV:getcontenttype",	// RFC2518 13.5
       "http://apache.org/dav/props/executable",
+    >);
+  } else if (st->isdir) {
+    res += (<
+      "DAV:defaultdocument",	  // draft-hopmann-collection-props-00 1.3
+      "DAV:isstructureddocument", // draft-hopmann-collection-props-00 1.7
+      "DAV:isroot",		  // MS uses this.
     >);
   }
   return res;
@@ -319,23 +475,23 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   Stat st = stat_file(path, id);
   if (!st) return Roxen.http_low_answer(404, "No such file or directory.");
   switch(prop_name) {
-  case "DAV:displayname":	// 13.2
+  case "DAV:displayname":	// RFC2518 13.2
     return combine_path(query_location(), path);
-  case "DAV:getcontentlength":	// 13.4
+  case "DAV:getcontentlength":	// RFC2518 13.4
     if (st->isreg) {
       return (string)st->size;
     }
     break;
-  case "DAV:getcontenttype":	// 13.5
+  case "DAV:getcontenttype":	// RFC2518 13.5
     if (st->isreg) {
       return id->conf->
 	type_from_filename(path, 0,
 			   lower_case(Roxen.extension(path, id)));
     }
     break;
-  case "DAV:getlastmodified":	// 13.7
+  case "DAV:getlastmodified":	// RFC2518 13.7
     return Roxen.iso8601_date_time(st->mtime);
-  case "DAV:resourcetype":	// 13.9
+  case "DAV:resourcetype":	// RFC2518 13.9
     if (st->isdir) {
       return ({
 	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
@@ -360,15 +516,39 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
       return "F";
     }
     break;
+
+    // The following are properties in the DAV namespace
+    // that Microsoft has stolen.
+  case "DAV:isreadonly":	// draft-ietf-dasl-protocol-00
+    if (!(st->mode & 0222)) {
+      return "1";
+    }
+    return "0";
+  case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
+  case "DAV:isfolder":		// draft-hopmann-collection-props-00 1.5
+    if (st->isdir) {
+      return "1";
+    }
+    return "0";
+  case "DAV:ishidden":		// draft-hopmann-collection-props-00 1.6
+    return "0";
+  case "DAV:isroot":		// ?
+    if (path == "/") return "1";
+    return "0";
   default:
     break;
   }
+  report_debug("query_property(): Unimplemented property:%O\n", prop_name);
+#if 1
   // RFC 2518 8.1:
   //   A request to retrieve the value of a property which does not
   //   exist is an error and MUST be noted, if the response uses a
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
   return Roxen.http_low_answer(404, "No such property.");
+#else /* !1 */
+  return Roxen.http_low_answer(200, "OK");
+#endif /* 1 */
 }
 
 //! Attempt to set property @[prop_name] for @[path] to @[value].
@@ -501,7 +681,13 @@ void find_properties(string path, string mode, MultiStatus result,
     }
     return;
   case "DAV:allprop":
-    filt = query_all_properties(path, id);
+    if (filt) {
+      // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
+      // (draft-reschke-webdav-allprop-include-04).
+      filt |= query_all_properties(path, id);
+    } else {
+      filt = query_all_properties(path, id);
+    }
     // FALL_THROUGH
   case "DAV:prop":
     foreach(indices(filt), string prop_name) {
