@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.26 1997/06/11 22:29:31 marcus Exp $
+ * $Id: ftp.pike,v 1.27 1997/06/12 00:29:12 marcus Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -625,6 +625,32 @@ int open_file(string arg, int|void noport)
   return 1;
 }
 
+mapping(string:string) cmd_help = ([
+  "user":"<sp> username",
+  "pass":"<sp> password",
+  "quit":"(terminate service)",
+  "noop":"",
+  "syst":"(get type of operating system)",
+  "pwd":"(return current directory)",
+  "cdup":"(change to parent directory)",
+  "cwd":"[ <sp> directory-name ]",
+  "type":"<sp> [ A | E | I | L ]",
+  "port":"<sp> b0, b1, b2, b3, b4",
+  "nlst":"[ <sp> path-name ]",
+  "list":"[ <sp> path-name ]",
+  "retr":"<sp> file-name",
+  "stat":"<sp> path-name",
+  "size":"<sp> path-name",
+  "stor":"<sp> file-name",
+  "dele":"<sp> file-name",
+  "pasv":"(set server in passive mode)",
+  "help":"[ <sp> <string> ]"
+]);
+
+mapping(string:string) site_help = ([
+  "prestate":"<sp> prestate"
+]);
+
 void got_data(mixed fooid, string s)
 {
   string cmdlin;
@@ -978,6 +1004,36 @@ void got_data(mixed fooid, string s)
       int port=(int)((pasv_port->query_address()/" ")[1]);
       reply("227 Entering Passive Mode. "+replace(controlport_addr, ".", ",")+
 	    ","+(port>>8)+","+(port&0xff)+"\n");
+      break;
+
+    case "help":
+      if(!arg || !strlen(arg)) {
+	reply(reply_enumerate(sprintf("The following commands are recognized:"
+				      "\n%-#72;8s\n",
+				      map(sort(indices(cmd_help)),
+					  upper_case)*"\n"), "214"));
+	break;
+      }
+      if(cmd_help[lower_case(arg)]) {
+	reply(reply_enumerate("Syntax: "+upper_case(arg)+" "+
+			      cmd_help[lower_case(arg)]+"\n", "214"));
+	break;
+      }
+      if(2==sscanf(lower_case(arg), "site%*[ ]%s", arg)) {
+	if(!strlen(arg)) {
+	  reply(reply_enumerate(sprintf("The following SITE commands are "
+					"recognized:\n%-#72;8s\n",
+					map(sort(indices(site_help)),
+					    upper_case)*"\n"), "214"));
+	  break;
+	}
+	if(site_help[lower_case(arg)]) {
+	  reply(reply_enumerate("Syntax: "+upper_case(arg)+" "+
+				site_help[lower_case(arg)]+"\n", "214"));
+	  break;
+	}
+      }
+      reply("502 Unknown command "+upper_case(arg)+".\n");
       break;
 
       // Extended commands
