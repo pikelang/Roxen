@@ -13,7 +13,7 @@
       ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
       Execute="deferred" />
     <CustomAction Id="CreatePikeLocation" Directory="SERVERDIR"
-      ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "Stdio.write_file(argv[1], argv[2]);" "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
+      ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
