@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.11 2001/10/02 12:48:37 tomas Exp $
+// $Id: cmdline.cpp,v 1.12 2001/10/08 13:53:52 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -369,6 +369,10 @@ void CCmdLine::PrintHelp()
     "",
     "      .B--removeB.:                   Remove all registry setting and uninstall",
     "                                  the NT service.",
+    "",
+    "       .B--offlineB.:                  Indicate that there is no network",
+    "                                  connection available. Disables DNS and some",
+    "                                  other similar things.",
     "",
     "      .B--remove-dumpedB.:            Remove all dumped code, thus forcing",
     "                                  a recompile.",
@@ -951,6 +955,16 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--enable-fd-debug", NULL, NULL) )
   {
     m_saPikeDefines.Add("-DFD_DEBUG");
+    type = eArgPike;
+    return 1;
+  }
+
+  //'--offline')
+  //  DEFINES="-DNO_DNS -DOFFLINE $DEFINES"
+  if (Match(*argv, "--offline", NULL, NULL) )
+  {
+    m_saPikeDefines.Add("-DNO_DNS");
+    m_saPikeDefines.Add("-DOFFLINE");
     type = eArgPike;
     return 1;
   }
