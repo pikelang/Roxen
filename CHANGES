@@ -3,6 +3,8 @@ Changes since Roxen Challenger 1.2 alpha 6
 
 o Added option to create FTP servers.
 
+o Reenabled the "Roxen is alive!" output even if DEBUG isn't defined.
+
 
 Changes since Roxen Challenger 1.2 alpha 5
 -----------------------------------------------
