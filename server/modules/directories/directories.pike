@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.51 2000/03/01 16:35:03 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.52 2000/03/01 18:07:11 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -25,7 +25,7 @@ inherit "module";
 inherit "roxenlib";
 
 array readme, indexfiles, nobrowse;
-int filename_width;
+int filename_width, cache;
 
 string output_format(array(string) filenames)
 {
@@ -48,10 +48,11 @@ void start()
   indexfiles = query("indexfiles")-({""});
   nobrowse = query("nobrowse")-({""});
   filename_width = query("fieldwidth");
+  cache = query("cache");
 }
 
 constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
-constant module_name = "Enhanced Directory Listings";
+constant module_name = "Directory Listings";
 constant module_doc = "This module pretty prints a list of files.";
 
 void create()
@@ -80,7 +81,7 @@ void create()
 	 "security hole.");
 
   defvar("spartan", 0, "Spartan listings.", TYPE_FLAG|VAR_INITIAL,
-	 "Show minimalistic file listings.");
+	 "Show minimalistic file listings by default.");
 
   defvar("size", 1, "Include file size", TYPE_FLAG,
 	 "If set, include the size of the file in the listing.");
@@ -101,6 +102,10 @@ void create()
 	 "option truncate the name rather than making extra room on the "
 	 "particular row.", 0,
 	 lambda() { return !query("fieldwidth"); });
+
+  defvar("cache", 0, "Cache result", TYPE_FLAG,
+	 "If selected, the result pages will be cached in the memory cache. "
+	 "Directory changes will not be visible until the cached enty has expired.");
 }
 
 string tag_directory_insert(string t, mapping m, RequestID id)
@@ -132,7 +137,7 @@ string find_readme(string d, RequestID id)
     if (txt) {
       if (id->conf->type_from_filename(f)!="text/html")
 	txt = "<pre>" + html_encode_string(txt) +"</pre>";
-      return "<hr noshade>"+txt;
+      return "<hr noshade=\"noshade\" />"+txt;
     }
   }
   return "";
@@ -355,7 +360,7 @@ string|mapping parse_directory(RequestID id)
   if(query("spartan") || id->prestate->spartan_directory) {
     if(!(dirlist=cache_lookup("directory-s",f))) {
       dirlist=spartan_directory(f,id);
-      cache_set("directory-s",f,dirlist);
+      if(cache) cache_set("directory-s",f,dirlist);
     }
     return http_string_answer(dirlist);
   }
@@ -364,7 +369,7 @@ string|mapping parse_directory(RequestID id)
     id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
     id->misc->rel_base="";
     dirlist=parse_rxml(describe_directory(f,id),id);
-    cache_set("directory-f",f,dirlist);
+    if(cache) cache_set("directory-f",f,dirlist);
   }
   return http_string_answer(dirlist);
 }
