@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.3.111 Yellow
 -----------------------------------------------
 
+o Added some files that were lacking to get the Servlet support working.
+
 o Fixed a problem in the SQL-module which prevented proper garbage collection,
   resulting in stale connections not being closed.
 
