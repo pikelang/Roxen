@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.340 2002/02/06 15:48:12 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.341 2002/02/06 18:05:28 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2704,12 +2704,12 @@ class TagDefine {
       }
 
       if (n=args->if) {
-	ctx->misc["if\0" + n] = UserIf (n, content);
+	ctx->set_misc ("if\0" + n, UserIf (n, content));
 	return 0;
       }
 
       if (n=args->name) {
-	ctx->misc[n]=content;
+	ctx->set_misc (n, content);
 	old_rxml_warning(id, "attempt to define name ","variable");
 	return 0;
       }
@@ -3767,6 +3767,12 @@ class UserIf
 
     return (ind==tmp);
   }
+
+  // These objects end up in RXML_CONTEXT->misc and might therefore be
+  // cached persistently.
+  constant is_RXML_encodable = 1;
+  array _encode() {return ({plugin_name, rxml_code});}
+  void _decode (array data) {[plugin_name, rxml_code] = data;}
 }
 
 class IfIs
