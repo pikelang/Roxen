@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.23 2000/09/10 16:35:07 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.24 2001/01/06 05:03:19 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -201,9 +201,9 @@ class TagFoldlist {
 	id->misc->foldlist_depth++;
 
       // Register ourselfs as state consumers and incorporate our initial state.
-      string fl_name = (args->name || "fl")+":"+id->misc->foldlist_depth+":"+hist;
+      state_id = (args->name || "fl")+":"+id->misc->foldlist_depth+":"+hist;
       object state=Page_state(id);
-      state_id = state->register_consumer(fl_name, id);
+      state_id = state->register_consumer(state_id, id);
       if(id->variables->state && !state->uri_decode(id->variables->state))
 	RXML.run_error("Error in state.");
 
@@ -212,7 +212,7 @@ class TagFoldlist {
       // 01 folded
       // 10 unfolded
       array(int) states=({});
-      int istates=state->get(state_id);
+      int istates=state->get();
       //      werror("istates: %d\n",istates);
       if(istates)
 	istates=istates>>1;
