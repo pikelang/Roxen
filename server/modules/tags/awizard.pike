@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.10 1999/12/02 23:44:28 peter Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.11 1999/12/22 01:34:46 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -467,7 +467,9 @@ class Store
       else if(sscanf(goto, "goto_page_%s/%d", goto, id->misc->button_id))
 	new_page = pages_by_name[ goto ] && pages_by_name[ goto ]->num+1;
       else if(sscanf(goto, "goto_href_[%s]/%d", goto, id->misc->button_id)) {
-	return http_redirect( goto, id );
+        if( last_page && extra_eval )
+          last_page->can_leave( id,  extra_eval );
+	return http_redirect( fix_relative(goto,id), id );
       }
 
       if( last_page && last_page->can_leave( id, extra_eval ))
@@ -501,7 +503,7 @@ class Store
 	v["goto_page_"+error->page+"/0"]=1;
 	return handle( id );
       } else if(error->href) {
-	return http_redirect(error->href, id);
+	return http_redirect(fix_relative(error->href,id), id);
       } else if(!error->page)
 	return error;
     }
