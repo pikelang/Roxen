@@ -916,14 +916,14 @@ class List
       else
         res += "<td></td>";
       res += "\n<td>"+
-            BUTTON(prefix+"delete."+i, LOCALE("", "Delete") )
+            BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
           "</tr>";
       i++;
     }
     res += 
         "<tr><td colspan='2'>"+
-        BUTTON(prefix+"new", LOCALE("", "New row") )+
+        BUTTON(prefix+"new", LOCALE(297, "New row") )+
         "</td></tr></table>\n";
 
     return res;

@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.345 2000/08/20 03:25:23 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.346 2000/08/22 08:34:45 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2868,14 +2868,14 @@ void create(string config)
   name=config;
 
   // for now only theese two. In the future there might be more variables.
-  defvar( "data_cache_size", 2048, DLOCALE("", "Data Cache:Cache size"),
+  defvar( "data_cache_size", 2048, DLOCALE(274, "Data Cache:Cache size"),
           TYPE_INT,
-          DLOCALE("", "The size of the data cache used to speed up requests "
+          DLOCALE(275, "The size of the data cache used to speed up requests "
                   "for commonly requested files, in KBytes"));
 
-  defvar( "data_cache_file_max_size", 50, DLOCALE("", "Data Cache:Max file size"),
+  defvar( "data_cache_file_max_size", 50, DLOCALE(276, "Data Cache:Max file size"),
           TYPE_INT,
-          DLOCALE("", "The maximum size of a file that is to be considered for "
+          DLOCALE(277, "The maximum size of a file that is to be considered for "
                   "the cache"));
 
 
