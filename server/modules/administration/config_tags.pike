@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.185 2002/10/29 22:38:30 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.186 2002/11/06 00:46:43 mani Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -77,10 +77,11 @@ class Scope_usr
     switch( var )
     {
       string q, res;
-     case "left-buttonwidth": return "150";
 
+     case "left-buttonwidth": return ENCODE_RXML_INT(150, type);
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
+     case "favicon": return ENCODE_RXML_TEXT("favicon.png", type);
      case "logo-html":
        return ENCODE_RXML_XML("<img border=\"0\" src="+QALIAS("logo")+" />", type);
 
