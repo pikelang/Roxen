@@ -135,6 +135,7 @@
               <gbutton href="/change_user.pike?uid=&usr.user-uid;"
                   align="right" 
                   width="70"> <translate id="206">User</translate>: </gbutton></colorscope>
+	     </font>
             </td>
             <td>
                <font color="&usr.top-fgcolor;">
