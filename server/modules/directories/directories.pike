@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.91 2000/12/04 22:49:58 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.92 2002/01/25 14:52:08 anders Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -192,8 +192,8 @@ mapping parse_directory(RequestID id)
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
       {
 	id->not_query = f + file;
-	mapping got = id->conf->get_file(id);
-	if (got)
+	mixed got = id->conf->handle_request(id);
+	if (got && mappingp(got))
 	  return got;
       }
     }
