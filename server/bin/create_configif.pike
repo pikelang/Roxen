@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.30 2000/09/04 13:12:04 noring Exp $
+ * $Id: create_configif.pike,v 1.31 2000/09/06 12:24:13 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -123,6 +123,8 @@ int main(int argc, array argv)
 
   do
   {
+    password = passwd2 = 0;
+    
     if(!admin) 
     {
       write("\n");
