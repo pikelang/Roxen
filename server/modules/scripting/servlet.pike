@@ -2,7 +2,7 @@
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.3 2000/01/23 14:02:28 nilsson Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.4 2000/01/25 01:15:36 marcus Exp $";
 int thread_safe=1;
 
 inherit "module";
@@ -86,6 +86,42 @@ void create()
 	 "Parameters for the servlet on the form "
 	 "<tt><i>name</i>=<i>value</i></tt>, one per line.");
 
+  defvar("rxml", 0, "Parse RXML in servlet output", TYPE_FLAG|VAR_MORE,
+	 "If this is set, the output from the servlet handled by this "
+         "module will be RXML parsed. NOTE: No data will be returned to the "
+         "client until the output is fully parsed.");
+}
+
+class RXMLParseWrapper
+{
+  static object _file;
+  static object _id;
+  static string _data;
+
+  int write(string data)
+  {
+    _data += data;
+    return strlen(data);
+  }
+
+  int close(void|string how)
+  {
+    _file->write(parse_rxml(_data,_id));
+    _data="";
+    return _file->close(how);
+  }
+
+  mixed `->(string n)
+  {
+    return ::`->(n) || predef::`->(_file, n);
+  }
+
+  void create(object file, object id)
+  {
+    _file = file;
+    _id = id;
+    _data = "";
+  }
 }
 
 mixed find_file( string f, RequestID id )
@@ -98,6 +134,8 @@ mixed find_file( string f, RequestID id )
   id->my_fd->set_blocking();
   id->misc->path_info = f;
   id->misc->mountpoint = QUERY(location);
+  if(QUERY(rxml))
+    id->my_fd = RXMLParseWrapper(id->my_fd, id);
   servlet->service(id);
 
   return http_pipe_in_progress();
