@@ -240,6 +240,12 @@ static mixed valify(mixed o)
     return (string)o;
 }
 
+static object make_module(RoxenModule m)
+{
+  // Should perhaps handle Pike modules as well?
+  return functionp(m->_java_object) && m->_java_object();
+}
+
 class ReaderFile
 {
   static private object _reader;
@@ -296,6 +302,8 @@ class ModuleWrapper
   static int modtype;
   static string modname, moddesc;
   static int modunique;
+
+  object _java_object() { return modobj; }
 
   static object make_conf(object conf)
   {
@@ -720,6 +728,22 @@ static string native_type_from_filename(object conf, object filename)
   return filename && conf && conf->type_from_filename((string)filename);
 }
 
+static object native_get_providers(object conf, object provides)
+{
+  array p;
+  conf = jotoconf[conf];
+  if(provides && conf && (p = conf->get_providers((string)provides))) {
+    p = map(p, make_module)-({0});
+    object a = module_class->new_array(sizeof(p), 0);
+    check_exception();
+    foreach(indices(p), int i)
+      a[i] = p[i];
+    check_exception();
+    return a;
+  } else
+    return 0;
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
@@ -732,6 +756,7 @@ void create()
     ({"getRealPath", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_real_file}),
     ({"getFileContents", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_try_get_file}),
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;", native_type_from_filename}),
+    ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
   }));
   natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
     ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),

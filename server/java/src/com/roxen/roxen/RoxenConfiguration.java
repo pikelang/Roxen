@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenConfiguration.java,v 1.5 2000/10/10 21:46:21 marcus Exp $
+ * $Id: RoxenConfiguration.java,v 1.6 2000/10/25 15:41:55 marcus Exp $
  *
  */
 
@@ -75,6 +75,24 @@ public class RoxenConfiguration {
   public String queryInternalLocation()
   {
     return queryInternalLocation(null);
+  }
+
+  /**
+   * Returns a list of modules providing a particular service
+   *
+   * @return    the modules that provide this service
+   */
+  public native Module[] getProviders(String provides);
+
+  /**
+   * Returns any module providing a particular service
+   *
+   * @return    the module that provide this service, or null
+   */
+  public Module getProvider(String provides)
+  {
+    Module[] modules = getProviders(provides);
+    return (modules.length>0? modules[0] : null);
   }
 
 }
