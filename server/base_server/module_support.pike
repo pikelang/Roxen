@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.80 2000/11/20 13:36:34 per Exp $
+// $Id: module_support.pike,v 1.81 2000/11/21 13:14:25 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -262,17 +262,39 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
+  static mixed encode_string( mixed what )
+  {
+    if( objectp( what ) && what->get_identifier ) // locale string.
+    {
+      array t = what->get_identifier();
+      t[1] = 0;
+      return t;
+    }
+    return what;
+  }
+
+  static string|object decode_string( mixed what )
+  {
+    if( arrayp( what ) )
+    {
+      what[1] = get_locale;
+      return Locale.DeferredLocale( @what );
+    }
+    return what;
+  }
+
   void save()
   {
     module_cache
       ->set( sname,
-             ([ "filename":filename,
-                "sname":sname,
-                "last_checked":last_checked,
-                "type":type,
-                "multiple_copies":multiple_copies,
-                "name":name,
-                "description":description,
+             ([
+	       "filename":filename,
+	       "sname":sname,
+	       "last_checked":last_checked,
+	       "type":type,
+	       "multiple_copies":multiple_copies,
+	       "name":encode_string(name),
+	       "description":encode_string(description),
              ]) );
   }
 
@@ -394,8 +416,8 @@ class ModuleInfo( string sname, string filename )
           {
             type = data->type;
             multiple_copies = data->multiple_copies;
-            name = data->name;
-            description = data->description;
+            name = decode_string( data->name );
+            description = decode_string( data->description );
             return 1;
           }
           else
