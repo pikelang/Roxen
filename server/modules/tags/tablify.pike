@@ -1,11 +1,6 @@
-/* This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
- *
- * Converts tab and newline separated lists to tables.
- * 
- * made by Per Hedbor
- */
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.25 1999/07/26 13:30:02 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.26 1999/08/05 18:00:43 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -13,103 +8,73 @@ inherit "wizard";
 
 #define old_rxml_compat 1
 
-static private int loaded;
-
-static private constant old_doc =
-  ("Generates tables from, as an example, tab separated fields in newline"
-   " separated records (this is the default)."
-   "<p>This module defines a tag, {tablify}<p>Arguments:<br>"
-   "help: This help<br>\n"
-   "nice: Generate \"nice\" tables. The first row is the title row<br>\n"
-   "nicer: Generate \"even nicer\" tables. The first row is the title row<br>\n"
-   "cellseparator=str: Use str as the column-separator<br>\n"
-   "rowseparator=str: Use str as the row-separator<br>\n"
-   "cellalign=left|right|center: Align the contents of the cells<br>\n"
-   "rowalign=left|right|center: Align the contents of the rows<br>\n"
-   "noxml: Do not terminate tags such as img and br wit a slash<br>\n");
-
-static private string doc()
-{
-  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/tablify")||
-			    old_doc,
-			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
-}
-
 mixed *register_module()
 {
   return ({ 
     MODULE_PARSER,
     "Tablify", 
     "This tag generates tables.<p>"
-    "<tt>&lt;tablify help&gt;&lt;/tablify&gt;</tt> gives help.\n\n<p>"+doc(),
-    ({}), 1, });
+    "<tt>&lt;tablify help&gt;&lt;/tablify&gt;</tt> gives help.\n\n<p>",
+    0, 1, });
 }
 
-void start(int num, object configuration)
+string html_nice_table(array subtitles, array table, mapping opt)
 {
-  loaded = 1;
-}
-
-string html_nicer_table(array(string) subtitles, array(array(string)) table,
-			mapping|void opt)
-{
-  /* Options:
-   *   bordercolor, titlebgcolor, titlecolor, oddbgcolor, evenbgcolor, modulo,
-   *   font, scale, face, size
-   * Containers:
-   *   <fields>[num|text, ...]</fields>
-   */
-
   string r = "";
 
-  if(!opt) opt = ([]);
-  int m = (int)(opt->modulo?opt->modulo:1);
-  r += ("<table bgcolor=\""+(opt->bordercolor||"#27215b")+"\" border=\"0\" "
-	"cellspacing=\"0\" cellpadding=\"1\">\n"
-	"<tr><td>\n");
-  r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\">\n";
+  int m = (int)opt->modulo || 1;
+  r += "<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
+       "cellspacing=\"0\" cellpadding=\"1\">\n"
+       "<tr><td>\n"
+       "<table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n";
+
+  int cols=0;
   if (subtitles) {
-    r += "<tr bgcolor=\""+(opt->titlebgcolor||"#27215b")+"\">\n";
-    foreach(subtitles, mixed s)
-      r+=
-	"<td align=\"left\"><gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
-	(opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
-	(opt->titlebgcolor||"#27215b")+"\""+(opt->noxml?"":" xml")+">"+s+"</gtext></td>";
-    r += "</tr>";
+    r += "<tr bgcolor=\""+(opt->titlebgcolor||"#112266")+"\">\n";
+    foreach(subtitles, string s) {
+      cols++;
+      if(opt->nicer)
+        r+="<th align=\"left\"><gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
+	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
+	   (opt->titlebgcolor||"#27215b")+"\""+(opt->noxml?"":" xml")+">"+s+"</gtext></th>";
+      else
+        r+="<th align=\"left\"><font color=\""+
+	  (opt->titlecolor||"#ffffff")+"\">"+s+" &nbsp; </font></th>";
+    }
+    r += "</tr>\n";
   }
   
-  int cols; // FIXME: Used in colspan below. Is never set!
   for(int i = 0; i < sizeof(table); i++) {
-    string tr;
-    r += tr = "<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":
+    r += "<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":
 			      opt->oddbgcolor||"#ffffff")+"\">";
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
-      if(arrayp(s))
-	r += "</tr>"+tr+"<td colspan=\""+cols+"\">"+s[0]+" &nbsp;</td>";
-      else {
-	string type = "text";
-	if(arrayp(opt->fields) && j < sizeof(opt->fields))
-	  type = opt->fields[j];
-	switch(type) {
-	case "num":
-	  array a = s/".";
-	  r += "<td align=\"right\"><font color=\""+(opt->fgcolor||"#000000")+"\" size=\""+(opt->size||"2")+"\" face=\""+
-	    (opt->face||"helvetica,arial")+"\">";
-	  if(sizeof(a) > 1) {
-	    r += (format_numeric(a[0])+"."+
-		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
-	  } else
-	    r += format_numeric(s, "&nbsp;");
-	  break;
-	case "text":
-	default:
-	  r += "<td><font color=\""+(opt->fgcolor||"#000000")+"\" size=\""+(opt->size||"2")+"\" face=\""+
-	    (opt->face||"helvetica,arial")+"\">"+s;
-	}
-	r += "&nbsp;&nbsp;</font></td>";
+      switch(arrayp(opt->fields) && j<sizeof(opt->fields)?opt->fields[j]:"text") {
+      case "num":
+	array a = s/".";
+	r += "<td align=\"right\">";
+        if(opt->nicer) r+="<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
+          "\" face=\""+(opt->face||"helvetica,arial")+"\">";
+
+	if(sizeof(a) > 1) {
+	  r += (format_numeric(a[0])+"."+
+	       reverse(format_numeric(reverse(a[1]), ";psbn&")));
+	} else
+	  r += format_numeric(s, "&nbsp;");
+        if(opt->nicer) r+="</font>";
+	break;
+      case "text":
+      default:
+        r += "<td align=\""+(opt->cellalign||"left")+"\">";
+	if(opt->nicer) r += "<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
+          "\" face=\""+(opt->face||"helvetica,arial")+"\">";
+        r += s;
+        if(opt->nicer) r+="</font>";
       }
+
+      r += "&nbsp;&nbsp;</td>";
     }
+    if(sizeof(table[i])<cols) r+="<td colspan=\""+(cols-sizeof(table[i]))+"\">&nbsp;</td>";
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
@@ -117,28 +82,16 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
   return r;
 }
 
-
-/* The meat of the module. Convert the contents of the tag (in 'q') to
- * a table. */
-
-string container_fields(string name, mapping arg, string q,
-			mapping m, mapping arg_list)
+string container_fields(string name, mapping arg, string q, mapping m, mapping arg_list)
 {
-  arg_list->fields = q/(m->cellseparator||"\t");
+  arg_list->fields = q/(arg->separator||m->cellseparator||"\t");
   return "";
 }
 
-string tag_tablify( string tag, mapping m, string q, object id)
+string tag_tablify(string tag, mapping m, string q, object id)
 {
   array rows, res;
-  string sep, td, color, table;
-  int i;
-
-#if 0
-  sscanf(q, "%*[\n]%s", q);
-  sscanf(reverse(q), "%*[\n]%s", q);
-  q = reverse(q);
-#endif
+  string sep;
 
 #if old_rxml_compat
   // RXML <1.4 compatibility stuff
@@ -151,6 +104,16 @@ string tag_tablify( string tag, mapping m, string q, object id)
     m->evenbgcolor=m->fgcolor1;
     m_delete(m, "fgcolor1");
     id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor1","evenbgcolor");
+  }
+  if(m->fgcolor) {
+    m->textcolor=m->fgcolor;
+    m_delete(m, "fgcolor");
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor","textcolor");
+  }
+  if(m->rowalign) {
+    m->cellalign=m->rowalign;
+    m_delete(m, "rowalign");
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute rowalign","cellalign");
   }
   // When people have forgotten what bgcolor meant we can reuse it as evenbgcolor=oddbgcolor=m->bgcolor
   if(m->bgcolor) {
@@ -165,24 +128,12 @@ string tag_tablify( string tag, mapping m, string q, object id)
   mapping arg_list = ([]);
   q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
 
-  if(sep = m->rowseparator)
-    m->rowseparator = 0;
-  else
-    sep = "\n";
+  sep = m->rowseparator||"\n";
+  m_delete(m,"rowseparator");
 
   rows = (q / sep) - ({""});
-  
-  if(sep = m->cellseparator)
-    m->cellseparator = 0;
-  else
-    sep = "\t";
 
-  if(m->cellalign)
-  {
-    td = "<td align=\""+m->cellalign+"\">";
-    m->cellalign = 0;
-  } else
-    td="<td>";
+  sep = m->cellseparator||"\t";
 
   array title;
   if((m->nice||m->nicer) && (!m->notitle)) {
@@ -195,34 +146,14 @@ string tag_tablify( string tag, mapping m, string q, object id)
   if(m->max)
     rows = rows[..((int)m->max-1)];
   
-  if(m->nice)
-  {
-    rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
-    return html_table(title, rows, m + arg_list);
-  }
+  rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
 
-  if(m->nicer)
-  {
-    rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
-    return html_nicer_table(title, rows, m + arg_list);
-  }
-  
-  for(i=0; i<sizeof(rows); i++)
-    rows[i] = td + (rows[i]/sep) * ("</td>"+td) + "</td>";
+  if(m->nice || m->nicer) return html_nice_table(title, rows, m + arg_list);
 
-  table = "<table";
-  foreach(indices(m), td)
-    if(m[td]) table += " "+td+"=\""+m[td]+"\"";
+  for(int i=0; i<sizeof(rows); i++)
+    rows[i] = "<td align=\""+m->cellalign+"\">" + rows[i] * ("</td><td align=\""+m->cellalign+"\">") + "</td>";
 
-  table += ">";
-  if(m->rowalign)
-  {
-    td = "<tr align=\""+m->rowalign+"\">";
-    m->rowalign=0;
-  } else
-    td="<tr>";
-
-  return table + td + rows*("</tr>\n"+td) + "</tr>\n</table>";
+  return make_container("table", m, "<tr>"+rows*"</tr>\n<tr>"+"</tr>\n");
 }
 
 mapping query_container_callers()
