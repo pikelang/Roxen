@@ -269,7 +269,7 @@ object conf_context(object conf)
 
 object request(object context, mapping(string:string)|object id,
 	       mapping(string:string|object)|void attrs,
-	       mapping(string:string)|void headers, mixed ... rest)
+	       mapping(string:array(string)|string)|void headers, mixed ... rest)
 {
   if(objectp(id)) {
     string tmp = id->conf->query("MyWorldLocation");
