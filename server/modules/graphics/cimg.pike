@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.54 2002/11/17 17:55:44 mani Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.55 2004/05/22 18:24:06 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -43,8 +43,22 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
  Insert images from other sources, e.g. databases through entities or
  variables.</p>
 <ex-box><emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
+<cimg data='&sql.imagedata:none;'/>
 </emit></ex-box>
+</attr>
+
+<attr name='process-all-layers'><p>Set this flag to make all image layers
+visible regardless of their original state.</p>
+</attr>
+
+<attr name='include-layers' value='layer-glob-list'><p>Comma-separated list
+of glob expressions which is matched against layer names. All matching
+layers are made visible regardless of their original state.</p>
+</attr>
+
+<attr name='exclude-layers' value='layer-glob-list'><p>Comma-separated list
+of glob expressions which is matched against layer names. All matching
+layers are hidden regardless of their original state.</p>
 </attr>",
 
 "cimg-url":#"<desc tag='tag'><p><short>
@@ -131,6 +145,11 @@ mapping(string:function) query_action_buttons() {
 
 void flush_cache() {
   the_cache->flush();
+  
+  //  It's possible that user code contains a number of stale URLs in
+  //  e.g. <cache> blocks so we can just as well flush the RAM cache to
+  //  reduce the risk of broken images.
+  cache.flush_memory_cache();
 }
 
 string status() {
@@ -143,7 +162,11 @@ string status() {
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 {
   array layers;
-  mapping opts = ([]);
+
+  //  Photoshop layers: don't let individual layers expand the image
+  //  beyond the bounds of the overall image.
+  mapping opts = ([ "crop_to_bounds" : 1 ]);
+  
   if( args["process-all-layers"] )
     opts->draw_all_layers = 1;
 
@@ -159,7 +182,7 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   {
     mixed tmp = roxen.load_layers( args->src, id, opts );
     if (mappingp(tmp)) {
-      if (tmp->error == 401)
+      if (tmp->error == Protocols.HTTP.HTTP_UNAUTH)
 	return tmp;
       else
 	layers = 0;
@@ -175,7 +198,7 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
       error("Failed to load specified image [%O]\n", args->src);
   }
 
-  if (!sizeof(layers->image() - ({0})))
+  if (!sizeof(filter(layers->image(), objectp)))
     error("Failed to decode layers in specified image [%O]\n", args->src);
 
   layers->set_misc_value( "visible",1 );
@@ -236,8 +259,8 @@ mapping get_my_args( mapping args, RequestID id )
     "data":args->data,
   ]);
 
-  if( args->src )
-    catch 
+  if( args->src ) {
+    mixed err = catch 
     {
       a->src = Roxen.fix_relative( args->src, id );
       array(int)|Stat st = (id->conf->try_stat_file(a->src, id) ||
@@ -250,6 +273,12 @@ mapping get_my_args( mapping args, RequestID id )
 	a->filesize = (string) st[ST_SIZE];
       }
     };
+#ifdef DEBUG
+    if (err)
+      report_error("<cimg> or <emit#cimg>: error in get_my_args(): %s\n",
+		   describe_backtrace(err));
+#endif
+  }
 
   a["background-color"] = id->misc->defines->bgcolor || "#eeeeee";
 
@@ -282,7 +311,7 @@ class TagCimgplugin
     mapping res = ([ ]);
     mapping a = get_my_args( check_args( args ), id );
     string data;
-    catch // This code will fail if the image does not exist.
+    mixed err = catch // This code will fail if the image does not exist.
     {
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
       if(do_ext)
@@ -294,6 +323,10 @@ class TagCimgplugin
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
       return ({ res });
     };
+#ifdef DEBUG
+    report_error("<emit#cimg> error in get_dataset(): %s\n",
+		 describe_backtrace(err));
+#endif
     RXML.parse_error( "Illegal arguments or image\n" );
     return ({});
   }
@@ -318,9 +351,10 @@ class TagCImg
 	ext = "." + (a->format || "gif");
       args->src = query_absolute_internal_location( id )
 		+ the_cache->store( a, id ) + ext;
-      if( mapping size = the_cache->metadata( a, id, 1 ) )
+      int no_draw = !id->misc->generate_images;
+      if( mapping size = the_cache->metadata( a, id, no_draw ) )
       {
-	// image in cache (1 above prevents generation on-the-fly)
+	// image in cache (no_draw above prevents generation on-the-fly)
 	args->width = size->xsize;
 	args->height = size->ysize;
       }
