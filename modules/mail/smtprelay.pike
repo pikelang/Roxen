@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.6 1999/10/26 14:57:33 grubba Exp $
+ * $Id: smtprelay.pike,v 2.7 1999/10/27 00:15:57 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.6 1999/10/26 14:57:33 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.7 1999/10/27 00:15:57 grubba Exp $";
 
 /*
  * Some globals
@@ -700,6 +700,12 @@ class MailSender
     if (server >= sizeof(servers)) {
       // Failure.
 
+      call_out(send_done, 0, SEND_FAIL);
+
+      // Make sure we don't have any circular references.
+      reset();
+      send_done = 0;
+
       return;
     }
 
@@ -768,6 +774,7 @@ static void mail_sent(int res, mapping message)
 			message->mailid),
   ]);
   if (res) {
+    // res != SEND_FAIL
     switch(res) {
     case SEND_OK:
       conf->log(([ "error":200, "len":message->sent ]), id);
@@ -804,6 +811,7 @@ static void mail_sent(int res, mapping message)
       rm(combine_path(QUERY(spooldir), message->mailid));
     }
   } else {
+    // res == SEND_FAIL
     conf->log(([ "error":408 ]), id);
     report_notice(sprintf("SMTP: Sending of %O failed!\n",
 			  message->mailid));
