@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.34 1998/05/15 06:10:01 neotron Exp $
+ * $Id: ftp2.pike,v 1.35 1998/05/15 06:12:07 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -79,7 +79,7 @@
 #include <module.h>
 #include <stat.h>
 
-#define FTP2_DEBUG
+//#define FTP2_DEBUG
 
 #define FTP2_XTRA_HELP ({ "Report any bugs to roxen-bugs@roxen.com." })
 
