@@ -2,9 +2,9 @@
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
- * 
+ *
  * Will also remove occuranses of "indexfiles" from the end of the URL.
- * 
+ *
  * made by Peter Bortas <peter@idonex.se> Januari -97
  *
  * Thanks for suggestions and bugreports:
@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.23 1999/11/29 16:49:19 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.24 1999/11/29 17:04:46 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -28,7 +28,7 @@ void create()
 
 mixed register_module()
 {
-  return ({ 
+  return ({
     MODULE_PARSER,
     "Killframe tag",
     ("Makes pages frameproof."
@@ -48,14 +48,14 @@ string tag_killframe( string tag, mapping m, object id )
   NOCACHE();
 
   if(m->help) return register_module()[2];
-  
+
   if( !id->supports->javascript ) return "";
-  
+
   string javascript;
-  
+
   while( id->misc->orig )
     id = id->misc->orig;
-  
+
   // Some versions of IE will choke on :80. (Reload and repeat..)
   string tmp;
   string prestate;
@@ -69,7 +69,7 @@ string tag_killframe( string tag, mapping m, object id )
     my_url = tmp +"/"+ (prestate?prestate:"") + id->not_query[1..];
   else
     my_url += (prestate?prestate:"") + id->not_query[1..];
-  
+
   // Links to index.html are ugly. All pages deserve a uniqe URL, and for
   // index-pages that URL in /.
   if( query("killindex") || m->killindex )
@@ -80,7 +80,7 @@ string tag_killframe( string tag, mapping m, object id )
       indexfiles = id->conf->dir_module->query("indexfiles");
 
     int l=strlen(my_url)-1;
-    
+
     foreach( indexfiles, string index )
       if( my_url[l-strlen(index)..] == "/" +index )
 	my_url = my_url[..l-strlen(index)];
