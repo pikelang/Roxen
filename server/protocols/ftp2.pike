@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.73 1999/01/03 16:51:58 grubba Exp $
+ * $Id: ftp2.pike,v 1.74 1999/03/09 00:46:16 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2502,6 +2502,9 @@ class FTPSession
     if(pasv_port)
       destruct(pasv_port);
     pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
+    /* FIXME: Hmm, getting the address from an anonymous port seems not
+     * to work on NT...
+     */
     int port=(int)((pasv_port->query_address()/" ")[1]);
     send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
 			 replace(local_addr, ".", ","),
