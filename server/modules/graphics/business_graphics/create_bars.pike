@@ -9,7 +9,7 @@ import Stdio;
 inherit "polyline.pike";
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.66 1998/03/12 03:25:15 peter Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.67 1998/03/12 03:54:06 peter Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -78,48 +78,46 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 #endif
 
   if (!(diagram_data["xspace"]))
-    {
-      //Initera hur långt det ska vara emellan.
-      
-      float range=(diagram_data["xmaxvalue"]-
+  {
+    //Initera hur långt det ska vara emellan.
+    
+    float range=(diagram_data["xmaxvalue"]-
 		 diagram_data["xminvalue"]);
-      //write("range"+range+"\n");
-      float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
-      if (range/space>5.0)
-	{
-	  if(range/(2.0*space)>5.0)
-	    {
-	      space=space*5.0;
-	    }
-	  else
-	    space=space*2.0;
-	}
-      else
-	if (range/space<2.5)
-	  space*=0.5;
-      diagram_data["xspace"]=space;      
-    }
-  if (!(diagram_data["yspace"]))
+    //write("range"+range+"\n");
+    float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
+    if (range/space>5.0)
     {
-      //Initera hur långt det ska vara emellan.
-      
-      float range=(diagram_data["ymaxvalue"]-
-		 diagram_data["yminvalue"]);
-      float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
-      if (range/space>5.0)
-	{
-	  if(range/(2.0*space)>5.0)
-	    {
-	      space=space*5.0;
-	    }
-	  else
-	    space=space*2.0;
-	}
+      if(range/(2.0*space)>5.0)
+      {
+	space=space*5.0;
+      }
       else
-	if (range/space<2.5)
-	  space*=0.5;
-      diagram_data["yspace"]=space;      
+	space=space*2.0;
     }
+    else
+      if (range/space<2.5)
+	space*=0.5;
+    diagram_data["xspace"]=space;      
+  }
+  if (!(diagram_data["yspace"]))
+  {
+    //Initera hur långt det ska vara emellan.
+    
+    float range=(diagram_data["ymaxvalue"]-
+		 diagram_data["yminvalue"]);
+    float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
+    if (range/space>5.0)
+    {
+      if(range/(2.0*space)>5.0)
+	space *= 5.0;
+      else
+	space *= 2.0;
+    }
+    else
+      if (range/space<2.5)
+	space *= 0.5;
+    diagram_data["yspace"]=space;      
+  }
  
 #ifdef BG_DEBUG
   };
@@ -129,15 +127,14 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 #ifdef BG_DEBUG
   bg_timers->text = gauge {
 #endif
+    
+    
+  float start;
+  start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
+  diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
+  for(int i=0; i<sizeof(diagram_data["xnames"]); i++)
+    diagram_data["values_for_xnames"][i]=start+start*2*i;
 
-
-  {  
-    float start;
-    start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
-    diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
-    for(int i=0; i<sizeof(diagram_data["xnames"]); i++)
-      diagram_data["values_for_xnames"][i]=start+start*2*i;
-  }
   if (!(diagram_data["values_for_ynames"]))
     {
       if ((diagram_data["yspace"]<LITET)&&
