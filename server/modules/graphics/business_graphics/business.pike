@@ -7,15 +7,22 @@
  * in October -97
  */
 
-constant cvs_version = "$Id 3$";
+constant cvs_version = "$Id: business.pike,v 1.7 1997/10/14 05:19:12 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
+#include <roxen.h>
 inherit "module";
 inherit "roxenlib";
-#include <roxen.h>
-//#include "create_bars.pike";
-#include "create_pie.pike";
+import Array;
+import Image;
+
+program Bars  = (program)"create_bars";
+program Graph = (program)"create_graph";
+program Pie   = (program)"create_pie";
+object pie    = Pie();
+object bars   = Bars();
+object graph  = Graph();
 
 #define SEP "\t"
 
@@ -100,7 +107,7 @@ string itag_data(mapping tag, mapping m, string contents,
     
     foreach( lines, string entries )
     {
-      foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
+      foreach( Array.filter( ({ entries/sep - ({""}) }), sizeof ), array item)
       {
 	foreach( item, string gaz )
 	  foo += ({ (int)gaz });
@@ -154,11 +161,44 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->type) res->type = m->type;
   else return syntax( "You must specify a type for your table" );
 
+  if(m->background)
+  {
+    res->image = m->background;
+    res->not_query = id->not_query;
+  }  
+
+  /* Piechart */
+  if(res->type[0..2] == "pie")
+    res->type = "pie";
+
+  /* Barchart */
+  if(res->type[0..2] == "bar")
+  {
+    res->type = "bars";
+    res->subtype = "box";
+  }   
+
+  /* Linechart */
+  if(res->type[0..3] == "line")
+  {
+    res->type = "bars";
+    res->subtype = "line";
+  }   
+
+  /* Normaliced sumbar */
+  if(res->type[0..3] == "norm")
+  {
+    res->type = "sumbars";
+    res->subtype = "norm";
+  }   
+
   if(m->subtype)
     res->subtype = (string)m->subtype;
 
   if(res->type == "pie")
     res->subtype="pie";
+  else
+    res->drawtype="linar";
 
   if(res->type == "bars")
     if(res->subtype!="line")
@@ -205,6 +245,10 @@ string tag_diagram(string tag, mapping m, string contents,
     if(res->type=="pie") res->drawtype = "2D";
     else res->drawtype = "linear";
       
+  if(m->orientation && m->orientation[0..3] == "vert")
+    res->orientation = "vert";
+  else res->orientation="hor";
+
   if(m->fontsize) res->fontsize = (int)m->fontsize;
   else res->fontsize=32;
 
@@ -255,6 +299,21 @@ mapping query_container_callers()
   return ([ "diagram" : tag_diagram ]);
 }
 
+object PPM(string fname, object id)
+{
+  string q = Stdio.read_bytes(fname);
+  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
+  if(!q) throw("Unknown PPM image '"+fname+"'");
+  mixed g = Gz;
+  if (g->inflate) {
+    catch {
+      q = g->inflate()->inflate(q);
+    };
+  }
+  return image()->fromppm(q);
+}
+
+
 mapping find_file(string f, object id)
 {
   if (f[sizeof(f)-4..] == ".gif")
@@ -265,14 +324,17 @@ mapping find_file(string f, object id)
   /*
     perror("f-#data: %O\n", sizeof(res->data[0]));
     perror("f-data: %O\n", res->data[0]);
-    perror("f-#xnames: %O\n", sizeof(res->xnames));
-    perror("f-xnames: %O\n", res->xnames);
   */
 
   //strap
   res->labels=      ({"xstor", "ystor", "xenhet", "yenhet"});
   res->xminvalue=   0.1;
   res->yminvalue=   0;
+
+  res->data = 	   ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
+		      ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
+		      ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
+		      ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) });
 
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":      res->type,
@@ -289,6 +351,7 @@ mapping find_file(string f, object id)
 		 "datacolors":res->colors,
 		 "fontsize":  res->fontsize,
 		 "xnames":    res->xnames,
+		 "ynames":    res->ynames,
 
 		 "xminvalue": res->xminvalue,
 		 "yminvalue": res->yminvalue,
@@ -304,78 +367,29 @@ mapping find_file(string f, object id)
 		 "linewidth": res->linewidth,
 		 "tone":      res->tone
   ]);
-
-  /*
-    if(res->type == "bars")
-    diagram_data=(["type":"bars",
-		   "textcolor":  fg,
-		   "subtype":    "box",
-		   "orient":     "vert",
-		   "data":       data,
-		   "fontsize":   res->fontsize,
-		   "axcolor":    res->axiscolor,
-		   "bgcolor":    bg,
-		   "labelcolor": res->labelcolor,
-		   "datacolors": datacolors,
-		   "linewidth":  res->linewidth,
-		   "xsize":      res->xsize,
-		   "ysize":      res->ysize,
-		   "xnames":     res->xnames,
-		   "labels":     res->labels,
-		   "legendfontsize": res->legendfontsize,
-		   "legend_texts":   res->legend_texts, 
-		   "labelsize":  res->labelsize,
-		   "xminvalue":  res->xminvalue,
-		   "yminvalue":  res->yminvalue
-    ]);
-  */
-
-  /*
-    if(res->type == "pie")
-    diagram_data=(["type":      "pie",
-		   "textcolor": res->fg,
-		   "subtype":   "box",
-		   "orient":    "vert",
-		   "data":      res->data,
-		   "fontsize":  res->fontsize,
-		   "axcolor":   res->axiscolor,
-		   "bgcolor":   res->bg,
-		   "labelcolor":res->labelcolor,
-		   "datacolors":res->colors,
-		   "linewidth": res->linewidth,
-		   "xsize":     res->xsize,
-		   "ysize":     res->ysize,
-		   "xnames":    res->xnames,
-		   "labels":    ({"xstor", "ystor", "xenhet", "yenhet"}),
-		   "legendfontsize":res->legenfontsize,
-		   "legend_texts":({ "streck 1", "streck 2", "foo",
-				     "bar gazonk foobar illalutta!", "lila",
-				     "turkos" }),
-		   "labelsize":res->labelsize,
-		   "xminvalue":0.1,
-		   "yminvalue":0,
-		   "3Ddepth":res->dimensionsdepth,
-		   "drawtype":res->dimensions,
-		   "tone":0	   
-    ]);
-  */
+  
 
   object(Image.image) img;
 
-  //  img = create_bars(diagram_data)["image"];
-  if(res->type = "pie")
-    img = create_pie(diagram_data)["image"];
+  perror( res->orientation +"  " );
+  perror( res->type +"  " );
+  perror( res->subtype +"\n" );
 
-  /*
-  if(res->type = "bars")
-    img = create_bars(diagram_data)["image"];
+  /* Säkerhetshål!! */
+  if(res->image)
+    diagram_data["image"] = PPM(res->image, id);
 
-  if(res->type = "graph")
-    img = create_graph(diagram_data)["image"];
+  if(res->type == "pie")
+    img = pie->create_pie(diagram_data)["image"];
 
-  if(res->type = "sumbars")
-    img = create_sumbars(diagram_data)["image"];
-  */
+  if(res->type == "bars")
+    img = bars->create_bars(diagram_data)["image"];
+
+  if(res->type == "graph")
+    img = graph->create_graph(diagram_data)["image"];
+
+  if(res->type == "sumbars")
+    img = bars->create_sumbars(diagram_data)["image"];
 
   img = img->map_closest(img->select_colors(254)+({res->bg}));
 
