@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.16 2001/01/29 07:18:25 per Exp $
+ * $Id: listfonts.pike,v 1.17 2001/02/05 13:20:17 per Exp $
  */
 
 #include <roxen.h>
@@ -21,10 +21,11 @@ string versions(string font)
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
-    res += ({ "<input type='hidden' name='"+(font+"/"+t)+"'/>"+
+    res += ({ //"<input type='hidden' name='"+(font+"/"+t)+"'/>"+
 	      Roxen.html_encode_string(m[t]) });
   return String.implode_nicely(res);
 }
+
 mapping info;
 string list_font(string font)
 {
@@ -51,7 +52,7 @@ string list_font(string font)
 string font_loaders( )
 {
   string res ="<dl>";
-  foreach( roxen->fonts->font_handlers, FontHandler fl )
+  foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
     res += "<b><dt><font size=+1>"+fl->name+" ("+nf
@@ -63,7 +64,7 @@ string font_loaders( )
 
 string page_0(RequestID id)
 {
-  array q = roxen.fonts->get_font_information();
+  array q = roxen.fonts.get_font_information();
   info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
@@ -71,7 +72,7 @@ string page_0(RequestID id)
 	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
               font_loaders()+"<font size='+1'><b>" +
 	      LOCALE("dI","All available fonts") + "</b></font><p>");
-  foreach(sort(roxen->fonts->available_fonts()), string font)
+  foreach(sort(roxen.fonts.available_fonts()), string font)
     res+=list_font(font);
   res += ("</p><p>" + LOCALE(236,"Example text") +
 	  "<font size=-1><input name=text size=46 value='" +
@@ -85,11 +86,11 @@ string page_0(RequestID id)
 string page_1(RequestID id)
 {
   string res="";
-  mapping v = id->variables;
-  foreach(roxen->fonts->available_fonts(), string fn)
-    res += Roxen.html_encode_string (fn)+":<br />\n"
-      "<gtext align='top' font='"+fn+"'>"+
-      Roxen.html_encode_string (v->text)+"</gtext><p>";
+  mapping v  = id->real_variables;
+  string txt = Roxen.html_encode_string( v->text && v->text[0] );
+  foreach(roxen.fonts.available_fonts(), string fn)
+    res += Roxen.html_encode_string( fn )+":<br />\n"
+      "<gtext align='top' font='"+fn+"'>"+txt+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok/></p>";
 }
 
