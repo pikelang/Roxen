@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.525 2000/08/19 00:47:58 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.526 2000/08/19 01:27:31 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3682,7 +3682,7 @@ class LogFormat
   }
 }
 
-mapping(string:LogFormat) compiled_formats = ([ ]);
+static mapping(string:LogFormat) compiled_formats = ([ ]);
 
 constant formats = 
 ({
@@ -3710,6 +3710,9 @@ constant formats =
 
 LogFormat compile_format( string fmt )
 {
+  if( compiled_formats[ fmt ] )
+    return compiled_formats[ fmt ];
+
   array parts = fmt/"$";
   string format = parts[0];
   array args = ({});
@@ -3774,7 +3777,7 @@ LogFormat compile_format( string fmt )
    callback( data );
   }
 ";
-  return compile_string( code )();
+  return compiled_formats[ fmt ] = compile_string( code )();
 }
 
 
@@ -3825,7 +3828,7 @@ class LogFile
     }
     opened = 1;
     remove_call_out( do_open );
-    call_out( do_open, 1800 ); 
+    call_out( do_open, 900 ); 
   }
   
   void do_close()
@@ -3834,13 +3837,23 @@ class LogFile
     opened = 0;
   }
 
-  int write( string what )
+  array(string) write_buf = ({});
+  static void do_the_write( )
   {
     if( !opened ) do_open();
     if( !opened ) return 0;
+    fd->write( write_buf );
+    write_buf = ({});
     remove_call_out( do_close );
     call_out( do_close, 10.0 );
-    return fd->write( what );
+  }
+
+  int write( string what )
+  {
+    if( !sizeof( write_buf ) )
+      call_out( do_the_write, 1 );
+    write_buf += ({what});
+    return strlen(what); 
   }
 
   static void create( string f ) 

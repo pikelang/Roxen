@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.342 2000/08/19 00:47:57 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.343 2000/08/19 01:27:31 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -549,9 +549,7 @@ public void log(mapping file, RequestID request_id)
 
   if(!form) return;
   
-  roxen.LogFormat fmt;
-  if( !(fmt = roxen.compiled_formats[ form ] ) )
-    fmt = roxen.compiled_formats[ form ] = roxen.compile_format( form );
+  roxen.LogFormat fmt = roxen.compile_format( form );
   fmt->log( log_function, request_id, file );
 }
 
