@@ -1,6 +1,4 @@
-<cset variable=templateeditorp><tmplinsert tag=templateeditorp></cset>
-<cset variable=htmleditorp><tmplinsert tag=htmleditorp></cset>
-<cset variable=menueditorp><tmplinsert tag=menueditorp></cset>
+<cset variable=browserp><tmplinsert tag=browserp></cset>
 
 <tmplblock tag=error>
   <table border=0><tr>
@@ -27,7 +25,7 @@
 </tmplblock>
 
 <tmplblock tag=toolbarlayout>
-  <if variable="htmleditorp is t">
+  <if variable="activetab is HTML_Editor">
     <table cellspacing=0 border=0>
     $toolbarlayout$
     </table>
@@ -44,7 +42,7 @@
 </tmplblock>
 
 <tmplblock tag=toolbarbuttonlayout params=name,href,target,shade singletag>
-<if variable="htmleditorp is t">
+<if variable="activetab is HTML_Editor">
   <if match="$shade$ is ">
     <tr>
       <td><gtext 
@@ -130,7 +128,8 @@
 <cset variable=else>t</cset>
 
 <comment><--  HTML Editor  --></comment>	
-<if variable="htmleditorp is t">
+<if variable="activetab is HTML_Editor">
+<if variable="browserp is t">
   <table cellspacing=1><tr><td bgcolor=#000000>
     <table border=0 cellspacing=1 cellpadding=10>
       <tr>
@@ -153,22 +152,20 @@
   </td></tr></table>
   <cset variable=else>nil</cset>
 </if>
+</if>
 
 <comment><--  Menu Editor  --></comment>	
-<if variable="menueditorp is t">
+<if variable="activetab is Menu_Editor">
   <tmplinsert tag=content>
   <tmplinsert tag=toolbar>
   <cset variable=else></cset>
 </if>
 
 <comment><--  Template Editor  --></comment>	
-<if variable="templateeditorp is t">
+<if variable="activetab is Template_Editor">
   <tmplinsert tag=content>
   <if variable=show_menu>
     <tmplinsert tag=toolbar>
-    <if variable=apply>
-      <b>Active template is applied to the website</b>
-    </if>
   </if>
   <cset variable=else></cset>
 </if>
