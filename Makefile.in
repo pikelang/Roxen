@@ -320,27 +320,28 @@ bump_version: bump_version.stamp
 #	  if cvs -q update -d|egrep '^[CM?]'; then exit 1; else : ; fi; \
 #	)
 # Do not update the Pike build for every Roxen build. Irritates people.
-#	@for d in $(SRCDIR)/pike/0.5 $(SRCDIR)/pike/0.6; do \
-#	  if test -f $$d/src/version.c; then \
-#	    (cd $$d/; \
-#	      echo Bumping Pike version in directory $$d...; \
-#	      build=`sed <src/version.c -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
-#	      newbuild=`echo $$build 1+p|dc`; \
-#	      sed <src/version.c -e"/push_text/s/ $$build/ $$newbuild/" >src/version.c.new; \
-#	      checkbuild=`sed <src/version.c.new -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
-#	      if test "x$$newbuild" = "x$$checkbuild"; then \
-#		mv -f src/version.c.new src/version.c || exit 1; \
-#		echo "Successfull bump to build $$newbuild."; \
-#	      else \
-#		echo "Version bump failed: $$newbuild != $$checkbuild."; \
-#		exit 1; \
-#	      fi; \
-#	      cvs ci -m "Pike release bumped to $$newbuild by bump_version." src/version.c || exit 1; \
-#	      echo "Tagging Pike in $$d..."; \
-#	      cvs tag `sed <src/version.c -e '/push_text/s/.*"\(.*\)".*/\1/p' -ed|tr 'A-Z. ' 'a-z__'|head -1`||exit 1; \
-#	      echo Done with $$d.); \
-#	  else :; fi; \
-#	done
+	@for d in $(SRCDIR)/pike/0.5 $(SRCDIR)/pike/0.6; do \
+	  if test -f $$d/src/version.c; then \
+	    (cd $$d/; \
+	      echo Bumping Pike version in directory $$d...; \
+	      build=`sed <src/version.c -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
+	      newbuild=`echo $$build 1+p|dc`; \
+	      sed <src/version.c -e"/push_text/s/ $$build/ $$newbuild/" >src/version.c.new; \
+	      checkbuild=`sed <src/version.c.new -e'/push_text/s/.* \([0-9]*\).*/\1/p' -ed|head -1`; \
+	      if test "x$$newbuild" = "x$$checkbuild"; then \
+		mv -f src/version.c.new src/version.c || exit 1; \
+		echo "Successfull bump to build $$newbuild."; \
+	      else \
+		echo "Version bump failed: $$newbuild != $$checkbuild."; \
+		exit 1; \
+	      fi; \
+	      cvs ci -m "Pike release bumped to $$newbuild by bump_version." src/version.c || exit 1; \
+	      echo "Tagging Pike in $$d..."; \
+	      cvs tag `sed <src/version.c -e '/push_text/s/.*"\(.*\)".*/\1/p' -ed|tr 'A-Z. ' 'a-z__'|head -1`||exit 1; \
+	      echo Done with $$d.); \
+	  else :; fi; \
+	done
+#end pike version bump
 	@if test -d platform/. ; then \
 	  extratag=-p; \
 	else :; fi; \
@@ -399,7 +400,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	fi
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
 	if test -d platform/. ; then \
-	  version=$$version-p; \
+	  version=$$version; \
 	else :; fi; \
 	if ls -d $$version* >/dev/null 2>&1; then \
 	  echo Deleting old distributions...; \
@@ -432,7 +433,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 tar_dist:
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
 	if test -d platform/. ; then \
-	  version=$$version-p; \
+	  version=$$version; \
 	else :; fi; \
 	echo "Altering some CVS files to point to developer.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
@@ -459,6 +460,9 @@ tar_dist:
 	    type="no_pike"; \
 	  fi ; \
 	fi; \
+	if test -d platform/. ; then \
+	  type=$$type-pf; \
+	else :; fi; \
 	echo Type $$type.; \
 	echo "Storing away manuals..."; \
 	mv $$version/server/manual/*parsed*.tar . || exit 1; \
