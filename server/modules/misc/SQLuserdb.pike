@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.9 1999/07/27 16:10:56 kinkie Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.10 1999/08/16 01:47:50 js Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -100,7 +100,13 @@ void create()
 	  "requests if the information is not supplied by the database."
 	  );
 
-  defvar ("defaultgid", getegid(), "Defaults: Group ID", TYPE_INT,
+  defvar ("defaultgid",
+#if efun(getegid)
+	  getegid()
+#else
+	  0
+#endif	  
+	  , "Defaults: Group ID", TYPE_INT,
 	  "Same as User ID, only it refers rather to the group."
 	  );
 

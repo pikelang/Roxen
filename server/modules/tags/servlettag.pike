@@ -3,7 +3,7 @@
 constant cvs_version = "$Id $";
 constant thread_safe=1;
 
-#if constant(Java)
+#if constant(jvm)
 
 inherit "roxenlib";
 inherit "module";
