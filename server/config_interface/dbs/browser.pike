@@ -8,7 +8,7 @@ mapping actions = ([
   // name         title                      function   must be internal
   "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
-  "group":  ({  _(0,"Change group for this database"), change_group, 0 }),
+  "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
 ]);
@@ -36,10 +36,10 @@ mixed change_group( string db, RequestID id )
   {
     string res ="<br /><blockquote>"
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(0,"Changing group for %s"), db )+"</h2>"
-      "<b>"+_(0,"Old group")+":</b> " +
+      "<h2>"+sprintf(_(423,"Changing group for %s"), db )+"</h2>"
+      "<b>"+_(445,"Old group")+":</b> " +
       DBManager.get_group(DBManager.db_group(db))->lname+"<br />"
-      "<b>"+_(0,"New group")+":</b> <select name='group'>";
+      "<b>"+_(504,"New group")+":</b> <select name='group'>";
     foreach( DBManager.list_groups(), string g )
       if( g == DBManager.db_group( db ) )
 	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
@@ -361,7 +361,7 @@ string format_decode_value( string what )
   if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
     return Roxen.html_encode_string(
       sprintf("<"+_(233,"bytecode data")+" ("+
-	      _(0,"%d bytes")+")>", strlen(what)));
+	      _(505,"%d bytes")+")>", strlen(what)));
   
   catch
   {
@@ -598,7 +598,7 @@ mapping|string parse( RequestID id )
   res +="<a href='edit_group.pike?group="+
     Roxen.http_encode_string(DBManager.db_group( id->variables->db ))+"'>"+
     sprintf( (string)
-	     _(0,"Member of the %s database group"),
+	     _(506,"Member of the %s database group"),
 	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
 	     ->lname )
     + "</a>";

@@ -2647,7 +2647,7 @@ Substituting with %s</o>
 
 <str id="424">
 <new/>
-<o>The database %s was deleted by %s</o>
+<o>The database %s was deleted by b%s</o>
 <t></t>
 </str>
 
@@ -3217,5 +3217,41 @@ server must be a MySQL server, nothing else will work.
 <str id="299">
 <new/>
 <o>URLs</o>
+<t></t>
+</str>
+
+<str id="324">
+<new/>
+<o>Change group for this database</o>
+<t></t>
+</str>
+
+<str id="423">
+<new/>
+<o>Changing group for %s</o>
+<t></t>
+</str>
+
+<str id="445">
+<new/>
+<o>Old group</o>
+<t></t>
+</str>
+
+<str id="504">
+<new/>
+<o>New group</o>
+<t></t>
+</str>
+
+<str id="505">
+<new/>
+<o>%d bytes</o>
+<t></t>
+</str>
+
+<str id="506">
+<new/>
+<o>Member of the %s database group</o>
 <t></t>
 </str>
