@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.379 2002/06/18 10:53:01 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.380 2002/06/18 11:17:12 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3823,7 +3823,15 @@ class TagEmit {
       else if (sscanf (b0, "%f%*[ \t]%*c", float f) == 2) b0 = f;
     }
 
-    if (b0 < a0)
+    int res;
+    if (mixed err = catch (res = b0 < a0)) {
+      // Assume we got a "cannot compare different types" error.
+      // Compare the types instead.
+      a0 = sprintf ("%t", a0);
+      b0 = sprintf ("%t", b0);
+      res = b0 < a0;
+    }
+    if (res)
       return 1;
     else if (a0 < b0)
       return -1;
