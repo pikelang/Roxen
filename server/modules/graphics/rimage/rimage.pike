@@ -67,9 +67,9 @@ void internal_tag_image( string t, mapping m, int line, object id, mapping this)
   plugin_for( m->f || m->filter || "solid" )( m, this, t, id, this_object() );
   if(this[t])
   {
-    if(this[t]->xsize() > this->width)
+    if(this[t]->xsize() >= (int)this->width)
       this->width = this[t]->xsize();
-    if(this[t]->ysize() > this->height)
+    if(this[t]->ysize() >= (int)this->height)
       this->height = this[t]->ysize();
   }
 }
@@ -85,14 +85,14 @@ void internal_parse_layer(string t, mapping m, string c, int line,
   this->opaque_value = (int)(((float)m->opaque_value * 2.55)) || 255;
 
   if(m->width) 
-    this->width = m->width;
+    this->width = (int)m->width;
   else
-    this->width = res->xsize;
+    this->width = (int)res->xsize;
 
   if(m->height) 
-    this->height = m->height;
+    this->height = (int)m->height;
   else
-    this->width = res->ysize;
+    this->width = (int)res->ysize;
 
   /* generate the image and the mask.. */
   parse_html_lines( c, ([ "image":internal_tag_image, 
@@ -214,7 +214,6 @@ mapping cached_image(int hmm, object id)
 mapping cache_image(int hmm, mapping val)
 {
   rm( query("cache-dir")+hmm );
-  werror("val=%O\n", val);
   Stdio.write_file( query("cache-dir")+hmm, encode_value( val ) );
 }
 
@@ -327,7 +326,6 @@ string tag_rimage_id( string t, mapping m, string contents, object id )
     i[1] = time(1);
     if( mapping t = cached_image( i[0], id ) )
     {
-      werror("%O", t);
       m->width = (string)t->xsize;
       m->height = (string)t->ysize;
     }
@@ -346,6 +344,6 @@ mapping query_container_callers()
 {
   return ([ 
     "rimage":tag_rimage,
-    "rimage_id":tag_rimage_id
+    "rimage-id":tag_rimage_id
   ]);
 }
