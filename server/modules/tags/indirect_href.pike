@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.12 2000/02/24 05:20:10 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.13 2000/03/17 00:30:48 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -77,8 +77,8 @@ string tag_newa(string tag, mapping m, string q)
   return make_container("a",m,q);
 }
 
-mapping query_container_callers()
+mapping query_simpletag_callers()
 {
-  return ([ tagname : tag_newa ]);
+  return ([ tagname : ({ 0, tag_newa }) ]);
 }
 

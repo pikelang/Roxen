@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: fnord.pike,v 1.8 2000/02/24 05:39:03 nilsson Exp $";
+string cvs_version = "$Id: fnord.pike,v 1.9 2000/03/17 00:39:43 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -60,15 +60,14 @@ inherit "module";
 // Michael A. Patton <map@bbn.com>
 
 
-// This is the code for the actual container.  By naming it "container_"
-// it is automatically recognized by Roxen as the code for a container
-// tag and is registered in its list of container tags.
+// This is the code for the actual container.  By naming it "simpletag_"
+// it is automatically recognized by Roxen as the code for a tag.
 
 // First, check the 'request_id->prestate' multiset for the presence
 // of 'fnord'. If it is there, show the contents, otherwise, if there
 // is an 'alt' text, display it, if not, simply return an empty string
 
-string container_fnord(string tag_name, mapping arguments, string contents,
+string simpletag_fnord(string tag_name, mapping arguments, string contents,
 		       RequestID id )
 {
   if (id->prestate->fnord)
