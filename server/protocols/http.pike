@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.161 1999/10/08 17:22:53 per Exp $
+// $Id: http.pike,v 1.162 1999/10/09 16:40:02 grubba Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.161 1999/10/08 17:22:53 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.162 1999/10/09 16:40:02 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1573,8 +1573,15 @@ void got_data(mixed fooid, string s)
     return;
   }
 
-  conf = port_obj->find_configuration_for_url( "http://"+misc->host+(search(misc->host, ":")<0? ":80":"")+not_query,
-                                     this_object() );
+  // FIXME: port_obj->name & port_obj->default_port are constant
+  // consider caching them?
+  conf =
+    port_obj->find_configuration_for_url(port_obj->name + "://" +
+					 misc->host +
+					 (search(misc->host, ":")<0?
+					  (":"+port_obj->default_port):"") +
+					 not_query,
+					 this_object());
 
   if (rawauth) 
   {
