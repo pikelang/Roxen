@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.306 1999/07/15 16:59:28 neotron Exp $
+ * $Id: roxen.pike,v 1.307 1999/07/19 18:43:26 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.306 1999/07/15 16:59:28 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.307 1999/07/19 18:43:26 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -3613,6 +3613,26 @@ void set_locale( string to )
 }
 
 
+// Dump all threads to the debug log.
+void describe_all_threads()
+{
+  array(mixed) all_backtraces;
+#if constant(all_threads)
+  all_backtraces = all_threads()->backtrace();
+#else /* !constant(all_threads) */
+  all_backtraces = ({ backtrace() });
+#endif /* constant(all_threads) */
+
+  werror("Describing all threads:\n");
+  int i;
+  for(i=0; i < sizeof(all_backtraces); i++) {
+    werror(sprintf("Thread %d:\n"
+		   "%s\n",
+		   i+1,
+		   describe_backtrace(all_backtraces[i])));
+  }
+}
+
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
 int main(int|void argc, array (string)|void argv)
@@ -3724,13 +3744,17 @@ int main(int|void argc, array (string)|void argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTERM" }), string sig) {
+  foreach( ({ "SIGTERM" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
   foreach( ({ "SIGINT" }), string sig) {
     catch { signal(signum(sig), shutdown); };
+  }
+  // Signals which cause Roxen to dump the thread state
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig) {
+    catch { signal(signum(sig), describe_all_threads); };
   }
 
   report_notice(LOCALE->roxen_started(time()-start_time));
