@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.6 1998/08/10 06:32:19 js Exp $
+ * $Id: admin.pike,v 1.7 1998/08/28 12:52:44 wellhard Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.6 1998/08/10 06:32:19 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.7 1998/08/28 12:52:44 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -156,7 +156,7 @@ void start(int q, object conf)
      Array.map(get_dir(actionsdir)-({".","..",".no_modules","CVS"}),
 	       lambda(string s,string d,string l) 
 	       {
-		 werror(s+"\n");
+		 //werror(s+"\n");
 		 return .Tab.tab(d+s,s,this_object());
 	       },actionsdir,query("location")));
    actionlist=values(actions);
