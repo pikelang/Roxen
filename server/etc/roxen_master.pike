@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.31 1997/04/09 23:37:29 marcus Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.32 1997/04/14 02:03:54 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -26,6 +26,22 @@ void name_program(program foo, string name)
 }
 
 private static int mid = 0;
+
+mapping _vars = ([]);
+array persistent_variables(program p, object o)
+{
+  if(_vars[p]) return _vars[p];
+
+  mixed b;
+  array res = ({});
+  foreach(indices(o), string a)
+  {
+    b=o[a];
+    if(!catch { o[a]=b; } ) // It can be assigned. Its a variable!
+      res += ({ a });
+  }
+  return _vars[p]=res;
+}
 
 array|string low_nameof(object|program|function fo)
 {
@@ -149,6 +165,7 @@ void create()
   add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
 
+  add_constant("persistent_variables", persistent_variables);
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
   add_constant("nameof", nameof);
