@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.449 2001/07/12 21:22:35 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.450 2001/07/18 21:10:03 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3173,6 +3173,13 @@ void low_init(void|int modules_already_enabled)
   if (!modules_already_enabled)
     report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
 		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
+
+#ifdef SNMP_AGENT
+  // Cold start trap after real virt.serv. loading
+  if(objectp(roxen->snmpagent))
+        roxen->snmpagent->coldstart_trap(({ get_config_id() }));
+#endif
+
 }
 
 DataCache datacache;
@@ -3527,12 +3534,16 @@ page.
          "The community string and access level for manipulation on server "
                 " specific objects.",
          0, snmp_disabled);
+  defvar("snmp_traphosts", ({ }),
+                 "SNMP: Trap hosts", TYPE_STRING_LIST,
+         "The remote nodes, where should be sent traps.", 0, snmp_disabled);
 
   if (query("snmp_process")) {
     if(objectp(roxen()->snmpagent)) {
       int servid;
       servid = roxen()->snmpagent->add_virtserv();
       // todo: make invisible varibale and set it to this value for future reference
+      // (support for per-reload persistence of server index?)
     } else
       report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
 #endif
@@ -3550,6 +3561,8 @@ static int arent_we_throttling_request() {
 private static int(0..1) snmp_disabled() {
   return (!snmp_global_disabled() && !query("snmp_process"));
 }
-private static int(0..1) snmp_global_disabled() { (!objectp(roxen->snmpagent)); }
+private static int(0..1) snmp_global_disabled() {
+  return (!objectp(roxen->snmpagent));
+}
 #endif
 
