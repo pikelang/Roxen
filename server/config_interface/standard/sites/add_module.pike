@@ -552,7 +552,7 @@ mixed do_it( RequestID id )
     if (got_initial)
       return Roxen.http_redirect( site_url( id, id->variables->config )+
 			    last_module+
-                           "?initial=1&mod="+initial_modules*",", 
+                           "/?initial=1&mod="+initial_modules*",", 
                                   id );
     else
       return Roxen.http_redirect( site_url( id, id->variables->config )+
