@@ -35,7 +35,7 @@
 /server/nfonts/Resegrg.txt eol=crlf
 /server/nfonts/lucida_unicode.txt eol=crlf
 /server/nfonts/verdana.txt eol=crlf
-*.wxs -text -crlf
+*.wxs eol=crlf
 *.xcf binary
 /server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
