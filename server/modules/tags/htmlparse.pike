@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.187 1999/09/10 22:29:18 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.188 1999/10/05 10:13:52 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2548,7 +2548,7 @@ string tag_referer(string tag, mapping m, object id, object file,
   if(m->help) 
     return ("Compatibility alias for referrer");
   if(id->referer)
-    return sizeof(id->referer)?id->referer*"":m->alt?m->alt:"..";
+    return sizeof(id->referer)?({ id->referer*"" }):m->alt?m->alt:"..";
   return m->alt?m->alt:"..";
 }
 
