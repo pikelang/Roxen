@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.11 2004/05/22 16:41:25 _cvs_stephen Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.12 2004/05/23 15:08:56 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -94,11 +94,11 @@ class PageFrame {
     old_wizard = id->misc->wizard;
     id->misc->wizard = vars;
     vars->page++;
-    if(!vars["cancel-label"]) vars["cancel-label"] = LOCALE(0,"Cancel");
-    if(!vars["ok-label"]) vars["ok-label"] = LOCALE(0,"Ok");
-    if(!vars["previous-label"]) vars["previous-label"] = LOCALE(0, "< Previous");
-    if(!vars["next-label"]) vars["next-label"] = LOCALE(0, "Next >");
-    if(!vars->title) vars->title = vars->name || vars->wizard_name || LOCALE(0, "ChiliMoon Wizard");
+    if(!vars["cancel-label"]) vars["cancel-label"] = "Cancel";
+    if(!vars["ok-label"]) vars["ok-label"] = "Ok";
+    if(!vars["previous-label"]) vars["previous-label"] = "< Previous";
+    if(!vars["next-label"]) vars["next-label"] = "Next >";
+    if(!vars->title) vars->title = vars->name || vars->wizard_name || "ChiliMoon Wizard";
     if(!vars->done) vars->done = "";
     if(!vars->cancel) vars->cancel = "";
   }

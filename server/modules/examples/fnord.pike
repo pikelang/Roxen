@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.17 2002/06/14 10:21:57 nilsson Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.18 2004/05/23 15:08:56 _cvs_dirix Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -17,7 +17,7 @@ inherit "module";
 // Some defines for the translation system
 // 
 //<locale-token project="mod_fnord">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("mod_fnord",X,Y)
+//#define LOCALE(X,Y)	_STR_LOCALE("mod_fnord",X,Y)
 // end of the locale related stuff
 
 // Documentation:
@@ -80,7 +80,7 @@ string simpletag_fnord(string tag_name, mapping arguments, string contents,
   if (arguments->alt)
     return arguments->alt;
   if (arguments["show-fnord"])
-    return LOCALE(5, "FNORD");
+    return "FNORD";
   return "";
 }
 
