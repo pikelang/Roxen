@@ -1,3 +1,7 @@
+/*
+ * $Id: PDB.pmod,v 1.2 1997/08/31 23:58:54 peter Exp $
+ */
+
 class FileIO {
   object open(string f, string m)
   {
