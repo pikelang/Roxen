@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.37 2001/08/10 09:04:47 wellhard Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.38 2001/08/15 17:59:44 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -335,16 +335,13 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
     if( verbose )
       report_debug( "PASS\n" );
   };
-  
+  string res;
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml":
 		       lambda(object t, mapping m, string c) {
 			 tag_test_data = c;
-		       },
-
-		       "result":
-		       lambda(object t, mapping m, string c) {
+			 
 			 mapping request_headers = ([]);
 			 if(args->admin && args->password)
 			   request_headers->authorization =
@@ -355,13 +352,26 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 id->realauth = args->user+":"+args->password;
 			 id->request_headers = request_headers;
 			 id->prot = "HTTP";
-			 string res = conf->try_get_file(args->file, id);
+			 
+			 int logerrorsr =
+			   conf->find_module("rxmlparse")->query("logerrorsr");
+			 if(m["ignore-rxml-run-error"])
+			   conf->find_module("rxmlparse")->getvar("logerrorsr")->set(0);
+
+			 res = conf->try_get_file(args->file, id);
+			 if(m["ignore-rxml-run-error"])
+			   conf->find_module("rxmlparse")->getvar("logerrorsr")->
+			     set(logerrorsr);
+		       },
+
+		       "result":
+		       lambda(object t, mapping m, string c) {
 			 res = canon_html( res );
 			 c = canon_html( c );
 
 			 if(res != c) {
 			   if(m->not) return;
-			   test_error("Failed (result %O != %O)\n", res, c);
+			   test_error("Failed (result \"%s\" != \"%s\")\n", res, c);
 			   throw(1);
 			 }
 			 test_ok( );
@@ -421,6 +431,7 @@ void run_xml_tests(string data) {
     "add-module" : xml_add_module,
     "drop-module" : xml_drop_module,
     "test" : xml_test,
+    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
     add_quote_tag("!--","","--")->
