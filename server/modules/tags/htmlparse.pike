@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.154 1998/10/21 20:51:56 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.155 1998/11/28 16:35:23 leif Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1478,8 +1478,16 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
 string tag_compat_config(string tag,mapping m,object id,object file,
 			 mapping defines)
 {
-  if(m->help) 
-    return ("See the Apache documentation.");
+  if(m->help || m["help--"]) 
+    return ("The SSI #config tag is used to set configuration parameters "
+       "for other SSI tags. The tag takes one or more of the following "
+       "attributes: <tt>sizefmt</tt>=<i>size_format</i>, "
+       "<tt>timefmt</tt>=<i>time_format</i>, <tt>errmsg</tt>=<i>error</i>. "
+       "The size format is either 'bytes' (plain byte count) or 'abbrev' "
+       "(use size suffixes), the time format is a <tt>strftime</tt> format "
+       "string, and the error message is the message to return if a parse "
+       "error is encountered.");
+
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -1504,8 +1512,9 @@ string tag_compat_config(string tag,mapping m,object id,object file,
 string tag_compat_include(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
-  if(m->help) 
-    return ("This tag is more or less equivalent to the 'insert' RXML command.");
+  if(m->help || m["help--"]) 
+    return ("The SSI #include tag is more or less equivalent to the RXML "
+            "&lt;INSERT&gt; tag. ");
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -1554,8 +1563,12 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
 string tag_compat_fsize(string tag,mapping m,object id,object file,
 			mapping defines)
 {
-  if(m->help) 
-    return ("Returns the size of the file specified (as virtual=... or file=...)");
+  if(m->help || m["help--"])
+  { if (tag == "!--#fsize")
+      return ("Returns the size of the file specified (as virtual=... or file=...)");
+    else
+      return ("Returns the last modification date of the file specified (as virtual=... or file=...)");
+  }
   if(!QUERY(ssi))
     return "SSI support disabled";
 
