@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.169 2004/05/03 19:04:43 mast Exp $
+// $Id: module.pike,v 1.170 2004/05/03 19:41:57 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -755,45 +755,6 @@ DAVLock|int(-2..1) check_locks(string path,
   return locked_by_auth_user ? -1 : shared;
 }
 
-//! Register @[lock] on the path @[path] under the assumption that
-//! there is no other lock already that conflicts with this one, i.e.
-//! that @code{check_locks(path,lock->recursive,id)@} would return
-//! @expr{0@} or @expr{1@}.
-//!
-//! This function is only provided as a helper to call from
-//! @[lock_file] if the default @[find_locks] and @[check_locks]
-//! implementations are to be used.
-//!
-//! @param path
-//!   Canonical path that the lock applies to. It's relative to the
-//!   filesystem root and always ends with a @expr{"/"@}.
-//!
-//! @param lock
-//!   The lock to register.
-//!
-//! @note
-//! The default implementation only handles the @expr{"DAV:write"@}
-//! lock type.
-static void register_lock(string path, DAVLock lock, RequestID id)
-{
-  ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
-  User uid = id->conf->authenticate (id);
-  string user = uid && uid->name();
-  if (lock->recursive) {
-    if (prefix_locks[path]) {
-      prefix_locks[path][user] = lock;
-    } else {
-      prefix_locks[path] = ([ user:lock ]);
-    }
-  } else {
-    if (file_locks[path]) {
-      file_locks[path][user] = lock;
-    } else {
-      file_locks[path] = ([ user:lock ]);
-    }
-  }
-}
-
 //! Lock the resource at @[path] with the given @[lock]. It's already
 //! checked that no other lock that applies, i.e. a call
 //! @code{check_locks(path,lock->recursive,id)@} would return
@@ -817,24 +778,35 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //!   The lock to register.
 //!
 //! @returns
-//!   Returns @expr{1@} if the lock is successfully installed,
-//!   @expr{0@} if the filesystem doesn't support locking (for
-//!   instance if it's read-only), or a status mapping if an error
-//!   occurred.
+//!   Returns @expr{0@} if the lock is successfully installed or a
+//!   status mapping if an error occurred.
 //!
 //! @note
-//! Use @[register_lock] from this function to let the default lock
-//! implementation do the work. It works under the assumption that
-//! every path maps to exactly one file or directory (when it exists),
-//! and that the authenticated user is uniquely identified by
+//! The default implementation supports only @expr{"DAV:write"@}. It
+//! works under the assumption that every path maps to exactly one
+//! file or directory (when it exists), and that the authenticated
+//! user is uniquely identified by
 //! @code{id->conf->authenticate(id)->name()@}.
-mapping(string:mixed)|int(0..1) lock_file(string path,
-					  DAVLock lock,
-					  RequestID id)
+mapping(string:mixed) lock_file(string path,
+				DAVLock lock,
+				RequestID id)
 {
-  // To use the default implementation:
-  //register_lock (path, lock, id);
-  //return 1;
+  ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
+  User uid = id->conf->authenticate (id);
+  string user = uid && uid->name();
+  if (lock->recursive) {
+    if (prefix_locks[path]) {
+      prefix_locks[path][user] = lock;
+    } else {
+      prefix_locks[path] = ([ user:lock ]);
+    }
+  } else {
+    if (file_locks[path]) {
+      file_locks[path][user] = lock;
+    } else {
+      file_locks[path] = ([ user:lock ]);
+    }
+  }
   return 0;
 }
 
