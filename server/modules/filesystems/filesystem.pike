@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.68 2000/03/01 18:30:33 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.69 2000/03/07 21:15:36 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -136,6 +136,23 @@ void create()
 
   defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
 	 "The charset the files on disk have.");
+
+  defvar("internal_files", "", "Internal files", TYPE_STRING,
+	 "A comma separated list of glob patterns that matches files "
+	 "which should be considered internal. Internal files can't be "
+	 "requested directly from a client, won't show up in directory "
+	 "listings and can never be uploaded, moved or deleted from a "
+	 "client. They can only be accessed internally, e.g. with the "
+	 "RXML <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
+}
+
+array(string) internal_files = ({});
+
+string check_variable (string var, mixed val)
+{
+  if (var == "internal_files")
+    internal_files = map (val / ",", String.trim_whites);
+  return 0;
 }
 
 
@@ -153,6 +170,7 @@ void start()
 
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
+  internal_files = map (QUERY (internal_files) / ",", String.trim_whites);
   FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
   cache_expire("stat_cache");
 }
@@ -163,9 +181,17 @@ string query_location()
 }
 
 
-mixed stat_file( mixed f, mixed id )
+#define FILTER_INTERNAL_FILE(f, id) \
+  (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
+
+mixed stat_file( string f, RequestID id )
 {
   array fs;
+
+  FILESYSTEM_WERR("stat_file for \""+f+"\"");
+
+  if (FILTER_INTERNAL_FILE (f, id)) return 0;
+
   if(stat_cache && !id->pragma["no-cache"] &&
      (fs=cache_lookup("stat_cache",path+f)))
     return fs[0];
@@ -189,7 +215,7 @@ mixed stat_file( mixed f, mixed id )
   return fs;
 }
 
-string real_file( mixed f, mixed id )
+string real_file( string f, RequestID id )
 {
   if(this->stat_file( f, id ))
 /* This filesystem might be inherited by other filesystem, therefore
@@ -197,17 +223,20 @@ string real_file( mixed f, mixed id )
     return path + f;
 }
 
-int dir_filter_function(string f)
+int dir_filter_function(string f, RequestID id)
 {
   if(f[0]=='.' && !QUERY(.files))           return 0;
   if(!QUERY(tilde) && backup_extension(f))  return 0;
+  if (FILTER_INTERNAL_FILE (f, id))         return 0;
   return 1;
 }
 
-array find_dir( string f, object id )
+array find_dir( string f, RequestID id )
 {
   mixed ret;
   array dir;
+
+  FILESYSTEM_WERR("find_dir for \""+f+"\"");
 
   object privs;
 
@@ -243,10 +272,12 @@ array find_dir( string f, object id )
   dirlists++;
 
   // Pass _all_ files, hide none.
-  if(QUERY(tilde) && QUERY(.files)) /* This is quite a lot faster */
+  if(QUERY(tilde) && QUERY(.files) &&
+     (!sizeof (internal_files) || id->misc->internal_get))
+    /* This is quite a lot faster */
     return dir;
 
-  return Array.filter(dir, dir_filter_function);
+  return Array.filter(dir, dir_filter_function, id);
 }
 
 
@@ -369,7 +400,7 @@ int contains_symlinks(string root, string path)
   return(0);
 }
 
-mixed find_file( string f, object id )
+mixed find_file( string f, RequestID id )
 {
   TRACE_ENTER("find_file(\""+f+"\")", 0);
   object o;
@@ -443,11 +474,17 @@ mixed find_file( string f, object id )
 	return http_redirect(new_query, id);
       }
 
-      if(!id->misc->internal_get && !QUERY(.files)
-	 && (tmp = (id->not_query/"/")[-1])
-	 && tmp[0] == '.') {
-	TRACE_LEAVE("Is .-file");
-	return 0;
+      if(!id->misc->internal_get) {
+	if (!QUERY(.files)
+	    && (tmp = (id->not_query/"/")[-1])
+	    && tmp[0] == '.') {
+	  TRACE_LEAVE("Is .-file");
+	  return 0;
+	}
+	if (FILTER_INTERNAL_FILE (f, id)) {
+	  TRACE_LEAVE ("Is internal file");
+	  return 0;
+	}
       }
 #ifndef THREADS
       object privs;
@@ -492,6 +529,12 @@ mixed find_file( string f, object id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MKDIR disallowed (since PUT is disallowed)");
+      return 0;
+    }
+
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MKDIR disallowed (since the dir name matches internal file glob)");
       return 0;
     }
 
@@ -542,6 +585,12 @@ mixed find_file( string f, object id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("PUT disallowed");
+      return 0;
+    }
+
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("PUT of internal file is disallowed");
       return 0;
     }
 
@@ -662,6 +711,12 @@ mixed find_file( string f, object id )
       return 0;
     }
 
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("CHMOD of internal file is disallowed");
+      return 0;
+    }
+
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("CHMOD: Permission denied");
       return http_auth_required("foo",
@@ -746,6 +801,14 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("MV: No source file");
       return 0;
     }
+
+    if (FILTER_INTERNAL_FILE (movefrom, id) ||
+	FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV to or from internal file is disallowed");
+      return 0;
+    }
+
     moves++;
 
     object privs;
@@ -835,6 +898,13 @@ mixed find_file( string f, object id )
     }
     string moveto = path + "/" + new_uri[sizeof(mountpoint)..];
 
+    if (FILTER_INTERNAL_FILE (f, id) ||
+	FILTER_INTERNAL_FILE (moveto, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MOVE to or from internal file is disallowed");
+      return 0;
+    }
+
     size = FILE_SIZE(moveto);
 
     if(!QUERY(delete) && size != -1)
@@ -908,6 +978,13 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("DELETE: Disabled");
       return 0;
     }
+
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("DELETE of internal file is disallowed");
+      return 0;
+    }
+
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("DELETE: Permission denied");
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
