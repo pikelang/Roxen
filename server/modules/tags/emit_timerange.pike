@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.9 2004/05/22 22:17:12 _cvs_dirix Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.10 2004/05/22 23:35:25 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -353,9 +353,8 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     string reached;
     foreach((scope/".")[1..] + (var ? ({ var }) : ({})), string index)
       if(!mappingp(result))
-	RXML.run_error(sprintf("Can't sub-index %O with %O.\n",
-			       reached || "", index));
-      else if(!(result = result[ index ]))
+      RXML.run_error("Can't sub-index %O with %O.\n", reached || "", index);
+	else if(!(result = result[ index ]))
       {
 	DEBUG("\b => ([])[0] (no such scope:%O%s)\n",
 	      scope, (zero_type(var) ? "" : sprintf(", var:%O combo", var)));
@@ -474,7 +473,7 @@ Calendar get_calendar(string name)
   string wanted = calendars[search(map(calendars, upper_case),
 				   upper_case(name))];
   if(wanted == "unknown")
-    RXML.parse_error(sprintf("Unknown calendar %O.\n", name));
+    RXML.parse_error("Unknown calendar %O.\n", name));
   return Calendar[wanted];
 }
 
@@ -532,8 +531,8 @@ class TagEmitTimeZones
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
     if(!zones[region])
-      RXML.parse_error(sprintf("Unknown timezone region %O.\n", region));
-    next_shift = zones[region] && zones[region]->next_shift;
+    RXML.parse_error("Unknown timezone region %O.\n", region);
+     next_shift = zones[region] && zones[region]->next_shift;
     if(next_shift && time > next_shift)
       refresh_zones(time, region);
     return map(sort(indices(zones[region]) - ({ "next_shift" })),
@@ -562,7 +561,7 @@ class TagEmitTimeRange
     {
       output_unit = output_units[search(output_units, what)];
       if(output_unit == "unknown")
-	RXML.parse_error(sprintf("Unknown unit %O.\n", what));
+	RXML.parse_error("Unknown unit %O.\n", what));
 
       unit_no = search(output_units, what);
       compare_num = ouput_unit_no[unit_no];
@@ -576,7 +575,7 @@ class TagEmitTimeRange
       {
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error(sprintf("Unknown day: %O\n",what));
+          RXML.parse_error("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
         if(from->calendar() != Calendar.ISO){
@@ -597,7 +596,7 @@ class TagEmitTimeRange
       if(what = m_delete(args, "to-week-day")){
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
+	  RXML.parse_error("Unknown day: %O\n",what));
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
@@ -623,7 +622,7 @@ class TagEmitTimeRange
 			{
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error(sprintf("Unknown day: %O\n",what));
+          RXML.parse_error("Unknown day: %O\n",what));
         int weekday_needed, change_to;
         int weekday = from->week_day();
 
@@ -643,7 +642,7 @@ class TagEmitTimeRange
       {
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
+	  RXML.parse_error("Unknown day: %O\n",what));
 	int change_to = 0, weekday_needed = 0;
 	int weekday = to->week_day();
 	if(calendar != "ISO")
@@ -734,7 +733,7 @@ class TagEmitTimeRange
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
     args = args - emit->req_arg_types - emit->opt_arg_types;
     if(sizeof( args ))
-      RXML.parse_error(sprintf("Unknown attribute%s %s.\n",
+      RXML.parse_error("Unknown attribute%s %s.\n",
 			       (sizeof(args)==1 ? "" : "s"),
 			       String.implode_nicely(indices(args))));
 #endif
