@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.91 2001/03/16 19:00:25 grubba Exp $
+// $Id: module_support.pike,v 1.92 2001/03/17 22:52:25 jhs Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -359,7 +359,7 @@ class ModuleInfo( string sname, string filename )
   {
     array dirlist = r_get_dir( dir );
 
-    if( sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
+    if( !dirlist || sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
       return 0;
 
     foreach( dirlist, string file )
