@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.350 2001/11/27 18:06:46 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.351 2001/12/04 18:39:55 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1042,33 +1042,6 @@ static void do_timeout()
   }
 }
 
-static string last_id, last_from;
-string get_id(string from)
-{
-  if(last_from == from) return last_id;
-  last_from=from;
-  catch {
-    object f = open(from,"r");
-    string id;
-    id = f->read(1024);
-    if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
-      return last_id=" (version "+id+")";
-  };
-  last_id = "";
-  return "";
-}
-
-void add_id(mixed to)
-{
-  if (arrayp (to) && sizeof (to) >= 2 && arrayp (to[1]) ||
-      objectp (to) && to->is_generic_error)
-    foreach(to[1], array q)
-      if(sizeof(q) && stringp(q[0])) {
-	string id = get_id(q[0]);
-	catch (q[0] += id);
-      }
-}
-
 string link_to(string file, int line, string fun, int eid, int qq)
 {
   if (!file || !line) return "<a>";
@@ -1124,7 +1097,7 @@ string format_backtrace(int eid)
 	link_to (file, line, func, eid, q) +
 	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
 	(line ? ":" + line : "") +
-	"</a>" + (file ? Roxen.html_encode_string (get_id (file)) : "") + ":<br />\n" +
+	"</a>" + (file ? Roxen.html_encode_string (get_cvs_id (file)) : "") + ":<br />\n" +
 	replace (Roxen.html_encode_string (descr),
 		 ({"(", ")", " "}), ({"<b>(</b>", "<b>)</b>", "&nbsp;"})) +
 	"</li>\n";
@@ -1236,7 +1209,7 @@ int store_error(mixed _err)
     }
   }
 
-  add_id (err);
+  add_cvs_ids (err);
   e[id] = ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)});
   return id;
 }
