@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.128 2004/05/14 16:35:00 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.129 2004/05/14 18:10:55 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -375,6 +375,8 @@ class Configuration
 			       int(0..1) exclude_shared, RequestID id);
   DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id);
+  int expire_locks(RequestID id);
+  void refresh_lock(DAVLock lock);
   mapping(string:mixed)|DAVLock lock_file(string path,
 					  int(0..1) recursive,
 					  string lockscope,
