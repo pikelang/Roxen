@@ -80,16 +80,17 @@ private string noex_cont(string t, mapping m, string c) {
 
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
+  c="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  if(m->type=="box")
+    return "<br />"+mktable( ({ ({ c }) }) );
+
   if(!id) return "";
+
   string parsed=
     id->conf->parse_rxml(m->type!="hr"?
 			 "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>":
 			 c, id);
-  c="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
-
   switch(m->type) {
-  case "box":
-    return "<br />"+mktable( ({ ({ c }) }) );
   case "hr":
     return c+"<hr />"+parsed;
   case "vert":
