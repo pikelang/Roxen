@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.105 1998/06/02 13:08:32 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.106 1998/06/27 14:53:19 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -352,7 +352,9 @@ private int parse_got(string s)
 		string v;
 		if(l < 200000)
 		{
-		  foreach(replace(data-"\n", "+", " ")/"&", v)
+		  foreach(replace(data,
+				  ({ "\n", "\r", "+" }),
+				  ({ "", "", " "}))/"&", v)
 		    if(sscanf(v, "%s=%s", a, b) == 2)
 		    {
 		      a = http_decode_string( a );
@@ -1050,6 +1052,11 @@ void send_result(mapping|void result)
     if(conf) conf->hsent+=strlen(head_string||"");
   }
 
+#ifdef REQUEST_DEBUG
+  roxen_perror(sprintf("Sending result for prot:%O, method:%O file:%O\n",
+		       prot, method, file));
+#endif /* REQUEST_DEBUG */
+
   if(method == "HEAD")
   {
     file->file = 0;
@@ -1064,7 +1071,8 @@ void send_result(mapping|void result)
 
   if(file->len > 0 && file->len < 2000)
   {
-    my_fd->write(head_string + (file->file?file->file->read():file->data));
+    my_fd->write((head_string || "") +
+		 (file->file?file->file->read():file->data));
     do_log();
     return;
   }
