@@ -1,10 +1,16 @@
-# $Id: db.spec,v 1.6 1998/07/21 05:53:30 js Exp $
+# $Id: db.spec,v 1.7 1998/07/21 19:38:09 wellhard Exp $
 
 drop table customers;
 drop table dns;
 drop table messages;
 drop table mailboxes;
 drop table users;
+drop table templates;
+drop table template_vars;
+drop table nav_templates;
+drop table nav_template_vars;
+drop table color_schemes;
+
 
 create table customers (
              id	                     int auto_increment primary key,
@@ -50,18 +56,18 @@ create table users (
              customer_id	     int
      );
 
-
 create table templates (
              id		             int auto_increment primary key,
              name		     varchar(255),
              filename		     varchar(255)
      );
 
-create table templates_vars (
+create table template_vars (
              name                    varchar(64),
-             realname		     varchar(255),
-	     help		     blob,
-	     type		     varchar(8) # font/color/image
+             title		     varchar(255),
+	     group                   varchar(255),
+             help		     blob,
+	     type		     varchar(8) # font/color/image/int
      );
 
 create table nav_templates (
@@ -70,11 +76,12 @@ create table nav_templates (
              filename		     varchar(255)
      );
 
-create table nav_templates_vars (
+create table nav_template_vars (
              name                    varchar(64),
-             realname		     varchar(255),
+             title		     varchar(255),
+             group		     varchar(255),
 	     help		     blob,
-	     type		     varchar(8) # font/color/image
+	     type		     varchar(8) # font/color/image/int
      );
 
 create table color_schemes (
@@ -82,4 +89,3 @@ create table color_schemes (
 	     name		     varchar(64),
 	     value		     varchar(255)
      );
-     

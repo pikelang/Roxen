@@ -5,7 +5,24 @@
 </tmpl_vars>
 
 <tmpl_body>
-  Template Editor
+  Template Editor <br>
+  <h3>Template variables</h3>
+  <ul>
+    <sqloutput query='select distinct group_name from template_vars'>
+      <li><a href="template_editor.html?template_wizarde=#group_name#">
+        #group_name#
+      </a>
+    </sqloutput>
+  </ul>
+
+  <h3>Navigation variables</h3>
+  <ul>
+    <sqloutput query='select distinct group_name from nav_template_vars'>
+      <li><a href="template_editor.html?nav_template_wizarde=#group_name#">
+        #group_name#
+      </a>
+    </sqloutput>
+  </ul>
 </tmpl_body>
 
 </template>

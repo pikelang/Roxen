@@ -1,0 +1,88 @@
+<sql-insert table="templates">
+  <delete all>
+  <insert name="Test1" filename="test1.tmpl">
+  <insert name="Test2" filename="test2.tmpl">
+  <insert name="Test3" filename="test3.tmpl">
+</sql-insert>
+
+
+<sql-insert table="template_vars">
+  <delete all>
+
+  <insert name="bgcolor" title="Background color" group_name="General"
+          type="color" help="Background color">
+
+  <insert name="fgcolor" title="Foreground color" group_name="General"
+          type="color" help="Foreground color">
+
+  <insert name="template_name" title="Template name" group_name="General"
+          type="template" help="Template name">
+
+
+  <insert name="h1_color" title="Heding 1 color" group_name="Heding 1"
+          type="color" help="Heding 1 color">
+
+  <insert name="h1_font" title="Heding 1 font" group_name="Heding 1"
+          type="font" help="Heding 1 font">
+
+  <insert name="h1_size" title="Heding 1 size" group_name="Heding 1"
+          type="int" help="Heding 1 size">
+
+
+  <insert name="h2_color" title="Heding 2 color" group_name="Heding 2"
+          type="color" help="Heding 2 color">
+
+  <insert name="h2_font" title="Heding 1 font" group_name="Heding 2"
+          type="font" help="Heding 2 font">
+
+  <insert name="h2_size" title="Heding 2 size" group_name="Heding 2"
+          type="int" help="Heding 2 size">
+
+
+</sql-insert>
+
+
+<sql-insert table="nav_templates">
+  <delete all>
+  <insert name="Nav1" filename="nav1.ntmpl">
+  <insert name="Nav2" filename="nav2.ntmpl">
+  <insert name="Nav3" filename="nav3.ntmpl">
+</sql-insert>
+
+
+<sql-insert table="nav_template_vars">
+  <delete all>
+  <insert name="nav_font" title="Navigation font" group_name="General"
+          type="font" help="Navigation font">
+	  
+  <insert name="nav_size" title="Navigation size" group_name="General"
+          type="int" help="Navigation size">
+	  
+  <insert name="nav_font" title="Navigation font" group_name="General"
+          type="font" help="Navigation font">
+	  
+  <insert name="nav_color1" title="Navigation color1" group_name="Color"
+          type="color" help="Navigation color1">
+	  
+  <insert name="nav_color2" title="Navigation color2" group_name="Color"
+          type="color" help="Navigation color2">
+
+  <insert name="nav_color3" title="Navigation color3" group_name="Color"
+          type="color" help="Navigation color3">
+
+</sql-insert>
+
+<sql-insert table="color_schemes">
+  <delete all>
+
+  <insert colorscheme_id="1" name="color1" value="green">
+  <insert colorscheme_id="1" name="color2" value="blue">
+  <insert colorscheme_id="1" name="color3" value="red">
+  <insert colorscheme_id="1" name="color4" value="grey">
+
+  <insert colorscheme_id="2" name="color1" value="green">
+  <insert colorscheme_id="2" name="color2" value="blue">
+  <insert colorscheme_id="2" name="color3" value="red">
+  <insert colorscheme_id="2" name="color4" value="grey">
+
+</sql-insert>
