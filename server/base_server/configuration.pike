@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.563 2004/04/30 12:54:25 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.564 2004/05/03 16:09:43 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1419,7 +1419,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   // Create the new lock.
 
-  string locktoken = roxen->new_locktoken_string();
+  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 owner);
   foreach(location_module_cache||location_modules(),
