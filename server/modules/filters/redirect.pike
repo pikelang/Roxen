@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.35 2004/06/30 16:59:01 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.36 2004/08/17 18:05:15 jonasw Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -181,7 +181,7 @@ mixed first_try(object id)
   if(!to)
     return 0;
 
-  string url = id->conf->query("MyWorldLocation");
+  string url = id->url_base();
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
   if(to == url + id->not_query || url == id->not_query)
