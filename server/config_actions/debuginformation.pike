@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.9 1998/03/02 06:24:09 neotron Exp $
+ * $Id: debuginformation.pike,v 1.10 1998/03/20 03:29:53 per Exp $
  */
 
 inherit "wizard";
@@ -15,6 +15,87 @@ mapping last_usage = ([]);
 #endif
 
 constant colors = ({ "#f0f0ff", "white" });
+
+#if efun(get_profiling_info)
+string remove_cwd(string from)
+{
+  return from-(getcwd()+"/");
+}
+
+array (program) all_modules()
+{
+  return values(master()->programs) | indices(roxen->my_loaded);
+}
+
+string program_name(program what)
+{
+  if(roxen->my_loaded[what]) return remove_cwd(roxen->my_loaded[what]);
+  return remove_cwd(search(master()->programs,what));
+}
+
+mapping get_prof(string|void foo)
+{
+  mapping res = ([]);
+  foreach(all_modules(), program prog)
+    res[program_name(prog)] = get_profiling_info( prog );
+  return res;
+}
+
+array get_prof_info(string|void foo)
+{
+  array res = ({});
+  // result: "object.function\ttotal_time\tcalled_times\n..."
+  mapping as_functions = ([]);
+  mapping tmp = get_prof();
+  foreach(indices(tmp), string c)
+  {
+    mapping g = tmp[c][1];
+    foreach(indices(g), string f) 
+      if(!foo || glob(foo,c+"->"+f))
+	as_functions[c+"->"+f] = ({ g[f][1],g[f][0] });
+  }
+  array q = indices(as_functions);
+  sort(values(as_functions), q);
+  foreach(reverse(q), string i) if(as_functions[i][0])
+    res += ({({i,sprintf("%1.2f",
+			 as_functions[i][0]/1000000.0),
+	       sprintf("%d",as_functions[i][1]),
+	       sprintf("%1.6f",
+		       (as_functions[i][0]/1000000.0)/as_functions[i][1])})});
+  return res;
+}
+
+string mktable(array titles, array data)
+{
+  string fmt = "";
+  array head = ({});
+  foreach(titles, mixed w)
+    if(intp(w)) 
+      fmt += "%"+w+"s ";
+    else
+      head += ({ w });
+  data = copy_value(data);
+  for(int i=0;i<sizeof(data);i++) data[i] = sprintf(fmt, @data[i]);
+  return "<pre><b>"+sprintf(fmt, @head)+"</b>\n"+
+    (data*"\n")+"</pre>";
+}
+
+mixed page_1(object id, object mc)
+{
+  string res = ("<font size=+1>Profiling information</font><br>"
+		"All times are in seconds, and real-time. Times incude"
+		" time of child functions. No callgraph is available yet.<br>"
+		"Function glob: <var type=string name=subnode><br>");
+
+    return res+mktable(({"Function",-60,"Time",7,"Calls",6,"Time/Call",10}),
+		       get_prof_info(id->variables->subnode));
+}
+
+int wizard_done()
+{ 
+  return -1;
+}
+#endif
 
 mixed page_0(object id, object mc)
 {
@@ -95,7 +176,7 @@ mixed page_0(object id, object mc)
 #endif
 #if efun(_dump_obj_table)
   first += "<p><br><p>";
-  res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
+  res += ("<table  border=0 cellspacing=0 ceellpadding=2 width=50%>"
 	  "<tr align=left bgcolor=lightblue><th  colspan=2>List of all "
 	  "programs with more than two clones:</th></tr>"
 	  "<tr align=left bgcolor=lightblue>"
@@ -109,10 +190,7 @@ mixed page_0(object id, object mc)
   for(i = 0; i < sizeof(foo); i++) {
     string s = foo[i][0];
     if(!stringp(s))
-    {
-      werror(sprintf("DebugInfo not string: %O\n", s));
       continue;
-    }
     if(search(s,"base_server/mainconfig.pike")!=-1) s="ConfigNode";
     if(search(s,"base_server/configuration.pike")!=-1) s="Bignum";
     if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
@@ -135,49 +213,6 @@ mixed page_0(object id, object mc)
 #if efun(_num_objects)
   first += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
-#if efun(get_profiling_info)
-  first += "<p><br><p> Only functions that have been called more than "
-    "ten times are listed.<p>";
-  res += "<table border=0 cellspacing=0 cellpadding=2 width=100%>\n"
-    "<tr bgcolor=lightblue><th align=left colspan=2>Program</th>"
-    "<th>&nbsp;</th><th align=right>Times cloned</th></tr>\n"
-    "<tr bgcolor=lightblue><th>&nbsp;</th><th align=left>Function</th>"
-    "<th>&nbsp;</th><th align=right>Times called</th></tr>\n";
-  mapping programs = master()->programs;
-  int color = 1;
-  foreach(sort(indices(programs)), string prog) {
-    string tf = "";
-    array(int|mapping(string:array(int))) arr =
-      get_profiling_info(programs[prog]);
-
-    int start_color = color ^ 1;
-
-    foreach(indices(arr[1]), string symbol) {
-      arr[1][symbol] = arr[1][symbol][0];
-    }
-    array(int) num_calls = values(arr[1]);
-    array(string) funs = indices(arr[1]);
-    sort(num_calls, funs);
-    int line = 0;
-    foreach(reverse(funs), string fun) {
-      if(arr[1][fun] > 10)
-      {
-	color ^= !(line % 3);
-	tf += sprintf("<tr bgcolor=%s><td>&nbsp;</td><td>%s()</td>"
-		      "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-		      colors[color], html_encode_string(fun), arr[1][fun]); 
-	line++;
-      }
-    }
-    if(line && strlen(tf))
-      res+=sprintf("<tr bgcolor=%s><td colspan=2><b>%s</b></td>"
-		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
-		   colors[start_color], html_encode_string(prog), arr[0]) + tf;
-  }
-  res += "</table>\n";
-  first += html_border( res, 0, 5 );
-
-#endif /* get_profiling_info */
   return first +"</ul>";
 }
 
