@@ -294,6 +294,7 @@ worldmap binary
 /server/server_core/wizard.pike foreign_ident
 /server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
+/server/tools/cmf.mib foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.cpp foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.h foreign_ident
 /server/tools/ntroxen/startdll/cmdline.cpp foreign_ident
@@ -304,5 +305,4 @@ worldmap binary
 /server/tools/ntroxen/startdll/startdll.cpp foreign_ident
 /server/tools/ntroxen/startdll/startdll.idl foreign_ident
 /server/tools/ntroxen/version.h foreign_ident
-/server/tools/roxenis.mib foreign_ident
 /start foreign_ident

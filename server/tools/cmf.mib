@@ -1,13 +1,13 @@
 --
--- Roxen Internet Software MIB
--- Copyright (C) 2001 Honza Petrous, hop@unibase.cz
+-- ChiliMoon Foundation MIB
+-- Copyright (C) 2002
 --
 -- This mib file defines the common OBJECT IDENTIFIER
--- used by all the RIS products
+-- used by all the CMF products
 --
--- Creator: Honza Petrous (hop@roxen.com)
+-- Creator: Honza Petrous (hop@pike.ida.liu.se)
 --
--- $Id: roxenis.mib,v 1.4 2002/06/14 16:05:05 jhs Exp $
+-- $Id: cmf.mib,v 1.1 2002/11/26 09:33:02 _cvs_hop Exp $
 
 
 ROXENIS-MIB DEFINITIONS ::= 
@@ -23,44 +23,44 @@ BEGIN
 		TRAP-TYPE
 		    FROM RFC-1215;
 
-	roxenis MODULE-IDENTITY
-	    LAST-UPDATED "200108290000Z"
-	    ORGANIZATION "Roxen Internet Software"
+	cmf MODULE-IDENTITY
+	    LAST-UPDATED "200211260000Z"
+	    ORGANIZATION "ChiliMoon Foundation"
 	    CONTACT-INFO
-		 "E-mail: hop@roxen.com"
+		 "E-mail: hop@pike.ida.liu.se"
 	    DESCRIPTION
-	         "The MIB module for RIS private objects."
-	::= { enterprises 8614 }
+	         "The MIB module for CMF private objects."
+	::= { enterprises 15377 }
 
 --
--- All RIS specific objects must branch off of the above roxenis root.    
+-- All CMF specific objects must branch off of the above chilimoon root.    
 -- The following objects are defined.
 --
   
 --
--- Roxen Applications
+-- CMF Applications
 --
-	app OBJECT IDENTIFIER ::= { roxenis 1 }
+	app OBJECT IDENTIFIER ::= { cmf 1 }
 
 --
--- Roxen LDAP OIDs
+-- CMF LDAP OIDs
 --
-	ldapSchema OBJECT IDENTIFIER ::= { roxenis 2 }
+	ldapSchema OBJECT IDENTIFIER ::= { cmf 2 }
 
 	attributes OBJECT IDENTIFIER ::= { ldapSchema 1 }
 
 	objectClasses OBJECT IDENTIFIER ::= { ldapSchema 2 }
 
 --
--- Roxen Applications
+-- CMF Applications
 --
 
 --    
 -- Internet Server		------------------------------
 --    
-	webserver OBJECT IDENTIFIER ::= { app 1 }
+	chilimoon OBJECT IDENTIFIER ::= { app 1 }
 
-	global OBJECT IDENTIFIER ::= { webserver 1 }
+	global OBJECT IDENTIFIER ::= { chilimoon 1 }
 
 	boot     OBJECT-TYPE
 			SYNTAX  INTEGER { restart(1), shutdown(2) }
@@ -84,7 +84,7 @@ BEGIN
 			STATUS  current
 			DESCRIPTION
                             "The virtual server table."
-			::= { webserver 2 }
+			::= { chilimoon 2 }
 
 	vsEntry   OBJECT-TYPE
 			SYNTAX  VsEntry
@@ -176,14 +176,14 @@ BEGIN
 --
 
 --	vsStartTrap TRAP-TYPE
---			ENTERPRISE webserver
+--			ENTERPRISE chilimoon
 --			VARIABLES { vsIndex }
 --			DESCRIPTION
 --			    "This trap is sent whenever a virtual server
 --			     is started."
 --			::= 1
 
-	trapGlobal OBJECT IDENTIFIER ::= { webserver 3 }
+	trapGlobal OBJECT IDENTIFIER ::= { chilimoon 3 }
 
 	serverDownTrap  OBJECT-TYPE
 			SYNTAX  Integer32 (1..2147483647)
@@ -194,7 +194,7 @@ BEGIN
 			     virtual server."
 			::= { trapGlobal 1 }
 
-	trapVs OBJECT IDENTIFIER ::= { webserver 4 }
+	trapVs OBJECT IDENTIFIER ::= { chilimoon 4 }
 
 	vsExternalTrap OBJECT IDENTIFIER ::= { trapVs 1 }
 
@@ -228,29 +228,8 @@ BEGIN
 --    
 -- Pike Interpreter		------------------------------
 --    
-	pike OBJECT IDENTIFIER ::= { app 2 }
-
---
--- Roxen Sitebuilder		------------------------------
---
-	sitebuilder OBJECT IDENTIFIER ::= { app 3 }
-
---
--- Roxen AC			------------------------------
---
-	ac OBJECT IDENTIFIER ::= { app 4 }
-
---
--- Roxen Search			------------------------------
---
-	search OBJECT IDENTIFIER ::= { app 5 }
-
---
--- Roxen Logview		------------------------------
---
-	logview OBJECT IDENTIFIER ::= { app 6 }
-
-
+---	pike OBJECT IDENTIFIER ::= { app 2 }
+---
 
            
 END
