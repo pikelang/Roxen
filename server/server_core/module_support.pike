@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.124 2002/10/23 20:43:10 nilsson Exp $
+// $Id: module_support.pike,v 1.125 2002/11/07 14:13:41 mani Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -144,8 +144,6 @@ class FakeModuleInfo( string sname )
   constant filename = "NOFILE";
   constant type = 0;
   constant multiple_copies = 0;
-  constant locked = 0;
-  constant config_locked = ([]);
   string name, description;
   
   void save()  { }
@@ -154,7 +152,6 @@ class FakeModuleInfo( string sname )
   int rec_find_module( string what, string dir )  { }
   int find_module( string sn )  { }
   int check (void|int force) { }
-  int unlocked(object /*License.Key*/ key) { }
 
   static string _sprintf()
   {
@@ -208,8 +205,6 @@ class ModuleInfo( string sname, string filename )
 {
   int last_checked;
   int type, multiple_copies;
-  int|string locked;
-  mapping(Configuration:int) config_locked = ([]);
 
   mapping|string name;
   mapping|string description;
@@ -261,16 +256,11 @@ class ModuleInfo( string sname, string filename )
 
     array register_module()
     {
-      string locked_desc =
-	(" The module is locked and not part of the license. "
-	 "To enable this module please select a valid license "
-	 "and restart the server.");
       return ({
 	0, // type
 	sprintf("Load of %s (%s) failed", sname, filename),
 	sprintf("The module %s (%s) could not be loaded.",
 		sname, get_name()||"unknown")+
-	(sizeof(config_locked)?locked_desc:"")+
 	get_compile_errors(),0,0
       });
     }
@@ -283,8 +273,8 @@ class ModuleInfo( string sname, string filename )
   
   RoxenModule instance( Configuration conf, void|int silent )
   {
-    // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
-    //        time()-last_checked,type,multiple_copies,name,description,locked);
+    // werror("Instance %O <%O,%O,%O,%O,%O>\n", this_object(),
+    //        time()-last_checked,type,multiple_copies,name,description);
     ErrorContainer ec = ErrorContainer();
     loader.push_compile_error_handler( ec );
     mixed err = catch
@@ -294,15 +284,6 @@ class ModuleInfo( string sname, string filename )
 	  filename[sizeof(filename)-4..]==".jar" )
 	return ((program)"javamodule.pike")(conf, filename);
 #endif
-      // Check if the module is locked. Throw an empty string to not
-      // generate output, this is handled later.
-      object key = conf && conf->getvar("license")->get_key();
-      if(locked && !(key && unlocked(key))) {
-	config_locked[conf] = 1;
-	throw( "" );
-      }
-      else
-	m_delete(config_locked, conf);
       return load( filename, silent )( conf );
     };
     loader.pop_compile_error_handler( );
@@ -339,7 +320,6 @@ class ModuleInfo( string sname, string filename )
 	       "multiple_copies":multiple_copies,
 	       "name":encode_string(name),
 	       "description":encode_string(description),
-	       "locked":locked,
              ]) );
   }
 
@@ -364,8 +344,6 @@ class ModuleInfo( string sname, string filename )
       multiple_copies = !data[4];
     else
       multiple_copies = 1;
-    if( sizeof( data ) > 5)
-      locked = data[5];
     last_checked = file_stat( filename )[ ST_MTIME ];
     save();
   }
@@ -467,7 +445,6 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = data->name;
             description = data->description;
-	    locked = data->locked;
             return 1;
           }
           else
@@ -480,11 +457,6 @@ class ModuleInfo( string sname, string filename )
       return init_module( roxen_path( filename ) );
     else
       return find_module( sname );
-  }
-
-  int unlocked(object /*License.Key*/ key)
-  {
-    return key->is_module_unlocked(stringp(locked)?locked:sname);
   }
 }
 

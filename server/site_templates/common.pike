@@ -5,14 +5,6 @@ constant modules = ({});
 constant silent_modules = ({}); 
 //! Silent modules does not get their initial variables shown.
 
-int unlocked(License.Key license)
-{
-  foreach(modules, string module)
-    if(!license->is_module_unlocked(module))
-      return 0;
-  return 1;
-}
-
 object load_modules(Configuration conf)
 {
 #ifdef THREADS
@@ -149,14 +141,9 @@ mixed parse( RequestID id, mapping|void opt )
 				    conf->modules[ mod ] );
     }
     
-    License.Key key = conf->getvar("license")->get_key();
     foreach( silent_modules, string mod )
     {
       ModuleInfo module = roxen.find_module(mod);
-      if(module->locked && (!key || !module->unlocked(key)) ) {
-	report_debug("Ignoring module "+mod+", disabled in license.\n");
-	continue;
-      }
       conf->enable_module( mod );
     }
 

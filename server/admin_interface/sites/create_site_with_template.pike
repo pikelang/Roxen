@@ -53,15 +53,6 @@ string|mapping parse( RequestID id )
     id->variables->site_template = t-".x";
   }
 
-  License.LicenseVariable license =
-    License.LicenseVariable("../license/", 0,
-			    "License file",
-			    "Use this license file for the new configuration.",
-			    0, 1);
-  license->set_path("license");
-  if(id->variables[license->path()])
-    license->set_from_form(id);
-  
   if( id->variables->site_template &&
       search(id->variables->site_template, "site_templates")!=-1 )
   {
@@ -72,12 +63,7 @@ string|mapping parse( RequestID id )
     DBManager.set_permission( "local", c,  DBManager.WRITE );
     c->error_log[0] = 1;
     id->misc->new_configuration = c;
-    
-    // Set license in the new configuration if it is unset.
-    if(!c->getvar("license")->query()) {
-      c->getvar("license")->set(license->query());
-    }
-    
+
     master()->clear_compilation_failures();
 
     object b;
@@ -141,22 +127,13 @@ string|mapping parse( RequestID id )
         else
           group = q->group;
 	
-	string button;
-	if(q->locked && !(license->get_key() && q->unlocked(license->get_key())))
-	  button = "<gbutton width='400' "
-		   "        icon_src='internal-roxen-padlock' "
-		   "        align_icon='right'"
-		   "        textcolor='#BEC2CB'>"
-		   + Roxen.html_encode_string(name) +
-		   "</gbutton>\n";
-	else
-	  button = "<cset variable='var.url'>"
-		   "<gbutton-url width='400' "
-		   "             icon_src='&usr.next;' "
-		   "             align_icon='right'>"
-		   + Roxen.html_encode_string(name) +
-		   "</gbutton-url></cset>"
-		   "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
+	string button = "<cset variable='var.url'>"
+	  "<gbutton-url width='400' "
+	  "             icon_src='&usr.next;' "
+	  "             align_icon='right'>"
+	  + Roxen.html_encode_string(name) +
+	  "</gbutton-url></cset>"
+	  "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
 	
 	//  Build a sort identifier on the form "999|Group name|template name"
 	//  where 999 is a number which orders the groups. The group name is
@@ -199,37 +176,5 @@ string|mapping parse( RequestID id )
   }
   master()->set_inhibit_compile_errors( 0 );
 
-
-  // License stuff
-  string render_variable(Variable.Variable var, RequestID id)
-  {
-    string pre = var->get_warnings();
-    
-    if( pre )
-      pre = "<font size='+1' color='&usr.warncolor;'><pre>"+
-	    Roxen.html_encode_string( pre )+
-	    "</pre></font>";
-    else
-      pre = "";
-    
-    string name = var->name()+"";
-    return "<tr><td valign='top' width='20%'><b>"+
-      Roxen.html_encode_string(name)+"</b></td>\n"
-      "<td valign='top'>"+pre+var->render_form(id, ([ "autosubmit":1 ]))+"</td>\n"
-      "<td><cset variable='var.url'><gbutton-url>Set</gbutton-url></cset>"
-      "<input border='0' type='image' src='&var.url;' name='set_license' /></td>\n"
-      "</tr>\n"
-      "<tr>\n"
-      "<td colspan='3'>"+var->doc()+"</td>\n"
-      "</tr>\n";
-  };
-  string license_res = "";
-  if(license->check_visibility(id, 0, 0, 0, 0))
-    license_res =
-      "<table border='0'>" +
-      render_variable(license, id) +
-      "</table>"
-      "<hr>\n";
-  
-  return sprintf(base, license_res, res);
+  return sprintf(base, "", res);
 }

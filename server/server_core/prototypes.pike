@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.61 2002/10/30 19:35:43 nilsson Exp $
+// $Id: prototypes.pike,v 1.62 2002/11/07 14:13:41 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -110,9 +110,7 @@ class ModuleInfo
 
   int last_checked;
   int type, multiple_copies;
-  int|string locked;
-  mapping(Configuration:int) config_locked;
-  
+
   string get_name();
   string get_description();
   RoxenModule instance( object conf, void|int silent );

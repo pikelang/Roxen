@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.545 2002/10/28 01:36:50 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.546 2002/11/07 14:13:40 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2791,17 +2791,10 @@ request should be handled by the module.
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
 #ifdef MODULE_DEBUG
-  if (enable_module_batch_msgs) {
-    if(moduleinfo->config_locked[this_object()])
-      report_debug("\bLocked %6.1fms\n", (gethrtime()-start_time)/1000.0);
-    else
+  if (enable_module_batch_msgs)
       report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
-  }
-#else
-  if(moduleinfo->config_locked[this_object()])
-    report_error("   Error: \"%s\" not loaded (license restriction).\n",
-		 moduleinfo->get_name());
 #endif
+
   if( !enabled_modules[modname+"#"+id] )
   {
     enabled_modules[modname+"#"+id] = 1;
@@ -3545,12 +3538,6 @@ also set 'URLs'.</p>");
 	  "wanted, and this list contains the default value of 404.inc, "
 	  "these files will be searched for, in this order:</p><br /> "
 	  "/foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
-
-  defvar("license",
-	 License.
-	 LicenseVariable("../license/", VAR_NO_DEFAULT, "License file",
-			 "The license file for this configuration.",
-			 this_object()));
 
   class NoSuchFileOverride
   {
