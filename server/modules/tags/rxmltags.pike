@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.169 2000/09/05 16:02:03 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.170 2000/09/08 15:15:01 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -126,7 +126,8 @@ mapping(string:object) page_scope=([
   "virtroot":EntityPageVirtroot(),
   "virtfile":EntityPageVirtfile(),
   "query":EntityPageQuery(),
-  "url":EntityPageURL(),
+  "url":EntityPageURL(), //  deprecated; use &page.path; instead
+  "path":EntityPageURL(),
   "last-true":EntityPageLastTrue(),
   "language":EntityPageLanguage(),
   "scope":EntityPageScope(),
@@ -1753,7 +1754,8 @@ constant tagdoc=([
 if the \"Path info support\" module is installed. For details see the
 documentation for that module.</desc>",
 "&page.query;":#"<desc ent>The query part of the page URI.</desc>",
-"&page.url;":#"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
+//  &page.url; is same as &page.path; but deprecated
+"&page.path;":#"<desc ent>The absolute path for this file, from the web server's root or point of view.</desc>",
 "&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
  (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
 "&page.language;":#"<desc ent>What language the contens of this file is written in.
