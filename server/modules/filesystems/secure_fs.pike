@@ -3,6 +3,7 @@
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
+string cvs_version = "$Id: secure_fs.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
@@ -16,10 +17,14 @@ array register_module()
 
 array seclevels = ({ });
 
+string cvs_version = "$Id: secure_fs.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #define  regexp(_) (Regexp(_)->match)
 
+string cvs_version = "$Id: secure_fs.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #define ALLOW 1
+string cvs_version = "$Id: secure_fs.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #define DENY 2
+string cvs_version = "$Id: secure_fs.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #define USER 3
 
 void start()

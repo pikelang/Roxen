@@ -32,22 +32,32 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #include <module.h>
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #include <config.h>
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #if DEBUG_LEVEL > 21
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 # ifndef PROXY_DEBUG
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #  define PROXY_DEBUG
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 # endif
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define VERSION "1.8"
 
 // If this is defined, the session log will be included in a HTML
 // comment on the returned page.
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define SESSION_INFO
 
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define CONNECTION_REFUSED "\
 HTTP/1.0 500 Connection refused by remote host\r\n\
 Content-type: text/html\r\n\
@@ -59,16 +69,24 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://roxen.com/>"+roxen->version()+"</a></font>"
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define INFOSTRING "<font size=-2><a href=http://roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@infovav.se</i></font>"
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef SESSION_INFO
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define ERROR_MESSAGE(XXXX) (_ERROR_MESSAGE(XXXX)+"\n\n<!-- session information:\n\n"+session+"\n\n-->\n")
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #else
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define ERROR_MESSAGE(XXXX) _ERROR_MESSAGE(XXXX)
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define AUTH_REQUIRED "HTTP/1.0 401 Auth Required\r\nWWW-Authenticate: Basic realm=\"ftp server password needed\""
 
 
@@ -76,6 +94,7 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #include "base_server/proxyauth.pike"
 
 program filep = (program)"/precompiled/file";
@@ -86,9 +105,13 @@ program Request = class
   inherit "socket";
   inherit "roxenlib";
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define CONNECTION_TIMEOUT (master->query("connection_timeout"))
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define ACTIVE_CONNECT_TIMEOUT (master->query("data_connection_timeout"))
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define SERVER_INFO (master->query("server_info")=="Yes")
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define MAX_PARSE_DIR 50000
 
   object id,master;
@@ -107,8 +130,10 @@ program Request = class
   string buffer;
   string what_now;
   string *links=({});
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef SESSION_INFO
   string session="";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
   string server_info="";
 
@@ -143,14 +168,18 @@ program Request = class
     }
   }
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef FTP_GATEWAY_DEBUG
   void set_what_now(string s)
   {
     perror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
     what_now=s;
   }
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #else
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #define set_what_now(s) (what_now=(s))
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
   void selfdestruct()
@@ -170,12 +199,16 @@ program Request = class
 
   void write_server(string s)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DEBUG
     write("write "+s+"\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     server->write(s+"\r\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef SESSION_INFO
     session+="-> "+s+"\n";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
   }
 
@@ -498,8 +531,10 @@ program Request = class
       if (server_info!="")
 	res+="\n<hr>\n<font size=-1>Information from ftp server:<pre>"+server_info+"</pre></font>\n";
     res+="<hr>"+INFOSTRING+"</body></html>";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef SESSION_INFO
     res+="\n\n\n<!-- session information\n\n"+session+"\n\n-->\n";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     return res;
   }
@@ -552,8 +587,10 @@ program Request = class
 
   void transfer_completed() /* called from pipe */
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: transfer_completed\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     id->end();
     save_stuff();
@@ -661,8 +698,10 @@ program Request = class
 
   void active_transfer_accept(object port)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     remove_call_out(data_connect_timeout);
     datacon=port->accept();
@@ -755,8 +794,10 @@ program Request = class
 
   void got_passive_connection(object d)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: got_passive_connection\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     if (!d)
     {
@@ -819,8 +860,10 @@ program Request = class
 
   void open_connection()
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DEBUG
     write("open_connection...\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     dontsaveserver=0;
     if (trystat||file[strlen(file)-1]=='/') /* dir, try stat */
@@ -902,8 +945,10 @@ program Request = class
   {
     string *ss;
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: read_server\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
     if (!objectp(id)) 
@@ -918,11 +963,15 @@ program Request = class
     last_read=ss[-1]; /* last element */
     foreach(ss[0..sizeof(ss)-2],s)
     {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef SESSION_INFO
       session+="<- "+s+"\n";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DEBUG
       perror("parse "+s+"\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
       if (strlen(s)<4||s[3]!=' '||
 	  s[0]<'0'||s[0]>'9'||
@@ -981,8 +1030,10 @@ program Request = class
 
   void server_close(mixed dummy_id)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: server_close\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     if (id) 
       id->end(ERROR_MESSAGE("Connection closed by <tt>"+host+"</tt>"));
@@ -994,8 +1045,10 @@ program Request = class
 
   void connection_timeout(object con)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: connected\n\n\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     if (objectp(id)) 
     {
@@ -1009,8 +1062,10 @@ program Request = class
 
   void connected(object con)
   {
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed) perror("I AM DESTRUCTED: connected\n\n\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
     remove_call_out(connection_timeout);
     if (!objectp(id)) 
@@ -1107,8 +1162,10 @@ void start()
   if(!strlen(QUERY(logfile)))
     return;
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef PROXY_DEBUG
   perror("FTP gateway online.\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
   if(QUERY(logfile) == "stdout")
@@ -1264,11 +1321,13 @@ string status()
   foreach( indices(requests), foo )
      if(objectp(foo))
 	res += foo->comment() + "<br>\n";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #if 0
   res += "<h2>Server connections unused: "+sizeof(ftp_connections)+"</h2>";
 
   foreach( indices(ftp_connections), foo )
     res += foo + ":"+sizeof(ftp_connections[foo])+"<br>\n";
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
   res += "<h2>Ports unused: "+sizeof(dataports)+"</h2>";
 
@@ -1291,8 +1350,10 @@ void connected_to_server(object o, string file, object id, int is_remote)
     return;
   }
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef PROXY_DEBUG
   perror("FTP PROXY: Connected.\n");
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
 
   new_request=Request();
@@ -1355,6 +1416,7 @@ mixed|mapping find_file( string f, object id )
      port = 21;
   }
      
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef PROXY_DEBUG
   werror(sprintf("FTP PROXY: Request for %s\n"
 		 "  file:  %s\n"
@@ -1363,6 +1425,7 @@ mixed|mapping find_file( string f, object id )
 		 "  host:  %s\n"
 		 "  port:  %d\n", f, file,
 		 (user||"ANON"), (passw||"N/A"), host, port));
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
      
    
@@ -1397,13 +1460,17 @@ mixed|mapping find_file( string f, object id )
   if(more = is_remote_proxy(host))
     async_connect(more[0], more[1], connected_to_server,  key, id, 1);
   
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #undef RECOMPILE 
 
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #ifdef RECOMPILE
   requests[compile_file("base_server/struct/ftp_gateway_request.pike")
 	  (id, this_object(),host,port,file, user, passw)]=1;
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #else
   requests[Request(id,this_object(),host,port,file, user, passw)]=1;
+string cvs_version = "$Id: ftpgateway.pike,v 1.4 1996/11/27 13:48:09 per Exp $";
 #endif
   return http_pipe_in_progress();
 }	  

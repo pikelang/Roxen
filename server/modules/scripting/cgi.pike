@@ -6,6 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -33,6 +34,7 @@ mapping build_env_vars(string f, object id, string|void path_info)
 
 void nil(){}
 
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #define ipaddr(x,y) (((x)/" ")[y])
 
 int uid_was_zero()
@@ -277,8 +279,10 @@ mixed find_file(string f, object id)
     f = tmp2[1];
   }
   
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #ifdef CGI_DEBUG
   perror("CGI: Starting '"+f+"'...\n");
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #endif
   
   wd = dirname(f);
@@ -372,8 +376,10 @@ mapping handle_file_extension(object o, string e, object id)
   // realfile entry in the id object.
   // This could be useful when the data is not really a file, but instead
   // generated internally, or if it is a socket.
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #ifdef CGI_DEBUG
   perror("CGI: Handling "+e+" by copying to /tmp/....\n");
+string cvs_version = "$Id: cgi.pike,v 1.3 1996/11/27 13:48:13 per Exp $";
 #endif
   
   oldp=path;

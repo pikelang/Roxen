@@ -8,6 +8,7 @@
 // </pike>
  
 inherit "module";
+string cvs_version = "$Id: lpctag.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
 #include <module.h>;
 
 array register_module()
@@ -82,9 +83,11 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   string tmp;
   string res;
   mixed err;
+string cvs_version = "$Id: lpctag.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
 #if efun(set_max_eval_time)
   if(err = catch {
     set_max_eval_time(2);
+string cvs_version = "$Id: lpctag.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
 #endif
     _master->set_inhibit_compile_errors(1);
     if(err=catch {
@@ -110,6 +113,7 @@ string tag_pike(string tag, mapping m, string s, object request_id,
       perror(err[0]-"\n"+" in "+request_id->not_query+"\n");
       res = (o->flush()||"")+"<h1><font color=red size=7><i>"+err[0]+"</i></font></h1>";
     }
+string cvs_version = "$Id: lpctag.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
 #if efun(set_max_eval_time)
     remove_max_eval_time(); // Remove the limit.
   })
@@ -121,6 +125,7 @@ string tag_pike(string tag, mapping m, string s, object request_id,
       res += "<h1>"+err[0]+"</h1>";
     remove_max_eval_time(); // Remove the limit.
   }
+string cvs_version = "$Id: lpctag.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
 #endif
   if(o) destruct(o);
 

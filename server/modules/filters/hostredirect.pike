@@ -5,6 +5,7 @@
 // cheap way (IP number wise) to do virtual hosting. Note that this
 // won't work with all clients.
 
+string cvs_version = "$Id: hostredirect.pike,v 1.3 1996/11/27 13:48:02 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

@@ -4,6 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
+string cvs_version = "$Id: redirect.pike,v 1.3 1996/11/27 13:48:03 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

@@ -2,6 +2,7 @@
 
 // A fast directory module, without support for the fold/unfold stuff
 // in the normal one.
+string cvs_version = "$Id: fastdir.pike,v 1.3 1996/11/27 13:47:58 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -33,7 +34,9 @@ void create()
 /*  Module specific stuff */
 
 
+string cvs_version = "$Id: fastdir.pike,v 1.3 1996/11/27 13:47:58 per Exp $";
 #define TYPE_MP  "    Module location"
+string cvs_version = "$Id: fastdir.pike,v 1.3 1996/11/27 13:47:58 per Exp $";
 #define TYPE_DIR "    Directory"
 
 

@@ -4,6 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
+string cvs_version = "$Id: home_logger.pike,v 1.4 1996/11/27 13:48:05 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

@@ -4,255 +4,450 @@
 // seem that I have forgotten who wrote it.
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #include <config.h>
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://roxen.com/>Roxen</a></font>"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define CONNECTION_REFUSED   QUERY(ConnRefuse)
 
 
 
 /* #define WAIS_DEBUG define this to have lot of debug */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #if DEBUG_LEVEL > 22
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 # ifndef WAIS_DEBUG
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #  define WAIS_DEBUG
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 # endif
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define bitsPerByte	    8
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define HEADER_LEN	    2 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define BINARY_INTEGER_BYTES      4
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define UNUSED	-1
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define HEADER_LENGTH 	25	/* number of bytes needed to write a wais-header (not sizeof(wais_header)) */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define HEADER_VERSION 	"2"
 
 /* message type */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define Z3950		"z"  
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ACK		"a"  
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	NAK		"n"  
 
 /* compression */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define NO_COMPRESSION 		" " 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define UNIX_COMPRESSION 	"u" 
 
 /* encoding */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define NO_ENCODING	" "  
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define HEX_ENCODING	"h"  /* Swartz 4/3 encoding */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define IBM_HEXCODING	"i"  /* same as h but uses characters acceptable for IBM mainframes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define UUENCODE	"u"  
 
 
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DB_DELIMITER 	"\037" 	/* hex 1F occurs between each database name */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DELIMITER_1 	"\037" 	/* separates database name from element name */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DELIMITER_2 	"\036" 	/* hex 1E separates <db,es> groups from one another */
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define QT_BooleanQuery	                "1"		/* standard boolean query */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define QT_RelevanceFeedbackQuery	"3"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define QT_TextRetrievalQuery		QT_BooleanQuery
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define IGNORE	                        "ig"
 
 /* use value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	UV_ISBN                        	"ub"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	CORPORATE_NAME                	"uc"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	ISSN	                        "us"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	PERSONAL_NAME	                "up"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	SUBJECT                        	"uj"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	TITLE	                        "ut"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	GEOGRAPHIC_NAME                	"ug"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	CODEN	                        "ud"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	SUBJECT_SUBDIVISION	        "ue"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	SERIES_TITLE	                "uf"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	MICROFORM_GENERATION	        "uh"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	PLACE_OF_PUBLICATION	        "ui"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	NUC_CODE	                "uk"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	LANGUAGE	                "ul"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	COMBINATION_OF_USE_VALUES	"um"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	SYSTEM_CONTROL_NUMBER	        "un"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DATE	                        "uo"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	LC_CONTROL_NUMBER	        "ur"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	MUSIC_PUBLISHERS_NUMBER        	"uu"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	GOVERNMENT_DOCUMENTS_NUMBER	"uv"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	SUBJECT_CLASSIFICATION	        "uw"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	RECORD_TYPE	                "uy"
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DATA_TYPE                       "wt"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define BYTE                            "wb"
 
 /* relation value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	EQUAL	                "re"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	GREATER_THAN	        "rg"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	GREATER_THAN_OR_EQUAL	"ro"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	LESS_THAN	        "rl"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	LESS_THAN_OR_EQUAL	"rp"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	NOT_EQUAL	        "rn"
 
 /* position value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	FIRST_IN_FIELD	        "pf"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	FIRST_IN_SUBFIELD	"ps"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	FIRST_IN_A_SUBFIELD	"pa"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	FIRST_IN_NOT_A_SUBFIELD	"pt"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	ANY_POSITION_IN_FIELD	"py"
 
 /* structure value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	PHRASE	                "sp"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	WORD	                "sw"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	KEY	                "sk"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	WORD_LIST	        "sl"
 
 /* truncation value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	NO_TRUNCATION	                "tn"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	RIGHT_TRUNCATION	        "tr"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	PROC_NUM_INCLUDED_IN_SEARCH_ARG	"ti"
 
 /* completeness value codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	INCOMPLETE_SUBFIELD	"ci"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	COMPLETE_SUBFIELD	"cs"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	COMPLETEFIELD	        "cf"
 
 /* operator codes */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define AND	"a"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define OR	"o"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define AND_NOT	"n"
 
 /* term types */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define TT_Attribute		1
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	TT_ResultSetID		2
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	TT_Operator		3
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ATTRIBUTE_SIZE          3
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define OPERATOR_SIZE	        2
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define AT_DELIMITER            " "
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	initAPDU			20
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	initResponseAPDU		21
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	searchAPDU			22
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	searchResponseAPDU		23
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	presentAPDU			24
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	presentResponseAPDU		25
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	deteteAPDU			26
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	deleteResponseAPDU		27
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	accessControlAPDU		28
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	accessControlResponseAPDU	29
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	resourceControlAPDU		30
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	resourceControlResponseAPDU	31
 
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_PDUType			1 	
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ReferenceID			2
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ProtocolVersion		3
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Options			4
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_PreferredMessageSize		5
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_MaximumRecordSize		6
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_IDAuthentication		7
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ImplementationID		8
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ImplementationName		9
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ImplementationVersion	10
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_UserInformationField		11
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Result			12
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SmallSetUpperBound		13
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_LargeSetLowerBound		14
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_MediumSetPresentNumber	15
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ReplaceIndicator		16
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultSetName		17
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DatabaseNames		18
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ElementSetNames 		19
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_QueryType			20
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Query			21
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SearchStatus			22
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultCount			23
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_NumberOfRecordsReturned	24
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_NextResultSetPosition	25
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultSetStatus		26
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_PresentStatus		27
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DatabaseDiagnosticRecords	28
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_NumberOfRecordsRequested	29
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultSetStartPosition	30
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultSetID			31
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DeleteOperation		32
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DeleteStatus			33
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_NumberNotDeleted		34
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_BulkStatuses			35
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DeleteMSG			36
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SecurityChallenge		37
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SecurityChallengeResponse	38
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SuspendedFlag		39
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResourceReport		40
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_PartialResultsAvailable	41
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ContinueFlag			42
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ResultSetWanted		43
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_AttributeList	        44
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_Term			        45
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_Operator		        46
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_UserInformationLength	99
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ChunkCode			100
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ChunkIDLength		101
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ChunkMarker			102
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_HighlightMarker		103
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DeHighlightMarker		104
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_NewlineCharacters		105
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SeedWords			106
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DocumentIDChunk		107
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ChunkStartID			108
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_ChunkEndID			109
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_TextList			110
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DateFactor			111
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_BeginDateRange		112
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_EndDateRange			113
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_MaxDocumentsRetrieved	114
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_SeedWordsUsed		115
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DocumentID			116
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_VersionNumber		117
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Score			118
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_BestMatch			119
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DocumentLength		120
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Source			121
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Date				122
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_Headline			123
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_OriginCity			124
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_PresentStartByte		125
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_TextLength			126
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_DocumentText			127
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_StockCodes			128
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_CompanyCodes			129
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_IndustryCodes		130
 
 /* added by harry */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentHeaderGroup		150
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentShortHeaderGroup	151
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentLongHeaderGroup	152
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentTextGroup		153
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentHeadlineGroup 	154
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_DocumentCodeGroup		155
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_Lines			131 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define	DT_TYPE_BLOCK			132
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define DT_TYPE				133
 
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentHeader	"Document Header"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentShortHeader	"Document Short Header"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentLongHeader	"Document Long Header"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentText		"Document Text"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentHeadline	"Document Headline"
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define ES_DocumentCodes	"Document Codes"
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define continueBit	128
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define dataMask	127
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define dataBits	7
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define CompressedInt1Byte	128 		/* 2 ^ 7 */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define CompressedInt2Byte	16384 		/* 2 ^ 14 */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #define CompressedInt3Byte	2097152 	/* 2 ^ 21 */
 
 
@@ -260,7 +455,9 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #include <module.h>
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #include "base_server/proxyauth.pike"
 
 
@@ -288,34 +485,44 @@ string trim_junk(string headline)
   int length;
   int i,j;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("trim_junk1("+debug_print_string(headline)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   headline = replace(headline, ({ "\033(", "\033)"}) , ({"",""}));
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("trim_junk2("+debug_print_string(headline)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   while((i=search(headline,"\033"))!=-1)
     headline=headline[0..i]+headline[i+4..1000000];
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("trim_junk3("+debug_print_string(headline)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   while(strlen(headline)>0 && headline[0]==' ')
     headline=headline[1..1000000];
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("trim_junk4("+debug_print_string(headline)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
 /*  headline=headline/"\n";
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("trim_junk5("+debug_print_string(headline)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 */
 
@@ -542,8 +749,10 @@ string generate_retrieval_apdu(string docid, string doctype, string database)
 
   nbuf+=writeString(query,DT_Query);
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("generate_retrieval_apdu got:\n"+nbuf+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   return nbuf;
 }
@@ -564,8 +773,10 @@ string WWW_from_archie(string file)
   int i,q;
   string res;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("archie id (to become WWW id): "+file+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   for(i=0; i<strlen(file) && file[i]>' '; i++)
@@ -577,8 +788,10 @@ string WWW_from_archie(string file)
   else
     res="file://"+file[0..i];
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("archie id (to become WWW id) result: "+res+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   return res;
@@ -600,22 +813,28 @@ string WAIS_from_WWW (string docname)
   string z,t2;
   int len,type,tmp,i,j;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("WWW id (to become WAIS id): "+debug_print_string(docname)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   z="";
   while(strlen(docname)>0) {
     if(sscanf(docname,"%d=%s;",type,t2)!=2) {
       if(sscanf(docname,"%d=",type)!=1) {
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	perror("cannot parse record"+docname+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	return 0;
       }
       if(strlen(docname[search(docname,"=")+1..10000])>0) {
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	perror("cannot parse record"+docname+" (second choice)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	return 0;
       }
@@ -638,9 +857,11 @@ string WAIS_from_WWW (string docname)
     }
     z+=t2;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     len=strlen(t2);
     perror(sprintf("found record %d, len %d, content %s\n",type,len,t2));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   }
 
@@ -662,16 +883,20 @@ string WWW_from_WAIS(string docid)
   if(!docid)
     return 0;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("WAIS id (to become WWW id): "+debug_print_string(docid)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   out="";
   for(in=0;in<sizeof(docid); ) {
     out+=sprintf("%d",(int)docid[in]);  /* record put type */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror(sprintf("found record type %d\n",(int)docid[in]));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     out+="=";
@@ -683,8 +908,10 @@ string WWW_from_WAIS(string docid)
       l = l + docid[in];
       in+=1;
     }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror(sprintf("found record len %d\n",l));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     out += replace(docid[in..in+l-1], ({ "\000", " ", "%" }), 
@@ -692,8 +919,10 @@ string WWW_from_WAIS(string docid)
     in+=l;
   }
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("translated in "+out+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   return out;
 }
@@ -765,8 +994,10 @@ string display_search_response(mapping response,string database,
   int archie,k;
   mapping info;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS........ Displaying search response\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   out=sprintf("Index %s contains the following %d item%s relevant to '%s'.\n",
@@ -785,8 +1016,10 @@ string display_search_response(mapping response,string database,
   info = response->DatabaseDiagnosticRecords;
 
   if (sizeof(info->Diagnostics)>0) {
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS........ showing diags\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     out+=showDiags(info->Diagnostics);
@@ -797,8 +1030,10 @@ string display_search_response(mapping response,string database,
       mapping head;
       string headline,docid,docname;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS........ showing header "+sprintf("%d (%d)",k,sizeof(info->DocHeaders))+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
       head=info->DocHeaders[k];
@@ -838,8 +1073,10 @@ string display_search_response(mapping response,string database,
 				       ({"%00", "%20", "%25" }));
 	      }
 	    }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	    perror("WAIS........ Types_array `"+types_array+"'\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  } else
 	    types_array+="TEXT";
@@ -1020,8 +1257,10 @@ mapping readSearchResponseInfo(string buf)
       buf = skipCompressedInteger(buf);
       seedWordsUsed = buf[0..val];
       buf=buf[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_SeedWordsUsed: "+seedWordsUsed+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     case DT_DatabaseDiagnosticRecords:
@@ -1045,8 +1284,10 @@ mapping readSearchResponseInfo(string buf)
 	buf = buf[2..1000000];
       }
       diags += ({ ([ "DIAG" : diag, "ADDINFO" : addinfo, "SURROGATE" : surrogate ]) });
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DatabaseDiagnosticRecords: "+diag+" "+surrogate+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     case DT_DocumentHeaderGroup:
@@ -1058,8 +1299,10 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DocumentHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       versionNumber = UNUSED;
       score = UNUSED;
@@ -1083,8 +1326,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
 	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1093,8 +1338,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Score:
@@ -1103,8 +1350,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1113,8 +1362,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1123,8 +1374,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Lines:
@@ -1133,16 +1386,20 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 
 	case DT_TYPE_BLOCK:
 	  int size;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_TYPE_BLOCK: \n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
 	  buf1 = skipCompressedInteger(buf1);
@@ -1156,8 +1413,10 @@ mapping readSearchResponseInfo(string buf)
 	    size -= sizeCompressedInteger(buf1);
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += ({ buf1[0..val-1] });
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	    buf1=buf1[val..1000000];
 	    size -= val;
@@ -1169,8 +1428,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Date:
@@ -1179,8 +1440,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Headline:
@@ -1189,8 +1452,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_OriginCity:
@@ -1199,20 +1464,26 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
 	}
       }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: end DT_DocumentHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       docHeaders += ({ (["versionNumber" : versionNumber,
 			 "score" : score,
@@ -1230,8 +1501,10 @@ mapping readSearchResponseInfo(string buf)
       string docID,buf1;
       int versionNumber,score,bestMatch,docLength,lines;
   
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DocumentShortHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
       versionNumber = UNUSED;
@@ -1256,8 +1529,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1266,8 +1541,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Score:
@@ -1276,8 +1553,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1286,8 +1565,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1296,8 +1577,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Lines:
@@ -1306,20 +1589,26 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default 2 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
 	}
       }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: end DT_DocumentShortHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       shortHeaders += ({ (["versionNumber" : versionNumber,
 			   "score" : score,
@@ -1336,8 +1625,10 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DocumentLongHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       versionNumber = UNUSED;
       score = UNUSED;
@@ -1361,8 +1652,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1371,8 +1664,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Score:
@@ -1381,8 +1676,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Score: "+sprintf("%d",score)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_BestMatch:
@@ -1391,8 +1688,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_BestMatch: "+sprintf("%d",bestMatch)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_DocumentLength:
@@ -1401,8 +1700,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentLength: "+sprintf("%d",docLength)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Lines:
@@ -1411,16 +1712,20 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1 = buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Lines: "+sprintf("%d",lines)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 
 	case DT_TYPE_BLOCK:
 	  int size;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_TYPE_BLOCK: \n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
 	  buf1 = skipCompressedInteger(buf1);
@@ -1432,8 +1737,10 @@ mapping readSearchResponseInfo(string buf)
 	    size -= sizeCompressedInteger(buf1);
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += buf1[0..val];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	    perror("WAIS: got DT_TYPE_BLOCK, type: "+buf1[0..val]+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	    buf1=buf1[val..1000000];
 	    size -= val;
@@ -1445,8 +1752,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Date:
@@ -1455,8 +1764,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Headline:
@@ -1465,8 +1776,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
         case DT_OriginCity:
@@ -1475,8 +1788,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_StockCodes:
@@ -1485,8 +1800,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_CompanyCodes:
@@ -1495,8 +1812,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_IndustryCodes:
@@ -1505,20 +1824,26 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
 	}
       }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: end DT_DocumentLongHeaderGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       longHeaders += ({ (["versionNumber" : versionNumber,
 			  "score" : score,
@@ -1547,8 +1872,10 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..1000000];
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
       perror("WAIS: got DT_DocumentTextGroup ("+debug_print_string(buf1)+")\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
       while (strlen(buf1)>0) {
@@ -1559,8 +1886,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
 	  perror("WAIS: got DT_DocumentID: "+debug_print_string(docID)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1569,8 +1898,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_DocumentText:
@@ -1579,13 +1910,17 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  documentText = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentText: "+documentText+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default 4 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
@@ -1602,8 +1937,10 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DocumentHeadlineGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       versionNumber = UNUSED;
 
@@ -1623,8 +1960,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1633,8 +1972,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Source:
@@ -1643,8 +1984,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Source: "+source+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Date:
@@ -1653,8 +1996,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Date: "+date+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_Headline:
@@ -1663,8 +2008,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_Headline: "+headline+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
         case DT_OriginCity:
@@ -1673,20 +2020,26 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_OriginCity: "+originCity+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
 	}
       }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: end DT_DocumentHeadlineGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       headlines += ({ (["versionNumber" : versionNumber,
 			"docID" : docID,
@@ -1701,8 +2054,10 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_DocumentCodeGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       versionNumber = UNUSED;
 
@@ -1722,8 +2077,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_DocumentID: "+docID+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_VersionNumber:
@@ -1732,8 +2089,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_VersionNumber: "+sprintf("%d",versionNumber)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_StockCodes:
@@ -1742,8 +2101,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_StockCodes: "+stockCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_CompanyCodes:
@@ -1752,8 +2113,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_CompanyCodes: "+companyCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	case DT_IndustryCodes:
@@ -1762,20 +2125,26 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got DT_IndustryCodes: "+industryCodes+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  break;
 	default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
 	  perror("WAIS: got default 3 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 	  return 0;
 	  break;
 	}
       }
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: end DT_DocumentCodesGroup\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       codes += ({ (["versionNumber" : versionNumber,
 		    "docID" : docID,
@@ -1784,8 +2153,10 @@ mapping readSearchResponseInfo(string buf)
 		    "industryCodes" : industryCodes ]) });      
       break;
     default:
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got default 4 (ARRRGGGH)\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     }
@@ -1834,9 +2205,11 @@ mapping readSearchResponseAPDU(string buf)
   nextPos = readBinaryInteger(3,buf);
   buf=buf[3..1000000];
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
 		 result,count,recordsReturned,nextPos));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   resultStatus = presentStatus = UNUSED;
@@ -1852,8 +2225,10 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       resultStatus = readBinaryInteger(val,buf);
       buf=buf[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_ResultSetStatus: "+sprintf("%d",resultStatus)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     case DT_PresentStatus:
@@ -1862,8 +2237,10 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       presentStatus = readBinaryInteger(val,buf);
       buf=buf[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_PresentStatus: "+sprintf("%d",presentStatus)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     case DT_ReferenceID:
@@ -1872,8 +2249,10 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       refID = buf[0..val];
       buf=buf[val..1000000];
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got DT_ReferenceID: "+refID+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       break;
     default:
@@ -1935,9 +2314,11 @@ void done_fetch_data(array in)
     return;
   }
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("WAIS: Got all fetch data ("+
 	 debug_print_string(in[0][HEADER_LENGTH..1000000])+").\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   /* Parse the result which came back into memory. */
@@ -1985,8 +2366,10 @@ void got_fetch_data(array i, string s)
 {
   int q,t;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: Got some fetch data.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   i[0] += s;
 
@@ -1996,8 +2379,10 @@ void got_fetch_data(array i, string s)
     if((q=search(i[0],"0"))==-1)
       return;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Got first 0.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
     
     if(q>0)
@@ -2009,16 +2394,20 @@ void got_fetch_data(array i, string s)
     if(sizeof(i[0])<HEADER_LENGTH)
       return;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     for(t=0;i[0][t]=='0';t++)
       ;
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: message header error.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       destruct(i[3]);
       destruct(i[4]);
@@ -2033,9 +2422,11 @@ void got_fetch_data(array i, string s)
 
     if(sizeof(i[0])>=i[2]+HEADER_LENGTH) {
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror(sprintf("WAIS: got all fetch datas (%d on %d).\n",sizeof(i[0]),
 	i[2]));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       i[1]=3;
       done_fetch_data(i);
@@ -2072,9 +2463,11 @@ void done_search_data(array in)
     return;
   }
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
   perror("WAIS: Got all search data ("+
 	 debug_print_string(in[0][HEADER_LENGTH..1000000])+").\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   /* Parse the result which came back into memory. */
@@ -2092,8 +2485,10 @@ void got_search_data(array i, string s)
 {
   int q,t;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: Got some search data.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   i[0] += s;
 
@@ -2103,8 +2498,10 @@ void got_search_data(array i, string s)
     if((q=search(i[0],"0"))==-1)
       return;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Got first 0.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
     
     if(q>0)
@@ -2116,16 +2513,20 @@ void got_search_data(array i, string s)
     if(sizeof(i[0])<HEADER_LENGTH)
       return;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     for(t=0;i[0][t]=='0';t++)
       ;
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: message header error.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       destruct(i[3]);
       destruct(i[4]);
@@ -2140,8 +2541,10 @@ void got_search_data(array i, string s)
 
     if(strlen(i[0])>=i[2]+HEADER_LENGTH) {
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
       perror("WAIS: got all search datas.\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
       i[1]=3;
       done_search_data(i);
@@ -2158,8 +2561,10 @@ void connected(object ok, string file, object send_to, string key)
   int doclen,i;
   string reqmsg,header;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: Connected\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   if(!send_to)
@@ -2209,10 +2614,12 @@ void connected(object ok, string file, object send_to, string key)
       database=file;
   }
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: request is:\nkey "+key+"\ndatabase "+database+"\ndoctype "+
 	 doctype+"\ndoclength "+sprintf("%d",doclen)+"\ndocname "+docname+
 	 "\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   
 
@@ -2224,8 +2631,10 @@ void connected(object ok, string file, object send_to, string key)
  */
 
   if(key && strlen(key)==0) {		/* I N D E X */
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Index\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     send_to->my_fd->write("HTTP/1.0 200 Yo! Wais data comming soon to a "
@@ -2237,8 +2646,10 @@ void connected(object ok, string file, object send_to, string key)
     destruct(send_to);
   } else if (key) {					/* S E A R C H */
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Search\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     replace(key,({"+"}),({" "}));
@@ -2259,8 +2670,10 @@ void connected(object ok, string file, object send_to, string key)
     header += "0";
     header += reqmsg;
     
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
     perror("about to send message ("+debug_print_string(header)+")\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
     
     /* Write out message. Read back header. */
@@ -2280,10 +2693,12 @@ void connected(object ok, string file, object send_to, string key)
     int bin;
     string docid;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror("WAIS: Fetch... Retrieve document `"+docname+
 	   "'\n............ type `"+doctype+
 	   sprintf("' length %d\n", doclen)+"\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     switch(doctype) {
@@ -2328,12 +2743,16 @@ void connected(object ok, string file, object send_to, string key)
     header += "0";
     header += reqmsg;
     
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG_2
     perror("about to send message ("+debug_print_string(header)+")\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
     
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
     perror(sprintf("requesting document type %s, binary %d)\n",format,bin));
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
     /* Write out message. Read back header. */
@@ -2354,8 +2773,10 @@ mapping find_file(string fi, object id)
   mixed tmp;
   string h, f;
   int p;
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: find_file("+fi+")\n");
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
 
   sscanf(fi, "%[^/]/%s", h, f);
@@ -2366,8 +2787,10 @@ mapping find_file(string fi, object id)
   if(!p)
     p=210;
 
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #ifdef WAIS_DEBUG
   perror("WAIS: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
+string cvs_version = "$Id: wais.pike,v 1.3 1996/11/27 13:48:12 per Exp $";
 #endif
   
   if(tmp = proxy_auth_needed(id))

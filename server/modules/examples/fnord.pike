@@ -1,6 +1,7 @@
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
  
+string cvs_version = "$Id: fnord.pike,v 1.2 1996/11/27 13:47:59 per Exp $";
 #include <module.h>
 inherit "module";
  

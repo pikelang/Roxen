@@ -3,10 +3,12 @@
 // Written by Mattias Wingstedt <wing@infovav.se>, contact him for
 // more info.
 
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #define WATCH(b,a) (perror( sprintf( b + ":%O\n", (a) ) ), (a))
 
 /************** Generic module stuff ***************/
@@ -113,7 +115,9 @@ void create()
 /*  Module specific stuff */
 
 
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #define TYPE_MP  "    Module location"
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #define TYPE_DIR "    Directory"
 
 
@@ -230,7 +234,9 @@ mapping parse_directory( mapping id )
 
 mapping (string:mixed) language_data = ([ ]);
 array (string) language_order = ({ });
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #define LANGUAGE_DATA_NAME 0
+string cvs_version = "$Id: language.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #define LANGUAGE_DATA_NEXT_LANGUAGE 1
 multiset (string) language_list;
 string default_language, flag_dir;

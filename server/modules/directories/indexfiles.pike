@@ -3,6 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
+string cvs_version = "$Id: indexfiles.pike,v 1.3 1996/11/27 13:47:58 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

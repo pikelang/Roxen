@@ -3,6 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -18,6 +19,7 @@ void try_find_user(string|int u)
   array uid;
   switch(QUERY(method))
   {
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(getpwuid) && efun(getpwnam)
   case "getpwent":
     if(intp(u)) uid = getpwuid(u);
@@ -34,6 +36,7 @@ void try_find_user(string|int u)
 	users[uid[0]] = uid;
       }
     }
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
 
   case "file":
@@ -64,6 +67,7 @@ string user_from_uid(int u)
   return uid2user[u]; 
 }
 
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #define ipaddr(x,y) (((x)/" ")[y])
 
 int method_is_not_file()
@@ -83,6 +87,7 @@ void create()
 	 "This file will be used if method is set to file.", 0, 
 	 method_is_not_file);
 
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(getpwent)
   defvar("method", "getpwent", "Password database request method",
 	 TYPE_STRING_LIST, 
@@ -100,6 +105,7 @@ void create()
 	 "regardless of user name and password.",
 
 	 ({ "ypcat", "file", "niscat", "getpwent", "none" }));
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #else
   defvar("method", "file", "Password database request method",
 	 TYPE_STRING_LIST, 
@@ -108,6 +114,7 @@ void create()
 	 ". If none is selected, all auth requests will succeed, "+
 	 "regardless of user name and password.",
 	 ({ "ypcat", "file", "niscat", "none" }));
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
 
   defvar("args", "", "Password command arguments",
@@ -132,6 +139,7 @@ void create()
 
 private static int last_password_read = 0;
 
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(getpwent)
 private static array foo_users;
 private static int foo_pos;
@@ -154,6 +162,7 @@ void slow_update()
   remove_call_out(slow_update);
   call_out(slow_update, 30);
 }
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
 
 void read_data()
@@ -166,12 +175,14 @@ void read_data()
   
   users=([]);
   uid2user=([]);
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(geteuid)
   if(getuid() != geteuid())
   {
     saved_uid = geteuid();
     seteuid(0);
   }
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
   switch(query("method"))
   {
@@ -180,6 +191,7 @@ void read_data()
     break;
 
    case "getpwent":
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(getpwent)
      // This could be a _lot_ faster.
      tmp2 = ({ });
@@ -191,6 +203,7 @@ void read_data()
      endpwent();
      data = tmp2 * "\n";
      break;
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
    case "file":
      fstat = file_stat(query("file"));
@@ -225,12 +238,16 @@ void read_data()
     foreach(data/"\n", data)
       if(sizeof(entry=data/":") > 6)
 	uid2user[(int)(users[entry[0]] = entry)[2]]=entry;
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(getpwent)
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #if efun(geteuid)
   if(saved_uid) seteuid(saved_uid);
+string cvs_version = "$Id: userdb.pike,v 1.4 1996/11/27 13:48:08 per Exp $";
 #endif
 }
 

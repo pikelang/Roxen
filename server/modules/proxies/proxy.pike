@@ -4,15 +4,23 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #include <module.h>
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #include <config.h>
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #if DEBUG_LEVEL > 21
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 # ifndef PROXY_DEBUG
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #  define PROXY_DEBUG
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 # endif
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #endif
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #define CONNECTION_REFUSED "\
 HTTP/1.0 500 Connection refused by remote host\r\n\
 Content-type: text/html\r\n\
@@ -28,6 +36,7 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #include "base_server/proxyauth.pike"
 
 program filep = (program)"/precompiled/file";
@@ -62,8 +71,10 @@ void start()
   if(!strlen(QUERY(logfile)))
     return;
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #ifdef PROXY_DEBUG
   perror("Proxy online.\n");
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #endif
 
   if(QUERY(logfile) == "stdout")
@@ -402,8 +413,10 @@ void connected_to_server(object o, string file, object id, int is_remote,
     return;
   }
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #ifdef PROXY_DEBUG
   perror("PROXY: Connected.\n");
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #endif
 
   new_request=Connection();
@@ -479,8 +492,10 @@ mapping find_file( string f, object id )
   int port;
   mixed tmp;
 
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #ifdef PROXY_DEBUG
   perror("PROXY: Request for "+f+"\n");
+string cvs_version = "$Id: proxy.pike,v 1.6 1996/11/27 13:48:11 per Exp $";
 #endif
   f=id->raw_url[strlen(QUERY(mountpoint))+1 .. 100000];
 

@@ -5,6 +5,7 @@
 // Written by Mattias Wingstedt, <wing@infovav.se>, please refer
 // to him for further info.
 
+string cvs_version = "$Id: indirect_href.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
 #include <module.h>
 
 inherit "module";

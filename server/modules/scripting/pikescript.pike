@@ -10,6 +10,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -27,11 +28,13 @@ void create()
   defvar("exts", ({ "lpc", "ulpc", "µlpc","pike" }), "Extensions", TYPE_STRING_LIST,
 	 "The extensions to parse");
   
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #if efun(set_max_eval_time)
   defvar("evaltime", 4, "Maximum evaluation time", TYPE_INT,
 	 "The maximum time (in seconds) that a script is allowed to run for. "
 	 "This might be changed in the script, but it will stop most mistakes "
 	 "like i=0; while(i<=0) i--;.. Setting this to 0 is not a good idea.");
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #endif
 }
 
@@ -66,16 +69,20 @@ array|mapping call_script(function fun, object got, object file)
     foreach(indices(got->variables), s)
       got->variables[s] = replace(got->variables[s], "\000", " ");
   
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #if efun(set_max_eval_time)
   if(catch {
     set_max_eval_time(query("evaltime"));
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #endif
     err=catch(result=fun(got)); 
 // The eval-time might be exceeded in here..
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #if efun(set_max_eval_time)
     remove_max_eval_time(); // Remove the limit.
   })
     remove_max_eval_time(); // Remove the limit.
+string cvs_version = "$Id: pikescript.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #endif
 
   if(uid)

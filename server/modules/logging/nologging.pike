@@ -2,6 +2,7 @@
 // This module can be used to turn off logging for some files.
 
 
+string cvs_version = "$Id: nologging.pike,v 1.3 1996/11/27 13:48:05 per Exp $";
 #include <module.h>
 inherit "module";
 

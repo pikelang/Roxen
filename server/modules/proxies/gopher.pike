@@ -2,25 +2,34 @@
 
 // Gopher proxy module.
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #include <config.h>
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
 "host\r\nContent-type: text/html\r\n\r\n<title>Roxen: Connection "	\
 "refused </title>\n<h1>Proxy request failed</h1><hr><font "		\
 "size=+2><i>Connection refused by remote host</i></font><hr><font "	\
 "size=-2><a href=http://roxen.com/>Roxen Challenger</a></font>"
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #if DEBUG_LEVEL > 22
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 # ifndef GOPHER_DEBUG
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #  define GOPHER_DEBUG
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 # endif
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
 
 inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #include <module.h>
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #include "base_server/proxyauth.pike"
 
 array register_module()
@@ -91,14 +100,17 @@ void done_dir_data(array in)
 
   if(dirl[0] && dirl[0][0] != '<')
   {
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Done with dir data.\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
     dirl -= ({ ".", "" });
     for(i=0; i < sizeof(dirl); i++)
     {
       array a;
       a=dirl[i][1..100000]/"\t";
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #define URL (a[2]+((int)a[3]==70?"":":"+a[3])+"/"+dirl[i][0..0]+a[1])
       switch(dirl[i][0])
       {
@@ -152,16 +164,21 @@ void done_dir_data(array in)
 	else
 	  dirl[i] = 0;
       }
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #undef URL
     }
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Sending dir data to client.\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
     write_to_client_and_cache(to, map_array(dirl, make_html_line)*"" +"<hr>", 
 			      in[-1]);
   } else {
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Sending cached dir data to client.\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
     write_to_client_and_cache(to, dirl*"\n", 0);
   }
@@ -171,8 +188,10 @@ void done_dir_data(array in)
 
 void got_dir_data(array i, string s)
 {
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Got some dir data.\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
   i[0] += s;
   if(i[0][-1] == '.' && i[0][-2]=='\n')
@@ -189,8 +208,10 @@ void connected(object ok, string file, object send_to, string query,
 {
   string type;
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
   perror("GOPHER: Connected\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
 
   if(!send_to)
@@ -214,15 +235,19 @@ void connected(object ok, string file, object send_to, string query,
     file=file[1..strlen(file)-1];
   }
 
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
   perror("GOPHER: Requesting file\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
 
   switch(type)
   {
    case "1": /* Directory, must be parsed. */
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Is a menu\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
     ok->write(file + "\n");
     ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
@@ -312,8 +337,10 @@ mapping find_file(string fi, object id)
   mixed tmp;
   string h, f, q;
   int p;
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
   perror("GOPHER: find_file()\n");
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
 
   if(tmp = proxy_auth_needed(id))
@@ -323,8 +350,10 @@ mapping find_file(string fi, object id)
   if(!f)  f="";
   sscanf(h, "%s:%d", h, p);
   if(!p)  p=70;
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #ifdef GOPHER_DEBUG
   perror("GOPHER: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
+string cvs_version = "$Id: gopher.pike,v 1.3 1996/11/27 13:48:10 per Exp $";
 #endif
   sscanf(id->raw_url, "%*s?%s", q);
   if(id->pragma["no-cache"] || id->method != "GET")
