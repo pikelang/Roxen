@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.109 1999/03/11 20:16:28 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.110 1999/03/12 22:53:39 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -57,6 +57,7 @@ class imap_mail
   void create(object m, int r, int i)
   {
     mail = m;
+    serial = mail->get_serial();
     is_recent = r;
     index = i;
     flags = get_flags();
@@ -137,7 +138,12 @@ class imap_mail
       return ({  imap_number(index), "FETCH",
 		imap_list( ({ "FLAGS",
 			      imap_list(indices(get_flags())),
+			      /*
+			       * Pine gets confused by UID
+			       */
+#if 0
 			      "UID", imap_number(uid),
+#endif /* 0 */
 		}) ) });
     }
     return 0;
