@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.127 2001/02/10 18:15:25 stewa Exp $
+// $Id: wizard.pike,v 1.128 2001/02/22 10:41:09 stewa Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -440,7 +440,8 @@ string parse_wizard_help(string t, mapping m, string contents, RequestID id,
 
 string make_title()
 {
-  string s = (this_object()->wizard_name||this_object()->name||"No name") -
+  string s = (string)(this_object()->wizard_name || 
+		      this_object()->name || "No name") -
     "<p>";
   sscanf(s, "%*s//%s", s);
   sscanf(s, "%*d:%s", s);
