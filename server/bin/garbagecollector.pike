@@ -1,7 +1,7 @@
 //#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.7 1997/05/28 00:29:13 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.8 1997/06/01 19:06:23 grubba Exp $";
 
 //#define DEBUG
 
@@ -91,8 +91,8 @@ int num_files, max_num_files;
 int garbage_time;
 int removed, removed_files, lastgc;
 int disk_max, disk_used, disk_avail, disk_capacity,
-  disk_i_used, disk_i_avail, disk_i_capacity, disk_time;
-string disk_name;
+  disk_i_max, disk_i_used, disk_i_avail, disk_i_capacity, disk_time;
+string disk_name, disk_type;
 
 #define LOGGER(x) if(gc_log)gc_log->write(x);else perror(x)
 object gc_log;
@@ -101,14 +101,16 @@ string disk_info()
 {
   return
     (disk_name?
-     sprintf("Disk(%s): %1dkb (%s)\n"
-	     "Disk(%s): %1dkb (%1d%%) used, %1dkb avail\n",
-	     ctime(disk_time)-"\n", disk_max, disk_name,
+     sprintf("Disk (%s):\n"
+	     "%s%s\t%1dkb%s\n"
+	     "\t%1dkb (%1d%%) used, %1dkb avail\n",
 	     ctime(disk_time)-"\n",
+	     strlen(disk_name)?"\tfilesystem name: "+disk_name+"\n":"",
+	     strlen(disk_type)?"\tfilesystem type: "+disk_type+"\n":"",
+	     disk_max, disk_i_max>0?" "+disk_i_max+" files":"",
 	     disk_used, disk_capacity, disk_avail):"") + 
     (disk_i_used>0?
-     sprintf("Disk(%s): %1d (%1d%%) files used, %1d files avail\n",
-	     ctime(disk_time)-"\n",
+     sprintf("\t%1d (%1d%%) files used, %1d files available\n",
 	     disk_i_used, disk_i_capacity, disk_i_avail):"");
 }
 
@@ -124,10 +126,12 @@ void current_cache_message()
 		 (float)cache_size*100/max_cache_size
 		 ));
   if(max_num_files>0)
-    LOGGER(sprintf("Cache(%s): %1d files (%1.2f%%)\n",
+    LOGGER(sprintf("Cache(%s):\n"
+		   "\t%1d files (%1.2f%%)\n",
 		   now, num_files, (float)num_files*100/max_num_files));
   else
-    LOGGER(sprintf("Cache(%s): %1d files\n",
+    LOGGER(sprintf("Cache(%s):\n"
+		   "\t %1d files\n",
 		   now, num_files));
 
   if(disk_name)
@@ -135,8 +139,9 @@ void current_cache_message()
 
   if(lastgc>0) {
     string gctime = ctime(lastgc)-"\n";
-    LOGGER(sprintf("Gc(%s): %1.3f MB (%d files) removed in last gc run\n"
-		   "Gc(%s): removed files were last accessed %s\n",
+    LOGGER(sprintf("Gc(%s):\n"
+		   "\t%1.3f MB (%d files) removed in last gc run\n"
+		   "\tremoved files were last accessed %s\n",
 		   gctime, (float)BLOCK_TO_KB(removed)/1024.0, removed_files,
 		   gctime, ctime(garbage_time)-"\n"));
   }
@@ -552,14 +557,15 @@ void gc(int cs)
 
 string statistics()
 {
-  string last_garb;
+  string gc_info;
   
   if(!removed)
     last_garb="";
   else
-    last_garb=sprintf("GC(%s): %2.2f Mb (%d files) removed\n"
-		      "GC: last run was %d minutes ago\n"
-		      "GC: removed files were last accessed %s\n",
+    last_garb=sprintf("GC(%s):\n"
+		      "\t%2.2f Mb (%d files) removed\n"
+		      "\tlast run was %d minutes ago\n"
+		      "\tremoved files were last accessed %s\n",
 		      ctime(lastgc)-"\n",
                       (float)removed/(1048576.0/BLOCK_SIZE),
 		      removed_files,
@@ -568,15 +574,19 @@ string statistics()
 
   rm("statistics");
   write_file("statistics",
-	     sprintf("Cache(%s): %1d files%s, %1.3f MB (%1.2f%%)\n%s\n%s",
-                    ctime(time())-"\n",
-                    num_files,
+	     sprintf("Cache(%s):\n"
+		     "\t%1d files%s\n"
+		     "\t%1.3f MB (%1.2f%%)\n"
+		     "\n"
+		     "%s\n"
+		     "%s",
+                    ctime(time())-"\n", num_files,
                     max_num_files>0?
 		     sprintf(" (%1.2f%%)",
 			     (float)cache_size*100/max_cache_size):"",
                      ((float)BLOCK_TO_KB(cache_size))/(1024.0),
                     (float)cache_size*100/max_cache_size,
-                    last_garb, disk_info()));
+                    gc_info, disk_info()));
 }
 
 private string lf;
@@ -607,60 +617,43 @@ void init_log_file(string lf)
   call_out(init_log_file, 300, lf);
 }
 
-void init_disk_check(int minfree)
+void init_disk_check(string dir, int minfree)
 {
   if(minfree<=0)
     return;
 
+#if efun(filesystem_stat)
   remove_call_out(init_disk_check);
-  
-  string res;
-  string comm = "/usr/ucb/df";
-  string rf = "df_output";
-  
-  if(mixed err = catch {
-    spawn(comm + " . > "+rf+" 2>&1;"+comm+" -i . >> "+rf+" 2>&1");
-    res = read_bytes(rf);
-  } ) {
-    LOGGER("Command ("+comm+") failed:" + err[0]+"\n");
+
+  mapping(string:int|string) st = filesystem_stat(dir);
+  if (!st) {
     LOGGER("Minimum free disk check disabled\n");
     return;
   }
-
-  if(!stringp(res)|| !strlen(res)) {
-    call_out(init_disk_check, 60, minfree);
-    return;
-  }
-
-  int no;
-  if((no = sscanf(res,
-		  "%*s%*[\n]%*s%*[ \t]%d%*[ \t]%d%*[ \t]%d%*[ \t]%d%*[%]%*[ \t]%s%*[\n]" +
-		  "%*s%*[\n]%*s%*[ \t]%d%*[ \t]%d%*[ \t]%d%*[%]%*s",
-		  disk_max, disk_used, disk_avail, disk_capacity, disk_name,
-		  disk_i_used, disk_i_avail, disk_i_capacity)) < 12) {
-    LOGGER("Minimum free disk check disabled\n");
-    return;
-  }
+  
   disk_time = time();
 
-#ifdef DEBUGX
-  if(no < 24)
-    LOGGER("Minimum free inodes check disabled - no no of inode info available\n");
-  LOGGER("init_disk_check - disk_max="+disk_max+
-	 ", disk_used="+disk_used+
-	 ", disk_avail="+disk_avail+
-	 ", disk_capacity="+disk_capacity+
-	 ", disk_name="+disk_name+"\n");
-  LOGGER("init_disk_check - disk_i_used="+disk_i_used+
-	 ", disk_i_avail="+disk_i_avail+
-	 ", disk_i_capacity="+disk_i_capacity+"\n");
-#endif
+  float i = (st->blocksize / 1024)||512;
+  disk_max = st->blocks * i;
+  disk_used = (st->blocks - st->bfree) * i;
+  disk_avail = st->bavail * i;
+  disk_capacity = (disk_max - disk_avail) * 100 / disk_max;
+  disk_name = st->fsname||"";
+  disk_type = st->fstype||"";
 
-  if(((disk_used > 0) && ((100 - disk_capacity) < minfree)) ||
-     ((disk_i_used > 0) && ((100 - disk_i_capacity) < minfree)))
+  disk_i_max = st->files;
+  disk_i_used = st->files - st->ffree;
+  disk_i_avail = st->favail;
+  disk_i_capacity = (disk_i_max - disk_i_avail) * 100 / disk_i_max;
+
+  if(((disk_used > 0) && ((100 - disk_capacity) <= minfree)) ||
+     ((disk_i_used > 0) && ((100 - disk_i_capacity) <= minfree)))
     gc(cache_normal_garb);
+
+  call_out(init_disk_check, 600, dir, minfree);
   
-  call_out(init_disk_check, 600, minfree);
+  statistics();
+#endif
 }
 
 void create(string cdir, string logfiles, int cng, int mcs,
@@ -699,7 +692,7 @@ void create(string cdir, string logfiles, int cng, int mcs,
       call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+3600);
     }
 
-    init_disk_check(minfree);
+    init_disk_check(cdir, minfree);
     
     LOGGER("Garbage collector ("+version+") on-line, waiting for commands.\n");
 
