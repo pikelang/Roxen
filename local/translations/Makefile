@@ -1,13 +1,13 @@
 #
 # Makefile for updating translations for locally installed modules.
 #
-# $Id: Makefile,v 1.1 2005/03/22 19:18:54 grubba Exp $
+# $Id: Makefile,v 1.2 2005/03/23 12:33:21 grubba Exp $
 #
 # 2005-03-22 Henrik Grubbström
 #
 
 # Pike interpreter to use for extraction
-PIKE=../../start --silent-start --program
+PIKE=../../start --silent-start --cd "`pwd`" --program
 
 # Leave empty to update all projects in the configs directory.
 CONFIGFILE=
@@ -19,17 +19,12 @@ all:
 	      while read config; do					\
 	        echo "Updating project $$config...";			\
 	        $(PIKE) -x extract_locale				\
-		  --config="`pwd`/$$config" --wipe --sync || exit $$?;	\
+		  --config="$$config" --wipe --sync || exit $$?;	\
 	      done;							\
-	  ;;								\
-	  /*)								\
-	    echo "Updating project $(CONFIGFILE)...";			\
-	    exec $(PIKE) -x extract_locale				\
-	      --config="$(CONFIGFILE)" --wipe --sync;			\
 	  ;;								\
 	  *)								\
 	    echo "Updating project $(CONFIGFILE)...";			\
 	    exec $(PIKE) -x extract_locale				\
-	      --config="`pwd`/$(CONFIGFILE)" --wipe --sync;		\
+	      --config="$(CONFIGFILE)" --wipe --sync;			\
 	  ;;								\
 	esac
