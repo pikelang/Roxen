@@ -27,6 +27,8 @@ case "$with_pike" in
 esac
 AC_MSG_RESULT($with_pike)
 
+test -d $with_pike/. || mkdir $with_pike
+
 AC_CONFIG_SUBDIRS($with_pike/src)
 
 AC_OUTPUT(Makefile)
