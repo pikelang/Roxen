@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.9 1997/02/19 01:14:11 nisse Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.10 1997/02/19 03:10:06 nisse Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -13,8 +13,14 @@ static string cvs_version = "$Id: cvsfs.pike,v 1.9 1997/02/19 01:14:11 nisse Exp
 inherit "module";
 inherit "roxenlib";
 
+#if efun(_static_modules)
+/* New pike */
 import Stdio;
 import Array;
+#else
+#include <stdio.h>
+#include <array.h>
+#endif
 
 string cvs_module_path = 0; /* Path in CVS repository */
 string cvs_program, rlog_program, rcsdiff_program;
@@ -38,7 +44,7 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
     result = ({ stdout->pipe(), stderr->pipe() });
   else
     {
-      stderr->create("stderr");
+      stderr->open("/dev/null", "w");
       result = stdout->pipe();
     }
   return (spawne(prog, args, (["PATH" : query("path") ]),
@@ -82,9 +88,9 @@ string lookup_cvs_module(string prog, string root, string module)
   if (! (prog && root && module))
     return 0;
   
-  // werror(sprintf("lookup_cvs_module: prog = %O, root = %O, module=%O\n",
+  /* werror(sprintf("lookup_cvs_module: prog = %O, root = %O, module=%O\n",
      prog, root, module));
-
+     */
   f = run_cvs(prog, 0, 0, "-d", root, "checkout", "-p", "CVSROOT/modules");
   if (!f)
     return 0;
@@ -196,6 +202,10 @@ void create()
 	 "defined in the CVS repository, and <tt>subdirectory</tt> "
 	 "is a path to a subdirectory of the module.");
 }
+
+#if !efun(_static_modules)
+string query_location() { return query("location"); }
+#endif
 
 string|void check_variable(string name, string value)
 {
