@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.275 2001/01/29 05:45:32 per Exp $
+// $Id: rxml.pike,v 1.276 2001/01/30 00:36:32 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -16,7 +16,6 @@ inherit "rxmlhelp";
 #define _stat defines[" _stat"]
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
-#define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
 // ----------------------- Error handling -------------------------
@@ -1924,31 +1923,27 @@ class IfIs
   constant name = "if";
 
   constant cache = 0;
+  constant case_sensitive = 0;
   function source;
-  function eval = match_in_map;
 
-  int match_in_string( string value, RequestID id )
+  int eval( string value, RequestID id )
   {
-    string is;
-    if(!this_object()->cache) NOCACHE();
-    sscanf( value, "%s is %s", value, is );
-    if(!is) return strlen(value);
-    value = lower_case( value );
-    is = lower_case( is );
-    return ((is==value)||glob(is,value)||
-            sizeof(filter( is/",", glob, value )));
-  }
-
-  int match_in_map( string value, RequestID id )
-  {
-    if(!this_object()->cache) NOCACHE();
+    if(cache != -1) CACHE(cache);
     array arr=value/" ";
     string|int|float var=source(id, arr[0]);
     if( !var && zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
-    var = lower_case( (var+"") );
-    if(sizeof(arr)==1) return !!var;
-    string is=lower_case(arr[2..]*" ");
+    string is;
+    if(case_sensitive) {
+      var = var+"";
+      if(sizeof(arr)==1) return !!var;
+      is=arr[2..]*" ";
+    }
+    else {
+      var = lower_case( (var+"") );
+      if(sizeof(arr)==1) return !!var;
+      is=lower_case(arr[2..]*" ");
+    }
 
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
@@ -2168,7 +2163,7 @@ class TagIfModule {
   constant plugin_name = "module";
 
   int eval(string u, RequestID id) {
-    if (!u || !sizeof(u)) return 0;
+    if (!sizeof(u)) return 0;
     return sizeof(glob(u+"#*", indices(id->conf->enabled_modules)));
   }
 }
@@ -2197,7 +2192,6 @@ class TagIfAccept {
   inherit IfMatch;
   constant plugin_name = "accept";
   array source(RequestID id) {
-    NOCACHE();
     return id->misc->accept;
   }
 }
@@ -2206,7 +2200,6 @@ class TagIfConfig {
   inherit IfIs;
   constant plugin_name = "config";
   int source(RequestID id, string s) {
-    NOCACHE();
     return id->config[s];
   }
 }
@@ -2215,7 +2208,6 @@ class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
   string source(RequestID id, string s) {
-    NOCACHE();
     return id->cookies[s];
   }
 }
@@ -2224,7 +2216,6 @@ class TagIfClient {
   inherit IfMatch;
   constant plugin_name = "client";
   array source(RequestID id) {
-    NOCACHE();
     return id->client;
   }
 }
@@ -2239,10 +2230,8 @@ class TagIfName {
 class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
-  constant cache = 1;
   string|int|float source(RequestID id, string s) {
     mixed val;
-    NOCACHE();
     if(!id->misc->defines || !(val=id->misc->defines[s])) return 0;
     if(stringp(val) || intp(val) || floatp(val)) return val;
     return 1;
@@ -2253,7 +2242,6 @@ class TagIfDomain {
   inherit IfMatch;
   constant plugin_name = "domain";
   string source(RequestID id) {
-    NOCACHE();
     return id->host;
   }
 }
@@ -2262,7 +2250,6 @@ class TagIfIP {
   inherit IfMatch;
   constant plugin_name = "ip";
   string source(RequestID id) {
-    NOCACHE();
     return id->remoteaddr;
   }
 }
@@ -2278,7 +2265,6 @@ class TagIfLanguage {
   inherit IfMatch;
   constant plugin_name = "language";
   array source(RequestID id) {
-    NOCACHE();
     return id->misc->pref_languages->get_languages();
   }
 }
@@ -2291,11 +2277,16 @@ class TagIfMatch {
   }
 }
 
+class TagIfMaTcH {
+  inherit TagIfMatch;
+  constant plugin_name = "Match";
+  constant case_sensitive = 1;
+}
+
 class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
   int source(RequestID id, string s) {
-    NOCACHE();
     return id->pragma[s];
   }
 }
@@ -2303,7 +2294,7 @@ class TagIfPragma {
 class TagIfPrestate {
   inherit IfIs;
   constant plugin_name = "prestate";
-  constant cache = 1;
+  constant cache = -1;
   int source(RequestID id, string s) {
     return id->prestate[s];
   }
@@ -2313,7 +2304,6 @@ class TagIfReferrer {
   inherit IfMatch;
   constant plugin_name = "referrer";
   array source(RequestID id) {
-    NOCACHE();
     return id->referer;
   }
 }
@@ -2322,7 +2312,6 @@ class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
   int source(RequestID id, string s) {
-    NOCACHE();
     return id->supports[s];
   }
 }
@@ -2338,10 +2327,16 @@ class TagIfVariable {
   }
 }
 
+class TagIfVaRiAbLe {
+  inherit TagIfVariable;
+  constant plugin_name = "Variable";
+  constant case_sensitive = 1;
+}
+
 class TagIfSizeof {
   inherit IfIs;
   constant plugin_name = "sizeof";
-  constant cache = 1;
+  constant cache = -1;
   int source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
     if(!var) {
@@ -2359,7 +2354,6 @@ class TagIfClientvar {
   inherit IfIs;
   constant plugin_name = "clientvar";
   string source(RequestID id, string s) {
-    NOCACHE();
     return id->client_var[s];
   }
 }
