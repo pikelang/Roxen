@@ -63,7 +63,7 @@
 </define>
 
 <define container=tmpl>
-  <title><version> <cf-locale get=administration_interface> &title;</title>
+  <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 
   <define name=font>haru</define>
@@ -71,7 +71,7 @@
   <body hspace=0 vspace=0
         topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
         bottommargin=0 rightmargin=0 margin=0  
-        bgcolor=white text=black>
+        bgcolor=&usr.bgcolor; text=black>
 
     <form method=POST action='<cf-current-url>'>
       <roxen-automatic-charset-variable>
