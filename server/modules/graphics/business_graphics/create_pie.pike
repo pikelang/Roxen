@@ -149,10 +149,15 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     }
   float w=diagram_data["linewidth"];
   //Initiate the piediagram!
+  float FI=(float)(diagram_data["rotate"])*2.0*PI/360.0;
+  float most_down=yc+yr+w;
+  float most_right=xc+xr+w;
+  float most_left=xc-xr-w;
+
   for(int i=0; i<401; i++)
     {
-      arr[2*i]=xc+xr*sin((i*2.0*PI/400.0+0.0001));
-      arr[1+2*i]=yc+yr*sin(0.0001-PI/2+i*2.0*PI/400.0);
+      arr[2*i]=xc+xr*sin((i*2.0*PI/400.0+0.0001)+FI);
+      arr[1+2*i]=yc+yr*sin(0.0001-PI/2+i*2.0*PI/400.0+FI);
       arr2[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0+0.0001));
       arr2[2*i+1]=yc+(w+yr)*sin(0.0001-PI/2+i*2.0*PI/400.0);
     }
@@ -311,15 +316,27 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
       array(float) arr6=arr3+arr2[200..601];
 
-      float plusx=ceil(2-arr2[600]);
-      float plusy=ceil(2-arr2[601]);
+      float plusx=ceil(2-(float)most_left);
+      float plusy=ceil(2-(float)yc);
       for(int i=0; i<sizeof(arr6); )
 	{
 	  arr6[i++]+=plusx;
 	  arr6[i++]+=plusy;
 	}
-      imxsize=(int)(ceil(arr2[200]+4-arr2[600]));
-      imysize=(int)(diagram_data["3Ddepth"]+ceil(arr2[401]+4-arr2[601]));
+      /*
+      arr6=allocate(804);
+      for(int i=0; i<201; i++)
+	{
+	  int j=i+200;
+	  arr6[2*i]=2+(xr+w)+(xr+w)*sin((j*2.0*PI/400.0+0.0001));
+	  arr6[2*i+1]=2+(w+yr)*sin(0.0001-PI/2+j*2.0*PI/400.0);
+
+	  arr6[802-2*i]=arr6[2*i];
+	  arr6[802-2*i+1]=diagram_data["3Ddepth"]+arr6[2*i+1];
+	}
+      */
+      imxsize=(int)(ceil(most_right+4)+floor(-most_left));
+      imysize=(int)(diagram_data["3Ddepth"]+yr+4);
       below=image(imxsize, imysize, 0, 0, 0)->
 	setcolor(255,255,255)->
 	polygone(arr6);
@@ -365,7 +382,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   
   //write the text!
-  int place;
+  int|float place;
   sum=0;
   if (names)
     for(int i=0; i<sizeof(pnumbers); i++)
@@ -373,6 +390,12 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	int t;
 	sum+=pnumbers[i];
 	place=sum-pnumbers[i]/2;
+	if (FI)
+	  {
+	    place=place+FI*400.0/(2.0*PI);
+	    while (place>400)
+	      place-=400;
+	  }
 	piediagram=piediagram->setcolor(255,0, 0);
 
 	
@@ -467,7 +490,8 @@ int main(int argc, string *argv)
 		 "yminvalue":0,
 		 "3Ddepth":30,
 		 "drawtype": "3D",
-		 "tone":0
+		 "tone":0,
+		 "rotate":30
 
   ]);
 
