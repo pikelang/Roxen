@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.43 2001/09/03 18:52:21 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.44 2001/09/21 15:58:16 jhs Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -117,13 +117,13 @@ constant tagdoc=([
 <attr name='var' value='document name'><p>
  Name of the current document (= page). RXML counterpart:
  <ent>page.self</ent>.</p>
- <ex type=vert><!--#echo var=\"document name\" --></ex>
+ <ex><!--#echo var=\"document name\" --></ex>
 </attr>
 
 <attr name='var' value='document uri'><p>
  URI (URL) to the current page. RXML counterpart:
  <ent>page.url</ent>.</p>
- <ex type=vert><!--#echo var=\"document uri\" --></ex>
+ <ex><!--#echo var=\"document uri\" --></ex>
 </attr>
 
 <attr name='var' value='date local'><p>
@@ -178,7 +178,7 @@ constant tagdoc=([
 
 <attr name='var' value='http cookie'><p>
  A list of the set cookies.</p>
- <ex type='box'><!--#echo var=\"http cookie\" --></ex>
+ <ex-box><!--#echo var=\"http cookie\" --></ex-box>
 </attr>
 
 <attr name='var' value='cookie'><p>
@@ -187,7 +187,7 @@ constant tagdoc=([
 
 <attr name='var' value='http accept'><p>
  A list of the http accept formats.</p>
- <ex type='vert'><!--#echo var=\"http accept\" --></ex>
+ <ex><!--#echo var=\"http accept\" --></ex>
 </attr>
 
 <attr name='var' value='http user agent'><p>
@@ -288,7 +288,7 @@ constant tagdoc=([
 <desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
  values.</short> Attributes won't be printed.</p>
- <ex type='box'><pre><!--#printenv --></pre></ex>
+ <ex-box><pre><!--#printenv --></pre></ex-box>
 </desc>",
 
 "!--#set":#"<desc tag='tag'><p><short>

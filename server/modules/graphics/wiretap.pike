@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.30 2001/08/23 23:34:46 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.31 2001/09/21 15:58:11 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -46,7 +46,7 @@ tag.");
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc = ([ "body" :
-#"<desc cont='cont'><p>
+#"<desc type='cont'><p>
 <short>The color wiretap functionality is active in the content.</short></p>
 </desc>
 

@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.14 2001/09/14 13:01:18 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.15 2001/09/21 15:58:15 jhs Exp $";
 
 constant thread_safe=1;
 
@@ -89,7 +89,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.14 $"/" ")[1];
+string revision = ("$Revision: 1.15 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -445,7 +445,7 @@ constant module_doc  = "Adds an extra container tag &lt;email&gt; "
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["email":({ #"
-<desc cont='cont'><p><short></short>
+<desc type='cont'><p><short></short>
 
 The <tag>email</tag> sends MIME compliant mail to a mail server
 using the (E)SMTP protocol. The content is sent as raw text
@@ -495,7 +495,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 
 ([
 
-"header":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
+"header":#"<desc type='both'><p><short hide='hide'>
  Adds additional headers to the mail.
 
  </short>This subtag/container is designed for adding additional
@@ -547,7 +547,7 @@ Roxen Administrator
 </email>
 </ex-box>",
 
-"attachment":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
+"attachment":#"<desc type='both'><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
  designed for adding attachments to the mail.</p>
 

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.45 2001/09/03 23:48:50 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.46 2001/09/21 15:58:14 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -70,11 +70,11 @@ Sets the time of an event to count down to.</p></attr>
                          use the 'month' attribute if you want to see years/months/days
                          instead of years/weeks/days.
 
-<ex type='vert'>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></c></row>
+<ex>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></c></row>
 <row><c><i>display=dogyears</i></c><c>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></c></row>
 <row><c><i>display=boolean</i></c><c>Return true or false (1 or 0), depending on if the time is now or not. The fuzziness of 'now' is decided by the 'prec' option.
 
-<ex type='vert'><b>Is this a Sunday?</b>
+<ex><b>Is this a Sunday?</b>
 <define variable='var.test' preparse=''><countdown day='sunday' display='boolean'/></define>
 <if variable='var.test = 1'>Yes, this is a Sunday.</if>
 <else>No, it isn´t.</else></ex>
@@ -85,11 +85,11 @@ Sets the time of an event to count down to.</p></attr>
 <attr name='type' value='type'><p>As for 'date'. Useful values for type include string, number and ordered.</p></attr>
 <attr name='lang' value='langcodes'><p>The language in which the result should be written if the type is string.</p>
 
-<ex type='vert'>Heute ist es ungefähr <countdown event='christmas' display='months' type='string' lang='de'/> Monate bis Weinachten.</ex>
+<ex>Heute ist es ungefähr <countdown event='christmas' display='months' type='string' lang='de'/> Monate bis Weinachten.</ex>
 </attr>
 
 <attr name='since'><p>Negate the period of time.</p>
-<ex type='vert'>
+<ex>
  I am <countdown iso='1980-06-28' since='' display='years' type='string'/> years old.</ex>
 </attr>
 
@@ -97,7 +97,7 @@ Sets the time of an event to count down to.</p></attr>
 <tag>countdown day='friday' next=''</tag> says 6 on a friday as opposed
 to 0 without the next attribute.</p>
 
-<ex type='vert'>It is <countdown day='monday' next=''/> to monday.</ex>
+<ex>It is <countdown day='monday' next=''/> to monday.</ex>
 
 </attr>
 <attr name='prec' value='year|month|week|day|hour|minute|second'><p>Modifies the precision for 'boolean'- and 'combined'-arguments.</p></attr>"

@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.46 2001/09/03 18:15:05 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.47 2001/09/21 15:58:10 jhs Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -69,33 +69,33 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 </emit></ex-box>
 </attr>",
 
-"emit#cimg":({ #"<desc plugin='plugin'><p><short>
+"emit#cimg":({ #"<desc type='plugin'><p><short>
  Entitybased version of <xref href='../graphics/cimg.tag' />.</short>
  Takes the same attributes as <tag>cimg</tag>.</p>
 </desc>",
 
 ([
-"&_.type;":#"<desc ent='ent'><p>
+"&_.type;":#"<desc type='entity'><p>
  Returns the image's content-type.</p>
 </desc>",
 
-"&_.src;":#"<desc ent='ent'><p>
+"&_.src;":#"<desc type='entity'><p>
  Returns the path to the indata file.</p>
 </desc>",
 
-"&_.file-size;":#"<desc ent='ent'><p>
+"&_.file-size;":#"<desc type='entity'><p>
  Returns the image's file size.</p>
 </desc>",
 
-"&_.xsize;":#"<desc ent='ent'><p>
+"&_.xsize;":#"<desc type='entity'><p>
  Returns the width of the image.</p>
 </desc>",
 
-"&_.ysize;":#"<desc ent='ent'><p>
+"&_.ysize;":#"<desc type='entity'><p>
  Returns the height of the image.</p>
 </desc>",
 
-"&_.data;":#"<desc ent='ent'><p>
+"&_.data;":#"<desc type='entity'><p>
  Returns the imagedata given through other sources, like databases
  through entities.</p>
 </desc>"

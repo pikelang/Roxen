@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.12 2001/09/03 18:55:11 nilsson Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.13 2001/09/21 15:58:18 jhs Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -53,7 +53,7 @@ Divides this requests' bandwidth by 'float'.</p>
 Sets this request's bandwidth to 'value'.</p>
 </attr>
 
-<attr name='final' required><p>
+<attr name='final' required='required'><p>
 No subsequent modifications will be done to this request's bandwidth
 after the current one.</p>
 </attr>",

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.16 2001/09/03 18:52:17 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.17 2001/09/21 15:58:13 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -228,7 +228,7 @@ class TagEmitKnownLangs
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "dice":#"<desc cont='cont'><p><short>
+  "dice":#"<desc type='cont'><p><short>
  Simulates a D&amp;D style dice algorithm.</short></p></desc>
 
 <attr name='type' value='string' default='D6'><p>
@@ -239,7 +239,7 @@ constant tagdoc=([
  The character 'T' may be used instead of 'D'.</p>
 </attr>",
 
-  "insert#href":#"<desc plugin='plugin'><p><short>
+  "insert#href":#"<desc type='plugin'><p><short>
  Inserts the contents at that URL.</short> This function has to be
  enabled in the <module>Additional RXML tags</module> module in the
  Roxen WebServer configuration interface. The page download will block
@@ -251,7 +251,7 @@ constant tagdoc=([
  The URL to the page that should be inserted.</p>
 </attr>",
 
-"sscanf":#"<desc cont='cont'><p><short>
+"sscanf":#"<desc type='cont'><p><short>
  Extract parts of a string and put them in other variables.</short> Refer to
  the sscanf function in the Pike reference manual for a complete
  description.</p>
@@ -259,7 +259,7 @@ constant tagdoc=([
 
 <attr name='variables' value='list' required='required'><p>
  A comma separated list with the name of the variables that should be set.</p>
-<ex type='vert'>
+<ex>
 <sscanf variables='form.year,var.month,var.day'
 format='%4d%2d%2d'>19771003</sscanf>
 &form.year;-&var.month;-&var.day;
@@ -268,7 +268,7 @@ format='%4d%2d%2d'>19771003</sscanf>
 
 <attr name='scope' value='name' required='required'><p>
  The name of the fallback scope to be used when no scope is given.</p>
-<ex type='vert'>
+<ex>
 <sscanf variables='year,month,day' scope='var'
  format='%4d%2d%2d'>19801228</sscanf>
 &var.year;-&var.month;-&var.day;<br />
@@ -283,7 +283,7 @@ format='%4d%2d%2d'>19771003</sscanf>
  available in the given variable.</p>
 </attr>",
 
-  "sprintf":#"<desc cont='cont'><p><short>
+  "sprintf":#"<desc type='cont'><p><short>
  Prints out variables with the formating functions availble in the
  Pike function sprintf.</short> Refer to the Pike reference manual for
  a complete description.</p></desc>
@@ -300,7 +300,7 @@ format='%4d%2d%2d'>19771003</sscanf>
 </attr>",
 
 
-"emit#known-langs":({ #"<desc plugin='plugin'><p><short>
+"emit#known-langs":({ #"<desc type='plugin'><p><short>
  Outputs all languages partially supported by roxen for writing
  numbers, weekdays et c.</short>
  Outputs all languages partially supported by roxen for writing
@@ -308,19 +308,19 @@ format='%4d%2d%2d'>19771003</sscanf>
  </p>
 </desc>
 
- <ex type='vert'><emit source='known-langs' sort='englishname'>
+ <ex><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
 </emit></ex>",
 			([
-			  "&_.id;":#"<desc ent='ent'>
+			  "&_.id;":#"<desc type='entity'>
  <p>Prints the three-character ISO 639-2 id of the language, for
  example \"eng\" for english and \"deu\" for german.</p>
 </desc>",
-			  "&_.name;":#"<desc ent='ent'>
+			  "&_.name;":#"<desc type='entity'>
  <p>The name of the language in the language itself, for example
  \"français\" for french.</p>
 </desc>",
-			  "&_.englishname;":#"<desc ent='ent'>
+			  "&_.englishname;":#"<desc type='entity'>
  <p>The name of the language in English.</p>
 </desc>",
 			]) }),

@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.40 2001/03/08 14:35:43 per Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.41 2001/09/21 15:58:10 jhs Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Counter";
 constant thread_safe = 1;
@@ -40,8 +40,8 @@ mapping tagdocumentation() {
   string args=" This tag relays the following attributes to gtext; "+String.implode_nicely(g_args)+
     ", and the following to accessed; "+String.implode_nicely(a_args)+". Refer to these tags documentation "
     "for more information.";
-  return ([ "counter":"<desc tag>"+module_doc+args+"</desc>",
-	    "counter":"<desc tag>"+replace(module_doc, "gtext", "gtext-url")+args+"</desc>"
+  return ([ "counter":"<desc type='tag'>"+module_doc+args+"</desc>",
+	    "counter":"<desc type='tag'>"+replace(module_doc, "gtext", "gtext-url")+args+"</desc>"
   ]);
 }
 

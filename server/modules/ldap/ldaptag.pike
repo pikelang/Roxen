@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.16 2001/09/03 18:17:42 nilsson Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.17 2001/09/21 15:58:11 jhs Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -73,7 +73,7 @@ constant tagdoc=([
  useful if the operation is to be built dynamically.</p>
 </attr>",
 
-"emit#ldap":#"<desc plugin='plugin'><p><short>
+"emit#ldap":#"<desc type='plugin'><p><short>
  Use this source to search LDAP directory for information.</short> The
  result will be available in variables named as the LDAP entries
  attribute.</p>

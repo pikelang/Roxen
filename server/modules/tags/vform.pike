@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.28 2001/09/03 18:52:21 nilsson Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.29 2001/09/21 15:58:17 jhs Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -467,11 +467,11 @@ class TagVForm {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"vform":({ #"<desc cont='cont'><p><short>
+"vform":({ #"<desc type='cont'><p><short>
  Creates a self verifying form.</short> You can use all standard
  HTML-input widgets in this container as well.</p>
 
-<ex type='box'>
+<ex-box>
 <vform>
   <vinput name='mail' type='email'>&_.warning;</vinput>
   <input type='hidden' name='user' value='&form.userid;' />
@@ -479,7 +479,7 @@ constant tagdoc=([
 </vform>
 <then><redirect to='other_page.html' /></then>
 <else>No, this form is still not valid</else>
-</ex>
+</ex-box>
 </desc>
 
 <attr name='hide-if-verified'>
@@ -511,18 +511,18 @@ constant tagdoc=([
 // It's a tagdoc bug that these, locally defined if-plugins does not show up
 // in the online manual.
 
-"if#vform-failed":#"<desc plugin='plugin'><p>
+"if#vform-failed":#"<desc type='plugin'><p>
  If used with empty argument this will be true if the complete form is
  failed, otherwise only if the named field failed.
 </p></desc>",
 
-"if#vform-verified":#"<desc plugin='plugin'><p>
+"if#vform-verified":#"<desc type='plugin'><p>
  If used with empty arguemnt this will be true if the complete form so
  far is verified, otherwise only if the named field was successfully
  verified.
 </p></desc>",
 
-"vinput":({ #"<desc cont='cont'><p><short>
+"vinput":({ #"<desc type='cont'><p><short>
  Creates a self verifying input widget.</short>
 </p></desc>
 
@@ -611,15 +611,14 @@ constant tagdoc=([
  <tag>verified</tag> for what should be outputted in the event of
  successful verification tag <tag>failed</tag> for every other event.</p>
 
-<ex type='box'>
-<table>
-<tr><td>upper</td><vinput name='a' case='upper' mode='complex'>
-<verified><td bgcolor=green></verified>
-<failed><td bgcolor=red></failed>&_.input:none;</td>
+<ex-box><table>
+<tr><td>upper</td>
+<vinput name='a' case='upper' mode='complex'>
+<verified><td bgcolor='green'>&_.input:none;</td></verified>
+<failed><td bgcolor='red'>&_.input:none;</td></failed>
 </vinput></tr>
 <tr><td><input type='submit' /></td></tr>
-</table>
-</ex>
+</table></ex-box>
 </attr>
 
 <attr name='min' value='number'><p>
@@ -637,26 +636,26 @@ constant tagdoc=([
  something.</p>
 </attr>",
 	    ([
-"&_.input;":#"<desc ent='ent'><p>
+"&_.input;":#"<desc type='entity'><p>
  The input tag, in complex mode.
 </p></desc>",
 
-"&_.warning;":#"<desc ent='ent'><p>
+"&_.warning;":#"<desc type='entity'><p>
  May contain a explaination of why the test failed.
 </p></desc>",
 
-"verified":#"<desc cont='cont'><p>
+"verified":#"<desc type='cont'><p>
  The content will only be shown if the variable was verfied, in
  complex mode.
 </p></desc>",
 
-"failed":#"<desc cont='cont'><p>
+"failed":#"<desc type='cont'><p>
  The content will only be shown if the variable failed to verify, in
  complex mode.
 </p></desc>"
 
 //      Should this subtag exist?
-//	"vselect":"<desc cont>Mail stewa@roxen.com for a description</desc>",
+//	"vselect":"<desc type='cont'>Mail stewa@roxen.com for a description</desc>",
 
 
 	    ])

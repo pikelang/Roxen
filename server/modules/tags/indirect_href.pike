@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.31 2001/09/03 18:52:19 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.32 2001/09/21 15:58:15 jhs Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -87,7 +87,7 @@ class TagAI {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "ai":#"<desc cont='cont'><p><short>
+  "ai":#"<desc type='cont'><p><short>
  Makes it possible to use a database of links.</short> Each link is referred
  to by a symbolic name instead of the URL.</p>
 

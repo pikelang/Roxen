@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.22 2001/09/20 11:30:19 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.23 2001/09/21 15:58:15 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -183,7 +183,7 @@ class TagWashHtml
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"wash-html":#"<desc cont='cont'><p><short hide='hide'>
+"wash-html":#"<desc type='cont'><p><short hide='hide'>
  Turns a text into HTML.</short>This tag is mostly useful for turning
  user freetext input from a form into HTML intelligently, by turning
  sections of the text separated by more than one newline into
@@ -201,7 +201,7 @@ constant tagdoc=([
   Some text, <i>italic</i>, <b>bold</b>,
   <i><b>bold italic</b></i>.
 
-  <hr>A little image:<img src='/internal-roxen-next'>.
+  <hr />A little image:<img src='/internal-roxen-next' />.
 </wash-html></ex>
 </attr>
 

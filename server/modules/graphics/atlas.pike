@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.9 2001/09/03 17:11:04 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.10 2001/09/21 15:58:09 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -204,7 +204,7 @@ Image generate_image(mapping state, RequestID id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"emit#atlas": ({ #"<desc plugin='plugin'><p><short>
+"emit#atlas": ({ #"<desc type='plugin'><p><short>
  Lists regions and countries defined in the atlas tag map.</short></p>
 </desc>
 
@@ -220,13 +220,13 @@ constant tagdoc=([
 </attr>",
 
 ([
-  "&_.name;":#"<desc ent='ent'><p>
+  "&_.name;":#"<desc type='entity'><p>
    The name of the region/country</p>
   </desc>"
 ])
 
   }),
-"atlas":({ #"<desc cont='cont'><p><short>
+"atlas":({ #"<desc type='cont'><p><short>
 
  Draws a map.</short> The map shows either the world, regions (Africa, Europe,
  etc) or countries. It's a known bug that the map is not entierly up to date.</p>

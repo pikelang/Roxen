@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.142 2001/09/03 18:15:05 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.143 2001/09/21 15:58:09 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -820,7 +820,7 @@ mixed draw_callback(mapping args, object id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"diagram":({ #"<desc cont='cont'><p><short>
+"diagram":({ #"<desc type='cont'><p><short>
  The <tag>diagram</tag> tag is used to draw pie, bar, or line charts
  as well as graphs.</short> It is quite complex with six internal
  tags.</p>
@@ -954,7 +954,7 @@ constant tagdoc=([
 	     ([
 
 
-"data":#"<desc cont='cont'><p><short>
+"data":#"<desc type='cont'><p><short>
  This tag contains the data the diagram is to visualize </short> It is
  required that the data is presented to the tag in a tabular or
  newline separated form.</p>
@@ -989,7 +989,7 @@ constant tagdoc=([
 
 //-----------------------------------------------------------------------
 
-	       "colors":#"<desc cont='cont'><p><short>
+	       "colors":#"<desc type='cont'><p><short>
  This tag sets the colors for different pie slices, bars or
  lines.</short> The colors are presented to the tag in a tab separated
  list.</p>
@@ -1001,7 +1001,7 @@ constant tagdoc=([
 
 //------------------------------------------------------------------------
 
-	       "legend":#"<desc cont='cont'><p><short>
+	       "legend":#"<desc type='cont'><p><short>
  A separate legend with description of the different pie slices, bars
  or lines.</short>The titles are presented to the tag in a tab
  separated list.</p>
@@ -1046,7 +1046,7 @@ constant tagdoc=([
 
 //------------------------------------------------------------------------
 
-	       "xnames":#"<desc cont='cont'><p><short>
+	       "xnames":#"<desc type='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
@@ -1064,7 +1064,7 @@ constant tagdoc=([
 
 //-------------------------------------------------------------------------
 
-"ynames":#"<desc cont='cont'><p><short>
+"ynames":#"<desc type='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
@@ -1073,7 +1073,7 @@ constant tagdoc=([
 
 <p>Some examples:</p>
 
- <ex type='vert'>
+ <ex>
   <diagram type='pie' width='200' height='200'  name='Population'
   tonedbox='lightblue,lightblue,white,white'>
     <data separator=','>5305048,5137269,4399993,8865051</data>
@@ -1081,7 +1081,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='bar' width='200' height='250' name='Population'
  horgrid='' tonedbox='lightblue,lightblue,white,white'>
    <data xnamesvert='' xnames='' separator=','>
@@ -1091,7 +1091,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='bar' width='200' height='250'
  name='Age structure' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1108,7 +1108,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='sumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1127,7 +1127,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='normsumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1145,7 +1145,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='line' width='200' height='250'
  name='Exchange Rates' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>

@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.15 2001/09/03 18:05:11 nilsson Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.16 2001/09/21 15:58:08 jhs Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -98,7 +98,7 @@ LocaleString module_doc  =
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["fnord":#"<desc cont>The fnord container tag hides its "
+constant tagdoc=(["fnord":#"<desc type='cont'>The fnord container tag hides its "
   "contents for the user, unless the fnord prestate is used.</desc>"
   "<attr name=alt value=string>An alternate text that should be written "
   "in place of the hidden text.</attr>"]);

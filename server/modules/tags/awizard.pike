@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.23 2001/09/03 18:52:17 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.24 2001/09/21 15:58:14 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -538,88 +538,88 @@ mixed container_awizard(string tagname, mapping arguments,
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"awizard":({#"<desc tag>
+"awizard":({#"<desc type='tag'>
 
 </desc>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
 
 </attr>",
 
-(["page":({#"<desc tag>
+(["page":({#"<desc type='tag'>
  Creates a new page in the wizard.
 </desc>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  A name for the page.
 </attr>",
 
-(["verify":#"<desc cont>
+(["verify":#"<desc type='cont'>
  RXML code to be executed when leaving the page.
 </desc>",
 
-"button":#"<desc tag>
+"button":#"<desc type='tag'>
  Creates a button.
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
  Send the user to this page when the button is pressed.
 </attr>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
  Put a name on the button.
 </attr>
 
-<attr name=image value=path>
+<attr name='image' value='path'>
  Put an image on the button.
 </attr>",
 
-"ebutton":#"<desc cont>
+"ebutton":#"<desc type='cont'>
  A more advanved button. When pressed the content of this container
  will be parsed before the user are allowed to leave the page.
 </desc>
 
-<attr name=href value=URL>
+<attr name='href' value='URL'>
  Send the user to this URL.
 </attr>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
  Put a name on the button.
 </attr>
 
-<attr name=image value=path>
+<attr name='image' value='path'>
  Put an image on the button.
 </attr>",
 
-"come-from-page":#"<desc cont>
+"come-from-page":#"<desc type='cont'>
 
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
 
 </attr>",
 
-"goto":#"<desc tag>
+"goto":#"<desc type='tag'>
 
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
 
 </attr>
 
-<attr name=href value=URL>
+<attr name='href' value='URL'>
 
 </attr>",
 
-"warn":#"<desc cont>
+"warn":#"<desc type='cont'>
 
 </desc>",
 
-"notice":#"<desc cont>
+"notice":#"<desc type='cont'>
 
 </desc>",
 
-"error":#"<desc cont>
+"error":#"<desc type='cont'>
 
 </desc>",])
 	 })])

@@ -229,7 +229,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-"emit#dir":({ #"<desc plugin='plugin'><p><short>
+"emit#dir":({ #"<desc type='plugin'><p><short>
  This plugin is used to generate directory listings.</short> The
  directory module must be added to use these entities. This plugin
  is only available in the directory template.
@@ -287,103 +287,103 @@ constant tagdoc=([
 </attr>",
 
 ([
-"&_.atime;":#"<desc ent='ent'><p>
+"&_.atime;":#"<desc type='entity'><p>
   Returns the date when the file was last accessed.
 </p></desc>",
 
-"&_.atime-iso;":#"<desc ent='ent'><p>
+"&_.atime-iso;":#"<desc type='entity'><p>
  Returns the date when the file was last accessed. Uses isotime
  (%Y-%m-%d).
 </p></desc>",
 
-"&_.atime-unix;":#"<desc ent='ent'><p>
+"&_.atime-unix;":#"<desc type='entity'><p>
  Returns the date when the file was last accessed. Uses unixtime.
 </p></desc>",
 
-"&_.dirname;":#"<desc ent='ent'><p>
+"&_.dirname;":#"<desc type='entity'><p>
  Returns the directoryname.
 </p></desc>",
 
-"&_.filename;":#"<desc ent='ent'><p>
+"&_.filename;":#"<desc type='entity'><p>
  Returns the filename.
 </p></desc>",
 
-"&_.type-img;":#"<desc ent='ent'><p>
+"&_.type-img;":#"<desc type='entity'><p>
  Returns the internal Roxen name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
 </p></desc>",
 
-"&_.mode;":#"<desc ent='ent'><p>
+"&_.mode;":#"<desc type='entity'><p>
  Returns file permission rights represented binary, e.g. \"r-xr-xr-x\".
 </p></desc>",
 
-"&_.mode-int;":#"<desc ent='ent'><p>
+"&_.mode-int;":#"<desc type='entity'><p>
  Returns file permission rights represented by integers. When encoded to
  binary this represents what is shown when using the Unix command \"ls
  -l\" or as shown using <ent>_.mode</ent>, e.g. \"16749\".
 </p></desc>",
 
-"&_.mtime;":#"<desc ent='ent'><p>
+"&_.mtime;":#"<desc type='entity'><p>
  Returns the date when the file was last modified.
 </p></desc>",
 
-"&_.mtime-iso;":#"<desc ent='ent'><p>
+"&_.mtime-iso;":#"<desc type='entity'><p>
  Returns the date when the file was last modified. Uses isotime (%Y-%m-%d).
 </p></desc>",
 
-"&_.mtime-unix;":#"<desc ent='ent'><p>
+"&_.mtime-unix;":#"<desc type='entity'><p>
  Returns the date when the file was last modified. Uses unixtime.
 </p></desc>",
 
-"&_.name;":#"<desc ent='ent'><p>
+"&_.name;":#"<desc type='entity'><p>
  Returns the name of the file or directory.
 </p></desc>",
 
-"&_.path;":#"<desc ent='ent'><p>
+"&_.path;":#"<desc type='entity'><p>
  Returns the path to the file or directory.
 </p></desc>",
 
-"&_.real-dirname;":#"<desc ent='ent'><p>
+"&_.real-dirname;":#"<desc type='entity'><p>
  Returns the directory of the real file in the filesystem.
 </p></desc>",
 
-"&_.real-filename;":#"<desc ent='ent'><p>
+"&_.real-filename;":#"<desc type='entity'><p>
  Returns the path to the real file in the filesystem.
 </p></desc>",
 
-"&_.size;":#"<desc ent='ent'><p>
+"&_.size;":#"<desc type='entity'><p>
  Returns a file's size in kb(kilobytes).
 </p></desc>",
 
-"&_.filesize;":#"<desc ent='ent'><p>
+"&_.filesize;":#"<desc type='entity'><p>
  Returns a file's size in bytes. Directories get the size \"-2\".
 </p></desc>",
 
-"&_.type;":#"<desc ent='ent'><p>
+"&_.type;":#"<desc type='entity'><p>
  Returns the file's content-type.
 </p></desc>",
 
-"&_.thumbnail;":#"<desc ent='ent'><p>
+"&_.thumbnail;":#"<desc type='entity'><p>
  Returns the image associated with the file's content-type or
  directory. Only available when <att>option=\"thumbnail\"</att> is
  used.
 </p></desc>",
 
-"&_.vfs;":#"<desc ent='ent'><p>
+"&_.vfs;":#"<desc type='entity'><p>
  Returns the name of the virtual filesystem that keeps the file.
 </p></desc>",
 
-"&_.vfs-root;":#"<desc ent='ent'><p>
+"&_.vfs-root;":#"<desc type='entity'><p>
  Returns the root directory of the virtual filesystem that keeps the file.
 </p></desc>",
 
-"&_.x-size;":#"<desc ent='ent'><p>
+"&_.x-size;":#"<desc type='entity'><p>
  Returns the width of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
 </p></desc>",
 
-"&_.y-size;":#"<desc ent='ent'><p>
+"&_.y-size;":#"<desc type='entity'><p>
  Returns the height of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
 </p></desc>",

@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.47 2001/09/03 23:48:33 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.48 2001/09/21 15:58:13 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -53,7 +53,7 @@ void create(Configuration c) {
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-  "&page.accessed;":#"<desc ent='ent'><p>
+  "&page.accessed;":#"<desc type='entity'><p>
  Generates an access counter that shows how many times the page has
  been accessed. Needs the accessed module.
 </p></desc>",

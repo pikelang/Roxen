@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.14 2001/09/03 18:31:04 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.15 2001/09/21 15:58:12 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -177,7 +177,7 @@ class TagUnavailableLanguage {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "language":"<desc tag>Show the pages language.</desc>",
-  "unavailable-language":"<desc cont>Show what language the user wanted, if this isn't it.</desc>"
+  "language":"<desc type='tag'>Show the pages language.</desc>",
+  "unavailable-language":"<desc type='cont'>Show what language the user wanted, if this isn't it.</desc>"
 ]);
 #endif

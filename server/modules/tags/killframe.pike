@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.34 2001/09/03 18:52:19 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.35 2001/09/21 15:58:16 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -42,7 +42,7 @@ constant tagdoc=(["killframe":#"<desc tag='tag'><p><short>
  index files, like <ext>index.html</ext>, from the end of the
  URL.</p></desc>
 
-<attr name=killindex><p>
+<attr name='killindex'><p>
  Removes trailing index.html from the URL.</p>
 </attr>",
 		]);

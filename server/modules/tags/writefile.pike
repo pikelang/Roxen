@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.4 2001/08/24 22:35:24 nilsson Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.5 2001/09/21 15:58:17 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -162,7 +162,7 @@ class TagWritefile {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"writefile":#"<desc cont='cont'><p><short>
+"writefile":#"<desc type='cont'><p><short>
  Writes uploaded or direct content to a file.</short>
  You can either use an upload form or write the container content
  directly into a file.  The ownership of any newly created file is determined
@@ -173,23 +173,23 @@ constant tagdoc=([
   on success or failure of the requested operation.</p>
 </desc>
 
-<attr name=filename value=string>
+<attr name='filename' value='string'>
  <p>Specifies the virtual filename to be created or operated on (relative
   to the current directory, or to the root of the virtual filesystem).</p>
 </attr>
 
-<attr name=chroot value=string>
+<attr name='chroot' value='string'>
  <p>Specifies the virtual root directory (sandbox) all file operations are
   contained under.</p>
 </attr>
 
-<attr name=from value=string>
+<attr name='from' value='string'>
  <p>Specifies the type=file form field variable which uploaded the file to be
   written.  If this attribute is omitted, the container content is what
   will be written instead.  Given the example below, the parameter
   <var>from=wrapupafile</var> should be specified.</p>
 
-<ex type='box'><form method='post'
+<ex-box><form method='post'
    enctype=\"multipart/form-data\">
  <input type='file' name='wrapupafile' />
  <input type='submit' value=\"Upload file\" />
@@ -197,46 +197,46 @@ constant tagdoc=([
 File uploaded:
   <insert scope='form'
     variable=\"wrapupafile..filename\"/>
-</ex>
+</ex-box>
 </attr>
 
-<attr name=append>
+<attr name='append'>
  <p>Append to the file instead of replacing it.</p>
 </attr>
 
-<attr name=mkdirhier>
+<attr name='mkdirhier'>
  <p>Create the directory hierarchy needed to store the file if needed.</p>
 </attr>
 
-<attr name=remove>
+<attr name='remove'>
  <p>Causes the specified filename or directory to be removed.</p>
 </attr>
 
-<attr name=moveto value=string>
+<attr name='moveto' value='string'>
  <p>Causes the specified filename to be moved to this new location.</p>
 </attr>
 
-<attr name=max-size value=integer>
+<attr name='max-size' value='integer'>
  <p>Specifies the maximum upload file size in bytes which is accepted.</p>
 </attr>
 
-<attr name=max-height value=integer>
+<attr name='max-height' value='integer'>
  <p>The maximum imageheight in pixels which is accepted.</p>
 </attr>
 
-<attr name=max-width value=integer>
+<attr name='max-width' value='integer'>
  <p>The maximum imagewidth in pixels which is accepted.</p>
 </attr>
 
-<attr name=min-height value=integer>
+<attr name='min-height' value='integer'>
  <p>The minimum imageheight in pixels which is accepted.</p>
 </attr>
 
-<attr name=min-width value=integer>
+<attr name='min-width' value='integer'>
  <p>The minimum imagewidth in pixels which is accepted.</p>
 </attr>
 
-<attr name=accept-type value=string>
+<attr name='accept-type' value='string'>
  <p>Comma separated list of file types which are accepted, currently
   supported types
   are jpeg, png and gif; the check is performed on the file content, not

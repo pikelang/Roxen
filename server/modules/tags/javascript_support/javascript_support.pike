@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.41 2001/09/13 15:36:59 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.42 2001/09/21 15:58:17 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -508,7 +508,7 @@ constant tagdoc = ([
 
 //----------------------------------------------------------------------
 
-"js-popup":#"<desc cont='cont'>
+"js-popup":#"<desc type='cont'>
   <p><short hide=\"hide\">Creates a javascript popup.</short>
   This tag creates a popup of its content and returns a link that
   activates the popup if the cursor hovers over the link.</p>
@@ -532,7 +532,7 @@ constant tagdoc = ([
 <attr name='props' value='javascript object name' default='default_props'>"+
 props_arg+
 #"<p>A small example that uses a props object:</p>
-  <ex type='box'>
+  <ex-box>
 <js-include file='CrossPlatform.js'/>
 <js-include file='Popup.js'/>
 
@@ -546,14 +546,14 @@ props_arg+
 
 <js-popup props='popup_props' label='popup'>
   <h1>This is a popup!</h1>
-</js-popup></ex>
+</js-popup></ex-box>
 </attr>
 
 <attr name='args-variable' value='RXML variable name'>
   <p>Arguments to the generated anchor tag will be stored in this variable.
   This argument is useful if the target to the popup should be an image,
   see the example below.</p>
-  <ex type='box'>
+  <ex-box>
 <js-include file='CrossPlatform.js'/>
 <js-include file='Popup.js'/>
 
@@ -565,7 +565,7 @@ props_arg+
 </js-popup>
 
 <gtext ::='&form.popup-args;'>popup</gtext>
-</ex>
+</ex-box>
 </attr>
 
 <attr name='event' value='javascript event' default='onMouseOver'>
@@ -578,7 +578,7 @@ props_arg+
 
 //----------------------------------------------------------------------
 
-"js-write":#"<desc cont='cont'>
+"js-write":#"<desc type='cont'>
   <p><short>Converts its content into javascript
   document.write.</short> The output will be turned into a javascript
   tag and written to the page with the <i>document.write</i> funtion.
@@ -588,12 +588,12 @@ props_arg+
 
 //----------------------------------------------------------------------
 
-"emit#js-hide-popup":({ #"<desc plugin='plugin'>
+"emit#js-hide-popup":({ #"<desc type='plugin'>
   <p><short>Creates a link event to hide popups.</short>
   This plugin can be used in hierarchical menues on those links that are not
   popups, i.e. direct links on the same level as other links that leads to
   a popup.</p>
-  <ex type='box'>
+  <ex-box>
 <js-include file='CrossPlatform.js'/>
 <js-include file='Popup.js'/>
 
@@ -605,17 +605,17 @@ props_arg+
 </emit><br />
 <js-popup label='Show'>
     ...
-</js-popup></ex>
+</js-popup></ex-box>
 </desc>",
 ([
-  "&_.args;":#"<desc ent='ent'>
+  "&_.args;":#"<desc type='entity'>
     <p>The javascript event arguments.</p>
   </desc>"
 ]) }),
 
 //----------------------------------------------------------------------
 
-"emit#js-dynamic-popup":({ #"<desc plugin='plugin'>
+"emit#js-dynamic-popup":({ #"<desc type='plugin'>
   <p><short>Creates a dynamic load popup.</short>
   This plugin creates a link to a dynamic loaded popup. The content of
   the popup will be loaded from the specified url.</p>
@@ -647,7 +647,7 @@ props_arg+
 <p>An example that loads index.xml into a popup layer when the link is
 clicked.</p>
 
-<ex type='box'>
+<ex-box>
 <js-include file='CrossPlatform.js'/>
 <js-include file='Popup.js'/>
 <js-include file='DynamicLoading.js'/>
@@ -656,9 +656,9 @@ clicked.</p>
 
 <emit source='js-dynamic-popup' name='popup' src='index.xml'>
   <a href='javascript:void(0);' onClick='&_.event;'>Show</a>
-</emit></ex>",
+</emit></ex-box>",
 ([
-  "&_.event;":#"<desc ent='ent'>
+  "&_.event;":#"<desc type='entity'>
     <p>The javascript event.</p>
   </desc>"
 ])}),
@@ -681,7 +681,7 @@ clicked.</p>
 
 //----------------------------------------------------------------------
 
-"js-external":#"<desc cont='cont'>
+"js-external":#"<desc type='cont'>
   <p><short hide='hide'>Creates an external javascript file of its
   content.</short> The tag creates an external javascript file
   containing the content of the tag in javascript

@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.89 2001/09/03 18:15:06 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.90 2001/09/21 15:58:10 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -59,14 +59,14 @@ mapping tagdocumentation() {
 
   return ([
 
-"gbutton":#"<desc cont='cont'><p><short>
+"gbutton":#"<desc type='cont'><p><short>
  Creates graphical buttons.</short></p>
 </desc>"
 
 	   +doc
 	   +imagecache,
 
-"gbutton-url":#"<desc cont='cont'><p><short>
+"gbutton-url":#"<desc type='cont'><p><short>
  Generates an URI to the button.</short> <tag>gbutton-url</tag> takes
  the same attributes as <xref href='gbutton.tag' /> including the
  image cache attributes.</p>

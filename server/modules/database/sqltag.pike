@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.82 2001/08/06 14:33:20 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.83 2001/09/21 15:58:08 jhs Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -84,7 +84,7 @@ constant tagdoc=([
  auto-incrementing columns. Note: This is only available with Mysql.</p>
 </attr>",
 
-"emit#sql":#"<desc plugin='plugin'><p><short>
+"emit#sql":#"<desc type='plugin'><p><short>
 
  Use this source to connect to and query SQL databases for
  information.</short> The result will be available in variables named

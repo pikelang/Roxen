@@ -8,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.12 2001/09/03 18:05:11 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.13 2001/09/21 15:58:09 jhs Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
@@ -88,7 +88,7 @@ LocaleString module_doc  =
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["fnord":#"<desc cont>The fnord container tag hides its "
+constant tagdoc=(["fnord":#"<desc type='cont'>The fnord container tag hides its "
   "contents for the user, unless the fnord prestate is used.</desc>"
   "<attr name=alt value=string>An alternate text that should be written "
   "in place of the hidden text.</attr>"]);

@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.35 2001/09/06 12:13:00 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.36 2001/09/21 15:58:13 jhs Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -546,7 +546,7 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"?pike":#"<desc pi='pi'><p><short hide='hide'>
+"?pike":#"<desc type='pi'><p><short hide='hide'>
  Pike processing instruction tag.</short>This processing intruction
  tag allows for evaluating Pike code directly in the document.</p>
 

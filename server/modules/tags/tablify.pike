@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.69 2001/08/24 22:35:07 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.70 2001/09/21 15:58:17 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -14,7 +14,7 @@ generate nice tables.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
+constant tagdoc=(["tablify":({ #"<desc type='cont'><p><short>
  Transforms texts into tables.</short> The default behavior is to use
  tabs as column delimiters and newlines as row delimiters. The values in the
  first row as assumed to be the title. Note in the example below how empty
@@ -94,13 +94,13 @@ Li, 6.939
  column is number 1. Negative value indicate reverse sort order.</p>
 </attr>
 
-<attr name=min value='number'><p>
+<attr name='min' value='number'><p>
  Decides which of the input rows should be the first one to be
  displayed. This can be used to skip unwanted rows in the beginning
  of the data. The first row after the heading is row number 1.</p>
 </attr>
 
-<attr name=max value='number'><p>
+<attr name='max' value='number'><p>
  Decides which of the input rows should be the last one to be
  displayed. This can be used to limit the the output to a maximum
  number of rows.</p>
@@ -133,7 +133,7 @@ six
  resulting table tag if neither nice nor nicer is used.</p>
 </attr>
 
-<attr name=cellpadding value='number'><p>
+<attr name='cellpadding' value='number'><p>
  Defines the cellpadding attribute. Default is 4 in nice and nicer
  modes. Otherwise undefined. The value is propagated into the
  resulting table tag if neither nice nor nicer is used.</p>
@@ -284,7 +284,7 @@ Li, 6.939
  in the font tag that encloses every cell.</p>
 </attr>",
 
-(["fields":#"<desc cont='cont'><p>
+(["fields":#"<desc type='cont'><p>
  The container 'fields' may be used inside the tablify container to
  describe the type of contents the fields in a column has. Available
  fields are:</p>
@@ -303,8 +303,8 @@ Li, 6.939
 
    <p>All fields except text overrides the cellvalign attribute.</p>
 
-<ex type='vert'>
-<tablify nice>
+<ex>
+<tablify nice='nice'>
 <fields separator=','>
 text,center,right,float,economic-float,int,economic-int
 </fields>

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.278 2001/09/03 18:15:06 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.279 2001/09/21 15:58:11 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -344,7 +344,7 @@ texture=\"/internal-roxen-squares\">A</gtext>
 </ex>
 </attr>
 
-<attr name=tile>
+<attr name='tile'>
  Tiles the background and foreground images if they are smaller than
  the actual image.
 </attr>
@@ -387,7 +387,7 @@ texture=\"/internal-roxen-squares\">A</gtext>
 
 
 constant tagdoc=([
-"anfang":#"<desc cont='cont'><p><short>
+"anfang":#"<desc type='cont'><p><short>
  Creates an anfang in the beginning of a text.</short> This tag takes
  the same attributes as <xref href='gtext.tag' />.</p>
 
@@ -400,7 +400,7 @@ constant tagdoc=([
 </desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh":#"<desc cont='cont'><p><short>
+"gh":#"<desc type='cont'><p><short>
  Creates a graphical header.</short> <tag>gh</tag> takes the same
  attributes as <xref href='gtext.tag' />. <tag>gh</tag> comes in six
  flavors, from <tag>gh1</tag> through <tag>gh6</tag> and are the RXML
@@ -408,25 +408,25 @@ constant tagdoc=([
 </desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh1":#"<desc cont='cont'></desc>
+"gh1":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh2":#"<desc cont='cont'></desc>
+"gh2":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh3":#"<desc cont='cont'></desc>
+"gh3":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh4":#"<desc cont='cont'></desc>
+"gh4":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh5":#"<desc cont='cont'></desc>
+"gh5":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gh6":#"<desc cont='cont'></desc>
+"gh6":#"<desc type='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gtext":#"<desc cont='cont'><p><short>
+"gtext":#"<desc type='cont'><p><short>
  Creates an image with the tag content texts.</short> It is possible to pass
  attributes, such as the target attribute, to the resulting tags by including
  them in the gtext tag.</p>
@@ -519,13 +519,12 @@ magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
  but if you would like to generate new text images live without
  reloading some RXML page, you need this tag. An example application:</p>
 
-<ex type='live'>
-<define variable='var.id' preparse='' trimwhites=''>
+<ex-box><define variable='var.id' preparse='' trimwhites=''>
 <gtext-id font='FranklinGothicDemi' fgcolor='blue'/>
 </define>
 
 <img src='&var.id;Please type some text here:'
-     alt='' name='banner' width='468' height='60'/>
+     alt='' name='banner' width='468' height='60' />
 
 <script language='javascript'>
 var image = document.images.banner;
@@ -539,15 +538,14 @@ function alter_image(label)
 
 <form onsubmit='return alter_image(this.label);'>
 <input type='text' size='40' name='label' />
-</form></ex>
-</desc>
+</form></ex-box></desc>
 
 <attr name='short'><p>
  Returns a relative path to the image, i.e. a shorter one.
 </p>
 </attr>"+gtextargs,
 
-"gtext-url":#"<desc cont='cont'><p><short>
+"gtext-url":#"<desc type='cont'><p><short>
  Returns an internal URL to an image with the specified attributes
  applied.</short></p>
 </desc>

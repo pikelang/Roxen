@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.17 2001/09/03 18:52:18 nilsson Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.18 2001/09/21 15:58:14 jhs Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
@@ -250,7 +250,7 @@ array spellcheck(array(string) words,string dict) {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"spell":#"<desc cont='cont'><p><short>
+"spell":#"<desc type='cont'><p><short>
  Checks words for spelling problems.</short> The spellchecker uses the ispell dictionary.
 </p></desc>
 

@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.36 2001/09/03 18:52:19 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.37 2001/09/21 15:58:16 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -190,7 +190,7 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
 "obox": ([
-  "standard":#"<desc cont='cont'><p><short>
+  "standard":#"<desc type='cont'><p><short>
  This tag creates an outlined box.</short>
 </p></desc>
 
@@ -267,7 +267,7 @@ This is just a sample box.
 </attr>",
 
 
-  "svenska":#"<desc cont='cont'><p><short>
+  "svenska":#"<desc type='cont'><p><short>
  Denna tagg skapar en ramlåda runt dess innehåll.</short>
 </p></desc>
 

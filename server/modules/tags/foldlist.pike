@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.31 2001/09/03 18:52:19 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.32 2001/09/21 15:58:15 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -17,19 +17,19 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-"foldlist":({#"<desc cont='cont'><p><short hide>
+"foldlist":({#"<desc type='cont'><p><short hide='hide'>
  This tag is used to build folding lists, that are like &lt;dl&gt; lists,
  but where each element can be unfolded.</short>This tag is used to
  build folding lists, that are like <tag>dl</tag> lists, but where
  each element can be unfolded. The tags used to build the lists
- elements are <tag>ft</tag> and <tag>fd</tag>. </p></desc>
+ elements are <tag>ft</tag> and <tag>fd</tag>.</p></desc>
 
 <attr name='unfolded'><p>
  Will make all the elements in the list unfolded by default.</p>
 </attr>
 ",
 
-(["ft":({#"<desc cont='cont'><p>
+([ "ft":({#"<desc type='cont'><p>
 This tag is used within the foldlist tag. The contents of this
 container, that is not within an fd, tag will be visible both when the
 element is folded and unfolded.</p></desc>
@@ -41,10 +41,9 @@ element is folded and unfolded.</p></desc>
 
 <attr name='unfolded'><p>
  Will make this element unfolded by default.</p>
-</attr>
-",
+</attr>",
 
-(["fd":#"<desc cont='cont'><p>
+([ "fd":#"<desc type='cont'><p>
  The contents of this container will only be visible when the element
  it is written in is unfolded.</p>
 </desc>
@@ -60,8 +59,7 @@ element is folded and unfolded.</p></desc>
      <fd>Contents 2</fd>
    </ft>
  </foldlist>
-</ex>
-"])
+</ex>" ])
   })])
 })]);
 #endif
