@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.190 1999/11/04 16:53:04 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.191 1999/12/07 22:44:50 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2843,11 +2843,15 @@ string tag_help(string t, mapping args, object id)
       tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>", tag, tag) });
     }
     return out + String.implode_nicely(tag_links);
-  } else if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
-    string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
-    return h;
   } else {
-    return "<h3>No help available for "+help_for+".</h3>";
+    help_for -= "/";
+
+    if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
+      string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
+      return h;
+    } else {
+      return "<h3>No help available for "+help_for+".</h3>";
+    }
   }
 }
 
