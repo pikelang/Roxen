@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.451 2004/03/03 20:29:18 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.452 2004/03/25 16:09:10 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2234,25 +2234,47 @@ string simpletag_sort(string t, mapping m, string c, RequestID id)
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
-string simpletag_replace( string tag, mapping m, string cont, RequestID id)
+class TagReplace
 {
-  switch(m->type)
+  inherit RXML.Tag;
+  constant name = "replace";
+
+  RXML.Type content_type = RXML.t_text (RXML.PXml);
+
+  class Frame
   {
-  case "word":
-  default:
-    if(!m->from) return cont;
-   return replace(cont,m->from,(m->to?m->to:""));
+    inherit RXML.Frame;
 
-  case "words":
-    if(!m->from) return cont;
-    string s=m->separator?m->separator:",";
-    array from=(array)(m->from/s);
-    array to=(array)(m->to/s);
+    array do_return (RequestID id)
+    {
+      result_type = RXML.t_text;
 
-    int balance=sizeof(from)-sizeof(to);
-    if(balance>0) to+=allocate(balance,"");
+      if (!args->from)
+	result = content;
 
-    return replace(cont,from,to);
+      else
+	switch(args->type)
+	{
+	  case "word":
+	  default:
+	    result = replace(content,args->from,(args->to?args->to:""));
+	    break;
+
+	  case "words":
+	    string s=args->separator?args->separator:",";
+	    array from=(array)(args->from/s);
+	    array to=(array)(args->to/s);
+
+	    int balance=sizeof(from)-sizeof(to);
+	    if(balance>0) to+=allocate(balance,"");
+	    else if (balance < 0)
+	      parse_error ("There are more elements in the \"to\" list (%d) "
+			   "than in \"from\" (%d).", sizeof (to), sizeof (from));
+
+	    result = replace(content,from,to);
+	    break;
+	}
+    }
   }
 }
 
@@ -7130,26 +7152,37 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "replace":#"<desc type='cont'><p><short>
- Replaces strings in the contents with other strings.</short>
+ Replaces strings in the content with other strings.</short>
 </p></desc>
 
 <attr name='from' value='string' required='required'>
- <p>String or list of strings that should be replaced.</p>
+ <p>String to be replaced.</p>
+
+ <p>When the \"type\" argument is \"words\", this is a list of strings
+ separated according to the \"separator\" argument.</p>
 </attr>
 
 <attr name='to' value='string'>
- <p>String or list of strings with the replacement strings. Default is the
- empty string.</p>
-</attr>
+ <p>Replacement string. The default is \"\" (the empty string).</p>
 
-<attr name='separator' value='string' default=','>
- <p>Defines what string should separate the strings in the from and to
- attributes.</p>
+ <p>When the \"type\" argument is \"words\", this is a list of strings
+ separated according to the \"separator\" argument. The first string
+ in the \"from\" list will be replaced with the first one in the
+ \"to\" list, etc. If there are fewer \"to\" than \"from\" elements,
+ the remaining ones in the \"from\" list will be replaced with the
+ empty string. All replacements are done in parallel, i.e. the result
+ of one replacement is not replaced again with another.</p>
 </attr>
 
 <attr name='type' value='word|words' default='word'>
- <p>Word means that a single string should be replaced. Words that from
- and to are lists.</p>
+ <p>\"word\" means that a single string is replaced. \"words\"
+ replaces several strings, and the \"from\" and \"to\" values are
+ interpreted as string lists.</p>
+</attr>
+
+<attr name='separator' value='string' default=','>
+ <p>The separator between words in the \"from\" and \"to\" arguments.
+ This is only relevant when the \"type\" argument is \"words\".</p>
 </attr>",
 
 //----------------------------------------------------------------------
