@@ -29,9 +29,22 @@ string describe_exts( object m, string func )
   return String.implode_nicely( m[func]() );
 }
 
-string describe_location( object m, int q )
+string describe_location( object m, RequestID id )
 {
-  return m->query_location();
+  Configuration conf = m->my_configuration();
+  string url = conf->query("MyWorldLocation"),
+	  mp = m->query_location();
+  if(!stringp(url) || !sizeof(url))
+  { // belt *and* suspenders :-)
+    array(string) urls = conf->query("URLs");
+    if(sizeof(urls))
+      url = urls[0];
+  }
+  if(sizeof(url/"*") == 2)
+    url = replace(url, "*", gethostname());
+  return url ? sprintf("<a href=\"%s%s\">%s</a>",
+		       url, mp[1..], mp)
+	     : mp;
 }
 
 string make_if( string q )
@@ -62,7 +75,7 @@ string describe_provides( object m, int q )
   return provides;
 }
 
-string describe_type( object m, int t )
+string describe_type( object m, int t, RequestID id )
 {
   string res = "";
 
@@ -78,7 +91,7 @@ do                                                                      \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
-  T(MODULE_LOCATION,   describe_location,                        0);
+  T(MODULE_LOCATION,   describe_location,                       id);
   T(MODULE_URL,                        0,                        0);
   T(MODULE_FILE_EXTENSION, describe_exts,  "query_file_extensions");
   T(MODULE_PARSER,         describe_tags,                        0);
@@ -248,7 +261,7 @@ string find_module_doc( string cn, string mn, object id )
 		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
                     "<br><br><table border=0 cellspacing=0 cellpadding=0>"
 		    "<tr><td valign=top><b>Type:</b> </td><td "
-                    "valign=top>" + describe_type( m,mi->type ) +
+                    "valign=top>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br>" +
                     translate(m->file_name_and_stuff()) +
 		    homepage + creators + "<dl>" +
