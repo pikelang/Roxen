@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.329 2004/04/19 18:04:19 mast Exp $
+// $Id: module.pmod,v 1.330 2004/04/19 18:15:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9133,13 +9133,13 @@ static void init_parsers()
   xml_tag_parser = p;
 
 #define TRY_DECODE_CHREF(CHREF) do {					\
-    if (sizeof (chref) && chref[0] == '#')				\
-      if ((<"#x", "#X">)[chref[..1]]) {					\
-	if (sscanf (chref, "%*2s%x%*c", int c) == 2)			\
+    if (sizeof (CHREF) && CHREF[0] == '#')				\
+      if ((<"#x", "#X">)[CHREF[..1]]) {					\
+	if (sscanf (CHREF, "%*2s%x%*c", int c) == 2)			\
 	  return ({(string) ({c})});					\
       }									\
       else								\
-	if (sscanf (chref, "%*c%d%*c", int c) == 2)			\
+	if (sscanf (CHREF, "%*c%d%*c", int c) == 2)			\
 	  return ({(string) ({c})});					\
   } while (0)
 
