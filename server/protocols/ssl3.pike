@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.35 1998/06/22 21:26:51 grubba Exp $
+/* $Id: ssl3.pike,v 1.36 1998/06/22 23:36:11 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -159,16 +159,14 @@ string get_data()
   roxen_perror(sprintf("SSL3:get_data()\n"));
 #endif /* SSL3_DEBUG */
   string s;
-  if(to_send->head)
+  if ((s = to_send->head))
   {
-    s = to_send->head;
     to_send->head = 0;
     return s;
   }
 
-  if(to_send->data)
+  if ((s = to_send->data))
   {
-    s = to_send->data;
     to_send->data = 0;
     return s;
   }
@@ -176,7 +174,7 @@ string get_data()
   s = to_send_buffer;
   to_send_buffer = 0;
 
-  if(to_send->file) {
+  if (to_send->file) {
     /* There's a file, but no data yet
      * disable ourselves until there is.
      */
@@ -194,20 +192,14 @@ static void write_more()
   roxen_perror(sprintf("SSL3:write_more()\n"));
 #endif /* SSL3_DEBUG */
   string s;
-  if(!cache)
-    s = get_data();
-  else
-    s = cache;
-
-  if(!s)
-  {
+  if (!(s = (cache || get_data()))) {
 //    perror("SSL3:: Done.\n");
     my_fd->set_blocking();
     my_fd->close();
     my_fd = 0;
     destruct();
     return;
-  }    
+  }
 
   if (sizeof(s)) {
     int pos = my_fd->write(s);
@@ -273,13 +265,8 @@ static void write_more_file()
   roxen_perror(sprintf("SSL3:write_more_file()\n"));
 #endif /* SSL3_DEBUG */
   string s;
-  if(!cache)
-    s = get_data_file();
-  else
-    s = cache;
 
-  if(!s)
-  {
+  if(!(s = (cache || get_data_file()))) {
 //    perror("SSL3:: Done.\n");
     my_fd->set_blocking();
     my_fd->close();
