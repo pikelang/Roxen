@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.78 1999/09/01 15:53:18 grubba Exp $
+ * $Id: smtp.pike,v 1.79 1999/09/09 11:38:24 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.78 1999/09/01 15:53:18 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.79 1999/09/09 11:38:24 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -18,11 +18,11 @@ inherit "module";
 /*
  * TODO:
  *
- * o Add possibility to disable relaying.
- *
  * o Better support for SIZE.
  *
  * o Add option to limit the size of accepted mail.
+ *
+ * o Add support for modification of headers.
  *
  * o Code clean-up.
  */
@@ -1025,6 +1025,20 @@ static class Smtp_Connection {
   }
 
   // DATA handling
+
+  static void _handle_command(string line)
+  {
+    ::_handle_command(line);
+    // Check that the mail doesn't exceed the size limit.
+    if (sizeof(multi_line_buffer) > current_mail->limit) {
+      // Size limit exceeded.
+      multi_line_buffer = "";
+      handle_data = lambda() {
+		      send(552);
+		      do_RSET();
+		    };
+    }
+  }
 
   void handle_DATA(string data)
   {
