@@ -96,13 +96,12 @@ string selected_item( string q, Configuration c, RequestID id,
   sort( module_groups );
   pre += "<table cellspacing='0' cellpadding='0'>\n";
 
-  int do_js;
+  int do_js = config_setting( "modulelistmode" ) == "js";
+  int unfolded = config_setting( "modulelistmode" ) == "uf";
   string hide_popup = "";
-  if( id->supports->javascript )
-  {
-    do_js = 1;
+
+  if( do_js )
     hide_popup = "onMouseOver='if( last_popup != false ) hide( last_popup );'";
-  }
   
   foreach( module_groups, array gd )
   {
@@ -124,7 +123,7 @@ string selected_item( string q, Configuration c, RequestID id,
       if( group_name != r_module_group )
       {
 	sel = "item";
-	if (sizeof( gd[1] ) > 1)
+	if (!unfolded && sizeof( gd[1] ) > 1)
 	  onlysel = 1;
       }
       if( onlysel )
@@ -165,17 +164,18 @@ string selected_item( string q, Configuration c, RequestID id,
       }
     else
     {
+      string jfn = lower_case(group_name-" ");
       if( do_js )
 	pre += "<a href=\""+quoted_url+Roxen.http_encode_string(group_name)+"\" "
-	  "onMouseOver='return popup_"+group_name+"(event);'>";
+	  "onMouseOver='return popup_"+jfn+"(event);'>";
       pre += "<font size=-1>("+sizeof(gd[1])+")</font>...";
       if( do_js )
       {
 	pre += "</a>";
 	if( id->supports->layers )
-	  pre += "<layer id='ly_"+group_name+"' visibility='hidden'>";
+	  pre += "<layer id='ly_"+jfn+"' visibility='hidden'>";
 	else
-	  pre += "<div id='ly_"+group_name+"' "
+	  pre += "<div id='ly_"+jfn+"' "
 	    "style='position:absolute; z-index:1; visibility:hidden;'>";
 	pre += "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' "
 	  "cellpadding='0'>\n"
@@ -199,13 +199,13 @@ string selected_item( string q, Configuration c, RequestID id,
 	if( !first_js++ )
 	  pre += #string "support.js";
 	pre +=
-	  "function popup_"+group_name+"(event)\n"
+	  "function popup_"+jfn+"(event)\n"
 	  "{\n"
-	  "  shiftTo( \"ly_"+group_name+"\","
+	  "  shiftTo( \"ly_"+jfn+"\","
 	  "           getEventX(event)-30, getEventY(event)-8 );\n"
 	  "  if( last_popup != false ) hide( last_popup );\n"
-	  "  last_popup = \"ly_"+group_name+"\";\n"
-	  "  show( \"ly_"+group_name+"\" );\n"
+	  "  last_popup = \"ly_"+jfn+"\";\n"
+	  "  show( \"ly_"+jfn+"\" );\n"
 	  "}\n";
 	pre += "\n// --></script>";
       }
