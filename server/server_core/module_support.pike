@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.128 2003/01/26 02:10:47 mani Exp $
+// $Id: module_support.pike,v 1.129 2004/01/25 18:29:59 norrby Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -134,7 +134,7 @@ class BasicModule
   void save_me() {}
   void save() {}
   string comment() { return ""; }
-  array query_seclevels() { return ({}); }
+  function(RequestID:int|mapping) query_seclevels() { return 0; }
   mapping api_functions() { return ([]); }
 }
 

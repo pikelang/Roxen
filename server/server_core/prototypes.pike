@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.64 2003/01/21 23:28:41 mani Exp $
+// $Id: prototypes.pike,v 1.65 2004/01/25 18:29:59 norrby Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -916,7 +916,7 @@ class RoxenModule
   string query_internal_location();
   string query_location();
   string query_provides();
-  array query_seclevels();
+  function(RequestID:int|mapping) query_seclevels();
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
