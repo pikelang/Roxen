@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.27 1997/06/11 17:41:56 grubba Exp $ */
+/* $Id: describers.pike,v 1.28 1997/07/19 23:23:10 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -249,6 +249,11 @@ string describe_configuration(object node)
 }
 
 
+string quote_html(string s)
+{
+  return(replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" })));
+}
+
 #if efun(_memory_usage)
 mapping last_usage = ([]);
 #endif
@@ -358,6 +363,43 @@ string describe_global_debug(object node)
 #if efun(_num_objects)
   res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
+#if efun(get_profiling_info)
+  res += "<p><br><p>";
+  res += "<table border=0 cellspacing=0 cellpadding=2 width=50%>\n"
+    "<tr bgcolor=#000060><th align=left colspan=2>Program</th>"
+    "<th>&nbsp;</th><th align=right>Times cloned</th></tr>\n"
+    "<tr bgcolor=#00008B><th>&nbsp;</th><th align=left>Function</th>"
+    "<th>&nbsp;</th><th align=right>Times called</th></tr>\n";
+  mapping programs = master()->programs;
+  foreach(sort(indices(programs)), string prog) {
+    array(int|mapping(string:array(int))) arr =
+      get_profiling_info(programs[prog]);
+
+    res += sprintf("<tr bgcolor=#000060><td colspan=2><b>%s</b></td>"
+		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
+		   quote_html(prog), arr[0]);
+    foreach(indices(arr[1]), string symbol) {
+      arr[1][symbol] = arr[1][symbol][0];
+    }
+    array(int) num_calls = values(arr[1]);
+    array(string) funs = indices(arr[1]);
+    sort(num_calls, funs);
+    int line = 0;
+    foreach(reverse(funs), string fun) {
+      if ((line % 6)<3) {
+	res += sprintf("<tr bgcolor=#00008B><td>&nbsp;</td><td>%s()</td>"
+		       "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
+		       quote_html(fun), arr[1][fun]); 
+      } else {
+	res += sprintf("<tr bgcolor=#00328B><td>&nbsp;</td><td>%s()</td>"
+		       "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
+		       quote_html(fun), arr[1][fun]); 
+      }
+      line++;
+    }
+  }
+  res += "</table>\n";
+#endif /* get_profiling_info */
   return res +"</ul>";
 }
 
