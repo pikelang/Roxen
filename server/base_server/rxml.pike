@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.125 2000/02/14 14:29:15 nilsson Exp $
+ * $Id: rxml.pike,v 1.126 2000/02/15 01:18:28 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -445,10 +445,8 @@ string do_parse(string to_parse, RequestID id,
   RXML.PXml parser;
   RXML.Context ctx;
 
-  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
-    parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
-    parser->_parent = parent_parser;
-  }
+  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
+    parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx, 0, parent_parser);
   else {
     parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
 #ifdef OLD_RXML_COMPAT
