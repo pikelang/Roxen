@@ -1,4 +1,4 @@
-## $Id: supports,v 1.49 1998/01/30 22:52:42 grubba Exp $
+## $Id: supports,v 1.50 1998/02/24 17:00:09 peter Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -153,10 +153,9 @@ w3.*linemode.*		   nothing
 cern.*linemode.*           nothing
 
 #section hotjava {
-# HotJava, SUNs little WWW browser with support for java aplets.  Nice
-# idea, but the client in itself is not all that impressive.
+# HotJava, SUNs little WWW browser with support for java aplets.
 .*      		    basic, java, center
-.*/1\.0/jdk1\.1\.1	    frames, pjpeginline, supsub, fontcolor,\
+.*/1\.0/j.*1\.1\.[1-9]	    frames, pjpeginline, supsub, fontcolor,\
 			    backgrounds, bigsmall, divisions, font,\
 			    imagealign, jpeginline, tables, tablecolor
 # }
