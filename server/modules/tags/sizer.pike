@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.28 2004/05/27 21:24:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.29 2004/05/27 23:14:20 mani Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -177,17 +177,19 @@ mixed find_internal( string f, RequestID id )
   if( sscanf( f, "%s!%s!%d", f, fmt, quality ) != 3 )
     return 0;
 
-  f = Gmp.mpz(f,16)->digits(256);
+  f = String.hex2string(f);
 
   mapping(string:Image.Image) i=Image._decode( do_read_file( f, id )->data() );
 
   switch( fmt )
   {
+#if constant(Image.JPEG.encode)
     case "JPEG":
       return Roxen.http_string_answer(
 	Image.JPEG.encode( i->img, ([ "quality":quality ]) ),
 	"image/jpeg" );
       break;
+#endif
     case "GIF":
       break;
   }
@@ -197,7 +199,7 @@ mixed find_internal( string f, RequestID id )
 string imglink( string img, string fmt, int quality,RequestID id )
 {
   return (query_absolute_internal_location(id)+
-	  Gmp.mpz(img,256)->digits(16)+"!"+fmt+"!"+quality);
+	  String.string2hex(img)+"!"+fmt+"!"+quality);
 }
 
 constant simpletag_page_size_flags = RXML.FLAG_EMPTY_ELEMENT;
@@ -355,6 +357,7 @@ string simpletag_page_size( string name,
 	if( 100*`+(@sizes[f])/total > mpct/3 )
 	switch( types[ f ] )
 	{
+#if constant(Image.JPEG.encode)
 	  case "image/jpeg":
 	    if( sizes[f][0] < 300*1024 )
 	    {
@@ -420,6 +423,11 @@ string simpletag_page_size( string name,
 	      res += WARN(sprintf( _(18,"The image %s is huge. Try making it smaller"), fname(f) ));
 	    }
 	    break;
+#else
+	    res += NOTE(_(22,"Could not decode/encode JPEG image. "
+			  "This server lacks JPEG support."));
+#endif
+
 	  case "image/gif":
 #if constant(Image.GIF) && constant(Image.GIF.encode)
 	    mapping _i = Image._decode( do_read_file( f, id )->data() );
