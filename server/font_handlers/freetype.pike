@@ -136,7 +136,8 @@ class FTFont
     for(int i = 0; i<sizeof(chars)-1; i++ )
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
-    w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
+    w += (int) ((chars[-1]->img->xsize() || chars[-1]->advance * x_spacing) +
+		chars[-1]->x);
     
     ys = chars[0]->ascender-chars[0]->descender;
     line_height = (int)chars[0]->height;
