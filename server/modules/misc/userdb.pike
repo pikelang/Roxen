@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.9 1997/02/13 13:01:11 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.10 1997/02/13 22:25:19 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -190,7 +190,7 @@ void read_data()
      tmp2 = ({ });
      setpwent();
      while(tmp = getpwent())
-       tmp2 += ({Array.map(tmp, lambda(mixed s) { return (string)s; }) * ":"}); 
+       tmp2 += ({ Array.map(tmp, lambda(mixed s) { return (string)s; }) * ":" }); 
      endpwent();
      data = tmp2 * "\n";
      break;
