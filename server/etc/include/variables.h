@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.14 2004/03/02 20:32:48 mast Exp $
+// $Id: variables.h,v 1.15 2004/05/18 16:38:49 grubba Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
@@ -9,7 +9,7 @@ private static constant errors =
   102:"Processing",
 
   200:"OK",
-  201:"URI follows",	// Created
+  201:"Created",	// URI follows
   202:"Accepted",
   203:"Provisional Information",	// Non-Authoritative Information
   204:"No Content",
