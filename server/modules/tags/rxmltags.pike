@@ -1,13 +1,13 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-#define _stat id->misc->defines[" _stat"]
-#define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
-#define _rettext id->misc->defines[" _rettext"]
-#define _ok id->misc->defines[" _ok"]
+#define _stat RXML_CONTEXT->misc[" _stat"]
+#define _error RXML_CONTEXT->misc[" _error"]
+#define _extra_heads RXML_CONTEXT->misc[" _extra_heads"]
+#define _rettext RXML_CONTEXT->misc[" _rettext"]
+#define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.240 2001/06/15 11:48:06 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.241 2001/06/18 15:48:16 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -438,10 +438,10 @@ class TagUnset {
       if(!args->variable && !args->scope)
 	parse_error("Variable nor scope not specified.\n");
       if(!args->variable && args->scope!="roxen") {
-	RXML.get_context()->add_scope(args->scope, ([]) );
+	RXML_CONTEXT->add_scope(args->scope, ([]) );
 	return 0;
       }
-      RXML.get_context()->user_delete_var(args->variable, args->scope);
+      RXML_CONTEXT->user_delete_var(args->variable, args->scope);
       return 0;
     }
   }
@@ -510,7 +510,7 @@ class TagCopyScope {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      RXML.Context ctx = RXML.get_context();
+      RXML.Context ctx = RXML_CONTEXT;
       foreach(ctx->list_var(args->from), string var)
 	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
     }
@@ -557,7 +557,7 @@ class TagDec {
 
 static void inc(mapping m, int val, RequestID id)
 {
-  RXML.Context context=RXML.get_context();
+  RXML.Context context=RXML_CONTEXT;
   array entity=context->parse_user_var(m->variable, m->scope);
   if(!context->exist_scope(entity[0])) RXML.parse_error("Scope "+entity[0]+" does not exist.\n");
   context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
@@ -871,7 +871,7 @@ class TagInsertVariables {
   constant plugin_name = "variables";
 
   string get_data(string var, mapping args) {
-    RXML.Context context=RXML.get_context();
+    RXML.Context context=RXML_CONTEXT;
     if(var=="full")
       return map(sort(context->list_var(args->scope)),
 		 lambda(string s) {
@@ -887,7 +887,7 @@ class TagInsertScopes {
   constant plugin_name = "scopes";
 
   string get_data(string var, mapping args) {
-    RXML.Context context=RXML.get_context();
+    RXML.Context context=RXML_CONTEXT;
     if(var=="full") {
       string result = "";
       foreach(sort(context->list_scopes()), string scope) {
@@ -1173,9 +1173,7 @@ class TagScope {
 //       if(scope_name=="form") oldvar=id->variables;
 // #endif
       if(args->extend)
-	// This is not really good, since we are peeking on the
-	// RXML parser internals without any abstraction...
-	vars=copy_value(RXML.get_context()->scopes[scope_name]);
+	vars=copy_value(RXML_CONTEXT->get_scope (scope_name));
       else
 	vars=([]);
 // #if ROXEN_COMPAT <= 1.3
@@ -1784,7 +1782,7 @@ class TagColorScope {
     inherit RXML.Frame;
     string link, alink, vlink;
 
-#define LOCAL_PUSH(X) if(args->X) { X=id->misc->defines->X; id->misc->defines->X=args->X; }
+#define LOCAL_PUSH(X) if(args->X) { X=RXML_CONTEXT->misc->X; RXML_CONTEXT->misc->X=args->X; }
     array do_enter(RequestID id) {
       Roxen.push_color("colorscope",args,id);
       LOCAL_PUSH(link);
@@ -1793,7 +1791,7 @@ class TagColorScope {
       return 0;
     }
 
-#define LOCAL_POP(X) if(X) id->misc->defines->X=X
+#define LOCAL_POP(X) if(X) RXML_CONTEXT->misc->X=X
     array do_return(RequestID id) {
       Roxen.pop_color("colorscope",id);
       LOCAL_POP(link);
@@ -1818,13 +1816,13 @@ class TagHelp {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array tags=map(indices(RXML.get_context()->tag_set->get_tag_names()),
+      array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
 		     lambda(string tag) {
 		       if(tag[..3]=="!--#" || !has_value(tag, "#"))
 			 return tag;
 		       return "";
 		     } ) - ({ "" });
-      tags += map(indices(RXML.get_context()->tag_set->get_proc_instr_names()),
+      tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
 		  lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
       tags = Array.sort_array(tags,
 			      lambda(string a, string b) {
@@ -1870,7 +1868,7 @@ class TagHelp {
 	/*
 	ret+="<p><b>This is a list of all currently defined RXML scopes and their entities</b></p>";
 
-	RXML.Context context=RXML.get_context();
+	RXML.Context context=RXML_CONTEXT;
 	foreach(sort(context->list_scopes()), string scope) {
 	  ret+=sprintf("<h3><a href=\"%s?_r_t_h=%s\">%s</a></h3>\n",
 		       id->not_query, Roxen.http_encode_url("&"+scope+";"), scope);
@@ -1897,7 +1895,7 @@ class TagNumber {
       if(args->type=="roman") return ({ Roxen.int2roman((int)args->num) });
       if(args->type=="memory") return ({ Roxen.sizetostring((int)args->num) });
       result=roxen.language(args->lang||args->language||
-                            id->misc->defines->theme_language,
+                            RXML_CONTEXT->misc->theme_language,
 			    args->type||"number",id)( (int)args->num );
     }
   }
@@ -1936,15 +1934,20 @@ class TagUse {
     sscanf(data, "%*shelp=%d", help);
     res = "<dt><b>"+f+"</b></dt><dd>"+(doc?doc+"<br />":"")+"</dd>";
 
-    array pack = parse_use_package(data, RXML.get_context());
-    cache_set("macrofiles", "|"+f, pack, 300);
+    array defs = parse_use_package(data, RXML_CONTEXT);
+    cache_set("macrofiles", "|"+f, defs, 300);
 
-    constant types = ({ "if plugin", "tag", "variable" });
+    array(string) ifs = ({}), tags = ({});
 
-    pack = pack + ({});
-    pack[0] = indices(pack[0]);
-    pack[1] = pack[1]->name;
-    pack[2] = indices(pack[2])+indices(pack[3]);
+    foreach (indices (defs[0]), string defname)
+      if (has_prefix (defname, "if\0"))
+	ifs += ({defname[sizeof ("if\0")..]});
+      else if (has_prefix (defname, "tag\0"))
+	tags += ({defname[sizeof ("tag\0")..]});
+
+    constant types = ({ "if plugin", "tag", "form variable", "\"var\" scope variable" });
+
+    array pack = ({ifs, tags, indices(defs[1]), indices(defs[2])});
 
     for(int i; i<3; i++)
       if(sizeof(pack[i])) {
@@ -1957,41 +1960,17 @@ class TagUse {
   }
 
   private array parse_use_package(string data, RXML.Context ctx) {
-    array res = allocate(4);
-    multiset before=ctx->get_runtime_tags();
-    if(!ctx->id->misc->_ifs) ctx->id->misc->_ifs = ([]);
-    mapping before_ifs = mkmapping(indices(ctx->id->misc->_ifs),
-				   indices(ctx->id->misc->_ifs));
-    mapping scope_form = mkmapping(ctx->list_var("form"),
-				   map(ctx->list_var("form"),
-				       lambda(string v) { return ctx->get_var(v, "form"); } ));
-    mapping scope_var = mkmapping(ctx->list_var("var"),
-				  map(ctx->list_var("var"),
-				      lambda(string v) { return ctx->get_var(v, "var"); } ));
+    RequestID id = ctx->id;
 
-    Roxen.parse_rxml( data, ctx->id );
+    RXML.Parser parser = Roxen.get_rxml_parser (ctx->id);
+    parser->write_end (data);
+    parser->eval();
 
-    foreach( ctx->list_var("form"), string var ) {
-      mixed val = ctx->get_var(var, "form");
-      if(scope_form[var]==val)
-	m_delete(scope_form, var);
-      else
-	scope_form[var]=val;
-    }
-
-    foreach( ctx->list_var("var"), string var ) {
-      mixed val = ctx->get_var(var, "var");
-      if(scope_var[var]==val)
-	m_delete(scope_var, var);
-      else
-	scope_var[var]=val;
-    }
-
-    res[0] = ctx->id->misc->_ifs - before_ifs;
-    res[1] = indices(RXML.get_context()->get_runtime_tags()-before);
-    res[2] = scope_form;
-    res[3] = scope_var;
-    return res;
+    return ({
+      parser->context->misc,
+      parser->context->get_scope ("form"),
+      parser->context->get_scope ("var")
+    });
   }
 
   class Frame {
@@ -2018,7 +1997,7 @@ class TagUse {
       }
       else
 	name = "|" + args->package;
-      RXML.Context ctx = RXML.get_context();
+      RXML.Context ctx = RXML_CONTEXT;
 
       if(args->info || id->pragma["no-cache"] ||
 	 !(res=cache_lookup("macrofiles",name)) ) {
@@ -2039,13 +2018,17 @@ class TagUse {
 	cache_set("macrofiles", name, res);
       }
 
-      id->misc->_ifs += res[0];
-      foreach(res[1], RXML.Tag tag)
-	ctx->add_runtime_tag(tag);
-      foreach(indices(res[2]), string var)
-	ctx->set_var(var, res[2][var], "form");
-      foreach(indices(res[3]), string var)
-	ctx->set_var(var, res[3][var], "var");
+      [mapping(string:mixed) newdefs,
+       mapping(string:mixed)|RXML.Scope formvars,
+       mapping(string:mixed)|RXML.Scope varvars] = res;
+      foreach (indices (newdefs), string defname) {
+	mixed def = ctx->misc[defname] = newdefs[defname];
+	if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+      }
+      foreach(indices(formvars), string var)
+	ctx->set_var(var, formvars[var], "form");
+      foreach(indices(varvars), string var)
+	ctx->set_var(var, varvars[var], "var");
 
       return 0;
     }
@@ -2084,36 +2067,50 @@ private RXML.TagSet user_tag_contents_tag_set =
 
 class UserTag {
   inherit RXML.Tag;
-  string name;
+  string name, lookup_name;
   int flags = 0;
   RXML.Type content_type = RXML.t_xml;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
-  string c;
-  mapping defaults;
-  string scope;
+  // Note: We can't store the actual user tag definition directly in
+  // this object; it won't work correctly in p-code since we don't
+  // reparse the source and thus don't create a frame with the current
+  // runtime tag definition. By looking up the definition in
+  // RXML.Context.misc we can get the current definition even if it
+  // changes in loops etc.
 
-  void create(string _name, string _c, mapping _defaults,
-	      int tag, void|string scope_name) {
+  void create(string _name, int tag) {
     name=_name;
-    c=_c;
-    defaults=_defaults;
+    lookup_name = "tag\0" + name;
     if(tag) flags=RXML.FLAG_EMPTY_ELEMENT;
-    scope=scope_name;
   }
 
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = user_tag_contents_tag_set;
     mapping vars;
-    string scope_name;
+    string content;
+    string def;
+    mapping defaults;
+    string def_scope_name, scope_name;
     constant is_user_tag = 1;
     string user_tag_contents;
 
+    array do_enter (RequestID id)
+    {
+      if (array tagdef = RXML_CONTEXT->misc[lookup_name])
+	[def, defaults, def_scope_name, UserTag ignored] = tagdef;
+      else
+	def = 0;
+      return 0;
+    }
+
     array do_return(RequestID id) {
+      if (!def) return ({propagate_tag()});
+
       mapping nargs = defaults+args;
       id->misc->last_tag_args = nargs;
-      scope_name = scope||name;
+      scope_name = def_scope_name || name;
       vars = nargs;
 
       if(content && args->trimwhites)
@@ -2131,8 +2128,8 @@ class UserTag {
 	  replace_to = values(nargs)+({ Roxen.make_tag_attributes(nargs)[1..], content });
 	}
 	string c2;
-	c2 = replace(c, replace_from, replace_to);
-	if(c2!=c) {
+	c2 = replace(def, replace_from, replace_to);
+	if(c2!=def) {
 	  vars=([]);
 	  return ({c2});
 	}
@@ -2142,7 +2139,7 @@ class UserTag {
       vars->args = Roxen.make_tag_attributes(nargs)[1..];
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
       user_tag_contents = vars->contents = content;
-      return ({ c });
+      return ({ def });
     }
   }
 }
@@ -2167,6 +2164,7 @@ class TagDefine {
 
     array do_return(RequestID id) {
       string n;
+      RXML.Context ctx = RXML_CONTEXT;
 
       if(n=args->variable) {
 	if(args->trimwhites) content=String.trim_all_whites((string)content);
@@ -2198,7 +2196,6 @@ class TagDefine {
 	      }
 #endif
 
-
 	if(!content) content = "";
 
 	string add_default(Parser.HTML p, mapping m, string c) {
@@ -2207,13 +2204,28 @@ class TagDefine {
 	};
 
 	if( compat_level > "2.1" ) {
-	  string want, rest, attrib="";
-	  while( sscanf(content, "%*[ \t\n\r]<attrib%s</attrib%*[ \t\n\r]>%s",
-			want, rest)==4 ) {
-	    attrib += "<attrib" + want + "</attrib>";
-	    content = rest;
-	  }
-	  Parser.HTML()->add_container("attrib", add_default)->finish(attrib);
+	  Parser.HTML p = Roxen.get_xml_parser();
+	  p->add_container ("attrib", add_default);
+	  array no_more_attrib (Parser.HTML p, void|string ignored)
+	  {
+	    p->add_container ("attrib", 0);
+	    p->_set_tag_callback (0);
+	    p->_set_data_callback (0);
+	    p->add_quote_tag ("?", 0, "?");
+	    p->add_quote_tag ("![CDATA[", 0, "]]");
+	    return 0;
+	  };
+	  // Stop parsing for attrib tags when we reach something else
+	  // than whitespace and comments.
+	  p->_set_tag_callback (no_more_attrib);
+	  p->_set_data_callback (lambda (Parser.HTML p, string d) {
+				   sscanf (d, "%[ \t\n\r]", string ws);
+				   if (d != ws) no_more_attrib (p);
+				   return 0;
+				 });
+	  p->add_quote_tag ("?", no_more_attrib, "?");
+	  p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
+	  content = p->finish (content)->read();
 	}
 	else
 	  content = Parser.HTML()->add_container("attrib", add_default)->
@@ -2228,19 +2240,19 @@ class TagDefine {
 	if(id->conf->old_rxml_compat) content = replace( content, indices(args), values(args) );
 #endif
 
-	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults,
-						    tag, args->scope));
+	UserTag user_tag = UserTag (n, tag);
+	ctx->misc["tag\0" + n] = ({content, defaults, args->scope, user_tag});
+	ctx->add_runtime_tag(user_tag);
 	return 0;
       }
 
       if (n=args->if) {
-	if(!id->misc->_ifs) id->misc->_ifs=([]);
-	id->misc->_ifs[args->if]=UserIf(args->if, content);
+	ctx->misc["if\0" + n] = UserIf (n, content);
 	return 0;
       }
 
       if (n=args->name) {
-	id->misc->defines[n]=content;
+	ctx->misc[n]=content;
 	old_rxml_warning(id, "attempt to define name ","variable");
 	return 0;
       }
@@ -2260,22 +2272,23 @@ class TagUndefine {
       string n;
 
       if(n=args->variable) {
-	RXML.get_context()->user_delete_var(n, args->scope);
+	RXML_CONTEXT->user_delete_var(n, args->scope);
 	return 0;
       }
 
       if (n=args->tag||args->container) {
-	RXML.get_context()->remove_runtime_tag(n);
+	m_delete (RXML_CONTEXT->misc, "tag\0" + n);
+	RXML_CONTEXT->remove_runtime_tag(n);
 	return 0;
       }
 
       if (n=args->if) {
-	m_delete(id->misc->_ifs, n);
+	m_delete(RXML_CONTEXT->misc, "if\0" + n);
 	return 0;
       }
 
       if (n=args->name) {
-	m_delete(id->misc->defines, args->name);
+	m_delete(RXML_CONTEXT->misc, args->name);
 	return 0;
       }
 
@@ -2492,10 +2505,13 @@ class TagStrLen {
 class TagCase {
   inherit RXML.Tag;
   constant name = "case";
+  // FIXME: 2.1 compat: Not mandatory.
+  mapping(string:RXML.Type) req_arg_types = (["case": RXML.t_xml (RXML.PEnt)]);
 
   class Frame {
     inherit RXML.Frame;
-    int cap=0;
+    int cap;
+    array do_enter() {cap = 0; return 0;}
     array do_process(RequestID id) {
       if(args->case) {
 	string op;
@@ -2564,22 +2580,24 @@ class FrameIf {
     if(args->or)  { and = 0; m_delete( args, "or" ); }
     if(args->and) { and = 1; m_delete( args, "and" ); }
     mapping plugins=get_plugins();
-    if(id->misc->_ifs) plugins+=id->misc->_ifs;
-    array possible = indices(args) & indices(plugins);
+    mapping(string:mixed) defs = RXML_CONTEXT->misc;
 
     int ifval=0;
-    foreach(possible, string s) {
-      ifval = plugins[ s ]->eval( args[s], id, args, and, s );
-      if(ifval) {
-	if(!and) {
-	  do_iterate = 1;
-	  return 0;
+    foreach(indices (args), string s)
+      if (RXML.Tag plugin = plugins[s] || defs["if\0" + s]) {
+	ifval = plugin->eval( args[s], id, args, and, s );
+	if(ifval) {
+	  if(!and) {
+	    do_iterate = 1;
+	    return 0;
+	  }
 	}
+	else
+	  if(and)
+	    return 0;
       }
-      else
-	if(and)
-	  return 0;
-    }
+//        else if (compat_level > "2.1")
+//  	parse_error ("Unknown if test %O.\n", s);
     if(ifval) {
       do_iterate = 1;
       return 0;
@@ -2602,6 +2620,7 @@ class TagIf {
   inherit RXML.Tag;
   constant name = "if";
   constant flags = RXML.FLAG_SOCKET_TAG;
+  array(RXML.Type) result_types = ({RXML.t_any});
   program Frame = FrameIf;
 }
 
@@ -2609,11 +2628,12 @@ class TagElse {
   inherit RXML.Tag;
   constant name = "else";
   constant flags = 0;
+  array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
-    int do_iterate=1;
+    int do_iterate;
     array do_enter(RequestID id) {
-      if(_ok) do_iterate=-1;
+      do_iterate= _ok ? -1 : 1;
       return 0;
     }
   }
@@ -2623,11 +2643,12 @@ class TagThen {
   inherit RXML.Tag;
   constant name = "then";
   constant flags = 0;
+  array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
-    int do_iterate=1;
+    int do_iterate;
     array do_enter(RequestID id) {
-      if(!_ok) do_iterate=-1;
+      do_iterate= _ok ? 1 : -1;
       return 0;
     }
   }
@@ -2636,6 +2657,7 @@ class TagThen {
 class TagElseif {
   inherit RXML.Tag;
   constant name = "elseif";
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
     inherit FrameIf;
@@ -2652,7 +2674,7 @@ class TagElseif {
     }
 
     mapping(string:RXML.Tag) get_plugins() {
-      return RXML.get_context()->tag_set->get_plugins ("if");
+      return RXML_CONTEXT->tag_set->get_plugins ("if");
     }
   }
 }
@@ -2661,6 +2683,7 @@ class TagTrue {
   inherit RXML.Tag;
   constant name = "true";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -2674,6 +2697,7 @@ class TagFalse {
   inherit RXML.Tag;
   constant name = "false";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   class Frame {
     inherit RXML.Frame;
     array do_enter(RequestID id) {
@@ -2717,7 +2741,7 @@ class TagCond
 
       // Must override this since it's used by FrameIf.
       mapping(string:RXML.Tag) get_plugins()
-	{return RXML.get_context()->tag_set->get_plugins ("if");}
+	{return RXML_CONTEXT->tag_set->get_plugins ("if");}
     }
   }
 
@@ -2786,9 +2810,10 @@ class TagEmit {
   ]);
   array(string) emit_args = indices( req_arg_types+opt_arg_types );
   RXML.Type def_arg_type = RXML.t_text(RXML.PNone);
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   int(0..1) should_filter(mapping vs, mapping filter) {
-    RXML.Context ctx = RXML.get_context();
+    RXML.Context ctx = RXML_CONTEXT;
     foreach(indices(filter), string v) {
       string|object val = vs[v];
       if(objectp(val))
@@ -2849,7 +2874,7 @@ class TagEmit {
     RXML.Context ctx;
 
     if(objectp(a0) && a0->rxml_var_eval) {
-      if(!ctx) ctx = RXML.get_context();
+      if(!ctx) ctx = RXML_CONTEXT;
       a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
@@ -2857,7 +2882,7 @@ class TagEmit {
       a0 = (string)a0;
 
     if(objectp(b0) && b0->rxml_var_eval) {
-      if(!ctx) ctx = RXML.get_context();
+      if(!ctx) ctx = RXML_CONTEXT;
       b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
@@ -3185,12 +3210,13 @@ class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   class Frame {
     inherit RXML.Frame;
-    int do_iterate=-1;
+    int do_iterate;
     array do_enter() {
-      if(args && args->preparse)
-	do_iterate=1;
+      do_iterate = args && args->preparse ? 1 : -1;
       return 0;
     }
     array do_return = ({});
@@ -3200,6 +3226,8 @@ class TagComment {
 class TagPIComment {
   inherit TagComment;
   constant flags = RXML.FLAG_PROC_INSTR;
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 }
 
 
@@ -3210,7 +3238,7 @@ class UserIf
   inherit RXML.Tag;
   constant name = "if";
   string plugin_name;
-  string rxml_code;
+  string|RXML.PCode rxml_code;
 
   void create(string pname, string code) {
     plugin_name = pname;
@@ -3224,7 +3252,11 @@ class UserIf
     TRACE_ENTER("user defined if argument "+plugin_name, UserIf);
     otruth = _ok;
     _ok = -2;
-    tmp = Roxen.parse_rxml(rxml_code, id);
+    if (stringp (rxml_code))
+      [tmp, rxml_code] =
+	RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code);
+    else
+      tmp = rxml_code->eval (RXML_CONTEXT);
     res = _ok;
     _ok = otruth;
 
@@ -3583,7 +3615,7 @@ class TagIfDefined {
   constant plugin_name = "defined";
   string|int|float source(RequestID id, string s) {
     mixed val;
-    if(!id->misc->defines || !(val=id->misc->defines[s])) return 0;
+    if(!(val=RXML_CONTEXT->misc[s])) return 0;
     if(stringp(val) || intp(val) || floatp(val)) return val;
     return 1;
   }
@@ -3727,7 +3759,7 @@ class TagEmitSources {
   constant plugin_name="sources";
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
-    return Array.map( indices(RXML.get_context()->tag_set->get_plugins("emit")),
+    return Array.map( indices(RXML_CONTEXT->tag_set->get_plugins("emit")),
 		      lambda(string source) { return (["source":source]); } );
   }
 }
@@ -3775,14 +3807,14 @@ class TagEmitValues {
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
     if(m["from-scope"]) {
       m->values=([]);
-      RXML.Context context=RXML.get_context();
+      RXML.Context context=RXML_CONTEXT;
       map(context->list_var(m["from-scope"]),
 	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
 	  return ""; });
     }
 
     if( m->variable )
-      m->values = RXML.get_context()->user_get_var( m->variable );
+      m->values = RXML_CONTEXT->user_get_var( m->variable );
 
     if(!m->values)
       return ({});
