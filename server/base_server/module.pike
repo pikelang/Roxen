@@ -276,8 +276,8 @@ array query_seclevels()
 	patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
 	break;
 
-      case "allowuser":
-	value = replace("("+(value/",")*")|("+")","(any)","(.*)");
+       case "allowuser":
+	value = replace("(^"+(value/",")*"$)|(^"+"$)","(any)","(.*)");
 	if(this->proxy_auth_needed) {
 	  patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	} else {

@@ -1,8 +1,11 @@
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 
-o fixed protocols/ftp.pike. It bugged.
+o Before allow user=foo,bar granted access to use foobar and bargaz as
+  well. Fixed with patch from Jordi Murgo (jordi@lleida.net).
 
+o fixed protocols/ftp.pike. It bugged.
+  
 o When the proxy authentification was fixed, as bug was added that
   broke normal user authenficiation.
 
