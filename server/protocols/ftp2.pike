@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.3 1998/04/03 18:19:47 grubba Exp $
+ * $Id: ftp2.pike,v 1.4 1998/04/03 21:40:54 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -66,7 +66,7 @@
 #include <module.h>
 #include <stat.h>
 
-#define FTP2_DEBUG
+// #define FTP2_DEBUG
 
 #define FTP2_XTRA_HELP ({ "Report any bugs to roxen-bugs@roxen.com." })
 
@@ -805,7 +805,7 @@ class LSFile
 }
 
 class TelnetSession {
-  static private object fd;
+  static object fd;
   static private mapping cb;
   static private mixed id;
   static private function(mixed|void:string) write_cb;
@@ -2449,12 +2449,14 @@ class FTPSession
 
   static private void timeout()
   {
-    // Recomended by RFC 1123 4.1.3.2
-    send(421, ({ "Connection timed out." }));
-    send(0,0);
-    master_session->method = "QUIT";
-    master_session->not_query = user || "Anonymous";
-    master_session->conf->log(([ "error":408 ]), master_session);
+    if (fd) {
+      // Recomended by RFC 1123 4.1.3.2
+      send(421, ({ "Connection timed out." }));
+      send(0,0);
+      master_session->method = "QUIT";
+      master_session->not_query = user || "Anonymous";
+      master_session->conf->log(([ "error":408 ]), master_session);
+    }
   }
 
   static private void got_command(mixed ignored, string line)
