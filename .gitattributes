@@ -77,9 +77,7 @@ worldmap binary
 /server/config_interface/standard/actions/make_selfsigned_rsa.pike foreign_ident
 /server/config_interface/standard/actions/openfiles.pike foreign_ident
 /server/config_interface/standard/actions/proc.pike foreign_ident
-/server/config_interface/standard/actions/processstatus.pike foreign_ident
 /server/config_interface/standard/actions/reloadconfigurations.pike foreign_ident
-/server/config_interface/standard/actions/requeststatus.pike foreign_ident
 /server/config_interface/standard/actions/resolv.pike foreign_ident
 /server/config_interface/standard/actions/restart.pike foreign_ident
 /server/config_interface/standard/actions/ssl_common.pike foreign_ident
