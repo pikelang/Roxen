@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.46 2000/01/31 03:48:20 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.47 2000/02/10 04:22:21 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -76,7 +76,7 @@ void create()
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG|VAR_INITIAL,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by appending '.' or '/' to the directory name, like "
+	 "in a directory by appending '.' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
@@ -310,7 +310,7 @@ string|mapping parse_directory(RequestID id)
     if(f[-1]!='/' && f[-1]!='.') return http_redirect(f+"/", id);
     if(f[-1]=='/' && f[-2]=='/') return http_redirect((f/"/"-({""}))*"/"+"/", id);
     if(f[-1]=='.') {
-      if(!QUERY(override)) return http_redirect(f[..sizeof(f)-3], id);
+      if(!query("override")) return http_redirect(f[..sizeof(f)-3], id);
       id->not_query="/.";
     }
   }
