@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.245 2001/06/25 17:47:27 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.246 2001/06/25 19:08:04 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2674,8 +2674,10 @@ class TagElseif {
   class Frame {
     inherit FrameIf;
     int last;
+
     array do_enter(RequestID id) {
       last=_ok;
+      do_iterate = -1;
       if(last) return 0;
       return ::do_enter(id);
     }
@@ -2737,6 +2739,7 @@ class TagCond
 
       array do_enter (RequestID id)
       {
+	do_iterate = -1;
 	if (up->result != RXML.Void) return 0;
 	content_type = up->result_type (RXML.PXml);
 	return ::do_enter (id);
