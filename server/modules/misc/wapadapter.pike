@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.9 2001/09/19 14:40:18 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.10 2001/09/25 19:59:18 nilsson Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -41,6 +41,11 @@ string ram_cache_name;
 void start(int num, Configuration conf) {
   module_dependencies (conf, ({ "cimg" }));
   ram_cache_name = query ("ram_cache_pages") && "p-code:" + conf->name;
+  query_tag_set()->prepare_context = set_entities;
+}
+
+void set_entities(RXML.Context c) {
+  c->extend_scope("client", client_scope);
 }
 
 array(string) query_file_extensions() {
@@ -178,8 +183,23 @@ static class TWml {
     return ::decode(replace([string]val, "$$", "$"));
   }
 
-  string _sprintf() {return "RXML.t_wml(" + parser_prog->name + ")";}
+  string _sprintf() { return "RXML.t_wml(" + parser_prog->name + ")"; }
 }
+
+class EntityClientWapSubscriber {
+  inherit RXML.Value;
+  mixed rxml_const_eval(RXML.Context c, string var,
+			string scope_name, void|RXML.Type type) {
+    c->id->misc->cacheable = 0;
+    if(c->id->request_headers["x-up-subno"])
+      return ENCODE_RXML_TEXT( c->id->request_headers["x-up-subno"], type );
+    return RXML.nil;
+  }
+}
+
+mapping client_scope = ([
+  "wap-subscriber" : EntityClientWapSubscriber(),
+]);
 
 TAGDOCUMENTATION;
 #ifdef manual
