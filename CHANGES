@@ -36,6 +36,12 @@ o Ftp-module now restores auth-information for every transaction. This is
 
 o Ftp-module now supports setting prestates via SITE PRESTATE.
 
+o Added some new top-level Makefile targets:
+  install_all		Install both Roxen and Pike.
+  install_pike		Install only Pike.
+  verify		Run Pikes testsuite.
+  verbose_verify	Run Pikes testsuite in verbose mode.
+
 
 Changes since Roxen Challenger 1.1.1 alpha 5
 -----------------------------------------------
