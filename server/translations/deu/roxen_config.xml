@@ -543,20 +543,6 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="86">
 <o>SSL certificate file</o>
 <t>Datei mit SSL-Zertifikat</t>
@@ -957,10 +943,6 @@ Anfrage eine Weile benötigt.</t>
 Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
 Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
-
-
-
-
 
 <str id="170">
 <o>Cache: Memory Cache Garbage Collect Interval</o>
@@ -1646,8 +1628,6 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 <t>/ an %s angehängt</t>
 </str>
 
-
-
 <str id="338">
 <o>Changed %s to %s</o>
 <t>Von %s nach %s geändert</t>
@@ -1904,10 +1884,6 @@ as the name of its log file directory.
 <o>Home</o>
 <t>Startseite</t>
 </str>
-
-
-
-
 
 <str id="363">
 <o>Documentation links</o>
@@ -2346,12 +2322,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <str id="400">
 <new/>
 <o>Update</o>
-<t></t>
-</str>
-
-<str id="0">
-<new/>
-<o>All database backups currently available</o>
 <t></t>
 </str>
 
@@ -2981,5 +2951,11 @@ server must be a MySQL server, nothing else will work.
 <str id="502">
 <new/>
 <o>Diff</o>
+<t></t>
+</str>
+
+<str id="78">
+<new/>
+<o>All database backups currently available</o>
 <t></t>
 </str>

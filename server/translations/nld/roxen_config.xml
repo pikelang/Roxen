@@ -556,20 +556,6 @@ also set 'URLs'.</o>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="86">
 <new/>
 <o>SSL certificate file</o>
@@ -1004,10 +990,6 @@ also set 'URLs'.</o>
 <o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
 <t></t>
 </str>
-
-
-
-
 
 <str id="170">
 <new/>
@@ -1790,8 +1772,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-
-
 <str id="338">
 <new/>
 <o>Changed %s to %s</o>
@@ -2089,10 +2069,6 @@ as the name of its log file directory.
 <o>Home</o>
 <t></t>
 </str>
-
-
-
-
 
 <str id="363">
 <new/>
@@ -2551,12 +2527,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <str id="400">
 <new/>
 <o>Update</o>
-<t></t>
-</str>
-
-<str id="0">
-<new/>
-<o>All database backups currently available</o>
 <t></t>
 </str>
 
@@ -3186,5 +3156,11 @@ server must be a MySQL server, nothing else will work.
 <str id="502">
 <new/>
 <o>Diff</o>
+<t></t>
+</str>
+
+<str id="78">
+<new/>
+<o>All database backups currently available</o>
 <t></t>
 </str>

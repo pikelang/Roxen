@@ -584,20 +584,6 @@ multiplicera detta värde med den här faktorn.</t>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="86">
 <o>SSL certificate file</o>
 <t>SSL-certifikatsfil</t>
@@ -1042,10 +1028,6 @@ på att en del minnesläckor fortfarande kan finns kvar. Ett sätt att återvinna mi
 slår på den här funktionen. Notera att det tar ett litet tag att starta om
 servern.</t>
 </str>
-
-
-
-
 
 <str id="170">
 <o>Cache: Memory Cache Garbage Collect Interval</o>
@@ -1735,8 +1717,6 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 <t>Lade till / på slutet av %s</t>
 </str>
 
-
-
 <str id="338">
 <o>Changed %s to %s</o>
 <t>Ändrade %s till %s</t>
@@ -2000,10 +1980,6 @@ utifrån detta namn.</t>
 <o>Home</o>
 <t>Hem</t>
 </str>
-
-
-
-
 
 <str id="363">
 <o>Documentation links</o>
@@ -2429,12 +2405,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <str id="400">
 <new/>
 <o>Update</o>
-<t></t>
-</str>
-
-<str id="0">
-<new/>
-<o>All database backups currently available</o>
 <t></t>
 </str>
 
@@ -3064,5 +3034,11 @@ server must be a MySQL server, nothing else will work.
 <str id="502">
 <new/>
 <o>Diff</o>
+<t></t>
+</str>
+
+<str id="78">
+<new/>
+<o>All database backups currently available</o>
 <t></t>
 </str>
