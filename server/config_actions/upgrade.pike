@@ -1,15 +1,23 @@
 /*
- * $Id: upgrade.pike,v 1.26 1997/09/14 18:10:54 grubba Exp $
+ * $Id: upgrade.pike,v 1.27 1997/09/14 22:17:17 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
 
 inherit "wizard";
 
+#ifdef THREADS
+object lock = Thread.Mutex();
+#endif /* THREADS */
+
 object _rpc;
 string rpc_to;
 void clear_rpc()
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   destruct(_rpc);
   _rpc = 0;
 }
@@ -17,6 +25,10 @@ void clear_rpc()
 mapping upgrade_servers = ([]);
 object connect_to_rpc(object id)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   remove_call_out(clear_rpc);
   call_out(clear_rpc, 20);
 
@@ -297,6 +309,10 @@ string page_3(object id)
 {
   if(id->variables["new"]=="0" || !id->variables["new"])
     return 0;
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
 
  object rpc = connect_to_rpc(id);
  if(!rpc) return "Failed to connect to update server.\n";
@@ -339,6 +355,10 @@ string page_2(object id)
 {
   if(id->variables["new"]=="0" || !id->variables["new"])
     return 0;
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   object rpc = connect_to_rpc(id);
   if(!rpc) return "Failed to connect to update server.\n";
 
@@ -369,6 +389,10 @@ string page_2(object id)
 string page_1(object id)
 {
   int num;
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   object rpc;
   string res=
     ("<font size=+2>Modules that have a newer version available.</font><p>"
@@ -465,6 +489,10 @@ string wizard_done(object id)
   if(sizeof(todo)==0)
     return 0;
   
+#ifdef THREADS
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   object rpc;
   int t = time();
   string res = "<font size=+2>Upgrade report</font><p>";
