@@ -299,6 +299,9 @@ bump_version: bump_version.stamp
 	      echo Done with $$d.); \
 	  else :; fi; \
 	done
+	if test -d platform/. ; then \
+	  extratag=-platform; \
+	else :; fi; \
 	@(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping Roxen version...; \
 	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
@@ -319,7 +322,7 @@ bump_version: bump_version.stamp
 	)
 	@(cd $(SRCDIR); \
 	  echo Tagging...; \
-	  cvs tag `cat VERSION | tr 'A-Z. ' 'a-z__'`||exit 1; \
+	  cvs tag `cat VERSION | tr 'A-Z. ' 'a-z__'`$$extratag||exit 1; \
 	)
 	@touch bump_version
 
@@ -345,12 +348,15 @@ faked_pre_dist:
 	-@$(MAKE) depend
 	-@$(MAKE) run_autoconfig
 
-dist:	$(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
+copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	@if test -f $(SRCDIR)/VERSION; then :; else \
 	  echo 'You need to make pre_dist first!'; \
 	  exit 1; \
 	fi
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
+	if test -d platform/. ; then \
+	  version=$$version-platform; \
+	else :; fi; \
 	if ls -d $$version* >/dev/null 2>&1; then \
 	  echo Deleting old distributions...; \
 	  rm -rf $$version* || exit 1; \
@@ -377,7 +383,13 @@ dist:	$(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	    sed <"$$f" >"$$f.fix" -e '/^#line/s!/.*/\(language\.yacc\)!\1!' && \
 	      mv "$$f.fix" "$$f"; \
 	  else :; fi; \
-	done; \
+	done;
+
+tar_dist:
+	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
+	if test -d platform/. ; then \
+	  version=$$version-platform; \
+	else :; fi; \
 	echo "Altering some CVS files to point to developer.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
 	  if egrep '^//*cvs//*roxen_src' "$$f/Repository" 2>&1 >/dev/null; \
@@ -422,3 +434,6 @@ dist:	$(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	(cd $$version; tar xf ../dbapi.tar || exit 1); \
 	echo Building lobotomized NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-$$type-nda-int.tar.gz
+
+dist: copy_dist tar_dist
+	@echo Distribution build complete.
