@@ -212,7 +212,7 @@ worldmap binary
 /server/modules/icecast/dir_playlist.pike foreign_ident
 /server/modules/icecast/icecast.pike foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
-/server/modules/ldap/ldapuserauth.pike foreign_ident
+/server/modules/ldap/userdb_ldap.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
