@@ -8,14 +8,14 @@
 <str id="1">
 <o>Starting one thread to handle requests.
 </o>
-<t>Startar en tråd för att hantera anrop.
+<t>Startar en tråd för anropshantering.
 </t>
 </str>
 
 <str id="2">
 <o>Starting %d threads to handle requests.
 </o>
-<t>Startar %d trådar för att hantera anrop.
+<t>Startar %d trådar för anropshantering.
 </t>
 </str>
 
@@ -28,19 +28,19 @@
 
 <str id="4">
 <o>All modules for %s enabled in %3.1f seconds</o>
-<t>Alla moduler till %s aktiverade på %3.1f sekunder</t>
+<t>Alla moduler i %s aktiverade på %3.1f sekunder</t>
 </str>
 
 <str id="5">
 <o>Update: Found new packages: %s
 </o>
-<t>Uppdatering: Nya paket: %s
+<t>Uppdateraren: Hittade nya paket: %s
 </t>
 </str>
 
 <str id="6">
 <o>Update: No new packages found.
 </o>
-<t>Uppdatering: Inga nya paket.
+<t>Uppdateraren: Hittade inga nya paket.
 </t>
 </str>
