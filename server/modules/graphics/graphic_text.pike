@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.241 2000/09/16 20:23:47 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.242 2000/09/18 15:42:45 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -288,9 +288,12 @@ opaque=70</gtext>
  Add space around the text.
 </attr>
 
-<attr name=talign value=left|right|center>
- Adjust the alignment of the text.
-</attr>
+"
+//  <attr name=talign value=left|right|center>
+//   Adjust the alignment of the text.
+//  </attr>
+//  At least temporarily removed from the documentation
+#"
 
 <attr name=textbelow value=color>
  Place the text centered in a box of the given color below the image
@@ -331,16 +334,19 @@ opaque=70</gtext>
  Allows the gtext parser to not be typographically correct.
 </attr>
 
-<attr name=xpad value=percentage>
- Sets the padding between characters.
- <ex type=vert>
-<gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
-<gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
-<gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
-<gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
-<gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
- </ex>
-</attr>
+"
+//  <attr name=xpad value=percentage>
+//  Sets the padding between characters.
+//  <ex type=vert>
+//  <gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
+//  <gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
+//  <gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
+//  <gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
+//  <gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
+//  </ex>
+//  </attr>
+//  At least temporarily removed from the documentation
+#"
 
 <attr name=xsize value=number>
  Sets the width.
@@ -350,9 +356,12 @@ opaque=70</gtext>
  Sets the horizontal spacing.
 </attr>
 
-<attr name=ypad value=percentage>
- Sets the padding beteen lines.
-</attr>
+"
+//  <attr name=ypad value=percentage>
+//  Sets the padding beteen lines.
+//  </attr>
+//  At least temporarily removed from the documentation
+#"
 
 <attr name=ysize value=number>
  Sets the height.
@@ -361,6 +370,8 @@ opaque=70</gtext>
 <attr name=yspacing value=number>
  Sets the vertical spacing.
 </attr>";
+
+
 constant tagdoc=([
 "anfang":#"<desc cont></desc> 
 <ex type=vert><anfang crop=\"\">This is a beginning<br />
