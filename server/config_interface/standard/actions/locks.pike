@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.2 2000/02/03 15:39:27 jhs Exp $
+ * $Id: locks.pike,v 1.3 2000/02/03 17:29:47 jhs Exp $
  */
 #include <config.h>
 
@@ -63,7 +63,7 @@ string parse( object id )
   }
   array rows = ({});
   foreach(sort(indices(res)), string q)
-    rows += ({ ({q,(string)res[q],(string)locks[q] }) });
+    rows += ({ ({q,(string)(res[q]||""),(string)(locks[q]||"") }) });
   return data+html_table( ({ "Config", "File", "Locked", "Unlocked" }), rows )+
          "<p><cf-ok>";
 }
