@@ -776,6 +776,7 @@ mapping query_container_callers() {
 
 class TagIfsuccessful {
   inherit RXML.Tag;
+  constant name = "if";
   constant plugin_name = "successful";
   int `() (string u, RequestID id) {
     return id->misc->defines[" _ok"];
@@ -784,6 +785,7 @@ class TagIfsuccessful {
 
 class TagIffailed {
   inherit RXML.Tag;
+  constant name = "if";
   constant plugin_name = "failed";
   int `() (string u, RequestID id) {
     return !id->misc->defines[" _ok"];
