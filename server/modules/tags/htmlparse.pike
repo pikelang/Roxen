@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.177 1999/05/23 00:04:04 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.178 1999/05/24 01:14:09 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2640,14 +2640,22 @@ string tag_quote(string tagname, mapping m)
 
 string tag_ximage(string tagname, mapping m, object id)
 {
-  string img = id->conf->real_file(fix_relative(m->src||"", id), id);
-  if(img && search(img, ".gif")!=-1) {
-    object fd = open(img, "r");
-    if(fd) {
-      int x, y;
-      sscanf(gif_size(fd), "width=%d height=%d", x, y);
-      m->width=x;
-      m->height=y;
+  string tmp="";
+  if(m->src)
+  {
+    string file;
+    if(file=id->conf->real_file(fix_relative(m->src||"", id), id))
+    {
+      array(int) xysize;
+      if(xysize=Dims.dims()->get(file))
+      {
+	m->width=(string)xysize[0];
+	m->height=(string)xysize[1];
+      }else{
+	m->err="Dims failed";
+      }
+    }else{
+      m->err="Virtual path failed";
     }
   }
   return make_tag("img", m);
@@ -2819,6 +2827,7 @@ mapping query_tag_callers()
 	    "list-tags":tag_list_tags,
 	    "number":tag_number,
 	    "imgs":tag_ximage,
+	    "ximg":tag_ximage,
 	    "version":tag_version,
 	    "set":tag_set,
 	    "append":tag_append,
