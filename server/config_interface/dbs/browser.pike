@@ -595,7 +595,7 @@ mapping|string parse( RequestID id )
 
   res += table_module_info( "" );
   
-  res +="<a href='edit_group.pike?group="+
+  res +="<br /><a href='edit_group.pike?group="+
     Roxen.http_encode_string(DBManager.db_group( id->variables->db ))+"'>"+
     sprintf( (string)
 	     _(506,"Member of the %s database group"),
