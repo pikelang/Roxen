@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>eng</language>
-<dumped>975000170</dumped>
+<dumped>975000342</dumped>
 <file>../base_server/config_userdb.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
@@ -38,8 +38,6 @@
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/update.pike</file>
 
-
-
 <str id="2">
 <o>Sent data:</o>
 <t></t>
@@ -52,11 +50,6 @@
 
 <str id="4">
 <o>Sent headers:</o>
-<t></t>
-</str>
-
-<str id="5">
-<o>Number of requests:</o>
 <t></t>
 </str>
 
@@ -122,16 +115,6 @@
 
 <str id="18">
 <o>Security: Security level</o>
-<t></t>
-</str>
-
-<str id="19">
-<o>The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -836,16 +819,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="152">
-<o>Update the supports database automatically</o>
-<t></t>
-</str>
-
-<str id="153">
-<o>If set to Yes, the etc/supports file will be updated automatically from www.roxen.com now and then. This is recomended, since you will then automatically get supports information for new clients, and new versions of old ones.</o>
-<t></t>
-</str>
-
 <str id="154">
 <o>ABS: Enable Anti-Block-System</o>
 <t></t>
@@ -1046,11 +1019,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="195">
-<o>Edit Module Variables</o>
-<t></t>
-</str>
-
 <str id="196">
 <o>Tasks</o>
 <t></t>
@@ -1191,26 +1159,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="222">
-<o>Create new user</o>
-<t></t>
-</str>
-
-<str id="223">
-<o>Delete old user</o>
-<t></t>
-</str>
-
-<str id="224">
-<o>Create User</o>
-<t></t>
-</str>
-
-<str id="225">
-<o>User ID</o>
-<t></t>
-</str>
-
 <str id="226">
 <o>Permission denied</o>
 <t></t>
@@ -1226,23 +1174,8 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="245">
-<o>Normal</o>
-<t></t>
-</str>
-
-<str id="246">
-<o>Reversed</o>
-<t></t>
-</str>
-
 <str id="247">
 <o>Clear Log</o>
-<t></t>
-</str>
-
-<str id="248">
-<o>Create new site</o>
 <t></t>
 </str>
 
@@ -1253,11 +1186,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 
 <str id="250">
 <o>Empty</o>
-<t></t>
-</str>
-
-<str id="400">
-<o>Initial Variables</o>
 <t></t>
 </str>
 
@@ -1321,16 +1249,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="262">
-<o>Character encoding</o>
-<t></t>
-</str>
-
-<str id="263">
-<o>Send pages to client in this character encoding.</o>
-<t></t>
-</str>
-
 <str id="264">
 <o>Mountpoint</o>
 <t></t>
@@ -1348,31 +1266,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 
 <str id="267">
 <o>View</o>
-<t></t>
-</str>
-
-<str id="269">
-<o>Site name:</o>
-<t></t>
-</str>
-
-<str id="270">
-<o>
-The name of the configuration must contain characters
-other than space and tab, it should not end with
-~, and it must not be 'CVS', 'Global Variables' or
-'global variables', nor the name of an existing
-configuration, and the character '/' cannot be
-used. This name will show up in the sites menu, a
-lowercased, filesystem-friendly version will become
-the virtual server's configuration file name as well
-as the name of its log file directory.
-</o>
-<t></t>
-</str>
-
-<str id="271">
-<o>with template</o>
 <t></t>
 </str>
 
@@ -1496,11 +1389,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="296">
-<o>Illegal site name</o>
-<t></t>
-</str>
-
 <str id="297">
 <o>New row</o>
 <t></t>
@@ -1553,16 +1441,6 @@ as the name of its log file directory.
 
 <str id="230">
 <o>The charset to use when rendering configuration interface pages.</o>
-<t></t>
-</str>
-
-<str id="231">
-<o>Preferred language</o>
-<t></t>
-</str>
-
-<str id="232">
-<o>Which one of the completed translations of the administration interface to use.</o>
 <t></t>
 </str>
 

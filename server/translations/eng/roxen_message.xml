@@ -2,12 +2,12 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>eng</language>
-<dumped>974833157</dumped>
+<dumped>975000350</dumped>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
 <file>../modules/configuration/update.pike</file>
-<file>../protocols/prot_hilfe.pike</file>
 <file>../protocols/prot_fhttp.pike</file>
+<file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
 
 <str id="1">
@@ -80,11 +80,6 @@ Check that your password database is correct for user %s(%d),
 
 <str id="17">
 <o>SSL3: No private key found.</o>
-<t></t>
-</str>
-
-<str id="18">
-<o>No SSL support available.</o>
 <t></t>
 </str>
 
