@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.152 2000/08/12 18:22:12 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.153 2000/08/12 19:22:57 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1786,8 +1786,8 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
  The value the variable should have appended.
 
  <ex>
- <define variable='var.ris'/>
- <append variable='var.ris' value='Roxen Internet Software'/>
+ <set variable='var.ris' value='Roxen'/>
+ <append variable='var.ris' value=' Internet Software'/>
  <ent>var.ris</ent>
  </ex>
 </attr>
@@ -1848,17 +1848,17 @@ using the pre tag.
 
 </desc>
 
-<attr name=nobr>
- Do not replace newlines with <tag>br /</tag>:s.
-</attr>
-
 <attr name=p>
- Replace double newlines with <tag>p</tag>:s.
+ Replace empty lines with <tag>p</tag>:s.
 <ex><autoformat p=''>
 It is almost like
 
 using the pre tag.
 </autoformat></ex>
+</attr>
+
+<attr name=nobr>
+ Do not replace newlines with <tag>br /</tag>:s.
 </attr>
 
 <attr name=class value=string>
@@ -1985,7 +1985,6 @@ January the 1st, 1970</i>) instead of the current time. This is mostly
 useful when the <tag>date</tag> tag is used from a Pike-script or
 Roxen module.
 
-<ex ><date unix-time='1'/></ex>
 <ex ><date unix-time='120'/></ex>
 </attr>
 
@@ -1995,22 +1994,21 @@ Display the time from another timezone.
 
 <attr name=years value=number>
  Add this number of years to the result.
- <ex ><date date='' years='2' type='discordian'/></ex>
+ <ex ><date date='' years='2'/></ex>
 </attr>
 
 <attr name=months value=number>
  Add this number of months to the result.
- <ex ><date date='' months='2' type='discordian'/></ex>
+ <ex ><date date='' months='2'/></ex>
 </attr>
 
 <attr name=weeks value=number>
  Add this number of weeks to the result.
- <ex ><date date='' weeks='2' type='discordian'/></ex>
+ <ex ><date date='' weeks='2'/></ex>
 </attr>
 
 <attr name=days value=number>
  Add this number of days to the result.
- <ex ><date date='' days='2' type='discordian'/></ex>
 </attr>
 
 <attr name=hours value=number>
@@ -2020,17 +2018,15 @@ Display the time from another timezone.
 
 <attr name=beats value=number>
  Add this number of beats to the result.
- <ex ><date time='' beats='2'/></ex>
+ <ex ><date time='' beats='10' type='iso'/></ex>
 </attr>
 
 <attr name=minutes value=number>
  Add this number of minutes to the result.
- <ex ><date time='' minutes='2'/></ex>
 </attr>
 
 <attr name=seconds value=number>
  Add this number of seconds to the result.
- <ex ><date time='' seconds='2'/></ex>
 </attr>
 
 <attr name=adjust value=number>
@@ -2427,9 +2423,9 @@ possible to hide variables so that they are not listed with this tag.
 <attr name=variables value=full|plain>
   Sets how the output should be formatted. 
  <ex>
-  <pre>
-   <insert variables='full' scope='roxen'/>
-  </pre>
+<pre>
+<insert variables='full' scope='roxen'/>
+</pre>
  </ex>
 </attr>
 
@@ -2444,9 +2440,7 @@ possible to hide variables so that they are not listed with this tag.
 </attr>
 
  <ex>
-  <pre>
-   <insert scopes=''/>
-  </pre>
+   <insert scopes='plain'/>
  </ex>
 </attr>",
 
