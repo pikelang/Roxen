@@ -102,25 +102,19 @@ string selected_item( string q, Configuration c, RequestID id,
     if( (group_name != "_misc")  )
     {
       fin = 1;
-      if( group_name != module_group )
-      {
-	if(sizeof( gd[1] ) > 1)
-	  onlysel = 1;
+      if( group_name != module_group && (sizeof( gd[1] ) > 3) )
+	onlysel = 1;
+      if( onlysel )
 	pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' alt='' /></td>"
-		"<td><a href=\""+quoted_url+
-		Roxen.http_encode_string(group_name)+
+		"<td><a href=\""+quoted_url+Roxen.http_encode_string(group_name)+
 		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
-		": ...</a><br />\n");
-	pre += "<table cellspacing='0' cellpadding='0'>\n";
-      }
+		":...</a><br />\n");
       else
-      {
 	pre += ("\n<tr><td valign='top'>"
 		"<img src=\"&usr.selected-indicator;\" width='12'"
 		" height='12' alt='' /></td>"
 		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
-	pre += "<table cellspacing='0' cellpadding='0'>\n";
-      }
+      pre += "<table cellspacing='0' cellpadding='0'>\n";
     }
     foreach( gd[1], mapping data )
     {
