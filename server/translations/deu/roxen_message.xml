@@ -220,11 +220,8 @@ Kein Modul mit diesem Namen: "%s".</t>
 </str>
 
 <str id="45">
-<changed from="Failed to enable the module %s. Skipping.
-%s"/>
 <o>Failed to enable the module %s. Skipping.</o>
-<t>Fehler beim Aktivieren des Moduls %s. Überspringen.
-%s</t>
+<t>Fehler beim Aktivieren des Moduls %s. Überspringen.</t>
 </str>
 
 <pike>
@@ -327,17 +324,13 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="58">
-<changed from="Syntax error in security patterns: Cannot find the user database ''
-"/>
 <o>Syntax error in security patterns: Cannot find the user database '%s'</o>
-<t>Syntaxfehler in Security-Muster: Kann nicht die Benuterdatenbank finden ''</t>
+<t>Syntaxfehler in Security-Muster: Kann nicht die Benuterdatenbank '%s' finden</t>
 </str>
 
 <str id="59">
-<changed from="Syntax error in security patterns: Cannot find the auth method ''
-"/>
 <o>Syntax error in security patterns: Cannot find the auth method '%s'</o>
-<t>Syntaxfehler in Security-Muster: Kann nicht die Auth-Methode finden ''</t>
+<t>Syntaxfehler in Security-Muster: Kann nicht die Auth-Methode '%s' finden</t>
 </str>
 
 <str id="60">
