@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.21 1997/09/17 21:40:06 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.22 1997/09/26 11:24:23 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -42,7 +42,7 @@ void create(string reason, int|string|void uid, int|void gid)
 
 #ifdef THREADS
   if (roxen->euid_egid_lock) {
-    mutex_key = roxen->euid_egid_lock->lock();
+    catch { mutex_key = roxen->euid_egid_lock->lock(); };
   }
 #endif /* THREADS */
 
