@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.31 2002/03/22 09:53:00 jonasw Exp $
+ * $Id: config.h,v 1.32 2002/04/05 12:42:16 jonasw Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -11,9 +11,11 @@
 
 
 
-//  FIXME: Until MySQL gets patched for a security hole we need this
-//  compatibility flag.
-#define UNSAFE_MYSQL
+//  If you are running an MySQL older than 3.23.49 (which lacks a patch for
+//  a security hole in LOAD DATA LOCAL) you need to set this compatibility
+//  flag.
+//
+//  #define UNSAFE_MYSQL
 
 
 #if efun(thread_create)
