@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.99 1999/05/19 07:09:29 peter Exp $
+// $Id: roxenlib.pike,v 1.100 1999/05/31 18:33:57 grubba Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -697,8 +697,8 @@ static string short_date(int timestamp)
 {
   int date = time(1);
   
-  if(ctime(date)[19..22] < ctime(timestamp)[19..22])
-    return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[19..22];
+  if(ctime(date)[20..23] != ctime(timestamp)[20..23])
+    return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[20..23];
   
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
