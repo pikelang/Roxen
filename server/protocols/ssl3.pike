@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.10 1997/08/03 22:53:13 grubba Exp $
+/* $Id: ssl3.pike,v 1.11 1997/08/09 20:55:55 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -469,8 +469,10 @@ void http_fallback(object alert, object|int n, string data)
     /* Redirect to a https-url */
 //    my_fd->set_close_callback(0);
 //    my_fd->leave_me_alone = 1;
+    trace(100);
     fallback_redirect_request(my_fd->raw_file, data,
-			      my_fd->config->query("MyWorldLocation") || "/",
+			      (my_fd->config &&
+			       my_fd->config->query("MyWorldLocation")) || "/",
 			      my_fd->context->port);
     destruct(my_fd);
     destruct(this_object());
