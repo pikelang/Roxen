@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $
+ * $Id: ldaptag.pike,v 1.10 2000/02/13 02:57:04 hop Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -32,11 +32,12 @@
      1999-06-24 v1.7	Fixed bug in testing connection status 
      1999-07-24 v1.8a	LDAPOUTPUT: added new parameter 'sortby' and 'quote'
      2000-02-04 v1.9	LDAPOUTPUT: added new parameter 'sizelimit', 'timelimit'
+     2000-02-13 v1.10	LDAPOUTPUT: added new parameter 'charset'
 
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.10 2000/02/13 02:57:04 hop Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -147,6 +148,9 @@ array register_module()
 	     "</td></tr>"
 	     "<tr><td valign=top><b>timelimit</b></td>"
 	     "<td>Restriction on time of search operation on server side"
+	     "</td></tr>"
+	     "<tr><td valign=top><b>charset</b></td>"
+	     "<td>Specifies the charset to use for encoding values"
 	     "</td></tr>"
 	     "</table></ul><p>\n"
 	     "The following attributes are used by &lt;ldapfor&gt; tag:<ul>\n"
@@ -434,6 +438,20 @@ int is_attrval_greater(mapping m1, mapping m2, string attrname) {
     return 0;
 }
 
+#if efun(_Charset.encoder)
+string deutf8(string cset, string value) {
+
+  if(stringp(cset) && sizeof(cset)) {
+    string o, s = utf8_to_string(value);
+    mixed error = catch(o=_Charset.encoder(cset)->feed(s)->drain());
+    if(!error) {
+      //DEBUGLOG(sprintf("encoded to: %s",cset));
+      return(o);
+    }
+  }
+  return(value);
+}
+#endif
 
 string ldapoutput_tag(string tag_name, mapping args, string contents,
 		     object request_id, object f,
@@ -449,6 +467,7 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
     string basedn = query("basedn");
     string user = query("user");
     string password = query("password");
+    string cset = query("charset");
     object con = 0, en;
     array(mapping(string:mixed)) result;
     function dir_connect = request_id->conf->dir_connect;
@@ -479,6 +498,8 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
       password = args->password;
       dir_connect = 0;
     }
+    if (args->charset)
+      cset = args->charset;
     if (dir_connect) {
       error = catch(con = dir_connect(host));
     } else {
@@ -646,7 +667,11 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 		  } //case
 		}
 	      }
+#if efun(_Charset.encoder)
+	      res_array += ({ ((value=="")?nullvalue:deutf8(cset, value)) }) + ({});
+#else
 	      res_array += ({ ((value=="")?nullvalue:value) }) + ({});
+#endif
 	    } else if (atype == "dn") {
 	      /* Get DN */
 		;
@@ -733,6 +758,18 @@ void create()
 	 TYPE_STRING,
 	 "Specifies the default password to use for access.\n"
 	 "<br><p><b>DEPRECATED!</b>");
+
+  defvar("charset", "", "Defaults:  charset",
+	 TYPE_STRING,
+	 "Specifies the default charset to use for encoding values.\n"
+	 "<br><p>Usable only for decoding UTF8-coded strings to national "
+	 "character set (like iso-8859-1, iso-8859-2, ...)"
+	 "<br><p><b>Be warned!</b>"
+	 "<br>LDAP servers works with national characters "
+	 "in protocol v2 mode (only one implemented in Pike/Roxen) very "
+	 "specificly (Netscape Directory server uses UTF8, but M$ Exchange "
+	 "doesn't)."
+	 "<br><p>Empty value forbidden decoding.");
 }
 
 /*
