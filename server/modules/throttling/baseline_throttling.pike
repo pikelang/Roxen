@@ -1,7 +1,9 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.4 2000/02/12 16:09:30 nilsson Exp $";
+constant cvs_version="$Id: baseline_throttling.pike,v 1.5 2000/03/17 14:13:27 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

@@ -1,12 +1,12 @@
 /*
  * by Francesco Chemolli
- * (C) 1999 Idonex AB
+ * This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
  *
  * Notice: this might look ugly, it's been designed to be split into
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.5 2000/02/12 16:09:30 nilsson Exp $";
+constant cvs_version="$Id: throttling_bytype.pike,v 1.6 2000/03/17 14:13:27 nilsson Exp $";
 
 #include <module.h>
 inherit "throttlelib";

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.13 2000/02/08 22:10:00 nilsson Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.14 2000/03/17 13:59:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

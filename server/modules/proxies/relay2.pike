@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000, Roxen IS.
+
 inherit "module";
 inherit "roxenlib";
 constant module_type = MODULE_FIRST|MODULE_LAST;
