@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.122 2000/05/05 15:54:00 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.123 2000/05/09 11:23:51 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2627,7 +2627,7 @@ Communicating?
 
 <attr name=email>
  Only print the e-mail address of the user, with no link.
- <ex>Email: <user name='kuntri' email=''/></ex>
+ <ex type='box'>Email: <user name='foo' email=''/></ex>
 </attr>
 
 <attr name=link>
@@ -2637,7 +2637,7 @@ Communicating?
 <attr name=name>
  The login name of the user. If no other attributes are specified, the
  user's realname and email including links will be inserted.
-<ex><user name='kuntri'/></ex>
+<ex type='box'><user name='foo'/></ex>
 </attr>
 
 <attr name=nolink>
@@ -2650,7 +2650,7 @@ Communicating?
 
 <attr name=realname>
  Only print the full name of the user, with no link.
-<ex><user name='kuntri' realname=''/></ex>
+<ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
 "if#expr":#"<desc plugin>
