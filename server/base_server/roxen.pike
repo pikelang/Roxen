@@ -224,7 +224,7 @@ private static void accept_callback( object port )
     mark_fd( file->query_fd(), "Connection from "+file->query_address());
 
     object request;
-    request = new(portno[port][-1]);
+    request = portno[port][-1]();
     request->assign( file, portno[port][1] );
 #ifdef SOCKET_DEBUG
     perror(sprintf("SOCKETS:   Ok. Connect on %O:%O from %O\n", 
@@ -258,7 +258,7 @@ object create_listen_socket(mixed port_no, object conf,
 
   if(!port_no)
   {
-    port = new( Port, "stdin", accept_callback );
+    port = Port ( "stdin", accept_callback );
 
     if(port->errno())
     {
@@ -266,7 +266,7 @@ object create_listen_socket(mixed port_no, object conf,
 		   "Errno is "+port->errno()+"\n");
     }
   } else {
-    port = new( Port );
+    port = Port ();
     if(!stringp(ether) || (lower_case(ether) == "any"))
       ether=0;
     if(ether)
@@ -295,7 +295,7 @@ object create_listen_socket(mixed port_no, object conf,
   }
   if(conf && QUERY(uselock) && (QUERY(copies) > 1))
     portno[port]=({ port_no, conf, ether||"Any", 
-		    clone((program)"lock",  port_no + (ether?hash(ether):0)),
+		    ((program)"lock")( port_no + (ether?hash(ether):0)),
 		    requestprogram });
   else
     portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
@@ -329,7 +329,7 @@ object configuration_interface()
     loading_config_interface = 1;
     
 
-    configuration_interface_obj= new( "mainconfig" );
+    configuration_interface_obj= ( (program) "mainconfig" )();
     root = configuration_interface_obj->root;
   }
   if(!configuration_interface_obj)
@@ -473,14 +473,14 @@ private void parse_supports_string(string what)
 	continue;
     
       if(bar[0] == "default")
-	default_supports = aggregate_list(@bar[1..]);
+	default_supports = aggregate_multiset(@bar[1..]);
       else
       {
 	gazonk = bar[1..];
 	supports[current_section]
-	  += ({ ({ new(Regexp, bar[0])->match,
-		     aggregate_list(@positive_supports(gazonk)),
-		     aggregate_list(@negative_supports(gazonk)),
+	  += ({ ({ Regexp(bar[0])->match,
+		     aggregate_multiset(@positive_supports(gazonk)),
+		     aggregate_multiset(@negative_supports(gazonk)),
 		     })});
       }
     }
@@ -1566,7 +1566,7 @@ void init_log_file(object conf)
       if(strlen(query("LogFile")))
       {
 	mkdirhier(query("LogFile"));
-	lf=new(File);
+	lf=File();
 	if(!(lf->open( query("LogFile"), "wac")))
 	{
 	  destruct(lf);
@@ -2110,7 +2110,7 @@ void enable_configuration(string config)
   
   perror("Enabling virtual server '"+config+"'\n");
   
-  current_configuration = new(Configuration, config);
+  current_configuration = Configuration(config);
   configurations += ({ current_configuration });
   
 
@@ -2194,7 +2194,7 @@ void enable_configuration(string config)
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
 	 "stdout for standard output, or stderr for standard error, or "+
-	 "a file name. May be relative to "+cwd()+".",0, log_is_not_enabled);
+	 "a file name. May be relative to "+getcwd()+".",0, log_is_not_enabled);
   
   defvar("NoLog", ({ }), 
 
@@ -2542,14 +2542,14 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("ModuleDirs", ({ "modules/" }), "Module directories", TYPE_DIR_LIST,
 	  "Where to look for modules. Can be relative paths, from the "
-	  "directory you started roxen, " + cwd() + " this time."
+	  "directory you started roxen, " + getcwd() + " this time."
 	  " The directories are searched in order for modules.");
   
   globvar("Supports", "#include <etc/supports>\n", 
 	  "Client supports regexps", TYPE_TEXT_FIELD,
 	  "What do the different clients support?\n<br>"
 	  "The default information is normally fetched from the file "+
-	  cwd()+"etc/supports, and the format is:<pre>"
+	  getcwd()+"etc/supports, and the format is:<pre>"
 	  "<a href=$docurl/configuration/regexp.html>regular-expression</a>"
 	  " feature, -feature, ...\n"
 	  "</pre>"
@@ -2775,6 +2775,9 @@ private void dump_variables(string file, mapping variables, array info,
 // user. This is not needed when the server is started.
 void scan_module_dir(string d)
 {
+  string file,path=d;
+  mixed err;
+
   foreach( get_dir( d )||({}), file)
   {
     if ( !backup_extension(file) )
@@ -2790,7 +2793,7 @@ void scan_module_dir(string d)
 	if (!(err=catch( module_info = lambda ( string file ) {
 	  array foo;
 	  object o;
-	  o =  clone(compile_file(file));
+	  o =  compile_file(file)();
 #ifdef MODULE_DEBUG
 	  perror(" load ok - ");
 #endif
@@ -2969,7 +2972,7 @@ void init_shuffler()
   {
     if(shuffler)
       destruct(shuffler);
-    out=new(File);
+    out=File();
     out2=out->pipe();
     mark_fd(out->query_fd(), "Data shuffler local end of pipe.\n");
     spawne("bin/shuffle", ({}), ({}), out2, stderr, stderr, 0, 0);
@@ -3114,8 +3117,6 @@ array fork_it()
 varargs int main(int argc, array (string) argv)
 {
   mixed tmp;
-
-  _master->add_object("roxen", this_object());
 
   start_time=time(1);
   

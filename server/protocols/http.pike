@@ -70,7 +70,7 @@ void end(string|void);
 private void setup_pipe(int noend)
 {
   if(!my_fd) return end();
-  if(!pipe)  pipe=clone((program)"/precompiled/pipe");
+  if(!pipe)  pipe=((program)"/precompiled/pipe")();
   if(!noend) pipe->set_done_callback(end);
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");
@@ -167,7 +167,7 @@ private int really_set_config(array mod_config)
 
     my_fd->write(prot+" 302 Config In Prestate!\r\n"
 		 +"\r\nLocation: "+roxen->query("MyWorldLocation")+
-		 add_pre_state(url, aggregate_list(@prestate))+"\r\n"
+		 add_pre_state(url, aggregate_multiset(@prestate))+"\r\n"
 		 +"Content-Type: text/html\r\n"
 		 +"Content-Length: 0\r\n\r\n");
   }
@@ -833,7 +833,7 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c;
-  c=clone(object_program(this_object()));
+  c=object_program(this_object())();
 
   c->my_fd = 0;
   c->conf = conf;

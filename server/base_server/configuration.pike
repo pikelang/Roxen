@@ -59,7 +59,7 @@ array (object) allocate_pris()
   int a;
   array (object) tmp;
   tmp=allocate(10);
-  for(a=0; a<10; a++)  tmp[a]=new(prip);
+  for(a=0; a<10; a++)  tmp[a]=prip();
   return tmp;
 }
 

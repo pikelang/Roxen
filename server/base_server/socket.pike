@@ -32,7 +32,7 @@ private void got_host_name(string host, string oh, int port,
 			   function callback, mixed ... args)
 {
   object f;
-  f=new(File);
+  f=File();
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
 #endif
@@ -85,7 +85,7 @@ private void my_pipe_done(object which)
 void async_pipe(object to, object from, function|void callback, 
 		mixed|void id, mixed|void cl, mixed|void file)
 {
-  object pipe=new(Pipe);
+  object pipe=Pipe();
   object cache;
 
 #ifdef SOCKET_DEBUG

@@ -21,6 +21,7 @@ void handle_error(mixed *trace)
 void create()
 {
   /* make ourselves known */
+  add_constant("_master",this_object());
   add_constant("master",lambda() { return this_object(); });
   add_constant("describe_backtrace",describe_backtrace);
   add_constant("version",lambda() { return "Pike v0.2"; });

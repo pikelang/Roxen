@@ -28,7 +28,7 @@ void initiate_languages()
       string alias;
       object l;
       p += capitalize(lang[0..search(lang, ".")-1])+" ";
-      l = clone(compile_file("languages/"+lang));
+      l = compile_file("languages/"+lang)();
       if(tmp=l->aliases())
       {
 	foreach(tmp, alias)

@@ -1,4 +1,5 @@
 #include <module.h>
+#include <simulate.h>
 inherit "roxenlib";
 object this = this_object();
 
@@ -65,7 +66,8 @@ private program CacheStream = class {
     string head;
     head = encode_value(headers);
 //    perror("Writing heders to "+fname+".head\n");
-    write_bytes(QUERY(cachedir)+fname+".head", head);
+    rm(QUERY(cachedir)+fname+".head");
+    write_file(QUERY(cachedir)+fname+".head", head);
   }
   
   void create(object a, string s, int n)
@@ -88,10 +90,10 @@ private program CacheStream = class {
 
 
 program Cache = class {
-  object lock = new( "lock" );
+  object lock = ((program) "lock" )();
   object this = this_object();
   string cd;
-  object command_stream = clone(File);
+  object command_stream = File();
 
 //  void destroy()
 //  {
@@ -160,7 +162,7 @@ program Cache = class {
       return;
     }
     /* Child */
-    lcs->dup2( new(File, "stdin") );
+    lcs->dup2( File ("stdin") );
     exec("bin/pike", "-m", "etc/master.pike",
 	 "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");
@@ -239,7 +241,7 @@ public void reinit_garber()
   if(cache)
     cache->reinit(QUERY(cachedir)+"logs/");
   else
-    cache = new(Cache, QUERY(cachedir)+"logs/");
+    cache = Cache (QUERY(cachedir)+"logs/");
 }
 
 public void init_garber()
@@ -254,7 +256,7 @@ object new_cache_stream(object fp, string fn)
 {
   object res;
   if(!QUERY(cache)) return 0;
-  res=new(CacheStream, fp, fn, 1);
+  res=CacheStream (fp, fn, 1);
 #ifdef DEBUG
   mark_fd(fp->query_fd(), "Cache stream to "+fn+"\n");
 #endif
