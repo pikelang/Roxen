@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.99 2004/06/09 09:28:16 grubba Exp $
+ * $Id: ftp.pike,v 2.100 2004/06/09 12:35:29 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -672,7 +672,10 @@ class LS_L(static RequestID master_session,
 	user = name_from_uid(st[5]);
       }
 
-      // FIXME: Convert st[6] to symbolic group name.
+      if (!stringp(st[6])) {
+	// FIXME: Convert st[6] to symbolic group name.
+	if (!st[6]) group = "wheel";
+      }
     }
 
     string ts;
