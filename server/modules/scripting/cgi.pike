@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.52 1997/10/14 21:04:18 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.53 1997/10/14 21:08:06 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -517,7 +517,6 @@ class sender
 
   void write_cb()
   {
-    trace(100);
     if (sizeof(to_send)) {
       int len = fd->write(to_send);
       if ((to_send = to_send[len..]) == "") {
@@ -526,7 +525,6 @@ class sender
     } else {
       fd->close();
     }
-    trace(0);
   }
   void close_cb()
   {
