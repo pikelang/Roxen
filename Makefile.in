@@ -1,0 +1,44 @@
+# @configure_input@
+SRCDIR=@srcdir@
+VPATH=@srcdir@
+prefix=@prefix@
+
+all:	extern pike
+	@(cd extern;$(MAKE) all;cd ..)
+	@(cd pike/src;$(MAKE);cd ..)
+
+
+clean:
+	@(cd extern;$(MAKE) clean)
+	@(cd pike/src;$(MAKE) clean)
+
+install: all
+	$(SRCDIR)/mkdir -p $(prefix)/roxen/
+	cp -r $(SRCDIR)/server $(prefix)/roxen/
+	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
+		$(prefix)/roxen/server/*/*/CVS
+	cp pike/src/pike $(prefix)/roxen/server/bin
+	@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
+	@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
+	@(cd extern;$(MAKE) install;cd ../)
+
+
+localinstall: all
+	cp pike/src/pike $(SRCDIR)/server/bin/
+	(cd extern; $(MAKE) localinstall)
+
+spotless:  clean
+	@(cd extern;$(MAKE) spotless)
+	@(cd pike/src;$(MAKE) spotless)
+	rm -f server/bin/selfdir server/bin/roxen_hostname pike/src/pike\
+	pike/src/pike.old server/bin/proxygarb 
+	find . '(' -name '#*#' -o -name '*~' -o -name '.*~' -o -name '*.bak'\
+        -o -name '.pine-debug*' -o -name '.*.bak' -o -name core -o -name \
+	config.cache -o -name config.status -o -name config.log -o -name \
+	"*.a" ')'  -print -exec /bin/rm '{}'  ';'
+	rm -rf server/logs
+	rm -rf logs
+
+
+distribute:	spotless
+	@(cd extern; $(MAKE) distribute)

@@ -1,0 +1,93 @@
+PROFIL=
+#PROFIL=-pg
+
+LIBS=@LIBS@ $(EXTRALIBS)
+CC=@CC@
+SRCDIR=@srcdir@
+prefix=@prefix@
+VPATH=@srcdir@
+
+HAVE_SSL=@ssl@
+HAVE_SHUFFLE=@shuffle@
+
+CFLAGS=-g @DEFS@ $(PREFLAGS) $(OTHERFLAGS)
+PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
+
+all: roxen_hostname cgi $(HAVE_SSL) $(HAVE_SHUFFLE) fcgi
+
+pure: purerecgi pureshuffle roxen_hostname puressl
+
+no: 
+none:
+no-install: 
+none-install:
+no-localinstall: 
+none-localinstall:
+-localinstall:
+-install:
+
+yes: ssl
+yes-install: ssl-install
+yes-localinstall: ssl-localinstall
+
+fcgi: 
+	(cd fast_cgi; make)
+	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
+	@(strip fcgi || echo)
+
+ssl:	ssl.c Makefile
+	gcc $(CFLAGS) -Wall -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o ssl $(SRCDIR)/ssl.c -lssl -lcrypto $(LIBS)
+	@(strip ssl || echo)
+
+puressl: ssl.o	Makefile
+	purify gcc -Wall -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o puressl ssl.o -lssl -lcrypto $(LIBS)
+
+roxen_hostname: roxen_hostname.o Makefile
+	$(CC) $(ARGS) -o roxen_hostname roxen_hostname.o $(LIBS)
+
+cgi: cgi.o Makefile
+	$(CC) $(ARGS) -o cgi cgi.o $(LIBS)
+
+purecgi: cgi.o Makefile
+	purify $(CC) $(ARGS) -o cgi cgi.o $(LIBS)
+
+shuffle:	shuffle.o
+	$(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
+	@(strip shuffle || echo)
+
+
+pureshuffle:	shuffle.o
+	purify $(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
+
+shuffle-install: shuffle
+	cp shuffle $(prefix)/roxen/server/bin
+
+shuffle-localinstall: shuffle
+	cp shuffle $(SRCDIR)/../server/bin
+
+ssl-install:	ssl
+	cp ssl $(prefix)/roxen/server/bin
+
+ssl-localinstall:	ssl
+	cp ssl $(SRCDIR)/../server/bin
+
+install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
+	cp roxen_hostname fcgi cgi $(prefix)/roxen/server/bin
+	@echo Done.
+
+localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-localinstall
+	cp fcgi roxen_hostname cgi $(SRCDIR)/../server/bin
+	@echo Done.
+
+.c.o:
+	$(CC) -c -I. -I$(SRCDIR) $(CFLAGS) $<
+
+clean: 
+	@rm -f roxen_hostname cgi shuffle fcgi ssl *.o  core
+	@(cd fast_cgi; make clean)
+
+spotless: clean
+	@rm -f config.* stamp-h
+
+distribute: spotless
+	@rm -f Makefile

@@ -1,0 +1,38 @@
+#
+#  Makefile for FastCGI application library
+#
+#  Open Market, Inc.
+#
+#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:41 per Exp $
+#
+SRCDIR=@srcdir@
+prefix=@prefix@
+VPATH=@srcdir@
+
+SHELL	= /bin/sh
+CC	= @CC@
+INCLUDEDIR  = -I$(SRCDIR)/../include -I../include -I. -I..
+CFLAGS	= @CCDEFS@ @PROFILE@ $(INCLUDEDIR) 
+RANLIB	= @RANLIB@
+LIBOBJS	= @LIBOBJS@
+
+OBJS	    = fcgiapp.o fcgi_stdio.o $(LIBOBJS)
+INCLUDES    = $(INCLUDEDIR)/fastcgi.h $(INCLUDEDIR)/fcgiapp.h \
+	      $(INCLUDEDIR)/fcgimisc.h $(INCLUDEDIR)/fcgiappmisc.h \
+	      $(INCLUDEDIR)/fcgi_stdio.h
+
+
+all: libfcgi.a
+
+libfcgi.a: $(OBJS)
+	ar cr libfcgi.a $(OBJS)
+	$(RANLIB) libfcgi.a
+
+clean:
+	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
+
+# ----------------------------------------------------------------------------
+
+fcgiapp.o: fcgiapp.c 
+
+fcgi_stdio.o: fcgi_stdio.c 

@@ -1,0 +1,7 @@
+configurations
+Makefile
+config.cache
+config.log
+config.status
+logs
+ulpc

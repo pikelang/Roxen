@@ -1,0 +1,117 @@
+<title>Roxen server configuration</title>
+<body background=/image/background.jpg bgcolor=#f0e0a0
+      text=#000000 link=#0000f0 vlink=#0000f0 alink=#00f000>
+
+<h1 align=center>
+<img align=left alt="Roxen server configuration" src=/image/roxen.gif>
+</h1>
+
+<a href=/(shutdown)/Configurations/?841722485><img src=/image/shutdown.gif alt=Kill hspace=0 border=0 align=right></a><br clear=right>
+<a href=/(restart)/Configurations/?841722486><img src=/image/restart.gif alt=Restart hspace=0 border=0 align=right></a><br clear=right>
+
+
+
+
+<br clear=all>
+<a href=/Configurations?rand()><img border=0 alt="/Servers" src=/image/tablists/9.gif></a><a href=/Globals?rand()><img border=0 alt="/Global Variables" src=/image/tablists/14.gif></a><a href=/Status?rand()><img border=0 alt="/Server Status" src=/image/tablists/3.gif></a><a href=/Errors?rand()><img border=0 alt="Debug Log\" src=/image/tablists/4.gif></a><br>
+
+<h1><font size=+2>
+<br><b>Welcome to the configuration interface of Roxen Challenger.</b>
+</font></h1>
+<p>
+
+This is an introduction to the visual elements of the interface.
+
+<p>
+
+At the top of the page you find the Roxen logotype, or the text `Roxen
+server configuration'. To the right of that logotype there are two
+buttons, `Kill' and `Restart'. Pressing `Kill' will kill the server,
+while `Restart' will also restart it.<p>
+
+Below the buttons and the logotype there are four other buttons.
+Pressing one of them will select that section of the configuation
+interface. Pressing the <em>selected</em> button will focus that part
+of the configuration interface on the top node of that part of the
+interface.  <p> It will probably make sense once you try it.  <p>
+
+There are a few more visual elements in the interface:
+
+<dl>
+  <dt><img alt=">" align=top src=/image/unfold.gif><font color=blue>Node to be unfolded or focused</font>
+
+  <dd>This is how a folded node looks. Selecting the little blue arrow
+(or the '>' character if you use a non-graphical browser) will unfold
+the node, and show it's contents. Selecting the actual text of the
+node will focus on it, thus showing it's contents and also using it as
+the 'top-level' node of the page.<p>
+
+  <dt><img alt="\/" align=top src=/image/fold.gif><font color=blue>Node to be folded or focused</font>
+      <dd>Selecting the arrow will fold the node, selecting the text works as above.<p>
+	  
+  <dt><img alt="*>" align=top src=/image/unfold2.gif><font color=blue>Modified Node to be unfolded or focused</font>
+
+   <dd>A red arrow (or '*>') is an indication of unsaved changes made
+in the configuration interface in this node or one of it's
+subnodes. There is no other difference in behaviour, except that all
+'red' nodes will be unfolded if the 'unfold all changed' button at the
+bottom of the page is pressed
+      
+  <dt><img align=top src=/image/fold2.gif><font color=blue>Modified Node to be folded or focused</font>
+      <dd>
+</dl>
+
+
+<p>
+
+There are usually one or more buttons, to do things that does not fit
+nicely in the 'node with subnodes' methaphore, like adding a new
+virtual server, unfolding/folding more than one node at the time etc,
+at the top or bottom of the configuration interface.
+
+<p>
+
+Some buttons, like the 'add a new module' button are only available in
+certain nodes (a node of a certain type has been focused). Those are:
+
+<dl>
+  <dt><li><b>Any <i>sub</i>node</b>
+  <dd><img src=/image/up.gif>An 'up' button will be added to the upper left corner of the
+      configuration interface.
+   <dt><li><b>The 'servers' section of the interface</b>
+   <dd><img src=/image/newconf.gif
+	    height=19 alt="Add a new virtual server"><img src=/image/right.gif
+       height=19 alt=\"\">
+
+   <dt><li><b>Any virtual server node</b>
+   <dd><img src=/image/newmod.gif
+	 height=19 alt="Add a module"><img src=/image/delconf.gif
+	 height=19 alt="Remove this configuration"><img
+         src=/image/right.gif height=19 alt=\"\"><br>
+	Add a module to this server, or remove the whole configuration.
+    <dt><li><b>Any module class node (node with multiple instances of the same module-class)</b>
+    <dd><img src=/image/newmod.gif
+	 height=19 alt="Add a module"><img src=/image/delmodcop.gif
+	 height=19
+	 alt="Delete this module and it's copies"><img
+         src=/image/right.gif height=19 alt=\"\"><br>
+
+	Add a new copy of <b>this</b> module class, and remove all
+copies of this class.
+    <dt><li><b>Any module instance node</b>
+     <dd><img src=/image/delmod.gif
+ 	  height=19 alt="Delete this module"><img
+          src=/image/refresh.gif height=19 
+          alt="Reload this module"><img src=/image/right.gif
+          height=19 alt=\"\"><br>
+
+	Remove this module, and reload this module from disk.
+	 The latter is only useful for developers and might not always
+	 work.
+
+  </dl>
+<p>
+
+
+
+<p><hr noshade><p align=right><a href=http://roxen.com>Roxen Challenger/1.0 prerelease</a></body>

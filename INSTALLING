@@ -1,0 +1,71 @@
+          Installing Roxen Challenger - the Source distribution
+
+  1. Get the source server package.
+
+  2. Issue the command to unpack the archive:
+
+          .tar.gz:
+               If you have GNU tar; "tar xzf roxen-archive-name"
+               If you don't have GNU tar: 
+               "gunzip < roxen-archive-name| tar xf -" 
+          .tar.Z
+               If you have GNU tar; "tar xzf roxen-archive-name"
+               If you don't have GNU tar: 
+               "uncompress < roxen-archive-name| tar xf -"
+          .tar
+               "tar xf roxen-archive-name"
+
+     (where "roxen-archive-name" is the name of the roxen archive
+     file.).
+
+  3. Type cd roxen to change to the new directory. This directory
+     should contain at the very least four directories: 
+     server (roxen server source), ulpc (the µLPC intepretator), 
+     extern (misc. programs used by roxen) and tools (misc tools).
+
+  4. Type ./configure --prefix=<wanted_base_path_for_roxen>
+     followed by make and make install to build the binaries and copy them 
+     to the correct place.
+
+     You can later on move the 'roxen' directory that will be
+     generated when you type 'make install' to anywhere in your
+     filesystem. 
+     
+  5. If everything worked fine and the compilation is done, type 
+     cd <dir>/server.
+
+  6. Start the install script by typing ./install.
+
+  7. Answer the simple questions and wait for your client.
+
+  9. If everything worked, configure the server, otherwise move on to the
+     troubleshooting section on the Roxen WWW-pages. 
+
+ Once you have installed the server, consider joining the Roxen
+ mailinglist (by sending a mail to roxen-request@infovav.se, with
+ the Subject: subscribe).
+
+ For more information about Roxen, read the online documentation at
+ http://roxen.com/
+
+----------------------------------------------------------------------------
+Example installation session:
+
+bash$ tar xzf Roxen.tar.gz
+bash$ cd roxen
+bash$ mkdir solaris
+bash$ cd solaris
+bash$ ../configure --prefix=/usr/www
+
+<Lots and lots of checks...>
+
+bash$ make install
+
+<Lots and lots of compilations>
+
+bash$ cd /usr/www/roxen/server
+bash$ ./install
+<answer a few questions>
+
+
+

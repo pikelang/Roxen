@@ -1,0 +1,143 @@
+#!/bin/sh
+
+VERSION=116
+BETA=1
+
+# Can be set with '--config-dir=DIR'
+DIR=../configurations/
+LOGDIR=../logs/
+FILES="default"
+
+ulpc=pike
+if [ -x bin/pike ] ; then ulpc=bin/pike; fi
+
+rotate () {
+  b=5;
+  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
+}
+
+# Change the permissions of the configuration files so that they match
+# those of the user Roxen runs as when it has started, not the one Roxen
+# is started as.
+
+fixperms() {
+ uline=`./configvar --query --config-dir=$DIR --region=Variables User`
+
+ uid=`echo $uline | sed -e 's![^"]*"!!' -e 's/:.*//'`
+ gid=`echo $uline | sed -e 's![^:]*:!!' -e 's/".*//'` 
+
+ if [ ! -z "$gid" ] ; then find $DIR $LOGDIR -print | xargs chgrp $gid; fi
+ if [ ! -z "$uid" ] ; then find $DIR $LOGDIR -print | xargs chown $uid; fi
+
+ find $DIR -print | xargs chmod og-rw
+ find $DIR -print | xargs chmod u+rw
+}
+
+####### END PREAMBLE
+
+
+## Parse all arguments.
+## GNU-style, long options only.
+while [ ! c"$1" = "c" ] ; do
+  case $1 in
+# Used by the 'install' script
+  --no-chown) 
+   NOCHOWN=TRUE
+  ;;
+  --log-dir=*)
+   LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
+  ;;
+  --config-dir=*)
+   DIR=`echo $1 | sed -e 's/--config-dir=//'`
+   FILES=`echo $1 | sed -e 's/--config-dir=//' -e 's/..//' -e 's./..g' -e 's.-..g'`
+  ;;
+  '--version')
+    if [ x$BETA = x1 ] ; then
+      more='ß'
+    else
+      more='.'
+    fi
+    echo `expr $VERSION / 100`$more`expr $VERSION % 100`
+    exit 0
+  ;;
+  '--help'|'-?')
+    echo Syntax: $0 '[--version] [--help] [--config-dir=DIR] [--pid-file=FILE] [--root=CHROOT] [--no-chown] [--log-dir=DIR]' 
+    echo This command will start the Roxen server.
+    echo If the configuration dir is set, a different set of debuglogfiles
+    echo will be used.
+    exit 0
+   ;;
+  *)
+    pass="$pass $1"
+  esac
+  shift
+done
+
+if [ ! X$pass = "X" ] ; then set $pass ;fi
+
+
+echo Starting the Roxen Challenger World Wide Web server.
+
+./mkdir -p $LOGDIR/debug/
+
+if [ "$NOCHOWN" != "TRUE" ]; then 
+  fixperms 2>/dev/null
+fi
+
+(while : ; do
+  sdfile="/tmp/Roxen_Shutdown_$$"
+  rm $sdfile
+  if [ -f "$sdfile" ] ; then
+    cat << oo
+WARNING:
+A shutdown file '('$sdfile')' is present, and the file cannot be
+removed by this script.
+
+Please remove this file, or you might be unable to shut down Roxen in
+the future.
+
+The file:
+oo
+   ls -l $sdfile
+    noshutdown="yes"
+  else
+    noshutdown=""
+  fi
+  
+  echo "Server restart at `date`"
+  rotate $LOGDIR/debug/$FILES
+  args="-DROXEN roxenloader --config-dir=$DIR --start-script-pid=$$"
+  echo Executing $ulpc -m etc/master.pike $args $@ 2>$LOGDIR/debug/$FILES.1 
+  $ulpc -m etc/master.pike $args $@ 2>>$LOGDIR/debug/$FILES.1 1>&2
+  if [ -z "$noshutdown" ] ; then 
+    if [ -f "$sdfile" ] ; then
+
+# A shutdown file. This is only done if Roxen cannot kill this script
+# for some reason, the most common beeing the lack of a seteuid()
+#  function, in which case Roxen will write this file.
+#
+# The contents of the file is the actual PID Roxen got when it was
+# started. This could be used to verify that this was the correct
+# shutdown file, but since it is extremely unlikely that two
+# start-scripts get the same PID, this is not done.
+
+      echo Server shutdown file detected. Shutting down
+      rm "$sdfile"
+      if [ -f "$sdfile" ] ; then
+        echo "Failed to remove '"$sdfile"'. This could be a problem"
+        exit 0
+      else
+        exit 0
+      fi
+    fi
+  fi
+done
+    
+echo Not Reached "(famous last words)"
+
+) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1&
+
+cat << oo
+Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
+You can use the configuration interface in the server to get debug info.
+oo

@@ -1,0 +1,34 @@
+Roxen 1.0 prerelease -- source version
+++++++++++++++++++++++++++++++++++++++
+
+Copyright 
+---------
+
+Roxen 1.0 is Copyright © to Informationsvävarna AB, 1994 - 1996
+uLPC is Copyright © to Fredrik Hübinette, 1994 - 1996
+
+This software is distributed under GPL, see the file COPYING for
+more details.
+
+
+The directories
+---------------
+
+doc/		The documentaion that is also available from
+		http://roxen.com/
+
+extern/   	A few programs used by Roxen or it's scripts.
+
+tools/ 		A tool that will dump the Accessed database in a
+		somewhat more readable format, htpasswd source, used
+		to make password files for .htaccess and
+		backlog_bumper for Solaris 2.4 and up.
+                (read the file for more information about what it is).
+		and a configuration file decoder and encoder.
+
+server/ 	The uLPC objects and other misc source that is the
+		core of the Roxen software.
+
+ulpc/	  	The source to the language used (Micro LPC, object
+		oriented C-like language). Written by Fredrik
+		Hübinette, hubbe@signum.se

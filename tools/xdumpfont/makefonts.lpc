@@ -1,0 +1,45 @@
+array sizes=reverse(({ 8, 16, 32, 64 }));
+
+
+array get_font_list()
+{
+  array fonts =  popen("xlsfonts | grep '.*-0-0-.-0-iso8859-1'")/"\n";
+  string font;
+  array res = ({ });
+  foreach(fonts, font)
+  {
+    string fndry, fmly, wght, slant, sWdth, spc;
+    if(!strlen(font)) continue;
+    if(sscanf(font, "-%s-%s-%s-%s-normal--0-0-0-0-%s-0-iso8859-1", 
+              fndry, fmly, wght, slant, spc) != 5)
+      perror("Invalid font: '"+font+"'\n");
+    else if(!strlen(fndry))
+    {
+      perror("Odd foundry.\n");
+    } else {
+      res += ({ ({ "-"+fndry+"-"+fmly+"-"+wght+"-"+slant+"-normal"
+		     "-*-%d-*-*-*-"+spc+"-*-iso8859-1", fmly+"_"+wght+"_"+slant,
+		     }) });
+    }
+  }
+  return res;
+}
+
+array fonts = get_font_list();
+
+void main()
+{
+  int size;
+  array font;
+  foreach(sizes, size)
+  {
+    foreach(fonts, font)
+    {
+      mkdir("fonts/");
+      mkdir("fonts/"+size);
+      perror("Generating "+sprintf(font[0],size*3)+"... ("+size+"/"+font[1]+")\n");
+      popen("time ./xdumpfont '"+sprintf(font[0],size*3)+"'");
+      mv("font", "fonts/"+size+"/"+font[1]);
+    }
+  }
+}

@@ -1,0 +1,48 @@
+#!/bin/sh
+# Make a directory and all it's parents.
+# this is how mkdir works on most systems, but not all.
+
+for a in $@ ; do
+  case $a in 
+    --help)
+cat <<EOF
+Usage: mkdir [OPTION] DIRECTORY...
+ 
+  -p, --parents     no error if existing, make parent directories as needed
+      --help        display this help and exit
+      --version     output version information and exit
+EOF
+      exit
+    ;;
+    --version)
+      echo Per hacks 0.0
+      exit
+    ;;
+    -p)
+      recurse=1;
+    ;;
+    /*)
+      dname=$a
+      dir=""
+    ;;
+    *)
+      dname=$a
+      dir="."
+    ;;
+  esac
+done
+
+if [ x$recurse = x ] ; then
+  /bin/mkdir $dname
+  exit
+fi
+
+IFS='/'
+
+for a in $dname; do
+  IFS=' '
+  dir="$dir/$a"
+  if [ ! -d $dir ] ; then
+    /bin/mkdir $dir || exit 1
+  fi
+done

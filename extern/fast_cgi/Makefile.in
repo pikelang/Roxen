@@ -1,0 +1,25 @@
+#
+#  Makefile for FastCGI development kit
+#
+#  Open Market, Inc.
+#
+#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+#
+SHELL=/bin/sh
+
+all:
+	(cd libfcgi; make all)
+	(cd cgi-fcgi; make all)
+
+reconfig: clean
+	uname -rs >config.uname
+	./configure
+
+clean:
+	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
+	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
+	rm -f config.cache config.log config.status config.uname
+	(cd libfcgi; make clean)
+	(cd cgi-fcgi; make clean)
+
+# ----------------------------------------------------------------------------

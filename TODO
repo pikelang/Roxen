@@ -1,0 +1,60 @@
+--- TODO (more long term projects..)
+
+o  SSL authentification
+
+> #       AUTH_TYPE       "ssl"
+> #       CLIENT_CERT     the client's certificate
+> #                       (base64 encoded DER X.509 certificate
+> #       REMOTE_USER     the user name to which the cert was mapped.
+>
+> and any additional directives to use with apache_SSL:
+>
+> e.g.
+> 
+> <Limit GET>
+> require valid-client_cert
+> </limit>
+
+
+o  Support netmasks everywhere where ip-patterns are now
+   supported. Preferably using the xxx.xxx.xxx.xxx/mask synytax, like:
+   130.236.253.0/24, and 194.52.182.64/26.
+
+o "Bookmarks" in the configuration interface (it is, of course,
+   possible to use _actual_ bookmarks in your browser, but then at least
+   Netscape insist on cacheing the page).
+
+o The possibility for modules to add their own buttons to the
+  configuration interface. This code is still present in some parts of
+  Roxen, namely the register_module() event callback.
+
+o <modified duration[=year|months|weeks|days|hours|seconds|auto]>
+  This page was last changed <modified type=string duration=auto> ago.
+  -> This page was last changed five hours ago
+  -> This page was last changed six days ago
+
+o Use netscape Live Script and/or Java in the configuration interface
+  if it is supported by the browser.
+
+o Disclaimer module. From Josh Wilmes <wilmesj@rpi.edu>:
+ 
+  Is there a way to force roxen to insert a piece of html code at the 
+  bottom of all documents from a given directory?
+ 
+  I'd like to force a disclaimer link onto some of my pages.
+
+o From: Bernhard Reiter <breiter@mathematik.Uni-Osnabrueck.DE>
+  Subject: Idea for Roxen configuration interface
+ 
+  I haven`t looked in the latest b15 configuration interface,
+  but i think that it is lacking 
+ 
+  A summary list of modules and their priorities.
+ 
+  And maybe their calling sequence and security parameters.
+ 
+  A few summary lists could make the use of priority levels a lot
+  easier.
+
+o Allow multiple 'tags' with the same name
+  

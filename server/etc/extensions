@@ -1,0 +1,144 @@
+aif	audio/x-aiff
+aifc	audio/x-aiff
+aiff	audio/x-aiff
+au	audio/basic
+m3u 	audio/x-mpegurl
+mp2	audio/x-mpeg
+mp3 	audio/x-mpeg
+mp3url	audio/x-mpegurl
+mpa	audio/x-mpeg
+ra	audio/x-pn-realaudio
+ram	audio/x-pn-realaudio
+rpm 	audio/x-pn-realaudio-plugin
+snd	audio/basic
+wav	audio/x-wav
+mid	audio/midi
+
+gif	image/gif
+ief	image/ief
+iff	image/ilbm
+ilbm	image/ilbm
+jpe	image/jpeg
+jpeg	image/jpeg
+jpg	image/jpeg
+pbm	image/x-portable-bitmap
+pgm	image/x-portable-graymap
+pjpg    image/jpeg
+png	image/x-png
+pnm	image/x-portable-anymap
+ppm	image/x-portable-pixmap
+ras	image/x-cmu-raster
+rgb	image/x-rgb
+tif	image/tiff
+tiff	image/tiff
+xbm	image/x-xbitmap
+xpm	image/x-xpixmap
+xwd	image/x-xwindowdump
+
+avi	video/x-msvideo
+mov	video/quicktime
+movie	video/x-sgi-movie
+mpe	video/mpeg
+mpeg	video/mpeg
+mpg	video/mpeg
+mpg	video/mpeg
+qt	video/quicktime
+
+etx	text/x-setext
+htm	text/html
+html	text/html
+java	text/plain
+rtx	text/richtext
+spml	text/spinnercode
+rxml	text/roxencode
+tsv	text/tab-separated-values
+txt	text/plain
+
+ai	application/postscript
+arj	application/octet-stream
+bcpio	application/x-bcpio
+bin	application/octet-stream
+c	application/x-c-code
+cc	application/x-c++-code
+cdf	application/x-netcdf
+com	application/octet-stream
+cpio	application/x-cpio
+csh	application/x-csh
+dll	application/octet-stream
+drv	application/octet-stream
+dvi	application/x-dvi
+eps	application/postscript
+exe	application/octet-stream
+gtar	application/x-gtar
+h	application/x-include-file
+hdf	application/x-hdf
+hqx	application/mac-binhex40
+js	application/x-javascript
+latex	application/x-latex
+lha	applictaion/lha
+lzh	application/lha
+man	application/x-troff-man
+map	application/x-imagemap
+me	application/x-troff-me
+mif	application/x-mif
+ms	application/x-troff-ms
+mw	application/math
+nc	application/x-netcdf
+oda	application/oda
+pdf	application/pdf
+pl	application/x-perl
+ps	application/postscript
+roff	application/x-troff
+rtf	application/rtf
+sh	application/x-sh
+shar	application/x-shar
+src	application/x-wais-source
+sv4cpic application/x-sv4cpio
+sv4crc	application/x-sv4crc
+t	application/x-troff
+tar	application/unix-tar
+tcl	application/x-tcl
+tex	application/x-tex
+texi	application/x-texinfo
+texinfo application/x-texinfo
+tgz	application/unix-tar	x-gzip
+tr	application/x-troff
+tsp	application/dsptype            
+ustar	application/x-ustar
+vcd	application/x-cdlink
+vmd 	application/vocaltec-media-desc
+vmf 	application/vocaltec-media-file
+wrl	x-world/x-vrml
+wrml    x-world/x-vrml
+zip	application/zip
+cdr	application/x-coreldraw
+cdrw    application/x-coreldraw
+
+aam 	application/x-authorware-map
+aas 	application/x-authorware-seg
+aab 	application/x-authorware-bin
+
+
+
+
+# Diskmasher -- Amiga thingie
+dms	application/x-diskmasher
+
+# Windows Write
+wri     application/x-write
+
+# MacroMedia Director (http://www.macromedia.com/)
+dcr	application/x-director
+dir	application/x-director
+dxr	application/x-director
+
+# Netscape proxy config files.
+nspc    application/x-ns-proxy-autoconfig
+
+# This is supposed to be just 'gzip' and 'compress', but Netscape barfs..
+Z	STRIP			x-compress
+gz	STRIP			x-gzip
+
+uu	STRIP			uuencode
+b64	STRIP			base64
+

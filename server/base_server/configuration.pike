@@ -1,0 +1,487 @@
+#include <module.h>
+/* A configuration.. */
+
+object   parse_module;
+object   types_module;
+object   auth_module;
+object   dir_module;
+
+function types_fun;
+function auth_fun;
+
+string name;
+
+/* Since the main module (Roxen, formerly Spinner, alias spider), does
+ * not have any clones its settings must be stored somewhere else.
+ * This looked like a likely spot.. :)
+ */
+mapping variables = ([]); 
+
+
+string query_name()
+{
+  if(strlen(QUERY(name))) return QUERY(name);
+  return name;
+}
+
+string comment()
+{
+  return QUERY(comment);
+}
+
+
+/* For debug and statistics info only */
+int requests;
+int received, received_wrapped;
+int sent, sent_wrapped;
+int hsent, hsent_wrapped;
+
+static private program prip=class {
+  array (object) url_modules = ({ });
+  array (object) logger_modules = ({ });
+  array (object) location_modules = ({ });
+  array (object) filter_modules = ({ });
+  array (object) last_modules = ({ });
+  array (object) first_modules = ({ });
+  
+  mapping (string:array(object)) extension_modules = ([ ]);
+  mapping (string:array(object)) file_extension_modules = ([ ]);
+};
+
+
+/* A 'pri' is one of the ten priority objects. Each one holds a list
+ * of modules for that priority. They are all merged into one list for
+ * performance reasons later on.
+ */
+
+array (object) allocate_pris()
+{
+  int a;
+  array (object) tmp;
+  tmp=allocate(10);
+  for(a=0; a<10; a++)  tmp[a]=new(prip);
+  return tmp;
+}
+
+void create(string n) { name=n; }
+
+float mb; // <blink>Ugly</blink> global variable.. 
+
+/* Describe a pseudo-64 bit integer as a string. If 'c' is present, it
+   is either a factor (3.5, e.g.) that will be used to multiply the
+   number of MBytes, igf it is an integer (like '1'), the actual
+   number of MBytes will be returned, instead of a string that will
+   describe them. This is perhaps just a tad bit too horrible...  */
+
+string|float describe_large(int a, int b, int|void|float c)
+{
+  mb=(float)(b*(4*1024));
+  
+  if(a<0)
+  {
+    a -= 2<<16;
+    mb += (float)(2*1024);
+  }
+
+  mb += (float)a / (float)(1024*1024);
+  if(intp(c))
+    return mb;
+  if(floatp(c))
+    mb *= c;
+  if(mb < 1024.0)
+    return sprintf("%.2f Mb", mb);
+  return sprintf("%.2f Gb", mb/1024.0);
+}
+
+
+float sent_mb()
+{
+  return describe_large( sent, sent_wrapped, 1 );
+}
+
+
+void add_received(int i)
+{ 
+  int o; 
+  o=received; 
+  received+=i; 
+  if(received<o) 
+    received_wrapped++; 
+}
+
+float|string describe_received(int|void|float a)
+{
+  return describe_large(received, received_wrapped, a); 
+}
+
+void add_sent(int i)
+{ 
+  if(sent < 0) return;
+  int o;
+  o=sent; 
+  sent+=i; 
+  if(sent<o) 
+    sent_wrapped++; 
+}
+
+float|string describe_sent(int|void a)
+{
+  return describe_large(sent, sent_wrapped, a); 
+}
+
+void add_hsent(int i)
+{ 
+  if(sent < 0) return;
+  int o; 
+  o=hsent; 
+  hsent+=i; 
+  if(hsent<o) 
+    hsent_wrapped++; 
+}
+
+float|string describe_hsent(int|void a)
+{ 
+  return describe_large(hsent, hsent_wrapped, a); 
+}
+
+// Min/Average/Max access time, in milliseconds. Not currently used.
+
+// int avgs=30;
+// int maxs;
+// int mins=10000;
+
+// static private int _ct; // Used to mark the beginning of a request
+
+void begin_request()
+{
+  
+}
+
+void end_request()
+{
+
+}
+
+
+// Used to store 'parser' modules before the main parser module
+// is added to the configuration.
+
+private object *_toparse_modules = ({});
+
+// Will write a line to the log-file. This will probably be replaced
+// entirely by log-modules in the future, since this would be much
+// cleaner.
+
+private function log_function;
+
+// The logging format used. This will probably move the the above
+// mentioned module in the future.
+private mapping (string:string) log_format = ([]);
+
+// A list of priority objects (used like a 'struct' in C, really)
+private array (object) pri = allocate_pris();
+
+// All enabled modules in this virtual server.
+// The format is "module#copy":([ module_info ])
+public mapping (string:mapping(string:mixed)) modules = ([]);
+
+// A mapping from objects to module names
+public mapping (object:string) otomod = ([]);
+
+
+// Caches to speed up the handling of the module search.
+// They are all sorted in priority order, and created by the functions
+// below.
+private array (function) url_module_cache, last_module_cache;
+private array (function) logger_module_cache, first_module_cache;
+private array (function) filter_module_cache;
+private array (array (string|function)) location_module_cache;
+private mapping (string:array (function)) extension_module_cache=([]);
+private mapping (string:array (function)) file_extension_module_cache=([]);
+
+// Empty all the caches above.
+void unvalidate_cache()
+{
+  last_module_cache = 0;
+  filter_module_cache = 0;
+  first_module_cache = 0;
+  url_module_cache = 0;
+  location_module_cache = 0;
+  logger_module_cache = 0;
+  extension_module_cache      = ([]);
+  file_extension_module_cache = ([]);
+#ifdef MODULE_LEVEL_SECURITY
+  if(roxenp()->misc_cache)
+    roxenp()->misc_cache = ([ ]);
+#endif
+}
+
+array (function) extension_modules(string ext, object id)
+{
+  if(!extension_module_cache[ext])
+  { 
+    int i;
+    extension_module_cache[ext]  = ({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d = pri[i]->extension_modules[ext])
+	foreach(d, p)
+	  extension_module_cache[ext] += ({ p->handle_extension });
+    }
+  }
+  return extension_module_cache[ext];
+}
+
+array (function) file_extension_modules(string ext, object id)
+{
+  if(!file_extension_module_cache[ext])
+  { 
+    int i;
+    file_extension_module_cache[ext]  = ({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d = pri[i]->file_extension_modules[ext])
+	foreach(d, p)
+	  file_extension_module_cache[ext] += ({ p->handle_file_extension });
+    }
+  }
+  return file_extension_module_cache[ext];
+}
+
+array (function) url_modules(object id)
+{
+  if(!url_module_cache)
+  {
+    int i;
+    url_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->url_modules)
+	foreach(d, p)
+	  url_module_cache += ({ p->remap_url });
+    }
+  }
+  return url_module_cache;
+}
+
+array (function) logger_modules(object id)
+{
+  if(!logger_module_cache)
+  {
+    int i;
+    logger_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->logger_modules)
+	foreach(d, p)
+	  if(p->log)
+	    logger_module_cache += ({ p->log });
+    }
+  }
+  return logger_module_cache;
+}
+
+array (function) last_modules(object id)
+{
+  if(!last_module_cache)
+  {
+    int i;
+    last_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->last_modules)
+	foreach(d, p)
+	  if(p->last_resort)
+	    last_module_cache += ({ p->last_resort });
+    }
+  }
+  return last_module_cache;
+}
+
+array (function) first_modules(object id)
+{
+  if(!first_module_cache)
+  {
+    int i;
+    first_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->first_modules)
+	foreach(d, p)
+	  if(p->first_try)
+	    first_module_cache += ({ p->first_try });
+    }
+  }
+  return first_module_cache;
+}
+
+
+array location_modules(object id)
+{
+  if(!location_module_cache)
+  {
+    int i;
+    location_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->location_modules)
+	foreach(d, p)
+	  if(p->find_file)
+	    location_module_cache+=({({ p->query_location(), 
+					  p->find_file })});
+    }
+  }
+  return location_module_cache;
+}
+
+array filter_modules(object id)
+{
+  if(!filter_module_cache)
+  {
+    int i;
+    filter_module_cache=({ });
+    for(i=9; i>=0; i--)
+    {
+      object *d, p;
+      if(d=pri[i]->filter_modules)
+	foreach(d, p)
+	  if(p->filter)
+	    filter_module_cache+=({ p->filter });
+    }
+  }
+  return filter_module_cache;
+}
+
+
+
+// Save this configuration. If all is included, save all configuration
+// global variables as well, otherwise only all module variables.
+void save(int|void all)
+{
+  mapping mod;
+  object oc;
+  oc = roxenp()->current_configuration;
+  roxenp()->current_configuration=this_object();
+  
+  if(all)
+  {
+    roxenp()->store("spider.lpc#0", variables, 0);
+    roxenp()->start(2);
+  }
+  
+  foreach(values(modules), mod)
+  {
+    if(mod->enabled)
+    {
+      roxenp()->store(mod->sname+"#0", mod->master->query(), 0);
+      mod->enabled->start(2);
+    } else if(mod->copies) {
+      int i;
+      foreach(indices(mod->copies), i)
+      {
+	roxenp()->store(mod->sname+"#"+i, mod->copies[i]->query(), 0);
+	mod->copies[i]->start(2);
+      }
+    }
+  }
+  unvalidate_cache();
+  roxenp()->current_configuration = oc;
+}
+
+// Save all variables in _one_ module.
+int save_one( object o )
+{
+  object oc;
+  mapping mod;
+  oc = roxenp()->current_configuration;
+  roxenp()->current_configuration=this_object();
+  if(!o) 
+  {
+    roxenp()->store("spider#0", variables, 0);
+    roxenp()->start(2);
+    roxenp()->current_configuration = oc;
+    return 1;
+  }
+  foreach(values(modules), mod)
+  {
+    if( mod->enabled == o)
+    {
+      roxenp()->store(mod->sname+"#0", o->query(), 0);
+      o->start(2);
+      unvalidate_cache();
+      roxenp()->current_configuration = oc;
+      return 1;
+    } else if(mod->copies) {
+      int i;
+      foreach(indices(mod->copies), i)
+      {
+	if(mod->copies[i] == o)
+	{
+	  roxenp()->store(mod->sname+"#"+i, o->query(), 0);
+	  o->start(2);
+	  unvalidate_cache();
+	  roxenp()->current_configuration = oc;
+	  return 1;
+	}
+      }
+    }
+  }
+  roxenp()->current_configuration = oc;
+}
+
+
+mapping (object:array) open_ports = ([]);
+
+
+int port_open(array prt)
+{
+  array v;
+  foreach(values(open_ports), v)
+    if(equal(v, prt)) return 1;
+  return 0;
+}
+
+
+string desc()
+{
+  string res="";
+  array (string|int) port;
+  
+  foreach(QUERY(Ports), port)
+  {
+    string prt;
+    
+    switch(port[1])
+    {
+    case "ssl":
+      prt = "https://";
+      break;
+      
+    default:
+      prt = port[1]+"://";
+    }
+    if(port[2] && port[2]!="ANY")
+      prt += port[2];
+    else
+      prt += (gethostname()/".")[0] + "." + QUERY(Domain);
+    prt += ":"+port[0]+"/";
+    if(port_open( port ))
+      res += "<a target=server_view href='"+prt+"'>"+prt+"</a>\n<br>";
+    else
+      res += "<font color=red><b>Not open:</b> <a target=server_view href='"+prt+"'>"+prt+"</a></font><br>\n";
+  }
+  return res+"<p>";
+}
+
+
+
+
+
+

@@ -1,0 +1,237 @@
+#!/bin/sh
+# -*- Emacs, this is: lpc -*-
+# This file use the built-in configuration file parsers in Roxen.
+# It is not at all fast, but it _does_ work all the time, and it will
+# continue to work even if the save-file format is changed in the future.
+
+if [ ! -f base_server/roxen.pike ] ; then
+  echo "This program must be run from the roxen/server directory"
+  exit
+fi
+
+
+cat > /tmp/roxen$$.pike  << "____________________"
+#12 "roxenvar"
+string report_error(string s) 
+{
+  werror(s);
+}
+
+object roxenp() 
+{
+  return this_object();
+}
+
+object|void open(string filename, string mode)
+{
+  object o;
+  o=File();
+  if(o->open(filename, mode))
+    return o;
+  destruct(o);
+}
+
+void mkdirhier(string from)
+{
+  string a, b;
+  array f;
+
+  f=(from/"/");
+  b="";
+
+  foreach(f[0..sizeof(f)-2], a)
+  {
+    mkdir(b+a);
+    b+=a+"/";
+  }
+}
+
+#define IN_INSTALL
+#define VAR_VALUE 0
+#define BASE ""
+#include "base_server/read_config.pike"
+
+string find_arg(array argv, array|string shortform, 
+		array|string|void longform, 
+		array|string|void envvars, 
+		string|void def)
+{
+  string value;
+  int i;
+
+  for(i=1; i<sizeof(argv); i++)
+  {
+    if(argv[i] && strlen(argv[i]) > 1)
+    {
+      if(argv[i][0] == '-')
+      {
+	if(argv[i][1] == '-')
+	{
+	  string tmp;
+	  int nf;
+	  if(!sscanf(argv[i], "%s=%s", tmp, value))
+	  {
+	    if(i < sizeof(argv)-1)
+	      value = argv[i+1];
+	    else
+	      value = argv[i];
+	    tmp = argv[i];
+	    nf=1;
+	  }
+	  if(arrayp(longform) && search(longform, tmp[2..1000]) != -1)
+	  {
+	    argv[i] = 0;
+	    if(i < sizeof(argv)-1)
+	      argv[i+nf] = 0;
+	    return value;
+	  } else if(longform && longform == tmp[2..10000]) {
+	    argv[i] = 0;
+	    if(i < sizeof(argv)-1)
+	      argv[i+nf] = 0;
+	    return value;
+	  }
+	}
+	if((arrayp(shortform) && ((search(shortform, argv[i][1..1]) != -1)))
+	   || (stringp(shortform) && (shortform == argv[i][1..1])))
+	{
+	  if(strlen(argv[i]) == 2)
+	  {
+	    if(i < sizeof(argv)-1)
+	      value =argv[i+1];
+	    argv[i] = argv[i+1] = 0;
+	    return value;
+	  } else {
+	    value=argv[i][2..100000];
+	    argv[i]=0;
+	    return value;
+	  }
+	}
+      }
+    }
+  }
+
+  if(arrayp(envvars))
+    foreach(envvars, value)
+      if(getenv(value))
+	return getenv(value);
+  
+  if(stringp(envvars))
+    if(getenv(envvars))
+      return getenv(envvars);
+
+  return def;
+}
+
+mapping current_configuration;
+
+mixed my_decode(string from)
+{
+  return compile_string("mixed value = "+from+";", "Supplied value")()->value;
+}
+
+void main(int argc, string *argv)
+{
+  int query_only, quiet;
+  string region;
+  string file;
+
+  if(find_arg(argv, "?", "help"))
+  {
+    write(sprintf("Syntax: roxenvar [flags] VAR[=VALUE] ...\n"
+	  "Args are:\n"
+" -n, --quiet              Just output the values of the variables.\n"
+" -d, --config-dir=DIR     This is where the configuration files are\n"
+"                          Default is '../configurations/'.\n"
+" -q, --query              Only query the variables, never ever set.\n"
+" -r, --region=REG         Set the region of the configuration file\n"
+"                          to search in. This is typicaly names of modules\n"
+"                          e.g. 'redirect#0', or 'Variables' for the\n"
+"                          global variables from the Global_Variables file.\n"
+" -c, --configuration=CONF Set the name of the configurationfile to use.\n"
+"                          The default value is 'Global_Variables'\n"
+		  , argv[0]));
+    exit(0);
+  }
+
+  if(find_arg(argv, "q", "query"))
+    query_only = 1;
+
+
+  if(find_arg(argv, "n", "quiet"))
+    quiet = 1;
+
+
+  region = find_arg(argv, "r", "region", 0, "Variables");
+  file   = find_arg(argv, "c", "configuration", 0, "Global_Variables");
+
+  current_configuration = ([ "name":file ]);
+
+  configuration_dir = find_arg(argv, "d", "config-dir", 0,"../configurations");
+
+  if(configuration_dir[-1] != "/")
+    configuration_dir += "/";
+  argv -= ({ 0 });
+  
+  list_all_configurations();
+
+  string tmp;
+  mapping vars;
+  int save_needed;
+
+  vars = retrieve(region);
+
+  foreach(argv[1..1000], tmp)
+  {
+    if(query_only)
+    {
+      if(!quiet) write(tmp+"=");
+      if(!vars[tmp] && zero_type(vars[tmp]))
+	write("UNDEF\n");
+      else
+	if(!stringp(vars[tmp]))
+	  write(sprintf("%O\n", vars[tmp]));
+	else
+	  write(sprintf("\"%O\"\n", vars[tmp]));
+    } else {
+      string var, value;
+      if(sscanf(tmp, "%s=%s", var, value) == 2)
+      {
+	if(value!="UNDEF")
+	  vars[var] = my_decode(value);
+	else
+	  m_delete(vars, var);
+	if(!quiet) 
+	  if(!vars[var] && zero_type(vars[var]))
+	    perror("Removing "+var+".\n");
+	  else
+	    perror("Setting "+var+" to "+ sprintf("%O", vars[var]) +"\n");
+	save_needed = 1;
+      } else {
+	if(!quiet) 
+	  write(tmp+"=");
+	if(!vars[tmp] && zero_type(vars[tmp]))
+	  write("UNDEF\n");
+	else
+	  if(!stringp(vars[tmp]))
+	    write(sprintf("%O\n", vars[tmp]));
+	  else
+	    write(sprintf("\"%O\"\n", vars[tmp]));
+      }
+    }
+  }
+  if(save_needed)
+  {
+    if(!quiet) 
+      perror("Saving file.\n");
+    store(region, vars, 1);
+  }
+}
+
+
+
+
+// The line below _must_ be there.. 
+____________________
+
+bin/pike -m etc/master.pike /tmp/roxen$$.pike "$@"
+/bin/rm /tmp/roxen$$.pike

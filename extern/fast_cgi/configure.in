@@ -1,0 +1,160 @@
+dnl     $Id: configure.in,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+dnl
+dnl     This file is an input file used by the GNU "autoconf" program to
+dnl     generate the file "configure", which is run during the build
+dnl     to configure the system for the local environment.
+dnl
+dnl Mark R. Brown
+dnl mbrown@openmarket.com
+dnl
+
+CCDEFS="$DEFS"
+
+AC_INIT(libfcgi/fcgiapp.c)
+AC_CONFIG_HEADER(include/fcgi_config.h)
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_EGREP_HEADER(sun_len, sys/un.h, AC_DEFINE(HAVE_SOCKADDR_UN_SUN_LEN))
+
+#--------------------------------------------------------------------
+#  What extra libraries do we need for this platform?
+#--------------------------------------------------------------------
+AC_CHECK_LIB(socket, main, [LIBS="$LIBS -lsocket"])
+AC_CHECK_LIB(nsl, main, [LIBS="$LIBS -lnsl"])
+AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
+AC_SUBST(LIBS)
+
+AC_REPLACE_FUNCS(strerror strtol)
+
+#--------------------------------------------------------------------
+#       Include sys/select.h if it exists and if it supplies things
+#       that appear to be useful and aren't already in sys/types.h.
+#       This appears to be true only on the RS/6000 under AIX.  Some
+#       systems like OSF/1 have a sys/select.h that's of no use, and
+#       other systems like SCO UNIX have a sys/select.h that's
+#       pernicious.  If "fd_set" isn't defined anywhere then set a
+#       special flag.
+#--------------------------------------------------------------------
+
+echo checking for sys/select.h
+AC_TRY_LINK([#include <sys/types.h>],
+	[fd_set readMask, writeMask;], ,
+	AC_HEADER_EGREP(fd_mask, sys/select.h, AC_DEFINE(HAVE_SYS_SELECT_H),
+        AC_DEFINE(NO_FD_SET)))
+
+echo checking for fpos functions in stdio.h
+AC_EGREP_HEADER(fpos_t, stdio.h, AC_DEFINE(HAVE_FPOS))
+
+dnl Checks for header files.
+dnl AC_HEADER_STDC
+dnl AC_CHECK_HEADERS(fcntl.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl AC_HEADER_TIME
+
+dnl Checks for library functions.
+dnl AC_FUNC_MEMCMP
+dnl AC_CHECK_FUNCS(select socket)
+
+AC_HAVE_FUNCS(memmove memcpy realloc)
+
+#--------------------------------------------------------------------
+#  Build with profiling?
+#--------------------------------------------------------------------
+AC_ARG_WITH(profile,
+    [  --with-profile          Build a version with profiling],
+    [with_profile=$withval],
+    [with_profile=no]
+)
+if test "$with_profile" = "yes" ; then
+    [PROFILE="-pg"]
+else
+    [PROFILE=""]
+fi
+AC_SUBST(PROFILE)
+
+#--------------------------------------------------------------------
+#  Build optimized, production version with no debugging code?  No
+#  asserts?  No testing code?
+#--------------------------------------------------------------------
+AC_ARG_WITH(nodebug, 
+    [  --with-nodebug          Build a production version,
+                          with no debugging code],
+    [with_nodebug=$withval],
+    [with_nodebug=no]
+)
+if test "$with_nodebug" = "yes" ; then
+    CCDEFS="$CCDEFS -O"
+else
+    AC_DEFINE(WITH_DEBUG)
+    if test -f /bin/uname && test `/bin/uname` != "IRIX"; then
+       CCDEFS="$CCDEFS -g"
+    fi
+fi
+AC_ARG_WITH(noassert,
+    [  --with-noassert         Build a production version,
+                          with no ASSERTs],
+    [with_noassert=$withval],
+    [with_noassert=no]
+)
+if test "$with_noassert" = "no" ; then
+    AC_DEFINE(WITH_ASSERT)
+fi
+AC_ARG_WITH(notest,
+    [  --with-notest           Build a production version,
+                          with no testing code],
+    [with_notest=$withval],
+    [with_notest=no]
+)
+if test "$with_notest" = "no" ; then
+    AC_DEFINE(WITH_TEST)
+fi
+#--------------------------------------------------------------------
+#  Do we need cross-process locking on this platform?
+#--------------------------------------------------------------------
+case "`uname -sr`" in
+    IRIX\ 5.*)	
+	AC_DEFINE(USE_LOCKING)
+    ;;
+    SunOS\ 5.*)	
+	AC_DEFINE(USE_LOCKING)
+    ;;
+esac
+
+#--------------------------------------------------------------------
+#  Determine the best warning options for this platform
+#--------------------------------------------------------------------
+if test "$CC" = "gcc"; then
+    WARNDEFS="-ansi -pedantic -Wall"
+else
+    if test -f /bin/uname && test `/bin/uname` = OSF1; then
+	WARNDEFS="-std1 -warnprotos"
+    fi
+fi
+CCDEFS="$CCDEFS $WARNDEFS"
+
+#--------------------------------------------------------------------
+#  Run with Purify?  PureCoverage?  Quantify?
+#--------------------------------------------------------------------
+CC_PURE="$CC"
+AC_ARG_WITH(purify,
+    [  --with-purify           Build a WebServer executable with Purify
+                          (Pure Software's tool for finding memory
+                          errors)],
+    [CC_PURE="purify $CC_PURE"],)
+
+AC_ARG_WITH(purecov,
+    [  --with-purecov          Build a WebServer executable with PureCoverage
+                          (Pure Software's tool for doing test coverage
+                          analysis)],
+    [CC_PURE="purecov $CC_PURE"],)
+
+AC_ARG_WITH(quantify,
+    [  --with-quantify         Build a WebServer executable with Quantify
+                          (Pure Software's tool for doing performance
+                          analysis)],
+    [CC_PURE="quantify $CC_PURE"],)
+
+AC_SUBST(CC_PURE)
+AC_SUBST(CCDEFS)
+AC_OUTPUT(Makefile libfcgi/Makefile cgi-fcgi/Makefile )

@@ -1,0 +1,272 @@
+FastCGI Developer's Kit README
+------------------------------
+
+    Version 1.5, 12 June 1996
+    $Id: README,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+    Copyright (c) 1996 Open Market, Inc.
+    See the file "LICENSE.TERMS" for information on usage and redistribution
+    of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
+Basic Directions
+----------------
+
+Open the kit's index page, index.html in this directory, using the
+"Open File" command in your Web browser.  The index page gives you an
+overview of the kit structure and helps you navigate the kit. The
+index page also contains links that run some example applications, but
+the applications won't work when index.html is opened using the "Open
+File" command because they aren't being accessed through a Web server.
+
+For further instructions see the FastCGI Developer's Kit
+document, accessible via the index page.
+
+
+
+What's New: Version 1.5, 12 June 1996
+--------------------------------------
+
+General:
+
+  Added a white paper on FastCGI application performance to the
+  doc directory.  Generally brought the other docs up to date.
+
+  Rearranged the kit to put more emphasis on running FastCGI-capable
+  servers and less on running cgi-fcgi.  Added
+  examples/conf/om-httpd.config, a config file that demonstrates all
+  of the example apps.  (Would like to have similar configs for NCSA
+  and Apache.)
+
+  Added the tiny-authorizer and sample-store applications to
+  the examples.  These are explained in the index.html.
+
+    In addition to everything else it does, sample-store demonstrates
+    a bug in the Open Market WebServer 2.0: When an Authorizer
+    application denies access, the server tacks some extra junk onto
+    the end of the page the application returns.  A little ugly but
+    not fatal.
+
+C libraries:
+
+  Added the functions FCGX_Finish and FCGI_Finish.  These functions
+  finish the current request from the HTTP server but do not begin a
+  new request.  These functions make it possible for applications to
+  perform other processing between requests.  An application must not
+  use its stdin, stdout, stderr, or environ between calling
+  FCGI_Finish and calling FCGI_Accept.  See doc/FCGI_Finish.3 for
+  more information.  The application examples/sample-store.c demonstrates
+  the use of FCGI_Finish.
+
+  Added conditional 'extern "C"' stuff to the .h files fcgi_stdio.h,
+  fcgiapp.h, and fcgiappmisc.h for the benefit of C++ applications
+  (suggested by Jim McCarthy).
+
+  Fixed two bugs in FCGX_VFPrintF (reported by Ben Laurie).  These
+  bugs affected processing of %f format specifiers and of all format
+  specifiers containing a precision spec (e.g "%12.4g").
+
+  Fixed a bug in FCGX_Accept in which the environment variable
+  FCGI_WEBSERVER_ADDRS was being read rather than the specified
+  FCGI_WEB_SERVER_ADDRS.  Fixed a bug in FCGX_Accept in which the
+  wrong storage was freed when FCGI_WEB_SERVER_ADDRS contained more
+  than one address or if the address check failed.
+
+  Changed FCGX_Accept to avoid depending upon accept(2) returning the
+  correct value of sin_family in the socketaddr structure for an
+  AF_UNIX connection (SCO returns the wrong value, as reported by Paul
+  Mahoney).
+
+  Changed the error retry logic in FCGX_Accept.  FCGX_Accept now
+  returns -1 only in case of operating system errors that occur while
+  accepting a connection (e.g. out of file descriptors).  Other errors
+  cause the current connection to be dropped and a new connection to
+  be attempted.
+
+Perl:
+
+  Changed FCGI.xs to make it insensitive to Perl's treatment of
+  environ (we hope).  Changed FCGI::accept so the initial environment
+  variables are not unset on the first call to FCGI::accept (or on
+  subsequent calls either).  Added the echo-perl example
+  program.  Added a workaround for the "empty initial environment bug"
+  to tiny-perl-fcgi.  Changed the example Perl scripts to use a new
+  symbolic link ./perl, avoiding the HP-UX 32 character limit on the
+  first line of a command interpreter file.
+
+  Because the FastCGI-enabled Perl interpreter uses the C fcgi_stdio
+  library, it picks up all the changes listed above for C.  There's
+  a new Perl subroutine FCGI::finish.
+
+Tcl:
+
+  Fixed a bug in tclFCGI.c that caused the request environment
+  variables to be lost.  Changed FCGI_Accept so the initial
+  environment variables are not unset on the first call to FCGI_Accept
+  (or on subsequent calls either).  Added the echo-tcl example
+  program.  Fixed another bug that caused Tcl to become confused by
+  file opens; as a side effect of this change, writes to stdout/stderr
+  that occur in an app running as FastCGI before FCGI_Accept is called
+  are no-ops rather than crashing Tcl.  Changed the example Tcl
+  scripts to use a new symbolic link ./tclsh, avoiding the HP-UX 32
+  character limit on the first line of a command interpreter file.
+
+  Because the FastCGI-enabled Tcl interpreter uses the C fcgi_stdio
+  library, it picks up all the changes listed above for C; there's
+  a new Tcl command FCGI_Finish.
+
+Java:
+
+  Fixed a sign-extension bug in FCGIMessage.java that caused bad encodings
+  of names and values in name-value pairs for lengths in [128..255].
+  Made small cleanups in the Java example programs to make them more
+  consistent with the other examples.
+
+
+
+What's New: Version 1.4, 10 May 1996
+--------------------------------------
+
+Includes Java classes and Java examples.
+
+
+
+What's New: Version 1.3.1, 6 May 1996
+--------------------------------------
+
+New, simplified, license terms.  Includes an expanded whitepaper that
+describes FastCGI support in Open Market's Secure WebServer 2.0.
+Includes Open Market FastCGI 1.0 Programmer's Guide.  Includes
+"FastCGI: A High-Performance Gateway Interface", a position paper
+presented at the workshop "Programming the Web - a search for APIs",
+Fifth International World Wide Web Conference, 6 May 1996, Paris,
+France.
+
+
+
+What's New: Version 1.3, 29 April 1996
+--------------------------------------
+
+First public release; new license terms on all files.
+
+Changed cgi-fcgi.c to use SO_REUSEADDR when creating the listening socket;
+this avoids the need to wait through the TIME_WAIT state on all the TCP
+connections made by the previous instance of an external application
+you are restarting. 
+
+
+
+What's New: Version 1.2.2, 15 April 1996
+----------------------------------------
+
+Partially fixed a bug in Perl's FCGI::accept (source file FCGI.xs).
+The per-request environment variables were being lost.  Now the
+per-request environment variables show up correctly, except that if
+the Perl application has an empty initial environment, the environment
+variables associated with the *first* request are lost.  Therefore,
+when starting Perl, always set some environment variable using the
+AppClass -initial-env option, or by running cgi-fcgi in a non-empty
+environment.
+
+
+
+What's New: Version 1.2.1, 22 March 1996
+----------------------------------------
+
+Fixed a bug in FCGI_Accept.  If your application running as FastCGI
+opened a file before calling FCGI_Accept, it would decide that it
+was really running as CGI.  Things went downhill quickly after that!
+
+Also added advisory locking to serialize calls to accept on shared
+listening sockets on Solaris and IRIX, to work around problems
+with concurrent accept calls on these platforms.
+
+
+
+What's New: Version 1.2, 20 March 1996
+--------------------------------------
+
+1. This version of the kit implements the most recent draft
+of the protocol spec.  Enhancements to the protocol include
+a BEGIN_REQUEST record that simplifies request ID management
+and transmits role and keep-alive information, and a simplified
+end-of-stream indication.
+
+The protocol spec has been revised to describe exactly what's
+been implemented, leaving out the features that we hope to
+introduce in later releases.
+
+At the application level, the visible change is the FCGI_ROLE
+variable that's available to applications.  This allows an application
+to check that it has been invoked in the expected role.  A single
+application can be written to respond in several roles.  The
+FCGI_Accept.3 manpage contains more information.
+
+2.  We introduced the new "module" prefix FCGX in order to simplify
+the relationship between fcgi_stdio and fcgiapp.
+
+A growing number of functions are provided in both fcgi_stdio and
+fcgiapp versions.  Rather than inventing an ad hoc solution for each
+naming conflict (as we did with FCGI_accept and FCGI_Accept), we've
+bitten the bullet and systematically renamed *all* the fcgapp
+primitives with the prefix FCGX_.  In fcgi_stdio, we've renamed
+FCGI_accept to FCGI_Accept.  So all functions that are common in the
+two libraries have the same name modulo the different prefixes.
+
+The Accept function visible in Tcl is now called FCGI_Accept, not
+FCGI_accept.
+
+The Accept function visible in Perl is now FCGI::accept.  All
+lower case names for functions and all upper case names for
+modules appears to be a Perl convention, so we conform.
+
+3. The kit now fully supports the Responder, Authorizer,
+and Filter roles.
+
+The Filter role required a new function, FCGI_StartFilterData.
+FCGI_StartFilterData changes the input stream from reading
+FCGI_STDIN data to reading FCGI_DATA data.  The manpage
+gives full details.
+
+Another new function, FCGI_SetExitStatus, is primarily for
+the Responder role but is available to all.  FCGI_SetExitStatus
+allows an application to set a nonzero "exit" status
+before completing a request and calling FCGI_Accept again.
+The manpage gives full details.
+
+These two new functions are provided at both the fcgi_stdio interface
+and the basic fcgiapp interface.  Naturally, the fcgiapp versions are
+called FCGX_StartFilterData and FCGX_SetExitStatus.
+
+4. The fcgiapp interface changed slightly in order to treat
+the streams and environment data more symmetrically.
+
+FCGX_Accept now returns an environment pointer, rather than requiring
+a call to FCGX_GetAllParams to retrieve an environment pointer.
+FCGX_GetParam takes an explicit environment pointer argument.
+FCGX_GetAllParams is eliminated.  See the documentation in the header
+file for complete information.
+
+fcgiapp also added the procedure FCGX_IsCGI, providing a standardized
+test of whether the app was started as CGI or FastCGI.
+
+5. We've ported the kits to vendor-supported ANSI C compilers
+on Sun (Solaris 2.X), HP, and Digital platforms.  GCC can be
+selected on these platforms by performing SETENV CC gcc before
+running configure.
+
+
+
+What's New: Version 1.1, 30 Jan 1996
+------------------------------------
+
+1. More platforms: Digital UNIX, IBM AIX, Silicon Graphics IRIX,
+Sun SunOS 4.1.4.
+
+2. Perl and Tcl: Simple recipes for producing Perl and Tcl
+interpreters that run as FastCGI applications.  No source
+code changes are needed to Perl and Tcl.  Documented
+in separate documents, accessible via the index page.
+
+
+
+Version 1.0, 10 Jan 1996
+------------------------

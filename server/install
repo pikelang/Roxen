@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ -f base_server/roxen.pike ]; then
+  exec bin/pike -m etc/master.pike ./bin/install.pike $@
+else
+  echo You have to cd to the 'roxen/server' directory to run this program.
+fi

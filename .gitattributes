@@ -1,0 +1,27 @@
+[attr]binary -text -crlf -diff -ident
+* text ident
+*.gif binary
+*.gz binary
+*.jpg binary
+/server/modules/gopher.pike -text -crlf
+
+# Handling of foreign (ie CVS) identifiers.
+#
+[attr]foreign_ident -ident block_commit=Remove-foreign_ident-attribute-before-commit.
+# Files containing CVS ids follow.
+# Remove the corresponding line before committing
+# changes to these files.
+/extern/fast_cgi/Makefile.in foreign_ident
+/extern/fast_cgi/README foreign_ident
+/extern/fast_cgi/cgi-fcgi/Makefile.in foreign_ident
+/extern/fast_cgi/cgi-fcgi/cgi-fcgi.c foreign_ident
+/extern/fast_cgi/configure.in foreign_ident
+/extern/fast_cgi/include/fastcgi.h foreign_ident
+/extern/fast_cgi/include/fcgi_stdio.h foreign_ident
+/extern/fast_cgi/include/fcgiapp.h foreign_ident
+/extern/fast_cgi/include/fcgiappmisc.h foreign_ident
+/extern/fast_cgi/include/fcgimisc.h foreign_ident
+/extern/fast_cgi/libfcgi/Makefile.in foreign_ident
+/extern/fast_cgi/libfcgi/fcgi_stdio.c foreign_ident
+/extern/fast_cgi/libfcgi/fcgiapp.c foreign_ident
+/extern/fast_cgi/libfcgi/strerror.c foreign_ident

@@ -1,0 +1,47 @@
+#!/bin/sh
+# init.d script for Roxen. Set the variables below to something fitting..
+# This is only an example script.
+#############
+roxenhome=/usr/local/roxen/server/
+wwwuser=www
+killallwww=yes
+# ':0' should be the uid.
+pidfile=/tmp/roxen_pid:0
+
+#configdir=dirname
+
+### You should not _have_ to change anything below here...
+
+case $1 in
+	start)
+          echo Starting Roxen...
+	  if [ -x $roxenhome/start ]; then
+ 		cd $roxenhome
+# If you want to start with another configuration directory:
+#		./start -d $configdir 2>/dev/null
+		./start 2>/dev/null
+          else
+             echo I cannot find the Roxen dir '('$roxenhome')'
+	  fi
+          echo Done.
+	;;
+
+	*)
+           echo Stopping Roxen...
+	   if [ -f $pidfile ] ; then
+             kill -USR1 'cat $pidfile' 2>/dev/null
+             sleep 4
+             kill 'cat $pidfile' 2>/dev/null
+             sleep 1
+             kill -9 'cat $pidfile' 2>/dev/null
+           fi
+           # Get all the CGI scripts... :-)
+           if [ x$killallwww = xyes ] ; then
+	     echo Killing all programs running as the www user.
+             su $wwwuser -c "kill -9 -1"
+           fi
+           echo Roxen stopped.
+	;;
+esac
+
+exit 0

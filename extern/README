@@ -1,0 +1,38 @@
+In this directory, files used more or less inderectly by roxen recides.
+
+ssl
++++
+ SSL support for roxen. This _requires_ the SSLeay package.
+ It expects it to be installed in /usr/local/ssl/. Do make ssl-install
+ to enable it if you have the SSL-package installed.
+ 
+ The SSL package can be found at the Roxen FTP site.
+
+
+shuffle
++++++++
+ External datashuffler. Only usable on solaris 2.4 and up. Do make
+ shuffle-install to use it. It will speed up the handling of many
+ simultaneous connections somewhat.
+
+roxen_hostname
++++++++++++++++
+   This program will do the ip to hostname and hostname to ip matching, since
+   the programming interface to DNS is blocking. We could ofcourse do
+   our own DNS queries, but that seems like too much trouble for too
+   little gain.
+   
+proxygarb
++++++++++
+   The Roxen proxy garbage collector. Takes care of cleaning up of
+   the proxy cache. (* Needs more work as it is now *)
+
+cgi
++++
+   The program used when Roxen is spawning CGI-scripts.
+
+fast_cgi/*
+++++++++++
+   Slightly rehacked version of the cgi to fast-cgi program
+
+

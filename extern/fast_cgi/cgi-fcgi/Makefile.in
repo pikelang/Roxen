@@ -1,0 +1,36 @@
+#
+#  Makefile for CGI -> FCGI application
+#
+#  Open Market, Inc.
+#
+#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+#
+
+SRCDIR=@srcdir@
+prefix=@prefix@
+VPATH=@srcdir@
+
+SHELL	= /bin/sh
+CC	= @CC@
+CC_PURE	= @CC_PURE@
+INCLUDEDIR  = $(SRCDIR)/../include -I../include -I. -I..
+CFLAGS	= @CCDEFS@ @PROFILE@ -I$(INCLUDEDIR)
+LIBS	= @LIBS@ -lm
+RANLIB	= @RANLIB@
+
+OBJS	    = fcgiapp.o
+LIBDIR      = ../libfcgi
+LIBFCGI	    = $(LIBDIR)/libfcgi.a
+TARGETS	    = cgi-fcgi
+
+all: $(TARGETS)
+
+cgi-fcgi: cgi-fcgi.o $(LIBFCGI)
+	$(CC_PURE) $(CFLAGS) cgi-fcgi.o -o cgi-fcgi $(LIBFCGI) $(LIBS)
+
+clean:
+	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out $(TARGETS)
+
+# ----------------------------------------------------------------------------
+
+cgi-fcgi.o: cgi-fcgi.c 
