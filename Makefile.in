@@ -112,7 +112,7 @@ install_only:
 	  fi; \
 	done
 	@for f in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type f -print`; do \
-	  if cmp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f 2>&1 >/dev/null; then :; else \
+	  if cmp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
 	    else :; fi; \
@@ -123,7 +123,7 @@ install_only:
 	  fi; \
 	done
 	@for f in `cd pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
-	  if cmp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f 2>&1 >/dev/null; then :; else \
+	  if cmp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
 	    else :; fi; \
