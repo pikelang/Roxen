@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.56 2003/02/19 10:14:55 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.57 2003/03/24 18:07:38 mast Exp $";
 
 class Variable
 {
@@ -800,6 +800,9 @@ class RequestID
 
   void set_output_charset( string|function to, int|void mode )
   {
+    if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+      ctx->add_p_code_callback ("set_output_charset", to, mode);
+
     if( search( output_charset, to ) != -1 ) // Already done.
       return;
 
