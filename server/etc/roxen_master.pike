@@ -1,3 +1,4 @@
+#define UNDEFINED (([])[0])
 #if efun(version)
 #define VERSION		version()
 #else
@@ -10,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.15 1997/01/20 13:58:24 kg Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16 1997/01/20 14:42:04 kg Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -154,6 +155,31 @@ varargs mixed getenv(string s)
 void putenv(string var, string val)
 {
   environment[var]=val;
+}
+
+class dirnode
+{
+  string dirname;
+  void create(string name) { dirname=name; }
+  object|program `[](string index)
+  {
+    index=dirname+"/"+index;
+    return
+      ((object)"/master")->findmodule(index) || (program) index;
+  }
+};
+
+object findmodule(string fullname)
+{
+  mixed *stat;
+  if(mixed *stat=file_stat(fullname))
+  {
+    if(stat[1]==-2) return dirnode(fullname);
+  }
+  program p;
+  if(p=(program)(fullname+".pmod"))
+    return (object)(fullname+".pmod");
+  return UNDEFINED;
 }
 
 mixed resolv(string identifier, string current_file)
