@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.13 2002/09/26 21:58:35 nilsson Exp $
+// $Id: startdll.cpp,v 1.14 2002/10/24 00:26:30 nilsson Exp $
 //
 
 
@@ -503,9 +503,7 @@ void CServiceModule::MsgLoopCallback(int index)
   DWORD exitcode = 0;
   GetExitCodeProcess(m_roxen->GetProcess(), &exitcode);
 
-  if (m_Cmdline.IsOnce())
-    Stop(FALSE);
-  else if (exitcode == STILL_ACTIVE)
+  if (exitcode == STILL_ACTIVE)
   {
     // do nothing
   }
@@ -515,13 +513,21 @@ void CServiceModule::MsgLoopCallback(int index)
     LogEvent("Roxen CMS shutdown.");
     Stop(FALSE);
   }
+  else if (exitcode == 50)
+  {
+    //clean shutdown
+    LogEvent("Failed to open any port. Shutdown.");
+    m_Cmdline.SetKeepMysql();
+    Stop(FALSE);
+  }
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
     LogEvent("Changing Roxen CMS version. Restarting...");
     
-    // restart the new version of the server!!
-    SetRestartFlag(TRUE);
+    if (!m_Cmdline.IsOnce())
+      // restart the new version of the server!!
+      SetRestartFlag(TRUE);
 
     Stop(FALSE);
   }
@@ -538,7 +544,7 @@ void CServiceModule::MsgLoopCallback(int index)
     Sleep(100);
     if (IsStopping())
       return;
-    if (!m_roxen->Start(0))
+    if (m_Cmdline.IsOnce() || !m_roxen->Start(0))
       Stop(FALSE);
   }
 }

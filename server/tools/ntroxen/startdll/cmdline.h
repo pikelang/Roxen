@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.11 2002/02/06 17:24:36 tomas Exp $
+// $Id: cmdline.h,v 1.12 2002/10/24 00:23:51 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -94,6 +94,8 @@ public:
   CArgList & GetPikeArgs()    { return m_saPikeArgs; }
   CArgList & GetPikeDefines() { return m_saPikeDefines; }
   CArgList & GetRoxenArgs()   { return m_saRoxenArgs; }
+
+  void SetKeepMysql(BOOL flag = TRUE) { m_bKeepMysql = flag; }
 
   static void OutputLine(HANDLE out, char *line);
   static void OutputLineFmt(HANDLE out, char *pFormat, ...);
