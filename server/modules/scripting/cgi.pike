@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.135 2000/03/01 02:04:24 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.136 2000/05/25 17:27:54 grubba Exp $";
 
 class Shuffle
 {
@@ -879,7 +879,7 @@ class CGIScript
     }
 
     if(environment->INDEX)
-      arguments = environment->INDEX/"+";
+      arguments = Array.map(environment->INDEX/"+", http_decode_string);
     else
       arguments = ({});
 
