@@ -1,23 +1,28 @@
 #!/bin/sh
 
 # Find the default master
-if [ -f ../pike/src/lib/master.pike ]; then
-  DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
+if [ -f lib/pike/master.pike ]; then
+  DEFINES="$DEFINES -mlib/pike/master.pike"
+else
+  # This is used with localinstall
+  if [ -f ../pike/src/lib/master.pike ]; then
+    DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+  fi
 fi
 
 # Extra module-path
 if [ -d etc/modules ]; then
-  DEFINES="$DEFINES -M etc/modules"
+  DEFINES="$DEFINES -Metc/modules"
 fi
  
 # Extra include-path
 if [ -d etc/include ]; then
-  DEFINES="$DEFINES -I etc/include"
+  DEFINES="$DEFINES -Ietc/include"
 fi
  
 # Extra include-path (2)
 if [ -d base_server ]; then
-  DEFINES="$DEFINES -I base_server"
+  DEFINES="$DEFINES -Ibase_server"
 fi
  
 if [ -f base_server/roxen.pike ]; then
