@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.15 1997/08/20 10:24:54 per Exp $
+/* $Id: wizard.pike,v 1.16 1997/08/20 10:31:43 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -177,7 +177,8 @@ string parse_wizard_page(string form, object id, string wiz_name)
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
-mapping|string wizard_for(object id, string|void cancel, string|void wiz_name)
+mapping|string wizard_for(object id, string|void cancel, string|void wiz_name,
+			  mixed ... args)
 {
   string data;
   int offset = 1;
@@ -209,21 +210,21 @@ mapping|string wizard_for(object id, string|void cancel, string|void wiz_name)
   {
     function pg=this_object()[wiz_name+((int)v->_page)];
     if(!pg) return "Error: Invalid page ("+v->_page+")!";
-    if(data = pg(id)) break;
+    if(data = pg(id,@args)) break;
   }
   return parse_wizard_page(data,id,wiz_name);
 }
 
 mapping wizards = ([]);
 
-object get_wizard(string act, string dir)
+object get_wizard(string act, string dir, mixed ... args)
 {
-  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)();
+  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
   return wizards[dir+act];
 }
 
 int zonk;
-mapping|string wizard_menu(object id, string dir, string base)
+mapping|string wizard_menu(object id, string dir, string base, mixed ... args)
 {
   if(id->pragma["no-cache"]) wizards=([]);
   if(!id->variables->action)
@@ -236,7 +237,7 @@ mapping|string wizard_menu(object id, string dir, string base)
       err = catch {
 	if(act[0]!='#' && act[-1]=='e')
 	{
-	  string rn = (get_wizard(act,dir)->name||act), name;
+	  string rn = (get_wizard(act,dir,@args)->name||act), name;
 	  if(sscanf(rn, "%*s:%s", name) != 2)
 	    name = rn;
 	  acts+=({"<!-- "+rn+" --><dt><font size=\"+2\">"
@@ -249,5 +250,5 @@ mapping|string wizard_menu(object id, string dir, string base)
     }
     return res+(sort(acts)*"\n")+"</dl>";
   }
-  return get_wizard(id->variables->action,dir)->wizard_for(id,base);
+  return get_wizard(id->variables->action,dir)->wizard_for(id,base,0,@args);
 }
