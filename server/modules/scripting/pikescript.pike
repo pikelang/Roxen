@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.43 1999/11/24 19:11:56 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.44 1999/11/26 03:21:32 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -49,6 +49,7 @@ void create()
   defvar("exts", ({ "lpc", "ulpc", "µlpc","pike" }), "Extensions", TYPE_STRING_LIST,
 	 "The extensions to parse");
 
+#ifndef THREADS
   defvar("fork_exec", 0, "Fork execution: Enabled", TYPE_FLAG,
 	 "If set, pike will fork to execute the script. "
 	 "This is a more secure way if you want to let "
@@ -72,15 +73,16 @@ void create()
   defvar("user", 1, "Fork execution: Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
+#endif
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
 	 "Please note that this will give the scripts access to the password "
-	 "used. This is not recommended !", 0, fork_exec_p);
+	 "used. This is not recommended !");
 
   defvar("clearpass", 0, "Send decoded password", TYPE_FLAG|VAR_MORE,
 	 "If set, the decoded password value will be sent to the script. "
-	 "This is not recommended !", 0, fork_exec_p);
+	 "This is not recommended !");
 
   defvar("exec-mask", "0777", "Exec mask: Needed", 
 	 TYPE_STRING|VAR_MORE,
@@ -90,12 +92,22 @@ void create()
 	 TYPE_STRING|VAR_MORE,
 	 "Never run scripts matching this permission mask");
 
-#if efun(set_max_eval_time)
-  defvar("evaltime", 4, "Maximum evaluation time", TYPE_INT,
-	 "The maximum time (in seconds) that a script is allowed to run for. "
-	 "This might be changed in the script, but it will stop most mistakes "
-	 "like i=0; while(i<=0) i--;.. Setting this to 0 is not a good idea.");
-#endif
+  defvar( "autoreload", 1, "Reload scripts automatically",
+          TYPE_FLAG,
+          "If this option is true, scripts will be reloaded automatically "
+          "from disk if they have changed. This requires one stat for each "
+          "access to the script, and also one stat for each file the script "
+          "inherits, if any.  Please note that pike modules are currently not "
+          "automatically reloaded from disk" );
+
+  defvar( "explicitreload", 0, 
+          "Reload scripts when the user sends a no-cache header",
+          TYPE_FLAG,
+          "If this option is true, scripts will be reloaded if the user sends "
+          "a pragma: no-cache header (netscape does this when the user presses "
+          "shift+reload, IE doesn't), even if they have not changed on disk. "
+          " Please note that pike modules are currently not automatically "
+          "reloaded from disk" );
 }
 
 array (string) query_file_extensions()
@@ -134,6 +146,7 @@ array|mapping call_script(function fun, object got, object file)
   if(got->realauth && !QUERY(clearpass))
     got->realauth=0;
 
+#ifndef THREADS
 #if efun(fork)
   if(QUERY(fork_exec)) {
     if(fork())
@@ -170,55 +183,40 @@ array|mapping call_script(function fun, object got, object file)
 
   } else 
 #endif
-  {
-#ifndef THREADS
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
-#elif defined(DEBUG)
-    if((got->misc->is_user && (us = file_stat(got->misc->is_user)))&&!getuid())
-
-      report_debug("Not executing pike-script as owner, since we are using"
-		   " threads. UID is not thread local, sadly enough.\n");
-#endif
-  }
-
-#ifdef THREADS
+#else
   object key;
-  if(!QUERY(fork_exec)) {
-    if(!function_object(fun)->thread_safe)
-    {
-      if(!locks[fun]) locks[fun]=Mutex();
-      key = locks[fun]->lock();
-    }
+  if(!function_object(fun)->thread_safe)
+  {
+    if(!locks[fun]) locks[fun]=Mutex();
+    key = locks[fun]->lock();
   }
 #endif
 
-#if efun(set_max_eval_time)
-  if(catch {
-    set_max_eval_time(query("evaltime"));
-#endif
 #if constant(__builtin.security)
-    // EXPERIMENTAL: Call with low credentials.
-    err = catch(result = call_with_creds(luser_creds, fun, got)); 
+  // EXPERIMENTAL: Call with low credentials.
+  err = catch(result = call_with_creds(luser_creds, fun, got)); 
 #else /* !constant(__builtin.security) */
-    err = catch(result = fun(got)); 
+  err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
-// The eval-time might be exceeded in here..
-#if efun(set_max_eval_time)
-    remove_max_eval_time(); // Remove the limit.
-  })
-    remove_max_eval_time(); // Remove the limit.
-#endif
 
-  if(privs) destruct(privs);
+  if(privs) 
+    destruct(privs);
 
+#ifndef THREADS
 #if efun(fork)
-  if (QUERY(fork_exec)) {
-    if (err = catch {
-      if (err) {
+  if (QUERY(fork_exec)) 
+  {
+    if (err = catch 
+    {
+      if (err) 
+      {
 	err = catch{my_error(err, got->not_query);};
 	result = describe_backtrace(err);
-      } else if (!stringp(result)) {
+      } 
+      else if (!stringp(result)) 
+      {
 	result = sprintf("<h1>Return-type %t not supported for Pike-scripts "
 			 "in forking-mode</h1><pre>%s</pre>", result,
 			 replace(sprintf("%O", result),
@@ -231,21 +229,23 @@ array|mapping call_script(function fun, object got, object file)
       got->my_fd->write("HTTP/1.0 200 OK\n"
 			"Content-Type: text/html\n"
 			"\n"+result);
-    }) {
+    }) 
+    {
       perror("Execution of pike-script wasn't nice:\n%s\n",
 	     describe_backtrace(err));
     }
     exit(0);
   }
 #endif
+#endif
   if(err)
     return ({ -1, err });
 
-  if(stringp(result)) {
-    return http_string_answer(parse_rxml(result, got, file));
-  }
+  if(stringp(result)) 
+    return http_rxml_answer( result, got );
 
-  if(result == -1) return http_pipe_in_progress();
+  if(result == -1) 
+    return http_pipe_in_progress();
 
   if(mappingp(result))
   {
@@ -257,7 +257,8 @@ array|mapping call_script(function fun, object got, object file)
   if(objectp(result))
     return result;
 
-  if(!result) return 0;
+  if(!result) 
+    return 0;
 
   return http_string_answer(sprintf("%O", result));
 }
@@ -277,10 +278,14 @@ mapping handle_file_extension(object f, string e, object got)
 
   if(scripts[ got->not_query ])
   {
+    int reload;
     p = object_program(o=function_object(scripts[got->not_query]));
-    if( (master()->refresh_inherit( p )>0) /*|| got->pragma["no-cache"]*/ )
+    if( query( "autoreload" ) )
+      reload = (master()->refresh_inherit( p )>0);
+    if( query( "explicitreload" ) )
+      reload += got->pragma["no-cache"];
+    if( reload )
     {
-      werror("RELOAD RELOAD RELOAD RELOAD RELOAD\n");
       // Reload the script from disk, if the script allows it.
       if(!(o->no_reload && o->no_reload(got)))
       {
@@ -360,6 +365,7 @@ string status()
 
 }
 
+#ifndef THREADS
 #if efun(fork)
 void start()
 {
@@ -371,4 +377,5 @@ void start()
       runuser = ({ (int)QUERY(runuser), 60001 });
   }
 }
+#endif
 #endif
