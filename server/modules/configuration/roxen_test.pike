@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.25 2001/05/20 13:03:11 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.26 2001/05/31 14:24:14 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -448,4 +448,12 @@ class TagOEmitTESTER {
   EmitObject get_dataset(mapping m, RequestID id) {
     return MyEmit( ::get_dataset(m,id) );
   }
+}
+
+class TagSEmitTESTER {
+  inherit TagEmitTESTER;
+  constant plugin_name = "STESTER";
+  constant skiprows = 1;
+  constant maxrows = 1;
+  constant sort = 1;
 }
