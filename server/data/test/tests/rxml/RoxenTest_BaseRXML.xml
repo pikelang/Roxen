@@ -2863,11 +2863,6 @@ cd</rxml>
 </test>
 
 <test>
-<rxml>&client.tm;</rxml>
-<result>&lt;TM&gt;</result>
-</test>
-
-<test>
 <rxml>&client.user;</rxml>
 <result></result>
 </test>
