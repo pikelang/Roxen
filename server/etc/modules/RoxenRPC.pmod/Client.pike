@@ -89,8 +89,8 @@ void create(string|object ip, int port, string cl,
     switch(server->read(1))
     {
      case "=":
-      not_again=1;
      case "!":
+      not_again=1;
       break;
      case "?":
       server->write("%4c%s", strlen(key||""), key||"");
