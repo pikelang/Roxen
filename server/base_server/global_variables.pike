@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.78 2001/08/20 15:11:25 per Exp $
+// $Id: global_variables.pike,v 1.79 2001/08/22 15:41:36 per Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -496,6 +496,8 @@ void define_global_variables(  )
 		"eternal loops will not cause the server to reboot, since only one thread is "
 		"blocked. In general there is no harm in having this option enabled. "));
 
+
+
   defvar("abs_timeout", 5, LOCALE(156, "ABS: Timeout"),
 	 TYPE_INT_LIST|VAR_MORE,
 	 LOCALE(157, "If the server is unable to accept connection for this many "
@@ -550,12 +552,17 @@ void define_global_variables(  )
 		"because of memory leaks.")
 	  );
 
-  defvar("suicide_timeout", 7,
-	 LOCALE(162, "Auto Restart: Timeout"),
-	 TYPE_INT_LIST|VAR_MORE,
-	 LOCALE(163, "Automatically restart the server after this many days."),
-	 ({1,2,3,4,5,6,7,14,30}),
-	 lambda(){return !query("suicide_engage");});
+  definvisvar( "last_suicide", 0, TYPE_INT );
+  
+  defvar("suicide_schedule",
+	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
+			    LOCALE(0,"Auto Restart: Schedule"),
+			    LOCALE(0, "Automatically restart the "
+				   "server according to this schedule.") ) )
+    ->set_invisibility_check_callback (
+      lambda(RequestID id, Variable.Variable f)
+	{return !query("suicide_engage");}
+    );
 
   defvar("mem_cache_gc",
 	 Variable.Int(300, 0, 
