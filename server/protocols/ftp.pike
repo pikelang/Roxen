@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.29 2000/02/14 16:07:40 jonasw Exp $
+ * $Id: ftp.pike,v 2.30 2000/03/10 17:14:53 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -3462,7 +3462,12 @@ class FTPSession
 
     // FIXME: Only supports one configuration!
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
+    id->misc->defaulted = 1;
 
+    // Support delayed loading.
+    if (!conf->inited) {
+      conf->enable_all_modules();
+    }
 #if 0
     werror("FTP: conf:%O\n"
 	   "FTP:urls:%O\n",
