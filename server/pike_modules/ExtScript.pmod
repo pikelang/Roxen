@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.18 2004/05/22 16:26:25 _cvs_stephen Exp $
+// $Id: ExtScript.pmod,v 1.19 2004/05/30 01:00:46 _cvs_stephen Exp $
 
 // 
 
@@ -484,13 +484,17 @@ static void objdiag()
   	if (h)
   	  line += "  H" + (++n) + "=" + h->procstat();
       DEBUGMSG(line + "\n");
-      if (!n)
-        remove_call_out(periodic_cleanup);
+      if (!n && cleaner) {
+	cleaner->stop();
+        cleaner = 0;
+      }
     }
   }
 }
 
 static int lastcleanup = 0;
+
+static core.BackgroundProcess cleaner;
 
 void periodic_cleanup()
 {
@@ -522,8 +526,6 @@ void periodic_cleanup()
       }
     }
   }
-  remove_call_out(periodic_cleanup); // remove a doubled call_out, if any.
-  call_out(periodic_cleanup, 50);
   objdiag();
 }
 
@@ -536,8 +538,11 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!intp(multi) || multi < 1) multi = 1;
 
-  if (lastcleanup+900 < time(0))
-    periodic_cleanup();
+  if (lastcleanup+900 < time(0)) {
+    if (!cleaner) {
+      cleaner = core.BackgroundProcess(50, periodic_cleanup);
+    }
+  }
 
   if (!(m = scripthandlers[binpath])) 
   {

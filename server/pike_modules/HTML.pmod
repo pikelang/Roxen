@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.6 2002/12/03 01:15:06 mani Exp $
+// $Id: HTML.pmod,v 1.7 2004/05/30 01:00:46 _cvs_stephen Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
@@ -126,6 +126,10 @@ array(array(string)) pad_rows( array(array(string)) rows, void|string padding ) 
   return rows;
 }
 
+// Kludge: An alternative name to allow access from OBox.pad_rows.
+static array(array(string)) _pad_rows( array(array(string)) rows, void|string padding )
+  {return pad_rows (rows, padding);}
+
 //! Provides the same functionality as the @[simple_obox] function,
 //! in a "streaming" way. The real gain is different addtition methods
 //! as well as the possibility to change the cell callback at any time.
@@ -241,7 +245,7 @@ class OBox {
 
   //! Ensures that all rows have the same number of cells.
   void pad_rows() {
-    rows = global::pad_rows(rows, "<td bgcolor='" + cell_color +
+    rows = _pad_rows(rows, "<td bgcolor='" + cell_color +
 			    "'>&nbsp;</td>");
   }
 
