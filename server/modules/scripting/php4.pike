@@ -1,4 +1,4 @@
-#if constant(PHP4.Interpretor)
+#if constant(PHP4.Interpreter)
 /* Roxen PHP module.
  *   (c) David Hedbor  1999
  *   Modified by Per Hedbor 2000
@@ -16,7 +16,7 @@ inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version = "$Id: php4.pike,v 2.1 2000/02/21 17:33:10 per Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.2 2000/03/07 20:21:08 neotron Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_FILE_EXTENSION;
@@ -26,7 +26,7 @@ constant module_doc  = "This module allows Roxen users to run PHP scripts, "
 
 class PHPScript
 {
-  PHP4.Interpretor interpretor;
+  PHP4.Interpreter interpreter;
   string command;
   string buffer="";
   // stderr is handled by run().
@@ -163,14 +163,14 @@ class PHPScript
     }
 
     mid->my_fd->set_close_callback(done);
-    interpretor->run(command, options, this_object(), done);
+    interpreter->run(command, options, this_object(), done);
     return this_object();
   }
 
   void create( object id )
   {
     DWERROR("PHP:PHPScript()\n");
-    interpretor = PHP4.Interpretor();
+    interpreter = PHP4.Interpreter();
     mid = id;
     if(!id->realfile)
     {
