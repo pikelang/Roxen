@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.60 1997/08/12 23:26:32 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.61 1997/08/12 23:47:24 peter Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1400,11 +1400,11 @@ mapping configuration_parse(object id)
        case NODE_CONFIGURATIONS:
 	return stores("You don't want to do that...\n");
       }
-      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be undone.\n\n<p></font>"+
-	   TABLEP("<table>", "") +"<tr><td><form action="+
-	   o->path(1)+">"
+      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be"
+	   " undone.\n\n<p></font>"+ TABLEP("<table>", "")+
+	   "<tr><td><form action=\""+ o->path(1)+"\">"
 	   "<input type=submit value=\"No, I do not want to delete it\"> "
-	   "</form></td><td><form action=\"/(really_delete)"+o->path(1)+
+	   "</form></td><td><form action=\"/(really_delete)"+ o->path(1)+
 	   "\"><input type=submit value=\"Go ahead\"></form></td></tr> "
 	   "</table></blockquote>");
       
@@ -1631,10 +1631,11 @@ mapping configuration_parse(object id)
   if(mappingp(tmp)) return tmp;
   if(!id->supports->font)
     tmp = parse_html(tmp, ([]),(["font":remove_font, ]));
+  PUSH("<dl><dt>");
   PUSH(tmp);
+  PUSH("</dl>");
   o->folded=i;
   
-  PUSH("</dl>");
   PUSH("<p><br clear=all>&nbsp;\n");
 
   int lm=1;
@@ -1675,8 +1676,9 @@ mapping configuration_parse(object id)
 
   if(!lm)
   {
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
-    PUSH("</nobr><br clear=all>");
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0"
+	 " src=\"/auto/button/rm/%20\">");
+    PUSH("<br clear=all>");
     lm=1;
   }
 
@@ -1691,14 +1693,9 @@ mapping configuration_parse(object id)
 //  BUTTON(shutdown,"Shutdown", left);
 
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
-  PUSH("</nobr><br clear=all>");
+  PUSH("<br clear=all>");
 //  PUSH("<p align=right><font size=-1 color=blue><a href=\"$docurl\"><font color=blue>"+roxen->real_version +"</font></a></font></p>");
 //  PUSH("</table>");
   PUSH("</body>\n");
   return stores(res*"");
 }
-
-
-
-
-
