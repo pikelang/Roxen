@@ -378,6 +378,16 @@
   <result>yxyx</result>
 </test>
 
+<test>
+  <rxml
+    ><define tag=post>post</define
+    ><define tag=pre>pre<noparse><post/><date/></noparse></define
+    ><define container=foo preparse=""><pre/>&_.contents;<contents/>&_.arg;</define
+    ><foo arg="a">c</foo
+  ></rxml>
+  <result>pre<post/><date/>cca</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
