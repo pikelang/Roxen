@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.155 2000/03/02 02:07:34 nilsson Exp $
+// $Id: rxml.pike,v 1.156 2000/03/03 11:03:15 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -26,10 +26,11 @@ inherit "rxmlhelp";
 // ----------------------- Error handling -------------------------
 
 function _run_error;
-string handle_run_error (RXML.Backtrace err, RXML.Type type, RequestID id)
+string handle_run_error (RXML.Backtrace err, RXML.Type type)
 // This is used to report thrown RXML run errors. See
 // RXML.run_error().
 {
+  RequestID id=RXML.get_context()->id;
   if(id->conf->get_provider("RXMLRunError")) {
     if(!_run_error)
       _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
@@ -49,10 +50,11 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type, RequestID id)
 }
 
 function _parse_error;
-string handle_parse_error (RXML.Backtrace err, RXML.Type type, RequestID id)
+string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 // This is used to report thrown RXML parse errors. See
 // RXML.parse_error().
 {
+  RequestID id=RXML.get_context()->id;
   if(id->conf->get_provider("RXMLParseError")) {
     if(!_parse_error)
       _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
@@ -89,15 +91,15 @@ class ScopeRoxen {
   string pike_version=predef::version();
   int ssl_strength=0;
 
-  void create() {
 #if constant(SSL)
+  void create() {
     ssl_strength=40;
     if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_des])
       ssl_strength=128;
     if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_3des])
       ssl_strength=168;
-#endif
   }
+#endif
 
   string|int `[] (string var, void|RXML.Context c, void|string scope) {
     switch(var)
@@ -930,11 +932,11 @@ class UserTag {
 	array replace_from, replace_to;
 	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
 	  replace_from = map(indices(nargs),make_entity)+({"#args#"});
-	  replace_to = values(nargs)+({ make_tag_attributes(nargs) });
+	  replace_to = values(nargs)+({ make_tag_attributes(nargs)[1..] });
 	}
 	else {
 	  replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
-	  replace_to = values(nargs)+({ make_tag_attributes(nargs), content });
+	  replace_to = values(nargs)+({ make_tag_attributes(nargs)[1..], content });
 	}
 	string c2;
 	c2 = replace(c, replace_from, replace_to);
@@ -945,8 +947,8 @@ class UserTag {
       }
 #endif
 
-      vars->args = make_tag_attributes(nargs);
-      vars["rest-args"] = make_tag_attributes(args - defaults);
+      vars->args = make_tag_attributes(nargs)[1..];
+      vars["rest-args"] = make_tag_attributes(args - defaults)[1..];
       user_tag_contents = vars->contents = content;
       return ({ c });
     }
@@ -1526,6 +1528,7 @@ class TagEmit {
       vars->counter=counter;
       return 1;
     }
+
   }
 }
 
