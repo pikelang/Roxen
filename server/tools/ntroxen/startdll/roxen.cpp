@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.10 2001/11/14 16:29:50 tomas Exp $
+// $Id: roxen.cpp,v 1.11 2001/11/28 11:29:44 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -290,7 +290,8 @@ BOOL CRoxen::CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, ch
 std::string CRoxen::RotateLogs(std::string logdir)
 {
   char buf[40];
-  std::string debugFile = logdir + "\\debug\\default.";
+  CreateDirectory(logdir.c_str(), NULL);
+  std::string debugFile = logdir + "\\default.";
   DeleteFile((debugFile + itoa(10, buf, 10) ).c_str());
   for (int i=9; i>0; i--)
   {
@@ -422,7 +423,8 @@ int CRoxen::Start(int first_time)
   HANDLE hFile = INVALID_HANDLE_VALUE;
   if (_Module.m_bService || (cmdline.GetVerbose() == 0 && !cmdline.IsPassHelp()))
   {
-    std::string newLogFile = RotateLogs(cmdline.GetLogDir());
+    CreateDirectory(cmdline.GetLogDir().c_str(), NULL);
+    std::string newLogFile = RotateLogs(cmdline.GetLogDir() + "\\debug");
     hFile = CreateFile(newLogFile.c_str(),
       GENERIC_WRITE,          // desired access
       FILE_SHARE_READ,        // share mode
