@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.262 2002/02/06 17:38:56 mast Exp $
+// $Id: module.pmod,v 1.263 2002/02/15 17:11:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6733,6 +6733,7 @@ class PCode
       // _type is 0 if we're being decoded or created without full
       // init (collect_results still needs to be handled, though).
       type = _type;
+      protocol_cache_time = -1;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
       exec = allocate (16);
       flags |= UPDATED;
@@ -6764,9 +6765,15 @@ class PCode
   // the extensive dependencies in the global rxml_tag_set that won't
   // be a problem in practice, so we avoid the overhead.
 
+  static int protocol_cache_time;
+  // The ctx->id->misc->cacheable setting when result collected p-code
+  // is finished. It's reinstated on entry whenever the p-code is used
+  // to ensure that the protocol cache doesn't overcache.
+
   void reset (Type _type, void|TagSet _tag_set)
   {
     type = _type;
+    protocol_cache_time = -1;
     if ((tag_set = _tag_set)) generation = _tag_set->generation;
     exec = allocate (16);
     length = 0;
@@ -6895,6 +6902,10 @@ class PCode
   void finish()
   {
     if (flags & COLLECT_RESULTS) {
+      Context ctx = RXML_CONTEXT;
+
+      protocol_cache_time = ctx->id && ctx->id->misc->cacheable;
+
       if (!(flags & CTX_ALREADY_GOT_VC))
 	m_delete (RXML_CONTEXT->misc, "variable_changes");
       PCODE_MSG ("end result collection\n");
@@ -6929,8 +6940,12 @@ class PCode
 	exec[length++] = exec[pos];
       }
     }
-    else
+
+    else {
+      // No need to record ctx->id->misc->cacheable when only
+      // unevaluated things are stored in the p-code entry.
       PCODE_MSG ("end content collection\n");
+    }
 
     if (length != sizeof (exec)) exec = exec[..length - 1];
     if (p_code) p_code->finish(), p_code = 0;
@@ -6963,7 +6978,12 @@ class PCode
     if (ctx->unwind_state)
       [object ignored, pos, parts, ppos] =
 	m_delete (ctx->unwind_state, this_object());
-    else parts = allocate (length);
+    else {
+      parts = allocate (length);
+      if (protocol_cache_time >= 0 && ctx->id)
+	ctx->id->misc->cacheable = min (ctx->id->misc->cacheable,
+					protocol_cache_time);
+    }
 
     while (1) {			// Loops only if errors are catched.
       mixed item;
@@ -7184,12 +7204,13 @@ class PCode
     flags |= FULLY_RESOLVED;
 
     return ({P_CODE_VERSION, tag_set, tag_set && tag_set->get_hash(),
-	     type, recover_errors, encode_p_code});
+	     type, recover_errors, encode_p_code, protocol_cache_time});
   }
 
   void _decode(array v, int check_hash)
   {
-    [int version, tag_set, string tag_set_hash, type, recover_errors, exec] = v;
+    [int version, tag_set, string tag_set_hash,
+     type, recover_errors, exec, protocol_cache_time] = v;
     if (version != P_CODE_VERSION)
       error ("P-code is stale; it was made with an incompatible version.\n");
     length = sizeof (exec);
