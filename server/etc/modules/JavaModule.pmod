@@ -761,6 +761,31 @@ static object native_get_providers(object conf, object provides)
     return 0;
 }
 
+static object native_get_var(object var, object scope)
+{
+  mixed x;
+  if(zero_type(x = RXML.get_var((string)var, scope&&(string)scope)))
+    return 0;
+  else if(intp(x)) {
+    object z = int_class->alloc();
+    int_init->call_nonvirtual(z, x);
+    check_exception();
+    return z;
+  } else
+    return objify(x);
+}
+
+static object native_set_var(object var, object val, object scope)
+{
+  RXML.set_var((string)var, valify(val), scope&&(string)scope);
+  return val;
+}
+
+static object native_delete_var(object var, object scope)
+{
+  RXML.delete_var((string)var, scope&&(string)scope);
+}
+
 static object native_user_get_var(object var, object scope)
 {
   mixed x;
@@ -819,6 +844,9 @@ void create()
     ({"cache", "(I)V", native_cache}),
   }));
   natives_bind5 = rxml_class->register_natives(({
+    ({"getVar", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", native_get_var}),
+    ({"setVar", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", native_set_var}),
+    ({"deleteVar", "(Ljava/lang/String;Ljava/lang/String;)V", native_delete_var}),
     ({"userGetVar", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", native_user_get_var}),
     ({"userSetVar", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", native_user_set_var}),
     ({"userDeleteVar", "(Ljava/lang/String;Ljava/lang/String;)V", native_user_delete_var}),
