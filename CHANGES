@@ -1,3 +1,26 @@
+Changes since Roxen Challenger 1.2.32 Yellow
+-----------------------------------------------
+
+o Updated pike/0.5/lib/modules/Crypto/rsa.pike to work with the new
+  SSL3 module.
+
+o Added support for dynamic modules in Pike 0.6 on UnixWare.
+  Thanks to Honza Petrous <hop@unibase.cz>.
+
+o accept_and_parse.c should now compile on Linux.
+  Thanks to Brian Lenihan <brianl@prognet.com>.
+
+o Fixed bug in the start-script.
+
+o Disabled some debug.
+
+o The HTTP relay module now works with SSL3.
+
+o Removed some dead code from the rimage module.
+
+o Fixed logging bug in ftp2.pike.
+
+
 Changes since Roxen Challenger 1.2.31 Yellow
 -----------------------------------------------
 
@@ -7,6 +30,9 @@ o Added support for SSL3 ServerKeyExchange.
 o First release of the accept-and-parse optimized HTTP module. EXPERIMENTAL.
   NOTE: Modules returning http_stream (eg the CGI module) are not
         supported yet.
+
+o New module: Roxen image manipulation tag.
+  This is a layer based image manipulation tag with plugins.
 
 o Made kill CGI scripts after X real time minute(s) a VAR_MORE instead
   of VAR_EXPERT and added a check to only allow killing of pid > 1.
