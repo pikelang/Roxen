@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.11 1998/03/28 23:43:31 neotron Exp $
+ * $Id: smartpipe.pike,v 1.12 1998/03/28 23:54:08 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -42,12 +42,12 @@ void write_more()
 {
   int len;
   len = write_out(current_input);
-  sent += len;
   if(len <= 0)
   {
     finish();
     return;
   }
+  sent += len;
   if(len >= strlen(current_input))
     next_input();
   else
