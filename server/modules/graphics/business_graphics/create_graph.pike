@@ -171,6 +171,10 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
+  if (diagram_data["labelcolor"]==0)
+    diagram_data["labelcolor"]=diagram_data["textcolor"];
+  if (sizeof(diagram_data["labelcolor"])!=3)
+    diagram_data["labelcolor"]=diagram_data["textcolor"];
   diagram_data["linewidth"]=(float)diagram_data["linewidth"];
   if ( diagram_data["linewidth"]< 0.01)
      diagram_data["linewidth"]=1.0;
