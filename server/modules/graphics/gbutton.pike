@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.109 2004/05/21 09:46:19 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.110 2004/06/21 12:43:48 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -56,7 +56,7 @@ void create()
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
-  string doc=compile_string("#define manual\n"+file->read())->gbuttonattr;
+  string doc=compile_string("#define manual\n"+file->read(), __FILE__)->gbuttonattr;
   string imagecache=button_cache->documentation();
 
   return ([

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.463 2004/06/17 16:12:43 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.464 2004/06/21 12:43:45 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5429,7 +5429,7 @@ string api_query_modified(RequestID id, string f, int|void by)
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
-  mapping doc=compile_string("#define manual\n"+file->read())->tagdoc;
+  mapping doc=compile_string("#define manual\n"+file->read(), __FILE__)->tagdoc;
   file->close();
   if(!file->open("etc/supports","r")) return doc;
 

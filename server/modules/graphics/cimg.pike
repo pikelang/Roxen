@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.65 2004/06/16 09:23:22 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.66 2004/06/21 12:43:48 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -18,7 +18,7 @@ mapping tagdocumentation()
 {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
-  mapping doc = compile_string("#define manual\n"+file->read())->tagdoc;
+  mapping doc = compile_string("#define manual\n"+file->read(), __FILE__)->tagdoc;
   foreach(({ "cimg", "cimg-url" }), string tag)
     doc[tag] += the_cache->documentation(tag +
 					 " src='/internal-roxen-testimage'");
