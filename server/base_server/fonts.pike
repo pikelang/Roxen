@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.60 2000/09/04 06:50:47 per Exp $
+// $Id: fonts.pike,v 1.61 2000/09/04 07:24:18 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -128,7 +128,7 @@ array available_font_versions(string name, int size)
   foreach( font_handlers, FontHandler a )
   {
     mixed hh = a->has_font( name, size );
-    res |= hh;
+    if( hh ) res |= hh;
   }
   if( sizeof( res ) )
     return res;
