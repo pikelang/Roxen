@@ -6,7 +6,7 @@ object sql = connect_to_my_mysql( 0, "local" );
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.112 2001/03/14 23:24:20 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.113 2001/03/29 02:49:04 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -281,30 +281,53 @@ void init_security()
 }
 #endif
 
+mapping dump_constants = ([]), dump_constants_rev = ([]);
+
+
+mixed add_dump_constant( string f, mixed what )
+{
+  if(!what) return 0;
+  dump_constants_rev[ dump_constants[ f ] = what ] = f;
+  catch(dump_constants_rev[ (program)what ] = f);
+  return what;
+}
+
 class MyCodec
 {
   program p;
+#ifdef DUMP_DEBUG
+  mixed last_failed;
+#endif
   string nameof(mixed x)
   {
     if(zero_type(x)) return ([])[0];
     if( x == 0 )     return 0;
 
     if(p!=x)
+    {
+      if( string n = dump_constants_rev[ x ] )
+	return "defun:"+n;
       if(mixed tmp=search(all_constants(),x))
 	return "efun:"+tmp;
-
-    if (programp (x)) {
-      if(p!=x)
+      if ( programp (x) )
       {
 	mixed tmp;
-	if(tmp=search(master()->programs,x))
+	if(tmp=search(programs,x))
 	  return tmp;
 
 	if((tmp=search(values(_static_modules), x))!=-1)
 	  return "_static_modules."+(indices(_static_modules)[tmp]);
+
+	if( (program)x != x )
+	  return nameof( (program)x );
+#ifdef DUMP_DEBUG
+	last_failed = x;
+#endif
+	return ([])[ 0 ];
       }
     }
-    else if (objectp (x)) 
+
+    if (objectp (x)) 
     {
       array(string) ids = ({});
       if(x->is_resolv_dirnode)
@@ -342,6 +365,9 @@ class MyCodec
       if( x == mm )
 	return "/master";
     }
+#ifdef DUMP_DEBUG
+    last_failed = x;
+#endif
     return ([])[0];
   }
 
@@ -349,7 +375,9 @@ class MyCodec
   {
     if(!stringp(x))
       return lambda(){};
-    if(sscanf(x,"efun:%s",x) && functionp(all_constants()[x]))
+    if( sscanf(x,"defun:%s",x) )
+      return dump_constants[x];
+    if( sscanf(x,"efun:%s",x) )
       return all_constants()[x];
     if(sscanf(x,"resolv:%s",x)) 
       return resolv(x);
@@ -361,10 +389,14 @@ class MyCodec
   {
     if(!stringp(x))
       return class{}();
+    if( sscanf(x,"defun:%s",x) )
+      return dump_constants[x];
     if(sscanf(x,"efun:%s",x))
     {
+#ifdef DUMP_DEBUG
       if( !objectp( all_constants()[x] ) )
         error("Failed to decode object efun:%s\n", x );
+#endif
       return all_constants()[x];
     }
     if(sscanf(x,"resolv:%s",x)) 
@@ -383,6 +415,8 @@ class MyCodec
 
   program programof(string x)
   {
+    if( sscanf(x,"defun:%s",x) )
+      return dump_constants[x];
     if(sscanf(x,"efun:%s",x))
       return (program)all_constants()[x];
     if(sscanf(x,"_static_modules.%s",x))
@@ -439,8 +473,9 @@ void dump_program( string pname, program what )
 {
   string index = make_ofilename( pname );
   string data;
-#ifdef DUMP_PROGRAM_DEBUG
-  if (!catch (data = encode_value( what, MyCodec( what ) ) ))
+#ifdef DUMP_DEBUG
+  MyCodec cd;
+  if (!catch (data = encode_value( what, (cd = MyCodec( what )) ) ))
 #else
   data = encode_value( what, MyCodec( what ) );
 #endif
@@ -451,12 +486,23 @@ void dump_program( string pname, program what )
                 "'"+sql->quote(data)+"',"
                 +time()+")" );
   }
-#ifdef DUMP_PROGRAM_DEBUG
+#ifdef DUMP_DEBUG
   else
   {
     array parts = pname / "/";
     if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
     werror("Couldn't dump " + parts * "/" + "\n");
+    werror("Last attempted: %O\n", cd->last_failed );
+    mixed w = Describer()->describe( cd->last_failed,10000 );
+    if( w == "program" ) w = _typeof( cd->last_failed );
+    werror( "  Type: %O\n",w);
+    mixed e = catch {
+      object q = cd->last_failed();
+      werror("%O\n", mkmapping( indices(q), values(q) ) );
+    };
+    if( e )
+      werror( describe_error( e )+"\n");
+    werror("\n");
   }
 #endif
 }
@@ -551,7 +597,10 @@ program low_findprog(string pname, string ext, object|void handler)
           if(s2[1]>0 && s2[3]>=s[3])
             LOAD_DATA( Stdio.File( ofile,"r")->read() );
 
-      DDEBUG( "Really compile: %O\n", fname );
+      DDEBUG( "Really compile: %O ", fname );
+#ifdef DUMP_DEBUG
+      int t = gethrtime();
+#endif
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
@@ -565,8 +614,10 @@ program low_findprog(string pname, string ext, object|void handler)
 	programs[fname]=0;
         if(arrayp(e) && sizeof(e) && e[0] == "Compilation failed.\n")
           e[1]=({});
+	DDEBUG( "FAILED\n",0 );
 	throw(e);
       }
+      DDEBUG( "%dms\n", (gethrtime()-t)/1000 );
       function f;
       if( functionp( f = has_set_on_load[ fname ] ) )
       {
@@ -728,6 +779,7 @@ void create()
   objects[ object_program(o) ] = o;
   /* Move the old efuns to the new object. */
 
+  add_constant("add_dump_constant", add_dump_constant);
   foreach(master_efuns, string e)
     add_constant(e, o[e]);
 }
