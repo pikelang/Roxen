@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.258 2000/11/06 22:49:53 mast Exp $
+// $Id: rxml.pike,v 1.259 2000/11/15 06:41:19 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1429,34 +1429,30 @@ class TagEmit {
   constant name = "emit";
   constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
-  
-  private int compare( string a, string b )
-    //! This method needs lot of work... but so do the rest of the system too
-    //! RXML needs types
-  {
-    if (!a)
-      if (b)
+
+  // A slightly modified Array.dwim_sort_func
+  static int compare(string a0,string b0) {
+    if (!a0) {
+      if (b0)
 	return -1;
-      else
-	return 0;
-    else if (!b)
+      return 0;
+    }
+
+    if (!b0)
       return 1;
-    else if ((string)(int)a == a && (string)(int)b == b)
-      if ((int )a > (int )b)
-	return 1;
-      else if ((int )a < (int )b)
-	return -1;
-      else
-	return 0;
-    else
-      if (a > b)
-	return 1;
-      else if (a < b)
-	return -1;
-      else
-	return 0;
+
+    string a2="",b2="";
+    int a1,b1;
+    sscanf(a0,"%s%d%s",a0,a1,a2);
+    sscanf(b0,"%s%d%s",b0,b1,b2);
+    if (a0>b0) return 1;
+    if (a0<b0) return -1;
+    if (a1>b1) return 1;
+    if (a1<b1) return -1;
+    if (a2==b2) return 0;
+    return compare(a2,b2);
   }
-  
+
   class Frame {
     inherit RXML.Frame;
     string scope_name;
@@ -1480,8 +1476,6 @@ class TagEmit {
 				  lambda (mapping(string:string) m1,
 					  mapping(string:string) m2)
 				  {
-				    int tmp;
-				    
 				    foreach (order, string field)
 				    {
 				      int tmp;
@@ -1494,6 +1488,7 @@ class TagEmit {
 						       m2[field[1..]] );
 				      else
 					tmp = compare( m1[field], m2[field] );
+
 				      if (tmp == 1)
 					return 1;
 				      else if (tmp == -1)
@@ -1575,17 +1570,52 @@ class TagEmitValues {
 	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
 	  return ""; });
     }
+
     if( m->variable )
       m->values = RXML.get_context()->user_get_var( m->variable );
+
     if(!m->values)
       return ({});
-    if(stringp(m->values)) m->values=m->values / (m->split || "\000");
+
+    if(stringp(m->values)) {
+      if(m->advanced) {
+	switch(m->advanced) {
+	case "lines":
+	  m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
+			      ({ "\n", "\n", "\n" }));
+	  m->split = "\n";
+	  break;
+	case "words":
+	  m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
+			      ({ "\n", "\n", "\n" }));
+	  m->values = replace(m->values, ({ "-\n", "\n", "\t" }),
+			      ({ "", " ", " " }));
+	  m->values = map(m->values/" " - ({""}),
+			  lambda(string word) {
+			    if(word[-1]=='.' || word[-1]==',' || word[-1]==';' ||
+			       word[-1]==':' || word[-1]=='!' || word[-1]=='?')
+			      return word[..sizeof(word)-2];
+			    return word;
+			  });
+	  break;
+	}
+      }
+      m->values=m->values / (m->split || "\000");
+    }
+
     if(mappingp(m->values))
       return map( indices(m->values),
 		  lambda(mixed ind) { return (["index":ind,"value":m->values[ind]]); });
+
     if(arrayp(m->values))
       return map( m->values,
-		  lambda(mixed val) { return (["value":val]); } );
+		  lambda(mixed val) {
+		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    if(m->case=="upper") val=upper_case(val);
+		    else if(m->case=="lower") val=lower_case(val);
+		    return (["value":val]);
+		  } );
+
     RXML.run_error("Values variable has wrong type %t.\n", m->values);
   }
 }
@@ -2118,7 +2148,7 @@ mapping tagdocumentation() {
   return doc;
 }
 
-private int format_support(string t, mapping m, string c, mapping doc) {
+static int format_support(string t, mapping m, string c, mapping doc) {
   string key=(["flags":"if#supports","vars":"if#clientvar"])[t];
   c=Roxen.html_encode_string(c)-"#! ";
   c=(Array.map(c/"\n", lambda(string row) {
@@ -2888,7 +2918,16 @@ An array or the string to be splitted into an array.
 <attr name=split value=string default=NULL>
 The string the values string is splitted with.
 </attr>
-<attr name=form-scope value=name>
+<attr name=advanced value=lines|words>
+If the input is a string it can be splitted into separate lines or words by using this attribute.
+</attr>
+<attr name=case value=upper|lower>
+Changes the case of the value.
+</attr>
+<attr name=trimwhites>
+Trims away all leading and trailing white space charachters from the values.
+</attr>
+<attr name=from-scope value=name>
 Create a mapping out of a scope and give it as indata to the emit.
 </attr>
 ",
