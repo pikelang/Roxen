@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.100 2000/08/12 21:29:21 mast Exp $
+//! $Id: module.pmod,v 1.101 2000/08/15 01:25:33 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1551,7 +1551,7 @@ class Frame
   Type content_type;
   //! The type of the content.
 
-  mixed content;
+  mixed content = nil;
   //! The content, if any. Set before do_process() and do_return() are
   //! called. Initialized to RXML.nil every time the frame executed.
 
@@ -1567,7 +1567,7 @@ class Frame
   //! necessary. An exception (which this frame can't catch) is thrown
   //! if conversion is impossible.
 
-  mixed result;
+  mixed result = nil;
   //! The result, which is assumed to be either RXML.nil or a valid
   //! value according to result_type. The exec arrays returned by e.g.
   //! do_return() changes this. It may also be set directly.
@@ -2212,84 +2212,88 @@ class Frame
 	      ENTER_SCOPE (ctx, this);
 
 	      for (; iter > 0; iter--) {
-		if (raw_content && raw_content != "") { // Got nested parsing to do.
-		  int finished = 0;
-		  if (!subparser) { // The nested content is not yet parsed.
-		    if (this->local_tags) {
-		      subparser = content_type->get_parser (
-			ctx, [object(TagSet)] this->local_tags, parser);
-		      subparser->_local_tag_set = 1;
+		if (raw_content && raw_content != "")
+		  if (flags & FLAG_EMPTY_ELEMENT)
+		    parse_error ("This tag doesn't handle content.\n");
+		  else {	// Got nested parsing to do.
+		    int finished = 0;
+		    if (!subparser) { // The nested content is not yet parsed.
+		      if (this->local_tags) {
+			subparser = content_type->get_parser (
+			  ctx, [object(TagSet)] this->local_tags, parser);
+			subparser->_local_tag_set = 1;
+		      }
+		      else
+			subparser = content_type->get_parser (ctx, 0, parser);
+		      subparser->finish (raw_content); // Might unwind.
+		      finished = 1;
 		    }
-		    else
-		      subparser = content_type->get_parser (ctx, 0, parser);
-		    subparser->finish (raw_content); // Might unwind.
-		    finished = 1;
-		  }
 
-		  do {
-		    if (flags & FLAG_STREAM_CONTENT && subparser->read) {
-		      // Handle a stream piece.
-		      // Squeeze out any free text from the subparser first.
-		      mixed res = subparser->read();
-		      if (content_type->sequential) piece = res + piece;
-		      else if (piece == nil) piece = res;
-		      if (piece != nil) {
-			array|function(RequestID,void|mixed:array) do_process;
-			if ((do_process =
-			     [array|function(RequestID,void|mixed:array)]
-			     this->do_process) &&
-			    !arrayp (do_process)) {
-			  if (!exec) {
-			    exec = do_process (id, piece); // Might unwind.
-			    if (ctx->new_runtime_tags)
-			      _handle_runtime_tags (ctx, parser);
-			  }
-			  if (exec) {
-			    ENTER_SCOPE (ctx, this);
-			    mixed res = _exec_array (
-			      parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
-			    if (flags & FLAG_STREAM_RESULT) {
-#ifdef DEBUG
-			      if (!zero_type (ctx->unwind_state->stream_piece))
-				fatal_error ("Internal error: "
-					     "Clobbering unwind_state->stream_piece.\n");
-#endif
-			      if (result_type->encoding_type ?
-				  result_type->encoding_type !=
-				  parser->type->encoding_type :
-				  result_type != parser->type)
-				res = parser->type->encode (res, result_type);
-			      ctx->unwind_state->stream_piece = res;
-			      throw (this);
+		    do {
+		      if (flags & FLAG_STREAM_CONTENT && subparser->read) {
+			// Handle a stream piece.
+			// Squeeze out any free text from the subparser first.
+			mixed res = subparser->read();
+			if (content_type->sequential) piece = res + piece;
+			else if (piece == nil) piece = res;
+			if (piece != nil) {
+			  array|function(RequestID,void|mixed:array) do_process;
+			  if ((do_process =
+			       [array|function(RequestID,void|mixed:array)]
+			       this->do_process) &&
+			      !arrayp (do_process)) {
+			    if (!exec) {
+			      exec = do_process (id, piece); // Might unwind.
+			      if (ctx->new_runtime_tags)
+				_handle_runtime_tags (ctx, parser);
 			    }
-			    exec = 0;
+			    if (exec) {
+			      ENTER_SCOPE (ctx, this);
+			      mixed res = _exec_array (
+				parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+			      if (flags & FLAG_STREAM_RESULT) {
+#ifdef DEBUG
+				if (!zero_type (ctx->unwind_state->stream_piece))
+				  fatal_error ("Internal error: Clobbering "
+					       "unwind_state->stream_piece.\n");
+#endif
+				if (result_type->encoding_type ?
+				    result_type->encoding_type !=
+				    parser->type->encoding_type :
+				    result_type != parser->type)
+				  res = parser->type->encode (res, result_type);
+				ctx->unwind_state->stream_piece = res;
+				throw (this);
+			      }
+			      exec = 0;
+			    }
+			    else if (flags & FLAG_STREAM_RESULT) {
+			      // do_process() finished the stream.
+			      // Ignore remaining content.
+			      ctx->unwind_state = 0;
+			      piece = nil;
+			      break;
+			    }
 			  }
-			  else if (flags & FLAG_STREAM_RESULT) {
-			    // do_process() finished the stream. Ignore remaining content.
-			    ctx->unwind_state = 0;
-			    piece = nil;
-			    break;
-			  }
+			  piece = nil;
 			}
+			if (finished) break;
+		      }
+		      else {	// The frame doesn't handle streamed content.
 			piece = nil;
+			if (finished) {
+			  mixed res = subparser->eval(); // Might unwind.
+			  if (content_type->sequential) content += res;
+			  else if (res != nil) content = res;
+			  break;
+			}
 		      }
-		      if (finished) break;
-		    }
-		    else {	// The frame doesn't handle streamed content.
-		      piece = nil;
-		      if (finished) {
-			mixed res = subparser->eval(); // Might unwind.
-			if (content_type->sequential) content += res;
-			else if (res != nil) content = res;
-			break;
-		      }
-		    }
 
-		    subparser->finish(); // Might unwind.
-		    finished = 1;
-		  } while (1); // Only loops when an unwound subparser has been recovered.
-		  subparser = 0;
-		}
+		      subparser->finish(); // Might unwind.
+		      finished = 1;
+		    } while (1); // Only loops when an unwound subparser has been recovered.
+		    subparser = 0;
+		  }
 
 		if (array|function(RequestID,void|mixed:array) do_process =
 		    [array|function(RequestID,void|mixed:array)] this->do_process) {
@@ -2408,12 +2412,10 @@ class Frame
 
 	  ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
 			   exec, orig_tag_set, ctx->new_runtime_tags});
-	  if (id->misc->trace_leave && tag)
-	    TRACE_LEAVE (action);
+	  TRACE_LEAVE (action);
 	}
 	else {
-	  if (id->misc->trace_leave && tag)
-	    TRACE_LEAVE ("exception");
+	  TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
 	  result = nil;
 	  action = "return";
@@ -2436,8 +2438,7 @@ class Frame
 	}
       }
       else
-	if (id->misc->trace_leave && tag)
-	  TRACE_LEAVE ("");
+	TRACE_LEAVE ("");
     } while (0);		// Breaks go here.
 
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
