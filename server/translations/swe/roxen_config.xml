@@ -172,217 +172,189 @@
 </str>
 
 <str id="473">
-<new/>
 <o>Value</o>
-<t></t>
+<t>Värde</t>
 </str>
 
 <str id="474">
-<new/>
 <o>Show changes</o>
-<t></t>
+<t>Visa ändringar</t>
 </str>
 
 <str id="475">
-<new/>
 <o>Restore default value</o>
-<t></t>
+<t>Återställ till ursprungsvärden</t>
 </str>
 
 <str id="476">
-<new/>
 <o>Change in content</o>
-<t></t>
+<t>Ändrat innehåll</t>
 </str>
 
 <str id="477">
-<new/>
 <o>1 line added.</o>
-<t></t>
+<t>1 new rad.</t>
 </str>
 
 <str id="478">
-<new/>
 <o>%d lines added.</o>
-<t></t>
+<t>%d nya rader.</t>
 </str>
 
 <str id="479">
-<new/>
 <o>1 line deleted.</o>
-<t></t>
+<t>1 rad borttagen.</t>
 </str>
 
 <str id="480">
-<new/>
 <o>%d lines deleted.</o>
-<t></t>
+<t>%d rader borttagna.</t>
 </str>
 
 <str id="481">
-<new/>
 <o>No difference
 </o>
-<t></t>
+<t>Ingen skillnad
+</t>
 </str>
 
 <str id="482">
-<new/>
 <o>Never</o>
-<t></t>
+<t>Aldrig</t>
 </str>
 
 <str id="483">
-<new/>
 <o>Every %s hour(s).</o>
-<t></t>
+<t>Var %s:e timma.</t>
 </str>
 
 <str id="484">
-<new/>
 <o>Day</o>
-<t></t>
+<t>Dag</t>
 </str>
 
 <str id="485">
-<new/>
 <o>Sunday</o>
-<t></t>
+<t>Söndag</t>
 </str>
 
 <str id="486">
-<new/>
 <o>Monday</o>
-<t></t>
+<t>Måndag</t>
 </str>
 
 <str id="487">
-<new/>
 <o>Tuesday</o>
-<t></t>
+<t>Tisdag</t>
 </str>
 
 <str id="488">
-<new/>
 <o>Wednesday</o>
-<t></t>
+<t>Onsdag</t>
 </str>
 
 <str id="489">
-<new/>
 <o>Thursday</o>
-<t></t>
+<t>Torsdag</t>
 </str>
 
 <str id="490">
-<new/>
 <o>Friday</o>
-<t></t>
+<t>Fredag</t>
 </str>
 
 <str id="491">
-<new/>
 <o>Saturday</o>
-<t></t>
+<t>Lördag</t>
 </str>
 
 <str id="492">
-<new/>
 <o>Every %s %s at %s o'clock.</o>
-<t></t>
+<t>Varje %s %s klockan %s.</t>
 </str>
 
 <str id="493">
-<new/>
 <o>Every %d hour.</o>
-<t></t>
+<t>Var %d:e timma.</t>
 </str>
 
 <str id="494">
-<new/>
 <o>Every %d %s at %02d:00</o>
-<t></t>
+<t>Var %d:e %s klockan %02d:00</t>
 </str>
 
 <str id="495">
-<new/>
 <o>Error in stored value.</o>
-<t></t>
+<t>Fel i sparat värde.</t>
 </str>
 
 <str id="496">
-<new/>
 <o>Value %s does not match the regexp %s.</o>
-<t></t>
+<t>Värdet %s matchar inte regexpen %s.</t>
 </str>
 
 <str id="497">
-<new/>
 <o>Value %s does not match the glob %s.</o>
-<t></t>
+<t>Värdet %s matchar inte globben %s.</t>
 </str>
 
 <str id="498">
-<new/>
 <o>Value %s must be at least %d characters long. (%d character short)</o>
-<t></t>
+<t>Värdet %s måste vara minst %d tecken långt. (%d tecken för få)</t>
 </str>
 
 <str id="499">
-<new/>
 <o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t></t>
+<t>Värdet %s får inte vara mer än %d tecken långt. (%d tecken för många)</t>
 </str>
 
 <str id="500">
-<new/>
 <o>Value %s is not uppercased.</o>
-<t></t>
+<t>Värdet %s är inte i versaler.</t>
 </str>
 
 <str id="501">
-<new/>
 <o>Value %s is not lowercased.</o>
-<t></t>
+<t>Värdet %s är inte i gemener.</t>
 </str>
 
 <str id="80">
-<new/>
 <o>No data entered.
 </o>
-<t></t>
+<t>För lite data inskrivet.
+</t>
 </str>
 
 <str id="81">
-<new/>
 <o>Data is not a float.
 </o>
-<t></t>
+<t>Datat är inte ett flyttal.
+</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Found the string %O trailing after the float.
 </o>
-<t></t>
+<t>Hittade strängen %O efter flyttalet.
+</t>
 </str>
 
 <str id="83">
 <new/>
 <o>Data is not an integer
 </o>
-<t></t>
+<t>Datat är inte ett heltal
+</t>
 </str>
 
 <str id="84">
-<new/>
 <o>Found the string %O trailing after the integer.
 </o>
-<t></t>
+<t>Hittade strängen %O efter heltalet.
+</t>
 </str>
 
 <str id="510">
-<new/>
 <o>Bind this port: </o>
-<t></t>
+<t>Bind porten: </t>
 </str>
