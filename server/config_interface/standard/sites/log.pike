@@ -1,9 +1,10 @@
 inherit "../logutil.pike";
 #include <config.h>
 #include <roxen.h>
-#define LOCALE	LOW_LOCALE->config_interface
+LOCALE_PROJECT(config_interface);
+#define LOCALE(X,Y)	LOW_LOCALE(X,Y)
 
-string parse(object id)
+string parse(RequestID id)
 {
   mapping log = id->misc->current_configuration->error_log;
   array report = indices(log), r2;
@@ -16,5 +17,5 @@ string parse(object id)
   for(int i=0;i<sizeof(report);i++) 
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, 1);
-  return (sizeof(report)?(report*""):LOCALE->empty);
+  return (sizeof(report)?(report*""):LOCALE("", "Empty"));
 }

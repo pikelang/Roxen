@@ -1,7 +1,14 @@
 inherit "roxenlib";
 #include <config.h>
 #include <roxen.h>
-#define LOCALE	LOW_LOCALE->config_interface
+
+#if constant(Locale.translate)
+#define LOCALE(X,Y)	Locale.translate(roxen.locale->get()->config_interface,X,Y)
+#else
+#define LOCALE(X,Y)	RoxenLocale.translate(roxen.locale->get()->config_interface,X,Y)
+#endif
+#define LOCALE_FUN(X,Y) roxen.locale->get->config_interface(X,Y)
+
 int __lt;
 string describe_time(int t)
 {
@@ -13,7 +20,7 @@ string describe_time(int t)
   }
 
   if(full)
-    return capitalize(roxen->language(LOW_LOCALE->name,"date")(t));
+    return capitalize(roxen->language(roxen.locale->get()->locale,"date")(t));
   else
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
@@ -22,9 +29,9 @@ string describe_interval(int i)
 {
   switch(i)
   {
-   case 0..50:       return LOW_LOCALE->seconds(i);
-   case 51..3560:    return LOW_LOCALE->minutes(((i+20)/60));
-   default:          return LOW_LOCALE->hours(((i+300)/3600));
+    //   case 0..50:       return LOW_LOCALE->seconds(i);
+    //   case 51..3560:    return LOW_LOCALE->minutes(((i+20)/60));
+    //   default:          return LOW_LOCALE->hours(((i+300)/3600));
   }
 }
 
@@ -32,7 +39,7 @@ string describe_times(array (int) times)
 {
   __lt=0;
   if(sizeof(times) < 6)
-    return String.implode_nicely(map(times, describe_time), LOW_LOCALE->and);
+    return String.implode_nicely(map(times, describe_time), LOCALE("", "and"));
 
   int d, every=1;
   int ot = times[0];
@@ -48,12 +55,12 @@ string describe_times(array (int) times)
     } else
       d = t-ot;
   if(every && (times[-1]+d) >= time(1)-10)
-    return (LOW_LOCALE->every +" "
-	    +describe_interval(d)+" "+LOW_LOCALE->since+" "+
+    return (LOCALE("", "every") +" "
+	    +describe_interval(d)+" "+LOCALE("", "since")+" "+
 	    describe_time(times[0]));
   return String.implode_nicely(map(times[..4], describe_time)+({"..."})+
 			map(times[sizeof(times)-3..], describe_time),
-			LOCALE->and);
+			LOCALE("", "and"));
 }
 
 string fix_err(string s)
@@ -72,9 +79,9 @@ string describe_error(string err, array (int) times,
 {
   int code, nt;
   string links = "", reference, server;
-  array(string) codetext=({ LOCALE->notice,
-			    LOCALE->warning,
-			    LOCALE->error });
+  array(string) codetext=({ LOCALE("", "Notice"),
+			    LOCALE("", "Warning"),
+			    LOCALE("", "Error") });
 
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;
