@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.14 2001/08/17 00:12:09 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.15 2001/08/30 12:21:50 jhs Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -63,12 +63,9 @@ constant tagdoc=([
  given by the <att>attr</att> attribute.</p>
 </attr>
 
-<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'><p>
- The actual values of attributes.</p>
-  <p> for example:</p>
- <ex type='box'>
- (sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')
- </ex>
+<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'>
+ <p>The actual values of attributes, for example:</p>
+ <ex-box>(sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')</ex-box>
 </attr>
 
 <attr name='parser'><p>

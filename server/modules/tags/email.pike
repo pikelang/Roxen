@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.11 2001/08/23 23:34:48 mast Exp $";
+constant cvs_version = "$Id: email.pike,v 1.12 2001/08/30 12:25:48 jhs Exp $";
 
 constant thread_safe=1;
 
@@ -485,12 +485,12 @@ value=''><p>
 </attr>
 
 
-<ex type='box'>
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
  This is the contents.
 </email>
-</ex>",
+</ex-box>",
 
 ([
 
@@ -514,7 +514,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 </attr>
 
 
-<ex type='box'>
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
@@ -523,13 +523,13 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 <header name=\"X-MSMail-Priority\" value=\"Normal\" />
  This is the contents.
 </email>
-</ex>",
+</ex-box>",
 
 "signature":#"<desc tag='tag'><p><short hide='hide'>Adds a signature to the mail.
  </short>This container is designed for adding a signature to the
  mail.</p></desc>
 
-<ex type='box'>
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
@@ -544,7 +544,7 @@ John Doe
 Roxen Administrator
 </signature>
 </email>
-</ex>",
+</ex-box>",
 
 "attachment":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
@@ -555,8 +555,7 @@ Roxen Administrator
  attachments are written inline. Inline attachments can for instance
  be a text or a binary (e.g. output from a database).</p>
 
-<ex type='box'>
-<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+<ex-box><email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <header name=\"X-foo-header\" value=\"one two three\" />
@@ -572,8 +571,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
       company2        2.345   ix
       company8        3.4567  az
 </attachment>
-</email>
-</ex>
+</email></ex-box>
 
 </desc>
 

@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.32 2001/08/28 18:09:43 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.33 2001/08/30 12:24:00 jhs Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -611,31 +611,26 @@ constant tagdoc=([
  declaration in the class that's generated to contain the Pike code in
  the tag, i.e. it inherits a specified file from the Roxen filesystem.</p>
 
- <ex type='box'>
-
-  <?pike
-
-    //O <pre>
-    int first = 1;
-    for( var.counter=100; var.counter>1; var.counter--,first=0 )
+ <ex-box><?pike
+  //O <pre>
+  int first = 1;
+  for( var.counter=100; var.counter>1; var.counter--,first=0 )
+  {
+    if( !first )
     {
-      if( !first )
-      {
-        //X &var.counter; bottles of beer on the wall
-        //O
-      }
       //X &var.counter; bottles of beer on the wall
-      //X &var.counter; bottles of beer
-      //O take one down, pass it around
+      //O
     }
-    //O one bottle of beer on the wall
-    //O one bottle of beer
-    //O take it down, pass it around
-    //O no bottles of beer on the wall
-    //O </pre>
-
-  ?>
- </ex>
+    //X &var.counter; bottles of beer on the wall
+    //X &var.counter; bottles of beer
+    //O take one down, pass it around
+  }
+  //O one bottle of beer on the wall
+  //O one bottle of beer
+  //O take it down, pass it around
+  //O no bottles of beer on the wall
+  //O </pre>
+?></ex-box>
 </attr>",
 
     ]);

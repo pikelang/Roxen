@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.7 2001/07/20 13:22:13 jhs Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.8 2001/08/30 12:27:34 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -203,12 +203,11 @@ and the session prestate is set, redirect back to the same page without any sess
 set. RoxenUserID is automatically set by the HTTP protocol module. Look at the servers ports
 tab to enable this feature.</p>
 
-<ex type='box'>
-<force-session-id/>
+<ex-box><force-session-id/>
 <if variable='client.session'>
   RXML code that uses <ent>client.session</ent>, e.g. <tag>session</tag><tag>/session</tag>.
 </if>
-</ex></desc>",
+</ex-box></desc>",
 
 ]);
 #endif
