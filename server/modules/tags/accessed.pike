@@ -5,11 +5,11 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.31 2000/04/30 02:05:45 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.32 2000/04/30 04:30:55 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
-constant module_doc  = "This module provides accessed counters, through the "
+constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
 constant language = roxen->language;
@@ -36,6 +36,9 @@ void create(Configuration c) {
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds. This saves resourses on servers with many sites.");
+
+  defvar("database", "mysql://localhost", "SQL Database", TYPE_STRING, 
+	 "What database to use for the database backend.");
 }
 
 TAGDOCUMENTATION
@@ -160,6 +163,7 @@ void start() {
   query_tag_set()->prepare_context=set_entities;
   counter=FileCounter();
   //  counter=MemCounter();
+  //  counter=SQLCounter();
 }
 
 class Entity_page_accessed {
@@ -177,7 +181,7 @@ void set_entities(RXML.Context c) {
 }
 
 
-// --- File access database -------------------------
+// --- File access databases -------------------------
 
 class FileCounter {
   // The old file based access database.
@@ -349,21 +353,57 @@ class FileCounter {
 }
 
 class SQLCounter {
-  // Very unfinished SQL counter.
+  // SQL backend counter.
+  // FIXME: Quality SQL queries.
 
   Sql.sql db;
 
   void create() {
     db=Sql.sql(QUERY(database));
-    //db->query("CREATE TABLE accessed (path TEXT NOT NULL, hits INT UNSIGNED, made INT UNSIGNED, PRIMARY KEY (path))");
-    //db->query("INSERT INTO accessed path='///', made="+time(1) );
+    catch {
+      db->query("CREATE TABLE accessed (path VARCHAR(255) NOT NULL, hits INT UNSIGNED DEFAULT 0,"
+		" made INT UNSIGNED, PRIMARY KEY (path))");
+      db->query("INSERT INTO accessed (path,made) VALUES ('///',"+time(1)+")" );
+    };
   }
 
   int creation_date(void|string file) {
-    array x;
     if(!file) file="///";
-    x=db->query("SELECT made FROM accessed WHERE path='"+file+"'");
+    array x=db->query("SELECT made FROM accessed WHERE path='"+fix_file(file)+"'");
     return x && sizeof(x) && (int)(x[0]->made);
+  }
+
+  private void create_entry(string file) {
+    catch(db->query("INSERT INTO accessed (path,made) VALUES ('"+file+"',"+time(1)+")" ));
+  }
+
+  private string fix_file(string file) {
+    if(sizeof(file)>255)
+      file="//"+MIME.encode_base64(Crypto.md5()->update(file)->digest(),1);
+    return db->quote(file);
+  }
+
+  void add(string file, int count) {
+    file=fix_file(file);
+    create_entry(file);
+    db->query("UPDATE accessed SET hits=hits+"+(count||1)+" WHERE path='"+file+"'" );
+  }
+
+  int query(string file) {
+    file=fix_file(file);
+    array x=db->query("SELECT hits FROM accessed WHERE path='"+file+"'");
+    return x && sizeof(x) && (int)(x[0]->hits);
+  }
+
+  void reset(string file) {
+    file=fix_file(file);
+    create_entry(file);
+    db->query("UPDATE accessed SET hits=0 WHERE path='"+file+"'");
+  }
+
+  int size() {
+    array x=db->query("SELECT count(*) from accessed");
+    return (int)(x[0]["count(*)"])-1;
   }
 }
 
@@ -528,25 +568,24 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   string res;
 
-  switch(m->type)
-  {
-   case "mcdonalds":
+  switch(m->type) {
+  case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
     res="More than "+language("eng", "number", id)(counts*(int)pow(10, q))
         + " served.";
     break;
 
-   case "linus":
+  case "linus":
     res=counts+" since "+ctime(counter->creation_date());
     break;
 
-   case "ordered":
+  case "ordered":
     m->type="string";
     res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "ordered", id));
     break;
 
-   default:
+  default:
     res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "number", id));
   }
   return res+(m->addreal?real:"");
