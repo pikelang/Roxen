@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.201 2000/07/02 16:53:40 nilsson Exp $
+// $Id: rxml.pike,v 1.202 2000/07/03 04:35:52 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -626,7 +626,10 @@ class TagHelp {
 
     array do_return(RequestID id) {
       RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
-      array tags = sort(indices(parser->tags()+parser->containers()))-({"\x266a"});
+      array tags = Array.sort_array(indices(parser->tags()+parser->containers()),
+				    lambda(string a, string b) {
+				      if(lower_case(a)==lower_case(b)) return a>b;
+				      return lower_case(a)>lower_case(b); })-({"\x266a"});
       string help_for = args->for || id->variables->_r_t_h;
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
@@ -638,10 +641,10 @@ class TagHelp {
 	array tag_links;
 
 	foreach(tags, string tag) {
-	  if(tag[0..0]!=char) {
+	  if(lower_case(tag[0..0])!=char) {
 	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
 					 String.implode_nicely(tag_links)+"</p>";
-	    char=tag[0..0];
+	    char=lower_case(tag[0..0]);
 	    tag_links=({});
 	  }
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":")
