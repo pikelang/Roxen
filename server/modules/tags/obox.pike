@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.8 1999/05/08 06:20:24 neotron Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.9 1999/05/24 23:48:08 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -135,8 +135,8 @@ string container_obox(string name, mapping args,
       (args->width?" width="+args->width:"") + ">\n" +
       title(args) +
       "<tr" +
-      (args->bgcolor?" bgcolor=\""+args->bgcolor:"") +
-      "\"><td bgcolor=\"" + args->outlinecolor + "\">" +
+      (args->bgcolor?" bgcolor=\""+args->bgcolor+"\"":"") +
+      "><td bgcolor=\"" + args->outlinecolor + "\">" +
       img_placeholder(args) + "</td>\n"
       "<td colspan=3>\n"
       "<table border=0 cellspacing=5 "+
