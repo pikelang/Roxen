@@ -185,3 +185,6 @@ int xsize, ysize;
 "center": int
 //If center==0 no centration takes place.
 //Else the slice number center-1 will be in the topp.
+
+"datasize": int
+//how many datas there are in the biggest dataset

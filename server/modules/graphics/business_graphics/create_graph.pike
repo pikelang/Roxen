@@ -32,14 +32,27 @@ void draw(object(image) img, float h, array(float) coords)
 
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
-  object piediagram=diagram_data["image"];
+  //diagram_data["datasize"]=0;
+  foreach(diagram_data["data"], string* fo)
+    if (sizeof(fo)>diagram_data["datasize"])
+      diagram_data["datasize"]=sizeof(fo);
+  
 
-  if (diagram_data["xnames"]!=0)
+  object piediagram=diagram_data["image"];
+  
+
+
+  /*  if (diagram_data["xnames"]!=0)
     if (sizeof(diagram_data["xnames"])!=sizeof(diagram_data["data"][0]))
-      diagram_data["xnames"]=0;
+    diagram_data["xnames"]=0;*/
   if (diagram_data["datacolors"])
     {
-      if (sizeof(diagram_data["datacolors"])<sizeof(diagram_data["data"][0]))
+      int cnum;
+      if (diagram_data["type"]=="pie")
+	cnum=diagram_data["datasize"];
+      else
+	cnum=sizeof(diagram_data["data"]);
+      if (sizeof(diagram_data["datacolors"])<cnum)
 	diagram_data["datacolors"]=0;
       else
 	foreach(diagram_data["datacolors"], mixed color)
@@ -61,77 +74,55 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
     }
   else
     {
-      array(mixed) numbers;
+      int numbers;
       if (diagram_data["type"]=="pie")
-	numbers=diagram_data["data"][0];
+	numbers=diagram_data["datasize"];
       else
-	numbers=diagram_data["data"];
+	numbers=sizeof(diagram_data["data"]);
 
-      int** carr=allocate(sizeof(numbers));
-      int steg=128+128/(sizeof(numbers));
-      if (1==sizeof(numbers))
+      int** carr=allocate(numbers);
+      int steg=128+128/(numbers);
+      if (1==numbers)
 	carr=({({39,155,102})});
       else
-      if (2==sizeof(numbers))
+      if (2==numbers)
 	carr=({({190, 180, 0}), ({39, 39, 155})});
       else
-      if (3==sizeof(numbers))
+      if (3==numbers)
 	carr=({({155, 39, 39}), ({39, 39, 155}), ({42, 155, 39})});
       else
-      if (4==sizeof(numbers))
+      if (4==numbers)
 	carr=({({155, 39, 39}), ({39, 66, 155}), ({180, 180, 0}), ({39, 155, 102})});
       else
-      if (5==sizeof(numbers))
+      if (5==numbers)
 	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({129, 39, 155}), ({39, 155, 80})});
       else
-     if (6==sizeof(numbers))
+     if (6==numbers)
 	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({74, 155, 39}), ({100, 39, 155}), ({39, 155, 102})});
       else
-     if (7==sizeof(numbers))
+     if (7==numbers)
 	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({72, 39, 155}), ({74, 155, 39}), ({155, 39, 140}), ({39, 155, 102})});
       else
-      if (8==sizeof(numbers))
+      if (8==numbers)
 	carr=({({155, 39, 39}), ({39, 110, 155}), ({180, 180, 0}), ({55, 39, 155}), ({96, 155, 39}), ({142, 39, 155}), ({39, 155, 69}), ({80, 39, 155})}) ;
       else
-      if (9==sizeof(numbers))
+      if (9==numbers)
 	carr= ({({155, 39, 39}), ({39, 115, 155}), ({155, 115, 39}), ({39, 39, 155}), ({118, 155, 39}), ({115, 39, 155}), ({42, 155, 39}), ({155, 39, 118}), ({39, 155, 112})});
       else
-      if (10==sizeof(numbers))
+      if (10==numbers)
 	carr=({({155, 39, 39}), ({39, 121, 155}), ({155, 104, 39}), ({39, 55, 155}), ({140, 155, 39}), ({88, 39, 155}), ({74, 155, 39}), ({130, 24, 130}), ({39, 155, 69}), ({180, 180, 0})}) ;
       else
-      if (11==sizeof(numbers))
+      if (11==numbers)
 	carr=({({155, 39, 39}), ({39, 123, 155}), ({155, 99, 39}), ({39, 63, 155}), ({150, 155, 39}), ({74, 39, 155}), ({91, 155, 39}), ({134, 39, 155}), ({39, 155, 47}), ({155, 39, 115}), ({39, 155, 107})}) ;
       else
-      if (12==sizeof(numbers))
+      if (12==numbers)
 	carr=({({155, 39, 39}), ({39, 126, 155}), ({155, 93, 39}), ({39, 72, 155}), ({155, 148, 39}), ({61, 39, 155}), ({107, 155, 39}), ({115, 39, 155}), ({53, 155, 39}), ({155, 39, 140}), ({39, 155, 80}), ({155, 39, 85})}) ;
       else
-	/*
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else
-      if (3==sizeof(numbers))
-	carr= ;
-      else*/
 	{
 	  //No colours given!
 	  //Now we have the %-numbers in pnumbers
 	  //Lets create a colourarray carr
-	  for(int i=0; i<sizeof(numbers); i++)
+	  for(int i=0; i<numbers; i++)
 	    {
 	      carr[i]=Colors.hsv_to_rgb((i*steg)%256,190,155);
 	    }
@@ -153,8 +144,6 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
-
-
 
   //Oulinecolors
   if ((diagram_data["backdatacolors"]==0)&&
@@ -210,7 +199,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
       float k;
       if (diagram_data["subtype"]=="norm")
 	{
-	  int j2=sizeof(diagram_data["data"][0]);
+	  int j2=diagram_data["datasize"];
 	  for(int i=0; i<j2; i++)
 	    {
 	      k=`+(@column(diagram_data["data"], i));
@@ -313,13 +302,15 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   if ((diagram_data["type"]=="bars")||(diagram_data["type"]=="sumbars"))
     {
       if (!(diagram_data["xnames"]))
-	diagram_data["xnames"]=allocate(sizeof(diagram_data["data"][0]));
+	diagram_data["xnames"]=allocate(diagram_data["datasize"]);
     }
+
   //Om xnames finns så sätt xspace om inte values_for_xnames finns
   if (diagram_data["xnames"])
     diagram_data["xspace"]=max((diagram_data["xmaxvalue"]-
 				diagram_data["xminvalue"])
-			       /(float)sizeof(diagram_data["xnames"]), LITET*20);
+			       /(float)(diagram_data["datasize"]), 
+			       LITET*20);
 
   //Om ynames finns så sätt yspace.
   if (diagram_data["ynames"])
@@ -1364,7 +1355,8 @@ int main(int argc, string *argv)
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
-		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
+		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" 
+}),
 		 "labelsize":0,
 		 "xminvalue":0,
 		 "yminvalue":0.1,

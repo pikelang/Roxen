@@ -196,7 +196,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     }
 
   //Draw the slices
-  int t=sizeof(diagram_data["data"][0]);
+  int t=sizeof(diagram_data["datacolors"]);
 
   edge_nr=0;
   for(i=0; i<t; i++)
@@ -392,7 +392,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int|float place;
   sum=0;
   if (names)
-    for(int i=0; i<sizeof(pnumbers); i++)
+    for(int i=0; i<sizeof(text); i++)
       {
 	int t;
 	sum+=pnumbers[i];
@@ -475,7 +475,7 @@ int main(int argc, string *argv)
 		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({55, 40, 30 ,20, 10, 10, 10, 10, 5 })/*,
+		 ({ ({55.5, 40, 30 ,20, 10, 10, 10, 10, 5 })/*,
 		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
 		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
@@ -487,7 +487,7 @@ int main(int argc, string *argv)
 		 "linewidth":2.2,
 		 "xsize":300,
 		 "ysize":300,
-		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep"
+		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug"//, "sep"
 		 }),
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 //"legendfontsize":12,
@@ -498,7 +498,7 @@ int main(int argc, string *argv)
 		 "3Ddepth":30,
 		 "drawtype": "3D",
 		 "tone":0,
-		 "center":10,
+		 "center":9,
 		 "rotate":30
 
   ]);

@@ -46,6 +46,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   diagram_data["ysize"]-=diagram_data["legend_size"];
   //write("ysize:"+diagram_data["ysize"]+"\n");
   
+
   //Bestäm största och minsta datavärden.
   init(diagram_data);
 
@@ -308,7 +309,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
   if (diagram_data["type"]=="sumbars")
     {
-      int s=sizeof(diagram_data["data"][0]);
+      int s=diagram_data["datasize"];
       float barw=diagram_data["xspace"]*xmore/3.0;
       for(int i=0; i<s; i++)
 	{
@@ -791,13 +792,13 @@ int main(int argc, string *argv)
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"bars",
 		 "textcolor":({0,255,0}),
-		 "subtype":"line",
+		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
 		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
-		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
-		    ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) }),
+		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2, 10 }),
+		    ({93.2, 113.3, 133.5, 143.7, 154.3 }) }),
 		 "fontsize":32,
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
@@ -807,7 +808,8 @@ int main(int argc, string *argv)
 		 "backlinewidth":0,
 		 "xsize":400,
 		 "ysize":200,
-		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"}),
+		 "xnames":({"jan", "feb", "mar", "apr", "maj"//, "jun"
+}),
 		 "fontsize":16,
 		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":20,
