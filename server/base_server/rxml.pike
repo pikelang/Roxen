@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.96 2000/02/06 11:48:22 nilsson Exp $
+ * $Id: rxml.pike,v 1.97 2000/02/06 14:55:07 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -722,12 +722,12 @@ private string use_file_doc( string f, string data, RequestID nid, RequestID id 
     int help=0; /* If true, all tags support the 'help' argument. */
     sscanf(data, "%*sdoc=\"%s\"", doc);
     sscanf(data, "%*sdoc=%d", help);
-    parse_rxml("<scope>"+data+"</scope>", nid);
+    parse_rxml(data, nid);
     res += "<dt><b>"+f+"</b><dd>"+(doc?doc+"<br>":"");
     array tags = indices(nid->misc->tags||({}));
     array containers = indices(nid->misc->containers||({}));
-    array ifs = indices(nid->misc->_ifs||({}))- indices(id->misc->_ifs||({}));
-    array defines = indices(nid->misc->defines||({}))- indices(id->misc->defines);
+    array ifs = indices(nid->misc->_ifs)- indices(id->misc->_ifs);
+    array defines = indices(nid->misc->defines)- indices(id->misc->defines);
     if(sizeof(tags))
       res += "defines the following tag"+
         (sizeof(tags)!=1?"s":"") +": "+
@@ -751,6 +751,7 @@ private string use_file_doc( string f, string data, RequestID nid, RequestID id 
 string|array tag_use(string tag, mapping m, string c, RequestID id)
 {
   mapping res = ([]);
+  if(!id->misc->_ifs) id->misc->_ifs=([]);
 
 #define SETUP_NID()                             \
     RequestID nid = id->clone_me();             \
@@ -804,7 +805,7 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
-    res->_ifs = nid->misc->_ifs - (id->misc->_ifs||([]));
+    res->_ifs = nid->misc->_ifs - id->misc->_ifs;
     m_delete( res->defines, " _stat" );
     m_delete( res->defines, " _error" );
     m_delete( res->defines, " _extra_heads" );
@@ -1850,40 +1851,40 @@ constant tagdoc=([
  operators is, = and == are the same. E.g. <tag><ref type=cont>if
  variable=\"x &gt; 5\"</ref></tag>More than one hand<tag><ref type=cont/if</ref></tag>",
 
-"true":#"<desc if-caller>
+"if#true":#"<desc plugin>
  This will always be true if the truth value is set to be true.
  Equivalent with <tag><ref type=cont>then</ref></tag>.
 </desc>",
 
-"false":#"<desc if-caller>
+"if#false":#"<desc plugin>
  This will always be true if the truth value is set to be false.
  Equivalent with <tag><ref type=cont>else</ref></tag>.
 </desc>",
 
-"accept":#"<desc if-caller>
+"if#accept":#"<desc plugin>
  Returns true is the browser accept certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html. If
  browser states that it accepts */* that is not taken in to account as
  this is always untrue. Accept is an IfMatch if caller.
 </desc>",
 
-"config":#"<desc if-caller>
+"if#config":#"<desc plugin>
  Has the config been set by use of the <tag><ref
  type=cont>aconf</ref></tag> tag? (Config is an IfIs if caller,
  although that functionality does not apply here.).
 </desc>",
 
-"cookie":#"<desc if-caller>
+"if#cookie":#"<desc plugin>
  Does the cookie exist and if a value is given, does it contain that
  value? Cookie is av IfIs if caller.
 </desc>",
 
-"client and name":#"<desc if-caller>
+"if#client":#"<desc plugin>
  Compares the user agent string with a pattern. Client and name is an
  IfMatch if caller.
 </desc>",
 
-"date":#"<desc if-caller>
+"if#date":#"<desc plugin>
  Is the date yyyymmdd? The attributes before, after and inclusive
  modifies the behavior.
 </desc>
@@ -1900,63 +1901,63 @@ constant tagdoc=([
 
 </attr>",
 
-"defined":#"<desc if-caller>
+"if#defined":#"<desc plugin>
  Tests if a certain define is defined? Defined is an IfIs if caller.
 </desc>",
 
-"domain":#"<desc if-caller>
+"if#domain":#"<desc plugin>
  Does the user'\s computer'\s DNS name match any of the patterns? Note
  that domain names are resolved asynchronously, and the the first time
  someone accesses a page, the domain name will probably not have been
  resolved. Domain is an IfMatch if caller.
 </desc>",
 
-"exists":#"<desc if-caller>
+"if#exists":#"<desc plugin>
  Returns true if the file path exists. If path does not begin with /,
  it is assumed to be a URL relative to the directory containing the page
  with the <tag><ref type=cont>if</ref></tag>-statement.
 </desc>",
 
-"expr":#"<desc if-caller>
+"if#expr":#"<desc plugin>
  Evaluates expressions. The following characters may be used: \"1, 2,
  3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, n, t, \, X. A, B, C, D, E,
  F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, )\".
 </desc>",
 
-"group":#"<desc if-caller>
+"if#group":#"<desc plugin>
  Checks if the current user is a member of the group according
  the groupfile.
 </desc>",
 
-"host and ip":#"<desc if-caller>
+"if#host and ip":#"<desc plugin>
  Does the users computers IP address match any of the patterns? Host and
  ip are IfMatch if callers.
 </desc>",
 
-"language":#"<desc if-caller>
+"if#language":#"<desc plugin>
  Does the client prefer one of the languages listed, as specified by the
  Accept-Language header? Language is an IfMatch if caller.
 </desc>",
 
-"match":#"<desc if-caller>
+"if#match":#"<desc plugin>
  Does the string match one of the patterns? Match is an IfMatch if caller.
 </desc>",
 
-"pragma":#"<desc if-caller>
+"if#pragma":#"<desc plugin>
  Compares the pragma with a string. Pragma is an IfIs if caller.
 </desc>",
 
-"prestate":#"<desc if-caller>
+"if#prestate":#"<desc plugin>
  Are all of the specified prestate options present in the URL? Prestate is
  an IfIs if caller.
 </desc>",
 
-"referrer":#"<desc if-caller>
+"if#referrer":#"<desc plugin>
  Does the referrer header match any of the patterns? Referrer is an IfMatch
  if caller.
 </desc>",
 
-"supports":#"<desc if-caller>
+"if#supports":#"<desc plugin>
  Does the browser support this feature? Supports is an IfIs if caller.
 </desc>
 
@@ -2045,10 +2046,6 @@ constant tagdoc=([
  The browser supports Java Scripts.
 </attr>
 
-<attr name=javascript1.2>
- The browser supports Java Scripts version 1.2.
-</attr>
-
 <attr name=jpeginline>
  The browser can show JPEG images inlined.
 </attr>
@@ -2067,10 +2064,6 @@ constant tagdoc=([
 
 <attr name=netscape_javascript>
  The browser needs netscape styled javascript.
-</attr>
-
-<attr name=perl>
- The browser supports Perl applets.
 </attr>
 
 <attr name=phone>
@@ -2093,22 +2086,8 @@ constant tagdoc=([
  The browser handles Server Push.
 </attr>
 
-<attr name=python>
- The browser supports Python applets.
-</attr>
-
 <attr name=requests_are_utf8_encoded>
  The requests are UTF8 encoded.
-</attr>
-
-<attr name=robot value=name ot the searchengine>
- The request really comes from a search robot, not an actual browser.
-
- <p>Examples of robots are: architex, backrub, checkbot, fast, freecrawl,
- passagen, gcreep, googlebot, harvest, alexa, infoseek, intraseek,
- lycos, webinfo, roxen, altavista, scout, hotbot, url-minder,
- webcrawler, wget, xenu, yahoo, unknown. For more information search
- in the &lt;roxen-dir&gt;/server/etc/supports file.</p>
 </attr>
 
 <attr name=ssl>
@@ -2120,7 +2099,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=supsub>
- The browser handles <sup> and <sub> tags correctly.
+ The browser handles <tag>sup</tag> and <tag>sub</tag> tags correctly.
 </attr>
 
 <attr name=tables>
@@ -2133,10 +2112,6 @@ constant tagdoc=([
 
 <attr name=tableimages>
  It is possible to set a backgroud image in a table in the browser.
-</attr>
-
-<attr name=tcl>
- The browser supports TCL applets.
 </attr>
 
 <attr name=unknown>
@@ -2157,27 +2132,37 @@ constant tagdoc=([
 
 <attr name=wml1.1>
  The browser supports Wireless Markup Language 1.1.
-</attr>
+</attr>",
 
- Other supports variables are:
-
- <p>Width - The presentation area width in pixels.<br>
- Height - The presentation area height in pixels.</p>",
-
-"time":#"<desc if-caller>
+"if#time":#"<desc plugin>
  Is the date ttmm? The attributes before, after and inclusive modifies
  the behavior. The attributes are used in the same fashion as with the
- date if-caller.
+ date plugin.
 </desc>",
 
-"user":#"<desc if-caller>
+"if#user":#"<desc plugin>
  Has the user been authenticated as one of these users? If any is given as
  argument, any authenticated user will do.
 </desc>",
 
-"variable":#"<desc if-caller>
+"if#variable":#"<desc plugin>
  Does the variable exist and, optionally, does it's content match the pattern?
- Variable is an IfIs if-caller.
+ Variable is an IfIs plugin.
+</desc>",
+
+"if#clientvar":#"<desc plugin>
+
+ The request really comes from a search robot, not an actual browser.
+
+ Examples of robots are: architex, backrub, checkbot, fast, freecrawl,
+ passagen, gcreep, googlebot, harvest, alexa, infoseek, intraseek,
+ lycos, webinfo, roxen, altavista, scout, hotbot, url-minder,
+ webcrawler, wget, xenu, yahoo, unknown. For more information search
+ in the &lt;roxen-dir&gt;/server/etc/supports file.</p>
+
+ Width - The presentation area width in pixels.
+ Height - The presentation area height in pixels.
+
 </desc>",
 
 "nooutput":#"<desc cont>
@@ -2248,7 +2233,7 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 </attr>
 
 <attr name=if value=name>
- Undefines this if-caller.
+ Undefines this if-plugin.
 </attr>",
 
 "use":#"<desc cont>
