@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.19 2000/07/02 17:52:16 grubba Exp $
+ * $Id: Roxen.pmod,v 1.20 2000/07/05 23:09:42 mast Exp $
  *
  * Various helper functions.
  *
@@ -766,18 +766,19 @@ RXML.TagSet entities_tag_set = class
     c->add_scope("var", ([]) );
   }
 
-  // No low_entities are replaced when the result type for the
-  // parser is t_xml or t_html.
-  mapping(string:string) low_entities = ([]);
 
   void create (string name)
   {
     ::create (name);
 
+    // Note: No string entities are replaced when the result type for
+    // the parser is t_xml or t_html.
+    mapping(string:string) entities = ([]);
     for (int i = 0; i < sizeof (replace_entities); i++) {
       string chref = replace_entities[i];
-      low_entities[chref[1..sizeof (chref) - 2]] = replace_values[i];
+      entities[chref[1..sizeof (chref) - 2]] = replace_values[i];
     }
+    add_string_entities (entities);
   }
 } ("entities_tag_set");
 
