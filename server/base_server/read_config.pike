@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.62 2002/03/26 16:20:24 tomas Exp $
+// $Id: read_config.pike,v 1.63 2002/04/08 15:03:17 mast Exp $
 
 #include <module.h>
 
@@ -207,13 +207,21 @@ mapping read_it(string cl)
   };
 
   string base = configuration_dir + replace(cl, " ", "_");
-  foreach( ({ base, base+"~", base+"~1~" }), string attempt )
+  foreach( ({ base }), string attempt )
     if( string data = try_read( attempt ) )
       return decode_config_file( data );
 
-  if (err) 
-    report_error("Failed to read configuration file for %O\n"
-                 "%s\n", cl, describe_backtrace(err));
+  if (err) {
+    string backup_file;
+    if (file_stat (base + "~")) backup_file = base + "~";
+    if (file_stat (base + "~2~")) backup_file = base + "~2~";
+    report_error("Failed to read configuration file (%s) for %O.%s\n"
+		 "%s\n",
+		 base, cl,
+		 backup_file ? " There is a backup file " + backup_file + ". "
+		 "You can try it instead by moving it to the original name. " : "",
+		 describe_backtrace(err));
+  }
 //else
 //  report_error( "Failed to read configuration file for %O\n", cl );
   return ([]);
