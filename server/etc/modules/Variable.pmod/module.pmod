@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.79 2002/09/11 15:39:46 mast Exp $
+// $Id: module.pmod,v 1.80 2003/02/17 10:12:23 tomas Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1667,8 +1667,12 @@ class FileList
   constant type="FileList";
 
 #ifdef __NT__
-  array verify_set( array(string) value )
+  array(string|array(string)) verify_set(mixed value )
   {
+    // Backward compatibility junk...
+    if (stringp(value))
+      return ::verify_set( replace(value, "\\", "/") );
+    
     return ::verify_set( map( value, replace, "\\", "/" ) );
   }
 #endif
