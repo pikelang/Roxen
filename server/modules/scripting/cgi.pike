@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.127 1999/06/02 21:54:59 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.128 1999/06/02 23:12:44 grubba Exp $";
 
 class Shuffle
 {
@@ -180,7 +180,8 @@ array verify_access( object id )
             if (!a || (a[1] == -4) ||
                 (b && (b[5] != us[5]) && (b[5] >= 10)) ||
                 !QUERY(allow_symlinks)) {
-              error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
+              error(sprintf("CGI: Bad symlink or device encountered: \"%s\"\n",
+			    fname));
 	    }
 	    /* This point is only reached if a[1] == -3.
 	     * ie symlink encountered, and QUERY(allow_symlinks) == 1.
@@ -191,8 +192,8 @@ array verify_access( object id )
 	    //     to something the user can move.
 	    a = file_stat(fname);
 	    if (!a || a[1] == -4) {
-	      error("CGI: Bad symlink or device encountered: \"%s\"\n",
-		    fname);
+	      error(sprintf("CGI: Bad symlink or device encountered: \"%s\"\n",
+			    fname));
 	    }
           }
 	  b = a;
