@@ -1,10 +1,13 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.29.2.1 1997/03/02 19:13:53 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.29.2.2 1997/03/03 13:34:58 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
 import Array;
 import Stdio;
+
+/* Work-around for Simulate.perror */
+#define perror roxen_perror
 
 #include <confignode.h>
 #include <module.h>
