@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.42 2001/09/21 15:58:17 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.43 2001/10/09 11:46:01 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -482,17 +482,19 @@ constant props_arg =
   </list>";
 
 constant tagdoc = ([
-"js-include":#"<desc>
-  <p><short>Includes a javascript component.</short></p>
-</desc>
+"js-include":#"<desc type='tag'><p><short>Includes a javascript
+component.</short> Required before using some of the other tags in the
+javascript support.</p></desc>
 
-<attr name='file' value='component' required='required'>
- <p>The component to include.</p>
+<attr name='file' value='component name' required='required'>
+ <p>The component to include. May be one of <tt>CrossPlatform.js</tt>,
+ <tt>DragDrop.js</tt>, <tt>DynamicLoading.js</tt>, <tt>Popup.js</tt>
+ or <tt>Scroll.js</tt>.</p>
 </attr>",
 
 //----------------------------------------------------------------------
 
-"js-insert":#"<desc>
+"js-insert":#"<desc type='tag'>
   <p><short>Inserts a javascript support string.</short></p>
 </desc>
 
@@ -502,7 +504,7 @@ constant tagdoc = ([
 
 <attr name='jswrite'>
   <p>The output will be turned into a javascript tag and written to
-  the page with the <i>document.write</i> funtion. This is usefull for
+  the page with the <i>document.write</i> funtion. This is useful for
   compatibility with browsers that has disabled javascript.</p>
 </attr>",
 
@@ -665,10 +667,10 @@ clicked.</p>
 
 //----------------------------------------------------------------------
 
-"js-dynamic-popup-div":#"<desc>
+"js-dynamic-popup-div":#"<desc type='tag'>
   <p><short>Creates a dynamic popup div/layer tag.</short> This tag
   creates a div or layer tag depending on the browser used. Use this
-  tag together with the <tag>emit#js-dunamic-popup</tag> tag.</p>
+  tag together with the <xref href='../output/emit_js-dynamic-popup.tag'/> tag.</p>
 </desc>
 
 <attr name='name' value='string' required='required'>
