@@ -27,6 +27,17 @@ void create()
          TYPE_FLAG,
          "If set, all calls through the backward compatibility code will be "
          "logged in the event log, enabeling you to upgrade those RXML tags.");
+  defvar("enableall", 1, "Enable all tag compatibility",
+	 TYPE_FLAG,
+	 "If not set support will only be enabled for tag modules that you have "
+	 "added to your server. The drawback is that you have to reload this module "
+	 "when you add a new module that this has support for");
+  defvar("disableall", 0, "Disable all tag compatibility",
+	 TYPE_FLAG,
+	 "If set, all tag compatiblity will be disabled. The parser will still run in "
+	 "compatibility mode though, so you need not write proper XML. The drawback is "
+	 "some decreased performance and disabled error checking. This option overrides "
+	 "the 'Enable all tag compatibility' setting.");
 }
 
 constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi">);
@@ -36,6 +47,11 @@ void start (int when, Configuration conf)
   set("_priority",7);
   if (!when) conf->old_rxml_compat++;
   enabled=(<>);
+  if(query("disableall")) return;
+  if(query("enableall")) {
+    enabled=relevant;
+    return;
+  }
   foreach(indices(conf->enabled_modules), string name)
     enabled+=(<name[0..sizeof(name)-3]>);
   enabled-=(enabled-relevant);
@@ -219,6 +235,8 @@ inline string do_replace(string s, mapping m, RequestID id)
 string|array tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
+
+  if(m->index || m->scope || m->scopes || m->realfile) return ({1});
 
   if(n=m->define || m->name) {
     old_rxml_warning(id, "define or name attribute in insert tag","only variables");
