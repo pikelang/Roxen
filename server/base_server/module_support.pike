@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.89 2001/03/16 01:43:00 per Exp $
+// $Id: module_support.pike,v 1.90 2001/03/16 12:52:13 stewa Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -552,7 +552,7 @@ array(string) find_all_pike_module_directories()
     foreach( get_dir( dir ), string s )
       if( (st = file_stat( combine_path( dir, s ) )) && st->isdir )
 	if( s == "pike-modules" )
-	  res += ({ dir });
+	  res += ({ dir+"/pike-modules" });
 	else if( s != "CVS" )
 	  res += recurse( combine_path( dir, s ) );
     return res;
