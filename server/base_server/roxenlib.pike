@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.120 1999/10/18 23:27:30 marcus Exp $
+// $Id: roxenlib.pike,v 1.121 1999/10/21 17:09:59 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1184,7 +1184,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
     {
       array exploded = contents / quote;
       if (!(sizeof (exploded) & 1))
-	return "<b>Contents ends inside a replace field</b>";
+	return "<b>Content ends inside a replace field</b>";
 
       for (int c=1; c < sizeof( exploded ); c+=2)
 	if (exploded[c] == "")
