@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.617 2001/01/29 09:48:54 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.618 2001/01/31 01:01:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -471,7 +471,6 @@ class Queue
   }
 }
 
-#ifdef THREADS
 // This is easier than when there is no threads.
 // See the discussion below. :-)
 function async_sig_start( function f, int really )
