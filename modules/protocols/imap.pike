@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.6 1998/10/12 15:59:54 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.7 1998/10/18 20:05:48 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -690,6 +690,8 @@ void create()
   defvar("port", Protocols.Ports.tcp.imap2, "SMTP port number", TYPE_INT,
 	 "Portnumber to listen to. "
 	 "Usually " + Protocols.Ports.tcp.imap2 + ".\n");
+  defvar("timeout", 600, "Max idle time.", TYPE_INT,
+	 "Clients who are inactive this long are logged out automatically.\n");
   defvar("debug", 0, "Debug", TYPE_INT, "Enable IMAP debug output.\n");
 }
 
@@ -707,7 +709,8 @@ void start(int i, object conf)
     {
       mixed e = catch {
 	server = Protocols.IMAP.imap_server(Stdio.Port(),
-					    QUERY(port), backend(conf), QUERY(debug));
+					    QUERY(port), QUERY(timeout),
+					    backend(conf), QUERY(debug));
       };
       
       if (e)
