@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.16 1998/09/21 15:44:56 js Exp $";
+"$Id: mailtags.pike,v 1.17 1998/09/24 19:00:59 per Exp $";
 
 constant thread_safe = 1;
 
@@ -314,14 +314,23 @@ static mapping extended_headers( mapping from )
 	      date, month, year, hour, minute, second, tz ) == 8)
     {
 //       werror("match in 1\n");
-      when = gettime( year, month, date, hour, minute, second, tz );
+      if(catch(when = gettime( year, month, date, hour, minute, second, tz )))
+      {
+	from->reldate="Impossible date; year>2386 or year<1940";
+	when=0;
+      }
     }
 
     // 10 Sep 1998 21:51:35 -0700
     if(sscanf(from->date, 
 	      "%d %s %d %d:%d:%d %s", 
 	      date, month, year, hour, minute, second, tz ) == 7)
-      when = gettime( year, month, date, hour, minute, second, tz );
+      if(catch(when = gettime( year, month, date, hour, minute,
+			       second, tz )))
+      {
+	from->reldate="Impossible date; year>2386 or year<1940";
+	when=0;
+      }
 
     if(when) 
     {
