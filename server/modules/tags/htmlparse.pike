@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.35 1997/07/10 16:28:38 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.36 1997/07/16 00:20:49 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1434,7 +1434,8 @@ string tag_aprestate(string tag, mapping m, string q, object got)
 
 string tag_aconfig(string tag, mapping m, string q, object got)
 {
-  string href, opts="", opt;
+  string href;
+  mapping(string:string) cookies = ([]);
 
   if(!m->href)
     href=strip_prestate(strip_config(got->raw_url));
@@ -1448,29 +1449,24 @@ string tag_aconfig(string tag, mapping m, string q, object got)
     m_delete(m, "href");
   }
 
-  foreach(indices(m), opt)
-  {
-    if(m[opt]==opt)
-    {
-      m_delete(m,opt);
-    
-      if(strlen(opt))
-	switch(opt[0])
-	{
-	 case '+':
+  foreach(indices(m), string opt) {
+    if(m[opt]==opt) {
+      if(strlen(opt)) {
+	switch(opt[0]) {
+	case '+':
 	  m_delete(m, opt);
-	  m[opt[1..100]] = opt;
-	  continue;
-	 case '-':
-	  continue;
-	 default:
-	  opts += " " + opt+"=\""+m[opt]+"\"";
-	  continue;
+	  cookies[opt[1..]] = opt;
+	  break;
+	case '-':
+	  m_delete(m, opt);
+	  cookies[opt] = opt;
+	  break;
 	}
+      }
     }
   }
-  m->href = add_config(href, indices(m), got->prestate);
-  return make_container("a",m,q);
+  m->href = add_config(href, indices(cookies), got->prestate);
+  return make_container("a", m, q);
 }
 
 string add_header(mapping to, string name, string value)
