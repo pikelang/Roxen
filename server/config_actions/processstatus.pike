@@ -1,11 +1,11 @@
 /*
- * $Id: processstatus.pike,v 1.2 1997/08/24 03:35:23 peter Exp $
+ * $Id: processstatus.pike,v 1.3 1997/08/26 19:42:40 grubba Exp $
  */
 
 inherit "wizard";
 constant name= "Status//Process status";
 
-constant doc = ("Shows the vaious information about the pike process.");
+constant doc = ("Shows various information about the pike process.");
 
 constant more=1;
 
