@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.464 2004/10/15 09:00:16 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.465 2004/12/01 16:56:41 stewa Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -421,33 +421,39 @@ private void really_set_config(array mod_config)
 private static mixed f, line;
 private static int hstart;
 
-//! Parse a cookie string.
+//! Parse cookie strings.
 //!
 //! @param contents
-//!   HTTP transport-encoded cookie header value.
+//!   HTTP transport-encoded cookie header value or array with values.
 //!
 //! @returns
 //!   Returns the resulting current cookie mapping.
-mapping(string:string) parse_cookies( string contents )
+mapping(string:string) parse_cookies( array|string contents )
 {
   if(!contents)
     return cookies;
 
 //       misc->cookies += ({contents});
-  foreach(((contents/";") - ({""})), string c)
-  {
-    string name, value;
-    while(sizeof(c) && c[0]==' ') c=c[1..];
-    if(sscanf(c, "%s=%s", name, value) == 2)
-    {
-      value=http_decode_string(value);
-      name=http_decode_string(name);
-      cookies[ name ]=value;
+
+  array tmp = arrayp(contents) ? contents : ({ contents});
+  
+  foreach(tmp, string cookieheader) {
+    
+    foreach(((cookieheader/";") - ({""})), string c)
+      {
+	string name, value;
+	while(sizeof(c) && c[0]==' ') c=c[1..];
+	if(sscanf(c, "%s=%s", name, value) == 2)
+	  {
+	    value=http_decode_string(value);
+	    name=http_decode_string(name);
+	    cookies[ name ]=value;
 #ifdef OLD_RXML_CONFIG
-      if( (name == "RoxenConfig") && strlen(value) )
-	config =  mkmultiset( value/"," );
+	    if( (name == "RoxenConfig") && strlen(value) )
+	      config =  mkmultiset( value/"," );
 #endif
-    }
+	  }
+      }
   }
   return cookies;
 }
