@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.90 1997/10/27 08:31:58 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.91 1997/10/27 08:32:42 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -63,6 +63,7 @@ array register_module()
 	      " quant=cols      Use this number of colors\n"
 	      " magic[=message] Modifier to href, more flashy links\n"
 	      "                 Does <b>not</b> work with 'split'\n"
+	      " magicbg=bg      As background, but for the 'magic' image\n"
 	      " fuzz[=color]    Apply the 'glow' effect to the result\n"
  	      " fs              Use floyd-steinberg dithering\n"
 	      " border=int,col. Draw an border (width is the first argument\n"
