@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.14 1999/05/23 23:23:15 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.15 1999/05/23 23:43:49 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -174,7 +174,7 @@ class Wrapper
     DWERROR(sprintf("CGI:Wrapper::write_callback(): write(%O) => %d\n",
 		    buffer, nelems));
 
-    if( nelems <= 0 )
+    if( nelems < 0 )
       // if nelems == 0, network buffer is full. We still want to continue.
       // -- Are you sure about this? The usual reason write() returns 0
       //    is that the client has closed the connection...
@@ -537,16 +537,27 @@ class CGIScript
     return stdout;
   }
 
+  // HUP, PIPE, INT, TERM, KILL
+  static constant kill_signals = ({ 1, 13, 2, 15, 9 });
+  static constant kill_interval = 3;
+  static int next_kill;
+
   void kill_script()
   {
-    DWERROR("CGI:CGIScript::kill_script()\n");
+    DWERROR(sprintf("CGI:CGIScript::kill_script()\n"
+		    "next_kill: %d\n", next_kill));
 
     if(pid && !pid->status())
     {
+      int signum = 9;
+      if (next_kill < sizeof(kill_signals)) {
+	signum = kill_signals[next_kill++];
+      }
       if(pid->kill)  // Pike 0.7, for roxen 1.4 and later 
-        pid->kill( -9 );
+        pid->kill(signum);
       else
-        kill( pid->pid(), -9 ); // Pike 0.6, for roxen 1.3 
+        kill( pid->pid(), signum); // Pike 0.6, for roxen 1.3 
+      call_out(kill_script, kill_interval);
     }
   }
 
