@@ -19,7 +19,7 @@ constant thread_safe   = 1;
 
 mapping settings_cache = ([ ]);
 
-object settings = roxen.ConfigIFCache( "settings" );
+object settings = roxen.ConfigIFCache( "settings",1 );
 
 class ConfigurationSettings
 {
