@@ -35,7 +35,7 @@ string parse(RequestID id )
 
   string error="",form =
 #"
-<gtext scale=0.6>Create a new database</gtext><br />
+<h2>Create a new database</h2><br />
 ERROR
 <table>
   <tr>
