@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.116 1999/10/08 16:13:25 nilsson Exp $
+// $Id: roxenlib.pike,v 1.117 1999/10/11 14:10:58 per Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1392,14 +1392,18 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   return new_contents;
 }
 
-string fix_relative(string file, object id)
+string fix_relative( string file, object id )
 {
+  string path = id->not_query;
+  // +(id->misc->path_info?id->misc->path_info:"");
+//   werror(" Fix relative, path = "+path+"; file = "+file+"; " );
   if(file != "" && file[0] == '/') 
     ;
   else if(file != "" && file[0] == '#') 
-    file = id->not_query + file;
+    file = path + file;
   else
-    file = dirname(id->not_query) + "/" +  file;
+    file = dirname(path) + "/" +  file;
+//   werror(" res = "+simplify_path(file)+"\n");
   return simplify_path(file);
 }
 
