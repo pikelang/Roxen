@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.15 1998/09/16 16:58:44 grubba Exp $
+ * $Id: smtprelay.pike,v 1.16 1998/09/16 17:29:37 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.15 1998/09/16 16:58:44 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.16 1998/09/16 17:29:37 grubba Exp $";
 
 /*
  * Some globals
@@ -234,6 +234,8 @@ class MailSender
 
   static function send_done;
 
+  static multiset(string) esmtp_features = (<>);
+
   static void connect_and_send();
 
   static string out_buf = "";
@@ -267,38 +269,56 @@ class MailSender
     }
   }
 
+  static string last_command = "";
+  static void send_command(string s)
+  {
+    last_command = s;
+    send(s + "\r\n");
+  }
+
   /*
    * Functions called by the state machine
    */
   
   static void send_ehlo()
   {
-    send(sprintf("EHLO %s\r\n", gethostname()));
+    send_command(sprintf("EHLO %s", gethostname()));
   }
 
   static void send_helo()
   {
-    send(sprintf("HELO %s\r\n", gethostname()));
+    send_command(sprintf("HELO %s", gethostname()));
   }
 
   static void send_mail_from(string code, array(string) reply)
   {
     if (state == 1) {
-      // Parse EHLO reply
+      if (sizeof(reply) > 1) {
+	// Parse EHLO reply
+	esmtp_features = (< @Array.map(reply[1..], lower_case) >);
+      }
     }
-    send(sprintf("MAIL FROM:%s\r\n", message->sender));
+    string extras = "";
+    if (esmtp_features["8bitmime"]) {
+      extras += " BODY=8BITMIME";
+    }
+    if (esmtp_features["size"]) {
+      // Add some margin for safety.
+      extras += " SIZE="+(sizeof(message)+10);
+    }
+    send_command(sprintf("MAIL FROM:%s%s", message->sender, extras));
   }
 
   static void send_rcpt_to()
   {
-    send(sprintf("RCPT TO:%s@%s\r\n", message->user, message->domain));
+    send_command(sprintf("RCPT TO:%s@%s", message->user, message->domain));
   }
 
   static void send_bounce(string code, array(string) text)
   {
-    parent->bounce(message, code, text);
+    parent->bounce(message, code, text, last_command);
 
-    send("QUIT\r\n");
+    send_command("QUIT");
   }
 
   static void bad_address(string code, array(string) text)
@@ -337,7 +357,7 @@ class MailSender
 			 message->mailid));
 #endif /* RELAY_DEBUG */
     result = 1;
-    send("QUIT\r\n");
+    send_command("QUIT");
   }
 
   // The state machine
@@ -391,7 +411,7 @@ class MailSender
 #endif /* DEBUG */
 
     if (stringp(action)) {
-      send(action + "\r\n");
+      send_command(action);
     } else {
       action(code, data);
     }
@@ -682,11 +702,12 @@ void send_message(string from, multiset(string) rcpt,
  * Used to bounce error messages
  */
 
-void bounce(mapping msg, string code, array(string) text)
+void bounce(mapping msg, string code, array(string) text, string last_command)
 {
   // FIXME: Generate a bounce.
 
-  roxen_perror(sprintf("SMTP: bounce(%O, %O, %O)\n", msg, code, text));
+  roxen_perror(sprintf("SMTP: bounce(%O, %O, %O, %O)\n",
+		       msg, code, text, last_command));
 
   if (sizeof(msg->sender)) {
     // Send a bounce.
@@ -703,10 +724,10 @@ void bounce(mapping msg, string code, array(string) text)
 	oldmessage += s;
       }
       f->close();
-      if (i = search(oldmessage, "\r\n\r\n")) {
-	oldheaders = oldmessage[..i+1];
-	break;
-      }
+      oldheaders = oldmessage;
+      if (i = search(oldheaders, "\r\n\r\n")) {
+	oldheaders = oldheaders[..i+1];
+      } 
     }
 
     string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
@@ -729,10 +750,12 @@ void bounce(mapping msg, string code, array(string) text)
 
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
 			  "Mailid:%s\r\n"
+			  "Last command:%s\r\n"
 			  "Description:\r\n"
 			  "%s\r\n",
 			  msg->user, msg->domain, msg->sender, code,
 			  msg->mailid,
+			  last_command,
 			  text*"\r\n");
 
     // Send a bounce
