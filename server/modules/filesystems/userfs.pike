@@ -8,7 +8,7 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.14 1997/08/12 06:32:19 per Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.15 1997/08/23 16:56:39 grubba Exp $";
 #include <module.h>
 
 inherit "filesystem";
@@ -106,7 +106,7 @@ mixed find_file(string f, object got)
     us = roxen->userinfo( u, got );
     // No user, or access denied.
     if(!us
-       || (QUERY(only_password) && strlen(us[ 1 ]) < 10)
+       || (QUERY(only_password) && (<"","*">)[us[ 1 ]])
        || (search( QUERY(banish_list), u ) != -1))
       return 0;
 
@@ -153,7 +153,7 @@ string real_file( mixed f, mixed id )
     array(int) fs;
     us = roxen->userinfo( u, id );
     if(!us) return 0;
-    if(QUERY(only_password) && strlen(us[ 1 ]) < 8)     return 0;
+    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
       path = us[ 5 ] + "/" + QUERY(pdir);
@@ -190,7 +190,7 @@ array find_dir(string f, object got)
     string *us;
     us = roxen->userinfo( u, got );
     if(!us) return 0;
-    if(QUERY(only_password) && strlen(us[ 1 ]) < 8)     return 0;
+    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
       path = us[ 5 ] + "/" + QUERY(pdir);
@@ -219,7 +219,7 @@ mixed stat_file( mixed f, mixed id )
     array us, st;
     us = roxen->userinfo( u, id );
     if(!us) return 0;
-    if(QUERY(only_password) && strlen(us[ 1 ]) < 8)     return 0;
+    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
       path = us[ 5 ] + "/" + QUERY(pdir);
