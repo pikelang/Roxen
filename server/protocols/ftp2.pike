@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.32 1998/05/15 00:06:16 grubba Exp $
+ * $Id: ftp2.pike,v 1.33 1998/05/15 00:08:36 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2499,8 +2499,6 @@ class FTPSession
     array(string) argv = glob_expand_command_line("/usr/bin/ls " + (args||""));
 
     call_ls(argv);
-
-    mode = old_mode;
   }
 
   void ftp_LIST(string args)
