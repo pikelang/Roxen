@@ -3,7 +3,7 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.9 1997/08/31 04:12:45 peter Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.10 1997/10/14 21:47:16 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -22,7 +22,7 @@ mixed *register_module()
 {
   return ({ 
     MODULE_FIRST|MODULE_PROXY,
-    "CONNECT method implementation", 
+    "SSL Proxy", 
     "Implements the CONNECT method, as in <a href="
       "http://www1.netscape.com/newsref/std/tunneling_ssl.html>the draft</a>"
       " Useful for tunneling of SSL connections (Secure proxy in Netscape).",
