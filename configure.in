@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.69 1999/08/15 18:10:03 grubba Exp $
+# $Id: configure.in,v 1.70 1999/11/28 22:00:26 peter Exp $
 #
 
 prefix=$PWD
@@ -160,16 +160,8 @@ AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(dld, shl_load)
 AC_CHECK_LIB(dld, dld_link)
 
-# Set up smartlink
-
-case $CC in
- *smartlink*) ;;
- *)
-   CC="$srcdir/pike/$pike_version/bin/smartlink $CC"
-   ac_cv_prog_CC="$CC"
- ;;
-esac
-
+#############################################################
+# Set some OS/Compiler Specific flags...
 # Compiler flags...
 
 AC_DEFUN(AC_SYS_COMPILER_FLAG,
@@ -206,6 +198,17 @@ AC_DEFUN(AC_SYS_OS_COMPILER_FLAG,
   fi
 ])
 
+
+# Set up smartlink
+
+case $CC in
+ *smartlink*) ;;
+ *)
+   CC="$srcdir/pike/$pike_version/bin/smartlink $CC"
+   ac_cv_prog_CC="$CC"
+ ;;
+esac
+
 # We need some special hacks when running slowaris
 AC_PATH_PROG(uname_prog,uname,no)
 AC_MSG_CHECKING(operating system)
@@ -229,26 +232,49 @@ AC_MSG_RESULT($roxen_cv_sys_os)
 
 case "$roxen_cv_sys_os" in
   SCO*)
-     case "$CFLAGS" in
-       *-belf*) ;;
-       *)
-          AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS)
-       ;;
-     esac
-     case "$LDFLAGS" in
-       *-belf*) ;;
-       *)
-          AC_SYS_COMPILER_FLAG(-belf,belf,LDFLAGS)
-       ;;
-     esac
+    case "$CFLAGS" in
+      *-belf*) 
+        AC_SYS_COMPILER_FLAG(-belf,sco_belf_option,CFLAGS,[],[
+          case "$LDFLAGS" in
+            *-belf*) ;;
+            *)
+	      echo "Adding -belf option to ldflags."
+              LDFLAGS="$LDFLAGS -belf"
+            ;;
+          esac
+        ])
+      ;;
+      *)
+        AC_SYS_COMPILER_FLAG(-belf,sco_belf_option,CFLAGS,[],[
+          case "$LDFLAGS" in
+            *-belf*) ;;
+            *)
+	      echo "Adding -belf option to ldflags."
+              LDFLAGS="$LDFLAGS -belf"
+            ;;
+          esac
+        ])
+      ;;
+    esac
   ;;
+ 
   UnixWare*)
-    if test "$GCC" = "yes"; then :; else
-      # Try using the built-in alloca function
-      AC_SYS_COMPILER_FLAG(-Kalloca,Kalloca,CFLAGS)
-    fi
+    case "$CFLAGS" in
+      *-Kalloca*) ;;
+      *)
+	if test "$GCC" != "yes"; then
+ 	# We are using built-in inline function
+          CFLAGS="$CFLAGS -Kalloca"
+          CXX="CC -DNO_CPLUSPLUS_ALLOCA"
+ 	fi
+      ;;
+    esac
   ;;
 esac
+  
+AC_SUBST(CXX)
+AC_SUBST(LD)
+ 
 
 #############################################################################
 
@@ -407,10 +433,18 @@ esac
      *+O*) ;;
      *-fast*) ;;
      *)
-      AC_SYS_COMPILER_FLAG(-O2,O2,OPTIMIZE)
-      if test "x$roxen_cv_option_O2" != "xyes"; then
-        AC_SYS_COMPILER_FLAG(-O,O,OPTIMIZE)
-      fi
+       if test "$GCC" != "yes"; then
+         case "$roxen_cv_sys_os" in
+           UnixWare*)
+             OPTIMIZE=""
+	   ;;
+         esac
+       else
+         AC_SYS_COMPILER_FLAG(-O2,O2,OPTIMIZE)
+         if test "x$roxen_cv_option_O2" != "xyes"; then
+           AC_SYS_COMPILER_FLAG(-O,O,OPTIMIZE)
+         fi
+       fi
      ;;
   esac
  fi
@@ -461,6 +495,7 @@ if test -z "$CCSHARED" ; then
 	hp*|HP*) CCSHARED="+z"; ;;
 	FreeBSD*) CCSHARED="-fpic";;
 	SCO_SV*) CCSHARED="-KPIC -dy -Bdynamic";;
+	UnixWare*) CCSHARED="-KPIC -dy -Bdynamic";;
 	Solaris*) CCSHARED="-KPIC -Bdynamic";;
         Windows_NT*) CCSHARED="-shared" ;;
     esac
@@ -472,6 +507,15 @@ fi
     roxen_cv_sys_ccshared="$CCSHARED", roxen_cv_sys_ccshared='')
   CFLAGS="$OLD_CFLAGS"
 ])
+
+if test "$GCC" != "yes"; then
+  case $roxen_cv_sys_os in
+    UnixWare*) CCSHARED="-KPIC -dy -Bdynamic"
+    roxen_cv_sys_ccshared="$CCSHARED"
+    ;;
+  esac
+fi
+
 CCSHARED="$roxen_cv_sys_ccshared"
 AC_MSG_RESULT($CCSHARED)
 
@@ -490,6 +534,7 @@ then
         GNU*) LINKFORSHARED="-rdynamic";;
 	next) LINKFORSHARED="-u libsys_s";;
 	SCO_SV*) LINKFORSHARED="-fpic -Wl,-Bexport";;
+	UnixWare*) LINKFORSHARED="-fpic -Wl,-Bexport";;
     esac
   else
     case $roxen_cv_sys_os in
@@ -499,6 +544,7 @@ then
         GNU*) LINKFORSHARED="-rdynamic";;
 	next) LINKFORSHARED="-u libsys_s";;
 	SCO_SV*) LINKFORSHARED="-Bdynamic -dy -Wl,-Bexport";;
+	UnixWare*) LINKFORSHARED="-Bdynamic -dy -Wl,-Bexport";;
     esac
   fi
 fi
