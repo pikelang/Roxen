@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.11 1997/09/14 17:31:31 grubba Exp $
+ * $Id: PDB.pmod,v 1.12 1997/10/05 19:43:08 noring Exp $
  */
 
 #if constant(thread_create)
@@ -197,6 +197,7 @@ class Bucket
   void destroy()
   {
     sync();
+    destruct(file);
   }
 };
 
@@ -475,6 +476,33 @@ class db
     UNLOCK();
     remove_call_out(sync);
     call_out(sync, 200);
+  }
+
+  // Remove maximum one level of directories and files
+  static void level2_rm(string f)
+  {
+    if(sizeof(f) > 1 && f[-1] == '/')
+      f = f[0..sizeof(f)-2];  // remove /'s
+    if((file_stat(f)||({0,0}))[1] == -2)  // directory
+      foreach(get_dir(f)||({}), string file)
+	rm(f+"/"+file);  // delete file
+    werror("###### rm("+f+")\n");
+    rm(f);  // delete file/directory
+  }
+
+  void purge()
+  {
+    // remove whole db...
+    LOCK();
+    foreach(values(buckets)+values(tables)+({ logfile }), object o)
+      destruct(o);
+    buckets = 0;
+    tables = 0;
+    level2_rm(dir+"Buckets");
+    level2_rm(dir);
+    dir = 0;
+    destruct();
+    UNLOCK();
   }
 
   static void restore_logs()
