@@ -1,8 +1,11 @@
+object mm=(object)"/master";
+inherit "/master": master;
+
 /*
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.102 2000/10/02 16:34:09 jonasw Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.103 2000/10/04 21:29:39 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 #ifndef OUT_OF_DATE_WARNING
@@ -142,9 +145,6 @@ class MyCodec
   }
 }
 
-
-object mm=(object)"/master";
-inherit "/master": master;
 
 #ifdef __NT__
 string getcwd()
