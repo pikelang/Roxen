@@ -28,26 +28,32 @@ int main(int argc, array argv)
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
 
-  write( "Roxen 1.4 configuration interface installation script\n");
+  write( "Roxen 2.0 configuration interface installation script\n");
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
   	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
                       "../configurations");
+  int admin = has_value(argv, "-a");
 
-  if(reverse(configdir)[0] != '/')
+  if(configdir[-1] != '/')
     configdir+="/";
-  write( "Creating a configuration interface server in "+configdir+"\n");
+  if(admin)
+    write( "Creating an administrator user.\n" );
+  else
+    write( "Creating a configuration interface server in "+configdir+"\n");
 
   do
   {
-    name = rl->read( "Server name [Configuration Interface]: " );
-    if( !strlen(name-" ") )
-      name = "Configuration Interface";
+    if(!admin) {
+      name = rl->read( "Server name [Configuration Interface]: " );
+      if( !strlen(name-" ") )
+	name = "Configuration Interface";
 
-    port = rl->read( "Port ["+def_port+"]: ");
-    if( !strlen(port-" ") )
-      port = def_port;
+      port = rl->read( "Port ["+def_port+"]: ");
+      if( !strlen(port-" ") )
+	port = def_port;
+    }
 
     user = rl->read( "Administrator Username [administrator]: ");
     if( !strlen(user-" ") )
@@ -75,6 +81,11 @@ int main(int argc, array argv)
                 "/settings/"+user->name+"_uid");
   mkdirhier( ufile );
   Stdio.write_file( ufile, encode_value( user ) );
+
+  if(admin) {
+    write("Administrator user \""+user->name+"\" created.");
+    return 0;
+  }
 
   mkdirhier( configdir );
   Stdio.write_file( configdir+replace( name, " ", "_" ),
