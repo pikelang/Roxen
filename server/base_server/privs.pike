@@ -1,11 +1,13 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.6 1997/01/13 06:53:23 per Exp $";
+string cvs_version = "$Id: privs.pike,v 1.7 1997/04/05 01:25:37 per Exp $";
 
 int saved_uid;
 int saved_gid;
 
 #define LOGP (roxen && roxen->variables && roxen->variables->audit && GLOBVAR(audit))
+
+#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 static private string dbt(array t)
 {

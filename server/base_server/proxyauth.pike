@@ -1,3 +1,5 @@
+inherit "http";
+
 mapping proxy_auth_needed(object id)
 {
   mixed res = id->conf->check_security(proxy_auth_needed, id);

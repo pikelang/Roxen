@@ -7,6 +7,29 @@ DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
 
+# Pike default Master-program
+if [ -f ../pike/src/lib/master.pike ]; then
+  DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
+fi
+
+# Extra module-path
+if [ -d etc/modules ]; then
+  DEFINES="$DEFINES -M etc/modules"
+fi
+
+# Extra include-path
+if [ -d etc/include ]; then
+  DEFINES="$DEFINES -I etc/include"
+fi
+
+# Extra include-path (2)
+if [ -d base_server ]; then
+  DEFINES="$DEFINES -I base_server"
+fi
+
+pike=pike
+if [ -x bin/pike ] ; then pike=bin/pike; fi
+
 rotate () {
   b=5;
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
@@ -23,6 +46,31 @@ tput 'bold' 2>/dev/null
 tput 'rmso' 2>/dev/null
   $PIKE $args $@
 }
+
+# Change the permissions of the configuration files so that they match
+# those of the user Roxen runs as when it has started, not the one Roxen
+# is started as.
+
+fixperms() {
+ uline=`./configvar --query --config-dir=$DIR --region=Variables User`
+
+ uid=`echo $uline | sed -e 's![^"]*"!!' -e 's/:.*//'`
+ gid=`echo $uline | sed -e 's![^:]*:!!' -e 's/".*//'` 
+
+ if [ ! -z "$gid" ] ; then find $DIR $LOGDIR -print | xargs chgrp $gid; fi
+ if [ ! -z "$uid" ] ; then find $DIR $LOGDIR -print | xargs chown $uid; fi
+
+ find $DIR -print | xargs chmod og-rw
+ find $DIR -print | xargs chmod u+rw
+}
+
+
+start_roxen() {
+  args="-DROXEN $DEFINES $pass $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
+  echo Executing $pike $args $@
+  $pike $args $@
+}
+####### END PREAMBLE
 
 ## Parse all arguments.
 ## GNU-style, long options only, except for -D, simply passed on.
@@ -119,7 +167,7 @@ oo
   echo $$: "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
 
-  start_roxen
+  start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
 
   if [ -z "$noshutdown" ] ; then 
     if [ -f "$sdfile" ] ; then

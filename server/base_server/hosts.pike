@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.9 1997/02/13 13:00:56 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.10 1997/04/05 01:25:31 per Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -8,6 +8,9 @@ string cvs_version = "$Id: hosts.pike,v 1.9 1997/02/13 13:00:56 per Exp $";
 #endif
 
 inherit "module_support";
+
+import files;
+import Stdio;
 
 #if 0
 inline nomask private static 

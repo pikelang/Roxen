@@ -3,6 +3,9 @@ int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
 inherit "low_describers";
+inherit "config/low_describers";
+
+import Array;
 
 string describe_configuration_global_variables(object node)
 {
@@ -40,17 +43,11 @@ string describe_builtin_variables(object node)
   return link("<b>Builtin variables (security, comments etc.)</b>");
 }
 
-string describe_time(int t)
-{
-  return roxen->language("en","date")(t);
-}
-
 string describe_errors(object node)
 {
   if(node->folded)
     return (link("<font size=+2>&nbsp;Error and debug log</font>"));
-
-
+  array(string) report = ({ });
 
   string err;
   array report = ({ }), r1=indices(node->data), r2;
@@ -62,7 +59,8 @@ string describe_errors(object node)
     report += ({ (sizeof(node->data[err])>1?
 		  (sizeof(node->data[err]) + " times:<br>"):"")
 		   + "<font size=-1>"+
-		   Array.map(node->data[err], describe_time)*"<br>"+"</font>"
+		   Array.map(node->data[err],
+			     roxen->language("en","date"))*"<br>"+"</font>"
 		   + err + "<hr noshade size=1>" });
 
   return (link("<font size=+2>&nbsp;Error and debug log")
@@ -107,7 +105,7 @@ string describe_open_files(object node)
   res += "<br><i>Define DEBUG in config/config.h for more accurate debug</i><p>";
 #endif
 #endif
-  res += roxen->checkfd();
+  res += roxen->checkfd(0);
   return res;
 }
 
@@ -442,8 +440,8 @@ string describe_hostnames_status(object node)
 	  "Number of host name lookup processes : "+sizeof(roxen->out)+"<br>"
 	  "Host name lookup queue size          : "  
 	  + (sizeof(roxen->do_when_found)?sizeof(roxen->do_when_found)
-	     + " (" + roxen->get_size(roxen->do_when_found)+
-	     sprintf(" bytes, %2.1f per process)<br>",
+//	     + " (" + (string)roxen->get_size( roxen->do_when_found ) +
+          + sprintf(" (%2.1f per process)<br>",
 		     (float)sizeof(roxen->do_when_found)
 		     / (float)sizeof(roxen->out))
 	     :"empty"));

@@ -1,4 +1,5 @@
-string cvs_version="$Id: graphic_text.pike,v 1.39 1997/03/26 05:54:13 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.40 1997/04/05 01:26:10 per Exp $";
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -20,7 +21,8 @@ array register_module()
 	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
 	      "<b>&lt;gh&gt;:</b> Header<br>\n"
 	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
-	      "<b>&lt;anfang&gt;:</b> Make the first character to a graphical one. Not all that usefull, really.<br>\n"
+	      "<b>&lt;anfang&gt;:</b> Make the first character to a "
+	      "graphical one. Not all that usefull, really.<br>\n"
 	      "<br>\n"
 	      "<b>Common arguments:</b>\n <pre>"
 	      " bg=color        Use this background, default taken from the\n"
@@ -106,7 +108,6 @@ array (string) list_fonts()
 
 void create()
 {
-
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
@@ -123,9 +124,21 @@ void create()
 	 ({ 1,2,3,4,5,6,7,8,10,16,32,64,128,256 }));
 
 
+#ifdef TYPE_FONT
   // compatibility variables...
   defvar("default_size", 32, 0, TYPE_INT,0,0,1);
   defvar("default_font", "urw_itc_avant_garde-demi-r",0,TYPE_STRING,0,0,1);
+#else
+  defvar("default_size", 32, "Default font size", TYPE_INT_LIST,
+	 "The default size for the font. This is used for the 'base' size, "
+	 "and can be scaled up or down in the tags.",
+	 ({ 16, 32, 64 }));
+  
+  defvar("default_font", "urw_itc_avant_garde-demi-r", "Default font",
+	 TYPE_STRING_LIST,
+	 "The default font. The 'font dir' will be prepended to the path",
+	 list_fonts());
+#endif
 }
 
 string query_location() { return query("location"); }
@@ -136,9 +149,11 @@ object(font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = font();
 
-  if(!name) name="foo";
-  if(sscanf(name, "%*s/%*s") != 2)
+  if ((!name)||(name == "")) {
+    name = QUERY(default_size)+"/"+QUERY(default_font);
+  } else if(sscanf(name, "%*s/%*s") != 2) {
     name=QUERY(default_size)+"/"+name;
+  }
 
   name = "fonts/" + name;
 
@@ -161,6 +176,7 @@ static private mapping (int:mapping(string:mixed)) cached_args = ([ ]);
 
 #define MAX(a,b) ((a)<(b)?(b):(a))
 
+#if !efun(make_matrix)
 static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
@@ -176,6 +192,7 @@ array (array(int)) make_matrix(int size)
       res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
   return matrixes[size] = res;
 }
+#endif
 
 string fix_relative(string file, object id)
 {
@@ -218,13 +235,11 @@ object (image) blur(object (image) img, int amnt)
 object (image) outline(object (image) on, object (image) with,
 		       array (int) color, int radie, int x, int y)
 {
-  object foo = image(with->xsize(), with->ysize(), @color);
-  
   int steps=10;
   for(int j=0; j<=steps; j++)
-    on->paste_mask(foo, with,(int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
-		   (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
-  foo=0;
+    on->paste_alpha_color(with, @color,
+			  (int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
+			  (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
   return on;
 }
 
@@ -270,10 +285,10 @@ object (image) bevel(object (image) in, int width, int|void invert)
   in->paste_mask(corner, corner->color(95,95,95), -1, in->ysize()-width);
   in->paste_mask(corner, corner->invert()->color(128,128,128),
                  -1, in->ysize()-width);
+  corner=0;
   in->paste_mask(corner2, corner2->color(70,70,70), -1, -1);
 
-  corner = corner2 = pix = 0;
-
+  corner2 = pix = 0;
   return in;
 }
 
@@ -349,7 +364,6 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     ysize+=howmuch*2+10;
   }
 
-
   if(args->xspacing)
   {
     xoffset += (int)args->xspacing;
@@ -373,21 +387,18 @@ object (image) make_text_image(mapping args, object font, string text,object id)
 
   if(args->texture)    foreground = load_image(args->texture,id);
 
-  if(args->background)
-  {
-    background = load_image(args->background,id);
+  if((args->background) && (background = load_image(args->background, id))) {
     xsize = background->xsize();
     ysize = background->ysize();
-    switch(lower_case(args->talign||"left"))
-    {
-     case "center":
+    switch(lower_case(args->talign||"left")) {
+    case "center":
       xoffset = (xsize/2 - txsize/2);
       yoffset = (ysize/2 - tysize/2);
       break;
-     case "right":
+    case "right":
       xoffset = (xsize - txsize);
       break;
-     case "left":
+    case "left":
     }
   } else
     background = image(xsize, ysize, @bgcolor);
@@ -457,13 +468,12 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     int bl=(int)(args->ghost/",")[1];
     array(int)clr=parse_color((args->ghost/",")[-1]);
     int j;
-    object base = image(xsize,ysize,@clr)->invert();
     object ta = text_alpha->copy();
     for (j=0;j<bl;j++)
       ta=ta->apply_matrix(({
 	({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
        }));
-    background->paste_mask(base->invert(),ta,xoffset+sdist,yoffset+sdist);
+    background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
     fgcolor=bgcolor;
   }
 
@@ -474,7 +484,7 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     int sdist = ((int)(args->shadow/",")[-1])+2;
     object ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
-    background->paste_mask(image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
+    background->paste_alpha_color(ta,0,0,0,xoffset+sdist, yoffset+sdist);
   }
 
 #define MIN(x,y) ((x)<(y)?(x):(y))
@@ -488,16 +498,15 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     object ta = image(xs,ys);
     ta->paste(text_alpha,sdist,sdist);
     ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
-    background->paste_mask(image(xs,ys),ta,xoffset, yoffset);
+    background->paste_alpha_color(ta,0,0,0,xoffset,yoffset);
   }
 
   if(args->glow)
   {
     int amnt = (int)(args->glow/",")[-1]+2;
     array (int) blurc = parse_color((args->glow/",")[0]);
-    background->paste_mask(image(txsize+amnt*2,tysize*2, @blurc),
-			   blur(text_alpha, amnt),
-			   xoffset-amnt, yoffset-amnt);
+    background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
+				  xoffset-amnt, yoffset-amnt);
   }
   
   if(args->chisel)
@@ -579,6 +588,7 @@ array(int)|string write_text(int _args, string text, int size,
   //  Nothing found in the cache. Generate a new image.
 
 
+#if efun(get_font)
   if(args->nfont)
   {
     int bold, italic;
@@ -589,7 +599,10 @@ array(int)|string write_text(int _args, string text, int size,
     data = get_font(args->nfont,(int)args->font_size,bold,italic,
 		    lower_case(args->talign||"left"),
 		    (float)(int)args->xpad, (float)(int)args->ypad);
-  } else {
+  }
+  else 
+#endif
+  {
     string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
     data = cache_lookup("fonts", fkey);
     if(!data)
@@ -746,9 +759,11 @@ string tag_gtext_id(string t, mapping arg,
   extra_args(arg);        m_delete(arg,"split");
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-//  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+#if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
-
+#endif
+  
   int num = find_or_insert( arg );
 
   if(!short)
@@ -827,11 +842,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
 //  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+#if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
+#endif
   if(!arg->bold) arg->bold=defines->bold;
   if(!arg->italic) arg->italic=defines->italic;
   if(!arg->black) arg->black=defines->black;
   if(!arg->narrow) arg->narrow=defines->narrow;
+  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 
   if(arg->split)
   {
@@ -898,7 +916,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
   }
   
   array size = write_text(num,gt,1,id);
-
   if(magic)
   {
     string res = "";

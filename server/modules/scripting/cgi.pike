@@ -6,7 +6,8 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.13 1997/03/26 05:54:15 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.14 1997/04/05 01:26:25 per Exp $";
+
 #include <module.h>
 
 inherit "module";
@@ -17,6 +18,8 @@ import Simulate;
 static mapping env=([]);
 static array runuser;
 
+import String;
+import Stdio;
 
 mapping build_env_vars(string f, object id, string|void path_info)
 {
@@ -211,9 +214,12 @@ void start(int n, object conf)
     runuser = ({ (int)us[2], (int)us[3] });
   else
 #endif
-    if((int)QUERY(runuser))
-    runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
-
+    if(strlen(QUERY(runuser)))
+      if (sizeof(us = (QUERY(runuser)/":")) == 2) 
+	runuser = ({ (int)us[0], (int)us[1] });
+      else
+	runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
+  
   tmp=conf->query("MyWorldLocation");
   sscanf(tmp, "%*s//%s", tmp);
   sscanf(tmp, "%s:", tmp);

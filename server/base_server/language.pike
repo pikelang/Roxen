@@ -1,15 +1,20 @@
 import String;
 /* Language support for numbers and dates. Very simple,
-string cvs_version = "$Id: language.pike,v 1.7 1997/02/13 13:00:56 per Exp $";
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
+ * $Id: language.pike,v 1.8 1997/04/05 01:25:32 per Exp $
+ * This file is included by roxen.pike. Not very nice to have a
+ * cvs_version variable here.
+ *
  * WARNING:
- * If the environment variable 'LANG' is set, it is used as the default 
+ * If the environment variable 'ROXEN_LANG' is set, it is used as the default 
  * language.
  */
 
 private mapping languages = ([ ]);
+
+import String;
 
 void initiate_languages()
 {
@@ -60,7 +65,7 @@ private string nil()
 }
 
 
-string default_language = getenv("LANG")||"en";
+string default_language = getenv("ROXEN_LANG")||"en";
 
 /* Return a pointer to an language-specific conversion function. */
 public function language(string what, string func)

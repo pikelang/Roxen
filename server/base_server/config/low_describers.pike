@@ -5,6 +5,10 @@ object this = this_object();
 #include <module.h>
 inherit "html";
 
+import String;
+import Array;
+import Stdio;
+
 string describe_type(int type, mixed flag)
 {
   switch(type)
@@ -186,7 +190,7 @@ string describe_variable_as_text(array var, int|void verbose)
     if(var[VAR_MISC])
       return (string)var[VAR_VALUE];
     if(arrayp(var[VAR_VALUE]))
-      return Array.map(var[VAR_VALUE],lambda(mixed a){
+      return map(var[VAR_VALUE],lambda(mixed a){
 	return replace((string)a,({"<",">","&"}),({"&lt;","&gt;","&amp;"}));
       }) * ", ";
     else 
@@ -255,7 +259,6 @@ void init_ip_list()
   }
     
   sort(ip_number_list);
-  
   if(sizeof(ip_number_list) == 2)
     ip_number_list = 0;
 }
@@ -265,7 +268,7 @@ string all_ip_numbers_as_selection(int id, string sel)
 {
   if(ip_number_list && sizeof(ip_number_list))
     return ("<select name=ip_number_"+id+">\n"
-	    + (Array.map(ip_number_list, lambda(string s, string q) {
+	    + (map(ip_number_list, lambda(string s, string q) {
   	        return "  <option"+(q==s?" selected":"")+">"+s+"\n";
    	       }, sel)*"")
 	    + "</select>\nOther IP-number: <input type=string name=other_"
@@ -276,7 +279,7 @@ string all_ip_numbers_as_selection(int id, string sel)
 
 array protocols()
 {
-  return Array.map(Array.filter(get_dir("protocols"), lambda(string s) {
+  return map(filter(get_dir("protocols"), lambda(string s) {
     return ((search(s,".pike") == search(s,".")) &&
 	    (search(s,".")!=-1) && s[-1]!="~");
   }), lambda(string s) { return (s/".")[0]; });
@@ -285,7 +288,7 @@ array protocols()
 string all_protocols_as_selection(int id, string sel)
 {
   return ("<select name=protocol_"+id+">\n"
-	  + (Array.map(protocols(), lambda(string s, string q) {
+	  + (map(protocols(), lambda(string s, string q) {
 	    return "  <option"+(q==s?" selected":"")+">"+s+"\n";
 	  }, sel)*"")
 	  + "</select>\n");
@@ -487,7 +490,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
 	var[VAR_VALUE]=({});
       
       res="<input name="+path+" size=30,1 value=\""+
-	(Array.map(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
+	(map(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
 	  "\">"+"<input type=submit value=Ok>";
     }
     break;

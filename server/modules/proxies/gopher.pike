@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.7 1997/03/11 01:19:39 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.8 1997/04/05 01:26:21 per Exp $";
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
@@ -21,8 +21,10 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
+import Array;
+
 #include <module.h>
-#include "../../base_server/proxyauth.pike"
+#include <proxyauth.pike>
 
 array register_module()
 {
@@ -158,7 +160,7 @@ void done_dir_data(array in)
 #ifdef GOPHER_DEBUG
     perror("GOPHER: Sending dir data to client.\n");
 #endif
-    write_to_client_and_cache(to, Array.map(dirl, make_html_line)*"" +"<hr>", 
+    write_to_client_and_cache(to, map(dirl, make_html_line)*"" +"<hr>",
 			      in[-1]);
   } else {
 #ifdef GOPHER_DEBUG

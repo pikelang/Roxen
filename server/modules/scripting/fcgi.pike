@@ -3,7 +3,8 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.7 1997/03/11 01:19:44 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.8 1997/04/05 01:26:26 per Exp $";
+
 #include <module.h>
 inherit "modules/scripting/cgi";
 

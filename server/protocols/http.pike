@@ -1,7 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-
-string cvs_version = "$Id: http.pike,v 1.21 1997/03/26 05:54:17 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.22 1997/04/05 01:26:31 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -15,6 +14,7 @@ constant errors=roxen->errors;
 constant handle=roxen->handle;
 constant _query=roxen->query;
 //constant This = object_program(this_object());
+import Simulate;
 
 #define SPEED_MAX
 
@@ -85,6 +85,7 @@ private void setup_pipe(int noend)
 {
   if(!my_fd) return end();
   if(!pipe)  pipe=Pipe.pipe();
+//  if(!noend) pipe->set_done_callback(end);
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");
 #endif
@@ -383,6 +384,15 @@ private int parse_got(string s)
 	   case "user-agent":
 	    sscanf(contents, "%s via", contents);
 	    client = contents/" " - ({ "" });
+	    break;
+
+	    /* Some of M$'s non-standard user-agent info */
+	   case "ua-pixels":	/* Screen resolution */
+	   case "ua-color":	/* Color scheme */
+	   case "ua-os":	/* OS-name */
+	   case "ua-cpu":	/* CPU-type */
+	     /* None of the above are interresting or usefull */
+	     /* IGNORED */
 	    break;
 
 	   case "referer":
@@ -904,7 +914,8 @@ object clone_me()
   c->raw_url = raw_url;
 // c->do_not_disconnect = do_not_disconnect;  // No use where there is no fd..
   c->variables = copy_value(variables);
-  c->misc = copy_value(misc);  c->misc->orig = t;
+  c->misc = copy_value(misc);
+  c->misc->orig = t;
 
   c->prestate = prestate;
   c->supports = supports;

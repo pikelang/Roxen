@@ -1,19 +1,9 @@
-inherit "read_config";
-
-string cvs_version = "$Id: module_support.pike,v 1.10 1997/01/29 05:32:10 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.11 1997/04/05 01:25:35 per Exp $";
 #include <roxen.h>
 #include <module.h>
-#include <config.h>
-
-#if DEBUG_LEVEL > 0
-#ifndef MODULE_DEBUG
-#  define MODULE_DEBUG
-#endif
-#endif
-
 
 /* Set later on to something better in roxen.pike::main() */
-array (object) configurations;
+//array (object) configurations;
 mapping (string:mixed *) variables=([]); 
 
 /* Variable support for the main Roxen "module". Normally this is
@@ -48,7 +38,7 @@ varargs int globvar(string var, mixed value, string name, int type,
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
-public mixed query(string var)
+public mixed query(void|string var)
 {
   if(var && variables[var])
     return variables[var][ VAR_VALUE ];
@@ -72,21 +62,19 @@ mixed set(string var, mixed val)
   error("set("+var+"). Unknown variable.\n");
 }
 
-
-/* =============================================== */
-/* =============================================== */
-/* =============================================== */
-/* =============================================== */
-/* =============================================== */
-
-
-program last_loaded();
-object load_from_dirs(array q, string);
-
-varargs void store(string what, mapping map, int mode);
-
 /* ================================================= */
 /* ================================================= */
 
- 
+#define SIMULATE(X)  mixed X( mixed ...a )				\
+{									\
+  if(roxenp()->current_configuration)					\
+    return roxenp()->current_configuration->X(@a);	                \
+  error("No current configuration\n");					\
+}
 
+SIMULATE(unload_module);
+SIMULATE(disable_module);
+SIMULATE(enable_module);
+SIMULATE(load_module);
+SIMULATE(find_module);
+SIMULATE(register_module_load_hook);

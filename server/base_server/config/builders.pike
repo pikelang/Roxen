@@ -7,6 +7,8 @@ import Array;
 
 /*#define CONFIG_DEBUG*/
 
+import Array;
+
 void low_build_variables(object node, mapping from)
 {
   array m;

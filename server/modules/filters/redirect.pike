@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.7 1997/03/26 05:54:12 per Exp $";
+string cvs_version = "$Id: redirect.pike,v 1.8 1997/04/05 01:26:08 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -13,7 +13,6 @@ import Array;
 inherit Regexp : regexp;
 
 private int redirs = 0;
-
 
 void create()
 {

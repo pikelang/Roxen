@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.46 1997/03/26 05:54:03 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.47 1997/04/05 01:25:39 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -7,6 +7,8 @@ string cvs_version = "$Id: roxen.pike,v 1.46 1997/03/26 05:54:03 per Exp $";
 #include <variables.h>
 #include <roxen.h>
 #include <config.h>
+
+inherit "read_config";
 
 #ifdef NO_DNS
 inherit "dummy_hosts";
@@ -20,11 +22,15 @@ inherit "language";
 
 import Array;
 import spider;
+import String;
+import Stdio;
 
 object roxen=this_object(), current_configuration;
+// int num_connections;
 
 private program Configuration;	/*set in create*/
 
+array configurations = ({});
 object main_configuration_port;
 mapping allmodules;
 
@@ -34,7 +40,7 @@ int shuffle_fd;
 
 // This is the real Roxen version. It should be changed before each
 // release
-string real_version = "Roxen Challenger/1.2 alpha"; 
+string real_version = "Roxen Challenger/1.1.1alpha1"; 
 
 // A mapping from ports (objects, that is) to an array of information
 // about that port.
@@ -128,7 +134,7 @@ private static void fork_or_quit()
     exit(0);
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
-    call_out(backtrace()[-1][-1], 20);
+    call_out(Simulate.this_function(), 20);
     if(!_pipe_debug()[0]) exit(0);
   }, 1);
 #endif
@@ -725,20 +731,17 @@ public string full_status()
 // to the configuration object. The functions will still be here for
 // compatibility for a while, though.
 
-public string *userlist(object id)
+public string *userlist(void|object id)
 {
-  object current_configuration;
-  if(!id) error("No id in userlist(object id)\n");
-  current_configuration = id->conf;
+  if(id) current_configuration = id->conf;
   if(current_configuration->auth_module)
     return current_configuration->auth_module->userlist();
   return 0;
 }
 
-public string *user_from_uid(int u, object id)
+public string *user_from_uid(int u, void|object id)
 {
-  object current_configuration;
-  if(!id) error("No id in user_from_uid(int uid, object id)\n");
+  if(id) current_configuration = id->conf;
   current_configuration = id->conf;
   if(current_configuration->auth_module)
     return current_configuration->auth_module->user_from_uid(u);
@@ -769,14 +772,43 @@ private object find_configuration_for(object bar)
 }
 
 // FIXME  
-public varargs string type_from_filename( string file, int to )
+public varargs array|string type_from_filename( string file, int to )
 {
   mixed tmp;
   object current_configuration;
   string ext=extension(file);
     
-  if(current_configuration = find_configuration_for(backtrace()[-2][-1]))
-    current_configuration->type_from_filename( file, to );
+  if(!current_configuration)
+    current_configuration = find_configuration_for(Simulate.previous_object());
+  if(!current_configuration->types_fun)
+    return to?({ "application/octet-stream", 0 }):"application/octet-stream";
+
+  while(file[-1] == '/') 
+    file = file[0..strlen(file)-2]; // Security patch? 
+  
+  if(tmp = current_configuration->types_fun(ext))
+  {
+    mixed tmp2,nx;
+    if(tmp[0] == "strip")
+    {
+      tmp2=file/".";
+      if(sizeof(tmp2) > 2)
+	nx=tmp2[-2];
+      if(nx && (tmp2=current_configuration->types_fun(nx)))
+	tmp[0] = tmp2[0];
+      else
+	if(tmp2=current_configuration->types_fun("default"))
+	  tmp[0] = tmp2[0];
+	else
+	  tmp[0]="application/octet-stream";
+    }
+    return to?tmp:tmp[0];
+  } else {
+    if(!(tmp=current_configuration->types_fun("default")))
+      tmp=({ "application/octet-stream", 0 });
+    // FIXME -- tmp above isn't used /grubba
+  }
+  return 0;
 }
   
 #define COMPAT_ALIAS(X) mixed X(string file, object id){return id->conf->X(file,id);}
@@ -973,9 +1005,68 @@ object load_from_dirs(array dirs, string f)
 void create()
 {
   add_constant("roxen", this_object());
+  add_constant("spinner", this_object());
+  add_constant("load",    load);
   (object)"color.pike";
   (object)"fonts.pike";
   Configuration = (program)"configuration";
+}
+
+
+// Get the current domain. This is not as easy as one could think.
+private string get_domain(int|void l)
+{
+  array f;
+  string t, s;
+
+//  ConfigurationURL is set by the 'install' script.
+  if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
+  {
+#if efun(gethostbyname) && efun(gethostname)
+    f = gethostbyname(gethostname()); // First try..
+    if(f)
+      foreach(f, f) if (arrayp(f)) { 
+	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
+	  if(!s || strlen(s) < strlen(t))
+	    s=t;
+      }
+#endif
+    if(!s)
+    {
+      t = read_bytes("/etc/resolv.conf");
+      if(t) 
+      {
+	if(!sscanf(t, "domain %s\n", s))
+	  if(!sscanf(t, "search %s%*[ \t\n]", s))
+	    s="nowhere";
+      } else {
+	s="nowhere";
+      }
+      s = "host."+s;
+    }
+  }
+  sscanf(s, "%*s.%s", s);
+  if(s && strlen(s))
+  {
+    if(s[-1] == '.') s=s[..strlen(s)-2];
+    if(s[0] == '.') s=s[1..];
+  } else {
+    s="unknown"; 
+  }
+  return s;
+}
+
+
+// This is the most likely URL for a virtual server. Again, this
+// should move into the actual 'configuration' object. It is not all
+// that nice to have all this code lying around in here.
+
+private string get_my_url()
+{
+  string s;
+  s = (gethostname()/".")[0] + "." + query("Domain");
+  s -= "\n";
+  return "http://" + s + "/";
 }
 
 // Set the uid and gid to the ones requested by the user. If the sete*
@@ -1107,17 +1198,12 @@ static private void enable_configurations()
   array err;
 
   enabling_configurations = 1;
-  catch {
-    configurations = ({});
-  
-    foreach(list_all_configurations(), string config)
-    {
-      if(err=catch {
-	enable_configuration(config)->start();
-      })
-	perror("Error while enabling configuration "+config+":\n"+
-	       describe_backtrace(err)+"\n");
-    }
+  configurations = ({});
+  foreach(list_all_configurations(), string config)
+  {
+    if(err=catch { enable_configuration(config)->start();  })
+      perror("Error while enabling configuration "+config+":\n"+
+	     describe_backtrace(err)+"\n");
   };
   enabling_configurations = 0;
 }
@@ -1239,16 +1325,21 @@ private void define_global_variables( int argc, array (string) argv )
 	 "Minimum number of Megabytes removed when a garbage collect is done",
 	  0, cache_disabled_p);
 
-#if 0 // TBD 
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
-	  "available free space", TYPE_INT,
-	  "If less than this amount of disk space (in MB) is left, "
-	  "the cache will remove a few files",
+	  "available free space and inodes (in %)", TYPE_INT,
+	  "If less than this amount of disk space or inodes (in %) is left, "
+	  "the cache will remove a few files. This check may work half hearted "
+	  "if the diskcache is spread over several filesystems.",
 	  0, cache_disabled_p);
-#endif
   
   globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
         "How many MB may the cache grow to before a garbage collect is done?",
+	  0, cache_disabled_p);
+
+  globvar("cache_max_num_files", 0, "Proxy disk cache: Maximum number "
+	  "of files", TYPE_INT, "How many cache files (inodes) may "
+	  "be on disk before a garbage collect is done ? May be left "
+	  "zero to disable this check.",
 	  0, cache_disabled_p);
   
   globvar("bytes_per_second", 50, "Proxy disk cache: Bytes per second", 
@@ -1275,6 +1366,32 @@ private void define_global_variables( int argc, array (string) argv )
 	  " the cache will be recalculated when this value is changed.",
 	  0, cache_disabled_p); 
   
+  globvar("cache_keep_without_content_length", 1, "Proxy disk cache: "
+	  "Keep without Content-Length", TYPE_FLAG, "Keep files "
+	  "without Content-Length header information in the cache ?",
+	  0, cache_disabled_p);
+
+  globvar("cache_check_last_modified", 0, "Proxy disk cache: "
+	  "Refresh on Last-Modified", TYPE_FLAG, "Refresh files without "
+	  "Expires header information after they stayed in the cache "
+	  "as long as they were old when they got cached ? "
+	  "This may be useful for some regularly updated docs as in "
+	  "online newpapers.",
+	  0, cache_disabled_p);
+
+  globvar("cache_last_ressort", 0, "Proxy disk cache: "
+	  "Last ressort (in days)", TYPE_INT, "How many days "
+	  "shall files without Expires and without Last-Modified header "
+	  "information be kept ?",
+	  0, cache_disabled_p);
+
+  globvar("cache_gc_logfile",  "",
+	  "Proxy disk cache: "
+	  "Garbage collector logfile", TYPE_FILE,
+	  "Information about garbage collector runs, removed and refreshed "
+	  "files, cache and disk status goes here.",
+	  0, cache_disabled_p);
+
   /// End of cache variables..
   
   globvar("docurl", "http://roxen.com", "Documentation URL",
@@ -1524,7 +1641,7 @@ void initiate_configuration_port( int|void first )
     foreach(QUERY(ConfigPorts), port)
     {
       if(o=create_listen_socket(port[0],0,port[2],
-				(program)("protocols/"+port[1])))
+				(program)(getcwd()+"/protocols/"+port[1])))
       {
 	perror("Configuration port: port number "
 	       +port[0]+" interface " +port[2]+"\n");
@@ -1551,7 +1668,6 @@ void initiate_configuration_port( int|void first )
 	   "./configvar ConfigurationPort=22202\n");
   }
 }
-
 
 // Find all modules, so a list of them can be presented to the
 // user. This is not needed when the server is started.
@@ -1849,7 +1965,7 @@ void exit_when_done()
   // Then wait for all sockets, but maximum 10 minutes.. 
 #if efun(_pipe_debug)
   call_out(lambda() { 
-    call_out(backtrace()[-1][-1], 5);
+    call_out(Simulate.this_function(), 5);
     if(!_pipe_debug()[0])
     {
       werror("Exiting roxen (all connections closed).\n");
@@ -1878,22 +1994,8 @@ void exit_it()
   exit(0);
 }
 
-void fork_it()
-{
-#ifdef THREADS
-  start_handler_threads();
-#endif
-#if efun(send_fd)
-  init_shuffler(); // No locking here.. Each process need one on it's own.
-#endif
-  create_host_name_lookup_processes();
-  signal(signum("SIGUSR1"), exit_when_done);
-  signal(signum("SIGUSR2"), exit_when_done);
-  signal(signum("SIGHUP"), exit_when_done);
-  signal(signum("SIGINT"), exit_when_done);
-}
-
-
+// REMOVE ME
+array fork_it(){}
 
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
@@ -1965,7 +2067,17 @@ varargs int main(int argc, array (string) argv)
   if(set_u_and_gid())
     perror("Setting UID and GID ...\n");
 
-  fork_it();
+#ifdef THREADS
+  start_handler_threads();
+#endif
+#if efun(send_fd)
+  init_shuffler(); // No locking here.. Each process need one on it's own.
+#endif
+  create_host_name_lookup_processes();
+  signal(signum("SIGUSR1"), exit_when_done);
+  signal(signum("SIGUSR2"), exit_when_done);
+  signal(signum("SIGHUP"), exit_when_done);
+  signal(signum("SIGINT"), exit_when_done);
 
   initiate_configuration_port( 1 );
   perror("Time to boot: "+(time()-start_time)+" seconds.\n");
@@ -1991,7 +2103,7 @@ inline static private string checkfd_fix_line(string l)
 }
 
 
-string checkfd(object id)
+string checkfd(object|void id)
 {
 //  perror(sprintf("%O\n", get_all_active_fd()));
   
@@ -2002,13 +2114,13 @@ string checkfd(object id)
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
      "<td>size</td></tr>\n"+
      (map(get_all_active_fd(),
-		lambda(int fd) 
-		{
-		  return ("<tr align=right><th>"+fd+"</th><td>"+
-			  replace(checkfd_fix_line(fd_info(fd)),",",
-				  "</td><td>")
-			  +"</td><td align=left>"
-			  +(mark_fd(fd)||"")+"<br></td></tr>"); 
-		})*"\n")+
+	  lambda(int fd) 
+	  {
+	    return ("<tr align=right><th>"+fd+"</th><td>"+
+		    replace(checkfd_fix_line(fd_info(fd)),",",
+			    "</td><td>")
+		    +"</td><td align=left>"
+		    +(mark_fd(fd)||"")+"<br></td></tr>"); 
+	  })*"\n")+
      "</table>");
 }

@@ -51,6 +51,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/socket.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/install.pike foreign_ident
+/server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
@@ -67,6 +68,7 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
+/server/modules/directories/directories2.pike foreign_ident
 /server/modules/directories/fastdir.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
@@ -109,6 +111,7 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
 /server/protocols/ssl.pike foreign_ident
+/server/protocols/ssl3.pike foreign_ident
 /server/unfinishedmodules/deepthought.pike foreign_ident
 /server/unfinishedmodules/extended_logger.pike foreign_ident
 /server/unfinishedmodules/fastcgi.pike foreign_ident

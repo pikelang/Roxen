@@ -1,6 +1,4 @@
-import Array;
-
-string cvs_version = "$Id: cache.pike,v 1.11 1997/03/26 05:54:00 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.12 1997/04/05 01:25:29 per Exp $";
 
 #include <config.h>
 
@@ -57,7 +55,8 @@ string status()
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
   b=indices(cache);
-  c=map(values(cache), get_size);
+  c=Array.map(values(cache), get_size);
+
   for(int i=0; i<sizeof(b); i++)
   {
     int s = sizeof(cache[b[i]]);

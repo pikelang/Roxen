@@ -7,8 +7,11 @@ import Array;
 #endif
 #endif
 #ifndef IN_INSTALL
-string cvs_version = "$Id: newdecode.pike,v 1.5 1997/02/13 13:00:58 per Exp $";
+string cvs_version = "$Id: newdecode.pike,v 1.6 1997/04/05 01:25:35 per Exp $";
 #endif
+
+#include <roxen.h>
+
 
 void parse(string s, mapping mr);
 void new_parse(string s, mapping mr);

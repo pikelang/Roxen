@@ -2,8 +2,7 @@
 import Image;
 
 constant Image = image;
-
-string cvs_verison = "$Id: draw_things.pike,v 1.17 1997/02/13 13:01:04 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.18 1997/04/05 01:25:45 per Exp $";
 
 
 object (Image) load_image(string f)

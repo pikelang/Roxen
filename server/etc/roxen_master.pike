@@ -1,9 +1,16 @@
-#if 0
-constant master = master();
-inherit master;
-#else
+/*
+ * Roxen master
+ */
+
+string cvs_version = "$Id: roxen_master.pike,v 1.30 1997/04/05 01:25:52 per Exp $";
+
+object stdout, stdin;
+mapping names=([]);
+int unique_id=time();
+
+object mm = (object)"/master";
+
 inherit "/master";
-#endif
 
 string program_name(program p)
 {
@@ -53,10 +60,20 @@ array|string nameof(mixed foo)
   return saved_names[foo] ||  (saved_names[foo] = low_nameof( foo ));
 }
 
-
 program programof(string foo)
 {
   return saved_names[foo] || programs[foo] || (program) foo ;
+}
+
+/* This function is called when an error occurs that is not caught
+ * with catch(). It's argument consists of:
+ * ({ error_string, backtrace }) where backtrace is the output from the
+ * backtrace() efun.
+ */
+void handle_error(mixed *trace)
+{
+  predef::trace(0);
+  catch(werror(describe_backtrace(trace)));
 }
 
 object objectof(array foo)
@@ -77,13 +94,11 @@ object objectof(array foo)
   }
   err = catch {
     o = p();
-
+    
     saved_names[ foo[0..1]*"\0" ] = o;
 
     saved_names[ o ] = foo;
-
     o->persist && o->persist( foo );
-
     return o;
   };
   werror("objectof(): Failed to restore object"
@@ -91,7 +106,6 @@ object objectof(array foo)
 	 describe_backtrace( err ));
   return 0;
 }
-
 
 function functionof(array f)
 {
@@ -112,6 +126,34 @@ function functionof(array f)
   }
   return o[f[-1]];
 }
+
+mixed handle_inherit(mixed ... args)
+{
+  catch {
+    return ::handle_inherit(@args);
+  };
+}
+
+void create()
+{
+  /* Copy variables from the original master */
+  foreach(indices(mm), string varname) {
+    catch(this_object()[varname] = mm[varname]);
+    /* Ignore errors when copying functions */
+  }
+  programs["/master"] = object_program(this_object());
+  objects[object_program(this_object())] = this_object();
+  /* make ourselves known */
+  add_constant("_master",this_object());
+  add_constant("master",lambda() { return this_object(); });
+  add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
+
+
+  add_constant("name_program", name_program);
+  add_constant("objectof", objectof);
+  add_constant("nameof", nameof);
+}
+
 
 string errors;
 string set_inhibit_compile_errors(mixed f)
@@ -135,17 +177,4 @@ void compile_error(string file,int line,string err)
     errors+=sprintf("%s:%d:%s\n",file,line,err);
   else
     ::compile_error(file,line,err);
-}
-
-
-
-void create()
-{
-  /* make ourselves known */
-  add_constant("_master",this_object());
-  add_constant("master",lambda() { return this_object(); });
-
-  add_constant("name_program", name_program);
-  add_constant("objectof", objectof);
-  add_constant("nameof", nameof);
 }

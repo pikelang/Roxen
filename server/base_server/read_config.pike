@@ -4,10 +4,16 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.8 1997/02/13 13:00:59 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.9 1997/04/05 01:25:38 per Exp $";
+
 #else
-# include "base_server/newdecode.pike"
+import spider;
+# define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+# include "newdecode.pike"
 #endif
+
+import Array;
+import Stdio;
 
 private mapping (string:mapping) configs = ([ ]);
 

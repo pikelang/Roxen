@@ -3,8 +3,39 @@ import spider;
 
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
+#define perror roxen_perror
+
+private static int perror_last_was_newline=1;
+
+int last_time = 0;
+int pid = getpid();
+object stderr = files.file("stderr");
+
+void roxen_perror(string format,mixed ... args)
+{
+  string s, ts="";
+  int lwn;
+
+  s=((args==({}))?format:sprintf(format,@args));
+
+  if (s=="") return;
+
+  if ( (lwn = (s[-1]=="\n") ))
+    s=s[..strlen(s)-2];
+
+  if((time()-last_time ) > 60)
+  {
+    stderr->write("Roxen is alive!     PID: "+pid+"    Time: "+ (ctime(time())/" ")[-2]+"\n");
+    last_time = time();
+  }
+
+  stderr->write(s);
+
+  perror_last_was_newline=lwn;
+}
+
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.12 1997/04/01 16:01:00 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.13 1997/04/05 01:25:41 per Exp $";
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -90,11 +121,6 @@ object open_db(array id)
   }
   return d;
 }
-
-
-
-
-void perror(string format,mixed ... args);
 
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
@@ -189,22 +215,6 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   } 
   catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
   exit(0); 
-}
-
-private static int perror_last_was_newline=1;
-
-void perror(string format,mixed ... args)
-{
-   string s;
-   int lwn;
-   s=((args==({}))?format:sprintf(format,@args));
-   if (s=="") return;
-   if ( (lwn = s[-1]=="\n") )
-      s=s[0..strlen(s)-2];
-   werror((perror_last_was_newline?getpid()+": ":"")
-	  +replace(s,"\n","\n"+getpid()+": ")
-          +(lwn?"\n":""));
-   perror_last_was_newline=lwn;
 }
 
 object roxen;
@@ -344,7 +354,6 @@ static private void initiate_cache()
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache", cache);
-  add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
 
@@ -371,8 +380,8 @@ object|void open(string filename, string mode)
 
 string make_path(string ... from)
 {
-  return Array.map(from, lambda(string a, string b){
-    return combine_path(b,a);
+  return Array.map(from, lambda(string a, string b) {
+    return (a[0]=='/')?combine_path("/",a):combine_path(b,a);
   }, getcwd())*":";
 }
 
@@ -382,21 +391,22 @@ void main(mixed ... args)
   string path = make_path("base_server", "etc/include", ".");
   perror("Roxen loader version "+cvs_version+"\n");
 
+  string path = make_path("base_server", "etc/include", ".", getcwd());
+
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
-  replace_master(mm=(((program)"etc/roxen_master.pike")()));
-  mm->putenv("PIKE_INCLUDE_PATH", path);
-  mm->pike_include_path = path/":";
-  mm->pike_library_path = master()->pike_library_path;
 
-  add_constant("open_db", open_db);
+  object mm=((program)"etc/roxen_master.pike")();
+  replace_master(mm);
+
   add_constant("error", lambda(string s){error(s);});
-
-  add_constant("spawne",spawne);
-  add_constant("perror",perror);
-  add_constant("popen",popen);
-
+  add_constant("popen", popen);
+  add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
+  add_constant("spawne", spawne);
+  
   add_constant("roxenp", lambda() { return roxen; });
+  add_constant("roxen_perror", roxen_perror);
+  add_constant("perror", roxen_perror);
   add_constant("report_debug", report_debug);
   add_constant("report_error", report_error);
   add_constant("report_fatal", report_fatal);

@@ -3,10 +3,14 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.11 1997/03/26 05:54:15 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.12 1997/04/05 01:26:16 per Exp $";
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+import Stdio;
+import Array;
 
 mapping users, uid2user;
 array fstat;
@@ -139,6 +143,12 @@ void create()
   defvar("Strip", 1, "Strip finger information from fullname", TYPE_FLAG,
 	 "This will strip everyting after the first ',' character from "
 	 "the GECOS field of the user database.");
+
+  defvar("update", 60,
+	 "Intervall between automatic updates of the user database",
+	 TYPE_INT,
+	 "This specifies the intervall in minutes between automatic updates "
+	 "of the user database.");
 }
 
 private static int last_password_read = 0;
@@ -190,7 +200,9 @@ void read_data()
      tmp2 = ({ });
      setpwent();
      while(tmp = getpwent())
-       tmp2 += ({ Array.map(tmp, lambda(mixed s) { return (string)s; }) * ":" }); 
+       tmp2 += ({
+	 map(tmp, lambda(mixed s) { return (string)s; }) * ":"
+       }); 
      endpwent();
      data = tmp2 * "\n";
      break;
@@ -262,6 +274,13 @@ void start(int i)
 {
   if(i<2)
     read_data();
+  /* Automatic update */
+  int delta = QUERY(update);
+  if (delta > 0) {
+    last_password_read=time(1);
+    remove_call_out(read_data);
+    call_out(read_data, delta*60);
+  }
 }
 
 void read_data_if_not_current()
@@ -321,6 +340,8 @@ array|int auth(string *auth, object id)
   id->misc->uid = users[u][2];
   id->misc->gid = users[u][3];
   id->misc->gecos = users[u][4];
+  id->misc->home = users[u][5];
+  id->misc->shell = users[u][6];
   succ++;
   return ({ 1, u, 0 }); // u is a valid user.
 }
@@ -334,7 +355,7 @@ string status()
      +", "+(string)nouser+" had the wrong username<br>\n"
      + "<p>"+
      "<h3>Failure by host</h3>" +
-     Array.map(indices(failed), lambda(string s) {
+     map(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
      + "<p>The database has "+ sizeof(users)+" entries"

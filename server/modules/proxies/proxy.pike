@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.14 1997/03/11 01:19:40 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.15 1997/04/05 01:26:22 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -32,9 +32,9 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include "../../base_server/proxyauth.pike"
+#include <proxyauth.pike>
 
-program filep = (program)"/precompiled/file";
+program filep = files.file;
 
 mapping (object:string) requests = ([ ]);
 object logfile;
@@ -262,6 +262,8 @@ program Connection = class {
   array ids;
   string name;
   array my_clients = ({ });
+
+  import Array;
     
   void log(string what) 
   {
@@ -518,6 +520,7 @@ mapping find_file( string f, object id )
     }
     port=80; /* Default */
   }
+  host = lower_case(host);
   id->misc->proxyhost = host; // Used if the host is unknown.
   if(tmp = proxy_auth_needed(id))
     return tmp;

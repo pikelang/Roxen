@@ -4,9 +4,10 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.11 1997/03/26 05:54:10 per Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.12 1997/04/05 01:26:04 per Exp $";
 
 #include <module.h>
+#include <roxen.h>
 #include <stat.h>
 
 #if DEBUG_LEVEL > 20

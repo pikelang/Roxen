@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.5 1997/01/29 04:59:44 per Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.6 1997/04/05 01:26:30 per Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -15,18 +15,22 @@ string cvs_version = "$Id: ftp.pike,v 1.5 1997/01/29 04:59:44 per Exp $";
       should not be used, due to security reasons. */
 
 
-inherit "protocols/http"; /* For the variables and such.. (Per) */ 
+inherit "http"; /* For the variables and such.. (Per) */ 
+
 #include <config.h>
 #include <module.h>
 #include <stat.h>
 
-string dataport_addr, cwd ="/", remote_addr, prot, method;
+import Array;
+
+#define perror	roxen_perror
+
+string dataport_addr, cwd ="/";
 int dataport_port;
 int GRUK = random(_time(1));
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
-
 
 /********************************/
 /* private functions            */
@@ -44,6 +48,33 @@ private string reply_enumerate(string s,string num)
    return num+" "+ss[-1]+"\n";
 }
 
+private static multiset|int allowed_shells = 0;
+
+private int check_shell(string shell)
+{
+  if (Query("shells") != "") {
+    if (!allowed_shells) {
+      object(files.file) file = files.file();
+
+      if (file->open(Query("shells"), "r")) {
+	allowed_shells = aggregate_multiset(@(map(file->read(0x7fffffff)/"\n",
+						  lambda(string line) {
+	  return((((line/"#")[0])/"" - ({" ", "\t"}))*"");
+	} )-({""})));
+#ifdef DEBUG
+	perror(sprintf("ftp.pike(): allowed_shells:%O\n", allowed_shells));
+#endif /* DEBUG */
+      } else {
+	perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
+		       Query("shells")));
+	return(0);
+      }
+    }
+    return(allowed_shells[shell]);
+  }
+  return(0);
+}
+
 /********************************/
 /* public methods               */
 
@@ -51,7 +82,7 @@ void end(string|void);
 
 void disconnect()
 {
-  if(objectp(pipe) && pipe != previous_object()) 
+  if(objectp(pipe) && pipe != Simulate.previous_object()) 
     destruct(pipe);
   my_fd = 0;
   destruct(this_object());
@@ -162,13 +193,11 @@ string file_ls(array (int) st, string file)
   if(st[1] < 0)
     st[1] =  512;
   string ct = ctime(st[-4]);
-  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm, 
-		 (roxen->user_from_uid(st[-2])?roxen->user_from_uid(st[-2])[0]:"")
+  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm,
+		 (roxen->user_from_uid(st[-2])?roxen->user_from_uid(st[-2])[0]:""+st[-2])
 		 ||(string)st[-2], st[-1],
 		 st[1], ct[4..9], ct[11..15], file);
 }
-
-void got_data(mixed fooid, string s);
 
 void done_callback(object fd)
 {
@@ -178,40 +207,99 @@ void done_callback(object fd)
     destruct(fd);
   }
   reply("226 Transfer complete.\n");
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
+  my_fd->set_read_callback(got_data);
+  my_fd->set_write_callback(lambda(){});
+  my_fd->set_close_callback(end);
   mark_fd(my_fd->query_fd(), GRUK+" cmd channel not sending data");
 }
 
-int connect_and_send(mapping file)
+void connected_to_send(object fd,mapping file)
 {
-  object fd, pipe;
-  my_fd->set_blocking();
+  object pipe=Pipe.pipe();
+  if(!file->len)
+    file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
-  fd = clone((program)"/precompiled/file");
-  if(!fd->open_socket())
+  if(fd)
   {
-    destruct(fd);
-    return 0;
+    reply(sprintf("150 Opening BINARY mode data connection for %s "
+		  "(%d bytes).\n", not_query, file->len));
   }
-  if(!fd->connect(dataport_addr, dataport_port))
+  else
   {
-    destruct(fd);
-    return 0;
+    reply("425 Can't build data connect: Connection refused.\n"); 
+    return;
   }
-  
-  mark_fd(fd->query_fd(), GRUK+" file");
-  mark_fd(my_fd->query_fd(), GRUK+" cmd channel sending data");
-  pipe=clone((program)"/precompiled/pipe");
+
   if(stringp(file->data))  pipe->write(file->data);
   if(file->file)  pipe->input(file->file);
 
   pipe->set_done_callback(done_callback, fd);
   pipe->output(fd);
-  return 1;
+}
+
+inherit "socket";
+void connect_and_send(mapping file)
+{
+#if 0
+  //  my_fd->set_blocking();
+  async_connect(dataport_addr,dataport_port, connected_to_send, file);
+#else
+  // More or less copied from socket.pike
+  
+  object(files.file) f = files.file();
+
+  object privs = (object)"privs";
+
+  // FIXME: Should really use ftp_port - 1
+  if(!f->open_socket(20))
+  {
+#ifdef FTP_DEBUG
+    perror("ftp: socket(20) failed. Trying with any port.\n");
+#endif
+    if (!f->open_socket()) {
+#ifdef FTP_DEBUG
+      perror("ftp: socket() failed. Out of sockets?\n");
+#endif
+      connected_to_send(0, file);
+      destruct(f);
+      return;
+    }
+  }
+  privs = 0;
+
+  f->set_nonblocking(0, lambda(array args) {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect ok.\n");
+#endif
+    args[2]->set_id(0);
+    args[0](args[2], @args[1]);
+  }, lambda(array args) {
+#ifdef FTP_DEBUG
+    perror("ftp: connect_and_send failed\n");
+#endif
+    args[2]->set_id(0);
+    destruct(args[2]);
+    args[0](0, @args[1]);
+  });
+  f->set_id( ({ connected_to_send, ({ file }), f }) );
+
+  mark_fd(f->query_fd(),
+	  "ftp communication: -> "+dataport_addr+":"+dataport_port);
+
+  if(catch(f->connect(dataport_addr, dataport_port))) // Illegal format...
+  {
+#ifdef FTP_DEBUG
+    perror("ftp: Illegal internet address in connect in async comm.\n");
+#endif
+    connected_to_send(0, file);
+    destruct(f);
+    return;
+  }
+#endif /* 0 */
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
-			     int F, int directory)
+			     int F, int directory, int all_mode)
 {
   string filename;
   array (int) st;
@@ -225,20 +313,15 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   else
     filename = combine_path(cwd, arg);
 
-  while(filename[-1] == '.')
-    filename=filename[..strlen(filename)-2];
-  
   this_object()->not_query = filename;
   st = roxen->stat_file(filename, this_object());
-  if(!st)
-  {
+  if(!st) {
     roxen->log(([ "error": 404, "len": -1 ]), this_object());
     return 0;
   }
   int sent;
   string tmp;
-  if(directory || st[1] > -2)
-  { 
+  if(directory || st[1] > -2) { 
     if(st[1] == -2 && arg[-1] != '/')
       arg += "/";
     if(short)
@@ -248,58 +331,55 @@ varargs int|string list_file(string arg, int srt, int short, int column,
     roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
     return tmp;
   } else {
-    if(arg[-1] != '/')
-      arg += "/";
+    if(filename[-1] != '/')
+      filename += "/";
     array (string) dir, parsed = ({});
     string s;
     mapping tsort = ([]);
 
-    not_query = arg;
-    if(dir = roxen->find_dir(filename, this_object()))
-    {
-      if(!srt)
-	sort(dir);
-      if(filename[-1] != '/')
-	filename += "/";
-      if(strlen(filename) != 1)
-	dir = ({".."}) + dir;
-      foreach(dir, s)
-      {
-	st = 0;
-	if(F && (st = roxen->stat_file(filename+s, this_object())) 
-	   && st[1] < 0)
-	  s += "/";
-	if(!short)
-	{
-	  if(st || (st = roxen->stat_file(filename+s, this_object())))
-	    if(srt)
-	      tsort += ([ (time - st[-4]) : file_ls(st, s) ]);
-	    else
-	      parsed += ({ file_ls(st, s) });
-	} else 
-	  parsed += ({ s });
-      }
-      if(srt)
-      {
-	parsed = values(tsort);
-	sort(indices(tsort), parsed);
-	tmp=parsed*"";
-      } else if(!short) {
-	tmp=parsed*"";
-      } else {
-	if(column)
-	{
-	  tmp=replace(sprintf("%-#79s\n", parsed*" \n"), "\n", "\r\n");
-	}
-	else
-	  tmp=parsed*"\r\n"+"\r\n";
-      }
-      roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
-      return tmp;
-    } else {
-      roxen->log(([ "error": 403, "len": -1 ]), this_object());
-      return -1;
+    not_query = arg = filename;
+    dir = roxen->find_dir(filename, this_object()) || ({});
+
+    if(!srt)
+      sort(dir);
+    if(filename[-1] != '/')
+      filename += "/";
+    if(strlen(filename) != 1) {
+      dir = ({".."}) + dir;
     }
+    foreach(dir, s) {
+      st = 0;
+      if (((!all_mode) && (s[0]=='.')) ||
+	  ((all_mode == 1) && (s - "." == ""))) {
+	continue;
+      }
+      if(F && (st = roxen->stat_file(filename+s, this_object())) 
+	 && st[1] < 0)
+	s += "/";
+      if(!short) {
+	if(st || (st = roxen->stat_file(filename+s, this_object())))
+	  if(srt)
+	    tsort += ([ (time - st[-4]) : file_ls(st, s) ]);
+	  else
+	    parsed += ({ file_ls(st, s) });
+      } else 
+	parsed += ({ s });
+    }
+    if(srt) {
+      parsed = values(tsort);
+      sort(indices(tsort), parsed);
+      tmp=parsed*"";
+    } else if(!short) {
+      tmp=parsed*"";
+    } else {
+      if(column) {
+	tmp=replace(sprintf("%-#79s\n", parsed*" \n"), "\n", "\r\n");
+      }
+      else
+	tmp=parsed*"\r\n"+"\r\n";
+    }
+    roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
+    return tmp;
   }
 }
 
@@ -319,15 +399,19 @@ int open_file(string arg)
   else 
     this_object()->not_query = combine_path(cwd, arg);
       
-  if(!file || (file->full_path != not_query))
+  if(1 || !file || (file->full_path != not_query))
   {
     if(file && file->file)
       destruct(file->file);
-    if(st = roxen->stat_file(not_query, this_object()))
-      if(st[1] < 0)
-	file = -1;
-      else if(catch(file = roxen->get_file(this_object())))
-	file = 1;
+    foreach(conf->first_modules(), function funp)
+      if(file = funp( this_object())) break;
+    if (!file) {
+      if(st = roxen->stat_file(not_query, this_object()))
+	if(st[1] < 0)
+	  file = -1;
+	else if(catch(file = roxen->get_file(this_object())))
+	  file = 1;
+    }
   }
   if(!file)
   {
@@ -365,6 +449,7 @@ int open_file(string arg)
   } 
   return 1;
 }
+
 void got_data(mixed fooid, string s)
 {
   string cmdlin;
@@ -386,9 +471,9 @@ void got_data(mixed fooid, string s)
     cmd=lower_case(cmd);
 #ifdef DEBUG
     if(cmd == "pass")
-      stdout->write("recieved 'PASS xxxxxxxx' "+GRUK+"\n");
+      perror("recieved 'PASS xxxxxxxx' "+GRUK+"\n");
     else
-      stdout->write("recieved '"+cmdlin+"' "+GRUK+"\n");
+      perror("recieved '"+cmdlin+"' "+GRUK+"\n");
 #endif
     switch (cmd)
     {
@@ -397,22 +482,41 @@ void got_data(mixed fooid, string s)
       {
 	reply("230 Anonymous ftp, at your service\n");
 	rawauth = 0;
+	auth = 0;
       } else {
 	rawauth = arg;
+	auth = 0;
 	reply("331 Give me a password, then!\n");
       }
+      cwd = "/";
       break;
       
      case "pass": 
       if(!rawauth)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
-      else {
+      else {	
+	method="LOGIN";
 	y = ({ "Basic", rawauth+":"+arg});
 	realauth = y[1];
-	if(conf && conf->auth_module)
+	if(conf && conf->auth_module) {
 	  y = conf->auth_module->auth( y, this_object() );
+
+	  if (y[0] == 1) {
+	    /* Authentification successfull */
+	    if (Query("named_ftp") && !check_shell(misc->shell)) {
+	      reply("432 You are not allowed to use named-ftp. Try using anonymous\n");
+	      /* roxen->(({ "error":403, "len":-1 ]), this_object()); */
+	      break;
+	    }
+	  }
+	}
 	auth=y;
-	reply("230 User "+rawauth+" logged in.\n"); 
+	if(auth[0]) {
+	  cwd = misc->home;
+	  reply("230 User "+rawauth+" logged in.\n"); 
+	} else
+	  reply("230 Luser "+rawauth+" logged in.\n"); 
+	/* roxen->log(([ "error": 202, "len":-1 ]), this_object()); */
       }
       break;
 
@@ -443,18 +547,18 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
-      if(!(st = roxen->stat_file(ncwd, this_object())))
-      {
+      st = roxen->stat_file(ncwd, this_object());
+
+      if(!st) {
 	reply("550 "+arg+": No such file or directory.\n");
 	break;
       }
-      if(st[1] > -1)
-      {
+      if(st[1] > -1) {
 	reply("550 "+arg+": Not a directory.\n");
 	break;
       }
       cwd = ncwd;
-      if(cwd[-1] != '/')
+      if((cwd == "") || (cwd[-1] != '/'))
 	cwd += "/";
       not_query = cwd;
       if(dir = roxen->find_dir(cwd, this_object()))
@@ -504,7 +608,7 @@ void got_data(mixed fooid, string s)
       break;
       
      case "nlst": 
-      int short=0, tsort=0, F=0, C=0, d=0;
+      int short=0, tsort=0, F=0, C=0, d=0, a=0;
       short = 1;
 
      case "list": 
@@ -551,20 +655,28 @@ void got_data(mixed fooid, string s)
 
 	if(search(args, "d") != -1)
 	  d = 1;
+
+	if(search(args, "A") != -1)
+	  a = 1;
+
+	if(search(args, "a") != -1)
+	  a = 2;
       }
-      
-      f = ([ "data": 
-	   list_file(arg, tsort, short, C, F, d) ]);
-	
-      if(f->data == 0)
-	reply("550 "+arg+": No such file or directory.\n");
-      else if(f->data == -1)
-	reply("550 "+arg+": Permission denied.\n");
-      else if(connect_and_send(f))
-	reply("150 Opening BINARY mode data connection.\n");
-      else
-	reply("425 Can't build data connect: Connection refused.\n"); 
-      
+      not_query = arg;
+
+      foreach(conf->first_modules(), function funp)
+	if(f = funp( this_object())) break;
+      if(!f)
+      {
+	f = ([ "data":list_file(arg, tsort, short, C, F, d, a) ]);
+	if(f->data == 0)
+	  reply("550 "+arg+": No such file or directory.\n");
+	else if(f->data == -1)
+	  reply("550 "+arg+": Permission denied.\n");
+	connect_and_send(f);
+      } else {
+	reply(reply_enumerate("Permission denied\n"+(f->data||""), "550"));
+      }
       break;
 	      
      case "retr": 
@@ -576,16 +688,12 @@ void got_data(mixed fooid, string s)
       }
       if(!open_file(arg))
 	break;
-      if(connect_and_send(file)) {
-	reply(sprintf("150 Opening BINARY mode data connection for %s "
-		      "(%d bytes).\n", arg, file->len));
-	roxen->log(file, this_object());
-      } else
-	reply("425 Can't build data connect: Connection refused.\n"); 
+      connect_and_send(file);
+      roxen->log(file, this_object());
       break;
 
      case "stat":
-      string dirlist;
+      string|int dirlist;
       if(!arg || !strlen(arg))
       {
 	reply("501 'STAT': Missing argument\n");
@@ -593,7 +701,11 @@ void got_data(mixed fooid, string s)
       }
       method="HEAD";
       reply("211-status of "+arg+":\n");
-      dirlist = list_file(arg, 0, 0);
+      not_query = arg = combine_path(cwd, arg);
+      foreach(conf->first_modules(), function funp)
+	if(f = funp( this_object())) break;
+      if(f) dirlist = -1;
+      else dirlist = list_file(arg, 0, 0, 0);
       
       if(!dirlist)
       {
@@ -616,6 +728,9 @@ void got_data(mixed fooid, string s)
       reply("213 "+ file->len +"\n");
       break;
     case "stor": // Store file..
+      // Does NOT work!
+      //
+      // Needs to check conf->first_modules().
       string f;
       if(!arg || !strlen(arg))
       {
@@ -625,7 +740,7 @@ void got_data(mixed fooid, string s)
       method = "PUT";
       object fd;
 
-      fd = new( File );
+      fd = files.file();
       if(catch {
 	if(!fd->connect(dataport_addr, dataport_port))
 	  throw("noconnect");
@@ -662,7 +777,11 @@ void create(object f, object c)
     conf = c;
     my_fd = f;
     my_fd->set_id(0);
-    my_fd->set_nonblocking(got_data, lambda(){}, end);
+
+    my_fd->set_read_callback(got_data);
+    my_fd->set_write_callback(lambda(){});
+    my_fd->set_close_callback(end);
+
     not_query = "/welcome.msg";
     call_out(end, 3600);
     

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.25 1997/03/26 05:54:16 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.26 1997/04/05 01:26:29 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -23,6 +23,11 @@ string cvs_version = "$Id: htmlparse.pike,v 1.25 1997/03/26 05:54:16 per Exp $";
 inherit "module";
 inherit "roxenlib";
 
+import String;
+import Array;
+import Stdio;
+
+int ok;
 
 function language = roxen->language;
 
@@ -114,6 +119,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
+  object privs = ((program)"privs")("Opening Access-log names file");
   names_file=open(QUERY(Accesslog)+".names", "wrca");
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
@@ -123,11 +129,14 @@ static mixed db_file_callout_id;
 inline void open_db_file()
 {
   if(objectp(database)) return;
-  if(!database || QUERY(close_db))
+  if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
+    object privs = ((program)"privs")("Opening Access-log database file");
     database=open(QUERY(Accesslog)+".db", "wrc");
-    db_file_callout_id = call_out(destruct, 9, database);
+    if (QUERY(close_db)) {
+      db_file_callout_id = call_out(destruct, 9, database);
+    }
   }
 }
 
@@ -148,14 +157,16 @@ void start()
   {
     olf = QUERY(Accesslog);
 
+    object privs = ((program)"privs")("Opening Access-log names file");
     mkdirhier(query("Accesslog"));
+#if 0
     if(!QUERY(close_db))
       if(!(database=open(olf+".db", "wrc")))
       {
 	perror("RXMLPARSE: Failed to open access database.\n");
 	return;
       }
-
+#endif /* 0 */
 
     if(names_file=open(olf+".names", "wrca"))
     {
@@ -430,7 +441,7 @@ void sort_lists()
     ind = indices(real_tag_callers[c]);
     val = values(real_tag_callers[c]);
     sort(ind);
-    s = Array.map(val, lambda(function f) {
+    s = map(val, lambda(function f) {
       return function_object(f)->query("_priority");
     });
     sort(s,val);
@@ -441,7 +452,7 @@ void sort_lists()
     ind = indices(real_container_callers[c]);
     val = values(real_container_callers[c]);
     sort(ind);
-    s = Array.map(val, lambda(function f) {
+    s = map(val, lambda(function f) {
       return function_object(f)->query("_priority");
     });
     sort(s,val);
@@ -634,7 +645,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->variables) 
   {
     if(n!="variables")
-      return Array.map(indices(got->variables), lambda(string s, mapping m) {
+      return map(indices(got->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->variables)*"\n";
     return implode_nicely(indices(got->variables));
@@ -643,7 +654,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->cookies) 
   {
     if(n!="cookies")
-      return Array.map(indices(got->cookies), lambda(string s, mapping m) {
+      return map(indices(got->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->cookies)*"\n";
     return implode_nicely(indices(got->cookies));
@@ -1020,8 +1031,8 @@ string tag_modified(string tag, mapping m, object got, object file,
   {
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = roxen->last_modified_by(file,got);
-    return tag_user(tag, m, got, file,defines);
+    m->name = roxen->last_modified_by(file, got);
+    return tag_user(tag, m, got, file, defines);
   }
 
   if(m->file)
@@ -1564,7 +1575,7 @@ string tag_client(string tag,mapping m, string s,object got,object file)
 
   if (!(isok && m->or) && m->name)
     isok=_match(got->client*" ",
-		Array.map(m->name/",", lambda(string s){return s+"*";}));
+		map(m->name/",", lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }
 

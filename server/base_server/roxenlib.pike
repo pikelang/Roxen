@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.19 1997/03/26 05:54:04 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.20 1997/04/05 01:25:40 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -184,8 +184,11 @@ static mapping build_roxen_env_vars(object id)
   foreach(indices(id->variables), tmp)
   {
     string name = replace(tmp," ","_");
-    new["QUERY_"+name]=replace(id->variables[tmp],"\000"," ");
-    new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
+    if (sizeof(id->variables[tmp]) < 8192) {
+      /* Some shells/OS's don't like LARGE environment variables */
+      new["QUERY_"+name]=replace(id->variables[tmp],"\000"," ");
+      new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
+    }
     if(new["VARIABLES"])
       new["VARIABLES"]+= " " + name;
     else
@@ -316,19 +319,19 @@ static int is_modified(string a, int t, void|int len)
   return 1;
 }
 
-static string short_name(string long_name)
+string short_name(string long_name)
 {
   long_name = replace(long_name, " ", "_");
   return lower_case(long_name);
 }
 
-static string strip_config(string from)
+string strip_config(string from)
 {
   sscanf(from, "/<%*s>%s", from);
   return from;
 }
 
-static string strip_prestate(string from)
+string strip_prestate(string from)
 {
   sscanf(from, "/(%*s)%s", from);
   return from;
@@ -348,7 +351,7 @@ static string parse_rxml(string what, object id,
 
   if(!id) error("No id passed to parse_rxml\n");
 
-  if(!(id->conf && id->conf->parse_module))
+  if(!id->conf || !id->conf->parse_module)
     return what;
   
   what = id->conf->parse_module->
@@ -361,7 +364,8 @@ static string parse_rxml(string what, object id,
 }
 
 constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789åäöÅÄÖ"/"";
-array (string) empty_strings = map(safe_characters,lambda(){return "";});
+/* constant */array (string) empty_strings =
+   map(safe_characters,lambda(){return "";});
 
 static int is_safe_string(string in)
 {
@@ -492,7 +496,7 @@ static int backup_extension( string f )
 
 /* ================================================= */
 /* Arguments: Anything Returns: Memory usage of the argument.  */
-static int get_size(mixed x)
+int get_size(mixed x)
 {
   if(mappingp(x))
     return 8 + 8 + get_size(indices(x)) + get_size(values(x));
@@ -624,6 +628,7 @@ static string image_from_type( string t )
     sscanf(t, "%s/%*s", t);
     switch(t)
     {
+     case "audio":
      case "sound":
       return "internal-gopher-sound";
      case "image":
@@ -653,3 +658,19 @@ static string sizetostring( int size )
   }
   return sprintf("%.1f %s", s, prefix[ size ]);
 }
+
+mapping proxy_auth_needed(object id)
+{
+  mixed res = roxen->check_security(proxy_auth_needed, id);
+  if(res)
+  {
+    if(res==1) // Nope...
+      return http_low_answer(403, "You are not allowed to access this proxy");
+    if(!mappingp(res))
+      return 0; // Error, really.
+    res->error = 407;
+    return res;
+  }
+  return 0;
+}
+

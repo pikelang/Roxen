@@ -12,16 +12,21 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.9 1997/03/26 05:54:16 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.10 1997/04/05 01:26:27 per Exp $";
 #include <module.h>
+
+#if constant(_static_modules) && efun(thread_create)
+constant Mutex=__builtin.mutex;
+#endif /* _static_modules */
 
 mixed *register_module()
 {
   return ({ 
     MODULE_FILE_EXTENSION,
-    "Pike script support", 
-    "Support for user Pike-scripts, like CGI, but handled internally in the"
-    " server, and thus much faster, but blocking, and somewhat less secure."
+      "Pike script support", 
+      "Support for user Pike-scripts, like CGI, but handled internally in the"
+      " server, and thus much faster, but blocking, and somewhat less secure.\n"
+      "NOTE: This module should not be enabled if you allow anonymous PUT\n"
     });
 }
 

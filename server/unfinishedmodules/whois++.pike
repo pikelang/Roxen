@@ -1,13 +1,15 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: whois++.pike,v 1.3 1996/12/01 19:18:54 per Exp $";
+string cvs_version = "$Id: whois++.pike,v 1.4 1997/04/05 01:26:35 per Exp $";
 // Experimental whois++ *client* module
 // Written by Pontus Hagland <law@infovav.se>
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
+
+import Array;
 
 #define MY_URL (roxen->query("MyWorldLocation") + QUERY(mountpoint))
 
@@ -49,79 +51,79 @@ int oldrow=0;
 void fixa_data(object pipe,string s)
 {
   pipe->write("<table border=1>\n");
-  map_array(s/"\n#",
-	    lambda(string s,object pipe)
-	    {
-	      array v,v2;
-	      if (!sizeof(v=s/"\n"-({""}))) return;
-	      if (!sizeof(v2=v[0]/" "-({""}))) return;
-	      switch (upper_case(v2[0]))
-	      {
-	       case "USER":
-	       case "SERVICES":
-		pipe->write("<tr></tr><tr></tr>\n");
-		oldrow=0;
-		map_array(v[1..10000],
-			  lambda(string s,object pipe)
-			  {
-			    string t=0,u;
-			    sscanf(s,"%*[ \t]%s:%*[ \t]%s",t,u);
-			    if (t) switch (t)
-			    {
-			     case "Email-address":
-			     case "Sysadmin-Email":
-			     case "Admin-Email":
-			     case "Tech-Email":
-			     case "Email": 
-			      u="<a href=\"mailto:"+u+"\">"+u+"</a>"; 
-			      break;
-			     case "Description-URI": 
-			      u="<a href=\""+u+"\">"+u+"</a>";
-			      break;
-			    }
-			    if (oldrow && t)
-			      pipe->write("</td></tr>\n"),oldrow=0;
-			    if (t)
-			      pipe->write("<tr><th align=left>"+t+
-					  "</td><td>"+u+"\n"),oldrow=1;
-			    else 
-			    {
-			      if (!oldrow)
-				pipe->write("<tr><td></td><td>");
-			      pipe->write(s);
-			      oldrow=1;
-			    }
+  map(s/"\n#",
+      lambda(string s,object pipe)
+      {
+	array v,v2;
+	if (!sizeof(v=s/"\n"-({""}))) return;
+	if (!sizeof(v2=v[0]/" "-({""}))) return;
+	switch (upper_case(v2[0]))
+	  {
+	  case "USER":
+	  case "SERVICES":
+	    pipe->write("<tr></tr><tr></tr>\n");
+	    oldrow=0;
+	    map(v[1..10000],
+		lambda(string s,object pipe)
+		{
+		  string t=0,u;
+		  sscanf(s,"%*[ \t]%s:%*[ \t]%s",t,u);
+		  if (t) switch (t)
+		    {
+		    case "Email-address":
+		    case "Sysadmin-Email":
+		    case "Admin-Email":
+		    case "Tech-Email":
+		    case "Email": 
+		      u="<a href=\"mailto:"+u+"\">"+u+"</a>"; 
+		      break;
+		    case "Description-URI": 
+		      u="<a href=\""+u+"\">"+u+"</a>";
+		      break;
+		    }
+		  if (oldrow && t)
+		    pipe->write("</td></tr>\n"),oldrow=0;
+		  if (t)
+		    pipe->write("<tr><th align=left>"+t+
+				"</td><td>"+u+"\n"),oldrow=1;
+		  else 
+		    {
+		      if (!oldrow)
+			pipe->write("<tr><td></td><td>");
+		      pipe->write(s);
+		      oldrow=1;
+		    }
 			  },pipe);
-		pipe->write("<tr></tr><tr></tr>\n");
+	    pipe->write("<tr></tr><tr></tr>\n");
 		break;
-	       case "SERVERS-TO-ASK":
-		if (oldrow)
-		  pipe->write("</td></tr>\n"),oldrow=0;
-		string u,q;
-		sscanf(s,"%*sBody-of-Query:%*[ \t]%s\n",q);
-		sscanf(s,"%*sNext-Servers:%*[\n\r\t \v]%s",u);
-		map_array(u/"\n",
-			  lambda(string s,object pipe,string q)
-			  {
-			    string v,w;
-			    sscanf(s,"%*[ \t]%*s%*[ \t]%s%*[ \t]%s%*[ \t\n\r\v]",v,w);
-			    pipe->write("<tr><td colspan=2 align=center>"+
-					"<a href=\"?host="+v+"&port="+w+"&tag="+q+">"+
+	  case "SERVERS-TO-ASK":
+	    if (oldrow)
+	      pipe->write("</td></tr>\n"),oldrow=0;
+	    string u,q;
+	    sscanf(s,"%*sBody-of-Query:%*[ \t]%s\n",q);
+	    sscanf(s,"%*sNext-Servers:%*[\n\r\t \v]%s",u);
+	    map(u/"\n",
+		lambda(string s,object pipe,string q)
+		{
+		  string v,w;
+		  sscanf(s,"%*[ \t]%*s%*[ \t]%s%*[ \t]%s%*[ \t\n\r\v]",v,w);
+		  pipe->write("<tr><td colspan=2 align=center>"+
+			      "<a href=\"?host="+v+"&port="+w+"&tag="+q+">"+
 					"Recommended whois++ server: <i>"+v+" port "+w+"</i>"+
-					"</a></td></tr>\n");
-			    hosts|=({v+" "+w});
-			  },pipe,q);
-		break;
-	      }
-	      if (oldrow) pipe->write("</td></tr>\n");
-	    },pipe);
+			      "</a></td></tr>\n");
+		  hosts|=({v+" "+w});
+		},pipe,q);
+	    break;
+	  }
+	if (oldrow) pipe->write("</td></tr>\n");
+      },pipe);
   pipe->write("</table>\n");
 }
 
 void server_closed(array v)
 {
    object pipe;
-   pipe=Pipe();
+   pipe=Pipe.pipe();
    fixa_data(pipe,v[4]);
    pipe->output(v[1]);
    v[2]->disconnect();
@@ -167,7 +169,7 @@ void serv_request(string host,object id,mapping var)
     }
     return;
   }
-  server=File();
+  server=files.file();
   if (!server->open_socket())
   {
     destruct(server);
@@ -213,8 +215,8 @@ mapping find_file( string f , object id )
       "<table border=1 width=100%><td align=left>\n"+
       "<select name=hosttype>\n"+
       "  <option selected>"+QUERY(defaulthost)+" "+QUERY(defaultport)+
-      map_array(hosts-({QUERY(defaulthost)+" "+QUERY(defaultport)}),
-		lambda(string s) { return "  <option>"+s; })*""+
+      map(hosts-({QUERY(defaulthost)+" "+QUERY(defaultport)}),
+	  lambda(string s) { return "  <option>"+s; })*""+
       "  <option>use fields below\n"+
       "</select>"+
       "\nHost: <input name=\"host\" size=30 value=\"\">"+

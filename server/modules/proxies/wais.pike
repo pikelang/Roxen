@@ -4,8 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.6 1997/03/11 01:19:41 per Exp $";
-import spider;
+string cvs_version = "$Id: wais.pike,v 1.7 1997/04/05 01:26:24 per Exp $";
 
 #include <config.h>
 
@@ -264,7 +263,7 @@ inherit "socket";
 inherit "roxenlib";
 
 #include <module.h>
-#include "../../base_server/proxyauth.pike"
+#include <proxyauth.pike>
 
 
 

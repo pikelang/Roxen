@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.3 1997/03/11 01:19:35 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.4 1997/04/05 01:26:12 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -159,7 +159,7 @@ object tab(string name, int select, int n, int last, string font,
   width = txt->xsize() + w_spacing;
   height = txt->ysize() + h_spacing;
 
-  img = Image(width,height);
+  img = image(width,height);
   draw_bg(img, bg, tc);
   if (n == select)
     selected(img, bg);
@@ -170,7 +170,7 @@ object tab(string name, int select, int n, int last, string font,
   else if (n+1 != select)
     right_shadow(img, tc);
 
-  tmp=Image(txt->xsize(), txt->ysize());
+  tmp=image(txt->xsize(), txt->ysize());
   tmp->box(0, 0, tmp->xsize()-1, tmp->ysize()-1, @fc);
   img->paste_mask(tmp, txt, w_spacing/3, h_spacing/2);
 

@@ -1,10 +1,13 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.36 1997/03/26 05:54:02 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.37 1997/04/05 01:25:33 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
-import Stdio;
 import Array;
+import Stdio;
+
+/* Work-around for Simulate.perror */
+#define perror roxen_perror
 
 #include <confignode.h>
 #include <module.h>
@@ -27,6 +30,8 @@ int bar=time(1);
 
 class Node {
   inherit "struct/node";
+
+  import Simulate;
 
   mixed original;
   int changed, moredocs;
@@ -295,10 +300,8 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
    case TYPE_DIR_LIST:
     array foo;
-    array st;
     foo=map((var-" ")/",", lambda(string var, object node) {
-      array st;
-      if (!strlen( var ) || !(st = file_stat( var )) || (st[1] != -2))
+      if (!strlen( var ) || file_size( var ) != -2)
       {
 	if(node->error)	
 	  node->error += ", " +var + " is not a directory";
@@ -316,6 +319,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return foo;
     
    case TYPE_DIR:
+    array st;
     if (!strlen( var ) || !(st = file_stat( var )) || (st[1] != -2))
     {
       node->error = var + " is not a directory";
@@ -634,9 +638,8 @@ int low_enable_configuration(string name, string type)
       sscanf(type, "%*s'%s'", from);
       tmp = roxen->copy_configuration(from, name);
       if(!tmp) error("No configuration to copy from!\n");
-      tmp["spider#0"]->LogFile = "../logs/"
-	+roxen->short_name(name)+"/Log";
-      roxen->save_it(name);
+      tmp["spider#0"]->LogFile = "../logs/"+roxenp()->short_name(name)+"/Log";
+      roxenp()->save_it(name);
       roxen->enable_configuration(name);
     }    
     confnode = root->descend("Configurations");

@@ -37,9 +37,11 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.10 1997/02/14 03:43:00 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.11 1997/04/05 01:26:19 per Exp $";
 #include <module.h>
 #include <config.h>
+
+import Stdio;
 
 #if DEBUG_LEVEL > 21
 # ifndef PROXY_DEBUG
@@ -82,7 +84,7 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include "../../base_server/proxyauth.pike"
+#include <proxyauth.pike>
 
 class Request {
   inherit "socket";
@@ -554,7 +556,7 @@ class Request {
       return;
     }
 
-    pipe=Pipe();
+    pipe=Pipe.pipe();
     pipe->write("HTTP/1.0 200 Yeah, it's a FTP directory\r\n"
 		"Content-type: text/html\r\n"
 		"Content-length: "+strlen(res)+"\r\n");
@@ -612,7 +614,7 @@ class Request {
 
     type=roxen->type_from_filename(file);
 
-    pipe=Pipe();
+    pipe=Pipe.pipe();
     pipe->write("HTTP/1.0 200 FTP transfer initiated\r\n");
 
     tmp=roxen->type_from_filename(file,1);
@@ -1059,8 +1061,9 @@ class Request {
     }
   }
 
-  void create(object rid,object rmaster,
-	      string rhost,int rport,string rfile, string u, string p)
+  void create(object|void rid,object|void rmaster,
+	      string|void rhost,int|void rport,
+	      string|void rfile, string|void u, string|void p)
   {
     mixed m;
 
@@ -1175,6 +1178,7 @@ void init_proxies()
   foreach(QUERY(Proxies)/"\n", foo)
   {
     array bar;
+
     if(!strlen(foo) || foo[0] == '#')
       continue;
     
@@ -1424,15 +1428,9 @@ mixed|mapping find_file( string f, object id )
   // Using a remote proxy?
   if(more = is_remote_proxy(host))
     async_connect(more[0], more[1], connected_to_server,  key, id, 1);
-  
-#undef RECOMPILE 
 
-#ifdef RECOMPILE
-  requests[compile_file("base_server/struct/ftp_gateway_request.pike")
-	  (id, this_object(),host,port,file, user, passw)]=1;
-#else
   requests[Request(id,this_object(),host,port,file, user, passw)]=1;
-#endif
+
   return http_pipe_in_progress();
 }	  
 

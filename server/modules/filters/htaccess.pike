@@ -5,12 +5,13 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.8 1997/03/11 01:19:32 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.9 1997/04/05 01:26:07 per Exp $";
 #include <module.h>
+#include <roxen.h>
 inherit "module";
 inherit "roxenlib";
 
-/*#define HTACCESS_DEBUG*/
+//#define HTACCESS_DEBUG
 
 
 array *register_module()
@@ -381,7 +382,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   cache_key = "groupfile:" + roxen->current_configuration->name;
 
-  f = File();
+  f = files.file();
   if(!(f->open(groupfile, "r")))
   {
 #ifdef HTACCESS_DEBUG

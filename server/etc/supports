@@ -1,4 +1,4 @@
-## $Id: supports,v 1.17 1997/04/02 21:42:33 mirar Exp $
+## $Id: supports,v 1.18 1997/04/05 01:25:54 per Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -44,24 +44,23 @@
 
 .*               basic, tables, jpeginline, font, imagealign,\
 			cookies, push, pull, backgrounds, ssl,\
-			javascript, java, frames, backgrounds, autogunzip
+			javascript, java, frames, backgrounds, autogunzip,\
+			netscape_javascript
 
 mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
-mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
-mozilla/1\..*	-ssl, -frames, -java, -javascript
+mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript, -netscape_javascript
+mozilla/1\..*	-ssl, -frames, -java, -javascript, -netscape_javascript
 
 mozilla.[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
 mozilla.[2-9].[0-9]b[2-9].*           -java
 
 #Old versions on Mac crash the entire mashine if you use javascript.
-mozilla/2.*	        -javascript
-mozilla/2.*solaris	javascript, netscape_javascript
+mozilla/2.*	        -javascript, -netscape_javascript
+mozilla/2.*X11		javascript
 
-mozilla/3.*		tablecolor, netscape_javascript
-mozilla/3.*solaris	netscape_javascript
+mozilla/3.*		tablecolor
 
-mozilla/4.*		stylesheets, netscape_javascript, tablecolor
-mozilla/4.*solaris	netscape_javascript
+mozilla/4.*		stylesheets, tablecolor
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-netscape_javascript

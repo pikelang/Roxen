@@ -1,5 +1,6 @@
-#!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.9 1997/01/29 18:39:55 kg Exp $";
+#!bin/pike -m lib/pike/master.pike
+string cvs_version = "$Id: install.pike,v 1.10 1997/04/05 01:25:50 per Exp $";
+
 #include <simulate.h>
 #include <roxen.h>
 
@@ -39,6 +40,7 @@ void mkdirhier(string from)
   }
 }
 
+mapping(string:mixed) variables = ([ "audit":0 ]);
 
 #define VAR_VALUE 0
 #define IN_INSTALL 1
@@ -72,7 +74,7 @@ int verify_port(int try)
 {
   int ret;
   object p;
-  p = (object)"/precompiled/port";
+  p = files.port();
   ret = p->bind(try);
   destruct(p);
   return ret;  
@@ -83,7 +85,7 @@ int getport()
   object p;
   int port;
 
-  p = (object)"/precompiled/port";
+  p = files.port();
 
   while(!(p -> bind(port = 10000 + random(10000))))
     ;

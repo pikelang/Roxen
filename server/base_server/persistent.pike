@@ -1,13 +1,14 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.17 1997/04/01 16:00:59 per Exp $ */
+/* $Id: persistent.pike,v 1.18 1997/04/05 01:25:36 per Exp $ */
+
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
 *                                                             *
 * What is not saved?                                          *
-* o Listening info (/precompiled/port)                        *
-* o Open files (/precompiled/file)                            *
+* o Listening info (files.port)                               *
+* o Open files (files.file)                                   *
 *                                                             *
 * This can be solved by specifying two new objects, like      *
 * persists/port and persist/file in Pike. I leave that as an  *
