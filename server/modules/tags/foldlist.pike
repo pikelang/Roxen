@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.20 2000/05/02 21:58:37 kuntri Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.21 2000/05/03 14:47:12 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -71,14 +71,12 @@ it is written in is unfolded.</desc>
 string encode_url(array states, RequestID id){
   object state=id->misc->foldlist->state;
 
-  werror("%O",states);
   int value, q;
   foreach(states, int tmp) {
     value+=tmp*(2->pow(q));
     q+=2;
   }
   value=(value<<1)+1;
-  werror(" = %d\n",value);
 
   //  if(id->query)
   //    return id->not_query+"?"+id->query+"&state="+
