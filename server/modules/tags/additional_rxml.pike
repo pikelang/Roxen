@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.28 2004/11/30 18:23:52 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.29 2004/12/16 10:31:09 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -340,6 +340,12 @@ class TagSprintf {
 class TagSscanf {
   inherit RXML.Tag;
   constant name = "sscanf";
+  mapping(string:RXML.Type) req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
+					       "format"    : RXML.t_text(RXML.PEnt)
+  ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "return"    : RXML.t_text(RXML.PEnt),
+					       "scope"     : RXML.t_text(RXML.PEnt)
+  ]);
 
   class Frame {
     inherit RXML.Frame;
