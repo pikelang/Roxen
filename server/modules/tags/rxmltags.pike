@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.31 1999/11/24 23:27:09 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.32 1999/12/07 12:12:36 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -37,12 +37,9 @@ array register_module()
 	    ("This module adds a lot of RXML tags."), 0, 1 });
 }
 
-mapping TAGDOCUMENTATION;
-mapping tagdocumentation() {
-  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
-  int start=__LINE__;
-  /*
-    (["roxen-automatic-charset-variable":"<desc tag></desc>",
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
 "append":"<desc tag></desc>",
 "auth-required":"<desc tag></desc>",
 "clientname":"<desc tag></desc>",
@@ -98,13 +95,8 @@ mapping tagdocumentation() {
 "repeat":"<desc cont></desc>",
 "replace":"<desc cont></desc>",
 "cset":"<desc cont></desc>"
-])
-  */
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
-  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
-  return TAGDOCUMENTATION;
-}
-
+    ]);
+#endif
 
 constant permitted = "123456789xabcdefnt\"XABCDEFlo<>=0-*+/%%|()"/"";
 

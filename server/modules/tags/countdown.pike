@@ -1,16 +1,13 @@
-constant cvs_version="$Id: countdown.pike,v 1.20 1999/11/23 07:46:02 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.21 1999/12/07 12:12:14 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
 
-mapping TAGDOCUMENTATION;
-mapping tagdocumentation() {
-  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
-  int start=__LINE__;
-  /*
-    (["countdown":#"<desc tag>
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["countdown":#"<desc tag>
 This tag can count days, minutes, months, etc. from a specified date or time. It can also
 give the time to or from a few special events. See below for a full list.</desc>
 
@@ -69,12 +66,8 @@ Sets the time of an evet to count down to.</attr>
 <attr name=next>Always count down to the next event. &lt;countdown day=friday
 next&gt; says 6 on a friday as opposed to 0 without the next attribute.</attr>
 <attr name=prec value=year,month,week,day,hour,minute,second>modifies the precision for 'boolean' and 'combined'.</attr>
-"])
-  */
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
-  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
-  return TAGDOCUMENTATION;
-}
+"]);
+#endif
 
 mapping set_to_julian_easter(int year) {
   int G = year % 19;

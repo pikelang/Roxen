@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.8 1999/11/24 15:38:58 nilsson Exp $
+// $Id: foldlist.pike,v 1.9 1999/12/07 12:11:55 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.8 1999/11/24 15:38:58 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.9 1999/12/07 12:11:55 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,12 +17,9 @@ array (mixed) register_module()
 	    0,1 });
 }
 
-mapping TAGDOCUMENTATION;
-mapping tagdocumentation() {
-  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
-  int start=__LINE__;
-  /*
-    (["foldlist":({#"<desc cont>This tag is used to build folding lists,
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["foldlist":({#"<desc cont>This tag is used to build folding lists,
 that are like &lt;dl&gt; lists, but where each element can be unfolded.
 The tags used to build the lists elements are ft and fd.</desc>
 
@@ -37,13 +34,8 @@ The tags used to build the lists elements are ft and fd.</desc>
   ",(["fd":#"<desc cont>The contents of this container will only be visible
     when the element it is written in is unfolded."])
   })])
-})])
-  */
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
-  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
-  return TAGDOCUMENTATION;
-}
-
+})]);
+#endif
 
 string encode_url(array states, object state, object id){
   string value="";

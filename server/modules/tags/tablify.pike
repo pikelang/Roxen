@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.40 1999/11/24 15:39:52 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.41 1999/12/07 12:12:52 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -17,12 +17,9 @@ array register_module()
     0, 1, });
 }
 
-mapping TAGDOCUMENTATION;
-mapping tagdocumentation() {
-  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
-  int start=__LINE__;
-  /*
-    (["tablify":({#"<desc cont>Transforms texts into tables. No attributes required.</desc>
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["tablify":({#"<desc cont>Transforms texts into tables. No attributes required.</desc>
 
 <attr name=rowseparator value=string>Defines the rowseparator. Default is a newline.</attr>
 <attr name=cellseparator value=string>Defines the cellseparaotr. Default is a tab.</attr>
@@ -90,12 +87,8 @@ mapping tagdocumentation() {
   <li>The value given in the cellseparator attribute to tablify.</li>
   <li>Tab.</li>
   </ol>"])
-})])
-  */
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
-  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
-  return TAGDOCUMENTATION;
-}
+})]);
+#endif
 
 string encode_url(int col, int state, object stateobj, RequestID id){
   if(col==abs(state))

@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.13 1999/11/23 07:44:23 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.14 1999/12/07 12:11:32 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -46,12 +46,9 @@ void create(object c)
 	 "8 seconds");
 }
 
-mapping TAGDOCUMENTATION;
-mapping tagdocumentation() {
-  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
-  int start=__LINE__;
-  /*
- ([ "accessed":#"<desc tag>Generates an access counter that shows how many
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows how many
  times the page has been accessed. A file, AccessedDB, in the logs directory is used to
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,
@@ -138,12 +135,8 @@ mapping tagdocumentation() {
 
 <attr name=type value=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
  Specifies how the count are to be presented. Some of these are only
- useful together with the since attribute.</attr>"])
-  */
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
-  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
-  return TAGDOCUMENTATION;
-}
+ useful together with the since attribute.</attr>"]);
+#endif
 
 static string olf; // Used to avoid reparsing of the accessed index file...
 static mixed names_file_callout_id;
@@ -274,9 +267,7 @@ int query_num(string file, int count)
     fton[file]=++cnum;
     p=cnum;
 
-//  perror(file + ": New entry.\n");
     open_names_file();
-//  perror(file + ": Created new entry.\n");
     names_file->write(file+":"+cnum+"\n");
 
     database->seek(p*8);
@@ -286,10 +277,8 @@ int query_num(string file, int count)
   if(database->seek(p*8) > -1)
   {
     sscanf(database->read(4), "%4c", n);
-//  perror("Old count: " + n + "\n");
     if (count) 
     { 
-//    perror("Adding "+count+" to it..\n");
       n+=count; 
       database->seek(p*8);
       database->write(sprintf("%4c", n)); 
@@ -297,7 +286,6 @@ int query_num(string file, int count)
     //lock->free();
     return n;
   } 
-//perror("Seek failed\n");
   //lock->free();
   return 0;
 }
@@ -457,11 +445,6 @@ string tag_accessed(string tag, mapping m, object id)
   }
   return res+(m->addreal?real:"");
 }                  
-
-mapping query_tag_callers()
-{
-  return (["accessed":tag_accessed]);
-}
 
 int api_query_num(object id, string f, int|void i)
 {
