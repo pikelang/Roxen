@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.103 1999/06/09 04:03:18 mast Exp $
+// $Id: roxenlib.pike,v 1.104 1999/06/10 05:27:02 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1069,16 +1069,10 @@ string get_modfullname (object module)
   else return 0;
 }
 
-// internal method for do_output_tag
-private string remove_leading_trailing_ws( string str )
-{
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
-  return str;
-}
-
-// method for use by tags that replace variables in their content, like
-// formoutput, sqloutput and others
+// method for use by tags that replace variables in their content,
+// like formoutput, sqloutput and others. Note that this function
+// always does the appropriate rxml parsing; the output from it should
+// not be parsed again.
 string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      object id )
 {
@@ -1202,7 +1196,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	else
 	{
 	  array(string) options =  exploded[c] / ":";
-	  string var = remove_leading_trailing_ws (options[0]);
+	  string var = trim (options[0]);
 	  mixed val = vars[var];
 	  array(string) encodings = ({});
 	  string multisep = multi_separator;
@@ -1211,9 +1205,9 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
 	  foreach(options[1..], string option) {
 	    array (string) foo = option / "=";
-	    string optval = remove_leading_trailing_ws (foo[1..] * "=");
+	    string optval = trim (foo[1..] * "=");
 
-	    switch (lower_case (remove_leading_trailing_ws( foo[0] ))) {
+	    switch (lower_case (trim( foo[0] ))) {
 	      case "empty":
 		empty = optval;
 		break;
@@ -1235,11 +1229,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		}
 		break;
 	      case "encode":
-		encodings += Array.map (lower_case (optval) / ",",
-					remove_leading_trailing_ws);
+		encodings += Array.map (lower_case (optval) / ",", trim);
 		break;
 	      default:
-		return "<b>Unknown option " + remove_leading_trailing_ws (foo[0]) +
+		return "<b>Unknown option " + trim (foo[0]) +
 		  " in replace field " + ((c >> 1) + 1) + "</b>";
 	    }
 	  }
@@ -1260,8 +1253,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
 	  if (!sizeof (encodings))
 	    encodings = args->encode ?
-	      Array.map (lower_case (args->encode) / ",",
-			 remove_leading_trailing_ws) : ({"html"});
+	      Array.map (lower_case (args->encode) / ",", trim) : ({"html"});
 	  foreach (encodings, string encoding)
 	    switch (encoding) {
 	      case "none":
