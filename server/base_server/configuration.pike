@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.482 2001/09/05 11:02:35 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.483 2001/09/06 12:50:14 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2440,10 +2440,10 @@ RoxenModule reload_module( string modname )
     return old_module;
   }
 
-  disable_module( modname );
+  disable_module( modname, 1 );
+  destruct( old_module ); 
 
   mi->update_with( nm,0 ); // This is sort of nessesary...
-
   enable_module( modname, nm, mi );
 
   foreach (old_error_log, [string msg, array(int) times])
