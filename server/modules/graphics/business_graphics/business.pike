@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.38 1997/10/28 12:30:34 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.39 1997/11/22 18:26:53 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -31,53 +31,55 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-      ("Draws graphs.\n"
-       "<p>This module defines a tag,\n"
+    (  "<hr noshade>"
+       "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
+       "Draws different kinds of diagrams.<br>"
        "<pre>"
-       "\n&lt;diagram&gt; (container): <br>\n"
-       "Draws different kinds of diagrams. <br>\n"
-       "Defines the following attributes: <br>\n"
-       " help            Displays this text.<br>\n"
-       " type=           { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
-       "                 This is the type of graph. Mandatory!<br>\n"
-       " background=     Takes the filename of a ppm image as input.\n"
-       " width=          width of diagram-image in pixels. (Will not have any effect below 100.)\n"
-       " height=         height of diagram-image in pixels. (Will not have any effect below 100.)\n"
-       " fontsize=       height of text in pixels.\n"
-       " legendfontsize= height of legend text in pixels. Uses fontsize if not defined\n"
-       " 3D=             Render piecharts on top of a cylinder, \n"
-       "                 takes the height in pixels of the cylinder as argument.\n"
+       "\n&lt;<b>diagram</b>&gt; (container)\n"
+       "Options:\n"
+       "  <b>help</b>           Displays this text.\n"
+       "  <b>type</b>           Mandatory. Type of graph. Valid types are:\n"
+       "                 <b>sumbars</b>, <b>normsumbars</b>, <b>linechart</b>,"
+       " <b>barchart</b>, <b>piechart</b> and <b>graph</b>\n"
+       "  <b>background</b>     Takes the filename of a ppm image as input.\n"
+       "  <b>width</b>          Width of diagram image in pixels.\n"
+       "                 (will not have any effect below 100)\n"
+       "  <b>height</b>         Height of diagram image in pixels.\n"
+       "                 (will not have any effect below 100)\n"
+       "  <b>fontsize</b>       Height of text in pixels.\n"
+       "  <b>legendfontsize</b> Height of legend text in pixels. Uses fontsize if not defined.\n"
+       "  <b>3D</b>             Render piecharts on top of a cylinder, takes the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
-       " You can also use regular &lt;img&gt; arguments. They will be passed\n"
-       " on to the resulting &lt;img&gt; tag. \n\n"
-       "Defines the following internal tags: \n"
-       "\n&lt;xaxis&gt; and &lt;yaxis&gt; (tags)\n"
-       "Attributes for the x and y axis.\n"
+       "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
+       "The following internal tags are available:\n"
+       "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
+       "Tab and newline separated list of data values for the diagram. Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "  <b>lineseparator</b>  Use the specified string as lineseparator instead of newline.\n"
+       "  <b>form</b>           Can be set to either row or column. Default is row.\n"
+       "  <b>parse</b>          Run the content of the tag through the RXML parser\n"
+       "                 before data extraction is done.\n"
+       "\n&lt;<b>colors</b>&gt; (container)\n"
+       "Tab separated list of colors for the diagram. Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "\n&lt;<b>legend</b>&gt; (container)\n"
+       "Tab separated list of titles for the legend. Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "\n&lt;<b>xnames</b>&gt; (container)\n"
+       "Tab separated list of datanames for the diagram. Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "\n&lt;<b>ynames</b>&gt; (container)\n"
+       "Tab separated list of datanames for the diagram. Options:\n"
+       "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "\n&lt;<b>xaxis</b>&gt; and &lt;<b>yaxis</b>&gt; (tags)\n"
+       "Options:\n"
        /* " name=        Dunno what this does.\n" */
-       " start=       Limit the start of the diagram at this quantity.\n"
-       " stop=        Limit the end of the diagram at this quantity.\n"
-       " quantity=    Name things represented in the diagram.\n"
-       " units=       Name the unit.\n"
-       "\n&lt;colors&gt; (container)\n"
-       "Tab separated list of colors for the diagram.\n"
-       " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;legend&gt; (container)\n"
-       "Tab separated list of strings for the legend.\n"
-       " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;xnames&gt; (container)\n"
-       "Tab separated list of datanames for the diagram.\n"
-       " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;ynames&gt; (container)\n"
-       "Tab separated list of dataname for the diagram.\n"
-       " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;data&gt; (container)  Mandatory!\n"
-       "Tab- and newline- separated list of data-value for the diagram.\n"
-       " separator=     Use the specified string as separator instead of tab.\n"
-       " lineseparator= Use the specified string as lineseparator instead of newline.\n"
-       " form=          Can be set to either row or column. Default is row.\n"
-       " parse          Run the content of the tag through the RXML-parser before data extraction is done.\n"
-       "</pre>"
+       "  <b>start</b>          Limit the start of the diagram at this quantity.\n"
+       "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
+       "  <b>quantity</b>       Name things represented in the diagram.\n"
+       "  <b>units</b>          Name the unit.\n"
+       "</pre><hr noshade>"
        ), ({}), 1,
     });
 }
@@ -238,7 +240,8 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 
 string syntax( string error )
 {
-  return "<hr noshade><h3>Syntax error</h3>"
+  return "<hr noshade><font size=+1><b>Syntax error</b></font>&nbsp;&nbsp;"
+         "(&lt;<b>diagram help</b>&gt;&lt;/<b>diagram</b>&gt; gives help)<p>"
     + error
     + "<hr noshade>";
 }
@@ -280,7 +283,14 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->help) return register_module()[2];
 
   if(m->type) res->type = m->type;
-  else return syntax( "You must specify a type for your table" );
+  else return syntax("You must specify a type for your table.<br>"
+		     "Valid types are: "
+		     "<b>sumbars</b>, "
+		     "<b>normsumbars</b>, "
+		     "<b>linechart</b>, "
+		     "<b>barchart</b>, "
+		     "<b>piechart</b> and "
+		     "<b>graph</b>");
 
   if(m->background)
     res->image = combine_path( dirname(id->not_query), (string)m->background);
