@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.21 2004/05/07 19:47:23 mast Exp $
+// $Id: webdav.pike,v 1.22 2004/05/08 14:37:37 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.21 2004/05/07 19:47:23 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.22 2004/05/08 14:37:37 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -42,7 +42,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 		"Public":"CHMOD,COPY,DELETE,GET,HEAD,MKCOL,MKDIR,MOVE,"
 		"MV,PING,POST,PROPFIND,PROPPATCH,PUT,OPTIONS",
 		"Accept-Ranges":"bytes",
-		"DAV":"1",
+		"DAV":"1,2",
 	      ]),
     ]);
   case "LOCK":
@@ -294,28 +294,8 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE("COPY: No destination header.");
       return Roxen.http_status(400, "COPY: Missing destination header.");
     }
-    // Check that destination is on this virtual server.
-    Standards.URI dest_uri;
-    if (catch {
-	dest_uri = Standards.URI(id->request_headers->destination);
-      }) {
-      TRACE_LEAVE("COPY: Bad destination header.");
-      return Roxen.http_status(400,
-			       sprintf("COPY: Bad destination header:%O.",
-				       id->request_headers->destination));
-    }
-    if ((dest_uri->scheme != id->port_obj->prot_name) ||
-	!(<id->misc->host, id->port_obj->ip, gethostname()>)[dest_uri->host] ||
-	dest_uri->port != id->port_obj->port) {
-      TRACE_LEAVE("COPY: Destination on other server.");
-      return Roxen.http_status(400,
-			       sprintf("COPY: Bad destination:%O != %s://%s:%d/.",
-				       id->request_headers->destination,
-				       id->port_obj->prot_name,
-				       id->port_obj->ip,
-				       id->port_obj->port));
-    }
-    extras = ({ dest_uri->path });
+    extras = ({ id->misc["new-uri"] });
+    mapping(string:int(-1..1)) propertybehavior = ([]);
     if (xml_data) {
       // Mapping from href to behavior.
       // @int
@@ -323,11 +303,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //     omit
       //   @value 0
       //     default
-      //     If default also check the entry for href @tt{0@} (zero).
+      //     If default also check the entry for href @expr{0@} (zero).
       //   @value 1
       //     keepalive
       // @endint
-      mapping(string:int(-1..1)) propertybehavior = ([]);
       SimpleNode prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
@@ -366,27 +345,35 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  break;
 	}
       }
-      if (sizeof(propertybehavior)) {
-	extras += ({ propertybehavior });
-      }
     }
+    extras += ({ propertybehavior });
     
-    recur_func = lambda(string path, string dest, int d, RoxenModule module,
+    recur_func = lambda(string source, string loc, int d, RoxenModule module,
 			MultiStatus.Prefixed stat, RequestID id,
-			mapping(string:int(-1..1))|void behavior) {
-		   return module->recurse_copy_files(path, d, 0, "",
-						     behavior||([]),
-						     stat, id);
+			string destination,
+			mapping(string:int(-1..1)) behavior) {
+		   if (!has_prefix(destination, loc)) {
+		     // FIXME: Destination in other filesystem.
+		     return 0;
+		   }
+		   // Convert destination to module location relative.
+		   destination = destination[sizeof(loc)..];
+		   return module->recurse_copy_files(source, destination, d,
+						     behavior, stat, id);
 		 };
     break;
   case "DELETE":
-    recur_func = lambda(string path, string dest, int d, RoxenModule module,
+    recur_func = lambda(string path, string ignored, int d, RoxenModule module,
 			MultiStatus.Prefixed stat, RequestID id) {
-		   module->recurse_delete_files(path, stat, id);
+		   if (!module->recurse_delete_files(path, stat, id)) {
+		     // Succeed in deleting some file(s).
+		     empty_result = Roxen.http_status(204);
+		   }
 		   return 0;
 		 };
-    // The multi status will be empty if everything went well.
-    empty_result = Roxen.http_status(204);
+    // The multi status will be empty if everything went well,
+    // or if the file didn't exist.
+    empty_result = Roxen.http_status(404);
     break;
   case "PROPFIND":	// Get meta data.
     if (xml_data) {
@@ -543,32 +530,23 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
   }
   // FIXME: Security, DoS, etc...
-  MultiStatus.Prefixed result;
-  if (id->method != "COPY") {
-    result = id->get_multi_status()->prefix(id->url_base());
-  } else {
-    result = id->get_multi_status()->prefix(id->request_headers->destination);
-  }
+  MultiStatus.Prefixed result = id->get_multi_status()->prefix(id->url_base());
   int start_ms_size = id->multi_status_size();
   string href = id->not_query;
   string href_prefix = combine_path(href, "./");
   foreach(conf->location_modules(), [string loc, function fun]) {
     int d = depth;
     string path;	// Module location relative path.
-    string dest = "";	// Destination header relative path.
-    TRACE_ENTER(sprintf("Trying module mounted at %O...", loc),
-		function_object(fun));
+    SIMPLE_TRACE_ENTER(function_object(fun),
+		       "Trying module mounted at %O...", loc);
     if (has_prefix(href, loc) || (loc == href+"/")) {
       // href = loc + path.
       path = href[sizeof(loc)..];
     } else if (d && has_prefix(loc, href_prefix) &&
-	       ((d -= sizeof((dest = loc[sizeof(href_prefix)..])/"/")) >= 0)) {
-      // loc = href_path + ...
+	       ((d -= sizeof((loc[sizeof(href_prefix)..])/"/")) >= 0)) {
+      // loc = href_prefix + ...
       // && recursion.
       path = "";
-      if (!sizeof(dest) || (dest[0] != '/')) {
-	dest = "/" + dest;
-      }
     } else {
       TRACE_LEAVE("Miss");
       continue;
@@ -592,8 +570,8 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     TRACE_ENTER("Performing the work...", c);
     ASSERT_IF_DEBUG (has_prefix (loc, "/"));
     mapping(string:mixed) ret =
-      recur_func(path, dest, d, c,
-		 id->method=="COPY"?result->prefix(dest):result->prefix(loc[1..]),
+      recur_func(path, loc, d, c,
+		 result->prefix(loc[1..]),
 		 id, @extras);
     if (ret) {
       TRACE_LEAVE("Short circuit return.");
