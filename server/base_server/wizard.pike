@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.8 1997/08/20 08:35:28 per Exp $
+/* $Id: wizard.pike,v 1.9 1997/08/20 08:44:09 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -135,19 +135,19 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
 	 "  <tr><td><table bgcolor=#d0e0ff cellpadding=0 "
 	 "         cellspacing=0 border=0 width=100%>\n"
-	 "    <tr><td><table width=100%>\n"
+	 "    <tr><td><table width=100% cellspacing=0 cellpadding=5>\n<tr><td>"
 	 "<font size=+2>"+(this_object()->wizard_name||this_object()->name)+"</font>"
 	 " </td>\n<td align=right>"+
 	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
-	 (v->help && !id->variables->help?
+	 (foo->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
 	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
 	  " border=0 value=\"Help\"></font>":"")
 	 +"</td>\n"
-	 " </tr><tr bgcolor=blue><td colspan=3><img src="+
+	 " </tr><tr><td colspan=3><table cellpadding=0 cellspacing=0 border=0 width=100%><tr  bgcolor=#113377><td><img src="+
 	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
-	 " width=1 height=1></td></tr>\n"
+	 " width=1 height=1></td></tr></table></td></tr>\n"
 	 "  </table><table cellpadding=6><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
 	 +form+
