@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.732 2001/09/06 09:47:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.733 2001/09/06 10:28:52 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2670,17 +2670,14 @@ class ImageCache
       return meta_cache[ id ];
 
 #ifdef ARG_CACHE_DEBUG
-      werror("restore meta %O\n", id );
+    werror("restore meta %O\n", id );
 #endif
     array(mapping(string:string)) q =
       QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
 
     string s;
-
     if(!sizeof(q) || !strlen(s = q[0]->meta))
       return 0;
-
-    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
 
     mapping m;
     if (catch (m = decode_value (s)))
@@ -2689,6 +2686,8 @@ class ImageCache
       QUERY( "DELETE FROM "+name+" WHERE id=%s", id);
       return 0;
     }
+
+    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
     return meta_cache_insert( id, m );
   }
 
@@ -3036,44 +3035,12 @@ class ArgCache
 #define CLEAN_SIZE  100
 
   static string lq, ulq;
+
 #ifdef THREADS
   Thread.Mutex mutex = Thread.Mutex();
-#endif
-  
-#ifdef DB_SHARING
-  class DBLock
-  {
-#ifdef THREADS
-    object key;
-#endif
-    static void create()
-    {
-#ifdef THREADS
-      key = mutex->lock();
-#endif
-      if(!lq)
-      {
-	lq = "select GET_LOCK('"+name+"', 4)";
-	ulq = "select RELEASE_LOCK('"+name+"')";
-      }
-      get_db()->query( lq );
-    }
-    static void destroy()
-    {
-      get_db()->query( ulq );
-#ifdef THREADS
-      key = 0;
-#endif
-    }
-  }
-# define LOCK() DBLock __ = DBLock()
-#else
-#ifdef THREADS
-  Thread.Mutex _mt = Thread.Mutex();
-# define LOCK() mixed __ = _mt->lock()
+# define LOCK() mixed __ = mutex->lock()
 #else
 # define LOCK()
-#endif
 #endif
   
   static mapping (string:mixed) cache = ([ ]);
@@ -3226,6 +3193,7 @@ class ArgCache
   //! data later.
   {
     array b = values(args), a = sort(indices(args),b);
+    LOCK();
     string id = encode_id( low_store( a ), low_store( b ) );
     if( !cache[ id ] )
       cache[ id ] = args+([]);
@@ -3239,7 +3207,6 @@ class ArgCache
     if( mixed q = cache[ hv ] )
       return q;
 
-    LOCK();
 #ifdef THREADS
     if( mixed q = cache[ hv ] )
       return q;
