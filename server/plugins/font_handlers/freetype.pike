@@ -24,7 +24,7 @@ static string translate_ttf_style( string style )
    case "light":                         return "ln";
    case "lightitalic":case "italiclight":return "li";
   }
-  if(search(lower_case(style), "oblique"))
+  if(has_value(lower_case(style), "oblique"))
     return "ni"; // for now.
   return "nn";
 }

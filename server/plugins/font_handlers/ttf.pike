@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.15 2002/09/26 22:15:13 nilsson Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.16 2002/10/01 23:54:27 nilsson Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -34,7 +34,7 @@ static string translate_ttf_style( string style )
    case "light":                         return "ln";
    case "lightitalic":case "italiclight":return "li";
   }
-  if(search(lower_case(style), "oblique"))
+  if(has_value(lower_case(style), "oblique"))
     return "ni"; // for now.
   return "nn";
 }
