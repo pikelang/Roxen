@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.185 1998/04/09 13:27:10 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.186 1998/04/09 13:30:11 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -425,7 +425,7 @@ void nwrite(string s, int|void perr, int|void type)
   } else {
     error_log[type+","+s] += ({ time() });
   }
-  if(type>1) roxen_perror(s);
+  if(type>=1) roxen_perror(s);
 }
  
 
