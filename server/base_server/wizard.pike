@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.74 1998/09/16 21:23:58 wellhard Exp $
+/* $Id: wizard.pike,v 1.75 1998/11/09 18:28:00 marcus Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -542,6 +542,7 @@ int zonk=time();
 mapping get_actions(object id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
+  if(id->pragma["no-cache"]) wizards=([]);
   foreach(get_dir(dir), string act)
   {
     mixed err;
