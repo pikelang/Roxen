@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.263 2001/03/14 11:36:01 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.264 2001/03/21 14:26:31 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -507,33 +507,43 @@ constant tagdoc=([
 </attr>"+gtextargs,
 
 "gtext-id":#"<desc tag='tag'><p><short>
- Returns an internal URL to an image with the specified attributes
- applied.</short> To use this tag a string with the wanted text needs
- to be put after the URL. Warning: This tag is a serious security
- problem since it is possible to supply very long strings to it,
- turning it into a DOS hole. Hence, this tag should only be used where
- its use can be controlled, e.g. Intranets.</p>
+ Returns an internal URL to an image with the specified gtext attributes
+ applied.</short> Rendering a text image with the given arguments is
+ accomplished by concatenating the text of your choice to the end of the
+ URL returned by the tag, as in \"<tag>gtext-id/</tag>Hello%20World!\".</p>
 
-<ex type='box'>
-<define variable='var.image' preparse='yes'><gtext-id/></define>
-<a href='&var.bild;'>Click me!</a>
-</ex>
+ <p>Be aware that this tag could be abused for denial of service
+ attacks by malicious users swarming your server with requests for
+ images of great length that the server would happily try to render
+ for them. Hence this tag should only be used in environments where
+ you trust all your users, e.g. Intranets.</p>
 
- <p>This link would lead to an empty page. However, if some text would
- be put after the URL the page would instead have some graphical text
- in its upper left corner .</p>
+ <p>In most cases the tag <tag>gtext-url</tag> solves this problem,
+ but if you would like to generate new text images live without
+ reloading some RXML page, you need this tag. An example application:</p>
 
-<ex type='vert'>
-<define variable='var.image' preparse='yes'><gtext-id/></define>
-<img src='<ent>var.image</ent>\"My text\"' />
-</ex>
+<ex type='live'>
+<define variable='var.id' preparse='' trimwhites=''>
+<gtext-id font='FranklinGothicDemi' fgcolor='blue'/>
+</define>
+
+<img src='&var.id;Please type some text here:'
+     alt='' name='banner' width='468' height='60'/>
+
+<script language='javascript'>
+var image = document.images.banner;
+function alter_image(label)
+{
+  image.src = '&var.id:js;' + escape(label.value);
+  label.focus();
+  return false;
+}
+</script>
+
+<form onsubmit='return alter_image(this.label);'>
+<input type='text' size='40' name='label' />
+</form></ex>
 </desc>
-
-<attr name='href' value='URL'><p>
- Link the image to the specified URL. The link color of the document
- will be used as the default foreground rather than the foreground
- color.</p>
-</attr>
 
 <attr name='short'><p>
  Returns a relative path to the image, i.e. a shorter one.
@@ -544,12 +554,6 @@ constant tagdoc=([
  Returns an internal URL to an image with the specified attributes
  applied.</short></p>
 </desc>
-
-<attr name='href' value='URL'><p>
- Link the image to the specified URL. The link color of the document
- will be used as the default foreground rather than the foreground
- color.</p>
-</attr>
 
 <attr name='short'><p>
  Returns a relative path to the image, i.e. a shorter one.
