@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.6 2001/08/09 13:13:21 nilsson Exp $
+// $Id: StateHandler.pmod,v 1.7 2001/09/27 20:08:45 nilsson Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -29,14 +29,14 @@
 //!   state_id = state->register_consumer(state_id, id);
 //! @}
 //!
-//! The it is a good idea to update the state object with
+//! Then it is a good idea to update the state object with
 //! the current page state, as given in the encoded state
 //! variable. This variable is typically URI-encoded and
 //! sent in a forms variable between pages.
 //!
 //! @code{
-//!   if(id->variables->state &&
-//!      !state->uri_decode(id->variables->state))
+//!   if(id->real_variables->__state &&
+//!      !state->uri_decode(id->real_variables->__state[0]))
 //!     RXML.run_error("Error in state.\n");
 //! @}
 //!
@@ -57,9 +57,9 @@
 //! @code{
 //!   string get_actions(string uri, int current_state,
 //!                      object state) {
-//!     return "<a href='" + uri + "?state=" +
+//!     return "<a href='" + uri + "?__state=" +
 //!            state->uri_encode(1) + "'>1</a><br />"
-//!            "<a href='" + uri + "?state=" +
+//!            "<a href='" + uri + "?__state=" +
 //!            state->uri_encode(2) + "'>2</a>";
 //!   }
 //! @}
