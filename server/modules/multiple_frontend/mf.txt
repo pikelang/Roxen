@@ -1,0 +1,60 @@
+Frontend Server
+
+  o Uses crypted communication
+  o All communication over HTTP (new method, with RPC in the request data)
+  o Push config changes to clients
+  o Provides poll and invalidate interface (poll from client to fetch
+    file, invalidate from server to the clients)
+  o Provides a message system for modules that have to synchronize data
+
+Frontend Client
+
+  o Can poll files not available from server
+  o Removes files from cache when server invalidates them (to be
+    repolled later on, if needed)
+
+
+Server (low-level) API:
+
+  module->server[->client]
+    
+   object server = id->conf->get_provides( "mf_server" );
+
+   array(MFClient) server->clients
+   //! All clients
+
+   void server->send_event( string event_type, mixed event_data );
+   //!  Sends the event to _all_ clients.
+
+   void server->set_callback( string event_type, function callback_function );
+   //!  Registers the event type event_type to call the function
+   //!  callback_function when it arrives from a client.
+
+
+  class MFClient
+  {
+     string host;
+     int port;
+     mixed command( Command ... c );
+    //! Send the specified command to the client.
+    //! A command is constructed with server->Command( event_type, event_data )
+
+    void command_nb( Command ... c );
+    //! Same as command, but nonblocking, and no result is returned
+  }
+
+Client (low-level) API:
+
+   module->client[->server]
+    
+   object client = id->conf->get_provides( "mf_client" );
+
+   mixed server->send_event_b( string event_type, mixed event_data );
+   //!  Sends the event to the server, blocking
+
+   void server->send_event( string event_type, mixed event_data );
+   //!  Sends the event to the server, non-blocking
+
+   void server->set_callback( string event_type, function callback_function );
+   //!  Registers the event type event_type to call the function
+   //!  callback_function when it arrives from the server.
