@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.231 1998/09/01 14:00:07 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.232 1998/09/01 19:15:21 marcus Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -2505,6 +2505,9 @@ void exit_when_done()
   {
     werror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
+#ifdef THREADS
+    stop_handler_threads();
+#endif /* THREADS */
     add_constant("roxen", 0);	// Paranoia...
     add_constant("roxenp", 0);	// Paranoia...
     exit(-1);	// Restart.
@@ -2530,6 +2533,9 @@ void exit_when_done()
     {
       werror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
+#ifdef THREADS
+      stop_handler_threads();
+#endif /* THREADS */
       add_constant("roxen", 0);	// Paranoia...
       exit(-1);	// Restart.
       perror("Odd. I am not dead yet.\n");
@@ -2538,6 +2544,9 @@ void exit_when_done()
   call_out(lambda(){
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
+#ifdef THREADS
+    stop_handler_threads();
+#endif /* THREADS */
     add_constant("roxen", 0);	// Paranoia...
     exit(-1); // Restart.
   }, 600, 0); // Slow buggers..
