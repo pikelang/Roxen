@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.109 1998/07/04 00:42:19 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.110 1998/07/04 12:34:28 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2134,10 +2134,29 @@ string tag_header(string tag, mapping m, object got, object file,
   }
   
   if(!(m->value && m->name))
-    return "<!-- Header requires booth a name and a value. -->";
+    return "<!-- Header requires both a name and a value. -->";
 
   add_header(_extra_heads, m->name, m->value);
   return "";
+}
+
+string tag_redirect(string tag, mapping m, object id, object file,
+		    mapping defines)
+{
+  if (!m->to) {
+    return("<!-- Redirect requires attribute \"to\". -->");
+  }
+  mapping r = http_redirect(m->to, id);
+  if (r->error) {
+    _error = r->error;
+  }
+  if (r->extra_heads) {
+    _extra_heads += r->extra_heads;
+  }
+  if (m->text) {
+    _rettext = m->text;
+  }
+  return("");
 }
 
 string tag_expire_time(string tag, mapping m, object got, object file,
@@ -2317,7 +2336,7 @@ mapping query_tag_callers()
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
 	    "pr":tag_pr,
-	   "use":tag_use,
+	    "use":tag_use,
 	    "list-tags":tag_list_tags,
 	    "number":tag_number,
 	    "imgs":tag_ximage,
@@ -2343,6 +2362,7 @@ mapping query_tag_callers()
 	    "realfile":tag_realfile,
 	    "vfs":tag_vfs,
 	    "header":tag_header,
+	    "redirect":tag_redirect,
 	    "expire_time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
