@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.159 1999/05/17 06:47:10 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.160 1999/05/18 02:31:12 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -169,57 +169,6 @@ array (array(int)) make_matrix(int size)
   return matrixes[size] = res;
 }
 #endif
-
-string fix_relative(string file, object id)
-{
-  if(file != "" && file[0] == '/') return file;
-  file = combine_path(dirname(id->not_query) + "/",  file);
-  return file;
-}
-
-object last_image;      // Cache the last image for a while.
-string last_image_name;
-object load_image(string f,object id)
-{
-  if(last_image_name == f && last_image) return last_image->copy();
-  string data;
-  object file;
-  object img
-#if !constant(Image.PNM)
-  =Image.image()
-#endif
-    ;
-  
-  if(id->misc->_load_image_called < 5) {
-    // We were recursing very badly with the demo module here...
-    id->misc->_load_image_called++;
-    if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
-      if(!(file=open(f,"r")) || (!(data=file->read())))
-	return 0;
-  }
-  id->misc->_load_image_called = 0;
-  if(!data)
-    return 0;
-  //werror("Read "+strlen(data)+" bytes.\n");
-#if constant(Image.GIF.decode)
-  catch { if(!img) img = Image.GIF.decode( data ); };
-#endif
-#if constant(Image.JPEG.decode)
-  catch { if(!img) img = Image.JPEG.decode( data ); };
-#endif
-#if constant(Image.PNG.decode)
-  catch { if(!img) img = Image.PNG.decode( data ); };
-#endif
-#if constant(Image.PNM.decode)
-  catch { if(!img) img = Image.PNM.decode( data ); };
-#endif
-#if !constant(Image.PNM.decode)
-  if (catch { if(!img->frompnm(data)) return 0;}) return 0;
-#endif
-  if(!img) return 0;
-  last_image = img; last_image_name = f;
-  return img->copy();
-}
 
 object  blur(object img, int amnt)
 {
@@ -392,45 +341,51 @@ object make_text_image(mapping args, object font, string text,object id)
   object background,foreground;
 
 
-  if(args->texture) {
-    foreground = load_image(args->texture,id);
-    if(args->tile)
+  if(args->texture)
+  {
+    object t = roxen.load_image(args->texture,id);
+    if( t )
     {
-      object b2 = Image.image(xsize,ysize);
-      for(int x=0; x<xsize; x+=foreground->xsize())
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  b2->paste(foreground, x, y);
-      foreground = b2;
-    } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
-      b3->paste(foreground,0,0);
-      b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-      b3->paste(foreground->mirrory(),0,foreground->ysize());
-      b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		foreground->ysize());
-      foreground = b3;
-      for(int x=0; x<xsize; x+=foreground->xsize())
+      foreground = t;
+      if(args->tile)
       {
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  if(y%2)
-	    b2->paste(foreground->mirrory(), x, y);
-	  else
+	object b2 = Image.image(xsize,ysize);
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	  for(int y=0; y<ysize; y+=foreground->ysize())
 	    b2->paste(foreground, x, y);
-	foreground = foreground->mirrorx();
+	foreground = b2;
+      } else if(args->mirrortile) {
+	object b2 = Image.image(xsize,ysize);
+	object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
+	b3->paste(foreground,0,0);
+	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
+	b3->paste(foreground->mirrory(),0,foreground->ysize());
+	b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
+		  foreground->ysize());
+	foreground = b3;
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	{
+	  for(int y=0; y<ysize; y+=foreground->ysize())
+	    if(y%2)
+	      b2->paste(foreground->mirrory(), x, y);
+	    else
+	      b2->paste(foreground, x, y);
+	  foreground = foreground->mirrorx();
+	}
+	foreground = b2;
       }
-      foreground = b2;
-    }
+    } else
+      werror("Failed to load image for "+args->texture+"\n");
   }
   int background_is_color;
   if(args->background &&
-     ((background = load_image(args->background, id)) ||
+     ((background = roxen.load_image(args->background, id)) ||
       (sizeof(args->background)>1 &&
        (background=Image.image(xsize,ysize, @(parse_color(args->background[1..]))))
        && (background_is_color=1))))
   {
     object alpha;
-    if(args->alpha && (alpha = load_image(args->alpha,id)) && background_is_color)
+    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
     {
       xsize=MAX(xsize,alpha->xsize());
       ysize=MAX(ysize,alpha->ysize());

@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.316 1999/04/24 23:20:48 marcus Exp $
+ * $Id: roxen.pike,v 1.317 1999/05/18 02:31:30 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,9 +8,10 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.316 1999/04/24 23:20:48 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.317 1999/05/18 02:31:30 peter Exp $";
 
 object backend_thread;
+object argcache;
 
 // Some headerfiles
 #define IN_ROXEN
@@ -1604,6 +1605,420 @@ int cache_disabled_p() { return !QUERY(cache);         }
 int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
 private int ident_disabled_p() { return QUERY(default_ident); }
 
+class ArgCache
+{
+  static string name;
+  static string path;
+  static int is_db;
+  static object db;
+
+#define CACHE_VALUE 0
+#define CACHE_SKEY  1
+#define CACHE_SIZE  600
+#define CLEAN_SIZE  100
+
+#ifdef THREADS
+  static Thread.Mutex mutex = Thread.Mutex();
+# define LOCK() object __key = mutex->lock()
+#else
+# define LOCK() 
+#endif
+
+  static mapping (string:mixed) cache = ([ ]);
+
+  void setup_table()
+  {
+    if(catch(db->query("select id from "+name+" where id=-1")))
+      if(catch(db->query("create table "+name+" ("
+                         "id int auto_increment primary key, "
+                         "lkey varchar(80) not null default '', "
+                         "contents blob not null default '', "
+                         "atime bigint not null default 0)")))
+        throw("Failed to create table in database\n");
+  }
+
+  void create( string _name, 
+               string _path, 
+               int _is_db )
+  {
+    name = _name;
+    path = _path;
+    is_db = _is_db;
+
+    if(is_db)
+    {
+      db = Sql.sql( path );
+      if(!db)
+        error("Failed to connect to database for argument cache\n");
+      setup_table( );
+    } else {
+      if(path[-1] != '/' && path[-1] != '\\')
+        path += "/";
+      path += replace(name, "/", "_")+"/";
+      mkdirhier( path + "/tmp" );
+    }
+  }
+
+  static string read_args( string id )
+  {
+    if( is_db )
+    {
+      mapping res = db->query("select * from "+name+" where id='"+id+"'");
+      if( sizeof(res) )
+      {
+        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
+        return res->contents;
+      }
+      return 0;
+    } else {
+      if( file_stat( path+id ) )
+        return Stdio.read_bytes(path+"/"+id);
+    }
+    return 0;
+  }
+
+  static string create_key( string long_key )
+  {
+    if( is_db )
+    {
+      mapping data = db->query(sprintf("select id,contents from %s where lkey='%s'",
+                                       name,long_key[..79]));
+      foreach( data, mapping m )
+        if( m->contents == long_key )
+          return m->id;
+
+      db->query( sprintf("insert into %s (contents,lkey,atime) values "
+                         "('%s','%s','%d')", 
+                         name, long_key, long_key[..79], time() ));
+      return create_key( long_key );
+    } else {
+      string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
+      _key = replace(_key-"=","/","=");
+      string short_key = _key[0..1];
+
+      while( file_stat( path+short_key ) )
+      {
+        if( Stdio.read_bytes( path+short_key ) == long_key )
+          return short_key;
+        short_key = _key[..strlen(short_key)];
+        if( strlen(short_key) >= strlen(_key) )
+          short_key += "."; // Not very likely...
+      }
+      object f = Stdio.File( path + short_key, "wct" );
+      f->write( long_key );
+      return short_key;
+    }
+  }
+
+
+  int key_exists( string key )
+  {
+    LOCK();
+    if( !is_db ) 
+      return !!file_stat( path+key );
+    return !!read_args( key );
+  }
+
+  string store( mapping args )
+  {
+    LOCK();
+    int e = gethrtime();
+    array b = values(args), a = sort(indices(args),b);
+    string data = MIME.encode_base64(encode_value(({a,b})),1);
+    if( cache[ data ] )
+      return cache[ data ][ CACHE_SKEY ];
+
+    string id = create_key( data );
+
+    cache[ data ] = ({ 0, 0 });
+    cache[ data ][ CACHE_VALUE ] = args;
+    cache[ data ][ CACHE_SKEY ] = id;
+    cache[ id ] = data;
+
+    if( sizeof( cache ) > CACHE_SIZE )
+    {
+      array i = indices(cache);
+      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE )
+        m_delete( cache, i[random(sizeof(i))] );
+    }
+    return id;
+  }
+
+  mapping lookup( string id )
+  {
+    if(cache[id])
+      return cache[cache[id]][CACHE_VALUE];
+
+    string q = read_args( id );
+    if(!q) error("Key does not exist!\n");
+    mixed data = decode_value(MIME.decode_base64( q ));
+    data = mkmapping( data[0],data[1] );
+
+    cache[ q ] = ({0,0});
+    cache[ q ][ CACHE_VALUE ] = data;
+    cache[ q ][ CACHE_SKEY ] = id;
+    cache[ id ] = q;
+    return data;
+  }
+
+  void delete( string id )
+  {
+    LOCK();
+    if(cache[id])
+    {
+      m_delete( cache, cache[id] );
+      m_delete( cache, id );
+    }
+    if( is_db )
+      db->query( "delete from "+name+" where id='"+id+"'" );
+    else
+      rm( path+id );
+  }
+}
+
+
+array(int) invert_color(array color )
+{
+  return ({ 255-color[0], 255-color[1], 255-color[2] });
+}
+
+
+mapping low_decode_image(string data, void|array tocolor)
+{
+  Image.image i, a;
+  string format;
+  if(!data)
+    return 0; 
+
+#if constant(Image.GIF._decode)  
+  // Use the low-level decode function to get the alpha channel.
+  catch
+  {
+    array chunks = Image.GIF._decode( data );
+
+    // If there is more than one render chunk, the image is probably
+    // an animation. Handling animations is left as an exercise for
+    // the reader. :-)
+    foreach(chunks, mixed chunk)
+      if(arrayp(chunk) && chunk[0] == Image.GIF.RENDER )
+        [i,a] = chunk[3..4];
+    format = "GIF";
+  };
+
+  if(!i) catch
+  {
+    i = Image.GIF.decode( data );
+    format = "GIF";
+  };
+#endif
+
+#if constant(Image.JPEG) && constant(Image.JPEG.decode)
+  if(!i) catch
+  {
+    i = Image.JPEG.decode( data );
+    format = "JPEG";
+  };
+
+#endif
+
+#if constant(Image.XCF) && constant(Image.XCF._decode)
+  if(!i) catch
+  {
+    mixed q = Image.XCF._decode( data, ([
+      "background":tocolor,
+      ]));
+    tocolor=0;
+    format = "XCF Gimp file";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.PSD) && constant(Image.PSD._decode)
+  if(!i) catch
+  {
+    mixed q = Image.PSD._decode( data, ([
+      "background":tocolor,
+      ]));
+    tocolor=0;
+    format = "PSD Photoshop file";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.PNG) && constant(Image.PNG._decode)
+  if(!i) catch
+  {
+    mixed q = Image.PNG._decode( data );
+    format = "PNG";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.BMP) && constant(Image.BMP._decode)
+  if(!i) catch
+  {
+    mixed q = Image.BMP._decode( data );
+    format = "Windows bitmap file";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.TGA) && constant(Image.TGA._decode)
+  if(!i) catch
+  {
+    mixed q = Image.TGA._decode( data );
+    format = "Targa";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.PCX) && constant(Image.PCX._decode)
+  if(!i) catch
+  {
+    mixed q = Image.PCX._decode( data );
+    format = "PCX";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.XBM) && constant(Image.XBM._decode)
+  if(!i) catch
+  {
+    mixed q = Image.XBM._decode( data, (["bg":tocolor||({255,255,255}),
+                                    "fg":invert_color(tocolor||({255,255,255})) ]));
+    format = "XBM";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.XPM) && constant(Image.XPM._decode)
+  if(!i) catch
+  {
+    mixed q = Image.XPM._decode( data );
+    format = "XPM";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.TIFF) && constant(Image.TIFF._decode)
+  if(!i) catch
+  {
+    mixed q = Image.TIFF._decode( data );
+    format = "TIFF";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.ILBM) && constant(Image.ILBM._decode)
+  if(!i) catch
+  {
+    mixed q = Image.ILBM._decode( data );
+    format = "ILBM";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+
+#if constant(Image.PS) && constant(Image.PS._decode)
+  if(!i) catch
+  {
+    mixed q = Image.PS._decode( data );
+    format = "Postscript";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.XWD) && constant(Image.XWD.decode)
+  if(!i) catch
+  {
+    i = Image.XWD.decode( data );
+    format = "XWD";
+  };
+#endif
+
+#if constant(Image.HRZ) && constant(Image.HRZ._decode)
+  if(!i) catch
+  {
+    mixed q = Image.HRZ._decode( data );
+    format = "HRZ";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+#if constant(Image.AVS) && constant(Image.AVS._decode)
+  if(!i) catch
+  {
+    mixed q = Image.AVS._decode( data );
+    format = "AVS X";
+    i = q->image;
+    a = q->alpha;
+  };
+#endif
+
+  if(!i)
+    catch{
+      i = Image.PNM.decode( data );
+      format = "PNM";
+    };
+
+  if(!i) // No image could be decoded at all. 
+    return 0;
+
+  if( tocolor && i && a )
+  {
+    object o = Image.image( i->xsize(), i->ysize(), @tocolor );
+    o->paste_mask( i,a );
+    i = o;
+  }
+
+  return ([
+    "format":format,
+    "alpha":a,
+    "img":i,
+  ]);
+}
+
+mapping low_load_image(string f,object id)
+{
+  string data;
+  object file, img;
+  
+  if(id->misc->_load_image_called < 5) {
+    // We were recursing very badly with the demo module here...
+    id->misc->_load_image_called++;
+    if(!(data=id->conf->try_get_file(f, id))) {
+      file=Stdio.File();
+      if(!file->open(f,"r") || !(data=file->read))
+	return 0;
+    }
+  }
+  id->misc->_load_image_called = 0;
+  if(!data)  return 0;
+  return low_decode_image( data );
+}
+
+
+
+object load_image(string f,object id)
+{
+  mapping q = low_load_image( f, id );
+  if( q ) return q->img;
+  return 0;
+}
+
+
 private void define_global_variables( int argc, array (string) argv )
 {
   int p;
@@ -1988,6 +2403,31 @@ private void define_global_variables( int argc, array (string) argv )
 	  ({1,2,3,4,5,6,7,14,30}),
 	  lambda(){return !QUERY(suicide_engage);}
 	  );
+
+  globvar("argument_cache_in_db", 0, 
+         "Argument Cache: Store the argument cache in a mysql database",
+         TYPE_FLAG|VAR_MORE,
+         "If set, store the argument cache in a mysql "
+         "database. This is very useful for load balancing using multiple "
+         "roxen servers, since the mysql database will handle "
+          " synchronization"); 
+
+  globvar( "argument_cache_db_path", "mysql://localhost/roxen", 
+          "Argument Cache: Database URL to use",
+          TYPE_STRING|VAR_MORE,
+          "The database to use to store the argument cache",
+          0,
+          lambda(){ return !QUERY(argument_cache_in_db); });
+
+  globvar( "argument_cache_dir", "../argument_cache/", 
+          "Argument Cache: Cache directory",
+          TYPE_DIR|VAR_MORE,
+          "The cache directory to use to store the argument cache."
+          " Please note that load balancing is not available for most modules "
+          " (such as gtext, diagram etc) unless you use a mysql database to "
+          "store the argument caches",
+          0,
+          lambda(){ return QUERY(argument_cache_in_db); });
 
   setvars(retrieve("Variables", 0));
 
@@ -2578,6 +3018,27 @@ int main(int|void argc, array (string)|void argv)
   initiate_supports();
 
   initiate_configuration_port( 1 );
+
+  roxen_perror("Initiating argument cache ... ");
+
+  int id;
+  string cp = QUERY(argument_cache_dir), na = "args";
+  if( QUERY(argument_cache_in_db) )
+  {
+    id = 1;
+    cp = QUERY(argument_cache_db_path);
+    na = "argumentcache";
+  }
+  mixed e;
+  e = catch( argcache = ArgCache(na,cp,id) );
+  if( e )
+  {
+    report_error( "Failed to initialize the global argument cache:\n"
+                  + (describe_backtrace( e )/"\n")[0]+"\n");
+    werror( describe_backtrace( e ) );
+  }
+  roxen_perror( "\n" );
+
   enable_configurations (1);
 
   create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
