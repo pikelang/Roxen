@@ -2,10 +2,10 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.1 2002/02/06 09:42:48 anders Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.2 2002/06/24 15:02:01 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
-constant module_name = "Whitespace Remover";
+constant module_name = "Whitespace Sucker";
 constant module_doc  = "Removes all whitespace from pages.";
 
 void create() {
