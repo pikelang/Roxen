@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.71 2004/05/24 13:40:50 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.72 2004/05/24 17:23:45 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -1362,14 +1362,14 @@ class RequestID
       foreach(query / "&", v)
 	if(sscanf(v, "%s=%s", a, b) == 2)
 	{
-	  a = _Roxen->http_decode_string(replace(a, "+", " "));
-	  b = _Roxen->http_decode_string(replace(b, "+", " "));
+	  a = _Roxen.http_decode_string(replace(a, "+", " "));
+	  b = _Roxen.http_decode_string(replace(b, "+", " "));
 	  real_variables[ a ] += ({ b });
 	} else
 	  if(strlen( rest_query ))
-	    rest_query += "&" + _Roxen->http_decode_string( v );
+	    rest_query += "&" + _Roxen.http_decode_string( v );
 	  else
-	    rest_query = _Roxen->http_decode_string( v );
+	    rest_query = _Roxen.http_decode_string( v );
       rest_query=replace(rest_query, "+", "\000");
     }
     return f;
