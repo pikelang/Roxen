@@ -30,6 +30,9 @@ o Pike is now called 7.0 instead of 0.7 in most places.
 
 o --without-Perl is now default.
 
+o Fixed bug in the Pike binary installer that resulted in huge amounts
+  of (harmless) backtraces.
+
 
 Changes since Roxen 2.0.20
 -----------------------------------------------
