@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.561 2004/04/28 17:48:35 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.562 2004/04/29 16:11:17 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -924,6 +924,8 @@ User authenticate( RequestID id, UserDB|void database)
 //! id->misc->authenticated_user is always set to the return value.
 {
   User u;
+  if (!zero_type (u = id->misc->authenticated_user))
+    return u;
   foreach( auth_modules(), AuthModule method )
     if( u = method->authenticate( id, database ) )
       return id->misc->authenticated_user = u;
@@ -1328,7 +1330,6 @@ string examine_return_mapping(mapping m)
    return res;
 }
 
-#if 0
 //! Attempt to lock @[path].
 //!
 //! @param path
@@ -1430,7 +1431,6 @@ mapping(string:mixed)|string lock_file(string path,
   // Success.
   return locktoken;
 }
-#endif
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All
