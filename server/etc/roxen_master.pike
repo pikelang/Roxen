@@ -1,6 +1,6 @@
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.10 1997/01/13 06:54:29 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.11 1997/01/14 13:31:53 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -46,6 +46,8 @@ string program_name(program p)
   return search(programs, p);
 }
 
+#define capitalize(X)	(upper_case((X)[..0])+(X)[1..])
+
 /* This function is called whenever a module has built a clonable program
  * with functions written in C and wants to notify the Pike part about
  * this. It also supplies a suggested name for the program.
@@ -54,8 +56,13 @@ void add_precompiled_program(string name, program p)
 {
   programs[name]=p;
 
-  if(sscanf(name,"/precompiled/%s",name))
-    add_constant(upper_case(name[..0])+name[1..],p);
+  if(sscanf(name,"/precompiled/%s",name)) {
+    string const="";
+    foreach(reverse(name/"/"), string s) {
+      const = capitalize(s) + const;
+      add_constant(const, p);
+    }
+  }
 }
 
 /* This function is called when the driver wants to cast a string
