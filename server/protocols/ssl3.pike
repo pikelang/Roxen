@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.55 1999/07/14 14:28:40 grubba Exp $
+/* $Id: ssl3.pike,v 1.56 1999/07/19 17:39:06 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -345,7 +345,7 @@ void send_result(mapping|void result)
 	pipe = 0;
 	return;
       }
-
+      destroy();		// To mark we're not interested in my_fd anymore.
       my_fd = 0;
       file = 0;
       return;
