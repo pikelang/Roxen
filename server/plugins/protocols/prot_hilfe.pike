@@ -1,4 +1,4 @@
-// This is a roxen protocol module.
+// This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
 inherit Protocol;
@@ -211,23 +211,40 @@ class Connection
     }
   }
 
-  mixed hilfe_debug( string what )
-  {
-    if( !stringp( what ) )
-      error("Syntex: debug(\"what\");");
-    switch( what )
-    {
+  class CommandDebug {
+    inherit Tools.Hilfe.Command;
+    string help(string what) { return "Debug ChiliMoon"; }
+
+    void exec(Tools.Hilfe.Evaluator e, string line, array(string) words,
+	      array(string) tokens) {
+      if(sizeof(words)!=2) {
+	e->safe_write(help("")+"\n");
+	return;
+      }
+
+      switch( words[1] ) {
       case "accesses":
 	foreach( roxen->configurations, Configuration c )
-	  if( c->inited )
-	  {
+	  if( c->inited ) {
 	    c->pri[4]->first_modules += ({ InsinuateFirst() });
 	    c->invalidate_cache();
 	  }
+	e->safe_write("Access debug started\n");
 	break;
 
       default:
-	error("Don't know how to debug "+what+"\n");
+	e->safe_write(help("")+"\n");
+      }
+    }
+  }
+
+  class CommandExit {
+    inherit Tools.Hilfe.Command;
+    string help(string what) { return "Exit Hilfe."; }
+
+    void exec(Tools.Hilfe.Evaluator e, string line, array(string) words,
+	      array(string) tokens) {
+      begone();
     }
   }
 
@@ -236,21 +253,14 @@ class Connection
 
     void got_data( string d )
     {
+      replace(d, "\r", "\n");
+      sscanf(d, "%s\n", d);
       add_input_line( d );
+      if(catch(state)) return;
       write( state->finishedp() ? "> " : ">> " );
       user->settings->set("hilfe_history",
 			  rl->readline->get_history()->encode());
       user->settings->save();
-    }
-
-    class CommandExit {
-      inherit Tools.Hilfe.Command;
-      string help(string what) { return "Exit Hilfe."; }
-
-      void exec(Tools.Hilfe.Evaluator e, string line, array(string) words,
-		array(string) tokens) {
-	begone();
-      }
     }
 
     void create()
@@ -259,11 +269,11 @@ class Connection
       write = lambda(string ... in) { rl->readline->write(sprintf(@in)); };
       commands->exit = CommandExit();
       commands->quit = commands->exit;
+      commands->debug = CommandDebug();
       constants["RequestID"] = myRequestID;
       constants["conf"] = my_conf;
       constants["port"] = my_port_obj;
       constants["user"] = user;
-      constants["debug"] = hilfe_debug;
       user->settings->defvar( "hilfe_history", Variable.String("", 65535,0,0 ) );
       user->settings->restore( );
       string hi;
@@ -372,7 +382,7 @@ class Connection
   {
     if( rl->readline )
     {
-      rl->readline->write("Welcome to Roxen Hilfe 1.1\n", 1);
+      rl->readline->write("Welcome to ChiliMoon Hilfe 1.2\n", 1);
       rl->readline->write("Username: ");
       return;
     }
