@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.12 2000/02/02 06:09:26 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.13 2000/02/03 17:19:01 wellhard Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -248,7 +248,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
       icon->alpha *= 0.3;
     button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
   }
-
+  
   //  Draw text
   if (args->dim)
     for (int i = 0; i < 3; i++)
@@ -282,7 +282,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left",                  //  Icon alignment
-    "font": (args->font||id->misc->defines->font),
+    "font": (args->font||roxen->query("default_font")),
   ]);
 
   if(args->bordercolor)
