@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.202 2000/07/03 04:35:52 nilsson Exp $
+// $Id: rxml.pike,v 1.203 2000/07/03 13:58:55 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -483,6 +483,12 @@ class CompatTag
     inherit RXML.Frame;
     string raw_tag_text;
 
+    array do_enter (RequestID id)
+    {
+      if (args->preparse)
+	content_type = content_type (RXML.PXml);
+    }
+
     array do_return (RequestID id)
     {
       id->misc->line = "0";	// No working system for this yet.
@@ -500,8 +506,10 @@ class CompatTag
       string|array(string) result;
       if (flags & RXML.FLAG_EMPTY_ELEMENT)
 	result = fn (name, args, id, source_file, defines);
-      else
+      else {
+	if(args->trimwhites) content = String.trim_all_whites(content);
 	result = fn (name, args, content, id, source_file, defines);
+      }
 
       if (arrayp (result)) {
 	result_type = result_type (RXML.PNone);
