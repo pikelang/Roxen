@@ -1,5 +1,5 @@
 /*
- * $Id: openports.pike,v 1.2 1997/08/13 22:27:26 grubba Exp $
+ * $Id: openports.pike,v 1.3 1997/08/13 23:13:00 neotron Exp $
  */
 
 inherit "roxenlib";
@@ -107,17 +107,18 @@ mixed all_ports(object id)
 
 mixed roxen_ports(object id)
 {
-  string res = "<h1>All open ports in this Roxen</h1><br>\n";
+  string res = "<h1>All open ports in this Roxen</h1>\n";
   mapping ports_by_ip = ([ ]);
 
   mapping used = ([]);
   foreach(roxen->configurations, object c)
   {
     mapping p = c->open_ports;
-    foreach(indices(p), array port)
+    foreach(indices(p), object port)
     {
       // num, protocol, ip
-      if(!used[p[port][2]] || !used[p[port][2]][p[port][0]])
+      // Why is port 0 sometimes? *bogglefluff* / David
+      if(port && (!used[p[port][2]] || !used[p[port][2]][p[port][0]]))
       {
 	if(!used[p[port][2]]) used[p[port][2]]=(<>);
 	used[p[port][2]][p[port][0]]=1;
@@ -139,29 +140,51 @@ mixed roxen_ports(object id)
     else
       ports_by_ip[ip]+=({({(int)port,"http",0})});
   }
-  
-  foreach(sort(indices(ports_by_ip)), string ip)
+
+  res += "<table cellspacing=4>";
+  foreach(Array.sort_array(indices(ports_by_ip), lambda(string a, string b) {
+    if(a == "ANY")
+      return -1;
+    return a > b;
+  }), string ip)
   {
     string su;
     string oip = ip;
-    if(ip != "ANY") ip = su = roxen->blocking_ip_to_host(ip);
-    else { su = gethostname(); ip="All interfaces"; }
-    res += "<h2>"+ip+"</h2>";
-    res += "<table><tr bgcolor=lightblue><td><b>Port number</b></td><td><b>Protocol</b></td><td><b>Server</b></td><td><b>URL</b></td></tr>\n";
+    if(ip != "ANY") {
+      if(ip == "127.0.0.1") {
+	ip = "Localhost";
+	su = "127.0.0.1";
+      } else
+	ip = su = roxen->blocking_ip_to_host(ip);
+    } else {
+      su = gethostname();
+      ip="All interfaces (bound to ANY)";
+    }
+    res += ("<tr><th align=left colspan=4><br><font size=+1><b>"+ip+
+	    "</b></font><br></th></tr><tr bgcolor=lightblue>"
+	    "<td><b>Port number</b></td><td><b>Protocol</b></td>"
+	    "<td><b>Server</b></td><td><b>URL</b></td></tr>\n");
     array a;
     a = ports_by_ip[oip];
     sort(column(a,0), a);
     foreach(a, array port)
     {
-      string url = (port[1][0]=='s'?"https":port[1]) + "://" + su + ":"+port[0];
+      string url, url2;
+      if(port[1] == "tetris")
+	url = "telnet://" + su + ":"+port[0]+"/";
+      else
+	url = (port[1][0]=='s'?"https":port[1]) + "://" + su + ":"+port[0]+"/";
+      
+      url2 = (port[1][0]=='s'?"https":port[1]) + "://" + su + ":"+port[0]+"/";
+
       res += sprintf("<tr><td align=right>%d</td><td>%s</td><td><a href=\"%s\">"
 		     "%s</a></td><td><a target=remote href=\"%s\">%s</a>"
 		     "</td></tr>",
 		     port[0],port[1],
-		     port[2]?"/Configurations/"+http_encode_string(port[2]->name)+"?"+time():"/Globals/", port[2]?port[2]->name:"Configuration interface", url, url);
+		     port[2]?"/Configurations/"+http_encode_string(port[2]->name)+"?"+time():"/Globals/", port[2]?port[2]->name:"Configuration interface", url, url2);
     }
-    res += "</table>";
   }
+  res += "</table>";
   return res;
 }
 
