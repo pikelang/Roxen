@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.4 1997/10/08 22:04:28 grubba Exp $";
+string cvs_version="$Id: pimage.pike,v 1.5 1997/10/16 12:16:30 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -326,10 +326,12 @@ array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
 	      "Pike Image Module",
-	      "This module adds a new tag, &lt;pimage&gt;&lt;/pimage&gt;, which "
-	      "draws an image from some pike-code. <p> "
-	      "There are several predefined images-constructors: <p>"
-	      "Clock( delay, background_image ); Animated clock-gif.<br>"
+	      "This module adds two new tags, &lt;gclock&gt; and "
+   	      "&lt;pimage&gt;&lt;/pimage&gt;. GClock draws clocks, and "
+	      " pimage draws an image from pike-code. <p> "
+	      "There are several predefined images-constructors to use "
+	      "in pimage: <p>"
+	      "Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
 	      "Progress( callback_function ); Animated progress bar.<br>"
 	      "PPM( \"file_name\" ); Loads a PPM file.<br>"
 	      "Image(xs,ys, bg_color ); Simple (cleared) image<br>"
@@ -341,6 +343,10 @@ void create()
 {
   defvar("location", "/pimages/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	 "The URL-prefix for the pike image module.");
+  defvar("pimage", 1, "The PIMAGE tag is enabled", TYPE_FLAG,
+	 "If set, the &lt;pimage&gt; tag will be available for use. This "
+	 "tag has the same security considerations as the &lt;pike&gt; tag. "
+	 "If not set, only the &lt;gclock&gt; tag vill be available.");
 }
 
 
@@ -377,9 +383,46 @@ string tag_pimage(string t, mapping m, string contents, object rid)
   return do_replace((compiled[id]=compile(contents, rid))->tag(m), id);
 }
 
+constant DANGEROUS_FROM = ({ "\"", "\\" });
+constant DANGEROUS_TO   = ({  "", "" });
+
+string tag_glock(string t, mapping m, object rid)
+{
+  string face;
+  if(m->dial){ m->face = m->dial; m_delete(m, face); }
+  if(!m->face) 
+    face = "Dial()";
+  else
+  {
+    switch(lower_case(m->face))
+    {
+     case "default":  face = "Dial()";  break;
+     case "roxen":  face = "Roxen()";  break;
+     default:
+       face = "PPM(\""+replace(m->face,DANGEROUS_FROM,DANGEROUS_TO)+"\")";
+    }
+  }
+  m_delete(m, "face");
+
+  return tag_pimage("pimage", m, 
+		    sprintf("object draw() {\n"
+			    "  return Clock(30,%d,%s,\"%s\",%d);\n"
+			    "}\n",(int)m->offset,face,
+			    replace(m->handcolor||"black",
+				    DANGEROUS_FROM,DANGEROUS_TO),
+			    (int)m->handoffset+50), rid);
+}
+
 string query_location() { return query("location"); }
 
 mapping query_container_callers()
 {
   return ([ "pimage":tag_pimage, ]);
+}
+
+mapping query_tag_callers()
+{
+  return ([
+    "gclock":tag_glock,
+  ]);
 }

@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.37 1997/09/03 05:19:28 per Exp $
+/* $Id: wizard.pike,v 1.38 1997/10/16 12:16:26 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -160,7 +160,7 @@ string make_title()
 }
 
 int num_pages(string wiz_name)
-{  
+{
   int max_page;
   for(int i=0; i<100; i++)
     if(!this_object()[wiz_name+i])
@@ -301,11 +301,17 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 }
 
 mapping wizards = ([]);
-
+string err;
 object get_wizard(string act, string dir, mixed ... args)
 {
   act-="/";
-  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
+  //  _master->set_inhibit_compile_errors("");
+  //  catch {
+    if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
+    //  };
+  if(_master->errrors && strlen(_master->errors)) err+=_master->errors;
+  //  _master->set_inhibit_compile_errors(0);
+  //  if(!wizards[dir+act]) throw("Failed to compile "+act+"\n");
   return wizards[dir+act];
 }
 
@@ -330,7 +336,7 @@ mapping get_actions(string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
-//  if(err) report_error(describe_backtrace(err));
+    if(err) report_error(describe_backtrace(err));
   }
   return acts;
 }
@@ -360,16 +366,35 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
   
   if(!id->variables->action)
   {
-    mapping acts = get_actions(base, dir, args);
-    return ("<table cellpadding=10><tr><td valign=top bgcolor=#eeeeee>"+
+    catch {
+      mapping acts = get_actions(base, dir, args);
+      string res;
+      res= ("<table cellpadding=3><tr><td valign=top bgcolor=#eeeeee>"+
 	    act_describe_submenues(indices(acts),base,id->variables->sm)+
 	    "</td>\n\n<td valign=top>"+
 	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=+3>"+
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
-	    "</dl></td></tr></table>");
+	    "</dl></td></tr></table>"+
+	    (strlen(err)?"<pre>"+err+"</pre>":""));
+      err="";
+      return res;
+    };
+    if(strlen(err)) {
+      string res="<pre>"+err+"</pre>";
+      err="";
+      return res;
+    }
   }
-  return get_wizard(id->variables->action,dir)->wizard_for(id,base,@args);
+  object o = get_wizard(id->variables->action,dir);
+  if(!o) {
+    mixed res = "<pre>"+err+"</pre>";
+    err="";
+    return res;
+  }
+  mixed res= o->wizard_for(id,base,@args);
+  err="";
+  return res;
 }
 
 /*** Additional Action Functions ***/

@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.87 1997/10/15 16:11:26 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.88 1997/10/16 12:16:29 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1024,18 +1024,51 @@ string tag_gtext_id(string t, mapping arg,
     return (string)num;
 }
 
+string internal_tag_on(string t, mapping args, mapping arglist, 
+		       object id, mapping defines)
+{
+  mapping arg = ([]);
+  if(arglist->text) arg->text = arglist->text;
+  if(args->delay)
+  {
+    args->type = "delay";
+  } else if(args->mouseover) {
+    args->type = "mouseover";
+    m_delete(args, "mouseover");
+  } else if(arg->mouseout) {
+    arg->type = "mouseover";
+    m_delete(args, "mouseout");
+  }
+  arg |= args;
+
+  for(int i=2; i<10; i++) 
+    if(arg[(string)i])
+    {
+      arg->scale = 1.0 / ((float)i*0.6);
+      m_delete(arg, (string)i);
+      break;
+    }
+
+  arglist->list += ({ arg });
+  return "";
+}
+
+string internal_tag_text(string t, mapping arg, string contents,
+			mapping arglist, object id, mapping defines)
+{
+  arglist->text = contents;
+  return "";
+}
+
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
-// Allow <accessed> and others inside <gtext>.
-
-
+//Allow <accessed> and others inside <gtext>.
   if(arg->help)
     return register_module()[2];
 
   string gif="";
-  if(query("gif"))
-    gif=".gif";
+  if(query("gif")) gif=".gif";
   
 #if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
@@ -1043,9 +1076,31 @@ string tag_graphicstext(string t, mapping arg, string contents,
   contents = parse_rxml(contents, id, foo);
 #endif
 
+  string lp, url, ea;
   string pre, post, defalign, gt, rest, magic;
   int i;
   string split;
+
+  if(arg->alternatives)
+  {
+    mapping arg_list = (["list":({})]);
+    parse_html(contents,(["on":internal_tag_on]),
+	       (["text":internal_tag_text, ]), arg_list, id, defines);
+
+    string js = "", href="";
+    mapping img_tag_args = ([]);
+    array(int) nums = ({});
+    foreach(arg_list->list, mapping q)
+    {
+      mapping w = copy_value(q);
+      m_delete(w, "text"); m_delete(w, "type"); m_delete(w, "delay");
+      m_delete(w, "href"); m_delete(w, "name"); m_delete(w, "align");
+      nums += ({ find_or_insert( w ) });
+      if(q->align) img_tag_args->align = q->align;
+      if(q->name)  img_tag_args->name = q->name;
+      if(q->href) href = make_tag("a", (["href":q->href, "name":q->name]));
+    }
+  }
 
  // No images here, let's generate an alternative..
   if(!id->supports->images || id->prestate->noimages)
@@ -1088,7 +1143,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
     m_delete(arg,"submit");
   }
   
-  string lp, url, ea;
 
   ea = extra_args(arg);
 

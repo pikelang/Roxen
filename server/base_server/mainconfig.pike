@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.80 1997/10/12 21:09:39 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.81 1997/10/16 12:16:24 per Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1172,9 +1172,9 @@ string describe_node_path(object node)
     if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += ("\n<b><font size=+1><a href=\""+q+"?"+bar+++"\">"+
+      res += ("\n<b><a href=\""+q+"?"+bar+++"\">"+
 	      dn(find_node(http_decode_string(q[..strlen(q)-2])))+
-	      "</a></font></b> -&gt;\n");
+	      "</a></b> -&gt;\n");
     }
     else
       cnt++;
@@ -1184,13 +1184,21 @@ string describe_node_path(object node)
 
 string status_row(object node)
 {
-   return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
+   return ("<table width=\"100%\" border=0 cellpadding=0"
 	   " cellspacing=0>\n"
-	   "<tr><td valign=middle align=left><a href=\"$docurl"+
+	   "<tr><td valign=bottom align=left><a href=\"$docurl"+
 	   node->path(1)+"\">"
 	   "<img border=0 src=\"/image/roxen-icon-gray.gif\" alt=\"\"></a>"
-	   "</td>\n<td align=right valign=center>" + describe_node_path(node) +
-	   "</td>\n<td>&nbsp;</td></tr>\n</table><br>");
+	   "</td>\n<td>&nbsp;</td><td  width=100% height=39>"
+	   "<table cellpadding=0 cellspacing=0 width=100% border=0>\n"
+	   "<tr width=\"100%\">\n"
+	   "<td width=\"1000%\" align=right valigh=center height=28>"
+	   +describe_node_path(node)+"</td>"
+	   "</tr><tr width=\"100%\">"
+	   "<td bgcolor=\"#003366\" align=right height=12 width=\"100%\">"
+	   "<font color=white size=-2>Administration Interface</font>"
+	   "</td></table>"
+	   "\n<td>&nbsp;</td></tr>\n</table><br>");
 }
 
 mapping logged = ([ ]);

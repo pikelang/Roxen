@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.14 1997/10/11 14:10:09 noring Exp $
+ * $Id: PDB.pmod,v 1.15 1997/10/16 12:16:27 per Exp $
  */
 
 #if constant(thread_create)
@@ -25,7 +25,7 @@ class FileIO {
     return o;
   }
   
-  static void write_file(string f, mixed d)
+  static int write_file(string f, mixed d)
   {
     d = encode_value(d);
     catch {
@@ -40,7 +40,7 @@ class FileIO {
     int n = o->write(d);
     o->close();
     if(n == sizeof(d))
-      mv(f+".tmp", f);
+      return mv(f+".tmp", f);
     else
       rm(f+".tmp");
   }
@@ -96,8 +96,8 @@ class Bucket
   
   static void save_free_blocks()
   {
-    write_file(rf+".free", ({last_block, free_blocks}));
-    dirty = 0;
+    if(write_file(rf+".free", ({last_block, free_blocks})))
+      dirty = 0;
   }
   
   void free_entry(int offset)
@@ -222,8 +222,8 @@ class Table
   {
     LOCK();
     if(dirty) {
-      write_file(dir+".INDEX", index);
-      dirty = 0;
+      if(write_file(dir+".INDEX", index))
+	dirty = 0;
     }
     UNLOCK();
   }
@@ -308,9 +308,9 @@ class Table
   }
   
   array _indices() {
-    LOCK();
+//  LOCK();
     return indices(index);
-    UNLOCK();
+//  UNLOCK();
   }
 
   array match(string match)
