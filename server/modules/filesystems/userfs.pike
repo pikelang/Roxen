@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.28 1998/05/27 11:59:00 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.29 1998/07/01 20:12:41 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -292,7 +292,7 @@ mixed stat_file( mixed f, mixed id )
     } else
       f = QUERY(searchpath) + u + "/" + f;
     st = ::stat_file( f,id );
-    if(!st) return st;
+    if(!st) return 0;
     if(QUERY(own) && (int)us[2] != st[-2]) return 0;
     return st;
   }
