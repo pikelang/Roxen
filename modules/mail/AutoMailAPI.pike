@@ -1,5 +1,5 @@
 // AutoSite Mail API
-// $Id: AutoMailAPI.pike,v 1.8 1998/07/25 13:04:46 leif Exp $
+// $Id: AutoMailAPI.pike,v 1.9 1998/07/25 21:53:59 leif Exp $
 // Leif Stensson, July 1998.
 
 #include <module.h>
@@ -24,8 +24,8 @@ void create()
 
 string status()
 { string s = "<B>Module version</B>:" +
-                  (("$Revision: 1.8 $"/":")[1]/"$")[0] +
-                  (("$Date: 1998/07/25 13:04:46 $"/"e:")[1]/"$")[0] +
+                  (("$Revision: 1.9 $"/":")[1]/"$")[0] +
+                  (("$Date: 1998/07/25 21:53:59 $"/"e:")[1]/"$")[0] +
                   (("$Author: leif $"/"or:")[1]/"$")[0] + "<BR>\n";
   s += "<B>Database</B>: " + db_status;
   if (last_insert_id)
@@ -139,10 +139,12 @@ int find_user(string user_address)
     array  row;
     int    aliasmatch = -1;
     while (row = result->fetch_row())
-    { if (row[1] == user_name)
-         return row[0];
+    { int id;
+      if (!sscanf(row[0], "%d", id)) continue; 
+      if (row[1] == user_name)
+         return id;
       if (row[2] == user_name)
-         aliasmatch = row[0];
+         aliasmatch = id;
     }
     if (aliasmatch != -1) return aliasmatch;
   }
@@ -179,6 +181,20 @@ mixed add_receiver(int mail_id, int user_id, void|string folder)
 
   return 1;
 }
+
+int has_receiver(int mail_id, int user_id)
+{ if (!database) return -1;
+  object res = database->big_query("SELECT folder FROM mailboxes "
+                   "WHERE message_id="+mail_id+" AND user_id="+user_id);
+  array row = res->fetch_row();
+  if (row)
+  { if (row[0] == 0 || row[0] == "")
+         return 1;
+    return row[0];
+  }
+  return 0;
+}
+
 
 static mixed mailbox_entries(object query_result)
 { array row, news = 0;
