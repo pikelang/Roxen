@@ -13,13 +13,15 @@
 
 // --------------------- Layout help functions --------------------
 
+#define TDBG "#d9dee7"
+
 string mktable(array table) {
   string ret="<table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">\n"
     "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n";
 
   foreach(table, array row)
-    ret+="<tr valign=\"top\"><td bgcolor=\"#d9dee7\"><font color=\"#000000\">"+
-      (row*"</font></td><td bgcolor=\"#d9dee7\"><font color=\"#000000\">")+"</font></td></tr>\n";
+    ret+="<tr valign=\"top\"><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">"+
+      row*("</font></td><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">")+"</font></td></tr>\n";
 
   ret+="</table></tr></td></table>";
   return ret;
@@ -69,7 +71,10 @@ private string attr_vals(string v)
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   if(!id) return "";
-  string parsed=id->conf->parse_rxml(c,id);
+  string parsed=
+    id->conf->parse_rxml(m->type!="hr"?
+			 "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>":
+			 c, id);
   c="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
 
   switch(m->type) {
@@ -189,14 +194,19 @@ string find_tag_doc(string name, void|object id) {
 	  plugindoc+=find_tag_doc(name+"#"+plugin, id);
 	plugindoc+="</dd></dl>";
       }
-      tag=object_program(tag);
+      if(tag->is_generic_tag)
+	tag=tag->_do_return;
+      else
+	tag=object_program(tag);
     }
-    if(arrayp(tag)) {
+    else if(arrayp(tag)) {
       if(tag[0])
 	tag=tag[0][1];
       else if(tag[1])
 	tag=tag[1][1];
     }
+    else
+      continue;
     tag=function_object(tag);
     if(!objectp(tag)) continue;
     RXMLHELP_WERR(sprintf("Tag defined in module %O", tag));
