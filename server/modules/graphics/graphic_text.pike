@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.254 2000/12/30 07:21:15 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.255 2000/12/31 23:57:05 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -343,7 +343,8 @@ opaque=70</gtext>
 //  </ex>
 //  </attr>
 //  At least temporarily removed from the documentation
-#"
+
++#"
 
 <attr name=xsize value=number>
  Sets the width.
@@ -356,7 +357,6 @@ opaque=70</gtext>
 <attr name=ypad value=percentage>
  Sets the padding beteen lines.
 </attr>
-
 
 <attr name=ysize value=number>
  Sets the height.
@@ -592,13 +592,25 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(args->light) bold=-1;
     if(args->black) bold=2;
     if(args->italic) italic=1;
+    int|float xpad=1.0;
+    if(args->xpad)
+      if(args->xpad[-1]=='%')
+	xpad = (float)args->xpad;
+      else
+	xpad = (int)args->xpad;
+    int|float ypad=1.0;
+    if(args->ypad)
+      if(args->ypad[-1]=='%')
+	ypad = (float)args->ypad;
+      else
+	ypad = (int)args->ypad;
     font = get_font(args->font||"default",
                     (int)args["fontsize"]||32,
                     bold,
                     italic,
                     lower_case(args->talign||"left"),
-                    (float)args->xpad,
-                    (float)args->ypad);
+                    xpad,
+                    ypad);
   }
   if(!font)
     font = resolve_font(0);
