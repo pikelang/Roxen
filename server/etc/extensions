@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.51 2004/07/15 17:25:19 grubba Exp $
+# $Id: extensions,v 1.52 2004/07/15 17:25:57 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -95,7 +95,6 @@ tiff	image/tiff
 # image/vnd.svf
 # image/vnd.dxf
 png	image/png
-psd	image/x-photoshop
 fpx	image/vnd.fpx
 # Also known as image/x-fpx and image/net-fpx
 # image/vnd.xiff
@@ -141,6 +140,7 @@ pict	image/pict
 pnm	image/x-portable-anymap
 pntg	image/x-macpaint
 ppm	image/x-portable-pixmap
+psd	image/x-photoshop
 qif	image/x-quicktime
 qti	image/x-quicktime
 qtif	image/x-quicktime
