@@ -1,11 +1,11 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2000, Roxen IS.
+// Copyright © 1996 - 2001, Roxen IS.
 //
 // Roxen bootstrap program.
 
 #define LocaleString Locale.DeferredLocale|string
 
-//#pragma strict_types
+// #pragma strict_types
 
 // Sets up the roxen environment. Including custom functions like spawne().
 
@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.257 2001/06/24 03:51:47 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.258 2001/06/24 14:14:18 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -109,12 +109,13 @@ int getppid() {   return -1; }
 int use_syslog, loggingfield;
 #endif
 
+
 /*
  * Some efuns used by Roxen
  */
 
-static int last_was_change;
-int roxen_started = time();
+static int(0..5) last_was_change;
+int(2..2147483647) roxen_started = [int(2..2147483647)]time();
 float roxen_started_flt = time(time());
 string short_time()
 {
@@ -238,7 +239,7 @@ int mkdirhier(string from, int|void mode)
       Stdio.Stat stat = file_stat (b + a, 1);
       if (stat && stat[0] & ~mode)
 	// Race here. Not much we can do about it at this point. :\
-	catch (chmod (b+a, stat[0] & mode));
+	catch (chmod (b+a, [int]stat[0] & mode));
 #endif
     }
     else mkdir(b+a);
@@ -251,7 +252,12 @@ int mkdirhier(string from, int|void mode)
 
 // Roxen itself
 
-object roxen;
+class Roxen {
+  mixed query(string);
+  void nwrite(string, int|void, int|void, void|mixed ...);
+}
+
+Roxen roxen;
 
 // The function used to report notices/debug/errors etc.
 function(string, int|void, int|void, void|mixed ...:void) nwrite;
@@ -354,11 +360,11 @@ void report_warning(LocaleString message, mixed ... foo)
 //! Shares argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
-  nwrite(message,0,2,MC);
+  nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach(message/"\n", message)
-      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
+    foreach([string]message/"\n", message)
+      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
 #endif
 }
 
@@ -368,11 +374,11 @@ void report_notice(LocaleString message, mixed ... foo)
 //! prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
-  nwrite(message,0,1,MC);
+  nwrite([string]message,0,1,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
-    foreach(message/"\n", message)
-      syslog(LOG_NOTICE, replace(message+"\n", "%", "%%"));
+    foreach([string]message/"\n", message)
+      syslog(LOG_NOTICE, replace([string]message+"\n", "%", "%%"));
 #endif
 }
 
@@ -382,11 +388,11 @@ void report_error(LocaleString message, mixed ... foo)
 //! argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
-  nwrite(message,0,3,MC);
+  nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach(message/"\n", message)
-      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
+    foreach([string]message/"\n", message)
+      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
 #endif
 }
 
@@ -423,11 +429,11 @@ void report_warning_sparsely (LocaleString message, mixed ... args)
   int now = time (1);
   if (sparsely_dont_log[message] >= now) return;
   sparsely_dont_log[message] = now + 10*60;
-  nwrite(message,0,2,MC);
+  nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach(message/"\n", message)
-      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
+    foreach([string]message/"\n", message)
+      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
 #endif
 }
 
@@ -440,11 +446,11 @@ void report_error_sparsely (LocaleString message, mixed... args)
   int now = time (1);
   if (sparsely_dont_log[message] >= now - 10*60*60) return;
   sparsely_dont_log[message] = now;
-  nwrite(message,0,3,MC);
+  nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach(message/"\n", message)
-      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
+    foreach([string]message/"\n", message)
+      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
 #endif
 }
 
@@ -650,11 +656,11 @@ int getgid(){ return 42; }
 #endif
 
 // Load Roxen for real
-object really_load_roxen()
+Roxen really_load_roxen()
 {
   int start_time = gethrtime();
   report_debug("Loading roxen ... ");
-  object res;
+  Roxen res;
   mixed err = catch {
     res = ((program)"base_server/roxen.pike")();
   };
@@ -736,7 +742,7 @@ static int|string|array(string) compat_call_container (
 {
   string name = lower_case (p->tag_name());
   if (string|function container = p->m_containers[name])
-    if (stringp (container)) return ({container});
+    if (stringp (container)) return ({[string]container});
     else return container (name, args, content, @extra);
   else
     // The container has disappeared from the mapping.
@@ -767,7 +773,8 @@ class ParseHtmlCompat
   }
 }
 
-string parse_html (string data, mapping tags, mapping containers,
+string parse_html (string data, mapping(string:function|string) tags,
+		   mapping(string:function|string) containers,
 		   mixed... args)
 {
   return ParseHtmlCompat (tags, containers, @args)->finish (data)->read();
@@ -791,7 +798,7 @@ static int|string|array(string) compat_call_container_lines (
 {
   string name = lower_case (p->tag_name());
   if (string|function container = p->m_containers[name])
-    if (stringp (container)) return ({container});
+    if (stringp (container)) return ({[string]container});
     else return container (name, args, content, p->at_line(), @extra);
   else
     // The container has disappeared from the mapping.
@@ -1247,9 +1254,9 @@ void low_start_mysql( string datadir,
   env->MYSQL_TCP_PORT  = "0";
 #endif
 
-  array args = ({ 
+  array(string) args = ({
 #ifdef __NT__
-		  "--skip-networking",
+                  "--skip-networking",
                   // Use pipes with default name "MySQL" unless --socket is set
 		  //"--socket=roxen_mysql",
 #else
@@ -1262,7 +1269,7 @@ void low_start_mysql( string datadir,
 		  "--basedir="+basedir,
 		  "--datadir="+datadir,
 		  "--pid-file="+pid_file,
-	       });
+  });
 
 #ifndef __NT__
   if( uid == "root" )
