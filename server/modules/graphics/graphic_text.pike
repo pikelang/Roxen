@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.182 1999/06/25 17:56:05 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.183 1999/07/10 21:42:58 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -52,7 +52,8 @@ void create()
 	 " whole document. This can be overrided with maxlen=... in the "
 	 "tag.");
 
-  defvar("gif", 0, "Append .fmt (gif, jpeg etc) to all images", TYPE_FLAG|VAR_MORE,
+  defvar("gif", 0, "Append .fmt (gif, jpeg etc) to all images",
+	 TYPE_FLAG|VAR_MORE,
 	 "Append .gif, .png, .gif etc to all images made by gtext. "
          "Normally this will only waste bandwidth");
 }
@@ -572,7 +573,7 @@ mixed draw_callback(mapping args, string text, object id)
   {
     if( !args->text )
       error("Failed miserably to find a text to draw. That's not"
-            " good.\nArgs=%O\n",args);
+	    " good.\n");
     id = (object)text;
     text = args->text;
   }
@@ -704,6 +705,15 @@ mapping find_internal(string f, object rid)
 {
   if( strlen(f)>4 && query("gif") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
+  if( strlen(f) && f[0..0]=="$" )
+  {
+    array id_text = f/"/";
+    if( sizeof(id_text)==2 )
+    {   // It's a gtext-id
+      string second_key = roxen.argcache.store( (["":id_text[1]]) );
+      return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, rid );
+    }
+  }
   return image_cache->http_file_answer( f, rid );
 }
 
@@ -768,7 +778,7 @@ string extra_args(mapping in)
   return s;
 }
 
-string tag_gtext_id(string t, mapping arg, string ctn,
+string tag_gtext_url(string t, mapping arg, string ctn,
 		    object id, object foo, mapping defines)
 {
   int short=!!arg->short;
@@ -795,11 +805,48 @@ string tag_gtext_id(string t, mapping arg, string ctn,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
+  arg->text = ctn;
+
   if(!short)
-    return query_internal_location()+image_cache->store( ({arg,ctn}), id )+
+    return query_internal_location()+image_cache->store( arg, id )+
       (query("gif")?".foo":"");
   else
-    return image_cache->store( ({arg,ctn}), id )+(query("gif")?".foo":"");
+    return image_cache->store( arg, id )+(query("gif")?".foo":"");
+}
+
+string tag_gtext_id(string t, mapping arg, object id, object foo,
+		    mapping defines)
+{
+  int short=!!arg->short;
+  if(arg->help) return "Arguments are identical to the argumets to &lt;gtext&gt;. This tag returns a url-prefix that can be used to generate gtexts.";
+  m_delete(arg, "short"); m_delete(arg, "maxlen");
+  m_delete(arg,"magic");  m_delete(arg,"submit");
+  extra_args(arg);        m_delete(arg,"split");
+  if(defines->fg && !arg->fg) arg->fg=defines->fg;
+  if(defines->bg && !arg->bg) arg->bg=defines->bg;
+  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
+  if(defines->afont && !arg->afont) arg->afont=defines->afont;
+  if(defines->font &&  !arg->font) arg->font=defines->font;
+
+  if(arg->background) 
+    arg->background = fix_relative(arg->background,id);
+  if(arg->texture) 
+    arg->texture = fix_relative(arg->texture,id);
+  if(arg->magic_texture)
+    arg->magic_texture=fix_relative(arg->magic_texture,id);
+  if(arg->magic_background) 
+    arg->magic_background=fix_relative(arg->magic_background,id);
+  if(arg->magicbg) 
+    arg->magicbg = fix_relative(arg->magicbg,id);
+  if(arg->alpha) 
+    arg->alpha = fix_relative(arg->alpha,id);
+
+  //  arg->text = ctn;
+
+  if(!short)
+    return query_internal_location()+"$"+image_cache->store( arg, id )+"/";
+  else
+    return "+"+image_cache->store( arg, id )+"/";
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -1095,7 +1142,7 @@ string|void pop_color(string tagname,mapping args,object id,object file,
 
 mapping query_tag_callers()
 {
-  mapping tags = ([ ]);
+  mapping tags = ([ "gtext-id":tag_gtext_id ]);
   if(query("colorparse"))
     foreach(query("colorparsing"), string t)
     {
@@ -1116,7 +1163,7 @@ mapping query_tag_callers()
 mapping query_container_callers()
 {
   return ([ "anfang":tag_graphicstext,
-            "gtext-id":tag_gtext_id, "gh":tag_graphicstext,
+            "gtext-url":tag_gtext_url, "gh":tag_graphicstext,
 	    "gh1":tag_graphicstext, "gh2":tag_graphicstext,
 	    "gh3":tag_graphicstext, "gh4":tag_graphicstext,
 	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
