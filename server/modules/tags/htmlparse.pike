@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.177 1999/06/22 21:46:27 grubba Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.178 1999/07/21 17:43:57 grubba Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1474,8 +1474,11 @@ string tag_expire_time(string tag, mapping m, object id, object file,
     if (m->months) t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
     if (m->years) t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
     CACHE(max(t-time(),0));
-  } else
+  } else {
     NOCACHE();
+    add_header(_extra_heads, "Pragma", "no-cache");
+    add_header(_extra_heads, "Cache-Control", "no-cache");
+  }
 
   add_header(_extra_heads, "Expires", http_date(t));
   return "";
