@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.859 2004/02/03 12:04:28 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.860 2004/02/05 15:32:20 anders Exp $";
 
 //! @appears roxen
 //!
@@ -2902,8 +2902,8 @@ class ImageCache
     werror("Replacing entry for %O\n", id );
 #endif
     QUERY("REPLACE INTO "+name+
-	  " (id,size,atime,meta,data) VALUES (%s,%d,%d,%s,%s)",
-	  id, strlen(data)+strlen(meta_data), time(1), meta_data, data );
+	  " (id,size,atime,meta,data) VALUES (%s,%d,UNIX_TIMESTAMP(),%s,%s)",
+	  id, strlen(data)+strlen(meta_data), meta_data, data );
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -3221,8 +3221,12 @@ class ImageCache
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      QUERY("REPLACE INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
-	    ci, user||"", time(1) );
+      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
+		       user||"", ci )) )
+	QUERY("INSERT INTO "+name+" "
+	      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+	      ci, user||"");
+
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
