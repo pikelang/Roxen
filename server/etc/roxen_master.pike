@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.2 1997/02/06 00:06:57 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.3 1997/02/06 00:16:59 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -243,7 +243,7 @@ void _main(string *argv, string *env)
    * to the master.
    *
    * The above test should work for everybody except those who
-   * have Pike 0.2 without __version.
+   * have Pike 0.4pl2 without __version (probably nobody).
    */
 
   tmp=new(pike_library_path+"/include/getopt.pre.pike");
