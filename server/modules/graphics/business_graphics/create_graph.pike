@@ -37,14 +37,24 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 
   if (diagram_data["type"]=="graph")
     diagram_data["subtype"]="line";
+  
+  if (diagram_data["type"]=="bars")
+    diagram_data["xminvalue"]=0;
 
-  if ((diagram_data["subtype"]==0)||
+
+  if ((diagram_data["subtype"]==0) ||
       (diagram_data["subtype"]==""))
     diagram_data["subtype"]="line";
 
   if (diagram_data["subtype"]=="line")
-    if (!(diagram_data["drawtype"]))
+    if ((!(diagram_data["drawtype"])) ||
+	(diagram_data["drawtype"]==""))
       diagram_data["drawtype"]="linear";
+
+  if (diagram_data["subtype"]=="box")
+    if ((!(diagram_data["drawtype"])) ||
+	(diagram_data["drawtype"]==""))
+      diagram_data["drawtype"]="2D";
 
   foreach(diagram_data["data"], array(float) d)
     {
@@ -303,21 +313,21 @@ mapping set_legend_size(mapping diagram_data)
 	      plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
 							 ({
 							   (float)(diagram_data["linewidth"]/2+1),
-							     (float)(plupps[i]->ysize()-
-								     diagram_data["linewidth"]/2-2),
-							     (float)(plupps[i]->xsize()-
-								     diagram_data["linewidth"]/2-2),
-							     (float)(diagram_data["linewidth"]/2+1)
+							   (float)(plupps[i]->ysize()-
+								   diagram_data["linewidth"]/2-2),
+							   (float)(plupps[i]->xsize()-
+								   diagram_data["linewidth"]/2-2),
+							   (float)(diagram_data["linewidth"]/2+1)
 							 }), 
 							 1, 1)[0]);
-	      else
-		plupps[i]->box(1,
-				    1,
-				    plupps[i]->xsize()-2,
-				    plupps[i]->ysize()-2
-				      
-				    );
-
+	    else
+	      plupps[i]->box(1,
+			     1,
+			     plupps[i]->xsize()-2,
+			     plupps[i]->ysize()-2
+			     
+			     );
+	    
 	  }
       else
 	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
@@ -1010,7 +1020,6 @@ int main(int argc, string *argv)
 		 "bgcolor":({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 "orient":"hor",
 		 "linewidth":2.2,
 		 "xsize":400,
 		 "ysize":200,
@@ -1018,9 +1027,9 @@ int main(int argc, string *argv)
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
-		 "labelsize":0//,
-		 //"xminvalue":0.1,
-		 ,"yminvalue":0.1
+		 "labelsize":0,
+		 "xminvalue":0.1,
+		 "yminvalue":0.1
 
   ]);
   /*
