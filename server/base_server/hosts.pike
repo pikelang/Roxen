@@ -1,4 +1,4 @@
-// "$Id: hosts.pike,v 1.26 1999/11/27 07:53:21 per Exp $";
+// "$Id: hosts.pike,v 1.27 1999/12/28 00:04:54 nilsson Exp $";
 #include <roxen.h>
 
 #ifdef NO_DNS
@@ -28,7 +28,7 @@ mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
 void got_one_result(string from, string to)
 {
 #ifdef HOST_NAME_DEBUG
-  roxen_perror("Hostnames:   ---- <"+from+"> == <"+to+"> ----\n");
+  werror("Hostname:  ---- <"+from+"> == <"+to+"> ----\n");
 #endif
   if(to) cache_set("hosts", from, to);
   array cbs = do_when_found[ from ];

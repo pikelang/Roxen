@@ -112,7 +112,7 @@ array (string) find_type(string in)
       if(i) switch(in[i-1])
       {
        default:
-//	perror("Invalid type thingie: '"+in[i..i]+"'\n");
+//	werror("Invalid type thingie: '"+in[i..i]+"'\n");
 	continue;
        case ' ':
        case '\n':
@@ -137,7 +137,7 @@ array (string) find_type(string in)
 
     p = op[..strlen(p)-1];
     post = op[strlen(p)..];
-//    perror("Found type: '%s' (left: %s)\n", s+p, post-"\n");
+//    werror("Found type: '%s' (left: %s)\n", s+p, post-"\n");
     return ({ pre, s+p, @find_decl(post) });
   }
 }
@@ -226,12 +226,12 @@ string highlight_line(string l, mapping m)
 {
   array p,r;
   string res = "";
-//  perror(l+"\n");
+//  werror(l+"\n");
   foreach(highlight_patterns, p)
   {
     if(r=p[0](l))
     {
-//      perror("Match %O (%s, %s)\n", p[-1][-1],(r[..sizeof(p[1])-1]*""),
+//      werror("Match %O (%s, %s)\n", p[-1][-1],(r[..sizeof(p[1])-1]*""),
 //	     (r[sizeof(p[1])..]*""));
       for(int i=0; i<sizeof(p[1]) && i<sizeof(r); i++)
 	if(functionp(p[1][i]))
