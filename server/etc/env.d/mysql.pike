@@ -2,8 +2,7 @@
 void run(object env)
 {
   write("\n   Configuring port number for external access to the internal\n"
-	"   MySQL database (leave empty for no external access). External\n"
-	"   MySQL access is needed when creating an CMS Instant site.\n"
+	"   MySQL database (leave empty for no external access).\n"
 	"\n");
   
   Stdio.File infd = Stdio.stdin, outfd = Stdio.stdout;
