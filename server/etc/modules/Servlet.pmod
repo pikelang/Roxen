@@ -20,6 +20,7 @@ static object dictionary_class = FINDCLASS("java/util/Dictionary");
 static object hashtable_class = FINDCLASS("java/util/Hashtable");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object unavailable_class = FINDCLASS("javax/servlet/UnavailableException");
+static object servlet_exc_class = FINDCLASS("javax/servlet/ServletException");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object vector_class = FINDCLASS("java/util/Vector");
@@ -57,6 +58,7 @@ static object throwable_printstacktrace = throwable_class->get_method("printStac
 static object throwable_getmessage = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
 static object unavailable_ispermanent = unavailable_class->get_method("isPermanent", "()Z");
 static object unavailable_getunavailableseconds = unavailable_class->get_method("getUnavailableSeconds", "()I");
+static object servlet_exc_getrootcause = servlet_exc_class->get_method("getRootCause", "()Ljava/lang/Throwable;");
 static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
 static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
@@ -80,6 +82,12 @@ static void check_exception()
     stringwriter_init(sw);
     object pw = printwriter_class->alloc();
     printwriter_init(pw, sw);
+    if (e->is_instance_of(servlet_exc_class))
+      {
+        object re = servlet_exc_getrootcause(e);
+        if (re)
+          throwable_printstacktrace(re, pw);
+      }
     throwable_printstacktrace(e, pw);
     printwriter_flush(pw);
     array bt = backtrace();
@@ -382,8 +390,11 @@ class context {
   string get_resource(string path)
   {
     string rp;
-    return conf && (rp = conf->real_file(path, make_dummy_id())) &&
-      ("file:"+rp);
+#ifdef __NT__
+    path = replace(path, "\\", "/");
+#endif
+    rp = get_real_path(path);
+    return rp && ("file:"+rp);
   }
 
   void set_init_parameters(mapping(string:string) pars)
@@ -434,6 +445,7 @@ object request(object context, mapping(string:array(string))|object id,
 		   id->raw && MIME.parse_headers(id->raw)[0],
 		   (zero_type(id->misc->len)? -1:id->misc->len),
 		   id->misc["content-type"], id->prot,
+                   (id && id->port_obj && lower_case(id->port_obj->prot_name))||
 		   lower_case((id->prot/"/")[0]), tmp,		   
 		   (id->my_fd&&(int)((id->my_fd->query_address(1)||"0 0")/" ")[1]),
 		   addr, (host != addr)&&host, id->data,
