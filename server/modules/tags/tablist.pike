@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.26 1999/11/19 02:05:26 per Exp $
+ * $Id: tablist.pike,v 1.27 1999/11/27 07:51:05 per Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: per $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.26 1999/11/19 02:05:26 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.27 1999/11/27 07:51:05 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -135,8 +135,9 @@ object button_font = resolve_font("haru 32");
 
 Image.Image draw_tab(mapping args, string txt)
 {
-  Image.Image text = button_font->write( txt )
-                     ->scale(0, frame_image->ysize());
+  Image.Image text = button_font
+              ->write( txt )
+              ->scale(0, frame_image->ysize());
 
   //  Create image with proper background
   Image.Image i = Image.Image(frame_image->xsize() * 2 + text->xsize(),
