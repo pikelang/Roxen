@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgiapp.c,v 1.3 1997/05/26 22:23:24 grubba Exp $";
+static const char rcsid[] = "$Id: fcgiapp.c,v 1.4 1997/10/07 22:09:38 grubba Exp $";
 #endif /* not lint */
 
 #include <fcgi_config.h>
@@ -371,8 +371,8 @@ static void CopyAndAdvance(char **destPtr, char **srcPtr, int n);
 int FCGX_VFPrintF(FCGX_Stream *stream, const char *format, va_list arg)
 {
     char *f, *fStop, *percentPtr, *p, *fmtBuffPtr, *buffPtr;
-    int op, performedOp, sizeModifier, buffCount, buffLen, specifierLength;
-    int fastPath, n, auxBuffLen, buffReqd, minWidth, precision, exp;
+    int op, performedOp, sizeModifier, buffCount = 0, buffLen, specifierLength;
+    int fastPath, n, auxBuffLen = 0, buffReqd, minWidth, precision, exp;
     char *auxBuffPtr = NULL;
     int streamCount = 0;
     char fmtBuff[FMT_BUFFLEN];
@@ -384,13 +384,13 @@ int FCGX_VFPrintF(FCGX_Stream *stream, const char *format, va_list arg)
     unsigned unsignedArg;
     unsigned long uLongArg;
     unsigned short uShortArg;
-    char *charPtrArg;
+    char *charPtrArg = NULL;
     void *voidPtrArg;
     int *intPtrArg;
     long *longPtrArg;
     short *shortPtrArg;
-    double doubleArg;
-    LONG_DOUBLE lDoubleArg;
+    double doubleArg = 0.0;
+    LONG_DOUBLE lDoubleArg = 0.0;
 
     fmtBuff[0] = '%';
     f = (char *) format;
@@ -1405,7 +1405,7 @@ static int ProcessManagementRecord(int type, FCGX_Stream *stream)
     char **pPtr;
     char response[64]; /* 64 = 8 + 3*(1+1+14+1)* + padding */
     char *responseP = &response[FCGI_HEADER_LEN];
-    char *name, value;
+    char *name, value = 0;
     int len, paddedLen;
     if(type == FCGI_GET_VALUES) {
         ReadParams(paramsPtr, stream);
