@@ -229,20 +229,6 @@ distribute:	spotless
 run_autoconfig:
 	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconfig .)
 
-weak_cleanup:
-	@for f in `find $(SRCDIR) -type f -name '*~' -print` \
-	  `find $(SRCDIR) -type f -name '.#*' -print` \
-	  `find $(SRCDIR) -type f -name '#*' -print`; do \
-	  echo $$f; rm $$f || exit 1; \
-	done
-	@for d in $(SRCDIR)/pike/0.5/tutorial $(SRCDIR)/pike/0.5/about_pike \
-	  $(SRCDIR)/pike/0.5/doc $(SRCDIR)/pike/0.6/about_pike \
-	  $(SRCDIR)/pike/0.6/doc; do \
-	  if test -d $$d/. ; then \
-	    echo Removing $$d...; rm -rf $$d || exit 1; \
-	  else :; fi; \
-	done
-
 ./Makefile: $(SRCDIR)/Makefile.in config.status
 	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
 	@echo "Run make again"
@@ -309,15 +295,16 @@ $(SRCDIR)/ChangeLog.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
 
 $(SRCDIR)/ChangeLog.rxml.gz:
-	cd $(SRCDIR); pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
-
+	cd $(SRCDIR); pike tools/make_changelog.pike --rxml | gzip -9 > ChangeLog.rxml.gz
 
 force_update: force
 	@rm $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz \
 	    $(SRCDIR)/VERSION bump_version bump_version.stamp || true
 	@echo Prepared for version update.
 
-pre_dist: bump_version weak_cleanup depend run_autoconfig
+pre_dist: bump_version
+	-@$(MAKE) depend
+	-@$(MAKE) run_autoconfig
 	@(cd pike; $(MAKE) pre_dist)
 
 dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
@@ -333,6 +320,19 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	mkdir $$version; \
 	echo Copying files...; \
 	(cd $(SRCDIR); tar cf - .)|(cd $$version; tar xf -; make dist_clean); \
+	echo Cleaning up the copied sources...; \
+	for f in `find $$version/. -type f -name '*~' -print` \
+	  `find $$version/. -type f -name '.#*' -print` \
+	  `find $$version/. -type f -name '#*' -print`; do \
+	  echo $$f; rm $$f || exit 1; \
+	done; \
+	for d in $$version/pike/0.5/tutorial $$version/pike/0.5/about_pike \
+	  $$version/pike/0.5/doc $$version/pike/0.6/about_pike \
+	  $$version/pike/0.6/doc; do \
+	  if test -d $$d/. ; then \
+	    echo Removing $$d...; rm -rf $$d || exit 1; \
+	  else :; fi; \
+	done; \
 	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
 	if test -d $$version/pike/0.5/. ; then \
 	  if test -d $$version/pike/0.6/. ; then \
