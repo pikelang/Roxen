@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.109 1999/11/11 08:15:10 mast Exp $
+ * $Id: roxenloader.pike,v 1.110 1999/11/17 15:15:49 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.109 1999/11/11 08:15:10 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.110 1999/11/17 15:15:49 per Exp $";
 
 #define perror roxen_perror
 
@@ -298,16 +298,35 @@ void init_logger()
 // Print a debug message
 void report_debug(string message, mixed ... foo)
 {
-  if( sizeof( foo ) ) message = sprintf(message, @foo );
-//   nwrite(message,0,2);
+  if( sizeof( foo ) ) 
+    message = sprintf(message, @foo );
   roxen_perror( message );
 }
+
+
+array find_module_and_conf_for_log( array q )
+{
+  object conf, mod;
+  for( int i = 0; i<sizeof( q ); i++ )
+  {
+    if( function_object( q[i][2] )->is_configuration )
+      conf = function_object( q[i][2] );
+    else if( function_object( q[i][2] )->is_module )
+      mod = function_object( q[i][2] );
+  }
+  return ({ mod,conf });
+}
+
+
+#define FIND_LOG_MODULE_CONF [object module, object configuration]=find_module_and_conf_for_log(backtrace())
 
 // Print a warning
 void report_warning(string message, mixed ... foo)
 {
+  FIND_LOG_MODULE_CONF();
+
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,2);
+  nwrite(message,0,2,module,configuration);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
     foreach(message/"\n", message)
@@ -318,8 +337,10 @@ void report_warning(string message, mixed ... foo)
 // Print a notice
 void report_notice(string message, mixed ... foo)
 {
+  FIND_LOG_MODULE_CONF();
+  
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,1);
+  nwrite(message,0,1,module,configuration);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
     foreach(message/"\n", message)
@@ -330,8 +351,10 @@ void report_notice(string message, mixed ... foo)
 // Print an error message
 void report_error(string message, mixed ... foo)
 {
+  FIND_LOG_MODULE_CONF();
+
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,3);
+  nwrite(message,0,3, module,configuration);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
     foreach(message/"\n", message)
@@ -342,8 +365,10 @@ void report_error(string message, mixed ... foo)
 // Print a fatal error message
 void report_fatal(string message, mixed ... foo)
 {
+  FIND_LOG_MODULE_CONF();
+
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,3);
+  nwrite(message,0,3,module,configuration);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
     foreach(message/"\n", message)

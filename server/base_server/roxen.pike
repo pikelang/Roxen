@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.349 1999/11/15 16:41:37 per Exp $
+ * $Id: roxen.pike,v 1.350 1999/11/17 15:15:38 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.349 1999/11/15 16:41:37 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.350 1999/11/17 15:15:38 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1297,12 +1297,29 @@ int add_new_configuration(string name, string type)
 mapping(string:array(int)) error_log=([]);
 
 // Write a string to the configuration interface error log and to stderr.
-void nwrite(string s, int|void perr, int|void type)
+void nwrite(string s, int|void perr, int|void type, 
+            int|void mod, int|void conf)
 {
   if (!error_log[type+","+s])
     error_log[type+","+s] = ({ time() });
   else
     error_log[type+","+s] += ({ time() });
+
+  if( mod )
+  {
+    werror("logging in module\n");
+    if( !mod->error_log )
+      mod->error_log = ([]);
+    mod->error_log[type+","+s] += ({time()});
+  }
+  if( conf )
+  {
+    werror("logging in configuration\n");
+    if( !conf->error_log )
+      conf->error_log = ([]);
+    conf->error_log[type+","+s] += ({time()});
+  }
+
   if(type >= 1) 
     roxen_perror(s);
 }
