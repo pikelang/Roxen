@@ -7,7 +7,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.24 2002/06/05 10:12:52 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.25 2003/01/19 01:59:21 zino Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";
@@ -81,6 +81,14 @@ void parse_ext_string(string exts)
 
 void start()
 {
+  //Fix old Roxen configurations
+  string exts = replace(query("exts"), "#include <etc/extensions>", 
+                        "#include <data/extensions>");
+  if(exts != query("exts")) {
+    report_warning("Fixing DEPRICATED location for data/extensions\n");
+    set("exts", exts);
+  }
+ 
   parse_ext_string(query("exts"));
 }
 
