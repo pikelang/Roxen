@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.37 1999/12/29 23:49:28 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.38 2000/01/02 01:24:29 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -159,7 +159,7 @@ string describe_directory(string d, RequestID id)
   if(toplevel)
   {
     result = "<html><head><title>Directory listing of "+d+"</title></head>\n"
-	     "<body><debug on>\n<h1>Directory listing of "+d+"</h1>\n<p>";
+	     "<body><h1>Directory listing of "+d+"</h1>\n<p>";
 
     if(sizeof(README))
       result += find_readme(d, id);
