@@ -330,7 +330,7 @@ class ConfigurationSettings
     name = _name;
     variables = ([]);
 
-    int theme_can_change_colors( RequestID i, Variable v )
+    int theme_can_change_colors( RequestID i, Variable.Variable v )
     {
       if( !RXML.get_context() ) return 0;
       if( config_setting2( "can-change-colors" ) ) return 0;

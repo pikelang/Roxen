@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.53 2002/10/25 18:19:35 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.54 2003/01/13 15:49:32 grubba Exp $";
 
 class Variable
 {
@@ -929,7 +929,7 @@ class RoxenModule
   string query_provides();
   array query_seclevels();
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
-  array(String) find_dir(string f, RequestID id);
+  array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
   string real_file(string f, RequestID id);
   void save();
