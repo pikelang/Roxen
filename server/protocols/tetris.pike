@@ -1,5 +1,5 @@
 #! /usr/env/bin pike
-// $Id: tetris.pike,v 1.8 2002/06/07 13:20:13 nilsson Exp $
+// $Id: tetris.pike,v 1.9 2002/06/07 15:29:41 nilsson Exp $
 #if constant(roxen)
 constant A=roxen.store;void B(string X)catch{Q=roxen.retrieve(X,0)->idi;};}
 #else
@@ -35,6 +35,6 @@ x){sscanf(x,"%[a-zA-Z0-9åäöÅÄÖüÜ]s\n",x);if(!strlen(x)){io->get_name(t2);}else
 );}void normal(){write("ÿý\1ÿý\"");}void quit(){destruct(this_object());}}void
 create(object f){if(f)tetris(telnet(f));}class consl{inherit Stdio.File;string
 get_name(function cb){cb(getenv("LOGNAME")||popen("id -un"));}void create(){::
-create("stdin");}void raw(){system("stty raw cbreak -echo stop u");}void
+create("stdin");}void raw(){system("stty raw cbreak -echo stop u");}void|array
 normal(){system("stty sane");}void quit(){exit(0);}}int main(){tetris(consl())
 ;return -1;}
