@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.657 2001/04/17 07:21:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.658 2001/04/17 07:33:05 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2221,6 +2221,8 @@ class ImageCache
 	    else
 	      w = 0;
 	  }
+	  w = min( w, reply->xsize() );
+	  h = min( h, reply->ysize() );
 	  reply = reply->scale( w,h );
 	  if( alpha )
 	    alpha = alpha->scale( w,h );
