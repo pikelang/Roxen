@@ -80,6 +80,128 @@ string page_base( RequestID id, string content )
 		  LOCALE(272,"Reload module list"), content );
 }
 
+
+
+string module_name_from_file( string file )
+{
+  string data, name;
+
+  catch(data = Stdio.read_bytes( file ));
+  
+  if( data
+      && sscanf( data, "%*smodule_name%*s=%[^;];", name )
+      && sscanf( name, "%*[^\"]\"%s\"", name ) )
+    return name;
+  return ((file/"/")[-1]/".")[0];
+}
+
+string pafeaw( string errors, string warnings )
+// Parse And Format Errors And Warnings.
+// Your ordinary prettyprinting function.
+{
+  mapping by_module = ([]);
+  int cnt = 0;
+  foreach( (errors+warnings)/"\n", string e )
+  {
+    string file;
+    int row;
+    string type, error;
+    sscanf( e, "%s:%d%s", file, row, error );
+    if( error )
+    {
+      sscanf( error, "%*[ \t]%s", error );
+      sscanf( error, "%s: %s", type, error );
+      if( by_module[ file ] )
+        by_module[ file ] += ({ ({ row*10000 + cnt++, row, type, error }) });
+      else
+        by_module[ file ] = ({ ({ row*10000 + cnt++, row, type, error }) });
+    }
+  }
+
+
+  string da_string = "";
+
+  int header_added;
+  foreach( sort((array)by_module), [string module, array errors] )
+  {
+    array res = ({ });
+    int remove_suspicious = 0;
+    sort( errors );
+    foreach( errors, array e )
+    { 
+      if( e[2]  == "Error" )
+      {
+        remove_suspicious = 1;
+        switch( e[3] )
+        {
+         case "Must return a value for a non-void function.":
+         case "Class definition failed.":
+         case "Illegal program pointer.":
+         case "Illegal program identifier":
+           continue;
+        }
+      }
+      res += ({ e });
+    }
+    if( sizeof( res ) )
+    {
+      string he( string what )
+      {
+        if( what == "Error" )
+          return "<font color='&usr.warn-color;'>"+what+"</font>";
+        return what;
+      };
+
+      string hc( string what )
+      {
+        return what;
+      };
+
+      string trim_name( string what )
+      {
+        array q = (what / "/");
+        return q[sizeof(q)-2..]*"/";
+      };
+
+#define RELOAD(X) sprintf("<gbutton "                                           \
+                          "href='add_module.pike?config=&form.config:http;"     \
+                          "&random=%d&reload_module_list=yes#"                  \
+                          "errors_and_warnings'> %s </gbutton>",                \
+                          random(4711111),                                      \
+                          LOCALE(253, "Reload"))
+
+      if( !header_added++ )
+        da_string += 
+                  "<p><a name='errors_and_warnings'><br />"
+                  "<font size=+2><b><font color='&usr.warn-color;'>"
+                  "Compile errors and warnings</font></b><br />"
+                  "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
+
+      da_string += "<tr><td></td>"
+                "<td colspan='3'  bgcolor='&usr.content-titlebg;'>"
+                + "<b><font color='&usr.content-titlefg;' size='+1'>"
+                + module_name_from_file(module)+"</font></b></td>"
+                + "<td align='right' bgcolor='&usr.content-titlebg;'>"
+                "<font color='&usr.content-titlefg;' size='+1'>"
+                + trim_name(module)
+                + "</font>&nbsp;"+RELOAD(module)+"</td><td></td></tr>";
+
+      foreach( res, array e )
+        da_string += 
+                  "<tr valign=top><td></td><td><img src=/internal-roxen-unit width=30 height=1 />"
+                  "</td><td align=right>"
+                  "<tt>"+e[1]+":</tt></td><td align=right><tt>"+
+                  he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";
+      da_string += "<tr valign=top><td colspan='5'>&nbsp;</td><td></td></tr>\n";
+
+    }
+  }
+  if( strlen( da_string ) )
+    da_string += "</table>";
+// "<pre>"+Roxen.html_encode_string( sprintf( "%O", by_module ) )+"</pre>";
+  return da_string;
+}
+
 array(string) get_module_list( function describe_module,
                                function class_visible,
                                RequestID id )
@@ -122,7 +244,10 @@ array(string) get_module_list( function describe_module,
     if( (r = class_visible( c, classes[c]->doc, id )) && r[0] )
     {
       res += r[1];
-      foreach(classes[c]->modules, object q)
+      array m = classes[c]->modules;
+      array q = m->get_name();
+      sort( q, m );
+      foreach(m, object q)
       {
         if( q->get_description() == "Undocumented" &&
             q->type == 0 )
@@ -134,9 +259,7 @@ array(string) get_module_list( function describe_module,
       res += r[1];
   }
   master()->set_inhibit_compile_errors( 0 );
-  if( ec->get_warnings() )
-    report_warning( ec->get_warnings() );
-  return ({ res, ec->get() });
+  return ({ res, pafeaw( ec->get(), ec->get_warnings() ) });
 }
 
 string module_image( int type )
@@ -226,8 +349,7 @@ string page_normal( RequestID id, int|void noimage )
   string desc, err;
   [desc,err] = get_module_list( describe_module_normal(!noimage),
                                 class_visible_normal, id );
-  content += (desc+"</table>"+
-              "<pre>"+Roxen.html_encode_string(err)+"</pre>");
+  content += (desc+"</table>"+err);
   return page_base( id, content );
 }
 
@@ -300,8 +422,7 @@ string page_faster( RequestID id )
   string desc, err;
   [desc,err] = get_module_list( describe_module_faster,
                                 class_visible_faster, id );
-  content += (desc+"</table></form>"+
-              "<pre>"+Roxen.html_encode_string(err)+"</pre>");
+  content += (desc+"</table></form>"+err);
   return page_base( id, content );
 }
 
@@ -333,8 +454,8 @@ string page_compact( RequestID id )
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><p><pre>"
-                   +Roxen.html_encode_string(err)+"</pre></form>",
+                   +LOCALE(251, "Add Module")+" </submit-gbutton><p>"
+                   +err+"</form>",
                    );
 }
 
@@ -375,14 +496,13 @@ string page_really_compact( RequestID id )
 
   master()->set_inhibit_compile_errors( 0 );
   desc=res;
-  err=ec->get();
 
   return page_base(id,
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    desc+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><br /><pre>"
-                   +Roxen.html_encode_string(err)+"</pre></form>",
+                   +LOCALE(251, "Add Module")+" </submit-gbutton><br />"
+                   +pafeaw(ec->get(),ec->get_warnings())+"</form>",
                    );
 }
 
@@ -395,7 +515,6 @@ string decode_site_name( string what )
 
 mixed do_it( RequestID id )
 {
-
   if( id->variables->encoded )
     id->variables->config = decode_site_name( id->variables->config );
 
@@ -410,39 +529,30 @@ mixed do_it( RequestID id )
     conf->enable_all_modules();
 
   //werror("%O\n", id->variables->mod_init_vars);
-  foreach( id->variables->module_to_add/"\0", string mod ) {
-    if (RoxenModule m = conf->enable_module( mod )) {
+  foreach( id->variables->module_to_add/"\0", string mod ) 
+  {
+    if (RoxenModule m = conf->enable_module( mod )) 
+    {
       mod = conf->otomod[m];
       last_module = replace(mod, "#", "!" );
-      /*
-      if (id->variables->mod_init_vars) {
-	foreach (indices (m->variables), string var)
-	  roxen.change_configurable (m->variables[var], VAR_INITIAL, 0);
-	foreach (id->variables->init_var / "\0", string var) {
-	  array(string) split = array_sscanf (replace (var, "!", "#"), "%s/%s");
-	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]]) {
-	    roxen.change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
-	    got_initial = 1;
-	    initial_modules += ({ last_module });
-	  }
-	}
-      }
-      else
-      */
       foreach (indices (m->variables), string var)
-	if ( m->variables[var]->get_flags()&VAR_INITIAL ) {
+	if ( m->variables[var]->get_flags()&VAR_INITIAL ) 
+        {
 	  got_initial = 1;
-	  initial_modules += ({ last_module });
+	  initial_modules |= ({ last_module });
 	}
     }
-    else last_module = "";
+    else 
+      last_module = "";
   }
+
+  conf->save_me();
 
   if( strlen( last_module ) )
     if (got_initial)
       return Roxen.http_redirect( site_url( id, id->variables->config )+
 			    last_module+
-                           "?initial=1&mod="+Array.uniq(initial_modules)*",", 
+                           "?initial=1&mod="+initial_modules*",", 
                                   id );
     else
       return Roxen.http_redirect( site_url( id, id->variables->config )+
