@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.256 2000/08/28 05:30:19 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.257 2000/08/28 06:53:38 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -622,7 +622,7 @@ void things_to_do_when_not_sending_from_cache( )
 #endif
         // intentional fall-through
      case '(':
-       if(strlen(a) && sscanf(f, "/(%s)/%s", a, f)==2)
+       if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
        {
          prestate = (multiset)( a/","-({""}) );
          f = "/"+f;
