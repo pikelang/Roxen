@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.13 2001/09/03 18:52:18 nilsson Exp $";
+constant cvs_version = "$Id: email.pike,v 1.14 2001/09/14 13:01:18 hop Exp $";
 
 constant thread_safe=1;
 
@@ -89,6 +89,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
+string revision = ("$Revision: 1.14 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -362,7 +363,7 @@ class TagEmail {
 			     "from":fromx,
 			     "to":replace(tox, split, ","),
 			     "content-type":"multipart/mixed",
-			     "x-mailer":"Roxen's email, v1.6"
+			     "x-mailer":"Roxen's email, r"+revision
 			   ]) + headers,
 			({ m }) + id->misc->_email_atts_
          ));
@@ -373,7 +374,7 @@ class TagEmail {
 			     "to":replace(tox, split, ","),
 			     "content-type":"text/plain" + chs,
 			     "content-transfer-encoding":"8bit",
-			     "x-mailer":"Roxen's email, v1.6"
+			     "x-mailer":"Roxen's email, r"+revision
 			   ]) + headers)
      );
 
