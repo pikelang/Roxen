@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.62 1998/03/02 16:06:22 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.63 1998/03/02 19:56:20 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -101,14 +101,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
  
 
 
-  if (1)
-    {  
-      float start;
-      start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
-      diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
-      for(int i=0; i<sizeof(diagram_data["xnames"]); i++)
-	diagram_data["values_for_xnames"][i]=start+start*2*i;
-    }
+  {  
+    float start;
+    start=diagram_data["xminvalue"]+diagram_data["xspace"]/2.0;
+    diagram_data["values_for_xnames"]=allocate(sizeof(diagram_data["xnames"]));
+    for(int i=0; i<sizeof(diagram_data["xnames"]); i++)
+      diagram_data["values_for_xnames"][i]=start+start*2*i;
+  }
   if (!(diagram_data["values_for_ynames"]))
     {
       if ((diagram_data["yspace"]<LITET)&&
