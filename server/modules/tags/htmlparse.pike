@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.43 1997/09/12 06:14:38 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.44 1997/09/14 14:13:36 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -608,14 +608,16 @@ string tagtime(int t,mapping m)
       if(m->holiday && eris[2])
 	res += ". Celebrate "+eris[2];
       return res;
-#endif
+#else
       return "Discordian date support disabled";
+#endif
      case "stardate":
      case "star":
 #if efun(stardate)
       return (string)stardate(t, (int)m->prec||1);
-#endif
+#else
       return "Stardate support disabled";
+#endif
      default:
     }
   }
@@ -641,7 +643,7 @@ string fix_relative(string file, object got)
 
 string tag_date(string q, mapping m)
 {
-  int t=time(1);
+  int t=(int)m->unix_time || time(1);
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
@@ -649,7 +651,7 @@ string tag_date(string q, mapping m)
   if(m->sec)    t += (int)m->sec;
   if(m->second) t += (int)m->second;
 
-  if(!(m->time || m->date))
+  if(!(m->brief || m->time || m->date))
     m->full=1;
 
   return tagtime(t,m);
