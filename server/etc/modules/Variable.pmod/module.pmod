@@ -1,3 +1,5 @@
+// $Id: module.pmod,v 1.11 2000/09/01 01:15:21 mast Exp $
+
 #include <module.h>
 #include <roxen.h>
 
@@ -699,14 +701,25 @@ class MultipleChoice
   string render_form( RequestID id, void|mapping additional_args )
   {
     string res = "<select name='"+path()+"'>\n";
+    string current = _name (query());
+    int selected = 0;
     foreach( get_choice_list(), mixed elem )
     {
       mapping m = ([]);
       m->value = _name( elem );
-      if( equal( m->value, _name( query() ) ) )
+      if( equal( m->value, current ) ) {
         m->selected="selected";
+	selected = 1;
+      }
       res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
     }
+    if (!selected)
+      // Make an entry for the current value if it's not in the list,
+      // so no other value appears to be selected, and to ensure that
+      // the value doesn't change as a side-effect by another change.
+      res = "  " + Roxen.make_container (
+	"option", (["value": current, "selected": "selected"]),
+	"(keep stale value " + current + ")");
     return res + "</select>";
   }
   static void create( mixed default_value, array|mapping choices,
