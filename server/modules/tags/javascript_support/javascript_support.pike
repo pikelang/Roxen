@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.25 2001/02/07 14:33:31 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.26 2001/03/02 14:17:46 jhs Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -304,7 +304,7 @@ class TagJsExternal
   }
 }
 
-mixed filter( mapping response, object id)
+mixed filter(mapping response, RequestID id)
 {
   mixed c_filter_insert(Parser.HTML parser, mapping args, object id)
   {
@@ -322,13 +322,14 @@ mixed filter( mapping response, object id)
     
     return js_insert->get();
   };
-  
-  if(!response || !response->type || !jssp(id))
-    return 0;
-  
-  string type = ((response->type - " ")/";")[0];
-  if(type != "text/html")
-    return response;
+
+  if(!response			// 404
+  || !response->type		// no response type
+  || !jssp(id)			// already filtered
+  || !stringp(response->data)	// got Stdio.File object
+  || !glob("text/html*",	// only touch HTML files
+	   response->type))
+    return 0;			// signal "didn't rewrite result"
 
   response->data = Parser.HTML()->add_tag("js-filter-insert", c_filter_insert)->
 		   set_extra(id)->finish(response->data)->read();
