@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.154 2000/03/01 15:32:46 nilsson Exp $
+// $Id: rxml.pike,v 1.155 2000/03/02 02:07:34 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -86,6 +86,19 @@ void old_rxml_warning(RequestID id, string no, string yes) {
 class ScopeRoxen {
   inherit RXML.Scope;
 
+  string pike_version=predef::version();
+  int ssl_strength=0;
+
+  void create() {
+#if constant(SSL)
+    ssl_strength=40;
+    if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_des])
+      ssl_strength=128;
+    if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_3des])
+      ssl_strength=168;
+#endif
+  }
+
   string|int `[] (string var, void|RXML.Context c, void|string scope) {
     switch(var)
     {
@@ -110,14 +123,16 @@ class ScopeRoxen {
      case "sent-kbit-per-second":
        return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
                                (time(1)-roxen->start_time || 1)));
+     case "ssl-strength":
+       return ssl_strength;
      case "pike-version":
-       return predef::version();
+       return pike_version;
      case "version":
        return roxen.version();
      case "time":
        return time(1);
      case "server":
-       //FIXME: Does this code always work?
+       //FIXME: This does not always work!
        string world_url = c->id->conf->query("MyWorldLocation");
        if (world_url == "") world_url = 0;
        array(string) urls = c->id->conf->query("URLs");
@@ -136,7 +151,7 @@ class ScopeRoxen {
   array(string) _indices() {
     return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
 	     "hits-per-minute", "hits", "sent-mb", "sent",
-             "sent-per-minute", "sent-kbit-per-second",
+             "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
               "pike-version", "version", "time", "server"});
   }
 
@@ -1996,6 +2011,7 @@ constant tagdoc=([
 "&roxen.sent-mb;":"<desc ent>The total amount of data the webserver has sent, in Mebibits.</desc>",
 "&roxen.sent-per-minute;":"<desc ent></desc>",
 "&roxen.server;":"<desc ent>The URL of the webserver.</desc>",
+"&roxen.ssl-strength;":"<desc ent>How many bits encryption strength are the SSL capable of</desc>",
 "&roxen.time;":"<desc ent>The current posix time.</desc>",
 "&roxen.uptime;":"<desc ent>The total uptime of the webserver, in seconds.</desc>",
 "&roxen.uptime-days;":"<desc ent>The total uptime of the webserver, in days.</desc>",
