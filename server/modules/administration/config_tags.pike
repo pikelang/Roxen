@@ -1,5 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
+// NGSERVER: Rename to admin_tags.pike
 inherit "module";
 inherit "html";
 inherit "roxenlib";
@@ -10,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.181 2002/06/15 21:04:40 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.182 2002/06/19 23:02:54 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
