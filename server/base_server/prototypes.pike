@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.125 2004/05/13 15:40:09 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.126 2004/05/13 17:45:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1966,8 +1966,6 @@ class RoxenModule
   mapping(string:mixed) recurse_delete_files(string path,
 					     RequestID id);
   mapping(string:mixed) make_collection(string path, RequestID id);
-  mapping(string:mixed) copy_properties(string source, string destination,
-					PropertyBehavior behavior, RequestID id);
   mapping(string:mixed) recurse_copy_files(string source, string destination,
 					   PropertyBehavior behavior,
 					   Overwrite overwrite, RequestID id);

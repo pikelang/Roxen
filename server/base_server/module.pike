@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.208 2004/05/13 16:09:36 grubba Exp $
+// $Id: module.pike,v 1.209 2004/05/13 17:45:20 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1255,7 +1255,8 @@ mapping(string:mixed) make_collection(string path, RequestID id)
   return find_file(path, tmp_id);
 }
 
-//! Copy all properties at @[source] to @[destination].
+//! Used by the default @[copy_collection] implementation to copy all
+//! properties at @[source] to @[destination].
 //!
 //! @param source
 //!   Source path below the filesystem location.
@@ -1270,8 +1271,8 @@ mapping(string:mixed) make_collection(string path, RequestID id)
 //! @returns
 //!   @expr{0@} (zero) in success or an appropriate status mapping for
 //!   any error.
-mapping(string:mixed) copy_properties(string source, string destination,
-				      PropertyBehavior behavior, RequestID id)
+static mapping(string:mixed) copy_properties(string source, string destination,
+					     PropertyBehavior behavior, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_properties(%O, %O, %O, %O)",
 		     source, destination, behavior, id);
