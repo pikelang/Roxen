@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.262 1999/03/27 22:15:50 grubba Exp $
+ * $Id: roxen.pike,v 1.263 1999/03/29 17:05:49 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.262 1999/03/27 22:15:50 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.263 1999/03/29 17:05:49 grubba Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -647,7 +647,10 @@ void handler_thread(int id)
   {
     if(q=catch {
       do {
+	werror("Handle thread ["+id+"] waiting for next event\n");
 	if((h=handle_queue->read()) && h[0]) {
+	  werror(sprintf("Handle thread [%O] calling %O(@%O)...\n",
+			 h[0], h[1..]));
 	  SET_LOCALE(default_locale);
 	  h[0](@h[1]);
 	  h=0;
@@ -3020,6 +3023,10 @@ object find_server_for(object id, string host, string|void port)
   object old_conf = id->conf;
   int portno = ((int)port);
 
+#ifdef REQUEST_DEBUG
+  werror(sprintf("ROXEN: find_server_for(%O, %O, %O)\n", id, host, port));
+#endif /* REQUEST_DEBUG */
+
   if(portno!=0 && portno!=21 && portno!=80 && portno!=443)
     // Not likely to be anything else than the current virtual server.
     return id->conf;
@@ -3034,43 +3041,13 @@ object find_server_for(object id, string host, string|void port)
       return (id->conf);
     }
 
-#if constant(String.fuzzymatch)
     int best;
     object c;
     string hn;
-    foreach(configurations, object s) {
-      string h = lower_case(s->query("MyWorldLocation"));
-
-      // Remove http:// and trailing slash...
-      // Would get interresting correlation problems with the "http" otherwise.
-      sscanf(h, "%*s://%s/", h);
-
-      int corr = String.fuzzymatch(host, h);
-      if ((corr > best) ||
-	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
-	/* Either better correlation,
-	 * or the same, but a shorter hostname.
-	 */
-	best = corr;
-	c = s;
-	hn = h;
-      }
-    }
-    if(best >= 50)
-      id->conf = config_cache[host] = (c || id->conf);
-    else 
-      config_cache[host] = id->conf;
-    host_accuracy_cache[host] = best;
-#elif constant(Array.diff_longest_sequence)
-    /* The idea of the algorithm is to find the server-url with the longest
-     * common sequence of characters with the host-string, and among those with
-     * the same correlation take the one which is shortest (ie least amount to
-     * throw away).
-     */
-    int best;
+#if !constant(String.fuzzymatch) && constant(Array.diff_longest_sequence)
     array a = host/"";
-    string hn;
-    object c;
+#endif /* !String.fuzzymatch && Array.diff_longest_sequence */
+
     foreach(configurations, object s) {
       string h = lower_case(s->query("MyWorldLocation"));
 
@@ -3080,9 +3057,21 @@ object find_server_for(object id, string host, string|void port)
       if (i != -1) {
 	h = h[i+3..];
       }
+      if ((i = search(h, "/")) != -1) {
+	h = h[..i-1];
+      }
 
-      array common = Array.diff_longest_sequence(a, h/"");
-      int corr = sizeof(common);
+#if constant(String.fuzzymatch)
+      int corr = String.fuzzymatch(host, h);
+#elif constant(Array.diff_longest_sequence)
+      int corr = sizeof(Array.diff_longest_sequence(a, h/""));
+#endif /* constant(Array.diff_longest_sequence) */
+
+      /* The idea of the algorithm is to find the server-url with the longest
+       * common sequence of characters with the host-string, and among those
+       * with the same correlation take the one which is shortest (ie least
+       * amount to throw away).
+       */
       if ((corr > best) ||
 	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
 	/* Either better correlation,
@@ -3093,14 +3082,17 @@ object find_server_for(object id, string host, string|void port)
 	hn = h;
       }
     }
+
+#if !constant(String.fuzzymatch) && constant(Array.diff_longest_sequence)
     // Minmatch should be counted in percent
     best=best*100/strlen(host);
+#endif /* !String.fuzzymatch && Array.diff_longest_sequence */
+
     if(best >= QUERY(minmatch))
       id->conf = config_cache[host] = (c || id->conf);
     else
       config_cache[host] = id->conf;
     host_accuracy_cache[host] = best;
-#endif /* constant(Array.diff_longest_sequence) */
   }
 
   if (id->conf != old_conf) {
