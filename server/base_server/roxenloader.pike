@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.119 1999/12/06 04:55:44 mast Exp $
+ * $Id: roxenloader.pike,v 1.120 1999/12/06 23:46:34 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.119 1999/12/06 04:55:44 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.120 1999/12/06 23:46:34 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -1027,6 +1027,18 @@ void write_current_time()
   call_out( write_current_time, 3600 - t % 3600 );
 }
 
+void paranoia_throw(mixed err)
+{
+  if ((arrayp(err) && ((sizeof(err) < 2) || !arrayp(err[1]) ||
+		       !(arrayp(err[1][0])||stringp(err[1][0])))) ||
+      (!arrayp(err) && (!objectp(err) || !err->is_generic_error))) {
+    roxen_perror(sprintf("Warning: throwing non-error: %O\n"
+			 "From: %s\n",
+			 err, describe_backtrace(backtrace())));
+  }
+  throw(err);
+}
+
 // Roxen bootstrap code.
 int main(int argc, array argv)
 {
@@ -1082,6 +1094,10 @@ Please install a newer pike version
     exit(0);
   }
 #endif /* constant(fork) */
+
+#ifdef INTERNAL_ERROR_DEBUG
+  add_constant("throw", paranoia_throw);
+#endif /* INTERNAL_ERROR_DEBUG */
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
