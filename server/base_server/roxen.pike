@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.3 1997/03/02 19:11:56 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.4 1997/03/09 13:36:34 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -626,10 +626,13 @@ public multiset find_supports(string from)
 private inline string fix_logging(string s)
 {
   string pre, post, c;
-  sscanf(s, "%*[\t ]", s);
+  sscanf(s, "%*[\t ]%s", s);
   s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
-  while(s[0] == ' ') s = s[1..10000];
-  while(s[0] == '\t') s = s[1..10000];
+
+  while(s[0] == ' ' || s[0] == '\t') {
+    s = s[1..];
+  }
+
   while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
     s=sprintf("%s%c%s", pre, c, post);
   while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
@@ -880,7 +883,7 @@ public string full_status()
 // to the configuration object. The functions will still be here for
 // compatibility for a while, though.
 
-public string *userinfo(string u, object id)
+public string *userinfo(string u, void|object id)
 {
   if(id)
     current_configuration = id->conf;
@@ -889,7 +892,7 @@ public string *userinfo(string u, object id)
   return 0;
 }
 
-public string *userlist(object id)
+public string *userlist(void|object id)
 {
   if(id)
     current_configuration = id->conf;
@@ -898,7 +901,7 @@ public string *userlist(object id)
   return 0;
 }
 
-public string *user_from_uid(int u, object id)
+public string *user_from_uid(int u, void|object id)
 {
   if(id)
     current_configuration = id->conf;
@@ -931,7 +934,7 @@ private object find_configuration_for(object bar)
 }
 
 // FIXME  
-public varargs string type_from_filename( string file, int to )
+public varargs array|string type_from_filename( string file, int to )
 {
   mixed tmp;
   string ext=extension(file);
@@ -964,6 +967,7 @@ public varargs string type_from_filename( string file, int to )
   } else {
     if(!(tmp=current_configuration->types_fun("default")))
       tmp=({ "application/octet-stream", 0 });
+    // FIXME -- tmp above isn't used /grubba
   }
   return 0;
 }
@@ -1706,31 +1710,41 @@ void start(int num)
 
   map(indices(current_configuration->open_ports), do_dest);
 
-  catch {
-    foreach(query("Ports"), port )
-    {
-      array tmp;
-      function rp;
-      array old = port;
-      object o;
-    
-      if(rp = ((object)(getcwd()+"/protocols/"+port[1]))->real_port)
-	if(tmp = rp(port))
-	  port = tmp;
-      object privs;
-      if(port[0] < 1024)
-	privs = ((program)"privs")("Opening listen port below 1024");
-      if(!(o=create_listen_socket(port[0], current_configuration, port[2],
-				  (program)(getcwd()+"/protocols/"+port[1]))))
-      {
-	perror("I failed to open the port "+old[0]+" at "+old[2]
-	       +" ("+old[1]+")\n");
-	err++;
-      } else
-	current_configuration->open_ports[o]=old;
+  foreach(query("Ports"), port ) {
+#ifdef DEBUG
+    perror("Opening port:%s...\n",
+	   map(port, lambda(mixed x){ return(x+""); } )*",");
+    array(mixed) port_error = 
+#endif /* DEBUG */
+      catch {
+	array tmp;
+	function rp;
+	array old = port;
+	object o;
+	
+	if(rp = ((object)(getcwd()+"/protocols/"+port[1]))->real_port)
+	  if(tmp = rp(port))
+	    port = tmp;
+	object privs;
+	if(port[0] < 1024)
+	  privs = ((program)"privs")("Opening listen port below 1024");
+	if(!(o=create_listen_socket(port[0], current_configuration, port[2],
+				    (program)(getcwd()+"/protocols/"+port[1]))))
+	  {
+	    perror("I failed to open the port "+old[0]+" at "+old[2]
+		   +" ("+old[1]+")\n");
+	    err++;
+	  } else
+	    current_configuration->open_ports[o]=old;
+      };
+#ifdef DEBUG
+    if (port_error) {
+      perror("Failed to open port %s at %s\n%s\n", port[0], port[2],
+	     master()->describe_backtrace(port_error));
     }
-  };
-  
+#endif /* DEBUG */
+  }
+
   if(!num && sizeof(query("Ports")))
   {
     if(err == sizeof(query("Ports")))
@@ -2343,8 +2357,14 @@ object enable_configuration(string config)
 	 TYPE_TEXT_FIELD,
 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
 	 "<i>/welcome.msg</i> doesn't exist.\n");
-  
 
+  defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG,
+	 "Allow ftp to normal user-accounts (requires auth-module).\n");
+
+  defvar("shells", "/etc/shells", "Shell database", TYPE_FILE,
+	 "File which contains a list of all valid shells.\n"
+	 "Usually /etc/shells\n");
+	 
   defvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   setvars(retrieve("spider#0"));
   
@@ -2369,13 +2389,15 @@ object enable_configuration(string config)
 
 
   array err;
-  foreach( modules_to_process, tmp_string )
+  foreach( modules_to_process, tmp_string ) {
+    perror("Enabling module %s\n", tmp_string);
     if(err = catch( enable_module( tmp_string ) ))
       perror("Failed to enable the module "+tmp_string+". Skipping\n"
 #ifdef MODULE_DEBUG
 	     +describe_backtrace(err)+"\n"
 #endif
 	);
+  }
   return current_configuration;
 }
 
@@ -2386,16 +2408,27 @@ static private void enable_configurations()
   string config;
 
   enabling_configurations = 1;
-  catch {
-    configs=list_all_configurations(); // From read_config.pike
-    configurations = ({});
+#define DEBUG
+#ifdef DEBUG
+  if (mixed err =
+#endif /* DEBUG */
+      catch {
+	configs=list_all_configurations(); // From read_config.pike
+	configurations = ({});
   
-    foreach(configs, config)
-    {
-      enable_configuration(config);
-      start(0);
-    }
-  };
+	foreach(configs, config)
+	  {
+	    enable_configuration(config);
+	    start(0);
+	  }
+      }
+#ifdef DEBUG
+       ) {
+    perror("Failed to enable configuration:\n%s\n",
+	   describe_backtrace(err));
+  }
+#endif /* DEBUG */
+  ;
   enabling_configurations = 0;
 }
 
@@ -3388,7 +3421,7 @@ inline static private string checkfd_fix_line(string l)
 }
 
 
-string checkfd(object id)
+string checkfd()
 {
 //  perror(sprintf("%O\n", get_all_active_fd()));
   
