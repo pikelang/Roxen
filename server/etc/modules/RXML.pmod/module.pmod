@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.203 2001/07/16 02:19:54 mast Exp $
+// $Id: module.pmod,v 1.204 2001/07/16 03:12:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -575,6 +575,13 @@ class TagSet
   //! Other tag sets that will be used. The precedence is local tags
   //! first, then imported from left to right. It's not safe to
   //! destructively change entries in this array.
+  //!
+  //! @note
+  //! The return value from @[get_hash] depends on the exact order in
+  //! this array. So even if the order isn't important for tag
+  //! overriding it should not be random in any way, or else
+  //! @[get_hash] won't return stable values. That would in turn make
+  //! decoding with @[RXML.string_to_p_code] fail almost always.
 
   function(Context:void) prepare_context;
   //! If set, this is a function that will be called before a new
@@ -808,6 +815,22 @@ class TagSet
     }
   }
 
+  local string get_hash()
+  //! Returns a hash string built from all the tags and imported tag
+  //! sets. It's suitable for use in persistent data to detect whether
+  //! the tag set has changed in any way that would cause different
+  //! tags to be parsed, or if they would be bound to different tag
+  //! definitions.
+  //!
+  //! @note
+  //! In the non-persistent case it's much more efficient to use
+  //! @[generation] to track changes in the tag set.
+  {
+    if (!hash)
+      hash = Crypto.md5()->update (encode_value_canonic (get_hash_data()))->digest();
+    return hash;
+  }
+
   local int has_effective_tags (TagSet tset)
   //! This one deserves some explanation.
   {
@@ -871,6 +894,7 @@ class TagSet
     prepare_funs = 0;
     overridden_tag_lookup = 0;
     plugins = pi_plugins = 0;
+    hash = 0;
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
     got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
@@ -1067,6 +1091,19 @@ class TagSet
 	  if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
 	}
     // We don't cache in pi_plugins; do that only at the top level.
+  }
+
+  static string hash;
+
+  /*static*/ array get_hash_data()
+  {
+    return ({
+      prefix,
+      prefix_req,
+      sort (indices (tags)),
+      proc_instrs && sort (indices (proc_instrs)),
+      string_entities,
+    }) + imported->get_hash_data();
   }
 
   string _sprintf()
@@ -6332,14 +6369,19 @@ class PCode
     }
     fully_resolved = 1;
 
-    return ({tag_set, type, recover_errors, encode_p_code});
+    return ({tag_set, tag_set && tag_set->get_hash(),
+	     type, recover_errors, encode_p_code});
   }
 
   void _decode(array v)
   {
-    [tag_set, type, recover_errors, p_code] = v;
+    [tag_set, string tag_set_hash, type, recover_errors, p_code] = v;
     length = sizeof (p_code);
-    if (tag_set) generation = tag_set->generation;
+    if (tag_set) {
+      if (tag_set->get_hash() != tag_set_hash)
+	error ("P-code is stale; the tag set has changed since it was encoded.\n");
+      generation = tag_set->generation;
+    }
     fully_resolved = 1;
 
     // Instantiate the cached frames, mainly so that any errors in
