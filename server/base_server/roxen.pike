@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.585 2000/12/12 13:54:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.586 2000/12/12 14:39:25 noring Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -477,6 +477,13 @@ function async_sig_start( function f )
   //
   // But on the other hand, you are not very likely to have any mutex
   // locks in an unthreaded pike, since it's quite impossible. /per
+  //
+  // But still, the problems with inconsistent internal states are
+  // there. The API:s for many (thread safe) objects are designed to
+  // only allow one (1) caller at any given time. It's a bug if this
+  // restriction can be circumvented using signals. I suggest that
+  // Thread.Mutex takes care of this problem in non-threaded mode.
+  // /noring
   return f;
 }
 #endif
