@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.208 2003/12/03 10:45:42 grubba Exp $
+# $Id: start,v 1.209 2003/12/03 10:53:09 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -680,7 +680,7 @@ signal_exit() {
       if [ "x$SILENT_START" != "xy" ]; then
 	echo >&2
       fi
-      if [ kill -0 "$mysql_pid" ] ; then
+      if kill -0 "$mysql_pid" ; then
         dp "Shutting down MySQL the hard way."
         kill -9 "$mysql_pid" 2>/dev/null
       fi
