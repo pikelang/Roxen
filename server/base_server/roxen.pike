@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.353 1999/07/08 13:09:25 peter Exp $
+ * $Id: roxen.pike,v 1.354 1999/07/10 21:37:38 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.353 1999/07/08 13:09:25 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.354 1999/07/10 21:37:38 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1597,14 +1597,22 @@ class ImageCache
     return data_cache[i] = what;
   }
 
+  static mixed frommapp( mapping what )
+  {
+    if( what[""] ) return what[""];
+    return what;
+  }
 
   static void draw( string name, object id )
   {
-    mapping args = argcache->lookup( name );
-    mixed reply = draw_function( copy_value(args), id );
-
+    mixed args = Array.map( Array.map( name/"$", argcache->lookup, id->client ), frommapp);
     mapping meta;
     string data;
+    mixed reply = draw_function( @copy_value(args), id );
+
+    if( arrayp( args ) )
+      args = args[0];
+
 
     if( objectp( reply ) || (mappingp(reply) && reply->img) )
     {
@@ -1613,6 +1621,7 @@ class ImageCache
       string dither = args->dither;
       object ct;
       object alpha;
+      int true_alpha; 
 
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
@@ -1627,6 +1636,32 @@ class ImageCache
       {
         alpha = reply->alpha;
         reply = reply->img;
+      }
+      
+      if( args->gamma )
+        reply = reply->gamma( (float)args->gamma );
+
+      if( args["true-alpha"] )
+        true_alpha = 1;
+
+      if( args["opaque-value"] )
+      {
+        true_alpha = 1;
+        int ov = (int)(((float)args["opaque-value"])*2.55);
+        if( ov < 0 )
+          ov = 0;
+        else if( ov > 255 )
+          ov = 255;
+        if( alpha )
+        {
+          object i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          i->paste_alpha( alpha, ov );
+          alpha = i;
+        }
+        else
+        {
+          alpha = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+        }
       }
 
       if( args->scale )
@@ -1676,7 +1711,8 @@ class ImageCache
             ct->ordered();
       }
 
-      if( !Image[upper_case( format )] || !Image[upper_case( format )]->encode )
+      if(!Image[upper_case( format )] 
+         || !Image[upper_case( format )]->encode )
         error("Image format "+format+" unknown\n");
 
       mapping enc_args = ([]);
@@ -1692,6 +1728,12 @@ class ImageCache
       switch(format)
       {
        case "gif":
+         if( alpha && true_alpha )
+         {
+           object ct=Image.colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           ct->floyd_steinberg();
+           alpha = ct->map( alpha );
+         }
          if( catch {
            if( alpha )
              data = Image.GIF.encode_trans( reply, ct, alpha );
@@ -1744,12 +1786,12 @@ class ImageCache
 
   static void store_data( string id, string data )
   {
-    Stdio.File f = Stdio.File(  dir+id, "wct" );
+    Stdio.File f = Stdio.File(  dir+id+".d", "wct" );
     if(!f) 
     {
       data_cache_insert( id, data );
       report_error( "Failed to open image cache persistant cache file "+
-                    dir+id+": "+strerror( errno() )+ "\n" );
+                    dir+id+".d: "+strerror( errno() )+ "\n" );
       return;
     }
     f->write( data );
@@ -1776,7 +1818,7 @@ class ImageCache
     else 
       f = Stdio.File( );
 
-    if(!f->open(dir+id, "r" ))
+    if(!f->open(dir+id+".d", "r" ))
       return 0;
 
     m = restore_meta( id );
@@ -1811,7 +1853,6 @@ class ImageCache
   {
     string na = store( data,id );
     mixed res;
-
     if(!( res = restore( na )) )
     {
       if(nodraw)
@@ -1835,11 +1876,20 @@ class ImageCache
     return restore_meta( na );
   }
 
-  string store( string|mapping data, object id )
+  mapping tomapp( mixed what )
+  {
+    if( mappingp( what ))
+      return what;
+    return ([ "":what ]);
+  }
+
+  string store( array|string|mapping data, object id )
   {
     string ci;
     if( mappingp( data ) )
       ci = argcache->store( data );
+    else if( arrayp( data ) )
+      ci = Array.map( Array.map( data, tomapp ), argcache->store )*"$";
     else
       ci = data;
     return ci;
@@ -1997,9 +2047,7 @@ class ArgCache
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
 
-//     werror(" store -> ");
     string id = create_key( data );
-//     werror(id+"\n");
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
@@ -2014,16 +2062,15 @@ class ArgCache
     return id;
   }
 
-  mapping lookup( string id )
+  mapping lookup( string id, array|void client )
   {
     LOCK();
-//     werror(" lookup -> "+id+"\n");
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
     string q = read_args( id );
 
-    if(!q) error("Key does not exist!\n");
+    if(!q) error("Key does not exist! (Thinks "+ client*" " +")\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
 
