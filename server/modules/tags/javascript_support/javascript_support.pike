@@ -1,8 +1,9 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.49 2002/03/22 17:09:01 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.50 2002/10/23 17:26:17 mast Exp $";
 
 #include <module.h>
+#include <request_trace.h>
 inherit "module";
 
 #define INT_TAG "_js_quote"
@@ -420,35 +421,56 @@ class TagEmitJSDynamicPopup {
   }
 }
 
+static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
+{
+  SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
+		      Roxen.make_tag_attributes (args));
+  JSInsert js_insert = get_jss(id)->get_insert(args->name);
+    
+  if(!js_insert) {
+    SIMPLE_TRACE_LEAVE ("Got no record of this tag");
+    return "";
+  }
+    
+  SIMPLE_TRACE_LEAVE ("");
+  if(args->name == "javascript1.2")
+    return ({ "<script language='javascript1.2'><!--\n"+
+	      js_insert->get()+"//--></script>" });
+
+  if(args->jswrite)
+    return container_js_write("js-post-write", ([]), js_insert->get(), id);
+    
+  return js_insert->get();
+}
+
 mapping filter(mapping response, RequestID id)
 {
-  mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
-  {
-    JSInsert js_insert = get_jss(id)->get_insert(args->name);
-    
-    if(!js_insert)
-      return "";
-    
-    if(args->name == "javascript1.2")
-      return ({ "<script language='javascript1.2'><!--\n"+
-		js_insert->get()+"//--></script>" });
-    
-    if(args->jswrite)
-      return container_js_write("js-post-write", ([]), js_insert->get(), id);
-    
-    return js_insert->get();
-  };
+  SIMPLE_TRACE_ENTER (this_object(), "Filtering %O", id->not_query);
 
-  if(!response			// 404
-  || !response->type		// no response type
-  || !jssp(id)			// nothing to filter
-  || !stringp(response->data)	// got Stdio.File object
-  || !glob("text/html*",	// only touch HTML files
-	   response->type))
-    return 0;			// signal "didn't rewrite result"
+  if(!response) {
+    SIMPLE_TRACE_LEAVE ("No response to filter");
+    return 0;
+  }
+  if (!response->type) {
+    SIMPLE_TRACE_LEAVE ("Not filtering due to missing response type");
+    return 0;
+  }
+  if (!glob("text/html*", response->type)) {
+    SIMPLE_TRACE_LEAVE ("Not filtering since the type isn't text/html*");
+    return 0;
+  }
+  if (!stringp(response->data)) {
+    SIMPLE_TRACE_LEAVE ("Cannot filter a file object");
+    return 0;
+  }
+  if (!jssp(id)) {
+    SIMPLE_TRACE_LEAVE ("Not filtering since no javascript tags have been used");
+    return 0;
+  }
 
   response->data = Parser.HTML()->add_tag("js-filter-insert", c_filter_insert)->
 		   set_extra(id)->finish(response->data)->read();
+  SIMPLE_TRACE_LEAVE ("");
   return response;
 }
 
