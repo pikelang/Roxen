@@ -200,18 +200,12 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, RequestID id
 {
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
-  if(!id->misc->up_args) id->misc->up_args = ([]);
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = ({"#args#"})+
-    Array.map(indices(args)+indices(id->misc->up_args),
+    Array.map(indices(args),
 	      lambda(string q){return "&"+q+";";});
-  array replace_to = (({make_tag_attributes( args + id->misc->up_args ) })+
-		      values(args)+values(id->misc->up_args));
-  foreach(indices(args), string a)
-  {
-    id->misc->up_args["::"+a]=args[a];
-    id->misc->up_args[tag+"::"+a]=args[a];
-  }
+  array replace_to = (({make_tag_attributes( args  ) })+
+		      values(args));
   string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   return r;
@@ -224,22 +218,16 @@ string call_user_container(string tag, mapping args, string contents, int line,
     tag = "";
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
-  if(!id->misc->up_args) id->misc->up_args = ([]);
   if(args->preparse && 
      (args->preparse=="preparse" || (int)args->preparse))
     contents = parse_rxml(contents, id);
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   array replace_from = ({"#args#", "<contents>"})+
-    Array.map(indices(args)+indices(id->misc->up_args),
+    Array.map(indices(args),
 	      lambda(string q){return "&"+q+";";});
-  array replace_to = (({make_tag_attributes( args + id->misc->up_args ),
+  array replace_to = (({make_tag_attributes( args  ),
 			contents })+
-		      values(args)+values(id->misc->up_args));
-  foreach(indices(args), string a)
-  {
-    id->misc->up_args["::"+a]=args[a];
-    id->misc->up_args[tag+"::"+a]=args[a];
-  }
+		      values(args));
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   return r;
