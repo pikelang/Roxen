@@ -58,15 +58,15 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.19 2000/08/21 23:38:27 hop Exp $";
-constant thread_safe=0; // FIXME: ??
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.20 2000/08/23 11:49:45 hop Exp $";
+constant thread_safe=0;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-import Stdio;
-import Array;
+//import Stdio;
+//import Array;
 
 #define LDAPAUTHDEBUG
 #ifdef LDAPAUTHDEBUG
@@ -132,51 +132,51 @@ void create()
 {
         defvar ("CI_access_mode","user","Access mode",
                    TYPE_STRING_LIST, "There are two generic mode:"
-		   "<p><b>user</b><br>"
+		   "<ol>"
+		   "<li><b>user</b><br>"
                    "The user is authenticated against his own entry"
 		   " in directory."
 		   "<br>Optional you can specify attribute/value"
 		   " pair must contained in."
-		   "<p><b>guest</b><br>"
+		   "<li><b>guest</b><br>"
 		   "The mode assume public access to the directory entries."
 		   "<br>This mode is for testing purpose. It's not recommended"
 		   " for real using."
-		   "<p><b>roaming</b><br>"
+		   "<li><b>roaming</b><br>"
 		   "Mode designed to works with Netscape roaming LDAP"
-		   " DIT tree.",
+		   " DIT tree.</ol>",
 		({ "user", "guest", "roaming" }) );
         defvar ("CI_access_type","search","Access type",
                    TYPE_STRING_LIST, "Type of LDAP operation used "
 		   "for authorization  checking."
-		   "<p>Only 'search' type implemented, yet ;-)",
+		   "<br><i>Only 'search' type implemented, yet ;-)</i>",
 		({ "search" }) );
 		//({ "search", "compare" }) );
 
 	// LDAP server:
-        defvar ("CI_dir_server","ldap://localhost/??sub","LDAP server: Location",
+        defvar ("CI_dir_server","ldap://localhost/??sub?(&(objectclass=person)(uid=%u%))","LDAP server: Location",
                    TYPE_STRING, "LDAP URL based information for connection"
 		   " to directory server which maintains "
-                   "the authentication information.<p>"
-		   "Notice for user access:<br>"
-		   " Variable '%u%' will be replaced by username.");
-        defvar ("CI_search_templ","(&(objectclass=person)(uid=%u%))","LDAP server: Search template",
-                   TYPE_STRING, "Template used by LDAP search operation"
-		   " as filter."
-		   "<p><b>%u%</b> : Will be replaced by entered username." );
+                   "the authentication information.<br>"
+		   "LDAP URL form:<p>"
+		   "ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]<p>"
+		   "<i>More detailed info at <a href=\"http://community.roxen.com/developers/idocs/rfc/rfc2255.html\"> RFC 2255</a>.</i><br>"
+		   "Notice:<i>"
+		   " %u% will be replaced by username.</i>");
 
 	// "user" access type
         defvar ("CI_required_attr","","LDAP server: Required attribute",
                    TYPE_STRING|VAR_MORE,
 		   "Which attribute must be present to successfully"
 		   " authenticate user (can be empty)"
-		   "<p>For example: <br>memberOf",
+		   "<br>Example: <i>memberOf</i>",
 		   0,
 		   access_mode_is_user_or_roaming
 		   );
         defvar ("CI_required_value","","LDAP server: Required value",
                    TYPE_STRING|VAR_MORE,
 		   "Which value must be in required attribute (can be empty)" 
-		   "<p>For example: <br>cn=KISS-PEOPLE",
+		   "<br>Example: <i>cn=KISS-PEOPLE</i>",
 		   0,
 		   access_mode_is_user_or_roaming
 		   );
@@ -200,16 +200,10 @@ void create()
 		   );
 
 	// Defaults:
-        defvar ("CI_default_attrname_upw", "userpassword",
-		   "Defaults: User password map", TYPE_STRING,
-                   "The mapping between passwd:password and LDAP.");
         defvar ("CI_default_uid",default_uid(),"Defaults: User ID", TYPE_INT,
                    "Some modules require an user ID to work correctly. This is the "
                    "user ID which will be returned to such requests if the information "
                    "is not supplied by the directory search.");
-        defvar ("CI_default_attrname_uid", "uidnumber",
-		   "Defaults: User ID map", TYPE_STRING,
-                   "The mapping between passwd:uid and LDAP.");
         defvar ("CI_default_gid",
 #ifdef __NT__
 		0,
@@ -218,27 +212,35 @@ void create()
 #endif		
 		"Defaults: Group ID", TYPE_INT,
                    "Same as User ID, only it refers rather to the group.");
-        defvar ("CI_default_attrname_gid", "gidnumber",
-		   "Defaults: Group ID map", TYPE_STRING,
-                   "The mapping between passwd:gid and LDAP.");
         defvar ("CI_default_gecos", "", "Defaults: Gecos", TYPE_STRING,
                    "The default Gecos.");
-        defvar ("CI_default_attrname_gecos", "gecos",
-		   "Defaults: Gecos map", TYPE_STRING,
-                   "The mapping between passwd:gecos and LDAP.");
         defvar ("CI_default_home","/", "Defaults: Home Directory", TYPE_DIR,
                    "It is possible to specify an user's home "
                    "directory. This is used if it's not provided.");
-        defvar ("CI_default_attrname_homedir", "homedirectory",
-		   "Defaults: Home Directory map", TYPE_STRING,
-                   "The mapping between passwd:homedir and LDAP.");
         defvar ("CI_default_shell","/bin/false", "Defaults: Shell", TYPE_STRING,
                    "The shell name for entries without own defined.");
-        defvar ("CI_default_attrname_shell", "loginshell",
-		   "Defaults: Shell map", TYPE_STRING,
-                   "The mapping between passwd:shell and LDAP.");
         defvar ("CI_default_addname",0,"Defaults: Username add",TYPE_FLAG,
                    "Setting this will add username to path to default directory.");
+
+	// Map
+        defvar ("CI_default_attrname_upw", "userpassword",
+		   "Map: User password map", TYPE_STRING,
+                   "The mapping between passwd:password and LDAP.");
+        defvar ("CI_default_attrname_uid", "uidnumber",
+		   "Map: User ID map", TYPE_STRING,
+                   "The mapping between passwd:uid and LDAP.");
+        defvar ("CI_default_attrname_gid", "gidnumber",
+		   "Map: Group ID map", TYPE_STRING,
+                   "The mapping between passwd:gid and LDAP.");
+        defvar ("CI_default_attrname_gecos", "gecos",
+		   "Map: Gecos map", TYPE_STRING,
+                   "The mapping between passwd:gecos and LDAP.");
+        defvar ("CI_default_attrname_homedir", "homedirectory",
+		   "Map: Home Directory map", TYPE_STRING,
+                   "The mapping between passwd:homedir and LDAP.");
+        defvar ("CI_default_attrname_shell", "loginshell",
+		   "Map: Shell map", TYPE_STRING,
+                   "The mapping between passwd:shell and LDAP.");
 
 	// Etc.
         defvar ("CI_use_cache",1,"Cache entries", TYPE_FLAG,
@@ -279,9 +281,6 @@ void open_dir(string u, string p) {
 
     last_dir_access=time(1);
     dir_accesses++; //I count accesses here, since this is called before each
-    //if(objectp(dir)) //already open
-    if(dir) //already open
-	return;
     if(dir)
 	return;
 
@@ -379,7 +378,6 @@ array(string) userinfo (string u,mixed p) {
     mapping(string:array(string)) tmp, attrsav;
 
     DEBUGLOG ("userinfo ("+u+")");
-    //DEBUGLOG (sprintf("DEB:%O\n",p));
     if (u == "A. Nonymous") {
       DEBUGLOG ("A. Nonymous pseudo user catched and filtered.");
       return 0;
@@ -399,8 +397,9 @@ array(string) userinfo (string u,mixed p) {
 
     if(QUERY(CI_access_type) == "search") {
 	string rpwd = "";
+	string flt = dir->parse_url(QUERY(CI_dir_server))->filter||"";
 
-	err = catch(results=dir->search(replace(QUERY(CI_search_templ), "%u%", u)));
+	err = catch(results=dir->search(replace(flt, "%u%", u)));
 	if (err || !objectp(results) || !results->num_entries()) {
 	    DEBUGLOG ("no entry in directory, returning unknown");
 	    if(access_mode_is_guest_or_roaming() && objectp(dir)) {
@@ -551,7 +550,6 @@ array|int auth (array(string) auth, object id)
 
     dirinfo=userinfo(u,p);
     if (!dirinfo||!sizeof(dirinfo)) {
-	//DEBUGLOG ("password check ("+dirinfo[1]+","+p+") failed");
 	DEBUGLOG ("password check failed");
 	DEBUGLOG ("no such user");
 	nouser++;
@@ -600,18 +598,16 @@ array|int auth (array(string) auth, object id)
 	    if (mappingp(dirinfo[7]) && dirinfo[7][attr]) {
 		mixed d;
 		d=dirinfo[7][attr];
-		// werror("User "+u+" has attr "+attr+"\n");
 		if(sizeof(QUERY(CI_required_value))) {
 		    mixed temp;
 		    int found=0;
 		    value=QUERY(CI_required_value);
 		    foreach(d, mixed temp) {
-			// werror("Looking at "+temp+"\n");
 			if (search(temp,value)!=-1)
 			    found=1;
 		    }
 		    if (found) {
-			// werror("User "+u+" has value "+value+"\n");
+		        DEBUGLOG ("User "+u+" has value "+value+"\n");
 		    } else {
 			werror("LDAPuserauth: User "+u+" has not value "+value+"\n");
 			failed[id->remoteaddr]++;
