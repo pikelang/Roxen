@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.411 2004/05/21 01:13:33 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.412 2004/05/21 01:23:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3232,12 +3232,6 @@ class TagDefine {
 
       if (n=args->if) {
 	ctx->set_misc ("if\0" + n, UserIf (n, content));
-	return 0;
-      }
-
-      if (n=args->name) {
-	ctx->set_misc (n, content);
-	old_rxml_warning(id, "attempt to define name ","variable");
 	return 0;
       }
 
