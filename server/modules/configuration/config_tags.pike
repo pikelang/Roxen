@@ -16,6 +16,26 @@ void start(int num, Configuration conf)
   conf->parse_html_compat=1;
 }
 
+void create() {
+  query_tag_set()->prepare_context=set_entities;
+}
+
+class Scope_usr {
+  inherit RXML.Scope;
+
+  mixed `[]  (string var, void|RXML.Context c, void|string scope) {
+    return c->id->misc->config_settings->query(var);
+  }
+
+  string _sprintf() { return "RXML.Scope(usr)"; }
+}
+
+RXML.Scope usr_scope=Scope_usr();
+
+void set_entities(RXML.Context c) {
+  c->extend_scope("usr", usr_scope);
+}
+
 string internal_topmenu_tag_item(string t, mapping m, 
 				 mapping c, RequestID id)
 {
@@ -36,7 +56,6 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
   items = items->them;
 
   c->top=( "<tablist bgcolor=#d9dee7>" );
-
   foreach(items, mapping i)
   {
     string color, fgcolor;
@@ -45,16 +64,14 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
     {
       targs->selected = "selected";
       targs->bgcolor = "#d9dee7";
-      targs->dimcolor = "white";
+      targs->selcolor = RXML.get_context()->get_var("bgcolor","usr");
       targs->txtcolor = "black";
-      targs->fgcolor = "#d9dee7";
     }
     else
     {
       targs->bgcolor = "#d9dee7";
       targs->dimcolor = "#9aa2ae";
       targs->txtcolor = "white";
-      targs->fgcolor = "white";
     }
     if( i->first ) targs->first=i->first;
     if( i->last )  targs->last=i->last;
