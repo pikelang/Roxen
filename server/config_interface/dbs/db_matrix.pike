@@ -117,31 +117,31 @@ string|mapping parse( RequestID id )
     {
       x++;
       float sz;
-      string bgc;
       string col = colors[y%sizeof(colors)][x%sizeof(colors[0])];
+      string bgc = col;
       res += "<td bgcolor='"+col+"' width='1%'><nobr>";
 
-#define SETUP(P) if( p[conf] == DBManager.P ) { sz=0.5; bgc=col;/*"&usr.bgcolor;";*/ }  else { sz=0.3; bgc=col; }
+#define SETUP(P) if( p[conf] == DBManager.P ) sz=0.5; else sz=0.3;
       
       
       SETUP(NONE);
-      res += sprintf("<a href='?set_none=%s&db=%s'>"
+      res += sprintf("<a href='?set_none=%s&db=%s'>"+
 		     "<gtext bgcolor='"+bgc+"' "
-		     "        scale="+sz+"> "+_(0,"N")+" </gtext>"
+		     "        scale='"+sz+"'> "+_(0,"N")+" </gtext>"
 		     "</a>", Roxen.http_encode_string(conf),
 		     Roxen.http_encode_string(db));
 
       SETUP(READ);
-      res += sprintf("<a href='?set_read=%s&db=%s'>"
+      res += sprintf("<a href='?set_read=%s&db=%s'>"+
 		     "<gtext bgcolor='"+bgc+"' "
-		     "        scale="+sz+"> "+_(0,"R")+" </gtext>"
+		     "        scale='"+sz+"'> "+_(0,"R")+" </gtext>"
 		     "</a>", Roxen.http_encode_string(conf),
 		     Roxen.http_encode_string(db));
 
       SETUP(WRITE);
-      res += sprintf("<a href='?set_write=%s&db=%s'>"
+      res += sprintf("<a href='?set_write=%s&db=%s'>"+
 		     "<gtext bgcolor='"+bgc+"' "
-		     "       fgcolor='&usr.warncolor;' scale="+sz+"> "+
+		     "       fgcolor='&usr.warncolor;' scale='"+sz+"'> "+
 		     _(0,"W")+" </gtext>"
 		     "</a>", Roxen.http_encode_string(conf),
 		     Roxen.http_encode_string(db));
