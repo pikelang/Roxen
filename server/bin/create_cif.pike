@@ -25,13 +25,17 @@ void abort_cif( )
   rm( output );
 }
 
-string font_name( string what )
+array(string) font_name( string what )
 {
-  Parser.HTML()->
+  string name = what;
+  string info = Parser.HTML()->
     add_container("name", lambda(string t, mapping m, string c) {
-			    what=c; return "";
-			  } )->finish(what);
-  return (lower_case( replace(what," ","_") )/"\n")[0]-"\r";
+			    name=c; return "";
+			  } )->finish(what)->read();
+  if(info==name) info=0;
+  name = (lower_case( replace(name," ","_") )/"\n")[0]-"\r";
+  info = info - "\r" - "\n";
+  return ({ name, info });
 }
 
 string find_prefix( string dir )
@@ -59,23 +63,27 @@ string find_prefix( string dir )
 void use_image_dir( )
 {
   input += "/";
-  if( !file_stat( input + "fontname" ) )
-  {
+  string prefix = find_prefix( input );
+
+  string name, info;
+  if( file_stat( input + "fontinfo" ) )
+    [name, info] = font_name( Stdio.read_bytes( input + "fontinfo" ) );
+  else if( file_stat( input + "fontname" ) )
+    name = font_name( Stdio.read_bytes( input + "fontname" ) ) [0];
+  else {
     werror("Not a imagedir font\n");
     abort_cif();
     exit(1);
   }
-  string prefix = find_prefix( input );
-  name_cif( font_name( Stdio.read_bytes( input + "fontname" ) ) );
-  foreach( get_dir( input )-({ "fontname" }), string fn )
+
+  name_cif( name );
+  foreach( get_dir( input )-({ "fontname","fontinfo" }), string fn )
   {
     int wc;
     string of = fn;
     sscanf( fn, "%s.", fn );
     if( fn == "prefix" )
       wc = 0xfffffffe;
-    else if( fn == "fontinfo" )
-      wc = 0xffffffff;
     else if( strlen(fn) > 2 )
       sscanf( fn, "0x%x", wc );
     else if( strlen(fn) == 1 )
@@ -85,6 +93,8 @@ void use_image_dir( )
   }
   if( strlen( prefix ) )
     add_to_cif( 0xfffffffe, prefix, "" );
+  if( info )
+    add_to_cif( 0xffffffff, info, "");
 
   // EOF marker. Not really needed, but somewhat nice.
   add_to_cif( 0, "", prefix );
@@ -94,14 +104,20 @@ void use_image_tar( )
 {
   Filesystem.Tar it = Filesystem.Tar( input );
   Stdio.File da_f;
-  if(!(da_f = it->open( "fontname", "r" ) ) )
-  {
+  string name, info;
+  if(da_f = it->open( "fontinfo", "r" ))
+    [name, info] = font_name( da_f->read() );
+  else if(da_f = it->open( "fontname", "r" ))
+    name = font_name( da_f->read() ) [0];
+  else {
     werror("Not a imagetar font\n");
     abort_cif();
     exit(1);
   }
-  name_cif( font_name( da_f->read() ) );
-  foreach( it->get_dir() - ({ "fontname", "/fontname" }), string fn )
+
+  name_cif( name );
+  foreach( it->get_dir() - ({ "fontname", "/fontname", "fontinfo", "/fontinfo" }),
+	   string fn )
   {
     int wc;
     string of = fn;
