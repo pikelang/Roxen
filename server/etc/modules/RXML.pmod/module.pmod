@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.108 2000/09/08 03:23:58 mast Exp $
+//! $Id: module.pmod,v 1.109 2000/09/14 21:55:53 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -27,18 +27,18 @@ class RequestID { };
 //!    you'll always get fresh Frame instances every time a tag is
 //!    evaluated.
 //!
-//! o  The parser currently can't stream data according to the
-//!    interface for streaming tags. Therefore there's still a risk
+//! o  The parser currently doesn't stream data according to the
+//!    interface for streaming tags (but the implementation still
+//!    follows the documented API for it). Therefore there's a risk
 //!    that incompatible changes must be made in it due to design bugs
 //!    when it's tested out. That is considered very unlikely, though.
 //!
-//! o  The type system will be developed further and the currently
-//!    implemented behavior might change as advanced types gets
-//!    implemented. Don't make assumptions about undocumented
-//!    behavior. Declare data properly with the types RXML.TXml,
-//!    RXML.THtml and RXML.TText to let the parser handle the
-//!    necessary conversions instead of doing it yourself. Try to
-//!    avoid implementing types.
+//! o  The type system will be developed further, and the API in the
+//!    Type class might change as advanced types gets implemented.
+//!    Don't make assumptions about undocumented behavior. Declare
+//!    data properly with the types RXML.TXml, RXML.THtml and
+//!    RXML.TText to let the parser handle the necessary conversions
+//!    instead of doing it yourself. Try to avoid implementing types.
 //!
 //! o  Various utilities have FIXME's in their documentation. Needless
 //!    to say they don't work as documented yet, and the doc should be
@@ -46,8 +46,8 @@ class RequestID { };
 //!    actually implemented.
 //!
 //! Note that the API for parsers, p-code evaluators etc is not part
-//! of the "official" API. (The syntax parsed by the currently
-//! implemented parsers are, however.)
+//! of the "official" API. (The syntax _parsed_ by the currently
+//! implemented parsers is well defined, of course.)
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
