@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>eng</language>
-<dumped>975000342</dumped>
+<dumped>975022891</dumped>
 <file>../base_server/config_userdb.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
@@ -1793,5 +1793,15 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 <str id="357">
 <o>Day must be %d or less.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Interface language</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Select the Administration interface language.</o>
 <t></t>
 </str>
