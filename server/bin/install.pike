@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.14 1997/08/19 06:17:12 per Exp $";
+string cvs_version = "$Id: install.pike,v 1.15 1997/08/23 14:37:38 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -102,11 +102,18 @@ int getport()
 {
   object p;
   int port;
+  int tries = 8192;
 
   p = files.port();
 
-  while(!(p -> bind(port = 10000 + random(10000))))
-    ;
+  while(tries && !(p -> bind(port = 10000 + random(10000))))
+    tries--;
+  if (!p && !tries) {
+    write("Failed to find a free port (tried 8192 different)\n"
+          "Pike's socket-implementation might be broken on this architecture.\n"
+          "Please run \"make verify\" in the build-tree to check pike.\n");
+    port=0;
+  }
   destruct(p);
   return port;
 }
@@ -375,9 +382,9 @@ void main(int argc, string *argv)
     if (!strlen(tmp) || lower_case(tmp)[0] != 'n') {
       prot_prog = "ssl3";
       prot_spec = "https://";
-      prot_extras = "cert-file testca.pem";
+      prot_extras = "cert-file demo_certificate.pem";
 
-      write("Using SSL3 with the demo certificate \"testca.pem\".\n"
+      write("Using SSL3 with the demo certificate \"demo_certificate.pem\".\n"
 	    "It is recommended that you change the certificate to one of your own.\n");
     }
   } else {
