@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.56 1997/12/15 01:52:13 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.57 1997/12/15 20:07:17 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1889,7 +1889,7 @@ mapping query_tag_callers()
 	    ]);
 }
 
-string tag_source(string tag,mapping m, string s,object got,object file)
+string tag_source(string tag, mapping m, string s, object got,object file)
 {
   string sep;
   sep=m["separator"]||"";
@@ -1899,7 +1899,7 @@ string tag_source(string tag,mapping m, string s,object got,object file)
 	  +"</pre>"+sep+s);
 }
 
-string tag_source2(string tag,mapping m, string s,object got,object file)
+string tag_source2(string tag, mapping m, string s, object got,object file)
 {
   if(!m["magic"])
     if(m["pre"])
@@ -1913,6 +1913,17 @@ string tag_source2(string tag,mapping m, string s,object got,object file)
 	replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))+"</pre>\n";
     else
       return replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
+}
+
+string tag_autoformat(string tag, mapping m, string s, object got,object file)
+{
+  if(m->p)
+    s = replace(s, "\n\n", "<p>");
+
+  s = replace(s, "\n", "<br>\n");
+  perror("Autoformating\n");
+  perror("Line2\n");
+  return s;
 }
 
 string tag_smallcaps(string t, mapping m, string s)
@@ -2028,6 +2039,7 @@ mapping query_container_callers()
   return (["comment":lambda(){ return ""; },
 	   "source":tag_source,
 	   "doc":tag_source2,
+	   "autoformat":tag_autoformat,
 	   "random":tag_random,
 	   "define":tag_define,
 	   "right":tag_right,
