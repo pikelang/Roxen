@@ -1,0 +1,54 @@
+Roxen translations
+------------------
+
+These files contain the locale/translation system with XML-based
+language files introduced in Roxen 2.1. The strings are extracted from
+the source and kept coherent by a tool included in Pike 7.1. 
+
+Files for each language is in a directory with the language code from
+the ISO-639-2 standard (http://lcweb.loc.gov/standards/iso639-2/). The
+files in the directory correspond to certain parts or activites in
+Roxen.
+
+Each file is loaded and cached on demand. The status of this can be
+checked in the administration interface under Tasks, Status, Cache status.
+
+
+*) How to a add new translation 
+Create a directory with the proper language code and copy the files from
+the 'eng'-directory into the new one. These files are empty and ready for
+new translations. After the personal option 'Show all translations' is
+enabled in the administration interface, it should be possible to select
+the new translation by the flag in the upper right corner, no matter how
+empty it is (the default English text will then be the fallback).
+
+
+*) File structure 
+Information for each string that should be translated is kept within a 
+<str id="foo">...</str> container. The id is unique for a certain string.
+
+The original string (like in the source) is kept inside the
+<str>-container inside a <o>...</o>. Do not change this - it is used to
+detected if the original string has changed since the translation was
+done.
+
+The translation is written within a <t>...</t>-container.
+
+Additionaly, there can be <new/>-markers (useful for searching for
+untranslated strings), and <changed from="...">-tags (if the original
+string has changed so a translator can verify that the translation still
+is correct).
+
+
+*) Improving translations
+One way is to browse through the translation files, searching for
+<new/> or <changed/> markers and dealing with these.
+
+Another way is to feed Roxen's start-script with the parameter
+'-DLOCALE_DEBUG', which makes the translationsystem a little more
+talkative. All strings then get their id appended which makes them easy to
+spot.
+
+
+Any patches or new translation are of course welcome for inclusion in the
+Roxen distribution.
