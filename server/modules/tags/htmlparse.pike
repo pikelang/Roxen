@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.183 1999/06/23 00:37:24 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.184 1999/08/14 06:19:07 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -655,6 +655,7 @@ mapping handle_file_extension( object file, string e, object id)
   mapping defines = id->misc->defines || ([]);
 
   id->misc->defines = defines;
+
   if(search(QUERY(noparse),e)!=-1)
   {
     query_num(id->not_query, 1);
@@ -1062,6 +1063,8 @@ string tag_use(string tag, mapping m, object id)
 {
   mapping res = ([]);
   object nid = id->clone_me();
+
+  nid->misc = ([]);
   nid->misc->tags = 0;
   nid->misc->containers = 0;
   nid->misc->defines = ([]);
@@ -1132,7 +1135,6 @@ string tag_use(string tag, mapping m, object id)
     m_delete(res->defines, "line");
     cache_set("macrofiles:"+ id->conf->name, (m->file || m->package), res);
   }
-
   if(!id->misc->tags)
     id->misc->tags = res->tags;
   else
@@ -1149,9 +1151,9 @@ string tag_use(string tag, mapping m, object id)
     id->misc->defaults |= res->defaults;
 
   if(!id->misc->defines)
-    id->misc->defines = res->defines;
+    id->misc->defines = copy_value(res->defines);
   else
-    id->misc->defines |= res->defines;
+    id->misc->defines |= copy_value(res->defines);
 
   foreach(indices(res->_tags), string t)
     id->misc->_tags[t] = res->_tags[t];
