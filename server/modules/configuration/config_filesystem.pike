@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.26 2000/02/24 17:12:52 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.27 2000/03/02 21:33:32 grubba Exp $";
 
 constant path = "config_interface/";
 
@@ -34,23 +34,31 @@ string real_file( mixed f, mixed id )
     return path + f;
 }
 
-mixed stat_file( string f, object id )
+// Try finding the locale-specific file first.
+// Returns ({ realfile, statinfo }).
+array(string|array) low_stat_file(string f, object id)
 {
-  mixed ret;
-  ret = file_stat( path+f );
-  if( !ret )
-  {
+  array ret;
+  ret = file_stat(path+f);
+  if (!ret) {
     sscanf( f, "%*[^/]/%s", f );
     f = "standard/"+f;
     ret = file_stat( path+f );
   }
-  return ret;
+  return ret && ({ path+f, ret });
+}
+
+array stat_file( string f, object id )
+{
+  array(string|array) ret = low_stat_file(f, id);
+  return ret && ret[1];
 }
 
 constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
 
 mixed find_dir( string f, object id )
 {
+  // FIXME: Shouldn't this look at the locale?
   return get_dir( path+f );
 }
 
@@ -93,9 +101,10 @@ mixed find_file( string f, object id )
 
   id->misc->cf_locale = locale;
 
-  array stat = stat_file( f, id );
-  if( !stat ) // No such luck...
+  array(string|array) stat_info = low_stat_file( f, id );
+  if( !stat_info ) // No such luck...
     return 0;
+  [string realfile, array stat] = stat_info;
   switch( stat[ ST_SIZE ] )
   {
    case -1:
@@ -108,9 +117,9 @@ mixed find_file( string f, object id )
      if (f[-1] == '/')
        return 0;	/* Let the PATH_INFO module handle it */
   }
-  id->realfile = path+replace(f,locale,"standard");
+  id->realfile = realfile;
 
-  mixed retval = Stdio.File( id->realfile, "r" );
+  mixed retval = Stdio.File( realfile, "r" );
 
   if( id->variables["content-type"] )
     return http_file_answer( retval, id->variables["content-type"] );
