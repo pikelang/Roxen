@@ -1,7 +1,7 @@
-// $Id: module.h,v 1.39 2000/07/09 18:18:03 per Exp $
+// $Id: module.h,v 1.40 2000/08/28 05:31:12 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
-
+#include "config.h"
 // compat
 #define QUERY(var)	query( #var )
 
