@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.327 2002/06/04 23:44:05 nilsson Exp $
+// $Id: roxenloader.pike,v 1.328 2002/06/05 00:22:25 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.327 2002/06/04 23:44:05 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.328 2002/06/05 00:22:25 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2011,16 +2011,8 @@ and rebuild Pike from scratch.
 #endif // !constant (Mysql.mysql)
 
   int start_time = gethrtime();
-  string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
   report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
-  master()->putenv("PIKE_INCLUDE_PATH", path);
-  foreach(path/":", string p) {
-    add_include_path(p);
-    add_program_path(p);
-  }
-  add_module_path( "pike_modules" );
-  add_module_path( "../local/pike_modules" );
 
   add_constant ("get_cvs_id", get_cvs_id);
   add_constant ("add_cvs_ids", add_cvs_ids);
