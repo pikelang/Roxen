@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.10.2.2 1997/03/03 11:42:25 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.10.2.3 1997/03/22 14:03:44 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -378,6 +378,15 @@ private int parse_got(string s)
 	   case "user-agent":
 	    sscanf(contents, "%s via", contents);
 	    client = explode(contents, " ") - ({ "" });
+	    break;
+	    
+	    /* Some of M$'s non-standard user-agent info */
+	   case "ua-pixels":	/* Screen resolution */
+	   case "ua-color":	/* Color scheme */
+	   case "ua-os":	/* OS-name */
+	   case "ua-cpu":	/* CPU-type */
+	     /* None of the above are interresting or usefull */
+	     /* IGNORED */
 	    break;
 
 	   case "referer":
