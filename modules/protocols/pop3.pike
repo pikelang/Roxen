@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.17 1998/09/28 22:37:13 grubba Exp $
+ * $Id: pop3.pike,v 1.18 1998/09/29 13:12:03 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.17 1998/09/28 22:37:13 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.18 1998/09/29 13:12:03 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -31,6 +31,7 @@ static class Pop_Session
   inherit Protocols.Line.simple;
 
   static object conf;
+  static object parent;
 
   static object user;
   static string username;
@@ -102,11 +103,31 @@ static class Pop_Session
     }
   }
 
+  static void do_timeout()
+  {
+    catch {
+      send_error("POP timeout");
+    };
+    user = 0;
+    catch {
+      send_ok(sprintf("%s POP3 server signing off.", gethostname()));
+    };
+    catch {
+      disconnect();
+    };
+    touch_time();	// We want to send the timeout message...
+    _timeout_cb();	// Restart the timeout timer.
+
+    // Force disconnection in timeout time
+    // if the other end doesn't read any data.
+    call_out(::do_timeout, timeout);
+  }
+
   // Commands:
 
   void pop_QUIT()
   {
-    send_ok(sprintf("%s POP3 server signing off", gethostname()));
+    send_ok(sprintf("%s POP3 server signing off.", gethostname()));
     disconnect();
     if (user) {
       indices(deleted)->delete();
@@ -188,6 +209,9 @@ static class Pop_Session
     body = bytestuff(body);
     send(body);
     send(".\r\n");
+    if (parent->query("mark_read")) {
+      mail->set_flag("read");
+    }
   }
 
   void pop_DELE(array(string) args)
@@ -357,10 +381,11 @@ static class Pop_Session
     send_error("Not supported yet.");
   }
 
-  void create(object con, object c)
+  void create(object con, int timeout, object c, object p)
   {
+    parent = p;
     conf = c;
-    ::create(con);
+    ::create(con, timeout);
 
     reset();
 
@@ -377,7 +402,8 @@ static void got_connection()
 {
   object con = port->accept();
 
-  Pop_Session(con, conf);	// Start a new session.
+  // Start a new session.
+  Pop_Session(con, QUERY(timeout), conf, this_object());
 }
 
 static void init()
@@ -449,12 +475,13 @@ void create()
 	 "Portnumber to listen to.<br>\n"
 	 "Usually " + Protocols.Ports.tcp.pop3 + ".\n");
 
-#if 0
+  defvar("mark_read", 0, "Mark retrieved messages as read", TYPE_FLAG,
+	 "Marks messages retrieved via POP3 as read.");
+
   // Enable this later.
   defvar("timeout", 10*60, "Timeout", TYPE_INT | VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
 	 "Zero or negative to disable timeouts.");
-#endif /* 0 */
 }
 
 void start(int i, object c)
