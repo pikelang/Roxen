@@ -1,4 +1,4 @@
-<gtext scale='0.7' font="franklin gothic demi">Welcome to Roxen WebServer &roxen.base-version;</gtext>
+<gtext scale='0.7' font="franklin gothic demi">Welcome to Roxen CMS &roxen.base-version;</gtext>
 <p>
  If your fonts are way too large (or small, depending on personal
  preferences), please adjust the unicode font size in your
