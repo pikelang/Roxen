@@ -41,6 +41,11 @@ A few guidelines to people contributing to the code:
   (to end users and administrators) references to Roxen should be replaced
   by ChiliMoon.
 
+- References to and code for SiteBuilder needs to be removed, the same
+  holds true for license-support code.
+
+- Alle visible locales in the admininterface must be removed.
+
 - We're aiming for compatibility with RXML2 of Roxen 4.0.
   Compatibility code with subtle sideeffects which are different from
   Roxen 4.0 should be removed (i.e. compat_levels lower than 4.0 can be
