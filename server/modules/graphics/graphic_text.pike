@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.247 2000/09/19 22:37:09 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.248 2000/09/21 23:03:45 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -81,7 +81,7 @@ constant gtextargs=#"
 <ex type=hor>
 <gtext font='lucida'>Aa3</gtext><br />
 <gtext font='lucida' bold=''>Aa3</gtext><br />
-<gtext font='lucida' italic''>Aa3</gtext><br />
+<gtext font='lucida' italic=''>Aa3</gtext><br />
 <gtext font='lucida' bold='' italic=''>Aa3</gtext><br />
 </ex>
 </attr>
