@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.130 2000/08/20 00:27:21 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.131 2000/08/21 01:05:23 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Business graphics";
@@ -705,17 +705,18 @@ string container_diagram(string tag, mapping m, string contents,
     m->height = size->ysize;
   }
 
-  if(m->noxml)
+  int xml=1;
+  if(m->noxml) {
     m_delete(m, "noxml");
-  else
-    m["/"]="/";
+    xml=0;
+  }
 
 #ifdef BG_DEBUG
   if(id->prestate->debug)
-    return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m));
+    return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m, xml));
 #endif
 
-  return make_tag("img", m);
+  return make_tag("img", m, xml);
 }
 
 int|object PPM(string fname, object id)

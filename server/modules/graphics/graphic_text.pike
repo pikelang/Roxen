@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.231 2000/08/15 20:16:07 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.232 2000/08/21 01:04:55 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -860,8 +860,9 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     m_delete(arg, "href");
   }
 
-  if(!arg->noxml) { arg["/"]="/"; m_delete(arg, "noxml"); }
-  if(!arg->border) arg->border=arg->border||"0";
+  int xml=!arg->noxml;
+  m_delete(arg, "noxml");
+  if(!arg->border) arg->border="0";
 
   if(arg->split)
   {
@@ -881,7 +882,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
         arg->width  = (string)size->xsize;
         arg->height = (string)size->ysize;
       }
-      res+=Roxen.make_tag( "img", arg )+" ";
+      res+=Roxen.make_tag( "img", arg, xml )+" ";
     }
     return sprintf(lp,res);
   }
@@ -925,8 +926,8 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     string sn="i"+id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
       return (!input)?
-        ("<a "+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]))+"</a>"):
-        Roxen.make_tag("input",arg+(["type":"image"]));
+        ("<a "+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
+        Roxen.make_tag("input",arg+(["type":"image"]),xml);
     }
 
     arg->name=sn;
@@ -952,13 +953,13 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
                                             "'"+replace(magic,"'","`")+"'":
                                             "0")+"); return true;\" "
       "onMouseout=\"document.images['"+sn+"'].src = "+sn+"l.src;\">"
-      +Roxen.make_tag("img",arg)+"</a>";
+      +Roxen.make_tag("img",arg,xml)+"</a>";
   }
 
   if(input)
-    return Roxen.make_tag("input",arg+(["type":"image"]));
+    return Roxen.make_tag("input",arg+(["type":"image"]),xml);
 
-  return sprintf(lp,Roxen.make_tag("img",arg));
+  return sprintf(lp,Roxen.make_tag("img",arg,xml));
 }
 
 array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
