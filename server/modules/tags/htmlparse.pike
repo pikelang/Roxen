@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.142 1998/09/25 13:14:38 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.143 1998/09/25 13:22:58 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -49,30 +49,30 @@ string strftime(string fmt, int t)
     string res = "";
     switch(a[i][0]) {
     case 'a':	// Abbreviated weekday name
-      ret = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+      res = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
     case 'A':	// Weekday name
-      ret = ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+      res = ({ "Sunday", "Monday", "Tuesday", "Wednesday",
 	       "Thursday", "Friday", "Saturday" })[lt->wday];
       break;
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
-      ret = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      res = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
       break;
     case 'B':	// Month name
-      ret = ({ "January", "February", "March", "April", "May", "June",
+      res = ({ "January", "February", "March", "April", "May", "June",
 	       "July", "August", "September", "October", "November", "December" })[lt->mon];
       break;
     case 'c':	// Date and time
-      ret = strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
+      res = strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
 			     lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year));
       break;
     case 'C':	// Century number; 0-prefix
-      ret = sprintf("%02d", 19 + lt->year/100);
+      res = sprintf("%02d", 19 + lt->year/100);
       break;
     case 'd':	// Day of month [1,31]; 0-prefix
-      ret = sprintf("%02d", lt->mday);
+      res = sprintf("%02d", lt->mday);
       break;
     case 'D':	// Date as %m/%d/%y
       res = strftime("%m/%d/%y", t);
