@@ -8,17 +8,19 @@
 //! Objects of this class are usually created through
 //! @[RoxenModule()->query_properties()].
 
+#include <roxen.h>
+
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
 #else /* !DAV_DEBUG */
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
 
-//! Path for which these properties apply.
+//! Filesystem-relative path for which these properties apply.
 string path;
 
-//! Status information about @[path] as returned by @[stat_file()].
-Stat st;
+//! Absolute path for which these properties apply.
+string abs_path;
 
 //! The current request.
 RequestID id;
@@ -26,26 +28,35 @@ RequestID id;
 //! Create a new property set.
 //!
 //! Usually called via @[query_properties()].
-static void create(string path, Stat st, RequestID id)
+static void create(string path, string abs_path, RequestID id)
 {
   global::path = path;
-  global::st = st;
+  global::abs_path = abs_path;
   global::id = id;
+
+  ASSERT_IF_DEBUG(has_prefix(abs_path, "/") && has_suffix(abs_path, path));
 }
 
+//! @decl static void destroy();
+//!
 //! Destruction callback.
 //!
 //! Note that this function must unroll any uncommitted
 //! property changes.
-static void destroy()
-{
-}
+
+//! Return an @[Stdio.Stat] object for the resource. Its main use is
+//! to tell collections (i.e. directories) from non-collections.
+Stat get_stat();
 
 //! Called by the default @[query_property] implementation to get the
 //! response headers a GET or HEAD request on @[path] would yield.
 //! It's used to fill in the properties that should reflect various
 //! response headers.
 mapping(string:string) get_response_headers();
+
+// Simulate an import of useful stuff from Parser.XML.Tree.
+static constant SimpleNode = Parser.XML.Tree.SimpleNode;
+static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
 private constant all_properties_common = (<
   "DAV:getcontentlength",
@@ -55,6 +66,8 @@ private constant all_properties_common = (<
   "DAV:supportedlock",
   "DAV:iscollection",
   "DAV:isfolder",
+  "DAV:lockdiscovery",
+  "DAV:supportedlock",
 >);
 
 private constant all_properties_file = all_properties_common + (<
@@ -95,6 +108,9 @@ private constant all_properties_dir = all_properties_common;
 //!
 //!     @value "DAV:getlastmodified"
 //!	  RFC2518 13.7
+//!
+//!     @value "DAV:lockdiscovery"
+//!       RFC2518 13.8
 //!
 //!     @value "DAV:resourcetype"
 //!	  RFC2518 13.9
@@ -230,17 +246,21 @@ private constant all_properties_dir = all_properties_common;
 //!   @tt{DAV:getlastmodified@}.
 multiset(string) query_all_properties()
 {
-  multiset(string) props =
-    (st->isreg ? all_properties_file : all_properties_dir) + (<>);
+  Stat st = get_stat();
+  if (st) {
+    multiset(string) props =
+      (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
 
-  // This isn't necessary for the Content-Length and Content-Type
-  // headers since RequestID.make_response_headers always sets those.
-  mapping(string:string) hdrs = get_response_headers();
-  if (hdrs["Content-Language"]) props["DAV:getcontentlanguage"] = 1;
-  if (hdrs->ETag)               props["DAV:getetag"] = 1;
-  if (hdrs["Last-Modified"])    props["DAV:getlastmodified"] = 1;
-
-  return props;
+    // This isn't necessary for the Content-Length and Content-Type
+    // headers since RequestID.make_response_headers always sets those.
+    mapping(string:string) hdrs = get_response_headers();
+    if (hdrs["Content-Language"]) props["DAV:getcontentlanguage"] = 1;
+    if (hdrs->ETag)               props["DAV:getetag"] = 1;
+    if (hdrs["Last-Modified"])    props["DAV:getlastmodified"] = 1;
+    return props;
+  }
+  // Null resource.
+  return all_properties_common + (<>);
 }
 
 //! Returns the value of the specified property, or an error code
@@ -252,7 +272,7 @@ multiset(string) query_all_properties()
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
-string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+string|array(SimpleNode)|mapping(string:mixed)
   query_property(string prop_name)
 {
   switch(prop_name) {
@@ -260,10 +280,14 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     // We don't really have any idea of the creation time in a unix
     // style file system.
   case "DAV:creationdate":	// RFC2518 13.1
-    int t = st->ctime;
-    if (t > st->atime) t = st->atime;
-    if (t > st->mtime) t = st->mtime;
-    return Roxen.iso8601_date_time(t);	// MS kludge.
+    Stdio.Stat stat = get_stat();
+    if (stat) {
+      int t = stat->ctime;
+      if (t > stat->atime) t = stat->atime;
+      if (t > stat->mtime) t = stat->mtime;
+      return Roxen.iso8601_date_time(t);	// MS kludge.
+    }
+    break;
 #endif
 
   case "DAV:displayname":	// RFC2518 13.2
@@ -286,17 +310,33 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   case "DAV:getlastmodified":	// RFC2518 13.7
     return get_response_headers()["Last-Modified"];
 
+  case "DAV:lockdiscovery":	// RFC2518 13.8
+    return indices(id->conf->find_locks(abs_path, 0, 0, id))->get_xml();
+
   case "DAV:resourcetype":	// RFC2518 13.9
-    if (st->isdir) {
+    if ((get_stat()||([]))->isdir) {
       return ({
-	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
+	SimpleElementNode("DAV:collection", ([])),	// 12.2
       });
     }
     return 0;
 
   case "DAV:supportedlock":	// RFC2518 13.11
-    return "";
+    {
+      return ({
+	SimpleElementNode("DAV:lockentry", ([]))->
+	add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		  add_child(SimpleElementNode("DAV:exclusive", ([]))))->
+	add_child(SimpleElementNode("DAV:locktype", ([]))->
+		  add_child(SimpleElementNode("DAV:write", ([])))),
 
+	SimpleElementNode("DAV:lockentry", ([]))->
+	add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		  add_child(SimpleElementNode("DAV:shared", ([]))))->
+	add_child(SimpleElementNode("DAV:locktype", ([]))->
+		  add_child(SimpleElementNode("DAV:write", ([])))),
+      });
+    }
   case "http://apache.org/dav/props/executable":
     // http://www.webdav.org/mod_dav/:
     //
@@ -310,8 +350,9 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     //		in most filesystems.
     //
     //		This property is not defined on collections.
-    if (st->isreg) {
-      if (st->mode & 0111) return "T";
+    Stdio.Stat stat = get_stat();
+    if (stat && stat->isreg) {
+      if (stat->mode & 0111) return "T";
       return "F";
     }
     break;
@@ -333,7 +374,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
-    if (st->isdir) {
+    if ((get_stat()||([]))->isdir) {
       return "1";
     }
     return "0";
@@ -342,7 +383,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     // The following are properties in the DAV namespace
     // that Microsoft has stolen.
   case "DAV:isreadonly":	// MS
-    if (!(st->mode & 0222)) {
+    if (!((get_stat()||(["mode":0222]))->mode & 0222)) {
       return "1";
     }
     return "0";
@@ -350,22 +391,15 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     if (path == "") return "1";
     return "0";
   case "DAV:lastaccessed":	// MS
-    return Roxen.iso8601_date_time(st->atime);
+    return Roxen.iso8601_date_time((get_stat()||([]))->atime);
   case "DAV:href":		// MS
-    return sprintf("%s://%s%s%s%s",
-		   id->port_obj->prot_name,
-		   id->misc->host || id->port_obj->ip ||
-		   gethostname(),
-		   (id->port_obj->port == id->port_obj->port)?
-		   "":(":"+(string)id->port_obj->port),
-		   id->port_obj->path||"",
-		   combine_path(query_location(), path));
+    return id->url_base() + abs_path[1..];
   case "DAV:contentclass":	// MS
     return "";
   case "DAV:parentname":	// MS
     return "";
   case "DAV:name":		// MS
-    return combine_path(query_location(), path);
+    return abs_path;
 #endif /* 0 */
 
   default:
@@ -450,7 +484,7 @@ void commit()
 //!   entity returned by a GET request, automatically calculated by
 //!   the server.
 mapping(string:mixed) set_property(string prop_name,
-				   string|array(Parser.XML.Tree.Node) value)
+				   string|array(SimpleNode) value)
 {
   switch(prop_name) {
   case "http://apache.org/dav/props/executable":
@@ -491,7 +525,7 @@ mapping(string:mixed) set_property(string prop_name,
 //!    maintaining the consistency of the syntax and semantics of a
 //!    dead property.
 mapping(string:mixed) set_dead_property(string prop_name,
-					array(Parser.XML.Tree.Node) value)
+					array(SimpleNode) value)
 {
   return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
 			    "Setting of dead properties is not supported.");
@@ -529,8 +563,6 @@ mapping(string:mixed) remove_property(string prop_name)
 //! RFC 2518 PROPFIND implementation for a single resource (i.e. not
 //! recursive).
 //!
-//! @param path
-//!   @[query_location()]-relative path.
 //! @param mode
 //!   Query mode. Currently one of
 //!   @string mode
@@ -542,20 +574,22 @@ mapping(string:mixed) remove_property(string prop_name)
 //!       Query properties specified by @[filt] and their values.
 //!   @endstring
 //! @param result
-//!   Result object.
+//!   @[MultiStatus.Prefixed] object to collect the results. It has
+//!   the path to the file system as implicit prefix.
 //! @param filt
 //!   Optional multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
 mapping(string:mixed) find_properties(string mode,
-				      MultiStatus result,
+				      MultiStatus.Prefixed result,
 				      multiset(string)|void filt)
 {
   switch(mode) {
   case "DAV:propname":
-    foreach(query_all_properties(); string prop_name;) {
+    filt = query_all_properties();
+    foreach(filt; string prop_name;) {
       result->add_property(path, prop_name, "");
     }
-    return 0;
+    break;
   case "DAV:allprop":
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
@@ -566,12 +600,18 @@ mapping(string:mixed) find_properties(string mode,
     }
     // FALL_THROUGH
   case "DAV:prop":
-    foreach(indices(filt), string prop_name) {
+    foreach(filt; string prop_name;) {
       result->add_property(path, prop_name,
 			   query_property(prop_name));
     }
+    break;
+  default:
+    // FIXME: Unsupported DAV operation.
     return 0;
   }
-  // FIXME: Unsupported DAV operation.
+
+  if (filt["http://apache.org/dav/props/executable"])
+    // Not really necessary.
+    result->add_namespace ("http://apache.org/dav/props/");
   return 0;
 }
