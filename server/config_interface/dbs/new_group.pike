@@ -91,6 +91,11 @@ mapping|string parse( RequestID id )
 	find_dbs = 1;
     }
     if(!strlen(error))
+      if (!sizeof(id->variables->lname))
+	error="<font color='&usr.warncolor;'>"+
+	  _(0,"Please give a name for the group.")+
+	  "</font>";
+    if(!strlen(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
 	error=sprintf("<font color='&usr.warncolor;'>"+
 		      _(457,"A database group named %s already exists")+
