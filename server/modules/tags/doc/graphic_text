@@ -72,6 +72,9 @@ module in pike.
 <dt><b>magic_X</b><dd>
           Same as X, where X is any other argument,
           but for the <tt>magic</tt> image.
+<dt><b>move=x,y</b><dd>
+	  Move the text relative to the upper left corner of the background
+          image. This will not adjust the size of the image.
 <dt><b>fuzz</b>[=<tt>color</tt>]<dd>
           Apply the 'glow' effect to the result.
 <dt><b>fs</b><dd>
