@@ -5,13 +5,23 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.14 2000/03/21 18:58:42 per Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.15 2000/04/05 12:10:20 jhs Exp $";
 
 void create()
 {
   defvar("location", "/demo/", "Mount point", TYPE_LOCATION,
 	 "This is where the module will be inserted in the "+
 	 "namespace of your server.");
+
+  defvar("dbpath", "../var/demomodule-bookmarks", "Database path",
+	 TYPE_STRING, "This is the path to the module's Yabu database.",
+	 0, 1); // Don't show this variable
+}
+
+void start(int level, Configuration conf)
+{
+  if(conf && query("dbpath") == "../var/demomodule-bookmarks")
+    set("dbpath", "../var/demomodule-bookmarks/" + conf->name);
 }
 
 constant module_type = MODULE_LOCATION;
@@ -58,22 +68,20 @@ mixed find_file( string f, object id )
   if(id->variables->go)
     return http_redirect(query("location")+id->variables->pos,id);
   if (!mdb) {
-    mdb = Yabu.db("../var/demomodule-bookmarks", "wcCr")["demo"];
+    mdb = Yabu.db(query("dbpath"), "wcCr")["demo"];
     if(!mdb[42])
       mdb[42]=
-#"<for variable=i from=99 to=1 step=-1>
-  <if not variable=\"i is 1\">
-    <set variable=s value=\"s\">
+#"<for variable=var.i from=99 to=1 step=-1>
+  <if not variable="var.i is 1">
+    <set variable=var.s value="s">
   </if>
   <else>
-    <set variable=s value=\"\">
+    <set variable=var.s value="">
   </else>
-  <formoutput>
-    #i# bottle#s# of beer on the wall,<br><br>
-    #i# bottle#s# of beer on the wall,<br>
-    #i# bottle#s# of beer,<br>
-    Take one down, pass it around,<br><br>
-  </formoutput>
+  &var.i; bottle&var.s; of beer on the wall,<br><br>
+  &var.i; bottle&var.s; of beer on the wall,<br>
+  &var.i; bottle&var.s; of beer,<br>
+  Take one down, pass it around,<br><br>
 </for>
 No more bottles of beer on the wall";
   }
