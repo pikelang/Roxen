@@ -94,12 +94,17 @@ string|mapping parse( RequestID id )
   {
     st = SITE_TEMPLATES+st;
     mixed err = catch {
+      program p;
       object q;
-      if (file_stat("../local/"+st)) {
-	q = ((program)("../local/"+st))();
-      } else {
-	q = ((program)st)();
+      if (file_stat("../local/"+st))
+	p = (program)("../local/"+st);
+      else
+	p = (program)(st);
+      if(!p) {
+	report_error("Template \""+st+"\" failed to compile.\n");
+	continue;
       }
+      q = p();
       if( q->site_template )
       {
         string name, doc;
@@ -134,10 +139,12 @@ string|mapping parse( RequestID id )
   sort( sts );
   foreach( sts, array q ) res += q[1]+"\n\n\n";
 
-  if( strlen( e->get() ) )
+  if( strlen( e->get() ) ) {
     res += ("Compile errors:<pre>"+
             Roxen.html_encode_string(e->get())+
             "</pre>");
+    report_error("Compile errors: "+e->get()+"\n");
+  }
   master()->set_inhibit_compile_errors( 0 );
   return sprintf(base,"",res);
 }
