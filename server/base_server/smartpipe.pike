@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.23 1998/05/22 21:24:42 grubba Exp $
+ * $Id: smartpipe.pike,v 1.24 1998/06/07 21:09:32 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -146,6 +146,7 @@ void next_input()
   if(outfd->query_fd()>0 && current_input->query_fd()>0)
   {
     outfd->set_blocking();
+    current_input->set_blocking();
     spider.shuffle(current_input,outfd,_pipe_done,0,current_input_len);
     return;
   }
