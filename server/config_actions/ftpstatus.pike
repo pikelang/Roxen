@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.3 1997/09/08 02:50:30 grubba Exp $ */
+/* $Id: ftpstatus.pike,v 1.4 1997/09/08 19:30:52 marcus Exp $ */
 
 inherit "wizard";
 
@@ -50,10 +50,11 @@ string page_0(object id)
   program p = ((program)"protocols/ftp");
   multiset(object) ftps = (< >);
   object o = next_object();
-  while(o || zero_type(o)) {
-    if(o && (object_program(o) == p) && o->cmd_fd)
+  for(;;) {
+    if(o && object_program(o) == p && o->cmd_fd)
       ftps[o]=1;
-    o = next_object(o);
+    if(catch(o = next_object(o)))
+      break;
   }
 
   if(sizeof(ftps))
