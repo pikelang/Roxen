@@ -7,9 +7,9 @@
 <row><c><p>gif</p></c><c><p>Graphics Interchange Format (might be missing in your roxen)</p></c></row>
 <row><c><p>jpeg</p></c><c><p>Joint Photography Expert Group image compression</p></c></row>
 <row><c><p>png</p></c><c><p>Portable Networks Graphics</p></c></row>
-<row><c><p>avs</p></c><c><p></p></c></row>
+<row><c><p>avs</p></c><c><p>Advanced Visual Systems Inc. image format</p></c></row>
 <row><c><p>bmp</p></c><c><p>Windows BitMaP file</p></c></row>
-<row><c><p>gd</p></c><c><p></p></c></row>
+<row><c><p>gd</p></c><c><p>Internal format used by libgd</p></c></row>
 <row><c><p>hrz</p></c><c><p>HRZ is (was?) used for amatuer radio slow-scan TV.</p></c></row>
 <row><c><p>ilbm</p></c><c><p>Interchangeable File Format: interleaved bitmap</p></c></row>
 <row><c><p>pcx</p></c><c><p>Zsoft PCX file format (PC / DOS)</p></c></row>
