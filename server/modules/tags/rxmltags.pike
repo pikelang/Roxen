@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.386 2002/06/28 18:59:33 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.387 2002/07/17 15:28:42 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3015,6 +3015,18 @@ class TagDefine {
       return 0;
     }
 
+    private array quote_other_entities (Parser.HTML p, string s, void|string scope_name)
+    {
+      // We know that s ends with ";", so it must be
+      // longer than the following prefixes if they match.
+      if (sscanf (s, "&_.%c", int c) && c != '.' ||
+	  (scope_name &&
+	   sscanf (s, "&" + replace (scope_name, "%", "%%") + ".%c", c) &&
+	   c != '.'))
+	return 0;
+      return ({"&:", s[1..]});
+    }
+
     array do_return(RequestID id) {
       string n;
       RXML.Context ctx = RXML_CONTEXT;
@@ -3081,6 +3093,13 @@ class TagDefine {
 	      p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
 	      m_delete (ctx->scopes->_internal_, var);
 	    }
+
+	    // Quote all entities except those handled above and those
+	    // in the current scope, to avoid repeated evaluation of
+	    // them in the expansion phase in UserTag. We use the rxml
+	    // special "&:foo;" quoting syntax.
+	    p->_set_entity_callback (quote_other_entities);
+	    if (args->scope) p->set_extra (args->scope);
 	  }
 
 	  content = p->finish (content)->read();

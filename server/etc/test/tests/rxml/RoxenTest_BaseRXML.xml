@@ -404,6 +404,15 @@
 
 <test>
   <rxml
+    ><set variable="var.foo">&:var.bar;</set
+    ><define tag=foo preparse="">&var.foo:none;</define
+    ><foo
+  /></rxml>
+  <result>&var.bar;</result>
+</test>
+
+<test>
+  <rxml
     ><define container="x"
       ><contents copy-of="a/node()"/>
 <contents copy-of="processing-instruction()"/>
