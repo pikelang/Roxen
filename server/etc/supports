@@ -1,4 +1,4 @@
-## $Id: supports,v 1.51 1998/03/11 19:42:33 neotron Exp $
+## $Id: supports,v 1.52 1998/03/31 13:31:11 grubba Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -287,6 +287,14 @@ cern.*linemode.*           nothing
 
 #section gcreep {
 .*		robot	gcreep
+# }
+
+#section wget {
+.*		robot	wget	mirror_script
+# }
+
+#section roxen {
+.*		roxen	rxml
 # }
 
 # Unknown clients:
