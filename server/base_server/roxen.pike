@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.487 2000/05/28 00:22:33 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.488 2000/06/01 12:54:10 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2287,9 +2287,12 @@ class ImageCache
 
       if( quant || (format=="gif") )
       {
-        int ncols = quant||id->misc->defquant||32;
-        if( ncols > 250 )
-          ncols = 250;
+	int ncols = quant;
+	if( format=="gif" ) {
+	  ncols = ncols||id->misc->defquant||32;
+	  if( ncols > 254 )
+	    ncols = 254;
+	}
         ct = Image.Colortable( reply, ncols );
         if( dither )
           if( ct[ dither ] )
