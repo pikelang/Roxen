@@ -33,7 +33,7 @@ void create()
 {
   query_tag_set()->prepare_context=set_entities;
   defvar("yabudir", "../upgrade_data", "Database directory",
-	 TYPE_DIR, "");
+	 TYPE_DIR, ""); /* Keep this in server and regenerate on upgrade */
   defvar("server", "community.roxen.com", "Server host",
 	 TYPE_STRING, "");
   defvar("port", 80, "Server port",
@@ -60,12 +60,36 @@ void set_entities(RXML.Context c)
   c->extend_scope("upgrade", upgrade_scope);
 }
 
-string tag_foo(string t, mapping m, RequestID id)
+array(mapping) menu = ({
+  ([ "Main":"" ]),
+  ([ "Security":"security.html" ]),
+  ([ "Bugfixes":"bugfixes.html" ]),
+  ([ "Idonex":"idonex.html" ]),
+  ([ "3rd part":"3rdpart.html" ]),
+});
+
+string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
 {
+  string ret =
+    "<gbutton width=150 bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
+  
+  foreach(menu, mapping entry)
+  {
+    ret += "<gbutton width=150 bgcolor=&usr.fade1; ";
+    if(m->this && lower_case(m->this)==lower_case(indices(entry)[0]))
+      ret += " icon_src=&usr.selected-indicator; ";
+    ret += "icon_align=left preparse href='"
+      + values(entry)[0] +"'>"+ indices(entry)[0] +"</gbutton><br>";
+  }
+ 
+  return ret;
 }
 
-string container_bar(string t, mapping m, string c, RequestID id)
+string container_packet_list(string t, mapping m, string c, RequestID id)
 {
+  // limit
+  for
+  return "";
 }
 
 string encode_ranges(array(int) a)
@@ -147,7 +171,8 @@ class GetInfoFile
     res->size=httpquery->headers->size;
     db["pkginfo"][(string)num]=res;
     db["pkginfo"]->sync();
-    report_notice("Upgrade: Added information about package number "+num+".\n");
+    report_notice("Upgrade: Added information about package number "
+		  +num+".\n");
   }
 
   void request_fail(object httpquery, int num)
@@ -183,12 +208,14 @@ class UpdateInfoFiles
       return;
     }
     if(sizeof(new_packages))
-      report_notice("Upgrade: Found new packages: "+ ((array(string))new_packages)*", "+"\n");
+      report_notice("Upgrade: Found new packages: "
+		    + ((array(string))new_packages)*", "+"\n");
     else
       report_notice("Upgrade: No new packages found.\n");
 
     if(sizeof(delete_packages))
-      report_notice("Upgrade: Deleting packages: "+ ((array(string))delete_packages)*", "+
+      report_notice("Upgrade: Deleting package info for: "
+		    + ((array(string))delete_packages)*", "+
 		    "\n");
     else
       report_notice("Upgrade: No packages to delete found.\n.");
@@ -213,7 +240,8 @@ class UpdateInfoFiles
 		  "POST /upgradeserver/get-packages HTTP/1.0",
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
-		  "have_packages="+encode_ranges((array(int))indices(db["pkginfo"])));
+		  "have_packages="
+		  + encode_ranges((array(int))indices(db["pkginfo"])));
     call_out(do_request, 12*3600);
   }
 
