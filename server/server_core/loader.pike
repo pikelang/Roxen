@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.374 2004/01/25 18:29:20 norrby Exp $
+// $Id: loader.pike,v 1.375 2004/04/04 00:00:34 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -27,7 +27,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.374 2004/01/25 18:29:20 norrby Exp $";
+constant cvs_version="$Id: loader.pike,v 1.375 2004/04/04 00:00:34 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2148,24 +2148,29 @@ void do_main( int argc, array(string) argv )
     if(file_stat("data/fonts/rbf"))
       add_constant("__rbf", "data/fonts/rbf" );
   }
-#else
+#endif
+
 #if constant(Image.FreeType.Face)
   // We can load the builtin font.
-  if(file_stat(data/fonts/rbf))
+  if(file_stat("data/fonts/rbf"))
     add_constant("__rbf", "data/fonts/rbf" );
 #else
-  feature_warn("FATAL", ({
-    "The Image.TTF (freeetype) module is not available. "
-    "True Type fonts and the default font  will not be available. "
-    "To get TTF support, download a Freetype 1 package from",
-    "http://freetype.sourceforge.net/download.html#freetype1",
-    "Install it, and then remove config.cache in pike and recompile. "
-    "If this was a binary release of ChiliMoon, there should be no need "
-    "to recompile the pike binary, since the one included should "
-    "already have the FreeType interface module, installing the  "
-    "library should be enough." }) );
-  exit(0);
+#if constant(Image.TTF)
+  if(!sizeof(indices(Image.TTF)))
 #endif
+  {
+    feature_warn("FATAL", ({
+      "The Image.TTF/Image.FreeType module is not available. "
+      "True Type fonts and the default font  will not be available. "
+      "To get TTF support, download a Freetype 1 package from",
+      "http://freetype.sourceforge.net/download.html#freetype1",
+      "Install it, and then remove config.cache in pike and recompile. "
+      "If this was a binary release of ChiliMoon, there should be no need "
+      "to recompile the pike binary, since the one included should "
+      "already have the FreeType interface module, installing the  "
+      "library should be enough." }) );
+    exit(0);
+  }
 #endif
 
   if( has_value( hider, "--long-error-file-names" ) )
