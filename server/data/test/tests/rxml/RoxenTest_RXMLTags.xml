@@ -116,28 +116,6 @@ c</p></result>
 
 
 <!-- ............................................................ -->
-<comment>If</comment>
-
-<test>
-  <rxml type=string>
-    <set variable="var.foo" expr="1-1"/>
-    <if variable="var.foo is 0">ok</if>
-    <else>bad</else>
-  </rxml>
-  <result>ok</result>
-</test>
-
-<test>
-  <rxml type=string>
-    <set variable="var.foo" expr="1-1"/>
-    <if variable="var.foo is ">ok</if>
-    <else>bad</else>
-  </rxml>
-  <result>ok</result>
-</test>
-
-
-<!-- ............................................................ -->
 <comment>Catch/throw</comment>
 <test>
 <rxml>a<catch>b<throw>c</throw>d</catch>e</rxml>

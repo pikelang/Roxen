@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.54 2002/06/14 16:05:04 jhs Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.55 2002/06/18 16:21:56 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -793,10 +793,10 @@ class TagEmitTESTER {
     case "1":
     default:
       return ({
-	([ "a":"kex", "b":"foo", "c":1, "d":"12foo" ]),
-	([ "a":"kex", "b":"boo", "c":2, "d":"foo" ]),
-	([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a" ]),
-	([ "a":"kox", "c":4, "d":"5foo4a" ])
+	([ "a":"kex",  "b":"foo",    "c":1, "d":"12foo",   "e":"-8",  "f": "0" ]),
+	([ "a":"kex",  "b":"boo",    "c":2, "d":"foo",     "e":"8",   "f": "-6.4" ]),
+	([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a", "e":"11",  "f": "1e6" ]),
+	([ "a":"kox",                "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23" ])
       });
     }
   }

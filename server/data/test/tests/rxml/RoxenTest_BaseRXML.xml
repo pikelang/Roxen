@@ -947,6 +947,26 @@ a&auml; &amp; b  &gt;
 <result>1</result>
 </test>
 
+<test>
+  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i is 0">a</if><else>b</else></rxml>
+  <result>a</result>
+</test>
+
+<test>
+  <rxml><if variable="var.i is 0">a</if><else>b</else></rxml>
+  <result>b</result>
+</test>
+
+<test>
+  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i = ?*">a</if><else>b</else></rxml>
+  <result>a</result>
+</test>
+
+<test>
+  <rxml><if variable="var.i = ?*">a</if><else>b</else></rxml>
+  <result>b</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Sort</comment>
@@ -1713,6 +1733,36 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="OTESTER" sort="-d">&_.c;:</emit></rxml>
 <result>2:1:3:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*d">&_.c;:</emit></rxml>
+<result>1:3:4:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*+d">&_.c;:</emit></rxml>
+<result>1:3:4:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*-d">&_.c;:</emit></rxml>
+<result>2:4:3:1:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*e">&_.c;:</emit></rxml>
+<result>4:1:2:3:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="-*e">&_.c;:</emit></rxml>
+<result>3:2:1:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="+*f">&_.c;:</emit></rxml>
+<result>2:1:4:3:</result>
 </test>
 
 <test>
