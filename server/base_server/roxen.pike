@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.829 2003/04/04 14:25:01 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.830 2003/04/05 22:15:36 anders Exp $";
 
 //! @appears roxen
 //!
@@ -2309,7 +2309,7 @@ class ImageCache
   string name;
   string dir;
   function draw_function;
-  mapping meta_cache = ([]);
+  mapping(string:array(mapping|int)) meta_cache = ([]);
 
   string documentation(void|string tag_n_args)
   {
@@ -2327,9 +2327,11 @@ class ImageCache
     werror("MD insert for %O: %O\n", i, what );
 #endif
     if( sizeof( meta_cache ) > 1000 )
-      meta_cache = ([ ]);
-    if( what )
-      return meta_cache[i] = what;
+      sync_meta();
+    if( what ) {
+      meta_cache[i] = ({ what, 0 });
+      return what;
+    }
     else
       m_delete( meta_cache, i );
     return 0;
@@ -2878,7 +2880,10 @@ class ImageCache
   static mapping restore_meta( string id, RequestID rid )
   {
     if( meta_cache[ id ] )
-      return meta_cache[ id ];
+    {
+      meta_cache[ id ][ 1 ] = time(1); // Update cached atime.
+      return meta_cache[ id ][ 0 ];
+    }
 
 #ifdef ARG_CACHE_DEBUG
     werror("restore meta %O\n", id );
@@ -2902,6 +2907,17 @@ class ImageCache
     return meta_cache_insert( id, m );
   }
 
+  static void sync_meta()
+  {
+    // Sync cached atimes.
+    foreach(indices(meta_cache), string id) {
+      if (meta_cache[id][1])
+	QUERY("UPDATE "+name+" SET atime=%d WHERE id=%s",
+	      meta_cache[id][1], id);
+    }
+    meta_cache = ([]);
+  }
+
   void flush(int|void age)
   //! Flush the cache. If an age (an integer as returned by
   //! @[time()]) is provided, only images with their latest access before
@@ -2912,11 +2928,14 @@ class ImageCache
     int t = gethrtime();
     report_debug("Cleaning "+name+" image cache ... ");
 #endif
-    meta_cache = ([]);
+    sync_meta();
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
+#ifdef DEBUG
+      report_debug("cleared\n");
+#endif
       QUERY( "DELETE FROM "+name );
       num = -1;
       return;
@@ -2943,7 +2962,6 @@ class ImageCache
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 
-    meta_cache = ([]);
 #ifdef DEBUG
     report_debug("%s removed, %dms\n",
 		 (num==-1?"all":num?(string)num:"none"),
@@ -3236,13 +3254,13 @@ class ImageCache
 
   static void init_db( )
   {
-    meta_cache = ([]);
+    catch(sync_meta());
     setup_tables();
   }
 
   void do_cleanup( )
   {
-    call_out( do_cleanup, 3600*10+random(4711) );
+    background_run( 3600*10+random(4711), do_cleanup );
     flush(time()-7*3600*24);
   }
   
@@ -3263,7 +3281,13 @@ class ImageCache
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
 
     // Always remove entries that are older than one week.
-    call_out( do_cleanup, 10 );
+    background_run( 10, do_cleanup );
+  }
+
+  void destroy()
+  {
+    if (mixed err = catch(sync_meta()))
+      report_warning("Failed to sync cached atimes for "+name+"\n");
   }
 }
 
