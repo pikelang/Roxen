@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.14 1997/08/26 02:58:27 peter Exp $
+ * $Id: upgrade.pike,v 1.15 1997/08/26 16:22:33 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -333,7 +333,7 @@ string upgrade_component(string m, object rpc)
 {
   array rm = rpc->get_component(m,roxen->real_version);
   string res="";
-  object privs = ((program)"privs")("root","Upgrading components");
+  object privs = ((program)"privs")("Upgrading components","root");
   if(!rm) return "Failed to fetch the component '"+m+"'.";
 
   if(Stdio.file_size(rm[0])>0)
