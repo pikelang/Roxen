@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.435 2000/02/16 16:05:15 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.436 2000/02/17 08:57:21 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -595,6 +595,7 @@ void stop_handler_threads()
     sleep(0.1);
   }
 }
+#endif /* THREADS */
 
 
 mapping get_port_options( string key )
@@ -610,7 +611,7 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
-#endif /* THREADS */
+
 class Protocol
 {
   inherit Stdio.Port: port;
