@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.41 1998/09/17 22:10:14 grubba Exp $
+ * $Id: smtp.pike,v 1.42 1998/09/18 15:02:01 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.41 1998/09/17 22:10:14 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.42 1998/09/18 15:02:01 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -83,6 +83,47 @@ static class Mail {
   }
 };
 
+static class do_multi_async
+{
+#ifdef THREADS
+  static object lock = Thread.Mutex();
+#endif /* THREADS */
+  static array res = ({});
+  static int count;
+  static function callback;
+  static array callback_args;
+
+  static void low_callback(array|void r)
+  {
+#ifdef THREADS
+    mixed key = lock->lock();
+#endif /* THREADS */
+    if (r && sizeof(r)) {
+      res += r;
+    }
+    if (!--count) {
+      callback(res, @callback_args);
+    }
+  }
+
+  void create(array(function) func, array args, function cb, mixed ... cb_args)
+  {
+    if (!(count = sizeof(func))) {
+      // Nothing to do...
+      cb(res, @cb_args);
+      destruct();
+      return;
+    }
+
+    callback = cb;
+    callback_args = cb_args;
+
+    foreach(func, function f) {
+      func(@args, low_callback);
+    }
+  }
+};
+
 static class Smtp_Connection {
   inherit Protocols.Line.smtp_style;
 
@@ -146,7 +187,6 @@ static class Smtp_Connection {
   object conf;
   object parent;
   string prot = "SMTP";
-  function delayed_answer;
 
   constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
   constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -173,37 +213,6 @@ static class Smtp_Connection {
 		   weekdays[lt->wday], lt->mday, months[lt->mon],
 		   1900 + lt->year, lt->hour, lt->min, lt->sec,
 		   off/60, off%60, tz));
-  }
-
-  static void got_remotehost(string h,
-			     function|void callback, mixed ... args)
-  {
-    remotehost = h || remoteip;
-    if (callback) {
-      callback(@args);
-    }
-  }
-
-  static void got_remoteident(array(string) i,
-			      function|void callback, mixed ... args)
-  {
-    ident = i;
-
-    if ((sizeof(ident) >= 3) && ((ident[0] - " ") != "ERROR")) {
-      remoteident = ident[2];
-    }
-
-    if (callback) {
-      callback(@args);
-    }
-  }
-
-  static void check_delayed_answer()
-  {
-    if (functionp(delayed_answer)) {
-      delayed_answer();
-    }
-    delayed_answer = 0;
   }
 
   static void handle_command(string data)
@@ -304,9 +313,12 @@ static class Smtp_Connection {
     send(214, res);
   }
 
-  void ident_HELO()
+  void smtp_HELO(string helo, string args)
   {
+    remotename = args;
+
     array(string) res;
+
     if (((ident[0] - " ") == "ERROR") || (sizeof(ident) < 3)) {
       res = ({ sprintf("%s Hello %s [%s], pleased to meet you",
 		       gethostname(), remotehost,
@@ -321,17 +333,6 @@ static class Smtp_Connection {
       res += ({ "EXPN", "8BITMIME", "SIZE", "HELP" });
     }
     send(250, res);
-  }
-
-  void smtp_HELO(string helo, string args)
-  {
-    remotename = args;
-
-    // NB: Race-condition...
-    if (ident)
-      ident_HELO();
-    else
-      delayed_answer = ident_HELO;
   }
 
   void smtp_EHLO(string ehlo, string args)
@@ -620,6 +621,20 @@ static class Smtp_Connection {
 
 	  parent->update_domains();
 
+	  do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
+				   lambda(object o) {
+				     return(o->async_verify_sender);
+				   }),
+			 ({ current_mail->sender }),
+			 lambda(array res) {
+			   if (sizeof(res)) {
+			     do_RSET();
+			     send(550, res);
+			   } else {
+			     send(250);
+			   }
+			 });
+
 	  send(250);
 	  return;
 	}
@@ -804,7 +819,7 @@ static class Smtp_Connection {
     call_out(::do_timeout, timeout);
   }
 
-  static void classify_connection(object con_, function cb, mixed ... args)
+  static void con_class_done(array(string) reason, object con)
   {
     foreach(conf->get_providers("smtp_filter") ||({}), object o) {
       // roxen_perror("Got SMTP filter\n");
@@ -816,63 +831,47 @@ static class Smtp_Connection {
 #ifdef SMTP_DEBUG
 	  roxen_perror("Refuse connection.\n");
 #endif /* SMTP_DEBUG */
-	  cb(({ "Connection Refused" }), @args);
-	  return;
+	  reason += ({ "Connection Refused" });
+	  break;
 	} else if (!connection_class) {
 	  connection_class = c;
 	}
       }
     }
 
-    // No problem detected here...
-    cb(0, @args);
+    if (sizeof(reason)) {
+      // Log that we've disconnected.
+      // Note that syslog will put a \n last if needed.
+      openlog("Roxen SMTP", 0, LOG_MAIL);
+      syslog(LOG_NOTICE, sprintf("Access denied\n"
+				 "%s",
+				 reason * "\n"));
+      // Give a reason why we disconnect
+      ::create(con, parent->query_timeout());
+      send(421, ({
+	sprintf("%s ESMTP %s; %s",
+		gethostname(), roxen->version(),
+		mktimestamp(time())),
+      }) + reason);
+      disconnect();
+      // They have 30 seconds to read the message...
+      call_out(destruct, 30, this_object());
+      return;
+    }
+
+    ::create(con, parent->query_timeout());
+
+    send(220, ({ sprintf("%s ESMTP %s; %s",
+			 gethostname(), roxen->version(),
+			 mktimestamp(time())) }));
   }
 
-  static array(string) disconnect_reason = ({});
-  static int bad_con;
-  static int num_async;
-  static void con_class_done(int|string status, object con)
+  static void got_remotehost(string h,
+			     function|void callback, mixed ... args)
   {
-    if (status) {
-      if (arrayp(status)) {
-	disconnect_reason += status;
-      }
-      bad_con = 1;
-    }
-    if (!(--num_async)) {
-      // All of the async lookups have returned.
-
-      if (bad_con) {
-	// Log that we've disconnected.
-	// Note that syslog will put a \n last if needed.
-	openlog("Roxen SMTP", 0, LOG_MAIL);
-	syslog(LOG_NOTICE, sprintf("Access denied\n"
-				   "%s",
-				   disconnect_reason * "\n"));
-	if (sizeof(disconnect_reason)) {
-	  // Give a reason why we disconnect
-	  ::create(con, parent->query_timeout());
-	  send(421, ({
-	    sprintf("%s ESMTP %s; %s",
-			   gethostname(), roxen->version(),
-		    mktimestamp(time())),
-	  }) + disconnect_reason);
-	  disconnect();
-	  // They have 30 seconds to read the message...
-	  call_out(destruct, 30, this_object());
-	} else {
-	  // Immediate disconnect
-	  con->close();
-	  destruct();
-	}
-	return;
-      }
-
-      ::create(con, parent->query_timeout());
-
-      send(220, ({ sprintf("%s ESMTP %s; %s",
-			   gethostname(), roxen->version(),
-			   mktimestamp(time())) }));
+    remotehost = h || remoteip;
+    if (callback) {
+      callback(@args);
     }
   }
 
@@ -880,6 +879,26 @@ static class Smtp_Connection {
 				function cb, mixed ... args)
   {
     roxen->ip_to_host(con_info->remoteip, got_remotehost, cb, 0, @args);
+  }
+
+  static void got_remoteident(array(string) i,
+			      function|void callback, mixed ... args)
+  {
+    ident = i;
+
+    if ((sizeof(ident) >= 3) && ((ident[0] - " ") != "ERROR")) {
+      remoteident = ident[2];
+    }
+
+    if (callback) {
+      callback(@args);
+    }
+  }
+
+  static void async_lookup_ident(object con, mapping con_info,
+				 function cb, mixed ... args)
+  {
+    Protocols.Ident->lookup_async(con, got_remoteident, cb, 0, @args);
   }
 
   void create(object con_, object parent_, object conf_)
@@ -897,21 +916,13 @@ static class Smtp_Connection {
       "remoteport":remoteport,
     ]);
 
-    array con_classifiers = ({
-      async_lookup_host,
-    }) + Array.map(conf->get_providers("smtp_filter")||({}),
-		   lambda(object o) {
-		     return(o->async_classify_connection);
-		   }) - ({ 0 });
-
-    num_async = sizeof(con_classifiers);
-
-    // Start the asynchronous lookups...
-    foreach(con_classifiers, function f) {
-      f(con_, con_info, con_class_done, con_);
-    }
-
-    Protocols.Ident->lookup_async(con_, got_remoteident, check_delayed_answer);
+    do_multi_async(({ async_lookup_host, async_lookup_ident }) +
+		   Array.map(conf->get_providers("smtp_filter")||({}),
+			     lambda(object o) {
+			       return(o->async_classify_connection);
+			     }) - ({ 0 }),
+		   ({ con_, con_info }),
+		   con_class_done, con_);
   }
 }
 
