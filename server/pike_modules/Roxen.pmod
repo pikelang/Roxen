@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.147 2002/10/02 00:01:19 nilsson Exp $
+// $Id: Roxen.pmod,v 1.148 2002/10/23 16:31:30 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2838,10 +2838,10 @@ string decode_charref (string chref)
 string|program safe_compile( string code )
 {
   program ret;
-  roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
-  roxenloader.push_compile_error_handler( ec );
+  loader.LowErrorContainer ec = loader.LowErrorContainer();
+  loader.push_compile_error_handler( ec );
   catch(ret = compile_string( code ));
-  roxenloader.pop_compile_error_handler( );
+  loader.pop_compile_error_handler( );
   if( !ret ) return ec->get();
   return ret;
 }

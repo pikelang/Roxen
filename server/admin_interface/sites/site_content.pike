@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.138 2002/07/03 12:40:09 nilsson Exp $
+// $Id: site_content.pike,v 1.139 2002/10/23 16:37:25 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -127,13 +127,13 @@ string buttons( Configuration c, string mn, RequestID id )
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == "Reload" )
     {
-      roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer(), nm;
+      loader.LowErrorContainer ec = loader.LowErrorContainer(), nm;
 
-      roxenloader.push_compile_error_handler( ec );
+      loader.push_compile_error_handler( ec );
 
       nm = c->reload_module( replace(mn,"!","#" ) );
 
-      roxenloader.pop_compile_error_handler();
+      loader.pop_compile_error_handler();
 
       if( strlen( ec->get() ) )
       {

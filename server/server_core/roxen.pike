@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.825 2002/10/23 15:00:00 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.826 2002/10/23 16:27:11 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3591,7 +3591,7 @@ void create()
   dump( "pike_modules/Roxen.pmod" );
   dump( "server_core/admin_userdb.pike" );
   dump( "server_core/disk_cache.pike" );
-  dump( "server_core/roxen.pike" );
+  dump( "server_core/core.pike" );
   dump( "server_core/basic_defvar.pike" );
   dump( "server_core/newdecode.pike" );
   dump( "server_core/read_config.pike" );
@@ -4128,7 +4128,7 @@ void describe_all_threads()
 #endif
 }
 
-constant dump = roxenloader.dump;
+constant dump = loader.dump;
 
 program slowpipe, fastpipe;
 

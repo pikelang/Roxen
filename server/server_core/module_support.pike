@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.122 2002/10/22 00:06:12 nilsson Exp $
+// $Id: module_support.pike,v 1.123 2002/10/23 16:29:16 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -246,7 +246,7 @@ class ModuleInfo( string sname, string filename )
     }
   }
 
-  static class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
+  static class LoadFailed(ErrorContainer ec) // faked module.
   {
     inherit BasicModule;
     constant not_a_module = 1;
@@ -285,8 +285,8 @@ class ModuleInfo( string sname, string filename )
   {
     // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
     //        time()-last_checked,type,multiple_copies,name,description,locked);
-    roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
-    roxenloader.push_compile_error_handler( ec );
+    ErrorContainer ec = ErrorContainer();
+    loader.push_compile_error_handler( ec );
     mixed err = catch
     {
 #if constant(Java.jvm)
@@ -303,7 +303,7 @@ class ModuleInfo( string sname, string filename )
       }
       return load( filename, silent )( conf );
     };
-    roxenloader.pop_compile_error_handler( );
+    loader.pop_compile_error_handler( );
     if( err )
       if( stringp( err ) )
       {

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.58 2002/07/03 13:05:11 nilsson Exp $
+// $Id: DBManager.pmod,v 1.59 2002/10/23 16:31:04 nilsson Exp $
 
 //! Manages database aliases and permissions
 
@@ -237,10 +237,10 @@ private
 
 mixed sql_cache_get(string what)
 {
-  mixed key = roxenloader.sq_cache_lock();  
+  mixed key = loader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
-  mixed res = roxenloader.sq_cache_get( i ) ||
-    roxenloader.sq_cache_set( i, Sql.Sql( what ) );
+  mixed res = loader.sq_cache_get( i ) ||
+    loader.sq_cache_set( i, Sql.Sql( what ) );
   // Fool the optimizer so that key is not released prematurely
   if( res )
     return res; 
@@ -529,7 +529,7 @@ string db_url( string name,
   if( (int)d[0]["local"] )
   {
     if( force )
-      return replace( roxenloader->my_mysql_path,
+      return replace( loader->my_mysql_path,
 		      ([
 			"%user%":"rw",
 			"%db%":name

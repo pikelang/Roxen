@@ -235,7 +235,7 @@ class ConfigurationSettings
         catch
         {
           Box box = (object)(BDIR+f);
-	  roxenloader->dump( BDIR+f, object_program(box) );
+	  loader->dump( BDIR+f, object_program(box) );
           if( box->box && box->box == box_type )
             bdata[ (f/".")[0] ] = ([ "name":box->box_name,
                                      "doc":box->box_doc,

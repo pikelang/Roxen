@@ -227,7 +227,7 @@ array(string) get_module_list( function describe_module,
                                RequestID id )
 {
   object conf = roxen.find_configuration( id->variables->config );
-  object ec = roxenloader.LowErrorContainer();
+  object ec = loader.LowErrorContainer();
   int do_reload;
   master()->set_inhibit_compile_errors( ec );
 
@@ -235,9 +235,9 @@ array(string) get_module_list( function describe_module,
     roxen->clear_all_modules_cache();
 
   array(ModuleInfo) mods;
-  roxenloader.push_compile_error_handler( ec );
+  loader.push_compile_error_handler( ec );
   mods = roxen->all_modules();
-  roxenloader.pop_compile_error_handler();
+  loader.pop_compile_error_handler();
 
   foreach( mods, ModuleInfo m )
     if( module_nomore( m->sname, m, conf ) )
@@ -519,7 +519,7 @@ string page_really_compact( RequestID id )
   first=0;
 
   object conf = roxen.find_configuration( id->variables->config );
-  object ec = roxenloader.LowErrorContainer();
+  object ec = loader.LowErrorContainer();
   master()->set_inhibit_compile_errors( ec );
 
   if( id->variables->reload_module_list )
@@ -535,9 +535,9 @@ string page_really_compact( RequestID id )
   }
 
   array mods;
-  roxenloader.push_compile_error_handler( ec );
+  loader.push_compile_error_handler( ec );
   mods = roxen->all_modules();
-  roxenloader.pop_compile_error_handler();
+  loader.pop_compile_error_handler();
 
   sort(map(mods->get_name(), lambda(LocaleString in) {
 			       in = lower_case((string)in);

@@ -33,7 +33,7 @@ string parse( RequestID id )
   }
   
   res += "</table>";
-  mapping connections = roxenloader->sql_active_list+([]);
+  mapping connections = loader->sql_active_list+([]);
 
   res += "<h2>Active connections</h2>";
   
@@ -61,8 +61,8 @@ string parse( RequestID id )
 
   connections = ([]);
 
-  foreach( indices( roxenloader->sql_free_list ), string name )
-    connections[name]=sizeof(roxenloader->sql_free_list[name]);
+  foreach( indices( loader->sql_free_list ), string name )
+    connections[name]=sizeof(loader->sql_free_list[name]);
 
   res += "<h2>Inactive connections</h2>";
   
@@ -89,7 +89,7 @@ string parse( RequestID id )
 		 "<pre>\n"
 		 "%{%s\n\n\n%}"
 		 "</pre>\n",
-		 values(roxenloader->my_mysql_last_user));
+		 values(loader->my_mysql_last_user));
 #endif /* DB_DEBUG */
 
   return res;
