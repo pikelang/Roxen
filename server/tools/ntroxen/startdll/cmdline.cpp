@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.23 2002/10/23 17:04:22 nilsson Exp $
+// $Id: cmdline.cpp,v 1.24 2002/10/24 00:22:46 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1131,14 +1131,15 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
   {
     if (argc > 1)
     {
-      m_saRoxenArgs.Add(*argv);
-      m_saRoxenArgs.Add(argv[1]);
+      int count;
+      for (count=0; count<argc; count++)
+        m_saRoxenArgs.Add(argv[count]);
       m_bOnce = TRUE;
       m_bPassHelp = TRUE;
       m_bKeepMysql = TRUE;
       m_bCheckVersion = FALSE;
       type = eArgNtLoader;
-      return 2;
+      return count;
     }
     else
     {
