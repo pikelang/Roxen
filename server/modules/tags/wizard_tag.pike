@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.9 1998/07/03 13:46:14 marcus Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.10 1998/07/19 16:26:37 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -36,7 +36,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
 		  object file, mapping defines)
 {
   if(!defines->line)
-    defines->line=-1;
+    defines->line=1;
   mapping f = ([ "pages":({}) ]);
   string pike = ("inherit \"wizard\";\n"
 		 "# "+defines->line+" \""+id->not_query+"\"\n"
