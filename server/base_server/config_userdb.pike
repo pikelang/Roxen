@@ -294,6 +294,19 @@ class ConfigurationSettings
     defvar( "theme", ThemeVariable( "default", 0,
                                     LOCALE(327,"Theme"),
                                     LOCALE(343,"The theme to use") ) );
+
+    defvar( "form-font-size", -1, LOCALE(0,"Form font size"),
+	    TYPE_INT_LIST,
+	    LOCALE(0,"The fontsize of the variables in the "
+		   "configuration interface"),
+	    ({ -2, -1, 0, 1, 2, }) );
+
+    defvar( "docs-font-size", -1, LOCALE(0,"Documentation font size"),
+	    TYPE_INT_LIST,
+	    LOCALE(0,"The fontsize of the documentation in the "
+		   "configuration interface"),
+	    ({ -2, -1, 0, 1, 2, }) );
+
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
@@ -311,13 +324,13 @@ class ConfigurationSettings
               "iso-2022",
               "iso-8859-1",
               "iso-8859-2",
-//            "iso-8859-3",
-//            "iso-8859-4",
-//            "iso-8859-5",
-//            "iso-8859-6",
-//            "iso-8859-7",
-//            "iso-8859-8",
-//            "iso646-se",
+	      "iso-8859-3",
+	      "iso-8859-4",
+	      "iso-8859-5",
+	      "iso-8859-6",
+	      "iso-8859-7",
+	      "iso-8859-8",
+// 	      "iso646-se",
             }));
 
     defvar( "sortorder", "alphabetical",
