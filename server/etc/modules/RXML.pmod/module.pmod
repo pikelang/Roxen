@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.286 2002/06/11 14:35:16 mast Exp $
+// $Id: module.pmod,v 1.287 2002/06/27 21:18:35 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2164,24 +2164,24 @@ class Context
   // introduce scopes. The values are tuples of the current scope and
   // the named scope they hide.
 
-  void enter_scope (Frame frame)
+  void enter_scope (Frame|CacheStaticFrame frame, SCOPE_TYPE vars)
   {
 #ifdef DEBUG
-    if (!frame->vars) fatal_error ("Frame has no variables.\n");
+    if (!vars) fatal_error ("Got no scope mapping.\n");
 #endif
     if (string scope_name = [string] frame->scope_name) {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
-      scopes["_"] = scopes[scope_name] = [SCOPE_TYPE] frame->vars;
+      scopes["_"] = scopes[scope_name] = vars;
     }
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
-      scopes["_"] = [SCOPE_TYPE] frame->vars;
+      scopes["_"] = vars;
     }
   }
 
-  void leave_scope (Frame frame)
+  void leave_scope (Frame|CacheStaticFrame frame)
   {
     if (array(SCOPE_TYPE) back = hidden[frame]) {
       if (mapping var_chg = misc->variable_changes) {
@@ -2203,8 +2203,9 @@ class Context
     }
   }
 
-#define ENTER_SCOPE(ctx, frame) \
-  (frame->vars && frame->vars != ctx->scopes["_"] && ctx->enter_scope (frame))
+#define ENTER_SCOPE(ctx, frame)						\
+  (frame->vars && frame->vars != ctx->scopes["_"] &&			\
+   ctx->enter_scope (frame, frame->vars))
 #define LEAVE_SCOPE(ctx, frame) \
   (frame->vars && ctx->leave_scope (frame))
 
@@ -2240,6 +2241,10 @@ class Context
   PikeCompile p_code_comp;
   // The PikeCompile object for collecting any produced Pike byte code
   // during p-code compilation.
+
+  PCode evaled_p_code;
+  // The p-code object of the innermost frame that collects evaled
+  // content (i.e. got FLAG_GET_EVALED_CONTENT set).
 
   static void create (void|TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
@@ -2284,6 +2289,21 @@ class Context
   int in_use;
 #endif
 #endif
+}
+
+static class CacheStaticFrame (string scope_name)
+// This class is used when tracking local scopes in frames that have
+// been optimized away by FLAG_IS_CACHE_STATIC. It contains the scope
+// name and is used as the key for Context.enter_scope and
+// Context.leave_scope.
+{
+  constant is_RXML_CacheStaticFrame = 1;
+  constant is_RXML_encodable = 1;
+
+  string _encode() {return scope_name;}
+  void _decode (string data) {scope_name = data;}
+
+  string _sprintf() {return sprintf ("RXML.CacheStaticFrame(%O)", scope_name);}
 }
 
 static class NewRuntimeTags
@@ -2563,6 +2583,56 @@ constant FLAG_DONT_PREPARSE	= 0x00000040;
 constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the @[RXML.PXml] parser. This is only
 //! used in the simple tag wrapper. Defined here as placeholder.
+
+constant FLAG_IS_CACHE_STATIC	= 0x00000200;
+//! If this flag is set, the tag may be cached even when its content
+//! contains uncachable parts. It's done by merging the result p-code
+//! for the content of the tag and any variable assignments directly
+//! into the result p-code for the surrounding content.
+//!
+//! This optimization flag may only be set for tags that meet these
+//! conditions:
+//!
+//! @ul
+//! @item
+//!   The content is propagated to the result without any
+//!   transformations, except that it's repeated zero or more times.
+//!   This implies that the content and result types must be the same
+//!   except for the parser.
+//! @item
+//!   The @tt{do_*@} callbacks have no other side effects than setting
+//!   variables or introducing tag scope.
+//! @item
+//!   Neither @[FLAG_GET_EVALED_CONTENT] nor @[FLAG_DONT_CACHE_RESULT]
+//!   may be set.
+//! @endul
+//!
+//! @note
+//! Setting this flag on tags already in use might have insidious
+//! compatiblity effects. Consider this case:
+//!
+//! @example
+//! <cache>
+//!   <registered-user>
+//!   	<nocache>Your name is &registered-user.name;</nocache>
+//!   </registered-user>
+//! </cache>
+//! @endexample
+//!
+//! The tag @tt{<registered-user>@} is a custom tag that ignores its
+//! content whenever the user isn't registered. When it doesn't have
+//! this flag set, the nested @tt{<nocache>@} tag causes it to stay
+//! unevaluated in the surrounding cache, and the test of the user is
+//! therefore kept dynamic. If it on the other hand has set
+//! @[FLAG_IS_CACHE_STATIC], that test is cached and the cache entry
+//! will either contain the @tt{<nocache>@} block and a cached
+//! assignment to @tt{&registered-user.name;@}, or none of the content
+//! inside @tt{<registered-user>@}.
+//!
+//! If the parameters of the surrounding cache doesn't take that into
+//! account then the same cache entry might be used both for
+//! registered and unregistered users, something that didn't happen
+//! before the @[FLAG_IS_CACHE_STATIC] flag was set.
 
 // Flags tested in the Frame object:
 
@@ -2880,10 +2950,10 @@ class Frame
   //!	  parser, the string will be parsed with it before it's
   //!	  assigned to the result variable and passed on.
   //!    @item @[RXML.Frame]
-  //!	  Already initialized frame to process. Neither arguments nor
-  //!	  content will be parsed. It's result is added or put into the
-  //!	  result of this tag. The functions @[RXML.make_tag],
-  //!	  @[RXML.make_unparsed_tag] are useful to create frames.
+  //!	  Already initialized frame to process. It's result is added
+  //!	  or put into the result of this tag. The functions
+  //!	  @[RXML.make_tag], @[RXML.make_unparsed_tag] are useful to
+  //!	  create frames.
   //!	 @item @[RXML.PCode]
   //!	  A p-code object to evaluate. It's not necessary that the
   //!	  type it evaluates to is the same as @[result_type]; it will
@@ -3486,7 +3556,30 @@ class Frame
     COND_PROF_LEAVE(tag,tag->name,"tag");				\
   } while (0)
 
-#define EXEC_CALLBACK(ctx, evaler, exec, cb, args...)			\
+#define TAG_ENTER_SCOPE(ctx, csf)					\
+  do {									\
+    if (SCOPE_TYPE vars = this_object()->vars) {			\
+      ENTER_SCOPE (ctx, this_object());					\
+      if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
+	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
+	ctx->misc->variable_changes[csf] = mappingp (vars) ?		\
+	  vars + ([]) : mkmapping (indices (vars), values (vars));	\
+      }									\
+    }									\
+  } while (0)
+
+#define TAG_LEAVE_SCOPE(ctx, csf)					\
+  do {									\
+    if (SCOPE_TYPE vars = this_object()->vars) {			\
+      LEAVE_SCOPE (ctx, this_object());					\
+      if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
+	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
+	ctx->misc->variable_changes[csf] = 0;				\
+      }									\
+    }									\
+  } while (0)
+
+#define EXEC_CALLBACK(ctx, csf, evaler, exec, cb, args...)		\
   do {									\
     if (!exec)								\
       if (arrayp (cb)) {						\
@@ -3499,7 +3592,7 @@ class Frame
 			 sizeof (exec) : "Zero") +			\
 			" returned from " #cb "\n");			\
 	THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());		\
-	ENTER_SCOPE (ctx, this_object());				\
+	TAG_ENTER_SCOPE (ctx, csf);					\
 	if (ctx->new_runtime_tags)					\
 	  _handle_runtime_tags (ctx, evaler);				\
       }									\
@@ -3786,6 +3879,8 @@ class Frame
     TagSet orig_tag_set; // Flags that additional_tags has been added to ctx->tag_set.
     //ctx->new_runtime_tags
     int orig_make_p_code;
+    CacheStaticFrame csf;
+    //ctx->evaled_p_code;
 
 #define PRE_INIT_ERROR(X...) (ctx->frame = this_object(), fatal_error (X))
 #ifdef DEBUG
@@ -3829,7 +3924,7 @@ class Frame
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
 	   subevaler, piece, exec, orig_tag_set,
-	   ctx->new_runtime_tags, orig_make_p_code
+	   ctx->new_runtime_tags, orig_make_p_code, csf, ctx->evaled_p_code
 #ifdef DEBUG
 	   , debug_iter
 #endif
@@ -3937,12 +4032,12 @@ class Frame
 	  case EVSTAT_BEGIN:
 	    if (array|function(RequestID:array) do_enter =
 		[array|function(RequestID:array)] this_object()->do_enter) {
-	      EXEC_CALLBACK (ctx, evaler, exec, do_enter, id);
+	      EXEC_CALLBACK (ctx, csf, evaler, exec, do_enter, id);
 	      EXEC_ARRAY (ctx, evaler, exec, do_enter);
 	    }
 	    else {
 	      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-	      ENTER_SCOPE (ctx, this_object());
+	      TAG_ENTER_SCOPE (ctx, csf);
 	    }
 	    if (flags & FLAG_UNPARSED) content = nil;
 	    eval_state = EVSTAT_ENTERED;
@@ -3986,20 +4081,29 @@ class Frame
 		  LOW_CALL_CALLBACK (iter, do_iterate, id);
 		  THIS_TAG_DEBUG ("%O returned from do_iterate\n", iter);
 		  THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-		  ENTER_SCOPE (ctx, this_object());
+		  TAG_ENTER_SCOPE (ctx, csf);
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, evaler);
 		  if (iter <= 0) eval_state = EVSTAT_LAST_ITER;
 		}
 	      }
 
+#ifdef MODULE_DEBUG
+	      if (flags & FLAG_IS_CACHE_STATIC &&
+		  flags & (FLAG_DONT_CACHE_RESULT|FLAG_GET_EVALED_CONTENT))
+		fatal_error ("FLAG_IS_CACHE_STATIC cannot be set when "
+			     "FLAG_DONT_CACHE_RESULT or FLAG_GET_EVALED_CONTENT is.\n");
+#endif
+
 	      for (; iter > 0; iter-- DO_IF_DEBUG (, debug_iter++)) {
-	      eval_content:
-		{
+	      eval_content: {
+		  PCode orig_evaled_p_code = ctx->evaled_p_code;
 		  PCode unevaled_content = 0;
 		  finished++;
+
 		  if (subevaler)
 		    finished = 0; // Continuing an unwound subevaler.
+
 		  else if (!in_content || in_content == "") {
 		    if (flags & FLAG_GET_EVALED_CONTENT) {
 		      this_object()->evaled_content = PCode (content_type, ctx);
@@ -4007,55 +4111,74 @@ class Frame
 		    }
 		    break eval_content; // No content to handle.
 		  }
-		  else if (stringp (in_content)) {
-		    if (flags & FLAG_EMPTY_ELEMENT)
-		      parse_error ("This tag doesn't handle content.\n");
-		    else {	// The nested content is not yet parsed.
-		      if (finished > 1)
-			// Looped once. Always compile since it's
-			// likely we'll loop again.
-			ctx->make_p_code = 1;
-		      {
+
+		  else {
+		    if (!(flags & FLAG_IS_CACHE_STATIC)) {
+		      if (orig_evaled_p_code)
+			// Make sure that any variable changes that were
+			// added during collection of the previous p-code
+			// are added to it instead of the new one (if any).
+			orig_evaled_p_code->add (ctx, nil, nil);
+		      ctx->evaled_p_code = 0;
+		    }
+
+		    if (stringp (in_content)) {
+		      if (flags & FLAG_EMPTY_ELEMENT)
+			parse_error ("This tag doesn't handle content.\n");
+
+		      else {	// The nested content is not yet parsed.
+			if (finished > 1)
+			  // Looped once. Always compile since it's
+			  // likely we'll loop again.
+			  ctx->make_p_code = 1;
 			if (TagSet local_tags =
 			    [object(TagSet)] this_object()->local_tags) {
 			  PCode p_code = unevaled_content =
 			    ctx->make_p_code && PCode (content_type, ctx, local_tags);
-			  if (flags & FLAG_GET_EVALED_CONTENT) {
-			    PCode more_p_code = this_object()->evaled_content =
+
+			  if (flags & FLAG_GET_EVALED_CONTENT)
+			    this_object()->evaled_content = ctx->evaled_p_code =
 			      PCode (content_type, ctx, local_tags, 1);
-			    if (p_code) p_code->p_code = more_p_code;
-			    else p_code = more_p_code;
-			  }
+			  if (PCode evaled_p_code = ctx->evaled_p_code)
+			    if (p_code) p_code->p_code = evaled_p_code;
+			    else p_code = evaled_p_code;
+
 			  subevaler = content_type->get_parser (
 			    ctx, local_tags, evaler, p_code);
 			  subevaler->_local_tag_set = 1;
+
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
 					  "with %O from local_tags\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
-					  flags & FLAG_GET_EVALED_CONTENT ?
+					  ctx->evaled_p_code ?
 					  " and result compiling" : "",
 					  format_short (in_content), subevaler);
 			}
+
 			else {
 			  PCode p_code = unevaled_content =
 			    ctx->make_p_code && PCode (content_type, ctx, ctx->tag_set);
-			  if (flags & FLAG_GET_EVALED_CONTENT) {
-			    PCode more_p_code = this_object()->evaled_content =
+
+			  if (flags & FLAG_GET_EVALED_CONTENT)
+			    this_object()->evaled_content = ctx->evaled_p_code =
 			      PCode (content_type, ctx, ctx->tag_set, 1);
-			    if (p_code) p_code->p_code = more_p_code;
-			    else p_code = more_p_code;
-			  }
+			  if (PCode evaled_p_code = ctx->evaled_p_code)
+			    if (p_code) p_code->p_code = evaled_p_code;
+			    else p_code = evaled_p_code;
+
 			  subevaler = content_type->get_parser (
 			    ctx, ctx->tag_set, evaler, p_code);
+
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
 					  "with %O%s\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
-					  flags & FLAG_GET_EVALED_CONTENT ?
+					  ctx->evaled_p_code ?
 					  " and result compiling" : "",
 					  format_short (in_content), subevaler,
 					  this_object()->additional_tags ?
 					  " from additional_tags" : "");
 			}
+
 			if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			  subevaler->recover_errors = 1;
 			  if (unevaled_content)
@@ -4063,23 +4186,27 @@ class Frame
 			  if (flags & FLAG_GET_EVALED_CONTENT)
 			    this_object()->evaled_content->recover_errors = 1;
 			}
+
+			subevaler->finish (in_content); // Might unwind.
+			finished = 1;
 		      }
-		      subevaler->finish (in_content); // Might unwind.
-		      finished = 1;
 		    }
-		  }
-		  else {
-		    subevaler = in_content;
-		    if (flags & FLAG_GET_EVALED_CONTENT) {
-		      PCode p_code = this_object()->evaled_content =
-			PCode (content_type, ctx, subevaler->tag_set, 1);
-		      if (subevaler->recover_errors)
-			p_code->recover_errors = 1;
+
+		    else {
+		      subevaler = in_content;
+
+		      if (flags & FLAG_GET_EVALED_CONTENT) {
+			PCode p_code =
+			  this_object()->evaled_content = ctx->evaled_p_code =
+			  PCode (content_type, ctx, subevaler->tag_set, 1);
+			if (subevaler->recover_errors)
+			  p_code->recover_errors = 1;
+		      }
+
+		      THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
+				      debug_iter,
+				      ctx->evaled_p_code ? " and result compiling" : "");
 		    }
-		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
-				    debug_iter,
-				    flags & FLAG_GET_EVALED_CONTENT ?
-				    " and result compiling" : "");
 		  }
 
 		eval_sub:
@@ -4089,8 +4216,10 @@ class Frame
 		      THIS_TAG_DEBUG ("Iter[%d]: Got %s stream piece %s\n",
 				      debug_iter, finished ? "ending" : "a",
 				      format_short (piece));
+
 		      if (!arrayp (do_process)) {
-			EXEC_CALLBACK (ctx, evaler, exec, do_process, id, piece);
+			EXEC_CALLBACK (ctx, csf, evaler, exec, do_process, id, piece);
+
 			if (exec) {
 			  mixed res = _exec_array (
 			    ctx, evaler, exec, "do_process"); // Might unwind.
@@ -4108,6 +4237,7 @@ class Frame
 			  }
 			  exec = 0;
 			}
+
 			else if (flags & FLAG_STREAM_RESULT) {
 			  THIS_TAG_DEBUG ("Iter[%d]: do_process finished the stream; "
 					  "ignoring remaining content\n", debug_iter);
@@ -4116,6 +4246,7 @@ class Frame
 			  break eval_sub;
 			}
 		      }
+
 		      piece = nil;
 		      if (finished) break eval_sub;
 		    }
@@ -4125,8 +4256,8 @@ class Frame
 		      if (finished) {
 			mixed res = subevaler->_eval (
 			  ctx,
-			  flags & FLAG_GET_EVALED_CONTENT &&
-			  this_object()->evaled_content); // Might unwind.
+			  flags & (FLAG_GET_EVALED_CONTENT|FLAG_IS_CACHE_STATIC) &&
+			  ctx->evaled_p_code); // Might unwind.
 			if (content_type->sequential)
 			  SET_SEQUENTIAL (res, content, "content");
 			else if (res != nil)
@@ -4139,8 +4270,10 @@ class Frame
 		    finished = 1;
 		  } while (1); // Only loops when an unwound subevaler has been recovered.
 
-		  if (flags & FLAG_GET_EVALED_CONTENT)
+		  if (flags & FLAG_GET_EVALED_CONTENT) {
 		    this_object()->evaled_content->finish();
+		    ctx->evaled_p_code = orig_evaled_p_code;
+		  }
 		  if (unevaled_content) {
 		    unevaled_content->finish();
 		    in_content = unevaled_content;
@@ -4155,7 +4288,7 @@ class Frame
 		}
 
 		if (do_process) {
-		  EXEC_CALLBACK (ctx, evaler, exec, do_process, id);
+		  EXEC_CALLBACK (ctx, csf, evaler, exec, do_process, id);
 		  EXEC_ARRAY (ctx, evaler, exec, do_process);
 		}
 	      }
@@ -4166,7 +4299,7 @@ class Frame
 	  case EVSTAT_ITER_DONE:
 	    if (array|function(RequestID,void|PCode:array) do_return =
 		[array|function(RequestID,void|PCode:array)] this_object()->do_return) {
-	      EXEC_CALLBACK (ctx, evaler, exec, do_return, id,
+	      EXEC_CALLBACK (ctx, csf, evaler, exec, do_return, id,
 			     objectp (in_content) && in_content);
 	      if (exec) {
 		// We don't use EXEC_ARRAY here since there's no idea
@@ -4208,9 +4341,16 @@ class Frame
 #ifdef DEBUG
 	else THIS_TAG_DEBUG ("Skipping nil result\n");
 #endif
+#ifdef MODULE_DEBUG
+	if (flags & FLAG_IS_CACHE_STATIC &&
+	    content_type->name != result_type->name)
+	  fatal_error ("Frame got FLAG_IS_CACHE_STATIC set, "
+		       "but the content (%s) and result (%s) types differ.\n",
+		       content_type->name, result_type->name);
+#endif
 
 	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this_object());
-	LEAVE_SCOPE (ctx, this_object());
+	TAG_LEAVE_SCOPE (ctx, csf);
 
 	if (ctx->new_runtime_tags)
 	  _handle_runtime_tags (ctx, evaler);
@@ -4224,7 +4364,8 @@ class Frame
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
-	  if (up && flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) \
+	  if (up && flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT) && \
+	      !(up->flags & FLAG_IS_CACHE_STATIC))			\
 	    up->flags |= flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT); \
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
@@ -4239,7 +4380,7 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" :
-			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    !(flags & (FLAG_MAY_CACHE_RESULT|FLAG_IS_CACHE_STATIC)) ?
 			    " (don't cache result for now)" : "");
 	if (!(flags & FLAG_CUSTOM_TRACE))
 	  TRACE_LEAVE ("");
@@ -4247,7 +4388,7 @@ class Frame
 
       }) {			// Exception handling.
 	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this_object());
-	LEAVE_SCOPE (ctx, this_object());
+	TAG_LEAVE_SCOPE (ctx, csf);
 
       unwind:
 	if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -4312,6 +4453,7 @@ class Frame
 	    ustate[this_object()] = ({err, eval_state, in_args, in_content, iter,
 				      subevaler, piece, exec, orig_tag_set,
 				      ctx->new_runtime_tags, orig_make_p_code,
+				      csf, ctx->evaled_p_code,
 #ifdef DEBUG
 				      debug_iter,
 #endif
@@ -4335,7 +4477,7 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Exception%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" :
-			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    !(flags & (FLAG_MAY_CACHE_RESULT|FLAG_IS_CACHE_STATIC)) ?
 			    " (don't cache result for now)" : "");
 	TRACE_LEAVE ("exception");
 	err = catch (throw_fatal (err));
@@ -6593,6 +6735,7 @@ class VariableChange (/*static*/ mapping settings)
       mixed var;
       if (stringp (encoded_var)) {
 	var = decode_value (encoded_var);
+
 	if (arrayp (var)) {
 	  if (stringp (var[0])) { // A scope or variable change.
 	    if (sizeof (var) == 1) {
@@ -6607,6 +6750,7 @@ class VariableChange (/*static*/ mapping settings)
 	      else
 		ctx->remove_scope (var[0]);
 	    }
+
 	    else {
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
@@ -6621,6 +6765,7 @@ class VariableChange (/*static*/ mapping settings)
 		ctx->delete_var (var[1..], var[0]);
 	    }
 	  }
+
 	  else {
 	    // A runtime tag change. Can extend this by looking closer at var[0].
 #ifdef DEBUG
@@ -6634,11 +6779,30 @@ class VariableChange (/*static*/ mapping settings)
 	    else
 	      ctx->direct_remove_runtime_tag (var[1]);
 	  }
+
 	  continue handle_var_loop;
 	}
       }
+
+      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
+	// Entering or leaving the local scope of a
+	// FLAG_IS_CACHE_STATIC optimized frame.
+#ifdef DEBUG
+	if (TAG_DEBUG_TEST (ctx->frame))
+	  TAG_DEBUG (ctx->frame, "    %s %s local scope for a cache static frame.\n",
+		     settings[encoded_var] ? "Entering" : "Leaving",
+		     encoded_var->scope_name || "nameless");
+#endif
+	if (mapping(string:mixed) vars = settings[encoded_var])
+	  ctx->enter_scope (encoded_var, vars);
+	else
+	  ctx->leave_scope (encoded_var);
+	continue handle_var_loop;
+      }
+
       else
 	var = encoded_var;
+
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
 	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
@@ -6646,6 +6810,7 @@ class VariableChange (/*static*/ mapping settings)
 #endif
       ctx->set_misc (var, settings[encoded_var]);
     }
+
     return nil;
   }
 
@@ -6678,6 +6843,13 @@ class VariableChange (/*static*/ mapping settings)
 	    else ind += sprintf (", del: %O", var);
 	  continue;
 	}
+      }
+      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
+	if (settings[encoded_var])
+	  ind += sprintf (", enter scope: %O", encoded_var->scope_name);
+	else
+	  ind += sprintf (", leave scope: %O", encoded_var->scope_name);
+	continue;
       }
       else var = encoded_var;
       ind += sprintf (", set misc: %O", var);
@@ -7157,33 +7329,39 @@ class PCode
 
     add_evaled_value:
       if (flags & COLLECT_RESULTS) {
-	if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
-	  // Special case: Poll for changes of the _ok flag, to avoid
-	  // widespread compatibility issues with the existing tags.
-	  ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
-	mapping var_chg = ctx->misc->variable_changes;
-	ctx->misc->variable_changes = ([]);
-	if ((frame_flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) !=
-	    FLAG_MAY_CACHE_RESULT)
-	  PCODE_MSG ("frame %O not result cached\n", frame);
-	else {
-	  if (evaled_value == PCode) {
-	    // The PCode value is only used as an ugly magic cookie to
-	    // signify that the frame produced no result to add (i.e. it
-	    // threw an exception instead). In that case we must keep
-	    // the frame unevaluated.
-	    frame_flags |= FLAG_DONT_CACHE_RESULT;
-	    PCODE_MSG ("frame %O not result cached due to exception\n", frame);
-	    break add_evaled_value;
-	  }
-	  PCODE_MSG ("adding result of frame %O: %s\n",
-		     frame, format_short (evaled_value));
-	  if (length + (sizeof (var_chg) ? 2 : 1) >= sizeof (exec))
-	    exec += allocate (sizeof (exec));
-	  exec[length++] = evaled_value;
-	  if (sizeof (var_chg))
-	    exec[length++] = VariableChange (var_chg);
+	if (frame_flags & FLAG_IS_CACHE_STATIC) {
+	  PCODE_MSG ("frame %O has already been result collected recursively\n", frame);
 	  break add_frame;
+	}
+	else {
+	  if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
+	    // Special case: Poll for changes of the _ok flag, to avoid
+	    // widespread compatibility issues with the existing tags.
+	    ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
+	  mapping var_chg = ctx->misc->variable_changes;
+	  ctx->misc->variable_changes = ([]);
+	  if ((frame_flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) !=
+	      FLAG_MAY_CACHE_RESULT)
+	    PCODE_MSG ("frame %O not result cached\n", frame);
+	  else {
+	    if (evaled_value == PCode) {
+	      // The PCode value is only used as an ugly magic cookie to
+	      // signify that the frame produced no result to add (i.e. it
+	      // threw an exception instead). In that case we must keep
+	      // the frame unevaluated.
+	      frame_flags |= FLAG_DONT_CACHE_RESULT;
+	      PCODE_MSG ("frame %O not result cached due to exception\n", frame);
+	      break add_evaled_value;
+	    }
+	    PCODE_MSG ("adding result of frame %O: %s\n",
+		       frame, format_short (evaled_value));
+	    if (length + (sizeof (var_chg) ? 2 : 1) >= sizeof (exec))
+	      exec += allocate (sizeof (exec));
+	    exec[length++] = evaled_value;
+	    if (sizeof (var_chg))
+	      exec[length++] = VariableChange (var_chg);
+	    break add_frame;
+	  }
 	}
       }
 
@@ -7239,6 +7417,17 @@ class PCode
       Context ctx = RXML_CONTEXT;
 
       protocol_cache_time = ctx->id && ctx->id->misc->cacheable;
+
+      // Install any trailing variable changes. This is useful to
+      // catch the last scope leave from a FLAG_IS_CACHE_STATIC
+      // optimized frame. With the compaction below it'll therefore
+      // ofter erase an earlier stored scope.
+      mapping var_chg = ctx->misc->variable_changes;
+      ctx->misc->variable_changes = ([]);
+      if (sizeof (var_chg)) {
+	if (length + 1 >= sizeof (exec)) exec += ({0});
+	exec[length++] = VariableChange (var_chg);
+      }
 
       if (!(flags & CTX_ALREADY_GOT_VC))
 	m_delete (RXML_CONTEXT->misc, "variable_changes");
