@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.52 2000/09/25 07:55:57 per Exp $
+// $Id: read_config.pike,v 1.53 2000/09/26 23:58:13 per Exp $
 
 #include <module.h>
 
@@ -11,6 +11,7 @@ import spider;
 # include "newdecode.pike"
 #endif
 
+// #define DEBUG_CONFIG
 #include <module_constants.h>
 
 #define COPY( X ) ((X||([])) + ([]))
@@ -47,15 +48,16 @@ mapping call_outs = ([]);
 void save_it(string cl, mapping data)
 {
   if( call_outs[ cl ] )
-    remove_call_out( call_outs[ cl ][0] );
+    remove_call_out( call_outs[ cl ][ 0 ] );
   data = COPY(data);
-  call_outs[ cl ] = ({call_out( really_save_it, 0.5, cl, data ), data});
+  call_outs[ cl ] = ({call_out( really_save_it, 0.1, cl, data ), data});
 }
 
 void really_save_it( string cl, mapping data )
 {
   Stdio.File fd;
   string f;
+  m_delete( call_outs, cl );
 
 #ifdef DEBUG_CONFIG
   werror("CONFIG: Writing configuration file for cl "+cl+"\n");
@@ -79,7 +81,7 @@ void really_save_it( string cl, mapping data )
       {
         config = c;
         break;
-      }
+      }        
 #endif
     string data = encode_regions( data, config );
     int num = fd->write( data );
@@ -89,11 +91,10 @@ void really_save_it( string cl, mapping data )
             " ("+strerror(fd->errno())+")"
             "\n");
 
-    config_stat_cache[cl] = fd->stat();
-
     destruct(fd);
 
     fd = open( f+".new", "r" );
+    config_stat_cache[cl] = fd->stat();
     
     if(!fd)
       error("Failed to open new config file for reading\n" );
@@ -119,7 +120,10 @@ void really_save_it( string cl, mapping data )
     return;
   };
   if( !file_stat( f ) ) // Oups. Gone.
+  {
     mv( f+"~", f );
+    Stdio.cp( f+"~2~", f+"~" );
+  }
   rm( f+".new");
   throw( err );
 }
@@ -141,6 +145,9 @@ mapping read_it(string cl)
   if (call_outs[cl])
     return call_outs[cl][1];
 
+#ifdef DEBUG_CONFIG
+  werror("CONFIG: Read configuration file for cl "+cl+"\n");
+#endif
   mixed err;
   string try_read( string f )
   {
@@ -185,7 +192,9 @@ void remove( string reg , object current_configuration)
   else
     cl=current_configuration->name;
 #endif
-
+#ifdef DEBUG_CONFIG
+  werror("CONFIG: Remove "+reg+" in "+cl+"\n");
+#endif
   mapping data = read_it(cl);
   m_delete( data, reg );
   save_it( cl, data );
@@ -197,6 +206,9 @@ void remove_configuration( string name )
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   
     f = configuration_dir+name;
+#ifdef DEBUG_CONFIG
+  werror("CONFIG: Remove "+f+"\n");
+#endif
   catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
   catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
   catch(rm( f ));
@@ -219,6 +231,9 @@ void store( string reg, mapping vars, int q, object current_configuration )
   else
     cl=current_configuration->name;
 #endif
+#ifdef DEBUG_CONFIG
+  werror("CONFIG: Store "+reg+" in "+cl+"\n");
+#endif
   mapping data;
   if( cl == last_read )
     data = last_data;
@@ -228,24 +243,20 @@ void store( string reg, mapping vars, int q, object current_configuration )
   mapping old_reg = data[ reg ];
 
   if(q)
-    data[ reg ] = vars;
+    data[ reg ] = m = vars;
   else
   {
     mixed var;
     m = ([ ]);
     foreach(indices(vars), var)
       m[ var ] = vars[ var ]->query();
+    data[ reg ] = m;
     if(!sizeof( m ))
       m_delete( data, reg );
-    else 
-      data[ reg ] = m;
   }
-  if( equal( old_reg, data[reg] ) )
+  if( equal( old_reg, m ) )
     return;
-
-  last_read = cl;
-  last_data = COPY( data );
-
+  last_read = 0; last_data = 0;
   save_it(cl, data);
 }
 
@@ -264,6 +275,9 @@ mapping(string:mixed) retrieve(string reg, object current_configuration)
     cl=current_configuration->name;
 #endif
 
+#ifdef DEBUG_CONFIG
+  werror("CONFIG: Retrieve "+reg+" in "+cl+"\n");
+#endif
   if( cl == last_read )
     return COPY( last_data[ reg ] );
 
