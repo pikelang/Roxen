@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.12 1997/10/05 19:43:08 noring Exp $
+ * $Id: PDB.pmod,v 1.13 1997/10/11 14:00:04 noring Exp $
  */
 
 #if constant(thread_create)
@@ -197,7 +197,8 @@ class Bucket
   void destroy()
   {
     sync();
-    destruct(file);
+    if(file)
+      destruct(file);
   }
 };
 
