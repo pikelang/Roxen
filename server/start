@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.195 2002/10/14 11:50:07 grubba Exp $
+# $Id: start,v 1.196 2002/12/16 09:43:54 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -134,11 +134,17 @@ fi
 
 gdb=no
 
+remove_dumped_passed=no
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
   # to roxenloader instead.
-  pass="$pass --remove-dumped"  
+
+  # Make sure that the argument isn't duplicated for every restart...
+  if [ "x$remove_dumped_passed" = "xyes"; then :; else
+    pass="$pass --remove-dumped"
+    remove_dumped_passed=yes
+  fi
 }
 
 ## Parse all arguments.
