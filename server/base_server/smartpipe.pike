@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.14 1998/03/29 00:30:15 neotron Exp $
+ * $Id: smartpipe.pike,v 1.15 1998/03/29 00:34:02 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -37,6 +37,7 @@ void finish()
   current_input = 0;
   write_out = done_callback = 0;
   to_send = 0;
+  destruct(this_object());
 }
 
 void write_more()
