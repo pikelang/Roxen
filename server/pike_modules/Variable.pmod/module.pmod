@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.93 2004/06/06 11:04:02 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.94 2004/06/19 22:39:01 _cvs_dirix Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1639,7 +1639,7 @@ class PortList
 
   string transform_from_form( string v, mapping va )
   {
-    if( v == "" ) return "http://$/";
+    if( v == "" ) return "http://*/";
     v = v[sizeof(path())..];
     if( sizeof( va[v+"path"] ) && va[v+"path"][-1] != '/' )
       va[v+"path"]+="/";

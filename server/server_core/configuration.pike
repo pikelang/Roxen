@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.571 2004/06/06 11:04:03 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.572 2004/06/19 22:39:01 _cvs_dirix Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3835,7 +3835,7 @@ blank.</p>
 also set 'URLs'.</p>");
 
   defvar("URLs", 
-         Variable.PortList( ({"http://$/"}), VAR_INITIAL|VAR_NO_DEFAULT,
+         Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
            "Ports: URLs",
 	   ("Bind to these URLs. You can use '*' and '?' to perform "
 	    "globbing (using any of these will default to binding to "
