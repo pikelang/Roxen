@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.10 2004/11/22 16:12:51 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.11 2004/11/23 09:10:28 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.10 2004/11/22 16:12:51 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.11 2004/11/23 09:10:28 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -134,6 +134,7 @@ int main(int argc, array(string) argv)
 				  "Version":version_str,
 				]))->
 			add_child(line_feed)->
+#if 0
 			add_child(WixNode("Upgrade", ([
 					    "Id":base_guid,
 					  ]))->
@@ -145,6 +146,7 @@ int main(int argc, array(string) argv)
 						      "OnlyDetect":"yes",
 						    ])))->
 				  add_child(line_feed))->
+#endif /* 0 */
 			add_child(line_feed)->
 			add_child(WixNode("Package", ([
 					    "Manufacturer":manufacturer,
