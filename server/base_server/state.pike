@@ -1,7 +1,57 @@
-// This is Roxen state mechanism.
+// This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: state.pike,v 1.17 2000/09/05 15:06:35 per Exp $
+// $Id: state.pike,v 1.18 2001/01/06 04:45:44 nilsson Exp $
+
+// This file defines a page state mechanism, i.e. a pike 
+// object in which the "objects" on a page can register
+// their state. If the state in one object is altered the
+// state in the others are not lost, as would be the case
+// if all "objects" on the page made their own
+// <a href="page.html?variable=value"> links.
+//
+// The first thing your (tag) module would have to do,
+// once it has created a state object, is to register
+// itself in the page state object. This is done by
+// providing a suggested id, typically the name of the
+// tag. The registration method then returns the given id,
+// which may be a different one than the suggested id.
+//
+//   string state_id = "my-tag";
+//   object state = Page_state(id);
+//   state_id = state->register_consumer(state_id, id);
+//
+// The it is a good idea to update the state object with
+// the current page state, as given in the encoded state
+// variable. This variable is typically URI-encoded and
+// sent in a forms variable between pages.
+//
+//   if(id->variables->state &&
+//      !state->uri_decode(id->variables->state))
+//     RXML.run_error("Error in state.\n");
+//
+// It is now possible to retrieve the state associated
+// with your page object by calling the get method in the
+// state object.
+//
+// Typically you do not set or alter values in the page
+// state, since the state of the page is only altered by
+// user action, which happens upon page loads. Instead you
+// predict, for each action your object provides, what the
+// resulting state would be and use the encode or
+// uri_encode methods to get a representation of that state
+// that is somehow transfered to the next page. I.e. if
+// your object has two states, 1 and 2, the following code
+// would calculate the proper way to alter the state.
+//
+//   string get_actions(string uri, int current_state,
+//                      object state) {
+//     return "<a href='" + uri + "?state=" +
+//            state->uri_encode(1) + "'>1</a><br />"
+//            "<a href='" + uri + "?state=" +
+//            state->uri_encode(2) + "'>2</a>";
+//   }
+//
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
@@ -22,8 +72,9 @@ class Page_state {
     return "Page_state()";
   }
 
-  // Register a new state consumer and return state consumer id
-  string register_consumer(string name) {
+  string register_consumer(string name)
+  //! Register a new state consumer and return state consumer id.
+  {
     if(id->misc->state->keys[name]) {
       int prefix=0;
       while(id->misc->state->keys[(string)prefix+name])
@@ -36,13 +87,17 @@ class Page_state {
     return name;
   }
 
-  // Decode states from a URI safe string
-  int uri_decode(string from) {
+  int uri_decode(string from)
+  //! Decode states from a URI safe string.
+  //! Returns 1 for success, 0 for failure.
+  {
     return decode(replace(from,({"-","!","_"}),({"+","/","="})));
   }
 
-  // Decode states from a string
-  int decode(string from) {
+  int decode(string from)
+  //! Decode states from a string.
+  //! Returns 1 for success, 0 for failure.
+  {
     if(!from)
       return 0;
 
@@ -76,8 +131,9 @@ class Page_state {
     return 1;
   }
 
-  // List all registered state consumers
-  array list_consumers() {
+  array(string) list_consumers()
+  //! List all registered state consumers.
+  {
     return indices(id->misc->state->keys);
   }
 
@@ -96,20 +152,23 @@ class Page_state {
     return to;
   }
 
-  // Get a specific state
-  mixed get(void|string key) {
+  mixed get(void|string key)
+  //! Get a specific state.
+  {
     return id->misc->state->values[key||stateid];
     return 0;
   }
 
-  // Alter a state
-  string alter(mixed value, void|string key) {
+  string alter(mixed value, void|string key)
+  //! Alter a state.
+  {
     id->misc->state->values[key||stateid]=value;
     return encode_state4real(id->misc->state->values);
   }
 
-  // Encode present state into a string
-  string encode(void|mixed value, void|string|array key) {
+  string encode(void|mixed value, void|string|array key)
+  //! Encode present state into a string.
+  {
     if(value) {
       if(arrayp(key)) {
 	if(!arrayp(value))
@@ -130,8 +189,9 @@ class Page_state {
     return encode_state4real(id->misc->state->values);
   }
 
-  // Encode present state into a URI safe string
-  string uri_encode(void|mixed value, void|string|array key) {
+  string uri_encode(void|mixed value, void|string|array key)
+  //! Encode present state into a URI safe string.
+  {
     // The "_" here is better for NT filesystems for the manual dumps.
     return replace(encode(value,key),({"+","/","="}),({"-","!","_"}));
   }
