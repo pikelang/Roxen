@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.1 1999/05/06 20:53:17 grubba Exp $
+ * $Id: Roxen.pmod,v 1.2 1999/05/07 23:28:24 grubba Exp $
  *
  * Various helper functions.
  *
@@ -41,6 +41,8 @@ class QuotaDB
   mapping(string:object) active_objects = ([]);
 
   array(int) index;
+  array(string) index_acc;
+  int acc_scale;
 
   int next_offset;
 
@@ -226,6 +228,27 @@ class QuotaDB
     return(f);
   }
 
+  static void init_index_acc()
+  {
+    /* Set up the index accellerator.
+     * sizeof(index_acc) ~ sqrt(sizeof(index))
+     */
+    acc_scale = 1;
+    if (sizeof(index)) {
+      int i = sizeof(index)/2;
+
+      while (i) {
+	i /= 4;
+	acc_scale <<= 1;
+      }
+    }
+    index_acc = allocate(sizeof(index)/acc_scale);
+
+    QD_WRITE(sprintf("QuotaDB()::init_index_acc(): "
+		     "sizeof(index):%d, sizeof(index_acc):%d acc_scale:%d\n",
+		     sizeof(index), sizeof(index_acc), acc_scale));
+  }
+
   static void rebuild_index()
   {
     // FIXME: Actually make an index file.
@@ -237,19 +260,64 @@ class QuotaDB
 
     int data_offset;
 
-    if (zero_type(data_offset = new_entries_cache[key])) {
-      // FIXME: Try the index file.
-
-      QD_WRITE(sprintf("QuotaDB::low_lookup(%O): Not found\n", key));
-
-      return 0;
+    if (!zero_type(data_offset = new_entries_cache[key])) {
+      return read_entry(data_offset);
     }
 
-#if constant(set_weak_flag)
-    return active_objects[key] = read_entry(data_offset);
-#else /* !constant(set_weak_flag) */
-    return QuotaProxy(active_objects[key] = read_entry(data_offset));
-#endif /* constant(set_weak_flag) */
+    /* Try the index file. */
+
+    /* First use the accellerated index. */
+    int lo;
+    int hi = sizeof(index_acc);
+    while(lo < hi-1) {
+      int probe = (lo + hi)/2;
+
+      if (!index_acc[probe]) {
+	object e = read_entry(index[probe * acc_scale]);
+
+	index_acc[probe] = e->name;
+
+	if (key == e->name) {
+	  /* Found in e */
+	  QD_WRITE(sprintf("QuotaDB:low_lookup(%O): In acc: Found at %d\n",
+			   key, probe * acc_scale));
+	  return e;
+	}
+      }
+      if (index_acc[probe] < key) {
+	lo = probe+1;
+      } else if (index_acc[probe] > key) {
+	hi = probe;
+      } else {
+	/* Found */
+	QD_WRITE(sprintf("QuotaDB:low_lookup(%O): In acc: Found at %d\n",
+			 key, probe * acc_scale));
+	return read_entry(index[probe * acc_scale]);
+      }
+    }
+
+    /* Not in the accellerated index, so go to disk. */
+    lo *= acc_scale;
+    hi *= acc_scale;
+    while (lo < hi-1) {
+      int probe = (lo + hi)/2;
+      object e = read_entry(index[probe]);
+
+      if (e->name < key) {
+	lo = probe+1;
+      } else if (e->name > key) {
+	hi = probe;
+      } else {
+	/* Found */
+	QD_WRITE(sprintf("QuotaDB:low_lookup(%O): Found at %d\n",
+			 key, probe));
+	return e;
+      }
+    }
+
+    QD_WRITE(sprintf("QuotaDB::low_lookup(%O): Not found\n", key));
+
+    return 0;
   }
 
   object lookup(string key, int quota)
@@ -271,7 +339,13 @@ class QuotaDB
 #endif /* constant(set_weak_flag) */
     }
     if (res = low_lookup(key)) {
+      active_objects[key] = res;
+
+#if constant(set_weak_flag)
       return res;
+#else /* !constant(set_weak_flag) */
+      return QuotaProxy(res);
+#endif /* constant(set_weak_flag) */
     }
 
     QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): New user.\n", key, quota));
@@ -360,6 +434,8 @@ class QuotaDB
 	next_offset = offset;
       }
     }
+
+    init_index_acc();
 
     if (sizeof(index)) {
       /* Skip past the last entry in the catalog file */
