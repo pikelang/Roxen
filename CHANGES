@@ -30,7 +30,25 @@ o The password database should now be reloaded automatically if the
 
 o There is no longer a conflict in the if-tag, two different checks
   wanted to use file=.. <if user=... file=...> now works
+
+o <if> now support the aguments time and until. 
+  Thanks to Jason Rumney <jasonr@pec.co.nz> 
   
+  Example usage:
+
+   <if time=1800 until=0600>
+    Show this text between 6pm and 6am (ie overnight)
+   </if>
+   <if time=1800 until=0600 inclusive>
+    As above, but also show it when the time is exactly 6pm or 6am.
+   </if>
+   <if time=0700 before>
+    Show this text from midnight to 7am.
+   </if>
+   <if time=1200 after>
+    Show this text from midday to midnight.
+   </if>
+
 o The external shuffle program fixed again, this time by me.
 
 o The statistics (sent data with friends) has been totaly rewritten,
