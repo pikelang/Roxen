@@ -30,15 +30,16 @@ object load_modules(Configuration conf)
   foreach( modules, string mod )
   {
     RoxenModule module;
-    
+
+    // Enable the module but do not call start or save in the
+    // configuration. Call start manually.
     if( !conf->find_module( mod ) &&
-	(module = conf->enable_module( mod, 0, 0, 1 )))
+	(module = conf->enable_module( mod, 0, 0, 1, 1 )))
     {
       conf->call_low_start_callbacks( module, 
 				      roxen.find_module( mod ), 
 				      conf->modules[ mod ] );
     }
-    remove_call_out( roxen.really_save_it );
   }
   return enable_modules_lock;
 }
