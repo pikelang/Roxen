@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfiginterface.pike,v 1.6 1998/04/23 13:17:03 grubba Exp $
+ * $Id: reloadconfiginterface.pike,v 1.7 1998/04/27 11:10:03 grubba Exp $
  */
 
 inherit "roxenlib";
@@ -19,7 +19,9 @@ constant programs = ({
 mixed handle(object id, object mc)
 {
   if (roxen->unload_configuration_interface) {
-    roxen->unload_configuration_interface();
+    /* Fool the type-checker of in old Roxen's */
+    mixed foo = roxen->unload_configuration_interface;
+    foo();
   } else {
     /* Some backward compatibility */
     roxen->configuration_interface_obj=0;
