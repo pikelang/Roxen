@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.23 1999/09/26 02:44:03 mast Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.24 1999/10/03 00:09:44 jhs Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -303,11 +303,9 @@ string tag_modified(string tag, mapping m, object id, object file)
   return rxml_error(tag, "Couldn't stat file.", id);
 }
 
-string tag_version() {
-  return roxen.version();
-}
+array(string) tag_version() { return ({ roxen.version() }); }
 
-string tag_user(string tag, mapping m, object id, object file)
+string|array(string) tag_user(string tag, mapping m, object id, object file)
 {
   string *u;
   string b, dom;
@@ -331,21 +329,25 @@ string tag_user(string tag, mapping m, object id, object file)
   if(m->realname && !m->email)
   {
     if(m->link && !m->nolink)
-      return "<a href=\"/~"+b+"/\">"+u[4]+"</a>";
-    return u[4];
+      return ({ "<a href=\"/~"+b+"/\">"+u[4]+"</a>" });
+    return ({ u[4] });
   }
   if(m->email && !m->realname)
   {
     if(m->link && !m->nolink)
-      return "<a href=\"mailto:" + b + "@" + dom + "\">"
-	+ b + "@" + dom + "</a>";
-    return b + "@" + dom;
+      return ({ sprintf("<a href=\"mailto:%s@%s@\">%s@%s</a>",
+			b, dom, b, dom)
+	      });
+    return ({ b + "@" + dom });
   }
   if(m->nolink && !m->link)
-    return u[4] + " &lt;" + b + "@" + dom + "&gt;";
-  return ("<a href=\"/~"+b+"/\">"+u[4]+"</a>"+
-	  " <a href=\"mailto:" + b + "@" + dom + "\"> &lt;"+
-	  b + "@" + dom + "&gt;</a>");
+    return ({ sprintf("%s &lt;%s@%s&gt;",
+		      u[4], b, dom)
+	    });
+  return ({ sprintf("<a href=\"/~%s/\">%s</a> "
+		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
+		    b, u[4], b, dom, b, dom)
+	  });
 }
 
 string add_header(mapping to, string name, string value)
