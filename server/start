@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.41 1998/07/09 00:07:25 mast Exp $
+# $Id: start,v 1.42 1998/07/09 17:15:08 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -95,6 +95,8 @@ start_roxen() {
   else
     echo Executing gdb $pike $args $@
     echo >.gdbinit handle SIGPIPE nostop noprint pass
+    echo >>.gdbinit handle SIGUSR1 nostop noprint pass
+    echo >>.gdbinit handle SIGUSR2 nostop noprint pass
     echo >>.gdbinit run $args $@
     gdb $pike
     rm .gdbinit
