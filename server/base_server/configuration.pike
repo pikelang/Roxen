@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.395 2000/11/15 09:55:25 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.396 2000/11/16 11:51:29 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2951,7 +2951,7 @@ static void create(string config)
   // Throttling-related variables
 
   defvar("throttle", 0,
-         DLOCALE(42, "Throttling: Server: Enabled"),TYPE_FLAG,
+         DLOCALE(42, "Throttling: Server; Enabled"),TYPE_FLAG,
 	 DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
 		 "It will allow you to limit the total available bandwidth for "
 		"this site.<br />Bandwidth is assigned using a Token Bucket. "
@@ -2961,14 +2961,14 @@ static void create(string config)
   //TODO: move this explanation somewhere on the website and just put a link.
 
   defvar("throttle_fill_rate", 102400,
-         DLOCALE(44, "Throttling: Server: Average available bandwidth"),
+         DLOCALE(44, "Throttling: Server; Average available bandwidth"),
          TYPE_INT,
 	 DLOCALE(45, "This is the average bandwidth available to this site in "
 		"bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 
   defvar("throttle_bucket_depth", 1024000,
-         DLOCALE(46, "Throttling: Server: Bucket Depth"), TYPE_INT,
+         DLOCALE(46, "Throttling: Server; Bucket Depth"), TYPE_INT,
 	 DLOCALE(47, "This is the maximum depth of the bucket. After a long enough period "
 		"of inactivity, a request will get this many unthrottled bytes of data, before "
 		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
@@ -2976,14 +2976,14 @@ static void create(string config)
 		"bandwidth is averaged."), 0, arent_we_throttling_server);
 
   defvar("throttle_min_grant", 1300,
-         DLOCALE(48, "Throttling: Server: Minimum Grant"), TYPE_INT,
+         DLOCALE(48, "Throttling: Server; Minimum Grant"), TYPE_INT,
 	 DLOCALE(49, "When the bandwidth availability is below this value, connections will "
 		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
 		"is to avoid sending too small packets (which would increase the IP overhead)."),
          0, arent_we_throttling_server);
 
   defvar("throttle_max_grant", 14900,
-         DLOCALE(50, "Throttling: Server: Maximum Grant"), TYPE_INT,
+         DLOCALE(50, "Throttling: Server; Maximum Grant"), TYPE_INT,
 	 DLOCALE(51, "This is the maximum number of bytes assigned in a single request "
 		"to a connection. Keeping this number low will share bandwidth more evenly "
 		"among the pending connections, but keeping it too low will increase IP "
@@ -2992,12 +2992,12 @@ static void create(string config)
 		"for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
-         DLOCALE(52, "Throttling: Request: Enabled"), TYPE_FLAG,
+         DLOCALE(52, "Throttling: Request; Enabled"), TYPE_FLAG,
 	 DLOCALE(53, "If set, per-request bandwidth throttling will be enabled.")
          );
 
   defvar("req_throttle_min", 1024,
-         DLOCALE(54, "Throttling: Request: Minimum guarranteed bandwidth"),
+         DLOCALE(54, "Throttling: Request; Minimum guarranteed bandwidth"),
          TYPE_INT,
 	 DLOCALE(55, "The maximum bandwidth each connection (in bytes/sec) can use is determined "
 		"combining a number of modules. But doing so can lead to too small "
@@ -3006,7 +3006,7 @@ static void create(string config)
          0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
-         DLOCALE(56, "Throttling: Request: Bucket Depth Multiplier"),
+         DLOCALE(56, "Throttling: Request; Bucket Depth Multiplier"),
          TYPE_FLOAT,
 	 DLOCALE(57, "The average bandwidth available for each request will be determined by "
 		"the modules combination. The bucket depth will be determined multiplying "
