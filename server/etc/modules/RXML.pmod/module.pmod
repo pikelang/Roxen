@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.217 2001/08/09 22:43:58 nilsson Exp $
+// $Id: module.pmod,v 1.218 2001/08/10 23:06:54 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -695,6 +695,14 @@ class TagSet
     changed();
   }
 
+  void clear()
+  //! Removes all registered tags, processing instructions and string
+  //! entities.
+  {
+    tags = ([]), proc_instrs = 0;
+    clear_string_entities();	// Calls changed().
+  }
+
   local Tag get_local_tag (string name, void|int proc_instr)
   //! Returns the @[RXML.Tag] object for the given name in this tag
   //! set, if any. If @[proc_instr] is nonzero the set of PI tags is
@@ -837,6 +845,28 @@ class TagSet
     if (!hash)
       hash = Crypto.md5()->update (encode_value_canonic (get_hash_data()))->digest();
     return hash;
+  }
+
+  local void add_tag_set_dependency (TagSet tset)
+  //! Makes this tag set depend on @[tset], so that any change in it
+  //! invalidates this tag set and affects the hash returned by
+  //! @[get_hash].
+  //!
+  //! This kind of dependency normally exists on the imported tag
+  //! sets, but this function lets you add a dependency without
+  //! getting the tags imported. It's typically useful to get proper
+  //! dependencies on tag sets that contain local or runtime tags.
+  {
+    dep_tag_sets[tset] = 1;
+    tset->do_notify (changed);
+    changed();
+  }
+
+  local void remove_tag_set_dependency (TagSet tset)
+  //! Removes a dependency added by @[add_tag_set_dependency].
+  {
+    dep_tag_sets[tset] = 0;
+    tset->dont_notify (changed);
   }
 
   local int has_effective_tags (TagSet tset)
@@ -994,6 +1024,8 @@ class TagSet
 
   static array(function(Context:void)) prepare_funs;
 
+  static multiset(TagSet) dep_tag_sets = set_weak_flag ((<>), 1);
+
   /*static*/ array(function(Context:void)) get_prepare_funs()
   {
     if (prepare_funs) return prepare_funs;
@@ -1111,7 +1143,8 @@ class TagSet
       sort (indices (tags)),
       proc_instrs && sort (indices (proc_instrs)),
       string_entities,
-    }) + imported->get_hash_data();
+    }) + imported->get_hash_data() +
+      ({0}) + indices (dep_tag_sets)->get_hash_data();
   }
 
   string _sprintf()
@@ -7088,7 +7121,10 @@ class PCodec
       if(what->is_RXML_Frame) {
 	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
 	  ENCODE_DEBUG_RETURN (({"frame", tag, what->_save()}));
-	ENCODE_MSG ("  encoding frame recursively\n");
+	ENCODE_MSG ("  encoding frame recursively since " +
+		    (what->RXML_dump_frame_reference ?
+		     "it got no tag object\n" :
+		     "it got no identifier RXML_dump_frame_reference\n"));
 	return ([])[0];
       }
       else if (what->is_RXML_Tag) {
@@ -7099,7 +7135,12 @@ class PCodec
 	    "ts:" + tagset->name,
 	    what->flags & FLAG_PROC_INSTR,
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
-	ENCODE_MSG ("  encoding tag recursively\n");
+	ENCODE_MSG ("  encoding tag recursively since " +
+		    (tagset ?
+		     (what->name ?
+		      sprintf ("its tag set %O is nameless\n", tagset) :
+		      "it's nameless\n") :
+		     "it got no tag set\n"));
 	return ([])[0];
       }
       else if (what->is_RXML_TagSet) {
@@ -7181,6 +7222,11 @@ class PCodec
 
     if (programp (what))
       error("Cannot encode program %s.\n", Program.defined (what));
+    else if (object o = functionp (what) && function_object (what)) {
+      string s = sprintf ("%O", o);
+      if (s == "object") s = "object(" + Program.defined (object_program (o)) + ")";
+      error ("Cannot encode function %s->%O.\n", s, what);
+    }
     else
       error ("Cannot encode %O.\n", what);
   }
