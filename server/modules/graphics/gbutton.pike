@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.56 2000/08/15 12:27:14 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.57 2000/08/15 20:19:02 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -721,6 +721,7 @@ class ButtonFrame {
 class TagGButtonURL {
   inherit RXML.Tag;
   constant name = "gbutton-url";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
   RXML.Type content_type = RXML.t_text(RXML.PXml);
 
   class Frame {
@@ -735,6 +736,7 @@ class TagGButtonURL {
 class TagGButton {
   inherit RXML.Tag;
   constant name = "gbutton";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
   RXML.Type content_type = RXML.t_text(RXML.PXml);
 
   class Frame {
