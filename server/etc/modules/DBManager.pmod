@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.34 2001/09/03 13:48:33 jonasw Exp $
+// $Id: DBManager.pmod,v 1.35 2001/09/03 16:51:55 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -474,6 +474,7 @@ void drop_db( string name )
   if( sizeof( q ) && (int)q[0]["local"] )
     query( "DROP DATABASE `"+name+"`" );
   query( "DELETE FROM dbs WHERE name=%s", name );
+  query( "DELETE FROM db_groups WHERE db=%s", name );
   query( "DELETE FROM db_permissions WHERE db=%s", name );
   changed();
 }
