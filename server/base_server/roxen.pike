@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.377 1999/12/27 22:44:42 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.378 1999/12/28 01:42:38 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -30,19 +30,18 @@ inherit "supports";
 // #define SSL3_DEBUG
 // #define PRIVS_DEBUG
 // #define THREAD_DEBUG
-// #define FD_DEBUG
 // #define DUMP_DEBUG
 
 #ifdef SSL3_DEBUG
-# define SSL3WERROR(X) werror("SSL3: "+X+"\n")
+# define SSL3_WERR(X) werror("SSL3: "+X+"\n")
 #else
-# define SSL3WERROR(X)
+# define SSL3_WERR(X)
 #endif
 
 #ifdef THREAD_DEBUG
-# define THREAD_WERROR(X) werror("Thread: "+X+"\n")
+# define THREAD_WERR(X) werror("Thread: "+X+"\n")
 #else
-# define THREAD_WERROR(X)
+# define THREAD_WERR(X)
 #endif
 
 /*
@@ -519,7 +518,7 @@ object do_thread_create(string id, function f, mixed ... args)
 {
   object t = thread_create(f, @args);
   catch(t->set_name( id ));
-  THREAD_WERROR(id+" started");
+  THREAD_WERR(id+" started");
   return t;
 }
 
@@ -537,9 +536,9 @@ void handler_thread(int id)
   {
     if(q=catch {
       do {
-	THREAD_WERROR("Handle thread ["+id+"] waiting for next event");
+	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
 	if((h=handle_queue->read()) && h[0]) {
-	  THREAD_WERROR(sprintf("Handle thread [%O] calling %O(@%O)...",
+	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(@%O)...",
 				id, h[0], h[1..]));
 	  SET_LOCALE(default_locale);
 	  h[0](@h[1]);
@@ -612,7 +611,7 @@ class fallback_redirect_request
 
   void die()
   {
-    SSL3WERROR(sprintf("fallback_redirect_request::die()"));
+    SSL3_WERR(sprintf("fallback_redirect_request::die()"));
 #if 0
     /* Close the file, DAMMIT */
     Stdio.File dummy = Stdio.File();
@@ -626,7 +625,7 @@ class fallback_redirect_request
 
   void write_callback(object id)
   {
-    SSL3WERROR(sprintf("fallback_redirect_request::write_callback()"));
+    SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
     int written = id->write(out);
     if (written <= 0)
       die();
@@ -637,7 +636,7 @@ class fallback_redirect_request
 
   void read_callback(object id, string s)
   {
-    SSL3WERROR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
     in += s;
     string name;
     string prefix;
@@ -696,7 +695,7 @@ class fallback_redirect_request
 
   void create(object socket, string s, string l, int p)
   {
-    SSL3WERROR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
+    SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
     f = socket;
     default_prefix = l;
     port = p;
@@ -945,7 +944,7 @@ class SSLProtocol
 
     function r = Crypto.randomness.reasonably_random()->read;
 
-    SSL3WERROR(sprintf("key file contains: %O", indices(msg->parts)));
+    SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
 
     if (part = msg->parts["RSA PRIVATE KEY"])
     {
@@ -966,7 +965,7 @@ class SSLProtocol
 
       ctx->rsa = rsa;
 
-      SSL3WERROR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
+      SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
 
       if (rsa->rsa_size() > 512)
       {
@@ -1006,7 +1005,7 @@ class SSLProtocol
 	return;
       }
 
-      SSL3WERROR(sprintf("Using DSA key."));
+      SSL3_WERR(sprintf("Using DSA key."));
 	
       dsa->use_random(r);
       ctx->dsa = dsa;
@@ -1287,7 +1286,7 @@ class HTTPS
 
     void ssl_alert_callback(object alert, object|int n, string data)
     {
-      SSL3WERROR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
+      SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
       //  trace(1);
 #if 0
       werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
@@ -1316,7 +1315,7 @@ class HTTPS
 
     void ssl_accept_callback(object id)
     {
-      SSL3WERROR(sprintf("ssl_accept_callback(X)"));
+      SSL3_WERR(sprintf("ssl_accept_callback(X)"));
       id->set_alert_callback(0); /* Forget about http_fallback */
       my_fd = 0;          /* Not needed any more */
     }
@@ -2320,7 +2319,7 @@ class ArgCache
 
     string q = read_args( id );
 
-    if(!q) 
+    if(!q)
       if( client )
         error("Key does not exist! (Thinks "+ (client*"") +")\n");
       else
@@ -2889,7 +2888,6 @@ int main(int argc, array argv)
               dump( "protocols/ftp.pike");
               dump( "protocols/https.pike");
               dump( "base_server/state.pike" );
-              dump( "base_server/struct/node.pike" );
               dump( "base_server/highlight_pike.pike");
               dump( "base_server/wizard.pike" );
               dump( "base_server/proxyauth.pike" );
