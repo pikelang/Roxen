@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.377 2002/06/15 01:04:29 ian Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.378 2002/06/17 11:44:54 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2973,8 +2973,8 @@ class TagDefine {
 
     // Callbacks used by the <attrib> parser. These are intentionally
     // defined outside the scope of do_return to avoid getting dynamic
-    // frames with cyclic references. (Pike ought to be able to
-    // refcount garb this.)
+    // frames with cyclic references. This is only necessary for Pike
+    // 7.2.
 
     private string add_default(Parser.HTML p, mapping m, string c,
 			       mapping defaults, RequestID id)
@@ -4223,10 +4223,7 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
-    if(!var)
-      // Compatibility kludge to work with the string-only approach
-      // below.
-      return do_check ("", arr, id) || do_check ("0", arr, id);
+    if(!var) var = "";
 
     string is;
 
@@ -4718,8 +4715,8 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var=RXML.user_get_var(s);
-    if(!var) return 0;
+    mixed var;
+    if (zero_type (var = RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
