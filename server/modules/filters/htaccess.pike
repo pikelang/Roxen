@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.35 1998/04/17 01:58:38 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.36 1998/04/24 08:43:10 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -390,7 +390,11 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
       return 0;
 
     foreach(indices(grps), grp) {
-      array gr = getgrnam(grp);
+      array gr
+#if efun(getgrnam)
+	= getgrnam(grp)
+#endif
+	;
 #ifdef HTACCESS_DEBUG
       werror("HTACCESS: Checking for unix group "+grp+" ... "
 	     +(gr&&gr[3]?"Existant":"Nope")+"\n");

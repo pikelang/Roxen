@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.26 1998/03/11 19:42:39 neotron Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.27 1998/04/24 08:43:20 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -191,7 +191,9 @@ void read_data()
   {
   case "ypcat":
     object privs;
+#if efun(geteuid)
 //  if(getuid() != geteuid()) privs = Privs("Reading password database");
+#endif
     data=Process.popen("ypcat "+query("args")+" passwd");
     if (objectp(privs)) {
       destruct(privs);
@@ -203,7 +205,9 @@ void read_data()
 #if efun(getpwent)
     // This could be a _lot_ faster.
     tmp2 = ({ });
+#if efun(geteuid)
     if(getuid() != geteuid()) privs = Privs("Reading password database");
+#endif
     setpwent();
     while(tmp = getpwent())
       tmp2 += ({
@@ -233,7 +237,9 @@ void read_data()
     string shadow;
     array pw, sh, a, b;
     mapping sh = ([]);
+#if efun(geteuid)
     if(getuid() != geteuid()) privs=Privs("Reading password database");
+#endif
     fstat = file_stat(query("file"));
     data=    Stdio.read_bytes(query("file"));
     shadow = Stdio.read_bytes(query("shadowfile"));
@@ -258,7 +264,9 @@ void read_data()
     break;
 
   case "niscat":
+#if efun(geteuid)
     if(getuid() != geteuid()) privs=Privs("Reading password database");
+#endif
     data=Process.popen("niscat "+query("args")+" passwd.org_dir");
     if (objectp(privs)) {
       destruct(privs);
