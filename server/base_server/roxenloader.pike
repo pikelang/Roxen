@@ -1,4 +1,9 @@
-string cvs_version = "$Id: roxenloader.pike,v 1.6 1996/12/02 04:32:36 per Exp $";
+string cvs_version = "$Id: roxenloader.pike,v 1.6.2.1 1997/03/02 19:16:09 grubba Exp $";
+
+import files;
+import spider;
+
+#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 #include <simulate.h>
 #include <roxen.h>
@@ -122,7 +127,7 @@ void load_roxen()
 object|void open(string filename, string mode)
 {
   object o;
-  o=File();
+  o=file();
   if(o->open(filename, mode))
   {
     mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
@@ -147,9 +152,32 @@ void mkdirhier(string from)
   }
 }
 
+string make_path(string ... from)
+{
+  return Array.map(from, lambda(string a, string b) {
+    return (a[0]=='/')?combine_path("/",a):combine_path(b,a);
+  }, getcwd())*":";
+}
+
 void main(mixed ... args)
 {
   perror("Roxen loader version "+cvs_version+"\n");
+
+  string path = make_path("base_server", "etc/include", ".", getcwd());
+
+  master()->putenv("PIKE_INCLUDE_PATH", path);
+  master()->pike_include_path = path/":";
+
+  object mm=((program)"etc/master.pike")();
+  replace_master(mm);
+#if 0
+  mm->putenv("PIKE_INCLUDE_PATH", path);
+  mm->pike_include_path = path/":";
+  mm->pike_library_path = master()->pike_library_path;
+#endif /* 0 */
+
+  add_constant("error", lambda(string s){error(s);});
+
   add_constant("roxenp", lambda() { return roxen; });
   add_constant("report_debug", report_debug);
   add_constant("report_error", report_error);
