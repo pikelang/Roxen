@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.489 2000/06/21 03:00:41 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.490 2000/06/26 17:46:03 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2536,6 +2536,11 @@ class ArgCache
     return 0;
   }
 
+  string tohex( string what ) 
+  {
+    return sprintf( "%x", Gmp.mpz( what, 256 ) );
+  }
+
   static string create_key( string long_key )
   {
     if( is_db )
@@ -2551,8 +2556,7 @@ class ArgCache
                          name, long_key, long_key[..79], time() ));
       return create_key( long_key );
     } else {
-      string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
-      _key = replace(_key-"=","/","=");
+      string _key=tohex(Crypto.md5()->update(long_key)->digest());
       string short_key = _key[0..1];
 
       Stdio.File f;
