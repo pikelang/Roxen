@@ -728,7 +728,6 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="129">
-<changed from="When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group]."/>
 <o>When Roxen is run as root, to be able to open port 80 for listening,
 change to this user-id and group-id when the port has been opened. If
 you specify a symbolic username, the default group of that user will
@@ -742,7 +741,13 @@ although the start script fixes this for the standard file locations.</o>
 öffnen zu können, wird die User-ID und die Group-ID auf diesen Wert
 gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
 verwendet wird, wird die Standardgruppe dieses Benutzers verwendet.
-Die Syntax ist user[:group].</t>
+Die Syntax ist user[:group].
+
+&lt;p&gt;Ein Neustart des Servers ist notwendig, damit die Änderungen
+an dieser Variablen wirksam werden. Achten Sie darauf, dass dies zu
+Zugriffsproblemen bei Dateien führen kann, die der Roxen-Prozess
+vorher geschrieben hat, und nun nicht mehr lesen kann.  Das start-Script
+versucht jedoch, dies für die Standard-Dateien zu beheben.</t>
 </str>
 
 <str id="130">
@@ -2828,42 +2833,39 @@ Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
 </str>
 
 <str id="79">
-<new/>
 <o>&lt;p&gt;No backups are currently available. To make a backup of a database, focus on it in the Databases tab, and click on the make backup button. Please note that you can only make backups of databases managed by Roxen.&lt;/p&gt;</o>
-<t></t>
+<t>&lt;p&gt;Derzeit sind keine Backups verfügbar. Um ein Backup einer
+Datenbank zu erstellen, klicken Sie den "make backup" Knopf der jeweiligen
+Datenbank.  Es können nur Backups von Datenbanken erzeugt werden, die
+Roxen verwaltet.&lt;/p&gt;</t>
 </str>
 
 <str id="80">
-<new/>
 <o>No data entered.
 </o>
-<t></t>
+<t>Keine Daten eingegeben.</t>
 </str>
 
 <str id="81">
-<new/>
 <o>Data is not a float.
 </o>
-<t></t>
+<t>Datum ist keine Fliesskommazahl.</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Found the string %O trailing after the float.
 </o>
-<t></t>
+<t>Zeichenkette %O am Ende der Fliesskommazahl gefunden.</t>
 </str>
 
 <str id="83">
-<new/>
 <o>Data is not an integer
 </o>
-<t></t>
+<t>Datum ist keine ganze Zahl.</t>
 </str>
 
 <str id="84">
-<new/>
 <o>Found the string %O trailing after the integer.
 </o>
-<t></t>
+<t>Zeichenkette %O am Ende der ganzen Zahl gefunden.</t>
 </str>
