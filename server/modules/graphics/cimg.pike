@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.18 2000/06/01 15:05:18 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.19 2000/06/02 01:29:42 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -27,8 +27,9 @@ mapping tagdocumentation() {
 
 #ifdef manual
 constant tagdoc=(["cimg":#"
-<desc tag><short>Convert and manuipulate images between different image
-formats.</short> The <tag>cimg</tag> makes it is possible to convert, alter size, and transform images between many formats.</desc>
+<desc tag><short>Manipulates and converts images between different image
+formats.</short> Provides the tag <tag>cimg</tag> that makes it is possible to convert,
+resize, crop and in other ways transform images.</desc>
 
 <attr name='src' value='uri' required>
  The path to the indata file.
@@ -40,9 +41,9 @@ formats.</short> The <tag>cimg</tag> makes it is possible to convert, alter size
  Insert images from other sources, e.g. databases through entities or
  variables.
 <ex type='box'>
-&lt;emit source='sql' query='select imagedata from images where id=37'&gt;
-&lt;cimg data='&sql.imagedata;'/&gt;
-&lt/emit&gt;
+<emit source='sql' query='select imagedata from images where id=37'>
+<cimg data='&sql.imagedata;'/>
+</emit>
 </ex>
 </attr>",
 
@@ -62,9 +63,9 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
  Insert images from other sources, e.g. databases through entities or
  variables.
 <ex type='box'>
-&lt;emit source='sql' query='select imagedata from images where id=37'&gt;
-&lt;cimg data='&sql.imagedata;'/&gt;
-&lt/emit&gt;
+<emit source='sql' query='select imagedata from images where id=37'>
+<cimg data='&sql.imagedata;'/>
+</emit>
 </ex>
 </attr>",
 ]);
@@ -74,6 +75,16 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
 void start()
 {
   the_cache = roxen.ImageCache( "cimg", generate_image );
+}
+
+mapping(string:function) query_action_buttons() {
+  return ([ "Clear cache":the_cache->flush ]);
+}
+
+string status() {
+  array s=the_cache->status();
+  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
+		 s[0]/2, Roxen.sizetostring(s[1]));
 }
 
 mapping generate_image( mapping args, RequestID id )
@@ -89,11 +100,11 @@ mapping find_internal( string f, RequestID id )
   return the_cache->http_file_answer( f, id );
 }
 
-mapping get_my_args( mapping args, object id )
+mapping get_my_args( mapping args, RequestID id )
 {
   mapping a=
   ([
-    "src":(args->src?Roxen.fix_relative( args->src, id ):0),
+    "src":Roxen.fix_relative( args->src, id ),
     "quant":args->quant,
     "crop":args->crop,
     "format":args->format,
@@ -105,6 +116,8 @@ mapping get_my_args( mapping args, object id )
     "data":args->data,
   ]);
 
+  a->stat = id->conf->stat_file( a->src,id );
+
   a["background-color"] = id->misc->defines->bgcolor 
                           || "#eeeeee";
 
@@ -114,21 +127,43 @@ mapping get_my_args( mapping args, object id )
   return a;
 }
 
-string tag_cimg( string t, mapping args, RequestID id )
-{
-  mapping a = get_my_args( args, id );
-  args -= a;
-  args->src = query_internal_location()+the_cache->store( a,id );
-  if( mapping size = the_cache->metadata( a, id, 1 ) )
-  {
-    // image in cache (1 above prevents generation on-the-fly)
-    args->width = size->xsize;
-    args->height = size->ysize;
+class TagCImg {
+  inherit RXML.Tag;
+  constant name = "cimg";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      mapping a = get_my_args( args, id );
+      args -= a;
+      args->src = query_internal_location()+the_cache->store( a,id );
+      if( mapping size = the_cache->metadata( a, id, 1 ) )
+      {
+	// image in cache (1 above prevents generation on-the-fly)
+	args->width = size->xsize;
+	args->height = size->ysize;
+      }
+      result = Roxen.make_tag( "img", args );
+      return 0;
+    }
   }
-  return Roxen.make_tag( "img", args );
 }
 
-string tag_cimg_url( string t, mapping args, RequestID id )
-{
-  return query_internal_location()+the_cache->store(get_my_args(args,id),id);
+class TagCImgURL {
+  inherit RXML.Tag;
+  constant name = "cimg-url";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      result = query_internal_location()+the_cache->store(get_my_args(args,id),id);
+      return 0;
+    }
+  }
 }
