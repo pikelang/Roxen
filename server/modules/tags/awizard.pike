@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.5 1999/11/15 16:43:12 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.6 1999/11/17 09:53:36 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -20,12 +20,14 @@ string store( mapping what )
 {
   call_out( m_delete, 3600*1, cache, (string)nid );
   cache[ (string)nid ] = what;
+//   werror("store -> "+nid+"\n");
   return (string)nid++;
 }
 
 mapping lookup( string id )
 {
-  return cache[id];
+//   werror("lookup "+id+"\n");
+  return cache[(id/".")[0]];
 }
 
 // Advanced wizard
