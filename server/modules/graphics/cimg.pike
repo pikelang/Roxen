@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.41 2001/04/03 07:29:34 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.42 2001/06/25 15:09:41 wellhard Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -156,6 +156,9 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
   else
     layers = roxen.load_layers( args->src, id, opts );
 
+  if(!layers)
+    return 0;
+  
   layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
     if( !lay->get_misc_value( "name" ) )
