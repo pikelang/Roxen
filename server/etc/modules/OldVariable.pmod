@@ -98,15 +98,23 @@ class Variable
       res[ n[strlen(path()..) ] ] = id->variables[ n ];
     return res;
   }
+
+  mixed transform_from_form( string what )
+    //. Given a form value, return what should be set.
+    //. Used by the default set_from_form implementation.
+  {
+    return what;
+  }
   
   mixed set_from_form( RequestID id )
     //. Set this variable from the form variable in id->Variables,
     //. if any are available. The default implementation simply sets
     //. the variable to the string in the form variables.
   {
-    array(mixed) val;
-    if( sizeof( val = get_form_vars()) && val[""] )
-      set( val[""] );
+    mapping val;
+    if( sizeof( val = get_form_vars()) && val[""] && 
+        transform_from_form( val[""] ) != query() )
+      set( transform_from_form( val[""] ));
   }
   
   string path()
@@ -204,6 +212,11 @@ class Float
     return ({ warn, new_value });
   }
   
+  int transform_from_form( string what )
+  {
+    return (float)what;
+  }
+
   string render_view( RequestID id )
   {
     return _format(query());
@@ -263,6 +276,11 @@ class Int
     return ({ warn, new_value });
   }
 
+  int transform_from_form( string what )
+  {
+    return (int)what;
+  }
+
   string render_form( RequestID id )
   {
     int size = 10;
@@ -271,3 +289,170 @@ class Int
     return input(path(), (string)query(), size);    
   }
 }
+
+
+// =====================================================================
+// String
+// =====================================================================
+
+class String
+//. String variable
+{
+  inherit Variable;
+  constant type = "String";
+  string render_form( RequestID id )
+  {
+    return input(path(), (string)query(), 60);
+  }
+}
+
+// =====================================================================
+// Text
+// =====================================================================
+class Text
+//. Text (multi-line string) variable
+{
+  inherit String;
+  constant type = "Text";
+  string render_form( RequestID id )
+  {
+    return "<textarea name='"+path()+"'>"
+           + Roxen.html_encode_string( query() || "" ) +
+           "</textarea>";
+  }
+}
+
+
+
+// =====================================================================
+// Password
+// =====================================================================
+class Password
+//. Password variable (uses crypt)
+{
+  inherit String;
+  constant type = "Password";
+
+  mixed set_from_form( RequestID id )
+  {
+    mapping val;
+    if( sizeof( val = get_form_vars()) && 
+        val[""] && strlen(val[""]) )
+      set( crypt( val[""] ) );
+  }
+
+  string render_view( RequestID id )
+  {
+    return "******";
+  }
+
+  string render_form( RequestID id )
+  {
+    return "<input name=\""+path()+"\" type=password size=30>";
+  }
+}
+
+
+// =====================================================================
+// MultipleChoice (one of many) baseclass
+// =====================================================================
+
+class MultipleChoice
+//. Base class for multiple-choice (one of many) variables.
+{
+  inherit Variable;
+  static array _list = ({});
+  void set_choice_list( array to )
+    //. Set the list of choices.
+  {
+    _list = to;
+  }
+
+  array get_choice_list( )
+    //. Get the list of choices. Used by this class as well.
+    //. You can overload this function if you want a dynamic list.
+  {
+    return _list;
+  }
+
+  static string _name( mixed what )
+    //. Get the name used as value for an element gotten from the
+    //. get_list() function.
+  {
+    return (string)what;
+  }
+
+  static string _title( mixed what )
+    //. Get the title used as description (shown to the user) for an
+    //. element gotten from the get_list() function.
+  {
+    return (string)what;
+  }
+
+  void render_form( RequestID id )
+  {
+    string res = "<select name='"+path()+"'>\n";
+    foreach( get_list(), mixed elem )
+    {
+      mapping m = ([]);
+      m->value = _name( elem );
+      if( m->value == query() )
+        m->selected="selected";
+      res += "  "+make_container( "option", m, _title( elem ) )+"\n";
+    }
+    return res + "</select>";
+  }
+}
+
+
+// =====================================================================
+// MultipleChoice subclasses
+// =====================================================================
+
+class StringChoice
+//. Select one of many strings.
+{
+  inherit MultipleChoice;
+}
+
+
+class IntChoice
+//. Select one of many integers.
+{
+  inherit MultipleChoice;
+  int transform_from_form( string what )
+  {
+    return (int)what;
+  }
+}
+
+
+class FloatChoice
+//. Select one of many floating point (real) numbers.
+{
+  inherit MultipleChoice;
+  static int _prec = 3;
+
+  void set_precision( int prec )
+    //. Set the number of _decimals_ shown to the user.
+    //. If prec is 3, and the float is 1, 1.000 will be shown.
+    //. Default is 2.
+  {
+    _prec = ndigits;
+  }
+
+  static string _title( mixed what )
+  {
+    if( !_prec )
+      return sprintf( "%d", (int)m );
+    return sprintf( "%1."+_prec+"f", m );
+  }
+
+  int transform_from_form( string what )
+  {
+    array q = get_choice_list();
+    array a = mkmapping( map( q, _name ), q );
+    return a[what] || (float)what; // Do we want this fallback?
+  }
+}
+
