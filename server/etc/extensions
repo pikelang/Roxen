@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.50 2002/11/27 12:58:42 anders Exp $
+# $Id: extensions,v 1.51 2004/07/15 17:25:19 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -95,6 +95,7 @@ tiff	image/tiff
 # image/vnd.svf
 # image/vnd.dxf
 png	image/png
+psd	image/x-photoshop
 fpx	image/vnd.fpx
 # Also known as image/x-fpx and image/net-fpx
 # image/vnd.xiff
