@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.67 2000/12/02 19:26:11 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.68 2001/01/31 01:14:40 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -71,6 +71,8 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
     if(line[0] == ' ') /* There can be only one /Connor MacLeod */
       line = line[1..];
 
+    line = lower_case(line);
+    
     if(sscanf(line, "deny from %s", data))
       tmp = "deny";
     else if(sscanf(line, "allow from %s", data))
