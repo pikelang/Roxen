@@ -6,8 +6,8 @@
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "small";
-String box_name = _(0,"News from www.roxen.com");
-String box_doc  = _(0,"The news headlines from www.roxen.com");
+String box_name = _(263,"News from www.roxen.com");
+String box_doc  = _(281,"The news headlines from www.roxen.com");
 
 
 

@@ -6,8 +6,8 @@
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "small";
-String box_name = _(0,"Crunch activity");
-String box_doc  = _(0,"Recently changed Crunch reports");
+String box_name = _(232,"Crunch activity");
+String box_doc  = _(262,"Recently changed Crunch reports");
 
 class Fetcher
 {
