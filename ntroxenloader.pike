@@ -56,6 +56,7 @@ void read_from_stdin()
 
 int main(int argc, array (string) argv)
 {
+  int redirect;
   /* Syntax: ntroxenloader.pike <roxen-directory> <roxen loader options> */
   if(argc > 1 && argv[1][0]=='+')
   {
@@ -63,6 +64,14 @@ int main(int argc, array (string) argv)
     argv = argv[1..];
     argc--;
   }
+
+  if(argc > 1 && argv[1] == "-verbose")
+  {
+    redirect = 0;
+    argv = argv[1..];
+    argc--;
+  }
+
   dir = get_regvalue("installation_directory");
   if(!dir)
   {
@@ -76,6 +85,8 @@ int main(int argc, array (string) argv)
 
   
   dir += "\\server\\";
+  dir = replace(dir, "\\\\", "\\");
+
   if(!cd(dir))
   {
     werror("Failed to cd to "+dir+"\n");
@@ -94,20 +105,24 @@ int main(int argc, array (string) argv)
   object fd = Stdio.File();
 
   mkdir(log_dir);
-  mkdir(log_dir+"\\debug");
-  
-  for(int i=10;i>0;i--)
-    mv(log_dir+"\\debug\\default."+i, log_dir+"\\debug\\default."+(i+1));
 
-  if(fd->open(log_dir+"\\debug\\default.1", "wct"))
+  if(redirect)
   {
-    fd->dup2( Stdio.stderr );
-    fd->dup2( Stdio.stdout );
-    mw = fd->write;
-    add_constant("werror", my_werror);
-    add_constant("write", my_werror);
-  } else {
-    werror("Failed to do redirection\n");
+    mkdir(log_dir+"\\debug");
+  
+    for(int i=10;i>0;i--)
+      mv(log_dir+"\\debug\\default."+i, log_dir+"\\debug\\default."+(i+1));
+
+    if(fd->open(log_dir+"\\debug\\default.1", "wct"))
+    {
+      fd->dup2( Stdio.stderr );
+      fd->dup2( Stdio.stdout );
+      mw = fd->write;
+      add_constant("werror", my_werror);
+      add_constant("write", my_werror);
+    } else {
+      werror("Failed to do redirection\n");
+    }
   }
 
   werror("Compiling "+dir+"base_server\\roxenloader.pike\n");
