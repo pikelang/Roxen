@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.27 1998/05/14 16:35:54 grubba Exp $
+ * $Id: ftp2.pike,v 1.28 1998/05/14 16:42:51 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1217,7 +1217,7 @@ class FTPSession
     if (sizeof(data) > 1) {
       data[0] = sprintf("%03d-%s\r\n", code, data[i]);
       for (i = sizeof(data)-1; --i; ) {
-	data[i] = " " + data[i];
+	data[i] = " " + data[i] + "\r\n";
       }
     }
     data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
