@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.139 1998/09/25 11:52:00 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.140 1998/09/25 12:05:03 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1385,7 +1385,7 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
     m_delete(m, "virtual");
   } else if (m->file && sizeof(m->file) && (m->file[0] != '/')) {
     // Fix relative path
-    m->file = combine_path(id->conf->real_file(id->not_query) || "/", "../" + m->file);
+    m->file = combine_path(id->conf->real_file(id->not_query, id) || "/", "../" + m->file);
   }
   if(m->file)
   {
