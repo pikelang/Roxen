@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.17 1997/10/15 05:04:06 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.18 1997/10/15 11:38:53 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -154,7 +154,8 @@ string itag_data(mapping tag, mapping m, string contents,
     array lines = contents/linesep;
     array foo = ({});
     array bar = ({});
-    
+    int maxsize=0;
+
     foreach( lines, string entries )
     {
       foreach( Array.filter( ({ entries/sep - ({""}) }), sizeof ), array item)
@@ -162,10 +163,26 @@ string itag_data(mapping tag, mapping m, string contents,
 	foreach( item, string gaz )
 	  foo += ({ (float)gaz });
       }
+      if (sizeof(bar)>maxsize)
+	maxsize=sizeof(bar);
       bar += ({ foo });
       foo = ({});
     }
-    res->data=bar;
+
+    //FIXME Här har Hedda hackat och fört in buggar
+    if (m->form == "db")
+      {
+	for(int i=0; i<sizeof(bar); i++)
+	  if (sizeof(bar[i])<maxsize)
+	    bar+=allocate(maxsize-sizeof(bar[i]));
+	
+	array bar2=allocate(sizeof(bar));
+	for(int i=0; i<sizeof(bar); i++)
+	  bar2[i]=column(bar, i);
+	res->data=bar2;
+      }
+    else
+      res->data=bar;
   }
 
   return "";
