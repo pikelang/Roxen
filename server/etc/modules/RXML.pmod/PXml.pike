@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.31 2000/02/15 07:54:12 mast Exp $
+//! $Id: PXml.pike,v 1.32 2000/02/15 14:57:19 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -66,11 +66,12 @@ static void set_quote_tag_cbs()
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  return [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden,
+  return [object(this_program)] low_parser::clone (
+    ctx, type, tag_set, overridden, rt_replacements, rt_tag_names,
 #ifdef OLD_RXML_COMPAT
-						   not_compat
+    not_compat
 #endif
-						  );
+  );
 }
 
 #ifdef OLD_RXML_COMPAT
@@ -80,6 +81,8 @@ static int not_compat = 1;
 static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
   void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
+  void|mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) orig_rt_replacements,
+  void|mapping(RXML.Tag:string) orig_rt_tag_names,
 #ifdef OLD_RXML_COMPAT
   void|int orig_not_compat
 #endif
@@ -87,7 +90,7 @@ static void create (
 {
 #ifdef OLD_RXML_COMPAT
   if (!ctx) ctx = RXML.get_context();
-  not_compat = !(ctx->id && ctx->id->conf->parse_html_compat);
+  not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
 #endif
 
   TagSetParser::create (ctx, type, tag_set);
@@ -97,6 +100,11 @@ static void create (
     if (not_compat == orig_not_compat) {
 #endif
       overridden = orig_overridden;
+      // The following mappings should be copied to behave cleanly,
+      // but we don't bother since they're only used in nested
+      // parsers, and changes propagate all the way up anyway.
+      rt_replacements = orig_rt_replacements;
+      rt_tag_names = orig_rt_tag_names;
       return;
 #ifdef OLD_RXML_COMPAT
     }
