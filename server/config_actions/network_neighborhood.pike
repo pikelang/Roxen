@@ -26,6 +26,21 @@ string show_servers(string c,array s)
   return c+String.implode_nicely(res)+"<p>";
 }
 
+string time_interval(int s)
+{
+  string r = "";
+
+  int d = s/3600/24;
+  int y = d/365;
+  int h = (s/3600)%24;
+  d %= 365;
+
+  if(y) r += sprintf("%dy ", y);
+  if(d||y) r += sprintf("%dd ", d);
+  if(d||h) r += sprintf("%dh ", h);
+  return r + ((s>7200)?"":sprintf("%2d min", (s%3600)/60));
+}
+
 string page_0()
 {
   array sn = indices(neighborhood);
@@ -34,17 +49,26 @@ string page_0()
 			/*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
-     int re=ns->seq_reboots>1;
+     int re=ns->seq_reboots;
      string ER="",RE="";
-     if(re)
+     if(re>1)
      {
        RE="<font color=red><b><blink>";
        ER="</blink></b></font>";
+     } else if(re || (time()-ns->last_reboot<120)) {
+       RE="<font color=orange><b>";
+       ER="</b></font>";
+     } else if(ns->time && (time()-ns->time)>300) {
+       RE="<font color=grey><b>";
+       ER="</b></font>";
+     } if(ns->time && (time()-ns->time)>600) {
+       RE="<font color=lightgrey><i>";
+       ER="</i></font>";
      }
      return({  "<a href='"+s+"'>"+s+"</a></font>",
 	       RE+getpwuid(ns->uid)[0]+ER,
 	       RE+ns->host+ER,
-	       RE+(string)(ns->sequence/2)+ER,
+	       RE+time_interval(time()-ns->last_reboot)+ER,
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
 	       RE+sv(ns->version)+ER
      });
