@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.575 2004/05/14 18:09:05 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.576 2004/05/18 12:46:53 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2404,7 +2404,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
     m_delete(file, "data");
   }
   id->not_query = oq;
-  return ({ file->file, file });
+  return ({ file->file || StringFile(""), file });
 }
 
 
@@ -2684,8 +2684,14 @@ int|string try_get_file(string s, RequestID id,
   fake_id->method = "GET";
 
   array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
-  if(a && a[0]) {
-    m = a[1];
+
+  m = a[1];
+
+  if (result_mapping)
+    foreach(indices(m), string i)
+      result_mapping[i] = m[i];
+
+  if(a[0]) {
     m->file = a[0];
   }
   else {
@@ -2695,10 +2701,6 @@ int|string try_get_file(string s, RequestID id,
 
   CACHE( fake_id->misc->cacheable );
   destruct (fake_id);
-
-  if (result_mapping)
-    foreach(indices(m), string i)
-      result_mapping[i] = m[i];
 
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;
