@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.306 2001/12/04 18:39:26 mast Exp $
+// $Id: roxenloader.pike,v 1.307 2001/12/04 18:44:37 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.306 2001/12/04 18:39:26 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.307 2001/12/04 18:44:37 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1991,6 +1991,10 @@ and rebuild Pike from scratch.
   add_module_path( "etc/modules" );
   add_module_path( "../local/pike_modules" );
 
+  add_constant ("get_cvs_id", get_cvs_id);
+  add_constant ("add_cvs_ids", add_cvs_ids);
+  add_constant ("describe_backtrace", describe_backtrace);
+
 #ifdef INTERNAL_ERROR_DEBUG
   add_constant("throw", paranoia_throw);
 #endif /* INTERNAL_ERROR_DEBUG */
@@ -2069,10 +2073,6 @@ and recompile pike, after removing the file 'config.cache'
 
 ");
 #endif
-
-  add_constant ("get_cvs_id", get_cvs_id);
-  add_constant ("add_cvs_ids", add_cvs_ids);
-  add_constant ("describe_backtrace", describe_backtrace);
 
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
