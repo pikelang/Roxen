@@ -146,6 +146,7 @@ nn binary
 /server/modules/compat/flik.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
+/server/modules/configuration/upgrade.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
