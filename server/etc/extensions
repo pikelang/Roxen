@@ -77,6 +77,7 @@ cc	application/x-c++-code
 cdf	application/x-netcdf
 cdr	application/x-coreldraw
 cdrw    application/x-coreldraw
+class	application/x-java-vm
 com	application/octet-stream
 cpio	application/x-cpio
 csh	application/x-csh
@@ -94,6 +95,7 @@ hdf	application/x-hdf
 hqx	application/mac-binhex40
 iw      application/iconauthor 
 iwm     application/iconauthor 
+jar	application/x-java-archive
 js	application/x-javascript
 latex	application/x-latex
 lha	application/lha
