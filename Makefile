@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.47 1999/02/05 20:30:11 grubba Exp $
+# $Id: Makefile,v 1.48 1999/03/30 20:56:35 marcus Exp $
 #
 # Bootstrap Makefile
 #
@@ -212,6 +212,13 @@ censor_dbapi :
 	    rm -rf $$d/modules/Oracle $$d/modules/Odbc; \
 	  else : ; fi; \
 	done
+
+censor_strong_crypto :
+	@echo "Censoring strong crypto..."
+	@cd server/protocols/; \
+	 cp ssl3.pike ssl3.strong; \
+	 sed -e '/WEAK_CRYPTO_40BIT/d' < ssl3.strong > ssl3.pike \
+	 rm -f ssl3.strong
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
 	-@$(BIN_TRUE)
