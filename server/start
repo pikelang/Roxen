@@ -1,8 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.57 1999/07/21 21:31:39 marcus Exp $
-
-VERSION=202; BETA=.b;
+# $Id: start,v 1.58 1999/08/11 06:26:54 peter Exp $
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -153,7 +151,7 @@ parse_args() {
     DEFINES="-DKEEP_ALIVE $DEFINES"
   ;;
   '--once')
-    once=1
+    once=1http://www.gnome.org/screenshots/gwp.jpg
   ;;
   '--gdb')
     gdb=gdb
@@ -164,7 +162,9 @@ parse_args() {
     shift
   ;;
   '--version')
-    echo Roxen Challenger 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
+    VERSION=`sed <base_server/roxen.pike -e'/__roxen_version__/s/[^0-9.]*//gp' -ed|head -1`
+    BUILD=`sed <base_server/roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`
+    echo Roxen Challenger $VERSION.$BUILD
     exit 0
   ;;
   '--help'|'-?')
