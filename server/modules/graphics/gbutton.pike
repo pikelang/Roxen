@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.71 2001/03/30 11:14:36 jhs Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.72 2001/03/30 17:01:59 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -101,12 +101,17 @@ constant gbuttonattr=#"
  to have at least the following layers: background, mask and
  frame.</p>
 
+<!--
+Non working example.
+
  <p>More information on how to create frame images can be found in the
  Roxen documentation; Web Site Creator/Graphical tags section.</p>
+
 <ex type='vert'>
 <gbutton frame-image='/internal-roxen-tab_frame'>foo</gbutton>
 </ex>
 </attr>
+-->
 
 <attr name='alt' value='string'><p>
  Alternative button and alt text.</p>
