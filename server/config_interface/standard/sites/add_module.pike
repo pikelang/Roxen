@@ -67,7 +67,7 @@ string page_base( RequestID id, string content )
                   "<st-tabs></st-tabs>"
                   "<st-page>"
                   "<gbutton preparse='' "
-                  "href='add_module.pike?config=&form.config;"
+                  "href='add_module.pike?config=&form.config:http;"
                        "&reload_module_list=yes' > "
                   "Reload module list </gbutton><p>"
                   "\n%s\n</p>\n"
