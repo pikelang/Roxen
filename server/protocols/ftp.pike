@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.23 2000/01/05 09:14:50 mast Exp $
+ * $Id: ftp.pike,v 2.24 2000/02/02 19:15:39 mast Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -3462,9 +3462,9 @@ class FTPSession
 
     if (!s) {
       s =
-	"              +-------------------------------------------------\n"
-	"              +-- Welcome to the Roxen Challenger FTP server ---\n"
-	"              +-------------------------------------------------\n";
+	"              +------------------------------------------------\n"
+	"              +--      Welcome to the Roxen FTP server      ---\n"
+	"              +------------------------------------------------\n";
       werror("FTP: Setting the default welcome message for ftp to:\n" + s);
       port_obj->set_option_default("FTPWelcome", s);
     }
