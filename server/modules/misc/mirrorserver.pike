@@ -109,19 +109,23 @@ void create()
   defvar("base", "/", "Base URL", TYPE_STRING);
 }
 
+// FIXME: Should probably be destructed on module reload.
 object server;
 void start(int arg, object conf)
 {
-  if(conf)
-    catch
-    {
+  if(conf) {
+    mixed err;
+    if (err = catch {
       object privs;
       array a = lower_case(query("port"))/":";
-      if(query("port") < 1024)
+      if(((int)a[1]) < 1024)
 	privs = Privs("Opening Mirror Server Port: \"" +
 		      query("port") + "\"\n");
       server = Server(a[0]!="any"?a[0]:0,(int)a[1]);
       privs = 0;
       server->provide("mirror", MirrorServer(FakeID(conf),query("base")));
-    };
+    }) {
+      report_error(describe_backtrace(err));
+    }
+  }
 }
