@@ -10,7 +10,7 @@
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if variable="form.action">
       <input type="hidden" name="class" value="&form.class;" />
-      <insert file="&form.action;" nocache="" />
+      <eval><insert file="&form.action;" nocache="" /></eval>
     </if>
     <else>
       <define container="action">
