@@ -1,4 +1,4 @@
-## $Id: supports,v 1.74 2000/02/14 10:23:49 nilsson Exp $
+## $Id: supports,v 1.75 2000/02/17 23:42:27 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -307,7 +307,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section mc218 {
-.*		wml1.1, wbmp0
+.*		wml1.1, gifinline
 # }
 
 #section jigsaw {
