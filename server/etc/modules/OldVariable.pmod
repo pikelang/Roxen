@@ -2,7 +2,7 @@
 static inherit "html";
 
 // Locale macros
-static Locale.LocaleObject getlocobj() {
+static object getlocobj() {
   return roxenp()->locale->get()->config_interface;
 }
 
