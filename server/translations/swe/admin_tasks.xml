@@ -35,7 +35,8 @@
 </str>
 
 <str id="2">
-<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<changed from="Show some information about how pike is using the memory it has allocated. Mostly useful for developers."/>
+<o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t>Visar en del information om hur Pike använder det minne som allokerats. Mest användbart för utvecklare.</t>
 </str>
 
@@ -816,7 +817,8 @@ kan du använda den här för att byta vilken som körs.</t>
 </str>
 
 <str id="47">
-<o>Shutting down and changing roxen version</o>
+<changed from="Shutting down and changing roxen version"/>
+<o>Shutting down and changing Roxen version</o>
 <t>Avslutar Roxen och ändrar roxenversion</t>
 </str>
 
@@ -841,7 +843,8 @@ kan du använda den här för att byta vilken som körs.</t>
 </str>
 
 <str id="137">
-<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<changed from="If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again"/>
+<o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t>Om du ändrar till en av de här roxenversionerna så kommer du inte
 kunna byta tillbaka igen från administrationsgränssnittet, du måste
 istället editera filen %O manuellt och sedan ta ner server, och köra
@@ -1035,7 +1038,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 
 <str id="168">
 <new/>
-<o>Upload a new roxen license file.</o>
+<o>Upload a new Roxen license file.</o>
 <t></t>
 </str>
 

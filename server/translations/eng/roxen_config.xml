@@ -2170,7 +2170,7 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="410">
-<o>%s is a mysql keyword, used by mysql.Please select another name</o>
+<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
 <t></t>
 </str>
 
@@ -2338,7 +2338,7 @@ Substituting with %s</o>
 </str>
 
 <str id="443">
-<o>The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database.</o>
+<o>The database type. Internal means that it will be created in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
 <t></t>
 </str>
 
@@ -2414,10 +2414,7 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="458">
-<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
-<t></t>
-</str>
+
 
 <str id="459">
 <o>Date</o>

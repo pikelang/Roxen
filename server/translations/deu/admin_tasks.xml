@@ -34,7 +34,8 @@
 </str>
 
 <str id="2">
-<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<changed from="Show some information about how pike is using the memory it has allocated. Mostly useful for developers."/>
+<o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t>Zeigt einige Informationen, wie Pike den Speicher belegt.  Hauptsächlich sinnvoll für Entwickler.</t>
 </str>
 
@@ -795,7 +796,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="47">
-<o>Shutting down and changing roxen version</o>
+<changed from="Shutting down and changing roxen version"/>
+<o>Shutting down and changing Roxen version</o>
 <t>Herunterfahren und Roxen-Version ändern</t>
 </str>
 
@@ -820,7 +822,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="137">
-<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<changed from="If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again"/>
+<o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t>Wenn Sie auf eine dieser Roxen-Versionen wechseln, ist es nicht mehr möglich, aus diesem Adminstrations-Interface zurückzuwechseln.  Sie müssen stattdessen die Datei %O bearbeiten, den Server anhalten und %O erneut ausführen</t>
 </str>
 
@@ -980,7 +983,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="168">
-<o>Upload a new roxen license file.</o>
+<changed from="Upload a new roxen license file."/>
+<o>Upload a new Roxen license file.</o>
 <t>Eine neue Roxen Lizenzdatei einspielen.</t>
 </str>
 

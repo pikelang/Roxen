@@ -2361,7 +2361,8 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="410">
-<o>%s is a mysql keyword, used by mysql.Please select another name</o>
+<changed from="%s is a mysql keyword, used by mysql.Please select another name"/>
+<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
 <t>%s ist ein mysql-Schlüsselwort. Bitte einen anderen Namen wählen</t>
 </str>
 
@@ -2532,7 +2533,8 @@ Wird ersetzt durch %s</t>
 </str>
 
 <str id="443">
-<o>The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database.</o>
+<changed from="The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database."/>
+<o>The database type. Internal means that it will be created in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
 <t>Der Datenbank-Typ. Intern bedeutet, das die Datenbank in der Roxen MySQL Datenbank erstellt wird und die Rechte der Datenbank automatisch durch Roxen verwaltet werden. Extern bedeutet, dass die Datenbank in einer anderen Datenbank abgelegt wird.</t>
 </str>
 
@@ -2616,10 +2618,7 @@ Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
 <t>Eine Datenbank-Gruppe mit Namen %s existiert bereits</t>
 </str>
 
-<str id="458">
-<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
-<t>%s ist ein MySQL-Schlüsselword. Bitte einen anderen Namen wählen</t>
-</str>
+
 
 <str id="459">
 <o>Date</o>

@@ -34,7 +34,7 @@
 </str>
 
 <str id="2">
-<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t></t>
 </str>
 
@@ -792,7 +792,7 @@ change the currently running version.</o>
 </str>
 
 <str id="47">
-<o>Shutting down and changing roxen version</o>
+<o>Shutting down and changing Roxen version</o>
 <t></t>
 </str>
 
@@ -817,7 +817,7 @@ change the currently running version.</o>
 </str>
 
 <str id="137">
-<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t></t>
 </str>
 
@@ -977,7 +977,7 @@ change the currently running version.</o>
 </str>
 
 <str id="168">
-<o>Upload a new roxen license file.</o>
+<o>Upload a new Roxen license file.</o>
 <t></t>
 </str>
 
