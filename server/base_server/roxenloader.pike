@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.74 1998/07/12 21:48:24 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.75 1998/07/12 22:02:27 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -342,7 +342,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 #endif
       object privs;
       if (!getuid()) {
-	array(int) olduid = ({ geteuid(), getegid() });
+	array(int) olduid = ({ geteuid() || -2, getegid() || -2 });
 	if(uid) {
 	  olduid[0] = uid;
 	}
@@ -350,12 +350,12 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	  olduid[1] = gid;
 	}
 	privs = Privs("Executing script as non-www user");
-	setgid(olduid[1]);
-	setuid(olduid[0]);
 #if efun(initgroups)
 	array pw = getpwuid((int)uid);
 	if(pw) initgroups(pw[0], (int)olduid[0]);
 #endif
+	setgid(olduid[1]);
+	setuid(olduid[0]);
       }
       catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
     };
