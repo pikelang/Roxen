@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.19 1998/09/28 00:35:06 per Exp $";
+"$Id: mailtags.pike,v 1.20 1998/09/29 03:05:33 per Exp $";
 
 constant thread_safe = 1;
 
@@ -49,6 +49,14 @@ class SMTPRelay
 static MIME.Message mymesg = MIME.Message();
 static roxen.Configuration conf;
 static int debug, secure;
+static mapping (string:User) uid_cache = ([]);
+
+
+/* These should be constants, but they cannot be ------------------- */
+static mapping _login = http_auth_required( "E-Mail" );
+static string scroll_down = Image.GIF.encode(arrow(1));
+static string scroll_up   = Image.GIF.encode(arrow(0));
+
 
 /* Roxen module glue ---------------------------------------------- */
 /* These functions are arranged in calling order. ----------------- */
@@ -150,22 +158,19 @@ mapping find_file(string f, object id)
 
 
 
-string get_date( string from )
+static string get_date( string from )
 {
   mapping h = extended_headers(([ "date":from ]));
   return h->reldate-" ago";
 }
 
-Image.image arrow(int flip)
+static Image.image arrow(int flip)
 {
   Image.image o = Image.image(15,15,192,192,192);
   o->setcolor( 0,0,0 );
   o->polyfill(({ 7.5,0,15,15,0,15,7.5,0 }));
   return flip?o->mirrory():o;
 }
-
-string scroll_down = Image.GIF.encode(arrow(1));
-string scroll_up = Image.GIF.encode(arrow(0));
 
 // For multipart/alternative
 static int type_score( MIME.Message m )
@@ -174,7 +179,7 @@ static int type_score( MIME.Message m )
          (m->type=="multipart")*2;
 }
 
-// for multipart/related
+// for multipart/related tags with a href
 static mixed internal_odd_tag_href(string t, mapping args, 
 				   string url, string pp )
 {
@@ -186,7 +191,7 @@ static mixed internal_odd_tag_href(string t, mapping args,
   }
 }
 
-// for multipart/related
+// for multipart/related tags with a src
 static mixed internal_odd_tag_src(string t, mapping args, 
 				  string url, string pp )
 {
@@ -232,6 +237,8 @@ static string highlight_enriched( string from, object id )
   return replace(from, "\n\n", "\n<br>\n");
 }
 
+// Returns a time_t in UTC, given a year, month, date hour minute
+// second and timezone (as a string).
 static int gettime( int year, string month, int date, int hour, 
 		    int minute, int second, string tz )
 {
@@ -282,6 +289,8 @@ static int gettime( int year, string month, int date, int hour,
   return mktime( mt )-lt->timezone+(lt->isdst?3600:0);
 }
 
+// FIXME: This one might be to inexact right now. It looks rather
+// nice, though.
 static string describe_time_period( int amnt )
 {
   if(amnt < 0) return "some time";
@@ -297,6 +306,9 @@ static string describe_time_period( int amnt )
   return amnt+" years";
 }
 
+// Add some extra headers to a headers mapping.
+// Currently only adds a 'reldate' header.
+
 static mapping extended_headers( mapping from )
 {
   from = copy_value( from );
@@ -308,12 +320,10 @@ static mapping extended_headers( mapping from )
 
     // Fri, 11 Sep 1998 22:59:18 +0200 (MET DST)
     // Sun, 13 Sep 1998 22:05:06 +0200
-//     werror("date is: '%s' (%{0x%x %})\n", from->date, values(from->date));
     if(sscanf(from->date, 
 	      "%*s, %d %s %d %d:%d:%d %s", 
 	      date, month, year, hour, minute, second, tz ) == 8)
     {
-//       werror("match in 1\n");
       if(catch(when = gettime( year, month, date, hour, minute, second, tz )))
       {
 	from->reldate="Impossible date; year>2386 or year<1940";
@@ -343,6 +353,10 @@ static mapping extended_headers( mapping from )
   return from;
 }
 
+// For email highlighting. Makes links of all URLs matching the regexp.
+// All email addresses should probably be highlighted as well. I'll
+// save that for some other time or function.
+//
 static string fix_urls(string s)
 {
   string *foo;
@@ -354,12 +368,10 @@ static string fix_urls(string s)
 }
 
 
-inline string qte(string what)
-{
-  return fix_urls(replace(what, ({ "<", ">", "&", }),
-			  ({ "&lt;", "&gt;", "&amp;" })));
-}
-
+// FIXME: This should be configurable on a per-user level.
+// Currently it's rather static, and only looks good on a white
+// background.
+//
 static string quote_color_for( int level )
 {
   switch(level)
@@ -371,6 +383,30 @@ static string quote_color_for( int level )
    default: return "#0077ee";
   }
 }
+
+// Highlight the body of a text/plain message.
+// Not really nessesary for this module, and the colors are somewhat
+// to hardcoded for my taste, but it does look _much_ better when the
+// message is highlighted.
+//
+
+static string highlight_emp( string from )
+{
+  if(strlen(from) > 75)
+    from = sprintf("%*-=s\n", 75, from);
+// *foo*  -> bold
+// /foo/  -> italic 
+// _foo_  -> underline 
+  string a, b, c;
+  while(sscanf(from, "%s *%[^*\n]*%s", a, b, c) == 3)
+    from = a+"<b> "+b+"</b>"+c;
+//   while(sscanf(from, "%s /%[^*\n]/ %s", a, b, c) == 3)
+//     from = a+" <i>"+b+"</i> "+c;
+  while(sscanf(from, "%s_%[^*\n]_%s", a, b, c) == 3)
+    from = a+"<u>"+replace(b, "_", " ")+"</u>"+c;
+  return from;
+}
+
 
 static string describe_body(string bdy, mapping m, int|void nofuss)
 {
@@ -413,7 +449,7 @@ static string describe_body(string bdy, mapping m, int|void nofuss)
       br=0;
       lq=1;
     }
-    res += (nofuss ? line : qte(line))+"\n" ;
+    res += highlight_emp((nofuss ? line : html_encode_string(line))+"\n");
     if(br) res +="<br>";
   }
   if(lq || cl)
@@ -442,17 +478,6 @@ static mapping common_callers( string prefix )
   return tags;
 }
 
-static int num_unread(Mailbox from)
-{
-//   int res;
-//   werror("%O\n", from->flags());
-  return from->num_unread();
-//   foreach(from, Mail m)
-//     if(!m->flags()->read)
-//       res++;
-//   return res;
-}
-
 static mapping parse_headers( string foo )
 {
   return mymesg->parse_headers( foo )[0];
@@ -466,9 +491,7 @@ static mapping make_flagmapping(multiset from)
 		    ({"set"})*sizeof(from));
 }
 
-mapping _login = http_auth_required( "E-Mail" );
-mapping (string:User) uid_cache = ([]);
-string login(object id)
+static string login(object id)
 {
   string force = ("Permission denied");
 
@@ -525,11 +548,13 @@ constant actions =
 ({
   ({ "delete", "Delete mail", 0 }),
   ({ "next", "Move to next mail", 0 }),
+  ({ "reply", "Reply to the sender", 0 }),
+  ({ "followup", "Reply to all", 0 }),
   ({ "previous", "Move to previous mail", 1 }),
   ({ "show_unread", "Go to mailbox page and show unread mail", 1 }),
   ({ "show_all", "Go to mailbox page and show all mail", 1 }),
-  ({ "select_unread", "Select all unread mail", 0 }),
-  ({ "select_all", "Select all mail", 0 }),
+  ({ "select_matching", "Select all mail matching filter", 0 }),
+  ({ "select_none", "Unselect all mail", 0 }),
 });
 
 static string describe_action( string foo )
@@ -540,6 +565,9 @@ static string describe_action( string foo )
 
   if(sscanf(foo, "move_mail_to_%s", foo))
     return "Move mail to the mailbox '"+foo+"'";
+
+  if(sscanf(foo, "select_mail_like_%s", foo))
+    return "Select all mail with headers matching '"+foo+"'";
 
   if(sscanf(foo, "copy_mail_to_%s", foo))
     return "Copy mail to the mailbox '"+foo+"'"; 
@@ -588,17 +616,19 @@ static string mktimestamp(int t)
 
 static int filter_mail_list( Mail m, object id )
 {
-  if(id->variables->mail_match)
-    if(search(lower_case(values(m->headers())*"\n"),
-	      lower_case(id->variables->mail_match))==-1)
-      return 0;
+  if(id->variables->mail_match
+     &&!sizeof(glob("*"+lower_case(id->variables->mail_match)+"*",
+		    Array.map(values(m->decoded_headers()),lower_case))))
+    return 0;
 
-  if(!m->flags()->deleted &&
-     (id->variables->listall || 
-      !m->flags()->read))
-    return 1;
+  if(m->flags()->deleted)
+    return 0;
+  if(m->flags()->read && !id->variables->listall)
+    return 0;
+  if(id->variables->listselected && !id->misc->flagged[ m->id ])
+    return 0;
 
-  return 0;
+  return 1;
 }
 
 
@@ -634,13 +664,44 @@ static string trim_subject( string from )
 }
 
 
+static multiset trim_mail_addresses(multiset from)
+{
+  multiset res = (<>);
+  DEBUG(("Trimming mail addresses. Input is: %O\n", from));
+  foreach(indices(from), string r)
+  {
+    string emil;
+    string u,h;
+    if(sscanf( r, "%*s<%s@%s>", u, h) == 3)
+      emil = u+"@"+h;
+    else if(sscanf( r, "%*s\"%s@%s\"", u, h) == 3)
+      emil = u+"@"+h;
+    else if(sscanf( r, "%*s%[^ ]@%[^ ]", u, h) == 3)
+      emil = u+"@"+h;
+    else
+      emil = r;
+    res[emil]=1;
+  }
+  DEBUG(("result of trim is: %O\n", res));
+  return res;
+}
+
 /* Tag functions --------------------------------------------------- */
+
+string tag_mail_trim_address_list( string t, mapping args, object id )
+{
+  // FIXME: remove duplicated from address lists pointed to by
+  // indices(args)
+  return "";
+}
 
 //
 // <send-mail-by-id mail_id=...>
 //
 string tag_send_mail_by_id( string t, mapping args, object id )
 {
+  DEBUG(("Sending a mail..\n"));
+
   MIME.Message m;
   args->mail = (args->mail/"\0")[0];
 
@@ -651,7 +712,19 @@ string tag_send_mail_by_id( string t, mapping args, object id )
 		 mkmultiset( ((m->headers->to||"") / ",")-({""})) );
   m_delete(m->headers, "bcc");
 
+  to = trim_mail_addresses( to );
+
+  m->headers->organization = tag_mail_userinfo("",(["org":1]),id);
+  if(UID->get("amhc_signature") && strlen(UID->get("amhc_signature")))
+  {
+    if(m->body_parts)
+      m->body_parts[0]->setdata(m->body_parts[0]->getdata()
+				+"\n-- \n"+UID->get("amhc_signature"));
+    else
+      m->setdata(m->getdata()+"\n-- \n"+UID->get("amhc_signature"));
+  }
   get_smtprelay()->send_message( from, to, (string)m );
+  return "";
 }
 
 // 
@@ -826,6 +899,11 @@ string tag__compose_mail( string t, mapping args, object id )
   m = (id->misc->_message ||
        MIME.Message(tag_mail_body("",(["mail":id->variables->mail_id]),id)));
 
+
+  if(id->variables->references)
+    if(strlen(id->variables->references))
+      m->headers->references = id->variables->references;
+
   if(id->variables->to)
     if(strlen(id->variables->to))
       m->headers->to = id->variables->to;
@@ -959,7 +1037,7 @@ string container_show_mail_user_buttons( string tag, mapping args,
   {
     vars += ({ 
       ([
-	"id":i,
+	"id":(string)i,
 	"name":(sizeof(b[i])>2?b[i][0]:
 		((b[i][0][1]=='b'?"Newline":"Space"))),
 	"desc":describe_button( b[i] ),
@@ -987,9 +1065,9 @@ string tag_mail_userinfo( string tag, mapping args, object id )
   if(args->email)
     return e;
 
-  if(args->organization)
+  if(args->organization || args->org)
   {
-    return UID->get( "amhc_organization" )||"Unkown";
+    return UID->get( "amhc_org" )||"Unkown";
   }
 
   if(args->address)
@@ -1139,6 +1217,7 @@ string container_list_mailboxes(string tag, mapping args, string contents,
   sort(vars->name, vars);
 
   array tmp = ({});
+  mixed ic;
   foreach(vars, mapping v)
     switch(v->name)
     {
@@ -1149,15 +1228,18 @@ string container_list_mailboxes(string tag, mapping args, string contents,
        break;
      default:
        tmp = ({ v }) + tmp;
+       break;
+     case "incoming":
+       ic = v;
     }
-  vars = tmp;
+  vars = ({ ic }) + tmp;
 
   if(!args->quick)
   {
     foreach(vars, mapping v)
     {
       v->mail = (string)sizeof(v->_mb->mail());
-      v->unread = (string)num_unread( v->_mb );
+      v->unread = (string) v->_mb->num_unread();
       v->read = (string)((int)v->mail - (int)v->unread);
       m_delete(v, "_mb");
     }
@@ -1285,6 +1367,8 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
 //
 string tag_process_move_actions( string tag, mapping args, object id )
 {
+  if(!id->variables->mail_id)
+    return "";
 #ifdef UIDPARANOIA
   if(!UID) return "";
 #endif
@@ -1329,7 +1413,7 @@ string tag_process_move_actions( string tag, mapping args, object id )
     m_delete(id->variables, replace(v, ".x", ".y"));
 
     sscanf(v, "move_mail_to_%s.x", mbox);
-    
+    DEBUG(("move "+id->variables->mail_id+" to "+mbox+"\n"));
     if(mbox)
     {
       Mailbox m = UID->get_or_create_mailbox( mbox );
@@ -1463,6 +1547,20 @@ string tag_user_buttons( string tag, mapping args, object id )
 	(< "mail","mailbox" >),
 	(< "move_mail_to_Deleted" >),
       }),
+      ({
+	" &nbsp; ",
+	(< "mailbox" >),
+      }),
+      ({
+	"Select all",
+	(< "mailbox" >),
+	(< "select_matching" >),
+      }),
+      ({
+	"Unselect all",
+	(< "mailbox" >),
+	(< "select_none" >),
+      }),
     });
     UID->set( "html_buttons", b );
   }
@@ -1569,12 +1667,42 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
     return ({"Invalid mailbox id"});
 
   string res="";
-  
+
   mapping q= copy_value(id->variables);
   q->i = (string)time() + (string)gethrtime();
   m_delete(q, "qm");   m_delete(q, "col"); m_delete(q, "gtextid");
+  m_delete(q, "gtextid&selected;");
   string link="?mail_id=#id#&";
   
+  // Handle the selection
+  // This could be faster, but this should be good enough.
+  multiset flagged = id->misc->flagged;
+//   werror("Initial: %O\n", flagged);
+//   // remove all visible flags.
+//   foreach((id->variables->toclear||"")/","-({""}), string s)
+//     flagged[s]=0;
+
+//   werror("to clear: %O\n", id->variables->toclear);
+//   m_delete(id->variables, "toclear");
+//   m_delete(q, "toclear");
+//   werror("Cleared: %O\n", flagged);
+
+//   foreach(glob("mail_flag_*", indices(q)), string f)
+//   {
+//     m_delete(id->variables, f);
+//     m_delete(q, f);
+//     sscanf(f, "mail_flag_%s", f);
+//     flagged[f]=1;
+//   }
+
+//   werror("Marked: %O\n", flagged);
+//   //
+//   // Now we have the 'flagged' list. Time to add it to the mailbox
+//   // section, for safe keeping.
+//   id->misc->flaged = flagged;
+//   mbox->set( "ht_select", flagged );
+//   //
+
   foreach(sort(indices(q)), string v)
     if(q[v] != "0")
       link += v+"="+http_encode_url( (string)q[v] )+"&";
@@ -1590,12 +1718,12 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
 
   mail = reverse(Array.filter(mail, filter_mail_list, id));
 
+
   if(sizeof(mail) > MAIL_PER_PAGE)
   {
     int start;
     if(id->misc->mail_goto_rel)
     {
-//       werror("mgr\n");
       start=(int)(sizeof(mail)*id->misc->mail_goto_rel/100.0-MAIL_PER_PAGE/2);
     }
     else
@@ -1613,11 +1741,11 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
     mail = mail[ start .. start+MAIL_PER_PAGE-1 ];
     id->variables->mail_list_start = (string)start;
   }
-  multiset flagged = mkmultiset((id->variables->flagged||"")/",");
   int first_line;
-  string extra;
+  string extra, toclear="";
   foreach(mail, Mail m)
   {
+    toclear += m->id+",";
     string f = replace(link,({"<HIGHLIGHT>","#id#"}),({
       m->flags()->read?"":"<b>",m->id}));
     mapping h = m->decoded_headers();
@@ -1631,8 +1759,8 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
       res += `+("<tr bgcolor=#ffeedd>",
 		"<td align=right>",
 		m->flags()->read?"":"<new-mail-flag>",
-		"<font size=-1><input type=checkbox name=mail_"+m->id,
-		flagged[ m ]?"checked></font></td>":"></td>",
+		"<font size=-1><input type=checkbox name=mail_flag_"+m->id+" ",
+		flagged[ m->id ]?"checked></font></td>":"></td>",
 		f,
 		html_encode_string(trim_subject(h->subject)),
 		"</td>",
@@ -1646,7 +1774,8 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
 		"</tr>\n");
     }
   }
-  return ({ res });
+  return ({ "<input type=hidden name=toclear value=\""+
+	    toclear[..strlen(toclear)-2]+"\">",res });
 }
 
 // 
@@ -1678,6 +1807,8 @@ string tag_process_mail_actions( string tag, mapping args, object id )
 {
   foreach(glob("list_*.x", indices(id->variables)), string v)
   {
+    m_delete(id->variables, v);
+    m_delete(id->variables, (v-".x")+".y");
     m_delete(id->variables, "mail_id");
     switch(v-".x")
     {
@@ -1686,9 +1817,15 @@ string tag_process_mail_actions( string tag, mapping args, object id )
        break;
      case "list_unread":
        m_delete(id->variables, "listall");
+       m_delete(id->variables, "listselected");
        break;
      case "list_all":
        id->variables->listall = "1";
+       m_delete(id->variables, "listselected");
+       break;
+     case "list_selected":
+       id->variables->listall = "1";
+       id->variables->listselected = "1";
        break;
      case "list_match":
        break;
@@ -1700,6 +1837,18 @@ string tag_process_mail_actions( string tag, mapping args, object id )
 
   if(id->variables->mail_id)
   {
+    if(id->variables["reply.x"])
+    {
+      return "<redirect to='reply.html?mail_id="+
+	     id->variables->mail_id+"'>";
+    }
+
+    if(id->variables["followup.x"])
+    {
+      return "<redirect to='reply.html?followup=1&mail_id="+
+	     id->variables->mail_id+"'>";
+    }
+
     if(id->variables["delete.x"])
       tag_delete_mail( "delete", ([ "mail":id->variables->mail_id ]), id );
 
@@ -1711,33 +1860,115 @@ string tag_process_mail_actions( string tag, mapping args, object id )
     }
     else if(id->variables["previous.x"])
       id->variables->mail_id = tag_mail_next(tag,(["previous":"1"]),id);
-  }
+  } else {
+    if(id->variables["scroll_down.x"])
+    {
+      m_delete(id->variables, "scroll_down.x");
+      m_delete(id->variables, "scroll_down.y");
+      id->variables->mail_list_start
+	=(string)((int)id->variables->mail_list_start+MAIL_PER_PAGE);
+    } else if(id->variables["scroll_up.x"]) {
+      m_delete(id->variables, "scroll_up.x");
+      m_delete(id->variables, "scroll_up.y");
+      id->variables->mail_list_start
+	=(string)((int)id->variables->mail_list_start-MAIL_PER_PAGE);
+      if((int)id->variables->mail_list_start < 0)
+	id->variables->mail_list_start = 0;
+    } else if(id->variables["scroll_goto.x"]) {
+      id->misc->mail_goto_rel=((int)id->variables["scroll_goto.y"])/3;
+      m_delete(id->variables, "scroll_goto.x");
+      m_delete(id->variables, "scroll_goto.y");
+    }
 
-  if(id->variables["scroll_down.x"])
-  {
-    m_delete(id->variables, "scroll_down.x");
-    m_delete(id->variables, "scroll_down.y");
-    id->variables->mail_list_start
-      =(string)((int)id->variables->mail_list_start+MAIL_PER_PAGE);
-  } else if(id->variables["scroll_up.x"]) {
-    m_delete(id->variables, "scroll_up.x");
-    m_delete(id->variables, "scroll_up.y");
-    id->variables->mail_list_start
-      =(string)((int)id->variables->mail_list_start-MAIL_PER_PAGE);
-    if((int)id->variables->mail_list_start < 0)
-      id->variables->mail_list_start = 0;
-  } else if(id->variables["scroll_goto.x"]) {
-    id->misc->mail_goto_rel=((int)id->variables["scroll_goto.y"])/3;
-    m_delete(id->variables, "scroll_goto.x");
-    m_delete(id->variables, "scroll_goto.y");
-  }
+    if(id->variables->mailbox_id)
+    {
+      Mailbox mbox;
+      // This is somewhat recursive.. :-)
+      //
+      // Do the action for all selected mail.
+      //
+      // THIS MUST BE LAST IN THIS ELSE
+      //
+      // Handle the selection
+      // This could be faster, but this should be good enough.
+      foreach( UID->mailboxes(), Mailbox m )
+	if(m->id == (int)id->variables->mailbox_id )
+	{
+	  mbox = m;
+	  break;
+	}
 
-  foreach(glob("*.x", indices(id->variables)), string v)
-  {
-//     werror("var: " + v + "\n");
-    m_delete(id->variables, v);
-    m_delete(id->variables, replace(v, ".x", ".y"));
+      multiset flagged = mbox->get( "ht_select" )||(<>);
+      foreach(indices(flagged), string f)
+	if(!mbox->get_mail_by_id(f))
+	  flagged[f]=0;
+      foreach((id->variables->toclear||"")/","-({""}), string s)
+	flagged[s]=0;
+
+      m_delete(id->variables, "toclear");
+
+      foreach(glob("mail_flag_*", indices(id->variables)), string f)
+      {
+	m_delete(id->variables, f);
+	sscanf(f, "mail_flag_%s", f);
+	flagged[f]=1;
+      }
+      string clear_match;
+      // This was the normal seleciton code. Some specials:
+      //
+      foreach(glob("select_mail_like_*.x", indices(id->variables)),
+	      string v)
+      {
+	m_delete(id->variables, v);
+	m_delete(id->variables, (v-".x")+".y");
+	sscanf(v, "select_mail_like_%s.x", v);
+	clear_match=id->variables->mail_match||"";
+	id->variables->mail_match = v;
+	id->variables["select_matching.x"]=1;
+      }
+      if(id->variables["select_matching.x"])
+      {
+	m_delete(id->variables, "select_matching.x");
+	m_delete(id->variables, "select_matching.y");
+	array mail = mbox->mail();
+	mail = Array.filter(mail, filter_mail_list, id);
+	if(clear_match)
+	{
+	  id->variables->mail_match = clear_match;
+	  if(clear_match == "")
+	    m_delete(id->variables, "clear_match");
+	}
+	flagged = mkmultiset( mail->id );
+      } else if(id->variables["select_none.x"]) {
+	m_delete(id->variables, "select_all.x");
+	m_delete(id->variables, "select_all.y");
+	flagged = (<>);
+      }
+      id->misc->flagged = flagged;
+      mbox->set( "ht_select", flagged );
+
+      mapping ov = copy_value(id->variables);
+      foreach( indices(flagged), string mail)
+      {
+// 	werror("Do multiple actions, current: "+mail+"\n");
+	id->variables = copy_value(ov);
+	id->variables->mail_id = mail;
+	id->variables->noclear = 1;
+	tag_process_move_actions( tag, args, id );
+	tag_process_mail_actions( tag, args, id );
+      }
+      m_delete(id->variables,"noclear");
+      m_delete(id->variables,"mail_id");
+    }
   }
+  if(!id->variables->noclear)
+    foreach(glob("*.x", indices(id->variables)), string v)
+    {
+      //   	  werror("var: " + v + "\n");
+      m_delete(id->variables, v);
+      m_delete(id->variables, replace(v, ".x", ".y"));
+    }
+  return "";
 }
 
 //
