@@ -289,10 +289,10 @@ class context {
   object ctx, sctx, conf;
   RoxenModule parent_module;
   static int id;
+  static string dir;
 
   string gettempdir()
   {
-    string dir = "servlettmp/";
     if (parent_module)
       dir += "conf_mod/" + parent_module->module_identifier() + "/";
     else if(conf)
@@ -304,8 +304,9 @@ class context {
     return dir;
   }
 
-  void create(object|void c, RoxenModule|void mod)
+  void create(object|void c, RoxenModule|void mod, string|void _tmpdir)
   {
+    dir = _tmpdir || "servlettmp/";
     parent_module = mod;
     id = context_id++;
     conf = c;
