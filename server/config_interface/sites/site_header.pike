@@ -21,12 +21,12 @@ string module_page( RequestID id, string conf, string module )
 }
 
 
-string parse( RequestID id )
+mixed parse( RequestID id )
 {
   array path = ((id->misc->path_info||"")/"/")-({""});
 
-  if( id->variables->section )
-    sscanf( id->variables->section, "%s\0", id->variables->section );
+  if( id->real_variables->section )
+    id->variables->section=id->real_variables->section[0];
 
   if( !sizeof( path )  )
     return "Hm?";
@@ -38,15 +38,16 @@ string parse( RequestID id )
   switch( sizeof(path)<3?"settings":path[ 1 ] )
   {
    case "settings":
-     return 
-#"<emit source='config-variables-sections' add-status='1'
-  configuration='"+path[0]+#"'>
-   <tab ::='&_.first; &_.last; &_.selected;'
-        href='?section=&_.section:http;'>&_.sectionname;</tab>
-</emit>";
+     return
+       Roxen.http_string_answer(
+	 "<emit source='config-variables-sections' add-status='1'"
+	 "configuration='"+path[0]+"'>\n"
+	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
+	 "       href='?section=&_.section:http;'>&_.sectionname;</tab>"
+	 "</emit>");
      break;
 
    default:
-     return module_page( id, path[0], path[2] );
+     return Roxen.http_string_answer( module_page( id, path[0], path[2] ));
   }
 }

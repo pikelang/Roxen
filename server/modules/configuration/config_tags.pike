@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.148 2001/05/16 01:50:28 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.149 2001/05/16 02:11:34 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -823,6 +823,15 @@ class TagModuleVariablesSectionsplugin
        "selected":((section=="Information" )?"selected":""),
      ]) });
 
+    if( !section )
+      id->variables->info_section_is_it = "1";
+      foreach( variables, mapping m )
+	if(m->section == "Settings" )
+	  m_delete( id->variables, "info_section_is_it" );
+
+    if( id->variables->info_section_is_it )
+      variables[-1]->selected = "selected";
+
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
       variables +=({ ([
        "section":"Docs",
@@ -830,15 +839,9 @@ class TagModuleVariablesSectionsplugin
        "selected":((section=="Docs")?"selected":""),
      ])});
     
-     if( sizeof( variables ) == 1 )
-     {
-       while( id->misc->orig )
-         id = id->misc->orig;
-       RXML.set_var( "info_section_is_it", "1", "form" );
-       variables[0]->selected="selected";
-     }
-
      int hassel;
+
+     
      foreach( reverse(variables), mapping q )
      {
        if( hassel )
@@ -846,15 +849,6 @@ class TagModuleVariablesSectionsplugin
        else
          hassel = strlen(q->selected);
      }
-//      hassel=0;
-//      foreach( variables, mapping q )
-//      {
-//        if( q->selected == "selected")
-//        {
-//          hassel = 1;
-//          break;
-//        }
-//      }
 //      variables[0]->selected="selected";
      variables = reverse(variables);
      variables[0]->first = " first ";
