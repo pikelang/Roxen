@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.75 2000/03/23 00:37:50 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.76 2000/03/26 03:43:24 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -459,7 +459,7 @@ mixed find_file( string f, RequestID id )
 
       if(!id->misc->internal_get) {
 	if (!QUERY(.files)
-	    && (tmp = (id->not_query/"/")[-1])
+	    && sizeof (tmp = (id->not_query/"/")[-1])
 	    && tmp[0] == '.') {
 	  TRACE_LEAVE("Is .-file");
 	  return 0;
