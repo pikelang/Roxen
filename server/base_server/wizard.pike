@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.99 1999/11/19 13:48:50 jonasw Exp $
+/* $Id: wizard.pike,v 1.100 1999/11/26 19:51:54 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -84,7 +84,7 @@ string loc_encode(string val, void|mapping args, void|string def)
 }
 
 
-string wizard_tag_var(string n, mapping m, mixed a, mixed b)
+string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 {
   object id;
   if(n=="cvar") // Container. Default value in 'a', id in 'b'.
