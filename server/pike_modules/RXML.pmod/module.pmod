@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.286 2002/06/11 16:46:22 nilsson Exp $
+// $Id: module.pmod,v 1.287 2002/06/15 16:50:40 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8327,7 +8327,7 @@ static void init_parsers()
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
-	      f->seek(-286);
+	      f->seek(-279);
 	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
 		     ->decode;}()));
   p->_set_tag_callback (
