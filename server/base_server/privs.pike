@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.22 1997/09/26 11:24:23 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.23 1997/10/08 15:30:44 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -47,10 +47,17 @@ void create(string reason, int|string|void uid, int|void gid)
 #endif /* THREADS */
 
   if(getuid()) return;
-  if(!stringp(uid))
+
+  /* Needs to be here since root-priviliges may be needed to
+   * use getpw{uid,nam}.
+   */
+  saved_uid = geteuid();
+  saved_gid = getegid();
+  seteuid(0);
+
+  if(!stringp(uid)) {
     u = getpwuid(uid);
-  else
-  {
+  } else {
     u = getpwnam(uid);
     if(u) 
       uid = u[2];
@@ -72,11 +79,6 @@ void create(string reason, int|string|void uid, int|void gid)
 			  (string)reason,
 			  (string)dbt(backtrace()[-2])));
 
-  if(getuid()) return;
-
-  saved_uid = geteuid();
-  saved_gid = getegid();
-  seteuid(0);
 #if efun(cleargroups)
   catch { cleargroups(); };
 #endif /* cleargroups */
