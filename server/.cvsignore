@@ -8,3 +8,5 @@ old_modules
 old_components
 .old_roxen_defines
 .removed_dumped_mark
+config_caches
+.remove_dumped_mark
