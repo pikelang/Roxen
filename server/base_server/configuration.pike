@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.126 1998/05/07 21:50:23 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.127 1998/05/08 19:51:13 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -138,13 +138,13 @@ class Priority
 
   void stop()
   {
-    foreach(url_modules, object m)      		CATCH(m->stop());
-    foreach(logger_modules, object m)   		CATCH(m->stop());
-    foreach(filter_modules, object m)  			CATCH(m->stop());
-    foreach(location_modules, object m)			CATCH(m->stop());
-    foreach(last_modules, object m)    			CATCH(m->stop());
-    foreach(first_modules, object m)    		CATCH(m->stop());
-    foreach(indices(provider_modules), object m) 	CATCH(m->stop());
+    foreach(url_modules, object m)      	 CATCH(m->stop && m->stop());
+    foreach(logger_modules, object m)   	 CATCH(m->stop && m->stop());
+    foreach(filter_modules, object m)  		 CATCH(m->stop && m->stop());
+    foreach(location_modules, object m)		 CATCH(m->stop && m->stop());
+    foreach(last_modules, object m)    		 CATCH(m->stop && m->stop());
+    foreach(first_modules, object m)    	 CATCH(m->stop && m->stop());
+    foreach(indices(provider_modules), object m) CATCH(m->stop && m->stop());
   }
 }
 
@@ -278,11 +278,11 @@ private mapping (string:array (object)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
-  CATCH(parse_module->stop());
-  CATCH(types_module->stop());
-  CATCH(auth_module->stop());
-  CATCH(dir_module->stop());
-  for(int i=0; i<10; i++) CATCH(pri[i]->stop());
+  CATCH(parse_modeule->stop && parse_module->stop());
+  CATCH(types_module->stop && types_module->stop());
+  CATCH(auth_module->stop && auth_module->stop());
+  CATCH(dir_module->stop && dir_module->stop());
+  for(int i=0; i<10; i++) CATCH(pri[i]->stop && pri[i]->stop());
 }
 
 public string type_from_filename( string file, int|void to )
