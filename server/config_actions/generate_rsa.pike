@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.9 1999/04/12 23:29:53 mast Exp $
+ * $Id: generate_rsa.pike,v 1.10 1999/06/07 05:02:34 mast Exp $
  */
 
 inherit "wizard";
@@ -13,7 +13,7 @@ inherit "wizard";
 constant name = "Security//Generate a new RSA key pair...";
 
 constant doc = ("In order to use the SSL on your server, "
-		"you first have to create a random RSA key pair."
+		"you first have to create a random RSA key pair. "
 		"One part of the key is kept secret. The "
 		"other part should be submitted to a certificate "
 		"authority, such as Thawte or VeriSign. The "
@@ -53,8 +53,9 @@ mixed page_0(object id, object mc)
        "applications, but of course you can you use an even larger key "
        "if you so wish."
        "</blockquote></help>"
-       "<var name=key_file type=string><br>\n"
-       "Where to store the secret key<br>\n"
+       "<var name=key_file type=string default=my_rsa_key.pem><br>\n"
+       "Where to store the secret key. May be relative to " + getcwd() +
+       ".<br>\n"
        "<help><blockquote>"
        "A filename in the real filesystem, where the secret key should "
        "be stored. This is the filename you enter in the 'Key file'-field "

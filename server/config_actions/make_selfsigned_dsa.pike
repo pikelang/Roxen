@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.1 1999/03/04 17:43:27 nisse Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.2 1999/06/07 05:02:36 mast Exp $
  */
 
 inherit "wizard";
@@ -13,11 +13,11 @@ import Standards.ASN1.Types;
 #define WERROR(x)
 #endif
 
-constant name = "Security//Generate an DSA key and a Selfsigned Certificate...";
+constant name = "Security//Generate an DSA key and a Self Signed Certificate...";
 
 constant doc = 
 ("In order to use the SSL on your server, "
- "you first have to create a key pair."
+ "you first have to create a key pair. "
  "One part of the key is kept secret. The "
  "other part is used to create a certificate. "
  "You can create a certificate yourself; this is "
@@ -59,7 +59,7 @@ mixed page_0(object id, object mc)
        "<var name=key_file type=string default=my_dsa_key.pem><br>\n"
        "<blockquote>"
        "A filename in the real filesystem, where the secret key should "
-       "be stored."
+       "be stored. May be relative to " + getcwd() + "."
        "</blockquote>");
 }
 
@@ -135,6 +135,9 @@ mixed page_1(mixed id, mixed mc)
      "Certificate Authority you use. This page lets you specify "
      "the most useful attributes. If you leave a field blank, "
      "that attribute will be omitted from your name.<p>\n"
+     "Although most browsers will accept 8 bit ISO 8859-1 characters in "
+     "these fields, it can't be counted on. To be on the safe side, "
+     "use only US-ASCII.\n"
      "</blockquote>"
 
      "<b>Your country code</b><br>\n"
@@ -221,8 +224,6 @@ mixed verify_2(object id, object mc)
   return 0;
 }
 
-object trim = Regexp("^[ \t]*([^ \t](.*[^ \t]|))[ \t]*$");
-
 mixed page_3(object id, object mc)
 {
   object file = Stdio.File();
@@ -264,23 +265,24 @@ mixed page_3(object id, object mc)
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (id->variables[attr])
-      {
-	array a = trim->split(id->variables[attr]);
-	if (a)
-	  attrs[attr] = a[0];
-      }
+      attrs[attr] = trim (id->variables[attr]);
   }
 
   array name = ({ });
-  foreach( ({ "countryName", "stateOrProvinceName",
+  if (attrs->countryName)
+    name += ({(["countryName": asn1_printable_string (attrs->countryName)])});
+  foreach( ({ "stateOrProvinceName",
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
       /* UTF8String is the recommended type. But it seems that
-       * netscape can't handle that. So we use the older TeletexString
-       * type instead. */
-      name += ({ ([ attr : asn1_teletex_string(attrs[attr]) ]) });
+       * netscape can't handle that. So when PrintableString doesn't
+       * suffice, we use latin1 but call it TeletexString (since at
+       * least netscape expects things that way). */
+      name += ({ ([ attr : (asn1_printable_valid (attrs[attr]) ?
+			    asn1_printable_string :
+			    asn1_broken_teletex_string) (attrs[attr]) ]) });
   }
 
   /* Create a plain X.509 v1 certificate, without any extensions */
@@ -300,7 +302,8 @@ mixed page_3(object id, object mc)
 	  "<var type=checkbox name=save checked></font>"
           "<b>Save the request in a file:</b><br>"
           "<blockquote><b>Filename</b><br>"
-	  "<var type=string name=cert_file default=my_dsa_certificate.pem>"
+	  "<var type=string name=cert_file default=my_dsa_certificate.pem><br>"
+	  "This may be relative to " + getcwd() + ".\n"
 	  "</blockquote>");
 
   return res;
