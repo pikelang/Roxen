@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.39 1997/10/24 20:10:33 noring Exp $
+/* $Id: wizard.pike,v 1.40 1997/10/24 20:26:03 noring Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -366,7 +366,8 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
   
   if(!id->variables->action)
   {
-    catch {
+    mixed wizbug;
+    wizbug = catch {
       mapping acts = get_actions(base, dir, args);
       string res;
       res= ("<table cellpadding=3><tr><td valign=top bgcolor=#eeeeee>"+
@@ -376,25 +377,29 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
 	    "</dl></td></tr></table>"+
-	    (strlen(err)?"<pre>"+err+"</pre>":""));
+	    (err && strlen(err)?"<pre>"+err+"</pre>":""));
       err="";
       return res;
     };
+    if(wizbug)
+      err = describe_backtrace(wizbug);
     if(err && strlen(err)) {
       string res="<pre>"+err+"</pre>";
       err="";
       return res;
     }
-  }
-  object o = get_wizard(id->variables->action,dir);
-  if(!o) {
-    mixed res = "<pre>"+err+"</pre>";
+  } else {
+    object o = get_wizard(id->variables->action,dir);
+    if(!o) {
+      mixed res = "<pre>"+err+"</pre>";
+      err="";
+      return res;
+    }
+    mixed res= o->wizard_for(id,base,@args);
     err="";
     return res;
   }
-  mixed res= o->wizard_for(id,base,@args);
-  err="";
-  return res;
+  return "<pre>The Wizard is confused.</pre>";
 }
 
 /*** Additional Action Functions ***/
