@@ -209,11 +209,6 @@ void create()
                     "nihongo":"$(B%j!<%I%*%s%j!<(B",
                     "svenska":"Läsa inställingar",
                   ]));
-  add_permission( "Edit Users",
-                  ([
-                    "nihongo":"$(B%(%G%#%H%f!<%6!<%:(B",
-                    "svenska":"Editera användare",
-                  ]) );
   add_permission( "Edit Global Variables",
                   ([
                     "nihongo":"$(B%(%G%#%H%0%m!<%P%k(B",
