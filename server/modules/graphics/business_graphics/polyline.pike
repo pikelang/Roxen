@@ -1,7 +1,10 @@
 #!NOMODULE
-//
-// $Id: polyline.pike,v 1.3 1998/03/02 18:35:50 grubba Exp $
-//
+/*
+ * name = "BG: Create pies";
+ * doc = "Business Graphics sub-module providing draw functions.";
+ * $Id: polyline.pike,v 1.4 1998/03/13 01:09:40 peter Exp $
+ */
+
 #define CAP_BUTT       0
 #define CAP_ROUND      1
 #define CAP_PROJECTING 2

@@ -6,12 +6,14 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.97 1998/03/12 03:25:58 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.98 1998/03/13 01:09:37 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
-#include "diagram.h"
+
+#define VOIDSYMBOL "\n"
+#define SEP "\t"
 
 inherit "module";
 inherit "roxenlib";

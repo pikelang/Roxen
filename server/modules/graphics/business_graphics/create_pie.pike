@@ -1,6 +1,16 @@
 #!NOMODULE
 
-#include "diagram.h"
+#define max(i, j) (((i)>(j)) ? (i) : (j))
+#define min(i, j) (((i)<(j)) ? (i) : (j))
+#define abs(arg) ((arg)*(1-2*((arg)<0)))
+
+#define PI 3.14159265358979
+#define VOIDSYMBOL "\n"
+#define SEP "\t"
+
+constant LITET = 1.0e-38;
+constant STORTLITET = 1.0e-30;
+constant STORT = 1.0e30;
 
 import Image;
 import Array;
@@ -10,7 +20,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.40 1998/03/12 03:25:19 peter Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.41 1998/03/13 01:09:40 peter Exp $";
 
 /*
  * name = "BG: Create pies";
