@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.11 1998/07/19 17:16:38 grubba Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.12 1998/07/22 00:05:30 js Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -20,6 +20,12 @@ string internal_page(string t, mapping args, string contents, int l, int ol,
 		     mapping f)
 {
   f->pages +=({({contents,ol+l})});
+}
+
+string internal_done(string t, mapping args, string contents, int l, int ol,
+		     mapping f)
+{
+  f->done=contents;
 }
 
 string fix_relative(string file, object id)
@@ -88,8 +94,20 @@ string tag_wizard(string t, mapping args, string contents, object id,
 	     "}\n\n");
 #endif /* __VERSION__ >= 0.6 */
   }
-  parse_html_lines(contents, ([]), (["page":internal_page]), 
+
+  parse_html_lines(contents,
+		   ([]),
+		   ([ "page":internal_page,
+		      "done":internal_done ]), 
 		   (int)defines->line,f);
+  if(f->done&&!args->ok);
+    pike += ("mixed wizard_done(object id)\n"
+	     "{\n"
+	     "  return parse_rxml(\""+replace(f->done,
+					      ({"\"","\n","\r", "\\"}), 
+					      ({"\\\"", "\\n", "\\r", "\\\\"}))+
+	     "\",id);\n"
+	     "}\n");
   foreach(f->pages, array q)
   {
 #if __VERSION__ >= 0.6
@@ -115,7 +133,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
   }
 
 
-  mixed res = w->wizard_for(id,fix_relative(args->cancel||args->done,id));
+  mixed res = w->wizard_for(id,fix_relative(args->cancel||args->done||"",id));
 
   if(mappingp(res))
   {
