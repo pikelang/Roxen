@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.12 2000/09/17 18:23:24 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.13 2000/10/17 21:01:33 per Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -83,6 +83,12 @@ class VInputFrame {
     case "date":
       var=Variable.Date(args->value||"");
       break;
+     case "image":
+       var=Variable.Image( args->value||"", 0, 0, 0 );
+       break;
+//   case "upload":
+//     var=Variable.Upload( args->value||"", 0, 0, 0 );
+//     break;
     case "text":
       var=Variable.VerifiedText(args->value||"");
     case "string":
@@ -105,13 +111,15 @@ class VInputFrame {
       break;
     }
 
+    var->set_path( args->name );
     if(!id->variables["__clear"] && id->variables[args->name] &&
-       !(args->optional && id->variables[args->name]=="") ) {
-      mixed new_value=id->variables[args->name];
-      if(args->trim) new_value=String.trim_whites(new_value);
-      var->set(var->transform_from_form(new_value));
+       !(args->optional && id->variables[args->name]=="") ) 
+    {
+      if(args->trim) 
+        id->variables[args->name] 
+           = String.trim_all_whites(id->variables[args->name]);
+      var->set_from_form( id );
     }
-    var->set_path(args->name);
 
     mapping new_args=([]);
     foreach(indices(args), string arg)

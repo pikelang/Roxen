@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.280 2000/10/07 11:22:03 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.281 2000/10/17 21:01:34 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -710,180 +710,129 @@ void things_to_do_when_not_sending_from_cache( )
 }
 
 
-#if constant(Roxen.HeaderParser)
+
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
-#endif
+static function(string:array(string|mapping)) hpf = hp->feed;
 int last;
+
 private int parse_got( string new_data )
 {
   multiset (string) sup;
   string a, b, s="", linename, contents;
-  mapping header_mapping = ([]);
 
-#if constant(Roxen.HeaderParser)
   if( !method )
   {
     array res;
-    if( catch { res  = hp->feed( new_data ); } )
-      return 1;
+    while( strlen( new_data ) )
+    {
+      string q;
+      if( strlen( new_data ) > 4192 )    
+        q = new_data[..4191];
+      else
+      {
+        q = new_data;
+        new_data = "";
+      }
+      if( catch { res = hpf( q ); } ) return 1;
+      if( res && strlen( new_data = new_data[4192..] ) )
+      {
+        res[0] += new_data;
+        break;
+      }
+    }
     if( !res )
       return 0; // Not enough data;
-    /* now in res:
 
-    leftovers/data
-     
-    first line
-    headers 
+    /* 
+       now in res:
+       leftovers/data
+       first line
+       headers 
     */
     data = res[0];
     line = res[1];
-    header_mapping = res[2];
+    request_headers = res[2];
   }
-#else
-  REQUEST_WERR(sprintf("HTTP: parse_got(%O)", raw));
-  if (!method) {  // Haven't parsed the first line yet.
-    int start;
-    // We check for \n only if \r\n fails, since Netscape 4.5 sends
-    // just a \n when doing a proxy-request.
-    // example line:
-    //   "CONNECT mikabran:443 HTTP/1.0\n"
-    //   "User-Agent: Mozilla/4.5 [en] (X11; U; Linux 2.0.35 i586)"
-    // Die Netscape, die! *grumble*
-    // Luckily the solution below shouldn't ever cause any slowdowns
-    //
-    // Note by Neo:  Rewrote the sscanf code to use search with a memory.
-    // The reason is that otherwise it's really, REALLY easy to lock up
-    // a Roxen server by sending a request that either has no newlines at all
-    // or has infinite sized headers. With this version, Roxen doesn't die but
-    // it does suck up data ad finitum - a configurable max GET request size and
-    // also a max GET+headers would be nice. 
+  string trailer, trailer_trailer;
 
-    if((start = search(raw[last..], "\n")) == -1) {
-      last = max(strlen(raw) - 3, 4);
-      REQUEST_WERR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
-      return 0;
-    } else {
-      start += last;
-      last = 0;
-      if(!start) {
-	REQUEST_WERR(sprintf("HTTP: parse_got(%O): malformed request.", raw));
-	return 1; // malformed request
-      }
-    }
-    if (raw[start-1] == '\r') {
-      line = raw[..start-2];
-    } else {
-      // Kludge for Netscape 4.5 sending bad requests.
-      line = raw[..start-1];
-    }
-    if(strlen(line) < 4)
-    {
-      // Incorrect request actually - min possible (HTTP/0.9) is "GET /"
-      // but need to support PING of course!
-
-      REQUEST_WERR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
-      return 1;
-    }
-#endif
-    string trailer, trailer_trailer;
-
-    switch(sscanf(line+" ", "%s %s %s %s %s",
-		  method, f, clientprot, trailer, trailer_trailer))
-    {
-    case 5:
-      // Stupid sscanf!
-      if (trailer_trailer != "") {
-	// Get rid of the extra space from the sscanf above.
-	trailer += " " + trailer_trailer[..sizeof(trailer_trailer)-2];
-      }
-      /* FALL_THROUGH */
-    case 4:
-      // Got extra spaces in the URI.
-      // All the extra stuff is now in the trailer.
-
-      // Get rid of the extra space from the sscanf above.
-      trailer = trailer[..sizeof(trailer) - 2];
-      f += " " + clientprot;
-
-      // Find the last space delimiter.
-      int end;
-      if (!(end = (search(reverse(trailer), " ") + 1))) {
-        // Just one space in the URI.
-        clientprot = trailer;
-      } else {
-        f += " " + trailer[..sizeof(trailer) - (end + 1)];
-        clientprot = trailer[sizeof(trailer) - end ..];
-      }
-      /* FALL_THROUGH */
-    case 3:
-      // >= HTTP/1.0
-
-      prot = clientprot;
-      // method = upper_case(p1);
-      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot]) {
-	// We're nice here and assume HTTP even if the protocol
-	// is something very weird.
-	prot = "HTTP/1.1";
-      }
-      // Do we have all the headers?
-      if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
-	// No, we still need more data.
-	REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
-	last = max(strlen(raw) - 5, 0);
-	return 0;
-      }
-      end += last;
-      last = 0;
-      data = raw[end+4..];
-      s = raw[sizeof(line)+2..end-1];
-      // s now contains the unparsed headers.
-      break;
-
-    case 2:
-      // HTTP/0.9
-      clientprot = prot = "HTTP/0.9";
-      if(method != "PING")
-	method = "GET"; // 0.9 only supports get.
-      s = data = ""; // no headers or extra data...
-      break;
-
-    case 1:
-      // PING...
-      if(method == "PING")
-	break;
-      // only PING is valid here.
-      return 1;
-
-    default:
-      // Too many or too few entries ->  Hum.
-      return 1;
-    }
-#if !constant(Roxen.HeaderParser)
-  } 
-  else 
+  switch(sscanf(line+" ", "%s %s %s %s %s",
+                method, f, clientprot, trailer, trailer_trailer))
   {
-    // HTTP/1.0 or later
-    // Check that the request is complete
-    int end;
-    if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
-      // No, we still need more data.
-      REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
-      last = max(strlen(raw) - 5, 0);
-      return 0;
-    }
-    end += last;
-    data = raw[end+4..];
-    s = raw[sizeof(line)+2..end-1];
+   case 5:
+     if (trailer_trailer != "") {
+       // Get rid of the extra space from the sscanf above.
+       trailer += " " + trailer_trailer[..sizeof(trailer_trailer)-2];
+     }
+     /* FALL_THROUGH */
+   case 4:
+     // Got extra spaces in the URI.
+     // All the extra stuff is now in the trailer.
+
+     // Get rid of the extra space from the sscanf above.
+     trailer = trailer[..sizeof(trailer) - 2];
+     f += " " + clientprot;
+
+     // Find the last space delimiter.
+     int end;
+     if (!(end = (search(reverse(trailer), " ") + 1))) {
+       // Just one space in the URI.
+       clientprot = trailer;
+     } else {
+       f += " " + trailer[..sizeof(trailer) - (end + 1)];
+       clientprot = trailer[sizeof(trailer) - end ..];
+     }
+     /* FALL_THROUGH */
+   case 3:
+     // >= HTTP/1.0
+
+     prot = clientprot;
+     // method = upper_case(p1);
+     if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot]) {
+       // We're nice here and assume HTTP even if the protocol
+       // is something very weird.
+       prot = "HTTP/1.1";
+     }
+     // Do we have all the headers?
+//      if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
+//        // No, we still need more data.
+//        REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
+//        last = max(strlen(raw) - 5, 0);
+//        return 0;
+//      }
+//      end += last;
+//      last = 0;
+//      data = raw[end+4..];
+//      s = raw[sizeof(line)+2..end-1];
+     // s now contains the unparsed headers.
+     break;
+
+   case 2:
+     // HTTP/0.9
+     clientprot = prot = "HTTP/0.9";
+     if(method != "PING")
+       method = "GET"; // 0.9 only supports get.
+     s = data = ""; // no headers or extra data...
+     break;
+
+   case 1:
+     // PING...
+     if(method == "PING")
+       break;
+     // only PING is valid here.
+     return 1;
+
+   default:
+     // Too many or too few entries ->  Hum.
+     return 1;
   }
-#endif
   if(method == "PING") 
   {
     my_fd->write("PONG\r\n");
     return 2;
   }
   REQUEST_WERR(sprintf("***** req line: %O", line));
-  REQUEST_WERR(sprintf("***** headers:  %O", s));
-  REQUEST_WERR(sprintf("***** data:     %O", data));
+  REQUEST_WERR(sprintf("***** headers:  %O", request_headers));
+  REQUEST_WERR(sprintf("***** data (%d):%O", strlen(data),data));
   raw_url    = f;
   time       = _time(1);
   // if(!data) data = "";
@@ -903,77 +852,64 @@ private int parse_got( string new_data )
     }
   }
 
-#if constant(Roxen.HeaderParser)
-  request_headers = header_mapping;
-  foreach( (array)header_mapping, [string linename, array|string contents] )
-#else
-  request_headers = ([]);
-  foreach(s/"\r\n" - ({""}), line)
-    if(sscanf(line, "%s:%*[ \t]%s", linename, contents) == 3)
+  foreach( (array)request_headers, [string linename, array|string contents] )
+    switch (linename) 
     {
-      linename=lower_case(linename);
-      request_headers[linename] = contents;
-#endif
-      switch (linename) 
-      {
-       case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
-       case "content-length": misc->len = (int)contents;       break;
-       case "authorization":  rawauth = contents;              break;
-       case "referer": referer = arrayp(contents)?contents:({contents}); break;
-       case "if-modified-since": since=contents; break;
+     case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
+     case "content-length": misc->len = (int)contents;       break;
+     case "authorization":  rawauth = contents;              break;
+     case "referer": referer = arrayp(contents)?contents:({contents}); break;
+     case "if-modified-since": since=contents; break;
 
-       case "proxy-authorization":
-         array y;
-         y = contents / " ";
-         if(sizeof(y) < 2)
-           break;
-         y[1] = decode(y[1]);
-         misc->proxyauth=y;
+     case "proxy-authorization":
+       array y;
+       y = contents / " ";
+       if(sizeof(y) < 2)
          break;
+       y[1] = decode(y[1]);
+       misc->proxyauth=y;
+       break;
 
-       case "user-agent":
-         if( !client )
-         {
-           sscanf(contents, "%s via", contents);
-           client_var->Fullname=contents;
-           client = contents/" " - ({ "" });
-         }
-         break;
+     case "user-agent":
+       if( !client )
+       {
+         sscanf(contents, "%s via", contents);
+         client_var->Fullname=contents;
+         client = contents/" " - ({ "" });
+       }
+       break;
 
-       case "request-range":
-         contents = lower_case(contents-" ");
-         if(!search(contents, "bytes"))
-           // Only care about "byte" ranges.
-           misc->range = contents[6..];
-         break;
+     case "request-range":
+       contents = lower_case(contents-" ");
+       if(!search(contents, "bytes"))
+         // Only care about "byte" ranges.
+         misc->range = contents[6..];
+       break;
 
-       case "range":
-         contents = lower_case(contents-" ");
-         if(!misc->range && !search(contents, "bytes"))
-           // Only care about "byte" ranges. Also the Request-Range header
-           // has precedence since Stupid Netscape (TM) sends both but can't
-           // handle multipart/byteranges but only multipart/x-byteranges.
-           // Duh!!!
-           misc->range = contents[6..];
-         break;
+     case "range":
+       contents = lower_case(contents-" ");
+       if(!misc->range && !search(contents, "bytes"))
+         // Only care about "byte" ranges. Also the Request-Range header
+         // has precedence since Stupid Netscape (TM) sends both but can't
+         // handle multipart/byteranges but only multipart/x-byteranges.
+         // Duh!!!
+         misc->range = contents[6..];
+       break;
 
 
-       case "host": 
-       case "connection":
-       case "content-type":
-         misc[linename] = lower_case(contents);
-         break;
+     case "host": 
+     case "connection":
+     case "content-type":
+       misc[linename] = lower_case(contents);
+       break;
 
-//        case "accept-encoding":
-//          foreach((contents-" ")/",", string e) {
-//            if (lower_case(e) == "gzip") {
-//              supports["autogunzip"] = 1;
-//            }
-//          }
-      }
-#if !constant(Roxen.HeaderParser)
+       //        case "accept-encoding":
+       //          foreach((contents-" ")/",", string e) {
+       //            if (lower_case(e) == "gzip") {
+       //              supports["autogunzip"] = 1;
+       //            }
+       //          }
     }
-#endif
   if(misc->len && method == "POST")
   {
     if(!data) data="";
@@ -1035,6 +971,7 @@ private int parse_got( string new_data )
              variables[part->disp_params->name] = part->getdata();
          }
        }
+//        werror("%O\n", variables );
        break;
     }
   }
@@ -1827,17 +1764,8 @@ void send_result(mapping|void result)
           misc->connection = "close";
         }
 
-#if constant( Roxen.make_http_headers )
         head_string += Roxen.make_http_headers( heads );
-#else
-        foreach(indices(heads), h)
-          if(arrayp(heads[h]))
-            foreach(heads[h], tmp)
-              head_string += h+": "+tmp+"\r\n";
-          else
-            head_string += h+": "+heads[h]+"\r\n";
-        head_string += "\r\n";
-#endif
+
         if( strlen( charset ) )
           head_string = output_encode( head_string )[1];
         conf->hsent += strlen(head_string);
@@ -2005,6 +1933,7 @@ void got_data(mixed fooid, string s)
 
   if(wanted_data)
   {
+    data += s;
     if(strlen(s) + have_data < wanted_data)
     {
       //      cache += ({ s });

@@ -1,0 +1,57 @@
+inherit Variable.String;
+
+constant type="Upload";
+
+static string filename;
+
+int set_filename( string to )
+//. Set the filename associated with this upload variable. Not normally
+//. nesessary, since it's set automatically when the form is processed.
+{
+  if( filename = to )
+    return 1;
+}
+
+string get_filename()
+//. Get the filename associated with this upload variable. 
+{
+  return filename;
+}
+
+void set_from_form( RequestID id )
+{
+  mixed val;
+  if( (val = get_form_vars( id )) && val[""] 
+      && val[".filename"] && set_filename( val[".filename"] )
+      && strlen(val[""])
+      && (val = transform_from_form( val[""] ) ) 
+      && val != query() )
+  {
+    array b;
+    mixed q = catch( b = verify_set_from_form( val ) );
+    if( q || sizeof( b ) != 2 )
+    {
+      if( q )
+        add_warning( q );
+      else
+        add_warning( "Internal error: Illegal sized array "
+                     "from verify_set_from_form\n" );
+      return;
+    }
+    if( b ) 
+    {
+      set_warning( b[0] );
+      set( b[1] );
+    }
+  }
+}
+
+string render_form( RequestID id, void|mapping additional_args )
+{
+  return ("<input type=file name='"+path()+"' />");
+}
+
+string render_view( RequestID id )
+{
+  return get_filename() ? "Uploaded file: "+get_filename() : "";
+}
