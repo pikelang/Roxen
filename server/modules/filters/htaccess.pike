@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@idonex.se 
 //   Changed into module by Per Hedbor, per@idonex.se
 
-constant cvs_version = "$Id: htaccess.pike,v 1.55 2000/02/10 04:54:17 nilsson Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.56 2000/02/17 12:44:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -134,13 +134,13 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
 {
   string htaccess, line;
   string cache_key;
-  int *s;
+  array(int) s;
   array|int in_cache;
   mapping access = ([ ]);
   cache_key = "htaccess:" + id->conf->name;
     
 
-  s = (int *)f->stat();
+  s = (array(int))f->stat();
 
   if((in_cache = cache_lookup(cache_key, rht)) && (s[3] == in_cache[0]))
     return in_cache[1];
@@ -366,7 +366,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 {
   mapping g;
   string groups, cache_key, grp, members, user, s2;
-  int *s;
+  array(int) s;
   Stdio.File f;
   array|int in_cache;
 
@@ -423,7 +423,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 #ifdef FD_DEBUG
   mark_fd(f->query_fd(), ".htaccess groupfile ("+groupfile+")\n");
 #endif
-  s = (int *)f->stat();
+  s = (array(int))f->stat();
   
   if((in_cache = cache_lookup(cache_key, groupfile))
      && (s[3] == in_cache[0]))
@@ -613,7 +613,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
       TRACE_LEAVE("No auth");
       return validate(aname);
     } else {
-      string *auth;
+      array(string) auth;
       
       auth = id->realauth/":";
 

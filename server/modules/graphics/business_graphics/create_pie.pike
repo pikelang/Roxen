@@ -10,7 +10,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.46 1999/05/01 17:01:07 grubba Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.47 2000/02/17 12:44:29 nilsson Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -393,10 +393,9 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   if (!twoD)
     {
       object below;
-      int *b=({70,70,70});
-      int *a=({0,0,0});
-      
-      
+      array(int) b=({70,70,70});
+      array(int) a=({0,0,0});
+
       object tbild;
 
       int imxsize=piediagram->xsize(); //diagram_data["xsize"];

@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.49 2000/02/10 04:40:34 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.50 2000/02/17 12:42:19 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User Filesystem";
 constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
@@ -189,7 +189,7 @@ mixed find_file(string f, object got)
 
   if(u)
   {
-    string *us;
+    array(string) us;
     array st;
     if(!dude_ok[ u ] || f == "")
     {
@@ -266,7 +266,7 @@ string real_file( mixed f, mixed id )
     array(int) fs;
     if(query("homedir"))
     {
-      string *us;
+      array(string) us;
       us = id->conf->userinfo( u, id );
       if ((!us) || BAD_PASSWORD(us) || banish_list[u]) {
 	return 0;

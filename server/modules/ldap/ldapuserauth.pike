@@ -53,7 +53,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.14 2000/02/10 05:40:34 nilsson Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.15 2000/02/17 12:45:19 nilsson Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -364,8 +364,8 @@ string get_attrval(mapping attrval, string attrname, string dflt) {
     return (zero_type(attrval[attrname]) ? dflt : attrval[attrname][0]);
 }
 
-string *userinfo (string u,mixed p) {
-    string *dirinfo;
+array(string) userinfo (string u,mixed p) {
+    array(string) dirinfo;
     object results;
     mixed err;
     mapping(string:array(string)) tmp, attrsav;
@@ -447,7 +447,7 @@ string *userinfo (string u,mixed p) {
     return dirinfo;
 }
 
-string *userlist() {
+array(string) userlist() {
 
     //if (QUERY(disable_userlist))
     return ({});
@@ -468,7 +468,7 @@ int chk_name(string x, string y) {
 }
 #endif
 
-array|int auth (string *auth, object id)
+array|int auth (array(string) auth, object id)
 {
     string u,p,*dirinfo, pw;
     mixed attr,value;

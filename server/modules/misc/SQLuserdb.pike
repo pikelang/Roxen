@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.12 2000/02/10 06:44:08 nilsson Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.13 2000/02/17 12:45:42 nilsson Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -168,8 +168,8 @@ void open_db() {
 /*
  * Module Callbacks
  */
-string *userinfo (string u) {
-	string *dbinfo;
+array(string) userinfo (string u) {
+	array(string) dbinfo;
 	array sql_results;
 	mixed err,tmp;
 	DEBUGLOG ("userinfo ("+u+")");
@@ -209,7 +209,7 @@ string *userinfo (string u) {
 	return 0;
 }
 
-string *userlist() {
+array(string) userlist() {
 	if (QUERY(disable_userlist))
 		return ({});
 	mixed err,tmp;
@@ -244,7 +244,7 @@ string user_from_uid (int u)
 	return data[0]->username;
 }
 
-array|int auth (string *auth, object id)
+array|int auth (array(string) auth, object id)
 {
 	string u,p,*dbinfo;
 	mixed err;

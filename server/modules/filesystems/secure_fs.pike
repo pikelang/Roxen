@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.14 2000/02/10 04:40:34 nilsson Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.15 2000/02/17 12:42:19 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -151,7 +151,7 @@ mixed not_allowed(string f, object id)
 	 need_auth = 1;
 	 if (query("page") && id->cookies["httpauth"]) {
 	   string user,pass,last;
-	   string *y=({ "","" });
+	   array(string) y=({ "","" });
 	   sscanf(id->cookies["httpauth"],"%s:%s:%s", user, pass, last);
 	   y[1]=user+":"+pass;
 	   id->auth=id->conf->auth_module->auth(y,id);

@@ -1,6 +1,6 @@
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.32 2000/02/08 22:10:00 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.33 2000/02/17 12:46:05 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -41,7 +41,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.32 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.33 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -84,7 +84,7 @@ class Request {
   string last_read="";
   string buffer;
   string what_now;
-  string *links=({});
+  array(string) links=({});
 #ifdef SESSION_INFO
   string session="";
 #endif
@@ -223,10 +223,11 @@ class Request {
 
   string parse_uwp_directory() /* ftp.uwp.edu... */
   {
-    string *dir,s,filename,link,rest;
+    array(string) dir;
+    string s,filename,link,rest;
     int size,maxlen;
     string res="";
-    mixed *dirl=({}),*q;
+    array dirl=({}), q;
 
     rest=((buffer/"\r")*"");
     dir=((rest/"\n ")*" ")/"\n"; /* remove wrapped */
@@ -265,7 +266,7 @@ class Request {
 
   int|string parse_unix_ls_directory()
   {
-    string *dir;
+    array(string) dir;
     string res,f,a;
     int date_position,i,maxlen;
 
@@ -348,7 +349,7 @@ class Request {
 
   string parse_unix_ls_directory_floating_date()
   {
-    string *dir;
+    array(string) dir;
     string res,f,a;
     int i,maxlen,date_position;
 
@@ -432,8 +433,8 @@ class Request {
 
   string parse_directory_without_first_line()
   {
-    string res ;
-    string *dir ;
+    string res;
+    array(string) dir;
     dir=((buffer/"\r")*"")/"\n";
     if (sizeof(dir)<1) return 0; /* nope */
 
@@ -569,7 +570,8 @@ class Request {
   void transfer()
   {
     object pipe;
-    string *type,stype;
+    array(string) type;
+    string stype;
     array tmp;
 
     if (getting_list)
@@ -731,7 +733,7 @@ class Request {
 
   void active_transfer_file()
   {
-    mixed *dataportid;
+    array dataportid;
     if (!(dataportid=master->get_dataport(active_transfer_accept)))
     {
       id->end(ERROR_MESSAGE("failed to listen on too many ports; this ought not to happen."));
@@ -896,7 +898,7 @@ class Request {
 
   void read_server(mixed dummy_id,string s)
   {
-    string *ss;
+    array(string) ss;
 
     DESTRUCT_WERR("read_server");
 
@@ -1490,7 +1492,7 @@ mixed get_dataport(function acceptfunc)
    }
 }
 
-void save_dataport(mixed *m) /* ({portno,object}) */
+void save_dataport(array m) /* ({portno,object}) */
 {
    if (QUERY(save_dataports)=="Yes")
    {
