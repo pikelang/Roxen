@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.6 1998/09/28 00:31:37 grubba Exp $
+ * $Id: pop3.pike,v 1.7 1998/09/28 00:33:25 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.6 1998/09/28 00:31:37 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.7 1998/09/28 00:33:25 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -87,7 +87,7 @@ static class Pop_Session
     send_ok(sprintf("%s POP3 server signing off", gethostname()));
     disconnect();
     if (user) {
-      array(object) mail = user->get_incoming()->list_mail();
+      array(object) mail = user->get_incoming()->mail();
       foreach(mail, object m) {
 	if (m->check_flag("pop_delete")) {
 	  m->delete();
@@ -100,7 +100,7 @@ static class Pop_Session
   {
     object mbox = user->get_incoming();
 
-    array(object) mail = mbox->list_mail();
+    array(object) mail = mbox->mail();
     int num = sizeof(mail);
     int sz = `+(@(mail->get_size()));
     send_ok(sprintf("%d %d", num, sz));
@@ -109,7 +109,7 @@ static class Pop_Session
   void pop_LIST()
   {
     object mbox = user->get_incoming();
-    array(object) mail = mbox->list_mail();
+    array(object) mail = mbox->mail();
     int num = sizeof(mail);
     
     int sz = `+(@(mail->get_size()));
@@ -174,7 +174,7 @@ static class Pop_Session
   void pop_RSET()
   {
     object mbox = user->get_incoming();
-    array(object) mail = mbox->list_mail();
+    array(object) mail = mbox->mail();
 
     mail->clear_flag("pop_delete");
 
@@ -253,7 +253,7 @@ static class Pop_Session
       return;
     } else {
       send_ok("");
-      foreach(user->get_incoming()->list_mail(), object m) {
+      foreach(user->get_incoming()->mail(), object m) {
 	if (!(m->flags()->pop_delete)) {
 	  send(sprintf("%s %s\r\n", m->id, m->id));
 	}
