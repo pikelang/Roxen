@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.22 1998/03/02 12:59:06 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.23 1998/03/16 02:55:43 mast Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -318,11 +318,11 @@ string encode_one_port(array port, int id)
 	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
 	    "<tr width=100%><td colspan=2 width=100%><b>SSL Options</b></td></tr>\n");
     res += ("<tr><td>Certificate file:</td> <td><input size=30,1 "
-	    "name=cert_"+id+" value=\""+html_encode_string(cf||"")+
-	    "\"></td></tr>\n"
+	    "name=cert_"+id+" value="+html_encode_tag_value(cf||"")+
+	    "></td></tr>\n"
 	    "<tr><td>Key file: (OPTIONAL)</td><td><input size=30,1 "
-	    "name=key_"+id+"  value=\""+html_encode_string(kf||"")+
-	    "\"></td></tr>\n");
+	    "name=key_"+id+"  value="+html_encode_tag_value(kf||"")+
+	    "></td></tr>\n");
     res += "</table></td></tr>\n";
   }
   return res +
@@ -404,7 +404,8 @@ string describe_variable_low(mixed *var, mixed path, int really_short,
 		 + ((arrayp(var[VAR_VALUE])?
 		     search(var[VAR_VALUE], o)!=-1:
 		     var[VAR_VALUE]==o)
-		    ?" selected":"")+">" + name_of_module(o)+ "</option>" });
+		    ?" selected":"")+">" + html_encode_string(name_of_module(o))+
+	       "</option>" });
     if(var[VAR_TYPE] == TYPE_MODULE)
       res = ("<select name="+path+">\n"+
 	     rs*"\n"+"\n</select>\n<input type=submit value=Ok>");
