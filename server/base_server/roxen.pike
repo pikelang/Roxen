@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.784 2002/05/15 15:23:55 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.785 2002/06/13 11:34:09 jonasw Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2981,7 +2981,15 @@ class ImageCache
 	error("Draw callback did not generate any data\n");
     }
     res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
+
+    //  Setting the cacheable flag is done in order to get headers sent which
+    //  cause the image to be cached in the client even when using https
+    //  sessions. However, this flag also controls whether the file should
+    //  be placed in the protocol-level cache, so we'll counter by destroying
+    //  the cache key if the request is authorized so this is avoided.
     id->misc->cacheable = INITIAL_CACHEABLE;
+    if (id->rawauth)
+      id->misc->cachekey = 0;
     return res;
   }
 
