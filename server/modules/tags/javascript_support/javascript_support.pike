@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.16 2000/02/22 15:06:14 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.17 2000/03/13 17:08:27 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -224,7 +224,7 @@ static private string container_js_popup(string name, mapping args,
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
   //werror(" leaving.\n");
-  return make_container_unquoted("a", largs, args->label) + "\n";
+  return make_container_unquoted("a", largs, args->label);
 }
 
 static private

@@ -40,3 +40,8 @@ function doDrop()
 		       '&destdir='+dest_name+
 		       '&destname='+src_name);
 }
+
+function setPStat()
+{
+  setStatus("Click on icon to raise action menu.");
+}
