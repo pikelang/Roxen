@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.5 1997/08/19 06:38:13 per Exp $";
+string cvs_version = "$Id: german.pike,v 1.6 1998/03/10 13:58:14 grubba Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -48,7 +48,7 @@ string date(int timestamp, mapping|void m)
   
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
-    return "dem " + ordered(t1["mday"]) + " " + (month(t1["mon"]+1));
+    return ordered(t1["mday"]) + " " + (month(t1["mon"]+1));
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
