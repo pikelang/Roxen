@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.34 2001/10/01 14:14:06 anders Exp $
+ * $Id: update.pike,v 1.35 2001/10/04 15:05:06 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2001, Roxen IS.
@@ -111,8 +111,10 @@ void post_start()
   installed=SqlMapping(db, "update_installed")
     ;
   mkdirhier(roxen_path(query("pkgdir")+"/foo"));
+#ifndef OFFLINE
   if(query("do_external_updates"))
     updater=UpdateInfoFiles();
+#endif
   UPDATE_NOISES("db == %O", ({ db }));
 }
 
@@ -768,12 +770,16 @@ class GetPackage
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+
 		  pkgnum+".tar HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -843,12 +849,16 @@ class GetInfoFile
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
 		  ".info HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -944,7 +954,11 @@ class UpdateInfoFiles
 
   void create()
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     set_callbacks(request_ok, request_fail);
     call_out(do_request,1);
+#endif
   }
 }
