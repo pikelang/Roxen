@@ -1,6 +1,14 @@
-static mapping changed_values = set_weak_flag( ([]), 1 );
-static int unique_vid;
 static inherit "html";
+
+static int unique_vid;
+
+// The theory is that most variables (or at least a sizable percentage
+// of all variables) does not have these members. This this saves
+// quite a respectable amount of memory, the cost is speed. But not
+// all that great a percentage of speed.
+static mapping changed_values = set_weak_flag( ([]), 1 );
+static mapping invisibility_callbacks = set_weak_flag( ([]), 1 );
+static mapping all_flags = set_weak_flag( ([]), 1 );
 
 class Variable
 //. The basic variable type in Roxen. All other variable types should
@@ -9,12 +17,35 @@ class Variable
   constant type = "Basic";
   //. Mostly used for debug
 
-  string sname;
-  //. The 'short' name of this variable. This string is not
-  //. translated.
-
   static mixed _initial;
   static int _id = unique_vid++;
+
+  int check_visibility( RequestID id,
+                        int more_mode,
+                        int expert_mode,
+                        int devel_mode,
+                        int initial )
+    //. Return 1 if this variable should be visible in the configuration
+    //. interface.
+  {
+    int flags = all_flags[this_object()];
+    if( initial && !(flags & VAR_INITIAL) )      return 0;
+    if( (flags & VAR_EXPERT) && !expert_mode )   return 0;
+    if( (flags & VAR_MORE) && !more_mode )       return 0;
+    if( (flags & VAR_DEVELOPER) && !devel_mode ) return 0;
+    if( invisibility_callbacks[this_object()] && 
+        invisibility_callbacks[this_object()]( id, this_object() ) )
+      return 0;
+    return 1;
+  }
+
+  void set_invisibility_check_callback( function cb )
+  {
+    if( functionp( cb ) )
+      invisibility_callbacks[this_object()] = cb;
+    else
+      m_delete( invisibility_callbacks, this_object() );
+  }
 
   string doc( RequestID id )
     //. Return the documentation for this variable (locale dependant).
@@ -22,7 +53,7 @@ class Variable
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( this_object(), sname, 1, id );
+    return LC->module_doc_string( this_object(), 1, id );
   }
   
   string name( RequestID id )
@@ -31,7 +62,7 @@ class Variable
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( this_object(), sname, 0, id );
+    return LC->module_doc_string( this_object(), 0, id );
   } 
 
   mixed default_value()
@@ -143,11 +174,38 @@ class Variable
       return sprintf( "Variables.%s(%s) [%O]", type, name, query() );
   }
 
-  void create( string short_name, mixed default_value )
-    //. Constructor. 
+
+  int deflocaledoc( string locale, string name, string doc )
+    //. Define the documentation (name and built-in runtime documentation) 
+    //. for the specified locale.
+    //. 
+    //. Returns 1 if the locale exists, 0 otherwise.
   {
-    sname = _sn;
+    catch {
+      RoxenLocale[locale]->
+        register_module_doc(this_object(),name,doc);
+      return 1;
+    };
+    return 0;
+  }
+
+  void create(mixed default_value,int _flags,string std_name,string std_doc)
+    //. Constructor. 
+    //. Flags is a bitwise or of one or more of 
+    //. 
+    //. VAR_EXPERT         Only for experts 
+    //. VAR_MORE           Only visible when more-mode is on (default on)
+    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //. VAR_INITIAL        Should be configured initially.
+    //. 
+    //. The std_name and std_doc is the name and documentation string
+    //. for the default locale (always english)
+    //. 
+    //. Use deflocaledoc to define translations.
+  {
     _initial = _dv;
+    if( flags ) all_flags[ this_object() ] = _flags;
+    RoxenLocale.standard.register_module_doc(this_object(),std_name,std_doc);
   }
 }
 
@@ -395,6 +453,7 @@ class MultipleChoice
 {
   inherit Variable;
   static array _list = ({});
+
   void set_choice_list( array to )
     //. Set the list of choices.
   {
@@ -412,14 +471,36 @@ class MultipleChoice
     //. Get the name used as value for an element gotten from the
     //. get_list() function.
   {
-    return (string)what;
+    return  (string)what;
   }
 
   static string _title( mixed what )
     //. Get the title used as description (shown to the user) for an
     //. element gotten from the get_list() function.
   {
+    mapping tr = LC->module_doc_string( this_object(), 2, id );
+    if( tr )
+      return tr[ what ] || (string)what;
     return (string)what;
+  }
+
+  int deflocaledoc( string locale, string name, string doc,
+                    mapping choices )
+    //. Define the documentation (name and built-in runtime documentation) 
+    //. for the specified locale.
+    //. 
+    //. Returns 1 if the locale exists, 0 otherwise.
+    //. 
+    //. The choices mapping is a mapping from value to the displayed
+    //. option title. You can pass 0 to avoid translation.
+
+  {
+    catch {
+      RoxenLocale[locale]->
+        register_module_doc(this_object(),name,doc, choices);
+      return 1;
+    };
+    return 0;
   }
 
   void render_form( RequestID id )
@@ -434,6 +515,28 @@ class MultipleChoice
       res += "  "+make_container( "option", m, _title( elem ) )+"\n";
     }
     return res + "</select>";
+  }
+  void create( mixed default_value, array choices,
+               int _flags, string std_name, string std_doc )
+    //. Constructor. 
+    //.
+    //. Choices is the list of possible choices, can be set with 
+    //. set_choice_list at any time.
+    //. 
+    //. Flags is a bitwise or of one or more of 
+    //. 
+    //. VAR_EXPERT         Only for experts 
+    //. VAR_MORE           Only visible when more-mode is on (default on)
+    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //. VAR_INITIAL        Should be configured initially.
+    //. 
+    //. The std_name and std_doc is the name and documentation string
+    //. for the default locale (always english)
+    //. 
+    //. Use deflocaledoc to define translations.
+  {
+    ::create( default_value, _flags, std_name, std_doc );
+    set_choice_list( choices );
   }
 }
 
@@ -637,10 +740,19 @@ class FloatList
   float transform_from_form(string what) { return (float)what; }
 }
 
-case UrlList
+class UrlList
 //. A list of URLs
 {
   inherit List;
+  constant type="UrlList";
+}
+
+
+class FileList
+//. A list of URLs
+{
+  inherit List;
+  constant type="FileList";
 }
 
 
