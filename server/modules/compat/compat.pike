@@ -131,7 +131,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
 array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
   NOCACHE();
-  old_rxml_warning(id, tag+" tag", "&amp;client.referrer; entity");
+  old_rxml_warning(id, tag+" tag", "&client.referrer; entity");
   return({ sizeof(id->referer) ?
     (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
     (m->alt || "") });
@@ -150,7 +150,7 @@ array tag_set(string tag, mapping m, RequestID id)
 array tag_pr(string tag, mapping m, RequestID id)
 {
   old_rxml_warning(id,"pr tag","roxen tag");
-  return ({1, "roxen", 0});
+  return ({1, "roxen", m});
 }
 
 array(string) tag_date(string q, mapping m, RequestID id)
@@ -392,11 +392,12 @@ array tag_countdown(string tag, mapping m, string c, RequestID id)
 
   if(!m->display) {
     foreach(({"seconds","minutes","hours","days","weeks","months","years",
-        "dogyears","combined","when"}), string tmp) {
-      if(m[tmp]) m->display=tmp;
-      m_delete(m, tmp);
-      old_rxml_warning(id, "countdown attribute "+tmp,"display="+tmp);
-    }
+	      "dogyears","combined","when"}), string tmp)
+      if(m[tmp]) {
+	m->display=tmp;
+	m_delete(m, tmp);
+	old_rxml_warning(id, "countdown attribute "+tmp,"display="+tmp);
+      }
   }
 
   return ({1, tag, m, c});
@@ -518,10 +519,14 @@ string|array(string) tag_clientname(string tag, mapping m, RequestID id)
   NOCACHE();
   string client="";
   if (sizeof(id->client)) {
-    if(m->full)
+    if(m->full) {
+      old_rxml_warning(id ,"clientname tag","&client.Fullname; or &client.fullname;");
       client=id->client * " ";
-    else
+    }
+    else {
+      old_rxml_warning(id ,"clientname tag","&client.name;");
       client=id->client[0];
+    }
   }
 
   return m->quote=="none"?client:({ html_encode_string(client) });
@@ -530,15 +535,20 @@ string|array(string) tag_clientname(string tag, mapping m, RequestID id)
 array(string) tag_file(string tag, mapping m, RequestID id)
 {
   string file;
-  if(m->raw)
+  if(m->raw) {
+    old_rxml_warning(id ,"file tag","&page.url;");
     file=id->raw_url;
-  else
+  }
+  else {
+    old_rxml_warning(id ,"file tag","&page.virtfile;");
     file=id->not_query;
+  }
   return m->quote=="none"?file:({ html_encode_string(file) });
 }
 
 string|array(string) tag_realfile(string tag, mapping m, RequestID id)
 {
+  old_rxml_warning(id ,"realfile tag","&page.realfile;");
   if(id->realfile)
     return ({ id->realfile });
   return rxml_error(tag, "Real file unknown", id);
@@ -546,6 +556,7 @@ string|array(string) tag_realfile(string tag, mapping m, RequestID id)
 
 string|array(string) tag_vfs(string tag, mapping m, RequestID id)
 {
+  old_rxml_warning(id ,"vfs tag","&page.virtroot;");
   if(id->virtfile)
     return ({ id->virtfile });
   return rxml_error(tag, "Virtual file unknown.", id);
@@ -558,14 +569,24 @@ array(string) tag_accept_language(string tag, mapping m, RequestID id)
   if(!id->misc["accept-language"])
     return ({ "None" });
 
-  if(m->full)
+  if(m->full) {
+    old_rxml_warning(id ,"accept-language tag","&client.accept_languages;");
     return ({ html_encode_string(id->misc["accept-language"]*",") });
-  else
+  }
+  else {
+    old_rxml_warning(id ,"accept-language tag","&client.accept_language;");
     return ({ html_encode_string((id->misc["accept-language"][0]/";")[0]) });
+  }
+}
+
+array(string) tag_version(string tag, mapping m, RequestID id) {
+  old_rxml_warning(id, "version tag", "&roxen.version;");
+  return ({ roxen->version() });
 }
 
 mapping query_tag_callers() {
-  mapping active=(["list-tags":tag_list_tags]);
+  mapping active=(["list-tags":tag_list_tags,
+		   "version":tag_version]);
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;
   if(enabled->graphic_text) active["gtext-id"]=tag_gtext_id;
