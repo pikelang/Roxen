@@ -1,6 +1,9 @@
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 
+o When the proxy authentification was fixed, as bug was added that
+  broke normal user authenficiation.
+
 o When opening the logfile, Roxen only tries to do mkdirhier if it is
   needed. Thanks to Stephen R. van den Berg (srb@cuci.nl) for the
   patch.

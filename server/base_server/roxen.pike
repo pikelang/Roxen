@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.26 1996/12/11 02:22:34 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.27 1996/12/13 08:11:45 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1003,7 +1003,8 @@ int|mapping check_security(function a, object id, void|int slevel)
        case MOD_USER: // allow user=...
 	if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
 	need_auth = 1;
-
+	continue;
+	
        case MOD_PROXY_USER: // allow user=...
 	if(id->misc->proxyauth && id->misc->proxyauth[0] && 
 	   level[1](id->misc->proxyauth[1])) return 0;
