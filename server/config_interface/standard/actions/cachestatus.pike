@@ -4,31 +4,30 @@
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "status";
-constant name = "Cache Status";
-constant name_svenska = "Cachestatus";
 
-constant doc = "Show information about the main memory cache in roxen";
-constant doc_svenska = "Visa information om minnescachen i roxen";
+string name= LOCALE(59, "Cache status");
+string doc = LOCALE(60, 
+		    "Show information about the main memory cache in Roxen");
 
 string parse( RequestID id )
 {
 
-  string res = "<b>"+LOCALE(0, "WebServer Memory Cache")+"</b><br />"
+  string res = "<b>"+LOCALE(61, "WebServer Memory Cache")+"</b><br />"
     "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
     "<tr bgcolor=\"&usr.fade3;\">"
-    "<td>"+LOCALE(0, "Class")+"</td>"
-    "<td align=\"right\">"+LOCALE(0, "Entries")+"</td>"
-    "<td align=\"right\">"+LOCALE(0, "Size")+"</td>"
-    "<td align=\"right\">"+LOCALE(0, "Hits")+"</td>"
-    "<td align=\"right\">"+LOCALE(0, "Misses")+"</td>"
-    "<td align=\"right\">"+LOCALE(0, "Hit rate")+"</td>";
+    "<td>"+LOCALE(62, "Class")+"</td>"
+    "<td align=\"right\">"+LOCALE(295, "Entries")+"</td>"
+    "<td align=\"right\">"+LOCALE(64, "Size")+"</td>"
+    "<td align=\"right\">"+LOCALE(293, "Hits")+"</td>"
+    "<td align=\"right\">"+LOCALE(294, "Misses")+"</td>"
+    "<td align=\"right\">"+LOCALE(67, "Hit rate")+"</td>";
 
   mapping c=cache->status();
 
   mapping trans = ([
-    "supports":LOCALE(0,"supportdb"),
-    "fonts":LOCALE(0,"fonts"),
-    "hosts":LOCALE(0,"DNS"),
+    "supports":LOCALE(68,"supportdb"),
+    "fonts":LOCALE(69,"Fonts"),
+    "hosts":LOCALE(70,"DNS"),
   ]);
 
   foreach(indices(c), string n)
@@ -71,12 +70,12 @@ string parse( RequestID id )
 #else
   mapping l=RoxenLocale.cache_status();
 #endif
-  res += "<br /><b>"+LOCALE(0, "Locale Cache")+"</b><br />"
+  res += "<br /><b>"+LOCALE(71, "Locale Cache")+"</b><br />"
     "<table>"
-    "<tr><td>"+LOCALE(0, "Loaded languages:")+"</td><td>"+l->languages+"</td></tr>"
-    "<tr><td>"+LOCALE(0, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>"
-    "<tr><td>"+LOCALE(0, "Loaded projects:")+"</td><td>"+l->load_proj+"</td></tr>"
-    "<tr><td>"+LOCALE(0, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
+    "<tr><td>"+LOCALE(72, "Used languages:")+"</td><td>"+l->languages+"</td></tr>"
+    "<tr><td>"+LOCALE(73, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>"
+    "<tr><td>"+LOCALE(74, "Loaded projects:")+"</td><td>"+l->load_proj+"</td></tr>"
+    "<tr><td>"+LOCALE(75, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
     "</table><br />";
 
   return res +  "<p><cf-ok/></p>";
