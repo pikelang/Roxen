@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.694 2001/08/13 19:09:05 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.695 2001/08/13 21:35:47 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -396,11 +396,11 @@ private void stop_all_configurations()
 private void really_low_shutdown(int exit_code)
 {
   // Die nicely. Catch for paranoia reasons
-  catch
-  {
 #ifdef THREADS
-    stop_handler_threads();
+  catch (stop_handler_threads());
 #endif /* THREADS */
+  destruct (cache);
+  catch {
     if (exit_code)
       report_notice("Restarting Roxen.\n");
     else
@@ -416,18 +416,18 @@ private int _recurse;
 //  exit_code = -1	Restart
 private void low_shutdown(int exit_code)
 {
-  if(++_recurse > 4)
+  if(_recurse >= 4)
   {
-    catch {
-      report_notice("Exiting roxen (spurious signals received).\n");
-      stop_all_configurations();
-      destruct(cache);
+    catch (report_notice("Exiting roxen (spurious signals received).\n"));
+    catch (stop_all_configurations());
+    destruct(cache);
 #ifdef THREADS
-      stop_handler_threads();
+    catch (stop_handler_threads());
 #endif /* THREADS */
-    };
     exit(exit_code);
   }
+  if (_recurse) return;
+  _recurse++;
 
 #ifdef SNMP_AGENT
   if(objectp(snmpagent))
@@ -435,7 +435,6 @@ private void low_shutdown(int exit_code)
 #endif
 
   catch(stop_all_configurations());
-  destruct(cache);
 
   call_out(really_low_shutdown, 0.1, exit_code);
 }
