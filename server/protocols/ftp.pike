@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.37 1997/08/17 04:01:07 grubba Exp $
+ * $Id: ftp.pike,v 1.38 1997/08/23 01:29:06 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -894,10 +894,26 @@ void got_data(mixed fooid, string s)
     } else {
       conf->extra_statistics->ftp->commands[cmd]++;
     }
+    if (!(session_auth || Query("anonymous_ftp") ||
+	  (< "user", "pass", "rest" >)[cmd])) {
+      reply("530 Please login with USER and PASS.\n");
+      continue;
+    }
     switch (cmd) {
+    case "rest":
+      reply("220 Server ready for new user.\n");
+      session_auth = 0;
+      rawauth = 0;
+      auth = 0;
+      cwd = "/";
+      break;
     case "user":
       if(!arg || arg == "ftp" || arg == "anonymous") {
-	reply("230 Anonymous ftp, at your service\n");
+	if (Query("anonymous_ftp")) {
+	  reply("230 Anonymous ftp, at your service\n");
+	} else {
+	  reply("532 Anonymous ftp disabled\n");
+	}
 	session_auth = 0;
 	rawauth = 0;
 	auth = 0;
@@ -905,15 +921,23 @@ void got_data(mixed fooid, string s)
 	session_auth = 0;
 	rawauth = username = arg;
 	auth = 0;
-	reply("331 Give me a password, then!\n");
+	if (Query("anonymous_ftp")) {
+	  reply("331 Give me a password, then!\n");
+	} else {
+	  reply(sprintf("331 Password required for %s.\n", arg));
+	}
       }
       cwd = "/";
       break;
       
     case "pass": 
-      if(!rawauth)
-	reply("230 Guest login ok, access restrictions apply.\n"); 
-      else {	
+      if(!rawauth) {
+	if (Query("anonymous_ftp")) {
+	  reply("230 Guest login ok, access restrictions apply.\n"); 
+	} else {
+	  reply("503 Login with USER first.\n");
+	}
+      } else {	
 	method="LOGIN";
 	y = ({ "Basic", username+":"+arg});
 	realauth = y[1];
@@ -923,11 +947,17 @@ void got_data(mixed fooid, string s)
 	  if (y[0] == 1) {
 	    /* Authentification successfull */
 	    if (!Query("named_ftp") || !check_shell(misc->shell)) {
-	      reply("432 You are not allowed to use named-ftp. Try using anonymous\n");
+	      reply("532 You are not allowed to use named-ftp. Try using anonymous\n");
 	      /* roxen->(({ "error":403, "len":-1 ]), this_object()); */
 	      break;
 	    }
+	  } else if (!Query("anonymous_ftp")) {
+	    reply(sprintf("530 User %s access denied.\n", username));
+	    break;
 	  }
+	} else if (!Query("anonymous_ftp")) {
+	  reply("532 Need account to login.\n");
+	  break;
 	}
 	session_auth = auth = y;
 	if(auth[0] == 1) {
