@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.20 1998/02/10 18:36:08 per Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.21 1998/05/06 22:17:10 per Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -18,126 +18,13 @@ mapping (string:mapping) configs = ([ ]);
 
 string configuration_dir; // Set by Roxen.
 
-#ifdef MODULE_DEBUG
-int debug_compare_vars(mixed a, mixed b)
-{
-  if (a == b) {
-    switch(sprintf("%t:%t", a, b)) {
-    case "int:int":
-    case "float:float":
-    case "string:string":
-    case "program:program":
-      break;
-    case "object:object":
-      write(sprintf("Warning! object in configs!\n"));
-      break;
-    case "function:function":
-      write(sprintf("Warning! function in configs!\n"));
-      break;
-    case "array:array":
-      if (sizeof(a)) {
-	write(sprintf("Arrays don't differ! %O\n", a));
-	return(0);
-      }
-      break;
-    case "multiset:multiset":
-      write(sprintf("Multisets don't differ! %O\n", a));
-      return(0);
-      break;
-    case "mapping:mapping":
-      write(sprintf("Mappings don't differ! %O\n", a));
-      return(0);
-      break;
-    default:
-      write(sprintf("Type mismatch: %O (%t) != %O (%t)\n", a, a, b, b));
-      return(0);
-      break;
-    }
-  } else {
-    switch(sprintf("%t:%t", a, b)) {
-    case "int:int":
-    case "float:float":
-    case "string:string":
-    case "program:program":
-      write(sprintf("Error! %O (%t) differs from %O (%t)!\n", a, a, b, b));
-      return(0);
-      break;
-    case "object:object":
-      write(sprintf("Error! objects in configs differ!\n"));
-      return(0);
-      break;
-    case "function:function":
-      write(sprintf("Error! functions in configs differ!\n"));
-      return(0);
-      break;
-    case "array:array":
-      if (sizeof(a) != sizeof(b)) {
-	write(sprintf("Error! Array sizes differ! %O (%d) != %O (%d)\n",
-		      a, sizeof(a), b, sizeof(b)));
-	return(0);
-      }
-      foreach(indices(a), int i) {
-	if (!debug_compare_vars(a[i], b[i])) {
-	  return(0);
-	}
-      }
-      break;
-    case "multiset:multiset":
-      if (sizeof(a) != sizeof(b)) {
-	write(sprintf("Error! Multiset sizes differ! %O (%d) != %O (%d)\n",
-		      a, sizeof(a), b, sizeof(b)));
-	return(0);
-      }
-      foreach(indices(a), mixed i) {
-	if (!b[i]) {
-	  write(sprintf("Error! Multiset contents differ! %O != %O (%O not in latter)\n",
-			a, b, i));
-	  return(0);
-	}
-      }
-      break;
-    case "mapping:mapping":
-      if (sizeof(a) != sizeof(b)) {
-	write(sprintf("Error! Mapping sizes differ! %O (%d) != %O (%d)\n",
-		      a, sizeof(a), b, sizeof(b)));
-	return(0);
-      }
-      foreach(indices(a), mixed i) {
-	if (zero_type(b[i])) {
-	  write(sprintf("Error! Mapping indices differ! %O != %O (%O not in latter)\n",
-			a, b, i));
-	  return(0);
-	}
-	if (!debug_compare_vars(a[i], b[i])) {
-	  return(0);
-	}
-      }
-      break;
-    default:
-      write(sprintf("Type mismatch: %O (%t) != %O (%t)\n", a, a, b, b));
-      return(0);
-      break;
-    }
-  }
-  return(1);
-} 
-#endif /* MODULE_DEBUG */
-
-
 mapping copy_configuration(string from, string to)
 {
-  if(!configs[from])
-    return 0;
+  if(!configs[from]) return 0;
 #ifdef DEBUG
-  write(sprintf("Copying configuration \"%s\" to \"%s\"\n",
-		from, to));
+  write(sprintf("Copying configuration \"%s\" to \"%s\"\n", from, to));
 #endif /* DEBUG */
-  configs[to] = copy_value(configs[from]);
-#ifdef MODULE_DEBUG
-  if (!debug_compare_vars(configs[from], configs[to])) {
-    write(sprintf("Copies don't differ!\n"));
-  }
-#endif /* MODULE_DEBUG */
+  configs[to] = copy_value( configs[from] );
   return configs[to];
 }
 
@@ -172,7 +59,6 @@ void save_it(string cl)
 #ifdef DEBUG_CONFIG
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
-
 
   f = configuration_dir + replace(cl, " ", "_");
 #ifndef THREADS
