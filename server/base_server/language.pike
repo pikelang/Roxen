@@ -2,7 +2,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.22 2000/01/17 16:55:23 nilsson Exp $
+ * $Id: language.pike,v 1.23 2000/02/15 14:13:08 nilsson Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -11,7 +11,7 @@
  * language.
  */
 
-mapping languages = ([ ]);
+private mapping languages = ([ ]);
 
 void initiate_languages()
 {
@@ -73,4 +73,10 @@ public function language(string what, string func)
   return languages[what][func] || nil;
 }
 
+array list_languages() {
+  return indices(languages);
+}
 
+object language_low(string what) {
+  return languages[what];
+}
