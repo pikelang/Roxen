@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.21 2000/02/10 05:46:54 nilsson Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.22 2000/03/02 04:37:09 nilsson Exp $";
 constant thread_safe=1;
 
 
@@ -76,7 +76,7 @@ nomask private inline string extract_user(string from)
   array tmp;
   if (!from || sizeof(tmp = from/":")<2)
     return "-";
-  
+
   return tmp[0];      // username only, no password
 }
 
@@ -106,15 +106,15 @@ string create()
   defvar("block", 0, "Only log in userlog", TYPE_FLAG,
 	 "If set, no entry will be written to the normal log.\n");
 
-  defvar("LogFormat", 
+  defvar("LogFormat",
  "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
  "500: $host ERROR - [$cern_date] \"$method $resource $protocol\" 500 -\n"
  "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length"
 	 ,
 
-	 "Logging Format", 
+	 "Logging Format",
 	 TYPE_TEXT_FIELD,
-	 
+	
 	 "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response acode\n\n"
@@ -147,7 +147,7 @@ string create()
 	 "                  by the client, otherwise '0'\n"
 	 "</pre>");
 
-  
+
   defvar("Logs", ({ "/~%s/" }), "Private logs", TYPE_STRING_LIST,
 	 "These directories want their own log files."
 	 "Either use a specific path, or a pattern, /foo/ will check "
@@ -200,7 +200,7 @@ class CacheFile {
     mapping lc = localtime( time() );
     return sprintf("%4d-%02d-%02d", lc->year+1900, lc->mon+1, lc->mday);
   }
-  
+
   int open(string s, string|void mode)
   {
     int res;
@@ -229,7 +229,7 @@ class CacheFile {
     ready = !res;
     return res;
   }
-  
+
   string status()
   {
     return ((ready?"Free (closed) cache file ("+n+").\n"
@@ -339,11 +339,11 @@ static void do_log(mapping file, object request_id, function log_function)
 
   if(!(form=log_format[(string)file->error]))
     form = log_format["*"];
-  
+
   if(!form) return;
-  
-  form=replace(form, 
-	       ({ 
+
+  form=replace(form,
+	       ({
 		 "$ip_number", "$bin-ip_number", "$cern_date",
 		 "$bin-date", "$method", "$resource", "$protocol",
 		 "$response", "$bin-response", "$length", "$bin-length",
@@ -368,7 +368,7 @@ static void do_log(mapping file, object request_id, function log_function)
 		   extract_user(request_id->realauth),
 		   (string)request_id->cookies->RoxenUserID,
 		 }));
-  
+
   if(search(form, "host") != -1)
     roxen->ip_to_host(request_id->remoteaddr, write_to_log, form,
 		      request_id->remoteaddr, log_function);
@@ -396,7 +396,7 @@ object find_cache_file(string f)
 #endif
   if(!cache_head)
     start();
-  
+
   object c = cache_head;
   do {
     if((c->set_file == f) && !c->ready)
@@ -467,7 +467,7 @@ mixed log(object id, mapping file)
   string s;
   object fnord;
 
-  if((s = home(id->not_query, id)) && 
+  if((s = home(id->not_query, id)) &&
      (fnord=find_cache_file(s)))
   {
     fnord->wait(); // Tell it not to die
