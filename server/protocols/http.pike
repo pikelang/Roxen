@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.173 1999/12/06 21:08:47 grubba Exp $
+// $Id: http.pike,v 1.174 1999/12/06 21:12:38 grubba Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.173 1999/12/06 21:08:47 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.174 1999/12/06 21:12:38 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1405,7 +1405,7 @@ void send_result(mapping|void result)
 	    /* ({ time, len }) */
 	    array(int) since_info = parse_since(since);
 	    if ((since_info[0] >= misc->last_modified) &&
-		(since_info[0] + misc->cacheable >= time(1)) &&
+		(since_info[0] + misc->cacheable >= predef::time(1)) &&
 		((since_info[1] == -1) || (since_info[1] == file->len)))
 	    {
 	      file->error = 304;
