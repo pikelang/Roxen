@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.9 2000/03/29 18:29:58 marcus Exp $
+ * $Id: Module.java,v 1.10 2000/11/13 19:33:23 marcus Exp $
  *
  */
 
@@ -17,6 +17,7 @@ import java.util.Vector;
  * @see LocationModule
  * @see ParserModule
  * @see FileExtensionModule
+ * @see LastResortModule
  * @see ProviderModule
  * @see ExperimentalModule
  * @see SecurityModule
@@ -170,7 +171,8 @@ public abstract class Module {
       (this instanceof FileExtensionModule? MODULE_FILE_EXTENSION : 0) |
       (this instanceof SecurityModule? MODULE_SECURITY : 0) |
       (this instanceof ExperimentalModule? MODULE_EXPERIMENTAL : 0) |
-      (this instanceof ProviderModule? MODULE_PROVIDER : 0);
+      (this instanceof ProviderModule? MODULE_PROVIDER : 0) |
+      (this instanceof LastResortModule? MODULE_LAST : 0);
   }
 
   final boolean queryUnique()
@@ -310,7 +312,8 @@ public abstract class Module {
    */
   public int queryInt(String name)
   {
-    return ((Integer)query(name)).intValue();
+    Object n = query(name);
+    return (n==null? 0 : ((Integer)n).intValue());
   }
 
   /**
