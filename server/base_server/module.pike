@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.209 2004/05/13 17:45:20 mast Exp $
+// $Id: module.pike,v 1.210 2004/05/14 21:18:04 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -639,7 +639,9 @@ string|int authenticated_user_id (string path, RequestID id)
 //! request is authenticated as.
 //!
 //! This function is e.g. used by the default lock implementation to
-//! tell different users holding locks apart.
+//! tell different users holding locks apart. WARNING: Due to some
+//! design issues in the lock system, it's likely that it will change
+//! to not use this function in the future.
 //!
 //! @param path
 //! The requested path below the filesystem location. It has been
@@ -755,6 +757,9 @@ multiset(DAVLock) find_locks(string path,
 //! Check if there are one or more locks that apply to @[path] for the
 //! user the request is authenticated as.
 //!
+//! WARNING: This function has some design issues and will very likely
+//! get a different interface. Compatibility is NOT guaranteed.
+//!
 //! @param path
 //!   Normalized path below the filesystem location.
 //!
@@ -807,10 +812,13 @@ DAVLock|LockFlag check_locks(string path,
 			     int(0..1) recursive,
 			     RequestID id)
 {
-  // Common case.
-  if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
-
   TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
+
+  // Common case.
+  if (!sizeof(file_locks) && !sizeof(prefix_locks)) {
+    TRACE_LEAVE ("Got no locks");
+    return 0;
+  }
 
   path = resource_id (path, id);
 
@@ -857,7 +865,7 @@ DAVLock|LockFlag check_locks(string path,
   }
 
   if (!recursive) {
-    TRACE_LEAVE(sprintf("Returning %O.", shared));
+    SIMPLE_TRACE_LEAVE("Returning %O.", shared);
     return shared;
   }
 
@@ -882,7 +890,7 @@ DAVLock|LockFlag check_locks(string path,
       }
     });
 
-  TRACE_LEAVE(sprintf("Returning %O.", locked_by_auth_user ? LOCK_OWN_BELOW : shared));
+  SIMPLE_TRACE_LEAVE("Returning %O.", locked_by_auth_user ? LOCK_OWN_BELOW : shared);
   return locked_by_auth_user ? LOCK_OWN_BELOW : shared;
 }
 
@@ -930,49 +938,12 @@ static void register_lock(string path, DAVLock lock, RequestID id)
   TRACE_LEAVE("Ok.");
 }
 
-//! Register @[lock] on the path @[path] under the assumption that
-//! there is no other lock already that conflicts with this one, i.e.
-//! that @code{check_locks(path,lock->recursive,id)@} would return
-//! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
-//! @expr{"DAV:exclusive"@}, or @expr{<= LOCK_SHARED_AT@} if
-//! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
+//! Unregister @[lock] that currently is locking the resource at
+//! @[path]. It's assumed that the lock is registered for exactly that
+//! path.
 //!
-//! The implementation must at least support the @expr{"DAV:write"@}
-//! lock type (RFC 2518, section 7). Briefly: An exclusive lock on a
-//! file prohibits other users from changing its content. An exclusive
-//! lock on a directory (aka collection) prohibits other users from
-//! adding or removing files or directories in it. An exclusive lock
-//! on a file or directory prohibits other users from setting or
-//! deleting any of its properties. A shared lock prohibits users
-//! without locks to do any of this, and it prohibits other users from
-//! obtaining an exclusive lock. A resource that doesn't exist can be
-//! locked, provided the directory it would be in exists (relaxed in
-//! RFC 2518Bis (working draft)).
-//!
-//! It's up to @[find_file] et al to actually check that the necessary
-//! locks are held. It can preferably use @[write_access] for that,
-//! which has a default implementation for checking
-//! @expr{"DAV:write"@} locks.
-//!
-//! @param path
-//!   Normalized path (below the filesystem location) that the lock
-//!   applies to.
-//!
-//! @param lock
-//!   The lock to register.
-//!
-//! @returns
-//!   Returns @expr{0@} if the lock is successfully installed or if
-//!   locking isn't used. Returns a status mapping if an error
-//!   occurred.
-mapping(string:mixed) lock_file(string path,
-				DAVLock lock,
-				RequestID id)
-{
-  return 0;
-}
-
-//! Remove @[lock] that currently is locking the resource at @[path].
+//! This function is only provided as a helper to call from
+//! @[unlock_file] if the default lock implementation is to be used.
 //!
 //! @param path
 //!   Normalized path (below the filesystem location) that the lock
@@ -983,13 +954,9 @@ mapping(string:mixed) lock_file(string path,
 //!
 //! @returns
 //!   Returns a status mapping on any error, zero otherwise.
-mapping(string:mixed) unlock_file (string path,
-				   DAVLock lock,
-				   RequestID id)
+static void unregister_lock (string path, DAVLock lock, RequestID id)
 {
-  if (!sizeof (file_locks) && !sizeof (prefix_locks))
-    return 0;			// Lock system not in use.
-  TRACE_ENTER(sprintf("unlock_file(%O, lock(%O), X).", path, lock->locktoken),
+  TRACE_ENTER(sprintf("unregister_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
   mixed auth_user = authenticated_user_id (path, id);
   path = resource_id (path, id);
@@ -1007,9 +974,93 @@ mapping(string:mixed) unlock_file (string path,
   return 0;
 }
 
+//! Register @[lock] on the path @[path] under the assumption that
+//! there is no other lock already that conflicts with this one, i.e.
+//! that @code{check_locks(path,lock->recursive,id)@} would return
+//! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
+//! @expr{"DAV:exclusive"@}, or @expr{<= LOCK_SHARED_AT@} if
+//! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
+//!
+//! The implementation must at least support the @expr{"DAV:write"@}
+//! lock type (RFC 2518, section 7). Briefly: An exclusive lock on a
+//! file prohibits other users from changing its content. An exclusive
+//! lock on a directory (aka collection) prohibits other users from
+//! adding or removing files or directories in it. An exclusive lock
+//! on a file or directory prohibits other users from setting or
+//! deleting any of its properties. A shared lock prohibits users
+//! without locks to do any of this, and it prohibits other users from
+//! obtaining an exclusive lock. A resource that doesn't exist can be
+//! locked, provided the directory it would be in exists (relaxed in
+//! RFC 2518Bis (working draft)). The default implementation fulfills
+//! these criteria.
+//!
+//! It's up to @[find_file] et al to actually check that the necessary
+//! locks are held. It can preferably use @[write_access] for that,
+//! which has a default implementation for checking
+//! @expr{"DAV:write"@} locks.
+//!
+//! @param path
+//!   Normalized path (below the filesystem location) that the lock
+//!   applies to.
+//!
+//! @param lock
+//!   The lock to register.
+//!
+//! @returns
+//!   Returns @expr{0@} if the lock is successfully installed or if
+//!   locking isn't used. Returns a status mapping if an error
+//!   occurred.
+//!
+//! @note
+//!   To use the default lock implementation, call @[register_lock]
+//!   from this function.
+mapping(string:mixed) lock_file(string path,
+				DAVLock lock,
+				RequestID id)
+{
+  return 0;
+}
+
+//! Remove @[lock] that currently is locking the resource at @[path].
+//! It's assumed that the lock is registered for exactly that path.
+//!
+//! @param path
+//!   Normalized path (below the filesystem location) that the lock
+//!   applies to.
+//!
+//! @param lock
+//!   The lock to unregister. (It must not be changed or destructed.)
+//!
+//! @param id
+//!   @mixed
+//!     @type RequestID
+//!	  The request that attempted to unlock the lock. The function
+//!	  should do the normal access checks before unlocking the lock
+//!	  in this case.
+//!
+//!	@type int(0..0)
+//!	  The lock is unlocked internally by the server (typically due
+//!	  to a timeout) and should be carried out without any access
+//!	  checks. The function must succeed and return zero in this
+//!	  case.
+//!   @endmixed
+//!
+//! @returns
+//!   Returns a status mapping on any error, zero otherwise.
+//!
+//! @note
+//!   To use the default lock implementation, call @[unregister_lock]
+//!   from this function.
+mapping(string:mixed) unlock_file (string path,
+				   DAVLock lock,
+				   RequestID|int(0..0) id);
+
 //! Checks that the conditions specified by the WebDAV @expr{"If"@}
 //! header are fulfilled on the given path (RFC 2518 9.4). This means
 //! that locks are checked as necessary using @[check_locks].
+//!
+//! WARNING: This function has some design issues and will very likely
+//! get a different interface. Compatibility is NOT guaranteed.
 //!
 //! @param path
 //!   Path (below the filesystem location) that the lock applies to.
@@ -1138,6 +1189,9 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 //! write access to @[path]. It should at least call
 //! @[check_if_header] to check DAV locks. It takes the same arguments
 //! and has the same return value as that function.
+//!
+//! WARNING: This function has some design issues and will very likely
+//! get a different interface. Compatibility is NOT guaranteed.
 //!
 //! A filesystem module should typically put all needed write access
 //! checks here and then use this from @[find_file()],
@@ -1269,7 +1323,7 @@ mapping(string:mixed) make_collection(string path, RequestID id)
 //!   type for details.
 //!
 //! @returns
-//!   @expr{0@} (zero) in success or an appropriate status mapping for
+//!   @expr{0@} (zero) on success or an appropriate status mapping for
 //!   any error.
 static mapping(string:mixed) copy_properties(string source, string destination,
 					     PropertyBehavior behavior, RequestID id)
