@@ -1,7 +1,6 @@
 /*
- * $Id: debug_info.pike,v 1.5 2000/06/26 08:26:59 lange Exp $
+ * $Id: debug_info.pike,v 1.6 2000/07/17 16:12:41 lange Exp $
  */
-inherit "roxenlib";
 #include <stat.h>
 
 constant action = "debug_info";

@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.2 2000/04/05 23:40:18 per Exp $
+ * $Id: requeststatus.pike,v 1.3 2000/07/17 16:12:41 lange Exp $
  */
 
 inherit "wizard";
@@ -33,6 +33,6 @@ mixed page_1(object id)
   return
     "<b>These are all active virtual servers. They are sorted by the "
     "number of requests they have received - the most active being first. "
-    "Servers which haven't recevied any requests are not listed.</b>" +
+    "Servers which haven't recieved any requests are not listed.</b>" +
     res+"<p><cf-ok>";
 }

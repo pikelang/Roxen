@@ -1,6 +1,5 @@
 #include <config.h>
 #if constant(all_threads)
-inherit "roxenlib";
 
 constant name= "Thread backtrace";
 constant doc = ("Shows a backtrace (stack) for each and every thread in roxen.");
@@ -51,7 +50,7 @@ string format_backtrace(array bt, object id)
   foreach(bt-({""}), string line)
   {
     line += get_id( (line/":")[0] );
-    res += ("<li value="+(--q)+"> "+html_encode_string(line)+"<br />\n");
+    res += ("<li value="+(--q)+"> "+Roxen.html_encode_string(line)+"<br />\n");
   }
   return res;
 }

@@ -1,5 +1,4 @@
 #include <config_interface.h>
-inherit "roxenlib";
 
 string parse( RequestID id )
 {
@@ -37,7 +36,7 @@ string parse( RequestID id )
   master()->set_inhibit_compile_errors( 0 );
 
   if( config_setting( "devel_mode" ) && strlen( ce->get() ) )
-    res += ({"Warning: <pre>"+html_encode_string(ce->get())+"</pre>"});
+    res += ({"Warning: <pre>"+Roxen.html_encode_string(ce->get())+"</pre>"});
   if( strlen( ce->get() ) )
     report_debug( "While compiling tasks: \n"+ce->get() );
   return sort(res)*"\n";
