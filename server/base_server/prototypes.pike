@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.119 2004/05/12 14:31:10 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.120 2004/05/13 12:35:14 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1535,10 +1535,7 @@ class MultiStatusStatus (int http_code, void|string message)
 }
 
 private SimpleElementNode ok_status_node =
-  lambda () {
-    return SimpleElementNode("DAV:status", ([]))->
-      add_child(SimpleTextNode("HTTP/1.1 200 OK"));
-  }();
+  SimpleElementNode("DAV:status", ([]))->add_child(SimpleTextNode("HTTP/1.1 200 OK"));
 
 class MultiStatusPropStat
 {
@@ -1850,6 +1847,7 @@ static class PropertySet
 					multiset(string)|void filt);
 }
 
+//! See @[RoxenModule.check_locks].
 enum LockFlag {
   LOCK_NONE		= 0,
   LOCK_SHARED_BELOW	= 2,
@@ -1859,11 +1857,23 @@ enum LockFlag {
   LOCK_EXCL_AT		= 7
 };
 
-//! State of the Overwrite header.
+//! How to handle an existing destination when files or directories
+//! are moved or copied in a filesystem.
 enum Overwrite {
-  NEVER_OVERWRITE = -1,	//! The Overwrite header is "F".
-  MAYBE_OVERWRITE = 0,	//! No Overwrite header.
-  DO_OVERWRITE = 1,	//! The Overwrite header is "T".
+  NEVER_OVERWRITE = -1,
+  //! Fail if the destination exists. Corresponds to an Overwrite
+  //! header with the value "F" (RFC 2518 9.6).
+
+  MAYBE_OVERWRITE = 0,
+  //! If the source and destination are directories, overwrite the
+  //! properties only. If the source and destination are files,
+  //! overwrite the file along with the content. Otherwise fail if the
+  //! destination exists.
+
+  DO_OVERWRITE = 1,
+  //! If the destination exists then delete it recursively before
+  //! writing the new content. Corresponds to an Overwrite header with
+  //! the value "T" (RFC 2518 9.6).
 };
 
 //! State of the DAV:PropertyBehavior for this source.
