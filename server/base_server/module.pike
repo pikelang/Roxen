@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.171 2004/05/04 12:35:13 mast Exp $
+// $Id: module.pike,v 1.172 2004/05/04 13:26:55 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -646,6 +646,8 @@ multiset(DAVLock) find_locks(string path,
       }
     }
   }
+
+  add_locks = 0;
 
   return sizeof(locks) && locks;
 }
