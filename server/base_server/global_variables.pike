@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.94 2002/06/15 21:03:54 nilsson Exp $
+// $Id: global_variables.pike,v 1.95 2002/09/26 22:12:24 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -248,6 +248,12 @@ void define_global_variables(  )
          , "Font directories",
 	 TYPE_DIR_LIST,
 	 "This is where the fonts are located.");
+
+  defvar("font_oversampling", 1, "Font oversampling", TYPE_FLAG,
+	 "If set to Yes, fonts will be oversampled resulting "
+	 "in higher quality but more fuzz. This will require clearing "
+	 "of various graphics caches like the Graphic text and "
+	 "GButton caches to take full effect.");
 
   defvar("logdirprefix", "../logs/",
 	 "Logging: Log directory prefix",
