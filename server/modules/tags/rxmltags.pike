@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.165 2000/09/02 14:09:34 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.166 2000/09/03 02:33:36 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -948,29 +948,10 @@ class TagSetCookie {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(!args->name)
-	RXML.parse_error("Requires a name attribute.\n");
-
-      string cookies = Roxen.http_encode_cookie(args->name)+"="+
-	Roxen.http_encode_cookie(args->value||"");
       int t;
-
-      if(args->persistent)
-	t=(3600*(24*365*2));
-      else
-	t=Roxen.time_dequantifier(args);
-
-      if(t)
-	cookies += "; expires="+Roxen.http_date(t+time(1));
-
-      if (args->domain)
-	cookies += "; domain=" + Roxen.http_encode_cookie(args->domain);
-
-      //FIXME: Check the parameter's usability
-      cookies += "; path=" + Roxen.http_encode_cookie(args->path||"/");
-
-      Roxen.add_http_header(_extra_heads, "Set-Cookie", cookies);
-
+      if(args->persistent) t=-1; else t=Roxen.time_dequantifier(args);
+      Roxen.set_cookie( id,  args->name, (args->value||""), t, 
+                        args->domain, args->path );
       return 0;
     }
   }
@@ -988,15 +969,15 @@ class TagRemoveCookie {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+//    really... is this error a good idea?  I don't think so, it makes
+//    it harder to make pages that use cookies. But I'll let it be for now.
+//       /Per
+
       if(!id->cookies[args->name])
-	RXML.run_error("That cookie does not exists.\n");
-
-      Roxen.add_http_header(_extra_heads, "Set-Cookie",
-			    Roxen.http_encode_cookie(args->name)+"="+
-			    Roxen.http_encode_cookie(args->value||"")+
-			    "; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
-			    );
-
+        RXML.run_error("That cookie does not exists.\n");
+      Roxen.remove_cookie( id, args->name, 
+                           (args->value||id->cookies[args->name]||""), 
+                           args->domain, args->path );
       return 0;
     }
   }
