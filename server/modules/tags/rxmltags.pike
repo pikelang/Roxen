@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.51 2000/01/25 22:31:16 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.52 2000/01/26 00:44:17 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -41,7 +41,10 @@ string query_provides() {
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
+constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
+ Internal Roxen tag. Not yet documented.
+</desc>",
+
 "aconf":#"<desc cont>
  Creates a link that can modify the persistent states in the cookie
  RoxenConfig.
@@ -53,11 +56,13 @@ constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
 </attr>
 
 <attr name=add value=string>
- The 'cookie' or 'cookies' that should be added, in a comma seperated list.
+ The \"cookie\" or \"cookies\" that should be added, in a comma
+ seperated list.
 </attr>
 
 <attr name=drop value=string>
- The 'cookie' or 'cookies' that should be droped, in a comma seperated list.
+ The \"cookie\" or \"cookies\" that should be droped, in a comma
+ seperated list.
 </attr>
 
 <attr name=class value=string>
@@ -108,20 +113,25 @@ constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
  This CSS class definition will apply to the a-element.
 </attr>
 
-All other attributes will be inherited by the generated a tag",
+ Adds or removes a prestate option. Prestate options are simple
+ toggles, and are added to the URL of the page. Use <tag>if</tag>
+ prestate=...<tag>/if</tag> to test for the presence of a prestate.
+ <tag>apre</tag> works just like the <tag>a href=...</tag> container,
+ but if no \"href\" attribute is specified, the current page is used.",
+
 "auth-required":#"<desc tag>
- Adds an HTTP auth required header and return code, that will force
+ Adds an HTTP auth required header and return code (401), that will force
  the user to supply a login name and password. This tag is needed when
  using access control in RXML in order for the user to be prompted to
  login.
 </desc>
 
 <attr name=realm value=string>
- Hmm??
+ The realm you are logging on to, i.e \"Intranet foo\".
 </attr>
 
 <attr name=message value=string>
- Returns a message if a login failed. ******Korrekt???********
+ Returns a message if a login failed or cancelled.
 </attr>",
 
 "autoformat":#"<desc cont>
@@ -141,14 +151,23 @@ All other attributes will be inherited by the generated a tag",
 </attr>",
 
 "cache":#"<desc cont>
-
+ This simple tag RXML parse its contents and cache them using the
+ normal Roxen memory cache. They key used to store the cached contents
+ is the MD5 hash sum of the contents, the accessed file name, the
+ query string, the server URL and the authentication information, if
+ available. This should create an unique key.
 </desc>
 
 <attr name=key value=string>
-
+ Append this value to the hash used to identify the contents for less
+ risk of incorrect caching. This shouldn't really be needed.
 </attr>",
 
-"catch":#"<desc cont></desc>",
+"catch":#"<desc cont>
+ Evaluates the RXML code, and, if nothing goes wrong, returns the
+ parsed contents. If something does go wrong, the error message is
+ returned instead. See also <tag><ref type=tag>throw</ref></tag>.
+</desc>",
 
 "configimage":#"<desc tag>
  Returns one of the configuration images. The src attribute is required.
@@ -177,7 +196,14 @@ All other attributes will be inherited by the generated a tag",
 
 "cset":#"<desc cont></desc>",
 
-"crypt":#"<desc cont></desc>",
+"crypt":#"<desc cont>
+ Encrypts the contents as a Unix style password. Useful when combined
+ with services that use such passwords. <p>Unix style passwords are
+ one-way encrypted, to prevent the actual clear-text password from
+ being stored anywhere. When a login attempt is made, the password
+ supplied is also encrypted and then compared to the stored encrypted
+ password.</p>
+</desc>",
 
 "date":#"<desc tag>
  Inserts the time and date. Does not require attributes.
@@ -276,7 +302,7 @@ All other attributes will be inherited by the generated a tag",
 </attr>
 
 <attr name=showid value=string>
- Shows a part of the id object. E.g. showid='id->request_headers'.
+ Shows a part of the id object. E.g. showid=\"id->request_headers\".
 </attr>",
 
 "dec":#"<desc tag>
@@ -289,8 +315,8 @@ All other attributes will be inherited by the generated a tag",
 
 "default":#"<desc cont>
 
- Makes it easier to give default values to '<tag>select</tag>' or
- '<tag>checkbox</tag>' form elements.
+ Makes it easier to give default values to \"<tag>select</tag>\" or
+ \"<tag>checkbox</tag>\" form elements.
 
  <p>The <tag>default</tag> container tag is placed around the form element it
  should give a default value.</p>
@@ -315,13 +341,13 @@ All other attributes will be inherited by the generated a tag",
 </attr>",
 
 "doc":#"<desc cont>
- Eases documentation by replacing '{', '}' and '&' with '<', '>' and
- '&'. No attributes required.
+ Eases documentation by replacing \"{\", \"}\" and \"&\" with \"<\", \">\" and
+ \"&\". No attributes required.
 </desc>
 
 <attr name=quote>
- Instead of replacing '{' and '}', '<' and '>' is replaced with '&amp;lt;'
- and '&amp;gt;'.
+ Instead of replacing \"{\" and \"}\", \"<\" and \">\" is replaced with \"&amp;lt;\"
+ and \"&amp;gt;\".
 </attr>
 
 <attr name=pre>
@@ -333,45 +359,46 @@ All other attributes will be inherited by the generated a tag",
 </attr>",
 
 "expire-time":#"<desc tag>
- Finns ingen tidigare doc.
+ Sets cache expire time for this document. Default bla bla.
 </desc>
 
 <attr name=now>
-
+ The document expires now.
 </attr>
 
-<attr name=hours value=number>
-
-</attr>
-
-
-<attr name=beats value=number>
-
-</attr>
-
-<attr name=minutes value=number>
-
-</attr>
-
-<attr name=seconds value=number>
-
-</attr>
-
-<attr name=days value=number>
-
-</attr>
-
-<attr name=weeks value=number>
-
+<attr name=years value=number>
+ Add this number of years to the result.
 </attr>
 
 <attr name=months value=number>
-
+ Add this number of months to the result.
 </attr>
 
-<attr <name=years value=number>
+<attr name=weeks value=number>
+ Add this number of weeks to the result.
+</attr>
 
-</attr>",
+<attr name=days value=number>
+ Add this number of days to the result.
+</attr>
+
+<attr name=hours value=number>
+ Add this number of hours to the result.
+</attr>
+
+<attr name=beats value=number>
+ Add this number of beats to the result.
+</attr>
+
+<attr name=minutes value=number>
+ Add this number of minutes to the result.
+</attr>
+
+<attr name=seconds value=number>
+ Add this number of seconds to the result.
+</attr>
+ It is not possible at the time to set the date beyond year 2038,
+ since a unix time_t is used.",
 
 "for":#"<desc cont>
  Makes it possible to create loops in RXML.
@@ -421,26 +448,40 @@ All other attributes will be inherited by the generated a tag",
 
 "gauge":#"<desc cont>
  Measures how much CPU time it takes to run its contents through the
- RXML parser.
+ RXML parser. Returns the number of seconds it took to parse the
+ contents.
 </desc>
 
 <attr name=define value=string>
-
+ The result will be put into a variable. E.g. define=var.gauge vill
+ put the result in a variable that can be reached with &var.gauge;.
 </attr>
 
 <attr name=silent>
-
+ Don't print anything.
 </attr>
 
 <attr name=timeonly>
-
+ Only print the time.
 </attr>
 
 <attr name=resultonly>
-
+ Only the result of the parsing. Useful if you want to put the time in
+ a database or such.
 </attr>",
 
-"header":#"<desc tag>sfdjhbskdg</desc>",
+"header":#"<desc tag>
+ Adds a header to this document.
+</desc>
+
+<attr name=name value=string>
+ The name of the header.
+</attr>
+
+<attr name=value value=string>
+ The value of the header.
+</attr>
+ See the Appendix for a list of HTTP headers.",
 
 "imgs":#"<desc tag>
  Generates a image tag with proper dimensions. Attribute src is required.
@@ -497,8 +538,8 @@ All other attributes will be inherited by the generated a tag",
 </attr>
 
 <attr name=quote value=html,none>
- How the inserted data should be quoted. Default is 'html', except for
- href and file where it's 'none'.
+ How the inserted data should be quoted. Default is \"html\", except for
+ href and file where it's \"none\".
 </attr>",
 
 "maketag":#"<desc cont>
@@ -557,7 +598,30 @@ All other attributes will be inherited by the generated a tag",
  than Roxen Webserver's virtual filesystem.
 </attr>",
 
-"quote":"<desc tag></desc>",
+"quote":#"<desc tag></desc>
+
+<attr name=start value=character>
+ Set the end quote character.
+</attr>
+
+<attr name=end value=character>
+ Set the start quote character.
+</attr>
+
+ Warning: This function is not thread-safe, and might behave
+ unexpectedly when used in a threaded roxen on several different
+ pages, using several different quote characters. The only safe use is
+ to use a standard begin and endquote, start=\"[\" end=\"]\", as an
+ example, please note that you have to quote the quote characters,
+ since utter caos would be the result the second time you use this tag
+ otherwise. Consider:<p>
+
+ <tag>quote start=[ end=]</tag>
+ <tag>quote start=[ end=]</tag>
+ <p>
+ <p>The second time this code is run, the starting quote character would
+ be set to \" \".</p>",
+
 
 "random":#"<desc cont>
  Randomly chooses a message from its contents.
@@ -606,8 +670,16 @@ All other attributes will be inherited by the generated a tag",
 </attr>
 
 <attr name=text value=string>
-Tja, steker greker kanske?
-</attr>",
+ Sends a text string to the browser, that hints from where and why the
+ page was redirected. Not all browsers will show this string. Only
+ special clients like Telnet uses it.
+</attr>
+ Arguments prefixed with \"add\" or \"drop\" are treated as prestate
+ toggles, which are added or removed, respectively, from the current
+ set of prestates in the URL in the redirect header (see also <tag
+ <ref type=tag>apre</ref></tag>). Note that this only works when the
+ to=... URL is absolute, i.e. begins with a \"/\", otherwise these
+ state toggles have no effect.",
 
 "remove-cookie":#"<desc tag>
  Removes a cookie.
@@ -651,7 +723,7 @@ load.",
 
 <attr name=separator value=string>
  Defines what string should seperate the strings in the from and to
- attributes. Default is ','.
+ attributes. Default is \",\".
 </attr>
 
 <attr name=type value=word,words>
@@ -682,7 +754,7 @@ load.",
 </attr>
 
 <attr name=alt value=string>
- The image description. Default is 'Powered by Roxen'.
+ The image description. Default is \"Powered by Roxen\".
 </attr>
 
 <attr name=border value=number>
@@ -731,7 +803,12 @@ Sets a variable. The variable attribute is required.
 
 <attr name=eval value=string>
  An RXML expression whose evaluated value the variable should have.
-</attr>",
+</attr>
+
+ If none of the above attributes are specified, the variable is unset.
+ If debug is currently on, more specific debug information is provided
+ if the operation failed. See also: <tag><ref
+ type=tag>append</ref></tag> and <tag><ref type=tag>debug</ref></tag>",
 
 "set-cookie":#"<desc tag>
  Sets a cookie that will be stored by the user's browser. This is a
@@ -744,31 +821,31 @@ Sets a variable. The variable attribute is required.
  The name of the cookie.
 </attr>
 
-<attr name=seconds>
+<attr name=seconds value=number>
  Add this number of seconds to the time the cookie is kept.
 </attr>
 
-<attr name=minutes>
+<attr name=minutes value=number>
  Add this number of minutes to the time the cookie is kept.
 </attr>
 
-<attr name=hours>
+<attr name=hours value=number>
  Add this number of hours to the time the cookie is kept.
 </attr>
 
-<attr name=days>
+<attr name=days value=number>
  Add this number of days to the time the cookie is kept.
 </attr>
 
-<attr name=weeks>
+<attr name=weeks value=number>
  Add this number of weeks to the time the cookie is kept.
 </attr>
 
-<attr name=months>
+<attr name=months value=number>
  Add this number of months to the time the cookie is kept.
 </attr>
 
-<attr name=years>
+<attr name=years value=number>
  Add this number of years to the time the cookie is kept.
 </attr>
 
@@ -781,18 +858,29 @@ Sets a variable. The variable attribute is required.
 </attr>
 
 <attr name=path value=string>
- ?????????????
+Adds a cookie named \"name\" with the value \"value\".
 </attr>
- It is not possible to set the date beyond year 2038. By default the
- cookie will be kept until the year 2038. Note that the change of a
- cookie will not take effect until the next page load.",
+
+ If persistent is specified; the cookie will be persistent until year
+ 2038, otherwise, the specified delays are used, just as for <tag><ref
+ type=tag>expire-time</ref></tag> (<expire-time help>).
+
+ Note that the change of a cookie will not take effect until the
+ next page load.",
 
 "set-max-cache":#"<desc tag>
+ Set the maximum time this document can be cached in any ram caches.
 
+ <p>Default is to get this time from the other tags in the document
+ (as an example, <tag>if supports=...</tag> sets the time to 0 seconds since
+ the result of the test depends on the client used.</p>
+
+ <p>You must do this at the end of the document, since many of the
+ normal tags will override this value.</p>
 </desc>
 
-<attr name=time value=number>
-
+<attr name=time value=number of seconds>
+ Add this number of seconds to the time this page was last loaded.
 </attr>",
 
 "smallcaps":#"<desc cont>
@@ -838,7 +926,11 @@ Sets a variable. The variable attribute is required.
  Reversed order sort.
 </attr>",
 
-"throw":#"<desc cont></desc>",
+"throw":#"<desc cont>
+ Throws an exception, with the enclosed text as the error message.
+ This tag has a close relation to <tag>catch</tag>. The RXML parsing
+ will stop at the <tag>throw</tag> tag.
+</desc>",
 
 "trimlines":#"<desc cont>
  This tag removes all empty lines from the contents.
