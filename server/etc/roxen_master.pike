@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.92 2000/05/11 04:29:52 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.93 2000/05/13 16:48:37 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -39,7 +39,7 @@ class MyCodec
     else if (objectp (x)) 
     {
       array(string) ids = ({});
-      if(object_program(x)->is_resolv_dirnode)
+      if(x->is_resolv_dirnode)
       {
         /* FIXME: this is a bit ad-hoc */
         string dirname=x->dirname;
