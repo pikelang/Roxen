@@ -182,11 +182,7 @@ class FTFont
   }
 
   mapping write_with_info( string ... what ) {
-#ifdef FREETYPE_OVERSHOOT
     return low_write_with_info(1, @what);
-#else
-    return low_write_with_info(0, @what);
-#endif
   }
 
   mapping low_write_with_info( int do_overshoot, string ... what )
