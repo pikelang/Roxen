@@ -116,6 +116,9 @@ install_only:
 	  mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old ; \
 	fi
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
+	@if test -f $(prefix)/roxen/server.old/etc/environment ; then \
+	  cp $(prefix)/roxen/server.old/etc/environment $(prefix)/roxen/server/etc/ ; \
+	fi
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/$(PIKEVERSION)/src/pike $(prefix)/roxen/server/bin
