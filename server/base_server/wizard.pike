@@ -1,9 +1,9 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.86 1999/07/11 00:20:55 peter Exp $
+ * $Id: wizard.pike,v 1.87 1999/07/11 16:23:59 peter Exp $
  *  name="Wizard generator";
- *  doc="This file generats all the nice wizards";
+ *  doc="This file generates all the nice wizards";
  * 
  */
 
@@ -178,7 +178,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     if (current && current != "0" &&
 	(current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
-    return make_tag("input",m);
+    res=make_tag("input",m);
+    m->type="hidden";
+    m->value="0";
+    return res+make_tag("input", m);
 
    case "int":
     m->type = "number";
