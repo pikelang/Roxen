@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.7 2002/10/22 08:50:00 jonasw Exp $
+// $Id: SloppyDOM.pmod,v 1.8 2004/12/01 14:34:43 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -373,7 +373,7 @@ static class NodeWithChildElements
   //! @note
   //! Not DOM compliant.
   {
-    sscanf (path, "%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", string name, path);
+    sscanf (path, "%*[ \t\n\r]%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", string name, path);
 
     void simple_path_error (string msg, mixed... args)
     {
@@ -386,7 +386,7 @@ static class NodeWithChildElements
     mixed res;
 
     if (!sizeof (name)) {
-      if (sscanf (path, "@%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", name, path)) {
+      if (sscanf (path, "@%*[ \t\n\r]%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", name, path)) {
 	if (!sizeof (name))
 	  simple_path_error ("No attribute name after @ in ");
 	mapping(string:string) attr = this_object()->attributes;
@@ -402,7 +402,7 @@ static class NodeWithChildElements
 
     else if (has_prefix (path, "(")) {
       string arg;
-      if (sscanf (path, "(%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r])%*[ \t\n\r]%s",
+      if (sscanf (path, "(%*[ \t\n\r]%[^][ \t\n\r/@(){},]%*[ \t\n\r])%*[ \t\n\r]%s",
 		  arg, path) != 5)
 	simple_path_error ("Invalid node type expression in %O in ", name + path);
       if (sizeof (arg) && name != "processing-instruction")
