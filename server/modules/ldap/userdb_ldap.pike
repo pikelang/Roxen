@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.16 2004/05/20 16:04:10 _cvs_stephen Exp $";
+  "$Id: userdb_ldap.pike,v 1.17 2004/05/22 17:08:35 _cvs_stephen Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -100,7 +100,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
     if (sizeof(pass) > 6)
       switch (upper_case(pass[..4])) {
 	case "{SHA}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.sha()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.SHA1.hash(password)));
 	  DEBUGLOG ("Trying SHA digest ...");
 	  break;
 
@@ -108,13 +108,13 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.sha()->update(password+salt)->digest()+salt));
+ 	    flg = (pass[6..] == MIME.encode_base64(Crypto.SHA1.hash(password+salt)+salt));
 	    DEBUGLOG ("Trying SSHA digest ...");
 	  }
 	  break;
 
 	case "{MD5}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.MD5()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.MD5.hash(password)));
 	  DEBUGLOG ("Trying MD5 digest ...");
 	  break;
 
@@ -122,7 +122,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.MD5()->update(password+salt)->digest()+salt));
+ 	    flg = (pass[6..] == MIME.encode_base64(Crypto.MD5.hash(password+salt)+salt));
 	    DEBUGLOG ("Trying SMD5 digest ...");
 	  }
 	  break;
