@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.381 2000/01/02 23:55:53 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.382 2000/01/03 01:24:59 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3052,4 +3052,53 @@ mapping host_accuracy_cache = ([]);
 int is_ip(string s)
 {
   return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
+}
+
+constant months=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
+	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
+		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
+	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
+
+#define MAX_SINCE_CACHE 16384
+static mapping(string:int) since_cache=([ ]);
+array(int) parse_since(string date)
+{
+  if(sizeof(date)<14) return({0,-1});
+  int t;
+  int length = -1;
+
+#if constant(mktime)
+  string extra;
+  sscanf(lower_case(date), "%*s, %s; length=%d", date, length);
+
+  if(!(t=since_cache[date])) {
+    int day, year, month, hour, minute, second, length;
+    string m;
+    if(sscanf(date, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    {
+      month=months[m];
+    } else   if(date[2]==',') {
+      sscanf(date, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      if(year >= 1900) year -= 1900;
+      month=months[m];
+    } else if(!(int)date) {
+      sscanf(date, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
+      month=months[m];
+      year -= 1900;
+    } else {
+      sscanf(date, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      month=months[m];
+      if(year >= 1900) year -= 1900;
+    }
+    catch {
+      t = mktime(second, minute, hour, day, month, year, -1, 0);
+    };
+    if(t) {
+      if (sizeof(since_cache) > MAX_SINCE_CACHE)
+	since_cache = ([]);
+      since_cache[date]=t;
+    }
+  }
+#endif /* constant(mktime) */
+  return ({ t, length });
 }
