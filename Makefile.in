@@ -89,6 +89,7 @@ install: all
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/src/pike $(prefix)/roxen/server/bin
+	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
 	cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
 	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
