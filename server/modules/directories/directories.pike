@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.26 1998/12/07 18:19:59 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.27 1998/12/07 18:22:45 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -46,7 +46,7 @@ class Dirnode
 
   inline string blink(string a,string b) 
   { 
-    return ("<a href="+(b+"?"+(nocache++))+">"+(a)); 
+    return ("<a href="+(b+"?"+(nocache++))+">"+(a)+"</a>"); 
   }
 
   // string path(int i)
