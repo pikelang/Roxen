@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.43 2000/04/04 20:21:55 marcus Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.44 2000/04/04 20:45:09 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -82,9 +82,23 @@ constant tagdoc=(["gbutton":"","gbutton-url":""]);
  */
 #endif
 
+function TIMER( function f )
+{
+#if 0
+  return lambda(mixed ... args) {
+           int h = gethrtime();
+           mixed res;
+           werror("Drawing ... ");
+           res = f( @args );
+           werror(" %.1fms\n", (gethrtime()-h)/1000000.0 );
+           return res;
+         };
+#endif
+  return f;
+}
 void start()
 {
-  button_cache = roxen.ImageCache("gbutton", draw_button);
+  button_cache = roxen.ImageCache("gbutton", TIMER(draw_button));
 }
 
 Image.Layer layer_slice( Image.Layer l, int from, int to )
@@ -288,12 +302,12 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   if( args->extra_frame_layers )
   {
-    array l = ({ frame });
+    array l = ({ });
     foreach( args->extra_frame_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
-    if( sizeof( l ) > 1)
-      frame = Image.lay( l );
+    if( sizeof( l ) )
+      frame = Image.lay( l+({frame}) );
   }
 
   if( args->extra_mask_layers )
@@ -310,21 +324,6 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     }
   }
 
-  if( args->extra_background_layers )
-  {
-    array l = ({ });
-    foreach( args->extra_background_layers/",", string q )
-      l += ({ ll[q] });
-    l-=({ 0 });
-    if( sizeof( l ) )
-    {
-      if( background )
-        l = ({ background })+l;
-      background = Image.lay( l );
-    }
-  }
-
-
   right = frame->xsize()-right;
   frame = stretch_layer( frame, left, right, req_width );
   if (mask != frame)
@@ -332,23 +331,26 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   array(Image.Layer) button_layers = ({
      Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
-                  mask->alpha()),
+                  mask->alpha()->scale(req_width,frame->ysize())),
   });
 
-  if( background )
-  {
-    if( !background->alpha() )
-      background->set_image( background->image(),
-                             Image.Image( background->xsize(),
-                                          background->ysize(),
-                                          ({255,255,255}) ) );
-    if( args->dim )
-      background->set_alpha_value( 0.3 );
-    background = stretch_layer( background, left, right, req_width );
-    button_layers += ({ background });
-  }
-  button_layers += ({ frame });
 
+  if( args->extra_background_layers || background)
+  {
+    array l = ({ background });
+    foreach( (args->extra_background_layers||"")/","-({""}), string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    foreach( l, object ll )
+    {
+      if( args->dim )
+        ll->set_alpha_value( 0.3 );
+      button_layers += ({ stretch_layer( ll, left, right, req_width ) });
+    }
+  }
+
+
+  button_layers += ({ frame });
   frame->set_mode( "value" );
 
   if( args->dim )
@@ -398,12 +400,13 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   {
     array q = map(args->extra_layers/",",
                   lambda(string q) { return ll[q]; } )-({0});
-    if( sizeof( q ) > 1)
-      button_layers += ({stretch_layer(Image.lay(q),left,right,req_width)});
-    else if( sizeof( q ) )
-      button_layers += ({ stretch_layer( q[0], left, right, req_width ) });
+    foreach( q, object ll )
+    {
+      if( args->dim )
+        ll->set_alpha_value( 0.3 );
+      button_layers += ({stretch_layer(ll,left,right,req_width)});
+    }
   }
-
 
   button_layers  -= ({ 0 });
   // left layers are added to the left of the image, and the mask is
@@ -451,14 +454,13 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   //  fix transparency (somewhat)
   if( !equal( args->pagebg, args->bg ) )
-    button_layers +=
-      ({
-        Image.Layer(([
-          "fill":args->pagebg,
-          "alpha":button_layers[0]->alpha()->invert(),
-        ]))
-      });
-
+    return button_layers  + 
+           ({
+             Image.Layer(([
+               "fill":args->pagebg,
+               "alpha":button_layers[0]->alpha()->invert(),
+             ]))
+           });
   return button_layers;
 }
 
