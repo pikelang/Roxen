@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.207 1999/09/05 01:35:36 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.208 1999/09/26 02:41:51 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -531,7 +531,7 @@ array (function) url_modules(object id)
 }
 
 mapping api_module_cache = ([]);
-mapping api_functions(object id)
+mapping api_functions(void|object id)
 {
   return copy_value(api_module_cache);
 }
