@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.13 1996/12/02 13:10:55 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.14 1996/12/03 04:13:29 neotron Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
@@ -1903,6 +1903,12 @@ private void update_global_vars(int from)
 private void update_vars(int from)
 {
   string report = "";
+  int i;
+  string modname;
+  mapping redir;
+  mapping enabled_modules = retrieve("EnabledModules");
+  array p, res=({});
+
   perr("Updating configuration file....\n");
   perr("----------------------------------------------------\n");
   switch(from)
@@ -1913,7 +1919,6 @@ private void update_vars(int from)
    // Ports changed from int, int, int ... to
    // ({ int, "http", query("PEther") })
    //
-    array p, res=({});
     
     if(sizeof(retrieve("spider#0")))
     {
@@ -1931,13 +1936,7 @@ private void update_vars(int from)
 
     // Now comes the tricky part..
     // Fix all thoose redirection modules.
-
-    res=({});
-    int i;
-    string modname;
-    mapping redir;
-    mapping enabled_modules = retrieve("EnabledModules");
-    
+    res = ({});
     while(sizeof(redir = retrieve(modname = "redirect#"+i++)))
     {
       string from, to;
@@ -2127,8 +2126,25 @@ private void update_vars(int from)
      enable_module("htaccess#0");
    }
    case 4:
-// Current level. 
+   case 5:
+    
+    while(sizeof(redir = retrieve(modname = "lpcscript#"+i)))
+    {
+      remove( modname );
+      if(search(redir->exts, "pike") == -1)
+	redir->exts += ({"pike"});
+      if(enabled_modules[modname] )
+	m_delete( enabled_modules, modname );
+      store("pikescript#"+i, redir, 1);
+      enable_module("pikescript#"+i);
+      perr("Renaming "+modname+" to pikescript#"+i+"\n");
+      i++;
+    }
+    store( "EnabledModules", enabled_modules, 1 );
+    
+   case 6:// Current level. 
   }
+
   perr("----------------------------------------------------\n");
   report_debug(report);
 }

@@ -5,4 +5,4 @@
 #define IP_TO_HOST 'I'
 #endif
 
-#define CONFIGURATION_FILE_LEVEL 5
+#define CONFIGURATION_FILE_LEVEL 6
