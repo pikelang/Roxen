@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.270 2001/07/12 23:08:02 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.271 2001/07/16 00:01:01 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1010,8 +1010,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
 
-  while( id->misc->orig )
-    id = id->misc->orig;
+  id = id->root_id;
 
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
