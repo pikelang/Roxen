@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.6 2004/02/09 09:28:02 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.7 2004/02/10 01:14:06 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -556,18 +556,72 @@ class TagEmitTimeRange
     Calendar cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
     string what, output_unit;
-
-		int unit_no = search(output_units, what);
-		int compare_num = ouput_unit_no[unit_no];
-
+    int compare_num, unit_no;
     if(what = m_delete(args, "unit"))
     {
       output_unit = output_units[search(output_units, what)];
       if(output_unit == "unknown")
 	RXML.parse_error(sprintf("Unknown unit %O.\n", what));
+
+      unit_no = search(output_units, what);
+      compare_num = ouput_unit_no[unit_no];
+
       from = to = get_date("", args, cal);
       from = get_date("from", args, cal) || from || cal->Second();
+
+      if((what = m_delete(args, "from-week-day")) && from)
+      {
+        what = lower_case(what);
+        if(search(gregorian_weekdays,lower_case(what)) == -1)
+          RXML.parse_error(sprintf("Unknown day: %O\n",what));
+        int weekday_needed, change_to;
+        int weekday = from->week_day();
+
+        if(calendar != "ISO")
+          weekday_needed = search(gregorian_weekdays,what)+1;
+        else
+          weekday_needed = search(iso_weekdays,what)+1;
+        if (weekday < weekday_needed)
+          change_to = 7 - (weekday_needed - weekday);
+        else if(weekday > weekday_needed)
+          change_to = weekday - weekday_needed;
+        if (change_to > 0)
+          from = from - change_to;
+      }
+
       to = get_date("to", args, cal) || to || from;
+
+      if((what = m_delete(args, "to-week-day"))){
+	what = lower_case(what);
+	if(search(gregorian_weekdays,what) == -1)
+	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
+	int change_to = 0, weekday_needed = 0;
+	int weekday = to->week_day();
+	//werror(sprintf("to->weekday == %O\n",to->week_day()-1));
+	if(calendar != "ISO")
+	  weekday_needed = search(gregorian_weekdays,what)+1;
+	else
+	  weekday_needed = search(iso_weekdays,what)+1;
+
+	if (weekday < weekday_needed)
+	  change_to = weekday_needed - weekday;
+	else if(weekday > weekday_needed)
+	  change_to = 7 - (weekday - weekday_needed);
+	if (change_to > 0)// && upper_case(to->week_day_name()) != upper_case(what) - NOT NEEDED
+	  if(to == to->calendar()->Year())
+	    to = to->calendar()->Day() + change_to;
+	  else
+	    to += change_to;
+	/*
+	  werror(sprintf("Calendar %O\n",to->calendar()));
+	  if (to->calendar() != Calendar.ISO)
+	  werror(sprintf("search(gregorian_weekdays): %O\n",search(gregorian_weekdays,what)));
+	  else
+	  werror(sprintf("search(iso_weekdays): %O\n",search(iso_weekdays,what)));
+	  werror(sprintf("change_to : %O weekday: %O weekday_needed: %O\n",change_to,weekday,weekday_needed-1));
+	*/
+
+      }
 
       if((what = m_delete(args, "from-week-day")) && from)
 			{
@@ -589,28 +643,28 @@ class TagEmitTimeRange
           from = from - change_to;
       }
 
-			if((what = m_delete(args, "to-week-day")))
-			{
-				what = lower_case(what);
-				if(search(gregorian_weekdays,what) == -1)
-					RXML.parse_error(sprintf("Unknown day: %O\n",what));
-				int change_to = 0, weekday_needed = 0;
-				int weekday = to->week_day();
-				if(calendar != "ISO")
-        weekday_needed = search(gregorian_weekdays,what)+1;
-				else
-					weekday_needed = search(iso_weekdays,what)+1;
+      if((what = m_delete(args, "to-week-day")))
+      {
+	what = lower_case(what);
+	if(search(gregorian_weekdays,what) == -1)
+	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
+	int change_to = 0, weekday_needed = 0;
+	int weekday = to->week_day();
+	if(calendar != "ISO")
+	  weekday_needed = search(gregorian_weekdays,what)+1;
+	else
+	  weekday_needed = search(iso_weekdays,what)+1;
 
-				if (weekday < weekday_needed)
-					change_to = weekday_needed - weekday;
-				else if(weekday > weekday_needed)
-					change_to = 7 - (weekday - weekday_needed);
-				if (change_to > 0)
-					if(to == to->calendar()->Year())
-						to = to->calendar()->Day() + change_to;
-					else
-						to += change_to;
-			}
+	if (weekday < weekday_needed)
+	  change_to = weekday_needed - weekday;
+	else if(weekday > weekday_needed)
+	  change_to = 7 - (weekday - weekday_needed);
+	if (change_to > 0)
+	  if(to == to->calendar()->Year())
+	    to = to->calendar()->Day() + change_to;
+	  else
+	    to += change_to;
+      }
 
       string range_type = m_delete(args, "inclusive") ? "range" : "distance";
       if(from <= to)
@@ -642,6 +696,45 @@ class TagEmitTimeRange
     if(from > to)
       dataset = reverse( dataset );
 
+    array(Calendar.TimeRange | mapping | array) dset = ({});
+    array(string) sqlindexes;
+
+    if(args["query"]){
+      string sqlquery = m_delete(args,"query");
+      string use_date = m_delete(args,"compare-date");
+      if(!use_date)
+        RXML.run_error("No argument compare-date. The compare-date attribute "
+                       "is needed together with the attribute query!\n");
+
+      string host = m_delete(args,"host");
+      //werror(sprintf("QUERY : %O HOST: %O\n",sqlquery,host));
+
+      array(mapping) rs = db_query(sqlquery,host||query("db_name")||"none");
+      if(sizeof(rs) > 0)
+      {
+        sqlindexes = indices(rs[0]);
+        foreach(dataset,Calendar.TimeRange testing)
+        {
+	  int i = 0;
+	  int test = 1;
+
+	  foreach(rs,mapping rsrow)
+	  {
+            if(testing->format_time()[..compare_num] == rsrow[use_date])
+            {
+	      werror("Hur är det nu: "+i);
+	      dset += ({({testing, rsrow})});
+	      test = 0;
+	    }
+            i++;
+          }
+
+	  if(test == 1)
+	    dset += ({testing});
+	} //End foreach
+      }
+    }// End if we have a SQL query
+
 #ifndef RXML_FUTURE_COMPAT
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
     args = args - emit->req_arg_types - emit->opt_arg_types;
@@ -650,48 +743,6 @@ class TagEmitTimeRange
 			       (sizeof(args)==1 ? "" : "s"),
 			       String.implode_nicely(indices(args))));
 #endif
-
-    array(Calendar.TimeRange | mapping | array) dset = ({});
-    array(string) sqlindexes;
-
-    if(args["query"]){
-      string use_date = m_delete(args,"compare-date");
-      if(!use_date)
-        RXML.run_error("No argument compare-date. The compare-date attribute "
-                       "is needed together with the attribute query!\n");
-
-      //werror(sprintf("QUERY : %O HOST: %O\n",args["query"],query("db_name")));
-      string host;
-      if (args->host)
-        {
-          host=args->host;
-          args->host="SECRET";
-        }
-      array(mapping) rs = db_query(args["query"],host||query("db_name")||"none");
-      if(sizeof(rs) > 0)
-			{
-        sqlindexes = indices(rs[0]);
-        foreach(dataset,Calendar.TimeRange testing)
-        {
-					int i = 0;
-					int test = 1;
-
-					foreach(rs,mapping rsrow)
-					{
-            if(testing->format_time()[..compare_num] == rsrow[use_date])
-            {
-							dset += ({({testing, rsrow})});
-							test = 0;
-						}
-            i++;
-          }
-
-					if(test == 1)
-						dset += ({testing});
-
-				} //End foreach
-			}
-		}// End if we have a SQL query
 
   array(mapping) res;
 
@@ -711,8 +762,8 @@ class TagEmitTimeRange
   }
   else
     res = map(dataset, scopify, output_unit);
-    // DEBUG("\b => %O\n", res);
-	return res;
+  // DEBUG("\b => %O\n", res);
+  return res;
   }
 }
 
