@@ -1,4 +1,4 @@
-## $Id: supports,v 1.16 1997/04/01 02:23:22 grubba Exp $
+## $Id: supports,v 1.17 1997/04/02 21:42:33 mirar Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -60,7 +60,7 @@ mozilla/2.*solaris	javascript, netscape_javascript
 mozilla/3.*		tablecolor, netscape_javascript
 mozilla/3.*solaris	netscape_javascript
 
-mozilla/4.*		stylesheets, netscape_javascript
+mozilla/4.*		stylesheets, netscape_javascript, tablecolor
 mozilla/4.*solaris	netscape_javascript
 
 # BLAM BLAM BLAM BLAM
