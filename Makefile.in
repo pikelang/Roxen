@@ -230,10 +230,17 @@ bump_version: bump_version.stamp
 	)
 	@touch bump_version
 
+ChangeLog.gz:
+	pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
+
+ChangeLog.rxml.gz:
+	pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
+
+
 pre_dist: bump_version weak_cleanup run_autoconf depend
 	@(cd pike; $(MAKE) pre_dist)
 
-dist:
+dist: ChangeLog.gz ChangeLog.rxml.gz
 	@if test -f $(SRCDIR)/VERSION; then :; else \
 	  echo 'You need to make pre_dist first!'; \
 	  exit 1; \

@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.32 1998/03/23 11:30:09 per Exp $
+# $Id: Makefile,v 1.33 1998/03/23 11:32:41 per Exp $
 #
 # Bootstrap Makefile
 #
@@ -194,3 +194,5 @@ censor_dbapi :
 	    rm -rf $$d/modules/Oracle $$d/modules/Odbc; \
 	  else : ; fi; \
 	done
+
+dist: ChangeLog.gz ChangeLog.rxml.gz
