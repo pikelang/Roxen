@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.94 2002/06/14 00:07:34 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.95 2002/06/15 21:17:31 nilsson Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -127,8 +127,7 @@ mapping query_action_buttons()
 void create()
 {
   defvar("indexfiles",
-         ({ "index.html", "index.xml", "index.htm", "index.pike",
-            "index.cgi" }),
+         ({ "index.xml", "index.html", "index.pike" }),
 	 "Index files", TYPE_STRING_LIST|VAR_INITIAL,
 	 ("If one of these files is present in a directory, it will "
 	  "be returned instead of the directory listing."));
