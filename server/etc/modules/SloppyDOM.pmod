@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.7 2002/10/22 08:50:00 jonasw Exp $
+// $Id: SloppyDOM.pmod,v 1.8 2004/12/01 16:58:07 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -396,6 +396,8 @@ static class NodeWithChildElements
 	  res = attr + ([]);
 	else if (string val = attr[name])
 	  res = ([name: val]);
+	else
+	  return xml_format && "";
       }
       else simple_path_error ("Invalid path %O in ", path);
     }
