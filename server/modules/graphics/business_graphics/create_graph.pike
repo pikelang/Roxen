@@ -330,6 +330,10 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 			    diagram_data["yminvalue"])
       /(float)sizeof(diagram_data["ynames"]);
   
+  //Check if labelsize is to big:
+  if (diagram_data["labelsize"]>diagram_data["ysize"]/5)
+    diagram_data["labelsize"]=diagram_data["ysize"]/5;
+
   
   return diagram_data;
 
@@ -843,9 +847,18 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 ;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+      if (labelimg->xsize()>
+	  diagram_data["xsize"]/2)
+	labelimg=labelimg->scale(diagram_data["xsize"]/2,0);
+
       labely=diagram_data["labelsize"];
       labelx=labelimg->xsize();
     }
+  
+
+
+    
+
 
   int ypos_for_xaxis; //avstånd NERIFRÅN!
   int xpos_for_yaxis; //avstånd från höger
@@ -912,7 +925,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Bestäm positionen för y-axeln
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+    (int)ceil(diagram_data["linewidth"])-max(si,labelx);
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
@@ -937,8 +950,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2)-
-	    labelx/2;
+	    (int)ceil(diagram_data["linewidth"])-si*2-labelx;
 	  if (maxpos<xpos_for_yaxis)
 	    {
 	      xpos_for_yaxis=maxpos;
@@ -955,7 +967,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
@@ -965,7 +977,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
@@ -1255,7 +1267,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       graph->paste_alpha_color(labelimg, 
 			       @(diagram_data["labelcolor"]), 
 			       diagram_data["xsize"]-labelx-(int)ceil((float)diagram_data["linewidth"]),
-			       diagram_data["ysize"]-(int)ceil((float)(ypos_for_xaxis-si)));
+			       diagram_data["ysize"]-(int)ceil((float)(ypos_for_xaxis-si/2)));
       
       string label;
       int x;
@@ -1276,13 +1288,17 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       
 	//if (labelimg->xsize()> graph->xsize())
 	//labelimg->scale(graph->xsize(),labelimg->ysize());
+
+      if (labelimg->xsize()>
+	  diagram_data["xsize"])
+	labelimg=labelimg->scale(diagram_data["xsize"], 0);
+      
       
       x=max(0,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
       x=min(x, graph->xsize()-labelimg->xsize());
       
       y=0; 
 
-      
       if (label && sizeof(label))
 	graph->paste_alpha_color(labelimg, 
 				 @(diagram_data["labelcolor"]), 
@@ -1338,11 +1354,11 @@ int main(int argc, string *argv)
 		 "xsize":400,
 		 "ysize":800,
 		 "fontsize":16,
-		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
+		 "labels":({"xstor", "ystor", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh"}),
 		 "legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" 
 }),
-		 "labelsize":0,
+		 "labelsize":23,
 		 "xminvalue":0,
 		 "yminvalue":-1,
 		 "vertgrind": 1,

@@ -150,6 +150,11 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 ;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+
+      if (labelimg->xsize()>
+	  diagram_data["xsize"]/2)
+	labelimg=labelimg->scale(diagram_data["xsize"]/2,0);
+
       labely=diagram_data["labelsize"];
       labelx=labelimg->xsize();
     }
@@ -223,7 +228,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //Bestäm positionen för y-axeln
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+    (int)ceil(diagram_data["linewidth"])-max(si,labelx);
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
@@ -248,8 +253,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2)-
-	    labelx/2;
+	    (int)ceil(diagram_data["linewidth"]+si*2+labelx);
 	  if (maxpos<xpos_for_yaxis)
 	    {
 	      xpos_for_yaxis=maxpos;
@@ -266,7 +270,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
@@ -276,7 +280,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx);
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
@@ -675,7 +679,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       barsdiagram->paste_alpha_color(labelimg, 
 			       @(diagram_data["labelcolor"]), 
 			       diagram_data["xsize"]-labelx-(int)ceil((float)diagram_data["linewidth"]),
-			       diagram_data["ysize"]-(int)ceil((float)(ypos_for_xaxis-si)));
+			       diagram_data["ysize"]-(int)ceil((float)(ypos_for_xaxis-si/2)));
       
       string label;
       int x;
@@ -693,6 +697,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       
+      if (labelimg->xsize()>
+	  diagram_data["xsize"])
+	labelimg=labelimg->scale(diagram_data["xsize"], 0);
+
       
 	//if (labelimg->xsize()> barsdiagram->xsize())
 	//labelimg->scale(barsdiagram->xsize(),labelimg->ysize());
@@ -745,20 +753,19 @@ int main(int argc, string *argv)
 		 "backlinewidth":0,
 		 "xsize":400,
 		 "ysize":200,
-		 "xnames":({"jan", "feb", "mar", "apr", "maj"//, "jun"
+		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"
 }),
 		 "fontsize":42,
-		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
+		 "labels":({"xstor", "ystor", "xenhet super maga ultra futur mega plus", "yenhet super maga ultra futur mega plus"}),
 		 "legendfontsize":25, 
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
-		 "labelsize":22,
+		 "labelsize":42,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "horgrind": 1,
 		 "grindwidth": 0.5,
 		 "backlinecolor":1.0,
 		 "bw":3,
-		 "xnames":({"hej", "olle"})
   ]);
 
     diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
