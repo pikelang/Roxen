@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.98 2001/08/13 18:20:50 per Exp $
+// $Id: module_support.pike,v 1.99 2001/08/23 19:13:57 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -135,6 +135,9 @@ class BasicModule
   string comment() { return ""; }
   array query_seclevels() { return ({}); }
   mapping api_functions() { return ([]); }
+
+  object/*(RXML.TagSet)*/ query_tag_set()
+    {return master()->resolv("RXML.empty_tag_set");}
 }
 
 class FakeModuleInfo( string sname )
