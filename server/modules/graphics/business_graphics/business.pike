@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.69 1998/02/17 16:22:36 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.70 1998/02/17 17:12:28 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -173,6 +173,8 @@ void create()
 	  "Maximal width of the generated image." );
   defvar( "maxheight", 600, "Maxheight", TYPE_INT,
 	  "Maximal height of the generated image." );
+  defvar( "maxstringlength", 60, "Maxstringlength", TYPE_INT,
+	  "Maximal length of the strings used in the diagram." );
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
@@ -192,15 +194,16 @@ string itag_xaxis(string tag, mapping m, mapping res)
 
 string itag_yaxis(string tag, mapping m, mapping res)
 {
-  if(m->name) res->yname = m->name;
+  int l=query("maxstringlength")-1;
+  if(m->name) res->yname = m->name[..l];
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
       res->ymin=1;
     else 
       res->ystart = (float)m->start;
   if(m->stop) res->ystop = (float)m->stop;
-  if(m->quantity) res->ystor = m->quantity;
-  if(m->unit) res->yunit = m->unit;
+  if(m->quantity) res->ystor = m->quantity[..l];
+  if(m->unit) res->yunit = m->unit[..l];
 
   return "";
 }
@@ -209,6 +212,7 @@ string itag_yaxis(string tag, mapping m, mapping res)
 string itag_names(string tag, mapping m, string contents,
 		      mapping res, object id)
 {
+  int l=query("maxstringlength")-1;
   string sep=SEP;
   if(!m->noparse)
     contents = parse_rxml( contents, id );
@@ -238,7 +242,8 @@ string itag_names(string tag, mapping m, string contents,
   for(int i=0; i<sizeof(foo); i++)
     if (voidsep==foo[i])
       foo[i]=" ";
-  
+    else
+      foo[i]=foo[i][..l];
   return "";
 }
 
@@ -285,14 +290,14 @@ string itag_data(mapping tag, mapping m, string contents,
   VOIDCODE
 
   if(m->separator)
-    sep=m->separator;
+    sep=m->separator; 
 
   if (sep=="")
     sep=SEP;
 
   string linesep="\n";
   if(m->lineseparator)
-    linesep=m->lineseparator;
+    linesep=m->lineseparator; 
 
   if (linesep=="")
     linesep="\n";
@@ -370,6 +375,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 string itag_legendtext(mapping tag, mapping m, string contents,
 		       mapping res, object id)
 {
+  int l=query("maxstringlength")-1;
   string sep=SEP;
   string voidsep;
 
@@ -388,6 +394,9 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   for(int i=0; i<sizeof(foo); i++)
     if (voidsep==foo[i])
       foo[i]=" ";
+    else
+      foo[i]=foo[i][..l];
+
 
   return "";
 }
