@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.130 1999/12/13 04:02:25 mast Exp $
+ * $Id: roxenloader.pike,v 1.131 1999/12/20 11:46:46 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,9 +17,9 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.130 1999/12/13 04:02:25 mast Exp $";
+#define werror roxen_perror
 
-#define perror roxen_perror
+constant cvs_version="$Id: roxenloader.pike,v 1.131 1999/12/20 11:46:46 nilsson Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -128,7 +128,7 @@ void roxen_perror(string format, mixed ... args)
   int t = time();
   spider;
 
-  if(sizeof(args)) 
+  if(sizeof(args))
     format=sprintf(format,@args);
 
   // "Delayed newlines": End a message with \b and start the next one
@@ -268,7 +268,7 @@ function nwrite;
  */
 #define VAR_VALUE 0
 
-mixed query(string arg) 
+mixed query(string arg)
 {
   if(!roxen)
     error("No roxen object!\n");
@@ -289,7 +289,7 @@ void init_logger()
   switch(query("LogST"))
   {
    case "Daemon":    res = LOG_DAEMON;    break;
-   case "Local 0":   res = LOG_LOCAL;     break; 
+   case "Local 0":   res = LOG_LOCAL;     break;
    case "Local 1":   res = LOG_LOCAL1;    break;
    case "Local 2":   res = LOG_LOCAL2;    break;
    case "Local 3":   res = LOG_LOCAL3;    break;
@@ -299,7 +299,7 @@ void init_logger()
    case "Local 7":   res = LOG_LOCAL7;    break;
    case "User":      res = LOG_USER;      break;
   }
-  
+
   loggingfield=0;
   switch(query("LogWH"))
   { /* Fallthrouh intentional */
@@ -317,14 +317,14 @@ void init_logger()
 
   closelog();
   openlog(query("LogNA"), (query("LogSP")*LOG_PID)|(query("LogCO")*LOG_CONS),
-          res); 
+          res);
 #endif
 }
 
 // Print a debug message
 void report_debug(string message, mixed ... foo)
 {
-  if( sizeof( foo ) ) 
+  if( sizeof( foo ) )
     message = sprintf(message, @foo );
   roxen_perror( message );
 }
@@ -336,7 +336,7 @@ array find_module_and_conf_for_log( array q )
   for( int i = 0; i<sizeof( q ); i++ )
   {
     object o = function_object( q[i][2] );
-//     werror(" We are in %O:%O <%d,%d>\n", 
+//     werror(" We are in %O:%O <%d,%d>\n",
 //            o, q[i][2], o->is_configuration, o->is_module);
     if( o->is_configuration )
       conf = o;
@@ -397,7 +397,7 @@ void report_fatal(string message, mixed ... foo)
 #endif
 }
 
-// Pipe open 
+// Pipe open
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p;
@@ -405,7 +405,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 
   f = Stdio.File();
   p = f->pipe(Stdio.PROP_IPC);
-  if(!p) 
+  if(!p)
     error("Popen failed. (couldn't create pipe)\n");
 
   mapping opts = ([
@@ -428,7 +428,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   p->close();
   destruct(p);
 
-  if (proc) 
+  if (proc)
   {
     string t = f->read(0x7fffffff);
     f->close();
@@ -441,12 +441,12 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 }
 
 // Create a process
-object spawne(string s,string *args, mapping|array env, object stdin, 
-	      object stdout, object stderr, void|string wd, 
+object spawne(string s,string *args, mapping|array env, object stdin,
+	      object stdout, object stderr, void|string wd,
 	      void|array (int) uid)
 {
   int u, g;
-  if(uid) { u = uid[0]; g = uid[1]; } 
+  if(uid) { u = uid[0]; g = uid[1]; }
 #if efun(geteuid)
   else { u=geteuid(); g=getegid(); }
 #endif
@@ -483,13 +483,13 @@ static private void initiate_cache()
   cache=((program)"base_server/cache")();
 
   add_constant( "Stdio.File", Stdio.File );
-  
+
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_clear", cache->cache_clear);
   add_constant("cache_expire", cache->cache_expire);
-  add_constant("capitalize", 
+  add_constant("capitalize",
                lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
@@ -599,7 +599,7 @@ int gethrtime()
 object really_load_roxen()
 {
   int start_time = gethrtime();
-  roxen_perror("Loading roxen ... ");
+  report_debug("Loading roxen ... ");
   object e = ErrorContainer();
   object res;
   master()->set_inhibit_compile_errors(e);
@@ -609,14 +609,14 @@ object really_load_roxen()
   master()->set_inhibit_compile_errors(0);
   string q = e->get();
   if (err) {
-    roxen_perror("ERROR\n" + (q||""));
+    report_debug("ERROR\n" + (q||""));
     throw(err);
   }
-  roxen_perror("done after %3.3fs\n",
+  report_debug("done after %3.3fs\n",
 	       (gethrtime()-start_time)/1000000.0);
 
   if (q && sizeof(q)) {
-    roxen_perror("Warnings compiling Roxen:\n" + q);
+    report_debug("Warnings compiling Roxen:\n" + q);
   }
   res->start_time = start_time;
   res->boot_time = start_time;
@@ -628,8 +628,8 @@ object really_load_roxen()
 #ifdef TRACE_DESTRUCT
 void trace_destruct(mixed x)
 {
-  roxen_perror("DESTRUCT(%O)\n%s\n",
-               x, describe_backtrace(backtrace()));
+  report_debug("DESTRUCT(%O)\n%s\n",
+               x, describe_backtrace(backtrace())):
   destruct(x);
 }
 #endif /* TRACE_DESTRUCT */
@@ -637,7 +637,6 @@ void trace_destruct(mixed x)
 // Set up efuns and load Roxen.
 void load_roxen()
 {
-  nwrite = roxen_perror;
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
@@ -658,13 +657,13 @@ void load_roxen()
   add_constant("parse_html", parse_html);
   add_constant("parse_html_lines", parse_html_lines);
 #endif
-  
+
   roxen = really_load_roxen();
 
-  perror("roxen.pike version "+(roxen->cvs_version/ " ")[2]+"\n"
-	 "Roxen release "+roxen->real_version+"\n"
+  report_debug("roxen.pike version "+(roxen->cvs_version/ " ")[2]+"\n"
+	       "Roxen release "+roxen->real_version+"\n"
 #ifdef __NT__
-	 "Running on NT\n"
+	       "Running on NT\n"
 #endif
     );
 
@@ -793,7 +792,7 @@ class mf
   void destroy()
   {
     catch { mark_fd(query_fd(),"CLOSED"); };
-  }  
+  }
 
   int close(string|void what)
   {
@@ -961,8 +960,8 @@ class getpw_kluge
 
   void init_error(string msg)
   {
-    roxen_perror(sprintf("Error in bootstrap code: %s\n"
-			 "getpw_kluge not enabled.\n", msg));
+    report_error("Error in bootstrap code: %s\n"
+		 "getpw_kluge not enabled.\n", msg));
   }
 
   void create()
@@ -1020,14 +1019,12 @@ void write_current_time()
     return;
   }
   int t = time();
-  roxen_perror("\n");
-  roxen_perror("** "+roxen->strftime("%Y-%m-%d %H:%M", t )+
-	       "   pid: "+pid+"   ppid: "+getppid()+
+  report_debug("\n** "+roxen->strftime("%Y-%m-%d %H:%M", t )+
+               "   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 	       (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
-	       "   uid: "+pw_name(getuid())+"\n");
-  roxen_perror("\n");
+               "   uid: "+pw_name(getuid())+"\n\n");
   call_out( write_current_time, 3600 - t % 3600 );
 }
 
@@ -1037,7 +1034,7 @@ void paranoia_throw(mixed err)
 		       !arrayp(err[1]) ||
 		       !(arrayp(err[1][0])||stringp(err[1][0])))) ||
       (!arrayp(err) && (!objectp(err) || !err->is_generic_error))) {
-    roxen_perror(sprintf("Warning: throwing non-error: %O\n"
+    report_debug(sprintf("Warning: throwing non-error: %O\n"
 			 "From: %s\n",
 			 err, describe_backtrace(backtrace())));
   }
@@ -1048,32 +1045,32 @@ void paranoia_throw(mixed err)
 int main(int argc, array argv)
 {
 #ifdef NOT_INSTALLED
-roxen_perror(
+report_debug(
 #"
 
 
-*************************** WARNING *************************** 
+*************************** WARNING ***************************
 You are running with an un-installed pike binary.
 
-Please note that this is unsupported, and might stop working at 
+Please note that this is unsupported, and might stop working at
 any time, since some things are done differently in uninstalled
 pikes, as an example the module search paths are different, and
 some environment variables are ignored.
-*************************** WARNING *************************** 
+*************************** WARNING ***************************
 
 
 ");
 #endif
 
 #if __VERSION__ < 0.7
-roxen_perror(
+report_debug(
 #"
 
 
-****************************************************** 
+******************************************************
 Roxen 1.4 requires pike 0.7.
 Please install a newer pike version
-****************************************************** 
+******************************************************
 
 
 ");
@@ -1085,8 +1082,8 @@ Please install a newer pike version
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
-  roxen_perror("\n"+version()+"\n");
-  roxen_perror("Roxen loader version "+(cvs_version/" ")[2]+"\n");
+  report_debug("\n"+version()+"\n");
+  report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
@@ -1133,7 +1130,7 @@ Please install a newer pike version
   initiate_cache();
   load_roxen();
   int retval = roxen->main(argc,argv);
-  roxen_perror("\n-- Total boot time %2.1f seconds ---------------------------\n",
+  report_debug("\n-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
   return(retval);
