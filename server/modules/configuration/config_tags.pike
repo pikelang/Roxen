@@ -724,6 +724,14 @@ string container_cf_dirlist( string t, mapping m, string c, object id )
   
 }
 
+object(Configuration) find_config_or_error(string config)
+{
+  object(Configuration) conf = roxen->find_configuration(config);
+  if (!conf)
+    error("Unknown configuration %O\n", config);
+  return conf;
+}
+
 string container_configif_output(string t, mapping m, string c, object id)
 {
   array(mapping) variables;
@@ -768,9 +776,8 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "config-modules":
-     object conf = roxen->find_configuration( m->configuration );
-     if( !conf )
-       error("Unknown configuration\n");
+     object conf = find_config_or_error( m->configuration );
+
      variables = ({ });
      foreach( values(conf->otomod), string q )
      {
@@ -788,16 +795,14 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "config-variables":
-     object conf = roxen->find_configuration( m->configuration );
-     if( !conf )
-       error("Unknown configuration "+ m->configuration +"\n");
+     object conf = find_config_or_error( m->configuration );
+
      variables = get_variable_maps( conf, m, id );
      break;
 
    case "config-variables-sections":
-     object conf = roxen->find_configuration( m->configuration );
-     if( !conf )
-       error("Unknown configuration "+ m->configuration +"\n");
+     object conf = find_config_or_error( m->configuration );
+
      variables = get_variable_sections( conf, m, id );
      break;
 
@@ -805,9 +810,8 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "module-variables":
-     object conf = roxen->find_configuration( m->configuration );
-     if( !conf )
-       error("Unknown configuration "+ m->configuration +"\n");
+     object conf = find_config_or_error( m->configuration );
+
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
@@ -815,9 +819,8 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "module-variables-sections":
-     object conf = roxen->find_configuration( m->configuration );
-     if( !conf )
-       error("Unknown configuration "+ m->configuration +"\n");
+     object conf = roxen->find_config_or_error( m->configuration );
+
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
