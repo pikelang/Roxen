@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
 // end of the locale related stuff
 
-constant cvs_version="$Id: common_api.pike,v 1.5 2000/11/27 06:17:12 per Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.6 2000/12/02 19:26:11 per Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -71,7 +71,7 @@ void create(Configuration|void conf)
   set_module_url("https://jhs.user.roxen.com/examples/common_api.html");
 }
 
-mapping(string:function(RequestID:void)) query_action_buttons( RequestID id )
+mapping(LocaleString:function(RequestID:void)) query_action_buttons(RequestID id)
 //! Optional callback for adding action buttons to the module's
 //! administration settings page; convenient for triggering module
 //! actions like flushing caches and the like.

@@ -9,7 +9,7 @@ inherit "module";
 // end of the locale related stuff
 
 
-constant cvs_version = "$Id: auth.pike,v 1.4 2000/11/27 06:17:12 per Exp $";
+constant cvs_version = "$Id: auth.pike,v 1.5 2000/12/02 19:26:10 per Exp $";
 constant module_type = MODULE_AUTH;
 LocaleString module_name_locale = LOCALE(1,"RefDoc for MODULE_AUTH");
 LocaleString module_doc_locale =
@@ -27,7 +27,7 @@ void create()
 				      LOCALE(3,"Users and Passwords"),
 				      LOCALE(4,"A list of username:password "
 					     "pairs the module should grant "
-					     "access for."));
+					     "access for.")));
 }
 
 array|int auth(array(string) auth, RequestID id)

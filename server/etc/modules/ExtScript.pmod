@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.9 2000/11/28 06:22:58 per Exp $
+// $Id: ExtScript.pmod,v 1.10 2000/12/02 19:26:10 per Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -13,7 +13,7 @@ static void diag(string x)
 
 class Handler
 {
-  Process  proc;
+  object      proc;
   Stdio.File  pipe;
   Stdio.File  pipe_other;
   string  binpath;
@@ -166,13 +166,13 @@ class Handler
             putvar("E", v, ee[v]);
 
       // Transfer request headers
-      array hd;
+      mapping(string:string|array(string)) hd;
       foreach( indices(hd = id->request_headers), mixed v)
         if (stringp(v) && stringp(hd[v]) && strlen(hd[v]) < 1000000)
            putvar("H", v, hd[v]);
 
       // Transfer FORMs variables.
-      array va;
+      mapping(string:string) va;
       foreach(indices(va = id->variables), mixed v)
         if (stringp(v) && stringp(va[v]) && strlen(va[v]) < 1000000)
            putvar("F", v, va[v]);
