@@ -7,4 +7,5 @@
 # Files containing CVS ids follow.
 # Remove the corresponding line before committing
 # changes to these files.
+/modules/admin/admin.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
