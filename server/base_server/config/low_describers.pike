@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.30 1999/05/14 02:42:33 neotron Exp $ */
+/* $Id: low_describers.pike,v 1.31 1999/06/10 00:28:54 mast Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -269,9 +269,9 @@ string all_ip_numbers_as_selection(int id, string sel)
 	    "</select>\n"+
 	    LOCALE->other_ip_nummer()
 	    +" <input type=string name=other_" +
-            id + " value=\""+sel+"\">\n");
+            id + " value=\""+sel+"\">");
   } else {
-    return "<input type=string name=ip_number_"+id+" value='"+sel+"'>\n";
+    return "<input type=string name=ip_number_"+id+" value='"+sel+"'>";
   }
 }
 
@@ -305,8 +305,8 @@ string encode_one_port(array port, int id)
 {
   string res;
   /* PortNo, Protocol, IP, options */
-  res= "\n<tr height=100%><td>\n"
-    "<table cellspacing=0 border=0 bgcolor=#e0e0ff>\n"
+  res= "\n<tr valign=top>\n<td>"
+    "<table border=0 bgcolor=#e0e0ff cellspacing=0 cellpadding=0>\n"
     "<tr>\n  <td><input size=5,1 name=port_"+id+" value="+
     port[0]+"></td>\n    <td>"+all_protocols_as_selection(id, port[1])+
     "</td>\n    <td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
@@ -319,25 +319,21 @@ string encode_one_port(array port, int id)
     sscanf(port[3], "%*scert-file %s\n", cf);
     sscanf(port[3], "%*skey-file %s\n", kf);
     res += ("<tr><td colspan=3>"
-	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
-	    "<tr width=100%><td colspan=2 width=100%><b>"+
+	    "<table width=100% cellspacing=0 border=0 bgcolor=#f0f0ff>\n"
+	    "<tr><td colspan=2><b>"+
 	    LOCALE->ssl_options()+"</b></td></tr>\n");
     res += LOCALE->ssl_variables(cf,kf,id);
-    //    res += "</table></td></tr>\n";
+    res += "</table></td></tr>\n";
     break;
   } 
   return res +
-    ("</table></td><td height=100% valign=top>\n"
-     "<table bgcolor=#e0e0ff height=100% cellspacing=0 cellpadding=0 "
-     "border=0>\n"+
-     "<tr height=100%><td height=100%>&nbsp;"+
-     port_buttons(port,id)+"</td></tr>\n"
-     "</table></td></tr>");
+   ("</table></td>\n<td>"+port_buttons(port,id)+"</td>\n</tr>\n");
 }
 
 string encode_ports(array from)
 {
-  string res = "<table border=0 cellpadding=1 bgcolor=black cellspacing=1>\n";
+  string res = "<table border=0 bgcolor=black cellspacing=0 cellpadding=0>\n"
+    "<tr><td><table border=0 bgcolor=#e0e0ff cellspacing=1 cellpadding=3>\n";
   int i;
   if(ip_number_list)
   {
@@ -358,10 +354,8 @@ string encode_ports(array from)
 	res += encode_one_port( from[i], i );
     }
   }
-  res += "<tr><td colspan=4>\n"
-    "<table width=100% bgcolor=#f0f0ff border=0 cellpadding=0 cellspacing=0>"
-    "<tr><td>\n"+LOCALE->port_top_buttons(from)+"</tr></table></td></tr>";
-  return res+"</table>";
+  res += "\n<tr><td colspan=2>"+LOCALE->port_top_buttons(from)+"</td></tr>\n";
+  return res+"</table></td></tr>\n</table>";
 }
 
 int module_wanted(mapping mod_info, object module, function check)
