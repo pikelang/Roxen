@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.202 2001/07/16 02:02:47 mast Exp $
+// $Id: module.pmod,v 1.203 2001/07/16 02:19:54 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6407,7 +6407,7 @@ class PCodec
 
   object objectof(string|array what)
   {
-    if (arrayp (what) && sizeof (what)) {
+    if (arrayp (what)) {
       ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
       switch (what[0]) {
 	case "frame": {
@@ -6650,11 +6650,12 @@ PCode string_to_p_code(string str)
   mixed err = catch {
     return [object(PCode)]decode_value(str, PCodec());
   };
-  // Try to explain the error a bit more.
+  // Try to explain the error a bit.
   catch {
-    err[0] +=
-      "The encoded p-code is probably just of an older version.\n"
-      "In that case the problem will disappear with the next update.\n";
+    err[0] += #"\
+The encoded p-code probably comes from an older version or a different
+server configuration. In that case this error can be safely ignored;
+it will disappear the next time the page is evaluated.\n";
   };
   throw (err);
 }
