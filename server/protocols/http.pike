@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.358 2002/02/06 17:59:33 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.359 2002/02/14 10:01:25 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -903,17 +903,28 @@ private final int parse_got_2( )
 	break;
 	    
       case "multipart/form-data":
-	object messg = MIME.Message(data, misc);
-	foreach(messg->body_parts, object part)
-	{
-	  if(part->disp_params->filename)
+	object messg = MIME.Message(data, request_headers);
+	if (!messg->body_parts) {
+	  report_error("HTTP: Bad multipart/form-data.\n"
+		       "  headers:\n"
+		       "%{    %O:%O\n%}"
+		       "  data:\n"
+		       "%{    %O\"\\n\"\n%}",
+		       (array)request_headers,
+		       data/"\n");
+	  /* FIXME: Should this be reported to the client? */
+	} else {
+	  foreach(messg->body_parts, object part)
 	  {
-	    real_variables[part->disp_params->name] += ({part->getdata()});
-	    real_variables[part->disp_params->name+".filename"] +=
-	    ({part->disp_params->filename});
-	    misc->files += ({ part->disp_params->name });
-	  } else 
-	    real_variables[part->disp_params->name] += ({part->getdata()});
+	    if(part->disp_params->filename)
+	    {
+	      real_variables[part->disp_params->name] += ({part->getdata()});
+	      real_variables[part->disp_params->name+".filename"] +=
+	      ({part->disp_params->filename});
+	      misc->files += ({ part->disp_params->name });
+	    } else 
+	      real_variables[part->disp_params->name] += ({part->getdata()});
+	  }
 	}
 	break;
       }
@@ -1929,6 +1940,8 @@ int processed;
 // array ccd = ({});
 void got_data(mixed fooid, string s)
 {
+  REQUEST_WERR(sprintf("HTTP: Got %O\n", s));
+
   if(wanted_data)
   {
     data += s;
