@@ -14,16 +14,28 @@ object db;
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
-  db=Yabu.db(QUERY("yabuname","wS"));
+  db=Yabu.db(QUERY(yabudir),"wcS");
   UpdateInfoFiles();
+}
+
+void stop()
+{
+  if(db)
+    catch(db->close());
 }
 
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
+  defvar("yabudir", "../upgrade_data", "Database directory",
+	 TYPE_DIR, "");
+  defvar("server", "community.roxen.com", "Server host",
+	 TYPE_STRING, "");
+  defvar("port", 80, "Server port",
+	 TYPE_INT, "");
 }
 
-class Scope_usr
+class Scope_upgrade
 {
   inherit RXML.Scope;
 
@@ -36,7 +48,7 @@ class Scope_usr
   string _sprintf() { return "RXML.Scope(upgrade)"; }
 }
 
-RXML.Scope upgade_scope=Scope_upgrade();
+RXML.Scope upgrade_scope=Scope_upgrade();
 
 void set_entities(RXML.Context c)
 {
@@ -111,7 +123,7 @@ mapping get_headers()
 
 class GetInfoFile
 {
-  inherit Protocols.HTTP.Query();
+  inherit Protocols.HTTP.Query;
 
   string get_containers(string t, mapping m, string c, mapping res)
   {
@@ -124,12 +136,12 @@ class GetInfoFile
     spider;
     mapping res=([]);;
     parse_html_lines(httpquery->data(),
-		     ([])
+		     ([]),
 		     (["":get_containers]),
 		     res);
     res->size=httpquery->headers->size;
-    db->pkginfo[(string)num]=res;
-    db->pkginfo->sync();
+    db["pkginfo"][(string)num]=res;
+    db["pkginfo"]->sync();
     report_notice("Added information about package number "+num+".");
   }
 
@@ -151,16 +163,20 @@ class GetInfoFile
 
 class UpdateInfoFiles
 {
-  inherit Protocols.HTTP.Query();
+  inherit Protocols.HTTP.Query;
 
   void request_ok(object httpquery)
   {
     string s=httpquery->data();
-
+    
     array lines=s/"\n";
     array(int) new_packages=decode_ranges(lines[1]);
     array(int) delete_packages=decode_ranges(lines[2]);
-
+    if(lines[0]!="upgrade")
+    {
+      report_error("Wrong answer from server.");
+      return;
+    }
     if(sizeof(new_packages))
       report_notice("Found new packages: "+ ((array(string))new_packages)*", ");
     else
@@ -175,7 +191,7 @@ class UpdateInfoFiles
       GetInfoFile(i);
 
     foreach(delete_packages, int i)
-      db->pkginfo->delete((string)i);
+      db["pkginfo"]->delete((string)i);
       
   }
 
@@ -187,17 +203,17 @@ class UpdateInfoFiles
 
   void do_request()
   {
-    async_request(QUERY(server),QUERY(PORT),
+    async_request(QUERY(server),QUERY(port),
 		  "POST /upgradeserver/get-packages HTTP/1.0",
 		  get_headers() |
-		  (["Content-type":"application/x-www-form-urlencoded"]),
-		  "have_packages="+encode_ranges((array(int))indices(db->pkginfo)));
+		  (["content-type":"application/x-www-form-urlencoded"]),
+		  "have_packages="+encode_ranges((array(int))indices(db["pkginfo"])));
     call_out(do_request, 12*3600);
   }
   
   void create()
   {
     set_callbacks(request_ok, request_fail);
-    call_out(do_request,60);
+    call_out(do_request,3);
   }
 }
