@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.233 2001/01/22 18:36:01 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.234 2001/01/22 19:22:43 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1525,7 +1525,8 @@ library should be enough.
   // Specific module types
   add_constant("AuthModule", prototypes->AuthModule );
   add_constant("UserDB",     prototypes->UserDB );
-  add_constant("User",     prototypes->User );
+  add_constant("User",       prototypes->User );
+  add_constant("Group",      prototypes->Group );
   
   report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
