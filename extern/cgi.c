@@ -89,7 +89,7 @@ int start_program(char **argv)
 	switch(p[0])
 	{
 #ifdef RLIMIT_CORE
-	 case 'c': // core=...
+	 case 'c': /* core=... */
 #ifdef DEBUG
 	  fprintf(stderr, "core size limited to %d\n", rl.rlim_max);
 #endif
@@ -97,7 +97,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_CPU
-	 case 't': // time=...
+	 case 't': /* time=... */
 #ifdef DEBUG
 	  fprintf(stderr, "time limited to %d\n", rl.rlim_max);
 #endif
@@ -105,7 +105,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_DATA
-	 case 'd': // data_size=...
+	 case 'd': /* data_size=... */
 #ifdef DEBUG
 	  fprintf(stderr, "data size limited to %d\n", rl.rlim_max);
 #endif
@@ -113,7 +113,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_FSIZE
-	 case 'f': // file_size=...
+	 case 'f': /* file_size=... */
 #ifdef DEBUG
 	  fprintf(stderr, "file size limited to %d\n", rl.rlim_max);
 #endif
@@ -121,7 +121,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_NOFILE
-	 case 'o': // open_files=...
+	 case 'o': /* open_files=... */
 	  if(rl.rlim_max < 64) rl.rlim_max=rl.rlim_cur = 64;
 #ifdef DEBUG
 	  fprintf(stderr, "open files limited to %d\n", rl.rlim_max);
@@ -130,7 +130,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_STACK
-	 case 's': // stack=...
+	 case 's': /* stack=... */
 #ifdef DEBUG
 	  fprintf(stderr, "stack limited to %d\n", rl.rlim_max);
 #endif
@@ -138,7 +138,7 @@ int start_program(char **argv)
 	  break;
 #endif
 #ifdef RLIMIT_VMEM
-	 case 'm': // mem_max=...
+	 case 'm': /* mem_max=... */
 #ifdef DEBUG
 	  fprintf(stderr, "mem_max limited to %d\n", rl.rlim_max);
 #endif
