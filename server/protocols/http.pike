@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.131 1999/04/22 09:34:29 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.132 1999/05/15 17:43:09 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1352,6 +1352,9 @@ void got_data(mixed fooid, string s)
 
   if(conf)
   {
+    // IP-Less support.
+    conf = roxen->find_site_for(this_object());
+
     conf->received += strlen(s);
     conf->requests++;
   }
