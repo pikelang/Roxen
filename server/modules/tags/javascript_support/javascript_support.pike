@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.37 2001/06/19 16:12:52 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.38 2001/07/20 12:13:18 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -544,7 +544,7 @@ props_arg+
 //----------------------------------------------------------------------
 
 "emit#js-hide-popup":({ #"<desc plugin='plugin'>
-  <p><short>Creates a link event to hide popups.</short></p>
+  <p><short>Creates a link event to hide popups.</short>
   This plugin can be used in hierarchical menues on those links that are not
   popups, i.e. direct links on the same level as other links that leads to
   a popup.</p>

@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.84 2001/07/09 13:39:21 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.85 2001/07/20 12:13:15 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -100,17 +100,7 @@ constant gbuttonattr=#"
 <attr name='frame-image' value='path'><p>
  Use this XCF-image as a frame for the button. The image is required
  to have at least the following layers: background, mask and frame.
-
-<?comment
-Non working example.
-
- More information on how to create frame images can be found in the
- Roxen documentation; Web Site Creator/Graphical tags section.</p>
-<ex>
-<gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
-</ex>
-?>
-
+"+/* <ex><gbutton frame-image='internal-roxen-tabframe'>foo</gbutton></ex> */#"
 </attr>
 
 <attr name='alt' value='string'><p>
@@ -122,7 +112,7 @@ Non working example.
 </attr>
 
 <attr name='textstyle' value='normal|condensed'><p>
- Set to <att>normal</att> or <att>condensed</att> to alter text style.</p>
+ Set to <i>normal</i> or <i>condensed</i> to alter text style.</p>
 </attr>
 
 <attr name='width' value=''><p>
@@ -131,12 +121,12 @@ Non working example.
 
 <attr name='align' value='left|center|right'><p>
  Set text alignment. There are some alignment restrictions: when text
- alignment is either <att>left</att> or <att>right</att>, icons must
- also be aligned <att>left</att> or <att>right</att>.</p>
+ alignment is either <i>left</i> or <i>right</i>, icons must
+ also be aligned <i>left</i> or <i>right</i>.</p>
 </attr>
 
 <attr name='state' value='enabled|disabled'><p>
- Set to <att>enabled</att> or <att>disabled</att> to select button state.</p>
+ Set to <i>enabled</i> or <i>disabled</i> to select button state.</p>
 </attr>
 
 <attr name='icon-src' value='URI'><p>
@@ -152,8 +142,8 @@ Non working example.
 
 <xtable>
 <row><c><p>left</p></c><c><p>Place icon on the left side of the text.</p></c></row>
-<row><c><p>center-before</p></c><c><p>Center the icon before the text. Requires the <att>align='center'</att> attribute.</p></c></row>
-<row><c><p>center-after</p></c><c><p>Center the icon after the text. Requires the <att>align='center'</att> attribute.</p></c></row>
+<row><c><p>center-before</p></c><c><p>Center the icon before the text. Requires the <i>align='center'</i> attribute.</p></c></row>
+<row><c><p>center-after</p></c><c><p>Center the icon after the text. Requires the <i>align='center'</i> attribute.</p></c></row>
 <row><c><p>right</p></c><c><p>Place icon on the right side of the text.</p></c></row>
 </xtable>
 
@@ -162,21 +152,19 @@ Non working example.
 </ex>
 <ex>
 <gbutton width='150' align='center' align-icon='center-after'
-  icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+  icon-src='/internal-roxen-help'>Roxen 2.0</gbutton>
 </ex>
 </attr>
 
 <attr name='valign-icon' value='above|middle|below'><p>
   Set icon vertical alignment. Requires three horizontal guidelines in the
-  frame image. If set to <att>above</att> the icon is placed between the first
+  frame image. If set to <i>above</i> the icon is placed between the first
   and second guidelines and the text between the second and third ones. If
-  set to <att>below</att> the placement is reversed. Default value is
-  <att>middle</att>.</p>
+  set to <i>below</i> the placement is reversed. Default value is
+  <i>middle</i>.</p>
 </attr>
 
-<attr name='font' value='fontname'><p></p>
-
-</attr>";
+<attr name='font' value='fontname'><p></p></attr>";
 #endif
 
 function TIMER( function f )

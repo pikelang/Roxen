@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.259 2001/07/20 06:38:50 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.260 2001/07/20 12:13:16 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5588,7 +5588,7 @@ load.</p>
 //----------------------------------------------------------------------
 
 "copy-scope":#"<desc tag='tag'><p><short>
- Copies the content of one scope into another scope</short></p>
+ Copies the content of one scope into another scope</short></p></desc>
 
 <attr name='from' value='scope name' required='1'>
  <p>The name of the scope the variables are copied from.</p>
@@ -6730,7 +6730,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"<?noparse": #"<desc pi='pi'><p><short>
+"?noparse": #"<desc pi='pi'><p><short>
  The content is inserted as-is, without any parsing or
  quoting.</short> The first whitespace character (i.e. the one
  directly after the \"noparse\" name) is discarded.</p>
@@ -6738,7 +6738,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"<?cdata": #"<desc pi='pi'><p><short>
+"?cdata": #"<desc pi='pi'><p><short>
  The content is inserted as a literal.</short> I.e. any XML markup
  characters are encoded with character references. The first
  whitespace character (i.e. the one directly after the \"cdata\" name)

@@ -13,7 +13,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.17 2001/03/07 13:40:47 kuntri Exp $";
+       "$Id: perl.pike,v 2.18 2001/07/20 12:13:15 jhs Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -345,10 +345,9 @@ constant tagdoc=([
  correct parameters are not set the Perl code might not work properly
  or security issues might arise.</p>
 
- <p>There is also a <tag>perl</tag></ref>...<tag>/perl</tag> container tag
+ <p>There is also a <tag>perl</tag>...<tag>/perl</tag> container tag
  available.</p>
 </desc>",
 
   ]);
 #endif
-

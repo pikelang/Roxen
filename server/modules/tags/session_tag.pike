@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.5 2001/05/16 11:30:38 nilsson Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.6 2001/07/20 12:13:17 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -205,7 +205,7 @@ tab to enable this feature.</p>
 <ex type='box'>
 <force-session-id/>
 <if variable='client.session'>
-  RXML code that uses &client.session, e.g. <session></session>.
+  RXML code that uses <ent>client.session</ent>, e.g. <tag>session</tag><tag>/session</tag>.
 </if>
 </ex></desc>",
 

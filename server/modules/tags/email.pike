@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.8 2001/03/12 05:59:41 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.9 2001/07/20 12:13:16 jhs Exp $";
 
 constant thread_safe=1;
 
@@ -548,12 +548,12 @@ Roxen Administrator
 
 "attachment":#"<desc tag='tag' cont='cont''><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
- designed for adding attachments to the mail. </p>
+ designed for adding attachments to the mail.</p>
 
  <p>There are two different kinds of attachments; file and inline.
  File attachments require the <i>file</i> attribute while inline
  attachments are written inline. Inline attachments can for instance
- be a text or a binary (e.g. output from a database). </p>
+ be a text or a binary (e.g. output from a database).</p>
 
 <ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"

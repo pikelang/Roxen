@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.66 2001/04/24 01:24:15 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.67 2001/07/20 12:13:17 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -170,7 +170,7 @@ Finland, 5 158 372
  The font of the table text.</p>
 
 <ex>
-<tablify nicer='' cellseparator=',' font='andover' scale='1.0'>
+<tablify nicer='' cellseparator=', ' font='andover' scale='1.0'>
 Country, Population
 Sweden, 8 911 296
 Denmark, 5 356 845
