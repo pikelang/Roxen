@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.27 1998/07/23 18:41:58 grubba Exp $
+ * $Id: sqltag.pike,v 1.28 1998/07/23 18:46:00 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.27 1998/07/23 18:41:58 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.28 1998/07/23 18:46:00 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -484,7 +484,7 @@ void create()
 	 "sql-servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
 
-  defvar("log_error", 0, "Enable the \"log_error\" attribute",
+  defvar("log_error", 0, "Enable the log_error attribute",
 	 TYPE_FLAG|VAR_MORE, "Enables the attribute \"log_error\" "
 	 "which causes errors to be logged to the event-log.\n");
 
