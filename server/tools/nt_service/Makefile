@@ -1,6 +1,6 @@
 # For use with sprshd.
 #
-# $Id: Makefile,v 1.2 2000/06/28 18:43:56 mast Exp $
+# $Id: Makefile,v 1.3 2000/08/02 18:21:46 mast Exp $
 
 LIBS=-llibcmt -lkernel32 -ladvapi32 -lshell32
 
@@ -18,3 +18,5 @@ roxen.res: roxen.rc ../../roxen.ico
 roxen.exe: roxen.o roxen_service.o roxen.res
 	$(CC) $(LDFLAGS) roxen.o roxen_service.o $(LIBS) roxen.res -o roxen
 
+clean:
+	$(RM) roxen roxen.exe roxen.ico roxen.res roxen.o roxen_service.o
