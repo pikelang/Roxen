@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.179 1999/05/24 06:11:04 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.180 1999/05/25 11:40:57 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2836,6 +2836,18 @@ string tag_cache(string tag, mapping args, string contents, object id)
 #undef HASH
 }
 
+string tag_fsize(string tag, mapping args, object id)
+{
+  catch {
+    array s = id->conf->stat_file( fix_relative( args->file, id ), id );
+    if (s && (s[1]>= 0)) {
+      return (string)s[1];
+    }
+  };
+  if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
+    return (string)strlen(s);
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -2869,6 +2881,7 @@ mapping query_tag_callers()
 	    "file":tag_file,
 	    "realfile":tag_realfile,
 	    "vfs":tag_vfs,
+	    "fsize":tag_fsize,
 	    "header":tag_header,
 	    "redirect":tag_redirect,
 	    "auth-required":tag_auth_required,
