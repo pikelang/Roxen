@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.291 2001/09/06 13:17:10 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.292 2001/09/06 13:27:46 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1212,11 +1212,8 @@ mapping sql_active_list = ([ ]);
 #ifdef DB_DEBUG
 static int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
-#endif /* DB_DEBUG */
-
-#ifdef DEBUG
 multiset all_sql_wrappers = set_weak_flag( (<>), 1 );
-#endif
+#endif /* DB_DEBUG */
 
 class MySQLKey
 {
@@ -1235,7 +1232,7 @@ class MySQLKey
   {
     real = _real;
     name = _name;
-#ifdef DEBUG
+#ifdef DB_DEBUG
     if( !_real )
       error("Creating SQL with empty real sql\n");
 
@@ -1257,7 +1254,7 @@ class MySQLKey
   
   static void destroy()
   {
-#ifdef DEBUG
+#ifdef DB_DEBUG
     all_sql_wrappers[this_object()]=0;
 #endif
     
@@ -1338,7 +1335,7 @@ mixed sq_cache_set( string i, mixed res )
 //! @appears connect_to_my_mysql
 mixed connect_to_my_mysql( string|int ro, void|string db )
 {
-#ifdef DEBUG
+#ifdef DB_DEBUG
   gc();
 #endif
   mixed key = sq_cache_lock();  
