@@ -1,31 +1,29 @@
 /* 
- * $Id: sqltag.pike,v 1.38 1999/10/11 11:41:02 grubba Exp $
+ * $Id: sqltag.pike,v 1.39 1999/11/05 08:46:55 nilsson Exp $
  *
  * A module for Roxen Challenger, which gives the tags
- * <SQLQUERY> and <SQLOUTPUT>.
+ * <sqltable>, <sqlquery> and <sqloutput>.
  *
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.38 1999/10/11 11:41:02 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.39 1999/11/05 08:46:55 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
+#define old_rxml_compat 1
 
-/* Compatibility with old versions of the sqltag module. */
+// Compatibility with old versions of the sqltag module.
 // #define SQL_TAG_COMPAT
 
 inherit "module";
 inherit "roxenlib";
 
-import Array;
 import Sql;
 
 object conf;
 
 
-/*
- * Module interface functions
- */
+// Module interface functions
 
 array register_module()
 {
@@ -87,396 +85,185 @@ array register_module()
 	     1 }) );
 }
 
-/*
- * Tag handlers
- */
+array|string|object do_sql_query(string tag, mapping args, RequestID id)
+{
+  if (!args->query)
+    return rxml_error(tag, "No query.", id);
 
-mixed sqloutput_tag(string tag_name, mapping args, string contents,
-		    object request_id, object f,
-		    mapping defines, object fd)
+  if (args->parse)
+    args->query = parse_rxml(args->query, id);
+
+  string host = query("hostname");
+  object(sql) con;
+  array(mapping(string:mixed)) result;
+  function sql_connect = id->conf->sql_connect;
+  mixed error;
+
+#ifdef SQL_TAG_COMPAT
+  string database = query("database");
+  string user = query("user");
+  string password = query("password");
+
+  if (args->host) {
+    host = args->host;
+    user = "";
+    password = "";
+  }
+  if (args->database) {
+    database = args->database;
+    user = "";
+    password = "";
+    sql_connect = 0;
+  }
+  if (args->user) {
+    user = args->user;
+    sql_connect = 0;
+  }
+  if (args->password) {
+    password = args->password;
+    sql_connect = 0;
+  }
+
+  if (sql_connect)
+    error = catch(con = sql_connect(host));
+  else {
+    host = (lower_case(host) == "localhost")?"":host;
+    error = catch(con = sql(host, database, user, password));
+  }
+#else
+  if (args->host)
+    host=args->host;
+
+  if(sql_connect)
+    error = catch(con = sql_connect(host));
+  else
+    error = catch(con = sql(lower_case(host)=="localhost"?"":host));
+#endif
+
+  if (error) {
+    if (!args->quiet) {
+      if (args->log_error && QUERY(log_error)) {
+        report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
+       		       "%s\n", describe_backtrace(error)));
+      }
+      return "<h3>Couldn't connect to SQL server</h3><br>\n" +
+              html_encode_string(error[0]) + "<false>";
+    }
+    return rxml_error(tag, "Couldn't connect to SQL server. "+html_encode_string(error[0]), id);
+  }
+
+  if (error = catch(result = tag=="sqltable"?con->big_query(args->query):con->query(args->query))) {
+    error = html_encode_string(sprintf("Query %O failed. %s", args->query, con->error()));
+    if (!args->quiet) {
+      if (args->log_error && QUERY(log_error)) {
+        report_error(sprintf("SQLTAG: Query %O failed:\n"
+	       "%s\n",
+	       args->query, describe_backtrace(error)));
+      }
+      return "<h3>"+error+"</h3>\n<false>";
+    }
+    return rxml_error(tag, error, id);
+  }
+
+  if(tag=="sqlquery") args["dbobj"]=con;
+  return result;
+}
+
+
+// -------------------------------- Tag handlers ------------------------------------
+
+array|string container_sqloutput(string tag, mapping args, string contents,
+		    RequestID id)
 {
   if(args->help) return register_module()[2]; // FIXME
+  NOCACHE();
 
-  request_id->misc->cacheable=0;
-  mixed res;
+  string|array res=do_sql_query(tag, args, id);
+  if(stringp(res)) return res;
 
-  if (args->query) {
+  if (res && sizeof(res)) {
+    array ret = ({ do_output_tag(args, res, contents, id) });
+    id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
-    if (args->parse) {
-      args->query = parse_rxml(args->query, request_id, f, defines);
-    }
+    if( args["rowinfo"] )
+           id->variables[args->rowinfo]=sizeof(res);
 
-    string host = query("hostname");
-#ifdef SQL_TAG_COMPAT
-    string database = query("database");
-    string user = query("user");
-    string password = query("password");
-#else /* SQL_TAG_COMPAT */
-    string database, user, password;
-#endif /* SQL_TAG_COMPAT */
-    object(sql) con;
-    array(mapping(string:mixed)) result;
-    function sql_connect = request_id->conf->sql_connect;
-    mixed error;
-
-    if (args->host) {
-      host = args->host;
-      user = "";
-      password = "";
-    }
-    if (args->database) {
-      database = args->database;
-      user = "";
-      password = "";
-      sql_connect = 0;
-    }
-    if (args->user) {
-      user = args->user;
-      sql_connect = 0;
-    }
-    if (args->password) {
-      password = args->password;
-      sql_connect = 0;
-    }
-    if (sql_connect) {
-      error = catch(con = sql_connect(host));
-    } else {
-      host = (lower_case(host) == "localhost")?"":host;
-      error = catch(con = sql(host, database, user, password));
-    }
-    if (error) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
-			       "%s\n", describe_backtrace(error)));
-	}
-	res = ("<h3>Couldn't connect to SQL server</h1><br>\n" +
-	       html_encode_string(error[0]) + "<false>");
-      } else {
-	res = "<false>";
-      }
-    } else if (error = catch(result = con->query(args->query))) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Query %O failed:\n"
-			       "%s\n",
-			       args->query, describe_backtrace(error)));
-	}
-	res = ("<h3>Query \"" + html_encode_string(args->query)
-	       + "\" failed: " + html_encode_string(con->error())
-	       + "</h1>\n<false>");
-      } else {
-	res = "<false>";
-      }
-    } else if (result && sizeof(result))
-    {
-      if(args["mysql-insert-id"])
-	if(con->master_sql->insert_id)
-	  request_id->variables[args["mysql-insert-id"]] =
-	    (string)con->master_sql->insert_id();
-	else
-	  return "<!-- No insert_id present. --><false>";
-
-      res = ({do_output_tag( args, result, contents, request_id )});
-      request_id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
-
-      if( args["rowinfo"] )
-             request_id->variables[args->rowinfo]=sizeof(result);
-
-    } else {
-      res = "<false>";
-    }
-  } else {
-    res = "<!-- No query! --><false>";
+    return ret;
   }
-  return(res);
+
+  if (args["do-once"])
+    return do_output_tag( args, ({([])}), contents, id )+ "<true>";
+
+  return rxml_error(tag, "No SQL return values.", id);
 }
 
-string sqlquery_tag(string tag_name, mapping args,
-		    object request_id, object f,
-		    mapping defines, object fd)
+string tag_sqlquery(string tag, mapping args, RequestID id)
 {
   if(args->help) return register_module()[2]; // FIXME
+  NOCACHE();
 
-  request_id->misc->cacheable=0;
+  string|array res=do_sql_query(tag, args, id);
+  if(stringp(res)) return res;
 
-  if (args->query) {
+  if(args["mysql-insert-id"])
+    if(args->dbobj && args->dbobj->master_sql)
+      id->variables[args["mysql-insert-id"]] = args->dbobj->master_sql->insert_id();
+    else
+      return rxml_error(tag, "No insert_id present.", id);
 
-    if (args->parse) {
-      args->query = parse_rxml(args->query, request_id, f, defines);
-    }
-
-    string host = query("hostname");
-#ifdef SQL_TAG_COMPAT
-    string database = query("database");
-    string user = query("user");
-    string password = query("password");
-#else /* SQL_TAG_COMPAT */
-    string database, user, password;
-#endif /* SQL_TAG_COMPAT */
-    object(sql) con;
-    mixed error;
-    function sql_connect = request_id->conf->sql_connect;
-    array(mapping(string:mixed)) res;
-
-    if (args->host) {
-      host = args->host;
-      user = "";
-      password = "";
-    }
-    if (args->database) {
-      database = args->database;
-      user = "";
-      password = "";
-      sql_connect = 0;
-    }
-    if (args->user) {
-      user = args->user;
-      sql_connect = 0;
-    }
-    if (args->password) {
-      password = args->password;
-      sql_connect = 0;
-    }
-    if (sql_connect) {
-      error = catch(con = sql_connect(host));
-    } else {
-      host = (lower_case(host) == "localhost")?"":host;
-      error = catch(con = sql(host, database, user, password));
-    }
-    if (error) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
-			       "%s\n", describe_backtrace(error)));
-	}
-	return("<h3>Couldn't connect to SQL server</h1><br>\n" +
-	       html_encode_string(error[0])+"<false>");
-      } else {
-	return("<false>");
-      }
-    } else if (error = catch(res = con->query(args->query))) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Query %O failed:\n"
-			       "%s\n",
-			       args->query, describe_backtrace(error)));
-	}
-	return("<h3>Query \"" + html_encode_string(args->query)+"\" failed: "
-	       + html_encode_string(con->error()) + "</h1>\n<false>");
-      } else {
-	return("<false>");
-      }
-    }
-    if(args["mysql-insert-id"])
-      if(con->master_sql->insert_id)
-	request_id->variables[args["mysql-insert-id"]] =
-	  (string)con->master_sql->insert_id();
-      else
-	return "<!-- No insert_id present. --><false>";
-    return("<true>");
-  } else {
-    return("<!-- No query! --><false>");
-  }
+  return "<true>";
 }
 
-string sqltable_tag(string tag_name, mapping args,
-		    object request_id, object f,
-		    mapping defines, object fd)
+string tag_sqltable(string tag, mapping args, RequestID id)
 {
-  int ascii;
-
   if(args->help) return register_module()[2]; // FIXME
+  NOCACHE();
 
-  request_id->misc->cacheable=0;
+  string|object res=do_sql_query(tag, args, id);
+  if(stringp(res)) return res;
 
+  int ascii=!!args->ascii;
+  string ret="";
 
-  if (args->ascii) {
-    // ASCII-mode
-    ascii = 1;
+  if (res) {
+    string nullvalue=args->nullvalue||"";
+    array(mixed) row;
+
+    if (!ascii) {
+      ret="<tr>";
+      foreach(map(res->fetch_fields(), lambda (mapping m) {
+					      return m->name;
+					    } ), string name)
+        ret += "<th>"+name+"</th>";
+      ret += "</tr>\n";
+    }
+
+    if( args["rowinfo"] )
+        id->variables[args->rowinfo]=res->num_rows();
+
+    while(arrayp(row=res->fetch_row())) {
+      if (ascii)
+        ret += row * "\t" + "\n";
+      else {
+        ret += "<tr>";
+        foreach(row, mixed value)
+          ret += "<td>"+(value==""?nullvalue:value)+"</td>";
+        ret += "</tr>\n";
+      }
+    }
+
+    if (!ascii)
+      ret=make_container("table", args-(["host":"", "database":"", "user":"", "password":"",
+					 "query":"", "nullvalue":""]), ret);
+
+    return ret+"<true>";
   }
 
-  if (args->query) {
-
-    if (args->parse) {
-      args->query = parse_rxml(args->query, request_id, f, defines);
-    }
-
-    string host = query("hostname");
-#ifdef SQL_TAG_COMPAT
-    string database = query("database");
-    string user = query("user");
-    string password = query("password");
-#else /* SQL_TAG_COMPAT */
-    string database, user, password;
-#endif /* SQL_TAG_COMPAT */
-    object(sql) con;
-    mixed error;
-    function sql_connect = request_id->conf->sql_connect;
-    object(sql_result) result;
-    string res;
-
-    if (args->host) {
-      host = args->host;
-      user = "";
-      password = "";
-    }
-    if (args->database) {
-      database = args->database;
-      user = "";
-      password = "";
-      sql_connect = 0;
-    }
-    if (args->user) {
-      user = args->user;
-      sql_connect = 0;
-    }
-    if (args->password) {
-      password = args->password;
-      sql_connect = 0;
-    }
-    if (sql_connect) {
-      error = catch(con = sql_connect(host));
-    } else {
-      host = (lower_case(host) == "localhost")?"":host;
-      error = catch(con = sql(host, database, user, password));
-    }
-    if (error) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
-			       "%s\n", describe_backtrace(error)));
-	}
-	return("<h3>Couldn't connect to SQL server</h1><br>\n" +
-	       html_encode_string(error[0])+"<false>");
-      } else {
-	return("<false>");
-      }
-    } else if (error = catch(result = con->big_query(args->query))) {
-      if (!args->quiet) {
-	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Query %O failed:\n"
-			       "%s\n",
-			       args->query, describe_backtrace(error)));
-	}
-	return ("<h3>Query \"" + html_encode_string(args->query) +
-	        "\" failed: " + html_encode_string(con->error()) + "</h1>\n" +
-	        "<false>");
-      } else {
-	return("<false>");
-      }
-    }
-
-    if (result) {
-      string nullvalue="";
-      array(mixed) row;
-
-      if (args->nullvalue) {
-	nullvalue=(string)args->nullvalue;
-      }
-
-      if (ascii) {
-	res = "";
-      } else {
-	res = "<table";
-	foreach(indices(args) - ({ "host", "database", "user", "password",
-				 "query", "nullvalue" }),
-		string attr) {
-	  string val = args[attr];
-	  if (val != attr) {
-	    res += " "+attr+"=\""+val+"\"";
-	  } else {
-	    res += " "+attr;
-	  }
-	}
-	res += "><tr>";
-	foreach(map(result->fetch_fields(), lambda (mapping m) {
-					      return(m->name);
-					    } ), string name) {
-	  res += "<th>"+name+"</th>";
-	}
-	res += "</tr>\n";
-      }
-
-      if( args["rowinfo"] )
-          request_id->variables[args->rowinfo]=result->num_rows();
-
-      while (row = result->fetch_row()) {
-	if (ascii) {
-	  res += (Array.map(row, lambda(mixed value) {
-				   return((string)value);
-				 }) * "\t") + "\n";
-	} else {
-	  res += "<tr>";
-	  foreach(row, mixed value) {
-	    value = (string)value;
-	    res += "<td>"+(value==""?nullvalue:value)+"</td>";
-	  }
-	  res += "</tr>\n";
-	}
-      }
-      if (ascii) {
-	res += "<true>";
-      } else {
-	res += "</table><true>";
-      }
-
-      return(res);
-    } else {
-      if (ascii) {
-	return("<false>");
-      }
-      return("<!-- No result from query --><false>");
-    }
-  } else {
-    if (ascii) {
-      return("<false>");
-    }
-    return("<!-- No query! --><false>");
-  }
+  return rxml_error(tag, "No SQL return values.", id);
 }
 
-string sqlelse_tag(string tag_name, mapping args, string contents,
-		   object request_id, mapping defines)
-{
-  return(make_container("else", args, contents));
-}
 
-#if 0
-
-string dumpid_tag(string tag_name, mapping args,
-		  object request_id, mapping defines)
-{
-  return(sprintf("<pre>ID:%O\n</pre>\n",
-		 mkmapping(indices(request_id), values(request_id))));
-}
-
-#endif /* 0 */
-
-
-/*
- * Hook in the tags
- */
-
-mapping query_tag_callers()
-{
-  return( ([ "sql":sqlquery_tag, "sqlquery":sqlquery_tag,
-	     "sqltable":sqltable_tag,
-#if 0
-	     "dumpid":dumpid_tag
-#endif /* 0 */
-  ]) );
-}
-
-mapping query_container_callers()
-{
-  return( ([ "sqloutput":sqloutput_tag, "sqlelse":sqlelse_tag ]) );
-}
-
-/*
- *  Callback functions
- */
-
+// ------------------- Callback functions -------------------------
 
 object(sql) sql_object(void|string host)
 {
@@ -495,9 +282,8 @@ string query_provides()
   return "sql";
 }
 
-/*
- * Setting the defaults
- */
+
+// ------------------------ Setting the defaults -------------------------
 
 void create()
 {
@@ -525,13 +311,11 @@ void create()
   defvar("password", "", "Default password (deprecated)",
 	 TYPE_STRING|VAR_MORE,
 	 "Specifies the default password to use for access.\n");
-#endif /* SQL_TAG_COMPAT */
+#endif // SQL_TAG_COMPAT
 }
 
-/*
- * More interface functions
- */
 
+// --------------------- More interface functions --------------------------
 
 void start(int level, object _conf)
 {
@@ -549,19 +333,17 @@ string status()
 {
   if (catch {
     object o;
-    if (conf->sql_connect) {
+    if (conf->sql_connect)
       o = conf->sql_connect(QUERY(hostname));
-    } else {
+    else
       o = Sql.sql(QUERY(hostname)
 #ifdef SQL_TAG_COMPAT
 		  , QUERY(database), QUERY(user), QUERY(password)
-#endif /* SQL_TAG_COMPAT */
+#endif // SQL_TAG_COMPAT
 		  );
-    }
     return(sprintf("Connected to %s server on %s<br>\n",
 		   o->server_info(), o->host_info()));
-  }) {
-    return("<font color=red>Not connected.</font><br>\n");
-  }
+  })
+  return "<font color=red>Not connected.</font><br>\n";
 }
 
