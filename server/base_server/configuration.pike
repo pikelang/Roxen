@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.328 2000/07/26 16:31:54 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.329 2000/07/31 00:55:31 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1461,7 +1461,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
     }
     TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
-    TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1])
+    TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
 		: "Missing type.");
     if(tmp)
     {
