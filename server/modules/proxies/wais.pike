@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.23 2001/01/04 06:03:29 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.24 2001/03/15 23:31:25 per Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -1320,7 +1320,7 @@ mapping readSearchResponseInfo(string buf)
 	    val = readCompressedInteger(buf1);
 	    size -= sizeCompressedInteger(buf1);
 	    buf1 = skipCompressedInteger(buf1);
-	    types  += buf1[0..val];
+	    types  += ({buf1[0..val]});
 	    WAIS_WERR("got DT_TYPE_BLOCK, type: "+buf1[0..val]);
 	    buf1=buf1[val..];
 	    size -= val;

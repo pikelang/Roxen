@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.38 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.39 2001/03/15 23:31:26 per Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -510,8 +510,8 @@ string|array(string) simpletag_exec(string tag, mapping m, string c, RequestID i
     if(QUERY(exec))
     {
       string user="Unknown";
-      if(id->auth && id->auth[0])
-	user=id->auth[1];
+      if( User u = id->conf->authenticate( id ) )
+	user = u->name();
       string addr=id->remoteaddr || "Internal";
       NOCACHE();
       return popen(fix_var(m->cmd, id),

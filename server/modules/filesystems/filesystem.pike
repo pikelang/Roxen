@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.96 2001/03/08 14:35:42 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.97 2001/03/15 23:31:25 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -549,7 +549,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("MKDIR: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MKDIR' denied</h1>");
@@ -603,7 +603,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("PUT: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
@@ -722,7 +722,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") &&  (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("CHMOD: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'CHMOD' files denied</h1>");
@@ -788,7 +788,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MV: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MV' files denied</h1>");
@@ -865,7 +865,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MOVE: Permission denied");
       return Roxen.http_auth_required("foo",
                                 "<h1>Permission to 'MOVE' files denied</h1>");
@@ -964,7 +964,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("DELETE: Permission denied");
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
     }

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.78 2001/03/14 01:02:07 mast Exp $
+// $Id: Roxen.pmod,v 1.79 2001/03/15 23:31:24 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -598,8 +598,10 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   if(id->realauth)
     new["REMOTE_USER"] = (id->realauth / ":")[0];
-  if(id->auth && id->auth[0])
-    new["ROXEN_AUTHENTICATED"] = "1"; // User is valid with the Roxen userdb.
+  if( User u = id->conf->authenticate( id ) )
+    new["ROXEN_AUTHENTICATED"] = u->name();
+  // User is valid with the Roxen userdb.
+
   if(id->data && strlen(id->data))
   {
     if(id->misc["content-type"])

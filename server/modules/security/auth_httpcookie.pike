@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.5 2001/03/08 14:35:45 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.6 2001/03/15 23:31:26 per Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -85,11 +85,11 @@ User authenticate( RequestID id, UserDB db )
   if( !id->cookies[ COOKIE ] )
     return 0;
   [password,user] = lookup_cookie( id->cookies[ COOKIE ] );
-
   if( !user || !password )
     return 0;
 
   NOCACHE();
+
   User res;
   if( !db )
   {

@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.286 2001/03/15 18:36:38 nilsson Exp $
+// $Id: rxml.pike,v 1.287 2001/03/15 23:31:23 per Exp $
 
 
 inherit "rxmlhelp";
@@ -2098,21 +2098,32 @@ class TagIfUser {
   constant name = "if";
   constant plugin_name = "user";
 
-  int eval(string u, RequestID id, mapping m) {
-    if(!id->auth)
+  int eval(string u, RequestID id, mapping m)
+  {
+    object db;
+    if( m->database )
+      db = id->conf->find_user_database( m->database );
+    User uid = id->conf->authenticate( id, db );
+
+    if( !uid && !id->auth )
       return 0;
+
     NOCACHE();
-    if(u == "any")
-      if(m->file)
-	return match_user(id->auth,id->auth[1],m->file,!!m->wwwfile, id);
+
+    if( u == "any" )
+      if( m->file )
+	// Note: This uses the compatibility interface. Should probably
+	// be fixed.
+	return match_user( id->auth, id->auth[1], m->file, !!m->wwwfile, id);
       else
-	return id->auth[0];
+	return !!u;
     else
       if(m->file)
-	// FIXME: wwwfile attribute doesn't work.
+	// Note: This uses the compatibility interface. Should probably
+	// be fixed.
 	return match_user(id->auth,u,m->file,!!m->wwwfile,id);
       else
-	return id->auth[0] && (search(u/",", id->auth[1]) != -1);
+	return has_value(u/",", uid->name());
   }
 
   private int match_user(array u, string user, string f, int wwwfile, RequestID id) {
@@ -2149,11 +2160,19 @@ class TagIfGroup {
   constant plugin_name = "group";
 
   int eval(string u, RequestID id, mapping m) {
-    if( !id->auth )
+    object db;
+    if( m->database )
+      db = id->conf->find_user_database( m->database );
+    User uid = id->conf->authenticate( id, db );
+
+    if( !uid && !id->auth )
       return 0;
+
     NOCACHE();
-    return ((m->groupfile && sizeof(m->groupfile))
-	    && group_member(id->auth, m->group, m->groupfile, id));
+    if( m->groupfile )
+      return ((m->groupfile && sizeof(m->groupfile))
+	      && group_member(id->auth, u, m->groupfile, id));
+    return sizeof( uid->groups() & (u/"," )) > 0;
   }
 
   private int group_member(array auth, string group, string groupfile, RequestID id) {

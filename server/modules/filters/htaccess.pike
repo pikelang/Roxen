@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.69 2001/01/31 01:17:31 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.70 2001/03/15 23:31:25 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -323,11 +323,7 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
     }
   }
   if(!userfile)
-  {
-    if(id->auth)
-      return id->auth[0];
-    return 0;
-  }
+    return !!id->conf->authenticate( id );
 
   Stat st;
 
@@ -359,8 +355,8 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
 }
 
 /* Check if the users is a member of the valid group(s) */
-int validate_group(multiset grps, array auth, string groupfile, string userfile,
-		   RequestID id)
+int validate_group(multiset grps, array auth, string groupfile,
+		   string userfile, RequestID id)
 {
   mapping g;
   string groups, cache_key, grp, members, user, s2;

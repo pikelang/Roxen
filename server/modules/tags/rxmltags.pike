@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.216 2001/03/14 01:02:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.217 2001/03/15 23:31:26 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -235,29 +235,32 @@ class EntityClientHost {
 
 class EntityClientAuthenticated {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var,
+			string scope_name, void|RXML.Type type) {
+    // Actually, it is cacheable, but _only_ if there is no authentication.
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_INT(c->id->auth&&c->id->auth[0]&&c->id->auth[1], type);
+    return ENCODE_RXML_INT(!!c->id->conf->authenticate( c->id ), type );
   }
 }
 
 class EntityClientUser {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var,
+			string scope_name, void|RXML.Type type) {
+    User u = c->id->conf->authenticate( c->id );
     c->id->misc->cacheable=0;
-    if(!c->id->realauth) return RXML.nil;
-    return ENCODE_RXML_TEXT((c->id->realauth/":")[0], type);
+    if(!u) return RXML.nil;
+    return ENCODE_RXML_TEXT(u->name(), type);
   }
 }
 
 class EntityClientPassword {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var,
+			string scope_name, void|RXML.Type type) {
     array tmp;
     c->id->misc->cacheable=0;
-    if(c->id->auth 
-       && c->id->auth[0] 
-       && c->id->realauth
+    if( c->id->realauth
        && (sizeof(tmp = c->id->realauth/":") > 1) )
       return ENCODE_RXML_TEXT(tmp[1..]*":", type);
     return RXML.nil;

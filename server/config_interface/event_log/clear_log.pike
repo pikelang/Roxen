@@ -4,11 +4,12 @@
 
 mapping parse( RequestID id )
 {
+  User u = id->conf->authenticate( id, roxen.config_userdb_module );
   roxen->error_log = ([]);
   report_notice(sprintf(LOCALE(298, 
 			       "Event log cleared by %s from %s")+"\n",
-			id->auth ? id->auth[1] : "anonymous",
-			(gethostbyaddr(id->remoteaddr) ? 
+			u?u->name():"a user",
+			(gethostbyaddr(id->remoteaddr)    ? 
 			 gethostbyaddr(id->remoteaddr)[0] : id->remoteaddr))
 		);
   return Roxen.http_redirect( "../global_settings/?section=event_log", id );

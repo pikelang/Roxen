@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.648 2001/03/13 11:48:58 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.649 2001/03/15 23:31:22 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -3621,6 +3621,13 @@ int main(int argc, array tmp)
   cache.init_session_cache();
 
   protocols = build_protocols_mapping();  
+
+  int t = gethrtime();
+  werror("Searching for pike-modules directories ... ");
+  foreach( find_all_pike_module_directories( ), string d )
+    master()->add_module_path( d );
+  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+
   enable_configurations();
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.

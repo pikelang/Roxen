@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.142 2001/03/15 00:30:55 mast Exp $
+//! $Id: module.pmod,v 1.143 2001/03/15 23:31:24 per Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -4532,7 +4532,6 @@ static class THtml
 
   string _sprintf() {return "RXML.t_html" + OBJ_COUNT;}
 }
-
 
 // P-code compilation and evaluation.
 

@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byaddress.pike,v 1.2 2000/05/20 16:40:20 kinkie Exp $";
+constant cvs_version="$Id: throttling_byaddress.pike,v 1.3 2001/03/15 23:31:26 per Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -27,6 +27,43 @@ constant module_name = "Throttling: throttle by address";
 constant module_doc  = 
 #"This module will alter a request's bandwidth by client address.";
 constant module_unique=1;
+
+class IP_with_mask 
+{
+  int net;
+  int mask;
+  static private int ip_to_int(string ip)
+  {
+    int res;
+    foreach(((ip/".") + ({ "0", "0", "0" }))[..3], string num) {
+      res = res*256 + (int)num;
+    }
+    return(res);
+  }
+  void create(string _ip, string|int _mask)
+  {
+    net = ip_to_int(_ip);
+    if (intp(_mask)) {
+      if (_mask > 32) {
+	report_error(sprintf("Bad netmask: %s/%d\n"
+			     "Using %s/32\n", _ip, _mask, _ip));
+	_mask = 32;
+      }
+      mask = ~0<<(32-_mask);
+    } else {
+      mask = ip_to_int(_mask);
+    }
+    if (net & ~mask) {
+      report_error(sprintf("Bad netmask: %s for network %s\n"
+			   "Ignoring node-specific bits\n", _ip, _mask));
+      net &= mask;
+    }
+  }
+  int `()(string ip)
+  {
+    return((ip_to_int(ip) & mask) == net);
+  }
+}
 
 mapping(string:object(IP_with_mask)) rules_cache=([]);
 //I'm not using the global cache because these are going to have a long
