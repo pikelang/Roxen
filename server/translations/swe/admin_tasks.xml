@@ -4,11 +4,14 @@
 <language>swe</language>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
+<file>../config_interface/actions/connections.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
+<file>../config_interface/actions/debug_summary.pike</file>
 <file>../config_interface/actions/feature_list.pike</file>
 <file>../config_interface/actions/flush.pike</file>
 <file>../config_interface/actions/ftpstatus.pike</file>
 <file>../config_interface/actions/generate_rsa.pike</file>
+<file>../config_interface/actions/licensestatus.pike</file>
 <file>../config_interface/actions/listfonts.pike</file>
 <file>../config_interface/actions/locks.pike</file>
 <file>../config_interface/actions/make_rsa_csr.pike</file>
@@ -23,6 +26,7 @@
 <file>../config_interface/actions/ssl_common.pike</file>
 <file>../config_interface/actions/tablist.pike</file>
 <file>../config_interface/actions/threads.pike</file>
+<file>../config_interface/actions/upload_license.pike</file>
 <added id="1"/>
 
 <str id="1">
@@ -954,5 +958,83 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <str id="155">
 <new/>
 <o>Failed to write CSR to %s.</o>
+<t></t>
+</str>
+
+<str id="156">
+<new/>
+<o>Active connection</o>
+<t></t>
+</str>
+
+<str id="157">
+<new/>
+<o>All currently active connection</o>
+<t></t>
+</str>
+
+<str id="158">
+<new/>
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="159">
+<new/>
+<o>Sent (Mib)</o>
+<t></t>
+</str>
+
+<str id="160">
+<new/>
+<o>Kibyte/s</o>
+<t></t>
+</str>
+
+<str id="161">
+<new/>
+<o>Total bandwidth</o>
+<t></t>
+</str>
+
+<str id="162">
+<new/>
+<o>Refresh</o>
+<t></t>
+</str>
+
+<str id="163">
+<new/>
+<o>Debug Summary</o>
+<t></t>
+</str>
+
+<str id="164">
+<new/>
+<o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
+<t></t>
+</str>
+
+<str id="165">
+<new/>
+<o>License status</o>
+<t></t>
+</str>
+
+<str id="166">
+<new/>
+<o>Show information about the installed licenses and there usage.</o>
+<t></t>
+</str>
+
+<str id="167">
+<new/>
+<o>Upload license</o>
+<t></t>
+</str>
+
+<str id="168">
+<new/>
+<o>Upload a new roxen license file.</o>
 <t></t>
 </str>

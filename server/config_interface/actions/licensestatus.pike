@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.10 2002/04/22 17:10:30 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.11 2002/07/01 15:29:19 anders Exp $
  */
 
 #include <roxen.h>
@@ -8,8 +8,8 @@
 
 constant action = "status";
 
-string name= LOCALE(0, "License status");
-string doc = LOCALE(0, "Show information about the installed licenses and "
+string name= LOCALE(165, "License status");
+string doc = LOCALE(166, "Show information about the installed licenses and "
 		    "there usage.");
 
 

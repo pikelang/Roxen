@@ -3,8 +3,8 @@
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "status";
-string name = LOCALE(0, "Active connection" );
-string doc = LOCALE(0,"All currently active connection");
+string name = LOCALE(156, "Active connection" );
+string doc = LOCALE(157,"All currently active connection");
 
 string parse( RequestID id )
 {
@@ -39,10 +39,10 @@ string parse( RequestID id )
       
       res += "<table cellspacing=0 border=0 cellpadding=2 width=100% >";
       res += "<tr bgcolor='&usr.fade2;'>"
-	"<td><b>"+LOCALE(0,"File")+"</b></td>"
-	"<td align=right><b>"+LOCALE(0,"Time")+"</b></td>"
-	"<td align=right><b>"+LOCALE(0,"Sent (Mib)")+"</b></td>"
-	"<td align=right><b>"+LOCALE(0,"Kibyte/s")+"</b></td>"
+	"<td><b>"+LOCALE(18,"File")+"</b></td>"
+	"<td align=right><b>"+LOCALE(158,"Time")+"</b></td>"
+	"<td align=right><b>"+LOCALE(159,"Sent (Mib)")+"</b></td>"
+	"<td align=right><b>"+LOCALE(160,"Kibyte/s")+"</b></td>"
 	"</tr>";
       float total_bw = 0.0, host_bw;
       string oh;
@@ -84,13 +84,13 @@ string parse( RequestID id )
 		       "<tr><td>&nbsp;</td></tr>", host_bw);
       res +=
 	sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
-		+LOCALE(0,"Total bandwidth")+"</td>"
+		+LOCALE(161,"Total bandwidth")+"</td>"
 		"<td align=right>%.1f</td></tr>",
 		total_bw );
       res += "</table>";
     }
   }
   res += "<input type=hidden name=action value='connections.pike' />"
-    "<submit-gbutton>"+LOCALE(0,"Refresh")+"</submit-gbutton>";
+    "<submit-gbutton>"+LOCALE(162,"Refresh")+"</submit-gbutton>";
   return res;
 }

@@ -1742,12 +1742,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-
-
-
-
-
-
 <str id="5">
 <changed from="Number of requests:"/>
 <o>Interface language</o>

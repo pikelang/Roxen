@@ -28,7 +28,7 @@
 </str>
 
 <str id="6">
-<o>No file accesses)</o>
+<o>No file accesses</o>
 <t></t>
 </str>
 
@@ -323,5 +323,10 @@
 
 <str id="62">
 <o>The table that cotains the files. The table should contain at least the columns 'name' and 'contents'. Optionally you can also have the fields 'mtime', 'uid' and 'gid'.</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>%s from %s...%s</o>
 <t></t>
 </str>

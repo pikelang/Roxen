@@ -4,11 +4,14 @@
 <language>eng</language>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
+<file>../config_interface/actions/connections.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
+<file>../config_interface/actions/debug_summary.pike</file>
 <file>../config_interface/actions/feature_list.pike</file>
 <file>../config_interface/actions/flush.pike</file>
 <file>../config_interface/actions/ftpstatus.pike</file>
 <file>../config_interface/actions/generate_rsa.pike</file>
+<file>../config_interface/actions/licensestatus.pike</file>
 <file>../config_interface/actions/listfonts.pike</file>
 <file>../config_interface/actions/locks.pike</file>
 <file>../config_interface/actions/make_rsa_csr.pike</file>
@@ -23,6 +26,7 @@
 <file>../config_interface/actions/ssl_common.pike</file>
 <file>../config_interface/actions/tablist.pike</file>
 <file>../config_interface/actions/threads.pike</file>
+<file>../config_interface/actions/upload_license.pike</file>
 
 <str id="1">
 <o>Pike memory usage information</o>
@@ -909,5 +913,70 @@ change the currently running version.</o>
 
 <str id="155">
 <o>Failed to write CSR to %s.</o>
+<t></t>
+</str>
+
+<str id="156">
+<o>Active connection</o>
+<t></t>
+</str>
+
+<str id="157">
+<o>All currently active connection</o>
+<t></t>
+</str>
+
+<str id="158">
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="159">
+<o>Sent (Mib)</o>
+<t></t>
+</str>
+
+<str id="160">
+<o>Kibyte/s</o>
+<t></t>
+</str>
+
+<str id="161">
+<o>Total bandwidth</o>
+<t></t>
+</str>
+
+<str id="162">
+<o>Refresh</o>
+<t></t>
+</str>
+
+<str id="163">
+<o>Debug Summary</o>
+<t></t>
+</str>
+
+<str id="164">
+<o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
+<t></t>
+</str>
+
+<str id="165">
+<o>License status</o>
+<t></t>
+</str>
+
+<str id="166">
+<o>Show information about the installed licenses and there usage.</o>
+<t></t>
+</str>
+
+<str id="167">
+<o>Upload license</o>
+<t></t>
+</str>
+
+<str id="168">
+<o>Upload a new roxen license file.</o>
 <t></t>
 </str>

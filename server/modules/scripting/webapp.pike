@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.20 2002/06/28 14:44:17 anders Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.21 2002/07/01 15:29:33 anders Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1225,7 +1225,7 @@ mixed find_file( string f, RequestID id )
 #endif /* __NT__ */
 	) {
       errors++;
-      report_error(LOCALE(0, "Path verification of %O failed:\n"
+      report_error(LOCALE(36, "Path verification of %O failed:\n"
 			  "%O is not a prefix of %O\n"
 			  ), oldf, normalized_path, norm_f);
       return http_low_answer(403, "<h2>File exists, but access forbidden "
@@ -1384,7 +1384,7 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
 #endif /* __NT__ */
 	) {
       errors++;
-      report_error(LOCALE(0, "Path verification of %O failed:\n"
+      report_error(LOCALE(36, "Path verification of %O failed:\n"
 			  "%O is not a prefix of %O\n"
 			  ), oldf, normalized_path, norm_f);
       frame->parse_error("File " + f + " exists, but access forbidden "
@@ -1904,8 +1904,8 @@ void create()
                 "NOTE: No data will be returned to the "
                 "client until the output is fully parsed.") );
 
-  defvar("rxmltypes", "text/xml text/html", LOCALE(0, "RXMLTypes"), TYPE_TEXT,
-	 LOCALE(23, "Content types that should be passed on to the "
+  defvar("rxmltypes", "text/xml text/html", LOCALE(37, "RXMLTypes"), TYPE_TEXT,
+	 LOCALE(9, "Content types that should be passed on to the "
                 "RXML Parser."), 0,
          lambda() { return !query("rxml"); } );
 
@@ -1922,25 +1922,25 @@ void create()
 
 #ifdef ENABLE_JSP
   defvar("jspengine", "None",
-         LOCALE(0, "Servlet engine"), TYPE_MULTIPLE_STRING,
-         LOCALE(0, "Select the jsp engine that should handle files with "
+         LOCALE(38, "Servlet engine"), TYPE_MULTIPLE_STRING,
+         LOCALE(39, "Select the jsp engine that should handle files with "
                 "the .jsp extension."),
          ({ "None", "GNUJSP", "Jasper" })
          );
 
-  defvar("jspdebug", 0, LOCALE(0, "JSP Debug"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "Enable debug output from the JSP engine."), 0,
+  defvar("jspdebug", 0, LOCALE(40, "JSP Debug"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(41, "Enable debug output from the JSP engine."), 0,
          lambda() { return query("jspengine") == "None"; } );
 
-  defvar("jspsenderrtoclient", 0, LOCALE(0, "Send Errors To Client"),
+  defvar("jspsenderrtoclient", 0, LOCALE(42, "Send Errors To Client"),
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "Return jsp compilation errors to the client."), 0,
+	 LOCALE(43, "Return jsp compilation errors to the client."), 0,
          lambda() { return query("jspengine") != "Jasper"; } );
 
 #endif // ENABLE_JSP
 
-  defvar("tagtarget", "", LOCALE(0, "Target name"), TYPE_STRING|VAR_MORE,
-	 LOCALE(25, "Target name to use in the servlet tag to reference "
+  defvar("tagtarget", "", LOCALE(44, "Target name"), TYPE_STRING|VAR_MORE,
+	 LOCALE(28, "Target name to use in the servlet tag to reference "
                 "this Web Application. Leave empty to exclude "
                 "from the servlet tag.") );
 

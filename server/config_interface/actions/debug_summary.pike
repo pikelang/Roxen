@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.5 2002/05/15 14:43:32 anders Exp $
+ * $Id: debug_summary.pike,v 1.6 2002/07/01 15:29:19 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -8,8 +8,8 @@
 
 constant action = "debug_info";
 
-LocaleString name= LOCALE(0,"Debug Summary");
-LocaleString doc = LOCALE(0,
+LocaleString name= LOCALE(163,"Debug Summary");
+LocaleString doc = LOCALE(164,
 		    "Shows a text file containing a configuration summary, suitable "
 		    "for support purposes.");
 

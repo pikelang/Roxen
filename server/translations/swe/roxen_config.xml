@@ -1807,12 +1807,6 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 <t>Modulen %s (%s) kunde inte laddas.</t>
 </str>
 
-
-
-
-
-
-
 <str id="5">
 <o>Interface language</o>
 <t>Administrationsgränssnittets språk</t>

@@ -43,12 +43,7 @@
 </str>
 
 <str id="8">
-<o>&lt;h2&gt;Servlets:&lt;/h2&gt;</o>
-<t></t>
-</str>
-
-<str id="9">
-<o> mapped to </o>
+<o>&lt;table border=0&gt;</o>
 <t></t>
 </str>
 
@@ -145,13 +140,8 @@
 <t></t>
 </str>
 
-<str id="28">
-<o>Application: </o>
-<t></t>
-</str>
-
 <str id="29">
-<o>&lt;i&gt;Servlet not loaded&lt;/i&gt;</o>
+<o>&lt;i&gt;Servlet not loaded.&lt;/i&gt;</o>
 <t></t>
 </str>
 
@@ -182,5 +172,62 @@
 
 <str id="35">
 <o>Load all servlets at module initialization time even if load-on-startup is not specified in web.xml</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>Path verification of %O failed:
+%O is not a prefix of %O
+</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>RXMLTypes</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>Servlet engine</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>Select the jsp engine that should handle files with the .jsp extension.</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>JSP Debug</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Enable debug output from the JSP engine.</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>Send Errors To Client</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>Return jsp compilation errors to the client.</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>Target name</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Content types that should be passed on to the RXML Parser.</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>Target name to use in the servlet tag to reference this Web Application. Leave empty to exclude from the servlet tag.</o>
 <t></t>
 </str>

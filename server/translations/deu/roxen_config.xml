@@ -1663,12 +1663,6 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 <t>Das Modul %s (%s) konnte nicht geladen werden.</t>
 </str>
 
-
-
-
-
-
-
 <str id="5">
 <o>Interface language</o>
 <t>Interface-Sprache</t>
