@@ -1,5 +1,138 @@
 Changes since Roxen 1.0 
 -----------------------------------------------
+
+o Roxen now gives an error message if the rights on the log an conf
+  files are set wrongly, that is, if it is unable to save the
+  configuration.
+
+o 'Maximum evalutation time' seems to work now, finally.  Signals are
+   tricky when you have to support four different behaviours.
+
+o Roxen no longer tries to set the 'UserID' cookie when methods other
+  than POST or GET are used.
+
+o Module security patterns now allow comma-separeted lists.
+
+o The accessed database no longer use 3 FDs. It is more like 0.6 on a
+  server with a moderate load. The FDs are closed when not used for
+  ten seconds.
+
+o The password database should now be reloaded automatically if the
+  source file is changed.
+
+o There is no longer a conflict in the if-tag, two different checks
+  wanted to use file=.. <if user=... file=...> now works
+  
+o The external shuffle program fixed again, this time by me.
+
+o The statistics (sent data with friends) has been totaly rewritten,
+  using a somewhat more generic bignum class, and hopefully not as
+  broken as the old one.
+
+o The interface names in the configuration interface should now
+  _always_ be resolved if it is at all possible to resolv them. It is
+  now also possible to enter any value, at all times, in a textfield.
+
+o <apre> and <aconf> now keep query-variables.
+
+o The logging format is now more customizable.
+
+o The logging disabler module now works as expected.
+
+o We now use a ticket database to maintain a list of known problems an
+  bugs. This has made the bug finding and fixing process _much_ more
+  efficient
+
+o SSL should work better now.
+  A short, step by step, guide for setting up a SSL-server:
+ 
+  o Get SSLeay, install it in /usr/local/ssl/ (this is the default)
+  o cd to roxen/extern/, and type 'make ssl' (this and the next step
+    can be skipped if SSLeay was installed when you built roxen)
+  o Copy the resulting 'ssl' binary to your 'roxen/server/bin/'
+    directory.
+   
+  o Get (or make) a certificate. A test-certificate can be found at
+    http://per.hedbor.org/certificate.
+ 
+  o Configure a new port on the server you want to enable SSL on:
+ 
+    1. Add a new port, and set the protocol to 'ssl'
+    2. Enter a line in the 'arguments' textfield for this port:
+       cert-file /full/path/to/the/certificate
+    3. Press save.
+    4. Access your SSL-server.
+
+o The proxy log no longer has two entries for each hit, and the date
+  has been added to it.
+
+o New module: Graphics text. Se
+  http://skuld.infovav.se:9999/test2.html for some more info (this
+  page will probably move in the near future)
+
+o The home logger module has been rewritten, and now hopefully works
+  better. 
+
+o The 'add a module' page has been rewritten.
+
+o The modules have been moved into subdirectories in the 'modules'
+  directory.  Roxen now support any level of directories in the module
+  directory, making it possible, if not useful, to set the module
+  search path to '/', and thus getting _all_ modules in the whole
+  system.  This took me four hours when I tested if it worked, so I do
+  not recommend it.
+
+o CVS version added to all files, as a variable.  In the modules, this
+  is used in the configuration interface to show the version.  This
+  will hopefully make bug-reports more useful to us, since we will
+  know which version of the module was used.  The configuration
+  interface now also show the filename of the sourcefile the module
+  was loaded from.
+
+o The garbage collector has been redesigned yet again, this time it
+  hopefully works. The only file-name-method left is 'hash', but it
+  has been enhanced to hash into multiple levels of directories, at
+  the most 500 dirs per level. There is no more 'find' processes, and
+  the cache recheck is done much more seldom. The server no longer
+  blocks when the cache is checked. This was a bug in disk_cache.lpc
+  (now disk_cache.pike)
+
+o Roxen can now count in japanese, using Kanji. It is also supposed to
+  have support for dates and such.  Since we are not exactly masters
+  of japanese, someone who knows the language better might want to
+  check this module (<accessed lang=kanji>, as an example)
+
+o Expiry time of RXML is <i>no longer set at all</i>. In the future,
+  it will be set automatically to a sensible value, depending on the
+  contents of the pages.  Before it was set to one second in the past,
+  making it painfully slow to browse a roxen server over a modem with
+  netscape, since netscape seems to reload the images as well as the
+  actual page.
+
+o Bug in roxenlib.pike fixed, there was a typo in a sscanf, rendering
+  the if-modified-since code quite useless (it only workded if the year
+  was 2000, the inverse of the famous "year-2000-problem" :-))
+  Wilhelm Koehler <wk@cs.tu-berlin.de>
+  
+o Portuguese added to the languages. Contributed by cjsawaia@8415.com.br
+
+o A bug in the user filesystem made it impossible to have multiple
+  ones mounted on the same spot and still use the .htaccess module
+  in them.  Now htaccess work as expected, on the virtual filesystem,
+  not the physical one.  The union of the directories are protected by
+  the same .htaccess file.
+
+o Roxen now write documentation files and open ports as the superuser,
+  if it is started with superuser privilegies. This is a quite useful
+  feature, since the configuration files can be protected from the
+  user that runs the WWW-server, thus making malicious CGI scripts
+  much less dangerous.
+
+o A lot of typos and gramatical errors fixed in the built-in
+  documentation.  It will hopefully be readable now.
+
+o Trust levels now works as documented.
+
 o Moved all foo.lpc files to foo.pike (phew..)
 
 o New global variable: Log directory prefix. The directory to prepend
