@@ -82,6 +82,12 @@ mixed move_db( string db, RequestID id )
                          "</font>", id->variables->name );
          break;
 	default:
+	 if( Roxen.is_mysql_keyword( id->variables->name ) )
+	   warning = sprintf("<font color='&usr.warncolor;'>"+
+			     _(0,"%s is a mysql keyword, used by mysql."
+			       "Please select another name")+
+			     "</font>", id->variables->name );
+	 break;
       }
     if( !strlen( warning ) )
     {

@@ -84,8 +84,16 @@ ERROR
                          "</font>", id->variables->name );
          break;
        default:
-         really_do_create( id );
-         RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	 if( Roxen.is_mysql_keyword( id->variables->name ) )
+	   error = sprintf("<font color='&usr.warncolor;'>"+
+			   _(0,"%s is a mysql keyword, used by mysql."
+			     "Please select another name")+
+			   "</font>", id->variables->name );
+	 else
+	 {
+	   really_do_create( id );
+	   RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	 }
          return "";
       }
   }
