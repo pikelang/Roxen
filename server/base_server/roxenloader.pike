@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.179 2000/06/29 05:49:41 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.180 2000/07/04 03:47:17 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -240,7 +240,7 @@ mapping make_mapping(array(string) f)
 
 class _roxen {
 
-  mapping(string:array) variables;
+  mapping(string:object) variables;
   string real_version;
   object locale;
   int start_time;
@@ -267,7 +267,6 @@ function(string, int|void, int|void, void|mixed ...:void) nwrite;
 /*
  * Code to get global configuration variable values from Roxen.
  */
-#define VAR_VALUE 0
 
 mixed query(string arg)
 {
@@ -277,7 +276,7 @@ mixed query(string arg)
     error("No roxen variables!\n");
   if(!roxen->variables[arg])
     error("Unknown variable: "+arg+"\n");
-  return roxen->variables[arg][VAR_VALUE];
+  return roxen->variables[arg]->query();
 }
 
 // used for debug messages. Sent to the administration interface and STDERR.
