@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.12 2004/05/07 11:57:10 wellhard Exp $
+ * $Id: upload_license.pike,v 1.13 2004/06/10 14:56:18 anders Exp $
  */
 
 #include <roxen.h>
@@ -62,7 +62,7 @@ mixed parse( RequestID id )
     Select local file to upload: <br />
     <input type='file' name='file' size='40'/>
     <input type='hidden' name='fixedfilename' value='' />
-    <submit-gbutton name='ok'
+    <submit-gbutton name='ok' width='75' align='center'
       onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
     <br /><br />
 
