@@ -1,6 +1,6 @@
 -*- html -*-
 <info>
-version="$Id: roxenlogo,v 1.11 2000/04/24 18:58:47 nilsson Exp $";
+version="$Id: roxenlogo,v 1.12 2000/04/26 00:08:53 nilsson Exp $";
 name="roxenlogo";
 doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 10.";
 help=1;
@@ -16,7 +16,7 @@ help=1;
 
 <define tag="o"><x bgcolor="#ff8c00" ::="&_.args;"/></define>
 <define tag="s"><x bgcolor="black" ::="&_.args;"/></define>
-<define tag="t"><define tag="img"></define><x ::="&_.args;"/><undefine tag="img"/></define>
+<define tag="t"><define tag="img"/><x ::="&_.args;"/><undefine tag="img"/></define>
 
 <define tag="roxenlogo" scope="rx" trimwhites="1"><trimlines>
 <attrib name="size">10</attrib>
