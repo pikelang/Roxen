@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.387 2000/01/08 20:43:43 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.388 2000/01/10 09:05:55 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3112,8 +3112,7 @@ array(int) parse_since(string date)
 object configuration_auth;
 mapping configuration_perm=([]);
 void add_permission(string name, mapping desc) {
+  configuration_perm[name]=desc;
   if(objectp(configuration_auth))
     configuration_auth->add_permission(name, desc);
-  else
-    configuration_perm[name]=desc;
 }
