@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.22 1998/03/16 15:17:44 marcus Exp $
+ * $Id: PDB.pmod,v 1.23 1998/03/16 15:52:17 marcus Exp $
  */
 
 #if constant(thread_create)
@@ -13,6 +13,7 @@
 #endif
 
 #define PDB_ERR(msg) (exceptions?throw(({ "(PDB) "+msg+"\n",backtrace() })):0)
+#define PDB_WARN(msg) werror("(PDB Warning) "+msg+"\n")
 
 class FileIO {
 
@@ -20,7 +21,7 @@ class FileIO {
   static inherit Thread.Mutex;
 #endif
 
-  static int exceptions;
+  static int exceptions, sov;
 
   static private object open(string f, string m)
   {
@@ -30,6 +31,24 @@ class FileIO {
     return o;
   }
   
+  static int safe_write(object o, string d, string ctx)
+  {
+    int warned_already=0;
+    int n;
+    for(;;) {
+      n = o->write(d);
+      if(!sov || n == sizeof(d) || n<0)
+	break;
+      d = d[n..];
+      if(!warned_already) {
+	PDB_WARN(ctx+": Disk seems to be full.");
+	warned_already=1;
+      }
+      sleep(1);
+    }
+    return (n<0? n : (n==strlen(d)? 1 : 0));
+  }
+
   static int write_file(string f, mixed d)
   {
     d = encode_value(d);
@@ -42,9 +61,9 @@ class FileIO {
       }
     };
     object o = open(f+".tmp","wct");
-    int n = o->write(d);
+    int n = safe_write(o, d, "write_file("+f+")");
     o->close();
-    if(n == sizeof(d))
+    if(n == 1)
       return mv(f+".tmp", f)?1:PDB_ERR("Cannot move file.");
     rm(f+".tmp");
     return PDB_ERR("Failed to write file. Disk full?");
@@ -82,8 +101,12 @@ class Bucket
 
   static int write_at(int offset, string to)
   {
-    if(file->seek(offset*size) != -1 && file->write(to) == sizeof(to))
+    if(file->seek(offset*size) < 0)
+      return PDB_ERR("write_at: seek failed");
+
+    if(safe_write(file, to, "write_at") == 1)
       return 1;
+
     return PDB_ERR("Failed to write file. Disk full?");
   }
   
@@ -185,13 +208,15 @@ class Bucket
     }
   }
   
-  void create(string d, int ms, int write, function logfun, int exceptions_in)
+  void create(string d, int ms, int write, function logfun, int exceptions_in,
+	      int sov_in)
   {
     string mode="r";
     size=ms;
     rf = d+ms;
     db_log = logfun;
     exceptions = exceptions_in;
+    sov = sov_in;
     if(write) { mode="rwc"; }
     catch {
       array t = read_file(rf+".free");
@@ -318,11 +343,15 @@ class Table
   mixed `[](string in) {
     return get(in);
   }
-  
-  array _indices() {
+
+  array list_keys() {
 //  LOCK();
     return indices(index);
 //  UNLOCK();
+  }
+  
+  array _indices() {
+    return list_keys();
   }
 
   array match(string match)
@@ -373,13 +402,14 @@ class Table
       dirty = sizeof(log)>0;
   }
 
-  void create(string n, string d, int wp, int cp, function fn, function logfun, int exceptions_in)
+  void create(string n, string d, int wp, int cp, function fn, function logfun, int exceptions_in, int sov_in)
   {
     name = n;
     get_bucket = fn;
     db_log = logfun;
     dir = d;
     exceptions = exceptions_in;
+    sov = sov_in;
     if(sizeof(predef::indices(Gz)) && cp) compress=1;
     if(wp) write=1;
     catch { index = read_file(dir+".INDEX"); };
@@ -394,11 +424,12 @@ class Table
 
 class db
 {
+  inherit FileIO;
 #ifdef THREAD_SAFE
   static inherit Thread.Mutex;
 #endif
 
-  static int write, compress, exceptions;
+  static int write, compress;
   static string dir;
   static mapping (int:object(Bucket)) buckets = ([]);
   static mapping (string:object(Table)) tables = ([]);
@@ -413,7 +444,8 @@ class db
 			     replace(encode_value(args),
 				     ({ "\203", "\n" }),
 				     ({ "\203\203", "\203n" })));
-      if((rc=logfile->write(entry)) != sizeof(entry))
+
+      if((rc = safe_write(logfile, entry, "log"))==1)
 	PDB_ERR("Failed to write log: "+(rc<0? strerror(logfile->errno()):
 					 "Disk full (probably)"));
     }
@@ -425,7 +457,7 @@ class db
     object bucket;
     LOCK();
     if(!(bucket = buckets[s]))
-      buckets[s] = bucket = Bucket( dir+"Buckets/", s, write, log, exceptions );
+      buckets[s] = bucket = Bucket( dir+"Buckets/", s, write, log, exceptions, sov );
     UNLOCK();
     return bucket;
   }
@@ -452,7 +484,7 @@ class db
     if(tables[tname])
       return tables[tname];
     return tables[tname] =
-      Table(tname, combine_path(dir, tname), write, compress, get_bucket, log, exceptions);
+      Table(tname, combine_path(dir, tname), write, compress, get_bucket, log, exceptions, sov );
     UNLOCK();
   }
 
@@ -578,6 +610,7 @@ class db
     if(search(mode,"e")+1) exceptions=1;
     if(search(mode,"w")+1) write=1;
     if(search(mode,"C")+1) compress=1;
+    if(search(mode,"s")+1) sov=1;
     if(search(mode,"c")+1) if(!file_stat(d))
     {
       mkdirhier(d+"/foo");
