@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.103 2004/05/24 17:31:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.104 2004/05/24 19:56:19 mani Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -129,9 +129,6 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 // --------------------------- Database query code --------------------------------
 
-#if ROXEN_COMPAT <= 1.3
-string compat_default_host;
-#endif
 string default_db;
 
 //  Cached copy of conf->query("compat_level"). This setting is defined
@@ -198,14 +195,9 @@ array|object do_sql_query(mapping args, RequestID id,
   }
   else
   {
-#if ROXEN_COMPAT <= 1.3
-    if( !args->db && (host || query("db")==" none") )
-      error = catch(con = id->conf->sql_connect(host));
-    if(!con)
-#endif
-      error = catch(con = DBManager.get( host||args->db||
-					 default_db,
-					 my_configuration(), ro));
+    error = catch(con = DBManager.get( host||args->db||
+				       default_db,
+				       my_configuration(), ro));
     if( !con )
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
@@ -234,45 +226,7 @@ array|object do_sql_query(mapping args, RequestID id,
 }
 
 
-// -------------------------------- Tag handlers ------------------------------------
-
-#if ROXEN_COMPAT <= 1.3
-class TagSQLOutput {
-  inherit RXML.Tag;
-  constant name = "sqloutput";
-
-  mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
-  RXML.Type content_type = RXML.t_same;
-  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
-
-  class Frame {
-    inherit RXML.Frame;
-    inherit "roxenlib";
-
-    array do_return(RequestID id) {
-      NOCACHE();
-
-      array res=do_sql_query(args, id);
-
-      if (res && sizeof(res)) {
-	result = do_output_tag(args, res, content, id);
-	id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
-
-	return 0;
-      }
-
-      if (args["do-once"]) {
-	result = do_output_tag( args, ({([])}), content, id );
-	id->misc->defines[" _ok"] = 1;
-	return 0;
-      }
-
-      id->misc->defines[" _ok"] = 0;
-      return 0;
-    }
-  }
-}
-#endif
+// ----------------------------- Tag handlers ---------------------------------
 
 inherit "emit_object";
 
@@ -449,24 +403,6 @@ class DatabaseVar
 
 void create()
 {
-#if ROXEN_COMPAT <= 1.3
-  defvar("hostname", "mysql://localhost/",
-         "Default database",
-	 TYPE_STRING | VAR_INVISIBLE,
-	 ("The default database that will be used if no <i>host</i> "
-	  "attribute is given to the tags. "
-	  "The value is a database URL in this format:\n"
-	  "<p><blockquote><pre>"
-	  "<i>driver</i><b>://</b>"
-	  "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
-	  "<i>host</i>[<b>:</b><i>port</i>]"
-	  "[<b>/</b><i>database</i>]\n"
-	  "</pre></blockquote>\n"
-	  "<p>If the <i>SQL databases</i> module is loaded, it's also "
-	  "possible to use an alias registered there. That's the "
-	  "recommended way, since this (usually sensitive) data is "
-	  "collected in one place then."));
-#endif
   defvar( "db",
           DatabaseVar( " none",({}),0,
                        "Default database",
@@ -480,9 +416,6 @@ void create()
 
 void start()
 {
-#if ROXEN_COMPAT <= 1.3
-  compat_default_host = query("hostname");
-#endif
   default_db          = query("db");
   compat_level = my_configuration()->query("compat_level");
 }
