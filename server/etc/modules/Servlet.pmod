@@ -91,7 +91,12 @@ static void check_exception()
     throwable_printstacktrace(e, pw);
     printwriter_flush(pw);
     array bt = backtrace();
-    throw(({(string)sw, bt[..sizeof(bt)-2]}));
+    // FIXME: KLUDGE: Sometimes the cast fails for some reason.
+    string s = "Unknown Java exception (StringWriter failed)";
+    catch {
+      s = (string)sw;
+    };
+    throw(({s, bt[..sizeof(bt)-2]}));
   }
 }
 
