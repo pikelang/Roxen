@@ -13,9 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.14 2000/02/22 05:14:24 nilsson Exp $";
-
-//#define SQLAUTHDEBUG
+constant cvs_version="$Id: SQLuserdb.pike,v 1.15 2000/03/13 18:27:07 nilsson Exp $";
 
 #include <module.h>
 inherit "roxenlib";
@@ -38,10 +36,10 @@ void create()
   defvar ("sqlserver", "localhost", "SQL server",
 	  TYPE_STRING,
 	  "This is the host running the SQL server with the "
-	  "authentication information.<br>\n"
+	  "authentication information.<br />\n"
 	  "Specify an \"SQL-URL\":<ul>\n"
 	  "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
-	  "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre></ul><br>\n"
+	  "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre></ul><br />\n"
 	  "Valid values for \"sqlserver\" depend on which "
 	  "sql-servers your pike has support for, but the following "
 	  "might exist: msql, mysql, odbc, oracle, postgres.\n",
@@ -175,7 +173,7 @@ array(string) userinfo (string u) {
 	DEBUGLOG ("userinfo ("+u+")");
 
 	if (QUERY(usecache))
-		dbinfo=cache_lookup("sqlauthentries",u);
+		dbinfo=cache_lookup("sqlauth"+QUERY(table),u);
 	if (dbinfo)
 		return dbinfo;
 
@@ -203,7 +201,7 @@ array(string) userinfo (string u) {
 			tmp->shell||QUERY(defaultshell)
 			});
 	if (QUERY(usecache))
-		cache_set("sqlauthentries",u,dbinfo);
+		cache_set("sqlauth"+QUERY(table),u,dbinfo);
 	DEBUGLOG(sprintf("Result: %O",dbinfo)-"\n");
 	return dbinfo;
 	return 0;
@@ -261,7 +259,7 @@ array|int auth (array(string) auth, object id)
 	}
 
 	if (QUERY(usecache))
-		dbinfo=cache_lookup("sqlauthentries",u);
+		dbinfo=cache_lookup("sqlauth"+QUERY(table),u);
 
 	if (!dbinfo) {
 		open_db();
@@ -305,11 +303,11 @@ array|int auth (array(string) auth, object id)
  * Support Callbacks
  */
 string status() {
-	return "<H2>Security info</H2>"
-			"Attempted authentications: "+att+"<BR>\n"
+	return "<h2>Security info</h2>"
+			"Attempted authentications: "+att+"<br />\n"
 			"Failed: "+(att-succ+nouser)+" ("+nouser+" because of wrong username)"
-			"<BR>\n"+
-			db_accesses +" accesses to the database were required.<BR>\n"
+			"<br />\n"+
+			db_accesses +" accesses to the database were required.<br />\n"
 			;
 }
 
