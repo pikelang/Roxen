@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.27 2000/03/21 21:10:00 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.28 2000/04/05 13:09:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -59,7 +59,7 @@ constant tagdoc=([
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,
  but can also be configured to count all files of a certain type.
- <ex><accessed></ex>
+ <ex><accessed/></ex>
  </desc>
 
 <attr name=add value=number>
