@@ -1,3 +1,12 @@
+Changes since Roxen Challenger 1.2.87 Yellow
+-----------------------------------------------
+
+o Added missing tag <scope>.
+
+o Fixed variable scope in roxenlib quote function. Hopefully with less
+  breakage this time.
+
+
 Changes since Roxen Challenger 1.2.77 Yellow
 -----------------------------------------------
 
