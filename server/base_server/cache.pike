@@ -1,5 +1,5 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.23 1999/05/20 23:00:17 neotron Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.24 1999/09/06 12:41:13 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
@@ -29,19 +29,11 @@ object cleaning_lock = Thread.Mutex();
 
 void cache_expire(string in)
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
   m_delete(cache, in);
 }
 
 mixed cache_lookup(string in, string what)
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
 #endif
@@ -63,10 +55,6 @@ mixed cache_lookup(string in, string what)
 
 string status()
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
   string res, a;
   res = LOCALE->cache_status_header();
   array c, b;
@@ -123,10 +111,6 @@ string status()
 
 void cache_remove(string in, string what)
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_remove(\"%s\",\"%O\")\n", in, what));
 #endif
@@ -139,10 +123,6 @@ void cache_remove(string in, string what)
 
 mixed cache_set(string in, string what, mixed to, int|void tm)
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_set(\"%s\", \"%s\", %O)\n",
 		 in, what, to));
@@ -158,10 +138,6 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
 
 void cache_clear(string in)
 {
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror("CACHE: cache_clear(\"%s\")\n", in);
 #endif
@@ -176,10 +152,6 @@ void cache_clean()
   call_out(cache_clean, CACHE_TIME_OUT);
   call_out(cache_clean, CACHE_TIME_OUT);
   gc();
-// #ifdef THREADS
-//   mixed key;
-//   catch { key = cleaning_lock->lock(); };
-// #endif /* THREADS */
   string a, b;
   int cache_time_out=CACHE_TIME_OUT;
 #ifdef CACHE_DEBUG
