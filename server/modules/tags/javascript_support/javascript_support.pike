@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.49 2002/04/18 10:08:33 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.50 2003/01/27 10:31:32 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -392,7 +392,7 @@ class TagJsDynamicPopupDiv
 			 args->name, args->zindex||"1");
       else
 	result = ("<div id=\""+args->name+"\""
-		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+
+		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+";"
 		  " left:0; top:0; visibility:hidden;\"></div>");
     }
   }
