@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.100 1999/09/25 04:43:26 mast Exp $
+ * $Id: roxenloader.pike,v 1.101 1999/10/04 15:11:55 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.100 1999/09/25 04:43:26 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.101 1999/10/04 15:11:55 per Exp $";
 
 #define perror roxen_perror
 
@@ -299,12 +299,8 @@ void init_logger()
 void report_debug(string message, mixed ... foo)
 {
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,2);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_DEBUG))
-    foreach(message/"\n", message)
-      syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
-#endif
+//   nwrite(message,0,2);
+  roxen_perror( message );
 }
 
 // Print a warning
@@ -403,15 +399,10 @@ object spawne(string s,string *args, mapping|array env, object stdin,
 	      object stdout, object stderr, void|string wd, 
 	      void|array (int) uid)
 {
-  int pid;
-  object privs;
-
   int u, g;
-  if(uid) { u = uid[0]; g = uid[1]; } else
+  if(uid) { u = uid[0]; g = uid[1]; } 
 #if efun(geteuid)
-  { u=geteuid(); g=getegid(); }
-#else
-  ;
+  else { u=geteuid(); g=getegid(); }
 #endif
   return Process.create_process(({ s }) + (args || ({})), ([
     "toggle_uid":1,

@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.326 1999/09/10 22:08:17 mast Exp $
+ * $Id: roxen.pike,v 1.327 1999/10/04 15:11:55 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.326 1999/09/10 22:08:17 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.327 1999/10/04 15:11:55 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -31,7 +31,7 @@ inherit "supports";
  * Version information
  */
 constant __roxen_version__ = "1.4";
-constant __roxen_build__ = "38";
+constant __roxen_build__ = "0";
 
 #ifdef __NT__
 string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
@@ -88,26 +88,25 @@ class RequestID
 };
 
 
-/*
- * The privilege changer.
- *
- * Based on privs.pike,v 1.36.
- */
-
 string filename( object o )
 {
   return search( master()->programs, object_program( o ) );
 }
 
-// Some variables used by Privs
 #ifdef THREADS
 // This mutex is used by Privs
 object euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
 
+/*
+ * The privilege changer.
+ *
+ * Based on privs.pike,v 1.36.
+ */
 int privs_level;
 
-static class Privs {
+static class Privs 
+{
 #if efun(seteuid)
 
   int saved_uid;
@@ -172,30 +171,30 @@ static class Privs {
     seteuid(0);
 
     /* A string of digits? */
-    if (stringp(uid) && ((int)uid) &&
-	(replace(uid, ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }),
-		 ({ "", "", "", "", "", "", "", "", "", "" })) == "")) {
+    if(stringp(uid) && (replace(uid,"0123456789"/"",({""})*10)==""))
       uid = (int)uid;
-    }
-    if (stringp(gid) && ((int)gid) &&
-	(replace(gid, ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }),
-		 ({ "", "", "", "", "", "", "", "", "", "" })) == "")) {
-      gid = (int)gid;
-    }
 
-    if(!stringp(uid)) {
+    if(stringp(gid) && (replace(gid, "0123456789"/"", ({"" })*10 == "")))
+      gid = (int)gid;
+
+    if(!stringp(uid))
       u = getpwuid(uid);
-    } else {
+    else 
+    {
       u = getpwnam(uid);
       if(u) 
 	uid = u[2];
     }
 
-    if(u && !gid) gid = u[3];
+    if(u && !gid) 
+      gid = u[3];
   
-    if(!u) {
-      if (uid && (uid != "root")) {
-	if (intp(uid) && (uid >= 60000)) {
+    if(!u) 
+    {
+      if (uid && (uid != "root")) 
+      {
+	if (intp(uid) && (uid >= 60000)) 
+        {
 	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
 				 "Assuming nobody.\n", uid));
 	  // Nobody.
@@ -337,7 +336,7 @@ static class Privs {
 #endif /* HAVE_EFFECTIVE_USER */
   }
 #endif /* efun(seteuid) */
-};
+}
 
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
@@ -347,21 +346,11 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
   return Privs(r, u, g);
 }
 
-
-#if _DEBUG_HTTP_OBJECTS
-mapping httpobjects = ([]);
-static int idcount;
-int new_id(){ return idcount++; }
-#endif
-
 #ifdef MODULE_DEBUG
 #define MD_PERROR(X)	roxen_perror X;
 #else
 #define MD_PERROR(X)
 #endif /* MODULE_DEBUG */
-
-// pids of the start-script and ourselves.
-int startpid, roxenpid;
 
 #ifndef THREADS
 class container
@@ -381,36 +370,19 @@ class container
 // Locale support
 Locale.Roxen.standard default_locale=Locale.Roxen.standard;
 object fonts;
-#ifdef THREADS
+#if constant( thread_local )
 object locale = thread_local();
 #else
 object locale = container(); 
 #endif /* THREADS */
+
 #define LOCALE	LOW_LOCALE->base_server
 
 program Configuration;	/*set in create*/
 
 array configurations = ({});
-object main_configuration_port;
-mapping allmodules, somemodules=([]);
-
-// A mapping from ports (objects, that is) to an array of information
-// about that port.  This will hopefully be moved to objects cloned
-// from the configuration object in the future.
-mapping portno=([]);
-
-// Function pointer and the root of the configuration interface
-// object.
-function build_root;
-object root;
 
 int die_die_die;
-
-void stop_all_modules()
-{
-  foreach(configurations, object conf)
-    conf->stop();
-}
 
 // Function that actually shuts down Roxen. (see low_shutdown).
 private static void really_low_shutdown(int exit_code)
@@ -427,98 +399,25 @@ private static void really_low_shutdown(int exit_code)
 //  exit_code = -1	Restart
 private static void low_shutdown(int exit_code)
 {
-  catch( stop_all_modules() );
-  
-  int pid;
-  if (exit_code) {
-    roxen_perror("Restarting Roxen.\n");
-  } else {
-    roxen_perror("Shutting down Roxen.\n");
-    // exit(0);
-  }
-  call_out(really_low_shutdown, 0.1, exit_code);
+  catch 
+  {
+    configurations->stop();
+    int pid;
+    if (exit_code) {
+      roxen_perror("Restarting Roxen.\n");
+    } else {
+      roxen_perror("Shutting down Roxen.\n");
+      // exit(0);
+    }
+  };
+  call_out(really_low_shutdown, 0.01, exit_code);
 }
 
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-mapping restart() 
-{ 
-  low_shutdown(-1);
-  return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
-		    ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
-  	    "type":"text/html" ]);
-} 
-
-mapping shutdown() 
-{
-  low_shutdown(0);
-  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"),
-			   ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
-	    "type":"text/html" ]);
-} 
-
-// This is called for each incoming connection.
-private static void accept_callback( object port )
-{
-  object file;
-  int q=QUERY(NumAccept);
-  array pn=portno[port];
-
-  while(q--)
-  {
-    catch { file = port->accept(); };
-#ifdef SOCKET_DEBUG
-    if(!pn[-1])
-    {
-      report_error("In accept: Illegal protocol handler for port.\n");
-      if(file) destruct(file);
-      return;
-    }
-    perror(sprintf("SOCKETS: accept_callback(CONF(%s))\n", 
-		   pn[1]&&pn[1]->name||"Configuration"));
-#endif
-    if(!file)
-    {
-      switch(port->errno())
-      {
-       case 0:
-#if constant(system.EAGAIN)
-      case system.EAGAIN:
-#endif /* constant(system.EAGAIN) */
-	return;
-
-#if constant(system.EMFILE)
-      case system.EMFILE:
-#endif /* constant(system.EMFILE) */
-#if constant(system.EBADF)
-      case system.EBADF:
-#endif /* constant(system.EBADF) */
-	report_fatal(LOCALE->out_of_sockets());
-	low_shutdown(-1);
-	return;
-
-      default:
-#ifdef DEBUG
-	perror("Accept failed.\n");
-#if constant(real_perror)
-	real_perror();
-#endif
-#endif /* DEBUG */
- 	return;
-      }
-    }
-#ifdef FD_DEBUG
-    mark_fd( file->query_fd(),
-	     LOCALE->out_of_sockets(file->query_address()));
-#endif
-    pn[-1](file,pn[1],pn);
-#ifdef SOCKET_DEBUG
-    perror(sprintf("SOCKETS:   Ok. Connect on %O:%O from %O\n", 
-		   pn[2], pn[0], file->query_address()));
-#endif
-  }
-}
+void restart()  { low_shutdown(-1); } 
+void shutdown() { low_shutdown(0);  }
 
 /*
  * handle() stuff
@@ -546,7 +445,9 @@ object do_thread_create(string id, function f, mixed ... args)
 {
   object t = thread_create(f, @args);
   catch(t->set_name( id ));
+#ifdef THREAD_DEBUG
   roxen_perror(id+" started\n");
+#endif
   return t;
 }
 
@@ -602,9 +503,10 @@ void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
     QUERY(numthreads) = 1;
-    report_debug("Starting 1 thread to handle requests.\n");
+    report_debug("Starting one thread to handle requests.\n");
   } else {
-    report_debug("Starting "+QUERY(numthreads)
+    report_debug("Starting "+
+                 languages["en"]->number(  QUERY(numthreads) )
                  +" threads to handle requests.\n");
   }
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
@@ -632,69 +534,8 @@ void stop_handler_threads()
 #endif /* THREADS */
 
 
-
-// Listen to a port, connected to the configuration 'conf', binding
-// only to the netinterface 'ether', using 'requestprogram' as a
-// protocol handled.
-
-// If you think that the argument order is quite unintuitive and odd,
-// you are right, the order is the same as the implementation order.
-
-// Old spinners only listened to a port number, then the
-// configurations came, then the need to bind to a specific
-// ethernetinterface, and then the need to have more than one concurrent
-// protocol (http, ftp, ssl, etc.)
-
-object create_listen_socket(mixed port_no, object conf,
-			    string|void ether, program requestprogram,
-			    array prt)
-{
-  object port;
-#ifdef SOCKET_DEBUG
-  perror(sprintf("SOCKETS: create_listen_socket(%d,CONF(%s),%s)\n",
-		 port_no, conf?conf->name:"Configuration port", ether));
-#endif
-  if(!requestprogram)
-    error("No request handling module passed to create_listen_socket()\n");
-
-  if(!port_no)
-  {
-    port = Stdio.Port( "stdin", accept_callback );
-    port->set_id(port);
-    if(port->errno()) {
-      report_error(LOCALE->stdin_is_quiet(port->errno()));
-    }
-  } else {
-    port = Stdio.Port();
-    port->set_id(port);
-    if(!stringp(ether) || (lower_case(ether) == "any"))
-      ether=0;
-    if(ether)
-      sscanf(ether, "addr:%s", ether);
-    if(!port->bind(port_no, accept_callback, ether))
-    {
-#ifdef SOCKET_DEBUG
-      perror("SOCKETS:    -> Failed.\n");
-#endif
-      report_warning(LOCALE->
-		     socket_already_bound_retry(ether, port_no,
-						port->errno()));
-      sleep(1);
-      if(!port->bind(port_no, accept_callback, ether))
-      {
-	report_warning(LOCALE->
-		       socket_already_bound(ether, port_no, port->errno()));
-	return 0;
-      }
-    }
-  }
-  portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
-#ifdef SOCKET_DEBUG
-  perror("SOCKETS:    -> Ok.\n");
-#endif
-  return port;
-}
-
+#if 0
+/* Grubbas */
 
 /*
  * Port DB stuff.
@@ -753,93 +594,235 @@ object find_handler(string prot, string ip, int port)
   }
   return handler;
 }
+#endif
 
-// The configuration interface is loaded dynamically for faster
-// startup-time, and easier coding in the configuration interface (the
-// Roxen environment is already finished when it is loaded)
-object configuration_interface_obj;
-int loading_config_interface;
-int enabling_configurations;
 
-object configuration_interface()
+#if 1
+
+/* Pers */
+
+class Protocol
 {
-  if(enabling_configurations)
-    return 0;
-  if(loading_config_interface)
-    perror("Recursive calls to configuration_interface()\n"
-	   + describe_backtrace(backtrace())+"\n");
-  
-  if(!configuration_interface_obj)
+  inherit Stdio.Port;
+
+  constant name = "unknown";
+  constant supports_ipless = 0;
+  constant requesthandlerfile = "";
+  constant default_port = 4711;
+
+  int port;
+  int refs;
+  string ip;
+  program requesthandler;
+
+  void ref()
   {
-    perror("Loading configuration interface.\n");
-    loading_config_interface = 1;
-    array err = catch {
-      configuration_interface_obj=((program)"mainconfig")();
-      root = configuration_interface_obj->root;
-      build_root = configuration_interface_obj->build_root;
-    };
-    loading_config_interface = 0;
-    if(!configuration_interface_obj) {
-      report_error(LOCALE->
-		   configuration_interface_failed(describe_backtrace(err)));
+    refs++;
+  }
+
+  void unref()
+  {
+    if( !--refs )
+      destruct( ); // Close the port.
+  }
+
+  void got_connection()
+  {
+    object q = accept( );
+    if( !q )
+      ;// .. errno stuff here ..
+    else
+      requesthandler( q );
+  }
+
+  void create( int pn, string i )
+  {
+    if( !requesthandler )
+      requesthandler = (program)requesthandlerfile;
+    port = pn;
+    ip = i;
+    ::create();
+    if(!bind( port, got_connection, ip ))
+      destruct( );
+  }
+}
+
+class HTTP
+{
+  inherit Protocol;
+  constant supports_ipless = 1;
+  constant name = "http";
+  constant requesthandlerfile = "protocols/http.pike";
+  constant default_port = 80;
+}
+
+mapping protocols = ([
+  "http":HTTP,
+]);
+
+mapping(string:mapping) open_ports = ([ ]);
+mapping(string:object) urls = ([]);
+array sorted_urls = ({});
+
+string find_ip_for( string what )
+{
+  if( what == "*" || lower_case(what) == "any" )
+    return 0;
+
+  if( !strlen( replace( what, "01234567890."/"", (" "*11)/"" ) ) )
+    return what;
+
+  array res = gethostbyname( what );
+  if( !res || !sizeof( res[1] ) )
+    report_error( "I cannot possibly bind to "+what+
+                  ", that host is unknown. "
+                  "Substituting with ANY\n");
+  else
+    return res[1][0];
+}
+
+void unregister_url( string url ) 
+{
+  if( urls[ url ] && urls[ url ]->port )
+  {
+    urls[ url ]->port->unref();
+    m_delete( urls, url );
+    sort_urls();
+  }
+}
+
+void sort_urls()
+{
+  sorted_urls = indices( urls );
+  sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
+}
+
+int register_url( string url, object conf )
+{
+  report_debug("Register "+url+" for "+conf->name+"\n");
+  string protocol;
+  string host;
+  int port;
+  string path;
+
+  Protocol prot;
+
+  string required_host;
+
+  url = replace( url, "/ANY", "*" );
+  url = replace( url, "/any", "*" );
+
+  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
+  sscanf( host, "%[^:]:%d", host, port );
+
+  if( strlen( path ) && ( path[-1] == '/' ) )
+    path = path[..strlen(path)-2];
+  if( !strlen( path ) )
+    path = 0;
+
+  if( urls[ url ] )
+  {
+    if( urls[ url ]->conf != conf )
+    {
+      report_error( "Cannot register URL "+url+
+                    ", already registerd by " + 
+                    urls[ url ]->conf->name + "!\n" );
+      return 0;
+    }
+    urls[ url ]->port->ref();
+    return 1;
+  }
+
+  if( !( prot = protocols[ protocol ] ) )
+  {
+    report_error( "Cannot register URL "+url+
+                  ", cannot find the protocol " + 
+                  protocol + "!\n" );
+    return 0;
+  }
+
+  if( !port )
+    port = prot->default_port;
+
+  if( !prot->supports_ipless )
+    required_host = find_ip_for( host );
+
+  mapping m;
+  if( !( m = open_ports[ protocol ] ) )
+    m = open_ports[ protocol ] = ([]);
+    
+  urls[ url ] = ([ "conf":conf, "path":path ]);
+  sorted_urls += ({ url });
+  if( m[ required_host ] && m[ required_host ][ port ] )
+  {
+    m[ required_host ][ port ]->ref();
+    urls[ url ]->port = prot;
+    sort_urls();
+    return 1;    /* No need to open a new port */
+  }
+
+  if( !m[ required_host ] )
+    m[ required_host ] = ([ ]);
+
+  m[ required_host ][ port ] = prot( port, required_host );
+  if( !( m[ required_host ][ port ] ) )
+  {
+    m_delete( urls, url );
+    m_delete( m[ required_host ], port );
+    report_error( "Cannot register URL "+url+", cannot bind the port!\n" );
+    return 0;
+  }
+  urls[ url ]->port = m[ required_host ][ port ];
+  m[ required_host ][ port ]->ref();
+  sort_urls();
+  return 1;
+}
+
+
+object find_configuration_for_url( string url, RequestID id )
+{
+  werror("find configuration for '"+url+"'\n");
+  foreach( sorted_urls, string in )
+  {
+    if( glob( in+"*", url ) )
+    {
+      if( urls[in]->path )
+        id->not_query = id->not_query[strlen(urls[in]->path)..];
+      return urls[ in ]->conf;
     }
   }
-  return configuration_interface_obj;
+  // Ouch.
+  return values( urls )[0]->conf;
 }
 
-// Unload the configuration interface
-void unload_configuration_interface()
+#endif
+
+object find_configuration( string name )
 {
-  report_notice(LOCALE->unload_configuration_interface());
-
-  configuration_interface_obj = 0;
-  loading_config_interface = 0;
-  enabling_configurations = 0;
-  build_root = 0;
-  catch{root->dest();};
-  root = 0;
+  name = replace( lower_case( name )-" ", "/", "-" );
+  foreach( configurations, object o )
+    if( (lower_case( replace( o->name - " " , "/", "-" ) ) == name) ||
+        (lower_case( replace( o->query_name() - " " , "/", "-" ) ) == name) )
+      return o;
 }
-
 
 // Create a new configuration from scratch.
-
 // 'type' is as in the form. 'none' for a empty configuration.
 int add_new_configuration(string name, string type)
 {
-  return configuration_interface()->low_enable_configuration(name, type);
-}
-
-#ifdef THREADS
-object configuration_lock = Thread.Mutex();
-#endif
-
-// Call the configuration interface function. This is more or less
-// equivalent to a virtual configuration with the configurationinterface
-// mounted on '/'. This will probably be the case in future versions
-mixed configuration_parse(mixed ... args)
-{
-#ifdef THREADS
-  object key;
-  catch(key = configuration_lock->lock());
-#endif
-  if(args)
-    return configuration_interface()->configuration_parse(@args);
 }
 
 mapping(string:array(int)) error_log=([]);
 
-string last_error="";
-
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void type)
 {
-  last_error = s;
-  if (!error_log[type+","+s]) {
+  if (!error_log[type+","+s])
     error_log[type+","+s] = ({ time() });
-  } else {
+  else
     error_log[type+","+s] += ({ time() });
-  }
-  if(type>=1) roxen_perror(s);
+  if(type >= 1) 
+    roxen_perror(s);
 }
 
 // When was Roxen started?
@@ -943,272 +926,6 @@ public string full_status()
 }
 
 
-int config_ports_changed = 0;
-
-static string MKPORTKEY(array(string) p)
-{
-  if (sizeof(p[3])) {
-    return(sprintf("%s://%s:%s/(%s)",
-		   p[1], p[2], (string)p[0],
-		   replace(p[3], ({"\n", "\r"}), ({ " ", " " }))));
-  } else {
-    return(sprintf("%s://%s:%s/",
-		   p[1], p[2], (string)p[0]));
-  }
-}
-
-// Is this only used to hold the config-ports?
-// Seems like it. Changed to a mapping.
-private mapping(string:object) configuration_ports = ([]);
-
-// Used by config_actions/openports.pike
-array(object) get_configuration_ports()
-{
-  return(values(configuration_ports));
-}
-
-class Codec
-{
-  program p;
-  string nameof(mixed x)
-  {
-    if(p!=x)
-      if(mixed tmp=search(all_constants(),x))
-	return "efun:"+tmp;
-
-    switch(sprintf("%t",x))
-    {
-      case "program":
-	if(p!=x)
-	{
-          mixed tmp;
-	  if(tmp=search(master()->programs,x))
-	    return tmp;
-
-	  if((tmp=search(values(_static_modules), x))!=-1)
-	    return "_static_modules."+(indices(_static_modules)[tmp]);
-	}
-	break;
-
-      case "object":
-	if(mixed tmp=search(master()->objects,x))
-	{
-	  if(tmp=search(master()->programs,tmp))
-	  {
-	    return tmp;
-	  }
-	}
-	break;
-    }
-
-    return ([])[0];
-  }
-
-  function functionof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    werror("Failed to decode %s\n",x);
-    return 0;
-  }
-
-
-  object objectof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    if(object tmp=(object)x) return tmp;
-    werror("Failed to decode %s\n",x);
-    return 0;
-    
-  }
-
-  program programof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    if(sscanf(x,"_static_modules.%s",x))
-    {
-      return (program)_static_modules[x];
-    }
-
-    if(program tmp=(program)x) return tmp;
-    werror("Failed to decode %s\n",x);
-    return 0;
-  }
-
-  mixed encode_object(object x)
-  {
-    error("Cannot encode objects yet.\n");
-  }
-
-  mixed decode_object(object x)
-  {
-    error("Cannot encode objects yet.\n");
-  }
-
-  void create( program q )
-  {
-    p = q;
-  }
-}
-
-int remove_dumped_mark = lambda ()
-{
-  array stat = file_stat (combine_path (
-    getcwd(), __FILE__ + "/../../.remove_dumped_mark"));
-  return stat && stat[ST_MTIME];
-}();
-
-program my_compile_file(string file)
-{
-  m_delete( master()->programs, file);
-  string ofile = file + ".o";
-  if (file_stat (ofile) &&
-      file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
-    rm (ofile);
-  program p  = (program)( file );
-  if( !file_stat( ofile ) ||
-      file_stat(ofile)[ST_MTIME] <
-      file_stat(file)[ST_MTIME] )
-    if( catch 
-    {
-      string data = encode_value( p, Codec(p) );
-      if( strlen( data ) )
-        Stdio.File( ofile, "wct" )->write( data );
-    } )
-    {
-#ifdef MODULE_DEBUG
-      werror(" [nodump] ");
-#endif
-      Stdio.File( ofile, "wct" );
-    } else {
-#ifdef MODULE_DEBUG
-      werror(" [dump] ");
-#endif
-    }
-  return p;
-}
-
-array compile_module( string file )
-{
-  array foo;
-  object o;
-  program p;
-
-  MD_PERROR(("Compiling " + file + "...\n"));
-
-  if (catch(p = my_compile_file(file)) || (!p)) {
-    MD_PERROR((" compilation failed"));
-    throw("MODULE: Compilation failed.\n");
-  }
-  
-  array err = catch(o =  p());
-
-  if (err) {
-    MD_PERROR((" load failed\n"));
-    throw(err);
-  } else if (!o) {
-    MD_PERROR((" load failed\n"));
-    throw("Failed to initialize module.\n");
-  } else {
-    MD_PERROR((" load ok - "));
-    if (!o->register_module) {
-      MD_PERROR(("register_module missing"));
-      throw("No registration function in module.\n");
-    }
-  }
-
-  foo = o->register_module();
-  if (!foo) {
-    MD_PERROR(("registration failed.\n"));
-    return 0;
-  } else {
-    MD_PERROR(("registered."));
-  }
-  return({ foo[1], foo[2]+"<p><i>"+
-	   replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
-	   +"</i>", foo[0] });
-}
-
-// ([ filename:stat_array ])
-mapping(string:array) module_stat_cache = ([]);
-object load(string s, object conf)   // Should perhaps be renamed to 'reload'. 
-{
-  string cvs;
-  array st;
-  sscanf(s, "/cvs:%s", cvs);
-
-  if(st=file_stat(s+".pike"))
-  {
-    program p;
-    if((cvs?
-        (p=master()->cvs_load_file( cvs+".pike" ))
-	:(p=my_compile_file(s+".pike"))))
-    {
-      mixed q;
-      module_stat_cache[s-dirname(s)]=st;
-      if(q = catch{ return p(conf); })
-        perror(s+".pike exists, but could not be instantiated.\n"+
-               describe_backtrace(q));
-    } else
-      perror(s+".pike exists, but compilation failed.\n");
-  }
-#if constant(load_module)
-  if(st=file_stat(s+".so"))
-    if(mixed q=predef::load_module(s+".so"))
-    {
-      if(!catch(q = q->instance(conf)))
-      {
-        module_stat_cache[s-dirname(s)]=st;
-        return q;
-      }
-      perror(s+".so exists, but could not be initated (no instance class?)\n");
-    }
-    else
-      perror(s+".so exists, but load failed.\n");
-#endif
-  return 0; // FAILED..
-}
-
-array(string) expand_dir(string d)
-{
-  string nd;
-  array(string) dirs=({d});
-
-  catch {
-    foreach(get_dir(d) - ({"CVS"}) , nd) 
-      if(file_stat(d+nd)[1]==-2)
-	dirs+=expand_dir(d+nd+"/");
-  }; // This catch is needed... (permission denied problems)
-  return dirs;
-}
-
-array(string) last_dirs=0,last_dirs_expand;
-
-object load_from_dirs(array dirs, string f, object conf)
-{
-  string dir;
-  object o;
-
-  if (dirs!=last_dirs)
-  {
-    last_dirs_expand=({});
-    foreach(dirs, dir)
-      last_dirs_expand+=expand_dir(dir);
-  }
-
-  foreach (last_dirs_expand,dir)
-     if((o=load(dir+f, conf))) 
-       return o;
-
-  return 0;
-}
-
-
 static int abs_started;
 
 void restart_if_stuck (int force) 
@@ -1247,6 +964,49 @@ void post_create ()
     call_out (restart,60*60*24*QUERY(suicide_timeout));
 }
 
+
+// Cache used by the various configuration interface modules etc.
+// It should be OK to delete this cache at any time.
+class ConfigIFCache
+{
+  string dir;
+  void create( string name )
+  {
+    dir = "config_caches/"+replace(configuration_dir-".", "/", "-") + "/" + name + "/";
+    mkdirhier( dir+"/foo" );
+  }
+
+  mixed set( string name, mixed to )
+  {
+    Stdio.File f = Stdio.File();
+    if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
+    {
+      mkdirhier( dir+"/foo" );
+      if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
+      {
+        report_error("Failed to create configuration interface cache file ("+
+                     dir + replace( name, "/", "-" )+") "+
+                     strerror( errno() )+"\n");
+        return to;
+      }
+    }
+    f->write( encode_value( to ) );
+    return to;
+  }
+  
+  mixed get( string name )
+  {
+    Stdio.File f = Stdio.File();
+    if(!f->open(  dir + replace( name, "/", "-" ), "r" ))
+      return 0;
+    return decode_value( f->read() );
+  }
+
+  void delete( string name )
+  {
+    rm( dir + replace( name, "/", "-" ) );
+  }
+}
 
 
 class ImageCache
@@ -1738,7 +1498,7 @@ class ArgCache
   mapping lookup( string id, string|void client )
   {
     LOCK();
-    if(cache[id])
+    if(cache[id] && cache[ cache[id] ] )
       return cache[cache[id]][CACHE_VALUE];
 
     string q = read_args( id );
@@ -1784,12 +1544,6 @@ string decode_charset( string charset, string data )
 void create()
 {
    SET_LOCALE(default_locale);
-// catch
-// {
-//   module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
-//   allmodules = decode_value(Stdio.read_bytes(".allmodules"));
-// };
-
   // Dump some programs (for speed)
   dump( "base_server/newdecode.pike" );
   dump( "base_server/read_config.pike" );
@@ -1990,7 +1744,6 @@ void reload_all_configurations()
   report_notice(LOCALE->reloading_config_interface());
   configs = ([]);
   setvars(retrieve("Variables", 0));
-  initiate_configuration_port( 0 );
 
   foreach(list_all_configurations(), string config)
   {
@@ -2052,19 +1805,13 @@ void reload_all_configurations()
   {
     modified = 1;
     report_notice(LOCALE->disabling_configuration(conf->name));
-    if (conf->server_ports) {
-      // Roxen 1.2.26 or later
-      Array.map(values(conf->server_ports), destruct);
-    } else {
-      Array.map(indices(conf->open_ports), destruct);
-    }
+    Array.map(values(conf->server_ports), destruct);
     conf->stop();
     destruct(conf);
   }
   if(modified) {
     configurations = new_confs;
     config_stat_cache = config_cache;
-    unload_configuration_interface();
   }
 }
 
@@ -2082,7 +1829,6 @@ void enable_configurations()
 {
   array err;
 
-  enabling_configurations = 1;
   configurations = ({});
   foreach(list_all_configurations(), string config)
   {
@@ -2090,7 +1836,6 @@ void enable_configurations()
       perror("Error while loading configuration "+config+":\n"+
 	     describe_backtrace(err)+"\n");
   };
-  enabling_configurations = 0;
 }
 
 
@@ -2292,11 +2037,13 @@ mapping low_decode_image(string data, void|array tocolor)
   };
 #endif
 
+#if constant(Image.PNM)
   if(!i)
     catch{
       i = Image.PNM.decode( data );
       format = "PNM";
     };
+#endif
 
   if(!i) // No image could be decoded at all. 
     return 0;
@@ -2345,234 +2092,6 @@ object load_image(string f,object id)
 }
 
 
-// Somewhat misnamed, since there can be more then one
-// configuration-interface port nowdays. But, anyway, this function
-// opens and listens to all configuration interface ports.
-void initiate_configuration_port( int|void first )
-{
-  object o;
-  array port;
-
-  // Hm.
-  if(!first && !config_ports_changed )
-    return 0;
-  
-  config_ports_changed = 0;
-
-  // First find out if we have any new ports.
-  mapping(string:array(string)) new_ports = ([]);
-  foreach(QUERY(ConfigPorts), port) {
-    if ((< "ssl", "ssleay", "ssl3" >)[port[1]]) {
-      // Obsolete versions of the SSL protocol.
-      report_warning(LOCALE->obsolete_ssl(port[1]));
-      port[1] = "https";
-    } else if ((< "ftp2" >)[port[1]]) {
-      // ftp2.pike has replaced ftp.pike entirely.
-      report_warning(LOCALE->obsolete_ftp(port[1]));
-      port[1] = "ftp";
-    }
-    string key = MKPORTKEY(port);
-    if (!configuration_ports[key]) {
-      report_notice(LOCALE->new_config_port(key));
-      new_ports[key] = port;
-    } else {
-      // This is needed not to delete old unchanged ports.
-      new_ports[key] = 0;
-    }
-  }
-
-  // Then disable the old ones that are no more.
-  foreach(indices(configuration_ports), string key) {
-    if (zero_type(new_ports[key])) {
-      report_notice(LOCALE->disable_config_port(key));
-      object o = configuration_ports[key];
-      if (main_configuration_port == o) {
-	main_configuration_port = 0;
-      }
-      m_delete(configuration_ports, key);
-      mixed err;
-      if (err = catch{
-	destruct(o);
-      }) {
-	report_warning(LOCALE->
-		       error_disabling_config_port(key,
-						   describe_backtrace(err)));
-      }
-      o = 0;	// Be sure that there are no references left...
-    }
-  }
-
-  // Now we can create the new ports.
-  foreach(indices(new_ports), string key)
-  {
-    port = new_ports[key];
-    if (port) {
-      array old = port;
-      mixed erro;
-      erro = catch {
-	program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
-	function rp;
-	array tmp;
-	if(!requestprogram) {
-	  report_error(LOCALE->no_request_program(port[1]));
-	  continue;
-	}
-	if(rp = requestprogram()->real_port)
-	  if(tmp = rp(port, 0))
-	    port = tmp;
-
-	// FIXME: For SSL3 we might need to be root to read our
-	// secret files.
-	object privs;
-	if(port[0] < 1024)
-	  privs = Privs(LOCALE->opening_low_port());
-	if(o=create_listen_socket(port[0],0,port[2],requestprogram,port)) {
-	  report_notice(LOCALE->opening_config_port(key));
-	  if (!main_configuration_port) {
-	    main_configuration_port = o;
-	  }
-	  configuration_ports[key] = o;
-	} else {
-	  report_error(LOCALE->could_not_open_config_port(key));
-	}
-      };
-      if (erro) {
-	report_error(LOCALE->open_config_port_failed(key,
-			     (stringp(erro)?erro:describe_backtrace(erro))));
-      }
-    }
-  }
-  if(!main_configuration_port)
-  {
-    if (sizeof(configuration_ports)) {
-      // This case happens when you delete the main config port,
-      // but still have others left.
-      main_configuration_port = values(configuration_ports)[0];
-    } else {
-      report_error(LOCALE->no_config_port());
-      if(first)
-	exit( -1 );	// Restart.
-    }
-  }
-}
-#include <stat.h>
-// Find all modules, so a list of them can be presented to the
-// user. This is not needed when the server is started.
-void scan_module_dir(string d)
-{
-  if(sscanf(d, "%*s.pmod")!=0) return;
-  MD_PERROR(("\n\nLooking for modules in "+d+" "));
-
-  string file,path=d;
-  mixed err;
-  array q  = (get_dir( d )||({})) - ({".","..","CVS","RCS" });
-  if(!sizeof(q)) {
-    MD_PERROR(("No modules in here. Continuing elsewhere\n"));
-    return;
-  }
-  if(search(q, ".no_modules")!=-1) {
-    MD_PERROR(("No modules in here. Continuing elsewhere\n"));
-    return;
-  }
-  MD_PERROR(("There are "+language("en","number")(sizeof(q))+" files.\n"));
-
-  foreach( q, file )
-  {
-    object e = ErrorContainer();
-    master()->set_inhibit_compile_errors(e->got_error);
-    if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z') &&
-         ((file[-1] != 'o') || file[-2] == 's'))
-    {
-      array stat = file_stat(path+file);
-      if(!stat || (stat[ST_SIZE] < 0))
-      {
-	if(err = catch ( scan_module_dir(path+file+"/") ))
-	  MD_PERROR((sprintf("Error in module rescanning directory code:"
-			     " %s\n",describe_backtrace(err))));
-      } else {
-	if((module_stat_cache[path+file] &&
-	    module_stat_cache[path+file][ST_MTIME])==stat[ST_MTIME])
-	{
-	  continue;
-	}
-	module_stat_cache[path+file]=stat;
-	
-	switch(extension(file))
-	{
-	case "pike":
-	case "lpc":
-          MD_PERROR(("Considering "+file+" - "));
-	  if(catch{
-	    if((open(path+file,"r")->read(4))=="#!NO") {
-	      MD_PERROR(("Not a module\n"));
-	      file=0;
-	    }
-	  }) {
-	    MD_PERROR(("Couldn't open file\n"));
-	    file=0;
-	  }
-	  if(!file) {
-            break;
-          }
-	case "mod":
-	case "so":
-	  array(string) module_info;
-          int s = gethrtime();
-	  if (!(err = catch( module_info = compile_module(path + file)))) {
-	    // Load OK
-	    if (module_info) {
-	      // Module load OK.
-	      allmodules[ file-("."+extension(file)) ] = module_info;
-	    } else {
-	      // Disabled module.
-	      report_notice(LOCALE->disabled_module(path+file));
-	    }
-	  } else {
-	    // Load failed.
-	    module_stat_cache[path+file]=0;
-	    e->errors += "\n";
-// 	    if (arrayp(err)) {
-// 	      e->errors += path + file + ":" +describe_backtrace(err) + "\n";
-// 	    } else {
-// 	      _master->errors += path + file + ": " + err;
-// 	    }
-	  }
-          MD_PERROR(("     [%4.2fms]\n", (gethrtime()-s)/1000.0));
-	}
-      }
-    }
-    master()->set_inhibit_compile_errors(0);
-    if(strlen(e->get())) {
-      report_debug(LOCALE->module_compilation_errors(d, e->get()));
-    }
-  }
-}
-
-void rescan_modules()
-{
-  string file, path;
-  mixed err;
-  report_notice(LOCALE->scanning_for_modules());
-  if (!allmodules) {
-    allmodules=copy_value(somemodules);
-  }
-
-  foreach(QUERY(ModuleDirs), path)
-  {
-    array err;
-    err = catch(scan_module_dir( path ));
-    if(err) {
-      report_error(LOCALE->module_scan_error(path, describe_backtrace(err)));
-    }
-  }
-  catch {
-//     rm(".module_stat_cache");
-//     rm(".allmodules");
-//     Stdio.write_file(".module_stat_cache", encode_value(module_stat_cache));
-//     Stdio.write_file(".allmodules", encode_value(allmodules));
-  };
-  report_notice(LOCALE->module_scan_done(sizeof(allmodules)));
-}
 
 // do the chroot() call. This is not currently recommended, since
 // roxen dynamically loads modules, all module files must be
@@ -2649,52 +2168,23 @@ void exit_when_done()
   int i;
   roxen_perror("Interrupt request received. Exiting,\n");
   die_die_die=1;
-//   trace(9);
+
   if(++_recurse > 4)
   {
     roxen_perror("Exiting roxen (spurious signals received).\n");
-    stop_all_modules();
+    configurations->stop();
 #ifdef THREADS
     stop_handler_threads();
 #endif /* THREADS */
     exit(-1);	// Restart.
   }
-
-  // First kill off all listening sockets.. 
-  foreach(indices(portno)||({}), o)
-  {
-#ifdef THREADS
-    object fd = Stdio.File();
-    fd->connect( portno[o][2]!="Any"?portno[o][2]:"127.0.0.1", portno[o][0] );
-    destruct(fd);
-#endif
-    destruct(o);
-  }
   
-  // Then wait for all sockets, but maximum 10 minutes.. 
-  call_out(lambda() { 
-    call_out(Simulate.this_function(), 5);
-    if(!_pipe_debug()[0])
-    {
-      roxen_perror("Exiting roxen (all connections closed).\n");
-      stop_all_modules();
+  roxen_perror("Exiting roxen.\n");
+  configurations->stop();
 #ifdef THREADS
-      stop_handler_threads();
+  stop_handler_threads();
 #endif /* THREADS */
-      add_constant("roxen", 0);	// Paranoia...
-      exit(-1);	// Restart.
-      roxen_perror("Odd. I am not dead yet.\n");
-    }
-  }, 0.1);
-  call_out(lambda(){
-    roxen_perror("Exiting roxen (timeout).\n");
-    stop_all_modules();
-#ifdef THREADS
-    stop_handler_threads();
-#endif /* THREADS */
-    add_constant("roxen", 0);	// Paranoia...
-    exit(-1); // Restart.
-  }, 600, 0); // Slow buggers..
+  exit(-1);	// Restart.
 }
 
 void exit_it()
@@ -2815,9 +2305,6 @@ int main(int argc, array argv)
   if(configuration_dir[-1] != '/')
     configuration_dir += "/";
 
-  startpid = getppid();
-  roxenpid = getpid();
-
   // Dangerous...
   if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
 
@@ -2837,7 +2324,6 @@ int main(int argc, array argv)
 #endif
   init_garber();
   initiate_supports();
-  initiate_configuration_port( 1 );
   enable_configurations();
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
@@ -2897,9 +2383,6 @@ int main(int argc, array argv)
   trace(1);
 #endif
   start_time=time();		// Used by the "uptime" info later on.
-
-  
-
   return -1;
 }
 
@@ -2912,23 +2395,6 @@ string check_variable(string name, mixed value)
 {
   switch(name)
   {
-   case "ConfigPorts":
-    config_ports_changed = 1;
-    break;
-   case "cachedir":
-//     if(!sscanf(value, "%*s/roxen_cache"))
-//     {
-      // FIXME: LOCALE?
-      // We will skip this soon anyway....
-//    object node;
-//    node = (configuration_interface()->root->descend("Globals", 1)->
-//            descend("Proxy disk cache: Base Cache Dir", 1));
-//    if(node && !node->changed) node->change(1);
-//       mkdirhier(value+"roxen_cache/foo");
-//       call_out(set, 0, "cachedir", value+"roxen_cache/");
-//     }
-    break;
-
    case "ConfigurationURL":
    case "MyWorldLocation":
     if(strlen(value)<7 || value[-1] != '/' ||
@@ -2955,19 +2421,10 @@ string check_variable(string name, mixed value)
      {
        default_locale = o;
        SET_LOCALE(default_locale);
-       if(root)
-       {
-         root->clear();
-//       destruct(root);
-// 	 configuration_interface()->root = configuration_interface()->Node();
-	 configuration_interface()->
-	   build_root(configuration_interface()->root);
-       }
      }
      break;
   }
 }
-
 
 mapping config_cache = ([ ]);
 mapping host_accuracy_cache = ([]);
@@ -2976,110 +2433,3 @@ int is_ip(string s)
   return (replace(s,"0123456789."/"",({""})*11) == "");
 }
 
-object find_server_for(object id, string host, string|void port)
-{
-  object old_conf = id->conf;
-  int portno = ((int)port);
-
-#ifdef REQUEST_DEBUG
-  werror(sprintf("ROXEN: find_server_for(%O, %O, %O)\n", id, host, port));
-#endif /* REQUEST_DEBUG */
-
-  if(portno!=0 && portno!=21 && portno!=80 && portno!=443)
-    // Not likely to be anything else than the current virtual server.
-    return id->conf;
-
-  host = lower_case(host);
-  if(config_cache[host]) {
-    id->conf=config_cache[host];
-  } else {
-    if (is_ip(host)) {
-      // Not likely to be anything else than the current virtual server.
-      config_cache[host] = id->conf;
-      return (id->conf);
-    }
-
-    int best;
-    object c;
-    string hn;
-#if !constant(String.fuzzymatch) && constant(Array.diff_longest_sequence)
-    array a = host/"";
-#endif /* !String.fuzzymatch && Array.diff_longest_sequence */
-
-    foreach(configurations, object s) {
-      string h = lower_case(s->query("MyWorldLocation"));
-
-      // Remove http:// et al here...
-      // Would get interresting correlation problems with the "http" otherwise.
-      int i = search(h, "://");
-      if (i != -1) {
-	h = h[i+3..];
-      }
-      if ((i = search(h, "/")) != -1) {
-	h = h[..i-1];
-      }
-
-#if constant(String.fuzzymatch)
-      int corr = String.fuzzymatch(host, h);
-#elif constant(Array.diff_longest_sequence)
-      int corr = sizeof(Array.diff_longest_sequence(a, h/""));
-#endif /* constant(Array.diff_longest_sequence) */
-
-      /* The idea of the algorithm is to find the server-url with the longest
-       * common sequence of characters with the host-string, and among those
-       * with the same correlation take the one which is shortest (ie least
-       * amount to throw away).
-       */
-      if ((corr > best) ||
-	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
-	/* Either better correlation,
-	 * or the same, but a shorter hostname.
-	 */
-	best = corr;
-	c = s;
-	hn = h;
-      }
-    }
-
-#if !constant(String.fuzzymatch) && constant(Array.diff_longest_sequence)
-    // Minmatch should be counted in percent
-    best=best*100/strlen(host);
-#endif /* !String.fuzzymatch && Array.diff_longest_sequence */
-
-    if(best >= 50 /* QUERY(minmatch) */)
-      id->conf = config_cache[host] = (c || id->conf);
-    else
-      config_cache[host] = id->conf;
-    host_accuracy_cache[host] = best;
-  }
-
-  if (id->conf != old_conf) 
-  {
-    /* Need to re-authenticate with the new server */
-
-    if (id->rawauth) {
-      array(string) y = id->rawauth / " ";
-
-      id->realauth = 0;
-      id->auth = 0;
-
-      if (sizeof(y) >= 2) {
-	y[1] = MIME.decode_base64(y[1]);
-	id->realauth = y[1];
-	if (id->conf && id->conf->auth_module) {
-	  y = id->conf->auth_module->auth(y, id);
-	}
-	id->auth = y;
-      }
-    }
-  }
-  return id->conf;
-}
-
-object find_site_for( object id )
-{
-  if(id->misc->host) 
-    return find_server_for(id,@lower_case(id->misc->host)/":");
-  else
-    return id->conf;
-}

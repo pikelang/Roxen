@@ -8,13 +8,14 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.56 1999/07/15 16:59:28 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.57 1999/10/04 15:11:55 per Exp $";
 constant thread_safe=1;
 
 
 #include <module.h>
 #include <roxen.h>
 #include <stat.h>
+#include <request_trace.h>
 
 #if DEBUG_LEVEL > 20
 # ifndef FILESYSTEM_DEBUG
@@ -22,10 +23,14 @@ constant thread_safe=1;
 # endif
 #endif
 
-// import Array;
+constant module_type = MODULE_LOCATION;
+constant module_name = "Filesystem";
+constant module_doc = 
+("This is a virtual filesystem, use it to make files available to "+
+ "the users of your WWW-server. If you want to serve any 'normal' "
+ "files from your server, you will have to have atleast one filesystem.") ;
+constant module_unique = 0;
 
-#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
-#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
 
 int redirects, accesses, errors, dirlists;
@@ -121,17 +126,6 @@ void create()
 	 "and can make the server much slower.");
 }
 
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_LOCATION, 
-    "Filesystem", 
-    ("This is a virtual filesystem, use it to make files available to "+
-     "the users of your WWW-server. If you want to serve any 'normal' "
-      "files from your server, you will have to have atleast one filesystem.") 
-    });
-}
 
 string path;
 int stat_cache;

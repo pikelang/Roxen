@@ -3,10 +3,12 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.208 1999/09/26 02:41:51 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.209 1999/10/04 15:11:54 per Exp $";
 #include <module.h>
 #include <roxen.h>
+#include <request_trace.h>
 
+mapping enabled_modules = ([]);
 
 #ifdef PROFILE
 mapping profile_map = ([]);
@@ -26,38 +28,22 @@ mapping profile_map = ([]);
 
 /* A configuration.. */
 
-
 #include "rxml.pike";
 
 object throttler=0;
-
-public string real_file(string file, object id);
-
-
 function store = roxen->store;
 function retrieve = roxen->retrieve;
 function remove = roxen->remove;
 function do_dest = roxen->do_dest;
-function create_listen_socket = roxen->create_listen_socket;
-
-
-object   parse_module =this_object();
-
 object   types_module;
 object   auth_module;
 object   dir_module;
-
 function types_fun;
 function auth_fun;
 
 string name;
 
-/* Since the main module (Roxen, formerly Spinner, alias spider), does
- * not have any clones its settings must be stored somewhere else.
- * This looked like a likely spot.. :)
- */
 mapping variables = ([]); 
-
 
 
 string get_doc_for( string region, string variable )
@@ -88,30 +74,19 @@ public mixed query(string var)
 
 mixed set(string var, mixed val)
 {
-#if DEBUG_LEVEL > 30
-  perror(sprintf("MAIN: set(\"%s\", %O)\n", var, val));
-#endif
   if(variables[var])
-  {
-#if DEBUG_LEVEL > 28
-    perror("MAIN:    Setting global variable.\n");
-#endif
     return variables[var][VAR_VALUE] = val;
-  }
   error("set("+var+"). Unknown variable.\n");
 }
 
 int setvars( mapping (string:mixed) vars )
 {
   string v;
-//  perror("Setting variables to %O\n", vars);
   foreach( indices( vars ), v )
     if(variables[v])
       variables[v][ VAR_VALUE ] = vars[ v ];
   return 1;
 }
-
-
 
 void killvar(string name)
 {
@@ -122,18 +97,15 @@ static class ConfigurableWrapper
 {
   int mode;
   function f;
-  int check()
+  int check( int|void more, int|void expert )
   {
-    if ((mode & VAR_EXPERT) &&
-	(!roxen->configuration_interface()->expert_mode)) {
+    if ((mode & VAR_EXPERT) && !expert)
       return 1;
-    }
-    if ((mode & VAR_MORE) &&
-	(!roxen->configuration_interface()->more_mode)) {
+    if ((mode & VAR_MORE) && !more)
       return 1;
-    }
-    return(f());
+    return f();
   }
+
   void create(int mode_, function f_)
   {
     mode = mode_;
@@ -145,7 +117,7 @@ int defvar(string var, mixed value, string name, int type,
 	   string|void doc_str, mixed|void misc,
 	   int|function|void not_in_config)
 {
-  variables[var]                = allocate( VAR_SIZE );
+  variables[var]                     = allocate( VAR_SIZE );
   variables[var][ VAR_VALUE ]        = value;
   variables[var][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
   variables[var][ VAR_DOC_STR ]      = doc_str;
@@ -155,20 +127,16 @@ int defvar(string var, mixed value, string name, int type,
   Locale.Roxen.standard
     ->register_module_doc( this_object(), var, name, doc_str );
 
-  type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
   type &= (VAR_EXPERT | VAR_MORE);
-  if (functionp(not_in_config)) {
-    if (type) {
+  if (functionp(not_in_config))
+    if (type)
       variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
-    } else {
+    else
       variables[var][ VAR_CONFIGURABLE ] = not_in_config;
-    }
-  } else if (type) {
+  else if (type) 
     variables[var][ VAR_CONFIGURABLE ] = type;
-  } else if(intp(not_in_config)) {
+  else if(intp(not_in_config))
     variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-  }
-
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
@@ -189,12 +157,13 @@ int definvisvar(string var, mixed value, int type)
 
 string query_internal_location(object|void mod)
 {
-  return QUERY(InternalLoc)+(mod? replace(otomod[mod]||"", "#", "!")+"/":"");
+  return QUERY(InternalLoc)+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
 }
 
 string query_name()
 {
-  if(strlen(QUERY(name))) return QUERY(name);
+  if(strlen(QUERY(name))) 
+    return QUERY(name);
   return name;
 }
 
@@ -211,11 +180,8 @@ class Priority
   array (object) filter_modules = ({ });
   array (object) last_modules = ({ });
   array (object) first_modules = ({ });
-  
-  mapping (string:array(object)) extension_modules = ([ ]);
   mapping (string:array(object)) file_extension_modules = ([ ]);
   mapping (object:multiset) provider_modules = ([ ]);
-
 
   void stop()
   {
@@ -245,15 +211,12 @@ class Priority
 
 array (object) allocate_pris()
 {
-  int a;
-  array (object) tmp;
-  tmp=allocate(10);
-  for(a=0; a<10; a++)  tmp[a]=Priority();
-  return tmp;
+  return allocate(10, Priority)();
 }
 
-class Bignum {
-#if constant(Gmp.mpz) // Perfect. :-)
+class Bignum 
+{
+#if constant(Gmp.mpz)
   object gmp = Gmp.mpz();
   float mb()
   {
@@ -272,41 +235,10 @@ class Bignum {
     return this_object();
   }
 #else
-  int msb;
-  int lsb=-0x7ffffffe;
-
-  object `-(int i);
-  object `+(int i)
-  {
-    if(!i) return this_object();
-    if(i<0) return `-(-i);
-    object res = object_program(this_object())(lsb+i,msb,2);
-    if(res->lsb < lsb) res->msb++;
-    return res;
-  }
-
-  object `-(int i)
-  {
-    if(!i) return this_object();
-    if(i<0) return `+(-i);
-    object res = object_program(this_object())(lsb-i,msb,2);
-    if(res->lsb > lsb) res->msb--;
-    return res;
-  }
-
-  float mb()
-  {
-    return ((((float)lsb/1024.0/1024.0)+2048.0)+(msb*4096.0));
-  }
-
-  void create(int|void num, int|void bnum, int|void d)
-  {
-    if(!d)
-      lsb = num-0x7ffffffe;
-    else
-      lsb = num;
-    msb = bnum;
-  }
+  int n;
+  object `+(int i) { n+=i; return this_object(); }
+  object `-(int i) { n-=i; return this_object(); }
+  float mb() {return (float)n/ 1024.0; }
 #endif
 }
 
@@ -322,8 +254,6 @@ object sent=Bignum();     // Sent data
 object hsent=Bignum();    // Sent headers
 object received=Bignum(); // Received data
 
-object this = this_object();
-
 // Will write a line to the log-file. This will probably be replaced
 // entirely by log-modules in the future, since this would be much
 // cleaner.
@@ -334,11 +264,11 @@ function log_function;
 // mentioned module in the future.
 private mapping (string:string) log_format = ([]);
 
-// A list of priority objects (used like a 'struct' in C, really)
+// A list of priority objects
 private array (object) pri = allocate_pris();
 
 // All enabled modules in this virtual server.
-// The format is "module":([ module_info ])
+// The format is "module":([ "copies":([ num:instance, ... ]) ])
 public mapping (string:mapping(string:mixed)) modules = ([]);
 
 // A mapping from objects to module names
@@ -352,7 +282,6 @@ private array (function) url_module_cache, last_module_cache;
 private array (function) logger_module_cache, first_module_cache;
 private array (function) filter_module_cache;
 private array (array (string|function)) location_module_cache;
-private mapping (string:array (function)) extension_module_cache=([]);
 private mapping (string:array (function)) file_extension_module_cache=([]);
 private mapping (string:array (object)) provider_module_cache=([]);
 
@@ -378,11 +307,7 @@ public string type_from_filename( string file, int|void to, string|void myext )
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
   string ext=myext || extension(file);
-    
 
-//   while(file[-1] == '/') 
-//     file = file[0..strlen(file)-2]; // Security patch? 
-  
   if(tmp = types_fun(ext))
   {
     mixed tmp2,nx;
@@ -468,7 +393,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
       if (arrayp(error = catch {
 	mixed ret;
 	if (ret = f(@args)) {
-	  return(ret);
+	  return ret;
 	}
       })) {
 	error[0] = "Error in call_provider(): "+error[0];
@@ -477,24 +402,6 @@ mixed call_provider(string provides, string fun, mixed ... args)
     }
   }
 }
-
-array (function) extension_modules(string ext, object id)
-{
-  if(!extension_module_cache[ext])
-  { 
-    int i;
-    extension_module_cache[ext]  = ({ });
-    for(i=9; i>=0; i--)
-    {
-      object *d, p;
-      if(d = pri[i]->extension_modules[ext])
-	foreach(d, p)
-	  extension_module_cache[ext] += ({ p->handle_extension });
-    }
-  }
-  return extension_module_cache[ext];
-}
-
 
 array (function) file_extension_modules(string ext, object id)
 {
@@ -578,7 +485,7 @@ static mixed strip_fork_information(object id)
   array a = id->not_query/"::";
   id->not_query = a[0];
   id->misc->fork_information = a[1..];
-  return(0);
+  return 0;
 }
 #endif /* __NT__ */
 
@@ -667,10 +574,8 @@ void init_log_file()
   remove_call_out(init_log_file);
 
   if(log_function)
-  {
     destruct(function_object(log_function)); 
     // Free the old one.
-  }
   
   if(query("Log")) // Only try to open the log file if logging is enabled!!
   {
@@ -847,7 +752,7 @@ public string status()
   float dt = (float)(time(1) - roxen->start_time + 1);
 
   if(!sent||!received||!hsent)
-    return(LOCALE->status_bignum_gone());
+    return LOCALE->status_bignum_gone();
 
   res = "<table>";
   res += LOCALE->config_status(sent->mb(), (sent->mb()/dt) * 8192.0,
@@ -861,8 +766,7 @@ public string status()
   }
   res += "</table><p>\n\n";
 
-  if ((roxen->configuration_interface()->more_mode) &&
-      (extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
+  if ((extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
     // FTP statistics.
     res += LOCALE->ftp_statistics() + "<br>\n"
       "<ul><table>\n";
@@ -989,7 +893,7 @@ int|mapping check_security(function a, object id, void|int slevel)
 	  return http_proxy_auth_required(seclevels[2]);
 	} else {
 	  // Bad IP.
-	  return(1);
+	  return 1;
 	}
         break;
 
@@ -997,7 +901,7 @@ int|mapping check_security(function a, object id, void|int slevel)
 	// Short-circuit version on allow.
 	if(level[1](id->remoteaddr)) {
 	  // Match. It's ok.
-	  return(0);
+	  return 0;
 	} else {
 	  ip_ok |= 1;	// IP may be bad.
 	}
@@ -1007,13 +911,13 @@ int|mapping check_security(function a, object id, void|int slevel)
 	// Short-circuit version on allow.
 	if(id->auth && id->auth[0] && level[1](id->auth[1])) {
 	  // Match. It's ok.
-	  return(0);
+	  return 0;
 	} else {
 	  if (id->auth) {
 	    auth_ok |= 1;	// Auth may be bad.
 	  } else {
 	    // No auth yet, get some.
-	    return(http_auth_failed(seclevels[2]));
+	    return http_auth_failed(seclevels[2]);
 	  }
 	}
 	break;
@@ -1023,21 +927,21 @@ int|mapping check_security(function a, object id, void|int slevel)
 
   if (err) {
     report_error(LOCALE->module_security_error(describe_backtrace(err)));
-    return(1);
+    return 1;
   }
 
   if (ip_ok == 1) {
     // Bad IP.
-    return(1);
+    return 1;
   } else {
     // IP OK, or no IP restrictions.
     if (auth_ok == 1) {
       // Bad authentification.
       // Query for authentification.
-      return(http_auth_failed(seclevels[2]));
+      return http_auth_failed(seclevels[2]);
     } else {
       // No auth required, or authentification OK.
-      return(0);
+      return 0;
     }
   }
 }
@@ -1051,7 +955,6 @@ void invalidate_cache()
   url_module_cache = 0;
   location_module_cache = 0;
   logger_module_cache = 0;
-  extension_module_cache      = ([]);
   file_extension_module_cache = ([]);
   provider_module_cache = ([]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1064,20 +967,13 @@ void invalidate_cache()
 void clear_memory_caches()
 {
   invalidate_cache();
-  foreach(indices(otomod), object m) {
-    if (m && m->clear_memory_caches) {
-      mixed err = catch {
-	m->clear_memory_caches();
-      };
-      if (err) {
+  foreach(indices(otomod), object m) 
+    if (m && m->clear_memory_caches) 
+      if (mixed err = catch( m->clear_memory_caches() )) 
 	report_error(LOCALE->
 		     clear_memory_cache_error(otomod[m],
 					      describe_backtrace(err)));
-      }
-    }
-  }
 }
-
 
 string draw_saturation_bar(int hue,int brightness, int where)
 {
@@ -1101,6 +997,7 @@ string draw_saturation_bar(int hue,int brightness, int where)
 // from the configuration interface. :-)
 private mapping internal_roxen_image(string from)
 {
+  // changed 970820 by js to allow for jpeg images
   sscanf(from, "%s.gif", from);
   sscanf(from, "%s.jpg", from);
 
@@ -1111,22 +1008,17 @@ private mapping internal_roxen_image(string from)
   // /..
   from -= ".";
 
-  // changed 970820 by js to allow for jpeg images
-
   // New idea: Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
   if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
     return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
 
-  if(object f=open("roxen-images/"+from+".gif", "r"))
+  if(Stdio.File f=open("roxen-images/"+from+".gif", "r"))
     return (["file":f,"type":"image/gif"]);
   else
     return (["file":open("roxen-images/"+from+".jpg", "r"),"type":"image/jpeg"]);
 }
 
-// The function that actually tries to find the data requested.  All
-// modules are mapped, in order, and the first one that returns a
-// suitable responce is used.
 
 mapping (mixed:function|int) locks = ([]);
 
@@ -1180,10 +1072,6 @@ object _lock(object|function f)
 #define LOCK(X)
 #define UNLOCK()
 #endif
-
-
-#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
-#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
 string examine_return_mapping(mapping m)
 {
@@ -1248,6 +1136,10 @@ string examine_return_mapping(mapping m)
 
    return res;
 }
+
+// The function that actually tries to find the data requested.  All
+// modules are mapped, in order, and the first one that returns a
+// suitable responce is used.
 mapping|int low_get_file(object id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
@@ -1415,41 +1307,7 @@ mapping|int low_get_file(object id, int|void no_magic)
       TRACE_LEAVE("");
     }
 #endif
-#ifdef EXTENSION_MODULES
-    if(tmp=extension_modules(loc = extension(file, id), id))
-    {
-      foreach(tmp, funp)
-      {
-	TRACE_ENTER(LOCALE->extension_module(loc), funp);
-	LOCK(funp);
-	tmp=funp(loc, id);
-	UNLOCK();
-	if(tmp)
-	{
-	  if(!objectp(tmp)) 
-	  {
-	    TRACE_LEAVE(LOCALE->returning_data());
-	    return tmp;
-	  }
-	  fid = tmp;
-#ifdef MODULE_LEVEL_SECURITY
-	  slevel = function_object(funp)->query("_seclvl");
-#endif
-	  TRACE_LEAVE(LOCALE->returned_fd()
-#ifdef MODULE_LEVEL_SECURITY
-		      +(slevel != id->misc->seclevel?
-			LOCALE->seclevel_is_now(slevel):"")
-#endif
-		      );
-#ifdef MODULE_LEVEL_SECURITY
-	  id->misc->seclevel = slevel;
-#endif
-	  break;
-	} else
-	  TRACE_LEAVE("");
-      }
-    }
-#endif 
+
     foreach(location_modules(id), tmp)
     {
       loc = tmp[0];
@@ -1688,8 +1546,6 @@ public array find_dir(string file, object id)
   string loc;
   array dir = ({ }), tmp;
   array | mapping d;
-//   if(roxen->find_site_for( id ) != this_object())
-//     return id->conf->find_dir( file, id );
   TRACE_ENTER(LOCALE->list_directory(file), 0);
 //   file=replace(file, "//", "/");
   
@@ -1797,14 +1653,14 @@ public array stat_file(string file, object id)
 {
   string loc;
   array s, tmp;
+#ifdef THREADS
+  object key;
+#endif
   TRACE_ENTER(LOCALE->stat_file(file), 0);
   
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
 #ifdef URL_MODULES
-#ifdef THREADS
-  object key;
-#endif
   // Map URL-modules
   foreach(url_modules(id), function funp)
   {
@@ -1924,9 +1780,6 @@ public array open_file(string fname, string mode, object id)
   function funp;
   mapping file;
 
-  if(roxen->find_site_for( id ) != this_object())
-    return id->open_file( fname, mode, id );
-  
   id->not_query = fname;
 
   foreach(oc->first_modules(), funp)
@@ -2000,9 +1853,6 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
   mapping(string:array(mixed)) dir = ([]);
   mixed d, tmp;
 
-
-  if(roxen->find_site_for( id ) != this_object())
-    return id->find_dir_stat( file, id );
 
   file=replace(file, "//", "/");
   
@@ -2095,7 +1945,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 	TRACE_ENTER(LOCALE->returned_array(), 0);
 	dir = mkmapping(d, Array.map(d, lambda(string f, string base,
 					 object c, object id) {
-				    return(c->stat_file(base + f, id));
+				    return c->stat_file(base + f, id);
 				  }, f, c, id)) | dir;
 	TRACE_LEAVE("");
       }
@@ -2166,9 +2016,7 @@ public string real_file(string file, object id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
-      // FIXME: NOTE: Limits filename length to 1000000 bytes.
-      //	/grubba 1997-10-03
-      if(s=function_object(tmp[1])->real_file(file[strlen(loc)..1000000], id))
+      if(s=function_object(tmp[1])->real_file(file[strlen(loc)..], id))
 	return s;
     }
   }
@@ -2179,13 +2027,11 @@ public string real_file(string file, object id)
 
 // NOTE: A 'file' can be a cgi script, which will be executed, resulting in
 // a horrible delay.
-
-public mixed try_get_file(string s, object id, int|void status, int|void nocache)
+int|string try_get_file(string s, object id, int|void status, int|void nocache)
 {
   string res, q;
   object fake_id;
   mapping m;
-
 
   if(objectp(id)) {
     // id->misc->common makes it possible to pass information to
@@ -2210,7 +2056,8 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
     string v, name, value;
     foreach(q/"&", v)
       if(sscanf(v, "%s=%s", name, value))
-	fake_id->variables[http_decode_string(name)]=value;
+	fake_id->variables[http_decode_string(name)]=
+          http_decode_string(value);
     fake_id->query=q;
   }
 
@@ -2220,10 +2067,10 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
 
   if(!(m = get_file(fake_id)))
   {
-    fake_id->end();
+    destruct(fake_id);
     return 0;
   }
-  fake_id->end();
+  destruct(fake_id);
   
   if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
   
@@ -2248,14 +2095,13 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-  if (!id->auth || !id->auth[0]) {
+  if (!id->auth || !id->auth[0]) 
     cache_set("file:"+id->conf->name, s, res);
-  }
   return res;
 }
 
 // Is 'what' a file in our virtual filesystem?
-public int is_file(string what, object id)
+int(0..1) is_file(string what, object id)
 {
   return !!stat_file(what, id);
 }
@@ -2263,132 +2109,29 @@ public int is_file(string what, object id)
 string MKPORTKEY(array(string) p)
 {
   if (sizeof(p[3])) {
-    return(sprintf("%s://%s:%s/(%s)",
+    return sprintf("%s://%s:%s/(%s)",
 		   p[1], p[2], (string)p[0],
-		   replace(p[3], ({"\n", "\r"}), ({ " ", " " }))));
+		   replace(p[3], ({"\n", "\r"}), ({ " ", " " })));
   } else {
-    return(sprintf("%s://%s:%s/",
-		   p[1], p[2], (string)p[0]));
+    return sprintf("%s://%s:%s/",
+		   p[1], p[2], (string)p[0]);
   }
 }
-
-mapping(string:object) server_ports = ([]);
-
-int ports_changed = 1;
+array registered_urls = ({});
 void start(int num)
 {
-  // Note: This may be run before uid:gid is changed.
-
-  string server_name = query_name();
-  array port;
-  int err=0;
-  object lf;
-  mapping new=([]), o2;
-
-#if 0
-  // Doesn't seem to be set correctly.
-  //	/grubba 1998-05-18
-  if (!ports_changed) {
-    return;
+  // Note: This is run as root if roxen is started as root
+  foreach( query( "URLs" )-registered_urls, string url )
+  {
+    registered_urls += ({ url });
+    roxenp()->register_url( url, this_object() );
   }
-#endif /* 0 */
-
-  ports_changed = 0;
-
-  // First find out if we have any new ports.
-  mapping(string:array(string)) new_ports = ([]);
-  foreach(query("Ports"), port) {
-    if ((< "ssl", "ssleay", "ssl3" >)[port[1]]) {
-      // Obsolete versions of the SSL protocol.
-      report_warning(server_name + ": " + LOCALE->obsolete_ssl(port[1]));
-      // Note: Change in-place.
-      port[1] = "https";
-      // FIXME: Should probably mark node as changed.
-    } else if ((< "ftp2" >)[port[1]]) {
-      // ftp2.pike has replaced ftp.pike entirely.
-      report_warning(LOCALE->obsolete_ftp(port[1]));
-      port[1] = "ftp";
-    }
-    string key = MKPORTKEY(port);
-    if (!server_ports[key]) {
-      report_notice(LOCALE->new_port(server_name, key));
-      new_ports[key] = port;
-    } else {
-      // This is needed not to delete old unchanged ports.
-      new_ports[key] = 0;
-    }
-  }
-
-  // Then disable the old ones that are no more.
-  foreach(indices(server_ports), string key) {
-    if (zero_type(new_ports[key])) {
-      report_notice(LOCALE->disabling_port(server_name, key));
-      object o = server_ports[key];
-      m_delete(server_ports, key);
-      mixed err;
-      if (err = catch{
-        destruct(o);
-      }) {
-        report_warning(LOCALE->error_disabling_port(server_name, key,
-						    describe_backtrace(err)));
-      }
-      o = 0;    // Be sure that there are no references left...
-    }
-  }
-
-  // Now we can create the new ports.
-  roxen_perror(LOCALE->opening_ports(server_name));
-  foreach(indices(new_ports), string key) {
-    port = new_ports[key];
-    if (port) {
-      array old = port;
-      mixed erro;
-      erro = catch {
-	program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
-        function rp;
-        array tmp;
-        if(!requestprogram) {
-          report_error(server_name + ": " +
-		       LOCALE->no_request_program(port[1]));
-          continue;
-        }
-        if(rp = requestprogram()->real_port)
-          if(tmp = rp(port, this_object()))
-            port = tmp;
-
-        object privs;
-        if(port[0] < 1024)
-          privs = Privs(LOCALE->opening_low_port());
-
-	object o;
-        if(o=create_listen_socket(port[0], this_object(), port[2],
-				  requestprogram, port)) {
-          report_notice(LOCALE->opening_port(server_name, key));
-          server_ports[key] = o;
-        } else {
-          report_error(LOCALE->could_not_open_port(server_name, key));
-        }
-	if (privs) {
-	  destruct(privs);	// Paranoia.
-	}
-      };
-      if (erro) {
-        report_error(LOCALE->failed_to_open_port(server_name, key,
-						 (stringp(erro)?erro:
-						  describe_backtrace(erro))));
-      }
-    }
-  }
-  if (sizeof(query("Ports")) && !sizeof(server_ports)) {
-    string port_list = Array.map(query("Ports"),
-				 lambda(array p) {
-				   return sprintf("%5d %-10s %-20s\n", @p);
-				 })*"";
-    report_error(LOCALE->no_ports_available_tried(name, port_list));
+  foreach( registered_urls-query("URLs"), string url )
+  {
+    registered_urls -= ({ url });
+    roxenp()->unregister_url( url );
   }
 }
-
-
 
 // Save this configuration. If all is included, save all configuration
 // global variables as well, otherwise only all module variables.
@@ -2397,23 +2140,17 @@ void save(int|void all)
   mapping mod;
   if(all)
   {
-    store("spider.lpc#0", variables, 0, this);
+    store("spider.lpc#0", variables, 0, this_object());
     start(2);
   }
   
   foreach(values(modules), mod)
   {
-    if(mod->enabled)
+    int i;
+    foreach(indices(mod->copies), i)
     {
-      store(mod->sname+"#0", mod->master->query(), 0, this);
-      mod->enabled->start(2, this);
-    } else if(mod->copies) {
-      int i;
-      foreach(indices(mod->copies), i)
-      {
-	store(mod->sname+"#"+i, mod->copies[i]->query(), 0, this);
-	mod->copies[i]->start(2, this);
-      }
+      store(mod->sname+"#"+i, mod->copies[i]->query(), 0, this_object());
+      mod->copies[i]->start(2, this_object());
     }
   }
   invalidate_cache();
@@ -2425,144 +2162,111 @@ int save_one( object o )
   mapping mod;
   if(!o) 
   {
-    store("spider#0", variables, 0, this);
+    store("spider#0", variables, 0, this_object());
     start(2);
     return 1;
   }
   foreach(values(modules), mod)
   {
-    if( mod->enabled == o)
+    int i;
+    foreach(indices(mod->copies), i)
     {
-      store(mod->sname+"#0", o->query(), 0, this);
-      o->start(2, this);
-      invalidate_cache();
-      return 1;
-    } else if(mod->copies) {
-      int i;
-      foreach(indices(mod->copies), i)
+      if(mod->copies[i] == o)
       {
-	if(mod->copies[i] == o)
-	{
-	  store(mod->sname+"#"+i, o->query(), 0, this);
-	  o->start(2, this);
-	  invalidate_cache();
-	  return 1;
-	}
+        store(mod->sname+"#"+i, o->query(), 0, this_object());
+        o->start(2, this_object());
+        invalidate_cache();
+        return 1;
       }
     }
-  }
-}
-
-mapping _hooks=([ ]);
-
-
-void hooks_for( string modname, object mod )
-{
-  array hook;
-  if(_hooks[modname])
-  {
-#ifdef MODULE_DEBUG
-    perror("Module hooks...");
-#endif
-    foreach(_hooks[modname], hook)
-      hook[0]( @hook[1], mod );
   }
 }
 
 object enable_module( string modname )
 {
-  string id;
+  int id;
+  object moduleinfo;
   mapping module;
-  mapping enabled_modules;
-//   modname = replace(modname, ".lpc#","#");
-  
-  sscanf(modname, "%s#%s", modname, id );
-  module = modules[ modname ];
-  if(!module)
-  {
-    load_module(modname);
-    module = modules[ modname ];
-  }
+  object me;
+  int pr;
+  mixed err;
+  int module_type;
+
+  sscanf(modname, "%s#%d", modname, id );
+
 
 #if constant(gethrtime)
   int start_time = gethrtime();
 #endif
-  if (!module) {
+  moduleinfo = roxen->find_module( modname );
+
+
+  if (!moduleinfo)
+  {
+#ifdef MODULE_DEBUG
+    report_debug(" %-30s ...  FAILED\n", modname);
+#endif
     return 0;
   }
 
-  object me;
-  mapping tmp;
-  int pr;
-  array err;
-
 #ifdef MODULE_DEBUG
-  perror("Enabling "+module->name+" # "+id+" ... ");
+  if( id )
+    report_debug(" %-30s ... ", moduleinfo->get_name()+" copy "+(id+1));
+  else
+    report_debug(" %-30s ... ", moduleinfo->get_name() );
 #endif
 
-  if(module->copies)
+  module = modules[ module ];
+
+  if(!module)
+    modules[ modname ] = module = ([ ]);
+
+
+  if( !module->copies )
+    module->copies = ([]);
+
+  if(err = catch(me = moduleinfo->instance(this_object())))
   {
-    if (err = catch(me = module["program"](this_object()))) {
-      report_error(LOCALE->could_not_clone_module(module->name,
-						  describe_backtrace(err)));
-      if (module->copies[id]) {
-#ifdef MODULE_DEBUG
-	perror("Keeping old copy\n");
-#endif
-      }
-      return(module->copies[id]);
-    }
-    if(module->copies[id]) {
-#ifdef MODULE_DEBUG
-      perror("Disabling old copy ... ");
-#endif
-      if (err = catch{
-	module->copies[id]->stop();
-      }) {
-	report_error(LOCALE->error_disabling_module(module->name,
-						    describe_backtrace(err)));
-      }
-      destruct(module->copies[id]);
-    }
-  } else {
-    if(objectp(module->master)) {
-      me = module->master;
-    } else {
-      if (err = catch(me = module["program"](this_object()))) {
-	report_error(LOCALE->could_not_clone_module(module->name,
-						    describe_backtrace(err)));
-	return(0);
-      }
-    }
+    report_debug("ERROR\n");
+    werror( describe_backtrace(err) );
+    return module->copies[id];
   }
 
-  me->set_configuration(this_object());
-#ifdef MODULE_DEBUG
-  //    perror("Initializing ");
-#endif
-  if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
-		      MODULE_CONFIG| MODULE_FILE_EXTENSION | MODULE_LOGGER |
-		      MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
-		      MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
+  if(module->copies[id]) 
   {
-    if(module->type != MODULE_CONFIG)
+    if (err = catch{
+      module->copies[ id ]->stop();
+    }) {
+      report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
+                                                  describe_backtrace(err)));
+    }
+    catch(destruct(module->copies[id]));
+  }
+
+  me->set_configuration( this_object() );
+
+  module_type = moduleinfo->type;
+  if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
+                     MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
+                     MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
+                     MODULE_FILTER|MODULE_PARSER|MODULE_FIRST))
+  {
+    if(module_type != MODULE_CONFIG)
     {
       me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 		 "The priority of the module. 9 is highest and 0 is lowest."
 		 " Modules with the same priority can be assumed to be "
 		 "called in random order", 
 		 ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-
       me->deflocaledoc("svenska", "_priority", "Prioritet",
 		       "Modulens prioritet, 9 är högst och 0 är"
 		       " lägst. Moduler med samma prioritet anropas i "
 		       "mer eller mindre slumpmässig ordning.");
     }
       
-    if(module->type != MODULE_LOGGER &&
-       module->type != MODULE_PROVIDER)
+    if(module_type != MODULE_LOGGER && module_type != MODULE_PROVIDER)
     {
-      if(!(module->type & MODULE_PROXY))
+      if(!(module_type & MODULE_PROXY))
       {
 	me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
 		   "The realm to use when requesting password from the "
@@ -2648,9 +2352,6 @@ object enable_module( string modname )
 			 " hanteras av <i>Filsystem</i> modulen "
 			 " skickas vidare till <i>CGI modulen</i>.");
 
-
-
-
 	me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
 		   "Each security level can be any or more from this list:"
@@ -2691,8 +2392,6 @@ object enable_module( string modname )
 			 "Användnamnet 'any' kan användas för att ange "
 			 "att vilken giltig användare som helst ska "
 			 " kunna få använda modulen.");
-
-	  
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 	  
@@ -2774,67 +2473,54 @@ object enable_module( string modname )
 		   "används dess värde istället för modulens riktiga namn "
 		   "i konfigurationsinterfacet.");
 
-  me->setvars(retrieve(modname + "#" + id, this));
+  me->setvars(retrieve(modname + "#" + id, this_object()));
 
-  if(module->copies)
-    module->copies[(int)id] = me;
-  else
-    module->enabled = me;
 
+  module->copies[ id ] = me;
   otomod[ me ] = modname;
       
   mixed err;
-  if((me->start) && (err = catch{
-    me->start(0, this);
-  })) {
+  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
+  {
+#ifdef MODULE_DEBUG
+    report_debug(" ERROR\n");
+#endif
     report_error(LOCALE->
-		 error_initializing_module_copy(module->name,
+		 error_initializing_module_copy(moduleinfo->get_name(),
 						describe_backtrace(err)));
+
 
     /* Clean up some broken references to this module. */
     m_delete(otomod, me);
-
-    if(module->copies)
-      m_delete(module->copies, (int)id);
-    else
-      m_delete(module, "enabled");
-    
+    m_delete(moduleinfo->copies, id);
     destruct(me);
-    
     return 0;
   }
     
-  if (err = catch(pr = me->query("_priority"))) {
+  if (err = catch(pr = me->query("_priority"))) 
+  {
     report_error(LOCALE->
-		 error_initializing_module_copy(module->name,
+		 error_initializing_module_copy(moduleinfo->get_name(),
 						describe_backtrace(err)));
     pr = 3;
   }
 
   api_module_cache |= me->api_functions();
 
-  if(module->type & MODULE_EXTENSION) {
-    if (err = catch {
-      array arr = me->query_extensions();
-      if (arrayp(arr)) {
-	string foo;
-	foreach( arr, foo )
-	  if(pri[pr]->extension_modules[ foo ])
-	    pri[pr]->extension_modules[foo] += ({ me });
-	  else
-	    pri[pr]->extension_modules[foo] = ({ me });
-      }
-    }) {
-      report_error(LOCALE->
-		   error_initializing_module_copy(module->name,
-						  describe_backtrace(err)));
-    }
-  }	  
+  if(module_type & MODULE_EXTENSION) 
+  {
+    report_error( moduleinfo->get_name()+
+                  " is an MODULE_EXTENSION, that type is no "
+                  "longer available.\nPlease notify the modules writer.\n"
+                  "Suitable replacement types include MODULE_FIRST and "
+                  " MODULE_LAST\n");
+  }
 
-  if(module->type & MODULE_FILE_EXTENSION) {
+  if(module_type & MODULE_FILE_EXTENSION)
     if (err = catch {
       array arr = me->query_file_extensions();
-      if (arrayp(arr)) {
+      if (arrayp(arr)) 
+      {
 	string foo;
 	foreach( me->query_file_extensions(), foo )
 	  if(pri[pr]->file_extension_modules[foo] ) 
@@ -2842,15 +2528,14 @@ object enable_module( string modname )
 	  else
 	    pri[pr]->file_extension_modules[foo]=({me});
       }
-    }) {
+    })
       report_error(LOCALE->
-		   error_initializing_module_copy(module->name,
+		   error_initializing_module_copy(moduleinfo->get_name(),
 						  describe_backtrace(err)));
-    }
-  }
 
-  if(module->type & MODULE_PROVIDER) {
-    if (err = catch {
+  if(module_type & MODULE_PROVIDER) 
+    if (err = catch 
+    {
       mixed provs = me->query_provides();
       if(stringp(provs))
 	provs = (< provs >);
@@ -2859,85 +2544,59 @@ object enable_module( string modname )
       if (multisetp(provs)) {
 	pri[pr]->provider_modules [ me ] = provs;
       }
-    }) {
+    })
       report_error(LOCALE->
-		   error_initializing_module_copy(module->name,
-						  describe_backtrace(err)));
-    }
-  }
-    
-  if(module->type & MODULE_TYPES)
+		   error_initializing_module_copy(moduleinfo->get_name(),
+                                                  describe_backtrace(err)));
+      
+  if(module_type & MODULE_TYPES)
   {
     types_module = me;
     types_fun = me->type_from_extension;
   }
   
-  if(module->type & MODULE_PARSER)
-  {
-    if(parse_module) {
-      if (err = catch {
-	add_parse_module( me );
-      }) {
-	report_error(LOCALE->
-		     error_initializing_module_copy(module->name,
-						    describe_backtrace(err)));
-      }
-    }
-  }
+  if(module_type & MODULE_PARSER)
+    add_parse_module( me );
 
-  if(module->type & MODULE_AUTH)
+
+  if(module_type & MODULE_AUTH)
   {
     auth_module = me;
     auth_fun = me->auth;
   }
 
-  if(module->type & MODULE_DIRECTORIES)
+  if(module_type & MODULE_DIRECTORIES)
     dir_module = me;
 
-  if(module->type & MODULE_LOCATION)
+  if(module_type & MODULE_LOCATION)
     pri[pr]->location_modules += ({ me });
 
-  if(module->type & MODULE_LOGGER)
+  if(module_type & MODULE_LOGGER)
     pri[pr]->logger_modules += ({ me });
 
-  if(module->type & MODULE_URL)
+  if(module_type & MODULE_URL)
     pri[pr]->url_modules += ({ me });
 
-  if(module->type & MODULE_LAST)
+  if(module_type & MODULE_LAST)
     pri[pr]->last_modules += ({ me });
 
-  if(module->type & MODULE_FILTER)
+  if(module_type & MODULE_FILTER)
     pri[pr]->filter_modules += ({ me });
 
-  if(module->type & MODULE_FIRST) {
+  if(module_type & MODULE_FIRST) 
     pri[pr]->first_modules += ({ me });
-  }
 
-  hooks_for(module->sname+"#"+id, me);
-      
-  enabled_modules=retrieve("EnabledModules", this);
-
-  if(!enabled_modules[modname+"#"+id])
+  if(!enabled_modules[ modname+"#"+id ])
   {
-#ifdef MODULE_DEBUG
-    perror("New module...");
-#endif
     enabled_modules[modname+"#"+id] = 1;
-    store( "EnabledModules", enabled_modules, 1, this);
+    store( "EnabledModules", enabled_modules, 1, this_object());
   }
   invalidate_cache();
-#ifdef MODULE_DEBUG
-#if constant(gethrtime)
-  perror(" Done (%3.2fms).\n", (gethrtime()-start_time)/1000.0);
-#else
-  perror(" Done.\n");
-#endif
-#endif
+  report_debug(" OK   %5.1fms.\n", (gethrtime()-start_time)/1000.0);
   return me;
 }
 
 // Called from the configuration interface.
-// TODO: doesn't work! It looks like it's not being called
 string check_variable(string name, mixed value)
 {
   switch(name)
@@ -2975,28 +2634,14 @@ string check_variable(string name, mixed value)
   }
 }
 
-
-#define perr(X) do { report += X; perror(X); } while(0)
-
-// Used to hide some variables when logging is not enabled.
-
-int log_is_not_enabled()
-{
-  return !query("Log");
-}
-
-
 int disable_module( string modname )
 {
-  mapping module;
-  mapping enabled_modules;
   object me;
-  int pr;
-  int id;
-
+  int id, pr;
   sscanf(modname, "%s#%d", modname, id );
 
-  module = modules[ modname ];
+  object moduleinfo =  roxen->find_module( modname );
+  mapping module = modules[ modname ];
 
   if(!module) 
   {
@@ -3004,41 +2649,34 @@ int disable_module( string modname )
     return 0;
   }
 
-  if(module->copies)
-  {
-    me = module->copies[id];
-    m_delete(module->copies, id);
-    if(!sizeof(module->copies))
-      unload_module(modname);
-  } else {
-    me = module->enabled || module->master;
-    module->enabled=module->master = 0;
-    unload_module(modname);
-  }
+  me = module->copies[id];
+  m_delete(module->copies, id);
+  
+  if(!sizeof(module->copies))
+    m_delete( modules, modname );
 
   invalidate_cache();
 
   if(!me)
   {
-    report_error(LOCALE->disable_module_failed(module->name+" # "+id));
+    if( id )
+      report_error(LOCALE->disable_module_failed(moduleinfo->get_name()
+                                                 +" # "+id));
+    else
+      report_error(LOCALE->disable_module_failed(moduleinfo->get_name()));
     return 0;
   }
 
   if(me->stop) me->stop();
 
 #ifdef MODULE_DEBUG
-  perror("Disabling "+module->name+" # "+id+"\n");
+  if( id )
+    report_debug("Disabling "+moduleinfo->get_name()+" # "+id+"\n");
+  else
+    report_debug("Disabling "+moduleinfo->get_name()+"\n");
 #endif
 
-  if(module["type"] & MODULE_EXTENSION)
-  {
-    string foo;
-    for(pr=0; pr<10; pr++)
-      foreach( indices (pri[pr]->extension_modules), foo )
-	pri[pr]->extension_modules[ foo ]-= ({ me });
-  }
-
-  if(module["type"] & MODULE_FILE_EXTENSION)
+  if(moduleinfo->type & MODULE_FILE_EXTENSION)
   {
     string foo;
     for(pr=0; pr<10; pr++)
@@ -3046,61 +2684,60 @@ int disable_module( string modname )
 	pri[pr]->file_extension_modules[foo]-=({me});
   }
 
-  if(module->type & MODULE_PROVIDER) {
+  if(moduleinfo->type & MODULE_PROVIDER) {
     for(pr=0; pr<10; pr++)
       m_delete(pri[pr]->provider_modules, me);
   }
   
-  if(module["type"] & MODULE_TYPES)
+  if(moduleinfo->type & MODULE_TYPES)
   {
     types_module = 0;
     types_fun = 0;
   }
 
-  if(module->type & MODULE_PARSER)
+  if(moduleinfo->type & MODULE_PARSER)
     remove_parse_module( me );
 
-  if( module->type & MODULE_AUTH )
+  if( moduleinfo->type & MODULE_AUTH )
   {
     auth_module = 0;
     auth_fun = 0;
   }
 
-  if( module->type & MODULE_DIRECTORIES )
+  if( moduleinfo->type & MODULE_DIRECTORIES )
     dir_module = 0;
 
 
-  if( module->type & MODULE_LOCATION )
+  if( moduleinfo->type & MODULE_LOCATION )
     for(pr=0; pr<10; pr++)
      pri[pr]->location_modules -= ({ me });
 
-  if( module->type & MODULE_URL )
+  if( moduleinfo->type & MODULE_URL )
     for(pr=0; pr<10; pr++)
       pri[pr]->url_modules -= ({ me });
 
-  if( module->type & MODULE_LAST )
+  if( moduleinfo->type & MODULE_LAST )
     for(pr=0; pr<10; pr++)
       pri[pr]->last_modules -= ({ me });
 
-  if( module->type & MODULE_FILTER )
+  if( moduleinfo->type & MODULE_FILTER )
     for(pr=0; pr<10; pr++)
       pri[pr]->filter_modules -= ({ me });
 
-  if( module->type & MODULE_FIRST ) {
+  if( moduleinfo->type & MODULE_FIRST ) {
     for(pr=0; pr<10; pr++)
       pri[pr]->first_modules -= ({ me });
   }
 
-  if( module->type & MODULE_LOGGER )
+  if( moduleinfo->type & MODULE_LOGGER )
     for(pr=0; pr<10; pr++)
       pri[pr]->logger_modules -= ({ me });
 
-  enabled_modules=retrieve("EnabledModules", this);
 
-  if(enabled_modules[modname+"#"+id])
+  if( enabled_modules[modname+"#"+id] )
   {
     m_delete( enabled_modules, modname + "#" + id );
-    store( "EnabledModules",enabled_modules, 1, this);
+    store( "EnabledModules",enabled_modules, 1, this_object());
   }
   destruct(me);
   return 1;
@@ -3111,291 +2748,27 @@ object|string find_module(string name)
   int id;
   sscanf(name, "%s#%d", name, id);
   if(modules[name])
-  {
-    if(modules[name]->copies)
-      return modules[name]->copies[id];
-    else 
-      if(modules[name]->enabled)
-	return modules[name]->enabled;
-  }
+    return modules[name]->copies[id];
   return 0;
-}
-
-void register_module_load_hook( string modname, function fun, mixed ... args )
-{
-  object o;
-#ifdef MODULE_DEBUG
-  perror("Registering a hook for the module "+modname+"\n");
-#endif
-  if(o=find_module(modname))
-  {
-#ifdef MODULE_DEBUG
-    perror("Already there!\n");
-#endif
-    fun( @args, o );
-  } else
-    if(!_hooks[modname])
-      _hooks[modname] = ({ ({ fun, args }) });
-    else
-      _hooks[modname] += ({ ({ fun, args }) });
-}
-
-int load_module(string module_file)
-{
-  int foo, disablep;
-  mixed err;
-  mixed *module_data;
-  mapping loaded_modules;
-  object obj;
-  program prog;
-#if efun(gethrtime)
-  int start_time = gethrtime();
-#endif
-  // It is not thread-safe to use this.
-#ifdef MODULE_DEBUG
-  perror("\nLoading " + module_file + "... ");
-#endif
-
-  if(prog=cache_lookup("modules", module_file)) {
-    err = catch {
-      obj = prog(this_object());
-    };
-  } else {
-    string dir;
-    object e;
-    master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
-    err = catch {
-      obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file,
-                                  this_object());
-    };
-    master()->set_inhibit_compile_errors(0);
-    
-    if (sizeof(e->get())) {
-      report_error(LOCALE->module_compilation_errors(module_file, e->get()));
-      return(0);
-    }
-    prog = object_program( obj );
-  }
-
-  if (err) {
-    report_error(LOCALE->error_enabling_module(module_file,
-					       describe_backtrace(err)));
-    return(0);
-  }
-
-  if(!obj)
-  {
-    report_error(LOCALE->module_load_failed(module_file));
-    return 0;
-  }
-
-  obj->set_configuration(this_object());
-  if (err = catch (module_data = obj->register_module(this_object()))) {
-#ifdef MODULE_DEBUG
-    perror("FAILED\n" + describe_backtrace( err ));
-#endif
-    report_error(LOCALE->
-		 module_loaded_register_module_failed(module_file,
-						      describe_backtrace(err)));
-    return 0;
-  }
-
-  err = "";
-  if (!arrayp( module_data ))
-    err = LOCALE->bad_register_module_result();
-  else
-    switch (sizeof( module_data ))
-    {
-     case 5:
-      foo=module_data[4];
-      module_data=module_data[0..3];
-     case 4:
-      if (module_data[3] && !arrayp( module_data[3] ))
-	err = LOCALE->bad_register_module4() + err;
-     case 3:
-      if (!stringp( module_data[2] ) && !mappingp(module_data[2]))
-	err = LOCALE->bad_register_module3() + err;
-      if (!stringp( module_data[1] ) && !mappingp(module_data[1]))
-	err = LOCALE->bad_register_module2() + err;
-      if (!intp( module_data[0] ))
-	err = LOCALE->bad_register_module1() + err;
-      break;
-
-    default:
-      err = LOCALE->bad_register_module_other();
-    }
-  if (err != "")
-  {
-#ifdef MODULE_DEBUG
-    perror("FAILED\n");
-#endif
-    report_error(LOCALE->tried_loading_module(module_file, err));
-    if(obj)
-      destruct( obj );
-    return 0;
-  } 
-    
-  if (sizeof(module_data) == 3)
-    module_data += ({ 0 }); 
-
-  if(!foo)
-  {
-    destruct(obj);
-    obj=0;
-  } else {
-    otomod[obj] = module_file;
-  }
-
-  if(!modules[ module_file ])
-    modules[ module_file ] = ([]);
-  mapping tmpp = modules[ module_file ];
-
-  tmpp->type=module_data[0];
-  if(mappingp(module_data[1]))
-  {
-    tmpp->names=module_data[1];
-    tmpp->name=module_data[1]->standard;
-  }
-  else
-  {
-    tmpp->name=module_data[1];
-    tmpp->names=([ "standard":module_data[1] ]);
-  }
-  
-  if(mappingp(module_data[2]))
-  {
-    tmpp->doc=module_data[2]->standard||module_data[2]->english;
-    tmpp->docs=module_data[2];
-  } else {
-    tmpp->doc = module_data[2];
-    tmpp->docs = ([ "standard":module_data[2] ]);
-  }
-  tmpp->extra=module_data[3];
-  tmpp["program"]=prog;
-  tmpp->master=obj;
-  tmpp->copies=(foo ? 0 : (tmpp->copies||([])));
-  tmpp->sname=module_file;
-      
-  roxen->somemodules[module_file]=
-  ({ tmpp->name, tmpp->doc, module_data[0] });
-#ifdef MODULE_DEBUG
-#if efun(gethrtime)
-  perror(" Done (%3.2fms).\n", (gethrtime()-start_time)/1000.0);
-#else
-  perror(" Done.\n");
-#endif
-#endif
-  cache_set("modules", module_file, modules[module_file]["program"]);
-// ??  invalidate_cache();
-
-  return 1;
-}
-
-int unload_module(string module_file)
-{
-  mapping module;
-  int id;
-
-  module = modules[ module_file ];
-
-  if(!module) 
-    return 0;
-
-  if(objectp(module->master)) 
-    destruct(module->master);
-
-  cache_remove("modules", module_file);
-  
-  m_delete(modules, module_file);
-
-  return 1;
 }
 
 int add_modules (array(string) mods)
 {
+  int wr;
   foreach (mods, string mod)
-    if(!modules[mod] || !modules[mod]->copies && !modules[mod]->master)
-      enable_module(mod+"#0");
-  if(roxen->root)
-    roxen->build_root(roxen->root);
-}
-
-int port_open(array prt)
-{
-  return(server_ports[MKPORTKEY(prt)] != 0);
-}
-
-
-string desc()
-{
-  string res="";
-  array (string|int) port;
-
-  if(!sizeof(QUERY(Ports)))
-  {
-/*    array ips = roxen->configuration_interface()->ip_number_list;*/
-/*    if(!ips) roxen->configuration_interface()->init_ip_list;*/
-/*    ips = roxen->configuration_interface()->ip_number_list;*/
-/*    foreach(ips||({}), string ip)*/
-/*    {*/
-      
-/*    }*/
-
-    array handlers = ({});
-    foreach(roxen->configurations, object c)
-      if(c->modules["ip-less_hosts"])
-	handlers+=({({http_encode_string("/Configurations/"+c->name),
-			strlen(c->query("name"))?c->query("name"):c->name})});
-
-    
-    if(sizeof(handlers)==1)
+    if( !enabled_modules[ mod+"#0" ] )
+#ifdef MODULE_DEBUG
     {
-      res = LOCALE->server_ports_handled_by_one(handlers[0][0],
-						handlers[0][1]);
-    } else if(sizeof(handlers)) {
-      string serverlist = "";
-      
-      foreach(handlers, array h)
-	serverlist += "<a href=\""+h[0]+"\">"+h[1]+"</a><br>\n";
-
-      res = LOCALE->server_ports_handled_by_multiple(serverlist);
-    } else
-      res = LOCALE->server_ports_handled_by_none();
-  }
-  
-  foreach(QUERY(Ports), port)
-  {
-    string prt;
-    
-    switch(port[1][0..2])
-    {
-    case "ssl":
-      prt = "https://";
-      break;
-    case "ftp":
-      prt = "ftp://";
-      break;
-      
-    default:
-      prt = port[1]+"://";
-    }
-    if(port[2] && port[2]!="ANY")
-      prt += port[2];
-    else
-#if efun(gethostname)
-      prt += (gethostname()/".")[0] + "." + QUERY(Domain);
-#else
-    ;
+      if( !wr++ )
+        report_debug("[ adding required modules\n");
 #endif
-    prt += ":"+port[0]+"/";
-    if(port_open( port ))
-      res += LOCALE->server_port_open(prt);
-    else
-      res += LOCALE->server_port_not_open(prt);
-  }
-  return (res + LOCALE->server_url(query("MyWorldLocation")) + "<p>");
+      enable_module( mod+"#0" );
+#ifdef MODULE_DEBUG
+    }
+  if( wr )
+    report_debug("]\n");
+#endif
 }
-
 
 // BEGIN SQL
 
@@ -3422,17 +2795,15 @@ object sql_cache_get(string what)
 
 object sql_connect(string db)
 {
-  if (sql_urls[db]) {
-    return(sql_cache_get(sql_urls[db]));
-  } else {
-    return(sql_cache_get(db));
-  }
+  if (sql_urls[db])
+    return sql_cache_get(sql_urls[db]);
+  else
+    return sql_cache_get(db);
 }
 
 // END SQL
 
 // This is the most likely URL for a virtual server.
-
 private string get_my_url()
 {
   string s;
@@ -3447,47 +2818,36 @@ private string get_my_url()
 
 void enable_all_modules()
 {
-#if efun(gethrtime)
-  int start_time = gethrtime();
-#endif
-  array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
+  enabled_modules = retrieve("EnabledModules", this_object());
+  array modules_to_process = indices( enabled_modules );
   string tmp_string;
 
   parse_log_formats();
   init_log_file();
 
-  perror("\nEnabling all modules for "+query_name()+"... \n");
+#if efun(gethrtime)
+  int start_time = gethrtime();
+#endif
+  report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
-#if constant(_compiler_trace)
-  // _compiler_trace(1);
-#endif /* !constant(_compiler_trace) */
-  
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
     modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
 
-
   array err;
   foreach( modules_to_process, tmp_string )
-    if(err = catch( enable_module( tmp_string ) ))
+    if(err = catch( enable_module( tmp_string )))
       report_error(LOCALE->enable_module_failed(tmp_string, 
 						describe_backtrace(err)));
-#if efun(gethrtime)
-  perror("\nAll modules for %s enabled in %4.3f seconds\n\n", query_name(),
-	 (gethrtime()-start_time)/1000000.0);
-#endif
+  report_debug("All modules for %s enabled in %4.3f seconds\n\n", query_name(),
+               (gethrtime()-start_time)/1000000.0);
 }
 
 void create(string config)
 {
-
   add_parse_module( this_object() );
-
   name=config;
-
-  perror("Creating virtual server '"+config+"'\n");
-
-  // FIXME: LOCALIZE!
+  report_debug("Creating virtual server '"+config+"'\n");
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
 	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
@@ -3517,7 +2877,7 @@ void create(string config)
 	       "Meddelanden: Filen finns inte",
 #"Det här meddelandet returneras om en användare frågar efter en
   resurs som inte finns. '$File' byts ut mot den efterfrågade
- resursen, och '$Me' med serverns URL");
+  resursen, och '$Me' med serverns URL");
   
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
@@ -3532,6 +2892,7 @@ void create(string config)
 	 "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used");
+
   deflocaledoc("svenska", "name", "Serverns namn",
 #"Det här är namnet som kommer att synas i
   konfigurationsgränssnittet. Om du lämnar det här fältet tomt kommer
@@ -3579,7 +2940,7 @@ void create(string config)
 	 "$user          -- the name of the auth user used, if any\n"
 	 "$user_id       -- A unique user ID, if cookies are supported,\n"
 	 "                  by the client, otherwise '0'\n"
-	 "</pre>", 0, log_is_not_enabled);
+	 "</pre>", 0, lambda(){ return !query("Log");});
   deflocaledoc("svenska", "LogFormat", "Loggning: Loggningsformat",
 #"Vilket format som ska användas för att logga
 <pre>
@@ -3642,7 +3003,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "%m    Month (e.g. '08')\n"
 	 "%d    Date  (e.g. '10' for the tenth)\n"
 	 "%h    Hour  (e.g. '00')\n</pre>"
-	 ,0, log_is_not_enabled);
+	 ,0, lambda(){ return !query("Log");});
   deflocaledoc("svenska", "LogFile", 
 	       "Loggning: Loggfil",
 	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
@@ -3661,7 +3022,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
-	 "log.\n",0, log_is_not_enabled);
+	 "log.\n",0, lambda(){ return !query("Log");});
   deflocaledoc("svenska", "NoLog", 
 	       "Loggning: Logga inte för",
 #"Logga inte några förfrågningar vars IP-nummer matchar
@@ -3673,77 +3034,70 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 " to generate default URLs, and to gererate email addresses");
   deflocaledoc( "svenska", "Domain", 
 		"DNS Domän",
-
 #"Serverns domännamn. Det av en del RXML styrkoder för att generara
 epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 		
 
-  defvar("Ports", ({ }), 
-	 "Ports", TYPE_PORTS,
-         "The ports this virtual instance of Roxen will bind to.\n");
-  deflocaledoc("svenska", "Ports", 
-	       "Portar",
-#"Portarna som den här virtuella instansen av roxen
-  kommer att öppna och lyssna på förfrågningar till");
-	       
-
-  defvar("MyWorldLocation", get_my_url(), 
-	 "Server URL", TYPE_STRING,
-	 "This is where your start page is located.");
+  defvar("MyWorldLocation", "", "Server URL", TYPE_STRING,
+	 "This is the main server URL, where your start page is located.");
   deflocaledoc( "svenska", "MyWorldLocation",
 		"Serverns URL",
-#"Det här är URLen till din startsida. Den används av rätt många 
+#"Det här är huvudURLen till din startsida. Den används av många 
   moduler för att bygga upp absoluta URLer från en relativ URL.");
+
+  defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST,
+         "Bind to these URLs" );
+
 // This should be somewhere else, I think. Same goes for HTTP related ones
 
-  defvar("FTPWelcome",  
-	 "              +-------------------------------------------------\n"
-	 "              +-- Welcome to the Roxen Challenger FTP server ---\n"
-	 "              +-------------------------------------------------\n",
-	 "FTP: FTP Welcome",
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 "FTP Welcome answer; transmitted to new FTP connections if the file "
-	 "<i>/welcome.msg</i> doesn't exist.\n");
-  deflocaledoc("svenska", "FTPWelcome",
-	       "FTP: Välkomstmeddelande",
-#"Det här meddelanden skickas till alla FTP klienter så
-  fort de kopplar upp sig till servern");
+//   defvar("FTPWelcome",  
+// 	 "              +-------------------------------------------------\n"
+// 	 "              +-- Welcome to the Roxen Challenger FTP server ---\n"
+// 	 "              +-------------------------------------------------\n",
+// 	 "FTP: FTP Welcome",
+// 	 TYPE_TEXT_FIELD|VAR_MORE,
+// 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
+// 	 "<i>/welcome.msg</i> doesn't exist.\n");
+//   deflocaledoc("svenska", "FTPWelcome",
+// 	       "FTP: Välkomstmeddelande",
+// #"Det här meddelanden skickas till alla FTP klienter så
+//   fort de kopplar upp sig till servern");
 
-  defvar("named_ftp", 0, "FTP: Allow named FTP", TYPE_FLAG|VAR_MORE,
-	 "Allow ftp to normal user-accounts (requires an auth module, "
-	 "e.g. 'User database and security').\n");
-  deflocaledoc("svenska", "named_ftp", "FTP: Tillåt icke-anonym FTP",
-	       "Tillåt FTP med loginnamn och lösenord. Du måste ha en "
-	       " authentifikationsmodul för att kunna "
-	       "använda icke-anonym FTP.");
-  defvar("anonymous_ftp", 1, "FTP: Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
-	 "Allows anonymous ftp.\n");
-  deflocaledoc("svenska", "anonymous_ftp", "FTP: Tillåt anonym FTP",
-	       "Tillåt anonym FTP");
+//   defvar("named_ftp", 0, "FTP: Allow named FTP", TYPE_FLAG|VAR_MORE,
+// 	 "Allow ftp to normal user-accounts (requires an auth module, "
+// 	 "e.g. 'User database and security').\n");
+//   deflocaledoc("svenska", "named_ftp", "FTP: Tillåt icke-anonym FTP",
+// 	       "Tillåt FTP med loginnamn och lösenord. Du måste ha en "
+// 	       " authentifikationsmodul för att kunna "
+// 	       "använda icke-anonym FTP.");
+//   defvar("anonymous_ftp", 1, "FTP: Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
+// 	 "Allows anonymous ftp.\n");
+//   deflocaledoc("svenska", "anonymous_ftp", "FTP: Tillåt anonym FTP",
+// 	       "Tillåt anonym FTP");
 
-  defvar("guest_ftp", 0, "FTP: Allow FTP guest users", TYPE_FLAG|VAR_MORE,
-	 "Allows FTP guest users.\n");
-  deflocaledoc( "svenska", "guest_ftp", 
-		"FTP: Tillåt FTPgästanvändare",
-		"Tillåt FTPgästanvändare");
+//   defvar("guest_ftp", 0, "FTP: Allow FTP guest users", TYPE_FLAG|VAR_MORE,
+// 	 "Allows FTP guest users.\n");
+//   deflocaledoc( "svenska", "guest_ftp", 
+// 		"FTP: Tillåt FTPgästanvändare",
+// 		"Tillåt FTPgästanvändare");
 
-  defvar("ftp_user_session_limit", 0,
-	 "FTP: User session limit", TYPE_INT|VAR_MORE,
-	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
+//   defvar("ftp_user_session_limit", 0,
+// 	 "FTP: User session limit", TYPE_INT|VAR_MORE,
+// 	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
 
-  deflocaledoc( "svenska", "ftp_user_session_limit", 
-		"FTP: Maximalt antal samtidiga användarsessioner",
-		"0=obegränsat antal");
+//   deflocaledoc( "svenska", "ftp_user_session_limit", 
+// 		"FTP: Maximalt antal samtidiga användarsessioner",
+// 		"0=obegränsat antal");
 
-  defvar("shells", "/etc/shells", "FTP: Shell database", TYPE_FILE|VAR_MORE,
-	 "File which contains a list of all valid shells\n"
-	 "(usually /etc/shells). Used for named ftp.\n"
-	 "Specify the empty string to disable shell database lookup.\n");
-  deflocaledoc( "svenska", "shells", 
-		"FTP: Skaldatabas",
-		#"En fil som innehåller en lista på alla tillåtna
- skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
- tomma strängen för att stänga av verifieringen av användarskal");
+//   defvar("shells", "/etc/shells", "FTP: Shell database", TYPE_FILE|VAR_MORE,
+// 	 "File which contains a list of all valid shells\n"
+// 	 "(usually /etc/shells). Used for named ftp.\n"
+// 	 "Specify the empty string to disable shell database lookup.\n");
+//   deflocaledoc( "svenska", "shells", 
+// 		"FTP: Skaldatabas",
+// 		#"En fil som innehåller en lista på alla tillåtna
+//  skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
+//  tomma strängen för att stänga av verifieringen av användarskal");
 
   defvar("InternalLoc", "/_internal/",
 	 "Internal module resource mountpoint", TYPE_LOCATION|VAR_MORE,
@@ -3823,9 +3177,10 @@ the modules combination. The bucket depth will be determined multiplying
 the rate by this factor.",
          0,arent_we_throttling_request);
 
-  setvars(retrieve("spider#0", this));
+  setvars(retrieve("spider#0", this_object()));
 
-  if (query("throttle")) {
+  if (query("throttle")) 
+  {
     throttler=.throttler();
     throttler->throttle(query("throttle_fill_rate"),
                         query("throttle_bucket_depth"),

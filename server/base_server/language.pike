@@ -4,7 +4,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.18 1999/09/15 01:17:58 mast Exp $
+ * $Id: language.pike,v 1.19 1999/10/04 15:11:54 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -28,7 +28,7 @@ void initiate_languages()
 		 "Most RXML tags will not work as expected!\n");
     return 0;
   }
-  report_debug( "Adding languages:\n");
+  report_debug( "Adding languages ... ");
   int start = gethrtime();
   foreach(glob("*.pike",langs), lang)
   {
@@ -38,15 +38,13 @@ void initiate_languages()
       string alias;
       object l;
       mixed err;
-      report_debug("     "+
-                    String.capitalize(lang[0..search(lang, ".")-1])+": ");
       if (err = catch {
         l = (object)("languages/"+lang);
         roxenp()->dump( "languages/"+lang );
-	if(tmp=l->aliases()) {
+	if(tmp=l->aliases()) 
+        {
 	  foreach(tmp, alias) 
           {
-            report_debug( alias+" " );
 	    languages[alias] = ([ "month":l->month,
 				  "ordered":l->ordered,
                                   "date":l->date,
@@ -54,8 +52,6 @@ void initiate_languages()
                                   "number":l->number,
 			       ]);
 	  }
-          report_debug( "\n" );
-
 	} 
       }) {
 	report_error(sprintf("Initialization of language %s failed:%s\n",
@@ -64,7 +60,7 @@ void initiate_languages()
     }
   }
   
-  report_debug( "Done in %4.2f seconds\n", (gethrtime()-start)/1000000.0 );
+  report_debug( "Done [%4.2fms]\n", (gethrtime()-start)/1000.0 );
 }
 
 private string nil()

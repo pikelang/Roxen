@@ -18,34 +18,18 @@ string get_domain(int|void l)
   array f;
   string t, s;
 
-//  ConfigurationURL is set by the 'install' script.
-  if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
-  {
-#if constant(gethostbyname) && constant(gethostname)
-    f = gethostbyname(gethostname()); // First try..
-    if(f)
-      foreach(f, f) if (arrayp(f)) { 
-	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
-	  if(!s || strlen(s) < strlen(t))
-	    s=t;
-      }
-#endif
-    if(!s)
-    {
-      // FIXME: NT support.
+  // FIXME: NT support.
 
-      t = Stdio.read_bytes("/etc/resolv.conf");
-      if(t) 
-      {
-	if(!sscanf(t, "domain %s\n", s))
-	  if(!sscanf(t, "search %s%*[ \t\n]", s))
-	    s="nowhere";
-      } else {
-	s="nowhere";
-      }
-      s = "host."+s;
-    }
+  t = Stdio.read_bytes("/etc/resolv.conf");
+  if(t) 
+  {
+    if(!sscanf(t, "domain %s\n", s))
+      if(!sscanf(t, "search %s%*[ \t\n]", s))
+        s="nowhere";
+  } else {
+    s="nowhere";
   }
+  s = "host."+s;
   sscanf(s, "%*s.%s", s);
   if(s && strlen(s))
   {
@@ -58,42 +42,24 @@ string get_domain(int|void l)
 }
 
 
-// This is the most likely URL for a virtual server. Again, this
-// should move into the actual 'configuration' object. It is not all
-// that nice to have all this code lying around in here.
-
-string get_my_url()
-{
-  string s;
-#if constant(gethostname)
-  s = (gethostname()/".")[0] + "." + query("Domain");
-#else
-  s = "localhost";
-#endif
-  s -= "\n";
-  return "http://" + s + "/";
-}
-
-string docurl;
-
 void define_global_variables( int argc, array (string) argv )
 {
   int p;
 
-  globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
+  globvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
 	  #"If set to Yes, all users of your server whose clients support 
 cookies will get a unique 'user-id-cookie', this can then be 
 used in the log and in scripts to track individual users.");
 
   deflocaledoc( "svenska", "set_cookie", 
-		"Sätt en unik cookie för alla användare",
+		"Loggning: Sätt en unik cookie för alla användare",
 		#"Om du sätter den här variabeln till 'ja', så kommer 
 alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt.  Den
 här kakan kan användas i skript för att spåra individuella användare.  Det är
 inte rekommenderat att använda den här variabeln, många användare tycker illa
 om cookies");
 
-  globvar("set_cookie_only_once",1,"Set ID cookies only once",TYPE_FLAG,
+  globvar("set_cookie_only_once",1,"Logging: Set ID cookies only once",TYPE_FLAG,
 	  #"If set to Yes, Roxen will attempt to set unique user ID cookies
  only upon receiving the first request (and again after some minutes). Thus, if
 the user doesn't allow the cookie to be set, she won't be bothered with
@@ -101,14 +67,14 @@ multiple requests.",0,
 	  lambda() {return !QUERY(set_cookie);});
 
   deflocaledoc( "svenska", "set_cookie_only_once", 
-		"Sätt bara kakan en gång per användare",
+		"Loggning: Sätt bara kakan en gång per användare",
 		#"Om den här variablen är satt till 'ja' så kommer roxen bara
 försöka sätta den unika användarkakan en gång. Det gör att om användaren inte
 tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under
 några minuter");
 
   globvar("RestoreConnLogFull", 0,
-	  "Log entire file length in restored connections",
+	  "Logging: Log entire file length in restored connections",
 	  TYPE_TOGGLE,
 	  "If this toggle is enabled log entries for restored connections "
 	  "will log the amount of sent data plus the restoration location. "
@@ -120,7 +86,7 @@ några minuter");
 	  "bandwidth statistics on the log file will be incorrect. The "
 	 "statistics in Roxen will continue being correct.");
 	 
-  deflocaledoc("svenska", "RestoreConnLogFull",
+  deflocaledoc("svenska", "Loggning: RestoreConnLogFull",
 	       "Logga hela fillängden vid återstartad nerladdning",
 	       "När den här flaggar är satt så loggar Roxen hela längden på "
 	       "en fil vars nerladdning återstartas. Om en användare först "
@@ -131,7 +97,7 @@ några minuter");
 	       "har lyckats ladda hem hela filen. I normalfallet vill du att "
 	       "ha denna flagga avslagen.");
 
-  globvar("show_internals", 1, "Show the internals", TYPE_FLAG,
+  globvar("show_internals", 1, "Show internal errors", TYPE_FLAG,
 #"Show 'Internal server error' messages to the user. 
 This is very useful if you are debugging your own modules 
 or writing Pike scripts.");
@@ -156,12 +122,12 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"Sökväg för typsnitt.");
 
 
-  globvar("logdirprefix", "../logs/", "Log directory prefix",
+  globvar("logdirprefix", "../logs/", "Logging: Log directory prefix",
 	  TYPE_DIR|VAR_MORE,
 	  #"This is the default file path that will be prepended to the log 
  file path in all the default modules and the virtual server.");
 
-  deflocaledoc( "svenska", "logdirprefix", "Loggningsmappprefix",
+  deflocaledoc( "svenska", "logdirprefix", "Loggning: Loggningsmappprefix",
 		"Alla nya loggar som skapas får det här prefixet.");
   
   globvar("cache", 0, "Proxy disk cache: Enabled", TYPE_FLAG,
@@ -299,13 +265,6 @@ källservern om de har en last-modified header som anger när de senast
 	       "Information om cacherensningskörningar sparas i den här filen"
 	       ".");
   /// End of cache variables..
-  
-  globvar("docurl2", "http://www.roxen.com/documentation/context.pike?page=",
-	  "Documentation URL", TYPE_STRING|VAR_MORE|VAR_EXPERT,
-	  "The URL to prepend to all documentation urls throughout the "
-	  "server. This URL should _not_ end with a '/'.");
-  deflocaledoc("svenska", "docurl2", "DokumentationsURL",
-	       "DokumentationsURLen används för att få kontextkänslig hjälp");
 
   globvar("pidfile", "/tmp/roxen_pid_$uid", "PID file",
 	  TYPE_FILE|VAR_MORE,
@@ -345,118 +304,32 @@ källservern om de har en last-modified header som anger när de senast
   deflocaledoc("svenska", "ident", "Identitet: Roxens identitet",
 	       "Det här är det namn som roxen kommer att använda sig av.");
 
-  globvar("DOC", 1, "Configuration interface: Help texts", TYPE_FLAG|VAR_MORE,
-	  "Do you want documentation? (this is an example of documentation)");
-  deflocaledoc("svenska", "DOC", "Konfigurationsinterfacet: Hjälptexter",
-	       "Vill du ha hjälptexter (den här texten är en typisk "
-	       " hjälptext)");
 
-  globvar("NumAccept", 1, "Number of accepts to attempt",
-	  TYPE_INT_LIST|VAR_MORE,
-	  "You can here state the maximum number of accepts to attempt for "
-	  "each read callback from the main socket. <p> Increasing this value "
-	  "will make the server faster for users making many simultaneous "
-	  "connections to it, or if you have a very busy server. The higher "
-	  "you set this value, the less load balancing between virtual "
-	  "servers. (If there are 256 more or less simultaneous "
-	  "requests to server 1, and one to server 2, and this variable is "
-	  "set to 256, the 256 accesses to the first server might very well "
-	  "be handled before the one to the second server.)",
-	  ({ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
-  deflocaledoc("svenska", "NumAccept", 
-	       "Uppkopplingsmottagningsförsök per varv i huvudloopen",
-	       "Antalet uppkopplingsmottagningsförsök per varv i huvudlopen. "
-	       "Om du ökar det här värdet så kan server svara snabbare om "
-	       "väldigt många använder den, men lastbalanseringen mellan dina "
-	       "virtuella servrar kommer att bli mycket sämre (tänk dig att "
-	       "det ligger 255 uppkopplingar och väntar i kön för en server"
-	       ", och en uppkoppling i kön till din andra server, och du  "
-	       " har satt den här variabeln till 256. Alla de 255 "
-	       "uppkopplingarna mot den första servern kan då komma "
-	       "att hanteras <b>före</b> den ensamma uppkopplingen till "
-	       "den andra server.");
+//   globvar("NumAccept", 1, "Number of accepts to attempt",
+// 	  TYPE_INT_LIST|VAR_MORE,
+// 	  "You can here state the maximum number of accepts to attempt for "
+// 	  "each read callback from the main socket. <p> Increasing this value "
+// 	  "will make the server faster for users making many simultaneous "
+// 	  "connections to it, or if you have a very busy server. The higher "
+// 	  "you set this value, the less load balancing between virtual "
+// 	  "servers. (If there are 256 more or less simultaneous "
+// 	  "requests to server 1, and one to server 2, and this variable is "
+// 	  "set to 256, the 256 accesses to the first server might very well "
+// 	  "be handled before the one to the second server.)",
+// 	  ({ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
+//   deflocaledoc("svenska", "NumAccept", 
+// 	       "Uppkopplingsmottagningsförsök per varv i huvudloopen",
+// 	       "Antalet uppkopplingsmottagningsförsök per varv i huvudlopen. "
+// 	       "Om du ökar det här värdet så kan server svara snabbare om "
+// 	       "väldigt många använder den, men lastbalanseringen mellan dina "
+// 	       "virtuella servrar kommer att bli mycket sämre (tänk dig att "
+// 	       "det ligger 255 uppkopplingar och väntar i kön för en server"
+// 	       ", och en uppkoppling i kön till din andra server, och du  "
+// 	       " har satt den här variabeln till 256. Alla de 255 "
+// 	       "uppkopplingarna mot den första servern kan då komma "
+// 	       "att hanteras <b>före</b> den ensamma uppkopplingen till "
+// 	       "den andra server.");
 
-  globvar("ConfigPorts", ({ ({ 22202, "http", "ANY", "" }) }),
-	  "Configuration interface: Ports",
-	  TYPE_PORTS,
-#"These are the ports through which you can configure the server.<br>
-
-Note that you should at least have one open port, since otherwise you won't be
-able to configure your server.");
-
-  deflocaledoc("svenska", "ConfigPorts",
-	       "Konfigurationsinterfacet: Portar",
-#"Det här är de portar som du kan använda för att konfigurera
- servern. <br>
-
-Notera att du alltid bör ha <b>minst</b> en port öppen, så om du
- t.ex. ska flytta konfigurationsinterfacet från en http port till en ssl3 port,
- ta inte bort den gamla porten innan du har verifierat att den nya verkligen
- fungerar. Det är rätt svårt att konfigurera roxen utan dess
- konfigurationsinterface, även om det går.");
-
-  globvar("ModuleListType", "Original",
-	  "Configuration interface: Add module page look  ",
-	  TYPE_STRING_LIST,
-#"This variable defines how the add module page will look like. The original
-version has graphical headers and the description for each of the modules.
-If you know your way around Roxen, the compact mode might be better. Then
-You will get a select list which contains module names only.",
-	  ({ "Original", "Compact" }));
-
-  deflocaledoc("svenska", "ModuleListType",
-	       "Konfigurationsinterfacet: Utseendet av addera-modulsidan",
-#"Här kan du ställa in utseendet av sidan där du adderar nya moduler.
-Standardversionen har en lång sida med alla moduler med modulbeskrivningar.
-Den kompakta versionen innehåller bara en select-lista med alla moduler,
-utan hjälptexterna och går därför mycket snabbare att ladda.",
-	       ([ "Original": "Standard",
-		  "Compact" : "Kompakt" ]));
-
-
-  globvar("ConfigurationURL", 
-	  "",
-          "Configuration interface: URL", TYPE_STRING,
-	  "The URL of the configuration interface. This is used to "
-	  "generate redirects now and then (when you press save, when "
-	  "a module is added, etc.).");
-  deflocaledoc("svenska", "ConfigurationURL",
-	       "Konfigurationsinterfacet: URL",
-	       #"Konfigurationsinterfacets URL. Normalt sätt så behöver du 
-inte ställa in den här variabeln, eftersom den automatiskt genereras från
- portvariablen, men ibland kan det vara bra att kunna ställa in den.");
-
-  globvar("ConfigurationPassword", "", "Configuration interface: Password", 
-	  TYPE_PASSWORD|VAR_EXPERT,
-	  "The password you will have to enter to use the configuration "
-	  "interface. Please note that changing this password in the "
-	  "configuration interface will _not_ require an additional entry "
-	  "of the password, so it is easy to make a typo. It is recommended "
-	  "that you use the <a href=/(changepass)/Globals/>form instead</a>.");
-  deflocaledoc("svenska", "ConfigurationPassword",
-	       "Konfigurationsinterface: Lösenord",
-	       #"Den här variablen bör du inte pilla på. Men det är lösenordet
- för användaren  som ska få konfigurera roxen, krypterat med crypt(3)");
-
-  globvar("ConfigurationUser", "", "Configuration interface: User", 
-	  TYPE_STRING|VAR_EXPERT,
-	  "The username you will have to enter to use the configuration "
-	  "interface");
-  deflocaledoc("svenska", "ConfigurationUser", 
-	       "Konfigurationsinterface: Användare",
-	       #"Den här variablen bör du inte pilla på. Men det är användaren
- som ska få konfigurera roxen");
-  
-  globvar("ConfigurationIPpattern","*", "Configuration interface: IP-Pattern", 
-	  TYPE_STRING|VAR_MORE,
-	  "Only clients running on computers with IP numbers matching "
-	  "this pattern will be able to use the configuration "
-	  "interface.");
-  deflocaledoc("svenska", "ConfigurationIPpattern",
-	       "Konfigurationsinterfacet: IPnummermönster",
-#"Bara klienters vars datorers IP-nummer matchar det här mönstret
-  kan ansluta till konfigurationsinterfacet. Ett normalt mönster är ditt lokala
-  C-nät, t.ex. 194.52.182.*.");
 
   globvar("User", "", "Change uid and gid to", TYPE_STRING,
 	  "When roxen is run as root, to be able to open port 80 "
@@ -506,7 +379,6 @@ normal grupper.");
 	  "What do the different clients support?\n<br>"
 	  "The default information is normally fetched from the file "+
 	  getcwd()+"etc/supports, and the format is:<pre>"
-	  //"<a href=$docurl/configuration/regexp.html>regular-expression</a>"
 	  "regular-expression"
 	  " feature, -feature, ...\n"
 	  "</pre>"
@@ -523,51 +395,53 @@ normal grupper.");
   reguljärt uttryck som matchar bäddrarens namn	funktion, funktion, ...
  </pre>Se filen server/etc/supports för en mer utförlig dokumentation");
 
-  globvar("audit", 0, "Audit trail", TYPE_FLAG,
+  globvar("audit", 0, "Logging: Audit trail", TYPE_FLAG,
 	  "If Audit trail is set to Yes, all changes of uid will be "
 	  "logged in the Event log.");
-  deflocaledoc("svenska", "audit", "Logga alla användaridväxlingar",
+  deflocaledoc("svenska", "audit", "Loggning: Logga alla användaridväxlingar",
 #"Om du slår på den är funktionen så kommer roxen logga i debugloggen (eller
 systemloggen om den funktionen används) så fort användaridt byts av någon
 anlending.");
 
 #if efun(syslog) 
-  globvar("LogA", "file", "Logging method", TYPE_STRING_LIST|VAR_MORE, 
+  globvar("LogA", "file", "Logging: Logging method", TYPE_STRING_LIST|VAR_MORE, 
 	  "What method to use for logging, default is file, but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
 	  "start script.",
 	  ({ "file", "syslog" }));
-  deflocaledoc("svenska", "LogA", "Loggningsmetod",
+  deflocaledoc("svenska", "LogA", "Loggning: Loggningsmetod",
 #"Hur ska roxens debug, fel, informations och varningsmeddelanden loggas?
   Normalt sätt så loggas de tilldebugloggen (logs/debug/defaul.1 etc), men de
   kan även skickas till systemloggen kan om du vill.",
 		 ([ "file":"loggfil",
 		    "syslog":"systemloggen"]));
   
-  globvar("LogSP", 1, "Syslog: Log PID", TYPE_FLAG,
+  globvar("LogSP", 1, "Logging: Log PID", TYPE_FLAG,
 	  "If set, the PID will be included in the syslog.", 0,
 	  syslog_disabled);
-  deflocaledoc("svenska", "LogSP", "Systemlogg: Logga roxens processid",
+  deflocaledoc("svenska", "LogSP", "Loggning: Logga roxens processid",
 		 "Ska roxens processid loggas i systemloggen?");
-  globvar("LogCO", 0, "Syslog: Log to system console", TYPE_FLAG,
+
+  globvar("LogCO", 0, "Logging: Log to system console", TYPE_FLAG,
 	  "If set and syslog is used, the error/debug message will be printed"
 	  " to the system console as well as to the system log.",
 	  0, syslog_disabled);
-  deflocaledoc("svenska", "LogCO", "Systemlogg: Logga till konsolen",
+  deflocaledoc("svenska", "LogCO", "Loggning: Logga till konsolen",
 	       "Ska roxen logga till konsolen? Om den här variabeln är satt "
 	       "kommer alla meddelanden som går till systemloggen att även "
 	       "skickas till datorns konsol.");
-  globvar("LogST", "Daemon", "Syslog: Log type", TYPE_STRING_LIST,
+
+  globvar("LogST", "Daemon", "Logging: Syslog type", TYPE_STRING_LIST,
 	  "When using SYSLOG, which log type should be used.",
 	  ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
 	     "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
 	  syslog_disabled);
-  deflocaledoc( "svenska", "LogST", "Systemlogg: Loggningstyp",
+  deflocaledoc( "svenska", "LogST", "Loggning: Systemloggningstyp",
 		"När systemloggen används, vilken loggningstyp ska "
 		"roxen använda?");
 		
-  globvar("LogWH", "Errors", "Syslog: Log what", TYPE_STRING_LIST,
+  globvar("LogWH", "Errors", "Logging: Log what to syslog", TYPE_STRING_LIST,
 	  "When syslog is used, how much should be sent to it?<br><hr>"
 	  "Fatal:    Only messages about fatal errors<br>"+
 	  "Errors:   Only error or fatal messages<br>"+
@@ -576,7 +450,7 @@ anlending.");
 	  "All:      Everything<br>",
 	  ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	  syslog_disabled);
-  deflocaledoc("svenska", "LogWH", "Systemlogg: Logga vad",
+  deflocaledoc("svenska", "LogWH", "Loggning: Logga vad till systemloggen",
 	       "När systemlogen används, vad ska skickas till den?<br><hr>"
           "Fatala:    Bara felmeddelenaden som är uppmärkta som fatala<br>"+
 	  "Fel:       Bara felmeddelanden och fatala fel<br>"+
@@ -589,12 +463,13 @@ anlending.");
 		  "Debug":"Debug", 
 		  "All":"Allt" ]));
 
-	       globvar("LogNA", "Roxen", "Syslog: Log as", TYPE_STRING,
+  globvar("LogNA", "Roxen", "Logging: Log as", TYPE_STRING,
 	  "When syslog is used, this will be the identification of the "
 	  "Roxen daemon. The entered value will be appended to all logs.",
 	  0, syslog_disabled);
+
   deflocaledoc("svenska", "LogNA", 
-	       "Systemlogg: Logga som",
+	       "Loggining: Logga som",
 #"När systemloggen används så kommer värdet av den här variabeln användas
   för att identifiera den här roxenservern i loggarna.");
 #endif
@@ -719,6 +594,12 @@ så här ofta. Tiden är angiven i dagar");
          "database. This is very useful for load balancing using multiple "
          "roxen servers, since the mysql database will handle "
           " synchronization"); 
+  deflocaledoc("svenska", "argument_cache_in_db",
+               "Argumentcache: Spara cachen i en databas",
+               "Om den här variabeln är satt så sparas argumentcachen i en "
+               "databas istället för filer. Det gör det möjligt att använda "
+               "multipla frontendor, dvs, flera separata roxenservrar som "
+               "serverar samma site" );
 
   globvar( "argument_cache_db_path", "mysql://localhost/roxen", 
           "Argument Cache: Database URL to use",
@@ -726,6 +607,9 @@ så här ofta. Tiden är angiven i dagar");
           "The database to use to store the argument cache",
           0,
           lambda(){ return !QUERY(argument_cache_in_db); });
+  deflocaledoc("svenska", "argument_cache_db_path",
+               "Argumentcache: Databas URL",
+               "Databasen i vilken argumentcachen kommer att sparas" );
 
   globvar( "argument_cache_dir", "../argument_cache/", 
           "Argument Cache: Cache directory",
@@ -733,11 +617,14 @@ så här ofta. Tiden är angiven i dagar");
           "The cache directory to use to store the argument cache."
           " Please note that load balancing is not available for most modules "
           " (such as gtext, diagram etc) unless you use a mysql database to "
-          "store the argument caches",
-          0,
-          lambda(){ return QUERY(argument_cache_in_db); });
-
-
+          "store the argument caches");
+  deflocaledoc("svenska", "argument_cache_dir",
+               "Argumentcache: Cachedirectory",
+               "Det directory i vilket cachen kommer att sparas. "
+               " Notera att lastbalansering inte fungerar om du inte sparar "
+               "cachen i en databas, och även om du sparar cachen i en "
+               "databas så kommer det fortfarande skrivas saker i det "
+               "här directoryt.");
 
 
   setvars(retrieve("Variables", 0));
@@ -772,17 +659,13 @@ så här ofta. Tiden är angiven i dagar");
 	perror("Unknown variable: "+c+"\n");
     }
   }
-  docurl=QUERY(docurl2);
-
 }
 
 
 static mapping __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
-// set global, but non-persistent, variables in Roxen. By using
-// these functions modules can "communicate" with one-another. This is
-// not really possible otherwise.
+// set global, but non-persistent, variables in Roxen.
 mixed set_var(string var, mixed to)
 {
   return __vars[var] = to;
@@ -791,65 +674,4 @@ mixed set_var(string var, mixed to)
 mixed query_var(string var)
 {
   return __vars[var];
-}
-
-
-// return the URL of the configuration interface. This is not as easy
-// as it sounds, unless the administrator has entered it somewhere.
-
-public string config_url()
-{
-  if(strlen(QUERY(ConfigurationURL)-" "))
-    return QUERY(ConfigurationURL)-" ";
-
-  array ports = QUERY(ConfigPorts), port, tmp;
-
-  if(!sizeof(ports)) return "CONFIG";
-
-  int p;
-  string prot;
-  string host;
-
-  foreach(ports, tmp)
-    if(tmp[1][0..2]=="ssl") 
-    {
-      port=tmp; 
-      break;
-    }
-
-  if(!port)
-    foreach(ports, tmp)
-      if(tmp[1]=="http") 
-      {
-	port=tmp; 
-	break;
-      }
-
-  if(!port) port=ports[0];
-
-  if(port[2] == "ANY")
-//  host = quick_ip_to_host( port[2] );
-// else
-  {
-#if efun(gethostname)
-    host = gethostname();
-#else
-    host = "127.0.0.1";
-#endif
-  }
-
-  switch(port[1][..2]) {
-  case "ssl":
-    prot = "https";
-    break;
-  case "ftp":
-    prot = "ftp";
-    break;
-  default:
-    prot = port[1];
-    break;
-  }
-  p = port[0];
-
-  return (prot+"://"+host+":"+p+"/");
 }

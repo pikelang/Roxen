@@ -1,14 +1,26 @@
-/* $Id: module.pike,v 1.46 1999/09/05 02:20:05 per Exp $ */
-
+/* $Id: module.pike,v 1.47 1999/10/04 15:11:54 per Exp $ */
 #include <module.h>
-
-#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
-#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+#include <request_trace.h>
 
 mapping (string:mixed *) variables=([]);
-
 object this = this_object();
-int module_type;
+
+constant module_type   = MODULE_PARSER;
+constant module_name   = "Unnamed module";
+constant module_doc    = "Undocumented";
+constant module_unique = 1;
+
+array register_module()
+{
+  return ({
+    module_type,
+    module_name,
+    module_doc,
+    0,
+    module_unique,
+  });
+}
+
 string fix_cvs(string from)
 {
   from = replace(from, ({ "$", "Id: "," Exp $" }), ({"","",""}));
@@ -75,6 +87,7 @@ void free_some_sockets_please(){}
 
 void start(void|int num, void|object conf) {}
 string status() {}
+
 
 string info(object conf)
 { 

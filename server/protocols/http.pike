@@ -1,31 +1,27 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.155 1999/09/29 20:25:10 kinkie Exp $
+// $Id: http.pike,v 1.156 1999/10/04 15:11:55 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.155 1999/09/29 20:25:10 kinkie Exp $";
+constant cvs_version = "$Id: http.pike,v 1.156 1999/10/04 15:11:55 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
-// int first;
-#if efun(gethrtime)
-# define HRTIME() gethrtime()
-# define HRSEC(X) ((int)((X)*1000000))
-# define SECHR(X) ((X)/(float)1000000)
-#else
-# define HRTIME() (predef::time())
-# define HRSEC(X) (X)
-# define SECHR(X) ((float)(X))
-#endif
+
+
 
 #ifdef PROFILE
+#define HRTIME() gethrtime()
+#define HRSEC(X) ((int)((X)*1000000))
+#define SECHR(X) ((X)/(float)1000000)
 int req_time = HRTIME();
 #endif
+
 #ifdef REQUEST_DEBUG
 int footime, bartime;
 #define DPERROR(X)	bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
@@ -44,6 +40,7 @@ constant find_supports = roxen.find_supports;
 constant version       = roxen.version;
 constant _query        = roxen.query;
 constant _time         = predef::time;
+constant find_configuration_for_url = roxen.find_configuration_for_url;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
@@ -529,26 +526,15 @@ private int parse_got()
 	    break;
 	  
 	  case "authorization":
-	    string *y;
 	    rawauth = contents;
-	    y = contents /= " ";
-	    if(sizeof(y) < 2)
-	      break;
-	    y[1] = decode(y[1]);
-	    realauth=y[1];
-	    if(conf && conf->auth_module)
-	      y = conf->auth_module->auth( y, this_object() );
-	    auth=y;
 	    break;
 	  
 	  case "proxy-authorization":
-	    string *y;
-	    y = contents /= " ";
+	    array y;
+	    y = contents / " ";
 	    if(sizeof(y) < 2)
 	      break;
 	    y[1] = decode(y[1]);
-	    if(conf && conf->auth_module)
-	      y = conf->auth_module->auth( y, this_object() );
 	    misc->proxyauth=y;
 	    break;
 	  
@@ -578,7 +564,7 @@ private int parse_got()
 	    
 	  case "extension":
 #ifdef DEBUG
-	    perror("Client extension: "+contents+"\n");
+          perror("Client extension: "+contents+"\n");
 #endif
 	  case "request-range":
 	    contents = lower_case(contents-" ");
@@ -1525,16 +1511,8 @@ void handle_request( )
   MARK_FD("HTTP handling request");
 
   array e;
-  if(conf)
-  {
-    if(e= catch(file = conf->handle_request( this_object() )))
-	internal_error( e );
-  } 
-  else if(!file&&(e=catch(file=roxen.configuration_parse(this_object())))) 
-  {
-    if(e==-1) return;
-    internal_error(e);
-  }
+  if(e= catch(file = conf->handle_request( this_object() )))
+    internal_error( e );
   send_result();
 }
 
@@ -1569,13 +1547,6 @@ void got_data(mixed fooid, string s)
   }
   
   
-#if 0
-  if(cache) 
-  {
-    raw = cache*""+s; 
-    cache = 0;
-  }
-#endif
   // If the request starts with newlines, it's a broken request. Really!
   //  sscanf(s, "%*[\n\r]%s", s);
   if(strlen(raw)) tmp = parse_got();
@@ -1598,15 +1569,40 @@ void got_data(mixed fooid, string s)
     return;
   }
 
-  if(conf)
+  conf = find_configuration_for_url( "http://"+misc->host+not_query,
+                                     this_object() );
+
+  if (rawauth) 
   {
-#ifndef DISABLE_VIRTUAL_HOSTING
-    // IP-Less support.
-    conf=roxen->find_site_for(this_object());
-#endif
-    conf->received += strlen(s);
-    conf->requests++;
+    /* Need to authenticate with the configuration */
+    array(string) y = rawauth / " ";
+    realauth = 0;
+    auth = 0;
+    if (sizeof(y) >= 2) 
+    {
+      y[1] = MIME.decode_base64(y[1]);
+      realauth = y[1];
+      if (conf->auth_module) 
+        y = conf->auth_module->auth(y, this_object());
+      auth = y;
+    }
   }
+
+
+  if( misc->proxyauth ) 
+  {
+    /* Need to authenticate with the configuration */
+    if (sizeof(misc->proxyauth) >= 2) 
+    {
+      misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
+      if (conf->auth_module) 
+        misc->proxyauthy
+          = conf->auth_module->auth(misc->proxyauth,this_object() );
+    }
+  }
+
+  conf->received += strlen(s);
+  conf->requests++;
 
   DPERROR("HTTP: Calling roxen.handle().");
 
@@ -1679,10 +1675,8 @@ void create(object f, object c)
     MARK_FD("HTTP connection");
     f->set_nonblocking(got_data, 0, end);
     my_fd = f;
-    conf = c;
-    //    my_fd->set_close_callback(end);
-    //    my_fd->set_read_callback(got_data);
-    // No need to wait more than 30 seconds to get more data.
+    if( c )
+      conf = c;
     call_out(do_timeout, 30);
     time = _time(1);
   }
@@ -1719,12 +1713,3 @@ void chain(object f, object c, string le)
     }
   }
 }
-
-// void chain(object fd, object conf, string leftovers)
-// {
-//   call_out(real_chain,0,fd,conf,leftovers);
-// }
-
-
-
-
