@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.3 2001/09/24 15:04:01 jhs Exp $
+// $Id: HTML.pmod,v 1.4 2001/09/25 15:26:01 nilsson Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
@@ -110,7 +110,7 @@ string simple_obox( array(array(string)) rows, void|string frame_color, void|str
 private string wrap_simple_obox( string rows, void|string frame_color,
 				 void|string width, void|string padding ) {
   if(!frame_color) frame_color = "#000000";
-  return "<table bgcolor='" + frame_color + "' cellspacing='0' cellpadding='0'><tr><td>\n"
+  return "<table bgcolor='" + frame_color + "' cellspacing='0' cellpadding='0' border='0'><tr><td>\n"
     "<table bgcolor='" + frame_color + "' cellspacing='" + (width||"1") + "' cellpadding='" +
     (padding||"3") + "' border='0'>\n" + rows + "</table></td></tr></table>";
 }
