@@ -16,9 +16,11 @@
 //
 private static __builtin.__master new_master;
 
+constant s = spider;
+
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.207 2000/09/26 23:11:32 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.208 2000/09/30 19:20:09 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -138,8 +140,6 @@ int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
-  spider;
-
   if(sizeof(args))
     format=sprintf(format,@args);
 
@@ -469,14 +469,14 @@ class Configuration
   RoxenModule get_provider(string provides);
   array(mixed) map_providers(string provides, string fun, mixed ... args);
   mixed call_provider(string provides, string fun, mixed ... args);
-  array(function) file_extension_modules(string ext, RequestID id);
-  array(function) url_modules(RequestID id);
+  array(function) file_extension_modules(string ext);
+  array(function) url_modules();
   mapping api_functions(void|RequestID id);
-  array(function) logger_modules(RequestID id);
-  array(function) last_modules(RequestID id);
-  array(function) first_modules(RequestID id);
-  array location_modules(RequestID id);
-  array(function) filter_modules(RequestID id);
+  array(function) logger_modules();
+  array(function) last_modules();
+  array(function) first_modules();
+  array location_modules();
+  array(function) filter_modules();
   void init_log_file();
   int|mapping check_security(function|object a, RequestID id, void|int slevel);
   void invalidate_cache();
@@ -715,20 +715,97 @@ class RequestID
   string host;
   //! The client's hostname, if resolved.
 
-  void create(object|void master_request_id);
-  void send(string|object what, int|void len);
-  string scan_for_query( string in );
-  void end(string|void s, int|void keepit);
-  void ready_to_receive();
-  void send_result(mapping|void result);
-  RequestID clone_me();
+  static void create(Stdio.File fd, Protocol port, Configuration conf){}
+  void send(string|object what, int|void len){}
 
-  Stdio.File connection( );
+  string scan_for_query( string f )
+  {
+    if(sscanf(f,"%s?%s", f, query) == 2)
+    {
+      string v, a, b;
+
+      foreach(query / "&", v)
+        if(sscanf(v, "%s=%s", a, b) == 2)
+        {
+          a = _Roxen.http_decode_string(replace(a, "+", " "));
+          b = _Roxen.http_decode_string(replace(b, "+", " "));
+
+          if(variables[ a ])
+            variables[ a ] +=  "\0" + b;
+          else
+            variables[ a ] = b;
+        } else
+          if(strlen( rest_query ))
+            rest_query += "&" + _Roxen.http_decode_string( v );
+          else
+            rest_query = _Roxen.http_decode_string( v );
+      rest_query=replace(rest_query, "+", "\000");
+    }
+    return f;
+  }
+
+  void end(string|void s, int|void keepit){}
+  void ready_to_receive(){}
+  void send_result(mapping|void result){}
+  RequestID clone_me()
+  {
+    object c,t;
+    c=object_program(t=this_object())(0, port_obj, conf);
+
+    // c->first = first;
+    c->port_obj = port_obj;
+    c->conf = conf;
+    c->time = time;
+    c->raw_url = raw_url;
+    c->variables = copy_value(variables);
+    c->misc = copy_value( misc );
+    c->misc->orig = t;
+
+    c->prestate = prestate;
+    c->supports = supports;
+    c->config = config;
+    c->client_var = client_var;
+
+    c->remoteaddr = remoteaddr;
+    c->host = host;
+
+    c->client = client;
+    c->referer = referer;
+    c->pragma = pragma;
+
+    c->cookies = cookies;
+    c->my_fd = 0;
+    c->prot = prot;
+    c->clientprot = clientprot;
+    c->method = method;
+
+    // realfile virtfile   // Should not be copied.
+    c->rest_query = rest_query;
+    c->raw = raw;
+    c->query = query;
+    c->not_query = not_query;
+    c->data = data;
+    c->extra_extension = extra_extension;
+
+    c->auth = auth;
+    c->realauth = realauth;
+    c->rawauth = rawauth;
+    c->since = since;
+    return c;
+  }
+
+  Stdio.File connection( )
   //! Returns the file descriptor used for the connection to the client.
+  {
+    return my_fd;
+  }
 
-  Configuration configuration();
+  Configuration configuration()
   //! Returns the <ref>Configuration</ref> object of the virtual server that
   //! is handling the request.
+  {
+    return conf;
+  }
 }
 
 
@@ -1026,10 +1103,8 @@ static private void initiate_cache()
   object cache;
   cache=((program)"base_server/cache")();
 
-#if constant(_Roxen)
   add_constant("http_decode_string", _Roxen.http_decode_string );
   add_constant("Stat", Stat);
-#endif
   add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
