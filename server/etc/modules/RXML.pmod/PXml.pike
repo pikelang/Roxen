@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.45 2000/04/05 14:13:33 mast Exp $
+//! $Id: PXml.pike,v 1.46 2000/06/23 16:54:26 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -59,6 +59,7 @@ static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
   {TagSetParser::create (ctx, type, tag_set, @args);}
 
 string html_context() {return low_parser::context();}
+string current_input() {return low_parser::current();}
 
 constant reset = 0;
 
@@ -165,8 +166,8 @@ static void create (
       foreach (tlist, RXML.Tag tag)
 	if (!tag->plugin_name && (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[[string] tag->name] =
-	    ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ==
-	     (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ?
+	    ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
+	     (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ?
 	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 #ifdef OLD_RXML_COMPAT
     }
@@ -204,17 +205,16 @@ static void create (
   lazy_entity_end (1);
   match_tag (0);
   splice_arg ("::");
+  xml_tag_syntax (2);
 
 #ifdef OLD_RXML_COMPAT
   if (not_compat) {
 #endif
-    xml_tag_syntax (2);
     _set_entity_callback (.utils.p_xml_entity_cb);
     set_quote_tag_cbs();
 #ifdef OLD_RXML_COMPAT
   }
   else {
-    xml_tag_syntax (1);
     case_insensitive_tag (1);
     ignore_unknown (1);
     ws_before_tag_name (1);
