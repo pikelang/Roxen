@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.52 2000/12/01 18:00:23 nilsson Exp $
+// $Id: global_variables.pike,v 1.53 2000/12/08 08:12:12 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -591,6 +591,9 @@ void define_global_variables(  )
 	 LOCALE(173, "Save the variable documentation strings as comments "
 		"in the configuration files. Only useful if you read or "
 		"edit the config files directly."));
+
+  defvar("global_position",
+	 Variable.Variable(0, VAR_INVISIBLE));
 }
 
 
