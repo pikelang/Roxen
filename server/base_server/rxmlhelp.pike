@@ -30,11 +30,11 @@ string mktable(array table) {
 string available_languages(object id) {
   string pl;
   if(id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
-    if(!roxen->languages[pl]) pl="en";
+    if(!has_value(roxen->list_languages(),pl)) pl="en";
   else
     pl="en";
-  mapping languages=roxen->languages[pl]->languages;
-  return mktable( map(indices(languages), lambda(string code) { return ({ code, languages[code] }); } ));
+  mapping languages=roxen->language_low(pl)->list_languages();
+  return mktable( map(sort(indices(languages)), lambda(string code) { return ({ code, languages[code] }); } ));
 }
 
 // --------------------- Help layout functions --------------------
@@ -62,9 +62,9 @@ private string attr_cont(string t, mapping m, string c)
 
 private string attr_vals(string v)
 {
-  if(search(v,",")!=-1) return "{"+(v/",")*", "+"}";
-  //FIXME Use real config url
-  if(v=="langcodes") return "<a href=\"/help/langcodes.pike\">language code</a>";
+  if(has_value(v,"|")) return "{"+(v/"|")*", "+"}";
+  // FIXME Use real config url
+  // if(v=="langcodes") return "<a href=\"/help/langcodes.pike\">language code</a>";
   return v;
 }
 
