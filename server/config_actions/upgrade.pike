@@ -1,11 +1,11 @@
 /*
- * $Id: upgrade.pike,v 1.3 1997/08/19 05:54:42 per Exp $
+ * $Id: upgrade.pike,v 1.4 1997/08/19 05:55:41 per Exp $
  */
 
 inherit "roxenlib";
 
-constant name= "Upgrade modules from roxen.com...";
-constant doc = "Search for new releases of all installed (or all used) modules.";
+constant name= "Upgrade components from roxen.com...";
+constant doc = "Selectively upgrade components from roxen.com.";
 
 mapping modules;
 
