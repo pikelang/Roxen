@@ -1,6 +1,6 @@
 #include <stat.h>
 #include <config.h>
-constant cvs_version="$Id: prototypes.pike,v 1.3 2001/01/14 10:25:18 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.4 2001/01/16 14:44:38 nilsson Exp $";
 
 class Variable
 {
@@ -138,7 +138,7 @@ class ModuleCopies
   {
     return values(copies);
   }
-  string _sprintf( ) { return "ModuleCopies()"; }
+  string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
 }
 
 class Configuration 
