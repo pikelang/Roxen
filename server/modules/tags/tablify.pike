@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.49 2000/04/30 02:58:03 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.50 2000/06/08 20:02:39 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -217,7 +217,8 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
 string _fields(string name, mapping arg, string q, mapping m)
 {
-  m->fields = q/(arg->separator||m->cellseparator||"\t");
+  m->fields = map(q/(arg->separator||m->cellseparator||"\t"),
+		  lambda(string field) { return String.trim_all_whites(field); });
   return "";
 }
 
