@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.300 1999/06/25 17:57:52 per Exp $
+ * $Id: roxen.pike,v 1.301 1999/06/27 16:04:48 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.300 1999/06/25 17:57:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.301 1999/06/27 16:04:48 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1895,16 +1895,14 @@ class ImageCache
 
   static void draw( string name, RequestID id )
   {
-    mixed args;
-    args = Array.map( Array.map( name/"¤", argcache->lookup ), frommapp);
-
+    mixed args = Array.map( Array.map( name/"$", argcache->lookup ), frommapp);
+    mapping meta;
+    string data;
     mixed reply = draw_function( @copy_value(args), id );
 
     if( arrayp( args ) )
       args = args[0];
 
-    mapping meta;
-    string data;
 
     if( objectp( reply ) || (mappingp(reply) && reply->img) )
     {
@@ -2003,7 +2001,8 @@ class ImageCache
             ct->ordered();
       }
 
-      if( !Image[upper_case( format )] || !Image[upper_case( format )]->encode )
+      if(!Image[upper_case( format )] 
+         || !Image[upper_case( format )]->encode )
         error("Image format "+format+" unknown\n");
 
       mapping enc_args = ([]);
@@ -2077,12 +2076,12 @@ class ImageCache
 
   static void store_data( string id, string data )
   {
-    Stdio.File f = Stdio.File(  dir+id, "wct" );
+    Stdio.File f = Stdio.File(  dir+id+".d", "wct" );
     if(!f) 
     {
       data_cache_insert( id, data );
       report_error( "Failed to open image cache persistant cache file "+
-                    dir+id+": "+strerror( errno() )+ "\n" );
+                    dir+id+".d: "+strerror( errno() )+ "\n" );
       return;
     }
     f->write( data );
@@ -2109,7 +2108,7 @@ class ImageCache
     else 
       f = Stdio.File( );
 
-    if(!f->open(dir+id, "r" ))
+    if(!f->open(dir+id+".d", "r" ))
       return 0;
 
     m = restore_meta( id );
@@ -2182,7 +2181,7 @@ class ImageCache
     if( mappingp( data ) )
       ci = argcache->store( data );
     else if( arrayp( data ) )
-      ci = Array.map( Array.map( data, tomapp ), argcache->store )*"¤";
+      ci = Array.map( Array.map( data, tomapp ), argcache->store )*"$";
     else
       ci = data;
     return ci;
