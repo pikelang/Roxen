@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.260 2000/02/16 07:10:15 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.261 2000/02/16 11:12:10 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2836,7 +2836,11 @@ private string get_my_url()
 
 void enable_all_modules()
 {
+  if( inited ) return; // already done
   inited = 1;
+
+  int start_time = gethrtime();
+  report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
   add_parse_module( (object)this_object() );
   enabled_modules = retrieve("EnabledModules", this_object());
@@ -2848,10 +2852,6 @@ void enable_all_modules()
 
   parse_log_formats();
   init_log_file();
-
-  int start_time = gethrtime();
-
-  report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
