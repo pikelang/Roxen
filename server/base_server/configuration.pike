@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.481 2001/09/04 05:42:33 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.482 2001/09/05 11:02:35 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -609,7 +609,10 @@ array (function) last_modules()
 static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
-  id->not_query = a[0]-":";
+  //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
+  //  e.g. "/internal-roxen-colorbar:x,y,z" and several others.
+  //  id->not_query = a[0]-":";
+  id->not_query = a[0];
   id->misc->fork_information = a[1..];
   return 0;
 }
