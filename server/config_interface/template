@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.112 2002/11/04 17:12:53 anders Exp $ -->
+<!-- $Id: template,v 1.113 2003/01/15 21:20:42 mast Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -42,8 +42,15 @@
    <tr>
      <td width="10"><img src="/internal-roxen-unit" width="10" height="1" alt="" /></td>
      <td ::="&usr.left-tableargs:none;">
-       <img src="/internal-roxen-unit" width="&usr.leftside-padwidth;" height="1" alt="" /><br />
-       &var.leftside:none;&var.leftimage:none;
+       <cset variable="var.left-content">&var.leftside:none;</cset>
+       <if variable="var.left-content is ?*">
+	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
+       </if>
+       <else>
+	 <set variable="var.leftside-padwidth" value="1"/>
+       </else>
+       <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="1" alt="" /><br />
+       &var.left-content:none;&var.leftimage:none;
      </td>
      <td ::="&usr.content-tableargs:none;">
        <contents/>
