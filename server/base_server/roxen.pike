@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.220 1998/07/13 20:34:47 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.221 1998/07/14 13:41:52 grubba Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -2367,6 +2367,7 @@ void exit_when_done()
     werror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
     add_constant("roxen", 0);	// Paranoia...
+    add_constant("roxenp", 0);	// Paranoia...
     exit(-1);	// Restart.
     // kill(getpid(), 9);
     // kill(0, -9);
