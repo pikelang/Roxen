@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.155 2001/03/20 15:18:55 noring Exp $
+# $Id: start,v 1.156 2001/03/23 03:39:52 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -156,6 +156,9 @@ parse_args() {
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
   ;;
+  --debug-log=*)
+   DEBUGLOG=`echo $1 | sed -e's/--debug-log=//'`
+  ;;
   --config-dir=*)
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
@@ -293,6 +296,9 @@ the default arguments.
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
 				  Defaults to .B../configurationsB..
+
+      .B--debug-log=FILEB.:           Use an alternate debuglog file.
+				  Defaults to .B../logs/debug/B.configdirname.B.1B..
 
       .B--pid-file=FILEB.:            Store the roxen and startscript pids in this
 				  file. Defaults to .B../configurations/_roxen_pidB..
@@ -596,7 +602,7 @@ start_roxen() {
     fi
 
     if [ "x$once" = "x" ]; then
-      $pike $args 2>>$LOGDIR/debug/$FILES.1 1>&2 &
+      $pike $args 2>>"${DEBUGLOG}.1" 1>&2 &
       ROXEN_PID=$!
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $! 2>/dev/null 1>&2
@@ -690,11 +696,15 @@ if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
     dp "Starting the Roxen WebServer."
   else :; fi
-  ./mkdir -p $LOGDIR/debug/
-
+  if [ "x$DEBUGLOG" = "x" ] ; then
+    DEBUGDIR="$LOGDIR/debug"
+    DEBUGLOG="$DEBUGDIR/$FILES"
+  else
+    DEBUGDIR="`dirname "$DEBUGLOG"`"
+  fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
-    dp "Storing the debug log in $LOGDIR/debug/$FILES.1"
+    dp "Storing the debug log in ${DEBUGLOG}.1"
     dp "You can use the administration interface in the server to see debug info."
   else :; fi
 
@@ -707,18 +717,18 @@ if [ -z "$once" ] ; then
       trap cleanup_pid_file 0
 
       while : ; do
-	if test -d "$LOGDIR/debug/."; then :; else
+	if test -d "$DEBUGDIR/."; then :; else
 	  # Avoid infinite loop if the debug directory is deleted.
 	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
-	  if ./mkdir -p "$LOGDIR/debug/"; then :; else
-	    dp "Failed to create log directory $LOGDIR/debug/."
+	  if ./mkdir -p "$DEBUGDIR"; then :; else
+	    dp "Failed to create log directory $DEBUGDIR."
 	    exit 1
 	  fi
 	fi
 
 	dp "Server start at `date`"
-	dp "Debug log in $LOGDIR/debug/$FILES.1"
-	rotate $LOGDIR/debug/$FILES
+	dp "Debug log in ${DEBUGLOG}.1"
+	rotate $DEBUGLOG
 	start_roxen
 
 	if [ "$exitcode" -eq "0" ] ; then
@@ -750,7 +760,7 @@ if [ -z "$once" ] ; then
     [ -z "$pidfile" ] || { echo "x" && echo $pid; } > $pidfile
     dp "Forked start script, pid $pid." 2>&3
     dp "Start script pid $pid."
-  ) 3>&2 </dev/null >"$LOGDIR/debug/start_$FILES.output" 2>&1; then
+  ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
   else
