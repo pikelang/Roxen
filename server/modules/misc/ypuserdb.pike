@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.9 1998/03/11 19:42:39 neotron Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.10 1998/05/23 13:54:34 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -53,9 +53,11 @@ string status()
 
 array(string) userinfo(string u)
 {
-  string s = domain->match("passwd.byname", u);
-  if (s) {
-    return(s/":");
+  if (sizeof(u)) {
+    string s = domain->match("passwd.byname", u);
+    if (s) {
+      return(s/":");
+    }
   }
   return(0);
 }
