@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.28 2003/06/26 09:21:42 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.29 2003/07/02 09:04:10 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -332,6 +332,7 @@ class TagLDAPplugin {
     array res;
     array rv = ({});
     string split = m->split || "\0";
+    NOCACHE();
 
     res=do_ldap_op("search", m, id);
 
@@ -377,7 +378,7 @@ class TagLDAPplugin {
        rv += ({ avalnew + ([ "_attributes": indices(avalnew)*split ]) });
      }
    } else
-     rv = ({([])});
+     rv = ({ });
 
    //LDAP_WERR(sprintf("emit search: rv: %O", rv));
    return(rv);
