@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.61 2000/02/08 21:31:21 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.62 2000/02/10 04:11:21 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -589,35 +589,6 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     return ({ String.implode_nicely(context->list_var(m->scope)) });
   }
 
-
-  //FIXME: Kill these ? --------------------------------
-  if(n = m->other) {
-    if(stringp(id->misc[n]) || intp(id->misc[n]))
-      return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
-    return rxml_error(tag, "No such other variable ("+n+").", id);
-  }
-
-  if(n = m->cookies)
-  {
-    NOCACHE();
-    if(n!="cookies")
-      return ({ html_encode_string(Array.map(indices(id->cookies),
-			  lambda(string s, mapping m)
-			  { return sprintf("%s=%O\n", s, m[s]); },
-					     id->cookies) * "\n")
-	      });
-    return ({ String.implode_nicely(indices(id->cookies)) });
-  }
-
-  if(n=m->cookie)
-  {
-    NOCACHE();
-    if(id->cookies[n])
-      return m->quote=="none"?id->cookies[n]:({ html_encode_string(id->cookies[n]) });
-    return rxml_error(tag, "No such cookie ("+n+").", id);
-  }
-  //FIXME: ------------------------------------------
-
   if(m->file)
   {
     if(m->nocache) {
@@ -810,6 +781,7 @@ array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
   id->misc->cacheable = (int)m->time;
   return ({ "" });
 }
+
 
 // ------------------- Containers ----------------
 
@@ -1500,10 +1472,6 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 
 </attr name=from value=string>
  The name of another variable that the value should be copied from.
-</attr>
-
-<attr name=other value=string>
- The name of a id->misc->variables that the value should be copied from.
 </attr>",
 
 "apre":#"<desc cont>
@@ -1932,24 +1900,12 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Inserts a variable listing.
 </attr>
 
-<attr name=cookies>
- Inserts a cookie listing.
-</attr>
-
-<attr name=cookie value=string>
- Inserts the value of that cookie.
-</attr>
-
 <attr name=file value=string>
  Inserts the contents of that file.
 </attr>
 
 <attr name=href value=string>
  Inserts the contents at that URL.
-</attr>
-
-<attr name=other value=string>
- Inserts a misc variable (id->misc->variables).
 </attr>
 
 <attr name=quote value=html,none>
