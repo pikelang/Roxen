@@ -14,11 +14,11 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.59 1998/01/21 16:25:25 grubba Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.60 1998/01/21 16:38:05 grubba Exp $";
 
 /*
  * name = "BG: Create bars";
- * doc = "Business Graphics sub-module for drawing bars."
+ * doc = "Business Graphics sub-module for drawing bars.";
  */
 
 /*
