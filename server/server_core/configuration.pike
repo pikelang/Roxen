@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.540 2002/10/23 20:39:10 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.541 2002/10/23 20:41:18 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -378,16 +378,20 @@ void unregister_urls()
 private int num_modules = 0;
 #ifdef THREADS
 private Thread.Condition modules_stopped = Thread.Condition();
+private Thread.Mutex modules_stopped_mutex = Thread.Mutex();
 #endif
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop && mod->stop()))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
-  if (!--num_modules)
 #ifdef THREADS
-    modules_stopped->signal()
+  Thread.MutexKey lock = modules_stopped_mutex->lock();
+  if (!--num_modules)
+    modules_stopped->signal();
+  lock = 0;
+#else
+  --num_modules;
 #endif
-      ;
 }
 
 void stop (void|int asynch)
@@ -445,15 +449,15 @@ void stop (void|int asynch)
 #undef STOP_MODULES
 
   if (!asynch) {
-    num_modules -= 17;
-    if (num_modules) {
 #ifdef THREADS
-      // Relying on the interpreter lock here.
-      modules_stopped->wait();
+    Thread.MutexKey lock = modules_stopped_mutex->lock();
+    num_modules -= 17;
+    if (num_modules) modules_stopped->wait (lock);
+    lock = 0;
 #else
+    if (num_modules != 17)
       error ("num_modules shouldn't be nonzero here when running nonthreaded.\n");
 #endif
-    }
   }
 }
 
@@ -2270,6 +2274,7 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
+  fake_id->conf = this_object();
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
