@@ -51,30 +51,22 @@
 -->
 
 <set variable='var.time'><date iso/></set>
-
 <theme-set what=left-image to="image.pike?&var.time;" themefile />
-
 <theme-set what=lefthtml to='<br /><br />' />
-
 <define variable="var.leftside"></define>
 
 <theme-set what=bgcolor   to="white"/>
 <theme-set what=fgcolor   to="black"/>
 <theme-set what=warncolor   to="#aa3c00"/>
 
-<!--
-<theme-set what=content-contentbackground to=contentbg.gif themefile />
-
-<theme-set what=content-extratableargs 
-           to="background='&usr.content-contentbackground;'" />
--->
 <theme-set what=content-toptableargs
            to="cellpadding='0' cellspacing='5'" />
 <theme-set what=split2-width to="0" />
 
 <theme-set what=linkcolor to="#425a84"/>
 
-<theme-set what=content-frame to="content-frame" />
+<theme-set what=content-frame to="box-frame" />
+<theme-set what=module-list-frame to="box-frame" />
 <theme-set what=list-style-boxes to="list-style-boxes" />
 
 <theme-set what=obox-titlefg to="#425a84"/>
