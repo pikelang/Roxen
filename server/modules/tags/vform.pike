@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.30 2001/10/01 09:21:35 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.31 2001/10/05 08:54:58 sara Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -605,9 +605,9 @@ constant tagdoc=([
 </attr>
 
 <attr name='mode' value='before|after|complex'><p>
- Select how to treat the contents of the vinput container. Before puts
- the contents before the input tag, and after puts it after, in the
- event of failed verification. If complex, use one tag
+ Select how to treat the contents of the vinput container. 
+ <i>Before</i> puts the contents before the input tag, and <i>after</i> 
+ puts it after, in the event of failed verification. If complex, use one tag
  <tag>verified</tag> for what should be outputted in the event of
  successful verification tag <tag>failed</tag> for every other event.</p>
 
@@ -627,7 +627,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='max' value='number'><p>
- Check that the number is at most the given. Only available when using
+ Check that the number is not greater than the given. Only available when using
  the type int or float.</p>
 </attr>
 
