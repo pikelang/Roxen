@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.18 2000/08/30 09:23:50 nilsson Exp $
+ * $Id: update.pike,v 1.19 2000/08/30 19:24:33 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -235,7 +235,7 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
   return "";
 }
 
-// <update-package-output>...</>
+// <update-package>...</>
 // Show information about one or several packages.
 // Arguments: package, reverse, type, limit
 class TagUpdatePackage {
@@ -246,11 +246,14 @@ class TagUpdatePackage {
     inherit RXML.Frame;
     mapping vars=([]);
     array res=({ });
+    string scope_name;
     int counter;
 
     array do_enter(RequestID id) {
       if(init_error)
 	return 0;
+
+      scope_name=args->scope;
 
       UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ "update-package",
 							 args, content }));
