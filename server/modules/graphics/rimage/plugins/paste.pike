@@ -11,7 +11,7 @@ void render(mapping args, mapping this, string channel, object id, object m)
   int yp = (int)args->ypos;
   
   if(a)
-    this[channel]->paste_mask( i, a, xp, yp );
+    this[channel] = this[channel]->paste_mask( i, a, xp, yp );
   else
-    this[channel]->paste( i, xp, yp );
+    this[channel] = this[channel]->paste( i, xp, yp );
 }
