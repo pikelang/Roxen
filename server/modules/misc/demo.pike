@@ -1,4 +1,4 @@
-// $Id: demo.pike,v 1.9 1999/07/27 19:43:24 js Exp $
+// $Id: demo.pike,v 1.10 1999/07/27 20:23:20 js Exp $
 //
 // (c) 1998 Idonex AB
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.9 1999/07/27 19:43:24 js Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.10 1999/07/27 20:23:20 js Exp $";
 
 void create()
 {
@@ -38,8 +38,9 @@ mixed *register_module()
 "<textarea name=_data cols=60 rows=14>%s</textarea>\n" \
 "<br><input type=submit name=_submit value=Clear> " \
 "<input type=submit value='    Show    '>\n" \
-"&nbsp;&nbsp;<input type=submit name=_submit value='Push'>\n"+\
-(sizeof(stack)?"<input type=submit name=_submit value='Pop'>":"")+\
+"<br><input type=submit name=_submit value='Push'>\n"+\
+(sizeof(stack)?"<input type=submit name=_submit value='Pop'>"\
+" <input type=submit name=_submit value='Swap'>":"")+\
 " (Stack size: "+sizeof(stack)+")\n"\
 "</form>\n" \
 "<table><tr><td>"\
@@ -95,6 +96,12 @@ No more bottles of beer on the wall";
     data=stack[0];
     mdb[ (int)f ] = data;
     stack=stack[1..];
+  }
+  else if(id->variables->_submit == "Swap")
+  {
+    string temp=data;
+    data=stack[0];
+    stack[0]=data;
   }
   else if (id->variables->_data)
   {
