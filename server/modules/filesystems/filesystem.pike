@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.47 1998/10/18 22:14:40 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.48 1999/01/13 23:25:25 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -354,10 +354,15 @@ mixed find_file( string f, object id )
 	if(sizeof(id->not_query) < 2)
 	  return 0;
 	redirects++;
-	TRACE_LEAVE("Redirecting to \"" +
-		    id->not_query[..sizeof(id->not_query)-2] +
-		    "\"");
-	return http_redirect(id->not_query[..sizeof(id->not_query)-2], id);
+
+	// Note: Keep the query part.
+	/* FIXME: Should probably keep prestates etc too.
+	 *	/grubba 1999-01-14
+	 */
+	string new_query = id->not_query[..sizeof(id->not_query)-2] +
+	  (id->query?("?" + id->query):"");
+	TRACE_LEAVE("Redirecting to \"" + new_query + "\"");
+	return http_redirect(new_query, id);
       }
 
       if(!id->misc->internal_get && QUERY(.files)
