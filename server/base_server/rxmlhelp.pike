@@ -80,6 +80,10 @@ private string noex_cont(string t, mapping m, string c) {
 
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
+  c=Parser.HTML()->add_container("ent", lambda(string t, mapping m, string c) {
+					  return "&"+c+";"; 
+					} )
+    ->feed(c)->read();
   string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   if(m->type=="box")
     return "<br />"+mktable( ({ ({ quoted }) }) );
