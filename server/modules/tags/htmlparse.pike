@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.162 1999/02/01 03:35:41 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.163 1999/02/16 19:47:56 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -961,6 +961,18 @@ string sexpr_eval(string what)
   array q = what/"";
   what = "mixed foo(){ return "+(q-(q-permitted))*""+";}";
   return (string)compile_string( what )()->foo();
+}
+
+array(string) tag_scope(string tag, mapping m, string contents, object id)
+{
+  mapping old_variables = id->variables;
+  id->variables = ([]);
+  if (m->extend) {
+    id->variables += old_variables;
+  }
+  contents = parse_rxml(contents, id);
+  id->variables = old_variables;
+  return ({ contents });
 }
 
 string tag_set( string tag, mapping m, object id )
@@ -3390,6 +3402,7 @@ mapping query_container_callers()
 	   "autoformat":tag_autoformat,
 	   "random":tag_random,
 	   "define":tag_define,
+	   "scope":tag_scope,
 	   "right":tag_right,
 	   "client":tag_client,
 	   "if":tag_if,
