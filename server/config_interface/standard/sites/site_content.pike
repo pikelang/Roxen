@@ -188,9 +188,9 @@ string buttons( Configuration c, string mn, RequestID id )
 	  else
 	    m_delete(conf->error_log, error);
       }
-      mod->error_log=([ log_msg : ({ flush_time }) ]);// Flush from module log
-      conf->error_log[log_msg]  = ({ flush_time });  // Kilroy was in the global log
-      roxen->error_log[log_msg] = ({ flush_time }); // and in the virtual server log
+      mod->error_log=([ log_msg : ({flush_time}) ]);// Flush from module log
+      conf->error_log[log_msg] +=({flush_time});  // Kilroy was in the global log
+      roxen->error_log[log_msg]+=({flush_time}); // and in the virtual server log
     }
     else if(mod->query_action_buttons) {
       mapping buttons=mod->query_action_buttons("standard");
@@ -511,8 +511,35 @@ string parse( RequestID id )
        res += "</td></tr></table><br />";
 
 
+       if( id->variables[ LOCALE(247, "Clear Log")+".x" ] )
+       {
+	 foreach( values(conf->modules), object m )
+	   foreach( values( m ), RoxenModule md )
+	     md->error_log = ([]);
+	 foreach( indices( conf->error_log ), string error )
+	 {
+	   array times = conf->error_log[error];
 
+	   // Flush from global log:
+	   if(array left = roxen->error_log[error])
+	     if(sizeof(left -= times))
+	       roxen->error_log[error] = left;
+	     else
+	       m_delete(roxen->error_log, error);
+	 }
+	 conf->error_log = ([]);
+	 roxen->nwrite( 
+	   sprintf(LOCALE(290,"Site event log for '%s' "
+			  "cleared by %s (%s) from %s"),
+		   conf->query_name(),
+		   id->misc->config_user->real_name,
+		   id->misc->config_user->name,
+		   id->misc->config_settings->host),
+	   0, 2, 0, conf);
+       }
        res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
+       if( sizeof( conf->error_log ) )
+	 res+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
        return res+"<br />\n";
     }
   } else
