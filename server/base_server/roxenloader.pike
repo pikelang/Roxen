@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.68 1998/04/30 15:25:28 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.69 1998/05/01 21:20:53 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -445,7 +445,7 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 
 #if constant(Process.create_process)
 
-#ifdef MODULE_DEBUG
+#ifdef DEBUG
   report_debug(sprintf("SPAWN_PIKE: Creating process( %O, %O)...\n",
 		       ({ pikebin }) + preargs + args, ([
 			 "toggle_uid":1,
@@ -455,7 +455,7 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 			 "cwd":wd,
 			 "env":getenv()
 		       ])));
-#endif /* MODULE_DEBUG */
+#endif /* DEBUG */
 
   object proc = Process.create_process(({ pikebin }) + preargs + args, ([
     "toggle_uid":1,
