@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.58 2001/01/04 06:02:14 nilsson Exp $
+// $Id: cache.pike,v 1.59 2001/01/10 16:12:40 per Exp $
 
 #pragma strict_types
 
@@ -171,7 +171,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
 void cache_clean()
 {
   remove_call_out(cache_clean);
-  int gc_time=[int]roxenp()->query("mem_cache_gc");
+  int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
   string a, b;
   array c;
   int t=time(1);
