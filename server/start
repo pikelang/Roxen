@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.195 2002/06/03 20:36:10 per Exp $
+# $Id: start,v 1.196 2002/06/05 00:13:51 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -560,46 +560,26 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
 fi
 
 # Extra module-path
-#if [ -d etc/modules ]; then
-  DEFINES="$DEFINES \"-M$roxendir/etc/modules\""
-#fi
+DEFINES="$DEFINES \"-M$roxendir/pike_modules\""
 
 # Extra include-path
-#if [ -d etc/include ]; then
-  DEFINES="$DEFINES \"-I$roxendir/etc/include\""
-#fi
+DEFINES="$DEFINES \"-I$roxendir/etc/include\""
 
+# Extra program-path
+DEFINES="$DEFINES \"-Pbase_server\" \"-P`pwd`\""
+
+# Support for adding local pike-modules
+
+# Extra module-path
+if [ -d "$LOCALDIR/pike_modules/." ]; then
+  DEFINES="$DEFINES \"-M$LOCALDIR/pike_modules\""
+fi
+
+# Extra include-path
 if [ -d "$LOCALDIR/include/." ]; then
   DEFINES="$DEFINES \"-I$LOCALDIR/include\""
 fi
 
-# Extra include-path (2)
-#if [ -d base_server ]; then
-  DEFINES="$DEFINES \"-I$roxendir/base_server\""
-#fi
-
-if [ -d "$LOCALDIR/base_server/." ]; then
-  DEFINES="$DEFINES \"-I$LOCALDIR/base_server\" \"-P$LOCALDIR/base_server\""
-fi
-
-# Extra program-path
-DEFINES="$DEFINES \"-P`pwd`\""
-
-# Support for adding local pike-modules
-if [ -d "$LOCALDIR/etc/." ]; then
-  # Extra module-path
-  if [ -d "$LOCALDIR/etc/modules/." ]; then
-    DEFINES="$DEFINES \"-M$LOCALDIR/etc/modules\""
-  fi
-
-  # Extra include-path
-  if [ -d "$LOCALDIR/etc/include/." ]; then
-    DEFINES="$DEFINES \"-I$LOCALDIR/etc/include\""
-  fi
-
-  # Extra program-path
-  DEFINES="$DEFINES \"-P$LOCALDIR/etc\""
-fi
 
 # Extra kludge for HPUX
 # HPUX doesn't like group 60001(nobody)
@@ -787,7 +767,7 @@ fi
 
 PIKEVERSION="`\"$pike\" --version 2>&1|head -1`"
 LS="`ls -lL \"$pike\" 2>/dev/null`"
-LS="$LS `find etc/modules -ls 2>/dev/null`"
+LS="$LS `find pike_modules -ls 2>/dev/null`"
 LS="$LS `find base_server -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
