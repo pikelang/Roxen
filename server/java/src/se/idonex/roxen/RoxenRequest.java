@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenRequest.java,v 1.3 2000/01/12 04:50:36 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.4 2000/02/03 22:55:17 marcus Exp $
  *
  */
 
@@ -25,6 +25,11 @@ public class RoxenRequest {
   private native Map getRequestHeaders();
   private native Set getSupports();
   private native Set getPragma();
+
+  public final RoxenConfiguration configuration()
+  {
+    return conf;
+  }
 
   public synchronized Map variables()
   {
