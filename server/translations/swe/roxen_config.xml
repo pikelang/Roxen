@@ -307,7 +307,7 @@ modul ska laddas. Directorynamnen kan vara relativa från biblioteket där Roxen s
 och de kommer att sökas igenom i den ordning som de står i listan.</t>
 
 <!-- [134] "Client supports regexps" -->
-<t id="134">Bläddrarfunktionalitetsdatabas</t>
+<t id="134">Webbläsares funktionalitet</t>
 
 <!-- [135] "What do the different clients support?
 &lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your roxen directory." -->
@@ -318,8 +318,8 @@ och de kommer att sökas igenom i den ordning som de står i listan.</t>
  <pre>
   reguljärt uttryck 	funktion, funktion
   reguljärt uttryck 	funktion, funktion
-  ...
- </pre>Se filen server/etc/supports för en mer utförlig dokumentation
+  ...</pre>
+Se filen server/etc/supports för en mer utförlig dokumentation
 </t>
 
 <!-- [136] "Logging: Audit trail" -->
@@ -342,13 +342,13 @@ kan även skickas till systemloggen om du vill.</t>
 <t id="140">Loggning: Logga Roxens processid</t>
 
 <!-- [141] "If set, the PID will be included in the syslog." -->
-<t id="142">Ska roxens processid loggas i systemloggen?</t>
+<t id="142">Ska Roxens processid loggas i systemloggen?</t>
 
 <!-- [142] "Logging: Log to system console" -->
 <t id="142">Loggning: Logga till konsolen</t>
 
 <!-- [143] "If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log." -->
-<t id="143">Ska roxen logga till konsolen? Om den här variabeln är satt
+<t id="143">Ska Roxen logga till konsolen? Om den här variabeln är satt
 kommer alla meddelanden som går till systemloggen att även
 skickas till systemets konsol.</t>
 
@@ -492,23 +492,23 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <!-- [bA] "Save" -->
 <t id="bA">Spara</t>
 
-<!-- [bB] "Ok" -->
-<t id="bB">Ok</t>
+<!-- [201] "Ok" -->
+<t id="201">Ok</t>
 
-<!-- [bC] "Cancel" -->
-<t id="bC">Avbryt</t>
+<!-- [202] "Cancel" -->
+<t id="202">Avbryt</t>
 
-<!-- [bD] "Next" -->
-<t id="bD">Nästa</t>
+<!-- [203] "Next" -->
+<t id="203">Nästa</t>
 
-<!-- [bE] "Administration Interface" -->
-<t id="bE">Admingränssnittet</t>
+<!-- [204] "Administration Interface" -->
+<t id="204">Admingränssnittet</t>
 
-<!-- [bF] "Language" -->
-<t id="bF">Språk</t>
+<!-- [205] "Language" -->
+<t id="205">Språk</t>
 
-<!-- [bG] "User" -->
-<t id="bG">Användare</t>
+<!-- [206] "User" -->
+<t id="206">Användare</t>
 
 <!-- [12] "Priority" -->
 <t id="12">Prioritet</t>
@@ -702,7 +702,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID; du
 <t id="28">Loggning: Aktiverad</t>
 
 <!-- [29] "Log requests" -->
-<t id="2">Ska roxen logga alla förfrågningar till en logfil?</t>
+<t id="29">Ska Roxen logga alla förfrågningar till en logfil?</t>
 
 <!-- [30] "Logging: Log file" -->
 <t id="30">Loggning: Loggfil</t>
@@ -844,53 +844,53 @@ multiplicera detta värde med den här faktorn.</t>
 <!-- [cw] "and" -->
 <t id="cw">och</t>
 
-<!-- [cx] "every" -->
-<t id="cx">var</t>
+<!-- [207] "every" -->
+<t id="207">var</t>
 
-<!-- [cy] "since" -->
-<t id="cy">sedan</t>
+<!-- [208] "since" -->
+<t id="208">sedan</t>
 
-<!-- [cz] "Notice" -->
-<t id="cz">Notis</t>
+<!-- [209] "Notice" -->
+<t id="209">Notis</t>
 
-<!-- [cA] "Warning" -->
-<t id="cA">Varning</t>
+<!-- [210] "Warning" -->
+<t id="210">Varning</t>
 
-<!-- [cB] "Error" -->
-<t id="cB">Fel</t>
+<!-- [211] "Error" -->
+<t id="211">Fel</t>
 
-<!-- [cC] "Admin" -->
-<t id="cC">Admin</t>
+<!-- [212] "Admin" -->
+<t id="212">Admin</t>
 
-<!-- [cD] "Sites" -->
-<t id="cD">Sajter</t>
+<!-- [213] "Sites" -->
+<t id="213">Sajter</t>
 
-<!-- [cE] "Globals" -->
-<t id="cE">Globala</t>
+<!-- [214] "Globals" -->
+<t id="214">Globala</t>
 
-<!-- [cF] "Ports" -->
-<t id="cF">Portar</t>
+<!-- [215] "Ports" -->
+<t id="215">Portar</t>
 
-<!-- [cG] "Events" -->
-<t id="cG">Loggbok</t>
+<!-- [216] "Events" -->
+<t id="216">Loggbok</t>
 
 <!-- [196] "Tasks" -->
 <t id="196">Funktioner</t>
 
-<!-- [cI] "Docs" -->
-<t id="cI">Manual</t>
+<!-- [217] "Docs" -->
+<t id="217">Manual</t>
 
-<!-- [cJ] "Startpage" -->
-<t id="cJ">Startsida</t>
+<!-- [218] "Startpage" -->
+<t id="218">Startsida</t>
 
-<!-- [cK] "Update" -->
-<t id="cK">Uppdatera</t>
+<!-- [219] "Update" -->
+<t id="219">Uppdatera</t>
 
-<!-- [cL] "Your Settings" -->
-<t id="cL">Inställningar</t>
+<!-- [220] "Your Settings" -->
+<t id="220">Inställningar</t>
 
-<!-- [cM] "Users" -->
-<t id="cM">Användare</t>
+<!-- [221] "Users" -->
+<t id="221">Användare</t>
 
 <!-- [cN] "Add Module" -->
 <t id="cN">Addera modul</t>
@@ -901,32 +901,32 @@ multiplicera detta värde med den här faktorn.</t>
 <!-- [cQ] "Reload" -->
 <t id="cQ">Ladda om</t>
 
-<!-- [cR] "Clear Log" -->
-<t id="cR">Töm loggbok</t>
+<!-- [247] "Clear Log" -->
+<t id="247">Töm loggbok</t>
 
 <!-- [cT] "Request status" -->
 <t id="cT">Trafikstatus</t>
 
 <!-- [cU] "Inherit tree" -->
-<t id="cU">Arvsträd</t>
+<t id="cU">Struktur</t>
 
-<!-- [cV] "Settings" -->
-<t id="cV">Inställningar</t>
+<!-- [256] "Settings" -->
+<t id="256">Inställningar</t>
 
-<!-- [cW] "Modules" -->
-<t id="cW">Moduler</t>
+<!-- [257] "Modules" -->
+<t id="257">Moduler</t>
 
-<!-- [cX] "Add module" -->
-<t id="cX">Addera modul</t>
+<!-- [258] "Add module" -->
+<t id="258">Addera modul</t>
 
-<!-- [cY] "Drop module" -->
-<t id="cY">Ta bort modul</t>
+<!-- [259] "Drop module" -->
+<t id="259">Ta bort modul</t>
 
-<!-- [cZ] "Create new site" -->
-<t id="cZ">Skapa ny sajt</t>
+<!-- [248] "Create new site" -->
+<t id="248">Skapa ny sajt</t>
 
-<!-- [c0] "Drop old site" -->
-<t id="c0">Radera sajt</t>
+<!-- [249] "Drop old site" -->
+<t id="249">Radera sajt</t>
 
 <!-- [174] "Show documentation" -->
 <t id="174">Visa dokumentationen</t>
@@ -1022,46 +1022,46 @@ moduler på samma gång.</dd>
 
 <!-- [dt] "Administrator logged on as %s from %s.
 " -->
-<t id="dt">Administratör inloggad som %s från %s.</t>
+<t id="dt">Administratör loggade in som %s från %s.</t>
 
-<!-- [du] "Character encoding" -->
-<t id="du">Teckenkodning</t>
+<!-- [262] "Character encoding" -->
+<t id="262">Teckenkodning</t>
 
-<!-- [dv] "Send pages to client in this character encoding." -->
-<t id="dv">Sänd sidor till klienter i den här teckenuppsättningen.</t>
+<!-- [263] "Send pages to client in this character encoding." -->
+<t id="263">Sänd sidor till klienter i den här teckenuppsättningen.</t>
 
-<!-- [dw] "Mountpoint" -->
-<t id="dw">Monteringspunkt</t>
+<!-- [264] "Mountpoint" -->
+<t id="264">Monteringspunkt</t>
 
-<!-- [dx] "Usually / is a good idea" -->
-<t id="dx">Vanligtvis /</t>
+<!-- [265] "Usually / is a good idea" -->
+<t id="265">Vanligtvis /</t>
 
 <!-- [dy] "Permission denied" -->
 <t id="dy">Tillträde nekas</t>
 
-<!-- [dz] "Empty" -->
-<t id="dz">Tom</t>
+<!-- [250] "Empty" -->
+<t id="250">Tom</t>
 
-<!-- [dA] "Create new user" -->
-<t id="dA">Skapa ny användare</t>
+<!-- [222] "Create new user" -->
+<t id="222">Skapa ny användare</t>
 
-<!-- [dB] "Delete old user" -->
-<t id="dB">Radera användare</t>
+<!-- [223] "Delete old user" -->
+<t id="223">Radera användare</t>
 
-<!-- [dC] "Create User" -->
-<t id="dC">Skapa användare</t>
+<!-- [224] "Create User" -->
+<t id="224">Skapa användare</t>
 
-<!-- [dD] "User ID" -->
-<t id="dD">Användar ID</t>
+<!-- [225] "User ID" -->
+<t id="225">Användar ID</t>
 
-<!-- [dE] "Delete" -->
-<t id="dE">Ta bort</t>
+<!-- [227] "Delete" -->
+<t id="227">Ta bort</t>
 
-<!-- [dF] "Normal" -->
-<t id="dF">Normal</t>
+<!-- [245] "Normal" -->
+<t id="245">Normal</t>
 
-<!-- [dG] "Reversed" -->
-<t id="dG">Reverserad</t>
+<!-- [246] "Reversed" -->
+<t id="246">Reverserad</t>
 
 <!-- [dH] "Not available." -->
 <t id="dH">Ej tillgänglig.</t>
@@ -1069,93 +1069,96 @@ moduler på samma gång.</dd>
 <!-- [dI] "All available fonts" -->
 <t id="dI">Alla tillgängliga typsnitt</t>
 
-<!-- [dJ] "Example text" -->
-<t id="dJ">Exempeltext</t>
+<!-- [236] "Example text" -->
+<t id="236">Exempeltext</t>
 
-<!-- [dK] "Jackdaws love my big sphinx of quartz." -->
-<t id="dK"></t>
+<!-- [237] "Jackdaws love my big sphinx of quartz." -->
+<t id="237"></t>
 
-<!-- [dL] "Features" -->
-<t id="dL"></t>
+<!-- [238] "Features" -->
+<t id="238"></t>
 
 <!-- [dM] "Disabled modules" -->
 <t id="dM">Icke tillgängliga moduler</t>
 
-<!-- [dN] "All modules" -->
-<t id="dN">Alla moduler</t>
+<!-- [239] "All modules" -->
+<t id="239">Alla moduler</t>
 
-<!-- [dP] "Name" -->
-<t id="dP">Namn</t>
+<!-- [240] "Name" -->
+<t id="240">Namn</t>
 
-<!-- [dQ] "State" -->
-<t id="dQ">Status</t>
+<!-- [241] "State" -->
+<t id="241">Status</t>
 
-<!-- [dR] "Disabled" -->
-<t id="dR">Inaktiv</t>
+<!-- [242] "Disabled" -->
+<t id="242">Inaktiv</t>
 
-<!-- [dS] "N/A" -->
-<t id="dS"></t>
+<!-- [243] "N/A" -->
+<t id="243"></t>
 
-<!-- [dT] "Enabled" -->
-<t id="dT">Aktiv</t>
+<!-- [244] "Enabled" -->
+<t id="244">Aktiv</t>
 
-<!-- [dU] "Status" -->
-<t id="dU">Status</t>
+<!-- [228] "Status" -->
+<t id="228">Status</t>
 
-<!-- [dV] "Maintenance" -->
-<t id="dV">Underhåll</t>
+<!-- [229] "Maintenance" -->
+<t id="229">Underhåll</t>
 
-<!-- [dW] "SSL" -->
-<t id="dW">SSL</t>
+<!-- [230] "SSL" -->
+<t id="230">SSL</t>
 
-<!-- [dX] "Debug information" -->
-<t id="dX">Debuginformation</t>
+<!-- [231] "Debug information" -->
+<t id="231">Debuginformation</t>
 
-<!-- [dY] "All memory caches have been flushed." -->
-<t id="dY">Alla minnescachar har rensats.</t>
+<!-- [232] "All memory caches have been flushed." -->
+<t id="232">Alla minnescachar har rensats.</t>
 
-<!-- [dZ] "Roxen will restart automatically." -->
-<t id="dZ">Roxen kommer starta om automatiskt</t>
+<!-- [233] "Roxen will restart automatically." -->
+<t id="233">Roxen kommer starta om automatiskt</t>
 
-<!-- [d0] "You might see the old process for a while in the process table
+<!-- [234] "You might see the old process for a while in the process table
 when doing 'ps' or running 'top'. This is normal. Roxen waits for a
 while for all connections to finish, the process will go away after at
 most 15 minutes." -->
-<t id="d0">Det är möjligt att den gamla processen ligger kvar ett tag.
+<t id="234">Det är möjligt att den gamla processen ligger kvar ett tag.
 Detta är normalt. Roxen väntar ett tag på att alla anslutningar ska avslutas,
 processen försvinner efter senast 15 minuter.</t>
 
-<!-- [d1] "Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically." -->
-<t id="d1">Roxen kommer &lt;b&gt;inte&lt;/b&gt; starta om automatiskt." --></t>
+<!-- [235] "Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically." -->
+<t id="235">Roxen kommer &lt;b&gt;inte&lt;/b&gt; starta om automatiskt." --></t>
 
 <!-- [d2] "Urls" -->
 <t id="d2">URL:er</t>
 
+<!-- [255] "Disabling old configuration %s
+" -->
+<t id="255">Tar bort server %s
+</t>
 
 
 <pike>
 
-  string full_status(string real_version, int boot_time, int time_to_boot,
-		     int days, int hrs, int min, int sec, string sent_data,
-		     float kbps, string sent_headers, int num_requests,
-		     float rpm, string received_data) {
+   string full_status(string real_version, int boot_time,
+       		   int days, int hrs, int min, int sec, string sent_data,
+		   float kbps, string sent_headers, int num_requests,
+		   float rpm, string received_data) {
     return(sprintf("<table>"
 		   "<tr><td><b>Version:</b></td><td colspan=2>%s</td></tr>\n"
 		   "<tr><td><b>Startad:</b></td><td colspan=2>%s</td></tr>\n"
-		   "<tr><td><b>Upstarttid:</b></td>"
-		   "<td>%d s</td></tr>\n"
-		   "<tr><td><b>Upptid:</b></td>"
-		   "<td colspan=2>%d dag%s, %02d:%02d:%02d</td></tr>\n"
-		   "<tr><td colspan=3>&nbsp;</td></tr>\n"
-		   "<tr><td><b>Sänd data:</b></td><td>%s"
-		   "</td><td>%.2f Kbit/s</td></tr><tr>\n"
-		   "<td><b>Sända headrar:</b></td><td>%s</td></tr>\n"
-		   "<tr><td><b>Antal förfrågningar:</b></td>"
-		   "<td>%8d</td><td>%.2f/min</td></tr>\n"
-		   "<tr><td><b>Emottagen data:</b></td>"
-		   "<td>%s</td></tr>\n"
+		   "<tr><td><b>Drifttid:</b></td>"
+		 "<td colspan=\"2\">%d dag%s, %02d:%02d:%02d</td></tr>\n"
+		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
+		 "<tr><td><b>Sänd data:</b></td><td>%s"
+		 "</td><td>%.2f Kbit/sek</td></tr><tr>\n"
+		 "<td><b>Skickade headers:</b></td><td>%s</td></tr>\n"
+
+		 "<tr><td><b>Antal förfrågningar:</b></td>"
+		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
+		 "<tr><td><b>Mottagen data:</b></td>"
+		 "<td>%s</td></tr>\n"
 		   "</table>",
-		   real_version, ctime(boot_time), time_to_boot,
+		   real_version, ctime(boot_time), 
 		   days, (days==1?"":"ar"), hrs, min, sec,
 		   sent_data, kbps, sent_headers,
 		   num_requests, rpm, received_data));

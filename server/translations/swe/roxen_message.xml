@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>roxen_message</project>
+<language>Swedish</language>
+<file>../base_server/roxen.pike</file>
+<file>../base_server/configuration.pike</file>
+<added id="1"/>
+
+<!-- [1] "Change to %s(%d):%d privs wanted (%s), from %s" -->
+<t id="1">Ändrade privilegierna till de önskade %s(%d):%d (%s), från %s</t>
+
+<!-- [2] "Privs: WARNING: Failed to set the effective group id to %d!
+Check that your password database is correct for user %s(%d),
+ and that your group database is correct.
+" -->
+<t id="2">Privilegier: VARNING: Misslyckades med att sätta effektivt gruppid till %d!
+Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare %s(%d) stämmer.</t>
+
+<!-- [3] "Change back to uid#%d gid#%d, from %s
+" -->
+<t id="3">Bytte tillbaka till användarid#%d gruppid#%d, från %s</t>
+
+<!-- [4] "Change back to uid#%d gid#%d, from backend
+" -->
+<t id="4">Bytte tillbaka till användarid#%d gruppid#%d, från systemet</t>
+
+<!-- [5] "Uncaught error in handler thread: %sClient will not get any response from Roxen.
+" -->
+<t id="5">Ofångat fel i en hanterartåd: %sKlienten kommer inte att få något svar från Roxen.
+</t>
+
+<!-- [6] "Failed to bind %s://%s:%d/ (%s)
+" -->
+<t id="6">Misslyckades med att binda %s://%s:%d/ (%s)
+</t>
+
+<!-- [7] "Protocol" -->
+<t id="7">Protokoll</t>
+
+<!-- [8] "SSL3: Reading cert-file failed!
+" -->
+<t id="8">SSL3: Kunde ej läsa cert-filen!</t>
+
+<!-- [9] "SSL3: Reading key-file failed!
+" -->
+<t id="9">SSL3: Kunde ej läsa nyckelfilen!</t>
+
+<!-- [10] "ssl3: No certificate found.
+" -->
+<t id="10">SSL3: Hittade inget certifikat.
+</t>
+
+<!-- [11] "SSL3: Private rsa key not valid (PEM).
+" -->
+<t id="11">SSL3: Privat rsa-nyckel ej giltig (PEM).
+</t>
+
+<!-- [12] "SSL3: Private rsa key not valid (DER).
+" -->
+<t id="12">SSL3: Privat rsa-nyckel ej giltig (PER).
+</t>
+
+<!-- [13] "SSL3: Certificate not valid (DER).
+" -->
+<t id="13">SSL3: Certifikatet ogiltigt (DER).
+</t>
+
+<!-- [14] "SSL3: Certificate and private key do not match.
+" -->
+<t id="14">SSL3: Certifikat och nyckel stämmer inte överrens.
+</t>
+
+<!-- [15] "SSL3: Private dsa key not valid (PEM).
+" -->
+<t id="15">SSL3: Privat dsa-nyckel ogiltig (PEM).
+</t>
+
+<!-- [16] "SSL3: Private dsa key not valid (DER).
+" -->
+<t id="16">SSL3: Privat dsa-nyckel ogiltig (DER).
+</t>
+
+<!-- [17] "SSL3: No private key found.
+" -->
+<t id="17">SSL3: Hittade ingen privat nyckel.
+</t>
+
+<!-- [18] "No SSL support available
+" -->
+<t id="18">SSL-stöd saknas</t>
+
+<!-- [19] "Bad URL '%s' for server `%s'
+" -->
+<t id="19">Felaktig URL '%s' för server `%s'
+</t>
+
+<!-- [20] "Cannot register URL %s, already registered by %s!
+" -->
+<t id="20">Kan ej registera URL %s, redan använd av %s!
+</t>
+
+<!-- [21] "Cannot register URL %s, cannot find the protocol %s!
+" -->
+<t id="21">Kan ej registrera URL %s, protokollet %s okänt!
+</t>
+
+<!-- [22] "Binding the port on IP %s failed
+   for URL %s!
+" -->
+<t id="22">Misslyckades med att binda porten på IP %s åt URL %s!
+</t>
+
+<!-- [23] "Cannot register URL %s!
+" -->
+<t id="23">Kan ej registrera URL %S!
+</t>
+
+<!-- [24] "It is only possible to change uid and gid if the server is running as root.
+" -->
+<t id="24">Det går endast att ändra användar-/grupp-id om servern körs av root.
+</t>
+
+<!-- [25] "Failed to set gid.
+" -->
+<t id="25">Misslyckades med att sätta gruppid.
+</t>
+
+<!-- [26] "Setting gid not supported on this system.
+" -->
+<t id="26">Systemet stödjer ej ändring av gruppid.
+</t>
+
+<!-- [27] "Failed to set uid.
+" -->
+<t id="27">Misslyckades med att sätta användarid.
+</t>
+
+<!-- [28] "Setting uid not supported on this system.
+" -->
+<t id="28">Systemet stödjer ej ändring av användarid.
+</t>
+
+<!-- [29] "Failed to set effective gid.
+" -->
+<t id="29">Misslyckades med att sätta effektivt gruppid.
+</t>
+
+<!-- [30] "Setting effective gid not supported on this system.
+" -->
+<t id="30">Systemet stödjer ej ändring av effektivt gruppid.
+</t>
+
+<!-- [31] "Failed to set effective uid.
+" -->
+<t id="31">Misslyckades med att sätta effektivt användarid.
+</t>
+
+<!-- [32] "Setting effective uid not supported on this system.
+" -->
+<t id="32">Systemet stödjer ej ändring av effektivt användarid.
+</t>
+
+<!-- [33] "Error while enabling configuration %s%s" -->
+<t id="33">Fel vid aktivering av server %s%s</t>
+
+<!-- [34] "Disabling old configuration %s
+" -->
+<t id="34">Tar bort server %s</t>
+
+<!-- [35] "
+Error while loading configuration %s:
+%s
+" -->
+<t id="35">
+Fel vid inläsning av konfiguration %s:
+%s
+</t>
+
+<!-- [36] "Error while loading modules in configuration %s:
+%s
+" -->
+<t id="36">
+Fel vid inladdning av moduler till server %s:
+%s
+</t>
+
+<!-- [37] "Failed to open logfile" -->
+<t id="37">Misslyckades med att öppna loggfil</t>
+
+<!-- [38] "No authorization module" -->
+<t id="38">Ingen auktoriseringsmodul</t>
+
+<!-- [39] "Error during module security check" -->
+<t id="39">Fel vid säkerhetskontollen i modulen</t>
+
+<!-- [40] "failed for module %O:
+%s
+" -->
+<t id="40">misslyckades i modul %O:
+%s
+</t>
+
+<!-- [41] "Error while initiating module copy of %s%s" -->
+<t id="41">Fel vid instansiering av modulkopia av %s%s</t>
+
+<!-- [42] "Failed to disable module:
+No module by that name: "%s".
+" -->
+<t id="42">Misslyckades med att ta bort modulen:
+Kunde inte hitta någon modul "%s".
+</t>
+
+<!-- [43] "Failed to disable module "%s".
+" -->
+<t id="43">Misslyckades med att ta bort modul "%s".
+</t>
+
+<!-- [44] "Error while disabling module %s%s" -->
+<t id="44">Fel vid borttagande av modul %s%s</t>
+
+<!-- [45] "Failed to enable the module %s. Skipping.
+%s" -->
+<t id="45">Misslyckades med att aktivera modulen %s, skippar den.</t>
+
+
+<pike>
+
+  string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {
+    return("Sätter uid till "+uid+" ("+uname+")"+
+	   (gname ? " och gid till "+gid+" ("+gname+")" : "")+" permanent.\n");
+  }
+
+  string setting_uid_gid(int uid, int gid, string uname, string gname) {
+    return("Sätter uid till "+uid+" ("+uname+")"+
+	   (gname ? " och gid till "+gid+" ("+gname+")" : "")+".\n");
+  }
+
+</pike>
