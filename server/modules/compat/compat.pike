@@ -1,4 +1,4 @@
-// Old RXML Compatibility Module Copyright 2000 (c) Idonex
+// Old RXML Compatibility Module Copyright © 2000, Roxen IS.
 //
 
 inherit "module";
@@ -20,7 +20,6 @@ constant language = roxen->language;
 constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
 constant module_name   = "Old RXML Compatibility Module";
 constant module_doc    = "Adds support for old (deprecated) RXML tags and attributes.";
-constant module_unique = 1;
 
 void create()
 {
@@ -199,7 +198,7 @@ array|string tag_append(string tag, mapping m, RequestID id)
       mixed value=context->user_get_var(m->variable, m->scope);
       // Append the value of a misc variable to an enityt variable.
       if (!id->misc->variables || !id->misc->variables[ m->other ])
-	return rxml_error(tag, "Other variable doesn't exist.", id);
+	RXML.run_error("Other variable doesn't exist.");
       if (value)
 	value+=id->misc->variables[ m->other ];
       else
@@ -217,7 +216,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   if(m->add || m->drop) return ({1});
 
   if (!(m->to && sizeof (m->to)))
-    return rxml_error(tag, "Requires attribute \"to\".", id);
+    RXML.parse_error("Requires attribute \"to\".");
 
   multiset(string) orig_prestate = id->prestate;
   multiset(string) prestate = (< @indices(orig_prestate) >);
@@ -274,7 +273,7 @@ string|array tag_set(string tag, mapping m, RequestID id)
 	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
 	return ({""});
       }
-      return rxml_error(tag, "Other variable doesn't exist.", id);
+      RXML.run_error("Other variable doesn't exist.");
     }
     if (m->eval) {
       // Set an entity variable to the result of some evaluated RXML
@@ -330,7 +329,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     m_delete(m, "name");
     if(id->misc->defines[n])
       return ({ do_replace(id->misc->defines[n], m, id) });
-    return rxml_error(tag, "No such define ("+n+").", id);
+    RXML.run_error("No such define ("+n+").");
   }
 
   if(n = m->variable)
@@ -345,7 +344,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     old_rxml_warning(id, "other attribute in insert tag","only regular variables");
     if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
-    return rxml_error(tag, "No such other variable ("+n+").", id);
+    RXML.run_error("No such other variable ("+n+").");
   }
 
   if(n = m->cookies)
@@ -370,7 +369,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       string cookie=do_replace(id->cookies[n], m, id);
       return m->quote=="none"?cookie:({ html_encode_string(cookie) });
     }
-    return rxml_error(tag, "No such cookie ("+n+").", id);
+    RXML.run_error("No such cookie ("+n+").");
   }
 
   if(m->file)
@@ -378,14 +377,16 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      n=API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
+      n=API_read_file(id,m->file);
+      if(!n) RXML.run_error("No such file ("+m->file+").");
       id->pragma["no-cache"] = nocache;
       m_delete(m, "nocache");
       m_delete(m, "file");
       return do_replace(n, m, id);
     }
-    string|int n=API_read_file(id,m->file);
-    return n?do_replace(n, m-(["file":""]), id):rxml_error("insert", "No such file ("+m->file+").", id);
+    string n=API_read_file(id,m->file);
+    if(!n) RXML.run_error("No such file ("+m->file+").");
+    return do_replace(n, m-(["file":""]), id);
   }
 
   return ({1});
@@ -444,7 +445,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      return rxml_error(tag, "It is not possible to add configs to absolute URLs.", id);
+      RXML.parse_error("It is not possible to add configs to absolute URLs.");
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
@@ -703,7 +704,7 @@ string|array(string) tag_realfile(string tag, mapping m, RequestID id)
   old_rxml_warning(id ,"realfile tag","&page.realfile;");
   if(id->realfile)
     return ({ id->realfile });
-  return rxml_error(tag, "Real file unknown", id);
+  RXML.run_error("Real file unknown");
 }
 
 string|array(string) tag_vfs(string tag, mapping m, RequestID id)
@@ -711,7 +712,7 @@ string|array(string) tag_vfs(string tag, mapping m, RequestID id)
   old_rxml_warning(id ,"vfs tag","&page.virtroot;");
   if(id->virtfile)
     return ({ id->virtfile });
-  return rxml_error(tag, "Virtual file unknown.", id);
+  RXML.run_error("Virtual file unknown.");
 }
 
 array(string) tag_accept_language(string tag, mapping m, RequestID id)
@@ -769,6 +770,14 @@ array container_elif(string t, mapping m, string c, RequestID id) {
   return ({ 1, "elseif", m, c });
 }
 
+array tag_set_max_cache(string t, mapping m, RequestID id) {
+  if(m->time) {
+    id->misc->cacheable = (int)m->time;
+    return ({""});
+  }
+  return ({1});
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -795,6 +804,7 @@ mapping query_tag_callers() {
     "file":tag_file,
     "realfile":tag_realfile,
     "vfs":tag_vfs,
+    "set-max-cache":tag_set_max_cache,
     "accept-language":tag_accept_language
   ]);
   return active;
