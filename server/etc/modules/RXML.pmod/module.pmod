@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.126 2001/01/24 19:49:10 mast Exp $
+//! $Id: module.pmod,v 1.127 2001/02/11 03:02:13 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -901,30 +901,48 @@ class Context
   //! subindexes. If var cannot be split a default scope is chosen as
   //! appropriate. Returns an array where the first entry is the
   //! scope, and the remaining entries are the list of indexes. Note
-  //! that the array contains only one entry if var is the empty
-  //! string.
+  //! that the function must not be called with an empty string. The
+  //! function also assumes that var does not contain any newlines.
   //!
   //! A ".." in the var string quotes a literal ".", e.g.
   //! "yow...cons..yet" is separated into "yow." and "cons.yet". Any
   //! subindex that can be parsed as a signed integer is converted to
   //! it. Note that it doesn't happen for the first index, since a
   //! variable in a scope always is a string.
+  //!
+  //! If the var contains a ".." but no "." it is assumed that the
+  //! user wants to create a new entity, e.g. using "&foo..bar;" to
+  //! produce "&foo.bar;" in the output data. In these cases this
+  //! function returns an array with only one element; the unquoted
+  //! entity name, in the example ({ "foo.bar" }). Note that this
+  //! behavior is slightly counter intuitive since e.g.
+  //! <insert variable="foo"/> inserts the value of the variable
+  //! _.foo, while <insert variable="foo..x"/> inserts the text
+  //! "&foo.x;".
   {
 #ifdef OLD_RXML_COMPAT
     if (compatible_scope)
       return ({scope_name || "form", var});
 #endif
 
-    array(string|int) splitted = sizeof (var) ?
-      Array.map(
-	replace(var, ({"..", "\0"}), ({"\0p", "\0\0"})) / ".",
-	lambda(string in) { return replace(in, ({"\0p", "\0\0"}), ({".", "\0"})); }) :
-      ({});
+    array(string|int) splitted;
+    if(has_value(var, ".."))
+      splitted = Array.map(replace(var, "..", "\n") / ".",
+			   lambda(string in) {
+			     return replace(in, "\n", ".");
+			   });
+    else
+      splitted = var / ".";
+
 
     if (scope_name)
       splitted = ({scope_name}) + splitted;
-    else if (sizeof (splitted) < 2)
-      splitted = ({"_"}) + splitted;
+    else if (sizeof (splitted) == 1) { 
+      if(has_value(splitted[0], "."))
+	return splitted;
+      else
+	splitted = ({"_"}) + splitted;
+    }
 
     for (int i = 2; i < sizeof (splitted); i++)
       if (sscanf (splitted[i], "%d%*c", int d) == 1) splitted[i] = d;
@@ -963,6 +981,7 @@ class Context
   {
     if(!var || !sizeof(var)) return ([])[0];
     array(string|int) splitted = parse_user_var (var, scope_name);
+    if(sizeof(splitted)==1) return "&"+splitted[0]+";";
     return get_var (splitted[1..], splitted[0], want_type);
   }
 
@@ -1022,6 +1041,7 @@ class Context
   {
     if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
     array(string|int) splitted = parse_user_var (var, scope_name);
+    if(sizeof(splitted)==1) parse_error ("Not a valid entity (&%O;).\n", var);
     return set_var(splitted[1..], val, splitted[0]);
   }
 
@@ -1071,6 +1091,7 @@ class Context
   {
     if(!var || !sizeof(var)) return;
     array(string|int) splitted = parse_user_var (var, scope_name);
+    if(sizeof(splitted)==1) return;
     delete_var(splitted[1..], splitted[0]);
   }
 
