@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.13 1998/09/12 20:24:06 js Exp $
+ * $Id: clientlayer.pike,v 1.14 1998/09/12 20:44:21 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.13 1998/09/12 20:24:06 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.14 1998/09/12 20:44:21 per Exp $";
 constant thread_safe=1;
 
 
@@ -61,27 +61,28 @@ mapping (program:mapping(int:object)) object_cache = ([]);
 
 /* (local) Utility functions   ---------------------------------------- */
 
-local string encode_binary( mixed what )
+string encode_binary( mixed what )
 {
   return sql_quote( MIME.encode_base64( encode_value( what ), 1 ) );
 }
 
-local mixed decode_binary( string what )
+mixed decode_binary( string what )
 {
   return decode_value( MIME.decode_base64( what ) );
 }
 
-local mapping filter_headers( mapping from ) 
+mapping filter_headers( mapping from ) 
 {
   mapping res = ([]);
   if(from->subject) res->subject = from->subject;
   if(from->from) res->from = from->from;
   if(from->to) res->to = from->to;
   if(from->date) res->date = from->date;
+//   werror("Filtered headers are %O\n", res);
   return res;
 }
 
-local string encode_headers( mapping from )
+string encode_headers( mapping from )
 {
   string res="";
   foreach(indices(from), string f)
@@ -89,53 +90,52 @@ local string encode_headers( mapping from )
   return res;
 }
 
-local string read_headers_from_fd( Stdio.File fd )
+string read_headers_from_fd( Stdio.File fd )
 {
+  fd->seek( 0 );
   string q = "", w;
+  int pos;
   do {
     w = fd->read(1024);
     q+=w;
-  } while(strlen(w) && (search(q, "\r\n\r\n")==-1)
-	  && (search(q, "\n\n")==-1));
-  return q[..search(q, "\n\n")];
+  } while(strlen(w)
+	  && ((pos=search(q, "\r\n\r\n"))==-1)
+	  && ((pos=search(q, "\n\n"))==-1));
+
+  return q[..pos-1];
 }
 
-local Sql.sql get_sql()
+Sql.sql get_sql()
 {
   return sql->get() || sql->set(Sql.sql(query("db_location")));
 }
 
-local array(mapping(string:string)) squery(string fmt, mixed ... args)
+array(mapping(string:string)) squery(string fmt, mixed ... args)
 {
-  return sql_query(sprintf(fmt, @args));
+  return get_sql()->query( sprintf(fmt, @args) );
 }
 
-local array(mapping(string:string)) sql_query(string query_string)
-{
-  return get_sql()->query( query_string );
-}
-
-local string sql_insert_mapping(mapping m)
+string sql_insert_mapping(mapping m)
 {
   string pre="",post="";
   foreach(indices(m), string q)
   {
-    pre += "'"+quote(q)+"',";
-    post += "'"+quote(m[q])+"',";
+    pre += q+",";
+    post += "'"+quote((string)m[q])+"',";
   }
   return sprintf("( %s ) VALUES ( %s )", 
 		 pre[..strlen(pre)-2], post[..strlen(post)-2]);
 }
 
 
-local string quote(string what)
+string quote(string what)
 {
   return get_sql()->quote(what);
 } 
 
-local function sql_quote = quote;
+function sql_quote = quote;
 
-local string hash_body_id(string body_id)
+string hash_body_id(string body_id)
 {
   body_id="0000"+body_id;
   int p=sizeof(body_id)-4;
@@ -145,7 +145,7 @@ local string hash_body_id(string body_id)
 Stdio.File load_body_get_obj(string body_id)
 {
   Stdio.File o = Stdio.File();
-  if(o->open( query("maildir")+"/"+body_id,"r" ))
+  if(o->open( query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id,"r" ))
     return o;
   return 0;
 }
@@ -154,8 +154,8 @@ string get_unique_body_id()
 {
   string id;
   object key = lock->lock(); /* Do this transaction locked. */
-  sql_query("update message_body_id set last=last+1");
-  id=sql_query("select last from message_body_id where 1=1")[0]->last;
+  squery("update message_body_id set last=last+1");
+  id=squery("select last from message_body_id where 1=1")[0]->last;
   destruct(key);
   return id;
 }
@@ -213,13 +213,16 @@ class Common
     serial++;
   }
 
+  static mapping cached_misc = ([]);
   final static mixed misc_get(string table, string var)
   {
+    if(!zero_type(cached_misc[var])) return cached_misc[var];
     array(mapping) a;
-    a=squery("select data from %s where id=%s and variable='%s'", 
-	     table, id, var);
+    a=squery("select qwerty from %s where id=%s and variable='%s'", 
+	     table, (string)id, var);
     if(sizeof(a))
-      return decode_binary( a[0]->data );
+      return cached_misc[var]=decode_binary( a[0]->data );
+    return cached_misc[var]=0;
   }
 
   final static mixed misc_set(string table, string name, mixed to)
@@ -227,9 +230,11 @@ class Common
     modify();
     name = sql_quote( name );
     string enc = encode_binary( to );
-    squery("delete from %s where id=%s and variable='%s'", table, id, name);
-    squery("insert into %s values (%s,'%s','%s')", table, id, name, enc);
-    return to;
+    squery("delete from %s where id=%s and variable='%s'", table, 
+	   (string)id, name);
+    squery("insert into %s values (%s,'%s','%s')", table, 
+	   (string)id, name, enc);
+    return cached_misc[name]=to;
   }
 }
 
@@ -265,6 +270,14 @@ class Mail
     return body_fd()->read();
   }
 
+  mapping decoded_headers(int|void force)
+  {
+    mapping heads = copy_value(headers(force));
+    foreach(indices(heads), string w)
+      heads[w] = column(Array.map( heads[w]/" ", MIME.decode_word ),0)*" ";
+    return heads;
+  }
+
   mapping headers(int|void force)
   {
     mapping h = get_mail_headers( message_id );
@@ -277,6 +290,7 @@ class Mail
   {
     if(!_flags || force)
       return _flags = get_mail_flags( id );
+    return _flags;
   }
 
   void set_flag(string name)
@@ -294,8 +308,8 @@ class Mail
 
   void create(string i, string m, object mb)
   {
-    id = i;
-    message_id = m;
+    id = (string)i;
+    message_id = (string)m;
     user = mb->user;
     mailbox = mb;
   }
@@ -305,16 +319,16 @@ class Mailbox
 {
   inherit MIME.Message;
   inherit Common;
-  static array _mails = ({ });
+  static array _mail = 0;
 
   object user;
   string name;
 
   void remove_mail(Mail mail)
   {
-    if(search(mails()->message_id, mail->message_id) != -1)
+    if(search(mail()->message_id, mail->message_id) != -1)
     {
-      _mails = 0; // No optimization, for safety...
+      _mail = 0; // No optimization, for safety...
       destruct( mail );
       modify( );
       remove_mailbox_from_mail( mail->message_id, id );
@@ -323,12 +337,12 @@ class Mailbox
 
   Mail add_mail(Mail mail, int|void nocopy)
   {
-    if(search(mails()->message_id, mail->message_id) == -1)
+    if(search(mail()->message_id, mail->message_id) == -1)
     {
-      _mails = 0;
+      _mail = 0;
       modify();
       add_mailbox_to_mail( mail->message_id, id );
-      foreach(mails(), Mail m)
+      foreach(mail(), Mail m)
 	if(m->message_id == mail->message_id)
 	{
 	  if(!nocopy)
@@ -349,7 +363,7 @@ class Mailbox
     
   void delete()
   {
-    foreach(mails, object m)
+    foreach(mail, object m)
     {
       m->_mboxes -= ({ this_object() });
       m->modify();
@@ -366,15 +380,20 @@ class Mailbox
     return name||(name=get_mailbox_name( id ));
   }
 
-  array(Mail) mails(int|void force)
+  array(Mail) mail(int|void force)
   {
-    if(!force && _mails) 
-      return _mails;
+    if(!force && _mail)
+      return _mail;
     mapping q = list_mail( id );
-    _mails = ({ });
-    foreach(sort(indices(q)), string w)
-      _mails += ({ get_any_obj( w, Mail, q[w], this_object()) });
-    return _mails;
+    _mail = ({ });
+//     werror("mail=%O\n", q);
+    foreach(indices(q), string w)
+      _mail += ({ get_any_obj( (string)w, Mail, 
+			       (string)q[w], this_object()) });
+    
+    sort((array(int))_mail->message_id, _mail);
+
+    return _mail;
   }
 
 
@@ -385,7 +404,7 @@ class Mailbox
     mapping row = ([
       "sender":headers->from,
       "subject":headers->subject,
-      "body_id":headers->bodyid,
+      "body_id":bodyid,
       "headers":encode_headers(filter_headers(headers)),
     ]);
 
@@ -396,29 +415,33 @@ class Mailbox
     add_mailbox_to_mail( mid, id );
     
     // 4> Zap the cache.
-    _mails = 0;
+    _mail = 0;
     modify();
 
-    // 5> Find this new message in the mails() array.
-    foreach(mails(), Mail m)
-      if(m->message_id == mid)
+    // 5> Find this new message in the mail() array.
+    foreach(mail(), Mail m)
+      if((string)m->message_id == (string)mid)
 	return m;
 
     // Oups. This should not happend. :-)
-    error("Failed to find newly created message in message array!\n");
+    error(sprintf("Failed to find newly created message (%s) in "
+		  "array (%s) for mbox %s!\n", mid, 
+		  String.implode_nicely((array(string))mail()->message_id),
+		  (string)id));
   }
 
   Mail create_mail_from_fd( Stdio.File fd )
   {
     string foo = read_headers_from_fd( fd );
     mapping headers = parse_headers( foo )[0];
+//     werror("Parsed headers are %O\n", headers);
     string bodyid = get_unique_body_id();
     fd->seek( 0 );
     Stdio.File f = new_body( bodyid );
     do 
     {
       foo = fd->read( 8192 );
-      if( f->write( foo ) != 8192 )
+      if( f->write( foo ) != strlen(foo) )
 	error("Failed to write body.\n");
     } while(strlen(foo) == 8192);
     f->close();
@@ -457,7 +480,7 @@ class User
   inherit Common;
   array _mboxes;
 
-  local static Mailbox create_mailbox( string name )
+  static Mailbox create_mailbox( string name )
   {
     _mboxes = 0;
     modify();
@@ -472,6 +495,11 @@ class User
   mixed set(string name, mixed to)
   {
     return misc_set("user_misc", name, to);
+  }
+
+  string query_name(int|void force)
+  {
+    return 0;
   }
 
   array(Mailbox) mailboxes(int|void force)
@@ -518,7 +546,7 @@ User get_user( string username_at_host, string password )
   return get_any_obj( id, User );
 }
 
-User get_user_from_adress( string username_at_host )
+User get_user_from_address( string username_at_host )
 {
   int id;
   id = find_user( username_at_host );
@@ -580,16 +608,19 @@ string get_user_realname(int user_id)
 
 int find_user( string username_at_host )
 {
-  [string user, string domain]=get_addr(lower_case(username_at_host))/"@";
-  int customer_id;
-  array a = squery("select customer_id from dns where domain='%s'");
-  if(!sizeof(a)) return 0;
-  customer_id=(int)a[0]->customer_id;
-  array a = squery("select user_id from users where username='%s' and customer_id='%d'",
-		   user,customer_id);
-  if(!sizeof(a)) return 0;
-  if(sizeof(a)>1) error("Ambigious user list.\n");
-  return (int)a[0]->user_id;
+  catch {
+    [string user, string domain]=get_addr(lower_case(username_at_host))/"@";
+    int customer_id;
+    array a = squery("select customer_id from dns where domain='%s' "
+		     " group by customer_id", domain);
+    if(!sizeof(a)) return 0;
+    customer_id=(int)a[0]->customer_id;
+    array a = squery("select id from users where username='%s' and"
+		     " customer_id='%d'", user,customer_id);
+    if(!sizeof(a)) return 0;
+    if(sizeof(a)>1) error("Ambigious user list.\n");
+    return (int)a[0]->id;
+  };
 }
 
 int authenticate_user(string username_at_host, string passwordcleartext)
@@ -597,8 +628,9 @@ int authenticate_user(string username_at_host, string passwordcleartext)
   int id = find_user( username_at_host );
   if(!id) return 0;
   array a=squery("select password from users where id='%d'", id);
-  if(!sizeof(a))
-    return 0;
+//   if(!sizeof(a))
+//     return 0;
+//   return (passwordcleartext == a[0]->password) && id;
   return crypt(passwordcleartext, a[0]->password) && id;
 }
 
@@ -614,15 +646,11 @@ mapping(string:int) list_mailboxes(int user)
 
 mapping(string:string) list_mail(int mailbox_id)
 {
-  // CHECKME: Is this correct?
-  array a=squery("select m.id from mail as l, messages as m where "
-		" l.mailbox_id='%d' and m.id=l.id order by m.id",
+  array a=squery("select m.id as m,l.id as l from mail as l, messages as m"
+		 " where l.mailbox_id='%d' and m.id=l.message_id"
+		 " order by m.id",
 		 mailbox_id);
-  return mkmapping(column( a, "l.id" ), column( a, "m.id" ));
-//   array mail=({});
-//   foreach(a, mapping row)
-//     mail+=({ (int)row->id });
-//   return mail;
+  return mkmapping(column( a, "l" ), column( a, "m" ));
 }
 
 mapping(string:mixed) get_mail(string message_id)
@@ -675,14 +703,15 @@ int delete_mail(string mail_id)
 
 int create_user_mailbox(int user, string mailbox)
 {
-  squery("insert into mailboxes values(NULL,'%s','%s')",
+  squery("insert into mailboxes values(NULL,'%d','%s')",
 	 user,sql_quote(mailbox));
   return (int)get_sql()->master_sql->insert_id();
 }
 
 string create_message(mapping mess)
 {
-  sql_query("insert into messages "+sql_insert_mapping( mess ));
+  werror(sql_insert_mapping( mess ));
+  get_sql()->query("insert into messages "+sql_insert_mapping( mess ));
   return (string)get_sql()->master_sql->insert_id();
 }
 
