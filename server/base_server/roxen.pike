@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.527 2000/08/19 01:39:37 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.528 2000/08/21 12:01:10 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3686,18 +3686,18 @@ static mapping(string:function) compiled_formats = ([ ]);
 
 constant formats = 
 ({
-  ({ "ip_number",   "%s",   "request_id->remoteaddr",0 }),
+  ({ "ip_number",   "%s",   "(string)request_id->remoteaddr",0 }),
   ({ "bin-ip_number","%s",  "host_ip_to_int(request_id->remoteaddr)",0 }),
   ({ "cern_date",   "%s",   "Roxen.cern_http_date( time( 1 ) )",0 }),
   ({ "bin-date",    "%4c",  "time(1)",0 }),
-  ({ "method",      "%s",   "request_id->method",0 }),
-  ({ "resource",    "%s",   "request_id->raw_url", 0 }),
-  ({ "full_resource","%s",  "request_id->raw_url",0 }),
-  ({ "protocol",    "%s",   "request_id->prot",0 }),
-  ({ "response",    "%d",   "(file->error || 200)",0 }),
-  ({ "bin-response","%2c",  "(file->error || 200)",0 }),
-  ({ "length",      "%d",   "file->len",0 }),
-  ({ "bin-length",  "%4c",  "file->len",0 }),
+  ({ "method",      "%s",   "(string)request_id->method",0 }),
+  ({ "resource",    "%s",   "(string)(request_id->raw_url||request_id->not_query)", 0 }),
+  ({ "full_resource","%s",  "(string)(request_id->raw_url||request_id->not_query)",0 }),
+  ({ "protocol",    "%s",   "(string)request_id->prot",0 }),
+  ({ "response",    "%d",   "(int)(file->error || 200)",0 }),
+  ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),
+  ({ "length",      "%d",   "(int)file->len",0 }),
+  ({ "bin-length",  "%4c",  "(int)file->len",0 }),
   ({ "referer",     "%s",    
      "sizeof(request_id->referer||({}))?request_id->referer[0]:\"\"", 0 }),
   ({ "user_agent",  "%s",    
