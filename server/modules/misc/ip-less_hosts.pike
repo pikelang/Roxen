@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.10 1998/03/02 15:04:57 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.11 1998/03/09 15:53:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -31,11 +31,30 @@ object find_server_for(object id, string host)
   array a = host/"";
   string hn;
   object c;
+#ifdef IP_LESS_DEBUG
+  roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
+#endif /* IP_LESS_DEBUG */
   foreach(roxen->configurations, object s) {
     string h = lower_case(s->query("MyWorldLocation"));
-    int corr = sizeof(Array.diff_longest_sequence(a, h/""));
+    // Should probably remove http:// here...
+    array common = Array.diff_longest_sequence(a, h/"");
+    int corr = sizeof(common);
+    string common_s = rows(h/"", common)*"";
+#ifdef IP_LESS_DEBUG
+    roxen_perror(sprintf("IPLESS: h: \"%s\"\n"
+			 "IPLESS: common: %O (\"%s\")\n"
+			 "IPLESS: corr: %d\n",
+			 h, common, common_s, corr));
+#endif /* IP_LESS_DEBUG */
     if ((corr > best) ||
-	((corr == best) && hn && (sizeof(hn) < sizeof(h)))) {
+	((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
+      /* Either better correlation,
+       * or the same, but a shorter hostname.
+       */
+#ifdef IP_LESS_DEBUG
+      roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+			   h, host, hn||""));
+#endif /* IP_LESS_DEBUG */
       best = corr;
       c = s;
       hn = h;
