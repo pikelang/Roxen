@@ -1,8 +1,10 @@
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: fnord.pike,v 1.7 2000/02/12 15:52:04 nilsson Exp $";
+string cvs_version = "$Id: fnord.pike,v 1.8 2000/02/24 05:39:03 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.

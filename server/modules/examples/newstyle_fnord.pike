@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000, Roxen IS.
+
 // This is a small sample module intended to show how a newstyle tag
 // is written. Note that this is only a very brief overview and that
 // the new parser is still under development and incompatible changes
@@ -6,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: newstyle_fnord.pike,v 1.2 2000/02/17 13:05:15 nilsson Exp $";
+string cvs_version = "$Id: newstyle_fnord.pike,v 1.3 2000/02/24 05:39:03 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe.
 int thread_safe=1;
