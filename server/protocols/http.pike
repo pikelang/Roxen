@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.159 1999/10/04 19:14:00 marcus Exp $
+// $Id: http.pike,v 1.160 1999/10/08 11:47:34 grubba Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.159 1999/10/04 19:14:00 marcus Exp $";
+constant cvs_version = "$Id: http.pike,v 1.160 1999/10/08 11:47:34 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1437,8 +1437,11 @@ void send_result(mapping|void result)
   if(!leftovers) leftovers = data||"";
 #endif
 
-  if(file->len > 0 && file->len < 2000)
+  if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
+     file->len > 0 && file->len < 2000)
   {
+    // Ordinary connection, and a short file.
+    // Just do a blocking write().
     my_fd->write((head_string || "") +
 		 (file->file?file->file->read(file->len):
 		  (file->data[..file->len-1])));
