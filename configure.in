@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.19 1997/09/08 01:53:11 neotron Exp $
+# $Id: configure.in,v 1.20 1997/09/08 03:06:55 grubba Exp $
 #
 
 prefix=$PWD
@@ -306,7 +306,9 @@ else
   fi
 fi
 
-export CC
+CFLAGS="$CFLAGS $WARN $OPTIMIZE"
+
+export CC CFLAGS
 
 # GMP -- Gnu Multi-Precision library
 #------------------------------------
@@ -320,40 +322,59 @@ if test -d $srcdir/gmp/.; then
     if test "$ac_cv_header_gmp_h" = "yes"; then
       echo Gmp already installed.
     else
-      echo Configuring gmp...
+      echo Enabling gmp...
       MAKE_GMP=gmp
       # Fool Pike into believing Gmp is installed.
       # It will be when Pike is being built.
       ac_cv_header_gmp_h=yes
       ac_cv_lib_gmp_mpz_set_d=yes
       PWD=`pwd`
-      CPPFLAGS="${CPPFLAGS} -I$srcdir/gmp -I$PWD/gmp"
-      LDFLAGS="${LDFLAGS} -L$PWD/gmp"
+      CPPFLAGS="-I$srcdir/gmp -I$PWD/gmp ${CPPFLAGS}"
+      LDFLAGS="-L$PWD/gmp ${LDFLAGS}"
     fi
   fi
 fi
 
-# Zlib -- Gnu compression library
-#---------------------------------
+# Zlib -- Compression library
+#-----------------------------
 
 MAKE_ZLIB=""
 AC_SUBST(MAKE_ZLIB)
 if test -d zlib/.; then
+  # We don't trust the config-cache for these two.
   unset ac_cv_header_zlib_h
+  unset ac_cv_lib_z_compress
   if test x$with_zlib = xyes; then
     AC_CHECK_HEADERS(zlib.h)
     if test "$ac_cv_header_zlib_h" = "yes"; then
       echo Zlib already installed.
-    else
-      echo Configuring zlib...
+      AC_MSG_CHECKING([if the installed libz.h is new enough])
+      AC_TRY_COMPILE([
+#include <zlib.h>
+      ],[
+int foo = (int)(Z_NO_COMPRESSION | Z_VERSION_ERROR);
+      ],[
+        AC_MSG_RESULT(yes)
+	AC_CHECK_LIB(z, compress, [], [
+          echo Using supplied zlib anyway.
+          ac_cv_header_zlib_h=no
+        ])
+      ],[
+        AC_MSG_RESULT(no)
+	echo Using supplied zlib anyway.
+        ac_cv_header_zlib_h=no
+      ])
+    fi
+    if test "$ac_cv_header_zlib_h" != "yes"; then
+      echo Enabling supplied zlib...
       MAKE_ZLIB=zlib
       # Fool Pike into believing Zlib is installed.
       # It will be when Pike is being built.
       ac_cv_header_zlib_h=yes
       ac_cv_lib_z_compress=yes
       PWD=`pwd`
-      CPPFLAGS="${CPPFLAGS} -I$srcdir/zlib -I$PWD/zlib"
-      LDFLAGS="${LDFLAGS} -L$PWD/zlib"
+      CPPFLAGS="-I$srcdir/zlib -I$PWD/zlib ${CPPFLAGS}"
+      LDFLAGS="-L$PWD/zlib ${LDFLAGS}"
     fi
   fi
 fi
@@ -370,22 +391,20 @@ if test -d gdbm/.; then
     if test "$ac_cv_header_gdbm_h" = "yes"; then
       echo Gdbm already installed.
     else
-      echo Configuring gdbm...
+      echo Enabling gdbm...
       MAKE_GDBM=gdbm
       # Fool Pike into believing Gdbm is installed.
       # It will be when Pike is being built.
       ac_cv_header_gdbm_h=yes
       ac_cv_lib_gdbm_gdbm_open=yes
       PWD=`pwd`
-      CPPFLAGS="${CPPFLAGS} -I$srcdir/gdbm -I$PWD/gdbm"
-      LDFLAGS="${LDFLAGS} -L$PWD/gdbm"
+      CPPFLAGS="-I$srcdir/gdbm -I$PWD/gdbm ${CPPFLAGS}"
+      LDFLAGS="-L$PWD/gdbm ${LDFLAGS}"
     fi
   fi
 fi
 
-CFLAGS="$CFLAGS $WARN $OPTIMIZE"
-
-export CPPFLAGS CFLAGS LDFLAGS
+export CPPFLAGS LDFLAGS
 
 AC_CONFIG_SUBDIRS(gmp zlib gdbm extern pike)
 AC_OUTPUT(Makefile, echo foo >stamp-h)
