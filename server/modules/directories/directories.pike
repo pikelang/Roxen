@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.66 2000/05/18 11:55:24 kuntri Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.67 2000/05/20 23:17:02 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -57,6 +57,10 @@ void start(int n, Configuration c)
   if( query("default-template" ) )
     set( "template", 
          #"
+<if not='' variable='form.sort'>
+  <set variable='form.sort' value='name'>a
+</if>
+
 <html>
   <head><title>Listing of &page.virtfile;</title></head>
   <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
@@ -413,10 +417,9 @@ string|mapping parse_directory(RequestID id)
   return Roxen.http_rxml_answer( query("template"), id );
 }
 
-TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-"emit#path":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
+"emit#directory":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
 
 <attr name='directory' value='path'>
 
@@ -468,7 +471,5 @@ constant tagdoc=([
 ])
 		 })
 ]);
-
-
 #endif
 
