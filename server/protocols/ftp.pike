@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.24 2000/02/02 19:15:39 mast Exp $
+ * $Id: ftp.pike,v 2.25 2000/02/02 20:08:32 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -828,7 +828,19 @@ class LSFile
       }
       object session = RequestID2(master_session);
       session->method = "DIR";
-      mapping(string:array) dir = session->conf->find_dir_stat(long, session);
+
+      mixed err;
+      mapping(string:array) dir;
+      err = catch {
+	dir = session->conf->find_dir_stat(long, session);
+      };
+
+      if (err) {
+	report_error(sprintf("FTP: LSFile->list_next_directory(): "
+			     "find_dir_stat(\"%s\") failed:\n"
+			     "%s\n",
+			     long, describe_backtrace(err)));
+      }
 
       DWRITE(sprintf("FTP: LSFile->list_next_directory(): "
 		     "find_dir_stat(\"%s\") => %O\n",
