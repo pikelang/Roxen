@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.126 1999/12/08 02:19:43 mast Exp $
+ * $Id: roxenloader.pike,v 1.127 1999/12/08 02:30:27 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.126 1999/12/08 02:19:43 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.127 1999/12/08 02:30:27 mast Exp $";
 
 #define perror roxen_perror
 
@@ -676,7 +676,7 @@ class ParseHtmlCompat
 
   int|string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
   {
-    string name = tag_name();
+    string name = lower_case (tag_name());
     if (string|function tag = m_tags[name])
       if (stringp (tag)) return ({tag});
       else return tag (name, tag_args(), @extra);
@@ -701,7 +701,7 @@ class ParseHtmlCompat
   int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
 					   string content, mixed... extra)
   {
-    string name = tag_name();
+    string name = lower_case (tag_name());
     if (string|function container = m_containers[name])
       if (stringp (container)) return ({container});
       else return container (name, args, content, @extra);
@@ -725,7 +725,7 @@ class ParseHtmlLinesCompat
 
   int|string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
   {
-    string name = tag_name();
+    string name = lower_case (tag_name());
     if (string|function tag = m_tags[name])
       if (stringp (tag)) return ({tag});
       else return tag (name, tag_args(), at_line(), @extra);
@@ -750,7 +750,7 @@ class ParseHtmlLinesCompat
   int|string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
 					   string content, mixed... extra)
   {
-    string name = tag_name();
+    string name = lower_case (tag_name());
     if (string|function container = m_containers[name])
       if (stringp (container)) return ({container});
       else return container (name, args, content, at_line(), @extra);
