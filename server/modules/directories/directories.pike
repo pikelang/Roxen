@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.27 1998/12/07 18:22:45 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.28 1999/01/14 00:34:29 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -415,13 +415,15 @@ mapping parse_directory(object id)
 // If this prestate is set, do some folding/unfolding.
   if(!id->prestate->diract) 
   { 
+    string new_query = id->not_query + "/" +
+      (id->query?("?" + id->query):"");
     if(strlen(f) > 1) // I check the last two characters.
     {
       if(!((f[-1] == '/') || ( (f[-1] == '.') && (f[-2] == '/') )))
-	return http_redirect(id->not_query+"/", id);
+	return http_redirect(new_query, id);
     } else {
       if(f != "/" )
-	return http_redirect(id->not_query+"/", id);
+	return http_redirect(new_query, id);
     }
       
     /* If the pathname ends with '.', and the 'override' variable
