@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.63 1997/08/13 04:17:41 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.64 1997/08/13 06:51:37 neotron Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -974,9 +974,9 @@ array tabs = ({
 
 array tab_names = ({
  "Virtual Servers",
- "Global variables",
+ "Global Variables",
  "Status",
- "Events",
+ "Event Log",
  "Actions",
 });
 		
@@ -1127,7 +1127,7 @@ string dn(object node)
    case "Configurations":
     return "Servers";
    case "Errors":
-    return "Events";
+    return "Event Log";
   }
   return s;
 }
