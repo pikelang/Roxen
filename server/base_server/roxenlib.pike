@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.192 2000/08/20 16:40:10 nilsson Exp $
+// $Id: roxenlib.pike,v 1.193 2000/08/21 01:04:03 nilsson Exp $
 
 //#pragma strict_types
 
@@ -666,7 +666,7 @@ string make_tag_attributes(mapping(string:string) in, void|int xml)
 string make_tag(string name, mapping(string:string) args, void|int xml)
 //! Returns an empty element tag `name', with the tag arguments dictated
 //! by the mapping `args'. If the flag xml is set, slash character will be
-//! added in the end of the tag. Use RXML.TXml.format_tag(name, args) instead.
+//! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
 {
   return "<"+name+make_tag_attributes(args,xml)+">";
 }
@@ -674,7 +674,7 @@ string make_tag(string name, mapping(string:string) args, void|int xml)
 string make_container(string name, mapping(string:string) args, string content)
 //! Returns a container tag `name' encasing the string `content', with
 //! the tag arguments dictated by the mapping `args'. Use
-//! RXML.TXml.format_tag(name, args, content) instead.
+//! RXML.t_xml->format_tag(name, args, content) instead.
 {
   if(args["/"]=="/") m_delete(args, "/");
   return make_tag(name,args)+content+"</"+name+">";
