@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.8 2004/12/01 14:34:43 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.9 2004/12/01 16:56:18 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -354,9 +354,22 @@ static class NodeWithChildElements
   //! @endul
   //!
   //! A Predicate is on the form @tt{[PredicateExpr]@} where
-  //! PredicateExpr currently can be an integer to index one item in
-  //! the selected set, according to the document order. A negative
-  //! index counts from the end of the set.
+  //! PredicateExpr currently can be in any of the following forms:
+  //!
+  //! @ul
+  //! @item
+  //!   An integer indexes one item in the selected set, according to
+  //!   the document order. A negative index counts from the end of
+  //!   the set.
+  //! @item
+  //!   @tt{@@name@} filters out the elements in the selected set that
+  //!   has an attribute with the given name.
+  //! @item
+  //!   @tt{@@name="value"@} filters out the elements in the selected
+  //!   set that has an attribute with the given name and value.
+  //!   Either @tt{'@} or @tt{"@} may be used to delimit the string
+  //!   literal.
+  //! @endul
   //!
   //! If @[xml_format] is nonzero, the return value is an xml
   //! formatted string of all the matched nodes, in document order.
@@ -495,28 +508,64 @@ static class NodeWithChildElements
     else res = get_elements (name);
 
     if (has_prefix (path, "[")) {
-      int index;
-      if (sscanf (path, "[%*[ \t\n\r]%d%*[ \t\n\r]]%*[ \t\n\r]%s", index, path) != 5)
+    parse_predicate: {
+	if (sscanf (path, "[%*[ \t\n\r]%d%*[ \t\n\r]]%*[ \t\n\r]%s",
+		    int index, path) == 5) {
+	  if (!index)
+	    simple_path_error ("Invalid index 0 in expression %O in ", name + "[0]");
+
+	  if (index > 0) {
+	    if (index > sizeof (res)) return xml_format && "";
+	    if (mappingp (res))
+	      res = (mapping) ({((array) res)[index - 1]});
+	    else
+	      res = res[index - 1];
+	  }
+	  else {
+	    if (index < -sizeof (res)) return xml_format && "";
+	    if (mappingp (res))
+	      res = (mapping) ({((array) res)[index]});
+	    else
+	      res = res[index];
+	  }
+
+	  if (intp (res)) res = make_node (res);
+	  break parse_predicate;
+	}
+
+	if (sscanf (path,
+		    "[%*[ \t\n\r]@%*[ \t\n\r]%[^][ \t\n\r/@(){},=]%*[ \t\n\r]%s",
+		    string attr_name, string rest) == 5) {
+	  string attr_value;
+	  if (sscanf (rest, "]%*[ \t\n\r]%s", rest) == 2 ||
+	      sscanf (rest, "=%*[ \t\n\r]'%[^']'%*[ \t\n\r]]%*[ \t\n\r]%s",
+		      attr_value, rest) == 5 ||
+	      sscanf (rest, "=%*[ \t\n\r]\"%[^\"]\"%*[ \t\n\r]]%*[ \t\n\r]%s",
+		      attr_value, rest) == 5) {
+
+	    if (mappingp (res)) {
+	      if (!(attr_value ? res[attr_name] == attr_value : res[attr_name]))
+		return xml_format && "";
+	    }
+	    else {
+	      array(Node) filtered_res = ({});
+	      foreach (res, int|Node elem) {
+		if (intp (elem)) elem = make_node (elem);
+		if (elem->node_type == ELEMENT_NODE &&
+		    (attr_value ? elem->attributes[attr_name] == attr_value :
+		     elem->attributes[attr_name]))
+		  filtered_res += ({elem});
+	      }
+	      res = filtered_res;
+	    }
+
+	    path = rest;
+	    break parse_predicate;
+	  }
+	}
+
 	simple_path_error ("Invalid index expression in %O in ", name + path);
-      if (!index)
-	simple_path_error ("Invalid index 0 in expression %O in ", name + "[0]");
-
-      if (index > 0) {
-	if (index > sizeof (res)) return xml_format && "";
-	if (mappingp (res))
-	  res = (mapping) ({((array) res)[index - 1]});
-	else
-	  res = res[index - 1];
       }
-      else {
-	if (index < -sizeof (res)) return xml_format && "";
-	if (mappingp (res))
-	  res = (mapping) ({((array) res)[index]});
-	else
-	  res = res[index];
-      }
-
-      if (intp (res)) res = make_node (res);
     }
 
     else
