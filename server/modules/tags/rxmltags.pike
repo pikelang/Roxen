@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.431 2003/05/21 09:30:04 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.432 2003/05/21 15:17:50 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3003,7 +3003,15 @@ class UserTag {
 
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
+
+    string _sprintf ()
+    {
+      if (catch {return "UserTag.Frame(" + name + ")";})
+	return "UserTag.Frame(?)";
+    }
   }
+
+  string _sprintf() {return "UserTag(" + name + ")";}
 }
 
 // A helper Scope class used when preparsing in TagDefine: Every
