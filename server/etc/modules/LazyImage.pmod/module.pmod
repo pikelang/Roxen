@@ -366,6 +366,8 @@ static string get_program_name (program p)
 
 int image_object_count;
 
+static Thread.Local request_id = Thread.Local();
+
 class LazyImage( LazyImage parent )
 //! One or more layers, with lazy evaluation.
 //! This is the base-class that is inherited by all layer operations.
@@ -386,7 +388,7 @@ class LazyImage( LazyImage parent )
   
   int refs;
 
-  int id = ++image_object_count;
+  int object_id = ++image_object_count;
   //! A unique object identifier used for debug
   
   this_program ref( )
@@ -422,7 +424,8 @@ class LazyImage( LazyImage parent )
 #ifdef GXML_DEBUG
 	string s1 = sprintf("%O", args) - "\n";
 	string s2 = parent?sprintf("(\n%O)", parent):"";
-	return replace(sprintf( "%s[%d:%d]: %s %s", operation_name, id, refs, s1, s2 ),
+	return replace(sprintf( "%s[%d:%d]: %s %s",
+				operation_name, object_id, refs, s1, s2 ),
 		       "\n", "\n  ");
 #else
 	string s = parent?sprintf("(%O)", parent):"";
@@ -663,11 +666,14 @@ class LazyImage( LazyImage parent )
     return layers;
   }
   
-  Layers run(int|void i)
+  Layers run(int|void i, RequestID|void id)
   //! Apply all operations needed to actually generate the image. 
   //! After the first time this function is called, the result is
   //! cached.
   {
+    if(id)
+      request_id->set(id);
+    
     if( result )
       return result;
 
@@ -739,11 +745,14 @@ class LazyImage( LazyImage parent )
     return render()->ysize();
   }
 
-  void set_args( Arguments a )
+  void set_args( Arguments a, void|int no_arg_check )
   //! Set the args mapping.
   //! Not normally called directly.
   {
-    args = check_args( a ) || a;
+    if(no_arg_check)
+      args = a;
+    else
+      args = check_args( a ) || a;
   }
 
   mapping encode()
@@ -766,11 +775,23 @@ class LoadImage
 
   static
   {
-    Layers process( Layers layers )
+    Layers process( Layers layers)
     {
-      array|mapping res = roxen.load_layers( args->src, RXML.get_context()->id );
-      // handles relative and absolute virtual files.
-      // Can also handle URLs
+      RequestID id = request_id->get();
+      if(!id)
+	error("Oops, no request id object.");
+      array|mapping res;
+#if constant(Sitebuilder)
+      //  Let SiteBuilder get a chance to decode its argument data
+      if (Sitebuilder.sb_start_use_imagecache) {
+	Sitebuilder.sb_start_use_imagecache(args, id);
+	res = roxen.load_layers(args->src, id);
+	Sitebuilder.sb_end_use_imagecache(args, id);
+      } else
+#endif
+      {
+	res = roxen.load_layers(args->src, id);
+      }
       if( !res || mappingp(res) )
 	RXML.parse_error("Failed to load %O\n", args->src );
       if( args->tiled )
@@ -779,14 +800,26 @@ class LoadImage
       return (layers||({}))+res;
     }
 
-    Arguments check_args( Arguments args )
+    Arguments check_args( Arguments args)
     {
       if( !args->src )
 	RXML.parse_error("Missing src attribute to load\n");
       RequestID id = RXML.get_context()->id;
-      Stat s = id->conf->stat_file( args->src, id );
-      if( s )
+      args->src = Roxen.fix_relative( args->src, id );
+      Stat s = id->conf->try_stat_file( args->src, id );
+      if( s ) {
+	string fn = id->conf->real_file( args->src, id );
+	if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
 	args->stat = s[ ST_MTIME ];
+#if constant(Sitebuilder)
+	//  The file we called try_stat_file() on above may be a SiteBuilder
+	//  file. If so we need to extend the argument data with e.g.
+	//  current language fork.
+	if (Sitebuilder.sb_prepare_imagecache)
+	  args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
+#endif
+
+      }
       return args;
     }
   };
@@ -1065,7 +1098,8 @@ class Join
 	case 'O':
 #ifdef GXML_DEBUG
 	  return replace(sprintf( "%s[%d:%d]: %O (%{\n%O %})",
-				  operation_name, id, refs, args - ([ "contents":1 ]),
+				  operation_name, object_id, refs,
+				  args - ([ "contents":1 ]),
 				  args->contents),
 			 "\n", "\n  ");
 #else
@@ -1077,8 +1111,11 @@ class Join
       }
     }
   };
-  Layers run( int|void i )
+  Layers run( int|void i, RequestID|void id )
   {
+    if(id)
+      request_id->set(id);
+    
     return `+( ({}), @args->contents->run(i+1) );
   }
 
@@ -1798,7 +1835,7 @@ LazyImage join_images( LazyImage ... i )
   return j;
 }
 
-LazyImage new( program p, LazyImage parent, mapping args, void|int no_refs )
+LazyImage new( program p, LazyImage parent, mapping args, void|int hard )
 //! Create a new (shared) LazyImage.
 //!
 //! The @[args] mapping is intended to be the args received in
@@ -1810,16 +1847,21 @@ LazyImage new( program p, LazyImage parent, mapping args, void|int no_refs )
 //!
 //! @[p] should be a child of the @[LazyImage] class.
 //! @[parent] can be 0.
+//!
+//! The @[hard] flag indicates if references counting and check_arg
+//! should be skipped. Usefull when decoding an already verified
+//! object tree.
+  
 {
   string hash = (parent?parent->hash():"") + low_hash( p, args );
   mapping ki = known_images->get();
   if( ki[ hash ] )
-    return no_refs? ki[ hash ]: ki[ hash ]->ref();
+    return hard? ki[ hash ]: ki[ hash ]->ref();
 
-  LazyImage res = p( parent ? no_refs?parent:parent->ref() : 0 );
-  res->set_args( args );
+  LazyImage res = p( parent ? (hard? parent: parent->ref()) : 0 );
+  res->set_args( args, hard );
   ki[ res->_hash = hash ] = res;
-  return no_refs? res: res->ref(); // no ->ref() here.
+  return hard? res: res->ref(); // no ->ref() here.
 }
 
 LazyImage decode(mapping node_tree)
