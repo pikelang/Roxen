@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.82 2001/08/28 15:47:58 per Exp $
+// $Id: global_variables.pike,v 1.83 2001/09/03 14:10:59 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -580,9 +580,9 @@ although the start script fixes this for the standard file locations."));
 	 // Note that the upper limit is arbitrary.
 
   defvar("replicate", 0,
-	 LOCALE(0, "Enable replication system" ),
+	 LOCALE(163, "Enable replication system" ),
 	 TYPE_FLAG,
-	 LOCALE(0,"If enabled, Roxen will enable various replication systems "
+	 LOCALE(337,"If enabled, Roxen will enable various replication systems "
 		"needed to set up multiple frontend systems. You will need "
 		"a database named 'replicate' that recides in a shared mysql "
 		"server for this to work. Also, all servers has to have this "

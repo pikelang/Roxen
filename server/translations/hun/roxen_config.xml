@@ -7,8 +7,8 @@
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
 <file>../config_interface/actions/index.html</file>
-<file>../config_interface/boxes/Box.pmod</file>
 <file>../config_interface/boxes/articles.pike</file>
+<file>../config_interface/boxes/Box.pmod</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
@@ -52,10 +52,10 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Mapping.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -270,7 +270,7 @@ $cache-status  -- A comma separated list of words (containing no
 
 <str id="36">
 <new/>
-<o>Primary Server URL</o>
+<o>Ports: Primary Server URL</o>
 <t></t>
 </str>
 
@@ -289,7 +289,7 @@ also set 'URLs'.</o>
 
 <str id="38">
 <new/>
-<o>URLs</o>
+<o>Ports: URLs</o>
 <t></t>
 </str>
 
@@ -924,7 +924,7 @@ although the start script fixes this for the standard file locations.</o>
 
 <str id="154">
 <new/>
-<o>ABS: Enable Anti-Block-System</o>
+<o>Auto Restart: Enable Anti-Block-System</o>
 <t></t>
 </str>
 
@@ -936,7 +936,7 @@ although the start script fixes this for the standard file locations.</o>
 
 <str id="156">
 <new/>
-<o>ABS: Timeout</o>
+<o>Auto Restart: ABS Timeout</o>
 <t></t>
 </str>
 
@@ -1478,12 +1478,6 @@ although the start script fixes this for the standard file locations.</o>
 <str id="298">
 <new/>
 <o>Event log cleared by %s from %s</o>
-<t></t>
-</str>
-
-<str id="299">
-<new/>
-<o>Information</o>
 <t></t>
 </str>
 
@@ -2350,12 +2344,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="324">
-<new/>
-<o>Ports</o>
-<t></t>
-</str>
-
 <str id="14">
 <new/>
 <o>Module list mode</o>
@@ -2657,12 +2645,6 @@ Substituting with %s</o>
 <t></t>
 </str>
 
-<str id="423">
-<new/>
-<o>Are you sure you want to delete the database %s?</o>
-<t></t>
-</str>
-
 <str id="424">
 <new/>
 <o>The database %s was deleted by %s</o>
@@ -2737,9 +2719,8 @@ Substituting with %s</o>
 
 <str id="436">
 <new/>
-<o>The &lt;i&gt;shared&lt;/i&gt; database contains data
-          should be shared between multiple-frontend servers, the
-          &lt;i&gt;local&lt;/i&gt; database contains data that should &lt;b&gt;not&lt;/b&gt;
+<o>The
+          &lt;i&gt;local&lt;/i&gt; database contains data that should not
           be shared. The &lt;i&gt;docs&lt;/i&gt; database contains all
           documentation.
           </o>
@@ -2791,12 +2772,6 @@ Substituting with %s</o>
 <str id="444">
 <new/>
 <o>URL</o>
-<t></t>
-</str>
-
-<str id="445">
-<new/>
-<o>Category</o>
 <t></t>
 </str>
 
@@ -3194,5 +3169,53 @@ server must be a MySQL server, nothing else will work.
 <new/>
 <o>Found the string %O trailing after the integer.
 </o>
+<t></t>
+</str>
+
+<str id="85">
+<new/>
+<o>Default module tab</o>
+<t></t>
+</str>
+
+<str id="162">
+<new/>
+<o>The tab that will be selected by default when you select a module.</o>
+<t></t>
+</str>
+
+<str id="163">
+<new/>
+<o>Enable replication system</o>
+<t></t>
+</str>
+
+<str id="337">
+<new/>
+<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect </o>
+<t></t>
+</str>
+
+<str id="361">
+<new/>
+<o>Are you sure you want to delete the database %s and the data?</o>
+<t></t>
+</str>
+
+<str id="362">
+<new/>
+<o>Are you sure you want to delete the database %s? No data will be deleted from the remote datbase.</o>
+<t></t>
+</str>
+
+<str id="503">
+<new/>
+<o>Group</o>
+<t></t>
+</str>
+
+<str id="299">
+<new/>
+<o>URLs</o>
 <t></t>
 </str>

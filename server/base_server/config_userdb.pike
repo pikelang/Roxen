@@ -380,13 +380,13 @@ class ConfigurationSettings
 	    ]) );
 
     defvar( "moduletab", "Status",
-	    LOCALE(0,"Default module tab"),
+	    LOCALE(85,"Default module tab"),
 	    TYPE_STRING_LIST,
-	    LOCALE(0,"The tab that will be selected by default when you "
+	    LOCALE(162,"The tab that will be selected by default when you "
 		   "select a module."),
 	    ([
-	      "Status":LOCALE(0,"Status"),
-	      "Settings":LOCALE(0,"Settings"),
+	      "Status":LOCALE(228,"Status"),
+	      "Settings":LOCALE(256,"Settings"),
 	    ]) );
 
     defvar( "configlistmode", 0,

@@ -67,7 +67,7 @@ ERROR
   <tr>
      <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
       <td><input name='url' size=30 value='&form.url;'/></td>
-       <td><b>"+_(0,"Group")+#":</b></td> <td width='100%'>
+       <td><b>"+_(503,"Group")+#":</b></td> <td width='100%'>
        <default variable='form.group'><select name=group> "+
       group_selector()+#"
        </select></default>

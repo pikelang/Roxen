@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.126 2001/08/28 16:32:58 per Exp $
+// $Id: site_content.pike,v 1.127 2001/09/03 14:09:52 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -508,7 +508,7 @@ string parse( RequestID id )
      case "":
      case "Status":
        res = "<br />\n<blockquote><h1>" +
- 	 LOCALE(38,"URLs") + "</h1>";
+ 	 LOCALE(299,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
          int open = (roxen->urls[ url ] 

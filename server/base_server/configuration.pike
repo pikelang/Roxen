@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.478 2001/08/31 06:23:21 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.479 2001/09/03 14:10:41 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3357,7 +3357,7 @@ also set 'URLs'."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
-           DLOCALE(38, "Ports: URLs"), 
+           DLOCALE(38, "Ports: URLs"),
 	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  The possible protocols "
