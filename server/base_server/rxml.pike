@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.284 2001/03/14 23:10:10 mast Exp $
+// $Id: rxml.pike,v 1.285 2001/03/15 01:01:25 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -177,7 +177,7 @@ string parse_rxml(string what, RequestID id,
 {
   id->misc->_rxml_recurse++;
 #ifdef RXML_DEBUG
-  werror("parse_rxml( "+strlen(what)+" ) -> ");
+  report_debug("parse_rxml( "+strlen(what)+" ) -> ");
   int time = gethrtime();
 #endif
   if(!defines)
@@ -230,7 +230,7 @@ string parse_rxml(string what, RequestID id,
   }) {
 #ifdef DEBUG
     if (!parser) {
-      werror("RXML: Parser destructed!\n");
+      report_debug("RXML: Parser destructed!\n");
 #if constant(_describe)
       _describe(parser);
 #endif /* constant(_describe) */
@@ -252,8 +252,8 @@ string parse_rxml(string what, RequestID id,
   }
   id->misc->_rxml_recurse--;
 #ifdef RXML_DEBUG
-  werror("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
-	 ("  "*id->misc->_rxml_recurse));
+  report_debug("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
+	      ("  "*id->misc->_rxml_recurse));
 #endif
   return what;
 }
@@ -1455,15 +1455,17 @@ class TagEmit {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
+	object|array res = id->misc->emit_rows;
 	if(!id->misc->emit_filter) {
-	  if( RXML.get_var("counter") < sizeof(id->misc->emit_rows) )
+	  if( objectp(res) ? res->peek() :
+	      RXML.get_var("counter") < sizeof(res) )
 	    result = content;
 	  return 0;
 	}
 	if(id->misc->emit_args->maxrows &&
 	   (int)id->misc->emit_args->maxrows == RXML.get_var("counter"))
 	  return 0;
-	if(more_rows(id->misc->emit_rows, id->misc->emit_filter))
+	if(more_rows(res, id->misc->emit_filter))
 	  result = content;
 	return 0;
       }
@@ -1513,10 +1515,19 @@ class TagEmit {
     array(mapping(string:mixed))|object res;
     mapping filter;
 
+    array expand(object res) {
+      array ret = ({});
+      do {
+	ret += ({ res->get_row() });
+      } while(ret[-1]!=0);
+      return ret[..sizeof(ret)-2];
+    }
+
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
 	parse_error("The emit source %O doesn't exist.\n", args->source);
       scope_name=args->scope||args->source;
+      vars = (["counter":0]);
 
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       res=plugin->get_dataset(args, id);
@@ -1527,20 +1538,46 @@ class TagEmit {
       if(plugin->maxrows && args->maxrows)
 	m_delete(args, "maxrows");
 
-      if(objectp(res)) {
-	do_iterate = object_iterate;
-
-	if(args->skiprows) {
-	  int loop = (int)args->skiprows;
-	  while(loop--)
-	    res->skip_row();
+      // Parse the filter argument
+      if(args->filter) {
+	array pairs = args->filter / ",";
+	filter = ([]);
+	foreach( args->filter / ",", string pair) {
+	  string v,g;
+	  if( sscanf(pair, "%s=%s", v,g) != 2)
+	    continue;
+	  v = String.trim_whites(v);
+	  if(g != "*"*sizeof(g))
+	    filter[v] = g;
 	}
-
-	return 0;
+	if(!sizeof(filter)) filter = 0;
       }
 
+      outer_args = id->misc->emit_args;
+      outer_rows = id->misc->emit_rows;
+      outer_filter = id->misc->emit_filter;
+      id->misc->emit_args = args;
+      id->misc->emit_filter = filter;
+
+      if(objectp(res))
+	if(args->sort)
+	  res = expand(res);
+	else {
+	  do_iterate = object_iterate;
+
+	  if(args->skiprows) {
+	    // FIXME '-'
+	    int loop = (int)args->skiprows;
+	    while(loop--)
+	      res->skip_row();
+	  }
+
+	  id->misc->emit_rows = res;
+
+	  return 0;
+	}
+
       if(arrayp(res)) {
-	vars = (["counter":0]);
 	if(args->sort && !plugin->sort)
 	{
 	  array(string) order = (args->sort - " ")/"," - ({ "" });
@@ -1569,31 +1606,20 @@ class TagEmit {
 				    return 0;
 				  } );
 	}
-	
-	if(args->filter) {
-	  // Parse the filter argument
-	  array pairs = args->filter / ",";
-	  filter = ([]);
-	  foreach( args->filter / ",", string pair) {
-	    string v,g;
-	    if( sscanf(pair, "%s=%s", v,g) != 2)
-	      continue;
-	    v = String.trim_whites(v);
-	    if(g != "*"*sizeof(g))
-	      filter[v] = g;
-	  }
+
+	if(filter) {
 
 	  // If rowinfo or negative skiprows are used we have
 	  // to do filtering in a loop of its own, instead of
 	  // doing it during the emit loop.
 	  if(args->rowinfo ||
 	     (args->skiprows && args->skiprows[-1]=='-')) {
-	    m_delete(args, "filter");
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i], filter)) {
 		res = res[..i-1] + res[i+1..];
 		i--;
 	      }
+	    filter = 0;
 	  }
 	  else {
 
@@ -1618,7 +1644,10 @@ class TagEmit {
 	  }
 	}
 
-	if(!args->filter) {
+	// We have to check the filter again, since it
+	// could have been zeroed in the last if statement.
+	if(!filter) {
+
 	  if(args->skiprows) {
 	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)+(int)args->skiprows;
 	    res=res[(int)args->skiprows..];
@@ -1634,12 +1663,7 @@ class TagEmit {
 	  do_iterate = array_iterate;
 	}
 
-	outer_rows = id->misc->emit_rows;
-	outer_filter = id->misc->emit_filter;
-	outer_args = id->misc->emit_args;
 	id->misc->emit_rows = res;
-	id->misc->emit_filter = filter;
-	id->misc->emit_args = args;
 
 	return 0;
       }
@@ -1659,9 +1683,15 @@ class TagEmit {
       int counter = vars->counter;
       if(args->maxrows && counter == (int)args->maxrows)
 	return do_once_more();
-      while(should_filter(vars=res->get_row(), filter));
-      vars->counter = counter++;
-      return mappingp(vars) || do_once_more();
+      while(should_filter(vars=res->get_row(), filter || ([]) ));
+
+      if(mappingp(vars)) {
+	vars->counter = ++counter;
+	return 1;
+      }
+
+      vars = ([]);
+      return do_once_more();
     }
 
     int(0..1) array_iterate(RequestID id) {
@@ -1962,12 +1992,12 @@ class IfMatch
 
   int eval( string is, RequestID id ) {
     array|string value=source(id);
-    if(!this_object()->cache) NOCACHE();
+    if(cache != -1) CACHE(cache);
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
     is = lower_case( "*"+is+"*" );
-    return (glob(is,value)||sizeof(filter( is/",", glob, value )));
+    return glob(is,value) || sizeof(filter( is/",", glob, value ));
   }
 }
 
@@ -2489,7 +2519,6 @@ Kibibits.
  that the <tag>default</tag> tag may be put whereever you want it
  within the <tag>cond</tag> tag. This will of course affect the order
  the content is parsed. The <tag>case</tag> tag is required.</p>
-
 </desc>",
 
 	  (["case":#"<desc cont='cont'><p>
