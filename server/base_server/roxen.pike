@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.813 2002/07/03 12:38:48 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.814 2002/07/03 14:51:52 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -58,6 +58,13 @@ static function sol = master()->set_on_load;
 #ifdef TEST_EUID_CHANGE
 int test_euid_change;
 #endif
+
+Shuffler.Shuffle get_shuffler( Stdio.File fd )
+{
+  if( fd->sslfile )
+    fd = fd->sslfile;
+  return shufflers[ random( sizeof( shufflers ) ) ]->shuffle( fd );
+}
 
 string md5( string what )
 {
@@ -621,6 +628,20 @@ int busy_threads;
 static array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
 
+static array(Shuffler.Shuffler) shufflers = ({ Shuffler.Shuffler() });
+
+void backend_thread_func( Pike.Backend backend )
+{
+  while( 1 )
+  {
+    mixed err = catch {
+      while(1)
+	backend( 3600.0 );
+    };
+    werror("Error in backend thread: %s\n", describe_backtrace( err ) );
+  }
+}
+
 void start_handler_threads()
 {
   if (query("numthreads") <= 1) {
@@ -631,6 +652,17 @@ void start_handler_threads()
 		   query("numthreads") );
   }
   array(object) new_threads = ({});
+
+  // FIXME: This should probably not be done like this.
+  shufflers = map( enumerate( query("numthreads") ),
+		   lambda( int i )
+		   {
+		     Shuffler.Shuffler res = Shuffler.Shuffler();
+		     Pike.Backend back = Pike.Backend();
+		     res->set_backend( back );
+		     thread_create( backend_thread_func, back );
+		     return res;
+		   } );
   for(; number_of_threads < query("numthreads"); number_of_threads++)
     new_threads += ({ do_thread_create( "Handle thread [" +
 					number_of_threads + "]",
@@ -1423,6 +1455,8 @@ class SSLProtocol
 
     mixed `[](string s)
     {
+      if( s == "sslfile" )
+	return sslfile;
       return sslfile[s];
     }
 
@@ -1433,6 +1467,8 @@ class SSLProtocol
 
     mixed `->(string s)
     {
+      if( s == "sslfile" )
+	return sslfile;
       return sslfile[s];
     }
 
@@ -3410,6 +3446,7 @@ class ArgCache
     }
   }
 
+
   int write_dump(Stdio.File file, int|void from_time)
   // Write a mapping from id to encoded arg string for all local arg
   // entries created after from_time to a file. Returns 0 if faled, 1
@@ -4038,19 +4075,6 @@ void create_pid_file(string where)
   if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
     report_debug("I cannot create the pid file ("+where+").\n");
 #endif
-}
-
-// NGSERVER: Compatibility method. Remove.
-Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
-		  Stdio.File|void to2,
-		  function(:void)|void callback)
-{
-  Pipe.pipe p = Pipe.pipe();
-  if (callback) p->set_done_callback(callback);
-  p->output(to);
-  if(to2) p->output(to2);
-  p->input(from);
-  return p;
 }
 
 // Dump all threads to the debug log.

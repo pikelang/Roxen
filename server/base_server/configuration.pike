@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.529 2002/07/03 12:38:47 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.530 2002/07/03 14:51:52 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2416,7 +2416,7 @@ void start(int num)
   if( query("throttle") )
   {
     if( !throttler )
-      throttler=.throttler();
+      throttler=.throttler(0);
     throttler->throttle(query("throttle_fill_rate"),
                         query("throttle_bucket_depth"),
                         query("throttle_min_grant"),

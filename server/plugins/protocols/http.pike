@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.374 2002/07/03 12:56:00 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.375 2002/07/03 14:52:10 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -99,9 +99,6 @@ mapping file;
 string rest_query="";
 string raw="";
 string extra_extension = ""; // special hack for the language module
-
-
-static mapping connection_stats = ([]);
 
 class AuthEmulator
 // Emulate the old (rather cumbersome) authentication API 
@@ -331,80 +328,40 @@ void decode_charset_encoding( string|function(string:string) decoder )
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
 // if fatal error.
-object pipe;
+Shuffler.Shuffle pipe;
+object throttler; // The inter-request throttling object.
 
-//used values: throttle->doit=0|1 to enable it
-//             throttle->rate the rate
-//             throttle->fixed if it's not to be touched again
-mapping(string:mixed) throttle = ([]);
-
-object throttler;//the inter-request throttling object.
-
-/* Pipe-using send functions */
-
-// FIXME:
-//I'm choosing the pipe type upon setup. Thus I'm assuming that all headers
-//have been defined before then. This is actually not true in case
-//of throttling and keep-alive. We'll take care of that later.
 private void setup_pipe()
 {
-  if(!my_fd) {
+  if(!my_fd)
+  {
     end();
     return;
   }
-  if ( throttle->doit && conf->query("req_throttle") )
-    throttle->doit = 0;
-  if( throttle->doit || conf->throttler )
-    pipe=roxen.slowpipe();
-  else
-    pipe=roxen.fastpipe();
-  if (throttle->doit) 
-  { 
-    //we are sure that pipe is really a slowpipe.
-    throttle->rate=max(throttle->rate, conf->query("req_throttle_min"));
-    pipe->throttle(throttle->rate,
-                   (int)(throttle->rate*conf->query("req_throttle_depth_mult")),
-                   0);
-    THROTTLING_DEBUG("throtting request at "+throttle->rate);
-  }
-  if( pipe->set_status_mapping )
-    pipe->set_status_mapping( connection_stats );
-  if ( conf->throttler )
-    pipe->assign_throttler( conf->throttler );
+  pipe = roxen.get_shuffler( my_fd );
+  if( conf )
+    conf->connection_add( this_object(), pipe );
 }
 
 
-void send (string|object what, int|void len)
+void send(string|object what, int|void len, int|void start)
 {
-  if( len>0 && port_obj && port_obj->minimum_byterate )
-    call_out( end, len / port_obj->minimum_byterate );
-
   if(!what) return;
   if(!pipe) setup_pipe();
-  if(stringp(what))  {
-    REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
-    pipe->write(what);
-  }
-  else {
-    REQUEST_WERR(sprintf("HTTP: Pipe stream %O, length %O", what, len));
-    pipe->input(what,len);
-  }
+  if( len>0 && port_obj && port_obj->minimum_byterate )
+    call_out( end, len / port_obj->minimum_byterate );
+  pipe->add_source(what,start,len||strlen(what));
 }
 
 void start_sender( )
 {
-  if (pipe) 
-  {
-    MARK_FD("HTTP really handled, piping response");
 #ifdef FD_DEBUG
-    call_out(timer, 30, predef::time(1)); // Update FD with time...
+  call_out(timer, 30, predef::time(1)); // Update FD with time...
 #endif
-    pipe->set_done_callback( do_log );
-    pipe->output( my_fd );
-  } else {
-    MARK_FD("HTTP really handled, pipe done");
-    do_log();
-  }
+  if( throttler || conf->throttler )
+    pipe->set_throttler( throttler || conf->throttler );
+  pipe->set_done_callback( do_log );
+  pipe->start( );
 }
 
 string scan_for_query( string f )
@@ -1294,24 +1251,19 @@ int wants_more()
   return !!cache;
 }
 
-void do_log( int|void fsent )
+void do_log( Shuffler.Shuffle r, int reason )
 {
   MARK_FD("HTTP logging"); // fd can be closed here
+  int fsent = r->sent_data();
+  
   TIMER_START(do_log);
   if(conf)
   {
-    int len;
-    if(!fsent && pipe)
-      file->len = pipe->bytes_sent();
-    else
-      file->len = fsent;
-    if(conf)
-    {
-      if(file->len > 0) conf->sent+=file->len;
-      file->len += misc->_log_cheat_addition;
-      conf->log(file, this_object());
-    }
+    conf->sent+=fsent;
+    file->len += misc->_log_cheat_addition;
+    conf->log(file, this_object());
   }
+
   if( !port_obj ) 
   {
     TIMER_END(do_log);
@@ -1733,13 +1685,7 @@ void send_result(mapping|void result)
               {
                 heads["Content-Range"] = sprintf("bytes %d-%d/%d",
                                                  @ranges[0], file->len);
-                file->file->seek(ranges[0][0]);
-                if(ranges[0][1] == (file->len - 1) &&
-                   GLOBVAR(RestoreConnLogFull))
-                  // Log continuations (ie REST in FTP), 'range XXX-'
-                  // using the entire length of the file, not just the
-                  // "sent" part. Ie add the "start" byte location when logging
-                  misc->_log_cheat_addition = ranges[0][0];
+                file->start = ranges[0][0];
                 file->len = ranges[0][1] - ranges[0][0]+1;
               } else {
                 // Multiple ranges. Multipart reply and stuff needed.
@@ -1796,10 +1742,6 @@ void send_result(mapping|void result)
         conf->hsent += strlen(head_string);
       }
     }
-#if 0
-    REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
-			 prot, method, file));
-#endif
     MARK_FD("HTTP handled");
   
     if( (method!="HEAD") && (file->error!=304) )
@@ -1837,33 +1779,15 @@ void send_result(mapping|void result)
         }
       }
 #endif
-      if( file->len > 0 && file->len < 4000 )
-      {
-        // Just do a blocking write().
-        int s;
-	TIMER_END(send_result);
-	TIMER_START(blocking_write);
-	string data = head_string +
-	  (file->file?file->file->read(file->len):
-	   (file->data[..file->len-1]));
-	REQUEST_WERR (sprintf ("HTTP: Send %O", data));
-	s = my_fd->write(data);
-	TIMER_END(blocking_write);
-        do_log( s );
-        return;
-      }
-      if(strlen(head_string))                 send(head_string);
-      if(file->data && strlen(file->data))    send(file->data, file->len);
-      if(file->file)                          send(file->file, file->len);
+      if(strlen(head_string))
+	send(head_string);
+      if(file->data && strlen(file->data))
+	send(file->data, file->len, file->start);
+      if(file->file)
+	send(file->file, file->len, file->start);
     }
     else 
     {
-      if( strlen( head_string ) < 4000)
-      {
-	REQUEST_WERR (sprintf ("HTTP: Send %O", head_string));
-	do_log( my_fd->write( head_string ) );
-        return;
-      }
       send(head_string);
       file->len = 1; // Keep those alive, please...
     }
@@ -2118,10 +2042,12 @@ void got_data(mixed fooid, string s)
 	    = conf->auth_module->auth(misc->proxyauth,this_object() );
       }
     }
-
-    conf->connection_add( this_object(), connection_stats );
-    conf->received += strlen(raw);
-    conf->requests++;
+    if( conf )
+    {
+      conf->connection_add( this_object(), ([]) );
+      conf->received += strlen(raw);
+      conf->requests++;
+    }
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
     processed=1;
@@ -2198,17 +2124,9 @@ void got_data(mixed fooid, string s)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    conf->hsent += strlen(file->hs);
 	    cache_status["protcache"] = 1;
-	    if( strlen( d ) < 4000 )
-	    {
-	      TIMER_END(cache_lookup);
-	      do_log( my_fd->write( fix_date(file->hs)+d ) );
-	    } 
-	    else 
-	    {
-	      TIMER_END(cache_lookup);
-	      send( fix_date(file->hs)+d );
-	      start_sender( );
-	    }
+	    TIMER_END(cache_lookup);
+	    send( fix_date(file->hs)+d );
+	    start_sender( );
 	    return;
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
@@ -2323,7 +2241,7 @@ static void create(object f, object c, object cc)
   root_id = this_object();
 }
 
-void chain(object f, object c, string le)
+void chain( object f, object c, string le )
 {
   my_fd = f;
   f->set_read_callback(0);
@@ -2357,8 +2275,8 @@ void chain(object f, object c, string le)
       do_not_disconnect = 0;
     if(!processed)
     {
-      f->set_read_callback(got_data);
-      f->set_close_callback(end);
+      my_fd->set_read_callback(got_data);
+      my_fd->set_close_callback(end);
     }
   }
 }
