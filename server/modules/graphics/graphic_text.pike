@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.31 1997/02/25 22:06:19 neotron Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.32 1997/02/25 22:38:05 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -492,7 +492,7 @@ string base_key = "gtext:"+roxen->current_configuration->name;
 //    perror("%d: %s\n", i, color_name(from[i]));
 //}
 
-int number=time(1), _start=time(1);
+int number=(time(1)/100) % 1000, _start=time(1)/100 % 1000;
 
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
@@ -596,7 +596,13 @@ int find_or_insert(mapping find)
   array b = values(cached_args);
   int i;
   for(i=0; i<sizeof(a); i++)
-    if(equal(find, b[i])) return a[i];
+    if(equal(find, b[i])) {
+//    perror("Found old args..\n");
+      return a[i];
+    }
+
+//  perror("Using new args..\n%O\n", find);
+
   cached_args[number]=find;
   return number++;
 }
@@ -606,40 +612,12 @@ string magic_javascript_header(object id)
 {
   if(!id->supports->javascript || !id->supports->images) return "";
   return
-    ("<script>\n"
-     "<!-- \n"
-     "version = 1;\n"
-     "browserName = navigator.appName;\n"
-     "browserVer = parseInt(navigator.appVersion); \n"
-     "if(browserName == \"Netscape\" && (browserVer == 3 || browserVer == 4 || browserVer == 5 || browserVer == 6)) \n"
-     "  version = \"3\";\n"
-     "else\n"
-     " version= \"1\";\n"
-     "\n"
-     "function stat(txt)\n"
+    ("\n<script>\n"
+     "function img_act(ri,hi,txt)\n"
      "{\n"
-     "  top.window.status = txt;\n"
+     "  document.images[ri].src = hi.src;\n"
+     "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
      "}\n"
-     "\n"
-     "function img_act(imgName, txt)\n"
-     "{\n"
-     "  if (version == \"3\") \n"
-     "  {\n"
-     "    imgOn = eval(imgName + \"2.src\");\n"
-     "    document [imgName].src = imgOn;\n"
-     "  }\n"
-     "  setTimeout(\"stat('\"+txt+\"')\", 100);\n"
-     "}\n"
-     "\n"
-     "function img_inact(imgName)\n"
-     "{\n"
-     "  if (version == \"3\") \n"
-     "  {\n"
-     "    imgOff = eval(imgName + \".src\");\n"
-     "    document [imgName].src = imgOff;\n"
-     "  }\n"
-     "}\n"
-     "// -->\n"
      "</script>\n");
 }
 
@@ -657,23 +635,15 @@ string magic_image(string url, int xs, int ys, string sn,
 
   return
     ("<script>\n"
-     "<!-- \n"
-     "if(version == \"3\")\n"
-     "{\n"
-     "  "+sn+" = new Image("+xs+", "+ys+");\n"
-     "  "+sn+".src = \""+image_1+"\";\n"
-     "  "+sn+"2 = new Image("+xs+", "+ys+");\n"
-     "  "+sn+"2.src = \""+image_2+"\";\n"
-     "}\n"
-     "// -->\n"
+     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
+     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"img_act('"+sn+"','"
-      +(mess||url)+"');return true;\"\n"
-      "\n"
-      "onMouseout=\"img_inact('"+sn+"')\"><img _parsed=1 width="+xs+" "
-      "height="+ys+" src="+image_1+" name="+sn+" border=0\nalt=\""+alt+"\" ></a>\n"));
+      +"onMouseover=\"img_act('"+sn+"',"+sn+"h,'"+(mess||url)+"');\"\n"
+      "onMouseout='document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
+      "_parsed=1 width="+xs+" height="+ys+" src="+image_1+" name="+sn+
+      " border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
 
@@ -769,14 +739,15 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   ea = extra_args(arg);
 
+  // Modify the 'arg' mapping...
   if(arg->href)
   {
     url = arg->href;
     lp = "<a href=\""+arg->href+"\" "+ea+">";
     if(!arg->fg) arg->fg=defines->link||"#0000ff";
+    m_delete(arg, "href");
   }
 
-  // Modify the 'arg' mapping...
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
   if(defines->font && !arg->font) arg->font=defines->font||QUERY(default_font);
@@ -800,6 +771,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(sscanf(t, "%s%d", t, i)==2)
     if(i > 1) arg->scale = 1.0 / ((float)i*0.6);
 
+  string na = arg->name, al=arg->align;
+  m_delete(arg, "name"); m_delete(arg, "align");
 
   // Now the 'args' mapping is modified enough..
   int num = find_or_insert( arg );
@@ -859,26 +832,29 @@ string tag_graphicstext(string t, mapping arg, string contents,
     }
     arg->fg = defines->alink||"#ff0000";
     if(arg->bevel) arg->pressed=1;
+
     int num2 = find_or_insert(arg);
     array size = write_text(num2,gt,1,0);
+
     if(!defines->magic_java) res = magic_javascript_header(id);
     defines->magic_java="yes";
-    return res + magic_image(url||"", size[0], size[1],
-			     "i"+(num+""+hash(gt,0x7fffffff)+hash(url||"",0x7fffffff))+"g",
-			     query_location()+num+"/"+quote(gt),
-			     query_location()+num2+"/"+quote(gt),
-			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
-			     id,input?(arg->name||"submit"):0,ea);
+
+    return res +
+      magic_image(url||"", size[0], size[1], "i"+(defines->mi++),
+		  query_location()+num+"/"+quote(gt),
+		  query_location()+num2+"/"+quote(gt),
+		  replace(gt, "\"","'"),(magic=="magic"?0:magic),
+		  id,input?na||"submit":0,ea);
   }
   if(input)
-    return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
+    return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
 	    replace(gt,"\"","'")+"\" src="+query_location()+num+"/"+quote(gt)
-	    +" align="+(arg->align?arg->align:defalign)+ea+
+	    +" align="+(al || defalign)+ea+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
 	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
 	  query_location()+num+"/"+quote(gt)+" "+ea
-	  +" align="+(arg->align?arg->align:defalign)+
+	  +" align="+(al || defalign)+
 	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
 }
 
