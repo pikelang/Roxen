@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.64 2004/04/04 00:53:11 mani Exp $
+// $Id: DBManager.pmod,v 1.65 2004/05/16 02:11:44 mani Exp $
 
 //! Manages database aliases and permissions
 
@@ -453,12 +453,14 @@ mapping db_table_information( string db, string table )
       }
     }
     default:
+#if 0 // This is potentially a very heavy task
       mixed err = catch{
 	return ([
 	  "rows":
 	  (int)(get(db)->query( "SELECT COUNT(*) AS C FROM "+table )[0]->C),
 	]);
       };
+#endif
   }
   return 0;
 }
