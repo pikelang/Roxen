@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.112 2001/08/17 16:16:57 per Exp $
+// $Id: Roxen.pmod,v 1.113 2001/08/20 13:28:53 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -342,7 +342,7 @@ mapping http_rxml_answer( string rxml, RequestID id,
 
 
 mapping http_try_again( float delay )
-//! Causes the request to be retried in delay seconds.
+//! Causes the request to be retried in @[delay] seconds.
 {
   return ([ "try_again_later":delay ]);
 }
@@ -378,8 +378,7 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
 //! Please note that this will cause your callback to be called again.
 //! An optional maximum delay time can be specified.
 //!
-//! Can be used like this:
-//!
+//! @example
 //! void first_try( RequestID id )
 //! {
 //!   if( !id->misc->has_logged_in )
@@ -467,6 +466,8 @@ string http_encode_string(string f)
 }
 
 string http_encode_cookie(string f)
+//! Encode dangerous characters in a string so that it can be used as
+//! the value string or name string in a cookie.
 {
   return replace(f, ({ "=", ",", ";", "%" }), ({ "%3d", "%2c", "%3b", "%25"}));
 }
@@ -602,33 +603,36 @@ string extract_query(string from)
 mapping build_env_vars(string f, RequestID id, string path_info)
 //! Generate a mapping with environment variables suitable for use
 //! with CGI-scripts or SSI scripts etc.
-//! INDEX
-//! SCRIPT_NAME
-//! PATH_INFO
-//! PATH_TRANSLATED
-//! DOCUMENT_NAME
-//! DOCUMENT_URI
-//! LAST_MODIFIED
-//! SCRIPT_FILENAME
-//! DOCUMENT_ROOT
-//! HTTP_HOST
-//! HTTP_PROXY_CONNECTION
-//! HTTP_ACCEPT
-//! HTTP_COOKIE
-//! HTTP_PRAGMA
-//! HTTP_CONNECTION
-//! HTTP_USER_AGENT
-//! HTTP_REFERER
-//! REMOTE_ADDR
-//! REMOTE_HOST
-//! REMOTE_PORT
-//! QUERY_STRING
-//! REMOTE_USER
-//! ROXEN_AUTHENTICATED
-//! CONTENT_TYPE
-//! CONTENT_LENGTH
-//! REQUEST_METHOD
-//! SERVER_PORT
+//!
+//! @mapping
+//!   @member string INDEX
+//!   @member string SCRIPT_NAME
+//!   @member string PATH_INFO
+//!   @member string PATH_TRANSLATED
+//!   @member string DOCUMENT_NAME
+//!   @member string DOCUMENT_URI
+//!   @member string LAST_MODIFIED
+//!   @member string SCRIPT_FILENAME
+//!   @member string DOCUMENT_ROOT
+//!   @member string HTTP_HOST
+//!   @member string HTTP_PROXY_CONNECTION
+//!   @member string HTTP_ACCEPT
+//!   @member string HTTP_COOKIE
+//!   @member string HTTP_PRAGMA
+//!   @member string HTTP_CONNECTION
+//!   @member string HTTP_USER_AGENT
+//!   @member string HTTP_REFERER
+//!   @member string REMOTE_ADDR
+//!   @member string REMOTE_HOST
+//!   @member string REMOTE_PORT
+//!   @member string QUERY_STRING
+//!   @member string REMOTE_USER
+//!   @member string ROXEN_AUTHENTICATED
+//!   @member string CONTENT_TYPE
+//!   @member string CONTENT_LENGTH
+//!   @member string REQUEST_METHOD
+//!   @member string SERVER_PORT
+//! @endmapping
 {
   string addr=id->remoteaddr || "Internal";
   mapping(string:string) new = ([]);
@@ -806,6 +810,7 @@ mapping build_roxen_env_vars(RequestID id)
 //! for use with CGI-scripts or SSI scripts etc. These variables are
 //! roxen extensions and not defined in any standard document.
 //! Specifically:
+//! @pre{
 //! For each cookie:          COOKIE_cookiename=cookievalue
 //! For each variable:        VAR_variablename=variablevalue
 //!                           (Where the null character is encoded as "#")
@@ -814,12 +819,22 @@ mapping build_roxen_env_vars(RequestID id)
 //! For each 'prestate':      PRESTATE_x=true
 //! For each 'config':        CONFIG_x=true
 //! For each 'supports' flag: SUPPORTS_x=true
-//! ROXEN_USER_ID     The unique ID for that client, if available.
-//! COOKIES           A space delimitered list of all the cookies names.
-//! CONFIGS           A space delimitered list of all config flags.
-//! VARIABLES         A space delimitered list of all variable names.
-//! PRESTATES         A space delimitered list of all prestates.
-//! SUPPORTS          A space delimitered list of all support flags.
+//! @}
+//!
+//! @mapping
+//!   @member string ROXEN_USER_ID
+//!     The unique ID for that client, if available.
+//!   @member string COOKIES
+//!     A space delimitered list of all the cookies names.
+//!   @member string CONFIGS
+//!     A space delimitered list of all config flags.
+//!   @member string VARIABLES
+//!     A space delimitered list of all variable names.
+//!   @member string PRESTATES
+//!     A space delimitered list of all prestates.
+//!   @member string SUPPORTS
+//!     A space delimitered list of all support flags.
+//! @endmapping
 {
   mapping(string:string) new = ([]);
   string tmp;
@@ -1254,7 +1269,9 @@ constant replace_values = values( iso88591 ) +
 constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({""})*sizeof(safe_characters);
 
-int is_safe_string(string in)
+//! Returns 1 if @[in] is nonempty and only contains alphanumerical
+//! characters (a-z, A-Z and 0-9). Otherwise returns 0.
+int(0..1) is_safe_string(string in)
 {
   return strlen(in) && !strlen(replace(in, safe_characters, empty_strings));
 }
@@ -1483,7 +1500,7 @@ string sizetostring( int size )
 }
 
 string html_decode_string(LocaleString str)
-//! Decodes `str', opposite to <ref>html_encode_string()</ref>
+//! Decodes `str', opposite to @[html_encode_string()].
 {
   return replace((string)str, replace_entities, replace_values);
 }
@@ -1757,7 +1774,7 @@ string roxen_encode( string val, string encoding )
 string fix_relative( string file, RequestID id )
 //! Turns a relative (or already absolute) virtual path into an
 //! absolute virtual path, that is, one rooted at the virtual server's
-//! root directory. The returned path is <ref>simplify_path()</ref>:ed.
+//! root directory. The returned path is @[simplify_path()]:ed.
 {
   string path = id->not_query;
   if( !search( file, "http:" ) )
@@ -3252,6 +3269,8 @@ int is_modified(string a, int t, void|int len)
   return 1;
 }
 
+//! Converts the @[date] string into a posix time integer
+//! by calling @[parse_since]. Returns -1 upon failure.
 int httpdate_to_time(string date)
 {
   return parse_since(date)[0]||-1;
