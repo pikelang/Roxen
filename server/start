@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.212 2004/05/20 12:47:15 _cvs_stephen Exp $
+# $Id: start,v 1.213 2004/05/20 13:44:17 _cvs_stephen Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -669,7 +669,7 @@ fork_chilimoon() {
 }
 
 start_chilimoon() {
-  check_owner
+  check_owner		# This is undesirable in a startup script FIXME
   raise_limit
 
   if [ x$remove_dumped = x1 ] ; then
