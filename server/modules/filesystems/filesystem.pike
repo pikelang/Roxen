@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.54 1999/05/06 20:51:55 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.55 1999/06/07 01:47:26 mast Exp $";
 constant thread_safe=1;
 
 
@@ -87,7 +87,7 @@ void create()
 	 " If unset, a file named .www_browsable in a directory will "
 	 "_enable_ directory listings.\n");
 
-  defvar("tilde", 0, "Show backupfiles", TYPE_FLAG|VAR_MORE,
+  defvar("tilde", 0, "Show backup files", TYPE_FLAG|VAR_MORE,
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 

@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.171 1999/05/19 16:18:49 grubba Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.172 1999/06/07 01:47:28 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -77,9 +77,9 @@ void create(object c)
 	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
-  defvar("noparse", ({  }), "Extensions to accesscount",
+  defvar("noparse", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
-         "Always access-count all files ending with these extensions.");
+         "Always access count all files ending with these extensions.");
  
   
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.195 1999/05/24 08:41:19 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.196 1999/06/07 01:47:24 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2682,7 +2682,7 @@ object enable_module( string modname )
 		   "and ? matches one character.<p>"
 		   "In username: 'any' stands for any valid account "
 		   "(from .htaccess"
-		   " or auth-module. The default (used when _no_ "
+		   " or an auth module. The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
 		   " everyone to access the module");
 
@@ -2737,7 +2737,7 @@ object enable_module( string modname )
 		   " character.<p>"
 		   "In username: 'any' stands for any valid account"
 		   " (from .htaccess"
-		   " or auth-module. The default is 'deny ip=*'");
+		   " or an auth module. The default is 'deny ip=*'");
 
 	me->deflocaledoc("svenska", "_seclevels", 
 			 "Säkerhet: Behörighetsregler",
@@ -3896,7 +3896,8 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
   fort de kopplar upp sig till servern");
 
   defvar("named_ftp", 0, "FTP: Allow named FTP", TYPE_FLAG|VAR_MORE,
-	 "Allow ftp to normal user-accounts (requires auth-module).\n");
+	 "Allow ftp to normal user-accounts (requires an auth module, "
+	 "e.g. 'User database and security').\n");
   deflocaledoc("svenska", "named_ftp", "FTP: Tillåt icke-anonym FTP",
 	       "Tillåt FTP med loginnamn och lösenord. Du måste ha en "
 	       " authentifikationsmodul för att kunna "

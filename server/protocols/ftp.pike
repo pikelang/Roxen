@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.5 1999/05/22 12:42:24 grubba Exp $
+ * $Id: ftp.pike,v 2.6 1999/06/07 01:47:29 mast Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1461,9 +1461,9 @@ class FTPSession
 					     return(((((line/"#")[0])/"") -
 						     ({" ", "\t"}))*"");
 					   } )-({""})));
-#ifdef DEBUG
+#ifdef FTP2_DEBUG
 	  perror(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
-#endif /* DEBUG */
+#endif /* FTP2_DEBUG */
 	} else {
 	  perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
 			 Query("shells")));
@@ -2434,7 +2434,7 @@ class FTPSession
       return;
     }
 
-    // Authentication successfull
+    // Authentication successful
 
     if (!Query("named_ftp") ||
 	!check_shell(master_session->misc->shell)) {
