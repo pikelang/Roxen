@@ -2,19 +2,52 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.105 2000/08/29 23:45:06 mast Exp $
+//! $Id: module.pmod,v 1.106 2000/08/31 19:14:35 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
 static object Roxen;
 class RequestID { };
 
-//! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-//! WARNING                                                 WARNING
-//! WARNING        This API is not yet set in stone.        WARNING
-//! WARNING        Expect incompatible changes.             WARNING
-//! WARNING                                                 WARNING
-//! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//! API stability notes:
+//!
+//! The API in this file regarding the global functions and the Tag,
+//! TagSet, Context, Frame and Type classes and their descendants is
+//! intended to not change in incompatible ways. There are however
+//! some areas where incompatible changes still must be expected:
+//!
+//! o  The namespace handling will likely change to conform to XML
+//!    namespaces. The currently implemented system is inadequate then
+//!    and will probably be removed.
+//!
+//! o  The semantics for caching and reuse of Frame objects is
+//!    deliberatily documented vaguely (see the class doc for the
+//!    Frame class). The currently implemented behavior will change
+//!    when the cache system becomes reality. So never assume that
+//!    you'll always get fresh Frame instances every time a tag is
+//!    evaluated.
+//!
+//! o  The parser currently can't stream data according to the
+//!    interface for streaming tags. Therefore there's still a risk
+//!    that incompatible changes must be made in it due to design bugs
+//!    when it's tested out. That is considered very unlikely, though.
+//!
+//! o  The type system will be developed further and the currently
+//!    implemented behavior might change as advanced types gets
+//!    implemented. Don't make assumptions about undocumented
+//!    behavior. Declare data properly with the types RXML.TXml,
+//!    RXML.THtml and RXML.TText to let the parser handle the
+//!    necessary conversions instead of doing it yourself. Try to
+//!    avoid implementing types.
+//!
+//! o  Various utilities have FIXME's in their documentation. Needless
+//!    to say they don't work as documented yet, and the doc should be
+//!    considered as ideas only; it might work differently when it's
+//!    actually implemented.
+//!
+//! Note that the API for parsers, p-code evaluators etc is not part
+//! of the "official" API. (The syntax parsed by the currently
+//! implemented parsers are, however.)
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -444,7 +477,7 @@ class TagSet
     return proc_instr ? proc_instrs && proc_instrs[name] : tags[name];
   }
 
-  array(Tag) get_local_tags()
+  local array(Tag) get_local_tags()
   //! Returns all the Tag objects in this tag set.
   {
     array(Tag) res = values (tags);
@@ -452,7 +485,7 @@ class TagSet
     return res;
   }
 
-  Tag get_tag (string name, void|int proc_instr)
+  local Tag get_tag (string name, void|int proc_instr)
   //! Returns the Tag object for the given name, if any, that's
   //! defined by this tag set (including its imported tag sets). If
   //! proc_instr is nonzero the set of PI tags is searched, else the
@@ -466,20 +499,27 @@ class TagSet
     return 0;
   }
 
-  multiset(string) get_tag_names()
+  local int has_tag (Tag tag)
+  //! Returns nonzero if the given tag is contained in this tag set
+  //! (including its imported tag sets).
+  {
+    return !!get_tag (tag->name, tag->flags & FLAG_PROC_INSTR);
+  }
+
+  local multiset(string) get_tag_names()
   //! Returns the names of all non-PI tags that this tag set defines.
   {
     return `| ((multiset) indices (tags), @imported->get_tag_names());
   }
 
-  multiset(string) get_proc_instr_names()
+  local multiset(string) get_proc_instr_names()
   //! Returns the names of all PI tags that this tag set defines.
   {
     return `| (proc_instrs ? (multiset) indices (proc_instrs) : (<>),
 	       @imported->get_proc_instr_names());
   }
 
-  Tag get_overridden_tag (Tag overrider)
+  local Tag get_overridden_tag (Tag overrider)
   //! Returns the tag definition that the given one overrides, or zero
   //! if none.
   {
@@ -494,7 +534,7 @@ class TagSet
     return tag;
   }
 
-  array(Tag) get_overridden_tags (string name, void|int proc_instr)
+  local array(Tag) get_overridden_tags (string name, void|int proc_instr)
   //! Returns all tag definitions for the given name, i.e. including
   //! the overridden ones. A tag to the left overrides one to the
   //! right. If proc_instr is nonzero the set of PI tags is searched,
@@ -523,7 +563,7 @@ class TagSet
     changed();
   }
 
-  mapping(string:string) get_string_entities()
+  local mapping(string:string) get_string_entities()
   //! Returns the set of entity replacements, including those from
   //! imported tag sets.
   {
@@ -533,7 +573,7 @@ class TagSet
       return `+(@imported->get_string_entities(), ([]));
   }
 
-  mapping(string:Tag) get_plugins (string name, void|int proc_instr)
+  local mapping(string:Tag) get_plugins (string name, void|int proc_instr)
   //! Returns the registered plugins for the given tag name. Don't be
   //! destructive on the returned mapping. If proc_instr is nonzero,
   //! the function searches for processing instruction plugins,
@@ -554,13 +594,13 @@ class TagSet
     }
   }
 
-  int has_effective_tags (TagSet tset)
+  local int has_effective_tags (TagSet tset)
   //! This one deserves some explanation.
   {
     return tset == top_tag_set && !got_local_tags;
   }
 
-  mixed `->= (string var, mixed val)
+  local mixed `->= (string var, mixed val)
   {
     switch (var) {
       case "imported":
@@ -577,7 +617,7 @@ class TagSet
     return val;
   }
 
-  mixed `[]= (string var, mixed val) {return `->= (var, val);}
+  local mixed `[]= (string var, mixed val) {return `->= (var, val);}
 
   Parser `() (Type top_level_type, void|RequestID id)
   //! Creates a new context for parsing content of the specified type,
@@ -1631,6 +1671,12 @@ class Frame
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
+  //!Frame parent_frame;
+  //! If this variable exists, it gets set to the frame object of the
+  //! closest surrounding tag that defined this tag in its
+  //! additional_tags or local_tags. Useful to access the "mother tag"
+  //! from the subtags it defines.
+
   //!string raw_tag_text;
   //! If this variable exists, it gets the raw text representation of
   //! the tag, if there is any. Note that it's after parsing of any
@@ -2141,6 +2187,16 @@ class Frame
 #ifdef MODULE_DEBUG
       else if (!args && !(flags & FLAG_PROC_INSTR)) fatal_error ("args not set.\n");
 #endif
+
+      if (!zero_type (this->parent_frame))
+	if (up->local_tags && up->local_tags->has_tag (tag))
+	  this->parent_frame = up;
+	else
+	  for (Frame f = up; f; f = f->up)
+	    if (f->additional_tags && f->additional_tags->has_tag (tag)) {
+	      this->parent_frame = f;
+	      break;
+	    }
 
       if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
 	TagSet tset = ctx->tag_set;
