@@ -1,10 +1,10 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.12 2000/01/17 02:33:53 nilsson Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.13 2000/02/12 15:54:28 nilsson Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
 #if constant(roxen)
 // This is a Roxen without Remote, but I don't want to throw an error.
-mixed *register_module()
+array register_module()
 {
   return 0;
 }
