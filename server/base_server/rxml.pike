@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.16 1999/07/27 22:12:51 neotron Exp $
+ * $Id: rxml.pike,v 1.17 1999/08/01 22:40:03 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -571,12 +571,20 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     if(!id->misc->defaults[n])
       id->misc->defaults[n] = ([]);
 
+    // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
         m_delete( m, arg );
       }
+
+    str=parse_html(str,([]),(["attrib":
+      lambda(string tag, mapping m, string cont, mapping c, object id) {
+        id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
+        return "";
+      }
+    ]),0,id,file,defines);
 
     id->misc->tags[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
     id->misc->_tags[n] = call_user_tag;
@@ -592,12 +600,20 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     if(!id->misc->defaults[n])
       id->misc->defaults[n] = ([]);
 
+    // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[0..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
         m_delete( m, arg );
       }
+
+    str=parse_html(str,([]),(["attrib":
+      lambda(string tag, mapping m, string cont, mapping c, object id) {
+        id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
+        return "";
+      }
+    ]),0,id,file,defines);
 
     id->misc->containers[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
     id->misc->_containers[n] = call_user_container;
@@ -1079,7 +1095,7 @@ int if_date( string date, RequestID id, mapping m )
   mapping c;
   c=localtime(time(1));
   b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
-  a=(int)date;
+  a=(int)replace(date,"-","");
   if(a > 999999) a -= 19000000;
   else if(a < 901201) a += 10000000;
   if(m->inclusive || !(m->before || m->after) && a==b)
