@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.102 1999/10/04 18:54:34 marcus Exp $
+ * $Id: roxenloader.pike,v 1.103 1999/10/11 01:43:45 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.102 1999/10/04 18:54:34 marcus Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.103 1999/10/11 01:43:45 mast Exp $";
 
 #define perror roxen_perror
 
@@ -517,6 +517,12 @@ void load_roxen()
 #if !constant(gethostname)
   add_constant("gethostname", lambda() { return "localhost"; });
 #endif
+
+#ifndef OLD_PARSE_HTML
+  // Temporary kludge to get wide string rxml parsing.
+  add_constant("parse_html", parse_html);
+  add_constant("parse_html_lines", parse_html_lines);
+#endif
   
   roxen = really_load_roxen();
 
@@ -528,6 +534,82 @@ void load_roxen()
     );
   nwrite = roxen->nwrite;
 }
+
+
+#ifndef OLD_PARSE_HTML
+
+// Temporary kludge to get wide string rxml parsing.
+
+string parse_html (string data, mapping tags, mapping containers,
+		   mixed... args)
+{
+  Parser.HTML parser = Parser.HTML();
+  parser->add_tags (map (
+    tags,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args,
+			  @extra);
+	     };
+    }));
+  parser->add_containers (map (
+    containers,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, string contents,
+		     mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args, contents,
+			  @extra);
+	     };
+    }));
+  parser->_set_tag_callback (
+    lambda (object parser, string str) {
+      parser->feed_insert (str[1..]);
+      return ({str[..0]});
+    });
+  parser->set_extra (@args);
+  return parser->finish (data)->read();
+}
+
+string parse_html_lines (string data, mapping tags, mapping containers,
+			 mixed... args)
+{
+  Parser.HTML parser = Parser.HTML();
+  parser->add_tags (map (
+    tags,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args,
+			  parser->at_line(), @extra);
+	     };
+    }));
+  parser->add_containers (map (
+    containers,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, string contents,
+		     mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args, contents,
+			  parser->at_line(), @extra);
+	     };
+    }));
+  parser->_set_tag_callback (
+    lambda (object parser, string str) {
+      parser->feed_insert (str[1..]);
+      return ({str[..0]});
+    });
+  parser->set_extra (@args);
+  return parser->finish (data)->read();
+}
+
+#endif
+
 
 // Code to trace fd usage.
 #ifdef FD_DEBUG
