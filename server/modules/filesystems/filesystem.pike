@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.65 2000/02/14 10:19:45 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.66 2000/02/16 11:06:18 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -480,7 +480,7 @@ mixed find_file( string f, object id )
       accesses++;
       TRACE_LEAVE("Normal return");
       if( id->misc->set_output_charset )
-        id->misc->set_output_charset( query("charset"), 1 );
+        id->misc->set_output_charset( query("charset"), 2 );
       id->misc->input_charset = query("charset");
       return o;
     }
