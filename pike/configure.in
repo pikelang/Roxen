@@ -21,13 +21,20 @@ case "$with_pike" in
   ;;
   0.6)
   ;;
+  dual|multi)
+    with_pike=dual
+  ;;
   *)
     with_pike=0.5
   ;;
 esac
 AC_MSG_RESULT($with_pike)
 
-test -d $with_pike/. || mkdir $with_pike
+if test "x$with_pike" = "xdual"; then
+  with_pike='[0-9]*'
+else
+  test -d $with_pike/. || mkdir $with_pike
+fi
 
 AC_CONFIG_SUBDIRS($with_pike/src)
 
