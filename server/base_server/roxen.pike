@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.493 2000/07/04 03:46:26 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.494 2000/07/09 14:13:05 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -27,6 +27,7 @@ inherit "hosts";
 inherit "disk_cache";
 inherit "language";
 inherit "supports";
+inherit "module_support";
 
 
 // --- Debug defines ---
@@ -43,106 +44,6 @@ inherit "supports";
 # define THREAD_WERR(X)
 #endif
 
-
-// Prototypes for other parts of roxen.
-
-class RoxenModule
-{
-  constant is_module=1;
-  constant module_type = 0;
-  constant module_unique = 1;
-  string|mapping(string:string) module_name;
-  string|mapping(string:string) module_doc;
-
-  array(int|string|mapping) register_module();
-  string file_name_and_stuff();
-
-  void start(void|int num, void|object conf);
-
-  void defvar(string var, mixed value, string name,
-              int type, string|void doc_str, mixed|void misc,
-              int|function|void not_in_config);
-  void definvisvar(string name, int value, int type, array|void misc);
-
-  void deflocaledoc( string locale, string variable,
-                     string name, string doc,
-                     mapping|void translate );
-  int killvar(string var);
-  string check_variable( string s, mixed value );
-  mixed query(string|void var, int|void ok);
-
-  void set(string var, mixed value);
-  int setvars( mapping (string:mixed) vars );
-
-
-  string query_internal_location();
-  string query_location();
-  string query_provides();
-  array query_seclevels();
-  array(int) stat_file(string f, RequestID id);
-  array(String) find_dir(string f, RequestID id);
-  mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
-  string real_file(string f, RequestID id);
-  void save();
-  mapping api_functions();
-  mapping query_tag_callers();
-  mapping query_container_callers();
-
-  string info(object conf);
-  string comment();
-}
-
-class RequestID
-{
-  object conf; // Really Configuration, but that's sort of recursive.
-  int time;
-  string raw_url;
-  int do_not_disconnect;
-  mapping (string:string) variables;
-  mapping (string:mixed) misc;
-  mapping (string:string) cookies;
-  mapping (string:string) request_headers;
-  mapping (string:mixed) throttle;
-  mapping (string:string) client_var;
-  multiset(string) prestate;
-  multiset(string) config;
-  multiset(string) supports;
-  multiset(string) pragma;
-  array(string) client;
-  array(string) referer;
-
-  Stdio.File my_fd;
-  string prot;
-  string clientprot;
-  string method;
-
-  string realfile;
-  string virtfile;
-  string rest_query;
-  string raw;
-  string query;
-  string not_query;
-  string extra_extension;
-  string data;
-  string leftovers;
-  array (int|string) auth;
-  string rawauth;
-  string realauth;
-  string since;
-  string remoteaddr;
-  string host;
-
-  void create(object|void master_request_id);
-  void send(string|object what, int|void len);
-  string scan_for_query( string in );
-  void end(string|void s, int|void keepit);
-  void ready_to_receive();
-  void send_result(mapping|void result);
-  RequestID clone_me();
-
-  Stdio.File connection( );
-  object     configuration(); // really Configuration
-};
 
 string filename( program|object o )
 {
@@ -2769,6 +2670,8 @@ string decode_charset( string charset, string data )
 
 void create()
 {
+  define_global_variables();
+
   SET_LOCALE(default_locale);
 
   // Dump some programs (for speed)
@@ -2823,7 +2726,6 @@ void create()
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
-  add_constant( "RequestID", RequestID);
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
 
@@ -3408,13 +3310,14 @@ int main(int argc, array tmp)
   if(configuration_dir[-1] != '/')
     configuration_dir += "/";
 
+  restore_global_variables(); // restore settings...
+
   // Dangerous...
   if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
 
   argv -= ({ 0 });
   argc = sizeof(argv);
 
-  define_global_variables(argc, argv);
 
   object o;
   if(QUERY(locale) != "standard" && (o = RoxenLocale[QUERY(locale)]))
