@@ -37,7 +37,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.9 1997/01/20 13:52:42 kg Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.10 1997/02/14 03:43:00 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -82,7 +82,7 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include "base_server/proxyauth.pike"
+#include "../../base_server/proxyauth.pike"
 
 class Request {
   inherit "socket";
@@ -1118,6 +1118,7 @@ mapping request_port=([]);
 
 void init_proxies();
 
+import Stdio;
 void start()
 {
   string pos;
@@ -1500,7 +1501,7 @@ mixed create_dataport(function acceptfunc)
 {
   int i, ii;
   object dataport;
-  dataport=Port();
+  dataport=files.port();
   ii=random(20000)+20000;
   for (i=0; i<500&&ii<65535; i++)
   {

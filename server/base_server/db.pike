@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.6 1997/02/13 15:11:12 per Exp $ */
+/* $Id: db.pike,v 1.7 1997/02/14 03:42:54 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -17,7 +17,7 @@ private static void sync()
   if(last)
   {
     perror("save ("+ last +")\n");
-    if(!file::open(DIR+last,"wca"))
+    if(!file::open(DIR+last,"wct"))
     {
       perror("FAILED TO OPEN FILE\n");
       error("Save of object not possible.\n");
@@ -31,12 +31,12 @@ private static void sync()
 
 
 
-public int db_open(string f)
+public int db_open(string f, int noread)
 {
 #ifdef DEBUG_DB
   perror("db_open "+f+"\n");
 #endif
-  if(last != f)
+  if(noread && (last != f))
   {
     int res;
     perror("restore ("+ f +")\n");
@@ -54,7 +54,8 @@ public int db_open(string f)
     else
       db = ([ ]);
     file::close();
-  }
+  } else
+    db = ([ ]);
   return 1;
 }
 

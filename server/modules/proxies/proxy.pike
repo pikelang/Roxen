@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.11 1996/12/08 10:33:26 neotron Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.12 1997/02/14 03:43:02 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -25,12 +25,15 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://roxen.com/>Roxen Challenger</a></font>"
 
+import Regexp;
+import Stdio;
+import Array;
 
 inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include "base_server/proxyauth.pike"
+#include "../../base_server/proxyauth.pike"
 
 program filep = (program)"/precompiled/file";
 
@@ -307,10 +310,10 @@ program Connection = class {
     
     if(b) 
       log(b[1]+" "+ (new?"New ":"Cache ") + 
-	  map_array(my_clients,hostname)*",");
+	  map(my_clients,hostname)*",");
     else  
       log("- " + (new?"New ":"Cache ") + 
-	  map_array(my_clients, hostname)*",");
+	  map(my_clients, hostname)*",");
     
     if(ids) 
       foreach(ids, id) 
@@ -340,7 +343,7 @@ program Connection = class {
     //    proxy = previous_object(); 
     // Sometimes this was roxen, which caused.. problems. =)
     proxy = prox;
-    pipe =  Pipe();
+    pipe =  files.pipe();
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
@@ -384,7 +387,7 @@ program Connection = class {
     
   string status()
   {
-    return "Sending to "+map_array(my_clients, hostname)*",";
+    return "Sending to "+map(my_clients, hostname)*",";
   }
   
   void end()

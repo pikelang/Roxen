@@ -1,6 +1,6 @@
 static private inherit "db";
 
-/* $Id: persistent.pike,v 1.6 1997/02/13 15:11:13 per Exp $ */
+/* $Id: persistent.pike,v 1.7 1997/02/14 03:42:55 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -136,7 +136,7 @@ public void persist(mixed id)
   if(!id)  error("No known id in persist.\n");
 
   __id = id;
-  db_open( id );
+  db_open( id, 0 );
   restore_variables();
   restore_call_out_list();
 
@@ -150,7 +150,7 @@ public void save()
   {
     mixed i = nameof(this_object());
     if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
-    db_open( __id );
+    db_open( __id, 1 );
   }
 #if 0
   perror("save "+__id+"\n");
