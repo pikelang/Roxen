@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.23 2000/03/06 14:44:12 peter Exp $
+// $Id: global_variables.pike,v 1.24 2000/03/06 18:54:30 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -301,7 +301,7 @@ void define_global_variables( int argc, array (string) argv )
 
   deflocaledoc("svenska", "RestoreConnLogFull",
 	       "Loggning: Logga hela fillängden vid återstartad nerladdning",
-	       "När den här flaggar är satt så loggar Roxen hela längden på "
+	       "När den här flaggan är satt så loggar Roxen hela längden på "
 	       "en fil vars nerladdning återstartas. Om en användare först "
 	       "laddar hem 100 bytes av en fil och sedan laddar hem de "
 	       "återstående 900 bytes av filen med en Range-request så "
@@ -310,7 +310,9 @@ void define_global_variables( int argc, array (string) argv )
 	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
   deflocaledoc("deutsch", "RestoreConnLogFull",
-               "Logging: Bei wiederaufgenommenen Verbindungen werden die "
+               "Logging: Verzeichnen die bisher verschickten Daten "
+	       "beim wiederaufgenommenen Verbindungen",
+	       "Bei wiederaufgenommenen Verbindungen werden die "
                "übertragenen Daten sowie die bisher verschickten Daten "
                "verzeichnet.  Wenn ein Benutzer bereits 100 Bytes einer Datei "
                "geladen hat, und in einem späteren Download die fehlenden 900 "
@@ -345,7 +347,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
   deflocaledoc( "svenska", "logdirprefix", "Loggning: Loggningsmappprefix",
 		"Alla nya loggar som skapas får det här prefixet.");
   deflocaledoc( "deutsch", "logdirprefix", "Logging: Logverzeichnis-Prefix",
-		"Alle Logdateien werden unterhalb dieses Verzeichnisses
+		#"Alle Logdateien werden unterhalb dieses Verzeichnisses
                  abgelegt.");
 
   globvar("cache", 0, "Cache: Proxy Disk Cache Enabled", TYPE_FLAG,
@@ -363,7 +365,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"Det minsta antalet Mb som tas bort vid en cacherensning.");
   deflocaledoc( "deutsch", "garb_min_garb",
 		"Cache: Proxy Disk Cache Reinigungsgröße",
-		"Wird der Cache geleert, werden mindestens soviel Megabytes
+		#"Wird der Cache geleert, werden mindestens soviel Megabytes
                  entfernt.");
 
 
@@ -668,7 +670,7 @@ erhöht sich so die Sicherheit des Servers.");
 ", och de kommer att sökas igenom i den ordning som de står i listan.");
   deflocaledoc("deutsch", "ModuleDirs", "Modul-Verzeichnisse",
 #"Eine Liste von Verzeichnissen, in denen Roxen nach Modulen
-suchen wird. Dies können relative Pfade zu "+getcwd()+" sein.
+suchen wird. Dies können relative Pfade zu "+getcwd()+#" sein.
 Die Verzeichnisse werden in der eingegeben Reihenfolge nach Modulen
 durchsucht.");
 
@@ -694,7 +696,7 @@ durchsucht.");
   reguljärt uttryck 	funktion, funktion
   ...
  </pre>Se filen server/etc/supports för en mer utförlig dokumentation");
-  deflocaledoc("deutsch", "Browser-Unterstützung",
+  deflocaledoc("deutsch", "Supports", "Browser-Unterstützung",
 #"Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
 Webbrowser unterstützt. Die Standard-Informationen werden aus der
 Datei server/etc/supports entnommen, das Format ist:<pre>
@@ -958,7 +960,7 @@ globvar("suicide_timeout",
 så här ofta. Tiden är angiven i dagar");
   deflocaledoc("deutsch", "suicide_timeout",
                "Automatischer Neustart: Zeitbegrenzung (in Tagen)",
-#Roxen wird nach soviel Tagen automatisch neugestartet.");
+#"Roxen wird nach soviel Tagen automatisch neugestartet.");
 
   globvar("argument_cache_in_db", 0,
          "Cache: Store the argument cache in a mysql database",
