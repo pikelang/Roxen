@@ -129,21 +129,22 @@ class ConfigurationSettings
             ]),TYPE_STRING_LIST,
             ([
               "english":
-#"<pre>
-          normal - Show module name and documentation with images.
-            fast - Like verbose, but no type images.
-         compact - Only show the names of modules, and allow addition/deletion
-                   of multiple modules at once.
-  really compact - Like compact, but no module classes.
-</pre>
+#"<dl>
+<dt>normal</dt><dd>Show module name and documentation with images.</dd>
+<dt>fast</dt><dd>Like verbose, but no type images.</dd>
+<dt>compact</dt><dd>Only show the names of modules, and allow
+addition/deletion of multiple modules at once.</dd>
+<dt>really compact</dt><dd>Like compact, but no module classes.</dd>
+</dl>
 ",
               "svenska":
-#"<pre>
-       normal - Visa modulnamnet, dokumentationen och typbilder.
-        snabb - Som normal, men inga typbilder.
-      kompakt - Visa bara namnet, och tillåt adderande av flera moduler
-                på samma gång.
-   kompaktare - Som kompakt, men utan modulkategorier.
+#"<dl>
+<dt>normal</dt><dd>Visa modulnamnet, dokumentationen och typbilder.</dd>
+<dt>snabb</dt><dd>Som normal, men inga typbilder.</dd>
+<dt>kompakt</dt><dd>Visa bara namnet, och tillåt adderande av flera
+moduler på samma gång.</dd>
+<dt>kompaktare</dt><dd>Som kompakt, men utan modulkategorier.</dd>
+</dl>
 " ]),
 ({ "normal","fast","compact","really compact"}),
 (["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt","really compact":"kompaktare"]),
