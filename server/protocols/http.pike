@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.28 1997/05/28 01:45:14 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.29 1997/05/30 12:33:44 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -90,7 +90,10 @@ private void setup_pipe(int noend)
 #if _DEBUG_HTTP_OBJECTS
   my_state = 6;
 #endif
-  if(!my_fd) return end();
+  if(!my_fd) {
+    end();
+    return;
+  }
   if(!pipe)  pipe=Pipe.pipe();
 //  if(!noend) pipe->set_done_callback(end);
 #ifdef REQUEST_DEBUG
