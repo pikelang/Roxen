@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.162 1999/10/09 16:40:02 grubba Exp $
+// $Id: http.pike,v 1.163 1999/10/10 19:21:55 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.162 1999/10/09 16:40:02 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.163 1999/10/10 19:21:55 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -853,7 +853,10 @@ string format_backtrace(array bt, int eid)
   // first entry is always the error, 
   // second is the actual function, 
   // rest is backtrace.
-  bt = map( bt, html_encode_string );
+  //   bt = map( bt, html_encode_string );
+  bt = map( bt, lambda( string q ){ 
+                  return highlight_pike("foo", ([ "nopre":1 ]), q);
+                } );
   string reason = roxen.diagnose_error( bt );
   if(sizeof(bt) == 1) // No backtrace?!
     bt += ({ "Unknown error, no backtrace."});
@@ -1632,6 +1635,7 @@ object clone_me()
   c=object_program(t=this_object())();
 
 // c->first = first;
+  c->port_obj = port_obj;
   c->conf = conf;
   c->time = time;
   c->raw_url = raw_url;
