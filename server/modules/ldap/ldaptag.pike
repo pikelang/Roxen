@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.27 2002/03/06 13:09:32 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.28 2003/06/26 09:21:42 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -45,6 +45,10 @@ constant tagdoc=([
 <attr name='server' value='LDAP URL' default='Server URL'><p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
  will be used.</p>
+ <p>URLs are written on the format:
+    <tt>ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
+    For details, see <a href=\"http://rfc.roxen.com/2255\">RFC 2255</a>.
+ </p>
 </attr>
 
 <attr name='password' value='password'><p>
@@ -69,33 +73,55 @@ constant tagdoc=([
 </attr>
 
 <attr name='parser'><p>
- If specified, the content of <att>attr</att> will be parsed by the RXML parser. This is
- useful if the operation is to be built dynamically.</p>
+ If specified, the content of <att>attr</att> will be parsed
+ by the RXML parser. This is useful if the operation is to be
+ built dynamically.</p>
 </attr>",
 
 "emit#ldap":#"<desc type='plugin'><p><short>
  Use this source to search LDAP directory for information.</short> The
  result will be available in variables named as the LDAP entries
  attribute.</p>
+
+<p>
+ <ex-box>
+<emit source=\"ldap\"
+  server=\"ldap://ldap.foo.com/dc=foo,dc=com?cn,sn,mail?sub?(sn=john)\">
+</emit>
+</ex-box>
+
+<ex-box>
+<emit source=\"ldap\"
+      server=\"ldap://ldap.foo.com/?cn,sn,mail\"
+      basedn=\"dc=foo,dc=com\"
+      search-scope=\"sub\"
+      search-filter=\"(sn=john)\" >
+</emit>
+</ex-box>
+</p>
 </desc>
 
 <attr name='server' value='LDAP URL' default='Server URL'><p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
  will be used.</p>
+ <p>URLs are written on the format:
+    <tt>ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
+    For details, see <a href=\"http://rfc.roxen.com/2255\">RFC 2255</a>.
+ </p>
 </attr>
 
 <attr name='search-filter' value='search filter'><p>
- Filter of an LDAP search operation. If used that this value rewrites
+ Filter of an LDAP search operation. This value will override
  the corresponding part of URL.</p>
 </attr>
 
 <attr name='basedn' value='base DN'><p>
- Base DN of an LDAP search operation. If used that this value rewrites
+ Base DN of an LDAP search operation. This value will override
  the corresponding part of URL.</p>
 </attr>
 
 <attr name='search-scope' value='search scope'><p>
- Scope of an LDAP search operation. If used that this value rewrites
+ Scope of an LDAP search operation. This value will override
  the corresponding part of URL.</p>
 </attr>
 
