@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.52 2000/09/27 00:00:04 per Exp $
+// $Id: read_config.pike,v 1.53 2001/02/22 17:46:28 mast Exp $
 
 #include <module.h>
 
@@ -62,7 +62,7 @@ void really_save_it( string cl, mapping data )
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
-  fd = open(f+".new", "wct");
+  fd = open(f+".new~", "wct");
 
   if(!fd)
     error("Creation of configuration file failed ("+f+") "
@@ -93,8 +93,8 @@ void really_save_it( string cl, mapping data )
 
     destruct(fd);
 
-    fd = open( f+".new", "r" );
-    
+    fd = open( f+".new~", "r" );
+
     if(!fd)
       error("Failed to open new config file for reading\n" );
     
@@ -109,7 +109,7 @@ void really_save_it( string cl, mapping data )
     if( file_stat(f) && !mv(f, f+"~") )
       error("Failed to move current config file to backup file\n");
 
-    if( !mv(f+".new", f) )
+    if( !mv(f+".new~", f) )
     {
       if( !mv( f+"~", f ) )
         error("Failed to move new config file to current file\n"
@@ -120,7 +120,8 @@ void really_save_it( string cl, mapping data )
   };
   if( !file_stat( f ) ) // Oups. Gone.
     mv( f+"~", f );
-  rm( f+".new");
+  catch (fd->close());		// Can't remove open files on NT.
+  rm( f+".new~");
   throw( err );
 }
 
