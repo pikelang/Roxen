@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.31 1999/04/07 18:58:00 peter Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.32 1999/07/06 20:05:10 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -36,6 +36,13 @@ array register_module()
 }
 
 int fork_exec_p() { return !QUERY(fork_exec); }
+
+#if constant(__builtin.security)
+// EXPERIMENTAL: Try using the credential system.
+constant security = __builtin.security;
+object luser = class {}();
+object luser_creds = security.Creds(looser, security.BIT_NOT_SETUID, 0);
+#endif /* constant(__builtin.security)
 
 void create()
 {
@@ -194,7 +201,12 @@ array|mapping call_script(function fun, object got, object file)
   if(catch {
     set_max_eval_time(query("evaltime"));
 #endif
-    err=catch(result=fun(got)); 
+#if constant(__builtin.security)
+    // EXPERIMENTAL: Call with low credentials.
+    err = catch(result = call_with_creds(luser_creds, fun, got); 
+#else /* !constant(__builtin.security) */
+    err = catch(result = fun(got)); 
+#endif /* constant(__builtin.security) */
 // The eval-time might be exceeded in here..
 #if efun(set_max_eval_time)
     remove_max_eval_time(); // Remove the limit.
@@ -361,6 +373,10 @@ mapping handle_file_extension(object f, string e, object got)
 string status()
 {
   string res="", foo;
+
+#if constant(__builtin.security)
+  res += "<hr><h1>Credential system enabled</h1>\n";
+#endif /* constant(__builtin.security) */
 
   if(sizeof(scripts))
   {
