@@ -8,18 +8,15 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.44 1999/11/26 03:21:32 per Exp $";
-constant thread_safe=1;
+constant cvs_version=
+"$Id: pikescript.pike,v 1.45 1999/11/26 03:25:22 per Exp $";
 
+constant thread_safe=1;
 mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
-
-#if constant(_static_modules) && efun(thread_create)
-constant Mutex=__builtin.mutex;
-#endif /* _static_modules */
 
 array register_module()
 {
@@ -32,10 +29,8 @@ array register_module()
     "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
     "NOTE: Enabling this module is the same thing as letting your users run"
     " programs with the same right as the server!"
-    });
+  });
 }
-
-int fork_exec_p() { return !QUERY(fork_exec); }
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -46,34 +41,9 @@ object luser_creds = security.Creds(luser, 0, 0);
 
 void create()
 {
-  defvar("exts", ({ "lpc", "ulpc", "µlpc","pike" }), "Extensions", TYPE_STRING_LIST,
+  defvar("exts", ({ "lpc", "ulpc", "µlpc","pike" }), "Extensions", 
+         TYPE_STRING_LIST,
 	 "The extensions to parse");
-
-#ifndef THREADS
-  defvar("fork_exec", 0, "Fork execution: Enabled", TYPE_FLAG,
-	 "If set, pike will fork to execute the script. "
-	 "This is a more secure way if you want to let "
-	 "your users execute pike scripts. "
-	 "Note, that fork_exec must be set for Run scripts as, "
-	 "Run user scripts as owner and Change directory variables."
-	 "Note, all features of pike-scripts are not available when "
-	 "this is enabled.");
-
-  defvar("runuser", "", "Fork execution: Run scripts as", TYPE_STRING,
-	"If you start Roxen as root, and this variable is set, root uLPC "
-	"scripts will be run as this user. You can use either the user "
-	"name or the UID. Note however, that if you don't have a working "
-	"user database enabled, only UID's will work correctly. If unset, "
-	"scripts owned by root will be run as nobody. ", 0, fork_exec_p);
-
-  defvar("scriptdir", 1, "Fork execution: Change directory", TYPE_FLAG,
-	"If set, the current directory will be changed to the directory "
-	"where the script to be executed resides. ", 0, fork_exec_p);
-  
-  defvar("user", 1, "Fork execution: Run user scripts as owner", TYPE_FLAG,
-	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
-#endif
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
@@ -115,22 +85,9 @@ array (string) query_file_extensions()
   return QUERY(exts);
 }
 
-private string|array(int) runuser;
-
 #ifdef THREADS
 mapping locks = ([]);
 #endif
-
-void my_error(array err, string|void a, string|void b)
-{
-//   if( !arrayp( err ) )
-//     err = (array)err;
-//   err[0] = ("<font size=+1>"+(b||"Error while executing code in pike script")
-// 	    + "</font><br><p>" +(err[0]||"") + (a||"")
-// 	    + "<br><p>The pike Script will be reloaded automatically.\n");
-//   throw(err);
-  throw( err );
-}
 
 array|mapping call_script(function fun, object got, object file)
 {
@@ -146,53 +103,12 @@ array|mapping call_script(function fun, object got, object file)
   if(got->realauth && !QUERY(clearpass))
     got->realauth=0;
 
-#ifndef THREADS
-#if efun(fork)
-  if(QUERY(fork_exec)) {
-    if(fork())
-      return ([ "leave_me":1 ]);
-    
-    catch {
-      /* Close all listen ports in copy. */
-      foreach(indices(roxen->portno), object o) {
-	destruct(o);
-	roxen->portno[o] = 0;
-      }
-    };
-    
-    /* Exit immediately after this request is done. */
-    call_out(lambda(){exit(0);}, 0);
-    
-    if(QUERY(user) && got->misc->is_user && 
-       (us = file_stat(got->misc->is_user)))
-      uid = us[5..6];
-    else if (!getuid() || !geteuid()) {
-      if (runuser)
-	uid = runuser;
-      else
-	uid = "nobody";
-    }
-    if(stringp(uid))
-      privs = Privs("Starting pike-script", uid);
-    else if(uid)
-      privs = Privs("Starting pike-script", @uid);
-    setgid(getegid());
-    setuid(geteuid());
-    if (QUERY(scriptdir) && got->realfile)
-      cd(dirname(got->realfile));
-
-  } else 
-#endif
-    if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
-      privs = Privs("Executing pikescript as non-www user", @us[5..6]);
-#else
   object key;
   if(!function_object(fun)->thread_safe)
   {
-    if(!locks[fun]) locks[fun]=Mutex();
+    if(!locks[fun]) locks[fun]=Thread.Mutex();
     key = locks[fun]->lock();
   }
-#endif
 
 #if constant(__builtin.security)
   // EXPERIMENTAL: Call with low credentials.
@@ -204,40 +120,6 @@ array|mapping call_script(function fun, object got, object file)
   if(privs) 
     destruct(privs);
 
-#ifndef THREADS
-#if efun(fork)
-  if (QUERY(fork_exec)) 
-  {
-    if (err = catch 
-    {
-      if (err) 
-      {
-	err = catch{my_error(err, got->not_query);};
-	result = describe_backtrace(err);
-      } 
-      else if (!stringp(result)) 
-      {
-	result = sprintf("<h1>Return-type %t not supported for Pike-scripts "
-			 "in forking-mode</h1><pre>%s</pre>", result,
-			 replace(sprintf("%O", result),
-				 ({ "<", ">", "&" }),
-				 ({ "&lt;", "&gt;", "&amp;" })));
-      }
-      result = parse_rxml(result, got, file);
-      /* Set the connection to blocking-mode */
-      got->my_fd->set_blocking();
-      got->my_fd->write("HTTP/1.0 200 OK\n"
-			"Content-Type: text/html\n"
-			"\n"+result);
-    }) 
-    {
-      perror("Execution of pike-script wasn't nice:\n%s\n",
-	     describe_backtrace(err));
-    }
-    exit(0);
-  }
-#endif
-#endif
   if(err)
     return ({ -1, err });
 
@@ -338,7 +220,7 @@ mapping handle_file_extension(object f, string e, object got)
   if(arrayp(err)) 
   {
     m_delete( scripts, got->not_query );
-    my_error(err[1]); // Will interrupt here.
+    throw( err );
   }
   return err;
 }
@@ -364,18 +246,3 @@ string status()
   return ("<pre><font size=+1>" + res + "</font></pre>");
 
 }
-
-#ifndef THREADS
-#if efun(fork)
-void start()
-{
-  if(QUERY(fork_exec))
-  {
-    if(!(int)QUERY(runuser))
-      runuser = QUERY(runuser);
-    else
-      runuser = ({ (int)QUERY(runuser), 60001 });
-  }
-}
-#endif
-#endif
