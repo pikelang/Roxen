@@ -1,4 +1,4 @@
-## $Id: supports,v 1.75 2000/02/17 23:42:27 nilsson Exp $
+## $Id: supports,v 1.76 2000/03/13 02:05:44 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -53,10 +53,8 @@
 #! cookies - The browser can receive cookies.
 #! divisions - The browser supports <div> tags.
 #! div - Same as divisions.
-#! epsinline - The browser can show encapsulated postscript files inline.
-#! font - The browser supports <font size=num>.
+#! font - The browser supports the font tag.
 #! fontcolor - The browser can change color of individual characters.
-#! fonttype - The browser supports <fonttype> tag.
 #! forms - The browser supports forms according to the HTML 2.0 and 3.0 specifications.
 #! frames - The browser supports frames.
 #! gifinline - The browser can show GIF images inlined.
@@ -177,7 +175,7 @@ netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
 .*			basic, center, jpeginline
 omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
 			fontcolor, imagealign, pjpeginline, pnginline,\
-			supsub, ssl, epsinline, cookies
+			supsub, ssl, cookies
 # }
 
 #section arena {
@@ -275,7 +273,7 @@ cern.*linemode.*	html
 # Micro$oft Browser.  I have only tested this on an exhibition
 # (ComNET '95/Sweden), so this is probably _very_ incomplete by now.
 #								/Per
-.*exp.*		basic, ms, font, center, fonttype, imagealign, frames, activex
+.*exp.*		basic, msie, font, center, imagealign, frames, activex
 # }
 
 #section microsoft {
