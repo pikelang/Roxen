@@ -538,24 +538,25 @@ string container_configif_output(string t, mapping m, string c, object id)
                         string tmp;
                         multiset cl = (<>);
                         sscanf( q, "/%[^/]/%s", tmp, q );
-                        cl[ tmp ] = 1;
-			//                        cl[ LOW_LOCALE->latin1_name ] = 1;
-			//                        if( LOW_LOCALE->latin1_name == "standard" )
-			//                          cl[ "english" ] = 1;
+                        cl[ roxen.locale->get()->locale ] = 1;
+
                         return ([
                           "name":l,
-			  /*
-                          "latin1-name":rl[l]->latin1_name,
+                          "latin1-name":
+#if constant(Standards.ISO639_2)
+			  Standards.ISO639_2.get_language(l),
+#else
+			  RoxenLocale.ISO639_2.get_language(l),
+#endif
                           "path":fix_relative( "/"+l+"/"+ q +
-                                               (id->misc->path_info?
-                                                id->misc->path_info:"")+
-                                               (id->query&&sizeof(id->query)?
-                                                "?" +id->query:""),
-                                               id),
-                          "selected":( cl[l] ? "selected": "" ),
-                          "-selected":( cl[l] ? "-selected": "" ),
-                          "selected-int":( cl[l] ? "1": "0" ),
-			  */
+					       (id->misc->path_info?
+						id->misc->path_info:"")+
+					       (id->query&&sizeof(id->query)?
+						"?" +id->query:""),
+					       id),
+			  "selected":( cl[l] ? "selected": "" ),
+			  "-selected":( cl[l] ? "-selected": "" ),
+			  "selected-int":( cl[l] ? "1": "0" ),
                         ]);
                       } ) - ({ 0 });
      break;
