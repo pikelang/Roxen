@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.317 2001/10/01 16:13:06 mast Exp $
+// $Id: rxml.pike,v 1.318 2001/11/14 15:53:19 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -87,7 +87,7 @@ RXML.TagSet rxml_tag_set = class
     if (old_rxml_compat) ctx->compatible_scope = 1;
 #endif
 
-    ctx->misc[" _ok"] = 1;
+    ctx->misc[" _ok"] = ctx->misc[" _prev_ok"] = 1;
     ctx->misc[" _error"] = 200;
     ctx->misc[" _extra_heads"] = ([ ]);
     if(id->misc->stat) ctx->misc[" _stat"] = id->misc->stat;
