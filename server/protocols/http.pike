@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.291 2001/02/26 21:38:17 marcus Exp $";
+constant cvs_version = "$Id: http.pike,v 1.292 2001/03/16 02:36:39 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1280,6 +1280,7 @@ int store_error(mixed _err)
   function dp =  master()->describe_program;
 #if __VERSION__ > 7.0
   object d = master()->Describer();
+  d->identify_parts(err);
   function dcl = d->describe_comma_list;
 #else
   function dcl = master()->stupid_describe_comma_list;
