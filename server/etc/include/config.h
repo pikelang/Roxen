@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.24 2001/01/04 06:27:22 nilsson Exp $
+ * $Id: config.h,v 1.25 2001/01/13 23:26:47 per Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -73,11 +73,5 @@
 // compatibility.
 #define ROXEN_COMPAT 1.3
 
-#if __VERSION__ > 7.0
-#define Stat _static_modules.files.Stat
-#else
-#define Stat array(int)
-#endif
-#define add_efun add_constant
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */

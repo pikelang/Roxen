@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.228 2001/01/10 16:12:43 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.229 2001/01/13 23:26:46 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -224,7 +224,7 @@ int mkdirhier(string from, int|void mode)
     if (query_num_arg() > 1) {
       mkdir(b+a, mode);
 #if constant(chmod)
-      Stat stat = file_stat (b + a, 1);
+      Stdio.Stat stat = file_stat (b + a, 1);
       if (stat && stat[0] & ~mode)
 	// Race here. Not much we can do about it at this point. :\
 	catch (chmod (b+a, stat[0] & mode));
@@ -478,13 +478,14 @@ object spawn_pike(array(string) args, void|string wd, object|void stdin,
 
 
 // Add a few cache control related efuns
+object(Stdio.Stat)|array(int) ___stat;
 static private void initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
 
   add_constant("http_decode_string", _Roxen.http_decode_string );
-  add_constant("Stat", Stat);
+  add_constant("Stat", typeof(___stat));
   add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
@@ -861,7 +862,7 @@ int mv( string f1, string f2 )
   return predef::mv( roxen_path(f1), roxen_path( f2 ) );
 }
 
-Stat file_stat( string filename, int|void slinks )
+Stdio.Stat file_stat( string filename, int|void slinks )
 {
   return predef::file_stat( roxen_path(filename), slinks );
 }
