@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.116 2003/12/15 09:48:24 grubba Exp $
+// $Id: module_support.pike,v 1.117 2004/06/17 16:19:52 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -44,28 +44,31 @@ program my_compile_file(string file, void|int silent)
 
   ErrorContainer e = ErrorContainer();
   master()->set_inhibit_compile_errors(e);
-  catch 
+  mixed err = catch
   {
     p  = (program)( file );
   };
   master()->set_inhibit_compile_errors(0);
+  if (err &&
+      (!objectp (err) || (!err->is_cpp_error && !err->is_compilation_error)))
+    throw (err);
 
   string q = e->get();
-  if( !p )
+  if (sizeof (q))
   {
-    if( strlen( q ) )
-    {
-      report_error("Failed to compile module %s:\n%s", file, q);
-      if( strlen( e->get_warnings() ) )
-        report_warning( e->get_warnings() );
-    }
-    throw( "" );
+    if (!p)
+      report_error ("Failed to compile module %s:\n%s", file, q);
+    else
+      report_error ("Errors during compilation of %s:\n%s", file, q);
+    if( strlen( q = e->get_warnings() ) )
+      report_warning (q);
   }
-  if ( strlen(q = e->get_warnings() ) )
+  else if ( strlen( q = e->get_warnings() ) )
   {
-    report_warning(sprintf("Warnings during compilation of %s:\n"
-                           "%s", file, q));
+    report_warning ("Warnings during compilation of %s:\n%s", file, q);
   }
+
+  if (!p) throw ("");
 
   if (p->dont_dump_program)
   {
