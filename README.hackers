@@ -8,6 +8,19 @@ A few guidelines to people contributing to the code:
 - search() is replaced with has_value(), has_prefix() or has_suffix()
   if deemed appropriate.
 
+- All references to roxen.symbol should be changed to core.symbol.
+
+- Beware of changes in file locations in the ChiliMoon source tree.
+
+- All places where the id->supports is checked to see if the client
+  supports images before generating an img tag should be scrapped.
+  ChiliMoon should always generate the tag, since it really is up to the
+  browser to handle what to do.
+
+- There is no need to support the feature to generate non-XML-compliant
+  HTML. All xml-attributes should be removed from RXML and the interfaces
+  cleaned up throughout the server to not pass/accept this parameter.
+
 - Reporting and debugging functions/macros should avoid nested sprintf()
   constructs, the functions themselves should be sprintf compatible in their
   argumentlists or be made so.
@@ -29,6 +42,13 @@ A few guidelines to people contributing to the code:
   by ChiliMoon.
 
 - We're aiming for compatibility with RXML2 of Roxen 4.0.
+  Compatibility code with subtle sideeffects which are different from
+  Roxen 4.0 should be removed (i.e. compat_levels lower than 4.0 can be
+  dropped in most cases).
+
+- Extra arguments to RXML tags which are not present in the Roxen 4.0 RXML2
+  standard can be left in the code for now, to ease porting of older
+  website RXML-code.
 
 - Changes in the code are visible through the codelibrarian at:
    http://www.lysator.liu.se/codelibrarian/
