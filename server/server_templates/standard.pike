@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pike,v 1.3 1997/08/13 22:05:36 grubba Exp $
+ * $Id: standard.pike,v 1.4 1997/08/14 00:25:36 grubba Exp $
  */
 
 constant selected = 1;
@@ -15,7 +15,7 @@ constant modules = ({
   "userdb#0",
   "userfs#0",
   "filesystem#0",
-  "gtext#0",
+  "graphic_text#0",
 });
 
 void enable(object config)
