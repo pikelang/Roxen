@@ -129,6 +129,7 @@ sprite  application/x-sprite
 src	application/x-wais-source
 sv4cpic application/x-sv4cpio
 sv4crc	application/x-sv4crc
+swf	application/x-shockwave-flash
 t	application/x-troff
 tar	application/unix-tar
 tcl	application/x-tcl
