@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.196 1999/06/07 01:47:24 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.197 1999/06/07 05:17:13 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2284,14 +2284,13 @@ mapping(string:object) server_ports = ([]);
 int ports_changed = 1;
 void start(int num)
 {
+  // Note: This may be run before uid:gid is changed.
+
   string server_name = query_name();
   array port;
   int err=0;
   object lf;
   mapping new=([]), o2;
-
-  parse_log_formats();
-  init_log_file();
 
 #if 0
   // Doesn't seem to be set correctly.
@@ -2364,8 +2363,6 @@ void start(int num)
           if(tmp = rp(port, this_object()))
             port = tmp;
 
-	// FIXME: For SSL3 we might need to be root to read our
-        // secret files.
         object privs;
         if(port[0] < 1024)
           privs = Privs(LOCALE->opening_low_port());
@@ -3449,179 +3446,6 @@ object sql_connect(string db)
 
 // END SQL
 
-// Start Argument Cache (for tag modules, mainly, id<->argument mapping)
-class ArgCache
-{
-  static string name;
-  static string path;
-  static int is_db;
-  static object db;
-
-#define CACHE_VALUE 0
-#define CACHE_SKEY  1
-#define CACHE_SIZE  600
-#define CLEAN_SIZE  100
-
-#ifdef THREADS
-  static Thread.Mutex mutex = Thread.Mutex();
-# define LOCK() object __key = mutex->lock()
-#else
-# define LOCK() 
-#endif
-
-  static mapping (string:mixed) cache = ([ ]);
-
-  void setup_table()
-  {
-    if(catch(db->query("select id from "+name+" where id=-1")))
-      if(catch(db->query("create table "+name+" ("
-                         "id int auto_increment primary key, "
-                         "lkey varchar(80) not null default '', "
-                         "contents blob not null default '', "
-                         "atime bigint not null default 0)")))
-        throw("Failed to create table in database\n");
-  }
-
-  void create( string _name, 
-               string _path, 
-               int _is_db )
-  {
-    name = _name;
-    path = _path;
-    is_db = _is_db;
-
-    if(is_db)
-    {
-      db = sql_connect( path );
-      if(!db)
-        error("Failed to connect to database for argument cache\n");
-      setup_table( );
-    } else {
-      if(path[-1] != '/' && path[-1] != '\\')
-        path += "/";
-      path += replace(name, "/", "_")+"/";
-      mkdirhier( path + "/tmp" );
-    }
-  }
-
-  static string read_args( string id )
-  {
-    if( is_db )
-    {
-      mapping res = db->query("select from "+name+" where id='"+id+"'");
-      if( sizeof(res) )
-      {
-        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
-        return res->contents;
-      }
-      return 0;
-    } else {
-      if( file_stat( path+id ) )
-        return Stdio.read_bytes(path+"/"+id);
-    }
-    return 0;
-  }
-
-  static string create_key( string long_key )
-  {
-    if( is_db )
-    {
-      mapping data = db->query(sprintf("select id,contents from %s where lkey='%s'",
-                                       name,long_key[..79]));
-      foreach( data, mapping m )
-        if( m->contents == long_key )
-          return m->id;
-
-      db->query( sprintf("insert into %s (contents,lkey,atime) values "
-                         "('%s','%s','%d')", 
-                         name, long_key, long_key[..79], time() ));
-      return create_key( long_key );
-    } else {
-      string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
-      _key = replace(_key-"=","/","=");
-      string short_key = _key[0..1];
-
-      while( file_stat( path+short_key ) )
-      {
-        if( Stdio.read_bytes( path+short_key ) == long_key )
-          return short_key;
-        short_key = _key[..strlen(short_key)];
-        if( strlen(short_key) >= strlen(_key) )
-          short_key += "."; // Not very likely...
-      }
-      object f = Stdio.File( path + short_key, "wct" );
-      f->write( long_key );
-      return short_key;
-    }
-  }
-
-
-  int key_exists( string key )
-  {
-    LOCK();
-    if( !is_db ) 
-      return !!file_stat( path+key );
-    return !!read_args( key );
-  }
-
-  string store( mapping args )
-  {
-    LOCK();
-    int e = gethrtime();
-    array b = values(args), a = sort(indices(args),b);
-    string data = MIME.encode_base64(encode_value(a),1);
-    if( cache[ data ] ) 
-      return cache[ data ][ CACHE_SKEY ];
-
-    string id = create_key( data );
-
-    cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = args;
-    cache[ data ][ CACHE_SKEY ] = id;
-    cache[ id ] = data;
-
-    if( sizeof( cache ) > CACHE_SIZE )
-    {
-      array i = indices(cache);
-      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE )
-        m_delete( cache, i[random(sizeof(i))] );
-    }
-    return id;
-  }
-
-  mapping lookup( string id )
-  {
-    if(cache[id])
-      return cache[cache[id]][CACHE_VALUE];
-
-    string q = read_args( id );
-    if(!q) error("Key does not exist!\n");
-    mixed data = decode_value(MIME.decode_base64( q ));
-    data = mkmapping( data[0],data[1] );
-
-    cache[ q ] = ({0,0});
-    cache[ q ][ CACHE_VALUE ] = data;
-    cache[ q ][ CACHE_SKEY ] = id;
-    cache[ id ] = q;
-    return data;
-  }
-
-  void delete( string id )
-  {
-    LOCK();
-    if(cache[id])
-    {
-      m_delete( cache, cache[id] );
-      m_delete( cache, id );
-    }
-    if( is_db )
-      db->query( "delete from "+name+" where id='"+id+"'" );
-    else
-      rm( path+id );
-  }
-
-}
-// #endif
 // This is the most likely URL for a virtual server.
 
 private string get_my_url()
@@ -3643,6 +3467,10 @@ void enable_all_modules()
 #endif
   array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
+
+  parse_log_formats();
+  init_log_file();
+
   perror("\nEnabling all modules for "+query_name()+"... \n");
 
 #if constant(_compiler_trace)
