@@ -171,7 +171,7 @@ void main(int argc, array (string) argv)
       }
     }
   }
-  array order = Array.map(entries, lambda(array e) { return ((e[0]/" ")[0])+e[5]; });
+  array order = Array.map(entries, lambda(array e) { return e[0][..sizeof(e[0])-4]+e[5]; });
   sort(order,entries);
   entries = reverse(entries);
   werror("Done. "+sizeof(entries)+" entries\n");
