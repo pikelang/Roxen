@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.32 1997/12/23 18:49:22 neotron Exp $
+ * $Id: upgrade.pike,v 1.33 1998/01/28 01:50:49 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -40,7 +40,7 @@ object connect_to_rpc(object id)
     string host,port, rpc_host;
     rpc_host = upgrade_servers[v->rpc_host]||"";
     sscanf(rpc_host, "%s:%d", host, port);
-    _rpc=RoxenRPC.Client(host||"skuld.infovav.se",port||23,"upgrade");
+    _rpc=RoxenRPC.Client(host||"skuld.idonex.se",port||23,"upgrade");
     rpc_to = v->rpc_host;
   };
   return _rpc;
@@ -244,7 +244,7 @@ string page_0(object id)
      "</blockquote></help>"
      
      "<var type=checkbox name=new> Also search for new components\n<br>"
-     "<p>Use this upgrade server: <var type=select name=rpc_host default='skuld.infovav.se:23' "
+     "<p>Use this upgrade server: <var type=select name=rpc_host default='skuld.idonex.se:23' "
      "choices='"+upgrade_server_list()*","+"'><help><p>"+upgrade_server_help+"</help>");
 }
 
