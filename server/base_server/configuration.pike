@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.276 2000/03/14 02:20:39 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.277 2000/03/17 17:45:55 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -904,7 +904,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 	    auth_ok |= 1;	// Auth may be bad.
 	  } else {
 	    // No auth yet, get some.
-	    return http_auth_failed(seclevels[2]);
+	    return http_auth_required(seclevels[2]);
 	  }
 	}
 	break;
@@ -925,7 +925,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
     if (auth_ok == 1) {
       // Bad authentification.
       // Query for authentification.
-      return http_auth_failed(seclevels[2]);
+      return http_auth_required(seclevels[2]);
     } else {
       // No auth required, or authentification OK.
       return 0;
@@ -1529,10 +1529,11 @@ mixed get_file(RequestID id, int|void no_magic, int|void internal_get)
   return res;
 }
 
-public array find_dir(string file, RequestID id)
+public array(string) find_dir(string file, RequestID id)
 {
   string loc;
-  array dir = ({ }), tmp;
+  array dir = ({ });
+  array|mapping|object tmp;
   array | mapping d;
   TRACE_ENTER(LOCALE->list_directory(file), 0);
 //   file=replace(file, "//", "/");
