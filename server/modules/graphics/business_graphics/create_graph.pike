@@ -171,6 +171,9 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
+  diagram_data["linewidth"]=(float)diagram_data["linewidth"];
+  if ( diagram_data["linewidth"]< 0.01)
+     diagram_data["linewidth"]=1.0;
 
   //Oulinecolors
   if ((diagram_data["backdatacolors"]==0)&&
@@ -364,6 +367,9 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
 
   object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
+
+  if (!(notext))
+    throw(({"Missing font or similar error!\n", backtrace() }));
   int j;
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
   for(int i=0; i<j; i++)
@@ -559,7 +565,11 @@ mapping set_legend_size(mapping diagram_data)
 	  
 	  notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
 			  "left",0,0);
-	  
+	  if (!(notext))
+	    throw(({"Missing font or similar error!\n", backtrace() }));
+
+
+
 	  j=sizeof(texts);
 	  if (!diagram_data["legendcolor"])
 	    diagram_data["legendcolor"]=diagram_data["bgcolor"];
@@ -855,6 +865,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   string label;
   int labelx=0;
   int labely=0;
+  object notext=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0);
+
+  if (!(notext))
+	    throw(({"Missing font or similar error!\n", backtrace() }));
+
   if (diagram_data["labels"])
     {
       if (diagram_data["labels"][2] && sizeof(diagram_data["labels"][2]))

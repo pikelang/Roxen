@@ -25,6 +25,7 @@ Create_bars can draw normal bars, sumbars and normalized sumbars.
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
   //Supportar bara xsize>=100
+
   int si=diagram_data["fontsize"];
  
   //Fixa defaultfärger!
@@ -759,7 +760,7 @@ int main(int argc, string *argv)
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 //"datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 "linewidth":2.2,
+		 //"linewidth":2.2,
 		 "backlinewidth":0,
 		 "xsize":400,
 		 "ysize":200,
