@@ -1,0 +1,438 @@
+
+cache.pike,274
+#define TIMESTAMP 5,42
+#define DATA 6,62
+#define ENTRY_SIZE 8,78
+#define CACHE_TIME_OUT 10,100
+#define CACHE_DEBUG14,169
+mixed cache_lookup(21,249
+string status(42,647
+void cache_remove(60,1151
+void cache_set(72,1389
+void cache_clean(85,1697
+void create(146,2892
+
+configuration.pike,897
+string query_name(21,399
+string comment(27,485
+  array _anonymous_::array40,707
+  array _anonymous_::array41,745
+  array _anonymous_::array42,786
+  array _anonymous_::array43,829
+  array _anonymous_::array44,870
+  array _anonymous_::array45,909
+  mapping _anonymous_::mapping47,952
+void create(66,1399
+string|float describe_large(76,1829
+float sent_mb(97,2176
+void add_received(103,2248
+float|string describe_received(112,2363
+void add_sent(117,2474
+float|string describe_sent(127,2591
+void add_hsent(132,2684
+float|string describe_hsent(142,2807
+void begin_request(155,3094
+void end_request(160,3123
+private mapping 179,3572
+array 219,4900
+array 236,5275
+array 253,5685
+array 270,5974
+array 288,6291
+array 306,6612
+array location_modules(325,6936
+array filter_modules(344,7297
+void save(366,7746
+int save_one(399,8448
+mapping 440,9294
+string desc(452,9457
+
+db.pike,342
+#define DIR 11,151
+#define DIR 13,184
+private static void sync(20,277
+void reorganize(37,521
+void close(57,849
+private static void doclose(67,915
+private static int open_db(76,997
+public void db_close(109,1477
+public void db_destroy(116,1547
+public void db_delete(121,1604
+public void db_set(134,1786
+public mixed db_get(153,2134
+
+disk_cache.pike,1039
+#define QUERY(QUERY8,106
+string flat_file_name(20,744
+string hierarchy_file_name(26,864
+string hash_file_name(32,969
+  void parse_headers(_anonymous_::parse_headers51,1348
+  void prepend_headers(_anonymous_::prepend_headers65,1690
+  void create(_anonymous_::create74,1921
+  void destroy(_anonymous_::destroy82,2062
+  void really_send(_anonymous_::really_send107,2593
+  void command(_anonymous_::command115,2747
+  int accessed(_anonymous_::accessed123,2912
+  void reinit(_anonymous_::reinit129,3011
+  void nil(_anonymous_::nil140,3286
+  void do_create(_anonymous_::do_create144,3346
+  void create(_anonymous_::create150,3422
+  string status(_anonymous_::status179,4064
+  int check(_anonymous_::check196,4414
+public void reinit_garber(220,4708
+public void init_garber(248,5345
+object new_cache_stream(256,5441
+object cache_file(268,5705
+object create_cache_file(328,6849
+void default_check_cache_file(363,7553
+#define END(END380,7951
+string get_garb_info(382,8037
+void http_check_cache_file(391,8117
+
+dummy_hosts.pike,139
+void create_host_name_lookup_processes(3,55
+string quick_host_to_ip(5,100
+varargs void host_to_ip(7,149
+varargs void ip_to_host(12,255
+
+hosts.pike,343
+# define HOST_NAME_DEBUG5,108
+string|int|array(13,211
+void died(22,359
+int lookup(24,433
+mapping 63,1224
+void got_one_result(74,1414
+string quick_ip_to_host(124,2574
+string quick_host_to_ip(150,3110
+varargs void ip_to_host(158,3257
+varargs void host_to_ip(186,3908
+void nil(215,4575
+void create_host_name_lookup_processes(217,4589
+
+html.pike,329
+#define __replace(__replace1,0
+varargs string input(3,26
+string pre(11,251
+varargs string table(17,311
+varargs string tr(40,757
+varargs string td(49,946
+varargs string bf(58,1177
+varargs string th(63,1271
+string h1(73,1522
+string h2(78,1578
+string h3(83,1634
+inline string button(89,1696
+inline string link(95,1878
+
+http.pike,545
+#define roxen 9,187
+mapping http_low_answer(17,407
+mapping http_pipe_in_progress(32,698
+mapping http_string_answer(46,1070
+mapping http_file_answer(54,1277
+string cern_http_date(60,1470
+string http_date(83,1920
+string http_encode_string(93,2106
+string http_encode_cookie(98,2218
+string http_roxen_config_cookie(103,2339
+string http_roxen_id_cookie(109,2492
+mapping http_redirect(116,2703
+mapping http_stream(131,3133
+mapping http_auth_required(137,3220
+mapping http_auth_failed(149,3566
+mapping http_proxy_auth_required(162,3893
+
+language.pike,94
+void initiate_languages(12,289
+private string nil(52,1133
+public function language(64,1437
+
+lock.pike,92
+public void aquire(6,175
+public void free(14,260
+void create(30,608
+void destroy(45,845
+
+mainconfig.pike,1258
+#define BODY 7,93
+#define TABLEP(TABLEP10,356
+  function saver = lambda(_anonymous_::lambda21,544
+  void change(_anonymous_::change25,652
+  private string show_me(_anonymous_::show_me31,726
+  string describe(_anonymous_::describe48,1259
+  object config(_anonymous_::config102,2290
+  void save(_anonymous_::save113,2466
+void create(132,2719
+inline string shutdown_restart(139,2805
+#define CBR 141,2864
+string default_head(158,3389
+object find_node(170,3748
+mapping file_image(181,4004
+#define CONFIG_URL 189,4184
+mapping save_it(191,4224
+mapping stores(204,4475
+object find_module(220,4778
+mixed decode_form_result(265,5775
+mapping std_redirect(406,8989
+string configuration_list(428,9542
+string new_configuration_form(437,9698
+mapping module_nomore(445,9966
+mixed new_module_copy(460,10475
+mixed new_module_copy_copy(509,11621
+string new_module_form(515,11781
+mapping new_module(577,13688
+int low_enable_configuration(589,13920
+mapping new_configuration(714,16966
+int conf_auth_ok(737,17889
+mapping initial_configuration(750,18167
+object module_of(821,20271
+string extract_almost_top(834,20508
+mapping 840,20614
+string display_tabular_header(857,21021
+int nunfolded(883,21733
+mapping configuration_parse(891,21845
+
+module.pike,514
+mapping 4,50
+void set_module_creator(18,278
+void set_module_url(23,339
+int killvar(28,394
+void free_some_sockets_please(36,529
+void start(38,564
+string status(39,592
+string info(41,612
+varargs int defvar(47,733
+int definvisvar(161,3811
+string check_variable(166,3936
+varargs mixed query(174,4133
+void set_module_list(185,4336
+void set(199,4653
+int setvars(218,5190
+string comment(230,5356
+array query_seclevels(240,5478
+mixed stat_file(277,6283
+mixed find_dir(278,6322
+mixed real_file(279,6360
+
+module_support.pike,412
+#  define MODULE_DEBUG9,125
+array 15,225
+void killvar(45,955
+varargs int defvar(50,1038
+int definvisvar(66,1850
+varargs int globvar(71,1955
+public mixed query(88,2570
+mixed set(104,2982
+int disable_module(145,4147
+object|string find_module(274,7438
+void register_module_load_hook(291,7775
+void hooks_for(311,8211
+object enable_module(324,8430
+int load_module(559,15486
+int unload_module(677,18447
+
+newdecode.pike,898
+#define roxenp 5,103
+private string decode_int(13,221
+private string decode_module(19,386
+private string decode_float(29,556
+private string decode_string(35,726
+private string decode_list(42,941
+private string new_decode_list(56,1225
+private string decode_array(70,1517
+private string new_decode_array(83,1760
+private string new_decode_mapping(97,2012
+private string decode_mapping(111,2308
+private string decode_variable(125,2594
+private string new_decode_variable(137,2772
+string name_of_module(151,2966
+void parse(173,3327
+void new_parse(186,3608
+string decode_config_region(198,3887
+string new_decode_config_region(206,4090
+mixed compat_decode_value(214,4296
+private mapping compat_parse(237,4754
+mapping decode_config_file(264,5155
+private string encode_mixed(293,6084
+string encode_config_region(320,6894
+string encode_regions(330,7103
+string encode_regions(341,7392
+
+persistent.pike,392
+#define PRIVATE 20,973
+PRIVATE int save_call_out_list(29,1117
+PRIVATE void save_variables(52,1718
+PRIVATE void restore_variables(77,2255
+PRIVATE int max(86,2407
+PRIVATE void restore_call_out_list(91,2500
+PRIVATE void do_auto_save(123,3303
+void destroy(156,3954
+public void begone(163,4029
+public void persist(169,4076
+public void auto_save_mode(186,4349
+public void save(192,4421
+
+proxyauth.pike,31
+mapping proxy_auth_needed(1,0
+
+read_config.pike,253
+private mapping 9,114
+array 22,366
+void save_it(46,1066
+array fix_array(73,1569
+void fix_config(85,1799
+private static void read_it(107,2251
+void remove(134,2698
+void remove_configuration(151,2975
+void store(164,3326
+mapping retrieve(192,3829
+
+roxen.pike,3436
+#define IN_SPIDER1,0
+#define DEC(DEC40,896
+#define MAXVAL 41,926
+int *pr2six = lambda(51,1239
+public string decode(59,1412
+private static void fork_or_quit(118,2973
+private static void accept_callback(157,3893
+object create_listen_socket(246,6243
+object configuration_interface(314,8212
+int add_new_configuration(343,8958
+mixed configuration_parse(351,9298
+void nwrite(358,9496
+string version(376,9823
+mapping 382,9915
+private inline array negative_supports(395,10220
+private void parse_supports_string(412,10626
+public void initiate_supports(488,12421
+void done_with_roxen_com(499,12622
+void got_data_from_roxen_com(527,13298
+void connected_to_roxen_com(534,13410
+public void update_supports_from_roxen_com(554,13807
+public multiset find_supports(579,14408
+private inline string fix_logging(619,15079
+private void parse_log_formats(626,15217
+private void write_to_log(640,15507
+nomask private inline string host_ip_to_int(648,15708
+nomask private inline string unsigned_to_bin(655,15866
+nomask private inline string unsigned_short_to_bin(660,15951
+nomask private inline string extract_user(665,16042
+public void log(674,16227
+private void restore_current_user_id_number(735,18053
+int increase_id(751,18598
+public string status(770,19187
+public string full_status(810,20540
+public string *userinfo(861,22143
+public string *userlist(870,22353
+public string *user_from_uid(879,22552
+public string last_modified_by(887,22757
+private object find_configuration_for(902,23030
+public varargs string type_from_filename(912,23252
+int|mapping check_security(954,24311
+private mapping internal_gopher_image(999,25553
+private mapping internal_roxen_image(1013,26070
+static private mapping|int low_get_file(1032,26784
+public mapping|int get_file(1198,30457
+public array find_dir(1219,30994
+public array stat_file(1257,31781
+public array access(1286,32420
+public string real_file(1314,33029
+public mixed try_get_file(1346,33829
+public int is_file(1412,35082
+string check_variable(1418,35206
+mapping restart(1452,36255
+mapping shutdown(1466,36638
+program last_loaded(1517,38048
+object load(1518,38086
+object load_from_dir(1535,38508
+object load_from_dirs(1546,38735
+void init_log_file(1559,39046
+void start(1624,40989
+void create(1687,42432
+private string get_domain(1696,42622
+private string get_my_url(1741,43644
+int set_u_and_gid(1755,44116
+mixed set_var(1801,45089
+mixed query_var(1806,45150
+private void update_global_vars(1817,45413
+#define perr(perr1820,45479
+private void update_vars(1869,47145
+int log_is_not_enabled(2107,53206
+void enable_configuration(2122,53711
+static private void enable_configurations(2286,59691
+public string config_url(2309,60179
+int cache_disabled_p(2364,61110
+int syslog_disabled(2365,61167
+int copies_is_one(2366,61224
+int copies_is_not_one(2367,61281
+private void define_global_variables(2370,61340
+void initiate_configuration_port(2686,74382
+private void dump_variables(2739,75919
+void scan_module_dir(2797,77534
+void rescan_modules(2853,78653
+private string find_arg(2877,79229
+private void fix_root(2953,80808
+void create_pid_file(2972,81131
+void init_shuffler(2989,81699
+void do_dest(3017,82537
+void exit_when_done(3029,82660
+void exit_it(3062,83336
+array do_fork_it(3070,83419
+array fork_it(3083,83774
+varargs int main(3139,85125
+inline static private string checkfd_fix_line(3248,87711
+string checkfd(3261,87927
+
+roxenlib.pike,786
+#define roxen 5,101
+#define ipaddr(ipaddr11,173
+static inline string extract_query(15,211
+mapping build_env_vars(23,361
+mapping build_roxen_env_vars(142,3557
+string decode_mode(198,4913
+#define MONTHS 235,5734
+int _match(240,6000
+int is_modified(250,6192
+string short_name(300,7605
+string parse_rxml(308,7724
+string dirname(330,8252
+string conv_hex(339,8391
+string add_pre_state(375,9047
+string add_config(387,9338
+string msectos(396,9586
+string extension(409,9956
+int backup_extension(429,10368
+int get_size(440,10693
+inline int ipow(467,11395
+inline string simplify_path(479,11639
+string short_date(511,12189
+string int2roman(521,12438
+string number2string(541,13000
+string image_from_type(565,13488
+#define  prefix 585,13867
+string sizetostring(586,13927
+
+roxenloader.pike,268
+mixed query(11,129
+void init_logger(23,455
+void report_debug(64,1596
+void report_error(75,1798
+void report_fatal(85,1992
+static private void initiate_cache(97,2199
+void load_roxen(108,2473
+object|void open(114,2554
+void mkdirhier(127,2756
+void main(142,2911
+
+socket.pike,281
+#define roxen 3,79
+# define SOCKET_DEBUG8,152
+private void connected(12,189
+private void failed(21,350
+private void got_host_name(31,526
+varargs void async_connect(64,1317
+private void my_pipe_done(74,1581
+void async_pipe(85,1751
+varargs void async_cache_connect(129,2748
+
+spinnerlib.pike,0
