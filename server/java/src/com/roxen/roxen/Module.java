@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.8 2000/03/28 21:09:38 jhs Exp $
+ * $Id: Module.java,v 1.9 2000/03/29 18:29:58 marcus Exp $
  *
  */
 
@@ -137,7 +137,7 @@ public abstract class Module {
   // The module implements a protocol.
   static final int MODULE_PROTOCOL        =  (1 << 16);
 
-  // A administration interface module
+  // An administration interface module
   static final int MODULE_CONFIG          =  (1 << 17);
 
   // Flags.
@@ -229,7 +229,7 @@ public abstract class Module {
    * Prepare the module for servicing requests
    *
    */
-  void start()
+  protected void start()
   {    
   }
 
@@ -237,7 +237,7 @@ public abstract class Module {
    * Inform the module that it is about to be taken out of service
    *
    */
-  void stop()
+  protected void stop()
   {
   }
 
