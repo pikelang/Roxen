@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.342 1999/11/02 01:37:22 per Exp $
+ * $Id: roxen.pike,v 1.343 1999/11/02 10:12:26 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.342 1999/11/02 01:37:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.343 1999/11/02 10:12:26 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1532,6 +1532,7 @@ class ImageCache
       string format = lower_case(args->format || "gif");
       string dither = args->dither;
       Image.Colortable ct;
+      Image.Color.Color bgcolor;
       object alpha;
       int true_alpha; 
 
@@ -1556,6 +1557,9 @@ class ImageCache
       if( args["true-alpha"] )
         true_alpha = 1;
 
+      if( args["background"] )
+        bgcolor = Image.Color( args["background"] );
+
       if( args["opaque-value"] )
       {
         true_alpha = 1;
@@ -1567,7 +1571,7 @@ class ImageCache
         if( alpha )
         {
           object i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
-          i->paste_alpha( alpha, ov );
+          i = i->paste_alpha( alpha, ov );
           alpha = i;
         }
         else
@@ -1612,7 +1616,7 @@ class ImageCache
 
       if( quant || (format=="gif") )
       {
-        int ncols = quant||id->misc->defquant||16;
+        int ncols = quant||id->misc->defquant||32;
         if( ncols > 250 )
           ncols = 250;
         ct = Image.Colortable( reply, ncols );
@@ -1633,6 +1637,13 @@ class ImageCache
       if( alpha )
         enc_args->alpha = alpha;
 
+      if( bgcolor && alpha )
+      {
+        reply = Image.Image( reply->xsize(),
+                             reply->ysize(), bgcolor )
+              ->paste_mask( reply, alpha );
+      }
+
       foreach( glob( "*-*", indices(args)), string n )
         if(sscanf(n, "%*[^-]-%s", string opt ) == 2)
           enc_args[opt] = (int)args[n];
@@ -1642,9 +1653,9 @@ class ImageCache
        case "gif":
          if( alpha && true_alpha )
          {
-           object ct=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
-           ct->floyd_steinberg();
-           alpha = ct->map( alpha );
+           object bw=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           bw->floyd_steinberg();
+           alpha = bw->map( alpha );
          }
          if( catch {
            if( alpha )
@@ -1654,15 +1665,18 @@ class ImageCache
          })
            data = Image.GIF.encode( reply );
          break;
+
        case "png":
-         if( ct )
-           enc_args->palette = ct;
+         if( ct ) enc_args->palette = ct;
          m_delete( enc_args, "colortable" );
+         if( !enc_args->alpha )  m_delete( enc_args, "alpha" );
+         
        default:
         data = Image[upper_case( format )]->encode( reply, enc_args );
       }
 
-      meta = ([ 
+      meta = 
+      ([ 
         "xsize":reply->xsize(),
         "ysize":reply->ysize(),
         "type":"image/"+format,
