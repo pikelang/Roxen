@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.1 2000/10/11 23:43:31 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.2 2000/10/12 00:46:47 hop Exp $";
 
 constant thread_safe=1;
 
@@ -128,6 +128,31 @@ class TagEmail {
 
   } // TagMailheader
 
+  // Subcontainer <signature />
+  class TagSignature {
+    inherit RXML.Tag;
+    constant name = "signature";
+
+    class Frame {
+      inherit RXML.Frame;
+
+      array do_return(RequestID id) {
+
+	// converting bare LFs (QMail specials:)
+	if(query("CI_qmail_spec"))
+	  content = (Array.map(content / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
+	if(content[..1] == "\r\n")
+	  content = content[2..];
+	 
+	id->misc["_email_sign_"] = (string)content;
+
+        return 0;
+      }
+
+    }
+
+  } // TagSignature
+
   // Subtag/subcontainer <attachment /> .. 
   class TagAttachment {
     inherit RXML.Tag;
@@ -228,7 +253,7 @@ class TagEmail {
     }
   } // TagAttachment
 
-  RXML.TagSet internal = RXML.TagSet("TagEmail.internal", ({ TagAttachment(), TagMailheader() }));
+  RXML.TagSet internal = RXML.TagSet("TagEmail.internal", ({ TagAttachment(), TagMailheader(), TagSignature() }));
 
   class Frame {
     inherit RXML.Frame;
@@ -260,6 +285,8 @@ class TagEmail {
       mapping headers = ([]);
 
 
+     if(stringp(id->misc->_email_sign_))
+	body += "\n-- \n" + id->misc->_email_sign_;
      if(mappingp(id->misc->_email_headers_))
 	headers = id->misc->_email_headers_;
      if(sizeof(query("CI_headers")))
@@ -392,8 +419,8 @@ string status() {
 constant module_type = MODULE_PARSER;
 constant module_name = "E-mail module";
 constant module_doc  = "Adds an extra container tag &lt;email&gt; "
-  " &lt;/email&gt;  and subtags &lt;attachment/&gt and &lt; header /&gt; "
-  " that's supposed to send MIME compliant"
+  " &lt;/email&gt;  and subtags &lt;attachment/&gt, &lt; header /&gt; "
+  " and &lt;signature /&gt; that are supposed to send MIME compliant"
   " mail to mail server by (E)SMTP protocol.";
 
 
