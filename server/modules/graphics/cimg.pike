@@ -7,14 +7,14 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.9 1999/12/09 09:58:10 nilsson Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.10 2000/01/30 21:18:55 per Exp $";
 constant tagdesc="Provides the tag 'cimg' that can be used to convert images "
   "between different image formats.";
 
 array register_module()
 {
-   return 
-   ({ 
+   return
+   ({
       MODULE_PARSER,
       "Image converter",
       tagdesc,
@@ -51,7 +51,8 @@ mapping find_internal( string f, RequestID id )
 
 mapping get_my_args( mapping args, object id )
 {
-  mapping a=([  
+  mapping a=
+  ([
     "src":(args->src?fix_relative( args->src, id ):0),
     "quant":args->quant,
     "format":args->format,
@@ -70,11 +71,9 @@ mapping get_my_args( mapping args, object id )
 string tag_cimg( string t, mapping args, RequestID id )
 {
   mapping a = get_my_args( args, id );
-
   args -= a;
-
   args->src = query_internal_location()+the_cache->store( a,id );
-  if( mapping size = the_cache->metadata( a, id, 1 ) ) 
+  if( mapping size = the_cache->metadata( a, id, 1 ) )
   {
     // image in cache (1 above prevents generation on-the-fly)
     args->width = size->xsize;
