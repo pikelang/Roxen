@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.177 2000/05/28 01:36:02 nilsson Exp $
+// $Id: roxenlib.pike,v 1.178 2000/05/28 14:16:58 nilsson Exp $
 
 //#pragma strict_types
 
@@ -951,6 +951,10 @@ string strftime(string fmt, int t)
     case 'e':	// Day of month [1,31]; space-prefix
       res += sprintf("%2d", lt->mday);
       break;
+    case 'E':
+    case 'O':
+      key = key[1..]; // No support for E or O extension.
+      break;
     case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
       res += sprintf("%02d", lt->hour);
       break;
@@ -994,10 +998,10 @@ string strftime(string fmt, int t)
     case 'X':
       res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
-    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1; 0-prefix
+    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
       res += sprintf("%d", lt->wday + 1);
       break;
-    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0; 0-prefix
+    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
       res += sprintf("%d", lt->wday);
       break;
     case 'x':	// Date
