@@ -218,8 +218,7 @@ install_only:
 	  echo "Installing supplied Roxen Platform parts..."; \
 	  ( \
 	    cd platform; \
-	    $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install && \
-	      $(MAKE) "prefix=$(prefix)" clean \
+	    $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install \
 	  ); \
 	else :; fi
 	@if test -f $(SRCDIR)/server/manual/parsed.tar ; then \
