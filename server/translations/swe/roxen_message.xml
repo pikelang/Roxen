@@ -249,19 +249,16 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </pike>
 
 <str id="46">
-<new/>
 <o>Cannot possibly bind to %O, that host is unknown. Substituting with ANY</o>
-<t></t>
+<t>Omöjligt att binda %O, host-namnet okänt. Försöker med ANY</t>
 </str>
 
 <str id="7">
-<new/>
 <o>The protocol '%s' is not available</o>
-<t></t>
+<t>Protokollet '%s' är inte tillgängligt</t>
 </str>
 
 <str id="12">
-<new/>
 <o>Hilfe</o>
-<t></t>
+<t>Hilfe</t>
 </str>
