@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.73 2002/11/11 01:55:36 mani Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.74 2002/11/13 16:23:55 mani Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -213,7 +213,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       if(id->realfile)
         p=(program)id->realfile;
       else
-        p=compile_string(cpp(file));
+        p=compile_string(file);
       destruct( key );
     };
     master()->set_inhibit_compile_errors(0);
