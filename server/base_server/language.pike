@@ -4,7 +4,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.17 1999/09/02 18:32:01 per Exp $
+ * $Id: language.pike,v 1.18 1999/09/15 01:17:58 mast Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -64,7 +64,7 @@ void initiate_languages()
     }
   }
   
-  report_debug( "Done in %4.2fseconds\n", (gethrtime()-start)/1000000.0 );
+  report_debug( "Done in %4.2f seconds\n", (gethrtime()-start)/1000000.0 );
 }
 
 private string nil()
