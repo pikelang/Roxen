@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.63 1997/05/31 23:36:47 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.64 1997/06/01 01:07:20 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -25,6 +25,12 @@ mapping httpobjects = ([]);
 static int idcount;
 int new_id(){ return idcount++; }
 #endif
+
+#ifdef MODULE_DEBUG
+#define MD_PERROR(X)	perror X;
+#else
+#define MD_PERROR(X)
+#endif /* MODULE_DEBUG */
 
 import Array;
 import spider;
@@ -1711,6 +1717,7 @@ void scan_module_dir(string d)
 
   foreach( get_dir( d )||({}), file)
   {
+    _master->set_inhibit_compile_errors("");
     if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z'))
     {
       if(Stdio.file_size(path+file) == -2)
@@ -1718,85 +1725,72 @@ void scan_module_dir(string d)
 	if ((file!="CVS") && (file!="RCS")) {
 	  scan_module_dir(path+file+"/");
 	}
-      }
-      else
-      {
-#ifdef MODULE_DEBUG
-	perror("Loading module: "+(file-("."+extension(file)))+" - ");
-#endif
+      } else {
+	MD_PERROR(("Loading module: "+(file-("."+extension(file)))+" - "));
+
 	switch(extension(file))
 	{
-	 case "pike":
-	 case "lpc":
+	case "pike":
+	case "lpc":
 	  if(catch{
-	    if((open(path+file,"r")->read(4))=="#!NO")
-	    {
-#ifdef MODULE_DEBUG
-	      perror("no module\n");
-#endif
+	    if((open(path+file,"r")->read(4))=="#!NO") {
+	      MD_PERROR(("no module\n"));
 	      continue;
 	    }
-	  })
+	  }) {
 	    break;
-
-	 case "mod":
-	 case "so":
+	  }
+	  
+	case "mod":
+	case "so":
 	  string *module_info;
 	  if (!(err=catch( module_info = lambda ( string file ) {
 	    array foo;
 	    object o;
 	    program p;
-	    
+	     
 	    if (catch(p = compile_file(file)) || (!p)) {
-#ifdef MODULE_DEBUG
-	      perror(" compilation failed");
-#endif
-	      throw("Compilation of module \""+file+"\" failed.\n");
+	      MD_PERROR((" compilation failed"));
+	      throw("Compilation of failed.\n");
 	    }
 
 	    array err = catch(o =  p());
 
-#ifdef MODULE_DEBUG
-	    if (err || !o) {
-	      perror(" load failed");
-	    } else {
-	      perror(" load ok - ");
-	    }
-#endif
 	    if (err) {
+	      MD_PERROR((" load failed"));
 	      throw(err);
 	    } else if (!o) {
-	      throw("Failed to initialize module \""+file+"\".\n");
-	    } else if (!o->register_module) {
-#ifdef MODULE_DEBUG
-	      perror("register_module missing");
-#endif
-	      throw("No registration function in module \""+file+"\".\n");
+	      MD_PERROR((" load failed"));
+	      throw("Failed to initialize module.\n");
+	    } else {
+	      MD_PERROR((" load ok - "));
+	      if (!o->register_module) {
+		MD_PERROR(("register_module missing"));
+		throw("No registration function in module.\n");
+	      }
 	    }
 
 	    foo = o->register_module();
 	    if (!foo) {
-#ifdef MODULE_DEBUG
-	      perror("registration failed");
-#endif
-	      throw("Failed to register module \""+file+"\".\n");
-#ifdef MODULE_DEBUG
+	      MD_PERROR(("registration failed"));
+	      throw("Failed to register module.\n");
 	    } else {
-	      perror("registered.");
-#endif	  
+	      MD_PERROR(("registered."));
 	    }
-	    return ({ foo[1], foo[2]+"<p><i>"+
-			replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
-			+"</i>", foo[0] });
-	  }(path + file))))
-	  {
+	    return({ foo[1], foo[2]+"<p><i>"+
+		       replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
+		       +"</i>", foo[0] });
+	  }(path + file)))) {
+	    // Load OK
 	    allmodules[ file-("."+extension(file)) ] = module_info;
 	  } else {
+	    // Load failed.
 	    _master->errors += "\n";
 	    if (arrayp(err)) {
-	      _master->errors += file + ": " + describe_backtrace(err) + "\n";
+	      _master->errors += path + file + ": " +
+		describe_backtrace(err) + "\n";
 	    } else {
-	      _master->errors += file + ": " + err + "\n";
+	      _master->errors += path + file + ": " + err;
 	    }
 #if 0
 	    perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
@@ -1804,11 +1798,13 @@ void scan_module_dir(string d)
 #endif
 	  }
 	}
-#ifdef MODULE_DEBUG
-	perror("\n");
-#endif
+	MD_PERROR(("\n"));
       }
     }
+    if(strlen(_master->errors)) {
+      nwrite("While rescanning module list:\n" + _master->errors);
+    }
+    _master->set_inhibit_compile_errors(0);
   }
 }
 
@@ -1818,20 +1814,16 @@ void rescan_modules()
   mixed err;
   
   allmodules=([]);
-  _master->set_inhibit_compile_errors("");
+
   foreach(QUERY(ModuleDirs), path)
   {
     array err;
     err = catch(scan_module_dir( path ));
     if(err) {
-      perror("Error while scanning module dir: %O\n", describe_backtrace(err));
-      _master->errors += describe_backtrace(err)+"\n";
+      nwrite("Error while scanning module dir (\""+path+"\"): " +
+	     describe_backtrace(err) + "\n");
     }
   }
-  if(strlen(_master->errors)) {
-    nwrite("While rescanning module list:\n" + _master->errors);
-  }
-  _master->set_inhibit_compile_errors(0);
 }
 
 // ================================================= 
