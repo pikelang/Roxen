@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.850 2003/01/21 23:28:40 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.851 2003/03/11 22:39:07 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4152,9 +4152,6 @@ private void fix_root(string to)
   if(!chroot(to))
   {
     report_debug("Cannot chroot to "+to+": ");
-#if efun(real_perror)
-    real_perror();
-#endif
     return;
   }
   report_debug("Root is now "+to+".\n");
