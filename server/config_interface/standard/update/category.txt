@@ -1,3 +1,4 @@
+<trans-reg project="update_client"/>
 <define tag="package-box" scope="pkg">
   <rul>
   <update-package type="&_.name;">

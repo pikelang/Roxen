@@ -1,3 +1,4 @@
+<trans-reg project="update_client"/>
 <define tag="item">
   <tr valign="top">
     <td align="right"><b>&_.title;:</b></td>

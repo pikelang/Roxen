@@ -1,3 +1,4 @@
+<trans-reg project="update_client"/>
 <define tag="cat-list" scope="cat">
   <br />
   <table bgcolor="&usr.obox-titlebg;" width="100%">

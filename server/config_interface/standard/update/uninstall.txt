@@ -1,3 +1,4 @@
+<trans-reg project="update_client"/>
 <translate id="31">Installed packages:</translate>
 <rul>
 <update-package installed>
