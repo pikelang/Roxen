@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.64 1997/08/23 01:29:32 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.65 1997/08/25 17:18:17 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1347,7 +1347,7 @@ mapping (object:array) open_ports = ([]);
 
 void start(int num)
 {
-  array port, erro;
+  array port;
   int possfd;
   int err=0;
   object lf;
@@ -1357,38 +1357,44 @@ void start(int num)
   init_log_file();
   map(indices(open_ports), do_dest);
 
-  perror("Opening ports for "+query_name()+" ");
+  perror("Opening ports for "+query_name()+"... ");
   foreach(query("Ports"), port ) {
+    array old = port;
+    mixed erro;
     erro = catch {
       array tmp;
       function rp;
-      array old = port;
       object o;
     
       if ((< "ssl", "ssleay" >)[port[1]]) {
 	// Obsolete versions of the SSL protocol.
 	report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
 		       "Converted to SSL3.\n");
+	// Note: Change in-place.
 	port[1] = "ssl3";
+	// FIXME: Should probably mark node as changed.
       }
-      if(rp = ((object)("protocols/"+port[1]))->real_port)
+      perror(port[0]+" "+port[2]+" ("+port[1]+")... ");
+      if(rp = ((object)("protocols/"+port[1]))->real_port) {
 	if(tmp = rp(port, this_object()))
 	  port = tmp;
+      }
       object privs;
       if(port[0] < 1024)
 	privs = ((program)"privs")("Opening listen port below 1024");
-      perror("...  "+port[0]+" "+port[2]+" ("+port[1]+") ");
       if(!(o=create_listen_socket(port[0], this, port[2],
 				  (program)("protocols/"+port[1]))))
       {
-	perror("I failed to open the port "+old[0]+" at "+old[2]
-	       +" ("+old[1]+")\n");
+	report_error("I failed to open the port "+old[0]+" at "+old[2]+
+		     " ("+old[1]+")\n");
 	err++;
       } else
 	open_ports[o]=old;
     };
     if(erro) {
-      perror("Error:\n"+describe_backtrace(erro));
+      report_error("Failed to open port "+old[0]+" at "+old[2]+
+		   " ("+old[1]+"): "+
+		   (stringp(erro)?erro:describe_backtrace(erro)));
     }
     perror("\n");
   }
