@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.536 2000/08/28 05:31:50 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.537 2000/08/28 12:09:12 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -650,9 +650,10 @@ class Protocol
     else if (path != (data->path || "")) path = 0;
     refs++;
     urls[name] = data;
-    sorted_urls = Array.sort_array(indices(urls), lambda(string a, string b) {
-						    return sizeof(a)<sizeof(b);
-						  });
+    sorted_urls = Array.sort_array(indices(urls), 
+                                 lambda(string a, string b) {
+                                   return sizeof(a)<sizeof(b);
+                                 });
   }
 
   void unref(string name)
@@ -677,7 +678,7 @@ class Protocol
     if( q )
     {
       object c;
-      if( sizeof( urls ) == 1 )
+      if( refs < 2 )
       {
         if(!mu) 
         {
@@ -1079,7 +1080,6 @@ class FHTTP
     o->cmf = 100*1024;
     o->cmp = 100*1024;
 
-    //   werror("%O\n", o->variables);
     if(o->method == "POST" && strlen(o->data))
     {
       mapping variabels = ([]);
