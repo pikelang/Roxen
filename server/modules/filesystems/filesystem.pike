@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.77 2000/03/26 03:58:22 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.78 2000/04/03 03:50:18 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -139,6 +139,9 @@ void create()
   defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
 	 "The charset the files on disk have.");
 
+  defvar("path_encoding", "iso-8859-1", "Filename charset", TYPE_STRING,
+	 "The charset the filenames on disk have.");
+
   defvar("internal_files", ({}), "Internal files", TYPE_STRING_LIST,
 	 "A list of glob patterns that matches files which should be "
 	 "considered internal. Internal files can't be requested directly "
@@ -187,7 +190,8 @@ mixed stat_file( string f, RequestID id )
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
   }
 
-  fs = file_stat(path + f);  /* No security currently in this function */
+  /* No security currently in this function */
+  fs = file_stat(decode_path(path + f));
   privs = 0;
   if(!stat_cache)
     return fs;
@@ -225,7 +229,7 @@ array find_dir( string f, RequestID id )
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
   }
 
-  if(!(dir = get_dir( path + f ))) {
+  if(!(dir = get_dir( decode_path(path + f) ))) {
     privs = 0;
     return 0;
   }
@@ -346,6 +350,18 @@ void got_put_data( array (object|string) id_arr, string data )
   }
 }
 
+string decode_path( string p )
+{
+  if( query( "path_encoding" ) != "iso-8859-1" )
+    p = Locale.Charset.encoder( QUERY( path_encoding ) )->feed( p )->drain();
+#ifndef __NT__
+  if( String.width( p ) != 8 )
+    p = string_to_utf8( p );
+#endif
+  return p;
+}
+
+
 int _file_size(string X,object id)
 {
   array fs;
@@ -354,7 +370,7 @@ int _file_size(string X,object id)
     id->misc->stat = fs[0];
     return fs[0]?fs[0][ST_SIZE]:-1;
   }
-  if(fs = file_stat(X))
+  if(fs = file_stat(decode_path(X)))
   {
     id->misc->stat = fs;
     cache_set("stat_cache",(X),({fs}));
@@ -364,7 +380,7 @@ int _file_size(string X,object id)
   return -1;
 }
 
-#define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(X))
+#define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(decode_path(X)))
 
 int contains_symlinks(string root, string path)
 {
@@ -372,7 +388,7 @@ int contains_symlinks(string root, string path)
 
   foreach(arr - ({ "" }), path) {
     root += "/" + path;
-    if (arr = file_stat(root, 1)) {
+    if (arr = file_stat(decode_path(root), 1)) {
       if (arr[1] == -3) {
 	return(1);
       }
@@ -478,7 +494,7 @@ mixed find_file( string f, RequestID id )
 	// NB: Root-access is prevented.
 	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
       }
-      o = open( f, "r" );
+      o = open( decode_path(f), "r" );
       privs = 0;
 
       if(!o || (QUERY(no_symlinks) && (contains_symlinks(path, oldf))))
@@ -539,7 +555,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mkdir( f );
+    int code = mkdir( decode_path(f) );
     privs = 0;
 
     TRACE_ENTER("MKDIR: Accepted", 0);
@@ -604,8 +620,8 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    rm( f );
-    mkdirhier( f );
+    rm( decode_path(f) );
+    mkdirhier( decode_path(f) );
 
     if (id->misc->quota_obj) {
       QUOTA_WERR("Checking if the file already exists.");
@@ -619,7 +635,7 @@ mixed find_file( string f, RequestID id )
       }
     }
 
-    object to = open(f, "wct");
+    object to = open(decode_path(f), "wct");
     privs = 0;
 
     TRACE_ENTER("PUT: Accepted", 0);
@@ -638,7 +654,7 @@ mixed find_file( string f, RequestID id )
     }
 
     // FIXME: Race-condition.
-    chmod(f, 0666 & ~(id->misc->umask || 022));
+    chmod(decode_path(f), 0666 & ~(id->misc->umask || 022));
 
     putting[id->my_fd] = id->misc->len;
     if(id->data && strlen(id->data))
@@ -711,7 +727,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    array err = catch(chmod(f, id->misc->mode & 0777));
+    array err = catch(chmod(decode_path(f), id->misc->mode & 0777));
     privs = 0;
 
     chmods++;
@@ -795,7 +811,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mv(movefrom, f);
+    int code = mv(decode_path(movefrom), decode_path(f));
     privs = 0;
 
     moves++;
@@ -897,7 +913,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mv(f, moveto);
+    int code = mv(decode_path(f), decode_path(moveto));
     privs = 0;
 
     TRACE_ENTER("MOVE: Accepted", 0);
@@ -961,7 +977,7 @@ mixed find_file( string f, RequestID id )
       cache_set("stat_cache", f, 0);
     }
 
-    if(!rm(f))
+    if(!rm(decode_path(f)))
     {
       privs = 0;
       id->misc->error_code = 405;
