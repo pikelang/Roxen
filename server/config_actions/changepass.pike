@@ -1,9 +1,9 @@
 /*
- * $Id: changepass.pike,v 1.4 1997/08/13 22:27:24 grubba Exp $
+ * $Id: changepass.pike,v 1.5 1997/08/20 14:23:51 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Change password and/or username...";
+constant name= "Security//Change password and/or username...";
 
 constant doc = ("Change the configuration interface username and/or password. "
 		"This is a shortcut to the initial configuration page of "

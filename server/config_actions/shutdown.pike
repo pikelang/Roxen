@@ -1,9 +1,9 @@
 /*
- * $Id: shutdown.pike,v 1.6 1997/08/13 22:27:31 grubba Exp $
+ * $Id: shutdown.pike,v 1.7 1997/08/20 14:23:55 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Shut down Roxen...";
+constant name= "Maintenance//Shut down Roxen...";
 
 constant doc = ("Restart or shut down Roxen.");
 

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.39 1997/08/19 07:03:28 per Exp $ */
+/* $Id: describers.pike,v 1.40 1997/08/20 14:23:50 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -120,36 +120,75 @@ string describe_error(string err, array (int) times)
 }
 
 mapping actions = ([]);
-object get_action(string act)
+object get_action(string act,string dir)
 {
-  if(!actions[act]) actions[act]=compile_file("config_actions/"+act)();
+  if(!actions[act]) actions[act]=compile_file(dir+act)();
   return actions[act];
 }
 
+mapping get_actions(string base,string dir)
+{
+  mapping acts = ([  ]);
+  foreach(get_dir(dir), string act)
+  {
+    mixed err;
+    err = catch
+    {
+      if(act[0]!='#' && act[-1]=='e')
+      {
+	if(!get_action(act,dir)->more || this_object()->more_mode)
+	{
+	  string sm,rn = (get_action(act,dir)->name||act), name;
+
+	  if(sscanf(rn, "%*s:%s", name) != 2)
+	    name = rn;
+	  sscanf(name, "%s//%s", sm, name);
+	  if(!acts[sm]) acts[sm] = ({ });
+	  acts[sm]+=
+	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
+		"<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
+	      name+"</a></font><dd>"+(get_action(act,dir)->doc||"")});
+	}
+      }
+    };
+//    if(err) report_error(describe_backtrace(err));
+  }
+  return acts;
+}
+
+string act_describe_submenues(array menues, string base,string sel)
+{
+  if(sizeof(menues)==1) return "";
+  string res = "<font size=+3>";
+  foreach(sort(menues), string s)
+    res+=
+      (s==sel?"<li>":"<font color=#eeeeee><li></font><a href=\""+base+"?sm="+replace(s||"Misc"," ","%20")+
+       "&uniq="+(++zonk)+"\">")+(s||"Misc")+
+      (s==sel?"<br>":"</a><br>")+"";
+  return res + "</font>";
+}
+
+string focused_action_menu;
 mixed describe_actions(object node, object id)
 {
   if(id->pragma["no-cache"]) actions=([]);
+
+  if(!id->variables->sm)
+    id->variables->sm = focused_action_menu;
+  else
+    focused_action_menu = id->variables->sm=="0"?0:id->variables->sm;
+  
   if(!id->variables->action)
   {
-    string res="<dl>";
-    array acts = ({});
-    foreach(get_dir("config_actions"), string act) {
-      mixed err = catch {
-	if(act[0]!='#' && act[-1]=='e')
-	  if(!get_action(act)->more || this_object()->more_mode)
-	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=\"+2\">"
-		      "<a href=\"/Actions/?action="+act+"&unique="+(zonk++)+"\">"+
-		      get_action(act)->name+"</a></font><dd>"+
-		      (get_action(act)->doc||"") });
-      };
-      if(err)
-	report_error(describe_backtrace(err));
-    }
-    return res+(sort(acts)*"\n")+"</dl>";
+    mapping acts = get_actions("/Actions/", "config_actions/");
+    return "</dl><table cellpadding=10><tr><td valign=top bgcolor=#eeeeee>"+
+      act_describe_submenues(indices(acts),"/Actions/",id->variables->sm)+
+      "</td><td valign=top>"+
+      (acts[id->variables->sm]?"<font size=+3>"+(id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
+      (sort(acts[id->variables->sm]||({}))*"\n")+"</dl></td></tr></table><dl>";
   }
-  mixed res;
-  res=get_action(id->variables->action)->handle(id,this_object());
-  return res;
+  return (get_action(id->variables->action,"config_actions/")
+       ->handle(id,this_object()));
 }
 
 string describe_errors(object node)
@@ -489,7 +528,7 @@ string describe_global_debug(object node)
       if(arr[1][fun] > 10)
       {
 	if ((line % 6)<3) {
-	  tf += sprintf("<tr bgcolor=#f0f0ff><td>&nbsp;</td><td>%s()</td>"
+	  tf += sprintf("<tr bgcolor=#eeeeee><td>&nbsp;</td><td>%s()</td>"
 			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
 			 html_encode_string(fun), arr[1][fun]); 
 	} else {
@@ -501,7 +540,7 @@ string describe_global_debug(object node)
       }
     }
     if(line && strlen(tf))
-      res+=sprintf("<tr bgcolor=#e0e0ff><td colspan=2><b>%s</b></td>"
+      res+=sprintf("<tr bgcolor=#eeeeee><td colspan=2><b>%s</b></td>"
 		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
 		   html_encode_string(prog), arr[0]) + tf;
   }

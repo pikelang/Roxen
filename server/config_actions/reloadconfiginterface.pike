@@ -1,9 +1,9 @@
 /*
- * $Id: reloadconfiginterface.pike,v 1.3 1997/08/20 08:17:08 per Exp $
+ * $Id: reloadconfiginterface.pike,v 1.4 1997/08/20 14:23:53 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Reload the configuration interface from disk";
+constant name= "Development//Reload the configuration interface from disk";
 constant doc = ("Force a reload of the configuration interface.");
 constant more=1;
 

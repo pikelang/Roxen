@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.19 1997/08/20 14:17:48 noring Exp $
+/* $Id: wizard.pike,v 1.20 1997/08/20 14:23:49 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -16,6 +16,32 @@ string wizard_tag_var(string n, mapping m, object id)
     m->value = current||"";
     if(!m->size)m->size="60,1";
     return make_tag("input", m);
+
+   case "list": // String....
+    string n = m->name, res="<table cellpadding=0 cellspacing=0 border=0>";
+    if(!id->variables[n]) id->variables[n]=current;
+    
+    m->type = "string";
+    if(!m->size)m->size="60,1";
+    m_delete(m,"default");
+    foreach((current||"")/"\0"-({""}), string v)
+    {
+      res+="<tr><td>"+v+"</td><td><font size=-2>";
+      m->name="_delete_"+n+":"+v;
+      m->value = " Remove ";
+      m->type = "submit";
+      res+=make_tag("input",m)+"</td></tr>";
+    }
+    m->name = "_new_"+n;
+    m->type = "string";
+    m->value = "";
+    res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size=-2>";
+    m->name="_Add";
+    m->value = " Add ";
+    m->type = "submit";
+    res+=make_tag("input",m)+"</font></td></tr>";
+    res+="</table>";
+    return res;
 
    case "text":
     m_delete(m,"type");
@@ -133,7 +159,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
-	 "  <tr><td><table bgcolor=#d0e0ff cellpadding=0 "
+	 "  <tr><td><table bgcolor=#eeeeee cellpadding=0 "
 	 "         cellspacing=0 border=0 width=100%>\n"
 	 "    <tr><td><table width=100% height=100% cellspacing=0 cellpadding=5>\n<tr><td>"
 	 "<font size=+2>"+(this_object()->wizard_name||this_object()->name)+"</font>"
@@ -177,12 +203,12 @@ string parse_wizard_page(string form, object id, string wiz_name)
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
-mapping|string wizard_for(object id,string cancel,string wiz_name,mixed ... args)
+mapping|string wizard_for(object id,string cancel,mixed ... args)
 {
   string data;
   int offset = 1;
   mapping v=id->variables;
-  if(!wiz_name) wiz_name = "page_";
+  string wiz_name = "page_";
   if(v->next_page)
     v->_page = PAGE(1);
   else if(v->prev_page)
@@ -205,7 +231,26 @@ mapping|string wizard_for(object id,string cancel,string wiz_name,mixed ... args
   foreach(indices(s), string q)
     v[q] = v[q]||s[q];
 
-  for(;!data;v->_page=PAGE(offset))
+
+  foreach(indices(id->variables), string n)
+  {
+    string q,on=n;
+    if(sscanf(n, "_new_%s", n))
+    {
+      if((v->_Add) && strlen(v[on]-"\r"))
+      {
+	if(v[n]) v[n]+="\0"+v[on];
+	else v[n]=v[on];
+	m_delete(v, on);
+	m_delete(v, "_Add");
+      }
+    } else if(sscanf(n, "_delete_%s:%s", n,q)==2) {
+      if(v[n]) v[n]=replace(replace(v[n]/"\0",q,"")*"\0","\0\0","\0");
+      m_delete(v, on);
+    }
+  }
+
+  for(; !data; v->_page=PAGE(offset))
   {
     function pg=this_object()[wiz_name+((int)v->_page)];
     if(!pg) return "Error: Invalid page ("+v->_page+")!";
@@ -248,15 +293,16 @@ mapping get_actions(string base,string dir, array args)
   return acts;
 }
 
-string act_describe_submenues(array menues, string base)
+string act_describe_submenues(array menues, string base,string sel)
 {
   if(sizeof(menues)==1) return "";
-  string res = "<font size=+3><b>";
+  string res = "<font size=+3>";
   foreach(sort(menues), string s)
-    res+="<a href=\""+base+"?sm="+
-      replace(s||"Misc"," ","%20")+"&uniq="+(++zonk)+"\">"+
-      (s||"Misc")+"</a><br>";
-  return res + "</b></font>";
+    res+=
+      (s==sel?"<li>":"<font color=#eeeeee><li></font><a href=\""+base+"?sm="+replace(s||"Misc"," ","%20")+
+       "&uniq="+(++zonk)+"\">")+(s||"Misc")+
+      (s==sel?"<br>":"</a><br>")+"";
+  return res + "</font>";
 }
 
 string focused_wizard_menu;
@@ -264,7 +310,7 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
 {
   mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
-
+  
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
@@ -273,12 +319,15 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
   if(!id->variables->action)
   {
     mapping acts = get_actions(base, dir, args);
-    return "<table cellpadding=10><tr><td valign=top bgcolor=#e0f0ff>"+
-      act_describe_submenues(indices(acts),base)+
-      "</td>\n\n<td valign=top><dl>"+
-      (sort(acts[id->variables->sm]||({}))*"\n")+"</dl></td></tr></table>";
+    return ("<table cellpadding=10><tr><td valign=top bgcolor=#eeeeee>"+
+	    act_describe_submenues(indices(acts),base,id->variables->sm)+
+	    "</td>\n\n<td valign=top>"+
+	    (acts[id->variables->sm]?"<font size=+3>"+
+	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
+	    (sort(acts[id->variables->sm]||({}))*"\n")+
+	    "</dl></td></tr></table>");
   }
-  return get_wizard(id->variables->action,dir)->wizard_for(id,base,0,@args);
+  return get_wizard(id->variables->action,dir)->wizard_for(id,base,@args);
 }
 
 /*** Additional Action Functions ***/
@@ -302,3 +351,4 @@ string html_table(array(string) subtitles, array(array(string)) table)
   r += "</table><br>\n";
   return r;
 }
+

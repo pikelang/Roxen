@@ -1,9 +1,9 @@
 /*
- * $Id: reloadmoduledb.pike,v 1.2 1997/08/13 22:27:29 grubba Exp $
+ * $Id: reloadmoduledb.pike,v 1.3 1997/08/20 14:23:54 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Flush module cache";
+constant name= "Cache//Flush module cache";
 
 constant doc = ("Force a flush of the module cache (used to describe modules "
 		"on the 'add module' page)");

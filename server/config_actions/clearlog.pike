@@ -1,9 +1,9 @@
 /*
- * $Id: clearlog.pike,v 1.3 1997/08/13 22:27:25 grubba Exp $
+ * $Id: clearlog.pike,v 1.4 1997/08/20 14:23:51 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Clear Event Log...";
+constant name= "Maintenance//Clear Event Log...";
 
 constant doc = ("Clear all or specified (on type) events from the Event Log.");
 

@@ -1,9 +1,9 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.3 1997/08/13 22:27:28 grubba Exp $
+ * $Id: reloadconfigurations.pike,v 1.4 1997/08/20 14:23:53 per Exp $
  */
 
 inherit "roxenlib";
-constant name= "Reload configurations from disk";
+constant name= "Cache//Reload configurations from disk";
 
 constant doc = ("Force a reload of all configuration information from the "
 		"configuration files");

@@ -1,9 +1,9 @@
 /*
- * $Id: openports.pike,v 1.4 1997/08/15 14:56:38 grubba Exp $
+ * $Id: openports.pike,v 1.5 1997/08/20 14:23:52 per Exp $
  */
 
 inherit "roxenlib";
-constant name = "Show all open ports...";
+constant name = "Status//Show all open ports...";
 
 constant doc = ("Show all open ports on any, or all, interfaces.");
 
