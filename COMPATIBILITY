@@ -1,4 +1,4 @@
-This file lists the known compatibility issues between ChiliMoon 2002
+This file lists the known compatibility issues between ChiliMoon 2003
 and Roxen WebServer <= 3.3.
 
  - The font folder has moved from server/nfonts to data/fonts. The font

@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.56 2002/10/27 20:29:57 nilsson Exp $
+// $Id: module.h,v 1.57 2003/01/14 19:43:10 jhs Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
@@ -21,7 +21,7 @@
 #define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
-#define CHILIMOON_VERSION 2002
+#define CHILIMOON_VERSION 2003
 
 #define TYPE_STRING            1
 #define TYPE_FILE              2
