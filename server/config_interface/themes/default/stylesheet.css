@@ -3,7 +3,7 @@
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 }
 
-pre, textarea
+tt, pre, textarea
 {
 	font-family: monospace;
 }
@@ -15,7 +15,7 @@ li
 {
 	/*margin-left: -1em;*/
 	/*margin-bottom: 0.3em;*/
-	list-style-image: URL(/themes/35/bullet.gif);
+	list-style-image: URL(/themes/default/bullet.gif);
 }
 
 /* For Mozilla */
@@ -35,14 +35,14 @@ li.item-indicator
 {
 	/*margin-left: 0;*/
 	/*margin-bottom: 0.3em;*/
-	/*list-style-image: URL(/themes/35/bullet.gif);*/
+	/*list-style-image: URL(/themes/default/bullet.gif);*/
 }
 
 li.selected-indicator
 {
 	/*margin-left: 0;*/
 	/*margin-bottom: 0.3em;*/
-	list-style-image: URL(/themes/35/sel2.gif);
+	list-style-image: URL(/themes/default/sel2.gif);
 }
 
 td.selected-indicator
@@ -131,4 +131,23 @@ table.module-sub-list
 	padding-left: 16px;
 	padding-right: 16px;
 	background-color:  #5f89d3;
+}
+
+
+/* docs tab */
+
+.doc * {
+       font-size: 11px;
+}
+
+.doc h1 {
+       font-size: 16px;
+}
+
+.doc h2 {
+       font-size: 13px;
+}
+
+.doc li {
+       list-style-image: inherit;
 }
