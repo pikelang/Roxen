@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.103 1999/05/29 14:05:41 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.104 1999/05/30 00:52:08 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1088,7 +1088,6 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
     array order;
 
     order = args->sort / "," - ({ "" });
-    werror( sprintf( "var_arr: %O\n", var_arr ) );
     var_arr = Array.sort_array( var_arr,
 				lambda (mapping m1, mapping m2, array order)
 				{
@@ -1113,7 +1112,6 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				  }
 				  return 0;
 				}, order );
-    werror( sprintf( "sorted var_arr: %O\n", var_arr ) );
   }
 
   if (args->range)
