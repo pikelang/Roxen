@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.6 1999/09/22 19:46:55 nilsson Exp $
+// $Id: foldlist.pike,v 1.7 1999/11/11 12:09:57 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.6 1999/09/22 19:46:55 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.7 1999/11/11 12:09:57 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -54,7 +54,7 @@ string tag_ft(string tag, mapping m, string cont, object id, object state, mappi
 	return "<dt><a target=\"_self\" href=\""+
 	       encode_url(states,state,id)+
                "\"><img width=\"20\" height=\"20\" "
-               "src=\"internal-roxen-fold\" border=\"0\" "
+               "src=\""+(m->unfoldedsrc||fl->ufsrc)+"\" border=\"0\" "
 	       "alt=\"-\" /></a>"+
                parse_html(cont,([]),(["fd":
 				      lambda(string tag, mapping m, string cont, object id) {
@@ -68,7 +68,7 @@ string tag_ft(string tag, mapping m, string cont, object id, object state, mappi
     return "<dt><a target=\"_self\" href=\""+
            encode_url(states,state,id)+
            "\"><img width=\"20\" height=\"20\" "
-           "src=\"internal-roxen-unfold\" border=\"0\" "
+           "src=\""+(m->foldedsrc||fl->fsrc)+"\" border=\"0\" "
 	   "alt=\"+\" /></a>"+parse_html(cont,([]),(["fd":""]))+"</dt>";
 }
 
@@ -101,7 +101,12 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   for(int i=0; i<sizeof(new); i++)
     states[i]=(int)new[i];
 
-  mapping fl=(["states":states,"cnt":0,"inh":id->misc->defines[" fl "],"txt":""]);
+  mapping fl=(["states":states,
+               "cnt":0,
+               "inh":id->misc->defines[" fl "],
+               "txt":"",
+               "fsrc":m->foldedsrc||"/internal-roxen-unfold",
+               "ufsrc":m->unfoldedsrc||"/internal-roxen-fold"]);
 
   //Do the real thing.
   c=parse_html(c,([]),(["ft":tag_ft]),id,state,fl);
