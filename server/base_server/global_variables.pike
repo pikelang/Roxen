@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.39 2000/08/17 01:16:30 per Exp $
+// $Id: global_variables.pike,v 1.40 2000/08/17 16:54:19 lange Exp $
 
 /*
 #pragma strict_types
@@ -507,11 +507,20 @@ void define_global_variables(  )
 		"Standard means using the default locale, which varies "
 		"according to the value of the 'LANG' environment variable."),
 #if constant(Locale.list_languages)
-	 sort(Locale.list_languages("roxen_config")+({"standard"}))
+#define LANGLIST   Locale.list_languages("roxen_config")
 #else
-	 sort(RoxenLocale.list_languages("roxen_config")+({"standard"}))
+#define LANGLIST   RoxenLocale.list_languages("roxen_config")
 #endif
+	 mkmapping(LANGLIST, map(LANGLIST, 
+#if constant(Standards.ISO639_2)
+				 Standards.ISO639_2.get_language,
+#else
+				 RoxenLocale.ISO639_2.get_language,
+#endif
+				 )) + (["standard":"Standard"])
+#undef LANGLIST
 	 );
+	 
 
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),
