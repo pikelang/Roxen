@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.1 1999/04/24 16:37:51 js Exp $
+ * $Id: ldaptag.pike,v 1.2 1999/08/16 00:42:25 peter Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -29,10 +29,13 @@
 			LDAPOUTPUT: added flag 'norem'
      1998-11-10 v1.5	read_attrs: added support for 'replace' op
      1999-02-22 v1.6	Removed OLD_LDAP_API support
+     1999-06-24 v1.7	Fixed bug in testing connection status 
+     1999-07-24 v1.8a	LDAPOUTPUT: added new parameter 'sortby' and 'quote'
+
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.1 1999/04/24 16:37:51 js Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.2 1999/08/16 00:42:25 peter Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -92,11 +95,11 @@ array register_module()
              "result.</td></tr>\n"
 	     "<tr><td valign=top><b>&lt;ldapfor&gt;</b></td>\n"
 	     "<td>Repeats content of tag for multiple attribute values."
-	     "<br><b>Usable only within &lt;ldapoutput&gt; tag!</b><p>"
+	     "<br><b>Usable only within &lt;ldapoutput&gt; tag!</b><br>"
 	     "Variable quoted by # is replaced by value.</td></tr>\n"
 	     "<tr><td valign=top><b>&lt;ldapelse&gt;</b></td>\n"
 	     "<td>Is executed only if error ocurred with last &lt;ldap&gt; or "
-	     "&lt;ldapoutput&gt; tags.<p>"
+	     "&lt;ldapoutput&gt; tags.<br>"
 	     "Content is parsed and variable #ldaperror# is replaced "
 	     "with last error message.</td></tr>\n"
 	     "</table></ul>\n"
@@ -117,7 +120,7 @@ array register_module()
 	     "<tr><td valign=top><b>dn</b></td>"
 	     "<td>The value of DN for operation. <b>(REQUIRED)</b></td></tr>\n"
 	     "<tr><td valign=top><b>op</b></td>"
-	     "<td>The mode operation of access the directory. <b>(REQUIRED)</b><p>"
+	     "<td>The mode operation of access the directory. <b>(REQUIRED)</b><br>"
 	     "Valid values are \"add\",\"delete\",\"modify\" and \"replace\".</td></tr>\n"
 	     "<tr><td valign=top><b>attr</b></td>"
 	     "<td>The attributes for operation.<p>"
@@ -129,21 +132,25 @@ array register_module()
 	     "<tr><td valign=top><b>filter</b></td>"
 	     "<td>The filter for search operation. <b>(REQUIRED)<b/></td></tr>\n"
 	     "<tr><td valign=top><b>scope</b></td>"
-	     "<td>The scope to access the directory.<p>Valid values are"
-	     " \"base\", \"onelevel\" and \"subtree\".</td></tr>\n"
+	     "<td>The scope to access the directory.<br>Valid values are"
+	     " \"base\", \"onelevel\" and \"subtree\".<br>\n"
+	     "<b>Warning: Default value is \"base\" !!!</b></td></tr>\n"
 	     "<tr><td valign=top><b>parse</b></td>"
 	     "<td>If specified, the filter will be parsed by the "
 	     "RXML-parser</td></tr>"
+	     "<tr><td valign=top><b>sortby</b></td>"
+	     "<td>The output will be sorted according to the specified "
+	     "attribute</td></tr>"
 	     "</table></ul><p>\n"
 	     "The following attributes are used by &lt;ldapfor&gt; tag:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>attr</b></td>"
 	     "<td>The parsed attribute name. <b>(REQUIRED)<b/></td></tr>\n"
 	     "<tr><td valign=top><b>index</b></td>"
-	     "<td>The initial index value.<p>Index starts from 1."
+	     "<td>The initial index value.<br>Index starts from 1."
 	     "<br><i>Default value is 1 (from first value)</i>.</td></tr>\n"
 	     "<tr><td valign=top><b>step</b></td>"
-	     "<td>The increment value for index.<p><i>Default value "
+	     "<td>The increment value for index.<br><i>Default value "
 	     "is 1 (index=index+1).</i></td></tr>"
 	     "<tr><td valign=top><b>max</b></td>"
 	     "<td>If specified, \"max\" value is returned.</td></tr>"
@@ -154,7 +161,7 @@ array register_module()
 	     "reason.<br>\n"
 	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
 	     "useful to generate the queries.<br>\n"
-             "<p>&copy; 1998 Honza Petrous, distributed freely under GPL license.",
+             "<p>&copy; 1998,99 Honza Petrous, distributed freely under GPL license.",
 	     0,
 	     1 }) );
 }
@@ -257,7 +264,8 @@ string ldap_tag(string tag_name, mapping args,
     } else {
       //host = (lower_case(host) == "localhost")?"":host;
       error = catch(con = Protocols.LDAP.client(host));
-      error |= catch(con->bind(user,password));
+      if(!error)
+        error = catch(con->bind(user,password));
     }
     if (error || !objectp(con)) {
       ldap_last_error = "Couldn't connect to LDAP server." + "";
@@ -407,6 +415,19 @@ mapping(string:mixed) parse_subc(string contents, object id) {
     return(([]));
 }
 
+int is_attrval_greater(mapping m1, mapping m2, string attrname) {
+// Returns 1 if m1 >= m2 sorted by attribute 'attrname'
+
+    if(zero_type(m1[attrname]))
+        return 0;
+    if(zero_type(m2[attrname]))
+        return 1;
+    if(m1[attrname][0] >= m2[attrname][0])
+        return 1;
+    return 0;
+}
+
+
 string ldapoutput_tag(string tag_name, mapping args, string contents,
 		     object request_id, object f,
 		     mapping defines, object fd)
@@ -426,8 +447,11 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
     function dir_connect = request_id->conf->dir_connect;
     mixed error;
     string atype;
+    string quote = "#";  // DEFAULT
     mapping m = (["attr":"","index":0,"step":1,"max":0,"body":""]);
 
+    if (args->quote && sizeof(quote))
+      quote = args->quote;  // do_output_tag doing this itself?
     if (args->host) {
       host = args->host;
       user = "";
@@ -453,7 +477,8 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
     } else {
       host = (lower_case(host) == "localhost")?"":host;
       error = catch(con = Protocols.LDAP.client(host));
-      error |= catch(con->bind(user,password));
+      if(!error)
+        error = catch(con->bind(user,password));
     }
     if (error || !objectp(con)) {
       contents = "<h1>Couldn't connect to LDAP-server</h1><br>\n" +
@@ -487,7 +512,7 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
     if (objectp(en) && en->num_entries()) {
       string nullvalue="";
       array parsed_content_array = ({});
-      array(string) content_array; // = contents/"#";
+      array(string) content_array; // = contents / quote;
       mapping(string:array(string)) res;
       array(string) res_array = ({});
       int ix, cnt;
@@ -515,9 +540,20 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 
       //DEBUGLOG(sprintf("DEB: preparsed: $%O$",parsed_content_array));
 
+      // Sorting the entries
+      array sen, ena = ({});
+      do
+        ena = ena + ({ en->fetch() });
+      while (en->next());
+      ena = ena - ({});
+      if (args->sortby && sizeof(args->sortby))
+        sen = Array.sort_array(ena, is_attrval_greater, args->sortby);
+      else
+        sen = ena;
+      ena = ({});
+
       // Walking through all entries
-      for( ; ; ) {
-        res=en->fetch();
+      foreach(sen, res) {
 	int i;
 
 	contents2 = "";
@@ -532,8 +568,8 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 		if (elem->max)
 		  if (cnt++ >= elem->max)
 		    break;
-		contents2 += replace (elem->body, "#"+elem->attr+"#",
-				     "#"+elem->attr+":"+(i+1)+"#");
+		contents2 += replace (elem->body, quote+elem->attr+quote,
+				     quote+elem->attr+":"+(i+1)+quote);
 	      }
 	    } else
 #if 1
@@ -547,8 +583,8 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 		    if (elem->max)
 		      if (cnt++ >= elem->max)
 			break;
-		      contents2 += replace (elem->body, "#"+elem->attr+"#",
-				     "#"+elem->attr+":"+(i+1)+"#");
+		      contents2 += replace (elem->body, quote+elem->attr+quote,
+				     quote+elem->attr+":"+(i+1)+quote);
 		  }
 	        } else
 #endif
@@ -557,7 +593,7 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 		 		"\" ! -->"; // + elem->body;
 	}
 	//DEBUGLOG(sprintf("DEB: preparsed_2: $%s$",contents2));
-	content_array = contents2 / "#";
+	content_array = contents2 / quote;
 
 	for (i=0; i < sizeof(content_array); i++) {
 	  int ord = 0;
@@ -605,7 +641,7 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 		;
 	    } else if (content_array[i] == "") {
 	      /* Dual #'s to get one */
-	      res_array += ({ "#" }) + ({});
+	      res_array += ({ quote }) + ({});
 	    } else {
                 if (zero_type(args["norem"]))
 	          res_array += ({"<!-- Missing attribute " + 
@@ -615,9 +651,7 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
 	    res_array += ({ content_array[i] });
 	  }
 	} // for
-        if(!en->next()) 
-	  break;
-      } // for ( ; ; )
+      } // foreach
       contents = (res_array * "") + "<true>";
     } else {
       contents = "<false>";
