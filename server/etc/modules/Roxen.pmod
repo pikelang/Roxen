@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.8 1999/05/16 16:05:53 grubba Exp $
+ * $Id: Roxen.pmod,v 1.9 1999/06/20 15:54:09 grubba Exp $
  *
  * Various helper functions.
  *
@@ -78,6 +78,11 @@ class QuotaDB
       usage = 0;
       sscanf(s, "%4c", usage);
 
+      if (usage < 0) {
+	// No negative usage.
+	usage = 0;
+      }
+
       QD_WRITE(sprintf("QuotaEntry::read(): Usage for %O is %O(%O)\n",
 		       name, usage, quota));
 
@@ -119,6 +124,11 @@ class QuotaDB
 		       uri, amount, usage, usage + amount, quota));
 
       usage += amount;
+
+      if (usage < 0) {
+	// No negative usage...
+	usage = 0;
+      }
 
       store();
 
