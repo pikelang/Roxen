@@ -1,6 +1,6 @@
 inherit "read_config";
 
-string cvs_version = "$Id: module_support.pike,v 1.8 1997/01/29 04:59:35 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.9 1997/01/29 05:28:20 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>
@@ -24,6 +24,7 @@ mapping (string:mixed *) variables=([]);
 int setvars( mapping (string:mixed) vars )
 {
   string v;
+//  perror("Setvars: %O\n", vars);
   foreach( indices( vars ), v )
     if(variables[v])
       variables[v][ VAR_VALUE ] = vars[ v ];

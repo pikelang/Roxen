@@ -116,6 +116,8 @@ void build_module(object node)
   int t;
   mixed copies, mod;
   object o, c;
+
+  if(!node->data->master && !node->data->copies) return;
   
   mod = node->data;
   copies = node->data->copies;

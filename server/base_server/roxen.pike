@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.32 1997/01/29 04:59:36 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.33 1997/01/29 05:28:20 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -379,7 +379,7 @@ void nwrite(string s, int|void perr)
     }
   if(root->descend("Errors", 1))
     root->descend("Errors")->data[s]++;
-  if(perr) perror(s);
+  perror(s);
 }
  
 
@@ -1449,15 +1449,13 @@ private void define_global_variables( int argc, array (string) argv )
   
   setvars(retrieve("Variables", 0));
 
-  if(sizeof(retrieve("Variables", 0)) &&  
-     (!retrieve("Variables", 0)->_v || 
-      (QUERY(_v) < CONFIGURATION_FILE_LEVEL)))
+  if(QUERY(_v) < CONFIGURATION_FILE_LEVEL)
   {
     update_global_vars(retrieve("Variables", 0)->_v?QUERY(_v):0);
     QUERY(_v) = CONFIGURATION_FILE_LEVEL;
     store("Variables", variables, 0, 0);
+    set("_v", CONFIGURATION_FILE_LEVEL);
   }
-  set("_v", CONFIGURATION_FILE_LEVEL);
 
   for(p = 1; p < argc; p++)
   {

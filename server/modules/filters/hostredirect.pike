@@ -8,8 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.3mb1.0 1997/01/23
-13:48:02 mb Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.7 1997/01/29 05:29:25 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -48,7 +47,8 @@ void create()
          "just stay and probably not produce the expected result."
        );
 }
-mapping patterns = ([]);
+
+mapping patterns = ([ /* empty */ ]);
 
 void start()
 {
