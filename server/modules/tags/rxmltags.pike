@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.198 2001/01/29 09:22:48 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.199 2001/02/05 11:52:40 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1144,25 +1144,28 @@ class TagScope {
 
     array do_enter(RequestID id) {
       scope_name=args->extend || "form";
-#if ROXEN_COMPAT <= 1.3
-      if(scope_name=="form") oldvar=id->variables;
-#endif
+      // FIXME: Should probably work like this, but it's anything but
+      // simple to do that now, since variables is a class that simply
+      // fakes the old variable structure using real_variables
+// #if ROXEN_COMPAT <= 1.3
+//       if(scope_name=="form") oldvar=id->variables;
+// #endif
       if(args->extend)
 	// This is not really good, since we are peeking on the
 	// RXML parser internals without any abstraction...
 	vars=copy_value(RXML.get_context()->scopes[scope_name]);
       else
 	vars=([]);
-#if ROXEN_COMPAT <= 1.3
-      if(oldvar) id->variables=vars;
-#endif
+// #if ROXEN_COMPAT <= 1.3
+//       if(oldvar) id->variables=vars;
+// #endif
       return 0;
     }
 
     array do_return(RequestID id) {
-#if ROXEN_COMPAT <= 1.3
-      if(oldvar) id->variables=oldvar;
-#endif
+// #if ROXEN_COMPAT <= 1.3
+//       if(oldvar) id->variables=oldvar;
+// #endif
       result=content;
       return 0;
     }
