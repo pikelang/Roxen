@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.10 1997/08/20 08:45:24 per Exp $
+/* $Id: wizard.pike,v 1.11 1997/08/20 08:51:17 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -200,8 +200,10 @@ mapping|string wizard_for(object id, string|void cancel, string|void wiz_name)
     v->help="1";
   } else if(v->cancel) 
     return http_redirect(cancel||id->not_query, @(id->conf?({id}):({})));
-  
-  v = decompress_state(v->_state) | v;
+
+  mapping s = decompress_state(v->_state);
+  foreach(indices(s), string q)
+    v[q] = v[q]||s[q];
 
   for(;!data;v->_page=PAGE(offset))
   {
