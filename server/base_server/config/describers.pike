@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.54 1998/02/20 00:58:14 per Exp $ */
+/* $Id: describers.pike,v 1.55 1998/06/01 13:37:36 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -151,6 +151,7 @@ mapping get_actions(string base,string dir)
 	  if(sscanf(rn, "%*s:%s", name) != 2)
 	    name = rn;
 	  sscanf(name, "%s//%s", sm, name);
+	  sm = sm || "Misc";
 	  if(!acts[sm]) acts[sm] = ({ });
 	  acts[sm]+=
 	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
@@ -164,15 +165,17 @@ mapping get_actions(string base,string dir)
   return acts;
 }
 
-string act_describe_submenues(array menues, string base,string sel)
+string act_describe_submenues(array menues, string base, string sel)
 {
   if(sizeof(menues)==1) return "";
   string res = "<font size=+3>";
-  foreach(sort(menues), string s)
+  foreach(sort(menues), string s) {
+    s = s || "Misc";
     res+=
-      (s==sel?"<li>":"<font color=#eeeeee><li></font><a href=\""+base+"?sm="+replace(s||"Misc"," ","%20")+
-       "&uniq="+(++zonk)+"\"><font color=#888888>")+(s||"Misc")+
-      (s==sel?"<br>":"</font></a><br>")+"";
+      (s==sel?"<li>":"<font color=#eeeeee><li></font><a href=\""+base+"?sm="+replace(s," ","%20")+
+       "&uniq="+(++zonk)+"\"><font color=#888888>")+s+
+      (s==sel?"<br>":"</font></a><br>");
+  }
   return res + "</font>";
 }
 
@@ -188,9 +191,9 @@ mixed describe_actions(object node, object id)
     actions=([]);
   }
   if(!id->variables->sm)
-    id->variables->sm = focused_action_menu;
+    id->variables->sm = focused_action_menu||"Misc";
   else
-    focused_action_menu = id->variables->sm=="0"?0:id->variables->sm;
+    focused_action_menu = id->variables->sm=="0"?"Misc":id->variables->sm;
   
   if(!id->variables->action)
   {
@@ -198,14 +201,14 @@ mixed describe_actions(object node, object id)
     return "</dl><table cellpadding=10><tr><td valign=top bgcolor=#eeeeee>"+
       act_describe_submenues(indices(acts),"/Actions/",id->variables->sm)+
       "</td><td valign=top>"+
-      (acts[id->variables->sm]?"<font size=+3>"+(id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
+      (acts[id->variables->sm]?"<font size=+3>"+id->variables->sm+"</font><dl>":"<dl>")+
       (sort(acts[id->variables->sm]||({}))*"\n")+"</dl></td></tr></table><dl>";
   }
   if(id->pragma["no-cache"])
     m_delete(actions,!id->variables->action);
 
   return (get_action(id->variables->action,"config_actions/")
-       ->handle(id,this_object()));
+	  ->handle(id,this_object()));
 }
 
 int reverse_report = 1;
@@ -395,4 +398,39 @@ string describe_configuration(object node)
   }
   return ("<font size=\"+2\">" + link(node->data->query_name()) + "</font>"+
          (node->folded?"":"<dd>"+node->data->desc()+node->data->comment()));
+}
+
+mapping docs = ([]);
+mixed describe_docs(object node, object id)
+{
+  if ((!sizeof(docs)) || (id->pragma["no-cache"]) ||
+      (id->variables->manual && !docs[id->variables->manual])) {
+    array(string) dirs = filter(get_dir("./manuals/")||({}),
+				lambda(string d) {
+				  return (!(< ".", "..">)[d]);
+				});
+
+    /* Should do more here... */
+    docs = mkmapping(dirs, dirs);
+  }
+  if (!id->variables->manual) {
+    if (!sizeof(docs)) {
+      return("<h1>No manuals installed</h1>");
+    } else {
+      return("</dl><table cellpadding=10>\n" +
+	     (map(indices(docs),
+		  lambda(string s, object node) {
+		    return("<tr><td valign=top bgcolor=#eeeeee>"
+			   "<a href=\"/" +
+			   (node->_path * "/") + "?manual=" + s +"\">" + s +
+			   "</a></td></tr>\n");
+		  }, node) * "") +
+	     "</table><dl>");
+    }
+  } else {
+    return("<h1>Manual for " + id->variables->manual + " here</h1>" +
+	   html_encode_string(sprintf("<pre>%O</pre>\n",
+				      mkmapping(indices(node), values(node))))
+	   );
+  }
 }
