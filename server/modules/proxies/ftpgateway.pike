@@ -1,6 +1,6 @@
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.33 2000/02/17 12:46:05 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.34 2000/02/17 13:48:13 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -41,7 +41,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.33 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.34 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -453,7 +453,8 @@ class Request {
 
   string parse_directory()
   {
-    string s,r,t,*path;
+    string s, r, t;
+    array(string) path;
     string|int res;
     /* check if known format */
     if (effect=="raw"||buffer=="")
@@ -1393,7 +1394,8 @@ mixed|mapping find_file( string f, object id )
 object ftp_connection(string hostid)
 {
    multiset lo;
-   mixed o,*oa;
+   mixed o;
+   array oa;
 
    if (!(lo=ftp_connections[hostid])) return 0; /* no list */
    if (!sizeof(oa=indices(lo))) return 0; /* empty list */
@@ -1479,7 +1481,8 @@ mixed create_dataport(function acceptfunc)
 
 mixed get_dataport(function acceptfunc)
 {
-   mixed o,*oa;
+   mixed o;
+   array oa;
    for (;;)
    {
       if (!sizeof(oa=indices(dataports))) return create_dataport(acceptfunc); /* no dataports left */
