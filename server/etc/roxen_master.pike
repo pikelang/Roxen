@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.42 1997/10/07 01:46:15 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.43 1997/12/11 22:42:10 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -25,15 +25,35 @@ object findmodule(string fullname)
 
   if(objectp(res) && !handled[res])
   {
-    fullname = reverse(fullname);
-    sscanf(fullname, "%s/", fullname);
-    fullname = reverse(fullname);
-    sscanf(fullname, "%s.pmod", fullname);
+    array(string) arr = fullname/".pmod/";
+    if (sizeof(arr) > 1) {
+      /* Directory module */
+      if (sscanf(reverse(arr[0]), "%s/", fullname)) {
+	arr[0] = reverse(fullname);
+      }
+      if ((< "module", "module.pike" >)[arr[-1]]) {
+	/* Extended directory module */
+	arr = arr[..sizeof(arr)-2];
+      } else {
+	sscanf(arr[-1], "%s.pmod", arr[-1]);
+      }
+      fullname = arr*".";
+    } else {
+      /* .so or ordinary module */
+      sscanf(reverse(fullname), "%s/", fullname);
+      fullname = reverse(fullname);
+      sscanf(fullname, "%s.pmod", fullname);
+    }
     handled[res]=1;
 
-    programs[fullname] = object_program(res);
-    foreach(indices(res), string foo)  if(programp(res[foo]))
-      programs[fullname+"."+foo] = res[foo];
+    if (!programs[fullname]) {
+      programs[fullname] = object_program(res);
+    }
+    foreach(indices(res), string foo) {
+      if(programp(res[foo]) && !programs[fullname+"."+foo]) {
+	programs[fullname+"."+foo] = res[foo];
+      }
+    }
   }
 
   return res;
