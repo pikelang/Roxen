@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.842 2003/11/04 14:51:40 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.843 2003/11/04 16:23:52 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5169,10 +5169,34 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      code += "      return " +
-		((thr_code == 2)?"authmethod->authenticate_throw(id, realm)":
-		 "1") +
-		";\n";
+	      if (all_shorted) {
+		if (thr_code < max_short_code) {
+		  code += sprintf("    {\n"
+				  "      state->%s = %d;\n"
+				  "      if (short_fail < %d)\n"
+				  "        short_fail = %d;\n"
+				  "      break;\n"
+				  "    }\n",
+				  check[3], thr_code,
+				  thr_code,
+				  thr_code);
+		  max_short_code = thr_code;
+		} else {
+		  code += sprintf("    {\n"
+				  "      state->%s = %d;\n"
+				  "      short_fail = %d;\n"
+				  "      break;\n"
+				  "    }\n",
+				  check[3], thr_code,
+				  thr_code);
+		}
+	      } else {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code);
+	      }
 	    }
 	    else
 	    {
