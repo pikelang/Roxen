@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.171 2004/05/16 21:40:33 mani Exp $
+// $Id: Roxen.pmod,v 1.172 2004/05/16 21:41:24 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1595,7 +1595,8 @@ string html_encode_tag_value(LocaleString str)
 			({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
-string strftime(string fmt, int t)
+string strftime(string fmt, int t,
+		void|string lang, void|function language, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
@@ -1603,25 +1604,38 @@ string strftime(string fmt, int t)
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
   string res = a[0];
+  mapping(string:string) m = (["type":"string"]);
 
   foreach(a[1..], string key) {
     if(key=="") continue;
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
-      res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+      if (language)
+	res += number2string(lt->wday+1,m,language(lang,"day",id))[..2];
+      else
+	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
     case 'A':	// Weekday name
-      res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-		"Thursday", "Friday", "Saturday" })[lt->wday];
+      if (language)
+	res += number2string(lt->wday+1,m,language(lang,"day",id));
+      else
+	res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+		  "Thursday", "Friday", "Saturday" })[lt->wday];
       break;
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
-      res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+      if (language)
+	res += number2string(lt->mon+1,m,language(lang,"month",id))[..2];
+      else
+	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
       break;
     case 'B':	// Month name
-      res += ({ "January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December" })[lt->mon];
+      if (language)
+	res += number2string(lt->mon+1,m,language(lang,"month",id));
+      else
+	res += ({ "January", "February", "March", "April", "May", "June",
+		  "July", "August", "September", "October", "November", "December" })[lt->mon];
       break;
     case 'c':	// Date and time
       res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
@@ -1932,7 +1946,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
-    return strftime(m->strftime, t);
+    return strftime(m->strftime, t, lang, language, id);
 
   if (m->part)
   {
