@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.232 2001/05/30 17:22:37 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.233 2001/05/31 16:53:10 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3765,12 +3765,19 @@ class TagEmitValues {
 	  break;
 	}
       }
-      m->values=m->values / (m->split || "\000");
+      if(stringp(m->values))
+	m->values=m->values / (m->split || "\000");
     }
 
     if(mappingp(m->values))
       return map( indices(m->values),
-		  lambda(mixed ind) { return (["index":ind,"value":m->values[ind]]); });
+		  lambda(mixed ind) {
+		    mixed val = m->values[ind];
+		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    if(m->case=="upper") val=upper_case(val);
+		    else if(m->case=="lower") val=lower_case(val);
+		    return (["index":ind,"value":val]);
+		  });
 
     if(arrayp(m->values))
       return map( m->values,
