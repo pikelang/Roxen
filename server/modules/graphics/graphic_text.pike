@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.84 1997/09/28 16:30:45 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.85 1997/10/02 14:08:07 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -149,6 +149,9 @@ void create()
 	 "The size of the image depends on the number of colors",
 	 ({ 1,2,3,4,5,6,7,8,10,16,32,64,128,256 }));
 
+  defvar("gif", 0, "Append .gif to all images", TYPE_FLAG|VAR_MORE,
+	 "Append .gif to all images made by gtext. Normally this will "
+	 "only waste bandwidth");
 
 #ifdef TYPE_FONT
   // compatibility variables...
@@ -816,6 +819,10 @@ mapping find_file(string f, object rid)
 {
   int id;
   sscanf(f,"%d/%s", id, f);
+
+  if( query("gif") )             //Remove .gif
+    f = f[..strlen(f)-5];
+    
   if (sizeof(f)) {
     object g;
     if (f[0] == '$') {	// Illegal in BASE64
@@ -1025,6 +1032,10 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(arg->help)
     return register_module()[2];
 
+  string gif="";
+  if(query("gif"))
+    gif=".gif";
+  
 #if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
 #else
@@ -1039,7 +1050,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(!id->supports->images || id->prestate->noimages)
   {
     if(!arg->split) contents=replace(contents,"\n", "\n<br>\n");
-    if(arg->submit) return "<input type=submit name=\""+(arg->name+".x")+"\" value=\""+contents+"\">";
+    if(arg->submit) return "<input type=submit name=\""+(arg->name+".x")
+		      + "\" value=\""+contents+"\">";
     switch(t)
     {
      case "gtext":
@@ -1172,7 +1184,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	  array size = write_text(num,word,1,id);
 	  res += ({ "<img _parsed=1 border=0 alt=\"" +
 		      replace(arg->alt || word, "\"", "'") +
-		      "\" src=\"" + pre + quote(word) + "\" width=" +
+		      "\" src=\"" + pre + quote(word) + gif + "\" width=" +
 		      size[0] + " height=" + size[1] + " " + ea + ">"
 		      });
 	}
@@ -1181,7 +1193,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	array size = write_text(num,word,1,id);
 	res += ({ "<img _parsed=1 border=0 alt=\"" +
 		    replace(arg->alt || word, "\"", "'") +
-		    "\" src=\"" + pre + quote(word) + "\" width=" +
+		    "\" src=\"" + pre + quote(word) + gif + "\" width=" +
 		    size[0] + " height=" + size[1] + " " + ea + ">\n"
 		    });
       }
@@ -1218,8 +1230,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
     return res +
       magic_image(url||"", size[0], size[1], "i"+(defines->mi++),
-		  query_location()+num+"/"+quote(gt),
-		  query_location()+num2+"/"+quote(gt),
+		  query_location()+num+"/"+quote(gt)+gif,
+		  query_location()+num2+"/"+quote(gt)+gif,
 		  (arg->alt?arg->alt:replace(gt, "\"","'")),
 		  (magic=="magic"?0:magic),
 		  id,input?na||"submit":0,ea);
@@ -1227,16 +1239,17 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(input)
     return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
 	    (arg->alt?arg->alt:replace(gt,"\"","'"))+
-	    "\" src="+query_location()+num+"/"+quote(gt)
+	    "\" src="+query_location()+num+"/"+quote(gt)+gif
 	    +" align="+(al || defalign)+ea+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
-  return (pre+(lp?lp:"")+
-	  "<img _parsed=1 border=0 alt=\""+
-	  (arg->alt?arg->alt:replace(gt,"\"","'")+"\"")
-	  +"\" src=\""+
-	  query_location()+num+"/"+quote(gt)+"\" "+ea
-	  +" align="+(al || defalign)+
-	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
+
+  return (pre+(lp?lp:"")
+	  + "<img _parsed=1 border=0 alt=\""
+	  + (arg->alt?arg->alt:replace(gt,"\"","'")+"\"")
+	  + "\" src=\""
+	  + query_location()+num+"/"+quote(gt)+gif+"\" "+ea
+	  + " align="+(al || defalign)
+	  + " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
 }
 
 inline string ns_color(array (int) col)
