@@ -1,6 +1,5 @@
 object mm=(object)"/master";
 inherit "/master": master;
-object sql;
 
 mixed sql_query( string q, mixed ... e )
 {
@@ -11,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.118 2001/08/31 05:18:59 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.119 2001/08/31 17:11:39 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
