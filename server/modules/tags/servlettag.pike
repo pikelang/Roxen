@@ -3,7 +3,9 @@
 constant cvs_version = "$Id $";
 constant thread_safe=1;
 
-#if constant(jvm)
+
+// Does not work yet
+#if 0
 
 inherit "roxenlib";
 inherit "module";
@@ -120,5 +122,4 @@ mapping query_container_callers()
 {
   return ([ "servlet":tag_servlet ]);
 }
-
 #endif
