@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.21 2002/07/01 15:29:33 anders Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.22 2002/07/04 16:21:23 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -919,7 +919,7 @@ class RXMLParseWrapper
     if (collect == 1)
     {
       res = Roxen.http_rxml_answer(get_data(1), _id);
-      WEBAPP_WERR(sprintf("get_result returns rxml_answer=%O", res));
+      //WEBAPP_WERR(sprintf("get_result returns rxml_answer=%O", res));
     }
     else
     {
@@ -1253,11 +1253,14 @@ mixed find_file( string f, RequestID id )
   if (loc[-1] == '/')
     id->misc->mountpoint = loc[..sizeof(loc)-2];
 
+  string path_info = id->misc->path_info;
   servlet = map_servlet(f, id);
 
   if (!servlet) {
-    if (!is_special(f, id))
+    if (!is_special(f, id)) {
+      id->misc->path_info = path_info;
       return ::find_file(f, id);
+    }
     else 
       return 0;
   }
@@ -1420,8 +1423,9 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
     id->misc->servlet_path = combine_path("/", f);
     id->misc->path_info = 0;
   }
-  else
+  if(!servlet) {
     servlet = map_servlet(f, id);
+  }
 
   if (!servlet) {
       frame->parse_error("Servlet not found!\n");
@@ -1435,9 +1439,11 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
           object rxml_wrapper;
 
           if (mixed e = catch {
+	    mapping request_headers = copy_value(id->request_headers);
             rxml_wrapper = RXMLParseWrapper(0, id);
 	    id = id->clone_me();
             id->my_fd = rxml_wrapper;
+	    id->request_headers = request_headers;
 
 #ifdef WEBAPP_CHAINING
             object chain_wrapper;
@@ -1545,7 +1551,7 @@ class TagServlet
         WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
         if (m->query("tagtarget") == args->webapp)
         {
-          string uri = args->uri || "";
+          string uri = args->uri || id->raw_url;
           RequestID fake_id;
 
           if(!objectp(id))
@@ -1574,7 +1580,11 @@ class TagServlet
 
           fake_id->raw_url=uri;
           fake_id->not_query=uri;
-          fake_id->method = "GET";
+
+	  // Remove fake_id->raw to prevent the java bridge to use the raw and incorrect url.
+	  fake_id->raw = 0;
+	  // Restore headers.
+	  fake_id->request_headers = copy_value(id->request_headers);
 
           mapping hdrs = m->call_servlet(this_object(), fake_id,
                                          uri, args->name || "");
