@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.16 2000/01/23 06:36:14 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.17 2000/01/23 14:20:27 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -56,7 +56,9 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  times the page has been accessed. A file, AccessedDB, in the logs directory is used to
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,
- but can also be configured to count all files of a certain type.</desc>
+ but can also be configured to count all files of a certain type.bar
+ <ex><accessed></ex>
+ </desc>
 
 <attr name=add value=int>
  Increments the number of accesses with this number instead of one,
@@ -105,9 +107,15 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
 <attr name=lang value=langcodes>
  Will print the result as words in the chosen language if used together
  with type=string.
+
+ <ex><accessed type=string></ex>
+ <ex><accessed type=string lang=sv></ex>
+</attr>
   
 <attr name=per value=second,minute,hour,day,week,month,year>
  Shows the number of accesses per unit of time.
+
+ <ex><accessed per=week></ex>
 </attr>
 
 <attr name=prec value=int>
@@ -135,11 +143,23 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  Inserts the date that the access count started. The language will
  depend on the lang tag, default is English. All normal date
  related attributes can be used. See the &lt;date&gt; tag.
+
+ <ex><accessed since></ex>
 </attr>
 
 <attr name=type value=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
  Specifies how the count are to be presented. Some of these are only
- useful together with the since attribute.</attr>"]);
+ useful together with the since attribute.
+
+ <ex><accessed type=roman></ex>
+ <ex><accessed since type=iso></ex>
+ <ex><accessed since type=discordian></ex>
+ <ex><accessed since type=stardate></ex>
+ <ex><accessed type=mcdonalds></ex>
+ <ex><accessed since type=linus></ex>
+ <ex><accessed type=ordered></ex>
+
+</attr>"]);
 #endif
 
 static string olf; // Used to avoid reparsing of the accessed index file...
