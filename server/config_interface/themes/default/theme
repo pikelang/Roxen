@@ -1,4 +1,9 @@
-<theme-set what=logo                 to=logo.gif themefile />
+<if variable="roxen.product-name == Roxen CMS">
+  <theme-set what=logo                 to="cms-logo.gif" themefile />
+</if>
+<else>
+  <theme-set what=logo                 to=logo.gif themefile />
+</else>
 <theme-set what=top-bgcolor          to=none />
 <theme-set what=toptabs-bgcolor      to=none />
 

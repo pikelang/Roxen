@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.137 2002/04/03 12:04:15 mast Exp $
+// $Id: Roxen.pmod,v 1.138 2002/04/08 15:37:51 js Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2978,6 +2978,8 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(__roxen_version__, type);
      case "build":
        return ENCODE_RXML_TEXT(__roxen_build__, type);
+     case "product-name":
+       return ENCODE_RXML_TEXT(roxen_product_name, type);     
      case "time":
        CACHE(c->id,1);
        return ENCODE_RXML_INT(time(),  type);

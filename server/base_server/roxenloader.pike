@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.320 2002/04/05 13:32:45 grubba Exp $
+// $Id: roxenloader.pike,v 1.321 2002/04/08 15:37:47 js Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.320 2002/04/05 13:32:45 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.321 2002/04/08 15:37:47 js Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -971,6 +971,8 @@ constant mf = Stdio.File;
 #include "../etc/include/version.h"
 
 static string release;
+static int roxen_is_cms;
+static string roxen_product_name;
 
 string roxen_version()
 //! @appears roxen_version
@@ -1168,6 +1170,13 @@ Roxen 2.4 should be run with Pike 7.2.
     // Only the first line is interresting.
     release = (replace(release, "\r", "\n")/"\n")[0];
   }
+
+  roxen_is_cms = !!file_stat("modules/sitebuilder");
+
+  if(roxen_is_cms)
+    roxen_product_name="Roxen CMS";
+  else
+    roxen_product_name="Roxen WebServer";
 
   // The default (internally managed) mysql path
   string defpath =
@@ -2030,6 +2039,8 @@ and rebuild Pike from scratch.
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
   add_constant("roxen_release", release || roxen_release);
+  add_constant("roxen_is_cms",  roxen_is_cms);
+  add_constant("roxen_product_name", roxen_product_name);
   add_constant("lopen",         lopen);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
