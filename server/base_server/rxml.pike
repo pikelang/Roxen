@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.73 2000/01/21 21:14:34 nilsson Exp $
+ * $Id: rxml.pike,v 1.74 2000/01/21 22:28:29 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -336,9 +336,11 @@ string do_parse(string to_parse, RequestID id,
     else
       parser->write_end (to_parse);
     string result = parser->eval();
+    parser->_defines = 0;
     id->misc->_parser = parent_parser;
     return result;
   }) {
+    parser->_defines = 0;
     id->misc->_parser = parent_parser;
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
