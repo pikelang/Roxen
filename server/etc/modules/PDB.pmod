@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.17 1998/01/28 01:49:39 grubba Exp $
+ * $Id: PDB.pmod,v 1.18 1998/02/20 19:37:19 noring Exp $
  */
 
 #if constant(thread_create)
@@ -12,16 +12,21 @@
 #define UNLOCK() } while(0)
 #endif
 
+#define PDB_ERR(msg) (exceptions?throw(({ "(PDB) "+msg+"\n",backtrace() })):0)
+
 class FileIO {
 
 #ifdef THREAD_SAFE
   static inherit Thread.Mutex;
 #endif
 
+  static int exceptions;
+
   static private object open(string f, string m)
   {
     object o = Stdio.File();
-    if(!o->open(f,m)) return 0;
+    if(!o->open(f,m))
+      return PDB_ERR("Failed to open file. Premission problems?");
     return o;
   }
   
@@ -40,9 +45,9 @@ class FileIO {
     int n = o->write(d);
     o->close();
     if(n == sizeof(d))
-      return mv(f+".tmp", f);
-    else
-      rm(f+".tmp");
+      return mv(f+".tmp", f)?1:PDB_ERR("Cannot move file.");
+    rm(f+".tmp");
+    return PDB_ERR("Failed to write file. Disk full?");
   }
   
   static mixed read_file(string f)
@@ -75,15 +80,17 @@ class Bucket
     db_log('B', subtype, size, arg);
   }
 
-  static void write_at(int offset, string to)
+  static int write_at(int offset, string to)
   {
-    file->seek(offset*size);
-    file->write(to);
+    if(file->seek(offset*size) != -1 && file->write(to) == sizeof(to))
+      return 1;
+    return PDB_ERR("Failed to write file. Disk full?");
   }
   
   static string read_at(int offset)
   {
-    file->seek(offset*size);
+    if(file->seek(offset*size) == -1)
+      return PDB_ERR("Failed to seek.");
     return file->read(size);
   }
   
@@ -138,9 +145,8 @@ class Bucket
   {
     if(strlen(to) > size) return 0;
     LOCK();
-    write_at(offset, to);
+    return write_at(offset, to);
     UNLOCK();
-    return 1;
   }
 
   void restore_from_log(array log)
@@ -179,12 +185,13 @@ class Bucket
     }
   }
   
-  void create(string d, int ms, int write, function logfun)
+  void create(string d, int ms, int write, function logfun, int exceptions_in)
   {
     string mode="r";
     size=ms;
     rf = d+ms;
     db_log = logfun;
+    exceptions = exceptions_in;
     if(write) { mode="rwc"; }
     catch {
       array t = read_file(rf+".free");
@@ -271,10 +278,11 @@ class Table
     }
     delete(in);
     int of = bucket->allocate_entry();
-    bucket->set_entry(of, ts);
-    index[in]=({ bucket->size, of });
-    dirty = 1;
-    log('C', in, index[in]);
+    if(bucket->set_entry(of, ts)) {
+      index[in]=({ bucket->size, of });
+      dirty = 1;
+      log('C', in, index[in]);
+    }
     UNLOCK();
     return to;
   }
@@ -359,12 +367,13 @@ class Table
       dirty = sizeof(log)>0;
   }
 
-  void create(string n, string d, int wp, int cp, function fn, function logfun)
+  void create(string n, string d, int wp, int cp, function fn, function logfun, int exceptions_in)
   {
     name = n;
     get_bucket = fn;
     db_log = logfun;
     dir = d;
+    exceptions = exceptions_in;
     if(sizeof(predef::indices(Gz)) && cp) compress=1;
     if(wp) write=1;
     catch { index = read_file(dir+".INDEX"); };
@@ -383,7 +392,7 @@ class db
   static inherit Thread.Mutex;
 #endif
 
-  static int write, compress;
+  static int write, compress, exceptions;
   static string dir;
   static mapping (int:object(Bucket)) buckets = ([]);
   static mapping (string:object(Table)) tables = ([]);
@@ -405,7 +414,7 @@ class db
     object bucket;
     LOCK();
     if(!(bucket = buckets[s]))
-      buckets[s] = bucket = Bucket( dir+"Buckets/", s, write, log );
+      buckets[s] = bucket = Bucket( dir+"Buckets/", s, write, log, exceptions );
     UNLOCK();
     return bucket;
   }
@@ -432,7 +441,7 @@ class db
     if(tables[tname])
       return tables[tname];
     return tables[tname] =
-      Table(tname, combine_path(dir, tname), write, compress, get_bucket, log);
+      Table(tname, combine_path(dir, tname), write, compress, get_bucket, log, exceptions);
     UNLOCK();
   }
 
@@ -555,6 +564,7 @@ class db
   
   void create(string d, string mode)
   {
+    if(search(mode,"e")+1) exceptions=1;
     if(search(mode,"w")+1) write=1;
     if(search(mode,"C")+1) compress=1;
     if(search(mode,"c")+1) if(!file_stat(d))
