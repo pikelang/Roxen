@@ -96,6 +96,8 @@ mixed find_file( string f, object id )
   if( sscanf( f, "%[^/]/%s", locale, f ) != 2 )
     locale = f;
 
+  id->misc->cf_locale = locale;
+
   mixed retval = ::find_file( locale+"/"+f, id );
 
   if( retval == 0 )
