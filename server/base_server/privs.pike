@@ -1,13 +1,17 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.27 1997/10/15 16:14:52 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.28 1997/11/06 20:15:40 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
 
+int new_uid;
+int new_gid;
+
 #if !constant(report_notice)
 #define report_notice werror
 #define report_debug werror
+#define report_warning werror
 #endif
 
 #define LOGP (roxen && roxen->variables && roxen->variables->audit && GLOBVAR(audit))
@@ -27,7 +31,7 @@ static private string _getcwd()
 
 static private string dbt(array t)
 {
-  if(sizeof(t)<2) return "";
+  if(!arrayp(t) || (sizeof(t)<2)) return "";
   return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
 }
 
@@ -96,7 +100,7 @@ void create(string reason, int|string|void uid, int|string|void gid)
 #endif /* cleargroups */
   catch { initgroups(u[0], u[3]); };
   gid = gid || getgid();
-  int err = (int)setegid(gid);
+  int err = (int)setegid(new_gid = gid);
   if (err < 0) {
     report_debug(sprintf("privs.pike: WARNING: Failed to set the effective group id to %d!\n"
 			 "Check that your password database is correct for user %s(%d),\n"
@@ -118,7 +122,7 @@ void create(string reason, int|string|void uid, int|string|void gid)
       foreach(({ 60001, 65534, -2 }), gid2) {
 	perror("%d... ", gid2);
 	if (initgroups(u[0], gid2) >= 0) {
-	  if ((err = setegid(gid2)) >= 0) {
+	  if ((err = setegid(new_gid = gid2)) >= 0) {
 	    perror("Success!\n");
 	    break;
 	  }
@@ -135,7 +139,7 @@ void create(string reason, int|string|void uid, int|string|void gid)
     gid = gid2;
   }
   if(getgid()!=gid) setgid(gid||getgid());
-  seteuid(uid);
+  seteuid(new_uid = uid);
 #endif /* HAVE_EFFECTIVE_USER */
 }
 
@@ -156,8 +160,26 @@ void destroy()
 
   if(getuid()) return;
 
+#ifdef DEBUG
+  int uid = geteuid();
+  if (uid != new_uid) {
+    report_warning(sprintf("Privs.pike: UID #%d differs from expected #%d\n"
+			   "%s\n",
+			   uid, new_uid, describe_backtrace(backtrace())));
+  }
+  int gid = getegid();
+  if (gid != new_gid) {
+    report_warning(sprintf("Privs.pike: GID #%d differs from expected #%d\n"
+			   "%s\n",
+			   gid, new_gid, describe_backtrace(backtrace())));
+  }
+#endif /* DEBUG */
+
   seteuid(0);
   array u = getpwuid(saved_uid);
+#if efun(cleargroups)
+  catch { cleargroups(); };
+#endif /* cleargroups */
   if(u && (sizeof(u) > 3)) {
     catch { initgroups(u[0], u[3]); };
   }
