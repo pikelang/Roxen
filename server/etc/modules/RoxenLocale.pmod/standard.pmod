@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.5 2000/03/14 02:22:11 per Exp $
+ * $Id: standard.pmod,v 1.6 2000/03/14 21:02:58 js Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -433,7 +433,7 @@ class _config_interface
   constant servers = "Servers";
   constant settings= "Settings";
   constant usersettings= "Your Settings";
-  constant upgrade = "Upgrade";
+  constant update = "Update";
   constant modules = "Modules";
   constant globals = "Globals";
   constant eventlog = "Event Log";
