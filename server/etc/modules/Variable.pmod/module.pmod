@@ -1,17 +1,13 @@
-// $Id: module.pmod,v 1.26 2000/09/28 03:54:40 per Exp $
+// $Id: module.pmod,v 1.27 2000/10/12 16:12:00 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
 
 // Locale macros
-static inline string getloclang() {
-  return roxenp()->locale->get();
-}
-
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
-#define LOCALE(X,Y)	\
-  ([string](mixed)Locale.DeferredLocale("roxen_config",getloclang,X,Y))
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;
