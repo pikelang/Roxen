@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.461 2000/03/21 18:47:34 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.462 2000/03/23 22:26:33 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -738,7 +738,7 @@ class SSLProtocol
 {
   inherit Protocol;
 
-#if constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL.sslfile)
+#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
 
   // SSL context
   object ctx;
