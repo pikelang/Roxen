@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.152 2002/10/27 20:13:17 nilsson Exp $
+// $Id: Roxen.pmod,v 1.153 2002/10/29 23:08:12 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3717,6 +3717,7 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
   FIX(bgcolor,bgcolor);
   FIX(color,fgcolor);
   FIX(text,fgcolor);
+  FIX(fgcolor,fgcolor);
 #undef FIX
 
 #ifdef WIRETAP_TRACE
