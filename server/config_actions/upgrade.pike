@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.33 1998/01/28 01:50:49 grubba Exp $
+ * $Id: upgrade.pike,v 1.34 1998/05/19 11:37:38 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -288,7 +288,7 @@ string upgrade_module(string m, object rpc)
   else {
     o->write(rm[1]);
     res+="Fetched modules/"+rm[0]+", "+strlen(rm[1])+" bytes.<br>";
-    report_notice("Upgraded "+rm[0]+".");
+    report_notice("Upgraded "+rm[0]+".\n");
   }
   if (roxen->allmodules) {
     m_delete(roxen->allmodules, m);
@@ -298,11 +298,11 @@ string upgrade_module(string m, object rpc)
   foreach(roxen->configurations, object c)
     if(c->modules[m])
       if(!c->load_module(m))
-	report_error("The newly upgraded module could not be reloaded!");
+	report_error("The newly upgraded module could not be reloaded!\n");
       else
 	foreach(indices(c->modules[m]->copies||({"foo"})), int n)
 	  if(!c->disable_module(m+"#"+n))
-	    report_error("Failed to disable the module "+m+"#"+n);
+	    report_error("Failed to disable the module "+m+"#"+n+"\n");
 	  else if(!(c->enable_module(m+"#"+n)))
 	    error("Failed to enable module "+m+"#"+n+".\n");
 
@@ -456,7 +456,7 @@ string upgrade_component(string m, object rpc)
   {
     o->write(rthingie[1]);
     res+="Fetched "+rthingie[0]+", "+strlen(rthingie[1])+" bytes.<br>";
-    report_notice("Upgraded the component "+rthingie[0]+".");
+    report_notice("Upgraded the component "+rthingie[0]+".\n");
   }
   return res+"<p>\n\n\n";
 }
