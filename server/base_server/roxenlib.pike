@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.143 2000/01/17 16:52:14 nilsson Exp $
+// $Id: roxenlib.pike,v 1.144 2000/01/18 10:17:57 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -874,7 +874,7 @@ mapping proxy_auth_needed(RequestID id)
 
 string program_filename()
 {
-  return master()->program_name (this_object());
+  return master()->program_name(this_object())||"";
 }
 
 string program_directory()
