@@ -109,19 +109,18 @@ class Relay
     url = _url;
     options = _options;
 
+    string file;
+    if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
+    {
+      port=80;
+      sscanf(url,"%*[^:/]://%[^:/]/%s",host,file);
+    }
+
     if( options->raw )
       request_data = _id->raw;
     else
     {
       mapping headers = ([]);
-      string file;
-
-      if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
-      {
-        port=80;
-        sscanf(url,"%*[^:/]://%[^:/]/%s",host,file);
-      }
-
       headers = make_headers( id, options->trimheaders );
 
       request_data = (id->method+" /"+http_encode_string(file)+" HTTP/1.0\r\n"+
