@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.5 1997/11/07 00:08:34 grubba Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.6 1997/11/11 01:58:18 grubba Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -795,7 +795,7 @@ static void FCGI_Start(char *bindPath, char *appPath, int nServers)
  *
  *----------------------------------------------------------------------
  */
-static buildNameValueHeaderCalls = 0; /* XXX: for testing */
+static int buildNameValueHeaderCalls = 0; /* XXX: for testing */
 
 static void FCGIUtil_BuildNameValueHeader(
         int nameLen,
