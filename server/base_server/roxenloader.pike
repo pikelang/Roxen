@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.70 1998/05/07 22:15:29 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.71 1998/05/10 20:20:52 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -336,7 +336,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       } else {
 	werror(sprintf("popen(%O) failed\n", s));
       }
-    }
+    };
     exit(69);
   }else{
     string t;
