@@ -7,55 +7,55 @@
 <str id="1">
 <new/>
 <o>No virtual servers enabled</o>
-<t></t>
+<t>Geen virtuele servers actief</t>
 </str>
 
 <str id="2">
 <new/>
 <o>Sent data</o>
-<t></t>
+<t>Data verstuurd</t>
 </str>
 
 <str id="3">
 <new/>
 <o>sec</o>
-<t></t>
+<t>sec.</t>
 </str>
 
 <str id="4">
 <new/>
 <o>Sent headers</o>
-<t></t>
+<t>Headers verstuurd</t>
 </str>
 
 <str id="5">
 <new/>
 <o>Number of requests</o>
-<t></t>
+<t>Aantal verzoeken</t>
 </str>
 
 <str id="6">
 <new/>
 <o>min</o>
-<t></t>
+<t>min.</t>
 </str>
 
 <str id="7">
 <new/>
 <o>Received data</o>
-<t></t>
+<t>Data ontvangen</t>
 </str>
 
 <str id="8">
 <new/>
 <o>FTP users (total)</o>
-<t></t>
+<t>FTP-gebruikers (totaal)</t>
 </str>
 
 <str id="9">
 <new/>
 <o>FTP users (now)</o>
-<t></t>
+<t>FTP-gebruikers (huidig)</t>
 </str>
 
 <str id="10">
