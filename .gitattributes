@@ -200,7 +200,6 @@ nn binary
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
-/server/modules/misc/SQLuserdb.pike foreign_ident
 /server/modules/misc/contenttypes.pike foreign_ident
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
@@ -209,7 +208,6 @@ nn binary
 /server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/preferred_language.pike foreign_ident
 /server/modules/misc/randomtext.pike foreign_ident
-/server/modules/misc/sqldb.pike foreign_ident
 /server/modules/misc/userdb.pike foreign_ident
 /server/modules/misc/wapadapter.pike foreign_ident
 /server/modules/misc/ypuserdb.pike foreign_ident
@@ -237,7 +235,6 @@ nn binary
 /server/modules/tags/rxmlparse.pike foreign_ident
 /server/modules/tags/rxmltags.pike foreign_ident
 /server/modules/tags/sed.pike foreign_ident
-/server/modules/tags/sqltag.pike foreign_ident
 /server/modules/tags/ssi.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/tablist.pike foreign_ident
