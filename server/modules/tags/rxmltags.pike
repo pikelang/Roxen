@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.393 2002/08/14 12:53:08 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.394 2002/08/16 15:11:02 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5748,7 +5748,7 @@ using the pre tag.
  memory on the server simply by making many requests with random
  variables.</p></note>
 
- <h4>Shared caches</h4>
+ <h1>Shared caches</h1>
 
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
@@ -5784,7 +5784,7 @@ using the pre tag.
  documentation for details about how to control RXML p-code
  caching.</p></note>
 
- <h4>Cache static tags</h4>
+ <h1>Cache static tags</h1>
 
  <note><p>Note that this is only applicable if the compatibility level
  is set to 2.5 or higher.</p></note>
@@ -5823,7 +5823,7 @@ using the pre tag.
  <p>Because of this, it's important to know whether a tag is cache
  static or not, and it's noted in the doc for all such tags.</p>
 
- <h4>Compatibility</h4>
+ <h1>Compatibility</h1>
 
  <p>If the compatibility level of the site is lower than 2.2 and there
  is no \"variable\" or \"profile\" attribute, the cache depends on the
