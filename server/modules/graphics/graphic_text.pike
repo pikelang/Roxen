@@ -1,48 +1,25 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.199 2000/01/02 01:36:28 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version="$Id: graphic_text.pike,v 1.200 2000/01/05 22:35:40 nilsson Exp $";
 
-#include <config.h>
 #include <module.h>
-#include <stat.h>
 inherit "module";
 inherit "roxenlib";
 
 
 // ------------------- Module registration ---------------------
 
-array register_module()
-{
-  return ({ MODULE_PARSER,
-	    "Graphics text",
-	    "Generates graphical texts.",
-	    0, 1
-         });
-}
+constant module_type   = MODULE_PARSER;
+constant module_name   = "Graphics text";
+constant module_doc    = "Generates graphical texts.";
+constant module_unique = 1;
+constant thread_safe   = 1;
 
 void create()
 {
   defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
 	 "If set, parse the specified tags for document colors.");
-
-  defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
-	 "Tags to parse for color",
-	 TYPE_STRING_LIST,
-	 "Which tags should be parsed for document colors? "
-	 "This will affect documents without gtext as well as documents "
-	 "with it, the parsing time is relative to the number of parsed "
-	 "tags in a document. You have to reload this module or restart "
-	 "roxen for changes of this variable to take effect.", 0,
-	 lambda(){return !query("colorparse");});
-
-  defvar("colormode", 1, "Normalize colors in parsed tags", TYPE_FLAG,
-	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
-	 "'netscape' colors (#rrggbb). Setting this to off will lessen the "
-	 "performance impact of the 'Tags to parse for color' option quite"
-	 " dramatically. You can try this out with the &lt;gauge&gt; tag.",
-	 0,  lambda(){return !query("colorparse");});
 
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
@@ -84,9 +61,10 @@ string status() {
 		 s[0]/2, sizetostring(s[1]));
 }
 
-void start()
+void start(int num, Configuration conf)
 {
   image_cache = roxen.ImageCache( "gtext", draw_callback );
+  if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
 }
 
 constant nbsp = iso88591["&nbsp;"];
@@ -307,6 +285,8 @@ constant textarg=({"afont",
 		   "yspacing"
 });
 
+constant theme=({"fgcolor","bgcolor","font"});
+
 mapping mk_gtext_arg(mapping arg, RequestID id) {
 
   mapping p=([]); //Picture rendering arguments.
@@ -328,15 +308,16 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
       m_delete(arg,tmp);
     }
 
-  if(id->misc->gtext_fgcolor && !p->fgcolor) p->fgcolor=id->misc->gtext_fgcolor;
-  if(id->misc->gtext_bgcolor && !p->bgcolor) p->bgcolor=id->misc->gtext_bgcolor;
-  if(id->misc->gtext_nfont && !p->nfont) p->nfont=id->misc->gtext_nfont;
-  if(id->misc->gtext_afont && !p->afont) p->afont=id->misc->gtext_afont;
-  if(id->misc->gtext_font &&  !p->font) p->font=id->misc->gtext_font;
-  if(id->misc->gtext_bold && !p->bold) p->bold=id->misc->gtext_bold;
-  if(id->misc->gtext_italic && !p->italic) p->italic=id->misc->gtext_italic;
-  if(id->misc->gtext_black && !p->black) p->black=id->misc->gtext_black;
-  if(id->misc->gtext_narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
+  foreach(theme, string tmp)
+    if( (id->misc->defines[tmp] || id->misc->defines["theme_"+tmp]) && !p[tmp])
+      p[tmp]=id->misc->defines["theme_"+tmp] || id->misc->defines[tmp];
+
+  if(id->misc->defines->nfont && !p->nfont) p->nfont=id->misc->gtext_nfont;
+  if(id->misc->defines->afont && !p->afont) p->afont=id->misc->gtext_afont;
+  if(id->misc->defines->bold && !p->bold) p->bold=id->misc->gtext_bold;
+  if(id->misc->defines->italic && !p->italic) p->italic=id->misc->gtext_italic;
+  if(id->misc->defines->black && !p->black) p->black=id->misc->gtext_black;
+  if(id->misc->defines->narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
 
   return p;
 }
@@ -445,8 +426,8 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
 
   arg->src=query_internal_location()+num+ext;
   if(size) {
-    arg->width=size->xsize;
-    arg->height=size->ysize;
+    arg->width=(string)size->xsize;
+    arg->height=(string)size->ysize;
   }
 
   if(arg->magic)
@@ -454,7 +435,8 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     string magic=replace(arg->magic,"'","`");
     m_delete(arg,"magic");
 
-    if(!arg->fgcolor) p->fgcolor=id->misc->gtext_alink||"#ff0000";
+    if(!arg->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
+			id->misc->defines->alink||"#ff0000";
     if(p->bevel) p->pressed=1;
 
     foreach(glob("magic-*", indices(arg)), string q)
@@ -466,8 +448,8 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     string num2 = image_cache->store( ({ p, c }),id );
     size = image_cache->metadata( num2, id );
     if(size) {
-      arg->width=max(arg->xsize,size->xsize);
-      arg->height=max(arg->ysize,size->ysize);
+      arg->width=(string)max(arg->xsize,size->xsize);
+      arg->height=(string)max(arg->ysize,size->ysize);
     }
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
@@ -522,125 +504,11 @@ array(string) container_anfang(string t, mapping m, string c, RequestID id) {
 }
 
 
-// ------------ Wiretap code to find HTML-colours ---------------------
-
-inline string ns_color(array (int) col)
-{
-  if(!arrayp(col)||sizeof(col)!=3)
-    return "#000000";
-  return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
-}
-
-int|array (string) tag_body(string t, mapping args, RequestID id)
-{
-  int changed=0;
-  int cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
-
-#define FIX(Y,Z,X) do{ \
-  if(!args->Y || args->Y==""){ \
-    id->misc["gtext_"+X]=Z; \
-    if(cols){ \
-      args->Y=Z; \
-      changed=1; \
-    } \
-  } \
-  else{ \
-    id->misc["gtext_"+X]=args->Y; \
-    if(QUERY(colormode)&&args->Y[0]!='#'){ \
-      args->Y=ns_color(parse_color(args->Y)); \
-      changed=1; \
-    } \
-  } \
-}while(0)
-
-  if(!search((id->client||({}))*"","Mosaic"))
-  {
-    FIX(bgcolor,"#bfbfbf","bgcolor");
-    FIX(text,   "#000000","fgcolor");
-    FIX(link,   "#0000b0","link");
-    FIX(alink,  "#3f0f7b","alink");
-    FIX(vlink,  "#ff0000","vlink");
-  } else {
-    FIX(bgcolor,"#c0c0c0","bgcolor");
-    FIX(text,   "#000000","fgcolor");
-    FIX(link,   "#0000ee","link");
-    FIX(alink,  "#ff0000","alink");
-    FIX(vlink,  "#551a8b","vlink");
-  }
-
-  if(changed && QUERY(colormode))
-    return ({make_tag("body", args) });
-  return 0;
-}
-
-string|array(string) tag_fix_color(string tagname, mapping args, RequestID id)
-{
-  int changed;
-
-  if(!id->misc->gtext_colors)
-    id->misc->gtext_colors = ({ ({ id->misc->gtext_fgcolor, id->misc->gtext_bgcolor, tagname }) });
-  else
-    id->misc->gtext_colors += ({ ({ id->misc->gtext_fgcolor, id->misc->gtext_bgcolor, tagname }) });
-
-#undef FIX
-#define FIX(X,Y) if(args->X && args->X!=""){ \
-  id->misc["gtext_"+Y]=args->X; \
-  if(QUERY(colormode) && args->X[0]!='#'){ \
-    args->X=ns_color(parse_color(args->X)); \
-    changed = 1; \
-  } \
-}
-
-  FIX(bgcolor,"bgcolor");
-  FIX(color,"fgcolor");
-  FIX(text,"fgcolor");
-#undef FIX
-
-  if(changed && QUERY(colormode))
-    return ({ make_tag(tagname, args) });
-  return 0;
-}
-
-string|void tag_pop_color(string tagname, mapping args, RequestID id)
-{
-  array c = id->misc->gtext_colors;
-  if(!c ||!sizeof(c))
-    return;
-
-  int i;
-  tagname = tagname[1..];
-
-  for(i=0; i<sizeof(c); i++)
-    if(c[-i-1][2]==tagname)
-    {
-      id->misc->gtext_fgcolor = c[-i-1][0];
-      id->misc->gtext_bgcolor = c[-i-1][1];
-      break;
-    }
-
-  id->misc->gtext_colors = c[..sizeof(c)-i-2];
-}
-
-
 // --------------- tag and container registration ----------------------
 
 mapping query_tag_callers()
 {
-  mapping tags = ([ "gtext-id":tag_gtext_id ]);
-  if(query("colorparse"))
-    foreach(query("colorparsing"), string t)
-    {
-      switch(t)
-      {
-       case "body":
-	 tags[t] = tag_body;
-	 break;
-       default:
-	 tags[t] = tag_fix_color;
-	 tags["/"+t]=tag_pop_color;
-      }
-    }
-  return tags;
+  return ([ "gtext-id":tag_gtext_id ]);
 }
 
 mapping query_container_callers()
