@@ -14,7 +14,7 @@ constant language = roxen->language;
 array register_module()
 {
   return ({
-    MODULE_PARSER,
+    MODULE_PARSER | MODULE_PROVIDER,
     "Old RXML Compatibility Module",
     "Adds support for old (deprecated) RXML tags and attributes.",
     0,1
@@ -29,9 +29,8 @@ void create(object c)
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
-void start(int q, object c)
-{
-  add_api_function("old_rxml_warning", old_rxml_warning, ({ "string", "string" }));
+string query_providers() {
+  return "oldRXMLwarning";
 }
 
 void old_rxml_warning(object id, string problem, string solution)
@@ -42,8 +41,7 @@ void old_rxml_warning(object id, string problem, string solution)
 }
 
 // Changes the parsing order by first parsing it's contents and then
-// morphing itself into another tag that gets parsed. Makes it possible to
-// use, for example, tablify together with sqloutput.
+// morphing itself into another tag that gets parsed.
 string container_preparse( string tag_name, mapping args, string contents,
 		     RequestID id )
 {
