@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.21 1997/04/12 15:25:20 per Exp $ */
+/* $Id: persistent.pike,v 1.22 1997/04/13 00:42:00 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -51,10 +51,10 @@ public void begone()
 {
   remove_call_out(really_save);
   ___destructed=1;
-  if(__id)
-    open_db(__id[0])->delete(__id[1]);
+  if(__id) open_db(__id[0])->delete(__id[1]);
   __id=0;
-  call_out(destruct,2,this_object());
+// A nicer destruct. Won't error() if no object.
+  call_out(do_destruct,8,this_object());
 }
 
 void destroy()

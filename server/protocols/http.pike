@@ -1,23 +1,21 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.23 1997/04/07 23:23:43 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.24 1997/04/13 00:42:03 per Exp $";
 // HTTP protocol module.
 #include <config.h>
-inherit "roxenlib";
+private inherit "roxenlib";
 int first;
 
 constant shuffle=roxen->shuffle;
 constant decode=roxen->decode;
 constant find_supports=roxen->find_supports;
 constant version=roxen->version;
-constant errors=roxen->errors;
 constant handle=roxen->handle;
 constant _query=roxen->query;
 //constant This = object_program(this_object());
 import Simulate;
 
 #define SPEED_MAX
-
 
 function _time=time;
 private static array(string) cache;
@@ -414,6 +412,7 @@ private int parse_got(string s)
 
 	   case "accept":
 	   case "accept-encoding":
+	   case "accept-charset":
 	   case "accept-language":
 	   case "session-id":
 	   case "message-id":
@@ -616,6 +615,38 @@ int wants_more()
   return !!cache;
 }
 
+constant errors =
+([
+  200:"200 OK",
+  201:"201 URI follows",
+  202:"202 Accepted",
+  203:"203 Provisional Information",
+  204:"204 No Content",
+  
+  300:"300 Moved",
+  301:"301 Permanent Relocation",
+  302:"302 Temporary Relocation",
+  303:"303 Temporary Relocation method and URI",
+  304:"304 Not Modified",
+
+  400:"400 Bad Request",
+  401:"401 Access denied",
+  402:"402 Payment Required",
+  403:"403 Forbidden",
+  404:"404 No such file or directory.",
+  405:"405 Method not allowed",
+  407:"407 Proxy authorization needed",
+  408:"408 Request timeout",
+  409:"409 Conflict",
+  410:"410 This document is no more. It has gone to meet it's creator. It is gone. It will not be coming back. Give up. I promise. There is no such file or directory.",
+  
+  500:"500 Internal Server Error.",
+  501:"501 Not Implemented",
+  502:"502 Gateway Timeout",
+  503:"503 Service unavailable",
+  
+  ]);
+
 void handle_request( )
 {
   mixed *err;
@@ -667,6 +698,7 @@ void handle_request( )
   } else {
     if((file->file == -1) || file->leave_me) 
     {
+      if(do_not_disconnect) return;
 //    perror("Leave me...\n");
 //      if(!file->stay) { destruct(thiso); }
       my_fd = file = 0;

@@ -35,40 +35,10 @@ rotate () {
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
 }
 
-
 start_roxen() {
-  PIKE=pike
-  if [ -x bin/pike ] ; then PIKE=bin/pike; fi
-  export PIKE
-  args="-DROXEN $DEBUG $DEFINES base_server/roxenloader.pike --config-dir=$DIR"
-tput 'bold' 2>/dev/null
-  echo $$: Executing $PIKE $args $@
-tput 'rmso' 2>/dev/null
-  $PIKE $args $@
-}
-
-# Change the permissions of the configuration files so that they match
-# those of the user Roxen runs as when it has started, not the one Roxen
-# is started as.
-
-fixperms() {
- uline=`./configvar --query --config-dir=$DIR --region=Variables User`
-
- uid=`echo $uline | sed -e 's![^"]*"!!' -e 's/:.*//'`
- gid=`echo $uline | sed -e 's![^:]*:!!' -e 's/".*//'` 
-
- if [ ! -z "$gid" ] ; then find $DIR $LOGDIR -print | xargs chgrp $gid; fi
- if [ ! -z "$uid" ] ; then find $DIR $LOGDIR -print | xargs chown $uid; fi
-
- find $DIR -print | xargs chmod og-rw
- find $DIR -print | xargs chmod u+rw
-}
-
-
-start_roxen() {
-  args="-DROXEN $DEFINES $pass $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $pike $args $@
-  $pike $args $@
+ args="-DROXEN $DEBUG $DEFINES $pass base_server/roxenloader --config-dir=$DIR"
+ echo Executing $pike $args $@
+ $pike $args $@
 }
 ####### END PREAMBLE
 
@@ -132,14 +102,12 @@ fi
 if [ ! "X$pass" = "X" ] ; then set $pass ;fi
 
 
-tput 'clear' 2>/dev/null
-tput 'bold' 2>/dev/null
 echo $$: Starting the Roxen Challenger World Wide Web server.
 
 ./mkdir -p $LOGDIR/debug/
 
 if [ -z "$debug" ] ; then
-  DEBUG="";
+  DEBUG="-DMODULE_DEBUG";
 else
   DEBUG="-DDEBUG -DMODULE_DEBUG"
 fi
@@ -195,16 +163,16 @@ oo
   fi
 done
     
-echo $$: Not Reached "(famous last words)"
+echo $$: Not Reached "famous last words"
 
 ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1&
 cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
 oo
-tput 'rmso' 2>/dev/null
 
 else
   echo $$: "Server restart at `date`"
   start_roxen
 fi
+    

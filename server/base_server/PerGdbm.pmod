@@ -7,13 +7,17 @@ class gdbm {
   {
     int len;
     while(sscanf(fd->read(4), "%4c", len))
-      catch(::set(@decode_value(fd->read(len))));
+      catch(::store(@decode_value(fd->read(len))));
   }
 
   void store(string ... args)
   {
     string s=encode_value(args);
-    command_stream->write(sprintf("%4c%s", strlen(s), s));
+    if(command_stream->write(sprintf("%4c%s", strlen(s), s)) != (strlen(s)+4))
+    {
+      werror("PerGdbm: Error in store, write failed. Using fallback.\n");
+      ::store( @args );
+    }
   }
 
   void create(string ... args)

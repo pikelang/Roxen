@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.18 1997/04/12 08:03:33 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.19 1997/04/13 00:42:02 per Exp $";
 
 #include <module.h>
 
@@ -23,7 +23,6 @@ import Stdio;
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
-  
   mapping new = build_env_vars(f,id,path_info);
   if(QUERY(rawauth) && id->rawauth)
     new["HTTP_AUTHORIZATION"] = id->rawauth;
@@ -206,6 +205,11 @@ static string path;
 
 void start(int n, object conf)
 {
+  if(n==2) return;
+
+  if(!conf) conf=roxen->current_configuration;
+  if(!conf) return;
+
   string tmp;
   array us;
   if(!conf) // When reloading, no conf is sent.
@@ -221,6 +225,7 @@ void start(int n, object conf)
 	runuser = ({ (int)us[0], (int)us[1] });
       else
 	runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
+
   
   tmp=conf->query("MyWorldLocation");
   sscanf(tmp, "%*s//%s", tmp);
@@ -387,8 +392,8 @@ mixed find_file(string f, object id)
 	      my_build_env_vars(f, id, path_info));
       exece(f, make_args(id->rest_query), my_build_env_vars(f, id, path_info));
     };
-    roxen_perror("CGI: Exec failed!\n%O\n",
-		 describe_backtrace((array)err));
+    catch(roxen_perror("CGI: Exec failed!\n%O\n",
+		       describe_backtrace((array)err)));
     exit(0);
   }
   destruct(pipe1);

@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.8 1997/04/05 01:26:26 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.9 1997/04/13 00:42:02 per Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -117,7 +117,7 @@ mixed find_file(string f, object id)
   
   spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
 				 QUERY(numsimul)+"" }),
-	 ::build_env_vars(f, id, path_info),
+	 my_build_env_vars(f, id, path_info),
 	 pipe1, pipe1, QUERY(err)?pipe1:stderr, dirname(f),
 	 uid);
 

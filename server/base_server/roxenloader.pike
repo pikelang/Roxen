@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.16 1997/04/12 15:25:22 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.17 1997/04/13 00:42:01 per Exp $";
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -72,10 +72,10 @@ class db {
     if(objectp(mdb)) mydb=mdb;
     else
     {
-      if(catch(mydb=gdbm(mdb,"cwrf")) ||!mydb)
+      if(catch(mydb=gdbm(mdb,"cwr")) ||!mydb)
       {
 	mkdirhier(mdb);
-	if(!(mydb=gdbm(mdb,"cwrf")))
+	if(!(mydb=gdbm(mdb,"cwr")))
 	  error("Failed to open database.\n");
       }
     }
@@ -399,6 +399,10 @@ void main(mixed ... args)
   replace_master(mm=(((program)"etc/roxen_master.pike")()));
 
   add_constant("open_db", open_db);
+  add_constant("do_destruct", lambda(object o) {
+    if(o&&objectp(o))  destruct(o);
+  });
+
   add_constant("error", lambda(string s){error(s);});
 
   add_constant("spawne",spawne);
@@ -419,4 +423,3 @@ void main(mixed ... args)
   load_roxen();
   return roxen->main(@args);
 }
-  
