@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.752 2001/11/07 13:15:58 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.753 2001/11/07 14:02:00 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1791,7 +1791,7 @@ int register_url( string url, Configuration conf )
   if( (int)opts->nobind )
   {
     report_warning(
-      LOC_M(0,"Not binding the port %O, disabled in configuration")+"\n",
+      LOC_M(61,"Not binding the port %O, disabled in configuration")+"\n",
       url );
     return 0;
   }

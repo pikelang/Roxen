@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.492 2001/11/01 14:19:49 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.493 2001/11/07 14:02:17 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2348,6 +2348,16 @@ void start(int num)
 {
   fix_my_url();
 
+#if 0
+  report_debug(sprintf("configuration:start():\n"
+		       "  registered_urls: ({ %{%O, %}})\n"
+		       "  faileded_urls:   ({ %{%O, %}})\n"
+		       "  URLs:            ({ %{%O, %}})\n",
+		       registered_urls,
+		       failed_urls,
+		       query("URLs")));
+#endif /* 0 */
+
   // Note: This is run as root if roxen is started as root
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
@@ -2358,10 +2368,12 @@ void start(int num)
   failed_urls = ({ });
 
   foreach( (query( "URLs" )-registered_urls), string url )
+  {
     if( roxen.register_url( url, this_object() ) )
       registered_urls += ({ url });
     else
       failed_urls += ({ url });
+  }
   if( !datacache )
     datacache = DataCache( );
   else
@@ -3393,7 +3405,7 @@ also set 'URLs'."));
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
            DLOCALE(38, "Ports: URLs"),
-	   DLOCALE(0, "Bind to these URLs. You can use '*' and '?' to perform"
+	   DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  If you specify a IP# in "
 		   "the field it will take precedence over the hostname.")));
