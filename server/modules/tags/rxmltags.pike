@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.438 2003/09/17 15:03:51 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.439 2003/10/06 17:23:17 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3527,7 +3527,7 @@ class TagElements
 	parse_error ("Variable %O doesn't exist.\n", args->variable);
       if (objectp (var) && var->_sizeof)
 	result = var->_sizeof();
-      else if (arrayp (var) || mappingp (var))
+      else if (arrayp (var) || mappingp (var) || multisetp (var))
 	result = sizeof (var);
       else
 	result = 1;
@@ -4471,7 +4471,7 @@ class IfIs
 
   constant cache = 0;
   constant case_sensitive = 0;
-  string|array source (RequestID id, string s);
+  string|array source (RequestID id, string s, void|int check_set_only);
 
   int(0..1) eval( string value, RequestID id, mapping args )
   {
@@ -4482,8 +4482,22 @@ class IfIs
 	CACHE(cache);
     }
     array arr=value/" ";
-    string|array var=source(id, arr[0]);
-    if(!arrayp(var)) return do_check(var, arr, id);
+    mixed var;
+    if (sizeof (arr) < 2) {
+      var = source (id, arr[0], 1);
+      // Compatibility kludge: Empty arrays are considered false. This
+      // is probably the result of that multiple values are
+      // represented by arrays. We don't want to escalate that to
+      // other types, though (empty strings are already considered
+      // true).
+      if (!arrayp (var))
+	return !!var;
+    }
+    else {
+      var=source(id, arr[0]);
+      if(!arrayp(var))
+	return do_check(var, arr, id);
+    }
 
     int(0..1) recurse_check(array var, array arr, RequestID id) {
       foreach(var, mixed val) {
@@ -5039,7 +5053,7 @@ class TagIfVariable {
   inherit IfIs;
   constant plugin_name = "variable";
   constant cache = 1;
-  string source(RequestID id, string s) {
+  mixed source(RequestID id, string s, void|int check_set_only) {
     mixed var;
     if (compat_level == 2.2) {
       // The check below makes it impossible to tell the value 0 from
@@ -5054,7 +5068,7 @@ class TagIfVariable {
     else
       if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
-    return RXML.t_text->encode (var);
+    return check_set_only ? 1 : RXML.t_text->encode (var);
   }
 }
 
@@ -5239,6 +5253,15 @@ class TagEmitValues {
 		    if(m->case=="upper") val=upper_case(val);
 		    else if(m->case=="lower") val=lower_case(val);
 		    return (["value":val]);
+		  } );
+
+    if(multisetp(m->values))
+      return map( m->values,
+		  lambda(mixed val) {
+		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    if(m->case=="upper") val=upper_case(val);
+		    else if(m->case=="lower") val=lower_case(val);
+		    return (["index":val]);
 		  } );
 
     RXML.run_error("Values variable has wrong type %t.\n", m->values);
@@ -7150,7 +7173,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  container will not affect variables in the rest of the page.
 </p></desc>
 
-<attr name='extend' value='name' default='form'>
+<attr name='extend' value='name'>
  <p>If set, all variables in the selected scope will be copied into
  the new scope. NOTE: if the source scope is \"magic\", as e.g. the
  roxen scope, the scope will not be copied, but rather linked and will
