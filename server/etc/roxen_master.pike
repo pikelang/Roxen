@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.77 2000/03/19 19:52:16 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.78 2000/03/20 04:15:08 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -120,11 +120,12 @@ mapping handled = ([]);
 
 mapping(program:string) program_names = set_weak_flag (([]), 1);
 
+string dump_path = "../var/"+roxen_version()+"/precompiled/"+
+  uname()->machine+"."+uname()->release + "/";
+
 string make_ofilename( string from )
 {
-  return "../var/"+roxen_version()+"/precompiled/"+
-         uname()->machine+"."+uname()->release + "/"
-         +sprintf( "%s-%08x.o",((from/"/")[-1]/".")[0], hash(from));
+  return dump_path + sprintf( "%s-%08x.o",((from/"/")[-1]/".")[0], hash(from));
 }
 
 void dump_program( string pname, program what )
@@ -176,15 +177,14 @@ program low_findprog(string pname, string ext, object|void handler)
 	      program_names[ret] = fname;
 	      return ret;
             };
+	    string msg = sprintf("Failed to decode dumped file for %s: %s\n",
+				 trim_file_name (fname), describe_error(err));
+	    if (ofile[..sizeof (dump_path) - 1] == dump_path)
+	      ofile = ofile[sizeof (dump_path)..];
 	    if (handler) {
-	      handler->compile_warning(ofile, 0,
-				       sprintf("Decode failed:\n"
-					       "\t%s",
-                                               describe_backtrace(err)));
+	      handler->compile_warning(ofile, 0, msg);
 	    } else {
-	      compile_warning(ofile, 0,
-			      sprintf("Decode failed:\n"
-				      "\t%s", describe_backtrace(err)));
+	      compile_warning(ofile, 0, msg);
 	    }
 	  }
         }
