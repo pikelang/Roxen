@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.7 1998/09/08 21:32:14 js Exp $
+ * $Id: clientlayer.pike,v 1.8 1998/09/09 09:20:57 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -8,14 +8,14 @@
  */
 
 #include <module.h>
-inherit "module";
+inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.7 1998/09/08 21:32:14 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.8 1998/09/09 09:20:57 per Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
 
-// Roxen module functions
+/* Roxen module functions ----------------------------------- */
 
 array register_module()
 {
@@ -27,20 +27,87 @@ array register_module()
 	     1 }) );
 }
 
+void create()
+{
+  defvar("maildir", "/home/js/AutoSite/mails/", "Mail storage directory", 
+	 TYPE_DIR,
+	 "This is the physical location of the root directory for all"
+         " mail.");
+
+  defvar("db_location", "mysql://auto:site@kopparorm/autosite",
+	 "Database URL" ,TYPE_STRING,"");
+}
+
 string query_provides()
 {
   return "automail_clientlayer";
 }
 
-void create()
+
+
+/* Utility functions   ---------------------------------------- */
+
+#if constant(thread_local)
+object sql = thread_local();
+Thread.Mutex lock = Thread.Mutex();
+static Sql.sql get_sql()
 {
-  defvar("maildir", "/home/js/AutoSite/mails/", "Mail storage directory", TYPE_DIR,
-	 "This is the physical location of the root directory for all"
-         " mail.");
-  defvar("db_location", "mysql://auto:site@kopparorm/autosite",
-	 "Database URL" ,TYPE_STRING,
- 	 "");
+  if(sql->get())
+    return sql->get();
+  sql->set(Sql.sql(module::query("db_location")));
+  return sql->get();
 }
+#else
+object sql;
+object lock = class {
+  void lock()
+  {
+    /* NO-OP */
+  }
+  function unlock = lock;
+}();
+
+static Sql.sql get_sql()
+{
+  if(sql)
+    return sql;
+  sql = Sql.sql(module::query("db_location"));
+  return sql;
+}
+#endif
+
+array(mapping(string:string)) squery(string fmt, mixed ... args)
+{
+  return query(sprintf(fmt, @args));
+}
+
+array(mapping(string:string)) query(string query_string, int|void nolock)
+{
+  object key;
+  if(!nolock)
+    key = lock->lock();
+  result = get_sql()->query( query_string );
+  if(key)
+    destruct(key);
+}
+
+string sql_insert_mapping(mapping m)
+{
+  string pre="",post="";
+  foreach(indices(m), string q)
+  {
+    pre += "'"+quote(q)+"',";
+    post += "'"+quote(m[q])+"',";
+  }
+  return sprintf("( %s ) VALUES ( %s )", 
+		 pre[..strlen(pre)-2], post[..strlen(post)-2]);
+}
+
+
+string quote(string what)
+{
+  return get_sql()->quote(what);
+} 
 
 string hash_body_id(string body_id)
 {
@@ -49,43 +116,455 @@ string hash_body_id(string body_id)
   return body_id[p..p+1]+"/"+body_id[p+2..p+3];
 }
 
-object(Stdio.File) load_body_get_obj(string body_id)
+Stdio.File load_body_get_obj(string body_id)
 {
-  return Stdio.File(query("maildir")+"/"+body_id,"r");
+  Stdio.File o = Stdio.File();
+  if(o->open( module::query("maildir")+"/"+body_id,"r" ))
+    return o;
+  retunr 0;
 }
 
 string get_unique_body_id()
 {
-  // FIXME: possible race condition ahead ... I want a transaction DBM!
-  get_sql()->query("update message_body_id set last=last+1");
-  return get_sql()->query("select last from message_body_id where 1=1")[0]->last;
+  string id;
+  object key = lock->lock(); // Do this transaction locked.
+  query("update message_body_id set last=last+1", 1);
+  id=query("select last from message_body_id where 1=1", 1)[0]->last;
+  destruct(key);
+  return id;
 }
 
-object(Stdio.File) get_fileobject(string body_id)
+Stdio.File get_fileobject(string body_id)
 {
   string where=hash_body_id(body_id);
-  mkdirhier(query("maildir")+"/"+where);
-  return Stdio.File(query("maildir")+"/"+where+"/"+body_id,"wc");
+  mkdirhier(module::query("maildir")+"/"+where);
+  return Stdio.File(module::query("maildir")+"/"+where+"/"+body_id,"wc");
 }
 
 void delete_body(string body_id)
 {
-  rm(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
+  rm(module::query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
-object get_sql()
+Stdio.File new_body( string bodyid )
 {
-  if(sql_objs[this_thread])
-    return sql_objs[this_thread];
-  else
-    return sql_objs[this_thread]=Sql.sql(query("db_location"));
+  string f = module::query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
+  mkdirhier(f);
+  return Stdio.File(f, "rwct");
 }
 
-// Client Layer functions
+/* Client Layer Abstraction ---------------------------------------- */
 
-int authentificate_user(string username, string passwordcleartext)
+static mapping (program:mapping(int:object)) object_cache = ([]);
+
+object get_cache_obj( program type, string|int id )
 {
-  array a=get_sql()->query("select password,id from users where username='"+username+"'");
+  if(!object_cache[ type ])
+    return 0;
+  if(object_cache[ type ][ id ])
+    return object_cache[ type ][ id ];
+}
+
+object get_any_obj(string|int id, program type, mixed ... moreargs)
+{
+  if(!object_cache[ type ])
+    object_cache[ type ] = ([]);
+  if(object_cache[ type ][ id ])
+  {
+    object_cache[ type ][ id ]->create(id, @moreargs);
+    return object_cache[ type ][ id ];
+  }
+  return object_cache[ type ][ id ] = type(id,@moreargs);
+}
+
+class Common
+{
+  int serial;
+  int get_serial()
+  {
+    return serial;
+  }
+
+  int modify()
+  {
+    serial++;
+  }
+}
+
+class Mail
+{
+  inherit Common;
+
+  string message_id;
+  string id;
+  User user;
+  Mailbox mailbox;
+  // array(object) _mboxes; 
+  // Nope. This is now actually a mail, not a message. Thus, it is
+  // only present in _one_ mailbox.
+
+
+  local static string encode_binary( mixed what )
+  {
+    return quote( MIME.encode_base64( encode_value( what ), 1 ) );
+  }
+
+  local static mixed decode_binary( string what )
+  {
+    return decode_value( MIME.decode_base64( what ) );
+  }
+
+  mixed get(string var)
+  {
+    mapping a;
+    a=squery("select data from mail_misc where id=%s and variable='%s'",
+	     id,var);
+    if(sizeof(a))
+      return decode_binary( a->data );
+  }
+
+  mixed set(string name, mixed to)
+  {
+    modified();
+    name = quote( name );
+    string enc = encode_binary( to );
+    squery("delete from mail_misc where id=%s and variable='%s'", id, var);
+    squery("insert into mail_misc values (%s,'%s','%s')", id, var, enc);
+    return to;
+  }
+
+  string name;
+
+  static mapping _headers;
+  static multiset _flags;
+
+  Stdio.File body_fd()
+  {
+    return get_filebobject( headers()->body_id );
+  }
+
+  string body()
+  {
+    return load_body( headers()->body_id );
+  }
+
+  mapping headers(int force)
+  {
+    mapping h = get_mail_headers( message_id );
+    if(!_headers || force)
+      return _headers = parse_headers(h[ HEAD_CID ]) | h;
+    return _headers;
+  }
+
+  multiset flags(int force)
+  {
+    if(!_flags || force)
+      return _flags = get_flags( id );
+  }
+
+  void set_flag(string name)
+  {
+    modify();
+    _flags = 0;
+    set_flag( id, name );
+  }
+
+  void clear_flag(string name)
+  {
+    _flags = 0;
+    delete_flag( id, name );
+  }
+
+  void create(int i, int m, object m)
+  {
+    id = i;
+    message_id = m;
+    user = m->user;
+    mailbox = m;
+  }
+}
+
+class Mailbox
+{
+  inherit Common;
+  static array _mails = ({ });
+
+  int id;
+  object user;
+  string name;
+
+  static mapping filter_headers( mapping from ) 
+  {
+    mapping res = ([]);
+    if(from->subject) res->subject = from->subject;
+    if(from->from) res->from = from->from;
+    if(from->to) res->to = from->to;
+    if(from->date) res->date = from->date;
+    return res;
+  }
+
+  static string encode_headers( mapping from )
+  {
+    string res="";
+    foreach(indices(from), string f)
+      res += f+": "+from[f]+"\n";
+    return res;
+  }
+
+			
+  static string read_headers_from_fd( Stdio.File fd )
+  {
+    string q = "", w;
+    do {
+      w = fd->read(1024);
+      q+=w;
+    } while(strlen(w) && (search(q, "\r\n\r\n")==-1)
+	    && (search(q, "\n\n")==-1));
+    return q[..search(q, "\n\n")];
+  }
+
+  void remove_mail(Mail mail)
+  {
+    if(search(mails()->message_id, mail->message_id) != -1)
+    {
+      _mails = 0; // No optimization, for safety...
+      destruct( mail );
+      modified( );
+      remove_mailbox_from_mail( mail->message_id, id );
+    }
+  }
+
+  Mail add_mail(Mail mail, int|void nocopy)
+  {
+    if(search(mails()->message_id, mail->message_id) == -1)
+    {
+      _mails = 0;
+      modified();
+      add_mailbox_to_mail( mail->message_id, id );
+      foreach(mails(), Mail m)
+	if(m->message_id == mail->message_id)
+	{
+	  if(!nocopy)
+	    foreach(indices(mail->flags), string f)
+	      m->set_flag( f );
+	  return m;
+	}
+      error("Added message could not be found in list of messages.\n");
+    }
+    return mail;
+  }
+
+  int rename(string to)
+  {
+    name=0;
+    rename_mailbox( id, to );
+  }
+    
+  void delete()
+  {
+    foreach(mails, object m)
+    {
+      m->_mboxes -= ({ this_object() });
+      m->modified();
+      user->_mailboxes = 0;
+      user->modify();
+    }
+    delete_mailbox( id );
+    destruct(this_object());
+  }
+  
+  string query_name(int force)
+  {
+    if(force) name=0;
+    return name||(name=get_mailbox_name( id ));
+  }
+
+  array(Mail) mails(int force)
+  {
+    if(!force && _mails) 
+      return _mails;
+    mapping q = list_mail( id );
+    _mails = ({ });
+    foreach(sort(indices(q)), string w)
+      _mails += ({ get_any_obj( w, Mail, q[w], this_object()) });
+    return _mails;
+  }
+
+
+  Mail low_create_mail( string bodyid, mapping headers )
+  {
+    /* This could be easier.. :-) */
+    // 1> Generate the db row for the 'messages' table.
+    mapping row = ([
+      "sender":headers->from,
+      "subject":headers->subject,
+      "body_id":headers->bodyid,
+      "headers":encode_headers(filter_headers(headers)),
+    ]);
+
+    // 2> Insert the row in the database, and get a new message id.
+    int mid = create_message( row );
+    
+    // 3> Insert the message in this mailbox using the 'mail' table.
+    add_mailbox_to_mail( mid, id );
+    
+    // 4> Zap the cache.
+    _mails = 0;
+    modified();
+
+    // 5> Find this new message in the mails() array.
+    foreach(mails(), Mail m)
+      if(m->message_id == mid)
+	return m;
+
+    // Oups. This should not happend. :-)
+    error("Failed to find newly created message in message array!\n");
+  }
+
+  Mail create_mail_from_fd( Stdio.File fd )
+  {
+    string foo = read_headers_from_fd( fd );
+    mapping headers = MIME.Message()->parse_headers( foo )[0];
+    string bodyid = get_unique_body_id();
+    fd->seek( 0 );
+    Stdio.File f = new_body( bodyid );
+    do 
+    {
+      foo = fd->read( 8192 );
+      if( f->write( foo ) != 8192 )
+	error("Failed to write body.\n");
+    } while(strlen(foo) == 8192);
+    f->close();
+    return low_create_mail( bodyid, headers );
+  }
+
+  Mail create_mail_from_data( string data )
+  {
+    return create_mail( MIME.Message( data ) );
+  }
+
+  Mail create_mail( MIME.Message m )
+  {
+    string bodyid = get_unique_body_id();
+    object f = new_body( bodyid );
+    string data = (string)m;
+    if(f->write(data) != strlen(data))
+      error("Failed to write body.\n");
+    return low_create_mail( bodyid, m->headers );
+  }
+
+  void create(int i, object u, string n)
+  {
+    id = i;
+    if(user != u)
+      modified();
+    user = u;
+    if(name != n)
+      modified();
+    name = n;
+  }
+}
+
+class User
+{
+  inherit Common;
+  array _mboxes;
+  int id;
+
+  local static Mailbox create_mailbox( string name )
+  {
+    _mailboxes = 0;
+    modified();
+    return Mailbox( create_mailbox( id, name ), 
+		    get_any_obj, Mailbox, this_object(), name );
+  }
+
+  // We need a way to store metadata about the user, preferences
+  // etc. This should probably be added to this object, since it would 
+  // have to be added for each and every protocol module
+  // otherwise. That might be somewhat unessesary. The problem is the
+  // API. Do we keep the data from different clients separated, or
+  // should we rely on them using unique keys? 
+  
+  // My suggestion:
+  local static string encode_binary( mixed what )
+  {
+    return quote( MIME.encode_base64( encode_value( what ), 1 ) );
+  }
+
+  local static mixed decode_binary( string what )
+  {
+    return decode_value( MIME.decode_base64( what ) );
+  }
+
+  mixed get(string var)
+  {
+    mapping a=squery("select data from user_misc where "
+		     "uid=%d and variable='%s'", id, var);
+    if(sizeof(a))
+      return decode_binary( a->data );
+  }
+
+  mixed set(string name, mixed to)
+  {
+    modified();
+
+    name = quote( name );
+    string enc= encode_binary( to );
+    squery("delete from user_misc where uid=%d and  variable='%s'", id, var);
+    squery("insert into user_misc values (%d,'%s','%s')",id,var,enc);
+    return to;
+  }
+
+  array(Mailbox) mailboxes(int|void force)
+  {
+    if(!force && _mailboxes)
+      return _mailboxes;
+    
+    mapping m = list_mailboxes(id);
+    array a = values(m), b = indices(m);
+    for(int i=0; i<sizeof(f); i++)
+      a[i] = get_any_obj( a[i], Mailbox, this_object(), b[i] );
+    return _mailboxes = a;
+  }
+
+  Mailbox get_incoming()
+  {
+    return get_or_create_mailbox( "incoming" );
+  }
+
+  Mailbox get_drafts()
+  {
+    return get_or_create_mailbox( "drafts" );
+  }
+
+  Mailbox get_or_create_mailbox( string name )
+  {
+    foreach(mailboxes(), Mailbox m )
+      if( lower_case(m->query_name()) == lower_case(name) ) 
+	return m;
+    return create_mailbox( name );
+  }
+
+  void create(int _id)
+  {
+    id = _id;
+  }
+}
+
+User get_user( string username, string password )
+{
+  int id;
+  id = authenticate_user( username, password );
+  if(!id) return 0;
+  return get_any_obj( id, User );
+}
+
+/* Low level client layer functions ---------------------------------- */
+
+int authenticate_user(string username, string passwordcleartext)
+{
+  array a=query("select password,id from users where username='"+username+"'");
   if(!sizeof(a))
     return 0;
   return (int)(crypt(passwordcleartext,a[0]->password)?a[0]->id:0);
@@ -93,71 +572,77 @@ int authentificate_user(string username, string passwordcleartext)
 
 mapping(string:int) list_mailboxes(int user)
 {
-  array a=get_sql()->query("select id,name from mailboxes where user_id='"+user+"'");
-  mapping mailboxes=([]);
-  foreach(a, mapping row)
-    mailboxes[row->name]=(int)row->id;
-  return mailboxes;
+  array a=query("select id,name from mailboxes where user_id='"+user+"'");
+  return mkmapping( column( a, "name" ), (array(int))column(a, "id" ) );
+//   mapping mailboxes=([]);
+//   foreach(a, mapping row)
+//     mailboxes[row->name]=(int)row->id;
+//   return mailboxes;
 }
 
-array(int) list_mail(int mailbox_id)
+mapping(string:string) list_mail(int mailbox_id)
 {
-  array a=get_sql()->query("select id from mail where mailbox_id='"+mailbox_id+
-		     "' order by id");
-  array mail=({});
-  foreach(a, mapping row)
-    mail+=({ (int)row->id });
-  return mail;
+  // CHECKME: Is this correct?
+  array a=squery("select m.id from mail as l, messages as m where "
+		" l.mailbox_id='%d' and m.id=l.id order by m.id",
+		 mailbox_id);
+  return mkmapping(column( a, "l.id" ), column( a, "m.id" ));
+//   array mail=({});
+//   foreach(a, mapping row)
+//     mail+=({ (int)row->id });
+//   return mail;
 }
 
-mapping(string:mixed) get_mail(int mail_id)
+mapping(string:mixed) get_mail(string|int message_id)
 {
-  array a=get_sql()->query("select message_id from mail where id='"+mail_id+"'");
+  array a;
+//   array a=query("select message_id from mail where id='"+mail_id+"'");
+//   if(!sizeof(a))
+//     return 0;
+  a=query("select * from messages where id='"+message_id+"'");
   if(!sizeof(a))
     return 0;
-  a=get_sql()->query("select * from messages where id='"+a[0]->message_id+"'");
-  if(!sizeof(a))
-    return 0;
-  mapping mail=a[0];
-  mail->body=load_body_get_obj(mail->body_id);
-  return mail;
+  return a[0];
+//   mapping mail=a[0];
+//   mail->body=load_body(mail->body_id);
+//   return mail;
 }
 
-mapping(string:mixed) get_mail_headers(int message_id)
+mapping(string:mixed) get_mail_headers(string|int message_id)
 {
-  array a=get_sql()->query("select message_id from mail where id='"+message_id+"'");
-  if(!sizeof(a))
-    return 0;
-  a=get_sql()->query("select * from messages where id='"+a[0]->message_id+"'");
+//   array a=query("select message_id from mail where id='"+message_id+"'");
+//   if(!sizeof(a))
+//     return 0;
+  a=query("select * from messages where id='"+a[0]->message_id+"'");
   if(!sizeof(a))
     return 0;
   return a[0];
 }
 
-int update_message_refcount(int message_id, int deltacount)
+int update_message_refcount(string message_id, int deltacount)
 {
-  array a=get_sql()->query("select refcount from messages where id='"+message_id+"'");
+  array a=query("select refcount from messages where id='"+message_id+"'");
   if(!a||!sizeof(a))
     return 0;
   int refcount=(int)a[0]->refcount + deltacount;
   if(refcount <= 0)
   {
-    get_sql()->query("delete from messages where id='"+message_id+"'");
+    query("delete from messages where id='"+message_id+"'");
     delete_body(a[0]->body_id);
   }
   else
-    get_sql()->query("update messages set refcount='"+refcount+"' where id='"+message_id+"'");
-  
+    squery("update messages set refcount='%d' where id=%s", 
+	   refcount,message_id);
 }
 
 int delete_mail(int mail_id)
 {
-  array a=get_sql()->query("select message_id from mail where id='"+mail_id+"'");
+  array a=query("select message_id from mail where id='"+mail_id+"'");
   if(!sizeof(a))
     return 0;
   int message_id=a[0]->message_id;
-  get_sql()->query("delete from mail where id='"+mail_id+"'");
-  a=get_sql()->query("select refcount,body_id from messages where id='"+message_id+"'");
+  query("delete from mail where id='"+mail_id+"'");
+  a=query("select refcount,body_id from messages where id='"+message_id+"'");
   werror("%O",a);
   if(!a||!sizeof(a))
     return 0;
@@ -168,39 +653,57 @@ int delete_mail(int mail_id)
 
 int create_mailbox(int user, string mailbox)
 {
-  object sql=Sql.sql("mysql://auto:site@kopparorm/autosite");
-  sql->query("insert into mailboxes values(NULL,'"+user+"','"+mailbox+"')");
-  return sql->master_sql->insert_id();
+  object key = lock->lock();
+  query("insert into mailboxes values(NULL,'"+user+"','"+mailbox+"')",1);
+  int id = get_sql()->master_sql->insert_id();
+  destruct(key);
+  return id;
+}
+
+int create_message(mapping mess)
+{
+  object key = lock->lock();
+  query("insert into messages "+sql_insert_mapping( mess ));
+  int id = get_sql()->master_sql->insert_id();
+  destruct(key);
+  return id;
 }
 
 string get_mailbox_name(int mailbox_id)
 {
-  array a=get_sql()->query("select name from mailboxes where id='"+mailbox_id+"'");
+  array a=squery("select name from mailboxes where id='%d'",mailbox_id);
   if(!sizeof(a)) return 0;
   return a[0]->name;
 }
 
 int delete_mailbox(int mailbox_id)
 {
-  get_sql()->query("delete from mailboxes where id='"+mailbox_id+"'");
+  squery("delete from mailboxes where id='%d'", mailbox_id);
   foreach(list_mail(mailbox_id), int mail_id)
     delete_mail(mail_id);
   return 1;
 }
 
-int rename_mailbox(int mailbox_id, string newmailbox)
+int rename_mailbox(int mailbox_id, string newname)
 {
-  get_sql()->query("update mailboxes set name='"+newmailbox+"' where id='"+mailbox_id+"'");
+  squery("update mailboxes set name='%s' where id='%d'", newname, mailbox_id);
   return 1;
 }
 
-int add_mailbox_to_mail(int mail_id, int mailbox_id)
+int remove_mailbox_from_mail(string message_id, int mailbox_id)
 {
-  array a=get_sql()->query("select message_id from mail where id='"+mail_id+"'");
-  if(!sizeof(a))
-    return 0;
-  int message_id=a[0]->message_id;
-  get_sql()->query("insert into mail values(NULL,'"+mailbox_id+"','"+message_id+"')");
+  squery("delete * from mail where mailbox_id='%d' and message_id='%s'",
+	 mailbox_id, message_id);
+  update_message_refcound( message_id, -1 );
+}
+
+int add_mailbox_to_mail(string message_id, int mailbox_id)
+{
+//   array a=query("select message_id from mail where id='"+mail_id+"'");
+//   if(!sizeof(a))
+//     return 0;
+//   int message_id=a[0]->message_id;
+  squery("insert into mail values(NULL,'%d','%s')",mailbox_id,message_id);
   if(!update_message_refcount(message_id,1))
     return 0;
   return 1;
@@ -208,17 +711,17 @@ int add_mailbox_to_mail(int mail_id, int mailbox_id)
 
 void set_flag(int mail_id, string flag)
 {
-  get_sql()->query("insert into flags values('"+mail_id+"','"+flag+"')");
+  squery("insert into flags values('%s','%s')",mail_id,flag);
 }
 
 void delete_flag(int mail_id, string flag)
 {
-  get_sql()->query("delete from flags where mail_id='"+mail_id+"' and name='"+flag+"'");
+  squery("delete from flags where mail_id='%s' and name='%s'",mail_id,flags);
 }
   
-multiset get_flags(int mail_id)
+multiset get_flags(int message_id)
 {
-  array a=get_sql()->query("select name from flags where mail_id='"+mail_id+"'");
+  array a=squery("select name from flags where mail_id='%s'",mail_id);;
   if(!a) return (<>);
   multiset flags=(<>);
   foreach(a, mapping row)
