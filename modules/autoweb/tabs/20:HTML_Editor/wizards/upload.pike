@@ -5,9 +5,11 @@ constant name = "Upload File";
 
 string page_0( object id )
 {
-  return "<b>Upload to "+id->variables->path+"</b>"
-    +Error(id)->get() + 
-    "<p><b>Select local file:</b> <input type=file name=the_file>";
+  return Misc()->wizardinput(id, "Local filename:",
+			     "Pleace enter the local filename "
+			     "you want to upload into directory <b>"+
+			     id->variables->path+"</b>.",
+			     "<input type=file name=the_file>");
 }
 
 static void cleanup_the_file( mapping state )
@@ -53,8 +55,10 @@ string page_1( object id )
   filename = arr[-1];
   id->variables->path = path;
   id->variables->filename = filename;
-  result += Error(id)->get()+"<b>Enter remote filename:</b>";
-  result += "<var size=20 name=filename default=" + filename + ">";
+  result += Misc()->wizardinput(id, "Remote filename:",
+				"Pleace enter the remote filename",
+				"<var size=20 name=filename default=" +
+				filename + ">");
   return result;
 }
 

@@ -5,10 +5,13 @@ constant name = "Create File";
 
 string page_0( object id )
 {
-  return Error(id)->get()+"<b>Select filename:</b>"
-    "<var name=filename type=string "
-    "size=40 default=\""+
-    replace((id->variables->path||"/")+"/", "//", "/") + "\">";
+  return Misc()->wizardinput(id, "Filename:",
+			     "Pleace enter the filename "
+			     "for the new file.",
+			     "<var name=filename type=string "
+			     "size=40 default=\""+
+			     replace((id->variables->path||"/")+"/",
+				     "//", "/") + "\">");
 }
 
 int verify_0(object id)

@@ -3,7 +3,7 @@ import AutoWeb;
 
 object wa;
 
-array wanted_buttons = ({ ({ "New...", (["path":""]) }) });
+array wanted_buttons = ({ ({ "New...", (["path":"/"]) }) });
 
 array get_buttons(object id)
 {

@@ -6,8 +6,13 @@ constant doc = "";
 
 string page_0( object id )
 {
-  return Error(id)->get()+
-    "Remove directory <b>" + id->variables->path+"</b> ?";
+  return Misc()->wizardinput(id, "", "Are you sure you want to "
+			     "remove the directory <b>" +
+			     id->variables->path+"</b>?", "");
+  //    id->variables->path+"</b>?", 
+  //  return Error(id)->get()+
+  //    "Are you sure you want to remove the directory <b>" +
+  //    id->variables->path+"</b>?";
 }
 
 int verify_0( object id )
@@ -24,5 +29,4 @@ int verify_0( object id )
 mixed wizard_done(object id)
 {
   AutoFile(id, id->variables->path)->rm();
-  // FIX ME redirect to ../
 }

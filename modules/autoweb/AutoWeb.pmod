@@ -386,7 +386,7 @@ class EditMetaData {
       }),
     });
   
-    return "<b>Metadata for file "+html_encode_string(f)+":</b><p>\n" + 
+    return "Metadata for file <b>"+html_encode_string(f)+"</b>:<p>\n" + 
       html_table(({ "Data", "Value", ({ "Description" }) }),
 		 Array.map(rows, describe_metadata_var));
   }
@@ -427,13 +427,28 @@ class Error {
 
   string get()
   {
-    return (id->variables->error?"<error>"+
-	    id->variables->error+"</error>":"");
+    return id->variables->error||"";
   }
   
   void create(object _id)
   {
     id = _id;
+  }
+}
+
+class Misc {
+  inherit "roxenlib";
+  
+  string wizardinput(object id, string title, string help, string content)
+  {
+ //    return
+//       make_container("wizardinput",
+// 		     ([ "title":title,
+// 			"help":help,
+// 			"error":Error(id)->get() ]),
+// 		     content);
+    return ("<wizardinput title=\""+title+"\" help=\""+help+
+	    "\" error=\""+Error(id)->get()+"\">"+content+"</wizardinput>");
   }
 }
 

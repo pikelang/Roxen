@@ -6,10 +6,13 @@ constant doc = "Create a new directory";
 
 string page_0(object id)
 {
-  return Error(id)->get()+"<b>Full path of new directory:</b>"
-    "<var name=dirname type=string "
-    "size=40 default=\""+
-    replace((id->variables->path||"/")+"/", "//", "/")+"\">";
+  return Misc()->wizardinput(id, "New directory:",
+			     "Pleace enter full path "
+			     "of the new directory.",
+			     "<var name=dirname type=string "
+			     "size=40 default=\""+
+			     replace((id->variables->path||"/")+"/",
+				     "//", "/")+"\">");
 }
 
 int verify_0(object id)
@@ -21,8 +24,8 @@ int verify_0(object id)
     return 1;
   }
   if (AutoFile(id, id->variables->dirname)->type()=="Directory") {
-    Error(id)->set("Directory "+id->variables->dirname+
-			   " already exists.\n");
+    Error(id)->set("Directory <b>"+id->variables->dirname+
+			   "</b> already exists.\n");
     return 1;
   }
   int last_was_dir = 1;
@@ -47,8 +50,8 @@ int verify_0(object id)
 
 string page_1(object id)
 {
-  return "Create directory <b>"+id->variables->dirname+
-    "</b> ?";
+  return "Are you sure want to create the directory <b>"
+    +id->variables->dirname+"</b>?";
 }
 
 void wizard_done(object id)

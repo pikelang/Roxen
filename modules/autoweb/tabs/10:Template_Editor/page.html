@@ -226,7 +226,7 @@
 	      <cset preparse variable=default><pike>
 		return
 		  "<sqloutput quote='£' query="
-		  "\"select * from template_schemes_vars "
+		  "\"select * from customers_schemes_vars "
 		  "where scheme_id='¤current_scheme:quote=mysql¤' and"
 		  " variable_id='#id:quote=mysql#'\">"
 		  "£value£</sqloutput>";
@@ -234,6 +234,19 @@
 	      <formoutput quote='$'>
 		<var name="variable_#id#" type="#type#"
 		      options="$options$" default="$default$">
+		<cset variable=__show_example__></cset>
+                <if match="#name# is nav_name">
+                  <cset variable=__show_example__>1</cset> 
+		</if>
+		<if match="#name# is template_name">
+                  <cset variable=__show_example__>1</cset> 
+		</if>
+                <if variable="__show_example__ is 1">
+		  <input type=submit name=example value='Example'>
+		  <if variable=example>
+		    <br><img src=/img/examples/$variable_#id#$.gif>
+		  </if>
+	        </if>
 	      </formoutput>
 	      <p>
 	      #help#<br>
@@ -248,12 +261,12 @@
 			  int variable_id, string slask)>0)&&(slask=="")) {
 		  //werror("%s=%s\n", variable, id->variables[variable]);
 		  r += "<sqlquery query=\""
-		       "delete from template_schemes_vars "
+		       "delete from customers_schemes_vars "
 		       "where scheme_id='¤current_scheme¤' and "
 		       "variable_id='"+variable_id+"'"
 		       "\">\n";
 		  r += "<sqlquery query=\""
-		       "insert into template_schemes_vars "
+		       "insert into customers_schemes_vars "
 		       "(scheme_id,variable_id,value) "
 		       " values ('¤current_scheme¤','"+variable_id+"','"+
 		       id->variables[variable]+"')"+

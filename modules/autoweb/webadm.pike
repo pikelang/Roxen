@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.21 1998/08/14 14:37:50 wellhard Exp $
+ * $Id: webadm.pike,v 1.22 1998/08/21 20:04:09 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.21 1998/08/14 14:37:50 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.22 1998/08/21 20:04:09 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -124,9 +124,9 @@ string update_template(string tag_name, mapping args, object id)
   
   // Fetch variables from database
   array variables =
-    db->query("select * from template_schemes_vars,template_vars where "
-	      "template_schemes_vars.scheme_id='"+scheme_id+"' and "
-	      "template_schemes_vars.variable_id=template_vars.id");
+    db->query("select * from customers_schemes_vars,template_vars where "
+	      "customers_schemes_vars.scheme_id='"+scheme_id+"' and "
+	      "customers_schemes_vars.variable_id=template_vars.id");
 
   // Replace placeholders with customer spesific preferences  
   foreach(variables, mapping variable) {

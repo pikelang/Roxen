@@ -9,17 +9,34 @@
   </tr></table>
 </tmplblock>
 
-<tmplblock tag=toolbarlayout>
-<if variable="htmleditorp is t">
-  <table cellspacing=0 border=0>
-  $toolbarlayout$
-  </table>
-</if>
-<else>
+<tmplblock tag=wizardinput params=title,help,error>
+  <if not match="$error$ is ">
+    <table border=0><tr>
+      <td valign=top><img src="/internal-roxen-err_3"></td>
+      <td><font color=darkred>$error$</font></td>
+    </tr></table>
+  </if>
   <table>
-    <tr>$toolbarlayout$</tr>
-  </table>
-</else>
+    <tr>
+      <td><b>$title$</b></td>
+      <td>$wizardinput$</td>
+    </tr>
+    <tr>
+      <td colspan=2>$help$</td>
+    </tr></table>
+</tmplblock>
+
+<tmplblock tag=toolbarlayout>
+  <if variable="htmleditorp is t">
+    <table cellspacing=0 border=0>
+    $toolbarlayout$
+    </table>
+  </if>
+  <else>
+    <table>
+      <tr>$toolbarlayout$</tr>
+    </table>
+  </else>
 </tmplblock>
 
 <tmplblock tag=toolbarheadinglayout>

@@ -10,9 +10,12 @@ string page_0( object id )
   if(md->title)
     title = md->title;
   
-  return Error(id)->get()+"<b>Enter menu title:</b>"+
-    "<var name=title type=string "
-    "size=40 default='"+title+"'>";
+  return
+    Misc()->wizardinput(id, "Title:",
+		      "Pleace enter the title of the new menu item.",
+		      ("<var name=title type=string "
+		       "size=40 default='"+title+"'>"));
+  
 }
 
 int verify_0( object id )
@@ -26,11 +29,12 @@ int verify_0( object id )
 
 mixed wizard_done( object id )
 {
-  string path;
-  if(sscanf(id->variables->path, "%s/index.html", path)>0)
-    id->variables->path = path+"/";
+  string path = id->variables->path;
+  if(glob("*/index.html", path)||
+     glob("*/index.htm", path))
+    path = combine_path(path+"/", "../");
   object file = AutoFile(id, "top.menu");
   array menu = MenuFile()->decode(file->read());
-  menu += ({ ([ "url":id->variables->path, "title":id->variables->title ]) });
+  menu += ({ ([ "url":path, "title":id->variables->title ]) });
   file->save(MenuFile()->encode(menu));
 }

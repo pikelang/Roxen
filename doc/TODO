@@ -3,13 +3,21 @@ TODO list for AutoSite
 	
 WebAdmin
 --------
-* Nicer file browser.
-  - All buttons are always visible, but some are disabled (grey-ed out).
-
 * Template Editor
-  - Make templates and nav-templates	
+  - Make templates and nav-templates
+  - Example images of templates and navigations in their wizards
   - Fix variables
   - Fix variable help
+
+* Html Editor
+  - Upload: if content-type is text/html save only content of body-tag
+
+* Menu Editor
+  - New: If url = ../index.html link to ../
+  - Implement Edit button
+
+* Statistics
+  - Only show statisticstab when it's enabled
 
 * LogView
 

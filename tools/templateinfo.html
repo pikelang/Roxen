@@ -15,9 +15,6 @@
   <insert name="Heading 2" title="Edit heading 2 preferences"
           help="help" category="tmpl">
 
-  <insert name="Heading 3" title="Edit heading 3 preferences"
-          help="help" category="tmpl">
-
   <!--  Navigation groups  -->
   <insert name="General" title="Edit general navigation preferences"
           help="help" category="nav">
@@ -29,7 +26,6 @@
           help="help" category="nav">
 
 </sql-insert>
-
 
 
 <sql-insert table="template_vars"
@@ -100,22 +96,6 @@
           type="toggle" help="Heading 2 shadow"
 	  _wizard_name="Heading 2"  _wizard_category="tmpl">
 	  
-  <!--  Heading 3  -->	  
-  <insert name="h3_color" title="Heading 3 color"
-          type="color" help="Heading 3 color"
-	  _wizard_name="Heading 3" _wizard_category="tmpl">
-
-  <insert name="h3_font" title="Heading 3 font"
-          type="font" help="Heading 3 font"
-	  _wizard_name="Heading 3" _wizard_category="tmpl">
-
-  <insert name="h3_size" title="Heading 3 size"
-          type="int" help="Heading 3 size"
-	  _wizard_name="Heading 3" _wizard_category="tmpl">
-	  
-  <insert name="h3_shadow" title="Heading 3 shadow"
-          type="toggle" help="Heading 3 shadow"
-	  _wizard_name="Heading 3"  _wizard_category="tmpl">
 	  
   <!--  Navigation Variables  -->
   <!--  General  -->
@@ -165,11 +145,13 @@
   <insert name="Layout 1" value="tmpl1.tmpl" _variable_name="template_name">
   <insert name="Layout 2" value="tmpl2.tmpl" _variable_name="template_name">
   <insert name="Layout 3" value="tmpl3.tmpl" _variable_name="template_name">
+  <insert name="Klee" value="Klee.tmpl" _variable_name="template_name">
 
   <!--  Navigation files  -->
   <insert name="Nav 1" value="nav1.ntmpl" _variable_name="nav_name">
   <insert name="Nav 2" value="nav2.ntmpl" _variable_name="nav_name">
   <insert name="Nav 3" value="nav3.ntmpl" _variable_name="nav_name">
+  <insert name="Klee" value="Klee.ntmpl" _variable_name="nav_name">
   <insert name="Basic" value="basic.ntmpl" _variable_name="nav_name">
 
   <!--  Navigation images  -->

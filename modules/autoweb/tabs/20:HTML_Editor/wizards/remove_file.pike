@@ -5,8 +5,8 @@ constant name = "Remove File";
 
 string page_0( object id )
 {
-  return "Remove file <b>"+
-    html_encode_string(id->variables->path)+"</b> ?";
+  return "Are you sure you want to remove the file<b> "+
+    html_encode_string(id->variables->path)+"</b>?";
 }
 
 mixed wizard_done( object id )

@@ -5,29 +5,41 @@ constant name = "New...";
 
 string page_0( object id )
 {
-  return Error(id)->get() + "<b>Enter full path of file for new menu item: </b>"
-    "<var size=40 name=path>";
+  return Misc()->wizardinput(id, "Filename:", "Please enter full path "
+			     "to the file for the new menu item.",
+			     "<var size=40 name=path>");
 }
 
 
 int verify_0( object id )
 {
-  if (id->variables->path=="" ||
-      id->variables->path[0]!='/')
+  if(id->variables->path=="" || id->variables->path[0]!='/') {
     id->variables->path = "/" + id->variables->path;
+    if(id->variables->path[-1] == '/') {
+      id->variables->path+="index.html";
+      return 1;
+    }
+  }
+  if(id->variables->path[-1] == '/') {
+    id->variables->path+="index.html";
+    return 1;
+  }
+  
   if(AutoFile(id, id->variables->path)->type()!="File") {
     Error(id)->set("file <b>"+id->variables->path+"</b> does not exist");
-  return 1;
+    return 1;
   }
+  
   Error(id)->reset();
 }
 
 string page_1(object id)
 {
-  return Error(id)->get()+
-    "<b>Enter the title of the new menu item: </b>"
-    "<var size=40 name=title default='"+
-    MetaData(id, id->variables->path)->get()->title+"'>";
+  return Misc()->wizardinput(id, "Title:", "Please enter the title "
+			     "of the new menu item.",
+			     "<var size=40 name=title default='"+
+			     MetaData(id, id->variables->path)->
+			     get()->title+"'>");
 }
 
 int verify_1(object id)
@@ -40,8 +52,12 @@ int verify_1(object id)
 
 mixed wizard_done(object id)
 {
+  string path = id->variables->path;
+  if(glob("*/index.html", path)||
+     glob("*/index.htm", path))
+    path = combine_path(path+"/", "../");
   object file = AutoFile(id, "top.menu");
   file->save(MenuFile()->encode(MenuFile()->decode(file->read()) +
-				({ ([ "url":id->variables->path,
+				({ ([ "url":path,
 				      "title":id->variables->title ]) }) ));
 }
