@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.20 2002/07/22 10:30:55 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.21 2002/10/23 23:42:15 nilsson Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.20 $"/" ")[1];
+string revision = ("$Revision: 1.21 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -185,12 +185,12 @@ class TagEmail {
 	if(args->file)
 	{
 	  array s;
-	  mapping got;
+	  int|string got;
+	  mapping res = ([]);
 
 	  if((s = id->conf->stat_file(args->file, id)) && (s[ST_SIZE] > 0)) {
-	    id->not_query = args->file;
-	    got = id->conf->get_file(id);
-	    if (!got)
+	    got = id->conf->try_get_file(args->file, id, 0, 0, 0, res);
+	    if (intp(got))
 	      RXML.run_error(EMAIL_LABEL + "Attachment:  file " +
 			     Roxen.html_encode_string(args->file) +
 			     " not exists.");
@@ -199,11 +199,9 @@ class TagEmail {
 			   Roxen.html_encode_string(args->file) +
 			   " not exists or is empty.");
 
-	  ftype = args->mimetype || got->type;
+	  ftype = args->mimetype || res->type;
 	  fenc  = args->mimeencoding || guess_file_encoding(aname, ftype);
-	  body  = got->file->read();
-
-	  got->file->close();
+	  body  = got;
 
 	  if(!stringp(aname) || !sizeof(aname))
 	    aname=(args->file/"/")[-1];
