@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
+o etc/extensions is now more complete.
+
 o The convert_accessed.pike script fixed. Someone forgot committing
   the bugfixed version before the release.
 

@@ -3,6 +3,8 @@ aifc	audio/x-aiff
 aiff	audio/x-aiff
 au	audio/basic
 m3u 	audio/x-mpegurl
+mid	audio/midi
+midi    audio/midi 
 mp2	audio/x-mpeg
 mp3 	audio/x-mpeg
 mp3url	audio/x-mpegurl
@@ -11,9 +13,10 @@ ra	audio/x-pn-realaudio
 ram	audio/x-pn-realaudio
 rpm 	audio/x-pn-realaudio-plugin
 snd	audio/basic
+vox     audio/voxware 
 wav	audio/x-wav
-mid	audio/midi
 
+fif     image/fif 
 gif	image/gif
 ief	image/ief
 iff	image/ilbm
@@ -23,6 +26,7 @@ jpeg	image/jpeg
 jpg	image/jpeg
 pbm	image/x-portable-bitmap
 pgm	image/x-portable-graymap
+pict  	image/pict
 pjpg    image/jpeg
 png	image/x-png
 pnm	image/x-portable-anymap
@@ -41,47 +45,66 @@ movie	video/x-sgi-movie
 mpe	video/mpeg
 mpeg	video/mpeg
 mpg	video/mpeg
-mpg	video/mpeg
 qt	video/quicktime
+viv     video/vnd.vivo 
+vivo    video/vnd.vivo 
 
 etx	text/x-setext
 htm	text/html
 html	text/html
 java	text/plain
 rtx	text/richtext
-spml	text/spinnercode
 rxml	text/roxencode
+sgm     text/x-sgml
+sgml    text/x-sgml
+spider  text/spidercode 
+spml	text/spinnercode
+spml    text/spidercode 
 tsv	text/tab-separated-values
+tsv     text/tab-separated-values
 txt	text/plain
 
+aab 	application/x-authorware-bin
+aam 	application/x-authorware-map
+aas 	application/x-authorware-seg
 ai	application/postscript
 arj	application/octet-stream
+asp     application/x-asap 
 bcpio	application/x-bcpio
 bin	application/octet-stream
 c	application/x-c-code
 cc	application/x-c++-code
 cdf	application/x-netcdf
+cdr	application/x-coreldraw
+cdrw    application/x-coreldraw
 com	application/octet-stream
 cpio	application/x-cpio
 csh	application/x-csh
 dll	application/octet-stream
+dnt     application/donut
+donut   application/donut
 drv	application/octet-stream
 dvi	application/x-dvi
 eps	application/postscript
+evy     application/x-envoy 
 exe	application/octet-stream
 gtar	application/x-gtar
 h	application/x-include-file
 hdf	application/x-hdf
 hqx	application/mac-binhex40
+iw      application/iconauthor 
+iwm     application/iconauthor 
 js	application/x-javascript
 latex	application/x-latex
-lha	applictaion/lha
+lha	application/lha
 lzh	application/lha
 man	application/x-troff-man
 map	application/x-imagemap
 me	application/x-troff-me
 mif	application/x-mif
+mm      application/x-meme 
 ms	application/x-troff-ms
+msw     application/binary 
 mw	application/math
 nc	application/x-netcdf
 oda	application/oda
@@ -92,6 +115,9 @@ roff	application/x-troff
 rtf	application/rtf
 sh	application/x-sh
 shar	application/x-shar
+spl     application/futuresplash 
+spr     application/x-sprite 
+sprite  application/x-sprite 
 src	application/x-wais-source
 sv4cpic application/x-sv4cpio
 sv4crc	application/x-sv4crc
@@ -108,24 +134,21 @@ ustar	application/x-ustar
 vcd	application/x-cdlink
 vmd 	application/vocaltec-media-desc
 vmf 	application/vocaltec-media-file
+wpc     application/wpc 
+zip	application/zip
+
 wrl	x-world/x-vrml
 wrml    x-world/x-vrml
-zip	application/zip
-cdr	application/x-coreldraw
-cdrw    application/x-coreldraw
 
-aam 	application/x-authorware-map
-aas 	application/x-authorware-seg
-aab 	application/x-authorware-bin
-
-
-
+talk    plugin/talker 
 
 # Diskmasher -- Amiga thingie
 dms	application/x-diskmasher
 
 # Windows Write
 wri     application/x-write
+
+ice     x-conference/x-cooltalk
 
 # MacroMedia Director (http://www.macromedia.com/)
 dcr	application/x-director
@@ -141,4 +164,3 @@ gz	STRIP			x-gzip
 
 uu	STRIP			uuencode
 b64	STRIP			base64
-
