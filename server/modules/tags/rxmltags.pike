@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.222 2001/04/18 04:57:34 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.223 2001/04/21 18:31:37 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -52,102 +52,6 @@ string sexpr_eval(string what)
 
 
 // ----------------- Entities ----------------------
-
-class EntityPageRealfile {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->id->realfile, type);
-  }
-}
-
-class EntityPageVirtroot {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->id->virtfile, type);
-  }
-}
-
-class EntityPageVirtfile {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->id->not_query, type);
-  }
-}
-
-class EntityPageQuery {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->id->query, type);
-  }
-}
-
-class EntityPageURL {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->id->raw_url, type);
-  }
-}
-
-class EntityPageLastTrue {
-  inherit RXML.Value;
-  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_INT(c->id->misc->defines[" _ok"], type);
-  }
-}
-
-class EntityPageLanguage {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    c->id->misc->cacheable=0;
-    return ENCODE_RXML_TEXT(c->id->misc->defines->language, type);
-  }
-}
-
-class EntityPageScope {
-  inherit RXML.Value;
-  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(c->current_scope(), type);
-  }
-}
-
-class EntityPageFileSize {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_INT(c->id->misc->defines[" _stat"]?
-			   c->id->misc->defines[" _stat"][1]:-4, type);
-  }
-}
-
-class EntityPageSelf {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
-  }
-}
-
-class EntityPageSSLStrength {
-  inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    c->id->misc->cacheable = 0;
-    if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
-    return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
-  }
-}
-
-mapping(string:object) page_scope=([
-  "realfile":EntityPageRealfile(),
-  "virtroot":EntityPageVirtroot(),
-  "virtfile":EntityPageVirtfile(),  //  deprecated; use &page.path; instead
-  "path": EntityPageVirtfile(),
-  "query":EntityPageQuery(),
-  "url":EntityPageURL(),
-  "last-true":EntityPageLastTrue(),
-  "language":EntityPageLanguage(),
-  "scope":EntityPageScope(),
-  "filesize":EntityPageFileSize(),
-  "self":EntityPageSelf(),
-  "ssl-strength":EntityPageSSLStrength(),
-]);
 
 class EntityClientTM {
   inherit RXML.Value;
@@ -283,7 +187,6 @@ mapping client_scope=([
 ]);
 
 void set_entities(RXML.Context c) {
-  c->extend_scope("page", page_scope);
   c->extend_scope("client", client_scope);
 }
 
@@ -1987,6 +1890,10 @@ constant tagdoc=([
 
 "&page.self;":#"<desc ent='ent'><p>
  The name of this file.
+</p></desc>",
+
+"&page.dir;":#"<desc ent='ent'><p>
+ The name of the directory in the virtual filesystem where the file resides.
 </p></desc>",
 
 //----------------------------------------------------------------------
