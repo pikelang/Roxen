@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.9 1997/04/05 01:26:07 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.10 1997/04/27 20:57:59 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -534,13 +534,13 @@ mapping|string|int htaccess(mapping access, object id)
 #ifdef HTACCESS_DEBUG
 	werror("HTACCESS: User access ok!\n");
 #endif
-	id->auth = ({ 1, auth[0] });
+	id->auth = ({ 1, auth[0], 0 });
 	return 0;
       } else {
 #ifdef HTACCESS_DEBUG
 	werror("HTACCESS: User access denied, invalid user.\n");
 #endif
-	id->auth = ({ 0, auth[0]+":"+auth[1] });
+	id->auth = ({ 0, auth[0], auth[1] });
 	return validate(aname);
       }
     }
