@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.85 1999/09/14 21:56:34 grubba Exp $
+ * $Id: smtp.pike,v 1.86 1999/09/14 22:12:04 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.85 1999/09/14 21:56:34 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.86 1999/09/14 22:12:04 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -493,6 +493,10 @@ static class Smtp_Connection {
 	}
       }
     }
+
+#ifdef SMTP_DEBUG
+    roxen_perror(sprintf("SMTP: EXPN result: %O\n", result));
+#endif /* SMTP_DEBUG */
 
     if (sizeof(result)) {
       conf->log(([ "error":200 ]), id);
@@ -1140,7 +1144,7 @@ static class Smtp_Connection {
   {
     ::_handle_command(line);
     // Check that the mail doesn't exceed the size limit.
-    if (sizeof(multi_line_buffer) > current_mail->limit) {
+    if (current_mail && (sizeof(multi_line_buffer) > current_mail->limit)) {
       // Size limit exceeded.
       multi_line_buffer = "";
       handle_data = lambda() {
@@ -1349,7 +1353,7 @@ static class Smtp_Connection {
     remoteip = remote[0];
     remoteport = (remote[1..])*" ";
 
-    array(string) local_addr = con->query_address(1)/" ";
+    array(string) local_addr = con_->query_address(1)/" ";
 
     localip = local_addr[0];
     localport = local_addr[1];
