@@ -2,12 +2,14 @@
 void run(object env)
 {
   write("\n   Configuring port number for external access to the internal\n"
+	"   External MySQL access is needed when creating an IntraWise site.\n"
 	"   MySQL database (leave empty for no external access).\n\n");
 
   Stdio.File infd = Stdio.stdin, outfd = Stdio.stdout;
   Stdio.Terminfo.Termcap term = Stdio.Terminfo.getTerm();
   Tools.Install.Readline rl = Tools.Install.Readline();
-  string in = rl->edit(env->get("MYSQL_TCP_PORT")||"", "MySQL port number: ");
+  string in = rl->edit(env->get("MYSQL_TCP_PORT") || "22299",
+		       "MySQL port number: ");
   write("\n");
   sscanf(in, "%d", int port);
   if(port)
