@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.82 1999/01/17 13:51:05 neotron Exp $
+ * $Id: roxenloader.pike,v 1.83 1999/01/17 15:52:18 peter Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.82 1999/01/17 13:51:05 neotron Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.83 1999/01/17 15:52:18 peter Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -396,14 +396,35 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     return t;
   }
 #endif
-=======
->>>>>>> 1.81
+}
+
+// Low level create process on Pike 0.5
+int low_spawne(string s,string *args, mapping|array env, object stdin, 
+	   object stdout, object stderr, void|string wd)
+{
+  object p;
+  int pid;
+  string t;
+
+  if(arrayp(env))
+    env = make_mapping(env);
+  if(!mappingp(env)) 
+    env=([]);
+  
+  
+  stdin->dup2(Stdio.File("stdin"));
+  stdout->dup2(Stdio.File("stdout"));
+  stderr->dup2(Stdio.File("stderr"));
+  if(stringp(wd) && sizeof(wd))
+    cd(wd);
+  exece(s, args, env);
+  perror(sprintf("Spawne: Failed to exece %s\n", s));
+  exit(99);
 }
 
 // Create a process
 int spawne(string s,string *args, mapping|array env, object stdin, 
-	      object stdout, object stderr, void|string wd, 
-	      void|array (int) uid)
+	   object stdout, object stderr, void|string wd, void|array (int) uid)
 {
   int pid, *olduid = allocate(2, "int");
   object privs;
@@ -416,7 +437,7 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 #else
   ;
 #endif
-  object proc =  Process.create_process(({ s }) + (args || ({})), ([
+  object proc = Process.create_process(({ s }) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
     "stdout":stdout,
