@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.43 1997/09/26 22:07:48 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.44 1997/09/30 14:13:38 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -354,8 +354,6 @@ class spawn_cgi
   object pipe1, pipe2;
   int kill_call_out;
   int dup_err;
-  object my_fd;
-  string data;
 
   void got_some_data(object to, string d)
   {
@@ -453,17 +451,11 @@ class spawn_cgi
       }, kill_call_out * 60 , pid);
     }
 
-    if(my_fd && data && sizeof(data)) {
-      pipe2->write(data);
-      my_fd->set_id( pipe2 );                  // for put..
-      my_fd->set_read_callback(got_some_data); // lets try, atleast..
-      my_fd->set_nonblocking();
-    }
   }
   
   void create(string wrapper_, string f_, array(string) args_, mapping env_,
 	      string wd_, int|string uid_, object pipe1_, object pipe2_,
-	      int dup_err_, int kill_call_out_, object my_fd_, string data_)
+	      int dup_err_, int kill_call_out_)
   {
     wrapper = wrapper_;
     f = f_;
@@ -475,8 +467,6 @@ class spawn_cgi
     pipe2 = pipe2_;
     dup_err = dup_err_;
     kill_call_out = kill_call_out_;
-    my_fd = my_fd_;
-    data = data_;
     call_out(do_cgi, 0);
   }
 };
@@ -538,12 +528,18 @@ mixed find_file(string f, object id)
     uid = uid[0];
   }
 
-  spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"), f,
-	    make_args(id->rest_query),
-	    my_build_env_vars(f, id, path_info),
-	    wd, uid, pipe1, pipe2, QUERY(err), QUERY(kill_call_out),
-	    id->my_fd, id->data);
+  object cgi = spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"),
+			 f, make_args(id->rest_query),
+			 my_build_env_vars(f, id, path_info),
+			 wd, uid, pipe1, pipe2, QUERY(err),
+			 QUERY(kill_call_out));
   
+  if(id->my_fd && id->data /* && sizeof(id->data) */) {
+    pipe2->write(id->data);
+    id->my_fd->set_id( pipe2 );                       // for put.. post?
+    id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
+    id->my_fd->set_nonblocking();
+  }
   return http_stream(pipe2);
 }
 
