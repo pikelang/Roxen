@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.9 1998/09/09 10:03:25 per Exp $
+ * $Id: clientlayer.pike,v 1.10 1998/09/10 14:40:02 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,10 +10,12 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.9 1998/09/09 10:03:25 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.10 1998/09/10 14:40:02 per Exp $";
 constant thread_safe=1;
 
-mapping sql_objs=([]);
+
+
+
 
 /* Roxen module functions ----------------------------------- */
 
@@ -45,54 +47,75 @@ string query_provides()
 
 
 
-/* Utility functions   ---------------------------------------- */
 
-#if constant(thread_local)
+/* Global variables -------------------------------------------------- */
+
 object sql = thread_local();
 Thread.Mutex lock = Thread.Mutex();
-static Sql.sql get_sql()
-{
-  if(sql->get())
-    return sql->get();
-  sql->set(Sql.sql(query("db_location")));
-  return sql->get();
-}
-#else
-object sql;
-object lock = class {
-  void lock()
-  {
-    /* NO-OP */
-  }
-  function unlock = lock;
-}();
+mapping (program:mapping(int:object)) object_cache = ([]);
 
-static Sql.sql get_sql()
-{
-  if(sql)
-    return sql;
-  sql = Sql.sql(query("db_location"));
-  return sql;
-}
-#endif
 
-array(mapping(string:string)) squery(string fmt, mixed ... args)
+
+
+
+
+/* (local) Utility functions   ---------------------------------------- */
+
+local string encode_binary( mixed what )
+{
+  return sql_quote( MIME.encode_base64( encode_value( what ), 1 ) );
+}
+
+local mixed decode_binary( string what )
+{
+  return decode_value( MIME.decode_base64( what ) );
+}
+
+local mapping filter_headers( mapping from ) 
+{
+  mapping res = ([]);
+  if(from->subject) res->subject = from->subject;
+  if(from->from) res->from = from->from;
+  if(from->to) res->to = from->to;
+  if(from->date) res->date = from->date;
+  return res;
+}
+
+local string encode_headers( mapping from )
+{
+  string res="";
+  foreach(indices(from), string f)
+    res += f+": "+from[f]+"\n";
+  return res;
+}
+
+local string read_headers_from_fd( Stdio.File fd )
+{
+  string q = "", w;
+  do {
+    w = fd->read(1024);
+    q+=w;
+  } while(strlen(w) && (search(q, "\r\n\r\n")==-1)
+	  && (search(q, "\n\n")==-1));
+  return q[..search(q, "\n\n")];
+}
+
+local Sql.sql get_sql()
+{
+  return sql->get() || sql->set(Sql.sql(query("db_location")));
+}
+
+local array(mapping(string:string)) squery(string fmt, mixed ... args)
 {
   return sql_query(sprintf(fmt, @args));
 }
 
-array(mapping(string:string)) sql_query(string query_string, int|void nolock)
+local array(mapping(string:string)) sql_query(string query_string)
 {
-  object key;
-  if(!nolock)
-    key = lock->lock();
-  array(mapping(string:string)) result = get_sql()->query( query_string );
-  if(key)
-    destruct(key);
-  return result;
+  return get_sql()->query( query_string );
 }
 
-string sql_insert_mapping(mapping m)
+local string sql_insert_mapping(mapping m)
 {
   string pre="",post="";
   foreach(indices(m), string q)
@@ -105,21 +128,21 @@ string sql_insert_mapping(mapping m)
 }
 
 
-string quote(string what)
+local string quote(string what)
 {
   return get_sql()->quote(what);
 } 
 
-function sql_quote = quote;
+local function sql_quote = quote;
 
-string hash_body_id(string body_id)
+local string hash_body_id(string body_id)
 {
   body_id="0000"+body_id;
   int p=sizeof(body_id)-5;
   return body_id[p..p+1]+"/"+body_id[p+2..p+3];
 }
 
-Stdio.File load_body_get_obj(string body_id)
+local Stdio.File load_body_get_obj(string body_id)
 {
   Stdio.File o = Stdio.File();
   if(o->open( query("maildir")+"/"+body_id,"r" ))
@@ -127,38 +150,40 @@ Stdio.File load_body_get_obj(string body_id)
   return 0;
 }
 
-string get_unique_body_id()
+local string get_unique_body_id()
 {
   string id;
-  object key = lock->lock(); // Do this transaction locked.
-  sql_query("update message_body_id set last=last+1", 1);
-  id=sql_query("select last from message_body_id where 1=1", 1)[0]->last;
+  object key = lock->lock(); /* Do this transaction locked. */
+  sql_query("update message_body_id set last=last+1");
+  id=sql_query("select last from message_body_id where 1=1")[0]->last;
   destruct(key);
   return id;
 }
 
-Stdio.File get_fileobject(string body_id)
+local Stdio.File get_fileobject(string body_id)
 {
   string where=hash_body_id(body_id);
   mkdirhier(query("maildir")+"/"+where);
   return Stdio.File(query("maildir")+"/"+where+"/"+body_id,"wc");
 }
 
-void delete_body(string body_id)
+local void delete_body(string body_id)
 {
   rm(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
-Stdio.File new_body( string body_id )
+local Stdio.File new_body( string body_id )
 {
   string f = query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
   mkdirhier(f);
   return Stdio.File(f, "rwct");
 }
 
-/* Client Layer Abstraction ---------------------------------------- */
 
-static mapping (program:mapping(int:object)) object_cache = ([]);
+
+
+
+/* Client Layer Abstraction ---------------------------------------- */
 
 object get_cache_obj( program type, string|int id )
 {
@@ -182,8 +207,8 @@ object get_any_obj(string|int id, program type, mixed ... moreargs)
 
 class Common
 {
-  int serial;
-  int get_serial()
+  static int serial;
+  final int get_serial()
   {
     return serial;
   }
@@ -191,6 +216,25 @@ class Common
   int modify()
   {
     serial++;
+  }
+
+  final static mixed misc_get(string table, string var)
+  {
+    array(mapping) a;
+    a=squery("select data from %s where id=%s and variable='%s'", 
+	     table, id, var);
+    if(sizeof(a))
+      return decode_binary( a[0]->data );
+  }
+
+  final static mixed misc_set(string table, string var, mixed what)
+  {
+    modify();
+    name = sql_quote( name );
+    string enc = encode_binary( to );
+    squery("delete from %s where id=%s and variable='%s'", table, id, name);
+    squery("insert into %s values (%s,'%s','%s')", table, id, name, enc);
+    return to;
   }
 }
 
@@ -202,44 +246,20 @@ class Mail
   string id;
   object user;
   object mailbox;
-  // array(object) _mboxes; 
-  // Nope. This is now actually a mail, not a message. Thus, it is
-  // only present in _one_ mailbox.
 
+  static mapping _headers;
+  static multiset _flags;
 
-  local static string encode_binary( mixed what )
-  {
-    return sql_quote( MIME.encode_base64( encode_value( what ), 1 ) );
-  }
-
-  local static mixed decode_binary( string what )
-  {
-    return decode_value( MIME.decode_base64( what ) );
-  }
 
   mixed get(string var)
   {
-    array(mapping) a;
-    a=squery("select data from mail_misc where id=%s and variable='%s'",
-	     id,var);
-    if(sizeof(a))
-      return decode_binary( a[0]->data );
+    return misc_get("mail_misc", var);
   }
 
   mixed set(string name, mixed to)
   {
-    modify();
-    name = sql_quote( name );
-    string enc = encode_binary( to );
-    squery("delete from mail_misc where id=%s and variable='%s'", id, name);
-    squery("insert into mail_misc values (%s,'%s','%s')", id, name, enc);
-    return to;
+    return misc_set("mail_misc", var, to);
   }
-
-  string name;
-
-  static mapping _headers;
-  static multiset _flags;
 
   Stdio.File body_fd()
   {
@@ -296,36 +316,6 @@ class Mailbox
   int id;
   object user;
   string name;
-
-  static mapping filter_headers( mapping from ) 
-  {
-    mapping res = ([]);
-    if(from->subject) res->subject = from->subject;
-    if(from->from) res->from = from->from;
-    if(from->to) res->to = from->to;
-    if(from->date) res->date = from->date;
-    return res;
-  }
-
-  static string encode_headers( mapping from )
-  {
-    string res="";
-    foreach(indices(from), string f)
-      res += f+": "+from[f]+"\n";
-    return res;
-  }
-
-			
-  static string read_headers_from_fd( Stdio.File fd )
-  {
-    string q = "", w;
-    do {
-      w = fd->read(1024);
-      q+=w;
-    } while(strlen(w) && (search(q, "\r\n\r\n")==-1)
-	    && (search(q, "\n\n")==-1));
-    return q[..search(q, "\n\n")];
-  }
 
   void remove_mail(Mail mail)
   {
@@ -482,41 +472,14 @@ class User
     return Mailbox( create_user_mailbox( id, name ), this_object(), name );
   }
 
-  // We need a way to store metadata about the user, preferences
-  // etc. This should probably be added to this object, since it would 
-  // have to be added for each and every protocol module
-  // otherwise. That might be somewhat unessesary. The problem is the
-  // API. Do we keep the data from different clients separated, or
-  // should we rely on them using unique keys? 
-  
-  // My suggestion:
-  local static string encode_binary( mixed what )
-  {
-    return sql_quote( MIME.encode_base64( encode_value( what ), 1 ) );
-  }
-
-  local static mixed decode_binary( string what )
-  {
-    return decode_value( MIME.decode_base64( what ) );
-  }
-
   mixed get(string var)
   {
-    array a=squery("select data from user_misc where "
-		     "uid=%d and variable='%s'", id, var);
-    if(sizeof(a))
-      return decode_binary( a[0]->data );
+    return misc_get("user_misc", var);
   }
 
   mixed set(string name, mixed to)
   {
-    modify();
-
-    name = sql_quote( name );
-    string enc= encode_binary( to );
-    squery("delete from user_misc where uid=%d and  variable='%s'", id, name);
-    squery("insert into user_misc values (%d,'%s','%s')",id,name,enc);
-    return to;
+    return misc_set("user_misc", var, to);
   }
 
   array(Mailbox) mailboxes(int|void force)
@@ -563,14 +526,38 @@ User get_user( string username, string password )
   return get_any_obj( id, User );
 }
 
+User get_user_from_adress( string adress )
+{
+  int id;
+  id = find_user( adress );
+  if(!id) return 0;
+  return get_any_obj( id, User );
+}
+
+
+
+
+
+
 /* Low level client layer functions ---------------------------------- */
 
-int authenticate_user(string username, string passwordcleartext)
+int find_user( string username_at_host )
 {
-  array a=squery("select password,id from users where username='%s'",username);
+  array a = squery("select user_id from FIXME where adress='%'",
+		   username_at_host);
+  if(!sizeof(a)) return 0;
+  if(sizeof(a)>1) error("Ambigious user list.\n");
+  return (int)o[0]->user_id;
+}
+
+int authenticate_user(string username_at_host, string passwordcleartext)
+{
+  int id = find_user( username_at_host );
+  if(!id) return 0;
+  array a=squery("select password from users where id='%d'", id);
   if(!sizeof(a))
     return 0;
-  return (int)(crypt(passwordcleartext,a[0]->password)?a[0]->id:0);
+  return crypt(passwordcleartext, a[0]->password) && id;
 }
 
 mapping(string:int) list_mailboxes(int user)
@@ -598,17 +585,7 @@ mapping(string:string) list_mail(int mailbox_id)
 
 mapping(string:mixed) get_mail(string message_id)
 {
-  array a;
-//   array a=query("select message_id from mail where id='"+mail_id+"'");
-//   if(!sizeof(a))
-//     return 0;
-  a=squery("select * from messages where id='%s'",message_id);
-  if(!sizeof(a))
-    return 0;
-  return a[0];
-//   mapping mail=a[0];
-//   mail->body=load_body(mail->body_id);
-//   return mail;
+  return get_mail_headers( message_id );
 }
 
 mapping(string:mixed) get_mail_headers(string message_id)
@@ -656,21 +633,15 @@ int delete_mail(string mail_id)
 
 int create_user_mailbox(int user, string mailbox)
 {
-  object key = lock->lock();
   sql_query("insert into mailboxes values(NULL,'"+user+"','"
 	    + sql_quote(mailbox) + ")", 1);
-  mixed id = get_sql()->master_sql->insert_id();
-  destruct(key);
-  return (int)id;
+  return (int)get_sql()->master_sql->insert_id();
 }
 
 string create_message(mapping mess)
 {
-  object key = lock->lock();
   sql_query("insert into messages "+sql_insert_mapping( mess ));
-  mixed id = get_sql()->master_sql->insert_id();
-  destruct(key);
-  return (string)id;
+  return (string)get_sql()->master_sql->insert_id();
 }
 
 string get_mailbox_name(int mailbox_id)
