@@ -683,14 +683,14 @@ mapping|string parse( RequestID id )
   {
     if(!bytes)
       return "";
-    foreach(({ _(0, "B"), _(375,"KiB"), _(0, "MiB"),
-	       _(0, "GiB"), _(0, "TiB") }), string unit)
+    foreach(({ _(39, "B"), _(375,"KiB"), _(336, "MiB"),
+	       _(511, "GiB"), _(512, "TiB") }), string unit)
     {
       if(bytes < 1024)
 	return format_number(bytes) + " " + unit;
       bytes /= 1024;
     }
-    return format_number(bytes) + " " + _(0, "EiB");
+    return format_number(bytes) + " " + _(513, "EiB");
   };
 
   void add_table_info( string table, mapping tbi )
