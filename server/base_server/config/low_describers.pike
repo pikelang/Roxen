@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.25 1998/06/09 12:13:56 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.26 1999/06/11 01:03:26 peter Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -470,7 +470,7 @@ string describe_variable_low(mixed *var, mixed path, int really_short,
    case TYPE_FONT:
     array select_from;
     catch {
-      select_from=roxen->available_fonts(0);
+      select_from=available_fonts();
     };
     if(!select_from) 
       break;
