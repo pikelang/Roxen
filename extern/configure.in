@@ -9,6 +9,8 @@ AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(resolv, gethostbyname)
 
+AC_DEFINE(POSIX_SOURCE)
+
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 
