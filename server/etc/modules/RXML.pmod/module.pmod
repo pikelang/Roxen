@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.198 2001/07/11 14:55:00 mast Exp $
+// $Id: module.pmod,v 1.199 2001/07/11 18:30:13 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1750,7 +1750,7 @@ class Context
       foo = describe_backtrace (backtrace());
 #endif
       tag_set->call_eval_finish_funs (this_object());
-      if (p_code_comp) p_code_comp->do_delayed_resolving();
+      if (p_code_comp) p_code_comp->compile(); // Fix all delayed resolves.
     }
   }
 
@@ -5848,15 +5848,12 @@ static class PikeCompile
 
   mixed resolve (string id)
   {
-    COMP_MSG ("%O resolve %s\n", this_object(), id);
+    COMP_MSG ("%O resolve %O\n", this_object(), id);
     if (zero_type (bindings[id])) {
+      compile();
 #ifdef DEBUG
-      if (!cur_ids[id]) error ("Unknown id %O.\n", id);
+      if (zero_type (bindings[id])) error ("Unknown id %O.\n", id);
 #endif
-      object compiled = compile();
-      foreach (indices (cur_ids), string i)
-	bindings[i] = compiled[i];
-      cur_ids = ([]);
     }
     return bindings[id];
   }
@@ -5865,34 +5862,33 @@ static class PikeCompile
 
   void delayed_resolve (mixed what, mixed index)
   {
-    COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
 #ifdef DEBUG
     if (!zero_type (delayed_resolve_places[what]))
       error ("Multiple indices per thing to delay resolve not handled.\n");
-    if (!bindings[what[index]] && !cur_ids[what[index]])
-      error ("Unknown binding %O.\n", what[index]);
 #endif
-    delayed_resolve_places[what] = index;
-  }
-
-  void do_delayed_resolving()
-  {
-    COMP_MSG ("%O do_delayed_resolving\n", this_object());
-    foreach (indices (delayed_resolve_places), mixed what) {
-      mixed index = delayed_resolve_places[what];
-      if (stringp (what[index])) what[index] = resolve (what[index]);
+    mixed resolved;
+    if (zero_type (resolved = bindings[what[index]])) {
+#ifdef DEBUG
+      if (!cur_ids[what[index]])
+	error ("Unknown binding %O.\n", what[index]);
+#endif
+      COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
+      delayed_resolve_places[what] = index;
     }
-    delayed_resolve_places = ([]);
+    else {
+      COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
+      what[index] = resolved;
+    }
   }
 
   static void destroy()
   {
-    do_delayed_resolving();
+    compile();			// To clean up delayed_resolve_places.
   }
 
   static class Resolver (object master)
-  // Can't keep the instantiated Resolver object around since it
-  // introduces a cyclic reference.
+  // Can't keep the instantiated Resolver object around since that'd
+  // introduce a cyclic reference.
   {
     void compile_error (string file, int line, string err)
       {master->compile_error (file, line, err);}
@@ -5910,40 +5906,60 @@ static class PikeCompile
 
   object compile()
   {
-    COMP_MSG ("%O compile\n", this_object());
-    code->add("mixed _encode() { } void _decode(mixed v) { }\n"
-	      "constant is_RXML_pike_code = 1;\n"
-	      "constant is_RXML_encodable = 1;\n"
-#ifdef RXML_OBJ_DEBUG
-	      // Don't want to encode the cloning of
-	      // Debug.ObjectMarker in the __INIT that is dumped,
-	      // since that debug might not be wanted when the dump is
-	      // decoded.
-	      "mapping|object __object_marker = ",
-	      bind (Debug.ObjectMarker ("object(compiled RXML code)")), ";\n"
-#else
-	      LITERAL (MARK_OBJECT) ";\n"
-#endif
-#ifdef DEBUG
-	      "string _sprintf() {return \"object(compiled RXML code)\" + "
-	      LITERAL (OBJ_COUNT)
-	      ";}\n"
-#endif
-	     );
+    object compiled = 0;
 
-    program res;
-    string txt = code->get();
-#ifdef DEBUG
-    if (mixed err = catch {
+    if (sizeof (code)) {
+      COMP_MSG ("%O compile\n", this_object());
+      code->add("mixed _encode() { } void _decode(mixed v) { }\n"
+		"constant is_RXML_pike_code = 1;\n"
+		"constant is_RXML_encodable = 1;\n"
+#ifdef RXML_OBJ_DEBUG
+		// Don't want to encode the cloning of
+		// Debug.ObjectMarker in the __INIT that is dumped,
+		// since that debug might not be wanted when the dump is
+		// decoded.
+		"mapping|object __object_marker = ",
+		bind (Debug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+#else
+		LITERAL (MARK_OBJECT) ";\n"
 #endif
-      res = predef::compile (txt, Resolver (master()));
 #ifdef DEBUG
-    }) {
-      report_debug ("Failed program: %s\n", txt);
-      throw (err);
+		"string _sprintf() {return \"object(compiled RXML code)\" + "
+		LITERAL (OBJ_COUNT)
+		";}\n"
+#endif
+	       );
+
+      program res;
+      string txt = code->get();
+#ifdef DEBUG
+      if (mixed err = catch {
+#endif
+	res = predef::compile (txt, Resolver (master()));
+#ifdef DEBUG
+      }) {
+	report_debug ("Failed program: %s\n", txt);
+	throw (err);
+      }
+#endif
+
+      compiled = res();
     }
+
+    foreach (indices (cur_ids), string i)
+      bindings[i] = compiled[i];
+    cur_ids = ([]);
+    foreach (indices (delayed_resolve_places), mixed what) {
+      mixed index = m_delete (delayed_resolve_places, what);
+#ifdef DEBUG
+      if (zero_type (bindings[what[index]]))
+	error ("Unknown delayed id %O.\n", what[index]);
 #endif
-    return res();
+      COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
+      what[index] = bindings[what[index]];
+    }
+
+    return compiled;
   }
 
   MARK_OBJECT;
@@ -6145,9 +6161,12 @@ class PCode
 	else
 	  EVAL_LOOP ({
 	    array frame_state = p_code[pos + 2];
-	    if (stringp (frame_state[0]))
-	      frame->args = frame_state[0] =
-		context->p_code_comp->resolve (frame_state[0]);
+	    if (stringp (frame->args))
+	      if (stringp (frame_state[0]))
+		frame->args = frame_state[0] =
+		  context->p_code_comp->resolve (frame_state[0]);
+	      else
+		frame->args = frame_state[0];
 	  }, {
 	    array frame_state = p_code[pos + 2];
 	    if (stringp (frame_state[0]))
