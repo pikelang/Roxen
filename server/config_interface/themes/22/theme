@@ -24,7 +24,7 @@
 <theme-set what=fade2     to="#dee2eb"/>
 
 <theme-set what=next     to=next2.gif themefile />
-<theme-set what=selected-indicator     to=sel2.gif themefile />
+<theme-set what=selected-indicator    to=sel2.gif themefile />
 
 <theme-set what=left-buttonbg     to='white'/>
 <theme-set what=left-selbuttonbg  to='white'/>
@@ -59,6 +59,9 @@
 <theme-set what=linkcolor to="#425a84"/>
 
 <theme-set what=obox-titlefg to="black"/>
+
+<theme-set what=content-titlefg to="black"/>
+<theme-set what=content-titlebg to="#e1e1ff"/>
 
 <theme-set what=fade3     to=#ff9c51/>
 <theme-set what=fade4     to=#222222/>
