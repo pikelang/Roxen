@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.52 2000/08/17 14:37:29 per Exp $
+// $Id: disk_cache.pike,v 1.53 2000/08/17 14:38:21 per Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -281,15 +281,16 @@ class Cache {
     // FIXME: Should probably use spawn_pike() here.
     mixed err;
     object proc;
-    catch {
+    if( catch {
       proc = Process.create_process(({
         "./start", "--once", "--program", "bin/garbagecollector.pike"
       }), (["stdin":lcs, "nice":19, "uid":0, "gid":0, ]));
-    } && ( err = catch {
-      proc = Process.create_process(({
-        "./start", "--once", "--program", "bin/garbagecollector.pike"
-      }), (["stdin":lcs,"nice":19, ]));
-    });
+    } )
+      err = catch {
+        proc = Process.create_process(({
+          "./start", "--once", "--program", "bin/garbagecollector.pike"
+        }), (["stdin":lcs,"nice":19, ]));
+      };
 
     if( err )
     {
