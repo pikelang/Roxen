@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.134 2004/05/10 14:46:39 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.135 2004/05/10 18:39:55 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1277,11 +1277,11 @@ mixed find_file( string f, RequestID id )
       }
       
       if ((overwrite == DO_OVERWRITE) || (size > -1)) {
-	int code = recurse_delete_files(new_uri,
-					id->get_multi_status()->
-					prefix(id->url_base() +
-					       mountpoint[1..]), id);
-	if (code > 1) {
+	mapping(string:mixed) res =
+	  recurse_delete_files(new_uri,
+			       id->get_multi_status()->
+			       prefix(id->url_base() + mountpoint[1..]), id);
+	if (res && res->error >= 300) {
 	  privs = 0;
 	  TRACE_LEAVE("MOVE: Recursive delete failed.");
 	  return Roxen.http_status(412);
@@ -1365,8 +1365,7 @@ mixed find_file( string f, RequestID id )
       if (mappingp(res = write_access(combine_path(oldf, "../"), 1, id)) ||
 	  (res && mappingp(res = write_access(oldf, 1, id)))) {
 	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
-	id->set_status_for_path(query_location()+oldf, res->error);
-	return 0;
+	return res;
       }
       report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
 
@@ -1383,7 +1382,8 @@ mixed find_file( string f, RequestID id )
 	  if (errno() != system.EEXIST)
 #endif
 	  {
-	    id->set_status_for_path(query_location() + oldf, 403);
+	    return Roxen.http_status(403);
+	    //id->set_status_for_path(query_location() + oldf, 403);
 	  }
 	} else {
 	  TRACE_LEAVE("DELETE: Failed to delete directory.");
@@ -1400,8 +1400,7 @@ mixed find_file( string f, RequestID id )
       if ((res = write_access(combine_path(oldf, "../"), 0, id)) ||
 	  (res = write_access(oldf, 0, id))) {
 	SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
-	id->set_status_for_path(query_location()+oldf, res->error);
-	return 0;
+	return res;
       }
 
       report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
