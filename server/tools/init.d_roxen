@@ -170,8 +170,22 @@ case $1 in
     }
   ;;
 
+  'debug')
+    echo "Sending Roxen SIGQUIT..."
+    cd $roxenhome && {
+      test -f "$pidfile" && {
+        if read pid && kill -QUIT "$pid" 2>/dev/null; then
+          echo "Roxen process found. Consult debug log for output."
+          :
+        else echo "pid $pid"; fi
+      } < $pidfile && exit 0
+      echo "Roxen doesn't seem to be running."
+      exit 1
+    }
+  ;;
+
   *)
-    echo "Syntax: $0 [start|stop|start_msg|stop_msg|restart|reload]"
+    echo "Syntax: $0 [start|stop|start_msg|stop_msg|restart|reload|debug]"
   ;;
 esac
 
