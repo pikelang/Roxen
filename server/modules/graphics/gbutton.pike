@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.41 2000/03/24 14:21:28 jhs Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.42 2000/03/24 17:34:53 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -151,7 +151,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   //  otherwise load default images
   if ( !frame )
-    set_image( roxen.load_layers("roxen-images/gbutton.xcf", id) );
+    set_image( roxen.load_layers("/internal-roxen-gbutton", id) );
 
 
   // Translate frame image to 0,0 (left layers are most likely to the
@@ -475,7 +475,8 @@ mapping find_internal(string f, RequestID id)
 class ButtonFrame {
   inherit RXML.Frame;
 
-  array mk_url(RequestID id) {
+  array mk_url(RequestID id) 
+  {
     string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = fix_relative( fi, id );
