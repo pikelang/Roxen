@@ -63,7 +63,7 @@ echo "Cleaning up."
 rm -f *\~
 mv index.html index.xml
 
-echo "Uploading new javadoc to internal-docs.roxen.com..."
-lukemftp -u ftp://${USER}@internal-docs:7000/roxen/2.1/programmer/java/ *
+echo "Uploading new javadoc to internal-docs-21.roxen.com..."
+lukemftp -u ftp://${USER}@internal-docs-21:7000/roxen/2.1/programmer/java/ *
 
-echo "Please visit http://internal-docs/edit/roxen/2.1/programmer/java/ and commit your updates."
+echo "Please visit http://internal-docs-21/edit/roxen/2.1/programmer/java/ and commit your updates."
