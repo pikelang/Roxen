@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.203 2000/09/26 23:11:59 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.204 2000/10/10 18:46:30 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -202,7 +202,7 @@ void roxen_perror(string format, mixed ... args)
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
-  from = roxen_path( from );
+  from = roxen_path( from + "x" ); // "x" keeps roxen_path from stripping trailing '/'.
   array(string) f=(from/"/");
   string b="";
 
