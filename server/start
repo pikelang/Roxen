@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.91 2000/02/08 07:57:12 mast Exp $
+# $Id: start,v 1.92 2000/02/14 16:19:32 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -486,7 +486,7 @@ PIKEVERSION=`$pike --version 2>&1`
 
 if [ "$program" = "base_server/roxenloader.pike" ] ; then
   if [ "`cat $old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
-    remove_old_dot_o_files "DEFINES changed"
+    remove_old_dot_o_files "defines or pike version changed"
   fi
   echo "$PIKEVERSION $DEFINES" > $old_roxen_defines
 fi
