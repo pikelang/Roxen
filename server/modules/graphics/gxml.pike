@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.25 2004/02/09 18:12:23 anders Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.26 2004/02/10 13:33:35 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -352,11 +352,9 @@ SIMPLE_LI(SelectFrom);
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
 
-class TagGXML
+static class InternalTagSet
 {
-  inherit RXML.Tag;
-  constant name = "gxml";
-  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
+  inherit RXML.TagSet;
 
   static class GXTag
   {
@@ -375,26 +373,41 @@ class TagGXML
     }
   }
 
-  static mapping last_from;
-  static array(RXML.Tag) last_result;
-  static array(RXML.Tag) gxml_make_tags( function get_plugins )
+  static array(RXML.Tag) gxml_make_tags()
   {
-    mapping from = ([]);
-    catch( from = get_plugins() );
-
-    if( from == last_from )
-      return last_result;
-
-    array(RXML.Tag) result = ({});
-    foreach( indices(from), string tn )
-      result += ({ GXTag( tn, from[tn] ) });
-
-    result += builtin_tags;
-    
-    last_from = from;
-    return last_result = result;
+    mapping from = my_configuration()->rxml_tag_set->get_plugins("gxml");
+    return builtin_tags + map (indices (from),
+			       lambda (string tn) {
+				 return GXTag( tn, from[tn] );
+			       });
   }
-  
+
+  static int in_changed = 0;
+
+  void changed()
+  {
+    if (in_changed) return;
+    in_changed = 1;
+    clear();
+    add_tags (gxml_make_tags());
+    in_changed = 0;
+    ::changed();
+  }
+
+  static void create()
+  {
+    ::create (this_module(), "gxml");
+    changed();
+  }
+}
+
+static RXML.TagSet internal_tag_set = InternalTagSet();
+
+class TagGXML
+{
+  inherit RXML.Tag;
+  constant name = "gxml";
+  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
 
 #define V(X) ("$["+X+"]")
   class LayersVars
@@ -446,21 +459,15 @@ class TagGXML
     ]);
 #undef V
 
-  RXML.TagSet internal;
-
   class Frame 
   {
     inherit RXML.Frame;
     constant scope_name = "gxml";
     mapping vars = gxml_vars;
-    RXML.TagSet additional_tags = internal;
+    RXML.TagSet additional_tags = internal_tag_set;
 
     array do_enter( RequestID id )
     {
-      if (!internal)
-	additional_tags = internal =
-	  RXML.TagSet(this_module(), "gxml",
-		      gxml_make_tags( get_plugins ));
 //       if( id->misc->gxml_stack )
 // 	parse_error("Recursive gxml tags not supported\n" );
       LazyImage.clear_cache();
