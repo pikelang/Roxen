@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.326 2001/08/13 18:28:55 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.327 2001/08/15 16:55:27 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2185,7 +2185,6 @@ object clone_me()
   werror ("clone %O -> %O\n", t, c);
 #endif
 
-// c->first = first;
   c->port_obj = port_obj;
   c->conf = conf;
   c->root_id = root_id;
