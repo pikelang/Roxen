@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.31 1998/09/29 16:20:56 wellhard Exp $
+ * $Id: webadm.pike,v 1.32 1998/09/30 04:26:17 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.31 1998/09/29 16:20:56 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.32 1998/09/30 04:26:17 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -288,9 +288,8 @@ string validate_admin(object id)
 
 mixed find_file(string f, object id)
 {
-  //werror("find_file: %O",id->variables);
   string tab,sub;
-  mixed content="";
+  mixed content;
   mapping state;
   
   int t1, t2, t3;
@@ -334,18 +333,18 @@ mixed find_file(string f, object id)
     sscanf(tab, "%d:%s", tabnum, tabname);
     id->variables->activetab = tabname;
   }
+
   string res = "<template base=/"+(query("location")-"/")+">\n";
 
   res += "<tablist>"+make_tablist(tablist, tabs[tab], id)+"</tablist>";
   if (!tabs[tab])
-    content= "You've reached a non-existing tab '"
+    content= "You've reached a non-existing tab "
 	     "<tt>"+tab+"</tt> somehow. Select another tab.\n";
   else
     content = tabs[tab]->show(sub, id, f);
-  
   if(mappingp(content))
     return content;
-  res += content+"\n</template>";
+  res += "<p>" + (content||"Select one of the tabs above.") + "</template>";
   
   return http_string_answer(parse_rxml(res, id)) |
     ([ "extra_heads":

@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.24 1998/09/29 21:00:38 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.25 1998/09/30 04:26:15 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -122,13 +122,13 @@ mixed find_file(string f, object id)
   {
     string s="";
     s+=
-      "<h1>Foobar Gazonk AB</h1>"
+      "<h1>Error!</h1>"
       "You seem to be using a browser that doesn't send host header. "
-      "Please upgrade your browser, or access the site you want to from the "
-      "list below:<p><ul>";
+      "Please upgrade your browser.<br><br>"
+      "The following sites are hosted here:<p><ul>";
     foreach(indices(host_to_id), string host)
       if(host[0..3]=="www.")
-	s+="<li><a href='/"+host+"/'>"+host+"</a>";
+	s+="<li><a href='http://"+host+"/'>"+host+"</a>";
     return http_string_answer(parse_rxml(s,id),"text/html");
   }
   if(!file)
