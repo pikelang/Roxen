@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.20 2004/05/07 11:53:21 grubba Exp $
+// $Id: webdav.pike,v 1.21 2004/05/07 19:47:23 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.20 2004/05/07 11:53:21 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.21 2004/05/07 19:47:23 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -171,7 +171,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     DAVLock lock;
     if (!xml_data) {
       // Refresh.
-      int(0..3)|DAVLock state =
+      int/*LockFlag*/|DAVLock state =
 	id->conf->check_locks(id->not_query, 0, id);
       if (intp(state)) {
 	if (state) {
