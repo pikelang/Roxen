@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.36 1999/07/01 12:40:35 wellhard Exp $
+ * $Id: sqltag.pike,v 1.37 1999/09/28 15:46:51 mast Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.36 1999/07/01 12:40:35 wellhard Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.37 1999/09/28 15:46:51 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -30,37 +30,37 @@ object conf;
 array register_module()
 {
   return( ({ MODULE_PARSER|MODULE_PROVIDER,
-	     "SQL-module",
+	     "SQL module",
 	     "This module gives the three tags &lt;SQLQUERY&gt;, "
 	     "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
 	     "Usage:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
-	     "<td>Executes an SQL-query, and "
+	     "<td>Executes an SQL query, and "
 	     "replaces #-quoted fieldnames with the results. # is "
 	     "quoted as ##. The content between &lt;sqloutput&gt; and "
 	     "&lt;/sqloutput&gt; is repeated once for every row in the "
 	     "result.</td></tr>\n"
 	     "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
-	     "<td>Executes an SQL-query, but "
+	     "<td>Executes an SQL query, but "
 	     "doesn't do anything with the result. This is useful if "
 	     "you do queries like INSERT and CREATE.</td></tr>\n"
 	     "<tr><td valign=top><b>&lt;sqltable&gt;</td>"
-	     "<td>Executes an SQL-query, and makes "
-	     "an HTML-table from the result.</td></tr>\n"
+	     "<td>Executes an SQL query, and makes "
+	     "an HTML table from the result.</td></tr>\n"
 	     "</table></ul>\n"
 	     "The following attributes are used by the above tags:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>query</b></td>"
-	     "<td>The actual SQL-query. (<b>REQUIRED</b>)</td></tr>\n"
+	     "<td>The actual SQL query. (<b>REQUIRED</b>)</td></tr>\n"
 	     "<tr><td valign=top><b>host<b></td>"
-	     "<td>The hostname of the machine the SQL-server runs on.<br>\n"
-	     "This argument can also be used to specify which SQL-server "
-	     "to use by specifying an \"SQL-URL\":<br><ul>\n"
+	     "<td>The hostname of the machine the SQL server runs on.<br>\n"
+	     "This argument can also be used to specify which SQL server "
+	     "to use by specifying an \"SQL URL\":<br><ul>\n"
 	     "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
 	     "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre><br>\n"
 	     "</ul>Valid values for \"sqlserver\" depend on which "
-	     "sql-servers your pike has support for, but the following "
+	     "SQL servers your pike has support for, but the following "
 	     "might exist: msql, mysql, odbc, oracle, postgres.</td></tr>\n"
 	     "<tr><td valign=top><b>database</b></td>"
 	     "<td>The name of the database to use.</td></tr>\n"
@@ -70,12 +70,12 @@ array register_module()
 	     "<td>The password to access the database.</td></tr>\n"
 	     "<tr><td valign=top><b>parse</b></td>"
 	     "<td>If specified, the query will be parsed by the "
-	     "RXML-parser</td></tr>\n"
+	     "RXML parser</td></tr>\n"
 	     "<tr><td valign=top><b>quiet</b></td>"
-	     "<td>If specified, SQL-errors will be kept quiet.</td></tr>\n"
+	     "<td>If specified, SQL errors will be kept quiet.</td></tr>\n"
 	     "</table></ul><p>\n"
 	     "The &lt;sqltable&gt; tag has an additional attribute "
-	     "<b>ascii</b>, which generates a tab-separated table (usefull "
+	     "<b>ascii</b>, which generates a tab separated table (usefull "
 	     "with eg the &lt;diagram&gt; tag).<p>\n"
 	     "\n"
 	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
@@ -147,10 +147,10 @@ mixed sqloutput_tag(string tag_name, mapping args, string contents,
     if (error) {
       if (!args->quiet) {
 	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
 			       "%s\n", describe_backtrace(error)));
 	}
-	res = ("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	res = ("<h3>Couldn't connect to SQL server</h1><br>\n" +
 	       html_encode_string(error[0]) + "<false>");
       } else {
 	res = "<false>";
@@ -240,10 +240,10 @@ string sqlquery_tag(string tag_name, mapping args,
     if (error) {
       if (!args->quiet) {
 	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
 			       "%s\n", describe_backtrace(error)));
 	}
-	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	return("<h3>Couldn't connect to SQL server</h1><br>\n" +
 	       html_encode_string(error[0])+"<false>");
       } else {
 	return("<false>");
@@ -337,10 +337,10 @@ string sqltable_tag(string tag_name, mapping args,
     if (error) {
       if (!args->quiet) {
 	if (args->log_error && QUERY(log_error)) {
-	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
 			       "%s\n", describe_backtrace(error)));
 	}
-	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	return("<h3>Couldn't connect to SQL server</h1><br>\n" +
 	       html_encode_string(error[0])+"<false>");
       } else {
 	return("<false>");
@@ -494,24 +494,24 @@ string query_provides()
 
 void create()
 {
-  defvar("hostname", "localhost", "Default SQL-database host", 
-	 TYPE_STRING, "Specifies the default host to use for SQL-queries.\n"
-	 "This argument can also be used to specify which SQL-server to "
-	 "use by specifying an \"SQL-URL\":<ul>\n"
+  defvar("hostname", "localhost", "Default SQL database host",
+	 TYPE_STRING, "Specifies the default host to use for SQL queries.\n"
+	 "This argument can also be used to specify which SQL server to "
+	 "use by specifying an \"SQL URL\":<ul>\n"
 	 "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
 	 "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre></ul><br>\n"
 	 "Valid values for \"sqlserver\" depend on which "
-	 "sql-servers your pike has support for, but the following "
+	 "SQL servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
 
   defvar("log_error", 0, "Enable the log_error attribute",
 	 TYPE_FLAG|VAR_MORE, "Enables the attribute \"log_error\" "
-	 "which causes errors to be logged to the event-log.\n");
+	 "which causes errors to be logged to the event log.\n");
 
 #ifdef SQL_TAG_COMPAT
-  defvar("database", "", "Default SQL-database (deprecated)",
+  defvar("database", "", "Default SQL database (deprecated)",
 	 TYPE_STRING|VAR_MORE,
-	 "Specifies the name of the default SQL-database.\n");
+	 "Specifies the name of the default SQL database.\n");
   defvar("user", "", "Default username (deprecated)",
 	 TYPE_STRING|VAR_MORE,
 	 "Specifies the default username to use for access.\n");
@@ -551,7 +551,7 @@ string status()
 #endif /* SQL_TAG_COMPAT */
 		  );
     }
-    return(sprintf("Connected to %s-server on %s<br>\n",
+    return(sprintf("Connected to %s server on %s<br>\n",
 		   o->server_info(), o->host_info()));
   }) {
     return("<font color=red>Not connected.</font><br>\n");

@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.16 1999/08/05 01:00:22 nilsson Exp $
+ * $Id: tablist.pike,v 1.17 1999/09/28 15:46:51 mast Exp $
  *
- * Makes a tab-list like the one in the config-interface.
+ * Makes a tab list like the one in the config interface.
  *
- * $Author: nilsson $
+ * $Author: mast $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.16 1999/08/05 01:00:22 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.17 1999/09/28 15:46:51 mast Exp $";
 constant thread_safe=1;
 
 #define old_rxml_compat 1
@@ -31,9 +31,9 @@ mapping(string:string) gif_cache = ([]);
 
 array register_module()
 {
-  return(({ MODULE_PARSER, "Tab-list", 
-	      "Adds some tags for making a config-interface "
-	      "look-alike tab-list.<br>\n"
+  return(({ MODULE_PARSER, "Tab list",
+	      "Adds some tags for making a config interface "
+	      "look-alike tab list.<br>\n"
 	      "Usage:<br>\n"
 	      "<ul><pre>&lt;tablist&gt;\n"
 	      "&lt;tab href=\"/tab1/\"&gt;Some text&lt;/tab&gt;\n"
@@ -119,7 +119,7 @@ int my_hash(mixed o)
 
 string tag_tablist(string t, mapping a, string contents)
 {
-#if use_contents_cache  
+#if use_contents_cache
   object md5 = Crypto.md5();
   md5->update(contents+my_hash(a));
   string key=md5->digest();
@@ -141,7 +141,7 @@ mapping query_tag_callers()
 
 mapping query_container_callers()
 {
-  return ([ "tablist":tag_tablist 
+  return ([ "tablist":tag_tablist
 #if old_rxml_compat
 	    ,"config_tablist":tag_tablist
 #endif
