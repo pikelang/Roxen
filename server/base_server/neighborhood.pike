@@ -71,8 +71,10 @@ class UDPNeigh
       return master->low_got_info(r->data, this_object());
     }
     else {
-      master->udp_sock->set_read_callback(0);
-      call_out(master->udp_sock->set_read_callback, 2, read);
+      destruct(master->udp_sock);
+      master->udp_sock = spider.dumUDP();
+      master->udp_sock->bind(port);
+      master->udp_sock->set_nonblocking(read);
     }
   }
 
@@ -301,7 +303,7 @@ void create()
   foreach(tcp_numbers(), string s)
     add_neighbour(TCPNeigh(s,51521,this_object()));
   foreach(network_numbers(), string s)
-   add_neighbour(UDPNeigh(s,51521,this_object()));
+    add_neighbour(UDPNeigh(s,51521,this_object()));
   if(roxen->query("neighborhood")) broadcast();else remove_call_out(broadcast);
   remove_call_out(create);
   add_constant("neighborhood", neighborhood);
