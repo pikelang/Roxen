@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.27 2004/12/16 10:27:16 erikd Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.28 2005/02/02 15:48:04 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -107,9 +107,9 @@ class TagSprintf {
     array do_return(RequestID id) {
       array(mixed) in;
       if(args->split)
-	in=content/args->split;
+	in=(content || "")/args->split;
       else
-	in=({content});
+	in=({content || ""});
 
       array f=((args->format-"%%")/"%")[1..];
       if(sizeof(in)!=sizeof(f))
@@ -171,7 +171,7 @@ class TagSscanf {
 
     string do_return(RequestID id) {
       array(string) vars=args->variables/",";
-      array(string) vals=array_sscanf(content, args->format);
+      array(string) vals=array_sscanf(content || "", args->format);
       if(sizeof(vars)<sizeof(vals))
 	RXML.run_error("Too few variables.\n");
 
