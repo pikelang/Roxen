@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.69 2000/07/25 09:32:45 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.70 2000/07/26 16:29:03 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -426,6 +426,32 @@ string|mapping parse_directory(RequestID id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
+"emit#path":({ #"<desc plugin><short>
+ Prints paths.</short> This plugin traverses over all directories in
+ the path from the root up to the current one.
+</desc>
+
+<attr name='trim' value='string'>
+ Removes all of the remaining path after and including the specified
+ string.
+</attr>
+
+<attr name='skip' value='number'>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the root.
+</attr>",
+	       ([
+"&_.name;":#"<desc ent>
+ Returns the name of the most recently traversed directory.
+</desc>",
+
+"&_.path;":#"<desc ent>
+ Returns the path to the most recently traversed directory.
+</desc>"
+	       ])
+	    }),
+
+
 "emit#directory":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
 
 <attr name='directory' value='path'>
