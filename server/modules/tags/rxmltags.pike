@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.356 2002/11/01 12:38:00 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.357 2002/12/17 13:07:59 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6338,10 +6338,8 @@ load.</p>
  <p>The value the cookie will be set to.</p>
 </attr>
 
-<attr name='path' value='string' default=\"/\"><p>
- The path in which the cookie should be available. Use path=\"\" to remove
- the path argument from the sent cookie, thus making the cookie valid only
- for the present directory and below.</p>
+<attr name='path' value='string' default=\"\"><p>
+ The path in which the cookie should be available.</p>
 </attr>
 ",
 
