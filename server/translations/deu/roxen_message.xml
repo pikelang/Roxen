@@ -36,7 +36,6 @@ und dass die Gruppen-Datenbank korrekt ist.
 </str>
 
 <str id="5">
-<changed from="Uncaught error in handler thread: %s Clientwill not get any response from Roxen."/>
 <o>Uncaught error in handler thread: %sClient will not get any response from Roxen.</o>
 <t>Unbehandelter Fehler im Handler-Thread: %s Client wird keine Antwort von Roxen erhalten.</t>
 </str>
