@@ -1,3 +1,11 @@
+Changes since Roxen 2.0.30
+-----------------------------------------------
+
+o Made output from Roxen XML-compliant.
+
+o Added manual to the admin interface.
+
+
 Changes since Roxen 2.0.28
 -----------------------------------------------
 
@@ -6,13 +14,13 @@ o Made --without-rtldebug default for the binary dists again. Makes
 
 o Added reconnect code by Zsolt Varga to the Postgres module. Thanks.
 
-o Added more paranioa in errorhandling in Pike and Roxen.
+o Added more paranoia in error handling in Pike and Roxen.
 
 
 Changes since Roxen 2.0.27
 -----------------------------------------------
 
-o Added the alternative poweruser module adder by Martin Baehr,
+o Added the alternative power-user module adder by Martin Baehr,
   thanks!
 
 o Some small bugfixes.
@@ -90,7 +98,7 @@ o Roxenlib is no longer inherited into roxen core. If you want
   to call roxenlib functions either inherit roxenlib or call
   Roxen.pmod.
 
-o Varoius other bugfixes.
+o Various other bugfixes.
 
 
 Changes since Roxen 2.0.15
@@ -163,10 +171,6 @@ o Added SANE (scanner interface) support to Pike.
 o Added Gnome support to Pike.
 
 o Added Gtk+Extra support to Pike.
-
-o Fixed problem with dumped sitebuilders. (kludge: don't dump.)
-
-o Improved language support in SiteBuilder.
 
 o Lots of bugs fixed.
 
