@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.33 1998/10/03 11:14:37 grubba Exp $
+ * $Id: smtprelay.pike,v 1.34 1998/10/03 14:36:22 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.33 1998/10/03 11:14:37 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.34 1998/10/03 14:36:22 grubba Exp $";
 
 /*
  * Some globals
@@ -397,19 +397,19 @@ class MailSender
   // The state machine
 
   static constant state_machine = ({
-    ([ "220":1, ]), 	// 0 (Connection established), EHLO
-    ([ "250":2, ]),	// 1 EHLO reply, MAIL FROM:, HELO
-    ([ "250":4, ]),	// 2 MAIL FROM: reply, RCPT TO:
-    ([ "250":2, ]),	// 3 HELO reply, MAIL FROM:
-    ([ "25":5, ]),	// 4 RCPT TO: reply, DATA
-    ([ "354":6, ]),	// 5 DATA reply, body
-    ([]),		// 6 body reply,
-    ([ "":-1 ]),	// 7 QUIT reply, disconnect
+    ([ "220":1, ]), 			// 0 (Connection established), EHLO
+    ([ "250":2, "":3, "221":7 ]),	// 1 EHLO reply, MAIL FROM:, HELO
+    ([ "250":4, ]),			// 2 MAIL FROM: reply, RCPT TO:
+    ([ "250":2, ]),			// 3 HELO reply, MAIL FROM:
+    ([ "25":5, ]),			// 4 RCPT TO: reply, DATA
+    ([ "354":6, ]),			// 5 DATA reply, body
+    ([]),				// 6 body reply,
+    ([ "":-1 ]),			// 7 QUIT reply, disconnect
   });
 
   static array(mapping) state_actions = ({
     ([ "220":send_ehlo, ]),
-    ([ "250":send_mail_from, "":send_helo, ]),
+    ([ "250":send_mail_from, "":send_helo, "221":"QUIT", ]),
     ([ "250":send_rcpt_to, "5":send_bounce_and_stop, ]),
     ([ "250":send_mail_from, "5":send_bounce, ]),
     ([ "25":"DATA", "55":bad_address, ]),
@@ -417,6 +417,20 @@ class MailSender
     ([ "250":send_ok, "":send_bounce, ]),
     ([]),
   });
+
+#if 0
+  static array disconnect_actions = ({
+    0,
+    reconnect_with_helo,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  });
+#endif /* 0 */
+    
 
   static mixed find_next(mapping(string:mixed) machine,
 			 string code, mixed def)
@@ -601,6 +615,8 @@ class MailSender
 
     // Reset the state.
     state = 0;
+    out_buf = "";
+    esmtp_features = (<>);
 
     message->remote_mta = servers[server];
     message->last_attempt_at = time();
