@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.310 2001/08/09 18:40:22 mast Exp $
+// $Id: rxml.pike,v 1.311 2001/08/09 23:28:19 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -98,8 +98,12 @@ RXML.TagSet rxml_tag_set = class
       else
 	id->misc->moreheads = ctx->misc[" _extra_heads"];
 
-    if (mapping olddefs = ctx->misc->old_defines)
+    if (mapping olddefs = ctx->misc->old_defines) {
+      // Somehow it seems like these values are stored in the wrong place.. :P
+      if (int v = ctx->misc[" _error"]) olddefs[" _error"] = v;
+      if (string v = ctx->misc[" _rettext"]) olddefs[" _rettext"] = v;
       id->misc->defines = olddefs;
+    }
 
     PROF_LEAVE( "rxml", "overhead" );
   }
