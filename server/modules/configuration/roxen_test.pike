@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.47 2001/09/13 16:04:14 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.48 2001/09/19 00:36:33 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -116,6 +116,13 @@ RequestID get_id()
   return id;
 }
 
+string rxml_error(RXML.Backtrace err, RXML.Type type) {
+  //  if(verbose)
+  //  werror(describe_backtrace(err)+"\n");
+  return sprintf("[Error (%s): %s]", err->type,
+		 String.trim_all_whites(replace(err->msg, "\n", "")));
+}
+
 string canon_html(string in) {
   return Roxen.get_xml_parser()->_set_tag_callback (
     lambda (Parser.HTML p, string tag) {
@@ -151,6 +158,7 @@ void xml_use_module(string t, mapping m, string c,
 
 int tests, ltests;
 int fails, lfails;
+
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
   ltests++;
@@ -361,9 +369,16 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 				 break;
 			       case "request_header":
 			         id->request_headers[m->name] = m->value;
-			         break;
+				 break;
 			     }
 			   },
+
+		   "login" : lambda(Parser.HTML p, mapping m) {
+			       id->request_headers->authorization =
+				 "Basic " + MIME.encode_base64(args->user+":"+args->password);
+			       id->realauth = args->user+":"+args->password;
+			       conf->authenticate(id);
+			     },
     ]) );
 
   if( catch(parser->finish(c)) ) {
@@ -579,7 +594,9 @@ void continue_find_tests( )
       {
 	report_debug("\nFound test file %s\n",file);
 	int done;
-	foreach( tests_to_run, string p )
+	foreach( tests_to_run, string p ) {
+	  if( !has_prefix(p, "RoxenTest_") )
+	    p = "RoxenTest_" + p;
 	  if( glob( "*"+p+"*", file ) )
 	  {
 	    if(glob("*.xml",file))
@@ -603,8 +620,9 @@ void continue_find_tests( )
 	    done++;
 	    break;
 	  }
-	if( !done )
-	  report_debug( "Skipped (not matched by --tests argument)\n" );
+	  if( !done )
+	    report_debug( "Skipped (not matched by --tests argument)\n" );
+	}
       }
     }
   }
@@ -626,6 +644,10 @@ void do_tests()
 
   tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
   verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
+
+  conf->rxml_tag_set->handle_run_error = rxml_error;
+  conf->rxml_tag_set->handle_parse_error = rxml_error;
+
   file_stack->push( 0 );
   file_stack->push( self_test_dir + "/tests" );
   call_out( continue_find_tests, 0 );
