@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.523 2003/01/15 14:53:12 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.524 2004/02/17 20:50:03 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1041,7 +1041,7 @@ private mapping internal_gopher_image(string from)
 private static int nest = 0;
 
 #ifdef MODULE_LEVEL_SECURITY
-private mapping misc_cache = set_weak_flag (([]), 1);
+private mapping(RoxenModule:array) security_level_cache = set_weak_flag (([]), 1);
 
 int|mapping check_security(function|RoxenModule a, RequestID id,
 			   void|int slevel)
@@ -1054,17 +1054,22 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
   //     1  May be bad -- Restriction encountered, and test failed.
   //    ~0  OK -- Test passed.
 
-  if(!(seclevels = misc_cache[ a ]))
-  {
-    RoxenModule mod = Roxen.get_owning_module (a);
-    if(mod && mod->query_seclevels)
-      misc_cache[ a ] = seclevels = ({
-	mod->query_seclevels(),
-	mod->query("_seclvl"),
-      });
-    else
-      misc_cache[ a ] = seclevels = ({0,0});
+  if (RoxenModule mod = Roxen.get_owning_module (a)) {
+    // Only store the module objects in the cache and not `a' directly
+    // since it can be (in) an object that is very short lived.
+    if (!(seclevels = security_level_cache[mod])) {
+      if(mod->query_seclevels)
+	seclevels = ({
+	  mod->query_seclevels(),
+	  mod->query("_seclvl"),
+	});
+      else
+	seclevels = ({0,0});
+      security_level_cache[mod] = seclevels;
+    }
   }
+  else
+    seclevels = ({0,0});
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     // Regarding memory cache: This won't have any impact, since it's
@@ -1104,7 +1109,7 @@ void invalidate_cache()
   file_extension_module_cache = ([]);
   provider_module_cache = ([]);
 #ifdef MODULE_LEVEL_SECURITY
-  misc_cache = ([ ]);
+  security_level_cache = set_weak_flag (([ ]), 1);
 #endif
 }
 
@@ -1426,8 +1431,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    {
 #ifdef MODULE_LEVEL_SECURITY
 	      int oslevel = slevel;
-	      slevel = misc_cache[ find_internal ][1];
-	      // misc_cache from
+	      slevel = security_level_cache[ Roxen.get_owning_module (find_internal) ][1];
+	      // security_level_cache from
 	      // check_security
 	      id->misc->seclevel = slevel;
 #endif
@@ -1547,8 +1552,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 #ifdef MODULE_LEVEL_SECURITY
 	    int oslevel = slevel;
-	    slevel = misc_cache[ tmp[1] ][1];
-	    // misc_cache from
+	    slevel = security_level_cache[ Roxen.get_owning_module (tmp[1]) ][1];
+	    // security_level_cache from
 	    // check_security
 	    id->misc->seclevel = slevel;
 #endif
