@@ -15,6 +15,7 @@
 *.txt eol=crlf
 /server/nfonts/bastard.txt !eol
 /server/nfonts/puppyface.txt !eol
+*.xcf binary
 map binary
 
 # Handling of foreign (ie CVS) identifiers.
