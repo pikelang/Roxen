@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.168 1998/11/22 17:06:51 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.169 1998/11/26 19:37:57 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -752,7 +752,7 @@ public void log(mapping file, object request_id)
   foreach(logger_modules(request_id), f) // Call all logging functions
     if(f(request_id,file))return;
 
-  if(!log_function) return;// No file is open for logging.
+  if(!log_function || !request_id) return;// No file is open for logging.
 
 
   if(QUERY(NoLog) && _match(request_id->remoteaddr, QUERY(NoLog)))
