@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.550 2004/03/13 16:13:14 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.551 2004/03/16 10:52:40 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2441,6 +2441,48 @@ int|string try_get_file(string s, RequestID id,
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
+  return res;
+}
+
+mapping(string:mixed) try_put_file(string path, string data, RequestID id)
+{
+  TIMER_START(try_put_file);
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  RequestID fake_id = id->clone_me();
+  
+  fake_id->misc->common = id->misc->common;
+  fake_id->misc->internal_get = 1;
+  fake_id->conf = this_object();
+
+  fake_id->root_id->misc->_request_depth++;
+  if(sub_req_limit && fake_id->root_id->misc->_request_depth > sub_req_limit)
+    error("Subrequest limit reached. (Possibly an insertion loop.)");
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    path = fake_id->scan_for_query(path);
+
+  path = Roxen.fix_relative(path, id);
+
+  fake_id->raw_url=path;
+  fake_id->not_query=path;
+  fake_id->method = "PUT";
+  fake_id->data = data;
+  fake_id->misc->len = sizeof(data);
+  fake_id->misc->internal_get = 1;
+
+  mapping(string:mixed) res = low_get_file(fake_id, 1);
+  TIMER_END(try_put_file);
   return res;
 }
 
