@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.92 1998/05/08 00:27:13 grubba Exp $
+ * $Id: ftp.pike,v 1.93 1998/05/08 00:29:11 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1423,6 +1423,7 @@ void handle_data(string s, mixed key)
       rawauth = 0;
       auth = 0;
       cwd = "/";
+      misc = ([]);
       stat_cache = roxen->query_var(conf->name + ":ftp:stat_cache") || ([]);
       break;
     case "user":
