@@ -7,36 +7,37 @@
 
    <if not variable=notok>
      
+     <comment><--  New scheme  --></comment>		     
+     <formoutput quote='$'>
+       <sqlquery mysql-insert-id=new_scheme_id
+         query="insert into customers_schemes (name) values
+	                                     ('Default')">
+     </formoutput>
+     
      <comment><--  Create customer  --></comment>
-     <sqlquery mysql-insert-id=customer_id
-       query="insert into customers
-              values(NULL,
-	             '¤user_id:quote=mysql¤',
-	             '¤password:quote=mysql¤',
-		     '¤name:quote=mysql¤',NULL,1)">
+     <formoutput quote='$'>
+      <sqlquery mysql-insert-id=customer_id
+         query="insert into customers
+                values(NULL,
+	               '¤user_id:quote=mysql¤',
+	               '¤password:quote=mysql¤',
+		       '¤name:quote=mysql¤',NULL,$new_scheme_id$)">
+     </formoutput>
 
      <comment><--  Randomize default scheme  --></comment>
      <cset preparse variable=scheme_id><random preparse separator=','><pike>
        string query=
          "<sqloutput quote='£' query="
-	 "\"select * from template_schemes where "
-	 "customer_id='0'\">"
+	 "\"select * from template_schemes\">"
 	 "£id£,</sqloutput>";
        return ((parse_rxml(query, id)/",")-({ "" }))*",";
      </pike></random></cset>
 		     
-     <comment><--  New scheme  --></comment>		     
+     <comment><--  Init new scheme  --></comment>
      <formoutput quote='$'>
-       <sqlquery mysql-insert-id=new_scheme_id
-         query="insert into customers_schemes (customer_id,name) values
-	                                     ('$customer_id$','Default')">
-     </formoutput>
-     
-     <comment><--  Init scheme  --></comment>
-     <formoutput quote='$'>
-       <sqlquery query="update customers set
-                        template_scheme_id='$new_scheme_id$'
-                        where id='$customer_id$'">
+       <sqlquery
+         query="update customers_schemes set customer_id='$customer_id$'
+	          where id='$new_scheme_id$'">
        <sqloutput quote='£'
          query="select * from template_schemes_vars
 	        where scheme_id='$scheme_id$'">
