@@ -14,6 +14,7 @@ constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
+inherit "create_pie.pike";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -747,13 +748,14 @@ int main(int argc, string *argv)
   //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"bars",
+  diagram_data=(["type":"pie",
 		 "textcolor":({0,20,0}),
 		 "subtype":"box",
-		 "orient":"hor",
+		 "orient":"vert",
 		 "data": 
 		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4 }),
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
+		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
 		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
 		    ({93.2, -413.3, 133.5, 143.7, 154.3, 400, 133}) }),
 		 "axcolor":({0,0,255}),
@@ -764,14 +766,15 @@ int main(int argc, string *argv)
 		 "backlinewidth":0,
 		 "xsize":400,
 		 "ysize":200,
-		 "xnames":({"j", "feb", "mar", "apr", "maj", "jun"
+		 "xnames":({"j", "", "mar", "apr", "maj", "jun"
 		 }),
 		 "fontsize":22,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":65, 
-		 "legend_texts": ({"Roxen", "Netscape", "Apache", "Microsoft", "j" }),
+		 "legend_texts": ({"Roxen"//, "Netscape", "Apache", "Microsoft", "" 
+}),
 		 "labelsize":42,
-		 "xminvalue":0.1,
+		 "xminvalue":0.0,
 		 "yminvalue":0,
 		 "horgrind": 0,
 		 "grindwidth": 0.5,
@@ -786,7 +789,7 @@ int main(int argc, string *argv)
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
-  o->write(create_bars(diagram_data)["image"]->toppm());
+  o->write(create_pie(diagram_data)["image"]->toppm());
   o->close();
  
 };
