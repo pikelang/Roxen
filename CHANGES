@@ -5,6 +5,10 @@ Major changes from Roxen WebServer 2.4:
    compatibility issues.
  - The update client is removed.
  - Several major improvements has been made to the Icecast modules.
+ - HTTP and HTTPS protocol modules are rewritten to use the direct
+   memory access functionality in the Shuffler Pike module.
+ - Optimized for Pike 7.3 which means better performance and better
+   looking source code.
  - Removed localizations of Administration Interface. There where
    several reasons that lead to this decision:
      - Keeping the localizations synchronized with the latest code
