@@ -34,6 +34,9 @@ umask 022
 
 ### You should not _have_ to change anything below here...
 
+# chkconfig: - 90 20
+# description:  Roxen WebServer
+
 if test x$configdir = x; then
   configdir=configurations
 else
