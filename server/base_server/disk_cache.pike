@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.47 2000/03/29 17:13:46 grubba Exp $
+// $Id: disk_cache.pike,v 1.48 2000/03/29 17:16:47 grubba Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -277,11 +277,9 @@ class Cache {
     cd = basename;
     lcs = command_stream->pipe();
 
-#if constant(Process.create_process)
     // FIXME: Should use spawn_pike() here.
     object proc = Process.create_process(({
-      "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-      "-M", "etc/modules", "bin/garbagecollector.pike"
+      "./start", "--once", "--program", "bin/garbagecollector.pike"
       }), ([
 	"stdin":lcs,
 	"nice":19,
@@ -289,43 +287,6 @@ class Cache {
 	"gid":0,
       ]));
 
-#else /* !constant(Process.create_process) */
-    if(!fork())
-    {
-      mixed err;
-      /* Child */
-      err = catch {
-	lcs->dup2( Stdio.File("stdin") );
-	object privs = Privs("Starting the garbage collector");
-	// start garbagecollector niced as possible to reduce I/O-Load
-
-	// FIXME: Should use spawn_pike() here.
-#if !constant(nice)
-	exec("/usr/bin/nice", "-19",
-	     "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	     "-M", "etc/modules", "bin/garbagecollector.pike");
-	report_debug("Failed to start niced garbage collector - retry without nice\n");
-#else
-	int q=9;
-	nice(q);
-	nice(q);
-#endif
-	Process.exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	     "-M", "etc/modules", "bin/garbagecollector.pike");
-	report_debug("Failed to start garbage collector (exec failed)!\n");
-#if efun(real_perror)
-	perror("bin/pike: ");real_perror();
-#endif
-      };
-      catch {
-	if (err) {
-	  report_debug(sprintf("Error when trying to start garbage-collector:\n"
-			 "%s\n", describe_backtrace(err)));
-	}
-      };
-      exit(0);
-    }
-#endif /* constant(Process.create_process) */
     /* Master */
     mixed err;
     err = catch {
