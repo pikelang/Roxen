@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.78 1998/02/15 11:23:01 wing Exp $
+ * $Id: ftp.pike,v 1.79 1998/02/24 10:36:38 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -88,7 +88,7 @@ private int check_shell(string shell)
 {
   if (Query("shells") != "") {
     if (!allowed_shells) {
-      object(files.file) file = files.file();
+      object(Stdio.File) file = Stdio.File();
 
       if (file->open(Query("shells"), "r")) {
 	allowed_shells = aggregate_multiset(@(map(file->read(0x7fffffff)/"\n",
@@ -839,7 +839,7 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
 {
   // More or less copied from socket.pike
   
-  object(files.file) f = files.file();
+  object(Stdio.File) f = Stdio.File();
 
   string|int local_addr = (cmd_fd->query_address(1)/" ")[0];
 
@@ -907,7 +907,7 @@ void connect_and_send(mapping file)
 
 class put_file_wrapper {
 
-  inherit files.file;
+  inherit Stdio.File;
 
   static object id;
   static string response;
@@ -1062,7 +1062,7 @@ int open_file(string arg, int|void noport)
     this_object()->not_query = combine_path(cwd, arg);
 
 
-  if(1 || !file || (file->full_path != not_query))
+  if(!file || (file->full_path != not_query))
   {
     if(file && file->file)
       destruct(file->file);
@@ -1071,22 +1071,19 @@ int open_file(string arg, int|void noport)
       if(file = funp( this_object())) break;
     if (!file) {
       st = my_stat_file(not_query);
-      if(st && st[1] < 0)
-	file = -1;
-      else if(catch(file = roxen->get_file(this_object())))
-	file = 1;
+      if(st && st[1] < 0) {
+	reply("550 "+arg+": not a plain file.\n");
+	file = 0;
+	return 0;
+      } else if(catch(file = roxen->get_file(this_object()))) {
+	file = 0;
+	reply("550 "+arg+": Error, can't open file.\n");
+	return 0;
+      }
     }
   }
 
-  if(file == -1) {
-    reply("550 "+arg+": not a plain file.\n");
-    file = 0;
-    return 0;
-  } else if(file == 1) {
-    file = 0;
-    reply("550 "+arg+": Error, can't open file.\n");
-    return 0;
-  } else if(!file || (file->error && (file->error/100 != 2))) {
+  if(!file || (file->error && (file->error/100 != 2))) {
     switch(misc->error_code) {
     case 401:
     case 403:
@@ -1617,7 +1614,7 @@ void handle_data(string s, mixed key)
     case "pasv":
       if(pasv_port)
 	destruct(pasv_port);
-      pasv_port = files.port(0, pasv_accept_callback);
+      pasv_port = Stdio.Port(0, pasv_accept_callback);
       int port=(int)((pasv_port->query_address()/" ")[1]);
       reply("227 Entering Passive Mode. "+replace(controlport_addr, ".", ",")+
 	    ","+(port>>8)+","+(port&0xff)+"\n");
