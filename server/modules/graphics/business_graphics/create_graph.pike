@@ -12,8 +12,9 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
+#define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.84 1997/12/06 13:30:02 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.85 1997/12/20 23:48:42 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -47,7 +48,7 @@ object tileimage(object img, int xs, int ys)
 }
 
 //Key word eng:
-//This function writes a float like on a engineer-format
+//This function writes a float like on an engineer-format
 string diagram_eng(float a)
 {
   string foo="";
@@ -68,21 +69,32 @@ string diagram_eng(float a)
   return foo+s;
 }
 
-void draw(object(image) img, float h, array(float) coords)
+void draw(object(image) img, float h, array(float|string) coords,
+	  void|int|float zerolength)
 {
   if ((sizeof(coords)==2)||
       (sizeof(coords)==3))
     {
-      img->
-	polygone(make_polygon_from_line(h, coords[0..1],
-					1, 1)[0]);
+      array(float) foo=({(float)coords[0]-(float)zerolength,
+			 (float)coords[1],
+			 (float)coords[0]+(float)zerolength,
+			 (float)coords[1]
+      });
+      img->polygone(make_polygon_from_line(h, foo,1, 1)[0]);
     }
   else
     for(int i=0; i<sizeof(coords)-3; i+=2)
       {
-	img->
-	  polygone(make_polygon_from_line(h, coords[i..i+3],
-					  1, 1)[0]);
+	if (coords[i]!=VOIDSYMBOL)
+	  if (coords[i+2]!=VOIDSYMBOL)
+	    img->
+	      polygone(make_polygon_from_line(h, coords[i..i+3],
+					      1, 1)[0]);
+	  else
+	    if (((i>0)&&(coords[i-2]==VOIDSYMBOL))||(i==0))
+	      img->
+		polygone(make_polygon_from_line(h, coords[i..i+1],
+						1, 1)[0]);
       }
 }
 
@@ -240,8 +252,8 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     diagram_data["legendcolor"]=diagram_data["bgcolor"];
 
   if (diagram_data["type"]=="graph")
-    diagram_data["subtype"]="line";
-  
+      diagram_data["subtype"]="line";
+
   if (diagram_data["type"]=="bars")
     diagram_data["xminvalue"]=0;
 
@@ -271,6 +283,9 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 
   if (diagram_data["type"]=="sumbars")
     {
+      diagram_data["data"]=Array.map(diagram_data["data"], replace,
+				     VOIDSYMBOL, 0.0);
+
       int j=sizeof(diagram_data["data"]);
       float k;
       if (diagram_data["subtype"]=="norm")
@@ -303,41 +318,61 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
       
     }
   else
-    foreach(diagram_data["data"], array(float) d)
+    foreach(diagram_data["data"], array(float|string) d)
       {
 	int j=sizeof(d);
 	
 	if (diagram_data["type"]=="graph")
-	  for(int i=0; i<j; i++)
-	    {
-	      float k;
-	      if (xminvalue>(k=d[i]))
-		xminvalue=k;
-	      if (xmaxvalue<(k))
-		xmaxvalue=k;
-	      if (yminvalue>(k=d[++i]))
-		yminvalue=k;
-	      if (ymaxvalue<(k))
-		ymaxvalue=k;
-	    }
+	  {
+	    d-=({VOIDSYMBOL});
+	    for(int i=0; i<j; i++)
+	      {
+		float k;
+		if (xminvalue>(k=d[i]))
+		  xminvalue=k;
+		if (xmaxvalue<(k))
+		  xmaxvalue=k;
+		if (yminvalue>(k=d[++i]))
+		  yminvalue=k;
+		if (ymaxvalue<(k))
+		  ymaxvalue=k;
+	      }
+	  }
 	else
-	  if ((diagram_data["type"]=="bars")||
-	      (diagram_data["type"]=="pie"))
+	  if (diagram_data["type"]=="bars")
 	    {
 	      for(int i; i<j; i++)
-		{
-		  float k; 
-		  if (yminvalue>(k=d[i]))
-		    yminvalue=k;
-		  if (ymaxvalue<(k))
-		    ymaxvalue=k;
-		}
+		if (floatp(d[i]))
+		  {
+		    float k; 
+		    if (yminvalue>(k=d[i]))
+		      yminvalue=k;
+		    if (ymaxvalue<(k))
+		      ymaxvalue=k;
+		  }
 	      xminvalue=0.0;
 	      xmaxvalue=10.0;
 	    }
 	  else
-	    throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
-		     backtrace()}));
+	    if (diagram_data["type"]=="pie")
+	      {
+		for(int i; i<j; i++)
+		  {
+		    if (!floatp(d[i]))
+		      d[i]=0;
+		    
+		    float k; 
+		    if (yminvalue>(k=d[i]))
+		      yminvalue=k;
+		    if (ymaxvalue<(k))
+		      ymaxvalue=k;
+		  }
+		xminvalue=0.0;
+		xmaxvalue=10.0;
+	      }
+	    else
+	      throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
+		       backtrace()}));
       }
 
   if (diagram_data["type"]=="sumbars")
@@ -1508,7 +1543,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Rita ut datan
   int farg=0;
 
-  foreach(diagram_data["data"], array(float) d)
+  foreach(diagram_data["data"], array(float|string) d)
     {
       for(int i=0; i<sizeof(d); i++)
 	{

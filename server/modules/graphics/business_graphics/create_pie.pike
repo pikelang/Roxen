@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.29 1997/12/03 23:02:00 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.30 1997/12/20 23:48:46 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -418,7 +418,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int|float place;
   sum=0;
   if (names)
-    for(int i=0; i<sizeof(text); i++)
+    for(int i=0; i<min(sizeof(pnumbers), sizeof(text)); i++)
       {
 	int t;
 	sum+=pnumbers[i];

@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.56 1997/12/17 18:13:46 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.57 1997/12/20 23:48:34 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -24,6 +24,20 @@ import Image;
 function create_pie, create_bars, create_graph;
 
 #define SEP "\t"
+#define VOIDSYMBOL "\n"
+
+//FIXME (Inte alltid VOID!
+#define VOIDCODE if(m->voidseparator) \
+    voidsep=m->voidseparator; \
+  else\
+    if(m->voidsep)\
+      voidsep=m->voidsep;\
+    else\
+      if (res->voidsep)\
+	voidsep=res->voidsep;\
+      else\
+	voidsep="VOID";
+
 
 int loaded;
 
@@ -60,6 +74,9 @@ mixed *register_module()
        "  <b>tonedbox</b>       Creates a background shading between the\n"
        "                        colors assigned to each of the four corners.\n"
        "  <b>center</b>         (Only for pie) center=n centers the nth slice\n"
+       "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
+       "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
+
        "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
        "The following internal tags are available:\n"
        "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
@@ -78,7 +95,7 @@ mixed *register_module()
        "\n&lt;<b>xnames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
-       "  <b>orient</b>         If set to vert the xnames vill be written vertical.\n"
+       "  <b>orient</b>         If set to vert the xnames will be written vertical.\n"
        "\n&lt;<b>ynames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
@@ -113,6 +130,7 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
 }
+
 
 void create()
 {
@@ -156,12 +174,16 @@ string itag_names(string tag, mapping m, string contents,
 
   if(m->separator)
     sep=m->separator;
-  
+
+  string voidsep;
+  VOIDCODE
+
+  array foo;
   if( contents-" " != "" )
   {
     if(tag=="xnames")
       {
-	res->xnames = contents/sep;
+	foo=res->xnames = contents/sep;
 	if(m->orient) 
 	  if (m->orient[0..3] == "vert")
 	    res->orientation = "vert";
@@ -169,15 +191,22 @@ string itag_names(string tag, mapping m, string contents,
 	    res->orientation="hor";
       }
     else
-      res->ynames = contents/sep;
+      foo=res->ynames = contents/sep;
   }
 
+  for(int i=0; i<sizeof(foo); i++)
+    if (voidsep==foo[i])
+      foo[i]=" ";
+  
   return "";
 }
 
-float floatify( string in )
+float|string floatify( string in , string voidsep)
 {
-  return (float)in;
+  if (voidsep==in)
+    return VOIDSYMBOL;
+  else
+    return (float)in;
 }
 
 /* Handle <xvalues> and <yvalues> */
@@ -185,6 +214,10 @@ string itag_values(string tag, mapping m, string contents,
 		   mapping res, object id)
 {
   string sep=SEP;
+  string voidsep;
+
+  VOIDCODE
+
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
@@ -194,9 +227,9 @@ string itag_values(string tag, mapping m, string contents,
   if( contents-" " != "" )
   {
     if(tag=="xvalues")
-      res->xvalues = Array.map( contents/sep, floatify );
+      res->xvalues = Array.map( contents/sep, floatify, voidsep );
     else
-      res->yvalues = Array.map( contents/sep, floatify );
+      res->yvalues = Array.map( contents/sep, floatify, voidsep );
   }
 
   return "";
@@ -206,6 +239,10 @@ string itag_data(mapping tag, mapping m, string contents,
 		 mapping res, object id)
 {
   string sep=SEP;
+  string voidsep;
+
+  VOIDCODE
+
   if(m->separator)
     sep=m->separator;
 
@@ -241,7 +278,10 @@ string itag_data(mapping tag, mapping m, string contents,
     foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
     {
       foreach( item, string gaz )
-	foo += ({ (float)gaz });
+	if (gaz==voidsep)
+	  foo+=({ VOIDSYMBOL });  //FIXME?
+	else
+	  foo += ({ (float)gaz });
     }
     if (sizeof(foo)>maxsize)
       maxsize=sizeof(foo);
@@ -294,6 +334,10 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 		       mapping res, object id)
 {
   string sep=SEP;
+  string voidsep;
+
+  VOIDCODE
+
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
@@ -301,6 +345,12 @@ string itag_legendtext(mapping tag, mapping m, string contents,
     sep=m->separator;
 
   res->legend_texts = contents/sep;
+
+  array foo=res->legend_texts;
+
+  for(int i=0; i<sizeof(foo); i++)
+    if (voidsep==foo[i])
+      foo[i]=" ";
 
   return "";
 }
@@ -361,7 +411,13 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->background)
     res->image = combine_path( dirname(id->not_query), (string)m->background);
-  
+
+  if(m->voidseparator)
+    res->voidsep=m->voidseparator;
+  else
+    if(m->voidsep)
+      res->voidsep=m->voidsep;
+
   if (m->tunedbox)
     m->tonedbox=m->tunedbox;
   if(m->tonedbox) {
@@ -424,7 +480,7 @@ string tag_diagram(string tag, mapping m, string contents,
     res->subtype="line";
   
   if(res->type == "sumbars")
-    if(res->subtype!="norm");
+    if(res->subtype!="norm"); //FIXME Va faan är detta???
 
   parse_html(contents, ([]),
 	     ([ "data":itag_data,
@@ -450,7 +506,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
 
   //This code is obsolet. It's now placed in xnames
-  //But this can not be taken away...
+  //But this can not be taken away... (Logview)
   if (!res->orientation)
     if (m->orient && m->orient[0..3] == "vert")
       res->orientation = "vert";

@@ -4,7 +4,7 @@
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
 
 #define PI 3.14159265358979
-
+#define VOIDSYMBOL "\n"
 import Image;
 import Array;
 import Stdio;
@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.55 1997/11/30 21:57:53 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.56 1997/12/20 23:48:38 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -361,10 +361,11 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	    diagram_data["ysize"]-ystart;	 
 	  float start=y;
 
-	  foreach(column(diagram_data["data"], i), float d)
+	  foreach(column(diagram_data["data"], i), float|string d)
 	    {
+	      if (d==VOIDSYMBOL)
+		d=0.0;
 	      y-=d*ymore;
-	      
 	      
 	      barsdiagram->setcolor(@(diagram_data["datacolors"][j++]));
 	      
@@ -392,24 +393,31 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   else
   if (diagram_data["subtype"]=="line")
     if (diagram_data["drawtype"]=="linear")
-      foreach(diagram_data["data"], array(float) d)
+      foreach(diagram_data["data"], array(float|string) d)
 	{
-	  array(float) l=allocate(sizeof(d)*2);
+	  array(float|string) l=allocate(sizeof(d)*2);
 	  for(int i=0; i<sizeof(d); i++)
-	    {
-	      l[i*2]=xstart+(diagram_data["xspace"]/2.0+
-			     diagram_data["xspace"]*i)*
-		xmore;
-	      l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
-		diagram_data["ysize"]-ystart;	  
-	    }
+	    if (d[i]==VOIDSYMBOL)
+	      {
+		l[i*2]=VOIDSYMBOL;
+		l[i*2+1]=VOIDSYMBOL;
+	      }
+	    else
+	      {
+		l[i*2]=xstart+(diagram_data["xspace"]/2.0+
+			       diagram_data["xspace"]*i)*
+		  xmore;
+		l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
+		  diagram_data["ysize"]-ystart;	  
+	      }
 	  
 	  //Draw Ugly outlines
 	  if ((diagram_data["backdatacolors"])&&
 	      (diagram_data["backlinewidth"]))
 	    {
 	      barsdiagram->setcolor(@(diagram_data["backdatacolors"][farg]));
-	      draw(barsdiagram, diagram_data["backlinewidth"],l);
+	      draw(barsdiagram, diagram_data["backlinewidth"],l,
+		   diagram_data["xspace"] );
 	    }
 
 	  barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
@@ -428,38 +436,39 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  barw/=s;
 	  barw/=2.0;
 	  farg=-1;
-	  foreach(diagram_data["data"], array(float) d)
+	  foreach(diagram_data["data"], array(float|string) d)
 	    {
 	      farg++;
 
 	      for(int i=0; i<sizeof(d); i++)
-		{
-		  float x,y;
-		  x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
-		    xmore;
-		  y=-(d[i]-diagram_data["yminvalue"])*ymore+
-		    diagram_data["ysize"]-ystart;	 
-		  
-		  // if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
-		  // y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
-
-		  barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
-  
-		  barsdiagram->polygone(
-					({x-barw+dnr, y 
-					  , x+barw+dnr, y, 
-					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
-					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
-					})); 
-		  barsdiagram->setcolor(0,0,0);		  
-		  draw(barsdiagram, 0.5, 
-		       ({x-barw+dnr, y 
-			 , x+barw+dnr, y, 
-			 x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
-			 , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
-			 x-barw+dnr, y 
+		if (d[i]!=VOIDSYMBOL)
+		  {
+		    float x,y;
+		    x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+		      xmore;
+		    y=-(d[i]-diagram_data["yminvalue"])*ymore+
+		      diagram_data["ysize"]-ystart;	 
+		    
+		    // if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
+		    // y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
+		    
+		    barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
+		    
+		    barsdiagram->polygone(
+					  ({x-barw+dnr, y 
+					    , x+barw+dnr, y, 
+					    x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
+					    , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
+					  })); 
+		    barsdiagram->setcolor(0,0,0);		  
+		    draw(barsdiagram, 0.5, 
+			 ({x-barw+dnr, y 
+			   , x+barw+dnr, y, 
+			   x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
+			   , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
+			   x-barw+dnr, y 
 			 }));
-		}
+		  }
 	      dnr+=barw*2.0;
 	    }   
 	}
