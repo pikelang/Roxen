@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.12 2001/04/11 14:12:04 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.13 2001/04/11 14:40:14 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -369,9 +369,9 @@ class TagLDAPQuery {
 
 // ------------------- Callback functions -------------------------
 
-Protocols.LDAP.client ldap_object(void|string host)
+Protocols.LDAP.client ldap_object(void|string a_host)
 {
-  string host = stringp(host)?host:query("server");
+  string host = stringp(a_host)?a_host:query("server");
   Protocols.LDAP.client con;
   function ldap_connect = conf->ldap_connect;
   mixed error;
