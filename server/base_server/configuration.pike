@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.400 2000/12/05 22:27:18 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.401 2000/12/10 02:01:42 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -227,6 +227,7 @@ void stop()
 	   m && m->stop && m->stop());
   foreach( registered_urls, string url )
     roxen.unregister_url(url);
+  registered_urls = ({});
 }
 
 string type_from_filename( string file, int|void to, string|void myext )
@@ -960,9 +961,9 @@ string examine_return_mapping(mapping m)
    if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
 
-   if (stringp(m->extra_heads["http-content-type"]) ||
+   if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
-      res += sprintf(" of %s", m->type);
+      res += sprintf(" of %s", m->type||m->extra_heads["content-type"]);
    }
 
    res+="<br />";
@@ -1015,7 +1016,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        case "roxen":
 	TRACE_LEAVE("Magic internal roxen image");
         if(loc=="unit")
-	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
+	  return (["data":"GIF89a\1\0\1\0\200\0ÀÀÀ\0\0\0!\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif" ]);
 	return internal_roxen_image(loc, id);
 
