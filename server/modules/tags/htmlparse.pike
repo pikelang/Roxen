@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.126 1998/07/21 20:57:04 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.127 1998/07/22 00:06:44 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2848,6 +2848,12 @@ string tag_trace(string t, mapping args, string c , object id)
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
+	   "crypt":lambda(string t, mapping m, string c){
+		     if(m->compare)
+		       return (string)crypt(c,m->compare);
+		     else
+		       return crypt(c);
+		   },
 	   "trace":tag_trace,
 	   "cset":lambda(string t, mapping m, string c, object id)
 		  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
