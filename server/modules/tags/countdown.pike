@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.33 2000/04/30 02:58:02 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.34 2000/05/02 20:12:19 kuntri Exp $";
 #include <module.h>
 inherit "module";
 
@@ -27,11 +27,11 @@ give the time to or from a few special events. See below for a full list.</desc>
 <attr name=second value=number>Sets the second.</attr>
 <attr name=iso value=year-month-day>Sets the year, month and day all at once
 (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
-<ex><countdown iso=\"2020-FEB-12\"/></ex>
+<ex><countdown iso='2020-FEB-12'/></ex>
 </attr>
 <attr name=event value=easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve>
 Sets the time of an evet to count down to.</attr>
-<br>
+
 <attr name=years value=number>Add this number of years to the result.</attr>
 <attr name=months value=number>Add this number of months to the result.</attr>
 <attr name=weeks value=number>Add this number of weeks to the result.</attr>
@@ -40,10 +40,13 @@ Sets the time of an evet to count down to.</attr>
 <attr name=beats value=number>Add this number of beats to the result.</attr>
 <attr name=minutes value=number>Add this number of minutes to the result.</attr>
 <attr name=seconds value=number>Add this number of seconds to the result.</attr>
-<attr name=now value=year-month-day>Sets the 'present' time, if other than really present time.
-(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+<attr name=now value=year-month-day>Sets the 'present' time, if other than really present time. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+
+
+
 <ex><countdown now=\"1999-12-24\" year=\"2000\" display=\"days\"/></ex>
 </attr>
+
 
 <p>Presentation:</p>
 
@@ -56,7 +59,7 @@ Sets the time of an evet to count down to.</attr>
 <tr><td><i>display=months</i></td><td>How many months until the time.</td></tr>
 <tr><td><i>display=weeks</i></td><td>How many weeks until the time.</td></tr>
 <tr><td><i>display=days</i></td><td>How many days until the time.</td></tr>
-<tr><td><i>display=hours</i></td><td>How many hours until the time.</td></tr>
+<tr><td><i>display=hours</i></td><td>How many hours until the time. <ex><countdown day=\"friday\" display=\"hours\"/></ex></td></tr>
 <tr><td><i>display=beats</i></td><td>How many beats until the time.</td></tr>
 <tr><td><i>display=minutes</i></td><td>How many minutes until the time.</td></tr>
 <tr><td><i>display=seconds</i></td><td>How many seconds until the time.</td></tr>
@@ -64,22 +67,36 @@ Sets the time of an evet to count down to.</attr>
                          Example: 2 days, 1 hour and 5 seconds. You may use the 'prec'
                          attribute to limit how precise the description is. Also, you can
                          use the 'month' attribute if you want to see years/months/days
-                         instead of years/weeks/days.</td></tr>
-<tr><td><i>display=dogyears</i></td><td>How many dog-years until the time. (With one decimal)</td></tr>
-<tr><td><i>display=boolean</i></td><td>Return true or false, depending on if the time is now or not. The
-                         fuzziness of 'now' is decided by the 'prec' option.</td><tr>
+                         instead of years/weeks/days.
+
+<ex type='vert'>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></td></tr>
+<tr><td><i>display=dogyears</i></td><td>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></td></tr>
+<tr><td><i>display=boolean</i></td><td>Return true or false (1 or 0), depending on if the time is now or not. The
+                         fuzziness of 'now' is decided by the 'prec' option.
+<ex type='vert'><p>Is this a Sunday?</p>
+<define variable='var.test' preparse=''><countdown day='sunday' display='boolean'/></define>
+<if variable='var.test = 1'>Yes, this is a Sunday.</if>
+<else>No, it isn´t.</else></ex>
+</td><tr>
 </table>
-<ex><countdown years=\"2\" display=\"dogyears\"/></ex>
-<ex><countdown day=\"friday\" display=\"hours\"/></ex>
+
 </attr>
 <attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
 <attr name=lang value=langcodes>The language in which the result should be written if the type is string.
 <lang/>
+
+<ex type='vert'>Heute ist es ungefähr <countdown event='christmas' display='months' type='string' lang='de'/> Monate bis Weinachten.</ex>
 </attr>
-<attr name=since>Negate the period of time.</attr>
-<attr name=next>Always count down to the next event. &lt;countdown day=friday
-next&gt; says 6 on a friday as opposed to 0 without the next attribute.</attr>
-<attr name=prec value=year|month|week|day|hour|minute|second>modifies the precision for 'boolean' and 'combined'.</attr>
+<attr name=since>Negate the period of time.
+<ex type='vert'>I am <countdown iso='1980-06-28' since='' display='years' type='string'/> years old.</ex>
+</attr>
+<attr name=next>Always count down to the next event. &lt;countdown day='friday'
+next=''&gt; says 6 on a friday as opposed to 0 without the next attribute.
+
+<ex type='vert'>It is <countdown day='monday' next=''/> to monday.</ex>
+
+</attr>
+<attr name=prec value=year|month|week|day|hour|minute|second>modifies the precision for 'boolean'- and 'combined'-arguments.</attr>
 "]);
 #endif
 
