@@ -1005,6 +1005,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="TESTER" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
+<result>1:2:3:4:0</result>
+</test>
+
+<test>
 <rxml><emit source="OTESTER" test="2" skiprows="3" maxrows="2"
  remainderinfo="var.rem">&_.data; </emit>&var.rem;</rxml>
 <result>a bb 14</result>
@@ -1157,6 +1162,11 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="OTESTER" sort="c" filter="a=??x" maxrows="2" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
 <result>1:2:1</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
+<result>1:2:3:4:0</result>
 </test>
 
 <test>
@@ -1364,6 +1374,11 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="STESTER" sort="d" skiprows="2" maxrows="1">&_.c;</emit></rxml>
 <result>1234</result>
+</test>
+
+<test>
+<rxml>&var.rem;<emit source="STESTER" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
+<result>1:2:3:4:0</result>
 </test>
 
 
