@@ -26,14 +26,17 @@ void register_project(string name, string path, void|string path_base)
   }
 #ifdef LOCALE_DEBUG
   if(projects[name] && projects[name]!=path)
-    werror("Changing project %s from %s to %s\n",
+    werror("\nChanging project %s from %s to %s\n",
 	   name, projects[name], path);
+  else
+    werror("\nRegistering project %O (%s)\n",name,path);
 #endif
   projects[name]=path;
 }
 
 array(string) list_languages(string project) {
   if(!projects[project]) return ({});
+
   string pattern=replace(projects[project], "%%", "%");
   string dirbase=(pattern/"%L")[0];
   if(dirbase[-1]!='/') {
@@ -54,6 +57,9 @@ array(string) list_languages(string project) {
     if(!file_stat(replace(pattern, "%L", lang))) continue;
     list+=({ lang });
   }
+#ifdef LOCALE_DEBUG
+  werror("\nLanguages for project %O are%{ %O%}\n", project, list);
+#endif
   return list;
 }
 
@@ -132,6 +138,9 @@ object get_object(string project, string lang) {
 		       if(decode && catch( c = decode(c) ))
 			 // FIXME logging of decoding error?
 			 return 0;
+#ifdef LOCALE_DEBUG
+		       c="["+m->id+":]"+c;
+#endif
 		       bindings[m->id]=c;
 		     }
 		     return 0;
@@ -204,6 +213,10 @@ object get_object(string project, string lang) {
 		    },"?");
   xml_parser->feed(data)->finish();
 
+#ifdef LOCALE_DEBUG
+  werror("\nGot LocaleObject %O in %O (bindings: %d, functions: %d)\n",
+	 project, lang, sizeof(bindings), sizeof(functions));
+#endif
   locale_object=LocaleObject(bindings, functions);
   locales[lang][project]=locale_object;
   return locale_object;
@@ -226,6 +239,10 @@ string translate(LocaleObject locale_object, string id,
     string t_str = locale_object->translate(id);
     if(t_str) return t_str;
   }
+#ifdef LOCALE_DEBUG
+  else
+    werror("\nlocale.translate: no object, only %O (%O)\n", id, str);
+#endif
   return str;
 }
 
@@ -245,8 +262,13 @@ static void clean_cache() {
   int t=time(1)-CLEAN_CYCLE;
   foreach(indices(locales), string lang) {
     foreach(indices(locales[lang]), string proj) {
-      if(locales[lang][proj]->timestamp < t)
+      if(objectp(locales[lang][proj]) &&
+	 locales[lang][proj]->timestamp < t) {
+#ifdef LOCALE_DEBUG	
+	werror("\nLocale.clean_cache: Removing project %O in %O\n",proj,lang);
+#endif
 	m_delete(locales[lang], proj);
+      }
     }
   }
   call_out(clean_cache, CLEAN_CYCLE);
