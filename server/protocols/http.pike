@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.396 2003/03/20 15:36:27 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.397 2003/03/31 13:47:19 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2124,6 +2124,9 @@ void got_data(mixed fooid, string s)
     TIMER_START(parse_request);
     if( things_to_do_when_not_sending_from_cache( ) )
       return;
+    REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
+    REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
+    REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
     TIMER_END(parse_request);
 
 #ifdef THREADS
