@@ -258,13 +258,13 @@ bump_version: bump_version.stamp
 	    exit 1; \
 	  fi; \
 	  version=`sed <roxen.pike -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
-	  cvs ci -m "Version bumped to $version.$build by bump_version." roxen.pike || exit 1; \
-	  echo "Roxen $$version.$$build" >../../VERSION; \
+	  cvs ci -m "Version bumped to $$version.$$newbuild by bump_version." roxen.pike || exit 1; \
+	  echo "Roxen $$version.$$newbuild" >../../VERSION; \
 	  cat ../../VERSION; \
 	)
 	@(cd $(SRCDIR); \
 	  echo Tagging...; \
-	  cvs tag `cat VERSION | tr 'A-Z.' 'a-z_'`||exit 1; \
+	  cvs tag `cat VERSION | tr 'A-Z. ' 'a-z__'`||exit 1; \
 	)
 	@touch bump_version
 
