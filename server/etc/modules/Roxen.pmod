@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.26 2000/08/12 21:49:41 mast Exp $
+ * $Id: Roxen.pmod,v 1.27 2000/08/14 18:53:14 mast Exp $
  *
  * Various helper functions.
  *
@@ -879,6 +879,7 @@ RXML.TagSet entities_tag_set = class
   }
 } ("entities_tag_set");
 
+
 constant monthnum=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
 		    "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
 		    "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
@@ -993,9 +994,98 @@ string get_world(array(string) urls) {
   return sprintf("%s://%s/%s", protocol, server, path);
 }
 
+RoxenModule get_owning_module (object|function thing)
+//! Tries to find out which module the thing belongs to, if any. The
+//! thing can be e.g. a module object, a Tag object or a simple_tag
+//! callback.
+{
+  if (functionp (thing)) thing = function_object (thing);
+  if (objectp (thing)) {
+    if (thing->is_module) return thing;
+    if (object parent =
+	functionp (object_program (thing)) &&
+	function_object (object_program (thing))) {
+      // FIXME: This way of finding the module for a tag is ugly.
+      if (parent->is_module) return parent;
+    }
+  }
+  return 0;
+}
+
+Configuration get_owning_config (object|function thing)
+//! Tries to find out which configuration the thing belongs to, if
+//! any. The thing can be e.g. a config or module object, a Tag object
+//! or a simple_tag callback.
+{
+  if (RoxenModule mod = get_owning_module (thing))
+    return mod->my_configuration();
+  if (functionp (thing)) thing = function_object (thing);
+  if (objectp (thing)) {
+    if (thing->is_configuration) return thing;
+    if (object parent =
+	functionp (object_program (thing)) &&
+	function_object (object_program (thing))) {
+      // This is mainly for finding tags defined in rxml.pike.
+      if (parent->is_configuration) return parent;
+    }
+  }
+  return 0;
+}
+
+#ifdef REQUEST_TRACE
+
+void trace_enter (RequestID id, string msg, object|function thing)
+{
+  if (!id->misc->trace_level)
+    report_debug ("%%%%%% Request handled by: %O\n", id->conf);
+
+  string txt = html_decode_string (
+    Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
+    finish (msg)->read());
+
+  string name;
+  if (thing) {
+    name = get_modfullname (get_owning_module (thing));
+    if (name)
+      name = "mod: " + html_decode_string (
+	Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
+	finish (name)->read());
+    else if (Configuration conf = get_owning_config (thing))
+      name = "conf: " + conf->query_name();
+    else if (thing)
+      name = sprintf ("obj: %O", thing);
+  }
+  else name = "";
+
+  report_debug ("%%%%%-40s %s\n",
+		sprintf ("%*s%s", id->misc->trace_level + 1, "", txt), name);
+  id->misc->trace_level++;
+
+  if(function(string,mixed ...:void) _trace_enter =
+     [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter)
+    _trace_enter (msg, thing);
+}
+
+void trace_leave (RequestID id, string desc)
+{
+  if (id->misc->trace_level) id->misc->trace_level--;
+
+  if (sizeof (desc)) {
+    string txt = html_decode_string (
+      Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
+      finish (desc)->read());
+    report_debug ("%%%%%*s%s\n", id->misc->trace_level + 1, "", txt);
+  }
+
+  if(function(string:void) _trace_leave =
+     [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave)
+    _trace_leave (desc);
+}
+
+#endif
 
 #if !constant(Parser.C)
-object Parser =
+object _Parser =
   class 
   {
     object C =
