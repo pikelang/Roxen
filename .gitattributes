@@ -11,6 +11,8 @@
 *.png binary
 *.ppm binary
 *.rc eol=crlf
+*.ttf binary
+*.txt eol=crlf
 map binary
 
 # Handling of foreign (ie CVS) identifiers.
