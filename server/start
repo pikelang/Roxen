@@ -55,7 +55,7 @@ fixperms() {
 
 
 start_roxen() {
-  args="-DROXEN $DEFINES $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
+  args="-DROXEN $DEFINES $pass $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
   echo Executing $pike $args $@
   $pike $args $@
 }
@@ -108,7 +108,7 @@ while [ ! c"$1" = "c" ] ; do
   shift
 done
 
-if [ ! X$pass = "X" ] ; then set $pass ;fi
+if [ ! "X$pass" = "X" ] ; then set $pass ;fi
 
 
 echo Starting the Roxen Challenger World Wide Web server.
