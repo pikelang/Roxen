@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.87 1997/11/29 19:48:02 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.88 1998/01/08 18:03:23 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -480,12 +480,14 @@ void init_log_file()
   {
     mapping m = localtime(time());
     string logfile = query("LogFile");
-    if(m->mday < 10) m->mday = "0"+m->mday;
+    m->year += 1900;	/* Adjust for years being counted since 1900 */
+    m->mon++;		/* Adjust for months being counted 0-11 */
     if(m->mon < 10) m->mon = "0"+m->mon;
+    if(m->mday < 10) m->mday = "0"+m->mday;
     if(m->hour < 10) m->hour = "0"+m->hour;
     logfile = replace(logfile,({"%d","%m","%y","%h" }),
-		      ({ (string)m->mday, (string)(m->mon+1),
-			 (string)(m->year+1900),(string)m->hour,}));
+		      ({ (string)m->mday, (string)(m->mon),
+			 (string)(m->year),(string)m->hour,}));
     if(strlen(logfile))
     {
       do {
