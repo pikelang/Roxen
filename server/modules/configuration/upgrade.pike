@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.15 2000/02/22 22:56:13 js Exp $
+ * $Id: upgrade.pike,v 1.16 2000/02/23 16:18:50 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -215,30 +215,103 @@ string container_upgrade_downloaded_packages_output(string t, mapping m,
   return do_output_tag(m, res, c, id);
 }
 
+string|void unpack_file(Stdio.File from, string to)
+{
+  werror("Unpacking file: %O\n",to);
 
-// void unpack_tarfile(string tarfile, string destination)
-// {
-//   void unpack_file(Stdio.File from, string to)
-//   {
+  string prefix=combine_path(getcwd(),"..");
+  if(file_stat(prefix+to))
+  {
+    if(!mv(prefix+to,prefix+to+"~"))
+      throw(sprintf("Could not move %s to %s.\n",prefix+to,prefix+to+"~"));
+  }
+  else
+    if(!mkdirhier(prefix+to))
+      throw(sprintf("Could not make directory %s.\n",
+		    combine_path(prefix+to,"../")));
 
-//   };      
+  string block;
+  Stdio.File f;
   
-//   void low_unpack_tarfile(Filesystem.Tar fs, string dir)
-//   {
-//     foreach(fs->get_dir(dir), string entry)
-//       if(fs->stat(entry)->isdir())
-// 	low_unpack_tarfile(fs, entry);
-//       else
-// 	copy_file(fs->open(entry,"r"), dir+entry);
-//   };
+  mixed err=catch
+  {
+    if(catch(f=Stdio.File(prefix+to,"wc")))
+      throw(sprintf("Could not open %s for writing.",
+		    prefix+to));
+    
+    do {
+      block = from->read(8192);
+      if (!block)
+	break;
+      if(f->write(block)!=sizeof(block))
+	throw(sprintf("Failed to write %s. Disk might be full.\n", prefix+to));
+    } while (block != "");
+  };
 
-//   Filesystem.Tar fs;
-//   mixed err;
-//   if(err=catch(fs=Filesystem.Tar(tarfile)))
-//     throw("Could not open tar file "+tarfile+".\n");
-//   if(err=catch(low_unpack_tarfile(fs, "")))
-//     throw(err);
-// }
+  if(err)
+  {
+    catch(f->close());
+    rm(prefix+to);
+    mv(prefix+to+"~", prefix+to);
+    throw(err);
+  }
+
+  rm(prefix+to+"~");
+  return "Wrote "+prefix+to+".";
+}
+  
+array(string) low_unpack_tarfile(Filesystem.Tar fs, string dir, mapping errors)
+{
+  array(string) res=({ });
+  foreach(sort(fs->get_dir(dir)), string entry)
+    if(fs->stat(entry)->isdir())
+      res += low_unpack_tarfile(fs, entry, errors);
+    else
+    {
+      string tmp;
+      mixed err;
+      err=catch(tmp=unpack_file(fs->open(entry,"r"), entry));
+      if(tmp)
+	res+=({ tmp });
+      if(err)
+      {
+	res+=({ "<b>Error:</b> "+err });
+	errors->found=1;
+      }
+    }
+  return res;
+}
+
+string unpack_tarfile(string tarfile)
+{
+  object fs;
+  mixed err;
+  if(err=catch(fs=Filesystem.Tar(tarfile)))
+    throw("Could not open tar file "+tarfile+".\n");
+  array res;
+  mapping errors=([]);
+  if(err=catch(res=low_unpack_tarfile(fs, "", errors)))
+    throw(err);
+  if(errors->found)
+    throw(res*"<br>");
+  return res*"<br>";
+}
+
+string tag_upgrade_install_package(string t, mapping m, RequestID id)
+{
+  if(!m->package)
+    return "No package argument";
+
+  if(!completely_downloaded((int)m->package))
+    return "<b>Package not completely downloaded.</b>";
+
+
+  mixed err;
+  string res;
+  if(err=catch(res=unpack_tarfile(QUERY(pkgdir)+(int)m->package+".tar")))
+    return err+"<br><br><b>Could not install package. Fix the problems above and try again.</b>";
+  return res+"<br><br><b>Package installed completely.</b>";
+}
 
 array(string) tarfile_contents(string|object tarfile, void|string dir)
 {
