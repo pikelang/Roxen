@@ -12,7 +12,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.14 2004/05/23 03:00:51 _cvs_stephen Exp $";
+ "$Id: writefile.pike,v 1.15 2004/05/23 15:08:29 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -152,18 +152,20 @@ class TagWritefile {
 	  }
 	  else
 	    towrite=content||"";
-	  object privs;
-	  ;{ Stat st;
-	  string diro,dirn;
-	  int domkdir=0;
-	  for(dirn=real_filename;
-	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
-	      domkdir=1);
-	  if(st) {
-	    privs = Privs("Writefile", st->uid, st->gid);
-	    if(domkdir && args->mkdirhier)
-	      Stdio.mkdirhier(dirname(real_filename));
-	  }
+	  Privs privs;
+	  {
+	    Stat st;
+	    string diro,dirn;
+	    int domkdir=0;
+	    for(dirn=real_filename;
+		diro=dirn, diro!=(dirn=dirname(dirn)) &&
+		  !(st = file_stat(dirn));
+		domkdir=1);
+	    if(st) {
+	      privs = Privs("Writefile", st->uid, st->gid);
+	      if(domkdir && args->mkdirhier)
+		Stdio.mkdirhier(dirname(real_filename));
+	    }
 	  }
 	  _ok = 0;
 	  object file=Stdio.File();
@@ -172,12 +174,11 @@ class TagWritefile {
 	    if(String.width(towrite)>8)
 	      towrite = string_to_utf8(towrite);
 	    file->write(towrite);
-	    object dims;
+	    file->seek(0);
+	    array xy;
 	    if (IS(args["min-height"])|| IS(args["max-height"])||
 		IS(args["min-width"]) || IS(args["max-width"])) {
-	      file->seek(0);
-	      dims = Dims.dims();
-	      array xy = dims->get(file);
+	      array xy = Image.Dims.get(file);
 	      if(xy && 
 		 (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
 		  IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
@@ -186,19 +187,10 @@ class TagWritefile {
 		_ok = 0;
 	    }
 	    if (_ok && args["accept-type"]) {
-	      file->seek(0);
-	      array(string) types = args["accept-type"]/",";
+	      multiset(string) types = (multiset)(args["accept-type"]/",");
 	      _ok = 0;
-	      catch {
-		if (!dims) {
-		  dims = Dims.dims();
-		  dims->f = file;
-		}
-		if (0<=search(types, "jpeg") && dims->get_JPEG() ||
-		    0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
-		    0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
-		  _ok = 1;
-	      };
+	      if(!xy) xy = Image.Dims.get(file);
+	      if( types[ xy[2] ] ) _ok = 1;
 	    }
 	    file->close();
 	  }
