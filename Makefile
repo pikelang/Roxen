@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.33 1998/03/23 11:32:41 per Exp $
+# $Id: Makefile,v 1.34 1998/03/24 02:34:35 per Exp $
 #
 # Bootstrap Makefile
 #
@@ -12,10 +12,12 @@ BUILDDIR=build/$(OS)
 
 easy : blurb all
 
-ChangeLog.gz:
+.noway:
+
+ChangeLog.gz: .noway
 	pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
 
-ChangeLog.rxml.gz:
+ChangeLog.rxml.gz: .noway
 	pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 hard : configure
