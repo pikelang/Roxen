@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.22 1997/05/28 00:29:11 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.23 1997/05/28 01:45:05 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -446,9 +446,9 @@ object cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
   string name = cl+"/"+file_name(entry)+".done";
-  object cf = files.file();
+  object cf;
 
-  if(!cf->open(QUERY(cachedir)+name, "r"))
+  if(!(cf=open(QUERY(cachedir)+name, "r")))
     return 0;
 
   cf=new_cache_stream(cf, name);
@@ -583,16 +583,16 @@ object create_cache_file(string cl, string entry)
   string name = cl+"/"+file_name(entry);
   string rfile = QUERY(cachedir)+name;
   string rfiledone = rfile+".done";
-  object cf = File();
+  object cf;
   int i;
 
   // to reduce IO-load try open before making directories
-  if(!(cf->open(rfile, "rwcx")))
+  if(!(cf=open(rfile, "rwcx")))
   {
     mkdirhier(rfile);
 
     for(i=10; i>=0; i--) {
-      if(cf->open(rfile, "rwcx"))
+      if(cf=open(rfile, "rwcx"))
 	break;
       
       if(i>1) {
@@ -604,7 +604,6 @@ object create_cache_file(string cl, string entry)
 #ifdef CACHE_DEBUG
 	perror("Open new cachefile failed: "+rfile+"\n");
 #endif
-	destruct(cf);
 	return 0;
       }
     }

@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.34 1997/05/27 01:15:53 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.35 1997/05/28 01:45:11 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -10,10 +10,35 @@ int unique_id=time();
 
 object mm = (object)"/master";
 
-inherit "/master";
+inherit "/master": old_master;
+
+mapping handled = ([]);
+
+object findmodule(string fullname)
+{
+  mixed res = old_master::findmodule(fullname);
+
+  if(objectp(res) && !handled[res])
+  {
+    fullname = reverse(fullname);
+    sscanf(fullname, "%s/", fullname);
+    fullname = reverse(fullname);
+    sscanf(fullname, "%s.pmod", fullname);
+    handled[res]=1;
+
+    programs[fullname] = object_program(res);
+    foreach(indices(res), string foo)  if(programp(res[foo]))
+      programs[fullname+"."+foo] = res[foo];
+  }
+
+  return res;
+}
+
+
 
 string program_name(program p)
 {
+//werror(sprintf("Program name %O = %O\n", p, search(programs,p)));
   return search(programs, p);
 }
 

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.60 1997/05/27 00:51:02 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.61 1997/05/28 01:45:08 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -2144,7 +2144,8 @@ inline static private string checkfd_fix_line(string l)
     s[1]=sizetostring((int)s[1]);
   else
     s[1]="-";
-  return s[0..1]*",";
+  s[2]=(int)s[3]?s[3]:"-";
+  return s[0..2]*",";
 }
 
 
@@ -2157,15 +2158,15 @@ string checkfd(object|void id)
      "<br clear=left><hr>\n"+
      "<table width=100% cellspacing=0 cellpadding=0>\n"+
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
-     "<td>size</td></tr>\n"+
+     "<td>size</td><td>inode</td></tr>\n"+
      (map(get_all_active_fd(),
 	  lambda(int fd) 
 	  {
 	    return ("<tr align=right><th>"+fd+"</th><td>"+
-		    replace(checkfd_fix_line(fd_info(fd)),",",
+ 		    replace(checkfd_fix_line(fd_info(fd)),",",
 			    "</td><td>")
 		    +"</td><td align=left>"
-		    +(mark_fd(fd)||"")+"<br></td></tr>"); 
+		    +(mark_fd(fd)||"?")+"<br></td></tr>"); 
 	  })*"\n")+
      "</table>");
 }

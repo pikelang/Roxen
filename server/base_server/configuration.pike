@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.29 1997/05/26 01:25:24 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.30 1997/05/28 01:45:04 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -464,13 +464,11 @@ void init_log_file()
       if(strlen(logfile))
       {
 	do {
-	  object lf=files.file();
 	  object privs = ((program)"privs")("Opening logfile \""+logfile+"\"");
-	  int opened=lf->open( logfile, "wac");
-	  if(!opened) {
+	  object lf=open( logfile, "wac");
+	  if(!lf) {
 	    mkdirhier(logfile);
-	    if(!(lf->open( logfile, "wac"))) {
-	      destruct(lf);
+	    if(!(lf=open( logfile, "wac"))) {
 	      privs = 0;
 	      report_error("Failed to open logfile. ("+logfile+")\n" +
 			   "No logging will take place!\n");

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.33 1997/05/26 01:26:49 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.34 1997/05/28 01:45:13 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -184,6 +184,7 @@ void start()
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
+      names_file = 0;
     }
   }
 }

@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.26 1997/05/16 17:37:58 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.27 1997/05/28 01:45:09 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -645,11 +645,10 @@ static string image_from_type( string t )
 #define  prefix ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
 static string sizetostring( int size )
 {
-  float s;
+  float s = (float)size;
   if(size<0) 
     return "--------";
-  s=(float)size/1024.0;
-  size=1;
+  size=0;
 
   while( s > 1024.0 )
   {

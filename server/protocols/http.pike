@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.27 1997/05/20 10:48:38 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.28 1997/05/28 01:45:14 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -202,6 +202,7 @@ private int really_set_config(array mod_config)
 
 private int parse_got(string s)
 {
+  catch{mark_fd(my_fd->query_fd(), "HTTP: Parsing");};
 #if _DEBUG_HTTP_OBJECTS
   my_state = 9;
 #endif
@@ -602,6 +603,7 @@ void no_more_keep_connection_alive(mapping foo)
 
 void end(string|void s)
 {
+  catch{mark_fd(my_fd->query_fd(), "");};
 #if _DEBUG_HTTP_OBJECTS
   my_state = 1;
 #endif
@@ -711,6 +713,7 @@ constant errors =
 
 void handle_request( )
 {
+  catch{mark_fd(my_fd->query_fd(), "HTTP: Handling");};
 #if _DEBUG_HTTP_OBJECTS
   my_state = 15;
 #endif
@@ -1088,6 +1091,7 @@ void clean()
 #if _DEBUG_HTTP_OBJECTS
 void destroy()
 {
+  catch{mark_fd(my_fd->query_fd(), "");};
   roxen->httpobjects->num--;
   m_delete(roxen->httpobjects, my_id);
 } 

@@ -1,4 +1,4 @@
-/* $Id: persistent.pike,v 1.27 1997/05/07 23:07:32 per Exp $ */
+/* $Id: persistent.pike,v 1.28 1997/05/28 01:45:06 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -16,7 +16,6 @@ void really_save()
   if(nosave()) return;
 //  perror("really save ("+(__id*":")+")!\n");
 
-  object file = files.file();
   array res = ({ });
   mixed b;
 
@@ -57,13 +56,14 @@ static void compat_persist()
   string _id;
   _id=(__id[0]+".class/"+__id[1]);
 
+
 #define COMPAT_DIR "dbm_dir.perdbm/"
-  object file = files.file();
   array var;
   mixed tmp;
   catch
   {
-    if(!file->open(COMPAT_DIR+_id, "r")) return 0;
+    object file;
+    if(!file=open(COMPAT_DIR+_id, "r")) return 0;
     perror("compat restore ("+ _id +")\n");
     var=decode_value(tmp=file->read(0x7ffffff));
   };
@@ -87,7 +87,6 @@ static void compat_persist()
 
 nomask public void persist(mixed id)
 {
-  object file = files.file();
   array err;
   /* No known id. This should not really happend. */
   if(!id)  error("No known id in persist.\n");
