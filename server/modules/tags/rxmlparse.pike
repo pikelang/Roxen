@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.52 2000/09/19 15:54:29 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.53 2000/11/15 10:02:20 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -104,7 +104,7 @@ multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
 
 int require_exec, parse_exec;
 int bytes;  // Holds the number of bytes parsed
-function(string:string) file2type;
+function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
@@ -142,7 +142,10 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   }
 
   return Roxen.http_rxml_answer(data, id, file,
-				file2type([string](id->realfile || id->no_query || "index.html")) );
+				file2type([string](id->realfile
+						   || id->no_query
+						   || "index.html"),
+					  0, e));
 }
 
 
