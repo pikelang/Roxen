@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.135 2002/03/14 13:30:26 grubba Exp $
+// $Id: Roxen.pmod,v 1.136 2002/03/27 17:51:38 per-bash Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -457,12 +457,12 @@ string cern_http_date(int t)
 		 lt->hour, lt->min, lt->sec, c, tzh));
 }
 
-string http_date(int t)
+string http_date( mixed t )
 //! Returns a http_date, as specified by the HTTP-protocol standard.
 //! This is used for logging as well as the Last-Modified and Time
 //! headers in the reply.
 {
-  mapping(string:int) l = gmtime( t );
+  mapping(string:int) l = gmtime( (int)t );
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
