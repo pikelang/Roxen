@@ -17,7 +17,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.55 2000/09/16 20:44:46 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.56 2000/09/18 14:50:03 per Exp $";
 
 constant path = "config_interface/";
 object charset_decoder;
@@ -198,6 +198,9 @@ mixed find_file( string f, object id )
 
   id->misc->cf_locale = locale;
 
+  // add template to all rxml/html pages...
+  string type = id->conf->type_from_filename( id->not_query );
+
   string df;
   mixed retval;
   if( tar && rest && (sscanf( rest, "docs/%s", df ) ))
@@ -205,8 +208,18 @@ mixed find_file( string f, object id )
     object s = tar->stat( df );
     if( !s ) return 0;
     if( s->isdir() ) return -1;
-    retval = id->conf->StringFile( tar->open( df, "r" )->read(), 
-                                   stat_file( f, id ));
+    string data = tar->open( df, "r" )->read();
+    if( type == "text/html" )
+    {
+      string title;
+      sscanf( data, "%*s<title>%s</title>", title );
+      sscanf( data, "%*s<br clear=\"all\">%s", data );
+      sscanf( data, "%s</body>", data );
+      retval = "<topmenu selected=\"docs\"/><content>"+data+"</content>";
+      if( title )
+        retval="<title>: Docs "+html_encode_string(title)+"</title>" + retval;
+    } else
+      retval = data;
   }
   else
   {
@@ -237,16 +250,18 @@ mixed find_file( string f, object id )
   if( id->variables["content-type"] )
     return http_file_answer( retval, id->variables["content-type"] );
 
-  // add template to all rxml/html pages...
-  string type = id->conf->type_from_filename( id->not_query );
-
   if( locale != "standard" ) 
     roxen.set_locale( locale );
 
   switch( type )
   {
    case "text/html":
-     string data =  retval->read(), title="", pre;
+     string data, title="", pre;
+     if( stringp( retval ) )
+       data = retval;
+     else
+       data = retval->read();
+
      if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
        data = pre+data;
 
@@ -255,14 +270,19 @@ mixed find_file( string f, object id )
 
      if(tmpl)
        data = sprintf(base,tmpl,title,data);
+
      if( !id->misc->stat )
        id->misc->stat = allocate(10);
+
      id->misc->stat[ ST_MTIME ] = time(1);
      if(!id->misc->defines)
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      
+//      return http_string_answer( data, type );
      retval = http_rxml_answer( data, id );
+
+
      NOCACHE();
      retval->stat = 0;
      retval->len = strlen( retval->data );
@@ -270,6 +290,9 @@ mixed find_file( string f, object id )
      if( locale != "standard" ) 
        roxen.set_locale( "standard" );
   }
+
+  if( stringp( retval ) )
+    retval = http_string_answer( retval, type );
 
   foreach( glob( "cf_goto_*", indices( id->variables ) - ({ 0 }) ), string q )
     if( sscanf( q, "cf_goto_%s.x", q ) )
