@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.118 1999/04/30 07:47:10 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.119 1999/04/30 21:36:06 neotron Exp $";
 
 class Shuffle
 {
@@ -133,7 +133,7 @@ array lookup_user( string what )
 array init_groups( int uid, int gid )
 {
   if(!QUERY(setgroups))
-    return 0;
+    return ({});
   return get_cached_groups_for_user( uid )-({ gid });
 }
 
@@ -234,7 +234,8 @@ class Wrapper
     if(!strlen(buffer)) 
       return;
     int nelems = tofd->write( buffer ); 
-    if( nelems <= 0 )
+    if( nelems < 0 )
+      // if nelems == 0, network buffer is full. We still want to continue.
     {
       buffer="";
       done(); 
