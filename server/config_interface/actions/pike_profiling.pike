@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.4 2004/05/21 11:18:52 grubba Exp $
+ * $Id: pike_profiling.pike,v 1.5 2004/05/25 13:32:40 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -138,8 +138,12 @@ mixed parse( RequestID id )
     "<cf-cancel href='?class=&form.class;'/></br>\n" +
     page_0( id )
 #else
-    "<font color='&usr.warncolor;'>This information is only available if the "
-    "pike binary has been compiled with <tt>--with-profiling</tt>.</font>"
+    "<font color='&usr.warncolor;'>" +
+    LOCALE(0,"This information is only available if the "
+	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
+    "</font>"
+    "<p />\n"
+    "<cf-ok-button href='?class=&form.class;'/>";
 #endif
     ;
 }
