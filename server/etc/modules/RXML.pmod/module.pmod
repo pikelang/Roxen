@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.125 2001/01/18 19:25:15 mast Exp $
+//! $Id: module.pmod,v 1.126 2001/01/24 19:49:10 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -539,11 +539,14 @@ class TagSet
     if (!mappingp (overridden_tag_lookup))
       overridden_tag_lookup = set_weak_flag (([]), 1);
     Tag tag;
-    if (zero_type (tag = overridden_tag_lookup[overrider]))
+    if (zero_type (tag = overridden_tag_lookup[overrider])) {
+      string overrider_name = overrider->plugin_name ?
+	overrider->plugin_name + "#" + overrider->name : overrider->name;
       tag = overridden_tag_lookup[overrider] =
 	overrider->flags & FLAG_PROC_INSTR ?
-	find_overridden_proc_instr (overrider) :
-	find_overridden_tag (overrider);
+	find_overridden_proc_instr (overrider, overrider_name) :
+	find_overridden_tag (overrider, overrider_name);
+    }
     return tag;
   }
 
@@ -706,40 +709,42 @@ class TagSet
 
   static mapping(Tag:Tag) overridden_tag_lookup;
 
-  /*static*/ Tag find_overridden_tag (Tag overrider)
+  /*static*/ Tag find_overridden_tag (Tag overrider, string overrider_name)
   {
-    if (tags[overrider->name] == overrider) {
+    if (tags[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
-	if (object(Tag) overrider = tag_set->get_tag (overrider->name))
+	if (object(Tag) overrider = tag_set->get_tag (overrider_name))
 	  return overrider;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (object(Tag) subtag = tag_set->get_tag (overrider->name))
+	if (object(Tag) subtag = tag_set->get_tag (overrider_name))
 	  if (found) return subtag;
 	  else if (subtag == overrider)
-	    if ((subtag = tag_set->find_overridden_tag (overrider)))
+	    if ((subtag = tag_set->find_overridden_tag (
+		   overrider, overrider_name)))
 	      return subtag;
 	    else found = 1;
     }
     return 0;
   }
 
-  /*static*/ Tag find_overridden_proc_instr (Tag overrider)
+  /*static*/ Tag find_overridden_proc_instr (Tag overrider, string overrider_name)
   {
-    if (proc_instrs && proc_instrs[overrider->name] == overrider) {
+    if (proc_instrs && proc_instrs[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
-	if (object(Tag) overrider = tag_set->get_proc_instr (overrider->name))
+	if (object(Tag) overrider = tag_set->get_proc_instr (overrider_name))
 	  return overrider;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (object(Tag) subtag = tag_set->get_proc_instr (overrider->name))
+	if (object(Tag) subtag = tag_set->get_proc_instr (overrider_name))
 	  if (found) return subtag;
 	  else if (subtag == overrider)
-	    if ((subtag = tag_set->find_overridden_proc_instr (overrider)))
+	    if ((subtag = tag_set->find_overridden_proc_instr (
+		   overrider, overrider_name)))
 	      return subtag;
 	    else found = 1;
     }
