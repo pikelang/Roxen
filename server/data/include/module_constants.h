@@ -26,4 +26,34 @@ constant MODULE_PROTOCOL         = (1<<28);
 constant MODULE_CONFIG           = (1<<29);
 constant MODULE_SECURITY         = (1<<30);
 constant MODULE_EXPERIMENTAL     = (1<<31);
+
+//! See @[RoxenModule.check_locks].
+enum LockFlag {
+  LOCK_NONE		= 0,
+  LOCK_SHARED_BELOW	= 2,
+  LOCK_SHARED_AT	= 3,
+  LOCK_OWN_BELOW	= 4,
+  LOCK_EXCL_BELOW	= 6,
+  LOCK_EXCL_AT		= 7
+};
+
+//! How to handle an existing destination when files or directories
+//! are moved or copied in a filesystem.
+enum Overwrite {
+  NEVER_OVERWRITE = -1,
+  //! Fail if the destination exists. Corresponds to an Overwrite
+  //! header with the value "F" (RFC 2518 9.6).
+
+  MAYBE_OVERWRITE = 0,
+  //! If the source and destination are directories, overwrite the
+  //! properties only. If the source and destination are files,
+  //! overwrite the file along with the properties. Otherwise fail if
+  //! the destination exists.
+
+  DO_OVERWRITE = 1,
+  //! If the destination exists then delete it recursively before
+  //! writing the new content. Corresponds to an Overwrite header with
+  //! the value "T" (RFC 2518 9.6).
+};
+
 #endif

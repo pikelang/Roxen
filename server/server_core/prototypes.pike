@@ -1,19 +1,31 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.69 2004/05/17 00:30:46 mani Exp $
+// $Id: prototypes.pike,v 1.70 2004/05/22 15:27:58 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
 #include <module.h>
+#include <variables.h>
 #include <module_constants.h>
+
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
+
+// To avoid reference cycles. Set to the Roxen module object by
+// roxenloader.pike.
+object Roxen;
 
 multiset(string) globals = (<
   "Protocol", "Configuration", "StringFile", "RequestID",
   "RoxenModule", "ModuleInfo", "ModuleCopies", "FakedVariables",
-  "AuthModule", "UserDB", "User", "Group",
+  "AuthModule", "UserDB", "User", "Group", "PrefLanguages", "DAVLock",
+  "MultiStatus", "Overwrite", "PropertyBehavior", "PatchPropertyCommand",
   >);
 
-class Variable
+static class Variable
 {
   constant is_variable = 1;
   constant type = "Basic";
@@ -116,7 +128,9 @@ class ModuleInfo
 
   int last_checked;
   int type, multiple_copies;
-
+  int|string locked;
+  mapping(Configuration:int) config_locked;
+  
   string get_name();
   string get_description();
   RoxenModule instance( object conf, void|int silent );
@@ -152,6 +166,140 @@ class ModuleCopies
   }
 }
 
+// Simulate an import of useful stuff from Parser.XML.Tree.
+static constant SimpleNode = Parser.XML.Tree.SimpleNode;
+static constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
+static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
+static constant SimpleTextNode = Parser.XML.Tree.SimpleTextNode;
+static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+
+//! Container for information about an outstanding DAV lock. No field
+//! except @[owner] may change after the object has been created since
+//! filesystem modules might store this info persistently.
+//!
+//! @note
+//! @[DAVLock] objects might be shared between filesystems but not
+//! between configurations.
+class DAVLock
+{
+  string locktoken;
+  //! The lock token given to the client. It may be zero in case there
+  //! only is knowledge that a lock exists but the lock instance has
+  //! been forgotten. This can happen in a filesystem that has some
+  //! way of recording locks but doesn't store the DAV lock tokens.
+
+  string path;
+  //! Canonical absolute path to the locked resource. Always ends with
+  //! a @expr{"/"@}.
+
+  int(0..1) recursive;
+  //! @expr{1@} if the lock applies to all resources under @[path],
+  //! @expr{0@} if it applies to @[path] only.
+
+  string|SimpleNode lockscope;
+  //! The lock scope (RFC 2518 12.7). As a special case, if it only is
+  //! an empty element without attributes then the element name is
+  //! stored as a string.
+  //!
+  //! @note
+  //! RFC 2518 specifies the lock scopes @expr{"DAV:exclusive"@} and
+  //! @expr{"DAV:shared"@}.
+
+  string|SimpleNode locktype;
+  //! The lock type (RFC 2518 12.8). As a special case, if it only is
+  //! an empty element without attributes then the element name is
+  //! stored as a string.
+  //!
+  //! @note
+  //! RFC 2518 only specifies the lock type @expr{"DAV:write"@}.
+
+  int(0..) expiry_delta;
+  //! Idle time before this lock expires.
+  //!
+  //! As a special case, if the value is @expr{0@} (zero), the lock
+  //! has infinite duration.
+
+  array(SimpleNode) owner;
+  //! The owner identification (RFC 2518 12.10), or zero if unknown.
+  //! More precisely, it's the children of the @expr{"DAV:owner"@}
+  //! element.
+  //!
+  //! @[RoxenModule.lock_file] may set this if it's zero, otherwise
+  //! it shouldn't change.
+
+  int(0..) expiry_time;
+  //! Absolute time when this lock expires.
+  //!
+  //! As a special case, if the value is @expr{0@} (zero), the lock
+  //! has infinite duration.
+
+  static void create(string locktoken, string path, int(0..1) recursive,
+		     string|SimpleNode lockscope, string|SimpleNode locktype,
+		     int(0..) expiry_delta, array(SimpleNode) owner)
+  {
+    DAVLock::locktoken = locktoken;
+    DAVLock::path = path;
+    DAVLock::recursive = recursive;
+    DAVLock::lockscope = lockscope;
+    DAVLock::locktype = locktype;
+    DAVLock::expiry_delta = expiry_delta;
+    DAVLock::owner = owner;
+    if (expiry_delta) {
+      if (expiry_delta < 0) error("Negative expiry delta!\n");
+      expiry_time = time(0) + expiry_delta;
+    }
+  }
+
+  //! Returns a DAV:activelock @[Parser.XML.Tree.SimpleNode] structure
+  //! describing the lock.
+  SimpleNode get_xml()
+  {
+    SimpleElementNode res = SimpleElementNode("DAV:activelock", ([]))->
+      add_child(SimpleElementNode("DAV:locktype", ([]))->
+		add_child(stringp(locktype)?
+			  SimpleElementNode(locktype, ([])):locktype))->
+      add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		add_child(stringp(lockscope)?
+			  SimpleElementNode(lockscope, ([])):lockscope))->
+      add_child(SimpleElementNode("DAV:depth", ([]))->
+		add_child(recursive?
+			  SimpleTextNode("Infinity"):SimpleTextNode("0")));
+
+    if (owner) {
+      SimpleElementNode node;
+      res->add_child(node = SimpleElementNode("DAV:owner", ([])));
+      node->replace_children(owner);
+    }
+
+    if (expiry_delta) {
+      res->add_child(SimpleElementNode("DAV:timeout", ([]))->
+		     add_child(SimpleTextNode(sprintf("Second-%d",
+						      expiry_delta))));
+    } else {
+      res->add_child(SimpleElementNode("DAV:timeout", ([]))->
+		     add_child(SimpleTextNode("Infinite")));
+    }
+
+    res->add_child(SimpleElementNode("DAV:locktoken", ([]))->
+		   add_child(SimpleElementNode("DAV:href", ([]))->
+			     add_child(SimpleTextNode(locktoken))));
+
+    return res;
+  }
+
+  static string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("DAVLock(%O on %O, %s, %s%s)", locktoken, path,
+	       recursive ? "rec" : "norec",
+	       lockscope == "DAV:exclusive" ? "excl" :
+	       lockscope == "DAV:shared" ? "shared" :
+	       sprintf ("%O", lockscope),
+	       locktype == "DAV:write" ? "" : sprintf (", %O", locktype));
+  }
+}
+
+//! Configuration information for a site.
 class Configuration
 {
   inherit BasicDefvar;
@@ -160,11 +308,16 @@ class Configuration
   mapping(string:array(int)) error_log=([]);
 
 #ifdef PROFILE
-  mapping profile_map = ([]);
+  mapping(string:array(int)) profile_map = ([]);
 #endif
 
   class Priority
   {
+    string _sprintf()
+    {
+      return "Priority()";
+    }
+
     array (RoxenModule) url_modules = ({ });
     array (RoxenModule) logger_modules = ({ });
     array (RoxenModule) location_modules = ({ });
@@ -209,7 +362,8 @@ class Configuration
   string comment();
   void unregister_urls();
   void stop(void|int asynch);
-  string type_from_filename( string file, int|void to, string|void myext );
+  string|array(string) type_from_filename( string file, int|void to,
+					   string|void myext );
 
   string get_url();
 
@@ -230,11 +384,24 @@ class Configuration
   void invalidate_cache();
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
+  multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+			       int(0..1) exclude_shared, RequestID id);
+  DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
+  mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
+  int expire_locks(RequestID id);
+  void refresh_lock(DAVLock lock);
+  mapping(string:mixed)|DAVLock lock_file(string path,
+					  int(0..1) recursive,
+					  string lockscope,
+					  string locktype,
+					  int(0..) expiry_delta,
+					  array(Parser.XML.Tree.Node) owner,
+					  RequestID id);
   mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
   array(int)|object(Stdio.Stat) stat_file(string file, RequestID id);
-  array open_file(string fname, string mode, RequestID id, void|int ig);
+  array open_file(string fname, string mode, RequestID id, void|int ig, void|int rc);
   mapping(string:array(mixed)) find_dir_stat(string file, RequestID id);
   array access(string file, RequestID id);
   string real_file(string file, RequestID id);
@@ -330,6 +497,7 @@ class Protocol
   void restore();
 };
 
+
 class FakedVariables( mapping real_variables )
 {
   static array _indices()
@@ -370,6 +538,7 @@ class FakedVariables( mapping real_variables )
   }
 
   static mixed _m_delete( mixed what ) {
+//     report_debug(" _m_delete( %O )\n", what );
     return fix_value( m_delete( real_variables, what ) );
   }
 
@@ -421,6 +590,101 @@ class FakedVariables( mapping real_variables )
 	  
     error("can't cast to %O\n",to);
   }
+}
+
+class PrefLanguages
+//! @appears PrefLanguages
+//! Support for language preferences. This object is typically
+//! accessed through @tt{id->misc->pref_languages@}.
+{
+  int decoded=0;
+  int sorted=0;
+  array(string) subtags=({});
+  array(string) languages=({});
+  array(float) qualities=({});
+
+  static string _sprintf(int c, mapping|void attrs)
+  {
+    return sprintf("PrefLanguages(%O)", get_languages());
+  }
+  
+  array(string) get_languages() {
+    sort_lang();
+    return languages;
+  }
+
+  string get_language() {
+    if(!languages || !sizeof(languages)) return 0;
+    sort_lang();
+    return languages[0];
+  }
+
+  array(float) get_qualities() {
+    sort_lang();
+    return qualities;
+  }
+
+  float get_quality() {
+    if(!qualities || !sizeof(qualities)) return 0.0;
+    sort_lang();
+    return qualities[0];
+  }
+
+  void set_sorted(array(string) lang, void|array(float) q) {
+    languages=lang;
+    if(q && sizeof(q)==sizeof(lang))
+      qualities=q;
+    else
+      qualities=({1.0})*sizeof(lang);
+    sorted=1;
+    decoded=1;
+  }
+
+  void sort_lang() {
+    if(sorted && decoded) return;
+    array(float) q;
+    array(string) s=reverse(languages)-({""}), u=({});
+
+    if(!decoded) {
+      q=({});
+      s=Array.map(s, lambda(string x) {
+		       float n=1.0;
+		       string sub="";
+		       sscanf(lower_case(x), "%s;q=%f", x, n);
+		       if(n==0.0) return "";
+		       sscanf(x, "%s-%s", x, sub);
+		       q+=({n});
+		       u+=({sub});
+		       return x;
+		     });
+      s-=({""});
+      decoded=1;
+    }
+    else
+      q=reverse(qualities);
+
+    sort(q,s,u);
+    languages=reverse(s);
+    qualities=reverse(q);
+    subtags=reverse(u);
+    sorted=1;
+  }
+}
+
+
+//  Kludge for resolver problems
+static function _charset_decoder_func;
+
+//! Used as @expr{id->misc->cachekey@}.
+class CacheKey {
+#if ID_CACHEKEY_DEBUG
+  constant __num = ({ 0 });
+  int _num;
+  string _sprintf() { return "CacheKey(#" + _num + ")"; }
+  void create() { _num = ++__num[0]; }
+  void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
+			  "%s\n\n", "" || describe_backtrace(backtrace())); }
+#endif
 }
 
 class RequestID
@@ -482,6 +746,12 @@ class RequestID
   //! is the typical location to store away your own request-local data for
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
+
+  mapping (string:mixed) connection_misc;
+  //! This mapping contains miscellaneous non-standardized information, and
+  //! is the typical location to store away your own connection-local data
+  //! for passing between requests on the same connection et cetera. Be sure
+  //! to use a key unique to your own application.
 
   mapping (string:string) cookies;
   //! The indices and values map to the names and values of the cookies sent
@@ -603,6 +873,185 @@ class RequestID
   static void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
 
+  static SimpleNode xml_data;	// XML data for the request.
+
+  SimpleNode get_xml_data()
+  {
+    if (!sizeof(data)) return 0;
+    if (xml_data) return xml_data;
+    // FIXME: Probably ought to check that the content-type for
+    //        the request is text/xml.
+    DAV_WERROR("Parsing XML data: %O\n", data);
+    return xml_data =
+      Parser.XML.Tree.simple_parse_input(data,
+					 0,
+					 Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
+  }
+
+  // Parsed if-header for the request.
+  static mapping(string:array(array(array(string)))) if_data;
+
+#ifdef IF_HEADER_DEBUG
+#define IF_HDR_MSG(X...) werror (X)
+#else
+#define IF_HDR_MSG(X...)
+#endif
+
+  //! Parse an RFC 2518 9.4 "If Header".
+  //!
+  //! @note
+  //!   For speed reasons the parsing is rather forgiving.
+  //!
+  //! @returns
+  //!   Returns @expr{0@} (zero) if there was no if header, or
+  //!   if parsing of the if header failed.
+  //!   Returns a mapping from resource name to condition on success.
+  //!
+  //!   A condition is represented as an array of sub-conditions
+  //!   (@tt{List@} in RFC 2518), where each sub-condition is an array
+  //!   of tokens, and each token is an array of two elements, where
+  //!   the first is one of the strings @expr{"not"@}, @expr{"etag"@},
+  //!   or @expr{"key"@}, and the second is the value.
+  //!
+  //!   The resource @expr{0@} (zero) represents the default resource.
+  mapping(string:array(array(array(string)))) get_if_data()
+  {
+    if (if_data) {
+      IF_HDR_MSG ("get_if_data(): Returning cached result\n");
+      return sizeof(if_data) && if_data;
+    }
+
+    if_data  = ([]);	// Negative caching.
+
+    string raw_header;
+    if (!(raw_header = request_headers->if)) {
+      IF_HDR_MSG ("get_if_data(): No if header\n");
+      return 0;
+    }
+
+    array(array(string|int|array(array(string)))) decoded_if =
+      MIME.decode_words_tokenized_labled(raw_header);
+
+#if 0
+    IF_HDR_MSG("get_if_data(): decoded_if: %O\n", decoded_if);
+#endif
+
+    if (!sizeof(decoded_if)) {
+      IF_HDR_MSG("Got only whitespace.\n");
+      return 0;
+    }
+
+    mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
+
+    string tmp_resource;
+    string resource;
+    foreach(decoded_if, array(string|int|array(array(string))) symbol) {
+      switch (symbol[0]) {
+      case "special":
+	switch(symbol[1]) {
+	case '<': tmp_resource = ""; break;
+	case '>': 
+	  resource = tmp_resource;
+	  tmp_resource = 0;
+	  // Normalize.
+	  // FIXME: Check that the protocol and server parts refer
+	  //        to this server.
+	  // FIXME: Support for servers mounted on subpaths.
+	  catch { resource = Standards.URI(resource)->path; };
+	  if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
+	  if (!res[resource])
+	    res[resource] = ({});
+	  break;
+	default:
+	  if (tmp_resource) tmp_resource += sprintf("%c", symbol[1]);
+	  break;
+	}
+	break;
+      case "word":
+      case "domain-literal":
+	// Resource
+	if (!tmp_resource) return 0;
+	tmp_resource += symbol[1];
+	break;
+      case "comment":
+	// Parenthesis expression.
+	if (tmp_resource) {
+	  // Inside a resource.
+	  tmp_resource += "(" + symbol[1][0][0] + ")";
+	  break;
+	}
+	array(array(string|int|array(array(string)))) sub_expr =
+	  MIME.decode_words_tokenized_labled(symbol[1][0][0]);
+	int i;
+	array(array(string)) expr = ({});
+	string tmp_key;
+	for (i = 0; i < sizeof(sub_expr); i++) {
+	  switch(sub_expr[i][0]) {
+	  case "special":
+	    switch(sub_expr[i][1]) {
+	    case '<': tmp_key = ""; break;
+	    case '>':
+	      if (!tmp_key) {
+		IF_HDR_MSG("No tmp_key.\n");
+		return 0;
+	      }
+	      expr += ({ ({ "key", tmp_key }) });
+	      tmp_key = 0;
+	      break;
+	    default:
+	      if (tmp_key) tmp_key += sprintf("%c", sub_expr[i][1]);
+	      break;
+	    }
+	    break;
+	  case "domain-literal":
+	    if (tmp_key) {
+	      tmp_key += sub_expr[i][1];
+	      break;
+	    }
+	    // entity-tag.
+	    string etag = sub_expr[i][1];
+	    // etag is usually something like "[\"some etag\"]" here.
+	    sscanf(etag, "[%s]", etag);	// Remove brackets
+	    expr += ({ ({ "etag", etag }) });
+	    break;
+	  case "word":
+	    // State-token or Not.
+	    if (tmp_key) {
+	      tmp_key += sub_expr[i][1];
+	      break;
+	    }
+	    if (lower_case(sub_expr[i][1]) == "not") {
+	      // Not
+	      expr += ({ ({ "not", 0 }) });
+	      break;
+	    }
+	    IF_HDR_MSG("Word outside key: %O\n", sub_expr[i][1]);
+	    report_debug("Syntax error in if-header: %O\n", raw_header);
+	    return 0;
+	  }
+	}
+	if (tmp_key) {
+	  IF_HDR_MSG("Active tmp_key: %O\n", tmp_key);
+	  report_debug("Syntax error in if-header: %O\n", raw_header);
+	  return 0;
+	}
+	res[resource] += ({ expr });
+	break;
+      default:
+	report_debug("Syntax error in if-header: %O\n", raw_header);
+	return 0;
+      }
+    }
+    if (tmp_resource) {
+      IF_HDR_MSG("Active tmp_resource: %O\n", tmp_resource);
+      report_debug("Syntax error in if-header: %O\n", raw_header);
+      return 0;
+    }
+    IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
+	       "%O\n", raw_header, res);
+    return if_data = res;
+  }
+
   static string cached_url_base;
 
   string url_base()
@@ -708,86 +1157,95 @@ class RequestID
     }
   }
 
-  class PrefLanguages {
+  static MultiStatus multi_status;
 
-    int decoded=0;
-    int sorted=0;
-    array(string) subtags=({});
-    array(string) languages=({});
-    array(float) qualities=({});
-
-    array(string) get_languages() {
-      sort_lang();
-      return languages;
-    }
-
-    string get_language() {
-      if(!languages || !sizeof(languages)) return 0;
-      sort_lang();
-      return languages[0];
-    }
-
-    array(float) get_qualities() {
-      sort_lang();
-      return qualities;
-    }
-
-    float get_quality() {
-      if(!qualities || !sizeof(qualities)) return 0.0;
-      sort_lang();
-      return qualities[0];
-    }
-
-    void set_sorted(array(string) lang, void|array(float) q) {
-      languages=lang;
-      if(q && sizeof(q)==sizeof(lang))
-	qualities=q;
-      else
-	qualities=({1.0})*sizeof(lang);
-      sorted=1;
-      decoded=1;
-    }
-
-    void sort_lang() {
-      if(sorted && decoded) return;
-      array(float) q;
-      array(string) s=reverse(languages)-({""}), u=({});
-
-      if(!decoded) {
-	q=({});
-	s=Array.map(s, lambda(string x) {
-			 float n=1.0;
-			 string sub="";
-			 sscanf(lower_case(x), "%s;q=%f", x, n);
-			 if(n==0.0) return "";
-			 sscanf(x, "%s-%s", x, sub);
-			 q+=({n});
-			 u+=({sub});
-			 return x;
-		       });
-	s-=({""});
-	decoded=1;
-      }
-      else
-	q=reverse(qualities);
-
-      sort(q,s,u);
-      languages=reverse(s);
-      qualities=reverse(q);
-      subtags=reverse(u);
-      sorted=1;
-    }
-
-    string _sprintf(int t) {
-      return t=='O' && sprintf("%O(%O)", this_program, languages);
-    }
+  MultiStatus get_multi_status()
+  //! Returns a @[MultiStatus] object that will be used to produce a
+  //! 207 Multi-Status response (RFC 2518 10.2). It's only consultet
+  //! if the result returned from @[RoxenModule.find_file] et al is an
+  //! empty mapping.
+  //!
+  //! @note
+  //! It's not necessarily safe to assume that there aren't any
+  //! multi-status responses stored here already on entry to
+  //! @[find_file] et al. C.f. @[multi_status_size].
+  //!
+  //! @seealso
+  //! @[set_status_for_path]
+  {
+    if (!multi_status) multi_status = MultiStatus();
+    return multi_status;
   }
 
+  int multi_status_size()
+  //! Returns the number responses that have been added to the
+  //! @[MultiStatus] object returned by @[get_multi_status]. Useful to
+  //! see whether a (part of a) recursive operation added any errors
+  //! or other results.
+  {
+    return multi_status && multi_status->num_responses();
+  }
+
+  void set_status_for_path (string path, int status_code,
+			    string|void message, mixed... args)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The status is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param status_code
+  //!   The HTTP status code.
+  //!
+  //! @param message
+  //!   If given, it's a message to include in the response. The
+  //!   message may contain line feeds ('\n') and ISO-8859-1
+  //!   characters in the ranges 32..126 and 128..255. Line feeds are
+  //!   converted to spaces if the response format doesn't allow them.
+  //!
+  //! @param args
+  //!   If there are more arguments after @[message] then @[message]
+  //!   is taken as an @[sprintf] style format string which is used to
+  //!   format @[args].
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    if (sizeof (args)) message = sprintf (message, @args);
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..],
+				    status_code, message);
+  }
+
+  void set_status_for_url (string url, int status_code,
+			   string|void message, mixed... args)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    if (sizeof (args)) message = sprintf (message, @args);
+    get_multi_status()->add_status (url, status_code, message);
+  }
+
+
+  //  Charset handling
+  
   array(string) output_charset = ({});
   string input_charset;
 
   void set_output_charset( string|function to, int|void mode )
   {
+    if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+      ctx->add_p_code_callback ("set_output_charset", to, mode);
+
     if( has_value( output_charset, to ) ) // Already done.
       return;
 
@@ -807,6 +1265,104 @@ class RequestID
 	break;
     }
   }
+
+  static string charset_name(function|string what)
+  {
+    switch (what) {
+    case string_to_unicode: return "ISO10646-1";
+    case string_to_utf8:    return "UTF-8";
+    default:                return upper_case((string) what);
+    }
+  }
+
+  static function charset_function(function|string what, int allow_entities)
+  {
+    switch (what) {
+    case "ISO-10646-1":
+    case "ISO10646-1":
+    case string_to_unicode:
+      return string_to_unicode;
+      
+    case "UTF-8":
+    case string_to_utf8:
+      return string_to_utf8;
+      
+    default:
+      catch {
+	//  Use entity fallback if content type allows it
+	function fallback_func =
+	  allow_entities &&
+	  lambda(string char) {
+	    return sprintf("&#x%x;", char[0]);
+	  };
+	
+	_charset_decoder_func =
+	  _charset_decoder_func || Roxen->_charset_decoder;
+	return
+	  _charset_decoder_func(Locale.Charset.encoder((string) what, "",
+						       fallback_func))
+	  ->decode;
+      };
+    }
+    return lambda(string what) { return what; };
+  }
+  
+  static array(string) join_charset(string old,
+				    function|string add,
+				    function oldcodec,
+				    int allow_entities)
+  {
+    switch (old && upper_case(old)) {
+    case 0:
+      return ({ charset_name(add), charset_function(add, allow_entities) });
+    case "ISO10646-1":
+    case "UTF-8":
+      return ({ old, oldcodec }); // Everything goes here. :-)
+    case "ISO-2022":
+      return ({ old, oldcodec }); // Not really true, but how to know this?
+    default:
+      // Not true, but there is no easy way to add charsets yet...
+      return ({ charset_name(add), charset_function(add, allow_entities) });
+    }
+  }
+  
+  array(string) output_encode(string what, int|void allow_entities,
+			      string|void force_charset)
+  {
+    //  Performance optimization for unneeded ISO-8859-1 recoding of
+    //  strings which already are narrow.
+    if (String.width(what) == 8) {
+      if (force_charset) {
+	if (upper_case(force_charset) == "ISO-8859-1")
+	  return ({ "ISO-8859-1", what });
+      } else {
+	if (sizeof(output_charset) == 1 &&
+	    upper_case(output_charset[0]) == "ISO-8859-1")
+	  return ({ "ISO-8859-1", what });
+      }
+    }
+    
+    if (!force_charset) {
+      string charset;
+      function encoder;
+      
+      foreach( output_charset, string|function f )
+	[charset,encoder] = join_charset(charset, f, encoder, allow_entities);
+      if (!encoder)
+	if (String.width(what) > 8) {
+	  charset = "UTF-8";
+	  encoder = string_to_utf8;
+	}
+      if (encoder)
+	what = encoder(what);
+      return ({ charset, what });
+    } else
+      return ({
+	0,
+	Locale.Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
+      });
+  }
+
 
   string scan_for_query( string f )
   {
@@ -830,6 +1386,136 @@ class RequestID
     return f;
   }
 
+  mapping(string:string) make_response_headers (mapping(string:mixed) file)
+  //! Make the response headers from a response mapping for this
+  //! request. The headers associated with transfer modifications of
+  //! the response, e.g. 206 Partial Content and 304 Not Modified, are
+  //! not calculated here.
+  //!
+  //! @note
+  //! Is destructive on @[file] and on various data in the request;
+  //! should only be called once for a @[RequestID] instance.
+  {
+    if (!file->stat) file->stat = misc->stat;
+    if(objectp(file->file)) {
+      if(!file->stat)
+	file->stat = file->file->stat();
+      if (zero_type(misc->cacheable) && file->file->is_file) {
+	// Assume a cacheablity on the order of the age of the file.
+	misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
+      }
+    }
+
+    if( Stat fstat = file->stat )
+    {
+      if( !file->len && (fstat[1] >= 0) && file->file )
+	file->len = fstat[1];
+      if ( fstat[ST_MTIME] > misc->last_modified )
+	misc->last_modified = fstat[ST_MTIME];
+    }	
+
+    if (!file->error)
+      file->error = Protocols.HTTP.HTTP_OK;
+
+    if(!file->type) file->type="text/plain";
+
+    mapping(string:string) heads = ([]);
+
+    if( !zero_type(misc->cacheable) &&
+	(misc->cacheable != INITIAL_CACHEABLE) ) {
+      if (!misc->cacheable) {
+	// It expired a year ago.
+	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
+      } else
+	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
+      if (misc->cacheable < INITIAL_CACHEABLE) {
+	// Data with expiry is assumed to have been generated at the
+	// same instant.
+	misc->last_modified = predef::time(1);
+      }
+    }
+
+    if (misc->last_modified)
+      heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
+
+    {
+      string charset="";
+      if( stringp(file->data) )
+      {
+	if (sizeof (output_charset) ||
+	    has_prefix (file->type, "text/") ||
+	    (String.width(file->data) > 8))
+	{
+	  int allow_entities =
+	    has_prefix(file->type, "text/xml") ||
+	    has_prefix(file->type, "text/html");
+	  [charset,file->data] = output_encode( file->data, allow_entities );
+	  if( charset && (search(file["type"], "; charset=") == -1))
+	    charset = "; charset="+charset;
+	  else
+	    charset = "";
+	}
+	file->len = strlen(file->data);
+      }
+      heads["Content-Type"] = file->type + charset;
+    }
+
+    heads["Accept-Ranges"] = "bytes";
+    heads["Server"] = replace(roxenp()->version(), " ", "·");
+    if (file->error == 500) {
+      // Internal server error.
+      // Make sure the connection is closed to resync.
+      heads["Connection"] = "close";
+      misc->connection = "close";
+    } else if( misc->connection )
+      heads["Connection"] = misc->connection;
+
+    if(file->encoding) heads["Content-Encoding"] = file->encoding;
+
+    heads->Date = Roxen->http_date(predef::time(1));
+    if(file->expires)
+      heads->Expires = Roxen->http_date(file->expires);
+
+    //if( file->len > 0 || (file->error != 200) )
+    heads["Content-Length"] = (string)file->len;
+
+    if (misc->etag)
+      heads->ETag = misc->etag;
+
+#ifdef RAM_CACHE
+    if (!misc->etag && file->len &&
+	(file->data || file->file) &&
+	file->error == 200 && (<"HEAD", "GET">)[method] &&
+	(file->len < conf->datacache->max_file_size)) {
+      string data = "";
+      if (file->file) {
+	data = file->file->read(file->len);
+	if (file->data && (sizeof(data) < file->len)) {
+	  data += file->data[..file->len - (sizeof(data)+1)];
+	}
+	m_delete(file, "file");
+      } else if (file->data) {
+	data = file->data[..file->len - 1];
+      }
+      file->data = data;
+      heads->ETag = misc->etag =
+	"\""+String.string2hex(Crypto.SHA1.hash(data))+"\"";
+    }
+#endif /* RAM_CACHE */
+
+    if (misc->vary && sizeof(misc->vary)) {
+      heads->Vary = ((array)misc->vary)*", ";
+    }
+
+    if(mappingp(file->extra_heads))
+      heads |= file->extra_heads;
+
+    if(mappingp(misc->moreheads))
+      heads |= misc->moreheads;
+
+    return heads;
+  }
+
   void adjust_for_config_path( string p )
   {
     if( not_query )  not_query = not_query[ strlen(p).. ];
@@ -839,7 +1525,14 @@ class RequestID
 
   void end(string|void s, int|void keepit){}
   void ready_to_receive(){}
-  void send_result(mapping|void result){}
+
+  void send_result(mapping|void result)
+  {
+#ifdef DEBUG
+    error ("send_result not overridden.\n");
+#endif
+  }
+
   RequestID clone_me()
   {
     object c,t;
@@ -856,6 +1549,8 @@ class RequestID
     c->misc = copy_value( misc );
     c->misc->orig = t;
 
+    c->connection_misc = connection_misc;
+
     c->prestate = prestate;
     c->supports = supports;
     c->config = config;
@@ -869,6 +1564,7 @@ class RequestID
     c->pragma = pragma;
 
     c->cookies = cookies;
+    c->request_headers = request_headers + ([]);
     c->my_fd = 0;
     c->prot = prot;
     c->clientprot = clientprot;
@@ -901,16 +1597,383 @@ class RequestID
   }
 }
 
+class MultiStatusStatus (int http_code, void|string message)
+{
+  constant is_status = 1;
+
+  void build_response (SimpleElementNode response_node)
+  {
+    SimpleElementNode node = SimpleElementNode("DAV:status", ([]));
+    response_node->add_child (node);
+    // No use wasting space on a good message in the status node since
+    // we have it in the responsedescription instead.
+    node->add_child(SimpleTextNode(sprintf("HTTP/1.1 %d ", http_code)));
+
+    if (message) {
+      node = SimpleElementNode ("DAV:responsedescription", ([]));
+      response_node->add_child (node);
+      node->add_child (SimpleTextNode (message));
+    }
+  }
+
+  int `== (mixed other)
+  {
+    return objectp (other) &&
+      object_program (other) == this_program &&
+      other->http_code == http_code &&
+      other->message == message;
+  }
+
+  int __hash()
+  {
+    return http_code + (message && hash (message));
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("MultiStatusStatus(%d,%O)", http_code, message);
+  }
+}
+
+private SimpleElementNode ok_status_node =
+  SimpleElementNode("DAV:status", ([]))->add_child(SimpleTextNode("HTTP/1.1 200 OK"));
+
+class MultiStatusPropStat
+{
+  constant is_prop_stat = 1;
+
+  mapping(string:string|SimpleNode|array(SimpleNode)|MultiStatusStatus)
+    properties = ([]);
+  //! The property settings. Indexed on property name (with complete
+  //! XML namespace). Values are:
+  //!
+  //! @mixed
+  //!   @type array(SimpleNode)
+  //!     The property value as a sequence of XML nodes. These nodes
+  //!     are used as children to the property nodes in the DAV
+  //!     protocol.
+  //!   @type SimpleNode
+  //!     Same as an array containing only this node.
+  //!   @type string
+  //!     Same as a single @[Parser.XML.Tree.SimpleTextNode] with this value.
+  //!   @type int(0..0)
+  //!     The property exists but has no value.
+  //!   @type MultiStatusStatus
+  //!     There was an error querying the property and this is the
+  //!     status it generated instead of a value.
+  //! @endmixed
+
+  void build_response (SimpleElementNode response_node)
+  {
+    SimpleElementNode ok_prop_node = SimpleElementNode("DAV:prop", ([]));
+    mapping(MultiStatusStatus:SimpleNode) prop_nodes = ([]);
+
+    foreach (properties;
+	     string prop_name;
+	     string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
+      if (objectp (value) && value->is_status) {
+	// Group together failed properties according to status codes.
+	SimpleNode prop_node = prop_nodes[value];
+	if (!prop_node)
+	  prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
+	prop_node->add_child(SimpleElementNode(prop_name, ([])));
+      }
+
+      else {
+	// The property is ok and has a value.
+
+	string ms_type;
+	// The DAV client in Windows XP Pro (at least) requires types
+	// on the date fields to parse them correctly. The type system
+	// is of course some MS goo.
+	switch (prop_name) {
+	  case "DAV:creationdate":     ms_type = "dateTime.tz"; break;
+	  case "DAV:getlastmodified":  ms_type = "dateTime.rfc1123"; break;
+	    // MS header - format unknown.
+	    //case "DAV:lastaccessed": ms_type = "dateTime.tz"; break;
+	}
+	SimpleElementNode node =
+	  SimpleElementNode(prop_name,
+			    ms_type ?
+			    ([ "urn:schemas-microsoft-com:datatypesdt":
+			       ms_type ]) : ([]));
+	ok_prop_node->add_child (node);
+
+	if (arrayp (value))
+	  node->replace_children (value);
+	else if (stringp (value))
+	  node->add_child(SimpleTextNode(value));
+	else if (objectp (value))
+	  node->add_child (value);
+      }
+    }
+
+    if (ok_prop_node->count_children()) {
+      SimpleElementNode propstat_node =
+	SimpleElementNode("DAV:propstat", ([]));
+      response_node->add_child (propstat_node);
+      propstat_node->add_child (ok_prop_node);
+      propstat_node->add_child (ok_status_node);
+    }
+
+    foreach (prop_nodes; MultiStatusStatus status; SimpleNode prop_node) {
+      SimpleElementNode propstat_node =
+	SimpleElementNode("DAV:propstat", ([]));
+      response_node->add_child (propstat_node);
+      propstat_node->add_child (prop_node);
+      status->build_response (propstat_node);
+    }
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("MultiStatusPropStat(%O)", properties);
+  }
+}
+
+typedef MultiStatusStatus|MultiStatusPropStat MultiStatusNode;
+
+class MultiStatus
+{
+  static mapping(string:MultiStatusNode) status_set = ([]);
+
+  static mapping(string:string) args = ([
+    "xmlns:DAV": "DAV:",
+    // MS namespace for data types; see comment in
+    // XMLPropStatNode.add_property. Note: The XML parser in the
+    // MS DAV client is broken and requires the break of the last
+    // word "datatypesdt" to be exactly at this point.
+    "xmlns:MS": "urn:schemas-microsoft-com:datatypes",
+  ]);
+
+  int num_responses()
+  //! Returns the number of responses that have been added to this
+  //! object.
+  {
+    return sizeof (status_set);
+  }
+
+  MultiStatusNode get_response (string href)
+  //! Returns the response stored for @[href] if there is any.
+  //!
+  //! @returns
+  //!   @mixed
+  //!     @type MultiStatusStatus
+  //!       There was some kind of error on @[href] and this is the
+  //!       stored status. This type is preferably checked by testing
+  //!       for a nonzero @expr{is_status@} member.
+  //!     @type MultiStatusPropStat
+  //!       A property query was successful on @[href] and the
+  //!       returned object contains the results for some or all
+  //!       properties. This type is preferably checked by testing for
+  //!       a nonzero @expr{is_prop_stat@} member.
+  //!   @endmixed
+  {
+    return status_set[href];
+  }
+
+  mapping(string:MultiStatusNode) get_responses_by_prefix (string href_prefix)
+  //! Returns the stored responses for all URI:s that got
+  //! @[href_prefix] as prefix. See @[get_response] for details about
+  //! the response value.
+  //!
+  //! Prefixes are only matched at @expr{"/"@} boundaries, so
+  //! @expr{"http://x.se/foo"@} is considered a prefix of
+  //! @expr{"http://x.se/foo/bar"@} but not
+  //! @expr{"http://x.se/foobar"@}. As a special case, the empty
+  //! string as @[href_prefix] returns all stored responses.
+  {
+    if (href_prefix == "")
+      return status_set + ([]);
+    mapping(string:MultiStatusNode) result = ([]);
+    if (!has_suffix (href_prefix, "/")) {
+      if (MultiStatusNode stat = status_set[href_prefix])
+	result[href_prefix] = stat;
+      href_prefix += "/";
+    }
+    foreach (status_set; string href; MultiStatusNode stat)
+      if (has_prefix (href, href_prefix))
+	result[href] = stat;
+    return result;
+  }
+
+  //! Add DAV:propstat information about the property @[prop_name] for
+  //! the resource @[href].
+  //!
+  //! @param prop_value
+  //!   Optional property value. It can be one of the following:
+  //!   @mixed prop_value
+  //!     @type void|int(0..0)
+  //!       Operation performed ok, no value.
+  //!     @type string|SimpleNode|array(SimpleNode)
+  //!       Property has value @[prop_value].
+  //!     @type MultiStatusStatus
+  //!     @type mapping(string:mixed)
+  //!       Operation failed as described by the mapping.
+  //!   @endmixed
+  void add_property(string href, string prop_name,
+		    void|int(0..0)|string|array(SimpleNode)|SimpleNode|
+		    MultiStatusStatus|mapping(string:mixed) prop_value)
+  {
+    MultiStatusPropStat prop_stat;
+    if (MultiStatusNode stat = status_set[href])
+      if (stat->is_prop_stat)
+	// This will cause override of an existing MultiStatusStatus.
+	// Presumably it came from another file system that is now
+	// being hidden. Or is it better to keep the status node and
+	// do nothing here instead?
+	prop_stat = stat;
+    if (!prop_stat)
+      prop_stat = status_set[href] = MultiStatusPropStat();
+    if (mappingp (prop_value))
+      prop_value = MultiStatusStatus (prop_value->error, prop_value->rettext);
+    prop_stat->properties[prop_name] = prop_value;
+  }
+
+  void add_status (string href, int status_code,
+		   void|string message, mixed... args)
+  //! Add a status for the specified url. The remaining arguments are
+  //! the same as for @[Roxen.http_status].
+  {
+    if (sizeof (args)) message = sprintf (message, @args);
+    if (!status_code) error("Bad status code!\n");
+    status_set[href] = MultiStatusStatus (status_code, message);
+  }
+
+  void add_namespace (string namespace)
+  //! Add a namespace to the generated @tt{<multistatus>@} element.
+  //! Useful if several properties share a namespace.
+  {
+    int ns_count = 0;
+    string ns_name;
+    while (args[ns_name = "xmlns:NS" + ns_count]) {
+      if (args[ns_name] == namespace) return;
+      ns_count++;
+    }
+    args[ns_name] = namespace;
+  }
+
+  SimpleNode get_xml_node()
+  {
+    SimpleElementNode node;
+    SimpleRootNode root = SimpleRootNode()->
+      add_child(SimpleHeaderNode((["version": "1.0",
+				   "encoding": "utf-8"])))->
+      add_child(node = SimpleElementNode("DAV:multistatus", args));
+
+    array(SimpleNode) response_xml = allocate(sizeof(status_set));
+    int i;
+
+    DAV_WERROR("Generating XML Nodes for status_set:%O\n",
+	       status_set);
+
+    // Sort this because some client (which one?) requires collections
+    // to come before the entries they contain.
+    foreach(sort(indices(status_set)), string href) {
+      SimpleElementNode response_node =
+	SimpleElementNode("DAV:response", ([]))->
+	add_child(SimpleElementNode("DAV:href", ([]))->
+		  add_child(SimpleTextNode(href)));
+      response_xml[i++] = response_node;
+      status_set[href]->build_response (response_node);
+    }
+    node->replace_children(response_xml);
+
+    return root;
+  }
+
+  mapping(string:mixed) http_answer()
+  {
+    string xml = get_xml_node()->render_xml();
+    return ([
+      "error": 207,
+      "data": xml,
+      "len": sizeof(xml),
+      "type": "text/xml; charset=\"utf-8\"",
+    ]);
+  }
+
+  class Prefixed (static string href_prefix)
+  {
+    MultiStatus get_multi_status() {return MultiStatus::this;}
+    void add_property(string path, string prop_name,
+		      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
+		      MultiStatusStatus|mapping(string:mixed) prop_value)
+    {
+      MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
+    }
+    void add_status (string path, int status_code,
+		     void|string message, mixed... args)
+    {
+      MultiStatus::add_status (href_prefix + path, status_code, message, @args);
+    }
+    void add_namespace (string namespace)
+    {
+      MultiStatus::add_namespace (namespace);
+    }
+    MultiStatus.Prefixed prefix(string href_prefix) {
+      return this_program (this_program::href_prefix + href_prefix);
+    }
+  }
+
+  MultiStatus.Prefixed prefix (string href_prefix)
+  //! Returns an object with the same @expr{add_*@} methods as this
+  //! one except that @[href_prefix] is implicitly prepended to every
+  //! path.
+  {
+    return Prefixed (href_prefix);
+  }
+}
+
+// Only for protyping and breaking of circularities.
+static class PropertySet
+{
+  string path;
+  RequestID id;
+  Stat get_stat();
+  mapping(string:string) get_response_headers();
+  multiset(string) query_all_properties();
+  string|array(SimpleNode)|mapping(string:mixed)
+    query_property(string prop_name);
+  mapping(string:mixed) start();
+  void unroll();
+  void commit();
+  mapping(string:mixed) set_property(string prop_name,
+				     string|array(SimpleNode) value);
+  mapping(string:mixed) set_dead_property(string prop_name,
+					  array(SimpleNode) value);
+  mapping(string:mixed) remove_property(string prop_name);
+  mapping(string:mixed) find_properties(string mode,
+					MultiStatus.Prefixed result,
+					multiset(string)|void filt);
+}
+
+//! State of the DAV:propertybehavior.
+//!
+//! @mixed
+//!   @type int(0..0)
+//!     DAV:omit.
+//!     Failure to copy a property does not cause the entire copy
+//!     to fail.
+//!   @type int(1..1)
+//!     DAV:keepalive "*".
+//!     All live properties must be kept alive.
+//!   @type multiset(string)
+//!     Set of properties to keep alive. Properties not in the set
+//!     should be copied according to best effort. The properties are
+//!     listed with complete namespaces.
+//! @endmixed
+typedef int(0..1)|multiset(string) PropertyBehavior;
+
 class RoxenModule
 {
   inherit BasicDefvar;
   constant is_module = 1;
   constant module_type = 0;
   constant module_unique = 1;
-  // FIXME: Decomment when module_name and module_doc
-  // is not allowed to be LocaleString.
-  //  constant module_name = 0;
-  //  constant module_doc = 0;
+  constant module_name="";
+  constant module_doc="";
 
   string module_identifier();
   string module_local_id();
@@ -924,6 +1987,8 @@ class RoxenModule
   string query_location();
   string|multiset(string) query_provides();
   function(RequestID:int|mapping) query_seclevels();
+  void set_status_for_path (string path, RequestID id, int status_code,
+			    string|void message, mixed... args);
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
@@ -935,12 +2000,68 @@ class RoxenModule
 
   string info(object conf);
   string comment();
+
+  PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id);
+  string|array(SimpleNode)|mapping(string:mixed)
+    query_property(string path, string prop_name, RequestID id);
+  void recurse_find_properties(string path, string mode, int depth,
+			       RequestID id, multiset(string)|void filt);
+  mapping(string:mixed) patch_properties(string path,
+					 array(PatchPropertyCommand) instructions,
+					 RequestID id);
+  mapping(string:mixed) set_property (string path, string prop_name,
+				      string|array(SimpleNode) value,
+				      RequestID id);
+  mapping(string:mixed) remove_property (string path, string prop_name,
+					 RequestID id);
+
+  string resource_id (string path, RequestID id);
+  string|int authenticated_user_id (string path, RequestID id);
+  multiset(DAVLock) find_locks(string path,
+			       int(0..1) recursive,
+			       int(0..1) exclude_shared,
+			       RequestID id);
+  DAVLock|LockFlag check_locks(string path,
+			       int(0..1) recursive,
+			       RequestID id);
+  mapping(string:mixed)|DAVLock lock_file(string path,
+					  int(0..1) recursive,
+					  string lockscope,
+					  string locktype,
+					  int(0..) expiry_delta,
+					  array(Parser.XML.Tree.Node) owner,
+					  RequestID id);
+  mapping(string:mixed) unlock_file (string path,
+				     DAVLock lock,
+				     RequestID id);
+  mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
+						  int(0..1) recursive,
+						  RequestID id);
+
+  mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
+							RequestID id);
+  mapping(string:mixed) recurse_delete_files(string path,
+					     RequestID id);
+  mapping(string:mixed) make_collection(string path, RequestID id);
+  mapping(string:mixed) recurse_copy_files(string source, string destination,
+					   PropertyBehavior behavior,
+					   Overwrite overwrite, RequestID id);
+  mapping(string:mixed) recurse_move_files(string source, string destination,
+					   PropertyBehavior behavior,
+					   Overwrite overwrite, RequestID id);
+}
+
+class PatchPropertyCommand
+{
+  constant command = "";
+  string property_name;
+  mapping(string:mixed) execute(PropertySet context);
 }
 
 class _roxen
 {
   mapping(string:object) variables;
-  string real_version;
+  constant real_version = "";
   object locale;
   int start_time;
   array(Configuration) configurations;
@@ -1214,40 +2335,40 @@ class UserDB
   User find_user( string s, RequestID|void id );
   //! Find a user
 
-  User find_user_from_uid( int id )
+  User find_user_from_uid( int uid, RequestID|void id )
   //! Find a user given a UID. The default implementation loops over
   //! list_users() and checks the uid() of each one.
   {
-    User uid;
+    User user;
     foreach( list_users(), string u )
-      if( (uid = find_user( u )) && (uid->uid() == id) )
-	return uid;
+      if( (user = find_user( u )) && (user->uid() == uid) )
+	return user;
   }    
 
-  Group find_group( string group )
+  Group find_group( string group, RequestID|void id )
   //! Find a group object given a group name.
   //! The default implementation returns 0.
   {
   }
   
-  Group find_group_from_gid( int id )
+  Group find_group_from_gid( int gid, RequestID|void id )
   //! Find a group given a GID. The default implementation loops over
   //! list_groups() and checks the gid() of each one.
   {
-    Group uid;
+    Group group;
     foreach( list_groups(), string u )
-      if( (uid = find_group( u )) && (uid->gid() == id) )
-	return uid;
+      if( (group = find_group( u )) && (group->gid() == gid) )
+	return group;
   }
   
-  array(string) list_groups( )
+  array(string) list_groups( RequestID|void id )
   //! Return a list of all groups handled by this database module.
   //! The default implementation returns the empty array.
   {
     return ({});
   }
 
-  array(string) list_users( );
+  array(string) list_users( RequestID|void id );
   //! Return a list of all users handled by this database module.
 
   User create_user( string s )
