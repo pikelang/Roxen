@@ -214,10 +214,9 @@
 	    <page>
 	      <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	      <input type=hidden name=wizard value='¤wizard:quote=mysql¤'>
-              <sqloutput quote='#' query="select * from template_vars where
+
+	      <sqloutput quote='#' query="select * from template_vars where
 		                          page_id='$id$'">
-  
-  		<b>#title#: </b> 
   		<cset preparse variable=options><pike>
   		  string query=
   		    "<sqloutput quote='£' query="
@@ -234,25 +233,26 @@
   		    " variable_id='#id:quote=mysql#'\">"
   		    "£value£</sqloutput>";
   		  </pike></cset>
-  		<formoutput quote='£'>
-  		  <var name="variable_#id#" type="#type#" advanced
-  			options="£options£" default="£default£">
+                <formoutput quote='£'>
+		  <b>#title#: </b>
+		  <var name="variable_#id#" type="#type#" advanced
+                       options="£options£" default="£default£">
   		  <cset variable=__show_example__></cset>
-  		  <if match="#name# is nav_name">
-  		    <cset variable=__show_example__>1</cset> 
-  		  </if>
-  		  <if match="#name# is template_name">
-  		    <cset variable=__show_example__>1</cset> 
-  		  </if>
-  		  <if variable="__show_example__ is 1">
-  		    <input type=submit name=example value='Example'>
-  		    <if variable=example>
-  		      <br><img src=/img/examples/£variable_#id#£.jpg>
-  		    </if>
-  		  </if>
-  		</formoutput>
-  		<p>
-  		#help#<br>
+		  <if match="#name# is nav_name">
+		    <cset variable=__show_example__>1</cset> 
+		  </if>
+		  <if match="#name# is template_name">
+		      <cset variable=__show_example__>1</cset> 
+		    </if>
+		  <if variable="__show_example__ is 1">
+		    <input type=submit name=example value='Example'>
+		    <if variable=example>
+		      <br><img src=/img/examples/£variable_#id#£.jpg>
+		    </if>
+		  </if>
+		</formoutput>
+		<if not match='#help# is '><br>#help#</if>
+		<p>
 	      </sqloutput>
 	    </page>
 	  </sqloutput>
