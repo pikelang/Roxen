@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.37 1998/12/06 18:26:15 grubba Exp $
+ * $Id: smtprelay.pike,v 1.38 1998/12/10 15:48:13 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.37 1998/12/06 18:26:15 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.38 1998/12/10 15:48:13 grubba Exp $";
 
 /*
  * Some globals
@@ -427,7 +427,7 @@ class MailSender
     ([ "250":send_mail_from, "5":send_bounce, ]),
     ([ "25":"DATA", "55":bad_address, ]),
     ([ "354":send_body, "":send_bounce, ]),
-    ([ "250":send_ok, "":send_bounce, ]),
+    ([ "250":send_ok, "5":send_bounce_and_stop, "":send_bounce, ]),
     ([]),
   });
 
