@@ -283,7 +283,7 @@ string parse_rxml(string what, object id,
 		  void|object file,
 		  void|mapping defines )
 {
-  id->misc->_rxml_recurse++
+  id->misc->_rxml_recurse++;
 #ifdef RXML_DEBUG
   werror("parse_rxml( "+strlen(what)+" ) -> ");
   int time = gethrtime();

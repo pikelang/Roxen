@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.17 1998/03/11 00:58:16 nisse Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.18 1998/11/19 10:22:27 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -64,9 +64,8 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
       stderr->open("/dev/null", "w");
       result = stdout->pipe();
     }
-  return (spawne(prog, args, (["PATH" : query("path") ]),
-		 stdin, stdout, stderr, dir) > 0)
-     ? result : 0;
+  return spawne(prog, args, (["PATH" : query("path") ]),
+		stdin, stdout, stderr, dir) ? result : 0;
 }
 
 mapping parse_modules_file(string modules)

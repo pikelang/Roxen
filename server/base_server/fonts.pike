@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.25 1998/11/18 04:53:46 per Exp $ */
+/* $Id: fonts.pike,v 1.26 1998/11/19 10:22:22 per Exp $ */
 
 #include <module.h>
 
@@ -14,6 +14,20 @@ string fix_name(string in)
 // name:([ version:fname, version:fname, ... ])
 mapping ttf_done = ([]);
 mapping ttf_font_names_cache = ([]);
+
+string trimttfname( string n )
+{
+  n = reverse(n);
+  sscanf("tb %s", n);
+  sscanf(n, "tl %s", n);
+  sscanf(n, "dm %s", n);
+  sscanf(n, "kb %s", n);
+  sscanf(n, "db %s", n);
+  sscanf(n, "xe %s", n);
+  sscanf(n, "nc %s", n);
+  sscanf(n, "klb %s", n);
+  return reverse(n);
+}
 
 string translate_ttf_style( string style )
 {
@@ -56,6 +70,8 @@ array available_font_versions(string name, int size)
   array available;
 #if constant(Image.TTF)
   int ttffound;
+  int ttffontschanged;
+
    if(ttf_font_names_cache[ name ])
      return indices(ttf_font_names_cache[ name ]);
   foreach(roxen->query("font_dirs"), dir)
@@ -70,18 +86,23 @@ array available_font_versions(string name, int size)
 	  if(ttf)
 	  {
 	    mapping n = ttf->names();
-	    if(!ttf_font_names_cache[lower_case(n->family)])
-	      ttf_font_names_cache[lower_case(n->family)] = ([]);
-	    ttf_font_names_cache[lower_case(n->family)]
-	      [ translate_ttf_style(n->style) ] =
-	      combine_path(dir+"/",fname);
-	    if(lower_case(n->family) == lower_case( name ))
-	      ttffound++;
+	    ttffontschanged++;
+	    string f = lower_case(trimttfname(n->family));
+	    if(!ttf_font_names_cache[f])
+	      ttf_font_names_cache[f] = ([]);
+	    ttf_font_names_cache[f][ translate_ttf_style(n->style) ] 
+	      = combine_path(dir+"/",fname);
+	    if(f == lower_case( name ))  ttffound++;
 	  }
 	}
       };
     }
   }
+  if(ttffontschanged)
+    catch{
+      Stdio.File(".ttffontcache",
+		 "wct")->write(encode_value(ttf_font_names_cache));
+    };
   if(ttffound)
     return  indices(ttf_font_names_cache[ name ]);
 #endif
@@ -180,7 +201,7 @@ object get_font(string f, int size, int bold, int italic,
   err = catch {
     name=make_font_name(f,size,bold,italic);
 //     werror("name is "+name+"; f is "+f+"\n");
-#if efun(Image.TTF)
+#if constant(Image.TTF)
     if(ttf_font_names_cache[ lower_case(f) ])
     {
       f = lower_case(f);
@@ -298,7 +319,7 @@ object resolve_font(string f, string|void justification)
 array available_fonts( )
 {
   array res = ({});
-#if efun(Image.TTF)
+#if constant(Image.TTF)
   // Populate the TTF font cache.
   available_font_versions( "No, there is no such font as this",32 );
 #endif
@@ -329,4 +350,11 @@ void create()
   add_constant("get_font_italic_bold", get_font_italic_bold);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
+
+#if constant(Image.TTF)
+  catch {
+    ttf_font_names_cache =
+      decode_value(Stdio.read_bytes(".ttffontcache"));
+  };
+#endif
 }

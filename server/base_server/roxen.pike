@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.252 1998/11/18 04:53:50 per Exp $
+ * $Id: roxen.pike,v 1.253 1998/11/19 10:22:23 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.252 1998/11/18 04:53:50 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.253 1998/11/19 10:22:23 per Exp $";
 
 
 // Some headerfiles
@@ -25,6 +25,54 @@ inherit "module_support";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
+
+
+// Prototypes for other parts of roxen.
+class RequestID 
+{
+  object conf; // Really Configuration, but that's sort of recursive.
+  int time;
+  string raw_url;
+  int do_not_disconnect;
+  mapping (string:string) variables;
+  mapping (string:mixed) misc;
+  mapping (string:string) cookies;
+  mapping (string:string) request_headers;
+  multiset(string) prestate;
+  multiset(string) config;
+  multiset(string) supports;
+  multiset(string) pragma;
+  array(string) client;
+  array(string) referer;
+
+  Stdio.File my_fd;
+  string prot;
+  string clientprot;
+  string method;
+  
+  string realfile;
+  string virtfile;
+  string rest_query;
+  string raw;
+  string query;
+  string not_query;
+  string extra_extension;
+  string data;
+  string leftovers;
+  array (int|string) auth;
+  string rawauth;
+  string realauth;
+  string since;
+  
+  void send(string|object what, int|void len);
+  string scan_for_query( string in );
+  void end(string|void s, int|void keepit);
+
+  void ready_to_receive();
+  void send_result(mapping|void result);
+  RequestID clone_me();
+};
+
 
 // The datashuffler program
 #if constant(spider.shuffle) && (defined(THREADS) || defined(__NT__))
@@ -1118,10 +1166,12 @@ void create()
     allmodules = decode_value(Stdio.read_bytes(".allmodules"));
   };
   add_constant("roxen", this_object());
+  add_constant("RequestID", RequestID);
   add_constant("load",    load);
   (object)"color.pike";
   fonts = (object)"fonts.pike";
   Configuration = (program)"configuration";
+  add_constant("Configuration", Configuration);
   call_out(post_create,1); //we just want to delay some things a little
 }
 
@@ -2462,6 +2512,13 @@ void exit_it()
 {
   perror("Recursive signals.\n");
   exit(-1);	// Restart.
+}
+
+void set_locale( string to )
+{
+  if( to == "standard" )
+    SET_LOCALE( default_locale );
+  SET_LOCALE( Locale.Roxen[ to ] || default_locale );
 }
 
 // And then we have the main function, this is the oldest function in

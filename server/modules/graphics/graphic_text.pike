@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.156 1998/11/18 04:54:15 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.157 1998/11/19 10:22:28 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1139,7 +1139,11 @@ string magic_image(string url, int xs, int ys, string sn,
     return (!input)?
        ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
        "alt=\""+alt+"\"></a>"):
-    ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
+    ("<input border=0 type=image "+extra_args+" src=\""+image_1+"\" name=\""+input+"\">");
+
+  if(input)
+    return 
+      "<input border=0 type=image "+extra_args+" src=\""+image_1+"\" name=\""+input+"\">";
 
   return
     ("<script>\n"
@@ -1148,7 +1152,7 @@ string magic_image(string url, int xs, int ys, string sn,
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
+      +" onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>"));
@@ -1215,6 +1219,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
 {
   if((contents-" ")=="") 
     return "";
+  
+  if(id->prestate->noimages)
+  {
+    contents = replace(contents, "&ss;", "");
+    if(arg->submit)
+      return "<input type=submit name='"+arg->name+"' value='"+contents+"'>";
+    return contents;
+  }
 //Allow <accessed> and others inside <gtext>.
   if(arg->nowhitespace)
   {
@@ -1222,10 +1234,12 @@ string tag_graphicstext(string t, mapping arg, string contents,
     sscanf(reverse(contents),"%*[ \n\r\t]%s",contents);
     contents=reverse(contents);
   }
-  if(t=="gtext" && arg->help)
-    return doc();
-  else if(arg->help)
+  if(arg->help)
+  {
+    if(t == "gtext")
+      return doc();
     return "This tag calls &lt;gtext&gt; with different default values.";
+  }
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
   if(arg->texture) 
