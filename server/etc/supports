@@ -1,4 +1,4 @@
-# $Id: supports,v 1.89 2001/08/05 16:58:27 nilsson Exp $
+# $Id: supports,v 1.90 2001/08/08 21:45:51 js Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -375,6 +375,10 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 
 #section intraseek {
 .*		html, robot, *robot=intraseek
+# }
+
+#section roxencrawler {
+.*		html, robot, *robot=RoxenCrawler
 # }
 
 #section lycos {
