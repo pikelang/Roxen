@@ -1,6 +1,8 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.169 2000/04/15 03:57:45 nilsson Exp $
+// $Id: roxenlib.pike,v 1.170 2000/04/19 14:44:42 nilsson Exp $
+
+//#pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
@@ -10,15 +12,35 @@ inherit "http";
 
 #define roxen roxenp()
 
-class RequestID {};
-class RoxenModule {};
+class Configuration {
+  string parse_rxml(string,RequestID,Stdio.File,mapping(string:mixed));
+  int|mapping check_security(function, RequestID);
+  string real_file(string, RequestID);
+  string name;
+  mapping modules;
+  mapping(object:string) otomod;
+};
+class RequestID {
+  object(Configuration) conf;
+  string query;
+  string not_query;
+  string remoteaddr;
+  mapping(string:mixed) misc;
+  mapping(string:string) variables;
+
+  void set_output_charset(string|function);
+};
+class RoxenModule {
+  string query_name();
+  mapping register_module();
+};
 
 // Functions declared as static are not reachable through Roxen.pmod.
 // These functions are to be considered deprecated.
 
 static string gif_size(Stdio.File gif)
 {
-  array xy=Dims.dims()->get(gif);
+  array(int) xy=Dims.dims()->get(gif);
   return "width="+xy[0]+" height="+xy[1];
 }
 
@@ -33,8 +55,7 @@ string extract_query(string from)
 mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
-  string|array|object(Stdio.File) tmp;
-  mapping new = ([]);
+  mapping(string:string) new = ([]);
   RequestID tmpid;
 
   if(id->query && strlen(id->query))
@@ -49,12 +70,12 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     t = t2 = "";
 
     // Kludge
-    if (id->misc->path_info == path_info) {
+    if ( ([mapping(string:mixed)]id->misc)->path_info == path_info ) {
       // Already extracted
       new["SCRIPT_NAME"]=id->not_query;
     } else {
       new["SCRIPT_NAME"]=
-	id->not_query[0..strlen(id->not_query)-strlen(path_info)-1];
+	id->not_query[0..strlen([string]id->not_query)-strlen(path_info)-1];
     }
     new["PATH_INFO"]=path_info;
 
@@ -68,7 +89,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 	new["PATH_TRANSLATED"] = t2 + t;
 	break;
       }
-      tmp = path_info/"/" - ({""});
+      array(string) tmp = path_info/"/" - ({""});
       if(!sizeof(tmp))
 	break;
       path_info = "/" + (tmp[0..sizeof(tmp)-2]) * "/";
@@ -82,23 +103,25 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     tmpid = tmpid->misc->orig;
 
   // Begin "SSI" vars.
-  if(sizeof(tmp = tmpid->not_query/"/" - ({""})))
-    new["DOCUMENT_NAME"]=tmp[-1];
+  array(string) tmps;
+  if(sizeof(tmps = tmpid->not_query/"/" - ({""})))
+    new["DOCUMENT_NAME"]=tmps[-1];
 
   new["DOCUMENT_URI"]= tmpid->not_query;
 
+  array(int) tmpi;
   if(tmpid->conf->real_file(tmpid->not_query||"", tmpid) &&
-     (tmp = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid)))
-     && sizeof(tmp))
-    new["LAST_MODIFIED"]=http_date(tmp[3]);
+     (tmpi = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid))) &&
+     sizeof(tmpi))
+      new["LAST_MODIFIED"]=http_date(tmpi[3]);
 
   // End SSI vars.
 
 
-  if(tmp = id->conf->real_file(new["SCRIPT_NAME"], id))
+  if(string tmp = id->conf->real_file(new["SCRIPT_NAME"], id))
     new["SCRIPT_FILENAME"] = tmp;
 
-  if(tmp = id->conf->real_file("/", id))
+  if(string tmp = id->conf->real_file("/", id))
     new["DOCUMENT_ROOT"] = tmp;
 
   if(!new["PATH_TRANSLATED"])
@@ -193,7 +216,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
 mapping build_roxen_env_vars(RequestID id)
 {
-  mapping new = ([]);
+  mapping(string:string) new = ([]);
   string tmp;
 
   if(id->cookies->RoxenUserID)
@@ -320,7 +343,7 @@ string strip_prestate(string from)
 
 string parse_rxml(string what, RequestID id,
 			 void|Stdio.File file,
-			 void|mapping defines)
+			 void|mapping(string:mixed) defines)
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
   return id->conf->parse_rxml( what, id, file, defines );
@@ -602,13 +625,13 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping in)
+string make_tag_attributes(mapping(string:string) in)
 {
   if(!in || !sizeof(in)) return "";
   int sl=0;
   string res=" ";
 #ifdef MODULE_DEBUG
-  array s=sort(indices(in));
+  array(string) s=sort(indices(in));
   foreach(s, string a) {
 #else
   foreach(indices(in), string a) {
@@ -622,12 +645,12 @@ string make_tag_attributes(mapping in)
   return res[..sizeof(res)-2];
 }
 
-string make_tag(string s, mapping in)
+string make_tag(string s, mapping(string:string) in)
 {
   return "<"+s+make_tag_attributes(in)+">";
 }
 
-string make_container(string s, mapping in, string contents)
+string make_container(string s, mapping(string:string) in, string contents)
 {
   if(in["/"]) m_delete(in, "/");
   return make_tag(s,in)+contents+"</"+s+">";
@@ -679,7 +702,7 @@ string extension( string f, RequestID|void id)
 {
   string ext, key;
   if(!f || !strlen(f)) return "";
-  if(!id || !(ext = id->misc[key="_ext_"+f])) {
+  if(!id || !(ext = [string]id->misc[key="_ext_"+f])) {
     sscanf(reverse(f), "%s.%*s", ext);
     if(!ext) ext = "";
     else {
@@ -736,7 +759,7 @@ string simplify_path(string file)
 string short_date(int timestamp)
   //! Returns a short date string from a time-int
 {
-  int date = time(1);
+  int date = [int]time(1);
 
   if(ctime(date)[20..23] != ctime(timestamp)[20..23])
     return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[20..23];
@@ -771,13 +794,13 @@ string number2string(int n, mapping m, array|function names)
   {
   case "string":
      if (functionp(names)) {
-       s=names(n);
+       s=([function(int:string)]names)(n);
        break;
      }
      if (n<0 || n>=sizeof(names))
        s="";
      else
-       s=names[n];
+       s=([array(string)]names)[n];
      break;
   case "roman":
     s=int2roman(n);
@@ -840,7 +863,7 @@ string sizetostring( int size )
 
 mapping proxy_auth_needed(RequestID id)
 {
-  mixed res = id->conf->check_security(proxy_auth_needed, id);
+  int|mapping res = id->conf->check_security(proxy_auth_needed, id);
   if(res)
   {
     if(res==1) // Nope...
@@ -848,7 +871,7 @@ mapping proxy_auth_needed(RequestID id)
     if(!mappingp(res))
       return 0; // Error, really.
     res->error = 407;
-    return res;
+    return [mapping]res;
   }
   return 0;
 }
@@ -886,7 +909,7 @@ string html_encode_tag_value(string str)
 string strftime(string fmt, int t)
 {
   mapping lt = localtime(t);
-  array a = fmt/"%";
+  array(string) a = fmt/"%";
   string res = "";
 
   foreach(a, string key) {
@@ -1021,7 +1044,7 @@ RoxenModule get_module (string modname)
       !sizeof (cname) || !sizeof(mname)) return 0;
   sscanf (mname, "%s#%d", mname, mid);
 
-  foreach (roxen->configurations, object conf) {
+  foreach (roxen->configurations, Configuration conf) {
     mapping moddata;
     if (conf->name == cname && (moddata = conf->modules[mname]))
       return moddata->copies[mid];
@@ -1036,7 +1059,7 @@ string get_modname (RoxenModule module)
 {
   if (!module) return 0;
 
-  foreach (roxen->configurations, object conf) {
+  foreach ([array(Configuration)]roxen->configurations, Configuration conf) {
     string mname = conf->otomod[module];
     if(mname)
       return conf->name + "/" + mname;
@@ -1052,7 +1075,7 @@ string get_modfullname (RoxenModule module)
   if (module) {
     string name = 0;
     if (module->query_name) name = module->query_name();
-    if (!name || !sizeof (name)) name = module->register_module()[1];
+    if (!name || !sizeof (name)) name = [string]module->register_module()[1];
     return name;
   }
   else return 0;
@@ -1170,8 +1193,8 @@ private int compare( string a, string b )
       return 0;
 }
 
-static string do_output_tag( mapping args, array (mapping) var_arr, string contents,
-		      RequestID id )
+static string do_output_tag( mapping(string:string) args, array(mapping(string:string)) var_arr,
+			     string contents, RequestID id )
   //! method for use by tags that replace variables in their content, like
   //! formoutput, sqloutput and others.
   //!
@@ -1180,7 +1203,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
   //! that avoids many of the problems that stems from this function.
 {
   string quote = args->quote || "#";
-  mapping other_vars = id->misc->variables;
+  mapping(string:string) other_vars = [mapping(string:string)]id->misc->variables;
   string new_contents = "", unparsed_contents = "";
   int first;
 
@@ -1207,11 +1230,10 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 
   if (args->sort)
   {
-    array order;
-
-    order = args->sort / "," - ({ "" });
+    array(string) order = args->sort / "," - ({ "" });
     var_arr = Array.sort_array( var_arr,
-				lambda (mapping m1, mapping m2, array order)
+				lambda (mapping(string:string) m1,
+					mapping(string:string) m2)
 				{
 				  int tmp;
 
@@ -1233,7 +1255,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 				      return 0;
 				  }
 				  return 0;
-				}, order );
+				} );
   }
 
   if (args->range)
@@ -1267,7 +1289,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
   }
 
   first = 1;
-  foreach (var_arr, mapping vars)
+  foreach (var_arr, mapping(string:string) vars)
   {
     if (args->set)
       foreach (indices (vars), string var) {
@@ -1281,7 +1303,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 	    val = replace ((string) val, "\000", multi_separator);
 	  if (!sizeof (val)) val = args->empty || "";
 	}
-	id->variables[var] = val;
+	id->variables[var] = [string]val;
       }
 
     id->misc->variables = vars;
@@ -1297,7 +1319,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 	  exploded[c] = quote;
 	else
 	{
-	  array(string) options =  exploded[c] / ":";
+	  array(string) options =  [string]exploded[c] / ":";
 	  string var = String.trim_whites(options[0]);
 	  mixed val = vars[var];
 	  array(string) encodings = ({});
@@ -1350,7 +1372,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 		multisep;
 	    else
 	      val = replace ((string) val, "\000", multisep);
-	    if (!sizeof (val)) val = empty;
+	    if (!sizeof ([string]val)) val = empty;
 	  }
 
 	  if (!sizeof (encodings))
@@ -1359,7 +1381,7 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 
 	  string tmp_val;
 	  foreach (encodings, string encoding)
-	    if( !(val = roxen_encode( val, encoding )) )
+	    if( !(val = roxen_encode( [string]val, encoding )) )
 	      return ("<b>Unknown encoding " + encoding
 		      + " in replace field " + ((c >> 1) + 1) + "</b>");
 
@@ -1414,7 +1436,7 @@ string fix_relative( string file, RequestID id )
 
 Stdio.File open_log_file( string logfile )
 {
-  mapping m = localtime(time());
+  mapping m = localtime([int]time(1));
   m->year += 1900;	/* Adjust for years being counted since 1900 */
   m->mon++;		/* Adjust for months being counted 0-11 */
   if(m->mon < 10) m->mon = "0"+m->mon;
@@ -1441,7 +1463,8 @@ Stdio.File open_log_file( string logfile )
   return Stdio.stderr;
 }
 
-string tagtime(int t, mapping m, RequestID id, function language)
+string tagtime(int t, mapping(string:string) m, RequestID id,
+	       function(string, string, object:function(int, mapping(string:string):string)) language)
 {
   string res;
 
@@ -1532,7 +1555,7 @@ string tagtime(int t, mapping m, RequestID id, function language)
 
      case "discordian":
 #if efun(discdate)
-      array eris=discdate(t);
+      array(string) eris=discdate(t);
       res=eris[0];
       if(m->year)
 	res += " in the YOLD of "+eris[1];
