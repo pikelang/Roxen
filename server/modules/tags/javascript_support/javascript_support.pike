@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.15 2000/02/21 23:49:40 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.16 2000/02/22 15:06:14 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -158,14 +158,33 @@ static private string container_js_link(string name, mapping args,
   return make_container_unquoted("a", args, contents);
 }
 
+static private string int_cont_js_popup_label(string name, mapping args,
+					      string contents, mapping m)
+{
+  if(m->label)
+    return 0;
+  
+  m->label = contents;
+  return "";
+}
+
 static private string container_js_popup(string name, mapping args,
 					 string contents, object id)
 {
   //werror("Enter");
+  
+  if(!args->label) {
+    mapping m = ([ ]);
+    contents = parse_html(contents, ([ ]),
+			  ([ "js-popup-label":int_cont_js_popup_label ]), m);
+    args->label = m->label;
+  }
+  
   mapping largs = copy_value(args);
   if(largs->label) m_delete(largs, "label");
   if(largs->ox) m_delete(largs, "ox");
   if(largs->oy) m_delete(largs, "oy");
+  if(largs->od) m_delete(largs, "od");
   if(!largs->href) largs->href = "javascript:void";
   if(largs->event) m_delete(largs, "event");
 
