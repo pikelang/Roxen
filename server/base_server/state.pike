@@ -1,6 +1,6 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
-// $Id: state.pike,v 1.5 1999/08/11 13:11:24 grubba Exp $
+// $Id: state.pike,v 1.6 1999/08/12 00:47:47 nilsson Exp $
 
 #define CHKSPACE "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
@@ -67,9 +67,7 @@ string encode_state(object id) {
 private string encode_state4real(mapping state) {
   string from = encode_value(state);
   object gz = Gz;
-  string to = MIME.encode_base64( gz->deflate()->deflate(from));
-  to-="\r";
-  to-="\n";
+  string to = MIME.encode_base64( gz->deflate()->deflate(from), 1);
   int chksum=0;
   for(int i=0; i<sizeof(to); i++)
     chksum+=to[i];
