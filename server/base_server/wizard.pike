@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.21 1997/08/20 19:09:54 noring Exp $
+/* $Id: wizard.pike,v 1.22 1997/08/21 10:50:29 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -145,6 +145,13 @@ string parse_wizard_help(string t, mapping m, string contents, object id,
   return contents;
 }
 
+string name_of()
+{
+  string n = (this_object()->wizard_name||this_object()->name)-"<p>";
+  sscanf(n, "%*s//%s", n);
+  sscanf(n, "%*d//%s", n);
+  return n;
+}
 
 string parse_wizard_page(string form, object id, string wiz_name)
 {
@@ -172,7 +179,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "  <tr><td><table bgcolor=#eeeeee cellpadding=0 "
 	 "         cellspacing=0 border=0 width=100%>\n"
 	 "    <tr><td><table width=100% height=100% cellspacing=0 cellpadding=5>\n<tr><td>"
-	 "<font size=+2>"+(this_object()->wizard_name||this_object()->name)+"</font>"
+	 "<font size=+2>"+name_of()+"</font>"
 	 " </td>\n<td align=right>"+
 	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
@@ -319,8 +326,14 @@ string focused_wizard_menu;
 mixed wizard_menu(object id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  if(id->pragma["no-cache"]) wizards=([]);
-  
+  if(id->pragma["no-cache"]) {
+    foreach(indices(wizards), string w)
+    {
+      destruct(wizards[w]);
+      m_delete(wizards,w);
+    }
+    wizards=([]);
+  }  
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
@@ -342,10 +355,33 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
 
 /*** Additional Action Functions ***/
 
+string html_notice(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_1.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}
+
+string html_warning(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_2.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}
+
+string html_error(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}
+
 string html_table(array(string) subtitles, array(array(string)) table)
 {
   string r = "";
 
+  r += "<table bgcolor=black border=0 cellspacing=0 cellpadding=1>\n"
+       "<tr><td>\n";
   r += "<table border=0 cellspacing=0 cellpadding=4>\n";
   r += "<tr bgcolor=#113377>\n";
   foreach(subtitles, string s)
@@ -358,6 +394,7 @@ string html_table(array(string) subtitles, array(array(string)) table)
     }
     r += "</tr>\n";
   }
+  r += "</table></td></tr>\n";
   r += "</table><br>\n";
   return r;
 }

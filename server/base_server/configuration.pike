@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.62 1997/08/20 21:37:06 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.63 1997/08/21 10:50:21 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1826,173 +1826,8 @@ private void update_vars(int from)
   {
   case 0:
 
-   // Pre b11p11 
-   // Ports changed from int, int, int ... to
-   // ({ int, "http", query("PEther") })
-   //
-    
-    if(sizeof(retrieve("spider#0")))
-    {
-      p = query("Ports");
-      foreach(p, p)
-	if(intp(p))
-	  res += ({ ({ p, "http", query("PEther") }) });
-
-      perr("Updating ports variable.\n");
-      set("PEther", 0);
-      set("Ports", res);
-    } else {
-      perr("Ports variable already fixed.\n");
-    }
-
-    // Now comes the tricky part..
-    // Fix all thoose redirection modules.
-    res = ({});
-    while(sizeof(redir = retrieve(modname = "redirect#"+i++)))
-    {
-      string from, to;
-      if(redir->fileredirect)
-      {
-	res += ({ "\n\n" +redir->fileredirect });
-	remove( modname, this );
-	if(enabled_modules[modname] )
-	  m_delete( enabled_modules, modname );
-	continue;
-      }
-      // from -> to
-      remove( modname, this );
-      if(enabled_modules[modname] )
-	m_delete( enabled_modules, modname );
-      from = redir->from;
-      to = redir->redirect;
-      if(redir->internal)
-	res += ({ from + "	" + to });
-      else
-	res += ({ from + "	" + "%u" + to });
-      perr("Fixing redirect from " + from + " to "+to+"\n");
-    }
-
-    if(sizeof(res)) // Hepp hopp
-    {
-      enabled_modules["redirect#0"] = 1;
-      store("redirect#0",
-	    ([
-	      "fileredirect":"# Automatically converted patterns...\n\n" 
-	                     + res*"\n"
-	      ]), 1);
-    }    
-    
-    // And now the etc/extentions bug...
-    redir = retrieve("contenttypes#0");
-
-    if(!sizeof(redir))
-      enabled_modules["contenttypes#0"] = 1;
-    else
-    {
-      redir->exts = replace(redir->exts, "etc/extentions", "etc/extensions");
-      store("contenttypes#0", redir, 1);
-      perr("Fixing spelling error in contenttypes configuration.\n");
-    }
-    
-    // Is there a directory parser in there somewhere?
-
-    perror("Making a list of all wanted index files...\n");
-    
-    i=0;
-    res=({ });
-    while(sizeof(redir = retrieve(modname = "userfs#"+i++)))
-    {
-      if(redir->indexfiles)
-      {
-	res |= redir->indexfiles;
-	redir[".files"] = !redir[".files"];
-	store("userfs#"+(i-1), redir, 1);
-#ifdef SUPPORT_HTACCESS
-	if(redir[".htaccess"])
-	{
-	  if(!query("htaccess"))
-	  {
-	    perr("A filesystem used .htaccess parsing.\n"
-		 "This variable is now server global.\n"
-		 "This variable has now been set to 'Yes'\n");
-	    set("htaccess", 1);
-	  }
-	}
-#endif
-      }
-    }
-    i=0;
-    while(sizeof(redir = retrieve(modname = "secure_fs#"+i++)))
-    {
-      if(redir->indexfiles)
-      {
-	res |= redir->indexfiles;
-	redir[".files"] = !redir[".files"];
-	store("secure_fs#"+(i-1), redir, 1);
-#ifdef SUPPORT_HTACCESS
-	if(redir[".htaccess"])
-	{
-	  if(!query("htaccess"))
-	  {
-	    perr("A secure filesystem used .htaccess parsing.\n"
-		 "This variable is now server global.\n"
-		 "This variable has now been set to 'Yes'\n");
-	    set("htaccess", 1);
-	  }
-	}
-#endif
-      }
-    }
-    i=0;
-    while(sizeof(redir = retrieve(modname = "filesystem#"+i++)))
-    {
-      if(redir->indexfiles)
-      {
-	res |= redir->indexfiles;
-	redir[".files"] = !redir[".files"];
-	store("filesystem#"+(i-1), redir, 1);
-#ifdef SUPPORT_HTACCESS
-	if(redir[".htaccess"])
-	{
-	  if(!query("htaccess"))
-	  {
-	    perr("A user filesystem used .htaccess parsing.\n"
-		 "This variable is now server global.\n"
-		 "It has been set to 'Yes'\n");
-	    set("htaccess", 1);
-	  }
-	}
-#endif
-      }
-    }
-    perr("-> "+res*","+"\n");
-    
-    for(i=0; i<10; i++)
-    {
-      remove("status#"+i, this);
-      m_delete(enabled_modules, "status#"+i);
-    }
-    
-    if(!sizeof(retrieve("directories#0"))
-       && (sizeof(redir = retrieve("fastdir#0"))))
-    {
-      redir->indexfiles = res;
-      store("fastdir#0", redir, 1);
-      perr("Updated fast directory parser to include new list.\n");
-    } else {
-      if(!(sizeof(redir = retrieve("directories#0"))))
-      {
-	enabled_modules["directories#0"] = 1;
-	perr("Enabled a directory parsing module.\n");
-	redir = ([ ]);
-      }
-      redir->indexfiles = res;
-      store("directories#0", redir, 1);
-      perr("Updated directory parser to include new list.\n");
-    }
-    perr("Saving new module list.\n");
-    store( "EnabledModules", enabled_modules, 1 );
-
+   // Pre Spinnerb11p11 
+   // No longer supported!
   case 1:
   case 2:
    perr("The 'No directory lists' variable is yet again available.\n");
@@ -2038,6 +1873,9 @@ int log_is_not_enabled()
 }
 
 
+
+// Get the current domain. This is not as easy as one could think.
+
 private string get_domain(int|void l)
 {
   array f;
@@ -2077,8 +1915,6 @@ private string get_domain(int|void l)
   }
   return s;
 }
-
-// Get the current domain. This is not as easy as one could think.
 
 int disable_module( string modname )
 {
@@ -2479,9 +2315,7 @@ string desc()
 
 
 
-// This is the most likely URL for a virtual server. Again, this
-// should move into the actual 'configuration' object. It is not all
-// that nice to have all this code lying around in here.
+// This is the most likely URL for a virtual server.
 
 private string get_my_url()
 {
@@ -2493,9 +2327,8 @@ private string get_my_url()
 
 void enable_all_modules()
 {
-  array modules_to_process = sort_array(indices(retrieve("EnabledModules",this)));
+  array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
-
 
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
@@ -2519,8 +2352,6 @@ void create(string config)
   name=config;
 
   perror("Enabling virtual server '"+config+"'\n");
-  
-  definvisvar("htaccess", 0, TYPE_FLAG);
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>"
 	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
@@ -2609,16 +2440,14 @@ void create(string config)
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, log_is_not_enabled);
   
-  defvar("Domain", get_domain(), 
-
-	 "Domain", TYPE_STRING, 
+  defvar("Domain", get_domain(), "Domain", TYPE_STRING, 
 	 "Your domainname, should be set automatically, if not, "
 	 "enter the real domain name here, and send a bug report to "
 	 "<a href=\"mailto:roxen-bugs@infovav.se\">roxen-bugs@infovav.se"
 	 "</a>");
   
 
-    defvar("Ports", ({ }), 
+  defvar("Ports", ({ }), 
 	 "Listen ports", TYPE_PORTS,
          "The ports this virtual instance of Roxen will bind to.\n");
 

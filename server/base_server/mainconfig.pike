@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.74 1997/08/20 07:46:55 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.75 1997/08/21 10:50:24 per Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -24,7 +24,7 @@ object get_template(string t);
 #define bdB "90"
 
 
-#define BODY "<body bgcolor=white text=black link=black vlink=black alink=red>"
+#define BODY "<body bgcolor=white text=black link=darkblue vlink=black alink=red>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -39,10 +39,8 @@ class Node {
 
   mixed original;
   int changed, moredocs;
-
   int bar=time();
-  function saver = lambda(object o) { if(o->changed) o->change(-o->changed); };
-  
+  function saver;
   string|array error;
   
   void change(int i)
@@ -145,6 +143,7 @@ class Node {
       // A port was changed in the current server...
     }
     if(saver) saver(this_object(), config());
+    else  change(-changed);
   }
 }
 

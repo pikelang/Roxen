@@ -1,11 +1,11 @@
 /*
- * $Id: upgrade.pike,v 1.8 1997/08/20 14:23:56 per Exp $
+ * $Id: upgrade.pike,v 1.9 1997/08/21 10:50:39 per Exp $
  */
 
 inherit "roxenlib";
 
 constant name= "Maintenance//Upgrade components from roxen.com...";
-constant doc = "Selectively upgrade components from roxen.com.";
+constant doc = "Selectively upgrade Roxen components from roxen.com.";
 
 mapping modules;
 
@@ -68,7 +68,7 @@ void find_modules(int mode)
 }
 
 
-string initial_form(object id)
+string page_0(object id)
 {
   return
     ("<table bgcolor=black cellpadding=1><tr><td>\n"
@@ -78,7 +78,6 @@ string initial_form(object id)
      "<form>\n"
      "<font size=+1>What components do you want to upgrade?</font><br>\n"
      "</tr><tr><td  colspan=2>\n"
-     "<input type=hidden name=action value="+id->variables->action+">\n"
      "<input type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
      "<input type=radio name=how checked value=0> All currently enabled modules in all virtual servers <br>\n"
      "<input type=radio name=how value=2> New (previously "

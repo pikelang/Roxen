@@ -1,40 +1,44 @@
 /*
- * $Id: clearlog.pike,v 1.4 1997/08/20 14:23:51 per Exp $
+ * $Id: clearlog.pike,v 1.5 1997/08/21 10:50:33 per Exp $
  */
 
-inherit "roxenlib";
+inherit "wizard";
 constant name= "Maintenance//Clear Event Log...";
+constant wizard_name= "Clear Event Log";
 
 constant doc = ("Clear all or specified (on type) events from the Event Log.");
 
-mixed handle(object id, object mc)
+mixed page_0(object id)
 {
-  mapping v = id->variables;
-  if(!v->types) {
-    return sprintf("<h1>Select type of messages to delete:</h1><form>"
-		   "<input type=hidden name=action value=\""+v->action+"\">"
-		   "<select name=types multiple>"
-		   "<option value=1>Informational messages"
-		   "<option value=2>Warning messages"
-		   "<option value=3>Error messages</select>"
-		   "<br><input type=submit value=\"Remove selected events\">"
-		   "</form");
-  } else {
-//    perror("%O\n", roxen->error_log);
-    array types = v->types / "\0";
-    int type;
-    /*  if(sizeof(types) == 3)
-      roxen->error_log = ([]);
-    else */foreach(indices(roxen->error_log), string err)
-    {
-      sscanf(err, "%d,%*s", type);
-      if(search(types, (string)type) != -1)
-	m_delete(roxen->error_log, err);
-    }
-//    perror("%O\n", roxen->error_log);
-    roxen->last_error = "";
-    report_notice("Event log cleared by admin from "+
-		  roxen->blocking_ip_to_host(id->remoteaddr)+".");
-    return http_redirect(roxen->config_url()+"Errors/?"+time());
-  }
+  return ("<font size=+2>Select which type of messages to delete:</font><p>"
+	  "<table><tr><td>"
+	  "<var name=types type=select_multiple default='' choices='"
+	  "Informational messages,Warning messages,Error messages'></td><td>"+
+	  html_notice("Example Informational Message", id)+
+	  html_warning("Example Warning Message", id)+
+	  html_error("Example Error Message", id)+
+	  "</td></tr></table>");
 }
+
+mixed wizard_done(object id)
+{
+  array types=Array.map(id->variables->types/"\0",
+			lambda(string s){return (s[0]=='I'?1:s[0]=='W'?2:3);});
+  foreach(indices(roxen->error_log), string err)
+  {
+    int type;
+    sscanf(err, "%d,%*s", type);
+    if(search(types,type) != -1) m_delete(roxen->error_log, err);
+  }
+  roxen->last_error = "";
+  report_notice("Event log cleared by admin from "+
+		roxen->blocking_ip_to_host(id->remoteaddr)+".");
+
+  return http_redirect(roxen->config_url()+"Errors/?"+time());
+}
+
+string handle(object id)
+{
+  return wizard_for(id,0);
+}
+

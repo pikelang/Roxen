@@ -1,5 +1,5 @@
 /*
- * $Id: reloadmoduledb.pike,v 1.3 1997/08/20 14:23:54 per Exp $
+ * $Id: reloadmoduledb.pike,v 1.4 1997/08/21 10:50:37 per Exp $
  */
 
 inherit "roxenlib";
@@ -12,5 +12,6 @@ mixed handle(object id, object mc)
 {
   roxen->allmodules=0;
   roxen->module_stat_cache=([]);
+  gc();
   return http_redirect(roxen->config_url()+"Actions/");
 }

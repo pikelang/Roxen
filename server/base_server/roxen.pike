@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.108 1997/08/21 00:10:34 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.109 1997/08/21 10:50:27 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1271,10 +1271,6 @@ private int ident_disabled_p() { return QUERY(default_ident); }
 private void define_global_variables( int argc, array (string) argv )
 {
   int p;
-  // Hidden variables (compatibility ones, or internal or too
-  // dangerous (in the case of chroot, the variable is totally
-  // removed.
-  
   globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
 	  "If set, all users of your server whose clients supports "
 	  "cookies will get a unique 'user-id-cookie', this can then be "
@@ -1292,9 +1288,19 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is very useful if you are debugging your own modules "
 	  "or writing Pike scripts.");
   
+  
+  // Hidden variables (compatibility ones, or internal or too
+  // dangerous
+/*  globvar("BS", 0, "Configuration interface: Compact layout",*/
+/*	  TYPE_FLAG|VAR_EXPERT,*/
+/*	  "Sick and tired of all those images? Set this variable to 'Yes'!");*/
+/*  globvar("BG", 1,  "Configuration interface: Background",*/
+/*	  TYPE_FLAG|VAR_EXPERT,*/
+/*	  "Should the background be set by the configuration interface?");*/
+
   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
-    
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
+
 
   globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
@@ -1422,13 +1428,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  "What Roxen will call itself when talking to clients. ",
 	  0, ident_disabled_p);
 
-// Does not work right now..
-  globvar("BS", 0, "Configuration interface: Compact layout",
-	  TYPE_FLAG|VAR_EXPERT,
-	  "Sick and tired of all those images? Set this variable to 'Yes'!");
-  globvar("BG", 1,  "Configuration interface: Background", TYPE_FLAG|VAR_EXPERT,
-	  "Should the background be set by the configuration interface?");
-
 
   globvar("DOC", 1, "Configuration interface: Help texts", TYPE_FLAG|VAR_MORE,
 	  "Do you want documentation? (this is an example of documentation)");
@@ -1486,8 +1485,9 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("User", "", "Change uid and gid to", TYPE_STRING,
 	  "When roxen is run as root, to be able to open port 80 "
 	  "for listening, change to this user-id and group-id when the port "
-	  " has been opened. If you only specify a symbolic username, the "
-	  "default group of that user will be used.");
+	  " has been opened. If you specify a symbolic username, the "
+	  "default group of that user will be used. "
+	  "The syntax is user[:group].");
   
   globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
 	  TYPE_INT|VAR_MORE,

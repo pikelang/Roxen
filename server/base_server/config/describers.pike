@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.40 1997/08/20 14:23:50 per Exp $ */
+/* $Id: describers.pike,v 1.41 1997/08/21 10:50:31 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -163,16 +163,22 @@ string act_describe_submenues(array menues, string base,string sel)
   foreach(sort(menues), string s)
     res+=
       (s==sel?"<li>":"<font color=#eeeeee><li></font><a href=\""+base+"?sm="+replace(s||"Misc"," ","%20")+
-       "&uniq="+(++zonk)+"\">")+(s||"Misc")+
-      (s==sel?"<br>":"</a><br>")+"";
+       "&uniq="+(++zonk)+"\"><font color=#888888>")+(s||"Misc")+
+      (s==sel?"<br>":"</font></a><br>")+"";
   return res + "</font>";
 }
 
-string focused_action_menu;
+string focused_action_menu="Maintenance";
 mixed describe_actions(object node, object id)
 {
-  if(id->pragma["no-cache"]) actions=([]);
-
+  if(id->pragma["no-cache"]) {
+    foreach(indices(actions), string w)
+    {
+      destruct(actions[w]);
+      m_delete(actions,w);
+    }
+    actions=([]);
+  }
   if(!id->variables->sm)
     id->variables->sm = focused_action_menu;
   else
