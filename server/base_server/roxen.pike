@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.577 2001/04/17 07:21:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.578 2001/06/06 21:04:30 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -895,132 +895,136 @@ class SSLProtocol
     restore();
     
     object privs = Privs("Reading cert file");
-
+    int key_matches;
     string f, f2;
+    ctx->certificates = ({});
 
-    if( catch{ f = lopen(query_option("ssl_cert_file"), "r")->read(); } )
+    foreach( query_option("ssl_cert_file")/",", string cert_file )
     {
-      report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
+      if( catch{ f = lopen(cert_file, "r")->read(); } )
+      {
+	report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
+	destruct();
+	return;
+      }
+
+      if( strlen(query_option("ssl_key_file")) &&
+	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
+      {
+	report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
+	destruct();
+	return;
+      }
+
+      object msg = Tools.PEM.pem_msg()->init( f );
+      object part = msg->parts["CERTIFICATE"] || msg->parts["X509 CERTIFICATE"];
+      string cert;
+
+      if (!part || !(cert = part->decoded_body())) 
+      {
+	report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
+	destruct();
+	return;
+      }
+
+      if( f2 )
+	msg = Tools.PEM.pem_msg()->init( f2 );
+
+      function r = Crypto.randomness.reasonably_random()->read;
+
+      SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
+
+      if (part = msg->parts["RSA PRIVATE KEY"])
+      {
+	string key;
+
+	if (!(key = part->decoded_body())) 
+	{
+	  report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
+	  destruct();
+	  return;
+	}
+
+	object rsa = Standards.PKCS.RSA.parse_private_key(key);
+	if (!rsa) 
+	{
+	  report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
+	  destruct();
+	  return;
+	}
+
+	ctx->rsa = rsa;
+
+	SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
+
+	if (rsa->rsa_size() > 512)
+	{
+	  /* Too large for export */
+	  ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+
+	  // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
+	}
+	ctx->rsa_mode();
+
+	object tbs = Tools.X509.decode_certificate (cert);
+	if (!tbs) 
+	{
+	  report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
+	  destruct();
+	  return;
+	}
+	if (tbs->public_key->rsa->public_key_equal (rsa))
+	  key_matches++;
+	else
+	  continue;
+      }
+      else if (part = msg->parts["DSA PRIVATE KEY"])
+      {
+	string key;
+
+	if (!(key = part->decoded_body())) 
+	{
+	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
+	  destruct();
+	  return;
+	}
+
+	object dsa = Standards.PKCS.DSA.parse_private_key(key);
+	if (!dsa) 
+	{
+	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
+	  destruct();
+	  return;
+	}
+
+	SSL3_WERR(sprintf("Using DSA key."));
+
+	dsa->use_random(r);
+	ctx->dsa = dsa;
+	/* Use default DH parameters */
+	ctx->dh_params = SSL.cipher.dh_parameters();
+
+	ctx->dhe_dss_mode();
+
+	// FIXME: Add cert <-> private key check.
+      }
+      else 
+      {
+	report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
+	destruct();
+	return;
+      }
+
+      ctx->certificates = ({ cert }) + ctx->certificates;
+      ctx->random = r;
+    }
+    if( !key_matches )
+    {
+      report_error(LOC_M(14, "SSL3: Certificate and private key do not "
+			 "match.")+"\n");
       destruct();
       return;
     }
-
-    if( strlen(query_option("ssl_key_file")) &&
-        catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
-    {
-      report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
-      destruct();
-      return;
-    }
-
-    if (privs)
-      destruct(privs);
-
-    object msg = Tools.PEM.pem_msg()->init( f );
-    object part = msg->parts["CERTIFICATE"] || msg->parts["X509 CERTIFICATE"];
-    string cert;
-
-    if (!part || !(cert = part->decoded_body())) 
-    {
-      report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
-      destruct();
-      return;
-    }
-
-    if( f2 )
-      msg = Tools.PEM.pem_msg()->init( f2 );
-
-    function r = Crypto.randomness.reasonably_random()->read;
-
-    SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
-
-    if (part = msg->parts["RSA PRIVATE KEY"])
-    {
-      string key;
-
-      if (!(key = part->decoded_body())) 
-      {
-	report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
-	destruct();
-	return;
-      }
-
-      object rsa = Standards.PKCS.RSA.parse_private_key(key);
-      if (!rsa) 
-      {
-	report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
-	destruct();
-	return;
-      }
-
-      ctx->rsa = rsa;
-
-      SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
-
-      if (rsa->rsa_size() > 512)
-      {
-	/* Too large for export */
-	ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
-
-	// ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
-      }
-      ctx->rsa_mode();
-
-      object tbs = Tools.X509.decode_certificate (cert);
-      if (!tbs) 
-      {
-	report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
-	destruct();
-	return;
-      }
-      if (!tbs->public_key->rsa->public_key_equal (rsa)) 
-      {
-	report_error(LOC_M(14, "SSL3: Certificate and private key do not "
-			   "match.")+"\n");
-	destruct();
-	return;
-      }
-    }
-    else if (part = msg->parts["DSA PRIVATE KEY"])
-    {
-      string key;
-
-      if (!(key = part->decoded_body())) 
-      {
-	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
-	destruct();
-	return;
-      }
-
-      object dsa = Standards.PKCS.DSA.parse_private_key(key);
-      if (!dsa) 
-      {
-	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
-	destruct();
-	return;
-      }
-
-      SSL3_WERR(sprintf("Using DSA key."));
-
-      dsa->use_random(r);
-      ctx->dsa = dsa;
-      /* Use default DH parameters */
-      ctx->dh_params = SSL.cipher.dh_parameters();
-
-      ctx->dhe_dss_mode();
-
-      // FIXME: Add cert <-> private key check.
-    }
-    else 
-    {
-      report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
-      destruct();
-      return;
-    }
-
-    ctx->certificates = ({ cert });
-    ctx->random = r;
-
 #if EXPORT
     ctx->export_mode();
 #endif

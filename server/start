@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.133 2001/03/27 18:20:34 mast Exp $
+# $Id: start,v 1.134 2001/06/06 21:02:33 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -249,6 +249,9 @@ parse_args() {
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
   ;;
+  '--strip-backslash'|'--without-backslash'|'--strip-back-slash')
+    DEFINES="-DSTRIP_BSLASH $DEFINES"
+  ;;
   '--without-ram-cache'|'--disable-ram-cache')
     DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
   ;;
@@ -354,6 +357,9 @@ the default arguments.
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
                                   this argument must be the first one.
+
+      .B--strip-backslashB.:          Replace all \\ characters in URIs with /
+
 
       .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
