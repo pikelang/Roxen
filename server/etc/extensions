@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.42 2000/02/16 17:54:09 peter Exp $
+# $Id: extensions,v 1.43 2000/05/21 20:09:20 nilsson Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -520,6 +520,9 @@ asp	application/x-asap
 asz	application/astound
 axs	application/olescript
 bcpio	application/x-bcpio
+bld	application/bld
+bld2	application/bld2
+bz2	application/x-bzip2
 cairn	application/x-cairn
 ca_cert application/x-x509-ca-cert
 cert	application/x-x509-ca-cert
@@ -630,6 +633,7 @@ sc2	application/vnd.ms-schedule
 scd	application/vnd.ms-schedule
 sch	application/vnd.ms-schedule
 #scm	application/x-icq
+sdf	application/e-score
 sh	application/x-sh
 shar	application/x-shar
 shw	application/presentations
