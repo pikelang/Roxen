@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.58 2000/12/11 03:38:48 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.59 2000/12/11 03:45:33 per Exp $
  *
  * Various helper functions.
  *
@@ -34,7 +34,73 @@ string http_roxen_id_cookie()
 }
 
 
-// These two functions are questionable, but rather widely used.
+// These five functions are questionable, but rather widely used.
+string msectos(int t)
+{
+  if(t<1000) /* One sec. */
+  {
+    return sprintf("0.%02d sec", t/10);
+  } else if(t<6000) {  /* One minute */
+    return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
+  } else if(t<3600000) { /* One hour */
+    return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
+  }
+  return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
+}
+
+
+
+string decode_mode(int m)
+{
+  string s;
+  s="";
+
+  if(S_ISLNK(m))  s += "Symbolic link";
+  else if(S_ISREG(m))  s += "File";
+  else if(S_ISDIR(m))  s += "Dir";
+  else if(S_ISCHR(m))  s += "Special";
+  else if(S_ISBLK(m))  s += "Device";
+  else if(S_ISFIFO(m)) s += "FIFO";
+  else if(S_ISSOCK(m)) s += "Socket";
+  else if((m&0xf000)==0xd000) s+="Door";
+  else s+= "Unknown";
+
+  s+=", ";
+
+  if(S_ISREG(m) || S_ISDIR(m))
+  {
+    s+="<tt>";
+    if(m&S_IRUSR) s+="r"; else s+="-";
+    if(m&S_IWUSR) s+="w"; else s+="-";
+    if(m&S_IXUSR) s+="x"; else s+="-";
+
+    if(m&S_IRGRP) s+="r"; else s+="-";
+    if(m&S_IWGRP) s+="w"; else s+="-";
+    if(m&S_IXGRP) s+="x"; else s+="-";
+
+    if(m&S_IROTH) s+="r"; else s+="-";
+    if(m&S_IWOTH) s+="w"; else s+="-";
+    if(m&S_IXOTH) s+="x"; else s+="-";
+    s+="</tt>";
+  } else {
+    s+="--";
+  }
+  return s;
+}
+
+mapping add_http_header(mapping to, string name, string value)
+{
+  if(to[name]) {
+    if(arrayp(to[name]))
+      to[name] += ({ value });
+    else
+      to[name] = ({ to[name], value });
+  }
+  else
+    to[name] = value;
+  return to;
+}
+
 string short_name(string long_name)
 {
   long_name = replace(long_name, " ", "_");
@@ -162,18 +228,6 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
 }
 
 
-mapping add_http_header(mapping to, string name, string value)
-{
-  if(to[name]) {
-    if(arrayp(to[name]))
-      to[name] += ({ value });
-    else
-      to[name] = ({ to[name], value });
-  }
-  else
-    to[name] = value;
-  return to;
-}
 
 mapping http_string_answer(string text, string|void type)
 //! Generates a result mapping with the given text as the request body
@@ -1664,6 +1718,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
      return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
 
    case "ГҐГ¤Г¶":
+   case "ГҐГ¤":
      id && id->set_output_charset && id->set_output_charset( "utf-8" );
      return utf8_to_string;
 
@@ -1675,7 +1730,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
      id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
      return unicode_to_string;
   }
-  report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
+  report_warning( "Unable to find charset decoder for едц == %O\n",едц);
 }
 
 

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.209 2000/12/11 03:36:16 per Exp $
+// $Id: roxenlib.pike,v 1.210 2000/12/11 03:45:32 per Exp $
 
 //#pragma strict_types
 
@@ -61,43 +61,6 @@ string msectos(int t)
 }
 
 
-static string decode_mode(int m)
-{
-  string s;
-  s="";
-
-  if(S_ISLNK(m))  s += "Symbolic link";
-  else if(S_ISREG(m))  s += "File";
-  else if(S_ISDIR(m))  s += "Dir";
-  else if(S_ISCHR(m))  s += "Special";
-  else if(S_ISBLK(m))  s += "Device";
-  else if(S_ISFIFO(m)) s += "FIFO";
-  else if(S_ISSOCK(m)) s += "Socket";
-  else if((m&0xf000)==0xd000) s+="Door";
-  else s+= "Unknown";
-
-  s+=", ";
-
-  if(S_ISREG(m) || S_ISDIR(m))
-  {
-    s+="<tt>";
-    if(m&S_IRUSR) s+="r"; else s+="-";
-    if(m&S_IWUSR) s+="w"; else s+="-";
-    if(m&S_IXUSR) s+="x"; else s+="-";
-
-    if(m&S_IRGRP) s+="r"; else s+="-";
-    if(m&S_IWGRP) s+="w"; else s+="-";
-    if(m&S_IXGRP) s+="x"; else s+="-";
-
-    if(m&S_IROTH) s+="r"; else s+="-";
-    if(m&S_IWOTH) s+="w"; else s+="-";
-    if(m&S_IXOTH) s+="x"; else s+="-";
-    s+="</tt>";
-  } else {
-    s+="--";
-  }
-  return s;
-}
 
 static string http_res_to_string( mapping file, RequestID id )
 {
