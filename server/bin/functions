@@ -107,6 +107,9 @@ find_pike() {
    dp "No pike binary found. Aborting."
    exit 1
  fi
+
+ PIKE=$pike
+ export PIKE
 }
 
 raise_limit() {
