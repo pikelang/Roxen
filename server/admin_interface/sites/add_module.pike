@@ -2,7 +2,7 @@
 #include <module.h>
 #include <module_constants.h>
 
-//$Id: add_module.pike,v 1.81 2004/05/27 18:41:33 _cvs_stephen Exp $
+//$Id: add_module.pike,v 1.82 2004/05/27 19:15:09 _cvs_stephen Exp $
 
 int no_reload()
 {
@@ -603,7 +603,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
  <tr>
 <td width='30'><img src='/%01/unit' width=50 height=1 alt='' /></td>
   <td colspan=2>&_.doc:none;</td></tr>
- <tr><td colspan='3'><img src='/%01/unit' height=18 width=1 alt="" /></td></tr>
+ <tr><td colspan='3'><img src='/%01/unit' height=18 width=1 alt='' /></td></tr>
 </emit>";
         break;
       }

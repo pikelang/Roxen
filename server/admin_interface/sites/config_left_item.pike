@@ -381,7 +381,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		 "Add module </gbutton>",
 		 Roxen.http_encode_string( c->name ) )+
       sprintf("<br />\n"
-	      "<img src='/%01/unit' width=1 height=1/><br />"
+	      "<img src='/%%01/unit' width=1 height=1/><br />"
 	      "<gbutton frame-image='&usr.left-buttonframe;' "
 	      "width='&usr.left-buttonwidth;' "
 	      "bgcolor='&usr.left-buttonbg;' "
