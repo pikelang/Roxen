@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.307 2000/05/05 23:29:48 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.308 2000/05/06 09:34:12 kinkie Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2875,9 +2875,11 @@ string check_variable(string name, mixed value)
                           query("throttle_min_grant"),
                           query("throttle_max_grant"));
     } else {
-      THROTTLING_DEBUG("configuration: Stopping throttler");
-      destruct(throttler);
-      throttler=0;
+      if (throttler) { //check, or get a backtrace the first time it's set
+        THROTTLING_DEBUG("configuration: Stopping throttler");
+        destruct(throttler);
+        throttler=0;
+      }
     }
     return 0;
   case "throttle_fill_rate":
