@@ -34,12 +34,12 @@ if test "x$with_pike" = "xdual"; then
   for d in `cd $srcdir; echo [0-9]*`; do
     test -d $d/. || mkdir $d
   done
-  subdirs=`cd $srcdir; echo [0-9]*/src`
+  pike_subdirs=`cd $srcdir; echo [0-9]*/src`
 else
   test -d $with_pike/. || mkdir $with_pike
-  subdirs=$with_pike/src
+  pike_subdirs=$with_pike/src
 fi
 
-AC_CONFIG_SUBDIRS($subdirs)
+AC_CONFIG_SUBDIRS($pike_subdirs)
 
 AC_OUTPUT(Makefile)
