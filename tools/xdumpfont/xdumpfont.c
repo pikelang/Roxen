@@ -19,8 +19,6 @@ static int height, baseline;
 static void init_x(int argc, char *argv[])
 {
   /* Open window etc. */
-  char *window_name = "XFontDump";
-  char *icon_name = "XFontDump, do _not_ iconify!";
   XSizeHints size_hints;
   XEvent report;
   Colormap colormap;
@@ -74,29 +72,6 @@ static void init_x(int argc, char *argv[])
   GCvalues.background = 0;
   GCvalues.font = font->fid;
   gc2 = XCreateGC(display, me, valuemask, &GCvalues);
-#if 0
-  {
-    XWMHints wm_hints;
-    XTextProperty windowName, iconName;
-
-    size_hints.flags = PPosition | PSize | PMinSize;
-    size_hints.min_width = 100;
-    size_hints.min_height = 100;
-
-    XStringListToTextProperty(&window_name, 1, &windowName);
-    XStringListToTextProperty(&icon_name, 1, &iconName);
-    
-    wm_hints.initial_state = NormalState;
-    wm_hints.input = True;
-    wm_hints.flags = StateHint | InputHint;
-
-    XSetWMProperties(display, me, &windowName, &iconName, argv, argc,
-		     &size_hints, &wm_hints, NULL);
-    XSelectInput(display, me, ExposureMask);
-
-    XMapWindow(display, me);
-  }
-#endif
   XFlush(display);
 }
 
@@ -139,13 +114,7 @@ static inline int MSB_8_GetPixel(XImage *im, int x, int y)
   return ((unsigned char *)im->data)[y * im->bytes_per_line + x];
 }
 
-#undef COMPAT
-
-#ifdef COMPAT
 #define GetPixel(i,x,y) (0!=XGetPixel(i,x,y))
-#else
-#define GetPixel(i,x,y) (0!=MSB_8_GetPixel(i,x,y))
-#endif
 
 void low_dump_char(unsigned char c, struct char_t *cid)
 {
@@ -159,11 +128,6 @@ void low_dump_char(unsigned char c, struct char_t *cid)
     return;
   }
 
-  if(c==32) /* Space, some X-fonts have buggy spaces?? */
-  {
-    if(width < height/3 || width > 400)
-      width = cid->spacing = height / 3;
-  }
   
   if(width > 400)
   {
@@ -217,32 +181,27 @@ void dump_char(unsigned char c)
 /*  XFlush(display);*/
   width = XTextWidth( font, &c, 1 );
 
-  character =
-    (struct char_t *)malloc(sizeof(struct char_t)+
-			    font->per_char[c].rbearing/2*height/2);
-  character->width = font->per_char[c].rbearing;
-  character->width *= 1.1;
-  character->spacing = width;
-#if 0
-  fprintf(stderr, "%d (%d, %d) x %d\n", c, character->width, 
+  if((c>=font->min_char_or_byte2) && (c<=font->max_char_or_byte2))
+  {
+    character =
+      (struct char_t *)
+      malloc(sizeof(struct char_t)+
+	     font->per_char[c-font->min_char_or_byte2].rbearing/2*height/2);
+    character->width = font->per_char[c-font->min_char_or_byte2].rbearing;
+    character->width *= 1.1;
+    character->spacing = width;
+  } else {
+    character = (struct char_t *)malloc(sizeof(struct char_t));
+    character->width=0;
+    character->spacing=width;
+  }
+    
+  fprintf(stderr, "%d (%d, %d) x %d\r", c, character->width, 
 	  character->spacing, height);
-#endif
-/*  character->height = height;*/
 
-  /*  XClearPixmap(display, me); */
   XDrawRectangle(display, me, gc2, 0, 0, 2100, 2100);
   XDrawImageString(display, me, gc, 0, font->ascent, todraw, 3);
-  /* XDrawRectangle(display, me, gc, 0, 0, width+1, height+1);*/
   XFlush(display);
-
-  if(c>30)
-    fputc(c,stderr);
-  else
-  {
-    fputc('\\',stderr);
-    fputc(c/10+'0',stderr);
-    fputc(c%10+'0',stderr);
-  }
   
   low_dump_char(c, character);
   font_size += 
