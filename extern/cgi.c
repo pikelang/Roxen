@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.27 1998/05/08 13:55:16 grubba Exp $
+ * $Id: cgi.c,v 1.28 1998/05/08 14:29:31 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -347,9 +347,16 @@ char *is_end_of_headers(char *s, int len)
 
   if(!headers) 
   {
+    hpointer = 0;
     hsize = (len/1024+1)*1024;
     headers = malloc(hsize);
-    hpointer = 0;
+    if ((s[0] == '\r') || (s[0] == '\n')) {
+      /* No headers. */
+      movemem(headers, s, len);
+      hpointer = len;
+      headers[hpointer] = 0;
+      return(headers);
+    }
   } else if(hsize <= hpointer+len) {
     headers = my_realloc(headers, (hpointer+len)*2+1, hsize);
     hsize = (hpointer+len)*2;
@@ -375,7 +382,7 @@ char *is_end_of_headers(char *s, int len)
 }
 
 
-int parse_and_send_headers(char *header_end)
+void parse_and_send_headers(char *header_end)
 {
   char *error, *pointer = NULL;
   if(headers)
@@ -403,15 +410,21 @@ int parse_and_send_headers(char *header_end)
       /*  send_data(headers, hpointer-headers);*/
       send_data(tmp+skip, hpointer-(tmp+skip-headers));
       free(headers);
-      return 1;
+      return;
     }
-    if((pointer = strstr(headers, "Location:") &&
+    if(((pointer = strstr(headers, "Location:")) &&
 	(!header_end || (pointer < header_end))) ||
-       (pointer = strstr(headers, "location:") &&
-	(!header_end || (pointer < header_end))))
+       ((pointer = strstr(headers, "location:")) &&
+	(!header_end || (pointer < header_end)))) {
+#ifdef DEBUG
+      fprintf(stderr, "Redirect: pointer:%p, header_end:%p, headers:%p\n",
+	      pointer, header_end, headers);
+#endif /* DEBUG */
+	      
       error = "HTTP/1.0 302 Redirect\r\n";
-    else
+    } else {
       error = "HTTP/1.0 200 Ok\r\n";
+    }
   } else
     error = "HTTP/1.0 200 Ok\r\n";
   
@@ -422,7 +435,7 @@ int parse_and_send_headers(char *header_end)
     free(headers);
   }
 /*  send_data("\n", 1);*/
-  return 1;
+  return;
 }
 
 
@@ -526,8 +539,10 @@ int main(int argc, char **argv)
     if(!raw)
     {
       char *header_end;
-      if((header_end = is_end_of_headers(foo, re)))
-	raw = parse_and_send_headers(header_end);
+      if((header_end = is_end_of_headers(foo, re))) {
+	parse_and_send_headers(header_end);
+	raw = 1;
+      }
     } else 
       send_data(bar, re);
   }
