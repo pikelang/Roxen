@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.54 1997/11/27 22:42:05 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.55 1998/01/12 14:24:08 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -380,6 +380,68 @@ class spawn_cgi
   void do_cgi()
   {
     int pid;
+#if constant(create_process)
+    if(wrapper) {
+      if(!(us = file_stat(combine_path(oldwd, wrapper))) ||
+	 !(us[0]&0111)) {
+	cgi_fail(403,
+		 "Wrapper exists, but access forbidden for user");
+      }
+      args = ({ combine_path(getcwd(), wrapper), f }) + args;
+    } else {
+      args = ({ f }) + args;
+    }
+
+    /* Be sure they are closed in the forked copy */
+    pipe2->set_close_on_exec(1);
+    pipe4->set_close_on_exec(1);
+    mapping options = ([ "cwd":wd,
+			 "stdin":pipe3,
+			 "stdout":pipe1,
+			 "toggle_uid":1,
+    ]);
+    if (dup_err) {
+      options["stderr"] = pipe1;
+    }
+
+    object privs;
+    if (!getuid()) {
+      // We are running as root -- change!
+      privs = Privs("CGI script", uid || 65534);
+    } else {
+      // Try to change user anyway, but don't throw an error if we fail.
+      catch(privs = Privs("CGI script", uid || 65534));
+    }
+    object proc;
+    mixed err = catch {
+      proc = create_process(args, options);
+    };
+    privs = 0;
+
+    /* We don't want to keep these. */
+    pipe1->close();
+    pipe3->close();
+
+    if (err) {
+      roxen_perror("CGI: create_process() failed:\n" +
+		   describe_backtrace(err));
+    }
+
+    if(proc && kill_call_out) {
+      call_out(lambda (int pid) {
+	object privs;
+	catch(privs = Privs("Killing CGI script."));
+	int killed;
+	killed = kill(pid, signum("SIGINTR"));
+	if(!killed)
+	  killed = kill(pid, signum("SIGHUP"));
+	if(!killed)
+	  killed = kill(pid, signum("SIGKILL"));
+	if(killed)
+	  perror("Killed CGI pid "+pid+"\n");
+      }, kill_call_out * 60 , proc->pid);
+    }
+#else /* !create_process */
     if (!(pid = fork())) {
       mixed err = catch {
 	array us;
@@ -472,6 +534,7 @@ class spawn_cgi
 	  perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , pid);
     }
+#endif /* constant(create_process) */
 
   }
   
@@ -598,8 +661,11 @@ mixed find_file(string f, object id)
   
   if(!getuid())
   {
-    if(QUERY(user) && id->misc->is_user && (us = file_stat(id->misc->is_user)))
+    if(QUERY(user) && id->misc->is_user &&
+       (us = file_stat(id->misc->is_user)) &&
+       (us[0] >= 10)) {
       uid = us[5..6];
+    }
     else if(runuser)
       uid = runuser;
   }
