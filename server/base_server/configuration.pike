@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.440 2001/06/22 02:59:33 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.441 2001/06/24 03:51:31 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1249,11 +1249,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #if defined(__NT__) || defined(STRIP_BSLASH)
   if( strlen(id->not_query ) )
   {
-    werror("a: "+id->not_query+"\n");
     int ss = (<'/','\\'>)[ id->not_query[0] ];
     id->not_query = combine_path("/",replace(id->not_query,"\\","/"));
     if( !ss )  id->not_query = id->not_query[1..];
-    werror("b: "+id->not_query+"\n");
   }
 #endif
 
@@ -3027,24 +3025,7 @@ int add_modules( array(string) mods, int|void now )
 
 mapping(string:string) sql_urls = ([]);
 
-mapping sql_cache = ([]);
-
-Sql.Sql sql_cache_get(string what)
-{
-#ifdef THREADS
-  if(sql_cache[what] && sql_cache[what][this_thread()])
-    return sql_cache[what][this_thread()];
-  if(!sql_cache[what])
-    sql_cache[what] =  ([ this_thread():Sql.Sql( what ) ]);
-  else
-    sql_cache[what][ this_thread() ] = Sql.Sql( what );
-  return sql_cache[what][ this_thread() ];
-#else /* !THREADS */
-  if(!sql_cache[what])
-    sql_cache[what] =  Sql.Sql( what );
-  return sql_cache[what];
-#endif
-}
+constant sql_cache_get = DBManager.sql_cache_get;
 
 Sql.Sql sql_connect(string db)
 {
