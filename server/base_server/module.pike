@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.109 2001/02/19 16:06:16 jonasw Exp $
+// $Id: module.pike,v 1.110 2001/02/21 05:41:10 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -178,15 +178,8 @@ void save_me()
   my_configuration()->module_changed( my_moduleinfo(), this_object() );
 }
 
-void save()
-{
-  save_me();
-}
-
-string comment()
-{
-  return "";
-}
+void save()      { save_me(); }
+string comment() { return ""; }
 
 string query_internal_location()
 //! Returns the internal mountpoint, where <ref>find_internal()</ref>
@@ -204,6 +197,9 @@ string query_absolute_internal_location(RequestID id)
 }
 
 string query_location()
+//! Returns the mountpoint as an absolute path. The default
+//! implementation uses the "location" configuration variable in the
+//! module.
 {
   string s;
   catch{s = query("location");};
@@ -536,29 +532,114 @@ mixed get_value_from_file(string path, string index, void|string pre)
   return compile_string((pre||"")+file->read())[index];
 }
 
-string my_db = "shared";
-void set_my_db( string to )
+string get_my_table( string|array(string) name,
+		     void|array(string)|string defenition )
+//! @decl string get_my_table( string name, array(string) types )
+//! @decl string get_my_table( string name, string defenition )
+//! @decl string get_my_table( string defenition )
+//! @decl string get_my_table( array(string) defenition )
+//!
+//! Returns the name of a table in the 'shared' database that is
+//! unique for this module. It is possible to select another database
+//! by using @[set_my_db] before calling this function.
+//! 
+//! In the first form, @[name] is the (postfix of) the name of the
+//! table, and @[types] is an array of defenitions, as an example:
+//!
+//! @example{
+//!   cache_table = get_my_table( "cache", ({
+//!               "id INT UNSIGNED AUTO_INCREMENT",
+//!               "data BLOB",
+//!               }) );
+//!  @}
+//!  
+//! In the second form, the whole table defenition is instead sent as
+//! a string. The cases where the name is not included (the third and
+//! fourth form) is equivalent to the first two cases with the name ""
+//!
+//! If the table does not exist in the datbase, it is created. If it
+//! exists, but it's defenition is different, the table will be
+//! altered with a ALTER TABLE call to conform to the defenition. This
+//! might not work if the database the table resides in is not a MySQL
+//! database (normally it is, but it's possible, using @[set_my_db],
+//! to change this).
+//!
+//! @note This function may not be called from create
 {
-  my_db = to;
-}
+  if( !defenition )
+  {
+    defenition = name;
+    name = "";
+  }
+  else if(strlen(name))
+    name = "_"+name;
 
-string get_my_table( string defenition )
-{
-  string res = _my_configuration->name+"_"+replace(sname(),"#","_");
   Sql.Sql sql = get_my_sql();
+  string res = hash(_my_configuration->name)->digits(36)
+    + "_" + replace(sname(),"#","_") + name;
+
   if( !sql )
   {
     report_error("Failed to get SQL handle, permission denied for "+my_db+"\n");
     return 0;
   }
-
+  if( arrayp( defenition ) )
+    defenition *= ", ";
+  
   if( catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" )) )
-    get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
+  {
+    mixed error =
+      catch
+      {
+	get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
+      };
+    if( error )
+    {
+      if( strlen( name ) )
+	name = " "+name;
+      report_notice( "Failed to create table"+name+": "+
+		     describe_error( error ) );
+      return 0;
+    }
+    return res;
+  }
+
+  
+  // Update defenition if it has changed. For now, always update. 
+  // This might be a tad ineffective if this function is called
+  // often, but mysql at least seems to ignore ALTER TABLE calls
+  // when the defenition has not changed.
+  mixed error = 
+    catch
+    {
+      get_my_sql()->query( "ALTER TABLE "+res+" ("+defenition+")" );
+    };
+  if( error )
+  {
+    if( strlen( name ) )
+      name = " for "+name;
+    report_notice( "Failed to update table defenition"+name+": "+
+		   describe_error( error ) );
+  }
   return res;
 }
 
 
-Sql.Sql get_my_sql()
+string my_db = "shared";
+void set_my_db( string to )
+//! Select the database in which tables will be created with
+//! get_my_table, and also the one that will be returned by
+//! @[get_my_sql]
 {
-  return DBManager.get( my_db, _my_configuration );
+  my_db = to;
+}
+
+Sql.Sql get_my_sql( int|void read_only )
+//! Return a SQL-object for the database set with @[set_my_db],
+//! defaulting to the 'shared' database. If read_only is specified,
+//! the database will be opened in read_only mode.
+//! 
+//! See also @[DBManager.get]
+{
+  return DBManager.get( my_db, _my_configuration, read_only );
 }
