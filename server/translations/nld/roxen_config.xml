@@ -82,7 +82,6 @@
 </str>
 
 <str id="11">
-<new/>
 <o>Reloaded %s.
 </o>
 <t>herlaad %s.
@@ -90,44 +89,36 @@
 </str>
 
 <str id="12">
-<new/>
 <o>Priority</o>
 <t>Prioriteit</t>
 </str>
 
 <str id="13">
-<new/>
 <o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
 <t>De prioriteit van de module. 9 is het hoogst, 0 is het laagst. Modules met dezelfde prioriteit worden in willekeurige volgorde geladen.</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Security: Realm</o>
 <t>Beveiling: locatie</t>
 </str>
 
 <str id="15">
-<new/>
-<o>De locatienaam die wordt getoond als de server om een wachtwoord van de
-gebruiker vraagt. Alleen informatief.from the client. Usually used as an informative message to the user.</o>
-<t></t>
+<o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
+<t>De locatienaam die wordt getoond als de server om een wachtwoord van de gebruiker vraagt. Alleen informatief. </t>
 </str>
 
 <str id="16">
-<new/>
 <o>Security: Patterns</o>
 <t>Beveiliging: patronen</t>
 </str>
 
 <str id="17">
-<new/>
 <o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
 <t>Dit is de 'security level=waarde' lijst. &lt;br /&gt;Elk beveiligingniveau kan &eacute;&eacute;n van de waarden uit de volgende lijst zijn:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</t>
 </str>
 
 <str id="18">
-<new/>
 <o>Security: Security level</o>
 <t>Beveiling: Beveiligingsniveau</t>
 </str>
@@ -144,49 +135,41 @@ gebruiker vraagt. Alleen informatief.from the client. Usually used as an informa
 </str>
 
 <str id="20">
-<new/>
 <o>Default site</o>
 <t>Standaard site</t>
 </str>
 
 <str id="21">
-<new/>
 <o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
 <t>Als waar, dan is deze site als eerste gekozen als virtual hosting inschakeld is en de client geen host header meegegeeft of de host header niet bekend is.</t>
 </str>
 
 <str id="22">
-<new/>
 <o>Virtual server comment</o>
-<t>Commentaar bij vVituele server</t>
+<t>Commentaar bij virtuele server</t>
 </str>
 
 <str id="23">
-<new/>
 <o>This text will be visible in the administration interface, it can be quite useful to use as a memory helper.</o>
 <t>Deze tekst is zichtbaar in de configuratie-interface. Makkelijk als geheugensteuntje.</t>
 </str>
 
 <str id="24">
-<new/>
 <o>Virtual server name</o>
 <t>Naam van de virtuele server</t>
 </str>
 
 <str id="25">
-<new/>
 <o>This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used.</o>
 <t>De naam id gebruikt wordt in de configuratie-interface. Is dit veld leeg dan gebruikt Roxen de werkelijke naam van de virtueleserver.</t>
 </str>
 
 <str id="26">
-<new/>
 <o>Logging: Format</o>
 <t>Logboek: Formaat</t>
 </str>
 
 <str id="27">
-<new/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -256,25 +239,21 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="28">
-<new/>
 <o>Logging: Enabled</o>
 <t>Loggen: Ingeschakeld</t>
 </str>
 
 <str id="29">
-<new/>
 <o>Log requests</o>
-<t>Logverzoeken</t>
+<t>Log-verzoeken</t>
 </str>
 
 <str id="30">
-<new/>
 <o>Logging: Log file</o>
 <t>Loggen: Logbestand</t>
 </str>
 
 <str id="31">
-<new/>
 <o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
@@ -290,50 +269,42 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="32">
-<new/>
 <o>Logging: No Logging for</o>
 <t>Loggen: Geen log bijhouden voor</t>
 </str>
 
 <str id="33">
-<new/>
 <o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
 <t>Log geen verzoeken van hosts met een IP-nummber dat overeenkomt met
 &eacute;&eacute;n van de patronen uit deze lisjt. Dit be&iacute;nvloedt ook het access-counter log.</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Domain</o>
 <t>Domein</t>
 </str>
 
 <str id="35">
-<new/>
 <o>The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses.</o>
 <t>De domeinnaam van de server. Deze wordt gebruikt om de standaard-URL's en -email adressen te genereren.</t>
 </str>
 
 <str id="36">
-<new/>
 <o>Primary Server URL</o>
 <t>URL van de Primaire server</t>
 </str>
 
 <str id="37">
-<new/>
 <o>This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable.</o>
 <t>Dit is de URL van de primar server, waar uw start-pagina zich bevindt. Let op: vul ook de variabele van de URL in.</t>
 </str>
 
 <str id="38">
-<new/>
 <o>URLs</o>
 <t>URL's</t>
 </str>
 
 <str id="39">
-<new/>
 <o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
 <t>Luister naar deze URL's. Gebruik '*' en '?' voor patronen (bij gebruik van deze tekens wordt standaard naa alle ip nummers op de machine geluisterd. Mogelijke protocollen zijn http, fhttp (een snellere variant van het HTTP protocol, maar niet 100% compatibel met alle modules) https, ftp, ftps, gopher en tetris.</t>
 </str>
