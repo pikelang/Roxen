@@ -2,12 +2,15 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.8 2000/11/27 20:57:28 leif Exp $
+// $Id: ExtScript.pmod,v 1.9 2001/07/18 15:13:26 leif Exp $
 
 mapping scripthandlers = ([ ]);
 
 static void diag(string x)
-{ // werror(x);
+{
+#ifdef EXTSCRIPT_DEBUG
+  werror(x);
+#endif
 }
 
 class Handler
@@ -46,15 +49,18 @@ class Handler
   }
 
   int procstat()
-  { return proc ? proc->status() : -1;
+  {
+    return proc ? proc->status() : -1;
   }
 
   int probe()
-  { return timeout < time(0);
+  {
+    return timeout < time(0);
   }
 
   static void putvar(string vtype, string vname, string vval)
-  { pipe->write(sprintf("%s%c%s%c%c%c", vtype, strlen(vname), vname,
+  {
+    pipe->write(sprintf("%s%c%s%c%c%c", vtype, strlen(vname), vname,
           strlen(vval)/65536, strlen(vval)/256, strlen(vval) & 255));
     pipe->write(vval);
   }
@@ -70,7 +76,10 @@ class Handler
     diag("(L1)");
 
     mapping opts = ([ "fds": ({ pipe_other }) ]);
-    if (settings->set_uid) opts["set_uid"] = settings->set_uid;
+    if (settings->set_uid > 0)
+      opts["uid"] = settings->set_uid;
+    if (settings->set_gid > 0)
+      opts["gid"] = settings->set_gid;
 
     runcount = 0; pipe_other = 0;
 
@@ -378,10 +387,3 @@ object getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   return m->handlers[random(sizeof(m->handlers))];
 }
-
-
-
-
-
-
-
