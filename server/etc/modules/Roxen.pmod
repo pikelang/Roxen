@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.165 2003/12/05 14:01:35 noring Exp $
+// $Id: Roxen.pmod,v 1.166 2003/12/08 10:15:53 noring Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3130,12 +3130,7 @@ class ScopePage {
 	string s = c->id->virtfile || "";
 	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
       case "virtfile": // Fallthrough from deprecated name.
-	
-      case "path":
-	if(c->id->misc->sbobj)
-	  return ENCODE_RXML_TEXT("/"+c->id->misc->sbobj->real_abspath(), type);
-	return ENCODE_RXML_TEXT(c->id->not_query, type);
-	
+      case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
       case "url": return ENCODE_RXML_TEXT(c->id->raw_url, type);
       case "last-true": return ENCODE_RXML_INT(c->misc[" _ok"], type);
@@ -3149,11 +3144,7 @@ class ScopePage {
 	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
 	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
       case "dir":
-	array parts;
-	if(c->id->misc->sbobj)
-	  parts = ("/"+c->id->misc->sbobj->real_abspath())/"/";
-	else
-	  parts = c->id->not_query/"/";
+	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
       case "counter":
 	return ENCODE_RXML_INT(++c->misc->internal_counter, type);
