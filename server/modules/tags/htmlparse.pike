@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.112 1998/07/12 21:26:44 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.113 1998/07/12 21:56:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -108,7 +108,19 @@ void create()
   defvar("exec", 0, "SSI support: execute command", 
 	 TYPE_FLAG,
 	 "If set and if server side include support is enabled, Roxen "
-	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\"--&gt;.",
+	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;.",
+	 ssi_is_not_set);
+
+  defvar("execuid", -2, "SSI support: execute command uid",
+	 TYPE_INT,
+	 "UID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
+	 "commands with.",
+	 ssi_is_not_set);
+
+  defvar("execgid", -2, "SSI support: execute command gid",
+	 TYPE_INT,
+	 "GID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
+	 "commands with.",
 	 ssi_is_not_set);
 
   defvar("close_db", 1, "Close the database if it is not used",
@@ -1180,7 +1192,8 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       return popen(m->cmd,
 		   getenv()
 		   | build_roxen_env_vars(got)
-		   | build_env_vars(got->not_query, got, 0), -2, -2);
+		   | build_env_vars(got->not_query, got, 0),
+		   QUERY(execuid) || -2, QUERY(execgid) || -2);
     }
     else
       return " <b>execute command support disabled</b> ";
