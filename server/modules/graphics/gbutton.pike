@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.30 2000/02/21 18:57:05 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.31 2000/02/21 20:47:02 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -127,7 +127,7 @@ Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
   return o;
 }
 
-object(Image.Image)|mapping draw_button(mapping args, string text, object id)
+array(Image.Layer) draw_button(mapping args, string text, object id)
 {
   Image.Image  text_img;
   mapping      icon;
@@ -348,13 +348,13 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
                                           background->ysize(),
                                           ({255,255,255}) ) );
     if( args->dim )
-      background->set_image(background->image(),
-                            background->alpha() * 0.3 );
+      background->set_alpha_value( 0.3 );
     background = stretch_layer( background, left, right, req_width );
   }
 
-  Image.Image button = Image.Image(req_width, frame->ysize(), args->bg);
 
+  // This part can probably be optimized rather drastically...
+  Image.Image button = Image.Image(req_width, frame->ysize(), args->bg);
   button = button->rgb_to_hsv();
   if( args->dim ) {
     //  Adjust dimmed border intensity to the background
@@ -384,47 +384,53 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   }) )->image();
   button = button->hsv_to_rgb();
 
+
+  array(Image.Layer) button_layers = ({
+    Image.Layer( ([
+      "image":button,
+      "alpha":mask->alpha()->threshold( 40 ),
+    ]) )
+  });
+
+
   // if there is a background, draw it.
   if( background )
-    button->paste_mask( background->image(), background->alpha() );
+    button_layers += ({ background });
 
   //  Draw icon.
   if (icon)
-  {
-    int icn_y = (button->ysize() - icon->img->ysize()) / 2;
-
-    if (!icon->alpha)
-      icon->alpha = icon->img->clone()->clear(({255,255,255}));
-
-    if (args->dim)
-      icon->alpha *= 0.3;
-
-    button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
-  }
+    button_layers += ({
+      Image.Layer( ([
+        //        "alpha_value":(args->dim ? 0.3 : 1.0),
+        "image":icon->img,
+        "alpha":(args->dim ? icon->alpha*0.3 : icon->alpha),
+        "xoffset":icn_x,
+        "yoffset":(button->ysize()-icon->img->ysize())/2,
+      ]) )});
 
   //  Draw text
-  if (args->dim)
-    for (int i = 0; i < 3; i++)
-      args->txt[i] = (args->txt[i] + args->bg[i]) / 2;
-
   if(text_img)
-    button->paste_alpha_color(text_img, args->txt, txt_x, top);
+    button_layers += ({
+    Image.Layer(([
+//       "alpha_value":(args->dim ? 0.5 : 1.0),
+      "image":text_img->color(0,0,0)->invert()->color(args->txt),
+      "xoffset":txt_x,
+      "yoffset":top,
+      "alpha":(args->dim ? text_img*0.5 : text_img ),
+    ]))
+  });
 
   // 'plain' extra layers are added on top of everything else
   if( args->extra_layers )
   {
-    array l = ({ });
-    foreach( args->extra_layers/",", string q )
-      l += ({ ll[q] });
-    l-=({ 0 });
-    if( sizeof( l ) )
-    {
-      object q = Image.lay( l );
-      q = stretch_layer( q, left, right, req_width );
-      button->paste_mask( q->image(), q->alpha() );
-    }
+    array q = map(args->extra_layers/",",
+                  lambda(string q) { return ll[q]; } )-({0});
+    if( sizeof( q ) )
+      button_layers += ({stretch_layer(Image.lay(q),left,right,req_width)});
   }
 
+
+  button_layers  -= ({ 0 });
   // left layers are added to the left of the image, and the mask is
   // extended using their mask. There is no corresponding 'mask' layers
   // for these, but that is not a problem most of the time.
@@ -437,14 +443,14 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
+      foreach( button_layers, object b )
+      {
+        int x = b->xoffset();
+        int y = b->yoffset();
+        b->set_offset( x+q->xsize(), y );
+      }
       q->set_offset( 0, 0 );
-      object b2 = Image.Image( button->xsize()+q->xsize(),
-                               button->ysize(), @args->pagebg );
-      b2->paste( button, q->xsize(),0 );
-      b2->paste_mask( q->image(), q->alpha() );
-      button = b2;
-      mask->set_offset( q->xsize(), 0 );
-      mask = Image.lay( ({q, mask}) );
+      button_layers += ({ q });
     }
   }
 
@@ -460,28 +466,24 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
-      q->set_offset( 0, 0 );
-      object b2 = Image.Image( button->xsize()+q->xsize(),
-                               button->ysize(), @args->pagebg );
-      b2->paste( button );
-      b2->paste_mask( q->image(), q->alpha(), button->xsize(), 0 );
-      button = b2;
       q->set_offset( mask->xsize(),0);
-      mask = Image.lay( ({q, mask }) );
+      button_layers += ({ q });
     }
   }
 
+  button_layers = ({Image.lay( button_layers )});
+
   //  fix transparency (somewhat)
   if( !equal( args->pagebg, args->bg ) )
-    button->paste_alpha_color( mask->alpha()->invert()->threshold( 200 ),
-                               args->pagebg );
+    button_layers +=
+      ({
+        Image.Layer(([
+          "fill":args->pagebg,
+          "alpha":button_layers[0]->alpha()->invert(),
+        ]))
+      });
 
-
-  return
-  ([
-    "img":button,
-    "alpha":mask->alpha()->threshold( 40 ),
-  ]);
+  return button_layers;
 }
 
 
