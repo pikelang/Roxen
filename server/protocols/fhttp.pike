@@ -1,5 +1,6 @@
 // This is a roxen protocol module.
 // Copyright © 1996 - 1999, Idonex AB.
+#include <variables.h>
 
 #ifdef FWWW_DEBUG
 # define FWWW_WERR(X) werror("FWWW: "+X+"\n");
