@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.314 2002/02/27 15:12:34 grubba Exp $
+// $Id: roxenloader.pike,v 1.315 2002/03/15 10:58:54 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.314 2002/02/27 15:12:34 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.315 2002/03/15 10:58:54 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -969,10 +969,14 @@ constant mf = Stdio.File;
 #endif
 
 #include "../etc/include/version.h"
+
+static string release;
+
 string roxen_version()
 //! @appears roxen_version
 {
-  return __roxen_version__+"."+__roxen_build__;
+  // Note: roxen_release is usually "-cvs" at the time this is compiled.
+  return __roxen_version__+"."+__roxen_build__+(release||roxen_release);
 }
 
 //! @appears roxen_path
@@ -1142,7 +1146,7 @@ int main(int argc, array(string) argv)
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 2.2 should be run with Pike 7.2.
+Roxen 2.4 should be run with Pike 7.2.
 ---------------------------------------------------------------
 ");
 	exit(1);
@@ -1159,6 +1163,11 @@ Roxen 2.2 should be run with Pike 7.2.
 
   if( configuration_dir[-1] != '/' ) configuration_dir+="/";
 
+  // Get the release version.
+  if (release = Stdio.read_bytes("RELEASE")) {
+    // Only the first line is interresting.
+    release = (replace(release, "\r", "\n")/"\n")[0];
+  }
 
   // The default (internally managed) mysql path
   string defpath =
@@ -2016,6 +2025,7 @@ and rebuild Pike from scratch.
   add_constant("open",          open);
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
+  add_constant("roxen_release", release);
   add_constant("lopen",         lopen);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
