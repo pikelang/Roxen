@@ -1,6 +1,6 @@
 string module_global_page( RequestID id, Configuration conf )
 {
-  
+  return "";
 }
 
 string module_page( RequestID id, string conf, string module )
