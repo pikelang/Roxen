@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.361 1999/11/28 07:18:33 per Exp $
+ * $Id: roxen.pike,v 1.362 1999/11/29 18:50:31 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.361 1999/11/28 07:18:33 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.362 1999/11/29 18:50:31 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2117,11 +2117,11 @@ void create()
   dump( "base_server/language.pike");
 
 #ifndef __NT__
-  if(!getuid()) {
+  if(!getuid())
     add_constant("Privs", Privs);
-  } else
+  else
 #endif /* !__NT__ */
-    add_constant("Privs", class{});
+    add_constant("Privs",class{});
 
   // for module encoding stuff
 
