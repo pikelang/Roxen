@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.182 2004/05/07 17:34:14 grubba Exp $
+// $Id: module.pike,v 1.183 2004/05/07 19:44:58 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -261,6 +261,46 @@ function(RequestID:int|mapping) query_seclevels()
   if(catch(query("_seclevels")) || (query("_seclevels") == 0))
     return 0;
   return roxen.compile_security_pattern(query("_seclevels"),this_object());
+}
+
+void set_status_for_path (string path, RequestID id, int status_code,
+			  string|void message, mixed... args)
+//! Register a status to be included in the response that applies only
+//! for the given path. This is used for recursive operations that can
+//! yield different results for different encountered files or
+//! directories.
+//!
+//! The status is stored in the @[MultiStatus] object returned by
+//! @[id->get_multi_status]. The server will use it to make a 207
+//! Multi-Status response iff the module returns an empty mapping as
+//! response.
+//!
+//! @param path
+//!   Path below the filesystem location to which the status applies.
+//!
+//! @param status_code
+//!   The HTTP status code.
+//!
+//! @param message
+//!   If given, it's a message to include in the response. The
+//!   message may contain line feeds ('\n') and ISO-8859-1
+//!   characters in the ranges 32..126 and 128..255. Line feeds are
+//!   converted to spaces if the response format doesn't allow them.
+//!
+//! @param args
+//!   If there are more arguments after @[message] then @[message]
+//!   is taken as an @[sprintf] style format string which is used to
+//!   format @[args].
+//!
+//! @note
+//! This function is just a wrapper for @[id->set_status_for_path]
+//! that corrects for the filesystem location.
+//!
+//! @seealso
+//! @[RequestID.set_status_for_path], @[Roxen.http_status]
+{
+  if (sizeof (args)) message = sprintf (message, @args);
+  id->set_status_for_path (query_location() + path, status_code, message);
 }
 
 Stat stat_file(string f, RequestID id){}
@@ -621,8 +661,7 @@ static mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //! Find some or all locks that apply to @[path].
 //!
 //! @param path
-//!   Path below the filesystem location. It's normalized with
-//!   @[VFS.normalize_path] and always ends with a @expr{"/"@}.
+//!   Normalized path below the filesystem location.
 //!
 //! @param recursive
 //!   If @expr{1@} also return locks anywhere below @[path].
@@ -706,34 +745,43 @@ multiset(DAVLock) find_locks(string path,
 //! user the request is authenticated as.
 //!
 //! @param path
-//!   Path below the filesystem location. It's normalized with
-//!   @[VFS.normalize_path] and always ends with a @expr{"/"@}.
+//!   Normalized path below the filesystem location.
 //!
 //! @param recursive
 //!   If @expr{1@} also check recursively under @[path] for locks.
 //!
 //! @returns
+//!   The valid return values are:
 //!   @mixed
 //!     @type DAVLock
-//!       Returns the lock owned by the authenticated user that apply
-//!       to @[path]. (It doesn't matter if the @expr{recursive@} flag
-//!       in the lock doesn't match the @[recursive] argument.)
-//!     @type int(0..3)
+//!       The lock owned by the authenticated user that apply to
+//!       @[path]. (It doesn't matter if the @expr{recursive@} flag in
+//!       the lock doesn't match the @[recursive] argument.)
+//!     @type LockFlag
 //!       @int
-//!         @value 0
-//!           Returns @expr{0@} if no locks apply.
-//!         @value 1
-//!           Returns @expr{1@} if there only are one or more shared
-//!           locks held by other users.
-//!         @value 2
-//!           Returns @expr{2@} if @[recursive] is set, the
-//!           authenticated user has locks under @[path] (but not on
-//!           @[path] itself), and there are no exclusive locks held
-//!           by other users.
-//!         @value 3
-//!           Returns @expr{3@} if there are one or more exclusive
-//!           locks held by other users.
+//!         @value LOCK_NONE (0)
+//!           No locks apply.
+//!         @value LOCK_SHARED_BELOW (2)
+//!           There are only one or more shared locks held by other
+//!           users somewhere below @[path] (but not on @[path]
+//!           itself). Only returned if @[recursive] is set.
+//!         @value LOCK_SHARED_AT (3)
+//!           There are only one or more shared locks held by other
+//!           users on @[path].
+//!         @value LOCK_OWN_BELOW (4)
+//!           The authenticated user has locks under @[path] (but not
+//!           on @[path] itself) and there are no exclusive locks held
+//!           by other users. Only returned if @[recursive] is set.
+//!         @value LOCK_EXCL_BELOW (6)
+//!           There are one or more exclusive locks held by other
+//!           users somewhere below @[path] (but not on @[path]
+//!           itself). Only returned if @[recursive] is set.
+//!         @value LOCK_EXCL_AT (7)
+//!           There are one or more exclusive locks held by other
+//!           users on @[path].
 //!       @endint
+//!       Note that the lowest bit is set for all flags that apply to
+//!       @[path] itself.
 //!   @endmixed
 //!
 //! @note
@@ -744,9 +792,9 @@ multiset(DAVLock) find_locks(string path,
 //! @note
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
-DAVLock|int(0..3) check_locks(string path,
-			      int(0..1) recursive,
-			      RequestID id)
+DAVLock|LockFlag check_locks(string path,
+			     int(0..1) recursive,
+			     RequestID id)
 {
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
@@ -763,16 +811,17 @@ DAVLock|int(0..3) check_locks(string path,
     TRACE_LEAVE(sprintf("Found lock %O.", lock->locktoken));
     return lock;
   }
-  int(0..1) shared;
+
+  LockFlag shared;
 
   if (mapping(mixed:DAVLock) locks = file_locks[path]) {
     foreach(locks;; DAVLock lock) {
       if (lock->lockscope == "DAV:exclusive") {
 	TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
 			    lock->locktoken));
-	return 3;
+	return LOCK_EXCL_AT;
       }
-      shared = 1;
+      shared = LOCK_SHARED_AT;
       break;
     }
   }
@@ -788,9 +837,9 @@ DAVLock|int(0..3) check_locks(string path,
 	  if (lock->lockscope == "DAV:exclusive") {
 	    TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
 				lock->locktoken));
-	    return 3;
+	    return LOCK_EXCL_AT;
 	  }
-	  shared = 1;
+	  shared = LOCK_SHARED_AT;
 	  break;
 	}
     }
@@ -814,32 +863,31 @@ DAVLock|int(0..3) check_locks(string path,
 	    if (lock->lockscope == "DAV:exclusive") {
 	      TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
 				  lock->locktoken));
-	      return 3;
+	      return LOCK_EXCL_BELOW;
 	    }
-	    shared = 1;
+	    if (!shared) shared = LOCK_SHARED_BELOW;
 	    break;
 	  }
       }
     });
 
-  TRACE_LEAVE(sprintf("Returning %O.", locked_by_auth_user ? 2 : shared));
-  return locked_by_auth_user ? 2 : shared;
+  TRACE_LEAVE(sprintf("Returning %O.", locked_by_auth_user ? LOCK_OWN_BELOW : shared));
+  return locked_by_auth_user ? LOCK_OWN_BELOW : shared;
 }
 
 //! Register @[lock] on the path @[path] under the assumption that
 //! there is no other lock already that conflicts with this one, i.e.
 //! that @code{check_locks(path,lock->recursive,id)@} would return
-//! @expr{0@} if @expr{lock->lockscope@} is @expr{"DAV:exclusive"@}, or
-//! @expr{0@} or @expr{1@} if @expr{lock->lockscope@} is
-//! @expr{"DAV:shared"@}.
+//! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
+//! @expr{"DAV:exclusive"@}, or @expr{< LOCK_OWN_BELOW@} if
+//! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
 //!
 //! This function is only provided as a helper to call from
 //! @[lock_file] if the default lock implementation is to be used.
 //!
 //! @param path
-//!   Path below the filesystem location that the lock applies to.
-//!   It's normalized with @[VFS.normalize_path] and always ends with
-//!   a @expr{"/"@}.
+//!   Normalized path below the filesystem location that the lock
+//!   applies to.
 //!
 //! @param lock
 //!   The lock to register.
@@ -874,20 +922,21 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //! Register @[lock] on the path @[path] under the assumption that
 //! there is no other lock already that conflicts with this one, i.e.
 //! that @code{check_locks(path,lock->recursive,id)@} would return
-//! @expr{0@} if @expr{lock->lockscope@} is @expr{"DAV:exclusive"@}, or
-//! @expr{0@} or @expr{1@} if @expr{lock->lockscope@} is
-//! @expr{"DAV:shared"@}.
+//! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
+//! @expr{"DAV:exclusive"@}, or @expr{<= LOCK_SHARED_AT@} if
+//! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
 //!
 //! The implementation must at least support the @expr{"DAV:write"@}
 //! lock type (RFC 2518, section 7). Briefly: An exclusive lock on a
 //! file prohibits other users from changing its content. An exclusive
-//! lock on a file or directory prohibits other users from setting or
-//! deleting any of its properties. An exclusive lock on a directory
-//! prohibits other users from adding or removing files or directories
-//! in it. A shared lock prohibits other users from obtaining an
-//! exclusive lock. A resource that doesn't exist can be locked,
-//! provided the directory it would be in exists (relaxed in RFC
-//! 2518Bis (working draft)).
+//! lock on a directory (aka collection) prohibits other users from
+//! adding or removing files or directories in it. An exclusive lock
+//! on a file or directory prohibits other users from setting or
+//! deleting any of its properties. A shared lock prohibits users
+//! without locks to do any of this, and it prohibits other users from
+//! obtaining an exclusive lock. A resource that doesn't exist can be
+//! locked, provided the directory it would be in exists (relaxed in
+//! RFC 2518Bis (working draft)).
 //!
 //! It's up to @[find_file] et al to actually check that the necessary
 //! locks are held. It can preferably use @[write_access] for that,
@@ -895,9 +944,8 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //! @expr{"DAV:write"@} locks.
 //!
 //! @param path
-//!   Path below the filesystem location that the lock applies to.
-//!   It's normalized with @[VFS.normalize_path] and always ends with
-//!   a @expr{"/"@}.
+//!   Normalized path below the filesystem location that the lock
+//!   applies to.
 //!
 //! @param lock
 //!   The lock to register.
@@ -916,9 +964,8 @@ mapping(string:mixed) lock_file(string path,
 //! Remove @[lock] that currently is locking the resource at @[path].
 //!
 //! @param path
-//!   Path below the filesystem location that the lock applies to.
-//!   It's normalized with @[VFS.normalize_path] and always ends with
-//!   a @expr{"/"@}.
+//!   Normalized path below the filesystem location that the lock
+//!   applies to.
 //!
 //! @param lock
 //!   The lock to unregister. (It must not be changed or destructed.)
@@ -929,23 +976,22 @@ mapping(string:mixed) unlock_file (string path,
 				   DAVLock lock,
 				   RequestID id)
 {
+  if (!sizeof (file_locks) && !sizeof (prefix_locks))
+    return 0;			// Lock system not in use.
   TRACE_ENTER(sprintf("unlock_file(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
   mixed auth_user = authenticated_user_id (path, id);
   path = resource_id (path, id);
   DAVLock removed_lock;
   if (lock->recursive) {
-    if (prefix_locks[path]) {
-      removed_lock = m_delete(prefix_locks[path], auth_user);
-      if (!sizeof(prefix_locks[path])) m_delete(prefix_locks, path);
-    }
+    removed_lock = m_delete(prefix_locks[path], auth_user);
+    if (!sizeof (prefix_locks[path])) m_delete (prefix_locks, path);
   }
   else if (file_locks[path]) {
     removed_lock = m_delete (file_locks[path], auth_user);
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
-  ASSERT_IF_DEBUG (!removed_lock || lock /*%O*/ == removed_lock /*%O*/,
-		   lock, removed_lock);
+  ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
   TRACE_LEAVE("Ok.");
   return 0;
 }
@@ -955,36 +1001,41 @@ mapping(string:mixed) unlock_file (string path,
 //! The default implementation checks if the current locks match the
 //! if-header.
 //!
-//! Usually called from @[find_file()].
+//! Usually called from @[find_file()], @[delete_file()] or similar.
 //!
 //! @note
 //!   Does not support checking against etags yet.
 //!
 //! @param path
 //!   Path below the filesystem location that the lock applies to.
-//!   It's normalized with @[VFS.normalize_path].
 //!
 //! @param recursive
 //!   If @expr{1@} also check write access recursively under @[path].
 //!
 //! @returns
-//!   Returns @expr{0@} (zero) on success and
-//!   a result mapping on failure.
-mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID id)
+//!   Returns @expr{0@} (zero) on success, a status mapping on
+//!   failure, or @expr{1@} if @[recursive] is set and write access is
+//!   allowed on this level but not somewhere recursively. The caller
+//!   should in the last case check recursively with @[write_access]
+//!   for each member in the directory.
+mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
+					     RequestID id)
 {
-  // FIXME: Implement recursive!
-
-  if (!has_suffix (path, "/")) path += "/";
-
   SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, X)", path, recursive);
 
-  int(0..3)|DAVLock lock = check_locks(path, 0, id);
+  int/*LockFlag*/|DAVLock lock = check_locks(path, recursive, id);
 
-  if (lock && intp(lock)) {
-    TRACE_LEAVE("Locked by other user.");
-    return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+  int(0..1) got_sublocks;
+  if (intp(lock) && !(<LOCK_NONE, LOCK_OWN_BELOW>)[lock]) {
+    if (lock & 1) {
+      TRACE_LEAVE("Locked by other user.");
+      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+    }
+    else
+      got_sublocks = 1;
   }
 
+  if (!has_suffix (path, "/")) path += "/"; // get_if_data always adds a "/".
   path = query_location() + path; // No need for fancy combine_path stuff here.
 
   mapping(string:array(array(array(string)))) if_data = id->get_if_data();
@@ -995,8 +1046,9 @@ mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID i
       return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
     }
     TRACE_LEAVE("No lock and no if header.");
-    return 0;	// No condition and no lock -- Ok.
+    return got_sublocks;	// No condition and no lock -- Ok.
   }
+
   mapping(string:mixed) res;
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
@@ -1027,8 +1079,9 @@ mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID i
     }
     TRACE_LEAVE("Found match.");
     TRACE_LEAVE("Ok.");
-    return 0;	// Found matching sub-condition.
+    return got_sublocks;	// Found matching sub-condition.
   }
+
   TRACE_LEAVE("Failed.");
   return res || Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
