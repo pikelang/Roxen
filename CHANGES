@@ -6,11 +6,10 @@ o etc/master.pike has been renamed to etc/roxen_master to avoid
   name conflicts/confusion.
 
 o Support for SSLv3 added.
-  NOTE: People in the US may not use this module since it violates patents
-	held by RSA Inc.
-	People in France may not download nor use this module due to
-	legislation. A version of Roxen without the crypto-module will
-	be made available on demand.
+  NOTE: This module uses strong encryption, which may violate local law.
+	In the US this module violates patents held by RSA Inc.
+  A version of Roxen without the crypto-module will be made available
+  on demand.
 
 o Fixed the install-script.
 
