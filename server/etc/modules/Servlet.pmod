@@ -35,7 +35,7 @@ static object servlet_destroy = servlet_ifc->get_method("destroy", "()V");
 static object servlet_getservletinfo = servlet_ifc->get_method("getServletInfo", "()Ljava/lang/String;");
 static object servlet_service = servlet_ifc->get_method("service", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
 static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Ljava/lang/String;)V");
-static object context_init = context_class->get_method("<init>", "(I)V");
+static object context_init = context_class->get_method("<init>", "(ILjava/lang/String;)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
 static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lse/idonex/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
@@ -229,13 +229,25 @@ class context {
   object ctx, sctx, conf;
   static int id;
 
+  string gettempdir()
+  {
+    string dir = "servlettmp/";
+    if(conf)
+      dir += "conf/" + conf->name + "/";
+    else
+      dir += "unbound/";
+    if(!file_stat(dir))
+      mkdirhier(dir);
+    return dir;
+  }
+
   void create(object|void c)
   {
     id = context_id++;
     conf = c;
     ctx = context_class->alloc();
     check_exception();
-    context_init(ctx, id);
+    context_init(ctx, id, gettempdir());
     check_exception();
     sctx = session_context_class->alloc();
     check_exception();
@@ -275,6 +287,11 @@ class context {
   string get_server_info()
   {
     return roxen->version();
+  }
+
+  string get_resource(string path)
+  {
+    return 0;
   }
 
   void set_init_parameters(mapping(string:string) pars)
@@ -423,6 +440,11 @@ static string native_getServerInfo(object ctx)
   return ctx_object(ctx)->get_server_info();
 }
 
+static string native_getResourceURL(object ctx, object path)
+{
+  return ctx_object(ctx)->get_resource((string)path);
+}
+
 static void native_forgetfd(object str)
 {
   int id = stream_id_field->get(str);
@@ -462,7 +484,8 @@ void create()
       native_getRealPath}),
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;",
       native_getMimeType}),
-    ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo})}));
+    ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo}),
+    ({"getResourceURL", "(Ljava/lang/String;)Ljava/lang/String;", native_getResourceURL})}));
   natives_bind2 = stream_class->register_natives(({
     ({"close", "()V", native_close}),
     ({"low_write", "([BII)V", native_writeba}),

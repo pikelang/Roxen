@@ -6,9 +6,11 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Hashtable;
+import java.io.File;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
@@ -139,16 +141,24 @@ class RoxenServletContext implements ServletContext
     return null;
   }
 
+  private native String getResourceURL(String path);
+
   public URL getResource(String path) throws MalformedURLException
   {
-    // FIXME
-    return null;
+    String url = getResourceURL(path);
+    return url == null? null : new URL(url);
   }
 
   public InputStream getResourceAsStream(String path)
   {
-    // FIXME
-    return null;
+    try {
+      URL url = getResource(path);
+      return url == null? null : url.openStream();
+    } catch(MalformedURLException e) {
+      return null;
+    } catch(IOException e) {
+      return null;
+    }
   }
 
   public int getMajorVersion()
@@ -161,9 +171,10 @@ class RoxenServletContext implements ServletContext
     return 2;
   }
 
-  RoxenServletContext(int id)
+  RoxenServletContext(int id, String temppath)
   {
     this.id = id;
+    setAttribute("javax.servlet.context.tempdir", new File(temppath));
   }
 
   // 2.2 stuff follows
