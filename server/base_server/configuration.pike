@@ -1,9 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-//
-// German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.326 2000/07/23 15:16:28 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.327 2000/07/26 15:14:35 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2055,21 +2053,21 @@ public string real_file(string file, RequestID id)
   }
 }
 
-// Convenience functions used in quite a lot of modules. Tries to
-// read a file into memory, and then returns the resulting string.
-
-// NOTE: A 'file' can be a cgi script, which will be executed, resulting in
-// a horrible delay.
-//
-// Unless the not_internal flag is set, this tries to get an external
-// or internal file. Here "internal" means a file that never should be
-// sent directly as a request response. E.g. an internal redirect to a
-// different file is still considered "external" since its contents is
-// sent directly to the client. Internal requests are recognized by
-// the id->misc->internal_get flag.
 int|string try_get_file(string s, RequestID id,
                         int|void status, int|void nocache,
 			int|void not_internal)
+//! Convenience function used in quite a lot of modules. Tries to read
+//! a file into memory, and then returns the resulting string.
+//!
+//! NOTE: A 'file' can be a cgi script, which will be executed,
+//! resulting in a horrible delay.
+//!
+//! Unless the not_internal flag is set, this tries to get an external
+//! or internal file. Here "internal" means a file that never should be
+//! sent directly as a request response. E.g. an internal redirect to a
+//! different file is still considered "external" since its contents is
+//! sent directly to the client. Internal requests are recognized by
+//! the id->misc->internal_get flag being non-zero.
 {
   string res, q, cache_key;
   RequestID fake_id;
@@ -2187,9 +2185,9 @@ void save_me()
   save_one( 0 );
 }
 
-// Save this configuration. If all is included, save all configuration
-// global variables as well, otherwise only all module variables.
 void save(int|void all)
+//! Save this configuration. If all is included, save all configuration
+//! global variables as well, otherwise only all module variables.
 {
   if(all)
   {
@@ -2208,8 +2206,8 @@ void save(int|void all)
   invalidate_cache();
 }
 
-// Save all variables in _one_ module.
 int save_one( RoxenModule o )
+//! Save all variables in a given module.
 {
   mapping mod;
   if(!o)
