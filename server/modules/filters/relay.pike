@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-string cvs_version = "$Id: relay.pike,v 1.7 1997/05/31 19:17:17 grubba Exp $";
+string cvs_version = "$Id: relay.pike,v 1.8 1997/07/06 15:20:07 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -15,12 +15,12 @@ inherit "roxenlib";
 inherit "socket";
 
 #define CONN_REFUSED "\
-505 Connection Refused by relay server\r\n\
+HTTP/1.0 503 Service Unavailable\r\n\
 Content-type: text/html\r\n\
 \r\n\
-<title>Connection refused by remote server</title>\
+<title>Service unavailable</title>\
 \
-<h1 align=center>Connection refused by remote server</h1>\
+<h1 align=center>Service unavailable</h1>\
 <hr noshade>\
 <font size=+2>Please try again later.</font>\
 <i>Sorry</i>\
@@ -68,25 +68,18 @@ string comment()
   return "http://"+query("relayh")+":"+query("relayp")+"/";
 }
 
-void nope(object hmm)
-{
-  if(hmm)
-  {
-    hmm->my_fd->write(CONN_REFUSED);
-    hmm->end();
-  }
-}
-
 void connected(object to, object id)
 {
-  if(!to) {
-    nope(id);
+  if(!id || !to || !to->query_address()) {
+    if (id)
+      id->end(CONN_REFUSED);
+    if (to)
+      destruct(to);
     return;
   }
   to->write(id->raw);
-  async_pipe(id->my_fd, to);
   id->do_not_disconnect = 0;
-  id->disconnect();
+  roxen->shuffle(to, id->my_fd);
 }
 
 array (string) always_list=({ });
