@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.5 1998/07/24 09:41:22 neotron Exp $
+ * $Id: openfiles.pike,v 1.6 1998/10/10 03:41:03 per Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,14 @@ constant name= "Status//Open files";
 constant doc = ("Show a list of all open files.");
 
 constant more=1;
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
+
+int verify_0()
+{
+  return 1;
+}
 
 
 #include <stat.h>
@@ -70,8 +78,6 @@ string page_0()
 	  })*"\n")+
      "</pre>");
 }
-
-int wizard_done(){ return -1; }
 
 mixed handle(object id) { return wizard_for(id,0); }
 

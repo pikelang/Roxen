@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.8 1998/08/05 18:51:54 grubba Exp $
+ * $Id: proc.pike,v 1.9 1998/10/10 03:41:05 per Exp $
  */
 
 inherit "wizard";
@@ -106,6 +106,14 @@ string cred(object id)
 		 gid,
 		 String.implode_nicely(groups));
 #endif /* constant(getgrgid) */
+}
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
+
+int verify_0()
+{
+  return 1;
 }
 
 mixed page_0(object id, object mc)

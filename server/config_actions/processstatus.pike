@@ -1,5 +1,5 @@
 /*
- * $Id: processstatus.pike,v 1.4 1998/03/09 19:46:36 neotron Exp $
+ * $Id: processstatus.pike,v 1.5 1998/10/10 03:41:06 per Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,9 @@ constant name= "Status//Process status";
 constant doc = ("Shows various information about the pike process.");
 
 constant more=1;
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
 
 string describe_global_status()
 {
@@ -49,6 +52,11 @@ mixed page_0(object id, object mc)
 	  +(ru[12]?"Messages received         : " + ru[12] + "\n":"")
 	  +(ru[13]?"Number of signals received: " + ru[13] + "\n":"")
 	  +"</pre>");
+}
+
+int verify_0()
+{
+  return 1;
 }
 
 mixed handle(object id) { return wizard_for(id,0); }

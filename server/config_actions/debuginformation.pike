@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.14 1998/10/10 00:37:17 per Exp $
+ * $Id: debuginformation.pike,v 1.15 1998/10/10 03:40:58 per Exp $
  */
 
 inherit "wizard";
@@ -13,6 +13,9 @@ constant more=1;
 mapping last_usage;
 
 constant colors = ({ "#f0f0ff", "white" });
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
 
 #if efun(get_profiling_info)
 string remove_cwd(string from)
@@ -89,7 +92,7 @@ mixed page_1(object id, object mc)
 		"Function glob: <var type=string name=subnode><br>");
 
 #if constant(ADT.Table)
-  object t = ADT.Table->table(get_prof_info(id->variables->subnode),
+  object t = ADT.Table->table(get_prof_info("*"+(id->variables->subnode||"")+"*"),
 			      ({ "Function", "Time", "Calls",
 				 "Time/Call"}));
   return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";

@@ -1,5 +1,5 @@
 /*
- * $Id: feature_list.pike,v 1.2 1997/11/30 16:08:58 grubba Exp $
+ * $Id: feature_list.pike,v 1.3 1998/10/10 03:40:59 per Exp $
  */
 
 inherit "wizard";
@@ -8,7 +8,7 @@ import Array;
 
 constant name = "Development//Pike feature-list";
 
-constant doc = "Shows which Pike-modules which are enabled.";
+constant doc = "Shows the Pike-modules that are enabled.";
 
 constant more = 1;
 

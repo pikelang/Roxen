@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.6 1998/03/20 03:29:35 per Exp $
+ * $Id: locks.pike,v 1.7 1998/10/10 03:41:02 per Exp $
  */
 #include <config.h>
 
@@ -7,8 +7,8 @@
 constant action_disabled = 1;
 #else /* THREADS */
 inherit "wizard";
-constant name= "Status//Thread status";
-constant doc = ("Shows various information about the threads in roxen.");
+constant name= "Status//Module lock status";
+constant doc = ("Shows various information about the module thread locks in roxen.");
 constant more=1;
 
 string describe_module(object q)
@@ -27,6 +27,15 @@ string describe_module(object q)
     }
   }
   return "Unknown module</td><td>"+roxen->filename(q)+"";
+}
+
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
+
+int verify_0()
+{
+  return 1;
 }
 
 mixed page_0(object id, object mc)

@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.5 1997/10/12 21:11:51 grubba Exp $ */
+/* $Id: ftpstatus.pike,v 1.6 1998/10/10 03:41:01 per Exp $ */
 
 inherit "wizard";
 
@@ -6,6 +6,9 @@ constant name= "Status//Current FTP sessions";
 constant doc = "List all active FTP sessions and what files they are "
   "currently transferring.";
 constant wizard_name = "Active FTP sessions";
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
 
 static string describe_ftp(object ftp)
 {
@@ -63,6 +66,11 @@ string page_0(object id)
       Array.map(indices(ftps), describe_ftp)*""+"</table>\n";
   else
     return "There are currently no active FTP sessions.";
+}
+
+int verify_0()
+{
+  return 1;
 }
 
 string handle(object id)

@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.7 1998/07/22 16:44:37 grubba Exp $
+ * $Id: requeststatus.pike,v 1.8 1998/10/10 03:41:08 per Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,9 @@ constant name= "Status//Access / request status";
 constant doc = ("Shows the amount of data handled since last restart.");
 
 constant more=0;
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
 
 mixed page_0(object id, object mc)
 {
@@ -40,6 +43,11 @@ mixed page_1(object id)
     "number of requests they have received - the most active being first. "
     "Servers which haven't recevied any requests are not listed.</b>" +
     res;
+}
+
+int verify_1(object id)
+{
+  return 1;
 }
 
 mixed handle(object id) { return wizard_for(id,0); }

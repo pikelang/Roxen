@@ -1,5 +1,5 @@
 /*
- * $Id: pipestatus.pike,v 1.2 1997/08/29 17:20:09 grubba Exp $
+ * $Id: pipestatus.pike,v 1.3 1998/10/10 03:41:04 per Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,14 @@ constant name= "Status//Pipe system status";
 constant doc = ("Show the number of data shuffling channels.");
 
 constant more=1;
+
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
+
+int verify_0()
+{
+  return 1;
+}
 
 mixed page_0(object id, object mc)
 {
