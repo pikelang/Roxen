@@ -9,9 +9,10 @@ roxenhome=/usr/local/roxen/server/
 
 # Set this to something unique to be able to stop, reload and restart
 # with this init script. It will override the setting in the config
-# interface. '0' is typically replaced with the uid.
+# interface. This default places the PID file in the server-local var
+# directory, which always is unique for the server.
 #
-# pidfile=/tmp/roxen_pid:0
+# pidfile=${roxenhome}/../var/roxen_pid
 
 # Set these to kill all processes owned by wwwuser on stop. Useful to
 # reap CGI scripts.
@@ -42,16 +43,16 @@ trap "" 1
 
 case $1 in
         'start_msg')
-	  echo 'Start Roxen WebServer'
+	  echo Start Roxen WebServer in $roxenhome
 	  exit 0
 	;;
 	'stop_msg')
-	  echo 'Stop Roxen WebServer'
+	  echo Stop Roxen WebServer in $roxenhome
 	  exit 0
 	;;
 
 	'start')
-          echo Starting Roxen WebServer in $roxenhome...
+          echo Starting Roxen WebServer in ${roxenhome}...
 	  if [ -z "$pidfile" ]; then
 	    echo Warning: No pid file set - cannot stop or reload.
 	  elif [ -f $pidfile ]; then
@@ -80,7 +81,7 @@ case $1 in
 	    echo "No pid file set."
 	    exit 1
 	  fi
-	  echo "Reloading configurations..."
+	  echo Reloading configurations in Roxen WebServer in ${roxenhome}...
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
 	    kill -HUP $pid || kill 1 $pid
@@ -94,7 +95,7 @@ case $1 in
 	    echo "No pid file set."
 	    exit 1
 	  fi
-	  echo Restarting Roxen WebServer...
+	  echo Restarting Roxen WebServer in ${roxenhome}...
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
 	    kill -TERM $pid || kill $pid
@@ -118,7 +119,7 @@ case $1 in
 	     echo "No pid file set."
 	     exit 1
 	   fi
-           echo Stopping Roxen WebServer...
+           echo Stopping Roxen WebServer in ${roxenhome}...
 	   if [ -f $pidfile ] ; then
 	     if kill -INT `cat $pidfile` || kill 2 `cat $pidfile` ; then
                echo Roxen WebServer stopped.
