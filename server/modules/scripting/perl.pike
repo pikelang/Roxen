@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.17 2001/01/12 16:55:48 leif Exp $";
+       "$Id: perl.pike,v 2.18 2001/01/29 15:02:14 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -70,7 +70,7 @@ void create()
   // Assume Unix
      "perl/bin/perlrun",
 #endif
-       "Perl Helper", TYPE_DIR,
+       "Perl Helper", TYPE_FILE,
     "Path to the Perl helper program used to start Perl subprocesses.");
 
   defvar("parallel", 2, "Parallel scripts", TYPE_MULTIPLE_INT,
