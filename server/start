@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.51 1998/10/16 17:48:37 grubba Exp $
+# $Id: start,v 1.52 1998/10/31 23:43:48 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -9,6 +9,7 @@ DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
+extra_args=""
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
@@ -119,6 +120,9 @@ parse_args() {
   --config-dir=*)
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
+  ;;
+  --pid-file=*)
+   extra_args="$extra_args $1"
   ;;
   '--debug'|'--with-debug'|'--enable-debug')
     debug=1
@@ -337,7 +341,7 @@ oo
     echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
     rotate $LOGDIR/debug/$FILES
 
-    start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
+    start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
 
     exitcode="$?"
 
@@ -362,6 +366,6 @@ oo
 
 else
   echo $$: "Server restart at `date`"
-  start_roxen
+  start_roxen $extra_args
 fi
     
