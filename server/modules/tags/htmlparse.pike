@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.123 1998/07/21 17:51:42 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.124 1998/07/21 18:42:37 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -410,6 +410,12 @@ string call_container(string tag, mapping args, string contents, int line,
     return handle_help("modules/tags/doc/"+tag, tag, args)+contents;
   if(stringp(rf)) return rf;
   if(args->preparse) contents = parse_rxml(contents, id);
+  if(args->trimwhites) {
+    sscanf(contents, "%*[ \t\n\r]%s", contents);
+    contents = reverse(contents);
+    sscanf(contents, "%*[ \t\n\r]%s", contents);
+    contents = reverse(contents);
+  }
   TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
 #ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
@@ -2748,6 +2754,15 @@ mapping query_container_callers()
 	   "source":tag_source,
 	   "case":tag_case,
 	   "noparse":tag_noparse,
+	   "catch":lambda(string t, mapping m, string c, object id) {
+		     string r;
+		     array e = catch(r=parse_rxml(c, id));
+		     if(e) return e[0];
+		     return r;
+		   },
+	   "throw":lambda(string t, mapping m, string c) {
+		     throw( ({ c, backtrace() }) );
+		   },
 	   "nooutput":tag_nooutput,
 	   "sort":tag_sort,
 	   "doc":tag_source2,
