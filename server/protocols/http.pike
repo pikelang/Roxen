@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.46 1997/10/05 03:37:49 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.47 1997/11/12 18:04:53 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -170,7 +170,7 @@ private int really_set_config(array mod_config)
 		      ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
       url = "/";
 
-    if ((base[-1] == '/') && (url[0] == '/')) {
+    if ((base[-1] == '/') && (strlen(url) && url[0] == '/')) {
       url = base + url[1..];
     } else {
       url = base + url;
@@ -694,8 +694,10 @@ void got_data(mixed fooid, string s);
 void keep_connection_alive()
 {
   pipe=0;
-  my_fd->set_read_callback(got_data);
-  my_fd->set_close_callback(end);
+  if(my_fd) {
+    my_fd->set_read_callback(got_data);
+    my_fd->set_close_callback(end);
+  }
 /*my_fd->set_write_callback(lambda(){});*/
 
   if(cache && strlen(cache))
