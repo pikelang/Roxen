@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.566 2004/05/04 13:01:31 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.567 2004/05/04 13:23:46 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1359,8 +1359,9 @@ multiset(DAVLock) find_locks(string path, int(0..1) recursive,
 }
 
 //! Check if there are any applicable locks for this user on @[path].
-int(-2..1)|DAVLock check_locks(string path, int(0..1) recursive, RequestID id)
+int(0..3)|DAVLock check_locks(string path, int(0..1) recursive, RequestID id)
 {
+  int state = 0;
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
@@ -1375,11 +1376,19 @@ int(-2..1)|DAVLock check_locks(string path, int(0..1) recursive, RequestID id)
       // Does not apply to this location module.
       continue;
     }
-    int(-2..1)|DAVLock lock_info =
+    int(0..3)|DAVLock lock_info =
       function_object(func)->check_locks(subpath, recursive, id);
-    if (lock_info) return lock_info;
+    if (objectp(lock_info)) {
+      if (has_prefix(path, loc)) {
+	return lock_info;
+      } else {
+	lock_info = 2;	// We have a lock on some subpath.
+      }
+    }
+    if (lock_info > state) state = lock_info;
+    if (state == 3) return 3;
   }
-  return 0;
+  return state;
 }
 
 //! Unlock the lock represented by @[lock] on @[path].
@@ -1441,13 +1450,13 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   // First check if there's already some lock on path that prevents
   // us from locking it.
-  int(-2..1)|DAVLock lock_info = check_locks(path, recursive, id);
+  int(0..3)|DAVLock lock_info = check_locks(path, recursive, id);
 
   if (!intp(lock_info)) {
     // We already hold a lock that prevents us.
     return Roxen.http_status(412, "Precondition Failed");
-  } else if ((lock_info < 0) ||
-	     (lock_info && (lockscope == "DAV:exclusive"))) {
+  } else if ((lock_info & 1) ||
+	     ((lock_info == 2) && (lockscope == "DAV:exclusive"))) {
     // Some other lock prevents us.
     return Roxen.http_status(423, "Locked");
   }
