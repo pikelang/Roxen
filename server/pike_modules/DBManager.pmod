@@ -1,6 +1,6 @@
-// Symbolic DB handling. 
+// Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.59 2002/10/23 16:31:04 nilsson Exp $
+// $Id: DBManager.pmod,v 1.60 2002/12/01 23:25:05 mani Exp $
 
 //! Manages database aliases and permissions
 
@@ -152,7 +152,9 @@ private
     low_set_user_permissions( c, name, level, "127.0.0.1", password );
   }
 
-  
+  // FIXME: This is a horrible kludge
+  constant blarg = error;
+
   class ROWrapper( static Sql.Sql sql )
   {
     static int pe;
@@ -163,7 +165,7 @@ private
           has_prefix( lower_case(query), "describe" ))
         return sql->query( query, @args );
       pe = 1;
-      ::error( "Permission denied\n" );
+      blarg( "Permission denied\n" );
     }
     static object big_query( string query, mixed ... args )
     {
@@ -172,7 +174,7 @@ private
           has_prefix( lower_case(query), "describe" ))
         return sql->big_query( query, @args );
       pe = 1;
-      ::error( "Permission denied\n" );
+      blarg( "Permission denied\n" );
     }
     static string error()
     {
