@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.28 1999/12/13 04:30:04 mast Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.29 1999/12/13 22:09:16 mast Exp $";
 #else
 import spider;
 # include "newdecode.pike"
@@ -174,9 +174,6 @@ private static void read_it(string cl)
       destruct(fd);
     }
   };
-#ifndef THREADS
-  if (privs) destruct(privs);
-#endif /* THREADS */
   if (err) {
     report_error(sprintf("Failed to read configuration file for %O\n"
 			 "%s\n", cl, describe_backtrace(err)));
