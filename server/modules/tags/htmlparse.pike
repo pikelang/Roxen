@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.30 1997/05/08 18:14:48 peter Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.31 1997/05/08 18:28:46 peter Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -353,10 +353,11 @@ mapping handle_file_extension( object file, string e, object id)
   mapping defines = id->misc->defines || ([]);
 
   id->misc->defines = defines;
-  if(search(QUERY(noparse),e)!=-1 && search(QUERY(toparse),e)==-1)
+  if(search(QUERY(noparse),e)!=-1)
   {
     query_num(id->not_query, 1);
-    return 0;
+    if(!search(QUERY(toparse),e)==-1)  /* Parse anyway */
+      return 0;
   }
   
 #if efun(set_start_quote)
