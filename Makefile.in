@@ -165,7 +165,17 @@ install_only:
 	    echo Modifying permissions for file $(prefix)/roxen/server/bin/$$f... ; \
 	    chmod a+rx $(prefix)/roxen/server/bin/$$f; \
 	  else :; fi; \
-	done
+	done; \
+	if test -f $(prefix)/bin/pike-roxen ; then :; else \
+	  if test -d $(prefix)/bin/. ; then :; else \
+	    echo "Creating directory $(prefix)/bin"; \
+	    mkdir $(prefix)/bin || exit 1; \
+	    chmod a+rx $(prefix)/bin/.; \
+	  fi; \
+	  echo "Installing $(prefix)/bin/pike-roxen"; \
+	  sed <$(SRCDIR)/pike-roxen.in -e 's!@prefix@!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
+	  chmod a+rx $(prefix)/bin/pike-roxen; \
+	fi
 	@echo Roxen installed.
 
 install_pike: all
