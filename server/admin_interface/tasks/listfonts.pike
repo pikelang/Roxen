@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.24 2002/11/14 23:16:09 agehall Exp $
+ * $Id: listfonts.pike,v 1.25 2002/11/17 04:29:54 mani Exp $
  */
 
 constant task = "status";
@@ -82,9 +82,15 @@ string page_1(RequestID id)
   string txt = v->text && v->text[0];
   foreach(roxen.fonts.available_fonts(), string fn)
     res += Roxen.html_encode_string( fn )+":<br />\n"
-      "<gtext fontsize=16 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(txt)+"</gtext><br>"
-      "<gtext fontsize=32 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
-      "<gtext fontsize=48 align='top' bgcolor='&usr.fade1;' font='"+fn+"'>"+Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
+      "<gtext fontsize=16 align='top' fgcolor='&usr.fgcolor;' "
+        "bgcolor='&usr.subtabs-frame;' font='"+fn+"'>"+
+        Roxen.html_encode_string(txt)+"</gtext><br>"
+      "<gtext fontsize=32 align='top' fgcolor='&usr.fgcolor;' "
+        "bgcolor='&usr.subtabs-frame;' font='"+fn+"'>"+
+        Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
+      "<gtext fontsize=48 align='top' fgcolor='&usr.fgcolor;' "
+        "bgcolor='&usr.subtabs-frame;' font='"+fn+"'>"+
+        Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok/></p>";
 }
 
