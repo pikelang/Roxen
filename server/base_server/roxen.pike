@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.282 1999/05/19 03:47:48 per Exp $
+ * $Id: roxen.pike,v 1.283 1999/05/19 09:32:16 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.282 1999/05/19 03:47:48 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.283 1999/05/19 09:32:16 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1917,6 +1917,9 @@ class ImageCache
       Image.Colortable ct;
       object alpha;
 
+      if( args->fs  || dither == "fs" )
+	dither = "floyd_steinberg";
+
       if( format == "jpg" ) 
         format = "jpeg";
 
@@ -1986,7 +1989,10 @@ class ImageCache
       switch(format)
       {
        case "gif":
-        data = Image.GIF.encode_trans( reply, ct, alpha );
+	 if( alpha )
+	   data = Image.GIF.encode_trans( reply, ct, alpha );
+	 else
+	   data = Image.GIF.encode( reply, ct );
         break;
        case "png":
          if( ct )
