@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.37 2003/03/04 21:00:52 mani Exp $
+// $Id: newdecode.pike,v 1.38 2004/04/06 21:07:05 mani Exp $
 
 // The magic below is for the 'install' program
 # if !efun(get_core)
@@ -84,7 +84,7 @@ private string decode_config_region(Parser.HTML p, mapping mr, string s, mapping
 string trim_comments( string from )
 {
   string res = "";
-  foreach( String.SplitIterator(from, '\n'); int r; string l )
+  foreach( from/"\n", string l )
   {
     if( strlen(l) && l[0] == '#' )
       // Just defeat any tags on the line. This won't clobber any
@@ -186,7 +186,7 @@ string trim_ws( string indata )
 
   indata = trim_tags( indata );
 
-  foreach(String.SplitIterator(indata, '\n'); int row; string line)
+  foreach(indata/"\n", string line)
     res += String.trim_whites(line) + "\n";
 
   return res;

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.857 2004/04/04 14:26:42 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.858 2004/04/06 21:07:05 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1609,8 +1609,7 @@ class SSLProtocol
     string f, f2;
     ctx->certificates = ({});
 
-    foreach( String.SplitIterator(query_option("ssl_cert_file"), ',');
-	     int num; string cert_file )
+    foreach( query_option("ssl_cert_file")/",", string cert_file )
     {
       if( catch{ f = lopen(String.trim_whites(cert_file), "r")->read(); } )
       {
@@ -1925,7 +1924,7 @@ int register_url( string url, Configuration conf )
   Standards.URI ui = Standards.URI(url);
   mapping opts = ([]);
   string a, b;
-  foreach( String.SplitIterator( (ui->fragment||""), ';'); int num; string x )
+  foreach( (ui->fragment||"")/";", string x )
   {
     sscanf( x, "%s=%s", a, b );
     opts[a]=b;
@@ -3163,7 +3162,7 @@ class ImageCache
 #ifndef NO_ARG_CACHE_SB_REPLICATE
     if(id->misc->persistent_cache_crawler) {
       // Force an update of atime for the requested arg cache id.
-      foreach( String.SplitIterator(ci, '$'); int num; string key) {
+      foreach( ci/"$", string key) {
 #if REPLICATE_DEBUG
 	werror("Request for id %O from prefetch crawler.\n", key);
 #endif /* REPLICATE_DEBUG */
@@ -4818,7 +4817,7 @@ array security_checks = ({
   "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
-      foreach( String.SplitIterator(q, ','); int num; string w )
+      foreach( q/",", string w )
 	if( (int)w )
 	  res[((int)w % 7)] = 1;
 	else
@@ -4921,7 +4920,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       "  int|mapping fail" });
   int shorted, patterns, cmd;
 
-  foreach( String.SplitIterator(pattern, '\n'); int row; string line )
+  foreach( pattern/"\n", string line )
   {
     line = String.trim_all_whites( line );
     if( !strlen(line) || line[0] == '#' )

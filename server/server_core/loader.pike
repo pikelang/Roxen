@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.376 2004/04/04 14:26:43 mani Exp $
+// $Id: loader.pike,v 1.377 2004/04/06 21:07:05 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -27,7 +27,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.376 2004/04/04 14:26:43 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.377 2004/04/06 21:07:05 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -236,7 +236,7 @@ void roxen_werror(string format, mixed ... args)
   if (sizeof(format)) {
 #if efun(syslog)
     if(use_syslog && (loggingfield&LOG_DEBUG))
-      foreach( String.SplitIterator(format,'\n'); int row; string message) {
+      foreach( format/"\n", string message) {
 	if(message=="") continue;
 	syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
       }
@@ -249,16 +249,14 @@ void roxen_werror(string format, mixed ... args)
     stderr->write( possibly_encode( format ) );
 #else
     array(string) a = format/"\n";
-    int i;
 
     a = map( a, possibly_encode );
 
-    for(i=0; i < sizeof(a)-1; i++) {
+    for(int i; i < sizeof(a)-1; i++)
       stderr->write(short_time() + a[i] + "\n");
-    }
-    if (!last_was_nl) {
+
+    if (!last_was_nl)
       stderr->write(short_time() + a[-1]);
-    }
 #endif
   }
 
@@ -400,7 +398,7 @@ void report_warning(LocaleString message, mixed ... foo)
   nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach( String.SplitIterator(message,'\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -415,7 +413,7 @@ void report_notice(LocaleString message, mixed ... foo)
   nwrite([string]message,0,1,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
-    foreach( String.SplitIterator(message,'\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_NOTICE, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -430,7 +428,7 @@ void report_error(LocaleString message, mixed ... foo)
   nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach( String.SplitIterator(message,'\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -443,7 +441,7 @@ void report_fatal(string message, mixed ... foo)
   nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
-    foreach( String.SplitIterator(message,'\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_EMERG, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -473,7 +471,7 @@ void report_warning_sparsely (LocaleString message, mixed ... args)
   nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach( String.SplitIterator(message, '\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -491,7 +489,7 @@ void report_error_sparsely (LocaleString message, mixed... args)
   nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach( String.SplitIterator(message, '\n'); int row; message )
+    foreach( message/"\n", message )
       syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -1580,7 +1578,7 @@ static void do_tailf( int loop, string f )
   string mysqlify( string what )
   {
     string res = "";
-    foreach( String.SplitIterator(what,'\n'); int row; string line )
+    foreach( what/"\n", string line )
     {
       if( sscanf( line, "%*sAborted connection%*s" ) == 2 )
 	continue;

@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.148 2004/04/04 14:26:44 mani Exp $
+// $Id: wizard.pike,v 1.149 2004/04/06 21:07:05 mani Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -129,7 +129,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->type = "text";
     if(!m->size)m->size="60,1";
     m_delete(m,"default");
-    foreach( String.SplitIterator( (current||""), 0 ); int num; string v)
+    foreach( (current||"")/"\0", string v)
     {
       if(v=="") continue;
       res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=\"-2\">";

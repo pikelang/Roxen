@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.553 2004/04/04 15:13:26 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.554 2004/04/06 21:07:04 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -806,7 +806,7 @@ private inline string fix_logging(string s)
 
 private void parse_log_formats()
 {
-  foreach(String.SplitIterator(query("LogFormat"), '\n'); int x; string b)
+  foreach(query("LogFormat")/"\n", string b)
     if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
       log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
