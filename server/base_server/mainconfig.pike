@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.88 1997/12/17 22:55:48 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.89 1997/12/17 23:05:42 peter Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -592,10 +592,11 @@ string configuration_docs()
   string res="";
   foreach(get_dir("server_templates"), string c)
   {
-      if( c-".pike" != c )
-	res += ("<dt><b>"+get_template(c)->name+"</b>\n"+
-		"<dd>"+get_template(c)->desc+"<br>\n"+
-		describe_config_modules(get_template(c)->modules) + "\n");
+    perror("c[-1]: %O\n", c[-1]);
+    if( c[-1]=='e' )
+      res += ("<dt><b>"+get_template(c)->name+"</b>\n"+
+	      "<dd>"+get_template(c)->desc+"<br>\n"+
+	      describe_config_modules(get_template(c)->modules) + "\n");
   }
   return res;
 }
