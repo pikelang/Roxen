@@ -541,7 +541,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["ysize"]-diagram_data["linewidth"],
 					  
 					  xpos_for_yaxis,
-					  diagram_data["linewidth"]+
+					  si+
 					  diagram_data["labelsize"]
 					}), 
 					1, 1)[0]);
@@ -571,7 +571,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					    si/3.0,
 					    
 					    xpos_for_yaxis,
-					    diagram_data["linewidth"]+
+					    si+
 					    diagram_data["labelsize"]
 					  }), 
 					  1, 1)[0]);
@@ -602,7 +602,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					      si*4.0/3.0,
 					    
 					      xpos_for_yaxis+0.01, //FIXME!
-					      diagram_data["linewidth"]+
+					      si+
 					      diagram_data["labelsize"]
 					      
 					    }), 
