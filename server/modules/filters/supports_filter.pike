@@ -5,7 +5,7 @@
 inherit "module";
 
 constant module_name = "Supports filter";
-constant module_doc = ("Filters the result HTML from things the client can not handle,"
+constant module_doc = ("Filters the result HTML from things the client can not handle, "
 		       "based on its supports values.");
 constant module_type = MODULE_FILTER;
 
