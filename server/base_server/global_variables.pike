@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.86 2002/01/11 11:39:47 grubba Exp $
+// $Id: global_variables.pike,v 1.87 2002/01/11 11:57:23 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -49,7 +49,7 @@ void set_up_hilfe_variables( Protocol o )
 	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
 	  LOCALE(310,"If yes, require a user with the hilfe permission "
 		 "set, otherwise, any configuration interface user will "
-		 "work,  even one with only the view settings permission" ) );
+		 "be allowed, even one with only the view settings permission." ) );
 }
 
 
@@ -63,7 +63,7 @@ void set_up_ftp_variables( Protocol o )
           "              +--      Welcome to the Roxen FTP server      ---\n"
           "              +------------------------------------------------\n",
 	  LOCALE(60, "Welcome text"), TYPE_TEXT,
-          LOCALE(61, "The text shown to the user on connect") );
+          LOCALE(61, "The text shown to the user on connect.") );
 
   defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"), 
 	  TYPE_INT,
@@ -71,7 +71,7 @@ void set_up_ftp_variables( Protocol o )
           " 0 means unlimited.") );
 
   defvar( "named_ftp", 1,  LOCALE(64, "Allow named ftp"), TYPE_FLAG,
-          LOCALE(65, "If yes, non-anonymous users can connect") );
+          LOCALE(65, "If yes, non-anonymous users can connect.") );
 
   defvar( "guest_ftp", 1, 
 	  LOCALE(66, "Allow login with incorrect password/user"), 
@@ -82,7 +82,7 @@ void set_up_ftp_variables( Protocol o )
 
   defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"), 
 	  TYPE_FLAG,
-          LOCALE(69, "If yes, anonymous users is allowed to connect.") );
+          LOCALE(69, "If yes, anonymous users are allowed to connect.") );
 
   defvar( "shells", "",  LOCALE(70, "Shell database"), 
 	  TYPE_FILE,
@@ -149,7 +149,7 @@ void set_up_ssl_variables( Protocol o )
 	  LOCALE(86, "SSL certificate file"),
 	  TYPE_STRING,
 	  sprintf(LOCALE(87, "The SSL certificate file to use. The path "
-			 "is relative to %s")+"\n", getcwd() ));
+			 "is relative to %s.")+"\n", getcwd() ));
 
 
   defvar( "ssl_key_file", "", LOCALE(88, "SSL key file"),
@@ -157,7 +157,7 @@ void set_up_ssl_variables( Protocol o )
 	  sprintf(LOCALE(89, "The SSL key file to use. The path is "
 			 "relative to %s, you do not have to specify a key "
 			 "file, leave this field empty to use the certificate "
-			 "file only")+"\n", getcwd() ));
+			 "file only.")+"\n", getcwd() ));
 }
 
 
@@ -240,7 +240,7 @@ void define_global_variables(  )
 	  "<p>This is useful if you want to know if downloads were successful "
 	  "(the user has the complete file downloaded). The drawback is that "
 	  "bandwidth statistics on the log file will be incorrect. The "
-	  "statistics in Roxen will still be correct."));
+	  "statistics in Roxen will still be correct.</p>"));
 
   defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
 	 TYPE_FONT,
@@ -298,7 +298,7 @@ void define_global_variables(  )
 	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
 	 TYPE_INT, 
 	 LOCALE(107, "How many cache files (inodes) may be on disk before "
-		"a garbage collect is done ? May be left zero to disable "
+		"a garbage collect is done? May be left at zero to disable "
 		"this check."),
 	 0, cache_disabled_p);
 
@@ -306,7 +306,7 @@ void define_global_variables(  )
 	 LOCALE(108, "Cache: Proxy Disk Cache bytes per second"),
 	 TYPE_INT,
 	 LOCALE(109, "How file size should be treated during garbage collect. "
-	  "Each X bytes counts as a second, so that larger files will "
+	  "Each X bytes count as a second, so that larger files will "
 	  "be removed first."),
 	  0, cache_disabled_p);
 
@@ -315,16 +315,16 @@ void define_global_variables(  )
 	  TYPE_DIR,
 	  LOCALE(111, "This is the base directory where cached files will "
 		 "reside. To avoid mishaps, 'roxen_cache/' is always "
-		 "prepended to this variable."),
+		 "appended to this variable."),
 	 0, cache_disabled_p);
 
   defvar("hash_num_dirs", 500,
 	 LOCALE(112, "Cache: Proxy Disk Cache Number of hash directories"),
 	 TYPE_INT|VAR_MORE,
 	 LOCALE(113, "This is the number of directories to hash the contents "
-		"of the disk cache into.  Changing this value currently "
+		"of the disk cache into. Changing this value currently "
 		"invalidates the whole cache, since the cache cannot find "
-		"the old files.  In the future, the cache will be "
+		"the old files. In the future, the cache will be "
 		"recalculated when this value is changed."),
 	 0, cache_disabled_p);
 
@@ -395,8 +395,8 @@ be used. The syntax is user[:group].
 
 <p>A server restart is necessary for a change of this variable to take
 effect. Note that it also can lead to file permission errors if the
-Roxen process no longer can read files it previously has written,
-although the start script fixes this for the standard file locations."));
+Roxen process no longer can read files it previously has written.
+The start script attempts to fix this for the standard file locations.</p>"));
 
   defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
 	 TYPE_FLAG,
@@ -536,7 +536,7 @@ although the start script fixes this for the standard file locations."));
 		"unique, non-guessable session id's. Change this "
 		"value into something that is hard to guess, unless "
 		"you are satisfied with what your computers random "
-		"generator has produced") );
+		"generator has produced.") );
 
   secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
     ->digest();
@@ -552,8 +552,8 @@ although the start script fixes this for the standard file locations."));
 	 LOCALE(161, "If set, Roxen will automatically restart after a "
 		"configurable number of days. Since Roxen uses a monolith, "
 		"non-forking server model the process tends to grow in size "
-		"over time. This is mainly due to heap fragmentation but also "
-		"because of memory leaks.")
+		"over time. This is mainly due to heap fragmentation but "
+		"may also sometimes be because of memory leaks.")
 	  );
 
   definvisvar( "last_suicide", 0, TYPE_INT );
@@ -586,7 +586,7 @@ although the start script fixes this for the standard file locations."));
 		"a database named 'replicate' that recides in a shared mysql "
 		"server for this to work. Also, all servers has to have this "
 		"flag set. Roxen must be restarted before changes to this "
-		"variable takes effect " ) );
+		"variable takes effect." ) );
   
   defvar("config_file_comments", 0,
 	 LOCALE(172, "Commented config files"),
@@ -601,13 +601,13 @@ although the start script fixes this for the standard file locations."));
   // SNMP stuffs
   defvar("snmp_agent", 0, LOCALE(999, "SNMP: Enable SNMP agent"),
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the Roxen SNMP agent will be anabled. "
+	 "If set, the Roxen SNMP agent will be anabled."
 	 );
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
-	 "'Read-write' permissions can be specified by append :rw to the community "
-	 "name (for example mypub:rw).",
+	 "'Read-write' permissions can be specified by appending :rw to the "
+	 "community name (for example mypub:rw).",
 	 0, snmp_disabled);
 /*
   defvar("snmp_mode", "smart", "SNMP: Agent mode",
@@ -618,8 +618,9 @@ although the start script fixes this for the standard file locations."));
 */
   defvar("snmp_hostport", snmp_get_cif_domain(), "SNMP: IP address and port",
          TYPE_STRING,
-         "Agent listenning IP adress and port. Format: [[host]:port] "
-         "If host isn't set then will be use IP address of config interface",
+         "Agent listening IP adress and port. Format: [[host]:port] "
+         "If host isn't set then the IP address of the config interface "
+	 "will be used.",
 	 0, snmp_disabled);
 
   defvar("snmp_global_traphosts", ({}),"SNMP: Trap destinations",
