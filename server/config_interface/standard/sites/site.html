@@ -1,0 +1,21 @@
+<left-menu title="Sites">
+  <configif-output source=configurations>
+    <item title=#name# href='site.html/#sname:quote=stag#/'
+     <pike>
+       werror(id->misc->pathinfo + "\n");
+       if("/#sname#/" == id->misc->pathinfo ) 
+         return "selected";
+      return "";
+      </pike>>
+     </item>
+  </configif-output>
+</left-menu>
+
+
+<content>
+foo!
+<pike>
+werror("FOO!\n");
+return "";
+</pike>
+</content>

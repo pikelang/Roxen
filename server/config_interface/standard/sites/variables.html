@@ -1,0 +1,33 @@
+<left-menu title="Global Settings"> 
+  <item href="?section=section" title="Misc"
+    <if not variable=section or variable="section is section">
+      selected
+    </if>
+   ></item>
+
+  <configif-output source=global-variables-sections>
+    <item href="?section=#section#"
+         title="#section:quote=dtag#"
+    <if variable="section is #section#">selected</if>></item>
+  </configif-output>
+</left-menu>
+
+<topmenu base="../" selected=globals>
+
+<path>
+ <seg href=/ name=root />
+ <seg href="" name="Global Settings" />
+</path>
+
+<content>
+  <formoutput quote="¤">
+  <input type=hidden name=section value="¤section¤">
+  <table>
+   <configif-output source=global-variables section="¤section:quote=dtag¤">
+    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
+    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
+   </configif-output>
+  </table>
+  <input type=submit value=" Apply " name=action>
+  </formoutput>
+</content>

@@ -1,0 +1,44 @@
+<!-- -*- html -*- -->
+
+<define tag=topmenu default_base="">
+  <top-menu>
+    <item title="<cf-locale get=sites>" href="&base;sites/" 
+      <if match="&selected; is sites"> selected</if> />
+    <item title="<cf-locale get=eventlog>" href="&base;event_log/" 
+          <if match="&selected; is event_log"> selected</if> />
+    <item title="<cf-locale get=globals>" href="&base;global_settings/" 
+          <if match="&selected; is globals"> selected</if> />
+    <item title="<cf-locale get=actions>" href="&base;actions/"
+          <if match="&selected; is actions"> selected</if>  />
+    <item title="<cf-locale get=manual>" href="&base;manual/" />
+  </top-menu>
+</define>
+
+
+<define container=tmpl>
+  <title>&title;</title>
+  <expire-time now>
+
+  <define name=font>haru</define>
+
+  <body hspace=0 vspace=0
+        topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
+        bottommargin=0 rightmargin=0 margin=0  
+        bgcolor=white text=black>
+
+
+    <form method=POST action='<file>'>
+      <roxen-config preparse>
+        <middle title="<version> <cf-locale get=administration_interface>">
+          <configif-output quote=¤ source=locales>
+            <a href="¤path¤">
+              <img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
+                   alt="¤latin1-name¤" border=0 height=16>
+            </a> 
+          </configif-output>
+        </middle>
+        <contents>
+      </roxen-config>
+    </form>
+  </body>
+</define>
