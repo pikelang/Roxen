@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.5 1997/03/11 04:25:03 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.6 1997/03/13 00:17:37 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -1742,7 +1742,7 @@ void start(int num)
       };
 #ifdef DEBUG
     if (port_error) {
-      perror("Failed to open port %s at %s\n%s\n", port[0], port[2],
+      perror("Failed to open port %s at %s\n%s\n", ""+port[0], ""+port[2],
 	     describe_backtrace(port_error));
     }
 #endif /* DEBUG */
