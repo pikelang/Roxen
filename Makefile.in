@@ -105,14 +105,10 @@ install_only:
 	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
 #	cp $(SRCDIR)/pike/$(PIKEVERSION)/bin/feature_list $(prefix)/roxen/server/bin
-	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
-	test -d $(prefix)/roxen/local/etc/. || mkdir $(prefix)/roxen/local/etc
-	test -d $(prefix)/roxen/local/etc/modules/. || mkdir $(prefix)/roxen/local/etc/modules
-	test -d $(prefix)/roxen/local/etc/include/. || mkdir $(prefix)/roxen/local/etc/include
-	test -d $(prefix)/roxen/local/modules/. || mkdir $(prefix)/roxen/local/modules
-	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
-	test -d $(prefix)/roxen/server/lib/. || mkdir $(prefix)/roxen/server/lib
-	test -d $(prefix)/roxen/server/lib/pike/. || mkdir $(prefix)/roxen/server/lib/pike
+	for d in local local/modules local/nfonts server/lib server/lib/pike \
+		 local/etc local/etc/modules local/etc/include; do \
+	  test -d $(prefix)/roxen/$$d/. || mkdir $(prefix)/roxen/$$d; \
+	done
 	@for d in `cd pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
 	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
 	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
