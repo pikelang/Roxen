@@ -32,8 +32,7 @@ string|mapping handle(string sub, object id)
   int item=(int)id->variables->item;
   array my_buttons=({ ({"Move up","up" }),
 		      ({"Move down","down" }),
-		      ({"Delete","delete" }),
-		      ({"Edit...","edit" }) });
+		      ({"Delete","delete" }) });
   if(id->variables->up&&item>0)
   {
     items=items[..item-2]+items[item..item]+items[item-1..item-1]+items[item+1..];
