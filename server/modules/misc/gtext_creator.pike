@@ -54,6 +54,14 @@ class SqlDB
 {
   object db;
 
+  mixed get(string s)
+  {
+    mapping r = db->query("select q from foo where id='"+db->quote(s)+"'");
+    if(!r || !sizeof(r))
+      return 0;
+    return decode_value( r[0]->q );
+  }
+
   void set(string s, mapping to)
   {
     string q = db->quote(encode_value( to ));
@@ -61,14 +69,6 @@ class SqlDB
       db->query("insert into foo values ('"+db->quote(s)+"','"+q+"')");
     else
       db->query("update foo set q='"+q+"' where id='"+db->quote(s)+"'");
-  }
-
-  void get(string s)
-  {
-    mapping r = db->query("select q from foo where id='"+db->quote(s)+"'");
-    if(!r || !sizeof(r))
-      return 0;
-    return decode_value( r[0]->q );
   }
 
   void create(object d)
