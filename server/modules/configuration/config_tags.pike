@@ -1022,10 +1022,12 @@ string container_configif_output(string t, mapping m, string c, object id)
                                           ({"-","-","-"}) ),
                         ]);
                       } );
+
+     sort(variables->name, variables);
      break;
 
    default:
-     return "<b>Invalid output source: "+m->source+"</b>";
+     RXML.parse_error("Invalid output source: "+m->source+"\n");
   }
   m_delete( m, "source" );
 
