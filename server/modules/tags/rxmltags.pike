@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.24 1999/10/10 11:22:44 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.25 1999/10/17 14:14:13 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -210,10 +210,16 @@ string|array(string) tag_referrer(string tag, mapping m, RequestID id)
 	   m->alt || "" });
 }
 
+string tag_unset(string tag, mapping m, RequestID id) {
+  if(!m->variable)  return rxml_error(tag, "Variable not specified.", id);
+  m_delete( id->variables, m->variable );
+  return "";
+}
+
 string tag_set( string tag, mapping m, RequestID id )
 {
   if(m->help) 
-    return ("<b>&lt;"+tag+" variable=...&gt;</b>: "+String.capitalize(tag)+" the variable specified "
+    return ("<b>&lt;set variable=...&gt;</b>: Sets the variable specified "
       "by the 'variable' argument");
 
   if (m->variable)
@@ -239,9 +245,6 @@ string tag_set( string tag, mapping m, RequestID id )
     else if (m->eval)
       // Set variable to the result of some evaluated RXML
       id->variables[ m->variable ] = parse_rxml(m->eval, id);
-    else
-      // Unset variable.
-      m_delete( id->variables, m->variable );
     return "";
   }
 
