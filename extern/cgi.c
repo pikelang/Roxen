@@ -49,7 +49,7 @@
 /* maximum size of the header before sending and error message and
  * killing the script.
  */
-# define MAXHEADERLEN 20000
+# define MAXHEADERLEN 32769
 #endif
 
 #undef DEBUG
@@ -323,9 +323,9 @@ void send_data(char *bar, int re)
 }
 
 
-int is_end_of_headers(char *s, int len)
+char *is_end_of_headers(char *s, int len)
 {
-  char *end_of_header;
+  int end_of_header;
 
   if(!headers) 
   {
@@ -333,8 +333,8 @@ int is_end_of_headers(char *s, int len)
     headers = malloc(hsize);
     hpointer = 0;
   } else if(hsize <= hpointer+len) {
-    headers = my_realloc(headers, hsize*2, hsize);
-    hsize *= 2;
+    headers = my_realloc(headers, (hpointer+len)*2+1, hsize);
+    hsize = (hpointer+len)*2;
   }
   if(hsize > MAXHEADERLEN) {
     send_data(LONGHEADER, strlen(LONGHEADER));
@@ -342,22 +342,22 @@ int is_end_of_headers(char *s, int len)
   }
     
   
-  movemem(headers+hpointer, s, len);
+  movemem(headers + hpointer, s, len);
   hpointer += len;
   headers[hpointer] = 0;
 
-  if ((end_of_header = strstr(headers, "\n\n")) ||
-      (end_of_header = strstr(headers, "\r\n\r\n")) ||
-      (end_of_header = strstr(headers, "\n\r\n\r"))) {
-    end_of_header[1] = 0;	/* Always a legal address */
-    return 1;
-  } else {
-    return 0;
+  end_of_header = strstr(headers, "\r\n\r\n");
+  if (!end_of_header) {
+    end_of_header = strstr(headers, "\n\n");
   }
+  if (!end_of_header) {
+    end_of_header = strstr(headers, "\n\r\n\r");
+  }
+  return(end_of_header)
 }
 
 
-int parse_and_send_headers(void)
+int parse_and_send_headers(char *header_end)
 {
   char *error, *pointer;
   if(headers)
@@ -367,25 +367,33 @@ int parse_and_send_headers(void)
        && error==headers)
     {
       char *tmp;
+      int skip;
       pointer = error;
-      while(*error!=' ') error++;
-      while(*error==' ') error++;
+      while(*error!=' ' && *error != ':') error++;
+      while(*error==' ' || *error == ':') error++;
       tmp=error;
-      while(*tmp!='\n') tmp++;
+      while(*tmp!='\n' && *tmp!='\r') tmp++;
+      if ((*tmp == '\n' && tmp[1] == '\r') ||
+	  (*tmp == '\r' && tmp[1] == '\n'))
+	skip = 2;
+      else
+	skip = 1;
       
       send_data("HTTP/1.0 ", 9);
-      send_data(error, tmp-error+1);
+      send_data(error, tmp - error);
+      send_data("\r\n", 2);
       /*  send_data(headers, pointer-headers);*/
-      send_data(tmp+1, hpointer-(tmp-headers));
+      send_data(tmp+skip, hpointer-(tmp+skip-headers));
       free(headers);
       return 1;
     }
-    if(strstr(headers, "Location:") || strstr(headers, "location:"))
-      error = "HTTP/1.0 302 Document Found\n";
+    if((pointer = strstr(headers, "Location:") && (pointer < end_of_headers)) ||
+       (pointer = strstr(headers, "location:") && (pointer < end_of_headers)))
+      error = "HTTP/1.0 302 Document Found\r\n";
     else
-      error = "HTTP/1.0 200 Ok\n";
+      error = "HTTP/1.0 200 Ok\r\n";
   } else
-    error = "HTTP/1.0 200 Ok\n";
+    error = "HTTP/1.0 200 Ok\r\n";
   
   send_data(error, strlen(error));
   if(headers)
@@ -478,27 +486,28 @@ int main(int argc, char **argv)
     char foo[2049], *bar;
     
     re = read(script, foo, 2048);
-#ifdef DEBUG
-    foo[re]=0;
-    fprintf(stderr, "read %s\n", foo);
-#endif
     if(re <= 0)
     {
 #ifdef DEBUG
       perror("read failed");
 #endif
-      if(!raw) parse_and_send_headers();
+      if(!raw) parse_and_send_headers(NULL);
       kill(pid, 9);
       close(0); close(1); close(2);
       exit(0);
     }
+    foo[re]=0;
+#ifdef DEBUG
+    fprintf(stderr, "read %s\n", foo);
+#endif
 
     bar=foo;
     
     if(!raw)
     {
-      if(is_end_of_headers(foo, re)) 
-	raw = parse_and_send_headers();
+      char *header_end;
+      if(header_end = is_end_of_headers(foo, re)) 
+	raw = parse_and_send_headers(header_end);
     } else 
       send_data(bar, re);
   }
