@@ -37,10 +37,17 @@
 			  with RFC2307
 			- changed labels for 'Attribute names: ...' to
 			  to more readable ' ... map'
+  1999-08-18 v1.9	added catching errors in search op.
+  1999-08-20 v1.10	- added logging all attempts of authenification
+			- added id->misc[uid,gid,gecos,home,shell] update -now
+			  works 'access as logged user'
+			- added uid->name mapping
+			! known bug: 1. unsuc. auth. is logged twice - status()
+			  function returns incorrect values !!!
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.3 1999/08/16 00:42:25 peter Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.4 1999/08/23 18:43:45 peter Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -66,6 +73,9 @@ object dir=0;
 int dir_accesses=0, last_dir_access=0, succ=0, att=0, nouser=0;
 mapping failed  = ([ ]);
 mapping accesses = ([ ]);
+
+mapping uids = ([ ]);
+mapping gids = ([ ]);
 
 int access_mode_is_user() {
 
@@ -242,7 +252,8 @@ void open_dir(string u, string p) {
 
     last_dir_access=time(1);
     dir_accesses++; //I count accesses here, since this is called before each
-    if(objectp(dir)) //already open
+    //if(objectp(dir)) //already open
+    if(dir) //already open
 	return;
     if(dir)
 	return;
@@ -257,18 +268,26 @@ void open_dir(string u, string p) {
 	bindpwd = p;
     }
 
-    err = catch(dir = Protocols.LDAP.client(QUERY(CI_dir_server)));
-    if(!err)
-	err = catch(err = dir->bind(binddn, bindpwd));
+    err = catch {
+	dir = Protocols.LDAP.client(QUERY(CI_dir_server));
+	dir->bind(binddn, bindpwd);
+    };
     if (arrayp(err)) {
 	werror ("LDAPauth: Couldn't open authentication directory!\n[Internal: "+err[0]+"]\n");
-	if (objectp(dir))
+	if (objectp(dir)) {
 	    werror("LDAPauth: directory interface replies: "+dir->error_string()+"\n");
+	    catch(dir->unbind());
+	}
 	else
 	    werror("LDAPauth: unknown reason\n");
 	werror ("LDAPauth: check the values in the configuration interface, and "
 		"that the user\n\trunning the server has adequate permissions "
 		"to the server\n");
+	dir=0;
+	return;
+    }
+    if(dir->error_code) {
+	werror ("LDAPauth: authentification error ["+dir->error_string+"]\n");
 	dir=0;
 	return;
     }
@@ -305,7 +324,7 @@ string status() {
 	     //+ "<p>The database has "+ sizeof(users)+" entries"
 #ifdef LOG_ALL
 	     + "<p>"+
-	     "<h3>Auth access by host</h3>" +
+	     "<h3>Auth attempt by host</h3>" +
 	     Array.map(indices(accesses), lambda(string s) {
 	       return roxen->quick_ip_to_host(s) + ": "+accesses[s]->cnt+" ["+accesses[s]->name[0]+
 		((sizeof(accesses[s]->name) > 1) ?
@@ -337,7 +356,7 @@ string *userinfo (string u,mixed p) {
     DEBUGLOG ("userinfo ("+u+")");
     //DEBUGLOG (sprintf("DEB:%O\n",p));
     if (u == "A. Nonymous") {
-      DEBUGLOG ("A. Nonymous pseudo user catched.");
+      DEBUGLOG ("A. Nonymous pseudo user catched and filtered.");
       return 0;
     }
 
@@ -356,9 +375,13 @@ string *userinfo (string u,mixed p) {
     if(QUERY(CI_access_type) == "search") {
 	string rpwd = "";
 
-	results=dir->search(replace(QUERY(CI_search_templ), "%u%", u));
-	if (!objectp(results)||!results->num_entries()) {
+	err = catch(results=dir->search(replace(QUERY(CI_search_templ), "%u%", u)));
+	if (err || !objectp(results) || !results->num_entries()) {
 	    DEBUGLOG ("no entry in directory, returning unknown");
+	    if(access_mode_is_guest() && objectp(dir)) {
+		catch(dir->unbind());
+		dir=0;
+	    }
 	    return 0;
 	}
 	tmp=results->fetch();
@@ -391,6 +414,17 @@ string *userinfo (string u,mixed p) {
       dir=0;
     }
 
+    if(zero_type(uids[(string)dirinfo[2]]))
+	uids = uids + ([ dirinfo[2] : ({ dirinfo[0] }) ]);
+    else
+	uids[dirinfo[2]] = uids[dirinfo[2]] + ({dirinfo[0]});
+#if 0
+    if(zero_type(gids[(string)dirinfo[3]]))
+	gids = ([ dirinfo[3]:({dirinfo[0]}) ]);
+    else
+	gids[dirinfo[3]] = gids[dirinfo[3]] + ({dirinfo[0]});
+#endif // FIXME: hacked - returns gidname = uidname !!!
+
     //DEBUGLOG(sprintf("Result: %O",dirinfo)-"\n");
     return dirinfo;
 }
@@ -404,8 +438,17 @@ string *userlist() {
 string user_from_uid (int u) 
 {
 
+    if(!zero_type(uids[(string)u]))
+	return(uids[(string)u][0]);
     return 0;
 }
+
+#if LOG_ALL
+int chk_name(string x, string y) {
+
+    return(x == y);
+}
+#endif
 
 array|int auth (string *auth, object id)
 {
@@ -420,7 +463,7 @@ array|int auth (string *auth, object id)
 #if LOG_ALL
     if(!zero_type(accesses[id->remoteaddr]) && !zero_type(accesses[id->remoteaddr]["cnt"])) {
       accesses[id->remoteaddr]->cnt++;
-      if(accesses[id->remoteaddr]->name[0] != u) // FIXME: needs the whole test
+      if(Array.search_array(accesses[id->remoteaddr]->name, chk_name, u) < 0)
 	accesses[id->remoteaddr]->name = accesses[id->remoteaddr]->name + ({ u });
     } else
       accesses[id->remoteaddr] = (["cnt" : 1, "name":({ u })]);
@@ -493,6 +536,12 @@ array|int auth (string *auth, object id)
     if (QUERY(CI_use_cache))
 	cache_set("ldapauthentries",u,dirinfo);
 
+    id->misc->uid = dirinfo[2];
+    id->misc->gid = dirinfo[3];
+    id->misc->gecos = dirinfo[4];
+    id->misc->home = dirinfo[5];
+    id->misc->shell = dirinfo[6];
+
     DEBUGLOG (u+" positively recognized");
     succ++;
     return ({1,u,0});
@@ -507,7 +556,7 @@ array|int auth (string *auth, object id)
 array register_module()
 {
 
-    return(({ MODULE_AUTH,
+    return(({ MODULE_AUTH || MODULE_EXPERIMENTAL,
 	"LDAP directory authorization",
 	"Experimental module for authorization using "
 	"Pike's internal Ldap directory interface."
@@ -516,4 +565,5 @@ array register_module()
 
 	({}), 1 }));
 }
+
 
