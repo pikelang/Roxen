@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.273 2002/03/13 17:56:21 mast Exp $
+// $Id: module.pmod,v 1.274 2002/03/15 16:43:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -399,7 +399,7 @@ class Tag
     if (mixed err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type);			\
       if (PCode p_code = _parser->p_code)				\
-	p_code->add_frame (_ctx, _frame, _res);				\
+	p_code->add_frame (_ctx, _frame, _res, 1);			\
     })									\
       if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
 	UNWIND_STATE ustate = _ctx->unwind_state;			\
@@ -421,7 +421,7 @@ class Tag
 	    "due to exception.\n",					\
 	    _frame, _ctx->state_updated, orig_state_updated);		\
 	  _ctx->state_updated = orig_state_updated;			\
-	  p_code->add_frame (_ctx, _frame, PCode);			\
+	  p_code->add_frame (_ctx, _frame, PCode, 1);			\
 	}								\
 	ctx->handle_exception (						\
 	  err, _parser); /* Will rethrow unknown errors. */		\
@@ -6890,7 +6890,7 @@ class PCode
   } while (0)
 
   void add_frame (Context ctx, Frame frame, mixed evaled_value,
-		  void|array frame_state)
+		  void|int cache_frame, void|array frame_state)
   {
   add_frame: {
       int frame_flags = frame->flags;
@@ -6934,7 +6934,12 @@ class PCode
 	error ("Invalid args %s in frame about to be added to p-code.\n",
 	       format_short (frame->args));
 #endif
-      exec[length + 1] = frame;	// Cached for reuse.
+
+      if (cache_frame) {
+	exec[length + 1] = frame;
+	cache_frame = 0;
+      }
+
       if (frame_state)
 	exec[length + 2] = frame_state;
       else {
@@ -6959,7 +6964,7 @@ class PCode
       PCODE_MSG ("added frame %O\n", frame);
     }
 
-    if (p_code) p_code->add_frame (ctx, frame, evaled_value, frame_state);
+    if (p_code) p_code->add_frame (ctx, frame, evaled_value, cache_frame, frame_state);
   }
 
   void set_recover_errors (int val)
@@ -7116,9 +7121,11 @@ class PCode
 		  RESET_FRAME (frame);					\
 		  /* Race here, but it doesn't matter much. */		\
 		  exec[pos + 1] = frame;				\
+		  if (p_code) p_code->add_frame (ctx, frame, item, 0);	\
 		}							\
+		else							\
+		  if (p_code) p_code->add_frame (ctx, frame, item, 1);	\
 		pos += 2;						\
-		if (p_code) p_code->add_frame (ctx, frame, item);	\
 		break chained_p_code_add;				\
 	      }								\
 	      else if (item->is_RXML_p_code_entry)			\
@@ -7176,7 +7183,7 @@ class PCode
 
 	  if (p_code)
 	    if (objectp (item) && item->is_RXML_p_code_frame)
-	      p_code->add_frame (ctx, frame, PCode);
+	      p_code->add_frame (ctx, frame, PCode, 1);
 	    else
 	      p_code->add (ctx, item, item);
 
@@ -7307,13 +7314,11 @@ class PCode
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-#if 1 // #ifdef DEBUG
-	// Always do this check, to attempt to get better info about
-	// [bug 2543].
 	if (stringp (encode_p_code[pos + 2][0]))
+	  // This is a debug check, but let's always do it since this
+	  // case would be very hard to track down otherwise.
 	  error ("Unresolved argument function in frame at position %d.\n"
 		 "Encoding p-code in unfinished evaluation?\n", pos);
-#endif
 	if (exec[pos + 1]) exec[pos + 1]->args = encode_p_code[pos + 2][0];
       }
     }
@@ -7362,7 +7367,7 @@ class RenewablePCode
   inherit PCode;
 
   string source;
-  //! The source code or frame used to generate the p-code.
+  //! The source code used to generate the p-code.
 
   int is_stale() {return 0;}
 
