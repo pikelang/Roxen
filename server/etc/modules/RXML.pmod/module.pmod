@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.225 2001/08/20 19:30:37 mast Exp $
+// $Id: module.pmod,v 1.226 2001/08/21 14:46:04 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1325,10 +1325,17 @@ class Context
   //!
 
   mapping(mixed:mixed) misc = ([]);
-  //! Various context info. This is typically the same mapping as
-  //! @tt{id->misc->defines@}. To avoid accidental namespace conflicts
-  //! in this mapping, it's suggested that the module/tag program or
-  //! object is used as index in it.
+  //! Various context info, typically internal stuff that shouldn't be
+  //! directly accessible by the user in some scope. This is typically
+  //! the same mapping as @tt{id->misc->defines@}. To avoid accidental
+  //! namespace conflicts in this mapping, it's suggested that the
+  //! module/tag program or object is used as index in it.
+  //!
+  //! Note however that the indices and values in this mapping
+  //! sometimes might need to be encoded by @[RXML.p_code_to_string],
+  //! so use some object to which it can properly encode references
+  //! (preferably @[RXML.Tag], @[RXML.TagSet], and Roxen module
+  //! objects).
 
   int type_check;
   // Whether to do type checking. FIXME: Not fully implemented.
@@ -1471,17 +1478,17 @@ class Context
 	  array(string|int) path = var[..sizeof (var) - 1];
 	  vars = rxml_index (vars, path, scope_name, this_object());
 	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  if (mapping var_chg = misc->variable_changes)
 	    var_chg[encode_value_canonic (({scope_name}) + var)] = val;
 	}
 	else {
 	  index = var[0];
-	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  if (mapping var_chg = misc->variable_changes)
 	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
 	}
       else {
 	index = var;
-	if (mapping(string:mixed) var_chg = misc->variable_changes)
+	if (mapping var_chg = misc->variable_changes)
 	  var_chg[encode_value_canonic (({scope_name, index}))] = val;
       }
 
@@ -1545,17 +1552,17 @@ class Context
 	  array(string|int) path = var[..sizeof (var) - 1];
 	  vars = rxml_index (vars, path, scope_name, this_object());
 	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  if (mapping var_chg = misc->variable_changes)
 	    var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
 	  var = var[-1];
 	}
 	else {
 	  var = var[0];
-	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  if (mapping var_chg = misc->variable_changes)
 	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
 	}
       else {
-	if (mapping(string:mixed) var_chg = misc->variable_changes)
+	if (mapping var_chg = misc->variable_changes)
 	  var_chg[encode_value_canonic (({scope_name, var}))] = nil;
       }
 
@@ -1615,6 +1622,15 @@ class Context
     return !!scopes[scope_name || "_"];
   }
 
+#define CLEANUP_VAR_CHG_SCOPE(var_chg, scope_name) do {			\
+    foreach (indices (var_chg), mixed encoded_var)			\
+      if (stringp (encoded_var)) {					\
+	mixed var = decode_value (encoded_var);				\
+	if (arrayp (var) && var[0] == scope_name)			\
+	  m_delete (var_chg, encoded_var);				\
+      }									\
+  } while (0)
+
   void add_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or replaces the specified scope at the global level. A
   //! scope can be a mapping or an @[RXML.Scope] object. A global
@@ -1637,11 +1653,8 @@ class Context
       }
     else scopes[scope_name] = vars;
 
-    if (mapping(string:mixed) var_chg = misc->variable_changes) {
-      foreach (indices (var_chg), string encoded_var) {
-	array var = decode_value (encoded_var);
-	if (var[0] == scope_name) m_delete (var_chg, encoded_var);
-      }
+    if (mapping var_chg = misc->variable_changes) {
+      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
       var_chg[encode_value_canonic (({scope_name}))] =
 	mappingp (vars) ? vars + ([]) : vars;
     }
@@ -1683,11 +1696,8 @@ class Context
     else {
       scopes[scope_name] = vars;
 
-      if (mapping(string:mixed) var_chg = misc->variable_changes) {
-	foreach (indices (var_chg), string encoded_var) {
-	  array var = decode_value (encoded_var);
-	  if (var[0] == scope_name) m_delete (var_chg, encoded_var);
-	}
+      if (mapping var_chg = misc->variable_changes) {
+	CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
 	var_chg[encode_value_canonic (({scope_name}))] =
 	  mappingp (vars) ? vars + ([]) : vars;
       }
@@ -1706,11 +1716,8 @@ class Context
     if (outermost) m_delete (hidden, outermost);
     else m_delete (scopes, scope_name);
 
-    if (mapping(string:mixed) var_chg = misc->variable_changes) {
-      foreach (indices (var_chg), string encoded_var) {
-	array var = decode_value (encoded_var);
-	if (var[0] == scope_name) m_delete (var_chg, encoded_var);
-      }
+    if (mapping var_chg = misc->variable_changes) {
+      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
       var_chg[encode_value_canonic (({scope_name}))] = 0;
     }
   }
@@ -1731,6 +1738,27 @@ class Context
   //! Returns the scope mapping/object for the given scope.
   {
     return scopes[scope_name];
+  }
+
+  void set_misc (mixed index, mixed value)
+  //! Sets an index:value pair in @[misc]. The given index is removed
+  //! from @[misc] if @[value] is @[RXML.nil].
+  //!
+  //! This function also records the setting if p-code is being result
+  //! compiled, so that the setting is remade when the cached p-code
+  //! result is reevaluated (see @[RXML.FLAG_DONT_CACHE_RESULT]). It
+  //! should therefore be used whenever a tag that doesn't use
+  //! @[RXML.FLAG_DONT_CACHE_RESULT] sets a value in @[misc] to be
+  //! used by some other tag or variable later in the evaluation. In
+  //! other situations it's perfectly alright to access @[misc]
+  //! directly.
+  {
+    if (mapping var_chg = misc->variable_changes) {
+      if (stringp (index)) index = encode_value_canonic (index);
+      var_chg[index] = value;
+    }
+    if (value == nil) m_delete (misc, index);
+    else misc[index] = value;
   }
 
   void add_runtime_tag (Tag tag)
@@ -6104,7 +6132,7 @@ class VarRef (string scope, string|array(string|int) var,
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
-class VariableChange (static mapping(string:mixed) settings)
+class VariableChange (static mapping settings)
 // A compiled-in change of some scope variables. Used when caching
 // results.
 {
@@ -6114,32 +6142,45 @@ class VariableChange (static mapping(string:mixed) settings)
 
   mixed get (Context ctx)
   {
-    foreach (indices (settings), string encoded_var) {
-      array var = decode_value (encoded_var);
-      if (sizeof (var) == 1) {
+  handle_var_loop:
+    foreach (indices (settings), mixed encoded_var) {
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+	if (arrayp (var)) {
+	  if (sizeof (var) == 1) {
 #ifdef DEBUG
-	if (TAG_DEBUG_TEST (ctx->frame))
-	  TAG_DEBUG (ctx->frame, "    Installing cached scope %s with %d variables\n",
-		     replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
+	    if (TAG_DEBUG_TEST (ctx->frame))
+	      TAG_DEBUG (ctx->frame, "    Installing cached scope %s with %d variables\n",
+			 replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
 #endif
-	if (SCOPE_TYPE vars = settings[encoded_var])
-	  ctx->add_scope (var[0], settings[encoded_var]);
-	else
-	  ctx->remove_scope (var[0]);
-      }
-      else {
+	    if (SCOPE_TYPE vars = settings[encoded_var])
+	      ctx->add_scope (var[0], settings[encoded_var]);
+	    else
+	      ctx->remove_scope (var[0]);
+	  }
+	  else {
 #ifdef DEBUG
-	if (TAG_DEBUG_TEST (ctx->frame))
-	  TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
-		     map ((array(string)) var, replace, ".", "..") * ".",
-		     format_short (settings[encoded_var]));
+	    if (TAG_DEBUG_TEST (ctx->frame))
+	      TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+			 map ((array(string)) var, replace, ".", "..") * ".",
+			 format_short (settings[encoded_var]));
 #endif
-	mixed val = settings[encoded_var];
-	if (val != nil)
-	  ctx->set_var (var[1..], val, var[0]);
-	else
-	  ctx->delete_var (var[1..], var[0]);
+	    mixed val = settings[encoded_var];
+	    if (val != nil)
+	      ctx->set_var (var[1..], val, var[0]);
+	    else
+	      ctx->delete_var (var[1..], var[0]);
+	  }
+	  continue handle_var_loop;
+	}
+	encoded_var = var;
       }
+#ifdef DEBUG
+      if (TAG_DEBUG_TEST (ctx->frame))
+	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
+		   encoded_var, format_short (settings[encoded_var]));
+#endif
+      ctx->set_misc (encoded_var, settings[encoded_var]);
     }
     return nil;
   }
@@ -6490,27 +6531,32 @@ class PCode
 
   static void create (Type _type, void|TagSet _tag_set, void|Context collect_results)
   {
-    if (_type) {		// 0 if we're being decoded.
+    if (collect_results) {
+      // Yes, the internal interaction between create, reset, the
+      // context and CTX_ALREADY_GOT_VC is ugly.
+      flags |= COLLECT_RESULTS;
+      if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
+      collect_results->misc->variable_changes = ([]);
+    }
+    if (_type) {
+      // _type is 0 if we're being decoded or created without full
+      // init (collect_results still needs to be handled, though).
       type = _type;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
       exec = allocate (16);
       flags = UPDATED;
-      if (collect_results) {
-	// Yes, the internal interaction between create, reset, the
-	// context and CTX_ALREADY_GOT_VC is ugly.
-	flags |= COLLECT_RESULTS;
-	if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
-	collect_results->misc->variable_changes = ([]);
-	PCODE_MSG ("begin result collection\n");
-      }
+      if (flags & COLLECT_RESULTS)
+	PCODE_MSG ("create for result collection\n");
       else
-	PCODE_MSG ("begin generation\n");
+	PCODE_MSG ("create for content collection\n");
     }
   }
 
 
   // Internals:
 
+  // Note: The frame state at exec[pos + 2] for frames might be shared
+  // between PCode instances.
   static array exec = 0;
   static int length = 0;
 
@@ -6534,6 +6580,10 @@ class PCode
     exec = allocate (16);
     length = 0;
     flags &= ~FULLY_RESOLVED;
+    if (flags & COLLECT_RESULTS)
+      PCODE_MSG ("reset for result collection\n");
+    else
+      PCODE_MSG ("reset for content collection\n");
     if (p_code) p_code->reset (_type, _tag_set);
   }
 
@@ -6542,17 +6592,17 @@ class PCode
     if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
 
     if (flags & COLLECT_RESULTS) {
-      PCODE_MSG ("adding result value %s\n", utils->format_short (evaled_value));
+      PCODE_MSG ("adding result value %s\n", format_short (evaled_value));
       exec[length++] = evaled_value;
-      mapping(string:mixed) var_chg = ctx->misc->variable_changes;
+      mapping var_chg = ctx->misc->variable_changes;
       if (sizeof (var_chg)) {
-	PCODE_MSG ("adding variable changes %s\n", utils->format_short (var_chg));
+	PCODE_MSG ("adding variable changes %s\n", format_short (var_chg));
 	exec[length++] = VariableChange (var_chg);
 	ctx->misc->variable_changes = ([]);
       }
     }
     else {
-      PCODE_MSG ("adding entry %s\n", utils->format_short (entry));
+      PCODE_MSG ("adding entry %s\n", format_short (entry));
       exec[length++] = entry;
     }
 
@@ -6565,7 +6615,8 @@ class PCode
     /* Maybe zap vars too, if it exists? */				\
   } while (0)
 
-  void add_frame (Context ctx, Frame frame, mixed evaled_value)
+  void add_frame (Context ctx, Frame frame, mixed evaled_value,
+		  void|array frame_state)
   {
   add_frame:
     {
@@ -6587,10 +6638,10 @@ class PCode
 	    break add_evaled_value;
 	  }
 	  PCODE_MSG ("adding result of frame %O: %s\n",
-		     frame, utils->format_short (evaled_value));
+		     frame, format_short (evaled_value));
 	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
 	  exec[length++] = evaled_value;
-	  mapping(string:mixed) var_chg = ctx->misc->variable_changes;
+	  mapping var_chg = ctx->misc->variable_changes;
 	  if (sizeof (var_chg)) {
 	    exec[length++] = VariableChange (var_chg);
 	    ctx->misc->variable_changes = ([]);
@@ -6608,14 +6659,18 @@ class PCode
 	       format_short (frame->args));
 #endif
       exec[length + 1] = frame;	// Cached for reuse.
-      array frame_state = exec[length + 2] = frame->_save();
-      if (stringp (frame_state[0]))
-	ctx->p_code_comp->delayed_resolve (frame_state, 0);
-      RESET_FRAME (frame);
+      if (frame_state)
+	exec[length + 2] = frame_state;
+      else {
+	frame_state = exec[length + 2] = frame->_save();
+	if (stringp (frame_state[0]))
+	  ctx->p_code_comp->delayed_resolve (frame_state, 0);
+	RESET_FRAME (frame);
+      }
       length += 3;
     }
 
-    if (p_code) p_code->add_frame (ctx, frame, evaled_value);
+    if (p_code) p_code->add_frame (ctx, frame, evaled_value, frame_state);
   }
 
   void finish()
@@ -6656,7 +6711,7 @@ class PCode
       }
     }
     else
-      PCODE_MSG ("end collection\n");
+      PCODE_MSG ("end content collection\n");
 
     if (length != sizeof (exec)) exec = exec[..length - 1];
     if (p_code) p_code->finish(), p_code = 0;
