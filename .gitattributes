@@ -18,6 +18,7 @@ urw_itc_avant_garde-demi-r binary
 # Files containing CVS ids follow.
 # Remove the corresponding line before committing
 # changes to these files.
+/Makefile foreign_ident
 /extern/fast_cgi/Makefile.in foreign_ident
 /extern/fast_cgi/README foreign_ident
 /extern/fast_cgi/cgi-fcgi/Makefile.in foreign_ident
