@@ -796,7 +796,9 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="42">
-<o>Indeed</o>
+<o>If you have more than one roxen version installed
+in the same location, you can use this action to
+change the currently running version.</o>
 <t></t>
 </str>
 

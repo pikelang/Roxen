@@ -5,7 +5,6 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
 <file>../base_server/wizard.pike</file>
-<file>../protocols/prot_fhttp.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
 
@@ -258,107 +257,94 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="16">
-<new/>
 <o>Remove</o>
 <t>Ta bort</t>
 </str>
 
 <str id="18">
-<new/>
 <o>Add</o>
 <t>Addera</t>
 </str>
 
 <str id="38">
-<new/>
 <o>Ok</o>
 <t>OK</t>
 </str>
 
 <str id="47">
-<new/>
 <o>Example</o>
 <t>Exempel</t>
 </str>
 
 <str id="48">
-<new/>
 <o>Example Text</o>
 <t>Exempeltext</t>
 </str>
 
 <str id="49">
-<new/>
 <o>Yes</o>
 <t>Ja</t>
 </str>
 
 <str id="50">
-<new/>
 <o>No</o>
 <t>Nej</t>
 </str>
 
 <str id="51">
-<new/>
 <o>No name</o>
 <t>Inget namn</t>
 </str>
 
 <str id="52">
-<new/>
 <o>Completed</o>
 <t>Färdig</t>
 </str>
 
 <str id="53">
-<new/>
 <o>Page </o>
 <t>Sida </t>
 </str>
 
 <str id="54">
-<new/>
 <o>&amp;lt;- Previous</o>
 <t>&amp;lt;- Föregående</t>
 </str>
 
 <str id="55">
-<new/>
 <o>OK</o>
 <t>OK</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Cancel</o>
 <t>Avbryt</t>
 </str>
 
 <str id="57">
-<new/>
 <o>Next -&amp;gt;</o>
-<t>Nästa -&mp;gt;</t>
+<t>Nästa -&amp;mp;gt;</t>
 </str>
 
 <str id="58">
-<new/>
-<o>Syntax error in security patterns: Cannot find the user database '%s'
+<changed from="Syntax error in security patterns: Cannot find the user database '%s'
+"/>
+<o>Syntax error in security patterns: Cannot find the user database ''
 </o>
 <t>Syntaxfel i säkerhetsmönstren: Kan inte hitta användardatabasen '%s'
 </t>
 </str>
 
 <str id="59">
-<new/>
-<o>Syntax error in security patterns: Cannot find the auth method '%s'
+<changed from="Syntax error in security patterns: Cannot find the auth method '%s'
+"/>
+<o>Syntax error in security patterns: Cannot find the auth method ''
 </o>
 <t>Syntaxfel i säkerhetsmönstren: Kan inte hitta authentifieringsmetoden '%s'
 </t>
 </str>
 
 <str id="60">
-<new/>
 <o>Syntax error in security patterns: Expected 'allow' or 'deny'
 </o>
 <t>Syntaxfel i säkerhetsmönstren: Letade efter 'allow' eller 'deny'

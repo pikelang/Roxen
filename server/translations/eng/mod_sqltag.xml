@@ -46,3 +46,8 @@
 <o>If this is defined, it's the database this server will use as the default database</o>
 <t></t>
 </str>
+
+<str id="9">
+<o>Cannot find the module %s</o>
+<t></t>
+</str>
