@@ -1,6 +1,25 @@
 Changes since Roxen Challenger 1.2 alpha 4
 -----------------------------------------------
 
+o You can now use path's like /cvs:/roxen_src/server/modules as a module
+  directory. Not really all that useful (the modules will be read from 
+  CVS automatically, thus ensuring that the latest version is used), but 
+  it might be useful for groups of people running concurrent development 
+  of roxen modules (like we at infovav..), there is no need to check out 
+  the latest version of a module before it can be reloaded in the server.
+
+  the CVSROOT environment variable will be used as the CVS root.
+
+  This was added as an extension to get_dir, stat_file and 
+  (program)"string"; (see the etc/roxen_master.pike file)
+
+  So normal pike-scripts can also take advantage of this.
+
+
+o The somewhat annoying 'Roxen is alive!' message will no longer be 
+  written to the log once per minute unless something else is always 
+  written to it.
+
 o Root execution of CGI scripts disabled.
 
 o Shuffle disabled for all OS's except Solaris 2.x on sparc.
@@ -14,15 +33,24 @@ o .htaccess-module now filters files starting with ".ht".
 o Added height specification to module-list images. The module-list should
   now display *much* faster.
 
-o Some patches to disk_cache.pike.
+o Some patches to disk_cache.pike. It no longer uses FILE objects per 
+  default (they cannot be used in non-blocking mode), instead File() 
+  objects are used (raw files). Also, the ROXEN_HEAD_SIZE define is not 
+  added to headers->headers_size multiple times. Also, the use of 
+  file->tell() has been removed, since that function seems to be somewhat 
+  broken in FILE (stdio like) objects.
 
 o Some patches for those who are brave enough to run with THREADS enabled.
+  Most debug output removed.
 
-o Some new extensions.
+o Some new extensions to MIME content-types mappings in the etc/extensions 
+  file.
 
 o Applied some patches by Wilhelm Köhler.
 
-o Some patches to language.pike.
+o Some patches to language.pike. It no longer uses the value of the LANG 
+  environment variable to select the default language. ROXEN_LANG is used 
+  instead.
 
 o Replaced all remaining instances of roxen->query with id->conf->query.
 
