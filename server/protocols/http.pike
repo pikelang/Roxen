@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.229 2000/04/30 00:19:01 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.230 2000/05/03 08:43:07 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1737,8 +1737,14 @@ void send_result(mapping|void result)
 	else
           head_string += h+": "+heads[h]+"\r\n";
 
-      if(file->len > -1)
+      if(file->len > -1) {
 	head_string += "Content-Length: "+ file->len +"\r\n";
+	if (file->len == 0)
+	  // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
+	  // content length when using keep-alive. So let's force a
+	  // close in that case.
+	  misc->connection = "close";
+      }
       else
 	misc->connection = "close";
 
