@@ -1,16 +1,12 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.bat eol=crlf
-*.cpp -text -crlf
-*.dsp eol=crlf
-*.dsw eol=crlf
 *.gif binary
 *.gz binary
 *.ico binary
 *.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
-*.rc eol=crlf
 bi binary
 bn binary
 button_font binary
@@ -243,4 +239,3 @@ urw_itc_avant_garde-demi-r binary
 /server/unfinishedmodules/mountserver.pike foreign_ident
 /server/unfinishedmodules/whois++.pike foreign_ident
 /tools/convert_accessed.pike foreign_ident
-/tools/roxenstarter/roxenstarter.cpp foreign_ident
