@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.56 2001/09/03 18:38:37 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.57 2001/09/04 21:48:34 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1231,3 +1231,22 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
           (Roxen.html_encode_string(describe_backtrace(e)))+
           "</pre></font>");
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc = ([
+
+  "cgi" : #"<desc tag='tag'><p><short hide='hide'>Runs a CGI script.</short>
+Runs a CGI script and inserts the result into the page.</p></desc>
+
+<attr name='script' value='file'><p>
+ Path to the CGI file to be executed.</p>
+</attr>
+
+<attr name='cache' value='number' default='0'><p>
+ The number of seconds the result may be cached. If the attribute is
+ given, but without any value or \"0\" as value it will use 60 seconds.</p>
+</attr>
+",
+ ]);
+#endif
