@@ -2,32 +2,34 @@
 
 #include <module.h>
 
+
+//<locale-token project="mod_sqldb">LOCALE</locale-token>
+//<locale-token project="mod_sqldb">SLOCALE</locale-token>
+#define SLOCALE(X,Y)	_STR_LOCALE("mod_sqldb",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_sqldb",X,Y)
+// end locale stuff
+
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.9 2000/10/18 21:28:04 mast Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.10 2000/11/21 19:01:31 per Exp $";
 constant module_type = MODULE_ZERO;
-constant module_name = "SQL databases";
-constant module_doc  = 
-#"SQL databases provides symbolic names to any number of database URLs.
-The symbolic names can later be used instead of the database URL. This
-avoids storing full database URLs in RXML pages, which enhances
-security. It also becomes possible to change database without having
-to change any RXML pages.";
+object module_name_locale = LOCALE(1,"SQL databases");
+object module_doc_locale  = 
+LOCALE(2,
+"SQL databases provides symbolic names to any number of database URLs. The\n"
+"symbolic names can later be used instead of the database URL. This makes\n"
+"it unnecessary to store full database URLs in RXML pages, which enhances\n"
+"security. It also becomes possible to change database without having to\n"
+"change any RXML pages.");
 
 void create()
 {
-  defvar("table", "", "Database URL table", TYPE_TEXT_FIELD|VAR_INITIAL,
-	 "The table with database URLs. Every line is on the form:\n"
-	 "<p><blockquote><pre><i>name</i>\t<i>URL</i>\n"
-	 "</pre></blockquote>\n"
-	 "<p><i>URL</i> is a database URL and the <i>name</i> is the alias "
-	 "given to it. Database URLs have the format:\n"
-	 "<p><blockquote><pre>"
-	 "<i>driver</i><b>://</b>"
-	 "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
-	 "<i>host</i>[<b>:</b><i>port</i>]"
-	 "[<b>/</b><i>database</i>]\n"
-	 "</pre></blockquote>\n");
+  defvar("table", "", LOCALE(3,"Database URL table"),
+	 TYPE_TEXT_FIELD|VAR_INITIAL,
+	 LOCALE(4,"The table with database URLs in the format:"
+		"<pre>name\tURL</pre>"
+		"The database URL is specified as "
+		"<tt>driver://user name:password@host:port/database</tt>.\n"));
 }
 
 mapping(string:string) parse_table(string tab)
@@ -62,12 +64,8 @@ string status()
   string res = "";
 
   if (sizeof(sql_urls)) {
-    res += "<p><table border=\"0\">\n"
-      "<tr><th align='left'>Alias</th><td>&nbsp;&nbsp;</td>"
-      "<th align='left'>Connection status</th></tr>\n";
+    res += "<table border=\"0\">\n";
     foreach(sort(indices(sql_urls)), string s) {
-      res += "<tr><td>" + Roxen.html_encode_string (s) + "</td><td>&nbsp;</td>";
-
       Sql.sql o;
 
       mixed err = catch {
@@ -75,21 +73,30 @@ string status()
       };
 
       if (o) {
-	res += sprintf("<td>Connected to %s server on %s</td>",
+	res += sprintf("<tr><td>"+LOCALE(5,"Connection OK")+"</td>"
+		       "<td><tt>%s</tt></td>"
+		       "<td>"+LOCALE(6,"%[2]s server on %[3]s")+
+		       "</td></tr>\n",
+		       Roxen.html_encode_string (s),
 		       Roxen.html_encode_string (o->server_info()),
 		       Roxen.html_encode_string (o->host_info()));
       } else if (err) {
-	res += sprintf("<td><font color='red'>Connection failed</font>: %s</td>",
-		       Roxen.html_encode_string (describe_error (err)));
+	res += sprintf("<tr><td><font color='&usr.warncolor;'>"+
+		       LOCALE(7,"Connection failed")+"</font>: %s</td>"
+		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
+		       Roxen.html_encode_string (describe_error (err)),
+		       Roxen.html_encode_string (s));
       }
       else
-	res += "<td><font color='red'>Connection failed</font>: Unknown reason</td>";
-
-      res += "</tr>\n";
+	res += sprintf("<tr><td><font color='&usr.warncolor;'>"+
+		       LOCALE(7,"Connection failed")+"</font>: "
+		       LOCALE(8,"Unknown reason")+"</td>"
+		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
+		       Roxen.html_encode_string (s));
     }
     res += "</table>\n";
   } else {
-    res += "<p>No associations defined.\n";
+    res += LOCALE(9,"No associations defined.")+"<br>\n";
   }
   return(res);
 }

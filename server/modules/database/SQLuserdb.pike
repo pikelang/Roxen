@@ -13,10 +13,17 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.20 2000/05/03 16:33:50 nilsson Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.21 2000/11/21 19:01:30 per Exp $";
 
 #include <module.h>
 inherit "module";
+
+
+//<locale-token project="mod_SQLuserdb">LOCALE</locale-token>
+//<locale-token project="mod_SQLuserdb">SLOCALE</locale-token>
+#define SLOCALE(X,Y)	_STR_LOCALE("mod_SQLuserdb",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_SQLuserdb",X,Y)
+// end locale stuff
 
 #ifdef SQLAUTHDEBUG
 #define DEBUGLOG(X) werror("SQLuserdb: "+X+"\n");
@@ -32,48 +39,52 @@ object db;
  */
 void create() 
 {
-  defvar ("sqlserver", "localhost", "Database URL",
+  defvar ("sqlserver", "localhost", LOCALE(1,"Database URL"),
 	  TYPE_STRING,
-	  "This database to connect to as a database URL in the format"
-	  "<br /><tt>driver://user name:password@host:port/database</tt>.");
+	  LOCALE(2,"This database to connect to as a database URL in the "
+		 "format <br />"
+		 "<tt>driver://user name:password@host:port/database</tt>."));
 
-  defvar ("crypted",1,"Passwords are crypted",
+  defvar ("crypted",1,LOCALE(3,"Passwords are crypted"),
           TYPE_FLAG|VAR_MORE,
-          "If set, passwords are stored encrypted with the Unix "
-	  "<i>crypt</i> funtion. If not, passwords are stored in clear "
-	  "text. "
+          LOCALE(4,"If set, passwords are stored encrypted with the Unix "
+		 "<i>crypt</i> funtion. If not, passwords are stored in clear "
+		 "text. ")
           );
 
-  defvar ("table", "passwd", "Table",
+  defvar ("table", "passwd", LOCALE(5,"Table"),
 	  TYPE_STRING,
-	  "This is the table that contains the data. It must contain the "
-	  "columns <i>username</i> and <i>passwd</i> and can contain the "
-	  "optional columns <i>uid</i>, <i>gid</i>, <i>gecos</i> (the full "
-	  "name of the user), <i>homedir</i> and <i>shell</i>. ");
+	  LOCALE(6,"This is the table that contains the data. It must contain "
+		 "the columns <i>username</i> and <i>passwd</i> and can "
+		 "contain the optional columns <i>uid</i>, <i>gid</i>, "
+		 "<i>gecos</i> (the full name of the user), "
+		 "<i>homedir</i> and <i>shell</i>. "));
 
-  defvar ("disable_userlist", 0, "Disable user list",
+  defvar ("disable_userlist", 0, LOCALE(7,"Disable user list"),
 	  TYPE_FLAG,
-	  "If this is turned on, it won't be possible to get a listing "
-	  "of all users. Usually the <i>User file system</i> module makes "
-	  "it possible to list all users on the system. If you have "
-	  "a large number of users this can take a lot of resourses." );
+	  LOCALE(8,"If this is turned on, it won't be possible to get a "
+		 "listing of all users. Usually the <i>User file system</i>"
+		 " module makes it possible to list all users on the system."
+		 " If you have a large number of users this can take a lot of"
+		 " resourses." ));
 
-  defvar ("usecache", 1, "Cache entries",
+  defvar ("usecache", 1, LOCALE(9,"Cache entries"),
 	  TYPE_FLAG,
-	  "If set, the module will cache database entries. Without this "
+	  LOCALE(10,
+          "If set, the module will cache database entries. Without this "
 	  "cache the module might well needs to make a database query per "
 	  "access. This option is therefore highly recommended. The "
 	  "drawback is changes to the database will not show up "
-	  "immediately." );
+	  "immediately." ));
 
-  defvar ("closedb", 1, "Close the database if not used", TYPE_FLAG,
-	  "This option closes the database connection upon to long "
-	  "inactivity. Saves resourses for sites that are not used "
-	  "very frequently.");
+  defvar ("closedb", 1, LOCALE(11,"Close the database if not used"), TYPE_FLAG,
+	  LOCALE(12,"This option closes the database connection upon to long "
+		 "inactivity. Saves resourses for sites that are not used "
+		 "very frequently."));
 
-  defvar ("timer", 60, "Database close timeout", TYPE_INT,
-	  "The inactivity time, in seconds, before the database connection "
-	  "is closed.",0,
+  defvar ("timer", 60, LOCALE(13,"Database close timeout"), TYPE_INT,
+	  LOCALE(14,"The inactivity time, in seconds, before the database "
+		 "connection is closed."),0,
 	  lambda(){return !QUERY(closedb);}
 	  );
 
@@ -83,29 +94,30 @@ void create()
 #else
 	  0
 #endif	  
-	  , "Defaults: User ID", TYPE_INT,
-	  "This is the uid that will be returned if a uid field is not "
-	  "present in the database table."
+	  , LOCALE(15,"Defaults: User ID"), TYPE_INT,
+	  LOCALE(16,"This is the uid that will be returned if a uid field is "
+		 "not present in the database table.")
 	  );
 
-  defvar ("defaultgid", getegid(), "Defaults: Group ID", TYPE_INT,
-	  "This is the gid that will be returned is a gid field is not "
-	  "present in the database table."
+  defvar ("defaultgid", getegid(), LOCALE(17,"Defaults: Group ID"), TYPE_INT,
+	  LOCALE(18,"This is the gid that will be returned is a gid field "
+		 "is not present in the database table.")
 	  );
 
-  defvar ("defaultgecos", "", "Defaults: Gecos", TYPE_STRING,
-	  "This is the gecos that will be returned if a gecos field is "
-	  "not present in the database table."
+  defvar ("defaultgecos", "", LOCALE(19,"Defaults: Gecos"), TYPE_STRING,
+	  LOCALE(20,"This is the gecos that will be returned if a gecos field "
+		 "is not present in the database table.")
 	  );
 
-  defvar ("defaulthome", "/", "Defaults: Home directory", TYPE_DIR, 
-	  "This is the home directory that will be returned if a "
-	  "<i>homedir</i> field is not present in the database table."
+  defvar ("defaulthome", "/", LOCALE(21,"Defaults: Home directory"), TYPE_DIR, 
+	  LOCALE(22,"This is the home directory that will be returned if a "
+		 "<i>homedir</i> field is not present in the database table.")
 	  );
 
-  defvar ("defaultshell", "/bin/sh", "Defaults: Login shell", TYPE_FILE,
-	  "This is the login shell that will be returned if a <i>shell</i> "
-	  "field is not present in the database table."
+  defvar ("defaultshell", "/bin/sh", LOCALE(23,"Defaults: Login shell"),
+	  TYPE_FILE,
+	  LOCALE(24,"This is the login shell that will be returned if a "
+		 "<i>shell</i> field is not present in the database table.")
 	  );
 }
 
@@ -317,8 +329,8 @@ string|void check_variable (string name, mixed newvalue)
 }
 
 constant module_type = MODULE_AUTH;
-constant module_name = "SQL user database";
-constant module_doc  = "This module implements user authentication via a SQL server.\n"
+object module_name_locale = LOCALE(25,"SQL user database");
+constant module_doc_locale  = LOCALE(26,"This module implements user authentication via a SQL server.\n"
   "<p>For setup instruction, see the comments at the beginning of the module "
   "code.</p>"
-  "&copy; 1997 Francesco Chemolli, distributed freely under GPL license.";
+  "&copy; 1997 Francesco Chemolli, distributed freely under GPL license.");

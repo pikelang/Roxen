@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.20 2000/11/21 12:52:48 per Exp $
+// $Id: roxen.h,v 1.21 2000/11/21 19:01:08 per Exp $
 // -*- Pike -*-
 
 #ifndef _ROXEN_H_
@@ -24,7 +24,7 @@ mixed get_locale();
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
-#  define _DEF_LOCALE(X, Y, Z)	Locale.DeferredLocale(X, __LOCALE, Y, Z)
+#  define _DEF_LOCALE(X, Y, Z) ([string|object]((mixed)Locale.DeferredLocale(X,__LOCALE,Y,Z)))
 #endif /* !_DEF_LOCALE */
 
 #ifndef _LOCALE_FUN

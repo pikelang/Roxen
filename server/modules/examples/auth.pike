@@ -2,7 +2,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: auth.pike,v 1.1 2000/08/28 16:05:26 jhs Exp $";
+constant cvs_version = "$Id: auth.pike,v 1.2 2000/11/21 19:01:31 per Exp $";
 constant module_type = MODULE_AUTH;
 constant module_name = "RefDoc for MODULE_AUTH";
 constant module_doc = #"This module does nothing, but its inlined documentation
@@ -79,7 +79,7 @@ array(string|int) userinfo(string user, RequestID|void id)
 //!
 //! All entries should be strings, except uid and gid, who should be integers.
 {
-  string user, passwd, name = "J. Random Hacker", homedir, shell = "/bin/zsh";
+  string passwd, name = "J. Random Hacker", homedir, shell = "/bin/zsh";
   int uid, gid;
   array(string) matching_users = glob(user + ":*", query("users"));
   if(!sizeof(matching_users))

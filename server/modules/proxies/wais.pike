@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.21 2000/09/05 15:06:45 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.22 2000/11/21 19:01:31 per Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -1942,7 +1942,7 @@ void got_search_data(array i, string s)
 
 void connected(object ok, string file, object send_to, string key)
 {
-  string key,database,doctype,docname,basetitle;
+  string database,doctype,docname,basetitle;
   int doclen,i;
   string reqmsg,header;
 
