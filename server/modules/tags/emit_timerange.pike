@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.19 2004/10/01 11:48:23 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.20 2004/10/01 14:11:10 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -677,8 +677,9 @@ class TagEmitTimeRange
     if(what = m_delete(args, "output-timezone"))
       range = range->set_timezone( what );
 
-    if(what = m_delete(args, "language"))
+    if(what = m_delete(args, "language")) {
       range = range->set_language( what );
+    }
 
     array(Calendar.TimeRange) dataset;
     if(output_unit)
@@ -821,9 +822,10 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
   string what; // temporary data
   if(what = m_delete(args, name + "timezone"))
     cal = cal->set_timezone( what );
-  if(what = m_delete(args, name + "language"))
-    cal = cal->set_language( what );
-
+  if(args[name + "language"])
+    cal = cal->set_language( args[name + "language"] );
+  if(sizeof(name) > 0)
+    what = m_delete(args, name + "language");
   int(0..1) succeeded = 1;
   if(what = m_delete(args, name + "time"))
   {
