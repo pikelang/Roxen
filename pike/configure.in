@@ -31,11 +31,15 @@ esac
 AC_MSG_RESULT($with_pike)
 
 if test "x$with_pike" = "xdual"; then
-  with_pike='[0-9]*'
+  for d in `cd $srcdir; echo [0-9]*`; do
+    test -d $d/. || mkdir $d
+  done
+  subdirs=`cd $srcdir; echo [0-9]*/src`
 else
   test -d $with_pike/. || mkdir $with_pike
+  subdirs=$with_pike/src
 fi
 
-AC_CONFIG_SUBDIRS($with_pike/src)
+AC_CONFIG_SUBDIRS($subdirs)
 
 AC_OUTPUT(Makefile)
