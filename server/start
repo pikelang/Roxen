@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.180 2001/09/04 12:37:27 hop Exp $
+# $Id: start,v 1.181 2001/09/19 14:02:52 jonasw Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -112,6 +112,12 @@ if uname | grep 'SunOS' >/dev/null 2>&1; then
 #    if [ $verbose -gt 0 ] ; then
 #      dp "Solaris 2.5 or later detected. Using threads by default."
 #    fi
+    DEFINES="$DEFINES -DENABLE_THREADS"
+  fi
+fi
+# Darwin 1.4 or later (Mac OS X 10.1 or newer) also uses threads.
+if uname | grep 'Darwin' >/dev/null 2>&1; then
+  if uname -r | grep '^1\.[4-9]' >/dev/null 2>&1; then
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
