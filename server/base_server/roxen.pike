@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.560 2000/09/24 18:59:45 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.561 2000/09/25 07:03:12 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -335,7 +335,7 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 object fonts;
 
 // For prototype reasons.
-program Configuration;	/*set in create*/
+program _configuration;	/*set in create*/
 
 // No way to write array(Configuration) here, since the program
 // is not loaded yet.
@@ -700,14 +700,14 @@ class Protocol
 
 #define INIT(X) do{mapping _=(X);string __=_->path;c=_->conf;if(__&&id->adjust_for_config_path) id->adjust_for_config_path(__);if(!c->inited)c->enable_all_modules(); } while(0)
 
-  object find_configuration_for_url( string url, RequestID id, 
-                                     int|void no_default )
+  Configuration find_configuration_for_url( string url, RequestID id, 
+                                            int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
   //! (virtual site) for the request. 
   //! This interface is not at all set in stone, and might change at 
   //! any time.
   {
-    object c;
+    Configuration c;
     if( sizeof( urls ) == 1 )
     {
       if(!mu) mu=urls[sorted_urls[0]];
@@ -2844,10 +2844,10 @@ void create()
   //add_constant( "roxen.ImageCache", ImageCache );
 
 //   int s = gethrtime();
-  Configuration = (program)"configuration";
+  _configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
   dump( "base_server/rxmlhelp.pike" );
-  add_constant( "Configuration", Configuration );
+  add_constant( "Configuration", _configuration );
 
 //   report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
 }
@@ -3059,7 +3059,7 @@ void fix_config_lookup()
 #endif
 }
 
-object/*(Configuration)*/ get_configuration (string name)
+Configuration get_configuration (string name)
 //! Gets the configuration with the given identifier name.
 {
 #ifdef DEBUG
@@ -3069,13 +3069,13 @@ object/*(Configuration)*/ get_configuration (string name)
   return config_lookup[name];
 }
 
-object/*(Configuration)*/ enable_configuration(string name)
+Configuration enable_configuration(string name)
 {
 #ifdef DEBUG
   if (get_configuration (name))
     error ("A configuration called %O already exists.\n", name);
 #endif
-  object cf = Configuration( name );
+  Configuration cf = _configuration( name );
   configurations += ({ cf });
   fix_config_lookup();
   return cf;
@@ -3106,7 +3106,7 @@ void enable_configurations()
   {
     int t = gethrtime();
     report_debug("\nEnabling the configuration %s ...\n", config);
-    if(err=catch( enable_configuration(config)->start() ))
+    if(err=catch( enable_configuration(config)->start(0) ))
       report_error("\n"+LOC_M(35, "Error while loading configuration %s%s"),
                    config+":\n", describe_backtrace(err)+"\n");
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );

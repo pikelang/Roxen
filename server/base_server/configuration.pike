@@ -1,21 +1,11 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-
-constant cvs_version = "$Id: configuration.pike,v 1.379 2000/09/25 06:29:43 per Exp $";
-constant is_configuration = 1;
+constant cvs_version = "$Id: configuration.pike,v 1.380 2000/09/25 07:03:11 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
 #include <request_trace.h>
 
-inherit "basic_defvar";
-
-mapping enabled_modules = ([]);
-mapping(string:array(int)) error_log=([]);
-
-#ifdef PROFILE
-mapping profile_map = ([]);
-#endif
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
 
@@ -46,25 +36,17 @@ USE_DEFERRED_LOCALE;
 #endif
 
 /* A configuration.. */
-
+inherit Configuration;
+inherit "basic_defvar";
 
 #include "rxml.pike";
+constant    store = roxen.store;
+constant    retrieve = roxen.retrieve;
+constant    remove = roxen.remove;
 
-object      throttler;
-function    store = roxen->store;
-function    retrieve = roxen->retrieve;
-function    remove = roxen->remove;
-RoxenModule types_module;
-RoxenModule auth_module;
-RoxenModule dir_module;
-function    types_fun;
-function    auth_fun;
-
-string name;
-int inited;
 int config_id;
-
-int get_config_id() {
+int get_config_id() 
+{
   if(config_id) return config_id;
   for(int i=sizeof(roxen->configurations); i;)
     if(roxen->configurations[--i]->name==name) return config_id=i;
@@ -105,43 +87,6 @@ string comment()
   return QUERY(comment);
 }
 
-class Priority
-{
-  string _sprintf()
-  {
-    return "Priority()";
-  }
-
-  array (RoxenModule) url_modules = ({ });
-  array (RoxenModule) logger_modules = ({ });
-  array (RoxenModule) location_modules = ({ });
-  array (RoxenModule) filter_modules = ({ });
-  array (RoxenModule) last_modules = ({ });
-  array (RoxenModule) first_modules = ({ });
-  mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
-  mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
-
-  void stop()
-  {
-    foreach(url_modules, RoxenModule m)
-      CATCH("stopping url modules",m->stop && m->stop());
-    foreach(logger_modules, RoxenModule m)
-      CATCH("stopping logging modules",m->stop && m->stop());
-    foreach(filter_modules, RoxenModule m)
-      CATCH("stopping filter modules",m->stop && m->stop());
-    foreach(location_modules, RoxenModule m)
-      CATCH("stopping location modules",m->stop && m->stop());
-    foreach(last_modules, RoxenModule m)
-      CATCH("stopping last modules",m->stop && m->stop());
-    foreach(first_modules, RoxenModule m)
-      CATCH("stopping first modules",m->stop && m->stop());
-    foreach(indices(provider_modules), RoxenModule m)
-      CATCH("stopping provider modules",m->stop && m->stop());
-  }
-}
-
-
-
 /* A 'pri' is one of the ten priority objects. Each one holds a list
  * of modules for that priority. They are all merged into one list for
  * performance reasons later on.
@@ -152,24 +97,6 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
-int requests;
-//! The number of requests, for debug and statistics info only.
-
-// Protocol specific statistics.
-mapping(string:mixed) extra_statistics = ([]);
-mapping(string:mixed) misc = ([]);	// Even more statistics.
-
-int sent;
-//! Bytes data sent
-int hsent;
-//! Bytes headers sent
-int received;
-//! Bytes data received
-
-// Will write a line to the log-file. This will probably be replaced
-// entirely by log-modules in the future, since this would be much
-// cleaner.
-function(string:int) log_function;
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
@@ -217,7 +144,7 @@ void stop()
     roxen.unregister_url(url);
 }
 
-public string type_from_filename( string file, int|void to, string|void myext )
+string type_from_filename( string file, int|void to, string|void myext )
 {
   array(string)|string tmp;
   if(!types_fun)
@@ -355,7 +282,7 @@ array (function) url_modules(RequestID id)
   return url_module_cache;
 }
 
-mapping api_module_cache = ([]);
+static mapping api_module_cache = ([]);
 mapping api_functions(void|RequestID id)
 {
   return api_module_cache+([]);
@@ -776,7 +703,7 @@ void clear_memory_caches()
 }
 
 //  Returns tuple < image, mime-type >
-array(string) draw_saturation_bar(int hue,int brightness, int where)
+static array(string) draw_saturation_bar(int hue,int brightness, int where)
 {
   Image.Image bar=Image.Image(30,256);
 
@@ -1353,7 +1280,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   return res;
 }
 
-public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
+array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 {
   array dir;
   TRACE_ENTER(sprintf("List directory %O.", file), 0);
@@ -1473,7 +1400,7 @@ public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 // Stat a virtual file.
 
-public array(int)|Stat stat_file(string file, RequestID id)
+array(int)|Stat stat_file(string file, RequestID id)
 {
   string loc;
   mixed s, tmp;
@@ -1561,47 +1488,8 @@ public array(int)|Stat stat_file(string file, RequestID id)
   TRACE_LEAVE("Returned 'no such file'.");
 }
 
-class StringFile( string data, mixed|void _st )
-{
-  int offset;
-
-  string _sprintf()
-  {
-    return "StringFile("+strlen(data)+","+offset+")";
-  }
-
-  string read(int nbytes)
-  {
-    if(!nbytes)
-    {
-      offset = strlen(data);
-      return data;
-    }
-    string d = data[offset..offset+nbytes-1];
-    offset += strlen(d);
-    return d;
-  }
-
-  array stat()
-  {
-    if( _st ) return (array)_st;
-    return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
-  }
-
-  void write(mixed ... args)
-  {
-    throw( ({ "File not open for write\n", backtrace() }) );
-  }
-
-  void seek(int to)
-  {
-    offset = to;
-  }
-}
-
-
 // this is not as trivial as it sounds. Consider gtext. :-)
-public array open_file(string fname, string mode, RequestID id, void|int internal_get)
+array open_file(string fname, string mode, RequestID id, void|int internal_get)
 {
   object oc = id->conf;
   string oq = id->not_query;
@@ -1685,7 +1573,7 @@ public array open_file(string fname, string mode, RequestID id, void|int interna
 }
 
 
-public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
+mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 {
   string loc;
   mapping(string:array(mixed)) dir = ([]);
@@ -1811,7 +1699,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
 // Access a virtual file?
 
-public array access(string file, RequestID id)
+array access(string file, RequestID id)
 {
   string loc;
   array s, tmp;
@@ -1839,7 +1727,7 @@ public array access(string file, RequestID id)
   return 0;
 }
 
-public string real_file(string file, RequestID id)
+string real_file(string file, RequestID id)
 //! Return the _real_ filename of a virtual file, if any.
 {
   string loc;
@@ -2046,7 +1934,7 @@ int save_one( RoxenModule o )
 RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
-  ModuleInfo mi = roxen->find_module( (modname/"#")[0] );
+  ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
   if( !old_module ) return 0;
 
   save_one( old_module );
@@ -2083,28 +1971,6 @@ RoxenModule reload_module( string modname )
   return nm;
 }
 
-class ModuleCopies
-{
-  mapping copies = ([]);
-  mixed `[](mixed q )
-  {
-    return copies[q];
-  }
-  mixed `[]=(mixed q,mixed w )
-  {
-    return copies[q]=w;
-  }
-  mixed _indices()
-  {
-    return(indices(copies));
-  }
-  mixed _values()
-  {
-    return(values(copies));
-  }
-  string _sprintf( ) { return "ModuleCopies()"; }
-}
-
 #ifdef THREADS
 Thread.Mutex enable_modules_mutex = Thread.Mutex();
 #define MODULE_LOCK \
@@ -2137,7 +2003,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !moduleinfo )
   {
-    moduleinfo = roxen->find_module( modname );
+    moduleinfo = roxen.find_module( modname );
 
     if (!moduleinfo)
     {
@@ -2517,7 +2383,7 @@ int disable_module( string modname, int|void nodest )
 
   if( datacache ) datacache->flush();
 
-  ModuleInfo moduleinfo =  roxen->find_module( modname );
+  ModuleInfo moduleinfo =  roxen.find_module( modname );
   mapping module = modules[ modname ];
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
 
@@ -2624,7 +2490,7 @@ int disable_module( string modname, int|void nodest )
   return 1;
 }
 
-RoxenModule|string find_module(string name)
+RoxenModule find_module(string name)
 //! Return the module corresponding to the name (eg "rxmlparse",
 //! "rxmlparse#0" or "filesystem#1") or zero, if there was no such
 //! module.
@@ -2808,90 +2674,9 @@ void low_init(void|int modules_already_enabled)
 		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 }
 
-
-// Trivial cache (actually, it's more or less identical to the 200+
-// lines of C in HTTPLoop. But it does not have to bother with the
-// fact that more than one thread can be active in it at once. Also,
-// it does not have to delay free until all current connections using
-// the cache entry is done...)
-class DataCache
-{
-  mapping(string:array(string|mapping(string:mixed))) cache = ([]);
-
-  int current_size;
-  int max_size;
-  int max_file_size;
-
-  int hits, misses;
-
-  void flush()
-  {
-    current_size = 0;
-    cache = ([]);
-  }
-
-  static void clear_some_cache()
-  {
-    array q = indices( cache );
-    if(!sizeof(q))
-    {
-      current_size=0;
-      return;
-    }
-    for( int i = 0; i<sizeof( q )/10; i++ )
-      expire_entry( q[random(sizeof(q))] );
-  }
-
-  void expire_entry( string url )
-  {
-    if( cache[ url ] )
-    {
-      current_size -= strlen(cache[url][0]);
-      m_delete( cache, url );
-    }
-  }
-
-  void set( string url, string data, mapping meta, int expire )
-  {
-    if( strlen( data ) > max_size ) return;
-    call_out( expire_entry, expire, url );
-    current_size += strlen( data );
-    cache[url] = ({ data, meta });
-    int n;
-    while( (current_size > max_size) && (n++<10))
-      clear_some_cache();
-  }
-  
-  array(string|mapping(string:mixed)) get( string url )
-  {
-    mixed res;
-    if( res = cache[ url ] )  
-      hits++;
-    else
-      misses++;
-    return res;
-  }
-
-  void init_from_variables( )
-  {
-    max_size = query( "data_cache_size" ) * 1024;
-    max_file_size = query( "data_cache_file_max_size" ) * 1024;
-    if( max_size < max_file_size )
-      max_size += max_file_size;
-    int n;
-    while( (current_size > max_size) && (n++<10))
-      clear_some_cache();
-  }
-
-  static void create()
-  {
-    init_from_variables();
-  }
-};
-
 DataCache datacache;
 
-void create(string config)
+static void create(string config)
 {
   name=config;
 
@@ -2990,7 +2775,7 @@ void create(string config)
 		 "the access counter log."), 
 	 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen->get_domain(), DLOCALE(34, "Domain"), TYPE_STRING,
+  defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"), TYPE_STRING,
 	 DLOCALE(35, "The domain name of the server. The domain name is used "
 	 "to generate default URLs, and to generate email addresses."));
 
@@ -3143,14 +2928,9 @@ page.
   }
 }
 
-int arent_we_throttling_server () {
+static int arent_we_throttling_server () {
   return !query("throttle");
 }
-int arent_we_throttling_request() {
+static int arent_we_throttling_request() {
   return !query("req_throttle");
-}
-
-string _sprintf( )
-{
-  return "Configuration("+name+")";
 }

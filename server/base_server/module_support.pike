@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.76 2000/08/28 05:31:50 per Exp $
+// $Id: module_support.pike,v 1.77 2000/09/25 07:03:12 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -96,7 +96,7 @@ class ModuleInfo
   mapping|string name;
   mapping|string description;
 
-  string _sprintf()
+  static string _sprintf()
   {
     return "ModuleInfo("+sname+")";
   }
@@ -127,7 +127,7 @@ class ModuleInfo
     }
   }
 
-  object instance( object conf, void|int silent )
+  RoxenModule instance( object conf, void|int silent )
   {
 #if constant(Java.jvm)
     if( filename[sizeof(filename)-6..]==".class" )
@@ -151,7 +151,7 @@ class ModuleInfo
   }
 
 
-  void update_with( object mod, string what )
+  void update_with( RoxenModule mod, string what )
   {
     if(!what)
       what = filename;
@@ -283,7 +283,7 @@ class ModuleInfo
       return find_module( sname );
   }
 
-  void create( string sn, string|void fname )
+  static void create( string sn, string|void fname )
   {
     if( sname )
     {

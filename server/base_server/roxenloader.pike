@@ -4,6 +4,8 @@
 
 // Sets up the roxen environment. Including custom functions like spawne().
 
+#define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
+
 #include <stat.h>
 #include <config.h>
 //
@@ -16,7 +18,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.204 2000/09/24 17:14:52 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.205 2000/09/25 07:03:14 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -239,6 +241,330 @@ mapping make_mapping(array(string) f)
   return foo;
 }
 
+class StringFile( string data, mixed|void _st )
+{
+  int offset;
+
+  string _sprintf()
+  {
+    return "StringFile("+strlen(data)+","+offset+")";
+  }
+
+  string read(int nbytes)
+  {
+    if(!nbytes)
+    {
+      offset = strlen(data);
+      return data;
+    }
+    string d = data[offset..offset+nbytes-1];
+    offset += strlen(d);
+    return d;
+  }
+
+  array stat()
+  {
+    if( _st ) return (array)_st;
+    return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
+  }
+
+  void write(mixed ... args)
+  {
+    throw( ({ "File not open for write\n", backtrace() }) );
+  }
+
+  void seek(int to)
+  {
+    offset = to;
+  }
+}
+class ModuleInfo
+{
+  string sname;
+  string filename;
+
+  int last_checked;
+  int type, multiple_copies;
+
+  string get_name();
+  string get_description();
+  RoxenModule instance( object conf, void|int silent );
+  void save();
+  void update_with( RoxenModule mod, string what );
+  int init_module( string what );
+  int rec_find_module( string what, string dir );
+  int find_module( string sn );
+  int check (void|int force);
+}
+
+class ModuleCopies
+{
+  mapping copies = ([]);
+  mixed `[](mixed q )
+  {
+    return copies[q];
+  }
+  mixed `[]=(mixed q,mixed w )
+  {
+    return copies[q]=w;
+  }
+  mixed _indices()
+  {
+    return(indices(copies));
+  }
+  mixed _values()
+  {
+    return(values(copies));
+  }
+  string _sprintf( ) { return "ModuleCopies()"; }
+}
+
+class Configuration 
+{
+  constant is_configuration = 1;
+  mapping enabled_modules = ([]);
+  mapping(string:array(int)) error_log=([]);
+
+#ifdef PROFILE
+  mapping profile_map = ([]);
+#endif
+
+  class Priority
+  {
+    string _sprintf()
+    {
+      return "Priority()";
+    }
+
+    array (RoxenModule) url_modules = ({ });
+    array (RoxenModule) logger_modules = ({ });
+    array (RoxenModule) location_modules = ({ });
+    array (RoxenModule) filter_modules = ({ });
+    array (RoxenModule) last_modules = ({ });
+    array (RoxenModule) first_modules = ({ });
+    mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
+    mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
+
+    void stop()
+    {
+      foreach(url_modules, RoxenModule m)
+        CATCH("stopping url modules",m->stop && m->stop());
+      foreach(logger_modules, RoxenModule m)
+        CATCH("stopping logging modules",m->stop && m->stop());
+      foreach(filter_modules, RoxenModule m)
+        CATCH("stopping filter modules",m->stop && m->stop());
+      foreach(location_modules, RoxenModule m)
+        CATCH("stopping location modules",m->stop && m->stop());
+      foreach(last_modules, RoxenModule m)
+        CATCH("stopping last modules",m->stop && m->stop());
+      foreach(first_modules, RoxenModule m)
+        CATCH("stopping first modules",m->stop && m->stop());
+      foreach(indices(provider_modules), RoxenModule m)
+        CATCH("stopping provider modules",m->stop && m->stop());
+    }
+  }
+
+  // Trivial cache (actually, it's more or less identical to the 200+
+  // lines of C in HTTPLoop. But it does not have to bother with the
+  // fact that more than one thread can be active in it at once. Also,
+  // it does not have to delay free until all current connections using
+  // the cache entry is done...)
+  class DataCache
+  {
+    mapping(string:array(string|mapping(string:mixed))) cache = ([]);
+
+    int current_size;
+    int max_size;
+    int max_file_size;
+
+    int hits, misses;
+
+    void flush()
+    {
+      current_size = 0;
+      cache = ([]);
+    }
+
+    static void clear_some_cache()
+    {
+      array q = indices( cache );
+      if(!sizeof(q))
+      {
+        current_size=0;
+        return;
+      }
+      for( int i = 0; i<sizeof( q )/10; i++ )
+        expire_entry( q[random(sizeof(q))] );
+    }
+
+    void expire_entry( string url )
+    {
+      if( cache[ url ] )
+      {
+        current_size -= strlen(cache[url][0]);
+        m_delete( cache, url );
+      }
+    }
+
+    void set( string url, string data, mapping meta, int expire )
+    {
+      if( strlen( data ) > max_size ) return;
+      call_out( expire_entry, expire, url );
+      current_size += strlen( data );
+      cache[url] = ({ data, meta });
+      int n;
+      while( (current_size > max_size) && (n++<10))
+        clear_some_cache();
+    }
+  
+    array(string|mapping(string:mixed)) get( string url )
+    {
+      mixed res;
+      if( res = cache[ url ] )  
+        hits++;
+      else
+        misses++;
+      return res;
+    }
+
+    void init_from_variables( )
+    {
+      max_size = query( "data_cache_size" ) * 1024;
+      max_file_size = query( "data_cache_file_max_size" ) * 1024;
+      if( max_size < max_file_size )
+        max_size += max_file_size;
+      int n;
+      while( (current_size > max_size) && (n++<10))
+        clear_some_cache();
+    }
+
+    static void create()
+    {
+      init_from_variables();
+    }
+  };
+  array(Priority) allocate_pris();
+
+  object      throttler;
+  RoxenModule types_module;
+  RoxenModule auth_module;
+  RoxenModule dir_module;
+  function    types_fun;
+  function    auth_fun;
+
+  string name;
+  int inited;
+
+  // Protocol specific statistics.
+  mapping(string:mixed) extra_statistics = ([]);
+  mapping(string:mixed) misc = ([]);	// Even more statistics.
+  int requests, sent, hsent, received;
+
+  function(string:int) log_function;
+  DataCache datacache;
+  
+  int get_config_id();
+  string get_doc_for( string region, string variable );
+  string query_internal_location(RoxenModule|void mod);
+  string query_name();
+  string comment();
+  void stop();
+  string type_from_filename( string file, int|void to, string|void myext );
+
+  array (RoxenModule) get_providers(string provides);
+  RoxenModule get_provider(string provides);
+  array(mixed) map_providers(string provides, string fun, mixed ... args);
+  mixed call_provider(string provides, string fun, mixed ... args);
+  array(function) file_extension_modules(string ext, RequestID id);
+  array(function) url_modules(RequestID id);
+  mapping api_functions(void|RequestID id);
+  array(function) logger_modules(RequestID id);
+  array(function) last_modules(RequestID id);
+  array(function) first_modules(RequestID id);
+  array location_modules(RequestID id);
+  array(function) filter_modules(RequestID id);
+  void init_log_file();
+  int|mapping check_security(function|object a, RequestID id, void|int slevel);
+  void invalidate_cache();
+  void clear_memory_caches();
+  string examine_return_mapping(mapping m);
+  mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
+  mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
+  array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
+  array(int)|Stat stat_file(string file, RequestID id);
+  array open_file(string fname, string mode, RequestID id, void|int ig);
+  mapping(string:array(mixed)) find_dir_stat(string file, RequestID id);
+  array access(string file, RequestID id);
+  string real_file(string file, RequestID id);
+  int|string try_get_file(string s, RequestID id,
+                          int|void status, int|void nocache,
+                          int|void not_internal);
+  int(0..1) is_file(string virt_path, RequestID id);
+  void start(int num);
+  void save_me();
+  int save_one( RoxenModule o );
+  RoxenModule reload_module( string modname );
+  RoxenModule enable_module( string modname, RoxenModule|void me, 
+                             ModuleInfo|void moduleinfo, 
+                             int|void nostart );
+  void call_start_callbacks( RoxenModule me, 
+                             ModuleInfo moduleinfo, 
+                             ModuleCopies module );
+  void call_low_start_callbacks( RoxenModule me, 
+                                 ModuleInfo moduleinfo, 
+                                 ModuleCopies module );
+  int disable_module( string modname, int|void nodest );
+  int add_modules( array(string) mods, int|void now );
+  RoxenModule find_module(string name);
+  Sql.sql sql_cache_get(string what);
+  Sql.sql sql_connect(string db);
+  void enable_all_modules();
+  void low_init(void|int modules_already_enabled);
+
+
+  string parse_rxml(string what, RequestID id,
+                    void|Stdio.File file,
+                    void|mapping defines );
+  void add_parse_module (RoxenModule mod);
+  void remove_parse_module (RoxenModule mod);
+
+  string real_file(string a, RequestID b);
+
+  static string _sprintf( )
+  {
+    return "Configuration("+name+")";
+  }
+}
+
+class Protocol 
+{
+  constant name = "unknown";
+  constant supports_ipless = 0;
+  constant requesthandlerfile = "";
+  constant default_port = 4711;
+
+  int bound;
+  int refs;
+
+  program requesthandler;
+
+  string path;
+  int port;
+  string ip;
+  array(string) sorted_urls = ({});
+  mapping(string:mapping) urls = ([]);
+
+  
+  void ref(string url, mapping data);
+  void unref(string url);
+  Configuration find_configuration_for_url( string url, RequestID id, 
+                                            int|void no_default );
+  string get_key();
+  void save();
+  void restore();
+};
+
+
 class RequestID
 //! The request information object contains all request-local information and
 //! server as the vessel for most forms of intercommunication between modules,
@@ -248,9 +574,9 @@ class RequestID
 //! request has passed through all levels of the <ref>module type calling
 //! sequence</ref>.
 {
-  object conf; // Really Configuration, but that's sort of recursive.
+  Configuration conf;
 
-  object/*Protocol*/ port_obj;
+  Protocol port_obj;
   //! The port object this request came from.
 
   int time;
@@ -405,9 +731,7 @@ class RequestID
   Stdio.File connection( );
   //! Returns the file descriptor used for the connection to the client.
 
-  object configuration();
-
-  //!Configuration configuration();
+  Configuration configuration();
   //! Returns the <ref>Configuration</ref> object of the virtual server that
   //! is handling the request.
 }
@@ -465,7 +789,7 @@ class _roxen {
   string real_version;
   object locale;
   int start_time;
-  array configurations;
+  array(Configuration) configurations;
 
   mixed  query(string a);
   void   store(string a, mapping b, int c, object d);
@@ -479,7 +803,7 @@ class _roxen {
 
 
 // Roxen itself
-object(_roxen) roxen;
+_roxen roxen;
 
 // The function used to report notices/debug/errors etc.
 function(string, int|void, int|void, void|mixed ...:void) nwrite;
@@ -1464,8 +1788,13 @@ library should be enough.
   add_constant( "Locale", nm_resolv("Locale") );
   add_constant( "Locale.Charset", nm_resolv("Locale.Charset") );
 
-  add_constant("RequestID", RequestID );
-  add_constant("RoxenModule", RoxenModule );
+  add_constant("Protocol",      Protocol );
+  add_constant("Configuration", Configuration );
+  add_constant("StringFile",    StringFile );
+  add_constant("RequestID",     RequestID );
+  add_constant("RoxenModule",   RoxenModule );
+  add_constant("ModuleInfo",    ModuleInfo );
+  add_constant("ModuleCopies",  ModuleCopies );
 
   report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 

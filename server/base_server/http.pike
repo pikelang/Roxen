@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.49 2000/09/19 09:53:50 jhs Exp $
+// $Id: http.pike,v 1.50 2000/09/25 07:03:12 per Exp $
 
 //#pragma strict_types
 
@@ -9,7 +9,6 @@
 #include <variables.h>
 
 #define roxen roxenp()
-class RequestID {};
 
 #ifdef HTTP_DEBUG
 # define HTTP_WERR(X) werror("HTTP: "+X+"\n");
@@ -237,13 +236,13 @@ mapping http_redirect( string url, RequestID|void id )
     {
       if( id->misc->site_prefix_path )
         url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
-      url = add_pre_state(url, [multiset]id->prestate);
+      url = add_pre_state(url,id->prestate);
       if(id->misc->host)
       {
 	array(string) h;
 	HTTP_WERR(sprintf("(REDIR) id->port_obj:%O", id->port_obj));
-	string prot = [string]id->port_obj->name + "://";
-	string p = ":" + [string]id->port_obj->default_port;
+	string prot = id->port_obj->name + "://";
+	string p = ":" + id->port_obj->default_port;
 
 	h = [string]id->misc->host / p  - ({""});
 	if(sizeof(h) == 1)

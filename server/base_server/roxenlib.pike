@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.201 2000/09/24 20:04:19 grubba Exp $
+// $Id: roxenlib.pike,v 1.202 2000/09/25 07:03:13 per Exp $
 
 //#pragma strict_types
 
@@ -11,40 +11,6 @@
 inherit "http";
 
 #define roxen roxenp()
-
-class Protocol {
-  int port;
-  string ip;
-  program requesthandler;
-  array(string) sorted_urls = ({});
-  mapping(string:mapping) urls = ([]);
-};
-class Configuration {
-  string parse_rxml(string data,
-                    RequestID id,
-                    void|Stdio.File fd,
-                    void|mapping(string:mixed) defines);
-  int|mapping check_security(function a, RequestID b);
-  string real_file(string a, RequestID b);
-  string name;
-  mapping modules;
-  mapping(object:string) otomod;
-};
-class RequestID {
-  object(Configuration) conf;
-  object(Protocol) port_obj;
-  string query;
-  string not_query;
-  string remoteaddr;
-  mapping(string:mixed) misc;
-  mapping(string:string) variables;
-
-  void set_output_charset(string|function charset);
-};
-class RoxenModule {
-  string query_name();
-  mapping register_module();
-};
 
 // Functions declared as static are not reachable through Roxen.pmod.
 // These functions are to be considered deprecated.
