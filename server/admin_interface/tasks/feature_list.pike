@@ -7,7 +7,7 @@ constant doc  = ("Show information about which features and modules are "
 
 constant all_features = ({
   // only include modules that are sensible to use with ChiliMoon
-  "threads", "out-of-band_data", "Crypto", "Gdbm", "Gmp", "Gz",
+  "threads", "out-of-band_data", "Nettle", "Gdbm", "Gmp", "Gz",
   "Image.FreeType", "Image.GIF", "Image.JPEG", "Image.TIFF", "Image.TTF",
   "Image.PNG", "Java", "Mird", "Msql", "Mysql", "Odbc", "Oracle", "PDF",
   "Postgres", "SANE", "sybase",
