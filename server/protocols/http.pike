@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright � 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.202 2000/02/14 09:22:40 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.203 2000/02/14 10:19:09 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -99,13 +99,19 @@ array (int|string) auth;
 string rawauth, realauth;
 string since;
 array(string) output_charset = ({});
+string input_charset;
 
-void set_output_charset( string|function to )
+void set_output_charset( string|function to, int|void no_override )
 {
-  output_charset = ({ to }) + output_charset;
+  if(sizeof( output_charset ) && output_charset[0] == to )
+    return;
+  if( !no_override )
+    output_charset = ({ to }) + output_charset;
+  else if(!sizeof(output_charset) || output_charset[0] == "iso-8859-1" )
+    output_charset = ({ to }) + output_charset;
 }
 
-array(string) output_encode( string what )
+static array(string) output_encode( string what )
 {
   string charset;
   if( sizeof( output_charset ) )
@@ -179,13 +185,18 @@ void decode_map( mapping what, function decoder )
   }
 }
 
-void decode_charset_encoding( function(string:string) decoder )
+void decode_charset_encoding( string|function(string:string) decoder )
 {
+  if(stringp(decoder))
+    decoder = _charset_decoder( Locale.Charset.decoder(decoder) )->decode;
+
   if( misc->request_charset_decoded )
     return;
-  misc->request_charset_decoded = 1;
+
   if( !decoder )
     return;
+
+  misc->request_charset_decoded = 1;
 
   string safe_decoder(string s) {
     catch { return decoder(s); };
@@ -887,15 +898,10 @@ private int parse_got()
     supports = find_supports(client_var->fullname, supports);
   }
 
-  // MSIE 5.0 sends all requests UTF8-encoded.
-  if (supports->requests_are_utf8_encoded) {
-    catch
-    {
-      set_output_charset( string_to_utf8 );
-      if( !variables->magic_roxen_automatic_charset_variable )
-        variables->magic_roxen_automatic_charset_variable = "åäö";
-//       f = utf8_to_string(f);
-    };
+  if ( client_var->charset && client_var->charset  != "iso-8859-1" )
+  {
+    set_output_charset( client_var->charset );
+    input_charset = client_var->charset;
   }
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
@@ -1779,9 +1785,12 @@ void got_data(mixed fooid, string s)
 
   mixed q;
   if( q = variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding( get_client_charset_decoder( q,this_object() )  );
+    decode_charset_encoding( get_client_charset_decoder( q,this_object() ) );
+  if( input_charset )
+    decode_charset_encoding( input_charset );
 
-  if (misc->host) {
+  if (misc->host)
+  {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
     conf =
@@ -1791,7 +1800,9 @@ void got_data(mixed fooid, string s)
 					    (":"+port_obj->default_port):"") +
 					   not_query,
 					   this_object());
-  } else {
+  }
+  else
+  {
     // No host header.
     // Fallback to using the first configuration bound to this port.
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
@@ -1836,7 +1847,8 @@ void got_data(mixed fooid, string s)
   processed=1;
   roxen.handle(this_object()->handle_request);
 
-  }) {
+  })
+  {
     report_error("Internal server error: " + describe_backtrace(err));
     my_fd->close();
     destruct (my_fd);
