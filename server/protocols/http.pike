@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.9 1996/12/10 06:57:20 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.10 1996/12/15 12:35:45 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -592,6 +592,11 @@ mapping internal_error(array err)
   
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
+}
+
+int wants_more()
+{
+  return !!cache;
 }
 
 /* We got some data on a socket.
