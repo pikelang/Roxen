@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.30 1998/07/02 07:47:58 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.31 1998/07/02 07:55:05 neotron Exp $";
 
 // import Array;
 // import Stdio;
@@ -136,7 +136,6 @@ mixed find_file(string f, object got)
 	sscanf(host, "%s.%*s", u);
       else 
 	u = host;
-      werror(sprintf("find_file: %O\n", u));
     }
   } else {
     if((<"","/">)[f]) return -1;
@@ -255,7 +254,6 @@ array find_dir(string f, object got)
 	sscanf(host, "%s.%*s", u);
       else 
 	u = host;
-      werror(sprintf("get_dir: %O\n", u));
     }
   } else {
 
@@ -302,7 +300,6 @@ mixed stat_file( mixed f, mixed id )
 	sscanf(host, "%s.%*s", u);
       else 
 	u = host;
-      werror(sprintf("get_dir: %O\n", u));
     }
   } else {
     
