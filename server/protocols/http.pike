@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.307 2001/03/08 14:35:49 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.308 2001/03/16 02:18:22 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1144,17 +1144,17 @@ int store_error(mixed _err)
     }
   }
   function dp =  master()->describe_program;
-#if __VERSION__ > 7.0
-  object d = master()->Describer();
-  function dcl = d->describe_comma_list;
-#else
-  function dcl = master()->stupid_describe_comma_list;
-#endif
+
   string cwd = getcwd() + "/";
   array bt;
   if (arrayp (err) && sizeof (err) >= 2 && arrayp (err[1]) ||
       objectp (err) && err->is_generic_error) {
+
+    object d = master()->Describer();
+    d->identify_parts(err);
+    function dcl = d->describe_comma_list;
     bt = ({});
+
     foreach (err[1], mixed ent) {
       string file, func, descr;
       int line;
