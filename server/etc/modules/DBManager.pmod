@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.30 2001/08/31 19:46:13 grubba Exp $
+// $Id: DBManager.pmod,v 1.31 2001/09/03 10:54:54 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -9,11 +9,13 @@
 
 
 
-// Not private since we use this variable for debugging purposes
+// Not private since we use these variables for debugging purposes.
 #ifdef THREADS
 mapping(object:mapping(string:Sql.Sql)) sql_cache = ([]);
+mapping(object:mapping(string:Sql.Sql)) dead_sql_cache = ([]);
 #else
 mapping(string:Sql.Sql) sql_cache = ([]);
+mapping(string:Sql.Sql) dead_sql_cache = ([]);
 #endif
 
 constant NONE  = 0;
@@ -42,24 +44,37 @@ private
   {
 #if DBMANAGER_DEBUG
     werror("DBManager: clear_sql_caches():\n"
+	   "  dead_sql_cache: %O\n"
 	   "  sql_cache: %O\n"
 	   "  connection_cache: %O\n",
+	   dead_sql_cache,
 	   sql_cache,
 	   connection_cache);
 #endif /* DMBMANAGER_DEBUG */
-#ifdef THREADS
+    /* Rotate the sql_caches.
+     *
+     * Perform the rotation first, to avoid thread-races.
+     */
     sql_cache_size = 0;
-    foreach( values( sql_cache ), mapping q )
+#ifdef THREADS
+    mapping(object:mapping(string:Sql.Sql)) really_dead_sql_cache =
+      dead_sql_cache;
+#else /* !THREADS */
+    mapping(string:Sql.Sql) really_dead_sql_cache = dead_sql_cache;
+#endif /* THREADS */
+    dead_sql_cache = sql_cache;
+    sql_cache = ([]);
+#ifdef THREADS
+    foreach( values( really_dead_sql_cache ), mapping q )
       foreach( values( q ), Sql.Sql s )
 #else
-    foreach( values( sql_cache ), Sql.Sql s )
+    foreach( values( really_dead_sql_cache ), Sql.Sql s )
 #endif
       {
 	if( s->master_sql )
 	  destruct( s->master_sql );
 	destruct( s );
       }
-    sql_cache = ([]);
 
     clear_connect_to_my_mysql_cache();
 
