@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.3 2001/06/30 21:56:10 hop Exp $
+ * $Id: snmpagent.pike,v 1.4 2001/06/30 23:02:43 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -77,16 +77,13 @@ inherit Roxen;
 
 // base external feeders
 
-int get_null() { return 0; }
-//! External function for MIB object returning nothing
-
-string get_description() { return("Roxen Webserver SNMP agent v"+("$Revision: 1.3 $"/" ")[1]+" (devel. rel.)"); }
+string get_description() { return("Roxen Webserver SNMP agent v"+("$Revision: 1.4 $"/" ")[1]+" (devel. rel.)"); }
 //! External function for MIB object 'system.sysDescr'
 
 string get_sysoid() { return RISMIB_BASE_WEBSERVER; }
 //! External function for MIB object 'system.sysOID'
 
-int get_uptime() { return ((time(1) - roxen->start_time)*20); }
+int get_uptime() { return ((time(1) - roxen->start_time)*100); }
 //! External function for MIB object 'system.sysUpTime'
 
 string get_syscontact() { return query("snmp_syscontact"); }
@@ -113,16 +110,21 @@ class SNMPagent {
   private int snmpbadver;
   private int snmpbadcommnames;
   private int snmpbadcommuses;
+  private int snmpenaauth;
   private mapping events;
   private mixed co;
   private object th;
   private static SNMPmib mib;
+
+  int get_null() { return 0; }
+  //! External function for MIB object returning nothing
 
   int get_snmpinpkts() { return(snmpinpkts); };
   int get_snmpoutpkts() { return(snmpoutpkts); };
   int get_snmpbadver() { return(snmpbadver); };
   int get_snmpbadcommnames() { return(snmpbadcommnames); };
   int get_snmpbadcommuses() { return(snmpbadcommuses); };
+  int get_snmpenaauth() { return(snmpenaauth); };
 
 class SNMPmib {
 #define MIBTREE_BASE "1.3.6.1"
@@ -199,7 +201,78 @@ class SNMPmib {
 	  ({ "count", get_snmpbadcommnames, "2.1.11.5.0" }),
 	// snmp.snmpInBadCommunityUses
 	"2.1.11.5.0":
-	  ({ "count", get_snmpbadcommuses, 0 }),
+	  ({ "count", get_null, "2.1.11.6.0" }),
+	// snmp.snmpInASNParseErrs
+	"2.1.11.6.0":
+	  ({ "count", get_null, "2.1.11.8.0" }),
+	// 7 is not used
+	// snmp.snmpInTooBigs
+	"2.1.11.8.0":
+	  ({ "count", get_null, "2.1.11.9.0" }),
+	// snmp.snmpInNoSuchNames
+	"2.1.11.9.0":
+	  ({ "count", get_null, "2.1.11.10.0" }),
+	// snmp.snmpInBadValues
+	"2.1.11.10.0":
+	  ({ "count", get_null, "2.1.11.11.0" }),
+	// snmp.snmpInReadOnlys
+	"2.1.11.11.0":
+	  ({ "count", get_null, "2.1.11.12.0" }),
+	// snmp.snmpInGenErrs
+	"2.1.11.12.0":
+	  ({ "count", get_null, "2.1.11.13.0" }),
+	// snmp.snmpInTotalReqVars
+	"2.1.11.13.0":
+	  ({ "count", get_null, "2.1.11.14.0" }),
+	// snmp.snmpInTotalSetVars
+	"2.1.11.14.0":
+	  ({ "count", get_null, "2.1.11.15.0" }),
+	// snmp.snmpInGetRequests
+	"2.1.11.15.0":
+	  ({ "count", get_null, "2.1.11.16.0" }),
+	// snmp.snmpInGetNexts
+	"2.1.11.16.0":
+	  ({ "count", get_null, "2.1.11.17.0" }),
+	// snmp.snmpInSetRequests
+	"2.1.11.17.0":
+	  ({ "count", get_null, "2.1.11.18.0" }),
+	// snmp.snmpInGetResponses
+	"2.1.11.18.0":
+	  ({ "count", get_null, "2.1.11.19.0" }),
+	// snmp.snmpInTraps
+	"2.1.11.19.0":
+	  ({ "count", get_null, "2.1.11.20.0" }),
+	// snmp.snmpOutTooBigs
+	"2.1.11.20.0":
+	  ({ "count", get_null, "2.1.11.21.0" }),
+	// snmp.snmpOutNoSuchNames
+	"2.1.11.21.0":
+	  ({ "count", get_null, "2.1.11.22.0" }),
+	// snmp.snmpOutBadValues
+	"2.1.11.22.0":
+	  ({ "count", get_null, "2.1.11.24.0" }),
+	// 23 is not used
+	// snmp.snmpOutGenErrs
+	"2.1.11.24.0":
+	  ({ "count", get_null, "2.1.11.25.0" }),
+	// snmp.snmpOutGetRequests
+	"2.1.11.25.0":
+	  ({ "count", get_null, "2.1.11.26.0" }),
+	// snmp.snmpOutGetNexts
+	"2.1.11.26.0":
+	  ({ "count", get_null, "2.1.11.27.0" }),
+	// snmp.snmpOutSetRequests
+	"2.1.11.27.0":
+	  ({ "count", get_null, "2.1.11.28.0" }),
+	// snmp.snmpOutGetResponses
+	"2.1.11.28.0":
+	  ({ "count", get_null, "2.1.11.29.0" }),
+	// snmp.snmpOutTraps
+	"2.1.11.29.0":
+	  ({ "count", get_null, "2.1.11.30.0" }),
+	// snmp.snmpEnableAuthenTraps
+	"2.1.11.30.0":
+	  ({ "int", get_snmpenaauth, 0 }),
 
 	// enterprises.roxenIS.webserver
 	"4.1.8614.1.1":
@@ -345,24 +418,41 @@ class SNMPmib {
 
 	  case SNMP_OP_SETREQUEST:
 
-	    // HACK! For testing purpose only!
-	    // Server restart = 1; server shutdown = 2
-	    if (attrname == RISMIB_BASE_WEBSERVER+".1.0")
-	      if(chk_access("rw", pdata[msgid])) {
-		setflg = 1;
-		rdata[attrname] += ({ "count", attrval });
-	        rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
-		if(attrval == 1 || attrval == 2) {
-		  report_warning("SNMPagent: Initiated " + ((attrval==1)?"restart":"shutdown") + " from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
-	  	  if (attrval == 1) roxen->restart(0.5);
-	  	  if (attrval == 2) roxen->shutdown(0.5);
-		}
-	    } else
-	      snmpbadcommuses++;
-	    break;
+	    switch (attrname) {
+	      case RISMIB_BASE_WEBSERVER+".1.0":
+	        // HACK! For testing purpose only!
+	        // Server restart = 1; server shutdown = 2
+	        if(chk_access("rw", pdata[msgid])) {
+		  setflg = 1;
+		  rdata[attrname] += ({ "int", attrval });
+	          rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
+		  if(attrval == 1 || attrval == 2) {
+		    report_warning("SNMPagent: Initiated " + ((attrval==1)?"restart":"shutdown") + " from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
+	  	    if (attrval == 1) roxen->restart(0.5);
+	  	    if (attrval == 2) roxen->shutdown(0.5);
+		  }
+	        } else
+	          snmpbadcommuses++;
+	        break;
+	      case MIBTREE_BASE+".2.1.11.30.0":
+	        // The standard-based (RFC1213) method of disabling auth. traps
+	        if(chk_access("rw", pdata[msgid])) {
+		  setflg = 1;
+		  rdata[attrname] += ({ "int", attrval });
+	          rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
+		  if(attrval == 0 || attrval == 1) {
+		    report_warning("SNMPagent: Requested " + attrval?"en":"dis" + "abling of auth. traps from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
+	  	    // here will be ena/disabling of such traps
+		  }
+	        } else
+	          snmpbadcommuses++;
+	        break;
 
-       } else
-	 SNMPAGENT_MSG(sprintf(" unknown or unsupported OID: %O:%O", attrname, attrval));
+	    } //switch
+	  break;
+        } //switch
+        else
+	  SNMPAGENT_MSG(sprintf(" unknown or unsupported OID: %O:%O", attrname, attrval));
       
 
 /*
