@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.8 2001/08/14 23:24:35 hop Exp $
+ * $Id: snmpagent.pike,v 1.9 2001/08/17 00:01:11 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -31,13 +31,16 @@ Developer notes:
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
 	- cold_start trap code isn't completed
+	- tabular walking throught roxenis.app.roxen.* doesn't working
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
+	- restart/stop
 	- 'basic' Roxen working variables
 
     v1.1 todo:
 	- trap handling
+	- module reloading
 
     v2.0 todo:
 	- Roxen.module API for registering MIB subtree
@@ -84,12 +87,32 @@ inherit Roxen;
 #define OBJ_TICK(x)		({"tick", x})
 #define OBJ_COUNT(x)		({"count", x})
 
-#define RISMIB_BASE			"1.3.6.1.4.1.8614"
-#define RISMIB_BASE_WEBSERVER		RISMIB_BASE+".1.1"
-
 //! The starting part of OID of every object will have, so we stripp it out
 //! before making index from OID to the MIB DB
-#define MIBTREE_BASE "1.3.6.1"
+#define MIBTREE_BASE			"1.3.6.1"
+
+#define RISMIB_BASE_ADD			"4.1.8614"
+// enterprises.roxenis
+#define RISMIB_BASE			MIBTREE_BASE+"."+RISMIB_BASE_ADD
+#define RISMIB_BASE_WEBSERVER_ADD	"1.1"
+// enterprises.roxenis.app.roxen
+#define RISMIB_BASE_WEBSERVER		RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
+// enterprises.roxenis.app.roxen.global
+#define RISMIB_BASE_WEBSERVER_GLOBAL	RISMIB_BASE_WEBSERVER+".1"
+// enterprises.roxenis.app.roxen.global.vs
+#define RISMIB_BASE_WEBSERVER_GLOBAL_VS	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
+// enterprises.roxenis.app.roxen.vs
+#define RISMIB_BASE_WEBSERVER_VS	RISMIB_BASE_WEBSERVER+".2"
+// enterprises.roxenis.app.roxen.vs.name
+#define RISMIB_BASE_WEBSERVER_VS_NAME	RISMIB_BASE_WEBSERVER_VS+".1"
+// enterprises.roxenis.app.roxen.vs.sentdata
+#define RISMIB_BASE_WEBSERVER_VS_SDATA	RISMIB_BASE_WEBSERVER_VS+".2"
+// enterprises.roxenis.app.roxen.vs.senthdrs
+#define RISMIB_BASE_WEBSERVER_VS_SHDRS	RISMIB_BASE_WEBSERVER_VS+".3"
+// enterprises.roxenis.app.roxen.vs.recvdata
+#define RISMIB_BASE_WEBSERVER_VS_RDATA	RISMIB_BASE_WEBSERVER_VS+".4"
+// enterprises.roxenis.app.roxen.vs.requests
+#define RISMIB_BASE_WEBSERVER_VS_REQS	RISMIB_BASE_WEBSERVER_VS+".5"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -116,7 +139,7 @@ class SNMPagent {
   array get_snmpbadver() { return OBJ_COUNT(snmpbadver); };
   array get_snmpbadcommnames() { return OBJ_COUNT(snmpbadcommnames); };
   array get_snmpbadcommuses() { return OBJ_COUNT(snmpbadcommuses); };
-  array get_snmpenaauth() { return OBJ_COUNT(snmpenaauth); };
+  array get_snmpenaauth() { return OBJ_INT(snmpenaauth); };
 
   array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); };
 
@@ -134,10 +157,10 @@ class SNMPagent {
     mib = SubMIBSystem();		// system.* table
     if(objectp(mib)) {
       // snmp.*
-      mib->register(MIBTREE_BASE+"."+"2.1.11", SubMIBSnmp(this_object()));
+      mib->register(SubMIBSnmp(this_object()));
       // enterprises.roxenis.*
-      mib->register(MIBTREE_BASE+"."+"4.1.8614", SubMIBRoxenIS(this_object()));
-      mib->register(MIBTREE_BASE+"."+"4.1.8614.1.1.999.2.1.1", SubMIBRoxenVs(this_object()));
+      mib->register(SubMIBRoxenVS(this_object()));
+      mib->register(SubMIBRoxenVSName(this_object()));
     }
     if (!status())
       start();
@@ -387,6 +410,9 @@ class SNMPagent {
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
      }
 
+    // some tabulars handlers ...
+    
+
     return(1);
   }
 
@@ -396,6 +422,35 @@ class SNMPagent {
       return 0; // bad index number
     return (roxen->configurations[vsid]->name);
   }
+
+  //! Returns send data statistics of the virtual server
+  int get_virtservsdata(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return -1; // bad index number
+    return (roxen->configurations[vsid]->sent);
+  }
+
+  //! Returns received data statistics of the virtual server
+  int get_virtservrdata(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return -1; // bad index number
+    return (roxen->configurations[vsid]->received);
+  }
+
+  //! Returns send headers statistics of the virtual server
+  int get_virtservshdrs(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return -1; // bad index number
+    return (roxen->configurations[vsid]->hsent);
+  }
+
+  //! Returns request statistics of the virtual server
+  int get_virtservreqs(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return -1; // bad index number
+    return (roxen->configurations[vsid]->requests);
+  }
+
 
   //! Deletes virtual server's specific objects from DB
   int del_virtserv(int vsid) {
@@ -452,14 +507,17 @@ class SubMIBManager {
   //! Note: If oid is ancessor of already existing oids, then autohiding of existing
   //!       object's managers will be done. Unregistering reenabled such hided managers
   //!       again.
-  int register(string oid, object manager) {
+  int register(object manager) {
 
-    if(!(oid = oid_strip(oid))) return -1; // false => bad OID
+    string oid = manager->tree;
+
     if(oid_check(oid))
-      return 0; // false => the OID is already registered. What about stackable organization ?
+      return 0; // false => the OID is already registered.
+		// What about stackable organization ?
     if(subtreeman[oid])
       return 0; // false => already registered
     subtreeman += ([oid: manager]); // FIXME: autohiding of subtree. Is it goood?
+    SNMPAGENT_MSG(sprintf("manager %O registered for tree %O", manager->name, manager->tree));
     return 1; // ok (registered)
   }
 
@@ -486,7 +544,8 @@ class SubMIBManager {
 
     // hmm, now we have to try some of the registered managers
     array s = soid/".";
-    for(int cnt = sizeof(s)-1; cnt>0; cnt--)
+    for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
+      SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
       if(subtreeman[s[..cnt]*"."]) {
 	// good, subtree manager exists
 	string manoid = s[..cnt]*".";
@@ -494,6 +553,10 @@ class SubMIBManager {
 				subtreeman[manoid]->name, manoid));
 	return subtreeman[manoid]->get(oid);
       }
+    }
+
+    SNMPAGENT_MSG("Not found any suitable manager");
+    return 0;
   }
 
   //! Returns array ({ nextoid, type, val }) or 0
@@ -535,6 +598,7 @@ class SubMIBManager {
       s = soid/".";
       // hmm, now we have to try some of the registered managers
       for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
+	SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
         if(subtreeman[s[..cnt]*"."]) {
 	  // good, subtree manager exists
 	  string manoid = s[..cnt]*".";
@@ -546,6 +610,7 @@ class SubMIBManager {
 
     }
 
+    SNMPAGENT_MSG("Not found any suitable manager");
     return 0;
   }
 
@@ -573,7 +638,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.8 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.9 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -721,19 +786,19 @@ class SubMIBSnmp {
 
 //! roxenis enterprise subtree manager
 //! Manages the enterprise.roxenis.* submib tree.
-class SubMIBRoxenIS {
+class SubMIBRoxenVS {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis";
-  constant tree = "4.1.8614";
+  constant name = "enterprises.roxenis.app.roxen.global.vs";
+  constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_VS - (MIBTREE_BASE+".");
 
   void create(object agent) {
 
     submibtab = ([
 	// enterprises
 	// hack2 :)
-	"4.1.8614.1.1.999.2.1.0": agent->get_virtserv,
+	tree+".0": agent->get_virtserv,
     ]);
   }
 }
@@ -772,59 +837,133 @@ class SubMIBRoxenIS {
 
 //! roxenis enterprise subtree manager
 //! Manages the enterprise.roxenis.* submib tree.
-class SubMIBRoxenVs {
+class SubMIBRoxenVSName {
 
   inherit SubMIBManager;
 
-  constant name = "roxenis.app.roxen.test.vs";
-  constant tree = "4.1.8614.1.1.999.2.1.1";
+  constant name = "enterprises.roxenis.app.roxen.vs";
+  constant tree =  RISMIB_BASE_WEBSERVER_VS  - (MIBTREE_BASE+".");
 
   object agent;
   
   void create(object agentp) {
-
-    submibtab = ([ ]);
     agent = agentp;
+    submibtab = ([ ]);
   }
 
   array get(string oid, mapping|void pkt) {
 
-    function rval;
     string soid, vname;
+    int vdata;
+    array rval, arroid;
 
     SNMPAGENT_MSG(sprintf("GET(%s): %O", name, oid));
     soid = oid_strip(oid);
 
-    if(sizeof((soid = soid - (tree + "."))/".") > 1)
-      return ({}); // no more points, please
+    /* fist, we will try to find  an "ordinary" object in the MIB
+    if (functionp(rval = submibtab[soid])) {
+      SNMPAGENT_MSG("found ordinary MIB object.");
+      return rval();
+    }*/
 
-    vname = agent->get_virtservname(((int)soid)+1);
-    if(!stringp(vname))
-      return ({}); // wrong index
-    return (OBJ_STR(vname));
+    // no, so we will try to find "tabular" object instead
+    if(sizeof((soid = soid - (tree + "."))/".") != 2)
+      return ({}); // exactly one point, please
+
+    switch ((soid/".")[0]) {
+
+	case "1": // VS_NAME
+    	  vname = agent->get_virtservname(((int)(soid/".")[1])+1);
+    	  if(!stringp(vname))
+	    return ({}); // wrong index
+    	  return (OBJ_STR(vname));
+
+	case "2": // VS_SDATA
+    	  vdata = agent->get_virtservsdata(((int)(soid/".")[1])+1);
+    	  if(vdata < 0)
+	    return ({}); // wrong index
+    	  return (OBJ_COUNT(vdata));
+
+	case "3": // VS_SHDRS
+    	  vdata = agent->get_virtservshdrs(((int)(soid/".")[1])+1);
+    	  if(vdata < 0)
+	    return ({}); // wrong index
+    	  return (OBJ_COUNT(vdata));
+
+	case "4": // VS_RDATA
+    	  vdata = agent->get_virtservrdata(((int)(soid/".")[1])+1);
+    	  if(vdata < 0)
+	    return ({}); // wrong index
+    	  return (OBJ_COUNT(vdata));
+
+	case "5": // VS_REQS
+    	  vdata = agent->get_virtservreqs(((int)(soid/".")[1])+1);
+    	  if(vdata < 0)
+	    return ({}); // wrong index
+    	  return (OBJ_COUNT(vdata));
+
+    }
+    return ({});
+
   }
 
   array getnext(string oid, mapping|void pkt) {
 
-    function rval;
-    string soid, vname;
-    int idx;
+    string soid, noid, vname;
+    int idx, vdata;
+    array rval, arr;
 
     SNMPAGENT_MSG(sprintf("GETNEXT(%s): %O", name, oid));
     soid = oid_strip(oid);
 
     if(oid == (MIBTREE_BASE+"."+tree)) {
-      soid = "-1"; 			// special case
-      oid += ".-1";			// trash only
-    } else if(sizeof((soid = soid - (tree + "."))/".") > 1)
-      return ({}); // no more points, please
+      soid = "1.-1"; 			// special case
+      oid += ".1.-1";			// trash only
+    }
 
-    idx = (int)soid+1;
-    vname = agent->get_virtservname(idx+1);
-    if(!stringp(vname))
-      return ({}); // wrong index
-    soid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)idx;
-    return (({soid, @OBJ_STR(vname)}));
+    arr = ((soid = soid - (tree + "."))/".");
+    if(sizeof(arr) == 1) {
+      soid = arr[0]+".-1"; 		// special case
+      oid += "."+soid;			// trash only
+    }
+
+    idx = (int)((soid/".")[1])+1;
+    noid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)idx;
+
+    switch ((soid/".")[0]) {
+
+	case "1": // VS_NAME
+	  vname = agent->get_virtservname(idx+1);
+	  if(!stringp(vname))
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_STR(vname)}));
+
+	case "2": // VS_SDATA
+	  vdata = agent->get_virtservsdata(idx+1);
+	  if(vdata < 0)
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_COUNT(vdata)}));
+
+	case "3": // VS_SHDRS
+	  vdata = agent->get_virtservshdrs(idx+1);
+	  if(vdata < 0)
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_COUNT(vdata)}));
+
+	case "4": // VS_RDATA
+	  vdata = agent->get_virtservrdata(idx+1);
+	  if(vdata < 0)
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_COUNT(vdata)}));
+
+	case "5": // VS_REQS
+	  vdata = agent->get_virtservreqs(idx+1);
+	  if(vdata < 0)
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_COUNT(vdata)}));
+
+    }
+    return ({});
   }
 
 }
