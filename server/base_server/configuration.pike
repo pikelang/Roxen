@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.140 1998/07/02 13:28:45 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.141 1998/07/03 12:06:19 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -307,18 +307,15 @@ public string type_from_filename( string file, int|void to )
 	nx=tmp2[-2];
       if(nx && (tmp2=types_fun(nx)))
 	tmp[0] = tmp2[0];
+      else if(tmp2=types_fun("default"))
+	tmp[0] = tmp2[0];
       else
-	if(tmp2=types_fun("default"))
-	  tmp[0] = tmp2[0];
-	else
-	  tmp[0]="application/octet-stream";
+	tmp[0]="application/octet-stream";
     }
-    return to?tmp:tmp[0];
-  } else {
-    if(!(tmp=types_fun("default")))
-      tmp=({ "application/octet-stream", 0 });
+  } else if(!(tmp = types_fun("default"))) {
+    tmp = ({ "application/octet-stream", 0 });
   }
-  return 0;
+  return to?tmp:tmp[0];
 }
 
 // Return an array with all provider modules that provides "provides".
