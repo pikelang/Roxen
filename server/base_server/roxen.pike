@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.672 2001/06/13 17:21:56 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.673 2001/06/15 09:57:12 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1958,19 +1958,9 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
-#ifndef THREADS
-#define QUERY(X,Y...) db->query(X,Y)
-#else
-  Thread.Mutex mutex = Thread.Mutex();
-  array(mapping) do_query( string X, mixed ... Y )
-  {
-    object key = mutex->lock();
-    return db->query(X,@Y);
-  }
-#define QUERY(X,Y...) do_query(X,Y)
-#endif
+#define QUERY(X,Y...) get_db()->query(X,Y)
 
-  Sql.Sql db;
+  static function(void:Sql.Sql) get_db;
   string name;
   string dir;
   function draw_function;
@@ -2740,9 +2730,8 @@ class ImageCache
   static void init_db( )
   {
     meta_cache = ([]);
-    db = master()->resolv( "DBManager.get" )( "local" );
-    if( !db )
-      report_fatal("No 'local' database!\n");
+    function f = master()->resolv( "DBManager.cached_get" );
+    get_db = lambda() { return f("local"); };
     catch(setup_tables());
   }
 
@@ -2770,7 +2759,7 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  static Sql.Sql db;
+  static function(void:Sql.Sql) get_db;
   static string name;
 
 #define CACHE_VALUE 0
@@ -2799,14 +2788,14 @@ class ArgCache
 	lq = "select GET_LOCK('"+name+"', 4)";
 	ulq = "select RELEASE_LOCK('"+name+"')";
       }
-      db->query( lq );
+      get_db()->query( lq );
     }
     static void destroy()
     {
+      get_db()->query( ulq );
 #ifdef THREADS
-      db->query( ulq );
-#endif
       key = 0;
+#endif
     }
   }
 # define LOCK() DBLock __ = DBLock()
@@ -2823,8 +2812,8 @@ class ArgCache
 
   static void setup_table()
   {
-    if(catch(db->query("SELECT id FROM "+name+" WHERE id=0")))
-      db->query("CREATE TABLE "+name+" ("
+    if(catch(QUERY("SELECT id FROM "+name+" WHERE id=0")))
+      QUERY("CREATE TABLE "+name+" ("
                 "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
                 "hash INT NOT NULL DEFAULT 0, "
                 "atime INT UNSIGNED NOT NULL DEFAULT 0, "
@@ -2837,7 +2826,8 @@ class ArgCache
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
     cache = ([]);
-    db = master()->resolv( "DBManager.get" )( "shared" );
+    function f = master()->resolv( "DBManager.cached_get" );
+    get_db = lambda() { return f("shared"); };
     setup_table( );
   }
 
@@ -2852,10 +2842,10 @@ class ArgCache
 
   static string read_args( int id )
   {
-    array res = db->query("SELECT contents FROM "+name+" WHERE id="+id);
+    array res = QUERY("SELECT contents FROM "+name+" WHERE id="+id);
     if( sizeof(res) )
     {
-      db->query("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
+      QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
       return res[0]->contents;
     }
     return 0;
@@ -2864,16 +2854,16 @@ class ArgCache
   static int create_key( string long_key )
   {
     string hl = Crypto.md5()->update( long_key )->digest();
-    array data = db->query("SELECT id,contents FROM "+name+" WHERE hash=%d",
+    array data = QUERY("SELECT id,contents FROM "+name+" WHERE hash=%d",
 			   hash(long_key));
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
-    db->query( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
+    QUERY( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
 	       "(%s,%d,UNIX_TIMESTAMP())",
 	       long_key, hash(long_key) );
-    int id = (int)db->master_sql->insert_id();
+    int id = (int)get_db()->master_sql->insert_id();
     if( !plugins ) get_plugins();
     (plugins->create_key-({0}))( id, hl, long_key );
     return id;
@@ -2881,7 +2871,7 @@ class ArgCache
 
   static int low_key_exists( string key )
   {
-    return sizeof( db->query( "SELECT id FROM "+name+" WHERE id="+(int)key));
+    return sizeof( QUERY( "SELECT id FROM "+name+" WHERE id="+(int)key));
   }
 
   static string secret;
@@ -3041,7 +3031,7 @@ class ArgCache
 	m_delete( cache, cache[id] );
 	m_delete( cache, id );
       }
-      db->query( "DELETE FROM "+name+" WHERE id="+id );
+      QUERY( "DELETE FROM "+name+" WHERE id="+id );
     }
   }
 }
