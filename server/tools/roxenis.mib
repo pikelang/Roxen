@@ -7,7 +7,7 @@
 --
 -- Creator: Honza Petrous (hop@roxen.com)
 --
--- $Id: roxenis.mib,v 1.1 2001/09/04 13:20:49 hop Exp $
+-- $Id: roxenis.mib,v 1.2 2001/09/13 13:19:10 hop Exp $
 
 
 ROXENIS-MIB DEFINITIONS ::= 
@@ -175,23 +175,55 @@ BEGIN
 -- TRAP objects
 --
 
-	trap OBJECT IDENTIFIER ::= { webserver 3 }
-
---	printerAlert TRAP-TYPE
+--	vsStartTrap TRAP-TYPE
 --			ENTERPRISE webserver
---			VARIABLES { vsColdTrap }
+--			VARIABLES { vsIndex }
 --			DESCRIPTION
---			    "This trap is sent whenever a virtual server is started."
+--			    "This trap is sent whenever a virtual server
+--			     is started."
 --			::= 1
 
-	vsColdTrap   OBJECT-TYPE
+	trapGlobal OBJECT IDENTIFIER ::= { webserver 3 }
+
+	serverDownTrap  OBJECT-TYPE
 			SYNTAX  Integer32 (1..2147483647)
 			MAX-ACCESS  read-only
 			STATUS  current
 			DESCRIPTION
 			    "An index which uniquely identifies a
 			     virtual server."
-			::= { trap 1 }
+			::= { trapGlobal 1 }
+
+	trapVs OBJECT IDENTIFIER ::= { webserver 4 }
+
+	vsExternalTrap OBJECT IDENTIFIER ::= { trapVs 1 }
+
+	vsStartTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 2 }
+
+	vsStopTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 3 }
+
+	vsConfChangedTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 4 }
 
 --    
 -- Pike Interpreter		------------------------------
