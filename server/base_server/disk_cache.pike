@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.26 1997/08/15 20:16:33 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.27 1997/09/05 16:54:30 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -283,7 +283,13 @@ class Cache {
   {
     object lcs;
     cd = basename;
-    
+
+#if 0    
+    // No support for nice yet.
+    object privs = ((program)"privs")("Starting the garbage collector");
+    spawn_pike(({ "bin/garbagecollector.pike" }), 0, command_stream->pipe());
+    return;
+#else
     lcs = command_stream->pipe();
     if(fork())
     {
@@ -309,6 +315,7 @@ class Cache {
     perror("bin/pike: ");real_perror();
 #endif
     exit(0);
+#endif /* 0 */
   }
   
   /*
