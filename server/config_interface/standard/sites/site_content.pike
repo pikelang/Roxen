@@ -136,7 +136,7 @@ string devel_buttons( object c, string mn, object id )
         m_delete(current_compile_errors, mn );
       mod = c->find_module( replace( mn,"!","#" ) );
       if( !mod )
-        return "<h1>FAILED TO RELOAD MODULKE! FATAL! AJEN!</h1>";
+        return "<h1>FAILED TO RELOAD MODULE! FATAL! AJEN!</h1>";
     }
     else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
     {
