@@ -1,0 +1,19 @@
+TODO list for AutoSite
+
+	
+WebAdmin
+--------------------------------------------------------------------------------
+* Redirect when 'remove file', 'remove directory',
+  'move file' and 'move directory' are complete.
+
+* New Menu editor tab.
+
+* New wizards in HTML-Editor:
+  - Move file
+  - Add to menu
+
+* Nicer file browser.
+
+* Make tags in webadm-template for:
+  - tablify
+  - error
