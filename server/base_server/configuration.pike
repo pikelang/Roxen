@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.484 2001/09/06 13:34:45 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.485 2001/09/06 15:02:59 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2285,7 +2285,10 @@ int|string try_get_file(string s, RequestID id,
   if( objectp(m->file) )
   {
     res += m->file->read();
-    destruct(m->file);
+    if (m->file) {
+      // Some wrappers may destruct themselves in read()...
+      destruct(m->file);
+    }
     m->file = 0;
   }
 
