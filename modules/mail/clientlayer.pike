@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.40 1999/09/01 15:33:17 grubba Exp $
+ * $Id: clientlayer.pike,v 1.41 1999/09/01 15:42:32 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.40 1999/09/01 15:33:17 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.41 1999/09/01 15:42:32 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -679,7 +679,7 @@ class Mailbox
     /* This could be easier.. :-) */
 
     // 0> Check quota.
-    int st = stat_body(bodyid);
+    array st = stat_body(bodyid);
     int sz = st && (st[1]>0) && st[1];
 
     if (!user->check_quota(sz)) {
@@ -855,7 +855,7 @@ class User
       // No quota at all.
       return 0;
     }
-    return(get_usage() + amount <= q);
+    return(query_usage() + amount <= q);
   }
 
   int allocate_quota(int amount)
