@@ -190,7 +190,7 @@ class FTFont
       rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
     }
     if( fake_italic )
-      rr = rr->skewx( rr->ysize()/3 );
+      rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
     return rr;
   }
 

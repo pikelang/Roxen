@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.8 2000/12/11 10:44:37 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.9 2001/08/21 14:26:51 per Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -86,6 +86,7 @@ class TTFWrapper
   static object real;
   static object encoder;
   static function(string ...:Image.image) real_write;
+  static int fake_bold, fake_italic;
 
   int height( )
   {
@@ -137,7 +138,19 @@ class TTFWrapper
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
+    if( fake_bold )
+    {
+      object r2 = Image.Image( rr->xsize()+2, rr->ysize() );
+      object r3 = rr*0.3;
+      for( int i = 0; i<2; i++ )
+	for( int j = 0; j<2; j++ )
+	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
+      rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
+    }
+    if( fake_italic )
+      rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
     return rr;
+
   }
 
   array text_extents( string what )
@@ -146,9 +159,11 @@ class TTFWrapper
     return ({ o->xsize(), o->ysize() });
   }
 
-  void create(object r, int s, string fn)
+  void create(object r, int s, string fn, int fb, int fi)
   {
     string encoding;
+    fake_bold = fb;
+    fake_italic = fi;
     real = r;
     size = s;
     real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
@@ -219,7 +234,7 @@ Font open(string f, int size, int bold, int italic )
   if( style == -1 ) // exact file
   {
     if( fo = Image.TTF( name ) )
-      return TTFWrapper( fo, size, f );
+      return TTFWrapper( fo, size, f,0,0 );
     return 0;
   }
 
@@ -229,10 +244,10 @@ Font open(string f, int size, int bold, int italic )
     if( tmp = ttf_font_names_cache[ f ][ style ] )
     {
       fo = Image.TTF( tmp );
-      if( fo ) return TTFWrapper( fo(), size, tmp );
+      if( fo ) return TTFWrapper( fo(), size, tmp,0,0 );
     }
     if( fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ f ])[0])))
-      return TTFWrapper( fo(), size, f );
+      return TTFWrapper( fo(), size, f, bold, italic );
   }
   return 0;
 }

@@ -4,7 +4,7 @@ inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.9 2001/08/21 13:55:02 per Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.10 2001/08/21 14:26:51 per Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -70,12 +70,12 @@ Font open( string name, int size, int bold, int italic )
 #ifdef THREADS
      object key = lock->lock();
 #endif
+     if( !roxenbuiltin ) catch(roxenbuiltin = grbf());
+     if( roxenbuiltin )
 #if constant(Image.FreeType.Face)
-     if( !roxenbuiltin ) catch(roxenbuiltin = grbf());
-     if( roxenbuiltin )  return FTFont( roxenbuiltin, size,"-",bold,italic );
+       return FTFont( roxenbuiltin, size,"-", bold, italic );
 #else
-     if( !roxenbuiltin ) catch(roxenbuiltin = grbf());
-     if( roxenbuiltin )  return TTFWrapper( roxenbuiltin(), size, "-" );
+       return TTFWrapper( roxenbuiltin(), size, "-", bold, italic);
 #endif
 #endif
    case "pikebuiltin":
