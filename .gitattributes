@@ -169,6 +169,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/graphics/business_graphics/create_bars.pike foreign_ident
 /server/modules/graphics/business_graphics/create_graph.pike foreign_ident
 /server/modules/graphics/business_graphics/create_pie.pike foreign_ident
+/server/modules/graphics/business_graphics/diagram.h foreign_ident
 /server/modules/graphics/business_graphics/polyline.pike foreign_ident
 /server/modules/graphics/counter.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident

@@ -1,6 +1,8 @@
 /*
  * name = "BG: diagram.h";
  * doc = "Business Graphics common things. You must upgrade this component to use newer versions of BG.";
+ *
+ * $Id: diagram.h,v 1.3 1998/03/12 23:42:39 peter Exp $
  */
 
 
@@ -12,8 +14,8 @@
 #define VOIDSYMBOL "\n"
 #define SEP "\t"
 
-constant LITET = 1.0e-40;
+constant LITET = 1.0e-38;
 constant STORTLITET = 1.0e-30;
-constant STORT = 1.0e40;
+constant STORT = 1.0e30;
 
 //#define BG_DEBUG 1
