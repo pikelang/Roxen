@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.12 2001/08/23 20:20:12 grubba Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.13 2001/08/28 17:52:37 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -42,9 +42,9 @@ void start(int n, Configuration c) {
     return;
   }
 
-  default_language=[string]query("default_language");
-  languages=[array(string)]query("languages");
-  rxml=[array(string)]query("rxml");
+  default_language = lower_case([string]query("default_language"));
+  languages = map([array(string)]query("languages"), lower_case);
+  rxml = map([array(string)]query("rxml"), lower_case);
   cache_id="lang_mod"+c->get_config_id();
 }
 
