@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.22 1998/09/11 20:02:41 wellhard Exp $
+# $Id: db.spec,v 1.23 1998/09/12 12:55:10 per Exp $
 
 drop table messages;
 drop table mail;
@@ -18,8 +18,25 @@ drop table customers_schemes_vars;
 
 # AutoMail
 
+create table mail_misc (
+	     id			bigint not null primary key,
+	     variable 		varchar(16) not null primary key,
+	     value		varchar(255),
+ );
+
+create table user_misc (
+	     id			bigint not null primary key,
+	     variable 		varchar(16) not null primary key,
+	     value		varchar(255),
+ );
+
+
+create table message_body_id (
+	     last		bigint
+  );
+
 create table messages (
-             id	                     int auto_increment primary key,
+             id	                     bigint auto_increment primary key,
              sender		     varchar(255),
              subject                 varchar(255),
 	     body_id		     varchar(32),
@@ -29,9 +46,9 @@ create table messages (
      );
 
 create table mail (
-             id	                     int auto_increment primary key,
+             id	                     bigint auto_increment primary key,
 	     mailbox_id		     int,
-             message_id		     int
+             message_id		     bigint
      );
 
      
