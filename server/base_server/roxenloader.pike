@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.128 1999/12/09 06:12:49 mast Exp $
+ * $Id: roxenloader.pike,v 1.129 1999/12/10 12:55:07 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.128 1999/12/09 06:12:49 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.129 1999/12/10 12:55:07 mast Exp $";
 
 #define perror roxen_perror
 
@@ -133,7 +133,7 @@ void roxen_perror(string format, mixed ... args)
 
   // "Delayed newlines": End a message with \b and start the next one
   // with \b to make them continue on the same line. If another
-  // message gets in between, it still get written on a new line.
+  // message gets in between, it still gets written on a new line.
   int delayed_nl;
   if (format == "\b") format = "";
   else if (sizeof (format)) {
@@ -686,6 +686,7 @@ class ParseHtmlCompat
     m_containers = containers;
     add_containers (mkmapping (indices (m_containers),
 			       ({call_container}) * sizeof (m_containers)));
+    add_tag ("", "");		// Don't ask..
     _set_tag_callback (call_tag);
     set_extra (@extra);
     lazy_entity_end (1);
