@@ -1,26 +1,25 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.23 2001/11/27 10:42:00 anders Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.24 2002/06/14 10:34:33 nilsson Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
 
 // begin locale stuff
 //<locale-token project="mod_sizer">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_sizer",X,Y)
+#define _(X,Y)	_STR_LOCALE("mod_sizer",X,Y)
 // end locale stuff
 
 
 constant module_type = MODULE_TAG | MODULE_FILTER;
-LocaleString module_name = _(1,"Tags: Page sizer");
-
-LocaleString module_doc  =
-  _(2,"This module provides the <tt>&lt;page-size&gt;</tt> tag that "
-    "calculates the size of a page, including inline images, and gives"
-    " estimates of the time it will take to download the page.<p>"
-    "You can also use the <i>size</i> prestate to trigger the sizing "
-    "process</p>");
+constant module_name = "Tags: Page sizer";
+constant module_doc  =
+  ("This module provides the <tt>&lt;page-size&gt;</tt> tag that "
+   "calculates the size of a page, including inline images, and gives "
+   "estimates of the time it will take to download the page.<p>"
+   "You can also use the <i>size</i> prestate to trigger the sizing "
+   "process</p>");
 
 #include <variables.h>
 
@@ -130,7 +129,8 @@ array size_file( string page, RequestID id )
     catch(  res = do_read_file( page, id ) );
 
     if( !res || !res->ok() )
-      messages += ERR("Failed to read '"+Roxen.html_encode_string(page)+"'\n");
+      messages += ERR( sprintf( _(3, "Failed to read %O."),
+				Roxen.html_encode_string(page)) + "\n" );
 
     function follow( string i ) {
       return lambda(object p, mapping m)
@@ -164,7 +164,8 @@ array size_file( string page, RequestID id )
     types[ page ] = res->type();
     sizes[ page ] = ({ res->size(), strlen(res->headers()) });
   } else {
-    messages += ERR("Cannot read '"+Roxen.html_encode_string(page)+"'");
+    messages += ERR( sprintf( _(3, "Failed to read %O."),
+			      Roxen.html_encode_string(page)) + "\n" );
   }
   return ({ files, sizes, types, messages });
 }
@@ -243,8 +244,8 @@ string simpletag_page_size( string name,
 	    sz+=")";
 
 	  if( ar->src )
-	    return "Cimg of "+fname( ar->src )+sz;
-	  return "Cimg from data"+sz;
+	    return sprintf( _(4, "Cimg of %s"), fname( ar->src )+sz );
+	  return sprintf( _(5, "Cimg from data"), sz);
 	}
       }
       else if(sscanf( f, internal + "graphic_text%*[^$]$%s", f ) == 2 )
@@ -270,7 +271,7 @@ string simpletag_page_size( string name,
 		    "<td align='right'><font color='black' size='-1'>%.1f</font>"
 		    "</td><td align='right'><font color='black' size='-1'>%d"
 		    "</font></td>"
-	    "<td align='right'><font color='black' size='-1'>%d%%</font></td>"
+		    "<td align='right'><font color='black' size='-1'>%d%%</font></td>"
 		    "</tr>\n",
 		    f, `+(@sz)/1024.0, sz[1],pct );
   };
@@ -283,10 +284,10 @@ string simpletag_page_size( string name,
   }
 
   res += "<table width='100%' cellpadding='0' cellspacing='0'>\n"
-    "  <tr><th align='left'><font size='-1' color='black'>File</font></th>"
-    "<th align='right'><font size='-1' color='black'>Size (kb)</font></th>"
-    "<th align='right'><font size='-1' color='black'>&nbsp; Headers (b)</font></th>"
-    "<th align='right'><font size='-1' color='black'>&nbsp; % of page</font></td></tr>"
+    "  <tr><th align='left'><font size='-1' color='black'>"+_(6,"File")+"</font></th>"
+    "<th align='right'><font size='-1' color='black'>"+_(7,"Size (kb)")+"</font></th>"
+    "<th align='right'><font size='-1' color='black'>&nbsp; "+_(8,"Headers (b)")+"</font></th>"
+    "<th align='right'><font size='-1' color='black'>&nbsp; "+_(9,"% of page")+"</font></td></tr>"
     "<tr><td colspan='4'><hr noshade='noshade' size='1'></td></tr>";
 
   foreach( files, string file )
@@ -302,8 +303,10 @@ string simpletag_page_size( string name,
 
   if( what->summary )
   {
-    res += sprintf( "\n<tr><td><font color='black' size='-1'><b>Total size:</b></font></td><td align='right'><font color='black' size='-1'>%.1f</font></td><td align='right'><font color='black' size='-1'>%d</font></td><td>&nbsp;</td></tr>",
-		    total/1024.0, total_headers );
+    res += sprintf( "\n<tr><td><font color='black' size='-1'><b>%s</b></font></td>"
+		    "<td align='right'><font color='black' size='-1'>%.1f</font></td>"
+		    "<td align='right'><font color='black' size='-1'>%d</font></td><td>&nbsp;</td></tr>",
+		    _(10,"Total size:"), total/1024.0, total_headers );
     res += "<tr><td colspan='4'><hr noshade size='1'></td></tr>";
   }
 
@@ -311,8 +314,8 @@ string simpletag_page_size( string name,
   if( what->dltime )
   {
     int i = -1;
-    res += "<b><font size='-1'>Estimated download time:</font></b> "
-	   "(bandwidth in kb/s)\n<table><tr>";
+    res += "<b><font size='-1'>" + _(11,"Estimated download time:") + "</font></b> " +
+	   _(12,"(bandwidth in kb/s)") + "\n<table><tr>";
     foreach( (args->speeds?(array(float))(args->speeds/",")
 	      :({ 28.8, 56.0, 64.0, 256.0, 384.0,1024.0 })), float kbit )
     {
@@ -345,8 +348,8 @@ string simpletag_page_size( string name,
     res += "<table>";
     if( ((total*8) / 56000)  > 20 )
     {
-      res += WARN("This page takes more than 20 seconds to download over a "
-		  "56Kbit/sec modem.");
+      res += WARN(_(13,"This page takes more than 20 seconds to download over a "
+		  "56Kbit/sec modem."));
       foreach( files, string f )
       {
 	if( 100*`+(@sizes[f])/total > mpct/3 )
@@ -358,8 +361,8 @@ string simpletag_page_size( string name,
 	      Image.Image i=Image.JPEG.decode( do_read_file( f, id )->data() );
 	      if( (i->xsize() > 1024) || (i->ysize() > 1024) )
 	      {
-		res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
-				    "people can easily view on screen.",
+		res += NOTE(sprintf(_(14,"The image %s (%dx%d) is larger than most "
+				      "people can easily view on screen."),
 				    fname(f),i->xsize(), i->ysize()));
 	      }
 	      else
@@ -373,14 +376,15 @@ string simpletag_page_size( string name,
 		string mm = "";
 		if( sz[ 75 ] < sizes[f][0] )
 		{
-		  mm = ("The image "+fname(f)+
-			" is compressed with a very high "
-			"JPEG-quality. Try lowering it.");
+		  mm = sprintf( _(15,"The image %s "
+				  "is compressed with a very high "
+				  "JPEG-quality. Try lowering it."),
+				fname(f) );
 		  ds = 0;
 		}
 		else if( sz[ 50 ] < sizes[f][0] )
 		{
-		  mm = ("The image "+fname(f)+" might be compressed better.");
+		  mm = sprintf( _(16,"The image %s might be compressed better."), fname(f) );
 		  ds = 1;
 		}
 		else
@@ -390,7 +394,7 @@ string simpletag_page_size( string name,
 		  if( ds )
 		  {
 		    res+=WARN(sprintf(replace(mm,"%","%%")+
-				      " Some suggestions: "
+				      " " + _(17,"Some suggestions:") + " "
 				      "<a target='_foo' href='%s'>50%%: -%.1fKb</a>, "
 				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
 				      imglink(f, "JPEG", 50,id),
@@ -399,7 +403,7 @@ string simpletag_page_size( string name,
 				      (sizes[f][0]-sz[25])/1024.0 ) );
 		  } else {
 		    res+=WARN(sprintf(replace(mm,"%","%%")+
-				      " Some suggestions: <a target='_foo' href='%s'>75%%: "
+				      " " + _(17,"Some suggestions:") + " <a target='_foo' href='%s'>75%%: "
 				      "-%.1fKb</a>, <a target='_foo' href='%s'>"
 				      "50%%: -%.1fKb</a>, "
 				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
@@ -413,8 +417,7 @@ string simpletag_page_size( string name,
 		}
 	      }
 	    } else {
-	      res += WARN("The image "+fname(f)+
-			  " is huge. Try making it smaller");
+	      res += WARN(sprintf( _(18,"The image %s is huge. Try making it smaller"), fname(f) ));
 	    }
 	    break;
 	  case "image/gif":
@@ -424,8 +427,8 @@ string simpletag_page_size( string name,
 	    Image.Image a = _i->alpha;
 
 	    if( (i->xsize() > 1024) || (i->ysize() > 1024) )
-	      res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
-				  "people can easily view on screen.",
+	      res += NOTE(sprintf(_(14,"The image %s (%dx%d) is larger than most "
+				    "people can easily view on screen."),
 				  fname(f), i->xsize(), i->ysize()));
 	    else
 	    {
@@ -449,14 +452,14 @@ string simpletag_page_size( string name,
 	      string mm = "";
 	      if( sz[ 128 ] < sizes[f][0] )
 	      {
-		mm = ("The image "+fname(f)+" is compressed with a very high "
-		      "number of colors.");
+		mm = sprintf( _(19,"The image %s is compressed with a very high "
+				"number of colors."), fname(f) );
 		ds = 0;
 	      }
 	      else if( sz[ 32 ] < sizes[f][0] )
 	      {
-		mm = ("The image "+fname(f)+" might be compressed better "
-		      "with fewer colors.");
+		mm = sprintf( _(20,"The image %s might be compressed better "
+				"with fewer colors."), fname(f) );
 		ds = 1;
 	      }
 	      else
@@ -464,13 +467,13 @@ string simpletag_page_size( string name,
 	      if( ds < 2 )
 	      {
 		if( ds )
-		  res+=WARN(sprintf(replace(mm,"%","%%")+" Some suggestions: "
-				    "32: -%.1fKb, 8: -%.1fKb",
+		  res+=WARN(sprintf(replace(mm,"%","%%")+" " + _(17,"Some suggestions:") +
+				    " 32: -%.1fKb, 8: -%.1fKb",
 				    (sizes[f][0]-sz[32])/1024.0,
 				    (sizes[f][0]-sz[8])/1024.0 ) );
 		else
 		  res+=WARN(sprintf(replace(mm,"%","%%")+
-				    " Some suggestions: 128: "
+				    " "+_(17,"Some suggestions:")+" 128: "
 				    "-%.1fKb, 32: -%.1fKb, 8: -%.1fKb",
 				    (sizes[f][0]-sz[128])/1024.0,
 				    (sizes[f][0]-sz[32])/1024.0,
@@ -478,8 +481,8 @@ string simpletag_page_size( string name,
 	      }
 	    }
 #else // constant(Image.GIF) && constant(Image.GIF.encode)
-	    res += NOTE("Could not decode/encode GIF image. "
-			"This server lacks LZW support.");
+	    res += NOTE(_(21,"Could not decode/encode GIF image. "
+			  "This server lacks LZW support."));
 #endif // constant(Image.GIF) && constant(Image.GIF.encode)
 	    break;
 	}
