@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.531 2003/01/21 13:08:14 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.532 2003/06/10 12:22:14 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1547,6 +1547,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
 	  if(mappingp(fid))
 	  {
+	    TRACE_LEAVE(""); // Location module [...]
 	    TRACE_LEAVE(examine_return_mapping(fid));
 	    TIMER_END(location_modules);
 	    return fid;
@@ -1584,6 +1585,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	// the mountpoint is /local/. It will slow things down, but...
 
 	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
+	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
 
 	// Keep query (if any).
@@ -1613,6 +1615,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       LOCK(dir_module);
       TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
+      TRACE_LEAVE("");
       UNLOCK();
       PROF_LEAVE(dir_module->module_name,"directory");
     }
