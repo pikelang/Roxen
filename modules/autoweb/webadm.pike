@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.32 1998/09/30 04:26:17 js Exp $
+ * $Id: webadm.pike,v 1.33 1998/09/30 15:45:06 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.32 1998/09/30 04:26:17 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.33 1998/09/30 15:45:06 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -15,6 +15,7 @@ inherit "module";
 inherit "roxenlib";
 import .AutoWeb;
 
+#define DB_ALIAS "autosite"
 string tabsdir, templatesdir;
 mapping tabs;
 array tablist;
@@ -25,12 +26,22 @@ array register_module()
 	     "",0,1 });
 }
 
+object get_db(string db_alias, object id) {
+  object db = id->conf->sql_connect(db_alias);
+  if(!db) {
+    werror("Can not connect to database '"+db_alias+"'.");
+    return 0;
+  }
+  return db;
+}
 
 mapping credentials;
 
 void update_customer_cache(object id)
 {
-  object db = id->conf->call_provider("sql","sql_object",id);
+  object db = get_db(DB_ALIAS, id);
+  if(!db)
+    return;
   array a = db->query("select id,user_id,password from customers");
   mapping new_credentials = ([]);
   if(!catch {
@@ -52,7 +63,9 @@ string tag_update(string tag_name, mapping args, object id)
 
 string customer_name(string tag_name, mapping args, object id)
 {
-  object db = id->conf->call_provider("sql","sql_object",id);
+  object db = get_db(DB_ALIAS, id);
+  if(!db)
+    return "";
   string query = ("select name from customers "
 		  "where id='"+id->misc->customer_id+"'");
   array result = db->query(query);
@@ -121,42 +134,47 @@ string mean_color(string c1, string c2)
 
 string update_template(string tag_name, mapping args, object id)
 {
-  object db = id->conf->call_provider("sql","sql_object",id);
+  object db = get_db(DB_ALIAS, id);
+  if(!db)
+    return "";
   string templatesdir = combine_path(roxen->filename(this)+
 				     "/", "../../../")+"templates/";
   string destfile = query("searchpath")+
 		    (string)id->variables->customer_id+
 		    "/templates/default.tmpl";
-
-  array scheme =
-    db->query ("select * from customers where "
-	       "id='"+id->variables->customer_id+"'");
+  // Fetch active scheme
+  array scheme = db->query ("select * from customers where "
+			    "id='"+id->variables->customer_id+"'");
   string scheme_id = 0;
   if(sizeof(scheme))
     scheme_id = scheme[0]->template_scheme_id;
   
+  // Fetch variables from database
+  array default_variables = db->query("SELECT * "
+				      "  FROM template_vars");
+  mapping default_vars = ([ ]);
+  foreach(default_variables, mapping variable)
+    default_vars[variable->name] = variable->default_value;
+  
+  array variables = db->query("SELECT * "
+			      "  FROM customers_schemes_vars "
+			      "  WHERE scheme_id='"+scheme_id+"'");
+  mapping vars = ([ ]);
+  foreach(variables, mapping variable)
+    vars[variable->name] = variable->default_value;
+  vars = default_vars + vars;
+  
   // Template
-  string template_filename =
-    get_variable_value(db, scheme_id, "template_name");
+  string template_filename = vars->template_name;
   if(!template_filename)
     return "";
   
   string template = Stdio.read_bytes(templatesdir+template_filename);
   if(!stringp(template)) {
-    werror("Can not open file '%s'\n",
-	   templatesdir+template_filename);
+    werror("Can not open file '%s'\n", templatesdir+template_filename);
     return "";
   }
   
-  // Fetch variables from database
-  array variables =
-    db->query("SELECT name "
-	      "  FROM template_vars");
-  
-  mapping vars=([]);
-  foreach(variables, mapping variable)
-    vars[variable->name] = get_variable_value(db, scheme_id, variable->name);
-
   if(vars["bg_image"]&&sizeof(vars["bg_image"])) {
     vars["bg_image_color_2"] = vars["bg_color"];
     vars["bg_color"] = mean_color(vars->bg_color,
@@ -201,7 +219,10 @@ string tag_as_get_variable(string tag, mapping args, object id)
 {
   // Tag to get the value for a given scheme_id and a variable name.
   // Supports default values.
-  object db = id->conf->call_provider("sql","sql_object",id);
+  object db = get_db(DB_ALIAS, id);
+  if(!db)
+    return "";
+
   if(args->scheme_id && args->variable) {
     string value;
     value = get_variable_value(db, args->scheme_id, args->variable);

@@ -5,7 +5,8 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.25 1998/09/30 04:26:15 js Exp $";
+#define DB_ALIAS "autosite"
+constant cvs_version="$Id: autositefs.pike,v 1.26 1998/09/30 15:45:05 wellhard Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -46,8 +47,9 @@ string get_host(object id)
   
 void update_host_cache(object id)
 {
-  object db=id->conf->call_provider("sql","sql_object",id);
-  array a=db->query("select rr_owner,customer_id,domain from dns where rr_type='A'");
+  object db=id->conf->sql_connect(DB_ALIAS);
+  array a=
+    db->query("select rr_owner,customer_id,domain from dns where rr_type='A'");
   mapping new_host_to_id=([]);
   if(!catch {
     Array.map(a,lambda(mapping entry, mapping m)
@@ -63,7 +65,7 @@ void update_host_cache(object id)
 
 void update_hidden_sites(object id)
 {
-  object db=id->conf->call_provider("sql","sql_object",id);
+  object db=id->conf->sql_connect(DB_ALIAS);
   array a=db->query("select customer_id from features where feature='Hidden Site'");
   hidden_sites=(< @a->customer_id >);
 }
@@ -101,8 +103,9 @@ int hiddenp(object id)
 
 int validate_user(object id)
 {
-  array a=id->conf->get_provider("sql")->sql_object(id)->
-    query("select user_id,password from customers where id='"+id->misc->customer_id+"'");
+  array a=id->conf->sql_connect(DB_ALIAS)->
+    query("select user_id,password from customers where id='"+
+	  id->misc->customer_id+"'");
   if(!sizeof(a))
     return 0;
   else
