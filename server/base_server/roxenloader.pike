@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.91 1999/08/30 09:36:34 per Exp $
+ * $Id: roxenloader.pike,v 1.92 1999/08/30 09:41:47 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.91 1999/08/30 09:36:34 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.92 1999/08/30 09:41:47 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -850,7 +850,7 @@ int main(mixed ... args)
   load_roxen();
   int retval = roxen->main(@args);
   perror_status_reported = 0;
-  roxen_perror("\n-- Total boot time %4.3f seconds ---------------------------\n\n",
+  roxen_perror("\n-- Total boot time %4.1f seconds ---------------------------\n\n",
 	       (gethrtime()-start_time)/1000000.0);
   return(retval);
 }
