@@ -186,7 +186,8 @@ class TagEmitAPEvents
 	where += ({ WhereEqual(replace(name, "-", "_"), args[name]) });
     };
     
-    map(({ "config", "config", "file", "event-class", "event-name"}), fix_arg);
+    map(({ "config", "config", "file", "event-class", "event-name", "session"}),
+	   fix_arg);
     
     if(sizeof(args["file-glob"]||""))
       where += ({ WhereLike("file", args["file-glob"]) });
