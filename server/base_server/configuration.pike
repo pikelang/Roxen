@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.533 2003/06/10 12:22:13 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.534 2003/06/11 15:47:42 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1788,52 +1788,64 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 
   switch(id->method) {
   case "PROPFIND":	// Get meta data.
-    Parser.XML.Tree.Node propfind =
-      xml_data->get_first_element("DAV:propfind", 1);
-    if (!propfind) {
-      return Roxen.http_low_answer(400, "Missing DAV:propfind.");
-    }
-    /* Valid children of <DAV:propfind> are
-     *   <DAV:propname />
-     * or
-     *   <DAV:allprop />
-     * or
-     *   <DAV:prop>{propertylist}*</DAV:prop>
-     */
-    foreach(propfind->get_children(), Parser.XML.Tree.Node prop) {
-      switch(prop->get_full_name()) {
-      case "DAV:propname":
-	if (recur_func)
-	  return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
-	recur_func = lambda(string path, int d, RoxenModule module,
-			    MultiStatus stat, RequestID id) {
-		       module->recurse_find_properties(path, "DAV:propname", d,
-						       stat, id);
-		     };
-	break;
-      case "DAV:allprop":
-	if (recur_func)
-	  return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
-	recur_func = lambda(string path, int d, RoxenModule module,
-			    MultiStatus stat, RequestID id) {
-		       module->recurse_find_properties(path, "DAV:allprop", d,
-						       stat, id);
-		     };
-	break;
-      case "DAV:prop":
-	if (recur_func)
-	  return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
-	recur_func = lambda(string path, int d, RoxenModule module,
-			    MultiStatus stat, RequestID id,
-			    multiset(string) filt) {
-		       module->recurse_find_properties(path, "DAV:prop", d,
-						       stat, id, filt);
-		     };
-	extras = ({ (multiset)(prop->get_children()->get_full_name()) });
-	break;
-      default:
-	break;
+    if (xml_data) {
+      Parser.XML.Tree.Node propfind =
+	xml_data->get_first_element("DAV:propfind", 1);
+      if (!propfind) {
+	return Roxen.http_low_answer(400, "Missing DAV:propfind.");
       }
+      /* Valid children of <DAV:propfind> are
+       *   <DAV:propname />
+       * or
+       *   <DAV:allprop />
+       * or
+       *   <DAV:prop>{propertylist}*</DAV:prop>
+       */
+      foreach(propfind->get_children(), Parser.XML.Tree.Node prop) {
+	switch(prop->get_full_name()) {
+	case "DAV:propname":
+	  if (recur_func)
+	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	  recur_func = lambda(string path, int d, RoxenModule module,
+			      MultiStatus stat, RequestID id) {
+			 module->recurse_find_properties(path, "DAV:propname", d,
+							 stat, id);
+		       };
+	  break;
+	case "DAV:allprop":
+	  if (recur_func)
+	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	  recur_func = lambda(string path, int d, RoxenModule module,
+			      MultiStatus stat, RequestID id) {
+			 module->recurse_find_properties(path, "DAV:allprop", d,
+							 stat, id);
+		       };
+	  break;
+	case "DAV:prop":
+	  if (recur_func)
+	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	  recur_func = lambda(string path, int d, RoxenModule module,
+			      MultiStatus stat, RequestID id,
+			      multiset(string) filt) {
+			 module->recurse_find_properties(path, "DAV:prop", d,
+							 stat, id, filt);
+		       };
+	  extras = ({ (multiset)(prop->get_children()->get_full_name()) });
+	  break;
+	default:
+	  break;
+	}
+      }
+    } else {
+      // RFC 2518 8.1:
+      //   A client may choose not to submit a request body. An empty
+      //   PROPFIND request body MUST be treated as a request for the
+      //   names and values of all properties.
+      recur_func = lambda(string path, int d, RoxenModule module,
+			  MultiStatus stat, RequestID id) {
+		     module->recurse_find_properties(path, "DAV:allprop", d,
+						     stat, id);
+		   };
     }
     break;
   case "PROPPATCH":	// Set/delete meta data.
@@ -1894,7 +1906,13 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.2).");
   }
   // FIXME: Security, DoS, etc...
-  MultiStatus result = MultiStatus();
+  MultiStatus result =
+    MultiStatus()->prefix(sprintf("%s://%s%s%s",
+				  id->port_obj->prot_name,
+				  id->misc->host || id->port_obj->ip,
+				  (id->port_obj->port == id->port_obj->port)?
+				  "":(string)id->port_obj->port,
+				  id->port_obj->path||""));
   string href = id->not_query;
   string href_prefix = combine_path(href, "./");
   foreach(location_modules(), [string loc, function fun]) {
