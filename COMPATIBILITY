@@ -31,3 +31,16 @@ Between InternetServer 2.4 and Roxen WebServer <= 2.4
    in that directory. Either all server configurations and the global
    settings has to be updated or a symlink must be added.
      ln -s server/data server/etc
+
+ - The argument cache plugins are now loaded from the directories
+   plugins/arg_cache and ../local/plugins/arg_cache. This affects
+   users using local argument cache plugins. This can be solved by
+   moving or symlinking the old local plugins directory to the new
+   location.
+     ln -s local/arg_cache_plugins local/plugins/arg_cache
+
+ - The protocol plugins are now loaded from the directories
+   plugins/protocols and ../local/plugins/protocols. This affects
+   users using local protocol plugins. This can be solved by moving or
+   symlinking the old local plugins directory to the new location.
+     ln -s local/protocols local/plugins/protocols
