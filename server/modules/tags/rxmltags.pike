@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.373 2002/06/11 14:27:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.374 2002/06/11 14:37:10 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2782,6 +2782,9 @@ class UserTag {
     mapping vars;
     string raw_tag_text;
     int do_iterate;
+#ifdef MODULE_LEVEL_SECURITY
+    object check_security_object = this_module();
+#endif
 
     constant is_user_tag = 1;
     constant is_contents_nest_tag = 1;
