@@ -1,18 +1,14 @@
-// $Id: module.h,v 1.37 2000/04/16 22:21:17 nilsson Exp $
+// $Id: module.h,v 1.38 2000/07/04 03:44:36 per Exp $
 #ifndef ROXEN_MODULE_H
-
 #define ROXEN_MODULE_H
-#ifndef MODULE_CONSTANTS_H
-#include <module_constants.h>
-#endif
-// Fast but unreliable.
-#define QUERY(var)	variables[ #var ][VAR_VALUE]
+// somewhat faster than 'query'
+#define QUERY(var)	variables[ #var ]->query()
 
 // Like query, but for global variables.
 #ifdef IN_ROXEN
-#define GLOBVAR(x) variables[ #x ][VAR_VALUE]
+#define GLOBVAR(x) variables[ #x ]->query()
 #else /* !IN_ROXEN */
-#define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
+#define GLOBVAR(x) roxenp()->variables[ #x ]->query()
 #endif /* IN_ROXEN */
 
 #define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
@@ -22,4 +18,44 @@
 #define ROXEN_MAJOR_VERSION 2
 #define ROXEN_MINOR_VERSION 1
 
+
+#define TYPE_STRING            1
+#define TYPE_FILE              2
+#define TYPE_INT               3
+#define TYPE_DIR               4
+#define TYPE_STRING_LIST       5
+#define TYPE_MULTIPLE_STRING   5
+#define TYPE_INT_LIST          6
+#define TYPE_MULTIPLE_INT      6
+#define TYPE_FLAG              7
+#define TYPE_TOGGLE            7
+#define TYPE_DIR_LIST	       9
+#define TYPE_FILE_LIST        10
+#define TYPE_LOCATION         11
+#define TYPE_TEXT_FIELD       13
+#define TYPE_TEXT             13
+#define TYPE_PASSWORD         14
+#define TYPE_FLOAT            15
+#define TYPE_MODULE           17
+#define TYPE_FONT             19
+#define TYPE_CUSTOM           20
+#define TYPE_URL              21
+#define TYPE_URL_LIST         22
+
+#define VAR_TYPE_MASK        255
+
+
+/* Not normally needed. */
+#define VAR_EXPERT         256
+#define VAR_MORE           512
+#define VAR_DEVELOPER     1024
+#define VAR_INITIAL       2048
+
+#define MOD_ALLOW	         1
+#define MOD_USER	         2
+#define MOD_DENY	         3
+#define MOD_PROXY_USER	         4
+#define MOD_ACCEPT	         5
+#define MOD_ACCEPT_USER	 	 6
+#define MOD_ACCEPT_PROXY_USER	 7
 #endif
