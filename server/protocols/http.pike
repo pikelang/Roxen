@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.217 2000/03/10 17:56:29 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.218 2000/03/15 17:16:07 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -1119,32 +1119,28 @@ string format_backtrace(array bt, int eid)
   bt = map( bt, lambda( string q ){
                   return highlight_pike("foo", ([ "nopre":1 ]), q);
                 } );
-  string reason = roxen.diagnose_error( bt );
   if(sizeof(bt) == 1) // No backtrace?!
     bt += ({ "Unknown error, no backtrace."});
-  string res = ("<title>Internal Server Error</title>"
-		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
-		"<table width=\"100%\" border=0 cellpadding=0 cellspacing=0>"
-		"<tr><td valign=bottom align=left><img border=0 "
-		"src=\""+(conf?"/internal-roxen-":"/img/")+
-		"roxen-icon-gray.gif\" alt=\"\"></td>"
-		"<td>&nbsp;</td><td width=100% height=39>"
-		"<table cellpadding=0 cellspacing=0 width=100% border=0>"
-		"<td width=\"100%\" align=right valigh=center height=28>"
-		"<b><font size=+1>Failed to complete your request</font>"
-		"</b></td></tr><tr width=\"100%\"><td bgcolor=\"#003366\" "
-		"align=right height=12 width=\"100%\"><font color=white "
-		"size=-2>Internal Server Error&nbsp;&nbsp;</font></td>"
-		"</tr></table></td></tr></table>"
-		"<p>\n\n"
-		"<font size=+2 color=darkred>"
-		"<img alt=\"\" hspace=10 align=left src="+
-		(conf?"/internal-roxen-":"/img/") +"manual-warning.gif>"
-		+bt[0]+"</font><br>\n"
-		"The error occured while calling <b>"+
-                bt[1]+"</b><p>\n"
-		+(reason?reason+"<p>":"")
-		+"<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
+  string res = (#"<html><head><title>Internal Server Error</title></head>
+<body bgcolor=\"white\" text=\"black\" link=\"darkblue\" vlink=\"darkblue\">
+<table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>
+<td valign=\"bottom\" align=\"left\" rowspan=\"2\">
+  <img border=\"0\" src=\"internal-roxen-roxen.gif\" alt=\"\" hspace=\"5\" vspace=\"1\"/>&nbsp;
+</td>
+<td width=\"100%\" height=\"100%\" align=\"right\" valign=\"bottom\">
+ <b><font size=+1>Failed to complete your request</font></b>
+</td></tr>
+<tr><td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" height=\"0%\" width=\"100%\">
+ <tr><td bgcolor=\"#003366\" align=\"right\" width=\"100%\">
+  <font color=\"white\" size=\"-2\">Internal Server Error&nbsp;&nbsp;</font>
+ </td></tr></table>
+</td></tr></table>
+<p>
+<font size=\"+2\" color=\"darkred\">"
+  +bt[0]+"</font><br />\n"
+  "The error occured while calling <b>"+
+  bt[1]+"</b></p>\n"
+  +"<br /><h3>Complete Backtrace:</h3>\n\n<ul>");
 
   int q = sizeof(bt)-1;
   foreach(bt[1..], string line)
@@ -1164,8 +1160,8 @@ string format_backtrace(array bt, int eid)
   }
   res += ("</ul><p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
 	  "Generate text-only version of this error message, for bug reports"+
-	  "</a></b>");
-  return res+"</body>";
+	  "</a></b></p>");
+  return res+"</body></html>";
 }
 
 string generate_bugreport(array from, string u, string rd)
