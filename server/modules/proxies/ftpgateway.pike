@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.36 2000/07/03 06:15:27 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.37 2000/11/23 05:12:18 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -42,7 +42,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.36 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.37 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -859,7 +859,7 @@ class Request {
       array f;
       if(0) // Silly
 	if(id->realauth && sizeof(f = id->realauth/":") == 2)
-	  write_server("pass "+f[1]);
+	  write_server("pass "+(f[1..]*":"));
 	else
 	  id->end(AUTH_REQUIRED);
       else if (passw)
