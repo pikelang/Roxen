@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.261 2000/11/24 16:50:34 per Exp $
+// $Id: rxml.pike,v 1.262 2000/12/05 23:06:17 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1430,6 +1430,23 @@ class TagEmit {
   constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
 
+  class TagDelimiter {
+    inherit RXML.Tag;
+    constant name = "delimiter";
+
+    class Frame {
+      inherit RXML.Frame;
+
+      array do_return(RequestID id) {
+	if( RXML.get_var("counter") < id->misc->emit_rowinfo )
+	  result = content;
+	return 0;
+      }
+    }
+  }
+
+  RXML.TagSet internal = RXML.TagSet("TagEmit.internal", ({ TagDelimiter() }) );
+
   // A slightly modified Array.dwim_sort_func
   static int compare(string a0,string b0) {
     if (!a0) {
@@ -1455,9 +1472,11 @@ class TagEmit {
 
   class Frame {
     inherit RXML.Frame;
+    RXML.TagSet additional_tags = internal;
     string scope_name;
-    mapping vars=(["counter":0]);
+    mapping vars;
 
+    int upper_size;
     object plugin;
     array(mapping(string:mixed))|function res;
 
@@ -1469,6 +1488,7 @@ class TagEmit {
       res=plugin->get_dataset(args, id);
       TRACE_LEAVE("");
       if(arrayp(res)) {
+	vars = (["counter":0]);
 	if(args->sort && !plugin->sort)
 	{
 	  array(string) order = (args->sort - " ")/"," - ({ "" });
@@ -1511,6 +1531,10 @@ class TagEmit {
 	if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
 	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
+	if(id->misc->emit_rowinfo)
+	  upper_size = id->misc->emit_rowinfo;
+	id->misc->emit_rowinfo = sizeof(res);
+
 	do_iterate=array_iterate;
 
 	if(sizeof(res))
@@ -1523,6 +1547,7 @@ class TagEmit {
       if(functionp(res)) {
 	do_iterate=function_iterate;
 	LAST_IF_TRUE = 1;
+	upper_size = 0;
 	return 0;
       }
       parse_error("Wrong return type from emit source plugin.\n");
@@ -1541,6 +1566,13 @@ class TagEmit {
       vars=res[counter++];
       vars->counter=counter;
       return 1;
+    }
+
+    array do_return(RequestID id) {
+      result = content;
+      if(upper_size)
+	id->misc->emit_rowinfo = upper_size;
+      return 0;
     }
 
   }
