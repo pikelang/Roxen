@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.29 2003/07/02 09:04:10 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.30 2003/07/03 14:59:46 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -227,14 +227,10 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   Protocols.LDAP.client con;
   array(mapping(string:mixed))|object|int result;
-  function ldap_connect = id->conf->ldap_connect;
   mixed error;
   mapping|int attrvals;
 
-  if(ldap_connect)
-    error = catch(con = ldap_connect(host));
-  else
-    error = catch(con = Protocols.LDAP.client(host));
+  error = catch(con = Protocols.LDAP.client(host));
 
   if (error) {
     RXML.run_error("Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]));
@@ -407,15 +403,6 @@ class TagLDAPQuery {
 }
 
 // ------------------- Callback functions -------------------------
-
-Protocols.LDAP.client ldap_object(void|string a_host)
-{
-  string host = stringp(a_host)?a_host:query("server");
-  Protocols.LDAP.client con;
-  function ldap_connect = conf->ldap_connect;
-  mixed error;
-  return ldap_connect(host);
-}
 
 string query_provides()
 {
