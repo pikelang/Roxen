@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.15 2002/04/24 12:53:20 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.16 2002/06/20 10:13:25 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -36,7 +36,7 @@ static inherit "http";
 
 string status_info="";
 
-constant module_type = MODULE_LOCATION;
+constant module_type = MODULE_LOCATION | MODULE_TAG | MODULE_PROVIDER;
 
 LocaleString module_name = LOCALE(1,"Java: Java Web Application bridge");
 LocaleString module_doc =
@@ -676,6 +676,11 @@ mapping(string:function) query_action_buttons()
   return ([ "Load all servlets":load_all ]);
 }
 
+multiset(string) query_provides()
+{
+  return (< "webapp" >);
+}
+
 void load_all()
 {
   WEBAPP_WERR("Loading all servlets");
@@ -748,10 +753,14 @@ class BaseWrapper
         WRAP_WERR(sprintf("found header!"));
         headers = (header/"\r\n")-({ "" });
 
+        if (_file)
+          set_collect(0);
+        else
+          set_collect(2);
+        
         if (lower_case((headers[0]/" ")[1]) != "200") {
           WRAP_WERR(sprintf("status: '%s'",
-                              lower_case((headers[0]/" ")[1]) ));
-          set_collect(0);
+                            lower_case((headers[0]/" ")[1]) ));
         }
         else {
           string name, value;
@@ -856,7 +865,7 @@ class BaseWrapper
     if (!zero_type(val)) return val;
 
     //WRAP_WERR(sprintf("predef::`->(%s)", n));
-    return predef::`->(_file, n);
+    return _file && predef::`->(_file, n);
   }
 
   void create(object file, object id)
@@ -906,7 +915,16 @@ class RXMLParseWrapper
                           "no-cache");
     _id->misc->cacheable = 0;
     set_id_headers();
-    mapping res = Roxen.http_rxml_answer(get_data(1), _id);
+    mapping res;
+    if (collect == 1)
+      res = Roxen.http_rxml_answer(get_data(1), _id);
+    else
+    {
+      string ct = content_type;
+      if (!ct || strlen(ct) == 0)
+        ct = "text/plain";
+      res = Roxen.http_string_answer(get_data(1), ct);
+    }
 //     WRAP_WERR(sprintf("_id->misc=%O",
 //                       mkmapping(indices(_id->misc), values(_id->misc))));
     return res;
@@ -1243,11 +1261,12 @@ mixed find_file( string f, RequestID id )
         else {
           object rxml_wrapper;
           object org_fd = id->my_fd;
-          org_fd->set_read_callback(0);
-          org_fd->set_close_callback(0);
+          
+          org_fd && org_fd->set_read_callback(0);
+          org_fd && org_fd->set_close_callback(0);
 
           // Don't set to blocking mode if SSL.
-          if (!org_fd->CipherSpec) {
+          if (org_fd && !org_fd->CipherSpec) {
             org_fd->set_blocking();
           }
 
@@ -1269,6 +1288,7 @@ mixed find_file( string f, RequestID id )
                 serv = map_servlet_chain(chain_wrapper->content_type);
                 if (serv && serv->initialized == 1) {
                   id->data = chain_wrapper->get_data();
+                  //werror("Chained data:\n" + hexdump(id->data));
                   servlet = serv;
                 }
                 else
@@ -1333,6 +1353,218 @@ mixed find_file( string f, RequestID id )
       {
         return 0;
       }
+  }
+}
+
+mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
+{
+  string oldf = f;
+  WEBAPP_WERR("Request for \""+f+"\"" +
+		  (id->misc->internal_get ? " (internal)" : ""));
+
+  string norm_f;
+
+  catch {
+    /* NOTE: NORMALIZE_PATH() may throw errors. */
+    norm_f = NORMALIZE_PATH(norm_f = decode_path(path + f));
+#if constant(system.normalize_path)
+    if (!has_prefix(norm_f, normalized_path) &&
+#ifdef __NT__
+	(norm_f+"\\" != normalized_path)
+#else /* !__NT__ */
+	(norm_f+"/" != normalized_path)
+#endif /* __NT__ */
+	) {
+      errors++;
+      report_error(LOCALE(0, "Path verification of %O failed:\n"
+			  "%O is not a prefix of %O\n"
+			  ), oldf, normalized_path, norm_f);
+      return "<h2>File " + f + " exists, but access forbidden "
+			     "by user</h2>";
+    }
+    
+    /* Adjust not_query */
+    id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
+					 "\\", "/");
+    if (sizeof(oldf) && (oldf[-1] == '/')) {
+      id->not_query += "/";
+    }
+
+    /* Adjust f */
+    f = replace(norm_f[sizeof(normalized_path)..], "\\", "/");
+    if (sizeof(oldf) && (oldf[-1] == '/')) {
+      f += "/";
+    }
+#endif /* constant(system.normalize_path) */
+  };
+
+
+  mapping(string:string|mapping|Servlet.servlet) servlet;
+  string loc = id->misc->mountpoint = query("mountpoint");
+  if (loc[-1] == '/')
+    id->misc->mountpoint = loc[..sizeof(loc)-2];
+
+  if (name && sizeof(name) > 0)
+  {
+    WEBAPP_WERR(sprintf("call_servlet: name=%s, f=%s", name, f));
+    servlet = servlets[name];
+    servlet && load_servlet(servlet);
+    id->misc->servlet_path = combine_path("/", f);
+    id->misc->path_info = 0;
+  }
+  else
+    servlet = map_servlet(f, id);
+
+  if (!servlet) {
+      frame->parse_error("Servlet not found!\n");
+  }
+  else {
+    if (servlet->initialized == 1)
+      {
+        if(id->my_fd == 0 && id->misc->trace_enter)
+          ; /* In "Resolve path...", kluge to avoid backtrace. */
+        else {
+          object rxml_wrapper;
+
+          if (mixed e = catch {
+            rxml_wrapper = RXMLParseWrapper(0, id);
+	    id = id->clone_me();
+            id->my_fd = rxml_wrapper;
+
+#ifdef WEBAPP_CHAINING
+            object chain_wrapper;
+            mapping(string:string|mapping|Servlet.servlet) serv;
+            int x=1;
+            do {
+              WEBAPP_WERR(sprintf("Chaining preparing: '%s'", servlet["servlet-name"]));
+              chain_wrapper = ServletChainingWrapper(rxml_wrapper, id);
+              id->my_fd = chain_wrapper;
+              servlet->servlet->service(id);
+              if (chain_wrapper->collect) {
+                serv = map_servlet_chain(chain_wrapper->content_type);
+                if (serv && serv->initialized == 1) {
+                  id->data = chain_wrapper->get_data();
+                  //werror("Chained data:\n" + hexdump(id->data));
+                  servlet = serv;
+                }
+                else
+                  x=0xffff;
+              }
+              WEBAPP_WERR(sprintf("Chaining: x=%d, collect=%d",
+                                  x, chain_wrapper->collect));
+              // Limit the chaining to 3 servlets!!
+            } while (x++<3 && chain_wrapper->collect);
+
+            if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
+              id->misc->cacheable = 5;
+              frame->parse_error( "Servlet Error - chaining failed\n"
+                                  "Location: " +
+                                  loc + f + "\n"
+                                  "The servlet you tried to run failed "
+                                  "during chaining. \nPlease contact the "
+                                  "server administrator about this "
+                                  "problem.\n");
+            }
+#else /* WEBAPP_CHAINING */
+            servlet->servlet->service(id);
+#endif /* WEBAPP_CHAINING */
+
+            if (rxml_wrapper->collect) {
+              mixed res = rxml_wrapper->get_result();
+              //WEBAPP_WERR(sprintf("res=%O", res ));
+              
+//               if (res->error)
+//                 RXML_CONTEXT->set_misc (" _error", res->error);
+//               if (res->extra_heads)
+//                 RXML_CONTEXT->extend_scope ("header", res->extra_heads);
+//               foreach(rxml_wrapper->headermap, string h)
+//               {
+//                 if (stringp(rxml_wrapper->headermap[h]))
+//                 {
+//                   WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
+//                                       h,  rxml_wrapper->headermap[h]));
+//                   id->add_response_header(h, rxml_wrapper->headermap[h]);
+//                 }
+//                 else
+//                   foreach(rxml_wrapper->headermap[h], string v)
+//                   {
+//                     WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
+//                                         h,  rxml_wrapper->headermap[h]));
+//                     id->add_response_header(h, v);
+//                   }
+//               }
+              return res["data"];
+            }
+            WEBAPP_WERR(sprintf("rxml_wrapper=%O\n", rxml_wrapper));
+
+          })
+          {
+            throw(e);
+          }
+        }
+        
+        frame->parse_error("Internal Error! Collect not set!\n");
+      }
+    else if  (servlet->initialized == -1)
+      if (servlet->permanent)
+        {
+          WEBAPP_WERR("Permanently unavailable detected in call_servlet");
+          frame->parse_error("Permanently Unavailable\n"
+                             "Location: " +
+                             loc + f + "\n"
+                             "Service is permanently unavailable\n");
+        }
+      else
+        {
+          WEBAPP_WERR("Service unavailable detected in call_servlet");
+          id->misc->cacheable = servlet->retry;
+          frame->parse_error("Service Unavailable\n"
+            "Location: " +
+            loc + f + "\n" +
+            servlet->exc_msg + "\n"
+            "Service is unavailable, try again in " +
+            servlet->retry + " seconds\n");
+        }
+    else
+    {
+      return 0;
+    }
+  }
+}
+
+class TagServlet 
+{
+  inherit RXML.Tag;
+  constant name = "servlet";
+  mapping(string:RXML.Type) req_arg_types = ([
+    "webapp": RXML.t_text(RXML.PEnt)
+  ]);
+  //array(RXML.Type) result_types = ({RXML.t_any});
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_enter(RequestID id) {
+      return 0;
+    }
+
+    array do_return(RequestID id) {
+      WEBAPP_WERR(sprintf("args=%O\n%s\n", args, query_name()));
+      if(!args->uri && !args->name)
+	parse_error("Neither uri nor name specified.\n");
+      foreach (id->conf->get_providers("webapp"), RoxenModule m)
+      {
+        WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
+        if (m->query("tagtarget") == args->webapp)
+        {
+          result = m->call_servlet(this_object(), id, args->uri || "", args->name || "");
+          return 0;
+        }
+      }
+      parse_error("No Web Application with name '" + args->webapp + "' found!\n");
+      return 0;
+    }
+
   }
 }
 
@@ -1552,6 +1784,31 @@ static int invisible_cb(RequestID id, Variable.Variable i )
   return 1;
 }
 
+static string isprint(int c)
+{
+  if (c>=0x20 && c<0x80)
+    return sprintf("%c", c);
+
+  return ".";
+}
+
+static string hexdump(string s)
+{
+  int count = 0;
+  string ret = "";
+  array(array(int)) saa;
+  sscanf(s, "%{%c%}", saa);
+  foreach(saa*({})/16.0, array(int) a)
+  {
+    ret += sprintf("%4x: %-36{%{%02x%} %} %{%s%}\n",
+                   count,
+                   (a/4.0)/1.0,
+                   map(a, isprint) );
+    count += 16;
+  }
+  return ret;
+}
+
 void create()
 {
   defvar("warname",
@@ -1621,6 +1878,11 @@ void create()
 
 #endif // ENABLE_JSP
 
+  defvar("tagtarget", "", LOCALE(0, "Target name"), TYPE_STRING|VAR_MORE,
+	 LOCALE(25, "Target name to use in the servlet tag to reference "
+                "this Web Application. Leave empty to exclude "
+                "from the servlet tag.") );
+
   defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
 	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
                 "&lt;Mount Point&gt;/servlet/") );
@@ -1631,3 +1893,31 @@ void create()
                 "even if load-on-startup is not specified in web.xml") );
 }
 
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=([
+"servlet":#"<desc type='tag'><p><short>
+ Inserts the content produced by running a servlet.</short>
+</p></desc>
+
+<attr name='webapp' value='string' required='required'>
+ <p>The Web Application that contains the servlet.</p>
+</attr>
+
+<attr name='name' value='string'>
+ <p>The name of the servlet. This is taken from the &lt;servlet-name&gt;
+ entry in the web.xml file.</p>
+</attr>
+
+<attr name='uri' value='string'>
+ <p>The uri of the servlet. This is matched against the &lt;url-pattern&gt;
+ entry in the web.xml file if the name attribute is not given, otherwise
+ it is just passed on to the servlet as the servlet path.</p>
+</attr>"
+,
+
+//----------------------------------------------------------------------
+
+
+    ]);
+#endif
