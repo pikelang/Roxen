@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.59 2001/08/01 17:10:50 per Exp $
+// $Id: module.pmod,v 1.60 2001/08/01 19:34:10 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -23,6 +23,128 @@ static mapping(int:string) all_warnings   = ([]);
 static mapping(int:function(RequestID,object:int))
                            invisibility_callbacks = set_weak_flag( ([]), 1 );
 
+mapping(string:Variable) all_variables = set_weak_flag( ([]), 1 );
+
+mapping get_all_variables()
+{
+  return all_variables;
+}
+
+Variable get_variables( string v )
+{
+  return all_variables[v];
+}
+
+class Diff
+{
+  static private array(string) diff;
+  
+  static private
+  array(string) print_row(array(string) diff_old, array(string) diff_new,
+                          int line, int|void start, int|void end)
+  {
+    if(!sizeof(diff_old) && sizeof(diff_new))
+      // New row.
+      return Array.map(diff_new, lambda(string s) {return "+ " + s;} );
+    
+    if(sizeof(diff_old) && !sizeof(diff_new))
+      // Deleted row.
+      return Array.map(diff_old, lambda(string s) {return "- " + s;} );
+    
+    if(diff_old != diff_new)
+      // Modified row.
+      return Array.map(diff_old, lambda(string s) {return "- " + s;} )
+        + Array.map(diff_new, lambda(string s) {return "+ " + s;} );
+
+    if(start + end < sizeof(diff_old) && (start || end))
+    {
+      if(start && !end)
+        diff_old = diff_old[.. start - 1];
+      else
+      {
+        diff_old = diff_old[.. start - 1] +
+                   ({ line + sizeof(diff_old) - end }) +
+                   diff_old[sizeof(diff_old) - end ..];
+      }
+    }
+    
+    return Array.map(diff_old, lambda(string|int s)
+                               { if(intp(s)) return "Line "+s+":";
+                               return "  " + s; } );
+  }
+  
+  string html(void|int hide_header)
+  {
+    string r = "";
+    int added, deleted;
+    if(sizeof(diff) && diff[-1] == "  ")
+      diff = diff[..sizeof(diff)-2];
+    foreach(diff, string row)
+    {
+      row = Roxen.html_encode_string(row);
+      row = replace(row, "\t", "  ");
+      row = replace(row, " ", "&nbsp;");
+      switch(row[0])
+      {
+        case '&': r += "<tt>"+row+"</tt><br>\n";
+          break;
+        case '+': r += "<tt><font color='darkgreen'>"+row+"</font></tt><br>\n";
+          added++;
+          break;
+        case '-': r += "<tt><font color='darkred'>"+row+"</font></tt><br>\n";
+          deleted++;
+          break;
+        case 'L': r += "<i>"+row+"</i><br>\n";
+          break;
+      }
+    }
+    if (!hide_header)
+      r =
+        "<b>" + LOCALE(201, "Change in content") + "</b><br />\n"+
+        "<i>"+(added==1? LOCALE(452, "1 line added."):
+               sprintf(LOCALE(453, "%d lines added."), added)) + " " +
+               (deleted==1? LOCALE(454, "1 line deleted."):
+                sprintf(LOCALE(455, "%d lines deleted."), deleted)) +
+        "</i><p>\n"+
+        r;
+    return r;
+  }
+
+  array get()
+  {
+    return diff;
+  }
+  
+  void create(array(string) new, array(string) old, int context)
+  {
+    array(array(string)) diff_old, diff_new;
+    
+    [diff_old, diff_new] = Array.diff(old, new);
+    int line = 1;
+    int diffp = 0;
+    diff = ({ });
+    for(int i = 0; i < sizeof(diff_old); i++)
+    {
+      if(diff_old[i] != diff_new[i])
+      {
+        diff += print_row(diff_old[i], diff_new[i], line);
+        
+        diffp = 1;
+      }
+      else if(sizeof(diff_old) > 1)
+      {
+        diff += print_row(diff_old[i], diff_new[i], line,
+                          diffp?context:0,
+                          sizeof(diff_old) - 1 > i?context:0 );
+        diffp = 0;
+      }
+      line += sizeof(diff_old[i] - ({ }));
+    }
+  }
+}
+
+
+
 class Variable
 //! The basic variable type in Roxen. All other variable types should
 //! inherit this class.
@@ -38,6 +160,31 @@ class Variable
   static mixed _initial; // default value
   static string _path = sprintf("v%x",_id);   // used for forms
   static LocaleString  __name, __doc;
+
+  string diff( int render )
+  //! Generate a html diff of the difference between the current
+  //! value and the default value.
+  //!
+  //! This method is used by the configuration interface.
+  //!
+  //! The argument @[render] is used to select the operation mode.
+  //!
+  //! render=0 means that you should generate an inline diff. This
+  //! should be at most 2 lines of text with no more than 30 or so
+  //! characters per line. This is mostly useful for simple variable
+  //! types such as integers or choice-lists.
+  //!
+  //! If you return 0 when render=0, this function will be called with
+  //! render=1 instead. If you return a non-zero value, you indicate
+  //! that there is a diff available. In this case the function can be
+  //! called again with render=2, in this case you have a full page of
+  //! HTML code to render on.
+  //!
+  //! If you return 0 for render=1 as well, no difference will be
+  //! shown. This is the default.
+  {
+    return 0;
+  }
 
   void destroy()
   {
@@ -370,7 +517,9 @@ class Variable
     //! shown on the same page). This is normally done by the 
     //! configuration interface.
   {
+    m_delete( all_variables, _path );
     _path = to;
+    all_variables[ to ] = this_object();
   }
 
   string render_form( RequestID id, void|mapping additional_args );
@@ -409,6 +558,7 @@ class Variable
     _initial = default_value;
     __name = std_name;
     __doc = std_doc;
+    all_variables[ path() ] = this_object();
   }
 }
 
@@ -434,6 +584,12 @@ class Float
     return sprintf( "%1."+_prec+"f", m );
   }
 
+  string diff( int render )
+  {
+    if(!render)
+      return "("+_format(default_value())+")";
+  }
+  
   void set_range(float minimum, float maximum )
     //! Set the range of the variable, if minimum and maximum are both
     //! 0.0 (the default), the range check is removed.
@@ -509,6 +665,12 @@ class Int
     _min = minimum;
   }
 
+  string diff( int render )
+  {
+    if(!render)
+      return "("+default_value()+")";
+  }
+
   array(string|int) verify_set( mixed new_value )
   {
     string warn;
@@ -557,6 +719,12 @@ class String
   int width = 40;
   //! The width of the input field. Used by overriding classes.
 
+  string diff( int render )
+  {
+    if(!render)
+      return "("+Roxen.html_encode_string( default_value() )+")";
+  }
+
   array(string) verify_set_from_form( mixed new )
   {
     return ({ 0, [string]new-"\r" });
@@ -580,12 +748,57 @@ class Text
   //! The width of the textarea
   int rows = 10;
   //! The height of the textarea
+  
+  string diff( int render )
+  {
+    switch( render )
+    {
+      case 0: return 0;
+      case 1: return "";
+      case 2: 
+	array lines_orig = default_value()/"\n";
+	array lines_new  = query()/"\n";
+
+	Diff diff = Diff( lines_new, lines_orig, 2 );
+
+	if( sizeof(diff->get()) )
+	  return diff->html();
+	else
+	  return "<i>"+LOCALE(0,"No difference\n" )+"</i>";
+    }
+  }
+
+  array(string) verify_set_from_form( mixed new )
+  {
+    return ({ 0, [string]new-"\r" });
+  }
+
   string render_form( RequestID id, void|mapping additional_args )
   {
     return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"'>"
            + Roxen.html_encode_string( query() || "" ) +
            "</textarea>";
   }
+
+  static void create(mixed default_value, void|int flags,
+                     void|LocaleString std_name, void|LocaleString std_doc)
+    //! Constructor. 
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
+    //! 
+    //! The std_name and std_doc is the name and documentation string
+    //! for the default locale (always english)
+  {
+    if( strlen( default_value ) && default_value[0] == '\n' )
+      // This is enforced by both netscape and IE... So let's just conform.
+      default_value = default_value[1..];
+    ::create( default_value, flags, std_name, std_doc );
+  }
+  
 }
 
 
@@ -729,6 +942,12 @@ class MultipleChoice
   inherit Variable;
   static array _list = ({});
   static mapping _table = ([]);
+
+  string diff( int render )
+  {
+    if(!render)
+      return "("+_title( default_value() )+")";
+  }
 
   void set_choice_list( array to )
     //! Set the list of choices.

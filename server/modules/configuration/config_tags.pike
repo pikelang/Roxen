@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.153 2001/07/31 12:03:25 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.154 2001/08/01 19:34:10 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -391,15 +391,29 @@ string get_var_form( string s, object var, object mod, RequestID id,
   return pre + var->render_view( id );
 }
 
+string diff_url( RequestID id, object mod, Variable.Variable var )
+{
+  RoxenModule cfs = id->conf->find_module( "config_filesystem#0" );
+
+  string base =
+    combine_path((id->port_obj->path||"/"),cfs->query_location()[1..])+
+    "diff.pike";
+  return base+"?variable="+Roxen.http_encode_string(var->path());
+}
+
 mapping get_variable_map( string s, object mod, RequestID id, int noset )
 {
   if( !mod ) return ([]);
   object var = mod->getvar( s );
   mapping res = ([ "sname":s]);
+
+  int defv = !!id->variables[var->path()+"do_default.x"];
+  if( defv )
+    id->variables["save.x"]="1";
   
   if( res->form =
       get_var_form( s, var, mod, id, !noset ?
-		    1+!!id->variables[var->path()+"do_default.x"]:0))
+		    1+defv:0))
   {
     // FIXME: Do lazy evaluation of all this. It's rather likely that
     // the variable will be filtered away in the calling function.
@@ -409,6 +423,15 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->rname = (string)var->name();
     res["no-default"] = var->get_flags() & VAR_NO_DEFAULT;
     res->path = var->path();
+    res["diff-txt"] = var->diff( 0 );
+    res->diff="";
+    if( !res["diff-txt"] && var->diff( 1 ) )
+      res->diff = 
+	"<a target=rxdiff_"+var->path()+
+	" href='"+diff_url( id, mod, var )+"'><gbutton>"+
+	LOCALE(0,"Diff")+"</gbutton></a>";
+    if(!res["diff-txt"])
+      res["diff-txt"]="";
     res->id = var->_id;
     res->changed = !var->is_defaulted();
     res->cid = res->changed*-10000000+res->id;
@@ -1024,12 +1047,10 @@ string simpletag_cf_render_variable( string t, mapping m,
     dfs = "<font size='"+(df>0?"+":"")+df+"'>";
   }
   if( chng = ((int)_("changed") == 1) )
-  {
     if( !(int)_("no-default") )
       def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
-	LOCALE(0,"Restore default value")+
-	" </submit-gbutton2><br />\n";
-  }
+	LOCALE(0,"Restore default value")+" "+_("diff-txt")+
+	" </submit-gbutton2> "+_("diff")+"<br />\n";
   
   switch( usr( "changemark" ) )
   {
