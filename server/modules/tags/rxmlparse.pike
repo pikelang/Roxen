@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.1 1999/07/21 22:27:23 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.2 1999/07/22 19:27:57 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -403,7 +403,14 @@ string tagtime(int t,mapping m)
   }
   s=language(m->lang, "date")(t,m);
 
-  switch(m["case"]) {
+#if 1
+  // Not part of RXML 1.4
+  if (m->upper) s=upper_case(s);
+  if (m->lower) s=lower_case(s);
+  if (m->cap||m->capitalize) s=capitalize(s);
+#endif
+
+  switch(lower_case(m["case"])) {
   case "upper": s=upper_case(s); break;
   case "lower": s=lower_case(s); break;
   case "capitalize": s=capitalize(s);
@@ -414,7 +421,12 @@ string tagtime(int t,mapping m)
 
 string tag_date(string q, mapping m, object id)
 {
-  int t=(int)m["unix-time"] || (int)m->unix_time || time(1); // unix_time is not part of RXML 1.4
+#if 1
+  // unix_time is not part of RXML 1.4
+  int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
+#else
+  int t=(int)m["unix-time"] || time(1);
+#endif
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
@@ -427,7 +439,7 @@ string tag_date(string q, mapping m, object id)
 
   if(!m->date)
   {
-    if(!m->unix_time)
+    if(!m->unix_time || m->second)
       NOCACHE();
   } else
     CACHE(60); // One minute is good enough.
@@ -565,8 +577,11 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   string n;
   mapping fake_id=([]);
 
-  if(n=m->define)
+#if 1
+  // Not part of RXML 1.4
+  if(n=m->define || m->name)
     return defines[n]||(id->misc->debug?"No such define: "+n:"");
+#endif
 
   if (n=m->variable)
     return id->variables[n]||(id->misc->debug?"No such variable: "+n:"");
@@ -929,6 +944,20 @@ string tag_aprestate(string tag, mapping m, string q, object id)
 
   multiset prestate = (< @indices(id->prestate) >);
 
+#if 1
+  // Not part of RXML 1.4
+  foreach(indices(m), s) {
+    if(m[s]==s) {
+      m_delete(m,s);
+
+      if(strlen(s) && s[0] == '-')
+        prestate[s[1..]]=0;
+      else
+        prestate[s]=1;
+     }
+  }
+#endif
+
   if(m->add) {
     foreach(m->add/",", s)
       prestate[s]=1;
@@ -962,6 +991,25 @@ string tag_aconf(string tag, mapping m, string q, object id)
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
+
+#if 1
+  foreach(indices(m), string opt) {
+    if(m[opt]==opt) {
+      if(strlen(opt)) {
+        switch(opt[0]) {
+        case '+':
+          m_delete(m, opt);
+          cookies[opt[1..]] = opt;
+          break;
+        case '-':
+          m_delete(m, opt);
+          cookies[opt] = opt;
+          break;
+        }
+      }
+    }
+  }
+#endif
 
   if(m->add) {
     foreach(m->add/",", s)
@@ -1267,6 +1315,27 @@ string tag_fsize(string tag, mapping args, object id)
     return (string)strlen(s);
 }
 
+#if 1
+// Not part of RXML 1.4
+
+string tag_source(string tag, mapping m, string s, object id,object file)
+{
+  string sep;
+  sep=m["separator"]||"";
+  if(!m->nohr)
+    sep="<hr><h2>"+sep+"</h2><hr>";
+  return ("<pre>"+replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))
+    +"</pre>"+sep+s);
+}
+
+string tag_signature(string tag, mapping m, object id, object file,
+                     mapping defines)
+{
+  return "<right><address>"+tag_user(tag, m, id, file,defines)+"</address></right>";
+}
+
+#endif
+
 mapping query_tag_callers()
 {
    return (["accept-language":tag_language,
@@ -1304,7 +1373,12 @@ mapping query_tag_callers()
 	    "version":tag_version,
 	    "vfs":tag_vfs,
 
-            "pr":tag_roxen,  // Not part of RXML 1.4
+#if 1
+            // Not part of RXML 1.4
+            "pr":tag_roxen,
+            "source":tag_source,
+            "signature":tag_signature,
+#endif
    ]);
 }
 
@@ -1329,7 +1403,12 @@ string tag_autoformat(string tag, mapping m, string s, object id,object file)
   s-="\r";
   if(!m->nobr) {
     s = replace(s, "\n", "<br>\n");
-    if(m->p || m->pre) { // m->pre is not part of RXML 1.4
+#if 1
+    // m->pre is not part of RXML 1.4
+    if(m->p || m->pre) {
+#else
+    if(m->p) {
+#endif
       if(search(s, "<br>\n<br>\n")!=-1) s="<p>"+s;
       s = replace(s, "<br>\n<br>\n", "\n</p><p>\n");
       if(s[..sizeof(s)-4]=="<p>")
@@ -1337,7 +1416,12 @@ string tag_autoformat(string tag, mapping m, string s, object id,object file)
       else
         s+="</p>";
     }
-  } else if(m->p || m->pre) { // m->pre is not part of RXML 1.4
+#if 1
+  // m->pre is not part of RXML 1.4
+  } else if(m->p || m->pre) {
+#else
+  } else if(m->p) {
+#endif
     if(search(s, "\n\n")!=-1) s="<p>"+s;
       s = replace(s, "\n\n", "\n</p><p>\n");
       if(s[..sizeof(s)-4]=="<p>")
@@ -1677,9 +1761,6 @@ mapping query_container_callers()
 		     else
 		       return crypt(c);
 		   },
-	   "cset":lambda(string t, mapping m, string c, object id)
-	  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
-			    id); },
 	   "doc":tag_doc,
 	   "default" : tag_default,
 	   "formoutput":tag_formoutput,
@@ -1695,7 +1776,13 @@ mapping query_container_callers()
 		     if(c[-1] != "\n") c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
-	   "trimlines" : tag_trimlines
+	   "trimlines" : tag_trimlines,
+#if 1
+           // Not part of RXML 1.4
+	   "cset":lambda(string t, mapping m, string c, object id)
+	  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
+			    id); },
+#endif
 	   ]);
 }
 
@@ -1743,7 +1830,6 @@ string api_define(object id, string what, string to)
   id->misc->defines[what]=to;
   return ([])[0];
 }
-
 
 string api_query_define(object id, string what)
 {
