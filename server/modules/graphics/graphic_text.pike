@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.235 2000/09/10 16:37:49 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.236 2000/09/10 23:24:44 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -20,7 +20,10 @@ void create()
 {
   defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
 	 "If set, it will use the <i>HTML color wiretrap</i> module to parse "
-	 "figure out the document colors by parsing tags that set colors.");
+	 "figure out the document colors by parsing tags that set colors. "
+	 "If you try to disable the <i>HTML color wiretap</i> module while "
+	 "this option is on, it will be readded every time the "
+	 "<i>Graphis text</i> module is reloaded.");
 
   defvar("deflen", 300, "Default maximum length of text", TYPE_INT|VAR_MORE,
 	 "Per default, it will not be possible to render texts longer than "
