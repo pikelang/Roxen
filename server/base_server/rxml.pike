@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.89 2000/01/30 18:23:03 nilsson Exp $
+ * $Id: rxml.pike,v 1.90 2000/01/30 22:28:44 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -422,7 +422,7 @@ string do_parse(string to_parse, RequestID id,
     parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
     parser->_parent = parent_parser;
   }
-  else { 
+  else {
     parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
 #ifdef OLD_RXML_COMPAT
     parser->context->add_scope("_", id->variables);
@@ -536,8 +536,7 @@ string call_user_tag(RXML.PHtml parser, mapping args)
   id->misc->line = parser->at_line();
   args = id->misc->defaults[tag]|args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
-  array replace_from = Array.map(indices(args),
-				 lambda(string q){return "&"+q+";";})+({"#args#"});
+  array replace_from = map(indices(args),make_entity)+({"#args#"});
   array replace_to = values(args)+({make_tag_attributes( args  ) });
 
   string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
@@ -570,11 +569,10 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
 
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   id->misc->do_not_recurse_for_ever_please++;
-  array replace_from = Array.map(indices(args),
-				 lambda(string q){return "&"+q+";";}) +
-    ({"#args#", "<contents>"});
-  array replace_to = values(args) + ({make_tag_attributes( args  ),
-				      contents });
+  array i = indices( args );
+  array v = values( args );
+  array replace_from = map(i,make_entity)+({"#args#", "<contents>"});
+  array replace_to = v + ({make_tag_attributes( args  ), contents });
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   if( args->noparse ) return ({ r });
@@ -678,12 +676,12 @@ string tag_number(string t, mapping args, RequestID id)
 
 array(string) list_packages()
 {
-  return Array.filter(((get_dir("../local/rxml_packages")||({}))
-                       |(get_dir("../rxml_packages")||({}))),
-                      lambda( string s ) {
-                        return (Stdio.file_size("../local/rxml_packages/"+s)+
-                                Stdio.file_size( "../rxml_packages/"+s )) > 0;
-                      });
+  return filter(((get_dir("../local/rxml_packages")||({}))
+                 |(get_dir("../rxml_packages")||({}))),
+                lambda( string s ) {
+                  return (Stdio.file_size("../local/rxml_packages/"+s)+
+                          Stdio.file_size( "../rxml_packages/"+s )) > 0;
+                });
 
 }
 
@@ -1280,7 +1278,7 @@ class IfIs
     value = lower_case( value );
     is = lower_case( is );
     return ((is==value)||glob(is,value)||
-            sizeof(Array.filter( is/",", glob, value )));
+            sizeof(filter( is/",", glob, value )));
   }
 
   int match_in_map( string value, RequestID id )
@@ -1295,7 +1293,7 @@ class IfIs
     is=lower_case(arr[2..]*" ");
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
-            sizeof(Array.filter( is/",", glob, var )));
+            sizeof(filter( is/",", glob, var )));
     if(arr[1]=="!=") return (is!=var);
     if(arr[1]=="<") return ((int)var<(int)is);
     if(arr[1]==">") return ((int)var>(int)is);
@@ -1329,7 +1327,7 @@ class IfMatch
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
     is = lower_case( "*"+is+"*" );
-    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+    return (glob(is,value)||sizeof(filter( is/",", glob, value )));
   }
 }
 

@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.147 2000/01/26 23:17:53 jhs Exp $
+// $Id: roxenlib.pike,v 1.148 2000/01/30 22:28:44 per Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -202,7 +202,7 @@ static mapping build_roxen_env_vars(RequestID id)
       new["COOKIE_"+tmp] = id->cookies[tmp];
       new["COOKIES"]+= tmp+" ";
     }
-	
+
   foreach(indices(id->config), tmp)
     {
       new["WANTS_"+replace(tmp, " ", "_")]="true";
@@ -234,7 +234,7 @@ static mapping build_roxen_env_vars(RequestID id)
     else
       new["PRESTATES"] = replace(tmp, " ", "_");
   }
-	
+
   foreach(indices(id->supports), tmp)
   {
     new["SUPPORTS_"+replace(tmp-",", " ", "_")]="true";
@@ -554,7 +554,7 @@ constant greek
      "&Kappa;":   "\x39A",
      "&Lambda;":  "\x39B",
      "&Mu;":      "\x39C",
-     "&Nu;":      "\x39D", 
+     "&Nu;":      "\x39D",
      "&Xi;":      "\x39E",
      "&Omicron;": "\x39F",
      "&Pi;":      "\x3A0",
@@ -578,7 +578,7 @@ constant greek
      "&kappa;":   "\x3BA",
      "&lambda;":  "\x3BB",
      "&mu;":      "\x3BC",
-     "&nu;":      "\x3BD", 
+     "&nu;":      "\x3BD",
      "&xi;":      "\x3BE",
      "&omicron;": "\x3BF",
      "&pi;":      "\x3C0",
@@ -602,6 +602,11 @@ constant empty_strings = ({""})*sizeof(safe_characters);
 static int is_safe_string(string in)
 {
   return strlen(in) && !strlen(replace(in, safe_characters, empty_strings));
+}
+
+static string make_entity( string q )
+{
+  return "&"+q+";";
 }
 
 static string make_tag_attributes(mapping in)
@@ -678,7 +683,7 @@ string msectos(int t)
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
 
-string extension( string f, RequestID|void id) 
+string extension( string f, RequestID|void id)
 {
   string ext, key;
   if(!f || !strlen(f)) return "";
@@ -727,7 +732,7 @@ static string simplify_path(string file)
 
   if(file[0] != '/')
     t2 = 1;
-	
+
   if(strlen(file) > 1
      && file[-2]=='/'
      && ((file[-1] == '/') || (file[-1]=='.'))
@@ -1120,7 +1125,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				lambda (mapping m1, mapping m2, array order)
 				{
 				  int tmp;
-				
+
 				  foreach (order, string field)
 				  if (field[0] == '-')
 				    if (!catch (tmp = (m1[field[1..]]
