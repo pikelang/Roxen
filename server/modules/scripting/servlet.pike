@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.15 2000/09/10 22:55:11 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.16 2000/11/14 01:13:20 marcus Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -16,8 +16,8 @@ string status_info="";
 
 constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION;
 constant module_name = "Java Servlet bridge";
-constant module_doc  = "An interface to Java <a href=\"http://jserv.javasoft.com/"
-  "products/java-server/servlets/index.html\">Servlets</a>.";
+constant module_doc  = "An interface to Java <a href=\"http://java.sun.com/"
+  "products/servlet/index.html""\">Servlets</a>.";
 
 #if constant(Servlet.servlet)
 
