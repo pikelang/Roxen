@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.32 1997/04/14 02:03:54 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.33 1997/05/27 00:51:04 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -143,11 +143,48 @@ function functionof(array f)
   return o[f[-1]];
 }
 
-mixed handle_inherit(mixed ... args)
+array cvs_get_dir(string name)
 {
-  catch {
-    return ::handle_inherit(@args);
-  };
+  array info;
+  string fname = getenv("CVSROOT") + name;
+  // werror(sprintf("find_dir: Looking for '%s'\n", name));
+//werror("CVS get dir "+name+"\n");
+
+  if((info = file_stat(fname))
+     && (info[1] == -2))
+  {
+    array dir = get_dir(fname);
+    if (dir)
+      dir = Array.map(dir, lambda(string entry) {
+	return (entry[strlen(entry)-2..] == ",v")
+	  ? entry[..strlen(entry)-3] : entry;
+      });
+    return dir - ({ "Attic" });
+  }
+  return 0;
+}
+
+mixed cvs_file_stat(string name)
+{
+  name = getenv("CVSROOT") + "/" + name;
+//werror("CVS file stat "+name+"\n");
+  return file_stat(name + ",v") || file_stat(name);
+}
+
+array r_file_stat(string f)
+{
+//werror("file stat "+f+"\n");
+  if(sscanf(f, "/cvs:%s", f))
+    return cvs_file_stat(f);
+  return file_stat(f);
+}
+
+array r_get_dir(string f)
+{
+//  werror("get dir "+f+"\n");
+  if(sscanf(f, "/cvs:%s", f))
+    return cvs_get_dir(f);
+  return get_dir(f);
 }
 
 void create()
@@ -165,6 +202,9 @@ void create()
   add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
 
+  add_constant("get_dir", r_get_dir);
+  add_constant("file_stat", r_file_stat);
+  
   add_constant("persistent_variables", persistent_variables);
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
@@ -194,6 +234,63 @@ void compile_error(string file,int line,string err)
     errors+=sprintf("%s:%d:%s\n",file,line,err);
   else
     ::compile_error(file,line,err);
+}
+
+string cvs_read_file(string name)
+{
+  if(cvs_file_stat(name))
+    return Process.popen("cvs co -p "+name+" 2>/dev/null");
+}
+
+string handle_include(string f, string current_file, int local_include)
+{
+  string rfile;
+  if(f[0]=='/') rfile = f;
+  else rfile=combine_path(current_file+"/","../"+f);
+
+  if(sscanf(rfile, "/cvs:%s", rfile))
+  {
+    rfile=cvs_read_file(rfile);
+    if(rfile && strlen(rfile)) return rfile;
+  }
+  return ::handle_include(f,current_file,local_include);
+}
+
+program cvs_load_file(string name)
+{
+//werror("CVS load file "+name+"\n");
+  string data = cvs_read_file(name);
+  if(!data ||!strlen(data)) return 0;
+  return compile_string(data, "/cvs:"+name);
+}
+
+program findprog(string pname, string ext)
+{
+  if(sscanf(pname, "/cvs:%s", pname))
+  {
+    program prog;
+//  werror("CVS findprog "+pname+"    ("+ext+")\n");
+    if(!ext) ext = "";
+    if(ext != ".pike")
+      prog = cvs_load_file(pname+ext) || cvs_load_file(pname+ext+".pike");
+    else
+      prog = cvs_load_file(pname+ext);
+    if(prog) return prog;
+  }
+  
+  switch(ext)
+  {
+   case ".pike":
+   case ".so":
+    return low_findprog(pname,ext);
+
+   default:
+    pname+=ext;
+    return
+      low_findprog(pname,"") ||
+      low_findprog(pname,".pike") ||
+      low_findprog(pname,".so");
+  }
 }
 
 /* This function is called when the driver wants to cast a string

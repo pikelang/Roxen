@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.59 1997/05/25 15:49:48 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.60 1997/05/27 00:51:02 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -944,11 +944,15 @@ string filename(object o)
 
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
+  string cvs;
+  sscanf(s, "/cvs:%s", cvs);
+
 //  perror("Module is "+s+"?");
   if(file_stat(s+".pike"))
   {
 //    perror("Yes, compile "+s+"?");
-    if(__p=compile_file(s+".pike"))
+    if((cvs?(__p=master()->cvs_load_file( cvs+".pike" ))
+	:(__p=compile_file(s+".pike"))))
     {
 //      perror("Yes.");
       my_loaded[__p]=s+".pike";
@@ -957,7 +961,8 @@ object load(string s)   // Should perhaps be renamed to 'reload'.
       perror(s+".pike exists, but compilation failed.\n");
   }
   if(file_stat(s+".lpc"))
-    if(__p=compile_file(s+".lpc"))
+    if(cvs?(__p=master()->cvs_load_file( cvs+".lpc" )):
+       (__p=compile_file(s+".lpc")))
     {
       my_loaded[__p]=s+".lpc";
       return __p();
