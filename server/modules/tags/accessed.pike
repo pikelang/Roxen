@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
 #include <module.h>
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.54 2004/05/21 23:49:43 mani Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.55 2004/05/23 01:52:36 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -214,8 +214,11 @@ class Entity_page_accessed {
   }
 }
 
-void set_entities(RXML.Context c) {
-  c->set_var("accessed", Entity_page_accessed(), "page");
+void set_entities(RXML.Context c)
+{
+  //  Kludge to avoid scope errors when running self-tests
+  if (c->exist_scope("page"))
+    c->set_var("accessed", Entity_page_accessed(), "page");
 }
 
 
@@ -400,7 +403,7 @@ class SQLCounter {
   
   void create()
   {
-#if constant(REPLICATE)
+#if constant(WS_REPLICATE)
     set_my_db( "replicate" );
 #endif
     
