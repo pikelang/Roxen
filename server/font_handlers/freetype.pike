@@ -32,7 +32,7 @@ static string translate_ttf_style( string style )
 static void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
-  ttf_font_names_cache=([]);
+  mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
     foreach(r_get_dir( dir )||({}), string fname)
@@ -54,15 +54,17 @@ static void build_font_names_cache( )
         {
           mapping n = ttf->info();
           string f = lower_case(n->family);
-          if(!ttf_font_names_cache[f])
-            ttf_font_names_cache[f] = ([]);
-          ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
+          if(!new_ttf_font_names_cache[f])
+            new_ttf_font_names_cache[f] = ([]);
+          new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
                                    = combine_path(dir+"/",fname);
         }
       }
     }
   };
   map( roxen->query("font_dirs"), traverse_font_dir );
+
+  ttf_font_names_cache = new_ttf_font_names_cache;
 }
 
 Thread.Mutex lock = Thread.Mutex();
@@ -241,12 +243,12 @@ class FTFont
   }
 }
 
-array available_fonts()
+array available_fonts(int(0..1)|void force_reload)
 {
 #ifdef THREADS
   object key = lock->lock();
 #endif
-  if( !ttf_font_names_cache  ) build_font_names_cache( );
+  if( !ttf_font_names_cache || force_reload ) build_font_names_cache( );
   return indices( ttf_font_names_cache );
 }
 

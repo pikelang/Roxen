@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.10 2001/09/27 21:51:23 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.11 2001/11/14 13:36:09 grubba Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -42,7 +42,7 @@ static string translate_ttf_style( string style )
 static void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
-  ttf_font_names_cache=([]);
+  mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
     foreach(r_get_dir( dir )||({}), string fname)
@@ -66,15 +66,17 @@ static void build_font_names_cache( )
         {
           mapping n = ttf->names();
           string f = lower_case(trimttfname(n->family));
-          if(!ttf_font_names_cache[f])
-            ttf_font_names_cache[f] = ([]);
-          ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
-                                   = combine_path(dir+"/",fname);
+          if(!new_ttf_font_names_cache[f])
+            new_ttf_font_names_cache[f] = ([]);
+          new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ] =
+	    combine_path(dir+"/",fname);
         }
       }
     }
   };
   map( roxen->query("font_dirs"), traverse_font_dir );
+
+  ttf_font_names_cache = new_ttf_font_names_cache;
 }
 
 
@@ -186,12 +188,12 @@ class TTFWrapper
 Thread.Mutex lock = Thread.Mutex();
 #endif
 
-array available_fonts()
+array available_fonts(int(0..1)|void force_reload)
 {
 #ifdef THREADS
   object key = lock->lock();
 #endif
-  if( !ttf_font_names_cache  ) build_font_names_cache( );
+  if( !ttf_font_names_cache || force_reload ) build_font_names_cache( );
   return indices( ttf_font_names_cache );
 }
 
@@ -215,7 +217,7 @@ array(mapping) font_information( string font )
   return ({ res });
 }
 
-array(string) has_font( string name, int size )
+array(string) has_font( string name, int size, int(0..1) force )
 {
 #ifdef THREADS
   object key = lock->lock();
@@ -224,6 +226,11 @@ array(string) has_font( string name, int size )
     build_font_names_cache( );
   if( ttf_font_names_cache[ name ] )
     return indices(ttf_font_names_cache[ name ]);
+  if (force) {
+    build_font_names_cache();
+    if( ttf_font_names_cache[ name ] )
+      return indices(ttf_font_names_cache[ name ]);
+  }
 }
 
 Font open(string f, int size, int bold, int italic )
@@ -237,6 +244,10 @@ Font open(string f, int size, int bold, int italic )
     if( fo = Image.TTF( name ) )
       return TTFWrapper( fo, size, f,0,0 );
     return 0;
+  }
+
+  if (!ttf_font_names_cache) {
+    build_font_names_cache();
   }
 
   if(ttf_font_names_cache[ lower_case(f) ])
