@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.80 2002/04/11 12:24:48 anders Exp $
+ * $Id: ftp.pike,v 2.81 2002/07/04 11:42:19 per Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -206,6 +206,7 @@ class RequestID2
       prot = "FTP";
       clientprot = "FTP";
       real_variables = ([]);
+      variables = FakedVariables( real_variables );
       misc = ([]);
       cookies = ([]);
       throttle = ([]);
@@ -1739,12 +1740,10 @@ class FTPSession
   /*
    * Data connection handling
    */
-  static private void send_done_callback(array(object) args)
+  static private void send_done_callback( object fd, object session,
+					  int amount )
   {
     DWRITE("FTP: send_done_callback()\n");
-
-    object fd = args[0];
-    object session = args[1];
 
     if(fd)
     {
@@ -1756,6 +1755,7 @@ class FTPSession
     curr_pipe = 0;
 
     if (session && session->file) {
+      session->file->len = amount;
       session->conf->log(session->file, session);
       session->file = 0;
     }
@@ -1955,46 +1955,31 @@ class FTPSession
       break;
     }
 
-#ifndef DISABLE_FTP_THROTTLING
-    mapping throttle=session->throttle||([]);
+    object throttler=session->throttler;
     object pipe;
-    if ( conf &&
-         ((throttle->doit && conf->query("req_throttle")) ||
-          conf->throttler
-          ) ) {
-//       report_debug("ftp: using slowpipe\n");
-      pipe=((program)"slowpipe")();
-    } else {
-//       report_debug("ftp: using fastpipe\n");
-      pipe=((program)"fastpipe")(); //will use Stdio.sendfile if possible
-      throttle->doit=0;
-    }
-    if (throttle->doit) {
-      throttle->rate=max(throttle->rate,
-                         conf->query("req_throttle_min"));
-      pipe->throttle(throttle->rate,
-                     (int)(throttle->rate*
-                           conf->query("req_throttle_depth_mult")),
-                     0);
-    }
-    if (conf && conf->throttler) { //we are sure to be using slowpipe
-      pipe->assign_throttler(conf->throttler);
-    }
-#else
-    object pipe=((program)"fastpipe")();
-#endif
+    pipe = roxen.get_shuffler( fd );
+    if( conf )
+      conf->connection_add( this_object(), pipe );
 
-    pipe->set_done_callback(send_done_callback, ({ fd, session }) );
+    if( throttler || conf->throttler )
+      pipe->set_throttler( throttler || conf->throttler );
+
+    pipe->set_done_callback(
+      lambda( Shuffler.Shuffle r, int reason ) {
+	send_done_callback( fd, session, r->sent_data() );
+      } );
     master_session->file = session->file = file;
     if(stringp(file->data)) {
-      pipe->write(file->data);
+      pipe->add_source(file->data,0,strlen(file->data));
     }
     if(file->file) {
+      int off;
       file->file->set_blocking();
-      pipe->input(file->file, file->len);
+      catch( off = file->tell() );
+      pipe->add_source( file->file, max(off,0),	(file->len||-1) );
     }
+    pipe->start();
     curr_pipe = pipe;
-    pipe->output(fd);
   }
 
   static private void connected_to_receive(object fd, string data, string args)
@@ -2026,7 +2011,7 @@ class FTPSession
       break;
     }
 
-    RequestID session = RequestID2(master_session);
+    object session = RequestID2(master_session);
     session->method = "PUT";
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
@@ -3124,7 +3109,7 @@ class FTPSession
   {
     if (curr_pipe) {
       catch {
-	destruct(curr_pipe);
+	curr_pipe->stop();
       };
       curr_pipe = 0;
       send(426, ({ "Data transmission terminated." }));
