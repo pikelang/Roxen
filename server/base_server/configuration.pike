@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.526 2002/06/18 16:16:22 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.527 2002/06/18 16:45:41 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -104,11 +104,11 @@ class ProfInfo( string url )
   {
     array table = ({});
     int n, t, v;
-    foreach( indices( data ), string k  )
+    foreach(data; string k; array value  )
       table += ({ ({ k,
-		     sprintf( "%d", (n=data[k][2]) ),
-		     sprintf("%5.2f",(t=data[k][0])/1000000.0),
-		     sprintf("%5.2f", (v=data[k][1])/1000000.0),
+		     sprintf( "%d", (n=value[2]) ),
+		     sprintf("%5.2f",(t=value[0])/1000000.0),
+		     sprintf("%5.2f", (v=value[1])/1000000.0),
 		     sprintf("%8.2f", t/n/1000.0),
 		     sprintf("%8.2f",v/n/1000.0), }) });
     sort( (array(float))column(table,2), table );
@@ -1092,11 +1092,11 @@ void invalidate_cache()
 void clear_memory_caches()
 {
   invalidate_cache();
-  foreach(indices(otomod), RoxenModule m)
+  foreach(otomod; RoxenModule m; string name)
     if (m && m->clear_memory_caches)
       if (mixed err = catch( m->clear_memory_caches() ))
 	report_error("clear_memory_caches() failed for module %O:\n%s\n",
-		     otomod[m], describe_backtrace(err));
+		     name, describe_backtrace(err));
 }
 
 //  Returns tuple < image, mime-type >
@@ -2309,8 +2309,8 @@ int|string try_get_file(string s, RequestID id,
   }
 
   if (result_mapping)
-    foreach(indices(m), string i)
-      result_mapping[i] = m[i];
+    foreach(m; string i; mixed v)
+      result_mapping[i] = v;
 
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;
@@ -2454,12 +2454,12 @@ void save(int|void all)
   }
 
   store( "EnabledModules", enabled_modules, 1, this_object());
-  foreach(indices(modules), string modname)
+  foreach(modules; string modname; ModuleCopies mc)
   {
-    foreach(indices(modules[modname]->copies), int i)
+    foreach(indices(mc->copies), int i)
     {
-      store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
-      if (mixed err = catch(modules[modname]->copies[i]->
+      store(modname+"#"+i, mc->copies[i]->query(), 0, this_object());
+      if (mixed err = catch(mc->copies[i]->
 			    start(2, this_object())))
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
@@ -3009,8 +3009,8 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   {
     string foo;
     for(pr=0; pr<10; pr++)
-      foreach( indices (pri[pr]->file_extension_modules), foo )
-	pri[pr]->file_extension_modules[foo]-=({me});
+      foreach( values (pri[pr]->file_extension_modules), array mods )
+	mods -= ({me});
   }
 
   if(moduleinfo->type & MODULE_PROVIDER) {
