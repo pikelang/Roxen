@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.86 2001/07/20 13:05:59 jhs Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.87 2001/08/03 12:06:22 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -697,13 +697,19 @@ mapping find_internal(string f, RequestID id)
 mapping __stat_cache = ([ ]);
 int get_file_stat( string f, RequestID id  )
 {
-  if( __stat_cache[ f ] )
-    return __stat_cache[ f ];
+  int res;
+
+  //  -1 is used to cache negative results
+  if( __stat_cache[ f ] ) {
+    res = __stat_cache[f];
+    return (res > 0) && res;
+  }
 
   call_out( m_delete, 10, __stat_cache, f );
-  return __stat_cache[ f ] = (id->conf->stat_file( f,id )
-			      || file_stat( f )
-			      || ({ 0,0,0,0 }))[ST_MTIME];
+  res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
+			     || file_stat( f )
+			     || ({ 0,0,0,0 }))[ST_MTIME] || -1;
+  return (res > 0) && res;
 }
 
 class ButtonFrame {
