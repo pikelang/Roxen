@@ -140,6 +140,7 @@ function layerLoadHandler(file_loader)
   show(layer);
 }
 
+
 var file_loader;
 
 // loadLayer: Loads document <src> into the layer <layer_name> with the

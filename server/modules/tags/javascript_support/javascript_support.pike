@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.59 2004/06/30 16:59:29 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.60 2004/10/04 09:41:49 stewa Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -311,16 +311,12 @@ class TagJSInclude {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(!id->supports["javascript1.2"] &&
-	 id->client_var && (float)(id->client_var->javascript) < 1.2)
-	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
-      else
-	result =
-	  "<script charset=\"iso-8859-1\" type=\"text/javascript\" "
-	  "language=\"javascript\" " +
-	  (args->defer ? "defer='defer' " : "") +
-	  "src=\"" + query_absolute_internal_location(id) + args->file + "\">"
-          "</script>";
+      result =
+	"<script charset=\"iso-8859-1\" type=\"text/javascript\" "
+	"language=\"javascript\" " +
+	(args->defer ? "defer='defer' " : "") +
+	"src=\"" + query_absolute_internal_location(id) + args->file + "\">"
+	"</script>";
       return 0;
     }
   }
