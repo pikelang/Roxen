@@ -40,7 +40,7 @@ module in pike.
 <dt><b>light</b><dd>
           Try to find a light version of the font.
 <dt><b>scale</b>=<tt>float</tt><dd>
-          Scale to this font, mostly useful in the <tt>{gtext}</tt>
+          Scale with this factor, mostly useful in the <tt>{gtext}</tt>
           tag, will not work at all in the <tt>{gh<i>[number]</i>}</tt>
           tags.
 <dt><b>rescale</b><dd>

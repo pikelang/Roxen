@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.109 1998/11/04 20:13:37 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.110 1998/11/18 04:54:17 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -715,6 +715,7 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
 
+  res->format         = m->format;
   res->encoding       = m->encoding || "iso-8859-1";
   res->fontsize       = (int)m->fontsize || 16;
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
@@ -868,18 +869,18 @@ int|object PPM(string fname, object id)
     else 
 #endif
       if (q[0..0]=="P")
-	if (catch{img_decode=Image.PNM.decode(q);})
-	  return 1;
-	else
-	  return img_decode;
-
+	catch{img_decode=Image.PNM.decode(q);};
+    if(!img_decode)
+      catch{img_decode = Image.PNG.decode(q);};
+    if(img_decode) 
+      return img_decode;
 #if constant(Image.JPEG.decode)
     perror("Diagram: Unknown image type for '"+fname+"', "
-	   "only GIF, jpeg and pnm is supported.\n");
+	   "only GIF, jpeg, png and pnm is supported.\n");
     return 1;
 #else
     perror("Diagram: Unknown image type for '"+fname+"', "
-	   "only pnm is supported.\n");
+	   "only pnm, png and gif is supported.\n");
     return 1;
 #endif
   }
@@ -1043,22 +1044,19 @@ mapping find_file(string f, object id)
   if(id->prestate->debug)
     werror("Timers: %O\n", bg_timers);
 #endif
-  if(!ct) ct = Image.colortable(img)->nodither();
-
 
   //NU: Save the created gif as <f>.gif!
 
-  if(back)
-    {
-      string foo=Image.GIF.encode(img, ct, @back);
-      Stdio.write_file(query("cachedir")+f+".gif", foo);
-      return http_string_answer(foo, "image/gif");
-    }
-  else
-    {
-      string foo=Image.GIF.encode(img, ct);
-      Stdio.write_file(query("cachedir")+f+".gif", foo);
-      return http_string_answer(foo, "image/gif");
-    }
-
+  if(diagram_data->format)
+  {
+    return
+      http_string_answer(Image[upper_case(diagram_data->format)]->
+			 encode( img ), 
+			 "image/"+lower_case(diagram_data->format));
+  } else {
+    if(!ct) ct = Image.colortable(img);
+    string foo=Image.GIF.encode(img, ct, @(back||({})));
+    Stdio.write_file(query("cachedir")+f+".gif", foo);
+    return http_string_answer(foo, "image/gif");
+  }
 }

@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.18 1998/09/17 12:36:59 mast Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.19 1998/11/18 04:54:30 per Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -62,8 +62,8 @@ string reporterr (string header, string dump)
     case "HTML comment":
       return "\n<!-- " + header + dump + "\n-->\n";
     case "HTML text":
-      return "\n<br><font color=red><b>" + html_encode_string (header) +
-	"</b></font><pre>\n" + html_encode_string (dump) + "</pre><br>\n";
+      return "\n<br><font color=red><b><pre>" + html_encode_string (header) +
+	"</b></pre></font><pre>\n"+html_encode_string (dump) + "</pre><br>\n";
     default:
       return "";
   }
@@ -136,39 +136,27 @@ string tag_pike(string tag, mapping m, string s, object request_id,
 
   request_id->misc->cacheable=0;
 
-#if efun(set_max_eval_time)
-  if(err = catch {
-    set_max_eval_time(2);
-#endif
-    _master->set_inhibit_compile_errors("");
-    if(err=catch {
-      s=pre(s)+s+post(s);
-      p = compile_string(s, "Pike-tag");
-    })
-    {
-      return reporterr(sprintf("Error compiling <pike> tag in %O:\n"
-			       "%s\n\n", request_id->not_query, s), 
-		       _master->errors || "");
-    }
-    _master->set_inhibit_compile_errors(0);
-
-    if(err = catch{
-      res = (o=p())->parse(request_id, defs, file, m);
-    })
-    {
-      return (res || "") + (o && o->flush() || "") +
-	reporterr ("Error in <pike> tag in " + request_id->not_query + ":\n",
-		   (describe_backtrace (err) / "\n")[0..1] * "\n");
-    }
-#if efun(set_max_eval_time)
-    remove_max_eval_time(); // Remove the limit.
+  object e = ErrorContainer();
+  master()->set_inhibit_compile_errors(e->got_error);
+  if(err=catch {
+    s = pre(s)+s+post(s);
+    p = compile_string(s, "Pike-tag");
+  })
+  {
+    master()->set_inhibit_compile_errors(0);
+    return reporterr(sprintf("Error compiling <pike> tag in %s:\n"
+			     "%s\n\n", request_id->not_query, s),e->get());
+  }
+  master()->set_inhibit_compile_errors(0);
+  
+  if(err = catch{
+    res = (o=p())->parse(request_id, defs, file, m);
   })
   {
     return (res || "") + (o && o->flush() || "") +
-      reporterr (err[0] + " for <pike> tag in " + request_id->not_query + "\n", "");
-    remove_max_eval_time(); // Remove the limit.
+      reporterr ("Error in <pike> tag in " + request_id->not_query + ":\n",
+		 (describe_backtrace (err) / "\n")[0..1] * "\n");
   }
-#endif
 
   res = (res || "") + (o && o->flush() || "");
 

@@ -1,23 +1,29 @@
 /*
- * $Id: cachestatus.pike,v 1.3 1998/10/10 03:40:57 per Exp $
+ * $Id: cachestatus.pike,v 1.4 1998/11/18 04:53:58 per Exp $
  */
 
 inherit "wizard";
-constant name= "Cache//Cache status";
+inherit "configlocale";
 
-constant doc = ("Show hitrate of the caching system.");
+string name_svenska = "Cache//Cachestatus";
+string name_standard = "Cache//Cache status";
+
+string doc_svenska  = "Visa cachesystemts träffratio och minnesanvändning";
+constant doc_standard = ("Show the hitrate of the caching system.");
 
 constant more=1;
 
-constant ok_label = " Refresh ";
-constant cancel_label = " Done ";
+constant ok_label_svenska =     " Uppdatera ";
+constant cancel_label_svenska = " Klar ";
+
+constant ok_label_standard = " Refresh ";
+constant cancel_label_standard = " Done ";
 
 mixed page_0(object id, object mc)
 {
   string ret;
 
-  ret = "<font size=\"+1\">Memory</font>";
-  ret += html_border(cache->status());
+  ret = html_border(cache->status());
   if( roxen->query("cache") )
   {
     ret += "<p><font size=\"+1\">Disk</font>";

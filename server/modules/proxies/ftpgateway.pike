@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.25 1998/06/27 13:20:06 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.26 1998/11/18 04:54:23 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -203,7 +203,7 @@ class Request {
     if (!type)
     {
       array tmp;
-      tmp=roxen->type_from_filename(filename,1);
+      tmp=id->conf->type_from_filename(filename,1);
       if (tmp&&tmp[0]) 
       {
 	type=tmp[0]; 
@@ -216,7 +216,7 @@ class Request {
     {
       array tmp;
       string type2;
-      tmp=roxen->type_from_filename(typename,1);
+      tmp=id->conf->type_from_filename(typename,1);
       if (tmp&&tmp[0]) 
       {
 	type2=tmp[0]; 
@@ -615,12 +615,12 @@ class Request {
       return;
     }
 
-    type=roxen->type_from_filename(file);
+    type=id->conf->type_from_filename(file);
 
     pipe=Pipe.pipe();
     pipe->write("HTTP/1.0 200 FTP transfer initiated\r\n");
 
-    tmp=roxen->type_from_filename(file,1);
+    tmp=id->conf->type_from_filename(file,1);
     if (arrayp(tmp)&&tmp[0]) 
     {
       pipe->write("Content-type: "+tmp[0]+"\r\n");
@@ -1221,10 +1221,10 @@ string check_variable(string name, mixed value)
   }
 }
 
-void create()
+void create(object c)
 {         
   defvar("logfile", GLOBVAR(logdirprefix)+
-	 short_name(roxen->current_configuration?roxen->current_configuration->name:".")+"/ftp_proxy_log",
+	 short_name(c?c->name:".")+"/ftp_proxy_log",
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
   
   defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION|VAR_MORE,

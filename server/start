@@ -1,6 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.53 1998/11/06 02:57:53 marcus Exp $
+# $Id: start,v 1.54 1998/11/18 04:53:30 per Exp $
+
+cd `dirname $0`
 
 VERSION=202; BETA=.b;
 
@@ -30,15 +32,15 @@ umask 022
 if [ "x$PIKE_MASTER" = "x" ]; then
   if [ -d share/pike ]; then
     # This is used with localinstall
-    DEFINES="$DEFINES -Ishare/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:share/pike/modules"
+    DEFINES="$DEFINES -I$roxendir/share/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/share/pike/modules"
   fi
   if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
+    DEFINES="$DEFINES -m$roxendir/lib/master.pike -I$roxendir/lib/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/modules"
   elif [ -f lib/pike/master.pike ]; then
-    DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
+    DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike -I$roxendir/lib/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/pike/modules"
   fi
   export PIKE_MODULE_PATH
 else
@@ -72,16 +74,16 @@ DEFINES="$DEFINES -P`pwd`"
 if [ -d ../local/etc/. ]; then
   # Extra module-path
   if [ -d ../local/etc/modules/. ]; then
-    DEFINES="$DEFINES -M../local/etc/modules"
+    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
   fi
 
   # Extra include-path
   if [ -d ../local/etc/include ]; then
-    DEFINES="$DEFINES -I../local/etc/include"
+    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
   fi
 
   # Extra program-path
-  DEFINES="$DEFINES -P../local/etc"
+  DEFINES="$DEFINES -P$roxendir/../local/etc"
 fi
 
 # Extra kludge for HPUX
@@ -162,6 +164,10 @@ parse_args() {
   ;;
   '--program')
     program="$2"
+    shift
+  ;;
+  '--cd')
+    cd_to="$2"
     shift
   ;;
   '--version')
@@ -308,7 +314,14 @@ rotate () {
 }
 
 start_roxen() {
-  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+  if [ x$DIR != xconfigurations ] ; then 
+    args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+  else
+    args="-DROXEN $DEBUG $DEFINES $pass $program"
+  fi
+  if [ x$cd_to != x ] ; then 
+    cd $cd_to
+  fi
   if [ "x$gdb" = "xno" ]; then
     echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
     echo Executing $pike $args $@
@@ -359,9 +372,9 @@ oo
       # Signal death.
       echo $$: "Roxen died of signal $exitcode. Restarting..."
     else
-      # Restart. Sleep a few seconds before restarting.
-      echo $$: Roxen died. Restarting in 5 seconds...
-      sleep 5
+      # Restart. Do not sleep a few seconds before restarting.
+      echo $$: Roxen died. Restarting...
+      # sleep 1
     fi
   done
     

@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.120 1998/11/04 20:29:04 peter Exp $";
+constant cvs_version = "$Id: http.pike,v 1.121 1998/11/18 04:54:36 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1004,7 +1004,7 @@ void send_result(mapping|void result)
       file = http_low_answer(501, "Not implemented.");
     else if(err = catch {
       file=http_low_answer(404,
-			   replace(parse_rxml(conf->query("ZNoSuchFile"),
+			   replace(conf->parse_rxml(conf->query("ZNoSuchFile"),
 					      thiso),
 				   ({"$File", "$Me"}), 
 				   ({not_query,

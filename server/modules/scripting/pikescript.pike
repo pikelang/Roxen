@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.29 1998/08/10 21:38:07 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.30 1998/11/18 04:54:28 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -137,7 +137,7 @@ array|mapping call_script(function fun, object got, object file)
     catch {
       /* Close all listen ports in copy. */
       foreach(indices(roxen->portno), object o) {
-	roxen->do_dest(o);
+	destruct(o);
 	roxen->portno[o] = 0;
       }
     };
@@ -307,16 +307,16 @@ mapping handle_file_extension(object f, string e, object got)
 #endif
     ban[5] = cd;
     add_constant("cd", 0);
-
-    _master->set_inhibit_compile_errors("");
+    object e = ErrorContainer();
+    master()->set_inhibit_compile_errors(e->got_error);
     if(got->realfile)
       err=catch(p=compile_string(file, got->realfile));
     else
       err=catch(p=compile_string(file));
-    if(strlen(_master->errors)) 
-      s=_master->errors + "\n\n" + s;
-    _master->set_inhibit_compile_errors(0);
-
+    master()->set_inhibit_compile_errors(0);
+    if(strlen(e->get()))
+      return http_string_answer("<h1>Error compiling pike script</h1><p>"+
+				html_encode_string(e->get()));
 #ifndef __NT__
 #if efun(setegid)
     add_constant("setegid", ban[0]);

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.115 1998/11/10 10:47:56 mast Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.116 1998/11/18 04:53:47 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -195,18 +195,10 @@ void create()
 }
 
 // Note stringification of ACTION and ALIGN
-#if 0
-#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
-#else
-
-#if constant(cpp)
 #define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/("#ACTION")"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+((#ALIGN-" ")=="left"?"":" align="+(#ALIGN-" "))+"></a>"})});lm=0;}while(0)
-#else /* !constant(cpp) */
-#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>"})});lm=0;}while(0)
-#endif /* constant(cpp) */
 #define PUSH_BUTTONS(CLEAR) do{if(sizeof(buttons)){buttons[-1][0]+="rm/";res+=`+(@buttons);if(CLEAR){PUSH("<br clear=all>");}}lm=1;buttons=({});}while(0)
 
-#endif /* 0 */
+
 
 
 string default_head(string h, string|void save)
@@ -1784,7 +1776,8 @@ mapping configuration_parse(object id)
   PUSH("<p>");
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	 "<img src=/auto/back alt=\"[Up]\" align=left hspace=0 border=0></a>\n");
+	 "<img src=/auto/back alt=\"[Up]\" align=left hspace=0 border=0>"
+	 "</a>\n");
 
   if(i=o->folded) o->folded=0;
   mixed tmp = o->describe(1,id);

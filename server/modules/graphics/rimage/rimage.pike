@@ -1,4 +1,3 @@
-#if __VERSION__ > 0.5
 #include <module.h>
 inherit "roxenlib";
 inherit "module";
@@ -19,21 +18,17 @@ void start()
 {
   mkdirhier(query("cache-dir")+"foo");
 }
-#endif // __VERSION__ > 0.5
 
 array register_module()
 {
-#if __VERSION__ > 0.5
   return ({ 
     MODULE_LOCATION|MODULE_PARSER,
     "Roxen image manipulation tag",
     "Layer base image manipulation tag with plugins",
     0,1 
   });
-#endif // __VERSION__ > 0.5
 } 
 
-#if __VERSION__ > 0.5
 /*  --------------------------------------- RENDERING FUNCTIONS */
 
 mapping layer_ops = ([
@@ -322,4 +317,3 @@ mapping query_container_callers()
     "rimage-id":tag_rimage_id
   ]);
 }
-#endif // __VERSION__ > 0.5

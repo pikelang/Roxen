@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.14 1998/03/11 19:42:40 neotron Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.15 1998/11/18 04:54:24 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -171,7 +171,6 @@ void done_dir_data(array in)
     write_to_client_and_cache(to, dirl*"\n", 0);
   }
   destruct(to);
-  --roxen->num_connections;
 }
 
 void got_dir_data(array i, string s)

@@ -5,7 +5,7 @@ inherit "module";
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.13 1998/02/04 16:10:46 per Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.14 1998/11/18 04:54:22 per Exp $";
 
 class MirrorServer {
   import Stdio;
@@ -50,7 +50,7 @@ class MirrorServer {
   object open_file(string url)
   {
     url = replace(base+url,"//","/");
-    string foo = roxen->real_file(url, fid);
+    string foo = id->conf->real_file(url, fid);
     if(foo) return MyFile(foo);
     return MyStringFile(fid->conf->try_get_file(url, fid));
   }
@@ -58,7 +58,7 @@ class MirrorServer {
   string get_file(string url)
   {
     url = replace(base+url,"//","/");
-    string foo = roxen->real_file(url, fid);
+    string foo = id->conf->real_file(url, fid);
     if(foo) return read_bytes(foo);
     return fid->conf->try_get_file(url, fid);
   }

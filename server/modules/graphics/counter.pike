@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.21 1998/10/31 08:23:26 neotron Exp $
+// $Id: counter.pike,v 1.22 1998/11/18 04:54:14 per Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.21  1998/10/31 08:23:26  neotron
+// Fixed a bug which appears when the userlist is missing.
+//
 // Revision 1.20  1998/08/07 09:20:38  neotron
 // Added bordercolor documentation.
 //
@@ -118,7 +121,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.21 1998/10/31 08:23:26 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.22 1998/11/18 04:54:14 per Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -410,11 +413,7 @@ mapping find_file_ppm( string f, object id )
     {
       buff = Stdio.read_bytes(dir + fontname+"/"+dn+".ppm" );// Try .ppm
       if (!buff 
-#if constant(Image.PNM)
 	  || catch( digit = PNM.decode( buff ))
-#else
-	  || catch( digit = image()->fromppm( buff ))
-#endif
 	  || !digit)
       {
 	buff = Stdio.read_bytes( dir + fontname+"/"+dn+".gif" ); // Try .gif
@@ -423,11 +422,6 @@ mapping find_file_ppm( string f, object id )
 	mixed err;
 #if constant(Image.GIF) && constant(Image.GIF.decode)
 	err =  catch( digit = GIF.decode( buff ));
-#else
-	int|function f;
-
-	if(f = image()->fromgif)
-	  err = catch( digit = f( buff ));
 #endif
 	if(err || !digit)
 	  return ppmlist( fontname, user, dir );
@@ -503,7 +497,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.21 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.22 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes

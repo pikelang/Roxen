@@ -1,19 +1,22 @@
 /*
- * $Id: problems.pike,v 1.11 1998/02/05 00:59:23 js Exp $
+ * $Id: problems.pike,v 1.12 1998/11/18 04:54:04 per Exp $
  */
 
 inherit "wizard";
+inherit "configlocale";
 
 constant name= "Maintenance//Check your Roxen configuration for problems...";
 constant doc = "Perform several sanity-checks of your configuration.";
 constant wizard_name = "Check configuration";
 
+constant name_svenska="Underhåll//Leta fel i dina roxeninställingar...";
+constant doc_svenska="Utför flera olika kontroller av dina roxeninställingar.";
+constant wizard_name_svenska = "Kontrollera inställingar";
+
 
 string page_0(object id)
 {
-  return ("<b>Welcome to the problem finder wizard.</b>"
-	  "<p>This action tries to find the most "
-	  "common errors in your Roxen configuration.");
+  return LOCALE()->problems_page0();
 }
 
 mapping mod_recursed = ([]), mod_problems = ([]), mod_identifiers = ([]);
@@ -62,7 +65,7 @@ string page_1(object id)
 
   if(mod_problems)
   {
-    string res = html_notice("<b>Checking module directories</b>",id);
+    string res = html_notice(LOCALE()->problem_checking_modules(),id);
     foreach(indices(mod_problems), string n)
     {
       if(mod_problems[n]==DIR_DONT_EXIST)
@@ -78,75 +81,45 @@ string page_1(object id)
 	  }
 
 	if(symlink)
-	  res+=html_error("The module directory <b>"+n+"</b> "
-			  "(symbolic link to <b>"+symlink+"</b>) does not"
-			  " exist. <br><var name=\"delete_mpath_"+n+
-			  "\" type=checkbox> Delete the symbolic link<br>"+
-			  (in_main_path?"<var name=\"remove_mpath_"+n+
-			   "\" type=checkbox> Remove the directory from the "
-			   "Module Path variable<br>":"")
+	  res+=html_error(LOCALE()->problem_symlink(symlink,n,in_main_path)
 			  ,id);
 	else
 #endif /* constant(readlink) */
-	  res+=html_error("The module directory <b>"+n+
-			  "</b>, mentioned in the "
-			  "'Module Path' variable, does not exist.<br>"
-			  "<var name=\"remove_mpath_"+n+
-			  "\" type=checkbox> Remove the directory from the "
-			  "Module Path variable<br>",id);
+	  res+=html_error(LOCALE()->problem_nodir(n),id);
       } else {
-	res+=html_warning("The module <b>"+n+
-			  "</b>, is also available as "+mod_problems[n][1]+
-			  "<br>"
-			  "<var name=\"remove_module_"+n+"\" "
-			  "type=checkbox> Move <b>"+n+
-			  "</b> to disabled_modules<br>"
-			  "<var name=\"remove_module_"+mod_problems[n][1]
-			  +"\" type=checkbox> Move <b>"+mod_problems[n][1]
-			  +"</b> to disabled_modules<br>",id);
+	res+=html_warning(LOCALE()->problem_double_module(n,mod_problems),id);
       }
     }
-    res += html_notice("Scanned "+sizeof(mod_recursed)+
-		     " directories, found "+sizeof(mod_identifiers)+
-		       " modules.<br>",id);
+    res +=html_notice(LOCALE()->
+		      problem_scannedinfo(sizeof(mod_recursed),
+					  sizeof(mod_identifiers)),id);
     return res;
   }
-  return html_notice("Scanned "+sizeof(mod_recursed)+
-		     " directories, found "+sizeof(mod_identifiers)+
-		     " modules.<br>"
-		     "No problems.\n",id);
+  return
+    html_notice(LOCALE()->problem_scannedinfo(sizeof(mod_recursed),
+					      sizeof(mod_identifiers))+
+		LOCALE()->problem_nope(),id);
 }
 
 string page_2(object id)
 {
   int errs;
-  string res="<font size=+1>Checking enabled virtual servers</font><p>";
+  string res="<font size=+1>"+LOCALE()->problem_checking_servers()+"</font><p>";
   foreach(roxen->configurations, object c)
   {
-    res+=html_notice("<b>Checking "+(strlen(c->query("name"))?
-				     c->query("name"):c->name)+"</b>",id);
+    res+=html_notice("<b>"+LOCALE()->problem_checking()+" "+
+		     (strlen(c->query("name"))?
+		      c->query("name"):c->name)+"</b>",id);
     if(c->query("Log") && strlen(c->query("LogFile")) && !c->log_function)
     {
       errs++;
-      res +=
-	html_warning("The logfile "+c->query("LogFile")+
-		     " cannot be opened<br>You might want to select "
-		     "another log filename<br>"
-		     "<var name=\"mod_cvar_"+c->name+
-		     "/LogFile\" default=\""+c->query("LogFile")+"\">", id);
+      res += html_warning(LOCALE()->problem_nologfile(c), id);
     }
     if(sizeof(c->query("NoLog")) && (search(c->query("NoLog"), "*")!=-1))
     {
       errs++;
       res +=
-	html_warning("The 'no log for' pattern includes '*'. "
-		     "This means that no logging "
-		     "will be done, and the &lt;accessed&gt; tag will not "
-		     "work. You might want to modify the no-log for variable."
-		     "<br>"
-		     "<var name=\"mod_cvar_"+c->name+
-		     "/NoLog\" type=list size=20,1 default=\'"+
-		     (c->query("NoLog")*"\0")+"\'>", id);
+	html_warning(LOCALE()->problems_logstar(c),id);
     }
 
     foreach(sort(indices(roxen->retrieve("EnabledModules",c))), string m)
@@ -155,16 +128,13 @@ string page_2(object id)
       if(!c->modules[m])
       {
 	errs++;
-	res += html_warning("The module "+m+" could not be loaded<br>"
-			    "<var name=\"mod_remove_module_"+c->name+"/"+m+
-			    "\" "
-			    "type=checkbox> Don't try again",id);
+	res += html_warning(LOCALE()->problem_begone(m,c),id);
       } else {
 	// Check the module?
       }
     }
   }
-  if(!errs) res+="<p><font size=+1>No errors found</font>";
+  if(!errs) res+="<p>"+LOCALE()->problems_nope();
   return res;
 }
 
@@ -175,17 +145,12 @@ string page_3(object id)
 {
   filter_checkbox_variables(id->variables);
   int errs;
-  string res="<font size=+1>Checking Global Variables</font><p>";
+  string res="<font size=+1>"+LOCALE()->problem_globals()+"</font><p>";
 
-  if(roxen->query("NumAccept")>16 && sizeof(roxen->configurations)>3)
+  if(roxen->query("NumAccept")>16 && sizeof(roxen->configurations)>1)
   {
     errs++;
-    res += html_warning("It is not advisable to have the 'Number of "
-			"accepts to attempt' variable set to a high "
-			"value with more than four virtual servers, "
-			"since this will dramatically impair the "
-			"load-balancing between virtual servers<br>"
-			"Set to: <var type=select name=\""
+    res += html_warning(LOCALE()->problem_idinum()+" <var type=select name=\""
 			"mod_cvar_G/NumAccept\" choices=1,2,4,8,16,"+
 			roxen->query("NumAccept")+" "
 			"default="+roxen->query("NumAccept")+"><br>",id);
@@ -197,9 +162,7 @@ string page_3(object id)
     string u,g;
     if(getuid())      
     {
-      res += html_warning("The server was not started as root, so the "
-			  "variable 'Change uid and gid to' will not have "
-			  "any effect, but it is set to "+user,id);
+      res += html_warning(LOCALE()->problem_nouser()+user,id);
     }
     sscanf(user, "%s:%s", u, g);
 
@@ -209,11 +172,7 @@ string page_3(object id)
       pw = getpwuid((int)u);
 
     if(!pw)
-      res += html_warning("'Change uid and gid to' is set to "+user+
-			  ". This does not seem to be a valid user on this "
-			  "computer. Roxen is currently running as UID#"+
-			  geteuid()+". You might want to change this "
-			  "variable.<br>"
+      res += html_warning(LOCALE()->problem_reallynouser(user)+
 			  "<var name=mod_cvar_G/User size=20,1 default='"+user+
 			  "'>",id);
 #endif
@@ -225,7 +184,7 @@ string page_3(object id)
 #endif
 
   
-  if(!errs) res+="<font size=+1>No errors found</font>";
+  if(!errs) res+="<font size=+1>"+LOCALE()->problem_nope()+"</font>";
   return res;
 }
 
@@ -291,32 +250,8 @@ void remove_module(string m)
 array actions = ({ });
 string page_4(object id)
 {
-  string res = "<font size=+1>Summary</font><ul>";
-  actions=({});
-  string tmp="";
   filter_checkbox_variables(id->variables);
-  foreach(indices(id->variables), string v)
-  {
-    if(sscanf(v,"remove_module_%s", tmp))
-      actions += ({ ({ "Move the module <b>"+tmp+"</b> to disabled_modules/",
-			 mv, tmp, "disabled_modules/"+(tmp-dirname(tmp)) }) });
-    else if(sscanf(v,"remove_mpath_%s", tmp))
-      actions +=({({"Remove the directory <b>"+tmp+"</b> from the module path",
-		      remove_module_dir, tmp }) });
-    else if(sscanf(v,"mod_cvar_%s", tmp))
-      actions +=({({"Modify the variable <b>"+tmp+"</b>",
-		      modify_variable, tmp, id->variables[v] }) });
-    else if(sscanf(v,"mod_remove_module_%s", tmp))
-      actions +=({({"Remove the module <b>"+tmp+"</b>",
-		      remove_module, tmp }) });
-    else if(sscanf(v,"delete_mpath_%s", tmp))
-      actions +=({({"Delete the symbolic link <b>"+tmp+"</b>.", rm, tmp }) });
-  }
-  if(!sizeof(actions)) return res+"No actions will be done</ul>";
-  res += "In order to fix the problems the following actions "
-    "will be performed.<p>";
-  foreach(actions, array act) res += "<li>"+act[0];
-  return res+"</ul>";
+  return LOCALE()->problem_summary( id, this_object() );
 }
 
 string wizard_done(object id)

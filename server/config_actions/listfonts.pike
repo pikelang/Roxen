@@ -1,4 +1,4 @@
-/* $Id: listfonts.pike,v 1.3 1998/11/02 07:01:18 per Exp $ */
+/* $Id: listfonts.pike,v 1.4 1998/11/18 04:54:03 per Exp $ */
 #if constant(available_font_versions)
 inherit "wizard";
 
@@ -46,13 +46,16 @@ string page_1(object id)
   mapping v = id->variables;
   foreach(sort(glob("font:*",indices(v))), string f)
   {
-    sscanf(f, "%*s:%s", f);
-    string fn = Array.map(replace(f,"_"," ")/" ",capitalize)*" ";
-    f = sprintf("action=%s&font=%s&italic=0&bold=0&text=%s&render=1",
-		http_encode_string(v->action),
-		http_encode_string(f),
-		http_encode_string(replace(v->text,"&","%26")));
-    res += fn+": <br><img src=?"+f+"><p>";
+    if(lower_case(f)>"domdiagon")
+    {
+      sscanf(f, "%*s:%s", f);
+      string fn = Array.map(replace(f,"_"," ")/" ",capitalize)*" ";
+      f = sprintf("action=%s&font=%s&italic=0&bold=0&text=%s&render=1",
+		  http_encode_string(v->action),
+		  http_encode_string(f),
+		  http_encode_string(replace(v->text,"&","%26")));
+      res += fn+": <br><img src=?"+f+"><p>";
+    }
   }
   return res;
 }

@@ -1,6 +1,8 @@
-/* $Id: describers.pike,v 1.57 1998/10/12 22:13:13 per Exp $ */
+/* $Id: describers.pike,v 1.58 1998/11/18 04:53:56 per Exp $ */
 
 #include <module.h>
+#include <roxen.h>
+#define LOCALE	LOW_LOCALE->config_interface
 int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
@@ -12,7 +14,7 @@ import String;
 #define ABS(X) ((X)<0?-(X):(X))
 string describe_configuration_global_variables(object node)
 {
-  return link("<font size=\"+1\"><b>Server variables</b></font>");
+  return link("<b>"+LOCALE->server_variables()+"</b>");
 }
 
 string describe_holder(object node)
@@ -44,7 +46,7 @@ string describe_holder(object node)
 
 string describe_builtin_variables(object node)
 {
-  return link("<b>Builtin variables (security, comments etc.)</b>");
+  return link(LOCALE->builtin_variables());
 }
 
 int __lt;
@@ -58,7 +60,7 @@ string describe_time(int t)
   }
 
   if(full)
-    return capitalize(roxen->language("en","date")(t));
+    return capitalize(roxen->language(LOW_LOCALE->name,"date")(t));
   else
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
@@ -67,12 +69,9 @@ string describe_interval(int i)
 {
   switch(i)
   {
-   case 0..1:        return "second";
-   case 2..50:       return i+" seconds";
-   case 51..66:      return "minute";
-   case 67..3560:    return ((i+20)/60)+" minutes";
-   case 3561..3561*2:return "hour";
-   default: return ((i+300)/3600)+" hours";
+   case 0..50:       return LOW_LOCALE->seconds(i);
+   case 51..3560:    return LOW_LOCALE->minutes(((i+20)/60));
+   default:          return LOW_LOCALE->hours(((i+300)/3600));
   }
 }
 
@@ -80,7 +79,7 @@ string describe_times(array (int) times)
 {
   __lt=0;
   if(sizeof(times) < 6)
-    return implode_nicely(map(times, describe_time));
+    return implode_nicely(map(times, describe_time), LOW_LOCALE->and);
 
   int d, every=1;
   int ot = times[0];
@@ -96,9 +95,12 @@ string describe_times(array (int) times)
     } else
       d = t-ot;
   if(every && (times[-1]+d) >= time(1)-10)
-    return "every "+describe_interval(d)+" since "+describe_time(times[0]);
+    return (LOW_LOCALE->every +" "
+	    +describe_interval(d)+" "+LOW_LOCALE->since+" "+
+	    describe_time(times[0]));
   return implode_nicely(map(times[..4], describe_time)+({"..."})+
-			map(times[sizeof(times)-3..], describe_time));
+			map(times[sizeof(times)-3..], describe_time),
+			LOCALE->and);
 }
 
 string fix_err(string s)
@@ -112,7 +114,9 @@ int last_time;
 string describe_error(string err, array (int) times)
 {
   int code, nt;
-  array(string) codetext=({ "Notice:", "Warning:", "Error:" });
+  array(string) codetext=({ LOCALE->notice(), 
+			    LOCALE->warning(), 
+			    LOCALE->error() });
   
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;
@@ -180,7 +184,7 @@ string act_describe_submenues(array menues, string base, string sel)
   return res + "</font>";
 }
 
-string focused_action_menu="Maintenance";
+string focused_action_menu=LOCALE->maintenance();
 mixed describe_actions(object node, object id)
 {
   if(id->pragma["no-cache"] && !id->variables->render) {
@@ -224,7 +228,7 @@ string describe_errors(object node)
   sort(r2,report);
   for(int i=0;i<sizeof(report);i++) 
      report[i] = describe_error(report[i], node->data[report[i]]);
-  return "</dl>"+(sizeof(report)?(report*""):"Empty")+"<dl>";
+  return "</dl>"+(sizeof(report)?(report*""):LOCALE->empty())+"<dl>";
 }
 
 string module_var_name(object n)
@@ -251,10 +255,11 @@ array|string describe_module_variable(object node)
     
   if(node->folded)
     if(node->error)
-      return "<b>Error in:</b> "+link("<b>"+module_var_name(node)+"</b>");
+      return "<b>"+LOCALE->error()+"</b>"+
+	link("<b>"+module_var_name(node)+"</b>");
     else
       return link(module_var_name(node))+": <i>" +
-	describe_variable_as_text(node->data) + "</i>";
+	describe_variable_as_text(node->data,0,node) + "</i>";
 
   if(node->error)
     err = "<font size=\"+1\"><b>"+node->error+"</b></font><br>";
@@ -285,13 +290,13 @@ string describe_module_copy_status(object node)
   if(!q || !strlen(q)) return 0;
 
   if(!node->folded)
-    return link("<b>Status and debug info</b>")+"<dd>" + q+"<br>";
-  return link("<b>Status and debug info</b><br>");
+    return link(LOCALE->status_info())+"<dd>" + q+"<br>";
+  return link(LOCALE->status_info()+"<br>");
 }
 
 string describe_module_copy_variables(object node)
 {
-  return link("Variables");
+  return "";
 }  
 
 string describe_module_subnode(object node)
@@ -301,8 +306,8 @@ string describe_module_subnode(object node)
 }  
 
 
-#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/More%20Documentation></a>")
-#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/Less%20Documentation></a>")
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/"+LOCALE->button_more_documentation()+"></a>")
+#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/"+LOCALE->button_less_documentation()+"></a>")
 
 string shorten(string in, object node)
 {
@@ -328,7 +333,6 @@ string describe_module_copy(object node)
     node->dest();
     return "";
   }
-
 
   if((name=node->data->query("_name")) && strlen(name))
     ;
@@ -370,7 +374,7 @@ string describe_module(object node)
     return ("<font size=\"+1\">" + link(name) + "</font>");
 
   if (!node->data->master) {
-    return("Module without copies:"+name);
+    return ("");
   }
   return ("<font size=\"+1\">" + link(name) +  "</font><dd>" +
           shorten(node->data->master->info(),node) 
@@ -419,7 +423,7 @@ mixed describe_docs(object node, object id)
   }
   if (!id->variables->manual) {
     if (!sizeof(docs)) {
-      return("<h1>No manuals installed</h1>");
+      return(LOCALE->no_mauals());
     } else {
       return("</dl><table cellpadding=10>\n" +
 	     (map(indices(docs),
@@ -432,7 +436,8 @@ mixed describe_docs(object node, object id)
 	     "</table><dl>");
     }
   } else {
-    return("<h1>Manual for " + id->variables->manual + " here</h1>" +
+    return("<h1>DEBUG gärnet: Manual for " + 
+	   id->variables->manual + " here (jomen)</h1>" +
 	   html_encode_string(sprintf("<pre>%O</pre>\n",
 				      mkmapping(indices(node), values(node))))
 	   );

@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.76 1998/11/09 22:01:03 marcus Exp $
+/* $Id: wizard.pike,v 1.77 1998/11/18 04:53:54 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -232,7 +232,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
    case "font":
      string res="";
      m->type = "select";
-     m->choices = roxen->available_fonts(1)*",";
+     m->lines = "20";
+     m->choices = roxen->available_fonts(0)*",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=submit value='Example'><br>"+
 	      ((current&&strlen(current))?
@@ -548,7 +549,8 @@ mapping get_actions(object id, string base,string dir, array args)
   foreach(get_dir(dir), string act)
   {
     mixed err;
-    _master->set_inhibit_compile_errors(0);
+    object e;
+    master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
     err = catch
     {
       if(act[0]!='#' && act[-1]=='e')
@@ -569,6 +571,8 @@ mapping get_actions(object id, string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
+    if(e->get())
+      error("While compiling wizards:\n"+e->get());
     if(err) report_error(describe_backtrace(err));
   }
   return acts;

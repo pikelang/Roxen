@@ -1,38 +1,18 @@
 /*
- * $Id: flush.pike,v 1.6 1998/03/11 19:18:52 neotron Exp $
+ * $Id: flush.pike,v 1.7 1998/11/18 04:54:02 per Exp $
  */
 
 inherit "wizard";
-constant name= "Cache//Flush caches...";
+inherit "configlocale";
+constant name_standard= "Cache//Flush caches...";
+constant name_svenska= "Cache//Töm cachear...";
 
-constant doc = ("Flush a cache or two");
+constant doc_standard = ("Flush a cache or two");
+constant doc_svenska = ("Töm en cache eller två");
 
 mixed page_0(object id, object mc)
 {
-  return ("<font size=+1>Which caches do you want to flush?</font><p>"
-	  "<var name=module_cache type=checkbox> The module cache<br>\n"
-	  "<help><blockquote>"
-	  "Force a flush of the module cache (used to describe "
-	  "modules on the 'add module' page)"
-	  "</blockquote></help>"
-	  "<var name=user_cache type=checkbox> The user cache<br>\n"
-	  "<help><blockquote>"
-	  "Force a flush of the user and password cache in all "
-	  "virtual servers."
-	  "</blockquote></help>"
-	  "<var default=1 name=memory_cache type=checkbox> The memory cache<br>\n"
-	  "<help><blockquote>"
-	  "Force a flush of the memory cache (the one described "
-	  "under the Actions -> Cache -> Cache status)."
-	  "</blockquote></help>"
-	  "<var default=1 name=dir_cache type=checkbox> Directory caches<br>\n"
-	  "<help><blockquote>"
-	  "Force a flush of all directory module caches."
-	  "</blockquote></help>"
-	  "<var default=0 name=gtext_cache type=checkbox> Graphical text caches<br>\n"
-	  "<help><blockquote>"
-	  "Force a flush of the graphical text cache."
-	  "</blockquote></help>");
+  return LOCALE()->flush_page_0();
 }
 
 #define CHECKED(x) (id->variables->x != "0")
@@ -40,15 +20,20 @@ mixed page_0(object id, object mc)
 mixed page_1(object id, object mc)
 {
   string ret = "";
-  if(CHECKED(user_cache))   ret += "The userdb cache<br>";
-  if(CHECKED(memory_cache)) ret += "The memory cache<br>";    
-  if(CHECKED(dir_cache))    ret += "The directory cache<br>";
-  if(CHECKED(module_cache)) ret += "The module cache<br>";
-  if(CHECKED(gtext_cache)) ret += "The graphical text cache<br>";
+  if(CHECKED(user_cache))   
+    ret += String.capitalize(LOCALE()->flush_userdbcache())+"<br>";
+  if(CHECKED(memory_cache)) 
+    ret += String.capitalize(LOCALE()->flush_memorycache())+"<br>";
+  if(CHECKED(dir_cache))    
+    ret += String.capitalize(LOCALE()->flush_directorycache())+"<br>";
+  if(CHECKED(module_cache)) 
+    ret += String.capitalize(LOCALE()->flush_modulecache())+"<br>";
+  if(CHECKED(gtext_cache)) 
+    ret += String.capitalize(LOCALE()->flush_gtextcache())+"<br>";
   if(!strlen(ret))
-    ret = "No items selected!";
+    ret = LOCALE()->flush_nothing();
 
-  return  "To flush the following caches press 'OK':\n<p>"+ ret;
+  return  LOCALE()->flush_toflush()+ ret;
 }
 
 string text_andify( array(string) info )
@@ -62,10 +47,9 @@ string text_andify( array(string) info )
     i++;
     if(i==1) ret = item;
     else
-      if(i==l) ret += " and "+ item;
+      if(i==l) ret += " "+locale()->and+" "+ item;
       else ret += ", "+ item;
   }
-
   return ret;
 }
 
@@ -78,7 +62,7 @@ mixed wizard_done(object id, object mc)
   /* Flush the userdb. */ 
   if(CHECKED(user_cache))
   {
-    info += ({ "the userdb" });
+    info += ({ LOCALE()->flush_userdbcache() });
     foreach(roxen->configurations, object c)
       if(c->modules["userdb"] && c->modules["userdb"]->master)
 	c->modules["userdb"]->master->read_data();
@@ -87,14 +71,14 @@ mixed wizard_done(object id, object mc)
   /* Flush the memory cache. */ 
   if(CHECKED(memory_cache))
   {
-    info += ({ "the memory cache" });
+    info += ({ LOCALE()->flush_memorycache() });
     function_object(cache_set)->cache = ([]);
   }
 
   /* Flush the gtext cache. */ 
   if(CHECKED(gtext_cache))
   {
-    info += ({ "the graphical text cache" });
+    info += ({ LOCALE()->flush_gtextcache() });
     foreach(roxen->configurations, object c)
     {
       if(c->modules["graphic_text"] && 
@@ -111,7 +95,7 @@ mixed wizard_done(object id, object mc)
   /* Flush the dir cache. */ 
   if(CHECKED(dir_cache))
   {
-    info += ({ "the directory cache" });
+    info += ({ LOCALE()->flush_directorycache() });
   foreach(roxen->configurations, object c)
     if(c->modules["directories"] && (c=c->modules["directories"]->enabled))
     {
@@ -125,13 +109,13 @@ mixed wizard_done(object id, object mc)
   /* Flush the module cache. */ 
   if(CHECKED(module_cache))
   {
-    info += ({ "the module cache" });
+    info += ({ LOCALE()->flush_modulecache()  });
     roxen->allmodules=0;
     roxen->module_stat_cache=([]);
   }
 
   if(info)
-    report_notice("Flushed "+ text_andify(info) +".");
+    report_notice(LOCALE()->flush_flushed() + " " + text_andify(info) + ".\n");
 
   gc();
 }

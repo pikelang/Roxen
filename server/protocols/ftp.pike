@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.96 1998/06/30 20:50:14 grubba Exp $
+ * $Id: ftp.pike,v 1.97 1998/11/18 04:54:33 per Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -195,7 +195,7 @@ array my_stat_file(string f, string|void d)
       return(st[1]);
     }
   }
-  stat_cache[f] = ({ _time(1), st = roxen->stat_file(f, this_object()) });
+  stat_cache[f] = ({ _time(1), st = conf->stat_file(f, this_object()) });
   return(st);
 }
 
@@ -500,9 +500,9 @@ class ls_program {
 	if ((flags & LS_FLAG_a) &&
 	    (long != "/")) {
 	  if (_dir) {
-	    _dir[".."] = roxen->stat_file(combine_path(long,"../"), id);
+	    _dir[".."] = conf->stat_file(combine_path(long,"../"), id);
 	  } else {
-	    _dir = ([ "..":roxen->stat_file(combine_path(long,"../"), id) ]);
+	    _dir = ([ "..":conf->stat_file(combine_path(long,"../"), id) ]);
 	  }
 	}
 	string s = "\n";
@@ -635,7 +635,7 @@ class ls_program {
 	    array(array(string)) new_matches = ({});
 	    foreach(matches, array(string) path) {
 	      array(string) dir;
-	      dir = roxen->find_dir(combine_path(id->cwd, path*"/")+"/", id);
+	      dir = conf->find_dir(combine_path(id->cwd, path*"/")+"/", id);
 	      if (dir && sizeof(dir)) {
 		dir = glob(part, dir);
 		if ((< '*', '?' >)[part[0]]) {
@@ -1126,7 +1126,7 @@ int open_file(string arg, int|void noport)
 	reply("550 "+arg+": not a plain file.\n");
 	file = 0;
 	return 0;
-      } else if(err = catch(file = roxen->get_file(this_object()))) {
+      } else if(err = catch(file = conf->get_file(this_object()))) {
 	roxen_perror(sprintf("FTP: Error opening file\n%s\n",
 			     describe_backtrace(err)));
 	// Lots of paranoia.
@@ -1562,14 +1562,14 @@ void handle_data(string s, mixed key)
       }
       cwd = ncwd;
       not_query = cwd;
-      if(dir = roxen->find_dir(cwd, this_object()))
+      if(dir = conf->find_dir(cwd, this_object()))
       {
 	string message = "";
 	array (string) readme = ({});
 	foreach(dir, f)
 	{
 	  if(f == ".message")
-	    message = roxen->try_get_file(cwd + f, this_object()) ||"";
+	    message = conf->try_get_file(cwd + f, this_object()) ||"";
 	  if(f[0..5] == "README")
 	  {
 	    if(st = my_stat_file(cwd + f))
@@ -2019,8 +2019,8 @@ void create(object f, object c)
     call_out(timeout, 3600);
     
 #if 0
-    if((fi = roxen->try_get_file("/welcome.msg", this_object()))||
-       (fi = roxen->try_get_file("/.message", this_object())))
+    if((fi = conf->try_get_file("/welcome.msg", this_object()))||
+       (fi = conf->try_get_file("/.message", this_object())))
       reply(reply_enumerate(fi, "220"));
     else
 #endif /* 0 */

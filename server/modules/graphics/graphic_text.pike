@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.155 1998/11/06 15:22:50 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.156 1998/11/18 04:54:15 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -185,10 +185,10 @@ object load_image(string f,object id)
   object file;
   object img;
   
-  if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
+  if(!(data=id->conf->try_get_file(f, id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
-//werror("Read "+strlen(data)+" bytes.\n");
+  if(file) destruct(file);
 #if constant(Image.GIF.decode)
   catch { if(!img) img = Image.GIF.decode( data ); };
 #endif
@@ -198,9 +198,7 @@ object load_image(string f,object id)
 #if constant(Image.PNG.decode)
   catch { if(!img) img = Image.PNG.decode( data ); };
 #endif
-#if constant(Image.PNM.decode)
   catch { if(!img) img = Image.PNM.decode( data ); };
-#endif
   if(!img) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
@@ -704,11 +702,9 @@ void start(int|void val, object|void conf)
   if(conf)
   {
     mkdirhier( query( "cache_dir" )+"/.foo" );
-#ifndef __NT__
-#if efun(chmod)
+#if constant(chmod)
     // FIXME: Should this error be propagated?
     catch { chmod( query( "cache_dir" ), 0777 ); };
-#endif
 #endif
     remove_call_out(clean_cache_dir);
     call_out(clean_cache_dir, 10);
@@ -753,11 +749,9 @@ array get_cache_file(string a, string b)
 void store_cache_file(string a, string b, array data)
 {
   object fd = open(FNAME(a,b), "wct");
-#ifndef __NT__
-#if efun(chmod)
+#if constant(chmod)
   // FIXME: Should this error be propagated?
   catch { chmod( FNAME(a,b), 0666 ); };
-#endif
 #endif
   if(!fd) return;
   fd->write(encode_value(({a,b,data})));
@@ -869,14 +863,14 @@ array(int)|string write_text(int _args, string text, int size, object id)
     }
   
 // Quantify
-    int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
+    int q=(int)args->quant||(args->background||args->texture?250:QUERY(cols));
 
     if(q>255) q=255;
     if(q<3) q=3;
 
-//     if(!args->fs)
-//       img = img->map_closest(img->select_colors(q-1)+
-// 			     ({parse_color(args->bg)}));
+    if(!args->fs)
+      img = img->map_closest(img->select_colors(q-1)+
+			     ({parse_color(args->bg)}));
 
     if(!args->scroll)
       if(args->fadein)
@@ -1063,11 +1057,9 @@ void save_cached_args()
   object o = open(ARGHASH, "wct");
   if(o)
   {
-#ifndef __NT__
-#if efun(chmod)
+#if constant(chmod)
     // FIXME: Should this error be propagated?
     catch { chmod( ARGHASH, 0666 ); };
-#endif
 #endif
     string data=encode_value(cached_args);
     catch {
@@ -1134,13 +1126,13 @@ string magic_javascript_header(object id)
      "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
      "}\n"
      "</script>\n");
-
 }
 
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id,string input,string extra_args,string lp)
+		   string mess,object id,string input, 
+		   string extra_args,string lp)
 {
   if(!id->supports->images) return (lp?lp:"")+alt+(lp?"</a>":"");
   if(!id->supports->netscape_javascript)
@@ -1465,7 +1457,7 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
      ||args->background||args->vlink)
     cols=1;
 
-#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;catch{if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}};}}while(0)
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
@@ -1510,9 +1502,10 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
 }
 
 string|void pop_color(string tagname,mapping args,object id,object file,
-		 mapping defines)
+		      mapping defines)
 {
-  if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
+  if(args->help) 
+    return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
   array c = id->misc->colors;
   if(!c ||!sizeof(c)) 
     return;
@@ -1527,8 +1520,7 @@ string|void pop_color(string tagname,mapping args,object id,object file,
       defines->bg = c[-i-1][1];
       break;
     }
-  c = c[..sizeof(c)-i-2];
-  id->misc->colors = c;
+  id->misc->colors = c[..sizeof(c)-i-2];
 }
 
 mapping query_tag_callers()

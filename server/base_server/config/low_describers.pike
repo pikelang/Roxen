@@ -1,7 +1,8 @@
-/* $Id: low_describers.pike,v 1.27 1998/10/16 22:05:16 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.28 1998/11/18 04:53:57 per Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
+#define LOCALE	LOW_LOCALE->config_interface
 
 #include <roxen.h>
 #include <module.h>
@@ -16,71 +17,51 @@ string describe_type(int type, mixed flag)
 {
   switch(type)
   {
-   case TYPE_MODULE:
-    return "(Module)";
-
    case TYPE_CUSTOM:
    case TYPE_TEXT_FIELD:
-    return "";
+   case TYPE_STRING:
+   case TYPE_PORTS:
+   case TYPE_FLAG:
+   case TYPE_COLOR:
+     break;
+
+   case TYPE_MODULE:
+    return LOCALE->module_hint();
 
    case TYPE_FONT:
-    return "(Existing font)";
-
-   case TYPE_STRING:
-    return "";
+    return LOCALE->font_hint();
 
    case TYPE_LOCATION:
-    return "(Location in the virtual filesystem)";
+    return LOCALE->location_hint();
 
    case TYPE_FILE:
-    return "(File name)";
+    return LOCALE->file_hint();
 
    case TYPE_DIR:
-    return "(Directory name of existing directory)";
+    return LOCALE->dir_hint();
 
    case TYPE_FLOAT:
-    return "(Floating point decimal number)";
+    return LOCALE->float_hint();
 
    case TYPE_INT:
-    return "(Integer number)";
+    return LOCALE->int_hint();
 
    case TYPE_STRING_LIST:
     if(!flag)
-      return "(Commaseparated list of strings)";
+      return LOCALE->stringlist_hint();
     break;
 
    case TYPE_DIR_LIST:
     if(!flag)
-      return "(Commaseparated list of directories)";
+      return LOCALE->dirlist_hint();
     break;
 
    case TYPE_PASSWORD:
-    return "(A password, characters will not be echoed)";
+     return LOCALE->password_hint();
 
    case TYPE_INT_LIST:
     if(!flag)
-      return "(Commaseparated list of integers)";
-    break;
-
-
-   case TYPE_PORTS:
-    if(!flag)
-      return
-	("This is a list of ports. "
-	 "<p> The first field for each port is the actual port number, the "
-	 "second is the protocol used and the third is the interface to bind "
-	 "to.");
-    break;
-
-   case TYPE_FLAG:
-    break;
-
-   case TYPE_COLOR:
-    if(!flag)
-      return 
-	("(A colon separated color specification with red:green:blue where "
-	 "red, green and blue are numbers ranging from 0 to 255. 0:0:0 "
-	 "is black, 255:0:0 red and 255:255:255 white)");
+      return LOCALE->intlist_hint();
     break;
   }
   return "";
@@ -103,7 +84,7 @@ string name_of_module( object m )
 {
   string name;
   if(!objectp(m))
-    return "None";
+    return "?";
 
   if((name=m->query("_name")) && strlen(name))
     ;
@@ -115,7 +96,7 @@ string name_of_module( object m )
   return strip_html(name);
 }
 
-string describe_variable_as_text(array var, int|void verbose)
+string describe_variable_as_text(array var, int verbose, object node)
 {
   switch(var[VAR_TYPE])
   {
@@ -138,8 +119,7 @@ string describe_variable_as_text(array var, int|void verbose)
     return replace(name, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
 
    case TYPE_PORTS:
-     return sizeof(var[VAR_VALUE])+ " port"+ 
-       (sizeof(var[VAR_VALUE]) == 1 ? "": "s")+" configured";
+     return LOCALE->ports_configured(sizeof(var[VAR_VALUE]));
 
    case TYPE_TEXT_FIELD:
     array f;
@@ -148,7 +128,7 @@ string describe_variable_as_text(array var, int|void verbose)
     if(verbose)
       return "<pre>"+replace(var[VAR_VALUE], ({ "<", ">", "&" }), 
 		     ({ "&lt;", "&gt;", "&amp;" }))+"</pre>";
-    return sizeof(f) + " lines";
+    return LOCALE->lines(sizeof(f));
     
    case TYPE_PASSWORD:
     return "****";
@@ -177,7 +157,13 @@ string describe_variable_as_text(array var, int|void verbose)
    case TYPE_STRING_LIST:
    case TYPE_INT_LIST:
     if(var[VAR_MISC])
+    {
+      object module = node->module_object();
+      if(LOW_LOCALE->module_doc_string(module, var[VAR_SHORTNAME], 2))
+	return LOW_LOCALE->
+	  module_doc_string(module, var[VAR_SHORTNAME], 2)[var[VAR_VALUE]];
       return (string)var[VAR_VALUE];
+    }
     if(arrayp(var[VAR_VALUE]))
       return map(var[VAR_VALUE],lambda(mixed a){
 	return replace((string)a,({"<",">","&"}),({"&lt;","&gt;","&amp;"}));
@@ -187,13 +173,13 @@ string describe_variable_as_text(array var, int|void verbose)
     
    case TYPE_FLAG:
     if(var[VAR_VALUE])
-      return "Yes";
-    return "No";
+      return LOW_LOCALE->yes;
+    return LOW_LOCALE->no;
     
    case TYPE_COLOR:
-    return "Color";
+    return LOCALE->color();
   }
-  return "Unknown";
+  return LOCALE->unkown_variable_type();
 }
 
 array ip_number_list;
@@ -236,7 +222,10 @@ void init_ip_list()
   }
 
   // Most others
-  string ips = popen(ifconfig+" -a 2>/dev/null");
+  string ips;
+  catch { // AmigaOS gives error when doing popen (for now)
+    ips = popen(ifconfig+" -a 2>/dev/null");
+  };
   if(!ips || !strlen(ips))
     ; // No output from the 'ifconfig' call.
   else   
@@ -277,7 +266,9 @@ string all_ip_numbers_as_selection(int id, string sel)
 		 lambda(string s, string q) {
 		   return "  <option"+(q==s?" selected":"")+">"+s+"\n";
 		 }, sel)*"") +
-	    "</select>\nOther IP-number: <input type=string name=other_" +
+	    "</select>\n"+
+	    LOCALE->other_ip_nummer()
+	    +" <input type=string name=other_" +
             id + " value=\""+sel+"\">\n");
   } else {
     return "<input type=string name=ip_number_"+id+" value='"+sel+"'>\n";
@@ -288,7 +279,7 @@ array protocols()
 {
   array(string) files = get_dir("protocols");
   if (!files || !sizeof(files)) {
-    throw(({"No protocols available!\n", backtrace() }));
+    error("No protocols available!\n");
   }
   return map(filter(files, lambda(string s) {
     return ((search(s,".pike") == search(s,".")) &&
@@ -307,9 +298,7 @@ string all_protocols_as_selection(int id, string sel)
 
 string port_buttons(array port, int id)
 {
-  return ("<input type=reset value=\"Reset to last entered\"><br>"
-	  "\n<font color=red><input type=submit name=delete_"+id+
-	  " value=\"Delete this port\"></font>");
+  return LOCALE->port_buttons(port, id);
 }
 
 string encode_one_port(array port, int id)
@@ -330,37 +319,11 @@ string encode_one_port(array port, int id)
     sscanf(port[3], "%*skey-file %s\n", kf);
     res += ("<tr><td colspan=3>"
 	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
-	    "<tr width=100%><td colspan=2 width=100%><b>SSL Options</b></td></tr>\n");
-    res += ("<tr><td>Certificate file:</td> <td><input size=30,1 "
-	    "name=cert_"+id+" value="+html_encode_tag_value(cf||"")+
-	    "></td></tr>\n"
-	    "<tr><td>Key file: (OPTIONAL)</td><td><input size=30,1 "
-	    "name=key_"+id+"  value="+html_encode_tag_value(kf||"")+
-	    "></td></tr>\n");
+	    "<tr width=100%><td colspan=2 width=100%><b>"+
+	    LOCALE->ssl_options()+"</b></td></tr>\n");
+    res += LOCALE->ssl_variables(cf,kf,id);
     res += "</table></td></tr>\n";
     break;
-#if 0
-   case "smtp":
-    string arg1, arg2;
-    sscanf(port[3], "%*sid %s\n", arg1);
-    sscanf(port[3], "%*ssize %s\n", arg2);
-    if(!arg1 || !strlen(arg1))
-      arg1 = "ESMTP "+roxen->real_version;
-    if(!arg2 || !strlen(arg2))
-      arg2 = "1000000"; // 1MB
-    
-    res += ("<tr><td colspan=3>"
-	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
-	    "<tr width=100%><td colspan=2 width=100%><b>SMTP Options</b></td></tr>\n");
-    res += ("<tr><td>Server identification string:</td> <td><input size=30,1 "
-	    "name=smtp_id_"+id+" value=\""+html_encode_string(arg1)+
-	    "\"></td></tr>\n"
-	    "<tr><td>Max Message Size:</td> <td><input size=30,1 "
-	    "name=smtp_size_"+id+"  value=\""+html_encode_string(arg2)+
-	    "\"></td></tr>\n");
-    res += "</table></td></tr>\n";
-    break;
-#endif
   } 
   return res +
     ("</table></td><td height=100% valign=top>\n"
@@ -395,10 +358,8 @@ string encode_ports(array from)
     }
   }
   res += "<tr><td colspan=4>\n"
-    "<table width=100% bgcolor=#f0f0ff border=0 cellpadding=0 cellspacing=0><tr><td>\n"+
-    (sizeof(from)?"<input type=submit name=ok value=\"Use these values\">":"")+
-    "<input type=submit name=new_port value=\"Configure a new port\">"
-    "</tr></table></td></tr>";
+    "<table width=100% bgcolor=#f0f0ff border=0 cellpadding=0 cellspacing=0>"
+    "<tr><td>\n"+LOCALE->port_top_buttons(from)+"</tr></table></td></tr>";
   return res+"</table>";
 }
 
@@ -445,10 +406,12 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
 	       "</option>" });
     if(var[VAR_TYPE] == TYPE_MODULE)
       res = ("<select name="+path+">\n"+
-	     rs*"\n"+"\n</select>\n<input type=submit value=Ok>");
+	     rs*"\n"+"\n</select>\n<input type=submit value="+
+	     LOW_LOCALE->ok+">");
     else
       res = ("<select multiple name="+path+">\n"+
-	     rs*"\n"+"\n</select>\n<input type=submit value=Ok>");
+	     rs*"\n"+"\n</select>\n<input type=submit value="+
+	     LOW_LOCALE->ok+">");
     break;
 
    case TYPE_PORTS:
@@ -459,11 +422,12 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
    case TYPE_TEXT_FIELD:
     res="<textarea name="+path+" cols=50 rows=10>"
       + html_encode_string(var[VAR_VALUE]||"")
-      + "</textarea><br><input type=submit value=Ok>\n";
+      + "</textarea><br><input type=submit value="+LOW_LOCALE->ok+">\n";
     break;
     
    case TYPE_PASSWORD:
-    res="<input name=\""+path+"\" type=password size=30,1><input type=submit value=Ok>";
+    res="<input name=\""+path+"\" type=password size=30,1>"
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
 
@@ -483,32 +447,37 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
       f = replace(f, "_", " ");
       res += "<option"+(f == var[VAR_VALUE]?" selected>":">")+f+"\n";
     }
-    res += "</select><input type=submit value=Ok>";
+    res += "</select><input type=submit value="+LOW_LOCALE->ok+">";
     break;
 
    case TYPE_STRING:
-    res=input(path, var[VAR_VALUE], 30)+"<input type=submit value=Ok>";
+    res=input(path, var[VAR_VALUE], 30)+
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_LOCATION:
-    res=input(path, var[VAR_VALUE], 30)+"<input type=submit value=Ok>";
+    res=input(path, var[VAR_VALUE], 30)+
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_FILE:
-    res=input(path, var[VAR_VALUE], 30)+"<input type=submit value=Ok>";
+    res=input(path, var[VAR_VALUE], 30)+
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_DIR:
-    res=input(path, var[VAR_VALUE], 30)+"<input type=submit value=Ok>";
+    res=input(path, var[VAR_VALUE], 30)+
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_INT:
-    res=input(path, var[VAR_VALUE], 10)+"<input type=submit value=Ok>";
+    res=input(path, var[VAR_VALUE], 10)+
+      "<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_FLOAT:
     res=input(path, sprintf("%.4f", var[VAR_VALUE]), 10)
-      +"<input type=submit value=Ok>";
+      +"<input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_DIR_LIST:
@@ -518,19 +487,28 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
     {
       string tmp;
       mixed *misc;
+      mapping translate;
       int i;
       
       tmp="<select name="+path+">  ";
       misc=var[VAR_MISC];
-      
+      translate = LOW_LOCALE->module_doc_string(node->module_object(), 
+						var[VAR_SHORTNAME],2);
+      if(!translate)
+	translate = mkmapping(misc,misc);
       for(i=0; i<sizeof(misc); i++)
       {
 	if(misc[i]==var[VAR_VALUE])
-	  tmp+="  <option selected> "+misc[i]+" ";
+	  tmp+=("  <option value=\""+
+		replace(misc[i],"\"","&quote;")
+		+ "\" selected> "+
+		translate[misc[i]]+" ");
  	else
-	  tmp+="  <option> "+misc[i]+"  ";
+	  tmp+=("  <option value=\""+
+		replace(misc[i],"\"","&quote;")+ "\"> "+
+		translate[misc[i]]+" ");
       }
-      res=tmp+"</select><input type=submit value=Ok>";
+      res=tmp+"</select><input type=submit value="+LOW_LOCALE->ok+">";
     } else {
       
       if(!arrayp(var[VAR_VALUE]))
@@ -538,17 +516,19 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
       
       res="<input name="+path+" size=60,1 value=\""+
 	(map(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
-	  "\">"+"<input type=submit value=Ok>";
+	  "\">"+"<input type=submit value="+LOW_LOCALE->ok+">";
     }
     break;
     
    case TYPE_FLAG:
     res = "<select name="+path+"> ";
     if(var[VAR_VALUE])
-      res +=  "<option selected>Yes<option>No";
+      res +=  ("<option value=Yes selected>"+LOW_LOCALE->yes+
+	       "<option value=No>"+LOW_LOCALE->no);
     else
-      res +=  "<option>Yes<option selected>No";
-    res +=  "</select><input type=submit value=Ok>";
+      res +=  ("<option value=Yes>"+LOW_LOCALE->yes+
+	       "<option value=No selected>"+LOW_LOCALE->no);
+    res +=  "</select><input type=submit value="+LOW_LOCALE->ok+">";
     break;
     
    case TYPE_COLOR:
@@ -558,7 +538,7 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
           + ((var[ VAR_VALUE ] >> 16) & 255)
 	  + ":" + ((var[ VAR_VALUE ] >> 8) & 255)
 	  + ":" + (var[ VAR_VALUE ] & 255) 
-	  + ">"+"<input type=submit value=Ok>";
+	  + ">"+"<input type=submit value="+LOW_LOCALE->ok+">";
   }
   /* Now in res: <input ...> */
 
@@ -574,106 +554,3 @@ string describe_variable_low(mixed *var, mixed path, string name, object node)
       + describe_type(var[VAR_TYPE], var[VAR_MISC]) + "<p>";
   return res;
 }
-
-string describe_module_type(int t)
-{
-  string res;
-  int w;
-  res="";
-  
-  if(t & MODULE_MAIN_PARSER)
-    return "";
-  
-  if(t & MODULE_TYPES)
-    return "This is the extension to contenttype mapping module";
-  
-  if(t & MODULE_DIRECTORIES)
-    return "This is the directory parsing module";
-  
-  if((t & MODULE_EXTENSION) || (t & MODULE_FILE_EXTENSION))
-  {
-    res += "This is an extension module. ";
-    w++;
-  }
-  
-  if(t & MODULE_AUTH)
-  {
-    if(!w)
-      res += "This is the authentification module. ";
-    else
-      res += "It is also the authentification module. ";
-    w++;
-  }
-  
-  if(t & MODULE_LOCATION)
-  {
-    switch(w)
-    {
-     case 0:
-      res += "This is a location module. ";
-      break;
-     case 1:
-      res += "It is also a location module. ";
-      break;
-     case 2:
-      res += "And a location module. ";
-    }
-    w++;
-  }
-  
-  if(t & MODULE_URL)
-  {
-    if(w)
-      res += "It will also remap URL-s (internal redirects). ";
-    else
-      res += "This module remap URL-s (internal redirects). ";
-  }  
-  
-  if(t & MODULE_FIRST)
-  {
-    if(w&1)
-      res += ("And since it is also a module that will be run before all "
-	      + "other modules, except other modules of the same type. ");
-    else if(w)
-      res += ("It is also a module that will be run before all "
-	      + "other modules, except other modules of the same type. ");
-    else
-      res += ("This is a module that will be run before all "
-	      +"other modules, except other modules of the same type. ");
-    w++;
-  }
-  
-  if(t & MODULE_LAST)
-  {
-    if(w)
-      res += ("And since it is also a last resort module,"
-	      +" it will be called if everything else fails. ");
-    else
-      res += ("This is a last resort module, which will only be called if "+
-	      "everything else fails. ");
-    w++;
-  }
-  
-  if(t & MODULE_PARSER)
-  {
-    if(w)
-      res += ("It also handles a few extensions to the HTML language. ");
-    else
-      res += ("This is a parse module, which adds one or more tags to "+
-	      "the HTML language. ");
-    w++;
-  }
-  
-  if(!w) 
-    return "";
-  
-  return res;
-}
-
-
-
-
-
-
-
-

@@ -1,10 +1,15 @@
 /*
- * $Id: debuginformation.pike,v 1.15 1998/10/10 03:40:58 per Exp $
+ * $Id: debuginformation.pike,v 1.16 1998/11/18 04:53:59 per Exp $
  */
 
 inherit "wizard";
-constant name= "Development//Debug information for developers";
+inherit "configlocale";
 
+constant name_svenska = "Utveckling//Avlusningsinformation för utvecklare";
+constant name = "Development//Development information for developers";
+
+constant doc_svenska = (#"Visa lite information om roxens interna
+ strukturer, kan vara användbart för folk som utvecklar roxenmoduler");
 constant doc = ("Show some internals of Roxen, useful for debugging "
 		"code.");
 
@@ -16,6 +21,9 @@ constant colors = ({ "#f0f0ff", "white" });
 
 constant ok_label = " Refresh ";
 constant cancel_label = " Done ";
+
+constant ok_label_svenska = " Uppdatera ";
+constant cancel_label_svenska = " Klar ";
 
 #if efun(get_profiling_info)
 string remove_cwd(string from)

@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.16 1998/11/04 20:27:08 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.17 1998/11/18 04:54:21 per Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -176,7 +176,7 @@ multiset (string) find_files( string url, object id )
 
   filename = reverse( (reverse( url ) / "/")[0] );
   basename = reverse( (reverse( url ) / "/")[1..] * "/" ) + "/";
-  tmp = roxen->find_dir( basename, id );
+  tmp = id->conf->find_dir( basename, id );
   if (tmp)
     files = aggregate_multiset( @tmp );
   foreach (indices( language_list ), extension)

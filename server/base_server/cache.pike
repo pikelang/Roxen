@@ -1,5 +1,6 @@
-//string cvs_version = "$Id: cache.pike,v 1.21 1998/06/24 02:09:40 js Exp $";
-
+#define LOCALE	roxenp()->locale->get()->base_server
+//string cvs_version = "$Id: cache.pike,v 1.22 1998/11/18 04:53:43 per Exp $";
+#include <roxen.h>
 #include <config.h>
 
 inherit "roxenlib";
@@ -67,8 +68,7 @@ string status()
 //   catch { key = cleaning_lock->lock(); };
 // #endif /* THREADS */
   string res, a;
-  res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=lightblue>"
-    "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
+  res = LOCALE->cache_status_header();
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
   b=indices(cache);
@@ -82,6 +82,7 @@ string status()
     int h = hits[b[i]];
     int t = all[b[i]];
     sscanf(b[i], "%s:", b[i]);
+    b[i] = LOCALE->translate_cache_class( b[i] );
     ca[b[i]]+=c[i]; cb[b[i]]+=s; ch[b[i]]+=h; ct[b[i]]+=t;
   }
   b=indices(ca);
@@ -110,7 +111,7 @@ string status()
     }
     i++;
   }
-  res += "<tr align=right bgcolor=lightblue><td align=left>Total</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
+  res += "<tr align=right bgcolor=lightblue><td align=left>&nbsp;</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
     res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
     if(totalr)
       res += "<td>"+(totalh*100)/totalr+"%</td>";

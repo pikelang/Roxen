@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.11 1998/03/11 19:42:40 neotron Exp $";
+string cvs_version = "$Id: wais.pike,v 1.12 1998/11/18 04:54:25 per Exp $";
 
 #include <config.h>
 
@@ -1979,8 +1979,7 @@ void done_fetch_data(array in)
 						   bin),0);
   }
   destruct(to);
-  --roxen->num_connections;
-}
+ 
 
 
 void got_fetch_data(array i, string s)
@@ -2086,7 +2085,6 @@ void done_search_data(array in)
 							key)+"</BODY></HTML>",
 			    0);
   destruct(to);
-  --roxen->num_connections;
 }
 
 

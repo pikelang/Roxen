@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.35 1998/10/12 22:13:10 per Exp $ */
+/* $Id: module.pike,v 1.36 1998/11/18 04:53:48 per Exp $ */
 
 #include <module.h>
 
@@ -286,15 +286,13 @@ void defvar(string|void var, mixed|void value, string|void name,
 }
 
 void deflocaledoc( string locale, string variable, 
-		   string name, string doc )
+		   string name, string doc, mapping|void translate )
 {
-  // Locale stuff!
-  // Här blir vi farliga...
   if(!Locale.Roxen[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
     Locale.Roxen[locale]
-      ->register_module_doc( this_object(), variable, name, doc );
+      ->register_module_doc( this_object(), variable, name, doc, translate );
 }
 
 // Convenience function, define an invissible variable, this variable

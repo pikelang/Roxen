@@ -4,7 +4,7 @@
  * generate any directory listings, instead only using index files.
  */
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.6 1998/03/11 19:42:35 neotron Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.7 1998/11/18 04:54:12 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -51,7 +51,7 @@ mapping parse_directory(object id)
   {
     mapping result;
     id->not_query = oq+file;
-    if(result=roxen->get_file(id))
+    if(result=id->conf->get_file(id))
       return result; // File found, return it.
   }
   id->not_query = oq;

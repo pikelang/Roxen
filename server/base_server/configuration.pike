@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.166 1998/11/13 20:10:20 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.167 1998/11/18 04:53:44 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -15,7 +15,7 @@ mapping profile_map = ([]);
 /* A configuration.. */
 
 
-inherit "roxenlib";
+inherit "rxml";
 
 public string real_file(string file, object id);
 
@@ -27,8 +27,8 @@ function do_dest = roxen->do_dest;
 function create_listen_socket = roxen->create_listen_socket;
 
 
+object   parse_module =this_object();
 
-object   parse_module;
 object   types_module;
 object   auth_module;
 object   dir_module;
@@ -139,15 +139,13 @@ int defvar(string var, mixed value, string name, int type,
 }
 
 void deflocaledoc( string locale, string variable, 
-		   string name, string doc )
+		   string name, string doc, mapping|void translate )
 {
-  // Locale stuff!
-  // Här blir vi farliga...
   if( !Locale.Roxen[locale] )
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
     Locale.Roxen[locale]
-      ->register_module_doc( this_object(), variable, name, doc );
+      ->register_module_doc( this_object(), variable, name, doc, translate );
 }
 
 int definvisvar(string var, mixed value, int type)
@@ -323,7 +321,6 @@ private mapping (string:array (object)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
-  CATCH(parse_module && parse_module->stop && parse_module->stop());
   CATCH(types_module && types_module->stop && types_module->stop());
   CATCH(auth_module && auth_module->stop && auth_module->stop());
   CATCH(dir_module && dir_module->stop && dir_module->stop());
@@ -2380,8 +2377,6 @@ object enable_module( string modname )
 		      MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
 		      MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
   {
-    // FIXME: LOCALIZE!
-
     me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 	       "The priority of the module. 9 is highest and 0 is lowest."
 	       " Modules with the same priority can be assumed to be "
@@ -2706,37 +2701,37 @@ object enable_module( string modname )
     types_fun = me->type_from_extension;
   }
   
-  if((module->type & MODULE_MAIN_PARSER))
-  {
-    parse_module = me;
-    if (_toparse_modules) {
-      Array.map(_toparse_modules,
-		lambda(object o, object me, mapping module)
-		{
-		  array err;
-		  if (err = catch {
-		    me->add_parse_module(o);
-		  }) {
-		    report_error(LOCALE->
-				 error_initializing_module_copy(module->name,
-								describe_backtrace(err)));
-		  }
-		}, me, module);
-    }
-  }
+//   if((module->type & MODULE_MAIN_PARSER))
+//   {
+//     parse_module = me;
+//     if (_toparse_modules) {
+//       Array.map(_toparse_modules,
+// 		lambda(object o, object me, mapping module)
+// 		{
+// 		  array err;
+// 		  if (err = catch {
+// 		    me->add_parse_module(o);
+// 		  }) {
+// 		    report_error(LOCALE->
+// 				 error_initializing_module_copy(module->name,
+// 								describe_backtrace(err)));
+// 		  }
+// 		}, me, module);
+//     }
+//   }
 
   if(module->type & MODULE_PARSER)
   {
     if(parse_module) {
       if (err = catch {
-	parse_module->add_parse_module( me );
+	add_parse_module( me );
       }) {
 	report_error(LOCALE->
 		     error_initializing_module_copy(module->name,
 						    describe_backtrace(err)));
       }
     }
-    _toparse_modules += ({ me });
+//     _toparse_modules += ({ me });
   }
 
   if(module->type & MODULE_AUTH)
@@ -2962,15 +2957,11 @@ int disable_module( string modname )
     types_fun = 0;
   }
 
-  if(module->type & MODULE_MAIN_PARSER)
-    parse_module = 0;
+//   if(module->type & MODULE_MAIN_PARSER)
+//     parse_module = 0;
 
   if(module->type & MODULE_PARSER)
-  {
-    if(parse_module)
-      parse_module->remove_parse_module( me );
-    _toparse_modules -= ({ me, 0 });
-  }
+    remove_parse_module( me );
 
   if( module->type & MODULE_AUTH )
   {
@@ -3052,7 +3043,6 @@ void register_module_load_hook( string modname, function fun, mixed ... args )
       _hooks[modname] += ({ ({ fun, args }) });
 }
 
-
 int load_module(string module_file)
 {
   int foo, disablep;
@@ -3075,23 +3065,19 @@ int load_module(string module_file)
     };
   } else {
     string dir;
-
-   _master->set_inhibit_compile_errors("");
-
+    object e;
+    master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
     err = catch {
       obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file,
 				  this_object());
     };
-
-    string errors = (string)_master->errors;
-
-    _master->set_inhibit_compile_errors(0);
-
-    if (sizeof(errors)) {
-      report_error(LOCALE->module_compilation_errors(module_file, errors));
+    master()->set_inhibit_compile_errors(0);
+    
+    if (sizeof(e->get())) {
+//       werror("compilation errors...\n"+e->get()+"\n");
+      report_error(LOCALE->module_compilation_errors(module_file, e->get()));
       return(0);
     }
-
     prog = roxen->last_loaded();
   }
 
@@ -3148,9 +3134,9 @@ int load_module(string module_file)
   if (err != "")
   {
 #ifdef MODULE_DEBUG
-    perror("FAILED\n"+err);
+    perror("FAILED\n");
 #endif
-    report_error(LOCALE->tried_moding_module(module_file, err));
+    report_error(LOCALE->tried_loading_module(module_file, err));
     if(obj)
       destruct( obj );
     return 0;
@@ -3403,18 +3389,30 @@ void create(string config)
 	 "What to return when there is no resource or file available "
 	 "at a certain location. $File will be replaced with the name "
 	 "of the resource requested, and $Me with the URL of this server ");
-
-
+  deflocaledoc("svenska", "ZNoSuchFile",
+	       "Meddelanden: Filen finns inte",
+#"Det här meddelandet returneras om en användare frågar efter en
+  resurs som inte finns. '$File' byts ut mot den efterfrågade
+ resursen, och '$Me' med serverns URL");
+  
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "This text will be visible in the configuration interface, it "
 	 " can be quite useful to use as a memory helper.");
-  
+
+  deflocaledoc("svenska", "comment", "Kommentar",
+	       "En kommentar som syns i konfigurationsinterfacet");
+
   defvar("name", "", "Virtual server name",
 	 TYPE_STRING|VAR_MORE,
 	 "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used");
+  deflocaledoc("svenska", "name", "Serverns namn",
+#"Det här är namnet som kommer att synas i
+  konfigurationsgränssnittet. Om du lämnar det här fältet tomt kommer
+  serverns ursprungliga namn (det du skrev in när du skapade servern)
+  att användas.");
   
   defvar("LogFormat", 
  "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
@@ -3457,9 +3455,56 @@ void create(string config)
 	 "$user_id       -- A unique user ID, if cookies are supported,\n"
 	 "                  by the client, otherwise '0'\n"
 	 "</pre>", 0, log_is_not_enabled);
+  deflocaledoc("svenska", "LogFormat", "Loggning: Loggningsformat",
+#"Vilket format som ska användas för att logga
+<pre>
+svarskod eller *: Loggformat för svarskoden (eller alla koder som inte 
+                  har något annat format specifierat om du använder '*')
+
+loggformatet är normala tecken, och en eller flera av koderna nedan.
+
+\\n \\t \\r    -- Precis som i C, ny rad, tab och carriage return
+$char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
+$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det 
+                  angivna nummret.
+$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det 
+                  angivna nummret.
+$^             -- Stoppa <b>inte</b> in en vagnretur på slutet av
+                  varje loggrad
+$host          -- DNS namnet för datorn som gjorde förfrågan
+$ip_number     -- IP-nummret för datorn som gjorde förfrågan
+$bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
+                  binärdata i nätverksoktettordning 
+
+$cern_date     -- Ett datum som det ska vara enligt Cern Common Log
+                  file specifikationen 
+$bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
+                  i nätverksoktettordning.
+
+$method        -- Förfrågningsmetoden (GET, POST etc)
+$resource      -- Resursidentifieraren (filnamnet)
+$protocol      -- Protokollet som användes för att fråga efter filen
+$response      -- Den skickade svarskoden
+$bin-response  -- Den skickade svarskoden som ett binärt ord (2
+                  oktetter) i nätverksoktettordning
+$length        -- Längden av datan som skickades som svar till klienten
+$bin-length    -- Samma sak, men som ett 4 oktetters ord i
+                  nätverksoktettordning. 
+$request-time  -- Tiden som requeten tog i sekunder
+$referer       -- Headern 'referer' från förfrågan eller '-'.
+$user_agent    -- Headern 'User-Agent' från förfrågan eller '-'.
+$user          -- Den autentifierade användarens namn, eller '-'
+$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du 
+                  måste slå på kaksättningsfunktionaliteten i de
+                  globala inställningarna. '0' används för de
+                  förfrågningar som inte har kakan.
+</pre>");
+	       
   
   defvar("Log", 1, "Logging: Enabled", TYPE_FLAG, "Log requests");
-  
+  deflocaledoc("svenska", "Log", "Loggning: På",
+	       "Ska roxen logga alla förfrågningar till en logfil?");
+
   defvar("LogFile", roxen->QUERY(logdirprefix)+
 	 short_name(name)+"/Log", 
 
@@ -3468,62 +3513,111 @@ void create(string config)
 	 "A file name. May be relative to "+getcwd()+"."
 	 " Some substitutions will be done:"
 	 "<pre>"
-	 "%y    Year  (i.e. '1997')\n"
-	 "%m    Month (i.e. '08')\n"
-	 "%d    Date  (i.e. '10' for the tenth)\n"
-	 "%h    Hour  (i.e. '00')\n</pre>"
+	 "%y    Year  (e.g. '1997')\n"
+	 "%m    Month (e.g. '08')\n"
+	 "%d    Date  (e.g. '10' for the tenth)\n"
+	 "%h    Hour  (e.g. '00')\n</pre>"
 	 ,0, log_is_not_enabled);
+  deflocaledoc("svenska", "LogFile", 
+	       "Logging: Loggfil",
+	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
+	       +getcwd()+
+#". Du kan använda några kontrollkoder för att få flera loggfiler och
+ automatisk loggrotation:
+<pre>
+%y    År     (t.ex. '1997')
+%m    Månad  (t.ex. '08')
+%d    Datum  (t.ex. '10')
+%h    Timme  (t.ex. '00')
+</pre>");
+
   
   defvar("NoLog", ({ }), 
 	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, log_is_not_enabled);
+  deflocaledoc("svenska", "NoLog", 
+	       "Loggning: Logga intget för",
+#"Logga inte några förfrågningar vars IP-nummer matchar
+  något av de mönster som står i den här listan.  Den här variabeln
+  påverkar även &lt;accessed&gt; RXML-styrkoden.");
   
   defvar("Domain", get_domain(), "Domain", TYPE_STRING, 
-	 "Your domainname, should be set automatically, if not, "
-	 "enter the correct domain name here, and send a bug report to "
-	 "<a href=\"mailto:roxen-bugs@idonex.se\">roxen-bugs@idonex.se"
-	 "</a>");
-  
+	 "The domainname of the server. The domainname is used "
+	 " to generate default URLs, and to gererate email addresses");
+  deflocaledoc( "svenska", "Domain", 
+		"DNS Domän",
+
+#"Serverns domännamn. Det av en del RXML styrkoder för att generara
+epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
+		
 
   defvar("Ports", ({ }), 
-	 "Listen ports", TYPE_PORTS,
+	 "Ports", TYPE_PORTS,
          "The ports this virtual instance of Roxen will bind to.\n");
+  deflocaledoc("svenska", "Ports", 
+	       "Portar",
+#"Portarna som den här virtuella instansen av roxen
+  kommer att öppna och lyssna på förfrågningar till");
+	       
 
   defvar("MyWorldLocation", get_my_url(), 
 	 "Server URL", TYPE_STRING,
 	 "This is where your start page is located.");
-
-
+  deflocaledoc( "svenska", "MyWorldLocation",
+		"Serverns URL",
+#"Det här är URLen till din startsida. Den används av rätt många 
+  moduler för att bygga upp absoluta URLer från en relativ URL.");
 // This should be somewhere else, I think. Same goes for HTTP related ones
 
   defvar("FTPWelcome",  
 	 "              +-------------------------------------------------\n"
 	 "              +-- Welcome to the Roxen Challenger FTP server ---\n"
 	 "              +-------------------------------------------------\n",
-	 "Messages: FTP Welcome",
+	 "FTP: FTP Welcome",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
 	 "<i>/welcome.msg</i> doesn't exist.\n");
-  
-  defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG|VAR_MORE,
+  deflocaledoc("svenska", "FTPWelcome",
+	       "FTP: Välkomstmeddelande",
+#"Det här meddelanden skickas till alla FTP klienter så
+  fort de kopplar upp sig till servern");
+
+  defvar("named_ftp", 0, "FTP: Allow named FTP", TYPE_FLAG|VAR_MORE,
 	 "Allow ftp to normal user-accounts (requires auth-module).\n");
-
-  defvar("anonymous_ftp", 1, "Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
+  deflocaledoc("svenska", "named_ftp", "FTP: Tillåt icke-anonym FTP",
+	       "Tillåt FTP med loginnamn och lösenord. Du måste ha en "
+	       " authentifikationsmodul för att kunna "
+	       "använda icke-anonym FTP.");
+  defvar("anonymous_ftp", 1, "FTP: Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
 	 "Allows anonymous ftp.\n");
+  deflocaledoc("svenska", "anonymous_ftp", "FTP: Tillåt anonym FTP",
+	       "Tillåt anonym FTP");
 
-  defvar("guest_ftp", 0, "Allow FTP guest users", TYPE_FLAG|VAR_MORE,
+  defvar("guest_ftp", 0, "FTP: Allow FTP guest users", TYPE_FLAG|VAR_MORE,
 	 "Allows FTP guest users.\n");
+  deflocaledoc( "svenska", "guest_ftp", 
+		"FTP: Tillåt FTPgästanvändare",
+		"Tillåt FTPgästanvändare");
 
   defvar("ftp_user_session_limit", 0,
 	 "FTP user session limit", TYPE_INT|VAR_MORE,
 	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
 
-  defvar("shells", "/etc/shells", "Shell database", TYPE_FILE|VAR_MORE,
+  deflocaledoc( "svenska", "ftp_user_session_limit", 
+		"FTP: Maximalt antal samtidiga användarsessioner",
+		"0=obegränsat antal");
+
+  defvar("shells", "/etc/shells", "FTP: Shell database", TYPE_FILE|VAR_MORE,
 	 "File which contains a list of all valid shells\n"
 	 "(usually /etc/shells). Used for named ftp.\n"
 	 "Specify the empty string to disable shell database lookup.\n");
+  deflocaledoc( "svenska", "shells", 
+		"FTP: Skaldatabas",
+		#"En fil som innehåller en lista på alla tillåtna
+ skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
+ tomma strängen för att stänga av verifieringen av användarskal");
 
   setvars(retrieve("spider#0", this));
 }

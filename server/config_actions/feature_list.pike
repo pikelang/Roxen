@@ -1,15 +1,16 @@
 /*
- * $Id: feature_list.pike,v 1.3 1998/10/10 03:40:59 per Exp $
+ * $Id: feature_list.pike,v 1.4 1998/11/18 04:54:01 per Exp $
  */
 
 inherit "wizard";
-
+inherit "configlocale";
 import Array;
 
 constant name = "Development//Pike feature-list";
+constant name_svenska = "Utveckling//Pikemodulslista";
 
 constant doc = "Shows the Pike-modules that are enabled.";
-
+constant doc_svenska = "Visar alla tillgängliga pikemoduler";
 constant more = 1;
 
 mapping(string:int) modules = ([]);
@@ -85,7 +86,7 @@ mixed page_0(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  string res = "<b>Features:</b><ul>\n";
+  string res = LOCALE()->feature_features()+"<ul>\n";
   foreach(({ "dynamic_modules", "threads", "_Crypto", "CommonLog",
 	     "Dbm", "Gdbm", "Gmp", "Gz", "MIME",
 	     "Msql", "Mysql", "Odbc", "Oracle", "Postgres", "Ssleay",
@@ -100,7 +101,7 @@ mixed page_0(object id, object mc)
 				 return(m[s] != 1);
 			       }, modules));
   if (sizeof(disabled)) {
-    res += "<b>Disabled modules:</b><ul>\n";
+    res += LOCALE()->feature_mdisabled()+"<ul>\n";
     res += disabled * " ";
     res += "</ul><br>\n";
   }
@@ -112,15 +113,17 @@ mixed page_1(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  return("<b>All modules:</b><ul>\n" +
-	 html_table(({ "Module name", "State" }),
+  return(LOCALE()->feature_allmodules()+"<ul>\n" +
+	 html_table(({ LOCALE()->feature_modulename(),
+		       LOCALE()->feature_state() }),
 		    map(sort(indices(modules)),
 			lambda(string s, mapping r) {
 			  return ({
 			    s,
 			    ({
-			      "<font color='#ff0000'><b>Disabled</b></font>",
-			      "N/A", "Enabled" })[ r[s] + 1]
+			      LOCALE()->feature_disabled(),
+			      LOCALE()->feature_na(), 
+			      LOCALE()->feature_enabled() })[ r[s] + 1]
 			  });
 			}, modules)) +
 	 "</ul>\n");

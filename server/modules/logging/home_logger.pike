@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.18 1998/09/11 22:19:59 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.19 1998/11/18 04:54:20 per Exp $";
 constant thread_safe=1;
 
 
@@ -394,7 +394,7 @@ string home(string of, object id)
       if(cached_homes[l] && !(cached_homes[l]==-1 && id->pragma["no-cache"]))
 	return (l=cached_homes[l])==-1?0:l;
       f=l;
-      l=roxen->real_file(l+QUERY(AccessLog), id);
+      l=id->conf->real_file(l+QUERY(AccessLog), id);
       if(l) cached_homes[f]=l;
       else cached_homes[f]=-1;
       return l;
@@ -404,7 +404,7 @@ string home(string of, object id)
       catch{f=sprintf(l,f);};
       if(cached_homes[f] && !(cached_homes[f]==-1 && id->pragma["no-cache"]))
 	return (l=cached_homes[f])==-1?0:l;
-      l=roxen->real_file(f+QUERY(AccessLog), id);
+      l=id->conf->real_file(f+QUERY(AccessLog), id);
       if(l) cached_homes[f]=l;
       else cached_homes[f]=-1;
       return l;

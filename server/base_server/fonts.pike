@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.24 1998/11/02 06:53:39 per Exp $ */
+/* $Id: fonts.pike,v 1.25 1998/11/18 04:53:46 per Exp $ */
 
 #include <module.h>
 
@@ -216,8 +216,8 @@ object get_font(string f, int size, int bold, int italic,
 	report_error("Failed to load the default font.\n");
 	return 0;
       }
-      report_debug("Failed to load the font "+
-		   name+", using the default font.\n");
+//       report_debug("Failed to load the font "+
+// 		   name+", using the default font.\n");
       return get_font(roxen->QUERY(default_font), 
 		      size,bold,italic,justification,xspace,yspace);
     }

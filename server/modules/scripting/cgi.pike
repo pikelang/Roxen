@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.105 1998/10/08 20:30:55 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.106 1998/11/18 04:54:27 per Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -136,7 +136,7 @@ int run_as_user_enabled()
   return(uid_was_zero() || !QUERY(user));
 }
 
-void create()
+void create(object c)
 {
   defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG|VAR_MORE,
 	 "If defined, Roxen will export a few extra varaibles, namely "
@@ -199,8 +199,7 @@ void create()
 	    "custom log file",
 	    "browser" }));
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 short_name(roxen->current_configuration?
-		    roxen->current_configuration->name:".")+"/cgi.log", 
+	 short_name(c? c->name:".")+"/cgi.log", 
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
 	 "the errors to the browser or to the main Roxen log file. "
@@ -340,7 +339,6 @@ void start(int n, object conf)
   if(intp(QUERY(wrapper)))
     QUERY(wrapper)="bin/cgi";
 
-  if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
 
   module_dependencies(conf, ({ "pathinfo" }));
