@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.27 1999/04/22 14:17:37 per Exp $ */
+/* $Id: fonts.pike,v 1.28 1999/06/10 23:39:35 per Exp $ */
 
 #include <module.h>
 
@@ -188,6 +188,38 @@ string make_font_name(string name, int size, int bold, int italic)
   return 0;
 }
 
+class TTFWrapper
+{
+  int size;
+  object real;
+  int height( )
+  {
+    return size;
+  }
+
+  array text_extents( string what )
+  {
+    object o = real->write( what );
+    return ({ o->xsize(), o->ysize() });
+  }
+
+  void create(object r, int s)
+  {
+    real = r;
+    size = s;
+    real->set_height( size );
+  }
+
+  object write( string|array what )
+  {
+    if( arrayp( what ) )
+      what = Array.map( (array(string))what, replace, " ", "" );
+    else
+      what = replace( what, " ", "" );
+    return real->write( what );
+  }
+}
+
 object get_font(string f, int size, int bold, int italic,
 		string justification, float xspace, float yspace)
 {
@@ -196,31 +228,24 @@ object get_font(string f, int size, int bold, int italic,
   mixed err;
 
   key = f+size+bold+italic+justification+xspace+yspace;
-//   werror("load font: key="+key+"\n");
   if(fnt=cache_lookup("fonts", key))
     return fnt;
 
   err = catch {
     name=make_font_name(f,size,bold,italic);
-//  werror("name is "+name+"; f is "+f+"\n");
 #if constant(Image.TTF)
     if(ttf_font_names_cache[ lower_case(f) ])
     {
-      werror("using "+ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]+"\n");
       f = lower_case(f);
-//    werror("font is ttf font.\n");
       if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
 	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]);
-	// TODO: fix support for xpace/yspace etc.
-	f = f();
-	f->set_height( size );
+	f = TTFWrapper( f(), size );
 	cache_set("fonts", key, f); 
 	return f;
       }
       object f = Image.TTF( values(ttf_font_names_cache[ lower_case(f) ])[0]);
-      // TODO: fix support for xpace/yspace etc.
-      return f()->set_height( size*2 );
+      return TTFWrapper( f(), size );
     }
 #endif
     fnt = Font();
@@ -240,8 +265,6 @@ object get_font(string f, int size, int bold, int italic,
 	report_error("Failed to load the default font.\n");
 	return 0;
       }
-//       report_debug("Failed to load the font "+
-// 		   name+", using the default font.\n");
       return get_font(roxen->QUERY(default_font), 
 		      size,bold,italic,justification,xspace,yspace);
     }
