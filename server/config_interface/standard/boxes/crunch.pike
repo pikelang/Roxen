@@ -5,7 +5,7 @@
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
-constant box      = "large";
+constant box      = "small";
 String box_name = _(0,"Crunch activity");
 String box_doc  = _(0,"Recently changed Crunch reports");
 
