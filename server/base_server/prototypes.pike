@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.48 2002/02/06 17:04:52 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.49 2002/04/09 11:28:25 wellhard Exp $";
 
 class Variable
 {
@@ -247,7 +247,8 @@ class Configuration
   RoxenModule reload_module( string modname );
   RoxenModule enable_module( string modname, RoxenModule|void me, 
                              ModuleInfo|void moduleinfo, 
-                             int|void nostart );
+                             int|void nostart,
+                             int|void nosave );
   void call_start_callbacks( RoxenModule me, 
                              ModuleInfo moduleinfo, 
                              ModuleCopies module );
