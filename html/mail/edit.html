@@ -6,6 +6,7 @@
   </formoutput>
 </if>
 
+
 <if variable=cancel>
   <unset variable=cancel>
   <set variable=mailbox_id eval='<mail-mailboxid mailbox=drafts>'>
@@ -13,6 +14,7 @@
    <redirect to="./?mailbox_id=#mailbox_id#&listall=1">
   </formoutput>
 </if>
+
 
 <if variable=abort>
   <unset variable=abort>
@@ -26,7 +28,6 @@
 <headline>Compose a new message</headline>
 <content>
   <use file=macros>
-  <expire-time now>
 
   <set variable="gtextid&selected;" 
        eval="<gtext-id talign=center xspacing=20 yspacing=8 
@@ -77,5 +78,6 @@
 </formoutput>
 </content>
 </template>
-</mail-verify-login>
 </else>
+
+</mail-verify-login>

@@ -1,5 +1,5 @@
 /*
- * $Id: faxrcpt.pike,v 1.4 1998/09/28 04:52:01 js Exp $
+ * $Id: faxrcpt.pike,v 1.5 1998/11/29 19:40:04 js Exp $
  *
  * A LysKOM FAX module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.4 1998/09/28 04:52:01 js Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.5 1998/11/29 19:40:04 js Exp $";
 
 /*
  * Roxen glue
@@ -172,14 +172,16 @@ int put(string sender, string user, string domain,
   object a = conf->get_provider("automail_admin");
   if(u && a->query_status(u->id,query_automail_name()))
   {
-    string fn="/tmp/"+time()+random(1000000);
+    string fn="/tmp/fax"+time()+random(1000000);
     mail->seek(0);
     Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(mail->read())) );
     string faxnumber=a->query_variable(u->id,query_automail_name(),"fax_number");
     if(faxnumber)
     {
       Process.popen("/usr/bin/faxlogon");
-      werror(Process.popen("/usr/bin/faxsend "+faxnumber+" "+fn));
+      Process.popen("/usr/bin/faxsend '"+Process.sh_quote(faxnumber)+"' "+fn);
+      int customer_id=u->query_customer_id();
+      clientlayer->add_charge_to("fax",customer_id);
     }
     rm(fn);
   }

@@ -1,4 +1,4 @@
- $Id: db.spec,v 1.39 1998/10/25 20:57:35 js Exp $
+ $Id: db.spec,v 1.40 1998/11/29 19:39:58 js Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -122,6 +122,14 @@ create table admin_variables (
      );
              
 # AutoAdmin         
+
+create table customer_charges (
+             customer_id             int not null,
+             type                    varchar(64) not null,
+             charge                  int not null,
+             PRIMARY KEY(customer_id,type)
+     );
+
 
 create table customers (
              id                      int auto_increment primary key,

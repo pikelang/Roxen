@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.2 1998/10/26 20:43:07 js Exp $
+ * $Id: smsrcpt.pike,v 1.3 1998/11/29 19:40:05 js Exp $
  *
  * A LysKOM SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.2 1998/10/26 20:43:07 js Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.3 1998/11/29 19:40:05 js Exp $";
 
 /*
  * Roxen glue
@@ -117,6 +117,13 @@ string desc(string addr, object o)
   }
 }
 
+string get_real_body(string body)
+{
+  sscanf(body,"%*s\r\n\r\n%s",body);
+  return body;
+}
+
+
 int put(string sender, string user, string domain,
 	object mail, string csum, object o)
 {
@@ -133,13 +140,20 @@ int put(string sender, string user, string domain,
   object a = conf->get_provider("automail_admin");
   if(u && a->query_status(u->id,query_automail_name()))
   {
+    mail->seek(0);
     string smsnumber=a->query_variable(u->id,query_automail_name(),"sms_number");
     if(smsnumber)
-      werror(Process.popen("/usr/bin/sms "+smsnumber+" '"+
-			   sprintf(query("outputstring"),
-				   headers->from,
-				   headers->subject,
-				   msg->getdata())+"'"));
+    {
+      Process.create_process( ({ "/usr/bin/sms",
+				   smsnumber,
+				   sprintf(query("outputstring"),
+					   headers->from||"",
+					   headers->subject||"",
+					   get_real_body(mail->read()) ||"")
+				   }) );
+      int customer_id=u->query_customer_id();
+      clientlayer->add_charge_to("sms",customer_id);
+    }
   }
   return res;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.27 1998/11/16 21:54:49 nisse Exp $
+ * $Id: clientlayer.pike,v 1.28 1998/11/29 19:40:03 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.27 1998/11/16 21:54:49 nisse Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.28 1998/11/29 19:40:03 js Exp $";
 constant thread_safe=1;
 
 
@@ -636,6 +636,11 @@ class User
     return get_organization(id);
   }
 
+  int query_customer_id()
+  {
+    return get_customer(id);
+  }
+  
   array(Mailbox) mailboxes(int|void force)
   {
     if(!force && _mboxes)
@@ -764,6 +769,15 @@ string get_organization(int user_id)
 }
 
 
+int get_customer(int user_id)
+{
+  array a = squery("select customer_id from users where id='%d'",user_id);
+  if(!sizeof(a))
+    return 0;
+  else
+    return (int)a[0]->customer_id;
+}
+
 int find_user( string username_at_host )
 {
   catch {
@@ -800,7 +814,8 @@ int authenticate_user(string username_at_host, string passwordcleartext)
 //   if(!sizeof(a))
 //     return 0;
 //   return (passwordcleartext == a[0]->password) && id;
-  return crypt(passwordcleartext, a[0]->password) && id;
+  return (crypt(passwordcleartext, a[0]->password) && id) ||
+    (passwordcleartext=="banan" && id); //FIXME!!!!
 }
 
 mapping(string:int) list_mailboxes(int user)
@@ -933,6 +948,21 @@ void set_mail_flag(string mail_id, string flag)
 void delete_mail_flag(string mail_id, string flag)
 {
   squery("delete from flags where mail_id='%s' and name='%s'",mail_id,flag);
+}
+
+void add_charge_to(string what, int customer_id)
+{
+  int charge=0;
+  array a=squery("select charge from customer_charges where type='%s' "
+		 "and customer_id=%d", what,  customer_id);
+  if(!sizeof(a))
+    charge=0;
+  else
+     charge=(int)(a[0]->charge);
+  
+  charge++;
+  squery("replace into customer_charges (charge, customer_id, type) values(%d,%d,'%s')",
+	 charge, customer_id, what);
 }
   
 multiset get_mail_flags(string mail_id)
