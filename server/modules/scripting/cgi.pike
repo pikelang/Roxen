@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.107 1999/03/23 22:24:55 mast Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.108 1999/03/24 16:43:14 js Exp $";
 int thread_safe=1;
 
 #include <config.h>
@@ -150,7 +150,13 @@ void create(object c)
 	 "This is where the module will find the files in the <b>real</b> "
 	 "file system.");
 
-  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
+  defvar("noexec",
+#ifdef __NT__
+	 0
+#else
+	 1
+#endif	 
+	 , "Ignore non-executable files", TYPE_FLAG,
 	 "If this flag is set, non-executable files will be returned "
 	 "as normal files to the client.");
 
