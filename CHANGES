@@ -4,15 +4,15 @@ Changes since Roxen Challenger 1.3.111 Yellow
 o Fixed a problem in the SQL-module which prevented proper garbage collection,
   resulting in stale connections not being closed.
 
-o Made a year 2000 compliance check. As exspected no year 2000 bugs
+o Made a year 2000 compliance check. As expected no year 2000 bugs
   were found, but a few other date-related bugs were found and fixed.
 
 o Added the Odbc-module to the GPLed Challenger.
 
 o Fixed <imgs> to work in virtual filesystems.
 
-o Fixed bug in the Crotatian, Czech and Italian language modules that
-  made the date() modes "full" and "date" always report the currect
+o Fixed bug in the Croatian, Czech and Italian language modules that
+  made the date() modes "full" and "date" always report the current
   year as year.
 
 o Improved trace outputs from the Java servlets module.
@@ -23,16 +23,23 @@ o Changed 1.2 to 1.3 in the documentation and test files.
 
 o Changed COPYING to better reflect the situation with RSA patents.
 
-o Brough back extern/README to reality as of 1999.
+o Brought back extern/README to reality as of 1999.
 
 o Disabled the socketpair kludge for Linux. Roxen needs more
-  functionailty than Linux broken socketpair provides, so let it fall
+  functionality than Linux broken socketpair provides, so let it fall
   back on socketpair ultra instead. This will surely break CGI-scripts
-  on Linux, but now we have a chance of fixing it in pikes fallbacks.
+  on Linux, but now we have a chance of fixing it in pikes fall backs.
+
+o Fixed several bugs in the CGI-support.
 
 o Updated the manual.
 
-o Fixed bug in fontloader.
+o Fixed bug in font loader.
+
+o Fixed <gtext-id> to work as it used to before the cache-rewrite.
+
+o Added <gtext-url> that incorporates the behavior <gtext-id> just
+  was fixed not to have..
 
 
 Changes since Roxen Challenger 1.3.107 Yellow
@@ -41,7 +48,7 @@ Changes since Roxen Challenger 1.3.107 Yellow
 o Updated documentation from manual server. Including the built in
   RXML help.
 
-o Fixed bug in gtext that genereated errornous buttons.
+o Fixed bug in gtext that generated errornous buttons.
 
 o Lots of fixes for NT.
 
