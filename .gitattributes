@@ -173,7 +173,6 @@ nn binary
 /server/modules/filesystems/cvsfs.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/incoming.pike foreign_ident
-/server/modules/filesystems/mirrorfs.pike foreign_ident
 /server/modules/filesystems/restrictedfs.pike foreign_ident
 /server/modules/filesystems/secure_fs.pike foreign_ident
 /server/modules/filesystems/userfs.pike foreign_ident
@@ -207,7 +206,6 @@ nn binary
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language.pike foreign_ident
 /server/modules/misc/language2.pike foreign_ident
-/server/modules/misc/mirrorserver.pike foreign_ident
 /server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/preferred_language.pike foreign_ident
 /server/modules/misc/randomtext.pike foreign_ident
