@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.234 2000/06/29 19:57:01 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.235 2000/07/23 16:50:48 stewa Exp $";
 
 #define MAGIC_ERROR
 
@@ -747,65 +747,6 @@ private int parse_got()
 	  switch (linename) {
 	  case "content-length":
 	    misc->len = (int)contents;
-	    if(!misc->len) continue;
-	    if(method == "POST")
-	    {
-	      if(!data) data="";
-	      int l = misc->len;
-	      wanted_data=l;
-	      have_data=strlen(data);
-
-	      if(strlen(data) < l)
-              {
-		REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
-		return 0;
-	      }
-	      leftovers = data[l+2..];
-	      data = data[..l+1];
-
-	      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
-	      {
-	      default: // Normal form data.
-		string v;
-		if(l < 200000)
-		{
-		  foreach(replace(data,
-				  ({ "\n", "\r", "+" }),
-				  ({ "", "", " "}))/"&", v)
-		    if(sscanf(v, "%s=%s", a, b) == 2)
-		    {
-		      a = http_decode_string( a );
-		      b = http_decode_string( b );
-
-		      if(variables[ a ])
-			variables[ a ] +=  "\0" + b;
-		      else
-			variables[ a ] = b;
-		    }
-		}
-		break;
-
-	      case "multipart/form-data":
-		object messg = MIME.Message(data, misc);
-		foreach(messg->body_parts, object part) {
-		  if(part->disp_params->filename) {
-		    variables[part->disp_params->name]=part->getdata();
-		    variables[part->disp_params->name+".filename"]=
-		      part->disp_params->filename;
-		    if(!misc->files)
-		      misc->files = ({ part->disp_params->name });
-		    else
-		      misc->files += ({ part->disp_params->name });
-		  } else {
-		    if(variables[part->disp_params->name])
-		      variables[part->disp_params->name] += "\0" + part->getdata();
-		    else
-		      variables[part->disp_params->name] = part->getdata();
-		  }
-		}
-		break;
-	      }
-	    }
 	    break;
 
 	  case "authorization":
@@ -950,6 +891,64 @@ private int parse_got()
 	}
       }
     }
+    if(misc->len && method == "POST")
+      {
+	if(!data) data="";
+	int l = misc->len;
+	wanted_data=l;
+	have_data=strlen(data);
+	
+	if(strlen(data) < l)
+	  {
+	    REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
+	    return 0;
+	  }
+	leftovers = data[l+2..];
+	data = data[..l+1];
+	
+	switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
+	  {
+	  default: // Normal form data.
+	    string v;
+	    if(l < 200000)
+	      {
+		foreach(replace(data,
+				({ "\n", "\r", "+" }),
+				({ "", "", " "}))/"&", v)
+		  if(sscanf(v, "%s=%s", a, b) == 2)
+		    {
+		      a = http_decode_string( a );
+		      b = http_decode_string( b );
+		      
+		      if(variables[ a ])
+			variables[ a ] +=  "\0" + b;
+		      else
+			variables[ a ] = b;
+		    }
+	      }
+	    break;
+	    
+	  case "multipart/form-data":
+	    object messg = MIME.Message(data, misc);
+	    foreach(messg->body_parts, object part) {
+	      if(part->disp_params->filename) {
+		variables[part->disp_params->name]=part->getdata();
+		variables[part->disp_params->name+".filename"]=
+		  part->disp_params->filename;
+		if(!misc->files)
+		  misc->files = ({ part->disp_params->name });
+		else
+		  misc->files += ({ part->disp_params->name });
+	      } else {
+		if(variables[part->disp_params->name])
+		  variables[part->disp_params->name] += "\0" + part->getdata();
+		else
+		  variables[part->disp_params->name] = part->getdata();
+	      }
+	    }
+	    break;
+	  }
+      }
   }
 
   REQUEST_WERR("HTTP: parse_got(): after header scan");
