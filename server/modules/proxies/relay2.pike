@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.27 2002/04/20 10:57:22 jhs Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.28 2002/10/22 00:23:03 nilsson Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -97,11 +97,11 @@ class Relay
       {
 	string base = id->not_query;
 	string f2 = (file/"?")[0];
-	if( strlen(f2) && search(id->not_query, f2 ) != -1)
+	if( strlen(f2) && has_value(id->not_query, f2 ))
 	  base = base[..search(id->not_query, f2 )-2];
 	return combine_path( base, what[1..] );
       }
-      else if( search( what, url ) == 0 )
+      else if( has_prefix( what, url ) )
       {
 	return replace( what, url, id->not_query );
       }

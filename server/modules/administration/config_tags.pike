@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.182 2002/06/19 23:02:54 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.183 2002/10/22 00:27:10 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -516,23 +516,23 @@ array get_variable_maps( object mod,
   if( f >= 0 )  fs = "+"+f; else  fs = ""+f;
 
   map( variables, lambda( mapping q ) {
-                    if( search( q->form, "<" ) != -1 )
+                    if( has_value( q->form, "<" ) )
                       q->form=("<font size='"+fs+"'>"+q->form+"</font>");
                   } );
 
   if( m->section && (m->section != "_all"))
   {
-    if( !strlen( m->section ) || (search( m->section, "Settings" ) != -1 ))
+    if( !strlen( m->section ) || has_value( m->section, "Settings" ) )
       variables = filter( variables,
                           lambda( mapping q )
                           {
-                            return search( q->rname, ":" ) == -1;
+                            return !has_value( q->rname, ":" );
                           } );
     else
       variables = filter( variables,
                        lambda( mapping q )
                        {
-                         return !search( q->rname, (m->section+":") );
+                         return has_prefix( q->rname, (m->section+":") );
                        } );
   }
 

@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.25 2001/09/03 18:12:18 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.26 2002/10/22 00:29:30 nilsson Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -109,8 +109,8 @@ int|mapping first_try(RequestID id)
   if(host=="default")
   {
     if((id->referrer) && (sizeof(id->referrer)) &&
-       search(id->referer[0],
-	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0) {
+       has_prefix(id->referer[0],
+		  lower_case((id->prot /"/")[0])+"://"+id->misc->host)) {
       return 0;
     }
     // this is some magic here: in order to allow pictures in the defaultpage
@@ -138,7 +138,7 @@ int|mapping first_try(RequestID id)
   to = replace(to, "%u", url);
 
 
-  if((host != "default") && (search(to, "%p") != -1))
+  if((host != "default") && has_value(to, "%p"))
   {
     to = replace(to, "/%p", "%p");   // maybe there is a better way
     if (id->not_query[-1] == '/')    // to remove double slashes
@@ -148,7 +148,7 @@ int|mapping first_try(RequestID id)
     path = 1;
   }
 
-  if(search(id->not_query, to) == 0) {
+  if(has_prefix(id->not_query, to)) {
     // Already have the correct beginning...
     return 0;
   }

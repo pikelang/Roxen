@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.33 2002/05/06 09:33:27 anders Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.34 2002/10/22 00:29:58 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -86,7 +86,7 @@ void parse_redirect_string(string what)
 	exact_patterns[a[1]] = a[2];
       }
       else if (sizeof(a)==2) {
-	if (search (redirect_from, a[0]) >= 0)
+	if (has_value (redirect_from, a[0]) )
 	  report_warning ("Duplicate redirect pattern %O.\n", a[0]);
 	redirect_from += ({a[0]});
 	redirect_to += ({a[1]});
