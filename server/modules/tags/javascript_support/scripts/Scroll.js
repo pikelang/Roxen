@@ -1,7 +1,7 @@
 function scroll_menu(menu)
 {
   if(getObject(menu)) {
-    shiftTo(menu, 0, getScrollTop());
+    shiftTo(menu, getObjectLeft(menu), getScrollTop());
   }
   setTimeout("scroll_menu(\""+menu+"\")", 100);
 }
