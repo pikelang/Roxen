@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.148 1998/08/03 09:40:19 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.149 1998/08/18 20:52:03 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2994,6 +2994,10 @@ int load_module(string module_file)
     report_error("Module loaded, but register_module() failed (" 
 		 + module_file + ").\n"  +
 		 describe_backtrace( err ));
+    return 0;
+  } else if (!module_data) {
+    // register_module() returns 0 => disabled module.
+    report_notice(sprintf("Module %O is disabled.\n", module_file));
     return 0;
   }
 
