@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.4 1998/07/16 12:44:51 js Exp $
+ * $Id: admin.pike,v 1.5 1998/07/16 16:30:03 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.4 1998/07/16 12:44:51 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.5 1998/07/16 16:30:03 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -121,6 +121,8 @@ mixed find_file(string f, object id)
      content = tabs[tab]->show(sub,id,f);
      res+="<hr noshade size=2><p>"+make_tablist(tablist,tabs[tab],customer,id);
    }
+//    else
+//      return http_redirect(query("location")+"/0/10:Choose_customer/",id);
 
  if(mappingp(content))
        return content;

@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.2 1998/07/16 12:44:55 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.3 1998/07/16 16:30:11 js Exp $";
 
 mapping host_to_id;
 
@@ -18,7 +18,6 @@ array register_module()
 
 string get_host(object id)
 {
-  return "www.idonex.se";
   if(id->misc->host)
     return (id->misc->host / ":")[0];
   else
@@ -28,12 +27,13 @@ string get_host(object id)
 void update_host_cache(object id)
 {
   object db=id->conf->call_provider("sql","sql_object",id);
-  array a=db->query("select * from dns where rr_type='CNAME'");
+  array a=db->query("select customer_id,domain from dns where rr_type='A'");
   mapping new_host_to_id=([]);
   if(!catch {
     Array.map(a,lambda(mapping entry, mapping m)
 		{
-		  m[entry->rr_value]=entry->id;
+		  m["www."+entry->domain]=entry->customer_id;
+		  m[entry->domain]=entry->customer_id;
 		},new_host_to_id);
   })
     host_to_id=new_host_to_id;
@@ -58,7 +58,7 @@ string file_from_host(object id, string file)
       return 0; // No such host
   }
   dir = replace(dir, "//", "/");
-  werror("file_from_host: %O\n",dir+file);
+//  werror("file_from_host: %O\n",dir+file);
   return dir+file;
 }
 
@@ -133,4 +133,33 @@ mixed stat_file(mixed f, mixed id)
     return 0; // FIXME, return a helpful page
   else
     return filesystem::stat_file( file,id );
+}
+
+string tag_update(string tag_name, mapping args, object id)
+{
+  update_host_cache(id);
+  return "Filesystem configuration reloaded.";
+}
+
+string tag_init_home_dir(string tag_name, mapping args, object id)
+{
+  if(!args->id)
+    return "error";
+  string dir=combine_path(query("searchpath"),args->id);
+  // I don't know why, but this feels dangerous...
+  Process.popen("rm -rf "+dir);
+  mkdir(dir);
+  mkdir(dir+"/templates/");
+  Stdio.write_file(dir+"/index.html",
+		   "<h1>Foobolaget</h1>"
+		   "Enjoy...");
+  Stdio.write_file(dir+"/templates/default.tmpl",
+		   Stdio.read_bytes(combine_path(
+		     query("searchpath"),"default.tmpl")));
+}
+
+mapping query_tag_callers()
+{
+  return ([ "autosite-fs-update" : tag_update,
+	    "autosite-fs-init-home-dir" : tag_init_home_dir  ]);
 }

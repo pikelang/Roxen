@@ -16,8 +16,9 @@
      <sqloutput query="select * from customers where user_id='¤user_id:quote=mysql¤' and
       name='¤name:quote=mysql¤'"><set variable=id value=#id#></sqloutput>
      <formoutput quote='#'>
-       <sqlquery query="insert into dns values(NULL,#id#,'CNAME','www.#domain:quote=mysql#')">
-       <sqlquery query="insert into dns values(NULL,#id#,'MX','#domain:quote=mysql#')">
+       <sqlquery query="insert into dns values(NULL,#id#,'A','','#domain:quote=mysql#')">
+       <sqlquery query="insert into dns values(NULL,#id#,'MX','10 #domain:quote=mysql#','#domain:quote=mysql#')">
+       <autosite-fs-init-home-dir id=#id#>
      </formoutput>
      <b>Information saved.</b><p>
    </if>

@@ -68,7 +68,7 @@ int query_timeunit(string var, int defaultvalue)
 }
 
 array register_module()
-{ return ({ 0, "AutoSite DNS Administration Module", "", 0, 1 });
+{ return ({ MODULE_PARSER, "AutoSite DNS Administration Module", "", 0, 1 });
 }
 
 string database_status
@@ -155,6 +155,19 @@ void update()
   update_scheduled = 1;
   call_out(do_update, 60);
 }
+
+string tag_update()
+{
+  update();
+  return "DNS configuration update initiated.";
+}
+
+mapping query_tag_callers()
+{
+  return ([ "autosite-dns-update" : tag_update ]);
+}
+
+
 
 void start()
 { if (! host_ip_no)

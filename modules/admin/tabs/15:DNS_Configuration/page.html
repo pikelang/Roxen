@@ -3,19 +3,18 @@
 
 <formoutput quote='¤'>
   <if variable=save>
-    <b>Information saved.</b><p>
-    <sqlquery query="replace into customers
-                     values('¤id:quote=mysql¤',
-		            '¤user_id:quote=mysql¤',
-		            '¤password:quote=mysql¤',
-			    '¤name:quote=mysql¤',
-			    1,1,
-		            '¤sms:quote=mysql¤',
-		            '¤fax:quote=mysql¤',NULL)">
-
+    <sqlquery query="delete from dns where customer_id='¤customer¤'">
+    <sqlquery query="insert into dns values(NULL,'¤customer¤',
+	            'A','','¤domain:quote=mysql¤')">
+    <sqlquery query="insert into dns values(NULL,'¤customer¤',
+	            'MX','10 ¤domain:quote=mysql¤','¤domain:quote=mysql¤')">
+    <b>Information saved.<br>
+      <autosite-dns-update><br>
+      <autosite-fs-update></b><p>
   </if>
-  <preparse tag=sqloutput query="select id,name,password,fax,sms,user_id from customers
-                    where id='¤customer:quote=mysql¤'">
+  <preparse tag=sqloutput query="select domain from dns where
+                                rr_type='A' and
+				customer_id='¤customer:quote=mysql¤'">
     <preparse tag=tablify cellseparator=/// rowseparator=\\\
               cellpadding=0 cellspacing=0>
       <form method=post>
@@ -24,6 +23,6 @@
 	<input type=submit name=save value='Apply and reload'>
       </form>
     </preparse>
-    Note that www.[domainname] is registered too.
+    Note that www.[domainname] is automatically registered for the website.
   </preparse>
 </formoutput>  
