@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.4 2000/04/03 15:12:39 mast Exp $
+ * $Id: svenska.pmod,v 1.5 2000/04/05 16:39:47 js Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -430,6 +430,7 @@ class _config_interface
   constant home = "Startsida";
   constant configiftab = "Konfiginterface";
   constant manual = "Manual";
+  constant docs = "Manual";
   constant modules = "Moduler";
   constant normal =  "Normal";
   constant notice = "Notera";

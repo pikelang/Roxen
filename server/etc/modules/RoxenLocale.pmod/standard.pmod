@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.10 2000/04/03 15:12:39 mast Exp $
+ * $Id: standard.pmod,v 1.11 2000/04/05 16:39:46 js Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -447,6 +447,7 @@ class _config_interface
   constant warning = "Warning";
   constant error = "Error";
   constant actions = "Tasks";
+  constant docs = "Docs";
   constant manual = "Manual";
   constant clear_log = "Clear Log";
 
