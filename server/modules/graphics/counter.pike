@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.1 1998/01/21 08:09:02 neotron Exp $
+// $Id: counter.pike,v 1.2 1998/01/22 07:34:07 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 //
@@ -21,6 +21,11 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.1  1998/01/21 08:09:02  neotron
+// Added the counter module to CVS. It's now extremely easy to make a
+// graphical counter! Just get the fonts and add the options in the
+// config interface.
+//
 // Revision 1.8  1997/01/13 18:19:12  jordi
 // Added gif support for digits, but it is not usable because internal
 // problems in Image()->from_gif() library.
@@ -51,7 +56,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.1 1998/01/21 08:09:02 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.2 1998/01/22 07:34:07 neotron Exp $";
 
 string copyright = "<BR>Copyright 1997 "
 +"<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -234,73 +239,56 @@ mapping find_file_font( string f, object id )
 //
 // Generation of Cool PPM/GIF Counters
 //
-mapping find_file_ppm( string f, object id )
+mixed find_file_ppm( string f, object id )
 {
   string fontname, strcounter, strsize, fg, bg, user;
   int len, counter, trans, rot;
   object digit, result;
   float scale;
   string ppmbuff, ppmfile, giffile, gifbuff, prefix, dir, *us;
-
+  int currx;
+  mapping retval;
   if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%d", 
 	    user, bg, fg, trans, len, scale, rot, fontname, counter) != 9 )
     return 0;
 
-  scale /= 5;
-  if( scale > 2.0 )
-    scale = 2.0;
-
   if( len > 10 )
     len = 10;
-
+  
   strsize = sprintf("%%0%dd", len);
   strcounter = sprintf( strsize, counter );
-	
+  int numdigits = sizeof(strcounter / "");
   if( user != "1" && roxen->userlist() && (us=roxen->userinfo(user,id)) )
-    dir = us[5] + (us[5][-1]!='/'?"/":"") 
-+ query("userpath");
+    dir = us[5] + (us[5][-1]!='/'?"/":"")+ query("userpath");
   else
     dir = query("ppmpath"); 
-
+  mapping digits = ([]);
   for( int dn=0; dn < sizeof( strcounter ); dn++ )
   {
-
-    prefix  = dir + fontname + "/" + (int)( strcounter[dn] - '0' );
-		
-    ppmfile = prefix + ".ppm";
-    giffile = prefix + ".gif";
-
-    ppmbuff = read_bytes( ppmfile );		// Try .ppm
-    if ( !ppmbuff ) {
-      // gifbuff = read_bytes( giffile );	// Try .gif
-      // if( !gifbuff )
-      return ppmlist( fontname, user, dir );	// Failed !!
-      // else
-      // digit = Image.image()->fromgif( gifbuff );
+    
+    prefix  = fontname + "/" + (int)( strcounter[dn] - '0' );
+    digit = digits[strcounter[dn]] || cache_lookup("ppmdigits", prefix);
+    //      if(digit == -1)
+    //	return ppmlist( fontname, user, dir );	// Failed !!
+    if(!objectp(digit)) {
+      ppmfile = dir + prefix + ".ppm";
+      ppmbuff = read_bytes( ppmfile );		// Try .ppm
+      if(!ppmbuff || catch( digit = Image.image()->fromppm( ppmbuff ))) {
+	cache_set("ppmdigits", prefix,  -1);
+	return ppmlist( fontname, user, dir );	// Failed !!
+      } 
+      cache_set("ppmdigits", prefix, digit || -1);
+      digits[strcounter[dn]] = digit;
     }
-    else
-      digit = Image.image()->fromppm( ppmbuff );
 
-    if ( result )
-      result = result->copy(  0,0,
-			      result->xsize() + digit->xsize()-1,
-			      MAX(result->ysize(),digit->ysize())-1,
-			      @mkcolor(bg) );	// Make image space
-    else
-      result=digit->copy();
-
-    result = result->paste( digit, 
-			    result->xsize() - digit->xsize(), 0 );
-  }	  
-
-  // Apply Color Filter 	
-  //
-  if( fg!="n" )
-    result=result->color( @mkcolor(fg) );
-
-  return http_string_answer(
-			    result->scale(scale)->rotate(rot, @mkcolor(bg) )->togif( @(trans?mkcolor(bg):({})) ),
-			    "image/gif" );
+    if(!result)
+      result = Image.image(digit->xsize()*2 * numdigits, digit->ysize());
+    result = result->paste(digit, currx, 0);
+    currx += digit->xsize();
+  }
+  return
+    http_string_answer(result->copy(0,0,currx-1,result->ysize()-1)->togif(),
+		       "image/gif" );
 }
 
 mapping find_file( string f, object id )
@@ -322,7 +310,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.1 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.2 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
