@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.141 2000/07/25 09:35:23 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.142 2000/07/25 15:24:14 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -729,104 +729,152 @@ class TagDate {
 class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
 
   class Frame {
     inherit RXML.Frame;
 
+    void do_insert(RXML.Tag plugin, string name, RequestID id) {
+      result=plugin->get_data(args[name], args, id);
+
+      // This is as elegant as eating stew with your hands...
+      if(plugin->get_type) {
+	if(plugin->get_type(args, result)==RXML.t_text)
+	  result=Roxen.html_encode_string(result);
+      }
+      else if(args->quote="none")
+	;
+      else
+	result=Roxen.html_encode_string(result);
+    }
+
     array do_return(RequestID id) {
 
-      string n;
-
-      if(n = args->variable) {
-	if(zero_type(RXML.user_get_var(n, args->scope)))
-	  RXML.run_error("No such variable ("+n+").\n", id);
-	result=(string)RXML.user_get_var(n, args->scope);
-	if(args->quote!="none") result=Roxen.html_encode_string(result);
+      if(args->source) {
+	RXML.Tag plugin=get_plugins()[args->source];
+	if(!plugin) RXML.parse_error("Source "+args->source+" not present.\n");
+	do_insert(plugin, args->source, id);
 	return 0;
       }
-
-      if(n = args->variables || args->scope) {
-	RXML.Context context=RXML.get_context();
-	if(n!="variables")
-	  result = Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
-						      lambda(string s) {
-							return sprintf("%s=%O", s, context->get_var(s, args->scope) );
-						      } ) * "\n");
-	else
-	  result = String.implode_nicely(sort(context->list_var(args->scope)));
-	return 0;
-      }
-
-      if(n = args->scopes) {
-	RXML.Context context=RXML.get_context();
-	if(n=="full") {
-	  result = "";
-	  foreach(sort(context->list_scopes()), string scope) {
-	    result += scope+"\n";
-	    result += Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
-						      lambda(string s) {
-							return sprintf("%s.%s=%O", scope, s,
-								       context->get_var(s, args->scope) );
-						      } ) * "\n");
-	    result += "\n";
-	  }
+      foreach((array)get_plugins(), [string name, RXML.Tag plugin]) {
+	if(args[name]) {
+	  do_insert(plugin, name, id);
 	  return 0;
 	}
-	result = String.implode_nicely(sort(context->list_scopes()));
-	return 0;
-      }
-
-      if(args->file)
-      {
-	if(args["sb-search"] && id->misc->wa)
-	{
-	  object vcfile = 
-	    id->misc->wa->
-	    locate_file(args->file, id->misc->vcobj,
-			id->misc->sb->
-			find_content_type_from_filename(args->file), id);
-	  if(vcfile)
-	  {
-	    string name = vcfile->abspath(id);
-	    if(!mappingp(name))
-	      args->file = "/" + name;
-	  }
-	}
-	if(args->nocache) {
-	  int nocache=id->pragma["no-cache"];
-	  id->pragma["no-cache"] = 1;
-	  result=id->conf->try_get_file(args->file,id);
-	  if(!result) RXML.run_error("No such file ("+args->file+").\n");
-	  id->pragma["no-cache"] = nocache;
-	}
-	else
-	  result=id->conf->try_get_file(args->file,id);
-	if(args->quote=="html") result=Roxen.html_encode_string(result);
-	
-#ifdef OLD_RXML_COMPAT
-	result=Roxen.parse_rxml(result, id);
-#endif
-
-	return 0;
-      }
-
-      if(args->href && query("insert_href")) {
-	if(args->nocache)
-	  NOCACHE();
-	else
-	  CACHE(60);
-	Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
-	if(q && q->status>0 && q->status<400) {
-	  result=q->data();
-	  if(args->quote!="html") result=Roxen.html_encode_string(result);
-	  return 0;
-	}
-	RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
       }
 
       RXML.parse_error("No correct insert attribute given.\n");
     }
+  }
+}
+
+class TagInsertVariable {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "variable";
+
+  string get_data(string var, mapping args, RequestID id) {
+    if(zero_type(RXML.user_get_var(var, args->scope)))
+      RXML.run_error("No such variable ("+var+").\n", id);
+    return (string)RXML.user_get_var(var, args->scope);
+  }
+}
+
+class TagInsertVariables {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "variables";
+
+  string get_data(string var, mapping args) {
+    RXML.Context context=RXML.get_context();
+    if(var=="full")
+      return Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						lambda(string s) {
+						  return sprintf("%s=%O", s, context->user_get_var(s, args->scope) );
+						} ) * "\n");
+    return String.implode_nicely(sort(context->list_var(args->scope)));
+  }
+}
+
+class TagInsertScopes {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "scopes";
+
+  string get_data(string var, mapping args) {
+    RXML.Context context=RXML.get_context();
+    if(var=="full") {
+      string result = "";
+      foreach(sort(context->list_scopes()), string scope) {
+	result += scope+"\n";
+	result += Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						     lambda(string s) {
+						       return sprintf("%s.%s=%O", scope, s,
+								      context->get_var(s, args->scope) );
+						     } ) * "\n");
+	result += "\n";
+      }
+      return result;
+    }
+    return String.implode_nicely(sort(context->list_scopes()));
+  }
+}
+
+class TagInsertFile {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "file";
+
+  string get_data(string var, mapping args, RequestID id) {
+    if(args["sb-search"] && id->misc->wa)
+    {
+      object vcfile = 
+	id->misc->wa->
+	locate_file(var, id->misc->vcobj,
+		    id->misc->sb->
+		    find_content_type_from_filename(var), id);
+      if(vcfile)
+      {
+	string name = vcfile->abspath(id);
+	if(!mappingp(name))
+	  args->file = "/" + name;
+      }
+    }
+
+    if(args->nocache) {
+      int nocache=id->pragma["no-cache"];
+      id->pragma["no-cache"] = 1;
+      string result=id->conf->try_get_file(var, id);
+      if(!result) RXML.run_error("No such file ("+var+").\n");
+      id->pragma["no-cache"] = nocache;
+      return result;
+    }
+	
+#ifdef OLD_RXML_COMPAT
+    return Roxen.parse_rxml(id->conf->try_get_file(var, id), id);
+#else
+    return id->conf->try_get_file(args->file, id);
+#endif
+  }
+}
+
+class TagInsertHref {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant plugin_name = "href";
+
+  string get_data(string var, mapping args, RequestID id) {
+    if(!query("insert_href")) return "";
+
+    if(args->nocache)
+      NOCACHE();
+    else
+      CACHE(60);
+    Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+    if(q && q->status>0 && q->status<400)
+      return q->data();
+
+    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
   }
 }
 
@@ -915,8 +963,6 @@ class TagRemoveCookie {
 
 string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 {
-  array (int) s;
-  Stdio.File f;
 
   if(m->by && !m->file && !m->realfile)
   {
@@ -940,6 +986,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     if(!id->conf->auth_module)
       RXML.run_error("Modified by requires a user database.\n");
 
+    Stdio.File f;
     if(f = open(m->realfile, "r"))
     {
       m->name = id->conf->last_modified_by(f, id);
@@ -950,18 +997,16 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     return "A. Nonymous.";
   }
 
+  array(int) s;
   if(m->realfile)
     s = file_stat(m->realfile);
+  else if (_stat)
+    s = _stat;
+  else
+    s = file_stat(id->realfile);
 
-  if(!(_stat || s) && !m->realfile && id->realfile)
-  {
-    m->realfile = id->realfile;
-    return tag_modified(tag, m, id, file);
-  }
-  CACHE(10);
-  if(!s) s = _stat;
-  if(!s) s = id->conf->stat_file( id->not_query, id );
   if(s) {
+    CACHE(10);
     if(m->ssi)
       return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
     return Roxen.tagtime(s[3], m, id, language);
@@ -974,22 +1019,21 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File file)
 {
   array(string) u;
-  string b, dom;
 
   if(!id->conf->auth_module)
     RXML.run_error("Requires a user database.\n");
 
-  if (!(b=m->name))
-    return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
+  if (!m->name)
+    return "";
 
-  b=m->name;
+  string b=m->name;
 
-  dom = id->conf->query("Domain");
+  array(string) u=id->conf->userinfo(b, id);
+  if(!u) return "";
+
+  string dom = id->conf->query("Domain");
   if(sizeof(dom) && (dom[-1]=='.'))
     dom = dom[0..strlen(dom)-2];
-  if(!b) return "";
-  u=id->conf->userinfo(b, id);
-  if(!u) return "";
 
   if(m->realname && !m->email)
   {
@@ -997,6 +1041,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
       return ({ "<a href=\"/~"+b+"/\">"+u[4]+"</a>" });
     return ({ u[4] });
   }
+
   if(m->email && !m->realname)
   {
     if(m->link && !m->nolink)
@@ -1005,10 +1050,12 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
 	      });
     return ({ b + "@" + dom });
   }
+
   if(m->nolink && !m->link)
     return ({ sprintf("%s &lt;%s@%s&gt;",
 		      u[4], b, dom)
 	    });
+
   return ({ sprintf( (m->nohomepage?"":"<a href=\"/~%s/\">%s</a> ")+
 		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
 		    b, u[4], b, dom, b, dom)
