@@ -81,7 +81,7 @@ install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
 	@for f in roxen_hostname fcgi cgi; do \
 		echo Installing $f...; \
 		/bin/rm -f $(prefix)/roxen/server/bin/$f; \
-		if /bin/cp $f $(prefix)/roxen/server/bin/ then :; \
+		if /bin/cp $f $(prefix)/roxen/server/bin/; then :; \
 		else exit 1; fi; \
 	done
 	@echo Done.
@@ -90,7 +90,7 @@ localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-l
 	@for f in fcgi roxen_hostname cgi; do \
 		echo Installing $f...; \
 		/bin/rm -f $(SRCDIR)/../server/bin/$f; \
-		if /bin/cp $f $(SRCDIR)/../server/bin/ then :; \
+		if /bin/cp $f $(SRCDIR)/../server/bin/; then :; \
 		else exit 1; fi; \
 	done
 	@echo Done.
