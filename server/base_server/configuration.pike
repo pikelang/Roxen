@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.479 2001/09/03 14:10:41 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.480 2001/09/03 16:38:42 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2411,6 +2411,8 @@ RoxenModule reload_module( string modname )
   RoxenModule old_module = find_module( modname );
   ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
 
+  roxen->bootstrap_info->set (({this_object(), modname }));
+
   if( !old_module ) return 0;
 
   master()->clear_compilation_failures();
@@ -2720,11 +2722,6 @@ void call_start_callbacks( RoxenModule me,
     report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     got_no_delayed_load = -1;
-    /* Clean up some broken references to this module. */
-//     m_delete(otomod, me);
-//     m_delete(module->copies, search( module->copies, me ));
-//     destruct(me);
-//     return 0;
   }
   if( inited && me->ready_to_receive_requests )
     if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
@@ -3141,7 +3138,8 @@ void low_init(void|int modules_already_enabled)
   if (!modules_already_enabled)
     report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
-  if (!modules_already_enabled) {
+  if (!modules_already_enabled)
+  {
     enabled_modules = retrieve("EnabledModules", this_object());
 //     roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
 //     roxenloader.push_compile_error_handler( ec );
@@ -3164,10 +3162,6 @@ void low_init(void|int modules_already_enabled)
     }
     enable_module_batch_msgs = 0;
     roxenloader.pop_compile_error_handler();
-// if( strlen( ec->get() ) )
-// report_error( "While enabling modules in "+name+":\n"+ec->get() );
-// if( strlen( ec->get_warnings() ) )
-// report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
     forcibly_added = ([]);
   }
     
