@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.70 1998/07/22 00:06:23 js Exp $
+/* $Id: wizard.pike,v 1.71 1998/07/23 16:17:11 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -20,7 +20,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       m["default"] = parse_rxml( a, id );
     else
       m["default"] = a;
-  } else // tag. No contents, id in 'b'.
+  } else // tag. No contents, id in 'a'.
     id = a;
 
   string current = id->variables[m->name] || m["default"];
