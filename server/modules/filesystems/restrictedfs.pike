@@ -1,5 +1,5 @@
 /*
- * $Id: restrictedfs.pike,v 1.1 1997/08/08 15:00:05 grubba Exp $
+ * $Id: restrictedfs.pike,v 1.2 1997/08/08 15:06:59 grubba Exp $
  *
  * $Author: grubba $
  *
@@ -10,6 +10,11 @@
  *
  * Thanks to Zsolt Varga <redax@agria.hu> for the idea.
  */
+
+constant cvs_version = "$Id: restrictedfs.pike,v 1.2 1997/08/08 15:06:59 grubba Exp $";
+
+#include <module.h>
+#include <roxen.h>
 
 import Array;
 
