@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.140 2004/06/16 09:57:14 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.141 2004/06/17 14:38:50 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2149,7 +2149,7 @@ class RoxenModule
 
   string query_internal_location();
   string query_location();
-  multiset(string) query_provides();
+  string|multiset(string) query_provides();
   function(RequestID:int|mapping) query_seclevels();
   void set_status_for_path (string path, RequestID id, int status_code,
 			    string|void message, mixed... args);
