@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.32 2000/04/02 20:49:14 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.33 2000/05/01 06:18:38 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -35,7 +35,6 @@ constant copyright = ("<br>Copyright 1997-1999 "
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 constant thread_safe = 1;
 
@@ -134,7 +133,7 @@ mapping fontlist(string bg, string fg, int scale)
     for(int i=0; i<sizeof(fnts); i++ ) {
       out += "<a href='" + query_internal_location()+
              "0/" + bg + "/" + fg +"/0/1/" + (string)scale +
-             "/0/" + http_encode_string(fnts[i]) +
+             "/0/" + Roxen.http_encode_string(fnts[i]) +
              "/1234567890.gif'>" + fnts[i] + "</a><br>\n";
     }
     out += "</dl>";
@@ -144,7 +143,7 @@ mapping fontlist(string bg, string fg, int scale)
 
   out += "<hr>" + copyright + "</body></html>";
 
-  return http_string_answer( out );
+  return Roxen.http_string_answer( out );
 }
 
 //
@@ -170,7 +169,7 @@ mapping ppmlist(string font, string user, string dir)
 	out += "<dt><font size=+1><b> ["+ initial +"]</b></font>\n<dd>";
       }
       out +=
-	"<a href='" +query_internal_location()+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
+	"<a href='" +query_internal_location()+ user + "/n/n/0/0/5/0/"+ Roxen.http_encode_string(fnts[i]) +
 	"/1234567890.gif'>" + fnts[i] + "</a> \n";
       totfonts++;
     }
@@ -179,9 +178,9 @@ mapping ppmlist(string font, string user, string dir)
     out += "Sorry, No Available Digits";
   }
 
-  out+= "<hr>" + copyright + "</body></html>";
+  out+= "<hr />" + copyright + "</body></html>";
 
-  return http_string_answer( out );
+  return Roxen.http_string_answer( out );
 }
 
 //
@@ -238,10 +237,10 @@ mapping find_file_font( string f, RequestID id )
   }
 
   if(trans)
-    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
+    return Roxen.http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
 			      "image/gif");
   else
-    return http_string_answer(Image.GIF.encode(img, ct),"image/gif");
+    return Roxen.http_string_answer(Image.GIF.encode(img, ct),"image/gif");
 }
 
 //
@@ -343,10 +342,10 @@ mapping find_file_ppm( string f, RequestID id )
   }
 
   if(trans)
-    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
+    return Roxen.http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
 			      "image/gif");
   else
-    return http_string_answer(Image.GIF.encode(img, ct),"image/gif");
+    return Roxen.http_string_answer(Image.GIF.encode(img, ct),"image/gif");
 }
 
 mapping find_internal( string f, RequestID id )
@@ -405,7 +404,7 @@ string tag_counter( string tagname, mapping args, RequestID id )
   // Common Part ( /<accessed> and IMG Attributes )
   //
 
-  string accessed=parse_rxml(make_tag("accessed",args), id);
+  string accessed=Roxen.parse_rxml(Roxen.make_tag("accessed",args), id);
 
   url +=  "/" + accessed +".gif";
 
@@ -421,7 +420,7 @@ string tag_counter( string tagname, mapping args, RequestID id )
   }
   if( tagname == "counter_url" ) return url;
 
-  return pre + make_tag("img",args) + post;	// <IMG SRC="url" ...>
+  return pre + Roxen.make_tag("img",args) + post;
 }
 
 mapping query_tag_callers()

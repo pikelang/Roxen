@@ -1,11 +1,10 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.14 2000/04/06 07:34:42 wing Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.15 2000/05/01 06:25:19 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 
 //---------------------- Module Registration --------------------------------

@@ -1,12 +1,11 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.44 2000/04/06 07:34:42 wing Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.45 2000/05/01 06:25:01 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Tab list";
@@ -56,11 +55,11 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   string fimage;
 
   if(a["frame-image"])
-    fimage = fix_relative( a["frame-image"], id );
+    fimage = Roxen.fix_relative( a["frame-image"], id );
   else if(d["frame-image"])
-    fimage = fix_relative( d["frame-image"], id );
+    fimage = Roxen.fix_relative( d["frame-image"], id );
   else if(id->misc->defines["tab-frame-image"])
-    fimage = fix_relative( id->misc->defines["tab-frame-image"], id );
+    fimage = Roxen.fix_relative( id->misc->defines["tab-frame-image"], id );
   else
     //  We need an absolute path or else gbutton will "fix" this according
     //  to the path in the request...
@@ -129,7 +128,7 @@ class TagTablist {
       add_layers( args->result[-1][0], "last" );
 
       return ({ map( args->result, lambda( array q ) {
-			       return make_container( "gbutton",q[0],q[1]);
+			       return Roxen.make_container( "gbutton",q[0],q[1]);
 			     } )*"" });
     }
   }

@@ -3,11 +3,10 @@
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.15 2000/04/11 04:51:23 per Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.16 2000/05/01 06:18:02 nilsson Exp $";
 constant tagdesc="Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
 "to convert images between different image formats.";
 
@@ -46,7 +45,7 @@ mapping get_my_args( mapping args, object id )
 {
   mapping a=
   ([
-    "src":(args->src?fix_relative( args->src, id ):0),
+    "src":(args->src?Roxen.fix_relative( args->src, id ):0),
     "quant":args->quant,
     "crop":args->crop,
     "format":args->format,
@@ -78,7 +77,7 @@ string tag_cimg( string t, mapping args, RequestID id )
     args->width = size->xsize;
     args->height = size->ysize;
   }
-  return make_tag( "img", args );
+  return Roxen.make_tag( "img", args );
 }
 
 string tag_cimg_url( string t, mapping args, RequestID id )
