@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.24 2003/05/07 16:43:08 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.25 2003/05/12 15:56:50 anders Exp $";
 
 constant thread_safe=1;
 
@@ -86,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.24 $"/" ")[1];
+string revision = ("$Revision: 1.25 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -378,9 +378,6 @@ class TagEmail {
      // headers at all so we have to do it here.
      m_delete(headers, "BCC");
 
-     if (!tox || sizeof(tox)<1)
-       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
-
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
 
@@ -473,6 +470,10 @@ class TagEmail {
      if (bccx) to |= bccx / split;
      string from = only_from_addr(fromx);
      string message = (string)m;
+     to -= ({""});
+
+     if (!sizeof(to))
+       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
 
      error = catch(o->send_message(from, to, message));
      if (error)
@@ -544,32 +545,32 @@ module's</i> administration interface.</p>
 of the machine that operates the mail server.  </p>
 </attr>
 
-<attr name='subject' default='\"[ * No Subject * ]\"'
+<attr name='subject' default='[ * No Subject * ]'
 value=''><p>
  The subject line.
 </p>
 </attr>
 
-<attr name='from' value='' default='(empty)'><p>
+<attr name='from' value=''><p>
  The email address of sender. Values on the form <tt>John Doe foo@bar.com</tt>
  renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
  If the value contains a '&lt;' the value is left unaltered.
 </p>
 </attr>
 
-<attr name='to' value='' default='(empty)'><p>
+<attr name='to' value=''><p>
  The list of recipient email address(es). Separator character can be
  defined by the 'separator' attribute.
 </p>
 </attr>
 
-<attr name='cc' value='' default='(empty)'><p>
+<attr name='cc' value=''><p>
  The list of carbon copy recipient email address(es).
  Separator character can be defined by the 'separator' attribute.
 </p>
 </attr>
 
-<attr name='bcc' value='' default='(empty)'><p>
+<attr name='bcc' value=''><p>
  The list of blind carbon copy recipient email address(es).
  Separator character can be defined by the 'separator' attribute.
 </p>
