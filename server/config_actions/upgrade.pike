@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.20 1997/09/03 01:19:06 peter Exp $
+ * $Id: upgrade.pike,v 1.21 1997/09/03 02:28:42 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -173,8 +173,7 @@ string page_0(object id)
      "plugins"
      "</blockquote></help>"
      
-     "<var type=checkbox name=new> Also search for new components\n"
-      );
+     "<var type=checkbox name=new> Also search for new components\n");
 }
 
 string upgrade_module(string m, object rpc)
@@ -213,29 +212,17 @@ string upgrade_module(string m, object rpc)
   m_delete(roxen->allmodules, m);
   cache_remove("modules", m);
 
-
   foreach(roxen->configurations, object c)
-  {
     if(c->modules[m])
-    {
       if(!c->load_module(m))
-      {
 	report_error("The newly upgraded module could not be reloaded!");
-      } else {
+      else
 	foreach(indices(c->modules[m]->copies||({"foo"})), int n)
-	  if(!c->disable_module(name+"#"+n))
-	    report_error("Failed to disable the module "+name+"#"+n);
-	  else if(!(c->enable_module(name+"#"+n)))
-	    error("Failed to enable module "+name+"#"+n+".\n");
-      }
-      object co = roxen->configuration_interface();
-      object node = co->root;
-      node = node->descend(c->name);
-      node->clear();
-      call_out(co->build_configuration,0,node);
-    }
-  }
-  
+	  if(!c->disable_module(m+"#"+n))
+	    report_error("Failed to disable the module "+m+"#"+n);
+	  else if(!(c->enable_module(m+"#"+n)))
+	    error("Failed to enable module "+m+"#"+n+".\n");
+
   return res+"<p>\n\n\n";
 }
 
@@ -426,9 +413,14 @@ string wizard_done(object id)
   string res = "<font size=+2>Upgrade report</font><p>";
   catch(rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade"));
   if(rpc) foreach(todo, array a) res+=a[1](@replace(a[2..], "RPC", rpc));
+  roxen->rescan_modules();
   res += "<p>Done in "+(time()-t)+" seconds.";
-  return (html_border(res,0,5)+"<form action=/Actions/><input "
-	  "type=submit value=' OK '></form>");
+  return (html_border(res+
+	  "<form action=/Actions/>"
+	  "<input type=hidden name=action value=reloadconfiginterface.pike>"
+	  "<input type=hidden name=unique value="+time()+">"
+	  "<input type=submit value=' OK '>"
+	  "</form>",0,5));
 }
 
 
