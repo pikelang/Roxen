@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.178 1999/07/21 17:43:57 grubba Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.179 1999/07/24 20:58:30 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -444,7 +444,7 @@ string tagtime(int t,mapping m)
 
 string tag_date(string q, mapping m, object id)
 {
-  int t=(int)m->unix_time || time(1);
+  int t=(int)m->unix_time || (int)m["unix-time"] || time(1);
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
@@ -457,7 +457,7 @@ string tag_date(string q, mapping m, object id)
 
   if(!m->date)
   {
-    if(!m->unix_time)
+    if(!m->unix_time || m->second)
       NOCACHE();
   } else
     CACHE(60); // One minute is good enough.
