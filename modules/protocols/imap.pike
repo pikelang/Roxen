@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.12 1999/01/27 02:13:45 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.13 1999/01/27 02:18:13 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -69,7 +69,7 @@ class imap_mail
 
       res["\\Recent"] = is_recent;
 
-      foreach(indices(mail->get_flags), string flag)
+      foreach(indices(mail->flags()), string flag)
       {
 	string imap_flag =
 	([ "read" : "\\Seen",
