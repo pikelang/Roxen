@@ -1,8 +1,286 @@
+#
+# $Id: configure.in,v 1.3 1997/08/18 02:55:30 grubba Exp $
+#
+
 prefix=$PWD
 AC_INIT(Makefile.in)
 
 AC_SET_MAKE
 
+# We want an absolute path to the source-dir.
+case "$srcdir" in
+    /*)
+    ;;
+    *)
+	oldsrcdir="$srcdir"
+	srcdir="`cd \"$srcdir\";pwd`"
+	AC_MSG_WARN([ Converted $oldsrcdir to $srcdir,
+If this does not work, please use an absolute path to the configure script. ])
+    ;;
+esac
+
+# Set some of the compiler flags.
+
+if test "x${CFLAGS-}" = x ; then
+  cflags_is_set=no
+else
+  cflags_is_set=yes
+fi
+
+if test "x${CPPFLAGS-}" = x ; then
+  cppflags_is_set=no
+else
+  cppflags_is_set=yes
+fi
+
+if test "x${LDFLAGS-}" = x ; then
+  ldflags_is_set=no
+else
+  ldflags_is_set=yes
+fi
+
+for ac_site_file in $CONFIG_SITE; do
+  if test -r "$ac_site_file"; then
+    AC_MSG_WARN([You are using a site file to initialize configure, please
+note that this can lead to problems if anything in
+$ac_site_file is not correct. If Pike does not compile, or
+does not run, please try this to compile Pike again:
+rm ./config.cache ; CONFIG_SITE=x ./configure ; make])
+  fi
+done
+
+if test $cppflags_is_set$ldflags_is_set = nono -a x${C_INCLUDE_PATH-} = x ; then
+  for d in /usr/local /usr/gnu /opt/gnu /sw/gnu /home/GNU /sw /usr/freeware
+  do
+    if test -d "$d/lib" ; then
+      echo Adding $d/lib to the library-path
+      LDFLAGS="${LDFLAGS} -R$d/lib -L$d/lib"
+    else
+      :
+    fi
+
+    if test -d "$d/include" ; then
+      echo Adding $d/include to the include-path
+      CPPFLAGS="${CPPFLAGS} -I$d/include"
+    else
+      :
+    fi
+  done
+else
+  :
+fi
+
+# Check compilers and such
+#--------------------------
+
+AC_PROG_CC
+AC_AIX
+AC_MINIX
+
+# We need some special hacks when running slowaris
+AC_PATH_PROG(uname_prog,uname,no)
+AC_MSG_CHECKING(operating system)
+AC_CACHE_VAL(roxen_cv_sys_os,
+[
+if test "$uname_prog" != "no"; then
+  roxen_cv_sys_os="`uname`"
+
+  case "$roxen_cv_sys_os" in
+    SunOS)
+      case "`uname -r`" in
+        5.*) roxen_cv_sys_os="Solaris";
+      esac
+    ;;
+  esac
+else
+  roxen_cv_sys_os="Not Solaris"
+fi
+])
+AC_MSG_RESULT($roxen_cv_sys_os)
+
+case "$roxen_cv_sys_os" in
+  SCO*)
+     case "$CC" in
+       *-belf*) ;;
+       *)
+          CC="$CC -belf"
+       ;;
+     esac
+  ;;
+esac
+
+#############################################################################
+
+
+AC_DEFUN(AC_SYS_COMPILER_FLAG,
+[
+  AC_MSG_CHECKING($1)
+  OLD_CFLAGS="[$]CFLAGS"
+  AC_CACHE_VAL(roxen_cv_option_$2,
+  [
+    CFLAGS="[$]OLD_CFLAGS $1"
+    AC_TRY_RUN([int main(){exit(0);}],roxen_cv_option_$2=yes,roxen_cv_option_$2=no)
+  ])
+  
+  CFLAGS="[$]OLD_CFLAGS"
+  
+  if test x"[$]roxen_cv_option_$2" = "xyes" ; then
+    OPTIMIZE="[$]OPTIMIZE $1"
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+])
+
+AC_DEFUN(AC_SYS_CPU_COMPILER_FLAG,
+[
+ if test "`uname -m 2>/dev/null`" = "$1" ; then
+    AC_SYS_COMPILER_FLAG($2,$3)
+ fi
+])
+
+WARN=""
+OPTIMIZE=""
+
+if test $cflags_is_set = no; then
+ if test "x${GCC-}" = xyes ; then
+  WARN="-W -Wall -Wpointer-arith -Wno-unused"
+### Optimize for different SUN machines. If there is no working 'uname'
+### no extra optimization will be done, but nothing should break either.
+  AC_SYS_CPU_COMPILER_FLAG(sun4c,-msparclite,sparclite)
+  AC_SYS_CPU_COMPILER_FLAG(sun4m,-mv8,microsparc)
+  AC_SYS_CPU_COMPILER_FLAG(sun4d,-msupersparc,supersparc)
+  AC_SYS_CPU_COMPILER_FLAG(sun4u,-msupersparc,ultrasparc)
+ else
+
+### Non-gcc thingies. This should probably be enhanced...
+  AC_SYS_COMPILER_FLAG(-fast,fast)
+
+dnl
+dnl This does not work with Digital UNIX cc/ld (cc thinks it is ok, ld does not)
+dnl  
+dnl AC_SYS_COMPILER_FLAG(-native,native)
+dnl
+
+dnl ### Ok. This is for apcc...
+case "$CC" in
+  *apcc)
+    AC_SYS_COMPILER_FLAG(-XO=5,apcc_opt)
+    AC_SYS_COMPILER_FLAG(-Xcallmod=2,apcc_opt_2)
+  ;;
+esac
+
+
+  AC_SYS_CPU_COMPILER_FLAG(sun4m,-Xpipe=micro,microsparc)
+  AC_SYS_CPU_COMPILER_FLAG(sun4d,-Xpipe=super,supersparc)
+  AC_SYS_CPU_COMPILER_FLAG(sun4u,-Xpipe=super,ultrasparc)
+
+  case "${CFLAGS-}" in
+     *-O*) ;;
+     *)
+      AC_SYS_COMPILER_FLAG(-O,O)
+     ;;
+  esac
+ fi
+fi
+
+if test "$GCC" = "yes"; then
+  if test $cflags_is_set = no; then
+    AC_SYS_COMPILER_FLAG(-pipe, pipe)
+  fi
+else
+#
+# Special hack for HP-UX stupid cc
+#
+  if test "$roxen_cv_sys_os" = "HP-UX"; then
+    AC_TRY_COMPILE([int foo(int bar);],[],[],
+    [
+      OLD_CC="${CC-cc}"
+      if test "$CC" = "$BINDIR/smartlink cc" -a -x /usr/bin/cc ; then
+        CC="$BINDIR/smartlink /usr/bin/cc"
+      fi
+      CC="$CC -Aa -D_HPUX_SOURCE +Olibcalls"
+      AC_TRY_COMPILE([int foo(int bar);],[],[],[CC="$OLD_CC"])
+    ])
+  fi
+fi
+
+# GMP -- Gnu Multi-Precision library
+#------------------------------------
+
+MAKE_GMP=""
+AC_SUBST(MAKE_GMP)
+if test -d $srcdir/gmp/.; then
+  if test x$with_gmp = xyes; then
+    AC_CHECK_HEADERS(gmp.h)
+  fi
+  if test "$ac_cv_header_gmp_h" = "yes"; then
+    echo Gmp already installed.
+  else
+    echo Configuring gmp...
+    AC_CONFIG_SUBDIRS(gmp)
+    MAKE_GMP=gmp
+    # Fool Pike into believing Gmp is installed.
+    # It will be when Pike is being built.
+    ac_cv_header_gmp_h=yes
+    ac_cv_lib_gmp_mpz_set_d=yes
+    PWD=`pwd`
+    CPPFLAGS="${CPPFLAGS} -I$srcdir/gmp -I$PWD/gmp"
+    LDFLAGS="${LDFLAGS} -L$PWD/gmp"
+  fi
+fi
+
+# Zlib -- Gnu compression library
+#---------------------------------
+
+MAKE_ZLIB=""
+AC_SUBST(MAKE_ZLIB)
+if test -d zlib/.; then
+  if test x$with_zlib = xyes; then
+    AC_CHECK_HEADERS(zlib.h)
+  fi
+  if test "$ac_cv_header_zlib_h" = "yes"; then
+    echo Zlib already installed.
+  else
+    echo Configuring zlib...
+    AC_CONFIG_SUBDIRS(zlib)
+    MAKE_ZLIB=zlib
+    # Fool Pike into believing Zlib is installed.
+    # It will be when Pike is being built.
+    ac_cv_header_zlib_h=yes
+    ac_cv_lib_z_compress=yes
+    PWD=`pwd`
+    CPPFLAGS="${CPPFLAGS} -I$srcdir/zlib -I$PWD/zlib"
+    LDFLAGS="${LDFLAGS} -L$PWD/zlib"
+  fi
+fi
+
+# Gdbm -- Gnu DataBase Manager library
+#--------------------------------------
+
+MAKE_GDBM=""
+AC_SUBST(MAKE_GDBM)
+if test -d gdbm/.; then
+  if test x$with_gdbm = xyes; then
+    AC_CHECK_HEADERS(gdbm.h)
+  fi
+  if test "$ac_cv_header_gdbm_h" = "yes"; then
+    echo Gdbm already installed.
+  else
+    echo Configuring gdbm...
+    AC_CONFIG_SUBDIRS(gdbm)
+    MAKE_GDBM=gdbm
+    # Fool Pike into believing Gdbm is installed.
+    # It will be when Pike is being built.
+    ac_cv_header_gdbm_h=yes
+    ac_cv_lib_gdbm_gdbm_open=yes
+    PWD=`pwd`
+    CPPFLAGS="${CPPFLAGS} -I$srcdir/gdbm -I$PWD/gdbm"
+    LDFLAGS="${LDFLAGS} -L$PWD/gdbm"
+  fi
+fi
+
+
 AC_CONFIG_SUBDIRS(extern pike)
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile, echo foo >stamp-h)
 
