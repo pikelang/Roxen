@@ -1,3 +1,5 @@
 *.acdb
 build
 modref
+docs.*
+search
