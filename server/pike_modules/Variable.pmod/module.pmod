@@ -1,7 +1,8 @@
-// $Id: module.pmod,v 1.87 2004/05/31 15:45:08 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.88 2004/05/31 23:02:01 _cvs_stephen Exp $
 
 #include <module.h>
 #include <roxen.h>
+#include <stat.h>
 
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>

@@ -593,9 +593,9 @@ mapping|string parse( RequestID id )
     
     if( strlen(mi->conf) && strlen(mi->module) )
     {
-      Configuration c = roxen.find_configuration( mi->conf );
+      Configuration c = core.find_configuration( mi->conf );
       RoxenModule   m = c && c->find_module( mi->module );
-      ModuleInfo    i = roxen.find_module( (mi->module/"#")[0] );
+      ModuleInfo    i = core.find_module( (mi->module/"#")[0] );
       string mn;
 
       if( c && m )

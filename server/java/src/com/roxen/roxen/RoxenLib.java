@@ -1,9 +1,9 @@
 /*
- * $Id: RoxenLib.java,v 1.7 2000/02/21 18:30:46 marcus Exp $
+ * $Id: RoxenLib.java,v 1.8 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 import java.util.Map;
 import java.util.TreeMap;

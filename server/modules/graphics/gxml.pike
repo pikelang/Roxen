@@ -1,20 +1,21 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 //
 #include <module.h>
+#include <stat.h>
 inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.27 2004/05/23 14:14:37 _cvs_dirix Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.28 2004/05/31 23:01:52 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
 
-roxen.ImageCache the_cache;
+core.ImageCache the_cache;
 
 void start()
 {
-  the_cache = roxen.ImageCache( "gxml", generate_image );
+  the_cache = core.ImageCache( "gxml", generate_image );
 }
 
 void flush_cache() {

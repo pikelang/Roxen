@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.27 2004/05/29 00:52:38 _cvs_stephen Exp $
+ * $Id: listfonts.pike,v 1.28 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 
 constant task = "status";
@@ -29,7 +29,7 @@ string list_font(string font)
   {
     string res = "<p><font><b>"+
            (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
-                                         capitalize)*" ")+
+                                         String.capitalize)*" ")+
                   "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
                   "<table cellspacing='0' cellpadding='0'");
     foreach( sort( indices( m ) - ({"name","versions"}) ), string i )
@@ -39,14 +39,15 @@ string list_font(string font)
     return res;
   }
   return "<p><font><b>"+
-         (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
+         (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
+	  String.capitalize)*" ")+
           "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
 
 string font_loaders( )
 {
   string res ="<dl>";
-  foreach( roxen.fonts.font_handlers, FontHandler fl )
+  foreach( core.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
     res += "<b><dt><font>"+fl->name+" ("+nf
@@ -58,14 +59,14 @@ string font_loaders( )
 
 string page_0(RequestID id)
 {
-  array q = roxen.fonts.get_font_information();
+  array q = core.fonts.get_font_information();
   info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='task' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
               "<font size='+1'><b>Available font loaders</b></font><p>"+
               font_loaders()+"<font size='+1'><b>"
 	      "<br />All available fonts</b></font><p>");
-  foreach(sort(roxen.fonts.available_fonts(1)), string font)
+  foreach(sort(core.fonts.available_fonts(1)), string font)
     res+=list_font(font);
   res += ("</p><p>Example text "
 	  "<font size='-1'><input name='text' size='46' value='"
@@ -81,7 +82,7 @@ string page_1(RequestID id)
   string res="";
   mapping v  = id->real_variables;
   string txt = v->text && v->text[0];
-  foreach(roxen.fonts.available_fonts(), string fn)
+  foreach(core.fonts.available_fonts(), string fn)
     res += Roxen.html_encode_string( fn )+":<br />\n"
       "<gtext fontsize=16 align='top' fgcolor='&usr.fgcolor;' "
         "bgcolor='&usr.subtabs-frame;' font='"+fn+"'>"+

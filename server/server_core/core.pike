@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.866 2004/05/27 17:51:46 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.867 2004/05/31 23:02:03 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2318,46 +2318,6 @@ public void log(mapping file, RequestID request_id)
   request_id->conf->log(file, request_id);
 }
 
-#if ROXEN_COMPAT < 2.2
-// Support for unique user id's
-private Stdio.File current_user_id_file;
-private int current_user_id_number, current_user_id_file_last_mod;
-
-private void restore_current_user_id_number()
-{
-  if(!current_user_id_file)
-    current_user_id_file = open("$CONFIGDIR/LASTUSER~", "rwc");
-  if(!current_user_id_file)
-  {
-    call_out(restore_current_user_id_number, 2);
-    return;
-  }
-  current_user_id_number = (int)current_user_id_file->read(100);
-  current_user_id_file_last_mod = current_user_id_file->stat()[2];
-  report_debug("Restoring unique user ID information. (" + current_user_id_number
-	       + ")\n");
-#ifdef FD_DEBUG
-  mark_fd(current_user_id_file->query_fd(), "Unique user ID logfile.\n");
-#endif
-}
-
-int increase_id()
-{
-  if(!current_user_id_file)
-  {
-    restore_current_user_id_number();
-    return current_user_id_number+time(1);
-  }
-  if(current_user_id_file->stat()[2] != current_user_id_file_last_mod)
-    restore_current_user_id_number();
-  current_user_id_number++;
-  current_user_id_file->seek(0);
-  current_user_id_file->write((string)current_user_id_number);
-  current_user_id_file_last_mod = current_user_id_file->stat()[2];
-  return current_user_id_number;
-}
-#endif // ROXEN_COMPAT < 2.2
-
 private int unique_id_counter;
 string create_unique_id()
 {
@@ -3813,16 +3773,6 @@ class ArgCache
   }
 }
 
-// NGSERVER Remove this function
-string decode_charset( string charset, string data )
-{
-  if( charset == "iso-8859-1" ) return data;
-  catch {
-    return Locale.Charset.decoder( charset )->feed( data )->drain();
-  };
-  return data;
-}
-
 void create()
 {
   if (all_constants()["core"])
@@ -3838,7 +3788,6 @@ void create()
   define_global_variables();
 
   // simplify dumped strings.
-  add_constant( "roxen", this); // NGSERVER Remove this
   add_constant( "core", this);
 
 //   add_constant( "DBManager", ((object)"server_core/dbs.pike") );
@@ -4882,7 +4831,7 @@ function compile_log_format( string fmt )
   {
     code += 
 #"
-     roxen.ip_to_host(request_id->remoteaddr,do_async_write,
+     core.ip_to_host(request_id->remoteaddr,do_async_write,
                       data, request_id->remoteaddr, callback );
    }
 ";
@@ -4992,7 +4941,7 @@ array(array(string|int|array)) security_checks = ({
   }), "group", }),
   ({ "dns=%s",1,({
     "    if(!dns && \n"
-    "       ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
+    "       ((dns=core.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
     "      if( (id->misc->delayed+=0.1) < 1.0 )\n"
     "        return Roxen.http_try_again( 0.1 );\n"
     "    if (sizeof(filter(%[0]O/\",\",\n"
@@ -5146,7 +5095,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "config_userdb" || line == "admin_userdb" ) // NGSERVER: No config_userdb
-	code += "    userdb_module = roxen.admin_userdb_module;\n";
+	code += "    userdb_module = core.admin_userdb_module;\n";
       else if( line == "all" )
 	code += "    userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )

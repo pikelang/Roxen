@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.149 2004/05/22 18:18:30 _cvs_stephen Exp $";
+constant cvs_version = "$Id: business.pike,v 1.150 2004/05/31 23:01:51 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -33,14 +33,14 @@ mapping bg_timers = ([]);
 int loaded;
 
 
-roxen.ImageCache image_cache;
+core.ImageCache image_cache;
 function verify_font;
 
 void start(int num, object configuration)
 {
   if (!loaded) loaded = 1; 
-  image_cache = roxen.ImageCache( "diagram", draw_callback );
-  verify_font = roxen->fonts->verify_font;
+  image_cache = core.ImageCache( "diagram", draw_callback );
+  verify_font = core->fonts->verify_font;
 }
 
 void stop()
@@ -369,7 +369,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 
   string sep = m->separator || SEP;
 
-  res->colors = map(contents/sep, parse_color);
+  res->colors = map(contents/sep, Colors.parse_color);
 
   return "";
 }
@@ -484,7 +484,7 @@ string container_diagram(string tag, mapping m, string contents,
     res->name=m->name[..l];
     if (m->namesize)
       res->namesize=(int)m->namesize;
-    res->namecolor=parse_color(m->namecolor||id->misc->defines->fgcolor);
+    res->namecolor=Colors.parse_color(m->namecolor||id->misc->defines->fgcolor);
     if(m->namefont)
       res->namefont = verify_font( m->namefont, res->namesize );
   }
@@ -503,13 +503,13 @@ string container_diagram(string tag, mapping m, string contents,
     array a = m->tonedbox/",";
     if(sizeof(a) != 4)
       return syntax("tonedbox must have a comma separated list of 4 colors.");
-    res->tonedbox = map(a, parse_color);
+    res->tonedbox = map(a, Colors.parse_color);
   }
   else if (m->colorbg)
-    res->colorbg=parse_color(m->colorbg);
+    res->colorbg=Colors.parse_color(m->colorbg);
 
   if (m->notrans) {
-    res->colorbg=parse_color(m->bgcolor||m->colorbg||id->misc->defines->bgcolor||"white");
+    res->colorbg=Colors.parse_color(m->bgcolor||m->colorbg||id->misc->defines->bgcolor||"white");
     m_delete(m, "bgcolor");
     res->notrans=1;
   }
@@ -573,8 +573,8 @@ string container_diagram(string tag, mapping m, string contents,
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
 
-  res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
-  res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
+  res->bg = Colors.parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
+  res->fg = Colors.parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
 
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
@@ -588,9 +588,9 @@ string container_diagram(string tag, mapping m, string contents,
 #endif
   res->encoding       = m->encoding || "iso-8859-1";
 
-  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fgcolor || "black");
-  res->axcolor   = parse_color(m->axcolor || id->misc->defines->fgcolor || "black");
-  res->gridcolor = parse_color(m->gridcolor || id->misc->defines->fgcolor || "black");
+  if(m->labelcolor) res->labelcolor=Colors.parse_color(m->labelcolor || id->misc->defines->fgcolor || "black");
+  res->axcolor   = Colors.parse_color(m->axcolor || id->misc->defines->fgcolor || "black");
+  res->gridcolor = Colors.parse_color(m->gridcolor || id->misc->defines->fgcolor || "black");
   res->linewidth = m->linewidth || "2.2";
   res->axwidth   = m->axwidth || "2.2";
 
@@ -718,7 +718,7 @@ string container_diagram(string tag, mapping m, string contents,
 
 int|object PPM(string fname, object id)
 {
-  return roxen->load_image( fname, id );
+  return core->load_image( fname, id );
 }
 
 mapping find_internal(string f, object id)

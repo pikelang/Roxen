@@ -3,8 +3,9 @@
 inherit "module";
 
 #include <module.h>
+#include <stat.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.25 2004/05/30 23:18:41 _cvs_dirix Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.26 2004/05/31 23:01:55 _cvs_stephen Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 

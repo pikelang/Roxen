@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.core.servlet;
 
 import java.util.Enumeration;
 import java.util.NoSuchElementException;

@@ -27,7 +27,7 @@ class Imagesize(mapping m, RequestID id) {
 	break;
       default:
 	catch {
-	  Image.Image i = roxen.load_image( m->path,id );
+	  Image.Image i = core.load_image( m->path,id );
 	  m["x-size"] = i->xsize();
 	  m["y-size"] = i->ysize();
 	};

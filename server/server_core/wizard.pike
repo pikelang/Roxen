@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.158 2004/05/29 02:10:05 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.159 2004/05/31 23:02:03 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -196,8 +196,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
-       a = parse_color(current||"black");
-       [h,s,v] = rgb_to_hsv(@a);
+       a = Colors.parse_color(current||"black");
+       [h,s,v] = Colors.rgb_to_hsv(@a);
      }
      if(id->variables[m->name+".foo.x"]) {
        h = (int)id->variables[m->name+".foo.x"];
@@ -207,8 +207,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      else if(id->variables[m->name+".entered"] &&
 	     strlen(current=id->variables[m->name+".entered"]))
      {
-       a = parse_color(current||"black");
-       [h,s,v] = rgb_to_hsv(@a);
+       a = Colors.parse_color(current||"black");
+       [h,s,v] = Colors.rgb_to_hsv(@a);
      }
 
      m_delete(id->variables, m->name+".foo.x");
@@ -218,7 +218,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
      if(!a)
-       a = hsv_to_rgb(h,s,v);
+       a = Colors.hsv_to_rgb(h,s,v);
      string bgcol = sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
@@ -258,7 +258,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<hr size='2' align='left' noshade='noshade' width='70' />\n"+
       "<font size='-1'><input type='string' name='"+
       m->name+".entered' size='8' value='"+
-      color_name(a) +
+      Colors.color_name(a) +
       "'> <input type='submit' value='Ok'></font></td></table>\n");
 
    case "color-small":
@@ -266,8 +266,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
-       a = parse_color(current||"black");
-       [h,s,v] = rgb_to_hsv(@a);
+       a = Colors.parse_color(current||"black");
+       [h,s,v] = Colors.rgb_to_hsv(@a);
      }
      if(id->variables[m->name+".foo.x"]) {
        h = ((int)id->variables[m->name+".foo.x"])*2;
@@ -277,8 +277,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      else if(id->variables[m->name+".entered"] &&
 	     strlen(current=id->variables[m->name+".entered"]))
      {
-       a = parse_color(current||"black");
-       [h,s,v] = rgb_to_hsv(@a);
+       a = Colors.parse_color(current||"black");
+       [h,s,v] = Colors.rgb_to_hsv(@a);
      }
 
      m_delete(id->variables, m->name+".foo.x");
@@ -288,7 +288,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
      if(!a)
-       a = hsv_to_rgb(h,s,v);
+       a = Colors.hsv_to_rgb(h,s,v);
      bgcol = sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
@@ -324,7 +324,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<tr><td width='110'>\n"
       "<font size='-1'><input type='string' name='"+
       m->name+".entered' size='8' value='"+
-      color_name(a)+"'> <input type='submit' value='" + LOCALE(38, "Ok") +
+      Colors.color_name(a)+"'> <input type='submit' value='" + LOCALE(38, "Ok") +
          "'></font>"
       "</td></tr>\n"
       "</table>\n");
@@ -333,8 +333,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      //  Note: This code requires ColorSelector.js
      if (string color_input = id->variables[m->name])
        current = color_input;
-     a = parse_color(current || "black");
-     [h, s, v] = rgb_to_hsv(@a);
+     a = Colors.parse_color(current || "black");
+     [h, s, v] = Colors.rgb_to_hsv(@a);
      current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
      id->variables[m->name] = current;
      
@@ -1138,20 +1138,6 @@ string html_table(array(string) subtitles, array(array(string)) table,
    */
 
   if(!opt) opt = ([]);
-
-  // RXML <2.0 compatibility stuff
-  if(opt->fgcolor0) {
-    opt->oddbgcolor=opt->fgcolor0;
-    m_delete(opt, "fgcolor0");
-  }
-  if(opt->fgcolor1) {
-    opt->evenbgcolor=opt->fgcolor1;
-    m_delete(opt, "fgcolor1");
-  }
-  if(opt->bgcolor) {
-    opt->bordercolor=opt->bgcolor;
-    m_delete(opt, "bgcolor");
-  }
 
   string r = "";
 

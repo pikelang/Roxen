@@ -1,9 +1,9 @@
 /*
- * $Id: Module.java,v 1.12 2004/05/31 11:45:00 _cvs_dirix Exp $
+ * $Id: Module.java,v 1.13 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 import java.util.Vector;
 

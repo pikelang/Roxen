@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.14 2004/05/23 14:14:38 _cvs_dirix Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.15 2004/05/31 23:01:52 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -309,7 +309,7 @@ class Location( string location,
       }
 
       i = ("HTTP/1.0 200 OK\r\n"
-	   "Server: "+roxen.version()+"\r\n"
+	   "Server: "+core.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "x-audiocast-gengre:"+(meta->gengre||"unknown")+"\r\n"
 	   +((meta->url||url)?"x-audiocast-url:"+(meta->url||url)+"\r\n":"")+
@@ -324,7 +324,7 @@ class Location( string location,
     {
       if( id->request_headers[ "icy-metadata" ] )
         i = ("ICY 200 OK\r\n"
-	   "Server: "+roxen.version()+"\r\n"
+	   "Server: "+core.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "icy-notice1:This stream requires a shoutcast compatible player.\r\n"
 	   "icy-notice2:ChiliMoon mod_mp3\r\n"+metahd+
@@ -338,7 +338,7 @@ class Location( string location,
     werror("MS Player?\n");
         protocol = "AudioCast";
         i = ("HTTP/1.0 200 OK\r\n"
-	   "Server: "+roxen.version()+"\r\n"
+	   "Server: "+core.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "Content-Length: 9999999999\r\n" );
       }

@@ -26,7 +26,7 @@ object load_modules(Configuration conf)
 	(module = conf->enable_module( mod, 0, 0, 1, 1 )))
     {
       conf->call_low_start_callbacks( module, 
-				      roxen.find_module( mod ), 
+				      core.find_module( mod ), 
 				      conf->modules[ mod ] );
     }
   }
@@ -47,7 +47,7 @@ string initial_form( Configuration conf, RequestID id, int setonly )
 
   foreach( modules, string mod )
   {
-    ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
+    ModuleInfo mi = core.find_module( (mod/"!")[0] );
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
     foreach( indices(moo->query()), string v )
     {
@@ -84,7 +84,7 @@ int form_is_ok( RequestID id )
   Configuration conf = id->misc->new_configuration;
   foreach( modules, string mod )
   {
-    ModuleInfo mi = roxen.find_module( mod );
+    ModuleInfo mi = core.find_module( mod );
     if( mi )
     {
       RoxenModule moo = conf->find_module( mod );
@@ -137,13 +137,13 @@ mixed parse( RequestID id, mapping|void opt )
       RoxenModule module = conf->find_module( mod );
       if(module)
 	conf->call_start_callbacks( module,
-				    roxen.find_module( mod ),
+				    core.find_module( mod ),
 				    conf->modules[ mod ] );
     }
     
     foreach( silent_modules, string mod )
     {
-      ModuleInfo module = roxen.find_module(mod);
+      ModuleInfo module = core.find_module(mod);
       conf->enable_module( mod );
     }
 

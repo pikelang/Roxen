@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.46 2004/05/30 23:18:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.47 2004/05/31 23:01:50 _cvs_stephen Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -147,7 +147,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='var' value='server name'><p>
- The web server name. RXML counterpart: <ent>roxen.domain</ent>.</p>
+ The web server name. RXML counterpart: <ent>core.domain</ent>.</p>
 </attr>
 
 <attr name='var' value='remote host'><p>
@@ -364,7 +364,7 @@ string get_var(string var, RequestID id)
      return modified((["ssi":1]), id);
 
    case "server_software":
-    return roxen->version();
+    return core->version();
 
    case "server_name":
     string tmp=id->conf->query("MyWorldLocation");

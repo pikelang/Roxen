@@ -1,9 +1,9 @@
 /*
- * $Id: RoxenFileResponse.java,v 1.3 2000/02/21 18:30:46 marcus Exp $
+ * $Id: RoxenFileResponse.java,v 1.4 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 import java.io.Reader;
 

@@ -27,13 +27,14 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.103 2004/05/27 21:24:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.104 2004/05/31 23:01:52 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
+#include <stat.h>
 inherit "module";
 
-roxen.ImageCache  button_cache;
+core.ImageCache  button_cache;
 int do_ext;
 
 constant module_type = MODULE_TAG;
@@ -195,7 +196,7 @@ function TIMER( function f )
 }
 void start()
 {
-  button_cache = roxen.ImageCache("gbutton", TIMER(draw_button));
+  button_cache = core.ImageCache("gbutton", TIMER(draw_button));
   do_ext = query("ext");
 }
 
@@ -287,7 +288,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   if( args->border_image )
   {
     array(Image.Layer)|mapping tmp =
-     roxen.load_layers(args->border_image, id, opts);
+     core.load_layers(args->border_image, id, opts);
     
     if (mappingp(tmp))
       if (tmp->error == 401)
@@ -381,7 +382,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   if (args->icn) {
     //  Pass error mapping to find out possible errors when loading icon
     mapping err = ([ ]);
-    icon = roxen.low_load_image(args->icn, id, err);
+    icon = core.low_load_image(args->icn, id, err);
 
     //  If icon loading fails due to missing authentication we reject the
     //  gbutton request so that the browser can re-request it with proper
@@ -389,7 +390,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     if (!icon && err->error == 401)
       return err;
   } else if (args->icd)
-    icon = roxen.low_decode_image(args->icd);
+    icon = core.low_decode_image(args->icd);
   
   int i_width = icon && icon->img->xsize();
   int i_height = icon && icon->img->ysize();
@@ -793,16 +794,16 @@ class ButtonFrame {
     
     mapping new_args =
       ([
-	"pagebg" :parse_color(args->pagebgcolor ||
+	"pagebg" :Colors.parse_color(args->pagebgcolor ||
 			      id->misc->defines->theme_bgcolor ||
 			      id->misc->defines->bgcolor ||
 			      args->bgcolor ||
 			      "#eeeeee"),                 // _page_ bg color
-	"bg"  : parse_color(args->bgcolor ||
+	"bg"  : Colors.parse_color(args->bgcolor ||
 			    id->misc->defines->theme_bgcolor ||
 			    id->misc->defines->bgcolor ||
 			    "#eeeeee"),                   //  Background color
-	"txt" : parse_color(args->textcolor ||
+	"txt" : Colors.parse_color(args->textcolor ||
 			    id->misc->defines->theme_bgcolor ||
 			    id->misc->defines->fgcolor ||
 			    "#000000"),                   //  Text color
@@ -820,8 +821,8 @@ class ButtonFrame {
 	"ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
 	"icva": lower_case(args->valign_icon || "middle"),//  Vertical align
 	"font": (args->font||id->misc->defines->font||
-		 roxen->query("default_font")),
-	"fontkey": roxen->fonts->verify_font(args->font||id->misc->defines->font),
+		 core->query("default_font")),
+	"fontkey": core->fonts->verify_font(args->font||id->misc->defines->font),
 	"border_image":fi,
 	"extra_layers":args["extra-layers"],
 	"extra_left_layers":args["extra-left-layers"],

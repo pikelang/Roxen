@@ -10,7 +10,7 @@ void really_do_create( RequestID id  )
   if( strlen( id->variables->comment ) )
     DBManager.is_module_db( 0, id->variables->name,
 			    id->variables->comment-"\r" );
-  foreach( roxen->configurations, Configuration c )
+  foreach( core->configurations, Configuration c )
     DBManager.set_permission( id->variables->name, c, DBManager.READ );
   DBManager.set_permission( id->variables->name, id->conf, DBManager.WRITE );
 }

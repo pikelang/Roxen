@@ -95,10 +95,10 @@ class Fetcher
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
     query->async_request( h, p, q,
 			  ([ "Host":h+":"+p,
-			     "User-Agent": (roxen.query("default_ident") ?
+			     "User-Agent": (core.query("default_ident") ?
 					    (roxen_product_name + "/" +
 					     roxen_dist_version) :
-					    roxen.version()),
+					    core.version()),
 			  ]) );
   }
   

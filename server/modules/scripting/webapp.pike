@@ -3,10 +3,11 @@
 inherit "chili-module:filesystem";
 
 #include <module.h>
+#include <stat.h>
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.26 2004/05/23 14:14:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.27 2004/05/31 23:01:55 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;

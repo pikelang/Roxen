@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.core.servlet;
 
 import javax.servlet.ServletInputStream;
 import java.io.IOException;

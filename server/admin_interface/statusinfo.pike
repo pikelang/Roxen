@@ -4,7 +4,7 @@
 
 string status(object|mapping conf)
 {
-  float tmp, dt = (float)(time(1) - roxen->start_time + 1);
+  float tmp, dt = (float)(time(1) - core->start_time + 1);
 
 #define NBSP(X)  replace(X, " ", "&nbsp;")
 

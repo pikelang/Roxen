@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.6 2002/06/14 00:39:13 nilsson Exp $ */
+/* $Id: ftpstatus.pike,v 1.7 2004/05/31 23:01:45 _cvs_stephen Exp $ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0
@@ -15,7 +15,7 @@ static string describe_ftp(object ftp)
   string res = "<tr>";
 
   res += "<td>"+
-    roxen->blocking_ip_to_host(((ftp->cmd_fd->query_address()||"")/" ")[0])+
+    core->blocking_ip_to_host(((ftp->cmd_fd->query_address()||"")/" ")[0])+
     "</td>";
 
   if(ftp->session_auth)

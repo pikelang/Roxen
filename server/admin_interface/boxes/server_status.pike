@@ -11,24 +11,24 @@ string add_row( string item, string value ) {
 
 string parse( RequestID id )
 {
-  int dt = (time() - roxen->start_time+1);
+  int dt = (time() - core->start_time+1);
   string contents = "";
   contents += add_row( "Server started",
-		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
+		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", core->start_time) );
   contents += add_row( "Server uptime",
 		      Roxen.msectos( dt*1000 ));
   mapping ru;
   if(!catch(ru=System.getrusage())) {
     int tmp;
     if(ru->utime)
-      tmp = ru->utime/(time() - roxen->start_time+1);
+      tmp = ru->utime/(time() - core->start_time+1);
     contents += add_row( "CPU-time used",
 			 Roxen.msectos(ru->utime+ru->stime) +
 			 (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
   }
 
   mapping total = ([]);
-  foreach(roxen->configurations, Configuration conf) {
+  foreach(core->configurations, Configuration conf) {
     if(!conf->sent || !conf->received || !conf->hsent)
       continue;
     total->sent += conf->sent;

@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.26 2004/05/30 19:17:21 _cvs_stenitzer Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.27 2004/05/31 23:01:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -40,8 +40,8 @@ void start(int n, Configuration c) {
 
   mapping conv = Standards.ISO639_2.list_639_1();
   conv = mkmapping( values(conv), indices(conv) );
-  roxen_languages = roxen->list_languages() +
-    map(roxen->list_languages(), lambda(string in) { return conv[in]; });
+  roxen_languages = core->list_languages() +
+    map(core->list_languages(), lambda(string in) { return conv[in]; });
   roxen_languages -= ({ 0 });
 }
 
@@ -121,9 +121,9 @@ function(string:string) translator(array(string) client, RequestID id) {
   client= ({ id->misc->defines->language }) + client + ({ languages[0] });
   foreach(client, string lang)
     if(has_value(roxen_languages,lang)) {
-      return roxen->language_low(lang)->language;
+      return core->language_low(lang)->language;
     }
-  return roxen->language_low("en")->language;
+  return core->language_low("en")->language;
 }
 
 class TagLanguage {

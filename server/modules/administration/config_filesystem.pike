@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.121 2004/05/31 14:42:33 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.122 2004/05/31 23:01:49 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -133,9 +133,9 @@ mixed find_file( string f, RequestID id )
       host = id->remoteaddr;
 
     // Patch it in. This is needed for the image-cache authentication handling.
-    id->conf->set_userdb_module_cache( ({ roxen.admin_userdb_module }) );
+    id->conf->set_userdb_module_cache( ({ core.admin_userdb_module }) );
 
-    if( user = id->conf->authenticate( id, roxen.admin_userdb_module ) )
+    if( user = id->conf->authenticate( id, core.admin_userdb_module ) )
     {
       if( !id->misc->cf_theme )
 	id->misc->cf_theme = ([]);
@@ -147,14 +147,14 @@ mixed find_file( string f, RequestID id )
 	report_notice("Administrator logged on as %s from %s.\n",
 		      user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
-      roxen.adminrequest_get_context( user->name(), host, id );
+      core.adminrequest_get_context( user->name(), host, id );
     }
     else
     {
       report_notice("Login attempt from %s\n",host);
       return id->conf
 	->authenticate_throw( id, "ChiliMoon Administration Interface",
-			      roxen.admin_userdb_module );
+			      core.admin_userdb_module );
     }
 
     encoding = config_setting( "charset" );
@@ -219,7 +219,7 @@ mixed find_file( string f, RequestID id )
       type = id->conf->type_from_filename( id->not_query );
 
     if( locale != "standard" ) 
-      roxen.set_locale( locale );
+      core.set_locale( locale );
 
     if (glob("text*", type))
       id->set_output_charset( encoding );
@@ -322,7 +322,7 @@ mixed find_file( string f, RequestID id )
     mixed error;
     error = catch( retval = Roxen.http_rxml_answer( data, id ) );
     if( locale != "standard" )
-      roxen.set_locale( "standard" );
+      core.set_locale( "standard" );
     if( error )
       throw( error );
     
@@ -362,9 +362,9 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if (cfg->query ("compat_level") != roxen.__roxen_version__)
+    if (cfg->query ("compat_level") != core.__roxen_version__)
       // The admin interface always runs with the current compatibility level.
-      cfg->set ("compat_level", roxen.__roxen_version__);
+      cfg->set ("compat_level", core.__roxen_version__);
 
     mixed err;
     array(mapping(string:string)) old_version;
@@ -393,7 +393,7 @@ void start(int n, Configuration cfg)
 	  report_notice("Creating the 'docs' database.\n");
 	  DBManager.create_db( "docs", 0, 1 );
 	  DBManager.is_module_db( this_module(), "docs", "All documentation");
-	  foreach( roxen->configurations, Configuration c )
+	  foreach( core->configurations, Configuration c )
 	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
 	DBManager.restore( "docs", getcwd()+"/data/", "docs", ({ "docs" }) );
@@ -484,11 +484,11 @@ void create()
 	    "auth_httpcookie":"HTTP Cookies",
 	  ]) );
 
-  roxen.add_permission( "View Settings", "View Settings");
-  roxen.add_permission( "Edit Global Variables", "Edit Global Variables");
-  roxen.add_permission( "Tasks", "Tasks");
-  roxen.add_permission( "Restart", "Restart");
-  roxen.add_permission( "Shutdown", "Shutdown");
-  roxen.add_permission( "Create Site", "Create Sites");
-  roxen.add_permission( "Add Module", "Add Modules");
+  core.add_permission( "View Settings", "View Settings");
+  core.add_permission( "Edit Global Variables", "Edit Global Variables");
+  core.add_permission( "Tasks", "Tasks");
+  core.add_permission( "Restart", "Restart");
+  core.add_permission( "Shutdown", "Shutdown");
+  core.add_permission( "Create Site", "Create Sites");
+  core.add_permission( "Add Module", "Add Modules");
 }

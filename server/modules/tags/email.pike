@@ -7,11 +7,12 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.27 2004/05/24 22:39:56 mani Exp $";
+constant cvs_version = "$Id: email.pike,v 1.28 2004/05/31 23:01:57 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 
 #include <module.h>
+#include <stat.h>
 inherit "module";
 
 // ------------------------ Setting the defaults -------------------------
@@ -88,7 +89,7 @@ void create()
 object notasciicharset = Regexp("[^\1-\177]");
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.27 $"/" ")[1];
+string revision = ("$Revision: 1.28 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;

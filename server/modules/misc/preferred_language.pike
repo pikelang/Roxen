@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.22 2002/09/26 23:06:09 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.23 2004/05/31 23:01:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -96,12 +96,12 @@ constant alias = ({
   "svenska"
 });
 
-constant language_low=roxen->language_low;
+constant language_low=core->language_low;
 array(string) languages;
 array(string) defaults;
 void start() {
   languages =
-    roxen->list_languages() + alias  +
+    core->list_languages() + alias  +
     indices(Standards.ISO639_2.list_languages()) +
     indices(Standards.ISO639_2.list_639_1());
   defaults=[array(string)]query("defaults")&languages;
@@ -155,7 +155,7 @@ class TagEmitLanguages {
 
     array res=({});
     foreach(langs, string lang) {
-      object locale_obj = [object] roxen->language_low(lang);
+      object locale_obj = [object] core->language_low(lang);
       array(string) lid =
 	(locale_obj && [array(string)] locale_obj->id()) ||
 	({ lang, "Unknown", "Unknown" });

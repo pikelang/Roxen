@@ -149,3 +149,4 @@ and Roxen WebServer 4.0.
 
  - Obsolete doOutputTag support dropped from JavaModule and roxenlib
 
+ - wizard.pike: html_table: drop support for fgcolor0, fgcolor1, fgcolor

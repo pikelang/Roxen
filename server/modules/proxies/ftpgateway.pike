@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.43 2004/05/27 18:28:43 _cvs_stephen Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.44 2004/05/31 23:01:54 _cvs_stephen Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -33,10 +33,10 @@ Content-type: text/html\r\n
 <hr>
 <font size=\"+2\"><i>Host unknown or connection refused</i></font>
 <hr>
-<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
+<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+"</a></font>";
 
-string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.43 $"-"$")+"</font>";
+string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+
+                  "</a> FTP Gateway "+("$Revision: 1.44 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -1118,7 +1118,7 @@ void log(string file, string more)
 
   if(!logfile) return;
   sscanf(file, "%s@%s:%s", user, host, rest);
-  roxen->ip_to_host(host, do_write, host, rest, more);
+  core->ip_to_host(host, do_write, host, rest, more);
 }
 
 
@@ -1261,7 +1261,7 @@ string process_request(object id, int is_remote)
 
 string hostname(string s)
 {
-  return roxen->quick_ip_to_host(s);
+  return core->quick_ip_to_host(s);
 }
 
 void connected_to_server(object o, string file, object id, int is_remote)

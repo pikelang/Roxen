@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.core.servlet;
 
 import java.util.Dictionary;
 import java.util.Hashtable;

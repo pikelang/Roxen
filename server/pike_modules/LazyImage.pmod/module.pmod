@@ -1,5 +1,7 @@
 //! Generic extensible lazy-evaluation image processing.
 
+#include <stat.h>
+
 typedef array(Image.Layer) Layers;
 //! The 'Layers' type.
 
@@ -804,7 +806,7 @@ class LoadImage
 	error("Oops, no request id object.");
       array|mapping res;
       {
-	res = roxen.load_layers(args->src, id);
+	res = core.load_layers(args->src, id);
       }
       if( !res || mappingp(res) )
 	RXML.parse_error("Failed to load %O\n", args->src );

@@ -7,7 +7,7 @@ mixed parse( RequestID id )
   if(!sizeof(path)) 
     return Roxen.http_string_answer("<redirect to=''/><true/>");
 
-  Configuration conf = roxen->find_configuration( path[0] );
+  Configuration conf = core->find_configuration( path[0] );
 
   if( conf && !conf->inited )
     conf->enable_all_modules();

@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.core.servlet;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.28 2004/05/29 00:52:38 _cvs_stephen Exp $
+ * $Id: debug_info.pike,v 1.29 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 #include <stat.h>
 
@@ -51,11 +51,11 @@ string find_class( string f, int l )
 mixed page_0( object id )
 {
   mapping last_usage;
-  last_usage = roxen->query_var("__memory_usage");
+  last_usage = core->query_var("__memory_usage");
   if(!last_usage)
   {
     last_usage = _memory_usage();
-    roxen->set_var( "__memory_usage", last_usage );
+    core->set_var( "__memory_usage", last_usage );
   }
 
   mapping(string|program:array) allobj = ([]);
@@ -160,7 +160,7 @@ mixed page_0( object id )
         sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
       }) });
     }
-  roxen->set_var("__memory_usage", mem_usage);
+  core->set_var("__memory_usage", mem_usage);
 
 #define HCELL(thargs, color, text)					\
   ("<th " + thargs + ">"						\
@@ -200,7 +200,7 @@ mixed page_0( object id )
     res += "</p>\n";
   }
 
-  mapping save_numobjs = roxen->query_var( "__num_clones" );
+  mapping save_numobjs = core->query_var( "__num_clones" );
   int no_save_numobjs = !save_numobjs;
   if (no_save_numobjs) save_numobjs = ([]);
 
@@ -283,7 +283,7 @@ mixed page_0( object id )
 				  a[1] < b[1]));
 			    });
 
-  roxen->set_var("__num_clones", save_numobjs);
+  core->set_var("__num_clones", save_numobjs);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", "Source") +

@@ -23,7 +23,7 @@ RoxenModule|Configuration find_module( string foo )
   if( foo[0] == '/' ) foo = foo[1..];
   sscanf( foo, "%[^/]/%s", foo, mod );
 
-  cfg = roxen->find_configuration( foo );
+  cfg = core->find_configuration( foo );
 
   if( !mod  || !cfg )
     return cfg;
@@ -32,7 +32,7 @@ RoxenModule|Configuration find_module( string foo )
 }
 string program_name_version( program what )
 {
-  string file = roxen.filename( what );
+  string file = core.filename( what );
   string ofile;
   string name = file, warning="";
   Stat fs;

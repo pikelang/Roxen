@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.33 2004/05/23 14:14:39 _cvs_dirix Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.34 2004/05/31 23:01:53 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -252,7 +252,7 @@ static void do_log(mapping file, object request_id, function log_function)
   string form;
   if(!(form=log_format[file->error]))  form = log_format[0];
   if(!form)  return;
-  roxen.run_log_format( form, log_function, request_id, file );
+  core.run_log_format( form, log_function, request_id, file );
 }
 
 
@@ -332,7 +332,7 @@ string home(string of, object id)
 inline string format_log(object id, mapping file)
 {
   return sprintf("%s %s %s [%s] \"%s %s %s\" %s %s\n",
-		 roxen->quick_ip_to_host(id->remoteaddr),
+		 core->quick_ip_to_host(id->remoteaddr),
 		 (string)(sizeof(id->referer)?id->referer*", ":"-"),
 		 replace((string)(id->client?id->client*" ":"-")," ","%20"),
 		 Roxen.cern_http_date(id->time),

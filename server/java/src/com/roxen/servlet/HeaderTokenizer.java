@@ -1,4 +1,4 @@
-package com.roxen.servlet;
+package com.core.servlet;
 
 class HeaderTokenizer
 {

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.425 2004/05/31 16:09:27 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.426 2004/05/31 23:01:57 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -195,7 +195,7 @@ class EntityClientHost {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(c->id->host) return c->id->host;
-    return c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr);
+    return c->id->host=core->quick_ip_to_host(c->id->remoteaddr);
   }
 }
 

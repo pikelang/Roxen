@@ -25,7 +25,7 @@ mapping|string parse( RequestID id )
   if( !config_perm( "Add Module" ) )
     return "Permission denied";
 
-  Configuration c = roxen.find_configuration( id->variables->config );
+  Configuration c = core.find_configuration( id->variables->config );
 
   if( !config_perm( "Site:"+c->name ) )
     return "Permission denied";
@@ -44,13 +44,13 @@ mapping|string parse( RequestID id )
 
   array pos = map( mods,
 		   lambda(string q) {
-		     return roxen.find_module( (q/"#")[0] )->get_name()+q;
+		     return core.find_module( (q/"#")[0] )->get_name()+q;
 		   } );
 
   sort(pos, mods);
   foreach( mods, string q )
   {
-    RoxenModule m = roxen.find_module( (q/"#")[0] );
+    RoxenModule m = core.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
     res += ("<p><gbutton href='drop_module.pike?config=&form.config;&"
             "drop="+replace(q,"#","!")+"'> Drop Module"

@@ -2,7 +2,7 @@
 #include <module.h>
 #include <module_constants.h>
 
-//$Id: add_module.pike,v 1.83 2004/05/27 21:24:32 _cvs_stephen Exp $
+//$Id: add_module.pike,v 1.84 2004/05/31 23:01:44 _cvs_stephen Exp $
 
 int no_reload()
 {
@@ -56,7 +56,7 @@ object module_nomore(string name, object modinfo, object conf)
   if(((modinfo->type & MODULE_DIRECTORIES) && (o=conf->dir_module))
      || ((modinfo->type & MODULE_AUTH)  && (o=conf->auth_module))
      || ((modinfo->type & MODULE_TYPES) && (o=conf->types_module)))
-    return roxen.find_module( conf->otomod[o] );
+    return core.find_module( conf->otomod[o] );
 }
 
 // To redirect to when done with module addition
@@ -218,17 +218,17 @@ array(string) get_module_list( function describe_module,
                                function class_visible,
                                RequestID id )
 {
-  object conf = roxen.find_configuration( id->variables->config );
+  object conf = core.find_configuration( id->variables->config );
   object ec = loader.LowErrorContainer();
   int do_reload;
   master()->set_inhibit_compile_errors( ec );
 
   if( id->variables->reload_module_list )
-    roxen->clear_all_modules_cache();
+    core->clear_all_modules_cache();
 
   array(ModuleInfo) mods;
   loader.push_compile_error_handler( ec );
-  mods = roxen->all_modules();
+  mods = core->all_modules();
   loader.pop_compile_error_handler();
 
   foreach( mods, ModuleInfo m )
@@ -507,7 +507,7 @@ string page_really_compact( RequestID id )
 {
   first=0;
 
-  object conf = roxen.find_configuration( id->variables->config );
+  object conf = core.find_configuration( id->variables->config );
   object ec = loader.LowErrorContainer();
   master()->set_inhibit_compile_errors( ec );
 
@@ -516,16 +516,16 @@ string page_really_compact( RequestID id )
     if( id->variables->only )
     {
       master()->clear_compilation_failures();
-      m_delete( roxen->modules, (((id->variables->only/"/")[-1])/".")[0] );
-      roxen->all_modules_cache = 0;
+      m_delete( core->modules, (((id->variables->only/"/")[-1])/".")[0] );
+      core->all_modules_cache = 0;
     }
     else
-      roxen->clear_all_modules_cache();
+      core->clear_all_modules_cache();
   }
 
   array mods;
   loader.push_compile_error_handler( ec );
-  mods = roxen->all_modules();
+  mods = core->all_modules();
   loader.pop_compile_error_handler();
 
   sort(map(mods->get_name(), lower_case), mods);
@@ -579,7 +579,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
 
   foreach( modules, string mod )
   {
-    ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
+    ModuleInfo mi = core.find_module( (mod/"!")[0] );
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
     foreach( indices(moo->query()), string v )
     {
@@ -631,13 +631,13 @@ mixed do_it_pass_2( array modules, Configuration conf,
 	return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 
-                                      roxen.find_module( (mod/"!")[0] ), 
+                                      core.find_module( (mod/"!")[0] ), 
                                       conf->modules[ mod ] );
       modules = replace( modules, mod,
 			 (already_added[mod]=(mod/"!")[0]+"!"+
 			  (conf->otomod[mm]/"#")[-1]) );
     }
-    remove_call_out( roxen.really_save_it );
+    remove_call_out( core.really_save_it );
   }
 
   [string cf_form, int num] = initial_form( id, conf, modules );
@@ -647,7 +647,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
     if( num ) Roxen.parse_rxml( cf_form, id );
     foreach( modules, string mod )
      conf->call_high_start_callbacks( conf->find_module( replace(mod,"!","#") ),
-				      roxen.find_module( (mod/"!")[0] ) );
+				      core.find_module( (mod/"!")[0] ) );
     already_added = ([ ]);
     conf->save( ); // save it all in one go
     conf->forcibly_added = ([]);
@@ -672,7 +672,7 @@ mixed do_it( RequestID id )
 
   Configuration conf;
   foreach(id->variables->config/"\0", string config) {
-    if (conf = roxen.find_configuration( id->variables->config )) {
+    if (conf = core.find_configuration( id->variables->config )) {
       id->variables->config = config;
       break;
     }
@@ -703,7 +703,7 @@ mixed parse( RequestID id )
 
   Configuration conf;
   foreach(id->variables->config/"\0", string config) {
-    if (conf = roxen.find_configuration( id->variables->config )) {
+    if (conf = core.find_configuration( id->variables->config )) {
       id->variables->config = config;
       break;
     }

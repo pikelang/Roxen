@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.7 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: reloadconfigurations.pike,v 1.8 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 
 constant task = "maintenance";
@@ -9,7 +9,7 @@ constant doc  = ("Force a reload of all configuration information from "
 
 mixed parse( RequestID id )
 {
-  roxen->reload_all_configurations();
+  core->reload_all_configurations();
   return "<font size='+1'><b>Reload configurations from disk</b></font><p />"
     "All configurations reloaded from disk."
     "<p><cf-ok/></p>";

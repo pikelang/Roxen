@@ -11,7 +11,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.18 2004/05/23 14:14:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.19 2004/05/31 23:01:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -147,7 +147,7 @@ class PHPScript
 	}
       }
     if(!sv_received)
-      result += "Server: "+roxen.version()+"/PHP4\r\n";
+      result += "Server: "+core.version()+"/PHP4\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
     write("HTTP/1.0 "+return_code+"\r\n"+result+"\r\n");
@@ -238,7 +238,7 @@ void start(int n, Configuration conf)
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
     global_env["SERVER_NAME"]=tmp;
-    global_env["SERVER_SOFTWARE"]=roxen.version();
+    global_env["SERVER_SOFTWARE"]=core.version();
     global_env["GATEWAY_INTERFACE"]="PHP/1.1";
     global_env["SERVER_PROTOCOL"]="HTTP/1.0";
     global_env["SERVER_URL"]=conf->query("MyWorldLocation");
@@ -254,7 +254,7 @@ int|mapping handle_file_extension(Stdio.File o, string e, RequestID id)
 {
   DWERROR("PHP:handle_file_extension()\n");
   id->do_not_disconnect = 1;
-  call_out(roxen->handle, 0, PHPScript(id)->run);
+  call_out(core->handle, 0, PHPScript(id)->run);
   DWERROR("PHP:handle_file_extension done\n");
   return Roxen.http_pipe_in_progress();
 }

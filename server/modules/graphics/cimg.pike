@@ -2,12 +2,13 @@
 //
 
 #include <module.h>
+#include <stat.h>
 inherit "module";
 constant thread_safe=1;
 
-roxen.ImageCache the_cache;
+core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.56 2004/05/27 21:24:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.57 2004/05/31 23:01:52 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -135,7 +136,7 @@ void create()
 
 void start()
 {
-  the_cache = roxen.ImageCache( "cimg", generate_image );
+  the_cache = core.ImageCache( "cimg", generate_image );
   do_ext = query("ext");
 }
 
@@ -177,10 +178,10 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   }
   
   if( args->data )
-    layers = roxen.decode_layers( args->data, opts );
+    layers = core.decode_layers( args->data, opts );
   else
   {
-    mixed tmp = roxen.load_layers( args->src, id, opts );
+    mixed tmp = core.load_layers( args->src, id, opts );
     if (mappingp(tmp)) {
       if (tmp->error == Protocols.HTTP.HTTP_UNAUTH)
 	return tmp;

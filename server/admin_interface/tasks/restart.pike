@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.19 2004/05/29 00:52:38 _cvs_stephen Exp $
+ * $Id: restart.pike,v 1.20 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 
 #include <admin_interface.h>
@@ -16,7 +16,7 @@ mixed parse( RequestID id )
   case "restart":
      if( config_perm( "Restart" ) )
      {
-       roxen->restart(0.5);
+       core->restart(0.5);
        return res +
 	 "<input type='hidden' name='task' value='restart.pike' />"
 	 "<font color='&usr.warncolor;'><h1>Restart</h1></font>"
@@ -31,7 +31,7 @@ mixed parse( RequestID id )
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
-       roxen->shutdown(0.5);
+       core->shutdown(0.5);
        return res +
 	 "<font color='&usr.warncolor;'><h1>Shutdown</h1></font>"
 	 "ChiliMoon will <b>not</b> restart automatically.\n\n<p><i>"

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.31 2004/05/29 00:52:38 _cvs_stephen Exp $
+ * $Id: resolv.pike,v 1.32 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -37,14 +37,14 @@ string module_name(function|RoxenModule|RXML.Tag m)
       if(mod->enabled == m)
       {
 	name = sprintf("<a href=\"%s\">%s</a> (%s)",
-		       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
+		       @get_conf_url_to_module(c->name+"/"+mn), core->filename(m));
 	break;
       }
       else if(mod->copies && !zero_type(search(mod->copies, m)))
       {
 	name = sprintf("<a href=\"%s\">%s</a> (%s)",
 		       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
-		       roxen->filename(m));
+		       core->filename(m));
 	break;
       }
     }

@@ -1,9 +1,9 @@
 /*
- * $Id: Frame.java,v 1.4 2004/05/31 11:45:00 _cvs_dirix Exp $
+ * $Id: Frame.java,v 1.5 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 /**
  * An object representing an RXML parse frame

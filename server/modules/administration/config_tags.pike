@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 // NGSERVER: Rename to admin_tags.pike
 inherit "module";
@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.195 2004/05/28 19:12:50 _cvs_stephen Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.196 2004/05/31 23:01:49 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -347,7 +347,7 @@ string get_var_form( string s, object var, object mod, RequestID id,
 {
   int view_mode;
 
-  if( mod == roxen )
+  if( mod == core )
   {
     if( !CU_AUTH( "Edit Global Variables" ) )
       view_mode = 1;
@@ -607,7 +607,7 @@ object(Configuration) find_config_or_error(string config)
   if(!config)
     error("No configuration specified!\n", config);
     
-  object(Configuration) conf = roxen->find_configuration(config);
+  object(Configuration) conf = core->find_configuration(config);
   if (!conf)
     error("Unknown configuration %O\n", config);
   return conf;
@@ -659,7 +659,7 @@ class TagCFBoxes
 	boxes[box] = Roxen.parse_box_xml( "admin_interface/boxes/"
 					  +box+".xml", id );
       else if(!catch(boxes[box]=(object)("admin_interface/boxes/"+box+".pike")))
-	roxen.dump("admin_interface/boxes/"+box+".pike");
+	core.dump("admin_interface/boxes/"+box+".pike");
       return boxes[box];
     }
 
@@ -727,7 +727,7 @@ class TagConfigModulesplugin
     array variables = ({ });
     foreach( values(conf->otomod), string q )
     {
-      ModuleInfo mi = roxen.find_module((q/"#")[0]);
+      ModuleInfo mi = core.find_module((q/"#")[0]);
       RoxenModule m = conf->find_module( q );
       array variables =
                 ({
@@ -768,7 +768,7 @@ class TagConfigPortsplugin
 
   array get_dataset(mapping m, RequestID id)
   {
-    array pos = roxen->all_ports();
+    array pos = core->all_ports();
     sort( pos->get_key(), pos );
     pos = map( pos, get_port_map );
     foreach( pos, mapping v )
@@ -786,7 +786,7 @@ class TagPortVariablesplugin
 
   array get_dataset(mapping m, RequestID id)
   {
-    return get_variable_maps( roxen->find_port( m->port ), ([]),
+    return get_variable_maps( core->find_port( m->port ), ([]),
                               id, !!m->noset);
   }
 }
@@ -799,7 +799,7 @@ class TagPortURLsplugin
 
   array get_dataset(mapping m, RequestID id)
   {
-    mapping u = roxen->find_port( m->port )->urls;
+    mapping u = core->find_port( m->port )->urls;
     return map(sort(indices(u)),get_url_map,u)-({0});
   }
 }
@@ -927,7 +927,7 @@ class TagGlobalVariablesSectionsplugin
   
   array get_dataset(mapping m, RequestID id)
   {
-    array v = get_variable_sections( roxen, m, id );
+    array v = get_variable_sections( core, m, id );
     v[0]->last = "last";
     v[-1]->first = "first";
     return v;
@@ -941,7 +941,7 @@ class TagGlobalVariablesplugin
   constant plugin_name = "global-variables";
   array get_dataset(mapping m, RequestID id)
   {
-    return get_variable_maps( roxen, m, id, !!m->noset);
+    return get_variable_maps( core, m, id, !!m->noset);
   }
 }
 
@@ -952,7 +952,7 @@ class TagConfigurationsplugin
   constant plugin_name = "configurations";
   array get_dataset(mapping m, RequestID id)
   {
-    array confs = roxen->configurations;
+    array confs = core->configurations;
 #ifndef DEVELOPER
     if(m->self && lower_case(m->self) == "no")
       confs -= ({ id->conf });

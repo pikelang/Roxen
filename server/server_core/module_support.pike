@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.131 2004/05/30 00:03:27 _cvs_stephen Exp $
+// $Id: module_support.pike,v 1.132 2004/05/31 23:02:03 _cvs_stephen Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -211,7 +211,7 @@ class FakeModuleInfo( string sname )
     {
       return 0;
     }
-    array(string)|multiset(string)|string query_provides()
+    multiset(string)|string query_provides()
     {
       return 0;
     }
@@ -318,14 +318,6 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
-  // NGSERVER: No localized module variables. Remove this function.
-  static mixed encode_string( mixed what )
-  {
-    if( objectp( what ) && what->get_identifier ) // locale string.
-      return (string)what;
-    return what;
-  }
-
   void save()
   {
     module_cache
@@ -336,8 +328,8 @@ class ModuleInfo( string sname, string filename )
 	       "last_checked":last_checked,
 	       "type":type,
 	       "multiple_copies":multiple_copies,
-	       "name":encode_string(name),
-	       "description":encode_string(description),
+	       "name":name,
+	       "description":description,
              ]) );
   }
 

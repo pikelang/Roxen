@@ -11,7 +11,7 @@ string describe_time(int t)
   }
 
   if(full)
-    return capitalize(roxen->language(roxen.locale->get(),"date")(t));
+    return String.capitalize(core->language(core.locale->get(),"date")(t));
   else
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
@@ -68,7 +68,7 @@ string fix_err(string s)
   if(s=="")
     return s;
   if(!(<'.','!','?'>)[s[-1]]) s+=".";
-  return Roxen.html_encode_string(capitalize(s));
+  return Roxen.html_encode_string(String.capitalize(s));
 }
 
 int last_time;
@@ -90,7 +90,7 @@ string describe_error(string err, array (int) times,
     RoxenModule module;
     case 2:
       sscanf(reference, "%[^/]", server);
-      if(conf = roxen->find_configuration( server ))
+      if(conf = core->find_configuration( server ))
 	links += sprintf("<a href=\"%s\">%s</a> : ",
 			 @get_conf_url_to_virtual_server( conf, lang ));
     case 1: // find_configuration(configinterface)->query_name() == realname
@@ -130,7 +130,7 @@ array(string) get_conf_url_to_virtual_server(string|Configuration conf,
   // eg "ConfigInterface"
   string url_confname;
   if(stringp(conf))
-    conf = roxen->find_configuration(url_confname = conf);
+    conf = core->find_configuration(url_confname = conf);
   else
     url_confname = conf->name;
 

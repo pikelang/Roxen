@@ -7,7 +7,7 @@ void create()
   ._fix_module_ref ("PExpr", RXML.PExpr);
   ._fix_module_ref ("utils", RXML.utils);
   ._fix_module_ref ("Roxen", Roxen);
-  ._fix_module_ref ("roxen", roxen);
+  ._fix_module_ref ("core", core);
   ._fix_module_ref (
     "empty_tag_set",
     class {

@@ -126,11 +126,11 @@ void run_tests( Configuration c )
 
   RoxenModule m;
 
-  test( roxen.enable_configuration, "usertestconfig" );
+  test( core.enable_configuration, "usertestconfig" );
   
 
   c = test_generic( check_is_configuration,
-		    roxen.find_configuration,
+		    core.find_configuration,
 		    "usertestconfig" );
 
   if( !c )  {
@@ -214,7 +214,7 @@ void run_tests( Configuration c )
   // 6: Shutdown.
 
   test( c->disable_module, "userdb_system" );
-  test( roxen.disable_configuration, "usertestconfig" );
+  test( core.disable_configuration, "usertestconfig" );
 
   return;
 }

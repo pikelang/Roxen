@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.30 2004/05/23 00:40:03 _cvs_stephen Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -32,7 +32,7 @@ class Relay
 
   mapping make_headers( object from, int trim )
   {
-    mapping res = ([ "Proxy-Software":roxen->version(), ]);
+    mapping res = ([ "Proxy-Software":core->version(), ]);
     if( trim ) return res;
     foreach( indices(from->request_headers), string i )
     {

@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000 - 2001, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byhostname.pike,v 1.2 2001/09/03 18:55:12 nilsson Exp $";
+constant cvs_version="$Id: throttling_byhostname.pike,v 1.3 2004/05/31 23:01:57 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -50,6 +50,6 @@ constant module_unique = 1;
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {
   if (!res) return 0;
-  return low_find_rule(roxen->quick_ip_to_host(id->remoteaddr), 
+  return low_find_rule(core->quick_ip_to_host(id->remoteaddr), 
                        rulenames, rules);
 }

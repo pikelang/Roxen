@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.144 2004/05/27 23:18:50 _cvs_stephen Exp $
+// $Id: site_content.pike,v 1.145 2004/05/31 23:01:44 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -127,13 +127,13 @@ string buttons( Configuration c, string mn, RequestID id )
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == "Reload" )
     {
-      roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer(), nm;
+      loader.LowErrorContainer ec = loader.LowErrorContainer(), nm;
 
-      roxenloader.push_compile_error_handler( ec );
+      loader.push_compile_error_handler( ec );
 
       nm = c->reload_module( replace(mn,"!","#" ) );
 
-      roxenloader.pop_compile_error_handler();
+      loader.pop_compile_error_handler();
 
       if( strlen( ec->get() ) )
       {
@@ -165,11 +165,11 @@ string buttons( Configuration c, string mn, RequestID id )
 	times = mod->error_log[error];
 
 	// Flush from global log:
-	if(left = roxen->error_log[error])
+	if(left = core->error_log[error])
 	  if(sizeof(left -= times))
-	    roxen->error_log[error] = left;
+	    core->error_log[error] = left;
 	  else
-	    m_delete(roxen->error_log, error);
+	    m_delete(core->error_log, error);
 
 	// Flush from virtual server log:
 	if(left = conf->error_log[error])
@@ -180,7 +180,7 @@ string buttons( Configuration c, string mn, RequestID id )
       }
       mod->error_log=([ log_msg : ({flush_time}) ]);// Flush from module log
       conf->error_log[log_msg] +=({flush_time});  // Kilroy was in the global log
-      roxen->error_log[log_msg]+=({flush_time}); // and in the virtual server log
+      core->error_log[log_msg]+=({flush_time}); // and in the virtual server log
     }
     else if(mod->query_action_buttons)
     {
@@ -275,7 +275,7 @@ string niceerror( function tocall, string y )
 
 string find_module_doc( string cn, string mn, RequestID id )
 {
-  Configuration c = roxen.find_configuration( cn );
+  Configuration c = core.find_configuration( cn );
 
   if(!c)
     return "";
@@ -288,7 +288,7 @@ string find_module_doc( string cn, string mn, RequestID id )
   if(!m)
     return "";
 
-  ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+  ModuleInfo mi = core.find_module( (mn/"!")[0] );
 
   string eventlog = get_eventlog( m, id );
 
@@ -375,11 +375,11 @@ string find_module_doc( string cn, string mn, RequestID id )
 
 string find_module_documentation( string conf, string mn, RequestID id )
 {
-  Configuration c = roxen.find_configuration( conf );
+  Configuration c = core.find_configuration( conf );
 
   if(!c) return "";
   RoxenModule m = c->find_module( replace(mn,"!","#") );
-  ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+  ModuleInfo mi = core.find_module( (mn/"!")[0] );
 
   if(!m) return "";
   if(!m->register_module) return "";
@@ -426,16 +426,16 @@ string module_page( RequestID id, string conf, string module )
 string port_for( string url, int settings )
 {
   string ourl = (url/"#")[0];
-  url = roxen->normalize_url(url);
-  if(!roxen->urls[url]) {
+  url = core->normalize_url(url);
+  if(!core->urls[url]) {
     //  report_debug(sprintf("site_content.pike:port_for(): URL %O not found!\n",
     //  	       ourl));
     //  report_debug(sprintf("Known URLS are:\n"
     //  	       "%{  %O\n%}\n",
-    //  	       indices(roxen->urls)));
+    //  	       indices(core->urls)));
     return "";
   }
-  Protocol p = roxen->urls[url]->port;
+  Protocol p = core->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
   string res =
 #"
@@ -508,7 +508,7 @@ string parse( RequestID id )
   if( !sizeof( path )  )
     return "Hm?";
 
-  Configuration conf = roxen->find_configuration( path[0] );
+  Configuration conf = core->find_configuration( path[0] );
 
   if( !conf->inited )
     conf->enable_all_modules();
@@ -553,19 +553,19 @@ string parse( RequestID id )
 
 	 //  If no port number is present we add the default port for
 	 //  the given protocol. This is needed to get a match in the
-	 //  roxen->urls mapping.
+	 //  core->urls mapping.
 	 string match_url = url;
 	 if (sizeof(url / ":") < 3) {
 	   sscanf(url, "%s://%s/%s", string proto, string host, string path);
 	   int portnum =
-	     roxen->protocols[proto] &&
-	     roxen->protocols[proto]->default_port;
+	     core->protocols[proto] &&
+	     core->protocols[proto]->default_port;
 	   match_url = proto + "://" + host + ":" + portnum + "/" + path;
 	 }
 	 
-         int open = (roxen->urls[ match_url ] 
-                     && roxen->urls[ match_url ]->port 
-                     && roxen->urls[ match_url ]->port->bound);
+         int open = (core->urls[ match_url ] 
+                     && core->urls[ match_url ]->port 
+                     && core->urls[ match_url ]->port->bound);
 	 
          if( !open )
            res += "<tr><td>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
@@ -631,14 +631,14 @@ string parse( RequestID id )
 	   array times = conf->error_log[error];
 
 	   // Flush from global log:
-	   if(array left = roxen->error_log[error])
+	   if(array left = core->error_log[error])
 	     if(sizeof(left -= times))
-	       roxen->error_log[error] = left;
+	       core->error_log[error] = left;
 	     else
-	       m_delete(roxen->error_log, error);
+	       m_delete(core->error_log, error);
 	 }
 	 conf->error_log = ([]);
-	 roxen->nwrite( 
+	 core->nwrite( 
 	   sprintf("Site event log for '%s' "
 		   "cleared by %s (%s) from %s\n",
 		   conf->query_name(),

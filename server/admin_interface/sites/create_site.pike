@@ -12,7 +12,7 @@ string parse( RequestID id )
     return "Permission denied";
 
   string name = decode_site_name(id->variables->name);
-  object conf = roxen.enable_configuration( name );
+  object conf = core.enable_configuration( name );
   conf->set( "URLs", ({}) );
   conf->error_log = ([]);
   catch(DBManager.set_permission( "docs",   conf,  DBManager.READ ));

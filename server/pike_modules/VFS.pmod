@@ -2,8 +2,7 @@
 //! functions that otherwise tend to get reinvented a few times per
 //! module.
 
-
-
+#include <stat.h>
 
 static Stat stat( string file, RequestID id )
 {

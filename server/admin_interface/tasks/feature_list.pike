@@ -15,7 +15,7 @@ constant all_features = ({
 
 string nice_name( string what )
 {
-  return map(replace(what, ([ "_":" ","-":" " ]) )/" ",capitalize)*" ";
+  return map(replace(what, ([ "_":" ","-":" " ]) )/" ",String.capitalize)*" ";
 }
   
 mixed parse(object id)

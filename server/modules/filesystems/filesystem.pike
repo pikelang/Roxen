@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.125 2004/05/23 14:14:37 _cvs_dirix Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.126 2004/05/31 23:01:51 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -281,7 +281,7 @@ void start()
   normalized_path = path;
 #endif /* constant(system.normalize_path) */
   FILESYSTEM_WERR("Online at "+query("mountpoint")+" (path="+path+")");
-  cache_expire("stat_cache");
+  cache_remove("stat_cache");
 }
 
 string query_location()

@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.18 2004/05/23 14:14:38 _cvs_dirix Exp $";
+  "$Id: userdb_ldap.pike,v 1.19 2004/05/31 23:01:53 _cvs_stephen Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -463,7 +463,7 @@ void create()
 void stop() {
 
   if (query("CI_use_cache"))
-    cache_expire("ldapuserdb"+query("CI_dir_server"));
+    cache_remove("ldapuserdb"+query("CI_dir_server"));
 }
 
 void close_dir() {
@@ -571,14 +571,14 @@ string status() {
 	     "<p>"+
 	     "<h3>Failure by host</h3>" +
 	     Array.map(indices(failed), lambda(string s) {
-	       return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
+	       return core->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
 	     }) * ""
 	     //+ "<p>The database has "+ sizeof(users)+" entries"
 #ifdef LOG_ALL
 	     + "<p>"+
 	     "<h3>Auth attempt by host</h3>" +
 	     Array.map(indices(accesses), lambda(string s) {
-	       return roxen->quick_ip_to_host(s) + ": "+accesses[s]->cnt+" ["+accesses[s]->name[0]+
+	       return core->quick_ip_to_host(s) + ": "+accesses[s]->cnt+" ["+accesses[s]->name[0]+
 		((sizeof(accesses[s]->name) > 1) ?
 		  (Array.map(accesses[s]->name, lambda(string u) {
 		    return (", "+u); }) * "") : "" ) + "]" +

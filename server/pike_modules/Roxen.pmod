@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.192 2004/05/31 16:34:57 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.193 2004/05/31 23:01:58 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1524,9 +1524,6 @@ string short_date(int timestamp)
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
-// NGSERVER remove
-constant int2roman = String.int2roman;
-
 string number2string(int n, mapping m, array|function names)
 {
   string s;
@@ -1552,7 +1549,7 @@ string number2string(int n, mapping m, array|function names)
   switch(m["case"]) {
     case "lower": return lower_case(s);
     case "upper": return upper_case(s);
-    case "capitalize": return capitalize(s);
+    case "capitalize": return String.capitalize(s);
   }
 
   return s;
@@ -1580,9 +1577,6 @@ string image_from_type( string t )
   }
   return "internal-gopher-unknown";
 }
-
-// NGSERVER remove
-constant sizetostring = String.int2size;
 
 string html_decode_string(LocaleString str)
 //! Decodes `str', opposite to @[html_encode_string()].
@@ -2048,7 +2042,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id)
     {
      case "upper":      return upper_case(res);
      case "lower":      return lower_case(res);
-     case "capitalize": return capitalize(res);
+     case "capitalize": return String.capitalize(res);
     }
 
   return res;
@@ -3775,7 +3769,7 @@ int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id,
   else{ \
     ctx_misc[X]=args->Y; \
     if(colormode&&args->Y[0]!='#'){ \
-      args->Y=ns_color(parse_color(args->Y)); \
+      args->Y=ns_color(Colors.parse_color(args->Y)); \
       changed=1; \
     } \
   } \
@@ -3815,7 +3809,7 @@ int(0..1) push_color (string tagname, mapping(string:string) args,
 #define FIX(X,Y) if(args->X && args->X!=""){ \
   ctx_misc->Y=args->X; \
   if(colormode && args->X[0]!='#'){ \
-    args->X=ns_color(parse_color(args->X)); \
+    args->X=ns_color(Colors.parse_color(args->X)); \
     changed = 1; \
   } \
 }

@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.33 2004/05/27 18:28:43 _cvs_stephen Exp $";
+string cvs_version="$Id: pimage.pike,v 1.34 2004/05/31 23:01:52 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -202,7 +202,7 @@ class Constructors
 
   private static array (int) to_color(mixed in)
   {
-    if(stringp(in)) return parse_color(in);
+    if(stringp(in)) return Colors.parse_color(in);
     return ({ in, in, in });
   }
 
@@ -288,7 +288,7 @@ class Constructors
     void create(int t_offset,object bg,string fg,array(int)|void center, int|void len)
     {
       if(!fg) fg="black";
-      foreground = parse_color(fg);
+      foreground = Colors.parse_color(fg);
       background = bg;
       time_offset = t_offset;
       if(!center) center = ({ bg->xsize()/2, bg->ysize()/2 });
@@ -302,7 +302,7 @@ class Constructors
 
   array (int) bg()
   {
-    if(id->misc->defines) return parse_color(id->misc->defines->bg);
+    if(id->misc->defines) return Colors.parse_color(id->misc->defines->bg);
     return ({ 0xcc, 0xcc, 0xcc });
   }
 
@@ -335,12 +335,12 @@ class Constructors
 
   object load( string fname )
   {
-    return myimage( bg(), roxen.load_image( fname, id) );
+    return myimage( bg(), core.load_image( fname, id) );
   }
 
   object load_alpha( string fname )
   {
-    return myimage( roxen.low_load_image( fname, id) );
+    return myimage( core.low_load_image( fname, id) );
   }
 
   object PPM(string fname)

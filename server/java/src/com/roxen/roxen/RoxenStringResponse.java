@@ -1,9 +1,9 @@
 /*
- * $Id: RoxenStringResponse.java,v 1.5 2000/02/21 18:30:46 marcus Exp $
+ * $Id: RoxenStringResponse.java,v 1.6 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 /**
  * A class of responses using a string as their source.

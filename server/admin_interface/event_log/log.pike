@@ -3,7 +3,7 @@ inherit "../logutil.pike";
 
 string parse( RequestID id )
 {
-  mapping log = roxen->error_log;
+  mapping log = core->error_log;
   array report = indices(log), r2;
 
   last_time=0;

@@ -100,10 +100,10 @@ string parse( RequestID id )
   {
     werror("Change to "+id->variables->server+"\n" );
     mv("../local/environment", "../local/environment~");
-    Stdio.write_file( combine_path(roxen.configuration_dir,
+    Stdio.write_file( combine_path(core.configuration_dir,
 				   "server_version"),
 		      id->variables->server );
-    roxen->shutdown(0.5);
+    core->shutdown(0.5);
     return "Shutting down and changing server version";
   }
 
@@ -127,7 +127,7 @@ string parse( RequestID id )
   foreach( available_versions(), Server f )
   {
     res += "<tr><td>";
-    if( f->version != roxen.__roxen_version__+"."+roxen.__roxen_build__ )
+    if( f->version != core.__roxen_version__+"."+roxen.__roxen_build__ )
       res += "<input type='radio' name='server' value='"+f->dir+"' /> ";
     else
       res += "";
@@ -142,7 +142,7 @@ string parse( RequestID id )
       "<td>"+(f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
       "</td>"
       "<td></td>"
-      "<td>"+(d->set_language( roxen.get_locale()+"_UNICODE" )
+      "<td>"+(d->set_language( core.get_locale()+"_UNICODE" )
 	      ->format_ext_ymd())+
       "</td>"
       "<td></td>"
@@ -166,7 +166,7 @@ string parse( RequestID id )
 	      "instead have to edit the file %O manually, shutdown the server, "
 	      "and execute %O again",
 	      combine_path(getcwd(),
-			   roxen.configuration_dir,
+			   core.configuration_dir,
 			   "server_version"),
 	      combine_path(getcwd(),"../start") )
       +"</td></tr></table>";

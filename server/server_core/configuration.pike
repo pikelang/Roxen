@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.567 2004/05/31 16:09:28 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.568 2004/05/31 23:02:02 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1105,7 +1105,7 @@ static array(string) draw_saturation_bar(int hue,int brightness, int where,
   for(int i=0;i<128;i++)
   {
     int j = i * 2;
-    array color = hsv_to_rgb(hue, 255 - j, brightness);
+    array color = Colors.hsv_to_rgb(hue, 255 - j, brightness);
     if (small_version) {
       bar->line(0, i, 15, i, @color);
     } else {
@@ -1429,9 +1429,9 @@ static void expire_lock_loop()
   if (sizeof(active_locks)) {
     // Expire locks at least once every hour.
     if (t < 3600) {
-      roxen.background_run(t, expire_lock_loop);
+      core.background_run(t, expire_lock_loop);
     } else {
-      roxen.background_run(3600, expire_lock_loop);
+      core.background_run(3600, expire_lock_loop);
     }
   }
 }
@@ -1496,7 +1496,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   // Create the new lock.
 
-  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
+  string locktoken = "opaquelocktoken:" + core->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 expiry_delta, owner);
   foreach(location_module_cache||location_modules(),
@@ -1611,7 +1611,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  TIMER_END(internal_magic);
 	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
 				  "\0\1\0\1\0\0\2\2L\1\0;",
-				  @parse_color(loc[6..])),
+				  @Colors.parse_color(loc[6..])),
 		   "type":"image/gif",
 		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
@@ -2268,10 +2268,6 @@ mapping error_file( RequestID id )
 {
   string data = query("ZNoSuchFile");
   NOCACHE();
-#if ROXEN_COMPAT <= 2.1
-  data = replace(data,({"$File", "$Me"}),
-                 ({"&page.virtfile;", "&server.server;"}));
-#endif
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
   res->error = 404;
   return res;
@@ -3298,13 +3294,7 @@ void call_low_start_callbacks( RoxenModule me,
       if(stringp(provs))
 	provs = (< provs >);
 
-      // NGSERVER: Deprecate array API.
-      if(arrayp(provs))
-	provs = mkmultiset(provs);
-
-      if (multisetp(provs)) {
-	pri[pr]->provider_modules [ me ] = provs;
-      }
+      pri[pr]->provider_modules [ me ] = provs;
     }) {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
@@ -3579,24 +3569,6 @@ int add_modules( array(string) mods, int|void now )
     report_debug("] \b");
 #endif
 }
-
-#if ROXEN_COMPAT < 2.2
-// BEGIN SQL
-
-mapping(string:string) sql_urls = ([]);
-
-constant sql_cache_get = DBManager.sql_cache_get;
-
-Sql.Sql sql_connect(string db)
-{
-  if (sql_urls[db])
-    return sql_cache_get(sql_urls[db]);
-  else
-    return sql_cache_get(db);
-}
-
-// END SQL
-#endif
 
 static string my_url;
 
@@ -4122,8 +4094,8 @@ also set 'URLs'.</p>");
 
   mapping(string:mixed) retrieved_vars = retrieve("spider#0", this);
   if (sizeof (retrieved_vars) && !retrieved_vars->compat_level)
-    // Upgrading an older configuration; default to 2.1 compatibility level.
-    set ("compat_level", "2.1");
+    // Upgrading an older configuration; default to 4.0 compatibility level.
+    set ("compat_level", "4.0");
   setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );

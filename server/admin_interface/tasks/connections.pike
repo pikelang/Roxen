@@ -1,3 +1,4 @@
+#include <stat.h>
 
 constant task = "status";
 constant name = "Active connection";
@@ -6,7 +7,7 @@ constant doc  = "All currently active connection";
 string parse( RequestID id )
 {
   string res = "";
-  foreach( roxen->configurations, Configuration c )
+  foreach( core->configurations, Configuration c )
   {
     mapping q = c->connection_get();
     if( sizeof( q ) )
@@ -52,7 +53,7 @@ string parse( RequestID id )
 	{
 	  if( oh )
 	    res += sprintf("<tr bgcolor='&usr.fade1;'><td colspan=3>"
-			   + roxen.quick_ip_to_host(oh)+
+			   + core.quick_ip_to_host(oh)+
 			   "</td><td align=right>%.1f</td>"
 			   "</tr><tr><td>&nbsp;</td></tr>", host_bw);
 	  oh = r->host;
@@ -80,7 +81,7 @@ string parse( RequestID id )
       }
       if( oh )
 	res += sprintf("<tr bgcolor='&usr.fade1;'><td colspan=3>"
-		       + roxen.quick_ip_to_host(oh)+
+		       + core.quick_ip_to_host(oh)+
 		       "</td><td align=right>%.1f</td></tr>"
 		       "<tr><td>&nbsp;</td></tr>\n", host_bw);
       res +=

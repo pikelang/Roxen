@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.56 2004/05/24 10:15:14 mani Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.57 2004/05/31 23:01:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -625,7 +625,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+roxen.language("eng", "number", id)(counts*10->pow(q))
+    res="More than "+core.language("eng", "number", id)(counts*10->pow(q))
         + " served.";
     break;
 
@@ -635,11 +635,11 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   case "ordered":
     m->type="string";
-    res=Roxen.number2string(counts, m, roxen.language(m->lang||id->misc->defines->theme_language, "ordered", id));
+    res=Roxen.number2string(counts, m, core.language(m->lang||id->misc->defines->theme_language, "ordered", id));
     break;
 
   default:
-    res=Roxen.number2string(counts, m, roxen.language(m->lang||id->misc->defines->theme_language, "number", id));
+    res=Roxen.number2string(counts, m, core.language(m->lang||id->misc->defines->theme_language, "number", id));
   }
 
   if(m->minlength) {

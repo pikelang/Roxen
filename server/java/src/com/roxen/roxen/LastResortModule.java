@@ -1,4 +1,4 @@
-package com.roxen.roxen;
+package com.core.roxen;
 
 /**
  * @author <a href="mailto:tomp@uk.uu.net">Tom Palmer</a>

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.109 2004/05/29 20:31:19 _cvs_stephen Exp $
+// $Id: global_variables.pike,v 1.110 2004/05/31 23:02:03 _cvs_stephen Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -426,7 +426,7 @@ The start script attempts to fix this for the standard file locations.</p>");
 			 "server/data/supports in your ChiliMoon directory.") ) )
     -> add_changed_callback( lambda(Variable.Text s) {
                                get_core()->initiate_supports();
-                               cache.cache_expire("supports");
+                               cache.cache_remove("supports");
                              } );
 
   defvar("audit", 0, "Logging: Audit trail",

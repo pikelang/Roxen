@@ -213,15 +213,15 @@ array(Image.Image) make_text_image(
     ysize += ((int)args->border)*2;
   }
 
-  array (int) bgcolor = parse_color(args->bgcolor);
-  array (int) fgcolor = parse_color(args->fgcolor);
+  array (int) bgcolor = Colors.parse_color(args->bgcolor);
+  array (int) fgcolor = Colors.parse_color(args->fgcolor);
 
   Image.Image background,foreground;
 
   if(args->texture)
   {
     extend_alpha = 1;
-    Image.Image t = roxen.load_image(args->texture,id);
+    Image.Image t = core.load_image(args->texture,id);
     if( t )
     {
       foreground = t;
@@ -257,21 +257,21 @@ array(Image.Image) make_text_image(
   }
   int background_is_color;
   if(args->background &&
-     ((background = roxen.load_image(args->background, id)) ||
+     ((background = core.load_image(args->background, id)) ||
       (sizeof(args->background)>1 &&
        (background=Image.Image(xsize,ysize,
-                               @(parse_color(args->background[1..]))))
+                               @(Colors.parse_color(args->background[1..]))))
        && (background_is_color=1))))
   {
     extend_alpha = 1;
     Image.Image alpha;
-    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
+    if(args->alpha && (alpha = core.load_image(args->alpha,id)) && background_is_color)
     {
       xsize=max(xsize,alpha->xsize());
       ysize=max(ysize,alpha->ysize());
       if((float)args->scale)
 	alpha=alpha->scale(1/(float)args->scale);
-      background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+      background=Image.Image(xsize,ysize, @(Colors.parse_color(args->background[1..])));
     }
 
     if((float)args->scale >= 0.1 && !alpha)
@@ -338,7 +338,7 @@ array(Image.Image) make_text_image(
   {
     extend_alpha = 1;
     int b = (int)args->border;
-    background->setcolor(@parse_color((args->border/",")[-1]));
+    background->setcolor(@Colors.parse_color((args->border/",")[-1]));
 
     for(--b;b>=0;b--)
     {
@@ -384,7 +384,7 @@ array(Image.Image) make_text_image(
     {
       array q= s/",";
       if(sizeof(q)<2) arg+=({ ((float)s)||0.2, ({ 255,255,255 }) });
-      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
+      arg+=({ ((float)q[0])||0.2, Colors.parse_color(q[1]) });
     }
     background=background->turbulence(arg);
   }
@@ -403,7 +403,7 @@ array(Image.Image) make_text_image(
     sscanf(args->textbox, "%*[^,],%s", bg);
     sscanf(bg,"%s,%d", bg,border);
     background->paste_alpha(Image.Image(txsize+border*2,tysize+border*2,
-				  @parse_color(bg)),
+				  @Colors.parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
@@ -416,7 +416,7 @@ array(Image.Image) make_text_image(
     } else {
       int sdist = (int)(a[0]);
       int bl=(int)(a[1]);
-      array(int)clr=parse_color(a[-1]);
+      array(int)clr=Colors.parse_color(a[-1]);
       int j;
       Image.Image ta = text_alpha->copy();
       for (j=0;j<bl;j++)
@@ -435,7 +435,7 @@ array(Image.Image) make_text_image(
     int sdist = ((int)(args->shadow/",")[-1])+2;
     Image.Image ta = text_alpha->copy();
     ta = ta->color(255-sd,255-sd,255-sd);
-    array sc = parse_color(args->scolor||"black");
+    array sc = Colors.parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
   }
@@ -448,7 +448,7 @@ array(Image.Image) make_text_image(
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
     Image.Image ta = Image.Image(xs+sdist*2,ys+sdist*2);
-    array sc = parse_color(args->scolor||"black");
+    array sc = Colors.parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
     ta = ta->blur( min(sdist,1) );
@@ -461,7 +461,7 @@ array(Image.Image) make_text_image(
   {
     extend_alpha = 1;
     int amnt = (int)(args->glow/",")[-1]+2;
-    array (int) blurc = parse_color((args->glow/",")[0]);
+    array (int) blurc = Colors.parse_color((args->glow/",")[0]);
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
 				  xoffset-amnt, yoffset-amnt);
   }
@@ -482,19 +482,19 @@ array(Image.Image) make_text_image(
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
     foreground->tuned_box(0,0, txsize,tysize,
-			  ({parse_color(c1),parse_color(c2),parse_color(c3),
-			      parse_color(c4)}));
+			  ({Colors.parse_color(c1),Colors.parse_color(c2),Colors.parse_color(c3),
+			      Colors.parse_color(c4)}));
   }
   if(args->outline) {
     extend_alpha = 1;
-    outline(background, text_alpha, parse_color((args->outline/",")[0]),
+    outline(background, text_alpha, Colors.parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
   }
 
   if(args->textbelow)
   {
     extend_alpha = 1;
-    array color = parse_color(args->textbelow);
+    array color = Colors.parse_color(args->textbelow);
 
     background->setcolor( @color );
     yoffset = background->ysize();
@@ -523,7 +523,7 @@ array(Image.Image) make_text_image(
   {
     string c;
     if(sscanf(args->rotate, "%*d,%s", c)==2)
-       background->setcolor(@parse_color(c));
+       background->setcolor(@Colors.parse_color(c));
     else
        background->setcolor(@bgcolor);
     background = background->rotate((float)args->rotate);

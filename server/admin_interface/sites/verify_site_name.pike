@@ -21,7 +21,7 @@ int check_config_name(string name)
   if( sizeof( rows( illegal_chars, name/"" ) -({ 0 }) ) )
     return 1;
   
-  foreach(roxen->configurations, Configuration c)
+  foreach(core->configurations, Configuration c)
     if(lower_case(c->name) == name)
       return 1;
   return (< " ", "cvs", "global variables" >)[ name ];

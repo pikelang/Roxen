@@ -15,12 +15,13 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.75 2004/05/30 23:15:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.76 2004/05/31 23:01:57 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
 #include <module.h>
 #include <request_trace.h>
+#include <stat.h>
 
 inherit "module";
 
@@ -428,5 +429,5 @@ void define_API_functions()
   add_api_function("set_return_code", api_set_return_code, ({ "int", 0, "string" }));
   add_api_function("query_referer", api_get_referer, ({}));
 
-  add_api_function("roxen_version", lambda(){return roxen.version();}, ({}));
+  add_api_function("roxen_version", lambda(){return core.version();}, ({}));
 }

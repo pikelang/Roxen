@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.13 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: locks.pike,v 1.14 2004/05/31 23:01:45 _cvs_stephen Exp $
  */
 
 #include <config.h>
@@ -14,7 +14,7 @@ constant doc  = "Shows various information about the module thread locks in Chil
 
 string describe_module(object q)
 {
-  foreach(roxen->configurations, object c)
+  foreach(core->configurations, object c)
   {
     foreach(indices(c->modules), string m)
     {
@@ -22,20 +22,20 @@ string describe_module(object q)
 	mapping mod = c->modules[m];
 	if(mod->enabled == q)
 	  return sprintf("<a href=\"%s\">%s</a></td><td>%s",
-			 @get_conf_url_to_module(c->name+"/"+m), roxen->filename(q));
+			 @get_conf_url_to_module(c->name+"/"+m), core->filename(q));
 	else if(mod->copies && !zero_type(search(mod->copies,q)))
 	  return sprintf("<a href=\"%s\">%s</a></td><td>%s",
 			 @get_conf_url_to_module(c->name+"/"+m+"#"+search(mod->copies,q)),
-			 roxen->filename(q));
+			 core->filename(q));
     }
   }
-  return "Unknown module</td><td>"+roxen->filename(q)+"";
+  return "Unknown module</td><td>"+core->filename(q)+"";
 }
 
 string parse( RequestID id )
 {
   mapping l = ([]), locks=([]), L=([]);
-  foreach(roxen->configurations, object c) {
+  foreach(core->configurations, object c) {
     if (c->locked) {
       l += c->locked;
     }

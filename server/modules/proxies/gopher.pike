@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.30 2004/05/27 18:28:43 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -60,7 +60,7 @@ void write_to_client_and_cache(object client, string data, string key)
   object cache;
   object pip;
   if(key)
-    cache = roxen->create_cache_file("gopher", key);
+    cache = core->create_cache_file("gopher", key);
 
   pip=Pipe.pipe();
   if(cache)

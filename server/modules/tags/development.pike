@@ -9,7 +9,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: development.pike,v 1.2 2004/05/31 14:42:34 _cvs_stephen Exp $";
+ "$Id: development.pike,v 1.3 2004/05/31 23:01:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -389,7 +389,7 @@ class TagEmitFonts
   constant name = "emit", plugin_name = "fonts";
   array get_dataset(mapping args, RequestID id)
   {
-    return roxen->fonts->get_font_information(args->ttf_only);
+    return core->fonts->get_font_information(args->ttf_only);
   }
 }
 

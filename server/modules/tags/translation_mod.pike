@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.13 2001/10/08 12:32:56 anders Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.14 2004/05/31 23:01:57 _cvs_stephen Exp $";
 
 
 
@@ -58,7 +58,7 @@ class TagTranslate {
     
     array do_return( RequestID id ) {
       string proj = args->project || id->misc->translation_proj;
-      string trans = Locale.translate(proj, roxen.locale->get(),
+      string trans = Locale.translate(proj, core.locale->get(),
 				      (int)args->id || args->id,
 				      content);
 

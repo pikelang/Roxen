@@ -358,7 +358,7 @@ class Earth {
 		       case "and":
 			 return w;
 		       default:
-			 return capitalize(w);
+			 return String.capitalize(w);
 		       }
 		     })*" ";
   }

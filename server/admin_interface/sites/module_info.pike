@@ -1,6 +1,6 @@
 string find_module_doc( string cn, string mn, RequestID id )
 {
-  Configuration c = roxen.find_configuration( cn );
+  Configuration c = core.find_configuration( cn );
 
   if(!c)
     return "";

@@ -53,12 +53,12 @@ static
 
       if( args["square-border"] )
       {
-	square=square->clear( parse_color( args["square-border"] ) );
+	square=square->clear( Colors.parse_color( args["square-border"] ) );
 	square=square->box( 1,1,height-2,height-2,
-			    parse_color(labels[i]->color) );
+			    Colors.parse_color(labels[i]->color) );
       }
       else
-	square=square->clear(  parse_color( labels[i]->color ) );
+	square=square->clear(  Colors.parse_color( labels[i]->color ) );
       r=r->paste( square, 0,(a->ysize()-square->ysize())/2 );
       a=a->paste( square->clear(255,255,255),
 		  0,(a->ysize()-square->ysize())/2 );

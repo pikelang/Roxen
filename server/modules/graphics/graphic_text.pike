@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.302 2004/05/27 21:24:37 _cvs_stephen Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.303 2004/05/31 23:01:52 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -708,7 +708,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
     sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
     if(initialdelay)
     {
-      Image.Image foo=Image.Image(img->xsize(),img->ysize(),@parse_color(args->bgcolor));
+      Image.Image foo=Image.Image(img->xsize(),img->ysize(),@Colors.parse_color(args->bgcolor));
       res += foo->gif_add(0,0,initialdelay);
     }
     for(int i = 0; i<(steps-1); i++)
@@ -732,7 +732,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
     {
       int xp = i*ox/steps;
       res += img->copy(xp, 0, xp+len, img->ysize(),
-                       @parse_color(args->bgcolor))->gif_add(0,0,delay);
+                       @Colors.parse_color(args->bgcolor))->gif_add(0,0,delay);
     }
     res += img->gif_end();
     data = ({ res, ({ len, img->ysize() }) });
@@ -912,14 +912,14 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
   if(id->misc->defines->narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
 
   if(p->afont) {
-    p->font = roxen->fonts->verify_font( p->afont+" "+p->fontsize );
+    p->font = core->fonts->verify_font( p->afont+" "+p->fontsize );
     if(!p->font) RXML.parse_error("Font "+p->afont+" could not be loaded.\n");
   }
   else {
     string font = p->font;
-    p->font = roxen->fonts->verify_font(p->font, p->fontsize||32);
+    p->font = core->fonts->verify_font(p->font, p->fontsize||32);
     if(!p->font) {
-      RXML.parse_error("Font " + (font || roxen->query("default_font")) +
+      RXML.parse_error("Font " + (font || core->query("default_font")) +
 		       " could not be loaded.\n");
     }
   }

@@ -10,12 +10,12 @@ mixed parse( RequestID id )
 
   if( v->delete_user && v->delete_user!="")
   {
-    roxen.delete_admin_user( v->delete_user );
+    core.delete_admin_user( v->delete_user );
     return Roxen.http_redirect( "users.html", id );
   }
-  foreach( sort( roxen.list_admin_users() ), string uid )
+  foreach( sort( core.list_admin_users() ), string uid )
   {
-    object u = roxen.find_admin_user( uid );
+    object u = core.find_admin_user( uid );
     if( u == id->misc->config_user )
       res += ("<gbutton font='&usr.gbutton-font;' "
 	      "dim='1' width='300'> Delete " +

@@ -1,9 +1,9 @@
 /*
- * $Id: RoxenRequest.java,v 1.8 2000/11/13 19:36:43 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.9 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 import java.util.Set;
 import java.util.Map;

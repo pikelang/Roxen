@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.404 2004/05/27 21:24:40 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.405 2004/05/31 23:02:02 _cvs_stephen Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -10,6 +10,7 @@ constant cvs_version = "$Id: http.pike,v 1.404 2004/05/27 21:24:40 _cvs_stephen 
 #include <config.h>
 #define TIMER_PREFIX "http:"
 #include <timers.h>
+#include <stat.h>
 
 inherit RequestID;
 
@@ -61,7 +62,7 @@ int kept_alive;
 
 #ifdef DEBUG
 #define CHECK_FD_SAFE_USE do {						\
-    if (this_thread() != roxen->backend_thread &&			\
+    if (this_thread() != core->backend_thread &&			\
 	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
 	 my_fd->query_close_callback() ||				\
 	 !zero_type (find_call_out (do_timeout))))			\

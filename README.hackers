@@ -8,6 +8,12 @@ or if Pike can be extended with this functionality.
 
 Some practical programming guidelines.
 
+- Convert constructs which use ST_MTIME/ST_CTIME/ST_SIZE as follows:
+  Old: array st=file_stat(x); st[ST_MTIME]
+  New: Stdio.Stat st=file_stat(x); st->mtime;
+  Also, check if the file at hand then still needs to #include <stat.h>
+  If not, remove the #include
+
 - Use "this" instead of "this_object()" (though the latter will be
   converted into the former by the optimizer).
 

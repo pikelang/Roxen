@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.13 2004/05/23 14:14:39 _cvs_dirix Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.14 2004/05/31 23:01:54 _cvs_stephen Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -21,6 +21,7 @@ constant module_doc  = "Improves supports flags and variables as well as "
 
 #include <module.h>
 #include <request_trace.h>
+#include <stat.h>
 
 void create() {
 

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.59 2004/05/31 16:34:57 _cvs_stephen Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.60 2004/05/31 23:01:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -108,10 +108,10 @@ void log_client(string host, string oh, string id, string more, string client,
 
   switch (resolve) {
   case "Resolved":
-    roxen->ip_to_host(client, do_write, client, more);
+    core->ip_to_host(client, do_write, client, more);
     break;
   case "IfCached":
-    log_function(more + roxen->quick_ip_to_host(client) + "\n");
+    log_function(more + core->quick_ip_to_host(client) + "\n");
     break;
   default:
     log_function(more + client + "\n");
@@ -801,7 +801,7 @@ class Server
     /*
     if(!to_disk && (strlen(_data) > cache_memory_filesize))
     {
-      if(to_disk = roxen->create_cache_file("http", name))
+      if(to_disk = core->create_cache_file("http", name))
       {
         //SERVER_DEBUG("server_got(" + strlen(_data) + ") setup to_disk")
 
@@ -915,7 +915,7 @@ class Server
 
       //if(cache_is_wanted = received_content_length())
       //{
-        call_out(roxen->http_check_cache_file, 0, to_disk);
+        call_out(core->http_check_cache_file, 0, to_disk);
         to_disk = 0;
         to_disk_pipe = 0;
       //}
@@ -923,7 +923,7 @@ class Server
 	// delete_cache_file(to_disk); // done by http_check_cache_file
     }
     else if(cache_is_wanted && (cache_is_wanted = received_content_length()) &&
-      (to_disk = roxen->create_cache_file("http", name)))
+      (to_disk = core->create_cache_file("http", name)))
     {
       //SERVER_DEBUG("finish - write memory cache to_disk_pipe")
 
@@ -958,7 +958,7 @@ class Server
     if(to_disk)
     {
       //delete_cache_file(to_disk);
-      call_out(roxen->http_check_cache_file, 0, to_disk);
+      call_out(core->http_check_cache_file, 0, to_disk);
       to_disk = 0;
     }
     proxy = 0;
@@ -1081,7 +1081,7 @@ class Server
     call_out(check_timed_out, 300);
 
     mode("HostLookup");
-    roxen->host_to_ip(host, got_hostname, host, port);
+    core->host_to_ip(host, got_hostname, host, port);
   }
 
   string error_msg(string s)
@@ -1153,7 +1153,7 @@ class Server
 	  _from_server = 0;
 	}
         mode("HostLookup");
-        call_out(roxen->host_to_ip, 0, remote[2], got_hostname, remote[2], remote[3]);
+        call_out(core->host_to_ip, 0, remote[2], got_hostname, remote[2], remote[3]);
 	remote = 0;
 	return;
       }
@@ -1176,11 +1176,11 @@ class Server
 	{
 	  cacher = 0;
 	  client->remote = 1;
-          roxen->host_to_ip(remote[0], got_hostname, remote[0], remote[1]);
+          core->host_to_ip(remote[0], got_hostname, remote[0], remote[1]);
 	}
 	else
 	{
-          call_out(roxen->host_to_ip, 0, cacher[2], got_hostname,
+          call_out(core->host_to_ip, 0, cacher[2], got_hostname,
                    cacher[2], cacher[3]);
 	  cacher = 0;
 	}
@@ -1279,7 +1279,7 @@ class Request
       mode(_mode + "-");
       string host, rest;
       sscanf(name, "%s:%s", host, rest);
-      roxen->ip_to_host(host, proxy->log_client, host, rest, more, _remoteaddr,
+      core->ip_to_host(host, proxy->log_client, host, rest, more, _remoteaddr,
 	time() - _start, query("log_resolve_client"));
     }
 
@@ -1539,7 +1539,7 @@ class Request
 
       // try disk cache
       object disk_cache;
-      if((disk_cache = roxen->cache_file("http", name)) &&
+      if((disk_cache = core->cache_file("http", name)) &&
 	 http_codes_to_cache[_http_code = disk_cache->headers[" returncode"]])
       {
 	//REQUEST_DEBUG("create - disk_cache")

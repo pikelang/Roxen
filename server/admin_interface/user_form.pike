@@ -1,4 +1,4 @@
-// $Id: user_form.pike,v 1.8 2002/06/15 20:24:02 nilsson Exp $
+// $Id: user_form.pike,v 1.9 2004/05/31 23:01:42 _cvs_stephen Exp $
 
 #include <admin_interface.h>
 
@@ -15,9 +15,9 @@ mapping parse( RequestID id )
     return Roxen.http_string_answer("Permission denied",
 				    "text/html");
 
-  foreach( sort( roxen.list_admin_users() ), string uid )
+  foreach( sort( core.list_admin_users() ), string uid )
   {
-    object u  = roxen.find_admin_user( uid );
+    object u  = core.find_admin_user( uid );
     res += "<table width='100%'><tr><td bgcolor='"+config_setting2("bgcolor")+
            "'><font size='+2'>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
     res += u->form( nid );

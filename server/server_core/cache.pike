@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.89 2004/05/29 21:14:59 _cvs_stephen Exp $
+// $Id: cache.pike,v 1.90 2004/05/31 23:02:02 _cvs_stephen Exp $
 
 // #pragma strict_types
 
@@ -35,27 +35,12 @@
 static mapping(string:mapping(string:array)) caches;
 static mapping(string:int) hits=([]), all=([]);
 
-// NGSERVER: Remove the possibility to specify cache.
 //! Empties the memory cache from entries.
-void flush_memory_cache (void|string cache) {
-  if (cache) {
-    m_delete (caches, cache);
-    m_delete (hits, cache);
-    m_delete (all, cache);
-  }
-  else {
-    caches = ([]);
-    hits = ([]);
-    all = ([]);
-  }
-}
-
-// NGSERVER: Remove this method. It does the same as cache_remove(in)
-// Expire a whole cache
-void cache_expire(string cache)
+void flush_memory_cache ()
 {
-  CACHE_WERR("cache_expire(%O)\n", cache);
-  m_delete(caches, cache);
+  caches = ([]);
+  hits = ([]);
+  all = ([]);
 }
 
 //! Lookup an entry in a cache.

@@ -5,7 +5,7 @@
 
 string get_conf_name( string c )
 {
-  Configuration cfg = roxen.find_configuration( c );
+  Configuration cfg = core.find_configuration( c );
   return cfg->query_name();
 }
 
@@ -19,15 +19,15 @@ string|mapping parse( RequestID id )
   {
     if( id->variables->set_read )
       DBManager.set_permission( id->variables->db,
-                                roxen.find_configuration(id->variables->set_read),
+                                core.find_configuration(id->variables->set_read),
                                 DBManager.READ );
     if( id->variables->set_write )
       DBManager.set_permission( id->variables->db,
-                                roxen.find_configuration(id->variables->set_write),
+                                core.find_configuration(id->variables->set_write),
                                 DBManager.WRITE );
     if( id->variables->set_none )
       DBManager.set_permission( id->variables->db,
-                                roxen.find_configuration(id->variables->set_none),
+                                core.find_configuration(id->variables->set_none),
                                 DBManager.NONE );
   }
 
@@ -48,10 +48,10 @@ string|mapping parse( RequestID id )
   string res = "<br /><table border='0' cellpadding='4' cellspacing='0'>\n";
   int x, y;
   int i = 1;
-  int tc = sizeof( roxen->configurations )+2;
+  int tc = sizeof( core->configurations )+2;
   if( tc < 8 )
   {
-    foreach( sort(roxen->configurations->name), string conf )
+    foreach( sort(core->configurations->name), string conf )
     {
       res += "<tr>";
       for( int j = 0; j<i; j++ )
@@ -87,7 +87,7 @@ string|mapping parse( RequestID id )
   else
   {
     res += "<tr><td>&nbsp;</td>";
-    foreach( sort(roxen->configurations->name), string conf )
+    foreach( sort(core->configurations->name), string conf )
     {
       x++;
       string ct = colors[0][x%sizeof(colors)];
@@ -124,7 +124,7 @@ string|mapping parse( RequestID id )
       (view_mode ? "" : "</a>")+
       "</nobr>"
       "</td>";
-    foreach( sort(roxen->configurations->name), string conf )
+    foreach( sort(core->configurations->name), string conf )
     {
       x++;
       string col = colors[y%sizeof(colors)][x%sizeof(colors[0])];
@@ -190,7 +190,7 @@ string|mapping parse( RequestID id )
     res += "<tr><td>\n";
     res += "<b><a href='edit_group.pike?group="+q[1]+"'>"+
       q[0]+"</a></b></td>";
-    for( i = 0; i<sizeof( roxen->configurations ); i++ )
+    for( i = 0; i<sizeof( core->configurations ); i++ )
       res += "<td bgcolor='"+colors[(i+1)%sizeof(colors)][0]+
 	"'>&nbsp;</td>";
     res += "<td></td></tr>\n";

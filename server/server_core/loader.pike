@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.383 2004/05/24 13:40:50 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.384 2004/05/31 23:02:03 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.383 2004/05/24 13:40:50 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.384 2004/05/31 23:02:03 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -286,7 +286,6 @@ class Cache {
   mixed cache_set(string,mixed,mixed,int|void);
   mixed cache_lookup(string,mixed);
   void cache_remove(string,void|mixed);
-  void cache_expire(string);
   array(string) cache_indices(string|void);
   void init_call_outs();
 }
@@ -594,8 +593,6 @@ static private Cache initiate_cache()
   add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
-  add_constant("cache_expire", cache->cache_expire);
-  add_constant("cache_clear",  cache->cache_expire);
   add_constant("cache_indices",cache->cache_indices);
 
   return cache;
@@ -2113,13 +2110,7 @@ void do_main( int argc, array(string) argv )
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
   add_constant("werror",        roxen_werror);
-  // NGSERVER: Remove roxenp
-  add_constant("roxenp",        lambda() { return core; });
   add_constant("get_core",      lambda() { return core; });
-  // NGSERVER: Remove these three
-  add_constant("ST_MTIME",      ST_MTIME );
-  add_constant("ST_CTIME",      ST_CTIME );
-  add_constant("ST_SIZE",       ST_SIZE );
   add_constant("mkdirhier",     mkdirhier );
 
 #if !constant(uname)
@@ -2137,8 +2128,6 @@ void do_main( int argc, array(string) argv )
   add_constant("r_get_dir", r_get_dir);
   add_constant("r_file_stat", file_stat);
   add_constant("loader", this);
-  // NGSERVER: Remove compatibility constant roxenloader.
-  add_constant("roxenloader", this);
   add_constant("ErrorContainer", ErrorContainer);
 
   add_constant("_cur_rxml_context", Thread.Local());
@@ -2161,8 +2150,6 @@ void do_main( int argc, array(string) argv )
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("init_logger", init_logger);
-  // NGSERVER: Remove redundant constant capitalize
-  add_constant("capitalize", String.capitalize);
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 
   // It's currently tricky to test for Image.TTF correctly with a
@@ -2298,13 +2285,6 @@ void do_main( int argc, array(string) argv )
   DC( "Locale" );  DC( "Locale.Charset" );
 
   report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
-
-  // NGSERVER: Remove these
-  add_constant( "hsv_to_rgb",  nm_resolv("Colors.hsv_to_rgb")  );
-  add_constant( "rgb_to_hsv",  nm_resolv("Colors.rgb_to_hsv")  );
-  add_constant( "parse_color", nm_resolv("Colors.parse_color") );
-  add_constant( "color_name",  nm_resolv("Colors.color_name")  );
-  add_constant( "colors",      nm_resolv("Colors")             );
 
   // Load prototypes (after the master is replaces, thus making it
   // possible to dump them to a .o file (in the mysql))

@@ -388,7 +388,7 @@ class context {
 
   string get_server_info()
   {
-    return roxen->version();
+    return core->version();
   }
 
   object get_request_dispatcher(string path)
@@ -437,7 +437,7 @@ object request(object context, mapping(string:array(string))|object id,
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
     string addr = id->remoteaddr || "Internal";
-    string host = roxen->quick_ip_to_host(addr);
+    string host = core->quick_ip_to_host(addr);
     string uri, query, pathtrans;
     if(id->raw) {
       if(sscanf(id->raw, "%[^?\r\n]?%s%*[ \t\n]", uri, query)>1)
@@ -593,7 +593,7 @@ static void native_writeba(object str, object b, int off, int len)
 
 static string native_blockingIPToHost(object n)
 {
-  return roxen->blocking_ip_to_host((string)n);
+  return core->blocking_ip_to_host((string)n);
 }
 
 void create()

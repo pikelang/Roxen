@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.30 2004/05/22 17:25:03 _cvs_stephen Exp $";
+string cvs_version = "$Id: wais.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -866,7 +866,7 @@ void write_to_client_and_cache(object client, string data, string key)
   object pip;
   if(query("cache"))
     if(key)
-      cache = roxen->create_cache_file("wais", key);
+      cache = core->create_cache_file("wais", key);
 
   pip=Pipe.pipe( );
   if(cache)

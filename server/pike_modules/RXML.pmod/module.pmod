@@ -2,12 +2,12 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.309 2004/05/24 21:03:57 mani Exp $
+// $Id: module.pmod,v 1.310 2004/05/31 23:01:59 _cvs_stephen Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
 static object Roxen;
-static object roxen;
+static object core;
 
 //! API stability notes:
 //!
@@ -8603,7 +8603,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 #endif
 	    config = default_config;
 	  }
-	  else if (!(config = roxen->get_configuration (what[1])))
+	  else if (!(config = get_core()->get_configuration (what[1])))
 	    error ("Cannot find configuration %O.\n", what[1]);
 	  if (config->compat_level() != what[2])
 	    error ("P-code is stale; the compatibility level has changed "
@@ -9245,7 +9245,7 @@ void _fix_module_ref (string name, mixed val)
 	format_short = utils->format_short;
 	break;
       case "Roxen": Roxen = [object] val; init_parsers(); break;
-      case "roxen": roxen = [object] val; break;
+      case "core": core = [object] val; break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
     }

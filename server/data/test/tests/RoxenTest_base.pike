@@ -143,9 +143,9 @@ void run_tests( Configuration c )
 
   // Should we really test this? I don't know, but for now (as long as
   // both functions exists) verify that they return the same value...
-  test( roxen.query_configuration_dir );
+  test( core.query_configuration_dir );
   test( loader.query_configuration_dir );
-  test_equal( roxen.query_configuration_dir(),
+  test_equal( core.query_configuration_dir(),
 	      loader.query_configuration_dir );
 
 
@@ -171,7 +171,7 @@ void run_tests( Configuration c )
   test_error( cd, "/tmp/" );
 
   test( loader.dump, __FILE__, object_program( this_object() ) );
-  test( roxen.dump, __FILE__, object_program( this_object() ) );
+  test( core.dump, __FILE__, object_program( this_object() ) );
   
   // Test globally added functions that are added from roxen and
   // loader.
@@ -238,7 +238,7 @@ void run_tests( Configuration c )
   ]);
 
   function format1 = 
-    test_true( roxen.compile_log_format,
+    test_true( core.compile_log_format,
 	    ({
 	      "$ip_number",  "$bin-ip_number",  "$cern_date",  "$bin-date",
 	      "$method",     "$resource",  "$full_resource", "$protocol",

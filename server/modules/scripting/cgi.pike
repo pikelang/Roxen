@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.64 2004/05/24 23:13:56 mani Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.65 2004/05/31 23:01:55 _cvs_stephen Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -467,7 +467,7 @@ class CGIWrapper
       }
     }
     if(!sv_received)
-      result += "Server: "+roxen.version()+"\r\n";
+      result += "Server: "+core.version()+"\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
     return "HTTP/1.0 "+code+"\r\n"+result+"\r\n"+post;
@@ -820,7 +820,7 @@ class CGIScript
     if(id->misc->orig) // An <insert file=...> operation, and we have no threads.
       blocking = 1;
 #else
-    if(id->misc->orig && this_thread() == roxen.backend_thread)
+    if(id->misc->orig && this_thread() == core.backend_thread)
       blocking = 1;
     // An <insert file=...> and we are
     // currently in the backend thread.
@@ -917,7 +917,7 @@ void start(int n, Configuration conf)
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
     global_env["SERVER_NAME"]=tmp;
-    global_env["SERVER_SOFTWARE"]=roxen.version();
+    global_env["SERVER_SOFTWARE"]=core.version();
     global_env["GATEWAY_INTERFACE"]="CGI/1.1";
     global_env["SERVER_PROTOCOL"]="HTTP/1.0";
     global_env["SERVER_URL"]=conf->query("MyWorldLocation");

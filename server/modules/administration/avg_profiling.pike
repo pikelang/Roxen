@@ -1,5 +1,5 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
-// $Id: avg_profiling.pike,v 1.14 2004/05/23 14:14:36 _cvs_dirix Exp $
+// $Id: avg_profiling.pike,v 1.15 2004/05/31 23:01:49 _cvs_stephen Exp $
 
 inherit "module.pike";
 
@@ -29,7 +29,7 @@ void create()
 
 void dump_iter( function cb )
 {
-  foreach( roxen->configurations - ({ this }),
+  foreach( core->configurations - ({ this }),
 	   Configuration c )
   {
     mapping p;
@@ -96,7 +96,7 @@ void dump_to_db( )
 
 void flush()
 {
-  foreach( roxen->configurations, object c )
+  foreach( core->configurations, object c )
     c->profiling_info = ([]);
 }
 
@@ -552,7 +552,7 @@ string status()
 
   res += "<font size=\"+1\"><b>Statistics</b></font>"
 	 "<table><tr><td><b>Configuration</b></td><td><b>Pages</b></td></tr>";
-  foreach( roxen->configurations - ({ this }), Configuration c )
+  foreach( core->configurations - ({ this }), Configuration c )
     res += "<tr><td>"+c->query_name()+"</td>"
 	   "<td align=\"right\">"+sizeof(indices(c->profiling_info))+"</td></tr>";
   return res+"</table>";

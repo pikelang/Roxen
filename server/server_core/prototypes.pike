@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.73 2004/05/27 17:46:55 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.74 2004/05/31 23:02:03 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -427,10 +427,6 @@ class Configuration
   int disable_module( string modname, int|void nodest );
   int add_modules( array(string) mods, int|void now );
   RoxenModule find_module(string name);
-#if ROXEN_COMPAT < 2.2
-  Sql.Sql sql_cache_get(string what);
-  Sql.Sql sql_connect(string db);
-#endif
   void enable_all_modules();
   void low_init(void|int modules_already_enabled);
 
@@ -1566,7 +1562,7 @@ class RequestID
     }
 
     heads["Accept-Ranges"] = "bytes";
-    heads["Server"] = replace(roxenp()->version(), " ", "·");
+    heads["Server"] = replace(get_core()->version(), " ", "·");
     if (file->error == 500) {
       // Internal server error.
       // Make sure the connection is closed to resync.

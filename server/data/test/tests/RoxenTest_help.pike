@@ -7,10 +7,10 @@ array(string) new = ({});
 void run_tests( Configuration c )
 {
   // Create a new server
-  test( roxen.enable_configuration, "helptestserver" );
+  test( core.enable_configuration, "helptestserver" );
 
   c = test_generic( check_is_configuration,
-		    roxen.find_configuration,
+		    core.find_configuration,
 		    "helptestserver" );
 
   if( !c )  {
@@ -19,7 +19,7 @@ void run_tests( Configuration c )
   }
 
   // Add all modules except wrapper modules and other funny stuff.
-  array modules = roxen->all_modules();
+  array modules = core->all_modules();
   sort(modules->sname, modules);
   foreach(modules, ModuleInfo m) {
     if( (< "roxen_test", "config_tags", "update",
@@ -55,5 +55,5 @@ void run_tests( Configuration c )
   foreach(new, string m)
     test( c->disable_module, m );
 
-  test( roxen.disable_configuration, "usertestconfig" );
+  test( core.disable_configuration, "usertestconfig" );
 }

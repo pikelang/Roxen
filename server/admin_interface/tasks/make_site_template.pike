@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.11 2004/05/29 00:52:38 _cvs_stephen Exp $
+ * $Id: make_site_template.pike,v 1.12 2004/05/31 23:01:45 _cvs_stephen Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -43,7 +43,7 @@ string parse(RequestID id)
 
   if (conf_name) {
     conf_name = Roxen.http_decode_string(conf_name);
-    conf = roxen.get_configuration(conf_name);
+    conf = core.get_configuration(conf_name);
   }
 
   if (!conf) {
@@ -56,7 +56,7 @@ string parse(RequestID id)
     }
     res += sprintf("<p>Select configuration to base the template on.</p>\n"
 		   "<p>%{<submit-gbutton2 name='conf-%s' width='200'>%s</submit-gbutton2><br\>\n%}</p>\n",
-		   map(roxen.configurations->name,
+		   map(core.configurations->name,
 		       lambda(string n) {
 			 return ({ Roxen.http_encode_string(n),
 				   Roxen.html_encode_string(n) });

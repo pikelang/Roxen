@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.99 2004/05/23 14:14:41 _cvs_dirix Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.100 2004/05/31 23:01:56 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -355,8 +355,8 @@ mapping parse_and_find_htaccess( RequestID id )
 #endif /* HTACCESS_DEBUG */
     
     function fun =
-      allow_deny( roxen.compile_security_pattern( roxen_allow, this ),
-		  roxen.compile_security_pattern( roxen_deny, this ),
+      allow_deny( core.compile_security_pattern( roxen_allow, this ),
+		  core.compile_security_pattern( roxen_deny, this ),
 		  order );
     
     foreach( indices( m ), string s )

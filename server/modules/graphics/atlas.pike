@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.15 2004/05/22 15:48:27 _cvs_stephen Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.16 2004/05/31 23:01:51 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -14,11 +14,11 @@ constant module_doc  =
 #"Provides the <tt>&lt;atlas&gt;</tt> tag that creates a world map. It is
 possible to highlight countries on the generated world map.";
 
-roxen.ImageCache the_cache;
+core.ImageCache the_cache;
 int do_ext;
 
 void start() {
-  the_cache = roxen.ImageCache( "atlas", generate_image );
+  the_cache = core.ImageCache( "atlas", generate_image );
   do_ext = query("ext");
 }
 
@@ -98,7 +98,7 @@ class TagAtlas {
 	  parse_error("No domain or name attribute given.\n");
 
 	id->misc->atlas_state->color[lower_case(name)] =
-	  parse_color(args->color || "#e0c080");
+	  Colors.parse_color(args->color || "#e0c080");
 	return 0;
       }
     }
@@ -127,7 +127,7 @@ class TagAtlas {
 
 	args->size = (int)args->size || 4;
 	if(args->color)
-	  args->color = parse_color(args->color);
+	  args->color = Colors.parse_color(args->color);
 	else
 	  args->color = ({ 255, 0, 0 });
 
@@ -198,7 +198,7 @@ Image.Image generate_image(mapping state, RequestID id)
   if(!state)
     return 0;
 
-  state->fgcolor = parse_color(state->fgcolor || "#ffffff");
+  state->fgcolor = Colors.parse_color(state->fgcolor || "#ffffff");
 
   mapping opt = ([ "color_fu":
 		   lambda(string name) {
@@ -207,7 +207,7 @@ Image.Image generate_image(mapping state, RequestID id)
 
 
   if(state->bgcolor)
-    opt->color_sea = parse_color(state->bgcolor);
+    opt->color_sea = Colors.parse_color(state->bgcolor);
 
   if(state->markers)
     opt->markers = state->markers;

@@ -1,9 +1,9 @@
 /*
- * $Id: RoxenConfiguration.java,v 1.5 2000/11/13 19:34:22 marcus Exp $
+ * $Id: RoxenConfiguration.java,v 1.6 2004/05/31 23:01:48 _cvs_stephen Exp $
  *
  */
 
-package com.roxen.roxen;
+package com.core.roxen;
 
 /**
  * A class representing the configuration of a virtual server in

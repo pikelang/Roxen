@@ -8,16 +8,16 @@ void run_tests( Configuration c )
   Configuration c1, c2;
   RoxenModule m;
 
-  test( roxen.enable_configuration, "dbtest1" );
-  test( roxen.enable_configuration, "dbtest2" );
+  test( core.enable_configuration, "dbtest1" );
+  test( core.enable_configuration, "dbtest2" );
   
 
   c1 = test_generic( check_is_configuration,
-		     roxen.find_configuration,
+		     core.find_configuration,
 		     "dbtest1" );
 
   c2 = test_generic( check_is_configuration,
-		     roxen.get_configuration,
+		     core.get_configuration,
 		     "dbtest2" );
 
   if( !c2 || !c1 )  {
@@ -105,6 +105,6 @@ void run_tests( Configuration c )
 
   
 
-  test( roxen.disable_configuration, "dbtest1" );
-  test( roxen.disable_configuration, "dbtest2" );
+  test( core.disable_configuration, "dbtest1" );
+  test( core.disable_configuration, "dbtest2" );
 }

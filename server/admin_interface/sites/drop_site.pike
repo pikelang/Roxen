@@ -9,7 +9,7 @@ string|mapping parse( RequestID id )
   if( !config_perm( "Create Site" ) )
     return "Permission denied";
 
-  Configuration cf = roxen->find_configuration( id->variables->site );
+  Configuration cf = core->find_configuration( id->variables->site );
   if( !cf )
     return "No such configuration: "+id->variables->site;
 
@@ -34,7 +34,7 @@ string|mapping parse( RequestID id )
     {
       int ok;
       foreach( indices(q[db]), string c )
-	foreach( (roxen->configurations-({cf}))->name, string c )
+	foreach( (core->configurations-({cf}))->name, string c )
 	{
 	  if( q[db][c] != DBManager.NONE )
 	  {
@@ -119,9 +119,9 @@ string|mapping parse( RequestID id )
     d = d[7..];
     DBManager.drop_db( d );
   }
-  string cfname = roxen.configuration_dir + "/" + cf->name;
+  string cfname = core.configuration_dir + "/" + cf->name;
   mv (cfname, cfname + "~");
-  roxen->remove_configuration( cf->name );
+  core->remove_configuration( cf->name );
   cf->stop();
   destruct( cf );
   

@@ -80,7 +80,7 @@ mixed parse( RequestID id )
     res +=
       "<h3>Thread " + thread_ids[i] +
 #ifdef THREADS
-      (threads[i] == roxen->backend_thread ?
+      (threads[i] == core->backend_thread ?
        " (backend thread)" : "") +
 #endif
       "</h3>\n"

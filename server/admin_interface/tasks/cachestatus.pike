@@ -64,7 +64,7 @@ string parse( RequestID id )
   res += "</tr></table>\n"
     "</box-frame>\n"
     "<br clear='all' />" +
-    (roxen->query("cache")?"<br />"+ roxen->get_garb_info():"");
+    (core->query("cache")?"<br />"+ core->get_garb_info():"");
 
 
   // ---

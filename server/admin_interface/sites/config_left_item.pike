@@ -13,7 +13,7 @@ mapping group( array(string) w )
   foreach( w, string n )
   {
     string g, s;
-    ModuleInfo i = roxen.find_module( n );
+    ModuleInfo i = core.find_module( n );
     if( sscanf( (string)i->get_name(), "%s:%s", g, s ) == 2 )
       groups[ g ] += ({ n });
     else
@@ -88,7 +88,7 @@ string selected_item( string q, Configuration c, RequestID id,
     array gg = ({});
     foreach( gr[gn], string q )
     {
-      ModuleInfo mi = roxen->find_module( q );
+      ModuleInfo mi = core->find_module( q );
       foreach( sort(indices(c->modules[ q ]->copies)), int i )
       {
 	string name, doc;
@@ -400,7 +400,7 @@ mapping|string parse( RequestID id )
   sscanf( id->misc->path_info, "/%[^/]/", site );
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
   return Roxen.http_string_answer(
-    selected_item( site, roxen.find_configuration( site ), id,
+    selected_item( site, core.find_configuration( site ), id,
 		   (((sizeof(path)>=2)?path[1]:"")/"!")[0],
 		   ((sizeof(path)>=3)?path[2]:"")));
 }

@@ -448,7 +448,7 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 string find_module_doc( string cn, string mn, RequestID id )
 {
   RXMLHELP_WERR("Help for module "+mn+" requested.");
-  object c = roxen.find_configuration( cn );
+  object c = core.find_configuration( cn );
   if(!c) return "";
 
   RoxenModule o = c->find_module( replace(mn,"!","#") );

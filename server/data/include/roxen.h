@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.27 2004/05/16 01:09:59 mani Exp $
+// $Id: roxen.h,v 1.28 2004/05/31 23:01:46 _cvs_stephen Exp $
 
 #ifndef _ROXEN_H_
 
@@ -13,7 +13,7 @@
 
 #ifndef __LOCALEOBJECT
 #ifndef IN_ROXEN
-#define __LOCALE (roxen.get_locale)
+#define __LOCALE (core.get_locale)
 #endif /* !IN_ROXEN */
 #endif /* !__LOCALEOBJECT */
 

@@ -3,12 +3,12 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.23 2002/06/15 20:10:53 nilsson Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.24 2004/05/31 23:01:50 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
 #include <module.h>
-
+#include <stat.h>
 
 //************** Generic module stuff ***************
 

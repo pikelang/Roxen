@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.31 2004/05/31 14:42:34 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.32 2004/05/31 23:01:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -58,7 +58,7 @@ class TagEmitKnownLangs
     return map(get_core()->list_languages(),
 	       lambda(string id)
 	       {
-		 object language = roxenp()->language_low(id);
+		 object language = get_core()->language_low(id);
 		 string eng_name = language->id()[1];
 		 if(eng_name == "standard")
 		   eng_name = "english";
