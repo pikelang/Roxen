@@ -133,9 +133,9 @@ string|mapping parse( RequestID id )
 		     "</a>", Roxen.http_encode_string(conf),\
 		     Roxen.http_encode_string(db))
 
-      PERM(NONE,_(0,"N"),"none");
-      PERM(READ,_(0,"R"),"read");
-      PERM(WRITE,_(0,"W"),"write");
+      PERM(NONE,_(431,"N"),"none");
+      PERM(READ,_(432,"R"),"read");
+      PERM(WRITE,_(433,"W"),"write");
       rres[DBManager.db_group(db)] += "</nobr></td>";
     }
 

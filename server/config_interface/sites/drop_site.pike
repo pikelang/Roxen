@@ -52,7 +52,7 @@ string|mapping parse( RequestID id )
     }
 
     res += "<b>"+
-      LOCALE(0,"This site listens to the following ports:")+"</b><br />\n";
+      LOCALE(468,"This site listens to the following ports:")+"</b><br />\n";
 
     res += "<ul>\n";
     foreach( cf->query( "URLs" ), string url )
@@ -66,17 +66,17 @@ string|mapping parse( RequestID id )
     
     if( sizeof( dead ) )
     {
-      res += "<b>"+LOCALE(0,"Databases that will no longer be used")+
+      res += "<b>"+LOCALE(469,"Databases that will no longer be used")+
 	"</b><br />";
 
       res += "<blockquote>";
       
       if( sizeof( dead ) == 1 )
 	
-	res += LOCALE(0,"If you do not want to delete this database, "
+	res += LOCALE(470,"If you do not want to delete this database, "
 		      "uncheck the checkmark in front of it");
       else
-	res += LOCALE(0,"If you do not want to delete one or more of these "
+	res += LOCALE(471,"If you do not want to delete one or more of these "
 		      "databases, uncheck the checkmark in front of the ones"
 		      " you want to keep");
       res += "<table>";

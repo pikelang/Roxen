@@ -24,7 +24,7 @@ class RDF
     file = uri->path+(uri->query?"?"+uri->query:"");
     
     if( !(data = get_http_data( host, port, "GET "+file+" HTTP/1.0" ) ) )
-      contents = sprintf((string)_(0,"Fetching data from %s..."), host);
+      contents = sprintf((string)_(389,"Fetching data from %s..."), host);
     else
     {
       contents = "";

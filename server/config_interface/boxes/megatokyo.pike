@@ -8,8 +8,8 @@
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(0,"Todays MegaTokyo comic");
-String box_doc  = _(0,"Todays comic from MegaTokyo");
+String box_name = _(398,"Todays MegaTokyo comic");
+String box_doc  = _(399,"Todays comic from MegaTokyo");
 
 
 /* And here we go. :-) */

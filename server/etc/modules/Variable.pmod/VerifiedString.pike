@@ -39,7 +39,7 @@ void add_regexp(string new_regexp)
   verifications+=({
     lambda(string in) {
       if(!regexp->match(in))
-	return ({ sprintf(LOCALE(320,"Value %s does not match the regexp %s."),
+	return ({ sprintf(LOCALE(496,"Value %s does not match the regexp %s."),
 			  in, new_regexp), in });
       return ({ 0, in });
     }
@@ -52,7 +52,7 @@ void add_glob(string new_glob)
   verifications+=({
     lambda(string in) {
       if(!glob(new_glob, in))
-	return ({ sprintf(LOCALE(321,"Value %s does not match the glob %s."),
+	return ({ sprintf(LOCALE(497,"Value %s does not match the glob %s."),
 			  in, new_glob), in });
       return ({ 0, in });
     }
@@ -65,7 +65,7 @@ void add_minlength(int minlength)
   verifications+=({
     lambda(string in) {
       if(sizeof(in)<minlength)
-	return ({ sprintf(LOCALE(322,"Value %s must be at least %d characters "
+	return ({ sprintf(LOCALE(498,"Value %s must be at least %d characters "
 				 "long. (%d character short)"),
 		       in, minlength, minlength-sizeof(in)), in });
       return ({ 0, in });
@@ -79,7 +79,7 @@ void add_maxlength(int maxlength)
   verifications+=({
     lambda(string in) {
       if(sizeof(in)>maxlength)
-	return ({ sprintf(LOCALE(323,"Value %s must not be more than %d "
+	return ({ sprintf(LOCALE(499,"Value %s must not be more than %d "
 				 "characters long. (%d character too long)"),
 		       in, maxlength, sizeof(in)-maxlength), in[..maxlength-1]});
       return ({ 0, in });
@@ -93,7 +93,7 @@ void add_upper()
   verifications+=({
     lambda(string in) {
       if(upper_case(in)!=in)
-	return ({ sprintf(LOCALE(324,"Value %s is not uppercased."), in),
+	return ({ sprintf(LOCALE(500,"Value %s is not uppercased."), in),
 		  upper_case(in) });
       return ({ 0, in });
     }
@@ -106,7 +106,7 @@ void add_lower()
   verifications+=({
     lambda(string in) {
       if(lower_case(in)!=in)
-	return ({ sprintf(LOCALE(325,"Value %s is not lowercased."), in),
+	return ({ sprintf(LOCALE(501,"Value %s is not lowercased."), in),
 		  lower_case(in) });
       return ({ 0, in });
     }

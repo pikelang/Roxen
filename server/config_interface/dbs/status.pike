@@ -60,8 +60,8 @@ string parse( RequestID id )
   
   res +=
     "<table>"
-    "<tr><td><b>"+_(0,"Database")+"</b></td><td><b>"+
-    _(0,"User")+"</b></td><td><b>"+_(0,"Connections")+
+    "<tr><td><b>"+_(463,"Database")+"</b></td><td><b>"+
+    _(206,"User")+"</b></td><td><b>"+_(464,"Connections")+
     "</b></td></tr>\n";
 
   int total;

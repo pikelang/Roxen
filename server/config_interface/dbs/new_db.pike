@@ -35,36 +35,36 @@ string parse(RequestID id )
 
   string error="",form =
 #"
-<gtext scale=0.6>"+_(0,"Create a new database")+#"</gtext><br />
+<gtext scale=0.6>"+_(439,"Create a new database")+#"</gtext><br />
 ERROR
 <table>
   <tr>
-    <td><b>"+_(0,"Name")+#":</b></td> <td><input name='name' value='&form.name;' size=30/></td>
-    <td><b>"+_(0,"Type")+#":</b></td> <td width='100%'>
+    <td><b>"+_(376,"Name")+#":</b></td> <td><input name='name' value='&form.name;' size=30/></td>
+    <td><b>"+_(419,"Type")+#":</b></td> <td width='100%'>
      <default variable=form.type><select name=type>
-       <option value='internal'>  "+_(0,"Internal")+#"  </option>
-       <option value='external'>  "+_(0,"External")+#"  </option>
+       <option value='internal'>  "+_(440,"Internal")+#"  </option>
+       <option value='external'>  "+_(441,"External")+#"  </option>
      </select></default>
     </td>
   </tr>
   <tr>
   <td valign=top colspan='2'>
-    <i>"+_(0,"The name of the database. To make it easy on your users, "
+    <i>"+_(442,"The name of the database. To make it easy on your users, "
 	   "use all lowercaps characters, and avoid 'odd' characters ")+#"
      </i>
    </td>
    <td valign=top colspan='2' width='100%'>
 
-        <i>"+_(0,"The database type. Internal means that it will be created"
+        <i>"+_(443,"The database type. Internal means that it will be created"
 	       " in the roxen mysql database, and the permissions of the"
 	       " database will be automatically manged by roxen. External"
 	       " means that the database resides in another database.")+#"</i>
    </td>
  </tr>
   <tr>
-     <td><nbsp><b>"+_(0,"URL")+#":</b></nbsp></td>
+     <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
       <td><input name='url' size=30 value='&form.url;'/></td>
-       <td><b>"+_(0,"Category")+#":</b></td> <td width='100%'>
+       <td><b>"+_(445,"Category")+#":</b></td> <td width='100%'>
        <default variable='form.group'><select name=group> "+
       group_selector()+#"
        </select></default>
@@ -72,13 +72,13 @@ ERROR
 
       </tr>
       <tr><td valign=top colspan='2'><i>
-      "+_(0,"This URL is only used for </i>External<i> databases, it is "
+      "+_(446,"This URL is only used for </i>External<i> databases, it is "
 	  "totally ignored for databases defined internally in Roxen")+"</i>"
       "</td>"+
     "<td valign=top colspan='2'><i>"
-    +_(0,"This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in")+"</i>"
+    +_(447,"This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in")+"</i>"
       "</td></tr>"
-#"<tr><td valign=top><nbsp><b>"+_(0,"Comment")+#":</b></nbsp></td>
+#"<tr><td valign=top><nbsp><b>"+_(448,"Comment")+#":</b></nbsp></td>
       <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
     "</table>";
 
@@ -88,11 +88,11 @@ ERROR
     {
       if( !strlen(id->variables->url) )
         error= "<font color='&usr.warncolor;'>"
-	  +_(0,"Please specify an URL to define an external database")+
+	  +_(406,"Please specify an URL to define an external database")+
                "</font>";
       else if( catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"+
-                        _(0,"It is not possible to connect to %s")+
+                        _(407,"It is not possible to connect to %s")+
                         "</font>",
                         id->variables->url );
     }
@@ -101,20 +101,20 @@ ERROR
       {
        case "":
          error =  "<font color='&usr.warncolor;'>"+
-	   _(0,"Please specify a name for the database")+
+	   _(408,"Please specify a name for the database")+
 	   "</font>";
          break;
        case "mysql": case "roxen":
        case "local": case "shared":
          error = sprintf("<font color='&usr.warncolor;'>"+
-                         _(0,"%s is an internal database, used by roxen."
+                         _(409,"%s is an internal database, used by roxen."
 			   "Please select another name")+
                          "</font>", id->variables->name );
          break;
        default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   error = sprintf("<font color='&usr.warncolor;'>"+
-			   _(0,"%s is a mysql keyword, used by mysql."
+			   _(410,"%s is a mysql keyword, used by mysql."
 			     "Please select another name")+
 			   "</font>", id->variables->name );
 	 else

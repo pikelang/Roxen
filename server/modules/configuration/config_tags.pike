@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.157 2001/08/21 13:55:35 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.158 2001/08/24 14:45:51 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -428,7 +428,7 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
       res->diff = 
 	"<a target=rxdiff_"+var->path()+
 	" href='"+diff_url( id, mod, var )+"'><gbutton>"+
-	LOCALE(0,"Diff")+"</gbutton></a>";
+	LOCALE(502,"Diff")+"</gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
@@ -1053,7 +1053,7 @@ string simpletag_cf_render_variable( string t, mapping m,
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
       def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
-	LOCALE(0,"Restore default value")+" "+_("diff-txt")+
+	LOCALE(475,"Restore default value")+" "+_("diff-txt")+
 	" </submit-gbutton2> "+_("diff")+"<br />\n";
   
   switch( usr( "changemark" ) )

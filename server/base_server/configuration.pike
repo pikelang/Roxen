@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.471 2001/08/23 22:22:05 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.472 2001/08/24 14:45:01 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2417,7 +2417,7 @@ RoxenModule reload_module( string modname )
   // If this is a faked module, let's call it a failure.
   if( nm->not_a_module )
   {
-    old_module->report_error(LOC_C(0,"Reload failed")+"\n");
+    old_module->report_error(LOC_C(385,"Reload failed")+"\n");
     return old_module;
   }
 
@@ -3227,7 +3227,7 @@ static void create()
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, VAR_NO_DEFAULT,
 	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(384, "The compatibility level is used by different modules to select "
+	   DLOCALE(386, "The compatibility level is used by different modules to select "
 		   "the right behavior to remain compatible with earlier Roxen "
 		   "versions. When a server configuration is created, this variable "
 		   "is set to the latest version. After that it's never changed "

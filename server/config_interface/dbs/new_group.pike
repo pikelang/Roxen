@@ -6,7 +6,7 @@
 
 string c_name( string c, RequestID id )
 {
-  if( c == _(0,"automatic") )
+  if( c == _(449,"automatic") )
     return Roxen.short_name( id->variables->lname );
   return c;
 }
@@ -28,12 +28,12 @@ mapping|string parse( RequestID id )
   RXML.user_set_var( "var.go-on",  "<cf-ok/>" );
 
   if( !id->variables->name )
-    id->variables->name = _(0,"automatic");
+    id->variables->name = _(449,"automatic");
   
   string error="",form =
 #"
-<gtext scale=0.6>"+_(0,"Create a new database group")+#"</gtext><br />
-"+_(0,"The groups are used mainly to group the databases in the\n"
+<gtext scale=0.6>"+_(450,"Create a new database group")+#"</gtext><br />
+"+_(451,"The groups are used mainly to group the databases in the\n"
 "Administration interface, but also to indicate the default MySQL server\n"
 "internal databases will be created in.\n"
 "\n"
@@ -43,12 +43,12 @@ mapping|string parse( RequestID id )
 <font size=+1><b>ERROR</b></font>
 <table>
   <tr>
-    <td><b>"+_(0,"ID")+#":</b></td> <td><input name='name' value='&form.name;' size=20/></td>
-    <td><b>"+_(0,"Name")+#":</b></td> <td><input name='lname' value='&form.lname;' size=30/></td>
+    <td><b>"+_(452,"ID")+#":</b></td> <td><input name='name' value='&form.name;' size=20/></td>
+    <td><b>"+_(376,"Name")+#":</b></td> <td><input name='lname' value='&form.lname;' size=30/></td>
   </tr>
   <tr>
   <td valign=top colspan='2'>
-    <i>"+_(0,"The identifier of the group. This is used internally in Roxen,"
+    <i>"+_(453,"The identifier of the group. This is used internally in Roxen,"
 	   " and must be unique. "
 	   "If you leave it as automatic, a ID will be selected "
 	   "automatically.")+#"
@@ -56,23 +56,23 @@ mapping|string parse( RequestID id )
    </td>
    <td valign=top colspan='2' width='100%'>
 
-        <i>"+_(0,"The name of the database group. This is what is"
+        <i>"+_(454,"The name of the database group. This is what is"
 	       " shown in the configuration interface")+#"</i>
    </td>
  </tr>
   <tr>
-     <td><nbsp><b>"+_(0,"URL")+#":</b></nbsp></td>
+     <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
       <td colspan=3>mysql://<input name='url' size=30 value='&form.url;'/></td>
       </tr>
       <tr><td valign=top colspan='4'><i>
-      "+_(0,"This URL is only used when </i>Internal<i> databases is "
+      "+_(455,"This URL is only used when </i>Internal<i> databases is "
 	  "created in this group, and it specified which MySQL server "
 	  "the datbase should be created in. As an example, if you want all "
 	  "databases created in the group to end up in the MySQL running "
 	  "on the host </i>wyrm<i>, using the account with the username </i>foo<i> and "
 	  "password </i>bar<i>, set this URL to </i>foo:bar@wyrm<i>")+
     "</td></tr>"
-#"<tr><td valign=top><nbsp><b>"+_(0,"Comment")+#":</b></nbsp></td>
+#"<tr><td valign=top><nbsp><b>"+_(448,"Comment")+#":</b></nbsp></td>
       <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
 
     "</table>";
@@ -83,7 +83,7 @@ mapping|string parse( RequestID id )
     {
       if(catch(Sql.Sql( "mysql://"+id->variables->url+"/mysql" ) ))
 	error = sprintf( "<font color='&usr.warncolor;'>"+
-			 _(0,"Cannot connect to %s")+
+			 _(456,"Cannot connect to %s")+
 			 "</font>", "mysql://"+id->variables->url );
       else
 	find_dbs = 1;
@@ -91,12 +91,12 @@ mapping|string parse( RequestID id )
     if(!strlen(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
 	error=sprintf("<font color='&usr.warncolor;'>"+
-		      _(0,"A database group named %s already exists")+
+		      _(457,"A database group named %s already exists")+
  		      "</font>", id->variables->name );
     if( !strlen( error ) )
       if( Roxen.is_mysql_keyword( id->variables->name ) )
 	error = sprintf("<font color='&usr.warncolor;'>"+
-			_(0,"%s is a MySQL keyword, used by MySQL."
+			_(458,"%s is a MySQL keyword, used by MySQL."
 			  "Please select another name")+
 			"</font>", id->variables->name );
       else

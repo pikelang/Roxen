@@ -6,19 +6,28 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/index.html</file>
 <file>../config_interface/boxes/articles.pike</file>
+<file>../config_interface/boxes/Box.pmod</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
+<file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
-<file>../config_interface/boxes/slashdot.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
+<file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
+<file>../config_interface/dbs/edit_group.pike</file>
+<file>../config_interface/dbs/import_dbs.pike</file>
+<file>../config_interface/dbs/index.html</file>
+<file>../config_interface/dbs/new_db.pike</file>
+<file>../config_interface/dbs/new_group.pike</file>
+<file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
+<file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
 <file>../config_interface/logutil.pike</file>
@@ -42,8 +51,11 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/Mapping.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Schedule.pike</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -186,10 +198,8 @@ $host          -- The remote host name, or ip number.
 $vhost         -- The Host request-header sent by the client, or - if none
 $ip_number     -- The remote ip number.
 $bin-ip_number -- The remote host id as a binary integer number.
-
 $cern_date     -- Cern Common Log file format date.
 $bin-date      -- Time, but as an 32 bit integer in network byteorder
-
 $method        -- Request method
 $resource      -- Resource identifier
 $full_resource -- Full requested resource, including any query fields
@@ -205,6 +215,16 @@ $user_agent    -- the header 'User-Agent' from the request, or '-'.
 $user          -- the name of the auth user used, if any
 $user_id       -- A unique user ID, if cookies are supported,
                   by the client, otherwise '0'
+$cache-status  -- A comma separated list of words (containing no
+                  whitespace) that describes which cache(s) the page
+                  was delivered from:
+                  protcache -- The low-level cache in the HTTP
+                               protocol module.
+                  xsltcache -- The XSLT cache.
+                  pcoderam  -- RXML parse tree RAM cache.
+                  pcodedisk -- RXML parse tree persistent cache.
+                  cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
+                  nocache   -- No hit in any known cache.
 &lt;/pre&gt;</o>
 <t>Welk formaat te gebruiken in het logboek. De synatix is:
 &lt;pre&gt;response-code of *: formaat for deze respons-code
@@ -298,7 +318,15 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="37">
-<o>This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable.</o>
+<changed from="This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable."/>
+<o>This is the main server URL, where your start page is located. This
+setting is for instance used as fallback to generate absolute URLs to
+the server, but in most circumstances the URLs sent by the clients are
+used. A URL is deduced from the first entry in 'URLs' if this is left
+blank.
+
+&lt;p&gt;Note that setting this doesn't make the server accessible; you must
+also set 'URLs'.</o>
 <t>Dit is de URL van de primar server, waar uw start-pagina zich bevindt. Let op: vul ook de variabele van de URL in.</t>
 </str>
 
@@ -308,7 +336,8 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="39">
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
+<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris."/>
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, https, ftp, ftps, hilfe and tetris.</o>
 <t>Luister naar deze URL's. Gebruik '*' en '?' voor patronen (bij gebruik van deze tekens wordt standaard naa alle ip nummers op de machine geluisterd. Mogelijke protocollen zijn http, fhttp (een snellere variant van het HTTP protocol, maar niet 100% compatibel met alle modules) https, ftp, ftps, gopher en tetris.</t>
 </str>
 
@@ -328,7 +357,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="43">
-<!-- fixme token bucket -->
 <o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
 <t>Als ingeschakeld dan is bandbreedteperking per server ingeschakeld. Het stelt u in staat de totale bandbreedte voor deze site te beperking .&lt;br /&gt;Bandbreedte wordt toegekend d.m.v een Token Bucket. Voor elke byte die de server stuur gebruiken we een token. Tokens worden in een vaste hoeveelheid toegevoegd aan een reservoir. Als er geen tokens in het reservoir zitten kan de server niets versturen. Als  er te veel tokens zijn (het reservoir zit 'vol') woden deze niet toegevoegd </t>
 </str>
@@ -349,7 +377,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="47">
-<!-- fixme data bursts -->
 <o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
 <t>Dit is de maximale diepte van het reservoir. Na een lange periode van inactiviteit krijgt een verzoek dit aantal tokens voordat de bandbreedtebeperking zich weer inschakeld. &lt;br&gt; Zet deze gelijk aan de vulsnelheid om geen data-bursts to te staan. Deze waarde bepaald de tijdsduur waarover de bandbreedte wordt gemiddeld.</t>
 </str>
@@ -371,7 +398,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="51">
 <o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
-<t>Dit is het maximale aantal bytes dat een enkele connectie mag versturen. Door deze waarde klein te houden verspreidt de bandbreedte zich beter over de connecties. Bij een te kleine waarde is er echter meer IP overhead. Deze waarde wilt u normaliter iets lager hebben dan een geheel meervouw van de MTU op uw netwerk (MTU voor ethernet is  1500)</t> 
+<t>Dit is het maximale aantal bytes dat een enkele connectie mag versturen. Door deze waarde klein te houden verspreidt de bandbreedte zich beter over de connecties. Bij een te kleine waarde is er echter meer IP overhead. Deze waarde wilt u normaliter iets lager hebben dan een geheel meervouw van de MTU op uw netwerk (MTU voor ethernet is  1500)</t>
 </str>
 
 <str id="52">
@@ -390,6 +417,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="55">
+<new/>
 <o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
 <t></t>
 </str>
@@ -526,53 +554,21 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="78">
-<new/>
-<o>Logging method</o>
-<t></t>
-</str>
 
-<str id="79">
-<new/>
-<o>None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through Roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits Roxen to less than 1k requests/second.&lt;/p&gt;</o>
-<t></t>
-</str>
 
-<str id="80">
-<new/>
-<o>Log file</o>
-<t></t>
-</str>
 
-<str id="81">
-<new/>
-<o>This file is used if logging is done using the CommonLog method.</o>
-<t></t>
-</str>
 
-<str id="82">
-<new/>
-<o>Ram cache</o>
-<t></t>
-</str>
 
-<str id="83">
-<new/>
-<o>The size of the ram cache, in MegaBytes</o>
-<t></t>
-</str>
 
-<str id="84">
-<new/>
-<o>Client timeout</o>
-<t></t>
-</str>
 
-<str id="85">
-<new/>
-<o>The maximum time Roxen will wait for a client before giving up, and close the connection, in seconds</o>
-<t></t>
-</str>
+
+
+
+
+
+
+
+
 
 <str id="86">
 <new/>
@@ -957,7 +953,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <new/>
 <o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;</o>
+&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Do not increase this over 20 unless you have a very good reason to do so.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -1009,17 +1005,9 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="162">
-<new/>
-<o>Auto Restart: Timeout</o>
-<t></t>
-</str>
 
-<str id="163">
-<new/>
-<o>Automatically restart the server after this many days.</o>
-<t></t>
-</str>
+
+
 
 <str id="170">
 <new/>
@@ -1029,7 +1017,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="171">
 <new/>
-<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client.</o>
+<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remembering what supports flags matches what client.</o>
 <t></t>
 </str>
 
@@ -1432,7 +1420,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="279">
 <new/>
-<o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
+<o>If true, the list of sites will be presented in a compact format suitable for servers with many sites.</o>
 <t></t>
 </str>
 
@@ -1802,11 +1790,7 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="337">
-<new/>
-<o>Changed %s to http</o>
-<t></t>
-</str>
+
 
 <str id="338">
 <new/>
@@ -2106,17 +2090,9 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="361">
-<new/>
-<o>Slashdot headlines</o>
-<t></t>
-</str>
 
-<str id="362">
-<new/>
-<o>The headlines from Slashdot: News for nerds, stuff that matters</o>
-<t></t>
-</str>
+
+
 
 <str id="363">
 <new/>
@@ -2252,13 +2228,13 @@ as the name of its log file directory.
 
 <str id="205">
 <new/>
-<o>Minumum allowed bitrate</o>
+<o>Minimum allowed bitrate</o>
 <t></t>
 </str>
 
 <str id="215">
 <new/>
-<o>The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users.</o>
+<o>The minimum allowed bitrate, in bits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14000 is not recommended if you have modem users.</o>
 <t></t>
 </str>
 
@@ -2439,7 +2415,7 @@ as the name of its log file directory.
 
 <str id="123">
 <new/>
-<o>Unfolded (old stype)</o>
+<o>Unfolded (old style)</o>
 <t></t>
 </str>
 
@@ -2464,5 +2440,751 @@ as the name of its log file directory.
 <str id="325">
 <new/>
 <o>HTTP Cookies</o>
+<t></t>
+</str>
+
+<str id="384">
+<new/>
+<o>Warning: The theme %s  no longer exists, using default.
+</o>
+<t></t>
+</str>
+
+<str id="385">
+<new/>
+<o>Reload failed</o>
+<t></t>
+</str>
+
+<str id="386">
+<new/>
+<o>The compatibility level is used by different modules to select the right behavior to remain compatible with earlier Roxen versions. When a server configuration is created, this variable is set to the latest version. After that it's never changed automatically, thereby ensuring that server configurations migrated from earlier Roxen versions is kept at the right compatibility level.
+&lt;p&gt;
+This variable may be changed manually, but it's advisable to test the site carefully afterwards. A reload of the whole server configuration is required to propagate the change properly to all modules.</o>
+<t></t>
+</str>
+
+<str id="387">
+<new/>
+<o>Auto Restart: Schedule</o>
+<t></t>
+</str>
+
+<str id="388">
+<new/>
+<o>Automatically restart the server according to this schedule.</o>
+<t></t>
+</str>
+
+<str id="999">
+<new/>
+<o>SNMP: Enable SNMP agent</o>
+<t></t>
+</str>
+
+<str id="389">
+<new/>
+<o>Fetching data from %s...</o>
+<t></t>
+</str>
+
+<str id="390">
+<new/>
+<o>Release notes</o>
+<t></t>
+</str>
+
+<str id="391">
+<new/>
+<o>Web Site Creator</o>
+<t></t>
+</str>
+
+<str id="392">
+<new/>
+<o>Administrator Manual</o>
+<t></t>
+</str>
+
+<str id="393">
+<new/>
+<o>User Manual</o>
+<t></t>
+</str>
+
+<str id="394">
+<new/>
+<o>RXML Tutorial</o>
+<t></t>
+</str>
+
+<str id="395">
+<new/>
+<o>Programmer Manual</o>
+<t></t>
+</str>
+
+<str id="396">
+<new/>
+<o>Pike Tutorial</o>
+<t></t>
+</str>
+
+<str id="397">
+<new/>
+<o>No documentation found at all</o>
+<t></t>
+</str>
+
+<str id="398">
+<new/>
+<o>Todays MegaTokyo comic</o>
+<t></t>
+</str>
+
+<str id="399">
+<new/>
+<o>Todays comic from MegaTokyo</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Update</o>
+<t></t>
+</str>
+
+<str id="0">
+<new/>
+<o>All database backups currently available</o>
+<t></t>
+</str>
+
+<str id="401">
+<new/>
+<o>Copy or move database</o>
+<t></t>
+</str>
+
+<str id="402">
+<new/>
+<o>Delete this database</o>
+<t></t>
+</str>
+
+<str id="403">
+<new/>
+<o>Delete all tables</o>
+<t></t>
+</str>
+
+<str id="404">
+<new/>
+<o>Make a backup</o>
+<t></t>
+</str>
+
+<str id="405">
+<new/>
+<o>Directory</o>
+<t></t>
+</str>
+
+<str id="406">
+<new/>
+<o>Please specify an URL to define an external database</o>
+<t></t>
+</str>
+
+<str id="407">
+<new/>
+<o>It is not possible to connect to %s</o>
+<t></t>
+</str>
+
+<str id="408">
+<new/>
+<o>Please specify a name for the database</o>
+<t></t>
+</str>
+
+<str id="409">
+<new/>
+<o>%s is an internal database, used by roxen.Please select another name</o>
+<t></t>
+</str>
+
+<str id="410">
+<new/>
+<o>%s is a mysql keyword, used by mysql.Please select another name</o>
+<t></t>
+</str>
+
+<str id="411">
+<new/>
+<o>While copying %s.%s: The source database does not support %s.
+The copy will not contain all metadata</o>
+<t></t>
+</str>
+
+<str id="412">
+<new/>
+<o>The source database used the string %s as a fieldname.
+This is reserved in newer MySQL versions.
+Substituting with %s</o>
+<t></t>
+</str>
+
+<str id="413">
+<new/>
+<o>Failed to copy data from source table.
+</o>
+<t></t>
+</str>
+
+<str id="414">
+<new/>
+<o>Move or copy this database</o>
+<t></t>
+</str>
+
+<str id="415">
+<new/>
+<o>Action</o>
+<t></t>
+</str>
+
+<str id="416">
+<new/>
+<o>Copy the data to a new database</o>
+<t></t>
+</str>
+
+<str id="417">
+<new/>
+<o>Move database</o>
+<t></t>
+</str>
+
+<str id="418">
+<new/>
+<o>New name</o>
+<t></t>
+</str>
+
+<str id="419">
+<new/>
+<o>Type</o>
+<t></t>
+</str>
+
+<str id="420">
+<new/>
+<o>The new name of the database. You do not have to change the name if you change the database type from internal to external, or change the URL of an external database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters</o>
+<t></t>
+</str>
+
+<str id="421">
+<new/>
+<o>The database type. Internal means that it will be stored in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
+<t></t>
+</str>
+
+<str id="422">
+<new/>
+<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen </o>
+<t></t>
+</str>
+
+<str id="423">
+<new/>
+<o>Are you sure you want to delete the database %s?</o>
+<t></t>
+</str>
+
+<str id="424">
+<new/>
+<o>The database %s was deleted by %s</o>
+<t></t>
+</str>
+
+<str id="425">
+<new/>
+<o>Are you sure you want to delete all tables in %s?</o>
+<t></t>
+</str>
+
+<str id="426">
+<new/>
+<o>Query took %[0].3fs, %[1]d rows in the reply</o>
+<t></t>
+</str>
+
+<str id="427">
+<new/>
+<o>the deleted module %s from %s</o>
+<t></t>
+</str>
+
+<str id="428">
+<new/>
+<o>Defined by %s</o>
+<t></t>
+</str>
+
+<str id="429">
+<new/>
+<o>The table is known as '%s' in the module</o>
+<t></t>
+</str>
+
+<str id="430">
+<new/>
+<o>The table is an anymous table defined by the module</o>
+<t></t>
+</str>
+
+<str id="431">
+<new/>
+<o>N</o>
+<t></t>
+</str>
+
+<str id="432">
+<new/>
+<o>R</o>
+<t></t>
+</str>
+
+<str id="433">
+<new/>
+<o>W</o>
+<t></t>
+</str>
+
+<str id="434">
+<new/>
+<o>Databases in the group %s</o>
+<t></t>
+</str>
+
+<str id="435">
+<new/>
+<o>When the group is created, the checked databases will be imported as well</o>
+<t></t>
+</str>
+
+<str id="436">
+<new/>
+<o>The &lt;i&gt;shared&lt;/i&gt; database contains data
+          should be shared between multiple-frontend servers, the
+          &lt;i&gt;local&lt;/i&gt; database contains data that should &lt;b&gt;not&lt;/b&gt;
+          be shared. The &lt;i&gt;docs&lt;/i&gt; database contains all
+          documentation.
+          </o>
+<t></t>
+</str>
+
+<str id="437">
+<new/>
+<o>Create new database</o>
+<t></t>
+</str>
+
+<str id="438">
+<new/>
+<o>Create new group</o>
+<t></t>
+</str>
+
+<str id="439">
+<new/>
+<o>Create a new database</o>
+<t></t>
+</str>
+
+<str id="440">
+<new/>
+<o>Internal</o>
+<t></t>
+</str>
+
+<str id="441">
+<new/>
+<o>External</o>
+<t></t>
+</str>
+
+<str id="442">
+<new/>
+<o>The name of the database. To make it easy on your users, use all lowercaps characters, and avoid 'odd' characters </o>
+<t></t>
+</str>
+
+<str id="443">
+<new/>
+<o>The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database.</o>
+<t></t>
+</str>
+
+<str id="444">
+<new/>
+<o>URL</o>
+<t></t>
+</str>
+
+<str id="445">
+<new/>
+<o>Category</o>
+<t></t>
+</str>
+
+<str id="446">
+<new/>
+<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen</o>
+<t></t>
+</str>
+
+<str id="447">
+<new/>
+<o>This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in</o>
+<t></t>
+</str>
+
+<str id="448">
+<new/>
+<o>Comment</o>
+<t></t>
+</str>
+
+<str id="449">
+<new/>
+<o>automatic</o>
+<t></t>
+</str>
+
+<str id="450">
+<new/>
+<o>Create a new database group</o>
+<t></t>
+</str>
+
+<str id="451">
+<new/>
+<o>The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL server
+internal databases will be created in.
+
+&lt;p&gt; If a group has a URL set, it will be used to select the database
+server in which the database will be created, please note that this
+server must be a MySQL server, nothing else will work.
+</o>
+<t></t>
+</str>
+
+<str id="452">
+<new/>
+<o>ID</o>
+<t></t>
+</str>
+
+<str id="453">
+<new/>
+<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, a ID will be selected automatically.</o>
+<t></t>
+</str>
+
+<str id="454">
+<new/>
+<o>The name of the database group. This is what is shown in the configuration interface</o>
+<t></t>
+</str>
+
+<str id="455">
+<new/>
+<o>This URL is only used when &lt;/i&gt;Internal&lt;i&gt; databases is created in this group, and it specified which MySQL server the datbase should be created in. As an example, if you want all databases created in the group to end up in the MySQL running on the host &lt;/i&gt;wyrm&lt;i&gt;, using the account with the username &lt;/i&gt;foo&lt;i&gt; and password &lt;/i&gt;bar&lt;i&gt;, set this URL to &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</o>
+<t></t>
+</str>
+
+<str id="456">
+<new/>
+<o>Cannot connect to %s</o>
+<t></t>
+</str>
+
+<str id="457">
+<new/>
+<o>A database group named %s already exists</o>
+<t></t>
+</str>
+
+<str id="458">
+<new/>
+<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
+<t></t>
+</str>
+
+<str id="459">
+<new/>
+<o>Date</o>
+<t></t>
+</str>
+
+<str id="460">
+<new/>
+<o>Restore</o>
+<t></t>
+</str>
+
+<str id="461">
+<new/>
+<o>Restore the following tables from the backup</o>
+<t></t>
+</str>
+
+<str id="462">
+<new/>
+<o>Restore the tables to the following database</o>
+<t></t>
+</str>
+
+<str id="463">
+<new/>
+<o>Database</o>
+<t></t>
+</str>
+
+<str id="464">
+<new/>
+<o>Connections</o>
+<t></t>
+</str>
+
+<str id="465">
+<new/>
+<o>Database Backups</o>
+<t></t>
+</str>
+
+<str id="466">
+<new/>
+<o>Difference</o>
+<t></t>
+</str>
+
+<str id="467">
+<new/>
+<o>%d entries skipped. Present in log on disk</o>
+<t></t>
+</str>
+
+<str id="468">
+<new/>
+<o>This site listens to the following ports:</o>
+<t></t>
+</str>
+
+<str id="469">
+<new/>
+<o>Databases that will no longer be used</o>
+<t></t>
+</str>
+
+<str id="470">
+<new/>
+<o>If you do not want to delete this database, uncheck the checkmark in front of it</o>
+<t></t>
+</str>
+
+<str id="471">
+<new/>
+<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep</o>
+<t></t>
+</str>
+
+<str id="472">
+<new/>
+<o>%d entries skipped. Present in log on disk.</o>
+<t></t>
+</str>
+
+<str id="473">
+<new/>
+<o>Value</o>
+<t></t>
+</str>
+
+<str id="474">
+<new/>
+<o>Show changes</o>
+<t></t>
+</str>
+
+<str id="475">
+<new/>
+<o>Restore default value</o>
+<t></t>
+</str>
+
+<str id="476">
+<new/>
+<o>Change in content</o>
+<t></t>
+</str>
+
+<str id="477">
+<new/>
+<o>1 line added.</o>
+<t></t>
+</str>
+
+<str id="478">
+<new/>
+<o>%d lines added.</o>
+<t></t>
+</str>
+
+<str id="479">
+<new/>
+<o>1 line deleted.</o>
+<t></t>
+</str>
+
+<str id="480">
+<new/>
+<o>%d lines deleted.</o>
+<t></t>
+</str>
+
+<str id="481">
+<new/>
+<o>No difference
+</o>
+<t></t>
+</str>
+
+<str id="482">
+<new/>
+<o>Never</o>
+<t></t>
+</str>
+
+<str id="483">
+<new/>
+<o>Every %s hour(s).</o>
+<t></t>
+</str>
+
+<str id="484">
+<new/>
+<o>Day</o>
+<t></t>
+</str>
+
+<str id="485">
+<new/>
+<o>Sunday</o>
+<t></t>
+</str>
+
+<str id="486">
+<new/>
+<o>Monday</o>
+<t></t>
+</str>
+
+<str id="487">
+<new/>
+<o>Tuesday</o>
+<t></t>
+</str>
+
+<str id="488">
+<new/>
+<o>Wednesday</o>
+<t></t>
+</str>
+
+<str id="489">
+<new/>
+<o>Thursday</o>
+<t></t>
+</str>
+
+<str id="490">
+<new/>
+<o>Friday</o>
+<t></t>
+</str>
+
+<str id="491">
+<new/>
+<o>Saturday</o>
+<t></t>
+</str>
+
+<str id="492">
+<new/>
+<o>Every %s %s at %s o'clock.</o>
+<t></t>
+</str>
+
+<str id="493">
+<new/>
+<o>Every %d hour.</o>
+<t></t>
+</str>
+
+<str id="494">
+<new/>
+<o>Every %d %s at %02d:00</o>
+<t></t>
+</str>
+
+<str id="495">
+<new/>
+<o>Error in stored value.</o>
+<t></t>
+</str>
+
+<str id="496">
+<new/>
+<o>Value %s does not match the regexp %s.</o>
+<t></t>
+</str>
+
+<str id="497">
+<new/>
+<o>Value %s does not match the glob %s.</o>
+<t></t>
+</str>
+
+<str id="498">
+<new/>
+<o>Value %s must be at least %d characters long. (%d character short)</o>
+<t></t>
+</str>
+
+<str id="499">
+<new/>
+<o>Value %s must not be more than %d characters long. (%d character too long)</o>
+<t></t>
+</str>
+
+<str id="500">
+<new/>
+<o>Value %s is not uppercased.</o>
+<t></t>
+</str>
+
+<str id="501">
+<new/>
+<o>Value %s is not lowercased.</o>
+<t></t>
+</str>
+
+<str id="502">
+<new/>
+<o>Diff</o>
 <t></t>
 </str>

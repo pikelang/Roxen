@@ -143,30 +143,30 @@ string render_form( RequestID id, void|mapping additional_args )
 
   res = "<table>"
     "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
-    checked(0,0) + " /></td><td>" + LOCALE(91, "Never") + "</td></tr>\n";
+    checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
 
   inp1 = select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)query()[1]);
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='1' type='radio' " +
-    checked(0,1) + " /></td><td>" + sprintf( LOCALE(92, "Every %s hour(s)."), inp1) +
+    checked(0,1) + " /></td><td>" + sprintf( LOCALE(483, "Every %s hour(s)."), inp1) +
     "</td></tr>\n";
 
   inp1 = select(path()+"2", "123456789"/1, (string)query()[2]);
   inp2 = select(path()+"3", ({
-    ({ "0", LOCALE(93, "Day") }),
-    ({ "1", LOCALE(100, "Sunday") }),
-    ({ "2", LOCALE(94, "Monday") }),
-    ({ "3",  LOCALE(95, "Tuesday") }),
-    ({ "4", LOCALE(96, "Wednesday") }),
-    ({ "5", LOCALE(97, "Thursday") }),
-    ({ "6", LOCALE(98, "Friday") }),
-    ({ "7", LOCALE(99, "Saturday") }) }), (string)query()[3]);
+    ({ "0", LOCALE(484, "Day") }),
+    ({ "1", LOCALE(485, "Sunday") }),
+    ({ "2", LOCALE(486, "Monday") }),
+    ({ "3",  LOCALE(487, "Tuesday") }),
+    ({ "4", LOCALE(488, "Wednesday") }),
+    ({ "5", LOCALE(489, "Thursday") }),
+    ({ "6", LOCALE(490, "Friday") }),
+    ({ "7", LOCALE(491, "Saturday") }) }), (string)query()[3]);
   inp3 = select(path()+"4", "000102030405060708091011121314151617181920212223"/2,
 		sprintf("%02d", query()[4]));
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
     checked(0,2) + " /></td>\n<td>" +
-    sprintf(LOCALE(101, "Every %s %s at %s o'clock."), inp1, inp2, inp3) +
+    sprintf(LOCALE(492, "Every %s %s at %s o'clock."), inp1, inp2, inp3) +
     "</td></tr>\n</table>";
 
   return res;
@@ -177,23 +177,23 @@ string render_view( RequestID id, void|mapping additional_args )
   array res = query();
   switch(res[0]) {
     case 0:
-      return LOCALE(91, "Never");
+      return LOCALE(482, "Never");
     case 1:
-      return sprintf(LOCALE(108, "Every %d hour."), res[1]);
+      return sprintf(LOCALE(493, "Every %d hour."), res[1]);
     case 2:
       string period = ({
-	LOCALE(93, "Day"),
-	LOCALE(94, "Monday"),
-	LOCALE(95, "Tuesday"),
-	LOCALE(96, "Wednesday"),
-	LOCALE(97, "Thursday"),
-	LOCALE(98, "Friday"),
-	LOCALE(99, "Saturday"),
-	LOCALE(100, "Sunday")
+	LOCALE(484, "Day"),
+	LOCALE(486, "Monday"),
+	LOCALE(487, "Tuesday"),
+	LOCALE(488, "Wednesday"),
+	LOCALE(489, "Thursday"),
+	LOCALE(490, "Friday"),
+	LOCALE(491, "Saturday"),
+	LOCALE(485, "Sunday")
       })[query()[3]];
 
-      return sprintf(LOCALE(109, "Every %d %s at %02d:00"), res[2], period, res[4]);
+      return sprintf(LOCALE(494, "Every %d %s at %02d:00"), res[2], period, res[4]);
     default:
-      return LOCALE(110, "Error in stored value.");
+      return LOCALE(495, "Error in stored value.");
   }
 }

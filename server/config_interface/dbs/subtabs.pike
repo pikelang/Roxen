@@ -8,7 +8,7 @@ array pages =
 ({
   ({ "dbs",         "", "Edit Global Variables", 0, LOCALE(164, "Databases") }),
   ({ "backups",      "backups.html",   "Edit Global Variables",   0,
-     LOCALE(372, "Database Backups") }),
+     LOCALE(465, "Database Backups") }),
   ({ "status",      "status.html",   "View Settings",   0,  LOCALE(372, "MySQL status") }),
 });
 

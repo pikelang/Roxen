@@ -6,10 +6,10 @@
 
 mapping actions = ([
   // name         title                      function   must be internal
-  "move":   ({  _(0,"Copy or move database"),move_db,   0 }),
-  "delete": ({  _(0,"Delete this database"), delete_db, 0 }),
-  "clear":  ({  _(0,"Delete all tables"),    clear_db,  0 }),
-  "backup": ({  _(0,"Make a backup"),        backup_db, 1 }),
+  "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
+  "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
+  "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
+  "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
 ]);
 
 #define VERIFY(X) do {						\
@@ -38,15 +38,15 @@ mixed backup_db( string db, RequestID id )
     return 0;
   }
   return
-    "<b>"+_(0,"Directory")+":</b> <input name='dir' size='80' value='auto' /><br />"
+    "<b>"+_(405,"Directory")+":</b> <input name='dir' size='80' value='auto' /><br />"
     "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(0,"Ok")+"</submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
     "<td valign=top align=right><a href='"+Roxen.html_encode_string(id->not_query)+
       "?db="+
        Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
+    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
 }
 
 mixed move_db( string db, RequestID id )
@@ -58,11 +58,11 @@ mixed move_db( string db, RequestID id )
     {
       if( !strlen(id->variables->url) )
         warning= "<font color='&usr.warncolor;'>"
-	  +_(0,"Please specify an URL to define an external database")+
+	  +_(406,"Please specify an URL to define an external database")+
 	  "</font>";
       else if( catch( Sql.Sql( id->variables->url ) ) )
         warning = sprintf("<font color='&usr.warncolor;'>"+
-			  _(0,"It is not possible to connect to %s")+
+			  _(407,"It is not possible to connect to %s")+
 			  "</font>",
 			  id->variables->url );
     }
@@ -71,20 +71,20 @@ mixed move_db( string db, RequestID id )
       {
        case "":
          warning =  "<font color='&usr.warncolor;'>"+
-	   _(0,"Please specify a name for the database")+
+	   _(408,"Please specify a name for the database")+
 	   "</font>";
          break;
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
-                         _(0,"%s is an internal database, used by roxen."
+                         _(409,"%s is an internal database, used by roxen."
 			   "Please select another name")+
                          "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(0,"%s is a mysql keyword, used by mysql."
+			     _(410,"%s is a mysql keyword, used by mysql."
 			       "Please select another name")+
 			     "</font>", id->variables->name );
 	 break;
@@ -132,7 +132,7 @@ mixed move_db( string db, RequestID id )
 		       ["Create Table"] ) )
 	    {
 	      array res = odb->query( "DESCRIBE "+table );
-	      report_warning( _(0,"While copying %s.%s: "
+	      report_warning( _(411,"While copying %s.%s: "
 				"The source database does not "
 				"support %s.\nThe copy will not "
 				"contain all metadata")+"\n",
@@ -147,7 +147,7 @@ mixed move_db( string db, RequestID id )
 		// FIXME: A real keyword list here.
 		if( m->Field == "when" )
 		{
-		  report_warning( _(0,"The source database used the string "
+		  report_warning( _(412,"The source database used the string "
 				    "%s as a fieldname.\nThis is reserved in "
 				    "newer MySQL versions.\nSubstituting "
 				    "with %s")+"\n",
@@ -181,7 +181,7 @@ mixed move_db( string db, RequestID id )
 	    }
 	  })
 	  {
-	    report_error( _(0,"Failed to copy data from source table.\n")+
+	    report_error( _(413,"Failed to copy data from source table.\n")+
 			  describe_error( err )+"\n" );
 	    break;
 	  }
@@ -218,21 +218,21 @@ mixed move_db( string db, RequestID id )
     id->variables->url  = DBManager.db_url( db ) || "";
 
   return
-    "<gtext scale=0.6>"+_(0,"Move or copy this database")+"</gtext><br />\n"
+    "<gtext scale=0.6>"+_(414,"Move or copy this database")+"</gtext><br />\n"
     +warning+
     "<table>\n"
-    "<tr><td><b>"+_(0,"Action")+":</b></td>"
+    "<tr><td><b>"+_(415,"Action")+":</b></td>"
     "<td><default variable='form.what'><select name=what>\n"
 //     "   <option value='copy'>"+_(0,"Move but do not delete old data")+
 //     "</option>\n"
-    "   <option value='dup'>"+_(0,"Copy the data to a new database")+
+    "   <option value='dup'>"+_(416,"Copy the data to a new database")+
     "</option>\n"
-    "   <option value='move'>"+_(0,"Move database")+"</option>\n"
+    "   <option value='move'>"+_(417,"Move database")+"</option>\n"
     "  </select></default>\n"
     "  <tr>\n"
-    "    <td><b>"+ _(0,"New name")+
+    "    <td><b>"+ _(418,"New name")+
     ":</b></td> <td><input name='name' value='&form.name;'/></td>\n"
-    "<td><b>"+_(0,"Type")+":</b></td> <td width='100%'>\n"
+    "<td><b>"+_(419,"Type")+":</b></td> <td width='100%'>\n"
 #"   <default variable=form.type><select name=type>
        <option value='internal'>  Internal  </option>
        <option value='external'>  External  </option>
@@ -242,7 +242,7 @@ mixed move_db( string db, RequestID id )
   <tr>
   <td valign=top colspan='2'>
     <i>"+
-    _(0,"The new name of the database. You do not have to change the "
+    _(420,"The new name of the database. You do not have to change the "
       "name if you change the database type from internal to external, "
       "or change the URL of an external database. To make it easy on "
       "your users, use all lowercaps characters, and avoid hard to type "
@@ -253,7 +253,7 @@ mixed move_db( string db, RequestID id )
     "<td valign=top colspan='2' width='100%'>\n"
 
     "<i>"+
-    _(0,"The database type. Internal means that it will be stored"
+    _(421,"The database type. Internal means that it will be stored"
       " in the Roxen MySQL database, and the permissions of the"
       " database will be automatically manged by Roxen. External"
       " means that the database resides in another database.")+"</i>\n"
@@ -264,24 +264,24 @@ mixed move_db( string db, RequestID id )
     "<td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
     "</tr>\n"
     "<tr><td colspan='4'><i>\n"+
-    _(0,"This URL is only used for </i>External<i> databases, it is "
+    _(422,"This URL is only used for </i>External<i> databases, it is "
       "totally ignored for databases defined internally in Roxen ")+
     "\n</i>\n"
     "</td></tr>\n"
     "</table>\n"+
     "<table width='100%'><tr><td>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(0,"Ok")+"</submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
     "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
       "?db="+
        Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
+    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
 }
 
 mixed delete_db( string db, RequestID id )
 {
-  VERIFY(_(0,"Are you sure you want to delete the database %s?"));
-  report_notice( _(0,"The database %s was deleted by %s")+"\n",
+  VERIFY(_(423,"Are you sure you want to delete the database %s?"));
+  report_notice( _(424,"The database %s was deleted by %s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
   return Roxen.http_redirect( "/dbs/", id );
@@ -289,7 +289,7 @@ mixed delete_db( string db, RequestID id )
 
 mixed clear_db( string db, RequestID id )
 {
-  VERIFY(_(0,"Are you sure you want to delete all tables in %s?"));
+  VERIFY(_(425,"Are you sure you want to delete all tables in %s?"));
   Sql.Sql sq = DBManager.get( db );
   foreach( sq->query( "show tables" ), mapping r )
     sq->query( "drop table "+values(r)[0] );
@@ -489,7 +489,7 @@ mapping|string parse( RequestID id )
 	  sprintf((string)_(380,"While running %s: %s"), q,describe_error(e) )+
 	  "</td></tr>\n";
       qres += "</table>"+
-	sprintf( _(385,"Query took %[0].3fs, %[1]d rows in the reply")+
+	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
 		 "\n<br />", qtime, qrows);
     }
   }
@@ -516,18 +516,18 @@ mapping|string parse( RequestID id )
 	  replace(mi->module,"#","!")+"/"+
 	  "'>"+i->get_name()+"</a> in "+c->query_name();
       else if( i )
-	mn =  sprintf((string)_(0,"the deleted module %s from %s"),
+	mn =  sprintf((string)_(427,"the deleted module %s from %s"),
 		      i->get_name(), mi->conf );
-      res=sprintf((string)_(0,"Defined by %s"),mn)+"<br />";
+      res=sprintf((string)_(428,"Defined by %s"),mn)+"<br />";
     }
 
     sscanf( mi->comment, "%s\0%s", mi->tbl, mi->comment );
     if( mi->tbl && mi->tbl != table)
       if( mi->tbl != (string)0 )
-	return sprintf(_(0,"The table is known as '%s' in the module"),
+	return sprintf(_(429,"The table is known as '%s' in the module"),
 		       mi->tbl )+"<br />"+res+mi->comment;
       else
-	return sprintf(_(0,"The table is an anymous table defined by "
+	return sprintf(_(430,"The table is an anymous table defined by "
 			 "the module"), mi->tbl )+
 	  "<br />"+res+mi->comment;
 

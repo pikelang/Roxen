@@ -21,44 +21,44 @@ string parse( RequestID id )
      id->conf->find_module( "config_filesystem#0" )->stat_file;
 
   docs += "<a href='"+path("whatsnew.html")+"'>"+
-    _(0,"Release notes")+"</a><br />";
+    _(390,"Release notes")+"</a><br />";
   
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
     if( exists(  rpath + "creator/index.html" ) )
       docs += "<a href='"+path(rpath+"creator/")+"'>"+
-	_(0,"Web Site Creator")+"</a><br />";
+	_(391,"Web Site Creator")+"</a><br />";
 
     if( exists( rpath + "administrator/index.html" ) )
       docs += "<a href='"+path(rpath+ "administrator/")+"'>"+
-	_(0,"Administrator Manual")+"</a><br />";
+	_(392,"Administrator Manual")+"</a><br />";
 
     if( exists( rpath + "user/index.html" ) )
       docs += "<a href='"+path(rpath+ "user/")+"'>"+
-	_(0,"User Manual")+"</a><br />";
+	_(393,"User Manual")+"</a><br />";
 
     if( exists( rpath + "tutorial/rxml/index.html" ) )
       docs += "<a href='"+path(rpath+ "tutorial/rxml/")+"'>"+
-	_(0,"RXML Tutorial")+"</a><br />";
+	_(394,"RXML Tutorial")+"</a><br />";
     else if( exists( rpath + "rxml_tutorial/index.html" ) )
       docs += "<a href='"+path(rpath+ "rxml_tutorial/")+"'>"+
-	_(0,"RXML Tutorial")+"</a><br />";
+	_(394,"RXML Tutorial")+"</a><br />";
 
     if( exists( rpath+"programmer/index.html") )
       docs += "<a href='"+path(rpath+ "programmer/")+"'>"+
-	_(0,"Programmer Manual")+"</a><br />";
+	_(395,"Programmer Manual")+"</a><br />";
   }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
     if( exists( ppath+"tutorial/index.html") )
       docs += "<a href='"+path(ppath+ "tutorial/")+"'>"+
-	_(0,"Pike Tutorial")+"</a><br />";
+	_(396,"Pike Tutorial")+"</a><br />";
   }
 
   if( docs == "" )
     docs="<font color='&usr.warncolor;'>"+
-      _(0,"No documentation found at all")+"</font>";
+      _(397,"No documentation found at all")+"</font>";
 
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }

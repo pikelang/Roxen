@@ -23,8 +23,8 @@ mapping|string parse( RequestID id )
       mapping done = ([ ]);
       res += "<gtext scale='0.6'>"+bk+"</gtext>";
       res += "<table>";
-      res += "<tr><td></td><td><b>"+_(0,"Directory")+"</b></td><td><b>"+
-	_(0,"Date")+"</b></td></tr>\n";
+      res += "<tr><td></td><td><b>"+_(405,"Directory")+"</b></td><td><b>"+
+	_(459,"Date")+"</b></td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {
@@ -35,10 +35,10 @@ mapping|string parse( RequestID id )
 	    ({ b->tbl }),
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&dir="+Roxen.html_encode_string( b->directory )+"'>"+
-	    "<gbutton>"+_(0,"Restore")+"</gbutton></a>"
+	    "<gbutton>"+_(460,"Restore")+"</gbutton></a>"
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&dir="+Roxen.html_encode_string( b->directory )+"&drop=1'>"+
-	    "<gbutton>"+_(0,"Delete")+"</gbutton></a>"
+	    "<gbutton>"+_(227,"Delete")+"</gbutton></a>"
 	  });
 	}
 	else
@@ -82,7 +82,7 @@ mapping|string parse( RequestID id )
 	  possible += ({ bk->tbl });
 
       res += "<gtext scale=0.5>"+
-	_(0,"Restore the following tables from the backup")+
+	_(461,"Restore the following tables from the backup")+
 	"</gtext> <br />"
 	"<input type=hidden name=db value='&form.db:http;' />"
 	"<input type=hidden name=dir value='&form.dir:http;' />";
@@ -106,7 +106,7 @@ mapping|string parse( RequestID id )
 
       res +=
 	"</blockquote><gtext scale='0.5'>"+
-	_(0,"Restore the tables to the following database")
+	_(462,"Restore the tables to the following database")
 	+"</gtext><blockquote>";
 
       res += "<select name='todb'>";
@@ -120,9 +120,9 @@ mapping|string parse( RequestID id )
       res += "</select>";
       
       res += "</blockquote><table width='100%'><tr><td>"
-	"<submit-gbutton2 name='ok'>"+_(0,"Ok")+"</submit-gbutton2></td>\n"
+	"<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
 	"<td align=right><a href=''><gbutton> "+
-	_(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
+	_(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
     }
   }
   if( !id->variables->db )

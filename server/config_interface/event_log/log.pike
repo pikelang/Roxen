@@ -19,7 +19,7 @@ string parse( RequestID id )
 				id->misc->cf_locale, 2);
   if( sizeof( report ) >= 1000 )
     report[1000] =
-      sprintf(LOCALE(386,"%d entries skipped. Present in log on disk"),
+      sprintf(LOCALE(467,"%d entries skipped. Present in log on disk"),
 	      sizeof( report )-999 );
   return "</dl>"+(sizeof(report)?(report[..1000]*""):LOCALE(250, "Empty"))+"<dl>";
 }

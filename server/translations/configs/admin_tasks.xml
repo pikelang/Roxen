@@ -5,7 +5,6 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/admin_tasks.xml</xmlpath>
 
-  <file>../base_server/roxen.pike</file>
   <file>../config_interface/actions/cachestatus.pike</file>
   <file>../config_interface/actions/change_version.pike</file>
   <file>../config_interface/actions/debug_info.pike</file>

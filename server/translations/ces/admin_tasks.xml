@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>ces</language>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
@@ -63,12 +62,6 @@
 <o>Features</o>
 <t>Vlastnosti</t>
 </str>
-
-
-
-
-
-
 
 <str id="8">
 <new/>

@@ -126,8 +126,8 @@ string render_view( RequestID id, void|mapping additional_args )
 
   if(sizeof(val))
   {
-    res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(0,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
+      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
@@ -154,8 +154,8 @@ string render_form( RequestID id, void|mapping additional_args )
   mapping val = query();
 
   if(sizeof(val)) {
-    res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(0,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
+      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
 
     foreach( sort(indices(val)), mixed var ) {
       res += "<tr>\n<td><font size='-1'>"+

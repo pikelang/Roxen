@@ -27,7 +27,7 @@ mapping|string parse( RequestID id )
   array q = sql->query( "SHOW databases" )->Database;
 
   res += "<b><font size=+1>"+
-    _(0,"When the group is created, the checked databases will "
+    _(435,"When the group is created, the checked databases will "
       "be imported as well")+"</b></font>";
   
   res += "<table>";

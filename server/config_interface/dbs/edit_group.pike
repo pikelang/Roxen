@@ -34,7 +34,7 @@ string parse( RequestID id )
   
 
   res += "</table>";
-  res += sprintf("<font size=+1><b>"+_(0,"Databases in the group %s")+
+  res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
 		 "</b></font><br />", c->lname );
 
   res += "<dl>";

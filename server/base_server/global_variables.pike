@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.79 2001/08/22 15:41:36 per Exp $
+// $Id: global_variables.pike,v 1.80 2001/08/24 14:45:14 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -556,8 +556,8 @@ void define_global_variables(  )
   
   defvar("suicide_schedule",
 	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
-			    LOCALE(0,"Auto Restart: Schedule"),
-			    LOCALE(0, "Automatically restart the "
+			    LOCALE(387,"Auto Restart: Schedule"),
+			    LOCALE(388, "Automatically restart the "
 				   "server according to this schedule.") ) )
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.63 2001/08/17 19:32:36 per Exp $
+// $Id: module.pmod,v 1.64 2001/08/24 14:44:26 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -60,7 +60,7 @@ string get_diff_def_html( Variable v,
 			      Roxen.make_container(
 				button_tag,
 				([]),
-				LOCALE(0,"Show changes")
+				LOCALE(474,"Show changes")
 			      ) );
     }
   }
@@ -68,7 +68,7 @@ string get_diff_def_html( Variable v,
   return diff_button + " " +
     Roxen.make_container( "a",m,
 	Roxen.make_container( button_tag, ([]),
-			      LOCALE(0, "Restore default value" )+
+			      LOCALE(475, "Restore default value" )+
 			      (oneliner||"") ) );
 
 }
@@ -138,11 +138,11 @@ class Diff
     }
     if (!hide_header)
       r =
-        "<b>" + LOCALE(201, "Change in content") + "</b><br />\n"+
-        "<i>"+(added==1? LOCALE(452, "1 line added."):
-               sprintf(LOCALE(453, "%d lines added."), added)) + " " +
-               (deleted==1? LOCALE(454, "1 line deleted."):
-                sprintf(LOCALE(455, "%d lines deleted."), deleted)) +
+        "<b>" + LOCALE(476, "Change in content") + "</b><br />\n"+
+        "<i>"+(added==1? LOCALE(477, "1 line added."):
+               sprintf(LOCALE(478, "%d lines added."), added)) + " " +
+               (deleted==1? LOCALE(479, "1 line deleted."):
+                sprintf(LOCALE(480, "%d lines deleted."), deleted)) +
         "</i><p>\n"+
         r;
     return r;
@@ -804,7 +804,7 @@ class Text
 	if( sizeof(diff->get()) )
 	  return diff->html();
 	else
-	  return "<i>"+LOCALE(0,"No difference\n" )+"</i>";
+	  return "<i>"+LOCALE(481,"No difference\n" )+"</i>";
     }
   }
 
