@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.37 1998/11/22 17:07:26 per Exp $ */
+/* $Id: module.pike,v 1.38 1999/01/21 23:31:24 marcus Exp $ */
 
 #include <module.h>
 
@@ -40,13 +40,24 @@ string file_name_and_stuff()
 	  (this->cvs_version?"<b>CVS Version: </b>"+fix_cvs(this->cvs_version)+"<nr>\n":""));
 }
 
+static private object _my_configuration;
+
 object my_configuration()
 {
+  if(_my_configuration)
+    return _my_configuration;
   object conf;
   foreach(roxen->configurations, conf)
     if(conf->otomod[this])
       return conf;
   return 0;
+}
+
+nomask void set_configuration(object c)
+{
+  if(_my_configuration && _my_configuration != c)
+    error("set_configuration() called twice.\n");
+  _my_configuration = c;
 }
 
 string module_creator;
@@ -371,6 +382,13 @@ int setvars( mapping (string:mixed) vars )
 string comment()
 {
   return "";
+}
+
+string query_internal_location()
+{
+  if(!_my_configuration)
+    error("Please do not call this function from create()!\n");
+  return _my_configuration->query_internal_location(this_object());
 }
 
 /* Per default, return the value of the module variable 'location' */

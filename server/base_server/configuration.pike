@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.175 1999/01/14 00:53:17 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.176 1999/01/21 23:31:21 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -153,6 +153,10 @@ int definvisvar(string var, mixed value, int type)
   return defvar(var, value, "", type, "", 0, 1);
 }
 
+string query_internal_location(object|void mod)
+{
+  return QUERY(InternalLoc)+(mod? replace(otomod[mod]||"", "#", "!")+"/":"");
+}
 
 string query_name()
 {
@@ -1266,165 +1270,238 @@ mapping|int low_get_file(object id, int|void no_magic)
       }
       TRACE_LEAVE("");
     }
+
+    if(!search(file, QUERY(InternalLoc))) 
+    {
+      TRACE_ENTER(LOCALE->magic_internal_module_location(), 0);
+      object module;
+      string name, rest;
+      function find_internal;
+      if(2==sscanf(file[strlen(QUERY(InternalLoc))..], "%s/%s", name, rest) &&
+	 (module = find_module(replace(name, "!", "#"))) &&
+	 (find_internal = module->find_internal))
+      {
+#ifdef MODULE_LEVEL_SECURITY
+	if(tmp2 = check_security(find_internal, id, slevel))
+	  if(intp(tmp2))
+	  {
+	    TRACE_LEAVE(LOCALE->module_access_denied());
+	    find_internal = 0;
+	  } else {
+	    TRACE_LEAVE("");
+	    TRACE_LEAVE(LOCALE->request_denied());
+	    return tmp2;
+	  }
+	if(find_internal)
+#endif
+	{
+	  TRACE_ENTER(LOCALE->calling_find_internal(), 0);
+	  LOCK(find_internal);
+	  fid=find_internal( rest, id );
+	  UNLOCK();
+	  TRACE_LEAVE(LOCALE->find_internal_returned(fid));
+	  if(fid)
+	  {
+	    if(mappingp(fid))
+	    {
+	      TRACE_LEAVE("");
+	      TRACE_LEAVE(examine_return_mapping(fid));
+	      return fid;
+	    }
+	    else
+	    {
+#ifdef MODULE_LEVEL_SECURITY
+	      int oslevel = slevel;
+	      slevel = misc_cache[ find_internal ][1];
+	      // misc_cache from
+	      // check_security
+	      id->misc->seclevel = slevel;
+#endif
+	      if(objectp(fid))
+		TRACE_LEAVE(LOCALE->returned_fd()
+#ifdef MODULE_LEVEL_SECURITY
+			    +(slevel != oslevel?
+			      LOCALE->seclevel_is_now(slevel):"")
+#endif
+			    +".");
+	      else
+		TRACE_LEAVE(LOCALE->returned_directory_indicator()
+#ifdef MODULE_LEVEL_SECURITY
+			    +(oslevel != slevel?
+			      LOCALE->seclevel_is_now(slevel):"")
+#endif
+			    );
+	    }
+	  } else
+	    TRACE_LEAVE("");
+	} else
+	  TRACE_LEAVE("");
+      } else
+	TRACE_LEAVE("");
+    }
   }
 
   // Well, this just _might_ be somewhat over-optimized, since it is
   // quite unreadable, but, you cannot win them all.. 
+  if(!fid)
+  {
 #ifdef URL_MODULES
   // Map URL-modules
-  foreach(url_modules(id), funp)
-  {
-    LOCK(funp);
-    TRACE_ENTER(LOCALE->url_module(), funp);
-    tmp=funp( id, file );
-    UNLOCK();
+    foreach(url_modules(id), funp)
+    {
+      LOCK(funp);
+      TRACE_ENTER(LOCALE->url_module(), funp);
+      tmp=funp( id, file );
+      UNLOCK();
     
-    if(mappingp(tmp)) 
-    {
+      if(mappingp(tmp)) 
+      {
+	TRACE_LEAVE("");
+	TRACE_LEAVE(LOCALE->returning_data());
+	return tmp;
+      }
+      if(objectp( tmp ))
+      {
+	array err;
+	
+	nest ++;
+	err = catch {
+	  if( nest < 20 )
+	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
+	  else
+	  {
+	    TRACE_LEAVE(LOCALE->too_deep_recursion());
+	    error("Too deep recursion in roxen::get_file() while mapping "
+		  +file+".\n");
+	  }
+	};
+	nest = 0;
+	if(err) throw(err);
+	TRACE_LEAVE("");
+	TRACE_LEAVE(LOCALE->returning_data());
+	return tmp;
+      }
       TRACE_LEAVE("");
-      TRACE_LEAVE(LOCALE->returning_data());
-      return tmp;
     }
-    if(objectp( tmp ))
-    {
-      array err;
-
-      nest ++;
-      err = catch {
-	if( nest < 20 )
-	  tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
-	else
-	{
-	  TRACE_LEAVE(LOCALE->too_deep_recursion());
-	  error("Too deep recursion in roxen::get_file() while mapping "
-		+file+".\n");
-	}
-      };
-      nest = 0;
-      if(err) throw(err);
-      TRACE_LEAVE("");
-      TRACE_LEAVE(LOCALE->returning_data());
-      return tmp;
-    }
-    TRACE_LEAVE("");
-  }
 #endif
 #ifdef EXTENSION_MODULES  
-  if(tmp=extension_modules(loc=extension(file), id))
-  {
-    foreach(tmp, funp)
+    if(tmp=extension_modules(loc=extension(file), id))
     {
-      TRACE_ENTER(LOCALE->extension_module(loc), funp);
-      LOCK(funp);
-      tmp=funp(loc, id);
-      UNLOCK();
-      if(tmp)
+      foreach(tmp, funp)
       {
-	if(!objectp(tmp)) 
+	TRACE_ENTER(LOCALE->extension_module(loc), funp);
+	LOCK(funp);
+	tmp=funp(loc, id);
+	UNLOCK();
+	if(tmp)
 	{
-	  TRACE_LEAVE(LOCALE->returning_data());
-	  return tmp;
-	}
-	fid = tmp;
+	  if(!objectp(tmp)) 
+	  {
+	    TRACE_LEAVE(LOCALE->returning_data());
+	    return tmp;
+	  }
+	  fid = tmp;
 #ifdef MODULE_LEVEL_SECURITY
-	slevel = function_object(funp)->query("_seclvl");
+	  slevel = function_object(funp)->query("_seclvl");
 #endif
-	TRACE_LEAVE(LOCALE->returned_fd()
+	  TRACE_LEAVE(LOCALE->returned_fd()
 #ifdef MODULE_LEVEL_SECURITY
-		    +(slevel != id->misc->seclevel?
-		    LOCALE->seclevel_is_now(slevel):"")
+		      +(slevel != id->misc->seclevel?
+			LOCALE->seclevel_is_now(slevel):"")
 #endif
-		    );
+		      );
 #ifdef MODULE_LEVEL_SECURITY
-	id->misc->seclevel = slevel;
-#endif
-	break;
-      } else
-	TRACE_LEAVE("");
-    }
-  }
-#endif 
- 
-  foreach(location_modules(id), tmp)
-  {
-    loc = tmp[0];
-    if(!search(file, loc)) 
-    {
-      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
-#ifdef MODULE_LEVEL_SECURITY
-      if(tmp2 = check_security(tmp[1], id, slevel))
-	if(intp(tmp2))
-	{
-	  TRACE_LEAVE(LOCALE->module_access_denied());
-	  continue;
-	} else {
-	  TRACE_LEAVE(LOCALE->request_denied());
-	  return tmp2;
-	}
-#endif
-      TRACE_ENTER(LOCALE->calling_find_file(), 0);
-      LOCK(tmp[1]);
-      fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
-      UNLOCK();
-      TRACE_LEAVE(LOCALE->find_file_returned(fid));
-      if(fid)
-      {
-	id->virtfile = loc;
-
-	if(mappingp(fid))
-	{
-	  TRACE_LEAVE("");
-	  TRACE_LEAVE(examine_return_mapping(fid));
-	  return fid;
-	}
-	else
-	{
-#ifdef MODULE_LEVEL_SECURITY
-	  int oslevel = slevel;
-	  slevel = misc_cache[ tmp[1] ][1];
-	  // misc_cache from
-	  // check_security
 	  id->misc->seclevel = slevel;
 #endif
-	  if(objectp(fid))
-	    TRACE_LEAVE(LOCALE->returned_fd()
-#ifdef MODULE_LEVEL_SECURITY
-			+(slevel != oslevel?
-			  LOCALE->seclevel_is_now(slevel):"")
-#endif
-			
-			+".");
-	  else
-	    TRACE_LEAVE(LOCALE->returned_directory_indicator()
-#ifdef MODULE_LEVEL_SECURITY
-			+(oslevel != slevel?
-			  LOCALE->seclevel_is_now(slevel):"")
-#endif
-			);
 	  break;
-	}
-      } else
-	TRACE_LEAVE("");
-    } else if(strlen(loc)-1==strlen(file)) {
-      // This one is here to allow accesses to /local, even if 
-      // the mountpoint is /local/. It will slow things down, but...
-      if(file+"/" == loc) 
+	} else
+	  TRACE_LEAVE("");
+      }
+    }
+#endif 
+ 
+    foreach(location_modules(id), tmp)
+    {
+      loc = tmp[0];
+      if(!search(file, loc)) 
       {
-	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
-	TRACE_LEAVE(LOCALE->returning_data());
-
-	// Keep query (if any).
-	/* FIXME: Should probably keep prestate etc.
-	 *	/grubba 1999-01-14
-	 */
-	string new_query = http_encode_string(id->not_query) + "/" +
-	  (id->query?("?"+id->query):"");
-
-	return http_redirect(new_query, id);
+	TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
+#ifdef MODULE_LEVEL_SECURITY
+	if(tmp2 = check_security(tmp[1], id, slevel))
+	  if(intp(tmp2))
+	  {
+	    TRACE_LEAVE(LOCALE->module_access_denied());
+	    continue;
+	  } else {
+	    TRACE_LEAVE("");
+	    TRACE_LEAVE(LOCALE->request_denied());
+	    return tmp2;
+	  }
+#endif
+	TRACE_ENTER(LOCALE->calling_find_file(), 0);
+	LOCK(tmp[1]);
+	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
+	UNLOCK();
+	TRACE_LEAVE(LOCALE->find_file_returned(fid));
+	if(fid)
+	{
+	  id->virtfile = loc;
+	  
+	  if(mappingp(fid))
+	  {
+	    TRACE_LEAVE("");
+	    TRACE_LEAVE(examine_return_mapping(fid));
+	    return fid;
+	  }
+	  else
+	  {
+#ifdef MODULE_LEVEL_SECURITY
+	    int oslevel = slevel;
+	    slevel = misc_cache[ tmp[1] ][1];
+	    // misc_cache from
+	    // check_security
+	    id->misc->seclevel = slevel;
+#endif
+	    if(objectp(fid))
+	      TRACE_LEAVE(LOCALE->returned_fd()
+#ifdef MODULE_LEVEL_SECURITY
+			  +(slevel != oslevel?
+			    LOCALE->seclevel_is_now(slevel):"")
+#endif
+			  
+			  +".");
+	    else
+	      TRACE_LEAVE(LOCALE->returned_directory_indicator()
+#ifdef MODULE_LEVEL_SECURITY
+			  +(oslevel != slevel?
+			    LOCALE->seclevel_is_now(slevel):"")
+#endif
+			  );
+	    break;
+	  }
+	} else
+	  TRACE_LEAVE("");
+      } else if(strlen(loc)-1==strlen(file)) {
+	// This one is here to allow accesses to /local, even if 
+	// the mountpoint is /local/. It will slow things down, but...
+	if(file+"/" == loc) 
+	{
+	  TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
+	  TRACE_LEAVE(LOCALE->returning_data());
+	  
+	  // Keep query (if any).
+	  /* FIXME: Should probably keep prestate etc.
+	   *	/grubba 1999-01-14
+	   */
+	  string new_query = http_encode_string(id->not_query) + "/" +
+	    (id->query?("?"+id->query):"");
+	  
+	  return http_redirect(new_query, id);
+	}
       }
     }
   }
-  
+
   if(fid == -1)
   {
     if(no_magic)
@@ -2385,6 +2462,7 @@ object enable_module( string modname )
     }
   }
 
+  me->set_configuration(this_object());
 #ifdef MODULE_DEBUG
   //    perror("Initializing ");
 #endif
@@ -3112,6 +3190,7 @@ int load_module(string module_file)
     return 0;
   }
 
+  obj->set_configuration(this_object());
   if (err = catch (module_data = obj->register_module(this_object()))) {
 #ifdef MODULE_DEBUG
     perror("FAILED\n" + describe_backtrace( err ));
@@ -3653,8 +3732,22 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
  skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
  tomma strängen för att stänga av verifieringen av användarskal");
 
+  defvar("InternalLoc", "/_internal/", 
+	 "Internal module resource mountpoint", TYPE_LOCATION|VAR_MORE,
+         "Some modules may want to create links to internal resources.  "
+	 "This setting configures an internally handled location that can "
+	 "be used for such purposes.  Simply select a location that you are "
+	 "not likely to use for regular resources.");
+  deflocaledoc("svenska", "InternalLoc", 
+	       "Intern modulresursmountpoint",
+#"Somliga moduler kan vilja skapa länkar till interna resurser.
+  Denna inställning konfigurerar en internt hanterad location som kan användas
+  för sådana ändamål.  Välj bara en location som du förmodligen inte kommer
+  behöva för vanliga resurser.");
+
   setvars(retrieve("spider#0", this));
 }
+
 
 
 
