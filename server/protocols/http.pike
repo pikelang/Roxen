@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.263 2000/08/31 03:00:34 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.264 2000/08/31 03:16:37 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1916,6 +1916,13 @@ void handle_request( )
   send_result();
 }
 
+void adjust_for_config_path( string p )
+{
+  if( not_query )  not_query = not_query[ strlen(p).. ];
+  raw_url = raw_url[ strlen(p).. ];
+  misc->stite_prefix_path = p;
+}
+
 /* We got some data on a socket.
  * =================================================
  */
@@ -1989,9 +1996,9 @@ void got_data(mixed fooid, string s)
   TIMER("charset");
 
   string path;
-  if( !conf || 
-      !(path = port_obj->path ) 
-      || (sizeof( path ) && not_query[..sizeof(path) - 1] != path) )
+  if( !conf || !(path = port_obj->path ) 
+      || (sizeof( path ) 
+          && not_query[..sizeof(path) - 1] != path) )
   {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
@@ -2004,10 +2011,7 @@ void got_data(mixed fooid, string s)
                                               this_object());
   }
   else if( strlen(path) )
-  {
-    raw_url = raw_url[strlen(path)..];
-    misc->site_prefix_path = path;
-  }
+    adjust_for_config_path( path );
 
   TIMER("conf");
 

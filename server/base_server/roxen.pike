@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.538 2000/08/28 15:20:51 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.539 2000/08/31 03:16:36 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -696,6 +696,8 @@ class Protocol
 
 
 
+#define INIT(X) do{mapping _=(X);string __=_->path;c=_->conf;if(__&&id->adjust_for_config_path) id->adjust_for_config_path(__);if(!c->inited)c->enable_all_modules(); } while(0)
+
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
@@ -706,20 +708,8 @@ class Protocol
     object c;
     if( sizeof( urls ) == 1 )
     {
-      if(!mu) 
-      {
-        mu = urls[sorted_urls[0]];
-        if(!(c=mu->conf)->inited) 
-          c->enable_all_modules();
-      } else
-        c = mu->conf;
-      if( mu->path )
-      {
-        if( id->not_query )
-          id->not_query = id->not_query[strlen(mu->path)..];
-        id->raw_url = id->raw_url[strlen(mu->path)..];
-        id->misc->site_prefix_path = mu->path;
-      }
+      if(!mu) mu=urls[sorted_urls[0]];
+      INIT( mu );
       return c;
     }
 
@@ -731,14 +721,7 @@ class Protocol
     {
       if( glob( in+"*", url ) )
       {
-	if( urls[in]->path )
-        {
-          if( id->not_query )
-            id->not_query = id->not_query[strlen(mu->path)..];
-          id->raw_url = id->raw_url[strlen(mu->path)..];
-          id->misc->site_prefix_path = urls[in]->path;
-        }
-        if(!(c=urls[ in ]->conf)->inited) c->enable_all_modules();
+        INIT( urls[in] );
 	return c;
       }
     }
@@ -747,14 +730,12 @@ class Protocol
       return 0;
     
     // No host matched, or no host header was included in the request.
-    // Is the port in the '*' ports?
+    // Is the URL in the '*' ports?
     mixed i;
-    if( !functionp(sp_fcfu)
-	&& ( i=open_ports[ name ][ 0 ][ port ] ) )
+    if( !functionp(sp_fcfu) && ( i=open_ports[ name ][ 0 ][ port ] ) )
       sp_fcfu = i->find_configuration_for_url;
     
-    if( sp_fcfu
-	&& (sp_fcfu != find_configuration_for_url)
+    if( sp_fcfu && (sp_fcfu != find_configuration_for_url)
 	&& (i = sp_fcfu( url, id, 1 )))
       return i;
     
@@ -768,19 +749,17 @@ class Protocol
     if( sizeof( choices ) )
     {
       // First pick default servers bound to this port
-      foreach( values(urls), mapping c )
-	if( choices[ c->conf ] )
+      foreach( values(urls), mapping cc )
+	if( choices[ cc->conf ] )
 	{
-          if( id->not_query )
-            id->not_query = id->not_query[strlen(mu->path)..];
-          id->raw_url = id->raw_url[strlen(mu->path)..];
-	  id->misc->site_prefix_path = c->path;
-	  if(c->conf->inited) 
-	    c->conf->enable_all_modules();
-	  return c->conf;
+          INIT( cc );
+	  return c;
 	}
+
       // if there is no such servers, pick the first default server
-      // available.
+      // available. FIXME: This makes it impossible to handle the
+      // server path correctly.
+
       c = ((array)choices)[0];
       if(!c->inited) c->enable_all_modules();
       return c;
@@ -789,8 +768,7 @@ class Protocol
 
     // if we end up here, there is no default port at all available
     // so grab the first configuration that is available at all.
-    if(!(c = urls[sorted_urls[0]]->conf)->inited)
-      c->enable_all_modules();
+    INIT( urls[sorted_urls[0]] );
     id->misc->defaulted=1;
     return c;
   }
