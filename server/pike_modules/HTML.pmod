@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.5 2001/11/16 16:07:21 nilsson Exp $
+// $Id: HTML.pmod,v 1.6 2002/12/03 01:15:06 mani Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
@@ -241,7 +241,8 @@ class OBox {
 
   //! Ensures that all rows have the same number of cells.
   void pad_rows() {
-    rows = ::pad_rows(rows, "<td bgcolor='" + cell_color + "'>&nbsp;</td>");
+    rows = global::pad_rows(rows, "<td bgcolor='" + cell_color +
+			    "'>&nbsp;</td>");
   }
 
   //! Returns the result.

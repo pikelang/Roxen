@@ -20,7 +20,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version = "$Id: userdb_ex.pike,v 1.6 2002/11/11 01:51:57 mani Exp $";
+constant cvs_version = "$Id: userdb_ex.pike,v 1.7 2002/12/03 01:15:51 mani Exp $";
 constant module_name = "RefDoc for MODULE_USERDB";
 constant  module_doc =
   ("This module does nothing special, it implements a simple "
@@ -179,7 +179,7 @@ class ExGroup
   {
     // All our users are members of this group, the default
     // implementation would work, bit it would be rather inefficient.
-    return ::list_users();
+    return UserDB::list_users();
   }
 }
 
