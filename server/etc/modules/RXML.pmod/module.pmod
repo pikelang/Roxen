@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.233 2001/08/22 17:28:22 wellhard Exp $
+// $Id: module.pmod,v 1.234 2001/08/22 22:19:08 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -421,7 +421,9 @@ class Tag
 	  _ctx->state_updated = orig_state_updated;			\
 	  p_code->add_frame (_ctx, _frame, PCode);			\
 	}								\
-	throw (err);							\
+	ctx->handle_exception (						\
+	  err, _parser); /* Will rethrow unknown errors. */		\
+	_res = nil;							\
       }									\
   } while (0)
 
@@ -1874,9 +1876,9 @@ class Context
 	  else
 	    msg = err->msg;
 	  if (evaluator->report_error (msg)) {
-	    if (compile_error && evaluator->p_code) {
+	    if (PCode p_code = compile_error && evaluator->p_code) {
 	      CompiledError comp_err = CompiledError (err);
-	      evaluator->p_code->add (RXML_CONTEXT, comp_err, comp_err);
+	      p_code->add (RXML_CONTEXT, comp_err, comp_err);
 	    }
 	    return;
 	  }
@@ -3164,9 +3166,8 @@ class Frame
 	// continue in it later. It's done here to keep the original
 	// exec array untouched.
 	([array] ustate->exec_left)[0] = subparser;
-      throw (err);
     }
-    throw_fatal (err);
+    throw (err);
   }
 
   private void _handle_runtime_tags (Context ctx, TagSetParser|PCode evaler)
@@ -3637,9 +3638,7 @@ class Frame
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
 	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
-	  ctx->handle_exception ( // Will throw if necessary.
-	    Backtrace ("help", help, ctx), evaler);
-	  return result = nil;
+	  throw (Backtrace ("help", help, ctx));
 	}
 #endif
 
@@ -4010,12 +4009,9 @@ class Frame
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" : "");
 	TRACE_LEAVE ("exception");
-	err = catch {
-	  ctx->handle_exception (err, evaler); // Will rethrow unknown errors.
-	};
 	CLEANUP;
-	if (err) throw (err);
-	return result = nil;
+	result = nil;
+	throw (err);
       }
       fatal_error ("Should not get here.\n");
     }
@@ -4512,6 +4508,10 @@ class Parser
 
     else {
       if (mixed err = catch {
+	if (PCode p_code = evaler->p_code)
+	  p_code->add (context,
+		       VarRef (splitted[0], splitted[1..], encoding, want_type), val);
+
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (context->frame))
 	  TAG_DEBUG (context->frame, "    Looking up variable %s in context of type %s\n",
@@ -4552,10 +4552,6 @@ class Parser
 	}
 	val = nil;
       }
-
-      if (PCode p_code = evaler->p_code)
-	p_code->add (context,
-		     VarRef (splitted[0], splitted[1..], encoding, want_type), val);
     }
     FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 		     context->frame_depth, "", varref, __LINE__);
@@ -6800,6 +6796,7 @@ class PCode
 
     while (1) {			// Loops only if errors are catched.
       mixed item;
+      Frame frame;
       if (mixed err = catch {
 
 #define EVAL_LOOP(RESOLVE_ARGFUNC_1, RESOLVE_ARGFUNC_2)			\
@@ -6808,7 +6805,6 @@ class PCode
 	chained_p_code_add: {						\
 	    if (objectp (item))						\
 	      if (item->is_RXML_p_code_frame) {				\
-		Frame frame;						\
 		if ((frame = exec[pos + 1])) {				\
 		  /* Relying on the interpreter lock here. */		\
 		  exec[pos + 1] = 0;					\
@@ -6881,6 +6877,7 @@ class PCode
 	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
 	}
+
 	else {
 	  PCODE_UPDATE_MSG (
 	    "%O: Restoring p-code update count from %d to %d "
@@ -6888,29 +6885,28 @@ class PCode
 	    "due to exception.\n",
 	    item, ctx->state_updated, update_count);
 	  ctx->state_updated = update_count;
-	  if (objectp (item) && item->is_RXML_p_code_frame) {
-	    // If the exception comes from a frame, handle_exception
-	    // already has been called. Thus we don't try to recover
-	    // again.
-	    if (p_code) p_code->add_frame (ctx, item, PCode);
-	  }
-	  else {
-	    if (p_code) p_code->add (ctx, item, item);
-	    err = catch {
-	      ctx->handle_exception (err, this_object()); // May throw.
-	      string msgs = m_delete (ctx->misc, this_object());
-	      if (pos >= length)
-		return msgs || nil;
-	      else {
-		if (msgs) parts[ppos++] = msgs;
-		if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame)
-		  pos += 3;
-		else
-		  pos++;
-		continue;
-	      }
-	    };
-	  }
+
+	  if (p_code)
+	    if (objectp (item) && item->is_RXML_p_code_frame)
+	      p_code->add_frame (ctx, frame, PCode);
+	    else
+	      p_code->add (ctx, item, item);
+
+	  err = catch {
+	    ctx->handle_exception (err, this_object()); // May throw.
+	    string msgs = m_delete (ctx->misc, this_object());
+	    if (pos >= length)
+	      return msgs || nil;
+	    else {
+	      if (msgs) parts[ppos++] = msgs;
+	      if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame)
+		pos += 3;
+	      else
+		pos++;
+	      continue;
+	    }
+	  };
+
 	  if (tag_set && tag_set->generation != generation)
 	    catch (err[0] += "Note: Error happened in stale p-code.\n");
 	  throw (err);
