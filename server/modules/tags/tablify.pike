@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.9 1997/11/14 19:39:05 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.10 1998/02/15 00:15:09 noring Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -31,15 +31,31 @@ mixed *register_module()
 /* The meat of the module. Convert the contents of the tag (in 'q') to
  * a table. */
 
+string container_fields(string name, mapping arg, string q,
+			mapping m, mapping arg_list)
+{
+  arg_list->fields = q/(m->cellseparator||"\t");
+  return "";
+}
+
 string tag_tablify( string tag, mapping m, string q, mapping request_id )
 {
   array rows, res;
   string sep, td, color, table;
   int i;
 
+#if 0
+  sscanf(q, "%*[\n]%s", q);
+  sscanf(reverse(q), "%*[\n]%s", q);
+  q = reverse(q);
+#endif
+
   if(tag == "htable") m->nice="nice";
   
   if(m->help) return register_module()[2];
+
+  mapping arg_list = ([]);
+  q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
 
   if(sep = m->rowseparator)
     m->rowseparator = 0;
@@ -60,11 +76,21 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   } else
     td="<td>";
 
+  array title;
+  if(m->nice) {
+    title = rows[0]/sep;
+    rows = rows[1..];
+  }
+
+  if(m->min)
+    rows = rows[((int)m->min)..];
+  if(m->max)
+    rows = rows[..((int)m->max-1)];
+  
   if(m->nice)
   {
-    array title = rows[0]/sep;
-    rows = Array.map(rows[1..],lambda(string r, string s){ return r/s; }, sep);
-    return html_table(title, rows);
+    rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
+    return html_table(title, rows, m + arg_list);
   }
 
   for(i=0; i<sizeof(rows); i++)
