@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.h,v 1.2 2000/06/28 01:39:42 mast Exp $
+ * $Id: roxen_service.h,v 1.3 2000/06/28 20:47:49 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -94,6 +94,7 @@ int console_mode;
 ////       stopped responding
 ////
 VOID ServiceStart(void);
+DWORD WINAPI ThreadServiceStop (LPVOID write_stop_file);
 VOID ServiceStop(int write_stop_file);
 //////////////////////////////////////////////////////////////////////////////
 
