@@ -561,7 +561,7 @@ class AdminUser
            save();
          }
          else if( strlen( id->variables[rp]  ) )
-           error = "Passwords does not match";
+           error = "Passwords do not match";
          break;
 
        default:
