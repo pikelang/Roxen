@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.64 1999/05/07 04:10:46 mast Exp $
+# $Id: configure.in,v 1.65 1999/05/26 08:47:06 mast Exp $
 #
 
 prefix=$PWD
@@ -149,6 +149,10 @@ else :; fi
 AC_PROG_CC
 AC_AIX
 AC_MINIX
+
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(dld, shl_load)
+AC_CHECK_LIB(dld, dld_link)
 
 # Set up smartlink
 
