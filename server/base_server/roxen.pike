@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.130 1997/09/12 06:14:28 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.131 1997/09/14 17:23:56 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -69,6 +69,11 @@ constant decode = MIME.decode_base64;
 private function build_root;
 private object root;
 
+
+#ifdef THREADS
+// This mutex is used by privs.pike
+object euid_egid_lock = Thread.Mutex();
+#endif /* THREADS */
 
 // Fork, and then do a 'slow-quit' in the forked copy. Exit the
 // original copy, after all listen ports are closed.
