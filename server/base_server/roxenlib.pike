@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.189 2000/08/07 21:28:20 jhs Exp $
+// $Id: roxenlib.pike,v 1.190 2000/08/11 14:35:17 nilsson Exp $
 
 //#pragma strict_types
 
@@ -887,6 +887,8 @@ string image_from_type( string t )
 
 #define  PREFIX ({ "bytes", "Kb", "Mb", "Gb", "Tb", "Hb" })
 string sizetostring( int size )
+  //! Returns the size as a memory size string with suffix,
+  //! e.g. 43210 is converted into "42.2 Kb.
 {
   if(size<0) return "--------";
   float s = (float)size;
@@ -1129,72 +1131,73 @@ string get_modfullname (RoxenModule module)
 }
 
 string roxen_encode( string val, string encoding )
-//! Quote content in a multitude of ways. Used primarily by do_output_tag
+//! Quote content in a multitude of ways. Used primarily by entity quoting.
 {
   switch (encoding) {
-   case "none":
    case "":
+   case "none":
+     //! No encoding
      return val;
 
    case "http":
-     // HTTP encoding.
+     //! HTTP encoding.
      return http_encode_string (val);
 
    case "cookie":
-     // HTTP cookie encoding.
+     //! HTTP cookie encoding.
      return http_encode_cookie (val);
 
    case "url":
-     // HTTP encoding, including special characters in URL:s.
+     //! HTTP encoding, including special characters in URL:s.
      return http_encode_url (val);
 
    case "html":
-     // For generic html text and in tag arguments.
+     //! For generic html text and in tag arguments.
      return html_encode_string (val);
 
    case "dtag":
-     // Quote quotes for a double quoted tag argument. Only
-     // for internal use, i.e. in arguments to other RXML tags.
+     //! Quote quotes for a double quoted tag argument. Only
+     //! for internal use, i.e. in arguments to other RXML tags.
      return replace (val, "\"", "\"'\"'\"");
 
    case "stag":
-     // Quote quotes for a single quoted tag argument. Only
-     // for internal use, i.e. in arguments to other RXML tags.
+     //! Quote quotes for a single quoted tag argument. Only
+     //! for internal use, i.e. in arguments to other RXML tags.
      return replace(val, "'", "'\"'\"'");
 
    case "pike":
-     // Pike string quoting (e.g. for use in a <pike> tag).
+     //! Pike string quoting (e.g. for use in a <pike> tag).
      return replace (val,
 		    ({ "\"", "\\", "\n" }),
 		    ({ "\\\"", "\\\\", "\\n" }));
 
    case "js":
    case "javascript":
-     // Javascript string quoting.
+     //! Javascript string quoting.
      return replace (val,
 		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
 		       "\\'", "\\\"" }));
 
    case "mysql":
-     // MySQL quoting.
+     //! MySQL quoting.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"" , "\\'", "\\\\" }) );
 
    case "sql":
    case "oracle":
-     // SQL/Oracle quoting.
+     //! SQL/Oracle quoting.
      return replace (val, "'", "''");
 
    case "mysql-dtag":
-     // MySQL quoting followed by dtag quoting.
+     //! MySQL quoting followed by dtag quoting.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"'\"'\"", "\\'", "\\\\" }));
 
    case "mysql-pike":
-     // MySQL quoting followed by Pike string quoting.
+     //! MySQL quoting followed by Pike string quoting.
      return replace (val,
 		    ({ "\"", "'", "\\", "\n" }),
 		    ({ "\\\\\\\"", "\\\\'",
@@ -1202,13 +1205,13 @@ string roxen_encode( string val, string encoding )
 
    case "sql-dtag":
    case "oracle-dtag":
-     // SQL/Oracle quoting followed by dtag quoting.
+     //! SQL/Oracle quoting followed by dtag quoting.
      return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
 
    default:
-     // Unknown encoding. Let the caller decide what to do with it.
+     //! Unknown encoding. Let the caller decide what to do with it.
      return 0;
   }
 }
@@ -1518,6 +1521,10 @@ Stdio.File open_log_file( string logfile )
 
 string tagtime(int t, mapping(string:string) m, RequestID id,
 	       function(string, string, object:function(int, mapping(string:string):string)) language)
+  //! A rather complex function used as presentation function by
+  //! several RXML tags. It takes a unix-time integer and a mapping
+  //! with formating instructions and returns a string representation
+  //! of that time. See the documentation of the date tag.
 {
   string res;
 
@@ -1667,6 +1674,11 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 }
 
 int time_dequantifier(mapping m)
+  //! Calculates an integer with how many seconds a mapping
+  //! that maps from time units to an integer can be collapsed to.
+  //! E.g. (["minutes":2]) results in 120.
+  //! Valid units are seconds, minutes, beats, hours, days, weeks,
+  //! months and years.
 {
   float t = 0.0;
   if (m->seconds) t+=((float)(m->seconds));
@@ -1698,6 +1710,9 @@ class _charset_decoder
 }
 
 function get_client_charset_decoder( string едц, RequestID|void id )
+  //! Returns a decoder for the clients charset, given the clients
+  //! encoding of the string "едц". See the roxen-automatic-charset-variable
+  //! tag.
 {
   switch( едц )
   {
