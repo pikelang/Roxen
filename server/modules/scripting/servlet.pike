@@ -4,8 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-#if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.13 2000/09/10 18:16:09 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.14 2000/09/10 18:28:02 js Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -19,6 +18,8 @@ constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION;
 constant module_name = "Java Servlet bridge";
 constant module_doc  = "An interface to Java <a href=\"http://jserv.javasoft.com/"
   "products/java-server/servlets/index.html\">Servlets</a>.";
+
+#if constant(Servlet.servlet)
 
 void stop()
 {
@@ -173,11 +174,6 @@ mixed handle_file_extension(object o, string e, RequestID id)
   return Roxen.http_pipe_in_progress();
 }
 
-array(string) query_file_extensions()
-{
-  return (query("ex")? query("ext") : ({}));
-}
-
 #else
 
 // Do not dump to a .o file if no Java is available, since it will then
@@ -195,7 +191,24 @@ string status()
   </ol></font>";
 }
 
+mixed find_file( string f, RequestID id )
+{
+  return Roxen.http_string_answer( status(), "text/html" );
+}
+
+int|mapping handle_file_extension(object o, string e, object id)
+{
+  return Roxen.http_string_answer( status(), "text/html" );
+}
+
+
 #endif
+
+array(string) query_file_extensions()
+{
+  return (query("ex")? query("ext") : ({}));
+}
+
 
 void create()
 {
