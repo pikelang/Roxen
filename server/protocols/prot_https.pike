@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2004, Roxen IS.
 
-// $Id: prot_https.pike,v 2.11 2004/08/16 19:31:37 grubba Exp $
+// $Id: prot_https.pike,v 2.12 2005/02/23 13:41:08 grubba Exp $
 
 // --- Debug defines ---
 
@@ -100,6 +100,13 @@ class fallback_redirect_request
 	     * but better safe than sorry...
 	     */
 	    string ip = (f->query_address(1)/" ")[0];
+	    if (has_value(ip, ":")) {
+	      // draft-masinter-url-ipv6-00 3
+	      //
+	      //   a) replace every colon ":" with a "-"
+	      //   b) append ".ipv6" to the end.
+	      ip = replace(ip, ":", "-") + ".ipv6";
+	    }
 	    prefix = "https://" + ip + ":" + port;
 	  } else if (prefix[..4] == "http:") {
 	    /* Broken MyWorldLocation -- fix. */
