@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.73 2001/01/29 05:40:31 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.74 2001/02/10 19:20:40 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -176,6 +176,8 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 class TagSQLOutput {
   inherit RXML.Tag;
   constant name = "sqloutput";
+  RXML.Type content_type = RXML.t_same;
+  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   class Frame {
     inherit RXML.Frame;
