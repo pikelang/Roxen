@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.74 1999/09/05 01:34:43 per Exp $
+# $Id: start,v 1.75 1999/09/05 02:19:34 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` : "
 
@@ -123,6 +123,9 @@ parse_args() {
     verbose=2
     debug=1
   ;;
+  '--remove-dumped')
+     remove_old_dot_o_files "user request"
+  ;;
   '--once')
     once=1
   ;;
@@ -174,6 +177,9 @@ the default arguments.
       .B--versionB.:                  Output version information.
 
       .B--help -?B.:                  This information.
+
+      .B--remove-dumpedB.:            Remove all dumped code, thus forcing
+                                  a recompile.
 
       .B--verbose -vB.:               Enable more verbose messages.
 
@@ -382,6 +388,12 @@ fi
 # Some useful functions
 #
 
+remove_old_dot_o_files () {
+  echo "$pre Removing old .o files ($1)"
+  find . -name '*.o' | xargs rm -f
+}
+
+
 rotate () {
   b=5;
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
@@ -389,9 +401,9 @@ rotate () {
 
 start_roxen() {
   if [ "x$DIR" != "x../configurations/" ] ; then 
-    args="$DEBUG $DEFINES $program --config-dir=$DIR $pass"
+    args="$DEFINES $program --config-dir=$DIR $pass"
   else
-    args="$DEBUG $DEFINES $program $pass"
+    args="$DEFINES $program $pass"
   fi
   if [ x$cd_to != x ] ; then 
     cd $cd_to
@@ -425,6 +437,15 @@ fi
 if [ "x$debug" = "x-1" ] ; then
   DEBUG="";
 else :; fi
+
+DEFINES="$DEBUG $DEFINES"
+PIKEVERSION=`$pike --version 2>&1`
+
+if [ "`cat .old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
+  remove_old_dot_o_files "DEFINES changed"
+fi
+
+echo "$PIKEVERSION $DEFINES" > .old_roxen_defines
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
