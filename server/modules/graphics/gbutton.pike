@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.96 2002/08/28 17:04:03 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.97 2002/09/05 12:28:17 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -479,7 +479,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 	break;
       case "right":
 	icn_x = req_width - right - i_width;
-	txt_x = left + (icn_x - i_spc - t_width) / 2;
+	txt_x = left + (icn_x - i_spc - t_width - left) / 2;
 	break;
       }
       break;
