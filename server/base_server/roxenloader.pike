@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.159 2000/03/21 18:58:33 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.160 2000/03/22 16:56:34 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1009,7 +1009,7 @@ Please install a newer pike version
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
-  report_debug("-"*58+"\n"+version()+"\n");
+  report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
 //   report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
