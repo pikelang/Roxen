@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.386 2000/12/10 02:01:44 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.387 2001/04/03 12:37:32 wing Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1228,11 +1228,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     else
     {
       TRACE_LEAVE("No directory module. Returning 'no such file'");
+      TRACE_LEAVE("");
       return 0;
     }
     if(mappingp(fid))
     {
       TRACE_LEAVE("Returning data");
+      TRACE_LEAVE("");
       return (mapping)fid;
     }
   }
