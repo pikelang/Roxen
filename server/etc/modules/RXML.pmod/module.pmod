@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.23 2000/01/18 10:38:21 mast Exp $
+//! $Id: module.pmod,v 1.24 2000/01/18 18:11:17 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -55,13 +55,15 @@ class Tag
   //! RXML.Frame.additional_tags and RXML.Frame.local_tags are
   //! initialized from these.
 
-  function(:Frame) frame();
-  //! This function should return an object to be used as a frame. The
-  //! frame object must (in practice) inherit RXML.Frame.
+  program/*(Frame)HMM*/ Frame;
+  //! This program is used to clone the objects used as frames. A
+  //! frame object must (in practice) inherit RXML.Frame. (It can, of
+  //! course, be any function that requires no arguments and returns a
+  //! new frame object.)
 
   //! Services.
 
-  inline Frame `() (mapping(string:mixed) args, void|mixed|PCode content)
+  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed|PCode content)
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_return(). The
   //! argument values and the content are not parsed; see
@@ -69,7 +71,7 @@ class Tag
   //! frame object.
   {
     Tag this = this_object();
-    Frame frame = ([function(:Frame)] this->frame)();
+    object/*(Frame)HMM*/ frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
     frame->tag = this;
     frame->flags = flags;
     if (scope_name) frame->scope_name = scope_name;
@@ -90,9 +92,9 @@ class Tag
   {
     Context ctx = parser->context;
     // FIXME: P-code generation.
-    Frame frame;
+    object/*(Frame)HMM*/ frame;
     if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
-      if (ustate[parser]) frame = [object(Frame)] ustate[parser][0];
+      if (ustate[parser]) frame = [object/*(Frame)HMM*/] ustate[parser][0];
       else frame = `() (args, Void);
     else frame = `() (args, Void);
 
@@ -136,10 +138,11 @@ class TagSet
   //! Used for identification only.
 
   string prefix;
-  //! A prefix that may precede the tags. If zero, it's up to the
-  //! importing tag set(s).
+  //! A namespace prefix that may precede the tags. If it's zero, it's
+  //! up to the importing tag set(s). A ':' is always inserted between
+  //! the prefix and the tag name.
 
-  int prefix_required;
+  int prefix_req;
   //! The prefix must precede the tags.
 
   array(TagSet) imported = ({});
@@ -1263,7 +1266,8 @@ class Frame
 	  while (functionp (iter)) { // Got a function from do_enter.
 	    int|function(RequestID:int|function) newiter =
 	      [int|function(RequestID:int|function)] iter (ctx->id); // Might unwind.
-	    fn = iter, iter = newiter;
+	    if (newiter) fn = iter;
+	    iter = newiter;
 	  }
 	}
 	ENTER_SCOPE (ctx, this);
@@ -1361,11 +1365,12 @@ class Frame
 	      }
 	    }
 	  }
-	  else if (result == Void && content_type->subtype_of (result_type))
-	    result = content;
 
 	}
       } while (fn);
+
+      if (!this->do_return && result == Void && content_type->subtype_of (result_type))
+	result = content;
 
       if (ctx->new_runtime_tags) {
 	_handle_runtime_tags (parser, ctx->new_runtime_tags);
