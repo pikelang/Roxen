@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.90 2000/05/26 15:24:51 nilsson Exp $
+//! $Id: module.pmod,v 1.91 2000/06/23 16:50:13 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -196,9 +196,20 @@ class Tag
     Context ctx = parser->context;
     // FIXME: P-code generation.
 
-    if (string splice_args = args["::"]) {
+    string splice_args;
+    if ((splice_args = args["::"])) {
       // Somewhat kludgy solution for the time being.
-      splice_args = t_text (PEnt)->eval (splice_args, ctx, 0, parser, 1);
+#ifdef MODULE_DEBUG
+      if (mixed err = catch {
+#endif
+	splice_args = t_text (PEnt)->eval (splice_args, ctx, 0, parser, 1);
+#ifdef MODULE_DEBUG
+      }) {
+	if (objectp (err) && ([object] err)->thrown_at_unwind)
+	  fatal_error ("Can't save parser state when evaluating splice argument.\n");
+	throw_fatal (err);
+      }
+#endif
       m_delete (args, "::");
       args += parser->parse_tag_args (splice_args);
     }
@@ -212,6 +223,12 @@ class Tag
       }
       else frame = `() (args, Void);
     else frame = `() (args, Void);
+
+    if (!zero_type (frame->raw_tag_text))
+      if (splice_args)
+	frame->raw_tag_text =
+	  t_xml->format_tag (parser->tag_name(), args, content, flags);
+      else frame->raw_tag_text = parser->current_input();
 
     mixed err = catch {
       frame->_eval (parser, args, content);
@@ -399,32 +416,26 @@ class TagSet
   //! In the latter case, the tag name must be given as the second
   //! argument. The return value is the same as for get_local_tag().
   {
-    if (objectp (tagdef) && ([object] tagdef)->is_RXML_Tag)
-      name = [string] ([object] tagdef)->name;
+    if (!mappingp (overridden_tag_lookup))
+      overridden_tag_lookup = set_weak_flag (([]), 1);
+    object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag;
+    if (zero_type (tag = overridden_tag_lookup[tagdef]))
+      if (objectp (tagdef) && ([object] tagdef)->is_RXML_Tag) {
+	tag = overridden_tag_lookup[tagdef] =
+	  find_overridden_tag (tagdef, [string] ([object] tagdef)->name);
+      }
+      else {
 #ifdef MODULE_DEBUG
-    if (!name) fatal_error ("Need tag name.\n");
+	if (!name) fatal_error ("Need tag name.\n");
 #endif
-    if (tags[name] == tagdef ||
-	(low_containers && low_containers[name] == tagdef) ||
-	(low_tags && low_tags[name] == tagdef)) {
-      foreach (imported, TagSet tag_set)
-	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tagdef =
-	    tag_set->get_tag (name)) return tagdef;
-    }
-    else {
-      int found = 0;
-      foreach (imported, TagSet tag_set)
-	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) subtag =
-	    tag_set->get_tag (name))
-	  if (found) return subtag;
-	  else if (arrayp (subtag) ?
-		   subtag[0] == tagdef || subtag[1] == tagdef :
-		   subtag == tagdef)
-	    if ((subtag = tag_set->get_overridden_tag (tagdef, name)))
-	      return subtag;
-	    else found = 1;
-    }
-    return 0;
+	mapping(LOW_TAG_TYPE|LOW_CONTAINER_TYPE:
+		array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)) ent =
+	  overridden_tag_lookup[name];
+	if (!ent) ent = overridden_tag_lookup[name] = ([]);
+	if (zero_type (tag = ent[tagdef]))
+	  tag = ent[tagdef] = find_overridden_tag (tagdef, name);
+      }
+    return tag;
   }
 
   array(Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)) get_overridden_tags (string name)
@@ -499,6 +510,7 @@ class TagSet
   {
     generation++;
     prepare_funs = 0;
+    overridden_tag_lookup = 0;
     plugins = ([]);
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
@@ -547,6 +559,37 @@ class TagSet
     if (prepare_context) funs += ({prepare_context});
     // We don't cache in prepare_funs; do that only at the top level.
     return funs;
+  }
+
+  static mapping(Tag:Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE))|
+    mapping(string:mapping(LOW_TAG_TYPE|LOW_CONTAINER_TYPE:
+			   Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)))
+    overridden_tag_lookup;
+
+  /*static*/ Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) find_overridden_tag (
+    Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE tagdef, string name)
+  {
+    if (tags[name] == tagdef ||
+	(low_containers && low_containers[name] == tagdef) ||
+	(low_tags && low_tags[name] == tagdef)) {
+      foreach (imported, TagSet tag_set)
+	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tagdef =
+	    tag_set->get_tag (name)) return tagdef;
+    }
+    else {
+      int found = 0;
+      foreach (imported, TagSet tag_set)
+	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) subtag =
+	    tag_set->get_tag (name))
+	  if (found) return subtag;
+	  else if (arrayp (subtag) ?
+		   subtag[0] == tagdef || subtag[1] == tagdef :
+		   subtag == tagdef)
+	    if ((subtag = tag_set->find_overridden_tag (tagdef, name)))
+	      return subtag;
+	    else found = 1;
+    }
+    return 0;
   }
 
   void call_prepare_funs (Context ctx)
@@ -1103,7 +1146,8 @@ class Backtrace
   string current_var;
   array backtrace;
 
-  void create (void|string _type, void|string _msg, void|Context _context)
+  void create (void|string _type, void|string _msg, void|Context _context,
+	       void|array _backtrace)
   {
     type = _type;
     msg = _msg;
@@ -1111,8 +1155,11 @@ class Backtrace
       frame = context->frame;
       current_var = context->current_var;
     }
-    backtrace = predef::backtrace();
-    backtrace = backtrace[..sizeof (backtrace) - 2];
+    if (_backtrace) backtrace = _backtrace;
+    else {
+      backtrace = predef::backtrace();
+      backtrace = backtrace[..sizeof (backtrace) - 2];
+    }
   }
 
   string describe_rxml_backtrace (void|int no_msg)
@@ -1215,14 +1262,20 @@ constant FLAG_NONE		= 0x00000000;
 //! Static flags (i.e. tested in the Tag object).
 
 constant FLAG_EMPTY_ELEMENT	= 0x00000001;
-//! If set, the tag does not use any content. E.g. with a HTML parser
+//! If set, the tag does not use any content. E.g. with an HTML parser
 //! this defines whether the tag is a container or not, and in XML
 //! parsing it simply causes the content (if any) to be thrown away.
 
-constant FLAG_NO_PREFIX		= 0x00000002;
+constant FLAG_COMPAT_PARSE	= 0x00000002;
+//! Makes the PXml parser parse the tag in an HTML compatible way: If
+//! FLAG_EMPTY_ELEMENT is set and the tag doesn't end with '/>', it
+//! will be parsed as an empty element. The effect of this flag in
+//! other parsers is currently undefined.
+
+constant FLAG_NO_PREFIX		= 0x00000004;
 //! Never apply any prefix to this tag.
 
-constant FLAG_SOCKET_TAG	= 0x00000004;
+constant FLAG_SOCKET_TAG	= 0x00000008;
 //! Declare the tag to be a socket tag, which accepts plugin tags (see
 //! Tag.plugin_name for details).
 
@@ -1353,6 +1406,11 @@ class Frame
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
+  //!string raw_tag_text;
+  //! If this variable exists, it gets the raw text representation of
+  //! the tag, if there is any. Note that it's after parsing of any
+  //! splice argument.
+
   //!array do_enter (RequestID id);
   //!array do_process (RequestID id, void|mixed piece);
   //!array do_return (RequestID id);
@@ -1392,6 +1450,11 @@ class Frame
   //!	multiset(mixed) - Should only contain one element that'll be
   //!		added or put into the result. Normally not necessary;
   //!		assign it directly to the result variable instead.
+  //!	propagate_tag() - Use a call to this function to propagate the
+  //!		tag to be handled by an overridden tag definition, if
+  //!		any exists. If this is used, it's probably necessary
+  //!		to define the raw_tag_text variable. For further
+  //!		details see the doc for propagate_tag() in this class.
   //!
   //! 0 -	Do nothing special. Exits the tag when used from
   //!		do_process() and FLAG_STREAM_RESULT is set.
@@ -1533,6 +1596,67 @@ class Frame
     return get_context()->tag_set->get_plugins (tag->name);
   }
 
+  Frame|string propagate_tag (void|mapping(string:string) args, void|string content)
+  //! This function is intended to be used in the execution array from
+  //! do_return() etc to propagate the tag to the next overridden tag
+  //! definition, if any exists. It either returns a frame from the
+  //! overridden tag or, if no overridden tag exists, a string
+  //! containing a formatted tag (which requires that the result type
+  //! supports formatted tags, i.e. has a working format_tag()
+  //! function). If args and content are given, they will be used in
+  //! the tag after parsing, otherwise the raw_tag_text variable is
+  //! used, which must have a string value.
+  {
+    Context ctx = get_context();
+    object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) overridden =
+      ctx->tag_set->get_overridden_tag (tag);
+    if (arrayp (overridden))
+      fatal_error ("Getting frames for low level tags are currently not implemented.\n");
+
+    if (overridden) {
+      Frame frame;
+      if (!args) {
+#ifdef MODULE_DEBUG
+	if (zero_type (this_object()->raw_tag_text))
+	  fatal_error ("The variable raw_tag_text must be defined.\n");
+	if (!stringp (this_object()->raw_tag_text))
+	  fatal_error ("raw_tag_text must have a string value.\n");
+#endif
+	Parser_HTML()
+	  ->add_container (tag->name,
+			   lambda (object p, mapping(string:string) a, string c) {
+			     args = a;
+			     content = c;
+			     return ({});
+			   })
+	  ->finish (this_object()->raw_tag_text);
+      }
+      frame = overridden (args, content || "");
+      frame->flags |= FLAG_UNPARSED;
+      return frame;
+    }
+
+    else
+      if (args) return result_type->format_tag (tag, args, content);
+      else {
+#ifdef MODULE_DEBUG
+	if (zero_type (this_object()->raw_tag_text))
+	  fatal_error ("The variable raw_tag_text must be defined.\n");
+	if (!stringp (this_object()->raw_tag_text))
+	  fatal_error ("raw_tag_text must have a string value.\n");
+	if (mixed err = catch {
+#endif
+	  return t_text (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
+#ifdef MODULE_DEBUG
+	}) {
+	  if (objectp (err) && ([object] err)->thrown_at_unwind)
+	    fatal_error ("Can't save parser state when evaluating arguments.\n");
+	  throw_fatal (err);
+	}
+#endif
+      }
+  }
+
   // Internals.
 
   mixed _exec_array (TagSetParser parser, array exec, int parent_scope)
@@ -1646,6 +1770,7 @@ class Frame
 	      void|mapping(string:string) raw_args,
 	      void|string raw_content)
   // Note: It might be somewhat tricky to override this function.
+  // Note: Might be destructive on raw_args.
   {
     Frame this = this_object();
     Context ctx = parser->context;
@@ -1725,7 +1850,6 @@ class Frame
     ctx->frame = this;
 
     if (raw_args) {
-      args = raw_args;
       if (sizeof (raw_args)) {
 	// Note: Code duplication in Tag.eval_args().
 	mapping(string:Type) atypes = raw_args & tag->req_arg_types;
@@ -1740,8 +1864,8 @@ class Frame
 #ifdef MODULE_DEBUG
 	if (mixed err = catch {
 #endif
-	  foreach (indices (args), string arg)
-	    args[arg] = (atypes[arg] || tag->def_arg_type)->
+	  foreach (indices (raw_args), string arg)
+	    raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
 	      eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
 #ifdef MODULE_DEBUG
 	}) {
@@ -1751,6 +1875,7 @@ class Frame
 	}
 #endif
       }
+      args = raw_args;
     }
 
 #ifdef MODULE_DEBUG
@@ -2111,7 +2236,8 @@ void run_error (string msg, mixed... args)
 //! connection to an SQL server fails.
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
-  throw (Backtrace ("run", msg, get_context()));
+  array bt = backtrace();
+  throw (Backtrace ("run", msg, get_context(), bt[..sizeof (bt) - 2]));
 }
 
 void parse_error (string msg, mixed... args)
@@ -2121,7 +2247,8 @@ void parse_error (string msg, mixed... args)
 //! invalid arguments to a tag.
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
-  throw (Backtrace ("parse", msg, get_context()));
+  array bt = backtrace();
+  throw (Backtrace ("parse", msg, get_context(), bt[..sizeof (bt) - 2]));
 }
 
 void fatal_error (string msg, mixed... args)
@@ -2154,26 +2281,38 @@ void throw_fatal (mixed err)
   throw (err);
 }
 
-Frame make_tag (string name, mapping(string:mixed) args, void|mixed content)
-//! Returns a frame for the specified tag. The tag definition is
-//! looked up in the current context and tag set. args and content are
-//! not parsed or evaluated.
+Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
+		void|Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE overridden_by)
+//! Returns a frame for the specified tag, or 0 if no such tag exists.
+//! The tag definition is looked up in the current context and tag
+//! set. args and content are not parsed or evaluated. If
+//! overridden_by is given, the returned frame will come from the tag
+//! that overridden_by overrides, if there is any.
 {
   TagSet tag_set = get_context()->tag_set;
-  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
+  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag =
+    overridden_by ? tag_set->get_overridden_tag (overridden_by, name) :
+    tag_set->get_tag (name);
+  if (!tag) return 0;
   if (arrayp (tag))
     fatal_error ("Getting frames for low level tags are currently not implemented.\n");
   return tag (args, content);
 }
 
-Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content)
-//! Returns a frame for the specified tag. The tag definition is
-//! looked up in the current context and tag set. args and content are
-//! given unparsed in this variant; they're parsed when the frame is
-//! about to be evaluated.
+Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content,
+			 void|Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE overridden_by)
+//! Returns a frame for the specified tag, or 0 if no such tag exists.
+//! The tag definition is looked up in the current context and tag
+//! set. args and content are given unparsed in this variant; they're
+//! parsed when the frame is about to be evaluated. If overridden_by
+//! is given, the returned frame will come from the tag that
+//! overridden_by overrides, if there is any.
 {
   TagSet tag_set = get_context()->tag_set;
-  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
+  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag =
+    overridden_by ? tag_set->get_overridden_tag (overridden_by, name) :
+    tag_set->get_tag (name);
+  if (!tag) return 0;
   if (arrayp (tag))
     fatal_error ("Getting frames for low level tags are currently not implemented.\n");
   Frame frame = tag (args, content);
@@ -2404,6 +2543,10 @@ class Parser
 #endif
   }
 
+  string current_input() {return 0;}
+  //! Should return the representation in the input stream for the
+  //! current tag or entity being parsed, or 0 if it isn't known.
+
   // Internals.
 
   Parser _next_free;
@@ -2617,6 +2760,22 @@ class Type
     return newtype;
   }
 
+  string format_tag (string|Tag tag, void|mapping(string:string) args,
+		     void|string content, void|int flags)
+  //! Returns a formatted tag according to the type. tag is either a
+  //! tag object or the name of the tag. Throws an error if this type
+  //! cannot format tags.
+  {
+    parse_error ("Cannot format tags with type %s.\n", this_object()->name);
+  }
+
+  string format_entity (string entity)
+  //! Returns a formatted entity according to the type. Throws an
+  //! error if this type cannot format entities.
+  {
+    parse_error ("Cannot format entities with type %s.\n", this_object()->name);
+  }
+
   //! Services.
 
   int `== (mixed other)
@@ -2756,10 +2915,9 @@ class Type
 
   mixed eval (string in, void|Context ctx, void|TagSet tag_set,
 	      void|Parser|PCode parent, void|int dont_switch_ctx)
-  //! Convenience function to parse and evaluate the value in the
-  //! given string. If a context isn't given, the current one is used.
-  //! The current context and ctx are assumed to be the same if
-  //! dont_switch_ctx is nonzero.
+  //! Parses and evaluates the value in the given string. If a context
+  //! isn't given, the current one is used. The current context and
+  //! ctx are assumed to be the same if dont_switch_ctx is nonzero.
   {
     mixed res;
     if (!ctx) ctx = get_context();
@@ -2922,6 +3080,35 @@ static class TXml
     if (!from || from->quoting_scheme != quoting_scheme)
       val = quote ([string] val);
     return val;
+  }
+
+  string format_tag (string|Tag tag, void|mapping(string:string) args,
+		     void|string content, void|int flags)
+  //! Returns a formatted XML tag. If tag is a Tag object, the flags
+  //! FLAG_COMPAT_PARSE and FLAG_EMPTY_ELEMENT are heeded when
+  //! formatting empty element tags.
+  {
+    string tagname;
+    if (objectp (tag)) tagname = tag->name, flags = tag->flags;
+    else tagname = tag;
+    string res = "<" + tagname;
+    if (args)
+      foreach (indices (args), string arg)
+	res += " " + arg + "=\"" + Roxen->html_encode_string (args[arg]) + "\"";
+    if (content)
+      res += ">" + content + "</" + tag->name + ">";
+    else
+      if (flags & FLAG_COMPAT_PARSE)
+	if (flags & FLAG_EMPTY_ELEMENT) res += ">";
+	else res += "></" + tag->name + ">";
+      else
+	res += " />";
+    return res;
+  }
+
+  string format_entity (string entity)
+  {
+    return "&" + entity + ";";
   }
 
   string _sprintf() {return "RXML.t_xml" + OBJ_COUNT;}
@@ -3167,6 +3354,8 @@ static function(string,mixed...:void) _parse_error = parse_error;
 static program PXml;
 static program PEnt;
 static program PExpr;
+static program Parser_HTML;
+
 void _fix_module_ref (string name, mixed val)
 {
   mixed err = catch {
@@ -3180,4 +3369,9 @@ void _fix_module_ref (string name, mixed val)
     }
   };
   if (err) werror (describe_backtrace (err));
+}
+
+void create()
+{
+  Parser_HTML = master()->resolv ("Parser.HTML");
 }
