@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.11 1999/05/13 23:15:26 mast Exp $
+ * $Id: make_csr.pike,v 1.12 1999/05/13 23:35:14 mast Exp $
  */
 
 inherit "wizard";
@@ -74,7 +74,9 @@ mixed page_1(mixed id, mixed mc)
 	  "Certificate Authority you use. This page lets you specify "
 	  "the most useful attributes. If you leave a field blank, "
 	  "that attribute will be omitted from your name.<p>\n"
-	  "Unfortunately, all fields should be in US-ASCII."
+	  "Although most browsers will accept 8 bit ISO 8859-1 characters in "
+	  "these fields, it can't be counted on. To be on the safe side, "
+	  "use only US-ASCII.\n"
 	  "</blockquote></help>"
 
 	  "<var name=countryName type=string default=SE><br>"
@@ -221,12 +223,15 @@ mixed page_4(object id, object mc)
   array name = ({ });
   if (attrs->countryName)
     name += ({(["countryName": asn1_printable_string (attrs->countryName)])});
+  object printable_invalid_chars = Regexp ("([^-A-Za-z0-9 '()+,./:=?])");
   foreach( ({ "stateOrProvinceName",
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
-      name += ({ ([ attr : asn1_T61_string(attrs[attr]) ]) });
+      name += ({ ([ attr : (printable_invalid_chars->match (attrs[attr]) ?
+			    asn1_T61_string :
+			    asn1_printable_string) (attrs[attr]) ]) });
   }
 
   mapping csr_attrs = ([]);
