@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.17 1998/04/20 19:06:40 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.18 1998/04/20 20:34:46 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -111,8 +111,8 @@ object find_server_for(object id, string host)
       if (sizeof(y) >= 2) {
 	y[1] = MIME.decode_base64(y[1]);
 	id->realauth = y[1];
-	if (conf && conf->auth_module) {
-	  y = conf->auth_module->auth(y, id);
+	if (id->conf && id->conf->auth_module) {
+	  y = id->conf->auth_module->auth(y, id);
 	}
 	id->auth = y;
       }
