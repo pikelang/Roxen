@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.133 2002/02/13 15:56:54 grubba Exp $
+// $Id: Roxen.pmod,v 1.134 2002/03/01 10:55:58 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2071,6 +2071,8 @@ class _charset_decoder(object cs)
   }
 }
 
+static multiset(string) charset_warned_for = (<>);
+
 function get_client_charset_decoder( string едц, RequestID|void id )
   //! Returns a decoder for the clients charset, given the clients
   //! encoding of the string "едц&#x829f;".
@@ -2111,6 +2113,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
      return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
      
   case "ГҐГ¤Г¶":
+  case "ГҐГ¤Г¶?":
   case "ГҐГ¤":
   case "ГҐГ¤Г¶\350\212\237":
     id && id->set_output_charset && id->set_output_charset( "utf-8" );
@@ -2132,7 +2135,11 @@ function get_client_charset_decoder( string едц, RequestID|void id )
     id && id->set_output_charset && id->set_output_charset( "shift_jis" );
     return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
   }
-  report_warning( "Unable to find charset decoder for едц == %O\n",едц);
+  if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
+    charset_warned_for[test] = 1;
+    report_warning( "Unable to find charset decoder for %O, vector: %O\n",
+		    едц, test);
+  }
 }
 
 
