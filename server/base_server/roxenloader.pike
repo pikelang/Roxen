@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.308 2001/12/19 10:01:47 grubba Exp $
+// $Id: roxenloader.pike,v 1.309 2002/01/18 01:09:56 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.308 2001/12/19 10:01:47 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.309 2002/01/18 01:09:56 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1136,28 +1136,7 @@ int main(int argc, array(string) argv)
 {
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
-#if __VERSION__ > 7.2
-    report_debug(
-#"
-
-
-
-
-------- WARNING -----------------------------------------------
-Roxen 2.2 should be run with Pike 7.2.
-
-It might still be possible to start roxen with Pike "+__VERSION__+#", 
-but the functionality and stability might be affected, and strange
-errors might occur. If this does happen, please do not report it
-as a bug unless you have checked that it also occurs with Pike 7.2.
----------------------------------------------------------------
-
-
-
-
-
-");
-#endif
+  Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
 #if __VERSION__ < 7.2
     report_debug(
