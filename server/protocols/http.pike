@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.295 2001/06/07 04:34:30 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.296 2001/08/07 01:05:55 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1762,6 +1762,8 @@ void send_result(mapping|void result)
         heads["Connection"] =
 	  (misc->connection=="close" ? "close": "keep-alive");
 
+        heads->Date = Roxen.http_date(predef::time(1));
+
         if(file->encoding)
 	  heads["Content-Encoding"] = file->encoding;
 
@@ -1875,12 +1877,14 @@ void send_result(mapping|void result)
              conf->datacache->max_file_size) 
             && misc->cachekey )
         {
-          string data = head_string;
-          if( file->file )   data += file->file->read();
-          if( file->data )   data += file->data;
+          string data;
+          if( file->file )
+	    data = file->file->read();
+          else
+	    data = file->data;
           conf->datacache->set( raw_url, data, 
                                 ([
-                                  "hs":strlen(head_string),
+                                  "hs":head_string,
                                   "key":misc->cachekey,
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
@@ -2167,10 +2171,18 @@ void got_data(mixed fooid, string s)
              st[ST_MTIME] == file->mtime ) )
 #endif
         {
-          conf->hsent += file->hs;
+          string fix_date( string headers )
+          {
+            string a, b;
+            if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
+              return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\r\n"+b;
+            return headers;
+          };
+
+          conf->hsent += strlen(file->hs);
           if( strlen( d ) < 4000 )
           {
-            do_log( my_fd->write( d ) );
+	    do_log( my_fd->write( fix_date(file->hs)+d ) );
           } 
           else 
           {
