@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.82 1999/05/12 01:20:02 js Exp $
+ * $Id: wizard.pike,v 1.83 1999/05/12 01:31:15 js Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -819,7 +819,7 @@ string act_describe_submenues(array menues, string base,string sel)
 }
 
 string focused_wizard_menu;
-mixed wizard_menu(object id, string dir, string base, string|void action, mixed ... args)
+mixed wizard_menu(object id, string dir, string base, mixed ... args)
 {
   mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
@@ -829,8 +829,8 @@ mixed wizard_menu(object id, string dir, string base, string|void action, mixed 
   else
     focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
 
-  if(action && !id->variables->action)
-    id->variables->action=action;
+  if(id->misc->action && !id->variables->action)
+    id->variables->action=id->misc->action;
   
   if(!id->variables->action)
   {
