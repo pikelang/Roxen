@@ -1,5 +1,5 @@
 #!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.5 1996/12/01 19:18:38 per Exp $";
+string cvs_version = "$Id: install.pike,v 1.6 1996/12/02 14:05:38 per Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -255,7 +255,7 @@ void main(int argc, string *argv)
 
   if(find_arg(argv, "v", "version"))
   {
-    perror("Roxen Install version "+version+"\n");
+    perror("Roxen Install version "+cvs_version+"\n");
     exit(0);
   }
 

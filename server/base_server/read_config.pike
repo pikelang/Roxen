@@ -1,8 +1,8 @@
-string cvs_version = "$Id: read_config.pike,v 1.4 1996/12/01 19:18:34 per Exp $";
 #include <module.h>
 
 #ifndef IN_INSTALL
 inherit "newdecode";
+string cvs_version = "$Id: read_config.pike,v 1.5 1996/12/02 14:05:37 per Exp $";
 #else
 # include "base_server/newdecode.pike"
 #endif

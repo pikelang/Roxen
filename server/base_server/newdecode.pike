@@ -1,4 +1,3 @@
-string cvs_version = "$Id: newdecode.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
 #include <simulate.h>
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -6,7 +5,9 @@ string cvs_version = "$Id: newdecode.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
 #define roxenp this_object()
 #endif
 #endif
-
+#ifndef IN_INSTALL
+string cvs_version = "$Id: newdecode.pike,v 1.3 1996/12/02 14:05:37 per Exp $";
+#endif
 
 void parse(string s, mapping mr);
 void new_parse(string s, mapping mr);

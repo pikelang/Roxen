@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.6 1996/12/02 04:32:33 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.7 1996/12/02 14:14:42 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -555,7 +555,8 @@ string new_module_form(object id, object node)
 		  "\">Disable that module</a> if you want this one insted</i>"
 		  "\n<p><br><p>")});
     } else {
-      res += ({"<p><a href=?"+q+"=1>"+ (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
+      res += ({"<p><a href="+node->path(1)+"?"+q+"=1>"+
+		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
 					q+" width=500>")+
 		 "</a><br>"+a[q][1]+"<p><br><p>"});
