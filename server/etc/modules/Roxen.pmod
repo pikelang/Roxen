@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.148 2002/10/15 12:00:00 grubba Exp $
+// $Id: Roxen.pmod,v 1.149 2002/10/16 16:26:02 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1349,30 +1349,62 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in)
+string make_tag_attributes(mapping(string:string) in,
+			   void|int preserve_roxen_entities)
 {
-  if(!in || !sizeof(in)) return "";
-  string res="";
-  foreach(indices(in), string a)
-    res+=" "+a+"=\""+html_encode_string((string)in[a])+"\"";
+  if (!in || !sizeof(in))
+    return "";
+
+  //  Special quoting which leaves Roxen entities (e.g. &page.path;)
+  //  unescaped.
+  string quote_fn(string text)
+  {
+    string out = "";
+    int pos = 0;
+    while ((pos = search(text, "&")) >= 0) {
+      if ((sscanf(text[pos..], "&%[^ <>;&];", string entity) == 1) &&
+	  search(entity, ".") >= 0) {
+	out += html_encode_string(text[..pos - 1]) + "&" + entity + ";";
+	text = text[pos + strlen(entity) + 2..];
+      } else {
+	out += html_encode_string(text[..pos]);
+	text = text[pos + 1..];
+      }
+    }
+    return out + html_encode_string(text);
+  };
+  
+  string res = "";
+  if (preserve_roxen_entities) {
+    foreach(indices(in), string a)
+      res += " " + a + "=\"" + quote_fn((string) in[a]) + "\"";
+  } else {
+    foreach(indices(in), string a)
+      res += " " + a + "=\"" + html_encode_string((string) in[a]) + "\"";
+  }
   return res;
 }
 
-string make_tag(string name, mapping(string:string) args, void|int xml)
-//! Returns an empty element tag `name', with the tag arguments dictated
-//! by the mapping `args'. If the flag xml is set, slash character will be
-//! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
+string make_tag(string name, mapping(string:string) args, void|int xml,
+		void|int preserve_roxen_entities)
+//! Returns an empty element tag [@name], with the tag arguments dictated
+//! by the mapping [@args]. If the flag [@xml] is set, slash character will
+//! be added in the end of the tag. Use RXML.t_xml->format_tag(name, args)
+//! instead.
 {
-  return "<"+name+make_tag_attributes(args)+(xml?" /":"")+">";
+  string attrs = make_tag_attributes(args, preserve_roxen_entities);
+  return "<" + name + attrs + (xml ? " /" : "" ) + ">";
 }
 
-string make_container(string name, mapping(string:string) args, string content)
-//! Returns a container tag `name' encasing the string `content', with
-//! the tag arguments dictated by the mapping `args'. Use
+string make_container(string name, mapping(string:string) args, string content,
+		      void|int preserve_roxen_entities)
+//! Returns a container tag [@name] encasing the string [@content], with
+//! the tag arguments dictated by the mapping [@args]. Use
 //! RXML.t_xml->format_tag(name, args, content) instead.
 {
   if(args["/"]=="/") m_delete(args, "/");
-  return make_tag(name,args)+content+"</"+name+">";
+  return make_tag(name, args, 0,
+		  preserve_roxen_entities) + content + "</" + name + ">";
 }
 
 string add_config( string url, array config, multiset prestate )
