@@ -15,9 +15,11 @@ LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
+# Used to avoid make compatibility problems.
+BIN_TRUE=":"
 
-VPATH_SUPPORT: VPATH_SUPPORT.in
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
+	-@$(BIN_TRUE)
 
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
@@ -35,10 +37,14 @@ zlib: force
 	-@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
 
 force:
+	-@$(BIN_TRUE)
 
 # These are here for compatibility with the easy-start makefile
 easy: all
+	-@$(BIN_TRUE)
+
 hard: all
+	-@$(BIN_TRUE)
 
 depend:
 	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
@@ -72,14 +78,17 @@ new_peep_engine:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)
 
 check: verify
+	-@$(BIN_TRUE)
 
 clean:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
 install_all: install_pike install
+	-@$(BIN_TRUE)
 
 install: all install_only
+	-@$(BIN_TRUE)
 
 install_only: 
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
