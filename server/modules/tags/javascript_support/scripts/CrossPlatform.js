@@ -3,7 +3,7 @@
 
 // Global variables
 var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,
-  isMacIE50 = false, isSafari = false;
+isMacIE50 = false, isSafari = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
@@ -52,7 +52,7 @@ function getObject(obj)
     if (isNav5)
       return document.getElementById(obj);
     else
-      return eval("document." + range + obj);
+      return document.all(obj);
   }
   else
     return obj;
