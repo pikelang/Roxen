@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23.2.1 1997/02/04 21:39:44 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23.2.2 1997/02/15 15:46:58 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -334,20 +334,17 @@ object (Image) make_text_image(mapping args, object font, string text)
 
   if(args->texture)    foreground = load_image(args->texture);
 
-  if(args->background)
-  {
-    background = load_image(args->background);
+  if((args->background) && (background = load_image(args->background))) {
     xsize = background->xsize();
     ysize = background->ysize();
-    switch(lower_case(args->talign||"left"))
-    {
-     case "center":
+    switch(lower_case(args->talign||"left")) {
+    case "center":
       xoffset = (xsize/2 - txsize/2);
       break;
-     case "right":
+    case "right":
       xoffset = (xsize - txsize);
       break;
-     case "left":
+    case "left":
     }
   } else
     background = Image(xsize, ysize, @bgcolor);
