@@ -20,13 +20,13 @@
       Execute="commit" />
     <CustomAction Id="RemoveRoxenService" Directory="TARGETDIR"
       ExeCommand='"[TARGETDIR]\ntstart" --remove'
-      Execute="commit" />
+      Execute="rollback" />
     <CustomAction Id="StartServer" Directory="TARGETDIR"
       ExeCommand='net start RoxenService'
       Execute="commit" />
     <CustomAction Id="StopServer" Directory="TARGETDIR"
       ExeCommand='net stop RoxenService'
-      Execute="commit" />
+      Execute="rollback" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
       Execute="commit" Return="asyncNoWait" />
