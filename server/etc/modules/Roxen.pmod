@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.2 1999/05/07 23:28:24 grubba Exp $
+ * $Id: Roxen.pmod,v 1.3 1999/05/10 23:21:21 grubba Exp $
  *
  * Various helper functions.
  *
@@ -33,7 +33,8 @@ class QuotaDB
   constant READ_BUF_SIZE = 256;
   constant CACHE_SIZE_LIMIT = 512;
 
-  object index_file;
+  string base;
+
   object catalog_file;
   object data_file;
 
@@ -252,16 +253,93 @@ class QuotaDB
   static void rebuild_index()
   {
     // FIXME: Actually make an index file.
+    array(string) new_keys = sort(indices(new_entries_cache));
+
+    int prev;
+    array(int) new_index = ({});
+
+    foreach(new_keys, string key) {
+      int lo;
+      int hi = sizeof(index_acc);
+      while(lo < hi-1) {
+	int probe = (lo + hi)/2;
+
+	if (!index_acc[probe]) {
+	  object e = read_entry(index[probe * acc_scale]);
+
+	  index_acc[probe] = e->name;
+	}
+	if (index_acc[probe] < key) {
+	  lo = probe;
+	} else if (index_acc[probe] > key) {
+	  hi = probe;
+	} else {
+	  /* Found */
+	  // Shouldn't happen...
+	  break;
+	}
+      }
+      if (lo < hi-1) {
+	// Found...
+	// Shouldn't happen, but...
+	// Skip to the next key...
+	continue;
+      }
+      lo *= acc_scale;
+      hi *= acc_scale;
+
+      while (lo < hi-1) {
+	int probe = (lo + hi)/2;
+	object e = read_entry(index[probe]);
+	if (e->name < key) {
+	  lo = probe;
+	} else if (e->name > key) {
+	  hi = probe;
+	} else {
+	  /* Found */
+	  // Shouldn't happen...
+	  break;
+	}
+      }
+      if (lo < hi-1) {
+	// Found...
+	// Shouldn't happen, but...
+	// Skip to the next key...
+	continue;
+      }
+      new_index += index[prev..lo] + ({ new_entries_cache[key] });
+      prev = hi;
+    }
+
+    LOCK();
+
+    object index_file = open(base + ".index.new", 1);
+    string to_write = sprintf("%@4c", new_index);
+    if (index_file->write(to_write) != sizeof(to_write)) {
+      index_file->close();
+      rm(base + ".index.new");
+    } else {
+      mv(base + ".index.new", base + ".index");
+    }
+
+    index = new_index;
+    init_index_acc();
+
+    UNLOCK();
+
+    foreach(new_keys, string key) {
+      m_delete(new_entries_cache, key);
+    }
   }
 
   static object low_lookup(string key)
   {
     QD_WRITE(sprintf("QuotaDB::low_lookup(%O)\n", key));
 
-    int data_offset;
+    int cat_offset;
 
-    if (!zero_type(data_offset = new_entries_cache[key])) {
-      return read_entry(data_offset);
+    if (!zero_type(cat_offset = new_entries_cache[key])) {
+      return read_entry(cat_offset);
     }
 
     /* Try the index file. */
@@ -383,9 +461,11 @@ class QuotaDB
 
   void create(string base_name, int|void create_new)
   {
-    index_file = open(base_name + ".index", create_new);
+    base = base_name;
+
     catalog_file = open(base_name + ".cat", create_new);
     data_file = open(base_name + ".data", create_new);
+    object index_file = open(base_name + ".index", 1);
 
 #if constant(set_weak_flag)
     set_weak_flag(active_objects, 1);
@@ -422,7 +502,7 @@ class QuotaDB
     array(string) index_str = index_file->read()/4;
     index = allocate(sizeof(index_str));
 
-    if (sizeof(index)*4 != sizeof(index_str)) {
+    if (sizeof(index_str) && (sizeof(index_str[-1]) != 4)) {
       error("Truncated read of the index file!\n");
     }
 
