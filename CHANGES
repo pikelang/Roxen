@@ -1,6 +1,9 @@
 Changes since Roxen Challenger 1.2 alpha 9
 -----------------------------------------------
 
+o The Languagemodule now supports Accept-Language headers and is
+  capable of presenting directory listings.
+
 o Minor redesign of the buttons in the config-interface.
 
 o Copying of configurations now works again.
