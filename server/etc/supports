@@ -1,4 +1,4 @@
-## $Id: supports,v 1.62 1999/10/26 17:50:20 nilsson Exp $
+## $Id: supports,v 1.63 1999/10/27 17:28:57 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -269,7 +269,7 @@ cern.*linemode.*	html
 # }
 
 #section microsoft {
-.*url.*control		robot	ms-url-control
+.*url.*control		robot, ms-url-control
 # }
 
 #section chimera {
@@ -280,8 +280,6 @@ cern.*linemode.*	html
 #
 #  --------- WAP ---------
 #
-
-# Hot hype stuff contributed by E|HAND
 
 #section nokia {
 nokia7110.*	phone, wml1.1, wbmp0
@@ -294,8 +292,8 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section up.broswer {
-.*si25.*	phone, wml1.0, wbmp0
 .*		wml1.1, wbmp0
+.*si25.*	phone, wml1.0, wbmp0, -wml1.1
 # }
 
 #section mc218 {
@@ -313,87 +311,87 @@ nokia.7110.*	wml1.1, wbmp0
 # How nice it would have been if all robots had 'robot' in their name..
 
 #section architext {
-.*		html, robot	architex
+.*		html, robot, architex
 # }
 
 #section yahoo {
-.*		html, robot	yahoo
+.*		html, robot, yahoo
 # }
 
 #section infoseek {
-.*		html, robot	infoseek
+.*		html, robot, infoseek
 # }
 
 #section url {
-.*minder.*	html, robot	url-minder
+.*minder.*	html, robot, url-minder
 # }
 
 #section scoutget {
-.*		html, robot	scout
+.*		html, robot, scout
 # }
 
 #section momspider {
-.*		html, robot	webinfo
+.*		html, robot, webinfo
 # }
 
 #section lycos {
-.*		html, robot	lycos
+.*		html, robot, lycos
 # }
 
 #section scooter {
-.*		html, robot	altavista
+.*		html, robot, altavista
 # }
 
 #section backrub {
-.*		html, robot	backrub
+.*		html, robot, backrub
 # }
 
 #section freecrawl {
-.*		html, robot	freecrawl
+.*		html, robot, freecrawl
 # }
 
 #section slurp {
-.*		html, robot	hotbot
+.*		html, robot, hotbot
 # }
 
 #section freeseek {
-.*		html, robot	passagen
+.*		html, robot, passagen
 # }
 
 #section webcrawler {
-.*		html, robot	webcrawler
+.*		html, robot, webcrawler
 # }
 
 #section intraseek {
-.*		html, robot	intraseek idonex infovav
+.*		html, robot, intraseek, idonex, infovav
 # }
 
 #section harvest {
-.*		html, robot	harvest
+.*		html, robot, harvest
 # }
 
 #section checkbot {
-.*		html, robot	checkbot
+.*		html, robot, checkbot
 # }
 
 #section gcreep {
-.*		html, robot	gcreep
+.*		html, robot, gcreep
 # }
 
 #section wget {
-.*		html, robot	wget mirror_script
+.*		html, robot, wget, mirror_script
 # }
 
 #section ia_archiver {
-.*		html, robot	alexa
+.*		html, robot, alexa
 # }
 
 #section fast-webcrawler {
-.*		html, robot	fast
+.*		html, robot, fast
 # }
 
 #section roxen {
-.*		html, roxen	rxml
+.*		html, roxen, rxml
 # }
 
 .*robot.*	html, robot
@@ -402,7 +400,7 @@ nokia.7110.*	wml1.1, wbmp0
 # unless you have more than 200Mb of memory, so something announcing
 # itself as 'libwww-perl' is probably a robot.
 
-.*libwww-perl.*		html, robot
+.*libwww-perl.*		html, robot, unknown
 
 # Although not a browser I don't think you would call this a robot.
 #section w3c_validator {
