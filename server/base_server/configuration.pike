@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.583 2004/09/08 12:38:04 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.584 2005/01/05 11:11:08 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -661,9 +661,23 @@ array (function) last_modules()
   return last_module_cache;
 }
 
-#ifdef __NT__
 static mixed strip_fork_information(RequestID id)
 {
+  if (uname()->sysname == "Darwin") {
+    //  Look for Mac OS X special filenames that are used access files in
+    //  magic ways:
+    //
+    //    foo.txt/..namedfork/data     (same as foo.txt)
+    //    foo.txt/..namedfork/rsrc     (resource fork of foo.txt)
+    //    foo.txt/rsrc                 (resource fork of foo.txt)
+    //    .DS_Store                    (Finder info file with catalog data)
+    if (has_value(id->not_query, "..namedfork/") ||
+	has_suffix(id->not_query, "/rsrc") ||
+	has_value(lower_case(id->not_query), ".ds_store"))
+      //  Show 404 page
+      return error_file(id);
+  }
+  
   array a = id->not_query/"::";
   //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
   //  e.g. "/internal-roxen-colorbar:x,y,z" and several others.
@@ -672,18 +686,25 @@ static mixed strip_fork_information(RequestID id)
   id->misc->fork_information = a[1..];
   return 0;
 }
-#endif /* __NT__ */
 
 array (function) first_modules()
 {
   if(!first_module_cache)
   {
     int i;
-    first_module_cache=({
+    first_module_cache = ({ });
+    
+    //  Add special fork handlers on Windows and Mac OS X
+    if (
 #ifdef __NT__
-      strip_fork_information,	// Always first!
-#endif /* __NT__ */
-    });
+	1 ||
+#endif
+	uname()->sysname == "Darwin") {
+      first_module_cache= ({
+	strip_fork_information,	// Always first!
+      });
+    }
+    
     for(i=9; i>=0; i--)
     {
       array(RoxenModule) d; RoxenModule p;
