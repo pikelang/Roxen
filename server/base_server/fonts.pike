@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.76 2001/08/27 15:33:53 per Exp $
+// $Id: fonts.pike,v 1.77 2001/08/29 18:41:53 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -109,12 +109,15 @@ class FontHandler
           return bc+ic;
   }
 
-
   static string make_font_name(string name, int size, int bold, int italic)
   {
     mixed style = font_style( name, size, bold, italic );
     if( style == -1 ) return name;
     return name+"/"+style;
+  }
+
+  string _sprintf() {
+    return "FontHandler";
   }
 }
 
