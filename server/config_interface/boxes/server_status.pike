@@ -5,7 +5,7 @@
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
-constant box_initial = 0;
+constant box_initial = 1;
 
 String box_name = _(367,"Server status");
 String box_doc  = _(368,"Various global server statistics");
