@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.95 2002/01/07 16:26:02 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.96 2002/01/07 18:08:32 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -257,11 +257,16 @@ class SqlEmitResponse {
     }
     val = map(val, lambda(mixed x) {
 		     if (x) return x;
-		     // Might be a dbnull object.
-		     // Transform NULLString to "".
-		     if ((x != 0) && stringp(x->type)) return x->type;
-		     // Let other null objects become 0.
-		     return 0;
+		     // Might be a dbnull object which considers
+		     // itself false (e.g. in the oracle glue).
+		     if ((x != 0) && stringp(x->type))
+		       // Transform NULLString to "".
+		       return x->type;
+		     // It's 0 or a null object. Treat it as the value
+		     // doesn't exist at all (ideally there should be
+		     // some sort of dbnull value at the rxml level
+		     // too to tell these cases apart).
+		     return RXML.nil;
 		   });
     return mkmapping(cols, val);
   }
