@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.196 2002/12/16 09:43:54 grubba Exp $
+# $Id: start,v 1.197 2002/12/16 14:37:52 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -141,7 +141,7 @@ remove_old_dot_o_files () {
   # to roxenloader instead.
 
   # Make sure that the argument isn't duplicated for every restart...
-  if [ "x$remove_dumped_passed" = "xyes"; then :; else
+  if [ "x$remove_dumped_passed" = "xyes" ]; then :; else
     pass="$pass --remove-dumped"
     remove_dumped_passed=yes
   fi
