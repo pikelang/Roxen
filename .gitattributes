@@ -230,6 +230,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/rxmltags.pike foreign_ident
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/sqltag.pike foreign_ident
+/server/modules/tags/ssi.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident

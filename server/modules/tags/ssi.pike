@@ -1,8 +1,12 @@
+// This is a roxen module. Copyright © 1999, Idonex AB.
+//
+
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
+constant cvs_version = "$Id: ssi.pike,v 1.12 1999/12/08 19:28:45 nilsson Exp $";
 
 array register_module()
 {
