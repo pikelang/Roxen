@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.150 2004/05/22 16:36:43 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.151 2004/05/23 02:50:18 mani Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -71,9 +71,9 @@ inherit "roxenlib";
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_message",X,Y)
 
 #ifdef DEBUG_WIZARD
-# define DEBUGMSG(msg) report_debug(msg)
+# define DEBUGMSG(X ...) report_debug(X)
 #else
-# define DEBUGMSG(msg)
+# define DEBUGMSG(X ...)
 #endif
 
 
@@ -123,7 +123,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     return make_tag("input", m);
 
    case "list": // String....
-    string n = m->name, res="<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">";
+    string n = m->name;
+    string res="<table cellpadding='0' cellspacing='0' border='0'>";
     if(!id->variables[n]) id->variables[n]=current;
 
     m->type = "text";
@@ -131,7 +132,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
     {
-      res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=\"-2\">";
+      res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size='-2'>";
       m->name="_delete_"+n+":"+v;
       m->value = " " + LOCALE(16, "Remove") + " ";
       m->type = "submit";
@@ -140,7 +141,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->name = "_new_"+n;
     m->type = "text";
     m->value = "";
-    res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size=\"-2\">";
+    res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size='-2'>";
     m->name="_Add";
     m->value = " " + LOCALE(18, "Add") + " ";
     m->type = "submit";
@@ -154,7 +155,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m_delete(m, "value");
     if(!m->rows)m->rows="6";
     if(!m->cols)m->cols="40";
-    return make_container("textarea", m-(["quote":""]), loc_encode(current||"", m, "html"));
+    return make_container("textarea", m-(["quote":""]),
+			  loc_encode(current||"", m, "html"));
 
    case "radio":
     m_delete(m,"default");
@@ -221,39 +223,43 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      id->variables[m->name] = bgcol;
      return
      ("<table><tr>\n"
-      "<td width=\"258\" rowspan=\"2\">\n"
-      "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"258\"><tr><td>\n"
-      "  <input type=\"image\" name=\""+m->name+".foo\" src=\"/internal-roxen-colsel\""
-        " width=\"256\" height=\"256\" border=\"0\"></td>\n"
+      "<td width='258' rowspan='2'>\n"
+      "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0' "
+          "width='258'><tr><td>\n"
+      "  <input type='image' name='"+m->name+".foo' src='/%01/colsel'"
+        " width='256' height='256' border='0'></td>\n"
       "</table>\n"
       "</td>\n"
-      "<td width=\"30\" rowspan=\"2\"></td>\n"
-      "<td width=\"32\" rowspan=\"2\">\n"
-      "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"32\"><tr><td>\n"
-      "<input type=\"image\" src=\"/internal-roxen-colorbar:"+
-      (string)h+","+(string)v+","+(string)s+"\" "
-      "name=\""+m->name+".bar\" width=\"30\" height=\"256\" border=\"0\"></td>"
+      "<td width='30' rowspan='2'></td>\n"
+      "<td width='32' rowspan='2'>\n"
+      "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0' "
+         "width='32'><tr><td>\n"
+      "<input type='image' src='/%01/colorbar:"+
+      (string)h+","+(string)v+","+(string)s+"' "
+      "name='"+m->name+".bar' width='30' height='256' border='0'></td>"
       "</table>\n"
       "</td>\n"
-      "<td width=\"32\" rowspan=\"2\"></td>\n"
-      "<td width=\"120\">\n"
-      "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"3\" cellspacing=\"0\" width=\"90\">\n"
-      "  <tr><td height=\"90\" width=\"90\" bgcolor=\""+bgcol+"\">&nbsp;"+
-      (m->tt?"<font color=\""+m->tc+"\">"+m->tt+"</font>":"")
+      "<td width='32' rowspan='2'></td>\n"
+      "<td width='120'>\n"
+      "  <table bgcolor='#000000' cellpadding='1' border='3' cellspacing='0' "
+         "width='90'>\n"
+      "  <tr><td height='90' width='90' bgcolor='"+bgcol+"'>&nbsp;"+
+      (m->tt?"<font color='"+m->tc+"'>"+m->tt+"</font>":"")
       +"</td></table>\n"
       "</td><tr>\n"
-      "<td width=\"120\">\n"
+      "<td width='120'>\n"
       "<b>R:</b> "+(string)a[0]+"<br />\n"
       "<b>G:</b> "+(string)a[1]+"<br />\n"
       "<b>B:</b> "+(string)a[2]+"<br />\n"
-      "<hr size=\"2\" align=\"left\" noshade=\"noshade\" width=\"70\" />\n"
+      "<hr size='2' align='left' noshade='noshade' width='70' />\n"
       "<b>H:</b> "+(string)h+"<br />\n"
       "<b>S:</b> "+(string)s+"<br />\n"
       "<b>V:</b> "+(string)v+"<br />\n"
-      "<hr size=\"2\" align=\"left\" noshade=\"noshade\" width=\"70\" />\n"+
-      "<font size=\"-1\"><input type=\"string\" name=\""+
-      m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"Ok\"></font></td></table>\n");
+      "<hr size='2' align='left' noshade='noshade' width='70' />\n"+
+      "<font size='-1'><input type='string' name='"+
+      m->name+".entered' size='8' value='"+
+      color_name(a) +
+      "'> <input type='submit' value='Ok'></font></td></table>\n");
 
    case "color-small":
      if(id->variables[m->name+".hsv"])
@@ -286,35 +292,40 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      bgcol = sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
-     ("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
-      "<td rowspan=\"2\">\n"
-      "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\"><tr><td>\n"
-      "    <input type=\"image\" name=\""+m->name+".foo\" "
-            "src=\"/internal-roxen-colsel-small\" "
-            "width=\"128\" height=\"128\" border=\"0\"></td>\n"
+     ("<table border='0' cellpadding='0' cellspacing='0'><tr>\n"
+      "<td rowspan='2'>\n"
+      "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0'>"
+         "<tr><td>\n"
+      "    <input type='image' name='"+m->name+".foo' "
+            "src='/internal-roxen-colsel-small' "
+            "width='128' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width=\"8\" rowspan=\"2\"><img src=\"/internal-roxen-unit\" width=\"8\" /></td>\n"
-      "<td width=\"18\" rowspan=\"2\">\n"
-      "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\"><tr><td>\n"
-      "    <input type=\"image\" src=\"/internal-roxen-colorbar:"+
-             (string)h+","+(string)v+","+(string)s+"\" "
-            "name=\""+m->name+".bar\" width=\"16\" height=\"128\" border=\"0\"></td>\n"
+      "<td width='8' rowspan='2'><img src='/internal-roxen-unit' width='8' />"
+      "</td>\n"
+      "<td width='18' rowspan='2'>\n"
+      "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0'>"
+      "<tr><td>\n"
+      "    <input type='image' src='/internal-roxen-colorbar:"+
+             (string)h+","+(string)v+","+(string)s+"' "
+            "name='"+m->name+".bar' width='16' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width=\"8\" rowspan=\"2\"><img src=\"/internal-roxen-unit\" width=\"8\" /></td>\n"
+      "<td width='8' rowspan='2'><img src='/internal-roxen-unit' width='8' />"
+      "</td>\n"
       "<td>\n"
-      "  <table bgcolor=\"#000000\" width=\"64\" border=\"3\" "
-               "cellpadding=\"1\" cellspacing=\"0\"><tr>\n"
-      "    <td height=\"64\" width=\"64\" bgcolor=\""+bgcol+"\">&nbsp;"+
-             (m->tt?"<font color=\""+m->tc+"\">"+m->tt+"</font>":"")+"\n"
+      "  <table bgcolor='#000000' width='64' border='3' "
+               "cellpadding='1' cellspacing='0'><tr>\n"
+      "    <td height='64' width='64' bgcolor='"+bgcol+"'>&nbsp;"+
+             (m->tt?"<font color='"+m->tc+"'>"+m->tt+"</font>":"")+"\n"
       "    </td></tr>\n"
       "  </table>\n"
       "</td>\n"
-      "<tr><td width=\"110\">\n"
-      "<font size=\"-1\"><input type=\"string\" name=\""+
-      m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "Ok") + "\"></font>"
+      "<tr><td width='110'>\n"
+      "<font size='-1'><input type='string' name='"+
+      m->name+".entered' size='8' value='"+
+      color_name(a)+"'> <input type='submit' value='" + LOCALE(38, "Ok") +
+         "'></font>"
       "</td></tr>\n"
       "</table>\n");
 
@@ -401,13 +412,17 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "<table border='0' cellspacing='0' cellpadding='2'>"
        "<tr>"
        "  <td>"
-       "    <input type='text' size='10' value='" + current + "' id='PREFIX_color_input' "
-       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);' />"
+       "    <input type='text' size='10' value='" + current +
+             "' id='PREFIX_color_input' "
+       "           name='" + m->name +
+             "' onChange='PREFIX_colsel_type(this.value, 1);' />"
        "  </td>"
        "  <td>"
-       "    <table border='0' cellspacing='0' cellpadding='0' background='#ffffff'>"
+       "    <table border='0' cellspacing='0' cellpadding='0' "
+            "background='#ffffff'>"
        "      <tr>"
-       "      	<td style='background: " + current + "; border: 1px solid #888888' "
+       "      	<td style='background: " + current +
+                  "; border: 1px solid #888888' "
        "      	    id='PREFIX_preview'"
        "      	  ><img src='/internal-roxen-colsel-arrow'"
        "                width='49' height='16' border='0'"
@@ -427,9 +442,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m->lines = "20";
      m->choices = core.fonts->available_fonts() * ",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
-       res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
+       res = ("<input type='submit' value='" + LOCALE(47, "Example") +
+	      "'><br />"+
 	      ((current&&strlen(current))?
-	       "<gtext font=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
+	       "<gtext font='"+current+"'>" + LOCALE(48, "Example Text") +
+	       "</gtext><br />"
 	       :""));
      m_delete(m, "noexample");
      return wizard_tag_var("var", m, id) + res;
@@ -437,9 +454,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
    case "toggle":
     m_delete(m,"default");
     return make_container("select", m,
-			  "<option"+((int)current?" selected=\"selected\"":"")+" value=\"1\">" +
+			  "<option"+((int)current?" selected='selected'":"") +
+			  " value='1'>" +
 			  LOCALE(49, "Yes") + "</option>\n"
-			  "<option"+(!(int)current?" selected=\"selected\"":"")+" value=\"0\">" +
+			  "<option"+(!(int)current?" selected='selected'":"") +
+			  " value='0'>" +
 			  LOCALE(50, "No") + "</option>\n");
 
    case "select":
@@ -458,7 +477,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 			({"__CoMma__", "__CoLon__"}));
 
      return make_container("select", m2, map(m->choices/",",
-                                             lambda(string s, string c, mapping m) {
+                                             lambda(string s, string c,
+						    mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
@@ -467,7 +487,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	t=replace(t,({"__CoMma__",
 		      "__CoLon__"}),({",",":"}));
 
-        return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+
+        return "<option value='"+s+"' "+(s==c?" selected='selected'":"")+">"+
 	  loc_encode(t, m, "html")+"</option>\n";
      },current,m)*"");
 
@@ -496,7 +516,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       t=replace(t,({"__CoMma__",
 		    "__CoLon__"}),({",",":"}));
 
-      return "<option value=\""+s+"\" "+(search(c,s)!=-1?"selected=\"selected\"":"")+">"+
+      return "<option value='"+s+"' " +
+	(search(c,s)!=-1?"selected='selected'":"")+">"+
 	loc_encode(t, m, "html")+"</option>\n";
     },(current||"")/"\0",m)*"");
   }
@@ -578,10 +599,11 @@ int num_pages(string wiz_name)
     }
   return max_page+1;
 }
-#define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
+#define Q(X) replace(X,(["<":"&lt;",">":"&gt;","&":"&amp;","'":"&apos;"]))
 #define LABEL(X,Y) (this->X?Q(this->X):Y)
 
-string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
+string parse_wizard_page(string form, RequestID id, string wiz_name,
+			 void|string page_name)
 {
   mapping(string:array) automaton = this->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
@@ -610,71 +632,75 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 
   //  Use custom method if caller doesn't like GET or perhaps wants other
   //  attributes included.
-  string method = this->wizard_method || "method=\"get\"";
+  string method = this->wizard_method || "method='get'";
 
 #ifdef USE_WIZARD_COOKIE
   string state_form = "";
-  id->add_response_header("Set-Cookie",
-			  sprintf("WizardState=%s; path=/",
-				  compress_state(id->real_variables) - "\r\n"));
+  Roxen.set_cookie(id, "WizardState",
+		   compress_state(id->real_variables)-"\r\n");
 #else
-  string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
-		      compress_state(id->real_variables)+"\" />\n";
+  string state_form = "<input type='hidden' name='_state' value='"+
+		      compress_state(id->real_variables)+"' />\n";
 #endif
   
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n" +
 	 (stringp (id->variables->action) ?
-	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
-	  "") +
-	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
+	  "<input type='hidden' name='action' value='"+id->variables->action +
+	  "' />\n" : "") +
+	 "<input type='hidden' name='_page' value='"+page+"' />\n"
 	 +state_form+
-	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
-	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
-	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
-	 "    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
-         "      <tr><td valign=top><font size=\"+2\">"+make_title()+"</font></td>\n"
-         "<td align=\"right\">"+
+	 "<table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0' "
+	   "width='80%'>\n"
+	 "  <tr><td><table bgcolor='#eeeeee' cellpadding='0' "
+	   "cellspacing='0' border='0' width='100%'>\n"
+	 "    <tr><td valign='top'><table width='100%' cellspacing='0' "
+	      "cellpadding='5'>\n"
+         "      <tr><td valign=top><font size='+2'>" + make_title() +
+	        "</font></td>\n"
+         "<td align='right'>"+
 	 (wiz_name=="done"
 	  ?LABEL(completed_label, LOCALE(52, "Completed"))
-	  :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page "))+(pageno+1)+"/"+(max_page+1):""))+
+	  :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page ")) +
+			 (pageno+1)+"/"+(max_page+1):""))+
 	 "</td>\n"
-	  " \n<td align=\"right\">"+
+	  " \n<td align='right'>"+
 	 (foo->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
 	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
-	  " border=\"0\" value=\"Help\"></font>":"")
+	  " border='0' value='Help'></font>":"")
 	 +"</td>\n"
-	 " </tr><tr><td colspan=\"3\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">"
-           "<tr bgcolor=\"#000000\"><td><img src=\""+
+	 " </tr><tr><td colspan='3'><table cellpadding='0' cellspacing='0' "
+	   "border='0' width='100%'>"
+           "<tr bgcolor='#000000'><td><img src='"+
 	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
-	 "\" width=\"1\" height=\"1\" alt=\"\" /></td></tr></table></td></tr>\n"
-	 "  </table><table cellpadding=\"6\"><tr><td>\n"
+	 "' width='1' height='1' alt='' /></td></tr></table></td></tr>\n"
+	 "  </table><table cellpadding='6'><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
 	 +form+
 	 "\n<!-- End of the output from the page function -->\n"
 	 "\n</td></tr></table>\n"
-	 "      <table width=\"100%\"><tr><td width=\"33%\">"+
+	 "      <table width='100%'><tr><td width='33%'>"+
 	 (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
 	   wiz_name!="done")?
-	  "\n        <input type=submit name=prev_page value=\""+
-	  LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"\" />":"")+
+	  "\n        <input type=submit name=prev_page value='"+
+	  LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"' />":"")+
 
-	 "</td><td width=\"33%\" align=\"center\">"+
+	 "</td><td width='33%' align='center'>"+
 	 (wiz_name!="done"
 	  ?(((automaton ? !id->variables->_next : pageno==max_page)
-	     ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
-	     LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
+	     ?"\n&nbsp;&nbsp;<input type='submit' name='ok' value=' "+
+	     LABEL(ok_label, LOCALE(55, "OK"))+" ' />&nbsp;&nbsp;"
 	     :"")+
-	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
-	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
-	  LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
-	 "</td><td width=\"33%\" align=\"right\">"+
+	    "\n&nbsp;&nbsp;<input type='submit' name='cancel' value=' "+
+	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" ' />&nbsp;&nbsp;")
+	  :"\n         <input type='submit' name='cancel' value=' "+
+	  LABEL(ok_label, LOCALE(55, "OK"))+" ' />")+
+	 "</td><td width='33%' align='right'>"+
 	 (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
 	   wiz_name!="done")?
-	  "\n        <input type=\"submit\" name=\"next_page\" value=\""+
-	  LABEL(next_label, LOCALE(57, "Next -&gt;"))+"\" />":"")+
+	  "\n        <input type='submit' name='next_page' value='"+
+	  LABEL(next_label, LOCALE(57, "Next -&gt;"))+"' />":"")+
 	 "</td></tr></table>\n"
 	 "    </td></tr>\n"
 	 "  </table>\n"
@@ -730,8 +756,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       function|string redirect = page_state[0];
       if (functionp (redirect)) {
 	dispatcher = redirect;
-	DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			   redirect, v->_page));
+	DEBUGMSG("Wizard: Running dispatch function %O for page %s\n",
+		 redirect, v->_page));
 	redirect = redirect (id, v->_page, @args);
       }
       if (stringp (redirect) && redirect != v->_page) {
@@ -757,8 +783,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     int fail = 0;
     if (functionp (c)) {
       fail = c (id, @args);
-      DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
-			 fail ? "failed" : "succeeded"));
+      DEBUGMSG("Wizard: Verify function %O %s\n", c,
+	       fail ? "failed" : "succeeded");
     }
     if (!fail) {
       v->_page = automaton ? v->_next : PAGE(1);
@@ -777,11 +803,12 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     int fail = 0;
     if (functionp (c)) {
       fail = c (id, @args);
-      DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
-			 fail ? "failed" : "succeeded"));
+      DEBUGMSG ("Wizard: Verify function %O %s\n", c,
+		fail ? "failed" : "succeeded");
     }
     if(!fail)
-      if (automaton) v->_page = 0; // Handle done state in the automaton code below.
+      // Handle done state in the automaton code below.
+      if(automaton) v->_page = 0;
       else
       {
 	mixed res;
@@ -837,7 +864,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       function|string redirect = 0;
       array page_state = automaton[v->_page];
       if (!page_state && v->_page != "done")
-	return "Internal error in wizard code: No entry " + v->_page + " in automaton.";
+	return "Internal error in wizard code: No entry " + v->_page +
+	  " in automaton.";
 
       if (page_state && v->_page != oldpage) {
 	redirect = page_state[0];
@@ -850,8 +878,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	    dispatcher = redirect = 0;
 	  else {
 	    dispatcher = redirect;
-	    DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			       dispatcher, v->_page));
+	    DEBUGMSG("Wizard: Running dispatch function %O for page %s\n",
+		     dispatcher, v->_page);
 	    redirect = dispatcher (id, v->_page, @args);
 	  }
 	}
@@ -878,7 +906,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	function pagefn = this[wiz_name + v->_page];
 	if (!functionp (pagefn)) return "Internal error in wizard code: "
 				   "No page function for " + v->_page + ".";
-	DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pagefn));
+	DEBUGMSG("Wizard: Running page function %O\n", pagefn);
 	data = pagefn (id, @args);
 	if (data) {
 	  id->variables->_prev = functionp (page_state[1]) ?
@@ -887,13 +915,17 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	    page_state[2] (id, v->_page, @args) : page_state[2];
 
 	  // So that dispatch functions may be used for prev/next too.
-	  if ((<"cancel", "done">)[id->variables->_prev]) id->variables->_prev = 0;
-	  if ((<"cancel", "done">)[id->variables->_next]) id->variables->_next = 0;
+	  if ((<"cancel", "done">)[id->variables->_prev])
+	    id->variables->_prev = 0;
+	  if ((<"cancel", "done">)[id->variables->_next])
+	    id->variables->_next = 0;
 
-	  page_name = sizeof (page_state) < 4 ? "" : functionp (page_state[3]) ?
+	  page_name = sizeof (page_state) < 4 ?
+	    "" : functionp (page_state[3]) ?
 	    page_state[3] (id, v->_page, @args) : page_state[3];
-	  DEBUGMSG ("Wizard: prev_page " + id->variables->_prev + ", next_page " +
-		    id->variables->_next + ", page_name \"" + page_name + "\"\n");
+	  DEBUGMSG("Wizard: prev_page " + id->variables->_prev +
+		   ", next_page " + id->variables->_next + ", page_name \"" +
+		   page_name + "\"\n");
 	  break;
 	}
 	else {
@@ -922,8 +954,9 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 		  || http_redirect(cancel||id->not_query,
 				   @(id->conf?({id}):({}))));
       }
-      if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
-      DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
+      if(!pg)
+	return "Internal error in wizard code: Invalid page ("+v->_page+")!";
+      DEBUGMSG ("Wizard: Running page function %O\n", pg);
       if(data = pg(id,@args)) break;
       DEBUGMSG ("Wizard: No data from page function; going to " +
 		(offset > 0 ? "next" : "previous") + " page\n");
@@ -989,8 +1022,8 @@ mapping get_actions(RequestID id, string base,string dir, array args)
  		  (get_wizard(act,dir,@args)->doc||"") });
  	else
 	  acts[sm]+=
-	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
-	      "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
+	    ({"<!-- "+rn+" --><dt><font size='+2'>"
+	      "<a href='"+base+"?action="+act+"&unique="+(zonk++)+"'>"+
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
@@ -1009,8 +1042,9 @@ string act_describe_submenues(array menues, string base,string sel)
   string res = "<font size=+3>";
   foreach(sort(menues), string s)
     res+=
-      (s==sel?"<li>":"<font color=\"#eeeeee\"><li></font><a href=\""+base+"?sm="+replace(s||"Misc"," ","%20")+
-       "&uniq="+(++zonk)+"\">")+(s||"Misc")+
+      (s==sel?"<li>":"<font color='#eeeeee'><li></font><a href='"+base+
+       "?sm="+replace(s||"Misc"," ","%20")+
+       "&uniq="+(++zonk)+"'>")+(s||"Misc")+
       (s==sel?"<br />":"</a><br />")+"";
   return res + "</font>";
 }
@@ -1039,10 +1073,10 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
       if(id->misc->raw_wizard_actions)
 	return acts[id->variables->sm];
       string res;
-      res= ("<table cellpadding=\"3\"><tr><td valign=\"top\" bgcolor=\"#eeeeee\">"+
+      res= ("<table cellpadding='3'><tr><td valign='top' bgcolor='#eeeeee'>"+
 	    act_describe_submenues(indices(acts),base,id->variables->sm)+
-	    "</td>\n\n<td valign=\"top\">"+
-	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=\"+3\">"+
+	    "</td>\n\n<td valign='top'>"+
+	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size='+3'>"+
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
 	    "</dl></td></tr></table>"+
@@ -1124,23 +1158,23 @@ string html_table(array(string) subtitles, array(array(string)) table,
   string r = "";
 
   int m = (int)(opt->modulo?opt->modulo:1);
-  r += ("<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
-	"cellspacing=\"0\" cellpadding=\"1\">\n"
+  r += ("<table bgcolor='"+(opt->bordercolor||"#000000")+"' border='0' "
+	"cellspacing='0' cellpadding='1'>\n"
 	"<tr><td>\n");
-  r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n";
-  r += "<tr bgcolor=\""+(opt->titlebgcolor||"#113377")+"\">\n";
+  r += "<table border='0' cellspacing='0' cellpadding='4'>\n";
+  r += "<tr bgcolor='"+(opt->titlebgcolor||"#113377")+"'>\n";
   int cols;
   foreach(subtitles, mixed s)
   {
     if(stringp(s))
     {
-      r+=("<th nowrap=\"nowrap\" align=\"left\"><font color=\""+
-	  (opt->titlecolor||"#ffffff")+"\">"+s+" &nbsp; </font></th>");
+      r+=("<th nowrap='nowrap' align='left'><font color='"+
+	  (opt->titlecolor||"#ffffff")+"'>"+s+" &nbsp; </font></th>");
       cols++;
     } else {
-      r+=("</tr><tr bgcolor=\""+(opt->titlebgcolor||"#113377")+"\">"
-	  "<th nowrap=\"nowrap\" align=\"left\" colspan=\""+cols+"\">"
-	  "<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s[0]+
+      r+=("</tr><tr bgcolor='"+(opt->titlebgcolor||"#113377")+"'>"
+	  "<th nowrap='nowrap' align='left' colspan='"+cols+"'>"
+	  "<font color='"+(opt->titlecolor||"#ffffff")+"'>"+s[0]+
 	  " &nbsp; </font></th>");
     }
   }
@@ -1153,7 +1187,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
-	r += "</tr>"+tr+"<td colspan=\""+cols+"\">"+s[0]+" &nbsp;</td>";
+	r += "</tr>"+tr+"<td colspan='"+cols+"'>"+s[0]+" &nbsp;</td>";
       else {
 	string type = "text";
 	if(arrayp(opt->fields) && j < sizeof(opt->fields))
@@ -1161,7 +1195,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	switch(type) {
 	case "num":
 	  array a = s/".";
-	  r += "<td nowrap=\"nowrap\" align=\"right\">";
+	  r += "<td nowrap='nowrap' align='right'>";
 	  if(sizeof(a) > 1) {
 	    r += (format_numeric(a[0])+"."+
 		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
@@ -1169,17 +1203,17 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	    r += format_numeric(s, "&nbsp;");
 	  break;
 	case "right":
-	  r += "<td align=\"right\">"+s;
+	  r += "<td align='right'>"+s;
 	  break;
 	case "center":
-	  r += "<td align=\"center\">"+s;
+	  r += "<td align='center'>"+s;
 	  break;
 	case "left":
-	  r += "<td align=\"left\">"+s;
+	  r += "<td align='left'>"+s;
 	  break;
 	case "text":
 	default:
-	  r += "<td nowrap=\"nowrap\">"+s;
+	  r += "<td nowrap='nowrap'>"+s;
 	}
 	//  Simple heuristics to detect cells containing a table, image etc
 	//  where trailing spaces will give really ugly results
@@ -1203,33 +1237,36 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
 string html_notice(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_1.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return ("<table><tr><td valign='top'><img \nalt='Notice:' src='"+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_1.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+	  "</td></tr></table>");
 }
 
 string html_warning(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Warning:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_2.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return ("<table><tr><td valign='top'><img \nalt='Warning:' src='"+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_2.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+	  "</td></tr></table>");
 }
 
 string html_error(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Error:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_3.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return ("<table><tr><td valign='top'><img \nalt='Error:' src='"+
+	  (id->conf?"/internal-roxen-":"/image/")
+	  +"err_3.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+	  "</td></tr></table>");
 }
 
 string html_border(string what, int|void width, int|void ww,
 		   string|void bgcolor, string|void bdcolor)
 {
-  return ("<table border=\"0\" cellpadding=\""+(width+1)+"\" cellspacing=\"0\" "
-	  "bgcolor=\""+(bdcolor||"#000000")+
-	  "\"><tr><td><table border=\"0\" cellpadding=\""+(ww)+
-	  "\" cellspacing=\"0\" bgcolor=\""+(bgcolor||"#ffffff")+
-	  "\"><tr><td>"+what+"</tr></td></table>"
+  return ("<table border='0' cellpadding='"+(width+1)+"' cellspacing='0' "
+	  "bgcolor='"+(bdcolor||"#000000")+
+	  "'><tr><td><table border='0' cellpadding='"+(ww)+
+	  "' cellspacing='0' bgcolor='"+(bgcolor||"#ffffff")+
+	  "'><tr><td>"+what+"</tr></td></table>"
           "</td></tr></table>");
 }
 
