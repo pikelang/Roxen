@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: standard.pmod,v 1.2 2000/02/24 19:06:09 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -657,7 +657,7 @@ void export_module_doc_stuff()
   if( name != "standard" )
   {
     mapping oq = RoxenLocale["standard"]->_module_doc_strings;
-    object f = Stdio.File( "/tmp/"+name+".in", "wct" );
+    object f = Stdio.File( "/tmp/"+latin1_name+".in", "wct" );
     array mods = indices( oq );
     array n = sort(Array.map(indices( oq ),module_name), mods);
     multiset written = (<>);
