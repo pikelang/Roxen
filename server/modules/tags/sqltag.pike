@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.11 1997/09/30 14:33:21 grubba Exp $
+ * $Id: sqltag.pike,v 1.12 1997/10/15 18:50:36 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,9 +7,12 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.11 1997/09/30 14:33:21 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.12 1997/10/15 18:50:36 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
+
+/* Compatibility with old versions of the sqltag module. */
+// #define SQL_TAG_COMPAT
 
 inherit "module";
 inherit "roxenlib";
@@ -24,51 +27,54 @@ import Sql;
 array register_module()
 {
   return( ({ MODULE_PARSER,
-	       "SQL-module",
-	       "This module gives the three tags &lt;SQLQUERY&gt;, "
-	       "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
-	       "Usage:<ul>\n"
-	       "<table border=0>\n"
-	       "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
-	       "<td>Executes an SQL-query, and "
-	       "replaces #-quoted fieldnames with the results. # is "
-	       "quoted as ##. The content inbetween &lt;sqloutput&gt; and "
-	       "&lt;/sqloutput&gt; is repeated once for every row in the "
-	       "result.</td></tr>\n"
-	       "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
-	       "<td>Executes an SQL-query, but "
-	       "doesn't do anything with the result. This is useful if "
-	       "you do queries like INSERT and CREATE.</td></tr>\n"
-	       "<tr><td valign=top><b>&lt;sqltable&gt;</td>"
-	       "<td>Executes an SQL-query, and makes "
-	       "an HTML-table from the result.</td></tr>\n"
-	       "</table></ul>\n"
-	       "The following attributes are used by the above tags:<ul>\n"
-	       "<table border=0>\n"
-	       "<tr><td valign=top><b>query</b></td>"
-	       "<td>The actual SQL-query. (<b>REQUIERED</b>)</td></tr>\n"
-	       "<tr><td valign=top><b>host<b></td>"
-	       "<td>The hostname of the machine the SQL-server runs on.<br>\n"
-	       "This argument can also be used to specify which SQL-server "
-	       "to use by specifying an \"SQL-URL\":<br><ul>\n"
-	       "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
-	       "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre><br>\n"
-	       "</ul>Valid values for \"sqlserver\" depend on which "
-	       "sql-servers your pike has support for, but the following "
-	       "might exist: msql, mysql, odbc, oracle, postgres.</td></tr>\n"
-	       "<tr><td valign=top><b>database</b></td>"
-	       "<td>The name of the database to use.</td></tr>\n"
-	       "<tr><td valign=top><b>user</b></td>"
-	       "<td>The name of the user to access the database with.</td></tr>\n"
-	       "<tr><td valign=top><b>password</b></td>"
-	       "<td>The password to access the database.</td></tr>\n"
-	       "</table></ul><p>\n"
-	       "\n"
-	       "<b>NOTE</b>: Specifying passwords in the documents may prove "
-	       "to be a security hole if the module is not loaded for some "
-	       "reason.<br>\n",
-	       0,
-	       1 }) );
+	     "SQL-module",
+	     "This module gives the three tags &lt;SQLQUERY&gt;, "
+	     "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
+	     "Usage:<ul>\n"
+	     "<table border=0>\n"
+	     "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
+	     "<td>Executes an SQL-query, and "
+	     "replaces #-quoted fieldnames with the results. # is "
+	     "quoted as ##. The content inbetween &lt;sqloutput&gt; and "
+	     "&lt;/sqloutput&gt; is repeated once for every row in the "
+	     "result.</td></tr>\n"
+	     "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
+	     "<td>Executes an SQL-query, but "
+	     "doesn't do anything with the result. This is useful if "
+	     "you do queries like INSERT and CREATE.</td></tr>\n"
+	     "<tr><td valign=top><b>&lt;sqltable&gt;</td>"
+	     "<td>Executes an SQL-query, and makes "
+	     "an HTML-table from the result.</td></tr>\n"
+	     "</table></ul>\n"
+	     "The following attributes are used by the above tags:<ul>\n"
+	     "<table border=0>\n"
+	     "<tr><td valign=top><b>query</b></td>"
+	     "<td>The actual SQL-query. (<b>REQUIERED</b>)</td></tr>\n"
+	     "<tr><td valign=top><b>host<b></td>"
+	     "<td>The hostname of the machine the SQL-server runs on.<br>\n"
+	     "This argument can also be used to specify which SQL-server "
+	     "to use by specifying an \"SQL-URL\":<br><ul>\n"
+	     "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
+	     "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre><br>\n"
+	     "</ul>Valid values for \"sqlserver\" depend on which "
+	     "sql-servers your pike has support for, but the following "
+	     "might exist: msql, mysql, odbc, oracle, postgres.</td></tr>\n"
+	     "<tr><td valign=top><b>database</b></td>"
+	     "<td>The name of the database to use.</td></tr>\n"
+	     "<tr><td valign=top><b>user</b></td>"
+	     "<td>The name of the user to access the database with.</td></tr>\n"
+	     "<tr><td valign=top><b>password</b></td>"
+	     "<td>The password to access the database.</td></tr>\n"
+	     "</table></ul><p>\n"
+	     "The &lt;sqltable&gt; tag has an additional attribute "
+	     "<b>ascii</b>, which generates a tab-separated table (usefull "
+	     "for eg the &lt;diagram&gt; tag)."
+	     "\n"
+	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
+	     "to be a security hole if the module is not loaded for some "
+	     "reason.<br>\n",
+	     0,
+	     1 }) );
 }
 
 /*
@@ -80,9 +86,13 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 {
   if (args->query) {
     string host = query("hostname");
+#ifdef SQL_TAG_COMPAT
     string database = query("database");
     string user = query("user");
     string password = query("password");
+#else /* SQL_TAG_COMPAT */
+    string database, user, password;
+#endif /* SQL_TAG_COMPAT */
     object(sql) con;
     array(mapping(string:mixed)) result;
     mixed error;
@@ -103,8 +113,7 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     if (args->password) {
       password = args->password;
     }
-    host = lower_case(host);
-    host = (host == "localhost")?"":host;
+    host = (lowercase(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -157,9 +166,13 @@ string sqlquery_tag(string tag_name, mapping args,
 {
   if (args->query) {
     string host = query("hostname");
+#ifdef SQL_TAG_COMPAT
     string database = query("database");
     string user = query("user");
     string password = query("password");
+#else /* SQL_TAG_COMPAT */
+    string database, user, password;
+#endif /* SQL_TAG_COMPAT */
     object(sql) con;
     mixed error;
     array(mapping(string:mixed)) res;
@@ -180,8 +193,7 @@ string sqlquery_tag(string tag_name, mapping args,
     if (args->password) {
       password = args->password;
     }
-    host = lower_case(host);
-    host = (host == "localhost")?"":host;
+    host = (lowercase(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -202,13 +214,23 @@ string sqltable_tag(string tag_name, mapping args,
 {
   if (args->query) {
     string host = query("hostname");
+#ifdef SQL_TAG_COMPAT
     string database = query("database");
     string user = query("user");
     string password = query("password");
+#else /* SQL_TAG_COMPAT */
+    string database, user, password;
+#endif /* SQL_TAG_COMPAT */
     object(sql) con;
     mixed error;
     object(sql_result) result;
     string res;
+    int ascii;
+
+    if (args->ascii) {
+      // ASCII-mode
+      ascii = 1;
+    }
 
     if (args->host) {
       host = args->host;
@@ -226,8 +248,7 @@ string sqltable_tag(string tag_name, mapping args,
     if (args->password) {
       password = args->password;
     }
-    host = lower_case(host);
-    host = (host == "localhost")?"":host;
+    host = (lowercase(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -246,40 +267,58 @@ string sqltable_tag(string tag_name, mapping args,
 	nullvalue=(string)args->nullvalue;
       }
 
-      res = "<table";
-      foreach(indices(args) - ({ "host", "database", "user", "password",
+      if (ascii) {
+	res = "";
+      } else {
+	res = "<table";
+	foreach(indices(args) - ({ "host", "database", "user", "password",
 				 "query", "nullvalue" }),
-	      string attr) {
-	string val = args[attr];
-	if (val != attr) {
-	  res += " "+attr+"=\""+val+"\"";
-	} else {
-	  res += " "+attr;
+		string attr) {
+	  string val = args[attr];
+	  if (val != attr) {
+	    res += " "+attr+"=\""+val+"\"";
+	  } else {
+	    res += " "+attr;
+	  }
 	}
-      }
-      res += "><tr>";
-      foreach(map(result->fetch_fields(), lambda (mapping m) {
-	return(m->name);
-      } ), string name) {
-	res += "<th>"+name+"</th>";
-      }
-      res += "</tr>\n";
-
-      while (row = result->fetch_row()) {
-	res += "<tr>";
-	foreach(row, mixed value) {
-	  value = (string)value;
-	  res += "<td>"+(value==""?nullvalue:value)+"</td>";
+	res += "><tr>";
+	foreach(map(result->fetch_fields(), lambda (mapping m) {
+					      return(m->name);
+					    } ), string name) {
+	  res += "<th>"+name+"</th>";
 	}
 	res += "</tr>\n";
       }
-      res += "</table><true>";
+
+      while (row = result->fetch_row()) {
+	if (ascii) {
+	  res += (Array.map(row, lambda(mixed value) {
+				   return((string)value);
+				 }) * "\t") + "\n";
+	} else {
+	  res += "<tr>";
+	  foreach(row, mixed value) {
+	    value = (string)value;
+	    res += "<td>"+(value==""?nullvalue:value)+"</td>";
+	  }
+	  res += "</tr>\n";
+	}
+      }
+      if (!ascii) {
+	res += "</table><true>";
+      }
 
       return(res);
     } else {
+      if (ascii) {
+	return("");
+      }
       return("<!-- No result from query --><false>");
     }
   } else {
+    if (ascii) {
+      return("");
+    }
     return("<!-- No query! --><false>");
   }
 }
@@ -327,12 +366,14 @@ void create()
 	 "Valid values for \"sqlserver\" depend on which "
 	 "sql-servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
+#ifdef SQL_TAG_COMPAT
   defvar("database", "", "Default SQL-database",
 	 TYPE_STRING, "Specifies the name of the default SQL-database.\n");
   defvar("user", "", "Default username",
 	 TYPE_STRING, "Specifies the default username to use for access.\n");
   defvar("password", "", "Default password",
 	 TYPE_STRING, "Specifies the default password to use for access.\n");
+#endif /* SQL_TAG_COMPAT */
 }
 
 /*
