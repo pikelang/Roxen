@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.2 2000/01/10 21:56:09 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.3 2000/01/11 01:59:08 mast Exp $
 
 #pragma strict_types
 
@@ -34,6 +34,8 @@ constant unwind_safe = 0;
   string|array|								\
   function(void|Parser.HTML:int(1..1)|string|array)
 
+static int flag_parse_html_compat;
+
 // Local mappings for the tagdefs. Used instead of the one built-in in
 // Parser.HTML for compatibility with certain things that changes the
 // tag definition maps destructively. This is slower and will go away
@@ -44,7 +46,7 @@ mapping(string:CONTAINER_TYPE) tagmap_containers;
 static int(1..1)|string|array tagmap_tag_cb (
   Parser.HTML this, string str, mixed... extra)
 {
-  string name = lower_case (tag_name());
+  string name = flag_parse_html_compat ? lower_case (tag_name()) : tag_name();
   if (TAG_TYPE tdef = tagmap_tags[name])
     if (stringp (tdef))
       return ({[string] tdef});
@@ -61,7 +63,7 @@ static int(1..1)|string|array tagmap_tag_cb (
 static int(1..1)|string|array tagmap_container_cb (
   Parser.HTML this, mapping(string:string) args, string content, mixed... extra)
 {
-  string name = lower_case (tag_name());
+  string name = flag_parse_html_compat ? lower_case (tag_name()) : tag_name();
   if (CONTAINER_TYPE cdef = tagmap_containers[name])
     if (stringp (cdef))
       return ({[string] cdef});
@@ -129,21 +131,21 @@ static array entity_cb (Parser.HTML ignored, string str)
       return val == RXML.Void ? ({}) : ({val});
     }
   }
-  return type->free_text ? ({str}) : ({});
+  return type->free_text ? 0 : ({});
 }
 
 /*static*/ void set_cbs()
 {
   ::set_cbs();
   _set_tag_callback (tagmap_tag_cb);
-  add_quote_tag ("!--", 0);
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
   this_program clone =
     [object(this_program)] _low_clone (ctx, type, tag_set, overridden,
-				       tagmap_tags, tagmap_containers);
+				       tagmap_tags, tagmap_containers,
+				       flag_parse_html_compat);
   clone->set_cbs();
   return clone;
 }
@@ -152,11 +154,13 @@ static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
   void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
   void|mapping(string:TAG_TYPE) orig_tagmap_tags,
-  void|mapping(string:CONTAINER_TYPE) orig_tagmap_containers)
+  void|mapping(string:CONTAINER_TYPE) orig_tagmap_containers,
+  void|int orig_parse_html_compat)
 {
   if (orig_overridden) { // We're cloned.
     tagmap_tags = orig_tagmap_tags + ([]);
     tagmap_containers = orig_tagmap_containers + ([]);
+    flag_parse_html_compat = orig_parse_html_compat;
   }
   else {
     tagmap_tags = ([]);
@@ -165,9 +169,32 @@ static void create (
 
   ::create (ctx, type, tag_set, orig_overridden);
 
-  // parse_html() compatibility.
-  case_insensitive_tag (1);
-  ignore_unknown (1);
+  if (flag_parse_html_compat)
+    parse_html_compat (1);
+}
+
+int parse_html_compat (void|int flag)
+//! Set to preserve parse_html() compatibility:
+//! o  Treat comments and unknown tags as text, continuing to parse
+//!    for tags in them.
+//! o  Be case insensitive when matching tag names. It's assumed that
+//!    the registered tags are already lowercased.
+{
+  int oldflag = flag_parse_html_compat;
+  if (!zero_type (flag) && !oldflag != !flag) {
+    if (flag) {
+      case_insensitive_tag (1);
+      ignore_unknown (1);
+      add_quote_tag ("!--", 0);
+    }
+    else {
+      case_insensitive_tag (0);
+      ignore_unknown (0);
+      set_comment_tag_cb();
+    }
+    flag_parse_html_compat = flag;
+  }
+  return oldflag;
 }
 
 string _sprintf() {return "RXML.PHtmlCompat";}
