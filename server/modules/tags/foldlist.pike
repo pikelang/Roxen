@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Idonex AB.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.11 2000/01/16 17:12:34 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.12 2000/02/07 12:08:58 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -16,20 +16,37 @@ constant module_doc  = "Adds the &lt;foldlist&gt; tag. This makes it easy to bui
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["foldlist":({#"<desc cont>This tag is used to build folding lists,
-that are like &lt;dl&gt; lists, but where each element can be unfolded.
-The tags used to build the lists elements are ft and fd.</desc>
+constant tagdoc=([
 
-<attr name=unfolded>Will make all the elements in the list unfolded by default.</attr>
-",(["ft":({#"<desc cont>This tag is used within the foldlist tag.
-  The contents of this container, that is not within an fd, tag will be
-  visible both when the element is folded and unfolded
+"foldlist":({#"<desc cont>
+This tag is used to build folding lists, that are like &lt;dl&gt;
+lists, but where each element can be unfolded. The tags used to build
+the lists elements are ft and fd.
+</desc>
 
-  <attr name=folded>Will make this element folded by default. Overrides an unfolded attribute
-  set in the foldlist tag.</attr>
-  <attr name=unfolded>Will make this element unfolded by default.</attr>
-  ",(["fd":#"<desc cont>The contents of this container will only be visible
-    when the element it is written in is unfolded."])
+<attr name=unfolded>
+Will make all the elements in the list unfolded by default.
+</attr>
+",
+
+(["ft":({#"<desc cont>
+This tag is used within the foldlist tag. The contents of this
+container, that is not within an fd, tag will be visible both when the
+element is folded and unfolded.
+
+<attr name=folded>
+Will make this element folded by default. Overrides an unfolded
+attribute set in the foldlist tag.
+</attr>
+
+<attr name=unfolded>
+Will make this element unfolded by default.
+</attr>
+",
+
+(["fd":#"<desc cont>
+The contents of this container will only be visible when the element
+it is written in is unfolded."])
   })])
 })]);
 #endif
