@@ -7,13 +7,13 @@
 <str id="1">
 <new/>
 <o>No virtual servers enabled</o>
-<t></t>
+<t>®ádný virtuální server není povolen</t>
 </str>
 
 <str id="2">
 <new/>
 <o>Sent data</o>
-<t></t>
+<t>Odeslaná data</t>
 </str>
 
 <str id="3">
@@ -25,13 +25,13 @@
 <str id="4">
 <new/>
 <o>Sent headers</o>
-<t></t>
+<t>Odeslané hlavièky</t>
 </str>
 
 <str id="5">
 <new/>
 <o>Number of requests</o>
-<t></t>
+<t>Poèet ¾ádostí</t>
 </str>
 
 <str id="6">
@@ -43,19 +43,19 @@
 <str id="7">
 <new/>
 <o>Received data</o>
-<t></t>
+<t>Pøijatá data</t>
 </str>
 
 <str id="8">
 <new/>
 <o>FTP users (total)</o>
-<t></t>
+<t>FTP u¾ivatelù (celkem)</t>
 </str>
 
 <str id="9">
 <new/>
 <o>FTP users (now)</o>
-<t></t>
+<t>FTP u¾ivatelù (nyní)</t>
 </str>
 
 <str id="10">
@@ -73,19 +73,19 @@
 <str id="12">
 <new/>
 <o>Priority</o>
-<t></t>
+<t>Priorita</t>
 </str>
 
 <str id="13">
 <new/>
 <o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
-<t></t>
+<t>Priorita modulu. Hodnota mezi 0 (nejni¾¹í) a 9 (nejvy¹¹í). Moduly se stejnou prioritou jsou zpracovávány v náhodném poøadí.</t>
 </str>
 
 <str id="14">
 <new/>
 <o>Security: Realm</o>
-<t></t>
+<t>Bezpeènost: Realm</t>
 </str>
 
 <str id="15">
@@ -97,7 +97,7 @@
 <str id="16">
 <new/>
 <o>Security: Patterns</o>
-<t></t>
+<t>Bezpeènost: ©ablona</t>
 </str>
 
 <str id="17">
@@ -109,7 +109,7 @@
 <str id="18">
 <new/>
 <o>Security: Security level</o>
-<t></t>
+<t>Bezpeènost: Bezpeènostní úroveò</t>
 </str>
 
 <str id="19">
@@ -126,7 +126,7 @@
 <str id="20">
 <new/>
 <o>Default site</o>
-<t></t>
+<t>Implicitní server</t>
 </str>
 
 <str id="21">
@@ -1008,7 +1008,7 @@ Standard means using the default locale, which varies according to the value of 
 <str id="160">
 <new/>
 <o>Auto Restart: Enable Automatic Restart</o>
-<t></t>
+<t>Auto Restart: Povolit automatický restart</t>
 </str>
 
 <str id="161">
@@ -1026,13 +1026,13 @@ Standard means using the default locale, which varies according to the value of 
 <str id="163">
 <new/>
 <o>Automatically restart the server after this many days.</o>
-<t></t>
+<t>Restartovat server server po tolika dnech.</t>
 </str>
 
 <str id="164">
 <new/>
 <o>Cache: Store the argument cache in a mysql database</o>
-<t></t>
+<t>Cache: Ukládat argument cache do mysql databáze</t>
 </str>
 
 <str id="165">
@@ -1200,13 +1200,13 @@ Standard means using the default locale, which varies according to the value of 
 <str id="191">
 <new/>
 <o>All Permissions</o>
-<t></t>
+<t>V¹echna práva</t>
 </str>
 
 <str id="192">
 <new/>
 <o>View Settings</o>
-<t></t>
+<t>Zobrazit nastavení</t>
 </str>
 
 <str id="193">
@@ -1245,13 +1245,13 @@ Standard means using the default locale, which varies according to the value of 
 <str id="199">
 <new/>
 <o>Create Sites</o>
-<t></t>
+<t>Vytvoøit virtuální servery</t>
 </str>
 
 <str id="200">
 <new/>
 <o>Add Modules</o>
-<t></t>
+<t>Pøidat moduly</t>
 </str>
 
 <str id="bA">
@@ -1287,7 +1287,7 @@ Standard means using the default locale, which varies according to the value of 
 <str id="206">
 <new/>
 <o>User</o>
-<t></t>
+<t>U¾ivatel</t>
 </str>
 
 <str id="cw">
@@ -1348,7 +1348,7 @@ Standard means using the default locale, which varies according to the value of 
 <str id="217">
 <new/>
 <o>Docs</o>
-<t></t>
+<t>Dokumentace</t>
 </str>
 
 <str id="218">
@@ -1373,7 +1373,7 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="222">
 <o>Create new user</o>
-<t>Vytvoøit u¾ivatele</t>
+<t>Vytvoøit nového u¾ivatele</t>
 </str>
 
 <str id="223">
@@ -1384,7 +1384,7 @@ Standard means using the default locale, which varies according to the value of 
 <str id="224">
 <new/>
 <o>Create User</o>
-<t></t>
+<t>Vytvoøit u¾ivatele</t>
 </str>
 
 <str id="225">
@@ -1433,7 +1433,7 @@ Standard means using the default locale, which varies according to the value of 
 <str id="233">
 <new/>
 <o>Roxen will restart automatically.</o>
-<t></t>
+<t>Roxen se bude automaticky restartovat.</t>
 </str>
 
 <str id="234">
@@ -1454,19 +1454,19 @@ most 15 minutes.</o>
 <str id="dH">
 <new/>
 <o>Not available.</o>
-<t></t>
+<t>Nedostupné.</t>
 </str>
 
 <str id="dI">
 <new/>
 <o>All available fonts</o>
-<t></t>
+<t>V¹echny dostupné fonty</t>
 </str>
 
 <str id="236">
 <new/>
 <o>Example text</o>
-<t></t>
+<t>Pøíklad</t>
 </str>
 
 <str id="237">
@@ -1476,7 +1476,7 @@ most 15 minutes.</o>
 
 <str id="238">
 <o>Features</o>
-<t>Vlastnost</t>
+<t>Vlastnosti</t>
 </str>
 
 <str id="dM">
@@ -1492,7 +1492,7 @@ most 15 minutes.</o>
 <str id="240">
 <new/>
 <o>Name</o>
-<t></t>
+<t>Jméno</t>
 </str>
 
 <str id="241">
@@ -1538,7 +1538,7 @@ most 15 minutes.</o>
 <str id="249">
 <new/>
 <o>Drop old site</o>
-<t></t>
+<t>Smazat server</t>
 </str>
 
 <str id="250">
@@ -1572,13 +1572,13 @@ most 15 minutes.</o>
 <str id="258">
 <new/>
 <o>Add module</o>
-<t></t>
+<t>Pøidat modul</t>
 </str>
 
 <str id="259">
 <new/>
 <o>Drop module</o>
-<t></t>
+<t>Smazat modul</t>
 </str>
 
 
@@ -1635,26 +1635,27 @@ string ftp_stat_line(string cmd, int times) {
 <str id="254">
 <new/>
 <o>Module homepage</o>
-<t></t>
+<t>Domovská stránka modulu</t>
 </str>
 
 <str id="260">
 <new/>
 <o>Request status</o>
-<t></t>
+<t>®ádosti</t>
 </str>
 
 <str id="261">
 <new/>
 <o>Inherit tree</o>
-<t></t>
+<t>Strom dìdictví</t>
 </str>
 
 <str id="dt">
 <new/>
 <o>Administrator logged on as %s from %s.
 </o>
-<t></t>
+<t>Administrátor %s se pøipojil z %s.
+</t>
 </str>
 
 <str id="262">
