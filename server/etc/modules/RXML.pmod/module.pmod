@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.61 2000/02/15 14:59:27 mast Exp $
+//! $Id: module.pmod,v 1.62 2000/02/15 15:55:35 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -29,6 +29,8 @@
 #  define COMMA_CNT(count) ""
 #endif
 
+#define OLD_RXML_COMPAT
+// Glä!
 
 class Tag
 //! Interface class for the static information about a tag.
@@ -610,15 +612,25 @@ class Context
   //! Nonzero if tag_set is a copy local to this context. A local tag
   //! set that imports the old tag set is created whenever need be.
 
+#ifdef OLD_RXML_COMPAT
+  int compatible_scope = 0;
+  //! If set, the default scope is form, otherwise it is the present
+  //! scope.
+#endif
+
   array parse_user_var (string var, void|string scope_name)
   //! Tries to decide what variable and scope to use. Handles cases
   //! where the variable also contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return ([])[0];
     array(string) splitted=var/".";
-    if(sizeof(splitted)>2) return ([])[0];
+    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
+#ifdef OLD_RXML_COMPAT
+    else if (compatible_scope)
+      scope_name = scope_name || "form";
+#endif
     else
       scope_name = scope_name || "_";
     return ({ scope_name, splitted[-1] });
@@ -669,9 +681,13 @@ class Context
   {
     if(!var || !sizeof(var)) return ([])[0];
     array(string) splitted=var/".";
-    if(sizeof(splitted)>2) return ([])[0];
+    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
+#ifdef OLD_RXML_COMPAT
+    else if (compatible_scope)
+      scope_name = scope_name || "form";
+#endif
     else
       scope_name = scope_name || "_";
     return get_var(splitted[-1], scope_name, want_type);
@@ -694,11 +710,15 @@ class Context
   //! As set_var, but can handle cases where the variable also
   //! contains the scope, e.g. "scope.var".
   {
-    if(!var || !sizeof(var)) return val;
+    if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
     array(string) splitted=var/".";
-    if(sizeof(splitted)>2) return val;
+    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
+#ifdef OLD_RXML_COMPAT
+    else if (compatible_scope)
+      scope_name = scope_name || "form";
+#endif
     else
       scope_name = scope_name || "_";
     return set_var(splitted[-1], val, scope_name);
@@ -723,9 +743,13 @@ class Context
   {
     if(!var || !sizeof(var)) return;
     array(string) splitted=var/".";
-    if(sizeof(splitted)>2) return;
+    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
+#ifdef OLD_RXML_COMPAT
+    else if (compatible_scope)
+      scope_name = scope_name || "form";
+#endif
     else
       scope_name = scope_name || "_";
     delete_var(splitted[-1], scope_name);
