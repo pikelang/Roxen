@@ -1,4 +1,4 @@
-// Roxen bootstrap program. Copyright © 1996 - 2000, Roxen IS.
+'// Roxen bootstrap program. Copyright © 1996 - 2000, Roxen IS.
 
 //#pragma strict_types
 
@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.173 2000/05/14 23:42:33 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.174 2000/05/15 10:34:15 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -498,6 +498,7 @@ static private void initiate_cache()
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_expire", cache->cache_expire);
+  add_constant("cache_clear", cache->cache_expire);
 }
 
 class _error_handler {
