@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.13 1998/03/11 19:42:38 neotron Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.14 1998/03/13 23:25:33 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -9,15 +9,20 @@ inherit "module";
 array register_module()
 {
   return ({ MODULE_FIRST,
-	    "IP-Less virtual hosting",
-	    "This module adds support for IP-less virtual hosts, "
-	    "simply add this module to a server with a real listen port "
-	    "(Server Variables -&gt; Listen ports) "
-	    "configured, then add no ports to all the servers you want to use "
-	    "ip-less virtual hosting for, but "
-	    "configure their server-URLs. This module will then automagically "
-	    "select the server the request should be sent to",0,1
-	  });
+	      "IP-Less virtual hosting",
+	      "This module adds support for IP-less virtual hosts, "
+	      "simply add this module to a server with a real listen port "
+	      "(Server Variables -&gt; Listen ports) "
+	      "configured, then add no ports to all the servers you want to "
+	      "use ip-less virtual hosting for, but configure their "
+	      "server-URLs. This module will then automagically "
+	      "select the server the request should be sent to."
+	      "<p><b>Please note that the ip less hosting module "
+	      "doesn't work together with proxies. The reason is that the "
+	      "host header sent isn't the one of the proxy server, but the "
+	      "one of the requested host. We recommend having the proxies in "
+	      "their own virtual server, with a unique IP and / or port.",
+	      0, 1 });
 }
 
 mapping config_cache = ([ ]);
