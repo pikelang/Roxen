@@ -1,12 +1,12 @@
 #
-# $Id: upgrade_servers,v 1.3 1997/09/17 02:17:02 grubba Exp $
+# $Id: upgrade_servers,v 1.4 1998/01/08 11:37:38 grubba Exp $
 #
 # name = "Upgrade Servers";
 # doc = "File containing known upgrade servers.";
 #
 
-# Main Infovav server
-Official Server		skuld.infovav.se:23	Main official Roxen upgrade server. 
+# Main Idonex server
+Official Server		skuld.idonex.se:23	Main official Roxen upgrade server. 
 # Roxen Module Source archive.
 # Third Party Source	www.riverweb.com:2000	Roxen Module Source. This server contains modules and scripts developed by third part developers.
 
