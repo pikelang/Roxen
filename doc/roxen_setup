@@ -12,7 +12,7 @@ Roxen modules neded by AutoSite
      Priority : 6
   AutoWeb Administration Interface
      Mount point : /webadm/
-     Search path : /.../AutoSite/sites/
+     Sites directory : /.../AutoSite/sites/
   Config tab-list 
   Content types 
   Directory parsing module 
