@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.193 2000/02/08 08:01:35 hubbe Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.194 2000/02/08 08:24:56 hubbe Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2696,20 +2696,23 @@ string tag_ximage(string tagname, mapping m, object id)
   if(m->src)
   {
     array a;
-    object file;
+    string fname=id->conf->real_file(fix_relative(m->src||"", id),id);
 
-    if((a=id->conf->open_file(fix_relative(m->src||"", id),"R", id)) &&
-       arrayp(a) &&
-       objectp(a[0]))
+    if(fname)
     {
-      file=a[0];
-      array(int) xysize;
-      if(xysize=Dims.dims()->get(file))
+      object file=Stdio.File();
+      if(file->open(fname,"r"))
       {
-        m->width=(string)xysize[0];
-        m->height=(string)xysize[1];
+	array(int) xysize;
+	if(xysize=Dims.dims()->get(file))
+	{
+	  m->width=(string)xysize[0];
+	  m->height=(string)xysize[1];
+	}else{
+	  m->err="Dims failed";
+	}
       }else{
-        m->err="Dims failed";
+	m->err="Failed to find file";
       }
     }else{
       m->err="Virtual path failed";
