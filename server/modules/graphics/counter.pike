@@ -16,23 +16,24 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.35 2000/09/04 22:20:33 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.36 2000/09/04 22:38:27 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Graphical Counter";
 constant thread_safe = 1;
 constant module_doc  = "Generates graphical counters. This module is really only "
-  "a wrapper kept for compatibility. It creates a gtext tag with an accessed tag inside.";
-
-// How to update from the old counter module.
-// Take your old ppm-fonts add a file called fontname with the name of the font in it.
-// Add the location of that directory to the font path in the global settings.
-// Know issues:
-//  - User directory fonts won't work.
+  "a wrapper kept for compatibility. It creates a gtext tag with an accessed tag inside."
+  "<br /><br />"
+  "How to update from the old counter module:<br />"
+  "Take your old ppm-fonts and add a file called fontname, with the name of the font in it. "
+  "Then add the location of that directory to the font path in the global settings. It is a "
+  "known issue that you can not create user font directories, as with the old counter tag.";
 
 void create()
 {
-  defvar("font", "counter_a", "Default Font", TYPE_STRING,
-	 "Default font for counters (Ex: 'counter_a')");
+  defvar("font", Variable.String("counter_a", 0,
+				 "Default Font",
+				 "Default font for counters, e.g. \"counter_a\"."
+				 ) );
 }
 
 mapping tagdocumentation() {
