@@ -17,7 +17,7 @@ static string findjre()
 		   "'s:/lib/rt.jar .*$::' -e p -e q")||"")-"\n";  
   if(check_jre_dir(dir))
     return dir;
-  foreach(`+(@Array.map(({"/usr/local", "/usr"}),
+  foreach(`+(@Array.map(({"/usr/local", "/usr", "/usr/java"}),
 			lambda(string s) {
 			  return Array.map(Array.map(({"jre*","jdk*","java*"}),
 						     glob,
