@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.21 2000/01/18 09:12:04 mast Exp $
+//! $Id: module.pmod,v 1.22 2000/01/18 10:33:33 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -407,7 +407,7 @@ class Scope
   private string _in_the_scope (string scope_name)
   {
     if (scope_name)
-      if (scope_name != "") return " in the scope " + scope_name;
+      if (scope_name != "_") return " in the scope " + scope_name;
       else return " in the current scope";
     else return "";
   }
@@ -449,16 +449,16 @@ class Context
   //! current scope if none is given. Returns zero with zero_type 1 if
   //! there's no such variable.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || ""]) {
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
       mixed val;
       if (objectp (vars)) {
-	val = ([object(Scope)] vars)->`[] (var, this_object(), scope_name || "");
+	val = ([object(Scope)] vars)->`[] (var, this_object(), scope_name || "_");
 	if (val == Void) return ([])[0];
       }
       else if (zero_type (val = vars[var])) return ([])[0];
       else if (objectp (val) && ([object] val)->rxml_var_eval)
 	return ([object(Value)] val)->
-	  rxml_var_eval (this_object(), var, scope_name || "");
+	  rxml_var_eval (this_object(), var, scope_name || "_");
       else return val;
     }
     else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
@@ -469,9 +469,9 @@ class Context
   //! Sets the value of a variable in the specified scope, or the
   //! current scope if none is given. Returns val.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || ""])
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
       if (objectp (vars))
-	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "");
+	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
       else
 	return vars[var] = val;
     else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
@@ -482,9 +482,9 @@ class Context
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || ""])
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
       if (objectp (vars))
-	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "");
+	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
       else
 	m_delete ([mapping(string:mixed)] vars, var);
     else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
@@ -495,9 +495,9 @@ class Context
   //! Returns the names of all variables in the specified scope, or
   //! the current scope if none is given.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || ""])
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
       if (objectp (vars))
-	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "");
+	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
       else
 	return indices ([mapping(string:mixed)] vars);
     else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
@@ -507,13 +507,13 @@ class Context
   array(string) list_scopes()
   //! Returns the names of all defined scopes.
   {
-    return indices (scopes) - ({""});
+    return indices (scopes) - ({"_"});
   }
 
   int exist_scope (void|string scope_name)
   //!
   {
-    return !!scopes[scope_name || ""];
+    return !!scopes[scope_name || "_"];
   }
 
   void add_scope (string scope_name, SCOPE_TYPE vars)
@@ -522,8 +522,8 @@ class Context
   //! _indices(), and m_delete().
   {
     if (scopes[scope_name])
-      if (scope_name == "") {
-	SCOPE_TYPE inner = scopes[""];
+      if (scope_name == "_") {
+	SCOPE_TYPE inner = scopes["_"];
 	while (SCOPE_TYPE outer = hidden[inner]) inner = outer;
 	hidden[inner] = vars;
       }
@@ -541,7 +541,7 @@ class Context
   //! Removes the named scope from the global level, if it exists.
   {
 #ifdef MODULE_DEBUG
-    if (scope_name == "") error ("Cannot remove current scope.\n");
+    if (scope_name == "_") error ("Cannot remove current scope.\n");
 #endif
     Frame outermost;
     for (Frame f = frame; f; f = f->up)
@@ -553,10 +553,10 @@ class Context
   string current_scope()
   //! Returns the name of the current scope, if it has any.
   {
-    if (SCOPE_TYPE vars = scopes[""]) {
+    if (SCOPE_TYPE vars = scopes["_"]) {
       string scope_name;
       while (scope_name = search (scopes, vars, scope_name))
-	if (scope_name != "") return scope_name;
+	if (scope_name != "_") return scope_name;
     }
     return 0;
   }
@@ -661,10 +661,10 @@ class Context
 
   mapping(string:SCOPE_TYPE) scopes = ([]);
   // The variable mappings for every currently visible scope. A
-  // special entry "" points to the current local scope.
+  // special entry "_" points to the current local scope.
 
   mapping(SCOPE_TYPE|Frame:SCOPE_TYPE) hidden = ([]);
-  // The currently hidden variable mappings in scopes. The old ""
+  // The currently hidden variable mappings in scopes. The old "_"
   // entries are indexed by the replacing variable mapping. The old
   // named scope entries are indexed by the frame object which
   // replaced them.
@@ -675,9 +675,9 @@ class Context
 #ifdef DEBUG
     if (!frame->vars) error ("Internal error: Frame has no variables.\n");
 #endif
-    if ((vars = [SCOPE_TYPE] frame->vars) != scopes[""]) {
-      hidden[vars] = scopes[""];
-      scopes[""] = vars;
+    if ((vars = [SCOPE_TYPE] frame->vars) != scopes["_"]) {
+      hidden[vars] = scopes["_"];
+      scopes["_"] = vars;
       if (string scope_name = [string] frame->scope_name) {
 	hidden[frame] = scopes[scope_name];
 	scopes[scope_name] = vars;
@@ -694,7 +694,7 @@ class Context
       }
     SCOPE_TYPE vars;
     if (hidden[vars = [SCOPE_TYPE] frame->vars]) {
-      scopes[""] = hidden[vars];
+      scopes["_"] = hidden[vars];
       m_delete (hidden, vars);
     }
   }
