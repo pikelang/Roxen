@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.10 2000/02/14 17:57:30 js Exp $
+ * $Id: upgrade.pike,v 1.11 2000/02/14 21:23:23 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -41,8 +41,10 @@ void stop()
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
-  defvar("yabudir", "../upgrade_data", "Database directory",
+  defvar("yabudir", "../upgrade_data/", "Database directory",
 	 TYPE_DIR, ""); /* Keep this in server and regenerate on upgrade */
+  defvar("pkgdir", "../packages/", "Database directory",
+	 TYPE_DIR, "");
   defvar("server", "community.roxen.com", "Server host",
 	 TYPE_STRING, "");
   defvar("port", 80, "Server port",
@@ -162,8 +164,52 @@ mapping get_headers()
   ]);
 }
 
+class GetPackage
+{
+  inherit Protocols.HTTP.Query;
 
+  
+  int|float percent_done()
+  {
+    int b=total_bytes();
+    if(b==-1)
+      return 0;
+    return (float)downloaded_bytes() / (float)b;
+  }
+  
+  void request_ok(object httpquery, int num)
+  {
+    // FIXME: rewrite this to use a file object and stream to disk?
+    Stdio.File f;
+    if(catch(f=Stdio.File(QUERY(pkgdir)+num+".tar","wc")))
+    {
+      report_error("Upgrade: Failed to open file for writing: "+
+		   QUERY(pkgdir)+num+".tar\n");
+      return;
+    }
+    if(catch(f->write(httpquery->data())))
+    {
+      report_error("Upgrade: Failed to write package to file: "+
+		   QUERY(pkgdir)+num+".tar\n");
+      catch(rm(QUERY(pkgdir)+num+".tar"));
+      return;
+    }
+  }
+  
+  void request_fail(object httpquery, int num)
+  {
+    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+		 "package number "+num+".\n");
+  }
 
+  void create(int pkgnum)
+  {
+    set_callbacks(request_ok, request_fail, pkgnum);
+    async_request(QUERY(server),QUERY(port),
+		  "GET /upgradeserver/packages/"+pkgnum+".tar HTTP/1.0",
+		  get_headers());
+  }
+}
 class GetInfoFile
 {
   inherit Protocols.HTTP.Query;
@@ -173,6 +219,7 @@ class GetInfoFile
     if(sizeof(t) && t[0]!='/')
       res[t]=c;
   }
+  
   
   void request_ok(object httpquery, int num)
   {
