@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.19 1999/06/01 16:23:49 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.20 1999/06/02 21:20:53 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -114,20 +114,36 @@ array verify_access( RequestID id )
       foreach(id->misc->is_user/"/", string part) 
       {
         fname += part;
-        if ((fname != ""))
+        if ((fname != "")) {
           if(((!(a = file_stat(fname, 1))) || ((< -3, -4 >)[a[1]])))
           {
             // Symlink or device encountered.
             // Don't allow symlinks from directories not owned by the
             // same user as the file itself.
-            // Assume that symlinks from directories owned by users 1-9 are safe.
+            // Assume that symlinks from directories owned by users 0-9
+	    // are safe.
+	    // Assume that top-level symlinks are safe.
             if (!a || (a[1] == -4) ||
-                !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
-                !QUERY(allow_symlinks)) 
+                (b && (b[5] != us[5]) && (b[5] >= 10)) ||
+                !QUERY(allow_symlinks)) {
               error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
+	    }
+	    /* This point is only reached if a[1] == -3.
+	     * ie symlink encountered, and QUERY(allow_symlinks) == 1.
+	     */
+
+	    // Stat what the symlink points to.
+	    // NB: This can be fooled if root is stupid enough to symlink
+	    //     to something the user can move.
+	    a = file_stat(fname);
+	    if (!a || a[1] == -4) {
+	      error("CGI: Bad symlink or device encountered: \"%s\"\n",
+		    fname);
+	    }
           }
+	  b = a;
+	}
         fname += "/";
-	b = a;
       }
       us = us[5..6];
     } 
