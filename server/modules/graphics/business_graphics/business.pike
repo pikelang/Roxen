@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.89 1998/03/07 16:53:55 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.90 1998/03/07 18:09:34 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,7 +19,7 @@ import Image;
 
 function create_pie, create_bars, create_graph;
 
-//#define BG_DEBUG 1
+#define BG_DEBUG 1
 #define SEP "\t"
 #define VOIDSYMBOL "\n"
 
@@ -351,10 +351,6 @@ string itag_data(mapping tag, mapping m, string contents,
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  string space="";
-  if ((sep!=" ")&&(linesep!=" "))
-    space = " ";
-
   if ((sep!="\t")&&(linesep!="\t"))
     contents = contents - "\t";
 
@@ -372,6 +368,19 @@ string itag_data(mapping tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->data_foo = gauge {
 #endif
+ 
+  bar=allocate(sizeof(lines));
+  int gaba=sizeof(lines);
+
+  for(int j=0; j<gaba; j++)
+  {
+    foo=lines[j]/sep - ({""});
+    foo=replace(foo, voidsep, VOIDSYMBOL);
+    if (sizeof(foo)>maxsize)
+      maxsize=sizeof(foo);
+    bar[j] = foo;
+  }
+  /*
   foreach( lines, string entries )
   {
     foo=entries/sep - ({""});
@@ -382,7 +391,7 @@ string itag_data(mapping tag, mapping m, string contents,
       maxsize=sizeof(foo);
     bar += ({ foo });
     foo = ({});
-  }
+    }*/
 #ifdef BG_DEBUG
   };
 #endif
@@ -425,11 +434,19 @@ string itag_data(mapping tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->data_gaz = gauge {
 #endif
+    mixed b;
+    mixed c;
+
   bar=res->data;
-  for(int i=0; i<sizeof(bar); i++)
-    for(int j=0; j<sizeof(bar[i]); j++)
-      if (bar[i][j]!=VOIDSYMBOL)
-	bar[i][j]=(float)((string)bar[i][j]-space);
+  int basonk=sizeof(bar);
+  for(int i=0; i<basonk; i++)
+    {
+      c=bar[i];
+      int k=sizeof(c);
+      for(int j=0; j<k; j++)
+	if ((b=c[j])!=VOIDSYMBOL)
+	  c[j]=(float)(b);
+    }
   res->data=bar;
 #ifdef BG_DEBUG
   };
@@ -756,7 +773,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
 
 #ifdef BG_DEBUG
-  if(id->prestate->debug)
+  //  if(id->prestate->debug)
     return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m));
 #endif
 
@@ -832,7 +849,7 @@ mapping unquote( string f )
 mapping find_file(string f, object id)
 {
 #ifdef BG_DEBUG
-  return 0;
+  //return 0;
 #endif
 
   if (f[sizeof(f)-4..] == ".gif")
