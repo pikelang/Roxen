@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.199 2001/07/11 18:30:13 mast Exp $
+// $Id: module.pmod,v 1.200 2001/07/12 18:33:45 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -165,7 +165,16 @@ static mapping(int|string:TagSet) composite_tag_set_cache =
   }									\
 } while (0)
 
-static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
+static mapping(string:TagSet|int) all_tagsets = set_weak_flag(([]), 1);
+// Maps all tag set names to their TagSet objects.
+//
+// For tag sets that have been removed, the value is their generation
+// number, so that a new tag set with that name will continue the
+// generation sequence. We use the fact that a weak mapping won't
+// remove items that aren't refcounted (and strings).
+//
+// Also, if a name conflict between two tag sets is discovered, the
+// value in all_tagsets is set to 0.
 
 static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 // Maps each parser name to the parser program.
@@ -811,7 +820,7 @@ class TagSet
   {
     switch (var) {
       case "name":
-	if (name) m_delete (all_tagsets, name);
+	if (name) all_tagsets[name] = generation;
 	set_name (val);
 	break;
       case "imported":
@@ -914,17 +923,26 @@ class TagSet
   static void destroy()
   {
     catch (changed());
-    if (name) m_delete (all_tagsets, name);
+    if (name) all_tagsets[name] = generation;
   }
 
   static void set_name (string new_name)
   {
     if (new_name) {
-      if (zero_type (all_tagsets[new_name]) ||
-	  (all_tagsets[new_name] && gc() && zero_type (all_tagsets[new_name])))
-	// Have to try to gc here to remove the old tag set object in
-	// case the only ref left to it is through all_tagsets.
-	all_tagsets[name = new_name] = this_object();
+      object(TagSet)|int old_tag_set;
+      if (zero_type (old_tag_set = all_tagsets[new_name]) ||
+	  (objectp (old_tag_set) && gc() &&
+	   // Have to try to gc here to remove the old tag set object
+	   // in case the only ref left to it is through all_tagsets.
+	   zero_type (old_tag_set = all_tagsets[new_name])))
+	all_tagsets[new_name] = this_object();
+      else if (intp (old_tag_set) && old_tag_set > 0) {
+	all_tagsets[new_name] = this_object();
+	if (generation <= old_tag_set) {
+	  generation = old_tag_set + 1;
+	  changed();
+	}
+      }
       else {
 	report_warning ("The tag set name %O is not unique - ignoring it.\n",
 			new_name);
@@ -1066,7 +1084,7 @@ class TagSet
 
   string _sprintf()
   {
-    return sprintf ("RXML.TagSet(%O,%d)%s", name, id_number, OBJ_COUNT);
+    return sprintf ("RXML.TagSet(%O,%d)%s", name, generation, OBJ_COUNT);
   }
 
   MARK_OBJECT_ONLY;
@@ -1080,7 +1098,9 @@ TagSet shared_tag_set (string name, void|array(Tag) tags)
 //! a new tag set is created with that name. @[tags] is passed along
 //! to its @[RXML.TagSet.create] function in that case.
 {
-  if (TagSet tag_set = all_tagsets[name]) return tag_set;
+  if (TagSet tag_set = all_tagsets[name])
+    if (objectp (tag_set))
+      return tag_set;
   return TagSet (name, tags);
 }
 
@@ -4022,12 +4042,6 @@ final class parse_frame
   string _sprintf() {return sprintf ("RXML.parse_frame(%O)", content_type);}
 }
 
-final mixed eval_p_code (PCode p_code, void|RequestID id)
-//! Evaluates the given p-code in a new context.
-{
-  return p_code->eval (p_code->new_context (id));
-}
-
 
 // Parsers:
 
@@ -5807,10 +5821,11 @@ class CompiledError
 static class PikeCompile
 //! Helper class to paste together a Pike program from strings.
 {
-  private int idnr = 0;
-  private String.Buffer code = String.Buffer();
-  private mapping(string:mixed) bindings = ([]);
-  private mapping(string:int) cur_ids = ([]);
+  static int idnr = 0;
+  static inherit String.Buffer: code;
+  static mapping(string:mixed) bindings = ([]);
+  static mapping(string:int) cur_ids = ([]);
+  static mapping(mixed:mixed) delayed_resolve_places = ([]);
 
   string bind (mixed val)
   {
@@ -5826,11 +5841,11 @@ static class PikeCompile
     string id = "v" + idnr++;
     if (init) {
       COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      code->add (sprintf ("%s %s = %s;\n", type, id, init));
+      code::add (sprintf ("%s %s = %s;\n", type, id, init));
     }
     else {
       COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      code->add (sprintf ("%s %s;\n", type, id));
+      code::add (sprintf ("%s %s;\n", type, id));
     }
     cur_ids[id] = 1;
     return id;
@@ -5841,7 +5856,7 @@ static class PikeCompile
     string id = "f" + idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    code->add (sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def));
+    code::add (sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def));
     cur_ids[id] = 1;
     return id;
   }
@@ -5857,8 +5872,6 @@ static class PikeCompile
     }
     return bindings[id];
   }
-
-  private mapping(mixed:mixed) delayed_resolve_places = ([]);
 
   void delayed_resolve (mixed what, mixed index)
   {
@@ -5879,11 +5892,6 @@ static class PikeCompile
       COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
       what[index] = resolved;
     }
-  }
-
-  static void destroy()
-  {
-    compile();			// To clean up delayed_resolve_places.
   }
 
   static class Resolver (object master)
@@ -5908,9 +5916,9 @@ static class PikeCompile
   {
     object compiled = 0;
 
-    if (sizeof (code)) {
+    if (code::_sizeof()) {
       COMP_MSG ("%O compile\n", this_object());
-      code->add("mixed _encode() { } void _decode(mixed v) { }\n"
+      code::add("mixed _encode() { } void _decode(mixed v) { }\n"
 		"constant is_RXML_pike_code = 1;\n"
 		"constant is_RXML_encodable = 1;\n"
 #ifdef RXML_OBJ_DEBUG
@@ -5931,7 +5939,7 @@ static class PikeCompile
 	       );
 
       program res;
-      string txt = code->get();
+      string txt = code::get();
 #ifdef DEBUG
       if (mixed err = catch {
 #endif
@@ -5962,9 +5970,19 @@ static class PikeCompile
     return compiled;
   }
 
+  static void destroy()
+  {
+    compile();			// To clean up delayed_resolve_places.
+  }
+
   MARK_OBJECT;
 
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
+}
+
+class StalePCode
+{
+  constant is_RXML_StalePCode = 1;
 }
 
 class PCode
@@ -5983,6 +6001,11 @@ class PCode
   TagSet tag_set;
   //! The tag set (if any) used by the parser that created this
   //! object. Used to initialize new contexts correctly.
+
+  int generation;
+  //! The generation of @[tag_set] when the p-code object was
+  //! generated. It's only valid to reevaluate as long as the
+  //! generation matches.
 
   int recover_errors;
   //! Nonzero if error recovery is allowed. Should be the same as the
@@ -6003,10 +6026,16 @@ class PCode
   //! the evaluation may break prematurely due to
   //! streaming/nonblocking operation. @[context->incomplete_eval]
   //! will return nonzero in that case.
+  //!
+  //! This function returns an instance of @[StalePCode] if the p-code
+  //! is stale, i.e. if @[generation] no longer matches the generation
+  //! of @[tag_set]. The caller should in that case evaluate from the
+  //! source instead.
   {
     mixed res, piece;
     int eval_loop = 0;
     ENTER_CONTEXT (context);
+  eval:
     while (1) {			// Loops when the evaluation is incomplete.
       if (mixed err = catch {
 	if (context && context->unwind_state && context->unwind_state->top) {
@@ -6021,19 +6050,23 @@ class PCode
 	}
 	piece = _eval (context); // Might unwind.
       }) {
-	if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	  if (!eval_piece && context->incomplete_eval()) {
-	    if (eval_loop) res = add_to_value (type, res, piece);
-	    eval_loop = 1;
-	    continue;
+	if (objectp (err))
+	  if (([object] err)->thrown_at_unwind) {
+	    if (!eval_piece && context->incomplete_eval()) {
+	      if (eval_loop) res = add_to_value (type, res, piece);
+	      eval_loop = 1;
+	      continue eval;
+	    }
+	    if (!context->unwind_state) context->unwind_state = ([]);
+	    context->unwind_state->top = this_object();
+	    break eval;
 	  }
-	  if (!context->unwind_state) context->unwind_state = ([]);
-	  context->unwind_state->top = this_object();
-	}
-	else {
-	  LEAVE_CONTEXT();
-	  throw_fatal (err);
-	}
+	  else if (([object] err)->is_RXML_StalePCode) {
+	    piece = err;
+	    break eval;
+	  }
+	LEAVE_CONTEXT();
+	throw_fatal (err);
       }
       else
 	if (eval_loop) piece = add_to_value (type, res, piece);
@@ -6050,7 +6083,8 @@ class PCode
   static void create (Type _type, void|TagSet _tag_set)
   {
     if (_type) {		// 0 if we're being decoded.
-      type = _type, tag_set = _tag_set;
+      type = _type;
+      if ((tag_set = _tag_set)) generation = _tag_set->generation;
       p_code = allocate (16);
     }
   }
@@ -6064,7 +6098,8 @@ class PCode
 
   void reset (Type _type, void|TagSet _tag_set)
   {
-    type = _type, tag_set = _tag_set;
+    type = _type;
+    if ((tag_set = _tag_set)) generation = _tag_set->generation;
     p_code = allocate (16);
     length = 0;
   }
@@ -6111,6 +6146,8 @@ class PCode
     int pos = 0;
     array parts;
     int ppos = 0;
+
+    if (tag_set && tag_set->generation != generation) throw (StalePCode());
 
     if (context && context->unwind_state) {
       object ignored;
@@ -6279,25 +6316,28 @@ class PCode
   mixed _encode()
   {
     finish();
+    array encode_p_code = p_code + ({});
     for (int pos = 0; pos < length; pos++) {
-      mixed item = p_code[pos];
+      mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
-	p_code[pos + 1] = 0;	// Don't encode the cached frame.
+	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
 #ifdef DEBUG
-	if (stringp (p_code[pos + 2][0]))
-	  error ("Unresolved argument function in frame at position %d.\n", pos);
+	if (stringp (encode_p_code[pos + 2][0]))
+	  error ("Unresolved argument function in frame at position %d.\n"
+		 "Encoding p-code in unfinished evaluation?\n", pos);
 #endif
       }
     }
     fully_resolved = 1;
 
-    return ({tag_set, type, recover_errors, p_code});
+    return ({tag_set, type, recover_errors, encode_p_code});
   }
 
   void _decode(array v)
   {
     [tag_set, type, recover_errors, p_code] = v;
     length = sizeof (p_code);
+    if (tag_set) generation = tag_set->generation;
     fully_resolved = 1;
 
     // Instantiate the cached frames, mainly so that any errors in
@@ -6342,12 +6382,12 @@ class PCodec
     if (sscanf (name_1, "[%d]%s", pos, compname) == 2)
       tag_set_1 = resolve_composite_tag_set (pos, compname);
     else
-      if (!(tag_set_1 = all_tagsets[name_1]))
+      if (!objectp (tag_set_1 = all_tagsets[name_1]))
 	error ("Cannot find tag set %O.\n", name_1);
     if (sscanf (name_2, "[%d]%s", pos, compname) == 2)
       tag_set_2 = resolve_composite_tag_set (pos, compname);
     else
-      if (!(tag_set_2 = all_tagsets[name_2]))
+      if (!objectp (tag_set_2 = all_tagsets[name_2]))
 	error ("Cannot find tag set %O.\n", name_2);
 
     TagSet tag_set;
@@ -6401,7 +6441,8 @@ class PCodec
 	if (sscanf (what, "[%d]%s", int pos, what) == 2)
 	  return resolve_composite_tag_set (pos, what);
 	if (TagSet tag_set = all_tagsets[what])
-	  return tag_set;
+	  if (objectp (tag_set))
+	    return tag_set;
 	error ("Cannot find tag set %O.\n", what);
       }
       else if(sscanf (what, "mod:%s", what)) {
