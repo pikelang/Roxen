@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.16 2000/06/02 22:01:40 js Exp $
+ * $Id: update.pike,v 1.17 2000/06/03 04:03:11 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -794,6 +794,8 @@ class UpdateInfoFiles
   
   void do_request()
   {
+    buf="";
+    headerbuf="";
     async_request(get_server(), get_port(),
 		  "POST "+proxyprefix()+"/updateserver/get_packages HTTP/1.0",
 		  get_headers() |
