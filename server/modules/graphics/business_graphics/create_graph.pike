@@ -502,7 +502,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 		   float xstart, float ystart, float si)
 {
   //Placera ut vert griden
-  int s=sizeof(diagram_data["xnamesimg"]);
+  int s=sizeof(diagram_data["xnames"]);
   object graph=diagram_data["image"];
   if (!diagram_data["gridwidth"])
     diagram_data["gridwidth"]=diagram_data["linewidth"]/4.0;
@@ -525,7 +525,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 					      diagram_data["xminvalue"])
 					     *xmore+xstart),
 					    diagram_data["ysize"]-
-					    diagram_data["ystop"]
+					    diagram_data["ystop"]+0.01 //FIXME
 					  }), 
 					  1, 1)[0]);
     }
@@ -549,7 +549,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 					  (-(diagram_data["values_for_ynames"][i]-
 					     diagram_data["yminvalue"])
 					   *ymore+diagram_data["ysize"]-
-					   ystart)
+					   ystart)+0.01 //FIXME
 					}), 
 					1, 1)[0]);
     }
