@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.184 2000/01/12 05:47:19 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.185 2000/01/12 22:02:19 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -111,14 +111,14 @@ void decode_map( mapping what, function decoder )
     string ni;
     mixed val;
     if( stringp( q ) )
-      ni = decoder( q );
+      catch { ni = decoder( q ); };
     val = what[q];
     if( stringp( val ) )
-      val = decoder( val );
+      catch { val = decoder( val ); };
     else if( arrayp( val ) )
       val = map( val, lambda( mixed q ) {
                         if( stringp( q ) )
-                          return decoder( q );
+                          catch { return decoder( q ); };
                         return q;
                       } );
     else if( mappingp( val ) )
@@ -126,7 +126,7 @@ void decode_map( mapping what, function decoder )
     else if( multisetp( val ) )
       val = mkmultiset( map( indices(val), lambda( mixed q ) {
                                              if( stringp( q ) )
-                                               return decoder( q );
+                                               catch { return decoder( q ); };
                                              return q;
                                            } ));
     what[ni] = val;
@@ -135,41 +135,51 @@ void decode_map( mapping what, function decoder )
   }
 }
 
-void decode_charset_encoding( function decoder )
+void decode_charset_encoding( function(string:string) decoder )
 {
   misc->request_charset_decoded = 1;
   if( !decoder )
     return;
-  if( prot ) prot = decoder( prot );
-  if( clientprot )clientprot = decoder( clientprot );
-  if( method ) method = decoder( method );
-  if( rest_query ) rest_query = decoder( rest_query );
-  if( query ) query = decoder( query );
-  if( not_query ) not_query = decoder( not_query );
+
+  string safe_decoder(string s) {
+    catch { return decoder(s); };
+    return s;
+  };
+
+  if( prot ) prot = safe_decoder( prot );
+  if( clientprot ) clientprot = safe_decoder( clientprot );
+  if( method ) method = safe_decoder( method );
+  if( rest_query ) rest_query = safe_decoder( rest_query );
+  if( query ) query = safe_decoder( query );
+  if( not_query ) not_query = safe_decoder( not_query );
   if( auth )
   {
     auth = map( auth, lambda( mixed q ) {
                         if( stringp( q ) )
-                          return decoder( q );
+                          return safe_decoder( q );
                         return q;
                       } );
-    rawauth = decoder( rawauth );
-    realauth = decoder( realauth );
+    rawauth = safe_decoder( rawauth );
+    realauth = safe_decoder( realauth );
   }
   if( since )
-    since = decoder( since );
+    since = safe_decoder( since );
 
   decode_map( variables, decoder );
   decode_map( misc, decoder );
   decode_map( cookies, decoder );
   decode_map( request_headers, decoder );
+
   if( client )
-    client = map( client, decoder );
+    client = map( client, safe_decoder );
   if( referer )
-    referer = map( referer, decoder );
-  prestate = mkmultiset( map( (array(string))indices( prestate ), decoder ) );
-  config = mkmultiset( map( (array(string))indices( config ), decoder ) );
-  pragma = mkmultiset( map( (array(string))indices( pragma ), decoder ) );
+    referer = map( referer, safe_decoder );
+  prestate = mkmultiset( map( (array(string))indices( prestate ),
+			      safe_decoder ) );
+  config = mkmultiset( map( (array(string))indices( config ),
+			    safe_decoder ) );
+  pragma = mkmultiset( map( (array(string))indices( pragma ),
+			    safe_decoder ) );
 }
 
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
