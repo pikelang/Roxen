@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.13 1997/08/31 04:12:48 peter Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.14 1997/09/03 12:11:14 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -146,10 +146,13 @@ array|mapping call_script(function fun, object got, object file)
       got->variables[s] = replace(got->variables[s], "\000", " ");
   
 #ifdef THREADS
+  object key;
   if(!QUERY(fork_exec)) {
-    if(!locks[fun])
-      locks[fun]=Mutex();
-    object key = locks[fun]->lock();
+    if(!function_object(fun)->thread_safe)
+    {
+      if(!locks[fun]) locks[fun]=Mutex();
+      key = locks[fun]->lock();
+    }
   }
 #endif
 

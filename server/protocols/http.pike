@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.39 1997/08/31 21:51:53 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.40 1997/09/03 12:11:15 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -310,7 +310,7 @@ private int parse_got(string s)
 #endif
 
   f = scan_for_query( f );
-  f = http_decode_string( f );
+//  f = http_decode_string( f );
 
   if (sscanf(f, "/<%s>%s", a, f))
   {
@@ -321,7 +321,7 @@ private int parse_got(string s)
   if (sscanf(f, "/(%s)%s", a, f) && strlen(a))
     prestate = aggregate_multiset(@(a/","-({""})));
   
-  not_query = f;
+  not_query = http_decode_string(simplify_path(f));
 
   if(strlen(s))
   {
@@ -604,7 +604,6 @@ private int parse_got(string s)
       perror("Unique ID: "+cookies->RoxenUserID+"\n");
 #endif
 #endif
-  not_query = simplify_path(not_query);
   return 1;	// Done.
 }
 

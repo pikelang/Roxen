@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.63 1997/09/03 05:16:34 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.64 1997/09/03 12:11:12 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -604,13 +604,24 @@ int number=0;
 
 mapping find_cached_args(int num);
 
+constant nbsp = sprintf("%c",160);
+
+array gif_size(string d)
+{
+  int x,y;
+  d=d[6..12];
+  x = (d[1]<<8) + d[0]; y = (d[3]<<8) + d[2];
+  return ({x,y});
+}
+
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
 {
   string key = base_key+_args;
   array err;
-  text = replace(text, ({ "&lt;", "&gt;", "&amp;" }), ({ "<", ">", "&" }));
+  text = replace(text, ({ "\0","&ss;","&lt;","&gt;","&amp;"}),({"/",nbsp,"<", ">", "&" }));
 
+  
   err = catch
   {
     object img;
@@ -620,10 +631,41 @@ array(int)|string write_text(int _args, string text, int size,
       args=(["fg":"black","bg":"white"]);
       text="Please reload this page";
     }
+    if(!args->verbatim)
+    {
+      string res="",nspace="",cspace="", nonum;
+      foreach(text/"\n", string line)
+      {
+	cspace="";nspace="";
+	foreach(line/" ", string word)
+	{
+	  if(strlen(word) &&
+	     (nonum=replace(word,({"1","2","3","4","5","6","7","8","9","0","."}),
+			    ({"","","","","","","","","","",""})))
+	     =="")
+	    cspace=nbsp+nbsp;
+	  else if(cspace!="")
+	    cspace=" ";
+	  if((strlen(word)-strlen(nonum)<strlen(word)/2) && (upper_case(word) == word))
+	    word=((word/"")*nbsp);
+	  res+=(nspace==cspace?nspace:" ")+word;
+
+	  if(cspace!="")   nspace=cspace;
+	  else    	   nspace=" ";
+	}
+	res+="\n";
+      }
+      text = replace(res[..strlen(res)-2], ({ "!","?",": " }), ({ nbsp+"!",nbsp+"?",nbsp+": " }));
+      text = replace(replace(replace(text,({". ",". "+nbsp}), ({"\000","\001"})),".","."+nbsp+nbsp),({"\000","\001"}),({". ","."+nbsp}));
+    }
     // Check the cache first..
     while(mixed data = cache_lookup(key, text))
     {
-      if(data == "rendering") { sleep(0.1); continue; }
+      if(data == "rendering")
+      {
+	sleep(0.1);
+	continue;
+      }
       if(args->nocache) // Remove from cache. Very usable for access counters
 	cache_remove(key, text);
       if(size) return data[1];
@@ -739,9 +781,8 @@ string quote(string in)
      case 'a'..'z':
      case 'A'..'Z':
      case '0'..'9':
-     case '.':
-     case ',':
-     case '!':
+     case '.': case ',': case '!':
+     case ':':
       res += in[i..i];
       break;
      default:
@@ -767,7 +808,8 @@ void restore_cached_args()
       cached_args |= decode_value(data);
     };
   }
-  number = sort(indices(cached_args))[-1]+1;
+  if(cached_args && sizeof(cached_args))
+    number = sort(indices(cached_args))[-1]+1;
 }
 
 void save_cached_args()

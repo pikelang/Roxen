@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.121 1997/09/03 07:48:58 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.122 1997/09/03 12:11:10 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -104,8 +104,8 @@ private int failed_connections = 0;
 // This is called for each incoming connection.
 private static void accept_callback( object port )
 {
-  int q=QUERY(NumAccept);
   object file;
+  int q=QUERY(NumAccept);
   array pn=portno[port];
   
 #ifdef DEBUG
@@ -242,7 +242,28 @@ void start_handler_threads()
   if(number_of_threads > 0)
     handle = threaded_handle;
 }
+
+void accept_thread(object port,array pn)
+{
+  program port_program = pn[-1];
+  mixed foo = pn[1];
+  array err;
+  object o;
+  catch {
+    while(1)
+    {
+      o = port->accept();
+      err = catch {
+	if(o) port_program(o,foo);
+      };
+      if(err)
+	perror("Error in accept_thread: %O\n",describe_backtrace(err));
+    }
+  };
+}
+
 #endif /* THREADS */
+
 
 
 // Listen to a port, connected to the configuration 'conf', binding
@@ -284,10 +305,17 @@ object create_listen_socket(mixed port_no, object conf,
       ether=0;
     if(ether)
       sscanf(ether, "addr:%s", ether);
-    
+#ifdef 0&&(defined(THREADS)
+    if(!port->bind(port_no, 0, ether))
+#else
     if(!port->bind(port_no, accept_callback, ether))
+#endif
     {
-      if(ether==0 || !port->bind(port_no, accept_callback))
+#ifdef 0&&defined(THREADS)    
+      if(ether==0 || !port->bind(port_no,accept_callback))
+#else
+      if(ether==0 || !port->bind(port_no,))
+#endif
       {
 #ifdef SOCKET_DEBUG
 	perror("SOCKETS:    -> Failed.\n");
@@ -303,6 +331,9 @@ object create_listen_socket(mixed port_no, object conf,
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
+#if 0&&defined(THREADS)
+  thread_create(accept_thread, port,portno[port]);
+#endif
 #ifdef SOCKET_DEBUG
   perror("SOCKETS:    -> Ok.\n");
 #endif
@@ -2084,7 +2115,7 @@ object shuffle_queue = Queue();
 void shuffle_thread(int id)
 {
 #ifdef THREAD_DEBUG
-  perror("shuffle_thread "+id+" started.\n");
+//  perror("shuffle_thread "+id+" started.\n");
 #endif
   while(mixed s=shuffle_queue->read())
     _shuffle(@s);
