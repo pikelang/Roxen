@@ -118,6 +118,7 @@ worldmap binary
 /server/java/src/com/roxen/roxen/SecurityModule.java foreign_ident
 /server/java/src/com/roxen/roxen/SimpleTagCaller.java foreign_ident
 /server/java/src/com/roxen/roxen/UniqueModule.java foreign_ident
+/server/modules/administration/avg_profiling.pike foreign_ident
 /server/modules/administration/config_filesystem.pike foreign_ident
 /server/modules/administration/config_tags.pike foreign_ident
 /server/modules/administration/roxen_test.pike foreign_ident

@@ -1,4 +1,5 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
+// $Id: avg_profiling.pike,v 1.12 2004/05/22 17:52:28 _cvs_stephen Exp $
 
 inherit "module.pike";
 
@@ -186,7 +187,8 @@ class TagEmitAPEvents
 	where += ({ WhereEqual(replace(name, "-", "_"), args[name]) });
     };
     
-    map(({ "config", "config", "file", "event-class", "event-name"}), fix_arg);
+    map(({ "config", "config", "file", "event-class", "event-name", "session"}),
+	   fix_arg);
     
     if(sizeof(args["file-glob"]||""))
       where += ({ WhereLike("file", args["file-glob"]) });
