@@ -6,48 +6,94 @@
 <body alink=#dd0000 bgcolor=#ffffff fgcolcor=#000000 link=#0000dd vlink=#000066>
 <h1>User's Guide for AutoSite</h1>
 
+This is a guide for the administrator or webmaster of a site hosted on
+an AutoSite server, it also includes a guide for the Roxen WebMail
+client.
 
-<h2>AutoWeb</h2>
+
+<h2>AutoWeb Administration</h2>
 
 AutoWeb is the web site part of AutoSite.
 
 
-<h3>AutoWeb Administration</h3>
-
-
-<h4>Logging in</h4>
+<h3>Logging in</h3>
 
 The AutoWeb administration interface is found by adding
-<i>/webadm/</i> to the domain URL of your site in your browser, like
+<i>/webadm/</i> to the domain URL of the site in your browser, like
 this: <tt>http://www.<i>domainname</i>/webadm/</tt>
 
-<p>You will be asked for the administrator's username and password. If
-you give a correct username and password you will be asked to choose
-one of the following tabs: <i>Template Editor, HTML Editor</i> and
-<i>Menu Editor</i>. If one of the LogView modules is enabled a tab
+<p>You will be asked for the administrator's username and password.
+The username and password can only be changed by the administrator of
+the AutoSite server on <tt>http://tifa.idonex.se/admin/</tt>
+
+<p>If you give a correct username and password you will be asked to
+choose one of the following tabs: <i>Template Editor, HTML Editor</i>
+and <i>Menu Editor</i>. If one of the LogView modules is enabled a tab
 called <i>Statistics</i> or <i>Simple Statistics</i> will also be
 found.
 
 
-<h3>Template Editor</h3>
+<h2>Template Editor</h2>
 
 This is where the layout of the site is configured.
 
 
-<h4>Layout</h4>
+<h3>Layout</h3>
 
 Clicking on one of the headings will allow you to change the
-properties of the background, title, headings etc.
+preferences of the background, title, headings, links etc.
+
+<dl>
+<dt>General...<dd>Edit layout style, text color, and link color
+preferences. The layout style can be chosen from a number of
+predefined styles.
+
+<dt>Background...<dd>Edit background image and background color
+preferences.
+
+<dt>Title...<dd>Edit preferences for the graphical text that will be
+used for the title of the page.
+
+<dt>Page head...<dd>Edit background and foreground color preferences
+of the background image of the page head, the position of the logo and
+the bar color. If there is a file called <i>logo.gif</i> in a
+directory, it will be included on all pages in that directory when
+they are viewed.
+
+<dt>Graphical element...<dd>Edit corner size and border color for
+graphical elements.
+
+<dt>Heading 1...<dd>Edit the preferences for the graphical text that
+will be used for &lt;h1&gt;...&lt;/h1&gt;
+
+<dt>Heading 2...<dd>Edit the preferences for the graphical text that
+will be used for &lt;h2&gt;...&lt;/h2&gt;
+
+<dt>Footer...<dd>Choose how the footer should be aligned. If there is
+a file called <i>footer.html</i> in a directory its contents will be
+included on every page in this directory.
+</dl>
 
 
-<h4>Navigation</h4>
+<h3>Navigation</h3>
 
-Clicking on one of the headings will allow you to change the
-properties for the background, text style and colors of the navigation
-menus.
+If the menu file, which is configurable under <i>Menu Editor</i>, is
+not empty a navigation menu will be included on all pages using the
+template. Clicking on one of the headings will allow you to edit the
+preferences for the background, text style and colors of the
+navigation menu.
+
+<dl>
+<dt>Navigation type...<dd>Choose the layout style from a number of
+predefined styles.
+
+<dt>Navigation text...<dd>Choose text style to be used.
+
+<dt>Navigation colors...<dd>Choose the colors of the text.
+</dl>
 
 
-<h4>Template Functions</h4>
+<h3>Template Functions</h3>
 
 The <i>Load...</i> button will allow you to load a new template to the
 active template. The properties of the layout and navigation will be
@@ -62,44 +108,161 @@ chosen as active template.
 templates if there is more than one.
 
 
-<h3>HTML Editor</h3>
+<h2>HTML Editor</h2>
 
 The HTML editor is where you find the file system of the site. Here
 you can create or upload new files, edit contents, moving or deleting
-existing files. 
+existing files.
 
 
-<h4>Handling Files</h4>
+<h3>Handling Files</h3>
 
-Click on the name of a file or directory to focus on the file or enter
-the directory.
+Click on the name of a file or directory in the <i>File Browser</i> to
+focus on the file or enter the directory. The available choices in the
+<i>Toolbar</i> will change depending on what actions can be performed
+when focusing on a directory or different file types.
 
 
-<h3>Menu Editor</h3>
+<h4>File functions</h4>
+
+<dl>
+<dt>View<dd>View the parsed contents of the file.
+
+<dt>Edit File<dd>Open the file for editing in the simple built in
+editor.
+
+<dt>Edit Metadata<dd>The metadata for a file contains information of
+file type, title, keywords, description and which template should be
+used.
+
+<p>Note: The template adds some of the necessary HTML tags
+automatically, so if you choose not to use the template you must be
+careful to add all the necessary HTML and RXML tags in the file.
+
+<dt>Add to Menu<dd>The file will automatically be added to the menu
+file.
+
+<dt>Create File<dd>Create a new file in the current directory.
+
+<dt>Upload File<dd>Upload a new file from the local file system to the
+site.
+
+<dt>Download File<dd>Download the file to the local file system.
+
+<dt>Move/Rename File<dd>Rename the file or move it to a different
+location.
+
+<dt>Remove File<dd>Remove the file permanently.
+</dl>
+
+
+<h4>Directory functions</h4>
+
+<dl>
+<dt>New Directory<dd>Create a new sub directory in the current
+directory.
+
+<dt>Move/Rename Dir<dd>Move the current directory, together with all
+files and sub directories in it, to a new location, the old copy will
+be removed.
+
+<dt>Remove Directory<dd>Remove the current directory. You will be
+warned if the directory is not empty.
+</dl>
+
+
+<h2>Menu Editor</h2>
 
 Here you can configure the menu file. Adding new items to the menu
-file is done by clicking the <i>New...</i> button and follow th
-instructions in the wizard or by chosing "Add to Menu" in the HTML
+file is done by clicking the <i>New...</i> button and follow the
+instructions in the wizard or by choosing "Add to Menu" in the HTML
 Editor when focusing on a file or a directory.
 
 <p>If you want to move or delete a menu item first select it by
-clicking the corresponing radio button in the Select column, then
+clicking the corresponding radio button in the Select column, then
 click on one of the buttons <i>Move Up, Move Down</i> or
 <i>Delete</i>.
 
 
-<h3>Statistics</h3>
+<h2>Statistics</h2>
 
 This tab will be available when the <i>LogView</i> module is enabled
-for the site. Clicking on the tab you will be able to choose from
-various log analyzing tools.
+for the site. Clicking on the tab you will provide an advanced log
+analyzing tool which allows you to choose among the different
+parameters .
 
 
-<h3>Simple Statistics</h3>
+<h3>Calendar</h3>
+
+Specify the period of time, choose from a year down to a single day.
+By clicking on the name of a month you will be able to choose a day
+from that month. Default is the current year.
+
+
+<h3>Report</h3>
+
+Choose what information you want statistics about.
+
+<dl>
+<dt>Bytes<dd>The amount of bytes sent from the site.
+
+<dt>Countries<dd>The countries the connections to the site has come
+from.
+
+<dt>Errors<dd>The different errors visitors to the site has
+encountered and the number of times they have occurred.
+
+<dt>Hits<dd>The total number of connections or hits.
+
+<dt>Page Hits<dd>The number of connections for each page in the
+current directory or for the current file
+
+<dt>Search Engines<dd>Which search engines have connected to the site.
+
+<dt>Search Hits<dd>The total number of search hits.
+
+<dt>Search Phrases<dd>The different phrases searched for when
+searching the site.
+
+<dt>Search Words<dd>The different words searched for when searching
+the site.
+</dl>
+
+
+<h3>File viewer</h3>
+
+Choose the directory or a single file you want statistics for. Default
+is the root or /-directory.
+
+
+<h3>Display</h3>
+
+Choose how to display the result.
+
+<dl>
+<dt>None<dd>No output.
+
+<dt>Table<dd>Show the result as a table.
+
+<dt>Text<dd>Show the result as a simple table.
+
+<dt>Linechart<dd>Show the result as a line chart. Only available for
+the <i>Bytes, Hits</i> and <i>Search Hits</i> reports.
+
+<dt>Barchart<dd>Show the result as a bar chart. Only available for the
+<i>Bytes, Hits, Search Engines</i> and <i>Search Hits</i> reports.
+
+<dt>Worldmap<dd>A world map showing the countries from which
+connections to the site have come. Only available for the
+<i>Countries</i> report.
+</dl>
+
+
+<h2>Simple Statistics</h2>
 
 This table will be shown when the <i>Simple LogView</i> module is
 enabled for the site. Choosing the tab will provide a graph showing
-the hitrate for the last month(s).
+the hit-rate for the current month.
 
 
 <h2>Creating HTML pages</h2>
@@ -114,21 +277,94 @@ should be considered when creating the HTML pages.
 When the IntraSeek module is enabled for a site, the &lt;search&gt;
 tag can be used in the content files to add a search tool on the page.
 Simply put the &lt;search&gt; tag in the HTML/RXML code where you want
-the search tool to appear on your page.
+the search form to appear on your page.
 
-<p>The search tool will allow a vistor to search the content of the
+<p>The search tool will allow a visitor to search the content of the
 pages on the site.
 
 
-<h3>&lt;formsmailer&gt;...&lt;/formsmailer&gt;</h3>
+<h3>&lt;forms-mail&gt;...&lt;/forms-mail&gt;</h3>
+
+<tt>&lt;forms-mail&gt;</tt>
+
+
+<h4>Attributes:</h4>
+<pre>      to:    receiver of the mailed form
+      from:  sender address (must exist)</pre>
+
+
+<h4>Contents:</h4>
+
+<p>A check-box (on/off):
+<pre>  &lt;input type=checkbox name=mycheckbox&gt;</pre>
+
+<p>A set of radio buttons:
+<pre>  &lt;input type=radio name=myradiobutton value=green&gt;
+  &lt;input type=radio name=myradiobutton value=blue&gt;</pre>
+
+<p>A select-box:
+<pre>  &lt;input type=select name=myselect&gt;
+    &lt;option value="volvo"&gt;Volvo&lt;/option&gt;
+    &lt;option value="saab"&gt;Saab&lt;/option&gt;
+    &lt;option value="Toyota"&gt;Toyota&lt;/option&gt;
+  &lt;/input&gt;</pre>
+
+<p>A one-line input area:
+<pre>  &lt;input type=text name=mystring size=40&gt;</pre>
+
+<p>A multiple-line text input area:
+<pre>  &lt;textarea rows=10 cols=70 name=mytextarea&gt;</pre>
+
+
+<h4>Example:</h4>
+
+<pre>&lt;h1&gt;Send us some feedback&lt;/h1&gt;
+
+&lt;forms-mail from=feedback@mydomain.com to=feedback@mydomain.com&gt;
+Your name: &lt;input type=text size=40 name=name&gt;
+&lt;br&gt;Your e-mail: input type=text size=40 name=name&gt;
+&lt;br&gt;Your sex: &lt;input type=radio name=sex value="male"&gt; Male
+&lt;br&gt;          &lt;input type=radio name=sex value="female"&gt; Female
+&lt;br&gt;Your thoughts about us:
+&lt;textarea rows=20 cols=65 name=thoughts&gt;I think...&lt;/textarea&gt;
+
+&lt;/forms-mail&gt;</pre>
 
 
 <h3>Gtext Headings</h3>
 
-The large headings, &lt;h1&gt;&lt;/h1&gt; and &lt;h2&lgt;&lt;/h2&lgt;
+The large headings, &lt;h1&gt;&lt;/h1&gt; and &lt;h2&gt;&lt;/h2&gt;
 used in the content files on the site will be shown as gtext, making
 them widely configurable and nice looking. Since gtext is shown as gif
 images extensive use of gtext headings can make a page slow to load.
+
+
+<h3>Special files</h3>
+
+A new site will contain three files in the root or /-directory,
+<i>index.html, footer.html</i> and <i>logo.gif</i>. Index.html is of
+course the home page but the other two perhaps need some further
+explanation.
+
+
+<h4>/footer.html</h4>
+
+The contents of this file will be included on the bottom of all pages
+on the site who use the template. When the site is created the file is
+empty. The footer align can be changed in the template editor.
+
+
+<h4>/logo.gif</h4>
+
+This file will be included on all pages on the site who use the
+template. When the site is created the image is a very small,
+transparent image. Since it is transparent it will be virtually
+invisible.
+
+<p>This file can be replaced with, for instance, the company logo or
+any other GIF-image. To replace the image first remove the old
+<i>logo.gif</i>-file and then upload the new image or move/rename an
+existing GIF-file.
 
 
 <h2>AutoMail</h2>
@@ -140,7 +376,7 @@ client, Roxen WebMail.
 
 <h3>Different Protocols</h3>
 
-There are a few different protcols used when fetching mail from a
+There are a few different protocols used when fetching mail from a
 server using different methods of fetching and storing the mail. This
 system supports the two currently most popular protocols, POP and
 IMAP, and also provides its own web based mail client.
@@ -155,37 +391,52 @@ means that the information about mail that has been read etc is
 available using any IMAP client connecting to the server.
 
 <p>WebMail: Roxen WebMail is a web based mail client that can be used
-from your web browser without installing 
+from your web browser without installing additional software.
+
+<br>Note: The client does not use a mail tool built in to your browser
+but is complete in itself.
 
 
-<h3>POP3: Choosing server</h3>
+<h3>Choosing server</h3>
+
+
+<h4>POP:</h4>
 
 If you read mail with a client using POP, choose <i>tifa.idonex.se</i>
 as POP server.
 
 
-<h3>IMAP4: Choosing server</h3>
+<h4>IMAP:</h4>
 
 If you read mail with a client using IMAP, choose
 <i>tifa.idonex.se</i> as IMAP server.
 
 
-<h3>Roxen WebMail</h3>
+<h2>Roxen WebMail</h2>
 
-To use Roxen WebMail add /mail/ to the domain URL of your site like
-this: <tt>http://www.<i>domainname</i>/mail/</tt>
+The Roxen WebMail client is found by adding <i>/mail/</i> to the
+domain URL of the site in your browser, like this:
+<tt>http://www.<i>domainname</i>/mail/</tt>
 
-<p>When asked you are asked for a username and a password type
-<i>username*domainname</i> as a username.
+<p>When asked for a username and a password, type
+
+<pre>    <i>username*domainname</i></pre>
+
+as a username. The username and password can only be changed on
+<tt>http://www.<i>domainname</i>/webadm/</tt> by the site
+administrator.
+
+After a successful login you will see a row of buttons with your
+different choices and a list of your mailboxes.
 
 
-<h4>Listing Mailboxes</h4>
+<h3>Listing Mailboxes</h3>
 
-Clicking on this button you will se a table showing all your
+Clicking on this button you will see a table showing all your
 mailboxes. Click on the name to view the contents of a mailbox.
 
 
-<h4>Reading Mail</h4>
+<h3>Reading Mail</h3>
 
 To get new mail click on the <i>List all mailboxes</i> button and
 choose the <i>Incoming</i> mailbox. Unread mail is marked <i>New!</i>
@@ -193,43 +444,86 @@ in the <i>Flag</i> column. Click on one of the text columns to read
 the mail.
 
 
-<h4>Delete Mail</h4>
+<h3>Delete Mail</h3>
 
-When focusing on a mail a 
+When focusing on a mail simply press the <i>Delete</i> button to move
+the mail to the <i>Deleted</i> folder which will be created
+automatically when deleting a mail.
 
 <p>To delete a mail from a mailbox select it by clicking on the button
-in the <i>Flag</i> column and then click the <i>Delete</i> button.
+in the <i>Flag</i> column and then click on the <i>Delete</i> button.
 Several mails can be selected simultaneously so be alert that only the
-mails you really want to delete are seleted.
+mails you really want to delete are selected.
+
+<p>To permanently delete the mail click on <i>Empty 'Deleted'
+mailbox</i> when listing all mailboxes. The <i>Deleted</i> mailbox
+will then disappear from the list of mailboxes. It will reappear when
+deleting another mail.
 
 
-<h4>Write/Send Mail</h4>
+<h3>Write/Send Mail</h3>
 
-To write a new mail click on the <i>Compose Message</i> button.
+To write a new mail click on the <i>Compose a new message</i> button.
+
+<dl>
+<dt>To:<dd>The email address of the recipient. Several recipients can
+be listed separated by a comma (,) in all the address fields. If you
+leave this out you will not receive a warning message when clicking on
+the <i>Send</i> button, but of course the mail will not be delivered.
+
+<dt>Subject:<dd>The subject of the mail, can be left out.
+
+<dt>Cc:<dd>The email address of an additional recipient. Can be left
+out.
+
+<dt>Bcc:<dd>The email address of an additional recipient. Can be left
+out. The recipient(s) given here will not bee seen by the
+recipient(s).
+
+<dt>Attachments:<dd>To attach a file, document etc to the mail click
+on the <i>New Attachment</i> button to browse the local file system.
+</dl>
+
+<p>Click on the <i>Send</i> button to send the mail when you are
+finished editing. A copy of the mail will be saved in the <i>Sent</i>
+mailbox.
+
+<p>If you want to save the mail without sending it, click on the <i>Save
+Draft</i> button. Go to the <i>Drafts</i> mailbox if you want to
+continue editing the mail later.
 
 
-<h4>Create Mailbox</h4>
+<h3>Create Mailbox</h3>
 
-A folder called inbox is created automatically when a new user is
-added. When composing a new message a <i>draft</i> folder will be
-created and when the first message is sent a <i>sent</i> folder will
-be created.
+A mailbox called <i>Incoming</i> is created automatically when a new
+user is added. When composing a new message a <i>Drafts</i> mailbox
+will be created and when the first message is sent a <i>Sent</i>
+mailbox will be created.
 
 <p>If you want to create a new mailbox, click on the <i>Create
-Mailbox</i> button.
+Mailbox</i> button and fill in the form. You can choose to create a
+button to move the current mail to this mailbox.
 
 
-<h4>Delete Mailbox</h4>
+<h3>Delete Mailbox</h3>
 
 Clicking on the <i>Delete mailbox</i> button you will be able to
 delete the mailbox of you choice. All mail currently in that mailbox
 will be deleted permanently.
 
+<p>The mailboxes that are created automatically will reappear when the
+action that caused them to be created is repeated.
 
-<h4>User Settings</h4>
+<p>Note: If you delete a mailbox created with the <i>Create
+mailbox</i> button with the option of creating a button for moving
+mail to that mailbox, the <i>Move to ...</i> button will not
+disappear, using that button will cause the mailbox to reappear.
 
-Clicking on this button will allow you to edit a signature file or
-change the personal data that is sent when sending mail.
+
+<h3>User Settings</h3>
+
+Clicking on this button will allow you to edit the signature file or
+change the personal data enclosed when sending mail.
 
 </body>
 </html>
