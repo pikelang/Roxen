@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.443 2000/02/29 23:35:23 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.444 2000/03/01 19:05:46 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1818,17 +1818,14 @@ void restart_if_stuck (int force)
   alarm (60*QUERY(abs_timeout)+10);
 }
 
-// Cache used by the various configuration interface modules etc.
-// It should be OK to delete this cache at any time.
+// Settings used by the various configuration interface modules etc.
 class ConfigIFCache
 {
   string dir;
   void create( string name )
   {
-    dir = (".config_settings/"+
-           replace(configuration_dir-".", "/", "-") +
-           "/" + name + "/");
-    mkdirhier( dir+"/foo" );
+    dir = configuration_dir + "_configinterface/" + name + "/";
+    mkdirhier( dir );
   }
 
   mixed set( string name, mixed to )
@@ -1845,7 +1842,7 @@ class ConfigIFCache
         return to;
       }
     }
-    f->write( encode_value( to ) );
+    f->write( encode_mixed( to, this_object() ) );
     return to;
   }
 
@@ -1854,7 +1851,10 @@ class ConfigIFCache
     Stdio.File f = Stdio.File();
     if(!f->open(  dir + replace( name, "/", "-" ), "r" ))
       return 0;
-    return decode_value( f->read() );
+    mapping q = ([]);
+    decode_variable( 0, ([ "name":"res" ]), f->read(), q );
+    parse( f->read(), ([]) );
+    return q->res;
   }
 
   array list()
