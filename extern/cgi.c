@@ -357,10 +357,12 @@ void main(int argc, char **argv)
   /* Do not allow root execution
    *
    * This is probably already fixed in Roxen,
-   * but two levels of security is better than one.
+   * but two levels of security are better than one.
    */
-  if(!getuid() && !geteuid()) exit(1);
-  if(!geteuid()) exit(1);
+  if(!geteuid()) {
+    printf("Execution of CGI-scripts as root is disabled\n");
+    exit(1);
+  }
   if(!getuid()) {
     int euid = geteuid();
     int egid = getegid();
@@ -368,7 +370,10 @@ void main(int argc, char **argv)
     setgid(egid);
     setuid(euid);
   }
-  if(!getuid()) exit(1);
+  if(!getuid()) {
+    printf("Couldn't change uid from root.\n");
+    exit(1);
+  }
   
   if(argc==1)
   {
