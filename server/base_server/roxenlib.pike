@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.58 1998/03/20 03:35:05 per Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.59 1998/03/26 07:21:36 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -246,7 +246,8 @@ static string decode_mode(int m)
   else if(S_ISBLK(m))  s += "Device";
   else if(S_ISFIFO(m)) s += "FIFO";
   else if(S_ISSOCK(m)) s += "Socket";
-  else s+="Unknown";
+  else if((m&0xf000)==0xd000) s+="Door";
+  else s+= "Unknown";
   
   s+=", ";
   
