@@ -1,25 +1,20 @@
-<left-menu title="<cf-locale get=globals>
-<cf-locale get=settings>"> 
-  <item href="?section=section" title="Misc"
-    <if not variable=section> selected </if>
-    <if variable="section is section"> selected </if>
-   ></item>
-
-  <configif-output source=global-variables-sections>
-    <item href="?section=#section#"
-         title="#section:quote=dtag#"
-    <if variable="section is #section#">selected</if>></item>
-  </configif-output>
-</left-menu>
-
 <topmenu base="../" selected=globals>
 
-<path>
- <seg href=/ name=root />
- <seg href="" name="Global Settings" />
-</path>
-
 <content>
+<p><br>
+<table align=right width=90% border=0 cellpadding=0 cellspacing=0>
+<tr><td width=100% valign=bottom
+><table width=100% border=0 callpadding=0 cellspacing=0><tr width=100%><td valign=bottom><tablist bgcolor=white preparse valign=bottom>
+  <configif-output source=global-variables-sections>
+    <tab dimcolor="##999999"
+         txtcolor="white"
+         selcolor="##eeeeee"
+         #selected#
+         fgcolor="##999999"
+         href="?section=#section#">#section#</tab>
+  </configif-output>
+</tablist></td><td width=100% valign=bottom><img src=/internal-roxen-black-dot width=100% height=1></td></tr></table></td></tr>
+<tr><td bgcolor="#eeeeee">
   <formoutput quote="¤">
   <input type=hidden name=section value="¤section¤">
   <table>
@@ -30,4 +25,5 @@
   </table>
   <input type=submit value=" Apply " name=action>
   </formoutput>
+</td></tr></table>
 </content>

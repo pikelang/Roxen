@@ -30,40 +30,31 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
 
   items = items->them;
 
-  c->top=("<table cellpadding=0 cellspacing=0 border=0><tr><td>"
-	  "<img src=/internal-roxen-unit width=30 height=10></tr>"
-	  "<td valign=bottom>"
-	  "<img src=/internal-roxen-unit width=1 height=6><br>");
+  c->top=( "<tablist bgcolor=#d9dee7>" );
 
   foreach(items, mapping i)
   {
     string color, fgcolor;
+    mapping targs = ([]);
     if(i->selected)
     {
-      color = "$TOP_SELECTED_BG$";
-      fgcolor = "$TOP_SELECTED_FG$";
+      targs->selected = "selected";
+      targs->bgcolor = "#d9dee7";
+      targs->dimcolor = "white";
+      targs->txtcolor = "black";
+      targs->fgcolor = "#d9dee7";
     }
     else
     {
-      color = "$TOP_TAB_BG$"; 
-      fgcolor = "$TOP_TAB_FG$";
+      targs->bgcolor = "#d9dee7";
+      targs->dimcolor = "#9aa2ae";
+      targs->txtcolor = "white";
+      targs->fgcolor = "white";
     }
-
-    c->top += (submit_gtxt( "goto_"+i->href,
-                           ([
-                             "fg":fgcolor, 
-                             "bg":color,
-                             "afont":"haru",
-                             "scale":"0.5",
-                             "spacing":"2",
-                             "xspacing":"20",
-                             "notrans":"notrans",
-                           ]),
-                           i->title,
-                           id ) +
-               "<img src=/internal-roxen-unit width=10 height=1>");
+    targs->href = i->href;
+    c->top += make_container( "tab", targs, " "+i->title+" " );
   }
-  c->top += "</td></tr></table>";
+  c->top += "</tablist>";
   return "";
 }
 
@@ -143,8 +134,7 @@ string internal_c_leftmenu(string t, mapping m, string d, mapping c, RequestID i
 
 string internal_c_middle(string t, mapping m, string d, mapping c,RequestID id)
 {
-  c->middle = ("\n<b><smallcaps space>"+m->title+
-	       "</smallcaps></b><br>\n"+d+"\n");
+  c->middle = (d);
   return "";
 }
 
@@ -187,38 +177,9 @@ string td(string data, string|void aa)
   return "<td"+aa+">"+data+"</td>\n";
 }
 
-constant colors_from = 
-({ 
-  "$LEFT_SELECTED_BG$",   "$LEFT_SELECTED_FG$", 
-  "$LEFT_BG$",   "$LEFT_FG$", 
-  "$TOP_SELECTED_BG$",   "$TOP_SELECTED_FG$", 
-  "$TOP_TAB_BG$",   "$TOP_TAB_FG$", 
-  "$TOP_BG$",   "$TOP_FG$", 
-  "$TITLE_BG$",   "$TITLE_FG$", 
-  "$CONTENT_BG$",  "$CONTENT_FG$",
-});
-
 string container_roxen_config(string t, mapping m, string data, RequestID id)
 {
   int _start = gethrtime();
-#define PAGECOLOR "#e7e7e7"
-  string left_bg = "#003366",       left_fg = "white",
-         left_selected_bg=PAGECOLOR,left_selected_fg = "black",
-         top_bg="#003366",          top_fg="black",
-         top_selected_bg=PAGECOLOR, top_selected_fg="black",
-         top_tab_bg = "#7e7e7e",    top_tab_fg = "black",
-         content_bg=PAGECOLOR,      content_fg="black",
-         title_bg="white",          title_fg="black";
-
-#define VC(c) if(id->variables->c)id->misc->c=c=id->variables->c;if(id->misc->c)c=id->misc->c;
-
-  VC(left_selected_bg); VC(left_selected_fg);
-  VC(left_bg);          VC(left_fg);
-  VC(top_selected_bg);  VC(top_selected_fg);
-  VC(top_tab_bg);       VC(top_tab_fg);
-  VC(top_bg);           VC(top_fg);
-  VC(content_bg);       VC(content_fg);
-  VC(title_bg);         VC(title_fg);
 
   mapping c = ([
     "title":"",
@@ -229,73 +190,37 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
   ]);
 
 
-  array colors_to = ({
-    left_selected_bg, left_selected_fg, 
-    left_bg,          left_fg, 
-    top_selected_bg,  top_selected_fg, 
-    top_tab_bg,       top_tab_fg, 
-    top_bg,           top_fg, 
-    title_bg,         title_fg, 
-    content_bg,       content_fg,
-  });
-
   string rest;
-  rest = replace(parse_html(data,([]), 
-			    ([ 
-			      "middle":internal_c_middle,
-			      "top-menu":internal_c_topmenu,
-			      "left-menu":internal_c_leftmenu,
-			      "content":internal_c_content,
-			    ]), c, id), colors_from, colors_to);
+  rest = parse_html(data,([]), 
+                    ([ 
+                      "middle":internal_c_middle,
+                      "top-menu":internal_c_topmenu,
+                      "left-menu":internal_c_leftmenu,
+                      "content":internal_c_content,
+                    ]), c, id);
     
 
-//   foreach(indices(c), string s)
-//     c[s] = replace( c[s], colors_from, colors_to );
+//   c->title = 
+  string page =  #"
+  <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='#d9dee7'>
+    <tr bgcolor='#d9dee7'>
+      <td colspan=2>
+       <table><tr><td>
+         <img src=/internal-roxen-roxen-blue-small.gif xspacing=10>
+         </td>
+          <td><font color='#78849c'><cf-locale get=administration_interface>
+              </font></td></tr></table></td>
+      <td align=right valign=top rowspan=2>"+c->middle+#"</td>
+    </tr>
+    <tr valign=bottom>
+      <td colspan=2 valign=bottom>"+c->top+#"</td>
+    </tr>
+  </table>
+";
 
-  c->title = table(tr(td("<img src=/internal-roxen-unit width=10 height=1>"
-			 "<img src=/internal-roxen-roxen-small>") +
-		      td("<img src=/internal-roxen-unit width=10 height=1>",
-			 "width=10")+
-		      td("<img src=/internal-roxen-unit height=6 width=1><br>"+
-			 "<font color=$TITLE_FG$>"+c->middle+"</font>",
-			 "valign=top align=right width=101%")),  
-                   "bgcolor=$TITLE_BG$" );
+  page += c->content;
 
-  // +  td("<img src=/internal-roxen-pike-small>")
-
-
-#define NCOLS 3
-#define TTDEF "width=101%"
-  string page = 
-    c->title+
-// 	  tr(td("<img src=/internal-roxen-unit width=1 height=5>",
-// 		"colspan="+NCOLS+" width=1 height=5")) +
-    table(tr(td(c->top,
-                "align=right valign=bottom colspan="+NCOLS+
-                " bgcolor=$TOP_BG$ height=25")),TTDEF)+
-    "<img src=/internal-roxen-unit height=3 width=1 alt=\"\"><br>"+
-    table(tr(
-//          td("<img src=/internal-roxen-unit width=3 height=1>",
-//  	        "width=2 bgcolor=$CONTENT_BG$")+
-	     td(c->left,
-		"valign=top height=80% width=300 bgcolor=$LEFT_BG$")+
-	     td("<img alt=\"\" src=/internal-roxen-unit height=1 width=3>",
-		"width=3 bgcolor=$CONTENT_BG$")+
-	     td("<font color=$CONTENT_FG$>"+c->content+"</font>&nbsp;",
-		"width=100% valign=top bgcolor=$CONTENT_BG$")) +
-//     tr(td("")*(NCOLS-1)+
-//        td("<font size=-1>"+roxen->real_version+"</font>",
-//           "width=100% align=right"), 
-//        "bgcolor=$CONTENT_BG$ width=100%"),
-        "",
-    TTDEF+" height=80%");
-  
-
-    return rest+replace(page, colors_from, colors_to);
-//   return table(tr(td(page, "width=101% height=100%"), 
-// 		  "valign=top height=200")+
-// 		,
-// 		"height=100% width=101% bgcolor=\""+content_bg+"\"");
+  return page;
 }
 
 string get_var_doc( string s, object mod, int n, object id )
@@ -738,7 +663,17 @@ mapping get_variable_section( string s, object mod, object id )
   s = LOW_LOCALE->module_doc_string( mod, s, 0 );
   if( !s ) return 0;
   if( sscanf( s, "%s:%*s", s ) )
-    return ([ "section":s ]);
+    return ([ 
+      "section":s,
+      "selected":(id->variables->section==s?"selected":"")
+    ]);
+  else
+    return ([ 
+      "section":"Misc",
+      "selected":
+      ((id->variables->section=="Misc"||!id->variables->section)?
+       "selected":""),
+    ]);
   return 0;
 }
 
@@ -753,7 +688,7 @@ array get_variable_maps( object mod, mapping m, object id )
                             } );
   if( m->section )
   {
-    if( !strlen( m->section ) || (search( m->section, "section" ) != -1 ))
+    if( !strlen( m->section ) || (search( m->section, "Misc" ) != -1 ))
       variables = Array.filter( variables, 
                                 lambda( mapping q )
                                 {
@@ -776,7 +711,7 @@ array get_variable_sections( object mod, mapping m, object id )
   array variables = map(indices(mod->variables),get_variable_section,mod,id);
   variables = Array.filter( variables-({0}), 
                        lambda( mapping q ) {
-                         return !w[q->section]++;
+                         return !w[ q->section ]++;
                        });
   sort( variables->section, variables );
   return variables;

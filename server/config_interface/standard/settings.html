@@ -1,29 +1,38 @@
 <topmenu selected=home>
 
-<left-menu title="<cf-locale get=welcome>">
- <item href="" title='<cf-locale get=home>'>
-   <item perm="View Settings" 
-         href="debug_info.html" 
-         title='<cf-locale get=debug_info>'></item>
-   <item href="settings.html"   selected
-         title='<cf-locale get=settings>'></item>
-   <item perm="Edit Users" 
-         href="users.html"  
-         title='<cf-locale get=users>'></item>
-   <item perm="Restart" 
-         href="restart.html" 
-         title='<cf-locale get=restart>'></item>
-   <item perm="Shutdown" 
-         href="shutdown.html" 
-         title='<cf-locale get=shutdown>'></item>
- </item>
-</left-menu>
-
 <content>
+<p><br>
+<table align=right width=90% border=0 cellpadding=0 cellspacing=0>
+<tr><td width=100%><table width=100% border=0 callpadding=0 cellspacing=0><tr width=100%><td valign=bottom
+><tablist preparse
+         dimcolor="#999999"
+         txtcolor="white"
+         selcolor="#eeeeee"
+         #selected#
+         fgcolor="#999999"
+         bgcolor=white>
+    <tab href="../"><cf-locale get=welcome></tab>
+  <cf-perm perm="View Settings">
+    <tab href="debug_info.html"><cf-locale get=debug_info></tab>
+  </cf-perm>
+    <tab href="settings.html"  selected><cf-locale get=settings></tab>
+  <cf-perm perm="Edit Users">
+    <tab href="users.html"><cf-locale get=users></tab>
+  </cf-perm>
+  <cf-perm perm="Restart">
+    <tab href="restart.html"><cf-locale get=restart></tab>
+  </cf-perm>
+  <cf-perm perm="Shutdown">
+    <tab href="shutdown.html"><cf-locale get=shutdown></tab>
+  </cf-perm>
+</tablist></td><td width=100% valign=bottom><img src=/internal-roxen-black-dot width=100% height=1></td></tr></table></td></tr>
+<tr><td bgcolor="#eeeeee">
 <table>
   <configif-output source=config-settings>
     <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
   </configif-output>
+</table>
+<input type=submit value=" Apply ">
 </table>
 </content>

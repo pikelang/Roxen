@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.3 1999/11/05 07:40:19 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.4 1999/11/15 12:35:28 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -221,35 +221,35 @@ class Page
 
   class TagCaller
   {
-    string tag;
     function fun;
 
-    void call(object parser, mapping args, mixed... extra)
+    mixed call(object parser, mapping args, mixed... extra)
     {
+      if(!fun) 
+        return "";
       return fun(parser->tag_name(), args, @extra);
     }
                    
-    void create( string n )
+    void create( function f )
     {
-      tag = n;
-      fun = my_tags[ n ];
+      fun = f;
     }
   }
 
   class ContainerCaller
   {
-    string tag;
     function fun;
 
-    void call(object parser, mapping args, string c, mixed... extra)
+    mixed call(object parser, mapping args, string c, mixed... extra)
     {
+      if(!fun) 
+        return "";
       return fun(parser->tag_name(), args, c, @extra);
     }
                    
-    void create( string n )
+    void create( function f )
     {
-      tag = n;
-      fun = my_tags[ n ];
+      fun = f;
     }
   }
 
@@ -263,18 +263,20 @@ class Page
     {
 #ifndef OLD_PARSE_HTML
       for (object p = id->misc->_parser_obj; p; p = p->up)
-        p->add_tag( s, TagCaller( s )->call );
+        p->add_tag( s, TagCaller( my_tags[s] )->call );
+#else
+       id->misc->_tags[ s ] = my_tags[ s ];
 #endif
-      id->misc->_tags[ s ] = my_tags[ s ];
     }
 
     foreach(indices(my_containers), string s)
     {
 #ifndef OLD_PARSE_HTML
       for (object p = id->misc->_parser_obj; p; p = p->up)
-        p->add_tag( s, ContainerCaller( s )->call );
+        p->add_tag( s, ContainerCaller( my_containers[s] )->call );
+#else
+       id->misc->_containers[ s ] = my_containers[ s ];
 #endif
-      id->misc->_containers[ s ] = my_containers[ s ];
     }
 //     id->misc->_tags["var"] = call_var;
 //     id->misc->_containers["cvar"] = call_cvar;
