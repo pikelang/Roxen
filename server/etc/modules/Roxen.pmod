@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.35 2000/09/02 22:46:56 per Exp $
+ * $Id: Roxen.pmod,v 1.36 2000/09/05 20:47:31 mast Exp $
  *
  * Various helper functions.
  *
@@ -1213,7 +1213,7 @@ void trace_enter (RequestID id, string msg, object|function thing)
 	finish (name)->read());
     else if (Configuration conf = get_owning_config (thing))
       name = "conf: " + conf->query_name();
-    else if (thing)
+    else
       name = sprintf ("obj: %O", thing);
   }
   else name = "";
