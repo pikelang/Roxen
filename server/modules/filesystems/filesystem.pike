@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.50 1999/06/08 03:09:41 hubbe Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.51 1999/12/22 16:59:50 jhs Exp $";
 constant thread_safe=1;
 
 
@@ -367,7 +367,7 @@ mixed find_file( string f, object id )
 	return http_redirect(new_query, id);
       }
 
-      if(!id->misc->internal_get && QUERY(.files)
+      if(!id->misc->internal_get && !QUERY(.files)
 	 && (tmp = (id->not_query/"/")[-1])
 	 && tmp[0] == '.') {
 	TRACE_LEAVE("Is .-file");
