@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.87 2000/08/28 05:31:54 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.88 2000/08/28 09:54:35 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -384,15 +384,17 @@ string decode_path( string p )
 }
 
 
-int _file_size(string X,object id)
+int _file_size(string X, RequestID id)
 {
   Stat fs;
   if( stat_cache )
   {
-    if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
+    array(Stat) cached_fs;
+    if(!id->pragma["no-cache"] &&
+       (cached_fs = cache_lookup("stat_cache", X)))
     {
-      id->misc->stat = fs[0];
-      return fs[0]?fs[0][ST_SIZE]:-1;
+      id->misc->stat = cached_fs[0];
+      return cached_fs[0] ? cached_fs[0][ST_SIZE] : -1;
     }
   }
   if(fs = file_stat(decode_path(X)))
