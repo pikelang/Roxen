@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.44 2000/12/28 19:02:37 mast Exp $
+ * $Id: ftp.pike,v 2.45 2001/01/19 18:34:46 per Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2615,25 +2615,15 @@ class FTPSession
     args = "CENSORED_PASSWORD";	// Censored in case of backtrace.
     master_session->method = "LOGIN";
     master_session->realauth = user + ":" + password;
-    master_session->auth = ({ 0, master_session->realauth, -1 });
     master_session->not_query = user;
 
-    if (conf && conf->auth_module) {
-      mixed err = catch {
-	master_session->auth[0] = "Basic";
-	master_session->auth = conf->auth_module->auth(master_session->auth,
-						       master_session);
-      };
-      if (err) {
-	master_session->auth = 0;
-	report_error(sprintf("FTP2: Authentication error.\n"
-			     "%s\n", describe_backtrace(err)));
-	send(451, ({ "Authentication error." }));
-	conf->log(([ "error":500 ]), master_session);
-	return;
-      }
-    }
+    master_session->misc->user = user;           // Loophole for new API
+    master_session->misc->password = password;  // Otherwise we have to emulate
+                                               // the Authentication header
 
+//     master_session->auth = ({ 0, master_session->realauth, -1 });
+
+    /* FIXME: Use new auth API here. */ 
     if (!master_session->auth ||
 	(master_session->auth[0] != 1)) {
       if (!port_obj->query_option("guest_ftp")) {

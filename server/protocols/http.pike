@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.296 2001/01/19 16:39:22 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.297 2001/01/19 18:34:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -66,13 +66,12 @@ constant decode          = MIME.decode_base64;
 constant find_supports_and_vars = roxen.find_supports_and_vars;
 constant version         = roxen.version;
 constant _query          = roxen.query;
-// constant _time           = predef::time;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
 
-object conf;
-object port_obj;
+Configuration conf;
+Protocol port_obj;
 
 #include <roxen.h>
 #include <module.h>
@@ -128,8 +127,39 @@ string query;
 string not_query;
 string extra_extension = ""; // special hack for the language module
 string data, leftovers;
-array (int|string) auth;
-string rawauth, realauth;
+
+class AuthEmulator
+// Emulate the old (rather cumbersome) authentication API 
+{
+  mixed `[]( int i )
+  {
+    User u;
+    switch( i )
+    {
+      case 0:
+	return conf->authenticate( this_object() );
+      case 1:
+	if( u = conf->authenticate( this_object() ) )
+	  return u->name();
+	if( realauth )
+	  return (realauth/":")[0];
+
+      case 2:
+	if( u = conf->authenticate( this_object() ) )
+	  return 0;
+	if( realauth )
+	  return ((realauth/":")[1..])*":";
+    }
+  }
+  int `!( )
+  {
+    return !realauth;
+  }
+}
+
+AuthEmulator auth;
+
+string rawauth, realauth; // Used by many modules, so let's keep this.
 string since;
 array(string) output_charset = ({});
 string input_charset;
@@ -279,13 +309,8 @@ void decode_charset_encoding( string|function(string:string) decoder )
   if( rest_query ) rest_query = safe_decoder( rest_query );
   if( query ) query = safe_decoder( query );
   if( not_query ) not_query = safe_decoder( not_query );
-  if( auth )
+  if( realauth )
   {
-    auth = map( auth, lambda( mixed q ) {
-                        if( stringp( q ) )
-                          return safe_decoder( q );
-                        return q;
-                      } );
     rawauth = safe_decoder( rawauth );
     realauth = safe_decoder( realauth );
   }
@@ -1878,8 +1903,6 @@ void got_data(mixed fooid, string s)
 
   if(wanted_data)
   {
-//     werror(" Wanted: %d; have: %d\n", wanted_data, have_data );
-//     ccd += ({ s });
     data += s;
     if(strlen(s) + have_data < wanted_data)
     {
@@ -1888,16 +1911,12 @@ void got_data(mixed fooid, string s)
       REQUEST_WERR("HTTP: We want more data.");
       return;
     }
-//     data += ccd*"";
   }
 
   if (mixed err = catch {
   int tmp;
 
   MARK_FD("HTTP got data");
-//   time = predef::time(1);
-//                   // Check is made towards this to make sure the object
-//                   // is not killed prematurely.
   if(!raw) raw = s; else raw += s;
 
 
@@ -1922,8 +1941,6 @@ void got_data(mixed fooid, string s)
   switch(tmp)
   {
    case 0:
-    //    if(this_object())
-    //      cache = ({ s });		// More on the way.
     REQUEST_WERR("HTTP: Request needs more data.");
     return;
 
@@ -1976,9 +1993,6 @@ void got_data(mixed fooid, string s)
     {
       y[1] = MIME.decode_base64(y[1]);
       realauth = y[1];
-//    if (conf->auth_module)
-//      y = conf->auth_module->auth(y, this_object());
-//    auth = y;
     }
   }
 

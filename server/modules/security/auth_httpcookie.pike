@@ -1,11 +1,11 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.1 2001/01/19 16:35:47 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.2 2001/01/19 18:34:45 per Exp $";
 inherit AuthModule;
 inherit "module";
 
 #define COOKIE "_roxen_cookie_auth"
 
-constant name = "httpcookie";
+constant name = "cookie";
 
 //<locale-token project="mod_auth_httpcookie">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_auth_httpcookie",X,Y)
@@ -84,12 +84,12 @@ User authenticate( RequestID id, UserDB db )
 
   if( !id->cookies[ COOKIE ] )
     return 0;
-
   [password,user] = lookup_cookie( id->cookies[ COOKIE ] );
 
   if( !user || !password )
     return 0;
 
+  NOCACHE();
   User res;
   if( !db )
   {
@@ -113,6 +113,7 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 //! database.
 {
   string u, p;
+  NOCACHE();
   if( (u=id->variables->_cookie_username) &&
       (p=id->variables->_cookie_password) )
   {
@@ -141,7 +142,7 @@ void start()
   );
 }
 
-void create()
+static void create()
 {
   defvar( "user_form", Variable.Text(
 #"

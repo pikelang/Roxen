@@ -1,9 +1,9 @@
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.1 2001/01/19 16:35:46 per Exp $";
+  "$Id: auth_httpbasic.pike,v 1.2 2001/01/19 18:34:45 per Exp $";
 inherit AuthModule;
 inherit "module";
 
-constant name = "httpbasic";
+constant name = "basic";
 
 //<locale-token project="mod_auth_httpbasic">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_auth_httpbasic",X,Y)
@@ -11,16 +11,44 @@ constant name = "httpbasic";
 #include <module.h>
 
 LocaleString module_name_locale =
-  _(0,"HTTP Basic authentication (username/password");
+  _(0,"Password authentication");
 
 LocaleString module_doc_locale =
   _(0,"Authenticate users using basic username/password authentication.");
 
+static array(string) parse_auth_header( mixed header )
+{
+  array(string) res;
+  array(string) handle_header( string header ) 
+  {
+    string a, b;
+    if( sscanf( header, "%[^ ] %s", a, b ) == 2 )
+      switch( a )
+      {
+	case "Basic":
+	case "basic":
+	  b = MIME.decode_base64( b );
+	  if( sscanf( b, "%[^:]:%s", a, b ) == 2 )
+	    return ({ a, b });
+      }
+  };
+  if( arrayp( header ) )
+  {
+    foreach( header, header )
+      if( (res = handle_header( header )) && res[0] )
+	return res;
+  }
+  else
+    return handle_header( header );
+  return ({ 0,0 });
+}
+
+
 static User low_authenticate( RequestID id,
 			      string user, string password,
-			      User DB db )
+			      UserDB db)
 {
-  if( User u = db->find_user( user ))
+  if( User u = db->find_user( user ) )
     if( u->password_authenticate( password ) )
       return u;
 }
@@ -36,15 +64,22 @@ User authenticate( RequestID id, UserDB db )
   string password = id->misc->password;
   string user     = id->misc->user;
 
+  mixed header;
+  
   if( !user )
-    if( id->realauth )
-      [user,password] = (id->realauth/":");
+    if( header = id->request_headers[ "authorization" ] )
+      [user,password] = parse_auth_header( header );
+    else if( id->realauth )
+      sscanf( id->realauth, "%[^:]:%s", user, password );
     else
       return 0; // Not very likely to work...
-    
+  
+  if( !user || !password )
+    return 0;
+  
   if( !db )
   {
-    int res;
+    User res;
     foreach( id->conf->user_databases(), UserDB db )
       if( res = low_authenticate( id, user, password, db ) )
 	return res;
@@ -54,7 +89,7 @@ User authenticate( RequestID id, UserDB db )
 }
 
 
-mapping authenticate_throw( RequestD id, string realm, UserDB db )
+mapping authenticate_throw( RequestID id, string realm, UserDB db )
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
 //! friends. If no @[db] is specified,  all datbases in the current
 //! configuration are searched in order, then the configuration user
