@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.51 1999/11/05 07:17:05 per Exp $ */
+/* $Id: module.pike,v 1.52 1999/11/10 04:54:04 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -310,9 +310,14 @@ void deflocaledoc( string locale, string variable,
     locs[locale]( this_object(), variable, name, doc, translate );
 }
 
-void save()
+void save_me()
 {
   my_configuration()->save_one( this_object() );
+}
+
+void save()
+{
+  save_me();
 }
 
 // Convenience function, define an invisible variable, this variable

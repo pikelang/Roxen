@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.219 1999/11/06 07:44:04 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.220 1999/11/10 04:54:04 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2180,20 +2180,15 @@ int save_one( object o )
     start(2);
     return 1;
   }
-  foreach(values(modules), mod)
-  {
-    int i;
-    foreach(indices(mod->copies), i)
-    {
-      if(mod->copies[i] == o)
-      {
-        store(mod->sname+"#"+i, o->query(), 0, this_object());
-        o->start(2, this_object());
-        invalidate_cache();
-        return 1;
-      }
-    }
-  }
+  string q = otomod[ o ];
+  if( !q )
+    error("Invalid module");
+  
+  store(q, o->query(), 0, this_object());
+  invalidate_cache();
+  o->start(2, this_object());
+  invalidate_cache();
+  return 1;
 }
 
 object enable_module( string modname )
