@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.19 2000/03/09 03:30:00 mast Exp $
+ * $Id: config.h,v 1.20 2000/03/10 18:07:24 mast Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -7,6 +7,15 @@
 
 #ifndef _ROXEN_CONFIG_H_
 #define _ROXEN_CONFIG_H_
+
+#if efun(thread_create)
+// If it works, good for you. If it doesn't, too bad.
+#ifndef DISABLE_THREADS
+#ifdef ENABLE_THREADS
+# define THREADS
+#endif /* ENABLE_THREADS */
+#endif /* !DISABLE_THREADS */
+#endif /* efun(thread_create) */
 
 /* Reply 'PONG\r\n' to the query 'PING\r\n'.
  * For performance tests...

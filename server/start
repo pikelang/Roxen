@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.97 2000/02/29 22:52:32 peter Exp $
+# $Id: start,v 1.98 2000/03/10 18:07:22 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -61,9 +61,9 @@ DEFINES="$DEFINES -DKEEP_ALIVE"
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
     if [ $verbose -gt 0 ] ; then
-      echo "$pre Solaris 2.5 or later detected. Enabling threads (if available)."
+      echo "$pre Solaris 2.5 or later detected. Defaulting to enabled threads."
     fi
-    DEFINES="$DEFINES -DENABLE_THREADS -DTHREADS"
+    DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
 
@@ -121,10 +121,10 @@ parse_args() {
     DEFINES="-DENABLE_THREADS $DEFINES"
   ;;
   '--no-threads'|'--without-threads'|'--disable-threads')
-    DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
+    DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//g'`"
   ;;
   '--no-keep-alive'|'--without-keep-alive'|'--disable-keep-alive')
-    DEFINES="`echo $DEFINES | sed -e 's/-DKEEP_ALIVE//'`"
+    DEFINES="`echo $DEFINES | sed -e 's/-DKEEP_ALIVE//g'`"
   ;;
   '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"
@@ -482,6 +482,7 @@ start_roxen() {
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
+    echo >>.gdbinit handle SIGLWP nostop noprint pass
     echo >>.gdbinit run $args $@
     gdb $pike
     rm .gdbinit
