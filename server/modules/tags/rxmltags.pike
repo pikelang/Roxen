@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.322 2001/10/05 08:41:13 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.323 2001/10/05 09:09:48 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6447,11 +6447,11 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#expr":#"<desc type='plugin'><p><short>
- This plugin evaluates a string as a pike expressions.</short>
+ This plugin evaluates a string as a pike expression.</short>
  Available arithmetic operators are +, -, *, / and % (modulo).
  Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
  &gt;=. Available bitwise operators are &amp;, | and ^, representing
- AND, OR and XOR. Available logical operators are &amp;&amp; and ||,
+ AND, OR and XOR. Available boolean operators are &amp;&amp; and ||,
  working as the pike AND and OR.</p>
 
  <p>Numbers can be represented as decimal integers when numbers
