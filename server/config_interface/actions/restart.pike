@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.11 2001/02/07 21:57:22 per Exp $
+ * $Id: restart.pike,v 1.12 2001/08/17 19:46:19 per Exp $
  */
 
 #include <config_interface.h>
@@ -14,7 +14,7 @@ LocaleString name= LOCALE(34, "Restart or shutdown");
 constant doc = "";
 
 
-string parse( RequestID id )
+mixed parse( RequestID id )
 {
   switch( id->variables->what )
   {
@@ -50,7 +50,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
      return LOCALE(226,"Permission denied");
 
   default:
-     return
+    return Roxen.http_string_answer(
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
@@ -77,6 +77,6 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
 </blockquote>
 
-<p><cf-cancel href='?class=&form.class;'/></p>";
+<p><cf-cancel href='?class=&form.class;'/></p>" );
      }
 }
