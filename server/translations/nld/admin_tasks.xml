@@ -75,9 +75,8 @@
 </str>
 
 <str id="240">
-<new/>
 <o>Name</o>
-<t></t>
+<t>Naam</t>
 </str>
 
 <str id="241">
@@ -141,21 +140,18 @@
 </str>
 
 <str id="237">
-<new/>
 <o>Jackdaws love my big sphinx of quartz.</o>
-<t></t>
+<t>Jackdaws love my big sphinx of quartz.</t>
 </str>
 
 <str id="280">
-<new/>
 <o>Module lock status</o>
-<t></t>
+<t>Module lock status</t>
 </str>
 
 <str id="281">
-<new/>
 <o>Shows various information about the module thread locks in Roxen.</o>
-<t></t>
+<t>Toont informatie over de module thread locks in Roxen.</t>
 </str>
 
 <str id="12">
@@ -164,9 +160,8 @@
 </str>
 
 <str id="13">
-<new/>
 <o>Module lock status : Accesses to all modules</o>
-<t></t>
+<t>Module lock status : toegangen tot alle modules</t>
 </str>
 
 <str id="14">
@@ -192,21 +187,18 @@
 </str>
 
 <str id="19">
-<new/>
 <o>Locked</o>
-<t></t>
+<t>Gelockt</t>
 </str>
 
 <str id="20">
-<new/>
 <o>Unlocked</o>
-<t></t>
+<t>Ge-unlocked</t>
 </str>
 
 <str id="21">
-<new/>
 <o>Open files</o>
-<t></t>
+<t>Open bestanden</t>
 </str>
 
 <str id="22">
@@ -235,21 +227,18 @@
 </str>
 
 <str id="27">
-<new/>
 <o>Resolve path...</o>
-<t></t>
+<t>herleid pad..</t>
 </str>
 
 <str id="28">
-<new/>
 <o>Check which modules handles the path you enter in the form</o>
-<t></t>
+<t>Bekijke welke modules zijn betrokken bij afhandeling van het opgegeven pad</t>
 </str>
 
 <str id="29">
-<new/>
 <o>URL</o>
-<t></t>
+<t>URL</t>
 </str>
 
 <str id="206">
@@ -258,33 +247,28 @@
 </str>
 
 <str id="30">
-<new/>
 <o>Password</o>
-<t></t>
+<t>Wachtwoord</t>
 </str>
 
 <str id="31">
-<new/>
 <o>There is no configuration available that matches this URL.</o>
-<t></t>
+<t>Er is geen configuratie beschikbaar die gelijk is aan deze URL</t>
 </str>
 
 <str id="32">
-<new/>
 <o>Resolving</o>
-<t></t>
+<t>Herleiden</t>
 </str>
 
 <str id="33">
-<new/>
 <o>in</o>
-<t></t>
+<t>in</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Restart or shutdown</o>
-<t></t>
+<t>Herstarten of stoppen</t>
 </str>
 
 <str id="197">
@@ -293,15 +277,15 @@
 </str>
 
 <str id="233">
-<new/>
 <o>Roxen will restart automatically.</o>
-<t></t>
+<t>Roxen zal automatisch herstarten.</t>
 </str>
 
 <str id="234">
-<new/>
 <o>You might see the old process for a while in the process table when doing 'ps' or running 'top'. This is normal. Roxen waits for a while for all connections to finish, the process will go away after at most 15 minutes.</o>
-<t></t>
+<t>Het oude proces blijft mogelijk nog een tijdje zichbaar in de procestabel
+bij het uitvoeren van een 'ps' of 'top'. Dit is normaal. Na het afhandelen van alle
+verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="226">
@@ -315,39 +299,33 @@
 </str>
 
 <str id="235">
-<new/>
 <o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t></t>
+<t>Roxen wordt &lt;b&gt;niet&lt;/b&gt; automatisch opnieuw gestart.</t>
 </str>
 
 <str id="35">
-<new/>
 <o>Thread backtrace</o>
-<t></t>
+<t>Thread backtrace</t>
 </str>
 
 <str id="36">
-<new/>
 <o>Shows a backtrace (stack) for each and every thread in Roxen.</o>
-<t></t>
+<t>Toont een backtrace (stack) van iedere actieve thread in Roxen.</t>
 </str>
 
 <str id="37">
-<new/>
 <o>version</o>
-<t></t>
+<t>versie</t>
 </str>
 
 <str id="38">
-<new/>
 <o>Backend thread</o>
-<t></t>
+<t>Backend thread</t>
 </str>
 
 <str id="39">
-<new/>
 <o>Thread</o>
-<t></t>
+<t>Thread</t>
 </str>
 
 <str id="16">
@@ -357,9 +335,8 @@
 </str>
 
 <str id="228">
-<new/>
 <o>Status</o>
-<t></t>
+<t>Status</t>
 </str>
 
 <str id="229">
@@ -368,9 +345,8 @@
 </str>
 
 <str id="230">
-<new/>
 <o>SSL</o>
-<t></t>
+<t>SSL</t>
 </str>
 
 <str id="231">
@@ -379,99 +355,83 @@
 </str>
 
 <str id="49">
-<new/>
 <o>Current FTP sessions</o>
-<t></t>
+<t>Actieve FTP sessies</t>
 </str>
 
 <str id="50">
-<new/>
 <o>List all active FTP sessions and what files they are currently transferring.</o>
-<t></t>
+<t>Toon alle actieve FTP-sessie en de bestanden die nu worden verzonden./t>
 </str>
 
 <str id="51">
-<new/>
 <o>anonymous</o>
-<t></t>
+<t>anoniem</t>
 </str>
 
 <str id="52">
-<new/>
 <o>idle</o>
-<t></t>
+<t>idle</t>
 </str>
 
 <str id="53">
-<new/>
 <o>From</o>
-<t></t>
+<t>Van</t>
 </str>
 
 <str id="54">
-<new/>
 <o>CWD</o>
-<t></t>
+<t>CWD</t>
 </str>
 
 <str id="55">
-<new/>
 <o>Action</o>
-<t></t>
+<t>Actie</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Transferred</o>
-<t></t>
+<t>Verzonden</t>
 </str>
 
 <str id="57">
-<new/>
 <o>There are currently no active FTP sessions.</o>
-<t></t>
+<t>Er zijn op dit moment geen actieve FTP-sessies</t>
 </str>
 
 <str id="58">
-<new/>
 <o>Available font loaders</o>
-<t></t>
+<t>Beschikbare lettertype-bibliotheken</t>
 </str>
 
 <str id="59">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Status van de cache</t>
 </str>
 
 <str id="60">
-<new/>
 <o>Show information about the main memory cache in Roxen</o>
-<t></t>
+<t>Toon informatie over de primaire geheugencache in Roxen</t>
 </str>
 
 <str id="61">
-<new/>
 <o>WebServer Memory Cache</o>
-<t></t>
+<t>WebServer geheugencache</t>
 </str>
 
 <str id="62">
-<new/>
 <o>Class</o>
-<t></t>
+<t>Klasse</t>
 </str>
 
 <str id="64">
-<new/>
 <o>Size</o>
-<t></t>
+<t>Groote</t>
 </str>
 
 <str id="67">
-<new/>
 <o>Hit rate</o>
-<t></t>
+<t>Hit rate</t>
 </str>
 
 <str id="68">
@@ -481,45 +441,39 @@
 </str>
 
 <str id="69">
-<new/>
 <o>Fonts</o>
-<t></t>
+<t>Lettertypes</t>
 </str>
 
 <str id="70">
 <new/>
 <o>DNS</o>
-<t></t>
+<t>DNS</t>
 </str>
 
 <str id="71">
-<new/>
 <o>Locale Cache</o>
-<t></t>
+<t>Lokale cache</t>
 </str>
 
 <str id="72">
-<new/>
 <o>Used languages:</o>
-<t></t>
+<t>Gebruikte talen:</t>
 </str>
 
 <str id="73">
-<new/>
 <o>Registered projects:</o>
-<t></t>
+<t>Geregistreerde projecten:</t>
 </str>
 
 <str id="74">
-<new/>
 <o>Loaded projects:</o>
-<t></t>
+<t>Geladen projecten:</t>
 </str>
 
 <str id="75">
-<new/>
 <o>Current cache size:</o>
-<t></t>
+<t>Huidige grootte van de cache</t>
 </str>
 
 <str id="295">
