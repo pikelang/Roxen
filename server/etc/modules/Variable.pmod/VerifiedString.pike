@@ -70,7 +70,7 @@ void add_maxlength(int maxlength)
 {
   verifications+=({
     lambda(string in) {
-      if(sizeof(in)<maxlength)
+      if(sizeof(in)>maxlength)
 	return ({ sprintf("Value %s must not be more than %d characters long. (%d character too long)",
 		       in, maxlength, sizeof(in)-maxlength), in[..maxlength-1]});
       return ({ 0, in });
