@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.28 1998/09/15 20:25:32 grubba Exp $
+# $Id: db.spec,v 1.29 1998/09/16 21:13:00 wellhard Exp $
 
 drop table messages;
 drop table mail;
@@ -148,7 +148,7 @@ create table template_vars (
              title		     varchar(255),
 	     page_id                 int not null,
              help		     blob,
-	     type		     varchar(8), # font/color/image/select
+	     type		     varchar(64), # font/color/image/select
              option_group_id         int
      );
 
