@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.193 2000/12/12 07:20:15 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.194 2000/12/15 17:13:43 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -136,6 +136,16 @@ mapping(string:object) page_scope=([
   "ssl-strength":EntityPageSSLStrength(),
 ]);
 
+class EntityClientTM {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0; // FIXME: Needed?
+    if(c->id->supports->trade) return "&trade;";
+    if(c->id->supports->supsub) return "<sup>TM</sup>";
+    return "&lt;TM&gt;";
+  }
+}
+
 class EntityClientReferrer {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
@@ -248,6 +258,7 @@ mapping client_scope=([
   "authenticated":EntityClientAuthenticated(),
   "user":EntityClientUser(),
   "password":EntityClientPassword(),
+  "tm":EntityClientTM(),
 ]);
 
 void set_entities(RXML.Context c) {
@@ -1741,6 +1752,9 @@ constant tagdoc=([
 "&client.authenticated;":#"<desc ent></desc>",
 "&client.user;":#"<desc ent></desc>",
 "&client.password;":#"<desc ent></desc>",
+"&client.tm;":#"<desc ent>Generates a trademark sign in a way that the client can render.
+ Possible outcomes are \"&amp;trade;\", \"&lt;sup&gt;TM&lt;/sup&gt;\", and
+ \"&amp;gt;TM&amp;lt;\".</desc>",
 
 
 "&page.realfile;":#"<desc ent>Path to this file in the file system.</desc>",
