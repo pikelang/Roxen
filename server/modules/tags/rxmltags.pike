@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.485 2005/03/17 12:08:44 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.486 2005/03/18 17:08:05 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -318,9 +318,9 @@ class TagAppend {
     array do_enter (RequestID id)
     {
       if (args->value || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
-      if (args->type != "array") {
+      if (args->type && args->type != "array") {
 	args->type = RXML.t_type->encode (args->type);
-	if (args->type) content_type = args->type (RXML.PXml);
+	content_type = args->type (RXML.PXml);
       }
     }
 
