@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.30 2005/01/12 14:41:24 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.31 2005/01/17 16:26:19 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -59,7 +59,7 @@ class AsyncHTTPClient {
 
   void do_method(string _method,
 		 string|Standards.URI _url,
-		 void|mapping query_variables,
+		 void|mapping post_variables,
 		 void|mapping _request_headers,
 		 void|Protocols.HTTP.Query _con, void|string _data)
   {
@@ -75,6 +75,13 @@ class AsyncHTTPClient {
       request_headers = ([]);
     else
       request_headers = _request_headers;
+
+    if(post_variables) {
+      request_headers += 
+		   (["content-type":
+		     "application/x-www-form-urlencoded"]);
+      _data = Protocols.HTTP.http_encode_query(post_variables);
+    }
 
     req_data = _data;
 
@@ -111,6 +118,7 @@ class AsyncHTTPClient {
     request_headers = default_headers | request_headers;
     
     query=url->query;
+    /*
     if(query_variables && sizeof(query_variables))
       {
 	if(query)
@@ -118,6 +126,8 @@ class AsyncHTTPClient {
 	else
 	  query=Protocols.HTTP.http_encode_query(query_variables);
       }
+    */
+
     
     path=url->path;
     if(path=="") path="/";
@@ -249,6 +259,9 @@ class TagInsertHref {
 #endif
     
     _ok = 1;
+    
+    if(args["status-variable"] && q && q->status)
+      RXML.user_set_var(args["status-variable"],q->status);
     
     if(q && q->status>0 && q->status<400)
       return q->data();
