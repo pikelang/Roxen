@@ -1,4 +1,4 @@
-/* $Id: listfonts.pike,v 1.2 1997/09/06 03:53:50 per Exp $ */
+/* $Id: listfonts.pike,v 1.3 1999/08/27 19:45:57 grubba Exp $ */
 #if constant(available_font_versions)
 inherit "wizard";
 
@@ -33,7 +33,14 @@ mapping render_font(object font, string text)
 string page_0(object id)
 {
   string res="<font size=+1>All available fonts</font><p>";
-  foreach(roxen->available_fonts(1), string font) res+=list_font(font);
+  foreach(
+#if constant(available_fonts)
+	  available_fonts(1),
+#else /* !constant(available_fonts) */
+	  roxen->available_fonts(1),
+#endif /* constant(available_fonts) */
+	  string font)
+    res+=list_font(font);
   res += "<p>Example text: <font size=-1><var type=string name=text default='"
     "The quick brown fox jumps over the lazy dog'>";
   return res;
