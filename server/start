@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.105 2000/03/29 17:09:11 grubba Exp $
+# $Id: start,v 1.106 2000/03/30 19:57:38 leif Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -36,16 +36,7 @@ verbose=1
 # Do not default to using a relative path.
 roxendir="`pwd`"
 
-# Set up environment
-if test -f $LOCALDIR/environment; then
-  . $LOCALDIR/environment
-fi
-
-# Make sure $CLASSPATH contains the servlet stuff
-CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/classes/servlet.jar:java/classes${CLASSPATH:+:}$CLASSPATH
-export CLASSPATH
-
-
+# Locate Pike binary.
 pike=`type pike|head -1|sed -e 's,.*is ,,'`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
@@ -65,6 +56,24 @@ if [ ! -f "$pike" ] ; then
   echo "No pike binary found. Aborting."
   exit 1
 fi
+
+# If environment file doesn't exist, try to create it.
+if
+  test ! -f $LOCALDIR/environment
+  test -f bin/buildenv.pike
+then
+  $pike bin/buildenv.pike
+fi
+
+# Set up environment
+if test -f $LOCALDIR/environment; then
+  . $LOCALDIR/environment
+fi
+
+# Make sure $CLASSPATH contains the servlet stuff
+CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/classes/servlet.jar:java/classes${CLASSPATH:+:}$CLASSPATH
+export CLASSPATH
+
 
 ####### BEGIN ARGUMENT PARSING
 
@@ -497,7 +506,7 @@ start_roxen() {
         echo "$pre" "Using '$pike'"|sed -e "s!`pwd`!.!g"
       fi
     fi
-    args="-DSERIOUS $args"
+    #args="-DSERIOUS $args"
     $pike $args $@
   else
     echo "$pre" Executing gdb $pike $args $@
