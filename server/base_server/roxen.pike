@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.877 2004/06/30 16:58:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.878 2004/08/18 15:44:16 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1606,6 +1606,7 @@ class Protocol
   }
 }
 
+#pike __REAL_VERSION__
 #if constant(SSL.sslfile)
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
@@ -1614,6 +1615,30 @@ class SSLProtocol
 
   // SSL context
   SSL.context ctx;
+
+  class CertificateListVariable
+  {
+    inherit Variable.FileList;
+
+    string doc()
+    {
+      return sprintf(::doc() + "\n",
+		     combine_path(getcwd(), "../local"),
+		     getcwd());
+    }
+  }
+
+  class KeyFileVariable
+  {
+    inherit Variable.String;
+
+    string doc()
+    {
+      return sprintf(::doc() + "\n",
+		     combine_path(getcwd(), "../local"),
+		     getcwd());
+    }
+  }
 
   class destruct_protected_sslfile
   {
@@ -1704,7 +1729,11 @@ class SSLProtocol
       if( f2 )
 	msg = Tools.PEM.pem_msg()->init( f2 );
 
+#if constant(Crypto.Random.random_string)
+      function r = Crypto.Random.random_string;
+#else
       function r = Crypto.randomness.reasonably_random()->read;
+#endif
 
       SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
 
@@ -1732,7 +1761,11 @@ class SSLProtocol
 	if (rsa->rsa_size() > 512)
 	{
 	  /* Too large for export */
+#if constant(Crypto.RSA)
+	  ctx->short_rsa = Crypto.RSA()->generate_key(512, r);
+#else
 	  ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+#endif
 
 	  // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
 	}
@@ -1814,6 +1847,8 @@ class SSLProtocol
   }
 }
 #endif
+// FIXME: Remove the following line when targetting for a newer Pike!
+#pike 7.4
 
 mapping(string:Protocol) build_protocols_mapping()
 {
