@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.41 1997/11/22 22:11:38 noring Exp $";
+constant cvs_version = "$Id: business.pike,v 1.42 1997/11/25 02:12:38 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -376,7 +376,7 @@ string tag_diagram(string tag, mapping m, string contents,
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
   res->bg = parse_color(defines->bg || "#e0e0e0");
-  res->fg = parse_color(defines->fg || "black");
+  res->fg = parse_color(defines->fg || "black"); //FIXME
   
   if(m->center) res->center = (int)m->center;
 
