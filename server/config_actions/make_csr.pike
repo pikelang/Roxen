@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.6 1998/04/21 16:46:15 nisse Exp $
+ * $Id: make_csr.pike,v 1.7 1998/04/21 18:14:06 nisse Exp $
  */
 
 inherit "wizard";
@@ -205,7 +205,8 @@ mixed page_4(object id, object mc)
   }
 
   array name = ({ });
-  foreach( ({ "countryName", "localityName", "organizationName",
+  foreach( ({ "countryName", "stateOrProvinceName",
+	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
